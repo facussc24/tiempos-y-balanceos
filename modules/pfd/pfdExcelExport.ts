@@ -100,6 +100,14 @@ function getStepTypeLabel(type: string): string {
     return PFD_STEP_TYPES.find(t => t.value === type)?.label || type;
 }
 
+/** C7-N1: Process phase labels */
+const PHASE_LABELS = {
+    'prototype': 'Prototipo',
+    'pre-launch': 'Pre-serie',
+    'production': 'Producción',
+    '': 'Sin definir',
+} as const;
+
 /** C3-N2: Disposition label for Excel */
 const DISPOSITION_LABEL: Record<RejectDisposition, string> = {
     none: '',
@@ -145,6 +153,7 @@ export function exportPfdExcel(doc: PfdDocument): void {
         [{ v: 'Fecha:', s: { font: { bold: true } } }, sanitizeCellValue(h.revisionDate), '', { v: 'Modelo/Año:', s: { font: { bold: true } } }, sanitizeCellValue(h.modelYear)],
         [{ v: 'Cód. Proveedor:', s: { font: { bold: true } } }, sanitizeCellValue(h.supplierCode), '', { v: 'Nivel Ing.:', s: { font: { bold: true } } }, sanitizeCellValue(h.engineeringChangeLevel)],
         [{ v: 'Equipo:', s: { font: { bold: true } } }, sanitizeCellValue(h.coreTeam), '', { v: 'Contacto:', s: { font: { bold: true } } }, sanitizeCellValue(h.keyContact)],
+        [{ v: 'Fase:', s: { font: { bold: true } } }, sanitizeCellValue(PHASE_LABELS[h.processPhase] || 'Sin definir'), '', { v: 'Exportado:', s: { font: { bold: true } } }, new Date().toLocaleDateString('es-AR')],
         [],
     ];
 
@@ -201,7 +210,10 @@ export function exportPfdExcel(doc: PfdDocument): void {
     rows.push([{ v: 'LEYENDA DE SÍMBOLOS:', s: { font: { bold: true, sz: 9, color: { rgb: '6B7280' } } } }]);
     for (const st of PFD_STEP_TYPES) {
         const sym = SYMBOL_UNICODE[st.value] || '';
-        rows.push([{ v: `  ${sym}  ${st.label}`, s: { font: { name: 'Arial', sz: 9 } } }]);
+        rows.push([
+            { v: sym, s: { font: { name: 'Segoe UI Symbol', sz: 12 }, alignment: { horizontal: 'center' as const, vertical: 'center' as const } } },
+            { v: st.label, s: { font: { name: 'Arial', sz: 9 }, alignment: { vertical: 'center' as const } } },
+        ]);
     }
 
     const ws = XLSX.utils.aoa_to_sheet(rows);
@@ -211,9 +223,9 @@ export function exportPfdExcel(doc: PfdDocument): void {
         { wch: 15 }, { wch: 12 }, { wch: 20 }, { wch: 12 }, { wch: 20 }, { wch: 10 },
     ];
 
-    // C4-E1: Freeze panes — header row (row 11 = index 10) stays visible when scrolling
-    // Rows 0-9 = metadata (title, blank, 8 metadata rows), row 10 = column headers
-    ws['!freeze'] = { xSplit: 0, ySplit: 11, topLeftCell: 'A12' };
+    // C4-E1: Freeze panes — header row stays visible when scrolling
+    // Rows 0-10 = metadata (title, form#, 8 metadata rows, blank), row 11 = column headers
+    ws['!freeze'] = { xSplit: 0, ySplit: 12, topLeftCell: 'A13' };
 
     XLSX.utils.book_append_sheet(wb, ws, 'Diagrama de Flujo');
 

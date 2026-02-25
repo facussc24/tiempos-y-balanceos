@@ -16,6 +16,14 @@ import { getLogoBase64 } from '../../src/assets/ppe/ppeBase64';
 const CYAN_HEADER = '#0891B2';
 const SGC_FORM_NUMBER = 'I-AC-005.1';
 
+/** C7-N1: Process phase labels for PDF */
+const PHASE_LABELS = {
+    'prototype': 'Prototipo',
+    'pre-launch': 'Pre-serie',
+    'production': 'Producción',
+    '': 'Sin definir',
+} as const;
+
 function esc(value: string | number | undefined | null): string {
     if (value == null || value === '') return '';
     return String(value)
@@ -190,6 +198,12 @@ function buildHeaderHtml(doc: PfdDocument, logoBase64: string): string {
                     <td style="${metaLabel}">Contacto</td>
                     <td style="${metaCell}">${esc(h.keyContact)}</td>
                 </tr>
+                <tr>
+                    <td style="${metaLabel}">Fase</td>
+                    <td style="${metaCell}">${esc(PHASE_LABELS[h.processPhase as keyof typeof PHASE_LABELS] || 'Sin definir')}</td>
+                    <td style="${metaLabel}" colspan="3"></td>
+                    <td style="${metaCell} font-size:7px; color:#9CA3AF;">Exportado: ${today}</td>
+                </tr>
             </table>
         </div>
     `;
@@ -269,10 +283,14 @@ export async function exportPfdPdf(doc: PfdDocument): Promise<void> {
 
     const container = document.createElement('div');
     container.innerHTML = htmlContent;
-    container.style.position = 'absolute';
-    container.style.left = '-9999px';
+    // C8-E2: Use visibility:hidden + fixed instead of left:-9999px
+    // so the browser computes height properly for html2canvas
+    container.style.position = 'fixed';
+    container.style.left = '0';
     container.style.top = '0';
     container.style.width = '297mm';
+    container.style.visibility = 'hidden';
+    container.style.pointerEvents = 'none';
     document.body.appendChild(container);
 
     const safeName = sanitizeFilename(doc.header.partName || 'PFD', { allowSpaces: true });

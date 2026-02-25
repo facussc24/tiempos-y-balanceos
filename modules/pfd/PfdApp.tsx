@@ -384,7 +384,7 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding }) => {
         setConfirmState({
             isOpen: true,
             title: 'Eliminar paso',
-            message: `¿Eliminar el paso "${label}"? Esta acción no se puede deshacer.`,
+            message: `¿Eliminar el paso "${label}"? Puede deshacerlo con Ctrl+Z.`,
             variant: 'danger',
             confirmText: 'Eliminar',
             onConfirm: () => {
@@ -637,7 +637,7 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding }) => {
                         return <span className="text-gray-400 ml-1">({parts.join(' · ')})</span>;
                     })()}
                     {' | '}
-                    <kbd className="px-1 py-0.5 bg-gray-100 rounded text-[10px] font-mono">Ctrl+Z</kbd> Deshacer · <kbd className="px-1 py-0.5 bg-gray-100 rounded text-[10px] font-mono">Ctrl+S</kbd> Guardar
+                    <kbd className="px-1 py-0.5 bg-gray-100 rounded text-[10px] font-mono">Ctrl+Z</kbd> Deshacer · <kbd className="px-1 py-0.5 bg-gray-100 rounded text-[10px] font-mono">Ctrl+Y</kbd> Rehacer · <kbd className="px-1 py-0.5 bg-gray-100 rounded text-[10px] font-mono">Ctrl+S</kbd> Guardar · <kbd className="px-1 py-0.5 bg-gray-100 rounded text-[10px] font-mono">Ctrl+Shift+N</kbd> Nuevo paso
                     {' · '}
                     <button
                         onClick={() => setShowFlowArrows(!showFlowArrows)}

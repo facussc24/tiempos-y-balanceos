@@ -20,9 +20,9 @@
 
 **Documento-relacional hibrido:** Los documentos complejos (AMFE con 5 niveles de anidamiento, HO con sheets/steps) se almacenan como JSON en columna `data`, con metadatos extraidos en columnas indexadas para queries rapidas.
 
-**10 tablas SQLite:** projects, amfe_documents, amfe_library_operations, cp_documents, ho_documents, drafts, settings, plant_config, ui_state, recent_projects
+**11 tablas SQLite:** projects, amfe_documents, amfe_library_operations, cp_documents, ho_documents, pfd_documents, drafts, settings, plant_config, ui_state, recent_projects
 
-**7 repositorios tipados** en `utils/repositories/` — toda operacion de datos pasa por ellos.
+**8 repositorios tipados** en `utils/repositories/` — toda operacion de datos pasa por ellos.
 
 **InMemoryAdapter** para modo web/dev cuando Tauri no esta disponible.
 
@@ -72,8 +72,8 @@
 | Test suites pasando | 166 |
 | Tests fallando | 0 |
 | Custom hooks | 18 |
-| Repositorios SQLite | 7 |
-| Tablas SQLite | 11 |
+| Repositorios SQLite | 8 |
+| Tablas SQLite | 11 (incl. pfd_documents) |
 
 ---
 

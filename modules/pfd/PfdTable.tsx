@@ -34,18 +34,23 @@ const PfdTable: React.FC<Props> = ({ steps, onUpdateStep, onBatchUpdateStep, onR
 
     return (
         <>
-            <thead className="sticky top-0 z-10">
+            <thead className="sticky top-0 z-20">
                 <tr className="bg-gradient-to-r from-cyan-600 to-teal-600">
-                    {PFD_COLUMNS.map(col => (
-                        <th
-                            key={col.key}
-                            className="px-2 py-2.5 text-xs font-semibold text-white text-center border-r border-cyan-500/30 whitespace-nowrap"
-                            style={{ width: col.width }}
-                        >
-                            {col.label}
-                            {col.required && <span className="text-cyan-200 ml-0.5">*</span>}
-                        </th>
-                    ))}
+                    {PFD_COLUMNS.map((col, ci) => {
+                        // C7-U1: First 3 columns are sticky (Nº Op., Símbolo, Descripción)
+                        const isSticky = ci < 3;
+                        const stickyLeft = ci === 0 ? 0 : ci === 1 ? 80 : ci === 2 ? 140 : 0;
+                        return (
+                            <th
+                                key={col.key}
+                                className={`px-2 py-2.5 text-xs font-semibold text-white text-center border-r border-cyan-500/30 whitespace-nowrap ${isSticky ? 'sticky z-30 bg-cyan-600 shadow-[2px_0_4px_rgba(0,0,0,0.1)]' : ''}`}
+                                style={{ width: col.width, ...(isSticky ? { left: `${stickyLeft}px` } : {}) }}
+                            >
+                                {col.label}
+                                {col.required && <span className="text-cyan-200 ml-0.5">*</span>}
+                            </th>
+                        );
+                    })}
                     {!readOnly && (
                         <th className="px-2 py-2.5 text-xs font-semibold text-white text-center" style={{ width: '110px' }}>
                             Acciones

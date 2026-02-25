@@ -294,5 +294,17 @@ export function validatePfdDocument(doc: PfdDocument): ValidationIssue[] {
         }
     }
 
+    // V18: Transport step without department/area (C7-N2 — AIAG APQP §3.3 material flow tracking)
+    for (const step of doc.steps) {
+        if (step.stepType === 'transport' && step.department.trim() === '') {
+            issues.push({
+                rule: 'V18',
+                severity: 'info',
+                message: `Paso ${step.stepNumber || '(sin nº)'}: transporte sin área/departamento destino`,
+                stepId: step.id,
+            });
+        }
+    }
+
     return issues;
 }

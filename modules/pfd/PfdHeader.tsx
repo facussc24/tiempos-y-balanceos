@@ -72,7 +72,7 @@ const PfdHeaderComponent: React.FC<Props> = ({ header, onChange, collapsed, onTo
 
                         <fieldset className="border border-gray-200 rounded-lg p-2.5">
                             <legend className="text-[11px] font-semibold text-cyan-700 px-1.5">Control del Documento</legend>
-                            <div className="grid grid-cols-3 gap-2">
+                            <div className="grid grid-cols-4 gap-2">
                                 <div>
                                     <label className={labelClass}>Nº de Documento</label>
                                     <input name="documentNumber" value={header.documentNumber} onChange={handleChange} className={inputClass} disabled={readOnly} />
@@ -84,6 +84,20 @@ const PfdHeaderComponent: React.FC<Props> = ({ header, onChange, collapsed, onTo
                                 <div>
                                     <label className={labelClass}>Fecha de Revisión</label>
                                     <input name="revisionDate" type="date" value={header.revisionDate} onChange={handleChange} className={inputClass} disabled={readOnly} />
+                                </div>
+                                <div>
+                                    <label className={labelClass}>Fase del Proceso</label>
+                                    <select
+                                        value={header.processPhase}
+                                        onChange={(e) => onChange('processPhase', e.target.value)}
+                                        className={inputClass}
+                                        disabled={readOnly}
+                                    >
+                                        <option value="">— Sin definir —</option>
+                                        <option value="prototype">Prototipo</option>
+                                        <option value="pre-launch">Pre-serie</option>
+                                        <option value="production">Producción</option>
+                                    </select>
                                 </div>
                             </div>
                         </fieldset>

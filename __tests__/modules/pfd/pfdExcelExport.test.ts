@@ -71,8 +71,8 @@ describe('pfdExcelExport', () => {
         const calls = (XLSX.utils.aoa_to_sheet as ReturnType<typeof vi.fn>).mock.calls;
         expect(calls.length).toBeGreaterThan(0);
         const rows = calls[0][0] as unknown[][];
-        // Header row is at index 10 (after 10 metadata rows)
-        const headerRow = rows[10] as { v: string }[];
+        // Header row is at index 11 (after 11 metadata rows: title, form#, 8 data rows, blank)
+        const headerRow = rows[11] as { v: string }[];
         const headers = headerRow.map((c: { v: string }) => c.v);
         expect(headers).toContain('Disposición');
         expect(headers).toContain('Detalle');
@@ -84,7 +84,7 @@ describe('pfdExcelExport', () => {
         exportPfdExcel(doc);
         const calls = (XLSX.utils.aoa_to_sheet as ReturnType<typeof vi.fn>).mock.calls;
         const rows = calls[0][0] as unknown[][];
-        const headerRow = rows[10] as { v: string }[];
+        const headerRow = rows[11] as { v: string }[];
         expect(headerRow).toHaveLength(14);
     });
 
@@ -94,6 +94,6 @@ describe('pfdExcelExport', () => {
         const calls = (XLSX.utils.aoa_to_sheet as ReturnType<typeof vi.fn>).mock.calls;
         const ws = calls[0]?.[0] ? (XLSX.utils.aoa_to_sheet as ReturnType<typeof vi.fn>).mock.results[0].value : {};
         // The worksheet should have !freeze set
-        expect(ws['!freeze']).toEqual({ xSplit: 0, ySplit: 11, topLeftCell: 'A12' });
+        expect(ws['!freeze']).toEqual({ xSplit: 0, ySplit: 12, topLeftCell: 'A13' });
     });
 });

@@ -65,6 +65,9 @@ const PfdTableRow: React.FC<Props> = ({ step, index, totalSteps, onUpdate, onBat
     const zebraBg = !dispositionBg && !externalBg && !typeTint && index % 2 === 1 ? 'bg-gray-50/70' : '';
     const rowBg = dispositionBg || externalBg || typeTint || zebraBg;
 
+    // C7-U1: Opaque background for sticky cells (prevent bleed-through during horizontal scroll)
+    const stickyBg = dispositionBg || externalBg || (index % 2 === 1 ? 'bg-gray-50' : 'bg-white');
+
     // N4: CC/SC visual — borde izquierdo prominente
     const hasCC = step.productSpecialChar === 'CC' || step.processSpecialChar === 'CC';
     const hasSC = !hasCC && (step.productSpecialChar === 'SC' || step.processSpecialChar === 'SC');
@@ -105,8 +108,8 @@ const PfdTableRow: React.FC<Props> = ({ step, index, totalSteps, onUpdate, onBat
             className={`border-b border-gray-200 hover:bg-cyan-50/50 transition-colors focus-within:ring-2 focus-within:ring-cyan-400 focus-within:ring-inset ${rowBg} ${leftBorder}`}
             data-step-id={step.id}
         >
-            {/* Step Number */}
-            <td className={`${cellClass} text-center font-mono font-bold`}>
+            {/* Step Number — C7-U1: Sticky column 1 */}
+            <td className={`${cellClass} text-center font-mono font-bold sticky left-0 z-10 ${stickyBg}`}>
                 <input
                     value={step.stepNumber}
                     onChange={handleTextChange('stepNumber')}
@@ -116,8 +119,8 @@ const PfdTableRow: React.FC<Props> = ({ step, index, totalSteps, onUpdate, onBat
                 />
             </td>
 
-            {/* Symbol */}
-            <td className={`${cellClass} text-center`}>
+            {/* Symbol — C7-U1: Sticky column 2 */}
+            <td className={`${cellClass} text-center sticky left-[80px] z-10 ${stickyBg}`}>
                 <PfdSymbolPicker
                     value={step.stepType}
                     onChange={(v: PfdStepType) => onUpdate(step.id, 'stepType', v)}
@@ -125,13 +128,14 @@ const PfdTableRow: React.FC<Props> = ({ step, index, totalSteps, onUpdate, onBat
                 />
             </td>
 
-            {/* Description */}
-            <td className={cellClass}>
+            {/* Description — C7-U1: Sticky column 3 + shadow divider */}
+            <td className={`${cellClass} sticky left-[140px] z-10 ${stickyBg} shadow-[2px_0_4px_rgba(0,0,0,0.06)]`}>
                 <div className="flex items-center gap-1.5">
                     <input
                         value={step.description}
                         onChange={handleTextChange('description')}
                         className={`${inputClass} flex-1`}
+                        title={step.description}
                         placeholder="Descripción de la operación"
                         disabled={readOnly}
                     />
@@ -183,6 +187,7 @@ const PfdTableRow: React.FC<Props> = ({ step, index, totalSteps, onUpdate, onBat
                     value={step.machineDeviceTool}
                     onChange={handleTextChange('machineDeviceTool')}
                     className={inputClass}
+                    title={step.machineDeviceTool}
                     placeholder="Máquina o herramienta"
                     disabled={readOnly}
                 />
@@ -194,6 +199,7 @@ const PfdTableRow: React.FC<Props> = ({ step, index, totalSteps, onUpdate, onBat
                     value={step.productCharacteristic}
                     onChange={handleTextChange('productCharacteristic')}
                     className={inputClass}
+                    title={step.productCharacteristic}
                     placeholder="Característica"
                     disabled={readOnly}
                 />
@@ -222,6 +228,7 @@ const PfdTableRow: React.FC<Props> = ({ step, index, totalSteps, onUpdate, onBat
                     value={step.processCharacteristic}
                     onChange={handleTextChange('processCharacteristic')}
                     className={inputClass}
+                    title={step.processCharacteristic}
                     placeholder="Variable de proceso"
                     disabled={readOnly}
                 />
@@ -250,6 +257,7 @@ const PfdTableRow: React.FC<Props> = ({ step, index, totalSteps, onUpdate, onBat
                     value={step.reference}
                     onChange={handleTextChange('reference')}
                     className={inputClass}
+                    title={step.reference}
                     placeholder="Plano / Ref."
                     disabled={readOnly}
                 />
@@ -272,6 +280,7 @@ const PfdTableRow: React.FC<Props> = ({ step, index, totalSteps, onUpdate, onBat
                     value={step.notes}
                     onChange={handleTextChange('notes')}
                     className={inputClass}
+                    title={step.notes}
                     placeholder="Notas"
                     disabled={readOnly}
                 />

@@ -42,6 +42,9 @@ export interface PfdHeader {
   coreTeam: string;
   keyContact: string;
 
+  // Process phase (AIAG APQP)
+  processPhase: 'prototype' | 'pre-launch' | 'production' | '';
+
   // Approvals
   preparedBy: string;
   preparedDate: string;
@@ -160,6 +163,7 @@ export const EMPTY_PFD_HEADER: PfdHeader = {
   documentNumber: '',
   revisionLevel: 'A',
   revisionDate: new Date().toISOString().split('T')[0],
+  processPhase: '',
   companyName: 'Barack Mercosul',
   plantLocation: 'Hurlingham, Buenos Aires',
   supplierCode: '',

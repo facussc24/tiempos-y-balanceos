@@ -64,6 +64,7 @@ npm run tauri:build  # Build Tauri
     amfe/               AMFE VDA (analisis modal de fallas) + AI chat copilot
     controlPlan/        Plan de Control AIAG + AI copilot + cross-validation
     hojaOperaciones/    Hojas de operaciones (navy theme, ISO PPE)
+    pfd/                Diagrama de Flujo del Proceso (cyan theme, ASME symbols)
     mix/                Mix multi-modelo
     flow-simulator/     Simulador de flujo (SimScript)
     heijunka/           Nivelado heijunka
@@ -80,6 +81,7 @@ npm run tauri:build  # Build Tauri
       amfeRepository.ts       Documentos AMFE + biblioteca
       cpRepository.ts         Planes de Control
       hoRepository.ts         Hojas de Operaciones
+      pfdRepository.ts        Diagramas de Flujo (PFD)
       draftRepository.ts      Borradores auto-save unificados
     geminiClient.ts     Cliente Gemini con cache y circuit breaker
     storageManager.ts   Settings de storage (delega a settingsRepository)
