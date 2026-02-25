@@ -140,8 +140,16 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding }) => {
                         setTimeout(() => { isFirstRenderRef.current = false; }, 0);
                         logger.info('PfdApp', 'Draft recovered', { steps: draft.steps.length });
                     },
-                    // C4-B1: NO borrar draft en onCancel. Cerrar con Escape/clic afuera
-                    // preserva el borrador para la proxima vez. Se borra solo al guardar.
+                    // C6-B3: Explicit discard — deletes draft and shows toast
+                    onCancel: async () => {
+                        try {
+                            await deletePfdDraft(draftKey);
+                            setToastMessage('Borrador descartado');
+                            logger.info('PfdApp', 'Draft discarded by user', { key: draftKey });
+                        } catch (err) {
+                            logger.warn('PfdApp', 'Failed to delete draft', { error: String(err) });
+                        }
+                    },
                 });
             } catch (err) {
                 logger.warn('PfdApp', 'Draft recovery failed', { error: String(err) });
@@ -610,7 +618,7 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding }) => {
                         <button
                             onClick={handleAddStep}
                             className="bg-cyan-600 hover:bg-cyan-500 text-white rounded-full p-3 shadow-lg flex items-center gap-2 transition-transform hover:scale-105"
-                            data-shortcut="Ctrl+Shift+N"
+                            title="Agregar paso (Ctrl+Shift+N)"
                         >
                             <Plus size={20} />
                             <span className="font-bold pr-1 text-sm">Agregar Paso</span>

@@ -234,7 +234,8 @@ function buildTableHtml(doc: PfdDocument): string {
     }
 
     // C5-V1/E1: Explicit column widths for consistent PDF layout
-    const colWidths = ['5%', '4%', '18%', '12%', '10%', '4%', '10%', '4%', '7%', '6%', '8%', '5%', '5%', '2%'];
+    // C6-E1: Rebalanced — more space for Descripción, Notas, Disposición, Detalle, Externo
+    const colWidths = ['5%', '4%', '20%', '11%', '9%', '3%', '9%', '3%', '6%', '5%', '10%', '6%', '6%', '3%'];
     const colgroup = `<colgroup>${colWidths.map(w => `<col style="width:${w}"/>`).join('')}</colgroup>`;
 
     return `

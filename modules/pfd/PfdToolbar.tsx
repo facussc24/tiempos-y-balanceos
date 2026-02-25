@@ -7,7 +7,7 @@
 
 import React from 'react';
 import {
-    ArrowLeft, Save, FolderOpen, FilePlus, FileDown, Printer,
+    ArrowLeft, Save, FolderOpen, FilePlus, FileDown, FileSpreadsheet, Printer,
     Eye, Edit3, AlertTriangle, Undo2, Redo2, Copy,
 } from 'lucide-react';
 
@@ -79,7 +79,7 @@ const PfdToolbar: React.FC<Props> = ({
             {onSaveAs && (
                 <button onClick={onSaveAs} className={`${btnClass} text-cyan-700 hover:bg-cyan-50`} title="Guardar como... (copia con nuevo nombre)">
                     <Copy size={16} />
-                    <span className="hidden lg:inline">Guardar como</span>
+                    <span className="hidden md:inline">Guardar como</span>
                 </button>
             )}
 
@@ -118,7 +118,7 @@ const PfdToolbar: React.FC<Props> = ({
                 <span className="hidden sm:inline">PDF</span>
             </button>
             <button onClick={onExportExcel} className={`${btnClass} text-gray-600 hover:bg-gray-100`} title="Exportar Excel">
-                <FileDown size={16} />
+                <FileSpreadsheet size={16} />
                 <span className="hidden sm:inline">Excel</span>
             </button>
             <button onClick={onPrint} className={`${btnClass} text-gray-600 hover:bg-gray-100`} title="Imprimir">

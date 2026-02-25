@@ -16,6 +16,7 @@ import {
     createEmptyStep,
     createEmptyPfdDocument,
     getNextStepNumber,
+    getIntermediateStepNumber,
     normalizePfdStep,
 } from './pfdTypes';
 
@@ -98,11 +99,12 @@ export function usePfdDocument(): UsePfdDocumentResult {
         });
     }, [setDataWithHistory]);
 
+    // C6-B1: Use intermediate step number instead of sequential
     const insertStepAfter = useCallback((stepId: string) => {
         setDataWithHistory(prev => {
             const index = prev.steps.findIndex(s => s.id === stepId);
             if (index === -1) return prev;
-            const nextNumber = getNextStepNumber(prev.steps);
+            const nextNumber = getIntermediateStepNumber(prev.steps, index);
             const newStep = createEmptyStep(nextNumber);
             const steps = [...prev.steps];
             steps.splice(index + 1, 0, newStep);
@@ -110,12 +112,13 @@ export function usePfdDocument(): UsePfdDocumentResult {
         });
     }, [setDataWithHistory]);
 
+    // C6-B2: Use intermediate step number for duplicates
     const duplicateStep = useCallback((stepId: string) => {
         setDataWithHistory(prev => {
             const index = prev.steps.findIndex(s => s.id === stepId);
             if (index === -1) return prev;
             const source = prev.steps[index];
-            const nextNumber = getNextStepNumber(prev.steps);
+            const nextNumber = getIntermediateStepNumber(prev.steps, index);
             const clone: PfdStep = {
                 ...source,
                 id: crypto.randomUUID(),

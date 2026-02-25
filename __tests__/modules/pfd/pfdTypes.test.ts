@@ -1,4 +1,4 @@
-import { createEmptyStep, createEmptyPfdDocument, PFD_COLUMNS, PFD_STEP_TYPES, EMPTY_PFD_HEADER, normalizePfdStep } from '../../../modules/pfd/pfdTypes';
+import { createEmptyStep, createEmptyPfdDocument, PFD_COLUMNS, PFD_STEP_TYPES, EMPTY_PFD_HEADER, normalizePfdStep, getIntermediateStepNumber, parseStepNumber, getNextStepNumber } from '../../../modules/pfd/pfdTypes';
 
 describe('pfdTypes', () => {
     describe('createEmptyStep', () => {
@@ -173,6 +173,66 @@ describe('pfdTypes', () => {
         it('should have disposition type for rejectDisposition column', () => {
             const col = PFD_COLUMNS.find(c => c.key === 'rejectDisposition');
             expect(col?.type).toBe('disposition');
+        });
+    });
+
+    describe('getIntermediateStepNumber (C6-B1)', () => {
+        it('should calculate midpoint between two steps', () => {
+            const steps = [
+                { ...createEmptyStep('OP 20'), description: 'A' },
+                { ...createEmptyStep('OP 30'), description: 'B' },
+            ];
+            // Insert after index 0 (OP 20), next is OP 30 → midpoint = OP 25
+            expect(getIntermediateStepNumber(steps, 0)).toBe('OP 25');
+        });
+
+        it('should use +5 when inserting after the last step', () => {
+            const steps = [
+                { ...createEmptyStep('OP 20'), description: 'A' },
+            ];
+            expect(getIntermediateStepNumber(steps, 0)).toBe('OP 25');
+        });
+
+        it('should fallback to getNextStepNumber when no room between consecutive numbers', () => {
+            const steps = [
+                { ...createEmptyStep('OP 20'), description: 'A' },
+                { ...createEmptyStep('OP 21'), description: 'B' },
+            ];
+            // No room between 20 and 21 → tries OP 25, which is available
+            const result = getIntermediateStepNumber(steps, 0);
+            expect(result).toBe('OP 25');
+        });
+
+        it('should fallback when +5 is already taken', () => {
+            const steps = [
+                { ...createEmptyStep('OP 20'), description: 'A' },
+                { ...createEmptyStep('OP 21'), description: 'B' },
+                { ...createEmptyStep('OP 25'), description: 'C' },
+            ];
+            // Between 20 and 21: no room. +5 = 25 but exists. Falls back to getNextStepNumber.
+            const result = getIntermediateStepNumber(steps, 0);
+            expect(parseStepNumber(result)).toBeGreaterThan(25);
+        });
+
+        it('should preserve prefix from current step', () => {
+            const steps = [
+                { ...createEmptyStep('INSP 100'), description: 'A' },
+                { ...createEmptyStep('INSP 200'), description: 'B' },
+            ];
+            expect(getIntermediateStepNumber(steps, 0)).toBe('INSP 150');
+        });
+
+        it('should handle negative index by falling back', () => {
+            const steps = [{ ...createEmptyStep('OP 10'), description: 'A' }];
+            const result = getIntermediateStepNumber(steps, -1);
+            // Fallback to getNextStepNumber
+            expect(result).toBe(getNextStepNumber(steps));
+        });
+
+        it('should handle out-of-bounds index', () => {
+            const steps = [{ ...createEmptyStep('OP 10'), description: 'A' }];
+            const result = getIntermediateStepNumber(steps, 5);
+            expect(result).toBe(getNextStepNumber(steps));
         });
     });
 

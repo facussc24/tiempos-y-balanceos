@@ -22,7 +22,7 @@
 
 **10 tablas SQLite:** projects, amfe_documents, amfe_library_operations, cp_documents, ho_documents, drafts, settings, plant_config, ui_state, recent_projects
 
-**6 repositorios tipados** en `utils/repositories/` — toda operacion de datos pasa por ellos.
+**7 repositorios tipados** en `utils/repositories/` — toda operacion de datos pasa por ellos.
 
 **InMemoryAdapter** para modo web/dev cuando Tauri no esta disponible.
 
@@ -34,6 +34,7 @@
 |--------|-----------|--------|-----|-------|
 | AMFE VDA | `modules/amfe/` | Completo | Sugerencias + Chat Copilot | 313+ |
 | Plan de Control | `modules/controlPlan/` | Completo | Sugerencias + Chat + Cross-validation | 95+ |
+| Diagrama de Flujo (PFD) | `modules/pfd/` | Completo | - | 60+ |
 | Hojas de Operaciones | `modules/hojaOperaciones/` | Completo | - | 130+ |
 | Balanceo de Linea | `modules/balancing/` + `core/` | Completo | - | 500+ |
 | Mix Multi-Modelo | `modules/mix/` | Completo | - | - |
@@ -71,8 +72,8 @@
 | Test suites pasando | 166 |
 | Tests fallando | 0 |
 | Custom hooks | 18 |
-| Repositorios SQLite | 6 |
-| Tablas SQLite | 8 |
+| Repositorios SQLite | 7 |
+| Tablas SQLite | 11 |
 
 ---
 

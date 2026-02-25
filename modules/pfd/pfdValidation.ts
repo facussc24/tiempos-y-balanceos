@@ -1,7 +1,7 @@
 /**
  * PFD Validation
  *
- * 16 validation rules (V1-V16) for Process Flow Diagram documents.
+ * 17 validation rules (V1-V17) for Process Flow Diagram documents.
  * Pure functions, no side effects.
  */
 
@@ -278,6 +278,19 @@ export function validatePfdDocument(doc: PfdDocument): ValidationIssue[] {
                     stepId: step.id,
                 });
             }
+        }
+    }
+
+    // V17: Inspection step without reference or notes (C6-N1 — AIAG APQP §3.1 verification purpose)
+    for (const step of doc.steps) {
+        if ((step.stepType === 'inspection' || step.stepType === 'combined') &&
+            step.reference.trim() === '' && step.notes.trim() === '') {
+            issues.push({
+                rule: 'V17',
+                severity: 'info',
+                message: `Paso ${step.stepNumber || '(sin nº)'}: inspección sin referencia ni nota que indique método/criterio`,
+                stepId: step.id,
+            });
         }
     }
 

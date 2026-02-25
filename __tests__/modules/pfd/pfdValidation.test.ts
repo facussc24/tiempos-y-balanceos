@@ -420,6 +420,54 @@ describe('pfdValidation', () => {
         });
     });
 
+    describe('V17: inspection without reference or notes (C6-N1)', () => {
+        it('should info when inspection has no reference and no notes', () => {
+            const doc = makeDoc();
+            doc.steps[0].stepType = 'inspection';
+            doc.steps[0].reference = '';
+            doc.steps[0].notes = '';
+            const issues = validatePfdDocument(doc);
+            expect(issues.some(i => i.rule === 'V17' && i.severity === 'info')).toBe(true);
+        });
+
+        it('should info for combined step without reference and notes', () => {
+            const doc = makeDoc();
+            doc.steps[0].stepType = 'combined';
+            doc.steps[0].machineDeviceTool = 'Calibre';
+            doc.steps[0].reference = '';
+            doc.steps[0].notes = '';
+            const issues = validatePfdDocument(doc);
+            expect(issues.some(i => i.rule === 'V17')).toBe(true);
+        });
+
+        it('should not fire when inspection has reference', () => {
+            const doc = makeDoc();
+            doc.steps[0].stepType = 'inspection';
+            doc.steps[0].reference = 'Plano 123-A';
+            doc.steps[0].notes = '';
+            const issues = validatePfdDocument(doc);
+            expect(issues.filter(i => i.rule === 'V17')).toHaveLength(0);
+        });
+
+        it('should not fire when inspection has notes', () => {
+            const doc = makeDoc();
+            doc.steps[0].stepType = 'inspection';
+            doc.steps[0].reference = '';
+            doc.steps[0].notes = 'Verificar diámetro con calibre pasa-no pasa';
+            const issues = validatePfdDocument(doc);
+            expect(issues.filter(i => i.rule === 'V17')).toHaveLength(0);
+        });
+
+        it('should not fire for operation steps', () => {
+            const doc = makeDoc();
+            doc.steps[0].stepType = 'operation';
+            doc.steps[0].reference = '';
+            doc.steps[0].notes = '';
+            const issues = validatePfdDocument(doc);
+            expect(issues.filter(i => i.rule === 'V17')).toHaveLength(0);
+        });
+    });
+
     it('should return empty array for valid document', () => {
         const doc = makeDoc();
         const issues = validatePfdDocument(doc);

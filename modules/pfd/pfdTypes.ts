@@ -134,20 +134,21 @@ export const PFD_STEP_TYPES: { value: PfdStepType; label: string; color: string 
 ];
 
 /** Table column definitions — C3-N1: replaced isRework with rejectDisposition */
+/** C6-U1: Reduced widths to fit ~1530px (was ~1640px). C6-V1: CC/SC 75px. C6-V2: "Disp." label. */
 export const PFD_COLUMNS: PfdColumnDef[] = [
   { key: 'stepNumber',            label: 'Nº Op.',              width: '80px',  required: true,  type: 'text' },
   { key: 'stepType',              label: 'Símbolo',             width: '60px',  required: true,  type: 'symbol' },
   { key: 'description',           label: 'Descripción',         width: '250px', required: true,  type: 'text' },
-  { key: 'machineDeviceTool',     label: 'Máquina/Dispositivo', width: '200px', required: false, type: 'text' },
+  { key: 'machineDeviceTool',     label: 'Máquina/Dispositivo', width: '160px', required: false, type: 'text' },
   { key: 'productCharacteristic', label: 'Caract. Producto',    width: '200px', required: false, type: 'text' },
-  { key: 'productSpecialChar',    label: 'CC/SC Prod.',         width: '70px',  required: false, type: 'specialChar' },
+  { key: 'productSpecialChar',    label: 'CC/SC Prod.',         width: '75px',  required: false, type: 'specialChar' },
   { key: 'processCharacteristic', label: 'Caract. Proceso',     width: '200px', required: false, type: 'text' },
-  { key: 'processSpecialChar',    label: 'CC/SC Proc.',         width: '70px',  required: false, type: 'specialChar' },
-  { key: 'reference',             label: 'Referencia',          width: '120px', required: false, type: 'text' },
-  { key: 'department',            label: 'Área',                width: '100px', required: false, type: 'text' },
-  { key: 'notes',                 label: 'Notas',               width: '150px', required: false, type: 'text' },
-  { key: 'rejectDisposition',     label: 'Disposición',         width: '80px',  required: false, type: 'disposition' },
-  { key: 'isExternalProcess',     label: 'Externo',             width: '60px',  required: false, type: 'boolean' },
+  { key: 'processSpecialChar',    label: 'CC/SC Proc.',         width: '75px',  required: false, type: 'specialChar' },
+  { key: 'reference',             label: 'Referencia',          width: '100px', required: false, type: 'text' },
+  { key: 'department',            label: 'Área',                width: '80px',  required: false, type: 'text' },
+  { key: 'notes',                 label: 'Notas',               width: '120px', required: false, type: 'text' },
+  { key: 'rejectDisposition',     label: 'Disp.',               width: '80px',  required: false, type: 'disposition' },
+  { key: 'isExternalProcess',     label: 'Ext.',                width: '45px',  required: false, type: 'boolean' },
 ];
 
 /** Empty header with defaults */
@@ -185,6 +186,37 @@ export function getNextStepNumber(steps: PfdStep[]): string {
   const prefix = last.stepNumber.replace(/\d+\s*$/, '').trim() || 'OP';
   const next = lastNum > 0 ? lastNum + 10 : (steps.length + 1) * 10;
   return `${prefix} ${next}`;
+}
+
+/**
+ * C6-B1: Generate an intermediate step number between steps[afterIndex] and steps[afterIndex+1].
+ * E.g., between "OP 20" and "OP 30" → "OP 25". Falls back to getNextStepNumber if no room.
+ */
+export function getIntermediateStepNumber(steps: PfdStep[], afterIndex: number): string {
+  if (afterIndex < 0 || afterIndex >= steps.length) return getNextStepNumber(steps);
+
+  const current = steps[afterIndex];
+  const currentNum = parseStepNumber(current.stepNumber);
+  const prefix = current.stepNumber.replace(/\d+\s*$/, '').trim() || 'OP';
+
+  // If there's a next step, try to find a midpoint
+  if (afterIndex + 1 < steps.length) {
+    const nextNum = parseStepNumber(steps[afterIndex + 1].stepNumber);
+    if (nextNum > currentNum + 1) {
+      const mid = Math.floor((currentNum + nextNum) / 2);
+      return `${prefix} ${mid}`;
+    }
+  }
+
+  // No next step or no room → use current + 5 (half the standard 10 increment)
+  const candidate = currentNum + 5;
+  const existing = new Set(steps.map(s => parseStepNumber(s.stepNumber)));
+  if (!existing.has(candidate)) {
+    return `${prefix} ${candidate}`;
+  }
+
+  // Fallback: sequential after all steps
+  return getNextStepNumber(steps);
 }
 
 /** Create a new empty step */

@@ -111,7 +111,7 @@ const PfdTableRow: React.FC<Props> = ({ step, index, totalSteps, onUpdate, onBat
                     value={step.stepNumber}
                     onChange={handleTextChange('stepNumber')}
                     className={`${inputClass} text-center font-bold`}
-                    placeholder="Nº op."
+                    placeholder="OP 10"
                     disabled={readOnly}
                 />
             </td>

@@ -2,6 +2,10 @@
   "name": "barack-mercosul",
   "private": true,
   "version": "7.0.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/facussc24/tiempos-y-balanceos.git"
+  },
   "type": "module",
   "scripts": {
     "dev": "vite",
