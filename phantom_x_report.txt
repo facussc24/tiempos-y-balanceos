@@ -1,0 +1,35 @@
+================================================================================
+REPORTE DE RESULTADOS: ESCENARIO "PHANTOM X"
+================================================================================
+
+1. Manejo de la Inyección (T1 - 180s):
+   • Resultado Obtenido: 1 estación(es)/máquina(s) asignadas
+   • Cálculo: 180/50 = 3.6 → Se necesitan 4 moldes rotativos
+   • Validación: OK - Inyección no usa multi-manning
+
+2. Validación de Zonas (T3 vs T5):
+   • T3 (Flameado/Sucio): Estación 3
+   • T5 (LCD/Limpio): Estación 5
+   • Separación Respetada: SÍ ✓
+
+3. Estructura Final de la Línea:
+   • Estación 1: T1, T2 | Zona: ZONA_HUMEDA | Replicas: 1
+   • Estación 3: T3 | Zona: ZONA_SUCIA | Replicas: 1
+   • Estación 4: T4 | Zona: ZONA_ENSAMBLE | Replicas: 1
+   • Estación 5: T5, T6 | Zona: ZONA_LIMPIA_ESD | Replicas: 1
+
+4. Eficiencia Técnica Real:
+   • Suma de Tiempos: 330s
+   • Estaciones Usadas: 4
+   • Máquinas Extra (Inyección): 3
+   • Denominador: (4 + 3) × 50 = 350
+   • Eficiencia: 94.3%
+
+5. Comparativa Greedy vs GA:
+   • Greedy: 4 estaciones, 25.0% eficiencia
+   • GA: 4 estaciones, 25.0% eficiencia
+   • Mejora: 0 estaciones ahorradas
+
+================================================================================
+FIN DEL REPORTE
+================================================================================

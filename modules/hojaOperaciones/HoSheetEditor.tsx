@@ -1,0 +1,295 @@
+/**
+ * Sheet Editor — Main editing area for a single Hoja de Operaciones.
+ * Layout replicates the real "HO 952 REV.06" paper format:
+ *   Header (3-row table with logo) → Visual Aids + Steps → EPP → Quality Checks → Reaction Plan
+ */
+
+import React from 'react';
+import { HojaOperacion, HoStep, HoVisualAid, PpeItem, HoStatus } from './hojaOperacionesTypes';
+import HoPpeSelector from './HoPpeSelector';
+import HoStepEditor from './HoStepEditor';
+import HoQualityCheckTable from './HoQualityCheckTable';
+import HoVisualAidPanel from './HoVisualAidPanel';
+import barackLogo from '../../src/assets/barack_logo.png';
+import { Shield, ClipboardCheck, AlertTriangle, Camera, ListOrdered } from 'lucide-react';
+
+interface Props {
+    sheet: HojaOperacion;
+    formNumber: string;
+    clientName: string;
+    onUpdateField: <K extends keyof HojaOperacion>(field: K, value: HojaOperacion[K]) => void;
+    onAddStep: () => void;
+    onRemoveStep: (stepId: string) => void;
+    onUpdateStep: (stepId: string, field: keyof HoStep, value: any) => void;
+    onReorderSteps: (fromIndex: number, toIndex: number) => void;
+    onTogglePpe: (item: PpeItem) => void;
+    onAddVisualAid: (imageData: string, caption: string) => void;
+    onRemoveVisualAid: (aidId: string) => void;
+    onUpdateVisualAidCaption: (aidId: string, caption: string) => void;
+    onUpdateQualityCheckRegistro: (checkId: string, value: string) => void;
+    onUpdateReactionPlan: (text: string) => void;
+    onUpdateReactionContact: (contact: string) => void;
+    readOnly?: boolean;
+}
+
+const NAVY = '#1e3a5f';
+
+function SectionHeader({ icon, title, color = 'navy' }: { icon: React.ReactNode; title: string; color?: string }) {
+    if (color === 'navy') {
+        return (
+            <div className="flex items-center gap-2 px-3 py-1.5 border-b text-xs font-semibold text-white" style={{ background: NAVY }}>
+                {icon}
+                {title}
+            </div>
+        );
+    }
+    const colorClasses: Record<string, string> = {
+        red: 'bg-red-50 text-red-800 border-red-200',
+        green: 'bg-green-50 text-green-800 border-green-200',
+    };
+    return (
+        <div className={`flex items-center gap-2 px-3 py-1.5 rounded-t border-b text-xs font-semibold ${colorClasses[color] || ''}`}>
+            {icon}
+            {title}
+        </div>
+    );
+}
+
+const HoSheetEditor: React.FC<Props> = ({
+    sheet,
+    formNumber,
+    clientName,
+    onUpdateField,
+    onAddStep,
+    onRemoveStep,
+    onUpdateStep,
+    onReorderSteps,
+    onTogglePpe,
+    onAddVisualAid,
+    onRemoveVisualAid,
+    onUpdateVisualAidCaption,
+    onUpdateQualityCheckRegistro,
+    onUpdateReactionPlan,
+    onUpdateReactionContact,
+    readOnly,
+}) => {
+    return (
+        <div className="max-w-[1200px] mx-auto space-y-3">
+            {/* ==================== HEADER (3-row structured table) ==================== */}
+            <div className="bg-white border border-gray-300 overflow-hidden rounded">
+                <table className="w-full border-collapse">
+                    <tbody>
+                        {/* Row 0: Logo | Title | HO Number */}
+                        <tr>
+                            <td className="w-[25%] border border-gray-300 p-2 align-middle">
+                                <img src={barackLogo} alt="Barack Mercosul" className="h-10 object-contain" />
+                            </td>
+                            <td className="w-[45%] border border-gray-300 p-2 text-center align-middle">
+                                <div className="text-lg font-bold tracking-wide" style={{ color: NAVY }}>
+                                    HOJA DE OPERACIONES
+                                </div>
+                            </td>
+                            <td className="w-[30%] border border-gray-300 p-2 text-right align-middle">
+                                <div className="text-[9px] text-gray-500">Form: {formNumber}</div>
+                                <div className="text-2xl font-bold" style={{ color: NAVY }}>
+                                    {sheet.hoNumber}
+                                </div>
+                            </td>
+                        </tr>
+
+                        {/* Row 1: Op Number | Denomination | Model + Realizo/Aprobo */}
+                        <tr>
+                            <td className="border border-gray-300 px-2 py-1">
+                                <div className="text-[9px] text-gray-500 font-semibold uppercase">N° DE OPERACION</div>
+                                <div className="text-xs font-medium">{sheet.operationNumber}</div>
+                            </td>
+                            <td className="border border-gray-300 px-2 py-1">
+                                <div className="text-[9px] text-gray-500 font-semibold uppercase">DENOMINACION DE LA OPERACION</div>
+                                <div className="text-xs font-medium">{sheet.operationName}</div>
+                            </td>
+                            <td className="border border-gray-300 px-2 py-1">
+                                <div className="text-[9px] text-gray-500 font-semibold uppercase">MODELO O VEHICULO</div>
+                                <input type="text" value={sheet.vehicleModel}
+                                    onChange={e => onUpdateField('vehicleModel', e.target.value)}
+                                    readOnly={readOnly}
+                                    className="w-full text-xs px-0 py-0.5 border-0 bg-transparent focus:outline-none" />
+                            </td>
+                        </tr>
+
+                        {/* Row 1b: Realizo | Aprobo | Fecha | Rev */}
+                        <tr>
+                            <td className="border border-gray-300 px-2 py-1" colSpan={1}>
+                                <div className="grid grid-cols-2 gap-2">
+                                    <div>
+                                        <div className="text-[9px] text-gray-500 font-semibold uppercase">Realizo:</div>
+                                        <input type="text" value={sheet.preparedBy}
+                                            onChange={e => onUpdateField('preparedBy', e.target.value)}
+                                            readOnly={readOnly}
+                                            className="w-full text-xs px-0 py-0.5 border-0 bg-transparent focus:outline-none" />
+                                    </div>
+                                    <div>
+                                        <div className="text-[9px] text-gray-500 font-semibold uppercase">Aprobo:</div>
+                                        <input type="text" value={sheet.approvedBy}
+                                            onChange={e => onUpdateField('approvedBy', e.target.value)}
+                                            readOnly={readOnly}
+                                            className="w-full text-xs px-0 py-0.5 border-0 bg-transparent focus:outline-none" />
+                                    </div>
+                                </div>
+                            </td>
+                            <td className="border border-gray-300 px-2 py-1" colSpan={1}>
+                                <div className="grid grid-cols-2 gap-2">
+                                    <div>
+                                        <div className="text-[9px] text-gray-500 font-semibold uppercase">Fecha:</div>
+                                        <input type="date" value={sheet.date}
+                                            onChange={e => onUpdateField('date', e.target.value)}
+                                            readOnly={readOnly}
+                                            className="w-full text-xs px-0 py-0.5 border-0 bg-transparent focus:outline-none" />
+                                    </div>
+                                    <div>
+                                        <div className="text-[9px] text-gray-500 font-semibold uppercase">Rev.</div>
+                                        <input type="text" value={sheet.revision}
+                                            onChange={e => onUpdateField('revision', e.target.value)}
+                                            readOnly={readOnly}
+                                            className="w-full text-xs px-0 py-0.5 border-0 bg-transparent focus:outline-none" />
+                                    </div>
+                                </div>
+                            </td>
+                            <td className="border border-gray-300 px-2 py-1 align-middle text-center" colSpan={1}>
+                                <span className={`px-2 py-0.5 rounded text-[10px] font-medium ${
+                                    sheet.status === 'aprobado' ? 'bg-green-500 text-white'
+                                    : sheet.status === 'pendienteRevision' ? 'bg-yellow-400 text-yellow-900'
+                                    : 'bg-gray-200 text-gray-600'
+                                }`}>
+                                    {sheet.status === 'aprobado' ? 'APROBADO'
+                                    : sheet.status === 'pendienteRevision' ? 'PENDIENTE REV.'
+                                    : 'BORRADOR'}
+                                </span>
+                            </td>
+                        </tr>
+
+                        {/* Row 2: Sector | Cod Pieza | Cliente + Puesto */}
+                        <tr>
+                            <td className="border border-gray-300 px-2 py-1">
+                                <div className="text-[9px] text-gray-500 font-semibold uppercase">SECTOR</div>
+                                <input type="text" value={sheet.sector}
+                                    onChange={e => onUpdateField('sector', e.target.value)}
+                                    readOnly={readOnly} placeholder="Ej: INYECCION"
+                                    className="w-full text-xs px-0 py-0.5 border-0 bg-transparent focus:outline-none" />
+                            </td>
+                            <td className="border border-gray-300 px-2 py-1">
+                                <div className="text-[9px] text-gray-500 font-semibold uppercase">COD. DE PIEZA / DESCRIPCION</div>
+                                <input type="text" value={sheet.partCodeDescription}
+                                    onChange={e => onUpdateField('partCodeDescription', e.target.value)}
+                                    readOnly={readOnly}
+                                    className="w-full text-xs px-0 py-0.5 border-0 bg-transparent focus:outline-none" />
+                            </td>
+                            <td className="border border-gray-300 px-2 py-1">
+                                <div className="grid grid-cols-2 gap-2">
+                                    <div>
+                                        <div className="text-[9px] text-gray-500 font-semibold uppercase">Cliente</div>
+                                        <input type="text" value={clientName} readOnly
+                                            className="w-full text-xs px-0 py-0.5 border-0 bg-transparent text-gray-400"
+                                            placeholder="-" />
+                                    </div>
+                                    <div>
+                                        <div className="text-[9px] text-gray-500 font-semibold uppercase">N° Puesto</div>
+                                        <input type="text" value={sheet.puestoNumber}
+                                            onChange={e => onUpdateField('puestoNumber', e.target.value)}
+                                            readOnly={readOnly} placeholder="-"
+                                            className="w-full text-xs px-0 py-0.5 border-0 bg-transparent focus:outline-none" />
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            {/* ==================== BODY: Visual Aids (left 40%) + Steps + PPE (right 60%) ==================== */}
+            <div className="grid grid-cols-1 md:grid-cols-[40%_60%] gap-3">
+                {/* Visual Aids */}
+                <div className="bg-white rounded border border-gray-200 overflow-hidden">
+                    <SectionHeader icon={<Camera size={14} />} title="AYUDAS VISUALES" />
+                    <div className="p-3">
+                        <HoVisualAidPanel
+                            aids={sheet.visualAids}
+                            onAdd={onAddVisualAid}
+                            onRemove={onRemoveVisualAid}
+                            onUpdateCaption={onUpdateVisualAidCaption}
+                            readOnly={readOnly}
+                        />
+                    </div>
+                </div>
+
+                {/* Steps + PPE */}
+                <div className="bg-white rounded border border-gray-200 overflow-hidden">
+                    <SectionHeader icon={<ListOrdered size={14} />} title="DESCRIPCION DE LA OPERACION" />
+                    <div className="p-3">
+                        <HoStepEditor
+                            steps={sheet.steps}
+                            onAdd={onAddStep}
+                            onRemove={onRemoveStep}
+                            onUpdate={onUpdateStep}
+                            onReorder={onReorderSteps}
+                            readOnly={readOnly}
+                        />
+                    </div>
+
+                    {/* EPP inside right column, bottom */}
+                    <div className="border-t border-gray-200">
+                        <SectionHeader icon={<Shield size={14} />} title="ELEMENTOS DE SEGURIDAD" />
+                        <div className="p-3">
+                            <HoPpeSelector
+                                selected={sheet.safetyElements}
+                                onToggle={onTogglePpe}
+                                readOnly={readOnly}
+                            />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* ==================== QUALITY CHECKS ==================== */}
+            <div className="bg-white rounded border border-gray-200 overflow-hidden">
+                <SectionHeader icon={<ClipboardCheck size={14} />} title="CICLO DE CONTROL" color="green" />
+                <div className="px-3 pt-1 pb-0">
+                    <span className="text-[10px] text-gray-500 italic">Referencia: OP - Operador de Produccion</span>
+                </div>
+                <div className="p-3 pt-1">
+                    <HoQualityCheckTable
+                        checks={sheet.qualityChecks}
+                        onUpdateRegistro={onUpdateQualityCheckRegistro}
+                        readOnly={readOnly}
+                    />
+                </div>
+            </div>
+
+            {/* ==================== REACTION PLAN ==================== */}
+            <div className="bg-white rounded border border-gray-200 overflow-hidden">
+                <SectionHeader icon={<AlertTriangle size={14} />} title="PLAN DE REACCION ANTE NO CONFORME" color="red" />
+                <div className="p-3 space-y-2">
+                    <textarea
+                        value={sheet.reactionPlanText}
+                        onChange={e => onUpdateReactionPlan(e.target.value)}
+                        readOnly={readOnly}
+                        rows={4}
+                        className="w-full px-2 py-1.5 text-xs border border-gray-200 rounded resize-none focus:outline-none focus:ring-1 focus:ring-blue-400 focus:border-blue-400 font-bold text-red-700 uppercase"
+                    />
+                    <div className="flex items-center gap-2">
+                        <label className="text-[10px] text-gray-500 uppercase">Contacto:</label>
+                        <input
+                            type="text"
+                            value={sheet.reactionContact}
+                            onChange={e => onUpdateReactionContact(e.target.value)}
+                            readOnly={readOnly}
+                            placeholder="Ej: Supervisor / Lider de celda"
+                            className="flex-1 px-2 py-1 text-xs border border-gray-200 rounded focus:border-blue-400 focus:ring-1 focus:ring-blue-400 outline-none"
+                        />
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export default HoSheetEditor;

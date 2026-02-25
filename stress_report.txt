@@ -1,0 +1,12 @@
+RESULTADOS DEL TEST DE ESTRES
+1. Comparativa de Motores:
+• Método Básico (Greedy): [26] Estaciones | Eficiencia: [100.0]%
+• Método Genético (IA): [26] Estaciones | Eficiencia: [100.0]%
+• Ganancia: Se redujeron [0] estaciones o se mejoró el balance en [0.0]%.
+2. Validación de Restricciones:
+• Paralelismo: ¿La tarea de 140s se dividió en 3? [SÍ]
+• Zonificación: ¿Se respetó la zona de soldadura? [SÍ]
+3. Calidad del Balanceo (Suavizado):
+• Índice de Suavidad (Smoothness): [7.93]
+4. Notas de UX:
+• Iteración rápida. Parallelism badge visible.

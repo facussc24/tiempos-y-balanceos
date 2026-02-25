@@ -1,0 +1,41 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Enables default permissions for Barack Mercosul application",
+  "windows": [
+    "main"
+  ],
+  "permissions": [
+    "core:default",
+    "core:window:allow-create",
+    "core:window:allow-show",
+    "core:window:allow-set-title",
+    "core:webview:allow-create-webview-window",
+    "dialog:default",
+    "dialog:allow-open",
+    "dialog:allow-save",
+    "dialog:allow-message",
+    "dialog:allow-ask",
+    "fs:default",
+    "fs:allow-home-read-recursive",
+    "fs:allow-home-write-recursive",
+    "fs:allow-document-read-recursive",
+    "fs:allow-document-write-recursive",
+    "fs:allow-desktop-read-recursive",
+    "fs:allow-desktop-write-recursive",
+    "fs:allow-download-read-recursive",
+    "fs:allow-download-write-recursive",
+    {
+      "identifier": "fs:scope",
+      "allow": [
+        "Y:\\**",
+        "$DOCUMENT/**"
+      ]
+    },
+    "sql:default",
+    "sql:allow-load",
+    "sql:allow-execute",
+    "sql:allow-select",
+    "sql:allow-close"
+  ]
+}

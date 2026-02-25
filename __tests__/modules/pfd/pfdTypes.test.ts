@@ -1,0 +1,192 @@
+import { createEmptyStep, createEmptyPfdDocument, PFD_COLUMNS, PFD_STEP_TYPES, EMPTY_PFD_HEADER, normalizePfdStep } from '../../../modules/pfd/pfdTypes';
+
+describe('pfdTypes', () => {
+    describe('createEmptyStep', () => {
+        it('should create a step with a UUID id', () => {
+            const step = createEmptyStep();
+            expect(step.id).toBeTruthy();
+            expect(typeof step.id).toBe('string');
+        });
+
+        it('should default to operation type', () => {
+            const step = createEmptyStep();
+            expect(step.stepType).toBe('operation');
+        });
+
+        it('should have empty strings for text fields', () => {
+            const step = createEmptyStep();
+            expect(step.description).toBe('');
+            expect(step.machineDeviceTool).toBe('');
+            expect(step.reference).toBe('');
+        });
+
+        it('should default special chars to none', () => {
+            const step = createEmptyStep();
+            expect(step.productSpecialChar).toBe('none');
+            expect(step.processSpecialChar).toBe('none');
+        });
+
+        it('should default booleans to false', () => {
+            const step = createEmptyStep();
+            expect(step.isRework).toBe(false);
+            expect(step.isExternalProcess).toBe(false);
+        });
+
+        it('should create unique IDs', () => {
+            const s1 = createEmptyStep();
+            const s2 = createEmptyStep();
+            expect(s1.id).not.toBe(s2.id);
+        });
+    });
+
+    describe('createEmptyPfdDocument', () => {
+        it('should create a document with a UUID id', () => {
+            const doc = createEmptyPfdDocument();
+            expect(doc.id).toBeTruthy();
+        });
+
+        it('should have an empty header with defaults', () => {
+            const doc = createEmptyPfdDocument();
+            expect(doc.header.companyName).toBe('Barack Mercosul');
+            expect(doc.header.plantLocation).toBe('Hurlingham, Buenos Aires');
+            expect(doc.header.revisionLevel).toBe('A');
+        });
+
+        it('should have one initial reception step (AIAG)', () => {
+            const doc = createEmptyPfdDocument();
+            expect(doc.steps).toHaveLength(1);
+            expect(doc.steps[0].stepType).toBe('storage');
+            expect(doc.steps[0].description).toBe('Recepción de materia prima');
+            expect(doc.steps[0].stepNumber).toBe('OP 10');
+        });
+
+        it('should have timestamps', () => {
+            const doc = createEmptyPfdDocument();
+            expect(doc.createdAt).toBeTruthy();
+            expect(doc.updatedAt).toBeTruthy();
+        });
+    });
+
+    describe('PFD_STEP_TYPES', () => {
+        it('should have 7 step types', () => {
+            expect(PFD_STEP_TYPES).toHaveLength(7);
+        });
+
+        it('should include all expected types', () => {
+            const values = PFD_STEP_TYPES.map(t => t.value);
+            expect(values).toContain('operation');
+            expect(values).toContain('transport');
+            expect(values).toContain('inspection');
+            expect(values).toContain('storage');
+            expect(values).toContain('delay');
+            expect(values).toContain('decision');
+            expect(values).toContain('combined');
+        });
+
+        it('should have label and color for each type', () => {
+            for (const t of PFD_STEP_TYPES) {
+                expect(t.label).toBeTruthy();
+                expect(t.color).toBeTruthy();
+            }
+        });
+    });
+
+    describe('PFD_COLUMNS', () => {
+        it('should have 13 columns', () => {
+            expect(PFD_COLUMNS).toHaveLength(13);
+        });
+
+        it('should have stepNumber, stepType, and description as required', () => {
+            const required = PFD_COLUMNS.filter(c => c.required);
+            const keys = required.map(c => c.key);
+            expect(keys).toContain('stepNumber');
+            expect(keys).toContain('stepType');
+            expect(keys).toContain('description');
+        });
+
+        it('should have width for each column', () => {
+            for (const col of PFD_COLUMNS) {
+                expect(col.width).toMatch(/^\d+px$/);
+            }
+        });
+    });
+
+    describe('createEmptyStep — C3-N1 disposition fields', () => {
+        it('should default rejectDisposition to none', () => {
+            const step = createEmptyStep();
+            expect(step.rejectDisposition).toBe('none');
+        });
+
+        it('should default scrapDescription to empty string', () => {
+            const step = createEmptyStep();
+            expect(step.scrapDescription).toBe('');
+        });
+    });
+
+    describe('normalizePfdStep', () => {
+        it('should fill missing rejectDisposition from isRework=true', () => {
+            const raw = { id: 'test-1', isRework: true } as Record<string, unknown> & { id: string };
+            const step = normalizePfdStep(raw);
+            expect(step.rejectDisposition).toBe('rework');
+        });
+
+        it('should fill missing rejectDisposition from isRework=false', () => {
+            const raw = { id: 'test-2', isRework: false } as Record<string, unknown> & { id: string };
+            const step = normalizePfdStep(raw);
+            expect(step.rejectDisposition).toBe('none');
+        });
+
+        it('should preserve existing rejectDisposition', () => {
+            const raw = { id: 'test-3', rejectDisposition: 'scrap', isRework: false } as Record<string, unknown> & { id: string };
+            const step = normalizePfdStep(raw);
+            expect(step.rejectDisposition).toBe('scrap');
+        });
+
+        it('should fill scrapDescription as empty string if missing', () => {
+            const raw = { id: 'test-4' } as Record<string, unknown> & { id: string };
+            const step = normalizePfdStep(raw);
+            expect(step.scrapDescription).toBe('');
+        });
+
+        it('should preserve existing scrapDescription', () => {
+            const raw = { id: 'test-5', scrapDescription: 'Dimensional', rejectDisposition: 'scrap' } as Record<string, unknown> & { id: string };
+            const step = normalizePfdStep(raw);
+            expect(step.scrapDescription).toBe('Dimensional');
+        });
+
+        it('should fill all default fields for minimal raw input', () => {
+            const raw = { id: 'test-6' } as Record<string, unknown> & { id: string };
+            const step = normalizePfdStep(raw);
+            expect(step.stepType).toBe('operation');
+            expect(step.description).toBe('');
+            expect(step.isExternalProcess).toBe(false);
+        });
+    });
+
+    describe('PFD_COLUMNS — C3-N1 disposition column', () => {
+        it('should have rejectDisposition column instead of isRework', () => {
+            const keys = PFD_COLUMNS.map(c => c.key);
+            expect(keys).toContain('rejectDisposition');
+            expect(keys).not.toContain('isRework');
+        });
+
+        it('should have disposition type for rejectDisposition column', () => {
+            const col = PFD_COLUMNS.find(c => c.key === 'rejectDisposition');
+            expect(col?.type).toBe('disposition');
+        });
+    });
+
+    describe('EMPTY_PFD_HEADER', () => {
+        it('should have Barack Mercosul as default company', () => {
+            expect(EMPTY_PFD_HEADER.companyName).toBe('Barack Mercosul');
+        });
+
+        it('should default revision to A', () => {
+            expect(EMPTY_PFD_HEADER.revisionLevel).toBe('A');
+        });
+
+        it('should have a date for revisionDate', () => {
+            expect(EMPTY_PFD_HEADER.revisionDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+        });
+    });
+});
