@@ -9,8 +9,8 @@
 
 ## 1. Resumen Ejecutivo
 
-Se realizaron **cinco pases** de revisión y mejora del módulo Flujograma de Proceso.
-Se identificaron **33 hallazgos** clasificados en 5 categorías y se corrigieron **todos los hallazgos**.
+Se realizaron **seis pases** de revisión y mejora del módulo Flujograma de Proceso.
+Se identificaron **34 hallazgos** clasificados en 5 categorías y se corrigieron **todos los hallazgos**.
 
 ### Pase 1 (C7) — Revisión inicial
 | Categoría     | Hallazgos | Corregidos | Pendientes |
@@ -49,15 +49,21 @@ Se identificaron **33 hallazgos** clasificados en 5 categorías y se corrigieron
 | UX            | 4         | 4          | 0          |
 | **Total**     | **4**     | **4**      | **0**      |
 
-### Totales combinados (C7+C8+C9+C10+C11)
+### Pase 6 (C12-UX) — Fix columna Ext. oculta
 | Categoría     | Hallazgos | Corregidos | Pendientes |
 |---------------|-----------|------------|------------|
-| BUGS          | 4         | 4          | 0          |
+| BUGS          | 1         | 1          | 0          |
+| **Total**     | **1**     | **1**      | **0**      |
+
+### Totales combinados (C7+C8+C9+C10+C11+C12)
+| Categoría     | Hallazgos | Corregidos | Pendientes |
+|---------------|-----------|------------|------------|
+| BUGS          | 5         | 5          | 0          |
 | NORMA         | 8         | 8          | 0          |
 | UX            | 14        | 14         | 0          |
 | VISUAL        | 1         | 1          | 0          |
 | EXPORTACIÓN   | 6         | 6          | 0          |
-| **Total**     | **33**    | **33**     | **0**      |
+| **Total**     | **34**    | **34**     | **0**      |
 
 **Resultado final:** `tsc --noEmit` limpio, **177 suites de test**, **2595 tests pass**, **0 failures**.
 
@@ -622,4 +628,34 @@ Los 5 botones (↑↓+⧉🗑) con `gap-0.5` y `flex-wrap` se wrapeaban en 2 fil
 ### C11 — GitHub
 
 - **Commit:** `6d83f6d` — "PFD C11-UX: Sticky actions, compact layout, tooltips, subtle placeholders"
+- **Push:** `origin/main` actualizado
+
+---
+
+## PASE 6 (C12-UX) — Fix Columna Ext. Oculta por Sticky Actions
+
+### C12 — Hallazgo
+
+| ID | Categoría | Severidad | Hallazgo | Solución |
+|----|-----------|-----------|----------|----------|
+| UX-9 | BUGS | P0 | La columna "Ext." (checkbox proceso externo, 45px) queda completamente oculta detrás de la columna Acciones sticky. Causa: `p-4` del container = 32px padding + 2px border → 1502px disponible, pero tabla era 1545px → 43px de overflow exactamente coincide con Ext. (45px) | Reducir anchos: Descripción 250→240, Caract.Producto 160→150, Caract.Proceso 160→150, Notas 100→85. Nuevo total: 1410+90=1500px (cabe en 1502px) |
+
+### C12 — Archivos modificados
+
+| Archivo | Cambio |
+|---------|--------|
+| `modules/pfd/pfdTypes.ts` | Anchos de 4 columnas reducidos para que tabla quepa en container |
+
+### C12 — Verificación
+
+- [x] tsc --noEmit limpio
+- [x] Documento vacío: todas las columnas visibles (Ext. entre Disp. y Acciones)
+- [x] Plantilla manufactura (12 pasos): columna Ext. visible, checkbox funcional
+- [x] Zoom en zona derecha: Disp. → Ext. → Acciones sin solapamiento
+- [x] Flujo paralelo, badges de branch, flechas: todo intacto
+- [x] 9 suites PFD, 206 tests PFD, 0 failures
+
+### C12 — GitHub
+
+- **Commit:** `f725463` — "PFD C12-UX9: Fix Ext. column hidden behind sticky Actions"
 - **Push:** `origin/main` actualizado
