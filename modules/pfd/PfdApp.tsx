@@ -503,7 +503,7 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding }) => {
     // Table total width
     const tableWidth = useMemo(() => {
         const cols = PFD_COLUMNS.reduce((sum, col) => sum + parseInt(col.width), 0);
-        return cols + (isReadOnly ? 0 : 110); // 110px for actions column (5 buttons)
+        return cols + (isReadOnly ? 0 : 90); // C11-UX6: 90px for compact actions column
     }, [isReadOnly]);
 
     const errorCount = validationIssues?.filter(i => i.severity === 'error').length;

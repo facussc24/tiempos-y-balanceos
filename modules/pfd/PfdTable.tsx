@@ -210,8 +210,9 @@ const PfdTable: React.FC<Props> = ({ steps, onUpdateStep, onBatchUpdateStep, onR
                         return (
                             <th
                                 key={col.key}
-                                className={`px-2 py-2.5 text-xs font-semibold text-white text-center border-r border-cyan-500/30 whitespace-nowrap ${isSticky ? 'sticky z-30 bg-cyan-600 shadow-[2px_0_4px_rgba(0,0,0,0.1)]' : ''}`}
+                                className={`px-2 py-2.5 text-xs font-semibold text-white text-center border-r border-cyan-500/30 whitespace-nowrap ${isSticky ? 'sticky z-30 bg-cyan-600 shadow-[2px_0_4px_rgba(0,0,0,0.1)]' : ''} ${col.tooltip ? 'cursor-help' : ''}`}
                                 style={{ width: col.width, ...(isSticky ? { left: `${stickyLeft}px` } : {}) }}
+                                title={col.tooltip}
                             >
                                 {col.label}
                                 {col.required && <span className="text-cyan-200 ml-0.5">*</span>}
@@ -219,7 +220,7 @@ const PfdTable: React.FC<Props> = ({ steps, onUpdateStep, onBatchUpdateStep, onR
                         );
                     })}
                     {!readOnly && (
-                        <th className="px-2 py-2.5 text-xs font-semibold text-white text-center" style={{ width: '110px' }}>
+                        <th className="px-2 py-2.5 text-xs font-semibold text-white text-center sticky right-0 z-30 bg-teal-600 shadow-[-2px_0_4px_rgba(0,0,0,0.1)]" style={{ width: '90px' }}>
                             Acciones
                         </th>
                     )}

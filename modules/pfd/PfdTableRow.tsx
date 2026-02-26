@@ -27,7 +27,7 @@ interface Props {
 }
 
 const cellClass = "px-2 py-1.5 border-r border-gray-200 text-sm";
-const inputClass = "w-full bg-transparent border-0 outline-none text-sm focus:ring-1 focus:ring-cyan-300 rounded px-1";
+const inputClass = "w-full bg-transparent border-0 outline-none text-sm focus:ring-1 focus:ring-cyan-300 rounded px-1 placeholder:text-gray-300 placeholder:text-xs";
 
 /** C3-V2: Subtle background tint per step type */
 const TYPE_TINTS: Partial<Record<PfdStepType, string>> = {
@@ -381,50 +381,50 @@ const PfdTableRow: React.FC<Props> = ({ step, index, totalSteps, onUpdate, onBat
                 />
             </td>
 
-            {/* Actions */}
+            {/* Actions — C11-UX5: Sticky right + C11-UX6: Compact single row */}
             {!readOnly && (
-                <td className="px-1 py-1 text-center whitespace-nowrap">
-                    <div className="flex items-center gap-0.5 justify-center flex-wrap">
+                <td className={`px-1 py-1 text-center whitespace-nowrap sticky right-0 z-10 ${stickyBg} shadow-[-2px_0_4px_rgba(0,0,0,0.06)]`}>
+                    <div className="flex items-center gap-px justify-center">
                         <button
                             onClick={() => onMove(step.id, 'up')}
                             disabled={index === 0}
-                            className="p-1 text-gray-400 hover:text-cyan-600 disabled:opacity-30 transition"
+                            className="p-0.5 text-gray-400 hover:text-cyan-600 disabled:opacity-30 transition"
                             title="Mover arriba"
                         >
-                            <ArrowUp size={14} />
+                            <ArrowUp size={13} />
                         </button>
                         <button
                             onClick={() => onMove(step.id, 'down')}
                             disabled={index === totalSteps - 1}
-                            className="p-1 text-gray-400 hover:text-cyan-600 disabled:opacity-30 transition"
+                            className="p-0.5 text-gray-400 hover:text-cyan-600 disabled:opacity-30 transition"
                             title="Mover abajo"
                         >
-                            <ArrowDown size={14} />
+                            <ArrowDown size={13} />
                         </button>
                         {onInsertAfter && (
                             <button
                                 onClick={() => onInsertAfter(step.id)}
-                                className="p-1 text-gray-400 hover:text-green-600 transition"
+                                className="p-0.5 text-gray-400 hover:text-green-600 transition"
                                 title="Insertar paso debajo"
                             >
-                                <Plus size={14} />
+                                <Plus size={13} />
                             </button>
                         )}
                         {onDuplicate && (
                             <button
                                 onClick={() => onDuplicate(step.id)}
-                                className="p-1 text-gray-400 hover:text-blue-600 transition"
+                                className="p-0.5 text-gray-400 hover:text-blue-600 transition"
                                 title="Duplicar paso"
                             >
-                                <Copy size={14} />
+                                <Copy size={13} />
                             </button>
                         )}
                         <button
                             onClick={() => onRemove(step.id)}
-                            className="p-1 text-gray-400 hover:text-red-500 transition"
+                            className="p-0.5 text-gray-400 hover:text-red-500 transition"
                             title="Eliminar paso"
                         >
-                            <Trash2 size={14} />
+                            <Trash2 size={13} />
                         </button>
                     </div>
                 </td>
