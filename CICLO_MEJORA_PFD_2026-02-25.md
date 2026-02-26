@@ -9,8 +9,8 @@
 
 ## 1. Resumen Ejecutivo
 
-Se realizaron **siete pases** de revisión y mejora del módulo Flujograma de Proceso.
-Se identificaron **37 hallazgos** clasificados en 6 categorías y se corrigieron **todos los hallazgos**.
+Se realizaron **ocho pases** de revisión y mejora del módulo Flujograma de Proceso.
+Se identificaron **41 hallazgos** clasificados en 6 categorías y se corrigieron **todos los hallazgos**.
 
 ### Pase 1 (C7) — Revisión inicial
 | Categoría     | Hallazgos | Corregidos | Pendientes |
@@ -62,16 +62,23 @@ Se identificaron **37 hallazgos** clasificados en 6 categorías y se corrigieron
 | A11Y          | 2         | 2          | 0          |
 | **Total**     | **3**     | **3**      | **0**      |
 
-### Totales combinados (C7+C8+C9+C10+C11+C12+C13)
+### Pase 8 (C14-UX) — NG→NOK, PDF blanco, filenames, modo vista
+| Categoría     | Hallazgos | Corregidos | Pendientes |
+|---------------|-----------|------------|------------|
+| UX            | 2         | 2          | 0          |
+| EXPORTACIÓN   | 2         | 2          | 0          |
+| **Total**     | **4**     | **4**      | **0**      |
+
+### Totales combinados (C7–C14)
 | Categoría     | Hallazgos | Corregidos | Pendientes |
 |---------------|-----------|------------|------------|
 | BUGS          | 6         | 6          | 0          |
 | NORMA         | 8         | 8          | 0          |
-| UX            | 14        | 14         | 0          |
+| UX            | 16        | 16         | 0          |
 | VISUAL        | 1         | 1          | 0          |
-| EXPORTACIÓN   | 6         | 6          | 0          |
+| EXPORTACIÓN   | 8         | 8          | 0          |
 | A11Y          | 2         | 2          | 0          |
-| **Total**     | **37**    | **37**     | **0**      |
+| **Total**     | **41**    | **41**     | **0**      |
 
 **Resultado final:** `tsc --noEmit` limpio, **177 suites de test**, **2595 tests pass**, **0 failures**.
 
@@ -697,4 +704,40 @@ Los 5 botones (↑↓+⧉🗑) con `gap-0.5` y `flex-wrap` se wrapeaban en 2 fil
 ### C13 — GitHub
 
 - **Commit:** `0bbd097` — "PFD C13-UX: Fix colgroup width, add title/aria-labels for a11y"
+- **Push:** `origin/main` actualizado
+
+---
+
+## PASE 8 (C14-UX) — NG→NOK, PDF Blanco, Filenames, Modo Vista
+
+### C14 — Hallazgos (reportados por usuario)
+
+| ID | Categoría | Severidad | Hallazgo | Solución |
+|----|-----------|-----------|----------|----------|
+| UX-13 | UX | P1 | "NG" en flechas de flujo incomprensible para usuarios argentinos. NG = Not Good (jerga japonesa) | Cambiar a "NOK" (No Conforme) en PfdTable.tsx y pfdPdfExport.ts |
+| UX-14 | UX | P0 | Modo vista (read-only) con letras casi invisibles. Causa: CSS global `input:disabled { opacity:0.6 }` + todos los inputs usan `disabled={readOnly}` | Reemplazar `disabled` por `readOnly` en 10 inputs de texto. Agregar `read-only:text-gray-700` + `read-only:placeholder:text-transparent`. Checkbox usa `pointer-events-none` |
+| EXP-7 | EXPORTACIÓN | P0 | PDF export sale todo blanco. Causa: container sin `background-color` + html2canvas sin `backgroundColor` | Agregar `background-color:#ffffff` al container y `backgroundColor:'#ffffff'` a opciones html2canvas |
+| EXP-8 | EXPORTACIÓN | P2 | Filename de PDF/Excel genera "PFD_PFD_fecha" cuando `partName` está vacío (fallback "PFD" + prefijo "PFD_") | Cadena de fallback: `partName → partNumber → documentNumber → 'Documento'` |
+
+### C14 — Archivos modificados
+
+| Archivo | Cambio |
+|---------|--------|
+| `modules/pfd/PfdTable.tsx` | "NG" → "NOK" en flow arrow annotation |
+| `modules/pfd/PfdTableRow.tsx` | `disabled={readOnly}` → `readOnly={readOnly}` + `tabIndex` en 10 inputs; `read-only:*` CSS; checkbox `pointer-events-none` |
+| `modules/pfd/pfdPdfExport.ts` | "NG" → "NOK"; `backgroundColor:#ffffff` en container + html2canvas; filename fallback chain |
+| `modules/pfd/pfdExcelExport.ts` | Filename fallback chain |
+| `__tests__/modules/pfd/pfdPdfExport.test.ts` | Test "NG" → "NOK" |
+
+### C14 — Verificación
+
+- [x] tsc --noEmit limpio
+- [x] Flow arrow muestra "OK ↓ | NOK ← Retrabajo → OP 50" (zoom confirmado)
+- [x] Modo vista: texto perfectamente legible, sin opacity reducida, placeholders ocultos
+- [x] Columna Acciones desaparece en modo vista
+- [x] 9 suites PFD, 206 tests PFD, 0 failures
+
+### C14 — GitHub
+
+- **Commit:** `cd27503` — "PFD C14-UX: NG→NOK, fix PDF blank, fix filenames, fix read-only visibility"
 - **Push:** `origin/main` actualizado
