@@ -143,20 +143,20 @@ export const PFD_STEP_TYPES: { value: PfdStepType; label: string; color: string 
 ];
 
 /** Table column definitions — C3-N1: replaced isRework with rejectDisposition */
-/** C6-U1: Reduced widths. C11-UX6: Further reduced to ~1530px total. C11-UX7: Tooltips on abbreviated headers. */
+/** C11-UX9: Widths tuned to fit container (p-4 = 32px padding → ~1502px available). Total = 1410 + 90 Actions = 1500px. */
 export const PFD_COLUMNS: PfdColumnDef[] = [
   { key: 'stepNumber',            label: 'Nº Op.',              width: '80px',  required: true,  type: 'text' },
   { key: 'stepType',              label: 'Símbolo',             width: '60px',  required: true,  type: 'symbol' },
-  { key: 'description',           label: 'Descripción',         width: '250px', required: true,  type: 'text' },
+  { key: 'description',           label: 'Descripción',         width: '240px', required: true,  type: 'text' },
   { key: 'branchId',              label: 'Línea',               width: '90px',  required: false, type: 'text', tooltip: 'Línea paralela (Procesos Interdependientes)' },
   { key: 'machineDeviceTool',     label: 'Máquina/Disp.',       width: '140px', required: false, type: 'text', tooltip: 'Máquina / Dispositivo / Herramienta' },
-  { key: 'productCharacteristic', label: 'Caract. Producto',    width: '160px', required: false, type: 'text', tooltip: 'Característica de producto' },
+  { key: 'productCharacteristic', label: 'Caract. Producto',    width: '150px', required: false, type: 'text', tooltip: 'Característica de producto' },
   { key: 'productSpecialChar',    label: 'CC/SC',               width: '60px',  required: false, type: 'specialChar', tooltip: 'Característica Crítica / Significativa — Producto' },
-  { key: 'processCharacteristic', label: 'Caract. Proceso',     width: '160px', required: false, type: 'text', tooltip: 'Característica de proceso' },
+  { key: 'processCharacteristic', label: 'Caract. Proceso',     width: '150px', required: false, type: 'text', tooltip: 'Característica de proceso' },
   { key: 'processSpecialChar',    label: 'CC/SC',               width: '60px',  required: false, type: 'specialChar', tooltip: 'Característica Crítica / Significativa — Proceso' },
   { key: 'reference',             label: 'Referencia',          width: '90px',  required: false, type: 'text', tooltip: 'Plano / Especificación de referencia' },
   { key: 'department',            label: 'Área',                width: '80px',  required: false, type: 'text' },
-  { key: 'notes',                 label: 'Notas',               width: '100px', required: false, type: 'text' },
+  { key: 'notes',                 label: 'Notas',               width: '85px',  required: false, type: 'text' },
   { key: 'rejectDisposition',     label: 'Disp.',               width: '80px',  required: false, type: 'disposition', tooltip: 'Disposición de rechazo (Retrabajo / Descarte / Selección)' },
   { key: 'isExternalProcess',     label: 'Ext.',                width: '45px',  required: false, type: 'boolean', tooltip: 'Proceso externo (tercerizado)' },
 ];
