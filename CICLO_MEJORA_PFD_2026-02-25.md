@@ -9,8 +9,8 @@
 
 ## 1. Resumen Ejecutivo
 
-Se realizaron **seis pases** de revisión y mejora del módulo Flujograma de Proceso.
-Se identificaron **34 hallazgos** clasificados en 5 categorías y se corrigieron **todos los hallazgos**.
+Se realizaron **siete pases** de revisión y mejora del módulo Flujograma de Proceso.
+Se identificaron **37 hallazgos** clasificados en 6 categorías y se corrigieron **todos los hallazgos**.
 
 ### Pase 1 (C7) — Revisión inicial
 | Categoría     | Hallazgos | Corregidos | Pendientes |
@@ -55,15 +55,23 @@ Se identificaron **34 hallazgos** clasificados en 5 categorías y se corrigieron
 | BUGS          | 1         | 1          | 0          |
 | **Total**     | **1**     | **1**      | **0**      |
 
-### Totales combinados (C7+C8+C9+C10+C11+C12)
+### Pase 7 (C13-UX) — Colgroup fix + Accesibilidad
 | Categoría     | Hallazgos | Corregidos | Pendientes |
 |---------------|-----------|------------|------------|
-| BUGS          | 5         | 5          | 0          |
+| BUGS          | 1         | 1          | 0          |
+| A11Y          | 2         | 2          | 0          |
+| **Total**     | **3**     | **3**      | **0**      |
+
+### Totales combinados (C7+C8+C9+C10+C11+C12+C13)
+| Categoría     | Hallazgos | Corregidos | Pendientes |
+|---------------|-----------|------------|------------|
+| BUGS          | 6         | 6          | 0          |
 | NORMA         | 8         | 8          | 0          |
 | UX            | 14        | 14         | 0          |
 | VISUAL        | 1         | 1          | 0          |
 | EXPORTACIÓN   | 6         | 6          | 0          |
-| **Total**     | **34**    | **34**     | **0**      |
+| A11Y          | 2         | 2          | 0          |
+| **Total**     | **37**    | **37**     | **0**      |
 
 **Resultado final:** `tsc --noEmit` limpio, **177 suites de test**, **2595 tests pass**, **0 failures**.
 
@@ -658,4 +666,35 @@ Los 5 botones (↑↓+⧉🗑) con `gap-0.5` y `flex-wrap` se wrapeaban en 2 fil
 ### C12 — GitHub
 
 - **Commit:** `f725463` — "PFD C12-UX9: Fix Ext. column hidden behind sticky Actions"
+- **Push:** `origin/main` actualizado
+
+---
+
+## PASE 7 (C13-UX) — Colgroup Fix + Accesibilidad
+
+### C13 — Hallazgos
+
+| ID | Categoría | Severidad | Hallazgo | Solución |
+|----|-----------|-----------|----------|----------|
+| UX-10 | BUGS | P1 | `<colgroup>` asigna `110px` a columna Actions, pero `<th>` y `tableWidth` usan `90px` — inconsistencia desde C11 | Corregir colgroup a `90px` en PfdApp.tsx |
+| UX-11 | A11Y | P2 | Input `department` sin `title={step.department}` — texto truncado sin tooltip en hover | Agregar `title` igual que los otros inputs de texto |
+| UX-12 | A11Y | P2 | Selects (CC/SC prod, CC/SC proc, Línea, Disposición) y checkbox Externo sin `aria-label` — screen readers no describen el control | Agregar `aria-label` descriptivo a 5 controles |
+
+### C13 — Archivos modificados
+
+| Archivo | Cambio |
+|---------|--------|
+| `modules/pfd/PfdApp.tsx` | Colgroup Actions col `110px` → `90px` |
+| `modules/pfd/PfdTableRow.tsx` | +`title` en department, +`aria-label` en 4 selects y 1 checkbox |
+
+### C13 — Verificación
+
+- [x] tsc --noEmit limpio
+- [x] DOM: 4 selects con aria-label, checkbox con aria-label, department con title
+- [x] Colgroup última col = 90px (verificado vía JS)
+- [x] 9 suites PFD, 206 tests PFD, 0 failures
+
+### C13 — GitHub
+
+- **Commit:** `0bbd097` — "PFD C13-UX: Fix colgroup width, add title/aria-labels for a11y"
 - **Push:** `origin/main` actualizado
