@@ -114,7 +114,7 @@ const PfdSymbolPicker: React.FC<Props> = ({ value, onChange, disabled }) => {
         onClick={() => !disabled && (isOpen ? setIsOpen(false) : openDropdown())}
         onKeyDown={handleKeyDown}
         disabled={disabled}
-        className="flex items-center justify-center w-10 h-8 rounded border border-gray-300 hover:border-cyan-400 hover:bg-cyan-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
+        className={`flex items-center justify-center w-10 h-8 rounded border border-gray-300 transition ${disabled ? 'cursor-default' : 'hover:border-cyan-400 hover:bg-cyan-50'}`}
         title={currentType?.label || value}
         aria-haspopup="listbox"
         aria-expanded={isOpen}

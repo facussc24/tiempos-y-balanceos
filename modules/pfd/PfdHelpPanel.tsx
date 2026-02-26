@@ -92,7 +92,7 @@ const PfdHelpPanel: React.FC<Props> = ({ isOpen, onClose }) => {
                             <SymbolRow type="inspection" name="Inspección" desc="Verificación o control de calidad. Indicar qué se inspecciona y el criterio de aceptación." />
                             <SymbolRow type="storage" name="Almacenamiento" desc="Material almacenado (MP, WIP o PT). El flujo debe iniciar y terminar con este símbolo." />
                             <SymbolRow type="delay" name="Demora / Espera" desc="Tiempo de espera no productivo. Ej: secado, curado, espera por lote." />
-                            <SymbolRow type="decision" name="Decisión" desc="Punto de bifurcación lógica (Sí/No). Ej: '¿Pasó la inspección?' Usar para inspecciones con resultado OK/NG." />
+                            <SymbolRow type="decision" name="Decisión" desc="Punto de bifurcación lógica (Sí/No). Ej: '¿Pasó la inspección?' Usar para inspecciones con resultado OK/NOK." />
                             <SymbolRow type="combined" name="Op. + Inspección" desc="Operación con inspección integrada (autocontrol del operador)." />
                         </div>
                     </Section>
@@ -136,7 +136,7 @@ const PfdHelpPanel: React.FC<Props> = ({ isOpen, onClose }) => {
                             <li><strong>Selección (Sort):</strong> Las piezas se separan y clasifican. Indicar el criterio.</li>
                         </ul>
                         <p className="mt-1">
-                            El sistema mostrará automáticamente las rutas <strong>OK/NG</strong> en las flechas
+                            El sistema mostrará automáticamente las rutas <strong>OK/NOK</strong> en las flechas
                             de flujo cuando una inspección tiene disposición configurada.
                         </p>
                         <div className="bg-amber-50 border border-amber-200 rounded-lg p-2 mt-1">
@@ -168,7 +168,7 @@ const PfdHelpPanel: React.FC<Props> = ({ isOpen, onClose }) => {
                             <li><strong>Iniciar con Recepción:</strong> El primer paso debe ser tipo Almacenamiento — "Recepción de materia prima". Usar la plantilla como base.</li>
                             <li><strong>Agregar operaciones:</strong> Cada transformación del material es una Operación. Indicar máquina/equipo.</li>
                             <li><strong>Intercalar transportes:</strong> Entre áreas, agregar pasos de Transporte indicando el destino.</li>
-                            <li><strong>Agregar inspecciones:</strong> Puntos de verificación. Indicar qué se inspecciona, referencia al plano, y disposición de NG.</li>
+                            <li><strong>Agregar inspecciones:</strong> Puntos de verificación. Indicar qué se inspecciona, referencia al plano, y disposición de no conformes.</li>
                             <li><strong>Marcar CC/SC:</strong> Identificar características especiales en cada paso.</li>
                             <li><strong>Configurar flujos paralelos:</strong> Si el material se divide, asignar líneas paralelas (A/B/C/D).</li>
                             <li><strong>Terminar con Envío:</strong> Último paso tipo Almacenamiento — "Almacenamiento y envío al cliente".</li>
