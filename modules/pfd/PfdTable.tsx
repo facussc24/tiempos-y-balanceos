@@ -93,36 +93,32 @@ function FlowArrow({
         <tr className="flow-arrow-row" aria-hidden="true">
             <td colSpan={colCount} className="py-0 text-center border-0 bg-gray-50/30">
                 <div className="flex flex-col items-center gap-0">
-                    {/* Fork indicator */}
+                    {/* Fork indicator — compact */}
                     {isFork && (
-                        <div className="flex items-center justify-center gap-2 py-1">
-                            <div className="w-px h-2 bg-cyan-300" />
-                            <div className="flex items-center gap-1.5 px-2 py-0.5 bg-cyan-50 border border-cyan-200 rounded-full">
-                                <GitBranch size={12} className="text-cyan-600" />
-                                <span className="text-[10px] font-semibold text-cyan-700">FLUJO PARALELO</span>
+                        <div className="flex items-center justify-center py-0.5">
+                            <div className="flex items-center gap-1 px-2 py-px bg-cyan-50 border border-cyan-200 rounded-full">
+                                <GitBranch size={10} className="text-cyan-600" />
+                                <span className="text-[9px] font-semibold text-cyan-700">FLUJO PARALELO</span>
                                 {forkBranches.map(b => {
                                     const color = getBranchColor(b);
                                     const label = steps.find(s => s.branchId === b)?.branchLabel || `Línea ${b}`;
                                     return (
-                                        <span key={b} className={`inline-block ${color.badge} border text-[9px] font-bold px-1.5 py-0 rounded`}>
+                                        <span key={b} className={`inline-block ${color.badge} border text-[8px] font-bold px-1 py-0 rounded`}>
                                             {label}
                                         </span>
                                     );
                                 })}
                             </div>
-                            <div className="w-px h-2 bg-cyan-300" />
                         </div>
                     )}
 
-                    {/* Join indicator */}
+                    {/* Join indicator — compact */}
                     {isJoin && (
-                        <div className="flex items-center justify-center gap-2 py-1">
-                            <div className="w-px h-2 bg-cyan-300" />
-                            <div className="flex items-center gap-1.5 px-2 py-0.5 bg-teal-50 border border-teal-200 rounded-full">
-                                <GitMerge size={12} className="text-teal-600" />
-                                <span className="text-[10px] font-semibold text-teal-700">CONVERGENCIA</span>
+                        <div className="flex items-center justify-center py-0.5">
+                            <div className="flex items-center gap-1 px-2 py-px bg-teal-50 border border-teal-200 rounded-full">
+                                <GitMerge size={11} className="text-teal-600" />
+                                <span className="text-[9px] font-semibold text-teal-700">CONVERGENCIA</span>
                             </div>
-                            <div className="w-px h-2 bg-cyan-300" />
                         </div>
                     )}
 
@@ -181,19 +177,17 @@ function FlowArrow({
                         </div>
                     )}
 
-                    {/* Normal flow arrow */}
+                    {/* Normal flow arrow — compact */}
                     {!isFork && !isJoin && (
-                        <div className="flex flex-col items-center">
-                            <div className={`w-px h-1 ${branchColor ? branchColor.border.replace('border-', 'bg-') : 'bg-cyan-300'}`} />
-                            <ArrowDown size={18} className={`${branchColor ? branchColor.text : 'text-cyan-500'} -my-0.5`} strokeWidth={2.5} />
-                            <div className={`w-px h-1 ${branchColor ? branchColor.border.replace('border-', 'bg-') : 'bg-cyan-300'}`} />
+                        <div className="flex justify-center py-px">
+                            <ArrowDown size={14} className={`${branchColor ? branchColor.text : 'text-cyan-400'}`} strokeWidth={2} />
                         </div>
                     )}
 
                     {/* Fork/Join also gets a small arrow */}
                     {(isFork || isJoin) && (
-                        <div className="flex flex-col items-center">
-                            <ArrowDown size={14} className="text-cyan-500 -my-0.5" strokeWidth={2} />
+                        <div className="flex justify-center py-px">
+                            <ArrowDown size={12} className="text-cyan-400" strokeWidth={2} />
                         </div>
                     )}
                 </div>

@@ -145,7 +145,7 @@ describe('PfdTable', () => {
         render(
             <table><PfdTable {...defaultProps} steps={[]} onLoadManufacturingTemplate={onLoadManufacturingTemplate} /></table>
         );
-        const btn = screen.getByText('Plantilla manufactura (11 pasos)');
+        const btn = screen.getByText('Plantilla manufactura (12 pasos)');
         expect(btn).toBeTruthy();
         fireEvent.click(btn);
         expect(onLoadManufacturingTemplate).toHaveBeenCalled();

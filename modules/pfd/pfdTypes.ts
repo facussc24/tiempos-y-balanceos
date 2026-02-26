@@ -146,6 +146,7 @@ export const PFD_COLUMNS: PfdColumnDef[] = [
   { key: 'stepNumber',            label: 'Nº Op.',              width: '80px',  required: true,  type: 'text' },
   { key: 'stepType',              label: 'Símbolo',             width: '60px',  required: true,  type: 'symbol' },
   { key: 'description',           label: 'Descripción',         width: '250px', required: true,  type: 'text' },
+  { key: 'branchId',              label: 'Línea',               width: '90px',  required: false, type: 'text' },
   { key: 'machineDeviceTool',     label: 'Máquina/Dispositivo', width: '160px', required: false, type: 'text' },
   { key: 'productCharacteristic', label: 'Caract. Producto',    width: '200px', required: false, type: 'text' },
   { key: 'productSpecialChar',    label: 'CC/SC Prod.',         width: '75px',  required: false, type: 'specialChar' },

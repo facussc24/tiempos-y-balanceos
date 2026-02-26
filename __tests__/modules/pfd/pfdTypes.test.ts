@@ -92,8 +92,8 @@ describe('pfdTypes', () => {
     });
 
     describe('PFD_COLUMNS', () => {
-        it('should have 13 columns', () => {
-            expect(PFD_COLUMNS).toHaveLength(13);
+        it('should have 14 columns (C10-UX: +Línea)', () => {
+            expect(PFD_COLUMNS).toHaveLength(14);
         });
 
         it('should have stepNumber, stepType, and description as required', () => {

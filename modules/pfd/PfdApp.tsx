@@ -398,6 +398,35 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding }) => {
         });
     }, [pfd.data.steps, pfd.removeStep]);
 
+    // C10-UX3: Sync branchLabel across steps when label changes
+    const handleUpdateStep = useCallback((stepId: string, field: keyof typeof pfd.data.steps[0], value: string | boolean) => {
+        pfd.updateStep(stepId, field, value);
+        // When a branchLabel changes, propagate to all steps on the same branch
+        if (field === 'branchLabel' && typeof value === 'string') {
+            const step = pfd.data.steps.find(s => s.id === stepId);
+            if (step?.branchId) {
+                for (const s of pfd.data.steps) {
+                    if (s.id !== stepId && s.branchId === step.branchId) {
+                        pfd.updateStep(s.id, 'branchLabel', value);
+                    }
+                }
+            }
+        }
+    }, [pfd.updateStep, pfd.data.steps]);
+
+    // C10-UX3: Auto-inherit branchLabel when assigning step to existing branch
+    const handleBatchUpdateStep = useCallback((stepId: string, updates: Partial<typeof pfd.data.steps[0]>) => {
+        if (updates.branchId && !updates.branchLabel) {
+            const existingLabel = pfd.data.steps.find(
+                s => s.branchId === updates.branchId && s.id !== stepId && s.branchLabel
+            )?.branchLabel;
+            if (existingLabel) {
+                updates = { ...updates, branchLabel: existingLabel };
+            }
+        }
+        pfd.updateStepFields(stepId, updates);
+    }, [pfd.updateStepFields, pfd.data.steps]);
+
     // C4-B4: Scroll to last step after adding
     const scrollToLastStep = useCallback(() => {
         setTimeout(() => {
@@ -567,8 +596,8 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding }) => {
                             </colgroup>
                             <PfdTable
                                 steps={pfd.data.steps}
-                                onUpdateStep={pfd.updateStep}
-                                onBatchUpdateStep={pfd.updateStepFields}
+                                onUpdateStep={handleUpdateStep}
+                                onBatchUpdateStep={handleBatchUpdateStep}
                                 onRemoveStep={handleRemoveStep}
                                 onMoveStep={pfd.moveStep}
                                 onInsertAfter={pfd.insertStepAfter}
@@ -644,6 +673,8 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding }) => {
                         for (const s of pfd.data.steps) counts[s.stepType] = (counts[s.stepType] || 0) + 1;
                         const labels: Record<string, string> = { operation: 'Op', transport: 'Transp', inspection: 'Insp', storage: 'Alm', delay: 'Demora', decision: 'Dec', combined: 'Op+Insp' };
                         const parts = Object.entries(counts).map(([k, v]) => `${v} ${labels[k] || k}`);
+                        const branches = new Set(pfd.data.steps.filter(s => s.branchId).map(s => s.branchId));
+                        if (branches.size > 0) parts.push(`${branches.size} líneas ∥`);
                         return <span className="text-gray-400 ml-1">({parts.join(' · ')})</span>;
                     })()}
                     {' | '}

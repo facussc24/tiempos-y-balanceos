@@ -147,12 +147,6 @@ const PfdTableRow: React.FC<Props> = ({ step, index, totalSteps, onUpdate, onBat
                         placeholder="Descripción de la operación"
                         disabled={readOnly}
                     />
-                    {/* C9-N1: Branch badge for parallel flow */}
-                    {step.branchId && (
-                        <span className={`inline-block ${branchColor?.badge || 'bg-gray-100 text-gray-600 border-gray-300'} border text-[9px] font-bold px-1.5 py-0.5 rounded whitespace-nowrap`}>
-                            {step.branchLabel || `Línea ${step.branchId}`}
-                        </span>
-                    )}
                     {dispositionInfo && (
                         <span className={`inline-block ${dispositionInfo.bg} ${dispositionInfo.textColor} border ${dispositionInfo.border} text-[9px] font-bold px-1.5 py-0.5 rounded whitespace-nowrap`}>
                             {dispositionInfo.text}
@@ -191,6 +185,57 @@ const PfdTableRow: React.FC<Props> = ({ step, index, totalSteps, onUpdate, onBat
                             placeholder={step.rejectDisposition === 'scrap' ? 'Motivo del descarte' : 'Criterio de selección'}
                             disabled={readOnly}
                         />
+                    </div>
+                )}
+            </td>
+
+            {/* C10-UX: Línea — Dedicated column for parallel flow assignment */}
+            <td className={`${cellClass} text-center ${step.branchId && branchColor ? branchColor.bg : ''}`}>
+                {readOnly ? (
+                    step.branchId ? (
+                        <span className={`inline-block ${branchColor?.badge || 'bg-gray-100 text-gray-600 border-gray-300'} border text-[9px] font-bold px-1.5 py-0.5 rounded whitespace-nowrap`}>
+                            {step.branchLabel || `Línea ${step.branchId}`}
+                        </span>
+                    ) : (
+                        <span className="text-gray-300 text-[10px]">—</span>
+                    )
+                ) : (
+                    <div className="flex flex-col items-center gap-0.5">
+                        <select
+                            value={step.branchId || ''}
+                            onChange={(e) => {
+                                const val = e.target.value;
+                                if (onBatchUpdate) {
+                                    onBatchUpdate(step.id, {
+                                        branchId: val,
+                                        branchLabel: '', // C10-UX3: Clear label; handler auto-inherits from existing branch steps
+                                    });
+                                } else {
+                                    onUpdate(step.id, 'branchId', val);
+                                }
+                            }}
+                            className={`text-xs border rounded px-1 py-0.5 bg-white outline-none focus:ring-1 focus:ring-cyan-300 w-full ${
+                                step.branchId && branchColor ? branchColor.border : 'border-gray-200'
+                            }`}
+                            title="Asignar a línea paralela"
+                        >
+                            <option value="">—</option>
+                            <option value="A">Línea A</option>
+                            <option value="B">Línea B</option>
+                            <option value="C">Línea C</option>
+                            <option value="D">Línea D</option>
+                        </select>
+                        {step.branchId && (
+                            <input
+                                value={step.branchLabel || ''}
+                                onChange={(e) => onUpdate(step.id, 'branchLabel', e.target.value)}
+                                className={`text-[10px] border rounded px-1 py-0.5 outline-none focus:ring-1 focus:ring-cyan-300 w-full ${
+                                    branchColor ? branchColor.border : 'border-gray-200'
+                                }`}
+                                placeholder="Nombre..."
+                                title="Nombre de la línea paralela (ej: Mecanizado, Soldadura)"
+                            />
+                        )}
                     </div>
                 )}
             </td>
@@ -381,31 +426,6 @@ const PfdTableRow: React.FC<Props> = ({ step, index, totalSteps, onUpdate, onBat
                         >
                             <Trash2 size={14} />
                         </button>
-                    </div>
-                    {/* C9-N1: Branch selector for parallel flows */}
-                    <div className="mt-0.5">
-                        <select
-                            value={step.branchId || ''}
-                            onChange={(e) => {
-                                const val = e.target.value;
-                                if (onBatchUpdate) {
-                                    onBatchUpdate(step.id, {
-                                        branchId: val,
-                                        branchLabel: val ? (step.branchLabel || `Línea ${val}`) : '',
-                                    });
-                                } else {
-                                    onUpdate(step.id, 'branchId', val);
-                                }
-                            }}
-                            className="text-[10px] border border-gray-200 rounded px-0.5 py-0 bg-white w-full"
-                            title="Asignar a línea paralela"
-                        >
-                            <option value="">— Flujo principal —</option>
-                            <option value="A">Línea A</option>
-                            <option value="B">Línea B</option>
-                            <option value="C">Línea C</option>
-                            <option value="D">Línea D</option>
-                        </select>
                     </div>
                 </td>
             )}

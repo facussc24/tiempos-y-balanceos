@@ -107,8 +107,8 @@ const PfdHelpPanel: React.FC<Props> = ({ isOpen, onClose }) => {
                             <p className="font-semibold text-cyan-800 mb-1">¿Cómo usar flujos paralelos?</p>
                             <ol className="list-decimal list-inside space-y-1 text-[11px]">
                                 <li>El paso donde se bifurca el flujo queda en <strong>flujo principal</strong> (sin línea asignada).</li>
-                                <li>Los pasos que corren en paralelo se asignan a una <strong>Línea</strong> (A, B, C, D) usando el selector en la columna Acciones.</li>
-                                <li>Opcionalmente, hacer doble clic en el badge de línea para cambiar el nombre (ej: "Línea ZAC").</li>
+                                <li>Los pasos que corren en paralelo se asignan a una <strong>Línea</strong> (A, B, C, D) usando la columna <strong>Línea</strong> de la tabla.</li>
+                                <li>Debajo del selector aparece un campo para <strong>nombrar la línea</strong> (ej: "Mecanizado", "Soldadura").</li>
                                 <li>El paso donde convergen las líneas vuelve a <strong>flujo principal</strong>.</li>
                             </ol>
                         </div>
