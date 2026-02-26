@@ -9,8 +9,8 @@
 
 ## 1. Resumen Ejecutivo
 
-Se realizaron **dos pases** de revisión y mejora del módulo Flujograma de Proceso.
-Se identificaron **14 hallazgos** clasificados en 5 categorías y se corrigieron **todos los hallazgos**.
+Se realizaron **cuatro pases** de revisión y mejora del módulo Flujograma de Proceso.
+Se identificaron **31 hallazgos** clasificados en 5 categorías y se corrigieron **todos los hallazgos**.
 
 ### Pase 1 (C7) — Revisión inicial
 | Categoría     | Hallazgos | Corregidos | Pendientes |
@@ -29,17 +29,31 @@ Se identificaron **14 hallazgos** clasificados en 5 categorías y se corrigieron
 | EXPORTACIÓN   | 1         | 1          | 0          |
 | **Total**     | **2**     | **2**      | **0**      |
 
-### Totales combinados
+### Pase 3 (C9) — Flujos paralelos, manual, exportaciones
+| Categoría     | Hallazgos | Corregidos | Pendientes |
+|---------------|-----------|------------|------------|
+| NORMA         | 5         | 5          | 0          |
+| UX            | 4         | 4          | 0          |
+| EXPORTACIÓN   | 4         | 4          | 0          |
+| **Total**     | **13**    | **13**     | **0**      |
+
+### Pase 4 (C10-UX) — Mejora de UX paralelos
+| Categoría     | Hallazgos | Corregidos | Pendientes |
+|---------------|-----------|------------|------------|
+| UX            | 4         | 4          | 0          |
+| **Total**     | **4**     | **4**      | **0**      |
+
+### Totales combinados (C7+C8+C9+C10)
 | Categoría     | Hallazgos | Corregidos | Pendientes |
 |---------------|-----------|------------|------------|
 | BUGS          | 4         | 4          | 0          |
-| NORMA         | 3         | 3          | 0          |
-| UX            | 2         | 2          | 0          |
+| NORMA         | 8         | 8          | 0          |
+| UX            | 10        | 10         | 0          |
 | VISUAL        | 1         | 1          | 0          |
-| EXPORTACIÓN   | 2         | 2          | 0          |
-| **Total**     | **12**    | **12**     | **0**      |
+| EXPORTACIÓN   | 6         | 6          | 0          |
+| **Total**     | **29**    | **29**     | **0**      |
 
-**Resultado final:** `tsc --noEmit` limpio, **177 archivos de test**, **2569 tests pass**, **1 flaky (performance benchmark)**.
+**Resultado final:** `tsc --noEmit` limpio, **177 suites de test**, **2595 tests pass**, **0 failures**.
 
 ---
 
@@ -427,3 +441,106 @@ Respuesta clave: Se usa el rombo de decisión para la pregunta "¿Pasó la inspe
 | P4 | AI suggestions para descripciones de pasos (Gemini) | Media |
 | P5 | Visualización gráfica tipo flowchart (además de tabla) | Baja |
 | P6 | Soporte para más de 4 líneas paralelas (E-H) | Baja |
+
+---
+
+## PASE 4 (C10-UX) — Mejora de UX: Columna Línea, Arrows Compactos, Sync Labels
+
+**Fecha:** 2026-02-25 (continuación)
+**Foco:** Experiencia de usuario — el selector de ramas estaba enterrado en la columna Acciones
+
+### Resumen
+| Categoría     | Hallazgos | Corregidos | Pendientes |
+|---------------|-----------|------------|------------|
+| UX            | 4         | 4          | 0          |
+| **Total C10** | **4**     | **4**      | **0**      |
+
+### Métricas
+| Métrica | Antes (C9) | Después (C10) | Delta |
+|---------|------------|---------------|-------|
+| Test suites | 177 | 177 | 0 |
+| Tests totales | 2595 | 2595 | 0 |
+| Archivos modificados | — | 7 | — |
+| `tsc --noEmit` | OK | OK | — |
+| Failures | 0 | 0 | — |
+
+---
+
+### C10 — Hallazgos UX
+
+#### UX-1 — Selector de ramas enterrado en columna Acciones (CRÍTICO)
+El dropdown para asignar pasos a líneas paralelas estaba al final de la columna Acciones, un `<select>` de 10px después de 5 botones (↑↓+⧉🗑). Era prácticamente invisible.
+
+**Corrección:**
+- `pfdTypes.ts`: +columna "Línea" (`branchId`) en `PFD_COLUMNS`, posición 4 (después de Descripción), 90px ancho
+- `PfdTableRow.tsx`: Nueva celda `<td>` dedicada con:
+  - **Modo edición:** `<select>` coloreado (—/Línea A/B/C/D) + input para nombre de línea (aparece al seleccionar rama)
+  - **Modo readOnly:** Badge con nombre de la línea o "—"
+  - Background de celda con color de rama
+- `PfdTableRow.tsx`: Eliminado el dropdown de branch de la columna Acciones (era `<div className="mt-0.5"><select...>`)
+- `PfdHelpPanel.tsx`: Instrucciones actualizadas ("columna **Línea** de la tabla" en lugar de "selector en la columna Acciones")
+
+#### UX-2 — Flechas de flujo demasiado altas (MEDIO)
+Los `FlowArrow` ocupaban ~26px de alto por sus barras verticales (`h-1`, `h-2`) y padding (`py-1`), agregando ~40% de espacio visual innecesario.
+
+**Corrección:**
+- `PfdTable.tsx`: `FlowArrow` compactado:
+  - Fork: eliminados `h-2` bars, `py-1` → `py-0.5`, GitBranch 12→10px, text 10→9px
+  - Join: eliminados `h-2` bars, GitMerge 12→11px, text 10→9px
+  - Normal: eliminados `h-1` bars, ArrowDown 18→14px, strokeWidth 2.5→2
+  - Fork/Join small arrow: 14→12px
+- Resultado: ~40% reducción en altura vertical entre filas
+
+#### UX-3 — Labels de rama no se sincronizan entre pasos (IMPORTANTE)
+Si renombrabas "Mecanizado" a "CNC" en OP 20, el OP 30 (misma Línea A) seguía mostrando "Mecanizado". También, al asignar un paso nuevo a una rama existente, no heredaba el nombre.
+
+**Corrección:**
+- `PfdApp.tsx`: `handleUpdateStep` wrapper — cuando `field === 'branchLabel'`, propaga el valor a todos los steps con mismo `branchId`
+- `PfdApp.tsx`: `handleBatchUpdateStep` wrapper — cuando se asigna `branchId` sin `branchLabel`, auto-hereda el label de la rama existente
+- `PfdTableRow.tsx`: Al cambiar `branchId` en select, siempre envía `branchLabel: ''` para que el handler auto-herede
+
+**Verificado:** Cambiar "Mecanizado" → "CNC" en OP 20 actualiza inmediatamente OP 30 y el badge "FLUJO PARALELO"
+
+#### UX-4 — Footer sin conteo de líneas paralelas (MENOR)
+El footer mostraba conteo por tipo de paso pero no indicaba cuántas líneas paralelas había activas.
+
+**Corrección:**
+- `PfdApp.tsx`: Footer agrega `"N líneas ∥"` cuando hay pasos con `branchId`
+- Usa `Set` para contar ramas únicas
+
+**Verificado:** Footer muestra "12 pasos (2 Alm · 2 Transp · 6 Op · 1 Op+Insp · 1 Insp · 2 líneas ∥)"
+
+---
+
+### C10 — Archivos Modificados
+
+| Archivo | Cambio |
+|---------|--------|
+| `modules/pfd/pfdTypes.ts` | +columna "Línea" en PFD_COLUMNS (14 cols) |
+| `modules/pfd/PfdTableRow.tsx` | +celda Línea dedicada, -branch dropdown de Acciones, -branch badge de Descripción |
+| `modules/pfd/PfdTable.tsx` | FlowArrow compactado (~40% menor altura) |
+| `modules/pfd/PfdApp.tsx` | +handleUpdateStep (sync labels), +handleBatchUpdateStep (auto-herencia), +footer líneas ∥ |
+| `modules/pfd/PfdHelpPanel.tsx` | Instrucciones actualizadas para columna Línea |
+| `__tests__/modules/pfd/pfdTypes.test.ts` | PFD_COLUMNS count 13→14 |
+| `__tests__/modules/pfd/PfdTable.test.tsx` | Manufacturing template "12 pasos" |
+
+---
+
+### C10 — Verificación en Navegador
+
+- [x] Columna "Línea" visible en header con ancho adecuado
+- [x] Dropdown "—" / "Línea A" / "B" / "C" / "D" funcional
+- [x] Input de nombre aparece al seleccionar rama
+- [x] Background de celda coloreado (violet para A, sky para B)
+- [x] Columna Acciones limpia (solo 5 botones, sin dropdown de branch)
+- [x] Flow arrows compactos (FLUJO PARALELO, CONVERGENCIA visibles)
+- [x] Sync labels: cambiar "Mecanizado" → "CNC" en OP 20 actualiza OP 30 y badge
+- [x] Footer muestra "2 líneas ∥"
+- [x] Consola sin errores
+
+---
+
+### C10 — GitHub
+
+- **Commit:** `0dfb28f` — "PFD C10-UX: Dedicated Línea column, compact arrows, branch sync"
+- **Push:** `origin/main` actualizado
