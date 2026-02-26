@@ -62,20 +62,23 @@ export function validatePfdDocument(doc: PfdDocument): ValidationIssue[] {
     }
 
     // V3: CC/SC without characteristic specified (warning)
+    // C16-UX: Clearer messages — spell out CC=Crítica, SC=Significativa
     for (const step of doc.steps) {
         if (step.productSpecialChar !== 'none' && step.productCharacteristic.trim() === '') {
+            const charLabel = step.productSpecialChar === 'CC' ? 'Característica Crítica (CC)' : 'Característica Significativa (SC)';
             issues.push({
                 rule: 'V3',
                 severity: 'warning',
-                message: `Paso ${step.stepNumber || '(sin nº)'}: ${step.productSpecialChar} de producto sin característica especificada`,
+                message: `Paso ${step.stepNumber || '(sin nº)'}: ${charLabel} de producto marcada, pero sin descripción de la característica`,
                 stepId: step.id,
             });
         }
         if (step.processSpecialChar !== 'none' && step.processCharacteristic.trim() === '') {
+            const charLabel = step.processSpecialChar === 'CC' ? 'Característica Crítica (CC)' : 'Característica Significativa (SC)';
             issues.push({
                 rule: 'V3',
                 severity: 'warning',
-                message: `Paso ${step.stepNumber || '(sin nº)'}: ${step.processSpecialChar} de proceso sin característica especificada`,
+                message: `Paso ${step.stepNumber || '(sin nº)'}: ${charLabel} de proceso marcada, pero sin descripción de la característica`,
                 stepId: step.id,
             });
         }
@@ -333,12 +336,13 @@ export function validatePfdDocument(doc: PfdDocument): ValidationIssue[] {
     }
 
     // V21: Inspection without disposition (C9-N2 — AIAG recommends explicit NG path)
+    // C16-UX: Elevated to 'warning' — every inspection must define what happens with rejects (IATF 16949)
     for (const step of doc.steps) {
         if ((step.stepType === 'inspection' || step.stepType === 'combined') && step.rejectDisposition === 'none') {
             issues.push({
                 rule: 'V21',
-                severity: 'info',
-                message: `Paso ${step.stepNumber || '(sin nº)'}: inspección sin disposición de no conformes (retrabajo/descarte/selección)`,
+                severity: 'warning',
+                message: `Paso ${step.stepNumber || '(sin nº)'}: inspección sin disposición de no conformes — defina retrabajo, descarte o selección`,
                 stepId: step.id,
             });
         }

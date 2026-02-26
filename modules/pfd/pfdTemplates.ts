@@ -105,6 +105,8 @@ export function createManufacturingProcessTemplate(): PfdStep[] {
             description: 'Inspección de soldadura',
             branchId: 'B',
             branchLabel: 'Soldadura',
+            rejectDisposition: 'scrap',
+            scrapDescription: 'Defecto de soldadura irreparable',
         },
         // Convergence
         {
