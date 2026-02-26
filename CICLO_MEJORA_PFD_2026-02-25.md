@@ -9,8 +9,8 @@
 
 ## 1. Resumen Ejecutivo
 
-Se realizaron **cuatro pases** de revisión y mejora del módulo Flujograma de Proceso.
-Se identificaron **31 hallazgos** clasificados en 5 categorías y se corrigieron **todos los hallazgos**.
+Se realizaron **cinco pases** de revisión y mejora del módulo Flujograma de Proceso.
+Se identificaron **33 hallazgos** clasificados en 5 categorías y se corrigieron **todos los hallazgos**.
 
 ### Pase 1 (C7) — Revisión inicial
 | Categoría     | Hallazgos | Corregidos | Pendientes |
@@ -43,15 +43,21 @@ Se identificaron **31 hallazgos** clasificados en 5 categorías y se corrigieron
 | UX            | 4         | 4          | 0          |
 | **Total**     | **4**     | **4**      | **0**      |
 
-### Totales combinados (C7+C8+C9+C10)
+### Pase 5 (C11-UX) — Layout compacto + sticky acciones
+| Categoría     | Hallazgos | Corregidos | Pendientes |
+|---------------|-----------|------------|------------|
+| UX            | 4         | 4          | 0          |
+| **Total**     | **4**     | **4**      | **0**      |
+
+### Totales combinados (C7+C8+C9+C10+C11)
 | Categoría     | Hallazgos | Corregidos | Pendientes |
 |---------------|-----------|------------|------------|
 | BUGS          | 4         | 4          | 0          |
 | NORMA         | 8         | 8          | 0          |
-| UX            | 10        | 10         | 0          |
+| UX            | 14        | 14         | 0          |
 | VISUAL        | 1         | 1          | 0          |
 | EXPORTACIÓN   | 6         | 6          | 0          |
-| **Total**     | **29**    | **29**     | **0**      |
+| **Total**     | **33**    | **33**     | **0**      |
 
 **Resultado final:** `tsc --noEmit` limpio, **177 suites de test**, **2595 tests pass**, **0 failures**.
 
@@ -543,4 +549,77 @@ El footer mostraba conteo por tipo de paso pero no indicaba cuántas líneas par
 ### C10 — GitHub
 
 - **Commit:** `0dfb28f` — "PFD C10-UX: Dedicated Línea column, compact arrows, branch sync"
+- **Push:** `origin/main` actualizado
+
+---
+
+## PASE 5 (C11-UX) — Layout Compacto, Sticky Acciones, Tooltips
+
+**Fecha:** 2026-02-25 (continuación)
+**Foco:** La tabla era ~190px más ancha que el viewport, forzando scroll horizontal. Acciones desaparecía al scrollear.
+
+### Resumen
+| Categoría     | Hallazgos | Corregidos | Pendientes |
+|---------------|-----------|------------|------------|
+| UX            | 4         | 4          | 0          |
+| **Total C11** | **4**     | **4**      | **0**      |
+
+---
+
+### C11 — Hallazgos UX
+
+#### UX-5 — Columna Acciones desaparece al scrollear (CRÍTICO)
+Con 14+ columnas (~1725px), la columna Acciones quedaba oculta a la derecha. El usuario no podía mover/eliminar pasos sin scrollear.
+
+**Corrección:**
+- `PfdTable.tsx`: Header Acciones con `sticky right-0 z-30 bg-teal-600 shadow-[-2px_0_4px]`
+- `PfdTableRow.tsx`: Body Actions `<td>` con `sticky right-0 z-10` + `stickyBg` opaco + sombra izquierda
+
+#### UX-6 — Botones de Acciones en 2 filas + tabla muy ancha (IMPORTANTE)
+Los 5 botones (↑↓+⧉🗑) con `gap-0.5` y `flex-wrap` se wrapeaban en 2 filas, inflando cada fila. La tabla total era 1725px para un viewport de 1536px.
+
+**Corrección:**
+- `PfdTableRow.tsx`: Acciones con `gap-px`, iconos 14→13px, padding p-1→p-0.5 → todos en 1 fila
+- `PfdApp.tsx`: Actions width 110→90px
+- `pfdTypes.ts`: Anchos reducidos: Máquina 160→140, Caract.Producto/Proceso 200→160, CC/SC 75→60, Referencia 100→90, Notas 120→100
+- Total: 1455px + 90 (Acciones) = **1545px** — cabe en viewport
+
+#### UX-7 — Headers abreviados sin explicación (MEDIO)
+"Disp.", "Ext.", "CC/SC", "Máquina/Disp." son crípticos para un ingeniero de calidad nuevo.
+
+**Corrección:**
+- `pfdTypes.ts`: +campo `tooltip?: string` en `PfdColumnDef`
+- 9 tooltips descriptivos: Disp.→"Disposición de rechazo", Ext.→"Proceso externo (tercerizado)", CC/SC→"Característica Crítica/Significativa", etc.
+- `PfdTable.tsx`: Render `title={col.tooltip}` + `cursor-help` en `<th>`
+
+#### UX-8 — Placeholders visualmente ruidosos (MENOR)
+12 filas × 6 columnas con placeholders grises ("Característica", "Variable de proceso") hacían la tabla parecer llena cuando estaba vacía.
+
+**Corrección:**
+- `PfdTableRow.tsx`: `inputClass` + `placeholder:text-gray-300 placeholder:text-xs` → placeholders más claros y pequeños
+
+---
+
+### C11 — Archivos Modificados
+
+| Archivo | Cambio |
+|---------|--------|
+| `modules/pfd/pfdTypes.ts` | +tooltip field, anchos reducidos, labels compactos |
+| `modules/pfd/PfdTable.tsx` | Actions sticky right + tooltips en headers |
+| `modules/pfd/PfdTableRow.tsx` | Actions sticky right + compact 1 row + placeholder styling |
+| `modules/pfd/PfdApp.tsx` | Actions width 110→90px |
+
+### C11 — Verificación en Navegador
+
+- [x] Toda la tabla visible sin scroll horizontal (1545px en viewport 1536px)
+- [x] Acciones siempre visible (sticky right con sombra)
+- [x] 5 botones en 1 sola fila
+- [x] 9 tooltips verificados via DOM (title attributes)
+- [x] Placeholders más sutiles (gris claro, texto pequeño)
+- [x] FLUJO PARALELO, CONVERGENCIA, NG path siguen funcionando
+- [x] 177 suites, 2595 tests, 0 failures
+
+### C11 — GitHub
+
+- **Commit:** `6d83f6d` — "PFD C11-UX: Sticky actions, compact layout, tooltips, subtle placeholders"
 - **Push:** `origin/main` actualizado
