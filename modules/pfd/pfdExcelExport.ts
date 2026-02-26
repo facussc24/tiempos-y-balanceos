@@ -236,6 +236,6 @@ export function exportPfdExcel(doc: PfdDocument): void {
 
     XLSX.utils.book_append_sheet(wb, ws, 'Diagrama de Flujo');
 
-    const safeName = sanitizeFilename(h.partName || 'PFD', { allowSpaces: true });
+    const safeName = sanitizeFilename(h.partName || h.partNumber || h.documentNumber || 'Documento', { allowSpaces: true });
     downloadWorkbook(wb, `PFD_${safeName}_${new Date().toISOString().split('T')[0]}.xlsx`);
 }

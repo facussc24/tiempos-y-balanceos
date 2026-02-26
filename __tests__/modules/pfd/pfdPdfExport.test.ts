@@ -235,7 +235,7 @@ describe('pfdPdfExport', () => {
             expect(html).toContain('CONVERGENCIA');
         });
 
-        it('should show OK/NG annotation for inspection with disposition', () => {
+        it('should show OK/NOK annotation for inspection with disposition', () => {
             const doc = createEmptyPfdDocument();
             doc.steps = [
                 { ...createEmptyStep('OP 10'), stepType: 'inspection', rejectDisposition: 'rework', reworkReturnStep: 'OP 05' },
@@ -243,7 +243,7 @@ describe('pfdPdfExport', () => {
             ];
             const html = getPfdPdfPreviewHtml(doc);
             expect(html).toContain('OK ↓');
-            expect(html).toContain('NG');
+            expect(html).toContain('NOK');
             expect(html).toContain('Retrabajo');
             expect(html).toContain('OP 05');
         });

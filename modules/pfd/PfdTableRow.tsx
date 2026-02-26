@@ -27,7 +27,7 @@ interface Props {
 }
 
 const cellClass = "px-2 py-1.5 border-r border-gray-200 text-sm";
-const inputClass = "w-full bg-transparent border-0 outline-none text-sm focus:ring-1 focus:ring-cyan-300 rounded px-1 placeholder:text-gray-300 placeholder:text-xs";
+const inputClass = "w-full bg-transparent border-0 outline-none text-sm focus:ring-1 focus:ring-cyan-300 rounded px-1 placeholder:text-gray-300 placeholder:text-xs read-only:text-gray-700 read-only:cursor-default read-only:placeholder:text-transparent";
 
 /** C3-V2: Subtle background tint per step type */
 const TYPE_TINTS: Partial<Record<PfdStepType, string>> = {
@@ -123,7 +123,8 @@ const PfdTableRow: React.FC<Props> = ({ step, index, totalSteps, onUpdate, onBat
                     onChange={handleTextChange('stepNumber')}
                     className={`${inputClass} text-center font-bold`}
                     placeholder="OP 10"
-                    disabled={readOnly}
+                    readOnly={readOnly}
+                    tabIndex={readOnly ? -1 : 0}
                 />
             </td>
 
@@ -145,7 +146,8 @@ const PfdTableRow: React.FC<Props> = ({ step, index, totalSteps, onUpdate, onBat
                         className={`${inputClass} flex-1`}
                         title={step.description}
                         placeholder="Descripción de la operación"
-                        disabled={readOnly}
+                        readOnly={readOnly}
+                        tabIndex={readOnly ? -1 : 0}
                     />
                     {dispositionInfo && (
                         <span className={`inline-block ${dispositionInfo.bg} ${dispositionInfo.textColor} border ${dispositionInfo.border} text-[9px] font-bold px-1.5 py-0.5 rounded whitespace-nowrap`}>
@@ -165,7 +167,8 @@ const PfdTableRow: React.FC<Props> = ({ step, index, totalSteps, onUpdate, onBat
                             onChange={(e) => onUpdate(step.id, 'reworkReturnStep', e.target.value)}
                             className="flex-1 bg-red-50 border border-red-200 text-xs rounded px-1 py-0.5 outline-none focus:ring-1 focus:ring-red-300"
                             placeholder="ej: OP 20"
-                            disabled={readOnly}
+                            readOnly={readOnly}
+                            tabIndex={readOnly ? -1 : 0}
                         />
                     </div>
                 )}
@@ -183,7 +186,8 @@ const PfdTableRow: React.FC<Props> = ({ step, index, totalSteps, onUpdate, onBat
                                     : 'bg-yellow-50 border-yellow-200 focus:ring-yellow-300'
                             }`}
                             placeholder={step.rejectDisposition === 'scrap' ? 'Motivo del descarte' : 'Criterio de selección'}
-                            disabled={readOnly}
+                            readOnly={readOnly}
+                            tabIndex={readOnly ? -1 : 0}
                         />
                     </div>
                 )}
@@ -249,7 +253,8 @@ const PfdTableRow: React.FC<Props> = ({ step, index, totalSteps, onUpdate, onBat
                     className={inputClass}
                     title={step.machineDeviceTool}
                     placeholder="Máquina o herramienta"
-                    disabled={readOnly}
+                    readOnly={readOnly}
+                    tabIndex={readOnly ? -1 : 0}
                 />
             </td>
 
@@ -261,7 +266,8 @@ const PfdTableRow: React.FC<Props> = ({ step, index, totalSteps, onUpdate, onBat
                     className={inputClass}
                     title={step.productCharacteristic}
                     placeholder="Característica"
-                    disabled={readOnly}
+                    readOnly={readOnly}
+                    tabIndex={readOnly ? -1 : 0}
                 />
             </td>
 
@@ -291,7 +297,8 @@ const PfdTableRow: React.FC<Props> = ({ step, index, totalSteps, onUpdate, onBat
                     className={inputClass}
                     title={step.processCharacteristic}
                     placeholder="Variable de proceso"
-                    disabled={readOnly}
+                    readOnly={readOnly}
+                    tabIndex={readOnly ? -1 : 0}
                 />
             </td>
 
@@ -321,7 +328,8 @@ const PfdTableRow: React.FC<Props> = ({ step, index, totalSteps, onUpdate, onBat
                     className={inputClass}
                     title={step.reference}
                     placeholder="Plano / Ref."
-                    disabled={readOnly}
+                    readOnly={readOnly}
+                    tabIndex={readOnly ? -1 : 0}
                 />
             </td>
 
@@ -333,7 +341,8 @@ const PfdTableRow: React.FC<Props> = ({ step, index, totalSteps, onUpdate, onBat
                     className={inputClass}
                     title={step.department}
                     placeholder="Área"
-                    disabled={readOnly}
+                    readOnly={readOnly}
+                    tabIndex={readOnly ? -1 : 0}
                 />
             </td>
 
@@ -345,7 +354,8 @@ const PfdTableRow: React.FC<Props> = ({ step, index, totalSteps, onUpdate, onBat
                     className={inputClass}
                     title={step.notes}
                     placeholder="Notas"
-                    disabled={readOnly}
+                    readOnly={readOnly}
+                    tabIndex={readOnly ? -1 : 0}
                 />
             </td>
 
@@ -379,9 +389,9 @@ const PfdTableRow: React.FC<Props> = ({ step, index, totalSteps, onUpdate, onBat
                 <input
                     type="checkbox"
                     checked={step.isExternalProcess}
-                    onChange={(e) => onUpdate(step.id, 'isExternalProcess', e.target.checked)}
-                    disabled={readOnly}
-                    className="w-4 h-4 accent-blue-500"
+                    onChange={(e) => !readOnly && onUpdate(step.id, 'isExternalProcess', e.target.checked)}
+                    readOnly={readOnly}
+                    className={`w-4 h-4 accent-blue-500 ${readOnly ? 'pointer-events-none' : ''}`}
                     aria-label="Proceso externo"
                     title="Proceso externo"
                 />

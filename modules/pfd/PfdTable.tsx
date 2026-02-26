@@ -140,7 +140,7 @@ function FlowArrow({
                         </div>
                     )}
 
-                    {/* NG path annotation for inspection with disposition */}
+                    {/* Reject path annotation for inspection with disposition */}
                     {showNgPath && (
                         <div className="flex items-center justify-center gap-2 py-0.5">
                             <div className="flex items-center gap-1">
@@ -157,7 +157,7 @@ function FlowArrow({
                                             : '';
                                     return (
                                         <span className="flex items-center gap-0.5 text-[10px] font-medium text-red-600">
-                                            <span className="text-red-400">NG</span>
+                                            <span className="text-red-400">NOK</span>
                                             <Icon size={10} />
                                             <span>{label}{detail}</span>
                                         </span>

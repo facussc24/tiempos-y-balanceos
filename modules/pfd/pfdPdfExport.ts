@@ -263,7 +263,7 @@ function buildFlowArrowHtml(
         const detail = disp === 'rework' && current.reworkReturnStep
             ? ` → ${esc(current.reworkReturnStep)}`
             : current.scrapDescription ? `: ${esc(current.scrapDescription.slice(0, 30))}` : '';
-        annotation += `${annotation ? ' · ' : ''}<span style="font-size:7px;color:#16A34A;font-weight:bold;">OK ↓</span> <span style="font-size:7px;color:#DC2626;font-weight:bold;">NG → ${label}${detail}</span>`;
+        annotation += `${annotation ? ' · ' : ''}<span style="font-size:7px;color:#16A34A;font-weight:bold;">OK ↓</span> <span style="font-size:7px;color:#DC2626;font-weight:bold;">NOK → ${label}${detail}</span>`;
     }
 
     const arrowSvg = `<svg width="16" height="18" viewBox="0 0 16 18" style="display:inline-block;vertical-align:middle;"><path d="M8 0v12M3 9l5 7 5-7" stroke="#0891B2" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
@@ -362,9 +362,11 @@ export async function exportPfdPdf(doc: PfdDocument): Promise<void> {
     container.style.width = '297mm';
     container.style.visibility = 'hidden';
     container.style.pointerEvents = 'none';
+    container.style.backgroundColor = '#ffffff';
     document.body.appendChild(container);
 
-    const safeName = sanitizeFilename(doc.header.partName || 'PFD', { allowSpaces: true });
+    const nameSource = doc.header.partName || doc.header.partNumber || doc.header.documentNumber || 'Documento';
+    const safeName = sanitizeFilename(nameSource, { allowSpaces: true });
     const date = new Date().toISOString().split('T')[0];
     const filename = `PFD_${safeName}_${date}.pdf`;
 
@@ -375,7 +377,7 @@ export async function exportPfdPdf(doc: PfdDocument): Promise<void> {
                 margin: [8, 6, 12, 6], // extra bottom margin for page numbers
                 filename,
                 image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, useCORS: true, letterRendering: true },
+                html2canvas: { scale: 2, useCORS: true, letterRendering: true, backgroundColor: '#ffffff' },
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' },
                 pagebreak: { mode: ['avoid-all', 'css'] },
             });
