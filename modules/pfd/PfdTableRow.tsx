@@ -218,6 +218,7 @@ const PfdTableRow: React.FC<Props> = ({ step, index, totalSteps, onUpdate, onBat
                                 step.branchId && branchColor ? branchColor.border : 'border-gray-200'
                             }`}
                             title="Asignar a línea paralela"
+                            aria-label="Línea paralela"
                         >
                             <option value="">—</option>
                             <option value="A">Línea A</option>
@@ -273,6 +274,7 @@ const PfdTableRow: React.FC<Props> = ({ step, index, totalSteps, onUpdate, onBat
                         value={step.productSpecialChar}
                         onChange={handleSpecialChar('productSpecialChar')}
                         className="text-xs border border-gray-200 rounded px-1 py-0.5 bg-white focus:ring-1 focus:ring-cyan-300 outline-none"
+                        aria-label="Característica especial de producto"
                     >
                         <option value="none">—</option>
                         <option value="CC">CC</option>
@@ -302,6 +304,7 @@ const PfdTableRow: React.FC<Props> = ({ step, index, totalSteps, onUpdate, onBat
                         value={step.processSpecialChar}
                         onChange={handleSpecialChar('processSpecialChar')}
                         className="text-xs border border-gray-200 rounded px-1 py-0.5 bg-white focus:ring-1 focus:ring-cyan-300 outline-none"
+                        aria-label="Característica especial de proceso"
                     >
                         <option value="none">—</option>
                         <option value="CC">CC</option>
@@ -328,6 +331,7 @@ const PfdTableRow: React.FC<Props> = ({ step, index, totalSteps, onUpdate, onBat
                     value={step.department}
                     onChange={handleTextChange('department')}
                     className={inputClass}
+                    title={step.department}
                     placeholder="Área"
                     disabled={readOnly}
                 />
@@ -360,6 +364,7 @@ const PfdTableRow: React.FC<Props> = ({ step, index, totalSteps, onUpdate, onBat
                         value={step.rejectDisposition}
                         onChange={handleDispositionChange}
                         className="text-xs border border-gray-200 rounded px-1 py-0.5 bg-white focus:ring-1 focus:ring-cyan-300 outline-none"
+                        aria-label="Disposición de rechazo"
                     >
                         <option value="none">—</option>
                         <option value="rework">Retrabajo</option>
@@ -377,6 +382,7 @@ const PfdTableRow: React.FC<Props> = ({ step, index, totalSteps, onUpdate, onBat
                     onChange={(e) => onUpdate(step.id, 'isExternalProcess', e.target.checked)}
                     disabled={readOnly}
                     className="w-4 h-4 accent-blue-500"
+                    aria-label="Proceso externo"
                     title="Proceso externo"
                 />
             </td>

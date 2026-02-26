@@ -592,7 +592,7 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding }) => {
                                 {PFD_COLUMNS.map(col => (
                                     <col key={col.key} style={{ width: col.width }} />
                                 ))}
-                                {!isReadOnly && <col style={{ width: '110px' }} />}
+                                {!isReadOnly && <col style={{ width: '90px' }} />}
                             </colgroup>
                             <PfdTable
                                 steps={pfd.data.steps}
