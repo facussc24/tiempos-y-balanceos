@@ -257,3 +257,173 @@ Dos pases de mejora elevaron el módulo PFD a cumplimiento completo con AIAG APQ
 5. **Trazabilidad**: Fecha de exportación en PDF y Excel.
 6. **Documentación**: CLAUDE.md y ESTADO_PROYECTO.md actualizados con el módulo PFD.
 7. **Validación NotebookLM**: 137 fuentes AIAG-VDA confirman cumplimiento normativo.
+
+---
+
+## PASE 3 (C9) — Flujos Paralelos, Manual de Ayuda, Exportaciones
+
+**Fecha:** 2026-02-25 (continuación)
+**Validación NotebookLM:** 45 fuentes AIAG-VDA
+
+### Resumen
+| Categoría     | Hallazgos | Corregidos | Pendientes |
+|---------------|-----------|------------|------------|
+| NORMA         | 5         | 5          | 0          |
+| UX            | 4         | 4          | 0          |
+| EXPORTACIÓN   | 4         | 4          | 0          |
+| **Total C9**  | **13**    | **13**     | **0**      |
+
+### Métricas
+| Métrica | Antes (C8) | Después (C9) | Delta |
+|---------|------------|--------------|-------|
+| Test suites | 167 | 177 | +10 |
+| Tests totales | 2368 | 2595 | +227 |
+| Tests PFD | ~60 | 206 | +146 |
+| Archivos PFD modificados | — | 10 | — |
+| Archivos PFD nuevos | — | 1 (PfdHelpPanel) | — |
+| `tsc --noEmit` | OK | OK | — |
+| Failures | 0 | 0 | — |
+
+---
+
+### C9 — Hallazgos NORMA
+
+#### N4 — Sin soporte para flujos paralelos (CRÍTICO)
+AIAG APQP §3.1 define "Procesos Interdependientes" para material que se bifurca a 2+ líneas simultáneas (ej: de Recepción salen Mecanizado, Soldadura, ZAC). El módulo no tenía esta capacidad.
+
+**Corrección:**
+- `pfdTypes.ts`: +`branchId`/`branchLabel` en `PfdStep`, +`BRANCH_COLORS` (4 colores), +`getBranchColor()`, +`analyzeFlowTransition()`, +`collectForkBranches()`, +`FlowTransition` interface
+- `PfdTableRow.tsx`: Branch background/border/badge, selector dropdown Línea A-D
+- `normalizePfdStep()`: Backward-compatible con documentos viejos
+
+#### N5 — Flechas de flujo sin indicadores fork/join/NG (IMPORTANTE)
+Las flechas entre filas eran solo ↓ simples, sin mostrar bifurcación, convergencia, ni caminos OK/NG tras inspección.
+
+**Corrección:**
+- `PfdTable.tsx`: `FlowArrow` completamente reescrito:
+  - "FLUJO PARALELO" badge con nombres de ramas
+  - "CONVERGENCIA" badge en verde teal
+  - "OK ↓ | NG → Retrabajo/Descarte/Selección" para inspecciones con disposición
+  - Flechas color-coded por rama
+
+#### N6 — Inspección sin disposición no advertida (INFO)
+AIAG recomienda camino NG explícito para toda inspección.
+
+**Corrección:** `pfdValidation.ts` +V21: Inspección sin disposición (info)
+
+#### N7 — Rama sin convergencia no detectada (WARNING)
+Si un flujo paralelo no tiene convergencia (pasos en main flow después de las ramas), el PFD queda incompleto.
+
+**Corrección:** `pfdValidation.ts` +V19: Rama sin convergencia (warning)
+
+#### N8 — Rama sin etiqueta descriptiva (INFO)
+Las ramas sin nombre dificultan la lectura del flujograma.
+
+**Corrección:** `pfdValidation.ts` +V20: Rama sin etiqueta (info)
+
+---
+
+### C9 — Hallazgos UX
+
+#### U5 — No hay forma de asignar pasos a líneas paralelas (CRÍTICO)
+**Corrección:** Selector dropdown en columna Acciones: "— Flujo principal —" / Línea A / B / C / D
+
+#### U6 — No se ve cuál paso está en qué línea (IMPORTANTE)
+**Corrección:** Background color por rama (violet/sky/rose/lime), left-border color, branch badge en descripción
+
+#### U7 — Falta manual/ayuda contextual para ingenieros de calidad (MEDIO)
+**Corrección:** Nuevo `PfdHelpPanel.tsx` con 8 secciones colapsables:
+1. ¿Qué es el Diagrama de Flujo del Proceso?
+2. Tipos de paso (Simbología ASME/AIAG)
+3. Flujos paralelos (Procesos Interdependientes) — step-by-step
+4. Inspección y disposición de no conformes
+5. Características especiales (CC/SC)
+6. Cómo armar un flujograma paso a paso (10 pasos)
+7. Atajos de teclado
+8. Integración con AMFE y Plan de Control
+
+Integrado en PfdApp.tsx: botón Ayuda en footer + F1 shortcut
+
+#### U8 — Plantilla manufactura sin ejemplo de flujo paralelo (MENOR)
+**Corrección:** `createManufacturingProcessTemplate()` actualizada:
+- 12 pasos (antes 11) con ramas A (Mecanizado) y B (Soldadura)
+- OP 60 con disposición rework → OP 50
+
+---
+
+### C9 — Hallazgos EXPORTACIÓN
+
+#### E3 — PDF sin columna "Línea" para flujos paralelos
+**Corrección:** `pfdPdfExport.ts`: +columna "Línea" con badges de color, 15 columnas
+
+#### E4 — Excel sin columna "Línea"
+**Corrección:** `pfdExcelExport.ts`: +columna "Línea", 15 columnas
+
+#### E5 — PDF flechas sin fork/join/NG annotations
+**Corrección:** `pfdPdfExport.ts`: `buildFlowArrowHtml()` con FLUJO PARALELO, CONVERGENCIA, OK/NG annotations
+
+#### E6 — Summary sin conteo de líneas paralelas
+**Corrección:** `pfdPdfExport.ts`: Summary incluye "N líneas paralelas"
+
+---
+
+### C9 — Archivos Modificados
+
+| Archivo | Cambio |
+|---------|--------|
+| `modules/pfd/pfdTypes.ts` | +branchId/branchLabel, +BRANCH_COLORS, +getBranchColor, +analyzeFlowTransition, +collectForkBranches |
+| `modules/pfd/PfdTable.tsx` | FlowArrow reescrito con fork/join/NG, label "12 pasos" |
+| `modules/pfd/PfdTableRow.tsx` | Branch colors, branch badge, branch selector dropdown |
+| `modules/pfd/PfdHelpPanel.tsx` | **NUEVO** — Manual in-app completo (8 secciones) |
+| `modules/pfd/PfdApp.tsx` | Integración help panel + F1 + botón Ayuda |
+| `modules/pfd/pfdValidation.ts` | +V19 (orphan branch), +V20 (branch without label), +V21 (inspection without disposition) |
+| `modules/pfd/pfdTemplates.ts` | Manufacturing template: 12 pasos con ramas A/B + rework |
+| `modules/pfd/pfdPdfExport.ts` | +Columna Línea, flechas fork/join/NG, branch colors, summary paralelo |
+| `modules/pfd/pfdExcelExport.ts` | +Columna Línea (15 cols), branch label |
+| `__tests__/modules/pfd/pfdTypes.test.ts` | +23 tests: branch fields, getBranchColor, analyzeFlowTransition, collectForkBranches |
+| `__tests__/modules/pfd/pfdTemplates.test.ts` | Actualizado para 12 pasos con ramas A/B y rework |
+| `__tests__/modules/pfd/pfdPdfExport.test.ts` | +7 tests: Línea column, fork/join/NG annotations, parallel count |
+| `__tests__/modules/pfd/pfdExcelExport.test.ts` | Actualizado para 15 columnas + Línea |
+
+---
+
+### C9 — Validación NotebookLM
+
+**Fuentes:** 45 documentos AIAG-VDA
+
+**Consulta 1: Flujos paralelos**
+> "¿Cómo representa AIAG los flujos paralelos en un PFD?"
+
+Respuesta clave: AIAG los llama "Procesos Interdependientes". Se representan con **líneas de flujo que se bifurcan**, NO con el rombo de decisión. El rombo es exclusivamente para condiciones lógicas (Sí/No).
+
+**Consulta 2: Inspección y resultados**
+> "¿Cómo se representan los resultados de inspección OK/NG?"
+
+Respuesta clave: Se usa el rombo de decisión para la pregunta "¿Pasó la inspección?". Las piezas retrabajadas DEBEN reingresar al flujo principal y pasar por TODAS las inspecciones posteriores. Los procesos de retrabajo necesitan su propio AMFE y Plan de Control.
+
+---
+
+### C9 — Verificación en Navegador
+
+- [x] Panel de ayuda abre con F1 y botón Ayuda
+- [x] 8 secciones del manual visibles y expandibles
+- [x] Sección "Flujos paralelos" con instrucciones paso a paso
+- [x] Plantilla manufactura carga 12 pasos correctamente
+- [x] Badge "FLUJO PARALELO" con Mecanizado/Soldadura visible
+- [x] Badge "CONVERGENCIA" entre OP 35 y OP 40
+- [x] Branch selector dropdown funcional en columna Acciones
+- [x] Branch badges (Soldadura) visibles en filas
+- [x] Footer muestra "12 pasos (2 Alm · 2 Transp · 6 Op · 1 Op+Insp · 1 Insp)"
+
+---
+
+### C9 — Pendientes para Futuro Ciclo
+
+| # | Descripción | Prioridad |
+|---|-------------|-----------|
+| P1 | Drag-and-drop para reordenar pasos | Media |
+| P2 | Validación cruzada PFD↔AMFE (verificar cada OP tiene fila en AMFE) | Alta |
+| P3 | Generación automática de AMFE desde PFD | Alta |
+| P4 | AI suggestions para descripciones de pasos (Gemini) | Media |
+| P5 | Visualización gráfica tipo flowchart (además de tabla) | Baja |
+| P6 | Soporte para más de 4 líneas paralelas (E-H) | Baja |

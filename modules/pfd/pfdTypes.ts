@@ -89,6 +89,10 @@ export interface PfdStep {
   rejectDisposition: RejectDisposition;
   scrapDescription: string;
 
+  // C9-N1: Parallel flow (branch/fork/join) per AIAG "Procesos Interdependientes"
+  branchId: string;       // '' = main flow, 'A'/'B'/'C' = parallel branch identifier
+  branchLabel: string;    // Human-readable label for the branch (e.g., "Línea ZAC")
+
   // Linkage metadata (filled when generating AMFE/CP)
   linkedAmfeOperationId?: string;
   linkedCpItemIds?: string[];
@@ -176,6 +180,65 @@ export const EMPTY_PFD_HEADER: PfdHeader = {
   approvedDate: '',
 };
 
+/** C9-N1: Branch color palette for parallel flow lanes */
+export const BRANCH_COLORS: Record<string, { bg: string; border: string; text: string; badge: string }> = {
+  A: { bg: 'bg-violet-50', border: 'border-violet-400', text: 'text-violet-700', badge: 'bg-violet-100 text-violet-700 border-violet-300' },
+  B: { bg: 'bg-sky-50', border: 'border-sky-400', text: 'text-sky-700', badge: 'bg-sky-100 text-sky-700 border-sky-300' },
+  C: { bg: 'bg-rose-50', border: 'border-rose-400', text: 'text-rose-700', badge: 'bg-rose-100 text-rose-700 border-rose-300' },
+  D: { bg: 'bg-lime-50', border: 'border-lime-400', text: 'text-lime-700', badge: 'bg-lime-100 text-lime-700 border-lime-300' },
+};
+
+/** Get branch color (cycles through palette for unknown IDs) */
+export function getBranchColor(branchId: string): { bg: string; border: string; text: string; badge: string } {
+  if (!branchId) return { bg: '', border: '', text: 'text-gray-500', badge: 'bg-gray-100 text-gray-600 border-gray-300' };
+  return BRANCH_COLORS[branchId.toUpperCase()] || BRANCH_COLORS.A;
+}
+
+/**
+ * C9-N1: Analyze parallel flow structure from steps.
+ * Returns info about fork/join points for flow arrow rendering.
+ */
+export interface FlowTransition {
+  type: 'normal' | 'fork' | 'join' | 'branch-continue' | 'branch-switch' | 'ng-path';
+  fromBranch: string;
+  toBranch: string;
+  branches?: string[];  // For fork: list of branch IDs that start
+  ngInfo?: { disposition: RejectDisposition; returnStep: string; scrapDesc: string };
+}
+
+export function analyzeFlowTransition(current: PfdStep, next: PfdStep): FlowTransition {
+  const curBranch = current.branchId || '';
+  const nextBranch = next.branchId || '';
+
+  // Main flow → branch = fork
+  if (!curBranch && nextBranch) {
+    return { type: 'fork', fromBranch: '', toBranch: nextBranch, branches: [nextBranch] };
+  }
+  // Branch → main flow = join
+  if (curBranch && !nextBranch) {
+    return { type: 'join', fromBranch: curBranch, toBranch: '' };
+  }
+  // Same branch continues
+  if (curBranch === nextBranch) {
+    return { type: curBranch ? 'branch-continue' : 'normal', fromBranch: curBranch, toBranch: nextBranch };
+  }
+  // Different branch
+  return { type: 'branch-switch', fromBranch: curBranch, toBranch: nextBranch };
+}
+
+/**
+ * C9-N1: Collect all unique branch IDs starting from a fork point.
+ * Looks ahead from afterIndex to find all consecutive branch steps.
+ */
+export function collectForkBranches(steps: PfdStep[], forkIndex: number): string[] {
+  const branches = new Set<string>();
+  for (let i = forkIndex + 1; i < steps.length; i++) {
+    if (!steps[i].branchId) break; // Back to main flow
+    branches.add(steps[i].branchId);
+  }
+  return Array.from(branches).sort();
+}
+
 /** Parse the numeric portion of a step number like "OP 10" → 10 */
 export function parseStepNumber(stepNumber: string): number {
   const match = stepNumber.match(/(\d+)\s*$/);
@@ -243,6 +306,8 @@ export function createEmptyStep(stepNumber?: string): PfdStep {
     reworkReturnStep: '',
     rejectDisposition: 'none',
     scrapDescription: '',
+    branchId: '',
+    branchLabel: '',
   };
 }
 
@@ -256,6 +321,13 @@ export function normalizePfdStep(raw: Record<string, unknown> & { id: string }):
   }
   if (step.scrapDescription === undefined || step.scrapDescription === null) {
     step.scrapDescription = '';
+  }
+  // C9-N1: Branch fields for parallel flows
+  if (step.branchId === undefined || step.branchId === null) {
+    step.branchId = '';
+  }
+  if (step.branchLabel === undefined || step.branchLabel === null) {
+    step.branchLabel = '';
   }
   return step;
 }

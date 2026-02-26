@@ -17,6 +17,7 @@ import PfdToolbar from './PfdToolbar';
 import PfdHeaderComponent from './PfdHeader';
 import PfdTable from './PfdTable';
 import PfdSymbolLegend from './PfdSymbolLegend';
+import PfdHelpPanel from './PfdHelpPanel';
 import { ConfirmModal } from '../../components/modals/ConfirmModal';
 import { PromptModal } from '../../components/modals/PromptModal';
 import { ModuleErrorBoundary } from '../../components/ui/ModuleErrorBoundary';
@@ -27,7 +28,7 @@ import {
     deletePfdDocument,
 } from '../../utils/repositories/pfdRepository';
 import { logger } from '../../utils/logger';
-import { Plus, XCircle, AlertTriangle, CheckCircle, Info, ArrowRight, ArrowDown } from 'lucide-react';
+import { Plus, XCircle, AlertTriangle, CheckCircle, Info, ArrowRight, ArrowDown, HelpCircle } from 'lucide-react';
 
 interface Props {
     onBackToLanding?: () => void;
@@ -62,6 +63,9 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding }) => {
             return stored !== null ? stored === 'true' : true; // Default: arrows shown
         } catch { return true; }
     });
+
+    // C9-U2: Help panel
+    const [showHelp, setShowHelp] = useState(false);
 
     // Confirm modal
     const [confirmState, setConfirmState] = useState<{
@@ -452,14 +456,20 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding }) => {
                 e.preventDefault();
                 window.print();
             }
+            // C9-U2: F1 opens/closes help panel
+            if (e.key === 'F1') {
+                e.preventDefault();
+                setShowHelp(prev => !prev);
+            }
             if (e.key === 'Escape') {
-                if (validationIssues) setValidationIssues(null);
+                if (showHelp) setShowHelp(false);
+                else if (validationIssues) setValidationIssues(null);
                 else if (showProjectPanel) setShowProjectPanel(false);
             }
         };
         document.addEventListener('keydown', handleKeyDown);
         return () => document.removeEventListener('keydown', handleKeyDown);
-    }, [handleSave, handleAddStep, pfd.undo, pfd.redo, validationIssues, showProjectPanel]);
+    }, [handleSave, handleAddStep, pfd.undo, pfd.redo, validationIssues, showProjectPanel, showHelp]);
 
     // Table total width
     const tableWidth = useMemo(() => {
@@ -647,6 +657,15 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding }) => {
                         <ArrowDown size={10} />
                         Flechas
                     </button>
+                    {' · '}
+                    <button
+                        onClick={() => setShowHelp(true)}
+                        className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-medium transition bg-gray-100 text-gray-500 hover:bg-cyan-100 hover:text-cyan-700"
+                        title="Manual de ayuda (F1)"
+                    >
+                        <HelpCircle size={10} />
+                        Ayuda
+                    </button>
                     {currentProject && <span className="ml-4 text-gray-400">Proyecto: <strong className="text-cyan-600">{currentProject}</strong></span>}
                 </div>
             </div>
@@ -683,6 +702,9 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding }) => {
                     {toastMessage}
                 </div>
             )}
+
+            {/* C9-U2: Help Panel */}
+            <PfdHelpPanel isOpen={showHelp} onClose={() => setShowHelp(false)} />
 
             {/* Load Error Toast */}
             {loadError && (

@@ -80,9 +80,9 @@ describe('pfdTemplates', () => {
     });
 
     describe('createManufacturingProcessTemplate (C4-U3)', () => {
-        it('should return 11 steps (C5-N2: with transport)', () => {
+        it('should return 12 steps (C9-N1: with parallel flows)', () => {
             const steps = createManufacturingProcessTemplate();
-            expect(steps).toHaveLength(11);
+            expect(steps).toHaveLength(12);
         });
 
         it('should start with OP 10 reception (storage)', () => {
@@ -99,35 +99,53 @@ describe('pfdTemplates', () => {
             expect(op15!.stepType).toBe('transport');
         });
 
-        it('should have OP 20 as cutting/preparation (operation)', () => {
+        it('should have OP 20 as cutting/preparation in branch A (operation)', () => {
             const steps = createManufacturingProcessTemplate();
             const op20 = steps.find(s => s.stepNumber === 'OP 20');
             expect(op20).toBeDefined();
             expect(op20!.stepType).toBe('operation');
             expect(op20!.description).toContain('Corte');
+            expect(op20!.branchId).toBe('A');
+            expect(op20!.branchLabel).toBe('Mecanizado');
         });
 
-        it('should have OP 30 as main manufacturing (operation)', () => {
+        it('should have OP 30 as main manufacturing in branch A (operation)', () => {
             const steps = createManufacturingProcessTemplate();
             const op30 = steps.find(s => s.stepNumber === 'OP 30');
             expect(op30).toBeDefined();
             expect(op30!.stepType).toBe('operation');
+            expect(op30!.branchId).toBe('A');
         });
 
-        it('should have OP 40 as in-process inspection (combined)', () => {
+        it('should have OP 25 and OP 35 in branch B (Soldadura)', () => {
+            const steps = createManufacturingProcessTemplate();
+            const op25 = steps.find(s => s.stepNumber === 'OP 25');
+            const op35 = steps.find(s => s.stepNumber === 'OP 35');
+            expect(op25).toBeDefined();
+            expect(op25!.branchId).toBe('B');
+            expect(op25!.branchLabel).toBe('Soldadura');
+            expect(op35).toBeDefined();
+            expect(op35!.branchId).toBe('B');
+            expect(op35!.stepType).toBe('combined');
+        });
+
+        it('should have OP 40 as assembly (convergence point)', () => {
             const steps = createManufacturingProcessTemplate();
             const op40 = steps.find(s => s.stepNumber === 'OP 40');
             expect(op40).toBeDefined();
-            expect(op40!.stepType).toBe('combined');
-            expect(op40!.description).toContain('Inspección en proceso');
+            expect(op40!.stepType).toBe('operation');
+            expect(op40!.description).toContain('Ensamble');
+            expect(op40!.branchId).toBe('');
         });
 
-        it('should have OP 60 as final inspection', () => {
+        it('should have OP 60 as final inspection with rework disposition', () => {
             const steps = createManufacturingProcessTemplate();
             const op60 = steps.find(s => s.stepNumber === 'OP 60');
             expect(op60).toBeDefined();
             expect(op60!.stepType).toBe('inspection');
             expect(op60!.description).toContain('Inspección final');
+            expect(op60!.rejectDisposition).toBe('rework');
+            expect(op60!.reworkReturnStep).toBe('OP 50');
         });
 
         it('should end with OP 80 shipping (storage)', () => {
@@ -141,20 +159,21 @@ describe('pfdTemplates', () => {
         it('should include transport steps between key transitions (C5-N2)', () => {
             const steps = createManufacturingProcessTemplate();
             const transportSteps = steps.filter(s => s.stepType === 'transport');
-            expect(transportSteps.length).toBeGreaterThanOrEqual(3);
+            expect(transportSteps.length).toBeGreaterThanOrEqual(2);
         });
 
         it('should give each step a unique id', () => {
             const steps = createManufacturingProcessTemplate();
             const ids = new Set(steps.map(s => s.id));
-            expect(ids.size).toBe(11);
+            expect(ids.size).toBe(12);
         });
 
-        it('should have default rejectDisposition=none', () => {
+        it('should have parallel flow branches A and B (C9-N1)', () => {
             const steps = createManufacturingProcessTemplate();
-            for (const step of steps) {
-                expect(step.rejectDisposition).toBe('none');
-            }
+            const branchA = steps.filter(s => s.branchId === 'A');
+            const branchB = steps.filter(s => s.branchId === 'B');
+            expect(branchA.length).toBe(2);
+            expect(branchB.length).toBe(2);
         });
 
         it('should create fresh instances on each call', () => {

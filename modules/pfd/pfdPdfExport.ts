@@ -9,7 +9,7 @@
  */
 
 import type { PfdDocument, PfdStepType, RejectDisposition } from './pfdTypes';
-import { PFD_STEP_TYPES } from './pfdTypes';
+import { PFD_STEP_TYPES, collectForkBranches } from './pfdTypes';
 import { sanitizeFilename } from '../../utils/filenameSanitization';
 import { getLogoBase64 } from '../../src/assets/ppe/ppeBase64';
 
@@ -121,10 +121,13 @@ function buildStepSummaryHtml(doc: PfdDocument): string {
     const ccCount = doc.steps.filter(s => s.productSpecialChar === 'CC' || s.processSpecialChar === 'CC').length;
     const scCount = doc.steps.filter(s => s.productSpecialChar === 'SC' || s.processSpecialChar === 'SC').length;
     const extCount = doc.steps.filter(s => s.isExternalProcess).length;
+    const branchSteps = doc.steps.filter(s => s.branchId);
+    const branchIds = new Set(branchSteps.map(s => s.branchId));
     const extras: string[] = [];
     if (ccCount) extras.push(`${ccCount} CC`);
     if (scCount) extras.push(`${scCount} SC`);
     if (extCount) extras.push(`${extCount} Ext.`);
+    if (branchIds.size > 0) extras.push(`${branchIds.size} líneas paralelas`);
     const summary = parts.join(' · ') + (extras.length ? ` — ${extras.join(' · ')}` : '');
     return `<div style="margin-top:6px;font-family:Arial,sans-serif;font-size:9px;color:#374151;"><strong>Resumen:</strong> ${doc.steps.length} ${doc.steps.length === 1 ? 'paso' : 'pasos'} — ${summary}</div>`;
 }
@@ -209,23 +212,92 @@ function buildHeaderHtml(doc: PfdDocument, logoBase64: string): string {
     `;
 }
 
+/** C9-N1: Branch color for PDF */
+const BRANCH_PDF_COLORS: Record<string, { bg: string; text: string; border: string }> = {
+    A: { bg: '#F5F3FF', text: '#6D28D9', border: '#A78BFA' },
+    B: { bg: '#F0F9FF', text: '#0369A1', border: '#7DD3FC' },
+    C: { bg: '#FFF1F2', text: '#BE123C', border: '#FDA4AF' },
+    D: { bg: '#F7FEE7', text: '#4D7C0F', border: '#BEF264' },
+};
+function getBranchPdfColor(branchId: string) {
+    return BRANCH_PDF_COLORS[branchId.toUpperCase()] || BRANCH_PDF_COLORS.A;
+}
+
+/** C9-N1: Build flow arrow between rows with fork/join/NG annotations */
+function buildFlowArrowHtml(
+    current: import('./pfdTypes').PfdStep,
+    next: import('./pfdTypes').PfdStep,
+    steps: import('./pfdTypes').PfdStep[],
+    currentIndex: number,
+    colCount: number,
+): string {
+    const curBranch = current.branchId || '';
+    const nextBranch = next.branchId || '';
+    const isFork = !curBranch && !!nextBranch;
+    const isJoin = !!curBranch && !nextBranch;
+
+    // NG path info
+    const hasDisposition = current.rejectDisposition !== 'none';
+    const isInspection = current.stepType === 'inspection' || current.stepType === 'combined';
+    const showNgPath = hasDisposition && isInspection;
+
+    let annotation = '';
+
+    if (isFork) {
+        const forkBranches = collectForkBranches(steps, currentIndex);
+        const badges = forkBranches.map(b => {
+            const color = getBranchPdfColor(b);
+            const label = steps.find(s => s.branchId === b)?.branchLabel || `Línea ${b}`;
+            return `<span style="background:${color.bg};color:${color.text};border:1px solid ${color.border};padding:1px 4px;border-radius:3px;font-size:7px;font-weight:bold;margin:0 2px;">${esc(label)}</span>`;
+        }).join('');
+        annotation = `<span style="font-size:7px;font-weight:bold;color:#0891B2;">FLUJO PARALELO</span> ${badges}`;
+    }
+
+    if (isJoin) {
+        annotation = `<span style="font-size:7px;font-weight:bold;color:#0D9488;">CONVERGENCIA</span>`;
+    }
+
+    if (showNgPath) {
+        const disp = current.rejectDisposition as Exclude<RejectDisposition, 'none'>;
+        const label = DISPOSITION_LABEL[disp];
+        const detail = disp === 'rework' && current.reworkReturnStep
+            ? ` → ${esc(current.reworkReturnStep)}`
+            : current.scrapDescription ? `: ${esc(current.scrapDescription.slice(0, 30))}` : '';
+        annotation += `${annotation ? ' · ' : ''}<span style="font-size:7px;color:#16A34A;font-weight:bold;">OK ↓</span> <span style="font-size:7px;color:#DC2626;font-weight:bold;">NG → ${label}${detail}</span>`;
+    }
+
+    const arrowSvg = `<svg width="16" height="18" viewBox="0 0 16 18" style="display:inline-block;vertical-align:middle;"><path d="M8 0v12M3 9l5 7 5-7" stroke="#0891B2" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+    return `<tr><td colspan="${colCount}" style="border:none;padding:1px 0;text-align:center;">${annotation ? `<div style="font-family:Arial,sans-serif;">${annotation}</div>` : ''}${arrowSvg}</td></tr>`;
+}
+
 function buildTableHtml(doc: PfdDocument): string {
-    // C3-N2: Updated columns — replaced Retrabajo with Disposición + Detalle
-    const headers = ['Nº Op.', 'Símbolo', 'Descripción', 'Máquina/Dispositivo', 'Caract. Producto', 'CC/SC Prod.', 'Caract. Proceso', 'CC/SC Proc.', 'Referencia', 'Área', 'Notas', 'Disposición', 'Detalle', 'Externo'];
+    // C9-N1: Added "Línea" column for parallel flow branch info
+    const headers = ['Nº Op.', 'Símbolo', 'Descripción', 'Línea', 'Máquina/Dispositivo', 'Caract. Producto', 'CC/SC Prod.', 'Caract. Proceso', 'CC/SC Proc.', 'Referencia', 'Área', 'Notas', 'Disposición', 'Detalle', 'Externo'];
     const colCount = headers.length;
 
     let rows = '';
     for (let i = 0; i < doc.steps.length; i++) {
         const step = doc.steps[i];
         const dispBg = step.rejectDisposition !== 'none' ? `background:${DISPOSITION_BG[step.rejectDisposition]};` : '';
-        const rowBg = dispBg || (step.isExternalProcess ? 'background:#EFF6FF;' : '');
+        // C9-N1: Branch background takes priority
+        const branchBg = step.branchId ? `background:${getBranchPdfColor(step.branchId).bg};` : '';
+        const rowBg = dispBg || branchBg || (step.isExternalProcess ? 'background:#EFF6FF;' : '');
         const hasCC = step.productSpecialChar === 'CC' || step.processSpecialChar === 'CC';
         const hasSC = !hasCC && (step.productSpecialChar === 'SC' || step.processSpecialChar === 'SC');
-        const leftBorderStyle = hasCC ? 'border-left:4px solid #EF4444;' : hasSC ? 'border-left:4px solid #F59E0B;' : '';
+        const leftBorderStyle = hasCC ? 'border-left:4px solid #EF4444;' : hasSC ? 'border-left:4px solid #F59E0B;'
+            : step.branchId ? `border-left:4px solid ${getBranchPdfColor(step.branchId).border};` : '';
+
+        // C9-N1: Branch cell content
+        const branchLabel = step.branchId
+            ? `<span style="background:${getBranchPdfColor(step.branchId).bg};color:${getBranchPdfColor(step.branchId).text};border:1px solid ${getBranchPdfColor(step.branchId).border};padding:1px 3px;border-radius:3px;font-size:7px;font-weight:bold;">${esc(step.branchLabel || `Línea ${step.branchId}`)}</span>`
+            : '';
+
         rows += `<tr>
             <td style="${cellStyle('center')} font-weight:bold; ${rowBg} ${leftBorderStyle}">${esc(step.stepNumber)}</td>
             ${symbolCell(step.stepType)}
             <td style="${cellStyle()} ${rowBg}">${esc(step.description)}</td>
+            <td style="${cellStyle('center')} ${rowBg}">${branchLabel}</td>
             <td style="${cellStyle()} ${rowBg}">${esc(step.machineDeviceTool)}</td>
             <td style="${cellStyle()} ${rowBg}">${esc(step.productCharacteristic)}</td>
             <td style="${cellStyle('center')} ${rowBg}">${specialCharBadge(step.productSpecialChar)}</td>
@@ -237,9 +309,9 @@ function buildTableHtml(doc: PfdDocument): string {
             ${dispositionCell(step.rejectDisposition, step.scrapDescription, step.reworkReturnStep)}
             <td style="${cellStyle('center')} ${rowBg}">${step.isExternalProcess ? 'Sí' : ''}</td>
         </tr>`;
-        // C4-V1: Flow arrow between rows — SVG instead of text character
+        // C9-N1: Enhanced flow arrows with fork/join/NG-path annotations
         if (i < doc.steps.length - 1) {
-            rows += `<tr><td colspan="${colCount}" style="border:none;padding:1px 0;text-align:center;"><svg width="16" height="18" viewBox="0 0 16 18" style="display:inline-block;vertical-align:middle;"><path d="M8 0v12M3 9l5 7 5-7" stroke="#0891B2" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></td></tr>`;
+            rows += buildFlowArrowHtml(step, doc.steps[i + 1], doc.steps, i, colCount);
         }
     }
 
@@ -247,9 +319,8 @@ function buildTableHtml(doc: PfdDocument): string {
         rows = `<tr><td colspan="${colCount}" style="${cellStyle('center')} color:#9CA3AF; padding:20px;">Sin pasos definidos</td></tr>`;
     }
 
-    // C5-V1/E1: Explicit column widths for consistent PDF layout
-    // C6-E1: Rebalanced — more space for Descripción, Notas, Disposición, Detalle, Externo
-    const colWidths = ['5%', '4%', '20%', '11%', '9%', '3%', '9%', '3%', '6%', '5%', '10%', '6%', '6%', '3%'];
+    // C9-N1: Rebalanced widths with Línea column
+    const colWidths = ['5%', '4%', '18%', '5%', '10%', '8%', '3%', '8%', '3%', '5%', '5%', '9%', '6%', '6%', '3%'];
     const colgroup = `<colgroup>${colWidths.map(w => `<col style="width:${w}"/>`).join('')}</colgroup>`;
 
     return `

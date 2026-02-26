@@ -7,7 +7,7 @@ vi.mock('html2pdf.js', () => ({
 }));
 
 import { getPfdPdfPreviewHtml } from '../../../modules/pfd/pfdPdfExport';
-import { createEmptyPfdDocument } from '../../../modules/pfd/pfdTypes';
+import { createEmptyPfdDocument, createEmptyStep } from '../../../modules/pfd/pfdTypes';
 
 describe('pfdPdfExport', () => {
     describe('getPfdPdfPreviewHtml', () => {
@@ -190,6 +190,74 @@ describe('pfdPdfExport', () => {
             doc.steps = [];
             const html = getPfdPdfPreviewHtml(doc);
             expect(html).not.toContain('Resumen');
+        });
+    });
+
+    describe('C9-N1: Parallel flow in PDF', () => {
+        it('should include Línea column header', () => {
+            const doc = createEmptyPfdDocument();
+            const html = getPfdPdfPreviewHtml(doc);
+            expect(html).toContain('Línea');
+        });
+
+        it('should render branch badge for steps in a branch', () => {
+            const doc = createEmptyPfdDocument();
+            doc.steps[0].branchId = 'A';
+            doc.steps[0].branchLabel = 'Mecanizado';
+            const html = getPfdPdfPreviewHtml(doc);
+            expect(html).toContain('Mecanizado');
+            expect(html).toContain('#6D28D9'); // violet text color for branch A
+        });
+
+        it('should render branch left border when no CC/SC', () => {
+            const doc = createEmptyPfdDocument();
+            doc.steps[0].branchId = 'B';
+            const html = getPfdPdfPreviewHtml(doc);
+            expect(html).toContain('#7DD3FC'); // sky border for branch B
+        });
+
+        it('should show FLUJO PARALELO annotation at fork point', () => {
+            const doc = createEmptyPfdDocument();
+            const step2 = { ...createEmptyStep('OP 20'), branchId: 'A', branchLabel: 'Línea A' };
+            doc.steps.push(step2);
+            const html = getPfdPdfPreviewHtml(doc);
+            expect(html).toContain('FLUJO PARALELO');
+            expect(html).toContain('Línea A');
+        });
+
+        it('should show CONVERGENCIA annotation at join point', () => {
+            const doc = createEmptyPfdDocument();
+            doc.steps = [
+                { ...createEmptyStep('OP 10'), branchId: 'A' },
+                { ...createEmptyStep('OP 20'), branchId: '' },
+            ];
+            const html = getPfdPdfPreviewHtml(doc);
+            expect(html).toContain('CONVERGENCIA');
+        });
+
+        it('should show OK/NG annotation for inspection with disposition', () => {
+            const doc = createEmptyPfdDocument();
+            doc.steps = [
+                { ...createEmptyStep('OP 10'), stepType: 'inspection', rejectDisposition: 'rework', reworkReturnStep: 'OP 05' },
+                { ...createEmptyStep('OP 20') },
+            ];
+            const html = getPfdPdfPreviewHtml(doc);
+            expect(html).toContain('OK ↓');
+            expect(html).toContain('NG');
+            expect(html).toContain('Retrabajo');
+            expect(html).toContain('OP 05');
+        });
+
+        it('should include parallel flow count in summary', () => {
+            const doc = createEmptyPfdDocument();
+            doc.steps = [
+                { ...createEmptyStep('OP 10') },
+                { ...createEmptyStep('OP 20'), branchId: 'A' },
+                { ...createEmptyStep('OP 30'), branchId: 'B' },
+                { ...createEmptyStep('OP 40') },
+            ];
+            const html = getPfdPdfPreviewHtml(doc);
+            expect(html).toContain('2 líneas paralelas');
         });
     });
 });

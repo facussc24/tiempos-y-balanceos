@@ -9,6 +9,7 @@
 import React from 'react';
 import { Trash2, ArrowUp, ArrowDown, Plus, Copy } from 'lucide-react';
 import type { PfdStep, PfdStepType, SpecialCharClass, RejectDisposition } from './pfdTypes';
+import { getBranchColor } from './pfdTypes';
 import PfdSymbolPicker from './PfdSymbolPicker';
 
 interface Props {
@@ -58,12 +59,16 @@ function SpecialCharBadge({ value }: { value: SpecialCharClass }) {
 }
 
 const PfdTableRow: React.FC<Props> = ({ step, index, totalSteps, onUpdate, onBatchUpdate, onRemove, onMove, onInsertAfter, onDuplicate, readOnly }) => {
-    // C3-N1: disposition-based background > external > type tint > zebra
+    // C9-N1: Branch color takes priority for parallel flow steps
+    const branchColor = step.branchId ? getBranchColor(step.branchId) : null;
+    const branchBg = branchColor ? branchColor.bg : '';
+
+    // C3-N1: disposition-based background > branch > external > type tint > zebra
     const dispositionBg = DISPOSITION_BG[step.rejectDisposition] || '';
-    const externalBg = step.isExternalProcess ? 'bg-blue-50' : '';
-    const typeTint = !dispositionBg && !externalBg ? (TYPE_TINTS[step.stepType] || '') : '';
-    const zebraBg = !dispositionBg && !externalBg && !typeTint && index % 2 === 1 ? 'bg-gray-50/70' : '';
-    const rowBg = dispositionBg || externalBg || typeTint || zebraBg;
+    const externalBg = !dispositionBg && step.isExternalProcess ? 'bg-blue-50' : '';
+    const typeTint = !dispositionBg && !externalBg && !branchBg ? (TYPE_TINTS[step.stepType] || '') : '';
+    const zebraBg = !dispositionBg && !externalBg && !branchBg && !typeTint && index % 2 === 1 ? 'bg-gray-50/70' : '';
+    const rowBg = dispositionBg || branchBg || externalBg || typeTint || zebraBg;
 
     // C7-U1: Opaque background for sticky cells (prevent bleed-through during horizontal scroll)
     const stickyBg = dispositionBg || externalBg || (index % 2 === 1 ? 'bg-gray-50' : 'bg-white');
@@ -71,7 +76,10 @@ const PfdTableRow: React.FC<Props> = ({ step, index, totalSteps, onUpdate, onBat
     // N4: CC/SC visual — borde izquierdo prominente
     const hasCC = step.productSpecialChar === 'CC' || step.processSpecialChar === 'CC';
     const hasSC = !hasCC && (step.productSpecialChar === 'SC' || step.processSpecialChar === 'SC');
-    const leftBorder = hasCC ? 'border-l-4 border-l-red-500' : hasSC ? 'border-l-4 border-l-amber-500' : '';
+    // C9-N1: Branch left border takes precedence if no CC/SC
+    const ccScBorder = hasCC ? 'border-l-4 border-l-red-500' : hasSC ? 'border-l-4 border-l-amber-500' : '';
+    const branchBorder = !ccScBorder && step.branchId && branchColor ? `border-l-4 ${branchColor.border}` : '';
+    const leftBorder = ccScBorder || branchBorder;
 
     const handleTextChange = (field: keyof PfdStep) => (e: React.ChangeEvent<HTMLInputElement>) => {
         onUpdate(step.id, field, e.target.value);
@@ -139,6 +147,12 @@ const PfdTableRow: React.FC<Props> = ({ step, index, totalSteps, onUpdate, onBat
                         placeholder="Descripción de la operación"
                         disabled={readOnly}
                     />
+                    {/* C9-N1: Branch badge for parallel flow */}
+                    {step.branchId && (
+                        <span className={`inline-block ${branchColor?.badge || 'bg-gray-100 text-gray-600 border-gray-300'} border text-[9px] font-bold px-1.5 py-0.5 rounded whitespace-nowrap`}>
+                            {step.branchLabel || `Línea ${step.branchId}`}
+                        </span>
+                    )}
                     {dispositionInfo && (
                         <span className={`inline-block ${dispositionInfo.bg} ${dispositionInfo.textColor} border ${dispositionInfo.border} text-[9px] font-bold px-1.5 py-0.5 rounded whitespace-nowrap`}>
                             {dispositionInfo.text}
@@ -367,6 +381,31 @@ const PfdTableRow: React.FC<Props> = ({ step, index, totalSteps, onUpdate, onBat
                         >
                             <Trash2 size={14} />
                         </button>
+                    </div>
+                    {/* C9-N1: Branch selector for parallel flows */}
+                    <div className="mt-0.5">
+                        <select
+                            value={step.branchId || ''}
+                            onChange={(e) => {
+                                const val = e.target.value;
+                                if (onBatchUpdate) {
+                                    onBatchUpdate(step.id, {
+                                        branchId: val,
+                                        branchLabel: val ? (step.branchLabel || `Línea ${val}`) : '',
+                                    });
+                                } else {
+                                    onUpdate(step.id, 'branchId', val);
+                                }
+                            }}
+                            className="text-[10px] border border-gray-200 rounded px-0.5 py-0 bg-white w-full"
+                            title="Asignar a línea paralela"
+                        >
+                            <option value="">— Flujo principal —</option>
+                            <option value="A">Línea A</option>
+                            <option value="B">Línea B</option>
+                            <option value="C">Línea C</option>
+                            <option value="D">Línea D</option>
+                        </select>
                     </div>
                 </td>
             )}

@@ -4,12 +4,15 @@
  * C3-U3: Empty state with template quick-start button.
  * Sticky header, inline editing, symbol picker, CC/SC badges.
  * Flow arrows between rows to visualize process direction (AIAG).
+ * C9-N1: Enhanced flow arrows with fork/join for parallel flows,
+ *         NG-path annotations for inspection dispositions,
+ *         and rework return indicators.
  */
 
 import React from 'react';
-import { ArrowDown, Plus, FileText, Factory } from 'lucide-react';
-import type { PfdStep } from './pfdTypes';
-import { PFD_COLUMNS } from './pfdTypes';
+import { ArrowDown, Plus, FileText, Factory, GitBranch, GitMerge, CornerDownLeft, XOctagon, Filter } from 'lucide-react';
+import type { PfdStep, RejectDisposition } from './pfdTypes';
+import { PFD_COLUMNS, getBranchColor, collectForkBranches } from './pfdTypes';
 import PfdTableRow from './PfdTableRow';
 
 interface Props {
@@ -27,6 +30,176 @@ interface Props {
     /** C5-U3: Toggle flow arrows between rows */
     showFlowArrows?: boolean;
     readOnly?: boolean;
+}
+
+/** C9-N1: Disposition labels in Spanish */
+const DISPOSITION_LABELS: Record<Exclude<RejectDisposition, 'none'>, string> = {
+    rework: 'Retrabajo',
+    scrap: 'Descarte',
+    sort: 'Selección',
+};
+const DISPOSITION_ICONS: Record<Exclude<RejectDisposition, 'none'>, typeof XOctagon> = {
+    rework: CornerDownLeft,
+    scrap: XOctagon,
+    sort: Filter,
+};
+
+/**
+ * C9-N1: Render the flow arrow area between two consecutive rows.
+ * Shows different indicators depending on the flow transition:
+ * - Normal: simple down arrow
+ * - Fork: branching arrows showing parallel flow start
+ * - Join: merging arrows showing parallel flow end
+ * - NG path: inspection disposition annotation
+ * - Rework return: return arrow to previous step
+ */
+function FlowArrow({
+    current,
+    next,
+    steps,
+    currentIndex,
+    colCount,
+}: {
+    current: PfdStep;
+    next: PfdStep;
+    steps: PfdStep[];
+    currentIndex: number;
+    colCount: number;
+}) {
+    const curBranch = current.branchId || '';
+    const nextBranch = next.branchId || '';
+
+    // Detect transition type
+    const isFork = !curBranch && !!nextBranch;
+    const isJoin = !!curBranch && !nextBranch;
+    const isBranchSwitch = !!curBranch && !!nextBranch && curBranch !== nextBranch;
+    const isSameBranch = curBranch === nextBranch;
+
+    // NG path info from current step
+    const hasDisposition = current.rejectDisposition !== 'none';
+    const isInspection = current.stepType === 'inspection' || current.stepType === 'combined';
+    const showNgPath = hasDisposition && isInspection;
+
+    // Rework return info
+    const isRework = current.rejectDisposition === 'rework' && current.reworkReturnStep;
+
+    // Fork: collect all branches that start after this point
+    const forkBranches = isFork ? collectForkBranches(steps, currentIndex) : [];
+
+    // Branch color for continuation
+    const branchColor = curBranch ? getBranchColor(curBranch) : null;
+
+    return (
+        <tr className="flow-arrow-row" aria-hidden="true">
+            <td colSpan={colCount} className="py-0 text-center border-0 bg-gray-50/30">
+                <div className="flex flex-col items-center gap-0">
+                    {/* Fork indicator */}
+                    {isFork && (
+                        <div className="flex items-center justify-center gap-2 py-1">
+                            <div className="w-px h-2 bg-cyan-300" />
+                            <div className="flex items-center gap-1.5 px-2 py-0.5 bg-cyan-50 border border-cyan-200 rounded-full">
+                                <GitBranch size={12} className="text-cyan-600" />
+                                <span className="text-[10px] font-semibold text-cyan-700">FLUJO PARALELO</span>
+                                {forkBranches.map(b => {
+                                    const color = getBranchColor(b);
+                                    const label = steps.find(s => s.branchId === b)?.branchLabel || `Línea ${b}`;
+                                    return (
+                                        <span key={b} className={`inline-block ${color.badge} border text-[9px] font-bold px-1.5 py-0 rounded`}>
+                                            {label}
+                                        </span>
+                                    );
+                                })}
+                            </div>
+                            <div className="w-px h-2 bg-cyan-300" />
+                        </div>
+                    )}
+
+                    {/* Join indicator */}
+                    {isJoin && (
+                        <div className="flex items-center justify-center gap-2 py-1">
+                            <div className="w-px h-2 bg-cyan-300" />
+                            <div className="flex items-center gap-1.5 px-2 py-0.5 bg-teal-50 border border-teal-200 rounded-full">
+                                <GitMerge size={12} className="text-teal-600" />
+                                <span className="text-[10px] font-semibold text-teal-700">CONVERGENCIA</span>
+                            </div>
+                            <div className="w-px h-2 bg-cyan-300" />
+                        </div>
+                    )}
+
+                    {/* Branch switch indicator */}
+                    {isBranchSwitch && (
+                        <div className="flex items-center justify-center gap-1 py-0.5">
+                            {(() => {
+                                const fromColor = getBranchColor(curBranch);
+                                const toColor = getBranchColor(nextBranch);
+                                const toLabel = next.branchLabel || `Línea ${nextBranch}`;
+                                return (
+                                    <>
+                                        <span className={`inline-block ${fromColor.badge} border text-[9px] px-1 rounded`}>{curBranch}</span>
+                                        <ArrowDown size={12} className="text-gray-400" />
+                                        <span className={`inline-block ${toColor.badge} border text-[9px] font-bold px-1 rounded`}>{toLabel}</span>
+                                    </>
+                                );
+                            })()}
+                        </div>
+                    )}
+
+                    {/* NG path annotation for inspection with disposition */}
+                    {showNgPath && (
+                        <div className="flex items-center justify-center gap-2 py-0.5">
+                            <div className="flex items-center gap-1">
+                                <span className="text-[10px] font-medium text-green-600">OK ↓</span>
+                                <span className="text-gray-300 text-[10px]">|</span>
+                                {(() => {
+                                    const disp = current.rejectDisposition as Exclude<RejectDisposition, 'none'>;
+                                    const Icon = DISPOSITION_ICONS[disp];
+                                    const label = DISPOSITION_LABELS[disp];
+                                    const detail = isRework
+                                        ? `→ ${current.reworkReturnStep}`
+                                        : current.scrapDescription
+                                            ? `: ${current.scrapDescription.slice(0, 30)}`
+                                            : '';
+                                    return (
+                                        <span className="flex items-center gap-0.5 text-[10px] font-medium text-red-600">
+                                            <span className="text-red-400">NG</span>
+                                            <Icon size={10} />
+                                            <span>{label}{detail}</span>
+                                        </span>
+                                    );
+                                })()}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Rework return indicator (for non-inspection steps with rework) */}
+                    {!showNgPath && isRework && (
+                        <div className="flex items-center justify-center gap-1 py-0.5">
+                            <CornerDownLeft size={10} className="text-red-400" />
+                            <span className="text-[10px] font-medium text-red-600">
+                                Retrabajo → {current.reworkReturnStep}
+                            </span>
+                        </div>
+                    )}
+
+                    {/* Normal flow arrow */}
+                    {!isFork && !isJoin && (
+                        <div className="flex flex-col items-center">
+                            <div className={`w-px h-1 ${branchColor ? branchColor.border.replace('border-', 'bg-') : 'bg-cyan-300'}`} />
+                            <ArrowDown size={18} className={`${branchColor ? branchColor.text : 'text-cyan-500'} -my-0.5`} strokeWidth={2.5} />
+                            <div className={`w-px h-1 ${branchColor ? branchColor.border.replace('border-', 'bg-') : 'bg-cyan-300'}`} />
+                        </div>
+                    )}
+
+                    {/* Fork/Join also gets a small arrow */}
+                    {(isFork || isJoin) && (
+                        <div className="flex flex-col items-center">
+                            <ArrowDown size={14} className="text-cyan-500 -my-0.5" strokeWidth={2} />
+                        </div>
+                    )}
+                </div>
+            </td>
+        </tr>
+    );
 }
 
 const PfdTable: React.FC<Props> = ({ steps, onUpdateStep, onBatchUpdateStep, onRemoveStep, onMoveStep, onInsertAfter, onDuplicate, onAddStep, onLoadTemplate, onLoadManufacturingTemplate, showFlowArrows = true, readOnly }) => {
@@ -90,7 +263,7 @@ const PfdTable: React.FC<Props> = ({ steps, onUpdateStep, onBatchUpdateStep, onR
                                                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-cyan-700 bg-cyan-50 hover:bg-cyan-100 border border-cyan-200 transition"
                                             >
                                                 <Factory size={14} />
-                                                Plantilla manufactura (11 pasos)
+                                                Plantilla manufactura (12 pasos)
                                             </button>
                                         )}
                                     </div>
@@ -113,17 +286,15 @@ const PfdTable: React.FC<Props> = ({ steps, onUpdateStep, onBatchUpdateStep, onR
                                 onDuplicate={onDuplicate}
                                 readOnly={readOnly}
                             />
-                            {/* C5-U3: Flow arrow between rows (toggleable) */}
+                            {/* C9-N1: Enhanced flow arrows with fork/join/NG-path */}
                             {showFlowArrows && index < steps.length - 1 && (
-                                <tr className="flow-arrow-row" aria-hidden="true">
-                                    <td colSpan={colCount} className="py-0 text-center border-0 bg-gray-50/30">
-                                        <div className="flex flex-col items-center">
-                                            <div className="w-px h-1 bg-cyan-300" />
-                                            <ArrowDown size={18} className="text-cyan-500 -my-0.5" strokeWidth={2.5} />
-                                            <div className="w-px h-1 bg-cyan-300" />
-                                        </div>
-                                    </td>
-                                </tr>
+                                <FlowArrow
+                                    current={step}
+                                    next={steps[index + 1]}
+                                    steps={steps}
+                                    currentIndex={index}
+                                    colCount={colCount}
+                                />
                             )}
                         </React.Fragment>
                     ))

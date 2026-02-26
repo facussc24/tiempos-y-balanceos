@@ -306,5 +306,43 @@ export function validatePfdDocument(doc: PfdDocument): ValidationIssue[] {
         }
     }
 
+    // V19: Parallel branch without convergence (C9-N1 — orphaned branches)
+    const branchIds = new Set(doc.steps.filter(s => s.branchId).map(s => s.branchId));
+    if (branchIds.size > 0) {
+        const lastBranchIndex = doc.steps.reduce((max, s, i) => s.branchId ? Math.max(max, i) : max, -1);
+        const hasConvergence = lastBranchIndex < doc.steps.length - 1;
+        if (!hasConvergence) {
+            issues.push({
+                rule: 'V19',
+                severity: 'warning',
+                message: 'Flujo paralelo sin convergencia: no hay pasos en flujo principal después de las líneas paralelas',
+            });
+        }
+    }
+
+    // V20: Branch step without label (C9-N1 — helps readability)
+    for (const step of doc.steps) {
+        if (step.branchId && (!step.branchLabel || step.branchLabel.trim() === '')) {
+            issues.push({
+                rule: 'V20',
+                severity: 'info',
+                message: `Paso ${step.stepNumber || '(sin nº)'}: línea paralela "${step.branchId}" sin nombre descriptivo`,
+                stepId: step.id,
+            });
+        }
+    }
+
+    // V21: Inspection without disposition (C9-N2 — AIAG recommends explicit NG path)
+    for (const step of doc.steps) {
+        if ((step.stepType === 'inspection' || step.stepType === 'combined') && step.rejectDisposition === 'none') {
+            issues.push({
+                rule: 'V21',
+                severity: 'info',
+                message: `Paso ${step.stepNumber || '(sin nº)'}: inspección sin disposición de no conformes (retrabajo/descarte/selección)`,
+                stepId: step.id,
+            });
+        }
+    }
+
     return issues;
 }

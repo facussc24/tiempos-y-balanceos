@@ -1,4 +1,4 @@
-import { createEmptyStep, createEmptyPfdDocument, PFD_COLUMNS, PFD_STEP_TYPES, EMPTY_PFD_HEADER, normalizePfdStep, getIntermediateStepNumber, parseStepNumber, getNextStepNumber } from '../../../modules/pfd/pfdTypes';
+import { createEmptyStep, createEmptyPfdDocument, PFD_COLUMNS, PFD_STEP_TYPES, EMPTY_PFD_HEADER, normalizePfdStep, getIntermediateStepNumber, parseStepNumber, getNextStepNumber, getBranchColor, BRANCH_COLORS, analyzeFlowTransition, collectForkBranches } from '../../../modules/pfd/pfdTypes';
 
 describe('pfdTypes', () => {
     describe('createEmptyStep', () => {
@@ -233,6 +233,132 @@ describe('pfdTypes', () => {
             const steps = [{ ...createEmptyStep('OP 10'), description: 'A' }];
             const result = getIntermediateStepNumber(steps, 5);
             expect(result).toBe(getNextStepNumber(steps));
+        });
+    });
+
+    describe('createEmptyStep — C9-N1 branch fields', () => {
+        it('should default branchId to empty string', () => {
+            const step = createEmptyStep();
+            expect(step.branchId).toBe('');
+        });
+
+        it('should default branchLabel to empty string', () => {
+            const step = createEmptyStep();
+            expect(step.branchLabel).toBe('');
+        });
+    });
+
+    describe('normalizePfdStep — C9-N1 branch backward compat', () => {
+        it('should fill missing branchId as empty string', () => {
+            const raw = { id: 'test-b1' } as Record<string, unknown> & { id: string };
+            const step = normalizePfdStep(raw);
+            expect(step.branchId).toBe('');
+        });
+
+        it('should fill missing branchLabel as empty string', () => {
+            const raw = { id: 'test-b2' } as Record<string, unknown> & { id: string };
+            const step = normalizePfdStep(raw);
+            expect(step.branchLabel).toBe('');
+        });
+
+        it('should preserve existing branchId', () => {
+            const raw = { id: 'test-b3', branchId: 'A', branchLabel: 'Mecanizado' } as Record<string, unknown> & { id: string };
+            const step = normalizePfdStep(raw);
+            expect(step.branchId).toBe('A');
+            expect(step.branchLabel).toBe('Mecanizado');
+        });
+    });
+
+    describe('getBranchColor (C9-N1)', () => {
+        it('should return color for branch A', () => {
+            const color = getBranchColor('A');
+            expect(color).toBe(BRANCH_COLORS.A);
+        });
+
+        it('should return color for lowercase branch id', () => {
+            const color = getBranchColor('b');
+            expect(color).toBe(BRANCH_COLORS.B);
+        });
+
+        it('should return default gray for empty branchId', () => {
+            const color = getBranchColor('');
+            expect(color.text).toBe('text-gray-500');
+        });
+
+        it('should fallback to A colors for unknown branch', () => {
+            const color = getBranchColor('Z');
+            expect(color).toBe(BRANCH_COLORS.A);
+        });
+    });
+
+    describe('analyzeFlowTransition (C9-N1)', () => {
+        it('should detect fork (main → branch)', () => {
+            const current = { ...createEmptyStep(), branchId: '' };
+            const next = { ...createEmptyStep(), branchId: 'A' };
+            const result = analyzeFlowTransition(current, next);
+            expect(result.type).toBe('fork');
+        });
+
+        it('should detect join (branch → main)', () => {
+            const current = { ...createEmptyStep(), branchId: 'B' };
+            const next = { ...createEmptyStep(), branchId: '' };
+            const result = analyzeFlowTransition(current, next);
+            expect(result.type).toBe('join');
+        });
+
+        it('should detect normal flow (main → main)', () => {
+            const current = { ...createEmptyStep(), branchId: '' };
+            const next = { ...createEmptyStep(), branchId: '' };
+            const result = analyzeFlowTransition(current, next);
+            expect(result.type).toBe('normal');
+        });
+
+        it('should detect branch-continue (same branch)', () => {
+            const current = { ...createEmptyStep(), branchId: 'A' };
+            const next = { ...createEmptyStep(), branchId: 'A' };
+            const result = analyzeFlowTransition(current, next);
+            expect(result.type).toBe('branch-continue');
+        });
+
+        it('should detect branch-switch (different branches)', () => {
+            const current = { ...createEmptyStep(), branchId: 'A' };
+            const next = { ...createEmptyStep(), branchId: 'B' };
+            const result = analyzeFlowTransition(current, next);
+            expect(result.type).toBe('branch-switch');
+        });
+    });
+
+    describe('collectForkBranches (C9-N1)', () => {
+        it('should collect all branch IDs after fork point', () => {
+            const steps = [
+                { ...createEmptyStep(), branchId: '' },      // 0: fork point
+                { ...createEmptyStep(), branchId: 'A' },     // 1
+                { ...createEmptyStep(), branchId: 'A' },     // 2
+                { ...createEmptyStep(), branchId: 'B' },     // 3
+                { ...createEmptyStep(), branchId: '' },      // 4: convergence
+            ];
+            const branches = collectForkBranches(steps, 0);
+            expect(branches).toEqual(['A', 'B']);
+        });
+
+        it('should return empty array when no branches follow', () => {
+            const steps = [
+                { ...createEmptyStep(), branchId: '' },
+                { ...createEmptyStep(), branchId: '' },
+            ];
+            const branches = collectForkBranches(steps, 0);
+            expect(branches).toEqual([]);
+        });
+
+        it('should stop at convergence (main flow)', () => {
+            const steps = [
+                { ...createEmptyStep(), branchId: '' },
+                { ...createEmptyStep(), branchId: 'A' },
+                { ...createEmptyStep(), branchId: '' },
+                { ...createEmptyStep(), branchId: 'C' },
+            ];
+            const branches = collectForkBranches(steps, 0);
+            expect(branches).toEqual(['A']);
         });
     });
 

@@ -79,13 +79,15 @@ describe('pfdExcelExport', () => {
         expect(headers).not.toContain('Retrabajo');
     });
 
-    it('should have 14 columns in header row (C3-N2)', () => {
+    it('should have 15 columns in header row (C9-N1: +Línea)', () => {
         const doc = createEmptyPfdDocument();
         exportPfdExcel(doc);
         const calls = (XLSX.utils.aoa_to_sheet as ReturnType<typeof vi.fn>).mock.calls;
         const rows = calls[0][0] as unknown[][];
         const headerRow = rows[11] as { v: string }[];
-        expect(headerRow).toHaveLength(14);
+        expect(headerRow).toHaveLength(15);
+        const headers = headerRow.map((c: { v: string }) => c.v);
+        expect(headers).toContain('Línea');
     });
 
     it('should set freeze panes on header row (C4-E1)', () => {

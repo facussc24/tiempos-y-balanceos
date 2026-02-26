@@ -157,8 +157,8 @@ export function exportPfdExcel(doc: PfdDocument): void {
         [],
     ];
 
-    // C3-N2: Updated headers — replaced Retrabajo with Disposición + Detalle
-    const headers = ['Nº Op.', 'Símbolo', 'Descripción', 'Máquina/Dispositivo', 'Caract. Producto', 'CC/SC Prod.', 'Caract. Proceso', 'CC/SC Proc.', 'Referencia', 'Área', 'Notas', 'Disposición', 'Detalle', 'Externo'];
+    // C9-N1: Updated headers — added "Línea" column for parallel flow branch info
+    const headers = ['Nº Op.', 'Símbolo', 'Descripción', 'Línea', 'Máquina/Dispositivo', 'Caract. Producto', 'CC/SC Prod.', 'Caract. Proceso', 'CC/SC Proc.', 'Referencia', 'Área', 'Notas', 'Disposición', 'Detalle', 'Externo'];
     rows.push(headers.map(label => ({ v: label, s: styles.header })));
 
     // Data rows
@@ -183,10 +183,16 @@ export function exportPfdExcel(doc: PfdDocument): void {
             dispDetail = step.scrapDescription;
         }
 
+        // C9-N1: Branch label for parallel flow
+        const branchLabel = step.branchId
+            ? (step.branchLabel || `Línea ${step.branchId}`)
+            : '';
+
         rows.push([
             { v: sanitizeCellValue(step.stepNumber), s: { ...rowS, alignment: { horizontal: 'center' as const, vertical: 'center' as const }, border: firstCellBorder } },
             { v: sanitizeCellValue(getStepTypeLabel(step.stepType)), s: { ...rowS, alignment: { horizontal: 'center' as const, vertical: 'center' as const } } },
             { v: sanitizeCellValue(step.description), s: rowS },
+            { v: sanitizeCellValue(branchLabel), s: styles.cellCenter },
             { v: sanitizeCellValue(step.machineDeviceTool), s: rowS },
             { v: sanitizeCellValue(step.productCharacteristic), s: rowS },
             { v: sanitizeCellValue(step.productSpecialChar === 'none' ? '' : step.productSpecialChar), s: getSpecialCharStyle(step.productSpecialChar) },
@@ -217,8 +223,9 @@ export function exportPfdExcel(doc: PfdDocument): void {
     }
 
     const ws = XLSX.utils.aoa_to_sheet(rows);
+    // C9-N1: Updated widths with Línea column
     ws['!cols'] = [
-        { wch: 10 }, { wch: 16 }, { wch: 35 }, { wch: 25 },
+        { wch: 10 }, { wch: 16 }, { wch: 35 }, { wch: 14 }, { wch: 25 },
         { wch: 25 }, { wch: 10 }, { wch: 25 }, { wch: 10 },
         { wch: 15 }, { wch: 12 }, { wch: 20 }, { wch: 12 }, { wch: 20 }, { wch: 10 },
     ];
