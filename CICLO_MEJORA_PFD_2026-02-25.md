@@ -9,8 +9,8 @@
 
 ## 1. Resumen Ejecutivo
 
-Se realizaron **ocho pases** de revisión y mejora del módulo Flujograma de Proceso.
-Se identificaron **41 hallazgos** clasificados en 6 categorías y se corrigieron **todos los hallazgos**.
+Se realizaron **diez pases** de revisión y mejora del módulo Flujograma de Proceso.
+Se identificaron **50 hallazgos** clasificados en 6 categorías y se corrigieron **todos los hallazgos**.
 
 ### Pase 1 (C7) — Revisión inicial
 | Categoría     | Hallazgos | Corregidos | Pendientes |
@@ -740,4 +740,67 @@ Los 5 botones (↑↓+⧉🗑) con `gap-0.5` y `flex-wrap` se wrapeaban en 2 fil
 ### C14 — GitHub
 
 - **Commit:** `cd27503` — "PFD C14-UX: NG→NOK, fix PDF blank, fix filenames, fix read-only visibility"
+- **Push:** `origin/main` actualizado
+
+---
+
+## PASE 9 (C15-UX) — Header Read-Only, Symbol Picker, Help NOK
+
+### C15 — Hallazgos
+
+| ID | Categoría | Severidad | Hallazgo | Solución |
+|----|-----------|-----------|----------|----------|
+| UX-15 | UX | P0 | Encabezado (PfdHeader) — 15 inputs usan `disabled={readOnly}` causando opacity 0.5, mismo bug que C14 pero en header | Reemplazar por `readOnly={readOnly}` + `tabIndex` + `read-only:` CSS |
+| UX-16 | UX | P1 | PfdSymbolPicker — `disabled:opacity-50` causa que símbolos se vean al 50% en modo vista | Quitar `disabled:opacity-50`, usar opacidad condicional por clase |
+| UX-17 | UX | P1 | PfdHelpPanel — 3 instancias de "OK/NG" en textos de ayuda visibles al usuario (líneas 95, 139, 171) | Cambiar a "OK/NOK" y "no conformes" |
+| UX-18 | UX | P2 | PfdHeader select (Fase del Proceso) — `disabled` nativo fades el texto | Agregar `pointer-events-none !opacity-100 !text-gray-700` override |
+
+### C15 — Archivos modificados
+
+| Archivo | Cambio |
+|---------|--------|
+| `modules/pfd/PfdHeader.tsx` | `disabled` → `readOnly` en 15 inputs; inputClass con `read-only:*`; select override opacity |
+| `modules/pfd/PfdSymbolPicker.tsx` | Quitar `disabled:opacity-50 disabled:cursor-not-allowed`; clase condicional |
+| `modules/pfd/PfdHelpPanel.tsx` | "OK/NG" → "OK/NOK" (2 instancias); "disposición de NG" → "disposición de no conformes" |
+
+### C15 — Verificación
+
+- [x] tsc --noEmit limpio
+- [x] 177 suites, 2595 tests, 0 failures
+- [x] Browser: Header en modo vista — texto claramente legible (Barack Mercosul, Hurlingham, A, 26/02/2026)
+- [x] Browser: Símbolo almacenamiento a 100% opacidad en modo vista
+- [x] Browser: Select "Sin definir" visible en modo vista
+
+### C15 — GitHub
+
+- **Commit:** `400371c` — "PFD C15-UX: Fix header read-only visibility, symbol picker opacity, help NG→NOK"
+- **Push:** `origin/main` actualizado
+
+---
+
+## PASE 10 (C16-UX) — Validación y Template
+
+### C16 — Hallazgos
+
+| ID | Categoría | Severidad | Hallazgo | Solución |
+|----|-----------|-----------|----------|----------|
+| NORM-6 | NORMA | P2 | V21: Inspección sin disposición era severity `info` — IATF 16949 exige definir ruta NOK para toda inspección | Elevar a `warning` con mensaje más prescriptivo |
+| UX-19 | UX | P2 | V3: Mensajes CC/SC ambiguos ("CC de producto sin...") — usuario no sabe qué es CC/SC | Expandir a "Característica Crítica (CC)" / "Característica Significativa (SC)" |
+| UX-20 | UX | P2 | Template manufactura: OP 35 (inspección soldadura) sin disposición de no conformes | Agregar `rejectDisposition: 'scrap'` con descripción realista |
+
+### C16 — Archivos modificados
+
+| Archivo | Cambio |
+|---------|--------|
+| `modules/pfd/pfdValidation.ts` | V21 severity `info` → `warning`; V3 mensajes con nombre completo CC/SC |
+| `modules/pfd/pfdTemplates.ts` | OP 35 welding inspection → `scrap` disposition con motivo |
+
+### C16 — Verificación
+
+- [x] tsc --noEmit limpio
+- [x] 177 suites, 2595 tests, 0 failures
+
+### C16 — GitHub
+
+- **Commit:** `dce0806` — "PFD C16-UX: Improve validation messages, upgrade V21 severity, enhance template"
 - **Push:** `origin/main` actualizado
