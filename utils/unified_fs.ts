@@ -4,7 +4,7 @@
  * This module provides a unified API that automatically uses:
  * - Tauri native filesystem when running as desktop app
  * - Web File System Access API when running in Chrome/Edge
- * - IndexedDB fallback for other browsers
+ * - SQLite fallback for other browsers
  * 
  * @module unified_fs
  */
@@ -53,7 +53,7 @@ export const initFileSystem = async (): Promise<void> => {
     } else if (hasFileSystemAccess()) {
         logger.info('UnifiedFS', 'Running in Web mode with File System Access API');
     } else {
-        logger.info('UnifiedFS', 'Running in Web mode with IndexedDB only');
+        logger.info('UnifiedFS', 'Running in Web mode with SQLite only');
     }
 
     isInitialized = true;
@@ -66,10 +66,10 @@ export const initFileSystem = async (): Promise<void> => {
 /**
  * Get the current storage mode
  */
-export const getStorageMode = (): 'tauri' | 'filesystem' | 'indexeddb' => {
+export const getStorageMode = (): 'tauri' | 'filesystem' | 'sqlite' => {
     if (tauriFs.isTauri()) return 'tauri';
     if (hasFileSystemAccess()) return 'filesystem';
-    return 'indexeddb';
+    return 'sqlite';
 };
 
 /**
@@ -80,7 +80,7 @@ export const listProjects = async (): Promise<Array<{ id: string; name: string; 
         return await tauriFs.listProjectsInAppData();
     }
 
-    // In web mode, projects come from IndexedDB (handled by db.ts)
+    // In web mode, projects come from SQLite (handled by repositories)
     return [];
 };
 
@@ -110,7 +110,7 @@ export const createProject = async (name: string): Promise<{ id: string; data: P
         return null;
     }
 
-    // In web mode, return the data and let db.ts handle IndexedDB
+    // In web mode, return the data and let repositories handle persistence
     return { id: projectId, data: newData };
 };
 
@@ -170,13 +170,6 @@ export const setCurrentProject = (projectId: string | null): void => {
     currentProjectId = projectId;
 };
 
-/**
- * Get the current project ID
- */
-export const getCurrentProject = (): string | null => {
-    return currentProjectId;
-};
-
 // ============================================================================
 // MEDIA OPERATIONS (Unified API)
 // ============================================================================
@@ -201,33 +194,6 @@ export const saveTaskMedia = async (file: File, taskId: string): Promise<string 
 export const loadTaskMedia = async (mediaRef: string): Promise<string | null> => {
     if (tauriFs.isTauri() && currentProjectId) {
         return await tauriFs.loadMediaFile(currentProjectId, mediaRef);
-    }
-
-    return null;
-};
-
-// ============================================================================
-// EXPORT/IMPORT OPERATIONS
-// ============================================================================
-
-/**
- * Export the current project to a file
- */
-export const exportCurrentProject = async (): Promise<boolean> => {
-    if (tauriFs.isTauri() && currentProjectId) {
-        return await tauriFs.exportProject(currentProjectId);
-    }
-
-    // Web fallback: Use browser download
-    return false;
-};
-
-/**
- * Import a project from a file
- */
-export const importProjectFromFile = async (): Promise<string | null> => {
-    if (tauriFs.isTauri()) {
-        return await tauriFs.importProject();
     }
 
     return null;
@@ -263,13 +229,6 @@ export const alert = async (title: string, message: string): Promise<void> => {
 // ============================================================================
 
 /**
- * Generate a unique project ID
- */
-export const generateProjectId = (): string => {
-    return `project_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-};
-
-/**
  * Get application info for display
  */
 export const getAppInfo = (): { mode: string; version: string } => {
@@ -277,7 +236,7 @@ export const getAppInfo = (): { mode: string; version: string } => {
     const modeLabels = {
         tauri: 'Desktop App',
         filesystem: 'Web (Connected)',
-        indexeddb: 'Web (Local)'
+        sqlite: 'Web (Local)'
     };
 
     return {

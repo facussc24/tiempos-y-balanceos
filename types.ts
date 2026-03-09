@@ -4,7 +4,7 @@
  * This file contains all shared interfaces and types used throughout the application.
  * 
  * @module types
- * @version 7.0.0
+ * @version 1.0.0-beta
  */
 
 // ============================================================================
@@ -182,6 +182,14 @@ export interface Sector {
 
   /** Target OEE for this sector (0-1), overrides global OEE */
   targetOee?: number;
+
+  /** Per-sector shift override (independent Takt calculation) */
+  shiftOverride?: {
+    /** Number of active shifts for this sector (1-3), overrides meta.activeShifts */
+    activeShifts: number;
+    /** Optional custom shift definitions for this sector */
+    shifts?: Shift[];
+  };
 
   /** Most recent OEE audit log (for form pre-fill) */
   lastLog?: OeeLog;
@@ -731,7 +739,7 @@ export interface StationConfig {
   // VSM v3.1: Tiempo de cambio de modelo (Setup/Changeover)
   changeoverTime?: number; // Segundos (default: 0)
 
-  // v7.0: Manual cycle time override (seconds)
+  // v1-beta: Manual cycle time override (seconds)
   // If set, this value is used instead of calculated task sum
   cycleTimeOverride?: number;
 
@@ -884,11 +892,14 @@ export interface ProductContribution {
 export interface MachineRequirement {
   machineId: string;
   machineName: string;
-  unitsRequired: number;       // ceil(totalTime / takt)
+  unitsRequired: number;       // ceil(totalWeightedTime / (takt × OBE)) — OBE applied HERE
   unitsAvailable: number;      // From plantConfig inventory
   hasDeficit: boolean;
-  totalWeightedTime: number;   // Sum of all task times
-  saturationPerUnit: number;   // (time / (N * takt)) * 100
+  totalWeightedTime: number;   // Sum of all weighted task times across products
+  /** Saturation vs NOMINAL takt (without OBE). Standard per Toyota Yamazumi / AIAG.
+   *  = (totalWeightedTime / (unitsRequired × taktTime)) × 100
+   *  OBE is used only in unitsRequired, NOT here. DO NOT add OBE to denominator. */
+  saturationPerUnit: number;
   productBreakdown: ProductContribution[];
   taskDescriptions: string[];  // Human-readable task names
 }
@@ -946,7 +957,7 @@ export interface MixSavedScenario {
 }
 
 export interface ProjectData {
-  id?: number; // IndexedDB ID
+  id?: number; // auto-generated ID
   fileHandle?: FSFileHandle | string; // Transient: FileSystemFileHandle or Tauri path
   directoryHandle?: FSDirectoryHandle | string; // Transient: FileSystemDirectoryHandle or Tauri path
   _loadedTimestamp?: number; // Transient: Last Modified Time from Disk (Concurrency Check)
@@ -988,6 +999,7 @@ export interface ProjectData {
     useSectorOEE?: boolean;
 
     dailyDemand: number;
+    piecesPerVehicle?: number; // Piezas necesarias por vehículo (default: 1). Permite calcular demanda en vehículos.
     targetInventoryDays?: number; // VSM Coach: Threshold for "excess inventory" alert (default: 3)
 
     // Section E2.2: Demand Variability / Bullwhip Effect Detection

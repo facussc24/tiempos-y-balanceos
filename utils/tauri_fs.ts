@@ -9,6 +9,7 @@
  */
 
 import { ProjectData } from '../types';
+import { logger } from './logger';
 
 // ============================================================================
 // ENVIRONMENT DETECTION
@@ -58,10 +59,10 @@ export const initTauriModules = async (): Promise<boolean> => {
         tauriDialog = await import('@tauri-apps/plugin-dialog');
         tauriFs = await import('@tauri-apps/plugin-fs');
         tauriPath = await import('@tauri-apps/api/path');
-        console.log('[Tauri] Modules initialized successfully');
+        logger.info('TauriFS', 'Modules initialized successfully');
         return true;
     } catch (error) {
-        console.error('[Tauri] Failed to initialize modules:', error);
+        logger.error('TauriFS', 'Failed to initialize modules', { error: error instanceof Error ? error.message : String(error) });
         return false;
     }
 };
@@ -75,17 +76,17 @@ export const initTauriModules = async (): Promise<boolean> => {
  * Returns the module or null if not in Tauri environment
  */
 async function ensureTauriFs(): Promise<typeof import('@tauri-apps/plugin-fs') | null> {
-    console.log('[ensureTauriFs] Called. isTauri():', isTauri(), 'tauriFs:', tauriFs ? 'exists' : 'null');
+    logger.debug('TauriFS', 'ensureTauriFs called', { isTauri: isTauri(), tauriFs: tauriFs ? 'exists' : 'null' });
 
     if (!isTauri()) {
-        console.log('[ensureTauriFs] Not in Tauri, returning null');
+        logger.debug('TauriFS', 'Not in Tauri, returning null');
         return null;
     }
 
     if (!tauriFs) {
-        console.log('[ensureTauriFs] tauriFs is null, calling initTauriModules...');
+        logger.debug('TauriFS', 'tauriFs is null, calling initTauriModules');
         const success = await initTauriModules();
-        console.log('[ensureTauriFs] initTauriModules result:', success, 'tauriFs now:', tauriFs ? 'exists' : 'null');
+        logger.debug('TauriFS', 'initTauriModules result', { success, tauriFs: tauriFs ? 'exists' : 'null' });
     }
 
     return tauriFs;
@@ -98,7 +99,7 @@ async function ensureTauriFs(): Promise<typeof import('@tauri-apps/plugin-fs') |
 async function ensureTauriDialog(): Promise<typeof import('@tauri-apps/plugin-dialog') | null> {
     if (!isTauri()) return null;
     if (!tauriDialog) {
-        console.log('[Tauri] Auto-initializing modules for dialog...');
+        logger.debug('TauriFS', 'Auto-initializing modules for dialog');
         await initTauriModules();
     }
     return tauriDialog;
@@ -111,7 +112,7 @@ async function ensureTauriDialog(): Promise<typeof import('@tauri-apps/plugin-di
 async function ensureTauriPath(): Promise<typeof import('@tauri-apps/api/path') | null> {
     if (!isTauri()) return null;
     if (!tauriPath) {
-        console.log('[Tauri] Auto-initializing modules for path...');
+        logger.debug('TauriFS', 'Auto-initializing modules for path');
         await initTauriModules();
     }
     return tauriPath;
@@ -124,7 +125,7 @@ async function ensureTauriPath(): Promise<typeof import('@tauri-apps/api/path') 
 /**
  * Get the application data directory
  * In Tauri: C:\Users\{User}\AppData\Local\BarackMercosul\
- * In Web: null (uses IndexedDB instead)
+ * In Web: null (uses SQLite instead)
  */
 export const getAppDataDir = async (): Promise<string | null> => {
     const path = await ensureTauriPath();
@@ -134,7 +135,7 @@ export const getAppDataDir = async (): Promise<string | null> => {
         const appData = await path.appLocalDataDir();
         return appData;
     } catch (error) {
-        console.error('[Tauri] Failed to get app data dir:', error);
+        logger.error('TauriFS', 'Failed to get app data dir', { error: error instanceof Error ? error.message : String(error) });
         return null;
     }
 };
@@ -162,7 +163,7 @@ export const ensureDir = async (path: string): Promise<boolean> => {
         }
         return true;
     } catch (error) {
-        console.error('[Tauri] Failed to ensure directory:', error);
+        logger.error('TauriFS', 'Failed to ensure directory', { error: error instanceof Error ? error.message : String(error) });
         return false;
     }
 };
@@ -177,16 +178,16 @@ export const ensureDir = async (path: string): Promise<boolean> => {
  */
 export const pickFolder = async (): Promise<string | null> => {
     if (!isTauri()) {
-        console.warn('[Tauri] Not in Tauri environment, falling back to web API');
+        logger.warn('TauriFS', 'Not in Tauri environment, falling back to web API');
         return null;
     }
 
     // Auto-initialize if needed
     if (!tauriDialog) {
-        console.log('[Tauri] Auto-initializing modules for pickFolder...');
+        logger.debug('TauriFS', 'Auto-initializing modules for pickFolder');
         const success = await initTauriModules();
         if (!success || !tauriDialog) {
-            console.error('[Tauri] Failed to initialize dialog module');
+            logger.error('TauriFS', 'Failed to initialize dialog module');
             return null;
         }
     }
@@ -218,7 +219,7 @@ export const pickFolder = async (): Promise<string | null> => {
 
         return selectedPath;
     } catch (error) {
-        console.error('[Tauri] Folder picker error:', error);
+        logger.error('TauriFS', 'Folder picker error', { error: error instanceof Error ? error.message : String(error) });
         return null;
     }
 };
@@ -240,7 +241,7 @@ export const pickProjectFile = async (): Promise<string | null> => {
 
         return result as string | null;
     } catch (error) {
-        console.error('[Tauri] File picker error:', error);
+        logger.error('TauriFS', 'File picker error', { error: error instanceof Error ? error.message : String(error) });
         return null;
     }
 };
@@ -262,7 +263,7 @@ export const pickSaveLocation = async (defaultName: string): Promise<string | nu
 
         return result;
     } catch (error) {
-        console.error('[Tauri] Save dialog error:', error);
+        logger.error('TauriFS', 'Save dialog error', { error: error instanceof Error ? error.message : String(error) });
         return null;
     }
 };
@@ -271,12 +272,13 @@ export const pickSaveLocation = async (defaultName: string): Promise<string | nu
  * Show a confirmation dialog
  */
 export const confirmDialog = async (title: string, message: string): Promise<boolean> => {
-    if (!isTauri() || !tauriDialog) {
+    const dialog = await ensureTauriDialog();
+    if (!dialog) {
         return window.confirm(message);
     }
 
     try {
-        return await tauriDialog.ask(message, { title, kind: 'warning' });
+        return await dialog.ask(message, { title, kind: 'warning' });
     } catch (error) {
         return window.confirm(message);
     }
@@ -286,13 +288,14 @@ export const confirmDialog = async (title: string, message: string): Promise<boo
  * Show an alert dialog
  */
 export const alertDialog = async (title: string, message: string): Promise<void> => {
-    if (!isTauri() || !tauriDialog) {
+    const dialog = await ensureTauriDialog();
+    if (!dialog) {
         window.alert(message);
         return;
     }
 
     try {
-        await tauriDialog.message(message, { title, kind: 'info' });
+        await dialog.message(message, { title, kind: 'info' });
     } catch (error) {
         window.alert(message);
     }
@@ -313,7 +316,7 @@ export const readTextFile = async (path: string): Promise<string | null> => {
         const content = await fs.readTextFile(path);
         return content;
     } catch (error) {
-        console.error('[Tauri] Failed to read file:', path, error);
+        logger.error('TauriFS', 'Failed to read file', { path, error: error instanceof Error ? error.message : String(error) });
         return null;
     }
 };
@@ -322,23 +325,23 @@ export const readTextFile = async (path: string): Promise<string | null> => {
  * Write a text file
  */
 export const writeTextFile = async (path: string, content: string): Promise<boolean> => {
-    console.log('[Tauri writeTextFile] Called with path:', path);
+    logger.debug('TauriFS', 'writeTextFile called', { path });
 
     const fs = await ensureTauriFs();
-    console.log('[Tauri writeTextFile] ensureTauriFs result:', fs ? 'OK' : 'NULL');
+    logger.debug('TauriFS', 'ensureTauriFs result', { result: fs ? 'OK' : 'NULL' });
 
     if (!fs) {
-        console.error('[Tauri writeTextFile] fs is null! isTauri():', isTauri());
+        logger.error('TauriFS', 'writeTextFile: fs is null', { isTauri: isTauri() });
         return false;
     }
 
     try {
-        console.log('[Tauri writeTextFile] Calling fs.writeTextFile...');
+        logger.debug('TauriFS', 'Calling fs.writeTextFile');
         await fs.writeTextFile(path, content);
-        console.log('[Tauri writeTextFile] SUCCESS');
+        logger.debug('TauriFS', 'writeTextFile SUCCESS', { path });
         return true;
     } catch (error) {
-        console.error('[Tauri writeTextFile] FAILED:', path, error);
+        logger.error('TauriFS', 'writeTextFile FAILED', { path, error: error instanceof Error ? error.message : String(error) });
         return false;
     }
 };
@@ -354,7 +357,7 @@ export const readBinaryFile = async (path: string): Promise<Uint8Array | null> =
         const content = await fs.readFile(path);
         return content;
     } catch (error) {
-        console.error('[Tauri] Failed to read binary file:', path, error);
+        logger.error('TauriFS', 'Failed to read binary file', { path, error: error instanceof Error ? error.message : String(error) });
         return null;
     }
 };
@@ -370,7 +373,7 @@ export const writeBinaryFile = async (path: string, content: Uint8Array): Promis
         await fs.writeFile(path, content);
         return true;
     } catch (error) {
-        console.error('[Tauri] Failed to write binary file:', path, error);
+        logger.error('TauriFS', 'Failed to write binary file', { path, error: error instanceof Error ? error.message : String(error) });
         return false;
     }
 };
@@ -393,23 +396,19 @@ export const exists = async (path: string): Promise<boolean> => {
  * Delete a file or directory
  */
 export const remove = async (path: string, options?: { recursive?: boolean }): Promise<boolean> => {
-    console.log('[TauriFS] remove called for:', path, options);
+    logger.debug('TauriFS', 'remove called', { path, options });
     const fs = await ensureTauriFs();
     if (!fs) {
-        console.error('[TauriFS] remove failed: fs module not available');
+        logger.error('TauriFS', 'remove failed: fs module not available');
         return false;
     }
 
     try {
         await fs.remove(path, options);
-        console.log('[TauriFS] remove success:', path);
+        logger.debug('TauriFS', 'remove success', { path });
         return true;
     } catch (error) {
-        console.error('[TauriFS] Failed to remove:', path, error);
-        // Log error details if object
-        if (typeof error === 'object') {
-            console.error('[TauriFS] Error details:', JSON.stringify(error));
-        }
+        logger.error('TauriFS', 'Failed to remove', { path, error: error instanceof Error ? error.message : String(error) });
         return false;
     }
 };
@@ -425,7 +424,7 @@ export const copyFile = async (from: string, to: string): Promise<boolean> => {
         await fs.copyFile(from, to);
         return true;
     } catch (error) {
-        console.error('[Tauri] Failed to copy file:', from, to, error);
+        logger.error('TauriFS', 'Failed to copy file', { from, to, error: error instanceof Error ? error.message : String(error) });
         return false;
     }
 };
@@ -441,7 +440,7 @@ export const rename = async (from: string, to: string): Promise<boolean> => {
         await fs.rename(from, to);
         return true;
     } catch (error) {
-        console.error('[Tauri] Failed to rename:', from, to, error);
+        logger.error('TauriFS', 'Failed to rename', { from, to, error: error instanceof Error ? error.message : String(error) });
         return false;
     }
 };
@@ -473,7 +472,7 @@ export const readDir = async (path: string): Promise<DirEntry[]> => {
             path: `${path}/${entry.name}`
         }));
     } catch (error) {
-        console.error('[Tauri] Failed to read directory:', path, error);
+        logger.error('TauriFS', 'Failed to read directory', { path, error: error instanceof Error ? error.message : String(error) });
         return [];
     }
 };
@@ -489,7 +488,7 @@ export const createDir = async (path: string): Promise<boolean> => {
         await fs.mkdir(path, { recursive: true });
         return true;
     } catch (error) {
-        console.error('[Tauri] Failed to create directory:', path, error);
+        logger.error('TauriFS', 'Failed to create directory', { path, error: error instanceof Error ? error.message : String(error) });
         return false;
     }
 };
@@ -523,12 +522,12 @@ export const saveProjectToAppData = async (
         const success = await writeTextFile(dataPath, json);
 
         if (success) {
-            console.log('[Tauri] Project saved:', projectId);
+            logger.info('TauriFS', 'Project saved', { projectId });
         }
 
         return success;
     } catch (error) {
-        console.error('[Tauri] Failed to save project:', error);
+        logger.error('TauriFS', 'Failed to save project', { error: error instanceof Error ? error.message : String(error) });
         return false;
     }
 };
@@ -547,10 +546,10 @@ export const loadProjectFromAppData = async (projectId: string): Promise<Project
         if (!json) return null;
 
         const data = JSON.parse(json) as ProjectData;
-        console.log('[Tauri] Project loaded:', projectId);
+        logger.info('TauriFS', 'Project loaded', { projectId });
         return data;
     } catch (error) {
-        console.error('[Tauri] Failed to load project:', error);
+        logger.error('TauriFS', 'Failed to load project', { error: error instanceof Error ? error.message : String(error) });
         return null;
     }
 };
@@ -590,7 +589,7 @@ export const listProjectsInAppData = async (): Promise<Array<{ id: string; name:
 
         return projects.sort((a, b) => b.lastModified - a.lastModified);
     } catch (error) {
-        console.error('[Tauri] Failed to list projects:', error);
+        logger.error('TauriFS', 'Failed to list projects', { error: error instanceof Error ? error.message : String(error) });
         return [];
     }
 };
@@ -607,11 +606,11 @@ export const deleteProjectFromAppData = async (projectId: string): Promise<boole
     try {
         const success = await remove(projectDir, { recursive: true });
         if (success) {
-            console.log('[Tauri] Project deleted:', projectId);
+            logger.info('TauriFS', 'Project deleted', { projectId });
         }
         return success;
     } catch (error) {
-        console.error('[Tauri] Failed to delete project:', error);
+        logger.error('TauriFS', 'Failed to delete project', { error: error instanceof Error ? error.message : String(error) });
         return false;
     }
 };
@@ -649,7 +648,7 @@ export const saveMediaFile = async (
         }
         return null;
     } catch (error) {
-        console.error('[Tauri] Failed to save media:', error);
+        logger.error('TauriFS', 'Failed to save media', { error: error instanceof Error ? error.message : String(error) });
         return null;
     }
 };
@@ -688,7 +687,7 @@ export const loadMediaFile = async (
         const blob = new Blob([arrayBuffer], { type: mimeType });
         return URL.createObjectURL(blob);
     } catch (error) {
-        console.error('[Tauri] Failed to load media:', error);
+        logger.error('TauriFS', 'Failed to load media', { error: error instanceof Error ? error.message : String(error) });
         return null;
     }
 };
@@ -730,7 +729,7 @@ export const exportProject = async (projectId: string): Promise<boolean> => {
 
         return success;
     } catch (error) {
-        console.error('[Tauri] Export failed:', error);
+        logger.error('TauriFS', 'Export failed', { error: error instanceof Error ? error.message : String(error) });
         await alertDialog('Error', 'Falló la exportación del proyecto.');
         return false;
     }
@@ -768,7 +767,7 @@ export const importProject = async (): Promise<string | null> => {
 
         return null;
     } catch (error) {
-        console.error('[Tauri] Import failed:', error);
+        logger.error('TauriFS', 'Import failed', { error: error instanceof Error ? error.message : String(error) });
         await alertDialog('Error', 'Falló la importación del proyecto.');
         return null;
     }
