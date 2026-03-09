@@ -1,25 +1,15 @@
 import React, { startTransition } from 'react';
 import {
-    Plus, FileJson, Save,
-    FolderOpen, Check, Clock, ArrowLeft, WifiOff, HardDrive,
-    BarChart3, FileSpreadsheet, Library, ClipboardCheck,
-    Hash, X, MoreHorizontal, Undo2, Redo2, FileText, Shield, Zap, Bot,
-    Eye, Pencil, HelpCircle, Copy, Layers,
+    FileJson, Save,
+    FolderOpen, Check, Clock, WifiOff, HardDrive,
+    BarChart3, FileSpreadsheet, Library, Loader2,
+    Hash, MoreHorizontal, Undo2, Redo2, FileText, Shield, Zap, Bot,
+    Eye, Pencil, HelpCircle, Copy, BookOpen, GitBranch,
 } from 'lucide-react';
-import type { ActiveTab } from './useAmfeTabNavigation';
 
 type ActivePanel = 'none' | 'projects' | 'summary' | 'library' | 'registry' | 'templates';
 
 interface AmfeToolbarProps {
-    // Tab navigation
-    tabNav: {
-        activeTab: ActiveTab;
-        setActiveTab: (t: ActiveTab) => void;
-        cpInitialData: unknown;
-        hoInitialData: unknown;
-        handleGenerateControlPlan: () => void;
-        handleGenerateHojasOperaciones: () => void;
-    };
     // Project info
     projects: {
         currentProject: string | null;
@@ -32,10 +22,6 @@ interface AmfeToolbarProps {
     };
     // Persistence info
     lastAutoSave: string | null;
-    // Confirm dialog
-    requestConfirm: (opts: { title: string; message: string; variant?: 'danger' | 'warning' | 'info'; confirmText?: string }) => Promise<boolean>;
-    // Navigation
-    onBackToLanding: () => void;
     // View mode
     viewMode: 'view' | 'edit';
     setViewMode: React.Dispatch<React.SetStateAction<'view' | 'edit'>>;
@@ -66,6 +52,8 @@ interface AmfeToolbarProps {
     // Export
     amfeExport: {
         isExporting: boolean;
+        isExportingPdf: boolean;
+        handleExcelCompleto: () => void;
         handleExcelResumenAP: () => void;
         handleExcelPlanAcciones: () => void;
         handlePdfPreview: (template: 'full' | 'summary' | 'actionPlan') => void;
@@ -77,14 +65,16 @@ interface AmfeToolbarProps {
     // Overflow menu
     showOverflowMenu: boolean;
     setShowOverflowMenu: (v: boolean) => void;
+    // Load example
+    onLoadExample?: () => void;
+    // Revision control
+    onNewRevision?: () => void;
+    currentRevisionLevel?: string;
 }
 
 const AmfeToolbar: React.FC<AmfeToolbarProps> = ({
-    tabNav,
     projects,
     lastAutoSave,
-    requestConfirm,
-    onBackToLanding,
     viewMode,
     setViewMode,
     showSummary,
@@ -112,6 +102,9 @@ const AmfeToolbar: React.FC<AmfeToolbarProps> = ({
     softLimitWarningCount,
     showOverflowMenu,
     setShowOverflowMenu,
+    onLoadExample,
+    onNewRevision,
+    currentRevisionLevel,
 }) => {
     const isReadOnly = viewMode === 'view';
 
@@ -125,54 +118,11 @@ const AmfeToolbar: React.FC<AmfeToolbarProps> = ({
     };
 
     return (
-        <header className="bg-white text-slate-800 border-b border-gray-300 p-3 sticky top-0 z-50">
-            {/* Tab row */}
-            <div className="flex items-center gap-0 mb-2 -mx-3 -mt-3 px-4 border-b border-gray-200">
-                <button
-                    onClick={() => tabNav.setActiveTab('amfe')}
-                    className="px-4 py-2 text-xs font-medium text-blue-700 border-b-2 border-blue-600 bg-blue-50/50 transition"
-                >
-                    AMFE VDA
-                </button>
-                <button
-                    onClick={() => tabNav.cpInitialData ? tabNav.setActiveTab('controlPlan') : tabNav.handleGenerateControlPlan()}
-                    className="px-4 py-2 text-xs font-medium text-gray-500 hover:text-gray-700 border-b-2 border-transparent hover:border-gray-300 transition flex items-center gap-1.5"
-                >
-                    <ClipboardCheck size={13} />
-                    Plan de Control
-                </button>
-                <button
-                    onClick={() => tabNav.hoInitialData ? tabNav.setActiveTab('hojaOperaciones') : tabNav.handleGenerateHojasOperaciones()}
-                    className="px-4 py-2 text-xs font-medium text-gray-500 hover:text-gray-700 border-b-2 border-transparent hover:border-gray-300 transition flex items-center gap-1.5"
-                >
-                    <FileText size={13} />
-                    Hojas de Operaciones
-                </button>
-            </div>
-
+        <header className="bg-white text-slate-800 border-b border-gray-300 px-3 py-2 z-40">
             <div className="flex flex-wrap justify-between items-center gap-3">
-                {/* Back + Logo + Project Name */}
+                {/* Logo + Project Name */}
                 <div className="flex items-center gap-3">
-                    <button
-                        onClick={async () => {
-                            if (projects.hasUnsavedChanges) {
-                                const ok = await requestConfirm({
-                                    title: 'Cambios sin guardar',
-                                    message: 'Hay cambios sin guardar. ¿Volver al inicio?',
-                                    variant: 'warning',
-                                    confirmText: 'Volver',
-                                });
-                                if (!ok) return;
-                            }
-                            onBackToLanding();
-                        }}
-                        className="flex items-center gap-1 text-slate-500 hover:text-slate-800 px-2 py-1.5 rounded hover:bg-slate-100 transition text-xs"
-                    >
-                        <ArrowLeft size={16} />
-                        <span>Inicio</span>
-                    </button>
-
-                    <div className="flex items-center gap-2 pl-2 border-l border-gray-200">
+                    <div className="flex items-center gap-2">
                         <div className="bg-blue-600 text-white p-1.5 rounded">
                             <FileJson size={18} />
                         </div>
@@ -224,6 +174,7 @@ const AmfeToolbar: React.FC<AmfeToolbarProps> = ({
                     {/* Summary Toggle */}
                     <button onClick={() => setShowSummary(!showSummary)}
                         className={`relative flex items-center gap-1.5 border px-3 py-2 rounded transition font-medium text-xs ${showSummary ? 'bg-blue-50 border-blue-300 text-blue-700' : 'bg-gray-100 hover:bg-gray-200 border-gray-300 text-slate-700'}`}
+                        title="Resumen del AMFE (Ctrl+E)"
                         data-shortcut="Ctrl+E">
                         <BarChart3 size={15} />
                         <span className="hidden sm:inline">Resumen</span>
@@ -236,7 +187,8 @@ const AmfeToolbar: React.FC<AmfeToolbarProps> = ({
 
                     {/* Library Toggle */}
                     <button onClick={() => { setShowLibrary(!showLibrary); libraryRefresh(); }}
-                        className={`flex items-center gap-1.5 border px-3 py-2 rounded transition font-medium text-xs ${showLibrary ? 'bg-purple-50 border-purple-300 text-purple-700' : 'bg-gray-100 hover:bg-gray-200 border-gray-300 text-slate-700'}`}>
+                        className={`flex items-center gap-1.5 border px-3 py-2 rounded transition font-medium text-xs ${showLibrary ? 'bg-purple-50 border-purple-300 text-purple-700' : 'bg-gray-100 hover:bg-gray-200 border-gray-300 text-slate-700'}`}
+                        title="Biblioteca de operaciones">
                         <Library size={15} />
                         <span className="hidden sm:inline">Biblioteca</span>
                     </button>
@@ -246,7 +198,7 @@ const AmfeToolbar: React.FC<AmfeToolbarProps> = ({
                         <button
                             onClick={onUndo}
                             disabled={!canUndo}
-                            className="flex items-center gap-1 bg-gray-100 hover:bg-gray-200 px-2.5 py-2 transition text-slate-700 text-xs disabled:opacity-30 disabled:cursor-not-allowed border-r border-gray-300"
+                            className="flex items-center gap-1 bg-gray-100 hover:bg-gray-200 px-2.5 py-2 transition text-slate-700 text-xs disabled:opacity-50 disabled:cursor-not-allowed border-r border-gray-300"
                             title="Deshacer (Ctrl+Z)"
                         >
                             <Undo2 size={15} />
@@ -254,7 +206,7 @@ const AmfeToolbar: React.FC<AmfeToolbarProps> = ({
                         <button
                             onClick={onRedo}
                             disabled={!canRedo}
-                            className="flex items-center gap-1 bg-gray-100 hover:bg-gray-200 px-2.5 py-2 transition text-slate-700 text-xs disabled:opacity-30 disabled:cursor-not-allowed"
+                            className="flex items-center gap-1 bg-gray-100 hover:bg-gray-200 px-2.5 py-2 transition text-slate-700 text-xs disabled:opacity-50 disabled:cursor-not-allowed"
                             title="Rehacer (Ctrl+Y)"
                         >
                             <Redo2 size={15} />
@@ -270,10 +222,16 @@ const AmfeToolbar: React.FC<AmfeToolbarProps> = ({
 
                     {/* Quick Save */}
                     <button onClick={onSave}
-                        className="flex items-center gap-1.5 bg-green-600 hover:bg-green-500 text-white px-3 py-2 rounded font-semibold transition shadow-sm text-xs disabled:opacity-50 disabled:cursor-not-allowed"
+                        className={`relative flex items-center gap-1.5 text-white px-3 py-2 rounded font-semibold transition shadow-sm text-xs disabled:opacity-50 disabled:cursor-not-allowed ${projects.hasUnsavedChanges ? 'bg-orange-500 hover:bg-orange-600' : 'bg-green-600 hover:bg-green-500'}`}
                         disabled={!projects.networkAvailable || projects.saveStatus === 'saving'}
                         title={projects.currentProjectRef ? `Guardar en ${projects.currentProjectRef.client}/${projects.currentProjectRef.project}/${projects.currentProjectRef.name}` : 'Guardar Como... (Ctrl+S)'}
                         data-shortcut="Ctrl+S">
+                        {projects.hasUnsavedChanges && (
+                            <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-300 opacity-75" />
+                                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-orange-400" />
+                            </span>
+                        )}
                         <Save size={15} />
                         <span>{projects.currentProjectRef?.client ? 'Guardar' : 'Guardar Como...'}</span>
                     </button>
@@ -285,6 +243,21 @@ const AmfeToolbar: React.FC<AmfeToolbarProps> = ({
                             title="Guardar Como..."
                             disabled={!projects.networkAvailable}>
                             <Copy size={14} />
+                        </button>
+                    )}
+
+                    {/* Revision Button */}
+                    {onNewRevision && (
+                        <button
+                            onClick={onNewRevision}
+                            className="flex items-center gap-1.5 px-3 py-2 rounded text-xs font-semibold bg-indigo-50 border border-indigo-200 text-indigo-700 hover:bg-indigo-100 hover:border-indigo-300 transition hover:shadow-sm"
+                            title="Crear nueva revision del documento"
+                        >
+                            <GitBranch size={15} />
+                            <span className="hidden sm:inline">Nueva Rev.</span>
+                            <span className="bg-indigo-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                                {currentRevisionLevel || 'A'}
+                            </span>
                         </button>
                     )}
 
@@ -309,16 +282,30 @@ const AmfeToolbar: React.FC<AmfeToolbarProps> = ({
                             onClick={(e) => { e.stopPropagation(); setShowOverflowMenu(!showOverflowMenu); }}
                             className="flex items-center gap-1.5 bg-gray-100 hover:bg-gray-200 border border-gray-300 px-3 py-2 rounded transition text-slate-700 font-medium text-xs"
                             title="Más opciones"
+                            aria-haspopup="menu"
+                            aria-expanded={showOverflowMenu}
                         >
                             <MoreHorizontal size={15} />
                             <span className="hidden sm:inline">Más</span>
                         </button>
                         {showOverflowMenu && (
-                            <div className="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-[60] min-w-[220px] max-h-[calc(100vh-120px)] overflow-y-auto pb-2">
+                            <div className="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-[60] min-w-[220px] max-h-[calc(100vh-200px)] overflow-y-auto pb-4">
                                 {/* HERRAMIENTAS Section */}
                                 <div className="px-4 py-1.5 text-[9px] font-bold text-gray-400 uppercase tracking-wider bg-gray-50 border-b border-gray-100 rounded-t-lg">
                                     Herramientas
                                 </div>
+                                {onLoadExample && (
+                                    <button
+                                        onClick={() => { setShowOverflowMenu(false); onLoadExample(); }}
+                                        className="w-full text-left px-4 py-2.5 text-xs hover:bg-emerald-50 border-b border-gray-100 flex items-center gap-2"
+                                    >
+                                        <BookOpen size={14} className="text-emerald-500" />
+                                        <div>
+                                            <span className="font-bold text-emerald-700">Ejemplo Completo</span>
+                                            <p className="text-[10px] text-gray-400 mt-0.5">AMFE modelo con 3 operaciones</p>
+                                        </div>
+                                    </button>
+                                )}
                                 <button
                                     onClick={() => { setShowOverflowMenu(false); setShowRegistry(!showRegistry); }}
                                     className="w-full text-left px-4 py-2.5 text-xs hover:bg-gray-50 border-b border-gray-100 flex items-center gap-2"
@@ -365,10 +352,21 @@ const AmfeToolbar: React.FC<AmfeToolbarProps> = ({
                                 </div>
                                 <button
                                     disabled={amfeExport.isExporting}
-                                    onClick={() => { setShowOverflowMenu(false); amfeExport.handleExcelResumenAP(); }}
-                                    className="w-full text-left px-4 py-2.5 text-xs hover:bg-gray-50 border-b border-gray-100 flex items-center gap-2"
+                                    onClick={() => { setShowOverflowMenu(false); amfeExport.handleExcelCompleto(); }}
+                                    className="w-full text-left px-4 py-2.5 text-xs hover:bg-gray-50 border-b border-gray-100 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                    <FileSpreadsheet size={14} className="text-emerald-500" />
+                                    {amfeExport.isExporting ? <Loader2 size={14} className="text-emerald-500 animate-spin" /> : <FileSpreadsheet size={14} className="text-emerald-500" />}
+                                    <div>
+                                        <span className="font-bold text-gray-800">{amfeExport.isExporting ? 'Exportando...' : 'Excel: AMFE Completo'}</span>
+                                        <p className="text-[10px] text-gray-400 mt-0.5">Formulario I-AC-005.3 completo</p>
+                                    </div>
+                                </button>
+                                <button
+                                    disabled={amfeExport.isExporting}
+                                    onClick={() => { setShowOverflowMenu(false); amfeExport.handleExcelResumenAP(); }}
+                                    className="w-full text-left px-4 py-2.5 text-xs hover:bg-gray-50 border-b border-gray-100 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {amfeExport.isExporting ? <Loader2 size={14} className="text-emerald-500 animate-spin" /> : <FileSpreadsheet size={14} className="text-emerald-500" />}
                                     <div>
                                         <span className="font-bold text-gray-800">{amfeExport.isExporting ? 'Exportando...' : 'Excel: Resumen AP'}</span>
                                         <p className="text-[10px] text-gray-400 mt-0.5">Fallas alta/media prioridad</p>
@@ -377,9 +375,9 @@ const AmfeToolbar: React.FC<AmfeToolbarProps> = ({
                                 <button
                                     disabled={amfeExport.isExporting}
                                     onClick={() => { setShowOverflowMenu(false); amfeExport.handleExcelPlanAcciones(); }}
-                                    className="w-full text-left px-4 py-2.5 text-xs hover:bg-gray-50 border-b border-gray-100 flex items-center gap-2"
+                                    className="w-full text-left px-4 py-2.5 text-xs hover:bg-gray-50 border-b border-gray-100 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                    <FileSpreadsheet size={14} className="text-emerald-500" />
+                                    {amfeExport.isExporting ? <Loader2 size={14} className="text-emerald-500 animate-spin" /> : <FileSpreadsheet size={14} className="text-emerald-500" />}
                                     <div>
                                         <span className="font-bold text-gray-800">{amfeExport.isExporting ? 'Exportando...' : 'Excel: Plan Acciones'}</span>
                                         <p className="text-[10px] text-gray-400 mt-0.5">Acciones abiertas para seguimiento</p>
@@ -387,17 +385,19 @@ const AmfeToolbar: React.FC<AmfeToolbarProps> = ({
                                 </button>
                                 <button
                                     onClick={() => { setShowOverflowMenu(false); amfeExport.handlePdfPreview('full'); }}
-                                    className="w-full text-left px-4 py-2.5 text-xs hover:bg-gray-50 border-b border-gray-100 flex items-center gap-2"
+                                    disabled={amfeExport.isExportingPdf}
+                                    className="w-full text-left px-4 py-2.5 text-xs hover:bg-gray-50 border-b border-gray-100 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                    <FileText size={14} className="text-red-500" />
+                                    {amfeExport.isExportingPdf ? <Loader2 size={14} className="text-red-500 animate-spin" /> : <FileText size={14} className="text-red-500" />}
                                     <div>
-                                        <span className="font-bold text-gray-800">PDF: Tabla VDA Completa</span>
+                                        <span className="font-bold text-gray-800">{amfeExport.isExportingPdf ? 'Generando PDF...' : 'PDF: Tabla VDA Completa'}</span>
                                         <p className="text-[10px] text-gray-400 mt-0.5">Sábana completa landscape A3</p>
                                     </div>
                                 </button>
                                 <button
                                     onClick={() => { setShowOverflowMenu(false); amfeExport.handlePdfPreview('summary'); }}
-                                    className="w-full text-left px-4 py-2.5 text-xs hover:bg-gray-50 border-b border-gray-100 flex items-center gap-2"
+                                    disabled={amfeExport.isExportingPdf}
+                                    className="w-full text-left px-4 py-2.5 text-xs hover:bg-gray-50 border-b border-gray-100 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     <FileText size={14} className="text-red-500" />
                                     <div>
@@ -407,7 +407,8 @@ const AmfeToolbar: React.FC<AmfeToolbarProps> = ({
                                 </button>
                                 <button
                                     onClick={() => { setShowOverflowMenu(false); amfeExport.handlePdfPreview('actionPlan'); }}
-                                    className="w-full text-left px-4 py-2.5 text-xs hover:bg-gray-50 border-b border-gray-100 flex items-center gap-2"
+                                    disabled={amfeExport.isExportingPdf}
+                                    className="w-full text-left px-4 py-2.5 text-xs hover:bg-gray-50 border-b border-gray-100 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     <FileText size={14} className="text-red-500" />
                                     <div>

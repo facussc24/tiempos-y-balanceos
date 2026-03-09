@@ -48,7 +48,6 @@ const PfdApp = lazy(() => import('../pfd/PfdApp'));
 const PfdGenerationWizard = lazy(() => import('../pfd/PfdGenerationWizard'));
 const ControlPlanApp = lazy(() => import('../controlPlan/ControlPlanApp'));
 const HojaOperacionesApp = lazy(() => import('../hojaOperaciones/HojaOperacionesApp'));
-const SyncPanel = lazy(() => import('../../components/sync/SyncPanel'));
 
 interface AmfeAppProps {
     onBackToLanding: () => void;
@@ -72,7 +71,6 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab }) => {
     const [showChangeAnalysis, setShowChangeAnalysis] = useState(false);
     const [showAudit, setShowAudit] = useState(false);
     const [showChat, setShowChat] = useState(false);
-    const [showSync, setShowSync] = useState(false);
     const [showHelp, setShowHelp] = useState(false);
     const [viewMode, setViewMode] = useState<'view' | 'edit'>('edit');
     const isReadOnly = viewMode === 'view';
@@ -569,8 +567,6 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab }) => {
                 softLimitWarningCount={softLimitWarnings.length}
                 showOverflowMenu={showOverflowMenu}
                 setShowOverflowMenu={setShowOverflowMenu}
-                showSync={showSync}
-                setShowSync={setShowSync}
                 onLoadExample={handleLoadFullExample}
                 onNewRevision={revisionControl.handleNewRevision}
                 currentRevisionLevel={amfe.data.header.revision || 'A'}
@@ -791,16 +787,6 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab }) => {
                 nextRevisionLevel={getNextRevisionLevel(amfe.data.header.revision || 'A')}
             />
 
-            {/* Server Sync Panel */}
-            {showSync && (
-                <Suspense fallback={<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20"><div className="text-sm text-gray-500">Cargando...</div></div>}>
-                    <SyncPanel
-                        isOpen={showSync}
-                        onClose={() => setShowSync(false)}
-                        modules={['amfe', 'cp']}
-                    />
-                </Suspense>
-            )}
         </div>
 
         {/* PFD Generation Wizard — modal overlay */}

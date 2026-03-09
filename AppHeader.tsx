@@ -4,7 +4,6 @@
  */
 import React from 'react';
 import barackLogo from './src/assets/barack_logo.png';
-import { StorageModeIndicator } from './components/StorageModeIndicator';
 import { Save, LayoutDashboard, ListTodo, BarChart2, FileText, Network, HardDrive, CircleHelp, Gauge, GitBranch, AlertTriangle, History, Settings, RefreshCw, ArrowLeft } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { isTauri } from './utils/unified_fs';
@@ -80,19 +79,20 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
                                 onClick={onBackToLanding}
                                 className="flex items-center gap-1 text-slate-400 hover:text-slate-700 px-2 py-1.5 rounded hover:bg-slate-100 transition text-xs border-r border-slate-200 pr-3 mr-1"
                                 title="Volver al menú principal"
+                                aria-label="Volver al menú principal"
                             >
                                 <ArrowLeft size={16} />
                                 <span className="hidden sm:inline">Inicio</span>
                             </button>
                         )}
-                        <div
-                            className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
+                        <button
+                            className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity bg-transparent border-none p-0"
                             onClick={() => navigation.setActiveTab('dashboard')}
-                            title="Ir al Inicio"
+                            aria-label="Ir al Inicio"
                         >
                             <img src={barackLogo} alt="Barack Mercosul" className="h-10 w-auto" />
                             <span className="font-medium text-slate-600 text-sm hidden sm:inline">Tiempos y Balanceos</span>
-                        </div>
+                        </button>
 
                         {persistence.data.fileHandle && (
                             <span className="ml-2 sm:ml-4 text-[10px] font-bold bg-emerald-100 text-emerald-700 px-1.5 sm:px-2 py-1 rounded-full border border-emerald-200 flex items-center gap-1 shadow-sm">
@@ -100,16 +100,6 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
                             </span>
                         )}
 
-                        {/* Storage Mode Indicator - hidden on mobile */}
-                        {isTauri() && (
-                            <div className="ml-2 hidden sm:block">
-                                <StorageModeIndicator
-                                    onOpenConfig={() => modals.setShowStorageConfig(true)}
-                                    onOpenSync={() => modals.setShowSyncPanel(true)}
-                                    compact={false}
-                                />
-                            </div>
-                        )}
 
                         {/* H-02 Fix: READ-ONLY Mode Banner */}
                         {sessionLock.isReadOnly && (
@@ -143,11 +133,13 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
 
                                             if (content) {
                                                 const projectData = JSON.parse(content);
-                                                persistence.setData({
+                                                const fullData = {
                                                     ...projectData,
                                                     fileHandle: masterPath,
                                                     directoryHandle: dataPath
-                                                });
+                                                };
+                                                persistence.setData(fullData);
+                                                undoRedo.resetHistory(fullData);
                                                 navigation.setActiveTab('panel');
                                                 toast.success('Proyecto Cargado', projectData.meta?.name || part);
                                             }
@@ -170,6 +162,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
                                 onClick={() => modals.setShowRevisionHistory(true)}
                                 className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                                 title="Historial de Revisiones"
+                                aria-label="Historial de Revisiones"
                             >
                                 <History size={18} />
                             </button>
@@ -221,6 +214,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
                                 onClick={() => modals.setShowShortcutsHelp(true)}
                                 className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all active:scale-95"
                                 title="Ayuda y Atajos (F1)"
+                                aria-label="Ayuda y Atajos de teclado"
                             >
                                 <CircleHelp size={20} />
                             </button>
@@ -239,6 +233,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
                                         : 'bg-slate-600 text-white hover:bg-slate-700 active:scale-95'
                                         }`}
                                     title="Guardar rápido (Ctrl+S) - sin crear revisión"
+                                    aria-label="Guardar rápido"
                                 >
                                     <Save size={18} />
                                 </button>
@@ -270,7 +265,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
                     </div>
                 </div>
 
-                <nav className="flex flex-wrap -mb-px gap-1">
+                <nav className="flex flex-wrap -mb-px gap-1" aria-label="Navegación principal">
                     <NavItem id="dashboard" icon={LayoutDashboard} label="Inicio" shortcut="Alt+H" activeTab={navigation.activeTab} onNavigate={navigation.setActiveTab} />
                     {(persistence.data.fileHandle || persistence.data.meta?.name) && (
                         <>

@@ -10,16 +10,19 @@ import { ControlPlanDocument, ControlPlanHeader, ControlPlanItem, CONTROL_PLAN_P
 import { CpValidationIssue } from './cpCrossValidation';
 import { exportControlPlan } from './controlPlanExcelExport';
 import { getExportWarnings } from './controlPlanValidation';
-import { exportCpPdf } from './controlPlanPdfExport';
 import { CP_COLUMN_GROUP_LABELS, CP_COLUMN_GROUP_COLORS, CpColumnGroupVisibility } from './useCpColumnVisibility';
 import {
     ArrowLeft, ClipboardCheck, Save, FolderOpen, FilePlus,
     FileSpreadsheet, Plus, Trash2, FileJson, FileText, Check, Clock,
     WifiOff, HardDrive, LayoutList, Sparkles, ShieldCheck,
     Eye, Pencil, ChevronUp, ChevronDown,
-    Search, Filter, Undo2, Redo2, MoreHorizontal, BarChart3, HelpCircle, LayoutTemplate
+    Search, Filter, Undo2, Redo2, MoreHorizontal, BarChart3, HelpCircle, LayoutTemplate,
+    Link2, ExternalLink, GitBranch,
 } from 'lucide-react';
 import { logger } from '../../utils/logger';
+import ProductSelector from '../../components/ProductSelector';
+import type { ProductSelection } from '../../components/ProductSelector';
+import { resolveApplicableParts } from '../../utils/productFamilyAutoFill';
 
 interface CpToolbarProps {
     // App state
@@ -60,7 +63,7 @@ interface CpToolbarProps {
     setHeaderCollapsed: (v: boolean) => void;
     headerSummary: string;
     header: ControlPlanHeader;
-    onHeaderChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
+    onHeaderChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => void;
     inputClass: string;
     // Filters
     searchQuery: string;
@@ -90,6 +93,15 @@ interface CpToolbarProps {
     data: ControlPlanDocument;
     exportToJson: () => void;
     requestConfirm: (opts: { title: string; message: string; variant?: string; confirmText?: string }) => Promise<boolean>;
+    onPdfPreview: (mode: 'full' | 'critical') => void;
+    // AMFE link
+    onNavigateToAmfe?: () => void;
+    linkedAmfeProject?: string;
+    // Revision control
+    onNewRevision?: () => void;
+    currentRevisionLevel?: string;
+    // Product catalog
+    onProductSelect?: (fields: Partial<ControlPlanHeader>) => void;
 }
 
 const CpToolbar: React.FC<CpToolbarProps> = (props) => {
@@ -105,7 +117,8 @@ const CpToolbar: React.FC<CpToolbarProps> = (props) => {
         hasActiveFilters, clearFilters, searchRef,
         colVis, totalItems, filteredCount, completionPercent,
         validationIssues, onRunValidation,
-        data, exportToJson, requestConfirm,
+        data, exportToJson, requestConfirm, onPdfPreview,
+        onNavigateToAmfe, linkedAmfeProject,
     } = props;
 
     const getSaveStatusUI = () => {
@@ -122,7 +135,7 @@ const CpToolbar: React.FC<CpToolbarProps> = (props) => {
         const warnings = getExportWarnings(data);
         if (warnings.length > 0) {
             const ok = await requestConfirm({
-                title: 'Advertencias de exportacion',
+                title: 'Advertencias de exportación',
                 message: `Se detectaron ${warnings.length} advertencia(s):\n\n${warnings.join('\n')}\n\n¿Desea exportar de todos modos?`,
                 variant: 'warning',
                 confirmText: 'Exportar',
@@ -132,7 +145,7 @@ const CpToolbar: React.FC<CpToolbarProps> = (props) => {
         try {
             exportControlPlan(data);
         } catch (err) {
-            logger.error('[CP] Excel export failed:', err);
+            logger.error('ControlPlan', 'Excel export failed', { error: err instanceof Error ? err.message : String(err) });
             await requestConfirm({
                 title: 'Error al exportar',
                 message: `No se pudo exportar Excel: ${err instanceof Error ? err.message : 'Error desconocido'}`,
@@ -147,31 +160,20 @@ const CpToolbar: React.FC<CpToolbarProps> = (props) => {
         const warnings = getExportWarnings(data);
         if (warnings.length > 0) {
             const ok = await requestConfirm({
-                title: 'Advertencias de exportacion',
-                message: `Se detectaron ${warnings.length} advertencia(s):\n\n${warnings.join('\n')}\n\n¿Desea exportar PDF de todos modos?`,
+                title: 'Advertencias de exportación',
+                message: `Se detectaron ${warnings.length} advertencia(s):\n\n${warnings.join('\n')}\n\n¿Desea ver la vista previa de todos modos?`,
                 variant: 'warning',
-                confirmText: 'Exportar PDF',
+                confirmText: 'Ver Vista Previa',
             });
             if (!ok) return;
         }
-        try {
-            await exportCpPdf(data, mode);
-        } catch (err) {
-            logger.error(`[CP] PDF ${mode} export failed:`, err);
-            await requestConfirm({
-                title: 'Error al exportar PDF',
-                message: `No se pudo generar el PDF: ${err instanceof Error ? err.message : 'Error desconocido'}`,
-                variant: 'danger',
-                confirmText: 'Cerrar',
-            });
-        }
+        onPdfPreview(mode);
     };
 
     return (
         <>
-            {/* Top Toolbar */}
-            {!embedded && (
-                <header className="bg-white text-slate-800 border-b border-gray-300 p-3 sticky top-0 z-50">
+            {/* Top Toolbar — always visible, even in embedded mode */}
+            <header className="bg-white text-slate-800 border-b border-gray-300 p-3 sticky top-0 z-50">
                     <div className="flex flex-wrap justify-between items-center gap-3">
                         <div className="flex items-center gap-3">
                             {onBackToLanding && (
@@ -196,6 +198,26 @@ const CpToolbar: React.FC<CpToolbarProps> = (props) => {
                                     {getSaveStatusUI()}
                                 </div>
                             )}
+                            {/* AMFE Link Badge */}
+                            {linkedAmfeProject && (
+                                <div className="flex items-center gap-1 ml-2 pl-3 border-l border-gray-200">
+                                    <Link2 size={12} className="text-orange-500" />
+                                    {onNavigateToAmfe ? (
+                                        <button
+                                            onClick={onNavigateToAmfe}
+                                            className="flex items-center gap-1 text-[11px] text-orange-600 bg-orange-50 hover:bg-orange-100 px-2 py-0.5 rounded-full transition font-medium"
+                                            title={`Ir al AMFE vinculado: ${linkedAmfeProject}`}
+                                        >
+                                            <span className="max-w-[120px] truncate" title={`AMFE: ${linkedAmfeProject}`}>AMFE: {linkedAmfeProject}</span>
+                                            <ExternalLink size={10} />
+                                        </button>
+                                    ) : (
+                                        <span className="text-[11px] text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full font-medium max-w-[150px] truncate" title={`AMFE: ${linkedAmfeProject}`}>
+                                            AMFE: {linkedAmfeProject}
+                                        </span>
+                                    )}
+                                </div>
+                            )}
                             {lastAutoSave && (
                                 <div className="flex items-center gap-1 text-gray-400 text-[10px] ml-2">
                                     <HardDrive size={10} />
@@ -217,7 +239,7 @@ const CpToolbar: React.FC<CpToolbarProps> = (props) => {
                                         ? 'bg-teal-50 border-teal-300 text-teal-700 hover:bg-teal-100'
                                         : 'bg-white border-gray-300 text-slate-600 hover:bg-gray-50'
                                 }`}
-                                title="Ctrl+D" data-shortcut="Ctrl+D">
+                                title={isReadOnly ? 'Cambiar a modo Edicion (Ctrl+D)' : 'Cambiar a modo Vista (Ctrl+D)'} data-shortcut="Ctrl+D">
                                 {isReadOnly ? <Eye size={15} /> : <Pencil size={15} />}
                                 <span>{isReadOnly ? 'Vista' : 'Editar'}</span>
                             </button>
@@ -234,12 +256,12 @@ const CpToolbar: React.FC<CpToolbarProps> = (props) => {
                             {/* Undo/Redo */}
                             <div className="flex border border-gray-300 rounded overflow-hidden">
                                 <button onClick={onUndo} disabled={!canUndo}
-                                    className="flex items-center gap-1 bg-gray-100 hover:bg-gray-200 px-2.5 py-2 transition text-slate-700 text-xs disabled:opacity-30 disabled:cursor-not-allowed border-r border-gray-300"
+                                    className="flex items-center gap-1 bg-gray-100 hover:bg-gray-200 px-2.5 py-2 transition text-slate-700 text-xs disabled:opacity-50 disabled:cursor-not-allowed border-r border-gray-300"
                                     title="Deshacer (Ctrl+Z)" data-shortcut="Ctrl+Z">
                                     <Undo2 size={15} />
                                 </button>
                                 <button onClick={onRedo} disabled={!canRedo}
-                                    className="flex items-center gap-1 bg-gray-100 hover:bg-gray-200 px-2.5 py-2 transition text-slate-700 text-xs disabled:opacity-30 disabled:cursor-not-allowed"
+                                    className="flex items-center gap-1 bg-gray-100 hover:bg-gray-200 px-2.5 py-2 transition text-slate-700 text-xs disabled:opacity-50 disabled:cursor-not-allowed"
                                     title="Rehacer (Ctrl+Y)" data-shortcut="Ctrl+Y">
                                     <Redo2 size={15} />
                                 </button>
@@ -251,16 +273,26 @@ const CpToolbar: React.FC<CpToolbarProps> = (props) => {
                                 <span className="hidden sm:inline">Proyectos</span>
                             </button>
                             <button onClick={() => saveCurrentProject()}
-                                className="flex items-center gap-1.5 bg-teal-600 hover:bg-teal-500 text-white px-3 py-2 rounded font-semibold transition shadow-sm text-xs"
+                                className={`relative flex items-center gap-1.5 text-white px-3 py-2 rounded font-semibold transition shadow-sm text-xs ${hasUnsavedChanges ? 'bg-orange-500 hover:bg-orange-600' : 'bg-teal-600 hover:bg-teal-500'}`}
                                 disabled={!networkAvailable}
+                                title="Guardar (Ctrl+S)"
                                 data-shortcut="Ctrl+S">
+                                {hasUnsavedChanges && (
+                                    <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-300 opacity-75" />
+                                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-orange-400" />
+                                    </span>
+                                )}
                                 <Save size={15} />
                                 <span>{currentProject ? 'Guardar' : 'Guardar Como...'}</span>
                             </button>
                             {/* Overflow "Mas" Menu */}
                             <div className="relative">
                                 <button onClick={(e) => { e.stopPropagation(); setShowOverflowMenu(!showOverflowMenu); }}
-                                    className="flex items-center gap-1.5 bg-gray-100 hover:bg-gray-200 border border-gray-300 px-3 py-2 rounded transition text-slate-700 font-medium text-xs">
+                                    className="flex items-center gap-1.5 bg-gray-100 hover:bg-gray-200 border border-gray-300 px-3 py-2 rounded transition text-slate-700 font-medium text-xs"
+                                    title="Más opciones"
+                                    aria-haspopup="menu"
+                                    aria-expanded={showOverflowMenu}>
                                     <MoreHorizontal size={15} />
                                     <span className="hidden sm:inline">Mas</span>
                                 </button>
@@ -337,6 +369,19 @@ const CpToolbar: React.FC<CpToolbarProps> = (props) => {
                                 )}
                             </div>
                             <div className="w-px h-6 bg-gray-300 mx-0.5" />
+                            {props.onNewRevision && (
+                                <button
+                                    onClick={props.onNewRevision}
+                                    className="flex items-center gap-1.5 px-3 py-2 rounded text-xs font-semibold bg-teal-50 border border-teal-200 text-teal-700 hover:bg-teal-100 hover:border-teal-300 transition hover:shadow-sm"
+                                    title="Crear nueva revision del documento"
+                                >
+                                    <GitBranch size={15} />
+                                    <span className="hidden sm:inline">Nueva Rev.</span>
+                                    <span className="bg-teal-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                                        {props.currentRevisionLevel || 'A'}
+                                    </span>
+                                </button>
+                            )}
                             <button onClick={() => setShowChat(true)}
                                 className="flex items-center gap-1.5 bg-teal-600 hover:bg-teal-500 text-white px-3 py-2 rounded font-semibold transition shadow-sm text-xs"
                                 title="Copiloto IA (Ctrl+I)" data-shortcut="Ctrl+I">
@@ -346,10 +391,9 @@ const CpToolbar: React.FC<CpToolbarProps> = (props) => {
                         </div>
                     </div>
                 </header>
-            )}
 
             {/* Projects Panel */}
-            {showProjectPanel && !embedded && (
+            {showProjectPanel && (
                 <div className="bg-white border-b border-gray-300 shadow-lg animate-in">
                     <div className="p-4 max-w-4xl mx-auto">
                         <div className="flex items-center justify-between mb-3">
@@ -377,7 +421,7 @@ const CpToolbar: React.FC<CpToolbarProps> = (props) => {
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center gap-2">
                                                 <ClipboardCheck size={14} className="text-teal-500 flex-shrink-0" />
-                                                <span className="font-medium text-sm text-gray-800 truncate">{p.name}</span>
+                                                <span className="font-medium text-sm text-gray-800 truncate" title={p.name}>{p.name}</span>
                                                 {currentProject === p.name && <span className="text-[10px] bg-teal-500 text-white px-1.5 py-0.5 rounded-full">activo</span>}
                                             </div>
                                             <div className="text-[10px] text-gray-400 ml-6 mt-0.5">
@@ -409,7 +453,10 @@ const CpToolbar: React.FC<CpToolbarProps> = (props) => {
                         <LayoutList className="text-teal-600" size={18} />
                         <h2 className="text-sm font-bold text-gray-800">Datos del Plan de Control</h2>
                         {headerCollapsed && (
-                            <span className="text-xs text-gray-400 ml-3 truncate max-w-[600px]">{headerSummary}</span>
+                            <span className="text-xs text-gray-400 ml-3 truncate max-w-[600px]" title={headerSummary}>{headerSummary}</span>
+                        )}
+                        {headerCollapsed && header.applicableParts?.trim() && (
+                            <span className="bg-teal-100 text-teal-700 text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex-shrink-0 ml-2">Familia</span>
                         )}
                     </div>
 
@@ -419,7 +466,7 @@ const CpToolbar: React.FC<CpToolbarProps> = (props) => {
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs mb-3">
                                 <div>
                                     <label className="block text-gray-500 font-bold mb-1">Nro. Plan de Control</label>
-                                    <input name="controlPlanNumber" value={header.controlPlanNumber} onChange={onHeaderChange} className={inputClass} />
+                                    <input name="controlPlanNumber" value={header.controlPlanNumber} onChange={onHeaderChange} maxLength={30} className={inputClass} />
                                 </div>
                                 <div>
                                     <label className="block text-gray-500 font-bold mb-1">Fase</label>
@@ -441,7 +488,7 @@ const CpToolbar: React.FC<CpToolbarProps> = (props) => {
                                 </div>
                                 <div>
                                     <label className="block text-gray-500 font-bold mb-1">Revision</label>
-                                    <input name="revision" value={header.revision} onChange={onHeaderChange} className={inputClass} />
+                                    <input name="revision" value={header.revision} onChange={onHeaderChange} maxLength={20} className={inputClass} />
                                 </div>
                             </div>
 
@@ -449,35 +496,67 @@ const CpToolbar: React.FC<CpToolbarProps> = (props) => {
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs mb-3">
                                 <div>
                                     <label className="block text-gray-500 font-bold mb-1">Nro. Pieza</label>
-                                    <input name="partNumber" value={header.partNumber} onChange={onHeaderChange} className={inputClass} />
+                                    <ProductSelector
+                                        name="partNumber"
+                                        value={header.partNumber}
+                                        onProductSelect={(sel: ProductSelection) => {
+                                            props.onProductSelect?.({
+                                                partNumber: sel.codigo,
+                                                partName: sel.descripcion,
+                                                client: sel.lineaName,
+                                            });
+                                            // Auto-fill applicableParts with family members (or line siblings)
+                                            if (sel.isFromCatalog && sel.lineaCode) {
+                                                resolveApplicableParts(sel.codigo, sel.lineaCode)
+                                                    .then(parts => {
+                                                        if (parts) {
+                                                            props.onProductSelect?.({ applicableParts: parts });
+                                                        }
+                                                    })
+                                                    .catch(() => {});
+                                            }
+                                        }}
+                                        onTextChange={(val) => {
+                                            const synth = { target: { name: 'partNumber', value: val } } as React.ChangeEvent<HTMLInputElement>;
+                                            onHeaderChange(synth);
+                                        }}
+                                        readOnly={isReadOnly}
+                                        placeholder="Buscar o escribir nro. pieza..."
+                                        maxLength={50}
+                                    />
                                 </div>
                                 <div>
                                     <label className="block text-gray-500 font-bold mb-1">Nivel de Cambio</label>
-                                    <input name="latestChangeLevel" value={header.latestChangeLevel} onChange={onHeaderChange} className={inputClass} />
+                                    <input name="latestChangeLevel" value={header.latestChangeLevel} onChange={onHeaderChange} maxLength={30} className={inputClass} />
                                 </div>
                                 <div className="col-span-2">
-                                    <label className="block text-gray-500 font-bold mb-1">Nombre Pieza / Descripcion</label>
-                                    <input name="partName" value={header.partName} onChange={onHeaderChange} className={inputClass} />
+                                    <label className="block text-gray-500 font-bold mb-1">Nombre Pieza / Descripción</label>
+                                    <input name="partName" value={header.partName} onChange={onHeaderChange} maxLength={150} className={inputClass} />
+                                </div>
+                                <div className="col-span-4">
+                                    <label className="block text-gray-500 font-bold mb-1">Piezas Aplicables</label>
+                                    <textarea name="applicableParts" value={header.applicableParts || ''} onChange={onHeaderChange} className={inputClass + ' resize-y'} rows={2} placeholder="Si cubre una familia, listar nros de pieza (uno por línea). Dejar vacío si es pieza única." />
+                                    <p className="text-[9px] text-gray-400 mt-0.5">Se hereda del AMFE al generar. Editable para ajustes.</p>
                                 </div>
                             </div>
 
                             {/* Row 3: Organization / Supplier */}
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs mb-3">
                                 <div>
-                                    <label className="block text-gray-500 font-bold mb-1">Organizacion / Planta</label>
-                                    <input name="organization" value={header.organization} onChange={onHeaderChange} className={inputClass} />
+                                    <label className="block text-gray-500 font-bold mb-1">Organización / Planta</label>
+                                    <input name="organization" value={header.organization} onChange={onHeaderChange} maxLength={100} className={inputClass} />
                                 </div>
                                 <div>
                                     <label className="block text-gray-500 font-bold mb-1">Proveedor</label>
-                                    <input name="supplier" value={header.supplier} onChange={onHeaderChange} className={inputClass} />
+                                    <input name="supplier" value={header.supplier} onChange={onHeaderChange} maxLength={100} className={inputClass} />
                                 </div>
                                 <div>
-                                    <label className="block text-gray-500 font-bold mb-1">Codigo Proveedor</label>
-                                    <input name="supplierCode" value={header.supplierCode} onChange={onHeaderChange} className={inputClass} />
+                                    <label className="block text-gray-500 font-bold mb-1">Código Proveedor</label>
+                                    <input name="supplierCode" value={header.supplierCode} onChange={onHeaderChange} maxLength={30} className={inputClass} />
                                 </div>
                                 <div>
-                                    <label className="block text-gray-500 font-bold mb-1">Contacto Clave / Telefono</label>
-                                    <input name="keyContactPhone" value={header.keyContactPhone} onChange={onHeaderChange} className={inputClass} />
+                                    <label className="block text-gray-500 font-bold mb-1">Contacto Clave / Teléfono</label>
+                                    <input name="keyContactPhone" value={header.keyContactPhone} onChange={onHeaderChange} maxLength={80} className={inputClass} />
                                 </div>
                             </div>
 
@@ -485,15 +564,15 @@ const CpToolbar: React.FC<CpToolbarProps> = (props) => {
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs mb-3">
                                 <div>
                                     <label className="block text-gray-500 font-bold mb-1">Cliente</label>
-                                    <input name="client" value={header.client} onChange={onHeaderChange} className={inputClass} />
+                                    <input name="client" value={header.client} onChange={onHeaderChange} maxLength={100} className={inputClass} />
                                 </div>
                                 <div>
                                     <label className="block text-gray-500 font-bold mb-1">Responsable</label>
-                                    <input name="responsible" value={header.responsible} onChange={onHeaderChange} className={inputClass} />
+                                    <input name="responsible" value={header.responsible} onChange={onHeaderChange} maxLength={80} className={inputClass} />
                                 </div>
                                 <div className="col-span-2">
                                     <label className="block text-gray-500 font-bold mb-1">Equipo</label>
-                                    <input name="coreTeam" value={header.coreTeam} onChange={onHeaderChange} className={inputClass} />
+                                    <input name="coreTeam" value={header.coreTeam} onChange={onHeaderChange} maxLength={300} className={inputClass} />
                                 </div>
                             </div>
 
@@ -502,20 +581,20 @@ const CpToolbar: React.FC<CpToolbarProps> = (props) => {
                                 <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Aprobaciones</span>
                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs mt-1">
                                     <div>
-                                        <label className="block text-gray-500 font-bold mb-1">Aprobacion Proveedor/Planta</label>
-                                        <input name="approvedBy" value={header.approvedBy} onChange={onHeaderChange} className={inputClass} />
+                                        <label className="block text-gray-500 font-bold mb-1">Aprobación Proveedor/Planta</label>
+                                        <input name="approvedBy" value={header.approvedBy} onChange={onHeaderChange} maxLength={80} className={inputClass} />
                                     </div>
                                     <div>
-                                        <label className="block text-gray-500 font-bold mb-1">Aprobacion Ing. Cliente</label>
-                                        <input name="customerEngApproval" value={header.customerEngApproval} onChange={onHeaderChange} className={inputClass} />
+                                        <label className="block text-gray-500 font-bold mb-1">Aprobación Ing. Cliente</label>
+                                        <input name="customerEngApproval" value={header.customerEngApproval} onChange={onHeaderChange} maxLength={80} className={inputClass} />
                                     </div>
                                     <div>
-                                        <label className="block text-gray-500 font-bold mb-1">Aprobacion Calidad Cliente</label>
-                                        <input name="customerQualityApproval" value={header.customerQualityApproval} onChange={onHeaderChange} className={inputClass} />
+                                        <label className="block text-gray-500 font-bold mb-1">Aprobación Calidad Cliente</label>
+                                        <input name="customerQualityApproval" value={header.customerQualityApproval} onChange={onHeaderChange} maxLength={80} className={inputClass} />
                                     </div>
                                     <div>
-                                        <label className="block text-gray-500 font-bold mb-1">Otra Aprobacion</label>
-                                        <input name="otherApproval" value={header.otherApproval} onChange={onHeaderChange} className={inputClass} />
+                                        <label className="block text-gray-500 font-bold mb-1">Otra Aprobación</label>
+                                        <input name="otherApproval" value={header.otherApproval} onChange={onHeaderChange} maxLength={80} className={inputClass} />
                                     </div>
                                 </div>
                             </div>

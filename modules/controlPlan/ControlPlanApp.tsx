@@ -14,7 +14,7 @@ import { useCpHistory } from './useCpHistory';
 import { useControlPlanProjects } from './useControlPlanProjects';
 import { useControlPlanPersistence } from './useControlPlanPersistence';
 import { useAmfeConfirm } from '../amfe/useAmfeConfirm';
-import { ControlPlanDocument, ControlPlanHeader, ControlPlanItem, CONTROL_PLAN_PHASES, CP_COLUMNS } from './controlPlanTypes';
+import { ControlPlanDocument, ControlPlanHeader, ControlPlanItem, CONTROL_PLAN_PHASES, CP_COLUMNS, EMPTY_CP_DOCUMENT } from './controlPlanTypes';
 import { CpSuggestionField, CpSuggestionContext } from './cpSuggestionTypes';
 import { createCpQueryFn } from './cpSuggestionEngine';
 import { SuggestionQueryFn } from '../amfe/SuggestableTextarea';
@@ -27,9 +27,19 @@ import CpValidationPanel from './CpValidationPanel';
 import CpTemplateModal from './CpTemplateModal';
 import { ConfirmModal } from '../../components/modals/ConfirmModal';
 import { PromptModal } from '../../components/modals/PromptModal';
+import { RevisionPromptModal } from '../../components/modals/RevisionPromptModal';
+import { CrossDocAlertBanner } from '../../components/CrossDocAlertBanner';
+import { RevisionHistoryPanel } from '../../components/RevisionHistoryPanel';
+import PdfPreviewModal from '../../components/modals/PdfPreviewModal';
 import { ModuleErrorBoundary } from '../../components/ui/ModuleErrorBoundary';
-import { Plus, XCircle, Sparkles } from 'lucide-react';
+import { LoadingOverlay } from '../../components/ui/LoadingOverlay';
+import { getCpPdfPreviewHtml, exportCpPdf, CpPdfTemplate } from './controlPlanPdfExport';
+import { useRevisionControl } from '../../hooks/useRevisionControl';
+import { useCrossDocAlerts } from '../../hooks/useCrossDocAlerts';
+import { getNextRevisionLevel } from '../../utils/revisionUtils';
+import { Plus, XCircle, Sparkles, Eye } from 'lucide-react';
 import { useShortcutHints } from '../../hooks/useShortcutHints';
+import { toast } from '../../components/ui/Toast';
 import { ShortcutHintsOverlay } from '../../components/ui/ShortcutHintsOverlay';
 import { useCpColumnVisibility } from './useCpColumnVisibility';
 import { AmfeDocument } from '../amfe/amfeTypes';
@@ -50,9 +60,11 @@ interface Props {
     onDataChange?: (data: ControlPlanDocument) => void;
     /** AMFE document for cross-context AI and validation (passed when embedded in AMFE) */
     amfeDoc?: AmfeDocument;
+    /** Navigate to the linked AMFE module (standalone mode only) */
+    onNavigateToAmfe?: () => void;
 }
 
-const ControlPlanApp: React.FC<Props> = ({ onBackToLanding, embedded, initialData, onDataChange, amfeDoc }) => {
+const ControlPlanApp: React.FC<Props> = ({ onBackToLanding, embedded, initialData, onDataChange, amfeDoc, onNavigateToAmfe }) => {
     const [showProjectPanel, setShowProjectPanel] = useState(false);
     const [showChat, setShowChat] = useState(false);
     const [showSummary, setShowSummary] = useState(false);
@@ -61,6 +73,8 @@ const ControlPlanApp: React.FC<Props> = ({ onBackToLanding, embedded, initialDat
     const [showTemplates, setShowTemplates] = useState(false);
     const [validationIssues, setValidationIssues] = useState<CpValidationIssue[] | null>(null);
     const [viewMode, setViewMode] = useState<'view' | 'edit'>('edit');
+    const [pdfPreview, setPdfPreview] = useState<{ html: string; template: CpPdfTemplate } | null>(null);
+    const [isExportingPdf, setIsExportingPdf] = useState(false);
     const [headerCollapsed, setHeaderCollapsed] = useState(() => {
         try { return localStorage.getItem('cp_header_collapsed') === 'true'; } catch { return false; }
     });
@@ -90,10 +104,22 @@ const ControlPlanApp: React.FC<Props> = ({ onBackToLanding, embedded, initialDat
         if (next) cp.loadData(next);
     }, [history, cp.loadData]);
 
+    // Wrap loadData to also reset undo history when loading a project
+    const handleLoadProject = useCallback((data: ControlPlanDocument) => {
+        cp.loadData(data);
+        history.resetHistory(data);
+    }, [cp.loadData, history]);
+
+    // Wrap resetData to also reset undo history when creating a new project
+    const handleResetProject = useCallback(() => {
+        cp.resetData();
+        history.resetHistory(EMPTY_CP_DOCUMENT);
+    }, [cp.resetData, history]);
+
     const projects = useControlPlanProjects(
         cp.data,
-        cp.loadData,
-        cp.resetData,
+        handleLoadProject,
+        handleResetProject,
         confirm.requestConfirm
     );
 
@@ -103,6 +129,20 @@ const ControlPlanApp: React.FC<Props> = ({ onBackToLanding, embedded, initialDat
         isSaving: projects.saveStatus === 'saving',
     });
 
+    // Revision control
+    const revisionControl = useRevisionControl({
+        module: 'cp',
+        documentId: projects.currentProject,
+        currentData: cp.data,
+        currentRevisionLevel: cp.data.header.revision || 'A',
+        onRevisionCreated: (newLevel) => {
+            cp.updateHeader('revision', newLevel);
+        },
+    });
+
+    // Cross-document alerts
+    const crossDocAlerts = useCrossDocAlerts('cp', projects.currentProject);
+
     // Load initial data if provided (from AMFE generator)
     useEffect(() => {
         if (initialData) {
@@ -110,6 +150,14 @@ const ControlPlanApp: React.FC<Props> = ({ onBackToLanding, embedded, initialDat
             history.resetHistory(initialData);
         }
     }, [initialData]);
+
+    // Cleanup timers on unmount
+    useEffect(() => {
+        return () => {
+            if (highlightTimerRef.current) clearTimeout(highlightTimerRef.current);
+            if (blobTimerRef.current) clearTimeout(blobTimerRef.current);
+        };
+    }, []);
 
     // Draft recovery on mount (extracted hook)
     useCpDraftRecovery({
@@ -150,9 +198,13 @@ const ControlPlanApp: React.FC<Props> = ({ onBackToLanding, embedded, initialDat
     // AI suggestions state (reads global Gemini settings)
     const [aiEnabled, setAiEnabled] = useState(false);
     useEffect(() => {
+        let cancelled = false;
         import('../../utils/settingsStore').then(({ loadSettings }) =>
-            loadSettings().then(s => setAiEnabled(s.geminiEnabled && !!s.geminiApiKey))
-        ).catch(err => logger.warn('[CP] Failed to load AI settings:', err));
+            loadSettings().then(s => {
+                if (!cancelled) setAiEnabled(s.geminiEnabled && !!s.geminiApiKey);
+            })
+        ).catch(err => logger.warn('ControlPlan', 'Failed to load AI settings', { error: err instanceof Error ? err.message : String(err) }));
+        return () => { cancelled = true; };
     }, []);
 
     // Completion progress bar stats
@@ -191,16 +243,36 @@ const ControlPlanApp: React.FC<Props> = ({ onBackToLanding, embedded, initialDat
         return createCpQueryFn(field, context);
     }, []);
 
+    const handleRemoveItem = useCallback(async (itemId: string) => {
+        const idx = cp.data.items.findIndex(i => i.id === itemId);
+        const item = idx >= 0 ? cp.data.items[idx] : undefined;
+        const desc = item?.processDescription?.trim() || `Fila #${idx + 1 || '?'}`;
+        const ok = await confirm.requestConfirm({
+            title: 'Eliminar fila',
+            message: `¿Eliminar "${desc.slice(0, 60)}" del Plan de Control? Esta accion se puede deshacer con Ctrl+Z.`,
+            variant: 'danger',
+            confirmText: 'Eliminar',
+        });
+        if (ok) cp.removeItem(itemId);
+    }, [cp.data.items, cp.removeItem, confirm.requestConfirm]);
+
     const handleHeaderChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         cp.updateHeader(name as keyof ControlPlanHeader, value);
     }, [cp.updateHeader]);
 
+    const handleProductSelect = useCallback((fields: Partial<ControlPlanHeader>) => {
+        Object.entries(fields).forEach(([key, val]) => {
+            cp.updateHeader(key as keyof ControlPlanHeader, val as string);
+        });
+    }, [cp.updateHeader]);
+
     const handleChatApply = useCallback((newDoc: ControlPlanDocument) => {
         cp.loadData(newDoc);
-        history.resetHistory(newDoc);
-    }, [cp.loadData, history]);
+        // Don't reset history — allow Ctrl+Z to undo chat actions
+    }, [cp.loadData]);
 
+    // FIX: Added history.resetHistory to prevent undo from removing template items
     const handleApplyTemplate = useCallback((templateId: string) => {
         const template = CP_TEMPLATES.find(t => t.id === templateId);
         if (!template) return;
@@ -210,16 +282,19 @@ const ControlPlanApp: React.FC<Props> = ({ onBackToLanding, embedded, initialDat
             items: [...cp.data.items, ...newItems],
         };
         cp.loadData(updatedDoc);
+        history.resetHistory(updatedDoc);
         setShowTemplates(false);
-    }, [cp.data, cp.loadData]);
+    }, [cp.data, cp.loadData, history]);
 
+    const highlightTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const handleJumpToItem = useCallback((itemId?: string) => {
         if (!itemId) return;
         const el = document.querySelector(`[data-item-id="${itemId}"]`);
         if (!el) return;
         el.scrollIntoView({ behavior: 'smooth', block: 'center' });
         el.classList.add('ring-2', 'ring-amber-400');
-        setTimeout(() => el.classList.remove('ring-2', 'ring-amber-400'), 2000);
+        if (highlightTimerRef.current) clearTimeout(highlightTimerRef.current);
+        highlightTimerRef.current = setTimeout(() => el.classList.remove('ring-2', 'ring-amber-400'), 2000);
     }, []);
 
     const handleRunValidation = useCallback(() => {
@@ -227,7 +302,7 @@ const ControlPlanApp: React.FC<Props> = ({ onBackToLanding, embedded, initialDat
             const issues = validateCpAgainstAmfe(cp.data, amfeDoc);
             setValidationIssues(issues);
         } catch (error) {
-            logger.error('[CP] Validation failed:', error);
+            logger.error('ControlPlan', 'Validation failed', { error: error instanceof Error ? error.message : String(error) });
             setValidationIssues([{
                 severity: 'error',
                 code: 'VALIDATION_ERROR',
@@ -238,6 +313,7 @@ const ControlPlanApp: React.FC<Props> = ({ onBackToLanding, embedded, initialDat
 
     const inputClass = "w-full border border-gray-300 bg-gray-50 p-2 rounded focus:ring-2 focus:ring-teal-100 focus:border-teal-400 outline-none transition";
 
+    const blobTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const exportToJson = useCallback(() => {
         try {
             const blob = new Blob([JSON.stringify(cp.data, null, 2)], { type: 'application/json' });
@@ -248,12 +324,34 @@ const ControlPlanApp: React.FC<Props> = ({ onBackToLanding, embedded, initialDat
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-            setTimeout(() => URL.revokeObjectURL(href), 1500);
+            if (blobTimerRef.current) clearTimeout(blobTimerRef.current);
+            blobTimerRef.current = setTimeout(() => URL.revokeObjectURL(href), 1500);
+            toast.success('JSON exportado', 'Plan de Control exportado como JSON.');
         } catch (err) {
-            logger.error('[CP] JSON export failed:', err);
-            alert('Error al exportar JSON.');
+            logger.error('ControlPlan', 'JSON export failed', { error: err instanceof Error ? err.message : String(err) });
+            toast.error('Error de exportación', 'No se pudo exportar el JSON.');
         }
     }, [cp.data]);
+
+    const handlePdfPreview = useCallback((mode: CpPdfTemplate) => {
+        const html = getCpPdfPreviewHtml(cp.data, mode);
+        setPdfPreview({ html, template: mode });
+    }, [cp.data]);
+
+    const handlePdfExport = useCallback(async () => {
+        if (!pdfPreview) return;
+        setIsExportingPdf(true);
+        try {
+            await exportCpPdf(cp.data, pdfPreview.template);
+            toast.success('PDF exportado', 'Plan de Control descargado correctamente.');
+        } catch (err) {
+            logger.error('ControlPlan', 'PDF export error', { error: err instanceof Error ? err.message : String(err) });
+            toast.error('Error de exportación', 'No se pudo exportar el PDF. Intente nuevamente.');
+        } finally {
+            setIsExportingPdf(false);
+            setPdfPreview(null);
+        }
+    }, [cp.data, pdfPreview]);
 
     // Header summary for collapsed mode
     const headerSummary = useMemo(() => {
@@ -332,7 +430,45 @@ const ControlPlanApp: React.FC<Props> = ({ onBackToLanding, embedded, initialDat
                 data={cp.data}
                 exportToJson={exportToJson}
                 requestConfirm={confirm.requestConfirm}
+                onPdfPreview={handlePdfPreview}
+                onNavigateToAmfe={onNavigateToAmfe}
+                linkedAmfeProject={cp.data.header.linkedAmfeProject}
+                onNewRevision={revisionControl.handleNewRevision}
+                currentRevisionLevel={cp.data.header.revision || 'A'}
+                onProductSelect={handleProductSelect}
             />
+
+            {/* Cross-document alert banner */}
+            <CrossDocAlertBanner
+                alerts={crossDocAlerts.alerts}
+                onDismiss={crossDocAlerts.dismissAlert}
+                onDismissAll={crossDocAlerts.dismissAll}
+            />
+
+            {/* Revision history panel */}
+            <RevisionHistoryPanel
+                revisions={revisionControl.revisions}
+                onViewSnapshot={(level) => {
+                    revisionControl.loadSnapshot(level).then(snap => {
+                        if (snap) {
+                            cp.loadData(snap as ControlPlanDocument);
+                            history.resetHistory(snap as ControlPlanDocument);
+                            logger.info('ControlPlanApp', `Loaded snapshot for Rev. ${level}`);
+                        }
+                    });
+                }}
+                isOpen={revisionControl.showRevisionHistory}
+                onToggle={() => revisionControl.setShowRevisionHistory(!revisionControl.showRevisionHistory)}
+            />
+
+            {/* Read-only mode indicator */}
+            {isReadOnly && (
+                <div className="bg-teal-50 border-b border-teal-200 px-4 py-1.5 flex items-center gap-2 text-xs text-teal-700 no-print animate-in fade-in duration-200">
+                    <Eye size={13} />
+                    <span className="font-medium">Modo solo lectura</span>
+                    <span className="text-teal-500">— Presiona Ctrl+D para editar</span>
+                </div>
+            )}
 
             {/* Summary Panel */}
             {showSummary && (
@@ -345,9 +481,12 @@ const ControlPlanApp: React.FC<Props> = ({ onBackToLanding, embedded, initialDat
 
             {/* Table */}
             <div className="flex-grow p-4 pb-20">
+                {projects.isLoadingProject ? (
+                    <LoadingOverlay message="Cargando Plan de Control..." accentColor="text-green-600" />
+                ) : (
                 <div className="bg-white shadow-lg rounded border border-gray-300">
                     <div className={`overflow-x-auto overflow-y-auto ${tableMaxH}`} style={{ scrollbarGutter: 'stable' }}>
-                        <table className="border-collapse table-fixed" style={{ width: '1794px' }}>
+                        <table className="border-collapse table-fixed" style={{ minWidth: '1794px' }}>
                             <colgroup>
                                 {CP_COLUMNS.map(col => (
                                     <col key={col.key} style={{ width: col.width }} />
@@ -358,8 +497,9 @@ const ControlPlanApp: React.FC<Props> = ({ onBackToLanding, embedded, initialDat
                             <ControlPlanTable
                                 items={filteredItems}
                                 onUpdateItem={cp.updateItem}
-                                onRemoveItem={cp.removeItem}
+                                onRemoveItem={handleRemoveItem}
                                 onMoveItem={cp.moveItem}
+                                onDuplicateItem={cp.duplicateItem}
                                 aiEnabled={aiEnabled}
                                 buildQueryFn={buildQueryFn}
                                 readOnly={isReadOnly}
@@ -368,14 +508,17 @@ const ControlPlanApp: React.FC<Props> = ({ onBackToLanding, embedded, initialDat
                         </table>
                     </div>
                 </div>
+                )}
 
                 {/* Validation Results Panel */}
                 {validationIssues && (
-                    <CpValidationPanel
-                        issues={validationIssues}
-                        onClose={() => setValidationIssues(null)}
-                        onJumpToItem={handleJumpToItem}
-                    />
+                    <div className="animate-in fade-in slide-in-from-top-2 duration-200">
+                        <CpValidationPanel
+                            issues={validationIssues}
+                            onClose={() => setValidationIssues(null)}
+                            onJumpToItem={handleJumpToItem}
+                        />
+                    </div>
                 )}
 
                 {/* FABs */}
@@ -391,6 +534,7 @@ const ControlPlanApp: React.FC<Props> = ({ onBackToLanding, embedded, initialDat
                     {!isReadOnly && (
                         <button onClick={cp.addItem}
                             className="bg-teal-600 hover:bg-teal-500 text-white rounded-full p-3 shadow-lg flex items-center gap-2 transition-transform hover:scale-105"
+                            title="Agregar item (Ctrl+N)"
                             data-shortcut="Ctrl+N">
                             <Plus size={20} />
                             <span className="font-bold pr-1 text-sm">Agregar Item</span>
@@ -399,13 +543,11 @@ const ControlPlanApp: React.FC<Props> = ({ onBackToLanding, embedded, initialDat
                 </div>
 
                 {/* Footer */}
-                {!embedded && (
-                    <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t p-2 text-center text-xs text-gray-500 z-30">
-                        <strong>{cp.data.items.length}</strong> items · {completionStats.percent}% completo |
-                        Mantene <kbd className="px-1 py-0.5 bg-gray-100 rounded text-[10px] font-mono">Alt</kbd> para ver atajos
-                        {projects.currentProject && <span className="ml-4 text-gray-400">Proyecto: <strong className="text-teal-600">{projects.currentProject}</strong></span>}
-                    </div>
-                )}
+                <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t p-2 text-center text-xs text-gray-500 z-30">
+                    <strong>{cp.data.items.length}</strong> items · {completionStats.percent}% completo |
+                    Mantene <kbd className="px-1 py-0.5 bg-gray-100 rounded text-[10px] font-mono">Alt</kbd> para ver atajos
+                    {projects.currentProject && <span className="ml-4 text-gray-400">Proyecto: <strong className="text-teal-600">{projects.currentProject}</strong></span>}
+                </div>
             </div>
 
             {/* Confirm Modal */}
@@ -429,6 +571,15 @@ const ControlPlanApp: React.FC<Props> = ({ onBackToLanding, embedded, initialDat
                 defaultValue={projects.promptState.defaultValue}
                 placeholder="Nombre del plan"
                 required
+            />
+
+            {/* Revision Prompt Modal */}
+            <RevisionPromptModal
+                isOpen={revisionControl.showRevisionPrompt}
+                onClose={() => revisionControl.setShowRevisionPrompt(false)}
+                onConfirm={(desc, by) => revisionControl.confirmRevision(desc, by)}
+                currentRevisionLevel={cp.data.header.revision || 'A'}
+                nextRevisionLevel={getNextRevisionLevel(cp.data.header.revision || 'A')}
             />
 
             {/* Load Error Toast */}
@@ -482,6 +633,20 @@ const ControlPlanApp: React.FC<Props> = ({ onBackToLanding, embedded, initialDat
                 onClose={() => setShowTemplates(false)}
                 onApplyTemplate={handleApplyTemplate}
             />
+
+            {/* PDF Preview Modal */}
+            {pdfPreview && (
+                <PdfPreviewModal
+                    html={pdfPreview.html}
+                    onExport={handlePdfExport}
+                    onClose={() => setPdfPreview(null)}
+                    isExporting={isExportingPdf}
+                    title="Vista Previa PDF — Plan de Control"
+                    subtitle={pdfPreview.template === 'full' ? 'Tabla AIAG Completa' : 'Items Criticos'}
+                    maxWidth={pdfPreview.template === 'full' ? '420mm' : '297mm'}
+                    themeColor="teal"
+                />
+            )}
 
             {/* Shortcut Hints Overlay */}
             <ShortcutHintsOverlay isVisible={shortcutHints.hintsVisible} />
