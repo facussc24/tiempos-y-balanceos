@@ -45,6 +45,32 @@ const getApColor = (ap: string) => {
     }
 };
 
+/** Precompute aggregate stats for a collapsed operation summary */
+function computeOpSummary(op: AmfeOperation) {
+    let totalFails = 0;
+    let totalCauses = 0;
+    let highAP = 0;
+    for (const w of op.workElements) {
+        for (const f of w.functions) {
+            totalFails += f.failures.length;
+            for (const fl of f.failures) {
+                totalCauses += fl.causes.length;
+                for (const ca of fl.causes) {
+                    if (ca.ap === 'H') highAP++;
+                }
+            }
+        }
+    }
+    return { totalWE: op.workElements.length, totalFails, totalCauses, highAP };
+}
+
+/** Static class maps for effect tabs (extracted outside component to avoid recreation) */
+const TAB_ACTIVE_CLASSES = ['border-blue-500 text-blue-700 bg-blue-50', 'border-orange-500 text-orange-700 bg-orange-50', 'border-red-500 text-red-700 bg-red-50'] as const;
+const TAB_DOT_CLASSES = ['bg-blue-400', 'bg-orange-400', 'bg-red-400'] as const;
+const TAB_BORDER_CLASSES = ['border-l-blue-400', 'border-l-orange-400', 'border-l-red-400'] as const;
+const TAB_LABEL_CLASSES = ['text-blue-600', 'text-orange-600', 'text-red-600'] as const;
+const TAB_SEV_HIGH_CLASSES = ['border-blue-500 bg-blue-100 font-bold', 'border-orange-500 bg-orange-100 font-bold', 'border-red-500 bg-red-100 font-bold'] as const;
+
 /** Color coding for S/O/D values based on risk level */
 const getSODColor = (value: number | string): string => {
     const num = Number(value);
@@ -320,6 +346,17 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
         </div>
     );
 
+    // Cache inferOperationCategory per operation name to avoid regex per cause cell
+    const opCategoryMap = useMemo(() => {
+        const map = new Map<string, string>();
+        for (const op of operations) {
+            if (op.name && !map.has(op.name)) {
+                map.set(op.name, inferOperationCategory(op.name));
+            }
+        }
+        return map;
+    }, [operations]);
+
     /** Build suggestion context from the current position in the AMFE hierarchy */
     const buildSugCtx = (
         op: AmfeOperation,
@@ -338,7 +375,7 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
             workElementType: we.type,
             workElementName: we.name,
             failureDescription: fail?.description,
-            existingValues: existingValues?.sort(),
+            existingValues: existingValues ? [...existingValues].sort() : undefined,
             functionDescription: func.description,
             functionRequirements: func.requirements || undefined,
             severity: sev || undefined,
@@ -346,7 +383,7 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
             detection: cause ? (Number(cause.detection) || undefined) : undefined,
             causeText: cause?.cause || undefined,
             effectsContext: effectsSummary || undefined,
-            operationCategory: inferOperationCategory(op.name),
+            operationCategory: opCategoryMap.get(op.name) ?? inferOperationCategory(op.name),
         };
     };
 
@@ -358,12 +395,7 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
         const maxS = Math.max(sL, sN, sE);
         const tab = getEffectTab(fail.id);
 
-        // Static class maps (Tailwind can't use dynamic class names)
-        const tabActiveClasses = ['border-blue-500 text-blue-700 bg-blue-50', 'border-orange-500 text-orange-700 bg-orange-50', 'border-red-500 text-red-700 bg-red-50'];
-        const dotClasses = ['bg-blue-400', 'bg-orange-400', 'bg-red-400'];
-        const borderClasses = ['border-l-blue-400', 'border-l-orange-400', 'border-l-red-400'];
-        const labelClasses = ['text-blue-600', 'text-orange-600', 'text-red-600'];
-        const sevHighClasses = ['border-blue-500 bg-blue-100 font-bold', 'border-orange-500 bg-orange-100 font-bold', 'border-red-500 bg-red-100 font-bold'];
+        // Class maps defined as module-level constants (TAB_*_CLASSES)
 
         const tabs = [
             { label: 'Local', sev: sL, value: fail.effectLocal, sevField: 'severityLocal' as const, field: 'effectLocal' as const, sugField: 'effectLocal' as const, placeholder: 'Efecto en planta propia', existing: func.failures.map(f => f.effectLocal).filter(Boolean) },
@@ -381,9 +413,9 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
                             const text = String(t.value || '').trim();
                             if (!text && t.sev === 0) return null;
                             return (
-                                <div key={i} className={`border-l-2 ${borderClasses[i]} pl-1.5`}>
+                                <div key={i} className={`border-l-2 ${TAB_BORDER_CLASSES[i]} pl-1.5`}>
                                     <div className="flex items-center gap-1 mb-0.5">
-                                        <span className={`text-[9px] font-semibold ${labelClasses[i]}`}>{t.label}</span>
+                                        <span className={`text-[9px] font-semibold ${TAB_LABEL_CLASSES[i]}`}>{t.label}</span>
                                         {t.sev > 0 && (
                                             <span className={`text-[9px] font-bold px-1 rounded ${t.sev === maxS ? 'bg-red-100 text-red-700' : 'text-gray-500'}`}>
                                                 S={t.sev}
@@ -425,10 +457,10 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
                                     if (e.key === 'ArrowLeft') { e.preventDefault(); setEffectTab(prev => ({ ...prev, [fail.id]: ((prev[fail.id] ?? 0) + 2) % 3 })); }
                                 }}
                                 className={`text-[9px] px-1.5 py-0.5 rounded-t border-b-2 transition font-medium flex items-center gap-0.5 ${
-                                    isActive ? tabActiveClasses[i] : 'border-transparent text-gray-400 hover:text-gray-600'
+                                    isActive ? TAB_ACTIVE_CLASSES[i] : 'border-transparent text-gray-400 hover:text-gray-600'
                                 }`}
                             >
-                                {hasFill && <span className={`inline-block w-1.5 h-1.5 rounded-full ${dotClasses[i]}`} />}
+                                {hasFill && <span className={`inline-block w-1.5 h-1.5 rounded-full ${TAB_DOT_CLASSES[i]}`} />}
                                 {t.label}
                                 {t.sev > 0 && <span className="text-[8px] ml-0.5 opacity-60">{t.sev}</span>}
                             </button>
@@ -436,14 +468,14 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
                     })}
                 </div>
                 {/* Active tab content */}
-                <div className={`border-l-2 ${borderClasses[tab]} pl-1.5`}>
+                <div className={`border-l-2 ${TAB_BORDER_CLASSES[tab]} pl-1.5`}>
                     <div className="flex items-center justify-between mb-0.5">
-                        <span className={`text-[10px] font-semibold ${labelClasses[tab]} leading-tight`}>{EFFECT_LABELS[active.field]}</span>
+                        <span className={`text-[10px] font-semibold ${TAB_LABEL_CLASSES[tab]} leading-tight`}>{EFFECT_LABELS[active.field]}</span>
                         <input
                             type="number" min={1} max={10} step={1}
                             value={fail[active.sevField] ?? ''}
                             onChange={e => handleSubSeverityChange(op.id, we.id, func.id, fail.id, active.sevField, e.target.value)}
-                            className={`w-8 text-center outline-none text-[10px] p-0.5 rounded border ${active.sev > 0 && active.sev === maxS ? sevHighClasses[tab] : 'border-gray-200 bg-gray-50'}`}
+                            className={`w-8 text-center outline-none text-[10px] p-0.5 rounded border ${active.sev > 0 && active.sev === maxS ? TAB_SEV_HIGH_CLASSES[tab] : 'border-gray-200 bg-gray-50'}`}
                             aria-label={`Severidad ${active.label} (S) 1-10`}
                             placeholder="S"
                         />
@@ -470,8 +502,8 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
                     <div className="flex justify-between group/cause">
                         {renderText(cause.cause, <SuggestableTextarea value={cause.cause} onChange={e => amfe.updateCause(op.id, we.id, func.id, fail.id, cause.id, 'cause', e.target.value)} onValueChange={v => amfe.updateCause(op.id, we.id, func.id, fail.id, cause.id, 'cause', v)} suggestionIndex={sIdx} aiEnabled={aiEnabled} suggestionField="cause" suggestionContext={buildSugCtx(op, we, func, fail, undefined, fail.causes.map(c => c.cause).filter(Boolean))} className={`${textAreaClass} text-orange-900 bg-orange-50/30`} placeholder="Por que fallo? (ej: Sensor descalibrado)" />)}
                         {!readOnly && <div className="flex flex-col gap-1 opacity-0 group-hover/cause:opacity-100">
-                            <button onClick={() => amfe.duplicateCause(op.id, we.id, func.id, fail.id, cause.id)} className="text-gray-300 hover:text-blue-500"><Copy size={10} /></button>
-                            <button onClick={() => confirmDeleteCause(op.id, we.id, func.id, fail.id, cause.id)} className="text-gray-300 hover:text-red-500"><Trash2 size={10} /></button>
+                            <button onClick={() => amfe.duplicateCause(op.id, we.id, func.id, fail.id, cause.id)} className="text-gray-300 hover:text-blue-500 hover:bg-blue-50 p-0.5 rounded transition" title="Duplicar causa" aria-label="Duplicar causa"><Copy size={10} /></button>
+                            <button onClick={() => confirmDeleteCause(op.id, we.id, func.id, fail.id, cause.id)} className="text-gray-300 hover:text-red-500 hover:bg-red-50 p-0.5 rounded transition" title="Eliminar causa" aria-label="Eliminar causa"><Trash2 size={10} /></button>
                         </div>}
                     </div>
                 </td>
@@ -576,10 +608,7 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
 
                 // Collapsed summary row
                 if (isCollapsed && op.workElements.length > 0) {
-                    const totalWE = op.workElements.length;
-                    const totalFails = op.workElements.reduce((a, w) => a + w.functions.reduce((b, f) => b + f.failures.length, 0), 0);
-                    const totalCauses = op.workElements.reduce((a, w) => a + w.functions.reduce((b, f) => b + f.failures.reduce((c, fl) => c + fl.causes.length, 0), 0), 0);
-                    const highAP = op.workElements.reduce((a, w) => a + w.functions.reduce((b, f) => b + f.failures.reduce((c, fl) => c + fl.causes.filter(ca => ca.ap === 'H').length, 0), 0), 0);
+                    const { totalWE, totalFails, totalCauses, highAP } = computeOpSummary(op);
 
                     return (
                         <tr key={op.id} className={`hover:bg-gray-50 bg-slate-50/80 cursor-pointer${opSeparator}`} onClick={() => onToggleCollapse?.(op.id)} onContextMenu={readOnly ? undefined : e => openCtx(e, { opId: op.id })}>
@@ -597,7 +626,7 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
                                     <span>{totalWE} elem.</span>
                                     <span>{totalFails} fallas</span>
                                     <span>{totalCauses} causas</span>
-                                    {highAP > 0 && <span className="bg-red-100 text-red-700 px-1.5 rounded font-bold">{highAP} AP=H</span>}
+                                    {highAP > 0 && <span className="bg-red-100 text-red-700 px-1.5 rounded font-bold whitespace-nowrap">{highAP} AP=H</span>}
                                 </div>
                             </td>
                         </tr>
@@ -612,8 +641,8 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
                                 <div className="flex justify-between items-start group/op">
                                     {renderText(op.opNumber, <AutoResizeTextarea value={op.opNumber} onChange={e => amfe.updateOp(op.id, 'opNumber', e.target.value)} className={textAreaClass} placeholder="Op #" />)}
                                     {!readOnly && <div className="flex flex-col gap-1 opacity-0 group-hover/op:opacity-100">
-                                        <button onClick={() => amfe.duplicateOperation(op.id)} className="text-gray-300 hover:text-blue-500" title="Duplicar Operación"><Copy size={12} /></button>
-                                        <button onClick={() => confirmDeleteOp(op.id)} className="text-gray-300 hover:text-red-500" title="Eliminar"><Trash2 size={12} /></button>
+                                        <button onClick={() => amfe.duplicateOperation(op.id)} className="text-gray-300 hover:text-blue-500 hover:bg-blue-50 p-0.5 rounded transition" title="Duplicar Operación" aria-label="Duplicar Operación"><Copy size={12} /></button>
+                                        <button onClick={() => confirmDeleteOp(op.id)} className="text-gray-300 hover:text-red-500 hover:bg-red-50 p-0.5 rounded transition" title="Eliminar" aria-label="Eliminar"><Trash2 size={12} /></button>
                                     </div>}
                                 </div>
                             </td>
@@ -647,12 +676,12 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
                                 {isFirstWE && (
                                     <>
                                         <td rowSpan={opRows} className={opNumCellClass}>
-                                            {onToggleCollapse && <button onClick={() => onToggleCollapse(op.id)} className="text-gray-400 hover:text-gray-600 mb-0.5 block" title="Colapsar operación"><ChevronDown size={12} /></button>}
+                                            {onToggleCollapse && <button onClick={() => onToggleCollapse(op.id)} className="text-gray-400 hover:text-gray-600 mb-0.5 block" title="Colapsar operación" aria-label="Colapsar operación"><ChevronDown size={12} /></button>}
                                             <div className="flex justify-between items-start group/op">
                                                 {renderText(op.opNumber, <AutoResizeTextarea value={op.opNumber} onChange={e => amfe.updateOp(op.id, 'opNumber', e.target.value)} className={textAreaClass} placeholder="Op #" />)}
                                                 {!readOnly && <div className="flex flex-col gap-1 opacity-0 group-hover/op:opacity-100">
-                                                    <button onClick={() => amfe.duplicateOperation(op.id)} className="text-gray-300 hover:text-blue-500" title="Duplicar Operación"><Copy size={12} /></button>
-                                                    <button onClick={() => confirmDeleteOp(op.id)} className="text-gray-300 hover:text-red-500"><Trash2 size={12} /></button>
+                                                    <button onClick={() => amfe.duplicateOperation(op.id)} className="text-gray-300 hover:text-blue-500 hover:bg-blue-50 p-0.5 rounded transition" title="Duplicar Operación" aria-label="Duplicar Operación"><Copy size={12} /></button>
+                                                    <button onClick={() => confirmDeleteOp(op.id)} className="text-gray-300 hover:text-red-500 hover:bg-red-50 p-0.5 rounded transition" title="Eliminar" aria-label="Eliminar"><Trash2 size={12} /></button>
                                                 </div>}
                                             </div>
                                         </td>
@@ -667,7 +696,7 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
                                             <span className="text-[9px] font-bold text-gray-400 uppercase p-0.5">{we.type.substring(0, 3)}</span>
                                             {renderText(we.name, <AutoResizeTextarea value={we.name} onChange={e => amfe.updateWorkElement(op.id, we.id, 'name', e.target.value)} className={textAreaClass} placeholder="Nombre Elemento" />)}
                                         </div>
-                                        {!readOnly && <button onClick={() => confirmDeleteWE(op.id, we.id)} className="text-gray-300 hover:text-red-500 opacity-0 group-hover/we:opacity-100"><Trash2 size={12} /></button>}
+                                        {!readOnly && <button onClick={() => confirmDeleteWE(op.id, we.id)} className="text-gray-300 hover:text-red-500 hover:bg-red-50 p-0.5 rounded transition opacity-0 group-hover/we:opacity-100" title="Eliminar" aria-label="Eliminar"><Trash2 size={12} /></button>}
                                     </div>
                                 </td>
                                 {v.step3 && <td className={cellClass}></td>}
@@ -712,12 +741,12 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
                                     {isFirstWE && isFirstFunc && (
                                         <>
                                             <td rowSpan={opRows} className={opNumCellClass}>
-                                                {onToggleCollapse && <button onClick={() => onToggleCollapse(op.id)} className="text-gray-400 hover:text-gray-600 mb-0.5 block" title="Colapsar operación"><ChevronDown size={12} /></button>}
+                                                {onToggleCollapse && <button onClick={() => onToggleCollapse(op.id)} className="text-gray-400 hover:text-gray-600 mb-0.5 block" title="Colapsar operación" aria-label="Colapsar operación"><ChevronDown size={12} /></button>}
                                                 <div className="flex justify-between items-start group/op">
                                                     {renderText(op.opNumber, <AutoResizeTextarea value={op.opNumber} onChange={e => amfe.updateOp(op.id, 'opNumber', e.target.value)} className={textAreaClass} placeholder="Op #" />)}
                                                     {!readOnly && <div className="flex flex-col gap-1 opacity-0 group-hover/op:opacity-100">
-                                                        <button onClick={() => amfe.duplicateOperation(op.id)} className="text-gray-300 hover:text-blue-500" title="Duplicar Operación"><Copy size={12} /></button>
-                                                        <button onClick={() => confirmDeleteOp(op.id)} className="text-gray-300 hover:text-red-500"><Trash2 size={12} /></button>
+                                                        <button onClick={() => amfe.duplicateOperation(op.id)} className="text-gray-300 hover:text-blue-500 hover:bg-blue-50 p-0.5 rounded transition" title="Duplicar Operación" aria-label="Duplicar Operación"><Copy size={12} /></button>
+                                                        <button onClick={() => confirmDeleteOp(op.id)} className="text-gray-300 hover:text-red-500 hover:bg-red-50 p-0.5 rounded transition" title="Eliminar" aria-label="Eliminar"><Trash2 size={12} /></button>
                                                     </div>}
                                                 </div>
                                             </td>
@@ -733,7 +762,7 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
                                                     <span className="text-[9px] font-bold text-gray-400 uppercase p-0.5">{we.type.substring(0, 3)}</span>
                                                     {renderText(we.name, <AutoResizeTextarea value={we.name} onChange={e => amfe.updateWorkElement(op.id, we.id, 'name', e.target.value)} className={textAreaClass} placeholder="Nombre Elemento" />)}
                                                 </div>
-                                                {!readOnly && <button onClick={() => confirmDeleteWE(op.id, we.id)} className="text-gray-300 hover:text-red-500 opacity-0 group-hover/we:opacity-100"><Trash2 size={12} /></button>}
+                                                {!readOnly && <button onClick={() => confirmDeleteWE(op.id, we.id)} className="text-gray-300 hover:text-red-500 hover:bg-red-50 p-0.5 rounded transition opacity-0 group-hover/we:opacity-100" title="Eliminar" aria-label="Eliminar"><Trash2 size={12} /></button>}
                                             </div>
                                         </td>
                                     )}
@@ -741,8 +770,8 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
                                         <div className="flex justify-between group/func">
                                             {renderText(func.description, <AutoResizeTextarea value={func.description} onChange={e => amfe.updateFunction(op.id, we.id, func.id, 'description', e.target.value)} className={textAreaClass} placeholder="Verbo + Sustantivo (ej: Mantener temperatura)" />)}
                                             {!readOnly && <div className="flex flex-col gap-1 opacity-0 group-hover/func:opacity-100">
-                                                <button onClick={() => amfe.duplicateFunction(op.id, we.id, func.id)} className="text-gray-300 hover:text-blue-500"><Copy size={12} /></button>
-                                                <button onClick={() => confirmDeleteFunc(op.id, we.id, func.id)} className="text-gray-300 hover:text-red-500"><Trash2 size={12} /></button>
+                                                <button onClick={() => amfe.duplicateFunction(op.id, we.id, func.id)} className="text-gray-300 hover:text-blue-500 hover:bg-blue-50 p-0.5 rounded transition" title="Duplicar" aria-label="Duplicar"><Copy size={12} /></button>
+                                                <button onClick={() => confirmDeleteFunc(op.id, we.id, func.id)} className="text-gray-300 hover:text-red-500 hover:bg-red-50 p-0.5 rounded transition" title="Eliminar" aria-label="Eliminar"><Trash2 size={12} /></button>
                                             </div>}
                                         </div>
                                     </td>}
@@ -800,12 +829,12 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
                                         {isFirstWE && isFirstFunc && isFirstFailRow && (
                                             <>
                                                 <td rowSpan={opRows} className={opNumCellClass}>
-                                                    {onToggleCollapse && <button onClick={() => onToggleCollapse(op.id)} className="text-gray-400 hover:text-gray-600 mb-0.5 block" title="Colapsar operación"><ChevronDown size={12} /></button>}
+                                                    {onToggleCollapse && <button onClick={() => onToggleCollapse(op.id)} className="text-gray-400 hover:text-gray-600 mb-0.5 block" title="Colapsar operación" aria-label="Colapsar operación"><ChevronDown size={12} /></button>}
                                                     <div className="flex justify-between items-start group/op">
                                                         {renderText(op.opNumber, <AutoResizeTextarea value={op.opNumber} onChange={e => amfe.updateOp(op.id, 'opNumber', e.target.value)} className={textAreaClass} placeholder="Op #" />)}
                                                         {!readOnly && <div className="flex flex-col gap-1 opacity-0 group-hover/op:opacity-100">
-                                                            <button onClick={() => amfe.duplicateOperation(op.id)} className="text-gray-300 hover:text-blue-500" title="Duplicar Operación"><Copy size={12} /></button>
-                                                            <button onClick={() => confirmDeleteOp(op.id)} className="text-gray-300 hover:text-red-500"><Trash2 size={12} /></button>
+                                                            <button onClick={() => amfe.duplicateOperation(op.id)} className="text-gray-300 hover:text-blue-500 hover:bg-blue-50 p-0.5 rounded transition" title="Duplicar Operación" aria-label="Duplicar Operación"><Copy size={12} /></button>
+                                                            <button onClick={() => confirmDeleteOp(op.id)} className="text-gray-300 hover:text-red-500 hover:bg-red-50 p-0.5 rounded transition" title="Eliminar" aria-label="Eliminar"><Trash2 size={12} /></button>
                                                         </div>}
                                                     </div>
                                                 </td>
@@ -823,7 +852,7 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
                                                         <span className={`text-[9px] font-bold uppercase shrink-0 ${readOnly ? 'bg-slate-200 text-slate-600 px-1 py-0.5 rounded' : 'text-gray-400 p-0.5'}`}>{we.type.substring(0, 3)}</span>
                                                         {renderText(we.name, <AutoResizeTextarea value={we.name} onChange={e => amfe.updateWorkElement(op.id, we.id, 'name', e.target.value)} className={textAreaClass} placeholder="Nombre Elemento" />)}
                                                     </div>
-                                                    {!readOnly && <button onClick={() => confirmDeleteWE(op.id, we.id)} className="text-gray-300 hover:text-red-500 opacity-0 group-hover/we:opacity-100"><Trash2 size={12} /></button>}
+                                                    {!readOnly && <button onClick={() => confirmDeleteWE(op.id, we.id)} className="text-gray-300 hover:text-red-500 hover:bg-red-50 p-0.5 rounded transition opacity-0 group-hover/we:opacity-100" title="Eliminar" aria-label="Eliminar"><Trash2 size={12} /></button>}
                                                 </div>
                                             </td>
                                         )}
@@ -834,8 +863,8 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
                                                 <div className="flex justify-between group/func">
                                                     {renderText(func.description, <AutoResizeTextarea value={func.description} onChange={e => amfe.updateFunction(op.id, we.id, func.id, 'description', e.target.value)} className={textAreaClass} placeholder="Verbo + Sustantivo (ej: Mantener temperatura)" />)}
                                                     {!readOnly && <div className="flex flex-col gap-1 opacity-0 group-hover/func:opacity-100">
-                                                        <button onClick={() => amfe.duplicateFunction(op.id, we.id, func.id)} className="text-gray-300 hover:text-blue-500"><Copy size={12} /></button>
-                                                        <button onClick={() => confirmDeleteFunc(op.id, we.id, func.id)} className="text-gray-300 hover:text-red-500"><Trash2 size={12} /></button>
+                                                        <button onClick={() => amfe.duplicateFunction(op.id, we.id, func.id)} className="text-gray-300 hover:text-blue-500 hover:bg-blue-50 p-0.5 rounded transition" title="Duplicar" aria-label="Duplicar"><Copy size={12} /></button>
+                                                        <button onClick={() => confirmDeleteFunc(op.id, we.id, func.id)} className="text-gray-300 hover:text-red-500 hover:bg-red-50 p-0.5 rounded transition" title="Eliminar" aria-label="Eliminar"><Trash2 size={12} /></button>
                                                     </div>}
                                                 </div>
                                             </td>
@@ -872,8 +901,8 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
                                                     <div className="flex justify-between group/fail">
                                                         {renderText(fail.description, <SuggestableTextarea value={fail.description} onChange={e => amfe.updateFailure(op.id, we.id, func.id, fail.id, 'description', e.target.value)} onValueChange={v => amfe.updateFailure(op.id, we.id, func.id, fail.id, 'description', v)} suggestionIndex={sIdx} aiEnabled={aiEnabled} suggestionField="failureDescription" suggestionContext={buildSugCtx(op, we, func, undefined, undefined, func.failures.map(f => f.description).filter(Boolean))} className={`${textAreaClass} font-bold text-red-900 bg-red-50/30`} placeholder="Negativo de la función (ej: No mantiene temp)" />)}
                                                         {!readOnly && <div className="flex flex-col gap-1 opacity-0 group-hover/fail:opacity-100">
-                                                            <button onClick={() => amfe.duplicateFailure(op.id, we.id, func.id, fail.id)} className="text-gray-300 hover:text-blue-500"><Copy size={12} /></button>
-                                                            <button onClick={() => confirmDeleteFailure(op.id, we.id, func.id, fail.id)} className="text-gray-300 hover:text-red-500"><Trash2 size={12} /></button>
+                                                            <button onClick={() => amfe.duplicateFailure(op.id, we.id, func.id, fail.id)} className="text-gray-300 hover:text-blue-500 hover:bg-blue-50 p-0.5 rounded transition" title="Duplicar" aria-label="Duplicar"><Copy size={12} /></button>
+                                                            <button onClick={() => confirmDeleteFailure(op.id, we.id, func.id, fail.id)} className="text-gray-300 hover:text-red-500 hover:bg-red-50 p-0.5 rounded transition" title="Eliminar" aria-label="Eliminar"><Trash2 size={12} /></button>
                                                         </div>}
                                                     </div>
                                                 </td>

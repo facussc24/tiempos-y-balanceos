@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo, lazy, Suspense } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef, lazy, Suspense } from 'react';
 import { useAmfe } from './useAmfe';
 import { useAmfeProjects } from './useAmfeProjects';
 import { useAmfePersistence } from './useAmfePersistence';
@@ -17,12 +17,20 @@ import AmfeModals from './AmfeModals';
 import AmfeToolbar from './AmfeToolbar';
 import AmfeTemplatesModal from './AmfeTemplatesModal';
 import { ConfirmModal } from '../../components/modals/ConfirmModal';
+import { RevisionPromptModal } from '../../components/modals/RevisionPromptModal';
+import { CrossDocAlertBanner } from '../../components/CrossDocAlertBanner';
+import { RevisionHistoryPanel } from '../../components/RevisionHistoryPanel';
+import { useRevisionControl } from '../../hooks/useRevisionControl';
+import { useCrossDocAlerts } from '../../hooks/useCrossDocAlerts';
+import { getNextRevisionLevel } from '../../utils/revisionUtils';
 import { Plus, Layers, HardDrive, AlertTriangle, X } from 'lucide-react';
 import { AmfeDocument, AmfeHeaderData } from './amfeTypes';
 import { useAmfeRegistry } from './useAmfeRegistry';
 import { useAmfeColumnVisibility } from './useAmfeColumnVisibility';
 import { AmfeTemplate } from './amfeTemplates';
+import { createExampleAmfeDocument } from './amfeExampleModel';
 import { ModuleErrorBoundary } from '../../components/ui/ModuleErrorBoundary';
+import { LoadingOverlay } from '../../components/ui/LoadingOverlay';
 import { FloatingActionButton } from '../../components/ui/FloatingActionButton';
 import { buildSuggestionIndex } from './amfeSuggestionEngine';
 import { logger } from '../../utils/logger';
@@ -36,11 +44,16 @@ import { useAmfeNetworkToast } from './useAmfeNetworkToast';
 import { useAmfeExport } from './useAmfeExport';
 import { useAmfeTabNavigation } from './useAmfeTabNavigation';
 
+const PfdApp = lazy(() => import('../pfd/PfdApp'));
+const PfdGenerationWizard = lazy(() => import('../pfd/PfdGenerationWizard'));
 const ControlPlanApp = lazy(() => import('../controlPlan/ControlPlanApp'));
 const HojaOperacionesApp = lazy(() => import('../hojaOperaciones/HojaOperacionesApp'));
+const SyncPanel = lazy(() => import('../../components/sync/SyncPanel'));
 
 interface AmfeAppProps {
     onBackToLanding: () => void;
+    /** Initial tab to show (e.g. 'pfd' when entering PFD from landing page) */
+    initialTab?: 'pfd' | 'amfe' | 'controlPlan' | 'hojaOperaciones';
 }
 
 /**
@@ -51,7 +64,7 @@ interface AmfeAppProps {
  */
 type ActivePanel = 'none' | 'projects' | 'summary' | 'library' | 'registry' | 'templates';
 
-const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding }) => {
+const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab }) => {
     const [activePanel, setActivePanel] = useState<ActivePanel>('none');
     const [showOverflowMenu, setShowOverflowMenu] = useState(false);
     const [collapsedOps, setCollapsedOps] = useState<Set<string>>(new Set());
@@ -59,6 +72,7 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding }) => {
     const [showChangeAnalysis, setShowChangeAnalysis] = useState(false);
     const [showAudit, setShowAudit] = useState(false);
     const [showChat, setShowChat] = useState(false);
+    const [showSync, setShowSync] = useState(false);
     const [showHelp, setShowHelp] = useState(false);
     const [viewMode, setViewMode] = useState<'view' | 'edit'>('edit');
     const isReadOnly = viewMode === 'view';
@@ -118,14 +132,31 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding }) => {
         isSaving: projects.saveStatus === 'saving',
     });
 
+    // 3b. Normalize flat project_names at startup (one-time repair)
+    useEffect(() => {
+        let cancelled = false;
+        import('./amfePathManager').then(({ normalizeProjectNames }) =>
+            normalizeProjectNames().then(count => {
+                if (!cancelled && count > 0) projects.refreshClients();
+            })
+        ).catch(() => { /* non-critical */ });
+        return () => { cancelled = true; };
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
     // 4. Library
     const library = useAmfeLibrary();
 
-    // 4b. Suggestion index (built from library for autocomplete)
-    const suggestionIndex = useMemo(
-        () => library.isLoaded ? buildSuggestionIndex(library.libraryOps) : null,
-        [library.libraryOps, library.isLoaded]
-    );
+    // 4b. Suggestion index (deferred to avoid blocking initial render)
+    const [suggestionIndex, setSuggestionIndex] = useState<ReturnType<typeof buildSuggestionIndex> | null>(null);
+    const suggestionIndexTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    useEffect(() => {
+        if (!library.isLoaded) { setSuggestionIndex(null); return; }
+        // Defer index building so the table renders first (0ms = next tick, non-blocking)
+        suggestionIndexTimerRef.current = setTimeout(() => {
+            setSuggestionIndex(buildSuggestionIndex(library.libraryOps));
+        }, 0);
+        return () => { if (suggestionIndexTimerRef.current) clearTimeout(suggestionIndexTimerRef.current); };
+    }, [library.libraryOps, library.isLoaded]);
 
     // 4c. Soft limit warnings (for badge on summary button)
     const softLimitWarnings = useMemo(() => getSoftLimitWarnings(amfe.data), [amfe.data]);
@@ -134,10 +165,30 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding }) => {
     const [aiEnabled, setAiEnabled] = useState(false);
 
     useEffect(() => {
+        let cancelled = false;
         import('../../utils/settingsStore').then(({ loadSettings }) =>
-            loadSettings().then(s => setAiEnabled(s.geminiEnabled && !!s.geminiApiKey))
-        );
+            loadSettings().then(s => {
+                if (!cancelled) setAiEnabled(s.geminiEnabled && !!s.geminiApiKey);
+            })
+        ).catch(() => {
+            // FIX: Prevent unhandled promise rejection if settings import/load fails
+        });
+        return () => { cancelled = true; };
     }, []);
+
+    // 4e. Revision control
+    const revisionControl = useRevisionControl({
+        module: 'amfe',
+        documentId: projects.currentProject,
+        currentData: amfe.data,
+        currentRevisionLevel: amfe.data.header.revision || 'A',
+        onRevisionCreated: (newLevel) => {
+            amfe.updateHeader('revision', newLevel);
+        },
+    });
+
+    // 4f. Cross-document alerts
+    const crossDocAlerts = useCrossDocAlerts('amfe', projects.currentProject);
 
     // 5. Registry (IATF 16949 centralized index)
     const amfeRegistry = useAmfeRegistry();
@@ -164,6 +215,7 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding }) => {
         data: amfe.data,
         currentProject: projects.currentProject,
         requestConfirm: confirm.requestConfirm,
+        initialTab,
     });
 
     // 10. Export (PDF + Excel)
@@ -177,6 +229,10 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding }) => {
 
     // --- SAVE WITH AP=H COMPLIANCE WARNING ---
     const [apHWarning, setApHWarning] = useState<string | null>(null);
+    const apHWarningTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    useEffect(() => {
+        return () => { if (apHWarningTimerRef.current) clearTimeout(apHWarningTimerRef.current); };
+    }, []);
 
     const saveWithComplianceCheck = useCallback(async () => {
         if (projects.saveStatus === 'saving') return;
@@ -184,7 +240,8 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding }) => {
         const errors = getDocumentCompletionErrors(amfe.data);
         if (errors.length > 0) {
             setApHWarning(`${errors.length} causa${errors.length > 1 ? 's' : ''} AP=H sin acciones completas. Se recomienda completar antes de cerrar.`);
-            setTimeout(() => setApHWarning(null), 5000);
+            if (apHWarningTimerRef.current) clearTimeout(apHWarningTimerRef.current);
+            apHWarningTimerRef.current = setTimeout(() => setApHWarning(null), 5000);
         }
         await projects.saveCurrentProject();
 
@@ -192,11 +249,13 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding }) => {
             try {
                 await amfeRegistry.registerAmfe(projects.currentProject, amfe.data);
             } catch (err) {
-                logger.warn('[AMFE] Registry update skipped:', err);
+                logger.warn('AMFE', 'Registry update skipped', { error: err instanceof Error ? err.message : String(err) });
             }
         }
     }, [amfe.data, projects.saveCurrentProject, projects.currentProject, projects.saveStatus, amfeRegistry.registerAmfe]);
 
+    // Disable AMFE shortcuts when a child module tab is active (PFD, CP, HO)
+    // to prevent Ctrl+S/Ctrl+N/Escape conflicts with child module shortcuts
     useAmfeKeyboardShortcuts({
         onUndo: handleUndo,
         onRedo: handleRedo,
@@ -213,6 +272,7 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding }) => {
         showSummary,
         setShowSummary,
         setViewMode,
+        disabled: tabNav.activeTab !== 'amfe',
     });
 
     useAmfeBeforeUnload({ hasUnsavedChanges: projects.hasUnsavedChanges });
@@ -229,6 +289,12 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding }) => {
     const handleHeaderChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         amfe.updateHeader(name as keyof AmfeHeaderData, value);
+    }, [amfe.updateHeader]);
+
+    const handleProductSelect = useCallback((fields: Partial<AmfeHeaderData>) => {
+        Object.entries(fields).forEach(([key, value]) => {
+            amfe.updateHeader(key as keyof AmfeHeaderData, value as string);
+        });
     }, [amfe.updateHeader]);
 
     // --- LIBRARY HANDLERS ---
@@ -265,6 +331,54 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding }) => {
         setShowTemplates(false);
     }, [amfe.data, amfe.loadData, confirm.requestConfirm]);
 
+    // Load full example AMFE document (replaces current document)
+    const handleLoadFullExample = useCallback(async () => {
+        const hasData = amfe.data.operations.length > 0;
+        if (hasData) {
+            const ok = await confirm.requestConfirm({
+                title: 'Cargar AMFE de ejemplo',
+                message: 'Se reemplazará el AMFE actual con un documento de ejemplo completo (Subchasis Soldado, 3 operaciones). ¿Continuar?',
+                variant: 'warning',
+                confirmText: 'Cargar Ejemplo',
+            });
+            if (!ok) return;
+        }
+        const exampleDoc = createExampleAmfeDocument();
+        amfe.loadData(exampleDoc);
+        setShowTemplates(false);
+        logger.info('AmfeApp', 'Loaded full example AMFE document');
+    }, [amfe.data.operations.length, amfe.loadData, confirm.requestConfirm]);
+
+    // Auto-expand header when creating a new blank document
+    useEffect(() => {
+        if (!projects.currentProject && amfe.data.operations.length === 0) {
+            setHeaderCollapsed(false);
+        }
+    }, [projects.currentProject, amfe.data.operations.length]);
+
+    // Auto-collapse operations for large documents (>200 total causes) on project load
+    const autoCollapseProjectRef = useRef<string | null>(null);
+    useEffect(() => {
+        const projectKey = projects.currentProject || '';
+        if (autoCollapseProjectRef.current === projectKey) return;
+        if (!projectKey || amfe.data.operations.length === 0) return;
+        autoCollapseProjectRef.current = projectKey;
+        let totalCauses = 0;
+        for (const op of amfe.data.operations) {
+            for (const we of op.workElements) {
+                for (const func of we.functions) {
+                    for (const fail of func.failures) {
+                        totalCauses += fail.causes.length;
+                    }
+                }
+            }
+            if (totalCauses > 200) break;
+        }
+        if (totalCauses > 200) {
+            setCollapsedOps(new Set(amfe.data.operations.map(op => op.id)));
+        }
+    }, [projects.currentProject, amfe.data.operations]);
+
     // --- UI HELPERS ---
     const toggleHeaderCollapsed = useCallback(() => {
         setHeaderCollapsed(prev => {
@@ -282,10 +396,34 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding }) => {
     }, [amfe.data.operations]);
     const expandAll = useCallback(() => setCollapsedOps(new Set()), []);
 
+    // Check if a saved CP exists for this AMFE project
+    const [hasSavedCp, setHasSavedCp] = useState(false);
+    useEffect(() => {
+        if (!projects.currentProject) { setHasSavedCp(false); return; }
+        let cancelled = false;
+        import('../../utils/repositories/cpRepository').then(({ loadCpByAmfeProject }) =>
+            loadCpByAmfeProject(projects.currentProject!).then(result => {
+                if (!cancelled) setHasSavedCp(!!result);
+            })
+        ).catch(() => { if (!cancelled) setHasSavedCp(false); });
+        return () => { cancelled = true; };
+    }, [projects.currentProject]);
+
+    // Project context for the tab bar (shows family/part across all tabs)
+    const projectContext = useMemo(() => ({
+        projectName: projects.currentProject || undefined,
+        clientName: amfe.data.header.client || undefined,
+        partName: amfe.data.header.subject || undefined,
+        partNumber: amfe.data.header.partNumber || undefined,
+    }), [projects.currentProject, amfe.data.header.client, amfe.data.header.subject, amfe.data.header.partNumber]);
+
     // Common tab bar props
     const tabBarProps = {
         activeTab: tabNav.activeTab,
         onTabChange: tabNav.setActiveTab,
+        pfdInitialData: tabNav.pfdInitialData,
+        onGeneratePfd: tabNav.handleGeneratePfd,
+        onImportPfdFromAmfe: tabNav.handleImportPfdFromAmfe,
         cpInitialData: tabNav.cpInitialData,
         hoInitialData: tabNav.hoInitialData,
         onGenerateControlPlan: tabNav.handleGenerateControlPlan,
@@ -293,60 +431,103 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding }) => {
         onBackToLanding,
         hasUnsavedChanges: projects.hasUnsavedChanges,
         requestConfirm: confirm.requestConfirm,
+        hasSavedCp,
+        amfeOperationCount: amfe.data.operations.length,
+        projectContext,
     };
 
-    // --- HOJA DE OPERACIONES TAB ---
-    if (tabNav.activeTab === 'hojaOperaciones') {
-        return (
-            <div className="min-h-screen bg-gray-50 flex flex-col font-sans text-sm">
-                <AmfeTabBar {...tabBarProps} regenerateButton={{ label: 'Regenerar desde AMFE + CP', onClick: tabNav.handleGenerateHojasOperaciones, color: 'amber' }} />
-                <Suspense fallback={<div className="flex-1 flex items-center justify-center text-gray-400"><div className="text-center"><div className="w-8 h-8 border-3 border-amber-500/30 border-t-amber-500 rounded-full animate-spin mx-auto mb-3" /><p className="text-xs">Cargando Hojas de Operaciones...</p></div></div>}>
-                    {tabNav.hoWarnings.length > 0 && (
-                        <div className="bg-amber-50 border-b border-amber-200 px-4 py-3">
-                            <div className="max-w-[1800px] mx-auto flex items-start gap-2">
-                                <AlertTriangle size={16} className="text-amber-600 flex-shrink-0 mt-0.5" />
-                                <div>{tabNav.hoWarnings.map((w, i) => <p key={i} className="text-xs text-amber-800">{w}</p>)}</div>
-                                <button onClick={() => tabNav.setHoWarnings([])} className="ml-auto text-amber-400 hover:text-amber-600"><X size={14} /></button>
-                            </div>
-                        </div>
-                    )}
-                    <HojaOperacionesApp embedded initialData={tabNav.hoInitialData || undefined} />
-                </Suspense>
-                <ConfirmModal isOpen={confirm.confirmState.isOpen} onClose={confirm.handleCancel} onConfirm={confirm.handleConfirm} title={confirm.confirmState.title} message={confirm.confirmState.message} variant={confirm.confirmState.variant} confirmText={confirm.confirmState.confirmText} />
-            </div>
-        );
-    }
+    const isAmfeActive = tabNav.activeTab === 'amfe';
 
-    // --- CONTROL PLAN TAB ---
-    if (tabNav.activeTab === 'controlPlan') {
-        return (
-            <div className="min-h-screen bg-gray-50 flex flex-col font-sans text-sm">
-                <AmfeTabBar {...tabBarProps} regenerateButton={{ label: 'Regenerar desde AMFE', onClick: tabNav.handleGenerateControlPlan, color: 'teal' }} />
-                <Suspense fallback={<div className="flex-1 flex items-center justify-center text-gray-400"><div className="text-center"><div className="w-8 h-8 border-3 border-green-500/30 border-t-green-500 rounded-full animate-spin mx-auto mb-3" /><p className="text-xs">Cargando Plan de Control...</p></div></div>}>
-                    {tabNav.cpWarnings.length > 0 && (
-                        <div className="bg-amber-50 border-b border-amber-200 px-4 py-3">
-                            <div className="max-w-[1800px] mx-auto flex items-start gap-2">
-                                <AlertTriangle size={16} className="text-amber-600 flex-shrink-0 mt-0.5" />
-                                <div>{tabNav.cpWarnings.map((w, i) => <p key={i} className="text-xs text-amber-800">{w}</p>)}</div>
-                                <button onClick={() => tabNav.setCpWarnings([])} className="ml-auto text-amber-400 hover:text-amber-600"><X size={14} /></button>
-                            </div>
-                        </div>
-                    )}
-                    <ControlPlanApp embedded initialData={tabNav.cpInitialData || undefined} amfeDoc={amfe.data} />
-                </Suspense>
-                <ConfirmModal isOpen={confirm.confirmState.isOpen} onClose={confirm.handleCancel} onConfirm={confirm.handleConfirm} title={confirm.confirmState.title} message={confirm.confirmState.message} variant={confirm.confirmState.variant} confirmText={confirm.confirmState.confirmText} />
-            </div>
-        );
-    }
+    // Cuando el tab AMFE vuelve a ser visible, disparar evento para que
+    // AutoResizeTextarea recalcule alturas (scrollHeight=0 con display:none)
+    useEffect(() => {
+        if (isAmfeActive) {
+            requestAnimationFrame(() => {
+                document.dispatchEvent(new Event('amfe-tab-visible'));
+            });
+        }
+    }, [isAmfeActive]);
 
     return (
-        <div className="min-h-screen bg-gray-50 flex flex-col font-sans text-sm">
+        <>
+        {/* --- PFD (DIAGRAMA DE FLUJO) TAB --- */}
+        {tabNav.activeTab === 'pfd' && (
+            <div className="h-screen bg-gray-50 flex flex-col font-sans text-sm overflow-hidden">
+                <AmfeTabBar {...tabBarProps} />
+                <div className="flex-1 overflow-auto">
+                    <ModuleErrorBoundary moduleName="Diagrama de Flujo" onNavigateHome={() => tabNav.setActiveTab('amfe')}>
+                    <Suspense fallback={<LoadingOverlay message="Cargando Diagrama de Flujo..." accentColor="text-cyan-600" showSkeleton={false} />}>
+                        {tabNav.pfdWarnings.length > 0 && (
+                            <div className="bg-amber-50 border-b border-amber-200 px-4 py-3">
+                                <div className="max-w-[1800px] mx-auto flex items-start gap-2">
+                                    <AlertTriangle size={16} className="text-amber-600 flex-shrink-0 mt-0.5" />
+                                    <div>{tabNav.pfdWarnings.map((w, i) => <p key={i} className="text-xs text-amber-800">{w}</p>)}</div>
+                                    <button onClick={() => tabNav.setPfdWarnings([])} className="ml-auto text-amber-400 hover:text-amber-600 transition" aria-label="Cerrar advertencias"><X size={14} /></button>
+                                </div>
+                            </div>
+                        )}
+                        <PfdApp embedded initialData={tabNav.pfdInitialData || undefined} />
+                    </Suspense>
+                    </ModuleErrorBoundary>
+                </div>
+                <ConfirmModal isOpen={confirm.confirmState.isOpen} onClose={confirm.handleCancel} onConfirm={confirm.handleConfirm} title={confirm.confirmState.title} message={confirm.confirmState.message} variant={confirm.confirmState.variant} confirmText={confirm.confirmState.confirmText} />
+            </div>
+        )}
+
+        {/* --- HOJA DE OPERACIONES TAB --- */}
+        {tabNav.activeTab === 'hojaOperaciones' && (
+            <div className="h-screen bg-gray-50 flex flex-col font-sans text-sm overflow-hidden">
+                <AmfeTabBar {...tabBarProps} />
+                <div className="flex-1 overflow-auto">
+                    <ModuleErrorBoundary moduleName="Hojas de Operaciones" onNavigateHome={() => tabNav.setActiveTab('amfe')}>
+                    <Suspense fallback={<LoadingOverlay message="Cargando Hojas de Operaciones..." accentColor="text-[#1e3a5f]" showSkeleton={false} />}>
+                        {tabNav.hoWarnings.length > 0 && (
+                            <div className="bg-amber-50 border-b border-amber-200 px-4 py-3">
+                                <div className="max-w-[1800px] mx-auto flex items-start gap-2">
+                                    <AlertTriangle size={16} className="text-amber-600 flex-shrink-0 mt-0.5" />
+                                    <div>{tabNav.hoWarnings.map((w, i) => <p key={i} className="text-xs text-amber-800">{w}</p>)}</div>
+                                    <button onClick={() => tabNav.setHoWarnings([])} className="ml-auto text-amber-400 hover:text-amber-600 transition" aria-label="Cerrar advertencias"><X size={14} /></button>
+                                </div>
+                            </div>
+                        )}
+                        <HojaOperacionesApp embedded initialData={tabNav.hoInitialData || undefined} />
+                    </Suspense>
+                    </ModuleErrorBoundary>
+                </div>
+                <ConfirmModal isOpen={confirm.confirmState.isOpen} onClose={confirm.handleCancel} onConfirm={confirm.handleConfirm} title={confirm.confirmState.title} message={confirm.confirmState.message} variant={confirm.confirmState.variant} confirmText={confirm.confirmState.confirmText} />
+            </div>
+        )}
+
+        {/* --- CONTROL PLAN TAB --- */}
+        {tabNav.activeTab === 'controlPlan' && (
+            <div className="h-screen bg-gray-50 flex flex-col font-sans text-sm overflow-hidden">
+                <AmfeTabBar {...tabBarProps} />
+                <div className="flex-1 overflow-auto">
+                    <ModuleErrorBoundary moduleName="Plan de Control" onNavigateHome={() => tabNav.setActiveTab('amfe')}>
+                    <Suspense fallback={<LoadingOverlay message="Cargando Plan de Control..." accentColor="text-green-600" showSkeleton={false} />}>
+                        {tabNav.cpWarnings.length > 0 && (
+                            <div className="bg-amber-50 border-b border-amber-200 px-4 py-3">
+                                <div className="max-w-[1800px] mx-auto flex items-start gap-2">
+                                    <AlertTriangle size={16} className="text-amber-600 flex-shrink-0 mt-0.5" />
+                                    <div>{tabNav.cpWarnings.map((w, i) => <p key={i} className="text-xs text-amber-800">{w}</p>)}</div>
+                                    <button onClick={() => tabNav.setCpWarnings([])} className="ml-auto text-amber-400 hover:text-amber-600 transition" aria-label="Cerrar advertencias"><X size={14} /></button>
+                                </div>
+                            </div>
+                        )}
+                        <ControlPlanApp embedded initialData={tabNav.cpInitialData || undefined} amfeDoc={amfe.data} />
+                    </Suspense>
+                    </ModuleErrorBoundary>
+                </div>
+                <ConfirmModal isOpen={confirm.confirmState.isOpen} onClose={confirm.handleCancel} onConfirm={confirm.handleConfirm} title={confirm.confirmState.title} message={confirm.confirmState.message} variant={confirm.confirmState.variant} confirmText={confirm.confirmState.confirmText} />
+            </div>
+        )}
+
+        {/* --- AMFE TAB — SIEMPRE MONTADO, oculto con display:none cuando otro tab activo --- */}
+        <div className="min-h-screen bg-gray-50 flex flex-col font-sans text-sm" style={{ display: isAmfeActive ? undefined : 'none' }}>
+            <AmfeTabBar {...tabBarProps} />
             <AmfeToolbar
-                tabNav={tabNav}
                 projects={projects}
                 lastAutoSave={persistence.lastAutoSave}
-                requestConfirm={confirm.requestConfirm}
-                onBackToLanding={onBackToLanding}
                 viewMode={viewMode}
                 setViewMode={setViewMode}
                 activePanel={activePanel}
@@ -375,6 +556,34 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding }) => {
                 softLimitWarningCount={softLimitWarnings.length}
                 showOverflowMenu={showOverflowMenu}
                 setShowOverflowMenu={setShowOverflowMenu}
+                showSync={showSync}
+                setShowSync={setShowSync}
+                onLoadExample={handleLoadFullExample}
+                onNewRevision={revisionControl.handleNewRevision}
+                currentRevisionLevel={amfe.data.header.revision || 'A'}
+            />
+
+            {/* Cross-document alert banner */}
+            <CrossDocAlertBanner
+                alerts={crossDocAlerts.alerts}
+                onDismiss={crossDocAlerts.dismissAlert}
+                onDismissAll={crossDocAlerts.dismissAll}
+            />
+
+            {/* Revision history panel */}
+            <RevisionHistoryPanel
+                revisions={revisionControl.revisions}
+                onViewSnapshot={(level) => {
+                    revisionControl.loadSnapshot(level).then(snap => {
+                        if (snap) {
+                            amfe.loadData(snap as AmfeDocument);
+                            history.resetHistory(snap as AmfeDocument);
+                            logger.info('AmfeApp', `Loaded snapshot for Rev. ${level}`);
+                        }
+                    });
+                }}
+                isOpen={revisionControl.showRevisionHistory}
+                onToggle={() => revisionControl.setShowRevisionHistory(!revisionControl.showRevisionHistory)}
             />
 
             <AmfeSideDrawer
@@ -409,6 +618,7 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding }) => {
             <AmfeHeaderForm
                 header={amfe.data.header}
                 onHeaderChange={handleHeaderChange}
+                onProductSelect={handleProductSelect}
                 headerCollapsed={headerCollapsed}
                 onToggleCollapsed={toggleHeaderCollapsed}
                 readOnly={isReadOnly}
@@ -430,7 +640,9 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding }) => {
 
             {/* Main Grid Area */}
             <div className="flex-grow p-4 pb-8">
-                {!hasActiveFilters(filters) && filteredOperations.length === 0 ? (
+                {projects.isLoadingProject ? (
+                    <LoadingOverlay message="Cargando AMFE..." accentColor="text-blue-600" />
+                ) : !hasActiveFilters(filters) && filteredOperations.length === 0 ? (
                     <div className="bg-white shadow-lg rounded border border-gray-300 p-12 text-center">
                         <div className="max-w-md mx-auto">
                             <h3 className="text-lg font-bold text-gray-600 mb-2">Comenzar el AMFE</h3>
@@ -487,6 +699,7 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding }) => {
                 {showTemplates && (
                     <AmfeTemplatesModal
                         onApplyTemplate={handleApplyTemplate}
+                        onLoadFullExample={handleLoadFullExample}
                         onClose={() => setShowTemplates(false)}
                     />
                 )}
@@ -509,7 +722,15 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding }) => {
                     onImportFromLibrary={handleImportFromLibrary}
                     onSaveToLibrary={(op, desc, cat, tags) => library.saveToLibrary(op, desc, cat, tags)}
                     onUpdateInLibrary={(libOpId, op) => library.updateInLibrary(libOpId, op)}
-                    onRemoveFromLibrary={(libOpId) => library.removeFromLibrary(libOpId)}
+                    onRemoveFromLibrary={async (libOpId) => {
+                        const ok = await confirm.requestConfirm({
+                            title: 'Eliminar de biblioteca',
+                            message: '¿Eliminar esta operación de la biblioteca? Los AMFEs que la usen no se modifican, pero perderán el vínculo.',
+                            variant: 'danger',
+                            confirmText: 'Eliminar',
+                        });
+                        if (ok) library.removeFromLibrary(libOpId);
+                    }}
                     onSyncOperation={handleSyncOperation}
                     onScanImpact={library.scanImpact}
                     onBatchSync={library.batchSync}
@@ -547,7 +768,43 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding }) => {
                 onClearNetworkToast={clearNetworkToast}
                 data={amfe.data}
             />
+
+            {/* Revision Prompt Modal */}
+            <RevisionPromptModal
+                isOpen={revisionControl.showRevisionPrompt}
+                onClose={() => revisionControl.setShowRevisionPrompt(false)}
+                onConfirm={(desc, by) => revisionControl.confirmRevision(desc, by)}
+                currentRevisionLevel={amfe.data.header.revision || 'A'}
+                nextRevisionLevel={getNextRevisionLevel(amfe.data.header.revision || 'A')}
+            />
+
+            {/* Server Sync Panel */}
+            {showSync && (
+                <Suspense fallback={<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20"><div className="text-sm text-gray-500">Cargando...</div></div>}>
+                    <SyncPanel
+                        isOpen={showSync}
+                        onClose={() => setShowSync(false)}
+                        modules={['amfe', 'cp']}
+                    />
+                </Suspense>
+            )}
         </div>
+
+        {/* PFD Generation Wizard — modal overlay */}
+        {tabNav.showPfdWizard && (
+            <ModuleErrorBoundary moduleName="Asistente PFD" onNavigateHome={() => tabNav.setShowPfdWizard(false)}>
+            <Suspense fallback={null}>
+                <PfdGenerationWizard
+                    amfeDoc={amfe.data}
+                    projectName={projects.currentProject || 'Sin nombre'}
+                    isOpen={tabNav.showPfdWizard}
+                    onComplete={tabNav.handlePfdWizardComplete}
+                    onCancel={() => tabNav.setShowPfdWizard(false)}
+                />
+            </Suspense>
+            </ModuleErrorBoundary>
+        )}
+        </>
     );
 };
 
