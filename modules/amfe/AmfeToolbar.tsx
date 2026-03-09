@@ -4,7 +4,7 @@ import {
     FolderOpen, Check, Clock, WifiOff, HardDrive,
     BarChart3, FileSpreadsheet, Library, Loader2,
     Hash, MoreHorizontal, Undo2, Redo2, FileText, Shield, Zap, Bot,
-    Eye, Pencil, HelpCircle, Copy, BookOpen, GitBranch,
+    Eye, Pencil, HelpCircle, Copy, BookOpen, GitBranch, Download, Upload,
 } from 'lucide-react';
 
 type ActivePanel = 'none' | 'projects' | 'summary' | 'library' | 'registry' | 'templates';
@@ -57,6 +57,8 @@ interface AmfeToolbarProps {
         handleExcelResumenAP: () => void;
         handleExcelPlanAcciones: () => void;
         handlePdfPreview: (template: 'full' | 'summary' | 'actionPlan') => void;
+        handleExportJson: () => void;
+        handleImportJson: () => void;
     };
     // Library refresh
     libraryRefresh: () => void;
@@ -414,6 +416,30 @@ const AmfeToolbar: React.FC<AmfeToolbarProps> = ({
                                     <div>
                                         <span className="font-bold text-gray-800">PDF: Plan de Acciones</span>
                                         <p className="text-[10px] text-gray-400 mt-0.5">Acciones abiertas para seguimiento</p>
+                                    </div>
+                                </button>
+                                {/* JSON Import/Export */}
+                                <div className="px-4 py-1.5 text-[9px] font-bold text-gray-400 uppercase tracking-wider bg-gray-50 border-b border-gray-100">
+                                    Intercambio JSON
+                                </div>
+                                <button
+                                    onClick={() => { setShowOverflowMenu(false); amfeExport.handleExportJson(); }}
+                                    className="w-full text-left px-4 py-2.5 text-xs hover:bg-gray-50 border-b border-gray-100 flex items-center gap-2"
+                                >
+                                    <Download size={14} className="text-sky-500" />
+                                    <div>
+                                        <span className="font-bold text-gray-800">Exportar JSON</span>
+                                        <p className="text-[10px] text-gray-400 mt-0.5">Descargar AMFE como archivo JSON</p>
+                                    </div>
+                                </button>
+                                <button
+                                    onClick={() => { setShowOverflowMenu(false); amfeExport.handleImportJson(); }}
+                                    className="w-full text-left px-4 py-2.5 text-xs hover:bg-gray-50 border-b border-gray-100 flex items-center gap-2"
+                                >
+                                    <Upload size={14} className="text-sky-500" />
+                                    <div>
+                                        <span className="font-bold text-gray-800">Importar JSON</span>
+                                        <p className="text-[10px] text-gray-400 mt-0.5">Cargar AMFE desde archivo JSON</p>
                                     </div>
                                 </button>
                             </div>

@@ -219,6 +219,8 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab }) => {
     // 10. Export (PDF + Excel)
     const amfeExport = useAmfeExport({
         data: amfe.data,
+        loadData: amfe.loadData,
+        resetHistory: history.resetHistory,
         requestConfirm: confirm.requestConfirm,
     });
 
@@ -803,6 +805,15 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab }) => {
             </Suspense>
             </ModuleErrorBoundary>
         )}
+
+        {/* Hidden file input for JSON import */}
+        <input
+            ref={amfeExport.jsonImportRef}
+            type="file"
+            accept=".json"
+            style={{ display: 'none' }}
+            onChange={amfeExport.handleFileSelected}
+        />
         </>
     );
 };

@@ -17,7 +17,7 @@ import {
     WifiOff, HardDrive, LayoutList, Sparkles, ShieldCheck,
     Eye, Pencil, ChevronUp, ChevronDown,
     Search, Filter, Undo2, Redo2, MoreHorizontal, BarChart3, HelpCircle, LayoutTemplate,
-    Link2, ExternalLink, GitBranch,
+    Link2, ExternalLink, GitBranch, Download, Upload,
 } from 'lucide-react';
 import { logger } from '../../utils/logger';
 import ProductSelector from '../../components/ProductSelector';
@@ -92,6 +92,7 @@ interface CpToolbarProps {
     // Export
     data: ControlPlanDocument;
     exportToJson: () => void;
+    importFromJson?: () => void;
     requestConfirm: (opts: { title: string; message: string; variant?: string; confirmText?: string }) => Promise<boolean>;
     onPdfPreview: (mode: 'full' | 'critical') => void;
     // AMFE link
@@ -312,12 +313,22 @@ const CpToolbar: React.FC<CpToolbarProps> = (props) => {
                                         </button>
                                         <button onClick={() => { setShowOverflowMenu(false); exportToJson(); }}
                                             className="w-full text-left px-4 py-2.5 text-xs hover:bg-gray-50 border-b border-gray-100 flex items-center gap-2.5">
-                                            <FileJson size={14} className="text-slate-500 flex-shrink-0" />
+                                            <Download size={14} className="text-sky-500 flex-shrink-0" />
                                             <div>
-                                                <span className="font-bold text-gray-800">JSON</span>
-                                                <p className="text-[10px] text-gray-400 mt-0.5">Exportar datos crudos</p>
+                                                <span className="font-bold text-gray-800">Exportar JSON</span>
+                                                <p className="text-[10px] text-gray-400 mt-0.5">Descargar como archivo JSON</p>
                                             </div>
                                         </button>
+                                        {props.importFromJson && (
+                                            <button onClick={() => { setShowOverflowMenu(false); props.importFromJson!(); }}
+                                                className="w-full text-left px-4 py-2.5 text-xs hover:bg-gray-50 border-b border-gray-100 flex items-center gap-2.5">
+                                                <Upload size={14} className="text-sky-500 flex-shrink-0" />
+                                                <div>
+                                                    <span className="font-bold text-gray-800">Importar JSON</span>
+                                                    <p className="text-[10px] text-gray-400 mt-0.5">Cargar desde archivo JSON</p>
+                                                </div>
+                                            </button>
+                                        )}
                                         <button onClick={() => handleExportPdf('full')}
                                             className="w-full text-left px-4 py-2.5 text-xs hover:bg-gray-50 border-b border-gray-100 flex items-center gap-2.5">
                                             <FileText size={14} className="text-red-500 flex-shrink-0" />

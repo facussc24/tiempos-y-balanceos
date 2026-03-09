@@ -14,7 +14,7 @@ import { useCpHistory } from './useCpHistory';
 import { useControlPlanProjects } from './useControlPlanProjects';
 import { useControlPlanPersistence } from './useControlPlanPersistence';
 import { useAmfeConfirm } from '../amfe/useAmfeConfirm';
-import { ControlPlanDocument, ControlPlanHeader, ControlPlanItem, CONTROL_PLAN_PHASES, CP_COLUMNS, EMPTY_CP_DOCUMENT } from './controlPlanTypes';
+import { ControlPlanDocument, ControlPlanHeader, ControlPlanItem, CONTROL_PLAN_PHASES, CP_COLUMNS, EMPTY_CP_DOCUMENT, normalizeControlPlanDocument } from './controlPlanTypes';
 import { CpSuggestionField, CpSuggestionContext } from './cpSuggestionTypes';
 import { createCpQueryFn } from './cpSuggestionEngine';
 import { SuggestionQueryFn } from '../amfe/SuggestableTextarea';
@@ -333,6 +333,46 @@ const ControlPlanApp: React.FC<Props> = ({ onBackToLanding, embedded, initialDat
         }
     }, [cp.data]);
 
+    // --- JSON Import ---
+    const jsonImportRef = useRef<HTMLInputElement | null>(null);
+    const handleImportJson = useCallback(() => {
+        jsonImportRef.current?.click();
+    }, []);
+    const handleCpFileSelected = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        e.target.value = '';
+        if (file.size > 10 * 1024 * 1024) {
+            toast.error('Archivo muy grande', 'El archivo supera el límite de 10 MB.');
+            return;
+        }
+        try {
+            const text = await file.text();
+            const parsed = JSON.parse(text);
+            if (!parsed || !parsed.header || !Array.isArray(parsed.items)) {
+                toast.error('JSON inválido', 'El archivo no es un Plan de Control válido (falta header o items).');
+                return;
+            }
+            const hasData = cp.data.items.length > 0;
+            if (hasData) {
+                const ok = await confirm.requestConfirm({
+                    title: 'Importar Plan de Control',
+                    message: 'Se reemplazará el documento actual con el contenido del archivo JSON. Esta acción se puede deshacer con Ctrl+Z.',
+                    variant: 'warning',
+                    confirmText: 'Importar',
+                });
+                if (!ok) return;
+            }
+            const normalized = normalizeControlPlanDocument(parsed);
+            cp.loadData(normalized);
+            history.resetHistory(normalized);
+            toast.success('Plan de Control importado', `Se cargaron ${normalized.items.length} ítems desde "${file.name}".`);
+        } catch (err) {
+            logger.error('ControlPlan', 'JSON import failed', { error: err instanceof Error ? err.message : String(err) });
+            toast.error('Error de importación', 'No se pudo leer el archivo JSON. Verifique el formato.');
+        }
+    }, [cp.data.items.length, cp.loadData, history, confirm]);
+
     const handlePdfPreview = useCallback((mode: CpPdfTemplate) => {
         const html = getCpPdfPreviewHtml(cp.data, mode);
         setPdfPreview({ html, template: mode });
@@ -429,6 +469,7 @@ const ControlPlanApp: React.FC<Props> = ({ onBackToLanding, embedded, initialDat
                 onRunValidation={handleRunValidation}
                 data={cp.data}
                 exportToJson={exportToJson}
+                importFromJson={handleImportJson}
                 requestConfirm={confirm.requestConfirm}
                 onPdfPreview={handlePdfPreview}
                 onNavigateToAmfe={onNavigateToAmfe}
@@ -650,6 +691,15 @@ const ControlPlanApp: React.FC<Props> = ({ onBackToLanding, embedded, initialDat
 
             {/* Shortcut Hints Overlay */}
             <ShortcutHintsOverlay isVisible={shortcutHints.hintsVisible} />
+
+            {/* Hidden file input for JSON import */}
+            <input
+                ref={jsonImportRef}
+                type="file"
+                accept=".json"
+                style={{ display: 'none' }}
+                onChange={handleCpFileSelected}
+            />
         </div>
     );
 };
