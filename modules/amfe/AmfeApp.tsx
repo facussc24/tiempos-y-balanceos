@@ -42,7 +42,7 @@ import { useAmfeKeyboardShortcuts, useAmfeBeforeUnload } from './useAmfeKeyboard
 import { useAmfeDraftRecovery } from './useAmfeDraftRecovery';
 import { useAmfeNetworkToast } from './useAmfeNetworkToast';
 import { useAmfeExport } from './useAmfeExport';
-import { useAmfeTabNavigation } from './useAmfeTabNavigation';
+import { useAmfeTabNavigation, ActiveTab } from './useAmfeTabNavigation';
 
 const PfdApp = lazy(() => import('../pfd/PfdApp'));
 const PfdGenerationWizard = lazy(() => import('../pfd/PfdGenerationWizard'));
@@ -438,6 +438,16 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab }) => {
 
     const isAmfeActive = tabNav.activeTab === 'amfe';
 
+    // Track visited tabs to keep them mounted via display:none after first visit
+    // This eliminates remount cost on subsequent tab switches (<300ms → instant)
+    const [mountedTabs, setMountedTabs] = useState<Set<ActiveTab>>(() => new Set(['amfe']));
+    useEffect(() => {
+        setMountedTabs(prev => {
+            if (prev.has(tabNav.activeTab)) return prev;
+            return new Set([...prev, tabNav.activeTab]);
+        });
+    }, [tabNav.activeTab]);
+
     // Cuando el tab AMFE vuelve a ser visible, disparar evento para que
     // AutoResizeTextarea recalcule alturas (scrollHeight=0 con display:none)
     useEffect(() => {
@@ -450,9 +460,10 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab }) => {
 
     return (
         <>
-        {/* --- PFD (DIAGRAMA DE FLUJO) TAB --- */}
-        {tabNav.activeTab === 'pfd' && (
-            <div className="h-screen bg-gray-50 flex flex-col font-sans text-sm overflow-hidden">
+        {/* --- PFD (DIAGRAMA DE FLUJO) TAB --- mount once, then display:none */}
+        {(tabNav.activeTab === 'pfd' || mountedTabs.has('pfd')) && (
+            <div className="h-screen bg-gray-50 flex flex-col font-sans text-sm overflow-hidden"
+                 style={{ display: tabNav.activeTab === 'pfd' ? undefined : 'none' }}>
                 <AmfeTabBar {...tabBarProps} />
                 <div className="flex-1 overflow-auto">
                     <ModuleErrorBoundary moduleName="Diagrama de Flujo" onNavigateHome={() => tabNav.setActiveTab('amfe')}>
@@ -474,9 +485,10 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab }) => {
             </div>
         )}
 
-        {/* --- HOJA DE OPERACIONES TAB --- */}
-        {tabNav.activeTab === 'hojaOperaciones' && (
-            <div className="h-screen bg-gray-50 flex flex-col font-sans text-sm overflow-hidden">
+        {/* --- HOJA DE OPERACIONES TAB --- mount once, then display:none */}
+        {(tabNav.activeTab === 'hojaOperaciones' || mountedTabs.has('hojaOperaciones')) && (
+            <div className="h-screen bg-gray-50 flex flex-col font-sans text-sm overflow-hidden"
+                 style={{ display: tabNav.activeTab === 'hojaOperaciones' ? undefined : 'none' }}>
                 <AmfeTabBar {...tabBarProps} />
                 <div className="flex-1 overflow-auto">
                     <ModuleErrorBoundary moduleName="Hojas de Operaciones" onNavigateHome={() => tabNav.setActiveTab('amfe')}>
@@ -498,9 +510,10 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab }) => {
             </div>
         )}
 
-        {/* --- CONTROL PLAN TAB --- */}
-        {tabNav.activeTab === 'controlPlan' && (
-            <div className="h-screen bg-gray-50 flex flex-col font-sans text-sm overflow-hidden">
+        {/* --- CONTROL PLAN TAB --- mount once, then display:none */}
+        {(tabNav.activeTab === 'controlPlan' || mountedTabs.has('controlPlan')) && (
+            <div className="h-screen bg-gray-50 flex flex-col font-sans text-sm overflow-hidden"
+                 style={{ display: tabNav.activeTab === 'controlPlan' ? undefined : 'none' }}>
                 <AmfeTabBar {...tabBarProps} />
                 <div className="flex-1 overflow-auto">
                     <ModuleErrorBoundary moduleName="Plan de Control" onNavigateHome={() => tabNav.setActiveTab('amfe')}>

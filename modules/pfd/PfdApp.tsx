@@ -1,26 +1,37 @@
 /**
  * PFD App — Main shell for the Process Flow Diagram module
  *
- * Manages document state, persistence, project CRUD, validation, and export.
+ * Manages document state, persistence, project CRUD, validation, and SVG export.
  * Cyan/teal color theme.
+ *
+ * The primary editing interface is PfdFlowEditor + PfdStepDetailPanel.
+ * Export is SVG-only (editable in Visio/Inkscape).
  */
 
 import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { usePfdDocument } from './usePfdDocument';
 import { usePfdPersistence, listPfdDraftKeys, loadPfdDraft, deletePfdDraft, deleteUnsavedDraft } from './usePfdPersistence';
+import { usePfdSelection } from './usePfdSelection';
 import { validatePfdDocument, ValidationIssue } from './pfdValidation';
-import { exportPfdPdf } from './pfdPdfExport';
-import { exportPfdExcel } from './pfdExcelExport';
-import { PFD_COLUMNS, PfdDocumentListItem, createEmptyPfdDocument } from './pfdTypes';
+import { exportPfdSvg } from './pfdSvgExport';
+import type { PfdDocument, PfdStep } from './pfdTypes';
+import { PfdDocumentListItem, createEmptyPfdDocument } from './pfdTypes';
 import { createBasicProcessTemplate, createManufacturingProcessTemplate } from './pfdTemplates';
 import PfdToolbar from './PfdToolbar';
 import PfdHeaderComponent from './PfdHeader';
-import PfdTable from './PfdTable';
+import PfdFlowEditor from './PfdFlowEditor';
+import PfdStepDetailPanel from './PfdStepDetailPanel';
 import PfdSymbolLegend from './PfdSymbolLegend';
 import PfdHelpPanel from './PfdHelpPanel';
 import { ConfirmModal } from '../../components/modals/ConfirmModal';
 import { PromptModal } from '../../components/modals/PromptModal';
+import { RevisionPromptModal } from '../../components/modals/RevisionPromptModal';
+import { CrossDocAlertBanner } from '../../components/CrossDocAlertBanner';
+import { RevisionHistoryPanel } from '../../components/RevisionHistoryPanel';
 import { ModuleErrorBoundary } from '../../components/ui/ModuleErrorBoundary';
+import { useRevisionControl } from '../../hooks/useRevisionControl';
+import { useCrossDocAlerts } from '../../hooks/useCrossDocAlerts';
+import { getNextRevisionLevel } from '../../utils/revisionUtils';
 import {
     listPfdDocuments,
     loadPfdDocument,
@@ -28,13 +39,21 @@ import {
     deletePfdDocument,
 } from '../../utils/repositories/pfdRepository';
 import { logger } from '../../utils/logger';
-import { Plus, XCircle, AlertTriangle, CheckCircle, Info, ArrowRight, ArrowDown, HelpCircle } from 'lucide-react';
+import {
+    Plus, XCircle, AlertTriangle, CheckCircle, Info, ArrowRight,
+    HelpCircle,
+    Undo2, Redo2, Eye, Edit3, Hash, GitBranch, Image,
+} from 'lucide-react';
 
 interface Props {
     onBackToLanding?: () => void;
+    /** When true, hides back button and project panel (used inside AmfeApp) */
+    embedded?: boolean;
+    /** Pre-loaded document from wizard (used when generating PFD from AMFE) */
+    initialData?: PfdDocument;
 }
 
-const PfdApp: React.FC<Props> = ({ onBackToLanding }) => {
+const PfdApp: React.FC<Props> = ({ onBackToLanding, embedded, initialData }) => {
     // Document state
     const pfd = usePfdDocument();
 
@@ -56,16 +75,22 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding }) => {
     });
     const [showProjectPanel, setShowProjectPanel] = useState(false);
     const [validationIssues, setValidationIssues] = useState<ValidationIssue[] | null>(null);
-    // C5-U3: Toggle flow arrows between rows
-    const [showFlowArrows, setShowFlowArrows] = useState(() => {
+    // C9-U2: Help panel
+    const [showHelp, setShowHelp] = useState(false);
+
+    // Phase B: Flow editor open/collapsed state (persisted)
+    const [flowEditorOpen, setFlowEditorOpen] = useState(() => {
         try {
-            const stored = localStorage.getItem('pfd_flow_arrows');
-            return stored !== null ? stored === 'true' : true; // Default: arrows shown
+            const stored = localStorage.getItem('pfd_flow_editor_open');
+            return stored !== null ? stored === 'true' : true; // Default: open
         } catch { return true; }
     });
 
-    // C9-U2: Help panel
-    const [showHelp, setShowHelp] = useState(false);
+    // Phase B: Step selection + keyboard nav
+    const selection = usePfdSelection({
+        steps: pfd.data.steps,
+        onRemoveStep: undefined, // Delete handled via confirm modal below
+    });
 
     // Confirm modal
     const [confirmState, setConfirmState] = useState<{
@@ -90,25 +115,68 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding }) => {
 
     const isReadOnly = viewMode === 'view';
     const isFirstRenderRef = useRef(true);
+    /** Snapshot of pfd.data at last save/load (for unsaved changes comparison) */
+    const savedSnapshotRef = useRef('');
+    const changeDetectionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-    // Track unsaved changes (skip initial render)
+    // Revision control
+    const revisionControl = useRevisionControl({
+        module: 'pfd',
+        documentId: pfd.data.id || null,
+        currentData: pfd.data,
+        currentRevisionLevel: pfd.data.header.revisionLevel || 'A',
+        onRevisionCreated: (newLevel) => {
+            pfd.updateHeader('revisionLevel', newLevel);
+        },
+    });
+
+    // Cross-document alerts
+    const crossDocAlerts = useCrossDocAlerts('pfd', pfd.data.id || null);
+
+    // Track unsaved changes via snapshot comparison (debounced to avoid expensive JSON.stringify per keystroke).
+    // This correctly resets hasUnsavedChanges when user undoes back to saved state.
     useEffect(() => {
         if (isFirstRenderRef.current) {
             isFirstRenderRef.current = false;
             return;
         }
-        setHasUnsavedChanges(true);
+        // No saved snapshot means no project loaded yet — nothing to compare against
+        if (!savedSnapshotRef.current) {
+            setHasUnsavedChanges(true);
+            return;
+        }
+        // Debounced JSON.stringify comparison (same pattern as useControlPlanProjects)
+        if (changeDetectionTimerRef.current) clearTimeout(changeDetectionTimerRef.current);
+        changeDetectionTimerRef.current = setTimeout(() => {
+            setHasUnsavedChanges(JSON.stringify(pfd.data) !== savedSnapshotRef.current);
+        }, 800);
+        return () => {
+            if (changeDetectionTimerRef.current) clearTimeout(changeDetectionTimerRef.current);
+        };
     }, [pfd.data]);
+
+    // Load initialData when provided (embedded mode from AMFE wizard)
+    // Track reference to detect regeneration while component stays mounted
+    const prevInitialDataRef = useRef<typeof initialData>(undefined);
+    useEffect(() => {
+        if (initialData && initialData !== prevInitialDataRef.current) {
+            prevInitialDataRef.current = initialData;
+            pfd.loadData(initialData);
+            isFirstRenderRef.current = true;
+            setTimeout(() => { isFirstRenderRef.current = false; }, 0);
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [initialData]);
 
     // Persist header collapse
     useEffect(() => {
         try { localStorage.setItem('pfd_header_collapsed', String(headerCollapsed)); } catch {}
     }, [headerCollapsed]);
 
-    // C5-U3: Persist flow arrows toggle
+    // Phase B: Persist flow editor collapse
     useEffect(() => {
-        try { localStorage.setItem('pfd_flow_arrows', String(showFlowArrows)); } catch {}
-    }, [showFlowArrows]);
+        try { localStorage.setItem('pfd_flow_editor_open', String(flowEditorOpen)); } catch {}
+    }, [flowEditorOpen]);
 
     // Load projects list
     const refreshProjects = useCallback(async () => {
@@ -122,14 +190,18 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding }) => {
 
     useEffect(() => { refreshProjects(); }, [refreshProjects]);
 
-    // Draft recovery on mount
+    // Draft recovery on mount (skip in embedded mode)
+    // FIX: Added cancelled flag to prevent state updates after unmount
+    // (matching useCpDraftRecovery / useAmfeDraftRecovery pattern)
     useEffect(() => {
+        if (embedded) return;
+        let cancelled = false;
         (async () => {
             try {
                 const keys = await listPfdDraftKeys();
-                if (keys.length === 0) return;
+                if (cancelled || keys.length === 0) return;
                 const draft = await loadPfdDraft(keys[0]);
-                if (!draft || !draft.steps || !draft.header) return;
+                if (cancelled || !draft || !draft.steps || !draft.header) return;
                 const draftKey = keys[0];
                 setConfirmState({
                     isOpen: true,
@@ -159,23 +231,35 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding }) => {
                 logger.warn('PfdApp', 'Draft recovery failed', { error: String(err) });
             }
         })();
+        return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     // C3-B1: Extracted shared save logic to avoid duplication
+    // FIX: Added savingRef mutex to prevent concurrent saves (matching AMFE/CP pattern)
+    const savingRef = useRef(false);
     const executeSave = useCallback(async () => {
-        setSaveStatus('saving');
-        const ok = await savePfdDocument(pfd.data.id, pfd.data);
-        setSaveStatus(ok ? 'saved' : 'error');
-        if (!ok) {
-            setToastMessage('Error al guardar. Intente nuevamente.');
-            setTimeout(() => setSaveStatus('idle'), 3000);
-        }
-        if (ok) {
-            setHasUnsavedChanges(false);
-            refreshProjects();
-            deleteUnsavedDraft();
-            setTimeout(() => setSaveStatus('idle'), 2000);
+        if (savingRef.current) return;
+        savingRef.current = true;
+        // Capture snapshot BEFORE async (matches AMFE/CP pattern — snapshot reflects what was persisted)
+        const snapshotAtSaveTime = JSON.stringify(pfd.data);
+        try {
+            setSaveStatus('saving');
+            const ok = await savePfdDocument(pfd.data.id, pfd.data);
+            setSaveStatus(ok ? 'saved' : 'error');
+            if (!ok) {
+                setToastMessage('Error al guardar. Intente nuevamente.');
+                setTimeout(() => setSaveStatus('idle'), 3000);
+            }
+            if (ok) {
+                savedSnapshotRef.current = snapshotAtSaveTime;
+                setHasUnsavedChanges(false);
+                refreshProjects();
+                deleteUnsavedDraft();
+                setTimeout(() => setSaveStatus('idle'), 2000);
+            }
+        } finally {
+            savingRef.current = false;
         }
     }, [pfd.data, refreshProjects]);
 
@@ -202,6 +286,7 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding }) => {
     }, [currentProject, pfd.data.header.partName, pfd.updateHeader, executeSave]);
 
     // C4-U1: Save As — duplicate with new name and ID
+    // FIX: Added savingRef mutex + deleteUnsavedDraft to match executeSave pattern
     const handleSaveAs = useCallback(() => {
         setPromptState({
             isOpen: true,
@@ -211,26 +296,34 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding }) => {
             onClose: () => setPromptState(prev => ({ ...prev, isOpen: false })),
             onSubmit: async (name: string) => {
                 setPromptState(prev => ({ ...prev, isOpen: false }));
-                // Generate new ID for the copy
-                const newId = crypto.randomUUID();
-                const now = new Date().toISOString();
-                const newDoc = {
-                    ...pfd.data,
-                    id: newId,
-                    header: { ...pfd.data.header, partName: name },
-                    createdAt: now,
-                    updatedAt: now,
-                };
-                pfd.loadData(newDoc);
-                setCurrentProject(name);
-                setSaveStatus('saving');
-                const ok = await savePfdDocument(newId, newDoc);
-                setSaveStatus(ok ? 'saved' : 'error');
-                if (ok) {
-                    setHasUnsavedChanges(false);
-                    refreshProjects();
-                    setToastMessage(`Copia guardada como "${name}"`);
-                    setTimeout(() => setSaveStatus('idle'), 2000);
+                if (savingRef.current) return; // Mutex: prevent concurrent saves
+                savingRef.current = true;
+                try {
+                    // Generate new ID for the copy
+                    const newId = crypto.randomUUID();
+                    const now = new Date().toISOString();
+                    const newDoc = {
+                        ...pfd.data,
+                        id: newId,
+                        header: { ...pfd.data.header, partName: name },
+                        createdAt: now,
+                        updatedAt: now,
+                    };
+                    pfd.loadData(newDoc);
+                    setCurrentProject(name);
+                    savedSnapshotRef.current = JSON.stringify(newDoc);
+                    setSaveStatus('saving');
+                    const ok = await savePfdDocument(newId, newDoc);
+                    setSaveStatus(ok ? 'saved' : 'error');
+                    if (ok) {
+                        setHasUnsavedChanges(false);
+                        refreshProjects();
+                        deleteUnsavedDraft(); // FIX: Clean up orphan draft
+                        setToastMessage(`Copia guardada como "${name}"`);
+                        setTimeout(() => setSaveStatus('idle'), 2000);
+                    }
+                } finally {
+                    savingRef.current = false;
                 }
             },
         });
@@ -244,6 +337,7 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding }) => {
                 pfd.loadData(doc);
                 const proj = projects.find(p => p.id === id);
                 setCurrentProject(proj?.part_name || proj?.document_number || id);
+                savedSnapshotRef.current = JSON.stringify(doc);
                 setHasUnsavedChanges(false);
                 setShowProjectPanel(false);
                 setLoadError('');
@@ -258,6 +352,13 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding }) => {
 
     // New project
     const handleNewProject = useCallback(() => {
+        const doReset = () => {
+            pfd.resetData();
+            setCurrentProject('');
+            savedSnapshotRef.current = '';
+            setHasUnsavedChanges(false);
+            setValidationIssues(null);
+        };
         if (hasUnsavedChanges) {
             setConfirmState({
                 isOpen: true,
@@ -267,17 +368,11 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding }) => {
                 confirmText: 'Continuar',
                 onConfirm: () => {
                     setConfirmState(prev => ({ ...prev, isOpen: false }));
-                    pfd.resetData();
-                    setCurrentProject('');
-                    setHasUnsavedChanges(false);
-                    setValidationIssues(null);
+                    doReset();
                 },
             });
         } else {
-            pfd.resetData();
-            setCurrentProject('');
-            setHasUnsavedChanges(false);
-            setValidationIssues(null);
+            doReset();
         }
     }, [hasUnsavedChanges, pfd.resetData]);
 
@@ -307,24 +402,14 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding }) => {
         setValidationIssues(issues);
     }, [pfd.data]);
 
-    // Exports — C5-U1: toast on success/error
-    const handleExportPdf = useCallback(async () => {
+    // Export — SVG only
+    const handleExportSvg = useCallback(async () => {
         try {
-            await exportPfdPdf(pfd.data);
-            setToastMessage('PDF exportado correctamente');
+            await exportPfdSvg(pfd.data);
+            setToastMessage('SVG exportado correctamente');
         } catch (err) {
-            logger.error('PfdApp', 'PDF export failed', {}, err instanceof Error ? err : undefined);
-            setToastMessage('Error al exportar PDF');
-        }
-    }, [pfd.data]);
-
-    const handleExportExcel = useCallback(() => {
-        try {
-            exportPfdExcel(pfd.data);
-            setToastMessage('Excel exportado correctamente');
-        } catch (err) {
-            logger.error('PfdApp', 'Excel export failed', {}, err instanceof Error ? err : undefined);
-            setToastMessage('Error al exportar Excel');
+            logger.error('PfdApp', 'SVG export failed', {}, err instanceof Error ? err : undefined);
+            setToastMessage('Error al exportar SVG');
         }
     }, [pfd.data]);
 
@@ -398,21 +483,20 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding }) => {
         });
     }, [pfd.data.steps, pfd.removeStep]);
 
-    // C10-UX3: Sync branchLabel across steps when label changes
+    // C10-UX3: Sync branchLabel across steps when label changes (single undo entry)
     const handleUpdateStep = useCallback((stepId: string, field: keyof typeof pfd.data.steps[0], value: string | boolean) => {
-        pfd.updateStep(stepId, field, value);
-        // When a branchLabel changes, propagate to all steps on the same branch
         if (field === 'branchLabel' && typeof value === 'string') {
             const step = pfd.data.steps.find(s => s.id === stepId);
             if (step?.branchId) {
-                for (const s of pfd.data.steps) {
-                    if (s.id !== stepId && s.branchId === step.branchId) {
-                        pfd.updateStep(s.id, 'branchLabel', value);
-                    }
-                }
+                const updates = pfd.data.steps
+                    .filter(s => s.branchId === step.branchId)
+                    .map(s => ({ stepId: s.id, field: 'branchLabel' as keyof typeof pfd.data.steps[0], value }));
+                pfd.updateMultipleSteps(updates);
+                return;
             }
         }
-    }, [pfd.updateStep, pfd.data.steps]);
+        pfd.updateStep(stepId, field, value);
+    }, [pfd.updateStep, pfd.updateMultipleSteps, pfd.data.steps]);
 
     // C10-UX3: Auto-inherit branchLabel when assigning step to existing branch
     const handleBatchUpdateStep = useCallback((stepId: string, updates: Partial<typeof pfd.data.steps[0]>) => {
@@ -480,10 +564,10 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding }) => {
                 e.preventDefault();
                 handleAddStep();
             }
-            // C5-U2: Ctrl+P for print
-            if (e.ctrlKey && e.key === 'p') {
+            // Ctrl+D: Toggle view/edit mode
+            if (e.ctrlKey && e.key === 'd') {
                 e.preventDefault();
-                window.print();
+                setViewMode(prev => prev === 'view' ? 'edit' : 'view');
             }
             // C9-U2: F1 opens/closes help panel
             if (e.key === 'F1') {
@@ -491,25 +575,37 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding }) => {
                 setShowHelp(prev => !prev);
             }
             if (e.key === 'Escape') {
+                // Phase B: deselect step first, then close panels
+                if (selection.selectedStepId) { selection.selectStep(null); return; }
                 if (showHelp) setShowHelp(false);
                 else if (validationIssues) setValidationIssues(null);
                 else if (showProjectPanel) setShowProjectPanel(false);
             }
+            // Phase B: Arrow key navigation for flow editor
+            if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+                if (flowEditorOpen && !e.ctrlKey && !e.shiftKey) {
+                    selection.handleKeyDown(e);
+                }
+            }
+            // Phase B: Delete selected step
+            if (e.key === 'Delete' && selection.selectedStepId) {
+                handleRemoveStep(selection.selectedStepId);
+            }
         };
         document.addEventListener('keydown', handleKeyDown);
         return () => document.removeEventListener('keydown', handleKeyDown);
-    }, [handleSave, handleAddStep, pfd.undo, pfd.redo, validationIssues, showProjectPanel, showHelp]);
-
-    // Table total width
-    const tableWidth = useMemo(() => {
-        const cols = PFD_COLUMNS.reduce((sum, col) => sum + parseInt(col.width), 0);
-        return cols + (isReadOnly ? 0 : 90); // C11-UX6: 90px for compact actions column
-    }, [isReadOnly]);
+    }, [handleSave, handleAddStep, pfd.undo, pfd.redo, validationIssues, showProjectPanel, showHelp, selection, flowEditorOpen, handleRemoveStep]);
 
     const errorCount = validationIssues?.filter(i => i.severity === 'error').length;
 
+    // Phase B: Selected step for detail panel
+    const selectedStep = useMemo(
+        () => selection.selectedStepId ? pfd.data.steps.find(s => s.id === selection.selectedStepId) ?? null : null,
+        [selection.selectedStepId, pfd.data.steps],
+    );
+
     return (
-        <div className="min-h-screen bg-gray-50 flex flex-col font-sans text-sm">
+        <div className={`${embedded ? 'flex flex-col h-full' : 'min-h-screen'} bg-gray-50 flex flex-col font-sans text-sm`}>
             {/* C3-E2: Print-friendly CSS */}
             <style>{`
                 @media print {
@@ -521,32 +617,112 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding }) => {
                 }
             `}</style>
 
-            <PfdToolbar
-                onBackToLanding={handleBackToLanding}
-                onSave={handleSave}
-                onSaveAs={handleSaveAs}
-                saveStatus={saveStatus}
-                hasUnsavedChanges={hasUnsavedChanges}
-                currentProject={currentProject}
-                lastAutoSave={persistence.lastAutoSave}
-                onToggleProjectPanel={() => setShowProjectPanel(!showProjectPanel)}
-                onNewProject={handleNewProject}
-                onExportPdf={handleExportPdf}
-                onExportExcel={handleExportExcel}
-                onPrint={() => window.print()}
-                viewMode={viewMode}
-                onToggleViewMode={() => setViewMode(prev => prev === 'view' ? 'edit' : 'view')}
-                onValidate={handleValidate}
-                validationCount={errorCount}
-                onUndo={pfd.undo}
-                onRedo={pfd.redo}
-                canUndo={pfd.canUndo}
-                canRedo={pfd.canRedo}
-                stepCount={pfd.data.steps.length}
+            {/* Toolbar — full in standalone, compact in embedded */}
+            {!embedded ? (
+                <PfdToolbar
+                    onBackToLanding={handleBackToLanding}
+                    onSave={handleSave}
+                    onSaveAs={handleSaveAs}
+                    saveStatus={saveStatus}
+                    hasUnsavedChanges={hasUnsavedChanges}
+                    currentProject={currentProject}
+                    lastAutoSave={persistence.lastAutoSave}
+                    onToggleProjectPanel={() => setShowProjectPanel(!showProjectPanel)}
+                    onNewProject={handleNewProject}
+                    onExportSvg={handleExportSvg}
+                    viewMode={viewMode}
+                    onToggleViewMode={() => setViewMode(prev => prev === 'view' ? 'edit' : 'view')}
+                    onValidate={handleValidate}
+                    validationCount={errorCount}
+                    onUndo={pfd.undo}
+                    onRedo={pfd.redo}
+                    canUndo={pfd.canUndo}
+                    canRedo={pfd.canRedo}
+                    stepCount={pfd.data.steps.length}
+                    onLoadBasicTemplate={() => handleLoadTemplate()}
+                    onLoadManufacturingTemplate={() => handleLoadTemplate(createManufacturingProcessTemplate)}
+                    onRenumber={pfd.renumber}
+                    onNewRevision={revisionControl.handleNewRevision}
+                    currentRevisionLevel={pfd.data.header.revisionLevel || 'A'}
+                />
+            ) : (
+                /* Compact embedded toolbar — essential actions only */
+                <div className="bg-white border-b border-gray-200 px-4 py-1.5 flex items-center gap-2 flex-wrap no-print">
+                    <button onClick={pfd.undo} disabled={!pfd.canUndo} className="flex items-center gap-1 px-2 py-1 rounded text-xs text-gray-600 hover:bg-gray-100 disabled:opacity-50" title="Deshacer (Ctrl+Z)">
+                        <Undo2 size={14} />
+                    </button>
+                    <button onClick={pfd.redo} disabled={!pfd.canRedo} className="flex items-center gap-1 px-2 py-1 rounded text-xs text-gray-600 hover:bg-gray-100 disabled:opacity-50" title="Rehacer (Ctrl+Y)">
+                        <Redo2 size={14} />
+                    </button>
+                    <div className="w-px h-5 bg-gray-200" />
+                    <button onClick={() => setViewMode(prev => prev === 'view' ? 'edit' : 'view')} className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium transition ${viewMode === 'view' ? 'bg-cyan-100 text-cyan-800' : 'text-gray-600 hover:bg-gray-100'}`} title="Alternar vista/edicion">
+                        {viewMode === 'view' ? <Eye size={14} /> : <Edit3 size={14} />}
+                        <span className="hidden sm:inline">{viewMode === 'view' ? 'Vista' : 'Editar'}</span>
+                    </button>
+                    <button onClick={handleValidate} className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium transition ${errorCount ? 'text-amber-700 hover:bg-amber-50' : 'text-gray-600 hover:bg-gray-100'}`} title="Validar">
+                        <AlertTriangle size={14} />
+                        {errorCount != null && errorCount > 0 && <span className="bg-amber-500 text-white text-[9px] font-bold rounded-full px-1.5 py-0.5">{errorCount}</span>}
+                    </button>
+                    {pfd.renumber && (
+                        <button onClick={pfd.renumber} disabled={pfd.data.steps.length === 0} className="flex items-center gap-1 px-2.5 py-1 rounded text-xs text-gray-600 hover:bg-gray-100 disabled:opacity-50" title="Renumerar">
+                            <Hash size={14} />
+                        </button>
+                    )}
+                    <div className="w-px h-5 bg-gray-200" />
+                    <button onClick={handleExportSvg} className="flex items-center gap-1 px-2.5 py-1 rounded text-xs text-gray-600 hover:bg-gray-100" title="Exportar SVG editable">
+                        <Image size={14} />
+                        <span className="hidden sm:inline">SVG</span>
+                    </button>
+                    <div className="w-px h-5 bg-gray-200" />
+                    <button
+                        onClick={revisionControl.handleNewRevision}
+                        className="flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold bg-cyan-50 border border-cyan-200 text-cyan-700 hover:bg-cyan-100 transition"
+                        title="Crear nueva revision del documento"
+                    >
+                        <GitBranch size={14} />
+                        Nueva Rev.
+                        <span className="bg-cyan-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                            {pfd.data.header.revisionLevel || 'A'}
+                        </span>
+                    </button>
+                    <div className="flex-1" />
+                    <span className="text-[10px] text-gray-400">{pfd.data.steps.length} pasos</span>
+                </div>
+            )}
+
+            {/* Cross-document alert banner */}
+            <CrossDocAlertBanner
+                alerts={crossDocAlerts.alerts}
+                onDismiss={crossDocAlerts.dismissAlert}
+                onDismissAll={crossDocAlerts.dismissAll}
             />
 
-            {/* Project panel (slide-in) */}
-            {showProjectPanel && (
+            {/* Revision history panel */}
+            <RevisionHistoryPanel
+                revisions={revisionControl.revisions}
+                onViewSnapshot={(level) => {
+                    revisionControl.loadSnapshot(level).then(snap => {
+                        if (snap) {
+                            pfd.loadData(snap as PfdDocument);
+                            logger.info('PfdApp', `Loaded snapshot for Rev. ${level}`);
+                        }
+                    });
+                }}
+                isOpen={revisionControl.showRevisionHistory}
+                onToggle={() => revisionControl.setShowRevisionHistory(!revisionControl.showRevisionHistory)}
+            />
+
+            {/* Read-only mode indicator */}
+            {isReadOnly && (
+                <div className="bg-cyan-50 border-b border-cyan-200 px-4 py-1.5 flex items-center gap-2 text-xs text-cyan-700 no-print animate-in fade-in duration-200">
+                    <Eye size={13} />
+                    <span className="font-medium">Modo solo lectura</span>
+                    <span className="text-cyan-500">— Presiona Ctrl+D para editar</span>
+                </div>
+            )}
+
+            {/* Project panel (slide-in, hidden in embedded mode) */}
+            {!embedded && showProjectPanel && (
                 <div className="bg-white border-b border-gray-200 px-4 py-3 shadow-sm no-print">
                     <div className="flex items-center justify-between mb-2">
                         <h3 className="text-sm font-semibold text-cyan-700">Documentos guardados</h3>
@@ -561,7 +737,7 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding }) => {
                             {projects.map(p => (
                                 <div key={p.id} className="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2 border border-gray-200 hover:border-cyan-300 transition">
                                     <button onClick={() => handleLoadProject(p.id)} className="text-left flex-1 min-w-0">
-                                        <div className="text-sm font-medium text-gray-800 truncate">{p.part_name || p.document_number || 'Sin nombre'}</div>
+                                        <div className="text-sm font-medium text-gray-800 truncate" title={p.part_name || p.document_number || 'Sin nombre'}>{p.part_name || p.document_number || 'Sin nombre'}</div>
                                         <div className="text-[10px] text-gray-400">{p.customer_name} · {p.step_count} pasos · Rev. {p.revision_level}</div>
                                     </button>
                                     <button onClick={() => handleDeleteProject(p.id)} className="ml-2 text-gray-300 hover:text-red-500 transition" title="Eliminar">
@@ -583,33 +759,40 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding }) => {
                 readOnly={isReadOnly}
             />
 
-            {/* Table */}
+            {/* Main content area */}
             <div className="flex-grow p-4 pb-20">
-                <div className="bg-white shadow-lg rounded border border-gray-300">
-                    <div className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-300px)]" style={{ scrollbarGutter: 'stable' }}>
-                        <table className="border-collapse table-fixed" style={{ width: `${tableWidth}px` }}>
-                            <colgroup>
-                                {PFD_COLUMNS.map(col => (
-                                    <col key={col.key} style={{ width: col.width }} />
-                                ))}
-                                {!isReadOnly && <col style={{ width: '90px' }} />}
-                            </colgroup>
-                            <PfdTable
-                                steps={pfd.data.steps}
-                                onUpdateStep={handleUpdateStep}
-                                onBatchUpdateStep={handleBatchUpdateStep}
-                                onRemoveStep={handleRemoveStep}
-                                onMoveStep={pfd.moveStep}
-                                onInsertAfter={pfd.insertStepAfter}
-                                onDuplicate={pfd.duplicateStep}
-                                onAddStep={handleAddStep}
-                                onLoadTemplate={handleLoadTemplate}
-                                onLoadManufacturingTemplate={() => handleLoadTemplate(createManufacturingProcessTemplate)}
-                                showFlowArrows={showFlowArrows}
-                                readOnly={isReadOnly}
-                            />
-                        </table>
+
+                {/* ═══ Phase B: Flow Editor + Detail Panel (primary editing) ═══ */}
+                <div className="flex gap-0 mb-4 no-print" onClick={() => {
+                    // Click on empty area deselects (but not when clicking inside panels)
+                }}>
+                    {/* Flow Editor — takes remaining width */}
+                    <div className={`${selectedStep ? 'flex-1 min-w-0' : 'w-full'} transition-all`}>
+                        <PfdFlowEditor
+                            steps={pfd.data.steps}
+                            selectedStepId={selection.selectedStepId}
+                            onSelectStep={selection.selectStep}
+                            onInsertAfter={pfd.insertStepAfter}
+                            onRemoveStep={handleRemoveStep}
+                            onMoveStep={pfd.moveStep}
+                            onUpdateStep={handleUpdateStep}
+                            onDuplicateStep={pfd.duplicateStep}
+                            readOnly={isReadOnly}
+                            isOpen={flowEditorOpen}
+                            onToggle={() => setFlowEditorOpen(prev => !prev)}
+                        />
                     </div>
+
+                    {/* Detail Panel — fixed 320px right side, shown when a step is selected */}
+                    {selectedStep && (
+                        <PfdStepDetailPanel
+                            step={selectedStep}
+                            onUpdateStep={handleUpdateStep}
+                            onBatchUpdateStep={handleBatchUpdateStep}
+                            onClose={() => selection.selectStep(null)}
+                            readOnly={isReadOnly}
+                        />
+                    )}
                 </div>
 
                 {/* Symbol Legend */}
@@ -617,7 +800,7 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding }) => {
 
                 {/* Validation Results Panel */}
                 {validationIssues && (
-                    <div className="mt-4 bg-white border border-gray-200 rounded-lg shadow-sm p-4 no-print">
+                    <div className="mt-4 bg-white border border-gray-200 rounded-lg shadow-sm p-4 no-print animate-in fade-in slide-in-from-top-2 duration-200">
                         <div className="flex items-center justify-between mb-3">
                             <h3 className="text-sm font-semibold text-gray-700">
                                 Resultado de validación ({validationIssues.length} {validationIssues.length === 1 ? 'hallazgo' : 'hallazgos'})
@@ -666,39 +849,32 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding }) => {
                 )}
 
                 {/* Footer */}
-                <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t p-2 text-center text-xs text-gray-500 z-30 no-print">
-                    <strong>{pfd.data.steps.length}</strong> {pfd.data.steps.length === 1 ? 'paso' : 'pasos'}
-                    {pfd.data.steps.length > 0 && (() => {
-                        const counts: Record<string, number> = {};
-                        for (const s of pfd.data.steps) counts[s.stepType] = (counts[s.stepType] || 0) + 1;
-                        const labels: Record<string, string> = { operation: 'Op', transport: 'Transp', inspection: 'Insp', storage: 'Alm', delay: 'Demora', decision: 'Dec', combined: 'Op+Insp' };
-                        const parts = Object.entries(counts).map(([k, v]) => `${v} ${labels[k] || k}`);
-                        const branches = new Set(pfd.data.steps.filter(s => s.branchId).map(s => s.branchId));
-                        if (branches.size > 0) parts.push(`${branches.size} líneas ∥`);
-                        return <span className="text-gray-400 ml-1">({parts.join(' · ')})</span>;
-                    })()}
-                    {' | '}
-                    <kbd className="px-1 py-0.5 bg-gray-100 rounded text-[10px] font-mono">Ctrl+Z</kbd> Deshacer · <kbd className="px-1 py-0.5 bg-gray-100 rounded text-[10px] font-mono">Ctrl+Y</kbd> Rehacer · <kbd className="px-1 py-0.5 bg-gray-100 rounded text-[10px] font-mono">Ctrl+S</kbd> Guardar · <kbd className="px-1 py-0.5 bg-gray-100 rounded text-[10px] font-mono">Ctrl+Shift+N</kbd> Nuevo paso
-                    {' · '}
-                    <button
-                        onClick={() => setShowFlowArrows(!showFlowArrows)}
-                        className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-medium transition ${showFlowArrows ? 'bg-cyan-100 text-cyan-700' : 'bg-gray-100 text-gray-500'}`}
-                        title="Mostrar/ocultar flechas de flujo entre pasos"
-                    >
-                        <ArrowDown size={10} />
-                        Flechas
-                    </button>
-                    {' · '}
-                    <button
-                        onClick={() => setShowHelp(true)}
-                        className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-medium transition bg-gray-100 text-gray-500 hover:bg-cyan-100 hover:text-cyan-700"
-                        title="Manual de ayuda (F1)"
-                    >
-                        <HelpCircle size={10} />
-                        Ayuda
-                    </button>
-                    {currentProject && <span className="ml-4 text-gray-400">Proyecto: <strong className="text-cyan-600">{currentProject}</strong></span>}
-                </div>
+                {!embedded && (
+                    <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t p-2 text-center text-xs text-gray-500 z-30 no-print">
+                        <strong>{pfd.data.steps.length}</strong> {pfd.data.steps.length === 1 ? 'paso' : 'pasos'}
+                        {pfd.data.steps.length > 0 && (() => {
+                            const counts: Record<string, number> = {};
+                            for (const s of pfd.data.steps) counts[s.stepType] = (counts[s.stepType] || 0) + 1;
+                            const labels: Record<string, string> = { operation: 'Op', transport: 'Transp', inspection: 'Insp', storage: 'Alm', delay: 'Demora', decision: 'Dec', combined: 'Op+Insp' };
+                            const parts = Object.entries(counts).map(([k, v]) => `${v} ${labels[k] || k}`);
+                            const branches = new Set(pfd.data.steps.filter(s => s.branchId).map(s => s.branchId));
+                            if (branches.size > 0) parts.push(`${branches.size} líneas ∥`);
+                            return <span className="text-gray-400 ml-1">({parts.join(' · ')})</span>;
+                        })()}
+                        {' | '}
+                        <kbd className="px-1 py-0.5 bg-gray-100 rounded text-[10px] font-mono">Ctrl+Z</kbd> Deshacer · <kbd className="px-1 py-0.5 bg-gray-100 rounded text-[10px] font-mono">Ctrl+Y</kbd> Rehacer · <kbd className="px-1 py-0.5 bg-gray-100 rounded text-[10px] font-mono">Ctrl+S</kbd> Guardar · <kbd className="px-1 py-0.5 bg-gray-100 rounded text-[10px] font-mono">Ctrl+Shift+N</kbd> Nuevo paso
+                        {' · '}
+                        <button
+                            onClick={() => setShowHelp(true)}
+                            className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-medium transition bg-gray-100 text-gray-500 hover:bg-cyan-100 hover:text-cyan-700"
+                            title="Manual de ayuda (F1)"
+                        >
+                            <HelpCircle size={10} />
+                            Ayuda
+                        </button>
+                        {currentProject && <span className="ml-4 text-gray-400">Proyecto: <strong className="text-cyan-600">{currentProject}</strong></span>}
+                    </div>
+                )}
             </div>
 
             {/* Confirm Modal */}
@@ -725,6 +901,15 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding }) => {
                 defaultValue={promptState.defaultValue}
                 placeholder="Nombre del documento"
                 required
+            />
+
+            {/* Revision Prompt Modal */}
+            <RevisionPromptModal
+                isOpen={revisionControl.showRevisionPrompt}
+                onClose={() => revisionControl.setShowRevisionPrompt(false)}
+                onConfirm={(desc, by) => revisionControl.confirmRevision(desc, by)}
+                currentRevisionLevel={pfd.data.header.revisionLevel || 'A'}
+                nextRevisionLevel={getNextRevisionLevel(pfd.data.header.revisionLevel || 'A')}
             />
 
             {/* Toast notification */}
