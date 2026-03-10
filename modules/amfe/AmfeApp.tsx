@@ -277,6 +277,24 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab }) => {
 
     useAmfeBeforeUnload({ hasUnsavedChanges: projects.hasUnsavedChanges });
 
+    // Auto-save to network drive (2s debounce after change detection)
+    const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    useEffect(() => {
+        // Only auto-save when: project loaded, changes exist, not already saving, network available
+        if (!projects.currentProjectRef || !projects.hasUnsavedChanges ||
+            projects.saveStatus === 'saving' || !projects.networkAvailable) {
+            return;
+        }
+        if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+        autoSaveTimerRef.current = setTimeout(() => {
+            projects.saveCurrentProject();
+        }, 2000);
+        return () => {
+            if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+        };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [projects.hasUnsavedChanges, projects.currentProjectRef, projects.saveStatus, projects.networkAvailable]);
+
     // Close overflow menu on outside click
     useEffect(() => {
         if (!showOverflowMenu) return;
