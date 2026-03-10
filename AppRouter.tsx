@@ -6,17 +6,31 @@
  * - Tiempos y Balanceos (original App)
  * - AMFE VDA Manager
  * - Plan de Control
+ * - PFD (Process Flow Diagram)
+ * - Document Hub (registry)
  */
-import React, { useState, lazy, Suspense } from 'react';
+import React, { useState, useCallback, useMemo, useEffect, lazy, Suspense } from 'react';
 import LandingPage from './modules/LandingPage';
+import type { DocumentType } from './modules/registry/documentRegistryTypes';
+import { useDocumentRegistry } from './modules/registry/useDocumentRegistry';
+import { ModuleErrorBoundary } from './components/ui/ModuleErrorBoundary';
+import { isProductCatalogSeeded, seedProductCatalog } from './utils/repositories/productRepository';
+import { PRODUCTS, CUSTOMER_LINES } from './src/data/productCatalogSeed';
+import { logger } from './utils/logger';
 
 // Lazy-load the heavy modules
 const TiemposApp = lazy(() => import('./App'));
 const AmfeApp = lazy(() => import('./modules/amfe/AmfeApp'));
-const ControlPlanApp = lazy(() => import('./modules/controlPlan/ControlPlanApp'));
-const PfdApp = lazy(() => import('./modules/pfd/PfdApp'));
+// PFD, CP, HO are now routed through AmfeApp (with initialTab) so tabs always appear
+const DocumentHub = lazy(() => import('./modules/registry/DocumentHub'));
+const SolicitudApp = lazy(() => import('./modules/solicitud/SolicitudApp'));
+const ManualesApp = lazy(() => import('./modules/engineering/ManualesApp'));
+const FormatosApp = lazy(() => import('./modules/engineering/FormatosApp'));
 
-type AppMode = 'landing' | 'pfd' | 'tiempos' | 'amfe' | 'controlPlan';
+type AppMode = 'landing' | 'pfd' | 'tiempos' | 'amfe' | 'controlPlan' | 'hojaOperaciones' | 'registry' | 'solicitud' | 'manuales' | 'formatos';
+
+const VALID_MODES = new Set<AppMode>(['landing', 'pfd', 'tiempos', 'amfe', 'controlPlan', 'hojaOperaciones', 'registry', 'solicitud', 'manuales', 'formatos']);
+const LS_KEY_MODE = 'barack_lastModule';
 
 const LoadingFallback: React.FC = () => (
     <div className="min-h-screen bg-slate-900 flex items-center justify-center">
@@ -27,27 +41,107 @@ const LoadingFallback: React.FC = () => (
     </div>
 );
 
+/** Map DocumentType → AppMode */
+const DOC_TYPE_TO_MODE: Record<DocumentType, AppMode> = {
+    pfd: 'pfd',
+    amfe: 'amfe',
+    controlPlan: 'controlPlan',
+    hojaOperaciones: 'hojaOperaciones',
+};
+
 const AppRouter: React.FC = () => {
-    const [currentMode, setCurrentMode] = useState<AppMode>('landing');
+    const [currentMode, setCurrentMode] = useState<AppMode>(() => {
+        try {
+            const saved = localStorage.getItem(LS_KEY_MODE) as AppMode | null;
+            if (saved && VALID_MODES.has(saved) && saved !== 'landing') return saved;
+        } catch { /* ignore */ }
+        return 'landing';
+    });
+    const { entries: registryEntries } = useDocumentRegistry();
 
-    const handleSelectModule = (module: 'pfd' | 'tiempos' | 'amfe' | 'controlPlan') => {
+    // Seed product catalog on first launch (idempotent)
+    useEffect(() => {
+        let cancelled = false;
+        isProductCatalogSeeded().then(seeded => {
+            if (cancelled || seeded) return;
+            return seedProductCatalog(PRODUCTS, CUSTOMER_LINES);
+        }).then(result => {
+            if (cancelled || !result) return;
+            logger.info('AppRouter', 'Product catalog seeded', result);
+        }).catch(err => {
+            if (cancelled) return;
+            logger.warn('AppRouter', 'Product catalog seed failed (non-critical)', { error: String(err) });
+        });
+        return () => { cancelled = true; };
+    }, []);
+
+    const handleSelectModule = useCallback((module: 'pfd' | 'tiempos' | 'amfe' | 'controlPlan' | 'hojaOperaciones' | 'registry' | 'solicitud' | 'manuales' | 'formatos') => {
         setCurrentMode(module);
-    };
+        try { localStorage.setItem(LS_KEY_MODE, module); } catch { /* ignore */ }
+    }, []);
 
-    const handleBackToLanding = () => {
+    const handleBackToLanding = useCallback(() => {
         setCurrentMode('landing');
-    };
+        try { localStorage.removeItem(LS_KEY_MODE); } catch { /* ignore */ }
+    }, []);
+
+    /** Open a document from the Hub — navigates to the correct module */
+    const handleOpenDocument = useCallback((_type: DocumentType, _id: string) => {
+        const mode = DOC_TYPE_TO_MODE[_type];
+        setCurrentMode(mode);
+        // TODO: In the future, pass the document ID to the module for auto-loading
+    }, []);
+
+    // Compute document counts and recent docs for landing page
+    const documentCounts = useMemo(() => {
+        const counts: Partial<Record<DocumentType, number>> = {};
+        for (const e of registryEntries) {
+            counts[e.type] = (counts[e.type] || 0) + 1;
+        }
+        return counts;
+    }, [registryEntries]);
+
+    const recentDocuments = useMemo(() => {
+        return registryEntries.slice(0, 5);
+    }, [registryEntries]);
 
     if (currentMode === 'landing') {
-        return <LandingPage onSelectModule={handleSelectModule} />;
+        return (
+            <LandingPage
+                onSelectModule={handleSelectModule}
+                documentCounts={documentCounts}
+                recentDocuments={recentDocuments}
+            />
+        );
     }
 
     return (
         <Suspense fallback={<LoadingFallback />}>
-            {currentMode === 'pfd' && <PfdApp onBackToLanding={handleBackToLanding} />}
+            {currentMode === 'pfd' && <AmfeApp onBackToLanding={handleBackToLanding} initialTab="pfd" />}
             {currentMode === 'tiempos' && <TiemposApp onBackToLanding={handleBackToLanding} />}
             {currentMode === 'amfe' && <AmfeApp onBackToLanding={handleBackToLanding} />}
-            {currentMode === 'controlPlan' && <ControlPlanApp onBackToLanding={handleBackToLanding} />}
+            {currentMode === 'controlPlan' && <AmfeApp onBackToLanding={handleBackToLanding} initialTab="controlPlan" />}
+            {currentMode === 'hojaOperaciones' && <AmfeApp onBackToLanding={handleBackToLanding} initialTab="hojaOperaciones" />}
+            {currentMode === 'solicitud' && (
+                <ModuleErrorBoundary moduleName="Solicitudes de Código" onNavigateHome={handleBackToLanding}>
+                    <SolicitudApp onBackToLanding={handleBackToLanding} />
+                </ModuleErrorBoundary>
+            )}
+            {currentMode === 'manuales' && (
+                <ModuleErrorBoundary moduleName="Manuales de Ingeniería" onNavigateHome={handleBackToLanding}>
+                    <ManualesApp onBackToLanding={handleBackToLanding} />
+                </ModuleErrorBoundary>
+            )}
+            {currentMode === 'formatos' && (
+                <ModuleErrorBoundary moduleName="Formatos Estandar" onNavigateHome={handleBackToLanding}>
+                    <FormatosApp onBackToLanding={handleBackToLanding} />
+                </ModuleErrorBoundary>
+            )}
+            {currentMode === 'registry' && (
+                <ModuleErrorBoundary moduleName="Registro de Documentos" onNavigateHome={handleBackToLanding}>
+                    <DocumentHub onBackToLanding={handleBackToLanding} onOpenDocument={handleOpenDocument} />
+                </ModuleErrorBoundary>
+            )}
         </Suspense>
     );
 };

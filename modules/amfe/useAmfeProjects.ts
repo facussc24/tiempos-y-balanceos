@@ -20,7 +20,6 @@ import {
     deleteAmfeClient,
     listLooseAmfeFiles,
     loadAmfe,
-    saveAmfe,
     isAmfePathAccessible,
     AmfeProjectInfo,
     ensureAmfeHierarchy,
@@ -28,6 +27,7 @@ import {
 import { migrateAmfeDocument } from './amfeValidation';
 import { deleteDraft } from './useAmfePersistence';
 import { logger } from '../../utils/logger';
+import { toast } from '../../components/ui/Toast';
 
 /** Identifies the current open project in the hierarchy */
 export interface AmfeProjectRef {
@@ -46,6 +46,8 @@ export interface SaveAsState {
     onSubmit: (client: string, project: string, name: string) => void;
     onClose: () => void;
 }
+
+const LS_KEY_LAST_PROJECT = 'amfe_lastProjectRef';
 
 const CLOSED_SAVE_AS: SaveAsState = {
     isOpen: false, defaultClient: '', defaultProject: '', defaultName: '',
@@ -104,10 +106,13 @@ export const useAmfeProjects = (
     const [promptState, setPromptState] = useState<ProjectPromptState>(CLOSED_PROMPT);
     const [saveAsState, setSaveAsState] = useState<SaveAsState>(CLOSED_SAVE_AS);
     const [loadError, setLoadError] = useState<string>('');
+    /** True while loading a project from SQLite (shows skeleton in UI) */
+    const [isLoadingProject, setIsLoadingProject] = useState(false);
 
     /** Serialized snapshot of data at last save/load for comparison */
     const savedSnapshotRef = useRef<string>('');
     const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const changeDetectionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const savingRef = useRef(false);
 
     // =========================================================================
@@ -123,7 +128,7 @@ export const useAmfeProjects = (
             const loose = await listLooseAmfeFiles();
             setLooseFiles(loose);
         } catch (err) {
-            logger.error('Error loading AMFE clients', err);
+            logger.error('AMFE', 'Error loading AMFE clients', { error: err instanceof Error ? err.message : String(err) });
         } finally {
             setIsLoadingBrowser(false);
         }
@@ -136,7 +141,7 @@ export const useAmfeProjects = (
             const list = await listAmfeClientProjects(client);
             setClientProjects(list);
         } catch (err) {
-            logger.error('Error loading client projects', err);
+            logger.error('AMFE', 'Error loading client projects', { error: err instanceof Error ? err.message : String(err) });
             setClientProjects([]);
         } finally {
             setIsLoadingBrowser(false);
@@ -150,7 +155,7 @@ export const useAmfeProjects = (
             const list = await listAmfeStudies(client, project);
             setStudies(list);
         } catch (err) {
-            logger.error('Error loading studies', err);
+            logger.error('AMFE', 'Error loading studies', { error: err instanceof Error ? err.message : String(err) });
             setStudies([]);
         } finally {
             setIsLoadingBrowser(false);
@@ -188,20 +193,22 @@ export const useAmfeProjects = (
     const filtersInitializedRef = useRef(false);
     useEffect(() => {
         if (filtersInitializedRef.current) {
-            localStorage.setItem('amfe_selectedClient', selectedClient);
-            localStorage.setItem('amfe_selectedProject', selectedProject);
+            try {
+                localStorage.setItem('amfe_selectedClient', selectedClient);
+                localStorage.setItem('amfe_selectedProject', selectedProject);
+            } catch { /* FIX: non-critical persistence */ }
         }
     }, [selectedClient, selectedProject]);
 
     // Restore filters from localStorage after clients are loaded
     useEffect(() => {
         if (clients.length > 0 && !filtersInitializedRef.current) {
-            const savedClient = localStorage.getItem('amfe_selectedClient') || '';
+            let savedClient = '';
+            try { savedClient = localStorage.getItem('amfe_selectedClient') || ''; } catch { /* FIX */ }
             if (savedClient && clients.includes(savedClient)) {
                 setSelectedClient(savedClient);
             } else if (savedClient) {
-                localStorage.removeItem('amfe_selectedClient');
-                localStorage.removeItem('amfe_selectedProject');
+                try { localStorage.removeItem('amfe_selectedClient'); localStorage.removeItem('amfe_selectedProject'); } catch { /* FIX */ }
             }
             filtersInitializedRef.current = true;
         }
@@ -210,11 +217,12 @@ export const useAmfeProjects = (
     // Restore project filter after clientProjects load
     useEffect(() => {
         if (clientProjects.length > 0 && filtersInitializedRef.current && !selectedProject) {
-            const savedProject = localStorage.getItem('amfe_selectedProject') || '';
+            let savedProject = '';
+            try { savedProject = localStorage.getItem('amfe_selectedProject') || ''; } catch { /* FIX */ }
             if (savedProject && clientProjects.includes(savedProject)) {
                 setSelectedProject(savedProject);
             } else if (savedProject) {
-                localStorage.removeItem('amfe_selectedProject');
+                try { localStorage.removeItem('amfe_selectedProject'); } catch { /* FIX */ }
             }
         }
     }, [clientProjects, selectedProject]);
@@ -246,12 +254,71 @@ export const useAmfeProjects = (
         return () => { if (timeoutRef.current) clearTimeout(timeoutRef.current); };
     }, []);
 
-    // Track unsaved changes
+    // Persist currentProjectRef to localStorage for navigation memory
     useEffect(() => {
-        if (!currentProjectRef) return;
-        if (!savedSnapshotRef.current) return;
-        const currentSerialized = JSON.stringify(currentData);
-        setHasUnsavedChanges(currentSerialized !== savedSnapshotRef.current);
+        try {
+            if (currentProjectRef) {
+                localStorage.setItem(LS_KEY_LAST_PROJECT, JSON.stringify(currentProjectRef));
+            } else {
+                localStorage.removeItem(LS_KEY_LAST_PROJECT);
+            }
+        } catch { /* ignore */ }
+    }, [currentProjectRef]);
+
+    // Auto-load last opened project on mount
+    const autoLoadDoneRef = useRef(false);
+    useEffect(() => {
+        if (autoLoadDoneRef.current) return;
+        autoLoadDoneRef.current = true;
+        let saved: AmfeProjectRef | null = null;
+        try {
+            const raw = localStorage.getItem(LS_KEY_LAST_PROJECT);
+            if (raw) saved = JSON.parse(raw);
+        } catch { /* ignore */ }
+        if (!saved || !saved.name) return;
+        // Load asynchronously without confirmation (fresh mount = no unsaved changes)
+        const ref = saved;
+        (async () => {
+            setIsLoadingProject(true);
+            try {
+                const rawData = ref.client
+                    ? await loadAmfeHierarchical(ref.client, ref.project, ref.name)
+                    : await loadAmfe(ref.name);
+                const data = rawData ? migrateAmfeDocument(rawData) : null;
+                if (data) {
+                    onLoadProject(data);
+                    setCurrentProjectRef(ref);
+                    savedSnapshotRef.current = JSON.stringify(data);
+                    setHasUnsavedChanges(false);
+                    logger.info('AMFE', `Auto-loaded last project: ${ref.client}/${ref.project}/${ref.name}`);
+                } else {
+                    // Project no longer exists — clear saved ref
+                    try { localStorage.removeItem(LS_KEY_LAST_PROJECT); } catch { /* ignore */ }
+                }
+            } catch (err) {
+                logger.warn('AMFE', 'Failed to auto-load last project', { error: String(err) });
+                try { localStorage.removeItem(LS_KEY_LAST_PROJECT); } catch { /* ignore */ }
+            } finally {
+                setIsLoadingProject(false);
+            }
+        })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    // Track unsaved changes (debounced to avoid expensive JSON.stringify on every keystroke)
+    useEffect(() => {
+        if (!currentProjectRef || !savedSnapshotRef.current) {
+            setHasUnsavedChanges(false);
+            return;
+        }
+        if (changeDetectionTimerRef.current) clearTimeout(changeDetectionTimerRef.current);
+        changeDetectionTimerRef.current = setTimeout(() => {
+            const currentSerialized = JSON.stringify(currentData);
+            setHasUnsavedChanges(currentSerialized !== savedSnapshotRef.current);
+        }, 800);
+        return () => {
+            if (changeDetectionTimerRef.current) clearTimeout(changeDetectionTimerRef.current);
+        };
     }, [currentData, currentProjectRef]);
 
     // =========================================================================
@@ -298,37 +365,8 @@ export const useAmfeProjects = (
         }
     }, [currentData, selectedClient, selectedProject, refreshStudies]);
 
-    /** Legacy flat save (for backward compat) */
-    const doSave = useCallback(async (projectName: string) => {
-        if (savingRef.current) return;
-        savingRef.current = true;
-
-        setSaveStatus('saving');
-        const snapshotAtSaveTime = JSON.stringify(currentData);
-        try {
-            const success = await saveAmfe(projectName, currentData);
-            if (success) {
-                setCurrentProjectRef({ client: '', project: '', name: projectName });
-                setSaveStatus('saved');
-                savedSnapshotRef.current = snapshotAtSaveTime;
-                setHasUnsavedChanges(false);
-                try { await deleteDraft(`amfe_draft_${projectName}`); } catch { /* ignore */ }
-                await refreshClients();
-                if (timeoutRef.current) clearTimeout(timeoutRef.current);
-                timeoutRef.current = setTimeout(() => setSaveStatus('idle'), 2000);
-            } else {
-                setSaveStatus('error');
-                if (timeoutRef.current) clearTimeout(timeoutRef.current);
-                timeoutRef.current = setTimeout(() => setSaveStatus('idle'), 3000);
-            }
-        } catch {
-            setSaveStatus('error');
-            if (timeoutRef.current) clearTimeout(timeoutRef.current);
-            timeoutRef.current = setTimeout(() => setSaveStatus('idle'), 3000);
-        } finally {
-            savingRef.current = false;
-        }
-    }, [currentData, refreshClients]);
+    // NOTE: Legacy flat doSave was removed — all saves must go through
+    // doSaveHierarchical to ensure project_name is always "client/project/name" format.
 
     // =========================================================================
     // Public API
@@ -422,17 +460,25 @@ export const useAmfeProjects = (
             });
             if (!ok) return;
         }
-        const rawData = await loadAmfeHierarchical(client, project, name);
-        const data = rawData ? migrateAmfeDocument(rawData) : null;
-        if (data) {
-            onLoadProject(data);
-            setCurrentProjectRef({ client, project, name });
-            savedSnapshotRef.current = JSON.stringify(data);
-            setHasUnsavedChanges(false);
-        } else {
-            setLoadError('Error al cargar proyecto. El archivo puede estar corrupto o inaccesible.');
-            if (timeoutRef.current) clearTimeout(timeoutRef.current);
-            timeoutRef.current = setTimeout(() => setLoadError(''), 5000);
+        // Show loading skeleton immediately (paints before heavy work)
+        setIsLoadingProject(true);
+        // Yield to let the loading UI paint before blocking with JSON parse
+        await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+        try {
+            const rawData = await loadAmfeHierarchical(client, project, name);
+            const data = rawData ? migrateAmfeDocument(rawData) : null;
+            if (data) {
+                onLoadProject(data);
+                setCurrentProjectRef({ client, project, name });
+                savedSnapshotRef.current = JSON.stringify(data);
+                setHasUnsavedChanges(false);
+            } else {
+                setLoadError('Error al cargar proyecto. El archivo puede estar corrupto o inaccesible.');
+                if (timeoutRef.current) clearTimeout(timeoutRef.current);
+                timeoutRef.current = setTimeout(() => setLoadError(''), 5000);
+            }
+        } finally {
+            setIsLoadingProject(false);
         }
     }, [hasUnsavedChanges, onLoadProject, requestConfirm]);
 
@@ -447,17 +493,24 @@ export const useAmfeProjects = (
             });
             if (!ok) return;
         }
-        const rawData = await loadAmfe(name);
-        const data = rawData ? migrateAmfeDocument(rawData) : null;
-        if (data) {
-            onLoadProject(data);
-            setCurrentProjectRef({ client: '', project: '', name });
-            savedSnapshotRef.current = JSON.stringify(data);
-            setHasUnsavedChanges(false);
-        } else {
-            setLoadError('Error al cargar proyecto. El archivo puede estar corrupto o inaccesible.');
-            if (timeoutRef.current) clearTimeout(timeoutRef.current);
-            timeoutRef.current = setTimeout(() => setLoadError(''), 5000);
+        // Show loading skeleton immediately
+        setIsLoadingProject(true);
+        await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+        try {
+            const rawData = await loadAmfe(name);
+            const data = rawData ? migrateAmfeDocument(rawData) : null;
+            if (data) {
+                onLoadProject(data);
+                setCurrentProjectRef({ client: '', project: '', name });
+                savedSnapshotRef.current = JSON.stringify(data);
+                setHasUnsavedChanges(false);
+            } else {
+                setLoadError('Error al cargar proyecto. El archivo puede estar corrupto o inaccesible.');
+                if (timeoutRef.current) clearTimeout(timeoutRef.current);
+                timeoutRef.current = setTimeout(() => setLoadError(''), 5000);
+            }
+        } finally {
+            setIsLoadingProject(false);
         }
     }, [hasUnsavedChanges, onLoadProject, requestConfirm]);
 
@@ -471,8 +524,11 @@ export const useAmfeProjects = (
         });
         if (!ok) return;
         const success = await deleteAmfeHierarchical(client, project, name);
+        // Always attempt draft cleanup
+        try { await deleteDraft(`amfe_draft_${name}`); } catch (err) {
+            logger.warn('AMFE', 'Failed to clean up draft after deletion', { draft: `amfe_draft_${name}`, error: String(err) });
+        }
         if (success) {
-            try { await deleteDraft(`amfe_draft_${name}`); } catch { /* ignore */ }
             if (currentProjectRef?.client === client && currentProjectRef?.project === project && currentProjectRef?.name === name) {
                 setCurrentProjectRef(null);
                 onResetProject();
@@ -480,6 +536,9 @@ export const useAmfeProjects = (
             if (selectedClient === client && selectedProject === project) {
                 refreshStudies(client, project);
             }
+        } else {
+            logger.error('AMFE', `Failed to delete AMFE: ${client}/${project}/${name}`);
+            toast.error('Error al Eliminar', `No se pudo eliminar el AMFE "${name}". Intente nuevamente.`);
         }
     }, [currentProjectRef, onResetProject, requestConfirm, selectedClient, selectedProject, refreshStudies]);
 
@@ -502,6 +561,9 @@ export const useAmfeProjects = (
                 setSelectedProject('');
                 refreshClientProjects(client);
             }
+        } else {
+            logger.error('AMFE', `Failed to delete project folder: ${client}/${project}`);
+            toast.error('Error al Eliminar', `No se pudo eliminar el proyecto "${project}". Algunos documentos pueden estar bloqueados.`);
         }
     }, [currentProjectRef, onResetProject, requestConfirm, selectedClient, refreshClientProjects]);
 
@@ -523,6 +585,9 @@ export const useAmfeProjects = (
             setSelectedClient('');
             setSelectedProject('');
             refreshClients();
+        } else {
+            logger.error('AMFE', `Failed to delete client folder: ${client}`);
+            toast.error('Error al Eliminar', `No se pudo eliminar el cliente "${client}". Algunos documentos pueden estar bloqueados.`);
         }
     }, [currentProjectRef, onResetProject, requestConfirm, refreshClients]);
 
@@ -537,13 +602,19 @@ export const useAmfeProjects = (
         });
         if (!ok) return;
         const success = await deleteAmfe(name);
+        // Always attempt draft cleanup
+        try { await deleteDraft(`amfe_draft_${name}`); } catch (err) {
+            logger.warn('AMFE', 'Failed to clean up draft after deletion', { draft: `amfe_draft_${name}`, error: String(err) });
+        }
         if (success) {
-            try { await deleteDraft(`amfe_draft_${name}`); } catch { /* ignore */ }
             if (currentProject === name) {
                 setCurrentProjectRef(null);
                 onResetProject();
             }
             await refreshClients();
+        } else {
+            logger.error('AMFE', `Failed to delete AMFE: ${name}`);
+            toast.error('Error al Eliminar', `No se pudo eliminar el AMFE "${name}". Intente nuevamente.`);
         }
     }, [currentProject, onResetProject, refreshClients, requestConfirm]);
 
@@ -567,8 +638,7 @@ export const useAmfeProjects = (
         setSelectedClient('');
         setSelectedProject('');
         setSearchQuery('');
-        localStorage.removeItem('amfe_selectedClient');
-        localStorage.removeItem('amfe_selectedProject');
+        try { localStorage.removeItem('amfe_selectedClient'); localStorage.removeItem('amfe_selectedProject'); } catch { /* FIX */ }
     }, []);
 
     // Filtered studies by search query
@@ -620,6 +690,7 @@ export const useAmfeProjects = (
         networkAvailable,
         saveAsState,
         loadError,
+        isLoadingProject,
         refreshProjects,
         refreshClients,
         refreshStudies,
