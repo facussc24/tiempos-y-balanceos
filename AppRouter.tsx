@@ -117,11 +117,31 @@ const AppRouter: React.FC = () => {
 
     return (
         <Suspense fallback={<LoadingFallback />}>
-            {currentMode === 'pfd' && <AmfeApp onBackToLanding={handleBackToLanding} initialTab="pfd" />}
-            {currentMode === 'tiempos' && <TiemposApp onBackToLanding={handleBackToLanding} />}
-            {currentMode === 'amfe' && <AmfeApp onBackToLanding={handleBackToLanding} />}
-            {currentMode === 'controlPlan' && <AmfeApp onBackToLanding={handleBackToLanding} initialTab="controlPlan" />}
-            {currentMode === 'hojaOperaciones' && <AmfeApp onBackToLanding={handleBackToLanding} initialTab="hojaOperaciones" />}
+            {currentMode === 'pfd' && (
+                <ModuleErrorBoundary moduleName="Diagrama de Flujo" onNavigateHome={handleBackToLanding}>
+                    <AmfeApp onBackToLanding={handleBackToLanding} initialTab="pfd" />
+                </ModuleErrorBoundary>
+            )}
+            {currentMode === 'tiempos' && (
+                <ModuleErrorBoundary moduleName="Tiempos y Balanceos" onNavigateHome={handleBackToLanding}>
+                    <TiemposApp onBackToLanding={handleBackToLanding} />
+                </ModuleErrorBoundary>
+            )}
+            {currentMode === 'amfe' && (
+                <ModuleErrorBoundary moduleName="AMFE VDA" onNavigateHome={handleBackToLanding}>
+                    <AmfeApp onBackToLanding={handleBackToLanding} />
+                </ModuleErrorBoundary>
+            )}
+            {currentMode === 'controlPlan' && (
+                <ModuleErrorBoundary moduleName="Plan de Control" onNavigateHome={handleBackToLanding}>
+                    <AmfeApp onBackToLanding={handleBackToLanding} initialTab="controlPlan" />
+                </ModuleErrorBoundary>
+            )}
+            {currentMode === 'hojaOperaciones' && (
+                <ModuleErrorBoundary moduleName="Hojas de Operaciones" onNavigateHome={handleBackToLanding}>
+                    <AmfeApp onBackToLanding={handleBackToLanding} initialTab="hojaOperaciones" />
+                </ModuleErrorBoundary>
+            )}
             {currentMode === 'solicitud' && (
                 <ModuleErrorBoundary moduleName="Solicitudes de Código" onNavigateHome={handleBackToLanding}>
                     <SolicitudApp onBackToLanding={handleBackToLanding} />
