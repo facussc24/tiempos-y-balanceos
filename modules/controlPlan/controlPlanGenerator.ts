@@ -62,9 +62,11 @@ function buildProductKey(opNumber: string, failDesc: string, detectionControl: s
     return JSON.stringify([normalizeForKey(opNumber), normalizeForKey(failDesc), normalizeForKey(detectionControl)]);
 }
 
-/** Pick highest AP from a group: H > M. */
-function pickHighestAp(group: QualifyingCause[]): 'H' | 'M' {
-    return group.some(g => g.cause.ap === 'H') ? 'H' : 'M';
+/** Pick highest AP from a group: H > M > L. */
+function pickHighestAp(group: QualifyingCause[]): 'H' | 'M' | 'L' {
+    if (group.some(g => g.cause.ap === 'H')) return 'H';
+    if (group.some(g => g.cause.ap === 'M')) return 'M';
+    return 'L';
 }
 
 /** Pick most restrictive specialChar from a group: CC > SC > explicit > ''. */
@@ -92,13 +94,14 @@ function pickCharacteristicNumber(group: QualifyingCause[]): string {
 // ============================================================================
 
 /**
- * Generate Control Plan items from AMFE causes with AP=H or AP=M.
+ * Generate Control Plan items from AMFE causes with AP=H, AP=M, or SC/CC.
  *
- * Per AIAG-VDA CP 1st Ed 2024:
+ * Per AIAG-VDA CP 1st Ed 2024 + IATF 16949 §8.3.3.3:
  * - Each AMFE cause generates a PROCESS characteristic row (cause → parameter to control)
  * - Each AMFE failure mode generates a PRODUCT characteristic row (failure → defect to detect)
  * - Dedup groups identical process rows and identical product rows
  * - Product and process characteristics are NEVER mixed in the same row
+ * - SC/CC characteristics (S≥5) MUST be included regardless of AP level
  */
 export function generateItemsFromAmfe(
     amfeDoc: AmfeDocument,
@@ -111,17 +114,24 @@ export function generateItemsFromAmfe(
     // ─── PHASE 1: Collect all qualifying causes with context ───
     const qualifying: QualifyingCause[] = [];
 
-    for (const op of amfeDoc.operations) {
+    // FIX: Guard against undefined/null operations from corrupted or partially-loaded data
+    for (const op of (amfeDoc?.operations ?? [])) {
         for (const we of (op.workElements ?? [])) {
             for (const func of (we.functions ?? [])) {
                 for (const fail of (func.failures ?? [])) {
                     for (const cause of (fail.causes ?? [])) {
                         totalCauses++;
-                        if (cause.ap !== 'H' && cause.ap !== 'M') continue;
 
                         const severity = Number(fail.severity) || 0;
                         const autoSpecialChar = cause.specialChar
                             || (severity >= 9 ? 'CC' : severity >= 5 ? 'SC' : '');
+
+                        // IATF 16949 §8.3.3.3: SC/CC characteristics MUST be in CP
+                        // regardless of AP level. Include AP=L causes if they have SC/CC.
+                        // Skip empty/invalid AP and AP=L without SC/CC.
+                        if (cause.ap !== 'H' && cause.ap !== 'M') {
+                            if (cause.ap !== 'L' || !autoSpecialChar) continue;
+                        }
 
                         qualifying.push({ op, we, func, fail, cause, severity, autoSpecialChar });
                     }
@@ -142,8 +152,12 @@ export function generateItemsFromAmfe(
     }
 
     for (const [, group] of processGroups) {
+        // FIX: Defensive guard — skip empty groups (should never happen by construction,
+        // but prevents group[0] crash and Math.max(...[]) returning -Infinity)
+        if (group.length === 0) continue;
         const rep = group[0];
-        const highestSeverity = Math.max(...group.map(g => g.severity));
+        const validSeverities = group.map(g => g.severity).filter(Number.isFinite);
+        const highestSeverity = validSeverities.length > 0 ? Math.max(...validSeverities) : 1;
         const highestAp = pickHighestAp(group);
         const bestSpecialChar = pickMostRestrictive(group);
 
@@ -191,8 +205,10 @@ export function generateItemsFromAmfe(
     }
 
     for (const [, group] of productGroups) {
+        if (group.length === 0) continue; // FIX: Same defensive guard as process groups
         const rep = group[0];
-        const highestSeverity = Math.max(...group.map(g => g.severity));
+        const validSevs = group.map(g => g.severity).filter(Number.isFinite);
+        const highestSeverity = validSevs.length > 0 ? Math.max(...validSevs) : 1;
         const highestAp = pickHighestAp(group);
         const bestSpecialChar = pickMostRestrictive(group);
 
@@ -251,8 +267,11 @@ export function generateItemsFromAmfe(
         const processRowCount = items.filter(i => !!i.processCharacteristic).length;
         const productRowCount = items.filter(i => !!i.productCharacteristic && !i.processCharacteristic).length;
         const opCount = new Set(items.map(i => i.processStepNumber)).size;
+        const scCcCount = qualifying.filter(q => q.cause.ap !== 'H' && q.cause.ap !== 'M').length;
+        const apHmCount = qualifying.length - scCcCount;
+        const scCcNote = scCcCount > 0 ? ` + ${scCcCount} SC/CC` : '';
         warnings.push(
-            `Plan de Control generado: ${items.length} items (${processRowCount} de proceso + ${productRowCount} de producto) en ${opCount} operacion(es), a partir de ${qualifying.length} causa(s) AMFE con AP Alto o Medio.`
+            `Plan de Control generado: ${items.length} ítems (${processRowCount} de proceso + ${productRowCount} de producto) en ${opCount} operación(es), a partir de ${apHmCount} causa(s) AP Alto/Medio${scCcNote}.`
         );
     }
 
@@ -277,6 +296,7 @@ export function generateControlPlanFromAmfe(
         responsible: amfeDoc.header.processResponsible || amfeDoc.header.responsible || '',
         approvedBy: amfeDoc.header.approvedBy || '',
         coreTeam: amfeDoc.header.team || '',
+        applicableParts: amfeDoc.header.applicableParts || '',
         linkedAmfeProject: amfeProjectName,
         date: new Date().toISOString().split('T')[0],
     };

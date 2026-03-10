@@ -162,7 +162,7 @@ function buildSheetHeaderHtml(sheet: HojaOperacion, doc: HoDocument, assets: Pdf
                 ${labelCell('SECTOR', sheet.sector)}
             </td>
             <td style="border:1px solid #d1d5db; padding:4px 6px;">
-                ${labelCell('COD. DE PIEZA / DESCRIPCION', sheet.partCodeDescription)}
+                ${labelCell('COD. DE PIEZA / DESCRIPCIÓN', sheet.partCodeDescription)}
             </td>
             <td style="border:1px solid #d1d5db; padding:4px 6px;">
                 <table style="width:100%; border-collapse:collapse;"><tr>

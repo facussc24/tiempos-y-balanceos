@@ -100,18 +100,18 @@ const HoSheetEditor: React.FC<Props> = ({
                         {/* Row 1: Op Number | Denomination | Model + Realizo/Aprobo */}
                         <tr>
                             <td className="border border-gray-300 px-2 py-1">
-                                <div className="text-[9px] text-gray-500 font-semibold uppercase">N° DE OPERACION</div>
+                                <div className="text-[9px] text-gray-500 font-semibold uppercase">N° DE OPERACIÓN</div>
                                 <div className="text-xs font-medium">{sheet.operationNumber}</div>
                             </td>
                             <td className="border border-gray-300 px-2 py-1">
-                                <div className="text-[9px] text-gray-500 font-semibold uppercase">DENOMINACION DE LA OPERACION</div>
+                                <div className="text-[9px] text-gray-500 font-semibold uppercase">DENOMINACIÓN DE LA OPERACIÓN</div>
                                 <div className="text-xs font-medium">{sheet.operationName}</div>
                             </td>
                             <td className="border border-gray-300 px-2 py-1">
                                 <div className="text-[9px] text-gray-500 font-semibold uppercase">MODELO O VEHICULO</div>
                                 <input type="text" value={sheet.vehicleModel}
                                     onChange={e => onUpdateField('vehicleModel', e.target.value)}
-                                    readOnly={readOnly}
+                                    readOnly={readOnly} placeholder="Ej: Corolla / Hilux" maxLength={100}
                                     className="w-full text-xs px-0 py-0.5 border-0 bg-transparent focus:outline-none" />
                             </td>
                         </tr>
@@ -124,14 +124,14 @@ const HoSheetEditor: React.FC<Props> = ({
                                         <div className="text-[9px] text-gray-500 font-semibold uppercase">Realizo:</div>
                                         <input type="text" value={sheet.preparedBy}
                                             onChange={e => onUpdateField('preparedBy', e.target.value)}
-                                            readOnly={readOnly}
+                                            readOnly={readOnly} placeholder="Nombre y apellido" maxLength={80}
                                             className="w-full text-xs px-0 py-0.5 border-0 bg-transparent focus:outline-none" />
                                     </div>
                                     <div>
                                         <div className="text-[9px] text-gray-500 font-semibold uppercase">Aprobo:</div>
                                         <input type="text" value={sheet.approvedBy}
                                             onChange={e => onUpdateField('approvedBy', e.target.value)}
-                                            readOnly={readOnly}
+                                            readOnly={readOnly} placeholder="Nombre y apellido" maxLength={80}
                                             className="w-full text-xs px-0 py-0.5 border-0 bg-transparent focus:outline-none" />
                                     </div>
                                 </div>
@@ -149,7 +149,7 @@ const HoSheetEditor: React.FC<Props> = ({
                                         <div className="text-[9px] text-gray-500 font-semibold uppercase">Rev.</div>
                                         <input type="text" value={sheet.revision}
                                             onChange={e => onUpdateField('revision', e.target.value)}
-                                            readOnly={readOnly}
+                                            readOnly={readOnly} placeholder="Ej: 01" maxLength={10}
                                             className="w-full text-xs px-0 py-0.5 border-0 bg-transparent focus:outline-none" />
                                     </div>
                                 </div>
@@ -173,14 +173,14 @@ const HoSheetEditor: React.FC<Props> = ({
                                 <div className="text-[9px] text-gray-500 font-semibold uppercase">SECTOR</div>
                                 <input type="text" value={sheet.sector}
                                     onChange={e => onUpdateField('sector', e.target.value)}
-                                    readOnly={readOnly} placeholder="Ej: INYECCION"
+                                    readOnly={readOnly} placeholder="Ej: INYECCION" maxLength={50}
                                     className="w-full text-xs px-0 py-0.5 border-0 bg-transparent focus:outline-none" />
                             </td>
                             <td className="border border-gray-300 px-2 py-1">
-                                <div className="text-[9px] text-gray-500 font-semibold uppercase">COD. DE PIEZA / DESCRIPCION</div>
+                                <div className="text-[9px] text-gray-500 font-semibold uppercase">COD. DE PIEZA / DESCRIPCIÓN</div>
                                 <input type="text" value={sheet.partCodeDescription}
                                     onChange={e => onUpdateField('partCodeDescription', e.target.value)}
-                                    readOnly={readOnly}
+                                    readOnly={readOnly} placeholder="Ej: 12345 / Soporte lateral" maxLength={150}
                                     className="w-full text-xs px-0 py-0.5 border-0 bg-transparent focus:outline-none" />
                             </td>
                             <td className="border border-gray-300 px-2 py-1">
@@ -195,7 +195,7 @@ const HoSheetEditor: React.FC<Props> = ({
                                         <div className="text-[9px] text-gray-500 font-semibold uppercase">N° Puesto</div>
                                         <input type="text" value={sheet.puestoNumber}
                                             onChange={e => onUpdateField('puestoNumber', e.target.value)}
-                                            readOnly={readOnly} placeholder="-"
+                                            readOnly={readOnly} placeholder="-" maxLength={20}
                                             className="w-full text-xs px-0 py-0.5 border-0 bg-transparent focus:outline-none" />
                                     </div>
                                 </div>
@@ -223,7 +223,7 @@ const HoSheetEditor: React.FC<Props> = ({
 
                 {/* Steps + PPE */}
                 <div className="bg-white rounded border border-gray-200 overflow-hidden">
-                    <SectionHeader icon={<ListOrdered size={14} />} title="DESCRIPCION DE LA OPERACION" />
+                    <SectionHeader icon={<ListOrdered size={14} />} title="DESCRIPCIÓN DE LA OPERACIÓN" />
                     <div className="p-3">
                         <HoStepEditor
                             steps={sheet.steps}
@@ -273,7 +273,8 @@ const HoSheetEditor: React.FC<Props> = ({
                         onChange={e => onUpdateReactionPlan(e.target.value)}
                         readOnly={readOnly}
                         rows={4}
-                        className="w-full px-2 py-1.5 text-xs border border-gray-200 rounded resize-none focus:outline-none focus:ring-1 focus:ring-blue-400 focus:border-blue-400 font-bold text-red-700 uppercase"
+                        placeholder="Describir las acciones a tomar ante una no conformidad..."
+                        className="w-full px-2 py-1.5 text-xs border border-gray-200 rounded resize-none focus:outline-none focus:ring-1 focus:ring-blue-400 focus:border-blue-400 font-bold text-red-700 uppercase placeholder:font-normal placeholder:normal-case placeholder:text-gray-300"
                     />
                     <div className="flex items-center gap-2">
                         <label className="text-[10px] text-gray-500 uppercase">Contacto:</label>
@@ -292,4 +293,4 @@ const HoSheetEditor: React.FC<Props> = ({
     );
 };
 
-export default HoSheetEditor;
+export default React.memo(HoSheetEditor);

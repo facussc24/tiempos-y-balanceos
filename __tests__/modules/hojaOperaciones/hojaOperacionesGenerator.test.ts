@@ -26,7 +26,7 @@ function makeAmfeDoc(operations: Partial<AmfeOperation>[] = []): AmfeDocument {
             processResponsible: '',
             revision: '1',
             approvedBy: 'M.Donofrio',
-            scope: '',
+            scope: '', applicableParts: '',
         },
         operations: operations.map((op, i) => ({
             id: op.id || `op-${i}`,
@@ -294,7 +294,7 @@ describe('warnings', () => {
         ]);
 
         const { warnings } = generateHoFromAmfeAndCp(amfe, cp, 'P1');
-        expect(warnings.some(w => w.includes('1 operacion(es) no tienen items'))).toBe(true);
+        expect(warnings.some(w => w.includes('1 operación(es) no tienen ítems'))).toBe(true);
     });
 
     it('emits summary warning with counts', () => {
@@ -305,7 +305,7 @@ describe('warnings', () => {
         ]);
 
         const { warnings } = generateHoFromAmfeAndCp(amfe, cp, 'P1');
-        expect(warnings.some(w => w.includes('1 hoja(s)') && w.includes('2 verificacion(es)'))).toBe(true);
+        expect(warnings.some(w => w.includes('1 hoja(s)') && w.includes('2 verificación(es)'))).toBe(true);
     });
 
     it('does not warn about missing CP items when cpDoc is null', () => {
@@ -334,7 +334,7 @@ describe('edge cases', () => {
                 subject: '', startDate: '', revDate: '', team: '',
                 amfeNumber: '', responsible: '', confidentiality: '',
                 partNumber: '', processResponsible: '', revision: '',
-                approvedBy: '', scope: '',
+                approvedBy: '', scope: '', applicableParts: '',
             },
             operations: [{ id: 'op-1', opNumber: '10', name: 'Op1', workElements: [] }],
         };

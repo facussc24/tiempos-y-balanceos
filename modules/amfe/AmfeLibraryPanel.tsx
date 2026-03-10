@@ -11,7 +11,7 @@
  * - See impact analysis and selectively propagate library changes
  */
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { AmfeOperation } from './amfeTypes';
 import { AmfeLibraryOperation, LIBRARY_CATEGORIES } from './amfeLibraryTypes';
 import { ImpactScanResult } from './amfeImpactAnalysis';
@@ -71,6 +71,19 @@ const AmfeLibraryPanel: React.FC<Props> = ({
     const [impactResult, setImpactResult] = useState<ImpactScanResult | null>(null);
     const [selectedForSync, setSelectedForSync] = useState<Set<string>>(new Set());
     const [syncMessage, setSyncMessage] = useState<string | null>(null);
+    const syncMsgTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    useEffect(() => {
+        return () => { if (syncMsgTimerRef.current) clearTimeout(syncMsgTimerRef.current); };
+    }, []);
+
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') { e.preventDefault(); onClose(); }
+        };
+        document.addEventListener('keydown', handleKeyDown);
+        return () => document.removeEventListener('keydown', handleKeyDown);
+    }, [onClose]);
 
     const linkedOps = currentOperations.filter(op => op.linkedLibraryOpId);
 
@@ -94,8 +107,9 @@ const AmfeLibraryPanel: React.FC<Props> = ({
             setSyncMessage(null);
         } else {
             // No linked AMFEs, just show a brief confirmation
-            setSyncMessage('Biblioteca actualizada. No hay AMFEs vinculados a esta operacion.');
-            setTimeout(() => setSyncMessage(null), 3000);
+            setSyncMessage('Biblioteca actualizada. No hay AMFEs vinculados a esta operación.');
+            if (syncMsgTimerRef.current) clearTimeout(syncMsgTimerRef.current);
+            syncMsgTimerRef.current = setTimeout(() => setSyncMessage(null), 3000);
         }
     };
 
@@ -121,7 +135,7 @@ const AmfeLibraryPanel: React.FC<Props> = ({
     if (impactResult) {
         return (
             <div className="fixed inset-0 z-50 flex">
-                <div className="flex-1 bg-black/30" onClick={() => setImpactResult(null)} />
+                <div className="flex-1 bg-black/30 animate-in fade-in duration-150" role="presentation" onClick={() => setImpactResult(null)} />
                 <div className="w-[460px] bg-white shadow-2xl border-l border-gray-200 flex flex-col animate-in slide-in-from-right">
                     {/* Impact Panel Header */}
                     <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-amber-50">
@@ -130,7 +144,7 @@ const AmfeLibraryPanel: React.FC<Props> = ({
                             <h2 className="font-bold text-sm text-gray-800">Analisis de Impacto</h2>
                         </div>
                         <button onClick={() => setImpactResult(null)}
-                            className="text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-100 transition">
+                            className="text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-100 transition" title="Cerrar impacto" aria-label="Cerrar impacto">
                             <X size={16} />
                         </button>
                     </div>
@@ -171,7 +185,7 @@ const AmfeLibraryPanel: React.FC<Props> = ({
                                                 <span className="text-[10px] text-gray-400 font-mono">
                                                     {info.registryEntry.amfeNumber}
                                                 </span>
-                                                <span className="text-xs font-medium text-gray-800 truncate">
+                                                <span className="text-xs font-medium text-gray-800 truncate" title={info.registryEntry.projectName}>
                                                     {info.registryEntry.projectName}
                                                 </span>
                                             </div>
@@ -180,7 +194,7 @@ const AmfeLibraryPanel: React.FC<Props> = ({
                                                 {info.registryEntry.client && ` — ${info.registryEntry.client}`}
                                             </p>
                                             <p className="text-[10px] text-gray-400 mt-0.5">
-                                                {info.linkedOperationCount} operacion(es) vinculada(s):
+                                                {info.linkedOperationCount} operación(es) vinculada(s):
                                                 {' '}{info.linkedOperationNames.join(', ')}
                                             </p>
                                         </div>
@@ -238,7 +252,7 @@ const AmfeLibraryPanel: React.FC<Props> = ({
     return (
         <div className="fixed inset-0 z-50 flex">
             {/* Backdrop */}
-            <div className="flex-1 bg-black/30" onClick={onClose} />
+            <div className="flex-1 bg-black/30 animate-in fade-in duration-150" role="presentation" onClick={onClose} />
 
             {/* Side Panel */}
             <div className="w-[460px] bg-white shadow-2xl border-l border-gray-200 flex flex-col animate-in slide-in-from-right">
@@ -255,7 +269,7 @@ const AmfeLibraryPanel: React.FC<Props> = ({
                             <RefreshCw size={14} />
                         </button>
                         <button onClick={onClose}
-                            className="text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-100 transition">
+                            className="text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-100 transition" title="Cerrar biblioteca" aria-label="Cerrar biblioteca">
                             <X size={16} />
                         </button>
                     </div>
@@ -411,7 +425,7 @@ const AmfeLibraryPanel: React.FC<Props> = ({
                                             <div key={op.id} className="flex items-center justify-between p-2 bg-purple-50 rounded border border-purple-200 mb-1.5">
                                                 <div className="flex items-center gap-2 min-w-0">
                                                     <Link2 size={12} className="text-purple-500 flex-shrink-0" />
-                                                    <span className="text-xs font-medium text-gray-800 truncate">{op.opNumber} - {op.name}</span>
+                                                    <span className="text-xs font-medium text-gray-800 truncate" title={`${op.opNumber} - ${op.name}`}>{op.opNumber} - {op.name}</span>
                                                 </div>
                                                 <button
                                                     onClick={() => onSyncOperation(op.id)}
@@ -575,7 +589,7 @@ const LibraryOpCard: React.FC<{
                                 {we.functions.map((func, fIdx) => (
                                     <div key={fIdx} className="ml-4 mt-0.5">
                                         <div className="text-gray-600">
-                                            <span className="text-gray-400">F:</span> {func.description || '(sin descripcion)'}
+                                            <span className="text-gray-400">F:</span> {func.description || '(sin descripción)'}
                                         </div>
                                         {func.failures.map((fail, flIdx) => (
                                             <div key={flIdx} className="ml-3 mt-0.5">
@@ -653,7 +667,7 @@ const SaveOpCard: React.FC<{
                 <div className="min-w-0">
                     <div className="flex items-center gap-2">
                         {isLinked && <Link2 size={11} className="text-purple-500" />}
-                        <span className="text-xs font-bold text-gray-800 truncate">
+                        <span className="text-xs font-bold text-gray-800 truncate" title={`${op.opNumber || '?'} - ${op.name || '(sin nombre)'}`}>
                             {op.opNumber || '?'} - {op.name || '(sin nombre)'}
                         </span>
                     </div>

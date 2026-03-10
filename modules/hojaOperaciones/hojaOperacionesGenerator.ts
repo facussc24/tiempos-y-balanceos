@@ -92,6 +92,7 @@ export function generateHoFromAmfeAndCp(
         client: amfeDoc.header.client || '',
         partNumber: amfeDoc.header.partNumber || '',
         partDescription: amfeDoc.header.subject || '',
+        applicableParts: amfeDoc.header.applicableParts || '',
         linkedAmfeProject: amfeProjectName,
         linkedCpProject: cpDoc?.header.controlPlanNumber || '',
     };
@@ -181,18 +182,18 @@ export function generateHoFromAmfeAndCp(
     if (!cpDoc) {
         warnings.push(
             `Se generaron ${sheets.length} hoja(s) de operaciones sin Plan de Control vinculado. ` +
-            `Los ciclos de control estan vacios — genere primero el Plan de Control.`
+            `Los ciclos de control están vacíos — genere primero el Plan de Control.`
         );
     } else if (opsWithoutCp > 0) {
         warnings.push(
-            `${opsWithoutCp} operacion(es) no tienen items en el Plan de Control. ` +
-            `Sus ciclos de control estaran vacios.`
+            `${opsWithoutCp} operación(es) no tienen ítems en el Plan de Control. ` +
+            `Sus ciclos de control estarán vacíos.`
         );
     }
 
     warnings.push(
-        `Hojas de Operaciones generadas: ${sheets.length} hoja(s) con ${totalChecks} verificacion(es) de calidad ` +
-        `a partir de ${amfeDoc.operations.length} operacion(es) AMFE.`
+        `Hojas de Operaciones generadas: ${sheets.length} hoja(s) con ${totalChecks} verificación(es) de calidad ` +
+        `a partir de ${amfeDoc.operations.length} operación(es) AMFE.`
     );
 
     return { document: { header, sheets }, warnings };
