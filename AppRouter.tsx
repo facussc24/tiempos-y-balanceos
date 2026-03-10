@@ -153,7 +153,7 @@ const AppRouter: React.FC = () => {
                 </ModuleErrorBoundary>
             )}
             {currentMode === 'formatos' && (
-                <ModuleErrorBoundary moduleName="Formatos Estandar" onNavigateHome={handleBackToLanding}>
+                <ModuleErrorBoundary moduleName="Formatos Estándar" onNavigateHome={handleBackToLanding}>
                     <FormatosApp onBackToLanding={handleBackToLanding} />
                 </ModuleErrorBoundary>
             )}
