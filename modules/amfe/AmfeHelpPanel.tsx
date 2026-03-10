@@ -5,7 +5,7 @@
  * Displays severity/occurrence/detection scales, AP logic,
  * keyboard shortcuts, and a step-by-step workflow guide.
  */
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, BookOpen, Keyboard, Route, AlertTriangle, ShieldCheck, Eye, Gauge } from 'lucide-react';
 
 type HelpTab = 'scales' | 'shortcuts' | 'workflow';
@@ -21,11 +21,11 @@ interface AmfeHelpPanelProps {
 const SEVERITY_SCALE = [
     { val: 10, label: 'Peligroso sin aviso', desc: 'Afecta seguridad/regulatorio. Sin aviso previo al operador.', color: 'bg-red-600 text-white' },
     { val: 9, label: 'Peligroso con aviso', desc: 'Afecta seguridad/regulatorio. Con aviso previo al operador.', color: 'bg-red-500 text-white' },
-    { val: 8, label: 'Muy alto', desc: 'Vehiculo/producto inoperable. Perdida funcion primaria.', color: 'bg-orange-500 text-white' },
-    { val: 7, label: 'Alto', desc: 'Vehiculo operable con rendimiento reducido. Cliente insatisfecho.', color: 'bg-orange-400 text-white' },
-    { val: 6, label: 'Moderado', desc: 'Vehiculo operable, confort/conveniencia afectados.', color: 'bg-amber-400' },
-    { val: 5, label: 'Bajo', desc: 'Vehiculo operable, confort reducido. Cliente algo insatisfecho.', color: 'bg-amber-300' },
-    { val: 4, label: 'Muy bajo', desc: 'Defecto notable por mayoria de clientes (>75%).', color: 'bg-yellow-200' },
+    { val: 8, label: 'Muy alto', desc: 'Vehículo/producto inoperable. Pérdida función primaria.', color: 'bg-orange-500 text-white' },
+    { val: 7, label: 'Alto', desc: 'Vehículo operable con rendimiento reducido. Cliente insatisfecho.', color: 'bg-orange-400 text-white' },
+    { val: 6, label: 'Moderado', desc: 'Vehículo operable, confort/conveniencia afectados.', color: 'bg-amber-400' },
+    { val: 5, label: 'Bajo', desc: 'Vehículo operable, confort reducido. Cliente algo insatisfecho.', color: 'bg-amber-300' },
+    { val: 4, label: 'Muy bajo', desc: 'Defecto notable por mayoría de clientes (>75%).', color: 'bg-yellow-200' },
     { val: 3, label: 'Menor', desc: 'Defecto notable por algunos clientes (50%).', color: 'bg-green-200' },
     { val: 2, label: 'Muy menor', desc: 'Defecto notable solo por clientes expertos (<25%).', color: 'bg-green-100' },
     { val: 1, label: 'Ninguno', desc: 'Sin efecto perceptible.', color: 'bg-gray-100' },
@@ -33,39 +33,40 @@ const SEVERITY_SCALE = [
 
 const OCCURRENCE_SCALE = [
     { val: 10, label: 'Muy alta', desc: '>=100 por mil piezas. Control inexistente.', color: 'bg-red-600 text-white' },
-    { val: 9, label: 'Alta', desc: '50 por mil piezas. Controles debiles.', color: 'bg-red-500 text-white' },
+    { val: 9, label: 'Alta', desc: '50 por mil piezas. Controles débiles.', color: 'bg-red-500 text-white' },
     { val: 8, label: 'Alta', desc: '20 por mil piezas. Controles limitados.', color: 'bg-orange-500 text-white' },
     { val: 7, label: 'Moderada-alta', desc: '10 por mil piezas. Algunos controles.', color: 'bg-orange-400 text-white' },
     { val: 6, label: 'Moderada', desc: '2 por mil piezas. Controles moderados.', color: 'bg-amber-400' },
     { val: 5, label: 'Moderada-baja', desc: '0.5 por mil piezas. Buenos controles.', color: 'bg-amber-300' },
     { val: 4, label: 'Baja', desc: '0.1 por mil piezas. Controles efectivos.', color: 'bg-yellow-200' },
     { val: 3, label: 'Muy baja', desc: '0.01 por mil piezas. Controles robustos.', color: 'bg-green-200' },
-    { val: 2, label: 'Remota', desc: '<=0.001 por mil. Prevencion probada.', color: 'bg-green-100' },
-    { val: 1, label: 'Eliminada', desc: 'Causa eliminada por diseno/prevencion.', color: 'bg-gray-100' },
+    { val: 2, label: 'Remota', desc: '<=0.001 por mil. Prevención probada.', color: 'bg-green-100' },
+    { val: 1, label: 'Eliminada', desc: 'Causa eliminada por diseño/prevención.', color: 'bg-gray-100' },
 ];
 
 const DETECTION_SCALE = [
-    { val: 10, label: 'Imposible', desc: 'Sin control de deteccion. No se puede detectar.', color: 'bg-red-600 text-white' },
-    { val: 9, label: 'Muy remota', desc: 'Control improbable de detectar. Inspeccion aleatoria.', color: 'bg-red-500 text-white' },
-    { val: 8, label: 'Remota', desc: 'Deteccion poco confiable. Inspeccion visual.', color: 'bg-orange-500 text-white' },
-    { val: 7, label: 'Muy baja', desc: 'Deteccion post-proceso. Inspeccion doble.', color: 'bg-orange-400 text-white' },
-    { val: 6, label: 'Baja', desc: 'Control estadistico (SPC) manual.', color: 'bg-amber-400' },
+    { val: 10, label: 'Imposible', desc: 'Sin control de detección. No se puede detectar.', color: 'bg-red-600 text-white' },
+    { val: 9, label: 'Muy remota', desc: 'Control improbable de detectar. Inspección aleatoria.', color: 'bg-red-500 text-white' },
+    { val: 8, label: 'Remota', desc: 'Detección poco confiable. Inspección visual.', color: 'bg-orange-500 text-white' },
+    { val: 7, label: 'Muy baja', desc: 'Detección post-proceso. Inspección doble.', color: 'bg-orange-400 text-white' },
+    { val: 6, label: 'Baja', desc: 'Control estadístico (SPC) manual.', color: 'bg-amber-400' },
     { val: 5, label: 'Moderada', desc: 'SPC con alarmas. Gage tipo variable.', color: 'bg-amber-300' },
-    { val: 4, label: 'Moderada-alta', desc: 'Control en estacion siguiente. Error-proofing.', color: 'bg-yellow-200' },
-    { val: 3, label: 'Alta', desc: 'Deteccion en estacion. Multiples Poka-Yoke.', color: 'bg-green-200' },
-    { val: 2, label: 'Muy alta', desc: 'Deteccion automatica. Segregacion auto.', color: 'bg-green-100' },
-    { val: 1, label: 'Segura', desc: 'Prevencion por diseno. Pieza no puede hacerse mal.', color: 'bg-gray-100' },
+    { val: 4, label: 'Moderada-alta', desc: 'Control en estación siguiente. Error-proofing.', color: 'bg-yellow-200' },
+    { val: 3, label: 'Alta', desc: 'Detección en estación. Múltiples Poka-Yoke.', color: 'bg-green-200' },
+    { val: 2, label: 'Muy alta', desc: 'Detección automática. Segregación auto.', color: 'bg-green-100' },
+    { val: 1, label: 'Segura', desc: 'Prevención por diseño. Pieza no puede hacerse mal.', color: 'bg-gray-100' },
 ];
 
 const AP_RULES = [
-    { level: 'H', label: 'Alto', color: 'bg-red-100 text-red-800 border-red-300', desc: 'Accion obligatoria. Severidad 9-10 casi siempre = H.' },
-    { level: 'M', label: 'Medio', color: 'bg-amber-100 text-amber-800 border-amber-300', desc: 'Accion recomendada. Evaluar si mejorar prevencion o deteccion.' },
-    { level: 'L', label: 'Bajo', color: 'bg-green-100 text-green-800 border-green-300', desc: 'Accion a discrecion del equipo. Monitorear tendencias.' },
+    { level: 'H', label: 'Alto', color: 'bg-red-100 text-red-800 border-red-300', desc: 'Acción obligatoria. Severidad 9-10 casi siempre = H.' },
+    { level: 'M', label: 'Medio', color: 'bg-amber-100 text-amber-800 border-amber-300', desc: 'Acción recomendada. Evaluar si mejorar prevención o detección.' },
+    { level: 'L', label: 'Bajo', color: 'bg-green-100 text-green-800 border-green-300', desc: 'Acción a discreción del equipo. Monitorear tendencias.' },
 ];
 
 const SPECIAL_CHARS = [
-    { code: 'CC', label: 'Critica', desc: 'Severidad >= 9. Requiere controles especiales, plan de control y SPC.', color: 'text-red-700 bg-red-50 border-red-200' },
-    { code: 'SC', label: 'Significativa', desc: 'Severidad 5-8. Requiere atencion en Plan de Control.', color: 'text-amber-700 bg-amber-50 border-amber-200' },
+    { code: 'CC', label: 'Crítica', desc: 'Severidad >= 9. Requiere controles especiales, plan de control y SPC.', color: 'text-red-700 bg-red-50 border-red-200' },
+    { code: 'SC', label: 'Significativa', desc: 'Severidad 5-8. Requiere atención en Plan de Control.', color: 'text-amber-700 bg-amber-50 border-amber-200' },
+    { code: 'PTC', label: 'Pass-Through', desc: 'Característica del proveedor que pasa sin modificación en planta. Nuevo en CP-1 2024.', color: 'text-blue-700 bg-blue-50 border-blue-200' },
 ];
 
 // ============================================================================
@@ -75,10 +76,10 @@ const SPECIAL_CHARS = [
 const SHORTCUTS = [
     { category: 'General', items: [
         { keys: 'Ctrl+S', desc: 'Guardar proyecto' },
-        { keys: 'Ctrl+Z', desc: 'Deshacer ultimo cambio' },
+        { keys: 'Ctrl+Z', desc: 'Deshacer último cambio' },
         { keys: 'Ctrl+Y', desc: 'Rehacer cambio' },
-        { keys: 'Ctrl+D', desc: 'Alternar modo Vista/Edicion' },
-        { keys: 'Ctrl+N', desc: 'Agregar operacion al final' },
+        { keys: 'Ctrl+D', desc: 'Alternar modo Vista/Edición' },
+        { keys: 'Ctrl+N', desc: 'Agregar operación al final' },
         { keys: 'Ctrl+F', desc: 'Buscar/filtrar en tabla' },
         { keys: 'Escape', desc: 'Cerrar paneles / limpiar filtros' },
         { keys: 'Alt (hold)', desc: 'Mostrar atajos en botones' },
@@ -101,16 +102,16 @@ const SHORTCUTS = [
 // ============================================================================
 
 const WORKFLOW_STEPS = [
-    { step: 1, title: 'Definir Operaciones', desc: 'Crear las operaciones/pasos del proceso productivo. Identificar cada paso que transforma el producto.', tip: 'Use el boton + o Ctrl+N. Copie desde Biblioteca si ya existen operaciones similares.' },
-    { step: 2, title: 'Asignar 6M (Elementos de Trabajo)', desc: 'Para cada operacion, definir los elementos 6M: Maquina, Mano de Obra, Material, Metodo, Medio Ambiente, Medicion.', tip: 'No todos los 6M aplican a cada operacion. Focalice en los mas relevantes.' },
-    { step: 3, title: 'Definir Funciones', desc: 'Para cada elemento de trabajo, definir que debe hacer (funcion). Formato: Verbo + Sustantivo.', tip: 'Ejemplo: "Mantener temperatura > 200°C", "Posicionar pieza a ±0.1mm".' },
-    { step: 4, title: 'Identificar Modos de Falla', desc: 'Para cada funcion, identificar como puede fallar. Es el opuesto/negativo de la funcion.', tip: 'Si funcion = "Mantener temperatura", falla = "No mantiene temperatura" o "Temperatura excesiva".' },
-    { step: 5, title: 'Evaluar Efectos y Severidad (S)', desc: 'Documentar 3 niveles de efecto: interno, en planta cliente, en usuario final. Asignar S = maximo de los 3.', tip: 'S >= 9 implica seguridad/regulatorio. S nunca puede reducirse con controles.' },
-    { step: 6, title: 'Identificar Causas y Controles', desc: 'Para cada falla: listar causas raiz, controles de prevencion existentes, y controles de deteccion existentes.', tip: 'Use IA Gemini para sugerencias. El Copiloto puede agregar causas y controles.' },
-    { step: 7, title: 'Evaluar O y D, Calcular AP', desc: 'Asignar Ocurrencia (con prevencion actual) y Deteccion (con deteccion actual). AP se calcula automaticamente.', tip: 'AP = H requiere accion obligatoria. AP = M requiere evaluacion. AP = L a discrecion.' },
-    { step: 8, title: 'Definir Acciones de Optimizacion', desc: 'Para causas con AP Alto: definir acciones preventivas y/o detectivas, responsable, fecha objetivo.', tip: 'Priorice reducir O (prevencion) antes que D (deteccion). S no se puede cambiar.' },
-    { step: 9, title: 'Generar Plan de Control', desc: 'Desde la pestana Plan de Control, generar items automaticamente desde las causas AP=H y AP=M del AMFE.', tip: 'Revise los items generados. Complete especificaciones y responsables manualmente.' },
-    { step: 10, title: 'Validar y Exportar', desc: 'Use Auditar AMFE para verificar completitud. Exporte a Excel/PDF para revision con el equipo.', tip: 'La validacion cruzada AMFE↔CP detecta inconsistencias entre ambos documentos.' },
+    { step: 1, title: 'Definir Operaciones', desc: 'Crear las operaciones/pasos del proceso productivo. Identificar cada paso que transforma el producto.', tip: 'Use el botón + o Ctrl+N. Copie desde Biblioteca si ya existen operaciones similares.' },
+    { step: 2, title: 'Asignar 6M (Elementos de Trabajo)', desc: 'Para cada operación, definir los elementos 6M: Máquina, Mano de Obra, Material, Método, Medio Ambiente, Medición.', tip: 'No todos los 6M aplican a cada operación. Focalice en los más relevantes.' },
+    { step: 3, title: 'Definir Funciones', desc: 'Para cada elemento de trabajo, definir qué debe hacer (función). Formato: Verbo + Sustantivo.', tip: 'Ejemplo: "Mantener temperatura > 200°C", "Posicionar pieza a ±0.1mm".' },
+    { step: 4, title: 'Identificar Modos de Falla', desc: 'Para cada función, identificar cómo puede fallar. Es el opuesto/negativo de la función.', tip: 'Si función = "Mantener temperatura", falla = "No mantiene temperatura" o "Temperatura excesiva".' },
+    { step: 5, title: 'Evaluar Efectos y Severidad (S)', desc: 'Documentar 3 niveles de efecto: interno, en planta cliente, en usuario final. Asignar S = máximo de los 3.', tip: 'S >= 9 implica seguridad/regulatorio. S nunca puede reducirse con controles.' },
+    { step: 6, title: 'Identificar Causas y Controles', desc: 'Para cada falla: listar causas raíz, controles de prevención existentes, y controles de detección existentes.', tip: 'Use IA Gemini para sugerencias. El Copiloto puede agregar causas y controles.' },
+    { step: 7, title: 'Evaluar O y D, Calcular AP', desc: 'Asignar Ocurrencia (con prevención actual) y Detección (con detección actual). AP se calcula automáticamente.', tip: 'AP = H requiere acción obligatoria. AP = M requiere evaluación. AP = L a discreción.' },
+    { step: 8, title: 'Definir Acciones de Optimización', desc: 'Para causas con AP Alto: definir acciones preventivas y/o detectivas, responsable, fecha objetivo.', tip: 'Priorice reducir O (prevención) antes que D (detección). S no se puede cambiar.' },
+    { step: 9, title: 'Generar Plan de Control', desc: 'Desde la pestaña Plan de Control, generar items automáticamente desde las causas AP=H y AP=M del AMFE.', tip: 'Revise los items generados. Complete especificaciones y responsables manualmente.' },
+    { step: 10, title: 'Validar y Exportar', desc: 'Use Auditar AMFE para verificar completitud. Exporte a Excel/PDF para revisión con el equipo.', tip: 'La validación cruzada AMFE↔CP detecta inconsistencias entre ambos documentos.' },
 ];
 
 // ============================================================================
@@ -120,6 +121,15 @@ const WORKFLOW_STEPS = [
 const AmfeHelpPanel: React.FC<AmfeHelpPanelProps> = ({ onClose }) => {
     const [activeTab, setActiveTab] = useState<HelpTab>('scales');
 
+    // Close on Escape key
+    useEffect(() => {
+        const handleEscape = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') { e.preventDefault(); onClose(); }
+        };
+        document.addEventListener('keydown', handleEscape);
+        return () => document.removeEventListener('keydown', handleEscape);
+    }, [onClose]);
+
     const tabs: { id: HelpTab; label: string; icon: React.ReactNode }[] = [
         { id: 'scales', label: 'Escalas', icon: <Gauge size={14} /> },
         { id: 'shortcuts', label: 'Atajos', icon: <Keyboard size={14} /> },
@@ -127,8 +137,8 @@ const AmfeHelpPanel: React.FC<AmfeHelpPanelProps> = ({ onClose }) => {
     ];
 
     return (
-        <div className="fixed inset-0 z-50 flex justify-end" onClick={onClose}>
-            <div className="absolute inset-0 bg-black/20" />
+        <div className="fixed inset-0 z-50 flex justify-end" role="presentation" onClick={onClose}>
+            <div className="absolute inset-0 bg-black/20 animate-in fade-in duration-150" />
             <div
                 className="relative w-[520px] max-w-full bg-white shadow-2xl overflow-hidden flex flex-col animate-in slide-in-from-right"
                 onClick={e => e.stopPropagation()}
@@ -142,7 +152,7 @@ const AmfeHelpPanel: React.FC<AmfeHelpPanelProps> = ({ onClose }) => {
                             <p className="text-[10px] text-gray-500">AIAG-VDA FMEA Handbook</p>
                         </div>
                     </div>
-                    <button onClick={onClose} className="text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-100 transition">
+                    <button onClick={onClose} className="text-gray-400 hover:text-gray-600 p-1.5 rounded hover:bg-gray-100 transition" title="Cerrar referencia" aria-label="Cerrar referencia">
                         <X size={18} />
                     </button>
                 </div>
@@ -219,7 +229,7 @@ function ScalesTab() {
         <div>
             <ScaleTable title="Severidad (S)" icon={<AlertTriangle size={14} className="text-red-500" />} scale={SEVERITY_SCALE} />
             <ScaleTable title="Ocurrencia (O)" icon={<Gauge size={14} className="text-orange-500" />} scale={OCCURRENCE_SCALE} />
-            <ScaleTable title="Deteccion (D)" icon={<Eye size={14} className="text-blue-500" />} scale={DETECTION_SCALE} />
+            <ScaleTable title="Detección (D)" icon={<Eye size={14} className="text-blue-500" />} scale={DETECTION_SCALE} />
 
             {/* AP Rules */}
             <div className="mb-5">
@@ -244,7 +254,7 @@ function ScalesTab() {
 
             {/* Special Characteristics */}
             <div>
-                <h4 className="text-xs font-bold text-gray-700 mb-2">Caracteristicas Especiales</h4>
+                <h4 className="text-xs font-bold text-gray-700 mb-2">Características Especiales</h4>
                 <div className="space-y-2">
                     {SPECIAL_CHARS.map(sc => (
                         <div key={sc.code} className={`flex items-start gap-2 px-3 py-2 rounded-lg border ${sc.color}`}>
@@ -291,9 +301,49 @@ function ShortcutsTab() {
 // WORKFLOW TAB
 // ============================================================================
 
+function FamilyInfoBox() {
+    return (
+        <div className="mb-4 border border-indigo-200 rounded-lg overflow-hidden">
+            <div className="bg-indigo-50 px-3 py-2 border-b border-indigo-200">
+                <h5 className="text-xs font-bold text-indigo-800">Familias de Productos (AIAG-VDA)</h5>
+            </div>
+            <div className="px-3 py-2 text-[11px] text-gray-600 space-y-1.5">
+                <p>
+                    Un <strong>Family FMEA</strong> cubre piezas multiples similares en aplicacion, diseno,
+                    manufactura, requerimientos y especificacion (ej: espejos izq/der, variaciones dimensionales).
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                    <div className="bg-green-50 border border-green-200 rounded p-1.5">
+                        <p className="font-semibold text-green-800 text-[10px] mb-0.5">✓ Usar familia cuando:</p>
+                        <ul className="list-disc list-inside text-[10px] text-green-700 space-y-0.5">
+                            <li>Mismo proceso de manufactura</li>
+                            <li>Mismos modos de falla</li>
+                            <li>Diferencia solo dimensional</li>
+                        </ul>
+                    </div>
+                    <div className="bg-red-50 border border-red-200 rounded p-1.5">
+                        <p className="font-semibold text-red-800 text-[10px] mb-0.5">✗ Separar cuando:</p>
+                        <ul className="list-disc list-inside text-[10px] text-red-700 space-y-0.5">
+                            <li>Procesos diferentes</li>
+                            <li>Fallas distintas</li>
+                            <li>Controles diferentes</li>
+                        </ul>
+                    </div>
+                </div>
+                <p className="text-[10px] text-gray-500 italic">
+                    En el encabezado: usar <strong>"Alcance / Familia"</strong> para describir la familia
+                    y <strong>"Piezas Aplicables"</strong> para listar los nros de pieza cubiertos.
+                    IATF 16949 no obliga un enfoque — es decision del equipo.
+                </p>
+            </div>
+        </div>
+    );
+}
+
 function WorkflowTab() {
     return (
         <div className="space-y-3">
+            <FamilyInfoBox />
             <p className="text-[11px] text-gray-600 mb-2">
                 Flujo de trabajo AMFE VDA — 7 pasos + vinculacion a Plan de Control.
             </p>

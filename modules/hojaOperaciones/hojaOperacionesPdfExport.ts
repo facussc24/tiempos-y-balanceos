@@ -32,6 +32,8 @@ import {
 } from './hojaOperacionesTypes';
 import { sanitizeFilename } from '../../utils/filenameSanitization';
 import { getPpeBase64Map, getLogoBase64 } from '../../src/assets/ppe/ppeBase64';
+import { renderHtmlToPdf } from '../../utils/pdfRenderer';
+import { truncateApplicableParts as truncateParts } from '../../utils/productFamilyAutoFill';
 
 // ============================================================================
 // CONSTANTS
@@ -169,22 +171,38 @@ function buildSheetHeaderHtml(sheet: HojaOperacion, doc: HoDocument, assets: Pdf
                 </tr></table>
             </td>
         </tr>
+        ${doc.header.applicableParts?.trim() ? `<!-- Row 4: Piezas Aplicables -->
+        <tr>
+            <td style="border:1px solid #d1d5db; padding:4px 6px;" colspan="3">
+                <div style="font-size:7px; color:#6b7280; font-weight:600; text-transform:uppercase; font-family:Arial,sans-serif;">${esc('PIEZAS APLICABLES')}</div><div style="font-size:9px; font-family:Arial,sans-serif;">${esc(truncateParts(doc.header.applicableParts)).replace(/\n/g, '<br/>')}</div>
+            </td>
+        </tr>` : ''}
     </table>`;
 }
+
+/** Maximum number of visual aid images shown in the PDF layout. */
+const MAX_PDF_VISUAL_AIDS = 6;
 
 function buildVisualAidsHtml(aids: HoVisualAid[]): string {
     if (aids.length === 0) {
         return `<div style="padding:8px; font-size:8px; color:#999; font-style:italic; font-family:Arial,sans-serif;">Sin ayudas visuales</div>`;
     }
-    const images = aids.slice(0, 4).map(aid => `
-        <div style="display:inline-block; width:48%; vertical-align:top; margin:1%; text-align:center;">
-            ${aid.imageData
+    const shown = aids.slice(0, MAX_PDF_VISUAL_AIDS);
+    const overflow = aids.length - shown.length;
+    // Use 3-column grid for 5-6 images, 2-column for fewer
+    const colWidth = shown.length > 4 ? '31%' : '48%';
+    const images = shown.map(aid => `
+        <div style="display:inline-block; width:${colWidth}; vertical-align:top; margin:1%; text-align:center;">
+            ${aid.imageData?.startsWith('data:')
                 ? `<img src="${aid.imageData}" style="max-width:100%; max-height:120px; border:1px solid #e5e7eb;" />`
                 : `<div style="height:80px; background:#f3f4f6; border:1px solid #e5e7eb; display:flex; align-items:center; justify-content:center; font-size:8px; color:#999;">Sin imagen</div>`}
             ${aid.caption ? `<div style="font-size:7px; color:#666; margin-top:2px; font-family:Arial,sans-serif;">${esc(aid.caption)}</div>` : ''}
         </div>
     `).join('');
-    return `<div style="padding:4px;">${images}</div>`;
+    const overflowNote = overflow > 0
+        ? `<div style="font-size:7px; color:#b45309; font-style:italic; text-align:center; padding:2px 0; font-family:Arial,sans-serif;">${overflow} imagen${overflow > 1 ? 'es' : ''} adicional${overflow > 1 ? 'es' : ''} no mostrada${overflow > 1 ? 's' : ''}</div>`
+        : '';
+    return `<div style="padding:4px;">${images}${overflowNote}</div>`;
 }
 
 function buildStepsHtml(steps: HoStep[]): string {
@@ -240,12 +258,21 @@ function buildQualityChecksHtml(checks: HoQualityCheck[]): string {
     `).join('');
 
     return `
-    <table style="width:100%; border-collapse:collapse;">
+    <table style="width:100%; border-collapse:collapse; table-layout:fixed;">
+        <colgroup>
+            <col style="width:4%"/>
+            <col style="width:22%"/>
+            <col style="width:20%"/>
+            <col style="width:20%"/>
+            <col style="width:10%"/>
+            <col style="width:10%"/>
+            <col style="width:14%"/>
+        </colgroup>
         <thead><tr>
             <th style="${headerCellStyle()}">#</th>
-            <th style="${headerCellStyle()}">Caracteristicas a controlar</th>
-            <th style="${headerCellStyle()}">Especificacion</th>
-            <th style="${headerCellStyle()}">Metodo de control</th>
+            <th style="${headerCellStyle()}">Características a controlar</th>
+            <th style="${headerCellStyle()}">Especificación</th>
+            <th style="${headerCellStyle()}">Método de control</th>
             <th style="${headerCellStyle()}">Resp.</th>
             <th style="${headerCellStyle()}">Frec.</th>
             <th style="${headerCellStyle()}">Registro</th>
@@ -255,7 +282,7 @@ function buildQualityChecksHtml(checks: HoQualityCheck[]): string {
 }
 
 function buildReactionPlanHtml(text: string, contact: string): string {
-    const lines = text.split('\n').map(l => `<div>${esc(l)}</div>`).join('');
+    const lines = (text || '').split(/\r?\n/).map(l => `<div>${esc(l)}</div>`).join('');
     return `
     <div style="border:2px solid ${RED_REACTION}; padding:6px; background:#FEF2F2; font-size:9px; font-family:Arial,sans-serif; color:#7f1d1d; font-weight:bold; word-wrap:break-word; overflow-wrap:break-word; max-width:100%;">
         ${lines}
@@ -307,6 +334,26 @@ export function buildSheetHtml(sheet: HojaOperacion, doc: HoDocument, assets: Pd
 }
 
 // ============================================================================
+// PREVIEW FUNCTIONS
+// ============================================================================
+
+/**
+ * Get the HTML preview string for a single HO sheet (loads assets async).
+ */
+export async function getHoSheetPreviewHtml(sheet: HojaOperacion, doc: HoDocument): Promise<string> {
+    const assets = await loadPdfAssets();
+    return buildSheetHtml(sheet, doc, assets);
+}
+
+/**
+ * Get the HTML preview string for all HO sheets (loads assets async).
+ */
+export async function getHoAllSheetsPreviewHtml(doc: HoDocument): Promise<string> {
+    const assets = await loadPdfAssets();
+    return doc.sheets.map(s => buildSheetHtml(s, doc, assets)).join('');
+}
+
+// ============================================================================
 // EXPORT FUNCTIONS (async for base64 asset loading)
 // ============================================================================
 
@@ -338,31 +385,13 @@ export async function exportAllHoSheetsPdf(doc: HoDocument): Promise<void> {
 }
 
 /**
- * Off-screen render HTML → PDF using html2pdf.js.
+ * Render HTML → PDF using iframe-based rendering for reliable capture.
  */
 async function renderAndDownload(html: string, fileNameBase: string): Promise<void> {
-    const html2pdf = (await import('html2pdf.js')).default;
-    const container = document.createElement('div');
-    container.style.position = 'absolute';
-    container.style.left = '-9999px';
-    container.style.top = '0';
-    container.style.width = '210mm'; // A4 portrait
-    container.innerHTML = html;
-    document.body.appendChild(container);
-
-    try {
-        await html2pdf()
-            .set({
-                margin: [5, 5, 5, 5],
-                filename: sanitizeFilename(fileNameBase) + '.pdf',
-                image: { type: 'jpeg', quality: 0.95 },
-                html2canvas: { scale: 2, useCORS: true },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-                pagebreak: { mode: ['css', 'legacy'] },
-            })
-            .from(container)
-            .save();
-    } finally {
-        document.body.removeChild(container);
-    }
+    await renderHtmlToPdf(html, {
+        filename: sanitizeFilename(fileNameBase) + '.pdf',
+        paperSize: 'a4',
+        orientation: 'portrait',
+        margin: [5, 5, 5, 5],
+    });
 }

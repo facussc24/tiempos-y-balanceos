@@ -39,13 +39,13 @@ const HoQualityCheckTable: React.FC<Props> = ({ checks, onUpdateRegistro, readOn
 
     return (
         <div className="overflow-x-auto">
-            <table className="w-full text-xs border-collapse">
+            <table className="w-full text-xs border-collapse" aria-label="Verificaciones de calidad">
                 <thead>
                     <tr className="bg-gray-50 text-left">
                         <th className="px-2 py-1.5 border border-gray-200 font-medium text-gray-600 w-8">#</th>
-                        <th className="px-2 py-1.5 border border-gray-200 font-medium text-gray-600">Caracteristica</th>
-                        <th className="px-2 py-1.5 border border-gray-200 font-medium text-gray-600">Especificacion</th>
-                        <th className="px-2 py-1.5 border border-gray-200 font-medium text-gray-600">Metodo</th>
+                        <th className="px-2 py-1.5 border border-gray-200 font-medium text-gray-600">Característica</th>
+                        <th className="px-2 py-1.5 border border-gray-200 font-medium text-gray-600">Especificación</th>
+                        <th className="px-2 py-1.5 border border-gray-200 font-medium text-gray-600">Método</th>
                         <th className="px-2 py-1.5 border border-gray-200 font-medium text-gray-600">Resp.</th>
                         <th className="px-2 py-1.5 border border-gray-200 font-medium text-gray-600">Frec.</th>
                         <th className="px-2 py-1.5 border border-gray-200 font-medium text-gray-600">Registro</th>

@@ -196,6 +196,8 @@ export interface AmfeHeaderData {
     revision: string;
     approvedBy: string;
     scope: string;
+    /** Applicable part numbers (one per line) for Family FMEA (AIAG-VDA). */
+    applicableParts: string;
 }
 
 /** Top-level AMFE document structure (header + operations). */
@@ -213,10 +215,10 @@ export const WORK_ELEMENT_TYPES: WorkElementType[] = ['Machine', 'Man', 'Materia
 
 /** Display labels for work element types (Spanish) */
 export const WORK_ELEMENT_LABELS: Record<WorkElementType, string> = {
-    Machine: 'Maquina',
+    Machine: 'Máquina',
     Man: 'Mano de Obra',
     Material: 'Material',
-    Method: 'Metodo',
+    Method: 'Método',
     Environment: 'Medio Ambiente',
-    Measurement: 'Medicion',
+    Measurement: 'Medición',
 };

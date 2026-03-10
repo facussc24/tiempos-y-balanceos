@@ -1,10 +1,29 @@
 import React, { useState } from 'react';
-import { AmfeOperation, WorkElementType } from './amfeTypes';
+import { AmfeOperation, AmfeWorkElement, AmfeFunction, AmfeFailure, AmfeCause, WorkElementType } from './amfeTypes';
 import { Plus, Trash2, ChevronRight, ChevronDown, User, Monitor, Box, Settings, Thermometer, PenTool } from 'lucide-react';
+
+/** Subset of the useAmfe hook result that StepsView requires */
+interface AmfeActions {
+    addOperation: () => void;
+    updateOp: (id: string, field: keyof AmfeOperation, value: AmfeOperation[keyof AmfeOperation]) => void;
+    deleteOp: (id: string) => void;
+    addWorkElement: (opId: string, type: WorkElementType) => void;
+    updateWorkElement: (opId: string, weId: string, field: keyof AmfeWorkElement, value: AmfeWorkElement[keyof AmfeWorkElement]) => void;
+    deleteWorkElement: (opId: string, weId: string) => void;
+    addFunction: (opId: string, weId: string) => void;
+    updateFunction: (opId: string, weId: string, funcId: string, field: keyof AmfeFunction, value: AmfeFunction[keyof AmfeFunction]) => void;
+    deleteFunction: (opId: string, weId: string, funcId: string) => void;
+    addFailure: (opId: string, weId: string, funcId: string) => void;
+    updateFailure: (opId: string, weId: string, funcId: string, failId: string, field: keyof AmfeFailure, value: AmfeFailure[keyof AmfeFailure]) => void;
+    deleteFailure: (opId: string, weId: string, funcId: string, failId: string) => void;
+    addCause: (opId: string, weId: string, funcId: string, failId: string) => void;
+    updateCause: (opId: string, weId: string, funcId: string, failId: string, causeId: string, field: keyof AmfeCause, value: AmfeCause[keyof AmfeCause]) => void;
+    deleteCause: (opId: string, weId: string, funcId: string, failId: string, causeId: string) => void;
+}
 
 interface Props {
     operations: AmfeOperation[];
-    amfe: any; // Using any for brevity to pass the hook result
+    amfe: AmfeActions;
 }
 
 const StepsView: React.FC<Props> = ({ operations, amfe }) => {
@@ -37,9 +56,9 @@ const StepsView: React.FC<Props> = ({ operations, amfe }) => {
                                 value={op.name}
                                 onChange={e => amfe.updateOp(op.id, 'name', e.target.value)}
                                 className="font-bold bg-transparent flex-1 border-b border-dashed border-gray-300 focus:border-blue-500 outline-none"
-                                placeholder="Nombre de la Operacion"
+                                placeholder="Nombre de la Operación"
                             />
-                            <button onClick={() => amfe.deleteOp(op.id)} className="text-gray-400 hover:text-red-500"><Trash2 size={16} /></button>
+                            <button onClick={() => amfe.deleteOp(op.id)} className="text-gray-400 hover:text-red-500" title="Eliminar operación" aria-label="Eliminar operación"><Trash2 size={16} /></button>
                         </div>
 
                         <div className="p-4 bg-slate-50/50 min-h-[100px]">
@@ -48,7 +67,7 @@ const StepsView: React.FC<Props> = ({ operations, amfe }) => {
                                     <div key={we.id} className="bg-white p-3 rounded border border-gray-200 shadow-sm relative group hover:border-blue-300 transition-colors">
                                         <div className="flex justify-between mb-2">
                                             <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${getTypeColor(we.type)}`}>{we.type}</span>
-                                            <button onClick={() => amfe.deleteWorkElement(op.id, we.id)} className="opacity-0 group-hover:opacity-100 text-gray-300 hover:text-red-500 transition-opacity"><Trash2 size={12} /></button>
+                                            <button onClick={() => amfe.deleteWorkElement(op.id, we.id)} className="opacity-0 group-hover:opacity-100 text-gray-300 hover:text-red-500 transition-opacity" title="Eliminar elemento" aria-label="Eliminar elemento de trabajo"><Trash2 size={12} /></button>
                                         </div>
                                         <textarea
                                             value={we.name}
@@ -63,10 +82,10 @@ const StepsView: React.FC<Props> = ({ operations, amfe }) => {
                                 <div className="border border-dashed border-gray-300 rounded flex flex-col justify-center items-center gap-2 p-4 text-gray-400">
                                     <span className="text-xs">Agregar Elemento:</span>
                                     <div className="flex flex-wrap justify-center gap-2">
-                                        <AddWeBtn icon={<Monitor size={14} />} label="Maquina" onClick={() => amfe.addWorkElement(op.id, 'Machine')} />
+                                        <AddWeBtn icon={<Monitor size={14} />} label="Máquina" onClick={() => amfe.addWorkElement(op.id, 'Machine')} />
                                         <AddWeBtn icon={<User size={14} />} label="Mano de Obra" onClick={() => amfe.addWorkElement(op.id, 'Man')} />
                                         <AddWeBtn icon={<Box size={14} />} label="Material" onClick={() => amfe.addWorkElement(op.id, 'Material')} />
-                                        <AddWeBtn icon={<Settings size={14} />} label="Metodo" onClick={() => amfe.addWorkElement(op.id, 'Method')} />
+                                        <AddWeBtn icon={<Settings size={14} />} label="Método" onClick={() => amfe.addWorkElement(op.id, 'Method')} />
                                     </div>
                                 </div>
                             </div>
@@ -106,7 +125,7 @@ const StepsView: React.FC<Props> = ({ operations, amfe }) => {
                                                 placeholder="Cual es la funcion de este elemento? (Ej: Apretar tuerca a 50Nm)"
                                             />
                                         </div>
-                                        <button onClick={() => amfe.deleteFunction(op.id, we.id, func.id)} className="text-gray-300 hover:text-red-500 pt-2 opacity-0 group-hover:opacity-100"><Trash2 size={14} /></button>
+                                        <button onClick={() => amfe.deleteFunction(op.id, we.id, func.id)} className="text-gray-300 hover:text-red-500 pt-2 opacity-0 group-hover:opacity-100" title="Eliminar funcion" aria-label="Eliminar funcion"><Trash2 size={14} /></button>
                                     </div>
                                 ))}
                                 <button onClick={() => amfe.addFunction(op.id, we.id)} className="text-green-600 text-xs font-bold hover:underline flex items-center gap-1">
@@ -143,7 +162,7 @@ const StepsView: React.FC<Props> = ({ operations, amfe }) => {
                                     <div key={func.id} className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
                                         <div className="bg-green-50/50 p-2 border-b border-gray-100 flex items-center gap-2">
                                             <Settings size={14} className="text-green-600" />
-                                            <span className="text-sm font-medium text-gray-800">{func.description || "(Sin descripcion de funcion)"}</span>
+                                            <span className="text-sm font-medium text-gray-800">{func.description || "(Sin descripción de función)"}</span>
                                         </div>
                                         <div className="p-3 bg-red-50/10 space-y-3">
                                             {func.failures.map(fail => (
@@ -160,9 +179,9 @@ const StepsView: React.FC<Props> = ({ operations, amfe }) => {
                                                         </div>
                                                         <div className="w-24 flex-shrink-0">
                                                             <label className="text-[10px] uppercase font-bold text-red-400">Severidad</label>
-                                                            <input type="number" placeholder="S" className="w-full text-center border p-1 rounded text-red-600 font-bold text-sm" value={fail.severity} onChange={e => amfe.updateFailure(op.id, we.id, func.id, fail.id, 'severity', e.target.value)} />
+                                                            <input type="number" placeholder="S" min={1} max={10} step={1} className="w-full text-center border p-1 rounded text-red-600 font-bold text-sm" value={fail.severity} onChange={e => amfe.updateFailure(op.id, we.id, func.id, fail.id, 'severity', e.target.value)} />
                                                         </div>
-                                                        <button onClick={() => amfe.deleteFailure(op.id, we.id, func.id, fail.id)} className="text-gray-300 hover:text-red-500 self-start"><Trash2 size={16} /></button>
+                                                        <button onClick={() => amfe.deleteFailure(op.id, we.id, func.id, fail.id)} className="text-gray-300 hover:text-red-500 self-start" title="Eliminar falla" aria-label="Eliminar falla"><Trash2 size={16} /></button>
                                                     </div>
 
                                                     {/* Causes list */}
@@ -178,7 +197,7 @@ const StepsView: React.FC<Props> = ({ operations, amfe }) => {
                                                                             className="w-full text-sm border-b border-gray-200 outline-none py-1 focus:border-orange-400 bg-transparent" placeholder="Causa raiz (Ej: Rodamiento desgastado)"
                                                                         />
                                                                     </div>
-                                                                    <button onClick={() => amfe.deleteCause(op.id, we.id, func.id, fail.id, cause.id)} className="text-gray-300 hover:text-red-500 opacity-0 group-hover/cause:opacity-100 transition-opacity"><Trash2 size={14} /></button>
+                                                                    <button onClick={() => amfe.deleteCause(op.id, we.id, func.id, fail.id, cause.id)} className="text-gray-300 hover:text-red-500 opacity-0 group-hover/cause:opacity-100 transition-opacity" title="Eliminar causa" aria-label="Eliminar causa"><Trash2 size={14} /></button>
                                                                 </div>
 
                                                                 {/* S/O/D mini-view: S from parent failure, O/D from cause */}
@@ -189,11 +208,11 @@ const StepsView: React.FC<Props> = ({ operations, amfe }) => {
                                                                     </div>
                                                                     <div className="col-span-1">
                                                                         <span className="text-[9px] text-gray-400 block text-center">O</span>
-                                                                        <input type="number" className="w-full text-center border p-1 rounded text-orange-600 text-xs" value={cause.occurrence} onChange={e => amfe.updateCause(op.id, we.id, func.id, fail.id, cause.id, 'occurrence', e.target.value)} />
+                                                                        <input type="number" min={1} max={10} step={1} className="w-full text-center border p-1 rounded text-orange-600 text-xs" value={cause.occurrence} onChange={e => amfe.updateCause(op.id, we.id, func.id, fail.id, cause.id, 'occurrence', e.target.value)} />
                                                                     </div>
                                                                     <div className="col-span-1">
                                                                         <span className="text-[9px] text-gray-400 block text-center">D</span>
-                                                                        <input type="number" className="w-full text-center border p-1 rounded text-blue-600 text-xs" value={cause.detection} onChange={e => amfe.updateCause(op.id, we.id, func.id, fail.id, cause.id, 'detection', e.target.value)} />
+                                                                        <input type="number" min={1} max={10} step={1} className="w-full text-center border p-1 rounded text-blue-600 text-xs" value={cause.detection} onChange={e => amfe.updateCause(op.id, we.id, func.id, fail.id, cause.id, 'detection', e.target.value)} />
                                                                     </div>
                                                                     <div className="col-span-2 text-[10px] flex items-end text-gray-400 pb-1">Definir controles en vista completa</div>
                                                                 </div>
@@ -244,13 +263,25 @@ const getTypeColor = (type: string) => {
     }
 }
 
-const AddWeBtn = ({ icon, label, onClick }: any) => (
+interface AddWeBtnProps {
+    icon: React.ReactNode;
+    label: string;
+    onClick: () => void;
+}
+
+const AddWeBtn = ({ icon, label, onClick }: AddWeBtnProps) => (
     <button onClick={onClick} className="flex items-center gap-1.5 px-2 py-1 bg-white border border-gray-200 rounded hover:border-blue-400 hover:text-blue-600 transition text-[10px] font-medium shadow-sm">
         {icon} {label}
     </button>
 )
 
-const TabButton = ({ active, onClick, label }: any) => (
+interface TabButtonProps {
+    active: boolean;
+    onClick: () => void;
+    label: string;
+}
+
+const TabButton = ({ active, onClick, label }: TabButtonProps) => (
     <button
         onClick={onClick}
         className={`px-4 py-3 font-bold text-sm transition-colors border-b-2 ${active ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
