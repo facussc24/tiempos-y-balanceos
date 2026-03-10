@@ -1,14 +1,16 @@
-import React, { memo, useCallback, useMemo, useState, useEffect, useRef } from 'react';
-import { AmfeOperation, AmfeWorkElement, AmfeFunction, AmfeFailure, AmfeCause, ActionPriority, AMFE_STATUS_OPTIONS, WORK_ELEMENT_TYPES, WORK_ELEMENT_LABELS, WorkElementType, EFFECT_LABELS } from './amfeTypes';
+import React, { memo, useCallback, useMemo, useState, useEffect } from 'react';
+import { AmfeOperation, AmfeWorkElement, AmfeFunction, AmfeFailure, AmfeCause, AMFE_STATUS_OPTIONS, WORK_ELEMENT_TYPES, WORK_ELEMENT_LABELS, WorkElementType, EFFECT_LABELS } from './amfeTypes';
 import { clampSOD, getFailureWarnings, getCauseValidationState, CauseValidationState } from './amfeValidation';
 import { AlertTriangle } from 'lucide-react';
 import { useAmfe } from './useAmfe';
-import { Trash2, Plus, Copy, Monitor, User, Box, Settings, Thermometer, Ruler, ChevronRight, ChevronDown } from 'lucide-react';
+import { Trash2, Plus, Copy, ChevronRight, ChevronDown } from 'lucide-react';
 import AutoResizeTextarea from './AutoResizeTextarea';
 import SuggestableTextarea from './SuggestableTextarea';
 import { SuggestionIndex, SuggestionContext } from './amfeSuggestionEngine';
 import { ColumnGroupVisibility, COLUMN_COUNTS } from './useAmfeColumnVisibility';
 import { inferOperationCategory } from '../../utils/processCategory';
+import { WE_ICONS, getApColor, getSODColor, getCauseRowBorderClass, computeOpSummary, hasSubSeverities, CauseValidationIcon, TAB_ACTIVE_CLASSES, TAB_DOT_CLASSES, TAB_BORDER_CLASSES, TAB_LABEL_CLASSES, TAB_SEV_HIGH_CLASSES } from './amfeTableHelpers';
+import AmfeContextMenu, { CtxTarget } from './AmfeContextMenu';
 
 interface Props {
     operations: AmfeOperation[];
@@ -24,90 +26,6 @@ interface Props {
 
 // inferOperationCategory re-exported from utils/processCategory
 export { inferOperationCategory } from '../../utils/processCategory';
-
-/** Icon map for each 6M work element type */
-const WE_ICONS: Record<WorkElementType, React.ReactNode> = {
-    Machine: <Monitor size={12} />,
-    Man: <User size={12} />,
-    Material: <Box size={12} />,
-    Method: <Settings size={12} />,
-    Environment: <Thermometer size={12} />,
-    Measurement: <Ruler size={12} />,
-};
-
-/** Color badge for Action Priority (H/M/L) */
-const getApColor = (ap: string) => {
-    switch (ap) {
-        case ActionPriority.HIGH: return 'bg-red-500 text-white font-bold';
-        case ActionPriority.MEDIUM: return 'bg-yellow-400 text-black font-bold';
-        case ActionPriority.LOW: return 'bg-green-500 text-white font-bold';
-        default: return 'bg-gray-100 text-gray-400';
-    }
-};
-
-/** Precompute aggregate stats for a collapsed operation summary */
-function computeOpSummary(op: AmfeOperation) {
-    let totalFails = 0;
-    let totalCauses = 0;
-    let highAP = 0;
-    for (const w of op.workElements) {
-        for (const f of w.functions) {
-            totalFails += f.failures.length;
-            for (const fl of f.failures) {
-                totalCauses += fl.causes.length;
-                for (const ca of fl.causes) {
-                    if (ca.ap === 'H') highAP++;
-                }
-            }
-        }
-    }
-    return { totalWE: op.workElements.length, totalFails, totalCauses, highAP };
-}
-
-/** Static class maps for effect tabs (extracted outside component to avoid recreation) */
-const TAB_ACTIVE_CLASSES = ['border-blue-500 text-blue-700 bg-blue-50', 'border-orange-500 text-orange-700 bg-orange-50', 'border-red-500 text-red-700 bg-red-50'] as const;
-const TAB_DOT_CLASSES = ['bg-blue-400', 'bg-orange-400', 'bg-red-400'] as const;
-const TAB_BORDER_CLASSES = ['border-l-blue-400', 'border-l-orange-400', 'border-l-red-400'] as const;
-const TAB_LABEL_CLASSES = ['text-blue-600', 'text-orange-600', 'text-red-600'] as const;
-const TAB_SEV_HIGH_CLASSES = ['border-blue-500 bg-blue-100 font-bold', 'border-orange-500 bg-orange-100 font-bold', 'border-red-500 bg-red-100 font-bold'] as const;
-
-/** Color coding for S/O/D values based on risk level */
-const getSODColor = (value: number | string): string => {
-    const num = Number(value);
-    if (isNaN(num) || num === 0) return '';
-    if (num >= 9) return 'bg-red-100 text-red-900 font-bold';
-    if (num >= 7) return 'bg-orange-100 text-orange-900 font-semibold';
-    if (num >= 4) return 'bg-yellow-50 text-yellow-900';
-    return 'bg-green-50 text-green-800';
-};
-
-/** Left-border color based on AP level for cause rows */
-const getCauseRowBorderClass = (ap: string): string => {
-    switch (ap) {
-        case 'H': return 'border-l-4 border-l-red-500 bg-red-50/20';
-        case 'M': return 'border-l-4 border-l-yellow-400 bg-yellow-50/15';
-        case 'L': return 'border-l-4 border-l-green-400 bg-green-50/10';
-        default: return '';
-    }
-};
-
-/** Whether a failure has any sub-severity values (makes main S read-only) */
-const hasSubSeverities = (fail: AmfeFailure): boolean =>
-    !!(fail.severityLocal || fail.severityNextLevel || fail.severityEndUser);
-
-/** Validation icon for cause row (shows AlertTriangle with tooltip on errors/warnings) */
-const CauseValidationIcon: React.FC<{ validation: CauseValidationState }> = ({ validation }) => {
-    if (validation.level === 'ok') return null;
-    const color = validation.level === 'error' ? 'text-red-500' : 'text-amber-500';
-    return (
-        <div className="relative group/validation inline-block ml-1">
-            <AlertTriangle size={12} className={`${color} cursor-help`} />
-            <div className="absolute z-50 hidden group-hover/validation:block bottom-full left-1/2 -translate-x-1/2 mb-1 bg-gray-900 text-white text-[10px] px-2 py-1 rounded shadow-lg whitespace-nowrap max-w-[220px]">
-                {validation.messages.map((msg, i) => <div key={i}>• {msg}</div>)}
-            </div>
-        </div>
-    );
-};
 
 const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, columnVisibility, suggestionIndex, aiEnabled = false, collapsedOps, onToggleCollapse, readOnly = false }) => {
     const sIdx = suggestionIndex || null;
@@ -174,9 +92,7 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
     }, [readOnly]);
 
     // --- Context Menu state ---
-    type CtxTarget = { x: number; y: number; opId: string; weId?: string; funcId?: string; failId?: string; causeId?: string };
     const [ctxMenu, setCtxMenu] = useState<CtxTarget | null>(null);
-    const ctxRef = useRef<HTMLDivElement>(null);
 
     // Close on outside click or Escape
     useEffect(() => {
@@ -1015,69 +931,19 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
             )}
 
             {/* Right-click context menu (disabled in view mode) */}
-            {!readOnly && ctxMenu && (() => {
-                const items: { label: string; icon: React.ReactNode; action: () => void; color?: string }[] = [];
-                const { opId, weId, funcId, failId, causeId } = ctxMenu;
-
-                // Cause-level actions
-                if (causeId && failId && funcId && weId) {
-                    items.push(
-                        { label: 'Duplicar Causa', icon: <Copy size={12} />, action: () => amfe.duplicateCause(opId, weId, funcId, failId, causeId) },
-                        { label: 'Eliminar Causa', icon: <Trash2 size={12} />, action: () => confirmDeleteCause(opId, weId, funcId, failId, causeId), color: 'text-red-600' },
-                        { label: '+ Causa', icon: <Plus size={12} />, action: () => amfe.addCause(opId, weId, funcId, failId), color: 'text-orange-600' },
-                    );
-                }
-                // Failure-level actions
-                if (failId && funcId && weId) {
-                    items.push(
-                        { label: 'Duplicar Falla', icon: <Copy size={12} />, action: () => amfe.duplicateFailure(opId, weId, funcId, failId) },
-                        { label: 'Eliminar Falla', icon: <Trash2 size={12} />, action: () => confirmDeleteFailure(opId, weId, funcId, failId), color: 'text-red-600' },
-                        { label: '+ Modo de Falla', icon: <Plus size={12} />, action: () => amfe.addFailure(opId, weId, funcId), color: 'text-red-500' },
-                    );
-                }
-                // Function-level actions
-                if (funcId && weId) {
-                    items.push(
-                        { label: 'Duplicar Función', icon: <Copy size={12} />, action: () => amfe.duplicateFunction(opId, weId, funcId) },
-                        { label: 'Eliminar Función', icon: <Trash2 size={12} />, action: () => confirmDeleteFunc(opId, weId, funcId), color: 'text-red-600' },
-                        { label: '+ Función', icon: <Plus size={12} />, action: () => amfe.addFunction(opId, weId), color: 'text-green-600' },
-                    );
-                }
-                // WE-level actions
-                if (weId) {
-                    items.push(
-                        { label: 'Eliminar Elem. Trabajo', icon: <Trash2 size={12} />, action: () => confirmDeleteWE(opId, weId), color: 'text-red-600' },
-                    );
-                }
-                // Op-level actions (always available)
-                items.push(
-                    { label: 'Duplicar Operación', icon: <Copy size={12} />, action: () => amfe.duplicateOperation(opId) },
-                    { label: 'Eliminar Operación', icon: <Trash2 size={12} />, action: () => confirmDeleteOp(opId), color: 'text-red-600' },
-                    { label: '+ Operación', icon: <Plus size={12} />, action: () => amfe.addOperation(), color: 'text-blue-600' },
-                );
-
-                return (
-                    <tr style={{ display: 'contents' }}>
-                        <td colSpan={restColSpan} style={{ padding: 0, border: 'none' }}>
-                            <div ref={ctxRef} className="fixed z-[100] bg-white border border-gray-200 rounded-lg shadow-xl py-1 min-w-[180px] text-xs" style={{ left: ctxMenu.x, top: ctxMenu.y }}>
-                                {items.map((item, i) => (
-                                    <React.Fragment key={i}>
-                                        {/* Separator between hierarchy levels */}
-                                        {i > 0 && items[i - 1].label.startsWith('+') && <div className="border-t border-gray-100 my-0.5" />}
-                                        <button
-                                            onClick={(e) => { e.stopPropagation(); item.action(); setCtxMenu(null); }}
-                                            className={`w-full flex items-center gap-2 px-3 py-1.5 hover:bg-gray-50 transition ${item.color || 'text-gray-700'}`}
-                                        >
-                                            {item.icon}
-                                            {item.label}
-                                        </button>
-                                    </React.Fragment>
-                                ))}
-                            </div>
-                        </td>
-                    </tr>
-                );
-            })()}
+            {!readOnly && ctxMenu && (
+                <AmfeContextMenu
+                    ctxMenu={ctxMenu}
+                    onClose={() => setCtxMenu(null)}
+                    amfe={amfe}
+                    confirmDeleteOp={confirmDeleteOp}
+                    confirmDeleteWE={confirmDeleteWE}
+                    confirmDeleteFunc={confirmDeleteFunc}
+                    confirmDeleteFailure={confirmDeleteFailure}
+                    confirmDeleteCause={confirmDeleteCause}
+                    restColSpan={restColSpan}
+                />
+            )}
         </tbody>
     );
 };
