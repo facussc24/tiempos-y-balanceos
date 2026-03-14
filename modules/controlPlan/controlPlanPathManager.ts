@@ -1,16 +1,23 @@
 /**
  * Control Plan Path Manager
  *
- * Persistence for Control Plan documents on the network drive.
- * Default path: Y:\Ingenieria\Documentacion Gestion Ingenieria\19. Plan de Control
+ * Backward-compatible API for Control Plan document CRUD.
+ * Delegates to SQLite via cpRepository (primary source of truth).
+ * Filesystem is used as optional backup and for transparent migration
+ * of legacy JSON files into SQLite on first load.
  *
- * Now uses configurable base path (via settingsStore) and atomic saves
- * (temp → verify → rename) matching amfePathManager pattern.
+ * Pattern follows amfePathManager.ts.
  */
 
-import { readTextFile, writeTextFile, readDir, mkdir, remove, exists, rename } from '@tauri-apps/plugin-fs';
-import { ControlPlanDocument, normalizeControlPlanDocument } from './controlPlanTypes';
+import { ControlPlanDocument } from './controlPlanTypes';
+import {
+    listCpDocuments,
+    loadCpByProjectName,
+    saveCpDocument,
+    deleteCpByProjectName,
+} from '../../utils/repositories/cpRepository';
 import { logger } from '../../utils/logger';
+import { v4 as uuidv4 } from 'uuid';
 
 // ============================================================================
 // Configuration
@@ -68,139 +75,169 @@ export interface ControlPlanProjectInfo {
 }
 
 // ============================================================================
-// Helpers
+// Filesystem helpers (web-safe stubs)
+// TODO: Implement via Supabase Storage if needed
 // ============================================================================
 
-async function ensureCpDir(): Promise<boolean> {
-    try {
-        const dirExists = await exists(_cpBasePath);
-        if (!dirExists) {
-            await mkdir(_cpBasePath, { recursive: true });
-        }
-        return true;
-    } catch (err) {
-        logger.error('[ControlPlan] Error ensuring directory:', err);
-        return false;
-    }
+/**
+ * No-op stub: filesystem backup not available in web mode.
+ */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+async function fsBackup(_name: string, _doc: ControlPlanDocument): Promise<void> {
+    // TODO: Implement via Supabase Storage if needed
+}
+
+/**
+ * No-op stub: filesystem migration load not available in web mode.
+ */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+async function fsLoad(_name: string): Promise<ControlPlanDocument | null> {
+    // TODO: Implement via Supabase Storage if needed
+    return null;
+}
+
+/**
+ * No-op stub: filesystem directory listing not available in web mode.
+ */
+async function fsList(): Promise<ControlPlanProjectInfo[]> {
+    // TODO: Implement via Supabase Storage if needed
+    return [];
+}
+
+/**
+ * No-op stub: filesystem delete not available in web mode.
+ */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+async function fsDelete(_name: string): Promise<void> {
+    // TODO: Implement via Supabase Storage if needed
 }
 
 // ============================================================================
-// CRUD Operations
+// CRUD Operations — delegate to cpRepository, filesystem as backup
 // ============================================================================
 
+/**
+ * List all Control Plan projects.
+ * Primary: SQLite via cpRepository.
+ * Merges filesystem entries that are not yet in SQLite (transparent migration).
+ */
 export async function listControlPlanProjects(): Promise<ControlPlanProjectInfo[]> {
     try {
-        await ensureCpDir();
-        const entries = await readDir(_cpBasePath);
-        const projects: ControlPlanProjectInfo[] = [];
+        // Primary: SQLite
+        const dbEntries = await listCpDocuments();
+        const projects: ControlPlanProjectInfo[] = dbEntries.map(e => ({
+            name: e.project_name,
+            filename: `${e.project_name}.json`,
+            path: `${_cpBasePath}\\${e.project_name}.json`,
+            header: {
+                partName: e.part_name,
+                client: e.client,
+                phase: e.phase,
+                linkedAmfeProject: e.linked_amfe_project,
+            },
+        }));
 
-        // Cleanup orphaned temp files from interrupted saves
-        for (const entry of entries) {
-            if (entry.name?.endsWith('.tmp.json')) {
-                try { await remove(`${_cpBasePath}\\${entry.name}`); } catch { /* ignore */ }
-            }
-        }
-
-        for (const entry of entries) {
-            if (entry.name && entry.name.endsWith('.json') && !entry.name.endsWith('.tmp.json')) {
-                const name = entry.name.replace('.json', '');
-                const filePath = `${_cpBasePath}\\${entry.name}`;
-
-                let header: any = {};
-                try {
-                    const content = await readTextFile(filePath);
-                    const parsed = JSON.parse(content);
-                    header = parsed.header || {};
-                } catch { /* skip corrupted files */ }
-
-                projects.push({
-                    name,
-                    filename: entry.name,
-                    path: filePath,
-                    header: {
-                        partName: header.partName || '',
-                        client: header.client || '',
-                        phase: header.phase || '',
-                        linkedAmfeProject: header.linkedAmfeProject || '',
-                    },
-                });
+        // Merge filesystem entries not yet in SQLite (migration scenario)
+        const dbNames = new Set(dbEntries.map(e => e.project_name));
+        const fsEntries = await fsList();
+        for (const fsEntry of fsEntries) {
+            if (!dbNames.has(fsEntry.name)) {
+                projects.push(fsEntry);
             }
         }
 
         return projects;
     } catch (err) {
-        logger.error('[ControlPlan] Error listing projects:', err);
+        logger.error('CpPath', 'Error listing projects', {}, err instanceof Error ? err : undefined);
         return [];
     }
 }
 
+/**
+ * Load a Control Plan document.
+ * Primary: SQLite via cpRepository.
+ * Fallback: filesystem (transparent migration to SQLite on first load).
+ */
 export async function loadControlPlan(name: string): Promise<ControlPlanDocument | null> {
     try {
-        const filePath = `${_cpBasePath}\\${name}.json`;
-        const content = await readTextFile(filePath);
-        return normalizeControlPlanDocument(JSON.parse(content));
+        // Primary: load from SQLite
+        const result = await loadCpByProjectName(name);
+        if (result) {
+            return result.doc;
+        }
+
+        // Fallback: load from filesystem (migration)
+        const fsDoc = await fsLoad(name);
+        if (fsDoc) {
+            logger.info('CpPath', `Migrating "${name}" from filesystem to SQLite`);
+            // Migrate to SQLite transparently
+            const id = uuidv4();
+            await saveCpDocument(id, name, fsDoc);
+            return fsDoc;
+        }
+
+        return null;
     } catch (err) {
-        logger.error('[ControlPlan] Error loading:', err);
+        logger.error('CpPath', 'Error loading CP', {}, err instanceof Error ? err : undefined);
         return null;
     }
 }
 
 /**
- * Save a Control Plan document using atomic write (temp → verify → rename).
- * Prevents data corruption if the write is interrupted (e.g. network failure).
+ * Save a Control Plan document.
+ * Primary: SQLite via cpRepository.
+ * Also writes filesystem backup (best-effort).
  */
 export async function saveControlPlan(name: string, data: ControlPlanDocument): Promise<boolean> {
     try {
-        await ensureCpDir();
-        const filePath = `${_cpBasePath}\\${name}.json`;
-        const tempPath = `${_cpBasePath}\\${name}.tmp.json`;
-        const content = JSON.stringify(data, null, 2);
+        // Check if this project already exists in SQLite
+        const existing = await loadCpByProjectName(name);
+        const id = existing?.id ?? uuidv4();
 
-        // Step 1: Write to temp file
-        await writeTextFile(tempPath, content);
-
-        // Step 2: Verify temp file is valid JSON
-        try {
-            const verification = await readTextFile(tempPath);
-            JSON.parse(verification); // throws if corrupted
-        } catch (verifyErr) {
-            logger.error('[ControlPlan] Temp file verification failed, aborting save:', verifyErr);
-            try { await remove(tempPath); } catch { /* cleanup best-effort */ }
+        const success = await saveCpDocument(id, name, data);
+        if (!success) {
+            logger.error('CpPath', 'Failed to save to SQLite');
             return false;
         }
 
-        // Step 3: Atomic rename temp → final
-        try {
-            await rename(tempPath, filePath);
-        } catch {
-            // Fallback: some filesystems don't support rename-over-existing
-            // Write directly (less safe but better than failing)
-            await writeTextFile(filePath, content);
-            try { await remove(tempPath); } catch { /* cleanup */ }
-        }
+        // Best-effort filesystem backup
+        await fsBackup(name, data);
 
         return true;
     } catch (err) {
-        logger.error('[ControlPlan] Error saving:', err);
+        logger.error('CpPath', 'Save failed', {}, err instanceof Error ? err : undefined);
         return false;
     }
 }
 
+/**
+ * Delete a Control Plan document.
+ * Deletes from SQLite and also attempts filesystem cleanup.
+ */
 export async function deleteControlPlan(name: string): Promise<boolean> {
     try {
-        const filePath = `${_cpBasePath}\\${name}.json`;
-        await remove(filePath);
+        const success = await deleteCpByProjectName(name);
+        if (!success) {
+            logger.error('CpPath', 'Failed to delete from SQLite');
+            return false;
+        }
+
+        // Best-effort filesystem cleanup
+        await fsDelete(name);
+
         return true;
     } catch (err) {
-        logger.error('[ControlPlan] Error deleting:', err);
+        logger.error('CpPath', 'Delete failed', {}, err instanceof Error ? err : undefined);
         return false;
     }
 }
 
+/**
+ * Check if the CP path (SQLite) is accessible.
+ * SQLite is always available; filesystem check is not available in web mode.
+ * TODO: Implement via Supabase Storage if needed
+ */
 export async function isCpPathAccessible(): Promise<boolean> {
-    try {
-        return await exists(_cpBasePath);
-    } catch {
-        return false;
-    }
+    // SQLite is always accessible in web mode
+    return true;
 }

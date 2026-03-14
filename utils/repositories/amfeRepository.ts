@@ -14,6 +14,7 @@ import { ActionPriority } from '../../modules/amfe/amfeTypes';
 import { getDatabase } from '../database';
 import { logger } from '../logger';
 import { generateChecksum } from '../crypto';
+import { scheduleBackup } from '../backupService';
 
 // ---------------------------------------------------------------------------
 // AMFE Document CRUD
@@ -86,26 +87,34 @@ export async function listAmfeDocuments(): Promise<AmfeRegistryEntry[]> {
              FROM amfe_documents ORDER BY updated_at DESC`
         );
 
-        return rows.map(r => ({
-            id: r.id,
-            amfeNumber: r.amfe_number,
-            projectName: r.project_name,
-            status: r.status,
-            subject: r.subject,
-            client: r.client,
-            partNumber: r.part_number,
-            responsible: r.responsible,
-            operationCount: r.operation_count,
-            causeCount: r.cause_count,
-            apHCount: r.ap_h_count,
-            apMCount: r.ap_m_count,
-            coveragePercent: r.coverage_percent,
-            startDate: r.start_date,
-            lastRevisionDate: r.last_revision_date,
-            revisions: JSON.parse(r.revisions || '[]'),
-            createdAt: r.created_at,
-            updatedAt: r.updated_at,
-        }));
+        return rows.map(r => {
+            let revisions: AmfeRevisionEntry[] = [];
+            try {
+                revisions = JSON.parse(r.revisions || '[]');
+            } catch {
+                logger.warn('AmfeRepo', `Corrupted revisions JSON for doc ${r.id}, using empty array`);
+            }
+            return {
+                id: r.id,
+                amfeNumber: r.amfe_number,
+                projectName: r.project_name,
+                status: r.status,
+                subject: r.subject,
+                client: r.client,
+                partNumber: r.part_number,
+                responsible: r.responsible,
+                operationCount: r.operation_count,
+                causeCount: r.cause_count,
+                apHCount: r.ap_h_count,
+                apMCount: r.ap_m_count,
+                coveragePercent: r.coverage_percent,
+                startDate: r.start_date,
+                lastRevisionDate: r.last_revision_date,
+                revisions,
+                createdAt: r.created_at,
+                updatedAt: r.updated_at,
+            };
+        });
     } catch (err) {
         logger.error('AmfeRepo', 'Failed to list documents', {}, err instanceof Error ? err : undefined);
         return [];
@@ -217,17 +226,20 @@ export async function saveAmfeDocument(
             `INSERT OR REPLACE INTO amfe_documents
              (id, amfe_number, project_name, subject, client, part_number, responsible,
               organization, status, operation_count, cause_count, ap_h_count, ap_m_count,
-              coverage_percent, start_date, last_revision_date, updated_at, data, revisions, checksum)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), ?, ?, ?)`,
+              coverage_percent, start_date, last_revision_date, created_at, updated_at, data, revisions, checksum)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+                     COALESCE((SELECT created_at FROM amfe_documents WHERE id = ?), datetime('now')),
+                     datetime('now'), ?, ?, ?)`,
             [
                 id, amfeNumber, projectName,
                 header.subject || '', header.client || '', header.partNumber || '',
                 header.responsible || '', header.organization || '', status,
                 stats.operationCount, stats.causeCount, stats.apHCount, stats.apMCount,
                 stats.coveragePercent, header.startDate || '', header.revDate || '',
-                data, JSON.stringify(revisions), checksum,
+                id, data, JSON.stringify(revisions), checksum,
             ]
         );
+        scheduleBackup();
         return true;
     } catch (err) {
         logger.error('AmfeRepo', `Failed to save document ${id}`, {}, err instanceof Error ? err : undefined);
@@ -246,6 +258,54 @@ export async function deleteAmfeDocument(id: string): Promise<boolean> {
     } catch (err) {
         logger.error('AmfeRepo', `Failed to delete document ${id}`, {}, err instanceof Error ? err : undefined);
         return false;
+    }
+}
+
+/**
+ * Delete multiple AMFE documents in a single transaction (all-or-nothing).
+ * Returns true only if ALL deletions succeed.
+ */
+export async function deleteAmfeDocumentsBatch(ids: string[]): Promise<boolean> {
+    if (ids.length === 0) return true;
+    try {
+        const db = await getDatabase();
+        await db.execute('BEGIN TRANSACTION', []);
+        try {
+            for (const id of ids) {
+                await db.execute('DELETE FROM amfe_documents WHERE id = ?', [id]);
+            }
+            await db.execute('COMMIT', []);
+            return true;
+        } catch (innerErr) {
+            try { await db.execute('ROLLBACK', []); } catch { /* rollback best-effort */ }
+            throw innerErr;
+        }
+    } catch (err) {
+        logger.error('AmfeRepo', `Failed to batch-delete ${ids.length} documents`, {}, err instanceof Error ? err : undefined);
+        return false;
+    }
+}
+
+/**
+ * Count CP and HO documents linked to a given AMFE document.
+ * Useful for warning users before deletion about orphaned references.
+ */
+export async function countLinkedDocuments(amfeId: string): Promise<{ cpCount: number; hoCount: number }> {
+    try {
+        const db = await getDatabase();
+        const cpRows = await db.select<{ count: number }>(
+            'SELECT COUNT(*) as count FROM cp_documents WHERE linked_amfe_id = ?', [amfeId]
+        );
+        const hoRows = await db.select<{ count: number }>(
+            'SELECT COUNT(*) as count FROM ho_documents WHERE linked_amfe_id = ?', [amfeId]
+        );
+        return {
+            cpCount: cpRows[0]?.count ?? 0,
+            hoCount: hoRows[0]?.count ?? 0,
+        };
+    } catch (err) {
+        logger.error('AmfeRepo', `Failed to count linked docs for ${amfeId}`, {}, err instanceof Error ? err : undefined);
+        return { cpCount: 0, hoCount: 0 };
     }
 }
 
@@ -353,11 +413,19 @@ export async function saveLibraryOperation(op: AmfeLibraryOperation): Promise<bo
 export async function saveLibrary(library: AmfeLibrary): Promise<boolean> {
     try {
         const db = await getDatabase();
-        // Delete all existing
-        await db.execute('DELETE FROM amfe_library_operations');
-        // Insert all
-        for (const op of library.operations) {
-            await saveLibraryOperation(op);
+        await db.execute('BEGIN TRANSACTION', []);
+        try {
+            // Delete all existing
+            await db.execute('DELETE FROM amfe_library_operations', []);
+            // Insert all
+            for (const op of library.operations) {
+                const ok = await saveLibraryOperation(op);
+                if (!ok) throw new Error(`Failed to save library operation ${op.id}`);
+            }
+            await db.execute('COMMIT', []);
+        } catch (innerErr) {
+            try { await db.execute('ROLLBACK', []); } catch { /* rollback best-effort */ }
+            throw innerErr;
         }
         return true;
     } catch (err) {

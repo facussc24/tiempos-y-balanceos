@@ -13,9 +13,10 @@ import {
     calculateTotalManualWork,
     calculateLineSaturation,
     calculateAvailableTimeVsTakt,
-    calculateSaturationVsTakt
+    calculateSaturationVsTakt,
+    calculateSectorTaktTime
 } from '../utils';
-import { detectCycles } from '../utils/graph';
+import { detectCycles, calculateTaskWeights } from '../utils/graph';
 import {
     simulateBalance as simulateBalanceUtils,
     simulateBalanceType2,
@@ -79,15 +80,27 @@ export const useLineBalancing = (data: ProjectData, updateData: (data: ProjectDa
     const sectorsList = data.sectors || [];
 
     // --- CALCULATIONS ---
-    const { nominalSeconds, effectiveSeconds } = calculateTaktTime(
+    const { nominalSeconds, effectiveSeconds } = useMemo(() => calculateTaktTime(
         data.shifts,
         data.meta.activeShifts,
         data.meta.dailyDemand,
-        data.meta.useSectorOEE ? 1 : data.meta.manualOEE
-    );
+        data.meta.useSectorOEE ? 1 : data.meta.manualOEE,
+        data.meta.setupLossPercent || 0
+    ), [
+        data.shifts,
+        data.meta.activeShifts,
+        data.meta.dailyDemand,
+        data.meta.useSectorOEE,
+        data.meta.manualOEE,
+        data.meta.setupLossPercent
+    ]);
 
-    const maxAssigned = data.assignments.length > 0 ? Math.max(...data.assignments.map(a => a.stationId)) : 1;
-    const configuredStations = Math.max(maxAssigned, data.meta.configuredStations || 1);
+    const validAssignedIds = data.assignments.map(a => a.stationId).filter(Number.isFinite);
+    const maxAssigned = validAssignedIds.length > 0 ? Math.max(...validAssignedIds) : 1;
+    const rawConfigured = data.meta.configuredStations;
+    const configuredStations = Math.max(maxAssigned, Number.isFinite(rawConfigured) && rawConfigured > 0 ? rawConfigured : 1);
+
+    const taskMap = useMemo(() => new Map(data.tasks.map(t => [t.id, t])), [data.tasks]);
 
     // Station Data Calculation
     const stationData = useMemo(() => {
@@ -101,8 +114,6 @@ export const useLineBalancing = (data: ProjectData, updateData: (data: ProjectDa
             oee: number;
             replicas: number;
             sectorId?: string;
-            operatorTime?: number; // V4.1: Twin Bars - manual work time
-            machineTime?: number;  // V4.1: Twin Bars - machine cycle time
         }> = {};
 
         // Initialize Stations
@@ -129,7 +140,7 @@ export const useLineBalancing = (data: ProjectData, updateData: (data: ProjectDa
 
         // First Pass: Distribute Tasks
         data.assignments.forEach(a => {
-            const exists = data.tasks.some(t => t.id === a.taskId);
+            const exists = taskMap.has(a.taskId);
             if (!exists) {
                 missingTaskIds.push(a.taskId);
                 return; // Skip assignment
@@ -161,11 +172,11 @@ export const useLineBalancing = (data: ProjectData, updateData: (data: ProjectDa
 
         // Second Pass: Calculate Metrics with NET TIME Logic (Internal=0)
         Object.values(stations).forEach(st => {
-            const tasksInStation = st.tasks.map(tid => data.tasks.find(t => t.id === tid)).filter(Boolean) as Task[];
+            const tasksInStation = st.tasks.map(tid => taskMap.get(tid)).filter(Boolean) as Task[];
 
             // Calculate Raw Sum (Gross) for "Absorbed" calculation
             let rawSum = 0;
-            tasksInStation.forEach(t => rawSum += (t.standardTime || t.averageTime));
+            tasksInStation.forEach(t => rawSum += (t.standardTime || t.averageTime || 0));
 
             // UNIFIED FIX: Use calculateEffectiveStationTime for TCR
             // This ensures Balanceo and ReportCenter use the same algorithm
@@ -186,139 +197,180 @@ export const useLineBalancing = (data: ProjectData, updateData: (data: ProjectDa
                     st.limit = nominalSeconds * st.oee;
                 }
 
-                // V4.1: Calculate Operator Time vs Machine Time for Twin Bars
-                // Operator Time = sum of manual tasks (excluding machine internal)
-                st.operatorTime = tasksInStation.reduce((sum, t) => {
-                    if (t.executionMode === 'injection' || t.executionMode === 'machine') return sum;
-                    if (t.isMachineInternal) return sum; // Internal tasks don't add to operator load
-                    return sum + (t.standardTime || t.averageTime || 0);
-                }, 0);
-
-                // Machine Time = max cycle of injection/machine tasks (uses realCycle if available)
-                st.machineTime = tasksInStation.reduce((max, t) => {
-                    if (t.executionMode === 'injection' || t.executionMode === 'machine') {
-                        const cycle = t.injectionParams?.realCycle || t.standardTime || t.averageTime || 0;
-                        return Math.max(max, cycle);
-                    }
-                    return max;
-                }, 0);
+                // Per-sector shift override: recalculate limit using sector's own Takt
+                const sector = st.sectorId ? (data.sectors || []).find(s => s.id === st.sectorId) : undefined;
+                if (sector?.shiftOverride && data.meta.dailyDemand > 0) {
+                    const sectorTakt = calculateSectorTaktTime(
+                        sector, data.shifts, data.meta.activeShifts,
+                        data.meta.dailyDemand, st.oee, data.meta.setupLossPercent || 0
+                    );
+                    st.limit = sectorTakt.effectiveSeconds;
+                }
             }
         });
 
         return Object.values(stations).sort((a, b) => a.id - b.id);
-    }, [data.assignments, data.tasks, configuredStations, data.meta.manualOEE, data.meta.useManualOEE, data.meta.useSectorOEE, data.stationConfigs, nominalSeconds, data.sectors]);
+    }, [data.assignments, taskMap, configuredStations, data.meta.manualOEE, data.meta.useManualOEE, data.meta.useSectorOEE, data.meta.setupLossPercent, data.stationConfigs, nominalSeconds, data.sectors]);
 
-    // Chart Data
-    const saturationData = useMemo(() => stationData.map(st => {
-        const withinLimit = Math.min(st.time, st.limit);
-        const overload = Math.max(0, st.time - st.limit);
-        // Idle = remaining capacity within the station's limit.
-        // If overloaded (time > limit), there is NO idle capacity — show 0.
-        // The reference lines (OEE green, Takt red) provide visual context above the bars.
-        const idle = overload > 0 ? 0 : Math.max(0, st.limit - st.time);
+    // Per-sector Takt map for chart/tooltip consumption
+    const sectorTaktMap: Record<string, number> = useMemo(() => {
+        const map: Record<string, number> = {};
+        (data.sectors || []).forEach(s => {
+            if (s.shiftOverride && data.meta.dailyDemand > 0) {
+                const oee = data.meta.useSectorOEE
+                    ? (s.targetOee ?? data.meta.manualOEE)
+                    : data.meta.manualOEE;
+                const takt = calculateSectorTaktTime(
+                    s, data.shifts, data.meta.activeShifts,
+                    data.meta.dailyDemand, oee, data.meta.setupLossPercent || 0
+                );
+                map[s.id] = takt.nominalSeconds;
+            }
+        });
+        return map;
+    }, [data.sectors, data.shifts, data.meta.activeShifts, data.meta.dailyDemand, data.meta.manualOEE, data.meta.useSectorOEE, data.meta.setupLossPercent]);
 
-        const sector = (data.sectors || []).find(s => s.id === st.sectorId);
-        const barColor = sector ? sector.color : "#3b82f6";
+    // Chart Data — sorted by sector to group bars visually
+    const saturationData = useMemo(() => {
+        const mapped = stationData.map(st => {
+            const withinLimit = Math.min(st.time, st.limit);
+            const overload = Math.max(0, st.time - st.limit);
+            // Idle = remaining capacity within the station's limit.
+            // If overloaded (time > limit), there is NO idle capacity — show 0.
+            // The reference lines (OEE green, Takt red) provide visual context above the bars.
+            const idle = overload > 0 ? 0 : Math.max(0, st.limit - st.time);
 
-        // Phase 3: Extract curing data for injection stations
-        const tasksInStation = st.tasks.map(tid => data.tasks.find(t => t.id === tid)).filter(Boolean) as Task[];
-        const injectionTask = tasksInStation.find(t => t.executionMode === 'injection' && t.injectionParams);
+            const sector = (data.sectors || []).find(s => s.id === st.sectorId);
+            const barColor = sector ? sector.color : "#3b82f6";
 
-        let curingTime = 0;
-        let injectionTime = 0;
-        let curingOperations: { name: string; type: 'internal' | 'external'; time: number }[] = [];
+            // Phase 3: Extract curing data for injection stations
+            const tasksInStation = st.tasks.map(tid => taskMap.get(tid)).filter(Boolean) as Task[];
+            const injectionTask = tasksInStation.find(t => t.executionMode === 'injection' && t.injectionParams);
 
-        if (injectionTask?.injectionParams) {
-            curingTime = injectionTask.injectionParams.pCuringTime || 0;
-            injectionTime = injectionTask.injectionParams.pInyectionTime || 0;
-            curingOperations = (injectionTask.injectionParams.manualOperations || []).map(op => ({
-                name: op.description || 'Operación',
-                type: op.type || 'internal',
-                time: op.time || 0
-            }));
+            let curingTime = 0;
+            let injectionTime = 0;
+            let curingOperations: { name: string; type: 'internal' | 'external'; time: number }[] = [];
+
+            if (injectionTask?.injectionParams) {
+                curingTime = injectionTask.injectionParams.pCuringTime || 0;
+                injectionTime = injectionTask.injectionParams.pInyectionTime || 0;
+                curingOperations = (injectionTask.injectionParams.manualOperations || []).map(op => ({
+                    name: op.description || 'Operación',
+                    type: op.type || 'internal',
+                    time: op.time || 0
+                }));
+            }
+
+            return {
+                name: `Est. ${st.id}`,
+                stationId: st.id,
+                withinLimit,
+                overload,
+                absorbed: st.absorbedTime,
+                idle,
+                totalTime: st.time,
+                limit: st.limit,
+                nominal: nominalSeconds,
+                replicas: st.replicas,
+                rawEffective: st.rawEffectiveTime,
+                barColor,
+                sectorName: sector?.name || "General",
+                sectorId: st.sectorId || '',
+                // Phase 3: Curing visualization data
+                curingTime,
+                injectionTime,
+                curingOperations,
+                // Per-sector shift override Takt (for tooltip)
+                sectorTakt: st.sectorId && sectorTaktMap[st.sectorId] ? sectorTaktMap[st.sectorId] : undefined
+            };
+        });
+        // Group bars by sector, then by station ID within each sector
+        return mapped.sort((a, b) => {
+            if (a.sectorName !== b.sectorName) return a.sectorName.localeCompare(b.sectorName);
+            return a.stationId - b.stationId;
+        });
+    }, [stationData, data.sectors, taskMap, nominalSeconds, sectorTaktMap]);
+
+    const unassignedTasks = useMemo(() => {
+        const assignedIds = new Set(data.assignments.map(a => a.taskId));
+        return data.tasks.filter(t => !assignedIds.has(t.id));
+    }, [data.tasks, data.assignments]);
+
+    const {
+        yAxisDomainMax,
+        realCycleTime,
+        machineCycleTime,
+        totalManualWork,
+        totalHeadcount,
+        efficiencyLine,
+        saturationVsTakt,
+        efficiency,
+        totalIdleTimePerCycle,
+        dailyLostHours
+    } = useMemo(() => {
+        // Chart Scaling (guard against empty arrays producing -Infinity)
+        const timeValues = saturationData.length > 0
+            ? [...saturationData.map(d => d.totalTime + (d.absorbed / d.replicas)), ...saturationData.map(d => d.limit)]
+                .filter(Number.isFinite)
+            : [];
+        const chartMaxVal = Math.max(nominalSeconds || 0, ...timeValues, 0);
+        const _yAxisDomainMax = Math.max(10, Math.ceil(Math.max(chartMaxVal, nominalSeconds) * 1.15));
+
+        // Metrics
+        const _totalHeadcount = calculateTotalHeadcount(data);
+
+        // EXPERT FIX v2: Saturación = Trabajo MANUAL / Ciclo Real
+        const validStationTimes = stationData.map(s => s.time).filter(Number.isFinite);
+        const _realCycleTime = validStationTimes.length > 0 ? Math.max(...validStationTimes) : 0;
+
+        // Calcular Ciclo Máquina (para Doble TCR visual)
+        const _machineCycleTime = data.tasks.reduce((max, t) => {
+            if (t.executionMode === 'injection' || t.executionMode === 'machine') {
+                return Math.max(max, t.standardTime || 0);
+            }
+            return max;
+        }, 0);
+
+        // PROTECTED FORMULA: Manual Work Only
+        const _totalManualWork = calculateTotalManualWork(data.tasks);
+
+        // PROTECTED FORMULA: Saturation (Manual / HC * Cycle)
+        const _efficiencyLine = calculateLineSaturation(_totalManualWork, _totalHeadcount, _realCycleTime);
+
+        // Utilización vs Takt: Manual / (HC * Takt)
+        const _saturationVsTakt = calculateSaturationVsTakt(_totalManualWork, _totalHeadcount, nominalSeconds);
+
+        // 1. Cumplimiento de Demanda (Service Level)
+        let _efficiency: number;
+        if (_realCycleTime <= 0) {
+            _efficiency = 100;
+        } else if (_realCycleTime <= nominalSeconds) {
+            _efficiency = 100;
+        } else {
+            _efficiency = (nominalSeconds / _realCycleTime) * 100;
         }
+
+        // PROTECTED FORMULA: Available Time = Takt - Real Cycle
+        const _totalIdleTimePerCycle = calculateAvailableTimeVsTakt(nominalSeconds, _realCycleTime);
+
+        // Pérdida diaria (solo cuando hay margen positivo, no déficit)
+        const _dailyLostHours = _totalIdleTimePerCycle > 0
+            ? (_totalIdleTimePerCycle * data.meta.dailyDemand) / 3600
+            : 0;
 
         return {
-            name: `Est. ${st.id}`,
-            withinLimit,
-            overload,
-            absorbed: st.absorbedTime,
-            idle,
-            totalTime: st.time,
-            limit: st.limit,
-            nominal: nominalSeconds,
-            replicas: st.replicas,
-            rawEffective: st.rawEffectiveTime,
-            barColor,
-            sectorName: sector?.name || "General",
-            // V4.1: Twin Bars - separated operator vs machine times
-            operatorTime: (st.operatorTime || 0) / st.replicas, // Divided by replicas for multi-manning
-            machineTime: st.machineTime || 0, // Machine time is not divided (physical constraint)
-            // Phase 3: Curing visualization data
-            curingTime,
-            injectionTime,
-            curingOperations
+            yAxisDomainMax: _yAxisDomainMax,
+            realCycleTime: _realCycleTime,
+            machineCycleTime: _machineCycleTime,
+            totalManualWork: _totalManualWork,
+            totalHeadcount: _totalHeadcount,
+            efficiencyLine: _efficiencyLine,
+            saturationVsTakt: _saturationVsTakt,
+            efficiency: _efficiency,
+            totalIdleTimePerCycle: _totalIdleTimePerCycle,
+            dailyLostHours: _dailyLostHours
         };
-    }), [stationData, data.sectors, data.tasks, nominalSeconds]);
-
-    // Chart Scaling
-    const chartMaxVal = Math.max(
-        ...saturationData.map(d => d.totalTime + (d.absorbed / d.replicas)),
-        nominalSeconds || 0,
-        ...saturationData.map(d => d.limit)
-    );
-    const yAxisDomainMax = Math.ceil(Math.max(chartMaxVal, nominalSeconds) * 1.15);
-
-    const unassignedTasks = useMemo(() =>
-        data.tasks.filter(t => !data.assignments.find(a => a.taskId === t.id)),
-        [data.tasks, data.assignments]);
-
-    // Metrics
-    const totalHeadcount = calculateTotalHeadcount(data);
-    const totalWorkContent = calculateTotalEffectiveWorkContent(data);
-
-    // EXPERT FIX v2: Saturación = Trabajo MANUAL / Ciclo Real
-    // Excluir tareas con executionMode='injection'|'machine' del numerador
-    const realCycleTime = stationData.length > 0 ? Math.max(...stationData.map(s => s.time)) : 0;
-
-    // Calcular Ciclo Máquina (para Doble TCR visual)
-    const machineCycleTime = data.tasks.reduce((max, t) => {
-        if (t.executionMode === 'injection' || t.executionMode === 'machine') {
-            return Math.max(max, t.standardTime || 0);
-        }
-        return max;
-    }, 0);
-
-    // PROTECTED FORMULA: Manual Work Only
-    const totalManualWork = calculateTotalManualWork(data.tasks);
-
-    // PROTECTED FORMULA: Saturation (Manual / HC * Cycle)
-    const efficiencyLine = calculateLineSaturation(totalManualWork, totalHeadcount, realCycleTime);
-
-    // Utilización vs Takt: Manual / (HC * Takt) — métrica accionable que no tiende a 100%
-    const saturationVsTakt = calculateSaturationVsTakt(totalManualWork, totalHeadcount, nominalSeconds);
-
-    // 1. Cumplimiento de Demanda (Service Level)
-    // PHASE 25 FIX: Use TCR vs Takt for demand fulfillment
-    // If TCR <= Takt, we can fulfill demand (100%)
-    // If TCR > Takt, we show capacity deficit
-    let efficiency: number;
-    if (realCycleTime <= 0) {
-        efficiency = 100;
-    } else if (realCycleTime <= nominalSeconds) {
-        efficiency = 100; // TCR fits within Takt - can meet demand
-    } else {
-        efficiency = (nominalSeconds / realCycleTime) * 100; // % of demand we can meet
-    }
-
-    // PROTECTED FORMULA: Available Time = Takt - Real Cycle
-    // BUG FIX: Allow negative values to show deficit when cycle exceeds takt
-    const totalIdleTimePerCycle = calculateAvailableTimeVsTakt(nominalSeconds, realCycleTime);
-
-    // Pérdida diaria (solo cuando hay margen positivo, no déficit)
-    const dailyLostHours = totalIdleTimePerCycle > 0
-        ? (totalIdleTimePerCycle * data.meta.dailyDemand) / 3600
-        : 0;
+    }, [saturationData, stationData, data.tasks, data.meta, nominalSeconds]);
 
     // V4.2 RC-ALBP: Machine Resource Validation
     const machineValidation: MachineValidationResult = useMemo(() =>
@@ -391,21 +443,59 @@ export const useLineBalancing = (data: ProjectData, updateData: (data: ProjectDa
         }
     };
 
-    const setStationCount = (count: number) => {
-        if (count < maxAssigned) {
-            // Find tasks in the last station to provide helpful feedback
-            const lastStationTasks = data.assignments.filter(a => a.stationId === maxAssigned);
-            const taskCount = lastStationTasks.length;
-            const taskList = lastStationTasks.slice(0, 3).map(a => a.taskId).join(', ');
-            const andMore = taskCount > 3 ? ` y ${taskCount - 3} más` : '';
+    const addStation = useCallback(() => {
+        updateData({ ...data, meta: { ...data.meta, configuredStations: configuredStations + 1 } });
+    }, [data, updateData, configuredStations]);
 
-            toast.warning(
-                `Estación ${maxAssigned} Ocupada`,
-                `No se puede eliminar: tiene ${taskCount} tarea${taskCount !== 1 ? 's' : ''} asignada${taskCount !== 1 ? 's' : ''} (${taskList}${andMore}). Muévelas primero.`
-            );
+    // Find empty stations (highest-numbered first) for removal
+    const emptyStationIds = useMemo(() => {
+        const empty: number[] = [];
+        for (let i = configuredStations; i >= 1; i--) {
+            const hasTasks = data.assignments.some(a => a.stationId === i);
+            if (!hasTasks) empty.push(i);
+        }
+        return empty;
+    }, [configuredStations, data.assignments]);
+
+    const removeEmptyStation = useCallback(() => {
+        if (emptyStationIds.length === 0) {
+            toast.warning('Sin Estaciones Vacías', 'Todas las estaciones tienen tareas asignadas. Mové las tareas primero.');
             return;
         }
-        updateData({ ...data, meta: { ...data.meta, configuredStations: count } });
+
+        // Remove the highest-numbered empty station
+        const stationToRemove = emptyStationIds[0];
+
+        // Renumber all stations above the removed one
+        const newAssignments = data.assignments.map(a => ({
+            ...a,
+            stationId: a.stationId > stationToRemove ? a.stationId - 1 : a.stationId
+        }));
+
+        // Renumber station configs (remove the deleted one, shift higher IDs down)
+        const newConfigs = (data.stationConfigs || [])
+            .filter(c => c.id !== stationToRemove)
+            .map(c => ({
+                ...c,
+                id: c.id > stationToRemove ? c.id - 1 : c.id
+            }));
+
+        updateData({
+            ...data,
+            assignments: newAssignments,
+            stationConfigs: newConfigs,
+            meta: { ...data.meta, configuredStations: configuredStations - 1 }
+        });
+
+        toast.success('Estación Eliminada', `Estación ${stationToRemove} eliminada y renumerada.`);
+    }, [data, updateData, configuredStations, emptyStationIds]);
+
+    // Keep setStationCount for the + button on the board view
+    const setStationCount = (count: number) => {
+        if (count > configuredStations) {
+            addStation();
+        }
+        // For decrement, use removeEmptyStation() instead
     };
 
 
@@ -426,7 +516,7 @@ export const useLineBalancing = (data: ProjectData, updateData: (data: ProjectDa
     };
 
     const confirmClearBalance = () => {
-        updateData({ ...data, assignments: [], meta: { ...data.meta, configuredStations: 0 } });
+        updateData({ ...data, assignments: [], stationConfigs: [], meta: { ...data.meta, configuredStations: 0 } });
         setShowClearBalanceConfirm(false);
         toast.success('Balance Limpiado', 'Todas las tareas fueron removidas de las estaciones');
     };
@@ -482,8 +572,8 @@ export const useLineBalancing = (data: ProjectData, updateData: (data: ProjectDa
 
             if (stationMachineType && stationMachineType !== movingTask.requiredMachineId) {
                 // Machine type conflict! Show toast and reject assignment
-                const movingMachineName = movingTask.requiredMachineId;
-                const stationMachineName = stationMachineType;
+                const movingMachineName = machinesList.find(m => m.id === movingTask.requiredMachineId)?.name || movingTask.requiredMachineId;
+                const stationMachineName = machinesList.find(m => m.id === stationMachineType)?.name || stationMachineType;
 
                 toast.error(
                     'Conflicto de Máquina',
@@ -558,7 +648,7 @@ export const useLineBalancing = (data: ProjectData, updateData: (data: ProjectDa
             const machineAssignment = data.assignments.find(a => a.taskId === machineId);
             if (machineAssignment && machineAssignment.stationId !== targetStationId) {
                 const machineTask = data.tasks.find(t => t.id === machineId);
-                const penalty = movingTask.standardTime || movingTask.averageTime;
+                const penalty = movingTask.standardTime || movingTask.averageTime || 0;
 
                 setWarningState({
                     type: 'moving_manual',
@@ -585,7 +675,7 @@ export const useLineBalancing = (data: ProjectData, updateData: (data: ProjectDa
 
             if (childrenLeftBehind.length > 0 && oldStationId !== targetStationId) {
                 const penalty = children.filter(c => childrenLeftBehind.some(a => a.taskId === c.id))
-                    .reduce((sum, t) => sum + (t.standardTime || t.averageTime), 0);
+                    .reduce((sum, t) => sum + (t.standardTime || t.averageTime || 0), 0);
 
                 setWarningState({
                     type: 'moving_machine',
@@ -602,10 +692,39 @@ export const useLineBalancing = (data: ProjectData, updateData: (data: ProjectDa
             }
         }
 
+        // Precedence Constraint Validation (warn, don't reject — user may have reasons)
+        if (movingTask?.predecessors && movingTask.predecessors.length > 0) {
+            for (const predId of movingTask.predecessors) {
+                const predAssign = data.assignments.find(a => a.taskId === predId);
+                if (predAssign && predAssign.stationId > targetStationId) {
+                    toast.warning(
+                        'Precedencia Invertida',
+                        `"${taskId}" tiene predecesora "${predId}" en Est. ${predAssign.stationId} (posterior). Esto puede violar restricciones de precedencia.`
+                    );
+                    break;
+                }
+            }
+        }
+        if (movingTask?.successors && movingTask.successors.length > 0) {
+            for (const succId of movingTask.successors) {
+                const succAssign = data.assignments.find(a => a.taskId === succId);
+                if (succAssign && succAssign.stationId < targetStationId) {
+                    toast.warning(
+                        'Precedencia Invertida',
+                        `"${taskId}" tiene sucesora "${succId}" en Est. ${succAssign.stationId} (anterior). Esto puede violar restricciones de precedencia.`
+                    );
+                    break;
+                }
+            }
+        }
+
         // RC1 FIX: Also add time overflow warning toast (optional)
-        const currentStationTime = stationData.find(s => s.id === targetStationId)?.time || 0;
+        // FIX: Use same logic as dragPreview — account for replicas and machine-internal tasks
+        const targetStation = stationData.find(s => s.id === targetStationId);
+        const currentStationTime = targetStation?.time || 0;
         const taskTime = movingTask?.standardTime || movingTask?.averageTime || 0;
-        const newStationTime = currentStationTime + taskTime;
+        const addedTime = movingTask?.isMachineInternal ? 0 : taskTime / (targetStation?.replicas || 1);
+        const newStationTime = currentStationTime + addedTime;
 
         if (newStationTime > nominalSeconds * 1.1) {
             // More than 10% over Takt - show warning but allow
@@ -649,14 +768,18 @@ export const useLineBalancing = (data: ProjectData, updateData: (data: ProjectDa
             return;
         }
 
+        // Safety: Recalculate task weights to ensure standardTime is properly normalized
+        // (prevents stale values from causing all-zero optimization when cycleQuantity > 1)
+        const freshTasks = calculateTaskWeights(data.tasks, data.meta.activeModels || [], data.meta.fatigueCompensation);
+
         // Validación 3: Tiempos Válidos (FIXED: Filter instead of Block)
         // Permite tareas con averageTime si falta standardTime. Ignora tareas con tiempo <= 0.
-        const validTasks = data.tasks.filter(t => {
+        const validTasks = freshTasks.filter(t => {
             const time = t.standardTime || t.averageTime || 0;
             return time > 0;
         });
 
-        const invalidCount = data.tasks.length - validTasks.length;
+        const invalidCount = freshTasks.length - validTasks.length;
         if (invalidCount > 0) {
             const msg = `Se ignoraron ${invalidCount} tareas con tiempo 0 durante la optimización.`;
             logger.warn('useLineBalancing', msg);
@@ -705,7 +828,7 @@ export const useLineBalancing = (data: ProjectData, updateData: (data: ProjectDa
             };
 
             // Show GA start toast
-            toast.info('🧬 Optimización Avanzada', `Ejecutando algoritmo genético: ${gaConfig.populationSize} soluciones × ${gaConfig.generations} generaciones...`);
+            toast.info('Optimización Avanzada', `Ejecutando algoritmo genético: ${gaConfig.populationSize} soluciones × ${gaConfig.generations} generaciones...`);
 
             // Set initial GA progress
             setGAProgress({
@@ -756,25 +879,25 @@ export const useLineBalancing = (data: ProjectData, updateData: (data: ProjectDa
             if (gaResult.improvementVsGreedy) {
                 const { stationsSaved, headcountSaved } = gaResult.improvementVsGreedy;
                 if (stationsSaved > 0 || headcountSaved > 0) {
-                    toast.success('🎉 Optimización Exitosa',
+                    toast.success('Optimización Exitosa',
                         `${stationsSaved > 0 ? `Ahorró ${stationsSaved} estación(es)` : ''}${stationsSaved > 0 && headcountSaved > 0 ? ' y ' : ''}${headcountSaved > 0 ? `${headcountSaved} operario(s)` : ''} vs método secuencial.`
                     );
                 }
             } else {
                 toast.info('Optimización Completa', 'El algoritmo genético confirmó la solución óptima.');
             }
-        } catch (e: any) {
+        } catch (e: unknown) {
             setGAProgress(null);
             setOptimizationProgress(null);
             logger.error('useLineBalancing', 'Critical optimization error', { error: String(e) });
-            toast.error('Error del Optimizador', `Fallo interno: ${e.message}`);
+            toast.error('Error del Optimizador', `Fallo interno: ${e instanceof Error ? e.message : String(e)}`);
         }
     };
 
     const applySimulation = (res: SimulationResult) => {
         try {
             // FIX: Normalize IDs to ensure contiguous stations (1..N).
-            const usedIds = Array.from(new Set(res.assignments.map(a => a.stationId))).sort((a, b) => a - b);
+            const usedIds = Array.from(new Set(res.assignments.map(a => a.stationId))).filter(Number.isFinite).sort((a, b) => a - b);
             const idMap = new Map<number, number>();
             usedIds.forEach((oldId, index) => idMap.set(oldId, index + 1));
 
@@ -840,6 +963,7 @@ export const useLineBalancing = (data: ProjectData, updateData: (data: ProjectDa
     return {
         // State
         draggedTask,
+        gaProgress,
         configStationId,
         stationOeeInput,
         optimizationResults,
@@ -867,6 +991,7 @@ export const useLineBalancing = (data: ProjectData, updateData: (data: ProjectDa
         dailyLostHours,
         sectorsList,
         machinesList,
+        sectorTaktMap,
         // V4.2 RC-ALBP: Machine Validation
         machineValidation,
 
@@ -884,6 +1009,9 @@ export const useLineBalancing = (data: ProjectData, updateData: (data: ProjectDa
         saveStationConfig,
         updateStationReplicas,
         setStationCount,
+        addStation,
+        removeEmptyStation,
+        emptyStationIds,
         unassignTask,
         clearBalance,
         confirmClearBalance,   // BUG-01 FIX: For ConfirmModal onConfirm

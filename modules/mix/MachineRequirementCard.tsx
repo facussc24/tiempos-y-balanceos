@@ -83,7 +83,7 @@ export const MachineRequirementCard: React.FC<MachineRequirementCardProps> = ({
                         <div className="bg-slate-50 rounded p-2 text-center">
                             <div className="text-slate-500">Por Unidad</div>
                             <div className="font-mono font-bold text-slate-700">
-                                {(machine.totalWeightedTime / machine.unitsRequired).toFixed(1)}s
+                                {(machine.unitsRequired > 0 ? machine.totalWeightedTime / machine.unitsRequired : 0).toFixed(1)}s
                             </div>
                         </div>
                         <div className="bg-slate-50 rounded p-2 text-center">

@@ -1,7 +1,8 @@
 import React from 'react';
-import { Layers, Plus, AlertTriangle, ClipboardPaste, ListTodo, Link2 } from 'lucide-react';
+import { Layers, Plus, AlertTriangle, ClipboardPaste, ListTodo, Link2, ChevronDown, GitBranch } from 'lucide-react';
 import { ProjectData } from '../types';
 import { Card } from '../components/ui/Card';
+import { Button } from '../components/ui/Button';
 import { EmptyState, EMPTY_STATE_PRESETS } from '../components/ui/EmptyState';
 import { ConfirmModal } from '../components/modals/ConfirmModal';
 import { CavityCalculator } from './CavityCalculator';
@@ -60,12 +61,30 @@ export const TaskManager: React.FC<Props> = ({ data, updateData, rootHandle }) =
     // FIX 3: Zoning Constraints Modal state
     const [isZoningModalOpen, setIsZoningModalOpen] = React.useState(false);
 
+    // Actions dropdown state
+    const [showActionsMenu, setShowActionsMenu] = React.useState(false);
+    const actionsMenuRef = React.useRef<HTMLDivElement>(null);
+
+    // Close actions menu on click outside
+    React.useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (actionsMenuRef.current && !actionsMenuRef.current.contains(event.target as Node)) {
+                setShowActionsMenu(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
     // Task deletion confirmation
     const [pendingDeleteTaskId, setPendingDeleteTaskId] = React.useState<string | null>(null);
     const pendingDeleteTask = pendingDeleteTaskId ? data.tasks.find(t => t.id === pendingDeleteTaskId) : null;
 
     // Mejora 2: Ref para focus en input ID
     const newTaskIdRef = React.useRef<HTMLInputElement>(null);
+
+    // Visual validation: detect duplicate task ID
+    const isDuplicateTaskId = newTaskID.trim() !== '' && data.tasks.some(t => t.id === newTaskID);
 
 
 
@@ -133,18 +152,17 @@ export const TaskManager: React.FC<Props> = ({ data, updateData, rootHandle }) =
 
                 {/* CAVITY / INJECTION CALCULATOR MODAL */}
                 {calcTask && calcTask.executionMode === 'injection' && (
-                    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-                        <CavityCalculator
-                            task={calcTask}
-                            projectTasks={data.tasks}
-                            shifts={data.shifts}
-                            dailyDemand={data.meta.dailyDemand}
-                            activeShifts={data.meta.activeShifts}
-                            oee={data.meta.manualOEE}
-                            onClose={() => setCalcTask(null)}
-                            onApply={applyInjectionParams}
-                        />
-                    </div>
+                    <CavityCalculator
+                        task={calcTask}
+                        projectTasks={data.tasks}
+                        shifts={data.shifts}
+                        dailyDemand={data.meta.dailyDemand}
+                        activeShifts={data.meta.activeShifts}
+                        oee={data.meta.manualOEE}
+                        setupLossPercent={data.meta.setupLossPercent || 0}
+                        onClose={() => setCalcTask(null)}
+                        onApply={applyInjectionParams}
+                    />
                 )}
 
                 {calcTask && calcTask.executionMode !== 'injection' && (
@@ -154,6 +172,7 @@ export const TaskManager: React.FC<Props> = ({ data, updateData, rootHandle }) =
                         dailyDemand={data.meta.dailyDemand}
                         activeShifts={data.meta.activeShifts}
                         oee={data.meta.manualOEE}
+                        setupLossPercent={data.meta.setupLossPercent || 0}
                         onClose={() => setCalcTask(null)}
                         onApply={applyManualParams}
                     />
@@ -211,40 +230,51 @@ export const TaskManager: React.FC<Props> = ({ data, updateData, rootHandle }) =
 
                 {/* Task List Table Component */}
                 <Card title="Gestión de Tareas y Tiempos" actions={
-                    <div className="flex gap-2">
-                        <button onClick={() => setIsSectorModalOpen(true)} className="text-sm text-slate-600 hover:text-blue-600 border border-slate-300 px-3 py-1.5 rounded-lg bg-white flex items-center gap-2 shadow-sm transition-colors">
-                            <Layers size={14} /> Gestionar Sectores
-                        </button>
-                        <button onClick={sortByWeight} className="text-sm text-blue-600 hover:text-blue-800 font-medium bg-blue-50 hover:bg-blue-100 border border-blue-100 px-3 py-1.5 rounded-lg shadow-sm transition-colors">
+                    <div className="flex gap-2 items-center">
+                        <Button variant="secondary" size="sm" onClick={sortByWeight}>
                             Ordenar por Prioridad
-                        </button>
-                        {/* FIX 3: Zoning Constraints Button */}
-                        <button
-                            onClick={() => setIsZoningModalOpen(true)}
-                            className="text-sm text-amber-600 hover:text-amber-800 font-medium bg-amber-50 hover:bg-amber-100 border border-amber-100 px-3 py-1.5 rounded-lg shadow-sm transition-colors flex items-center gap-1"
-                            title="Gestionar Restricciones de Zonificación"
-                        >
-                            <Link2 size={14} />
-                            Restricciones
-                            {(data.zoningConstraints?.length || 0) > 0 && (
-                                <span className="bg-amber-600 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold">
-                                    {data.zoningConstraints?.length}
-                                </span>
-                            )}
-                        </button>
-                        {/* V9.0: Create Variant Button */}
-                        {data.tasks.length > 0 && (
-                            <button
-                                onClick={() => setIsVariantModalOpen(true)}
-                                className="text-sm text-purple-600 hover:text-purple-800 font-medium bg-purple-50 hover:bg-purple-100 border border-purple-100 px-3 py-1.5 rounded-lg shadow-sm transition-colors flex items-center gap-1"
-                                title="Crear variante heredando tareas de este producto"
+                        </Button>
+                        <div ref={actionsMenuRef} className="relative">
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                icon={<ChevronDown size={14} />}
+                                iconPosition="right"
+                                onClick={() => setShowActionsMenu(!showActionsMenu)}
                             >
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                    <path d="M6 3v12M18 9a3 3 0 100 6M6 15a3 3 0 100 6M18 15l-6-6M12 9L6 15" />
-                                </svg>
-                                Crear Variante
-                            </button>
-                        )}
+                                Más acciones
+                            </Button>
+                            {showActionsMenu && (
+                                <div className="absolute right-0 top-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg py-1 min-w-[220px] z-50">
+                                    <button
+                                        onClick={() => { setIsSectorModalOpen(true); setShowActionsMenu(false); }}
+                                        className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-50 text-left transition-colors"
+                                    >
+                                        <Layers size={14} /> Gestionar Sectores
+                                    </button>
+                                    <button
+                                        onClick={() => { setIsZoningModalOpen(true); setShowActionsMenu(false); }}
+                                        className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-50 text-left transition-colors"
+                                    >
+                                        <Link2 size={14} />
+                                        Restricciones
+                                        {(data.zoningConstraints?.length || 0) > 0 && (
+                                            <span className="bg-amber-600 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold ml-auto">
+                                                {data.zoningConstraints?.length}
+                                            </span>
+                                        )}
+                                    </button>
+                                    {data.tasks.length > 0 && (
+                                        <button
+                                            onClick={() => { setIsVariantModalOpen(true); setShowActionsMenu(false); }}
+                                            className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-50 text-left transition-colors"
+                                        >
+                                            <GitBranch size={14} /> Crear Variante
+                                        </button>
+                                    )}
+                                </div>
+                            )}
+                        </div>
                     </div>
                 }>
                     {cycleError && (
@@ -271,7 +301,7 @@ export const TaskManager: React.FC<Props> = ({ data, updateData, rootHandle }) =
                                 size="compact"
                                 actions={[
                                     {
-                                        label: 'Crear Primera Tarea',
+                                        label: 'Ingresar Primera Tarea',
                                         onClick: () => newTaskIdRef.current?.focus(),
                                         icon: Plus,
                                         variant: 'primary'
@@ -294,9 +324,17 @@ export const TaskManager: React.FC<Props> = ({ data, updateData, rootHandle }) =
                                 ref={newTaskIdRef}
                                 value={newTaskID}
                                 onChange={e => setNewTaskID(e.target.value.toUpperCase())}
-                                className="border border-slate-300 p-2.5 w-32 bg-white text-slate-900 font-mono font-bold rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all placeholder:text-slate-400"
+                                aria-invalid={isDuplicateTaskId}
+                                className={`border p-2.5 w-32 bg-white font-mono font-bold rounded-lg focus:ring-2 transition-all placeholder:text-slate-400 ${
+                                    isDuplicateTaskId
+                                        ? 'border-red-400 text-red-700 focus:ring-red-500/20 focus:border-red-500'
+                                        : 'border-slate-300 text-slate-900 focus:ring-blue-500 focus:border-blue-500'
+                                }`}
                                 placeholder="A1"
                             />
+                            {isDuplicateTaskId && (
+                                <p className="text-[10px] text-red-500 mt-1 font-medium">ID ya existe</p>
+                            )}
                         </div>
                         <div className="flex-1 w-full">
                             <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider block mb-1.5">Descripción de Operación</label>
@@ -325,14 +363,8 @@ export const TaskManager: React.FC<Props> = ({ data, updateData, rootHandle }) =
                             {newTaskSectorId && globalMachines.filter(m => m.sectorId === newTaskSectorId).length === 0 && (
                                 <div className="absolute -bottom-7 left-0 right-0 flex items-center gap-1 text-[9px] text-amber-600 whitespace-nowrap">
                                     <AlertTriangle size={10} />
-                                    <span>Sin máquinas →</span>
-                                    <a
-                                        href="#plant"
-                                        className="text-blue-600 hover:underline font-medium"
-                                        title="Ir a Configuración de Planta"
-                                    >
-                                        Configurar
-                                    </a>
+                                    <span>Sin máquinas configuradas.</span>
+                                    <span className="text-slate-500">Agregalas en Panel de Control → Planta</span>
                                 </div>
                             )}
                         </div>
@@ -376,10 +408,10 @@ export const TaskManager: React.FC<Props> = ({ data, updateData, rootHandle }) =
                 </Card>
             </div>
         );
-    } catch (e: any) {
+    } catch (e: unknown) {
         return <div className="p-4 bg-red-100 text-red-800 border border-red-300 rounded">
-            <strong>CRITICAL ERROR in TaskManager:</strong> {e.message}
-            <pre className="text-xs mt-2">{e.stack}</pre>
+            <strong>CRITICAL ERROR in TaskManager:</strong> {e instanceof Error ? e.message : String(e)}
+            <pre className="text-xs mt-2">{e instanceof Error ? e.stack : undefined}</pre>
         </div>;
     }
 };

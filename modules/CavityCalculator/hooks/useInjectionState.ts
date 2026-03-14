@@ -18,7 +18,7 @@ export const useInjectionState = (task: Task, projectTasks: Task[] = []) => {
         .map(t => ({
             id: t.id,
             description: t.description,
-            time: t.standardTime || t.averageTime, // Use calculated standard time or avg
+            time: t.standardTime || t.averageTime || 0, // Use calculated standard time or avg
             type: t.isMachineInternal ? 'internal' : 'external' // Map the flag
         }));
 
@@ -62,7 +62,7 @@ export const useInjectionState = (task: Task, projectTasks: Task[] = []) => {
     const updateCavities = (delta: number) => {
         if (cavityMode === 'auto') return;
         const current = userSelectedN;
-        const next = Math.max(1, Math.min(64, current + delta));
+        const next = Math.max(1, Math.min(28, current + delta));
         setUserSelectedN(next);
     };
 
@@ -87,7 +87,7 @@ export const useInjectionState = (task: Task, projectTasks: Task[] = []) => {
                 .map(t => ({
                     id: t.id,
                     description: t.description,
-                    time: t.standardTime || t.averageTime,
+                    time: t.standardTime || t.averageTime || 0,
                     type: t.isMachineInternal ? 'internal' : 'external'
                 } as ManualOperation));
 

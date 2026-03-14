@@ -5,7 +5,9 @@
  * Extracted from App.tsx for consistency with other modals.
  */
 
+import { useEffect } from 'react';
 import { AlertTriangle } from 'lucide-react';
+import { useFocusTrap } from '../../hooks/useFocusTrap';
 
 interface LockConflictModalProps {
     onCancel: () => void;
@@ -13,15 +15,34 @@ interface LockConflictModalProps {
 }
 
 export function LockConflictModal({ onCancel, onForceLock }: LockConflictModalProps) {
+    const modalRef = useFocusTrap(true);
+
+    useEffect(() => {
+        const handleEscape = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                onCancel();
+            }
+        };
+        document.addEventListener('keydown', handleEscape);
+        return () => document.removeEventListener('keydown', handleEscape);
+    }, [onCancel]);
+
     return (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 animate-in fade-in zoom-in duration-200">
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" role="presentation" onClick={onCancel}>
+            <div
+                ref={modalRef}
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="lock-conflict-modal-title"
+                className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 animate-in fade-in zoom-in duration-200"
+                onClick={e => e.stopPropagation()}
+            >
                 {/* Header */}
                 <div className="flex items-center gap-3 mb-4">
                     <div className="bg-amber-100 text-amber-600 p-2 rounded-lg">
                         <AlertTriangle size={24} />
                     </div>
-                    <h3 className="text-lg font-bold text-slate-800">Proyecto en Uso</h3>
+                    <h3 id="lock-conflict-modal-title" className="text-lg font-bold text-slate-800">Proyecto en Uso</h3>
                 </div>
 
                 {/* Message */}

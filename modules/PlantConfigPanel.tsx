@@ -187,7 +187,7 @@ export const PlantConfigPanel: React.FC = () => {
                             {editingId ? <Edit2 size={18} className="text-blue-500" /> : <Plus size={18} className="text-green-500" />}
                             {editingId ? 'Editar Máquina' : 'Nueva Máquina'}
                         </h3>
-                        <button onClick={() => { setShowAddForm(false); setEditingId(null); setForm(INITIAL_FORM); }} className="text-slate-400 hover:text-slate-600">
+                        <button onClick={() => { setShowAddForm(false); setEditingId(null); setForm(INITIAL_FORM); }} className="text-slate-400 hover:text-slate-600" title="Cerrar formulario" aria-label="Cerrar formulario">
                             <X size={20} />
                         </button>
                     </div>
@@ -244,7 +244,7 @@ export const PlantConfigPanel: React.FC = () => {
                                 min={1}
                                 max={50} // Increased limit based on user feedback (Costura sometimes has lots)
                                 value={form.availableUnits}
-                                onChange={e => setForm({ ...form, availableUnits: parseInt(e.target.value) || 1 })}
+                                onChange={e => { const v = parseInt(e.target.value, 10); setForm({ ...form, availableUnits: Math.max(1, Math.min(50, isNaN(v) ? 1 : v)) }); }}
                                 className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-bold text-center"
                             />
                         </div>

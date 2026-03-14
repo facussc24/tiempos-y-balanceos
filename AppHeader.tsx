@@ -4,13 +4,13 @@
  */
 import React from 'react';
 import barackLogo from './src/assets/barack_logo.png';
-import { Save, LayoutDashboard, ListTodo, BarChart2, FileText, Network, HardDrive, CircleHelp, Gauge, GitBranch, AlertTriangle, History, Settings, RefreshCw, ArrowLeft } from 'lucide-react';
+import { Save, LayoutDashboard, ListTodo, BarChart2, FileText, Network, HardDrive, CircleHelp, Gauge, GitBranch, AlertTriangle, History, Settings, RefreshCw, ArrowLeft, Film, Factory, Layers, FolderOutput } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { isTauri } from './utils/unified_fs';
 import { buildMasterJsonPath, buildPath } from './utils/pathManager';
 import { DropdownNav } from './components/navigation/DropdownNav';
 import { UndoRedoControls } from './components/ui/UndoRedoControls';
-import { ProjectSwitcher } from './components/ProjectSwitcher';
+import { ProjectSwitcher } from './components/navigation/ProjectSwitcher';
 import { logger } from './utils/logger';
 import { toast } from './components/ui/Toast';
 import type { Tab } from './hooks/useAppNavigation';
@@ -19,10 +19,13 @@ import type { useSessionLock } from './hooks/useSessionLock';
 import type { useUndoRedo } from './hooks/useUndoRedo';
 import type { useShortcutHints } from './hooks/useShortcutHints';
 import type { useAppModals } from './hooks/useAppModals';
+import type { NetworkHealth } from './hooks/useNetworkHealth';
 import type { ProjectData } from './types';
 
 interface AppHeaderProps {
     onBackToLanding?: () => void;
+    localMediaCount?: number;
+    onMediaMigrationClick?: () => void;
     navigation: {
         activeTab: Tab;
         setActiveTab: (tab: Tab) => void;
@@ -33,6 +36,8 @@ interface AppHeaderProps {
     isUndoingRef: React.MutableRefObject<boolean>;
     shortcutHints: ReturnType<typeof useShortcutHints>;
     modals: ReturnType<typeof useAppModals>;
+    networkHealth?: NetworkHealth;
+    exportFolder?: { openFolder: () => Promise<void>; isOpening: boolean; canOpen: boolean };
 }
 
 const NavItem = ({ id, icon: Icon, label, disabled = false, shortcut, activeTab, onNavigate }: {
@@ -60,12 +65,16 @@ const NavItem = ({ id, icon: Icon, label, disabled = false, shortcut, activeTab,
 
 export const AppHeader: React.FC<AppHeaderProps> = ({
     onBackToLanding,
+    localMediaCount,
+    onMediaMigrationClick,
     navigation,
     persistence,
     sessionLock,
     undoRedo,
     isUndoingRef,
     modals,
+    networkHealth,
+    exportFolder,
 }) => {
     const handleCloseProject = modals.handleCloseProject;
 
@@ -94,11 +103,32 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
                             <span className="font-medium text-slate-600 text-sm hidden sm:inline">Tiempos y Balanceos</span>
                         </button>
 
-                        {persistence.data.fileHandle && (
-                            <span className="ml-2 sm:ml-4 text-[10px] font-bold bg-emerald-100 text-emerald-700 px-1.5 sm:px-2 py-1 rounded-full border border-emerald-200 flex items-center gap-1 shadow-sm">
-                                <HardDrive size={10} /><span className="hidden sm:inline">CONECTADO</span>
-                            </span>
-                        )}
+                        {persistence.data.fileHandle && (() => {
+                            const online = networkHealth?.isOnline ?? true;
+                            const checking = networkHealth?.isChecking ?? false;
+                            if (!online) {
+                                return (
+                                    <span className="ml-2 sm:ml-4 text-[10px] font-bold bg-red-100 text-red-700 px-1.5 sm:px-2 py-1 rounded-full border border-red-200 flex items-center gap-1 shadow-sm animate-pulse"
+                                        title="Sin conexión al servidor. Los cambios se guardan localmente.">
+                                        <Network size={10} /><span className="hidden sm:inline">SIN CONEXIÓN</span>
+                                    </span>
+                                );
+                            }
+                            if (checking) {
+                                return (
+                                    <span className="ml-2 sm:ml-4 text-[10px] font-bold bg-amber-100 text-amber-700 px-1.5 sm:px-2 py-1 rounded-full border border-amber-200 flex items-center gap-1 shadow-sm"
+                                        title="Verificando conexión al servidor...">
+                                        <RefreshCw size={10} className="animate-spin" /><span className="hidden sm:inline">VERIFICANDO...</span>
+                                    </span>
+                                );
+                            }
+                            return (
+                                <span className="ml-2 sm:ml-4 text-[10px] font-bold bg-emerald-100 text-emerald-700 px-1.5 sm:px-2 py-1 rounded-full border border-emerald-200 flex items-center gap-1 shadow-sm"
+                                    title="Conectado al servidor">
+                                    <HardDrive size={10} /><span className="hidden sm:inline">CONECTADO</span>
+                                </span>
+                            );
+                        })()}
 
 
                         {/* H-02 Fix: READ-ONLY Mode Banner */}
@@ -107,11 +137,23 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
                                 <AlertTriangle size={10} /><span className="hidden sm:inline">SOLO LECTURA ({sessionLock.lockOwner})</span>
                             </span>
                         )}
+
+                        {localMediaCount != null && localMediaCount > 0 && (
+                            <button
+                                onClick={onMediaMigrationClick}
+                                className="ml-2 text-[10px] font-bold bg-orange-100 text-orange-700 px-1.5 sm:px-2 py-1 rounded-full border border-orange-200 flex items-center gap-1 shadow-sm hover:bg-orange-200 transition-colors cursor-pointer"
+                                title={`${localMediaCount} archivo(s) multimedia en almacenamiento local. Click para migrar al servidor.`}
+                            >
+                                <Film size={10} /><span className="hidden sm:inline">{localMediaCount} MEDIA LOCAL</span>
+                            </button>
+                        )}
                     </div>
                     <div className="flex items-center gap-2">
 
-                        <span className="text-[10px] text-slate-400 hidden lg:inline mr-2 font-mono uppercase tracking-wider">
-                            {persistence.lastSaved ? `Guardado: ${persistence.lastSaved}` : ''}
+                        <span className={`text-[10px] hidden lg:inline mr-2 font-mono uppercase tracking-wider ${persistence.isDirty ? 'text-orange-500 font-bold' : 'text-slate-400'}`}>
+                            {persistence.isDirty
+                                ? 'Cambios sin guardar'
+                                : persistence.lastSaved ? `Guardado: ${persistence.lastSaved}` : ''}
                         </span>
 
                         {/* Quick Switch Project Button - replaces old Close button */}
@@ -165,6 +207,18 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
                                 aria-label="Historial de Revisiones"
                             >
                                 <History size={18} />
+                            </button>
+                        )}
+                        {/* Export Folder Button */}
+                        {exportFolder && persistence.data.fileHandle && (
+                            <button
+                                onClick={exportFolder.openFolder}
+                                disabled={!exportFolder.canOpen || exportFolder.isOpening}
+                                className="p-2 text-slate-500 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                                title="Abrir carpeta de exportacion en Explorador"
+                                aria-label="Abrir carpeta de exportacion"
+                            >
+                                <FolderOutput size={18} />
                             </button>
                         )}
                         {persistence.data.fileHandle && (
@@ -224,19 +278,24 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
                         {persistence.data.fileHandle && (
                             <div className="flex items-center gap-1">
                                 {/* Quick Save Button - Ctrl+S */}
-                                <button
-                                    onClick={persistence.handleQuickSave}
-                                    disabled={persistence.isSaving || sessionLock.isReadOnly}
-                                    data-shortcut="Ctrl+S"
-                                    className={`p-2 rounded-lg transition-all ${sessionLock.isReadOnly
-                                        ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
-                                        : 'bg-slate-600 text-white hover:bg-slate-700 active:scale-95'
-                                        }`}
-                                    title="Guardar rápido (Ctrl+S) - sin crear revisión"
-                                    aria-label="Guardar rápido"
-                                >
-                                    <Save size={18} />
-                                </button>
+                                <div className="relative">
+                                    <button
+                                        onClick={persistence.handleQuickSave}
+                                        disabled={persistence.isSaving || sessionLock.isReadOnly}
+                                        data-shortcut="Ctrl+S"
+                                        className={`p-2 rounded-lg transition-all ${sessionLock.isReadOnly
+                                            ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                                            : 'bg-slate-600 text-white hover:bg-slate-700 active:scale-95'
+                                            }`}
+                                        title={persistence.isDirty ? "Cambios sin guardar - Guardar rápido (Ctrl+S)" : "Guardar rápido (Ctrl+S) - sin crear revisión"}
+                                        aria-label="Guardar rápido"
+                                    >
+                                        <Save size={18} />
+                                    </button>
+                                    {persistence.isDirty && !sessionLock.isReadOnly && (
+                                        <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-orange-500 rounded-full border-2 border-white shadow-sm animate-pulse" />
+                                    )}
+                                </div>
 
                                 {/* Formal Save Button - Nueva Revisión */}
                                 <button
@@ -274,6 +333,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
                                 label="Datos"
                                 icon={LayoutDashboard}
                                 items={[
+                                    { id: 'plant', label: 'Configuración Planta', icon: Factory },
                                     { id: 'panel', label: 'Panel Control', icon: LayoutDashboard },
                                     { id: 'tasks', label: 'Tareas', icon: ListTodo },
                                     { id: 'oee', label: 'Validación OEE', icon: Gauge },
@@ -288,6 +348,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
                                 icon={BarChart2}
                                 items={[
                                     { id: 'balance', label: 'Balanceo', icon: BarChart2 },
+                                    { id: 'mix', label: 'Mix Multi-Modelo', icon: Layers },
                                     { id: 'vsm', label: 'Simulador de Flujo', icon: GitBranch },
                                     { id: 'summary', label: 'Resumen Ejecutivo', icon: FileText },
                                 ]}
@@ -313,43 +374,6 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
                 </nav>
             </div>
 
-            {/* Contextual Sub-Navigation: Workflow-order direct access */}
-            {persistence.data.fileHandle && (() => {
-                const workflowTabs = [
-                    { id: 'panel' as Tab, label: 'Panel Control', icon: Settings },
-                    { id: 'tasks' as Tab, label: 'Tareas', icon: ListTodo },
-                    { id: 'balance' as Tab, label: 'Balanceo', icon: BarChart2 },
-                    { id: 'vsm' as Tab, label: 'Simulador', icon: GitBranch },
-                    { id: 'summary' as Tab, label: 'Reportes', icon: FileText },
-                ];
-
-                // Only show when on a workflow tab (not on dashboard, help, oee, graph)
-                if (!workflowTabs.some(t => t.id === navigation.activeTab)) return null;
-
-                return (
-                    <div className="bg-slate-50 border-t border-slate-100 px-4 sm:px-6 lg:px-8 print:hidden">
-                        <div className="flex items-center gap-1 -mb-px overflow-x-auto">
-                            {workflowTabs.map(tab => {
-                                const isActive = navigation.activeTab === tab.id;
-                                const TabIcon = tab.icon;
-                                return (
-                                    <button
-                                        key={tab.id}
-                                        onClick={() => navigation.setActiveTab(tab.id)}
-                                        className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium border-b-2 transition-all whitespace-nowrap ${isActive
-                                            ? 'border-blue-600 text-blue-700 bg-white'
-                                            : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-white/60'
-                                            }`}
-                                    >
-                                        <TabIcon size={14} />
-                                        {tab.label}
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    </div>
-                );
-            })()}
         </header>
     );
 };

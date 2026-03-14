@@ -275,9 +275,13 @@ export function onLockEvent(
     }
 
     const handler = (event: MessageEvent) => {
+        // FIX: Validate message and pass lockedBy for READ-ONLY banner
+        const data = event.data;
+        if (!data || typeof data !== 'object' || !data.type) return;
         callback({
-            type: event.data.type,
-            projectId: event.data.projectId
+            type: data.type,
+            projectId: data.projectId,
+            lockedBy: data.lockedBy
         });
     };
 

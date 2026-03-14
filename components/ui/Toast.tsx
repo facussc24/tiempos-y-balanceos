@@ -43,6 +43,7 @@ const MAX_TOASTS = 5;
 class ToastStore {
     private toasts: Toast[] = [];
     private listeners: Set<ToastListener> = new Set();
+    private timers = new Map<string, ReturnType<typeof setTimeout>>();
 
     subscribe(listener: ToastListener): () => void {
         this.listeners.add(listener);
@@ -61,6 +62,8 @@ class ToastStore {
 
         // H-05 Fix: Limit to MAX_TOASTS, removing oldest first
         if (this.toasts.length > MAX_TOASTS) {
+            const evicted = this.toasts.slice(0, -MAX_TOASTS);
+            evicted.forEach(t => { const tm = this.timers.get(t.id); if (tm != null) { clearTimeout(tm); this.timers.delete(t.id); } });
             this.toasts = this.toasts.slice(-MAX_TOASTS);
         }
 
@@ -69,18 +72,22 @@ class ToastStore {
         // Auto-dismiss after duration (default 5s for non-errors)
         const duration = toast.duration ?? (toast.type === 'error' ? 0 : 5000);
         if (duration > 0) {
-            setTimeout(() => this.remove(id), duration);
+            this.timers.set(id, setTimeout(() => this.remove(id), duration));
         }
 
         return id;
     }
 
     remove(id: string): void {
+        const timer = this.timers.get(id);
+        if (timer != null) { clearTimeout(timer); this.timers.delete(id); }
         this.toasts = this.toasts.filter(t => t.id !== id);
         this.notify();
     }
 
     clear(): void {
+        this.timers.forEach(t => clearTimeout(t));
+        this.timers.clear();
         this.toasts = [];
         this.notify();
     }
@@ -208,6 +215,7 @@ function ToastItem({ toast: t, onDismiss }: ToastItemProps) {
             </div>
             <button
                 onClick={onDismiss}
+                aria-label="Cerrar notificación"
                 className={`${color.text} opacity-50 hover:opacity-100 transition-opacity`}
             >
                 <X size={16} />

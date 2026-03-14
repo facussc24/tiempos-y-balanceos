@@ -49,7 +49,7 @@ export const useAmfe = () => {
     }, []);
 
     /** Update a field on an operation by ID. */
-    const updateOp = useCallback((id: string, field: keyof AmfeOperation, value: any) => {
+    const updateOp = useCallback((id: string, field: keyof AmfeOperation, value: AmfeOperation[keyof AmfeOperation]) => {
         setData(prev => ({
             ...prev,
             operations: prev.operations.map(op => op.id === id ? { ...op, [field]: value } : op)
@@ -79,7 +79,7 @@ export const useAmfe = () => {
     }, []);
 
     /** Update a field on a work element by ID. */
-    const updateWorkElement = useCallback((opId: string, weId: string, field: keyof AmfeWorkElement, value: any) => {
+    const updateWorkElement = useCallback((opId: string, weId: string, field: keyof AmfeWorkElement, value: AmfeWorkElement[keyof AmfeWorkElement]) => {
         setData(prev => ({
             ...prev,
             operations: prev.operations.map(op => {
@@ -127,7 +127,7 @@ export const useAmfe = () => {
     }, []);
 
     /** Update a field on a function by ID. */
-    const updateFunction = useCallback((opId: string, weId: string, funcId: string, field: keyof AmfeFunction, value: any) => {
+    const updateFunction = useCallback((opId: string, weId: string, funcId: string, field: keyof AmfeFunction, value: AmfeFunction[keyof AmfeFunction]) => {
         setData(prev => ({
             ...prev,
             operations: prev.operations.map(op => {
@@ -197,7 +197,7 @@ export const useAmfe = () => {
      * Update a field on a failure (mode-level: description, effects, severity).
      * When severity changes, cascade AP recalculation to ALL child causes.
      */
-    const updateFailure = useCallback((opId: string, weId: string, funcId: string, failId: string, field: keyof AmfeFailure, value: any) => {
+    const updateFailure = useCallback((opId: string, weId: string, funcId: string, failId: string, field: keyof AmfeFailure, value: AmfeFailure[keyof AmfeFailure]) => {
         setData(prev => ({
             ...prev,
             operations: prev.operations.map(op => {
@@ -308,7 +308,7 @@ export const useAmfe = () => {
      * Update a field on a cause. Auto-recalculates AP when O or D change,
      * using the parent failure's severity.
      */
-    const updateCause = useCallback((opId: string, weId: string, funcId: string, failId: string, causeId: string, field: keyof AmfeCause, value: any) => {
+    const updateCause = useCallback((opId: string, weId: string, funcId: string, failId: string, causeId: string, field: keyof AmfeCause, value: AmfeCause[keyof AmfeCause]) => {
         setData(prev => ({
             ...prev,
             operations: prev.operations.map(op => {

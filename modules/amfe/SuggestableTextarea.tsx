@@ -10,7 +10,7 @@
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import AutoResizeTextarea from './AutoResizeTextarea';
-import SuggestionPopover from '../../components/SuggestionPopover';
+import SuggestionPopover from '../../components/ui/SuggestionPopover';
 import {
     queryAllSuggestions,
     AllSuggestionsResult,
@@ -66,6 +66,7 @@ const SuggestableTextarea: React.FC<Props> = ({
     const localDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const aiDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const aiAbortRef = useRef<AbortController | null>(null);
+    const blurTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const lastLocalRef = useRef<Suggestion[]>([]);
 
     // Cleanup on unmount
@@ -73,6 +74,7 @@ const SuggestableTextarea: React.FC<Props> = ({
         return () => {
             if (localDebounceRef.current) clearTimeout(localDebounceRef.current);
             if (aiDebounceRef.current) clearTimeout(aiDebounceRef.current);
+            if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
             if (aiAbortRef.current) aiAbortRef.current.abort();
         };
     }, []);
@@ -179,8 +181,9 @@ const SuggestableTextarea: React.FC<Props> = ({
 
     const handleBlur = useCallback((e: React.FocusEvent<HTMLTextAreaElement>) => {
         setIsFocused(false);
-        // Delay to allow click on suggestion
-        setTimeout(() => setShowSuggestions(false), 200);
+        // Delay to allow click on suggestion — tracked for cleanup
+        if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
+        blurTimeoutRef.current = setTimeout(() => setShowSuggestions(false), 200);
         if (onBlur) onBlur(e);
     }, [onBlur]);
 
@@ -204,7 +207,7 @@ const SuggestableTextarea: React.FC<Props> = ({
     const hasAnySuggestion = localSuggestions.length > 0 || (aiSuggestions && aiSuggestions.length > 0) || aiLoading;
 
     return (
-        <div className="relative">
+        <div className="relative w-full">
             <AutoResizeTextarea
                 value={value}
                 onChange={handleChange}
@@ -224,4 +227,4 @@ const SuggestableTextarea: React.FC<Props> = ({
     );
 };
 
-export default SuggestableTextarea;
+export default React.memo(SuggestableTextarea);

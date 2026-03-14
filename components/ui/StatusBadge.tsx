@@ -129,6 +129,16 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({
 /**
  * Quick status indicator (dot only)
  */
+const STATUS_LABELS: Record<BadgeStatus, string> = {
+    success: 'Exitoso',
+    error: 'Error',
+    warning: 'Advertencia',
+    info: 'Información',
+    pending: 'Pendiente',
+    loading: 'Cargando',
+    neutral: 'Neutro'
+};
+
 export const StatusDot: React.FC<{
     status: BadgeStatus;
     size?: 'sm' | 'md' | 'lg';
@@ -153,6 +163,8 @@ export const StatusDot: React.FC<{
 
     return (
         <span
+            role="status"
+            aria-label={STATUS_LABELS[status]}
             className={`
                 ${sizes[size]} rounded-full ${dotColors[status]}
                 ${pulse ? 'animate-pulse' : ''}

@@ -101,7 +101,7 @@ REGLAS SEVERIDAD para reactionPlan:
 - S<4 (Bajo): "Registrar y monitorear."
 
 REGLAS CP 2024:
-1. reactionPlanOwner es OBLIGATORIO. Si no se proporciona, sugerir un rol como "Operador" o "Supervisor".
+1. reactionPlanOwner es OBLIGATORIO segun CP 2024. Si el usuario no lo especifica, dejar el campo VACIO y advertir que debe completarse manualmente.
 2. Si controlMethod contiene "Poka-Yoke", sampleFrequency debe incluir verificacion del dispositivo (ej: "Verificar pieza patron al inicio de turno").
 3. specialCharClass CC o SC NUNCA debe eliminarse sin justificacion.
 
@@ -158,13 +158,15 @@ export function serializeCpCompact(doc: ControlPlanDocument): string {
     }
 
     lines.push('');
-    lines.push('Idx | Proceso | Maquina | Caract.Prod | MetodoControl | TamMuestra | Frecuencia | PlanReaccion | Responsable | CC/SC | AP');
-    lines.push('--- | ------- | ------- | ----------- | ------------- | ---------- | ---------- | ------------ | ----------- | ----- | --');
+    lines.push('Idx | Proceso | Maquina | Caract.Prod | Caract.Proc | Especificacion | TecnicaEval | MetodoControl | TamMuestra | Frecuencia | PlanReaccion | Responsable | CC/SC | AP');
+    lines.push('--- | ------- | ------- | ----------- | ----------- | -------------- | ----------- | ------------- | ---------- | ---------- | ------------ | ----------- | ----- | --');
 
     doc.items.forEach((item, i) => {
         lines.push(
             `${i + 1} | ${item.processDescription || '-'} | ${item.machineDeviceTool || '-'} | ` +
-            `${item.productCharacteristic || '-'} | ${item.controlMethod || '-'} | ` +
+            `${item.productCharacteristic || '-'} | ${item.processCharacteristic || '-'} | ` +
+            `${item.specification || '-'} | ${item.evaluationTechnique || '-'} | ` +
+            `${item.controlMethod || '-'} | ` +
             `${item.sampleSize || '-'} | ${item.sampleFrequency || '-'} | ` +
             `${item.reactionPlan || '-'} | ${item.reactionPlanOwner || '(vacio)'} | ` +
             `${item.specialCharClass || '-'} | ${item.amfeAp || '-'}`
@@ -180,11 +182,11 @@ export function serializeCpCompact(doc: ControlPlanDocument): string {
 export function serializeAmfeContext(amfeDoc: AmfeDocument): string {
     const causes: string[] = [];
 
-    for (const op of amfeDoc.operations) {
-        for (const we of op.workElements) {
-            for (const func of we.functions) {
-                for (const fail of func.failures) {
-                    for (const cause of fail.causes) {
+    for (const op of (amfeDoc.operations ?? [])) {
+        for (const we of (op.workElements ?? [])) {
+            for (const func of (we.functions ?? [])) {
+                for (const fail of (func.failures ?? [])) {
+                    for (const cause of (fail.causes ?? [])) {
                         if (cause.ap !== 'H' && cause.ap !== 'M') continue;
                         causes.push(
                             `Op: ${op.name} | Falla: ${fail.description} | Causa: ${cause.cause} | ` +
@@ -365,8 +367,10 @@ export function resolveItemsByFilter(
     const ccMatch = /\bcc\b/.test(f);
     const scMatch = /\bsc\b/.test(f);
     if (ccMatch || scMatch) {
-        const target = ccMatch ? 'cc' : 'sc';
-        return items.filter(item => normalize(item.specialCharClass || '') === target);
+        const targets = new Set<string>();
+        if (ccMatch) targets.add('cc');
+        if (scMatch) targets.add('sc');
+        return items.filter(item => targets.has(normalize(item.specialCharClass || '')));
     }
 
     // Default: substring match on processDescription
@@ -404,11 +408,54 @@ export function executeCpChatActions(
         newDoc: doc,
     };
 
+    // Separate remove actions to process them in reverse index order
+    // (prevents index corruption when multiple items are removed)
+    const removeActions: CpChatAction[] = [];
+    const otherActions: CpChatAction[] = [];
     for (const action of actions) {
+        if (action.action === 'removeItem') {
+            removeActions.push(action);
+        } else {
+            otherActions.push(action);
+        }
+    }
+
+    // Execute non-remove actions first
+    for (const action of otherActions) {
         try {
             executeOneCpAction(action, doc, result);
-        } catch (err: any) {
-            result.errors.push(`${action.action}: ${err?.message || 'Error desconocido'}`);
+        } catch (err: unknown) {
+            result.errors.push(`${action.action}: ${err instanceof Error ? err.message : 'Error desconocido'}`);
+        }
+    }
+
+    // Resolve remove targets and sort by descending index so splices don't shift later targets
+    const resolvedRemoves = removeActions
+        .map(action => {
+            const item = resolveItem(doc.items, action.target);
+            const idx = item ? doc.items.indexOf(item) : -1;
+            return { action, idx };
+        })
+        .filter(r => r.idx >= 0)
+        .sort((a, b) => b.idx - a.idx);
+
+    for (const { action } of resolvedRemoves) {
+        try {
+            executeOneCpAction(action, doc, result);
+        } catch (err: unknown) {
+            result.errors.push(`${action.action}: ${err instanceof Error ? err.message : 'Error desconocido'}`);
+        }
+    }
+
+    // Report unresolved removes
+    const resolvedCount = resolvedRemoves.length;
+    if (resolvedCount < removeActions.length) {
+        for (const action of removeActions) {
+            const item = resolveItem(doc.items, action.target);
+            if (!item) {
+                const desc = action.target?.processDescription || '?';
+                result.errors.push(`No se encontró item para eliminar: "${desc}"`);
+            }
         }
     }
 
@@ -499,10 +546,9 @@ function executeAddItem(
         }
     }
 
-    // Auto-fill reactionPlanOwner if empty (CP 2024 mandatory field)
+    // Warn if reactionPlanOwner is empty (CP 2024 mandatory field — must be filled by user)
     if (!newItem.reactionPlanOwner.trim()) {
-        newItem.reactionPlanOwner = DEFAULT_REACTION_PLAN_OWNER;
-        result.warnings.push(`Item "${processDesc}": Responsable auto-asignado como "${DEFAULT_REACTION_PLAN_OWNER}" — verificar`);
+        result.warnings.push(`Item "${processDesc}": Falta Responsable del Plan de Reacción (campo obligatorio CP 2024). Completar manualmente.`);
     }
 
     doc.items.push(newItem);
@@ -627,6 +673,7 @@ function executeValidateCP(
     doc: ControlPlanDocument,
     result: CpChatExecutionResult,
 ): void {
+    const warningsBefore = result.warnings.length;
     // Check missing owners
     const missingOwners = doc.items.filter(item => !item.reactionPlanOwner.trim());
     if (missingOwners.length > 0) {
@@ -657,7 +704,8 @@ function executeValidateCP(
     }
 
     result.applied++;
-    result.modified.push(`Validación ejecutada: ${result.warnings.length} advertencia(s)`);
+    const newWarnings = result.warnings.length - warningsBefore;
+    result.modified.push(`Validación ejecutada: ${newWarnings} advertencia(s)`);
 }
 
 // ============================================================================

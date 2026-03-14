@@ -30,7 +30,7 @@ const emptyDoc: AmfeDocument = {
         subject: '', startDate: '', revDate: '', team: '',
         amfeNumber: '', responsible: '', confidentiality: '',
         partNumber: '', processResponsible: '', revision: '',
-        approvedBy: '', scope: '',
+        approvedBy: '', scope: '', applicableParts: '',
     },
     operations: [],
 };
@@ -312,7 +312,7 @@ describe('analyzeProcessChange', () => {
         await expect(analyzeProcessChange('', sampleDoc))
             .rejects.toThrow(GeminiError);
         await expect(analyzeProcessChange('   ', sampleDoc))
-            .rejects.toThrow('La descripcion del cambio no puede estar vacia');
+            .rejects.toThrow('La descripción del cambio no puede estar vacía');
     });
 
     it('throws on empty AMFE document (no operations)', async () => {

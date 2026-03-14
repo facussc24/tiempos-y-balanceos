@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
     FolderOpen, FilePlus, Trash2, FileJson, ChevronDown,
     AlertTriangle, X, Loader2, Search, Filter,
@@ -42,16 +42,25 @@ const AmfeSideDrawer: React.FC<AmfeSideDrawerProps> = ({ activePanel, setActiveP
     const showRegistry = activePanel === 'registry';
     const showSummary = activePanel === 'summary';
 
+    useEffect(() => {
+        if (!showProjectPanel && !showRegistry && !showSummary) return;
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') { e.preventDefault(); setActivePanel('none'); }
+        };
+        document.addEventListener('keydown', handleKeyDown);
+        return () => document.removeEventListener('keydown', handleKeyDown);
+    }, [showProjectPanel, showRegistry, showSummary, setActivePanel]);
+
     if (!showProjectPanel && !showRegistry && !showSummary) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex justify-end" onClick={() => setActivePanel('none')}>
+        <div className="fixed inset-0 z-50 flex justify-end" role="presentation" onClick={() => setActivePanel('none')}>
             {/* Backdrop */}
-            <div className="absolute inset-0 bg-black/20" />
+            <div className="absolute inset-0 bg-black/20 animate-in fade-in duration-150" />
             {/* Drawer */}
             <div className="relative w-[480px] max-w-full bg-white shadow-2xl overflow-y-auto animate-in slide-in-from-right" onClick={e => e.stopPropagation()}>
                 {/* Close button */}
-                <button onClick={() => setActivePanel('none')} className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 z-10">
+                <button onClick={() => setActivePanel('none')} className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 z-10" aria-label="Cerrar panel" title="Cerrar panel">
                     <X size={18} />
                 </button>
 
@@ -63,7 +72,7 @@ const AmfeSideDrawer: React.FC<AmfeSideDrawerProps> = ({ activePanel, setActiveP
                                 <FolderOpen size={16} className="text-blue-600" />
                                 Proyectos AMFE
                             </h2>
-                            <button onClick={projects.createNewProject}
+                            <button onClick={async () => { try { await projects.createNewProject(); setActivePanel('none'); } catch { /* FIX: Prevent unhandled rejection if createNewProject throws */ } }}
                                 className="flex items-center gap-1 text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 px-3 py-1.5 rounded transition font-medium mr-6">
                                 <FilePlus size={14} /> Nuevo
                             </button>
@@ -73,7 +82,7 @@ const AmfeSideDrawer: React.FC<AmfeSideDrawerProps> = ({ activePanel, setActiveP
                         <div className="bg-gray-50 rounded-lg border border-gray-200 p-3 mb-4">
                             <div className="flex items-center gap-2 mb-3">
                                 <Filter size={14} className="text-gray-500" />
-                                <span className="text-xs font-medium text-gray-600">Filtrar por Jerarquia</span>
+                                <span className="text-xs font-medium text-gray-600">Filtrar por Jerarquía</span>
                                 <button
                                     onClick={projects.clearFilters}
                                     disabled={!projects.selectedClient && !projects.searchQuery}
@@ -179,7 +188,7 @@ const AmfeSideDrawer: React.FC<AmfeSideDrawerProps> = ({ activePanel, setActiveP
                                                 className="group flex flex-col items-center p-3 rounded-lg border border-gray-200 hover:border-blue-300 hover:shadow-sm bg-white cursor-pointer transition hover:-translate-y-0.5"
                                             >
                                                 <FolderOpen size={20} className="text-blue-500 mb-1 group-hover:text-blue-600" />
-                                                <span className="text-xs font-medium text-gray-700 text-center truncate w-full">{proj}</span>
+                                                <span className="text-xs font-medium text-gray-700 text-center truncate w-full" title={proj}>{proj}</span>
                                                 <Trash2 size={12}
                                                     className="mt-1 text-transparent group-hover:text-gray-300 hover:!text-red-500 transition cursor-pointer"
                                                     onClick={(e) => { e.stopPropagation(); projects.deleteProjectFolder(projects.selectedClient, proj); }}
@@ -217,7 +226,7 @@ const AmfeSideDrawer: React.FC<AmfeSideDrawerProps> = ({ activePanel, setActiveP
                                                     <div className="flex-1 min-w-0">
                                                         <div className="flex items-center gap-2">
                                                             <FileJson size={14} className="text-blue-500 flex-shrink-0" />
-                                                            <span className="font-medium text-sm text-gray-800 truncate">{s.name}</span>
+                                                            <span className="font-medium text-sm text-gray-800 truncate" title={s.name}>{s.name}</span>
                                                             {isActive && <span className="text-[10px] bg-blue-500 text-white px-1.5 py-0.5 rounded-full">activo</span>}
                                                         </div>
                                                         <div className="text-[10px] text-gray-400 ml-6 mt-0.5">
@@ -255,7 +264,7 @@ const AmfeSideDrawer: React.FC<AmfeSideDrawerProps> = ({ activePanel, setActiveP
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-center gap-2">
                                                     <FileJson size={14} className="text-amber-500 flex-shrink-0" />
-                                                    <span className="font-medium text-sm text-gray-800 truncate">{p.name}</span>
+                                                    <span className="font-medium text-sm text-gray-800 truncate" title={p.name}>{p.name}</span>
                                                 </div>
                                                 <div className="text-[10px] text-gray-400 ml-6 mt-0.5">
                                                     {p.header?.subject && <span className="mr-3">{p.header.subject}</span>}

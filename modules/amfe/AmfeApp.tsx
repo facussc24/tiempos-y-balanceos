@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef, lazy, Suspense } from 'react';
 import { useAmfe } from './useAmfe';
+import { toast } from '../../components/ui/Toast';
 import { useAmfeProjects } from './useAmfeProjects';
 import { useAmfePersistence } from './useAmfePersistence';
 import { useAmfeConfirm } from './useAmfeConfirm';
@@ -16,10 +17,9 @@ import AmfeSideDrawer from './AmfeSideDrawer';
 import AmfeModals from './AmfeModals';
 import AmfeToolbar from './AmfeToolbar';
 import AmfeTemplatesModal from './AmfeTemplatesModal';
-import { ConfirmModal } from '../../components/modals/ConfirmModal';
 import { RevisionPromptModal } from '../../components/modals/RevisionPromptModal';
-import { CrossDocAlertBanner } from '../../components/CrossDocAlertBanner';
-import { RevisionHistoryPanel } from '../../components/RevisionHistoryPanel';
+import { CrossDocAlertBanner } from '../../components/ui/CrossDocAlertBanner';
+import { RevisionHistoryPanel } from '../../components/layout/RevisionHistoryPanel';
 import { useRevisionControl } from '../../hooks/useRevisionControl';
 import { useCrossDocAlerts } from '../../hooks/useCrossDocAlerts';
 import { getNextRevisionLevel } from '../../utils/revisionUtils';
@@ -28,7 +28,12 @@ import { AmfeDocument, AmfeHeaderData } from './amfeTypes';
 import { useAmfeRegistry } from './useAmfeRegistry';
 import { useAmfeColumnVisibility } from './useAmfeColumnVisibility';
 import { AmfeTemplate } from './amfeTemplates';
-import { createExampleAmfeDocument } from './amfeExampleModel';
+import { createExampleAmfeDocument, createPatagoniaAmfeDocument } from './amfeExampleModel';
+import { createPatagoniaTapizadoTemplate } from '../pfd/pfdTemplates';
+import { EMPTY_PFD_HEADER } from '../pfd/pfdTypes';
+import { generateControlPlanFromAmfe } from '../controlPlan/controlPlanGenerator';
+import { getPatagoniaManualCpItems } from '../controlPlan/controlPlanPatagoniaTemplate';
+import { createPatagoniaHoDocument } from '../hojaOperaciones/hojaOperacionesPatagoniaTemplate';
 import { ModuleErrorBoundary } from '../../components/ui/ModuleErrorBoundary';
 import { LoadingOverlay } from '../../components/ui/LoadingOverlay';
 import { FloatingActionButton } from '../../components/ui/FloatingActionButton';
@@ -43,7 +48,10 @@ import { useAmfeDraftRecovery } from './useAmfeDraftRecovery';
 import { useAmfeNetworkToast } from './useAmfeNetworkToast';
 import { useAmfeExport } from './useAmfeExport';
 import { useAmfeTabNavigation, ActiveTab } from './useAmfeTabNavigation';
+import { useOpenExportFolder } from '../../hooks/useOpenExportFolder';
+import { detectSyncAlerts, type SyncAlert } from '../controlPlan/cpSyncEngine';
 
+const CpSyncPanel = lazy(() => import('../controlPlan/CpSyncPanel'));
 const PfdApp = lazy(() => import('../pfd/PfdApp'));
 const PfdGenerationWizard = lazy(() => import('../pfd/PfdGenerationWizard'));
 const ControlPlanApp = lazy(() => import('../controlPlan/ControlPlanApp'));
@@ -99,12 +107,18 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab }) => {
 
     const handleUndo = useCallback(() => {
         const prev = history.undo();
-        if (prev) amfe.loadData(prev);
+        if (prev) {
+            amfe.loadData(prev);
+            toast.success('Deshacer', history.undoCount > 0 ? `${history.undoCount} cambios restantes` : undefined);
+        }
     }, [history, amfe.loadData]);
 
     const handleRedo = useCallback(() => {
         const next = history.redo();
-        if (next) amfe.loadData(next);
+        if (next) {
+            amfe.loadData(next);
+            toast.success('Rehacer', history.redoCount > 0 ? `${history.redoCount} cambios restantes` : undefined);
+        }
     }, [history, amfe.loadData]);
 
     // Confirmation modal state
@@ -137,7 +151,11 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab }) => {
             normalizeProjectNames().then(count => {
                 if (!cancelled && count > 0) projects.refreshClients();
             })
-        ).catch(() => { /* non-critical */ });
+        ).catch(err => {
+            logger.warn('AmfeApp', 'Project name normalization failed (non-critical)', {
+                error: err instanceof Error ? err.message : String(err),
+            });
+        });
         return () => { cancelled = true; };
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -227,6 +245,34 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab }) => {
     // 11. Network toast
     const { networkToast, clearNetworkToast } = useAmfeNetworkToast(projects.networkAvailable);
 
+    // 12. Export folder
+    const exportFolder = useOpenExportFolder('amfe', amfe.data);
+
+    // 13. AMFE ↔ CP Sync alerts (rule-based, free, instant)
+    const [showSyncPanel, setShowSyncPanel] = useState(false);
+    const [dismissedSyncAlerts, setDismissedSyncAlerts] = useState<Set<string>>(new Set());
+    const syncAlerts = useMemo(() => {
+        if (!tabNav.cpInitialData || !amfe.data.operations.length) return [];
+        return detectSyncAlerts(amfe.data, tabNav.cpInitialData);
+    }, [amfe.data, tabNav.cpInitialData]);
+    const activeSyncAlerts = useMemo(
+        () => syncAlerts.filter(a => !dismissedSyncAlerts.has(a.id)),
+        [syncAlerts, dismissedSyncAlerts]
+    );
+    const handleDismissSyncAlert = useCallback((alertId: string) => {
+        setDismissedSyncAlerts(prev => new Set([...prev, alertId]));
+    }, []);
+    const handleDismissAllSyncAlerts = useCallback(() => {
+        setDismissedSyncAlerts(new Set(syncAlerts.map(a => a.id)));
+    }, [syncAlerts]);
+    const handleApplySyncAlert = useCallback((_alert: SyncAlert) => {
+        // For now, just dismiss the alert and show a toast with the suggestion
+        if (_alert.suggestedAction) {
+            toast.info('Sugerencia aplicada', _alert.suggestedAction);
+        }
+        setDismissedSyncAlerts(prev => new Set([...prev, _alert.id]));
+    }, []);
+
     // --- SAVE WITH AP=H COMPLIANCE WARNING ---
     const [apHWarning, setApHWarning] = useState<string | null>(null);
     const apHWarningTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -256,6 +302,15 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab }) => {
 
     // Disable AMFE shortcuts when a child module tab is active (PFD, CP, HO)
     // to prevent Ctrl+S/Ctrl+N/Escape conflicts with child module shortcuts
+    // Guard: Ctrl+I only toggles chat if AI is enabled (or to close an already-open chat)
+    const guardedSetShowChat = useCallback((fn: (prev: boolean) => boolean) => {
+        setShowChat(prev => {
+            const next = fn(prev);
+            if (next && !aiEnabled) return prev; // block opening if AI disabled
+            return next;
+        });
+    }, [aiEnabled]);
+
     useAmfeKeyboardShortcuts({
         onUndo: handleUndo,
         onRedo: handleRedo,
@@ -266,7 +321,7 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab }) => {
         showTemplates,
         setShowTemplates,
         showChat,
-        setShowChat,
+        setShowChat: guardedSetShowChat,
         showHelp,
         setShowHelp,
         showSummary,
@@ -317,6 +372,10 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab }) => {
 
     // --- LIBRARY HANDLERS ---
     const handleImportFromLibrary = useCallback((libOpId: string) => {
+        // Guard: prevent importing a library op that's already linked in this document
+        const alreadyLinked = amfe.data.operations.some(op => op.linkedLibraryOpId === libOpId);
+        if (alreadyLinked) return;
+
         const newOp = library.importFromLibrary(libOpId);
         if (newOp) {
             const updated = { ...amfe.data, operations: [...amfe.data.operations, newOp] };
@@ -366,6 +425,54 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab }) => {
         setShowTemplates(false);
         logger.info('AmfeApp', 'Loaded full example AMFE document');
     }, [amfe.data.operations.length, amfe.loadData, confirm.requestConfirm]);
+
+    // Load PATAGONIA tapizado — ALL 4 documents at once (AMFE + PFD + CP + HO)
+    const handleLoadPatagoniaExample = useCallback(async () => {
+        const hasData = amfe.data.operations.length > 0;
+        if (hasData) {
+            const ok = await confirm.requestConfirm({
+                title: 'Cargar INSERTO PATAGONIA — VWA (4 documentos)',
+                message: 'Se cargarán los 4 documentos APQP del INSERTO PATAGONIA:\n• AMFE (22 operaciones)\n• Diagrama de Flujo (38 pasos)\n• Plan de Control (auto + 9 ítems manuales)\n• Hojas de Operaciones (22 hojas)\n\nSe reemplazará todo el contenido actual. ¿Continuar?',
+                variant: 'warning',
+                confirmText: 'Cargar INSERTO PATAGONIA',
+            });
+            if (!ok) return;
+        }
+
+        // 1. AMFE — 22 operaciones completas
+        const patagoniaDoc = createPatagoniaAmfeDocument();
+        amfe.loadData(patagoniaDoc);
+
+        // 2. PFD — 38 pasos con ramas paralelas, decisiones y retrabajo
+        const pfdTemplate = createPatagoniaTapizadoTemplate();
+        const pfdDoc = {
+            id: crypto.randomUUID(),
+            header: { ...EMPTY_PFD_HEADER, ...(pfdTemplate.header || {}) },
+            steps: pfdTemplate.steps,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+        };
+        tabNav.setPfdInitialData(pfdDoc);
+
+        // 3. CP — auto-generated from AMFE + 9 manual items
+        const { document: cpDoc } = generateControlPlanFromAmfe(patagoniaDoc, 'PATAGONIA - INSERTO');
+        const manualItems = getPatagoniaManualCpItems();
+        cpDoc.items = [...cpDoc.items, ...manualItems];
+        // Sort all items by operation number
+        cpDoc.items.sort((a, b) => {
+            const numA = parseInt(a.processStepNumber) || 0;
+            const numB = parseInt(b.processStepNumber) || 0;
+            return numA - numB;
+        });
+        tabNav.setCpInitialData(cpDoc);
+
+        // 4. HO — 22 sheets (5 with full detail from PDF)
+        const hoDoc = createPatagoniaHoDocument();
+        tabNav.setHoInitialData(hoDoc);
+
+        setShowTemplates(false);
+        logger.info('AmfeApp', 'Loaded PATAGONIA complete APQP package: AMFE + PFD + CP + HO');
+    }, [amfe.data.operations.length, amfe.loadData, confirm.requestConfirm, tabNav]);
 
     // Auto-expand header when creating a new blank document
     useEffect(() => {
@@ -452,6 +559,7 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab }) => {
         hasSavedCp,
         amfeOperationCount: amfe.data.operations.length,
         projectContext,
+        onOpenTemplates: () => setShowTemplates(true),
     };
 
     const isAmfeActive = tabNav.activeTab === 'amfe';
@@ -499,7 +607,6 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab }) => {
                     </Suspense>
                     </ModuleErrorBoundary>
                 </div>
-                <ConfirmModal isOpen={confirm.confirmState.isOpen} onClose={confirm.handleCancel} onConfirm={confirm.handleConfirm} title={confirm.confirmState.title} message={confirm.confirmState.message} variant={confirm.confirmState.variant} confirmText={confirm.confirmState.confirmText} />
             </div>
         )}
 
@@ -524,7 +631,6 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab }) => {
                     </Suspense>
                     </ModuleErrorBoundary>
                 </div>
-                <ConfirmModal isOpen={confirm.confirmState.isOpen} onClose={confirm.handleCancel} onConfirm={confirm.handleConfirm} title={confirm.confirmState.title} message={confirm.confirmState.message} variant={confirm.confirmState.variant} confirmText={confirm.confirmState.confirmText} />
             </div>
         )}
 
@@ -545,11 +651,27 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab }) => {
                                 </div>
                             </div>
                         )}
+                        {/* Sync alert banner */}
+                        {activeSyncAlerts.length > 0 && (
+                            <div className="bg-blue-50 border-b border-blue-200 px-4 py-2.5">
+                                <div className="max-w-[1800px] mx-auto flex items-center gap-2">
+                                    <AlertTriangle size={14} className="text-blue-600 flex-shrink-0" />
+                                    <p className="text-xs text-blue-800 font-medium">
+                                        {activeSyncAlerts.length} cambio{activeSyncAlerts.length !== 1 ? 's' : ''} detectado{activeSyncAlerts.length !== 1 ? 's' : ''} en el AMFE que afectan este Plan de Control.
+                                    </p>
+                                    <button
+                                        onClick={() => setShowSyncPanel(true)}
+                                        className="ml-auto text-xs font-medium text-blue-700 hover:text-blue-900 bg-blue-100 hover:bg-blue-200 px-2.5 py-1 rounded-md transition"
+                                    >
+                                        Ver detalles
+                                    </button>
+                                </div>
+                            </div>
+                        )}
                         <ControlPlanApp embedded initialData={tabNav.cpInitialData || undefined} amfeDoc={amfe.data} />
                     </Suspense>
                     </ModuleErrorBoundary>
                 </div>
-                <ConfirmModal isOpen={confirm.confirmState.isOpen} onClose={confirm.handleCancel} onConfirm={confirm.handleConfirm} title={confirm.confirmState.title} message={confirm.confirmState.message} variant={confirm.confirmState.variant} confirmText={confirm.confirmState.confirmText} />
             </div>
         )}
 
@@ -559,6 +681,7 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab }) => {
             <AmfeToolbar
                 projects={projects}
                 lastAutoSave={persistence.lastAutoSave}
+                autoSaveError={persistence.autoSaveError}
                 viewMode={viewMode}
                 setViewMode={setViewMode}
                 activePanel={activePanel}
@@ -590,6 +713,9 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab }) => {
                 onLoadExample={handleLoadFullExample}
                 onNewRevision={revisionControl.handleNewRevision}
                 currentRevisionLevel={amfe.data.header.revision || 'A'}
+                aiEnabled={aiEnabled}
+                onOpenExportFolder={exportFolder.openFolder}
+                canOpenExportFolder={exportFolder.canOpen}
             />
 
             {/* Cross-document alert banner */}
@@ -715,7 +841,7 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab }) => {
                     </div>
                 )}
 
-                {!isReadOnly && (
+                {!isReadOnly && filteredOperations.length > 0 && (
                     <FloatingActionButton config={{
                         primary: { label: 'Agregar Operación', icon: Plus, onClick: amfe.addOperation, color: 'blue' },
                         secondary: [
@@ -723,14 +849,6 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab }) => {
                             { label: 'Desde Template', icon: Layers, onClick: () => setShowTemplates(true), color: 'purple' },
                         ]
                     }} />
-                )}
-
-                {showTemplates && (
-                    <AmfeTemplatesModal
-                        onApplyTemplate={handleApplyTemplate}
-                        onLoadFullExample={handleLoadFullExample}
-                        onClose={() => setShowTemplates(false)}
-                    />
                 )}
 
                 <ShortcutHintsOverlay isVisible={shortcutHints.hintsVisible} />
@@ -780,7 +898,7 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab }) => {
                 setShowAudit={setShowAudit}
                 showChat={showChat}
                 setShowChat={setShowChat}
-                onApplyChanges={(newDoc) => amfe.loadData(newDoc)}
+                onApplyChanges={(newDoc) => { history.flushPending(); amfe.loadData(newDoc); }}
                 onSettingsChanged={setAiEnabled}
                 showHelp={showHelp}
                 setShowHelp={setShowHelp}
@@ -796,6 +914,7 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab }) => {
                 networkToast={networkToast}
                 onClearNetworkToast={clearNetworkToast}
                 data={amfe.data}
+                aiEnabled={aiEnabled}
             />
 
             {/* Revision Prompt Modal */}
@@ -822,6 +941,34 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab }) => {
                 />
             </Suspense>
             </ModuleErrorBoundary>
+        )}
+
+        {/* Templates modal — global overlay accessible from any tab */}
+        {showTemplates && (
+            <AmfeTemplatesModal
+                onApplyTemplate={handleApplyTemplate}
+                onLoadFullExample={handleLoadFullExample}
+                onLoadPatagoniaExample={handleLoadPatagoniaExample}
+                onClose={() => setShowTemplates(false)}
+            />
+        )}
+
+        {/* AMFE ↔ CP Sync Panel — side panel for reviewing sync alerts */}
+        {showSyncPanel && (
+            <Suspense fallback={null}>
+                <CpSyncPanel
+                    alerts={activeSyncAlerts}
+                    onApplyAlert={handleApplySyncAlert}
+                    onDismissAlert={handleDismissSyncAlert}
+                    onDismissAll={handleDismissAllSyncAlerts}
+                    onClose={() => setShowSyncPanel(false)}
+                    onRegenerateCp={async () => {
+                        setShowSyncPanel(false);
+                        setDismissedSyncAlerts(new Set());
+                        await tabNav.handleGenerateControlPlan();
+                    }}
+                />
+            </Suspense>
         )}
 
         {/* Hidden file input for JSON import */}

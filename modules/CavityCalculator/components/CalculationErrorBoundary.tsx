@@ -39,7 +39,7 @@ export class CalculationErrorBoundary extends Component<Props, State> {
                     </div>
                     <h3 className="text-lg font-bold text-red-800 mb-2">Error de Cálculo</h3>
                     <p className="text-red-600 mb-6 max-w-sm text-sm">
-                        Ocurrió un algo inesperado al procesar los datos.<br />
+                        Ocurrió algo inesperado al procesar los datos.<br />
                         <span className="opacity-75 italic text-xs mt-1 block font-mono bg-red-100/50 p-1 rounded">
                             {this.state.error?.message || "Error desconocido"}
                         </span>

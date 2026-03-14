@@ -347,20 +347,22 @@ export const RouteEditor: React.FC<RouteEditorProps> = ({
                                                     <button
                                                         onClick={() => handleMoveStop(index, 'up')}
                                                         disabled={index === 0}
-                                                        className="p-1 hover:bg-gray-100 rounded disabled:opacity-30"
+                                                        className="p-1.5 hover:bg-gray-100 rounded disabled:opacity-30 disabled:cursor-not-allowed"
                                                     >
                                                         <ChevronUp size={16} />
                                                     </button>
                                                     <button
                                                         onClick={() => handleMoveStop(index, 'down')}
                                                         disabled={index === stops.length - 1}
-                                                        className="p-1 hover:bg-gray-100 rounded disabled:opacity-30"
+                                                        className="p-1.5 hover:bg-gray-100 rounded disabled:opacity-30 disabled:cursor-not-allowed"
                                                     >
                                                         <ChevronDown size={16} />
                                                     </button>
                                                     <button
                                                         onClick={() => handleRemoveStop(stop.stationId)}
-                                                        className="p-1 hover:bg-red-100 text-red-500 rounded"
+                                                        className="p-1.5 hover:bg-red-100 text-red-500 rounded"
+                                                        title="Eliminar parada"
+                                                        aria-label="Eliminar parada"
                                                     >
                                                         <Trash2 size={16} />
                                                     </button>
@@ -509,7 +511,7 @@ export const RouteEditor: React.FC<RouteEditorProps> = ({
                                         {result.schedule.slice(0, 5).map((item, i) => (
                                             <div key={i} className="flex justify-between">
                                                 <span className="text-gray-500">{item.arrivalTime}</span>
-                                                <span className="text-gray-700 truncate ml-2">{item.stationName}</span>
+                                                <span className="text-gray-700 truncate ml-2" title={item.stationName}>{item.stationName}</span>
                                             </div>
                                         ))}
                                         {result.schedule.length > 5 && (

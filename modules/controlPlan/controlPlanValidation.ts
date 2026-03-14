@@ -83,14 +83,14 @@ export function getItemValidationState(item: ControlPlanItem): ItemValidationSta
 
     // ERROR: CC/SC item missing reactionPlanOwner (CP 2024 mandatory)
     if (isCcSc && !(item.reactionPlanOwner || '').trim()) {
-        messages.push(`Item ${sc}: falta Responsable de Reaccion (obligatorio CP 2024)`);
+        messages.push(`Item ${sc}: falta Responsable de Reacción (obligatorio CP 2024)`);
         level = 'error';
     }
 
     // ERROR: CC/SC item missing controlMethod (only for process rows and mixed rows)
     const isProductRow = !!(item.productCharacteristic || '').trim() && !(item.processCharacteristic || '').trim();
     if (isCcSc && !isProductRow && !(item.controlMethod || '').trim()) {
-        messages.push(`Item ${sc}: falta Metodo de Control`);
+        messages.push(`Item ${sc}: falta Método de Control`);
         level = 'error';
     }
 
@@ -102,7 +102,7 @@ export function getItemValidationState(item: ControlPlanItem): ItemValidationSta
 
     // WARNING: AP=H without specification
     if (isHighAp && !(item.specification || '').trim()) {
-        messages.push('AP Alto: sin especificacion/tolerancia definida');
+        messages.push('AP Alto: sin especificación/tolerancia definida');
         if (level !== 'error') level = 'warning';
     }
 
@@ -121,11 +121,11 @@ export function getItemValidationState(item: ControlPlanItem): ItemValidationSta
 
     // WARNING: Field length > MAX_FIELD_LENGTH
     const textFields: [string | undefined, string][] = [
-        [item.controlMethod, 'Metodo Control'],
-        [item.reactionPlan, 'Plan Reaccion'],
-        [item.specification, 'Especificacion'],
-        [item.evaluationTechnique, 'Tec. Evaluacion'],
-        [item.processDescription, 'Descripcion Proceso'],
+        [item.controlMethod, 'Método Control'],
+        [item.reactionPlan, 'Plan Reacción'],
+        [item.specification, 'Especificación'],
+        [item.evaluationTechnique, 'Téc. Evaluación'],
+        [item.processDescription, 'Descripción Proceso'],
     ];
     for (const [field, label] of textFields) {
         if (field && field.length > MAX_FIELD_LENGTH) {
@@ -172,7 +172,7 @@ export function getDocumentCompletionErrors(doc: ControlPlanDocument): CpComplia
         if (missing.length > 0) {
             errors.push({
                 processStep: item.processStepNumber || '\u2014',
-                processDescription: item.processDescription || '(sin descripcion)',
+                processDescription: item.processDescription || '(sin descripción)',
                 itemId: item.id,
                 missing,
             });
@@ -199,23 +199,23 @@ export function getExportWarnings(doc: ControlPlanDocument): string[] {
     if (!h.controlPlanNumber) emptyHeader.push('Nro. Plan');
     if (!h.partName) emptyHeader.push('Nombre Pieza');
     if (!h.partNumber) emptyHeader.push('Nro. Pieza');
-    if (!h.organization) emptyHeader.push('Organizacion');
+    if (!h.organization) emptyHeader.push('Organización');
     if (!h.responsible) emptyHeader.push('Responsable');
     if (!h.date) emptyHeader.push('Fecha');
     if (emptyHeader.length > 0) {
-        warnings.push(`Campos de encabezado vacios: ${emptyHeader.join(', ')}.`);
+        warnings.push(`Campos de encabezado vacíos: ${emptyHeader.join(', ')}.`);
     }
 
     // CC/SC compliance
     const compErrors = getDocumentCompletionErrors(doc);
     if (compErrors.length > 0) {
-        warnings.push(`${compErrors.length} item(s) critico(s) (CC/SC/AP=H) con campos obligatorios faltantes.`);
+        warnings.push(`${compErrors.length} ítem(s) crítico(s) (CC/SC/AP=H) con campos obligatorios faltantes.`);
     }
 
     // Missing owners (all items, not just CC/SC)
     const noOwner = doc.items.filter(i => !(i.reactionPlanOwner || '').trim()).length;
     if (noOwner > 0) {
-        warnings.push(`${noOwner} item(s) sin Responsable de Reaccion.`);
+        warnings.push(`${noOwner} ítem(s) sin Responsable de Reacción.`);
     }
 
     // Field length vs Excel limits
@@ -227,7 +227,7 @@ export function getExportWarnings(doc: ControlPlanDocument): string[] {
         }
     }
     if (longFieldCount > 0) {
-        warnings.push(`${longFieldCount} campo(s) exceden el limite de ${EXCEL_CELL_LIMIT.toLocaleString()} caracteres de Excel.`);
+        warnings.push(`${longFieldCount} campo(s) exceden el límite de ${EXCEL_CELL_LIMIT.toLocaleString()} caracteres de Excel.`);
     }
 
     // Empty plan
@@ -265,14 +265,14 @@ export function validateControlPlanDocument(data: unknown): { valid: boolean; er
     const errors: string[] = [];
 
     if (!data || typeof data !== 'object') {
-        return { valid: false, errors: ['El archivo no contiene un objeto JSON valido.'] };
+        return { valid: false, errors: ['El archivo no contiene un objeto JSON válido.'] };
     }
 
     const doc = data as Record<string, unknown>;
 
     // Validate header
     if (!doc.header || typeof doc.header !== 'object') {
-        errors.push('Falta la seccion "header" del documento.');
+        errors.push('Falta la sección "header" del documento.');
     } else {
         const header = doc.header as Record<string, unknown>;
         const requiredHeaderFields = [
@@ -281,12 +281,12 @@ export function validateControlPlanDocument(data: unknown): { valid: boolean; er
         ];
         for (const field of requiredHeaderFields) {
             if (typeof header[field] !== 'string') {
-                errors.push(`Campo del header faltante o invalido: "${field}".`);
+                errors.push(`Campo del header faltante o inválido: "${field}".`);
             }
         }
         // Validate phase is a known value
         if (typeof header.phase === 'string' && !CONTROL_PLAN_PHASES.some(p => p.value === header.phase)) {
-            errors.push(`Fase invalida: "${header.phase}". Valores validos: ${CONTROL_PLAN_PHASES.map(p => p.value).join(', ')}.`);
+            errors.push(`Fase inválida: "${header.phase}". Valores válidos: ${CONTROL_PLAN_PHASES.map(p => p.value).join(', ')}.`);
         }
     }
 
@@ -298,7 +298,7 @@ export function validateControlPlanDocument(data: unknown): { valid: boolean; er
         for (let i = 0; i < items.length; i++) {
             const item = items[i] as Record<string, unknown>;
             if (!item || typeof item !== 'object') {
-                errors.push(`Item ${i + 1}: no es un objeto valido.`);
+                errors.push(`Item ${i + 1}: no es un objeto válido.`);
                 continue;
             }
             if (typeof item.id !== 'string') {

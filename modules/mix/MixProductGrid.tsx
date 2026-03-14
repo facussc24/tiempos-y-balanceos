@@ -161,8 +161,9 @@ export const MixProductGrid: React.FC<MixProductGridProps> = ({
      * Toggle selección de un producto
      */
     const toggleProduct = (index: number) => {
-        const updated = [...products];
-        updated[index].isSelected = !updated[index].isSelected;
+        const updated = products.map((p, i) =>
+            i === index ? { ...p, isSelected: !p.isSelected } : p
+        );
         setProducts(updated);
         onSelectionChange(updated.filter(p => p.isSelected));
     };
@@ -333,10 +334,10 @@ export const MixProductGrid: React.FC<MixProductGridProps> = ({
 
                                     {/* Product Info */}
                                     <div className="flex-1 min-w-0">
-                                        <p className="font-semibold text-slate-800 dark:text-slate-100 truncate">
+                                        <p className="font-semibold text-slate-800 dark:text-slate-100 truncate" title={product.displayName}>
                                             {product.displayName}
                                         </p>
-                                        <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                                        <p className="text-xs text-slate-500 dark:text-slate-400 truncate" title={`${product.client} / ${product.project}`}>
                                             {product.client} / {product.project}
                                         </p>
                                     </div>

@@ -131,7 +131,7 @@ const AmfeRegistryView: React.FC<Props> = ({ onOpenProject, onClose }) => {
                             <RefreshCw size={12} className={reg.loading ? 'animate-spin' : ''} />
                             Sincronizar
                         </button>
-                        <button onClick={onClose} className="text-gray-400 hover:text-gray-600 p-1">
+                        <button onClick={onClose} className="text-gray-400 hover:text-gray-600 p-1" title="Cerrar registro" aria-label="Cerrar registro">
                             <X size={16} />
                         </button>
                     </div>
@@ -287,7 +287,7 @@ const AmfeRegistryView: React.FC<Props> = ({ onOpenProject, onClose }) => {
                                                 )}
                                             </td>
                                             <td className="px-3 py-2 text-gray-400 text-[10px]">
-                                                {entry.updatedAt ? new Date(entry.updatedAt).toLocaleDateString('es-AR') : '-'}
+                                                {entry.updatedAt && !isNaN(new Date(entry.updatedAt).getTime()) ? new Date(entry.updatedAt).toLocaleDateString('es-AR') : '-'}
                                             </td>
                                             <td className="px-3 py-2">
                                                 <button

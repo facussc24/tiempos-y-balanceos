@@ -33,6 +33,16 @@ export const ModelManagerModal: React.FC<Props> = ({ isOpen, onClose, data, upda
 
     const [error, setError] = useState<string | null>(null);
 
+    // Close on Escape key
+    useEffect(() => {
+        if (!isOpen) return;
+        const handleEscape = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') { e.preventDefault(); onClose(); }
+        };
+        document.addEventListener('keydown', handleEscape);
+        return () => document.removeEventListener('keydown', handleEscape);
+    }, [isOpen, onClose]);
+
     if (!isOpen) return null;
 
     // Computed Values
@@ -113,7 +123,7 @@ export const ModelManagerModal: React.FC<Props> = ({ isOpen, onClose, data, upda
                             <p className="text-xs text-slate-500">Defina la cantidad de piezas por modelo. La demanda total se ajustará automáticamente.</p>
                         </div>
                     </div>
-                    <button onClick={onClose} className="text-slate-400 hover:text-slate-600 p-1 hover:bg-slate-200 rounded-lg transition-colors">
+                    <button onClick={onClose} className="text-slate-400 hover:text-slate-600 p-1.5 hover:bg-slate-200 rounded-lg transition-colors" title="Cerrar" aria-label="Cerrar mix de producción">
                         <X size={24} />
                     </button>
                 </div>
@@ -260,7 +270,7 @@ export const ModelManagerModal: React.FC<Props> = ({ isOpen, onClose, data, upda
                                 <div key={m.id} className="flex items-center justify-between text-sm p-2 rounded bg-white border border-slate-100 shadow-sm">
                                     <div className="flex items-center gap-2">
                                         <div className="w-3 h-3 rounded-full" style={{ backgroundColor: m.color }}></div>
-                                        <span className="font-medium text-slate-600 truncate max-w-[100px]">{m.name}</span>
+                                        <span className="font-medium text-slate-600 truncate max-w-[100px]" title={m.name}>{m.name}</span>
                                     </div>
                                     <span className="font-bold text-slate-800">{(m.percentage * 100).toFixed(1)}%</span>
                                 </div>
@@ -276,10 +286,11 @@ export const ModelManagerModal: React.FC<Props> = ({ isOpen, onClose, data, upda
                     </div>
 
                     <div className="flex gap-2">
-                        <button onClick={onClose} className="px-4 py-2 text-slate-600 hover:bg-slate-200 rounded-lg font-medium text-sm transition-colors">
+                        <button type="button" onClick={onClose} className="px-4 py-2 text-slate-600 hover:bg-slate-200 rounded-lg font-medium text-sm transition-colors">
                             Cancelar
                         </button>
                         <button
+                            type="button"
                             onClick={handleSave}
                             disabled={totalUnits <= 0}
                             className={`px-6 py-2 rounded-lg font-bold text-white shadow-md flex items-center gap-2 transition-all ${totalUnits > 0

@@ -22,8 +22,8 @@ describe('CpHelpPanel (R6A)', () => {
     it('shows Columnas tab content by default (column info)', () => {
         render(<CpHelpPanel onClose={vi.fn()} />);
         expect(screen.getAllByText('Proceso').length).toBeGreaterThan(0);
-        expect(screen.getAllByText('Caracteristicas').length).toBeGreaterThan(0);
-        expect(screen.getAllByText('Metodos').length).toBeGreaterThan(0);
+        expect(screen.getAllByText('Características').length).toBeGreaterThan(0);
+        expect(screen.getAllByText('Métodos').length).toBeGreaterThan(0);
     });
 
     it('clicking Atajos tab shows shortcuts content', () => {

@@ -29,12 +29,3 @@ export async function verifyChecksum(content: string, expected: string): Promise
     const actual = await generateChecksum(content);
     return actual === expected;
 }
-
-/**
- * Generate a random ID string
- * @param length - Length of random portion (default 9)
- * @returns Random ID string with timestamp prefix
- */
-export function generateRandomId(length: number = 9): string {
-    return `${Date.now()}_${Math.random().toString(36).substring(2, 2 + length)}`;
-}

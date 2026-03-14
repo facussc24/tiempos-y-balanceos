@@ -1,3 +1,5 @@
+import { logger } from './logger';
+
 /**
  * File System Security Utilities
  * Validates directory access and prevents access to system directories
@@ -82,8 +84,7 @@ export async function validateDirectoryHandle(
 
         return { valid: true };
     } catch (error) {
-        // Log technical error (no sensitive data)
-        console.warn('[Security] Directory validation error:', error instanceof Error ? error.name : 'Unknown');
+        logger.warn('FileSystemSecurity', 'Directory validation error', { errorName: error instanceof Error ? error.name : 'Unknown' });
         return {
             valid: false,
             message: '❌ Error al validar el directorio. Intente con otra ubicación.'

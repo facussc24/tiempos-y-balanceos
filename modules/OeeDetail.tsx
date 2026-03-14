@@ -37,14 +37,14 @@ export const OeeDetail: React.FC<Props> = ({ data, updateData }) => {
 
     const operatingTime = Math.max(0, pt - dt);
 
-    // Availability = Operating / Planned
-    const avail = pt > 0 ? operatingTime / pt : 0;
+    // Availability = Operating / Planned (clamped to 0-1)
+    const avail = pt > 0 ? Math.min(1, operatingTime / pt) : 0;
 
-    // Performance = Total Produced / (Operating Time Hours * Max Capacity U/h)
-    const perf = (operatingTime > 0 && maxCap > 0) ? totalP / ((operatingTime / 60) * maxCap) : 0;
+    // Performance = Total Produced / (Operating Time Hours * Max Capacity U/h), clamped to 0-1
+    const perf = (operatingTime > 0 && maxCap > 0) ? Math.min(1, totalP / ((operatingTime / 60) * maxCap)) : 0;
 
-    // Quality = Good / Total
-    const qual = totalP > 0 ? goodP / totalP : 0;
+    // Quality = Good / Total (clamped: good can't exceed total)
+    const qual = totalP > 0 ? Math.min(1, goodP / totalP) : 0;
 
     const oee = avail * perf * qual;
 
@@ -176,11 +176,11 @@ export const OeeDetail: React.FC<Props> = ({ data, updateData }) => {
                                         <div className="grid grid-cols-2 gap-4">
                                             <div>
                                                 <label className="text-xs text-slate-500">Tiempo Planificado (min)</label>
-                                                <input type="number" className="w-full border border-slate-300 rounded p-2" value={plannedTime} onChange={e => setPlannedTime(e.target.value)} />
+                                                <input type="number" min={0} className="w-full border border-slate-300 rounded p-2" value={plannedTime} onChange={e => setPlannedTime(e.target.value)} />
                                             </div>
                                             <div>
                                                 <label className="text-xs text-slate-500">Tiempo Inactivo (min)</label>
-                                                <input type="number" className="w-full border border-slate-300 rounded p-2" value={downtime} onChange={e => setDowntime(e.target.value)} />
+                                                <input type="number" min={0} className="w-full border border-slate-300 rounded p-2" value={downtime} onChange={e => setDowntime(e.target.value)} />
                                             </div>
                                         </div>
                                     </div>
@@ -191,11 +191,11 @@ export const OeeDetail: React.FC<Props> = ({ data, updateData }) => {
                                         <div className="grid grid-cols-2 gap-4">
                                             <div>
                                                 <label className="text-xs text-slate-500">Capacidad Máx (U/h)</label>
-                                                <input type="number" className="w-full border border-slate-300 rounded p-2" value={maxCapacity} onChange={e => setMaxCapacity(e.target.value)} />
+                                                <input type="number" min={0} className="w-full border border-slate-300 rounded p-2" value={maxCapacity} onChange={e => setMaxCapacity(e.target.value)} />
                                             </div>
                                             <div>
                                                 <label className="text-xs text-slate-500">Producción Real (U)</label>
-                                                <input type="number" className="w-full border border-slate-300 rounded p-2" value={totalProduced} onChange={e => setTotalProduced(e.target.value)} />
+                                                <input type="number" min={0} className="w-full border border-slate-300 rounded p-2" value={totalProduced} onChange={e => setTotalProduced(e.target.value)} />
                                             </div>
                                         </div>
                                     </div>
@@ -206,7 +206,7 @@ export const OeeDetail: React.FC<Props> = ({ data, updateData }) => {
                                         <div className="grid grid-cols-2 gap-4">
                                             <div className="col-span-2">
                                                 <label className="text-xs text-slate-500">Piezas Buenas (OK)</label>
-                                                <input type="number" className="w-full border border-slate-300 rounded p-2" value={goodProduced} onChange={e => setGoodProduced(e.target.value)} />
+                                                <input type="number" min={0} className="w-full border border-slate-300 rounded p-2" value={goodProduced} onChange={e => setGoodProduced(e.target.value)} />
                                             </div>
                                         </div>
                                     </div>
@@ -256,7 +256,7 @@ export const OeeDetail: React.FC<Props> = ({ data, updateData }) => {
                                         {activeSector.history?.map(log => (
                                             <div key={log.id} className="text-xs p-3 bg-slate-50 rounded border border-slate-200">
                                                 <div className="flex justify-between items-start mb-2">
-                                                    <span className="font-bold text-slate-700">{new Date(log.timestamp).toLocaleDateString()}</span>
+                                                    <span className="font-bold text-slate-700">{isNaN(new Date(log.timestamp).getTime()) ? '—' : new Date(log.timestamp).toLocaleDateString()}</span>
                                                     <Badge color="blue">{formatNumber(log.finalOee * 100, 1)}%</Badge>
                                                 </div>
                                                 <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-slate-500 mb-2">

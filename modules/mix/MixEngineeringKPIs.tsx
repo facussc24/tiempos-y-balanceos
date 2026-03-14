@@ -86,7 +86,8 @@ export const MixEngineeringKPIs: React.FC<MixEngineeringKPIsProps> = ({
                         <span className={`text-3xl font-bold ${balancingEfficiency >= 85 ? 'text-emerald-400' :
                             balancingEfficiency >= 70 ? 'text-amber-400' : 'text-red-400'
                             }`}>
-                            {balancingEfficiency.toFixed(0)}%
+                            {/* FIX: Guard against NaN from upstream division-by-zero */}
+                            {isFinite(balancingEfficiency) ? balancingEfficiency.toFixed(0) : '0'}%
                         </span>
                     </div>
                     <div className="flex items-center justify-end gap-1 mt-1">
@@ -151,7 +152,7 @@ export const MixEngineeringKPIs: React.FC<MixEngineeringKPIsProps> = ({
                             <p className="text-lg font-bold text-amber-400">
                                 {criticalMachines.length} en déficit
                             </p>
-                            <p className="text-[10px] text-amber-300 truncate">
+                            <p className="text-[10px] text-amber-300 truncate" title={criticalMachines.map(m => m.name).join(', ')}>
                                 {criticalMachines.map(m => m.name).join(', ')}
                             </p>
                         </div>

@@ -133,8 +133,10 @@ export function useUndoRedo(
         // Ideally we want the context of where the "undone" change happened to navigate there.
         // The change that is being undone is represented by the transition from 'previousWrapper' to 'state.present'.
         // So the context we care about (where the change happened) is stored in 'state.present.context'.
+        // FIX: Deep-clone before returning to prevent shared references from corrupting history
+        // if downstream code mutates nested objects on the returned state
         return {
-            state: previousWrapper.data,
+            state: JSON.parse(JSON.stringify(previousWrapper.data)),
             context: state.present.context
         };
     }, [state]);
@@ -153,10 +155,9 @@ export function useUndoRedo(
 
         lastChangeRef.current = 'Rehacer';
 
-        // When redoing, we are applying the change in 'nextWrapper'.
-        // So we want to navigate to the context of 'nextWrapper'.
+        // FIX: Deep-clone before returning to prevent shared references from corrupting history
         return {
-            state: nextWrapper.data,
+            state: JSON.parse(JSON.stringify(nextWrapper.data)),
             context: nextWrapper.context
         };
     }, [state]);
@@ -164,12 +165,12 @@ export function useUndoRedo(
     const pushState = useCallback((newState: ProjectData, context?: UndoContext) => {
         const newSnapshot = createSnapshot(newState);
 
-        // Only push if state actually changed
-        if (!hasChanged(state.present.data, newSnapshot)) {
-            return;
-        }
-
         setState(prev => {
+            // Only push if state actually changed (compare against fresh prev, not stale closure)
+            if (!hasChanged(prev.present.data, newSnapshot)) {
+                return prev;
+            }
+
             // Update the CURRENT state wrapper with the new data/context
             const inputWrapper: HistoryItem<Partial<ProjectData>> = {
                 data: newSnapshot,
@@ -177,10 +178,11 @@ export function useUndoRedo(
                 timestamp: Date.now()
             };
 
-            const newPast = [...prev.past, prev.present];
+            // FIX: Use slice instead of shift to avoid in-place mutation
+            let newPast = [...prev.past, prev.present];
             // Limit history size
             if (newPast.length > maxHistory) {
-                newPast.shift();
+                newPast = newPast.slice(newPast.length - maxHistory);
             }
 
             return {
@@ -191,7 +193,7 @@ export function useUndoRedo(
         });
 
         lastChangeRef.current = null;
-    }, [state.present, maxHistory]);
+    }, [maxHistory]);
 
     const resetHistory = useCallback((initialState: ProjectData) => {
         setState({

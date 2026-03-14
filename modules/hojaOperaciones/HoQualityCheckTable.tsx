@@ -6,29 +6,34 @@
 
 import React from 'react';
 import { HoQualityCheck } from './hojaOperacionesTypes';
+import { ExternalLink } from 'lucide-react';
 
 interface Props {
     checks: HoQualityCheck[];
     onUpdateRegistro: (checkId: string, value: string) => void;
     readOnly?: boolean;
+    onNavigateToCp?: (cpItemId: string) => void;
 }
 
 function SpecialCharBadge({ symbol }: { symbol: string }) {
     if (!symbol) return null;
     const upper = symbol.toUpperCase().trim();
-    const isCC = upper === 'CC';
+    const colorClass = upper === 'CC'
+        ? 'bg-red-100 text-red-700 border border-red-300'
+        : upper === 'SC'
+        ? 'bg-amber-100 text-amber-700 border border-amber-300'
+        : upper === 'PTC'
+        ? 'bg-blue-100 text-blue-700 border border-blue-300'
+        : '';
+    if (!colorClass) return null;
     return (
-        <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold ${
-            isCC
-                ? 'bg-red-100 text-red-700 border border-red-300'
-                : 'bg-amber-100 text-amber-700 border border-amber-300'
-        }`}>
+        <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold ${colorClass}`}>
             {symbol}
         </span>
     );
 }
 
-const HoQualityCheckTable: React.FC<Props> = ({ checks, onUpdateRegistro, readOnly }) => {
+const HoQualityCheckTable: React.FC<Props> = ({ checks, onUpdateRegistro, readOnly, onNavigateToCp }) => {
     if (checks.length === 0) {
         return (
             <p className="text-xs text-gray-400 italic px-2 py-3">
@@ -49,6 +54,7 @@ const HoQualityCheckTable: React.FC<Props> = ({ checks, onUpdateRegistro, readOn
                         <th className="px-2 py-1.5 border border-gray-200 font-medium text-gray-600">Resp.</th>
                         <th className="px-2 py-1.5 border border-gray-200 font-medium text-gray-600">Frec.</th>
                         <th className="px-2 py-1.5 border border-gray-200 font-medium text-gray-600">Registro</th>
+                        {onNavigateToCp && <th className="px-2 py-1.5 border border-gray-200 font-medium text-gray-600 w-10"></th>}
                     </tr>
                 </thead>
                 <tbody>
@@ -64,13 +70,13 @@ const HoQualityCheckTable: React.FC<Props> = ({ checks, onUpdateRegistro, readOn
                                 </div>
                             </td>
                             <td className="px-2 py-1.5 border border-gray-200 text-gray-600">
-                                {qc.specification}
+                                {qc.specification || <span className="text-gray-300 italic text-[10px]">Según plano</span>}
                             </td>
                             <td className="px-2 py-1.5 border border-gray-200 text-gray-600">
                                 {qc.controlMethod || qc.evaluationTechnique}
                             </td>
                             <td className="px-2 py-1.5 border border-gray-200 text-gray-600">
-                                {qc.reactionContact}
+                                {qc.reactionContact || <span className="text-gray-300 italic text-[10px]">Ver CP</span>}
                             </td>
                             <td className="px-2 py-1.5 border border-gray-200 text-gray-600">
                                 {qc.frequency}
@@ -81,10 +87,26 @@ const HoQualityCheckTable: React.FC<Props> = ({ checks, onUpdateRegistro, readOn
                                     value={qc.registro}
                                     onChange={e => onUpdateRegistro(qc.id, e.target.value)}
                                     readOnly={readOnly}
-                                    placeholder="—"
+                                    placeholder="Ej: PLN-001"
                                     className="w-full px-1 py-0.5 text-xs border border-transparent hover:border-gray-200 focus:border-amber-400 focus:ring-1 focus:ring-amber-400 rounded bg-transparent focus:bg-white outline-none transition"
                                 />
                             </td>
+                            {onNavigateToCp && (
+                                <td className="px-1 py-1 border border-gray-200 text-center">
+                                    {qc.cpItemId ? (
+                                        <button
+                                            onClick={() => onNavigateToCp(qc.cpItemId!)}
+                                            className="text-[9px] text-teal-600 hover:text-teal-800 hover:bg-teal-50 px-1.5 py-0.5 rounded transition flex items-center gap-0.5"
+                                            title="Ver item en Plan de Control"
+                                        >
+                                            <ExternalLink size={10} />
+                                            CP
+                                        </button>
+                                    ) : (
+                                        <span className="text-gray-300 text-[9px]">—</span>
+                                    )}
+                                </td>
+                            )}
                         </tr>
                     ))}
                 </tbody>

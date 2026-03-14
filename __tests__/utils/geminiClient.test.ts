@@ -101,6 +101,11 @@ describe('geminiClient', () => {
                 plantAssetsPath: null,
                 amfeBasePath: null,
                 cpBasePath: null,
+                hoBasePath: null,
+                pfdBasePath: null,
+                solicitudBasePath: null,
+                engineeringBasePath: null,
+                lastReconciliationCheck: null,
             });
 
             try {

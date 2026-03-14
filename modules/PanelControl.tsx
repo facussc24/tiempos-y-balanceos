@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { ProjectData, INITIAL_PROJECT } from '../types';
+import { ProjectData, INITIAL_PROJECT, Task } from '../types';
 import { Card, Badge } from '../components/ui/Card';
-import { calculateTaktTime, formatNumber, calculateTotalEffectiveWorkContent, calculateTotalHeadcount } from '../utils';
+import { calculateTaktTime, formatNumber, calculateTotalEffectiveWorkContent, calculateTotalHeadcount, calculateEffectiveStationTime } from '../utils';
 import { parseDemand } from '../utils/validation';
 import { AlertTriangle, CheckCircle2, X, Trash2, Layers, PieChart } from 'lucide-react';
+import ProductSelector from '../components/ui/ProductSelector';
+import type { ProductSelection } from '../components/ui/ProductSelector';
 import { Tooltip } from '../components/ui/Tooltip';
 import { toast } from '../components/ui/Toast';
 
@@ -46,15 +48,27 @@ export const PanelControl: React.FC<Props> = ({ data, updateData }) => {
 
     // Local state for Daily Demand to allow empty input (UX)
     const [dailyDemandInput, setDailyDemandInput] = useState(data.meta.dailyDemand.toString());
+    const [piecesPerVehicleInput, setPiecesPerVehicleInput] = useState((data.meta.piecesPerVehicle ?? 1).toString());
+    const [vehicleDemandInput, setVehicleDemandInput] = useState('');
 
     // Business Logic Hooks
     const oeeLogic = useOEELogic(data, updateData);
     const shiftManager = useShiftManager(data, updateData);
 
+    const ppv = data.meta.piecesPerVehicle ?? 1;
+
     // Sync local state when external data changes
     useEffect(() => {
         setDailyDemandInput(data.meta.dailyDemand.toString());
-    }, [data.meta.dailyDemand]);
+        // Auto-calculate vehicle demand from pieces demand
+        if (ppv > 0) {
+            setVehicleDemandInput(Math.round(data.meta.dailyDemand / ppv).toString());
+        }
+    }, [data.meta.dailyDemand, ppv]);
+
+    useEffect(() => {
+        setPiecesPerVehicleInput((data.meta.piecesPerVehicle ?? 1).toString());
+    }, [data.meta.piecesPerVehicle]);
 
     const handleDemandChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const val = e.target.value;
@@ -73,6 +87,31 @@ export const PanelControl: React.FC<Props> = ({ data, updateData }) => {
         }
     };
 
+    const handlePiecesPerVehicleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const val = e.target.value;
+        setPiecesPerVehicleInput(val);
+        if (val === '' || isNaN(Number(val))) return;
+        const num = Math.max(1, Math.round(Number(val)));
+        oeeLogic.handleMetaChange('piecesPerVehicle', num);
+    };
+
+    const handleVehicleDemandChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const val = e.target.value;
+        setVehicleDemandInput(val);
+        if (val === '' || isNaN(Number(val))) return;
+        const vehicles = Math.max(0, Math.round(Number(val)));
+        // Bidirectional: update dailyDemand = vehicles × piecesPerVehicle
+        const newDemand = vehicles * ppv;
+        setDailyDemandInput(newDemand.toString());
+        oeeLogic.handleMetaChange('dailyDemand', newDemand);
+    };
+
+    const handleVehicleDemandBlur = () => {
+        if (vehicleDemandInput === '' && ppv > 0) {
+            setVehicleDemandInput(Math.round(data.meta.dailyDemand / ppv).toString());
+        }
+    };
+
     const handleResetData = () => {
         // MEJORA 3: Prevenir doble-click y mostrar feedback
         if (isResetting) return;
@@ -87,6 +126,11 @@ export const PanelControl: React.FC<Props> = ({ data, updateData }) => {
         cleanState.meta.name = "";
         cleanState.meta.client = "";
         cleanState.meta.version = "Borrador";
+
+        // Preserve file association so save/auto-save keeps working
+        cleanState.fileHandle = data.fileHandle;
+        cleanState.directoryHandle = data.directoryHandle;
+        cleanState.id = data.id;
 
         updateData(cleanState);
         toast.success('Proyecto Restablecido', 'Todos los datos han sido eliminados.');
@@ -104,6 +148,7 @@ export const PanelControl: React.FC<Props> = ({ data, updateData }) => {
             ...data,
             tasks: [],
             assignments: [],
+            zoningConstraints: [],
             stationConfigs: data.stationConfigs.map(sc => ({
                 ...sc,
                 effectiveTime: 0,
@@ -115,45 +160,50 @@ export const PanelControl: React.FC<Props> = ({ data, updateData }) => {
     };
 
     // --- CALCULATIONS (Controller Layer) ---
-    const { nominalSeconds, effectiveSeconds, totalAvailableMinutes } = calculateTaktTime(
-        data.shifts,
-        data.meta.activeShifts,
-        data.meta.dailyDemand,
-        oeeLogic.activeOEE
+    const { nominalSeconds, effectiveSeconds, totalAvailableMinutes } = useMemo(
+        () => calculateTaktTime(data.shifts, data.meta.activeShifts, data.meta.dailyDemand, oeeLogic.activeOEE, data.meta.setupLossPercent || 0),
+        [data.shifts, data.meta.activeShifts, data.meta.dailyDemand, oeeLogic.activeOEE, data.meta.setupLossPercent]
     );
 
-    const totalEffectiveWork = calculateTotalEffectiveWorkContent(data);
-    const totalHeadcount = calculateTotalHeadcount(data);
+    const totalEffectiveWork = useMemo(
+        () => calculateTotalEffectiveWorkContent(data),
+        [data.tasks, data.assignments]
+    );
+    const totalHeadcount = useMemo(
+        () => calculateTotalHeadcount(data),
+        [data.meta.configuredStations, data.stationConfigs]
+    );
     const realStations = data.meta.configuredStations > 0 ? data.meta.configuredStations : 1;
 
     // HALLAZGO #1 FIX: Calcular el cuello de botella real (TCR) basado en asignaciones
-    // Alineado con useLineBalancing.ts:289 - Considera réplicas y excluye isMachineInternal
+    // Uses calculateEffectiveStationTime for overlap-aware cycle time (concurrent machine+manual tasks)
     const realCycleTime = useMemo(() => {
         if (!data.assignments || data.assignments.length === 0) return 0;
 
-        // Calcular tiempo efectivo por estación (igual que useLineBalancing)
-        const stationTimes = new Map<number, number>();
-        data.assignments.forEach(a => {
-            const task = data.tasks.find(t => t.id === a.taskId);
-            if (task) {
-                // Excluir tareas internas de máquina (isMachineInternal = true)
-                if (task.isMachineInternal) return;
+        const taskMap = new Map(data.tasks.map(t => [t.id, t]));
+        const configMap = new Map(data.stationConfigs?.map(sc => [sc.id, sc]) ?? []);
 
-                const time = task.standardTime || task.averageTime || 0;
-                const current = stationTimes.get(a.stationId) || 0;
-                stationTimes.set(a.stationId, current + time);
+        // Group tasks by station
+        const stationTasksMap = new Map<number, Task[]>();
+        data.assignments.forEach(a => {
+            const task = taskMap.get(a.taskId);
+            if (task) {
+                if (!stationTasksMap.has(a.stationId)) {
+                    stationTasksMap.set(a.stationId, []);
+                }
+                stationTasksMap.get(a.stationId)!.push(task);
             }
         });
 
-        // Dividir por réplicas (multi-manning) si existe configuración
+        // Calculate effective time per station using overlap-aware algorithm
         const stationCycles: number[] = [];
-        stationTimes.forEach((time, stationId) => {
-            const config = data.stationConfigs?.find(sc => sc.id === stationId);
+        stationTasksMap.forEach((tasks, stationId) => {
+            const effectiveTime = calculateEffectiveStationTime(tasks);
+            const config = configMap.get(stationId);
             const replicas = config?.replicas || 1;
-            stationCycles.push(time / replicas);
+            stationCycles.push(effectiveTime / replicas);
         });
 
-        // El bottleneck es la estación más lenta
         if (stationCycles.length === 0) return 0;
         return Math.max(...stationCycles);
     }, [data.assignments, data.tasks, data.stationConfigs]);
@@ -189,13 +239,21 @@ export const PanelControl: React.FC<Props> = ({ data, updateData }) => {
         })).filter(Boolean) as SectorBreakdown[];
     }, [data.meta.useSectorOEE, data.meta.manualOEE, data.sectors, data.tasks]);
 
+    // Pre-check: any task without sector? (avoid re-scanning in JSX on every render)
+    const hasTasksWithoutSector = useMemo(
+        () => data.tasks.some(t => !t.sectorId),
+        [data.tasks]
+    );
+
     // Efficiency
     const efficiency = (totalHeadcount > 0 && nominalSeconds > 0)
         ? (totalEffectiveWork / (totalHeadcount * nominalSeconds)) * 100
         : 0;
 
+    // FIX: Guard against NaN masking as 'good' status
     let effStatus: 'good' | 'warn' | 'crit' | 'error' = 'good';
-    if (efficiency > 100) effStatus = 'error';
+    if (!Number.isFinite(efficiency)) effStatus = 'error';
+    else if (efficiency > 100) effStatus = 'error';
     else if (efficiency < 75) effStatus = 'crit';
     else if (efficiency < 85) effStatus = 'warn';
 
@@ -233,8 +291,18 @@ export const PanelControl: React.FC<Props> = ({ data, updateData }) => {
                                 <input type="date" className="mt-1 block w-full rounded-md border-slate-300 shadow-sm border p-2 bg-white text-slate-900" value={data.meta.date} onChange={(e) => oeeLogic.handleMetaChange('date', e.target.value)} />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-slate-700">Cliente</label>
-                                <input type="text" className="mt-1 block w-full rounded-md border-slate-300 shadow-sm border p-2 bg-white text-slate-900" value={data.meta.client} onChange={(e) => oeeLogic.handleMetaChange('client', e.target.value)} />
+                                <label className="block text-sm font-medium text-slate-700">Cliente / Producto</label>
+                                <div className="mt-1">
+                                    <ProductSelector
+                                        value={data.meta.client}
+                                        onProductSelect={(sel: ProductSelection) => {
+                                            oeeLogic.handleMetaChange('client', sel.lineaName);
+                                            oeeLogic.handleMetaChange('name', sel.descripcion);
+                                        }}
+                                        onTextChange={(val) => oeeLogic.handleMetaChange('client', val)}
+                                        placeholder="Buscar cliente o producto..."
+                                    />
+                                </div>
                             </div>
                         </div>
 
@@ -264,9 +332,40 @@ export const PanelControl: React.FC<Props> = ({ data, updateData }) => {
                             </div>
                         </div>
 
+                        {/* Piezas por Vehículo */}
+                        <div className="grid grid-cols-3 gap-3 mb-3">
+                            <div>
+                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide">Pzs por Vehículo</label>
+                                <input
+                                    type="number"
+                                    min="1"
+                                    className="mt-1 block w-full rounded-md border-slate-300 shadow-sm border p-2 bg-white text-slate-900 text-center font-bold"
+                                    value={piecesPerVehicleInput}
+                                    onChange={handlePiecesPerVehicleChange}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide">Demanda (vehículos/día)</label>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    className="mt-1 block w-full rounded-md border-slate-300 shadow-sm border p-2 bg-white text-blue-700 font-bold text-center"
+                                    value={vehicleDemandInput}
+                                    onChange={handleVehicleDemandChange}
+                                    onBlur={handleVehicleDemandBlur}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide">Demanda Semanal (pzs)</label>
+                                <div className="mt-1 block w-full rounded-md border border-slate-200 bg-slate-50 p-2 text-slate-700 font-mono text-center text-sm font-bold">
+                                    {(data.meta.dailyDemand * 5).toLocaleString('es-AR')}
+                                </div>
+                            </div>
+                        </div>
+
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-slate-700">Demanda Diaria (unidades)</label>
+                                <label className="block text-sm font-medium text-slate-700">Demanda Diaria (piezas)</label>
                                 <input
                                     type="number"
                                     min="0"
@@ -297,6 +396,11 @@ export const PanelControl: React.FC<Props> = ({ data, updateData }) => {
                                     <option value={2}>2 Turnos</option>
                                     <option value={3}>3 Turnos</option>
                                 </select>
+                                {(data.sectors || []).some(s => s.shiftOverride) && (
+                                    <div className="mt-1.5 px-2 py-1 bg-indigo-50 border border-indigo-200 rounded-md text-xs text-indigo-700 font-medium">
+                                        {(data.sectors || []).filter(s => s.shiftOverride).length} sector(es) con turnos propios
+                                    </div>
+                                )}
                             </div>
                         </div>
 
@@ -328,12 +432,12 @@ export const PanelControl: React.FC<Props> = ({ data, updateData }) => {
                                     <input
                                         type="text"
                                         disabled={data.meta.useSectorOEE}
-                                        className={`block w-full rounded-md border shadow-sm p-2 text-slate-900 font-bold transition-colors ${data.meta.useSectorOEE ? 'bg-purple-50 text-purple-700 border-purple-200 cursor-default' : 'bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500'}`}
+                                        className={`block w-full rounded-md border shadow-sm p-2 font-bold transition-colors ${data.meta.useSectorOEE ? 'bg-slate-100 text-slate-500 border-slate-300 cursor-not-allowed' : 'bg-white text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500'}`}
                                         value={data.meta.useSectorOEE ? formatNumber(oeeLogic.weightedOEE * 100) : oeeLogic.oeeInput}
                                         onChange={(e) => oeeLogic.handleOeeChange(e.target.value)}
                                         placeholder="85"
                                     />
-                                    <span className={`absolute right-3 top-2.5 text-xs font-bold ${data.meta.useSectorOEE ? 'text-purple-400' : 'text-slate-400'}`}>%</span>
+                                    <span className={`absolute right-3 top-2.5 text-xs font-bold ${data.meta.useSectorOEE ? 'text-slate-400' : 'text-slate-400'}`}>%</span>
                                 </div>
 
                                 {data.meta.useSectorOEE && (
@@ -407,7 +511,7 @@ export const PanelControl: React.FC<Props> = ({ data, updateData }) => {
                                     </div>
 
                                     {/* Warnings */}
-                                    {data.tasks.some(t => !t.sectorId) && (
+                                    {hasTasksWithoutSector && (
                                         <div className="mt-2 text-[10px] text-amber-700 bg-amber-50 p-2 rounded border border-amber-100 flex items-start gap-2">
                                             <AlertTriangle size={12} className="mt-0.5 flex-shrink-0" />
                                             <div>
@@ -497,13 +601,14 @@ export const PanelControl: React.FC<Props> = ({ data, updateData }) => {
                             </div>
 
                             {/* Percentage Input */}
-                            <div className={`flex items-center gap-2 transition-opacity ${(data.meta.fatigueCompensation?.enabled ?? true) ? '' : 'opacity-50 pointer-events-none'
+                            <div className={`flex items-center gap-2 transition-opacity ${(data.meta.fatigueCompensation?.enabled ?? true) ? '' : 'opacity-50'
                                 }`}>
                                 <input
                                     type="number"
                                     min="0"
                                     max="30"
-                                    className="w-20 rounded-md border-slate-300 shadow-sm border p-2 bg-white text-slate-900 text-center font-bold"
+                                    disabled={!(data.meta.fatigueCompensation?.enabled ?? true)}
+                                    className={`w-20 rounded-md shadow-sm border p-2 text-center font-bold ${(data.meta.fatigueCompensation?.enabled ?? true) ? 'bg-white text-slate-900 border-slate-300' : 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed'}`}
                                     value={data.meta.fatigueCompensation?.globalPercent ?? 10}
                                     onChange={(e) => oeeLogic.handleMetaChange('fatigueCompensation', {
                                         enabled: data.meta.fatigueCompensation?.enabled ?? true,
@@ -581,6 +686,18 @@ export const PanelControl: React.FC<Props> = ({ data, updateData }) => {
                         onUpdateBreak={shiftManager.updateBreak}
                         editingBreaksShiftId={shiftManager.editingBreaksShiftId}
                         setEditingBreaksShiftId={shiftManager.setEditingBreaksShiftId}
+                        sectors={data.sectors}
+                        dailyDemand={data.meta.dailyDemand}
+                        globalOee={oeeLogic.activeOEE}
+                        setupLossPercent={data.meta.setupLossPercent || 0}
+                        onSectorShiftChange={(sectorId, activeShiftsVal) => {
+                            const newSectors = (data.sectors || []).map(s =>
+                                s.id === sectorId
+                                    ? { ...s, shiftOverride: activeShiftsVal !== null ? { activeShifts: Math.max(1, Math.min(3, activeShiftsVal)) } : undefined }
+                                    : s
+                            );
+                            updateData({ ...data, sectors: newSectors });
+                        }}
                     />
                 </div>
 

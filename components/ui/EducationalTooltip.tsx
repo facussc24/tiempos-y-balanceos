@@ -113,6 +113,10 @@ export const EducationalTooltip: React.FC<EducationalTooltipProps> = ({
                 onMouseLeave={handleMouseLeave}
                 onFocus={handleMouseEnter}
                 onBlur={handleMouseLeave}
+                onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setIsVisible(v => !v); }
+                    if (e.key === 'Escape') { setIsVisible(false); setCoords(null); }
+                }}
                 tabIndex={0}
                 role="button"
                 aria-label={`Información sobre ${termDef.simple}`}

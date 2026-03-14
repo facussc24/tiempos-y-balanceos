@@ -30,15 +30,30 @@ export interface PathConfig {
 }
 
 /**
- * Default configuration using the user's specified network paths
+ * Default configuration using the user's specified network paths.
+ * The mapped drive letter (Y:) can break when Windows loses the network mapping
+ * (sleep, reboot, VPN reconnect). The UNC fallback ensures the app always connects.
  */
 export const DEFAULT_PATH_CONFIG: PathConfig = {
-    basePath: 'Y:\\Ingenieria\\Documentacion Gestion Ingenieria\\15. Tiempos',
+    basePath: 'Y:\\INGENIERIA\\Datos Software',
     dataFolder: '01_DATA',
     mediaFolder: '02_MEDIA',
     docsFolder: '03_DOCS',
     reportsFolder: '04_REPORTES',
 };
+
+/**
+ * UNC fallback path — same folder as basePath but via direct network name.
+ * Used when the mapped drive letter (Y:) is unavailable.
+ */
+export const UNC_FALLBACK_BASE_PATH = '\\\\server\\compartido\\INGENIERIA\\Datos Software';
+
+/**
+ * Legacy paths — for backward compatibility with data saved before the reorganization.
+ * resolveBasePath() will try these if the new path doesn't exist yet.
+ */
+export const LEGACY_BASE_PATH = 'Y:\\Ingenieria\\Documentacion Gestion Ingenieria\\15. Tiempos\\Software';
+export const LEGACY_UNC_FALLBACK = '\\\\server\\compartido\\Ingenieria\\Documentacion Gestion Ingenieria\\15. Tiempos\\Software';
 
 // In-memory config (can be updated at runtime)
 let currentConfig: PathConfig = { ...DEFAULT_PATH_CONFIG };
@@ -68,7 +83,12 @@ export function loadPathConfig(): void {
     if (!isTauri() && typeof localStorage !== 'undefined') {
         const stored = localStorage.getItem('path_config');
         if (stored) {
-            currentConfig = { ...DEFAULT_PATH_CONFIG, ...JSON.parse(stored) };
+            try {
+                currentConfig = { ...DEFAULT_PATH_CONFIG, ...JSON.parse(stored) };
+            } catch {
+                // Corrupted localStorage entry — reset to defaults
+                localStorage.removeItem('path_config');
+            }
         }
     }
 }
@@ -167,7 +187,7 @@ export async function ensureStudyStructure(
         const tauriFs = await import('./tauri_fs');
 
         // Create folders for each content type
-        const contentTypes: ContentType[] = ['data', 'media', 'reports'];
+        const contentTypes: ContentType[] = ['data', 'media'];
 
         for (const type of contentTypes) {
             const path = buildPath(type, client, project, part);
@@ -385,6 +405,81 @@ export async function deleteClient(client: string): Promise<{ success: boolean; 
             success: false,
             error: e instanceof Error ? e.message : 'Unknown error'
         };
+    }
+}
+
+/**
+ * Resolve the best available base path at runtime.
+ * Tries the mapped drive (Y:\...) first, then falls back to UNC (\\server\...).
+ * Updates currentConfig.basePath in-place so all subsequent path operations use it.
+ *
+ * Why: Windows frequently loses mapped drive letters after sleep, reboot, or VPN
+ * reconnect. The UNC path works as long as the network is reachable. This makes
+ * the app resilient to drive mapping issues on any PC.
+ */
+// Cache for resolved base path (avoids repeated network checks)
+let resolvedBasePathCache: { path: string; resolvedAt: number } | null = null;
+const RESOLVE_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
+export async function resolveBasePath(): Promise<string> {
+    if (!isTauri()) return currentConfig.basePath;
+
+    // Return cached result if still valid
+    if (resolvedBasePathCache && (Date.now() - resolvedBasePathCache.resolvedAt) < RESOLVE_CACHE_TTL_MS) {
+        return resolvedBasePathCache.path;
+    }
+
+    try {
+        const tauriFs = await import('./tauri_fs');
+
+        const checkPath = async (path: string, timeout: number): Promise<boolean> => {
+            return Promise.race([
+                tauriFs.exists(path),
+                new Promise<boolean>((_, reject) => setTimeout(() => reject(false), timeout))
+            ]).catch(() => false);
+        };
+
+        // Priority order (highest to lowest)
+        const candidates = [
+            { path: currentConfig.basePath, label: 'primary' },
+            { path: UNC_FALLBACK_BASE_PATH, label: 'UNC' },
+            { path: LEGACY_BASE_PATH, label: 'legacy' },
+            { path: LEGACY_UNC_FALLBACK, label: 'legacy UNC' },
+        ];
+
+        // Check ALL paths in parallel with a global 5s timeout
+        const results = await Promise.race([
+            Promise.allSettled(
+                candidates.map(c => checkPath(c.path, 3000).then(ok => ({ ...c, ok })))
+            ),
+            new Promise<PromiseSettledResult<{ path: string; label: string; ok: boolean }>[]>(
+                resolve => setTimeout(() => resolve(candidates.map(c => ({
+                    status: 'fulfilled' as const,
+                    value: { ...c, ok: false },
+                }))), 5000)
+            ),
+        ]);
+
+        // Pick the first accessible path in priority order
+        for (const result of results) {
+            if (result.status === 'fulfilled' && result.value.ok) {
+                const chosen = result.value;
+                if (chosen.path !== currentConfig.basePath) {
+                    logger.info('PathManager', `Using ${chosen.label} path`, { path: chosen.path });
+                    currentConfig.basePath = chosen.path;
+                }
+                resolvedBasePathCache = { path: chosen.path, resolvedAt: Date.now() };
+                return chosen.path;
+            }
+        }
+
+        // None accessible — keep current and let caller handle
+        logger.warn('PathManager', 'No path accessible');
+        resolvedBasePathCache = { path: currentConfig.basePath, resolvedAt: Date.now() };
+        return currentConfig.basePath;
+    } catch (e) {
+        logger.error('PathManager', 'Error resolving base path', {}, e instanceof Error ? e : undefined);
+        return currentConfig.basePath;
     }
 }
 

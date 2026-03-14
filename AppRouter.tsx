@@ -17,19 +17,23 @@ import { ModuleErrorBoundary } from './components/ui/ModuleErrorBoundary';
 import { isProductCatalogSeeded, seedProductCatalog } from './utils/repositories/productRepository';
 import { PRODUCTS, CUSTOMER_LINES } from './src/data/productCatalogSeed';
 import { logger } from './utils/logger';
+import { AuthProvider } from './components/auth/AuthProvider';
+import { LoginPage } from './components/auth/LoginPage';
 
 // Lazy-load the heavy modules
 const TiemposApp = lazy(() => import('./App'));
 const AmfeApp = lazy(() => import('./modules/amfe/AmfeApp'));
-// PFD, CP, HO are now routed through AmfeApp (with initialTab) so tabs always appear
 const DocumentHub = lazy(() => import('./modules/registry/DocumentHub'));
 const SolicitudApp = lazy(() => import('./modules/solicitud/SolicitudApp'));
 const ManualesApp = lazy(() => import('./modules/engineering/ManualesApp'));
 const FormatosApp = lazy(() => import('./modules/engineering/FormatosApp'));
+const DataManager = lazy(() => import('./modules/DataManager'));
+const PfdTestRoute = lazy(() => import('./modules/pfd/PfdTestRoute'));
+const PfdSvgAudit = lazy(() => import('./modules/pfd/PfdSvgAudit'));
 
-type AppMode = 'landing' | 'pfd' | 'tiempos' | 'amfe' | 'controlPlan' | 'hojaOperaciones' | 'registry' | 'solicitud' | 'manuales' | 'formatos';
+type AppMode = 'landing' | 'pfd' | 'pfdTest' | 'pfdSvgAudit' | 'tiempos' | 'amfe' | 'controlPlan' | 'hojaOperaciones' | 'registry' | 'solicitud' | 'manuales' | 'formatos' | 'dataManager';
 
-const VALID_MODES = new Set<AppMode>(['landing', 'pfd', 'tiempos', 'amfe', 'controlPlan', 'hojaOperaciones', 'registry', 'solicitud', 'manuales', 'formatos']);
+const VALID_MODES = new Set<AppMode>(['landing', 'pfd', 'pfdTest', 'pfdSvgAudit', 'tiempos', 'amfe', 'controlPlan', 'hojaOperaciones', 'registry', 'solicitud', 'manuales', 'formatos', 'dataManager']);
 const LS_KEY_MODE = 'barack_lastModule';
 
 const LoadingFallback: React.FC = () => (
@@ -49,7 +53,7 @@ const DOC_TYPE_TO_MODE: Record<DocumentType, AppMode> = {
     hojaOperaciones: 'hojaOperaciones',
 };
 
-const AppRouter: React.FC = () => {
+const AppRouterInner: React.FC = () => {
     const [currentMode, setCurrentMode] = useState<AppMode>(() => {
         try {
             const saved = localStorage.getItem(LS_KEY_MODE) as AppMode | null;
@@ -75,7 +79,7 @@ const AppRouter: React.FC = () => {
         return () => { cancelled = true; };
     }, []);
 
-    const handleSelectModule = useCallback((module: 'pfd' | 'tiempos' | 'amfe' | 'controlPlan' | 'hojaOperaciones' | 'registry' | 'solicitud' | 'manuales' | 'formatos') => {
+    const handleSelectModule = useCallback((module: 'pfd' | 'pfdTest' | 'pfdSvgAudit' | 'tiempos' | 'amfe' | 'controlPlan' | 'hojaOperaciones' | 'registry' | 'solicitud' | 'manuales' | 'formatos' | 'dataManager') => {
         setCurrentMode(module);
         try { localStorage.setItem(LS_KEY_MODE, module); } catch { /* ignore */ }
     }, []);
@@ -89,7 +93,7 @@ const AppRouter: React.FC = () => {
     const handleOpenDocument = useCallback((_type: DocumentType, _id: string) => {
         const mode = DOC_TYPE_TO_MODE[_type];
         setCurrentMode(mode);
-        // TODO: In the future, pass the document ID to the module for auto-loading
+        // TODO: Pass document ID to module for auto-loading
     }, []);
 
     // Compute document counts and recent docs for landing page
@@ -122,6 +126,16 @@ const AppRouter: React.FC = () => {
                     <AmfeApp onBackToLanding={handleBackToLanding} initialTab="pfd" />
                 </ModuleErrorBoundary>
             )}
+            {currentMode === 'pfdTest' && (
+                <ModuleErrorBoundary moduleName="PFD Test" onNavigateHome={handleBackToLanding}>
+                    <PfdTestRoute onBackToLanding={handleBackToLanding} />
+                </ModuleErrorBoundary>
+            )}
+            {currentMode === 'pfdSvgAudit' && (
+                <ModuleErrorBoundary moduleName="PFD SVG Audit" onNavigateHome={handleBackToLanding}>
+                    <PfdSvgAudit />
+                </ModuleErrorBoundary>
+            )}
             {currentMode === 'tiempos' && (
                 <ModuleErrorBoundary moduleName="Tiempos y Balanceos" onNavigateHome={handleBackToLanding}>
                     <TiemposApp onBackToLanding={handleBackToLanding} />
@@ -129,7 +143,7 @@ const AppRouter: React.FC = () => {
             )}
             {currentMode === 'amfe' && (
                 <ModuleErrorBoundary moduleName="AMFE VDA" onNavigateHome={handleBackToLanding}>
-                    <AmfeApp onBackToLanding={handleBackToLanding} />
+                    <AmfeApp onBackToLanding={handleBackToLanding} initialTab="amfe" />
                 </ModuleErrorBoundary>
             )}
             {currentMode === 'controlPlan' && (
@@ -162,8 +176,19 @@ const AppRouter: React.FC = () => {
                     <DocumentHub onBackToLanding={handleBackToLanding} onOpenDocument={handleOpenDocument} />
                 </ModuleErrorBoundary>
             )}
+            {currentMode === 'dataManager' && (
+                <ModuleErrorBoundary moduleName="Datos y Seguridad" onNavigateHome={handleBackToLanding}>
+                    <DataManager onBackToLanding={handleBackToLanding} />
+                </ModuleErrorBoundary>
+            )}
         </Suspense>
     );
 };
+
+const AppRouter: React.FC = () => (
+    <AuthProvider loginPage={<LoginPage />}>
+        <AppRouterInner />
+    </AuthProvider>
+);
 
 export default AppRouter;

@@ -40,8 +40,8 @@ export const BlockingStarvingDashboard: React.FC<BlockingStarvingDashboardProps>
     elapsedTime,
     isComplete,
 }) => {
-    // Don't show if simulation hasn't run yet
-    if (elapsedTime < 1) {
+    // Don't show if simulation hasn't run yet or no stations configured
+    if (elapsedTime < 1 || stations.length === 0) {
         return null;
     }
 
@@ -63,8 +63,11 @@ export const BlockingStarvingDashboard: React.FC<BlockingStarvingDashboardProps>
     });
 
     // Calculate line-level totals
-    const totalBlockedPct = stationData.reduce((sum, s) => sum + s.blockedPct, 0) / stations.length;
-    const totalStarvedPct = stationData.reduce((sum, s) => sum + s.starvedPct, 0) / stations.length;
+    // FIX: Defensive guard against div-by-zero (early return at line 44 handles
+    // normal flow, but this prevents NaN if stations array is somehow empty)
+    const stationCount = stations.length || 1;
+    const totalBlockedPct = stationData.reduce((sum, s) => sum + s.blockedPct, 0) / stationCount;
+    const totalStarvedPct = stationData.reduce((sum, s) => sum + s.starvedPct, 0) / stationCount;
     const hasIssues = totalBlockedPct > 1 || totalStarvedPct > 1;
 
     return (

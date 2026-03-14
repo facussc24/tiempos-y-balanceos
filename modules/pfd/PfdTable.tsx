@@ -11,7 +11,7 @@
 
 import React from 'react';
 import { ArrowDown, Plus, FileText, Factory, GitBranch, GitMerge, CornerDownLeft, XOctagon, Filter } from 'lucide-react';
-import type { PfdStep, RejectDisposition } from './pfdTypes';
+import type { PfdStep, PfdColumnDef, RejectDisposition } from './pfdTypes';
 import { PFD_COLUMNS, getBranchColor, collectForkBranches } from './pfdTypes';
 import PfdTableRow from './PfdTableRow';
 
@@ -30,6 +30,8 @@ interface Props {
     /** C5-U3: Toggle flow arrows between rows */
     showFlowArrows?: boolean;
     readOnly?: boolean;
+    /** Phase C: Filtered columns to render (when provided, overrides PFD_COLUMNS) */
+    visibleColumns?: PfdColumnDef[];
 }
 
 /** C9-N1: Disposition labels in Spanish */
@@ -196,20 +198,22 @@ function FlowArrow({
     );
 }
 
-const PfdTable: React.FC<Props> = ({ steps, onUpdateStep, onBatchUpdateStep, onRemoveStep, onMoveStep, onInsertAfter, onDuplicate, onAddStep, onLoadTemplate, onLoadManufacturingTemplate, showFlowArrows = true, readOnly }) => {
-    const colCount = PFD_COLUMNS.length + (readOnly ? 0 : 1);
+const PfdTable: React.FC<Props> = ({ steps, onUpdateStep, onBatchUpdateStep, onRemoveStep, onMoveStep, onInsertAfter, onDuplicate, onAddStep, onLoadTemplate, onLoadManufacturingTemplate, showFlowArrows = true, readOnly, visibleColumns }) => {
+    const columnsToRender = visibleColumns || PFD_COLUMNS;
+    const colCount = columnsToRender.length + (readOnly ? 0 : 1);
 
     return (
         <>
             <thead className="sticky top-0 z-20">
                 <tr className="bg-gradient-to-r from-cyan-600 to-teal-600">
-                    {PFD_COLUMNS.map((col, ci) => {
+                    {columnsToRender.map((col, ci) => {
                         // C7-U1: First 3 columns are sticky (Nº Op., Símbolo, Descripción)
                         const isSticky = ci < 3;
                         const stickyLeft = ci === 0 ? 0 : ci === 1 ? 80 : ci === 2 ? 140 : 0;
                         return (
                             <th
                                 key={col.key}
+                                scope="col"
                                 className={`px-2 py-2.5 text-xs font-semibold text-white text-center border-r border-cyan-500/30 whitespace-nowrap ${isSticky ? 'sticky z-30 bg-cyan-600 shadow-[2px_0_4px_rgba(0,0,0,0.1)]' : ''} ${col.tooltip ? 'cursor-help' : ''}`}
                                 style={{ width: col.width, ...(isSticky ? { left: `${stickyLeft}px` } : {}) }}
                                 title={col.tooltip}
@@ -220,7 +224,7 @@ const PfdTable: React.FC<Props> = ({ steps, onUpdateStep, onBatchUpdateStep, onR
                         );
                     })}
                     {!readOnly && (
-                        <th className="px-2 py-2.5 text-xs font-semibold text-white text-center sticky right-0 z-30 bg-teal-600 shadow-[-2px_0_4px_rgba(0,0,0,0.1)]" style={{ width: '90px' }}>
+                        <th scope="col" className="px-2 py-2.5 text-xs font-semibold text-white text-center sticky right-0 z-30 bg-teal-600 shadow-[-2px_0_4px_rgba(0,0,0,0.1)]" style={{ width: '90px' }}>
                             Acciones
                         </th>
                     )}
@@ -280,6 +284,7 @@ const PfdTable: React.FC<Props> = ({ steps, onUpdateStep, onBatchUpdateStep, onR
                                 onInsertAfter={onInsertAfter}
                                 onDuplicate={onDuplicate}
                                 readOnly={readOnly}
+                                visibleColumns={visibleColumns}
                             />
                             {/* C9-N1: Enhanced flow arrows with fork/join/NG-path */}
                             {showFlowArrows && index < steps.length - 1 && (

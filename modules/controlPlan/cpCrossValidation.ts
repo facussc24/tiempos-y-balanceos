@@ -51,6 +51,7 @@ export function validateCpAgainstAmfe(
     issues.push(...validatePokaYokeFrequency(cpDoc));
     issues.push(...validatePokaYokeDetectionCoherence(cpDoc, amfeDoc));
     issues.push(...validateSamplingConsistency(cpDoc));
+    issues.push(...validateMachineConsolidation(cpDoc));
 
     // Cross-validations (only when AMFE is available)
     if (amfeDoc?.operations && amfeDoc.operations.length > 0) {
@@ -93,10 +94,12 @@ export function validateSpecialCharConsistency(
                 for (const fail of func.failures) {
                     if (!fail?.causes) continue;
                     for (const cause of fail.causes) {
-                        if (cause.ap !== 'H' && cause.ap !== 'M') continue;
+                        const sev = typeof fail.severity === 'number' ? fail.severity : Number(fail.severity) || 0;
+                        const hasSpecialChar = !!(cause.specialChar?.trim()) || sev >= 5;
+                        // Include AP=H, AP=M, and SC/CC with AP=L (IATF 16949 §8.3.3.3)
+                        if (cause.ap !== 'H' && cause.ap !== 'M' && !hasSpecialChar) continue;
                         const explicit = cause.specialChar?.trim();
                         let expected = '';
-                        const sev = typeof fail.severity === 'number' ? fail.severity : Number(fail.severity) || 0;
                         if (explicit) {
                             expected = explicit;
                         } else if (sev >= 9) {
@@ -106,7 +109,11 @@ export function validateSpecialCharConsistency(
                             expected = 'SC';
                         }
                         if (expected) {
-                            amfeClassMap.set(norm(op.name), { expected, severity: sev, failDesc: fail.description });
+                            const existing = amfeClassMap.get(norm(op.name));
+                            const priority = (cls: string) => cls === 'CC' ? 2 : cls === 'SC' ? 1 : 0;
+                            if (!existing || priority(expected) > priority(existing.expected)) {
+                                amfeClassMap.set(norm(op.name), { expected, severity: sev, failDesc: fail.description });
+                            }
                         }
                     }
                 }
@@ -147,8 +154,11 @@ export function validateSpecialCharConsistency(
 // ============================================================================
 
 /**
- * Check that every AMFE cause with AP=H or AP=M has a corresponding CP item.
+ * Check that every AMFE cause with AP=H, AP=M, or SC/CC classification
+ * has a corresponding CP item.
  * Matching is by operation name (processDescription ↔ operation name).
+ *
+ * Per IATF 16949 §8.3.3.3: SC/CC characteristics must be in CP regardless of AP.
  */
 export function validateOrphanFailures(
     cpDoc: ControlPlanDocument,
@@ -169,7 +179,11 @@ export function validateOrphanFailures(
                 for (const fail of func.failures) {
                     if (!fail?.causes) continue;
                     for (const cause of fail.causes) {
-                        if (cause.ap !== 'H' && cause.ap !== 'M') continue;
+                        const sev = typeof fail.severity === 'number' ? fail.severity : Number(fail.severity) || 0;
+                        const hasSpecialChar = !!(cause.specialChar?.trim()) || sev >= 5;
+
+                        // Skip causes with no CP relevance (AP=L without SC/CC)
+                        if (cause.ap !== 'H' && cause.ap !== 'M' && !hasSpecialChar) continue;
 
                         // Check if any CP item covers this operation
                         const opNorm = norm(op.name);
@@ -178,10 +192,11 @@ export function validateOrphanFailures(
                         );
 
                         if (!covered) {
+                            const scLabel = sev >= 9 ? ' [CC]' : sev >= 5 ? ' [SC]' : '';
                             issues.push({
                                 severity: cause.ap === 'H' ? 'error' : 'warning',
                                 code: 'ORPHAN_FAILURE',
-                                message: `Causa AMFE sin cobertura en CP: Op "${op.name}" → Falla "${fail.description}" → Causa "${cause.cause}" (AP=${cause.ap})`,
+                                message: `Causa AMFE sin cobertura en CP: Op "${op.name}" → Falla "${fail.description}" → Causa "${cause.cause}" (AP=${cause.ap}${scLabel})`,
                                 amfePath: `${op.name} > ${fail.description} > ${cause.cause}`,
                             });
                         }
@@ -323,8 +338,10 @@ export function validatePokaYokeDetectionCoherence(
     const issues: CpValidationIssue[] = [];
     if (!cpDoc?.items || !amfeDoc?.operations) return issues;
 
-    // Build map: operation name → max detection rating from causes
-    const amfeDetection = new Map<string, number>();
+    // Build cause ID → detection map for precise matching
+    const causeDetection = new Map<string, number>();
+    // Build operation name → max detection map as fallback
+    const opDetection = new Map<string, number>();
     for (const op of amfeDoc.operations) {
         if (!op?.workElements) continue;
         let maxD = 0;
@@ -336,12 +353,13 @@ export function validatePokaYokeDetectionCoherence(
                     if (!fail?.causes) continue;
                     for (const cause of fail.causes) {
                         const d = Number(cause.detection) || 0;
+                        causeDetection.set(cause.id, d);
                         if (d > maxD) maxD = d;
                     }
                 }
             }
         }
-        if (maxD > 0) amfeDetection.set(norm(op.name), maxD);
+        if (maxD > 0) opDetection.set(norm(op.name), maxD);
     }
 
     for (const item of cpDoc.items) {
@@ -349,14 +367,27 @@ export function validatePokaYokeDetectionCoherence(
         const hasPokaYoke = cm.includes('poka-yoke') || cm.includes('poka yoke') || cm.includes('pokayoke');
         if (!hasPokaYoke) continue;
 
-        const procNorm = norm(item.processDescription);
-        const matchKey = [...amfeDetection.keys()].find(
-            k => k.includes(procNorm) || procNorm.includes(k)
-        );
-        if (!matchKey) continue;
+        // Prefer specific cause-level detection when amfeCauseIds are available
+        let detectionRating: number | undefined;
+        if (item.amfeCauseIds?.length) {
+            let maxD = 0;
+            for (const causeId of item.amfeCauseIds) {
+                const d = causeDetection.get(causeId) ?? 0;
+                if (d > maxD) maxD = d;
+            }
+            if (maxD > 0) detectionRating = maxD;
+        }
 
-        const detectionRating = amfeDetection.get(matchKey)!;
-        if (detectionRating > 3) {
+        // Fallback to operation-level matching if no cause IDs
+        if (detectionRating === undefined) {
+            const procNorm = norm(item.processDescription);
+            const matchKey = [...opDetection.keys()].find(
+                k => k.includes(procNorm) || procNorm.includes(k)
+            );
+            if (matchKey) detectionRating = opDetection.get(matchKey);
+        }
+
+        if (detectionRating !== undefined && detectionRating > 3) {
             issues.push({
                 severity: 'warning',
                 code: 'POKAYOKE_HIGH_D',
@@ -400,6 +431,49 @@ export function validateSamplingConsistency(
                 code: 'SAMPLE_INCONSISTENCY',
                 message: `Item "${item.processDescription}": Muestra 100% pero frecuencia "${item.sampleFrequency}" no indica muestreo continuo. Verificar coherencia.`,
                 itemId: item.id,
+            });
+        }
+    }
+
+    return issues;
+}
+
+// ============================================================================
+// V8: Machine Consolidation (multiple machines per process step)
+// ============================================================================
+
+/**
+ * Check if a process step has multiple different machines assigned.
+ * AIAG CP 2024 recommends consolidating machines per process step
+ * or referencing the automation/MES system instead.
+ */
+export function validateMachineConsolidation(
+    cpDoc: ControlPlanDocument,
+): CpValidationIssue[] {
+    const issues: CpValidationIssue[] = [];
+    if (!cpDoc?.items) return issues;
+
+    // Group items by processStepNumber
+    const groups = new Map<string, ControlPlanItem[]>();
+    for (const item of cpDoc.items) {
+        const psn = (item.processStepNumber || '').trim();
+        if (!psn) continue;
+        const group = groups.get(psn) || [];
+        group.push(item);
+        groups.set(psn, group);
+    }
+
+    for (const [psn, items] of groups) {
+        const machines = new Set(
+            items.map(i => (i.machineDeviceTool || '').trim().toLowerCase()).filter(Boolean)
+        );
+        if (machines.size > 1) {
+            const machineList = [...new Set(items.map(i => i.machineDeviceTool).filter(Boolean))];
+            issues.push({
+                severity: 'info',
+                code: 'MULTIPLE_MACHINES',
+                message: `Proceso ${psn} "${items[0].processDescription}": ${machineList.length} maquinas distintas (${machineList.join(', ')}). Considere consolidar en una unica descripcion de equipo.`,
+                itemId: items[0].id,
             });
         }
     }

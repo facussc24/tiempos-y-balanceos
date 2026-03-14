@@ -461,9 +461,11 @@ export function addProductToMix(
     path: string,
     demand: number
 ): MixScenario {
-    // M-03 FIX: Validate demand is positive
-    if (demand <= 0) {
-        logger.warn('mixHelpers', 'Demand must be positive, using fallback', { demand });
+    // M-03 FIX: Validate demand is positive and finite
+    // FIX: Also guard against NaN — NaN <= 0 is false, so it slips through the
+    // original check, contaminating totalDemand and zeroing all percentages.
+    if (!Number.isFinite(demand) || demand <= 0) {
+        logger.warn('mixHelpers', 'Demand must be positive and finite, using fallback', { demand });
         demand = 1;
     }
     const newProducts = [
@@ -494,12 +496,16 @@ export function removeProductFromMix(
     path: string
 ): MixScenario {
     const newProducts = scenario.products.filter(p => p.path !== path);
-    const totalDemand = newProducts.reduce((sum, p) => sum + p.demand, 0);
+    // FIX: Guard against NaN demands contaminating totalDemand
+    const totalDemand = newProducts.reduce((sum, p) => {
+        const d = Number.isFinite(p.demand) ? p.demand : 0;
+        return sum + d;
+    }, 0);
 
     // Recalculate percentages
     const withPercentages = newProducts.map(p => ({
         ...p,
-        percentage: totalDemand > 0 ? p.demand / totalDemand : 0
+        percentage: totalDemand > 0 && Number.isFinite(p.demand) ? p.demand / totalDemand : 0
     }));
 
     return {
@@ -517,6 +523,11 @@ export function updateProductDemand(
     path: string,
     demand: number
 ): MixScenario {
+    // Validate demand is positive (consistent with addProductToMix)
+    if (demand <= 0) {
+        logger.warn('mixHelpers', 'Demand must be positive, using fallback', { demand });
+        demand = 1;
+    }
     const newProducts = scenario.products.map(p =>
         p.path === path ? { ...p, demand } : p
     );

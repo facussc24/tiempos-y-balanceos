@@ -17,6 +17,7 @@
 
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
+import { useFocusTrap } from '../../hooks/useFocusTrap';
 import {
     Search,
     X,
@@ -103,7 +104,8 @@ const CATEGORY_CONFIG: Record<CommandCategory, {
 const HighlightMatch: React.FC<{ text: string; query: string }> = ({ text, query }) => {
     if (!query.trim()) return <>{text}</>;
 
-    const parts = text.split(new RegExp(`(${query})`, 'gi'));
+    const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const parts = text.split(new RegExp(`(${escaped})`, 'gi'));
 
     return (
         <>
@@ -138,6 +140,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
     const [selectedIndex, setSelectedIndex] = useState(0);
     const inputRef = useRef<HTMLInputElement>(null);
     const listRef = useRef<HTMLDivElement>(null);
+    const paletteRef = useFocusTrap(isOpen);
 
     // Build command list
     const commands = useMemo<CommandItem[]>(() => [
@@ -373,11 +376,16 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
             onClick={handleBackdropClick}
         >
             <div
+                ref={paletteRef}
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="command-palette-title"
                 className="w-full max-w-xl bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden animate-in slide-in-from-top-4 duration-200"
                 onKeyDown={handleKeyDown}
             >
                 {/* Search Header */}
                 <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white">
+                    <span id="command-palette-title" className="sr-only">Paleta de comandos</span>
                     <Search size={20} className="text-slate-400" />
                     <input
                         ref={inputRef}
@@ -394,6 +402,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
                     </kbd>
                     <button
                         onClick={onClose}
+                        aria-label="Cerrar"
                         className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
                     >
                         <X size={18} />
@@ -443,11 +452,11 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
                                                     {cmd.icon}
                                                 </div>
                                                 <div className="flex-1 min-w-0">
-                                                    <div className={`font-medium truncate ${isSelected ? 'text-blue-700' : 'text-slate-700'}`}>
+                                                    <div className={`font-medium truncate ${isSelected ? 'text-blue-700' : 'text-slate-700'}`} title={cmd.label}>
                                                         <HighlightMatch text={cmd.label} query={query} />
                                                     </div>
                                                     {cmd.description && (
-                                                        <div className="text-xs text-slate-400 truncate">
+                                                        <div className="text-xs text-slate-400 truncate" title={cmd.description}>
                                                             <HighlightMatch text={cmd.description} query={query} />
                                                         </div>
                                                     )}

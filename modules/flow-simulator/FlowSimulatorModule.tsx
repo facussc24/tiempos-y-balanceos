@@ -8,7 +8,7 @@
  */
 
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
-import { ProjectData, StationConfig } from '../../types';
+import { ProjectData, StationConfig, Task } from '../../types';
 import './flow-simulator.css';
 import {
     InventoryStatus,
@@ -22,7 +22,7 @@ import {
     ProductMixMode,
 } from './flowTypes';
 import { createDESEngine, DESConfig } from './desSimulationEngine';
-import { calculateTaktTime } from '../../core/balancing/simulation';
+import { calculateTaktTime, calculateEffectiveStationTime } from '../../core/balancing/simulation';
 import { useResolvedProject } from '../../hooks/useResolvedProject';
 import { analyzeBufferNeeds } from '../../core/balancing/bufferLogic';
 import { BlockingStarvingDashboard } from './BlockingStarvingDashboard';
@@ -109,9 +109,9 @@ export const FlowSimulatorModule: React.FC<Props> = ({ data, rootHandle }) => {
             return { taktTime: (fallbackMinutes * 60 * oee) / demand, totalAvailableMinutes: fallbackMinutes };
         }
 
-        const result = calculateTaktTime(resolvedData.shifts, activeShifts, demand, oee);
+        const result = calculateTaktTime(resolvedData.shifts, activeShifts, demand, oee, resolvedData.meta.setupLossPercent || 0);
         return { taktTime: result.effectiveSeconds, totalAvailableMinutes: result.totalAvailableMinutes };
-    }, [resolvedData.shifts, resolvedData.meta.dailyDemand, resolvedData.meta.activeShifts, resolvedData.meta.manualOEE]);
+    }, [resolvedData.shifts, resolvedData.meta.dailyDemand, resolvedData.meta.activeShifts, resolvedData.meta.manualOEE, resolvedData.meta.setupLossPercent]);
 
     const taktTime = taktMetrics.taktTime;
 
@@ -150,7 +150,7 @@ export const FlowSimulatorModule: React.FC<Props> = ({ data, rootHandle }) => {
 
                 for (const stId of sortedIds) {
                     const stTasks = stationMap.get(stId)!;
-                    const cycleTime = stTasks.reduce((sum, t) => sum + (t.standardTime || 0), 0);
+                    const cycleTime = calculateEffectiveStationTime(stTasks);
 
                     // Derive sector from first task that has a sectorId
                     const firstWithSector = stTasks.find(t => t.sectorId);
@@ -194,7 +194,9 @@ export const FlowSimulatorModule: React.FC<Props> = ({ data, rootHandle }) => {
                 ? resolvedData.sectors?.find(s => s.id === firstTaskWithSector.sectorId)
                 : resolvedData.sectors?.[idx % (resolvedData.sectors?.length || 1)];
 
-            const calculatedCycleTime = tasksInStation.reduce((sum, t) => sum + (t?.standardTime || 0), 0);
+            const calculatedCycleTime = tasksInStation.length > 0
+                ? calculateEffectiveStationTime(tasksInStation.filter(Boolean) as Task[])
+                : 0;
             const cycleTime = st.effectiveTime || st.cycleTimeOverride || calculatedCycleTime || (taktTime > 0 ? taktTime * 0.9 : 45);
             const bufferCapacity = (st.logistics?.binCapacity || 10) * (st.logistics?.currentBins || 2);
 
@@ -332,10 +334,15 @@ export const FlowSimulatorModule: React.FC<Props> = ({ data, rootHandle }) => {
                     if (piece.currentStationDuration === undefined) {
                         let baseDuration = station.cycleTime * piece.cycleTimeMultiplier;
                         if (currentVariability > 0) {
-                            const u1 = Math.random(), u2 = Math.random();
+                            // FIX: Guard against Math.random()=0 → Math.log(0)=-Infinity → NaN
+                            // Same fix as desSimulationEngine.ts gaussianRandom()
+                            const u1 = Math.random() || Number.MIN_VALUE;
+                            const u2 = Math.random() || Number.MIN_VALUE;
                             const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
                             const stdDev = baseDuration * (currentVariability / 100);
-                            baseDuration = Math.max(baseDuration * 0.5, baseDuration + z * stdDev);
+                            baseDuration = Number.isFinite(z)
+                                ? Math.max(baseDuration * 0.5, baseDuration + z * stdDev)
+                                : baseDuration;
                         }
                         piece.currentStationDuration = baseDuration;
                     }

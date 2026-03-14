@@ -50,7 +50,7 @@ export const LoadCapacityChart: React.FC<LoadCapacityChartProps> = ({ sectors = 
 
             <div className="space-y-4">
                 {sectors.map((sector, idx) => {
-                    const loadPercentage = (sector.weightedTime / taktTime) * 100;
+                    const loadPercentage = (sector.weightedTime / safeTakt) * 100;
                     // For visualization, we might cap the bar width or handle it if it exceeds 100% of a SINGLE workstation?
                     // "Process Load" vs Takt. 
                     // If a sector has multiple stations, the "Load" is total time, but capacity is machines * Takt.

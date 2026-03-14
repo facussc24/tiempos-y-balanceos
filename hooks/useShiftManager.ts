@@ -4,7 +4,7 @@ import { ProjectData, ShiftBreak } from '../types';
 export const useShiftManager = (data: ProjectData, updateData: (data: ProjectData) => void) => {
     const [editingBreaksShiftId, setEditingBreaksShiftId] = useState<number | null>(null);
 
-    const handleShiftChange = (id: number, field: string, value: any) => {
+    const handleShiftChange = (id: number, field: string, value: string) => {
         const newShifts = data.shifts.map((s) =>
             s.id === id ? { ...s, [field]: value } : s
         );
@@ -31,7 +31,7 @@ export const useShiftManager = (data: ProjectData, updateData: (data: ProjectDat
         updateData({ ...data, shifts: updatedShifts });
     };
 
-    const updateBreak = (shiftId: number, breakId: string, field: keyof ShiftBreak, value: any) => {
+    const updateBreak = (shiftId: number, breakId: string, field: keyof ShiftBreak, value: ShiftBreak[keyof ShiftBreak]) => {
         const updatedShifts = data.shifts.map(s =>
             s.id === shiftId ? {
                 ...s,

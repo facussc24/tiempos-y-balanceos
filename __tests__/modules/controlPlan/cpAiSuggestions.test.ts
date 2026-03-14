@@ -63,7 +63,7 @@ describe('CP SYSTEM_PROMPT', () => {
 
     it('contains severity-based reaction plan rules', () => {
         expect(SYSTEM_PROMPT).toContain('S>=9');
-        expect(SYSTEM_PROMPT).toContain('Detener linea');
+        expect(SYSTEM_PROMPT).toContain('Detener línea');
     });
 
     it('contains technical vocabulary', () => {
@@ -141,7 +141,7 @@ describe('FIELD_PROMPTS', () => {
 
         it('references detection origin from AMFE', () => {
             const prompt = FIELD_PROMPTS.evaluationTechnique(BASE_CONTEXT, 'Ultrasonido');
-            expect(prompt).toContain('Deteccion');
+            expect(prompt).toContain('Detección');
         });
     });
 
@@ -189,7 +189,7 @@ describe('FIELD_PROMPTS', () => {
         it('includes severity-based rules', () => {
             const prompt = FIELD_PROMPTS.reactionPlan(BASE_CONTEXT, 'Detener');
             expect(prompt).toContain('S>=9');
-            expect(prompt).toContain('Detener linea');
+            expect(prompt).toContain('Detener línea');
         });
 
         it('includes CC/SC classification', () => {
@@ -321,5 +321,30 @@ describe('parseCpGeminiResponse', () => {
         const result = parseCpGeminiResponse('[123, "valid", null, true]', 'test');
         expect(result).toHaveLength(1);
         expect(result[0].text).toBe('valid');
+    });
+
+    it('extracts text from object responses (Gemini edge case)', () => {
+        const response = JSON.stringify([
+            { text: 'Poka-Yoke geometrico' },
+            'CMM 100%',
+            { suggestion: 'SPC carta X-R' },
+            { value: 'Vision artificial' },
+            { unrelated: 'ignored' },
+        ]);
+        const result = parseCpGeminiResponse(response, 'test');
+        expect(result).toHaveLength(4);
+        expect(result[0].text).toBe('Poka-Yoke geometrico');
+        expect(result[1].text).toBe('CMM 100%');
+        expect(result[2].text).toBe('SPC carta X-R');
+        expect(result[3].text).toBe('Vision artificial');
+    });
+
+    it('filters objects without recognized text fields', () => {
+        const response = JSON.stringify([
+            { name: 'not recognized' },
+            { id: 123, label: 'also not' },
+        ]);
+        const result = parseCpGeminiResponse(response, 'test');
+        expect(result).toHaveLength(0);
     });
 });

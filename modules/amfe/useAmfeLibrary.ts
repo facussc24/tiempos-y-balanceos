@@ -206,7 +206,7 @@ export function useAmfeLibrary(): UseAmfeLibraryResult {
 
             return scanLinkedAmfes(libOpId, libOp.name, docs, registry.entries);
         } catch (err) {
-            logger.error('[AMFE Library] Error scanning impact:', err);
+            logger.error('AMFE', 'Library: Error scanning impact', { error: err instanceof Error ? err.message : String(err) });
             return null;
         } finally {
             setIsScanning(false);
@@ -258,8 +258,8 @@ export function useAmfeLibrary(): UseAmfeLibraryResult {
 
             return generateSyncSummary(results);
         } catch (err) {
-            logger.error('[AMFE Library] Error during batch sync:', err);
-            return 'Error durante la sincronizacion. Verifique la red y reintente.';
+            logger.error('AMFE', 'Library: Error during batch sync', { error: err instanceof Error ? err.message : String(err) });
+            return 'Error durante la sincronización. Verifique la red y reintente.';
         } finally {
             setIsSyncing(false);
         }

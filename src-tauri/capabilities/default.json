@@ -29,7 +29,17 @@
       "identifier": "fs:scope",
       "allow": [
         "Y:\\**",
-        "$DOCUMENT/**"
+        "$DOCUMENT/**",
+        "\\\\SERVER\\**",
+        "\\\\server\\**"
+      ]
+    },
+    "opener:default",
+    {
+      "identifier": "opener:allow-open-path",
+      "allow": [
+        { "path": "Y:\\**" },
+        { "path": "$DOCUMENT/**" }
       ]
     },
     "sql:default",

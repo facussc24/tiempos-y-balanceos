@@ -5,9 +5,10 @@
  * Used when ConflictError is thrown during save operations.
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AlertTriangle, RefreshCw, FilePlus, X, Clock, User, Hash } from 'lucide-react';
 import { SaveConflict } from '../../utils/concurrency';
+import { useFocusTrap } from '../../hooks/useFocusTrap';
 
 interface ConflictModalProps {
     conflict: SaveConflict;
@@ -18,9 +19,23 @@ interface ConflictModalProps {
 
 export function ConflictModal({ conflict, onReload, onSaveAsNew, onCancel }: ConflictModalProps) {
     const [isLoading, setIsLoading] = useState(false);
+    const modalRef = useFocusTrap(true);
+
+    useEffect(() => {
+        const handleEscape = (e: KeyboardEvent) => {
+            if (e.key === 'Escape' && !isLoading) {
+                onCancel();
+            }
+        };
+        document.addEventListener('keydown', handleEscape);
+        return () => document.removeEventListener('keydown', handleEscape);
+    }, [isLoading, onCancel]);
 
     const formatTimestamp = (ts: number) => {
-        return new Date(ts).toLocaleString('es-AR', {
+        const d = new Date(ts);
+        // FIX: Guard against Invalid Date producing "Invalid Date" string
+        if (isNaN(d.getTime())) return '—';
+        return d.toLocaleString('es-AR', {
             dateStyle: 'short',
             timeStyle: 'medium'
         });
@@ -36,19 +51,27 @@ export function ConflictModal({ conflict, onReload, onSaveAsNew, onCancel }: Con
     };
 
     return (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full animate-in fade-in zoom-in duration-200">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" role="presentation" onClick={onCancel}>
+            <div
+                ref={modalRef}
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="conflict-modal-title"
+                className="bg-white rounded-xl shadow-2xl max-w-lg w-full animate-in fade-in zoom-in duration-200"
+                onClick={e => e.stopPropagation()}
+            >
                 {/* Header */}
                 <div className="flex items-center gap-3 p-6 border-b border-slate-200">
                     <div className="bg-amber-100 text-amber-600 p-3 rounded-lg">
                         <AlertTriangle size={24} />
                     </div>
                     <div>
-                        <h2 className="text-lg font-bold text-slate-800">Conflicto de Versión</h2>
+                        <h2 id="conflict-modal-title" className="text-lg font-bold text-slate-800">Conflicto de Versión</h2>
                         <p className="text-sm text-slate-500">El archivo fue modificado por otro usuario</p>
                     </div>
                     <button
                         onClick={onCancel}
+                        aria-label="Cerrar"
                         className="ml-auto text-slate-400 hover:text-slate-600 transition-colors"
                     >
                         <X size={20} />
@@ -101,25 +124,35 @@ export function ConflictModal({ conflict, onReload, onSaveAsNew, onCancel }: Con
                     <button
                         onClick={() => handleAction(onReload)}
                         disabled={isLoading}
-                        className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
+                        className="w-full flex flex-col items-center gap-1 px-4 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        <RefreshCw size={18} className={isLoading ? 'animate-spin' : ''} />
-                        Recargar (Perder cambios locales)
+                        <span className="flex items-center gap-2">
+                            <RefreshCw size={18} className={isLoading ? 'animate-spin' : ''} />
+                            Recargar (Perder cambios locales)
+                        </span>
+                        <span className="text-xs font-normal text-blue-200">
+                            Se descartarán todos los cambios no guardados y se cargará la versión del servidor
+                        </span>
                     </button>
 
                     <button
                         onClick={() => handleAction(onSaveAsNew)}
                         disabled={isLoading}
-                        className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition-colors disabled:opacity-50"
+                        className="w-full flex flex-col items-center gap-1 px-4 py-3 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        <FilePlus size={18} />
-                        Guardar como Nueva Revisión
+                        <span className="flex items-center gap-2">
+                            <FilePlus size={18} />
+                            Guardar como Nueva Revisión
+                        </span>
+                        <span className="text-xs font-normal text-emerald-200">
+                            Se creará una nueva revisión con tus cambios actuales, preservando ambas versiones
+                        </span>
                     </button>
 
                     <button
                         onClick={onCancel}
                         disabled={isLoading}
-                        className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-white border border-slate-300 text-slate-700 rounded-lg font-medium hover:bg-slate-50 transition-colors disabled:opacity-50"
+                        className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-white border border-slate-300 text-slate-700 rounded-lg font-medium hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         <X size={18} />
                         Cancelar (Mantener cambios locales)

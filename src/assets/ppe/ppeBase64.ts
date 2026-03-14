@@ -34,7 +34,7 @@ export async function getPpeBase64Map(): Promise<Record<string, string>> {
         try {
             results[id] = await urlToBase64(url);
         } catch (err) {
-            logger.warn('[PPE] Failed to load image for', id, err);
+            logger.warn('PPE', 'Failed to load image', { id, error: err instanceof Error ? err.message : String(err) });
             results[id] = '';
         }
     }
@@ -50,7 +50,7 @@ export async function getLogoBase64(): Promise<string> {
         logoBase64Cache = await urlToBase64(barackLogo);
         return logoBase64Cache;
     } catch (err) {
-        logger.warn('[PPE] Failed to load Barack logo:', err);
+        logger.warn('PPE', 'Failed to load Barack logo', { error: err instanceof Error ? err.message : String(err) });
         return '';
     }
 }

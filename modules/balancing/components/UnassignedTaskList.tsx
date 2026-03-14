@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import { CheckCircle2, Split } from 'lucide-react';
 import { useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
@@ -32,6 +32,8 @@ const DraggableUnassignedTask: React.FC<{
             {...attributes}
             className={`bg-white border border-slate-200 p-3 rounded-lg shadow-sm cursor-grab hover:shadow-md hover:border-blue-300 group active:cursor-grabbing transition-all ${isDragging ? 'opacity-50' : ''}`}
             style={{ ...style, borderLeftColor: sectorsList.find(s => s.id === task.sectorId)?.color || undefined, borderLeftWidth: task.sectorId ? 4 : 1 }}
+            aria-label={`Tarea ${task.id}, ${formatNumber(task.standardTime || task.averageTime)} segundos. Arrastrar a una estación para asignar.`}
+            aria-roledescription="elemento arrastrable"
         >
             <div className="flex justify-between items-start mb-1">
                 <span className="font-bold text-slate-800 text-sm font-mono">{task.id}</span>
@@ -66,6 +68,21 @@ export const UnassignedTaskList: React.FC<UnassignedTaskListProps> = ({
     sectorsList,
     performAssignment
 }) => {
+    const [showAssignAllConfirm, setShowAssignAllConfirm] = useState(false);
+
+    const handleAssignAll = useCallback(() => {
+        setShowAssignAllConfirm(true);
+    }, []);
+
+    const confirmAssignAll = useCallback(() => {
+        unassignedTasks.forEach(t => performAssignment(t.id, 1));
+        setShowAssignAllConfirm(false);
+    }, [unassignedTasks, performAssignment]);
+
+    const cancelAssignAll = useCallback(() => {
+        setShowAssignAllConfirm(false);
+    }, []);
+
     return (
         <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm sticky top-24 max-h-[calc(100vh-150px)] flex flex-col">
             <div className="flex justify-between items-center mb-4">
@@ -75,7 +92,7 @@ export const UnassignedTaskList: React.FC<UnassignedTaskListProps> = ({
                 {unassignedTasks.length === 0 && (
                     <div className="text-center py-8 text-slate-400">
                         <CheckCircle2 size={32} className="mx-auto mb-2 text-slate-200" />
-                        <p className="text-sm">¡Todo asignado!</p>
+                        <p className="text-sm font-medium">Todas las tareas asignadas</p>
                     </div>
                 )}
                 {unassignedTasks.map(task => (
@@ -89,16 +106,39 @@ export const UnassignedTaskList: React.FC<UnassignedTaskListProps> = ({
             </div>
             {unassignedTasks.length > 0 && (
                 <div className="mt-4 pt-3 border-t border-slate-100 text-center">
-                    <button
-                        onClick={() => {
-                            if (window.confirm(`¿Asignar ${unassignedTasks.length} tarea(s) a Estación 1?\n\nNota: Esta acción no valida restricciones de sector, máquina ni zona.`)) {
-                                unassignedTasks.forEach(t => performAssignment(t.id, 1));
-                            }
-                        }}
-                        className="text-xs text-blue-600 hover:text-blue-800 font-medium hover:underline"
-                    >
-                        Asignar todo a Est. 1
-                    </button>
+                    {showAssignAllConfirm ? (
+                        <div className="flex flex-col items-center gap-2">
+                            <p className="text-[10px] text-gray-500">
+                                Asignar {unassignedTasks.length} tarea(s) a Estación 1?
+                            </p>
+                            <p className="text-[9px] text-amber-600">
+                                No valida restricciones de sector, máquina ni zona.
+                            </p>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    type="button"
+                                    onClick={confirmAssignAll}
+                                    className="px-3 py-1 text-[10px] bg-blue-500 text-white rounded hover:bg-blue-600 transition font-medium"
+                                >
+                                    Sí, asignar
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={cancelAssignAll}
+                                    className="px-3 py-1 text-[10px] bg-gray-100 text-gray-600 rounded hover:bg-gray-200 transition font-medium"
+                                >
+                                    Cancelar
+                                </button>
+                            </div>
+                        </div>
+                    ) : (
+                        <button
+                            onClick={handleAssignAll}
+                            className="text-xs text-blue-600 hover:text-blue-800 font-medium hover:underline"
+                        >
+                            Asignar todo a Estación 1
+                        </button>
+                    )}
                 </div>
             )}
         </div>

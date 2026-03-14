@@ -11,11 +11,12 @@ interface Props {
     dailyDemand: number;
     activeShifts: number;
     oee: number;
+    setupLossPercent?: number;
     onClose: () => void;
     onApply: (updates: Partial<Task>) => void;
 }
 
-export const ManualCapacityCalculator: React.FC<Props> = ({ task, shifts, dailyDemand, activeShifts, oee, onClose, onApply }) => {
+export const ManualCapacityCalculator: React.FC<Props> = ({ task, shifts, dailyDemand, activeShifts, oee, setupLossPercent = 0, onClose, onApply }) => {
 
     // 1. Local State for "What-If" Analysis
     // We initialize with task values, but allow user to play with them
@@ -24,7 +25,7 @@ export const ManualCapacityCalculator: React.FC<Props> = ({ task, shifts, dailyD
     // Fatigue removed v10.1 - Managed Global ONLY
 
     // 2. Constants & Takt Calculation (FIX: Use centralized function with real shift data)
-    const taktResult = calculateTaktTime(shifts, activeShifts, dailyDemand, oee);
+    const taktResult = calculateTaktTime(shifts, activeShifts, dailyDemand, oee, setupLossPercent);
     const taktNominal = taktResult.nominalSeconds;
     const taktEffective = taktResult.effectiveSeconds;
 

@@ -15,7 +15,7 @@ import {
     CheckCircle,
     Info
 } from 'lucide-react';
-import { InfoTooltip, LEAN_TOOLTIPS } from '../../components/InfoTooltip';
+import { InfoTooltip, LEAN_TOOLTIPS } from '../../components/ui/InfoTooltip';
 
 interface PitchConfiguratorProps {
     /** Takt time in seconds */
@@ -44,7 +44,9 @@ export const PitchConfigurator: React.FC<PitchConfiguratorProps> = ({
     disabled = false
 }) => {
     // Calculate theoretical pitch: Takt × Package Quantity
-    const theoreticalPitchSeconds = taktTime * packageQuantity;
+    // FIX: Guard against NaN/Infinity from invalid taktTime propagating to .toFixed() calls
+    const safeTaktTime = Number.isFinite(taktTime) ? taktTime : 0;
+    const theoreticalPitchSeconds = safeTaktTime * packageQuantity;
     const theoreticalPitchMinutes = theoreticalPitchSeconds / 60;
 
     // Find recommended pitch (next standard interval >= theoretical)
@@ -89,7 +91,7 @@ export const PitchConfigurator: React.FC<PitchConfiguratorProps> = ({
                     </span>
                 </div>
                 <p className="text-xs text-slate-500">
-                    = Takt ({taktTime.toFixed(1)}s) × Cantidad Paquete ({packageQuantity} pz) / 60
+                    = Takt ({safeTaktTime.toFixed(1)}s) × Cantidad Paquete ({packageQuantity} pz) / 60
                 </p>
             </div>
 

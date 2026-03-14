@@ -15,8 +15,7 @@ import {
     deleteDraft,
     listDraftKeys,
 } from '../../utils/repositories/draftRepository';
-
-const AUTOSAVE_DEBOUNCE_MS = 2000;
+import { AUTOSAVE_DEBOUNCE_MS } from '../../config';
 
 export async function loadCpDraft(key: string): Promise<ControlPlanDocument | null> {
     try {
@@ -44,6 +43,7 @@ interface Options {
 
 export function useControlPlanPersistence({ currentData, currentProject, isSaving }: Options) {
     const [lastAutoSave, setLastAutoSave] = useState('');
+    const [autoSaveError, setAutoSaveError] = useState(false);
     const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const isMountedRef = useRef(true);
 
@@ -60,17 +60,21 @@ export function useControlPlanPersistence({ currentData, currentProject, isSavin
             try {
                 await saveDraft('cp', `cp_draft_${currentProject}`, currentData);
                 if (isMountedRef.current) {
+                    setAutoSaveError(false);
                     setLastAutoSave(new Date().toLocaleTimeString('es-AR', {
                         hour: '2-digit', minute: '2-digit', second: '2-digit',
                     }));
                 }
             } catch (err) {
-                logger.warn('[ControlPlan] Auto-save failed:', err);
+                logger.warn('ControlPlan', 'Auto-save failed', { error: err instanceof Error ? err.message : String(err) });
+                if (isMountedRef.current) {
+                    setAutoSaveError(true);
+                }
             }
         }, AUTOSAVE_DEBOUNCE_MS);
 
         return () => { if (timerRef.current) clearTimeout(timerRef.current); };
     }, [currentData, currentProject, isSaving]);
 
-    return { lastAutoSave };
+    return { lastAutoSave, autoSaveError };
 }

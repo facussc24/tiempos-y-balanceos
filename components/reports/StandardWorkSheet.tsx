@@ -12,6 +12,17 @@
 import React from 'react';
 import { ProjectData, Task, StationConfig } from '../../types';
 import { formatNumber } from '../../utils';
+import { calculateEffectiveStationTime } from '../../core/balancing/simulation';
+import { toast } from '../ui/Toast';
+
+/** Sanitize a value for safe HTML output — prevents XSS in generated HTML */
+function esc(value: string | number | undefined | null): string {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}
 
 interface StationWorkData {
     stationId: number;
@@ -58,11 +69,8 @@ export const extractStationWorkData = (
     const firstTask = tasks[0];
     const sector = data.sectors?.find(s => s.id === firstTask?.sectorId);
 
-    // Calculate total time
-    const totalTime = tasks.reduce((sum, t) => {
-        if (t.isMachineInternal) return sum;
-        return sum + (t.standardTime || t.averageTime || 0);
-    }, 0);
+    // Calculate total time using effective station time (handles concurrent/machine overlap)
+    const totalTime = calculateEffectiveStationTime(tasks);
 
     // Get machine names
     const machineIds = [...new Set(tasks.map(t => t.requiredMachineId).filter(Boolean))];
@@ -101,9 +109,9 @@ export const generateStandardWorkSheetHTML = (
     const tasksHTML = tasks.map((task, index) => `
         <tr class="task-row">
             <td class="seq">${index + 1}</td>
-            <td class="desc">${task.description || task.id}</td>
+            <td class="desc">${esc(task.description || task.id)}</td>
             <td class="time">${formatNumber(task.standardTime || task.averageTime || 0)}s</td>
-            <td class="mode">${task.executionMode === 'manual' ? '👤' : task.executionMode === 'machine' ? '⚙️' : '🔧'}</td>
+            <td class="mode">${task.executionMode === 'manual' ? '&#128100;' : task.executionMode === 'machine' ? '&#9881;' : '&#128296;'}</td>
             <td class="notes">${task.isMachineInternal ? '(Interno)' : ''}</td>
         </tr>
     `).join('');
@@ -113,7 +121,7 @@ export const generateStandardWorkSheetHTML = (
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Hoja de Trabajo - ${stationName}</title>
+    <title>Hoja de Trabajo - ${esc(stationName)}</title>
     <style>
         @page { 
             size: A4 portrait; 
@@ -316,11 +324,11 @@ export const generateStandardWorkSheetHTML = (
         <div class="header">
             <div class="header-left">
                 <h1>📋 Hoja de Trabajo Estándar</h1>
-                <div class="subtitle">${projectMeta.client} | ${projectMeta.name} | ${projectMeta.date}</div>
+                <div class="subtitle">${esc(projectMeta.client)} | ${esc(projectMeta.name)} | ${esc(projectMeta.date)}</div>
             </div>
             <div class="header-right">
-                <div class="station-badge">${stationName}</div>
-                <div style="color: #64748b; font-size: 9pt; margin-top: 4px;">${sectorName}</div>
+                <div class="station-badge">${esc(stationName)}</div>
+                <div style="color: #64748b; font-size: 9pt; margin-top: 4px;">${esc(sectorName)}</div>
             </div>
         </div>
         
@@ -346,7 +354,7 @@ export const generateStandardWorkSheetHTML = (
         ${machineNames.length > 0 ? `
         <div style="background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 6px; padding: 8px 12px; margin-bottom: 15px;">
             <strong style="color: #0369a1;">⚙️ Equipos:</strong> 
-            <span style="color: #0c4a6e;">${machineNames.join(', ')}</span>
+            <span style="color: #0c4a6e;">${machineNames.map(esc).join(', ')}</span>
         </div>
         ` : ''}
         
@@ -415,20 +423,20 @@ export const StandardWorkSheet: React.FC<StandardWorkSheetProps> = ({
     const handlePrint = () => {
         const html = generateStandardWorkSheetHTML(stationData, data.meta, taktTime);
 
-        // Open in new window for printing
         const printWindow = window.open('', '_blank');
-        if (printWindow) {
-            printWindow.document.write(html);
-            printWindow.document.close();
-            printWindow.focus();
-
-            // Auto-print after content loads
-            printWindow.onload = () => {
-                setTimeout(() => {
-                    printWindow.print();
-                }, 300);
-            };
+        if (!printWindow) {
+            toast.warning('Ventana bloqueada', 'No se pudo abrir la ventana de impresión. Verifique que los pop-ups no estén bloqueados.');
+            return;
         }
+        printWindow.document.write(html);
+        printWindow.document.close();
+        printWindow.focus();
+
+        printWindow.onload = () => {
+            setTimeout(() => {
+                printWindow.print();
+            }, 300);
+        };
     };
 
     return (

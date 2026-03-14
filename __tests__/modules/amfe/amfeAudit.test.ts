@@ -12,7 +12,7 @@ const emptyHeader = {
     subject: '', startDate: '', revDate: '', team: '',
     amfeNumber: '', responsible: '', confidentiality: '',
     partNumber: '', processResponsible: '', revision: '',
-    approvedBy: '', scope: '',
+    approvedBy: '', scope: '', applicableParts: '',
 };
 
 const emptyDoc: AmfeDocument = { header: emptyHeader, operations: [] };
@@ -283,7 +283,7 @@ describe('runAudit', () => {
             preventionControl: 'inspeccion visual',
         }, { severity: 9 });
         const report = runAudit(doc);
-        const issue = report.issues.find(i => i.message.includes('Control generico'));
+        const issue = report.issues.find(i => i.message.includes('Control genérico'));
         expect(issue).toBeDefined();
         expect(issue!.severity).toBe('warning');
     });
@@ -293,7 +293,7 @@ describe('runAudit', () => {
             detectionControl: 'autocontrol',
         }, { severity: 8 });
         const report = runAudit(doc);
-        const issue = report.issues.find(i => i.message.includes('Control generico'));
+        const issue = report.issues.find(i => i.message.includes('Control genérico'));
         expect(issue).toBeDefined();
     });
 

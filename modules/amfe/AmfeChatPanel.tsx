@@ -18,6 +18,7 @@ import {
     ChatExecutionResult, ChatMessage,
 } from './amfeChatEngine';
 import { AmfeDocument } from './amfeTypes';
+import { logger } from '../../utils/logger';
 
 // ============================================================================
 // TYPES
@@ -161,7 +162,7 @@ const EXAMPLE_PROMPTS = [
     'Agrega modo de falla de porosidad en soldadura',
     'Ponele severidad 8 a todas las fallas de pintura',
     'Agrega control preventivo de mantenimiento semanal',
-    'Agrega una operacion de ensamble con una falla de torque incorrecto',
+    'Agrega una operación de ensamble con una falla de torque incorrecto',
 ];
 
 // ============================================================================
@@ -177,6 +178,8 @@ const AmfeChatPanel: React.FC<AmfeChatPanelProps> = ({ doc, onApplyChanges, onCl
     const abortRef = useRef<AbortController | null>(null);
     const scrollRef = useRef<HTMLDivElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+    // FIX: Guard against setState after unmount (handleTestConnection, handleToggleAi)
+    const isMountedRef = useRef(true);
 
     // Inline settings state
     const [showSettings, setShowSettings] = useState(false);
@@ -188,13 +191,27 @@ const AmfeChatPanel: React.FC<AmfeChatPanelProps> = ({ doc, onApplyChanges, onCl
     const [savingSettings, setSavingSettings] = useState(false);
     const [settingsLoaded, setSettingsLoaded] = useState(false);
 
+    // FIX: Abort in-flight Gemini request on unmount + mark unmounted
+    useEffect(() => {
+        return () => {
+            abortRef.current?.abort();
+            isMountedRef.current = false;
+        };
+    }, []);
+
     // Load settings on mount
     useEffect(() => {
+        let cancelled = false;
         loadSettings().then(s => {
+            if (cancelled) return;
             setGeminiEnabled(s.geminiEnabled);
             setApiKey(s.geminiApiKey || '');
             setSettingsLoaded(true);
+        }).catch(() => {
+            // FIX: Prevent unhandled promise rejection if settings fail to load
+            if (!cancelled) setSettingsLoaded(true);
         });
+        return () => { cancelled = true; };
     }, []);
 
     const handleSaveSettings = useCallback(async () => {
@@ -220,11 +237,13 @@ const AmfeChatPanel: React.FC<AmfeChatPanelProps> = ({ doc, onApplyChanges, onCl
         setTestResult(null);
         try {
             const result = await testGeminiConnection();
-            setTestResult(result);
-        } catch {
-            setTestResult({ ok: false, error: 'Error de conexion' });
+            // FIX: Guard against setState on unmounted component
+            if (isMountedRef.current) setTestResult(result);
+        } catch (err) {
+            logger.warn('AmfeChatPanel', 'Gemini connection test failed', { error: err instanceof Error ? err.message : String(err) });
+            if (isMountedRef.current) setTestResult({ ok: false, error: 'Error de conexion' });
         } finally {
-            setTestingConnection(false);
+            if (isMountedRef.current) setTestingConnection(false);
         }
     }, [handleSaveSettings]);
 
@@ -301,10 +320,13 @@ const AmfeChatPanel: React.FC<AmfeChatPanelProps> = ({ doc, onApplyChanges, onCl
                         errorText = 'La solicitud tardo demasiado. Intenta de nuevo.';
                         break;
                     case 'RATE_LIMIT':
-                        errorText = 'Rate limit excedido. Espera un momento.';
+                        errorText = 'Limite de solicitudes excedido. Espera 1 minuto e intenta de nuevo.';
                         break;
                     case 'AUTH_ERROR':
                         errorText = 'API key inválida. Verificala en ⚙ Configuración.';
+                        break;
+                    case 'NETWORK_ERROR':
+                        errorText = 'Error de red. Verifica tu conexion a internet e intenta de nuevo.';
                         break;
                     case 'PARSE_ERROR':
                         errorText = 'No se pudo entender la respuesta de la IA. Intenta reformular.';
@@ -380,17 +402,17 @@ const AmfeChatPanel: React.FC<AmfeChatPanelProps> = ({ doc, onApplyChanges, onCl
     const hasOps = doc.operations.length > 0;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-            <div className="bg-white rounded-2xl shadow-2xl w-[92vw] max-w-2xl h-[88vh] flex flex-col overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-150" role="presentation" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+            <div role="dialog" aria-modal="true" aria-labelledby="amfe-chat-title" className="bg-white rounded-2xl shadow-2xl w-[92vw] max-w-2xl h-[88vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
                 {/* Header */}
                 <div className="flex items-center gap-3 px-5 py-3.5 border-b border-gray-200 bg-gradient-to-r from-violet-50 via-purple-50 to-fuchsia-50">
                     <div className="w-9 h-9 bg-gradient-to-br from-violet-500 to-purple-600 rounded-xl flex items-center justify-center shadow-sm">
                         <Sparkles size={16} className="text-white" />
                     </div>
                     <div className="flex-1 min-w-0">
-                        <h2 className="text-sm font-bold text-gray-800">Copiloto IA</h2>
+                        <h2 id="amfe-chat-title" className="text-sm font-bold text-gray-800">Copiloto IA</h2>
                         <p className="text-[10px] text-gray-500 truncate">
-                            Asistente AMFE {hasOps ? `\u2022 ${doc.operations.length} operacion${doc.operations.length !== 1 ? 'es' : ''}` : '\u2022 AMFE vacio'}
+                            Asistente AMFE {hasOps ? `\u2022 ${doc.operations.length} operación${doc.operations.length !== 1 ? 'es' : ''}` : '\u2022 AMFE vacío'}
                         </p>
                     </div>
                     <div className="flex items-center gap-1">
@@ -469,7 +491,7 @@ const AmfeChatPanel: React.FC<AmfeChatPanelProps> = ({ doc, onApplyChanges, onCl
                                     <button
                                         onClick={handleSaveSettings}
                                         disabled={savingSettings}
-                                        className="flex items-center gap-1 px-2.5 py-1 text-[10px] font-medium bg-violet-600 hover:bg-violet-500 text-white rounded-lg transition disabled:opacity-50"
+                                        className="flex items-center gap-1 px-2.5 py-1 text-[10px] font-medium bg-violet-600 hover:bg-violet-500 text-white rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                         {savingSettings && <Loader2 size={10} className="animate-spin" />}
                                         Guardar
@@ -477,7 +499,7 @@ const AmfeChatPanel: React.FC<AmfeChatPanelProps> = ({ doc, onApplyChanges, onCl
                                     <button
                                         onClick={handleTestConnection}
                                         disabled={testingConnection || !geminiEnabled || !apiKey.trim()}
-                                        className="flex items-center gap-1 px-2.5 py-1 text-[10px] font-medium bg-gray-100 hover:bg-gray-200 border border-gray-300 text-gray-700 rounded-lg transition disabled:opacity-50"
+                                        className="flex items-center gap-1 px-2.5 py-1 text-[10px] font-medium bg-gray-100 hover:bg-gray-200 border border-gray-300 text-gray-700 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                         {testingConnection ? <Loader2 size={10} className="animate-spin" /> : <Sparkles size={10} />}
                                         Probar
@@ -631,7 +653,7 @@ const AmfeChatPanel: React.FC<AmfeChatPanelProps> = ({ doc, onApplyChanges, onCl
                         <button
                             onClick={() => handleSend()}
                             disabled={isLoading || !input.trim()}
-                            className="p-2.5 bg-gradient-to-br from-violet-600 to-purple-600 text-white rounded-xl hover:from-violet-700 hover:to-purple-700 disabled:opacity-30 disabled:cursor-not-allowed transition shadow-sm active:scale-95"
+                            className="p-2.5 bg-gradient-to-br from-violet-600 to-purple-600 text-white rounded-xl hover:from-violet-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition shadow-sm active:scale-95"
                             aria-label="Enviar mensaje"
                         >
                             <Send size={16} />

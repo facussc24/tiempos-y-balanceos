@@ -25,6 +25,11 @@ import SolicitudForm from './SolicitudForm';
 import SolicitudList from './SolicitudList';
 import SolicitudToolbar from './SolicitudToolbar';
 import SolicitudAttachmentPanel from './SolicitudAttachmentPanel';
+import { useRevisionControl } from '../../hooks/useRevisionControl';
+import { RevisionPromptModal } from '../../components/modals/RevisionPromptModal';
+import { RevisionHistoryPanel } from '../../components/layout/RevisionHistoryPanel';
+import { getNextRevisionLevel } from '../../utils/revisionUtils';
+import { useOpenExportFolder } from '../../hooks/useOpenExportFolder';
 
 // Lazy-loaded overlays
 const SolicitudProcedureViewer = lazy(() => import('./SolicitudProcedureViewer'));
@@ -72,6 +77,45 @@ const SolicitudApp: React.FC<SolicitudAppProps> = ({ onBackToLanding }) => {
         currentData: solicitud.data,
         currentId: selectedId,
     });
+
+    // --- Revision Control ---
+    const revisionControl = useRevisionControl({
+        module: 'solicitud',
+        documentId: selectedId,
+        currentData: solicitud.data,
+        currentRevisionLevel: solicitud.data.header.revision || 'A',
+        onRevisionCreated: useCallback(async (newLevel: string) => {
+            solicitud.updateHeader({ revision: newLevel });
+
+            // Auto-save the updated revision level
+            try {
+                const snapshot = {
+                    ...solicitud.data,
+                    header: { ...solicitud.data.header, revision: newLevel },
+                    updatedAt: new Date().toISOString(),
+                };
+                const { saveSolicitud } = await import('../../utils/repositories/solicitudRepository');
+                await saveSolicitud(snapshot.id, snapshot);
+            } catch {
+                // Non-critical
+            }
+
+            // Auto-update index on Y: (fire-and-forget)
+            if (serverStatus === 'connected') {
+                try {
+                    const { updateSolicitudIndex } = await import('./solicitudIndexExcel');
+                    const { getSolicitudBasePath } = await import('./solicitudServerManager');
+                    const basePath = await getSolicitudBasePath();
+                    await updateSolicitudIndex(basePath);
+                } catch {
+                    // Index update failure is non-critical
+                }
+            }
+        }, [solicitud.updateHeader, solicitud.data, serverStatus]),
+    });
+
+    // --- Export folder ---
+    const exportFolder = useOpenExportFolder('solicitud', solicitud.data);
 
     // --- Validation ---
     const validationIssues = useMemo(() => validateSolicitud(solicitud.data), [solicitud.data]);
@@ -661,6 +705,11 @@ const SolicitudApp: React.FC<SolicitudAppProps> = ({ onBackToLanding }) => {
                 serverStatus={serverStatus}
                 pendingOps={pendingOpsCount}
                 onRetryPending={handleRetryPending}
+                onNewRevision={revisionControl.handleNewRevision}
+                onShowHistory={() => revisionControl.setShowRevisionHistory(!revisionControl.showRevisionHistory)}
+                revisionLevel={solicitud.data.header.revision || 'A'}
+                onOpenExportFolder={exportFolder.openFolder}
+                canOpenExportFolder={exportFolder.canOpen}
             />
 
             {/* Reconciliation banner */}
@@ -865,6 +914,30 @@ const SolicitudApp: React.FC<SolicitudAppProps> = ({ onBackToLanding }) => {
                     onClose={() => setShowProcedure(false)}
                 />
             </Suspense>
+
+            {/* Revision Prompt Modal */}
+            <RevisionPromptModal
+                isOpen={revisionControl.showRevisionPrompt}
+                onClose={() => revisionControl.setShowRevisionPrompt(false)}
+                onConfirm={revisionControl.confirmRevision}
+                currentRevisionLevel={solicitud.data.header.revision || 'A'}
+                nextRevisionLevel={getNextRevisionLevel(solicitud.data.header.revision || 'A')}
+                defaultRevisedBy={solicitud.data.header.solicitante || ''}
+            />
+
+            {/* Revision History Panel */}
+            <RevisionHistoryPanel
+                revisions={revisionControl.revisions}
+                onViewSnapshot={async (level) => {
+                    const snap = await revisionControl.loadSnapshot(level);
+                    if (snap) {
+                        solicitud.setData(snap as import('./solicitudTypes').SolicitudDocument);
+                        showToast(`Snapshot Rev. ${level} cargado (solo lectura)`, 'info');
+                    }
+                }}
+                isOpen={revisionControl.showRevisionHistory}
+                onToggle={() => revisionControl.setShowRevisionHistory(!revisionControl.showRevisionHistory)}
+            />
 
             {/* Confirm Modal */}
             <ConfirmModal

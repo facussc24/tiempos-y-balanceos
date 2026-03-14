@@ -2,7 +2,8 @@ import React, { useRef, useState, useEffect } from 'react';
 import { BookOpen, X, Video, FileVideo, Upload, Save } from 'lucide-react';
 import { ProjectData, Task } from '../../../types';
 import { saveTaskMediaWeb, loadTaskMediaWeb } from '../../../utils/webFsHelpers';
-import * as UnifiedFS from '../../../utils/unified_fs';
+import { isTauri } from '../../../utils/unified_fs';
+import { saveMedia, loadMedia } from '../../../utils/mediaManager';
 import { toast } from '../../../components/ui/Toast';
 import { logger } from '../../../utils/logger';
 
@@ -11,7 +12,7 @@ interface Props {
     onClose: () => void;
     data: ProjectData;
     updateData: (data: ProjectData) => void;
-    rootHandle: any; // FileSystemDirectoryHandle or string (Tauri)
+    rootHandle: FileSystemDirectoryHandle | string | null | undefined;
 }
 
 export const DocumentationModal: React.FC<Props> = ({ task, onClose, data, updateData, rootHandle }) => {
@@ -34,16 +35,26 @@ export const DocumentationModal: React.FC<Props> = ({ task, onClose, data, updat
         };
     }, [mediaPreviewUrl]);
 
+    // Close on Escape key
+    useEffect(() => {
+        if (!task) return;
+        const handleEscape = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') { e.preventDefault(); onClose(); }
+        };
+        document.addEventListener('keydown', handleEscape);
+        return () => document.removeEventListener('keydown', handleEscape);
+    }, [task, onClose]);
+
     // Load media on open
     useEffect(() => {
-        const loadMedia = async () => {
+        const loadMediaPreview = async () => {
             setMediaPreviewUrl(null);
             if (task && task.mediaRef) {
                 try {
-                    if (UnifiedFS.isTauri()) {
-                        const url = await UnifiedFS.loadTaskMedia(task.mediaRef);
+                    if (isTauri() && data.id) {
+                        const url = await loadMedia(String(data.id), task.mediaRef);
                         setMediaPreviewUrl(url);
-                    } else if (rootHandle) {
+                    } else if (rootHandle && typeof rootHandle !== 'string') {
                         const url = await loadTaskMediaWeb(rootHandle, task.mediaRef);
                         setMediaPreviewUrl(url);
                     }
@@ -52,8 +63,8 @@ export const DocumentationModal: React.FC<Props> = ({ task, onClose, data, updat
                 }
             }
         };
-        loadMedia();
-    }, [task, rootHandle]);
+        loadMediaPreview();
+    }, [task, rootHandle, data.id]);
 
 
     if (!task || !docTask) return null;
@@ -80,11 +91,13 @@ export const DocumentationModal: React.FC<Props> = ({ task, onClose, data, updat
         let newMediaRef = docTask.mediaRef;
         if (pendingFileRef.current) {
             try {
-                if (UnifiedFS.isTauri()) {
-                    // Tauri mode assumes current project context for media
-                    const result = await UnifiedFS.saveTaskMedia(pendingFileRef.current, docTask.id);
-                    if (result) newMediaRef = result;
-                } else if (rootHandle) {
+                if (isTauri() && data.id) {
+                    const result = await saveMedia(
+                        String(data.id), docTask.id, pendingFileRef.current,
+                        { client: data.meta.client, project: data.meta.project, name: data.meta.name }
+                    );
+                    if (result) newMediaRef = result.localRef;
+                } else if (rootHandle && typeof rootHandle !== 'string') {
                     newMediaRef = await saveTaskMediaWeb(rootHandle, pendingFileRef.current, docTask.id);
                 }
             } catch (e) {
@@ -111,7 +124,7 @@ export const DocumentationModal: React.FC<Props> = ({ task, onClose, data, updat
                             <p className="text-sm text-slate-500">Documentación de Método para Tarea: <span className="font-mono font-bold text-blue-600 bg-blue-50 px-1 rounded">{docTask.id}</span></p>
                         </div>
                     </div>
-                    <button onClick={onClose} className="text-slate-400 hover:text-slate-700 hover:bg-slate-50 p-2 rounded-full transition-colors">
+                    <button onClick={onClose} className="text-slate-400 hover:text-slate-700 hover:bg-slate-50 p-2 rounded-full transition-colors" title="Cerrar" aria-label="Cerrar documentación">
                         <X size={24} />
                     </button>
                 </div>
@@ -195,10 +208,10 @@ export const DocumentationModal: React.FC<Props> = ({ task, onClose, data, updat
                         Los cambios se guardan localmente al confirmar.
                     </div>
                     <div className="flex gap-3">
-                        <button onClick={onClose} className="px-6 py-2.5 text-slate-600 hover:bg-slate-50 rounded-lg font-medium text-sm transition-colors">
+                        <button type="button" onClick={onClose} className="px-6 py-2.5 text-slate-600 hover:bg-slate-50 rounded-lg font-medium text-sm transition-colors">
                             Cancelar
                         </button>
-                        <button onClick={handleSaveDoc} className="px-8 py-2.5 bg-blue-600 text-white rounded-lg shadow-lg hover:bg-blue-700 hover:shadow-xl text-sm font-bold flex items-center gap-2 transition-all transform active:scale-95">
+                        <button type="button" onClick={handleSaveDoc} className="px-8 py-2.5 bg-blue-600 text-white rounded-lg shadow-lg hover:bg-blue-700 hover:shadow-xl text-sm font-bold flex items-center gap-2 transition-all transform active:scale-95">
                             <Save size={18} /> Guardar Documentación
                         </button>
                     </div>

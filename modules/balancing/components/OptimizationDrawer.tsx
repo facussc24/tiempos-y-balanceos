@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Sparkles, AlertCircle, Info, ChevronRight, CheckCircle2, ListOrdered, ChevronUp, ChevronDown, Check, Users } from 'lucide-react';
+import { X, Sparkles, AlertCircle, AlertTriangle, Lightbulb, Info, ChevronRight, CheckCircle2, ListOrdered, ChevronUp, ChevronDown, Check, Users } from 'lucide-react';
 import { Tooltip } from '../../../components/ui/Tooltip';
 import { formatNumber } from '../../../utils';
 import { SimulationResult } from '../../../core/balancing/engine';
@@ -38,7 +38,7 @@ export const OptimizationDrawer: React.FC<OptimizationDrawerProps> = ({ results,
                         </h2>
                         <p className="text-xs text-slate-500 mt-1">Estructura recomendada para tu línea</p>
                     </div>
-                    <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-400 hover:text-slate-600">
+                    <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-400 hover:text-slate-600" title="Cerrar optimización" aria-label="Cerrar optimización">
                         <X size={20} />
                     </button>
                 </div>
@@ -66,7 +66,7 @@ export const OptimizationDrawer: React.FC<OptimizationDrawerProps> = ({ results,
                                 <div className="mt-0.5"><AlertCircle size={20} className="text-red-600" /></div>
                                 <div className="flex-1">
                                     <p className="font-bold mb-2 flex items-center gap-2">
-                                        ⚠️ Conflicto de Recursos Detectado
+                                        <AlertTriangle size={16} className="text-red-600" /> Conflicto de Recursos Detectado
                                     </p>
                                     <div className="space-y-2">
                                         {bestResult.resourceGaps.map((gap, gapIdx) => (
@@ -77,8 +77,8 @@ export const OptimizationDrawer: React.FC<OptimizationDrawerProps> = ({ results,
                                                     · Disponible: <span className="font-bold">{gap.available}</span>
                                                     · <span className="bg-red-200 px-1 rounded">Déficit: {gap.deficit}</span>
                                                 </div>
-                                                <div className="text-[10px] text-red-600 mt-1 italic">
-                                                    💡 Acción: Comprar {gap.deficit} unidad(es) adicional(es) o redistribuir carga
+                                                <div className="text-[10px] text-red-600 mt-1 italic flex items-center gap-1">
+                                                    <Lightbulb size={10} /> Acción: Comprar {gap.deficit} unidad(es) adicional(es) o redistribuir carga
                                                 </div>
                                             </div>
                                         ))}
@@ -158,7 +158,7 @@ export const OptimizationDrawer: React.FC<OptimizationDrawerProps> = ({ results,
 
                         {showPriorityTable && bestResult && (
                             <div className="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-sm animate-in slide-in-from-top-2 duration-200">
-                                <table className="w-full text-[10px] text-left">
+                                <table className="w-full text-[10px] text-left" aria-label="Detalle de prioridades RPW">
                                     <thead className="bg-slate-50 text-slate-400 font-bold uppercase border-b border-slate-100">
                                         <tr>
                                             <th className="p-2">ID</th>

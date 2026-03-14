@@ -17,11 +17,12 @@ import { ExecutiveSummary } from './modules/ExecutiveSummary';
 import { Dashboard } from './modules/Dashboard';
 import { isTauri } from './utils/unified_fs';
 import { listClients, listProjects, listParts, buildMasterJsonPath, buildPath } from './utils/pathManager';
-import { addToRecentProjects } from './components/ProjectSwitcher';
+import { addToRecentProjects } from './components/navigation/ProjectSwitcher';
 import { logger } from './utils/logger';
 import { toast } from './components/ui/Toast';
 import type { Tab } from './hooks/useAppNavigation';
 import type { useProjectPersistence } from './hooks/useProjectPersistence';
+import type { useUndoRedo } from './hooks/useUndoRedo';
 import type { useAppModals } from './hooks/useAppModals';
 
 interface AppTabContentProps {
@@ -38,6 +39,7 @@ interface AppTabContentProps {
         activeTab: Tab;
         setActiveTab: (tab: Tab) => void;
     };
+    undoRedo: ReturnType<typeof useUndoRedo>;
     modals: ReturnType<typeof useAppModals>;
 }
 
@@ -52,6 +54,7 @@ export const AppTabContent: React.FC<AppTabContentProps> = ({
     storageReady,
     storageVersion,
     navigation,
+    undoRedo,
     modals,
 }) => {
     return (
@@ -73,11 +76,13 @@ export const AppTabContent: React.FC<AppTabContentProps> = ({
 
                                 if (content) {
                                     const projectData = JSON.parse(content);
-                                    persistence.setData({
+                                    const fullData = {
                                         ...projectData,
                                         fileHandle: masterPath,
                                         directoryHandle: dataPath
-                                    });
+                                    };
+                                    persistence.setData(fullData);
+                                    undoRedo.resetHistory(fullData);
                                     // Add to recent projects for Quick Switch
                                     addToRecentProjects({
                                         path: studyInfo,
@@ -96,6 +101,7 @@ export const AppTabContent: React.FC<AppTabContentProps> = ({
                                         directoryHandle: dataPath
                                     };
                                     persistence.setData(initialData);
+                                    undoRedo.resetHistory(initialData);
                                     navigation.setActiveTab('panel');
                                     toast.info('Nuevo Proyecto', 'Creando estructura inicial...');
                                 }
@@ -118,57 +124,56 @@ export const AppTabContent: React.FC<AppTabContentProps> = ({
                     }}
                     onConfigPlant={() => navigation.setActiveTab('plant')}
                     onDeleteStudy={async (path) => {
-                        const { deleteStudy, buildPath } = await import('./utils/pathManager');
-                        const { confirmDialog } = await import('./utils/tauri_fs');
+                        try {
+                            const { deleteStudy, buildPath } = await import('./utils/pathManager');
 
-                        // Reconstruir path absoluto
-                        const [client, project, part] = path.split('/');
-                        const absolutePath = buildPath('data', client, project, part);
+                            // Reconstruir path absoluto
+                            const [client, project, part] = path.split('/');
+                            const absolutePath = buildPath('data', client, project, part);
 
-                        // Confirmación NATIVA
-                        const confirmed = await confirmDialog(
-                            'Eliminar Estudio',
-                            `¿Estás seguro de que deseas eliminar permanentemente el estudio "${part}"?\n\nEsta acción no se puede deshacer.`
-                        );
+                            const result = await deleteStudy(absolutePath);
+                            if (!result.success) {
+                                toast.error('Error al Eliminar', result.error || 'Error desconocido al eliminar el estudio');
+                                return;
+                            }
 
-                        if (!confirmed) return;
-
-                        const result = await deleteStudy(absolutePath);
-                        if (!result.success) {
-                            throw new Error(result.error || 'Error desconocido al eliminar');
+                            toast.success('Estudio Eliminado', `Se eliminó "${part}" correctamente`);
+                        } catch (e) {
+                            logger.error('App', 'Error deleting study', { path }, e instanceof Error ? e : undefined);
+                            toast.error('Error al Eliminar', e instanceof Error ? e.message : 'Error desconocido');
                         }
-
-                        toast.success('Estudio Eliminado', `Se eliminó "${part}" correctamente`);
                     }}
                     onDeleteProject={async (client, project) => {
-                        const { deleteProject } = await import('./utils/pathManager');
-                        const { confirmDialog } = await import('./utils/tauri_fs');
+                        try {
+                            const { deleteProject } = await import('./utils/pathManager');
 
-                        const confirmed = await confirmDialog(
-                            'Eliminar Proyecto',
-                            `¿Estás seguro de que deseas eliminar el proyecto "${project}"?\n\nSe eliminarán TODAS las piezas y estudios contenidos. Esta acción es irreversible.`
-                        );
+                            const result = await deleteProject(client, project);
+                            if (!result.success) {
+                                toast.error('Error al Eliminar', result.error || 'Error desconocido al eliminar el proyecto');
+                                return;
+                            }
 
-                        if (!confirmed) return;
-
-                        const result = await deleteProject(client, project);
-                        if (!result.success) throw new Error(result.error);
-                        toast.success('Proyecto Eliminado');
+                            toast.success('Proyecto Eliminado');
+                        } catch (e) {
+                            logger.error('App', 'Error deleting project', { client, project }, e instanceof Error ? e : undefined);
+                            toast.error('Error al Eliminar', e instanceof Error ? e.message : 'Error desconocido');
+                        }
                     }}
                     onDeleteClient={async (client) => {
-                        const { deleteClient } = await import('./utils/pathManager');
-                        const { confirmDialog } = await import('./utils/tauri_fs');
+                        try {
+                            const { deleteClient } = await import('./utils/pathManager');
 
-                        const confirmed = await confirmDialog(
-                            'Eliminar Cliente',
-                            `¿Estás seguro de que deseas eliminar el cliente "${client}"?\n\nSe eliminarán TODOS sus proyectos y estudios. Esta acción es irreversible.`
-                        );
+                            const result = await deleteClient(client);
+                            if (!result.success) {
+                                toast.error('Error al Eliminar', result.error || 'Error desconocido al eliminar el cliente');
+                                return;
+                            }
 
-                        if (!confirmed) return;
-
-                        const result = await deleteClient(client);
-                        if (!result.success) throw new Error(result.error);
-                        toast.success('Cliente Eliminado');
+                            toast.success('Cliente Eliminado');
+                        } catch (e) {
+                            logger.error('App', 'Error deleting client', { client }, e instanceof Error ? e : undefined);
+                            toast.error('Error al Eliminar', e instanceof Error ? e.message : 'Error desconocido');
+                        }
                     }}
                     listClientsFunc={listClients}
                     listProjectsFunc={listProjects}

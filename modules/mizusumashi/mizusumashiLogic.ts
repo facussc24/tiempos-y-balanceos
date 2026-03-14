@@ -203,13 +203,23 @@ export function calculatePitch(
 
 /**
  * Calculates the total route cycle time.
- * 
- * Route Time = Σ(Walk Time + Handling Time) for all stops
- * 
+ *
+ * Route Time = Σ(Walk Time + Handling Time) for all stops + Return Walk
+ *
+ * A complete milk run cycle must include the return trip from the last stop
+ * back to the warehouse. Without it, route times are systematically underestimated
+ * and the pitch compliance check becomes too optimistic.
+ *
  * @param stops - Array of route stops
+ * @param returnWalkTimeSeconds - Walk time from last stop back to warehouse (seconds).
+ *        Defaults to 0 for backward compatibility. If not provided, assumes the first
+ *        stop's walk time (symmetric route) when stops exist.
  * @returns Total route time in minutes
  */
-export function calculateRouteTime(stops: RouteStop[]): number {
+export function calculateRouteTime(
+    stops: RouteStop[],
+    returnWalkTimeSeconds?: number
+): number {
     if (!stops || stops.length === 0) {
         return 0;
     }
@@ -218,7 +228,13 @@ export function calculateRouteTime(stops: RouteStop[]): number {
         return sum + (stop.walkTimeSeconds || 0) + (stop.handlingTimeSeconds || 0);
     }, 0);
 
-    return totalSeconds / 60; // Convert to minutes
+    // Add return trip: if explicit return time provided, use it;
+    // otherwise assume symmetric route (return ≈ first stop's walk time from warehouse)
+    const returnSeconds = returnWalkTimeSeconds !== undefined
+        ? returnWalkTimeSeconds
+        : (stops[0]?.walkTimeSeconds || 0);
+
+    return (totalSeconds + returnSeconds) / 60;
 }
 
 /**
@@ -337,14 +353,17 @@ export function calculateMizusumashi(
 
 /**
  * Builds a detailed schedule of stops with calculated arrival times.
- * 
+ *
  * @param stops - Route stops
  * @param startTime - Start time (HH:MM format)
+ * @param returnWalkTimeSeconds - Walk time from last stop back to warehouse (seconds).
+ *        Defaults to first stop's walk time (symmetric route).
  * @returns Array of schedule items with calculated times
  */
 export function buildSchedule(
     stops: RouteStop[],
-    startTime: string
+    startTime: string,
+    returnWalkTimeSeconds?: number
 ): RouteScheduleItem[] {
     const schedule: RouteScheduleItem[] = [];
 
@@ -386,6 +405,14 @@ export function buildSchedule(
         currentMinutes += handlingMinutes;
         cumulativeMinutes += handlingMinutes;
     });
+
+    // Return walk to warehouse (symmetric default: same as first stop's walk from warehouse)
+    const returnWalk = returnWalkTimeSeconds !== undefined
+        ? returnWalkTimeSeconds
+        : (stops[0]?.walkTimeSeconds || 0);
+    const returnWalkMinutes = returnWalk / 60;
+    currentMinutes += returnWalkMinutes;
+    cumulativeMinutes += returnWalkMinutes;
 
     // Return to warehouse
     schedule.push({

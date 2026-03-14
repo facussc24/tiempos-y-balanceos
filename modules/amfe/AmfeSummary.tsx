@@ -141,7 +141,7 @@ const AmfeSummary: React.FC<Props> = ({ data }) => {
                 <div className="flex items-center gap-2 mb-3">
                     <BarChart3 className="text-blue-600" size={16} />
                     <h3 className="text-sm font-bold text-gray-800">Resumen AMFE</h3>
-                    <span className="text-[10px] text-gray-400">{stats.totalOps} {stats.totalOps === 1 ? 'operacion' : 'operaciones'} | {stats.totalFailures} {stats.totalFailures === 1 ? 'falla' : 'fallas'} | {stats.totalCauses} {stats.totalCauses === 1 ? 'causa' : 'causas'}</span>
+                    <span className="text-[10px] text-gray-400">{stats.totalOps} {stats.totalOps === 1 ? 'operación' : 'operaciones'} | {stats.totalFailures} {stats.totalFailures === 1 ? 'falla' : 'fallas'} | {stats.totalCauses} {stats.totalCauses === 1 ? 'causa' : 'causas'}</span>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -232,7 +232,7 @@ const AmfeSummary: React.FC<Props> = ({ data }) => {
                                         <span className="bg-red-500 text-white rounded px-1 font-bold flex-shrink-0">H</span>
                                         <div className="min-w-0">
                                             <span className="text-gray-500">{item.opName}:</span>{' '}
-                                            <span className="font-medium text-gray-800 break-words">{item.failDescription || '(sin descripcion)'}</span>
+                                            <span className="font-medium text-gray-800 break-words">{item.failDescription || '(sin descripción)'}</span>
                                             {item.causeText && (
                                                 <span className="text-gray-400 break-words"> - {item.causeText}</span>
                                             )}
@@ -302,7 +302,7 @@ const AmfeSummary: React.FC<Props> = ({ data }) => {
                         </h4>
                         {apMCompliance.count > 0 && (
                             <>
-                                <p className="text-[10px] text-amber-600 mb-1.5">AIAG-VDA: si no se toman acciones, es obligatorio documentar una justificacion tecnica en Observaciones.</p>
+                                <p className="text-[10px] text-amber-600 mb-1.5">AIAG-VDA: si no se toman acciones, es obligatorio documentar una justificación técnica en Observaciones.</p>
                                 <div className="space-y-1 max-h-32 overflow-y-auto">
                                     {apMCompliance.withoutJustification.slice(0, 10).map((item) => (
                                         <div key={item.causeId} className="flex items-start gap-1.5 text-[10px]">

@@ -8,7 +8,7 @@ const emptyDoc: AmfeDocument = {
         organization: '', location: '', client: '', modelYear: '',
         subject: '', startDate: '', team: '', responsible: '',
         revDate: '', amfeNumber: '', confidentiality: '',
-        partNumber: '', processResponsible: '', revision: '', approvedBy: '', scope: '',
+        partNumber: '', processResponsible: '', revision: '', approvedBy: '', scope: '', applicableParts: '',
     },
     operations: [],
 };

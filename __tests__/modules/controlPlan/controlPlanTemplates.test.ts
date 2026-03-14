@@ -2,8 +2,8 @@ import { describe, it, expect } from 'vitest';
 import { CP_TEMPLATES } from '../../../modules/controlPlan/controlPlanTemplates';
 
 describe('CP Templates (R6B)', () => {
-    it('has 6 templates', () => {
-        expect(CP_TEMPLATES.length).toBe(6);
+    it('has 7 templates', () => {
+        expect(CP_TEMPLATES.length).toBe(7);
     });
 
     it('all templates have unique IDs', () => {

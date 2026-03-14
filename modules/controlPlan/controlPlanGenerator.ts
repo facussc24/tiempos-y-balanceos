@@ -9,8 +9,9 @@
  * - AMFE Failure Mode → CP Product Characteristic row (detection control → evaluation technique)
  * - CP 2024 PROHIBITS mixing product and process characteristics in the same row
  * - Dedup: same cause+prevention → 1 process row; same failure+detection → 1 product row
- * - specification: NEVER auto-fill (comes from design)
- * - reactionPlanOwner: NEVER auto-fill (must be person on floor)
+ * - specification: inferred from failure/cause keywords (heuristic)
+ * - reactionPlanOwner: inferred from severity + AP + operation category
+ * - evaluationTechnique (process rows): inferred from detection control
  */
 
 import { v4 as uuidv4 } from 'uuid';
@@ -19,7 +20,7 @@ import {
     AmfeFunction, AmfeFailure, AmfeCause,
 } from '../amfe/amfeTypes';
 import { ControlPlanItem, ControlPlanHeader, ControlPlanDocument, ControlPlanPhase, EMPTY_CP_HEADER } from './controlPlanTypes';
-import { getControlPlanDefaults } from './controlPlanDefaults';
+import { getControlPlanDefaults, inferSpecification, inferReactionPlanOwner } from './controlPlanDefaults';
 import { inferOperationCategory } from '../../utils/processCategory';
 
 // ============================================================================
@@ -167,6 +168,17 @@ export function generateItemsFromAmfe(
             phase,
         });
 
+        const opCategory = inferOperationCategory(rep.op.name) || '';
+        // AIAG-VDA: specification for process rows should only be set when a specific
+        // keyword is recognized — do NOT use a generic fallback (spec comes from engineering design)
+        const specProcessRaw = inferSpecification('process', '', rep.cause.cause || '');
+        const specProcess = specProcessRaw === 'Según instrucción de proceso' ? '' : specProcessRaw;
+        const ownerProcess = inferReactionPlanOwner(highestSeverity, highestAp, opCategory);
+        // AIAG-VDA: evaluationTechnique is for product rows (detection), NOT process rows (prevention)
+        const processAutoFilled = [...defaults.autoFilledFields];
+        if (specProcess) processAutoFilled.push('specification');
+        if (ownerProcess) processAutoFilled.push('reactionPlanOwner');
+
         items.push({
             id: uuidv4(),
             processStepNumber: rep.op.opNumber,
@@ -176,17 +188,17 @@ export function generateItemsFromAmfe(
             productCharacteristic: '',                           // EMPTY for process rows
             processCharacteristic: rep.cause.cause || '',        // cause = process parameter
             specialCharClass: bestSpecialChar,
-            specification: '',                                   // NEVER auto-fill
-            evaluationTechnique: '',                             // EMPTY for process rows
+            specification: specProcess,
+            evaluationTechnique: '',                             // EMPTY for process rows (AIAG-VDA)
             sampleSize: defaults.sampleSize,
             sampleFrequency: defaults.sampleFrequency,
             controlMethod: rep.cause.preventionControl || '',    // prevention control
             reactionPlan: defaults.reactionPlan,
-            reactionPlanOwner: '',                               // NEVER auto-fill
-            autoFilledFields: defaults.autoFilledFields,
+            reactionPlanOwner: ownerProcess,
+            autoFilledFields: processAutoFilled,
             amfeAp: highestAp,
             amfeSeverity: highestSeverity,
-            operationCategory: inferOperationCategory(rep.op.name) || '',
+            operationCategory: opCategory,
             amfeCauseIds: [...new Set(group.map(g => g.cause.id))],
             amfeFailureId: rep.fail.id,
             amfeFailureIds: [...new Set(group.map(g => g.fail.id))],
@@ -218,6 +230,13 @@ export function generateItemsFromAmfe(
             phase,
         });
 
+        const opCatProd = inferOperationCategory(rep.op.name) || '';
+        const specProduct = inferSpecification('product', rep.fail.description || '', '');
+        const ownerProduct = inferReactionPlanOwner(highestSeverity, highestAp, opCatProd);
+        const productAutoFilled = [...defaults.autoFilledFields];
+        if (specProduct) productAutoFilled.push('specification');
+        if (ownerProduct) productAutoFilled.push('reactionPlanOwner');
+
         items.push({
             id: uuidv4(),
             processStepNumber: rep.op.opNumber,
@@ -227,17 +246,17 @@ export function generateItemsFromAmfe(
             productCharacteristic: rep.fail.description || '',   // failure mode = product defect
             processCharacteristic: '',                           // EMPTY for product rows
             specialCharClass: bestSpecialChar,
-            specification: '',                                   // NEVER auto-fill
+            specification: specProduct,
             evaluationTechnique: rep.cause.detectionControl || '', // detection control
             sampleSize: defaults.sampleSize,
             sampleFrequency: defaults.sampleFrequency,
             controlMethod: '',                                   // EMPTY for product rows
             reactionPlan: defaults.reactionPlan,
-            reactionPlanOwner: '',                               // NEVER auto-fill
-            autoFilledFields: defaults.autoFilledFields,
+            reactionPlanOwner: ownerProduct,
+            autoFilledFields: productAutoFilled,
             amfeAp: highestAp,
             amfeSeverity: highestSeverity,
-            operationCategory: inferOperationCategory(rep.op.name) || '',
+            operationCategory: opCatProd,
             amfeCauseIds: [...new Set(group.map(g => g.cause.id))],
             amfeFailureId: rep.fail.id,
             amfeFailureIds: [...new Set(group.map(g => g.fail.id))],

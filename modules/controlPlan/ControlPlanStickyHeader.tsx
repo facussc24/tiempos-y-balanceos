@@ -2,8 +2,8 @@
  * Control Plan Sticky Column Header
  *
  * Teal-themed two-row header with AIAG tooltips per column.
- * Groups: Proceso (teal) / Caracteristicas (cyan) / Metodos (sky).
- * First two columns (Nro. Parte/Proceso + Descripcion) are frozen sticky left.
+ * Groups: Proceso (teal) / Características (cyan) / Métodos (sky).
+ * First two columns (Nro. Parte/Proceso + Descripción) are frozen sticky left.
  * Supports column group visibility toggles.
  */
 
@@ -43,12 +43,12 @@ const ControlPlanStickyHeader: React.FC<Props> = ({ columnVisibility }) => {
                 )}
                 {showCaract && (
                     <th colSpan={4} className="bg-cyan-100 px-3 py-2 text-center min-w-[440px] border-r border-cyan-200 font-bold text-cyan-900">
-                        CARACTERISTICAS
+                        CARACTERÍSTICAS
                     </th>
                 )}
                 {showMetodos && (
                     <th colSpan={7} className="bg-sky-100 px-3 py-2 text-center min-w-[850px] border-r border-sky-200 font-bold text-sky-900">
-                        METODOS
+                        MÉTODOS
                     </th>
                 )}
                 <th rowSpan={2} className="bg-gray-200 p-2 text-center w-16 border-l border-gray-300 font-bold text-gray-600">
@@ -65,10 +65,10 @@ const ControlPlanStickyHeader: React.FC<Props> = ({ columnVisibility }) => {
                             <HeaderWithTip termKey="processStepNumber" label="Nro. Parte" />
                         </th>
                         <th className="bg-teal-50 p-2 w-44 min-w-[170px] border-r border-teal-100 sticky left-[80px] z-20" style={{ boxShadow: '2px 0 4px rgba(0,0,0,0.06)' }}>
-                            <HeaderWithTip termKey="processDescription" label="Descripcion Proceso" />
+                            <HeaderWithTip termKey="processDescription" label="Descripción Proceso" />
                         </th>
                         <th className="bg-teal-50 p-2 w-36 border-r border-gray-300">
-                            <HeaderWithTip termKey="machineDeviceTool" label="Maquina/Disp./Herram." />
+                            <HeaderWithTip termKey="machineDeviceTool" label="Máquina/Disp./Herram." />
                         </th>
                     </>
                 )}
@@ -98,7 +98,7 @@ const ControlPlanStickyHeader: React.FC<Props> = ({ columnVisibility }) => {
                             <HeaderWithTip termKey="specification" label="Espec./Tolerancia" />
                         </th>
                         <th className="bg-sky-50 p-2 w-36 border-r border-sky-100">
-                            <HeaderWithTip termKey="evaluationTechnique" label="Tec. Evaluacion" />
+                            <HeaderWithTip termKey="evaluationTechnique" label="Téc. Evaluación" />
                         </th>
                         <th className="bg-sky-50 p-2 w-24 border-r border-sky-100">
                             <HeaderWithTip termKey="sampleSize" label="Tam. Muestra" />
@@ -107,13 +107,13 @@ const ControlPlanStickyHeader: React.FC<Props> = ({ columnVisibility }) => {
                             <HeaderWithTip termKey="sampleFrequency" label="Frecuencia" />
                         </th>
                         <th className="bg-sky-50 p-2 w-36 border-r border-sky-100">
-                            <HeaderWithTip termKey="controlMethod" label="Metodo Control" />
+                            <HeaderWithTip termKey="controlMethod" label="Método Control" />
                         </th>
                         <th className="bg-sky-50 p-2 w-40 border-r border-sky-100">
-                            <HeaderWithTip termKey="reactionPlan" label="Plan Reaccion" />
+                            <HeaderWithTip termKey="reactionPlan" label="Plan Reacción" />
                         </th>
                         <th className="bg-sky-50 p-2 w-32 border-r border-gray-300">
-                            <HeaderWithTip termKey="reactionPlanOwner" label="Resp. Reaccion" className="text-red-600" />
+                            <HeaderWithTip termKey="reactionPlanOwner" label="Resp. Reacción" className="text-red-600" />
                         </th>
                     </>
                 )}
@@ -122,4 +122,4 @@ const ControlPlanStickyHeader: React.FC<Props> = ({ columnVisibility }) => {
     );
 };
 
-export default ControlPlanStickyHeader;
+export default React.memo(ControlPlanStickyHeader);

@@ -1,4 +1,4 @@
-import { Shift, Task, ProjectData, InjectionSimulationParams, InjectionScenario } from "../../types";
+import { Shift, Task, ProjectData, InjectionSimulationParams, InjectionScenario, Sector } from "../../types";
 import { parseTime } from "../../utils/formatting";
 import { RotaryInjectionStrategy } from "../../modules/strategies/RotaryStrategy";
 
@@ -6,13 +6,17 @@ export const calculateShiftNetMinutes = (shift: Shift): number => {
     const start = parseTime(shift.startTime);
     let end = parseTime(shift.endTime);
 
+    // FIX: Guard against malformed shift times producing NaN
+    if (!Number.isFinite(start) || !Number.isFinite(end)) return 0;
+
     // Handle overnight shifts
     if (end < start) {
         end += 24 * 60;
     }
 
     const gross = end - start;
-    const totalBreaks = shift.breaks.reduce((sum, b) => sum + (b.duration || 0), 0);
+    // FIX: Reject negative break durations to prevent silent data corruption
+    const totalBreaks = shift.breaks.reduce((sum, b) => sum + Math.max(0, b.duration || 0), 0);
     return Math.max(0, gross - totalBreaks);
 };
 
@@ -70,7 +74,7 @@ export const calculateWeightedLineOEE = (data: ProjectData): number => {
 
     // 2. Accumulate Times
     data.tasks.forEach(t => {
-        const time = t.standardTime || t.averageTime;
+        const time = t.standardTime || t.averageTime || 0;
         totalStdTime += time;
         const sId = t.sectorId && sectorTimes[t.sectorId] !== undefined ? t.sectorId : 'general';
         sectorTimes[sId] += time;
@@ -161,7 +165,7 @@ export const calculateTaktTime = (
     setupLossApplied: number;    // V8.1: Actual % applied (for display)
 } => {
     let totalMinutes = 0;
-    for (let i = 0; i < activeShiftsCount; i++) {
+    for (let i = 0; i < activeShiftsCount && i < shifts.length; i++) {
         totalMinutes += calculateShiftNetMinutes(shifts[i]);
     }
 
@@ -182,7 +186,9 @@ export const calculateTaktTime = (
 
     // Calculate Takt based on NET available time
     const nominalSeconds = (netMinutes * 60) / dailyDemand;
-    const effectiveSeconds = nominalSeconds * (oee > 0 ? oee : 1);
+    // OEE must be 0 < oee ≤ 1; if unset or invalid, skip OEE adjustment (= 1)
+    const safeOee = (oee > 0 && oee <= 1) ? oee : 1;
+    const effectiveSeconds = nominalSeconds * safeOee;
 
     return {
         nominalSeconds,
@@ -191,6 +197,42 @@ export const calculateTaktTime = (
         netAvailableMinutes: netMinutes,
         setupLossApplied: clampedSetupLoss
     };
+};
+
+/**
+ * Returns the effective shift config for a sector, falling back to project defaults.
+ * If the sector has a shiftOverride, uses those values; otherwise uses the project config.
+ */
+export const getSectorShiftConfig = (
+    sector: Sector,
+    projectShifts: Shift[],
+    projectActiveShifts: number
+): { shifts: Shift[]; activeShifts: number } => {
+    if (!sector.shiftOverride) {
+        return { shifts: projectShifts, activeShifts: projectActiveShifts };
+    }
+    // FIX: Clamp activeShifts to available shifts length to prevent off-by-one
+    const effectiveShifts = sector.shiftOverride.shifts ?? projectShifts;
+    return {
+        shifts: effectiveShifts,
+        activeShifts: Math.max(1, Math.min(effectiveShifts.length, sector.shiftOverride.activeShifts))
+    };
+};
+
+/**
+ * Calculates Takt Time for a specific sector using its shift override (if any).
+ * Delegates to calculateTaktTime with the resolved shift config.
+ */
+export const calculateSectorTaktTime = (
+    sector: Sector,
+    projectShifts: Shift[],
+    projectActiveShifts: number,
+    dailyDemand: number,
+    oee: number,
+    setupLossPercent: number = 0
+): ReturnType<typeof calculateTaktTime> => {
+    const { shifts, activeShifts } = getSectorShiftConfig(sector, projectShifts, projectActiveShifts);
+    return calculateTaktTime(shifts, activeShifts, dailyDemand, oee, setupLossPercent);
 };
 
 export const calculateEffectiveStationTime = (tasks: Task[]): number => {
@@ -209,7 +251,7 @@ export const calculateEffectiveStationTime = (tasks: Task[]): number => {
 
     // Process Machine Groups
     machineTasks.forEach(mt => {
-        const mtTime = mt.standardTime || mt.averageTime;
+        const mtTime = mt.standardTime || mt.averageTime || 0;
 
         // Find concurrent manual tasks assigned TO THIS group of tasks
         // Note: In this context, we assume all 'tasks' passed to this function are in the same station.
@@ -232,7 +274,7 @@ export const calculateEffectiveStationTime = (tasks: Task[]): number => {
     // 2. Add remaining independent tasks OR Broken Links
     tasks.forEach(t => {
         if (!processedIds.has(t.id)) {
-            totalTime += (t.standardTime || t.averageTime);
+            totalTime += (t.standardTime || t.averageTime || 0);
         }
     });
 
@@ -263,9 +305,11 @@ export const calculateTotalEffectiveWorkContent = (data: ProjectData): number =>
     });
 
     // 3. Add unassigned tasks (raw sum, assuming no concurrency benefit until assigned)
+    // FIX: Exclude isMachineInternal tasks — they contribute 0 effective time
+    // because they run concurrently inside the machine cycle
     data.tasks.forEach(t => {
-        if (!assignedTaskIds.has(t.id)) {
-            totalEffectiveTime += (t.standardTime || t.averageTime);
+        if (!assignedTaskIds.has(t.id) && !t.isMachineInternal) {
+            totalEffectiveTime += (t.standardTime || t.averageTime || 0);
         }
     });
 

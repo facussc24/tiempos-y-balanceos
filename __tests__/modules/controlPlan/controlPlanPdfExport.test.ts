@@ -170,13 +170,19 @@ describe('getCpPdfPreviewHtml — full template', () => {
         expect(html).toContain('Operador A');
     });
 
-    it('uses rowspan for grouped processStepNumber', () => {
+    it('repeats processStepNumber in flat rows (no rowspan for safe page breaks)', () => {
         const items = [
             makeItem({ id: '1', processStepNumber: '10', processDescription: 'Soldadura' }),
             makeItem({ id: '2', processStepNumber: '10', processDescription: 'Soldadura' }),
         ];
         const html = getCpPdfPreviewHtml(makeDoc(items), 'full');
-        expect(html).toContain('rowspan="2"');
+        // No rowspan — flat rows for reliable page breaks in html2pdf.js
+        expect(html).not.toContain('rowspan');
+        // Step number repeated in both rows
+        const matches = html.match(/>10<\/td>/g);
+        expect(matches?.length).toBeGreaterThanOrEqual(2);
+        // Description shown only on first row of group (visual grouping)
+        expect(html).toContain('Soldadura');
     });
 
     it('applies AP stripe colors to rows', () => {
@@ -228,7 +234,7 @@ describe('getCpPdfPreviewHtml — full template', () => {
 describe('getCpPdfPreviewHtml — critical template', () => {
     it('contains Items Criticos title', () => {
         const html = getCpPdfPreviewHtml(makeDoc([]), 'critical');
-        expect(html).toContain('Items Criticos');
+        expect(html).toContain('Ítems Críticos');
     });
 
     it('filters only CC/SC and AP=H items', () => {
@@ -282,7 +288,7 @@ describe('getCpPdfPreviewHtml — critical template', () => {
             processDescription: 'Normal',
         })];
         const html = getCpPdfPreviewHtml(makeDoc(items), 'critical');
-        expect(html).toContain('no-criticos');
+        expect(html).toContain('no-críticos');
     });
 
     it('shows empty plan message when no items at all', () => {

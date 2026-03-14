@@ -4,6 +4,8 @@ import {
     X,
     Sparkles,
     CheckCircle2,
+    AlertTriangle,
+    XCircle,
     ChevronRight,
     Users,
     Factory,
@@ -39,9 +41,12 @@ const ScenarioCard: React.FC<{
 
     const statusLabel = isFeasible ? 'Factible' : isRisk ? 'Riesgo' : 'No Factible';
     const statusColor = isFeasible ? 'text-emerald-600 bg-emerald-50' : isRisk ? 'text-amber-600 bg-amber-50' : 'text-red-600 bg-red-50';
-    const statusIcon = isFeasible ? '✅' : isRisk ? '⚠️' : '❌';
+    const statusIcon = isFeasible ? <CheckCircle2 size={14} className="text-emerald-500" /> : isRisk ? <AlertTriangle size={14} className="text-amber-500" /> : <XCircle size={14} className="text-red-500" />;
 
-    const labels = ['A', 'B', 'C'];
+    /** Generate scenario label: A, B, C, ..., Z, AA, AB, ... */
+    const scenarioLabel = index < 26
+        ? String.fromCharCode(65 + index)
+        : String.fromCharCode(65 + Math.floor(index / 26) - 1) + String.fromCharCode(65 + (index % 26));
 
     return (
         <div className={`bg-white rounded-xl border-2 ${borderColor} p-5 flex flex-col relative overflow-hidden transition-all hover:shadow-lg`}>
@@ -55,7 +60,7 @@ const ScenarioCard: React.FC<{
 
             {/* Scenario label */}
             <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">
-                Escenario {labels[index] || index + 1}
+                Escenario {scenarioLabel}
             </div>
 
             {/* Headcount (hero metric) */}
@@ -126,7 +131,14 @@ export const OptimizationResultsModal: React.FC<OptimizationResultsModalProps> =
             ></div>
 
             {/* Modal */}
-            <div className={`relative w-full bg-white rounded-xl shadow-xl overflow-hidden animate-scale-in flex flex-col max-h-[90vh] ${hasMultipleScenarios ? 'max-w-3xl' : 'max-w-lg'}`}>
+            {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions */}
+            <div
+                role="dialog"
+                aria-modal="true"
+                aria-label="Resultados de optimizacion"
+                onKeyDown={(e) => { if (e.key === 'Escape') onClose(); }}
+                className={`relative w-full bg-white rounded-xl shadow-xl overflow-hidden animate-scale-in flex flex-col max-h-[90vh] ${hasMultipleScenarios ? (results.length >= 4 ? 'max-w-5xl' : 'max-w-3xl') : 'max-w-lg'}`}
+            >
 
                 {/* HEADER (Minimalist) */}
                 <div className="flex items-center justify-between px-8 pt-8 pb-4">
@@ -145,6 +157,7 @@ export const OptimizationResultsModal: React.FC<OptimizationResultsModalProps> =
                     <button
                         onClick={onClose}
                         className="text-slate-400 hover:text-slate-600 hover:bg-slate-100 p-2 rounded-full transition-colors"
+                        aria-label="Cerrar"
                     >
                         <X size={20} />
                     </button>
@@ -155,7 +168,7 @@ export const OptimizationResultsModal: React.FC<OptimizationResultsModalProps> =
 
                     {/* MULTI-SCENARIO VIEW */}
                     {hasMultipleScenarios ? (
-                        <div className={`grid gap-4 mb-6 ${results.length === 2 ? 'grid-cols-2' : 'grid-cols-3'}`}>
+                        <div className={`grid gap-4 mb-6 ${results.length === 2 ? 'grid-cols-2' : results.length >= 4 ? 'grid-cols-2 lg:grid-cols-4' : 'grid-cols-3'}`}>
                             {results.map((r, i) => (
                                 <ScenarioCard
                                     key={i}
@@ -267,9 +280,9 @@ export const OptimizationResultsModal: React.FC<OptimizationResultsModalProps> =
                                         <div className={`p-4 rounded-xl border ${statusColor}`}>
                                             <div className="text-slate-500 text-[10px] font-bold uppercase tracking-wider mb-2">Estado</div>
                                             <div className={`text-3xl font-black ${statusTextColor} flex items-center gap-2`}>
-                                                {isFeasible && <span>✅</span>}
-                                                {isRisk && <span>⚠️</span>}
-                                                {!isFeasible && !isRisk && <span>❌</span>}
+                                                {isFeasible && <CheckCircle2 size={24} className="text-emerald-500" />}
+                                                {isRisk && <AlertTriangle size={24} className="text-amber-500" />}
+                                                {!isFeasible && !isRisk && <XCircle size={24} className="text-red-500" />}
                                                 {statusLabel}
                                             </div>
                                             <div className="text-slate-400 text-xs mt-1">{statusDesc}</div>

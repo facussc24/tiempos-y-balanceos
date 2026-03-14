@@ -157,7 +157,7 @@ export async function analyzeProcessChange(
     signal?: AbortSignal,
 ): Promise<ChangeImpactReport> {
     if (!changeDescription.trim()) {
-        throw new GeminiError('La descripcion del cambio no puede estar vacia', 'PARSE_ERROR' as GeminiErrorCode);
+        throw new GeminiError('La descripción del cambio no puede estar vacía', 'PARSE_ERROR' as GeminiErrorCode);
     }
 
     const serialized = serializeAmfeCompact(currentAmfe);

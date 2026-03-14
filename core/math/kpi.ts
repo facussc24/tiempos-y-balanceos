@@ -15,9 +15,13 @@ export const calculateTotalManualWork = (tasks: Task[]): number => {
     return tasks.reduce((sum, t) => {
         // Exclude Machine/Injection types
         if (t.executionMode === 'injection' || t.executionMode === 'machine') return sum;
-        // Exclude tasks marked explicitly as internal machine time if schema supports it (future proof)
-        // if (t.isMachineInternal) return sum; 
-        return sum + (t.standardTime || 0);
+        // FIX: Exclude isMachineInternal tasks — they run inside the machine cycle
+        // and contribute 0 effective time (consistent with calculateEffectiveStationTime,
+        // engine.ts, detectOverloadAndRecommend, executiveSummaryCalc)
+        if (t.isMachineInternal) return sum;
+        // FIX: Fall back to averageTime for tasks without completed time study
+        // (consistent with all other time calculations in the codebase)
+        return sum + (t.standardTime || t.averageTime || 0);
     }, 0);
 };
 

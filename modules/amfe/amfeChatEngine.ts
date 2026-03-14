@@ -176,9 +176,15 @@ export function parseChatResponse(text: string): ChatAIResponse {
     }
 }
 
+const VALID_ACTION_TYPES = new Set<string>([
+    'addOperation', 'addWorkElement', 'addFunction', 'addFailure', 'addCause',
+    'updateOperation', 'updateWorkElement', 'updateFunction', 'updateFailure', 'updateCause',
+]);
+
 /** Sanitize a single action: validate types, clamp numeric values */
 function sanitizeAction(raw: any): ChatAction {
-    const action = String(raw.action) as ChatActionType;
+    const rawAction = String(raw.action);
+    const action = (VALID_ACTION_TYPES.has(rawAction) ? rawAction : 'updateOperation') as ChatActionType;
     const path: ChatActionPath = {};
 
     if (raw.path && typeof raw.path === 'object') {
@@ -190,16 +196,27 @@ function sanitizeAction(raw: any): ChatAction {
         if (raw.path.causeDesc) path.causeDesc = String(raw.path.causeDesc);
     }
 
+    const SOD_KEYS = new Set(['severity', 'occurrence', 'detection']);
     const data: Record<string, string | number> = {};
     if (raw.data && typeof raw.data === 'object') {
         for (const [key, val] of Object.entries(raw.data)) {
             if (val === null || val === undefined) continue;
             if (typeof val === 'number') {
                 // Clamp S/O/D to 1-10
-                if (key === 'severity' || key === 'occurrence' || key === 'detection') {
+                if (SOD_KEYS.has(key)) {
                     data[key] = Math.max(1, Math.min(10, Math.round(val)));
                 } else {
                     data[key] = val;
+                }
+            } else if (SOD_KEYS.has(key) && typeof val === 'string') {
+                // FIX: Gemini sometimes returns S/O/D as strings ("8", "8.5", "+8").
+                // Previous regex /^\d+$/ rejected floats like "8.5". Use Number() with
+                // isFinite check instead to handle all numeric string formats.
+                const parsed = Number(val.trim());
+                if (Number.isFinite(parsed)) {
+                    data[key] = Math.max(1, Math.min(10, Math.round(parsed)));
+                } else {
+                    data[key] = val; // Keep original string if not parseable
                 }
             } else {
                 data[key] = String(val);
@@ -295,8 +312,8 @@ export function executeChatActions(
     for (const action of actions) {
         try {
             executeOneAction(action, doc, result);
-        } catch (err: any) {
-            result.errors.push(`${action.action}: ${err?.message || 'Error desconocido'}`);
+        } catch (err: unknown) {
+            result.errors.push(`${action.action}: ${err instanceof Error ? err.message : 'Error desconocido'}`);
         }
     }
 
@@ -380,6 +397,12 @@ function executeAddWorkElement(action: ChatAction, doc: AmfeDocument, result: Ch
         return;
     }
 
+    const name = String(action.data.name || '').trim();
+    if (!name) {
+        result.errors.push('addWorkElement: Se requiere un nombre para el elemento de trabajo');
+        return;
+    }
+
     const typeStr = String(action.data.type || 'Machine');
     const type = WORK_ELEMENT_TYPES.includes(typeStr as WorkElementType)
         ? (typeStr as WorkElementType) : 'Machine';
@@ -387,7 +410,7 @@ function executeAddWorkElement(action: ChatAction, doc: AmfeDocument, result: Ch
     const we: AmfeWorkElement = {
         id: uuidv4(),
         type,
-        name: String(action.data.name || ''),
+        name,
         functions: [],
     };
     op.workElements.push(we);
@@ -639,7 +662,7 @@ function executeUpdateFailure(action: ChatAction, doc: AmfeDocument, result: Cha
     if (action.data.severity !== undefined) {
         const sev = typeof action.data.severity === 'number'
             ? Math.max(1, Math.min(10, action.data.severity))
-            : Number(action.data.severity) || fail.severity;
+            : Math.max(1, Math.min(10, Number(action.data.severity) || Number(fail.severity) || 1));
         fail.severity = sev;
         changes.push(`severity=${sev}`);
 
@@ -701,15 +724,15 @@ function executeUpdateCause(action: ChatAction, doc: AmfeDocument, result: ChatE
     }
 
     if (action.data.occurrence !== undefined) {
-        cause.occurrence = typeof action.data.occurrence === 'number'
-            ? Math.max(1, Math.min(10, action.data.occurrence))
-            : Number(action.data.occurrence) || cause.occurrence;
+        const rawO = typeof action.data.occurrence === 'number'
+            ? action.data.occurrence : Number(action.data.occurrence);
+        cause.occurrence = isNaN(rawO) ? cause.occurrence : Math.max(1, Math.min(10, Math.round(rawO)));
         changes.push(`occurrence=${cause.occurrence}`);
     }
     if (action.data.detection !== undefined) {
-        cause.detection = typeof action.data.detection === 'number'
-            ? Math.max(1, Math.min(10, action.data.detection))
-            : Number(action.data.detection) || cause.detection;
+        const rawD = typeof action.data.detection === 'number'
+            ? action.data.detection : Number(action.data.detection);
+        cause.detection = isNaN(rawD) ? cause.detection : Math.max(1, Math.min(10, Math.round(rawD)));
         changes.push(`detection=${cause.detection}`);
     }
 

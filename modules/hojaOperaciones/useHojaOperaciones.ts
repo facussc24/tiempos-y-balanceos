@@ -139,18 +139,25 @@ export function useHojaOperaciones(): UseHojaOperacionesResult {
 
     const addStep = useCallback((sheetId: string) => {
         setData(prev => mapSheet(prev, sheetId, sheet => {
-            const nextNumber = sheet.steps.length > 0
-                ? Math.max(...sheet.steps.map(s => s.stepNumber)) + 1
+            // FIX: Filter out NaN/undefined stepNumbers to prevent NaN propagation
+            // from corrupted stored data. Math.max(...[NaN]) returns NaN, corrupting
+            // all subsequent step numbers.
+            const validNumbers = (sheet.steps ?? []).map(s => s.stepNumber).filter(Number.isFinite);
+            const nextNumber = validNumbers.length > 0
+                ? Math.max(...validNumbers) + 1
                 : 1;
-            return { ...sheet, steps: [...sheet.steps, createEmptyStep(nextNumber)] };
+            return { ...sheet, steps: [...(sheet.steps ?? []), createEmptyStep(nextNumber)] };
         }));
     }, []);
 
     const removeStep = useCallback((sheetId: string, stepId: string) => {
-        setData(prev => mapSheet(prev, sheetId, sheet => ({
-            ...sheet,
-            steps: sheet.steps.filter(s => s.id !== stepId),
-        })));
+        setData(prev => mapSheet(prev, sheetId, sheet => {
+            const filtered = sheet.steps.filter(s => s.id !== stepId);
+            return {
+                ...sheet,
+                steps: filtered.map((s, i) => ({ ...s, stepNumber: i + 1 })),
+            };
+        }));
     }, []);
 
     const updateStep = useCallback((sheetId: string, stepId: string, field: keyof HoStep, value: any) => {
@@ -203,8 +210,11 @@ export function useHojaOperaciones(): UseHojaOperacionesResult {
 
     const addVisualAid = useCallback((sheetId: string, imageData: string, caption: string) => {
         setData(prev => mapSheet(prev, sheetId, sheet => {
-            const maxOrder = sheet.visualAids.length > 0
-                ? Math.max(...sheet.visualAids.map(v => v.order))
+            // FIX: Filter out NaN/undefined orders to prevent NaN propagation
+            const aids = sheet.visualAids ?? [];
+            const validOrders = aids.map(v => v.order).filter(Number.isFinite);
+            const maxOrder = validOrders.length > 0
+                ? Math.max(...validOrders)
                 : -1;
             const newAid: HoVisualAid = {
                 id: uuidv4(),
@@ -212,7 +222,7 @@ export function useHojaOperaciones(): UseHojaOperacionesResult {
                 caption,
                 order: maxOrder + 1,
             };
-            return { ...sheet, visualAids: [...sheet.visualAids, newAid] };
+            return { ...sheet, visualAids: [...aids, newAid] };
         }));
     }, []);
 

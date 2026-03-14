@@ -75,6 +75,10 @@ export function useResolvedProject(
             return;
         }
 
+        // FIX: Race condition guard — prevents setState on unmounted component
+        // or when effect re-runs with new data before previous async completes
+        let cancelled = false;
+
         // Create loader function
         const resolveAsync = async () => {
             setIsResolving(true);
@@ -82,6 +86,7 @@ export function useResolvedProject(
 
             try {
                 const tauriFs = await import('../utils/tauri_fs');
+                if (cancelled) return;
 
                 // Determine base directory from rootHandle or default
                 const baseDir = typeof rootHandle === 'string'
@@ -110,6 +115,8 @@ export function useResolvedProject(
                 };
 
                 const result = await resolveProductProcess(data, parentLoader);
+                if (cancelled) return;
+
                 setResolved(result);
 
                 if (result.warnings.length > 0) {
@@ -124,16 +131,19 @@ export function useResolvedProject(
                 });
 
             } catch (err) {
+                if (cancelled) return;
                 const message = err instanceof Error ? err.message : String(err);
                 logger.error('useResolvedProject', 'Resolution failed', { error: message });
                 setError(message);
                 setResolved(null);
             } finally {
-                setIsResolving(false);
+                if (!cancelled) setIsResolving(false);
             }
         };
 
         resolveAsync();
+
+        return () => { cancelled = true; };
     }, [data, rootHandle, needsResolution]);
 
     // If no resolution needed, return original data

@@ -7,7 +7,7 @@
  * @module hooks/useKeyboardShortcuts
  */
 
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 import { Tab } from './useAppNavigation';
 
 // ============================================================================
@@ -391,7 +391,16 @@ export function useKeyboardShortcuts(
     activeTab: Tab,
     handlers: ShortcutHandlers
 ): void {
+    const handlersRef = useRef(handlers);
+    handlersRef.current = handlers;
+
+    const activeTabRef = useRef(activeTab);
+    activeTabRef.current = activeTab;
+
     const handleKeyDown = useCallback((event: KeyboardEvent) => {
+        const currentHandlers = handlersRef.current;
+        const currentTab = activeTabRef.current;
+
         // Don't intercept if user is typing in an input
         if (isInputElement(event.target)) {
             // Exception: Allow Ctrl+S even in inputs (universal save)
@@ -415,7 +424,7 @@ export function useKeyboardShortcuts(
             'summary': 'global',
         };
 
-        const currentContext = contextMap[activeTab] || 'global';
+        const currentContext = contextMap[currentTab] || 'global';
 
         // Find matching shortcut
         for (const shortcut of SHORTCUTS) {
@@ -426,7 +435,7 @@ export function useKeyboardShortcuts(
             if (!isGlobalOrNav && !isContextMatch) continue;
 
             // Check if shortcut requires a project to be open
-            if (shortcut.requiresProject && !handlers.isProjectOpen) continue;
+            if (shortcut.requiresProject && !currentHandlers.isProjectOpen) continue;
 
             // Check if event matches shortcut
             if (matchesShortcut(event, shortcut)) {
@@ -435,11 +444,11 @@ export function useKeyboardShortcuts(
                 event.stopPropagation();
 
                 // Execute handler
-                shortcut.handler(handlers);
+                shortcut.handler(currentHandlers);
                 return;
             }
         }
-    }, [activeTab, handlers]);
+    }, []);
 
     useEffect(() => {
         // Add event listener

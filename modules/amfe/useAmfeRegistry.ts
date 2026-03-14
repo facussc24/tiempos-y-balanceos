@@ -12,7 +12,7 @@ import {
     AmfeRegistry,
     AmfeRegistryEntry,
     AmfeLifecycleStatus,
-    EMPTY_REGISTRY,
+    createEmptyRegistry,
 } from './amfeRegistryTypes';
 import {
     loadRegistry,
@@ -46,7 +46,7 @@ export const EMPTY_REGISTRY_FILTERS: RegistryFilters = {
 };
 
 export const useAmfeRegistry = () => {
-    const [registry, setRegistry] = useState<AmfeRegistry>({ ...EMPTY_REGISTRY });
+    const [registry, setRegistry] = useState<AmfeRegistry>(createEmptyRegistry);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [filters, setFilters] = useState<RegistryFilters>(EMPTY_REGISTRY_FILTERS);
@@ -55,14 +55,13 @@ export const useAmfeRegistry = () => {
 
     const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-    // ─── Load on mount ──────────────────────────────────────────
-    useEffect(() => {
-        loadRegistryData();
-        return () => {
-            if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
-        };
-    }, []);
+    // FIX: Ref always holds the latest registry to avoid stale closures in CRUD callbacks.
+    // Without this, rapid CRUD calls can read outdated state from their useCallback closures.
+    const registryRef = useRef(registry);
+    registryRef.current = registry;
 
+    // ─── Load on mount ──────────────────────────────────────────
+    // FIX: Added cancelled flag to prevent state updates after unmount
     const loadRegistryData = useCallback(async () => {
         setLoading(true);
         setError(null);
@@ -84,6 +83,36 @@ export const useAmfeRegistry = () => {
         }
     }, []);
 
+    useEffect(() => {
+        let cancelled = false;
+        (async () => {
+            setLoading(true);
+            setError(null);
+            try {
+                let data = await loadRegistry();
+                if (cancelled) return;
+                const dupes = findDuplicateAmfeNumbers(data);
+                if (dupes.length > 0) {
+                    logger.warn('useAmfeRegistry', 'Found duplicate amfeNumbers, repairing', { duplicates: dupes.map(d => d.amfeNumber) });
+                    data = repairDuplicateNumbers(data);
+                    await saveRegistry(data);
+                    if (cancelled) return;
+                }
+                setRegistry(data);
+            } catch (err) {
+                if (cancelled) return;
+                setError('Error al cargar el registro AMFE');
+                logger.error('useAmfeRegistry', 'Load error', {}, err instanceof Error ? err : undefined);
+            } finally {
+                if (!cancelled) setLoading(false);
+            }
+        })();
+        return () => {
+            cancelled = true;
+            if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+        };
+    }, []);
+
     // ─── Auto-save helper ───────────────────────────────────────
     const persistRegistry = useCallback(async (updated: AmfeRegistry) => {
         setRegistry(updated);
@@ -98,63 +127,65 @@ export const useAmfeRegistry = () => {
     // ─── CRUD Operations ────────────────────────────────────────
 
     /** Register a new AMFE document in the registry. */
+    // FIX: Use registryRef.current to avoid stale closure reads during rapid operations.
     const registerAmfe = useCallback(async (
         projectName: string,
         doc: AmfeDocument,
     ): Promise<AmfeRegistryEntry | null> => {
+        const current = registryRef.current;
         // Check if already registered
-        const existing = registry.entries.find(e => e.projectName === projectName);
+        const existing = current.entries.find(e => e.projectName === projectName);
         if (existing) {
             // Update existing entry instead
-            const updated = await updateRegistryEntry(registry, projectName, doc);
+            const updated = await updateRegistryEntry(current, projectName, doc);
             await persistRegistry(updated);
             return updated.entries.find(e => e.projectName === projectName) || null;
         }
 
-        const { entry, updatedRegistry } = await addToRegistry(registry, projectName, doc);
+        const { entry, updatedRegistry } = await addToRegistry(current, projectName, doc);
         await persistRegistry(updatedRegistry);
         return entry;
-    }, [registry, persistRegistry]);
+    }, [persistRegistry]);
 
     /** Update stats for an existing AMFE project in the registry (called on save). */
     const updateAmfeStats = useCallback(async (
         projectName: string,
         doc: AmfeDocument,
     ): Promise<void> => {
-        const updated = await updateRegistryEntry(registry, projectName, doc);
+        const updated = await updateRegistryEntry(registryRef.current, projectName, doc);
         await persistRegistry(updated);
-    }, [registry, persistRegistry]);
+    }, [persistRegistry]);
 
     /** Change lifecycle status for an entry. */
     const changeStatus = useCallback(async (
         entryId: string,
         status: AmfeLifecycleStatus,
     ): Promise<void> => {
-        const updated = await updateEntryStatus(registry, entryId, status);
+        const updated = await updateEntryStatus(registryRef.current, entryId, status);
         await persistRegistry(updated);
-    }, [registry, persistRegistry]);
+    }, [persistRegistry]);
 
     /** Add a revision note to an entry. */
     const addRevision = useCallback(async (
         entryId: string,
         revision: { reason: string; revisedBy: string; description: string },
     ): Promise<void> => {
-        const updated = addRevisionToEntry(registry, entryId, revision);
+        const updated = addRevisionToEntry(registryRef.current, entryId, revision);
         await persistRegistry(updated);
-    }, [registry, persistRegistry]);
+    }, [persistRegistry]);
 
     /** Sync registry with project files on disk. */
     const syncFromDisk = useCallback(async (): Promise<void> => {
         setLoading(true);
         try {
-            const synced = await syncRegistryFromProjects(registry);
+            const synced = await syncRegistryFromProjects(registryRef.current);
             await persistRegistry(synced);
         } catch (err) {
             setError('Error al sincronizar con disco');
         } finally {
             setLoading(false);
         }
-    }, [registry, persistRegistry]);
+    }, [persistRegistry]);
 
     // ─── Filtering & Sorting ────────────────────────────────────
 

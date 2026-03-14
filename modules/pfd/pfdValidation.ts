@@ -1,7 +1,7 @@
 /**
  * PFD Validation
  *
- * 17 validation rules (V1-V17) for Process Flow Diagram documents.
+ * 21 validation rules (V1-V21) for Process Flow Diagram documents.
  * Pure functions, no side effects.
  */
 
@@ -231,7 +231,9 @@ export function validatePfdDocument(doc: PfdDocument): ValidationIssue[] {
     }
 
     // V13: Step without operation number (C4-N1 — AIAG APQP requires numbered steps)
+    // Transport steps are exempt: they are connectors, not numbered operations
     for (const step of doc.steps) {
+        if (step.stepType === 'transport') continue;
         if (step.stepNumber.trim() === '') {
             issues.push({
                 rule: 'V13',
@@ -323,15 +325,24 @@ export function validatePfdDocument(doc: PfdDocument): ValidationIssue[] {
         }
     }
 
-    // V20: Branch step without label (C9-N1 — helps readability)
+    // V20: Branch without label (C9-N1 — helps readability)
+    // Fire once per unique branchId, not per step
+    const checkedBranches = new Set<string>();
     for (const step of doc.steps) {
-        if (step.branchId && (!step.branchLabel || step.branchLabel.trim() === '')) {
-            issues.push({
-                rule: 'V20',
-                severity: 'info',
-                message: `Paso ${step.stepNumber || '(sin nº)'}: línea paralela "${step.branchId}" sin nombre descriptivo`,
-                stepId: step.id,
-            });
+        if (step.branchId && !checkedBranches.has(step.branchId)) {
+            checkedBranches.add(step.branchId);
+            // Check if ANY step on this branch has a label
+            const hasLabel = doc.steps.some(
+                s => s.branchId === step.branchId && s.branchLabel && s.branchLabel.trim() !== ''
+            );
+            if (!hasLabel) {
+                issues.push({
+                    rule: 'V20',
+                    severity: 'info',
+                    message: `Línea paralela "${step.branchId}" sin nombre descriptivo`,
+                    stepId: step.id,
+                });
+            }
         }
     }
 

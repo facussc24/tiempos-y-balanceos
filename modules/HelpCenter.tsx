@@ -18,7 +18,7 @@ import {
 // TabButton extracted outside component for performance
 interface TabButtonProps {
     tab: HelpTab;
-    icon: any;
+    icon: React.ComponentType<{ size?: number; className?: string }>;
     label: string;
     activeTab: HelpTab;
     onClick: (tab: HelpTab) => void;

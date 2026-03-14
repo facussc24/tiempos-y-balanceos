@@ -17,6 +17,8 @@ interface UseAmfeKeyboardShortcutsParams {
     showSummary: boolean;
     setShowSummary: (v: boolean) => void;
     setViewMode: (fn: (prev: 'view' | 'edit') => 'view' | 'edit') => void;
+    /** When true, keyboard shortcuts are disabled (e.g., when a child tab is active). */
+    disabled?: boolean;
 }
 
 export function useAmfeKeyboardShortcuts(params: UseAmfeKeyboardShortcutsParams): void {
@@ -28,11 +30,15 @@ export function useAmfeKeyboardShortcuts(params: UseAmfeKeyboardShortcutsParams)
         showHelp, setShowHelp,
         showSummary, setShowSummary,
         setViewMode,
+        disabled,
     } = params;
 
     // Keyboard shortcuts
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
+            // When a child module tab is active (PFD, CP, HO), don't intercept shortcuts
+            if (disabled) return;
+
             const mod = e.ctrlKey || e.metaKey;
 
             // Ctrl+Z: Undo
@@ -135,7 +141,7 @@ export function useAmfeKeyboardShortcuts(params: UseAmfeKeyboardShortcutsParams)
         };
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [onSave, onAddOperation, filters, showTemplates, showChat, showHelp, onUndo, onRedo, showSummary, setShowSummary, setFilters, setShowTemplates, setShowChat, setShowHelp, setViewMode]);
+    }, [onSave, onAddOperation, filters, showTemplates, showChat, showHelp, onUndo, onRedo, showSummary, setShowSummary, setFilters, setShowTemplates, setShowChat, setShowHelp, setViewMode, disabled]);
 
     // Beforeunload warning — uses same hook file since it's a global listener
     // (moved to separate hook below)

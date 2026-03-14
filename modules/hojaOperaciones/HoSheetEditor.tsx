@@ -4,14 +4,14 @@
  *   Header (3-row table with logo) → Visual Aids + Steps → EPP → Quality Checks → Reaction Plan
  */
 
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { HojaOperacion, HoStep, HoVisualAid, PpeItem, HoStatus } from './hojaOperacionesTypes';
 import HoPpeSelector from './HoPpeSelector';
 import HoStepEditor from './HoStepEditor';
 import HoQualityCheckTable from './HoQualityCheckTable';
 import HoVisualAidPanel from './HoVisualAidPanel';
 import barackLogo from '../../src/assets/barack_logo.png';
-import { Shield, ClipboardCheck, AlertTriangle, Camera, ListOrdered } from 'lucide-react';
+import { Shield, ClipboardCheck, AlertTriangle, Camera, ListOrdered, Search, X } from 'lucide-react';
 
 interface Props {
     sheet: HojaOperacion;
@@ -30,6 +30,7 @@ interface Props {
     onUpdateReactionPlan: (text: string) => void;
     onUpdateReactionContact: (contact: string) => void;
     readOnly?: boolean;
+    stepSearchRef?: React.RefObject<HTMLInputElement | null>;
 }
 
 const NAVY = '#1e3a5f';
@@ -72,7 +73,19 @@ const HoSheetEditor: React.FC<Props> = ({
     onUpdateReactionPlan,
     onUpdateReactionContact,
     readOnly,
+    stepSearchRef,
 }) => {
+    const [stepSearch, setStepSearch] = useState('');
+
+    const filteredSteps = useMemo(() => {
+        if (!stepSearch.trim()) return sheet.steps;
+        const q = stepSearch.toLowerCase();
+        return sheet.steps.filter(s =>
+            s.description.toLowerCase().includes(q) ||
+            s.keyPointReason.toLowerCase().includes(q)
+        );
+    }, [sheet.steps, stepSearch]);
+
     return (
         <div className="max-w-[1200px] mx-auto space-y-3">
             {/* ==================== HEADER (3-row structured table) ==================== */}
@@ -224,15 +237,50 @@ const HoSheetEditor: React.FC<Props> = ({
                 {/* Steps + PPE */}
                 <div className="bg-white rounded border border-gray-200 overflow-hidden">
                     <SectionHeader icon={<ListOrdered size={14} />} title="DESCRIPCIÓN DE LA OPERACIÓN" />
+                    {/* Step search bar */}
+                    <div className="px-3 pt-2">
+                        <div className="relative">
+                            <Search size={12} className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400" />
+                            <input
+                                ref={stepSearchRef}
+                                type="text"
+                                value={stepSearch}
+                                onChange={e => setStepSearch(e.target.value)}
+                                placeholder="Buscar paso (Ctrl+F)..."
+                                className="w-full pl-6 pr-7 py-1 text-xs border border-gray-200 rounded focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
+                            />
+                            {stepSearch && (
+                                <button
+                                    onClick={() => setStepSearch('')}
+                                    className="absolute right-1.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-0.5"
+                                    title="Limpiar búsqueda"
+                                >
+                                    <X size={12} />
+                                </button>
+                            )}
+                        </div>
+                        {stepSearch.trim() && (
+                            <div className="text-[10px] text-gray-400 mt-0.5 px-1">
+                                {filteredSteps.length} de {sheet.steps.length} paso(s)
+                            </div>
+                        )}
+                    </div>
                     <div className="p-3">
                         <HoStepEditor
-                            steps={sheet.steps}
+                            steps={filteredSteps}
                             onAdd={onAddStep}
                             onRemove={onRemoveStep}
                             onUpdate={onUpdateStep}
                             onReorder={onReorderSteps}
                             readOnly={readOnly}
+                            disableDrag={!!stepSearch.trim()}
+                            highlightQuery={stepSearch}
                         />
+                        {stepSearch.trim() && (
+                            <p className="text-[11px] text-amber-600 px-2 py-1">
+                                Reordenamiento deshabilitado durante la búsqueda. Limpie el filtro para reordenar.
+                            </p>
+                        )}
                     </div>
 
                     {/* EPP inside right column, bottom */}
@@ -284,7 +332,11 @@ const HoSheetEditor: React.FC<Props> = ({
                             onChange={e => onUpdateReactionContact(e.target.value)}
                             readOnly={readOnly}
                             placeholder="Ej: Supervisor / Lider de celda"
-                            className="flex-1 px-2 py-1 text-xs border border-gray-200 rounded focus:border-blue-400 focus:ring-1 focus:ring-blue-400 outline-none"
+                            className={`flex-1 px-2 py-1 text-xs border rounded focus:border-blue-400 focus:ring-1 focus:ring-blue-400 outline-none ${
+                                sheet.reactionPlanText.trim() && !sheet.reactionContact.trim()
+                                    ? 'border-amber-400 bg-amber-50'
+                                    : 'border-gray-200'
+                            }`}
                         />
                     </div>
                 </div>

@@ -519,7 +519,7 @@ describe('getSoftLimitWarnings (R5D)', () => {
                 organization: 'TEST', location: '', client: '', modelYear: '',
                 subject: '', startDate: '', revDate: '', team: '',
                 amfeNumber: '', responsible: '', confidentiality: '',
-                partNumber: '', processResponsible: '', revision: '', approvedBy: '', scope: '',
+                partNumber: '', processResponsible: '', revision: '', approvedBy: '', scope: '', applicableParts: '',
             },
             operations,
         };

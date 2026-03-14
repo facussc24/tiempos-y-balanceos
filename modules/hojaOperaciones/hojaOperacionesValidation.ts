@@ -117,9 +117,18 @@ function validateSheet(sheet: HojaOperacion): HoValidationIssue[] {
             issues.push({
                 ...ctx,
                 severity: 'warning',
-                message: `Paso ${step.stepNumber}: Descripcion muy larga (${step.description.length} caracteres).`,
+                message: `Paso ${step.stepNumber}: Descripción muy larga (${step.description.length} caracteres).`,
             });
         }
+    }
+
+    // WARNING: Reaction plan has content but no escalation contact
+    if (sheet.reactionPlanText.trim() && !sheet.reactionContact.trim()) {
+        issues.push({
+            ...ctx,
+            severity: 'warning',
+            message: "El plan de reacción tiene contenido pero falta el campo 'Contacto de escalamiento'.",
+        });
     }
 
     return issues;

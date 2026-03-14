@@ -18,6 +18,14 @@ export type PfdStepType =
 /** Special characteristic classification */
 export type SpecialCharClass = 'CC' | 'SC' | 'none';
 
+/**
+ * Transport step insertion mode per ASME Y15.3 / AIAG APQP.
+ * - 'cross-sector': Only insert between different departments (recommended per standard)
+ * - 'all': Insert between every operation (legacy behavior)
+ * - 'none': No transport steps
+ */
+export type TransportMode = 'cross-sector' | 'all' | 'none';
+
 /** C3-N1: Reject disposition per AIAG (rework/scrap/sort) */
 export type RejectDisposition = 'none' | 'rework' | 'scrap' | 'sort';
 
@@ -51,11 +59,17 @@ export interface PfdHeader {
   approvedBy: string;
   approvedDate: string;
 
+  // Applicable parts (family coverage)
+  applicableParts?: string;
+
   // Linkage
   linkedProjectId?: string;
   linkedAmfeId?: string;
   linkedCpId?: string;
 }
+
+/** SGC document form reference number */
+export const SGC_FORM_NUMBER = 'I-AC-005.1-R01';
 
 /** A single process step/operation */
 export interface PfdStep {
@@ -93,6 +107,9 @@ export interface PfdStep {
   branchId: string;       // '' = main flow, 'A'/'B'/'C' = parallel branch identifier
   branchLabel: string;    // Human-readable label for the branch (e.g., "Línea ZAC")
 
+  // Cycle time annotation (AIAG recommended)
+  cycleTimeMinutes?: number;
+
   // Linkage metadata (filled when generating AMFE/CP)
   linkedAmfeOperationId?: string;
   linkedCpItemIds?: string[];
@@ -120,6 +137,24 @@ export interface PfdDocumentListItem {
   updated_at: string;
 }
 
+/** Column group for visibility toggling */
+export type PfdColumnGroup = 'essential' | 'equipment' | 'characteristics' | 'flow' | 'reference' | 'disposition';
+
+export const PFD_COLUMN_GROUPS: {
+  id: PfdColumnGroup;
+  label: string;
+  description: string;
+  defaultVisible: boolean;
+  autoShow?: (steps: PfdStep[]) => boolean;
+}[] = [
+  { id: 'essential', label: 'Esencial', description: 'Nº, Símbolo, Descripción', defaultVisible: true },
+  { id: 'equipment', label: 'Equipo', description: 'Máquina / Dispositivo', defaultVisible: true },
+  { id: 'characteristics', label: 'Características', description: 'Producto y Proceso CC/SC', defaultVisible: true },
+  { id: 'flow', label: 'Flujo', description: 'Líneas paralelas', defaultVisible: false, autoShow: (steps) => steps.some(s => s.branchId) },
+  { id: 'reference', label: 'Referencia', description: 'Ref., Área, Notas', defaultVisible: false },
+  { id: 'disposition', label: 'Disposición', description: 'Rechazo, Externo', defaultVisible: false, autoShow: (steps) => steps.some(s => s.rejectDisposition !== 'none' || s.isExternalProcess) },
+];
+
 /** Column definition for the table */
 export interface PfdColumnDef {
   key: keyof PfdStep;
@@ -129,6 +164,8 @@ export interface PfdColumnDef {
   type?: 'text' | 'select' | 'symbol' | 'specialChar' | 'boolean' | 'disposition';
   /** C11-UX7: Tooltip for abbreviated column headers */
   tooltip?: string;
+  /** Column group for visibility toggling */
+  group: PfdColumnGroup;
 }
 
 /** Step type definitions with display label and color */
@@ -145,20 +182,20 @@ export const PFD_STEP_TYPES: { value: PfdStepType; label: string; color: string 
 /** Table column definitions — C3-N1: replaced isRework with rejectDisposition */
 /** C11-UX9: Widths tuned to fit container (p-4 = 32px padding → ~1502px available). Total = 1410 + 90 Actions = 1500px. */
 export const PFD_COLUMNS: PfdColumnDef[] = [
-  { key: 'stepNumber',            label: 'Nº Op.',              width: '80px',  required: true,  type: 'text' },
-  { key: 'stepType',              label: 'Símbolo',             width: '60px',  required: true,  type: 'symbol' },
-  { key: 'description',           label: 'Descripción',         width: '240px', required: true,  type: 'text' },
-  { key: 'branchId',              label: 'Línea',               width: '90px',  required: false, type: 'text', tooltip: 'Línea paralela (Procesos Interdependientes)' },
-  { key: 'machineDeviceTool',     label: 'Máquina/Disp.',       width: '140px', required: false, type: 'text', tooltip: 'Máquina / Dispositivo / Herramienta' },
-  { key: 'productCharacteristic', label: 'Caract. Producto',    width: '150px', required: false, type: 'text', tooltip: 'Característica de producto' },
-  { key: 'productSpecialChar',    label: 'CC/SC',               width: '60px',  required: false, type: 'specialChar', tooltip: 'Característica Crítica / Significativa — Producto' },
-  { key: 'processCharacteristic', label: 'Caract. Proceso',     width: '150px', required: false, type: 'text', tooltip: 'Característica de proceso' },
-  { key: 'processSpecialChar',    label: 'CC/SC',               width: '60px',  required: false, type: 'specialChar', tooltip: 'Característica Crítica / Significativa — Proceso' },
-  { key: 'reference',             label: 'Referencia',          width: '90px',  required: false, type: 'text', tooltip: 'Plano / Especificación de referencia' },
-  { key: 'department',            label: 'Área',                width: '80px',  required: false, type: 'text' },
-  { key: 'notes',                 label: 'Notas',               width: '85px',  required: false, type: 'text' },
-  { key: 'rejectDisposition',     label: 'Disp.',               width: '80px',  required: false, type: 'disposition', tooltip: 'Disposición de rechazo (Retrabajo / Descarte / Selección)' },
-  { key: 'isExternalProcess',     label: 'Ext.',                width: '45px',  required: false, type: 'boolean', tooltip: 'Proceso externo (tercerizado)' },
+  { key: 'stepNumber',            label: 'Nº Op.',              width: '80px',  required: true,  type: 'text',        group: 'essential' },
+  { key: 'stepType',              label: 'Símbolo',             width: '60px',  required: true,  type: 'symbol',      group: 'essential' },
+  { key: 'description',           label: 'Descripción',         width: '320px', required: true,  type: 'text',        group: 'essential' },
+  { key: 'branchId',              label: 'Línea',               width: '90px',  required: false, type: 'text',        group: 'flow', tooltip: 'Línea paralela (Procesos Interdependientes)' },
+  { key: 'machineDeviceTool',     label: 'Máquina/Disp.',       width: '170px', required: false, type: 'text',        group: 'equipment', tooltip: 'Máquina / Dispositivo / Herramienta' },
+  { key: 'productCharacteristic', label: 'Caract. Producto',    width: '170px', required: false, type: 'text',        group: 'characteristics', tooltip: 'Característica de producto' },
+  { key: 'productSpecialChar',    label: 'CC/SC',               width: '60px',  required: false, type: 'specialChar', group: 'characteristics', tooltip: 'Característica Crítica / Significativa — Producto' },
+  { key: 'processCharacteristic', label: 'Caract. Proceso',     width: '170px', required: false, type: 'text',        group: 'characteristics', tooltip: 'Característica de proceso' },
+  { key: 'processSpecialChar',    label: 'CC/SC',               width: '60px',  required: false, type: 'specialChar', group: 'characteristics', tooltip: 'Característica Crítica / Significativa — Proceso' },
+  { key: 'reference',             label: 'Referencia',          width: '90px',  required: false, type: 'text',        group: 'reference', tooltip: 'Plano / Especificación de referencia' },
+  { key: 'department',            label: 'Área',                width: '100px', required: false, type: 'text',        group: 'reference' },
+  { key: 'notes',                 label: 'Notas',               width: '85px',  required: false, type: 'text',        group: 'reference' },
+  { key: 'rejectDisposition',     label: 'Disp.',               width: '80px',  required: false, type: 'disposition', group: 'disposition', tooltip: 'Disposición de rechazo (Retrabajo / Descarte / Selección)' },
+  { key: 'isExternalProcess',     label: 'Ext.',                width: '45px',  required: false, type: 'boolean',     group: 'disposition', tooltip: 'Proceso externo (tercerizado)' },
 ];
 
 /** Empty header with defaults */
@@ -311,28 +348,33 @@ export function createEmptyStep(stepNumber?: string): PfdStep {
     scrapDescription: '',
     branchId: '',
     branchLabel: '',
+    cycleTimeMinutes: undefined,
   };
 }
 
-/** C3-N1: Normalize a step loaded from old format (backward compat) */
-export function normalizePfdStep(raw: Record<string, unknown> & { id: string }): PfdStep {
-  const base = createEmptyStep();
-  const step = { ...base, ...raw } as PfdStep;
-  // Old docs may not have rejectDisposition — derive from isRework
-  if (!step.rejectDisposition || (step.rejectDisposition === 'none' && step.isRework)) {
-    step.rejectDisposition = step.isRework ? 'rework' : 'none';
-  }
-  if (step.scrapDescription === undefined || step.scrapDescription === null) {
-    step.scrapDescription = '';
-  }
-  // C9-N1: Branch fields for parallel flows
-  if (step.branchId === undefined || step.branchId === null) {
-    step.branchId = '';
-  }
-  if (step.branchLabel === undefined || step.branchLabel === null) {
-    step.branchLabel = '';
-  }
-  return step;
+// Re-export from pfdNormalize to avoid duplicate code
+// (pfdNormalize exists to break circular deps with pfdRepository)
+export { normalizePfdStep } from './pfdNormalize';
+
+/**
+ * Renumber all steps sequentially.
+ * Operations get OP 10, OP 20, OP 30...
+ * Transport steps keep empty stepNumber (they are connectors, not numbered operations).
+ * Bookend steps (storage at start/end) keep their REC/ENV labels.
+ */
+export function renumberSteps(steps: PfdStep[]): PfdStep[] {
+  let opCounter = 10;
+  return steps.map((step, i) => {
+    // Transport steps: keep empty
+    if (step.stepType === 'transport') return { ...step, stepNumber: '' };
+    // Bookend: first storage = REC, last storage = ENV
+    if (step.stepType === 'storage' && i === 0) return { ...step, stepNumber: 'REC' };
+    if (step.stepType === 'storage' && i === steps.length - 1) return { ...step, stepNumber: 'ENV' };
+    // Normal operation: OP 10, OP 20...
+    const num = opCounter;
+    opCounter += 10;
+    return { ...step, stepNumber: `OP ${num}` };
+  });
 }
 
 /** Create a new empty PFD document with AIAG-recommended initial step */

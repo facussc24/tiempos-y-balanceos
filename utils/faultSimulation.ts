@@ -1,3 +1,5 @@
+import { logger } from './logger';
+
 /**
  * Fault Simulation Module (DEV ONLY)
  * 
@@ -68,7 +70,7 @@ export function enableFaultSimulation(
     delayMs: number = 0
 ): void {
     if (!isDevMode()) {
-        console.warn('[FaultSim] Cannot enable fault simulation in production');
+        logger.warn('FaultSimulation', 'Cannot enable fault simulation in production');
         return;
     }
 
@@ -80,7 +82,7 @@ export function enableFaultSimulation(
         delayMs
     };
 
-    console.log(`[FaultSim] Enabled: ${errorType}, fail ${failCount} times`);
+    logger.info('FaultSimulation', 'Enabled', { errorType, failCount });
 }
 
 /**
@@ -94,7 +96,7 @@ export function disableFaultSimulation(): void {
         currentCount: 0,
         delayMs: 0
     };
-    console.log('[FaultSim] Disabled');
+    logger.info('FaultSimulation', 'Disabled');
 }
 
 /**
@@ -115,7 +117,7 @@ export async function maybeSimulateFault(operation: string): Promise<void> {
 
     // Check if we should still fail
     if (faultConfig.currentCount >= faultConfig.failCount) {
-        console.log(`[FaultSim] ${operation}: Allowing after ${faultConfig.failCount} failures`);
+        logger.debug('FaultSimulation', `${operation}: Allowing after ${faultConfig.failCount} failures`);
         return;
     }
 
@@ -129,7 +131,7 @@ export async function maybeSimulateFault(operation: string): Promise<void> {
 
     // Create error based on type
     const error = createSimulatedError(faultConfig.errorType, operation);
-    console.log(`[FaultSim] ${operation}: Simulating ${faultConfig.errorType} (${faultConfig.currentCount}/${faultConfig.failCount})`);
+    logger.debug('FaultSimulation', `${operation}: Simulating ${faultConfig.errorType}`, { attempt: faultConfig.currentCount, failCount: faultConfig.failCount });
 
     throw error;
 }

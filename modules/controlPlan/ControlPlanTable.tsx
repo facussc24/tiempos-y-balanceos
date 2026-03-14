@@ -7,23 +7,33 @@
  * Row grouping: consecutive rows with same processStepNumber merge cols 0-1 via rowSpan.
  */
 
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { ControlPlanItem, CP_COLUMNS, CPColumnDef } from './controlPlanTypes';
 import { CP_AI_FIELDS, CpSuggestionField } from './cpSuggestionTypes';
 import { CpColumnGroupVisibility, CP_COLUMN_TO_GROUP } from './useCpColumnVisibility';
 import { SuggestionQueryFn } from '../amfe/SuggestableTextarea';
 import SuggestableTextarea from '../amfe/SuggestableTextarea';
-import { Trash2, ChevronUp, ChevronDown, Sparkles } from 'lucide-react';
+import AutoResizeTextarea from '../amfe/AutoResizeTextarea';
+import { Trash2, ChevronUp, ChevronDown, ChevronRight, Copy, ClipboardList } from 'lucide-react';
+
+/** Columns that should use textarea (multi-line wrap) instead of single-line input */
+const TEXTAREA_COLUMNS = new Set<string>([
+    'processDescription', 'machineDeviceTool',
+    'productCharacteristic', 'processCharacteristic',
+    'specification', 'reactionPlanOwner',
+]);
 
 interface Props {
     items: ControlPlanItem[];
     onUpdateItem: (itemId: string, field: keyof ControlPlanItem, value: string) => void;
     onRemoveItem: (itemId: string) => void;
     onMoveItem: (itemId: string, direction: 'up' | 'down') => void;
+    onDuplicateItem?: (itemId: string) => void;
     aiEnabled?: boolean;
     buildQueryFn?: (item: ControlPlanItem, field: CpSuggestionField) => SuggestionQueryFn;
     readOnly?: boolean;
     columnVisibility?: CpColumnGroupVisibility;
+    onBulkFill?: (sourceItemId: string, field: string, value: string) => void;
 }
 
 /** Get AP badge color */
@@ -41,6 +51,7 @@ const getSpecialCharColor = (sc: string) => {
     const upper = sc.toUpperCase().trim();
     if (upper === 'CC') return 'bg-red-100 text-red-700 font-bold';
     if (upper === 'SC') return 'bg-orange-100 text-orange-700 font-bold';
+    if (upper === 'PTC') return 'bg-blue-100 text-blue-700 font-bold';
     return '';
 };
 
@@ -69,17 +80,30 @@ function computeRowGroups(items: ControlPlanItem[]): RowGroupInfo[] {
     return result;
 }
 
-const ControlPlanTable: React.FC<Props> = ({ items, onUpdateItem, onRemoveItem, onMoveItem, aiEnabled = false, buildQueryFn, readOnly = false, columnVisibility }) => {
+const ControlPlanTable: React.FC<Props> = ({ items, onUpdateItem, onRemoveItem, onMoveItem, onDuplicateItem, aiEnabled = false, buildQueryFn, readOnly = false, columnVisibility, onBulkFill }) => {
     const rowGroups = useMemo(() => computeRowGroups(items), [items]);
+    const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
+    const [bulkMenu, setBulkMenu] = useState<{x: number; y: number; itemId: string; field: string; value: string; stepNumber: string} | null>(null);
+
+    const toggleGroupCollapse = useCallback((stepNumber: string) => {
+        setCollapsedGroups(prev => {
+            const next = new Set(prev);
+            if (next.has(stepNumber)) next.delete(stepNumber);
+            else next.add(stepNumber);
+            return next;
+        });
+    }, []);
 
     if (items.length === 0) {
         return (
             <tbody>
                 <tr>
-                    <td colSpan={CP_COLUMNS.length + 1} className="text-center py-12 text-gray-400 text-sm">
-                        No hay items en el Plan de Control.
-                        <br />
-                        <span className="text-xs">Genera desde el AMFE o agrega manualmente.</span>
+                    <td colSpan={CP_COLUMNS.length + 1} className="text-center py-16">
+                        <div className="flex flex-col items-center gap-3">
+                            <ClipboardList size={40} className="text-teal-200" />
+                            <p className="text-sm font-medium text-gray-500">No hay items en el Plan de Control</p>
+                            <p className="text-xs text-gray-400">Genera desde el AMFE o agrega items manualmente.</p>
+                        </div>
                     </td>
                 </tr>
             </tbody>
@@ -88,25 +112,80 @@ const ControlPlanTable: React.FC<Props> = ({ items, onUpdateItem, onRemoveItem, 
 
     return (
         <tbody>
-            {items.map((item, idx) => (
-                <ControlPlanRow
-                    key={item.id}
-                    item={item}
-                    idx={idx}
-                    total={items.length}
-                    onUpdateItem={onUpdateItem}
-                    onRemoveItem={onRemoveItem}
-                    onMoveItem={onMoveItem}
-                    aiEnabled={aiEnabled}
-                    buildQueryFn={buildQueryFn}
-                    readOnly={readOnly}
-                    columnVisibility={columnVisibility}
-                    groupInfo={rowGroups[idx]}
-                />
-            ))}
+            {items.map((item, idx) => {
+                const groupInfo = rowGroups[idx];
+                const isCollapsed = collapsedGroups.has(item.processStepNumber);
+
+                // Skip collapsed group rows (except the separator header itself)
+                if (isCollapsed && !groupInfo.isGroupStart) return null;
+
+                return (
+                    <React.Fragment key={item.id}>
+                        {/* Group separator row */}
+                        {groupInfo.isGroupStart && idx > 0 && (
+                            <tr className="bg-teal-50/50 border-t-2 border-teal-200">
+                                <td colSpan={999} className="px-3 py-1.5">
+                                    <button onClick={() => toggleGroupCollapse(item.processStepNumber)}
+                                        className="flex items-center gap-2 text-xs font-semibold text-teal-700 w-full text-left">
+                                        {isCollapsed ? <ChevronRight size={14} /> : <ChevronDown size={14} />}
+                                        <span>OP {item.processStepNumber}</span>
+                                        <span className="font-normal text-teal-500">{item.processDescription}</span>
+                                        <span className="ml-auto text-[10px] text-teal-400">{groupInfo.groupSpan} items</span>
+                                    </button>
+                                </td>
+                            </tr>
+                        )}
+                        {/* Skip rendering row content if group is collapsed */}
+                        {!isCollapsed && (
+                            <ControlPlanRow
+                                item={item}
+                                idx={idx}
+                                total={items.length}
+                                onUpdateItem={onUpdateItem}
+                                onRemoveItem={onRemoveItem}
+                                onMoveItem={onMoveItem}
+                                onDuplicateItem={onDuplicateItem}
+                                aiEnabled={aiEnabled}
+                                buildQueryFn={buildQueryFn}
+                                readOnly={readOnly}
+                                columnVisibility={columnVisibility}
+                                groupInfo={groupInfo}
+                                onBulkFill={onBulkFill}
+                                setBulkMenu={setBulkMenu}
+                            />
+                        )}
+                    </React.Fragment>
+                );
+            })}
+            {/* Bulk fill context menu */}
+            {bulkMenu && (
+                <tr style={{ position: 'absolute', top: 0, left: 0, height: 0, overflow: 'visible' }}>
+                    <td colSpan={999} style={{ padding: 0, border: 'none', position: 'relative' }}>
+                        <div
+                            className="fixed z-[100] bg-white border border-gray-200 rounded-lg shadow-xl py-1 min-w-[200px]"
+                            style={{ top: bulkMenu.y, left: bulkMenu.x }}
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <button
+                                onClick={() => {
+                                    onBulkFill?.(bulkMenu.itemId, bulkMenu.field, bulkMenu.value);
+                                    setBulkMenu(null);
+                                }}
+                                className="w-full text-left px-3 py-2 text-xs hover:bg-teal-50 text-gray-700"
+                            >
+                                Aplicar &lsquo;{bulkMenu.value.length > 30 ? bulkMenu.value.slice(0, 30) + '...' : bulkMenu.value}&rsquo; a OP {bulkMenu.stepNumber}
+                            </button>
+                        </div>
+                        <div className="fixed inset-0 z-[99]" onClick={() => setBulkMenu(null)} onKeyDown={(e) => { if (e.key === 'Escape') setBulkMenu(null); }} />
+                    </td>
+                </tr>
+            )}
         </tbody>
     );
 };
+
+/** Fields eligible for bulk fill via right-click */
+const BULK_FILL_FIELDS = new Set<string>(['sampleSize', 'sampleFrequency', 'controlMethod', 'reactionPlanOwner']);
 
 /** Single row — memoized to prevent re-renders of all rows on any change */
 const ControlPlanRow: React.FC<{
@@ -116,23 +195,26 @@ const ControlPlanRow: React.FC<{
     onUpdateItem: (itemId: string, field: keyof ControlPlanItem, value: string) => void;
     onRemoveItem: (itemId: string) => void;
     onMoveItem: (itemId: string, direction: 'up' | 'down') => void;
+    onDuplicateItem?: (itemId: string) => void;
     aiEnabled: boolean;
     buildQueryFn?: (item: ControlPlanItem, field: CpSuggestionField) => SuggestionQueryFn;
     readOnly: boolean;
     columnVisibility?: CpColumnGroupVisibility;
     groupInfo: RowGroupInfo;
-}> = React.memo(({ item, idx, total, onUpdateItem, onRemoveItem, onMoveItem, aiEnabled, buildQueryFn, readOnly, columnVisibility, groupInfo }) => {
+    onBulkFill?: (sourceItemId: string, field: string, value: string) => void;
+    setBulkMenu?: (menu: {x: number; y: number; itemId: string; field: string; value: string; stepNumber: string} | null) => void;
+}> = React.memo(({ item, idx, total, onUpdateItem, onRemoveItem, onMoveItem, onDuplicateItem, aiEnabled, buildQueryFn, readOnly, columnVisibility, groupInfo, onBulkFill, setBulkMenu }) => {
 
     // Memoize class strings — only recompute when readOnly changes
-    // max-w-0 + overflow-hidden on td: classic trick to force table-fixed cells to clip content
+    // table-fixed + colgroup controla anchos; break-words fuerza wrap de texto largo
     const cls = useMemo(() => ({
         cellBase: readOnly
-            ? 'px-2 py-2 border-r border-b border-gray-200 align-top text-xs max-w-0 overflow-hidden'
-            : 'border border-gray-200 px-0 align-top max-w-0 overflow-hidden',
-        textSpan: 'text-xs font-medium text-slate-700 leading-relaxed whitespace-pre-wrap break-words',
-        input: 'w-full px-1.5 py-1.5 text-[10px] bg-transparent border-0 outline-none focus:bg-blue-50 transition truncate',
-        stickyStep: `${readOnly ? 'px-2 py-2 border-r border-b border-gray-200 align-middle text-xs' : 'border border-gray-200 px-0 align-top'} ${readOnly ? 'bg-teal-50' : 'bg-white'} sticky left-0 z-[5] max-w-0 overflow-hidden`,
-        stickyDesc: `${readOnly ? 'px-2 py-2 border-r border-b border-gray-200 align-middle text-xs' : 'border border-gray-200 px-0 align-top'} ${readOnly ? 'bg-teal-50' : 'bg-white'} sticky left-[80px] z-[5] max-w-0 overflow-hidden`,
+            ? 'px-2 py-2 border-r border-b border-gray-200 align-top text-xs break-words'
+            : 'border border-gray-200 px-0 align-top break-words',
+        textSpan: 'block text-xs font-medium text-slate-700 leading-relaxed whitespace-pre-wrap break-words',
+        input: 'w-full px-1.5 py-1.5 text-[10px] bg-transparent border-0 outline-none focus:bg-blue-50 focus:ring-1 focus:ring-inset focus:ring-teal-300 transition',
+        stickyStep: `${readOnly ? 'px-2 py-2 border-r border-b border-gray-200 align-middle text-xs' : 'border border-gray-200 px-0 align-top'} ${readOnly ? 'bg-teal-50' : 'bg-white'} sticky left-0 z-[5] break-words`,
+        stickyDesc: `${readOnly ? 'px-2 py-2 border-r border-b border-gray-200 align-middle text-xs' : 'border border-gray-200 px-0 align-top'} ${readOnly ? 'bg-teal-50' : 'bg-white'} sticky left-[80px] z-[5] break-words`,
     }), [readOnly]);
 
     const descShadow: React.CSSProperties = { boxShadow: readOnly ? '3px 0 6px rgba(0,0,0,0.08)' : '2px 0 4px rgba(0,0,0,0.04)' };
@@ -158,8 +240,16 @@ const ControlPlanRow: React.FC<{
         const value = item[col.key] as string || '';
         const isEmpty = !value;
         const isOwnerField = col.key === 'reactionPlanOwner';
-        const showCriticalRequired = !readOnly && isOwnerField && isEmpty;
-        const showRequiredHint = !readOnly && !isOwnerField && col.required && isEmpty;
+        // Determine if this is a product row (has product characteristic but not process-only)
+        const hasProduct = ((item.productCharacteristic as string) || '').trim() !== '';
+        const hasProcess = ((item.processCharacteristic as string) || '').trim() !== '';
+        const isProductRow = hasProduct || !hasProcess;
+        // Fields that require red highlight when empty in edit mode
+        const isRequiredField = isOwnerField
+            || (col.key === 'specification' && isProductRow)
+            || (col.key === 'evaluationTechnique' && isProductRow);
+        const showCriticalRequired = !readOnly && isRequiredField && isEmpty;
+        const showRequiredHint = !readOnly && !isRequiredField && col.required && isEmpty;
         const isAutoFilled = item.autoFilledFields?.includes(col.key) && !!value;
         const isAiField = CP_AI_FIELDS.has(col.key);
 
@@ -168,18 +258,26 @@ const ControlPlanRow: React.FC<{
         const isGroupedCol = colIdx <= 2;
         if (isGroupedCol) {
             if (!groupInfo.isGroupStart) {
-                // Non-leader: rowSpan in readOnly (hidden), dimmed empty cell in edit mode
+                // Non-leader: rowSpan in readOnly (hidden), dimmed but editable in edit mode
                 if (readOnly) return null;
+                const useTextarea = TEXTAREA_COLUMNS.has(col.key);
+                const dimmedInput = `${cls.input} text-gray-400 focus:text-slate-700 focus:bg-blue-50`;
                 return (
                     <td key={col.key}
-                        className={`${colIdx === 0 ? cls.stickyStep : colIdx === 1 ? cls.stickyDesc : cls.cellBase} opacity-0`}
+                        className={`${colIdx === 0 ? cls.stickyStep : colIdx === 1 ? cls.stickyDesc : cls.cellBase} opacity-50 focus-within:opacity-100 transition-opacity`}
                         style={colIdx === 1 ? descShadow : undefined}
                     >
-                        <input type="text" value={value}
-                            onChange={e => onUpdateItem(item.id, col.key, e.target.value)}
-                            className={`${cls.input} opacity-0 focus:opacity-100`}
-                            tabIndex={-1}
-                            aria-label={`${col.label} para fila ${idx + 1}`} />
+                        {useTextarea ? (
+                            <AutoResizeTextarea value={value}
+                                onChange={e => onUpdateItem(item.id, col.key, e.target.value)}
+                                className={dimmedInput}
+                                aria-label={`${col.label} para fila ${idx + 1}`} />
+                        ) : (
+                            <input type="text" value={value}
+                                onChange={e => onUpdateItem(item.id, col.key, e.target.value)}
+                                className={dimmedInput}
+                                aria-label={`${col.label} para fila ${idx + 1}`} />
+                        )}
                     </td>
                 );
             }
@@ -187,13 +285,19 @@ const ControlPlanRow: React.FC<{
             const rSpan = readOnly && groupInfo.groupSpan > 1 ? groupInfo.groupSpan : undefined;
             const stickyClass = colIdx === 0 ? cls.stickyStep : colIdx === 1 ? cls.stickyDesc : cls.cellBase;
             const inputClass = colIdx === 0 ? `${cls.input} font-semibold text-teal-700` : `${cls.input} font-medium`;
+            const useTextarea = TEXTAREA_COLUMNS.has(col.key);
             return (
                 <td key={col.key}
                     className={stickyClass}
                     style={colIdx === 1 ? descShadow : undefined}
                     rowSpan={rSpan}
                 >
-                    {renderText(value, (
+                    {renderText(value, useTextarea ? (
+                        <AutoResizeTextarea value={value}
+                            onChange={e => onUpdateItem(item.id, col.key, e.target.value)}
+                            className={inputClass}
+                            aria-label={`${col.label} para fila ${idx + 1}`} />
+                    ) : (
                         <input type="text" value={value}
                             onChange={e => onUpdateItem(item.id, col.key, e.target.value)}
                             className={inputClass}
@@ -215,25 +319,36 @@ const ControlPlanRow: React.FC<{
             );
         }
 
-        const criticalBorder = showCriticalRequired ? 'border-l-2 border-l-red-500 bg-red-50' : showRequiredHint ? 'border-l-2 border-l-amber-400' : '';
+        const criticalBorder = showCriticalRequired ? 'border-l-2 border-l-red-500 bg-red-50/30' : showRequiredHint ? 'border-l-2 border-l-amber-400' : '';
         const cellClass = `${cls.cellBase} ${criticalBorder}`;
 
-        const autoFilledBg = isAutoFilled ? 'bg-purple-50/60' : '';
+        // Bulk fill context menu handler for eligible fields
+        const isBulkEligible = !readOnly && BULK_FILL_FIELDS.has(col.key) && value.trim() !== '' && onBulkFill && setBulkMenu;
+        const handleContextMenu = isBulkEligible ? (e: React.MouseEvent) => {
+            e.preventDefault();
+            setBulkMenu({
+                x: e.clientX,
+                y: e.clientY,
+                itemId: item.id,
+                field: col.key,
+                value: value,
+                stepNumber: item.processStepNumber,
+            });
+        } : undefined;
 
         // AI-eligible fields: use SuggestableTextarea with Gemini suggestions
         if (isAiField && !readOnly && (aiEnabled || buildQueryFn)) {
             const queryFn = buildQueryFn ? buildQueryFn(item, col.key as CpSuggestionField) : undefined;
             return (
-                <td key={col.key} className={`${cellClass} ${autoFilledBg}`}>
-                    {isAutoFilled && <Sparkles className="inline-block w-3 h-3 text-purple-400 mr-0.5 -mt-0.5 flex-shrink-0" aria-label="Sugerencia auto-generada" />}
+                <td key={col.key} className={cellClass} onContextMenu={handleContextMenu}>
                     <SuggestableTextarea
                         value={value}
                         onValueChange={(newVal) => onUpdateItem(item.id, col.key, newVal)}
                         queryFn={queryFn}
                         aiEnabled={aiEnabled}
-                        className={`${cls.input} ${isAutoFilled ? 'text-purple-600/70 italic' : ''}`}
+                        className={cls.input}
                         aria-label={`${col.label} para fila ${idx + 1}`}
-                        title={isAutoFilled ? 'Sugerencia auto-generada — editar para confirmar' : undefined}
+                        title={isAutoFilled ? 'Derivado del AMFE' : undefined}
                     />
                 </td>
             );
@@ -242,29 +357,43 @@ const ControlPlanRow: React.FC<{
         // View mode — render as text
         if (readOnly) {
             return (
-                <td key={col.key} className={`${cellClass} ${autoFilledBg}`}>
-                    {isAutoFilled && <Sparkles className="inline-block w-3 h-3 text-purple-400 mr-0.5 -mt-0.5" aria-label="Sugerencia auto-generada" />}
+                <td key={col.key} className={cellClass}>
                     {renderText(value, null)}
                 </td>
             );
         }
 
-        // Edit mode — plain input for non-AI fields
+        // Edit mode — textarea for long-text fields, plain input for short fields
+        const useTextarea = TEXTAREA_COLUMNS.has(col.key);
+        const placeholder = showCriticalRequired ? 'Ej: Operador de Línea'
+            : col.key === 'specification' && isEmpty ? 'Completar del plano'
+            : '';
+        const editClass = `${cls.input} ${showCriticalRequired ? 'placeholder:text-red-400 placeholder:text-[9px]' : isEmpty && col.key === 'specification' ? 'placeholder:text-gray-300 placeholder:text-[9px] placeholder:italic' : ''}`;
         return (
-            <td key={col.key} className={`${cellClass} ${autoFilledBg}`}>
-                {isAutoFilled && <Sparkles className="inline-block w-3 h-3 text-purple-400 mr-0.5 -mt-0.5" aria-label="Sugerencia auto-generada" />}
-                <input
-                    type="text"
-                    value={value}
-                    onChange={e => onUpdateItem(item.id, col.key, e.target.value)}
-                    placeholder={showCriticalRequired ? 'Obligatorio' : ''}
-                    className={`${cls.input} ${isAutoFilled ? 'text-purple-600/70 italic' : ''} ${showCriticalRequired ? 'placeholder:text-red-400 placeholder:text-[9px]' : ''}`}
-                    aria-label={`${col.label} para fila ${idx + 1}`}
-                    title={isAutoFilled ? 'Sugerencia auto-generada — editar para confirmar' : undefined}
-                />
+            <td key={col.key} className={cellClass} onContextMenu={handleContextMenu}>
+                {useTextarea ? (
+                    <AutoResizeTextarea
+                        value={value}
+                        onChange={e => onUpdateItem(item.id, col.key, e.target.value)}
+                        placeholder={placeholder}
+                        className={editClass}
+                        aria-label={`${col.label} para fila ${idx + 1}`}
+                        title={isAutoFilled ? 'Derivado del AMFE' : undefined}
+                    />
+                ) : (
+                    <input
+                        type="text"
+                        value={value}
+                        onChange={e => onUpdateItem(item.id, col.key, e.target.value)}
+                        placeholder={placeholder}
+                        className={editClass}
+                        aria-label={`${col.label} para fila ${idx + 1}`}
+                        title={isAutoFilled ? 'Derivado del AMFE' : undefined}
+                    />
+                )}
             </td>
         );
-    }, [item, idx, aiEnabled, buildQueryFn, onUpdateItem, readOnly, cls, descShadow, renderText, columnVisibility, groupInfo]);
+    }, [item, idx, aiEnabled, buildQueryFn, onUpdateItem, readOnly, cls, descShadow, renderText, columnVisibility, groupInfo, onBulkFill, setBulkMenu]);
 
     // Row background — subtle AP indicator stripe + zebra striping
     const apStripe = item.amfeAp === 'H' ? 'border-l-2 border-l-red-400'
@@ -282,21 +411,27 @@ const ControlPlanRow: React.FC<{
                 {!readOnly && (
                     <div className="flex items-center justify-center gap-0.5 opacity-0 group-hover:opacity-100 transition">
                         <button onClick={() => onMoveItem(item.id, 'up')} disabled={idx === 0}
-                            className="text-gray-300 hover:text-gray-600 disabled:opacity-30 p-0.5" title="Subir" aria-label={`Subir fila ${idx + 1}`}>
+                            className="text-gray-300 hover:text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed p-0.5" title="Mover arriba" aria-label={`Mover fila ${idx + 1} arriba`}>
                             <ChevronUp size={11} />
                         </button>
                         <button onClick={() => onMoveItem(item.id, 'down')} disabled={idx === total - 1}
-                            className="text-gray-300 hover:text-gray-600 disabled:opacity-30 p-0.5" title="Bajar" aria-label={`Bajar fila ${idx + 1}`}>
+                            className="text-gray-300 hover:text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed p-0.5" title="Mover abajo" aria-label={`Mover fila ${idx + 1} abajo`}>
                             <ChevronDown size={11} />
                         </button>
+                        {onDuplicateItem && (
+                            <button onClick={() => onDuplicateItem(item.id)}
+                                className="text-gray-300 hover:text-teal-600 p-0.5" title="Duplicar fila" aria-label={`Duplicar fila ${idx + 1}`}>
+                                <Copy size={11} />
+                            </button>
+                        )}
                         <button onClick={() => onRemoveItem(item.id)}
-                            className="text-gray-300 hover:text-red-500 p-0.5" title="Eliminar" aria-label={`Eliminar fila ${idx + 1}`}>
+                            className="text-gray-300 hover:text-red-500 p-0.5" title="Eliminar fila del Plan de Control" aria-label={`Eliminar fila ${idx + 1}`}>
                             <Trash2 size={11} />
                         </button>
                     </div>
                 )}
                 {readOnly && item.amfeAp && (
-                    <span className={`text-[9px] px-1.5 py-0.5 rounded border ${getApColor(item.amfeAp)}`}>
+                    <span className={`text-[9px] px-1.5 py-0.5 rounded border whitespace-nowrap ${getApColor(item.amfeAp)}`}>
                         {item.amfeAp}
                     </span>
                 )}
@@ -305,4 +440,4 @@ const ControlPlanRow: React.FC<{
     );
 });
 
-export default ControlPlanTable;
+export default React.memo(ControlPlanTable);

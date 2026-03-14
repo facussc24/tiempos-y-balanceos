@@ -31,7 +31,7 @@ describe('AmfeHelpPanel (R5B)', () => {
         // Default tab is "Escalas" which shows severity/occurrence/detection scales
         expect(screen.getByText('Severidad (S)')).toBeDefined();
         expect(screen.getByText('Ocurrencia (O)')).toBeDefined();
-        expect(screen.getByText('Deteccion (D)')).toBeDefined();
+        expect(screen.getByText('Detección (D)')).toBeDefined();
     });
 
     it('clicking Atajos tab shows shortcuts content', () => {

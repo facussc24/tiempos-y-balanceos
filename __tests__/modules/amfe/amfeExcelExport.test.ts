@@ -58,6 +58,7 @@ function makeHeader(overrides: Partial<AmfeHeaderData> = {}): AmfeHeaderData {
         responsible: 'Juan Perez', confidentiality: '-',
         partNumber: 'ABC-123', processResponsible: 'Pedro',
         revision: '1.0', approvedBy: 'Director', scope: 'Proceso completo',
+        applicableParts: '',
         ...overrides,
     };
 }
@@ -126,15 +127,15 @@ describe('exportAmfeResumenAP', () => {
         exportAmfeResumenAP(doc);
 
         expect(clickedAnchors.length).toBe(1);
-        expect(clickedAnchors[0].download).toContain('AMFE_Resumen_Mi Proyecto');
+        expect(clickedAnchors[0].download).toContain('AMFE Resumen - Mi Proyecto');
         expect(clickedAnchors[0].download).toMatch(/\.xlsx$/);
     });
 
-    it('uses "Export" as fallback when subject is empty', () => {
-        const doc = makeDoc({ header: makeHeader({ subject: '' }) });
+    it('uses "Documento" as fallback when subject and partNumber are empty', () => {
+        const doc = makeDoc({ header: makeHeader({ subject: '', partNumber: '' }) });
         exportAmfeResumenAP(doc);
 
-        expect(clickedAnchors[0].download).toContain('AMFE_Resumen_Export');
+        expect(clickedAnchors[0].download).toContain('AMFE Resumen - Documento');
     });
 
     it('includes only H and M causes in priority rows', () => {
@@ -286,7 +287,7 @@ describe('exportAmfePlanAcciones', () => {
         doc.operations[0].workElements[0].functions[0].failures[0].causes[0].preventionAction = 'Action';
         exportAmfePlanAcciones(doc);
 
-        expect(clickedAnchors[0].download).toContain('AMFE_Acciones_Proyecto X');
+        expect(clickedAnchors[0].download).toContain('AMFE Acciones - Proyecto X');
     });
 
     it('excludes completed and cancelled causes', () => {
@@ -522,8 +523,13 @@ describe('Plan de Acciones - empty status handling', () => {
 
         const aoaData = mockAoaToSheet.mock.calls[0][0];
         // Find the title row to count action items
-        const titleRow = aoaData.find((row: any[]) => row[0]?.v?.includes?.('PLAN DE ACCIONES'));
-        expect(titleRow[0].v).toContain('2 items'); // c1 (empty status) + c2 (En Proceso), NOT c3 (Completado)
+        // Verify 2 actionable causes are exported (c1 empty status + c2 En Proceso)
+        // c3 (Completado) should be excluded
+        // Column 3 = AP, only data rows have H/M/L values there
+        const dataRows = aoaData
+            .filter((row: any[]) => row.length >= 9 && row[3] && typeof row[3] === 'object')
+            .filter((row: any[]) => row[3].v === 'H' || row[3].v === 'M' || row[3].v === 'L');
+        expect(dataRows.length).toBe(2);
     });
 });
 
@@ -559,8 +565,8 @@ describe('Resumen AP - traceability columns', () => {
         const headerRow = aoaData.find((row: any[]) => row[0]?.v === 'Op');
         expect(headerRow).toBeDefined();
         const headerValues = headerRow.map((h: any) => h.v);
-        expect(headerValues).toContain('No.Car.');
-        expect(headerValues).toContain('Car. Esp.');
+        expect(headerValues).toContain('Nro.Car.');
+        expect(headerValues).toContain('Car.Esp.');
         expect(headerValues).toContain('Filtro');
 
         // Find data row with AP=H

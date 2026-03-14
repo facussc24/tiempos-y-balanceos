@@ -16,24 +16,26 @@ export const validateInjectionParams = (params: InjectionSimulationParams): Vali
     const { puInyTime, puCurTime, activeShifts, manualOps } = params;
 
     // 1. Critical Machine Params
-    if (puInyTime <= 0) {
+    // FIX: Guard against NaN bypassing comparison operators
+    if (!Number.isFinite(puInyTime) || puInyTime <= 0) {
         errors.push({
             field: 'puInyTime',
-            message: 'El tiempo de inyección debe ser mayor a 0.',
+            message: 'El tiempo de inyección debe ser un número válido mayor a 0.',
             severity: 'error'
         });
     }
 
-    if (puCurTime < 0) { // Curing could be 0 theoretically (e.g. cooling in mold during injection?) but unlikely
+    if (!Number.isFinite(puCurTime) || puCurTime < 0) {
         errors.push({
             field: 'puCurTime',
-            message: 'El tiempo de curado no puede ser negativo.',
+            message: 'El tiempo de curado debe ser un número válido no negativo.',
             severity: 'error'
         });
     }
 
     // 2. Production Config
-    if (activeShifts < 1 || activeShifts > 3) {
+    // FIX: Guard against NaN bypassing range check
+    if (!Number.isFinite(activeShifts) || activeShifts < 1 || activeShifts > 3) {
         errors.push({
             // activeShifts is a valid key of InjectionSimulationParams
             field: 'activeShifts',
@@ -43,7 +45,8 @@ export const validateInjectionParams = (params: InjectionSimulationParams): Vali
     }
 
     // 3. Manual Ops Integrity
-    const hasNegativeTime = manualOps.some(op => op.time < 0);
+    // FIX: Guard against NaN in operation times
+    const hasNegativeTime = manualOps.some(op => !Number.isFinite(op.time) || op.time < 0);
     if (hasNegativeTime) {
         errors.push({
             field: 'manualOps',

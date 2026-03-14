@@ -338,11 +338,11 @@ export const DependencyGraph: React.FC<Props> = ({ data, initialState, onStateCh
             <Card title="Mapa de Precedencias (PDM)" actions={
                 <div className="flex gap-2 print:hidden">
                     <div className="flex bg-slate-100 rounded p-1 items-center">
-                        <button onClick={zoomOut} className="p-1 hover:bg-white rounded text-slate-600"><ZoomOut size={16} /></button>
+                        <button onClick={zoomOut} className="p-1.5 hover:bg-white rounded text-slate-600" title="Alejar" aria-label="Alejar"><ZoomOut size={16} /></button>
                         <span className="text-xs font-mono w-10 text-center">{(zoom * 100).toFixed(0)}%</span>
-                        <button onClick={zoomIn} className="p-1 hover:bg-white rounded text-slate-600"><ZoomIn size={16} /></button>
+                        <button onClick={zoomIn} className="p-1.5 hover:bg-white rounded text-slate-600" title="Acercar" aria-label="Acercar"><ZoomIn size={16} /></button>
                         <div className="w-px h-4 bg-slate-300 mx-1"></div>
-                        <button onClick={resetView} className="p-1 hover:bg-white rounded text-slate-600 text-xs px-2">Reset</button>
+                        <button onClick={resetView} className="p-1.5 hover:bg-white rounded text-slate-600 text-xs px-2" title="Restablecer vista">Reset</button>
                     </div>
                     <button
                         onClick={handlePrint}
@@ -387,8 +387,10 @@ export const DependencyGraph: React.FC<Props> = ({ data, initialState, onStateCh
                 >
                     {/* GRAPH SVG */}
                     {graph.nodes.length === 0 ? (
-                        <div className="flex items-center justify-center h-full text-slate-400">
-                            No hay tareas para mostrar.
+                        <div className="flex flex-col items-center justify-center h-full text-slate-400 gap-3">
+                            <Network size={40} className="text-slate-300" strokeWidth={1.5} />
+                            <p className="font-medium text-slate-500">No hay tareas para mostrar</p>
+                            <p className="text-sm text-slate-400">Agrega operaciones en la tabla para visualizar el grafo de dependencias.</p>
                         </div>
                     ) : (
                         <svg

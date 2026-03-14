@@ -14,13 +14,13 @@ import {
     deleteDraft,
     listDraftKeys,
 } from '../../utils/repositories/draftRepository';
-
-const AUTOSAVE_DEBOUNCE_MS = 2000;
+import { AUTOSAVE_DEBOUNCE_MS } from '../../config';
 
 export async function loadPfdDraft(key: string): Promise<PfdDocument | null> {
     try {
         return await loadDraft<PfdDocument>('pfd', key);
-    } catch {
+    } catch (err) {
+        logger.warn('PfdPersistence', 'Failed to load draft', { key, error: String(err) });
         return null;
     }
 }

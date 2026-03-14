@@ -49,6 +49,7 @@ function makeAmfeDoc(ops: { opNumber: string; name: string; linkedLibraryOpId?: 
             confidentiality: '',
             approvedBy: '',
             processResponsible: '',
+            applicableParts: '',
         },
         operations: ops.map((op, idx) => ({
             id: `op-${idx}`,
@@ -231,7 +232,7 @@ describe('syncAmfeWithLibrary', () => {
         const result = syncAmfeWithLibrary(doc, 'TestProject', libOp, 'Juan Perez');
 
         expect(result.mergedCount).toBe(1);
-        expect(result.revisionEntry.reason).toBe('Sincronizacion de Biblioteca');
+        expect(result.revisionEntry.reason).toBe('Sincronización de Biblioteca');
         expect(result.revisionEntry.revisedBy).toContain('Juan Perez');
         expect(result.revisionEntry.revisedBy).toContain('Sync Biblioteca');
         expect(result.revisionEntry.description).toContain('Corte Laser');
@@ -293,7 +294,7 @@ describe('generateSyncSummary', () => {
 
         const summary = generateSyncSummary(results);
         expect(summary).toContain('2 AMFE(s)');
-        expect(summary).toContain('3 operacion(es)');
+        expect(summary).toContain('3 operación(es)');
     });
 
     it('mentions Control Plan attention when applicable', () => {

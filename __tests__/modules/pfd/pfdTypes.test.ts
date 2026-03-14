@@ -1,4 +1,4 @@
-import { createEmptyStep, createEmptyPfdDocument, PFD_COLUMNS, PFD_STEP_TYPES, EMPTY_PFD_HEADER, normalizePfdStep, getIntermediateStepNumber, parseStepNumber, getNextStepNumber, getBranchColor, BRANCH_COLORS, analyzeFlowTransition, collectForkBranches } from '../../../modules/pfd/pfdTypes';
+import { createEmptyStep, createEmptyPfdDocument, PFD_COLUMNS, PFD_STEP_TYPES, EMPTY_PFD_HEADER, normalizePfdStep, getIntermediateStepNumber, parseStepNumber, getNextStepNumber, getBranchColor, BRANCH_COLORS, analyzeFlowTransition, collectForkBranches, renumberSteps } from '../../../modules/pfd/pfdTypes';
 
 describe('pfdTypes', () => {
     describe('createEmptyStep', () => {
@@ -373,6 +373,114 @@ describe('pfdTypes', () => {
 
         it('should have a date for revisionDate', () => {
             expect(EMPTY_PFD_HEADER.revisionDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+        });
+    });
+
+    describe('renumberSteps', () => {
+        it('should assign sequential OP numbers to operations', () => {
+            const steps = [
+                { ...createEmptyStep('OP 10'), stepType: 'storage' as const, description: 'Recepción' },
+                { ...createEmptyStep('OP 25'), stepType: 'operation' as const, description: 'Op 1' },
+                { ...createEmptyStep('OP 45'), stepType: 'operation' as const, description: 'Op 2' },
+                { ...createEmptyStep('OP 90'), stepType: 'storage' as const, description: 'Envío' },
+            ];
+            const result = renumberSteps(steps);
+            expect(result[0].stepNumber).toBe('REC');
+            expect(result[1].stepNumber).toBe('OP 10');
+            expect(result[2].stepNumber).toBe('OP 20');
+            expect(result[3].stepNumber).toBe('ENV');
+        });
+
+        it('should skip transport steps (keep empty stepNumber)', () => {
+            const steps = [
+                { ...createEmptyStep('OP 10'), stepType: 'storage' as const, description: 'Recepción' },
+                { ...createEmptyStep('OP 15'), stepType: 'transport' as const, description: 'Transporte' },
+                { ...createEmptyStep('OP 20'), stepType: 'operation' as const, description: 'Op 1' },
+                { ...createEmptyStep('OP 50'), stepType: 'storage' as const, description: 'Envío' },
+            ];
+            const result = renumberSteps(steps);
+            expect(result[0].stepNumber).toBe('REC');
+            expect(result[1].stepNumber).toBe('');
+            expect(result[2].stepNumber).toBe('OP 10');
+            expect(result[3].stepNumber).toBe('ENV');
+        });
+
+        it('should preserve REC/ENV for bookend storage steps', () => {
+            const steps = [
+                { ...createEmptyStep('Whatever'), stepType: 'storage' as const, description: 'Recepción' },
+                { ...createEmptyStep('SomeNum'), stepType: 'storage' as const, description: 'Envío' },
+            ];
+            const result = renumberSteps(steps);
+            expect(result[0].stepNumber).toBe('REC');
+            expect(result[1].stepNumber).toBe('ENV');
+        });
+
+        it('should number middle storage steps as regular operations', () => {
+            const steps = [
+                { ...createEmptyStep('OP 10'), stepType: 'storage' as const, description: 'Recepción' },
+                { ...createEmptyStep('OP 20'), stepType: 'storage' as const, description: 'Buffer intermedio' },
+                { ...createEmptyStep('OP 30'), stepType: 'storage' as const, description: 'Envío' },
+            ];
+            const result = renumberSteps(steps);
+            expect(result[0].stepNumber).toBe('REC');
+            expect(result[1].stepNumber).toBe('OP 10');
+            expect(result[2].stepNumber).toBe('ENV');
+        });
+
+        it('should not mutate original steps', () => {
+            const steps = [
+                { ...createEmptyStep('OP 10'), stepType: 'operation' as const, description: 'Op 1' },
+            ];
+            const original = steps[0].stepNumber;
+            renumberSteps(steps);
+            expect(steps[0].stepNumber).toBe(original);
+        });
+
+        it('should handle empty array', () => {
+            const result = renumberSteps([]);
+            expect(result).toHaveLength(0);
+        });
+
+        it('should handle single operation step', () => {
+            const steps = [
+                { ...createEmptyStep('OP 99'), stepType: 'operation' as const, description: 'Solo op' },
+            ];
+            const result = renumberSteps(steps);
+            expect(result[0].stepNumber).toBe('OP 10');
+        });
+
+        it('should number inspection and decision steps sequentially', () => {
+            const steps = [
+                { ...createEmptyStep('OP 10'), stepType: 'storage' as const, description: 'Rec' },
+                { ...createEmptyStep('OP 20'), stepType: 'operation' as const, description: 'Op' },
+                { ...createEmptyStep('OP 30'), stepType: 'inspection' as const, description: 'Insp' },
+                { ...createEmptyStep('OP 40'), stepType: 'decision' as const, description: 'Dec' },
+                { ...createEmptyStep('OP 50'), stepType: 'storage' as const, description: 'Env' },
+            ];
+            const result = renumberSteps(steps);
+            expect(result[0].stepNumber).toBe('REC');
+            expect(result[1].stepNumber).toBe('OP 10');
+            expect(result[2].stepNumber).toBe('OP 20');
+            expect(result[3].stepNumber).toBe('OP 30');
+            expect(result[4].stepNumber).toBe('ENV');
+        });
+
+        it('should handle multiple transport steps interspersed', () => {
+            const steps = [
+                { ...createEmptyStep('OP 10'), stepType: 'storage' as const, description: 'Rec' },
+                { ...createEmptyStep(''), stepType: 'transport' as const, description: 'T1' },
+                { ...createEmptyStep('OP 20'), stepType: 'operation' as const, description: 'Op1' },
+                { ...createEmptyStep(''), stepType: 'transport' as const, description: 'T2' },
+                { ...createEmptyStep('OP 30'), stepType: 'operation' as const, description: 'Op2' },
+                { ...createEmptyStep('OP 40'), stepType: 'storage' as const, description: 'Env' },
+            ];
+            const result = renumberSteps(steps);
+            expect(result[0].stepNumber).toBe('REC');
+            expect(result[1].stepNumber).toBe('');
+            expect(result[2].stepNumber).toBe('OP 10');
+            expect(result[3].stepNumber).toBe('');
+            expect(result[4].stepNumber).toBe('OP 20');
+            expect(result[5].stepNumber).toBe('ENV');
         });
     });
 });

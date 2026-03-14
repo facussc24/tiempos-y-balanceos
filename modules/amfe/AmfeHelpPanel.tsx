@@ -86,7 +86,6 @@ const SHORTCUTS = [
     ]},
     { category: 'Paneles', items: [
         { keys: 'Ctrl+E', desc: 'Abrir/cerrar Resumen' },
-        { keys: 'Ctrl+I', desc: 'Abrir/cerrar Copiloto IA' },
         { keys: 'Ctrl+T', desc: 'Abrir/cerrar Templates' },
     ]},
     { category: 'Tabla', items: [
@@ -107,7 +106,7 @@ const WORKFLOW_STEPS = [
     { step: 3, title: 'Definir Funciones', desc: 'Para cada elemento de trabajo, definir qué debe hacer (función). Formato: Verbo + Sustantivo.', tip: 'Ejemplo: "Mantener temperatura > 200°C", "Posicionar pieza a ±0.1mm".' },
     { step: 4, title: 'Identificar Modos de Falla', desc: 'Para cada función, identificar cómo puede fallar. Es el opuesto/negativo de la función.', tip: 'Si función = "Mantener temperatura", falla = "No mantiene temperatura" o "Temperatura excesiva".' },
     { step: 5, title: 'Evaluar Efectos y Severidad (S)', desc: 'Documentar 3 niveles de efecto: interno, en planta cliente, en usuario final. Asignar S = máximo de los 3.', tip: 'S >= 9 implica seguridad/regulatorio. S nunca puede reducirse con controles.' },
-    { step: 6, title: 'Identificar Causas y Controles', desc: 'Para cada falla: listar causas raíz, controles de prevención existentes, y controles de detección existentes.', tip: 'Use IA Gemini para sugerencias. El Copiloto puede agregar causas y controles.' },
+    { step: 6, title: 'Identificar Causas y Controles', desc: 'Para cada falla: listar causas raíz, controles de prevención existentes, y controles de detección existentes.', tip: 'Use la Biblioteca para reutilizar causas y controles de operaciones similares.' },
     { step: 7, title: 'Evaluar O y D, Calcular AP', desc: 'Asignar Ocurrencia (con prevención actual) y Detección (con detección actual). AP se calcula automáticamente.', tip: 'AP = H requiere acción obligatoria. AP = M requiere evaluación. AP = L a discreción.' },
     { step: 8, title: 'Definir Acciones de Optimización', desc: 'Para causas con AP Alto: definir acciones preventivas y/o detectivas, responsable, fecha objetivo.', tip: 'Priorice reducir O (prevención) antes que D (detección). S no se puede cambiar.' },
     { step: 9, title: 'Generar Plan de Control', desc: 'Desde la pestaña Plan de Control, generar items automáticamente desde las causas AP=H y AP=M del AMFE.', tip: 'Revise los items generados. Complete especificaciones y responsables manualmente.' },

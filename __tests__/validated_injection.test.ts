@@ -202,31 +202,37 @@ describe('Validado: Takt Time de Inyeccion', () => {
 
 // ============================================================================
 // BLOQUE 4D: Auto-Cavidades Optimas
-// Formula: N_auto = max(1, ceil(t_curado / takt))
+// Formula: N_auto = min N where realCycle(N) <= taktTime
+// (Corrected: old formula ceil(curado/takt) ignored injection time + external ops)
 // ============================================================================
 describe('Validado: Auto-Cavidades Optimas', () => {
 
-    it('caso tipico: curado=15s, takt=48.96s → N_auto=1', () => {
-        // ceil(15 / 48.96) = ceil(0.306) = 1
+    it('caso tipico: curado=15s, takt=48.96s → N_auto=1 (realCycle=18s < 48.96s)', () => {
+        // N=1: cyclePerPiece=18s, realCycle=18s (default 15s internal absorbed) ≤ 48.96 → feasible
         const result = calculateInjectionMetrics(crearParamsBase());
         expect(result.inputs.activeN).toBe(1);
     });
 
-    it('demanda alta: curado=15s, takt=12.24s → N_auto=2', () => {
-        // ceil(15 / 12.24) = ceil(1.225) = 2
+    it('demanda alta: curado=15s, takt=12.24s → N_auto=2 (realCycle@N=2=10.5s < 12.24s)', () => {
+        // N=1: realCycle=18s > 12.24 ✗
+        // N=2: cyclePerPiece=10.5s, machineLoop=21s, realCycle=10.5s ≤ 12.24 ✓
         const result = calculateInjectionMetrics(crearParamsBase({
             dailyDemand: 2000,
         }));
         expect(result.inputs.activeN).toBe(2);
     });
 
-    it('curado largo, takt corto: curado=60s, takt=10s → N_auto=6', () => {
-        // ceil(60 / 10) = 6
+    it('curado largo, takt corto: curado=60s, takt=10s → N_auto=9', () => {
+        // N=8: cyclePerPiece=10.5s, realCycle=10.5s > 10s ✗
+        // N=9: cyclePerPiece=9.67s, realCycle=9.67s ≤ 10s ✓
+        // (Old formula ceil(60/10)=6 was wrong: realCycle at N=6 is 13s > 10s!)
         const result = calculateInjectionMetrics(crearParamsBase({
             puCurTime: 60,
             dailyDemand: 2448, // takt = (28800*0.85)/2448 ≈ 10.0s
         }));
-        expect(result.inputs.activeN).toBe(6);
+        expect(result.inputs.activeN).toBe(9);
+        // Verify the selected scenario actually meets takt
+        expect(result.selectedData!.realCycle).toBeLessThanOrEqual(result.inputs.taktTime);
     });
 
     it('modo manual: usa N del usuario, ignora auto', () => {
@@ -235,6 +241,44 @@ describe('Validado: Auto-Cavidades Optimas', () => {
             userSelectedN: 4,
         }));
         expect(result.inputs.activeN).toBe(4);
+    });
+
+    it('con operaciones externas: auto N compensa el tiempo extra', () => {
+        // iny=4s, curado=20s, takt=23.04s, manual=8s INT + 3s EXT
+        // N=1: realCycle = max(24,8)+3 = 27s > 23.04 ✗
+        // N=2: realCycle = (max(28,8)+3)/2 = 15.5s ≤ 23.04 ✓
+        const ops: ManualOperation[] = [
+            { id: 'm1', description: 'Carga', time: 8, type: 'internal' },
+            { id: 'm2', description: 'Inspeccion', time: 3, type: 'external' },
+        ];
+        const result = calculateInjectionMetrics({
+            puInyTime: 4,
+            puCurTime: 20,
+            activeShifts: 1,
+            dailyDemand: 1000,
+            oee: 0.80,
+            availableSeconds: 28800,
+            manualOps: ops,
+            manualTimeOverride: null,
+            headcountMode: 'auto',
+            userHeadcountOverride: 1,
+            cavityMode: 'auto',
+        });
+        expect(result.inputs.activeN).toBe(2);
+        expect(result.selectedData!.realCycle).toBeLessThanOrEqual(result.inputs.taktTime);
+    });
+
+    it('sin escenario factible: elige N mas alto como mejor esfuerzo', () => {
+        // Demanda extrema: takt ≈ 2s, iny=3s → ningún N puede bajar de 3s
+        const result = calculateInjectionMetrics(crearParamsBase({
+            dailyDemand: 12240, // takt = (28800*0.85)/12240 = 2.0s
+        }));
+        // puInyTime=3s > takt=2s → cyclePerPiece siempre > 3s
+        // Auto should pick highest N as best effort
+        expect(result.inputs.activeN).toBeGreaterThanOrEqual(8);
+        // realCycle won't meet takt, but it should be the best available
+        const lastScenario = result.chartData[result.chartData.length - 1];
+        expect(result.inputs.activeN).toBe(lastScenario.n);
     });
 });
 
@@ -455,13 +499,13 @@ describe('Validado: Produccion Horaria y Diaria', () => {
     });
 
     it('produccion diaria usa segundos reales del turno', () => {
-        // dailyOutput = (availableSeconds * shifts * OEE) / realCycle
+        // dailyOutput = (availableSeconds * OEE) / realCycle  (availableSeconds already includes shifts)
         const result = calculateInjectionMetrics(crearParamsBase({
             cavityMode: 'manual',
             userSelectedN: 6,
         }));
 
-        const expected = (28800 * 1 * 0.85) / result.selectedData!.realCycle;
+        const expected = (28800 * 0.85) / result.selectedData!.realCycle;
         expect(result.selectedData!.dailyOutput).toBeCloseTo(expected, 0);
     });
 });
@@ -665,22 +709,25 @@ describe('Validado: Flujo Completo de Inyeccion', () => {
         // 2. Takt = (28800 * 0.80) / 1000 = 23.04s
         expect(result.inputs.taktTime).toBeCloseTo(23.04, 2);
 
-        // 3. Auto N = max(1, ceil(20 / 23.04)) = ceil(0.868) = 1
-        expect(result.inputs.activeN).toBe(1);
+        // 3. Auto N: N=1 realCycle=27s > 23.04 → N=2 realCycle=15.5s ≤ 23.04 → N=2
+        expect(result.inputs.activeN).toBe(2);
 
-        // 4. Con N=1: cicloMaquina = 4 + 20/1 = 24s
-        expect(result.selectedData!.cyclePerPiece).toBeCloseTo(24, 2);
+        // 4. Con N=2: cicloMaquina = 4 + 20/2 = 14s
+        expect(result.selectedData!.cyclePerPiece).toBeCloseTo(14, 2);
 
-        // 5. machineLoop para N=1 = 24 * 1 = 24s
-        // realLoop = max(24, 8) + 3 = 27s
-        // realCycle = 27/1 = 27s
-        expect(result.selectedData!.realCycle).toBeCloseTo(27, 0);
+        // 5. machineLoop para N=2 = 14 * 2 = 28s
+        // realLoop = max(28, 8) + 3 = 31s
+        // realCycle = 31/2 = 15.5s
+        expect(result.selectedData!.realCycle).toBeCloseTo(15.5, 0);
 
-        // 6. Produccion horaria = 3600 / 27 ≈ 133.33
+        // 6. Produccion horaria = 3600 / 15.5 ≈ 232.3
         expect(result.metrics.hourlyOutput).toBeCloseTo(3600 / result.selectedData!.realCycle, 1);
 
-        // 7. No es factible con 1 maquina porque 24 > 23.04
-        expect(result.selectedData!.isSingleMachineFeasible).toBe(false);
+        // 7. Factible con 1 maquina porque cyclePerPiece 14 < 23.04
+        expect(result.selectedData!.isSingleMachineFeasible).toBe(true);
+
+        // 8. Real cycle meets takt
+        expect(result.selectedData!.realCycle).toBeLessThanOrEqual(result.inputs.taktTime);
     });
 
     it('escenario real: pieza automotriz con curado largo', () => {

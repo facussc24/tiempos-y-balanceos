@@ -9,6 +9,7 @@
 
 import React from 'react';
 import { X, Keyboard, Command, Navigation, BarChart2, ListTodo, Binary, GitBranch } from 'lucide-react';
+import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { SHORTCUTS, formatShortcut, getShortcutsGrouped } from '../../hooks/useKeyboardShortcuts';
 
 // ============================================================================
@@ -203,10 +204,11 @@ export const ShortcutsHelpModal: React.FC<ShortcutsHelpModalProps> = ({
     onClose,
     activeContext = 'global'
 }) => {
-    if (!isOpen) return null;
+    const modalRef = useFocusTrap(isOpen);
 
     // Close on Escape key
     React.useEffect(() => {
+        if (!isOpen) return;
         const handleEscape = (e: KeyboardEvent) => {
             if (e.key === 'Escape') {
                 onClose();
@@ -215,7 +217,9 @@ export const ShortcutsHelpModal: React.FC<ShortcutsHelpModalProps> = ({
 
         window.addEventListener('keydown', handleEscape);
         return () => window.removeEventListener('keydown', handleEscape);
-    }, [onClose]);
+    }, [isOpen, onClose]);
+
+    if (!isOpen) return null;
 
     // Map tab names to context names
     const contextMap: Record<string, string> = {
@@ -235,6 +239,10 @@ export const ShortcutsHelpModal: React.FC<ShortcutsHelpModalProps> = ({
             onClick={onClose}
         >
             <div
+                ref={modalRef}
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="shortcuts-help-modal-title"
                 className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[85vh] overflow-hidden animate-in zoom-in-95 duration-200"
                 onClick={e => e.stopPropagation()}
             >
@@ -245,12 +253,13 @@ export const ShortcutsHelpModal: React.FC<ShortcutsHelpModalProps> = ({
                             <Keyboard size={22} className="text-white" />
                         </div>
                         <div>
-                            <h2 className="text-lg font-bold text-white">Atajos de Teclado</h2>
+                            <h2 id="shortcuts-help-modal-title" className="text-lg font-bold text-white">Atajos de Teclado</h2>
                             <p className="text-slate-400 text-xs mt-0.5">Acceso rápido a funciones principales</p>
                         </div>
                     </div>
                     <button
                         onClick={onClose}
+                        aria-label="Cerrar"
                         className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
                     >
                         <X size={20} />

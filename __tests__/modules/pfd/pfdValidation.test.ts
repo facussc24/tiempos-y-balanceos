@@ -301,6 +301,7 @@ describe('pfdValidation', () => {
         it('should warn when step has empty stepNumber', () => {
             const doc = makeDoc();
             doc.steps[0].stepNumber = '';
+            doc.steps[0].stepType = 'operation';
             const issues = validatePfdDocument(doc);
             expect(issues.some(i => i.rule === 'V13' && i.severity === 'warning')).toBe(true);
         });
@@ -308,6 +309,7 @@ describe('pfdValidation', () => {
         it('should warn when step has whitespace-only stepNumber', () => {
             const doc = makeDoc();
             doc.steps[0].stepNumber = '   ';
+            doc.steps[0].stepType = 'operation';
             const issues = validatePfdDocument(doc);
             expect(issues.some(i => i.rule === 'V13')).toBe(true);
         });
@@ -316,6 +318,30 @@ describe('pfdValidation', () => {
             const doc = makeDoc();
             const issues = validatePfdDocument(doc);
             expect(issues.filter(i => i.rule === 'V13')).toHaveLength(0);
+        });
+
+        it('should NOT fire for transport steps with empty stepNumber', () => {
+            const doc = makeDoc();
+            const transport = createEmptyStep();
+            transport.stepType = 'transport';
+            transport.stepNumber = '';
+            transport.description = 'Transporte a línea';
+            doc.steps.push(transport);
+            const issues = validatePfdDocument(doc);
+            // Should not have any V13 for the transport step
+            const v13Issues = issues.filter(i => i.rule === 'V13');
+            expect(v13Issues).toHaveLength(0);
+        });
+
+        it('should still fire for non-transport steps with empty stepNumber', () => {
+            const doc = makeDoc();
+            const inspection = createEmptyStep();
+            inspection.stepType = 'inspection';
+            inspection.stepNumber = '';
+            inspection.description = 'Inspección';
+            doc.steps.push(inspection);
+            const issues = validatePfdDocument(doc);
+            expect(issues.some(i => i.rule === 'V13')).toBe(true);
         });
     });
 
@@ -465,6 +491,104 @@ describe('pfdValidation', () => {
             doc.steps[0].notes = '';
             const issues = validatePfdDocument(doc);
             expect(issues.filter(i => i.rule === 'V17')).toHaveLength(0);
+        });
+    });
+
+    describe('V20: branch without label (once per branch)', () => {
+        it('should fire only once per branch without a label', () => {
+            const doc = makeDoc();
+            // 3 steps on branch A, none with a label
+            const s1 = createEmptyStep('OP 20');
+            s1.description = 'Op A1';
+            s1.stepType = 'operation';
+            s1.machineDeviceTool = 'Prensa';
+            s1.branchId = 'A';
+            s1.branchLabel = '';
+            doc.steps.push(s1);
+
+            const s2 = createEmptyStep('OP 30');
+            s2.description = 'Op A2';
+            s2.stepType = 'operation';
+            s2.machineDeviceTool = 'Torno';
+            s2.branchId = 'A';
+            s2.branchLabel = '';
+            doc.steps.push(s2);
+
+            const s3 = createEmptyStep('OP 40');
+            s3.description = 'Op A3';
+            s3.stepType = 'operation';
+            s3.machineDeviceTool = 'Fresa';
+            s3.branchId = 'A';
+            s3.branchLabel = '';
+            doc.steps.push(s3);
+
+            // Add convergence step so V19 doesn't fire
+            const conv = createEmptyStep('OP 50');
+            conv.description = 'Convergencia';
+            conv.stepType = 'operation';
+            conv.machineDeviceTool = 'Mesa';
+            doc.steps.push(conv);
+
+            const issues = validatePfdDocument(doc);
+            const v20Issues = issues.filter(i => i.rule === 'V20');
+            // Only ONE V20 issue for branch A, not three
+            expect(v20Issues).toHaveLength(1);
+            expect(v20Issues[0].message).toContain('"A"');
+        });
+
+        it('should not fire if any step on the branch has a label', () => {
+            const doc = makeDoc();
+            const s1 = createEmptyStep('OP 20');
+            s1.description = 'Op A1';
+            s1.stepType = 'operation';
+            s1.machineDeviceTool = 'Prensa';
+            s1.branchId = 'A';
+            s1.branchLabel = '';
+            doc.steps.push(s1);
+
+            const s2 = createEmptyStep('OP 30');
+            s2.description = 'Op A2';
+            s2.stepType = 'operation';
+            s2.machineDeviceTool = 'Torno';
+            s2.branchId = 'A';
+            s2.branchLabel = 'Mecanizado'; // has label
+            doc.steps.push(s2);
+
+            // Add convergence step
+            const conv = createEmptyStep('OP 40');
+            conv.description = 'Convergencia';
+            conv.stepType = 'operation';
+            conv.machineDeviceTool = 'Mesa';
+            doc.steps.push(conv);
+
+            const issues = validatePfdDocument(doc);
+            const v20Issues = issues.filter(i => i.rule === 'V20');
+            expect(v20Issues).toHaveLength(0);
+        });
+
+        it('should fire once per distinct branch', () => {
+            const doc = makeDoc();
+            // Branch A - no label
+            const s1 = createEmptyStep('OP 20');
+            s1.description = 'Op A1'; s1.stepType = 'operation'; s1.machineDeviceTool = 'P';
+            s1.branchId = 'A'; s1.branchLabel = '';
+            doc.steps.push(s1);
+
+            // Branch B - no label
+            const s2 = createEmptyStep('OP 30');
+            s2.description = 'Op B1'; s2.stepType = 'operation'; s2.machineDeviceTool = 'T';
+            s2.branchId = 'B'; s2.branchLabel = '';
+            doc.steps.push(s2);
+
+            // Convergence
+            const conv = createEmptyStep('OP 40');
+            conv.description = 'Conv'; conv.stepType = 'operation'; conv.machineDeviceTool = 'M';
+            doc.steps.push(conv);
+
+            const issues = validatePfdDocument(doc);
+            const v20Issues = issues.filter(i => i.rule === 'V20');
+            // One for A, one for B
+            expect(v20Issues).toHaveLength(2);
         });
     });
 

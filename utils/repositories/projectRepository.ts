@@ -9,6 +9,7 @@ import type { ProjectData } from '../../types';
 import { getDatabase } from '../database';
 import { logger } from '../logger';
 import { generateChecksum } from '../crypto';
+import { scheduleBackup } from '../backupService';
 
 export interface ProjectListItem {
     id: number;
@@ -86,6 +87,7 @@ export async function saveProject(project: ProjectData): Promise<number> {
                  WHERE id = ?`,
                 [name, client, projectCode, engineer, version, dailyDemand, data, checksum, id]
             );
+            scheduleBackup();
             return id;
         }
 
@@ -95,6 +97,7 @@ export async function saveProject(project: ProjectData): Promise<number> {
              VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
             [name, client, projectCode, engineer, version, dailyDemand, data, checksum]
         );
+        scheduleBackup();
         return result.lastInsertId;
     } catch (err) {
         logger.error('ProjectRepo', 'Failed to save project', {}, err instanceof Error ? err : undefined);

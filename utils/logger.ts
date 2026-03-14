@@ -211,8 +211,8 @@ export const logger = {
     info: (category: string, message: string, details?: Record<string, any>) =>
         log('info', category, message, details),
 
-    warn: (category: string, message: string, details?: Record<string, any>) =>
-        log('warn', category, message, details),
+    warn: (category: string, message: string, details?: Record<string, any>, error?: Error) =>
+        log('warn', category, message, details, error),
 
     error: (category: string, message: string, details?: Record<string, any>, error?: Error) =>
         log('error', category, message, details, error),

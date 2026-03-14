@@ -14,8 +14,7 @@ import {
     deleteDraft as repoDeleteDraft,
     listDraftKeys as repoListDraftKeys,
 } from '../../utils/repositories/draftRepository';
-
-const AUTOSAVE_DEBOUNCE_MS = 2000;
+import { AUTOSAVE_DEBOUNCE_MS } from '../../config';
 
 /**
  * Save a draft to SQLite.
@@ -53,6 +52,7 @@ interface AmfePersistenceOptions {
 
 interface AmfePersistenceResult {
     lastAutoSave: string;
+    autoSaveError: boolean;
 }
 
 /**
@@ -64,6 +64,7 @@ export function useAmfePersistence({
     isSaving,
 }: AmfePersistenceOptions): AmfePersistenceResult {
     const [lastAutoSave, setLastAutoSave] = useState('');
+    const [autoSaveError, setAutoSaveError] = useState(false);
     const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const isMountedRef = useRef(true);
 
@@ -82,6 +83,7 @@ export function useAmfePersistence({
                 const key = `amfe_draft_${currentProject}`;
                 await saveDraftInternal(key, currentData);
                 if (isMountedRef.current) {
+                    setAutoSaveError(false);
                     setLastAutoSave(new Date().toLocaleTimeString('es-AR', {
                         hour: '2-digit',
                         minute: '2-digit',
@@ -89,7 +91,10 @@ export function useAmfePersistence({
                     }));
                 }
             } catch (err) {
-                logger.warn('[AMFE] Auto-save failed:', err);
+                logger.warn('AMFE', 'Auto-save failed', { error: err instanceof Error ? err.message : String(err) });
+                if (isMountedRef.current) {
+                    setAutoSaveError(true);
+                }
             }
         }, AUTOSAVE_DEBOUNCE_MS);
 
@@ -98,5 +103,5 @@ export function useAmfePersistence({
         };
     }, [currentData, currentProject, isSaving]);
 
-    return { lastAutoSave };
+    return { lastAutoSave, autoSaveError };
 }

@@ -1,5 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
+import DOMPurify from 'dompurify';
 
 export const PrintView: React.FC = () => {
     const [htmlContent, setHtmlContent] = useState<string | null>(null);
@@ -8,7 +9,7 @@ export const PrintView: React.FC = () => {
         // Retrieve content from storage
         const content = localStorage.getItem('barack_print_content');
         if (content) {
-            setHtmlContent(content);
+            setHtmlContent(DOMPurify.sanitize(content));
 
             // Auto-print after a short delay to ensure styles load
             const timer = setTimeout(() => {

@@ -6,18 +6,7 @@
 import React from 'react';
 import type { SimulationKPIs } from './flowTypes';
 import type { ProductionStation } from './ProductionLine';
-
-// =============================================================================
-// HELPERS
-// =============================================================================
-
-function formatTime(seconds: number): string {
-    if (!isFinite(seconds) || seconds <= 0) return '-';
-    if (seconds < 60) return `${seconds.toFixed(1)}s`;
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}m ${secs.toFixed(0)}s`;
-}
+import { formatTime } from './flowUtils';
 
 // =============================================================================
 // PROPS
@@ -48,8 +37,8 @@ export const KPIDashboard: React.FC<KPIDashboardProps> = ({
 }) => {
     if (status === 'idle') return null;
 
-    const bottleneckStation = stations.find((_, idx) => idx === kpis.bottleneckStationId)
-        || stations.find(s => s.id === kpis.bottleneckStationId);
+    // FIX: bottleneckStationId is a station ID, not an array index
+    const bottleneckStation = stations.find(s => s.id === kpis.bottleneckStationId);
     const bottleneckName = bottleneckStation?.name ?? '-';
 
     return (
@@ -63,7 +52,7 @@ export const KPIDashboard: React.FC<KPIDashboardProps> = ({
                     <span className="flow-kpi-card__label">Piezas/hora</span>
                 </div>
                 <div className="flow-kpi-card">
-                    <span className="flow-kpi-card__value">{formatTime(avgCycleTime)}</span>
+                    <span className="flow-kpi-card__value">{formatTime(kpis.avgLeadTime > 0 ? kpis.avgLeadTime : avgCycleTime)}</span>
                     <span className="flow-kpi-card__label">Lead Time Prom.</span>
                 </div>
                 <div className="flow-kpi-card">
@@ -107,7 +96,7 @@ export const KPIDashboard: React.FC<KPIDashboardProps> = ({
                     const blockedPct = totalTime > 0 ? (blockedTime / totalTime) * 100 : 0;
                     const starvedPct = totalTime > 0 ? (starvedTime / totalTime) * 100 : 0;
 
-                    const isBottleneck = station.id === kpis.bottleneckStationId || idx === kpis.bottleneckStationId;
+                    const isBottleneck = station.id === kpis.bottleneckStationId;
 
                     return (
                         <div key={station.id} className={`flow-kpi-station-bar ${isBottleneck ? 'flow-kpi-station-bar--bottleneck' : ''}`}>

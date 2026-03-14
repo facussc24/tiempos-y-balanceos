@@ -78,7 +78,7 @@ export function getCauseValidationState(failure: AmfeFailure, cause: AmfeCause):
     }
 
     // AP=M without actions and without justification in observations (AIAG-VDA normative)
-    if (cause.ap === 'M' && !cause.preventionAction && !cause.detectionAction && !cause.observations) {
+    if (cause.ap === 'M' && !cause.preventionAction && !cause.detectionAction && !cause.observations?.trim()) {
         messages.push('AP Medio sin acciones: documentar justificación en Observaciones');
         if (level !== 'error') level = 'warning';
     }
@@ -415,7 +415,7 @@ export function getDocumentCompletionErrors(doc: AmfeDocument): ApHComplianceErr
                             errors.push({
                                 opName: op.name || op.opNumber,
                                 weName: we.name,
-                                failDescription: fail.description || '(sin descripcion)',
+                                failDescription: fail.description || '(sin descripción)',
                                 causeText: cause.cause || '(sin texto)',
                                 causeId: cause.id,
                                 missing,
@@ -528,7 +528,7 @@ export function getSoftLimitWarnings(doc: AmfeDocument): string[] {
                     totalCauses += causeCount;
                     if (causeCount > SOFT_LIMIT_CAUSES_PER_FAILURE) {
                         warnings.push(
-                            `Falla "${fail.description || '(sin descripcion)'}" en op ${op.opNumber || op.name || '?'} tiene ${causeCount} causas (recomendado: max ${SOFT_LIMIT_CAUSES_PER_FAILURE}). Considere agrupar causas similares.`
+                            `Falla "${fail.description || '(sin descripción)'}" en op ${op.opNumber || op.name || '?'} tiene ${causeCount} causas (recomendado: max ${SOFT_LIMIT_CAUSES_PER_FAILURE}). Considere agrupar causas similares.`
                         );
                     }
                 }

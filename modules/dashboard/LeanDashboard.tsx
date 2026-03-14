@@ -57,6 +57,15 @@ interface LeanDashboardProps {
 // ============================================================================
 
 function getVSMStatus(valueAddedPercent: number): TrafficLightStatus {
+    // FIX: Guard against NaN/Infinity — NaN comparisons are always false,
+    // causing fall-through to gray status but .toFixed(NaN) shows "NaN%" in message
+    if (!Number.isFinite(valueAddedPercent) || valueAddedPercent < 0) {
+        return {
+            color: 'gray',
+            label: 'Sin datos',
+            message: 'Generar VSM para ver métricas de flujo'
+        };
+    }
     if (valueAddedPercent >= 25) {
         return {
             color: 'green',
@@ -90,6 +99,16 @@ function getKanbanStatus(calculated: boolean, coverageRatio: number): TrafficLig
             color: 'gray',
             label: 'Sin calcular',
             message: 'Configurar Kanban para dimensionar inventarios'
+        };
+    }
+
+    // FIX: Guard against NaN/Infinity — upstream division could produce
+    // invalid ratio, causing NaN to render in percentage messages
+    if (!Number.isFinite(coverageRatio) || coverageRatio < 0) {
+        return {
+            color: 'gray',
+            label: 'Error de Datos',
+            message: 'No se pudo calcular el ratio de cobertura'
         };
     }
 
@@ -132,6 +151,16 @@ function getHeijunkaStatus(
             color: 'red',
             label: 'Cuello de botella',
             message: 'Ciclos exceden el Pitch - Ajustar capacidad'
+        };
+    }
+
+    // FIX: Guard against NaN/Infinity in optional ratio — NaN comparisons
+    // are always false, causing silent fall-through to green "Nivelado" status
+    if (routeTimeRatio !== undefined && !Number.isFinite(routeTimeRatio)) {
+        return {
+            color: 'gray',
+            label: 'Error de Datos',
+            message: 'No se pudo calcular el ratio de ruta logística'
         };
     }
 
@@ -273,6 +302,7 @@ export const LeanDashboard: React.FC<LeanDashboardProps> = ({
                         <button
                             onClick={onClose}
                             className="text-white/70 hover:text-white transition-colors"
+                            title="Cerrar" aria-label="Cerrar dashboard"
                         >
                             <X size={24} />
                         </button>

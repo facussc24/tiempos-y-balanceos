@@ -607,7 +607,10 @@ export const runGeneticAlgorithm = (
     const machineInventory = new Map<string, number>();
     if (machines) {
         for (const m of machines) {
-            machineInventory.set(m.id, m.availableUnits);
+            // FIX: Fall back to quantity (legacy alias), default 0.
+            // Use Number.isFinite — nullish coalescing (??) doesn't catch NaN.
+            const rawUnits = m.availableUnits ?? m.quantity;
+            machineInventory.set(m.id, Number.isFinite(rawUnits) ? rawUnits : 0);
         }
     }
 

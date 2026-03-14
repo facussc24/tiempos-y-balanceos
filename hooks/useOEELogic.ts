@@ -22,7 +22,7 @@ export const useOEELogic = (data: ProjectData, updateData: (data: ProjectData) =
         setOeeInput(displayVal.toString());
     }, [data.meta.manualOEE]);
 
-    const handleMetaChange = (field: keyof typeof data.meta, value: any) => {
+    const handleMetaChange = (field: keyof typeof data.meta, value: ProjectData['meta'][keyof ProjectData['meta']]) => {
         updateData({
             ...data,
             meta: { ...data.meta, [field]: value },

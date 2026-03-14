@@ -30,6 +30,7 @@ export function createEmptyAmfeDoc(): AmfeDocument {
             revision: '',
             approvedBy: '',
             scope: '',
+            applicableParts: '',
         },
         operations: [],
     };

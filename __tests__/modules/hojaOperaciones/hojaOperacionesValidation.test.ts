@@ -37,6 +37,7 @@ function makeValidSheet(): HojaOperacion {
         approvedBy: 'M.Donofrio',
         visualAids: [{ id: 'va1', imageData: 'data:...', caption: 'Foto', order: 0 }],
         sector: 'SOLDADURA',
+        reactionContact: 'Supervisor de turno',
     });
 }
 

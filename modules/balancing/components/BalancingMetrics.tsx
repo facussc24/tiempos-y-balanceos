@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Users, TrendingUp, HelpCircle, Timer, Plus, Minus, Trash2, Sparkles, Target, Scale, Calculator, ChevronDown, ChevronUp, CheckCircle2, AlertTriangle, XCircle, Link2, BarChart3, Clock } from 'lucide-react';
+import { Users, TrendingUp, HelpCircle, Timer, Plus, Minus, Trash2, Sparkles, Scale, Calculator, ChevronDown, ChevronUp, CheckCircle2, AlertTriangle, XCircle, Link2, BarChart3, Clock } from 'lucide-react';
 import { formatNumber } from '../../../utils';
 import { SimStation } from '../../../core/balancing/engine';
 import { Tooltip } from '../../../components/ui/Tooltip';
@@ -16,6 +16,9 @@ interface BalancingMetricsProps {
     totalIdleTimePerCycle: number;
     dailyLostHours: number;
     setStationCount: (count: number) => void;
+    addStation: () => void;
+    removeEmptyStation: () => void;
+    emptyStationIds: number[];
     clearBalance: () => void;
     handleOptimization: () => void;
     balancingMode?: 'SALBP1' | 'SALBP2';
@@ -52,6 +55,9 @@ export const BalancingMetrics: React.FC<BalancingMetricsProps> = ({
     totalIdleTimePerCycle,
     dailyLostHours,
     setStationCount,
+    addStation,
+    removeEmptyStation,
+    emptyStationIds,
     clearBalance,
     handleOptimization,
     balancingMode = 'SALBP1',
@@ -120,12 +126,9 @@ export const BalancingMetrics: React.FC<BalancingMetricsProps> = ({
         statusColor = 'bg-amber-50 text-amber-700 border-amber-200';
     }
 
-    // Can remove station?
-    const maxAssignedStation = stationData.reduce((max, st) => {
-        const hasTasks = st.tasks && (Array.isArray(st.tasks) ? st.tasks.length > 0 : false);
-        return hasTasks ? Math.max(max, st.id) : max;
-    }, 0);
-    const canRemoveStation = configuredStations > maxAssignedStation && configuredStations > 1;
+    // Can remove station? — Now uses emptyStationIds from the hook
+    const canRemoveStation = emptyStationIds.length > 0 && configuredStations > 1;
+    const nextStationToRemove = emptyStationIds.length > 0 ? emptyStationIds[0] : null;
 
     return (
         <div className="flex flex-col gap-3 bg-white p-3 rounded-lg border border-slate-200 shadow-sm relative z-40">
@@ -147,7 +150,7 @@ export const BalancingMetrics: React.FC<BalancingMetricsProps> = ({
                     <div className="w-full bg-white/20 h-2 rounded-full overflow-hidden">
                         <div
                             className="h-full bg-gradient-to-r from-green-400 to-emerald-400 rounded-full transition-all duration-200"
-                            style={{ width: `${(gaProgress.generation / gaProgress.totalGenerations) * 100}%` }}
+                            style={{ width: `${gaProgress.totalGenerations > 0 ? (gaProgress.generation / gaProgress.totalGenerations) * 100 : 0}%` }}
                         />
                     </div>
                 </div>
@@ -347,30 +350,6 @@ export const BalancingMetrics: React.FC<BalancingMetricsProps> = ({
                 </div>
             )}
 
-            {/* Strategy Selector */}
-            <div className="flex items-center gap-4 pb-3 border-b border-slate-100">
-                <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Estrategia:</span>
-                <div className="flex gap-2">
-                    <button
-                        onClick={() => onModeChange?.('SALBP1')}
-                        className="px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all bg-blue-600 text-white shadow-md"
-                    >
-                        <Target size={14} />
-                        Minimizar Recursos
-                    </button>
-                </div>
-                <Tooltip content={
-                    <div className="w-64 text-center">
-                        <strong>Estrategia de Optimización</strong>
-                        <p className="mt-2 text-left text-xs">
-                            El algoritmo calcula el número óptimo de operarios para cumplir el Takt Time.
-                        </p>
-                    </div>
-                }>
-                    <HelpCircle size={14} className="text-slate-400 cursor-help" />
-                </Tooltip>
-            </div>
-
             {/* Main Metrics Row */}
             <div className="flex flex-col lg:flex-row gap-4 justify-between items-center">
                 <div className="flex gap-4 divide-x divide-slate-200 overflow-x-auto">
@@ -486,36 +465,44 @@ export const BalancingMetrics: React.FC<BalancingMetricsProps> = ({
 
                 {/* Action Buttons Area */}
                 <div className="flex items-center gap-3">
-                    {/* Station Management — redesigned */}
-                    <div className="flex items-center gap-1.5">
-                        <button
-                            onClick={() => setStationCount(configuredStations + 1)}
-                            className="flex items-center gap-1 bg-white border border-slate-200 hover:border-blue-400 hover:text-blue-600 px-2 py-1.5 rounded-lg text-xs text-slate-600 transition-colors shadow-sm"
-                            title="Agregar una estación vacía al final"
-                        >
-                            <Plus size={12} />
-                            <span className="font-medium">Estación</span>
-                        </button>
-                        <Tooltip content={canRemoveStation
-                            ? `Quitar estación ${configuredStations} (vacía)`
-                            : `No se puede quitar: la estación ${configuredStations} tiene tareas asignadas. Movelas primero.`
-                        }>
+                    {/* Station Management — stepper control */}
+                    <div className="flex items-center gap-2">
+                        <div className="flex items-center bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
+                            <Tooltip content={canRemoveStation
+                                ? `Quitar estación ${nextStationToRemove} (vacía)`
+                                : configuredStations <= 1
+                                    ? 'Mínimo 1 estación'
+                                    : 'Todas las estaciones tienen tareas. Movelas primero.'
+                            }>
+                                <button
+                                    onClick={() => canRemoveStation && removeEmptyStation()}
+                                    className={`px-2.5 py-1.5 border-r border-slate-200 transition-colors ${
+                                        canRemoveStation
+                                            ? 'hover:bg-red-50 text-slate-500 hover:text-red-600'
+                                            : 'text-slate-200 cursor-not-allowed'
+                                    }`}
+                                    aria-label="Quitar estación vacía"
+                                >
+                                    <Minus size={14} />
+                                </button>
+                            </Tooltip>
+                            <div className="px-3 py-1.5 text-xs font-bold text-slate-700 min-w-[80px] text-center select-none">
+                                {configuredStations} Est.
+                            </div>
                             <button
-                                onClick={() => canRemoveStation && setStationCount(configuredStations - 1)}
-                                className={`flex items-center gap-1 bg-white border px-2 py-1.5 rounded-lg text-xs transition-colors shadow-sm ${
-                                    canRemoveStation
-                                        ? 'border-slate-200 hover:border-red-400 hover:text-red-600 text-slate-600 cursor-pointer'
-                                        : 'border-slate-100 text-slate-300 cursor-not-allowed'
-                                }`}
+                                onClick={addStation}
+                                className="px-2.5 py-1.5 border-l border-slate-200 hover:bg-blue-50 text-slate-500 hover:text-blue-600 transition-colors"
+                                title="Agregar estación"
+                                aria-label="Agregar estación"
                             >
-                                <Minus size={12} />
-                                <span className="font-medium">Estación</span>
+                                <Plus size={14} />
                             </button>
-                        </Tooltip>
+                        </div>
                         <button
                             onClick={clearBalance}
                             className="flex items-center gap-1 text-slate-400 hover:text-red-600 px-2 py-1.5 hover:bg-red-50 rounded-lg transition-colors text-xs border border-transparent hover:border-red-200"
                             title="Quitar todas las tareas de todas las estaciones"
+                            aria-label="Reiniciar balance"
                         >
                             <Trash2 size={12} />
                             <span className="font-medium">Reiniciar</span>
@@ -541,8 +528,9 @@ export const BalancingMetrics: React.FC<BalancingMetricsProps> = ({
                     <button
                         onClick={handleOptimization}
                         className="px-5 py-2 rounded-lg shadow-md hover:shadow-lg transition-all flex items-center gap-2 font-bold text-sm ml-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
+                        title="Asigna las tareas automáticamente minimizando estaciones y operarios"
                     >
-                        <Sparkles size={16} /> Ejecutar Balanceo Óptimo
+                        <Sparkles size={16} /> Balanceo Automático
                     </button>
                 </div>
             </div>

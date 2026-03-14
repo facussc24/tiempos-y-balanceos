@@ -54,7 +54,11 @@ export const YamazumiStackedChart: React.FC<YamazumiStackedChartProps> = ({
     }
 
     // Find max time for scaling (either highest bar or takt * 1.3)
-    const maxTime = Math.max(...bars.map(b => b.totalTime), taktTime * 1.3);
+    // FIX: Filter NaN values to prevent cascading NaN in chart rendering
+    const validTimes = bars.map(b => b.totalTime).filter(Number.isFinite);
+    const maxTime = validTimes.length > 0
+        ? Math.max(...validTimes, taktTime * 1.3)
+        : (taktTime * 1.3 || 1);
 
     // Count bottlenecks
     const bottleneckCount = bars.filter(b => b.isBottleneck).length;
@@ -142,7 +146,7 @@ export const YamazumiStackedChart: React.FC<YamazumiStackedChartProps> = ({
                                         >
                                             {/* Segments */}
                                             {bar.segments.map((segment, segIdx) => {
-                                                const segmentHeight = (segment.timeContribution / bar.totalTime) * 100;
+                                                const segmentHeight = bar.totalTime > 0 ? (segment.timeContribution / bar.totalTime) * 100 : 0;
                                                 return (
                                                     <div
                                                         key={segment.productId}
@@ -169,7 +173,7 @@ export const YamazumiStackedChart: React.FC<YamazumiStackedChartProps> = ({
                                                                 className="w-2 h-2 rounded-full flex-shrink-0"
                                                                 style={{ backgroundColor: seg.color }}
                                                             />
-                                                            <span className="truncate">{seg.productName}</span>
+                                                            <span className="truncate" title={seg.productName}>{seg.productName}</span>
                                                             <span className="ml-auto font-medium">
                                                                 {seg.percentage.toFixed(0)}%
                                                             </span>

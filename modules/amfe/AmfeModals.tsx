@@ -1,7 +1,9 @@
-import React, { lazy, Suspense } from 'react';
-import { Download, FileText, Loader2, X, Save, Wifi, WifiOff, AlertTriangle, XCircle } from 'lucide-react';
+import React, { lazy, Suspense, useEffect } from 'react';
+import { X, Save, Wifi, WifiOff, AlertTriangle, XCircle } from 'lucide-react';
+import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { ConfirmModal } from '../../components/modals/ConfirmModal';
 import { PromptModal } from '../../components/modals/PromptModal';
+import PdfPreviewModal from '../../components/modals/PdfPreviewModal';
 import { ModuleErrorBoundary } from '../../components/ui/ModuleErrorBoundary';
 import type { AmfeDocument } from './amfeTypes';
 import type { AmfeConfirmState } from './useAmfeConfirm';
@@ -63,6 +65,8 @@ interface AmfeModalsProps {
     onClearNetworkToast: () => void;
     // Data for panels
     data: AmfeDocument;
+    // AI
+    aiEnabled?: boolean;
 }
 
 const AmfeModals: React.FC<AmfeModalsProps> = ({
@@ -77,52 +81,35 @@ const AmfeModals: React.FC<AmfeModalsProps> = ({
     loadError, apHWarning, onClearApHWarning,
     networkToast, onClearNetworkToast,
     data,
-}) => (
+    aiEnabled,
+}) => {
+    const saveAsRef = useFocusTrap(saveAsState.isOpen);
+
+    useEffect(() => {
+        const handleEscape = (e: KeyboardEvent) => {
+            if (e.key === 'Escape' && saveAsState.isOpen) {
+                saveAsState.onClose();
+            }
+        };
+        document.addEventListener('keydown', handleEscape);
+        return () => document.removeEventListener('keydown', handleEscape);
+    }, [saveAsState.isOpen, saveAsState.onClose]);
+
+    return (
     <>
         {/* PDF Preview Modal */}
         {pdfPreview && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={onClearPdfPreview}>
-                <div
-                    className="bg-white rounded-xl shadow-2xl border border-gray-200 w-[95vw] h-[90vh] flex flex-col overflow-hidden"
-                    onClick={e => e.stopPropagation()}
-                >
-                    <div className="flex items-center justify-between px-5 py-3 border-b border-gray-200 bg-gradient-to-r from-red-50 to-gray-50 flex-shrink-0">
-                        <div className="flex items-center gap-2">
-                            <FileText size={18} className="text-red-600" />
-                            <div>
-                                <h3 className="text-sm font-bold text-gray-800">Vista Previa PDF</h3>
-                                <p className="text-[10px] text-gray-500">
-                                    {pdfPreview.template === 'full' ? 'Tabla VDA Completa' :
-                                     pdfPreview.template === 'summary' ? 'Resumen AP' : 'Plan de Acciones'}
-                                </p>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <button
-                                onClick={onPdfExport}
-                                disabled={isExportingPdf}
-                                className="flex items-center gap-1.5 bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded font-semibold transition shadow-sm text-xs disabled:opacity-50"
-                            >
-                                {isExportingPdf ? (
-                                    <><Loader2 size={14} className="animate-spin" /> Generando...</>
-                                ) : (
-                                    <><Download size={14} /> Exportar PDF</>
-                                )}
-                            </button>
-                            <button onClick={onClearPdfPreview} className="text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-100 transition">
-                                <X size={18} />
-                            </button>
-                        </div>
-                    </div>
-                    <div className="flex-1 overflow-auto p-4 bg-gray-100">
-                        <div
-                            className="bg-white shadow-lg mx-auto p-6 min-h-full"
-                            style={{ maxWidth: pdfPreview.template === 'full' ? '420mm' : '297mm' }}
-                            dangerouslySetInnerHTML={{ __html: pdfPreview.html }}
-                        />
-                    </div>
-                </div>
-            </div>
+            <PdfPreviewModal
+                html={pdfPreview.html}
+                onExport={onPdfExport}
+                onClose={onClearPdfPreview}
+                isExporting={isExportingPdf}
+                title="Vista Previa PDF — AMFE"
+                subtitle={pdfPreview.template === 'full' ? 'Tabla VDA Completa' :
+                    pdfPreview.template === 'summary' ? 'Resumen AP' : 'Plan de Acciones'}
+                maxWidth={pdfPreview.template === 'full' ? '420mm' : '297mm'}
+                themeColor="blue"
+            />
         )}
 
         {/* Confirmation Modal */}
@@ -155,6 +142,7 @@ const AmfeModals: React.FC<AmfeModalsProps> = ({
                     <AmfeAuditPanel
                         doc={data}
                         onClose={() => setShowAudit(false)}
+                        aiEnabled={aiEnabled}
                     />
                 </Suspense>
             </ModuleErrorBoundary>
@@ -197,13 +185,20 @@ const AmfeModals: React.FC<AmfeModalsProps> = ({
 
         {/* SaveAs Modal */}
         {saveAsState.isOpen && (
-            <div className="fixed inset-0 z-[70] flex items-center justify-center" onClick={saveAsState.onClose}>
+            <div className="fixed inset-0 z-[70] flex items-center justify-center" role="presentation" onClick={saveAsState.onClose}>
                 <div className="absolute inset-0 bg-black/30" />
-                <div className="relative bg-white rounded-xl shadow-2xl w-[420px] max-w-[95vw] p-6 animate-in zoom-in-95" onClick={e => e.stopPropagation()}>
-                    <button onClick={saveAsState.onClose} className="absolute top-3 right-3 text-gray-400 hover:text-gray-600">
+                <div
+                    ref={saveAsRef}
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="amfe-saveas-modal-title"
+                    className="relative bg-white rounded-xl shadow-2xl w-[420px] max-w-[95vw] p-6 animate-in zoom-in-95"
+                    onClick={e => e.stopPropagation()}
+                >
+                    <button onClick={saveAsState.onClose} aria-label="Cerrar" className="absolute top-3 right-3 text-gray-400 hover:text-gray-600">
                         <X size={18} />
                     </button>
-                    <h3 className="text-base font-bold text-gray-800 mb-1 flex items-center gap-2">
+                    <h3 id="amfe-saveas-modal-title" className="text-base font-bold text-gray-800 mb-1 flex items-center gap-2">
                         <Save size={18} className="text-green-600" />
                         Guardar AMFE
                     </h3>
@@ -320,6 +315,7 @@ const AmfeModals: React.FC<AmfeModalsProps> = ({
             </div>
         )}
     </>
-);
+    );
+};
 
 export default AmfeModals;

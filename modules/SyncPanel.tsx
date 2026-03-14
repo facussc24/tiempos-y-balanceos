@@ -115,7 +115,7 @@ function ProjectItem({ item, expanded, onToggle }: {
                                     </p>
                                     {item.localModified && (
                                         <p className="text-slate-500 mt-1">
-                                            Mod: {new Date(item.localModified).toLocaleString()}
+                                            Mod: {isNaN(new Date(item.localModified).getTime()) ? '—' : new Date(item.localModified).toLocaleString()}
                                         </p>
                                     )}
                                 </>
@@ -132,7 +132,7 @@ function ProjectItem({ item, expanded, onToggle }: {
                                     </p>
                                     {item.serverModified && (
                                         <p className="text-slate-500 mt-1">
-                                            Mod: {new Date(item.serverModified).toLocaleString()}
+                                            Mod: {isNaN(new Date(item.serverModified).getTime()) ? '—' : new Date(item.serverModified).toLocaleString()}
                                         </p>
                                     )}
                                 </>
@@ -217,6 +217,14 @@ export function SyncPanel({ onClose, onOpenConfig }: SyncPanelProps) {
         }
     }
 
+    // P4: Conflict resolution state
+    const [pendingConflicts, setPendingConflicts] = useState<SyncItem[]>([]);
+    const [conflictResolutions, setConflictResolutions] = useState<Map<string, ConflictResolution>>(new Map());
+    const [conflictResolver, setConflictResolver] = useState<{
+        conflicts: SyncItem[];
+        resolve: (resolutions: Map<string, ConflictResolution>) => void;
+    } | null>(null);
+
     async function handleSync(direction: SyncDirection) {
         if (!serverOnline && direction !== 'toLocal') {
             toast.warning('Sin conexión', 'El servidor no está disponible');
@@ -231,10 +239,12 @@ export function SyncPanel({ onClose, onOpenConfig }: SyncPanelProps) {
                 direction,
                 (progress) => setSyncProgress(progress),
                 async (conflicts) => {
-                    // For now, skip all conflicts (user can resolve manually)
-                    const resolutions = new Map<string, ConflictResolution>();
-                    conflicts.forEach(c => resolutions.set(c.id, 'skip'));
-                    return resolutions;
+                    // P4: Show conflict resolution UI and wait for user decisions
+                    return new Promise<Map<string, ConflictResolution>>((resolve) => {
+                        setPendingConflicts(conflicts);
+                        setConflictResolutions(new Map());
+                        setConflictResolver({ conflicts, resolve });
+                    });
                 }
             );
 
@@ -263,6 +273,28 @@ export function SyncPanel({ onClose, onOpenConfig }: SyncPanelProps) {
             setIsSyncing(false);
             setSyncProgress(null);
         }
+    }
+
+    function handleConflictChoice(id: string, resolution: ConflictResolution) {
+        setConflictResolutions(prev => {
+            const next = new Map(prev);
+            next.set(id, resolution);
+            return next;
+        });
+    }
+
+    function submitConflictResolutions() {
+        if (!conflictResolver) return;
+        // Fill any unresolved conflicts with 'skip'
+        const finalResolutions = new Map(conflictResolutions);
+        for (const c of conflictResolver.conflicts) {
+            if (!finalResolutions.has(c.id)) {
+                finalResolutions.set(c.id, 'skip');
+            }
+        }
+        conflictResolver.resolve(finalResolutions);
+        setConflictResolver(null);
+        setPendingConflicts([]);
     }
 
     function toggleExpanded(id: string) {
@@ -315,7 +347,7 @@ export function SyncPanel({ onClose, onOpenConfig }: SyncPanelProps) {
                     {/* Last Sync */}
                     {lastSync && (
                         <div className="text-xs text-slate-500">
-                            Última sync: {new Date(lastSync).toLocaleDateString()}
+                            Última sync: {isNaN(new Date(lastSync).getTime()) ? '—' : new Date(lastSync).toLocaleDateString()}
                         </div>
                     )}
 
@@ -323,7 +355,7 @@ export function SyncPanel({ onClose, onOpenConfig }: SyncPanelProps) {
                     <button
                         onClick={loadData}
                         disabled={isLoading || isSyncing}
-                        className="p-1.5 rounded-md hover:bg-slate-700 text-slate-400 hover:text-slate-200 transition-colors disabled:opacity-50"
+                        className="p-1.5 rounded-md hover:bg-slate-700 text-slate-400 hover:text-slate-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         <RefreshCw size={16} className={isLoading ? 'animate-spin' : ''} />
                     </button>
@@ -355,6 +387,56 @@ export function SyncPanel({ onClose, onOpenConfig }: SyncPanelProps) {
                     </div>
                 ) : (
                     <div className="space-y-4">
+                        {/* P4: Active Conflict Resolution UI */}
+                        {conflictResolver && pendingConflicts.length > 0 && (
+                            <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/30">
+                                <h3 className="text-sm font-semibold text-red-400 mb-3 flex items-center gap-2">
+                                    <AlertTriangle size={14} />
+                                    Resolver Conflictos ({pendingConflicts.length})
+                                </h3>
+                                <p className="text-xs text-slate-400 mb-3">
+                                    Estos proyectos fueron modificados tanto localmente como en el servidor. Elige qué versión conservar:
+                                </p>
+                                <div className="space-y-3">
+                                    {pendingConflicts.map(c => (
+                                        <div key={c.id} className="bg-slate-800 rounded-lg p-3 border border-slate-700">
+                                            <p className="text-sm text-slate-200 font-medium mb-1">{c.client} / {c.project} / {c.part}</p>
+                                            <div className="grid grid-cols-2 gap-2 text-xs text-slate-500 mb-2">
+                                                <span>Local: {c.localModified ? new Date(c.localModified).toLocaleString() : '—'}</span>
+                                                <span>Servidor: {c.serverModified ? new Date(c.serverModified).toLocaleString() : '—'}</span>
+                                            </div>
+                                            <div className="flex gap-2">
+                                                <button
+                                                    onClick={() => handleConflictChoice(c.id, 'keepLocal')}
+                                                    className={`flex-1 px-2 py-1.5 rounded text-xs font-medium transition-colors ${conflictResolutions.get(c.id) === 'keepLocal' ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}`}
+                                                >
+                                                    Usar Local
+                                                </button>
+                                                <button
+                                                    onClick={() => handleConflictChoice(c.id, 'keepServer')}
+                                                    className={`flex-1 px-2 py-1.5 rounded text-xs font-medium transition-colors ${conflictResolutions.get(c.id) === 'keepServer' ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}`}
+                                                >
+                                                    Usar Servidor
+                                                </button>
+                                                <button
+                                                    onClick={() => handleConflictChoice(c.id, 'skip')}
+                                                    className={`flex-1 px-2 py-1.5 rounded text-xs font-medium transition-colors ${conflictResolutions.get(c.id) === 'skip' ? 'bg-amber-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}`}
+                                                >
+                                                    Omitir
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                                <button
+                                    onClick={submitConflictResolutions}
+                                    className="w-full mt-3 px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium transition-colors"
+                                >
+                                    Aplicar Resoluciones
+                                </button>
+                            </div>
+                        )}
+
                         {/* Conflicts Section */}
                         {conflictItems.length > 0 && (
                             <div>

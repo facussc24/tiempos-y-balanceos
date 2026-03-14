@@ -18,6 +18,7 @@ import {
     calculateQuantityPerSlot as coreCalculateQuantityPerSlot,
     euclideanDistribute as coreEuclideanDistribute
 } from '../../core/services/SequencingService';
+import { formatTime } from '../../utils/formatting';
 
 // ============================================================================
 // TYPES
@@ -38,6 +39,9 @@ export interface ProductDemand {
 
     /** Color for visual display */
     color: string;
+
+    /** Pieces per container/box (default: 50). Used for material delivery calculation. */
+    packOut?: number;
 }
 
 export interface SlotAssignment {
@@ -209,7 +213,8 @@ export function generateHeijunkaSequence(
                 slots[slotIndex].materialsToDeliver.push({
                     productName: product.productName,
                     quantity,
-                    boxCount: Math.ceil(quantity / 50) // Assume 50 per box
+                    // FIX: Guard against packOut=0 producing Infinity
+                    boxCount: Math.ceil(quantity / Math.max(1, product.packOut || 50))
                 });
             }
         });
@@ -243,8 +248,10 @@ export function validateCapacity(
     products: ProductDemand[],
     pitchSeconds: number
 ): CapacityAlert[] {
+    // FIX: Guard against pitchSeconds=0 producing Infinity ratio and NaN in .toFixed()
+    const safePitchSeconds = pitchSeconds > 0 ? pitchSeconds : 1;
     return products.map(product => {
-        const ratio = product.cycleTimeSeconds / pitchSeconds;
+        const ratio = product.cycleTimeSeconds / safePitchSeconds;
 
         if (ratio > 1) {
             return {
@@ -326,15 +333,6 @@ export function calculateHeijunka(
 // ============================================================================
 // HELPER FUNCTIONS
 // ============================================================================
-
-/**
- * Format minutes since midnight to HH:MM.
- */
-function formatTime(totalMinutes: number): string {
-    const hours = Math.floor(totalMinutes / 60) % 24;
-    const minutes = Math.round(totalMinutes % 60);
-    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-}
 
 /**
  * Format seconds to human readable.

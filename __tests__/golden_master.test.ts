@@ -32,12 +32,14 @@ describe('Sealed Logic: Injection Calculation Golden Master', () => {
         // Verification Points
         expect(result.inputs.taktTime).toBeCloseTo(9.792, 3); // (16*3600*0.85)/5000 = 9.792
         expect(result.inputs.nStar).toBe(7); // 1 + (120/20) = 7
-        expect(result.inputs.activeN).toBe(13); // Ceil(120 / 9.792) = 13
 
-        // At N=13
-        // Cycle per Piece = Injection + RoundTrip? No, Rotary. 
-        // Logic: Max(Inj+Mov, Cooling/N, Manual/Op) generally.
-        // Let's check the derived metrics to ensure stability.
+        // puInyTime=20s > takt=9.792s → no scenario can meet takt (cyclePerPiece always > 20s)
+        // Auto picks highest N (16) as best effort — maxSim = max(16, min(32, 7+2)) = 16
+        expect(result.inputs.activeN).toBe(16);
+
+        // System correctly detects infeasibility (needs multiple machines)
+        expect(result.selectedData!.isSingleMachineFeasible).toBe(false);
+        expect(result.selectedData!.machinesNeeded).toBeGreaterThan(1);
 
         expect(result.validation.isValid).toBe(true);
         expect(result.metrics.isCurrentFeasible).toBe(true);

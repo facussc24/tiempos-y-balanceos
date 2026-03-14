@@ -10,3 +10,7 @@ export * from './cpRepository';
 export * from './hoRepository';
 export * from './draftRepository';
 export * from './pfdRepository';
+export * from './solicitudRepository';
+export * from './revisionRepository';
+export * from './productRepository';
+export * from './familyRepository';

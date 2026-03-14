@@ -1,8 +1,8 @@
 import React from 'react';
 import { Card } from '../../components/ui/Card';
 import { formatNumber } from '../../utils';
-import { calculateShiftNetMinutes } from '../../core/balancing/simulation';
-import { Shift, ShiftBreak } from '../../types';
+import { calculateShiftNetMinutes, calculateSectorTaktTime, calculateTaktTime } from '../../core/balancing/simulation';
+import { Shift, ShiftBreak, Sector } from '../../types';
 import { Plus, Trash2, X } from 'lucide-react';
 import { parsePositiveInt } from '../../utils/validation';
 
@@ -11,13 +11,19 @@ interface Props {
     activeShifts: number;
     totalAvailableMinutes: number;
     // Handlers from useShiftManager
-    onShiftChange: (id: number, field: string, value: any) => void;
+    onShiftChange: (id: number, field: string, value: string) => void;
     onAddBreak: (shiftId: number) => void;
     onRemoveBreak: (shiftId: number, breakId: string) => void;
-    onUpdateBreak: (shiftId: number, breakId: string, field: keyof ShiftBreak, value: any) => void;
+    onUpdateBreak: (shiftId: number, breakId: string, field: keyof ShiftBreak, value: ShiftBreak[keyof ShiftBreak]) => void;
     // Editing State
     editingBreaksShiftId: number | null;
     setEditingBreaksShiftId: (id: number | null) => void;
+    // Per-sector shift summary (optional)
+    sectors?: Sector[];
+    dailyDemand?: number;
+    globalOee?: number;
+    setupLossPercent?: number;
+    onSectorShiftChange?: (sectorId: string, activeShifts: number | null) => void;
 }
 
 export const ShiftStructure: React.FC<Props> = ({
@@ -29,7 +35,12 @@ export const ShiftStructure: React.FC<Props> = ({
     onRemoveBreak,
     onUpdateBreak,
     editingBreaksShiftId,
-    setEditingBreaksShiftId
+    setEditingBreaksShiftId,
+    sectors,
+    dailyDemand,
+    globalOee,
+    setupLossPercent = 0,
+    onSectorShiftChange
 }) => {
     const activeShiftToEdit = shifts.find(s => s.id === editingBreaksShiftId);
 
@@ -37,8 +48,8 @@ export const ShiftStructure: React.FC<Props> = ({
         <div className="relative">
             {/* Break Editor Modal */}
             {editingBreaksShiftId !== null && activeShiftToEdit && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-                    <div className="bg-white rounded-lg shadow-xl w-full max-w-md overflow-hidden border border-slate-200">
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm animate-in fade-in duration-150">
+                    <div className="bg-white rounded-lg shadow-xl w-full max-w-md overflow-hidden border border-slate-200 animate-in zoom-in-95 duration-200">
                         <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
                             <h3 className="font-bold text-slate-800">Descansos - {activeShiftToEdit.name}</h3>
                             <button onClick={() => setEditingBreaksShiftId(null)} className="text-slate-400 hover:text-slate-700">
@@ -130,11 +141,109 @@ export const ShiftStructure: React.FC<Props> = ({
                         </tbody>
                         <tfoot>
                             <tr>
-                                <td colSpan={3} className="pt-3 text-right text-sm text-slate-500 font-medium">Total Disponible (1 Estación):</td>
+                                <td colSpan={3} className="pt-3 text-right text-sm text-slate-500 font-medium">Total Disponible (Neto):</td>
                                 <td className="pt-3 text-right font-bold text-blue-600 text-lg">{formatNumber(totalAvailableMinutes)} min</td>
                             </tr>
                         </tfoot>
                     </table>
+
+                    {/* Per-sector Takt section — shows ALL sectors, not just overrides */}
+                    {(() => {
+                        const allSectors = sectors || [];
+                        if (allSectors.length === 0 || !dailyDemand || dailyDemand <= 0) return null;
+
+                        const projectTakt = calculateTaktTime(shifts, activeShifts, dailyDemand, globalOee ?? 0.85, setupLossPercent);
+                        return (
+                            <div className="mt-4 pt-3 border-t border-slate-200">
+                                <h4 className="text-xs font-bold text-slate-500 uppercase mb-2">Turnos y Takt por Sector</h4>
+                                <table className="min-w-full text-xs">
+                                    <thead>
+                                        <tr className="text-slate-400">
+                                            <th className="text-left py-1 px-2">Sector</th>
+                                            <th className="text-center py-1 px-2">Turnos</th>
+                                            <th className="text-right py-1 px-2">Takt</th>
+                                            <th className="text-right py-1 px-2">vs Proyecto</th>
+                                            {onSectorShiftChange && <th className="px-2"></th>}
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {allSectors.map(s => {
+                                            const hasOverride = !!s.shiftOverride;
+                                            const oee = s.targetOee ?? globalOee ?? 0.85;
+                                            const sectorTakt = calculateSectorTaktTime(s, shifts, activeShifts, dailyDemand, oee, setupLossPercent);
+                                            const diff = sectorTakt.nominalSeconds - projectTakt.nominalSeconds;
+                                            return (
+                                                <tr key={s.id} className="border-t border-slate-100">
+                                                    <td className="py-1.5 px-2 flex items-center gap-2">
+                                                        <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: s.color }} />
+                                                        <span className="font-medium text-slate-700">{s.name}</span>
+                                                    </td>
+                                                    <td className="py-1.5 px-2 text-center">
+                                                        {hasOverride ? (
+                                                            onSectorShiftChange ? (
+                                                                <select
+                                                                    className="text-xs border border-indigo-200 rounded px-1.5 py-0.5 bg-white text-indigo-700 font-bold"
+                                                                    value={s.shiftOverride!.activeShifts}
+                                                                    onChange={e => onSectorShiftChange(s.id, parseInt(e.target.value))}
+                                                                >
+                                                                    <option value={1}>1T</option>
+                                                                    <option value={2}>2T</option>
+                                                                    <option value={3}>3T</option>
+                                                                </select>
+                                                            ) : (
+                                                                <span className="bg-indigo-100 text-indigo-700 font-bold px-1.5 py-0.5 rounded">
+                                                                    {s.shiftOverride!.activeShifts}T
+                                                                </span>
+                                                            )
+                                                        ) : (
+                                                            onSectorShiftChange ? (
+                                                                <button
+                                                                    onClick={() => onSectorShiftChange(s.id, activeShifts)}
+                                                                    className="text-xs text-slate-400 hover:text-indigo-600 px-1.5 py-0.5 rounded hover:bg-indigo-50 transition-all"
+                                                                    title="Click para asignar turnos propios"
+                                                                >
+                                                                    {activeShifts}T
+                                                                </button>
+                                                            ) : (
+                                                                <span className="text-slate-400">{activeShifts}T</span>
+                                                            )
+                                                        )}
+                                                    </td>
+                                                    <td className="py-1.5 px-2 text-right font-mono font-bold text-slate-700">
+                                                        {formatNumber(sectorTakt.nominalSeconds, 1)}s
+                                                    </td>
+                                                    <td className="py-1.5 px-2 text-right">
+                                                        {Math.abs(diff) > 0.1 ? (
+                                                            <span className={`font-bold ${diff > 0 ? 'text-emerald-600' : 'text-amber-600'}`}>
+                                                                {diff > 0 ? '+' : ''}{formatNumber(diff, 1)}s
+                                                            </span>
+                                                        ) : (
+                                                            <span className="text-slate-400">=</span>
+                                                        )}
+                                                    </td>
+                                                    {onSectorShiftChange && (
+                                                        <td className="py-1.5 px-1">
+                                                            {hasOverride ? (
+                                                                <button
+                                                                    onClick={() => onSectorShiftChange(s.id, null)}
+                                                                    className="text-slate-300 hover:text-red-500 transition-all text-xs"
+                                                                    title="Quitar turnos propios (usar proyecto)"
+                                                                >
+                                                                    ✕
+                                                                </button>
+                                                            ) : (
+                                                                <span className="w-4"></span>
+                                                            )}
+                                                        </td>
+                                                    )}
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+                            </div>
+                        );
+                    })()}
                 </div>
             </Card>
         </div>

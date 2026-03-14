@@ -174,9 +174,14 @@ export interface DESConfig {
  */
 function gaussianRandom(mean: number, sigma: number): number {
     if (sigma === 0) return mean;
-    const u1 = Math.random();
-    const u2 = Math.random();
+    // FIX: Math.random() can return exactly 0, and Math.log(0) = -Infinity
+    // which propagates NaN through sqrt(-2 * -Infinity) → NaN → cycle time NaN
+    // Guard with Number.MIN_VALUE (smallest positive float, ~5e-324)
+    const u1 = Math.random() || Number.MIN_VALUE;
+    const u2 = Math.random() || Number.MIN_VALUE;
     const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+    // Guard against NaN from edge cases (defensive)
+    if (!Number.isFinite(z)) return mean;
     // Clamp to prevent extreme outliers (±3 sigma)
     const clamped = Math.max(-3, Math.min(3, z));
     return Math.max(0.1, mean + sigma * clamped); // Never go below 0.1s
@@ -292,6 +297,8 @@ export class DESSimulationEngine {
     /** Post-warmup throughput: pieces completed when warmup ended */
     private completedAtWarmup: number = 0;
     private warmupRecorded: boolean = false;
+    /** Lead time samples from steady-state only (pieces entering after warmup) */
+    private leadTimeSteadyCount: number = 0;
 
     // Product mix state
     private heijunkaSequence: number[] = []; // array of cycleTimeMultiplier values mapped by index
@@ -554,6 +561,11 @@ export class DESSimulationEngine {
         // Log performance
         logger.debug('DES', `Instant simulation: ${executionTimeMs.toFixed(2)}ms for ${this.completedCount} pieces, ${tickCount} events`);
 
+        // FIX: Calculate average lead time from steady-state samples only
+        if (this.leadTimeSteadyCount > 0) {
+            this.kpis.avgLeadTime = this.kpis.totalLeadTime / this.leadTimeSteadyCount;
+        }
+
         return {
             completedCount: this.completedCount,
             elapsedTime: elapsedSeconds,
@@ -634,6 +646,18 @@ export class DESSimulationEngine {
             piece.status = 'completed';
             piece.completionTime = this.currentTime;
             this.completedCount++;
+
+            // FIX: Track lead time (entry → exit) for KPI reporting
+            // Only count pieces that entered during steady state (after warmup)
+            // to avoid contamination from the transient line-filling phase
+            const leadTime = this.currentTime - piece.entryTime;
+            if (leadTime >= 0 && piece.entryTime >= this.warmupTime) {
+                this.kpis.totalLeadTime += leadTime;
+                this.kpis.minLeadTime = Math.min(this.kpis.minLeadTime, leadTime);
+                this.kpis.maxLeadTime = Math.max(this.kpis.maxLeadTime, leadTime);
+                this.leadTimeSteadyCount++;
+            }
+
             this.pieces.delete(event.pieceId); // Free memory
 
             // Try to spawn new piece if needed
@@ -689,19 +713,26 @@ export class DESSimulationEngine {
         const station = this.stations[stationIndex];
         const queue = this.stationQueues[stationIndex];
 
+        // Clear starvation when work becomes available
+        if (station.queueCount > 0) {
+            station.isStarved = false;
+        }
+
         while (
             station.queueCount > 0 &&
             station.activeCount < station.operators &&
-            !station.isStarved &&
             !station.isDown // Phase 12 Check
         ) {
             // O(1) dequeue from per-station queue (replaces O(n) Map scan)
             if (queue.length === 0) break;
             const pieceId = queue.shift()!;
+            // FIX: Decrement queueCount immediately after shift() to keep it in sync
+            // with the physical queue. Previously, a failed piece lookup would skip the
+            // decrement, causing queueCount > queue.length divergence.
+            station.queueCount--;
             const pieceToStart = this.pieces.get(pieceId);
             if (!pieceToStart || pieceToStart.status !== 'queued') continue; // defensive guard
 
-            station.queueCount--;
             station.activeCount++;
 
             // Schedule start event
@@ -713,6 +744,14 @@ export class DESSimulationEngine {
                 priority: 8,
             });
         }
+
+        // FIX: Detect starvation — station has no work and is not the first station
+        // (station 0 receives input from outside, so empty queue is normal between arrivals)
+        station.isStarved = station.queueCount === 0
+            && station.activeCount === 0
+            && !station.blocked
+            && !station.isDown
+            && stationIndex > 0;
     }
 
     /**
@@ -902,13 +941,19 @@ export class DESSimulationEngine {
                 : 1.0;
 
             // Performance: Actual throughput vs theoretical max
-            // Theoretical max pieces = runTime / bottleneckCycleTime
+            // FIX: Use simulation elapsed time (post-warmup), NOT summed station-time.
+            // runTime is summed across all N stations, so dividing by bottleneckCT
+            // would give N× the actual theoretical max, making Performance always ~1/N.
             const bottleneckCT = this.kpis.bottleneckCycleTime ||
                 (this.stations.length > 0 ? Math.max(0.01, ...this.stations.map(s => s.cycleTime)) : 1);
-            const theoreticalMaxPieces = bottleneckCT > 0 ? runTime / bottleneckCT : 0;
+            const steadyStateElapsed = Math.max(0, this.currentTime - this.warmupTime);
+            const steadyStatePieces = this.completedCount - this.completedAtWarmup;
+            const theoreticalMaxPieces = bottleneckCT > 0 && steadyStateElapsed > 0
+                ? steadyStateElapsed / bottleneckCT
+                : 0;
 
             this.kpis.performance = theoreticalMaxPieces > 0
-                ? Math.min(1.0, this.completedCount / theoreticalMaxPieces)
+                ? Math.min(1.0, steadyStatePieces / theoreticalMaxPieces)
                 : 1.0;
 
             // Quality: Perfect quality assumed (not modeled)

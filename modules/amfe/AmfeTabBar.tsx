@@ -1,12 +1,24 @@
 import React from 'react';
-import { ClipboardCheck, FileText, RefreshCcw, ArrowLeft } from 'lucide-react';
+import { GitBranch, ClipboardCheck, FileText, FileJson, Home, Check, Package, Layers } from 'lucide-react';
 import type { ActiveTab } from './useAmfeTabNavigation';
+import type { PfdDocument } from '../pfd/pfdTypes';
 import type { ControlPlanDocument } from '../controlPlan/controlPlanTypes';
 import type { HoDocument } from '../hojaOperaciones/hojaOperacionesTypes';
+
+/** Project context shown across all APQP tabs to maintain "same family" feeling */
+interface ProjectContext {
+    projectName?: string;
+    clientName?: string;
+    partName?: string;
+    partNumber?: string;
+}
 
 interface AmfeTabBarProps {
     activeTab: ActiveTab;
     onTabChange: (tab: ActiveTab) => void;
+    pfdInitialData: PfdDocument | null;
+    onGeneratePfd: () => void;
+    onImportPfdFromAmfe?: () => void;
     cpInitialData: ControlPlanDocument | null;
     hoInitialData: HoDocument | null;
     onGenerateControlPlan: () => void;
@@ -19,30 +31,32 @@ interface AmfeTabBarProps {
         variant?: 'danger' | 'warning' | 'info';
         confirmText?: string;
     }) => Promise<boolean>;
-    regenerateButton?: {
-        label: string;
-        onClick: () => void;
-        color: 'amber' | 'teal';
-    };
+    /** Indicates a saved CP exists for this AMFE project */
+    hasSavedCp?: boolean;
+    /** Number of operations in the current AMFE document */
+    amfeOperationCount?: number;
+    /** Project context: client, part name, etc. to show across all tabs */
+    projectContext?: ProjectContext;
+    /** Open the templates modal (accessible from any tab) */
+    onOpenTemplates?: () => void;
 }
 
 const TAB_CLASSES = {
     active: {
+        pfd: 'text-cyan-700 border-b-2 border-cyan-600 bg-cyan-50/50',
         amfe: 'text-blue-700 border-b-2 border-blue-600 bg-blue-50/50',
         controlPlan: 'text-green-700 border-b-2 border-green-600 bg-green-50/50',
         hojaOperaciones: 'text-amber-700 border-b-2 border-amber-600 bg-amber-50/50',
     },
-    inactive: 'text-gray-500 hover:text-gray-700 border-b-2 border-transparent hover:border-gray-300',
-} as const;
-
-const REGEN_COLORS = {
-    amber: 'bg-amber-50 hover:bg-amber-100 text-amber-700 border-amber-300',
-    teal: 'bg-teal-50 hover:bg-teal-100 text-teal-700 border-teal-300',
+    inactive: 'text-gray-500 hover:text-gray-700 hover:bg-gray-50 border-b-2 border-transparent hover:border-gray-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-300',
 } as const;
 
 const AmfeTabBar: React.FC<AmfeTabBarProps> = ({
     activeTab,
     onTabChange,
+    pfdInitialData,
+    onGeneratePfd,
+    onImportPfdFromAmfe,
     cpInitialData,
     hoInitialData,
     onGenerateControlPlan,
@@ -50,7 +64,10 @@ const AmfeTabBar: React.FC<AmfeTabBarProps> = ({
     onBackToLanding,
     hasUnsavedChanges,
     requestConfirm,
-    regenerateButton,
+    hasSavedCp,
+    amfeOperationCount = 0,
+    projectContext,
+    onOpenTemplates,
 }) => {
     const handleBack = async () => {
         if (hasUnsavedChanges) {
@@ -68,48 +85,88 @@ const AmfeTabBar: React.FC<AmfeTabBarProps> = ({
     const getTabClass = (tab: ActiveTab) =>
         activeTab === tab ? TAB_CLASSES.active[tab] : TAB_CLASSES.inactive;
 
+    // Build context text pieces
+    const contextParts: string[] = [];
+    if (projectContext?.clientName) contextParts.push(projectContext.clientName);
+    if (projectContext?.partName) contextParts.push(projectContext.partName);
+    if (projectContext?.partNumber) contextParts.push(`Nro. ${projectContext.partNumber}`);
+    const hasContext = contextParts.length > 0;
+
     return (
-        <div className="bg-white border-b border-gray-300 px-4 flex items-center gap-0 sticky top-0 z-50">
-            <button
-                onClick={() => onTabChange('amfe')}
-                className={`px-4 py-2.5 text-xs font-medium transition ${getTabClass('amfe')}`}
-            >
-                AMFE VDA
-            </button>
-            <button
-                onClick={() => cpInitialData ? onTabChange('controlPlan') : onGenerateControlPlan()}
-                className={`px-4 py-2.5 text-xs font-medium transition flex items-center gap-1.5 ${getTabClass('controlPlan')}`}
-            >
-                {activeTab !== 'controlPlan' && <ClipboardCheck size={13} />}
-                Plan de Control
-            </button>
-            <button
-                onClick={() => hoInitialData ? onTabChange('hojaOperaciones') : onGenerateHojasOperaciones()}
-                className={`px-4 py-2.5 text-xs font-medium transition flex items-center gap-1.5 ${getTabClass('hojaOperaciones')}`}
-            >
-                {activeTab !== 'hojaOperaciones' || activeTab === 'hojaOperaciones' ? <FileText size={13} /> : null}
-                Hojas de Operaciones
-            </button>
-            {regenerateButton && (
+        <div className="bg-white border-b border-gray-300 sticky top-0 z-50">
+            <div className="px-4 flex items-center gap-0">
                 <button
-                    onClick={regenerateButton.onClick}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border rounded transition ml-3 ${REGEN_COLORS[regenerateButton.color]}`}
-                    title={regenerateButton.label}
+                    onClick={() => pfdInitialData ? onTabChange('pfd') : (onImportPfdFromAmfe || onGeneratePfd)()}
+                    className={`px-4 py-2.5 text-xs font-medium transition-colors duration-150 flex items-center gap-1.5 ${getTabClass('pfd')}`}
                 >
-                    <RefreshCcw size={13} />
-                    {regenerateButton.label}
+                    <GitBranch size={13} />
+                    Diagrama de Flujo
                 </button>
-            )}
-            <div className="flex-1" />
-            <button
-                onClick={handleBack}
-                className="flex items-center gap-1 text-slate-500 hover:text-slate-800 px-2 py-1.5 rounded hover:bg-slate-100 transition text-xs"
-            >
-                <ArrowLeft size={14} />
-                Inicio
-            </button>
+                <button
+                    onClick={() => onTabChange('amfe')}
+                    className={`px-4 py-2.5 text-xs font-medium transition-colors duration-150 flex items-center gap-1.5 ${getTabClass('amfe')}`}
+                >
+                    <FileJson size={13} />
+                    AMFE VDA
+                </button>
+                <button
+                    onClick={() => cpInitialData ? onTabChange('controlPlan') : onGenerateControlPlan()}
+                    className={`px-4 py-2.5 text-xs font-medium transition-colors duration-150 flex items-center gap-1.5 ${getTabClass('controlPlan')}`}
+                >
+                    <ClipboardCheck size={13} />
+                    Plan de Control
+                    {hasSavedCp && (
+                        <span className="flex items-center gap-0.5 text-[9px] bg-green-100 text-green-700 px-1.5 py-0 rounded-full font-bold" title="CP guardado vinculado">
+                            <Check size={9} /> Guardado
+                        </span>
+                    )}
+                </button>
+                <button
+                    onClick={() => {
+                        // Auto-regenerate if previous generation produced empty result but AMFE now has operations
+                        const hoIsStaleEmpty = hoInitialData && hoInitialData.sheets.length === 0 && amfeOperationCount > 0;
+                        (hoInitialData && !hoIsStaleEmpty) ? onTabChange('hojaOperaciones') : onGenerateHojasOperaciones();
+                    }}
+                    className={`px-4 py-2.5 text-xs font-medium transition-colors duration-150 flex items-center gap-1.5 ${getTabClass('hojaOperaciones')}`}
+                >
+                    <FileText size={13} />
+                    Hojas de Operaciones
+                </button>
+
+                {/* Project context — shows the family you're working on */}
+                {hasContext && (
+                    <div className="ml-4 flex items-center gap-1.5 text-[11px] text-gray-400 border-l border-gray-200 pl-4">
+                        <Package size={12} className="text-gray-300 flex-shrink-0" />
+                        <span className="truncate max-w-[300px]" title={contextParts.join(' · ')}>
+                            {contextParts.join(' · ')}
+                        </span>
+                    </div>
+                )}
+
+                <div className="flex-1" />
+                <div className="border-l border-gray-300 ml-2 pl-2 flex items-center gap-1">
+                    {onOpenTemplates && (
+                        <button
+                            onClick={onOpenTemplates}
+                            title="Cargar template completo (Ctrl+T)"
+                            className="flex items-center gap-1.5 text-slate-600 hover:text-purple-700 px-3 py-1.5 rounded hover:bg-purple-50 transition text-xs font-medium"
+                        >
+                            <Layers size={14} />
+                            Templates
+                        </button>
+                    )}
+                    <button
+                        onClick={handleBack}
+                        title="Volver al menú principal"
+                        className="flex items-center gap-1.5 text-slate-600 hover:text-blue-700 px-3 py-1.5 rounded hover:bg-blue-50 transition text-xs font-medium"
+                    >
+                        <Home size={14} />
+                        Inicio
+                    </button>
+                </div>
+            </div>
         </div>
     );
 };
 
-export default AmfeTabBar;
+export default React.memo(AmfeTabBar);

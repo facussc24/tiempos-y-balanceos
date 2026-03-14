@@ -554,8 +554,8 @@ describe('inferOperationCategory', () => {
         expect(inferOperationCategory('Inspeccion Final')).toBe('inspeccion');
     });
 
-    it('returns undefined for unknown "Logistica"', () => {
-        expect(inferOperationCategory('Logistica')).toBeUndefined();
+    it('detects "Logistica" as logistica', () => {
+        expect(inferOperationCategory('Logistica')).toBe('logistica');
     });
 
     it('is case-insensitive', () => {

@@ -57,7 +57,7 @@ function makeAmfeDoc(): AmfeDocument {
             modelYear: '2025', subject: 'Test AMFE', startDate: '2025-01-01',
             revDate: '', team: 'Team', amfeNumber: 'A-001', responsible: 'Resp',
             confidentiality: '-', partNumber: 'PN-100', processResponsible: 'PR',
-            revision: 'Rev-A', approvedBy: 'Appr', scope: '',
+            revision: 'Rev-A', approvedBy: 'Appr', scope: '', applicableParts: '',
         },
         operations: [{
             id: 'op1', opNumber: '10', name: 'Soldadura MIG',
@@ -447,7 +447,7 @@ describe('executeCpChatActions: addItem', () => {
         expect(result.newDoc.items[0].amfeAp).toBe('');
     });
 
-    it('addItem auto-fills reactionPlanOwner when empty', () => {
+    it('addItem warns when reactionPlanOwner is empty (CP 2024 mandatory)', () => {
         const doc = makeCpDoc([]);
         const actions: CpChatAction[] = [{
             action: 'addItem',
@@ -459,8 +459,8 @@ describe('executeCpChatActions: addItem', () => {
         }];
         const result = executeCpChatActions(actions, doc);
         expect(result.newDoc.items).toHaveLength(1);
-        expect(result.newDoc.items[0].reactionPlanOwner).toBe('Operador');
-        expect(result.warnings.some(w => w.includes('auto-asignado'))).toBe(true);
+        expect(result.newDoc.items[0].reactionPlanOwner).toBe('');
+        expect(result.warnings.some(w => w.includes('Falta Responsable'))).toBe(true);
     });
 });
 

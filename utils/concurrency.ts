@@ -119,12 +119,17 @@ export function getMachineId(): string {
     // H-08 Fix: Use localStorage instead of sessionStorage to ensure consistent machineId
     // across all tabs/windows. sessionStorage is isolated per-tab, causing self-locks
     // when the same user opens multiple windows of the application.
-    let machineId = localStorage.getItem('_barack_machine_id');
-    if (!machineId) {
-        machineId = `machine_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-        localStorage.setItem('_barack_machine_id', machineId);
+    try {
+        let machineId = localStorage.getItem('_barack_machine_id');
+        if (!machineId) {
+            machineId = `machine_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+            localStorage.setItem('_barack_machine_id', machineId);
+        }
+        return machineId;
+    } catch {
+        // FIX: Fallback if localStorage is inaccessible (quota exceeded, private browsing)
+        return `machine_fallback_${Date.now()}`;
     }
-    return machineId;
 }
 
 /**
@@ -132,10 +137,12 @@ export function getMachineId(): string {
  */
 export function getCurrentUser(): string {
     // Try to get from localStorage (set in settings)
-    const userName = localStorage.getItem('_barack_user_name');
-    if (userName) return userName;
-
-    // Fallback to a default
+    try {
+        const userName = localStorage.getItem('_barack_user_name');
+        if (userName) return userName;
+    } catch {
+        // FIX: Graceful fallback if localStorage is inaccessible
+    }
     return 'Usuario Desconocido';
 }
 
@@ -143,7 +150,11 @@ export function getCurrentUser(): string {
  * Set the current user name
  */
 export function setCurrentUser(name: string): void {
-    localStorage.setItem('_barack_user_name', name);
+    try {
+        localStorage.setItem('_barack_user_name', name);
+    } catch {
+        // FIX: Silently fail if localStorage is inaccessible (non-critical persistence)
+    }
 }
 
 // ============================================================================
@@ -214,9 +225,13 @@ export async function acquireLock(
             // Someone else has the lock
             return { acquired: false, existingLock };
         } catch (e) {
-            // Lock file doesn't exist - create it
-            await writeLockFile(dirHandle, lockFilename, ttlMs);
-            return { acquired: true };
+            if (e instanceof DOMException && e.name === 'NotFoundError') {
+                // Lock file doesn't exist - create it
+                await writeLockFile(dirHandle, lockFilename, ttlMs);
+                return { acquired: true };
+            }
+            // Corrupt JSON, permission errors, etc. — treat lock as contested
+            return { acquired: false, error: 'Corrupt lock file or permission error' };
         }
     } catch (error) {
         // H-01 Fix: Distinguish transient vs permanent errors
@@ -282,7 +297,6 @@ export async function releaseLock(
             return;
         }
 
-        // @ts-ignore - removeEntry is available
         await dirHandle.removeEntry(lockFilename);
     } catch (error) {
         // Ignore errors releasing lock
@@ -442,7 +456,6 @@ export async function atomicWrite(
     } catch (error) {
         // Cleanup temp file on error
         try {
-            // @ts-ignore
             await dirHandle.removeEntry(tempName);
         } catch {
             // Ignore cleanup errors

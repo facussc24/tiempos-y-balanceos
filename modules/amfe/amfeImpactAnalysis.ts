@@ -139,9 +139,9 @@ export function syncAmfeWithLibrary(
 
     const revisionEntry: AmfeRevisionEntry = {
         date: today,
-        reason: 'Sincronizacion de Biblioteca',
+        reason: 'Sincronización de Biblioteca',
         revisedBy: `${syncAuthor} (Sync Biblioteca)`,
-        description: `Sincronizacion con operacion de biblioteca "${libOp.name}" (v${libOp.version}). Cambios: ${detailText}.`,
+        description: `Sincronización con operación de biblioteca "${libOp.name}" (v${libOp.version}). Cambios: ${detailText}.`,
     };
 
     // Check if AMFE has linked Control Plan (header field if exists)
@@ -164,7 +164,7 @@ export function generateSyncSummary(results: SyncResult[]): string {
     const amfesUpdated = results.filter(r => r.mergedCount > 0).length;
     const cpAttention = results.filter(r => r.hasLinkedControlPlan).length;
 
-    const parts = [`Se actualizaron ${amfesUpdated} AMFE(s) con ${totalMerged} operacion(es) sincronizada(s).`];
+    const parts = [`Se actualizaron ${amfesUpdated} AMFE(s) con ${totalMerged} operación(es) sincronizada(s).`];
 
     if (cpAttention > 0) {
         parts.push(`${cpAttention} AMFE(s) tienen Plan de Control vinculado que requiere atencion.`);

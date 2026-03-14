@@ -24,6 +24,9 @@ const getStatusMessage = (effStatus: string, efficiency: number): string => {
         }
         return 'Revisar distribución de carga entre estaciones.';
     }
+    if (effStatus === 'warn') {
+        return 'Atencion: la carga esta cerca del limite. Monitorear de cerca.';
+    }
     return 'Estado operativo normal.';
 };
 
@@ -61,9 +64,10 @@ export const KPIView: React.FC<Props> = ({
                     <p className={`text-xl font-bold ${effStatus === 'error' ? 'text-red-600' : efficiency < 70 ? 'text-amber-600' : 'text-slate-800'}`}>{formatNumber(efficiency)}%</p>
                 </div>
             </div>
-            <div className={`mt-4 text-xs p-3 rounded border flex items-center gap-2 ${effStatus === 'error' ? 'bg-red-50 border-red-200 text-red-700' : effStatus === 'crit' ? 'bg-amber-50 border-amber-200 text-amber-700' : 'bg-emerald-50 border-emerald-200 text-emerald-700'}`}>
+            <div className={`mt-4 text-xs p-3 rounded border flex items-center gap-2 ${effStatus === 'error' ? 'bg-red-50 border-red-200 text-red-700' : effStatus === 'crit' ? 'bg-amber-50 border-amber-200 text-amber-700' : effStatus === 'warn' ? 'bg-amber-50 border-amber-200 text-amber-700' : 'bg-emerald-50 border-emerald-200 text-emerald-700'}`}>
                 {effStatus === 'error' && <AlertOctagon size={16} />}
                 {effStatus === 'crit' && <AlertTriangle size={16} />}
+                {effStatus === 'warn' && <AlertTriangle size={16} />}
                 {effStatus === 'good' && <CheckCircle2 size={16} />}
                 <span>
                     {getStatusMessage(effStatus, efficiency)}

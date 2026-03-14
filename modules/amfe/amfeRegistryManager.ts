@@ -8,7 +8,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import type { AmfeDocument } from './amfeTypes';
 import type { AmfeRegistry, AmfeRegistryEntry, AmfeLifecycleStatus } from './amfeRegistryTypes';
-import { EMPTY_REGISTRY } from './amfeRegistryTypes';
+import { createEmptyRegistry } from './amfeRegistryTypes';
 import {
     listAmfeDocuments,
     saveAmfeDocument,
@@ -36,7 +36,7 @@ export async function loadRegistry(): Promise<AmfeRegistry> {
         };
     } catch (err) {
         logger.error('AmfeRegistry', 'Failed to load registry', {}, err instanceof Error ? err : undefined);
-        return { ...EMPTY_REGISTRY };
+        return createEmptyRegistry();
     }
 }
 

@@ -122,7 +122,7 @@ describe('Network Utils - Error Classification', () => {
         expect(result.isPermanent).toBe(true);
         expect(result.isTransient).toBe(false);
         expect(result.code).toBe('53');
-        expect(result.userMessage).toContain('ruta de red');
+        expect(result.userMessage).toContain('conexión al servidor');
     });
 
     it('should classify Windows error 67 as network path error', () => {
@@ -138,7 +138,7 @@ describe('Network Utils - Error Classification', () => {
         expect(permError.userMessage).toContain('permiso');
 
         const networkError = classifyError({ code: 'ETIMEDOUT' });
-        expect(networkError.userMessage).toContain('red');
+        expect(networkError.userMessage).toContain('conexión');
     });
 });
 

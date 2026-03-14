@@ -38,15 +38,17 @@ describe('Mizusumashi Logic', () => {
     });
 
     describe('calculateRouteTime', () => {
-        it('calculates total route time correctly', () => {
+        it('calculates total route time correctly (includes return trip)', () => {
             const stops: RouteStop[] = [
                 { stationId: 1, stationName: 'E1', walkTimeSeconds: 60, handlingTimeSeconds: 30, boxCount: 2 },
                 { stationId: 2, stationName: 'E2', walkTimeSeconds: 90, handlingTimeSeconds: 30, boxCount: 3 },
                 { stationId: 3, stationName: 'E3', walkTimeSeconds: 60, handlingTimeSeconds: 30, boxCount: 1 }
             ];
-            // Total = (60+30) + (90+30) + (60+30) = 300 sec = 5 min
+            // Stops = (60+30) + (90+30) + (60+30) = 300s
+            // Return trip = stops[0].walkTimeSeconds = 60s (symmetric default)
+            // Total = 360s = 6 min
             const routeTime = calculateRouteTime(stops);
-            expect(routeTime).toBe(5);
+            expect(routeTime).toBe(6);
         });
 
         it('returns 0 for empty stops', () => {
@@ -104,9 +106,10 @@ describe('Mizusumashi Logic', () => {
             const result = calculateMizusumashi(60, 20, stops, '08:00');
 
             expect(result.pitchMinutes).toBe(20);
-            expect(result.routeTimeMinutes).toBe(3); // 180 sec = 3 min
+            // Stops = (60+30)+(60+30) = 180s, Return = 60s, Total = 240s = 4 min
+            expect(result.routeTimeMinutes).toBe(4);
             expect(result.isRouteFeasible).toBe(true);
-            expect(result.utilizationPercent).toBeCloseTo(15); // 3/20 = 15%
+            expect(result.utilizationPercent).toBeCloseTo(20); // 4/20 = 20%
             expect(result.mizusumashisNeeded).toBe(1);
         });
 
@@ -118,9 +121,10 @@ describe('Mizusumashi Logic', () => {
 
             const result = calculateMizusumashi(60, 20, stops, '08:00');
 
-            expect(result.routeTimeMinutes).toBe(30); // 1800 sec = 30 min
+            // Stops = (600+300)+(600+300) = 1800s, Return = 600s, Total = 2400s = 40 min
+            expect(result.routeTimeMinutes).toBe(40);
             expect(result.isRouteFeasible).toBe(false);
-            expect(result.mizusumashisNeeded).toBe(2); // 30/20 = 1.5 → 2
+            expect(result.mizusumashisNeeded).toBe(2); // 40/20 = 2.0 → ceil = 2
         });
     });
 

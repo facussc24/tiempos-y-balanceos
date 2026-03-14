@@ -5,7 +5,7 @@ import { InjectionSimulationParams } from '../types';
 describe('RotaryInjectionStrategy Logic', () => {
     const strategy = new RotaryInjectionStrategy();
 
-    test('should calculate cycle time using sequential logic (Iny + Cur/N)', () => {
+    it('should calculate cycle time using sequential logic (Iny + Cur/N)', () => {
         // Scenario from User Report:
         // Injection: 20s
         // Curing: 300s
@@ -41,7 +41,7 @@ describe('RotaryInjectionStrategy Logic', () => {
         expect(resultN7?.cyclePerPiece).toBeCloseTo(62.857, 2);
     });
 
-    test('should add external manual time correctly to the cycle', () => {
+    it('should add external manual time correctly to the cycle', () => {
         // Same scenario + 15s External Manual Time
         // Base Machine Cycle = 20 + 300/7 = 62.857s
         // External adds: 15/7 = 2.14s
@@ -67,7 +67,7 @@ describe('RotaryInjectionStrategy Logic', () => {
         expect(resultN7?.realCycle).toBeCloseTo(65.00, 1);
     });
 
-    test('should treat manualTimeOverride as INTERNAL (absorbed) by default', () => {
+    it('should treat manualTimeOverride as INTERNAL (absorbed) by default', () => {
         // Phase 16 Fix: The generic "Carga Operador" input (override) should be treated 
         // as Internal work for Rotary machines, as operators typically work during the cycle.
 

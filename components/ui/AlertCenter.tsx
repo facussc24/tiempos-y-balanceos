@@ -116,6 +116,7 @@ const AlertRow: React.FC<{
                                 onClick={onDismiss}
                                 className={`${config.textColor} opacity-50 hover:opacity-100 transition-opacity p-1 rounded`}
                                 title="Descartar"
+                                aria-label={`Descartar alerta: ${alert.title}`}
                             >
                                 <X size={16} />
                             </button>

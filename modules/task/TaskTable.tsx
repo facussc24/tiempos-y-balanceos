@@ -20,7 +20,7 @@ interface TaskTableProps {
     onApplyBulkSectorQuantity: (sectorId: string) => void;
 
     // Task Actions
-    onUpdateFairTimeParams: (taskId: string, field: string, value: any) => void;
+    onUpdateFairTimeParams: (taskId: string, field: keyof Task, value: Task[keyof Task]) => void;
     onTaskSectorChange: (taskId: string, sectorId: string) => void;
     onTaskMachineChange?: (taskId: string, machineId: string) => void; // V4.0
     onDependencyChange: (taskId: string, preds: string[]) => void;
@@ -90,6 +90,12 @@ export const TaskTable: React.FC<TaskTableProps> = ({
         return grouped;
     }, [tasks, sectorsList]);
 
+    // Memoize machine/injection tasks for "concurrent with" dropdowns (avoids O(N) filter per row)
+    const machineTasks = useMemo(() =>
+        tasks.filter(t => t.executionMode === 'machine' || t.executionMode === 'injection'),
+        [tasks]
+    );
+
     const renderTaskRow = (task: Task) => {
         // Refinement: Only flag outliers if we have enough samples (N >= 3) to establish a trend
         const validSamplesCount = task.times.filter(t => t !== null && t > 0).length;
@@ -154,7 +160,7 @@ export const TaskTable: React.FC<TaskTableProps> = ({
                                         onChange={(e) => onTaskMachineChange(task.id, e.target.value)}
                                         title="Máquina requerida (V4)"
                                     >
-                                        <option value="">Sin Máq.</option>
+                                        <option value="">Sin Máquina</option>
                                         {machinesList
                                             .filter(m => m.sectorId === task.sectorId)
                                             .map(m => <option key={m.id} value={m.id}>{m.name}</option>)
@@ -179,24 +185,24 @@ export const TaskTable: React.FC<TaskTableProps> = ({
                             <div className="flex bg-slate-100 p-0.5 rounded-lg gap-0.5">
                                 <button
                                     onClick={() => onModeChange(task.id, 'manual')}
-                                    className={`px-2 py-1 text-[9px] font-bold uppercase transition-all min-w-[36px] rounded-md ${task.executionMode === 'manual' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-white'}`}
+                                    className={`px-2.5 py-1 text-[10px] font-bold transition-all min-w-[44px] rounded-md ${task.executionMode === 'manual' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-white'}`}
                                     title="Tarea manual - operador trabaja solo"
                                 >
-                                    Man
+                                    Manual
                                 </button>
                                 <button
                                     onClick={() => onModeChange(task.id, 'machine')}
-                                    className={`px-2 py-1 text-[9px] font-bold uppercase transition-all min-w-[36px] rounded-md ${task.executionMode === 'machine' ? 'bg-amber-500 text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-white'}`}
+                                    className={`px-2.5 py-1 text-[10px] font-bold transition-all min-w-[44px] rounded-md ${task.executionMode === 'machine' ? 'bg-amber-500 text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-white'}`}
                                     title="Máquina automática (tapizado, etc.)"
                                 >
-                                    Maq
+                                    Máq.
                                 </button>
                                 <button
                                     onClick={() => onModeChange(task.id, 'injection')}
-                                    className={`px-2 py-1 text-[9px] font-bold uppercase transition-all min-w-[36px] rounded-md ${task.executionMode === 'injection' ? 'bg-purple-500 text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-white'}`}
+                                    className={`px-2.5 py-1 text-[10px] font-bold transition-all min-w-[44px] rounded-md ${task.executionMode === 'injection' ? 'bg-purple-500 text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-white'}`}
                                     title="Inyectora con ciclo automático"
                                 >
-                                    Inj
+                                    Inyec.
                                 </button>
                             </div>
 
@@ -210,7 +216,7 @@ export const TaskTable: React.FC<TaskTableProps> = ({
                                         title="Si esta tarea se hace MIENTRAS una máquina trabaja, seleccioná la máquina"
                                     >
                                         <option value="">Independiente</option>
-                                        {tasks.filter(t => t.id !== task.id && (t.executionMode === 'machine' || t.executionMode === 'injection')).map(m => (
+                                        {machineTasks.filter(t => t.id !== task.id).map(m => (
                                             <option key={m.id} value={m.id}>Durante: {m.id}</option>
                                         ))}
                                     </select>
@@ -252,11 +258,11 @@ export const TaskTable: React.FC<TaskTableProps> = ({
                                 />
                             ))}
                         </div>
-                        {!isMachine && (
+                        {task.executionMode !== 'injection' && (
                             <div className="flex justify-center gap-2 mt-2">
                                 <button onClick={() => onOpenPasteModal(task.id)} className="px-3 py-1 text-xs bg-white border border-slate-200 rounded-md hover:bg-slate-50 hover:border-slate-300 font-medium transition-all">Pegar</button>
-                                {task.times.length < 10 && <button onClick={() => onAddSamples(task.id)} className="px-3 py-1 text-xs bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-md hover:bg-emerald-100 hover:border-emerald-300 font-medium transition-all">+ Mue</button>}
-                                {task.times.length > 3 && <button onClick={() => onRemoveSample(task.id)} className="px-3 py-1 text-xs bg-red-50 border border-red-200 text-red-600 rounded-md hover:bg-red-100 hover:border-red-300 font-medium transition-all">- Mue</button>}
+                                {task.times.length < 10 && <button onClick={() => onAddSamples(task.id)} className="px-3 py-1 text-xs bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-md hover:bg-emerald-100 hover:border-emerald-300 font-medium transition-all" title="Agregar una medición de cronómetro">+ Medición</button>}
+                                {task.times.length > 3 && <button onClick={() => onRemoveSample(task.id)} className="px-3 py-1 text-xs bg-red-50 border border-red-200 text-red-600 rounded-md hover:bg-red-100 hover:border-red-300 font-medium transition-all" title="Quitar última medición">- Medición</button>}
                             </div>
                         )}
                     </td>
@@ -364,9 +370,11 @@ export const TaskTable: React.FC<TaskTableProps> = ({
                             {isMachine ? (
                                 <button
                                     onClick={() => onSetCalcTask(task)}
-                                    className="text-[9px] flex items-center gap-1 bg-amber-50 text-amber-700 px-1.5 py-0.5 border border-amber-200 rounded-md hover:bg-amber-100 font-bold uppercase transition-all"
+                                    className={`text-[9px] flex items-center gap-1 px-1.5 py-0.5 border rounded-md font-bold uppercase transition-all ${task.executionMode === 'injection' ? 'bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100' : 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100'}`}
+                                    title={task.executionMode === 'injection' ? 'Calcular cavidades y ciclo de inyección' : 'Calcular tiempo de ciclo máquina'}
+                                    aria-label={task.executionMode === 'injection' ? 'Calcular cavidades' : 'Calcular ciclo máquina'}
                                 >
-                                    <Hash size={10} /> Calc
+                                    <Hash size={10} /> {task.executionMode === 'injection' ? 'Cavidades' : 'Calc'}
                                 </button>
                             ) : (
                                 <div className="flex items-center gap-1 text-[10px] text-slate-400 group/std">
@@ -422,7 +430,7 @@ export const TaskTable: React.FC<TaskTableProps> = ({
                                                         {model.name}
                                                     </label>
                                                     <span className="text-[9px] font-medium text-slate-400">
-                                                        {(model.percentage * 100).toFixed(0)}% del Mix
+                                                        {((model.percentage || 0) * 100).toFixed(0)}% del Mix
                                                     </span>
                                                 </div>
                                             </div>

@@ -4,7 +4,7 @@
  * @module MixHistoryModal
  * @version 1.1.0 - Migrado de confirm() nativo a ConfirmModal
  */
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Trash2, Calendar, Package, Users } from 'lucide-react';
 import { MixSavedScenario } from '../../types';
 import { ConfirmModal } from '../../components/modals/ConfirmModal';
@@ -28,6 +28,16 @@ export const MixHistoryModal: React.FC<MixHistoryModalProps> = ({
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
+
+    // Close on Escape key
+    useEffect(() => {
+        if (!isOpen) return;
+        const handleEscape = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') { e.preventDefault(); onClose(); }
+        };
+        document.addEventListener('keydown', handleEscape);
+        return () => document.removeEventListener('keydown', handleEscape);
+    }, [isOpen, onClose]);
 
     if (!isOpen) return null;
 
@@ -57,8 +67,8 @@ export const MixHistoryModal: React.FC<MixHistoryModalProps> = ({
 
     return (
         <>
-            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-                <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[80vh] flex flex-col">
+            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-150">
+                <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[80vh] flex flex-col animate-in zoom-in-95 duration-200">
                     {/* Header */}
                     <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
                         <h2 className="text-xl font-bold text-slate-800">
@@ -99,7 +109,7 @@ export const MixHistoryModal: React.FC<MixHistoryModalProps> = ({
                                                 <div className="flex items-center gap-4 mt-2 text-sm text-slate-500">
                                                     <span className="flex items-center gap-1">
                                                         <Calendar size={14} />
-                                                        {new Date(scenario.createdAt).toLocaleString('es-AR')}
+                                                        {isNaN(new Date(scenario.createdAt).getTime()) ? '—' : new Date(scenario.createdAt).toLocaleString('es-AR')}
                                                     </span>
                                                     <span className="flex items-center gap-1">
                                                         <Package size={14} />

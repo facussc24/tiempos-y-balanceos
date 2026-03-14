@@ -233,10 +233,10 @@ export function convertToTaskList(
     pitchMinutes: number
 ): TimeSlot[] {
     return heijunkaSlots.map((slot, idx) => {
-        const startHour = parseInt(slot.time.split(':')[0]);
-        const startMin = parseInt(slot.time.split(':')[1]);
+        const startHour = parseInt(slot.time.split(':')[0]) || 0;
+        const startMin = parseInt(slot.time.split(':')[1]) || 0;
         const endMin = startMin + pitchMinutes;
-        const endHour = startHour + Math.floor(endMin / 60);
+        const endHour = (startHour + Math.floor(endMin / 60)) % 24;
         const endMinNorm = endMin % 60;
 
         return {

@@ -175,10 +175,10 @@ function buildStationRows(data: ProjectData, sectorFilter?: string): StationRow[
 
         const cfg = cfgMap.get(i);
         const replicas = cfg?.replicas && cfg.replicas > 0 ? cfg.replicas : 1;
-        const effectiveTime = calculateEffectiveStationTime(tasks);
-        // B2: Guard effectiveTime NaN/negative — skip broken station
-        if (!Number.isFinite(effectiveTime) || effectiveTime <= 0) continue;
-        const cycleTime = effectiveTime / replicas;
+        let effectiveTime = calculateEffectiveStationTime(tasks);
+        // B2: Guard effectiveTime NaN/negative — clamp to 0 (keep station visible)
+        if (!Number.isFinite(effectiveTime) || effectiveTime < 0) effectiveTime = 0;
+        const cycleTime = replicas > 0 ? effectiveTime / replicas : 0;
         // B3: Clamp OEE to [0, 1] range
         const rawOee = calculateStationOEE(data, i, sectorId);
         const oee = Math.max(0, Math.min(1, Number.isFinite(rawOee) ? rawOee : 0.85));
@@ -246,6 +246,7 @@ async function buildSheet(
     stationRows: StationRow[],
     sheetTitle: string,
     logoId?: number,
+    sectorOverride?: Sector,
 ): Promise<void> {
     // B4: Clamp piecesPerVehicle ≥ 1 to prevent division by zero.
     // FIX: Use Number.isFinite instead of ?? — nullish coalescing does NOT catch NaN,
@@ -257,13 +258,31 @@ async function buildSheet(
     const weeklyDemand = dailyDemand * 5;
 
     const oee = data.meta.useSectorOEE ? 1 : data.meta.manualOEE;
-    const { totalAvailableMinutes } = calculateTaktTime(
-        data.shifts, data.meta.activeShifts, dailyDemand, oee,
-        data.meta.setupLossPercent || 0
-    );
+
+    // FIX: Use sector-specific shift count and available time when sector has shift override
+    let displayShifts = data.meta.activeShifts;
+    let totalAvailableMinutes: number;
+
+    if (sectorOverride?.shiftOverride) {
+        displayShifts = sectorOverride.shiftOverride.activeShifts;
+        const sectorOee = (data.meta.useSectorOEE && sectorOverride.targetOee && sectorOverride.targetOee > 0)
+            ? sectorOverride.targetOee : oee;
+        const sectorTakt = calculateSectorTaktTime(
+            sectorOverride, data.shifts, Math.min(data.meta.activeShifts, data.shifts.length),
+            dailyDemand, sectorOee, data.meta.setupLossPercent || 0
+        );
+        totalAvailableMinutes = sectorTakt.totalAvailableMinutes;
+    } else {
+        const globalTakt = calculateTaktTime(
+            data.shifts, data.meta.activeShifts, dailyDemand, oee,
+            data.meta.setupLossPercent || 0
+        );
+        totalAvailableMinutes = globalTakt.totalAvailableMinutes;
+    }
+
     const totalAvailableSeconds = totalAvailableMinutes * 60;
     const shiftNetMinutes = data.shifts
-        .filter((_, i) => i < data.meta.activeShifts)
+        .filter((_, i) => i < displayShifts)
         .reduce((sum, s) => sum + calculateShiftNetMinutes(s), 0);
 
     // Layout: Column A and Row 1 are empty padding for a clean Excel look
@@ -338,7 +357,7 @@ async function buildSheet(
     sc(ws, row, 4 + CO, vehicleDemand, paramValueStyle);
     ws.mergeCells(row, 5 + CO, row, 7 + CO);
     sc(ws, row, 5 + CO, 'Cantidad de turnos', paramStyle);
-    sc(ws, row, 8 + CO, data.meta.activeShifts, paramValueStyle);
+    sc(ws, row, 8 + CO, displayShifts, paramValueStyle);
 
     row++;
     ws.mergeCells(row, 1 + CO, row, 3 + CO);
@@ -479,7 +498,7 @@ async function buildSheet(
     ws.mergeCells(row, 1 + CO, row, 2 + CO);
     sc(ws, row, 1 + CO, 'Operadores por turno', { font: ft(9, true, C.PARAM_LABEL), fill: fl(C.PARAM_BG), border: B_ALL, alignment: AL });
     // B6: Guard activeShifts — prevent division by zero in ROUNDUP formula
-    const safeShifts = Math.max(1, data.meta.activeShifts || 1);
+    const safeShifts = Math.max(1, displayShifts || 1);
     sf(ws, row, 3 + CO, `ROUNDUP(${colL(3 + CO)}${row - 1}/${safeShifts},0)`, {
         font: ft(10, true, C.PARAM_VALUE),
         border: B_ALL,
@@ -561,18 +580,19 @@ export async function exportBalancingCapacityExcel(data: ProjectData): Promise<v
     const useSingleSheet = sectors.length <= 1 && !hasGeneral;
 
     if (useSingleSheet || sectors.length === 0) {
-        // Single sheet
+        // Single sheet — pass sector override if exactly one sector with shift override
         const allRows = buildStationRows(data);
         const sheetName = sectors.length === 1 ? sanitizeSheetName(sectors[0].name) : 'General';
         const ws = wb.addWorksheet(sheetName);
-        await buildSheet(wb, ws, data, allRows, sheetName, logoId);
+        const singleSector = sectors.length === 1 ? sectors[0] : undefined;
+        await buildSheet(wb, ws, data, allRows, sheetName, logoId, singleSector);
     } else {
         // Multi-sheet: one per sector + optional General
         for (const sector of sectors) {
             const rows = buildStationRows(data, sector.id);
             if (rows.length === 0) continue;
             const ws = wb.addWorksheet(sanitizeSheetName(sector.name));
-            await buildSheet(wb, ws, data, rows, sector.name, logoId);
+            await buildSheet(wb, ws, data, rows, sector.name, logoId, sector);
         }
         if (hasGeneral) {
             const rows = buildStationRows(data, 'general');
@@ -586,4 +606,64 @@ export async function exportBalancingCapacityExcel(data: ProjectData): Promise<v
     // B5: Sanitize filename to prevent filesystem issues
     const fileName = `${sanitizeFilename(data.meta.name || 'Capacidad')}_Capacidad_Proceso.xlsx`;
     await downloadExcelJSWorkbook(wb, fileName);
+}
+
+/**
+ * Generate balancing capacity Excel as Uint8Array buffer (for auto-export).
+ * Builds the same workbook as exportBalancingCapacityExcel but returns buffer.
+ */
+export async function generateBalancingBuffer(data: ProjectData): Promise<Uint8Array> {
+    const wb = new ExcelJS.Workbook();
+    wb.creator = 'Barack Mercosul';
+    wb.created = new Date();
+
+    let logoId: number | undefined;
+    try {
+        const logoBase64 = await getLogoBase64();
+        if (logoBase64) {
+            logoId = wb.addImage({
+                base64: stripDataUri(logoBase64),
+                extension: getExt(logoBase64),
+            });
+        }
+    } catch { /* logo optional */ }
+
+    const sectorIds = new Set<string>();
+    const tMap = new Map(data.tasks.map(t => [t.id, t]));
+    data.assignments.forEach(a => {
+        const task = tMap.get(a.taskId);
+        if (task?.sectorId) sectorIds.add(task.sectorId);
+    });
+    const hasGeneral = data.assignments.some(a => {
+        const task = tMap.get(a.taskId);
+        return !task?.sectorId;
+    });
+
+    const sectors = (data.sectors || []).filter(s => sectorIds.has(s.id));
+    const useSingleSheet = sectors.length <= 1 && !hasGeneral;
+
+    if (useSingleSheet || sectors.length === 0) {
+        const allRows = buildStationRows(data);
+        const sheetName = sectors.length === 1 ? sanitizeSheetName(sectors[0].name) : 'General';
+        const ws = wb.addWorksheet(sheetName);
+        const singleSector = sectors.length === 1 ? sectors[0] : undefined;
+        await buildSheet(wb, ws, data, allRows, sheetName, logoId, singleSector);
+    } else {
+        for (const sector of sectors) {
+            const rows = buildStationRows(data, sector.id);
+            if (rows.length === 0) continue;
+            const ws = wb.addWorksheet(sanitizeSheetName(sector.name));
+            await buildSheet(wb, ws, data, rows, sector.name, logoId, sector);
+        }
+        if (hasGeneral) {
+            const rows = buildStationRows(data, 'general');
+            if (rows.length > 0) {
+                const ws = wb.addWorksheet('General');
+                await buildSheet(wb, ws, data, rows, 'General', logoId);
+            }
+        }
+    }
+
+    const buffer = await wb.xlsx.writeBuffer();
+    return new Uint8Array(buffer as ArrayBuffer);
 }

@@ -38,22 +38,24 @@ export const ProductionControls: React.FC<Props> = ({
         <div className="flex flex-col gap-4 mb-4">
             {/* CONTROL: CAVITIES */}
             <div className={`flex-1 border rounded-xl px-4 py-2 shadow-sm flex flex-col items-center justify-center min-w-[160px] transition-colors relative group ${cavityMode === 'auto' ? 'bg-indigo-50 border-indigo-200' : 'bg-white border-slate-200'}`}>
-                <div className="absolute top-2 right-2 flex gap-1 bg-white rounded-md border border-slate-200 p-0.5 shadow-sm">
+                <div className="absolute top-2 right-2 flex gap-0.5 bg-slate-100 rounded-lg border border-slate-200 p-0.5 shadow-sm">
                     <button
                         onClick={() => setCavityMode('auto')}
                         data-testid="btn-cavity-mode-auto"
-                        className={`px-1.5 py-0.5 text-[9px] font-bold rounded transition-colors ${cavityMode === 'auto' ? 'bg-indigo-100 text-indigo-700' : 'text-slate-400 hover:text-slate-600'}`}
+                        className={`px-2.5 py-1 text-[10px] font-bold rounded-md transition-all ${cavityMode === 'auto' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-white'}`}
                         title="Cálculo Automático (Basado en Takt Time)"
+                        aria-label="Modo automático de cavidades"
                     >
-                        AUTO
+                        Auto
                     </button>
                     <button
                         onClick={() => setCavityMode('manual')}
                         data-testid="btn-cavity-mode-manual"
-                        className={`px-1.5 py-0.5 text-[9px] font-bold rounded transition-colors ${cavityMode === 'manual' ? 'bg-slate-100 text-slate-700' : 'text-slate-400 hover:text-slate-600'}`}
-                        title="Selección Manual"
+                        className={`px-2.5 py-1 text-[10px] font-bold rounded-md transition-all ${cavityMode === 'manual' ? 'bg-slate-700 text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-white'}`}
+                        title="Selección Manual de cavidades"
+                        aria-label="Modo manual de cavidades"
                     >
-                        MAN
+                        Manual
                     </button>
                 </div>
 
@@ -65,8 +67,10 @@ export const ProductionControls: React.FC<Props> = ({
                     <button
                         onClick={() => updateCavities(-1)}
                         data-testid="btn-cavity-dec"
-                        disabled={cavityMode === 'auto'}
-                        className={`p-1 rounded-full transition-colors ${cavityMode === 'auto' ? 'text-slate-300 cursor-not-allowed' : 'hover:bg-slate-100 text-indigo-300 hover:text-indigo-600'}`}
+                        disabled={cavityMode === 'auto' || activeN <= 1}
+                        className={`p-1 rounded-full transition-colors ${cavityMode === 'auto' || activeN <= 1 ? 'text-slate-300 cursor-not-allowed' : 'hover:bg-slate-100 text-indigo-300 hover:text-indigo-600'}`}
+                        title="Reducir cavidades"
+                        aria-label="Reducir cavidades"
                     >
                         <MinusCircle size={18} />
                     </button>
@@ -80,8 +84,10 @@ export const ProductionControls: React.FC<Props> = ({
                     <button
                         onClick={() => updateCavities(1)}
                         data-testid="btn-cavity-inc"
-                        disabled={cavityMode === 'auto'}
-                        className={`p-1 rounded-full transition-colors ${cavityMode === 'auto' ? 'text-slate-300 cursor-not-allowed' : 'hover:bg-slate-100 text-indigo-300 hover:text-indigo-600'}`}
+                        disabled={cavityMode === 'auto' || activeN >= 28}
+                        className={`p-1 rounded-full transition-colors ${cavityMode === 'auto' || activeN >= 28 ? 'text-slate-300 cursor-not-allowed' : 'hover:bg-slate-100 text-indigo-300 hover:text-indigo-600'}`}
+                        title={activeN >= 28 ? 'Máximo 28 cavidades' : 'Agregar cavidad'}
+                        aria-label="Agregar cavidad"
                     >
                         <PlusCircle size={18} />
                     </button>
@@ -89,14 +95,14 @@ export const ProductionControls: React.FC<Props> = ({
 
                 {/* STACKED ALERTS & PREDICTION CONTAINER */}
                 <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-48 flex flex-col gap-1 z-20 pointer-events-none">
-                    {/* TAKT VIOLATION WARNING - FIX-3: Clarify is about operator, not cavities */}
+                    {/* TAKT VIOLATION WARNING: machine cycle exceeds takt at this N */}
                     {selectedData && !selectedData.isSingleMachineFeasible && (
-                        <div className="bg-amber-100 text-amber-800 text-[9px] font-bold px-2 py-1 rounded border border-amber-200 text-center shadow-sm flex flex-col items-center animate-in fade-in slide-in-from-top-1">
+                        <div className="bg-red-100 text-red-800 text-[9px] font-bold px-2 py-1 rounded border border-red-200 text-center shadow-sm flex flex-col items-center animate-in fade-in slide-in-from-top-1">
                             <div className="flex items-center gap-1 mb-0.5">
                                 <AlertTriangle size={10} />
-                                <span>Operario Saturado ({formatNumber(realSaturation)}%)</span>
+                                <span>Ciclo excede Takt</span>
                             </div>
-                            <span className="opacity-80 font-medium">N* Óptimo: {selectedData.nStar} cavidades</span>
+                            <span className="opacity-80 font-medium">Requiere multi-máquina o más cavidades</span>
                         </div>
                     )}
 
@@ -144,18 +150,22 @@ export const ProductionControls: React.FC<Props> = ({
 
             {/* CONTROL: HEADCOUNT */}
             <div className={`flex-1 border rounded-xl px-4 py-2 shadow-sm flex flex-col items-center justify-center min-w-[160px] transition-colors relative group ${isBottleneckLabor ? 'bg-red-50 border-red-200' : 'bg-indigo-50 border-indigo-100'}`}>
-                <div className="absolute top-2 right-2 flex gap-1 bg-white rounded-md border border-slate-200 p-0.5 shadow-sm">
+                <div className="absolute top-2 right-2 flex gap-0.5 bg-slate-100 rounded-lg border border-slate-200 p-0.5 shadow-sm">
                     <button
                         onClick={() => setHeadcountMode('auto')}
-                        className={`px-1.5 py-0.5 text-[9px] font-bold rounded transition-colors ${headcountMode === 'auto' ? 'bg-indigo-100 text-indigo-700' : 'text-slate-400 hover:text-slate-600'}`}
+                        className={`px-2.5 py-1 text-[10px] font-bold rounded-md transition-all ${headcountMode === 'auto' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-white'}`}
+                        title="Dotación automática (basada en saturación)"
+                        aria-label="Modo automático de dotación"
                     >
-                        AUTO
+                        Auto
                     </button>
                     <button
                         onClick={() => setHeadcountMode('manual')}
-                        className={`px-1.5 py-0.5 text-[9px] font-bold rounded transition-colors ${headcountMode === 'manual' ? 'bg-amber-100 text-amber-700' : 'text-slate-400 hover:text-slate-600'}`}
+                        className={`px-2.5 py-1 text-[10px] font-bold rounded-md transition-all ${headcountMode === 'manual' ? 'bg-slate-700 text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-white'}`}
+                        title="Dotación manual"
+                        aria-label="Modo manual de dotación"
                     >
-                        MAN
+                        Manual
                     </button>
                 </div>
 
@@ -167,7 +177,10 @@ export const ProductionControls: React.FC<Props> = ({
                     {headcountMode === 'manual' && (
                         <button
                             onClick={() => updateHeadcount(-1)}
-                            className={`p-1 hover:bg-white rounded-full transition-colors ${isBottleneckLabor ? 'text-red-400 hover:text-red-600' : 'text-indigo-300 hover:text-indigo-600'}`}
+                            disabled={activeHeadcount <= 1}
+                            className={`p-1 hover:bg-white rounded-full transition-colors ${activeHeadcount <= 1 ? 'text-slate-300 cursor-not-allowed' : isBottleneckLabor ? 'text-red-400 hover:text-red-600' : 'text-indigo-300 hover:text-indigo-600'}`}
+                            title="Reducir operarios"
+                            aria-label="Reducir operarios"
                         >
                             <MinusCircle size={18} />
                         </button>
@@ -181,6 +194,7 @@ export const ProductionControls: React.FC<Props> = ({
                                     className={`text-3xl font-black text-center w-24 bg-transparent outline-none border-b-2 focus:border-current transition-all ${isBottleneckLabor ? 'text-red-700 border-red-300' : 'text-indigo-700 border-indigo-300'}`}
                                     value={userHeadcountStr}
                                     onChange={e => setUserHeadcountStr(e.target.value)}
+                                    aria-label="Cantidad de operarios"
                                 />
                                 <span className={`text-xs font-bold ${isBottleneckLabor ? 'text-red-500' : 'text-indigo-500'}`}>Op.</span>
                             </div>
@@ -195,14 +209,16 @@ export const ProductionControls: React.FC<Props> = ({
                         <button
                             onClick={() => updateHeadcount(1)}
                             className={`p-1 hover:bg-white rounded-full transition-colors ${isBottleneckLabor ? 'text-red-400 hover:text-red-600' : 'text-indigo-300 hover:text-indigo-600'}`}
+                            title="Agregar operario"
+                            aria-label="Agregar operario"
                         >
                             <PlusCircle size={18} />
                         </button>
                     )}
                 </div>
 
-                <span className={`text-[9px] font-medium mt-1 ${isBottleneckLabor ? 'text-red-600 font-bold' : 'text-indigo-400'}`}>
-                    Sat: {formatNumber(realSaturation)}%
+                <span className={`text-[9px] font-medium mt-1 ${isBottleneckLabor ? 'text-red-600 font-bold' : 'text-indigo-400'}`} title="Porcentaje de saturación del operario">
+                    Saturación: {formatNumber(realSaturation)}%
                 </span>
 
                 {/* SENSITIVITY PREVIEW (Manual Mode Only) */}

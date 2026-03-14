@@ -5,9 +5,11 @@
  */
 
 import type { PfdDocument, PfdDocumentListItem } from '../../modules/pfd/pfdTypes';
+import { normalizePfdStep } from '../../modules/pfd/pfdNormalize';
 import { getDatabase } from '../database';
 import { logger } from '../logger';
 import { generateChecksum } from '../crypto';
+import { scheduleBackup } from '../backupService';
 
 /**
  * List all PFD documents (metadata only).
@@ -37,7 +39,14 @@ export async function loadPfdDocument(id: string): Promise<PfdDocument | null> {
             [id]
         );
         if (rows.length === 0) return null;
-        return JSON.parse(rows[0].data) as PfdDocument;
+        const doc = JSON.parse(rows[0].data) as PfdDocument;
+        // Normalize steps for backward compat (old docs missing new fields)
+        if (doc.steps && Array.isArray(doc.steps)) {
+            doc.steps = doc.steps.map(s =>
+                normalizePfdStep(s as unknown as Record<string, unknown> & { id: string })
+            );
+        }
+        return doc;
     } catch (err) {
         logger.error('PfdRepo', `Failed to load document ${id}`, {}, err instanceof Error ? err : undefined);
         return null;
@@ -67,6 +76,7 @@ export async function savePfdDocument(id: string, doc: PfdDocument): Promise<boo
                 h.customerName || '', doc.steps.length, id, data, checksum,
             ]
         );
+        scheduleBackup();
         return true;
     } catch (err) {
         logger.error('PfdRepo', `Failed to save document ${id}`, {}, err instanceof Error ? err : undefined);

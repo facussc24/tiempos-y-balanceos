@@ -63,7 +63,7 @@ function makeAmfeDoc(overrides?: {
             modelYear: '2025', subject: 'Test AMFE', startDate: '2025-01-01',
             revDate: '', team: 'Team', amfeNumber: 'A-001', responsible: 'Resp',
             confidentiality: '-', partNumber: 'PN-100', processResponsible: 'PR',
-            revision: 'Rev-A', approvedBy: 'Appr', scope: '',
+            revision: 'Rev-A', approvedBy: 'Appr', scope: '', applicableParts: '',
         },
         operations: [{
             id: 'op1', opNumber: '10', name: o.opName ?? 'Soldadura MIG',
@@ -173,9 +173,9 @@ describe('validateOrphanFailures', () => {
         expect(issues.some(i => i.code === 'ORPHAN_FAILURE' && i.severity === 'warning')).toBe(true);
     });
 
-    it('does not flag AP=L causes', () => {
+    it('does not flag AP=L causes without SC/CC (severity < 5)', () => {
         const cp = makeCpDoc([makeItem({ processDescription: 'Ensamble' })]);
-        const amfe = makeAmfeDoc({ opName: 'Soldadura MIG', ap: 'L' });
+        const amfe = makeAmfeDoc({ opName: 'Soldadura MIG', ap: 'L', severity: 3 });
         const issues = validateOrphanFailures(cp, amfe);
         expect(issues).toHaveLength(0);
     });
@@ -466,5 +466,88 @@ describe('cpCrossValidation: whitespace collapse (Audit R8)', () => {
         const issues = validateOrphanFailures(cp, amfe);
         // CP covers the AMFE failure → no orphan
         expect(issues.filter(i => i.code === 'ORPHAN_FAILURE')).toHaveLength(0);
+    });
+});
+
+// ============================================================================
+// V2: SC/CC with AP=L orphans (IATF 16949 §8.3.3.3)
+// ============================================================================
+
+describe('validateOrphanFailures — SC/CC with AP=L', () => {
+    it('flags CC cause (S=9, AP=L) without CP coverage as warning', () => {
+        const cp = makeCpDoc([makeItem({ processDescription: 'Ensamble' })]);
+        const amfe = makeAmfeDoc({ opName: 'Soldadura MIG', ap: 'L', severity: 9 });
+        const issues = validateOrphanFailures(cp, amfe);
+        const orphan = issues.find(i => i.code === 'ORPHAN_FAILURE');
+        expect(orphan).toBeDefined();
+        expect(orphan!.severity).toBe('warning');
+        expect(orphan!.message).toContain('[CC]');
+    });
+
+    it('flags SC cause (S=6, AP=L) without CP coverage as warning', () => {
+        const cp = makeCpDoc([makeItem({ processDescription: 'Ensamble' })]);
+        const amfe = makeAmfeDoc({ opName: 'Soldadura MIG', ap: 'L', severity: 6 });
+        const issues = validateOrphanFailures(cp, amfe);
+        const orphan = issues.find(i => i.code === 'ORPHAN_FAILURE');
+        expect(orphan).toBeDefined();
+        expect(orphan!.severity).toBe('warning');
+        expect(orphan!.message).toContain('[SC]');
+    });
+
+    it('does not flag cause (S=3, AP=L) — no SC/CC', () => {
+        const cp = makeCpDoc([makeItem({ processDescription: 'Ensamble' })]);
+        const amfe = makeAmfeDoc({ opName: 'Soldadura MIG', ap: 'L', severity: 3 });
+        const issues = validateOrphanFailures(cp, amfe);
+        expect(issues.filter(i => i.code === 'ORPHAN_FAILURE')).toHaveLength(0);
+    });
+
+    it('does not flag SC/CC cause (S=9, AP=L) when CP has coverage', () => {
+        const cp = makeCpDoc([makeItem({ processDescription: 'Soldadura MIG' })]);
+        const amfe = makeAmfeDoc({ opName: 'Soldadura MIG', ap: 'L', severity: 9 });
+        const issues = validateOrphanFailures(cp, amfe);
+        expect(issues.filter(i => i.code === 'ORPHAN_FAILURE')).toHaveLength(0);
+    });
+
+    it('AP=H still produces error severity (not warning)', () => {
+        const cp = makeCpDoc([makeItem({ processDescription: 'Ensamble' })]);
+        const amfe = makeAmfeDoc({ opName: 'Soldadura MIG', ap: 'H', severity: 6 });
+        const issues = validateOrphanFailures(cp, amfe);
+        const orphan = issues.find(i => i.code === 'ORPHAN_FAILURE');
+        expect(orphan).toBeDefined();
+        expect(orphan!.severity).toBe('error');
+    });
+});
+
+// ============================================================================
+// V1: SC/CC consistency for AP=L (IATF 16949 §8.3.3.3)
+// ============================================================================
+
+describe('validateSpecialCharConsistency — AP=L with SC/CC', () => {
+    it('detects missing CC when S=9 AP=L', () => {
+        const cp = makeCpDoc([makeItem({ specialCharClass: '' })]);
+        const amfe = makeAmfeDoc({ severity: 9, ap: 'L' });
+        const issues = validateSpecialCharConsistency(cp, amfe);
+        expect(issues.some(i => i.code === 'CC_SC_MISSING' && i.message.includes('CC'))).toBe(true);
+    });
+
+    it('detects mismatch SC vs CC when S=9 AP=L', () => {
+        const cp = makeCpDoc([makeItem({ specialCharClass: 'SC' })]);
+        const amfe = makeAmfeDoc({ severity: 9, ap: 'L' });
+        const issues = validateSpecialCharConsistency(cp, amfe);
+        expect(issues.some(i => i.code === 'CC_SC_MISMATCH')).toBe(true);
+    });
+
+    it('detects missing SC when S=6 AP=L', () => {
+        const cp = makeCpDoc([makeItem({ specialCharClass: '' })]);
+        const amfe = makeAmfeDoc({ severity: 6, ap: 'L' });
+        const issues = validateSpecialCharConsistency(cp, amfe);
+        expect(issues.some(i => i.code === 'CC_SC_MISSING' && i.message.includes('SC'))).toBe(true);
+    });
+
+    it('no issues when S<5 AP=L (no SC/CC expected)', () => {
+        const cp = makeCpDoc([makeItem({ specialCharClass: '' })]);
+        const amfe = makeAmfeDoc({ severity: 3, ap: 'L' });
+        const issues = validateSpecialCharConsistency(cp, amfe);
+        expect(issues).toHaveLength(0);
     });
 });

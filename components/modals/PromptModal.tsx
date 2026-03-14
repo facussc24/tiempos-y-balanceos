@@ -9,6 +9,7 @@
  */
 import React, { useState, useEffect, useRef } from 'react';
 import { MessageSquare, X, Loader2 } from 'lucide-react';
+import { useFocusTrap } from '../../hooks/useFocusTrap';
 
 export interface PromptModalProps {
     isOpen: boolean;
@@ -39,6 +40,7 @@ export const PromptModal: React.FC<PromptModalProps> = ({
 }) => {
     const [inputValue, setInputValue] = useState(defaultValue);
     const inputRef = useRef<HTMLInputElement>(null);
+    const modalRef = useFocusTrap(isOpen);
 
     // Reset input value when modal opens
     useEffect(() => {
@@ -62,7 +64,7 @@ export const PromptModal: React.FC<PromptModalProps> = ({
         };
         document.addEventListener('keydown', handleKeyDown);
         return () => document.removeEventListener('keydown', handleKeyDown);
-    }, [isOpen, isLoading, inputValue, required]);
+    }, [isOpen, isLoading, inputValue, required, onClose, onSubmit]);
 
     const handleSubmit = () => {
         if (required && !inputValue.trim()) {
@@ -83,12 +85,20 @@ export const PromptModal: React.FC<PromptModalProps> = ({
             />
 
             {/* Modal */}
-            <div className="relative bg-white rounded-xl shadow-xl w-full max-w-md mx-4 animate-fade-in-up overflow-hidden">
+            <div
+                ref={modalRef}
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="prompt-modal-title"
+                aria-describedby="prompt-modal-message"
+                className="relative bg-white rounded-xl shadow-xl w-full max-w-md mx-4 animate-fade-in-up overflow-hidden"
+            >
                 {/* Close button */}
                 <button
                     onClick={onClose}
                     disabled={isLoading}
-                    className="absolute top-4 right-4 p-1 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition-colors disabled:opacity-50"
+                    aria-label="Cerrar"
+                    className="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     <X size={20} />
                 </button>
@@ -100,12 +110,12 @@ export const PromptModal: React.FC<PromptModalProps> = ({
                     </div>
 
                     {/* Title */}
-                    <h2 className="text-xl font-bold text-slate-800 text-center mb-2">
+                    <h2 id="prompt-modal-title" className="text-xl font-bold text-slate-800 text-center mb-2">
                         {title}
                     </h2>
 
                     {/* Message */}
-                    <p className="text-slate-600 text-center mb-4 whitespace-pre-line">
+                    <p id="prompt-modal-message" className="text-slate-600 text-center mb-4 whitespace-pre-line">
                         {message}
                     </p>
 
@@ -117,6 +127,8 @@ export const PromptModal: React.FC<PromptModalProps> = ({
                         onChange={(e) => setInputValue(e.target.value)}
                         placeholder={placeholder}
                         disabled={isLoading}
+                        aria-label={title}
+                        aria-required={required}
                         className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all mb-6 disabled:opacity-50 disabled:bg-slate-50"
                     />
 
@@ -125,14 +137,14 @@ export const PromptModal: React.FC<PromptModalProps> = ({
                         <button
                             onClick={onClose}
                             disabled={isLoading}
-                            className="flex-1 px-4 py-2.5 bg-slate-100 text-slate-700 font-medium rounded-xl hover:bg-slate-200 transition-colors disabled:opacity-50"
+                            className="flex-1 px-4 py-2.5 bg-slate-100 text-slate-700 font-medium rounded-xl hover:bg-slate-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {cancelText}
                         </button>
                         <button
                             onClick={handleSubmit}
                             disabled={isLoading || (required && !inputValue.trim())}
-                            className="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition-colors disabled:opacity-70 flex items-center justify-center gap-2"
+                            className="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition-colors disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                         >
                             {isLoading ? (
                                 <>

@@ -17,19 +17,20 @@ interface Props {
     dailyDemand: number;
     activeShifts?: number;
     oee?: number;
+    setupLossPercent?: number;
     onClose: () => void;
     onApply: (params: InjectionParams, calculatedCycle: number) => void;
 }
 
 export const CavityCalculator: React.FC<Props> = ({
-    task, projectTasks = [], shifts = [], dailyDemand, activeShifts = 1, oee = 0.85, onClose, onApply
+    task, projectTasks = [], shifts = [], dailyDemand, activeShifts = 1, oee = 0.85, setupLossPercent = 0, onClose, onApply
 }) => {
     // FIX Bug #3: Calculate real available seconds from shift configuration
     const availableSeconds = useMemo(() => {
         if (!shifts || shifts.length === 0) return undefined; // Fallback to constant in core
-        const taktResult = calculateTaktTime(shifts, activeShifts, dailyDemand, oee);
+        const taktResult = calculateTaktTime(shifts, activeShifts, dailyDemand, oee, setupLossPercent);
         return taktResult.totalAvailableMinutes * 60;
-    }, [shifts, activeShifts, dailyDemand, oee]);
+    }, [shifts, activeShifts, dailyDemand, oee, setupLossPercent]);
 
     // 1. STATE HOOK (Managed Inputs)
     const state = useInjectionState(task, projectTasks);
@@ -244,7 +245,7 @@ export const CavityCalculator: React.FC<Props> = ({
 
                     {/* RIGHT: RESULTS */}
                     <div className="flex-1 bg-white p-6 flex flex-col relative">
-                        <button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-700 hover:bg-slate-100 p-2 rounded-full transition-colors z-10">
+                        <button onClick={onClose} aria-label="Cerrar calculadora de cavidades" className="absolute top-4 right-4 text-slate-400 hover:text-slate-700 hover:bg-slate-100 p-2 rounded-full transition-colors z-10">
                             <X size={24} />
                         </button>
 
@@ -265,10 +266,12 @@ export const CavityCalculator: React.FC<Props> = ({
                         />
 
                         <div className="mt-4 flex justify-between items-center">
-                            <div className={`flex items-center gap-3 px-4 py-2 rounded-lg border transition-colors ${'bg-indigo-50 border-indigo-200 text-indigo-800'}`}>
+                            <div className={`flex items-center gap-3 px-4 py-2 rounded-lg border transition-colors ${state.cavityMode === 'auto' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-indigo-50 border-indigo-200 text-indigo-800'}`}>
                                 <MousePointer2 size={20} />
                                 <div className="flex flex-col">
-                                    <span className="text-[10px] font-bold uppercase opacity-70">SELECCIÓN MANUAL</span>
+                                    <span className="text-[10px] font-bold uppercase opacity-70">
+                                        {state.cavityMode === 'auto' ? 'SELECCIÓN AUTOMÁTICA' : 'SELECCIÓN MANUAL'}
+                                    </span>
                                     <span className="font-black text-sm leading-none flex items-center gap-2">
                                         {calculator.activeN} Cavidades / {calculator.metrics.activeHeadcount} Op.
                                     </span>
@@ -276,7 +279,12 @@ export const CavityCalculator: React.FC<Props> = ({
                             </div>
 
                             <div className="flex gap-2">
-                                <button onClick={handleApply} data-testid="btn-apply-calculator" className={`px-6 py-2 rounded-lg font-bold shadow-md transition-all transform active:scale-95 flex items-center gap-2 text-sm ${calculator.metrics.isCurrentFeasible ? 'bg-indigo-600 hover:bg-indigo-700 text-white' : 'bg-white border-2 border-slate-200 text-slate-400 cursor-not-allowed opacity-60'}`}>
+                                <button
+                                    onClick={handleApply}
+                                    disabled={!calculator.metrics.isCurrentFeasible}
+                                    data-testid="btn-apply-calculator"
+                                    className={`px-6 py-2 rounded-lg font-bold shadow-md transition-all transform active:scale-95 flex items-center gap-2 text-sm ${calculator.metrics.isCurrentFeasible ? 'bg-indigo-600 hover:bg-indigo-700 text-white' : 'bg-white border-2 border-slate-200 text-slate-400 cursor-not-allowed opacity-60'}`}
+                                >
                                     Aplicar <ArrowRight size={16} />
                                 </button>
                             </div>

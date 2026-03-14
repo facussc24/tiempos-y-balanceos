@@ -5,7 +5,7 @@
  * Persists visibility state in localStorage.
  */
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 
 const STORAGE_KEY = 'amfe-column-visibility';
 
@@ -34,6 +34,15 @@ export const COLUMN_GROUP_LABELS: Record<keyof ColumnGroupVisibility, string> = 
     step5: 'P5: Riesgo',
     step6: 'P6: Optimización',
     obs: 'Observaciones',
+};
+
+export const COLUMN_GROUP_TOOLTIPS: Record<keyof ColumnGroupVisibility, string> = {
+    step2: 'Paso 2: Operaciones y elementos de trabajo (6M)',
+    step3: 'Paso 3: Funciones de cada elemento',
+    step4: 'Paso 4: Modos de falla, efectos y severidad',
+    step5: 'Paso 5: Causas, controles, O/D y Prioridad de Acción (AP)',
+    step6: 'Paso 6: Acciones de mejora, responsables y fechas',
+    obs: 'Notas y comentarios adicionales',
 };
 
 export const COLUMN_GROUP_COLORS: Record<keyof ColumnGroupVisibility, string> = {
@@ -82,9 +91,9 @@ export const useAmfeColumnVisibility = () => {
         setVisibility({ ...DEFAULT_VISIBILITY });
     }, []);
 
-    const isDefault = Object.entries(visibility).every(
+    const isDefault = useMemo(() => Object.entries(visibility).every(
         ([k, v]) => v === DEFAULT_VISIBILITY[k as keyof ColumnGroupVisibility]
-    );
+    ), [visibility]);
 
     return {
         visibility,

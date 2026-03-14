@@ -65,9 +65,14 @@ export interface AmfeRegistry {
     nextNumber: number;         // Auto-increment for AMFE number
 }
 
-/** Empty registry for initialization. */
-export const EMPTY_REGISTRY: AmfeRegistry = {
-    entries: [],
-    lastUpdated: new Date().toISOString(),
-    nextNumber: 1,
-};
+/** Create a fresh empty registry (avoids stale timestamps from module-load time). */
+export function createEmptyRegistry(): AmfeRegistry {
+    return {
+        entries: [],
+        lastUpdated: new Date().toISOString(),
+        nextNumber: 1,
+    };
+}
+
+/** @deprecated Use createEmptyRegistry() instead */
+export const EMPTY_REGISTRY: AmfeRegistry = createEmptyRegistry();

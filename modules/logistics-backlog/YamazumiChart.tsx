@@ -22,11 +22,25 @@ export const YamazumiChart: React.FC<YamazumiChartProps> = ({
     bars,
     taktTime
 }) => {
-    // Calculate the max time for scaling (use highest bar or takt * 1.1)
-    const maxTime = Math.max(...bars.map(b => b.time), taktTime * 1.5);
+    if (bars.length === 0) {
+        return (
+            <div className="bg-white rounded-xl border border-slate-200 p-8 text-center">
+                <BarChart3 size={48} className="mx-auto text-slate-300 mb-4" />
+                <p className="text-slate-500">No hay datos de estaciones disponibles</p>
+            </div>
+        );
+    }
+
+    // Calculate the max time for scaling (use highest bar or takt * 1.5)
+    // FIX: Filter NaN values to prevent Math.max corruption — one NaN bar
+    // would make maxTime=1 (via || 1 fallback), causing all valid bars to overflow.
+    const validBarTimes = bars.map(b => b.time).filter(Number.isFinite);
+    const taktRef = Number.isFinite(taktTime) ? taktTime * 1.5 : 0;
+    const maxTime = validBarTimes.length > 0 ? Math.max(...validBarTimes, taktRef) : (taktRef || 1);
 
     // Get bar color based on how close to takt
     const getBarColor = (time: number, required: number) => {
+        if (required <= 0 || taktTime <= 0) return 'bg-slate-300';
         const saturation = (time / (required * taktTime)) * 100;
         if (saturation > 95) return 'bg-red-500';
         if (saturation > 85) return 'bg-emerald-500';
@@ -97,7 +111,7 @@ export const YamazumiChart: React.FC<YamazumiChartProps> = ({
             <div className="mt-4 flex items-center justify-center gap-6 text-xs text-slate-500">
                 <div className="flex items-center gap-1">
                     <div className="w-3 h-3 bg-red-400 rounded-full"></div>
-                    <span>Línea Takt ({taktTime.toFixed(1)}s)</span>
+                    <span>Línea Takt ({(Number.isFinite(taktTime) ? taktTime : 0).toFixed(1)}s)</span>
                 </div>
                 <div className="flex items-center gap-1">
                     <div className="w-3 h-3 bg-emerald-500 rounded"></div>

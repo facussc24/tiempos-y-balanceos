@@ -40,7 +40,7 @@ export function useAppNavigation(options: UseAppNavigationOptions = {}) {
     useEffect(() => {
         if (isReady) {
             window.location.hash = activeTab;
-            localStorage.setItem('optiline_tab', activeTab);
+            try { localStorage.setItem('optiline_tab', activeTab); } catch { /* FIX: non-critical persistence */ }
         }
     }, [activeTab, isReady]);
 

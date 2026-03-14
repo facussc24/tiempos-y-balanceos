@@ -79,6 +79,16 @@ export function DiagnosticPanel({ isOpen, onClose, projectPath }: DiagnosticPane
         toast.info('Logs Limpiados', 'Se eliminaron todos los registros');
     };
 
+    // Close on Escape key
+    useEffect(() => {
+        if (!isOpen) return;
+        const handleEscape = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') { e.preventDefault(); onClose(); }
+        };
+        document.addEventListener('keydown', handleEscape);
+        return () => document.removeEventListener('keydown', handleEscape);
+    }, [isOpen, onClose]);
+
     if (!isOpen) return null;
 
     return (

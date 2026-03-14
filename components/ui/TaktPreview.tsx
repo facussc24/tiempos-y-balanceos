@@ -11,6 +11,7 @@ import React, { useMemo } from 'react';
 import { Clock, TrendingDown, AlertTriangle, Settings } from 'lucide-react';
 import { Shift } from '../../types';
 import { calculateTaktTime, calculateShiftNetMinutes } from '../../core/balancing/simulation';
+import { formatTime } from '../../modules/flow-simulator/flowUtils';
 
 export interface TaktPreviewProps {
     /** Array of shift configurations */
@@ -35,17 +36,6 @@ export interface TaktPreviewResult {
     setupLossApplied: number;
     hasSetupLoss: boolean;
 }
-
-/**
- * Format seconds to human-readable time
- */
-const formatTime = (seconds: number): string => {
-    if (seconds <= 0) return '—';
-    if (seconds < 60) return `${seconds.toFixed(1)}s`;
-    const minutes = Math.floor(seconds / 60);
-    const secs = Math.round(seconds % 60);
-    return `${minutes}m ${secs}s`;
-};
 
 /**
  * Format minutes to hours and minutes

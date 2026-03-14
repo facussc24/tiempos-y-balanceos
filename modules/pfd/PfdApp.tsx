@@ -14,9 +14,10 @@ import { usePfdPersistence, listPfdDraftKeys, loadPfdDraft, deletePfdDraft, dele
 import { usePfdSelection } from './usePfdSelection';
 import { validatePfdDocument, ValidationIssue } from './pfdValidation';
 import { exportPfdSvg } from './pfdSvgExport';
-import type { PfdDocument, PfdStep } from './pfdTypes';
+import { exportPfdPdf } from './pfdPdfExport';
+import type { PfdDocument, PfdStep, PfdHeader } from './pfdTypes';
 import { PfdDocumentListItem, createEmptyPfdDocument } from './pfdTypes';
-import { createBasicProcessTemplate, createManufacturingProcessTemplate } from './pfdTemplates';
+import { createBasicProcessTemplate, createManufacturingProcessTemplate, createPatagoniaTapizadoTemplate, type PfdTemplateResult } from './pfdTemplates';
 import PfdToolbar from './PfdToolbar';
 import PfdHeaderComponent from './PfdHeader';
 import PfdFlowEditor from './PfdFlowEditor';
@@ -26,8 +27,9 @@ import PfdHelpPanel from './PfdHelpPanel';
 import { ConfirmModal } from '../../components/modals/ConfirmModal';
 import { PromptModal } from '../../components/modals/PromptModal';
 import { RevisionPromptModal } from '../../components/modals/RevisionPromptModal';
-import { CrossDocAlertBanner } from '../../components/CrossDocAlertBanner';
-import { RevisionHistoryPanel } from '../../components/RevisionHistoryPanel';
+import { CrossDocAlertBanner } from '../../components/ui/CrossDocAlertBanner';
+import { toast } from '../../components/ui/Toast';
+import { RevisionHistoryPanel } from '../../components/layout/RevisionHistoryPanel';
 import { ModuleErrorBoundary } from '../../components/ui/ModuleErrorBoundary';
 import { useRevisionControl } from '../../hooks/useRevisionControl';
 import { useCrossDocAlerts } from '../../hooks/useCrossDocAlerts';
@@ -39,10 +41,11 @@ import {
     deletePfdDocument,
 } from '../../utils/repositories/pfdRepository';
 import { logger } from '../../utils/logger';
+import { useOpenExportFolder } from '../../hooks/useOpenExportFolder';
 import {
     Plus, XCircle, AlertTriangle, CheckCircle, Info, ArrowRight,
-    HelpCircle,
-    Undo2, Redo2, Eye, Edit3, Hash, GitBranch, Image,
+    HelpCircle, Save, FileText, FolderOpen, Check, Clock,
+    Undo2, Redo2, Eye, Edit3, Hash, GitBranch, Image, ChevronDown,
 } from 'lucide-react';
 
 interface Props {
@@ -52,6 +55,9 @@ interface Props {
     /** Pre-loaded document from wizard (used when generating PFD from AMFE) */
     initialData?: PfdDocument;
 }
+
+const LS_LAST_PROJECT = 'pfd_lastProjectId';
+const LS_LAST_PROJECT_NAME = 'pfd_lastProjectName';
 
 const PfdApp: React.FC<Props> = ({ onBackToLanding, embedded, initialData }) => {
     // Document state
@@ -74,6 +80,8 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding, embedded, initialData }) => 
         } catch { return false; }
     });
     const [showProjectPanel, setShowProjectPanel] = useState(false);
+    const [embeddedNewMenuOpen, setEmbeddedNewMenuOpen] = useState(false);
+    const embeddedNewMenuRef = useRef<HTMLDivElement>(null);
     const [validationIssues, setValidationIssues] = useState<ValidationIssue[] | null>(null);
     // C9-U2: Help panel
     const [showHelp, setShowHelp] = useState(false);
@@ -85,6 +93,20 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding, embedded, initialData }) => 
             return stored !== null ? stored === 'true' : true; // Default: open
         } catch { return true; }
     });
+
+    // Close embedded new-menu on outside click
+    useEffect(() => {
+        if (!embeddedNewMenuOpen) return;
+        const handler = (e: MouseEvent) => {
+            if (embeddedNewMenuRef.current && !embeddedNewMenuRef.current.contains(e.target as Node)) setEmbeddedNewMenuOpen(false);
+        };
+        document.addEventListener('mousedown', handler);
+        return () => document.removeEventListener('mousedown', handler);
+    }, [embeddedNewMenuOpen]);
+
+    // PFD flow search state
+    const [pfdSearch, setPfdSearch] = useState('');
+    const pfdSearchRef = useRef<HTMLInputElement>(null);
 
     // Phase B: Step selection + keyboard nav
     const selection = usePfdSelection({
@@ -132,6 +154,9 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding, embedded, initialData }) => 
 
     // Cross-document alerts
     const crossDocAlerts = useCrossDocAlerts('pfd', pfd.data.id || null);
+
+    // Export folder
+    const exportFolder = useOpenExportFolder('pfd', pfd.data);
 
     // Track unsaved changes via snapshot comparison (debounced to avoid expensive JSON.stringify per keystroke).
     // This correctly resets hasUnsavedChanges when user undoes back to saved state.
@@ -235,6 +260,37 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding, embedded, initialData }) => 
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
+    // Auto-load last project on mount (matching AMFE useAmfeProjects pattern)
+    useEffect(() => {
+        if (initialData) return; // Skip if wizard provided data
+        let cancelled = false;
+        const lastId = (() => { try { return localStorage.getItem(LS_LAST_PROJECT); } catch { return null; } })();
+        if (!lastId) return;
+        (async () => {
+            try {
+                const doc = await loadPfdDocument(lastId);
+                if (cancelled) return;
+                if (doc) {
+                    pfd.loadData(doc);
+                    const savedName = (() => { try { return localStorage.getItem(LS_LAST_PROJECT_NAME); } catch { return null; } })();
+                    const name = savedName || doc.header?.partName || doc.header?.documentNumber || '';
+                    setCurrentProject(name);
+                    savedSnapshotRef.current = JSON.stringify(doc);
+                    setHasUnsavedChanges(false);
+                    logger.info('PfdApp', 'Auto-loaded last project', { id: lastId, name });
+                } else {
+                    // Project no longer exists — clean up
+                    try { localStorage.removeItem(LS_LAST_PROJECT); } catch { /* noop */ }
+                }
+            } catch (err) {
+                logger.warn('PfdApp', 'Auto-load failed', { error: String(err) });
+                try { localStorage.removeItem(LS_LAST_PROJECT); } catch { /* noop */ }
+            }
+        })();
+        return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
     // C3-B1: Extracted shared save logic to avoid duplication
     // FIX: Added savingRef mutex to prevent concurrent saves (matching AMFE/CP pattern)
     const savingRef = useRef(false);
@@ -248,7 +304,7 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding, embedded, initialData }) => 
             const ok = await savePfdDocument(pfd.data.id, pfd.data);
             setSaveStatus(ok ? 'saved' : 'error');
             if (!ok) {
-                setToastMessage('Error al guardar. Intente nuevamente.');
+                toast.error('Error al guardar', 'Intente nuevamente.');
                 setTimeout(() => setSaveStatus('idle'), 3000);
             }
             if (ok) {
@@ -256,12 +312,18 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding, embedded, initialData }) => 
                 setHasUnsavedChanges(false);
                 refreshProjects();
                 deleteUnsavedDraft();
+                // Persist last project ID + name for auto-load
+                try {
+                    localStorage.setItem(LS_LAST_PROJECT, pfd.data.id);
+                    localStorage.setItem(LS_LAST_PROJECT_NAME, currentProject || pfd.data.header.partName || '');
+                } catch { /* noop */ }
+                toast.success('Guardado', currentProject || pfd.data.header.partName || 'Documento guardado correctamente');
                 setTimeout(() => setSaveStatus('idle'), 2000);
             }
         } finally {
             savingRef.current = false;
         }
-    }, [pfd.data, refreshProjects]);
+    }, [pfd.data, refreshProjects, currentProject]);
 
     const handleSave = useCallback(async () => {
         if (!currentProject) {
@@ -319,7 +381,11 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding, embedded, initialData }) => 
                         setHasUnsavedChanges(false);
                         refreshProjects();
                         deleteUnsavedDraft(); // FIX: Clean up orphan draft
-                        setToastMessage(`Copia guardada como "${name}"`);
+                        try {
+                            localStorage.setItem(LS_LAST_PROJECT, newId);
+                            localStorage.setItem(LS_LAST_PROJECT_NAME, name);
+                        } catch { /* noop */ }
+                        toast.success('Copia guardada', `"${name}"`);
                         setTimeout(() => setSaveStatus('idle'), 2000);
                     }
                 } finally {
@@ -341,6 +407,10 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding, embedded, initialData }) => 
                 setHasUnsavedChanges(false);
                 setShowProjectPanel(false);
                 setLoadError('');
+                try {
+                    localStorage.setItem(LS_LAST_PROJECT, id);
+                    localStorage.setItem(LS_LAST_PROJECT_NAME, proj?.part_name || proj?.document_number || id);
+                } catch { /* noop */ }
             } else {
                 setLoadError('No se pudo cargar el documento.');
             }
@@ -402,7 +472,7 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding, embedded, initialData }) => 
         setValidationIssues(issues);
     }, [pfd.data]);
 
-    // Export — SVG only
+    // Export — SVG
     const handleExportSvg = useCallback(async () => {
         try {
             await exportPfdSvg(pfd.data);
@@ -410,6 +480,17 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding, embedded, initialData }) => 
         } catch (err) {
             logger.error('PfdApp', 'SVG export failed', {}, err instanceof Error ? err : undefined);
             setToastMessage('Error al exportar SVG');
+        }
+    }, [pfd.data]);
+
+    // Export — PDF (via print dialog)
+    const handleExportPdf = useCallback(async () => {
+        try {
+            await exportPfdPdf(pfd.data);
+            setToastMessage('Diálogo de impresión abierto — seleccione "Guardar como PDF"');
+        } catch (err) {
+            logger.error('PfdApp', 'PDF export failed', {}, err instanceof Error ? err : undefined);
+            setToastMessage('Error al exportar PDF');
         }
     }, [pfd.data]);
 
@@ -435,7 +516,27 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding, embedded, initialData }) => 
 
     // C3-U3: Load basic/manufacturing process template
     // C4-B3: Confirm before replacing existing steps with template
-    const handleLoadTemplate = useCallback((templateFn: () => ReturnType<typeof createBasicProcessTemplate> = createBasicProcessTemplate) => {
+    const handleLoadTemplate = useCallback((templateFn: () => PfdStep[] | PfdTemplateResult = createBasicProcessTemplate) => {
+        /** Apply template: set steps + optionally fill header fields */
+        const applyTemplate = () => {
+            const result = templateFn();
+            // If result has { steps, header } shape → full template (e.g., PATAGONIA)
+            if (result && 'steps' in result && Array.isArray(result.steps)) {
+                const tmpl = result as PfdTemplateResult;
+                pfd.setSteps(tmpl.steps);
+                if (tmpl.header) {
+                    for (const [key, value] of Object.entries(tmpl.header)) {
+                        if (value !== undefined && value !== '') {
+                            pfd.updateHeader(key as keyof PfdHeader, value as string);
+                        }
+                    }
+                }
+            } else {
+                // Plain PfdStep[] (basic/manufacturing templates)
+                pfd.setSteps(result as PfdStep[]);
+            }
+        };
+
         const hasUserData = pfd.data.steps.length > 1 || pfd.data.steps.some(s => s.description.trim() !== '' && s.description !== 'Recepción de materia prima');
         if (hasUserData) {
             setConfirmState({
@@ -446,13 +547,13 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding, embedded, initialData }) => 
                 confirmText: 'Reemplazar',
                 onConfirm: () => {
                     setConfirmState(prev => ({ ...prev, isOpen: false }));
-                    pfd.setSteps(templateFn());
+                    applyTemplate();
                 },
             });
         } else {
-            pfd.setSteps(templateFn());
+            applyTemplate();
         }
-    }, [pfd.data.steps, pfd.setSteps]);
+    }, [pfd.data.steps, pfd.setSteps, pfd.updateHeader]);
 
     // Auto-dismiss toasts
     useEffect(() => {
@@ -551,6 +652,11 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding, embedded, initialData }) => 
                 e.preventDefault();
                 handleSave();
             }
+            // Ctrl+F: Focus flow search
+            if (e.ctrlKey && e.key === 'f') {
+                e.preventDefault();
+                pfdSearchRef.current?.focus();
+            }
             if (e.ctrlKey && e.key === 'z') {
                 e.preventDefault();
                 pfd.undo();
@@ -630,6 +736,7 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding, embedded, initialData }) => 
                     onToggleProjectPanel={() => setShowProjectPanel(!showProjectPanel)}
                     onNewProject={handleNewProject}
                     onExportSvg={handleExportSvg}
+                    onExportPdf={handleExportPdf}
                     viewMode={viewMode}
                     onToggleViewMode={() => setViewMode(prev => prev === 'view' ? 'edit' : 'view')}
                     onValidate={handleValidate}
@@ -641,9 +748,12 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding, embedded, initialData }) => 
                     stepCount={pfd.data.steps.length}
                     onLoadBasicTemplate={() => handleLoadTemplate()}
                     onLoadManufacturingTemplate={() => handleLoadTemplate(createManufacturingProcessTemplate)}
+                    onLoadTapizadoTemplate={() => handleLoadTemplate(createPatagoniaTapizadoTemplate)}
                     onRenumber={pfd.renumber}
                     onNewRevision={revisionControl.handleNewRevision}
                     currentRevisionLevel={pfd.data.header.revisionLevel || 'A'}
+                    onOpenExportFolder={exportFolder.openFolder}
+                    canOpenExportFolder={exportFolder.canOpen}
                 />
             ) : (
                 /* Compact embedded toolbar — essential actions only */
@@ -654,6 +764,40 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding, embedded, initialData }) => 
                     <button onClick={pfd.redo} disabled={!pfd.canRedo} className="flex items-center gap-1 px-2 py-1 rounded text-xs text-gray-600 hover:bg-gray-100 disabled:opacity-50" title="Rehacer (Ctrl+Y)">
                         <Redo2 size={14} />
                     </button>
+                    <div className="w-px h-5 bg-gray-200" />
+                    <button
+                        onClick={() => { refreshProjects(); setShowProjectPanel(prev => !prev); }}
+                        className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium transition ${
+                            showProjectPanel ? 'bg-cyan-100 text-cyan-800' : 'text-gray-600 hover:bg-gray-100'
+                        }`}
+                        title="Documentos guardados"
+                    >
+                        <FolderOpen size={14} />
+                        <span className="hidden sm:inline">Proyectos</span>
+                        {projects.length > 0 && (
+                            <span className="text-[9px] bg-gray-200 text-gray-600 rounded-full px-1.5 py-0.5">{projects.length}</span>
+                        )}
+                    </button>
+                    <div className="relative" ref={embeddedNewMenuRef}>
+                        <button
+                            onClick={() => setEmbeddedNewMenuOpen(prev => !prev)}
+                            className="flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium text-cyan-700 hover:bg-cyan-50 transition"
+                            title="Nuevo documento o cargar template"
+                        >
+                            <Plus size={14} />
+                            <span className="hidden sm:inline">Nuevo</span>
+                            <ChevronDown size={12} />
+                        </button>
+                        {embeddedNewMenuOpen && (
+                            <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 min-w-[230px] py-1">
+                                <button onClick={() => { handleNewProject(); setEmbeddedNewMenuOpen(false); }} className="w-full text-left px-3 py-2 text-xs text-gray-700 hover:bg-cyan-50 hover:text-cyan-700 transition">Documento vacío</button>
+                                <button onClick={() => { handleLoadTemplate(); setEmbeddedNewMenuOpen(false); }} className="w-full text-left px-3 py-2 text-xs text-gray-700 hover:bg-cyan-50 hover:text-cyan-700 transition">Plantilla básica (8 pasos)</button>
+                                <button onClick={() => { handleLoadTemplate(createManufacturingProcessTemplate); setEmbeddedNewMenuOpen(false); }} className="w-full text-left px-3 py-2 text-xs text-gray-700 hover:bg-cyan-50 hover:text-cyan-700 transition">Plantilla manufactura (12 pasos)</button>
+                                <div className="border-t border-gray-100 my-1" />
+                                <button onClick={() => { handleLoadTemplate(createPatagoniaTapizadoTemplate); setEmbeddedNewMenuOpen(false); }} className="w-full text-left px-3 py-2 text-xs text-cyan-700 hover:bg-cyan-50 font-semibold transition">INSERTO PATAGONIA — VWA (35 pasos)</button>
+                            </div>
+                        )}
+                    </div>
                     <div className="w-px h-5 bg-gray-200" />
                     <button onClick={() => setViewMode(prev => prev === 'view' ? 'edit' : 'view')} className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium transition ${viewMode === 'view' ? 'bg-cyan-100 text-cyan-800' : 'text-gray-600 hover:bg-gray-100'}`} title="Alternar vista/edicion">
                         {viewMode === 'view' ? <Eye size={14} /> : <Edit3 size={14} />}
@@ -669,9 +813,27 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding, embedded, initialData }) => 
                         </button>
                     )}
                     <div className="w-px h-5 bg-gray-200" />
+                    <button
+                        onClick={handleSave}
+                        className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium transition ${
+                            hasUnsavedChanges
+                                ? 'text-cyan-700 bg-cyan-50 hover:bg-cyan-100 border border-cyan-200'
+                                : 'text-gray-600 hover:bg-gray-100'
+                        }`}
+                        title="Guardar (Ctrl+S)"
+                    >
+                        <Save size={14} />
+                        <span className="hidden sm:inline">Guardar</span>
+                        {hasUnsavedChanges && <span className="w-1.5 h-1.5 bg-cyan-500 rounded-full animate-pulse" />}
+                    </button>
+                    <div className="w-px h-5 bg-gray-200" />
                     <button onClick={handleExportSvg} className="flex items-center gap-1 px-2.5 py-1 rounded text-xs text-gray-600 hover:bg-gray-100" title="Exportar SVG editable">
                         <Image size={14} />
                         <span className="hidden sm:inline">SVG</span>
+                    </button>
+                    <button onClick={handleExportPdf} className="flex items-center gap-1 px-2.5 py-1 rounded text-xs text-gray-600 hover:bg-gray-100" title="Exportar PDF (imprimir)">
+                        <FileText size={14} />
+                        <span className="hidden sm:inline">PDF</span>
                     </button>
                     <div className="w-px h-5 bg-gray-200" />
                     <button
@@ -686,7 +848,31 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding, embedded, initialData }) => 
                         </span>
                     </button>
                     <div className="flex-1" />
-                    <span className="text-[10px] text-gray-400">{pfd.data.steps.length} pasos</span>
+                    {/* Project name badge + save status indicator */}
+                    <div className="flex items-center gap-2">
+                        {currentProject && (
+                            <span className="text-xs font-medium text-cyan-700 bg-cyan-50 px-2 py-0.5 rounded truncate max-w-[250px]" title={currentProject}>
+                                {currentProject}
+                            </span>
+                        )}
+                        {saveStatus === 'saving' && (
+                            <span className="text-blue-500 flex items-center gap-1 text-[11px]">
+                                <Clock size={12} className="animate-spin" /> Guardando...
+                            </span>
+                        )}
+                        {saveStatus === 'saved' && (
+                            <span className="text-green-600 flex items-center gap-1 text-[11px]">
+                                <Check size={12} /> Guardado
+                            </span>
+                        )}
+                        {saveStatus === 'error' && (
+                            <span className="text-red-500 text-[11px]">Error al guardar</span>
+                        )}
+                        {saveStatus === 'idle' && hasUnsavedChanges && currentProject && (
+                            <span className="text-orange-500 text-[11px]">Sin guardar</span>
+                        )}
+                        <span className="text-[10px] text-gray-400">{pfd.data.steps.length} pasos</span>
+                    </div>
                 </div>
             )}
 
@@ -721,8 +907,8 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding, embedded, initialData }) => 
                 </div>
             )}
 
-            {/* Project panel (slide-in, hidden in embedded mode) */}
-            {!embedded && showProjectPanel && (
+            {/* Project panel (slide-in) */}
+            {showProjectPanel && (
                 <div className="bg-white border-b border-gray-200 px-4 py-3 shadow-sm no-print">
                     <div className="flex items-center justify-between mb-2">
                         <h3 className="text-sm font-semibold text-cyan-700">Documentos guardados</h3>
@@ -780,6 +966,8 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding, embedded, initialData }) => 
                             readOnly={isReadOnly}
                             isOpen={flowEditorOpen}
                             onToggle={() => setFlowEditorOpen(prev => !prev)}
+                            searchQuery={pfdSearch}
+                            onSearchChange={setPfdSearch}
                         />
                     </div>
 

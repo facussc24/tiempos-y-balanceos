@@ -105,8 +105,7 @@ describe('computeCpStats', () => {
     });
 
     it('calculates completion percent for fully filled items', () => {
-        // 7 required fields: processStepNumber, processDescription, productCharacteristic,
-        // sampleSize, controlMethod, reactionPlan, reactionPlanOwner
+        // 7 required fields — context-aware: product rows use evaluationTechnique, process rows use controlMethod
         const items = [
             makeItem({
                 id: '1',
@@ -114,7 +113,7 @@ describe('computeCpStats', () => {
                 processDescription: 'Soldadura',
                 productCharacteristic: 'Longitud',
                 sampleSize: '5',
-                controlMethod: 'SPC',
+                evaluationTechnique: 'Medición directa',
                 reactionPlan: 'Segregar',
                 reactionPlanOwner: 'Operador A',
             }),
@@ -149,7 +148,7 @@ describe('computeCpStats', () => {
                 processDescription: 'Soldadura',
                 productCharacteristic: 'Longitud',
                 sampleSize: '5',
-                controlMethod: 'SPC',
+                evaluationTechnique: 'SPC',
                 reactionPlan: 'Segregar',
                 reactionPlanOwner: 'Operador',
             }),
@@ -177,9 +176,9 @@ describe('computeCpStats', () => {
         expect(stats.criticalItems[0].description).toBe('Soldadura');
         expect(stats.criticalItems[0].missing).toContain('Producto');
         expect(stats.criticalItems[0].missing).toContain('Tam. Muestra');
-        expect(stats.criticalItems[0].missing).toContain('Metodo Control');
-        expect(stats.criticalItems[0].missing).toContain('Plan Reaccion');
-        expect(stats.criticalItems[0].missing).toContain('Resp. Reaccion');
+        expect(stats.criticalItems[0].missing).toContain('Método Control');
+        expect(stats.criticalItems[0].missing).toContain('Plan Reacción');
+        expect(stats.criticalItems[0].missing).toContain('Resp. Reacción');
     });
 
     it('identifies critical items (AP=H with missing fields)', () => {
@@ -274,7 +273,7 @@ describe('computeCpStats', () => {
         ];
         const stats = computeCpStats(makeDoc(items));
 
-        expect(stats.criticalItems[0].description).toBe('(sin descripcion)');
+        expect(stats.criticalItems[0].description).toBe('(sin descripción)');
         expect(stats.criticalItems[0].processStep).toBe('—');
     });
 

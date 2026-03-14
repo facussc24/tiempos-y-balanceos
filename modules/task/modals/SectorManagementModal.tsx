@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
-import { Layers, X, Plus, Trash2, Globe, Download } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Layers, X, Plus, Trash2, Globe, Download, Clock } from 'lucide-react';
 import { ProjectData, Sector } from '../../../types';
 import { usePlantAssets } from '../../../hooks/usePlantAssets';
 import { ConfirmModal } from '../../../components/modals/ConfirmModal';
+import { calculateTaktTime, calculateSectorTaktTime } from '../../../core/balancing/simulation';
+import { formatNumber } from '../../../utils';
 
 interface Props {
     isOpen: boolean;
@@ -20,6 +22,16 @@ export const SectorManagementModal: React.FC<Props> = ({ isOpen, onClose, data, 
     const [pendingDeleteSectorId, setPendingDeleteSectorId] = useState<string | null>(null);
 
     const { sectors: globalSectors } = usePlantAssets();
+
+    // Close on Escape key
+    useEffect(() => {
+        if (!isOpen) return;
+        const handleEscape = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') { e.preventDefault(); onClose(); }
+        };
+        document.addEventListener('keydown', handleEscape);
+        return () => document.removeEventListener('keydown', handleEscape);
+    }, [isOpen, onClose]);
 
     if (!isOpen) return null;
 
@@ -40,8 +52,9 @@ export const SectorManagementModal: React.FC<Props> = ({ isOpen, onClose, data, 
             id: Math.random().toString(36).substr(2, 5).toUpperCase(),
             name: newSectorName,
             color: newSectorColor,
-            targetOee: Math.max(0.01, parseFloat(newSectorOEE) / 100),
-            sequence: Math.min(20, Math.max(1, parseInt(newSectorSequence) || 1))
+            // FIX: NaN || default returns NaN (not default), use isNaN guard
+            targetOee: Math.max(0.01, (() => { const v = parseFloat(newSectorOEE); return isNaN(v) ? 85 : v; })() / 100),
+            sequence: Math.min(20, Math.max(1, (() => { const v = parseInt(newSectorSequence, 10); return isNaN(v) ? 1 : v; })()))
         };
         updateData({ ...data, sectors: [...sectorsList, newSector] });
         setNewSectorName("");
@@ -89,6 +102,7 @@ export const SectorManagementModal: React.FC<Props> = ({ isOpen, onClose, data, 
                         <button
                             onClick={onClose}
                             className="text-white/70 hover:text-white hover:bg-white/20 p-2 rounded-xl transition-all"
+                            title="Cerrar" aria-label="Cerrar gestión de sectores"
                         >
                             <X size={22} />
                         </button>
@@ -198,6 +212,16 @@ export const SectorManagementModal: React.FC<Props> = ({ isOpen, onClose, data, 
                                 </div>
                             </div>
 
+                            {/* Project shift reference */}
+                            {sortedSectors.length > 0 && (
+                                <div className="flex items-center gap-2 mb-3 px-1 text-xs text-slate-500">
+                                    <Clock size={14} className="text-slate-400" />
+                                    <span>Proyecto: <strong className="text-slate-700">{data.meta.activeShifts} turno{data.meta.activeShifts !== 1 ? 's' : ''}</strong></span>
+                                    <span className="text-slate-300">|</span>
+                                    <span className="text-slate-400">Click en el reloj de cada sector para asignar turnos propios</span>
+                                </div>
+                            )}
+
                             {/* LISTA DE SECTORES */}
                             <div className="space-y-2 max-h-64 overflow-y-auto">
                                 {sortedSectors.length === 0 && (
@@ -252,7 +276,7 @@ export const SectorManagementModal: React.FC<Props> = ({ isOpen, onClose, data, 
                                             onChange={e => updateSector(s.id, { color: e.target.value })}
                                         />
 
-                                        {/* Nombre y OEE - Editables inline */}
+                                        {/* Nombre, OEE y Turnos - Editables inline */}
                                         <div className="flex-1 min-w-0 space-y-1">
                                             <input
                                                 type="text"
@@ -260,21 +284,78 @@ export const SectorManagementModal: React.FC<Props> = ({ isOpen, onClose, data, 
                                                 value={s.name}
                                                 onChange={e => updateSector(s.id, { name: e.target.value })}
                                             />
-                                            <div className="flex items-center gap-1 text-xs text-slate-500">
-                                                <span>OEE:</span>
-                                                <input
-                                                    type="number"
-                                                    min="1"
-                                                    max="100"
-                                                    className="w-14 text-center font-bold bg-transparent border-b border-transparent hover:border-slate-300 focus:border-blue-500 focus:outline-none text-blue-600 transition-all rounded"
-                                                    value={s.targetOee ? Math.round(s.targetOee * 100) : 85}
-                                                    onChange={e => {
-                                                        const v = Math.min(100, Math.max(1, parseInt(e.target.value) || 85));
-                                                        updateSector(s.id, { targetOee: v / 100 });
-                                                    }}
-                                                />
-                                                <span>%</span>
+                                            <div className="flex items-center gap-3 text-xs text-slate-500">
+                                                <div className="flex items-center gap-1">
+                                                    <span>OEE:</span>
+                                                    <input
+                                                        type="number"
+                                                        min="1"
+                                                        max="100"
+                                                        className="w-14 text-center font-bold bg-transparent border-b border-transparent hover:border-slate-300 focus:border-blue-500 focus:outline-none text-blue-600 transition-all rounded"
+                                                        value={s.targetOee ? Math.round(s.targetOee * 100) : 85}
+                                                        onChange={e => {
+                                                            const v = Math.min(100, Math.max(1, parseInt(e.target.value) || 85));
+                                                            updateSector(s.id, { targetOee: v / 100 });
+                                                        }}
+                                                    />
+                                                    <span>%</span>
+                                                </div>
+                                                {/* Shift override — redesigned for clarity */}
+                                                <div className="flex items-center gap-1.5">
+                                                    {s.shiftOverride ? (
+                                                        <>
+                                                            <div className="flex items-center gap-1 bg-indigo-50 border border-indigo-200 rounded-lg px-2 py-1">
+                                                                <Clock size={13} className="text-indigo-500" />
+                                                                <select
+                                                                    className="text-xs bg-transparent text-indigo-700 font-bold outline-none cursor-pointer"
+                                                                    value={s.shiftOverride.activeShifts}
+                                                                    onChange={e => {
+                                                                        const v = Math.max(1, Math.min(3, parseInt(e.target.value) || 1));
+                                                                        updateSector(s.id, { shiftOverride: { ...s.shiftOverride!, activeShifts: v } });
+                                                                    }}
+                                                                >
+                                                                    <option value={1}>1 turno</option>
+                                                                    <option value={2}>2 turnos</option>
+                                                                    <option value={3}>3 turnos</option>
+                                                                </select>
+                                                            </div>
+                                                            <button
+                                                                onClick={() => updateSector(s.id, { shiftOverride: undefined })}
+                                                                className="text-slate-300 hover:text-red-500 transition-all p-0.5"
+                                                                title={`Quitar turnos propios (volver a ${data.meta.activeShifts}T del proyecto)`}
+                                                            >
+                                                                <X size={14} />
+                                                            </button>
+                                                        </>
+                                                    ) : (
+                                                        <button
+                                                            onClick={() => updateSector(s.id, { shiftOverride: { activeShifts: data.meta.activeShifts } })}
+                                                            className="flex items-center gap-1 px-2 py-1 rounded-lg border border-slate-200 text-slate-400 hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50 transition-all"
+                                                            title={`Proyecto usa ${data.meta.activeShifts} turno(s). Click para asignar turnos propios a este sector.`}
+                                                        >
+                                                            <Clock size={13} />
+                                                            <span>{data.meta.activeShifts}T</span>
+                                                        </button>
+                                                    )}
+                                                </div>
                                             </div>
+                                            {/* Takt comparison when override is active */}
+                                            {s.shiftOverride && data.meta.dailyDemand > 0 && (() => {
+                                                const sectorOee = s.targetOee ?? data.meta.manualOEE;
+                                                const sectorTakt = calculateSectorTaktTime(s, data.shifts, data.meta.activeShifts, data.meta.dailyDemand, sectorOee, data.meta.setupLossPercent || 0);
+                                                const projectTakt = calculateTaktTime(data.shifts, data.meta.activeShifts, data.meta.dailyDemand, sectorOee, data.meta.setupLossPercent || 0);
+                                                const diff = sectorTakt.nominalSeconds - projectTakt.nominalSeconds;
+                                                return (
+                                                    <div className="text-[11px] mt-1 flex items-center gap-2 bg-indigo-50/60 rounded px-2 py-0.5">
+                                                        <span className="text-indigo-700 font-bold">Takt: {formatNumber(sectorTakt.nominalSeconds, 1)}s</span>
+                                                        {Math.abs(diff) > 0.1 && (
+                                                            <span className={`font-semibold ${diff > 0 ? 'text-emerald-600' : 'text-amber-600'}`}>
+                                                                ({diff > 0 ? '+' : ''}{formatNumber(diff, 1)}s vs proyecto)
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })()}
                                         </div>
 
                                         {/* Eliminar */}

@@ -49,12 +49,13 @@ export const TimeInputCell: React.FC<Props> = ({ value, onChange, isIgnored, isO
                 onBlur={handleBlur}
                 onKeyDown={handleKeyDown}
                 className={`w-20 h-8 border text-center text-sm rounded-md outline-none font-mono transition-all focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 z-10 relative ${disabled ? 'bg-slate-100 text-slate-400 cursor-not-allowed border-transparent' :
+                    isIgnored && isOutlier ? 'bg-amber-50/50 text-amber-400 line-through border-amber-300 border-dashed' :
                     isIgnored ? 'bg-slate-100 text-slate-300 line-through border-slate-200' :
                         isOutlier ? 'border-amber-300 bg-amber-50 text-amber-700 font-bold' :
                             value !== null ? 'border-slate-200 bg-white text-slate-800 font-bold hover:border-slate-300' : 'border-slate-200 bg-white hover:border-blue-300'
                     }`}
                 placeholder="-"
-                title={isOutlier ? "Posible outlier. Usá el botón ❌ para excluirlo del cálculo." : ""}
+                title={isOutlier && isIgnored ? "Outlier excluido del cálculo. Usá el botón ↩ para restaurarlo." : isOutlier ? "Posible outlier. Usá el botón ❌ para excluirlo del cálculo." : ""}
             />
             {/* Botón para ignorar outliers (solo visible cuando es outlier y no está ignorado) */}
             {!disabled && isOutlier && !isIgnored && onToggleIgnore && (

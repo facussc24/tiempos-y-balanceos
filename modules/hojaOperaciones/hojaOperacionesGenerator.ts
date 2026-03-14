@@ -19,6 +19,8 @@ import {
     HoDocumentHeader,
     HojaOperacion,
     HoQualityCheck,
+    HoStep,
+    PpeItem,
     EMPTY_HO_HEADER,
     DEFAULT_REACTION_PLAN_TEXT,
 } from './hojaOperacionesTypes';
@@ -41,6 +43,27 @@ export interface HoGenerationResult {
 function buildPartCodeDescription(partNumber: string, subject: string): string {
     const parts = [partNumber, subject].filter(Boolean);
     return parts.join(' / ');
+}
+
+/** Infer basic PPE from operation name using regex patterns. */
+function inferSafetyElements(opName: string): PpeItem[] {
+    const n = opName.toLowerCase();
+    if (/soldadura|soldar|weld/.test(n))        return ['anteojos', 'guantes', 'delantal', 'proteccionAuditiva'];
+    if (/pintura|e-coat|lacado|paint/.test(n))   return ['respirador', 'guantes', 'anteojos'];
+    if (/prensa|estampado|corte|troquel/.test(n)) return ['anteojos', 'guantes', 'proteccionAuditiva'];
+    if (/inspecci[oó]n|medici[oó]n|control/.test(n)) return ['anteojos', 'zapatos'];
+    return ['anteojos', 'zapatos'];
+}
+
+/** Create a stub step for a generated sheet. */
+function createStubStep(opName: string): HoStep {
+    return {
+        id: uuidv4(),
+        stepNumber: 1,
+        description: `Realizar ${opName}`,
+        isKeyPoint: false,
+        keyPointReason: '',
+    };
 }
 
 /**
@@ -152,9 +175,9 @@ export function generateHoFromAmfeAndCp(
                 amfeDoc.header.partNumber || '',
                 amfeDoc.header.subject || '',
             ),
-            safetyElements: [],
+            safetyElements: inferSafetyElements(op.name),
             hazardWarnings: [],
-            steps: [],
+            steps: [createStubStep(op.name)],
             qualityChecks,
             reactionPlanText: DEFAULT_REACTION_PLAN_TEXT,
             reactionContact,

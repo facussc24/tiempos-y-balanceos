@@ -93,16 +93,36 @@ npm run tauri:build  # Build Tauri
     networkUtils.ts     Deteccion de red
     processCategory.ts  Inferencia de categoria de proceso
 
-  __tests__/            166 archivos de test (2362+ tests)
+  __tests__/            209 archivos de test (3753+ tests)
 
   src/                  Assets y datos
     assets/             Imagenes, iconos PPE, logo
     data/               Datos estaticos (SGC catalog)
 ```
 
-## Reglas de desarrollo
+## Estandares de calidad
 
-### Obligatorio
+### Mentalidad
+- **Nivel senior obligatorio**: nunca entregar algo que no aprobaria un ingeniero de software senior.
+- **Cero esfuerzo minimo**: si encontras un bug, busca si hay mas del mismo patron en todo el codebase.
+  Ejemplo: si `Math.max(...arr)` puede recibir NaN, busca TODOS los Math.max del proyecto.
+- **Verificar antes de editar**: lee el codigo completo, entende el flujo, recien ahi modifica.
+  Los fixes basados en suposiciones son peores que no hacer nada.
+- **Subagentes no son infalibles**: ~40-50% de hallazgos de audit agents son false positives.
+  Siempre verificar manualmente trazando la ejecucion real del codigo antes de aplicar.
+- **Cada fix debe mejorar legibilidad**: si un fix agrega complejidad sin valor, no aplicar.
+- **Correr tests despues de cada batch de cambios**: `npx vitest run`. No commitear si fallan.
+- **NO fixes cosmeticos**: no perder tiempo en acentos/tildes, renombrar variables por estilo,
+  o reformatear codigo. Enfocarse en logica, formulas, data flow, race conditions.
+
+### Modo autonomo (deep audits)
+- Trabajar sin parar hasta agotar el contexto.
+- Usar subagentes para escaneo de archivos (reduce contaminacion del contexto principal).
+- Priorizar modulos: PFD, AMFE, HO, Plan de Control, core/balancing.
+- Clasificar hallazgos: TRUE BUG > ROBUSTNESS > FALSE POSITIVE.
+- Ante la duda, NO aplicar el fix. Es mejor dejar codigo correcto intacto.
+
+### Reglas de codigo
 - **Usar repositorios para acceso a datos, nunca SQLite directo** — importar de `utils/repositories/`
 - **NO hardcodear API keys** en codigo fuente. Usar `settingsStore` o variables de entorno
 - **Usar logger.ts** en vez de `console.log/warn/error`: `import { logger } from 'utils/logger'`
@@ -112,17 +132,23 @@ npm run tauri:build  # Build Tauri
 - **Auto-save/borradores** via `draftRepository` (SQLite), NO IndexedDB
 - **Modulos lazy-loaded** con `React.lazy()` + `Suspense`
 
-### Testing
+### Testing (detalle en .claude/rules/testing.md)
 - Framework: Vitest con globals habilitados (`describe`, `it`, `expect` sin import)
-- Patron: `describe > it > expect`
-- Hooks: usar `renderHook` de `@testing-library/react`
-- React 19 concurrent mode: ErrorBoundary tests NO pueden usar patron "throw once"
-- `ConfirmModal` requiere `vi.useFakeTimers()` para tests con `isOpen=false`
-- Mocks comunes: repositorios (`utils/repositories/*`), `unified_fs`, `logger`, `crypto`
-- Test dir: `__tests__/` (167 archivos, 2368+ tests)
+- Correr: `npx vitest run` | Coverage: `npx vitest run --coverage`
+- Test dir: `__tests__/` (209 archivos, 3753+ tests)
+- Mocks: repositorios, `unified_fs`, `logger`, `crypto` (nunca filesystem real)
 
 ### Path aliases
 - `@/*` mapea a la raiz del proyecto (configurado en tsconfig.json y vite.config.ts)
+
+### Reglas contextuales (.claude/rules/)
+Reglas detalladas por modulo se cargan automaticamente al editar archivos relevantes:
+- `testing.md` — React 19 gotchas, mock patterns, coverage
+- `amfe-ai.md` — Gemini integration, sugerencias, chat copilot
+- `database.md` — Repositorios, SQLite, persistencia
+- `control-plan.md` — CP AI, cross-validation, trazabilidad
+- `exports.md` — Excel/PDF export patterns, NaN prevention
+- `hoja-operaciones.md` — HO UI, PPE, navy theme
 
 ## Datos de referencia
 
@@ -130,36 +156,7 @@ npm run tauri:build  # Build Tauri
 - Tipos principales: `Project`, `Operation`, `WorkElement`, `AmfeDocument`, `ControlPlanDocument`
 - SGC docs catalogados en `src/data/sgc/`
 
-## ⚠️ BUG CONOCIDO: preview_start NO funciona — NO intentar
+## Preview & Verificacion Visual
 
-**`mcp__Claude_Preview__preview_start` SIEMPRE falla con `spawn EINVAL` en este proyecto.**
-
-### Causa raiz
-La ruta del proyecto tiene espacios (`Software Barack Mercosul\Tiempos y Balanceos`).
-Node.js v22 en Windows tira EINVAL en `child_process.spawn()` cuando el CWD tiene espacios
-(CVE-2024-27980 + nodejs/node#7367). El MCP Preview tool no usa `{ shell: true }`.
-
-### Ya se probo TODO esto (2026-02-24) y TODO fallo:
-- `cmd.exe /c npx vite` → EINVAL
-- `npx` (resuelve a npx.cmd) → EINVAL
-- `node` / `node.exe` → EINVAL
-- Ruta absoluta `C:\Program Files\nodejs\node.exe` → EINVAL
-- Ruta corta 8.3 `C:\PROGRA~1\nodejs\node.exe` → EINVAL
-- PowerShell como ejecutable → EINVAL
-- Junction sin espacios `C:\dev\barack` → EINVAL
-- Wrapper `.js` con `shell: true` → EINVAL
-- Wrapper `.cmd` en ruta sin espacios → EINVAL
-- Hasta `node --version` (sin args complejos) → EINVAL
-
-### Que hacer en su lugar
-Para verificacion visual, usar **Bash + Chrome extension**:
-```bash
-cd "C:\Users\FacundoS-PC\Documents\Software Barack Mercosul\Tiempos y Balanceos"
-npx vite --port 3002 &    # levantar server en background
-# Luego usar mcp__Claude_in_Chrome__navigate para ir a localhost:3002
-```
-
-### Solucion definitiva (pendiente)
-Renombrar la carpeta del proyecto para eliminar espacios, o esperar que Anthropic
-arregle el MCP Preview tool agregando `{ shell: true }` al spawn (como hizo Continue.dev
-en su PR #5631 para el mismo bug).
+Usar `preview_start` con name "dev" para levantar Vite en puerto 3002.
+La configuracion esta en `.claude/launch.json`.

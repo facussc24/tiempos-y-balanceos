@@ -68,6 +68,10 @@ export const Tooltip: React.FC<Props> = ({ content, children, className = "", sh
                 onMouseLeave={() => setIsVisible(false)}
                 onFocus={handleFocus}
                 onBlur={handleBlur}
+                onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setIsVisible(v => !v); }
+                    if (e.key === 'Escape') setIsVisible(false);
+                }}
                 tabIndex={0}
                 role="button"
                 aria-describedby={isVisible ? 'tooltip-content' : undefined}

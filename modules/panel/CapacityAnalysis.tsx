@@ -130,7 +130,7 @@ export const CapacityAnalysis: React.FC<Props> = ({
                         <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden mb-2">
                             <div
                                 className={`h-full rounded-full ${capacityDiff < 0 ? 'bg-red-500' : 'bg-emerald-500'}`}
-                                style={{ width: `${Math.min(100, (requiredManHours / (totalLineCapacityHours || 1)) * 100)}%` }}
+                                style={{ width: `${Number.isFinite(requiredManHours) && Number.isFinite(totalLineCapacityHours) ? Math.min(100, (requiredManHours / (totalLineCapacityHours || 1)) * 100) : 0}%` }}
                             ></div>
                         </div>
 

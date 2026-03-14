@@ -1,11 +1,10 @@
 import React from 'react';
-import { HelpCircle, Droplets } from 'lucide-react';
 import { ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine, LabelList, Cell } from 'recharts';
 import { Card } from '../../components/ui/Card';
 import { formatNumber } from '../../utils';
 import { ProjectData } from '../../types';
 import { EducationalTooltip } from '../../components/ui/EducationalTooltip';
-import { CuringBar } from '../../components/charts/CuringBar';
+import { Eye } from 'lucide-react';
 
 interface Props {
     saturationData: any[];
@@ -13,6 +12,7 @@ interface Props {
     effectiveSeconds: number;
     yAxisDomainMax: number;
     data: ProjectData;
+    onShowCapacityPreview?: () => void;
 }
 
 // Custom Tooltip for better visibility and formatting
@@ -34,23 +34,28 @@ const CustomChartTooltip = ({ active, payload, label }: any) => {
                             const raw = entry.payload.rawEffective;
                             const sector = entry.payload.sectorName;
 
-                            labelText = `Ciclo [${sector}]`;
+                            labelText = `Tiempo de Ciclo [${sector}]`;
                             if (replicas > 1) {
                                 valueText = `${formatNumber(entry.value)}s`;
-                                extraInfo = `(Real: ${formatNumber(raw)}s / ${replicas} op)`;
+                                extraInfo = `(Total: ${formatNumber(raw)}s ÷ ${replicas} ops)`;
                             }
                         } else if (entry.dataKey === 'idle') {
-                            labelText = 'Capacidad Disponible';
+                            labelText = 'Tiempo Disponible';
                             // FORCE DARK COLOR for visibility (Fixes "white text" issue)
                             color = '#64748b'; // slate-500
                         } else if (entry.dataKey === 'overload') {
                             labelText = 'Sobrecarga';
                         } else if (entry.dataKey === 'absorbed') {
-                            labelText = 'Absorbido (Concurrente)';
+                            labelText = 'Tiempo Concurrente';
                         }
 
                         // Filter out zero values unless it's the main cycle bar
                         if (entry.value <= 0.01 && entry.dataKey !== 'withinLimit') return null;
+
+                        // Add per-sector Takt info when shift override is active
+                        if (entry.dataKey === 'withinLimit' && entry.payload.sectorTakt) {
+                            extraInfo = (extraInfo ? extraInfo + ' · ' : '') + `Takt Sector: ${formatNumber(entry.payload.sectorTakt)}s`;
+                        }
 
                         return (
                             <div key={index} className="flex flex-col">
@@ -76,18 +81,29 @@ const CustomChartTooltip = ({ active, payload, label }: any) => {
     return null;
 };
 
-export const BalancingChart: React.FC<Props> = ({ saturationData, nominalSeconds, effectiveSeconds, yAxisDomainMax, data }) => {
+export const BalancingChart: React.FC<Props> = ({ saturationData, nominalSeconds, effectiveSeconds, yAxisDomainMax, data, onShowCapacityPreview }) => {
     return (
         <Card
             title="Saturación y Balanceo"
             className="border-indigo-100 shadow-md"
             actions={
-                <div className="flex items-center gap-2 bg-slate-50 px-2 py-1 rounded-full border border-slate-100">
-                    <span className="text-[10px] text-slate-500 font-bold uppercase">Takt Time</span>
-                    <EducationalTooltip termKey="TAKT_TIME" iconSize={14} />
-                    <span className="text-slate-300">|</span>
-                    <span className="text-[10px] text-slate-500 font-bold uppercase">Saturación</span>
-                    <EducationalTooltip termKey="SATURATION" iconSize={14} />
+                <div className="flex items-center gap-2">
+                    {onShowCapacityPreview && (
+                        <button
+                            onClick={onShowCapacityPreview}
+                            className="flex items-center gap-1.5 bg-indigo-600 text-white px-3 py-1.5 rounded-lg hover:bg-indigo-700 text-xs font-bold transition-all shadow-sm"
+                        >
+                            <Eye size={14} />
+                            Vista Previa Capacidad
+                        </button>
+                    )}
+                    <div className="bg-slate-50 px-2 py-1 rounded-full border border-slate-100 flex items-center gap-2">
+                        <span className="text-[10px] text-slate-500 font-bold uppercase">Takt Time</span>
+                        <EducationalTooltip termKey="TAKT_TIME" iconSize={14} />
+                        <span className="text-slate-300">|</span>
+                        <span className="text-[10px] text-slate-500 font-bold uppercase">Saturación</span>
+                        <EducationalTooltip termKey="SATURATION" iconSize={14} />
+                    </div>
                 </div>
             }
         >
@@ -108,7 +124,7 @@ export const BalancingChart: React.FC<Props> = ({ saturationData, nominalSeconds
                         <XAxis dataKey="name" />
                         <YAxis
                             width={50}
-                            label={{ value: 'Tiempo Ciclo (seg)', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#64748b', fontSize: 12 } }}
+                            label={{ value: 'Tiempo (seg)', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#64748b', fontSize: 12 } }}
                             domain={[0, yAxisDomainMax]}
                             tickFormatter={(val) => Math.round(val).toString()}
                             tick={{ fontSize: 11, fill: '#64748b' }}
@@ -122,7 +138,10 @@ export const BalancingChart: React.FC<Props> = ({ saturationData, nominalSeconds
                             stroke="#dc2626"
                             strokeWidth={2}
                             strokeDasharray="5 5"
-                            label={{ value: 'Takt Nominal', position: 'insideTopRight', fill: '#dc2626', fontSize: 12, fontWeight: 'bold' }}
+                            label={{
+                                value: saturationData.some(d => d.sectorTakt) ? 'Takt Proyecto' : 'Takt Nominal',
+                                position: 'insideTopRight', fill: '#dc2626', fontSize: 12, fontWeight: 'bold'
+                            }}
                         />
 
                         {/* GLOBAL LIMIT LINE (Only if not using Sector Mode) */}
@@ -136,12 +155,12 @@ export const BalancingChart: React.FC<Props> = ({ saturationData, nominalSeconds
                             />
                         )}
 
-                        {/* If using Sector Mode, visualize station limits individually */}
-                        {data.meta.useSectorOEE && (
+                        {/* Show per-station limit line when sector OEE or sector shift overrides are active */}
+                        {(data.meta.useSectorOEE || saturationData.some(d => d.sectorTakt)) && (
                             <Line type="step" dataKey="limit" stroke="#a855f7" strokeWidth={2} strokeDasharray="4 4" dot={false} activeDot={false} name="Límite Sector" />
                         )}
 
-                        <Bar dataKey="withinLimit" stackId="a" name="Tiempo Ciclo (Output)" barSize={50}>
+                        <Bar dataKey="withinLimit" stackId="a" name="Tiempo de Ciclo" barSize={50}>
                             {saturationData.map((entry, index) => (
                                 <Cell key={`cell-${index}`} fill={entry.barColor} />
                             ))}
@@ -149,7 +168,7 @@ export const BalancingChart: React.FC<Props> = ({ saturationData, nominalSeconds
                         <Bar
                             dataKey="idle"
                             stackId="a"
-                            name="Tiempo Ocioso (Desperdicio)"
+                            name="Tiempo Disponible"
                             fill="#f1f5f9"
                             stroke="#94a3b8"
                             strokeDasharray="3 3"
@@ -158,122 +177,20 @@ export const BalancingChart: React.FC<Props> = ({ saturationData, nominalSeconds
                             <LabelList
                                 dataKey="idle"
                                 position="center"
-                                formatter={(val: number) => val > 0.5 ? `${formatNumber(val)}s (Libre)` : ''}
+                                formatter={(val: number) => val > 0.5 ? `${formatNumber(val)}s` : ''}
                                 style={{ fontSize: '10px', fill: '#64748b', fontWeight: 'bold' }}
                             />
                         </Bar>
-                        <Bar dataKey="overload" stackId="a" name="Sobrecarga" fill="#ef4444" barSize={50} />
-                        <Bar dataKey="absorbed" stackId="a" name="T. Absorbido (Concurrente)" fill="#10b981" fillOpacity={0.2} stroke="#10b981" strokeDasharray="2 2" barSize={50} />
+                        {saturationData.some(d => d.overload > 0) && (
+                            <Bar dataKey="overload" stackId="a" name="Sobrecarga" fill="#ef4444" barSize={50} />
+                        )}
+                        {saturationData.some(d => d.replicas > 0 && (d.absorbed / d.replicas) > 0.01) && (
+                            <Bar dataKey="absorbed" stackId="a" name="Tiempo Concurrente" fill="#10b981" fillOpacity={0.2} stroke="#10b981" strokeDasharray="2 2" barSize={50} />
+                        )}
                     </ComposedChart>
                 </ResponsiveContainer>
             </div>
 
-            {/* V4.1: Twin Bars - Operator vs Machine Time Visualization */}
-            {saturationData.some(d => d.machineTime > 0) && (
-                <div className="mt-6 pt-4 border-t border-slate-200">
-                    <div className="flex items-center gap-2 mb-3">
-                        <span className="text-xs font-bold text-slate-600 uppercase">Tiempo Operario vs Máquina</span>
-                        <div className="flex gap-3 text-[10px] text-slate-500">
-                            <span className="flex items-center gap-1">
-                                <div className="w-3 h-3 rounded bg-blue-500"></div>
-                                Operario
-                            </span>
-                            <span className="flex items-center gap-1">
-                                <div className="w-3 h-3 rounded bg-purple-500"></div>
-                                Máquina
-                            </span>
-                        </div>
-                    </div>
-                    <div className="flex gap-4 overflow-x-auto py-2">
-                        {saturationData.map((st, idx) => {
-                            const maxTime = Math.max(st.operatorTime || 0, st.machineTime || 0, nominalSeconds);
-                            const opHeight = maxTime > 0 ? ((st.operatorTime || 0) / maxTime) * 100 : 0;
-                            const machHeight = maxTime > 0 ? ((st.machineTime || 0) / maxTime) * 100 : 0;
-                            const taktHeight = maxTime > 0 ? (nominalSeconds / maxTime) * 100 : 0;
-
-                            // Determine constraint: who is the bottleneck?
-                            const isOperatorConstrained = (st.operatorTime || 0) > (st.machineTime || 0);
-
-                            return (
-                                <div key={idx} className="flex flex-col items-center min-w-[60px]">
-                                    {/* Bars container */}
-                                    <div className="relative h-20 flex gap-1 items-end">
-                                        {/* Takt line */}
-                                        <div
-                                            className="absolute w-full border-t-2 border-red-500 border-dashed"
-                                            style={{ bottom: `${taktHeight}%` }}
-                                        ></div>
-                                        {/* Operator bar */}
-                                        <div
-                                            className={`w-5 rounded-t transition-all ${isOperatorConstrained ? 'bg-blue-600' : 'bg-blue-400'}`}
-                                            style={{ height: `${opHeight}%` }}
-                                            title={`Operario: ${formatNumber(st.operatorTime || 0)}s`}
-                                        ></div>
-                                        {/* Machine bar */}
-                                        <div
-                                            className={`w-5 rounded-t transition-all ${!isOperatorConstrained && (st.machineTime || 0) > 0 ? 'bg-purple-600' : 'bg-purple-400'}`}
-                                            style={{ height: `${machHeight}%` }}
-                                            title={`Máquina: ${formatNumber(st.machineTime || 0)}s`}
-                                        ></div>
-                                    </div>
-                                    {/* Labels */}
-                                    <span className="text-[9px] text-slate-500 mt-1">{st.name}</span>
-                                    <div className="flex gap-1 text-[8px] text-slate-400">
-                                        <span className="text-blue-600">{formatNumber(st.operatorTime || 0)}</span>
-                                        <span>/</span>
-                                        <span className="text-purple-600">{formatNumber(st.machineTime || 0)}</span>
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
-                    <p className="text-[10px] text-slate-400 mt-2 italic">
-                        💡 Si Azul &gt; Violeta: Operario es cuello de botella. Si Violeta &gt; Azul: Máquina define el ciclo (operario espera).
-                    </p>
-                </div>
-            )}
-
-            {/* Phase 3: Curing Time Visualization for Injection Stations */}
-            {saturationData.some(d => d.curingTime > 0) && (
-                <div className="mt-6 pt-4 border-t border-slate-200">
-                    <div className="flex items-center gap-2 mb-3">
-                        <Droplets size={16} className="text-slate-500" />
-                        <span className="text-xs font-bold text-slate-600 uppercase">Estaciones de Inyección - Visualización de Curado</span>
-                        <div className="flex gap-3 ml-4 text-[10px] text-slate-500">
-                            <span className="flex items-center gap-1">
-                                <div className="w-3 h-3 rounded bg-slate-300"></div>
-                                Curado
-                            </span>
-                            <span className="flex items-center gap-1">
-                                <div className="w-3 h-3 rounded bg-emerald-400"></div>
-                                Ops Internas
-                            </span>
-                            <span className="flex items-center gap-1">
-                                <div className="w-3 h-3 rounded bg-amber-400"></div>
-                                Ops Externas
-                            </span>
-                        </div>
-                    </div>
-                    <div className="flex gap-6 overflow-x-auto py-2">
-                        {saturationData.filter(st => st.curingTime > 0).map((st, idx) => (
-                            <div key={idx} className="flex flex-col items-center min-w-[100px]">
-                                <CuringBar
-                                    curingTime={st.curingTime}
-                                    injectionTime={st.injectionTime || 0}
-                                    operations={st.curingOperations || []}
-                                    taktTime={nominalSeconds}
-                                    height={100}
-                                    compact={false}
-                                />
-                                <span className="text-[10px] text-slate-600 font-medium mt-1">{st.name}</span>
-                            </div>
-                        ))}
-                    </div>
-                    <p className="text-[10px] text-slate-400 mt-2 italic">
-                        💡 Las operaciones internas (verde) se realizan durante el curado. Si exceden el tiempo de curado, aparece alerta.
-                    </p>
-                </div>
-            )}
         </Card>
     );
 };

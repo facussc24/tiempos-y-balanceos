@@ -73,24 +73,26 @@ describe('Validado: Pitch (Rother & Shook)', () => {
 // ============================================================================
 describe('Validado: Route Time (Harris & Harris)', () => {
 
-    it('ruta con 3 paradas', () => {
+    it('ruta con 3 paradas (incluye retorno al almacén)', () => {
         const stops: RouteStop[] = [
             crearParada({ walkTimeSeconds: 60, handlingTimeSeconds: 30 }),
             crearParada({ walkTimeSeconds: 90, handlingTimeSeconds: 45 }),
             crearParada({ walkTimeSeconds: 120, handlingTimeSeconds: 60 }),
         ];
-        // Total = (60+30) + (90+45) + (120+60) = 405s = 6.75 min
-        expect(calculateRouteTime(stops)).toBeCloseTo(6.75, 2);
+        // Stops = (60+30) + (90+45) + (120+60) = 405s
+        // Return trip = stops[0].walkTimeSeconds = 60s (symmetric default)
+        // Total = 465s = 7.75 min
+        expect(calculateRouteTime(stops)).toBeCloseTo(7.75, 2);
     });
 
     it('ruta vacia = 0 min', () => {
         expect(calculateRouteTime([])).toBe(0);
     });
 
-    it('una sola parada', () => {
+    it('una sola parada (incluye retorno al almacén)', () => {
         const stops = [crearParada({ walkTimeSeconds: 120, handlingTimeSeconds: 60 })];
-        // 180s = 3 min
-        expect(calculateRouteTime(stops)).toBe(3);
+        // Stops = 120+60 = 180s, Return = 120s (symmetric), Total = 300s = 5 min
+        expect(calculateRouteTime(stops)).toBe(5);
     });
 });
 
@@ -139,21 +141,23 @@ describe('Validado: Validacion de Ruta', () => {
 // ============================================================================
 describe('Validado: Calculo Completo Mizusumashi', () => {
 
-    it('ruta factible: 3 paradas, pitch 20 min', () => {
+    it('ruta factible: 3 paradas, pitch 20 min (incluye retorno)', () => {
         const stops: RouteStop[] = [
             crearParada({ stationName: 'Linea 1', walkTimeSeconds: 120, handlingTimeSeconds: 60 }),
             crearParada({ stationName: 'Linea 2', walkTimeSeconds: 90, handlingTimeSeconds: 45 }),
             crearParada({ stationName: 'Linea 3', walkTimeSeconds: 60, handlingTimeSeconds: 30 }),
         ];
-        // routeTime = (120+60)+(90+45)+(60+30) = 405s = 6.75 min
+        // Stops = (120+60)+(90+45)+(60+30) = 405s
+        // Return trip = stops[0].walkTimeSeconds = 120s (symmetric default)
+        // Total route = 525s = 8.75 min
         // pitch = 60 × 20 = 1200s = 20 min
         const result = calculateMizusumashi(60, 20, stops, '08:00');
 
         expect(result.pitchMinutes).toBe(20);
-        expect(result.routeTimeMinutes).toBeCloseTo(6.75, 2);
+        expect(result.routeTimeMinutes).toBeCloseTo(8.75, 2);
         expect(result.isRouteFeasible).toBe(true);
-        expect(result.utilizationPercent).toBeCloseTo(33.75, 1);
-        expect(result.marginMinutes).toBeCloseTo(13.25, 1);
+        expect(result.utilizationPercent).toBeCloseTo(43.75, 1);
+        expect(result.marginMinutes).toBeCloseTo(11.25, 1);
         expect(result.mizusumashisNeeded).toBe(1);
     });
 

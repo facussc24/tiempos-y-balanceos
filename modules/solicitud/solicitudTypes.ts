@@ -50,8 +50,16 @@ export const UNIDADES_MEDIDA: readonly { value: UnidadMedida; label: string }[] 
     { value: 'otro', label: 'Otro' },
 ] as const;
 
-/** Default base path for server folder management */
-export const DEFAULT_SOLICITUD_BASE_PATH = 'Y:\\Ingenieria\\Solicitudes de Codigo';
+/**
+ * Default base path for server folder management.
+ * Derived from the export system constants so that solicitud server sync
+ * and auto-export both write to the same numbered folder on Y:.
+ *
+ * Result: Y:\INGENIERIA\06_Solicitudes_de_Codigo
+ *
+ * @see exportPathManager.ts — MODULE_FOLDER_NAMES.solicitud
+ */
+export const DEFAULT_SOLICITUD_BASE_PATH = 'Y:\\INGENIERIA\\06_Solicitudes_de_Codigo';
 
 /** Blocked attachment file extensions (security) */
 export const BLOCKED_ATTACHMENT_EXTENSIONS = [

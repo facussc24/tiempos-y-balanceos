@@ -2,7 +2,7 @@ import React from 'react';
 import { ComposedChart, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceDot, Area, ReferenceLine, Bar, Cell } from 'recharts';
 import { AlertOctagon, TrendingDown, AlertTriangle, TrendingUp } from 'lucide-react';
 import { formatNumber } from '../../../utils';
-import { calculateMinOperators } from '../../core_logic';
+import { calculateMinOperators } from '../../../core/core_logic';
 import { InjectionScenario } from '../../../types';
 import { SmartInsight } from './SmartInsight';
 import { analyzeImprovementOpportunities } from '../logic/optimizationAnalysis';
@@ -61,7 +61,9 @@ export const SimulationResults: React.FC<Props> = ({
                 // If Bottleneck, Real = Manual. Saturation = 100%+.
                 // If Machine Paced, Real = Machine. Saturation = Manual / Machine.
 
-                const saturationPct = (currentEffectiveManualTime / realCycleTime) * 100;
+                const saturationPct = activeHeadcount > 0
+                    ? (currentEffectiveManualTime / (activeHeadcount * realCycleTime)) * 100
+                    : 0;
 
                 const isCriticalSaturation = saturationPct >= 98; // >98% (No rest)
                 const isHighSaturation = saturationPct >= 90 && saturationPct < 98; // 90-98% (Risk)
@@ -116,7 +118,7 @@ export const SimulationResults: React.FC<Props> = ({
                         <div className="mb-2 mx-0 bg-amber-100 border-l-4 border-amber-500 p-3 rounded-r-lg shadow-sm flex items-start gap-3 animate-in fade-in slide-in-from-top-1">
                             <div className="bg-amber-200 p-1.5 rounded-full text-amber-900 mt-0.5"><AlertTriangle size={16} /></div>
                             <div>
-                                <h4 className="text-xs font-black text-amber-900 uppercase tracking-wide">⚠ Alerta de Fatiga: Saturación &gt; 85%</h4>
+                                <h4 className="text-xs font-black text-amber-900 uppercase tracking-wide flex items-center gap-1"><AlertTriangle size={12} /> Alerta de Fatiga: Saturación &gt; 85%</h4>
                                 <p className="text-xs text-amber-800 leading-relaxed mt-0.5">
                                     Se ha permitido 1 Operador para optimizar costos, pero la saturación es alta. Vigile la fatiga.
                                 </p>
@@ -193,17 +195,22 @@ export const SimulationResults: React.FC<Props> = ({
                     </div>
                     {operatorDelay > 0.1 && (
                         <div
-                            className="h-full bg-emerald-500 flex items-center justify-center text-[10px] text-white font-bold transition-all duration-500 relative pattern-diagonal-lines"
+                            className={`h-full flex items-center justify-center text-[10px] text-white font-bold transition-all duration-500 relative pattern-diagonal-lines ${isBottleneckLabor ? 'bg-red-400' : 'bg-emerald-500'}`}
                             style={{ width: `${100 - machinePortionPct}%` }}
                         >
-                            <span className="drop-shadow-md whitespace-nowrap px-1">ESPERA OP (SLACK) ({formatNumber(operatorDelay)}s)</span>
+                            <span className="drop-shadow-md whitespace-nowrap px-1">
+                                {isBottleneckLabor ? `ESPERA MÁQ (${formatNumber(operatorDelay)}s)` : `SLACK OP (${formatNumber(operatorDelay)}s)`}
+                            </span>
                         </div>
                     )}
                 </div>
                 {operatorDelay > 0.1 && formatNumber(operatorDelay) !== "0,00" && (
-                    <div className="mt-2 text-[10px] text-emerald-600 font-bold flex items-center gap-1 justify-center animate-pulse">
-                        <TrendingUp size={12} />
-                        El Operario tiene {formatNumber(operatorDelay)}s de Tiempo de Espera (Slack) por ciclo.
+                    <div className={`mt-2 text-[10px] font-bold flex items-center gap-1 justify-center ${isBottleneckLabor ? 'text-red-500' : 'text-emerald-600 animate-pulse'}`}>
+                        {isBottleneckLabor ? <AlertOctagon size={12} /> : <TrendingUp size={12} />}
+                        {isBottleneckLabor
+                            ? `La máquina espera ${formatNumber(operatorDelay)}s al operario por ciclo.`
+                            : `El operario tiene ${formatNumber(operatorDelay)}s de tiempo libre (slack) por ciclo.`
+                        }
                     </div>
                 )}
             </div>

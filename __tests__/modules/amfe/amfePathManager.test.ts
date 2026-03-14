@@ -40,6 +40,8 @@ import {
     listAmfeClientProjects,
     listAmfeStudies,
     listLooseAmfeFiles,
+    buildAmfePath,
+    normalizeProjectNames,
 } from '../../../modules/amfe/amfePathManager';
 
 const mockedListDocs = vi.mocked(listAmfeDocuments);
@@ -162,23 +164,276 @@ describe('listAmfeClients', () => {
     });
 });
 
-describe('listAmfeStudies', () => {
-    it('filters by client and project', async () => {
+// ============================================================================
+// HELPER: create a registry entry with defaults
+// ============================================================================
+
+function makeEntry(overrides: Record<string, any>) {
+    return {
+        id: overrides.id ?? 'id-1',
+        amfeNumber: overrides.amfeNumber ?? 'AMFE-001',
+        projectName: overrides.projectName ?? 'VWA/PATAGONIA/INSERTO',
+        status: 'draft' as const,
+        subject: overrides.subject ?? 'INSERTO',
+        client: overrides.client ?? 'VWA',
+        partNumber: '',
+        responsible: '',
+        operationCount: 0,
+        causeCount: 0,
+        apHCount: 0,
+        apMCount: 0,
+        coveragePercent: 0,
+        startDate: '',
+        lastRevisionDate: '',
+        revisions: [],
+        createdAt: '',
+        updatedAt: overrides.updatedAt ?? '',
+    };
+}
+
+// ============================================================================
+// listAmfeClientProjects — CRITICAL FIX FOR DUPLICATE BUG
+// ============================================================================
+
+describe('listAmfeClientProjects', () => {
+    it('extracts project from "client/project/name" format', async () => {
         mockedListDocs.mockResolvedValue([
-            { id: '1', projectName: 'ZAC/Headlamp/study1', client: 'ZAC', amfeNumber: 'AMFE-001', status: 'draft', subject: 'Study 1', partNumber: '', responsible: '', operationCount: 0, causeCount: 0, apHCount: 0, apMCount: 0, coveragePercent: 0, startDate: '', lastRevisionDate: '', revisions: [], createdAt: '', updatedAt: '2025-01-01' },
-            { id: '2', projectName: 'BMW/Door/study2', client: 'BMW', amfeNumber: 'AMFE-002', status: 'draft', subject: 'Study 2', partNumber: '', responsible: '', operationCount: 0, causeCount: 0, apHCount: 0, apMCount: 0, coveragePercent: 0, startDate: '', lastRevisionDate: '', revisions: [], createdAt: '', updatedAt: '2025-02-01' },
+            makeEntry({ projectName: 'VWA/PATAGONIA/INSERTO', client: 'VWA' }),
+        ]);
+        const result = await listAmfeClientProjects('VWA');
+        expect(result).toEqual(['PATAGONIA']);
+    });
+
+    it('returns multiple projects for same client', async () => {
+        mockedListDocs.mockResolvedValue([
+            makeEntry({ projectName: 'VWA/PATAGONIA/INSERTO', client: 'VWA', id: '1' }),
+            makeEntry({ projectName: 'VWA/AMAROK/SOPORTE', client: 'VWA', id: '2' }),
+        ]);
+        const result = await listAmfeClientProjects('VWA');
+        expect(result).toEqual(['AMAROK', 'PATAGONIA']);
+    });
+
+    it('deduplicates projects with multiple studies', async () => {
+        mockedListDocs.mockResolvedValue([
+            makeEntry({ projectName: 'VWA/PATAGONIA/INSERTO', client: 'VWA', id: '1' }),
+            makeEntry({ projectName: 'VWA/PATAGONIA/TOP ROLL', client: 'VWA', id: '2' }),
+        ]);
+        const result = await listAmfeClientProjects('VWA');
+        expect(result).toEqual(['PATAGONIA']);
+    });
+
+    it('groups flat project_name under "(Sin proyecto)" — REGRESSION FIX', async () => {
+        mockedListDocs.mockResolvedValue([
+            makeEntry({ projectName: 'INSERTO', client: 'VWA' }),
+        ]);
+        const result = await listAmfeClientProjects('VWA');
+        expect(result).toEqual(['(Sin proyecto)']);
+        // Must NOT return 'INSERTO' as a project name
+        expect(result).not.toContain('INSERTO');
+    });
+
+    it('separates flat and hierarchical entries correctly — REGRESSION FIX', async () => {
+        mockedListDocs.mockResolvedValue([
+            makeEntry({ projectName: 'VWA/PATAGONIA/INSERTO', client: 'VWA', id: '1' }),
+            makeEntry({ projectName: 'INSERTO', client: 'VWA', id: '2' }),
+        ]);
+        const result = await listAmfeClientProjects('VWA');
+        expect(result).toContain('PATAGONIA');
+        expect(result).toContain('(Sin proyecto)');
+        expect(result).not.toContain('INSERTO');
+    });
+
+    it('handles two-part "project/name" format', async () => {
+        mockedListDocs.mockResolvedValue([
+            makeEntry({ projectName: 'PATAGONIA/INSERTO', client: 'VWA' }),
+        ]);
+        const result = await listAmfeClientProjects('VWA');
+        expect(result).toEqual(['PATAGONIA']);
+    });
+
+    it('ignores other clients', async () => {
+        mockedListDocs.mockResolvedValue([
+            makeEntry({ projectName: 'VWA/PATAGONIA/INSERTO', client: 'VWA', id: '1' }),
+            makeEntry({ projectName: 'BMW/X5/BRACKET', client: 'BMW', id: '2' }),
+        ]);
+        const result = await listAmfeClientProjects('VWA');
+        expect(result).toEqual(['PATAGONIA']);
+    });
+});
+
+// ============================================================================
+// listAmfeStudies — STRICT PREFIX MATCH FIX
+// ============================================================================
+
+describe('listAmfeStudies', () => {
+    it('filters by strict "client/project/" prefix', async () => {
+        mockedListDocs.mockResolvedValue([
+            makeEntry({ projectName: 'ZAC/Headlamp/study1', client: 'ZAC', id: '1', subject: 'Study 1', updatedAt: '2025-01-01' }),
+            makeEntry({ projectName: 'BMW/Door/study2', client: 'BMW', id: '2', subject: 'Study 2', updatedAt: '2025-02-01' }),
         ]);
 
         const studies = await listAmfeStudies('ZAC', 'Headlamp');
         expect(studies).toHaveLength(1);
-        expect(studies[0].name).toBe('ZAC/Headlamp/study1');
+        expect(studies[0].name).toBe('study1');
         expect(studies[0].header?.subject).toBe('Study 1');
+    });
+
+    it('does NOT match flat names that happen to include the project string — REGRESSION FIX', async () => {
+        mockedListDocs.mockResolvedValue([
+            makeEntry({ projectName: 'VWA/PATAGONIA/INSERTO', client: 'VWA', id: '1' }),
+            makeEntry({ projectName: 'INSERTO', client: 'VWA', id: '2' }),
+        ]);
+        const result = await listAmfeStudies('VWA', 'PATAGONIA');
+        expect(result).toHaveLength(1);
+        expect(result[0].filename).toBe('VWA/PATAGONIA/INSERTO');
+    });
+
+    it('returns multiple studies under same project', async () => {
+        mockedListDocs.mockResolvedValue([
+            makeEntry({ projectName: 'VWA/PAT/INSERTO', client: 'VWA', id: '1' }),
+            makeEntry({ projectName: 'VWA/PAT/TOP ROLL', client: 'VWA', id: '2' }),
+        ]);
+        const result = await listAmfeStudies('VWA', 'PAT');
+        expect(result).toHaveLength(2);
+    });
+
+    it('does not cross-match similar project names', async () => {
+        mockedListDocs.mockResolvedValue([
+            makeEntry({ projectName: 'VWA/PAT/INSERTO', client: 'VWA', id: '1' }),
+            makeEntry({ projectName: 'VWA/PATAGONIA/INSERTO', client: 'VWA', id: '2' }),
+        ]);
+        const result = await listAmfeStudies('VWA', 'PAT');
+        expect(result).toHaveLength(1);
+        expect(result[0].filename).toBe('VWA/PAT/INSERTO');
+    });
+
+    it('handles "(Sin proyecto)" for flat entries', async () => {
+        mockedListDocs.mockResolvedValue([
+            makeEntry({ projectName: 'INSERTO', client: 'VWA', id: '1' }),
+            makeEntry({ projectName: 'VWA/PAT/INSERTO', client: 'VWA', id: '2' }),
+        ]);
+        const result = await listAmfeStudies('VWA', '(Sin proyecto)');
+        expect(result).toHaveLength(1);
+        expect(result[0].name).toBe('INSERTO');
+        expect(result[0].filename).toBe('INSERTO');
     });
 });
 
+// ============================================================================
+// listLooseAmfeFiles
+// ============================================================================
+
 describe('listLooseAmfeFiles', () => {
-    it('returns empty array (no loose files in SQLite mode)', async () => {
+    it('returns flat entries (no slashes in project_name)', async () => {
+        mockedListDocs.mockResolvedValue([
+            makeEntry({ projectName: 'INSERTO', client: 'VWA', id: '1' }),
+            makeEntry({ projectName: 'VWA/PAT/INSERTO', client: 'VWA', id: '2' }),
+        ]);
         const result = await listLooseAmfeFiles();
-        expect(result).toEqual([]);
+        expect(result).toHaveLength(1);
+        expect(result[0].name).toBe('INSERTO');
+    });
+
+    it('returns empty when all entries are hierarchical', async () => {
+        mockedListDocs.mockResolvedValue([
+            makeEntry({ projectName: 'VWA/PAT/INSERTO', client: 'VWA' }),
+        ]);
+        const result = await listLooseAmfeFiles();
+        expect(result).toHaveLength(0);
+    });
+
+    it('returns empty when no documents exist', async () => {
+        mockedListDocs.mockResolvedValue([]);
+        const result = await listLooseAmfeFiles();
+        expect(result).toHaveLength(0);
+    });
+});
+
+// ============================================================================
+// buildAmfePath
+// ============================================================================
+
+describe('buildAmfePath', () => {
+    it('joins client/project/name', () => {
+        expect(buildAmfePath('VWA', 'PATAGONIA', 'INSERTO')).toBe('VWA/PATAGONIA/INSERTO');
+    });
+
+    it('handles spaces in names', () => {
+        expect(buildAmfePath('Mi Cliente', 'Proyecto 1', 'Mi AMFE')).toBe('Mi Cliente/Proyecto 1/Mi AMFE');
+    });
+});
+
+// ============================================================================
+// normalizeProjectNames — DATA REPAIR
+// ============================================================================
+
+describe('normalizeProjectNames', () => {
+    it('deletes flat entry when a hierarchical duplicate exists', async () => {
+        mockedListDocs.mockResolvedValue([
+            makeEntry({ projectName: 'VWA/PATAGONIA/INSERTO', client: 'VWA', id: 'id-hier' }),
+            makeEntry({ projectName: 'INSERTO', client: 'VWA', id: 'id-flat' }),
+        ]);
+        mockedDeleteDoc.mockResolvedValue(true);
+
+        const count = await normalizeProjectNames();
+        expect(count).toBe(1);
+        expect(mockedDeleteDoc).toHaveBeenCalledWith('id-flat');
+        expect(mockedSaveDoc).not.toHaveBeenCalled();
+    });
+
+    it('normalizes flat entry to "(Sin proyecto)" when no duplicate exists', async () => {
+        const mockDoc = { header: { subject: 'STANDALONE', client: 'VWA' }, operations: [] } as any;
+        mockedListDocs.mockResolvedValue([
+            makeEntry({ projectName: 'STANDALONE', client: 'VWA', id: 'id-flat' }),
+        ]);
+        mockedLoadByProject.mockResolvedValue({
+            doc: mockDoc,
+            meta: { id: 'id-flat', amfeNumber: 'AMFE-001', status: 'draft', revisions: [] } as any,
+        });
+        mockedSaveDoc.mockResolvedValue(true);
+
+        const count = await normalizeProjectNames();
+        expect(count).toBe(1);
+        expect(mockedDeleteDoc).not.toHaveBeenCalled();
+        expect(mockedSaveDoc).toHaveBeenCalledWith(
+            'id-flat', 'AMFE-001', 'VWA/(Sin proyecto)/STANDALONE',
+            mockDoc, 'draft', [],
+        );
+    });
+
+    it('skips hierarchical entries (no-op)', async () => {
+        mockedListDocs.mockResolvedValue([
+            makeEntry({ projectName: 'VWA/PATAGONIA/INSERTO', client: 'VWA', id: '1' }),
+        ]);
+        const count = await normalizeProjectNames();
+        expect(count).toBe(0);
+    });
+
+    it('returns 0 when database is empty', async () => {
+        mockedListDocs.mockResolvedValue([]);
+        const count = await normalizeProjectNames();
+        expect(count).toBe(0);
+    });
+
+    it('handles multiple flat entries', async () => {
+        mockedListDocs.mockResolvedValue([
+            makeEntry({ projectName: 'INSERTO', client: 'VWA', id: 'flat-1' }),
+            makeEntry({ projectName: 'VWA/PATAGONIA/INSERTO', client: 'VWA', id: 'hier-1' }),
+            makeEntry({ projectName: 'BRACKET', client: 'BMW', id: 'flat-2' }),
+        ]);
+        mockedDeleteDoc.mockResolvedValue(true);
+        mockedLoadByProject.mockResolvedValue({
+            doc: { header: {}, operations: [] } as any,
+            meta: { id: 'flat-2', amfeNumber: 'AMFE-002', status: 'draft', revisions: [] } as any,
+        });
+        mockedSaveDoc.mockResolvedValue(true);
+
+        const count = await normalizeProjectNames();
+        expect(count).toBe(2);
+        expect(mockedDeleteDoc).toHaveBeenCalledWith('flat-1');
+        expect(mockedSaveDoc).toHaveBeenCalledWith(
+            'flat-2', 'AMFE-002', 'BMW/(Sin proyecto)/BRACKET',
+            expect.anything(), 'draft', [],
+        );
     });
 });

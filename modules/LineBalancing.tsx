@@ -1,4 +1,4 @@
-﻿import React, { useMemo, useState, useCallback } from 'react';
+﻿import React, { useMemo, useState, useCallback, useEffect } from 'react';
 import { DndContext, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { ProjectData, Task } from '../types';
 import { useLineBalancing } from '../hooks/useLineBalancing';
@@ -13,7 +13,15 @@ import { Unlink, TrendingUp, X, ChevronDown, ChevronRight, Info, Plus, AlertTria
 import { Tooltip } from '../components/ui/Tooltip';
 import { AlertCenter, Alert } from '../components/ui/AlertCenter';
 import { detectOverloadAndRecommend } from '../core/balancing/simulation';
-// import { StandardWorkSheetManager } from '../components/reports'; REMOVED
+import { buildCapacityPreviewHtml } from './balancing/balancingCapacityPreviewHtml';
+import { exportBalancingCapacityExcel } from './balancing/balancingCapacityExcelExport';
+import { renderHtmlToPdf } from '../utils/pdfRenderer';
+import { getLogoBase64 } from '../src/assets/ppe/ppeBase64';
+import { sanitizeFilename } from '../utils/filenameSanitization';
+import { toast } from '../components/ui/Toast';
+import { logger } from '../utils/logger';
+
+const PdfPreviewModal = React.lazy(() => import('../components/modals/PdfPreviewModal'));
 
 interface Props {
     data: ProjectData;
@@ -66,6 +74,9 @@ export const LineBalancing: React.FC<Props> = ({ data, updateData }) => {
         saveStationConfig,
         updateStationReplicas,
         setStationCount,
+        addStation,
+        removeEmptyStation,
+        emptyStationIds,
         unassignTask,
         clearBalance,
         handleDragStart,
@@ -79,6 +90,20 @@ export const LineBalancing: React.FC<Props> = ({ data, updateData }) => {
         cancelClearBalance
     } = useLineBalancing(data, updateData);
 
+    // Close modals on Escape
+    useEffect(() => {
+        const handleEscape = (e: KeyboardEvent) => {
+            if (e.key !== 'Escape') return;
+            e.preventDefault();
+            if (showClearBalanceConfirm) cancelClearBalance();
+            else if (configStationId !== null) setConfigStationId(null);
+        };
+        if (showClearBalanceConfirm || configStationId !== null) {
+            document.addEventListener('keydown', handleEscape);
+            return () => document.removeEventListener('keydown', handleEscape);
+        }
+    }, [showClearBalanceConfirm, cancelClearBalance, configStationId, setConfigStationId]);
+
     // Stable sensor config - avoids recreation on each render
     const sensors = useSensors(
         useSensor(PointerSensor, {
@@ -86,10 +111,62 @@ export const LineBalancing: React.FC<Props> = ({ data, updateData }) => {
         })
     );
 
-    // Phase 10: Work Sheets Modal State REMOVED
+    // Capacity Preview state
+    const [showCapacityPreview, setShowCapacityPreview] = useState(false);
+    const [capacityPreviewHtml, setCapacityPreviewHtml] = useState('');
+    const [isExportingPdf, setIsExportingPdf] = useState(false);
+    const [isExportingExcel, setIsExportingExcel] = useState(false);
 
-    // FIX 3: Zoning Constraints Modal State
+    // Zoning Constraints Modal State
     const [showZoningModal, setShowZoningModal] = useState(false);
+
+    const handleShowCapacityPreview = useCallback(async () => {
+        try {
+            const logo = await getLogoBase64();
+            const html = buildCapacityPreviewHtml(data, logo);
+            setCapacityPreviewHtml(html);
+            setShowCapacityPreview(true);
+        } catch (err) {
+            logger.error('LineBalancing', 'Capacity preview failed', { error: err instanceof Error ? err.message : String(err) });
+            toast.error('Error de vista previa', err instanceof Error ? err.message : 'No se pudo generar la vista previa.');
+        }
+    }, [data]);
+
+    const handleExportCapacityPdf = useCallback(async () => {
+        // B8: Export mutex — prevent concurrent PDF + Excel export
+        if (isExportingPdf || isExportingExcel) return;
+        setIsExportingPdf(true);
+        try {
+            // B5: Sanitize filename
+            const safeName = sanitizeFilename(data.meta.name || 'Capacidad');
+            await renderHtmlToPdf(capacityPreviewHtml, {
+                filename: `${safeName}_Capacidad_Proceso.pdf`,
+                paperSize: 'a3',
+                orientation: 'landscape',
+            });
+            toast.success('PDF exportado', 'Capacidad de proceso descargada correctamente.');
+        } catch (err) {
+            logger.error('LineBalancing', 'Capacity PDF export failed', { error: err instanceof Error ? err.message : String(err) });
+            toast.error('Error de exportación', err instanceof Error ? err.message : 'No se pudo exportar el PDF.');
+        } finally {
+            setIsExportingPdf(false);
+        }
+    }, [capacityPreviewHtml, data.meta.name, isExportingPdf, isExportingExcel]);
+
+    const handleExportCapacityExcel = useCallback(async () => {
+        // B8: Export mutex — prevent concurrent PDF + Excel export
+        if (isExportingPdf || isExportingExcel) return;
+        setIsExportingExcel(true);
+        try {
+            await exportBalancingCapacityExcel(data);
+            toast.success('Excel exportado', 'Capacidad de proceso descargada correctamente.');
+        } catch (err) {
+            logger.error('LineBalancing', 'Capacity Excel export failed', { error: err instanceof Error ? err.message : String(err) });
+            toast.error('Error de exportación', err instanceof Error ? err.message : 'No se pudo exportar Excel.');
+        } finally {
+            setIsExportingExcel(false);
+        }
+    }, [data, isExportingPdf, isExportingExcel]);
 
     // Mejora 2: Memoize config station lookup to avoid repeated .find() in modal
     const configStation = useMemo(
@@ -109,10 +186,7 @@ export const LineBalancing: React.FC<Props> = ({ data, updateData }) => {
         return grouped;
     }, [stationData, sectorsList]);
 
-    // TCR (Time Cycle Real) is now provided by useLineBalancing
-    // const realCycleTime = ... (Removed)
-
-    // Phase 2 UX: Build alerts array for AlertCenter
+    // Build alerts array for AlertCenter
     const balancingAlerts = useMemo<Alert[]>(() => {
         const alerts: Alert[] = [];
 
@@ -219,6 +293,18 @@ export const LineBalancing: React.FC<Props> = ({ data, updateData }) => {
         return alerts;
     }, [stationData, nominalSeconds, effectiveSeconds, machineValidation, data.tasks, data.meta.capacityLimitMode, data.meta.manualOEE]);
 
+    const metricsStationData = useMemo(() => {
+        const tMap = new Map(data.tasks.map(t => [t.id, t]));
+        return stationData.map(st => ({
+            id: st.id,
+            tasks: st.tasks.map(tid => tMap.get(tid)).filter(Boolean) as Task[],
+            effectiveTime: st.time,
+            limit: st.limit,
+            replicas: st.replicas,
+            sectorId: st.sectorId,
+        }));
+    }, [stationData, data.tasks]);
+
     return (
         <DndContext
             sensors={sensors}
@@ -228,7 +314,7 @@ export const LineBalancing: React.FC<Props> = ({ data, updateData }) => {
         >
             <div className="space-y-6 relative">
 
-                {/* Phase 2 UX: Consolidated AlertCenter */}
+                {/* Consolidated AlertCenter */}
                 <AlertCenter alerts={balancingAlerts} maxVisible={1} />
 
                 {/* ERROR / WARNING MODAL (Concurrency) */}
@@ -278,7 +364,7 @@ export const LineBalancing: React.FC<Props> = ({ data, updateData }) => {
                     onApply={applySimulation}
                 />
 
-                {/* FIX 3: ZONING CONSTRAINTS MODAL */}
+                {/* ZONING CONSTRAINTS MODAL */}
                 <ZoningConstraintsModal
                     isOpen={showZoningModal}
                     onClose={() => setShowZoningModal(false)}
@@ -288,8 +374,8 @@ export const LineBalancing: React.FC<Props> = ({ data, updateData }) => {
 
                 {/* CLEAR BALANCE CONFIRMATION MODAL */}
                 {showClearBalanceConfirm && (
-                    <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in zoom-in duration-200">
-                        <div className="bg-white rounded-xl shadow-2xl max-w-md w-full overflow-hidden border-2 border-red-100">
+                    <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in zoom-in duration-200" onClick={cancelClearBalance}>
+                        <div className="bg-white rounded-xl shadow-2xl max-w-md w-full overflow-hidden border-2 border-red-100" onClick={e => e.stopPropagation()}>
                             <div className="bg-red-50 px-6 py-4 border-b border-red-100 flex items-center gap-3">
                                 <div className="bg-red-100 p-2 rounded-full">
                                     <AlertTriangle size={24} className="text-red-600" />
@@ -325,11 +411,11 @@ export const LineBalancing: React.FC<Props> = ({ data, updateData }) => {
                 {/* CONFIG MODAL */}
                 {
                     configStationId !== null && (
-                        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in zoom-in duration-200">
-                            <div className="bg-white rounded-xl shadow-2xl max-w-sm w-full overflow-hidden">
+                        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in zoom-in duration-200" onClick={() => setConfigStationId(null)}>
+                            <div className="bg-white rounded-xl shadow-2xl max-w-sm w-full overflow-hidden" onClick={e => e.stopPropagation()}>
                                 <div className="bg-slate-50 px-6 py-4 border-b border-slate-100 flex justify-between items-center">
                                     <h3 className="font-bold text-slate-800">Configurar Estación {configStationId}</h3>
-                                    <button onClick={() => setConfigStationId(null)} className="text-slate-400 hover:text-red-500 transition-colors">
+                                    <button onClick={() => setConfigStationId(null)} className="text-slate-400 hover:text-red-500 transition-colors" aria-label="Cerrar">
                                         <X size={20} />
                                     </button>
                                 </div>
@@ -361,7 +447,7 @@ export const LineBalancing: React.FC<Props> = ({ data, updateData }) => {
                                             <button
                                                 onClick={() => {
                                                     if (configStation && configStation.replicas > 1) {
-                                                        updateStationReplicas(configStationId!, configStation.replicas - 1);
+                                                        updateStationReplicas(configStationId!, -1);
                                                     }
                                                 }}
                                                 className="p-2 bg-slate-100 hover:bg-slate-200 rounded text-slate-600 transition-colors"
@@ -374,7 +460,7 @@ export const LineBalancing: React.FC<Props> = ({ data, updateData }) => {
                                             <button
                                                 onClick={() => {
                                                     if (configStation) {
-                                                        updateStationReplicas(configStationId!, (configStation.replicas || 1) + 1);
+                                                        updateStationReplicas(configStationId!, 1);
                                                     }
                                                 }}
                                                 className="p-2 bg-slate-100 hover:bg-slate-200 rounded text-slate-600 transition-colors"
@@ -409,6 +495,9 @@ export const LineBalancing: React.FC<Props> = ({ data, updateData }) => {
                     totalIdleTimePerCycle={totalIdleTimePerCycle}
                     dailyLostHours={dailyLostHours}
                     setStationCount={setStationCount}
+                    addStation={addStation}
+                    removeEmptyStation={removeEmptyStation}
+                    emptyStationIds={emptyStationIds}
                     clearBalance={clearBalance}
                     handleOptimization={handleOptimization}
                     // Phase 5: SALBP mode props
@@ -432,21 +521,10 @@ export const LineBalancing: React.FC<Props> = ({ data, updateData }) => {
                     totalWorkContent={totalManualWork}
                     dailyAvailableTime={nominalSeconds * data.meta.dailyDemand}
                     dailyDemand={data.meta.dailyDemand}
-                    // Phase 10: Work Sheets access REMOVED
-                    stationData={stationData.map(st => ({
-                        id: st.id,
-                        tasks: st.tasks.map(tid => data.tasks.find(t => t.id === tid)).filter(Boolean) as Task[],
-                        effectiveTime: st.time,
-                        limit: st.limit,
-                        replicas: st.replicas,
-                        sectorId: st.sectorId,
-                    }))}
-                    // FIX 3: Zoning Constraints access
+                    stationData={metricsStationData}
                     onOpenZoningConstraints={() => setShowZoningModal(true)}
                     zoningConstraintsCount={(data.zoningConstraints || []).length}
                 />
-
-                {/* Phase 10: Standard Work Sheets Modal REMOVED */}
 
                 {/* CHART: SATURATION */}
                 <BalancingChart
@@ -455,6 +533,7 @@ export const LineBalancing: React.FC<Props> = ({ data, updateData }) => {
                     effectiveSeconds={effectiveSeconds}
                     yAxisDomainMax={yAxisDomainMax}
                     data={data}
+                    onShowCapacityPreview={handleShowCapacityPreview}
                 />
 
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -567,7 +646,7 @@ export const LineBalancing: React.FC<Props> = ({ data, updateData }) => {
                         })}
 
                         <button
-                            onClick={() => setStationCount(configuredStations + 1)}
+                            onClick={addStation}
                             className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow transition-colors font-bold mt-4"
                         >
                             <Plus size={20} /> Agregar Nueva Estación
@@ -575,6 +654,24 @@ export const LineBalancing: React.FC<Props> = ({ data, updateData }) => {
                     </div>
                 </div>
             </div >
+
+            {/* Capacity Preview Modal */}
+            {showCapacityPreview && (
+                <React.Suspense fallback={null}>
+                    <PdfPreviewModal
+                        html={capacityPreviewHtml}
+                        onExport={handleExportCapacityPdf}
+                        onClose={() => { if (!isExportingPdf && !isExportingExcel) setShowCapacityPreview(false); }}
+                        isExporting={isExportingPdf}
+                        onExportExcel={handleExportCapacityExcel}
+                        isExportingExcel={isExportingExcel}
+                        title="Capacidad de Producción por Proceso"
+                        subtitle={data.meta.name}
+                        maxWidth="420mm"
+                        themeColor="navy"
+                    />
+                </React.Suspense>
+            )}
 
         </DndContext >
     );

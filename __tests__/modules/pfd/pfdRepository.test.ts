@@ -17,6 +17,7 @@ vi.mock('../../../utils/crypto', () => ({
 import { listPfdDocuments, loadPfdDocument, savePfdDocument, deletePfdDocument } from '../../../utils/repositories/pfdRepository';
 import { getDatabase } from '../../../utils/database';
 import { createEmptyPfdDocument } from '../../../modules/pfd/pfdTypes';
+import type { PfdDocument } from '../../../modules/pfd/pfdTypes';
 
 describe('pfdRepository', () => {
     beforeEach(() => {
@@ -49,6 +50,78 @@ describe('pfdRepository', () => {
             const result = await loadPfdDocument(doc.id);
             expect(result).not.toBeNull();
             expect(result!.id).toBe(doc.id);
+        });
+
+        it('should normalize steps on load — add missing branchId', async () => {
+            // Simulate an old-format doc without branchId/branchLabel fields
+            const oldDoc: PfdDocument = {
+                id: 'old-doc-1',
+                header: createEmptyPfdDocument().header,
+                steps: [
+                    {
+                        id: 'step-1',
+                        stepNumber: 'OP 10',
+                        stepType: 'operation',
+                        description: 'Old step',
+                        machineDeviceTool: '',
+                        productCharacteristic: '',
+                        productSpecialChar: 'none',
+                        processCharacteristic: '',
+                        processSpecialChar: 'none',
+                        reference: '',
+                        department: '',
+                        notes: '',
+                        isRework: false,
+                        isExternalProcess: false,
+                        reworkReturnStep: '',
+                        rejectDisposition: 'none',
+                        scrapDescription: '',
+                        // branchId and branchLabel intentionally MISSING
+                    } as unknown as PfdDocument['steps'][0],
+                ],
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+            };
+            const db = await getDatabase();
+            (db.select as ReturnType<typeof vi.fn>).mockResolvedValueOnce([{ data: JSON.stringify(oldDoc) }]);
+            const result = await loadPfdDocument('old-doc-1');
+            expect(result).not.toBeNull();
+            expect(result!.steps[0].branchId).toBe('');
+            expect(result!.steps[0].branchLabel).toBe('');
+        });
+
+        it('should normalize steps on load — derive rejectDisposition from isRework', async () => {
+            const oldDoc: PfdDocument = {
+                id: 'old-doc-2',
+                header: createEmptyPfdDocument().header,
+                steps: [
+                    {
+                        id: 'step-rw',
+                        stepNumber: 'OP 20',
+                        stepType: 'operation',
+                        description: 'Rework step',
+                        machineDeviceTool: '',
+                        productCharacteristic: '',
+                        productSpecialChar: 'none',
+                        processCharacteristic: '',
+                        processSpecialChar: 'none',
+                        reference: '',
+                        department: '',
+                        notes: '',
+                        isRework: true,
+                        isExternalProcess: false,
+                        reworkReturnStep: '',
+                        // rejectDisposition intentionally MISSING
+                    } as unknown as PfdDocument['steps'][0],
+                ],
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+            };
+            const db = await getDatabase();
+            (db.select as ReturnType<typeof vi.fn>).mockResolvedValueOnce([{ data: JSON.stringify(oldDoc) }]);
+            const result = await loadPfdDocument('old-doc-2');
+            expect(result).not.toBeNull();
+            expect(result!.steps[0].rejectDisposition).toBe('rework');
         });
     });
 

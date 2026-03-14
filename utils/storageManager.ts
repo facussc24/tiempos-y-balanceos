@@ -10,7 +10,7 @@
 
 import { isTauri } from './unified_fs';
 import { getSetting, setSetting } from './repositories/settingsRepository';
-import { getPathConfig, setPathConfig } from './pathManager';
+import { getPathConfig, setPathConfig, resolveBasePath } from './pathManager';
 import { logger } from './logger';
 
 // ============================================================================
@@ -117,18 +117,37 @@ export async function isPathAccessible(path: string, timeoutMs: number = SERVER_
 }
 
 export async function isServerAvailable(): Promise<boolean> {
-    const settings = await loadStorageSettings();
-    const serverPath = settings.sharedStoragePath || getPathConfig().basePath;
-    return isPathAccessible(serverPath);
+    // Resolve best path first (tries mapped drive Y:\, falls back to UNC \\server\...)
+    const resolvedPath = await resolveBasePath();
+
+    // Always use the resolved path — the saved sharedStoragePath may point to a
+    // stale mapped drive (Y:\) that no longer exists. resolveBasePath() already
+    // verified this path is accessible, so trust it over the saved setting.
+    const accessible = await isPathAccessible(resolvedPath);
+
+    if (accessible) {
+        // Persist the working path so future operations use it directly
+        const settings = await loadStorageSettings();
+        if (settings.sharedStoragePath !== resolvedPath) {
+            settings.sharedStoragePath = resolvedPath;
+            await saveStorageSettings(settings);
+            logger.info('StorageManager', 'Updated sharedStoragePath to resolved path', { resolvedPath });
+        }
+    }
+
+    return accessible;
 }
 
-export async function detectBestMode(): Promise<StorageMode> {
+async function detectBestMode(): Promise<StorageMode> {
     const settings = await loadStorageSettings();
     if (!settings.autoDetectNetwork) return settings.storageMode;
 
     const serverAvailable = await isServerAvailable();
     if (serverAvailable) {
-        logger.info('StorageManager', 'Server available, using shared mode');
+        // Sync the resolved path into global config so all modules use it
+        const resolvedPath = getPathConfig().basePath;
+        setPathConfig({ basePath: resolvedPath });
+        logger.info('StorageManager', 'Server available, using shared mode', { basePath: resolvedPath });
         return 'shared';
     }
     logger.info('StorageManager', 'Server not available, falling back to local mode');
@@ -215,7 +234,7 @@ export async function isStorageConfigured(): Promise<boolean> {
 // PATH UTILITIES
 // ============================================================================
 
-export async function ensureLocalStorageDir(): Promise<boolean> {
+async function ensureLocalStorageDir(): Promise<boolean> {
     if (!isTauri()) return false;
     try {
         const tauriFs = await import('./tauri_fs');
@@ -225,12 +244,6 @@ export async function ensureLocalStorageDir(): Promise<boolean> {
         logger.error('StorageManager', 'Failed to create local storage directory', {}, error instanceof Error ? error : undefined);
         return false;
     }
-}
-
-export async function getProjectPath(client: string, project: string, part: string): Promise<string> {
-    const basePath = await getActiveBasePath();
-    const pathConfig = getPathConfig();
-    return `${basePath}\\${pathConfig.dataFolder}\\${client}\\${project}\\${part}`;
 }
 
 // ============================================================================

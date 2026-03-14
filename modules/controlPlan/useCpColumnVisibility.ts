@@ -25,8 +25,8 @@ export const CP_DEFAULT_VISIBILITY: CpColumnGroupVisibility = {
 
 export const CP_COLUMN_GROUP_LABELS: Record<keyof CpColumnGroupVisibility, string> = {
     proceso: 'Proceso',
-    caracteristicas: 'Caracteristicas',
-    metodos: 'Metodos',
+    caracteristicas: 'Características',
+    metodos: 'Métodos',
 };
 
 export const CP_COLUMN_GROUP_COLORS: Record<keyof CpColumnGroupVisibility, string> = {

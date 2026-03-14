@@ -6,7 +6,7 @@
  * can await the user's decision.
  */
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 
 export interface AmfeConfirmState {
     isOpen: boolean;
@@ -66,6 +66,19 @@ export function useAmfeConfirm() {
         resolverRef.current?.(false);
         resolverRef.current = null;
         setConfirmState(INITIAL_STATE);
+    }, []);
+
+    // FIX: Auto-cancel pending promise on unmount to prevent hanging awaits.
+    // Without this, if the component unmounts while a confirm dialog is pending,
+    // the promise never resolves and any code after `await requestConfirm()`
+    // never executes (including try/finally cleanup blocks).
+    useEffect(() => {
+        return () => {
+            if (resolverRef.current) {
+                resolverRef.current(false);
+                resolverRef.current = null;
+            }
+        };
     }, []);
 
     return { confirmState, requestConfirm, handleConfirm, handleCancel };

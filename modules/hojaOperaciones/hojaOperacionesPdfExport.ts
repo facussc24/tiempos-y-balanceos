@@ -32,7 +32,7 @@ import {
 } from './hojaOperacionesTypes';
 import { sanitizeFilename } from '../../utils/filenameSanitization';
 import { getPpeBase64Map, getLogoBase64 } from '../../src/assets/ppe/ppeBase64';
-import { renderHtmlToPdf } from '../../utils/pdfRenderer';
+import { renderHtmlToPdf, renderHtmlToPdfBuffer } from '../../utils/pdfRenderer';
 import { truncateApplicableParts as truncateParts } from '../../utils/productFamilyAutoFill';
 
 // ============================================================================
@@ -99,7 +99,8 @@ function labelCell(label: string, value: string): string {
 // ============================================================================
 
 function buildSheetHeaderHtml(sheet: HojaOperacion, doc: HoDocument, assets: PdfAssets): string {
-    const logoImg = assets.logoBase64
+    const isValidDataUri = (uri: string) => /^data:image\/[a-z+.-]+;base64,/.test(uri);
+    const logoImg = assets.logoBase64 && isValidDataUri(assets.logoBase64)
         ? `<img src="${assets.logoBase64}" style="height:32px; object-fit:contain;" />`
         : `<div style="font-size:11px; font-weight:bold; color:${NAVY}; font-family:Arial,sans-serif;">${esc(doc.header.organization || 'BARACK MERCOSUL')}</div>`;
 
@@ -187,7 +188,7 @@ function buildVisualAidsHtml(aids: HoVisualAid[]): string {
     if (aids.length === 0) {
         return `<div style="padding:8px; font-size:8px; color:#999; font-style:italic; font-family:Arial,sans-serif;">Sin ayudas visuales</div>`;
     }
-    const shown = aids.slice(0, MAX_PDF_VISUAL_AIDS);
+    const shown = [...aids].sort((a, b) => a.order - b.order).slice(0, MAX_PDF_VISUAL_AIDS);
     const overflow = aids.length - shown.length;
     // Use 3-column grid for 5-6 images, 2-column for fewer
     const colWidth = shown.length > 4 ? '31%' : '48%';
@@ -233,7 +234,7 @@ function buildPpeHtml(ppeItems: string[], assets: PdfAssets): string {
     return ppeItems.map(id => {
         const label = PPE_CATALOG.find(p => p.id === id)?.label || id;
         const b64 = assets.ppeBase64Map[id];
-        if (b64) {
+        if (b64 && /^data:image\/[a-z+.-]+;base64,/.test(b64)) {
             return `<img src="${b64}" alt="${esc(label)}" title="${esc(label)}" style="width:36px; height:36px; border-radius:50%; border:2px solid #2563eb; margin:2px; object-fit:cover; vertical-align:middle;" />`;
         }
         return `<span style="display:inline-block; background:${NAVY_LIGHT}; border:1px solid #93c5fd; padding:2px 6px; margin:1px; border-radius:3px; font-size:8px; font-family:Arial,sans-serif; color:${NAVY}; font-weight:500;">${esc(label)}</span>`;
@@ -390,6 +391,19 @@ export async function exportAllHoSheetsPdf(doc: HoDocument): Promise<void> {
 async function renderAndDownload(html: string, fileNameBase: string): Promise<void> {
     await renderHtmlToPdf(html, {
         filename: sanitizeFilename(fileNameBase) + '.pdf',
+        paperSize: 'a4',
+        orientation: 'portrait',
+        margin: [5, 5, 5, 5],
+    });
+}
+
+/**
+ * Generate all HO sheets as a Uint8Array PDF buffer (for auto-export).
+ */
+export async function generateHoPdfBuffer(doc: HoDocument): Promise<Uint8Array> {
+    const assets = await loadPdfAssets();
+    const allHtml = doc.sheets.map(s => buildSheetHtml(s, doc, assets)).join('');
+    return renderHtmlToPdfBuffer(allHtml, {
         paperSize: 'a4',
         orientation: 'portrait',
         margin: [5, 5, 5, 5],

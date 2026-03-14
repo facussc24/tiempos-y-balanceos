@@ -337,10 +337,17 @@ const optimizeWorkloadSmoothing = (
 
                 for (let tIdx = 0; tIdx < fromSt.tasks.length; tIdx++) {
                     const task = fromSt.tasks[tIdx];
-                    const taskTime = calculateEffectiveStationTime([task]);
 
-                    // Capacity Check
-                    if (toSt.effectiveTime + taskTime > hardLimit) continue;
+                    // FIX: Use overlap-aware recalculation instead of linear arithmetic.
+                    // calculateEffectiveStationTime is non-linear for concurrent groups
+                    // (machine + manual overlap uses Math.max, not sum).
+                    const tasksAfterRemoval = fromSt.tasks.filter((_, i) => i !== tIdx);
+                    const tasksAfterAddition = [...toSt.tasks, task];
+                    const newFromLoad = calculateEffectiveStationTime(tasksAfterRemoval);
+                    const newToLoad = calculateEffectiveStationTime(tasksAfterAddition);
+
+                    // Capacity Check (using actual recalculated time)
+                    if (newToLoad > hardLimit) continue;
 
                     // Precedence Check
                     if (!isMoveValid(task.id, fromSt.id, toSt.id, stations)) continue;
@@ -348,9 +355,6 @@ const optimizeWorkloadSmoothing = (
                     // Variance Gain Check
                     const oldFromDiff = Math.pow(fromSt.effectiveTime - targetLoad, 2);
                     const oldToDiff = Math.pow(toSt.effectiveTime - targetLoad, 2);
-
-                    const newFromLoad = fromSt.effectiveTime - taskTime;
-                    const newToLoad = toSt.effectiveTime + taskTime;
 
                     const newFromDiff = Math.pow(newFromLoad - targetLoad, 2);
                     const newToDiff = Math.pow(newToLoad - targetLoad, 2);
@@ -388,15 +392,14 @@ const optimizeWorkloadSmoothing = (
         if (bestMove) {
             const { fromIdx, toIdx, taskIdx } = bestMove;
             const task = stations[fromIdx].tasks[taskIdx];
-            const taskTime = calculateEffectiveStationTime([task]);
 
-            // Remove
+            // Remove and recalculate using overlap-aware algorithm
             stations[fromIdx].tasks.splice(taskIdx, 1);
-            stations[fromIdx].effectiveTime -= taskTime;
+            stations[fromIdx].effectiveTime = calculateEffectiveStationTime(stations[fromIdx].tasks);
 
-            // Add
+            // Add and recalculate
             stations[toIdx].tasks.push(task);
-            stations[toIdx].effectiveTime += taskTime;
+            stations[toIdx].effectiveTime = calculateEffectiveStationTime(stations[toIdx].tasks);
 
             improved = true;
         }
@@ -594,6 +597,18 @@ function validateEngineInputs(
         );
     }
 
+    // Validate task times are non-negative and finite
+    for (const task of data.tasks) {
+        const time = task.standardTime || task.averageTime || 0;
+        if (time < 0 || !isFinite(time)) {
+            throw new BalancingInputError(
+                'task.time',
+                `Tarea ${task.id} tiene tiempo inválido: ${time}. Debe ser >= 0 y finito.`,
+                time
+            );
+        }
+    }
+
     // Note: data.shifts is NOT validated here because the engine receives
     // pre-calculated nominalSeconds/effectiveSeconds. Shifts are validated
     // upstream in calculateTaktTime() which returns 0 for invalid shifts,
@@ -650,12 +665,12 @@ const runGreedyAssignment = (
             if (Math.abs(b.positionalWeight - a.positionalWeight) > 0.01) {
                 return b.positionalWeight - a.positionalWeight;
             }
-            const timeA = a.standardTime || a.averageTime;
-            const timeB = b.standardTime || b.averageTime;
+            const timeA = a.standardTime || a.averageTime || 0;
+            const timeB = b.standardTime || b.averageTime || 0;
             return timeB - timeA;
         } else {
-            const timeA = a.standardTime || a.averageTime;
-            const timeB = b.standardTime || b.averageTime;
+            const timeA = a.standardTime || a.averageTime || 0;
+            const timeB = b.standardTime || b.averageTime || 0;
             return timeB - timeA;
         }
     });
@@ -671,7 +686,11 @@ const runGreedyAssignment = (
 
     if (data.plantConfig?.machines && data.plantConfig.machines.length > 0) {
         for (const machine of data.plantConfig.machines) {
-            machineInventory.set(machine.id, machine.availableUnits || 0);
+            // FIX: Fall back to quantity (legacy alias) for backward compatibility.
+            // Use || 0 after ?? chain — nullish coalescing doesn't catch NaN,
+            // which would corrupt machine constraint checks downstream.
+            const rawUnits = machine.availableUnits ?? machine.quantity;
+            machineInventory.set(machine.id, Number.isFinite(rawUnits) ? rawUnits : 0);
             machineNames.set(machine.id, machine.name);
         }
     } else {
@@ -714,6 +733,16 @@ const runGreedyAssignment = (
         }
         return Math.max(1, effectiveSeconds);
     };
+
+    // PERF: Pre-build lookup maps to avoid O(n) .find()/.filter() inside greedy loop
+    const taskMap = new Map(data.tasks.map(t => [t.id, t]));
+    const internalTasksByParent = new Map<string, Task[]>();
+    for (const t of data.tasks) {
+        if (t.isMachineInternal && t.concurrentWith) {
+            const list = internalTasksByParent.get(t.concurrentWith);
+            if (list) { list.push(t); } else { internalTasksByParent.set(t.concurrentWith, [t]); }
+        }
+    }
 
     let safetyCounter = 0;
     const MAX_ITERATIONS = 1000;
@@ -799,7 +828,8 @@ const runGreedyAssignment = (
 
             let effectiveTaskLoad = calculateEffectiveStationTime([task]);
             if (task.executionMode === 'injection' || task.executionMode === 'machine') {
-                const internalTasks = data.tasks.filter(t => t.isMachineInternal && t.concurrentWith === task.id);
+                // PERF: Use pre-built Map instead of O(n) filter on every iteration
+                const internalTasks = internalTasksByParent.get(task.id) || [];
                 const totalInternalTime = calculateEffectiveStationTime(internalTasks);
                 effectiveTaskLoad = Math.max(effectiveTaskLoad, totalInternalTime);
             }
@@ -933,9 +963,10 @@ const runGreedyAssignment = (
     const usedStationIds = Array.from(new Set(processedAssignments.map(a => a.stationId))).sort((a, b) => a - b);
 
     usedStationIds.forEach(stId => {
+        // PERF: Use pre-built taskMap instead of O(n) find per assignment
         const stationTasks = processedAssignments
             .filter(a => a.stationId === stId)
-            .map(a => data.tasks.find(t => t.id === a.taskId))
+            .map(a => taskMap.get(a.taskId))
             .filter(Boolean) as Task[];
 
         const stationEffectiveTime = calculateEffectiveStationTime(stationTasks);
@@ -1015,6 +1046,9 @@ const calculateBalancingMetrics = (
     const finalStationIds = Array.from(new Set(processedAssignments.map(a => a.stationId))).sort((a, b) => a - b);
     const stationsCount = finalStationIds.length;
 
+    // PERF: Pre-build task lookup Map to avoid O(n) find per assignment
+    const metricsTaskMap = new Map(data.tasks.map(t => [t.id, t]));
+
     let totalEffWork = 0;
     let totalHeadcount = 0;
     let maxStationCycle = 0;
@@ -1022,25 +1056,23 @@ const calculateBalancingMetrics = (
     for (const stId of usedStationIds) {
         const stTasks = processedAssignments
             .filter(a => a.stationId === stId)
-            .map(a => data.tasks.find(t => t.id === a.taskId))
+            .map(a => metricsTaskMap.get(a.taskId))
             .filter(Boolean) as Task[];
 
-        const stManualWork = stTasks.reduce((sum, t) => {
-            if (t.isMachineInternal) return sum;
-            return sum + (t.standardTime || t.averageTime || 0);
-        }, 0);
-
-        totalEffWork += stManualWork;
+        // Use the same effective time calculation as useLineBalancing (concurrency-aware)
+        const stEffective = calculateEffectiveStationTime(stTasks);
+        totalEffWork += stEffective;
 
         const cfg = proposedConfigs.find(c => c.id === stId);
         const replicas = cfg?.replicas || 1;
         totalHeadcount += replicas;
 
-        let stationCycle = replicas > 0 ? stManualWork / replicas : stManualWork;
+        let stationCycle = replicas > 0 ? stEffective / replicas : stEffective;
 
         const injectionTask = stTasks.find(t => t.executionMode === 'injection' || t.executionMode === 'machine');
         if (injectionTask?.injectionParams?.realCycle) {
-            stationCycle = injectionTask.injectionParams.realCycle;
+            // Use Max: station cycle is limited by whichever is slower (manual work or machine)
+            stationCycle = Math.max(stationCycle, injectionTask.injectionParams.realCycle);
         }
 
         if (stationCycle > maxStationCycle) maxStationCycle = stationCycle;
@@ -1049,19 +1081,27 @@ const calculateBalancingMetrics = (
     // Demand Fulfillment
     let efficiency: number;
     if (maxStationCycle <= 0) {
-        efficiency = 100;
+        efficiency = 0; // No work assigned → 0% efficiency, not 100%
     } else if (maxStationCycle <= nominalSeconds) {
         efficiency = 100;
     } else {
-        efficiency = maxStationCycle > 0 ? (nominalSeconds / maxStationCycle) * 100 : 0;
+        efficiency = (nominalSeconds / maxStationCycle) * 100;
     }
 
-    // Asset Utilization
-    const lineEfficiency = (totalHeadcount * maxStationCycle) > 0
-        ? (totalEffWork / (totalHeadcount * maxStationCycle)) * 100
+    // Asset Utilization (Line Efficiency = Total Work / (Headcount × Bottleneck Cycle))
+    // FIX: Use totalHeadcount (not stationsCount) to account for multi-manning replicas.
+    // With replicas, multiple operators share one station — efficiency must reflect
+    // all operator-time available, not just station count.
+    // Consistent with SALBP-2 path (simulateBalanceType2) and idleTime calculation.
+    // FIX: Check both operands individually to prevent 0*x=0 passing the guard
+    // when totalHeadcount=0 but maxStationCycle>0, which would produce 0/0=NaN
+    const lineEfficiency = totalHeadcount > 0 && maxStationCycle > 0
+        ? Math.min(100, (totalEffWork / (totalHeadcount * maxStationCycle)) * 100)
         : 0;
 
-    const idleTime = maxStationCycle <= nominalSeconds
+    // FIX: Guard against maxStationCycle=0 (all machine-internal tasks)
+    // which would falsely produce a large idle time
+    const idleTime = maxStationCycle > 0 && maxStationCycle <= nominalSeconds
         ? (totalHeadcount * nominalSeconds) - totalEffWork
         : 0;
 
@@ -1321,7 +1361,8 @@ const simulateBalanceInternal = (
         const workPerMachine = new Map<string, number>();
         for (const task of data.tasks) {
             if (task.requiredMachineId && !task.isMachineInternal) {
-                const time = task.standardTime || task.averageTime || 0;
+                const rawTime = task.standardTime || task.averageTime || 0;
+                const time = Number.isFinite(rawTime) ? rawTime : 0;
                 workPerMachine.set(
                     task.requiredMachineId,
                     (workPerMachine.get(task.requiredMachineId) || 0) + time
@@ -1332,7 +1373,9 @@ const simulateBalanceInternal = (
         for (const [machineId, totalWork] of workPerMachine) {
             const machine = data.plantConfig.machines.find(m => m.id === machineId);
             if (!machine) continue;
-            const available = machine.availableUnits || 0;
+            // FIX: Fall back to quantity (legacy alias); guard NaN via Number.isFinite.
+            const rawAvail = machine.availableUnits ?? machine.quantity;
+            const available = Number.isFinite(rawAvail) ? rawAvail : 0;
             // How many stations would SALBP-2 need for these tasks?
             const stationsNeeded = effectiveSeconds > 0 ? Math.ceil(totalWork / effectiveSeconds) : 1;
             if (stationsNeeded > available && available > 0) {
@@ -1415,8 +1458,11 @@ export function simulateBalanceType2(
         return createEmptySimulationResult(name, 'RPW', data.tasks || []);
     }
 
-    // Safety: at least 1 station
-    const N = Math.max(1, Math.floor(targetStations));
+    // FIX: Guard against NaN/Infinity from corrupted targetStations input.
+    // Math.floor(NaN) = NaN, and Math.max(1, NaN) = NaN, propagating through
+    // all downstream calculations (lowerBound, theoreticalMin, binary search).
+    const rawN = Math.floor(targetStations);
+    const N = Number.isFinite(rawN) && rawN >= 1 ? rawN : 1;
 
     // 1. Calculate total work content
     const totalWorkContent = data.tasks.reduce((sum, t) => {
@@ -1445,8 +1491,8 @@ export function simulateBalanceType2(
         if (Math.abs(b.positionalWeight - a.positionalWeight) > 0.01) {
             return b.positionalWeight - a.positionalWeight;
         }
-        const timeA = a.standardTime || a.averageTime;
-        const timeB = b.standardTime || b.averageTime;
+        const timeA = a.standardTime || a.averageTime || 0;
+        const timeB = b.standardTime || b.averageTime || 0;
         return timeB - timeA;
     });
 
@@ -1462,6 +1508,8 @@ export function simulateBalanceType2(
 
         const unassigned = new Set(sortedTasks.map(t => t.id));
         const assigned: Assignment[] = [];
+        // PERF: Map for O(1) precedence lookups instead of O(n) assigned.find()
+        const assignmentMap = new Map<string, Assignment>();
 
         let iterations = 0;
         const MAX_ITER = sortedTasks.length * N * 2;
@@ -1483,7 +1531,8 @@ export function simulateBalanceType2(
                 // Task must be assigned to station >= max(predecessor stations)
                 let minAllowedStation = 1;
                 for (const predId of task.predecessors) {
-                    const predAssignment = assigned.find(a => a.taskId === predId);
+                    // PERF: Use Map for O(1) lookup instead of O(n) find
+                    const predAssignment = assignmentMap.get(predId);
                     if (predAssignment && predAssignment.stationId > minAllowedStation) {
                         minAllowedStation = predAssignment.stationId;
                     }
@@ -1500,17 +1549,23 @@ export function simulateBalanceType2(
                 // FIX: Find which station(s) contain this task's predecessors
                 const predStationIds = new Set<number>();
                 for (const predId of task.predecessors) {
-                    const pa = assigned.find(a => a.taskId === predId);
+                    // PERF: Use Map for O(1) lookup
+                    const pa = assignmentMap.get(predId);
                     if (pa) predStationIds.add(pa.stationId);
                 }
 
+                // FIX: Use overlap-aware effective time for capacity check (not naive sum)
+                // calculateEffectiveStationTime handles concurrent machine+manual groups via Math.max
                 const eligibleStations = stations
-                    .filter(st =>
-                        st.time + taskTime <= cycleLimit &&
-                        st.id >= minAllowedStation &&  // PRECEDENCE FIX: Respect predecessor order
-                        // SECTOR AFFINITY: Hard constraint - station must be empty or same sector
-                        (!useSectorAffinity || !st.sectorId || st.sectorId === task.sectorId)
-                    )
+                    .filter(st => {
+                        if (st.id < minAllowedStation) return false;
+                        if (useSectorAffinity && st.sectorId && st.sectorId !== task.sectorId) return false;
+                        // Overlap-aware capacity check: actual effective time with this task added
+                        const effectiveWithTask = task.isMachineInternal
+                            ? st.time  // Internal tasks contribute 0 effective time
+                            : calculateEffectiveStationTime([...st.tasks, task]);
+                        return effectiveWithTask <= cycleLimit;
+                    })
                     .sort((a, b) => {
                         // 1. Prefer station with predecessors (keeps chain together, preserves flexibility)
                         const aHasPred = predStationIds.has(a.id) ? 1 : 0;
@@ -1531,10 +1586,13 @@ export function simulateBalanceType2(
                 if (eligibleStations.length > 0) {
                     const target = eligibleStations[0];
                     target.tasks.push(task);
-                    target.time += taskTime;
+                    // FIX: Update time using overlap-aware calculation (not naive addition)
+                    target.time = calculateEffectiveStationTime(target.tasks);
                     if (!target.sectorId) target.sectorId = task.sectorId;
 
-                    assigned.push({ taskId: task.id, stationId: target.id });
+                    const newAssignment = { taskId: task.id, stationId: target.id };
+                    assigned.push(newAssignment);
+                    assignmentMap.set(task.id, newAssignment);
                     unassigned.delete(task.id);
                     madeProgress = true;
                 }
@@ -1583,11 +1641,14 @@ export function simulateBalanceType2(
     // 4. Build result structures
     const usedStationIds = Array.from(new Set(bestAssignments.map(a => a.stationId))).sort((a, b) => a - b);
 
+    // PERF: Pre-build task lookup Map for result building
+    const t2TaskMap = new Map(data.tasks.map(t => [t.id, t]));
+
     // FIX: Calculate effectiveTime for each station (was undefined before)
     const proposedConfigs: StationConfig[] = usedStationIds.map(stId => {
         const stTasks = bestAssignments!
             .filter(a => a.stationId === stId)
-            .map(a => data.tasks.find(t => t.id === a.taskId))
+            .map(a => t2TaskMap.get(a.taskId))
             .filter(Boolean) as Task[];
 
         const stEffectiveTime = calculateEffectiveStationTime(stTasks);
@@ -1610,15 +1671,11 @@ export function simulateBalanceType2(
     for (const stId of usedStationIds) {
         const stTasks = bestAssignments
             .filter(a => a.stationId === stId)
-            .map(a => data.tasks.find(t => t.id === a.taskId))
+            .map(a => t2TaskMap.get(a.taskId))
             .filter(Boolean) as Task[];
 
-        // FIX: Align with SALBP-1 (Phase 24) - use raw Process Time for lineEfficiency
-        // This ensures the KPI is algorithm-agnostic and measures pure process efficiency
-        const stTime = stTasks.reduce((sum, t) => {
-            if (t.isMachineInternal) return sum;
-            return sum + (t.standardTime || t.averageTime || 0);
-        }, 0);
+        // Use concurrency-aware effective time (consistent with SALBP-1 metrics)
+        const stTime = calculateEffectiveStationTime(stTasks);
 
         totalEffWork += stTime;
         if (stTime > maxStationCycle) maxStationCycle = stTime;
@@ -1629,11 +1686,14 @@ export function simulateBalanceType2(
         ? 100
         : (maxStationCycle > 0 ? (nominalSeconds / maxStationCycle) * 100 : 0);
 
-    const lineEfficiency = (totalHeadcount * maxStationCycle) > 0
-        ? (totalEffWork / (totalHeadcount * maxStationCycle)) * 100
+    // FIX: Check both operands individually to prevent 0*x=0 passing the guard
+    // when totalHeadcount=0 but maxStationCycle>0, which would produce 0/0=NaN
+    const lineEfficiency = totalHeadcount > 0 && maxStationCycle > 0
+        ? Math.min(100, (totalEffWork / (totalHeadcount * maxStationCycle)) * 100)
         : 0;
 
-    const idleTime = maxStationCycle <= nominalSeconds
+    // FIX: Guard against maxStationCycle=0 (all machine-internal tasks)
+    const idleTime = maxStationCycle > 0 && maxStationCycle <= nominalSeconds
         ? (totalHeadcount * nominalSeconds) - totalEffWork
         : 0;
 

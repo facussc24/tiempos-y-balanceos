@@ -14,6 +14,7 @@ import type {
     Sector,
 } from '../../types';
 
+import { calculateEffectiveStationTime } from '../../core/balancing/simulation';
 import type { ProductType, MultiProductConfig } from './flowTypes';
 
 // =============================================================================
@@ -148,11 +149,12 @@ export function parseStationsFromBalancing(data: ProjectData): SimulatorStation[
         stationAssignments.set(assignment.stationId, existing);
     }
 
-    const maxStationId = Math.max(
+    const allIds = [
         ...Array.from(stationAssignments.keys()),
         ...stationConfigs.map(s => s.id),
-        data.meta.configuredStations || 0
-    );
+        data.meta.configuredStations || 0,
+    ].filter(Number.isFinite);
+    const maxStationId = allIds.length > 0 ? Math.max(...allIds) : 0;
 
     const stations: SimulatorStation[] = [];
 
@@ -160,13 +162,13 @@ export function parseStationsFromBalancing(data: ProjectData): SimulatorStation[
         const config = stationConfigs.find(s => s.id === stationId);
         const assignedTaskIds = stationAssignments.get(stationId) || [];
 
-        // Calculate cycle time from assigned tasks
+        // Calculate cycle time from assigned tasks using overlap-aware algorithm
         let cycleTimeSeconds = config?.cycleTimeOverride ?? 0;
         if (!cycleTimeSeconds && assignedTaskIds.length > 0) {
-            cycleTimeSeconds = assignedTaskIds.reduce((sum, taskId) => {
-                const task = taskMap.get(taskId);
-                return sum + (task?.standardTime || 0);
-            }, 0);
+            const stationTasks = assignedTaskIds
+                .map(taskId => taskMap.get(taskId))
+                .filter(Boolean) as Task[];
+            cycleTimeSeconds = calculateEffectiveStationTime(stationTasks);
         }
         if (!cycleTimeSeconds) cycleTimeSeconds = 30;
 
@@ -194,7 +196,7 @@ export function parseStationsFromBalancing(data: ProjectData): SimulatorStation[
             id: stationId,
             name,
             cycleTimeSeconds,
-            operators: 1,
+            operators: config?.replicas || 1,
             sectorId,
             sectorColor,
             sectorName,

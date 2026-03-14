@@ -198,6 +198,8 @@ export interface HoDocumentHeader {
     client: string;
     partNumber: string;
     partDescription: string;
+    /** Applicable part numbers (one per line) for product family documents. */
+    applicableParts: string;
     linkedAmfeProject: string;
     linkedCpProject: string;
 }
@@ -218,6 +220,7 @@ export const EMPTY_HO_HEADER: HoDocumentHeader = {
     client: '',
     partNumber: '',
     partDescription: '',
+    applicableParts: '',
     linkedAmfeProject: '',
     linkedCpProject: '',
 };

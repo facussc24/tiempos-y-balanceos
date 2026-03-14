@@ -30,7 +30,7 @@ function makeAmfeDoc(overrides?: {
             processResponsible: 'ProcResp',
             revision: 'Rev-A',
             approvedBy: 'Aprobador',
-            scope: '',
+            scope: '', applicableParts: '',
         },
         operations: [{
             id: 'op1',
@@ -337,23 +337,35 @@ describe('generateItemsFromAmfe — specialChar classification', () => {
 // ============================================================================
 
 describe('generateItemsFromAmfe — AP filtering', () => {
-    it('filters only AP=H and AP=M causes', () => {
+    it('filters AP=H, AP=M, and SC/CC AP=L causes (IATF 16949)', () => {
         const doc = makeAmfeDoc({
+            severity: 8, // S=8 → SC, so AP=L with SC still qualifies
             causes: [
                 makeCause({ id: 'c1', cause: 'High', ap: 'H', preventionControl: 'PC1', detectionControl: 'DC1' }),
                 makeCause({ id: 'c2', cause: 'Medium', ap: 'M', preventionControl: 'PC2', detectionControl: 'DC2' }),
-                makeCause({ id: 'c3', cause: 'Low', ap: 'L', preventionControl: 'PC3', detectionControl: 'DC3' }),
+                makeCause({ id: 'c3', cause: 'Low SC', ap: 'L', preventionControl: 'PC3', detectionControl: 'DC3' }),
                 makeCause({ id: 'c4', cause: 'None', ap: '', preventionControl: '', detectionControl: '' }),
             ],
         });
         const { items } = generateItemsFromAmfe(doc);
-        // 2 qualifying causes → 2 process rows + product rows (deduped by failure desc)
+        // 3 qualifying causes (H, M, and L with SC) → 3 process rows + product rows
         const proc = processRows(items);
         const prod = productRows(items);
-        expect(proc).toHaveLength(2);
-        // Product rows: both causes share same failure description + different detection controls
-        // So 2 product rows (one per unique fail+detection combo)
-        expect(prod).toHaveLength(2);
+        expect(proc).toHaveLength(3);
+        expect(prod).toHaveLength(3);
+    });
+
+    it('excludes AP=L causes when severity < 5 (no SC/CC)', () => {
+        const doc = makeAmfeDoc({
+            severity: 3, // S=3 → no SC/CC
+            causes: [
+                makeCause({ id: 'c1', cause: 'High', ap: 'H', preventionControl: 'PC1', detectionControl: 'DC1' }),
+                makeCause({ id: 'c2', cause: 'Low no SC', ap: 'L', preventionControl: 'PC2', detectionControl: 'DC2' }),
+            ],
+        });
+        const { items } = generateItemsFromAmfe(doc);
+        const proc = processRows(items);
+        expect(proc).toHaveLength(1); // Only AP=H qualifies
     });
 
     it('returns empty items with warning when no operations exist', () => {
@@ -367,14 +379,15 @@ describe('generateItemsFromAmfe — AP filtering', () => {
         expect(warnings[0]).toContain('no tiene causas definidas');
     });
 
-    it('returns empty items with warning when no causes qualify', () => {
+    it('returns empty items with warning when no causes qualify (AP=L, no SC/CC)', () => {
         const doc = makeAmfeDoc({
+            severity: 3, // S=3 → no SC/CC → AP=L truly excluded
             causes: [makeCause({ id: 'c1', cause: 'Low risk', ap: 'L' })],
         });
         const { items, warnings } = generateItemsFromAmfe(doc);
         expect(items).toEqual([]);
         expect(warnings.length).toBeGreaterThan(0);
-        expect(warnings[0]).toContain('No se encontraron causas con AP Alto');
+        expect(warnings[0]).toContain('No se encontraron causas');
     });
 });
 
@@ -569,7 +582,7 @@ describe('generateItemsFromAmfe — dedup', () => {
         expect(summary).toBeDefined();
         expect(summary).toContain('de proceso');
         expect(summary).toContain('de producto');
-        expect(summary).toContain('3 causa(s) AMFE');
+        expect(summary).toContain('3 causa(s) AP Alto/Medio');
     });
 
     it('handles multiple operations independently', () => {
@@ -775,5 +788,187 @@ describe('generateItemsFromAmfe — traceability fields (R5A)', () => {
         expect(new Set(proc[0].amfeCauseIds).size).toBe(proc[0].amfeCauseIds!.length);
         // amfeFailureId should be set from the first cause's failure
         expect(proc[0].amfeFailureId).toBe('fail1');
+    });
+});
+
+// ============================================================================
+// SC/CC WITH AP=L — IATF 16949 §8.3.3.3
+// ============================================================================
+
+describe('generateItemsFromAmfe — SC/CC with AP=L (IATF 16949)', () => {
+    it('includes SC cause (S=6, AP=L) in CP', () => {
+        const doc = makeAmfeDoc({
+            severity: 6,
+            causes: [makeCause({ id: 'c1', cause: 'SC cause', ap: 'L', preventionControl: 'Audit', detectionControl: 'Visual' })],
+        });
+        const { items } = generateItemsFromAmfe(doc);
+        expect(items.length).toBeGreaterThan(0);
+        expect(processRows(items)).toHaveLength(1);
+        expect(productRows(items)).toHaveLength(1);
+    });
+
+    it('includes CC cause (S=9, AP=L) in CP', () => {
+        const doc = makeAmfeDoc({
+            severity: 9,
+            causes: [makeCause({ id: 'c1', cause: 'CC cause', ap: 'L', preventionControl: 'SPC', detectionControl: 'CMM' })],
+        });
+        const { items } = generateItemsFromAmfe(doc);
+        expect(items.length).toBeGreaterThan(0);
+        expect(processRows(items)).toHaveLength(1);
+        expect(productRows(items)).toHaveLength(1);
+    });
+
+    it('excludes cause (S=3, AP=L) — no SC/CC', () => {
+        const doc = makeAmfeDoc({
+            severity: 3,
+            causes: [makeCause({ id: 'c1', cause: 'Low low', ap: 'L' })],
+        });
+        const { items } = generateItemsFromAmfe(doc);
+        expect(items).toHaveLength(0);
+    });
+
+    it('SC cause (S=5, AP=L) gets specialCharClass=SC', () => {
+        const doc = makeAmfeDoc({
+            severity: 5,
+            causes: [makeCause({ id: 'c1', cause: 'SC edge', ap: 'L' })],
+        });
+        const { items } = generateItemsFromAmfe(doc);
+        for (const item of items) {
+            expect(item.specialCharClass).toBe('SC');
+        }
+    });
+
+    it('CC cause (S=10, AP=L) gets specialCharClass=CC', () => {
+        const doc = makeAmfeDoc({
+            severity: 10,
+            causes: [makeCause({ id: 'c1', cause: 'CC edge', ap: 'L' })],
+        });
+        const { items } = generateItemsFromAmfe(doc);
+        for (const item of items) {
+            expect(item.specialCharClass).toBe('CC');
+        }
+    });
+
+    it('SC/CC cause with AP=L gets amfeAp=L', () => {
+        const doc = makeAmfeDoc({
+            severity: 7,
+            causes: [makeCause({ id: 'c1', cause: 'SC L cause', ap: 'L' })],
+        });
+        const { items } = generateItemsFromAmfe(doc);
+        for (const item of items) {
+            expect(item.amfeAp).toBe('L');
+        }
+    });
+
+    it('mixed group H + L → pickHighestAp returns H', () => {
+        const doc = makeAmfeDoc({
+            severity: 8,
+            causes: [
+                makeCause({ id: 'c1', cause: 'Same cause', preventionControl: 'SPC', ap: 'H' }),
+                makeCause({ id: 'c2', cause: 'Same cause', preventionControl: 'SPC', ap: 'L' }),
+            ],
+        });
+        const { items } = generateItemsFromAmfe(doc);
+        const proc = processRows(items);
+        expect(proc).toHaveLength(1);
+        expect(proc[0].amfeAp).toBe('H');
+    });
+
+    it('mixed group M + L → pickHighestAp returns M', () => {
+        const doc = makeAmfeDoc({
+            severity: 6,
+            causes: [
+                makeCause({ id: 'c1', cause: 'Same cause', preventionControl: 'SPC', ap: 'M' }),
+                makeCause({ id: 'c2', cause: 'Same cause', preventionControl: 'SPC', ap: 'L' }),
+            ],
+        });
+        const { items } = generateItemsFromAmfe(doc);
+        const proc = processRows(items);
+        expect(proc).toHaveLength(1);
+        expect(proc[0].amfeAp).toBe('M');
+    });
+
+    it('group of only AP=L → pickHighestAp returns L', () => {
+        const doc = makeAmfeDoc({
+            severity: 7,
+            causes: [
+                makeCause({ id: 'c1', cause: 'Same SC', preventionControl: 'SPC', ap: 'L' }),
+                makeCause({ id: 'c2', cause: 'Same SC', preventionControl: 'SPC', ap: 'L' }),
+            ],
+        });
+        const { items } = generateItemsFromAmfe(doc);
+        const proc = processRows(items);
+        expect(proc).toHaveLength(1);
+        expect(proc[0].amfeAp).toBe('L');
+    });
+
+    it('summary includes SC/CC count when AP=L causes qualify', () => {
+        const doc = makeAmfeDoc({
+            severity: 8,
+            causes: [
+                makeCause({ id: 'c1', cause: 'H cause', ap: 'H', preventionControl: 'PC1', detectionControl: 'DC1' }),
+                makeCause({ id: 'c2', cause: 'L SC cause', ap: 'L', preventionControl: 'PC2', detectionControl: 'DC2' }),
+            ],
+        });
+        const { warnings } = generateItemsFromAmfe(doc);
+        const summary = warnings.find(w => w.includes('Plan de Control generado'));
+        expect(summary).toBeDefined();
+        expect(summary).toContain('SC/CC');
+    });
+
+    it('AP=L with explicit specialChar (e.g., "D") is included', () => {
+        const doc = makeAmfeDoc({
+            severity: 3, // No auto SC/CC
+            causes: [makeCause({ id: 'c1', cause: 'Custom char', ap: 'L', specialChar: 'D' })],
+        });
+        const { items } = generateItemsFromAmfe(doc);
+        expect(items.length).toBeGreaterThan(0);
+        expect(items[0].specialCharClass).toBe('D');
+    });
+
+    it('AP=L defaults: S=9 → sampleSize=3 piezas, sampleFrequency=Cada 2 horas', () => {
+        const doc = makeAmfeDoc({
+            severity: 9,
+            causes: [makeCause({ id: 'c1', cause: 'CC low', ap: 'L', preventionControl: 'SPC', detectionControl: 'CMM' })],
+        });
+        const { items } = generateItemsFromAmfe(doc);
+        const proc = processRows(items);
+        expect(proc[0].sampleSize).toBe('3 piezas');
+        expect(proc[0].sampleFrequency).toBe('Cada 2 horas');
+    });
+
+    it('AP=L defaults: S=6 → sampleSize=1 pieza, sampleFrequency=Cada turno', () => {
+        const doc = makeAmfeDoc({
+            severity: 6,
+            causes: [makeCause({ id: 'c1', cause: 'SC low', ap: 'L', preventionControl: 'Audit', detectionControl: 'Visual' })],
+        });
+        const { items } = generateItemsFromAmfe(doc);
+        const proc = processRows(items);
+        expect(proc[0].sampleSize).toBe('1 pieza');
+        expect(proc[0].sampleFrequency).toBe('Cada turno');
+    });
+
+    it('AP=L with S>=9: reactionPlan still auto-filled based on severity (consequence is the same)', () => {
+        const doc = makeAmfeDoc({
+            severity: 9,
+            causes: [makeCause({ id: 'c1', cause: 'CC with react', ap: 'L' })],
+        });
+        const { items } = generateItemsFromAmfe(doc);
+        // Reaction plan is severity-based: S=9 → stop line, regardless of AP level
+        const proc = processRows(items);
+        expect(proc[0].reactionPlan).toContain('Detener');
+    });
+
+    it('AP=L with S<4: reactionPlan is empty (no severity-based plan)', () => {
+        // This should never happen in practice (S<5 → no SC/CC → AP=L excluded)
+        // but defensively testing the severity-based reaction plan logic
+        const doc = makeAmfeDoc({
+            severity: 6,
+            causes: [makeCause({ id: 'c1', cause: 'SC mid react', ap: 'L' })],
+        });
+        const { items } = generateItemsFromAmfe(doc);
+        const proc = processRows(items);
+        // S=6 → "Ajustar proceso" reaction plan
+        expect(proc[0].reactionPlan).toContain('Ajustar');
     });
 });

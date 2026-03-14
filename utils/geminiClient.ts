@@ -179,28 +179,29 @@ export async function queryGemini(
         setCache(cacheKey, text);
 
         return { text, cached: false };
-    } catch (error: any) {
+    } catch (error: unknown) {
         clearTimeout(timer);
 
         // External abort takes priority — don't count user aborts as failures
         if (signal?.aborted) {
             throw new GeminiError('Request aborted', 'TIMEOUT');
         }
-        if (error?.name === 'AbortError' || timeoutController.signal.aborted) {
+        const err = error as Record<string, unknown>;
+        if (err?.name === 'AbortError' || timeoutController.signal.aborted) {
             recordFailure();
             throw new GeminiError('Request timed out', 'TIMEOUT');
         }
-        if (error?.status === 429) {
+        if (err?.status === 429) {
             recordFailure();
             throw new GeminiError('Rate limit exceeded (1500/day)', 'RATE_LIMIT');
         }
-        if (error?.status === 403 || error?.status === 401) {
+        if (err?.status === 403 || err?.status === 401) {
             recordFailure();
             throw new GeminiError('Invalid API key', 'AUTH_ERROR');
         }
         recordFailure();
         throw new GeminiError(
-            error?.message || 'Unknown Gemini error',
+            error instanceof Error ? error.message : 'Unknown Gemini error',
             'NETWORK_ERROR',
         );
     }
@@ -308,7 +309,7 @@ export async function queryGeminiChat(
         recordSuccess();
 
         return { text };
-    } catch (error: any) {
+    } catch (error: unknown) {
         clearTimeout(timer);
 
         if (error instanceof GeminiError) throw error;
@@ -316,21 +317,22 @@ export async function queryGeminiChat(
         if (signal?.aborted) {
             throw new GeminiError('Request aborted', 'TIMEOUT');
         }
-        if (error?.name === 'AbortError' || timeoutController.signal.aborted) {
+        const err = error as Record<string, unknown>;
+        if (err?.name === 'AbortError' || timeoutController.signal.aborted) {
             recordFailure();
             throw new GeminiError('Request timed out', 'TIMEOUT');
         }
-        if (error?.status === 429) {
+        if (err?.status === 429) {
             recordFailure();
             throw new GeminiError('Rate limit excedido. Esperá un momento.', 'RATE_LIMIT');
         }
-        if (error?.status === 403 || error?.status === 401) {
+        if (err?.status === 403 || err?.status === 401) {
             recordFailure();
             throw new GeminiError('API key de Gemini inválida', 'AUTH_ERROR');
         }
         recordFailure();
         throw new GeminiError(
-            error?.message || 'Error de red desconocido',
+            error instanceof Error ? error.message : 'Error de red desconocido',
             'NETWORK_ERROR',
         );
     }

@@ -72,7 +72,7 @@ export const DependencySelector: React.FC<Props> = ({ currentTaskId, allTasks, p
                                 {predecessors.includes(t.id) && <span className="text-blue-600 text-[10px] font-bold">✓</span>}
                             </div>
                             <span className="font-bold font-mono bg-slate-100 px-1 rounded">{t.id}</span>
-                            <span className="truncate flex-1">{t.description}</span>
+                            <span className="truncate flex-1" title={t.description}>{t.description}</span>
                         </div>
                     ))}
                 </div>

@@ -1,92 +1,132 @@
 /**
- * Unified File System Module
- * 
- * This module provides a unified API that automatically uses:
- * - Tauri native filesystem when running as desktop app
- * - Web File System Access API when running in Chrome/Edge
- * - SQLite fallback for other browsers
- * 
+ * Unified File System Module — Web version
+ *
+ * Provides a unified API for file operations that works in the browser.
+ * All file I/O is done via browser APIs (File System Access API or download links).
+ * Tauri-specific operations have been removed.
+ *
  * @module unified_fs
  */
 
 import { ProjectData, FSItem, INITIAL_PROJECT } from '../types';
 import { incrementVersion } from '../utils';
-import * as tauriFs from './tauri_fs';
 import { logger } from './logger';
 
-// Re-export environment detection
-export const isTauri = tauriFs.isTauri;
-export const hasFileSystemAccess = tauriFs.hasFileSystemAccess;
+// ---------------------------------------------------------------------------
+// Environment detection — always web in this build
+// ---------------------------------------------------------------------------
 
-// Re-export primitive operations for ProjectExplorer
-export const pickFolder = tauriFs.pickFolder;
-export const readDir = tauriFs.readDir;
-export const createDir = tauriFs.createDir;
-export const writeTextFile = tauriFs.writeTextFile;
-export const readTextFile = tauriFs.readTextFile;
-export const remove = tauriFs.remove;
+export const isTauri = (): boolean => false;
+export const hasFileSystemAccess = (): boolean =>
+    typeof window !== 'undefined' && 'showOpenFilePicker' in window;
 
-// ============================================================================
-// INITIALIZATION
-// ============================================================================
+// ---------------------------------------------------------------------------
+// Primitive file operations (browser-based)
+// ---------------------------------------------------------------------------
+
+/** Pick a folder using File System Access API (Chrome/Edge only). */
+export const pickFolder = async (): Promise<string | null> => {
+    try {
+        if (!hasFileSystemAccess()) return null;
+        // @ts-expect-error - showDirectoryPicker is not in all TypeScript lib defs
+        const handle = await window.showDirectoryPicker({ mode: 'readwrite' });
+        return handle?.name ?? null;
+    } catch {
+        return null;
+    }
+};
+
+/** List files/dirs (stub for compatibility). */
+export const readDir = async (_path: string): Promise<FSItem[]> => {
+    logger.warn('UnifiedFS', 'readDir called in web mode — no filesystem access');
+    return [];
+};
+
+/** Create directory (no-op in web). */
+export const createDir = async (_path: string): Promise<boolean> => false;
+
+/** Write text file via browser download. */
+export const writeTextFile = async (path: string, content: string): Promise<boolean> => {
+    try {
+        const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = path.split(/[/\\]/).pop() ?? 'export.txt';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        return true;
+    } catch (err) {
+        logger.error('UnifiedFS', 'writeTextFile failed', {}, err instanceof Error ? err : undefined);
+        return false;
+    }
+};
+
+/** Read text file (no-op, use file input instead). */
+export const readTextFile = async (_path: string): Promise<string | null> => {
+    logger.warn('UnifiedFS', 'readTextFile called in web mode — use file input instead');
+    return null;
+};
+
+/** Remove file (no-op in web). */
+export const remove = async (_path: string): Promise<boolean> => false;
+
+// ---------------------------------------------------------------------------
+// Trigger a browser file download
+// ---------------------------------------------------------------------------
+
+/**
+ * Trigger a browser download for arbitrary data.
+ * Use this instead of Tauri's save-file dialogs.
+ */
+export function triggerDownload(filename: string, content: string | Uint8Array, mimeType = 'application/octet-stream'): void {
+    const blob = content instanceof Uint8Array
+        ? new Blob([content], { type: mimeType })
+        : new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+// ---------------------------------------------------------------------------
+// Initialization
+// ---------------------------------------------------------------------------
 
 let isInitialized = false;
 let currentProjectId: string | null = null;
 
 /**
- * Initialize the unified file system
- * Call this once on app startup
+ * Initialize the unified file system.
+ * In web mode, this is a no-op.
  */
 export const initFileSystem = async (): Promise<void> => {
     if (isInitialized) return;
-
-    if (tauriFs.isTauri()) {
-        const success = await tauriFs.initTauriModules();
-        if (success) {
-            logger.info('UnifiedFS', 'Running in Tauri mode');
-            // Ensure projects directory exists
-            const projectsDir = await tauriFs.getProjectsDir();
-            if (projectsDir) {
-                await tauriFs.ensureDir(projectsDir);
-            }
-        }
-    } else if (hasFileSystemAccess()) {
-        logger.info('UnifiedFS', 'Running in Web mode with File System Access API');
-    } else {
-        logger.info('UnifiedFS', 'Running in Web mode with SQLite only');
-    }
-
+    logger.info('UnifiedFS', 'Running in Web mode (Supabase)');
     isInitialized = true;
 };
 
-// ============================================================================
-// PROJECT OPERATIONS (Unified API)
-// ============================================================================
+// ---------------------------------------------------------------------------
+// Storage mode
+// ---------------------------------------------------------------------------
 
-/**
- * Get the current storage mode
- */
-export const getStorageMode = (): 'tauri' | 'filesystem' | 'sqlite' => {
-    if (tauriFs.isTauri()) return 'tauri';
-    if (hasFileSystemAccess()) return 'filesystem';
-    return 'sqlite';
-};
+export const getStorageMode = (): 'web' => 'web';
 
-/**
- * List all projects (from internal storage in Tauri mode)
- */
+// ---------------------------------------------------------------------------
+// Project operations (handled by repositories in web mode)
+// ---------------------------------------------------------------------------
+
 export const listProjects = async (): Promise<Array<{ id: string; name: string; lastModified: number }>> => {
-    if (tauriFs.isTauri()) {
-        return await tauriFs.listProjectsInAppData();
-    }
-
-    // In web mode, projects come from SQLite (handled by repositories)
+    // In web mode, projects are loaded via projectRepository
     return [];
 };
 
-/**
- * Create a new project
- */
 export const createProject = async (name: string): Promise<{ id: string; data: ProjectData } | null> => {
     const projectId = `project_${Date.now()}`;
     const newData: ProjectData = {
@@ -96,151 +136,51 @@ export const createProject = async (name: string): Promise<{ id: string; data: P
             ...INITIAL_PROJECT.meta,
             name,
             version: '1.0.0',
-            date: new Date().toISOString().split('T')[0]
+            date: new Date().toISOString().split('T')[0],
         },
-        lastModified: Date.now()
+        lastModified: Date.now(),
     };
-
-    if (tauriFs.isTauri()) {
-        const success = await tauriFs.saveProjectToAppData(projectId, newData);
-        if (success) {
-            currentProjectId = projectId;
-            return { id: projectId, data: newData };
-        }
-        return null;
-    }
-
-    // In web mode, return the data and let repositories handle persistence
     return { id: projectId, data: newData };
 };
 
-/**
- * Load a project by ID
- */
-export const loadProject = async (projectId: string): Promise<ProjectData | null> => {
-    if (tauriFs.isTauri()) {
-        const data = await tauriFs.loadProjectFromAppData(projectId);
-        if (data) {
-            currentProjectId = projectId;
-        }
-        return data;
-    }
+export const loadProject = async (_projectId: string): Promise<ProjectData | null> => null;
 
-    // In web mode, projects are loaded via db.ts
-    return null;
-};
+export const saveProject = async (_data: ProjectData): Promise<boolean> => false;
 
-/**
- * Save the current project
- */
-export const saveProject = async (data: ProjectData): Promise<boolean> => {
-    if (tauriFs.isTauri() && currentProjectId) {
-        // Increment version
-        const newData = {
-            ...data,
-            meta: {
-                ...data.meta,
-                version: incrementVersion(data.meta.version)
-            },
-            lastModified: Date.now()
-        };
+export const deleteProject = async (_projectId: string): Promise<boolean> => false;
 
-        return await tauriFs.saveProjectToAppData(currentProjectId, newData);
-    }
-
-    // In web mode, saving is handled by db.ts or utils/webFsHelpers.ts
-    return false;
-};
-
-/**
- * Delete a project
- */
-export const deleteProject = async (projectId: string): Promise<boolean> => {
-    if (tauriFs.isTauri()) {
-        return await tauriFs.deleteProjectFromAppData(projectId);
-    }
-
-    return false;
-};
-
-/**
- * Set the current project ID (for tracking which project is open)
- */
 export const setCurrentProject = (projectId: string | null): void => {
     currentProjectId = projectId;
 };
 
-// ============================================================================
-// MEDIA OPERATIONS (Unified API)
-// ============================================================================
+// ---------------------------------------------------------------------------
+// Media (no-op stubs)
+// ---------------------------------------------------------------------------
 
-/**
- * Save a media file for a task
- * Returns the relative path to the saved file
- */
-export const saveTaskMedia = async (file: File, taskId: string): Promise<string | null> => {
-    if (tauriFs.isTauri() && currentProjectId) {
-        return await tauriFs.saveMediaFile(currentProjectId, taskId, file);
-    }
+/** @deprecated Use Supabase Storage for media files. */
+export const saveTaskMedia = async (_file: File, _taskId: string): Promise<string | null> => null;
 
-    // In web mode with filesystem, this is handled by utils/webFsHelpers.ts
-    // Return null to indicate fallback is needed
-    return null;
-};
+/** @deprecated Use Supabase Storage for media files. */
+export const loadTaskMedia = async (_mediaRef: string): Promise<string | null> => null;
 
-/**
- * Load a media file and return as blob URL
- */
-export const loadTaskMedia = async (mediaRef: string): Promise<string | null> => {
-    if (tauriFs.isTauri() && currentProjectId) {
-        return await tauriFs.loadMediaFile(currentProjectId, mediaRef);
-    }
+// ---------------------------------------------------------------------------
+// Dialogs (browser-native)
+// ---------------------------------------------------------------------------
 
-    return null;
-};
+export const confirm = async (_title: string, message: string): Promise<boolean> =>
+    window.confirm(message);
 
-// ============================================================================
-// DIALOG OPERATIONS (Unified API)
-// ============================================================================
-
-/**
- * Show a confirmation dialog
- */
-export const confirm = async (title: string, message: string): Promise<boolean> => {
-    if (tauriFs.isTauri()) {
-        return await tauriFs.confirmDialog(title, message);
-    }
-    return window.confirm(message);
-};
-
-/**
- * Show an alert dialog
- */
-export const alert = async (title: string, message: string): Promise<void> => {
-    if (tauriFs.isTauri()) {
-        await tauriFs.alertDialog(title, message);
-        return;
-    }
+export const alert = async (_title: string, message: string): Promise<void> =>
     window.alert(message);
-};
 
-// ============================================================================
-// UTILITY FUNCTIONS
-// ============================================================================
+// ---------------------------------------------------------------------------
+// App info
+// ---------------------------------------------------------------------------
 
-/**
- * Get application info for display
- */
-export const getAppInfo = (): { mode: string; version: string } => {
-    const mode = getStorageMode();
-    const modeLabels = {
-        tauri: 'Desktop App',
-        filesystem: 'Web (Connected)',
-        sqlite: 'Web (Local)'
-    };
+export const getAppInfo = (): { mode: string; version: string } => ({
+    mode: 'Web App (Supabase)',
+    version: '1.0.0',
+});
 
-    return {
-        mode: modeLabels[mode],
-        version: '1.0.0'
-    };
-};
+// Keep incrementVersion in scope (imported above for potential future use)
+void incrementVersion;

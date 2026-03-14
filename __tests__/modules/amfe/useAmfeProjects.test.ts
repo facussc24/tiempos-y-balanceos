@@ -54,7 +54,7 @@ function makeDoc(overrides: Partial<AmfeDocument> = {}): AmfeDocument {
             subject: 'Test AMFE', startDate: '', revDate: '', team: '',
             amfeNumber: '', responsible: '', confidentiality: '',
             partNumber: '', processResponsible: '', revision: '',
-            approvedBy: '', scope: '',
+            approvedBy: '', scope: '', applicableParts: '',
         },
         operations: [],
         ...overrides,
@@ -81,7 +81,6 @@ describe('useAmfeProjects', () => {
         mockListAmfeStudies.mockResolvedValue([]);
         mockListLooseAmfeFiles.mockResolvedValue([]);
         mockLoadAmfe.mockResolvedValue(null);
-        mockSaveAmfe.mockResolvedValue(true);
         mockDeleteAmfe.mockResolvedValue(true);
         mockLoadAmfeHierarchical.mockResolvedValue(null);
         mockSaveAmfeHierarchical.mockResolvedValue(true);

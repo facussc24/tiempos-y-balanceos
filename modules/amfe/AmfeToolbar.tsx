@@ -22,6 +22,7 @@ interface AmfeToolbarProps {
     };
     // Persistence info
     lastAutoSave: string | null;
+    autoSaveError?: boolean;
     // View mode
     viewMode: 'view' | 'edit';
     setViewMode: React.Dispatch<React.SetStateAction<'view' | 'edit'>>;
@@ -72,11 +73,17 @@ interface AmfeToolbarProps {
     // Revision control
     onNewRevision?: () => void;
     currentRevisionLevel?: string;
+    // AI
+    aiEnabled?: boolean;
+    // Export folder
+    onOpenExportFolder?: () => void;
+    canOpenExportFolder?: boolean;
 }
 
 const AmfeToolbar: React.FC<AmfeToolbarProps> = ({
     projects,
     lastAutoSave,
+    autoSaveError,
     viewMode,
     setViewMode,
     showSummary,
@@ -107,6 +114,9 @@ const AmfeToolbar: React.FC<AmfeToolbarProps> = ({
     onLoadExample,
     onNewRevision,
     currentRevisionLevel,
+    aiEnabled,
+    onOpenExportFolder,
+    canOpenExportFolder,
 }) => {
     const isReadOnly = viewMode === 'view';
 
@@ -147,12 +157,17 @@ const AmfeToolbar: React.FC<AmfeToolbarProps> = ({
                     )}
                     {!projects.currentProjectRef && getSaveStatusUI()}
 
-                    {lastAutoSave && (
+                    {autoSaveError ? (
+                        <div className="flex items-center gap-1 text-red-500 text-[10px] ml-2" title="El auto-guardado de borrador falló. Tu trabajo no está siendo respaldado automáticamente.">
+                            <HardDrive size={10} />
+                            <span>Borrador: error</span>
+                        </div>
+                    ) : lastAutoSave ? (
                         <div className="flex items-center gap-1 text-gray-400 text-[10px] ml-2">
                             <HardDrive size={10} />
                             <span>Borrador: {lastAutoSave}</span>
                         </div>
-                    )}
+                    ) : null}
 
                     {!projects.networkAvailable && (
                         <div className="flex items-center gap-1 text-amber-600 bg-amber-50 px-2 py-1 rounded text-xs ml-2">
@@ -263,20 +278,22 @@ const AmfeToolbar: React.FC<AmfeToolbarProps> = ({
                         </button>
                     )}
 
-                    {/* Copiloto IA Button */}
-                    <button
-                        onClick={() => setShowChat(!showChat)}
-                        className={`flex items-center gap-1.5 px-3 py-2 rounded transition font-medium text-xs ${
-                            showChat
-                                ? 'bg-violet-100 border border-violet-400 text-violet-700'
-                                : 'bg-gradient-to-r from-violet-600 to-purple-600 text-white hover:from-violet-700 hover:to-purple-700 shadow-sm'
-                        }`}
-                        title="Copiloto IA (Ctrl+I)"
-                        data-shortcut="Ctrl+I"
-                    >
-                        <Bot size={15} />
-                        <span className="hidden sm:inline">Copiloto IA</span>
-                    </button>
+                    {/* Copiloto IA Button — only visible when AI is enabled */}
+                    {aiEnabled && (
+                        <button
+                            onClick={() => setShowChat(!showChat)}
+                            className={`flex items-center gap-1.5 px-3 py-2 rounded transition font-medium text-xs ${
+                                showChat
+                                    ? 'bg-violet-100 border border-violet-400 text-violet-700'
+                                    : 'bg-gradient-to-r from-violet-600 to-purple-600 text-white hover:from-violet-700 hover:to-purple-700 shadow-sm'
+                            }`}
+                            title="Copiloto IA (Ctrl+I)"
+                            data-shortcut="Ctrl+I"
+                        >
+                            <Bot size={15} />
+                            <span className="hidden sm:inline">Copiloto IA</span>
+                        </button>
+                    )}
 
                     {/* Overflow "Mas" Menu */}
                     <div className="relative">
@@ -318,16 +335,18 @@ const AmfeToolbar: React.FC<AmfeToolbarProps> = ({
                                         <p className="text-[10px] text-gray-400 mt-0.5">Índice centralizado 16949</p>
                                     </div>
                                 </button>
-                                <button
-                                    onClick={() => { setShowOverflowMenu(false); setShowChangeAnalysis(true); }}
-                                    className="w-full text-left px-4 py-2.5 text-xs hover:bg-gray-50 border-b border-gray-100 flex items-center gap-2"
-                                >
-                                    <Zap size={14} className="text-purple-500" />
-                                    <div>
-                                        <span className="font-bold text-gray-800">Analizar Cambio</span>
-                                        <p className="text-[10px] text-gray-400 mt-0.5">Impacto de cambio de proceso</p>
-                                    </div>
-                                </button>
+                                {aiEnabled && (
+                                    <button
+                                        onClick={() => { setShowOverflowMenu(false); setShowChangeAnalysis(true); }}
+                                        className="w-full text-left px-4 py-2.5 text-xs hover:bg-gray-50 border-b border-gray-100 flex items-center gap-2"
+                                    >
+                                        <Zap size={14} className="text-purple-500" />
+                                        <div>
+                                            <span className="font-bold text-gray-800">Analizar Cambio</span>
+                                            <p className="text-[10px] text-gray-400 mt-0.5">Impacto de cambio de proceso</p>
+                                        </div>
+                                    </button>
+                                )}
                                 <button
                                     onClick={() => { setShowOverflowMenu(false); setShowAudit(true); }}
                                     className="w-full text-left px-4 py-2.5 text-xs hover:bg-gray-50 border-b border-gray-100 flex items-center gap-2"
@@ -418,6 +437,19 @@ const AmfeToolbar: React.FC<AmfeToolbarProps> = ({
                                         <p className="text-[10px] text-gray-400 mt-0.5">Acciones abiertas para seguimiento</p>
                                     </div>
                                 </button>
+                                {onOpenExportFolder && (
+                                    <button
+                                        onClick={() => { setShowOverflowMenu(false); onOpenExportFolder(); }}
+                                        disabled={!canOpenExportFolder}
+                                        className="w-full text-left px-4 py-2.5 text-xs hover:bg-amber-50 border-b border-gray-100 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        <FolderOpen size={14} className="text-amber-500" />
+                                        <div>
+                                            <span className="font-bold text-gray-800">Abrir Carpeta</span>
+                                            <p className="text-[10px] text-gray-400 mt-0.5">Ver archivos exportados en Y:\INGENIERIA</p>
+                                        </div>
+                                    </button>
+                                )}
                                 {/* JSON Import/Export */}
                                 <div className="px-4 py-1.5 text-[9px] font-bold text-gray-400 uppercase tracking-wider bg-gray-50 border-b border-gray-100">
                                     Intercambio JSON

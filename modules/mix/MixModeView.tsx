@@ -26,7 +26,7 @@ import {
     validateProcessConstraints,
     validateModelVariability
 } from '../../core/balancing/mixBalancing';
-import { calculateTaktTime } from '../../core/balancing/simulation';
+import { calculateTaktTime, calculateShiftNetMinutes } from '../../core/balancing/simulation';
 import { loadMixProducts, createEmptyMixScenario, detectConfigConflicts } from '../../utils/mixHelpers';
 import { toSimplifiedResult } from '../../core/balancing/mixSimplifier';
 import { usePlantAssets } from '../../hooks/usePlantAssets';
@@ -200,11 +200,16 @@ export const MixModeView: React.FC<MixModeViewProps> = ({
                 ? (template.meta?.manualOEE || 0.85)
                 : 0.85;
 
-            // Calcular setup como porcentaje del tiempo total estimado
-            const estimatedTotalMinutes = activeShiftsCount * 8 * 60;
-            const setupLossPercent = setupMinutes > 0
-                ? Math.min(0.20, setupMinutes / estimatedTotalMinutes)
+            // Calcular setup como porcentaje del tiempo total real (no hardcoded 8h)
+            const actualTotalMinutes = (template.shifts || [])
+                .slice(0, activeShiftsCount)
+                .reduce((sum, s) => sum + calculateShiftNetMinutes(s), 0) || (activeShiftsCount * 480);
+            // FIX: setupMinutes is "per shift" — multiply by activeShiftsCount
+            // to get total setup loss across all shifts
+            const rawSetupLoss = setupMinutes > 0
+                ? Math.min(0.20, (setupMinutes * activeShiftsCount) / actualTotalMinutes)
                 : 0;
+            const setupLossPercent = Number.isFinite(rawSetupLoss) ? rawSetupLoss : 0;
 
             // V5.5: Usar calculateTaktTime que itera sobre cada turno correctamente
             // Esto corrige el bug donde solo se usaban los breaks del primer turno
@@ -216,6 +221,20 @@ export const MixModeView: React.FC<MixModeViewProps> = ({
                 setupLossPercent
             );
             const taktTime = taktResult.effectiveSeconds;
+
+            // FIX: Validate Takt Time > 0 before passing to balancing engine.
+            // calculateTaktTime returns 0 when demand=0 or totalMinutes=0.
+            // Without this guard, downstream division by taktTime produces Infinity.
+            if (taktTime <= 0) {
+                toast.error(
+                    'Error de Configuración',
+                    'No hay tiempo disponible para producción (Takt Time = 0). ' +
+                    'Verificá turnos, breaks y setup time.'
+                );
+                setStep('select');
+                setIsCalculating(false);
+                return;
+            }
 
             // Validar setup excesivo (menos de 30 min productivos por turno)
             if (taktResult.netAvailableMinutes < 30 * activeShiftsCount) {
@@ -263,7 +282,7 @@ export const MixModeView: React.FC<MixModeViewProps> = ({
                     sectors: plantAssets.sectors || [],
                     machines: plantAssets.machines || []
                 },
-                0.85
+                oee
             );
 
             // 7. Transformar a formato simplificado
@@ -329,7 +348,7 @@ export const MixModeView: React.FC<MixModeViewProps> = ({
 
         } catch (e) {
             logger.error('MixV2', 'Calculation error', { error: String(e) });
-            toast.error('Error', (e as Error).message);
+            toast.error('Error', e instanceof Error ? e.message : String(e));
             setStep('select');
         } finally {
             setIsCalculating(false);
@@ -432,19 +451,19 @@ export const MixModeView: React.FC<MixModeViewProps> = ({
         [selectedProducts]);
 
     // Memoized Takt preview to avoid IIFE in render
+    // NOTE: Uses conservative defaults (8h, 85% OEE) because full shift data
+    // is loaded asynchronously in handleCalculate, not available at preview time.
     const taktPreview = useMemo(() => {
-        if (totalDemand === 0) return '';
-        const hoursPerShift = 8;
-        const defaultOEE = 0.85;
-        const availableMin = (hoursPerShift * 60 * defaultOEE) - setupMinutes;
+        if (totalDemand <= 0) return '';
+        const estimateHoursPerShift = 8;
+        const estimateOEE = 0.85;
+        // FIX: Guard against NaN setupMinutes (from corrupted state)
+        const safeSetup = Number.isFinite(setupMinutes) ? Math.max(0, setupMinutes) : 0;
+        const availableMin = (estimateHoursPerShift * 60 * estimateOEE) - safeSetup;
         const taktEstimado = (availableMin * 60) / totalDemand;
-        if (taktEstimado <= 0) return '⚠️ Setup muy alto - no hay tiempo de producción';
-        const multiProduct = selectedProducts.length > 1;
-        const disclaimer = multiProduct
-            ? '(conservador: 1 turno, OEE 85% — el cálculo usará config. del primer producto)'
-            : '(conservador: 1 turno, OEE 85% — el cálculo usará tu configuración exacta)';
-        return `📊 Takt estimado: ~${taktEstimado.toFixed(1)}s ${disclaimer}`;
-    }, [totalDemand, setupMinutes, selectedProducts.length]);
+        if (!Number.isFinite(taktEstimado) || taktEstimado <= 0) return '⚠️ Setup muy alto - no hay tiempo de producción';
+        return `📊 Takt estimado: ~${taktEstimado.toFixed(1)}s (preliminar: asume 1 turno 8h, OEE 85% — al calcular se usará la configuración real)`;
+    }, [totalDemand, setupMinutes]);
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
@@ -457,6 +476,7 @@ export const MixModeView: React.FC<MixModeViewProps> = ({
                                 <button
                                     onClick={handleBackWithConfirm}
                                     className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                                    title="Volver" aria-label="Volver"
                                 >
                                     <ArrowLeft size={24} />
                                 </button>

@@ -40,7 +40,7 @@ const emptyHeader = {
     subject: '', startDate: '', revDate: '', team: '',
     amfeNumber: '', responsible: '', confidentiality: '',
     partNumber: '', processResponsible: '', revision: '',
-    approvedBy: '', scope: '',
+    approvedBy: '', scope: '', applicableParts: '',
 };
 
 const emptyDoc: AmfeDocument = { header: emptyHeader, operations: [] };

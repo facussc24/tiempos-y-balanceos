@@ -1,140 +1,399 @@
 /**
- * Control Plan Excel Export
+ * Control Plan Excel Export — I-AC-005.2
  *
- * Exports the Control Plan in AIAG standard format with green styling.
- * Uses xlsx-js-style for formatted Excel output.
+ * Exports the Control Plan in AIAG standard format.
+ * Styling matches manually-created Excel templates (standard Excel palette).
+ *
+ * Features:
+ *  - Compact 3-pair metadata with merged label cells (never truncated)
+ *  - Phase checkboxes (☒/☐) per AIAG template
+ *  - Vertical merging for same-process groups (cols 0-2)
+ *  - Explicit row heights for professional appearance
  */
 
 import XLSX from 'xlsx-js-style';
-import { ControlPlanDocument, CP_COLUMNS, CP_COLUMN_GROUPS, CONTROL_PLAN_PHASES } from './controlPlanTypes';
+import { ControlPlanDocument, ControlPlanItem, CP_COLUMNS, CP_COLUMN_GROUPS, CONTROL_PLAN_PHASES } from './controlPlanTypes';
 import { sanitizeFilename } from '../../utils/filenameSanitization';
 import { sanitizeCellValue } from '../../utils/sanitizeCellValue';
+import { downloadWorkbook, generateWorkbookBuffer } from '../../utils/excel';
+import { truncateApplicableParts as truncateParts } from '../../utils/productFamilyAutoFill';
 
-const GREEN_FILL = { fgColor: { rgb: '16A34A' } };
-const LIGHT_GREEN_FILL = { fgColor: { rgb: 'DCFCE7' } };
-const WHITE_FILL = { fgColor: { rgb: 'FFFFFF' } };
-const BORDER_THIN = {
-    top: { style: 'thin', color: { rgb: 'D1D5DB' } },
-    bottom: { style: 'thin', color: { rgb: 'D1D5DB' } },
-    left: { style: 'thin', color: { rgb: 'D1D5DB' } },
-    right: { style: 'thin', color: { rgb: 'D1D5DB' } },
-} as const;
+// ============================================================================
+// CONSTANTS
+// ============================================================================
 
-const headerStyle = {
-    font: { bold: true, color: { rgb: 'FFFFFF' }, sz: 10 },
-    fill: GREEN_FILL,
-    alignment: { horizontal: 'center' as const, vertical: 'center' as const, wrapText: true },
-    border: BORDER_THIN,
+const SGC_FORM_NUMBER = 'I-AC-005.2';
+
+/**
+ * Dedicated column widths (wch) — tuned for both metadata labels and data.
+ * 14 columns matching CP_COLUMNS order.
+ */
+const CP_COL_WIDTHS: number[] = [
+    12,   // 0:  Nro. Parte/Proceso
+    25,   // 1:  Descripción Proceso/Operación
+    20,   // 2:  Máquina/Dispositivo/Herram.
+    10,   // 3:  Nro. (Característica)
+    22,   // 4:  Producto
+    22,   // 5:  Proceso
+    12,   // 6:  Clasif. Caract. Esp.
+    23,   // 7:  Espec./Tolerancia
+    20,   // 8:  Técnica Evaluación/Medición
+    13,   // 9:  Tamaño Muestra
+    13,   // 10: Frecuencia
+    20,   // 11: Método Control
+    23,   // 12: Plan Reacción
+    17,   // 13: Responsable Reacción
+];  //  Total ≈ 252 chars
+
+/**
+ * Metadata pair layout: 3 label-value pairs across 14 columns.
+ *
+ *   Pair 0: cols 0-4  (5 cols) → label 0-2 (57ch), value 3-4 (32ch)
+ *   Pair 1: cols 5-9  (5 cols) → label 5-6 (34ch), value 7-9 (56ch)
+ *   Pair 2: cols 10-13 (4 cols) → label 10-11 (33ch), value 12-13 (40ch)
+ *
+ * Left label has 3 merged cols (57 chars) — fits even the longest label
+ * ("Organizacion / Planta" = 21 chars) with room to spare.
+ */
+const META_PAIRS = [
+    { lStart: 0, lEnd: 2, vStart: 3, vEnd: 4 },
+    { lStart: 5, lEnd: 6, vStart: 7, vEnd: 9 },
+    { lStart: 10, lEnd: 11, vStart: 12, vEnd: 13 },
+];
+
+// ============================================================================
+// STYLES — Standard Excel palette (looks hand-made)
+// ============================================================================
+
+const BORDER = {
+    top: { style: 'thin' as const, color: { rgb: '000000' } },
+    bottom: { style: 'thin' as const, color: { rgb: '000000' } },
+    left: { style: 'thin' as const, color: { rgb: '000000' } },
+    right: { style: 'thin' as const, color: { rgb: '000000' } },
 };
 
-const cellStyle: Record<string, any> = {
-    font: { sz: 9 },
-    fill: WHITE_FILL,
-    alignment: { vertical: 'center' as const, wrapText: true },
-    border: BORDER_THIN,
+const st = {
+    title: {
+        font: { bold: true, sz: 14, name: 'Arial' },
+        alignment: { horizontal: 'center' as const, vertical: 'center' as const },
+        border: BORDER,
+    },
+    formRef: {
+        font: { sz: 8, color: { rgb: '808080' }, name: 'Arial' },
+        alignment: { horizontal: 'left' as const },
+        border: BORDER,
+    },
+    phaseText: {
+        font: { sz: 9, name: 'Arial' },
+        alignment: { horizontal: 'right' as const },
+        border: BORDER,
+    },
+    metaLabel: {
+        font: { bold: true, sz: 9, name: 'Arial' },
+        fill: { fgColor: { rgb: 'F2F2F2' } },
+        border: BORDER,
+    },
+    metaValue: {
+        font: { sz: 9, name: 'Arial' },
+        border: BORDER,
+    },
+    groupHeader: {
+        font: { bold: true, color: { rgb: 'FFFFFF' }, sz: 9, name: 'Arial' },
+        fill: { fgColor: { rgb: '4472C4' } },
+        alignment: { horizontal: 'center' as const, vertical: 'center' as const, wrapText: true },
+        border: BORDER,
+    },
+    colHeader: {
+        font: { bold: true, sz: 8, name: 'Arial' },
+        fill: { fgColor: { rgb: 'D9E2F3' } },
+        alignment: { horizontal: 'center' as const, vertical: 'center' as const, wrapText: true },
+        border: BORDER,
+    },
+    cell: {
+        font: { sz: 9, name: 'Arial' },
+        alignment: { vertical: 'top' as const, wrapText: true },
+        border: BORDER,
+    },
+    cellCenter: {
+        font: { sz: 9, name: 'Arial' },
+        alignment: { horizontal: 'center' as const, vertical: 'center' as const, wrapText: true },
+        border: BORDER,
+    },
+    /** Vertically-merged group leader cell (centered vertically). */
+    cellMerged: {
+        font: { sz: 9, name: 'Arial' },
+        alignment: { vertical: 'center' as const, wrapText: true },
+        border: BORDER,
+    },
+    ccBadge: {
+        font: { bold: true, sz: 9, name: 'Arial', color: { rgb: '9C0006' } },
+        fill: { fgColor: { rgb: 'FFC7CE' } },
+        alignment: { horizontal: 'center' as const, vertical: 'center' as const },
+        border: BORDER,
+    },
+    scBadge: {
+        font: { bold: true, sz: 9, name: 'Arial', color: { rgb: '9C6500' } },
+        fill: { fgColor: { rgb: 'FFEB9C' } },
+        alignment: { horizontal: 'center' as const, vertical: 'center' as const },
+        border: BORDER,
+    },
+    ptcBadge: {
+        font: { bold: true, sz: 9, name: 'Arial', color: { rgb: '1D4ED8' } },
+        fill: { fgColor: { rgb: 'DBEAFE' } },
+        alignment: { horizontal: 'center' as const, vertical: 'center' as const },
+        border: BORDER,
+    },
 };
 
-function downloadWorkbook(wb: XLSX.WorkBook, filename: string) {
-    const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-    const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setTimeout(() => URL.revokeObjectURL(url), 1500);
+function getSpecialCharStyle(value: string) {
+    const upper = (value || '').toUpperCase().trim();
+    if (upper === 'CC') return st.ccBadge;
+    if (upper === 'SC') return st.scBadge;
+    if (upper === 'PTC') return st.ptcBadge;
+    return st.cellCenter;
 }
 
-export function exportControlPlan(doc: ControlPlanDocument) {
+// ============================================================================
+// HELPERS
+// ============================================================================
+
+/**
+ * Build a metadata row with 3 label-value pairs using META_PAIRS layout.
+ * Every cell gets an explicit style with borders — no bare `{}` cells.
+ */
+function buildMetaRow(
+    info: [string, string, string, string, string, string],
+    totalCols: number,
+    rowIdx: number,
+    merges: XLSX.Range[],
+): any[] {
+    // Initialize ALL cells with border (ensures consistent rendering in merges)
+    const row: any[] = Array(totalCols).fill(null).map(() => ({ v: '', s: { border: BORDER } }));
+
+    for (let p = 0; p < 3; p++) {
+        const label = info[p * 2];
+        const value = info[p * 2 + 1];
+        const { lStart, lEnd, vStart, vEnd } = META_PAIRS[p];
+
+        if (label) {
+            // Label cells — gray background
+            row[lStart] = { v: label, s: st.metaLabel };
+            for (let c = lStart + 1; c <= lEnd; c++) row[c] = { v: '', s: st.metaLabel };
+
+            // Value cells
+            row[vStart] = { v: sanitizeCellValue(value), s: st.metaValue };
+            for (let c = vStart + 1; c <= vEnd; c++) row[c] = { v: '', s: st.metaValue };
+        }
+
+        // Merge label cells (always, even for empty pairs — ensures clean borders)
+        if (lEnd > lStart) {
+            merges.push({ s: { r: rowIdx, c: lStart }, e: { r: rowIdx, c: lEnd } });
+        }
+        // Merge value cells
+        if (vEnd > vStart) {
+            merges.push({ s: { r: rowIdx, c: vStart }, e: { r: rowIdx, c: vEnd } });
+        }
+    }
+
+    return row;
+}
+
+/**
+ * Compute process row groups for vertical merging.
+ * Consecutive items with the same non-empty processStepNumber are grouped.
+ * Returns array of { startIdx, span } entries.
+ */
+function computeProcessGroups(items: ControlPlanItem[]): { startIdx: number; span: number }[] {
+    const groups: { startIdx: number; span: number }[] = [];
+    let i = 0;
+    while (i < items.length) {
+        const psn = (items[i].processStepNumber || '').trim();
+        if (!psn) { i++; continue; }
+        let j = i + 1;
+        while (j < items.length && (items[j].processStepNumber || '').trim() === psn) {
+            j++;
+        }
+        const span = j - i;
+        if (span > 1) {
+            groups.push({ startIdx: i, span });
+        }
+        i = j;
+    }
+    return groups;
+}
+
+// ============================================================================
+// EXPORT
+// ============================================================================
+
+/**
+ * Build the Control Plan workbook (no download).
+ */
+export function buildControlPlanWorkbook(doc: ControlPlanDocument): XLSX.WorkBook {
     const wb = XLSX.utils.book_new();
     const rows: any[][] = [];
     const h = doc.header;
-    const phaseName = CONTROL_PLAN_PHASES.find(p => p.value === h.phase)?.label || h.phase;
+    const totalCols = CP_COLUMNS.length; // 14
+    const merges: XLSX.Range[] = [];
 
-    // Title row
-    rows.push([{
-        v: 'PLAN DE CONTROL',
-        s: { font: { bold: true, sz: 14, color: { rgb: 'FFFFFF' } }, fill: GREEN_FILL, alignment: { horizontal: 'center' } },
-    }]);
+    // ── Row 0: Title ──────────────────────────────────────────────
+    const titleRow: any[] = Array(totalCols).fill(null).map(() => ({ v: '', s: st.title }));
+    titleRow[0] = { v: 'PLAN DE CONTROL', s: st.title };
+    rows.push(titleRow);
+    merges.push({ s: { r: 0, c: 0 }, e: { r: 0, c: totalCols - 1 } });
 
-    // Header info rows
-    const headerInfo = [
-        ['Nro. Plan de Control', h.controlPlanNumber, 'Fase', phaseName, 'Fecha', h.date],
-        ['Pieza', h.partName, 'Nro. Pieza', h.partNumber, 'Nivel de Cambio', h.latestChangeLevel],
-        ['Organizacion/Planta', h.organization, 'Proveedor', h.supplier, 'Cod. Proveedor', h.supplierCode],
-        ['Contacto Clave/Telefono', h.keyContactPhone, 'Cliente', h.client, 'Revision', h.revision],
-        ['Responsable', h.responsible, 'Equipo', h.coreTeam, '', ''],
-        ['Aprob. Proveedor/Planta', h.approvedBy, 'Aprob. Ing. Cliente', h.customerEngApproval, 'Aprob. Cal. Cliente', h.customerQualityApproval],
-        ['Otra Aprobacion', h.otherApproval, 'AMFE Vinculado', h.linkedAmfeProject, '', ''],
+    // ── Row 1: Form reference (left) + Phase checkboxes (right) ──
+    const phaseStr = CONTROL_PLAN_PHASES
+        .map(p => `${p.value === h.phase ? '☒' : '☐'} ${p.label}`)
+        .join('    ');
+
+    const formPhaseRow: any[] = Array(totalCols).fill(null).map(() => ({ v: '', s: { border: BORDER } }));
+    formPhaseRow[0] = { v: `Formulario ${SGC_FORM_NUMBER}`, s: st.formRef };
+    for (let c = 1; c <= 4; c++) formPhaseRow[c] = { v: '', s: st.formRef };
+    formPhaseRow[5] = { v: phaseStr, s: st.phaseText };
+    for (let c = 6; c < totalCols; c++) formPhaseRow[c] = { v: '', s: st.phaseText };
+    rows.push(formPhaseRow);
+    merges.push({ s: { r: 1, c: 0 }, e: { r: 1, c: 4 } });
+    merges.push({ s: { r: 1, c: 5 }, e: { r: 1, c: totalCols - 1 } });
+
+    // ── Rows 2-7: Header metadata (3 label-value pairs per row) ──
+    const headerInfo: [string, string, string, string, string, string][] = [
+        ['Nro. Plan de Control', h.controlPlanNumber, 'Nro. Pieza',            h.partNumber,             'Fecha',              h.date],
+        ['Pieza',                h.partName,           'Nivel de Cambio',       h.latestChangeLevel,      'Revision',           h.revision],
+        ['Organizacion / Planta', h.organization,      'Proveedor',             h.supplier,               'Cod. Proveedor',     h.supplierCode],
+        ['Contacto / Telefono', h.keyContactPhone,     'Cliente',               h.client,                 'Responsable',        h.responsible],
+        ['Equipo',              h.coreTeam,             'AMFE Vinculado',        h.linkedAmfeProject,      'Otra Aprobacion',    h.otherApproval],
+        ['Aprob. Planta',       h.approvedBy,           'Aprob. Ing. Cliente',   h.customerEngApproval,    'Aprob. Cal. Cliente', h.customerQualityApproval],
+        ...(h.applicableParts?.trim() ? [['Piezas Aplicables', truncateParts(h.applicableParts).replace(/\n/g, ' · '), '', '', '', ''] as [string, string, string, string, string, string]] : []),
     ];
 
-    for (const row of headerInfo) {
-        rows.push(row.map((val, i) => ({
-            v: i % 2 === 0 ? val : sanitizeCellValue(val),
-            s: i % 2 === 0
-                ? { font: { bold: true, sz: 9 }, fill: LIGHT_GREEN_FILL, border: BORDER_THIN }
-                : { font: { sz: 9 }, fill: WHITE_FILL, border: BORDER_THIN },
-        })));
+    for (const info of headerInfo) {
+        const rowIdx = rows.length;
+        rows.push(buildMetaRow(info, totalCols, rowIdx, merges));
     }
 
-    // Empty row separator
-    rows.push([]);
+    // ── Empty row separator ──
+    rows.push(Array(totalCols).fill(''));
+    const separatorIdx = rows.length - 1;
 
-    // Group header row
+    // ── Group header row (Proceso / Características / Métodos) ──
     const groupRow: any[] = [];
     for (const group of CP_COLUMN_GROUPS) {
-        groupRow.push({ v: group.label, s: headerStyle });
+        groupRow.push({ v: group.label, s: st.groupHeader });
         for (let i = 1; i < group.colSpan; i++) {
-            groupRow.push({ v: '', s: headerStyle });
+            groupRow.push({ v: '', s: st.groupHeader });
         }
     }
     rows.push(groupRow);
+    const groupRowIdx = rows.length - 1;
 
-    // Column headers
-    rows.push(CP_COLUMNS.map(col => ({ v: col.label, s: headerStyle })));
-
-    // Data rows (sanitized against formula injection)
-    for (const item of doc.items) {
-        rows.push(CP_COLUMNS.map(col => {
-            const value = (item[col.key] as string) || '';
-            return { v: sanitizeCellValue(value), s: cellStyle };
-        }));
-    }
-
-    const ws = XLSX.utils.aoa_to_sheet(rows);
-
-    // Calculate row indices
-    const titleRowIdx = 0;
-    const groupRowIdx = 1 + headerInfo.length + 1; // title + header rows + empty separator
-
-    // Merges
-    const merges: XLSX.Range[] = [
-        // Title row merge
-        { s: { r: titleRowIdx, c: 0 }, e: { r: titleRowIdx, c: CP_COLUMNS.length - 1 } },
-    ];
-
-    // Group header merges
-    let colOffset = 0;
+    let colOff = 0;
     for (const group of CP_COLUMN_GROUPS) {
         if (group.colSpan > 1) {
             merges.push({
-                s: { r: groupRowIdx, c: colOffset },
-                e: { r: groupRowIdx, c: colOffset + group.colSpan - 1 },
+                s: { r: groupRowIdx, c: colOff },
+                e: { r: groupRowIdx, c: colOff + group.colSpan - 1 },
             });
         }
-        colOffset += group.colSpan;
+        colOff += group.colSpan;
     }
 
+    // ── Column headers ──
+    rows.push(CP_COLUMNS.map(col => ({ v: col.label, s: st.colHeader })));
+    const colHeaderIdx = rows.length - 1;
+
+    // ── Data rows ──
+    const dataStartIdx = rows.length;
+    for (const item of doc.items) {
+        rows.push(CP_COLUMNS.map(col => {
+            const value = (item[col.key] as string) || '';
+            if (col.key === 'specialCharClass') {
+                return { v: sanitizeCellValue(value), s: getSpecialCharStyle(value) };
+            }
+            return { v: sanitizeCellValue(value), s: st.cell };
+        }));
+    }
+
+    // ── Vertical merging for same-process groups (cols 0-2) ──
+    const processGroups = computeProcessGroups(doc.items);
+    for (const group of processGroups) {
+        for (const col of [0, 1, 2]) {
+            // Merge from first row to last row of the group
+            merges.push({
+                s: { r: dataStartIdx + group.startIdx, c: col },
+                e: { r: dataStartIdx + group.startIdx + group.span - 1, c: col },
+            });
+
+            // Apply vertical-center style to the leader cell
+            const leaderRow = rows[dataStartIdx + group.startIdx];
+            leaderRow[col] = { ...leaderRow[col], s: st.cellMerged };
+
+            // Clear duplicate text in follower cells
+            for (let r = 1; r < group.span; r++) {
+                const rowIdx = dataStartIdx + group.startIdx + r;
+                // FIX: Bounds check prevents crash if doc.items changed mid-export
+                if (rowIdx >= rows.length) break;
+                const followerRow = rows[rowIdx];
+                followerRow[col] = { v: '', s: st.cellMerged };
+            }
+        }
+    }
+
+    // ── Sheet assembly ──
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols'] = CP_COL_WIDTHS.map(w => ({ wch: w }));
     ws['!merges'] = merges;
 
-    // Column widths
-    ws['!cols'] = CP_COLUMNS.map(col => ({ wch: parseInt(col.width) / 6 }));
+    // ── Row heights — dynamic for data rows based on content length ──
+    ws['!rows'] = rows.map((row, idx) => {
+        if (idx === 0) return { hpt: 30 };            // Title
+        if (idx === 1) return { hpt: 18 };             // Form ref + phase
+        if (idx >= 2 && idx < separatorIdx) return { hpt: 18 };  // Metadata (dynamic)
+        if (idx === separatorIdx) return { hpt: 6 };    // Thin separator
+        if (idx === groupRowIdx) return { hpt: 28 };    // Group headers
+        if (idx === colHeaderIdx) return { hpt: 24 };   // Column headers
+        // Data rows: calculate height from longest cell text vs its column width
+        if (idx >= dataStartIdx && Array.isArray(row)) {
+            let maxLines = 1;
+            for (let c = 0; c < row.length; c++) {
+                const text = String(row[c]?.v || '');
+                if (!text) continue;
+                const colW = CP_COL_WIDTHS[c] || 15;
+                // ~1.2 chars/unit with Arial 9pt; account for word wrapping
+                const charsPerLine = Math.max(8, Math.floor(colW * 1.2));
+                const lines = Math.ceil(text.length / charsPerLine);
+                maxLines = Math.max(maxLines, lines);
+            }
+            return { hpt: Math.min(80, Math.max(15, maxLines * 13)) };
+        }
+        return { hpt: 15 };
+    });
+
+    // Auto-filter on column header row for easy navigation
+    // 14 columns (A-N), totalCols-1 = 13 → 'N'
+    const lastColLetter = String.fromCharCode(65 + totalCols - 1);
+    ws['!autofilter'] = { ref: `A${colHeaderIdx + 1}:${lastColLetter}${colHeaderIdx + 1}` };
+
+    // Freeze panes at data start (headers stay visible while scrolling)
+    ws['!freeze'] = { xSplit: 0, ySplit: dataStartIdx, topLeftCell: `A${dataStartIdx + 1}` };
 
     XLSX.utils.book_append_sheet(wb, ws, 'Plan de Control');
 
-    const safeName = sanitizeFilename(h.partName || 'Export', { allowSpaces: true });
-    const filename = `PlanDeControl_${safeName}_${new Date().toISOString().split('T')[0]}.xlsx`;
-    downloadWorkbook(wb, filename);
+    return wb;
+}
+
+/**
+ * Export Control Plan — builds workbook and triggers download dialog.
+ */
+export function exportControlPlan(doc: ControlPlanDocument): void {
+    const wb = buildControlPlanWorkbook(doc);
+    const safeName = sanitizeFilename(doc.header.partName || doc.header.partNumber || 'Documento', { allowSpaces: true });
+    downloadWorkbook(wb, `Plan de Control - ${safeName}.xlsx`);
+}
+
+/**
+ * Generate Control Plan Excel as Uint8Array buffer (for auto-export).
+ */
+export function generateCpExcelBuffer(doc: ControlPlanDocument): Uint8Array {
+    return generateWorkbookBuffer(buildControlPlanWorkbook(doc));
 }

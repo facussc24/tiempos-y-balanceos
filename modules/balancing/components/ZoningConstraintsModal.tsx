@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Link, Unlink, X, Plus, Trash2, AlertTriangle } from 'lucide-react';
 import { ProjectData, ZoningConstraint, Task } from '../../../types';
 import { toast } from '../../../components/ui/Toast';
@@ -41,6 +41,16 @@ export const ZoningConstraintsModal: React.FC<Props> = ({ isOpen, onClose, data,
             setNewTaskB('');
         }
     };
+
+    // Close on Escape key
+    useEffect(() => {
+        if (!isOpen) return;
+        const handleEscape = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') { e.preventDefault(); onClose(); }
+        };
+        document.addEventListener('keydown', handleEscape);
+        return () => document.removeEventListener('keydown', handleEscape);
+    }, [isOpen, onClose]);
 
     if (!isOpen) return null;
 
@@ -99,7 +109,7 @@ export const ZoningConstraintsModal: React.FC<Props> = ({ isOpen, onClose, data,
                         <AlertTriangle size={20} className="text-amber-500" />
                         Restricciones de Zonificación
                     </h3>
-                    <button onClick={onClose} className="text-slate-400 hover:text-slate-700">
+                    <button onClick={onClose} className="text-slate-400 hover:text-slate-700" title="Cerrar" aria-label="Cerrar restricciones">
                         <X size={20} />
                     </button>
                 </div>

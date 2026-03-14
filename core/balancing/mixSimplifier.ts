@@ -174,11 +174,21 @@ export function toSimplifiedResult(
     const summary = generateSummary(!hasDeficit, totalOperators, totalMachines);
 
     // Breakdown de productos por porcentaje
+    // FIX: Compensate rounding error so percentages sum to exactly 100%.
+    // Without this, 3 products with equal demand show [33%, 33%, 33%] = 99%.
     const productBreakdown = products.map((p, idx) => ({
         productName: p.name,
         percentage: totalDemand > 0 ? Math.round((p.demand / totalDemand) * 100) : 0,
         color: PRODUCT_COLORS[idx % PRODUCT_COLORS.length]
     }));
+
+    // Adjust last product to compensate for rounding (largest remainder method)
+    if (productBreakdown.length > 0 && totalDemand > 0) {
+        const currentSum = productBreakdown.reduce((s, p) => s + p.percentage, 0);
+        if (currentSum !== 100 && currentSum > 0) {
+            productBreakdown[productBreakdown.length - 1].percentage += (100 - currentSum);
+        }
+    }
 
     return {
         isViable: !hasDeficit,

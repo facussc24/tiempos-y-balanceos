@@ -72,7 +72,7 @@ export async function updateSetting<K extends keyof AppSettings>(
 /**
  * Get the default diagnostic export path
  */
-export async function getDefaultDiagnosticPath(): Promise<string> {
+async function getDefaultDiagnosticPath(): Promise<string> {
     if (isTauri()) {
         try {
             const tauriPath = await import('@tauri-apps/api/path');
@@ -94,32 +94,4 @@ export async function getDiagnosticExportPath(): Promise<string> {
         return settings.diagnosticExportPath;
     }
     return getDefaultDiagnosticPath();
-}
-
-// ============================================================================
-// QA VISIBILITY
-// ============================================================================
-
-/**
- * Check if QA panel should be visible
- */
-export async function isQAVisible(): Promise<boolean> {
-    if (isDevMode()) return true;
-    const settings = await loadSettings();
-    return settings.qaEnabled;
-}
-
-// ============================================================================
-// PLANT ASSETS PATH
-// ============================================================================
-
-export const DEFAULT_PLANT_ASSETS_PATH =
-    'Y:\\Ingenieria\\Documentacion Gestion Ingenieria\\15. Tiempos\\00_CONFIG\\assets.json';
-
-/**
- * Get the configured or default plant assets path
- */
-export async function getPlantAssetsPath(): Promise<string> {
-    const settings = await loadSettings();
-    return settings.plantAssetsPath || DEFAULT_PLANT_ASSETS_PATH;
 }

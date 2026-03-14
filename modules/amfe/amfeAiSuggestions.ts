@@ -261,8 +261,20 @@ function parseGeminiResponse(text: string, currentText: string): Suggestion[] {
 
         const currentLower = currentText.toLowerCase().trim();
 
+        // FIX: Gemini sometimes returns objects like [{text: "..."}, ...] instead of
+        // plain strings. Extract .text or .suggestion fields from object responses
+        // to avoid silently discarding valid suggestions.
         return parsed
-            .filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
+            .map(item => {
+                if (typeof item === 'string') return item;
+                if (item && typeof item === 'object') {
+                    if (typeof item.text === 'string') return item.text;
+                    if (typeof item.suggestion === 'string') return item.suggestion;
+                    if (typeof item.value === 'string') return item.value;
+                }
+                return null;
+            })
+            .filter((item): item is string => item !== null && item.trim().length > 0)
             .filter(item => item.toLowerCase().trim() !== currentLower) // Don't suggest exact match
             .slice(0, 5)
             .map(text => ({

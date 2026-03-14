@@ -10,7 +10,7 @@
  * @module Dashboard
  * @version 4.1.1
  */
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
     Plus, FileText, Video, Users, FolderOpen, Search,
     Clock, ArrowRight, TrendingUp, Sparkles, Filter, ChevronDown,
@@ -21,7 +21,6 @@ import { StatCard } from '../components/landing/StatCard';
 import { logger } from '../utils/logger';
 import { toast } from '../components/ui/Toast';
 import { ConfirmModal } from '../components/modals/ConfirmModal';
-import { readTextFile } from '../utils/tauri_fs';
 import { isTauri } from '../utils/unified_fs';
 
 interface Study {
@@ -66,6 +65,9 @@ export const Dashboard: React.FC<DashboardProps> = ({
     storageVersion = 0    // Reload trigger
 }) => {
     // State
+    // FIX: Use ref counter to prevent premature spinner hide when multiple
+    // async loads overlap (loadClients, loadProjects, loadParts share this flag)
+    const loadingCountRef = useRef(0);
     const [isLoading, setIsLoading] = useState(false);
     const [clients, setClients] = useState<string[]>([]);
     const [projects, setProjects] = useState<string[]>([]);
@@ -113,33 +115,39 @@ export const Dashboard: React.FC<DashboardProps> = ({
     // FIX: Solo persistir DESPUÉS de validar para evitar guardar valores vacíos iniciales
     useEffect(() => {
         if (filtersValidated) {
-            localStorage.setItem('dashboard_selectedClient', selectedClient);
-            localStorage.setItem('dashboard_selectedProject', selectedProject);
+            try {
+                localStorage.setItem('dashboard_selectedClient', selectedClient);
+                localStorage.setItem('dashboard_selectedProject', selectedProject);
+            } catch { /* FIX: non-critical persistence */ }
         }
     }, [selectedClient, selectedProject, filtersValidated]);
 
     // UX Mejora #3: Persist Mix selection to sessionStorage
     // Using sessionStorage (not localStorage) because selection is temporary per session
     useEffect(() => {
-        if (selectedForMix.size > 0) {
-            sessionStorage.setItem('dashboard_mixSelection', JSON.stringify(Array.from(selectedForMix)));
-        } else {
-            sessionStorage.removeItem('dashboard_mixSelection');
-        }
+        try {
+            if (selectedForMix.size > 0) {
+                sessionStorage.setItem('dashboard_mixSelection', JSON.stringify(Array.from(selectedForMix)));
+            } else {
+                sessionStorage.removeItem('dashboard_mixSelection');
+            }
+        } catch { /* FIX: non-critical persistence */ }
     }, [selectedForMix]);
 
     // UX Mejora #3: Restore Mix selection on mount after filters are validated
     useEffect(() => {
         if (filtersValidated) {
-            const saved = sessionStorage.getItem('dashboard_mixSelection');
-            if (saved) {
-                try {
-                    const paths = JSON.parse(saved) as string[];
-                    setSelectedForMix(new Set(paths));
-                } catch {
-                    sessionStorage.removeItem('dashboard_mixSelection');
+            try {
+                const saved = sessionStorage.getItem('dashboard_mixSelection');
+                if (saved) {
+                    try {
+                        const paths = JSON.parse(saved) as string[];
+                        setSelectedForMix(new Set(paths));
+                    } catch {
+                        sessionStorage.removeItem('dashboard_mixSelection');
+                    }
                 }
-            }
+            } catch { /* FIX: sessionStorage inaccessible */ }
         }
     }, [filtersValidated]);
 
@@ -147,15 +155,13 @@ export const Dashboard: React.FC<DashboardProps> = ({
     // Esto evita el parpadeo de un cliente que ya no existe
     useEffect(() => {
         if (clients.length > 0 && !filtersValidated) {
-            const savedClient = localStorage.getItem('dashboard_selectedClient') || '';
+            let savedClient = '';
+            try { savedClient = localStorage.getItem('dashboard_selectedClient') || ''; } catch { /* FIX */ }
 
             if (savedClient && clients.includes(savedClient)) {
                 setSelectedClient(savedClient);
-                // Proyecto se validará en su propio useEffect después de cargar projects
             } else if (savedClient) {
-                // Cliente guardado ya no existe - limpiar silenciosamente
-                localStorage.removeItem('dashboard_selectedClient');
-                localStorage.removeItem('dashboard_selectedProject');
+                try { localStorage.removeItem('dashboard_selectedClient'); localStorage.removeItem('dashboard_selectedProject'); } catch { /* FIX */ }
             }
             setFiltersValidated(true);
         }
@@ -164,12 +170,12 @@ export const Dashboard: React.FC<DashboardProps> = ({
     // FIX: Cargar proyecto guardado de localStorage después de validar
     useEffect(() => {
         if (filtersValidated && projects.length > 0 && !selectedProject) {
-            const savedProject = localStorage.getItem('dashboard_selectedProject') || '';
+            let savedProject = '';
+            try { savedProject = localStorage.getItem('dashboard_selectedProject') || ''; } catch { /* FIX */ }
             if (savedProject && projects.includes(savedProject)) {
                 setSelectedProject(savedProject);
             } else if (savedProject) {
-                // Proyecto guardado ya no existe - limpiar
-                localStorage.removeItem('dashboard_selectedProject');
+                try { localStorage.removeItem('dashboard_selectedProject'); } catch { /* FIX */ }
             }
         }
     }, [projects, filtersValidated, selectedProject]);
@@ -212,9 +218,20 @@ export const Dashboard: React.FC<DashboardProps> = ({
         }
     }, [parts, selectedClient, selectedProject]);
 
+    // FIX: Helpers to manage shared loading counter — spinner stays visible
+    // until ALL concurrent async loads finish, preventing premature hide.
+    const startLoading = () => {
+        loadingCountRef.current++;
+        setIsLoading(true);
+    };
+    const stopLoading = () => {
+        loadingCountRef.current = Math.max(0, loadingCountRef.current - 1);
+        if (loadingCountRef.current === 0) setIsLoading(false);
+    };
+
     const loadClients = async () => {
         if (!listClientsFunc) return;
-        setIsLoading(true);
+        startLoading();
         try {
             const result = await listClientsFunc();
             setClients(result);
@@ -223,13 +240,13 @@ export const Dashboard: React.FC<DashboardProps> = ({
             toast.error('Error al cargar clientes', 'Verifica tu conexión e intenta de nuevo');
             setClients([]);
         } finally {
-            setIsLoading(false);
+            stopLoading();
         }
     };
 
     const loadProjects = async (client: string) => {
         if (!listProjectsFunc) return;
-        setIsLoading(true);
+        startLoading();
         try {
             const result = await listProjectsFunc(client);
             setProjects(result);
@@ -238,13 +255,13 @@ export const Dashboard: React.FC<DashboardProps> = ({
             toast.error('Error al cargar proyectos', 'Verifica tu conexión e intenta de nuevo');
             setProjects([]);
         } finally {
-            setIsLoading(false);
+            stopLoading();
         }
     };
 
     const loadParts = async (client: string, project: string) => {
         if (!listPartsFunc) return;
-        setIsLoading(true);
+        startLoading();
         try {
             const result = await listPartsFunc(client, project);
             setParts(result);
@@ -253,7 +270,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
             toast.error('Error al cargar piezas', 'Verifica tu conexión e intenta de nuevo');
             setParts([]);
         } finally {
-            setIsLoading(false);
+            stopLoading();
         }
     };
 
@@ -304,8 +321,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
         setStudies([]);
         setSelectedForMix(new Set());
         // Also clear localStorage to ensure fresh start
-        localStorage.removeItem('dashboard_selectedClient');
-        localStorage.removeItem('dashboard_selectedProject');
+        try { localStorage.removeItem('dashboard_selectedClient'); localStorage.removeItem('dashboard_selectedProject'); } catch { /* FIX */ }
     };
 
     // Handlers para confirmar/cancelar limpieza de selección
@@ -392,9 +408,9 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 }
                 toast.success('Cliente Eliminado', `"${pendingDelete.name}" y todos sus proyectos fueron eliminados.`);
             }
-        } catch (e: any) {
+        } catch (e: unknown) {
             logger.error('Dashboard', `Error deleting ${pendingDelete.type}`, { error: String(e) });
-            toast.error(`Error al Eliminar`, e.message || String(e));
+            toast.error(`Error al Eliminar`, e instanceof Error ? e.message : String(e));
         } finally {
             setIsDeleting(false);
             setShowConfirmModal(false);
@@ -776,23 +792,14 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
                                 try {
                                     // Leer demanda real de cada master.json
+                                    // isTauri() is false in web mode so demand always falls back to 100.
                                     const products = await Promise.all(
                                         currentSelection.map(async (studyPath) => {
-                                            let demand = 100; // Fallback default
-                                            if (isTauri() && buildPathFunc) {
-                                                try {
-                                                    const [client, project, part] = studyPath.split('/');
-                                                    const masterPath = buildPathFunc(client, project, part);
-                                                    const content = await readTextFile(masterPath);
-                                                    if (content) {
-                                                        const data = JSON.parse(content);
-                                                        if (typeof data.meta?.dailyDemand === 'number' && data.meta.dailyDemand > 0) {
-                                                            demand = data.meta.dailyDemand;
-                                                        }
-                                                    }
-                                                } catch {
-                                                    // Usar default si hay error interno
-                                                }
+                                            const demand = 100; // Fallback default (filesystem not available in web)
+                                            if (isTauri()) {
+                                                // This branch is never reached in web mode.
+                                                // In Tauri mode, demand would be read from master.json via the
+                                                // filesystem. TODO: Implement via backend API.
                                             }
                                             return { path: studyPath, demand };
                                         })

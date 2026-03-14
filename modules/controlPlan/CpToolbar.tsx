@@ -20,9 +20,10 @@ import {
     Link2, ExternalLink, GitBranch, Download, Upload,
 } from 'lucide-react';
 import { logger } from '../../utils/logger';
-import ProductSelector from '../../components/ProductSelector';
-import type { ProductSelection } from '../../components/ProductSelector';
+import ProductSelector from '../../components/ui/ProductSelector';
+import type { ProductSelection } from '../../components/ui/ProductSelector';
 import { resolveApplicableParts } from '../../utils/productFamilyAutoFill';
+import SyncStatusIndicator from '../../components/ui/SyncStatusIndicator';
 
 interface CpToolbarProps {
     // App state
@@ -37,6 +38,7 @@ interface CpToolbarProps {
     hasUnsavedChanges: boolean;
     networkAvailable: boolean;
     lastAutoSave: string | null;
+    autoSaveError?: boolean;
     projects: Array<{ filename: string; name: string; header?: { partName?: string; linkedAmfeProject?: string } }>;
     saveCurrentProject: () => void;
     refreshProjects: () => void;
@@ -103,6 +105,17 @@ interface CpToolbarProps {
     currentRevisionLevel?: string;
     // Product catalog
     onProductSelect?: (fields: Partial<ControlPlanHeader>) => void;
+    // AI
+    aiEnabled?: boolean;
+    // Auto-validation badge
+    autoValidationCount?: number;
+    autoValidationHasErrors?: boolean;
+    // Sync status
+    syncAlertCount?: number;
+    onSyncClick?: () => void;
+    // Export folder
+    onOpenExportFolder?: () => void;
+    canOpenExportFolder?: boolean;
 }
 
 const CpToolbar: React.FC<CpToolbarProps> = (props) => {
@@ -219,12 +232,22 @@ const CpToolbar: React.FC<CpToolbarProps> = (props) => {
                                     )}
                                 </div>
                             )}
-                            {lastAutoSave && (
+                            {props.syncAlertCount != null && props.onSyncClick && (
+                                <div className="ml-2 pl-3 border-l border-gray-200">
+                                    <SyncStatusIndicator alertCount={props.syncAlertCount} onClick={props.onSyncClick} />
+                                </div>
+                            )}
+                            {props.autoSaveError ? (
+                                <div className="flex items-center gap-1 text-red-500 text-[10px] ml-2" title="El auto-guardado de borrador falló. Tu trabajo no está siendo respaldado automáticamente.">
+                                    <HardDrive size={10} />
+                                    <span>Borrador: error</span>
+                                </div>
+                            ) : lastAutoSave ? (
                                 <div className="flex items-center gap-1 text-gray-400 text-[10px] ml-2">
                                     <HardDrive size={10} />
                                     <span>Borrador: {lastAutoSave}</span>
                                 </div>
-                            )}
+                            ) : null}
                             {!networkAvailable && (
                                 <div className="flex items-center gap-1 text-amber-600 bg-amber-50 px-2 py-1 rounded text-xs ml-2">
                                     <WifiOff size={14} />
@@ -233,6 +256,25 @@ const CpToolbar: React.FC<CpToolbarProps> = (props) => {
                             )}
                         </div>
                         <div className="flex gap-2 flex-wrap items-center">
+                            {/* Persistent validation badge */}
+                            <button
+                                onClick={onRunValidation}
+                                className="flex items-center gap-1.5 bg-gray-100 hover:bg-gray-200 border border-gray-300 px-2.5 py-2 rounded transition text-slate-700 font-medium text-xs relative"
+                                title="Validar Plan de Control"
+                            >
+                                <ShieldCheck size={15} className={
+                                    props.autoValidationHasErrors ? 'text-red-500'
+                                    : (props.autoValidationCount ?? 0) > 0 ? 'text-amber-500'
+                                    : 'text-teal-500'
+                                } />
+                                {(props.autoValidationCount ?? 0) > 0 && (
+                                    <span className={`absolute -top-1 -right-1 text-[9px] font-bold rounded-full px-1 min-w-[16px] text-center ${
+                                        props.autoValidationHasErrors ? 'bg-red-500 text-white' : 'bg-amber-400 text-amber-900'
+                                    }`}>
+                                        {props.autoValidationCount}
+                                    </span>
+                                )}
+                            </button>
                             {/* View/Edit Toggle */}
                             <button onClick={() => startTransition(() => setViewMode(prev => prev === 'view' ? 'edit' : 'view'))}
                                 className={`flex items-center gap-1.5 px-3 py-2 rounded font-semibold transition shadow-sm text-xs border ${
@@ -345,6 +387,19 @@ const CpToolbar: React.FC<CpToolbarProps> = (props) => {
                                                 <p className="text-[10px] text-gray-400 mt-0.5">Solo CC/SC y AP Alto (A4)</p>
                                             </div>
                                         </button>
+                                        {props.onOpenExportFolder && (
+                                            <button
+                                                onClick={() => { setShowOverflowMenu(false); props.onOpenExportFolder!(); }}
+                                                disabled={!props.canOpenExportFolder}
+                                                className="w-full text-left px-4 py-2.5 text-xs hover:bg-amber-50 border-b border-gray-100 flex items-center gap-2.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                                            >
+                                                <FolderOpen size={14} className="text-amber-500 flex-shrink-0" />
+                                                <div>
+                                                    <span className="font-bold text-gray-800">Abrir Carpeta</span>
+                                                    <p className="text-[10px] text-gray-400 mt-0.5">Ver archivos exportados en Y:\INGENIERIA</p>
+                                                </div>
+                                            </button>
+                                        )}
                                         <div className="px-4 py-1.5 text-[9px] font-bold text-gray-400 uppercase tracking-wider bg-gray-50 border-b border-gray-100">
                                             Herramientas
                                         </div>
@@ -393,12 +448,14 @@ const CpToolbar: React.FC<CpToolbarProps> = (props) => {
                                     </span>
                                 </button>
                             )}
-                            <button onClick={() => setShowChat(true)}
-                                className="flex items-center gap-1.5 bg-teal-600 hover:bg-teal-500 text-white px-3 py-2 rounded font-semibold transition shadow-sm text-xs"
-                                title="Copiloto IA (Ctrl+I)" data-shortcut="Ctrl+I">
-                                <Sparkles size={15} />
-                                <span className="hidden sm:inline">Copiloto</span>
-                            </button>
+                            {props.aiEnabled && (
+                                <button onClick={() => setShowChat(true)}
+                                    className="flex items-center gap-1.5 bg-teal-600 hover:bg-teal-500 text-white px-3 py-2 rounded font-semibold transition shadow-sm text-xs"
+                                    title="Copiloto IA (Ctrl+I)" data-shortcut="Ctrl+I">
+                                    <Sparkles size={15} />
+                                    <span className="hidden sm:inline">Copiloto</span>
+                                </button>
+                            )}
                         </div>
                     </div>
                 </header>

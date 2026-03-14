@@ -122,7 +122,7 @@ describe('Bug #4 Fix: RotaryStrategy uses real shift config for dailyOutput', ()
         const defaultScenario = defaultResult.chartData[0];
 
         // With 7h shift, dailyOutput should be lower than 8h
-        // dailyOutput = (shiftSeconds * activeShifts * oee) / realCycle
+        // dailyOutput = (shiftSeconds * oee) / realCycle
         expect(shortShiftScenario.dailyOutput).toBeLessThan(defaultScenario.dailyOutput);
     });
 
@@ -135,8 +135,8 @@ describe('Bug #4 Fix: RotaryStrategy uses real shift config for dailyOutput', ()
         const scenario = result.chartData[0];
         const realCycle = scenario.realCycle;
 
-        // Expected: (21600 * 1 * 0.85) / realCycle
-        const expectedDailyOutput = (21600 * 1 * 0.85) / realCycle;
+        // Expected: (21600 * 0.85) / realCycle  (shiftSeconds already includes all shifts)
+        const expectedDailyOutput = (21600 * 0.85) / realCycle;
         expect(scenario.dailyOutput).toBeCloseTo(expectedDailyOutput, 0);
     });
 });

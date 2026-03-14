@@ -153,7 +153,7 @@ export function runAudit(doc: AmfeDocument): AuditReport {
                             issues.push({
                                 severity: 'info',
                                 category: 'Completitud',
-                                message: 'Causa sin descripcion.',
+                                message: 'Causa sin descripción.',
                                 location: failLoc,
                             });
                         }
@@ -221,9 +221,9 @@ export function runAudit(doc: AmfeDocument): AuditReport {
                                 issues.push({
                                     severity: 'warning',
                                     category: 'Controles',
-                                    message: 'Control generico para severidad alta (S≥8). Se recomienda control especifico.',
+                                    message: 'Control genérico para severidad alta (S≥8). Se recomienda control específico.',
                                     location: causeLoc,
-                                    suggestion: 'Para S>=8, usar controles especificos: Poka-Yoke, SPC, inspeccion 100%.',
+                                    suggestion: 'Para S>=8, usar controles específicos: Poka-Yoke, SPC, inspección 100%.',
                                 });
                             }
                         }

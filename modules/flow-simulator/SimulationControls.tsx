@@ -5,6 +5,7 @@
 
 import React from 'react';
 import type { ProductMixMode } from './flowTypes';
+import { formatTime } from './flowUtils';
 
 // =============================================================================
 // ICONS
@@ -33,24 +34,12 @@ const ResetIcon = () => (
 // =============================================================================
 
 const SIMULATION_SCENARIOS = [
-    { id: 'quick', name: 'Rapida', icon: '⚡', time: '~30 seg', pieces: 10, speed: 5, variability: 0, wip: 3, description: 'Vista rapida del flujo' },
-    { id: 'standard', name: 'Estandar', icon: '📊', time: '~2 min', pieces: 50, speed: 2, variability: 5, wip: 3, description: 'Analisis tipico' },
-    { id: 'stress', name: 'Stress Test', icon: '🔥', time: '~5 min', pieces: 200, speed: 1, variability: 15, wip: 5, description: 'Maxima carga' },
+    { id: 'quick', name: 'Rápida', icon: '⚡', time: '~30 seg', pieces: 10, speed: 5, variability: 0, wip: 3, description: 'Vista rápida del flujo' },
+    { id: 'standard', name: 'Estándar', icon: '📊', time: '~2 min', pieces: 50, speed: 2, variability: 5, wip: 3, description: 'Análisis típico' },
+    { id: 'stress', name: 'Stress Test', icon: '🔥', time: '~5 min', pieces: 200, speed: 1, variability: 15, wip: 5, description: 'Máxima carga' },
 ];
 
 export type SimScenario = typeof SIMULATION_SCENARIOS[0];
-
-// =============================================================================
-// HELPERS
-// =============================================================================
-
-function formatTime(seconds: number): string {
-    if (!isFinite(seconds) || seconds <= 0) return '-';
-    if (seconds < 60) return `${seconds.toFixed(1)}s`;
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}m ${secs.toFixed(0)}s`;
-}
 
 // =============================================================================
 // PROPS

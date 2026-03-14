@@ -18,7 +18,7 @@ interface MixTask extends Task {
         time: number;
         demand: number;
     }>;
-    _originalTimes?: any;
+    _originalTimes?: Array<{ productId: string; time: number; demand: number }>;
     _weightedTime?: number;
     _isLowWeight?: boolean; // V4.1: Flag for Mizusumashi recommendation (< 15% Takt)
 }
@@ -168,11 +168,29 @@ export function calculateWeightedTimes(
         let weightedSum = 0;
 
         for (const entry of times) {
+            // FIX: Guard against NaN in entry data (corrupted JSON, bad import)
+            if (!Number.isFinite(entry.time) || !Number.isFinite(entry.demand)) {
+                logger.warn('MMALBP', 'Non-finite entry in weighted calc, skipping', {
+                    taskId: task.id,
+                    time: entry.time,
+                    demand: entry.demand
+                });
+                continue;
+            }
+
             // Calculate percentage of this product in total mix
             const mixPercentage = entry.demand / totalDemand;
 
             // Contribution = Time * %Mix
             weightedSum += entry.time * mixPercentage;
+        }
+
+        // FIX: Guard against NaN propagation from corrupted upstream data
+        if (!Number.isFinite(weightedSum)) {
+            logger.error('MMALBP', 'Weighted sum is non-finite, using 0', {
+                taskId: task.id, weightedSum
+            });
+            weightedSum = 0;
         }
 
         // Round to 2 decimals for UI clarity
@@ -220,6 +238,9 @@ export function generateHeijunkaSequence(
 
     // Calculate percentages for rationale
     const totalDemand = products.reduce((sum, p) => sum + p.demand, 0);
+    if (totalDemand <= 0) {
+        return { sequence: '', rationale: 'Demanda total es 0 - no se puede generar secuencia' };
+    }
     const percentages = sorted.map(p => ({
         name: p.name,
         percent: Math.round((p.demand / totalDemand) * 100)
@@ -362,6 +383,7 @@ export function calculateStationProductBreakdown(
     totalDemand: number
 ): Record<string, number> {
     const breakdown: Record<string, number> = {};
+    if (totalDemand <= 0) return breakdown;
 
     for (const task of stationTasks) {
         const times = task._originalTimes || task._multiProductTimes;
@@ -411,7 +433,7 @@ export function validateMixBalance(
             const taskTime = taskTimeMap.get(a.taskId) || 0;
             return sum + taskTime;
         }, 0);
-        const saturation = totalTime / taktTime;
+        const saturation = taktTime > 0 ? totalTime / taktTime : 0;
 
         if (saturation > SATURATION_THRESHOLD) {
             riskyStations.push(config.id);
@@ -468,6 +490,8 @@ export function validateModelVariability(
     alerts: ModelVariabilityAlert[];
     worstCase: { modelId: string; maxTime: number } | null;
 } {
+    if (taktTime <= 0) return { valid: false, alerts: [], worstCase: null };
+
     const alerts: ModelVariabilityAlert[] = [];
     let worstCase: { modelId: string; maxTime: number } | null = null;
     let maxModelTime = 0;
@@ -633,6 +657,11 @@ export function validateProcessConstraints(
 } {
     const violations: ProcessConstraintViolation[] = [];
 
+    // Guard: taktTime must be positive for constraint validation
+    if (taktTime <= 0) {
+        return { valid: false, violations: [], fatalMessage: 'Takt Time invalido (debe ser > 0). Revise turnos y demanda.' };
+    }
+
     // Filter tasks with process constraints
     const constrainedTasks = tasks.filter(t => t.isProcessConstraint === true);
 
@@ -655,7 +684,9 @@ export function validateProcessConstraints(
                     m => m.id === task.requiredMachineId
                 );
                 if (machineConfig) {
-                    availableMachines = machineConfig.availableUnits || machineConfig.quantity || 1;
+                    // FIX: Guard NaN — nullish coalescing doesn't catch NaN
+                    const rawUnits = machineConfig.availableUnits ?? machineConfig.quantity;
+                    availableMachines = Number.isFinite(rawUnits) ? rawUnits : 1;
                 }
             }
 
@@ -725,6 +756,19 @@ export function analyzeMixBySector(
 ): MixSectorAnalysis {
     try {
         const totalDemand = products.reduce((sum, p) => sum + p.demand, 0);
+
+        // Guard: zero demand means no analysis possible
+        if (totalDemand <= 0) {
+            return {
+                sectors: [],
+                totalPuestos: 0,
+                totalOperators: result.totalHeadcount,
+                hasAnyDeficit: false,
+                taktTime,
+                totalDemand: 0
+            };
+        }
+
         const sectorsMap = new Map<string, SectorRequirement>();
         const machinesMap = new Map<string, MachineRequirement>();
 
@@ -741,9 +785,12 @@ export function analyzeMixBySector(
         const getMachineInfo = (machineId?: string): { id: string; name: string; available: number } => {
             if (!machineId) return { id: 'MANUAL', name: 'Manual', available: 999 };
             const machine = plantConfig?.machines.find(m => m.id === machineId);
-            return machine
-                ? { id: machine.id, name: machine.name, available: machine.availableUnits }
-                : { id: machineId, name: machineId, available: 999 };
+            if (machine) {
+                // FIX: Guard NaN — nullish coalescing doesn't catch NaN
+                const rawUnits = machine.availableUnits ?? machine.quantity;
+                return { id: machine.id, name: machine.name, available: Number.isFinite(rawUnits) ? rawUnits : 1 };
+            }
+            return { id: machineId, name: machineId, available: 999 };
         };
 
         // Process each task in the result
@@ -800,10 +847,12 @@ export function analyzeMixBySector(
                     // Find or create product contribution entry
                     let contrib = machine.productBreakdown.find(c => c.productPath === mpt.productId);
                     if (!contrib) {
+                        // FIX: findIndex returns -1 when not found; -1 % N = -1 in JS → undefined color
+                        const safeIdx = productIdx >= 0 ? productIdx : 0;
                         contrib = {
                             productPath: mpt.productId,
                             productName: productInfo?.name || mpt.productId.split(/[\\/]/).pop() || mpt.productId,
-                            color: PRODUCT_COLORS[productIdx % PRODUCT_COLORS.length],
+                            color: PRODUCT_COLORS[safeIdx % PRODUCT_COLORS.length],
                             timeContribution: 0,
                             percentageOfTotal: 0
                         };
@@ -821,15 +870,35 @@ export function analyzeMixBySector(
 
             // V4.5 FIX: Apply Variable Efficiency Factor (OBE)
             // Passed from UI: 1.0 (Theoretical) or 0.85 (Real)
-            const OBE = efficiencyFactor;
+            // Clamp to valid range to prevent division by zero or nonsensical values
+            const OBE = Math.max(0.01, Math.min(1.0, efficiencyFactor));
 
-            // Calculate units required with efficiency buffer
-            machine.unitsRequired = machine.totalWeightedTime > 0
+            // ── CAPACITY PLANNING ─────────────────────────────────────────
+            // OBE goes in the denominator HERE to inflate machine count,
+            // absorbing real-world losses (micro-stops, fatigue, changeovers).
+            // Formula: unitsRequired = ceil(weightedTime / (takt × OBE))
+            // Source: Krajewski capacity cushion model, AIAG capacity analysis.
+            machine.unitsRequired = machine.totalWeightedTime > 0 && taktTime > 0
                 ? Math.ceil(machine.totalWeightedTime / (taktTime * OBE))
                 : 0;
 
-            // Calculate saturation per unit
-            if (machine.unitsRequired > 0) {
+            // ── SATURATION REPORTING ──────────────────────────────────────
+            // IMPORTANT: Saturation is measured against NOMINAL takt (without OBE).
+            // This is the automotive industry standard (Toyota Yamazumi charts,
+            // Lean Enterprise Institute OBC, AIAG/VDA capacity planning).
+            //
+            // Rationale: A well-balanced line with OBE=0.85 should show ~85%
+            // saturation, making the 15% efficiency buffer VISIBLE to the user.
+            // If we divided by (takt × OBE), saturation would always show ~100%
+            // for balanced lines, hiding the buffer and providing no diagnostic value.
+            //
+            // UI color thresholds reflect this:
+            //   Green  < 85%  → healthy margin
+            //   Amber  85-95% → tight but viable
+            //   Red    >= 95% → no margin, risk of missed takt
+            //
+            // DO NOT add OBE to this denominator.
+            if (machine.unitsRequired > 0 && taktTime > 0) {
                 machine.saturationPerUnit = (machine.totalWeightedTime / (machine.unitsRequired * taktTime)) * 100;
             }
 
@@ -893,6 +962,7 @@ export function detectParallelStationNeeds(
     products: ProjectData[],
     taktTime: number
 ): ParallelStationAlert[] {
+    if (taktTime <= 0) return [];
     const alerts: ParallelStationAlert[] = [];
 
     for (const product of products) {

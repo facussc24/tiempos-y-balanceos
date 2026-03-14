@@ -28,8 +28,8 @@ import CpTemplateModal from './CpTemplateModal';
 import { ConfirmModal } from '../../components/modals/ConfirmModal';
 import { PromptModal } from '../../components/modals/PromptModal';
 import { RevisionPromptModal } from '../../components/modals/RevisionPromptModal';
-import { CrossDocAlertBanner } from '../../components/CrossDocAlertBanner';
-import { RevisionHistoryPanel } from '../../components/RevisionHistoryPanel';
+import { CrossDocAlertBanner } from '../../components/ui/CrossDocAlertBanner';
+import { RevisionHistoryPanel } from '../../components/layout/RevisionHistoryPanel';
 import PdfPreviewModal from '../../components/modals/PdfPreviewModal';
 import { ModuleErrorBoundary } from '../../components/ui/ModuleErrorBoundary';
 import { LoadingOverlay } from '../../components/ui/LoadingOverlay';
@@ -47,6 +47,7 @@ import { logger } from '../../utils/logger';
 import { useCpKeyboardShortcuts } from './useCpKeyboardShortcuts';
 import { useCpFilters } from './useCpFilters';
 import { useCpDraftRecovery } from './useCpDraftRecovery';
+import { useOpenExportFolder } from '../../hooks/useOpenExportFolder';
 
 const CpChatPanel = lazy(() => import('./CpChatPanel'));
 const ControlPlanSummary = lazy(() => import('./ControlPlanSummary'));
@@ -72,6 +73,9 @@ const ControlPlanApp: React.FC<Props> = ({ onBackToLanding, embedded, initialDat
     const [showHelp, setShowHelp] = useState(false);
     const [showTemplates, setShowTemplates] = useState(false);
     const [validationIssues, setValidationIssues] = useState<CpValidationIssue[] | null>(null);
+    const [autoValidationCount, setAutoValidationCount] = useState(0);
+    const [autoValidationHasErrors, setAutoValidationHasErrors] = useState(false);
+    const validationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const [viewMode, setViewMode] = useState<'view' | 'edit'>('edit');
     const [pdfPreview, setPdfPreview] = useState<{ html: string; template: CpPdfTemplate } | null>(null);
     const [isExportingPdf, setIsExportingPdf] = useState(false);
@@ -96,12 +100,18 @@ const ControlPlanApp: React.FC<Props> = ({ onBackToLanding, embedded, initialDat
     // Undo/Redo handlers
     const handleUndo = useCallback(() => {
         const prev = history.undo();
-        if (prev) cp.loadData(prev);
+        if (prev) {
+            cp.loadData(prev);
+            toast.success('Deshacer', history.undoCount > 0 ? `${history.undoCount} cambios restantes` : undefined);
+        }
     }, [history, cp.loadData]);
 
     const handleRedo = useCallback(() => {
         const next = history.redo();
-        if (next) cp.loadData(next);
+        if (next) {
+            cp.loadData(next);
+            toast.success('Rehacer', history.redoCount > 0 ? `${history.redoCount} cambios restantes` : undefined);
+        }
     }, [history, cp.loadData]);
 
     // Wrap loadData to also reset undo history when loading a project
@@ -143,6 +153,9 @@ const ControlPlanApp: React.FC<Props> = ({ onBackToLanding, embedded, initialDat
     // Cross-document alerts
     const crossDocAlerts = useCrossDocAlerts('cp', projects.currentProject);
 
+    // Export folder
+    const exportFolder = useOpenExportFolder('cp', cp.data);
+
     // Load initial data if provided (from AMFE generator)
     useEffect(() => {
         if (initialData) {
@@ -156,6 +169,7 @@ const ControlPlanApp: React.FC<Props> = ({ onBackToLanding, embedded, initialDat
         return () => {
             if (highlightTimerRef.current) clearTimeout(highlightTimerRef.current);
             if (blobTimerRef.current) clearTimeout(blobTimerRef.current);
+            if (validationTimerRef.current) clearTimeout(validationTimerRef.current);
         };
     }, []);
 
@@ -179,21 +193,18 @@ const ControlPlanApp: React.FC<Props> = ({ onBackToLanding, embedded, initialDat
         try { localStorage.setItem('cp_header_collapsed', String(headerCollapsed)); } catch {}
     }, [headerCollapsed]);
 
-    // Keyboard shortcuts (extracted hook)
-    useCpKeyboardShortcuts({
-        onSave: projects.saveCurrentProject,
-        onToggleChat: useCallback(() => setShowChat(prev => !prev), []),
-        onToggleViewMode: useCallback(() => setViewMode(prev => prev === 'view' ? 'edit' : 'view'), []),
-        onFocusSearch: useCallback(() => searchRef.current?.focus(), [searchRef]),
-        onAddItem: cp.addItem,
-        onUndo: handleUndo,
-        onRedo: handleRedo,
-        onToggleSummary: useCallback(() => setShowSummary(prev => !prev), []),
-        onToggleHelp: useCallback(() => setShowHelp(prev => !prev), []),
-        showChat, validationIssues, showSummary, showHelp, showTemplates,
-        isReadOnly, setValidationIssues, setShowChat, setShowSummary, setShowHelp, setShowTemplates,
-        showOverflowMenu, setShowOverflowMenu,
-    });
+    // Auto-validate CP against AMFE with 2-second debounce
+    useEffect(() => {
+        if (validationTimerRef.current) clearTimeout(validationTimerRef.current);
+        validationTimerRef.current = setTimeout(() => {
+            if (amfeDoc) {
+                const issues = validateCpAgainstAmfe(cp.data, amfeDoc);
+                setAutoValidationCount(issues.length);
+                setAutoValidationHasErrors(issues.some(i => i.severity === 'error'));
+            }
+        }, 2000);
+        return () => { if (validationTimerRef.current) clearTimeout(validationTimerRef.current); };
+    }, [cp.data.items, amfeDoc]);
 
     // AI suggestions state (reads global Gemini settings)
     const [aiEnabled, setAiEnabled] = useState(false);
@@ -207,16 +218,35 @@ const ControlPlanApp: React.FC<Props> = ({ onBackToLanding, embedded, initialDat
         return () => { cancelled = true; };
     }, []);
 
-    // Completion progress bar stats
+    // Keyboard shortcuts (extracted hook)
+    useCpKeyboardShortcuts({
+        onSave: projects.saveCurrentProject,
+        onToggleChat: useCallback(() => { if (aiEnabled) setShowChat(prev => !prev); }, [aiEnabled]),
+        onToggleViewMode: useCallback(() => setViewMode(prev => prev === 'view' ? 'edit' : 'view'), []),
+        onFocusSearch: useCallback(() => searchRef.current?.focus(), [searchRef]),
+        onAddItem: cp.addItem,
+        onUndo: handleUndo,
+        onRedo: handleRedo,
+        onToggleSummary: useCallback(() => setShowSummary(prev => !prev), []),
+        onToggleHelp: useCallback(() => setShowHelp(prev => !prev), []),
+        showChat, validationIssues, showSummary, showHelp, showTemplates,
+        isReadOnly, setValidationIssues, setShowChat, setShowSummary, setShowHelp, setShowTemplates,
+        showOverflowMenu, setShowOverflowMenu,
+    });
+
+    // Completion progress bar stats — context-aware by row type (process vs product)
     const completionStats = useMemo(() => {
-        const requiredFields: (keyof ControlPlanItem)[] = [
-            'processStepNumber', 'processDescription', 'productCharacteristic',
-            'sampleSize', 'controlMethod', 'reactionPlan', 'reactionPlanOwner'
-        ];
-        const total = cp.data.items.length * requiredFields.length;
+        const FIELDS_PER_ROW = 7;
+        const total = cp.data.items.length * FIELDS_PER_ROW;
         if (total === 0) return { percent: 0, filled: 0, total: 0 };
         const filled = cp.data.items.reduce((acc, item) => {
-            return acc + requiredFields.filter(f => ((item[f] as string) || '').trim() !== '').length;
+            const hasProcess = ((item.processCharacteristic as string) || '').trim() !== '';
+            const hasProduct = ((item.productCharacteristic as string) || '').trim() !== '';
+            const isProcess = hasProcess && !hasProduct;
+            const fields: (keyof ControlPlanItem)[] = isProcess
+                ? ['processStepNumber', 'processDescription', 'processCharacteristic', 'sampleSize', 'controlMethod', 'reactionPlan', 'reactionPlanOwner']
+                : ['processStepNumber', 'processDescription', 'productCharacteristic', 'sampleSize', 'evaluationTechnique', 'reactionPlan', 'reactionPlanOwner'];
+            return acc + fields.filter(f => ((item[f] as string) || '').trim() !== '').length;
         }, 0);
         return { percent: Math.round((filled / total) * 100), filled, total };
     }, [cp.data.items]);
@@ -268,9 +298,10 @@ const ControlPlanApp: React.FC<Props> = ({ onBackToLanding, embedded, initialDat
     }, [cp.updateHeader]);
 
     const handleChatApply = useCallback((newDoc: ControlPlanDocument) => {
+        history.flushPending(); // Commit any in-progress typing before AI mutation
         cp.loadData(newDoc);
         // Don't reset history — allow Ctrl+Z to undo chat actions
-    }, [cp.loadData]);
+    }, [cp.loadData, history]);
 
     // FIX: Added history.resetHistory to prevent undo from removing template items
     const handleApplyTemplate = useCallback((templateId: string) => {
@@ -310,6 +341,16 @@ const ControlPlanApp: React.FC<Props> = ({ onBackToLanding, embedded, initialDat
             }]);
         }
     }, [cp.data, amfeDoc]);
+
+    // Bulk fill: apply a value from one item to all items in the same operation group
+    const handleBulkFill = useCallback((sourceItemId: string, field: string, value: string) => {
+        const sourceItem = cp.data.items.find(i => i.id === sourceItemId);
+        if (!sourceItem) return;
+        const stepNumber = sourceItem.processStepNumber;
+        cp.data.items
+            .filter(i => i.processStepNumber === stepNumber && i.id !== sourceItemId)
+            .forEach(i => cp.updateItem(i.id, field as keyof ControlPlanItem, value));
+    }, [cp.data.items, cp.updateItem]);
 
     const inputClass = "w-full border border-gray-300 bg-gray-50 p-2 rounded focus:ring-2 focus:ring-teal-100 focus:border-teal-400 outline-none transition";
 
@@ -427,6 +468,7 @@ const ControlPlanApp: React.FC<Props> = ({ onBackToLanding, embedded, initialDat
                 hasUnsavedChanges={projects.hasUnsavedChanges}
                 networkAvailable={projects.networkAvailable}
                 lastAutoSave={persistence.lastAutoSave}
+                autoSaveError={persistence.autoSaveError}
                 projects={projects.projects}
                 saveCurrentProject={projects.saveCurrentProject}
                 refreshProjects={projects.refreshProjects}
@@ -473,10 +515,15 @@ const ControlPlanApp: React.FC<Props> = ({ onBackToLanding, embedded, initialDat
                 requestConfirm={confirm.requestConfirm}
                 onPdfPreview={handlePdfPreview}
                 onNavigateToAmfe={onNavigateToAmfe}
-                linkedAmfeProject={cp.data.header.linkedAmfeProject}
+                linkedAmfeProject={cp.data.header.partName || cp.data.header.linkedAmfeProject}
                 onNewRevision={revisionControl.handleNewRevision}
                 currentRevisionLevel={cp.data.header.revision || 'A'}
                 onProductSelect={handleProductSelect}
+                aiEnabled={aiEnabled}
+                autoValidationCount={autoValidationCount}
+                autoValidationHasErrors={autoValidationHasErrors}
+                onOpenExportFolder={exportFolder.openFolder}
+                canOpenExportFolder={exportFolder.canOpen}
             />
 
             {/* Cross-document alert banner */}
@@ -545,6 +592,7 @@ const ControlPlanApp: React.FC<Props> = ({ onBackToLanding, embedded, initialDat
                                 buildQueryFn={buildQueryFn}
                                 readOnly={isReadOnly}
                                 columnVisibility={colVis.visibility}
+                                onBulkFill={handleBulkFill}
                             />
                         </table>
                     </div>
@@ -564,7 +612,7 @@ const ControlPlanApp: React.FC<Props> = ({ onBackToLanding, embedded, initialDat
 
                 {/* FABs */}
                 <div className="fixed bottom-14 right-8 z-40 flex flex-col gap-3 items-end">
-                    {embedded && (
+                    {embedded && aiEnabled && (
                         <button onClick={() => setShowChat(true)}
                             className="bg-teal-600 hover:bg-teal-500 text-white rounded-full p-3 shadow-lg flex items-center gap-2 transition-transform hover:scale-105"
                             title="Copiloto IA (Ctrl+I)">

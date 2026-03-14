@@ -15,8 +15,13 @@ export interface AppSettings {
     plantAssetsPath: string | null;
     amfeBasePath: string | null;
     cpBasePath: string | null;
+    hoBasePath: string | null;
+    pfdBasePath: string | null;
+    solicitudBasePath: string | null;
+    engineeringBasePath: string | null;
     geminiApiKey: string | null;
     geminiEnabled: boolean;
+    lastReconciliationCheck: string | null;
 }
 
 export const DEFAULT_APP_SETTINGS: AppSettings = {
@@ -26,8 +31,13 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
     plantAssetsPath: null,
     amfeBasePath: null,
     cpBasePath: null,
+    hoBasePath: null,
+    pfdBasePath: null,
+    solicitudBasePath: null,
+    engineeringBasePath: null,
     geminiApiKey: null,
     geminiEnabled: false,
+    lastReconciliationCheck: null,
 };
 
 /**

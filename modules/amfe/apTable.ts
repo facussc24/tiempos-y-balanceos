@@ -208,17 +208,13 @@ function buildAPTable(): AP[][][] {
  * @returns 'H' | 'M' | 'L' | '' (empty if inputs invalid)
  */
 export function calculateAP(s: number, o: number, d: number): 'H' | 'M' | 'L' | '' {
-    // Validate inputs
+    // Validate inputs — NaN check MUST come first, before Math.round,
+    // because NaN comparisons always return false (bypassing range checks)
+    if (isNaN(s) || isNaN(o) || isNaN(d)) return '';
     const sInt = Math.round(s);
     const oInt = Math.round(o);
     const dInt = Math.round(d);
-
-    if (sInt < 1 || sInt > 10 || oInt < 1 || oInt > 10 || dInt < 1 || dInt > 10) {
-        return '';
-    }
-    if (isNaN(sInt) || isNaN(oInt) || isNaN(dInt)) {
-        return '';
-    }
+    if (sInt < 1 || sInt > 10 || oInt < 1 || oInt > 10 || dInt < 1 || dInt > 10) return '';
 
     return apLookup[sInt][oInt][dInt];
 }

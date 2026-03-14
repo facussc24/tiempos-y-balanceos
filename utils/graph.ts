@@ -160,7 +160,10 @@ export const calculateTaskWeights = (
             }
         } else {
             // Keep legacy or manual if no time data
-            averageTime = t.averageTime;
+            // FIX: Guard against undefined/NaN averageTime from legacy data — this is
+            // the root cause of NaN propagation through standardTime → positionalWeight
+            // → sort comparators and Math.max calculations downstream.
+            averageTime = t.averageTime || 0;
             stdDev = t.stdDev || 0;
         }
 

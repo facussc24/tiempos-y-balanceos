@@ -57,7 +57,6 @@ const SHORTCUTS = [
     ]},
     { category: 'Paneles', items: [
         { keys: 'Ctrl+E', desc: 'Abrir/cerrar Resumen' },
-        { keys: 'Ctrl+I', desc: 'Abrir/cerrar Copiloto IA' },
         { keys: 'Ctrl+H', desc: 'Abrir/cerrar Referencia Rapida' },
     ]},
     { category: 'Tabla', items: [
@@ -272,7 +271,7 @@ function ColumnsTab() {
                                 <tr className="bg-gray-50 text-gray-600">
                                     <th className="px-2 py-1.5 text-left font-semibold">Columna</th>
                                     <th className="px-2 py-1.5 text-center w-12 font-semibold">Req.</th>
-                                    <th className="px-2 py-1.5 text-center w-12 font-semibold">IA</th>
+                                    <th className="px-2 py-1.5 text-center w-12 font-semibold">Auto</th>
                                     <th className="px-2 py-1.5 text-left font-semibold">Descripción</th>
                                 </tr>
                             </thead>
@@ -287,7 +286,7 @@ function ColumnsTab() {
                                         </td>
                                         <td className="px-2 py-1.5 text-center">
                                             {item.autoFill
-                                                ? <span className="text-purple-500 font-bold text-[10px]">AI</span>
+                                                ? <span className="text-teal-500 font-bold text-[10px]">Auto</span>
                                                 : <span className="text-gray-300">-</span>}
                                         </td>
                                         <td className="px-2 py-1.5 text-gray-600">{item.desc}</td>
@@ -302,7 +301,7 @@ function ColumnsTab() {
             {/* Legend */}
             <div className="flex items-center gap-4 text-[10px] text-gray-500 pt-2">
                 <span><span className="text-red-500 font-bold">*</span> = Campo obligatorio</span>
-                <span><span className="text-purple-500 font-bold">AI</span> = Auto-llenado / sugerido por IA</span>
+                <span><span className="text-teal-500 font-bold">Auto</span> = Auto-llenado desde AMFE</span>
             </div>
         </div>
     );

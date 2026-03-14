@@ -8,7 +8,7 @@
  * @module mix
  * @version 4.3.0
  */
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AlertTriangle, CheckCircle, XCircle, HelpCircle } from 'lucide-react';
 
 export interface TaskConflict {
@@ -28,6 +28,15 @@ export const TaskConflictModal: React.FC<TaskConflictModalProps> = ({
     onResolve,
     onCancel
 }) => {
+    // Close on Escape key
+    useEffect(() => {
+        const handleEscape = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') { e.preventDefault(); onCancel(); }
+        };
+        document.addEventListener('keydown', handleEscape);
+        return () => document.removeEventListener('keydown', handleEscape);
+    }, [onCancel]);
+
     // Track user decisions: 'merge' = same machine, 'separate' = different machines
     const [decisions, setDecisions] = useState<Map<string, 'merge' | 'separate'>>(
         new Map(conflicts.map(c => [c.taskId, 'merge']))
@@ -42,8 +51,8 @@ export const TaskConflictModal: React.FC<TaskConflictModalProps> = ({
     };
 
     return (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full mx-4 max-h-[85vh] overflow-hidden">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 backdrop-blur-sm animate-in fade-in duration-150">
+            <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full mx-4 max-h-[85vh] overflow-hidden animate-in zoom-in-95 duration-200">
                 {/* Header */}
                 <div className="p-4 border-b border-slate-200 bg-amber-50">
                     <div className="flex items-center gap-3">

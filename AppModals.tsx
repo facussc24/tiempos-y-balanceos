@@ -6,6 +6,7 @@
  */
 import React from 'react';
 import { SyncPanel } from './modules/SyncPanel';
+import { MediaMigrationPanel } from './modules/MediaMigrationPanel';
 import { StorageConfigModal } from './components/modals/StorageConfigModal';
 import { ProjectWizard } from './modules/ProjectWizard';
 import { listProjects, listParts, ensureStudyStructure, buildMasterJsonPath, buildPath } from './utils/pathManager';
@@ -24,6 +25,7 @@ import { isTauri } from './utils/unified_fs';
 import type { Tab } from './hooks/useAppNavigation';
 import type { useProjectPersistence } from './hooks/useProjectPersistence';
 import type { useSessionLock } from './hooks/useSessionLock';
+import type { useUndoRedo } from './hooks/useUndoRedo';
 import type { useShortcutHints } from './hooks/useShortcutHints';
 import type { useAppModals } from './hooks/useAppModals';
 
@@ -34,6 +36,7 @@ interface AppModalsProps {
     };
     persistence: ReturnType<typeof useProjectPersistence>;
     sessionLock: ReturnType<typeof useSessionLock>;
+    undoRedo: ReturnType<typeof useUndoRedo>;
     shortcutHints: ReturnType<typeof useShortcutHints>;
     modals: ReturnType<typeof useAppModals>;
     fabConfig: FABConfig | null;
@@ -41,12 +44,14 @@ interface AppModalsProps {
     storageVersion: number;
     setStorageVersion: React.Dispatch<React.SetStateAction<number>>;
     confirmCloseProject: () => void;
+    onMediaMigrationComplete?: () => void;
 }
 
 export const AppModals: React.FC<AppModalsProps> = ({
     navigation,
     persistence,
     sessionLock,
+    undoRedo,
     shortcutHints,
     modals,
     fabConfig,
@@ -54,6 +59,7 @@ export const AppModals: React.FC<AppModalsProps> = ({
     storageVersion,
     setStorageVersion,
     confirmCloseProject,
+    onMediaMigrationComplete,
 }) => {
     return (
         <>
@@ -77,7 +83,7 @@ export const AppModals: React.FC<AppModalsProps> = ({
 
             {/* Revision History Modal */}
             {modals.showRevisionHistory && persistence.data.directoryHandle && typeof persistence.data.directoryHandle === 'string' && typeof persistence.data.fileHandle === 'string' && (
-                <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4">
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
                     <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-auto animate-in fade-in zoom-in duration-200">
                         <div className="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between">
                             <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
@@ -95,11 +101,13 @@ export const AppModals: React.FC<AppModalsProps> = ({
                                 directoryPath={persistence.data.directoryHandle as string}
                                 currentFilePath={persistence.data.fileHandle as string}
                                 onRestore={(restored) => {
-                                    persistence.setData({
+                                    const restoredData = {
                                         ...restored,
                                         fileHandle: persistence.data.fileHandle,
                                         directoryHandle: persistence.data.directoryHandle
-                                    });
+                                    };
+                                    persistence.setData(restoredData);
+                                    undoRedo.resetHistory(restoredData);
                                     modals.setShowRevisionHistory(false);
                                     toast.success('Versión Restaurada', 'Se cargó la versión seleccionada');
                                 }}
@@ -207,6 +215,7 @@ export const AppModals: React.FC<AppModalsProps> = ({
 
                         // Load project and navigate
                         persistence.setData(initialData);
+                        undoRedo.resetHistory(initialData);
                         navigation.setActiveTab('panel');
 
                         toast.success(
@@ -240,6 +249,14 @@ export const AppModals: React.FC<AppModalsProps> = ({
                         />
                     </div>
                 </div>
+            )}
+
+            {/* Media Migration Panel */}
+            {modals.showMediaMigration && (
+                <MediaMigrationPanel
+                    onClose={() => modals.setShowMediaMigration(false)}
+                    onMigrationComplete={onMediaMigrationComplete}
+                />
             )}
 
             {/* Storage Config Modal */}

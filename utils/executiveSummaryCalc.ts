@@ -9,9 +9,24 @@
  */
 
 import { ProjectData, Shift, Sector, Task, MachineType, Assignment } from '../types';
-import { calculateTaktTime, calculateShiftNetMinutes } from '../core/balancing/simulation';
+import { calculateTaktTime, calculateShiftNetMinutes, calculateEffectiveStationTime, calculateSectorTaktTime } from '../core/balancing/simulation';
 import XLSX from 'xlsx-js-style';
 import { logger } from './logger';
+import { sanitizeCellValue } from './sanitizeCellValue';
+import { toast } from '../components/ui/Toast';
+
+// ============================================================================
+// HTML helpers
+// ============================================================================
+
+/** Sanitize a value for safe HTML output — prevents XSS in generated HTML */
+function esc(value: string | number | undefined | null): string {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}
 
 // ============================================================================
 // Types
@@ -131,7 +146,8 @@ const getEffectiveTaskTime = (task: Task): number => {
 /**
  * Compute real bottleneck cycle time from station assignments.
  * Returns 0 if no balancing data exists.
- * The bottleneck is the slowest station (max effective cycle time).
+ * Uses calculateEffectiveStationTime for overlap-aware cycle times
+ * (properly handles concurrent machine+manual tasks).
  */
 const calculateBottleneckFromAssignments = (data: ProjectData): number => {
     if (!data.assignments?.length || !data.stationConfigs?.length) return 0;
@@ -144,10 +160,11 @@ const calculateBottleneckFromAssignments = (data: ProjectData): number => {
 
         if (stationTasks.length === 0) return 0;
 
-        const totalTime = stationTasks.reduce((sum, t) => sum + getEffectiveTaskTime(t), 0);
+        // Use overlap-aware algorithm instead of naive sum
+        const effectiveTime = calculateEffectiveStationTime(stationTasks);
 
         // Divide by replicas (multi-manning reduces effective cycle time)
-        return totalTime / (config.replicas || 1);
+        return effectiveTime / (config.replicas || 1);
     });
 
     return stationTimes.length > 0 ? Math.max(...stationTimes) : 0;
@@ -170,7 +187,8 @@ const calculateScenario = (
         data.shifts,
         Math.min(shiftCount, data.shifts.length), // Don't exceed defined shifts
         data.meta.dailyDemand,
-        oee
+        oee,
+        data.meta.setupLossPercent || 0
     );
 
     const taktTime = nominalSeconds;
@@ -233,10 +251,20 @@ const calculateScenario = (
         const sectorName = sector?.name || 'General';
         const sectorColor = sector?.color || '#6b7280';
 
-        // Use sector OEE if enabled
+        // Use sector-specific takt when sector has shift overrides or sector OEE
+        // Sectors with shiftOverride have their own shift count (e.g., injection 1T when plant is 2T)
         let sectorTakt = taktTime;
-        if (data.meta.useSectorOEE && sector?.targetOee) {
-            sectorTakt = taktTime * (1 / sector.targetOee); // Sector OEE reduces effective takt
+        if (sector?.shiftOverride) {
+            // Sector has its own shift config — calculate takt from sector's actual availability
+            const sectorOee = (data.meta.useSectorOEE && sector.targetOee && sector.targetOee > 0)
+                ? sector.targetOee : oee;
+            const sectorTaktResult = calculateSectorTaktTime(
+                sector, data.shifts, Math.min(shiftCount, data.shifts.length),
+                data.meta.dailyDemand, sectorOee, data.meta.setupLossPercent || 0
+            );
+            sectorTakt = sectorTaktResult.effectiveSeconds;
+        } else if (data.meta.useSectorOEE && sector?.targetOee && sector.targetOee > 0) {
+            sectorTakt = taktTime * sector.targetOee;
         }
 
         // Sum effective standard times (exclude machine-internal)
@@ -299,7 +327,8 @@ const calculateScenario = (
         for (const [machineId, machineTasks] of machineGroups) {
             const machineType = machineInventory.get(machineId);
             const machineName = machineType?.name || machineId;
-            const available = machineType?.availableUnits || 0;
+            // FIX: Fall back to quantity (legacy alias) for backward compatibility
+            const available = machineType?.availableUnits ?? machineType?.quantity ?? 0;
 
             // Sum time for tasks using this machine
             const machineWorkTime = machineTasks.reduce((sum, t) => {
@@ -569,7 +598,7 @@ export const exportSummaryToExcel = (
     for (const sec of scenario.sectors) {
         const gap = sec.totalMachinesRequired - sec.totalMachinesAvailable;
         rows.push([
-            { v: sec.sectorName, s: styles.cell },
+            { v: sanitizeCellValue(sec.sectorName), s: styles.cell },
             { v: sec.taskCount, s: styles.cellCenter },
             { v: sec.totalStandardTime.toFixed(1), s: styles.cellCenter },
             { v: sec.operatorsRequired, s: styles.cellCenter },
@@ -627,8 +656,8 @@ export const exportSummaryToExcel = (
         for (const sec of scenario.sectors) {
             for (const m of sec.machines) {
                 machineRows.push([
-                    { v: sec.sectorName, s: styles.cell },
-                    { v: m.machineName, s: styles.cell },
+                    { v: sanitizeCellValue(sec.sectorName), s: styles.cell },
+                    { v: sanitizeCellValue(m.machineName), s: styles.cell },
                     { v: m.unitsRequired, s: styles.cellCenter },
                     { v: m.unitsAvailable, s: styles.cellCenter },
                     { v: m.gap, s: m.gap > 0 ? styles.deficit : styles.ok },
@@ -786,7 +815,7 @@ export const exportFullSummaryToExcel = (
         for (const sec of scenario.sectors) {
             const gap = sec.totalMachinesRequired - sec.totalMachinesAvailable;
             rows.push([
-                { v: sec.sectorName, s: styles.cell },
+                { v: sanitizeCellValue(sec.sectorName), s: styles.cell },
                 { v: sec.taskCount, s: styles.cellCenter },
                 { v: sec.totalStandardTime.toFixed(1), s: styles.cellCenter },
                 { v: sec.operatorsRequired, s: styles.cellCenter },
@@ -820,8 +849,8 @@ export const exportFullSummaryToExcel = (
         for (const sec of scenario1.sectors) {
             for (const m of sec.machines) {
                 machRows.push([
-                    { v: sec.sectorName, s: styles.cell },
-                    { v: m.machineName, s: styles.cell },
+                    { v: sanitizeCellValue(sec.sectorName), s: styles.cell },
+                    { v: sanitizeCellValue(m.machineName), s: styles.cell },
                     { v: m.unitsRequired, s: styles.cellCenter },
                     { v: m.unitsAvailable, s: styles.cellCenter },
                     { v: m.gap, s: m.gap > 0 ? styles.deficit : styles.ok },
@@ -878,8 +907,8 @@ export const exportSummaryToPDF = (
         return `
         <tr>
             <td>
-                <span class="sector-badge" style="background: ${sec.sectorColor}20; color: ${sec.sectorColor}; border: 1px solid ${sec.sectorColor}40;">
-                    ${sec.sectorName}
+                <span class="sector-badge" style="background: ${esc(sec.sectorColor)}20; color: ${esc(sec.sectorColor)}; border: 1px solid ${esc(sec.sectorColor)}40;">
+                    ${esc(sec.sectorName)}
                 </span>
             </td>
             <td class="mono right">${sec.totalStandardTime.toFixed(1)}s</td>
@@ -904,8 +933,8 @@ export const exportSummaryToPDF = (
             const gapClass = m.gap > 0 ? 'deficit' : 'ok';
             return `
             <tr>
-                <td>${sec.sectorName}</td>
-                <td>${m.machineName}</td>
+                <td>${esc(sec.sectorName)}</td>
+                <td>${esc(m.machineName)}</td>
                 <td class="center">${m.unitsRequired}</td>
                 <td class="center">${m.unitsAvailable}</td>
                 <td class="center ${gapClass}">${m.gap > 0 ? `−${m.gap}` : '✓'}</td>
@@ -932,7 +961,7 @@ export const exportSummaryToPDF = (
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Resumen Ejecutivo — ${summary.projectName}</title>
+    <title>Resumen Ejecutivo — ${esc(summary.projectName)}</title>
     <style>
         @page { size: A4 landscape; margin: 12mm; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -992,7 +1021,7 @@ export const exportSummaryToPDF = (
         <div class="header">
             <div>
                 <h1>📊 Resumen Ejecutivo</h1>
-                <div class="subtitle">${summary.projectName} — Escenario ${scenario.shiftCount} Turno${scenario.shiftCount > 1 ? 's' : ''}</div>
+                <div class="subtitle">${esc(summary.projectName)} — Escenario ${scenario.shiftCount} Turno${scenario.shiftCount > 1 ? 's' : ''}</div>
             </div>
             <div class="meta">
                 <div>Generado: ${new Date().toLocaleDateString('es-AR')} ${new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}</div>
@@ -1110,8 +1139,12 @@ export const exportSummaryToPDF = (
 </body>
 </html>`;
 
-    const printWindow = window.open('', '_blank');
-    if (printWindow) {
+    try {
+        const printWindow = window.open('', '_blank');
+        if (!printWindow) {
+            toast.warning('Ventana bloqueada', 'No se pudo abrir la ventana de impresión. Verifique que los pop-ups no estén bloqueados.');
+            return;
+        }
         printWindow.document.write(html);
         printWindow.document.close();
         printWindow.focus();
@@ -1120,5 +1153,8 @@ export const exportSummaryToPDF = (
                 printWindow.print();
             }, 300);
         };
+    } catch (err) {
+        logger.error('ExecutiveSummary', 'Error exporting PDF', {}, err instanceof Error ? err : undefined);
+        toast.error('Error de exportación', 'No se pudo exportar el PDF. Intente nuevamente.');
     }
 };

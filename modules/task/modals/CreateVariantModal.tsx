@@ -8,7 +8,7 @@
  * @version 9.0.0
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, GitBranch, Copy, AlertTriangle } from 'lucide-react';
 import { ProjectData } from '../../../types';
 
@@ -28,6 +28,16 @@ export const CreateVariantModal: React.FC<CreateVariantModalProps> = ({
     const [variantName, setVariantName] = useState('');
     const [isCreating, setIsCreating] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    // Close on Escape key
+    useEffect(() => {
+        if (!isOpen) return;
+        const handleEscape = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') { e.preventDefault(); onClose(); }
+        };
+        document.addEventListener('keydown', handleEscape);
+        return () => document.removeEventListener('keydown', handleEscape);
+    }, [isOpen, onClose]);
 
     if (!isOpen) return null;
 
@@ -72,6 +82,7 @@ export const CreateVariantModal: React.FC<CreateVariantModalProps> = ({
                         <button
                             onClick={onClose}
                             className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                            title="Cerrar" aria-label="Cerrar crear variante"
                         >
                             <X size={20} />
                         </button>

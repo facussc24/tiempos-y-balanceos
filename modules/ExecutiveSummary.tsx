@@ -16,7 +16,7 @@ import {
     exportFullSummaryToExcel,
     exportSummaryToPDF,
 } from '../utils/executiveSummaryCalc';
-import { Download, FileText, Printer } from 'lucide-react';
+import { Download, FileText, Printer, BarChart3 } from 'lucide-react';
 
 // ============================================================================
 // Props
@@ -46,8 +46,9 @@ export const ExecutiveSummary: React.FC<Props> = ({ data }) => {
         return (
             <div className="flex items-center justify-center h-64">
                 <div className="text-center">
+                    <BarChart3 size={40} className="mx-auto mb-3 text-slate-300" strokeWidth={1.5} />
                     <p className="text-lg font-semibold text-slate-500">Sin datos para generar reporte</p>
-                    <p className="text-sm text-slate-400 mt-1">Configure turnos y demanda en Panel de Control</p>
+                    <p className="text-sm text-slate-400 mt-1">Configure turnos y demanda en Panel de Control para ver el resumen ejecutivo.</p>
                 </div>
             </div>
         );
@@ -66,7 +67,7 @@ export const ExecutiveSummary: React.FC<Props> = ({ data }) => {
                         Resumen Ejecutivo
                     </h1>
                     <p className="text-sm text-slate-400 mt-0.5">
-                        {summary.projectName} · {new Date(summary.calculatedAt).toLocaleDateString('es-AR', { day: '2-digit', month: 'short', year: 'numeric' })}
+                        {summary.projectName} · {isNaN(new Date(summary.calculatedAt).getTime()) ? '—' : new Date(summary.calculatedAt).toLocaleDateString('es-AR', { day: '2-digit', month: 'short', year: 'numeric' })}
                     </p>
                 </div>
                 <div className="flex items-center gap-2">

@@ -84,6 +84,7 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
                                     action.onClick();
                                     setIsExpanded(false);
                                 }}
+                                aria-label={action.label}
                                 style={{ animationDelay: `${staggerDelay}ms` }}
                                 className={`
                                     flex items-center gap-2 px-4 py-2.5 rounded-full
@@ -105,7 +106,7 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
             <button
                 onClick={handlePrimaryClick}
                 className={`
-                    group flex items-center gap-3 
+                    group flex items-center gap-3
                     ${colors.bg} ${colors.hover}
                     text-white font-bold
                     px-5 py-4 rounded-full
@@ -114,6 +115,8 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
                     ring-4 ${colors.ring} ring-opacity-30
                 `}
                 title={primary.label}
+                aria-label={primary.label}
+                {...(secondary && secondary.length > 0 ? { 'aria-haspopup': 'menu' as const, 'aria-expanded': isExpanded } : {})}
             >
                 <Icon
                     size={22}

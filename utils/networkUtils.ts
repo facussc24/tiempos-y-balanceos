@@ -1,3 +1,5 @@
+import { logger } from './logger';
+
 /**
  * Network Utilities for Tauri Desktop
  * 
@@ -151,10 +153,11 @@ export interface ErrorClassification {
     isLockError: boolean;
     isPermissionError: boolean;
     isNetworkError: boolean;
-    isNetworkPathError: boolean;  // Added: specific flag for network path issues
+    isNetworkPathError: boolean;
     code: string | null;
     message: string;
     userMessage: string;
+    suggestedAction: string;
 }
 
 /**
@@ -215,20 +218,28 @@ export function classifyError(error: unknown): ErrorClassification {
         isNetworkPathError ||
         PERMANENT_ERROR_CODES.includes(code);
 
-    // Generate user-friendly message (improved for network path errors)
-    let userMessage = 'Error desconocido';
+    // Generate user-friendly message + suggested action for non-technical users
+    let userMessage = 'Error desconocido. Intente de nuevo en unos segundos.';
+    let suggestedAction = 'Esperar unos segundos e intentar de nuevo.';
+
     if (isNetworkPathError) {
-        userMessage = `La ruta de red no es accesible. Verifique la conexión al servidor o cambie a Modo Local.`;
+        userMessage = 'No hay conexión al servidor. Tus cambios se guardan localmente.';
+        suggestedAction = 'Verificar que el cable de red esté conectado o que haya WiFi.';
     } else if (isPermissionError) {
-        userMessage = 'Sin permisos para acceder al archivo. Verifique que tenga acceso a la carpeta de red.';
+        userMessage = 'No tienes permiso para acceder a este archivo.';
+        suggestedAction = 'Pedir acceso a la carpeta al administrador de sistemas.';
     } else if (isLockError) {
-        userMessage = 'El archivo está en uso por otro usuario o proceso.';
+        userMessage = 'Otro usuario está editando este archivo. Espera un momento.';
+        suggestedAction = 'Esperar 30 segundos e intentar de nuevo.';
     } else if (isNetworkError) {
-        userMessage = 'Error de conexión de red. Verifique que el servidor esté accesible.';
+        userMessage = 'Se perdió la conexión al servidor. Tus cambios se guardan localmente.';
+        suggestedAction = 'Verificar la conexión de red. Se sincronizará automáticamente al volver.';
     } else if (code === 'ENOENT') {
-        userMessage = 'El archivo o carpeta no existe.';
+        userMessage = 'No se encontró el archivo o carpeta.';
+        suggestedAction = 'Verificar que el proyecto no haya sido movido o eliminado.';
     } else if (code === 'ENOSPC') {
-        userMessage = 'No hay espacio disponible en el disco.';
+        userMessage = 'No hay espacio en el disco. Libera espacio e intenta de nuevo.';
+        suggestedAction = 'Borrar archivos innecesarios del disco o pedir más espacio.';
     }
 
     return {
@@ -240,7 +251,8 @@ export function classifyError(error: unknown): ErrorClassification {
         isNetworkPathError,
         code: windowsErrorCode || code,
         message,
-        userMessage
+        userMessage,
+        suggestedAction,
     };
 }
 
@@ -424,25 +436,52 @@ export class LockHeartbeat {
     private readonly lockPath: string;
     private readonly updateFn: () => Promise<void>;
     private readonly intervalMs: number;
+    private readonly onHeartbeatFailed?: () => void;
+    private consecutiveFailures = 0;
+    private static readonly MAX_FAILURES = 2;
 
     constructor(
         lockPath: string,
         updateFn: () => Promise<void>,
-        intervalMs: number = 10000 // 10 seconds
+        intervalMs: number = 10000,
+        onHeartbeatFailed?: () => void,
     ) {
         this.lockPath = lockPath;
         this.updateFn = updateFn;
         this.intervalMs = intervalMs;
+        this.onHeartbeatFailed = onHeartbeatFailed;
     }
 
     start(): void {
         if (this.intervalId) return;
 
         this.intervalId = setInterval(async () => {
-            try {
-                await this.updateFn();
-            } catch (err) {
-                console.warn('[LockHeartbeat] Failed to update lock:', err);
+            // Retry up to 2 times per heartbeat tick
+            let success = false;
+            for (let attempt = 0; attempt < 2; attempt++) {
+                try {
+                    await this.updateFn();
+                    success = true;
+                    this.consecutiveFailures = 0;
+                    break;
+                } catch (err) {
+                    if (attempt === 0) {
+                        // Wait briefly before retry
+                        await new Promise(r => setTimeout(r, 500));
+                    }
+                }
+            }
+
+            if (!success) {
+                this.consecutiveFailures++;
+                logger.warn('Network', 'LockHeartbeat: consecutive failures', {
+                    failures: this.consecutiveFailures,
+                    lockPath: this.lockPath,
+                });
+
+                if (this.consecutiveFailures >= LockHeartbeat.MAX_FAILURES && this.onHeartbeatFailed) {
+                    this.onHeartbeatFailed();
+                }
             }
         }, this.intervalMs);
     }

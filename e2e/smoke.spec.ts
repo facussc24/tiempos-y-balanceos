@@ -1,5 +1,5 @@
 /**
- * Smoke Test Visual - Barack Mercosul v7.0
+ * Smoke Test Visual - Barack Mercosul v1-beta
  *
  * Navega todos los módulos principales y verifica que:
  * - La UI renderiza completa (no hay pantallas en blanco)

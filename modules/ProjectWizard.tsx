@@ -420,7 +420,7 @@ export const ProjectWizard: React.FC<ProjectWizardProps> = ({
 interface StepContentProps {
     title: string;
     description: string;
-    icon: any;
+    icon: React.ComponentType<{ size?: number; className?: string }>;
     children: React.ReactNode;
 }
 

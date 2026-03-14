@@ -5,7 +5,7 @@
  * and receives an AI-generated impact analysis report.
  */
 
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { X, Send, Loader2, AlertTriangle, ArrowUp, ArrowDown, Minus, Sparkles, Plus } from 'lucide-react';
 import { AmfeDocument } from './amfeTypes';
 import { analyzeProcessChange, ChangeImpactReport, AffectedItem } from './amfeChangeAnalysis';
@@ -28,6 +28,15 @@ const AmfeChangeAnalysisPanel: React.FC<AmfeChangeAnalysisPanelProps> = ({ doc, 
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [report, setReport] = useState<ChangeImpactReport | null>(null);
     const [error, setError] = useState<string | null>(null);
+
+    // Close on Escape key
+    useEffect(() => {
+        const handleEscape = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') { e.preventDefault(); onClose(); }
+        };
+        document.addEventListener('keydown', handleEscape);
+        return () => document.removeEventListener('keydown', handleEscape);
+    }, [onClose]);
     const abortRef = useRef<AbortController | null>(null);
 
     const handleAnalyze = useCallback(async () => {
@@ -87,18 +96,18 @@ const AmfeChangeAnalysisPanel: React.FC<AmfeChangeAnalysisPanelProps> = ({ doc, 
     }, [handleAnalyze]);
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-            <div className="bg-white rounded-xl shadow-2xl w-[90vw] max-w-2xl max-h-[85vh] flex flex-col">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm animate-in fade-in duration-150">
+            <div role="dialog" aria-modal="true" aria-labelledby="change-analysis-title" className="bg-white rounded-xl shadow-2xl w-[90vw] max-w-2xl max-h-[85vh] flex flex-col animate-in zoom-in-95 duration-200">
                 {/* Header */}
                 <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-200">
                     <div className="w-9 h-9 bg-purple-100 rounded-lg flex items-center justify-center">
                         <Sparkles size={18} className="text-purple-600" />
                     </div>
                     <div className="flex-1">
-                        <h2 className="text-sm font-semibold text-gray-800">Análisis de Impacto por Cambio</h2>
+                        <h2 id="change-analysis-title" className="text-sm font-semibold text-gray-800">Análisis de Impacto por Cambio</h2>
                         <p className="text-xs text-gray-500">Describí el cambio de proceso y la IA analizará el impacto en el AMFE</p>
                     </div>
-                    <button onClick={onClose} className="text-gray-400 hover:text-gray-600 p-1">
+                    <button onClick={onClose} className="text-gray-400 hover:text-gray-600 p-1.5 rounded hover:bg-gray-100 transition" title="Cerrar analisis" aria-label="Cerrar analisis">
                         <X size={18} />
                     </button>
                 </div>

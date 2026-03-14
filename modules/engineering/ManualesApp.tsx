@@ -8,6 +8,7 @@
  */
 
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import DOMPurify from 'dompurify';
 import {
     ArrowLeft, BookOpen, ExternalLink, WifiOff, Loader2,
     RefreshCw, FileText, Search,
@@ -75,7 +76,7 @@ const ManualesApp: React.FC<ManualesAppProps> = ({ onBackToLanding }) => {
         try {
             const { readManualHtml } = await import('./engineeringServerManager');
             const content = await readManualHtml(fileName);
-            setHtmlContent(content);
+            setHtmlContent(content ? DOMPurify.sanitize(content) : null);
         } catch (err) {
             logger.warn('Manuales', 'Failed to load HTML content', { error: err instanceof Error ? err.message : String(err) });
             setHtmlContent(null);
@@ -85,13 +86,10 @@ const ManualesApp: React.FC<ManualesAppProps> = ({ onBackToLanding }) => {
     }, []);
 
     // --- Open file with system app ---
-    const handleOpenExternal = useCallback(async (filePath: string) => {
-        try {
-            const opener = await import('@tauri-apps/plugin-opener');
-            await opener.openPath(filePath);
-        } catch {
-            // Silent — only works in Tauri
-        }
+    // No-op in web mode: plugin-opener is a Tauri-only feature.
+    // TODO: Implement via backend API if needed.
+    const handleOpenExternal = useCallback((_filePath: string) => {
+        // Not available in web mode
     }, []);
 
     // --- Filtered files ---

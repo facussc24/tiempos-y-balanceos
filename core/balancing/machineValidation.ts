@@ -80,7 +80,7 @@ export function calculateStationMachineRequirements(
         }
 
         results.push({
-            stationId: parseInt(stationId),
+            stationId: parseInt(stationId, 10) || 0,
             requiredMachineIds: uniqueMachines,
             hasConflict,
             conflictMessage
@@ -105,7 +105,9 @@ export function validateMachineInventory(
             .map(sr => sr.stationId);
 
         const consumed = stationsUsing.length;
-        const available = machine.availableUnits || 0;
+        // FIX: Fall back to quantity (legacy alias); guard NaN via Number.isFinite.
+        const rawAvail = machine.availableUnits ?? machine.quantity;
+        const available = Number.isFinite(rawAvail) ? rawAvail : 0;
         const balance = available - consumed;
 
         balances.push({

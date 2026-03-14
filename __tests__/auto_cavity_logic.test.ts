@@ -1,6 +1,6 @@
 
 import { describe, it, expect } from 'vitest';
-import { calculateTaktTime, calculateMinCavities, calculateMinOperators } from '../modules/core_logic';
+import { calculateTaktTime, calculateMinCavities, calculateMinOperators } from '../core/core_logic';
 
 describe('Auto Cavity Logic (Core Formulas)', () => {
 

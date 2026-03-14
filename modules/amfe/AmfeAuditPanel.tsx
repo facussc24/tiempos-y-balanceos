@@ -5,7 +5,7 @@
  * Issues displayed sorted by severity (critical → warning → info).
  */
 
-import React, { useState, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import {
     X, AlertTriangle, AlertCircle, Info, Shield, Loader2,
     Sparkles, ChevronDown, ChevronUp, CheckCircle2,
@@ -17,6 +17,7 @@ import { GeminiError } from '../../utils/geminiClient';
 interface AmfeAuditPanelProps {
     doc: AmfeDocument;
     onClose: () => void;
+    aiEnabled?: boolean;
 }
 
 const SEVERITY_CONFIG: Record<AuditSeverity, { icon: React.ReactNode; color: string; bg: string; label: string }> = {
@@ -40,13 +41,22 @@ const SEVERITY_CONFIG: Record<AuditSeverity, { icon: React.ReactNode; color: str
     },
 };
 
-const AmfeAuditPanel: React.FC<AmfeAuditPanelProps> = ({ doc, onClose }) => {
+const AmfeAuditPanel: React.FC<AmfeAuditPanelProps> = ({ doc, onClose, aiEnabled }) => {
     const report = useMemo(() => runAudit(doc), [doc]);
     const [aiReview, setAiReview] = useState<AiReviewResult | null>(null);
     const [isLoadingAi, setIsLoadingAi] = useState(false);
     const [aiError, setAiError] = useState<string | null>(null);
     const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set(['AP Alto', 'Controles']));
     const abortRef = useRef<AbortController | null>(null);
+
+    // Close on Escape key
+    useEffect(() => {
+        const handleEscape = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') { e.preventDefault(); onClose(); }
+        };
+        document.addEventListener('keydown', handleEscape);
+        return () => document.removeEventListener('keydown', handleEscape);
+    }, [onClose]);
 
     const handleAiReview = useCallback(async () => {
         if (isLoadingAi) {
@@ -105,8 +115,8 @@ const AmfeAuditPanel: React.FC<AmfeAuditPanelProps> = ({ doc, onClose }) => {
     const scoreBg = report.score >= 80 ? 'bg-green-50' : report.score >= 50 ? 'bg-yellow-50' : 'bg-red-50';
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-            <div className="bg-white rounded-xl shadow-2xl w-[90vw] max-w-2xl max-h-[85vh] flex flex-col">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm animate-in fade-in duration-150">
+            <div className="bg-white rounded-xl shadow-2xl w-[90vw] max-w-2xl max-h-[85vh] flex flex-col animate-in zoom-in-95 duration-200">
                 {/* Header */}
                 <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-200">
                     <div className="w-9 h-9 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -116,7 +126,7 @@ const AmfeAuditPanel: React.FC<AmfeAuditPanelProps> = ({ doc, onClose }) => {
                         <h2 className="text-sm font-semibold text-gray-800">Auditoría del AMFE</h2>
                         <p className="text-xs text-gray-500">Verificación de completitud y calidad</p>
                     </div>
-                    <button onClick={onClose} className="text-gray-400 hover:text-gray-600 p-1">
+                    <button onClick={onClose} className="text-gray-400 hover:text-gray-600 p-1.5 rounded hover:bg-gray-100 transition" title="Cerrar auditoria" aria-label="Cerrar auditoria">
                         <X size={18} />
                     </button>
                 </div>
@@ -209,27 +219,29 @@ const AmfeAuditPanel: React.FC<AmfeAuditPanelProps> = ({ doc, onClose }) => {
                                 <Sparkles size={14} className="text-purple-500" />
                                 <span className="text-xs font-semibold text-gray-700">Revisión IA (opcional)</span>
                             </div>
-                            <button
-                                onClick={handleAiReview}
-                                disabled={isLoadingAi && !abortRef.current}
-                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition ${
-                                    isLoadingAi
-                                        ? 'bg-red-50 text-red-600 hover:bg-red-100'
-                                        : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
-                                }`}
-                            >
-                                {isLoadingAi ? (
-                                    <>
-                                        <Loader2 size={12} className="animate-spin" />
-                                        Cancelar
-                                    </>
-                                ) : (
-                                    <>
-                                        <Sparkles size={12} />
-                                        {aiReview ? 'Revisar de nuevo' : 'Pedir revisión IA'}
-                                    </>
-                                )}
-                            </button>
+                            {aiEnabled && (
+                                <button
+                                    onClick={handleAiReview}
+                                    disabled={isLoadingAi && !abortRef.current}
+                                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition ${
+                                        isLoadingAi
+                                            ? 'bg-red-50 text-red-600 hover:bg-red-100'
+                                            : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
+                                    }`}
+                                >
+                                    {isLoadingAi ? (
+                                        <>
+                                            <Loader2 size={12} className="animate-spin" />
+                                            Cancelar
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Sparkles size={12} />
+                                            {aiReview ? 'Revisar de nuevo' : 'Pedir revisión IA'}
+                                        </>
+                                    )}
+                                </button>
+                            )}
                         </div>
 
                         {aiError && (

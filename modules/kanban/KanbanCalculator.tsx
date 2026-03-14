@@ -12,6 +12,9 @@
  */
 
 import React, { useState, useMemo } from 'react';
+
+// FIX: Safe parseFloat that returns fallback instead of NaN (NaN || 0 returns NaN, not 0!)
+const safeParseFloat = (v: string, fallback = 0): number => { const n = parseFloat(v); return isNaN(n) ? fallback : n; };
 import { X, Package, Calculator, AlertTriangle, Check, Info, Clock, Box, ChevronDown } from 'lucide-react';
 import {
     calculateKanban,
@@ -144,7 +147,7 @@ export const KanbanCalculator: React.FC<KanbanCalculatorProps> = ({
     };
 
     return (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 animate-in fade-in duration-200">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 animate-in fade-in duration-200">
             <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden animate-in slide-in-from-bottom-4 duration-300">
                 {/* Header */}
                 <div className="bg-gradient-to-r from-emerald-600 to-teal-600 px-6 py-4 flex items-center justify-between">
@@ -158,6 +161,7 @@ export const KanbanCalculator: React.FC<KanbanCalculatorProps> = ({
                     <button
                         onClick={onClose}
                         className="text-white/70 hover:text-white transition-colors"
+                        title="Cerrar" aria-label="Cerrar calculadora kanban"
                     >
                         <X size={24} />
                     </button>
@@ -249,7 +253,7 @@ export const KanbanCalculator: React.FC<KanbanCalculatorProps> = ({
                                                 min={0}
                                                 step={0.5}
                                                 value={orderProcessingHours}
-                                                onChange={e => setOrderProcessingHours(parseFloat(e.target.value) || 0)}
+                                                onChange={e => setOrderProcessingHours(safeParseFloat(e.target.value))}
                                                 className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-indigo-500"
                                             />
                                             <span className="text-xs text-gray-500">hrs</span>
@@ -263,7 +267,7 @@ export const KanbanCalculator: React.FC<KanbanCalculatorProps> = ({
                                                 min={0}
                                                 step={0.5}
                                                 value={supplierTravelHours}
-                                                onChange={e => setSupplierTravelHours(parseFloat(e.target.value) || 0)}
+                                                onChange={e => setSupplierTravelHours(safeParseFloat(e.target.value))}
                                                 className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-indigo-500"
                                             />
                                             <span className="text-xs text-gray-500">hrs</span>
@@ -277,7 +281,7 @@ export const KanbanCalculator: React.FC<KanbanCalculatorProps> = ({
                                                 min={0}
                                                 step={0.5}
                                                 value={receptionHours}
-                                                onChange={e => setReceptionHours(parseFloat(e.target.value) || 0)}
+                                                onChange={e => setReceptionHours(safeParseFloat(e.target.value))}
                                                 className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-indigo-500"
                                             />
                                             <span className="text-xs text-gray-500">hrs</span>
@@ -291,7 +295,7 @@ export const KanbanCalculator: React.FC<KanbanCalculatorProps> = ({
                                                 min={0}
                                                 step={0.5}
                                                 value={qualityInspectionHours}
-                                                onChange={e => setQualityInspectionHours(parseFloat(e.target.value) || 0)}
+                                                onChange={e => setQualityInspectionHours(safeParseFloat(e.target.value))}
                                                 className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-indigo-500"
                                             />
                                             <span className="text-xs text-gray-500">hrs</span>
@@ -305,7 +309,7 @@ export const KanbanCalculator: React.FC<KanbanCalculatorProps> = ({
                                                 min={0}
                                                 step={0.5}
                                                 value={putawayHours}
-                                                onChange={e => setPutawayHours(parseFloat(e.target.value) || 0)}
+                                                onChange={e => setPutawayHours(safeParseFloat(e.target.value))}
                                                 className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-indigo-500"
                                             />
                                             <span className="text-xs text-gray-500">hrs</span>

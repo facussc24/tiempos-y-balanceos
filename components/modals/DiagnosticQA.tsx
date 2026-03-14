@@ -166,7 +166,7 @@ export function DiagnosticQA({ isOpen, onClose, directoryPath }: DiagnosticQAPro
                             <p className="text-xs text-slate-500">Pruebas de integridad del sistema</p>
                         </div>
                     </div>
-                    <button onClick={onClose} className="text-slate-400 hover:text-slate-600 p-1">
+                    <button onClick={onClose} className="text-slate-400 hover:text-slate-600 p-1" title="Cerrar" aria-label="Cerrar diagnóstico">
                         <X size={20} />
                     </button>
                 </div>
@@ -233,7 +233,7 @@ export function DiagnosticQA({ isOpen, onClose, directoryPath }: DiagnosticQAPro
                             <button
                                 onClick={() => runTest('retryBehavior', testRetryBehavior)}
                                 disabled={tests.retryBehavior.status === 'running'}
-                                className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                                className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 <RefreshCw size={14} /> Probar
                             </button>
@@ -251,7 +251,7 @@ export function DiagnosticQA({ isOpen, onClose, directoryPath }: DiagnosticQAPro
                             <button
                                 onClick={() => runTest('conflictNoRetry', testConflictNotRetried)}
                                 disabled={tests.conflictNoRetry.status === 'running'}
-                                className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                                className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 <RefreshCw size={14} /> Probar
                             </button>

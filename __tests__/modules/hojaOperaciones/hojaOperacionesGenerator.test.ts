@@ -113,12 +113,16 @@ describe('generateHoFromAmfeAndCp', () => {
         expect(document.sheets[0].reactionPlanText).toBe(DEFAULT_REACTION_PLAN_TEXT);
     });
 
-    it('initializes manual fields as empty', () => {
+    it('initializes manual fields as empty and generates stubs', () => {
         const amfe = makeAmfeDoc([{ opNumber: '10', name: 'Op1' }]);
         const { document } = generateHoFromAmfeAndCp(amfe, null, 'P1');
         const sheet = document.sheets[0];
-        expect(sheet.steps).toEqual([]);
-        expect(sheet.safetyElements).toEqual([]);
+        // Steps now include a stub step
+        expect(sheet.steps).toHaveLength(1);
+        expect(sheet.steps[0].description).toBe('Realizar Op1');
+        expect(sheet.steps[0].stepNumber).toBe(1);
+        // Safety elements are inferred from operation name
+        expect(sheet.safetyElements.length).toBeGreaterThan(0);
         expect(sheet.hazardWarnings).toEqual([]);
         expect(sheet.visualAids).toEqual([]);
         expect(sheet.sector).toBe('');

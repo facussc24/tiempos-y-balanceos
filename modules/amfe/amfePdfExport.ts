@@ -14,6 +14,8 @@
 import { AmfeDocument, AmfeCause, AmfeFailure, ActionPriority } from './amfeTypes';
 import { WORK_ELEMENT_LABELS, WorkElementType } from './amfeTypes';
 import { sanitizeFilename } from '../../utils/filenameSanitization';
+import { renderHtmlToPdf, renderHtmlToPdfBuffer } from '../../utils/pdfRenderer';
+import { truncateApplicableParts as truncateParts } from '../../utils/productFamilyAutoFill';
 
 // --- COLOR CONSTANTS (matching Excel export) ---
 const AP_COLORS: Record<string, { bg: string; text: string }> = {
@@ -140,6 +142,10 @@ function buildHeaderHtml(doc: AmfeDocument, title: string): string {
                     <td style="font-family:Arial,sans-serif; font-size:8px; padding:2px 4px; font-weight:bold;">Alcance</td>
                     <td style="font-family:Arial,sans-serif; font-size:8px; padding:2px 4px;" colspan="3">${esc(h.scope)}</td>
                 </tr>
+                ${h.applicableParts?.trim() ? `<tr>
+                    <td style="font-family:Arial,sans-serif; font-size:8px; padding:2px 4px; font-weight:bold;">Piezas Aplicables</td>
+                    <td style="font-family:Arial,sans-serif; font-size:8px; padding:2px 4px;" colspan="5">${esc(truncateParts(h.applicableParts)).replace(/\n/g, '<br/>')}</td>
+                </tr>` : ''}
             </table>
             <hr style="border:none; border-top:2px solid ${BLUE_HEADER}; margin:0;" />
         </div>
@@ -153,80 +159,48 @@ function buildHeaderHtml(doc: AmfeDocument, title: string): string {
 function buildFullTableHtml(doc: AmfeDocument): string {
     const header = buildHeaderHtml(doc, 'Tabla VDA Completa');
 
+    // Flatten hierarchy to one row per cause (no rowspan) for reliable page breaks.
+    // Rowspan cells crossing page boundaries render unpredictably in html2pdf.js.
+    // Visual grouping is achieved via top borders and background colors on first rows.
     let tableRows = '';
+    let isFirstOp = true;
     for (const op of doc.operations) {
-        // Count total cause rows for this operation (for rowspan)
-        let opCauseCount = 0;
-        for (const we of op.workElements)
-            for (const func of we.functions)
-                for (const fail of func.failures)
-                    opCauseCount += Math.max(fail.causes.length, 1);
-
-        if (opCauseCount === 0) opCauseCount = 1;
-
         let isFirstOpRow = true;
-
         for (const we of op.workElements) {
-            let weCauseCount = 0;
-            for (const func of we.functions)
-                for (const fail of func.failures)
-                    weCauseCount += Math.max(fail.causes.length, 1);
-
-            if (weCauseCount === 0) weCauseCount = 1;
-
+            const weLabel = WORK_ELEMENT_LABELS[we.type as WorkElementType] || we.type;
             let isFirstWeRow = true;
-
             for (const func of we.functions) {
-                let funcCauseCount = 0;
-                for (const fail of func.failures)
-                    funcCauseCount += Math.max(fail.causes.length, 1);
-
-                if (funcCauseCount === 0) funcCauseCount = 1;
-
                 let isFirstFuncRow = true;
-
                 for (const fail of func.failures) {
-                    const causeCount = Math.max(fail.causes.length, 1);
                     let isFirstFailRow = true;
-
                     const causes = fail.causes.length > 0 ? fail.causes : [null];
-
                     for (const cause of causes) {
-                        tableRows += '<tr>';
+                        // Visual separator: thick top border on first row of each operation
+                        const opBorder = isFirstOpRow && !isFirstOp ? `border-top:2px solid ${BLUE_HEADER};` : '';
+                        tableRows += `<tr style="${opBorder}">`;
 
-                        // Operation cells (merged)
-                        if (isFirstOpRow) {
-                            tableRows += `<td rowspan="${opCauseCount}" style="${cellStyle('center')} font-weight:bold; background:#EFF6FF;">${esc(op.opNumber)}</td>`;
-                            tableRows += `<td rowspan="${opCauseCount}" style="${cellStyle()} font-weight:bold; background:#EFF6FF;">${esc(op.name)}</td>`;
-                            isFirstOpRow = false;
-                        }
+                        // Operation cells — repeated in every row (no rowspan)
+                        const opBg = isFirstOpRow ? 'background:#EFF6FF;' : 'background:#F8FAFF;';
+                        tableRows += `<td style="${cellStyle('center')} font-weight:bold; ${opBg}">${esc(op.opNumber)}</td>`;
+                        tableRows += `<td style="${cellStyle()} font-weight:bold; ${opBg}">${isFirstOpRow ? esc(op.name) : ''}</td>`;
 
-                        // WE cells (merged)
-                        if (isFirstWeRow) {
-                            const weLabel = WORK_ELEMENT_LABELS[we.type as WorkElementType] || we.type;
-                            tableRows += `<td rowspan="${weCauseCount}" style="${cellStyle('center')} background:#F5F3FF; font-size:7px;">${esc(weLabel)}</td>`;
-                            tableRows += `<td rowspan="${weCauseCount}" style="${cellStyle()} background:#F5F3FF;">${esc(we.name)}</td>`;
-                            isFirstWeRow = false;
-                        }
+                        // WE cells — repeated, show value only on first row of each WE
+                        const weBg = isFirstWeRow ? 'background:#F5F3FF;' : '';
+                        tableRows += `<td style="${cellStyle('center')} ${weBg} font-size:7px;">${isFirstWeRow ? esc(weLabel) : ''}</td>`;
+                        tableRows += `<td style="${cellStyle()} ${weBg}">${isFirstWeRow ? esc(we.name) : ''}</td>`;
 
-                        // Function cells (merged)
-                        if (isFirstFuncRow) {
-                            tableRows += `<td rowspan="${funcCauseCount}" style="${cellStyle()}">${esc(func.description)}</td>`;
-                            tableRows += `<td rowspan="${funcCauseCount}" style="${cellStyle()}">${esc(func.requirements)}</td>`;
-                            isFirstFuncRow = false;
-                        }
+                        // Function cells — show value only on first row
+                        tableRows += `<td style="${cellStyle()}">${isFirstFuncRow ? esc(func.description) : ''}</td>`;
+                        tableRows += `<td style="${cellStyle()}">${isFirstFuncRow ? esc(func.requirements) : ''}</td>`;
 
-                        // Failure cells (merged across causes)
-                        if (isFirstFailRow) {
-                            tableRows += `<td rowspan="${causeCount}" style="${cellStyle()}">${esc(fail.description)}</td>`;
-                            tableRows += `<td rowspan="${causeCount}" style="${cellStyle()} font-size:7px;">${esc(fail.effectLocal)}</td>`;
-                            tableRows += `<td rowspan="${causeCount}" style="${cellStyle()} font-size:7px;">${esc(fail.effectNextLevel)}</td>`;
-                            tableRows += `<td rowspan="${causeCount}" style="${cellStyle()} font-size:7px;">${esc(fail.effectEndUser)}</td>`;
-                            tableRows += `<td rowspan="${causeCount}" style="${cellStyle('center')} font-weight:bold;">${esc(fail.severity)}</td>`;
-                            isFirstFailRow = false;
-                        }
+                        // Failure cells — show value only on first row of each failure
+                        tableRows += `<td style="${cellStyle()}">${isFirstFailRow ? esc(fail.description) : ''}</td>`;
+                        tableRows += `<td style="${cellStyle()} font-size:7px;">${isFirstFailRow ? esc(fail.effectLocal) : ''}</td>`;
+                        tableRows += `<td style="${cellStyle()} font-size:7px;">${isFirstFailRow ? esc(fail.effectNextLevel) : ''}</td>`;
+                        tableRows += `<td style="${cellStyle()} font-size:7px;">${isFirstFailRow ? esc(fail.effectEndUser) : ''}</td>`;
+                        tableRows += `<td style="${cellStyle('center')} font-weight:bold;">${isFirstFailRow ? esc(fail.severity) : ''}</td>`;
 
-                        // Cause cells (one per row)
+                        // Cause cells (always shown — one per row)
                         if (cause) {
                             tableRows += `<td style="${cellStyle()}">${esc(cause.cause)}</td>`;
                             tableRows += `<td style="${cellStyle()}">${esc(cause.preventionControl)}</td>`;
@@ -254,15 +228,20 @@ function buildFullTableHtml(doc: AmfeDocument): string {
                             // Observations
                             tableRows += `<td style="${cellStyle()}">${esc(cause.observations)}</td>`;
                         } else {
-                            // Empty cause placeholder — merged cell (21 cause-level columns)
+                            // Empty cause placeholder (21 cause-level columns)
                             tableRows += `<td colspan="21" style="${cellStyle('center')} color:#9CA3AF; font-style:italic;">Sin causas definidas</td>`;
                         }
 
                         tableRows += '</tr>';
+                        isFirstOpRow = false;
+                        isFirstWeRow = false;
+                        isFirstFuncRow = false;
+                        isFirstFailRow = false;
                     }
                 }
             }
         }
+        isFirstOp = false;
     }
 
     const headers = [
@@ -275,10 +254,48 @@ function buildFullTableHtml(doc: AmfeDocument): string {
         'Obs.',
     ];
 
+    // Column widths for 32 columns on A3 landscape — text-heavy cols get more space
+    const colWidths = [
+        '2.5%',  // Op
+        '5%',    // Paso del Proceso
+        '2%',    // 6M
+        '4%',    // Elemento
+        '5%',    // Función
+        '4%',    // Requisito
+        '5%',    // Modo de Falla
+        '4%',    // Efecto Local
+        '4%',    // Efecto Cliente
+        '4%',    // Efecto Usr. Final
+        '1.5%',  // S
+        '5%',    // Causa
+        '5%',    // Control Prev.
+        '1.5%',  // O
+        '5%',    // Control Det.
+        '1.5%',  // D
+        '2%',    // AP
+        '2%',    // No.Car
+        '2%',    // Car.
+        '2%',    // Filtro
+        '5%',    // Acción Prev.
+        '5%',    // Acción Det.
+        '3%',    // Responsable
+        '2.5%',  // Fecha Obj.
+        '2.5%',  // Estado
+        '5%',    // Acción Tomada
+        '2.5%',  // Fecha Real
+        '1.5%',  // S*
+        '1.5%',  // O*
+        '1.5%',  // D*
+        '2%',    // AP*
+        '3.5%',  // Obs.
+    ];
+    const colgroup = `<colgroup>${colWidths.map(w => `<col style="width:${w}"/>`).join('')}</colgroup>`;
+
     return `
         <div>
             ${header}
             <table style="border-collapse:collapse; width:100%; table-layout:fixed; page-break-inside:auto;">
+                ${colgroup}
                 <thead style="display:table-header-group;">
                     <tr>${headers.map(h => `<th style="${headerCellStyle()}">${esc(h)}</th>`).join('')}</tr>
                 </thead>
@@ -302,10 +319,11 @@ function buildSummaryHtml(doc: AmfeDocument): string {
     );
 
     // Sort: H first, then M; within same AP, by severity desc
+    // FIX: Guard against NaN from undefined severity (same fix as amfeExcelExport.ts)
     priority.sort((a, b) => {
         if (a.cause.ap === ActionPriority.HIGH && b.cause.ap !== ActionPriority.HIGH) return -1;
         if (a.cause.ap !== ActionPriority.HIGH && b.cause.ap === ActionPriority.HIGH) return 1;
-        return Number(b.failure.severity) - Number(a.failure.severity);
+        return (Number(b.failure.severity) || 0) - (Number(a.failure.severity) || 0);
     });
 
     const hCount = allRows.filter(r => r.cause.ap === ActionPriority.HIGH).length;
@@ -356,11 +374,30 @@ function buildSummaryHtml(doc: AmfeDocument): string {
         tableRows = `<tr><td colspan="13" style="${cellStyle('center')} color:#9CA3AF; padding:20px;">No hay causas con AP Alto o Medio</td></tr>`;
     }
 
+    // Column widths for 13 columns on A4 landscape
+    const colWidths = [
+        '4%',   // Op
+        '8%',   // Paso
+        '10%',  // Elemento 6M
+        '10%',  // Función
+        '14%',  // Modo de Falla
+        '12%',  // Efecto Usr. Final
+        '14%',  // Causa Raíz
+        '3%',   // S
+        '3%',   // O
+        '3%',   // D
+        '3%',   // AP
+        '6%',   // Estado
+        '10%',  // Responsable
+    ];
+    const colgroup = `<colgroup>${colWidths.map(w => `<col style="width:${w}"/>`).join('')}</colgroup>`;
+
     return `
         <div>
             ${header}
             ${summaryHtml}
-            <table style="border-collapse:collapse; width:100%;">
+            <table style="border-collapse:collapse; width:100%; table-layout:fixed;">
+                ${colgroup}
                 <thead>
                     <tr>${headers.map(h => `<th style="${headerCellStyle()}">${esc(h)}</th>`).join('')}</tr>
                 </thead>
@@ -417,13 +454,30 @@ function buildActionPlanHtml(doc: AmfeDocument): string {
         tableRows = `<tr><td colspan="11" style="${cellStyle('center')} color:#9CA3AF; padding:20px;">No hay acciones abiertas</td></tr>`;
     }
 
+    // Column widths for 11 columns on A4 landscape — actions get most space
+    const colWidths = [
+        '10%',  // Operación
+        '10%',  // Modo de Falla
+        '12%',  // Causa Raíz
+        '3%',   // AP
+        '14%',  // Acción Preventiva
+        '14%',  // Acción Detectiva
+        '8%',   // Responsable
+        '6%',   // Fecha Obj.
+        '6%',   // Estado
+        '12%',  // Acción Tomada
+        '5%',   // Fecha Real
+    ];
+    const colgroup = `<colgroup>${colWidths.map(w => `<col style="width:${w}"/>`).join('')}</colgroup>`;
+
     return `
         <div>
             ${header}
             <p style="font-family:Arial,sans-serif; font-size:10px; color:#4B5563; margin-bottom:8px;">
                 ${actionItems.length} accion(es) abierta(s)
             </p>
-            <table style="border-collapse:collapse; width:100%;">
+            <table style="border-collapse:collapse; width:100%; table-layout:fixed;">
+                ${colgroup}
                 <thead>
                     <tr>${headers.map(h => `<th style="${headerCellStyle()}">${esc(h)}</th>`).join('')}</tr>
                 </thead>
@@ -468,54 +522,36 @@ export function getAmfePdfPreviewHtml(doc: AmfeDocument, template: PdfTemplate):
 
 /**
  * Export an AMFE document to PDF.
- * Creates a temporary off-screen element, renders styled HTML, and converts to PDF.
+ * Uses iframe-based rendering for reliable html2canvas capture.
  */
 export async function exportAmfePdf(
     doc: AmfeDocument,
     template: PdfTemplate,
     options?: PdfExportOptions,
 ): Promise<void> {
-    const html2pdf = (await import('html2pdf.js')).default;
-
     const paperSize = options?.paperSize || (template === 'full' ? 'A3' : 'A4');
     const orientation = options?.orientation || 'landscape';
-
     const htmlContent = TEMPLATE_BUILDERS[template](doc);
-
-    // Create off-screen container
-    const container = document.createElement('div');
-    container.innerHTML = htmlContent;
-    container.style.position = 'absolute';
-    container.style.left = '-9999px';
-    container.style.top = '0';
-    container.style.width = paperSize === 'A3' ? '420mm' : '297mm';
-    document.body.appendChild(container);
 
     const safeName = sanitizeFilename(doc.header.subject || 'Export', { allowSpaces: true });
     const date = new Date().toISOString().split('T')[0];
     const filename = `AMFE_${TEMPLATE_NAMES[template]}_${safeName}_${date}.pdf`;
 
-    try {
-        await html2pdf()
-            .from(container)
-            .set({
-                margin: [8, 6, 8, 6],
-                filename,
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: {
-                    scale: 2,
-                    useCORS: true,
-                    letterRendering: true,
-                },
-                jsPDF: {
-                    unit: 'mm',
-                    format: paperSize.toLowerCase(),
-                    orientation,
-                },
-                pagebreak: { mode: ['avoid-all', 'css'] },
-            })
-            .save();
-    } finally {
-        document.body.removeChild(container);
-    }
+    await renderHtmlToPdf(htmlContent, {
+        filename,
+        paperSize: paperSize.toLowerCase() as 'a3' | 'a4',
+        orientation,
+    });
+}
+
+/**
+ * Generate AMFE PDF as Uint8Array buffer (for auto-export to Y: drive).
+ * Uses the 'full' template by default.
+ */
+export async function generateAmfePdfBuffer(doc: AmfeDocument): Promise<Uint8Array> {
+    const htmlContent = TEMPLATE_BUILDERS.full(doc);
+    return renderHtmlToPdfBuffer(htmlContent, {
+        paperSize: 'a3',
+        orientation: 'landscape',
+    });
 }

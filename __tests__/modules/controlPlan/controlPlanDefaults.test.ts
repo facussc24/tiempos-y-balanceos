@@ -64,9 +64,9 @@ describe('getControlPlanDefaults', () => {
         });
     });
 
-    describe('AP Low or empty', () => {
-        it('returns empty sample fields for AP=L', () => {
-            const result = getControlPlanDefaults({ ap: 'L', severity: 5, phase: 'production' });
+    describe('AP Low — no SC/CC', () => {
+        it('returns empty sample fields for AP=L with severity < 5 (no SC/CC)', () => {
+            const result = getControlPlanDefaults({ ap: 'L', severity: 3, phase: 'production' });
             expect(result.sampleSize).toBe('');
             expect(result.sampleFrequency).toBe('');
         });
@@ -78,10 +78,67 @@ describe('getControlPlanDefaults', () => {
         });
     });
 
+    describe('AP Low — SC/CC (IATF 16949 §8.3.3.3)', () => {
+        it('S=9 (CC) → 3 piezas, Cada 2 horas', () => {
+            const result = getControlPlanDefaults({ ap: 'L', severity: 9, phase: 'production' });
+            expect(result.sampleSize).toBe('3 piezas');
+            expect(result.sampleFrequency).toBe('Cada 2 horas');
+        });
+
+        it('S=10 (CC) → 3 piezas, Cada 2 horas', () => {
+            const result = getControlPlanDefaults({ ap: 'L', severity: 10, phase: 'production' });
+            expect(result.sampleSize).toBe('3 piezas');
+            expect(result.sampleFrequency).toBe('Cada 2 horas');
+        });
+
+        it('S=5 (SC lower bound) → 1 pieza, Cada turno', () => {
+            const result = getControlPlanDefaults({ ap: 'L', severity: 5, phase: 'production' });
+            expect(result.sampleSize).toBe('1 pieza');
+            expect(result.sampleFrequency).toBe('Cada turno');
+        });
+
+        it('S=6 (SC) → 1 pieza, Cada turno', () => {
+            const result = getControlPlanDefaults({ ap: 'L', severity: 6, phase: 'production' });
+            expect(result.sampleSize).toBe('1 pieza');
+            expect(result.sampleFrequency).toBe('Cada turno');
+        });
+
+        it('S=8 (SC) → 1 pieza, Cada turno', () => {
+            const result = getControlPlanDefaults({ ap: 'L', severity: 8, phase: 'production' });
+            expect(result.sampleSize).toBe('1 pieza');
+            expect(result.sampleFrequency).toBe('Cada turno');
+        });
+
+        it('reactionPlan is severity-based even for AP=L (consequence unchanged)', () => {
+            const r9 = getControlPlanDefaults({ ap: 'L', severity: 9, phase: 'production' });
+            const r6 = getControlPlanDefaults({ ap: 'L', severity: 6, phase: 'production' });
+            const r3 = getControlPlanDefaults({ ap: 'L', severity: 3, phase: 'production' });
+            // S=9 → stop line (severity determines consequence, not AP)
+            expect(r9.reactionPlan).toContain('Detener');
+            // S=6 → adjust process
+            expect(r6.reactionPlan).toContain('Ajustar');
+            // S=3 → no reaction plan (severity too low)
+            expect(r3.reactionPlan).toBe('');
+        });
+
+        it('autoFilledFields includes sampleSize+sampleFrequency when SC/CC', () => {
+            const result = getControlPlanDefaults({ ap: 'L', severity: 9, phase: 'production' });
+            expect(result.autoFilledFields).toContain('sampleSize');
+            expect(result.autoFilledFields).toContain('sampleFrequency');
+            // reactionPlan also auto-filled because severity >= 9 (independent of AP)
+            expect(result.autoFilledFields).toContain('reactionPlan');
+        });
+
+        it('autoFilledFields empty when S<5 (no SC/CC)', () => {
+            const result = getControlPlanDefaults({ ap: 'L', severity: 3, phase: 'production' });
+            expect(result.autoFilledFields).toHaveLength(0);
+        });
+    });
+
     describe('Reaction Plan based on Severity', () => {
         it('suggests stop line for severity >= 9', () => {
             const result = getControlPlanDefaults({ ap: 'H', severity: 10, phase: 'production' });
-            expect(result.reactionPlan).toContain('Detener linea');
+            expect(result.reactionPlan).toContain('Detener línea');
             expect(result.reactionPlan).toContain('Segregar');
             expect(result.autoFilledFields).toContain('reactionPlan');
         });

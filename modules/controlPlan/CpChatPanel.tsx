@@ -14,6 +14,7 @@ import {
     ClipboardCheck, Trash2, RefreshCw, ShieldCheck,
 } from 'lucide-react';
 import { GeminiError, testGeminiConnection, clearGeminiCache, GeminiConnectionStatus } from '../../utils/geminiClient';
+import { logger } from '../../utils/logger';
 import { loadSettings, saveSettings, AppSettings } from '../../utils/settingsStore';
 import {
     sendCpChatMessage, executeCpChatActions, CpChatAction, CpChatAIResponse,
@@ -194,6 +195,8 @@ const CpChatPanel: React.FC<CpChatPanelProps> = ({ doc, amfeDoc, onApplyChanges,
     const abortRef = useRef<AbortController | null>(null);
     const scrollRef = useRef<HTMLDivElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+    // FIX: Guard against setState after unmount (handleTestConnection, handleToggleAi)
+    const isMountedRef = useRef(true);
 
     // Inline settings state
     const [showSettings, setShowSettings] = useState(false);
@@ -207,16 +210,25 @@ const CpChatPanel: React.FC<CpChatPanelProps> = ({ doc, amfeDoc, onApplyChanges,
 
     // Load settings on mount
     useEffect(() => {
+        let cancelled = false;
         loadSettings().then(s => {
+            if (cancelled) return;
             setGeminiEnabled(s.geminiEnabled);
             setApiKey(s.geminiApiKey || '');
             setSettingsLoaded(true);
+        }).catch(() => {
+            // FIX: Prevent unhandled promise rejection if settings fail to load
+            if (!cancelled) setSettingsLoaded(true);
         });
+        return () => { cancelled = true; };
     }, []);
 
-    // Cleanup abort controller on unmount
+    // Cleanup abort controller on unmount + mark unmounted
     useEffect(() => {
-        return () => { abortRef.current?.abort(); };
+        return () => {
+            abortRef.current?.abort();
+            isMountedRef.current = false;
+        };
     }, []);
 
     const handleSaveSettings = useCallback(async () => {
@@ -231,6 +243,8 @@ const CpChatPanel: React.FC<CpChatPanelProps> = ({ doc, amfeDoc, onApplyChanges,
             await saveSettings(updated);
             clearGeminiCache();
             onSettingsChanged?.(geminiEnabled && !!apiKey.trim());
+        } catch (err) {
+            logger.error('CpChat', 'Failed to save settings', {}, err instanceof Error ? err : undefined);
         } finally {
             setSavingSettings(false);
         }
@@ -242,11 +256,12 @@ const CpChatPanel: React.FC<CpChatPanelProps> = ({ doc, amfeDoc, onApplyChanges,
         setTestResult(null);
         try {
             const result = await testGeminiConnection();
-            setTestResult(result);
+            // FIX: Guard against setState on unmounted component
+            if (isMountedRef.current) setTestResult(result);
         } catch {
-            setTestResult({ ok: false, error: 'Error de conexion' });
+            if (isMountedRef.current) setTestResult({ ok: false, error: 'Error de conexion' });
         } finally {
-            setTestingConnection(false);
+            if (isMountedRef.current) setTestingConnection(false);
         }
     }, [handleSaveSettings]);
 
@@ -324,10 +339,13 @@ const CpChatPanel: React.FC<CpChatPanelProps> = ({ doc, amfeDoc, onApplyChanges,
                         errorText = 'La solicitud tardó demasiado. Intenta de nuevo.';
                         break;
                     case 'RATE_LIMIT':
-                        errorText = 'Rate limit excedido. Esperá un momento.';
+                        errorText = 'Limite de solicitudes excedido. Espera 1 minuto e intenta de nuevo.';
                         break;
                     case 'AUTH_ERROR':
                         errorText = 'API key inválida. Verificala en ⚙ Configuración.';
+                        break;
+                    case 'NETWORK_ERROR':
+                        errorText = 'Error de red. Verifica tu conexion a internet e intenta de nuevo.';
                         break;
                     case 'PARSE_ERROR':
                         errorText = 'No se pudo entender la respuesta de la IA. Intentá reformular.';
@@ -404,15 +422,15 @@ const CpChatPanel: React.FC<CpChatPanelProps> = ({ doc, amfeDoc, onApplyChanges,
     const hasAmfe = !!amfeDoc && amfeDoc.operations.length > 0;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-            <div className="bg-white rounded-2xl shadow-2xl w-[92vw] max-w-2xl h-[88vh] flex flex-col overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-150" role="presentation" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+            <div role="dialog" aria-modal="true" aria-labelledby="cp-chat-title" className="bg-white rounded-2xl shadow-2xl w-[92vw] max-w-2xl h-[88vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
                 {/* Header */}
                 <div className="flex items-center gap-3 px-5 py-3.5 border-b border-gray-200 bg-gradient-to-r from-emerald-50 via-green-50 to-teal-50">
                     <div className="w-9 h-9 bg-gradient-to-br from-emerald-500 to-green-600 rounded-xl flex items-center justify-center shadow-sm">
                         <Sparkles size={16} className="text-white" />
                     </div>
                     <div className="flex-1 min-w-0">
-                        <h2 className="text-sm font-bold text-gray-800">Copiloto Plan de Control</h2>
+                        <h2 id="cp-chat-title" className="text-sm font-bold text-gray-800">Copiloto Plan de Control</h2>
                         <p className="text-[10px] text-gray-500 truncate">
                             Asistente CP {hasItems ? `\u2022 ${doc.items.length} item${doc.items.length !== 1 ? 's' : ''}` : '\u2022 CP vacío'}
                             {hasAmfe && ' \u2022 AMFE vinculado'}
@@ -494,7 +512,7 @@ const CpChatPanel: React.FC<CpChatPanelProps> = ({ doc, amfeDoc, onApplyChanges,
                                     <button
                                         onClick={handleSaveSettings}
                                         disabled={savingSettings}
-                                        className="flex items-center gap-1 px-2.5 py-1 text-[10px] font-medium bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg transition disabled:opacity-50"
+                                        className="flex items-center gap-1 px-2.5 py-1 text-[10px] font-medium bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                         {savingSettings && <Loader2 size={10} className="animate-spin" />}
                                         Guardar
@@ -502,7 +520,7 @@ const CpChatPanel: React.FC<CpChatPanelProps> = ({ doc, amfeDoc, onApplyChanges,
                                     <button
                                         onClick={handleTestConnection}
                                         disabled={testingConnection || !geminiEnabled || !apiKey.trim()}
-                                        className="flex items-center gap-1 px-2.5 py-1 text-[10px] font-medium bg-gray-100 hover:bg-gray-200 border border-gray-300 text-gray-700 rounded-lg transition disabled:opacity-50"
+                                        className="flex items-center gap-1 px-2.5 py-1 text-[10px] font-medium bg-gray-100 hover:bg-gray-200 border border-gray-300 text-gray-700 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                         {testingConnection ? <Loader2 size={10} className="animate-spin" /> : <Sparkles size={10} />}
                                         Probar
@@ -661,7 +679,7 @@ const CpChatPanel: React.FC<CpChatPanelProps> = ({ doc, amfeDoc, onApplyChanges,
                         <button
                             onClick={() => handleSend()}
                             disabled={isLoading || !input.trim()}
-                            className="p-2.5 bg-gradient-to-br from-emerald-600 to-green-600 text-white rounded-xl hover:from-emerald-700 hover:to-green-700 disabled:opacity-30 disabled:cursor-not-allowed transition shadow-sm active:scale-95"
+                            className="p-2.5 bg-gradient-to-br from-emerald-600 to-green-600 text-white rounded-xl hover:from-emerald-700 hover:to-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition shadow-sm active:scale-95"
                             aria-label="Enviar mensaje"
                         >
                             <Send size={16} />

@@ -4,6 +4,15 @@ import { calculateTaskWeights, parseCSVLine, syncSuccessors } from '../utils';
 import { detectPrecedenceCycles } from '../core/balancing/detectCycles';
 import { toast } from '../components/ui/Toast';
 
+/** Calculate the next sequential task ID based on existing tasks (e.g., A1 → A2 → A3). */
+const getNextTaskId = (tasks: Task[]): string => {
+    if (tasks.length === 0) return 'A1';
+    const lastId = tasks[tasks.length - 1].id;
+    const match = lastId.match(/^([A-Z]+)(\d+)$/);
+    if (match) return match[1] + (parseInt(match[2]) + 1);
+    return 'A' + (tasks.length + 1);
+};
+
 export const useTaskManager = (data: ProjectData, updateData: (data: ProjectData) => void) => {
     const [calcTask, setCalcTask] = useState<Task | null>(null);
     const [docTask, setDocTask] = useState<Task | null>(null);
@@ -11,7 +20,7 @@ export const useTaskManager = (data: ProjectData, updateData: (data: ProjectData
     const [pasteTargetTaskId, setPasteTargetTaskId] = useState<string | null>(null);
     const [isSectorModalOpen, setIsSectorModalOpen] = useState(false);
 
-    const [newTaskID, setNewTaskID] = useState("");
+    const [newTaskID, setNewTaskID] = useState(() => getNextTaskId(data.tasks));
     const [newTaskDesc, setNewTaskDesc] = useState("");
     const [newTaskSectorId, setNewTaskSectorId] = useState(""); // Sector for new task creation
 
@@ -26,7 +35,10 @@ export const useTaskManager = (data: ProjectData, updateData: (data: ProjectData
     // --- CRUD OPERATIONS ---
 
     const addTask = () => {
-        if (!newTaskID.trim()) return;
+        if (!newTaskID.trim()) {
+            toast.warning('ID Requerido', 'Ingresá un identificador para la tarea (ej: A1)');
+            return;
+        }
         if (data.tasks.some(t => t.id === newTaskID)) {
             toast.warning('ID Duplicado', 'Ya existe una tarea con este identificador');
             return;
@@ -50,7 +62,7 @@ export const useTaskManager = (data: ProjectData, updateData: (data: ProjectData
 
         const updatedTasks = calculateTaskWeights([...data.tasks, newTask], data.meta.activeModels || [], data.meta.fatigueCompensation);
         updateData({ ...data, tasks: updatedTasks });
-        setNewTaskID("");
+        setNewTaskID(getNextTaskId([...data.tasks, newTask]));
         setNewTaskDesc("");
     };
 
@@ -116,14 +128,15 @@ export const useTaskManager = (data: ProjectData, updateData: (data: ProjectData
         updateData({ ...data, tasks: calculateTaskWeights(newTasks, data.meta.activeModels || [], data.meta.fatigueCompensation) });
     };
 
-    const updateFairTimeParams = (taskId: string, field: keyof Task, value: any) => {
+    const updateFairTimeParams = (taskId: string, field: keyof Task, value: Task[keyof Task]) => {
         const newTasks = data.tasks.map(t => t.id === taskId ? { ...t, [field]: value } : t);
         updateData({ ...data, tasks: calculateTaskWeights(newTasks, data.meta.activeModels || [], data.meta.fatigueCompensation) });
     };
 
     const updateManualStdDev = (taskId: string, value: string) => {
         const num = parseFloat(value.replace(',', '.'));
-        const newTasks = data.tasks.map(t => t.id === taskId ? { ...t, stdDev: isNaN(num) ? 0 : num } : t);
+        const safeNum = isNaN(num) ? 0 : Math.max(0, num); // stdDev cannot be negative
+        const newTasks = data.tasks.map(t => t.id === taskId ? { ...t, stdDev: safeNum } : t);
         updateData({ ...data, tasks: calculateTaskWeights(newTasks, data.meta.activeModels || [], data.meta.fatigueCompensation) });
     };
 
@@ -157,7 +170,12 @@ export const useTaskManager = (data: ProjectData, updateData: (data: ProjectData
     };
 
     const sortByWeight = () => {
-        const sorted = [...data.tasks].sort((a, b) => b.positionalWeight - a.positionalWeight);
+        // FIX: Guard against NaN in positionalWeight causing non-deterministic sort
+        const sorted = [...data.tasks].sort((a, b) => {
+            const aw = Number.isFinite(a.positionalWeight) ? a.positionalWeight : 0;
+            const bw = Number.isFinite(b.positionalWeight) ? b.positionalWeight : 0;
+            return bw - aw;
+        });
         updateData({ ...data, tasks: sorted });
     };
 
@@ -244,7 +262,7 @@ export const useTaskManager = (data: ProjectData, updateData: (data: ProjectData
                 return {
                     ...t,
                     cycleQuantity: params.optimalCavities,
-                    injectionParams: { ...params, realCycle: calculatedCycle },
+                    injectionParams: { ...params, realCycle: calculatedCycle / (params.optimalCavities || 1) },
                     times: newTimes,
                     ignoredTimeIndices: []
                 };

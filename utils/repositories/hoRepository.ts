@@ -6,9 +6,11 @@
  */
 
 import type { HoDocument } from '../../modules/hojaOperaciones/hojaOperacionesTypes';
+import { normalizeHoDocument } from '../../modules/hojaOperaciones/hojaOperacionesTypes';
 import { getDatabase } from '../database';
 import { logger } from '../logger';
 import { generateChecksum } from '../crypto';
+import { scheduleBackup } from '../backupService';
 
 export interface HoDocumentListItem {
     id: string;
@@ -52,7 +54,8 @@ export async function loadHoDocument(id: string): Promise<HoDocument | null> {
             [id]
         );
         if (rows.length === 0) return null;
-        return JSON.parse(rows[0].data) as HoDocument;
+        const raw = JSON.parse(rows[0].data);
+        return normalizeHoDocument(raw);
     } catch (err) {
         logger.error('HoRepo', `Failed to load document ${id}`, {}, err instanceof Error ? err : undefined);
         return null;
@@ -70,7 +73,8 @@ export async function loadHoByAmfeProject(amfeProject: string): Promise<{ id: st
             [amfeProject]
         );
         if (rows.length === 0) return null;
-        return { id: rows[0].id, doc: JSON.parse(rows[0].data) as HoDocument };
+        const raw = JSON.parse(rows[0].data);
+        return { id: rows[0].id, doc: normalizeHoDocument(raw) };
     } catch (err) {
         logger.error('HoRepo', `Failed to load by AMFE project: ${amfeProject}`, {}, err instanceof Error ? err : undefined);
         return null;
@@ -91,16 +95,19 @@ export async function saveHoDocument(id: string, doc: HoDocument, linkedAmfeId?:
             `INSERT OR REPLACE INTO ho_documents
              (id, form_number, organization, client, part_number, part_description,
               linked_amfe_project, linked_cp_project, linked_amfe_id, linked_cp_id,
-              sheet_count, updated_at, data, checksum)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), ?, ?)`,
+              sheet_count, created_at, updated_at, data, checksum)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+                     COALESCE((SELECT created_at FROM ho_documents WHERE id = ?), datetime('now')),
+                     datetime('now'), ?, ?)`,
             [
                 id, h.formNumber || 'I-IN-002.4-R01', h.organization || '',
                 h.client || '', h.partNumber || '', h.partDescription || '',
                 h.linkedAmfeProject || '', h.linkedCpProject || '',
                 linkedAmfeId ?? null, linkedCpId ?? null,
-                doc.sheets.length, data, checksum,
+                doc.sheets.length, id, data, checksum,
             ]
         );
+        scheduleBackup();
         return true;
     } catch (err) {
         logger.error('HoRepo', `Failed to save document ${id}`, {}, err instanceof Error ? err : undefined);

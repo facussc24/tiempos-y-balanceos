@@ -82,21 +82,8 @@ export const calculateInjectionMetrics = (params: CavityCalculationInput): Cavit
     // N* = 1 + (t_cur / t_iny)
     const nStar = Math.ceil(1 + (puCurTime / (puInyTime || 1)));
 
-    // Auto-Cavity Logic
-    // N_min = Ceil(Curing / Takt)
-    // Note: Re-implementing logic here effectively "freezes" it.
-    // Ideally we import calculateMinCavities from core_logic but let's seal it here for now.
-    const autoOptimalN = taktTime <= 0 ? 1 : Math.max(1, Math.ceil(puCurTime / taktTime));
-    const activeN = (cavityMode === 'auto' ? autoOptimalN : userSelectedN) || 1;
-
-    // 2. VALIDATION
-    const validation = validateInjectionParams({
-        puInyTime, puCurTime, activeShifts, manualOps,
-        manualTimeOverride, taktTime, headcountMode,
-        userHeadcountOverride, oee, cycleQuantity: activeN
-    });
-
-    // 3. SCENARIO CALCULATION (Strategy Pattern)
+    // 2. SCENARIO CALCULATION (Strategy Pattern) — generated BEFORE auto-N selection
+    // so we can pick the minimum N based on REAL cycle (including manual ops)
     const strategy = new RotaryInjectionStrategy();
     const chartData = strategy.calculate({
         puInyTime,
@@ -108,11 +95,33 @@ export const calculateInjectionMetrics = (params: CavityCalculationInput): Cavit
         userHeadcountOverride,
         activeShifts,
         oee,
-        cycleQuantity: 1, // Strategy iterates internally usually, but RotaryStrategy.calculate logic generates array for N=1..Max
-        availableSeconds  // FIX Bug #4: Propagate real shift seconds
+        cycleQuantity: 1,
+        availableSeconds
     });
 
-    // 4. DERIVED METRICS
+    // 3. AUTO-CAVITY LOGIC (uses real cycle from scenarios)
+    // Old formula: N_min = Ceil(Curing / Takt) — WRONG: ignores injection time + external ops
+    // New: find first N where realCycle (including all constraints) ≤ taktTime
+    let autoOptimalN: number;
+    if (taktTime <= 0 || chartData.length === 0) {
+        autoOptimalN = 1;
+    } else {
+        const feasible = chartData.find(d => d.realCycle <= taktTime);
+        // If no scenario meets takt, pick highest N (lowest cycle) as best effort
+        autoOptimalN = feasible
+            ? feasible.n
+            : chartData[chartData.length - 1].n;
+    }
+    const activeN = (cavityMode === 'auto' ? autoOptimalN : userSelectedN) || 1;
+
+    // 4. VALIDATION
+    const validation = validateInjectionParams({
+        puInyTime, puCurTime, activeShifts, manualOps,
+        manualTimeOverride, taktTime, headcountMode,
+        userHeadcountOverride, oee, cycleQuantity: activeN
+    });
+
+    // 5. DERIVED METRICS
     const selectedData = chartData.find(d => d.n === activeN);
 
     // Safe extract with defaults

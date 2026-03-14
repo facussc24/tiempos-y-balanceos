@@ -17,7 +17,8 @@ export const calculateRequiredSampleSize = (mean: number, stdDev: number, count:
     const term = (40 * stdDev) / mean;
     const n = Math.pow(term, 2);
 
-    return Math.ceil(n);
+    // FIX: Guard against NaN/Infinity propagation from corrupted input
+    return Number.isFinite(n) ? Math.ceil(n) : 0;
 };
 
 // Outlier Detection (Values outside Mean +/- 2 * StdDev)

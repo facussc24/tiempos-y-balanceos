@@ -350,7 +350,7 @@ export const useAmfeProjects = (
                     refreshStudies(ref.client, ref.project);
                 }
                 if (timeoutRef.current) clearTimeout(timeoutRef.current);
-                timeoutRef.current = setTimeout(() => setSaveStatus('idle'), 2000);
+                timeoutRef.current = setTimeout(() => setSaveStatus('idle'), 5000);
             } else {
                 setSaveStatus('error');
                 if (timeoutRef.current) clearTimeout(timeoutRef.current);
@@ -395,7 +395,13 @@ export const useAmfeProjects = (
                 const c = sanitizeName(client);
                 const p = sanitizeName(project);
                 const n = sanitizeName(name);
-                if (!c || !p || !n) return;
+                if (!c || !p || !n) {
+                    toast.warning('Nombre inválido', 'Los nombres no pueden estar vacíos ni contener solo caracteres especiales.');
+                    return;
+                }
+                if (c !== client.trim() || p !== project.trim() || n !== name.trim()) {
+                    toast.info('Nombre ajustado', 'Se removieron caracteres especiales no permitidos.');
+                }
 
                 // Check duplicate
                 const existingStudies = await listAmfeStudies(c, p);
@@ -429,7 +435,13 @@ export const useAmfeProjects = (
                 const c = sanitizeName(client);
                 const p = sanitizeName(project);
                 const n = sanitizeName(name);
-                if (!c || !p || !n) return;
+                if (!c || !p || !n) {
+                    toast.warning('Nombre inválido', 'Los nombres no pueden estar vacíos ni contener solo caracteres especiales.');
+                    return;
+                }
+                if (c !== client.trim() || p !== project.trim() || n !== name.trim()) {
+                    toast.info('Nombre ajustado', 'Se removieron caracteres especiales no permitidos.');
+                }
 
                 const existingStudies = await listAmfeStudies(c, p);
                 const exists = existingStudies.find(s => s.name === n);

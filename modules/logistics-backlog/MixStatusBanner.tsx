@@ -20,9 +20,12 @@ export const MixStatusBanner: React.FC<MixStatusBannerProps> = ({
     isViable,
     isTight,
     personas,
-    taktTime,
-    saturacion
+    taktTime: rawTaktTime,
+    saturacion: rawSaturacion
 }) => {
+    // FIX: Guard against NaN/Infinity propagating to .toFixed() calls
+    const taktTime = Number.isFinite(rawTaktTime) ? rawTaktTime : 0;
+    const saturacion = Number.isFinite(rawSaturacion) ? rawSaturacion : 0;
     // Determine status
     const status = !isViable ? 'error' : isTight ? 'warning' : 'success';
 

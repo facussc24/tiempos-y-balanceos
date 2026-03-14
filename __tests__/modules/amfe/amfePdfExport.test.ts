@@ -29,6 +29,7 @@ function buildTestDoc(): AmfeDocument {
             revision: 'Rev 2',
             approvedBy: 'Director',
             scope: 'Soldadura chasis',
+            applicableParts: '',
         },
         operations: [{
             id: 'op1',
@@ -81,7 +82,7 @@ function buildEmptyDoc(): AmfeDocument {
             organization: '', location: '', client: '', modelYear: '',
             subject: '', startDate: '', revDate: '', team: '', amfeNumber: '',
             responsible: '', confidentiality: '', partNumber: '',
-            processResponsible: '', revision: '', approvedBy: '', scope: '',
+            processResponsible: '', revision: '', approvedBy: '', scope: '', applicableParts: '',
         },
         operations: [],
     };
@@ -280,6 +281,102 @@ describe('amfePdfExport', () => {
                 const doc = buildTestDoc();
                 const html = getAmfePdfPreviewHtml(doc, 'full');
                 expect(html).toContain('page-break-inside');
+            });
+        });
+
+        // ---------------------------------------------------------------
+        // Flat rows (no rowspan) for safe page breaks
+        // ---------------------------------------------------------------
+        describe('flat rows for safe page breaks', () => {
+            it('full template has NO rowspan attributes (flat rows)', () => {
+                const doc = buildTestDoc();
+                const html = getAmfePdfPreviewHtml(doc, 'full');
+                expect(html).not.toContain('rowspan');
+            });
+
+            it('repeats operation number in every cause row', () => {
+                const doc = buildTestDoc();
+                const html = getAmfePdfPreviewHtml(doc, 'full');
+                // Op 10 has 3 causes across 2 failures → 3 rows all with "10"
+                const matches = html.match(/>10<\/td>/g);
+                expect(matches?.length).toBe(3);
+            });
+
+            it('shows operation name only on first row of each operation', () => {
+                const doc = buildTestDoc();
+                const html = getAmfePdfPreviewHtml(doc, 'full');
+                // "Soldadura MIG" should appear once (first row only)
+                const nameMatches = html.match(/Soldadura MIG/g);
+                expect(nameMatches?.length).toBe(1);
+            });
+
+            it('uses thick top border for visual operation grouping', () => {
+                // Build doc with 2 operations to trigger the border on second op
+                const doc = buildTestDoc();
+                const cause = { ...createEmptyCause(), cause: 'Test' };
+                doc.operations.push({
+                    id: 'op2',
+                    opNumber: '20',
+                    name: 'Ensamble',
+                    workElements: [{
+                        id: 'we3', type: 'Man', name: 'Operador',
+                        functions: [{
+                            id: 'fn3', description: 'Ensamblar', requirements: '',
+                            failures: [{
+                                id: 'fail3', description: 'Mal ensamblado',
+                                effectLocal: '', effectNextLevel: '', effectEndUser: '',
+                                severity: 5, causes: [cause],
+                            }],
+                        }],
+                    }],
+                });
+                const html = getAmfePdfPreviewHtml(doc, 'full');
+                expect(html).toContain('border-top:2px solid #2563EB');
+                expect(html).toContain('Ensamble');
+            });
+
+            it('handles large documents (many operations) without rowspan', () => {
+                const doc = buildTestDoc();
+                // Add 9 more operations (10 total) for multi-page scenario
+                for (let i = 2; i <= 10; i++) {
+                    const causes = Array.from({ length: 3 }, (_, j) => ({
+                        ...createEmptyCause(),
+                        cause: `Causa ${i}-${j + 1}`,
+                        occurrence: 3,
+                        detection: 4,
+                        ap: j === 0 ? ActionPriority.HIGH : ActionPriority.LOW,
+                    }));
+                    doc.operations.push({
+                        id: `op${i}`,
+                        opNumber: String(i * 10),
+                        name: `Operacion ${i}`,
+                        workElements: [{
+                            id: `we${i}`, type: 'Machine', name: `Maquina ${i}`,
+                            functions: [{
+                                id: `fn${i}`, description: `Funcion ${i}`, requirements: '',
+                                failures: [{
+                                    id: `fail${i}`, description: `Falla ${i}`,
+                                    effectLocal: `Local ${i}`, effectNextLevel: `Next ${i}`,
+                                    effectEndUser: `EndUser ${i}`, severity: 7,
+                                    causes,
+                                }],
+                            }],
+                        }],
+                    });
+                }
+
+                const html = getAmfePdfPreviewHtml(doc, 'full');
+                // No rowspan anywhere
+                expect(html).not.toContain('rowspan');
+                // All 10 operations present
+                for (let i = 2; i <= 10; i++) {
+                    expect(html).toContain(`Operacion ${i}`);
+                }
+                // Count total <tr> in tbody: 3 (original) + 9 ops × 3 causes = 30 rows
+                const trCount = (html.match(/<tr/g) || []).length;
+                expect(trCount).toBeGreaterThanOrEqual(30); // 30 data rows + 1 header row
+                // Verify page-break-inside:auto on table
+                expect(html).toContain('page-break-inside:auto');
             });
         });
     });

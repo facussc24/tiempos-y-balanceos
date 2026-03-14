@@ -18,6 +18,7 @@ import {
     getNextStepNumber,
     getIntermediateStepNumber,
     normalizePfdStep,
+    renumberSteps,
 } from './pfdTypes';
 
 const MAX_HISTORY = 20;
@@ -34,8 +35,12 @@ export interface UsePfdDocumentResult {
     updateStep: (stepId: string, field: keyof PfdStep, value: string | boolean) => void;
     /** C5-B1: Batch update multiple fields atomically (single undo entry) */
     updateStepFields: (stepId: string, updates: Partial<PfdStep>) => void;
+    /** Update a field on multiple steps atomically (single undo entry) */
+    updateMultipleSteps: (updates: Array<{ stepId: string; field: keyof PfdStep; value: string | boolean }>) => void;
     moveStep: (stepId: string, direction: 'up' | 'down') => void;
     setSteps: (steps: PfdStep[]) => void;
+    /** Renumber all steps sequentially (single undo entry) */
+    renumber: () => void;
     undo: () => void;
     redo: () => void;
     canUndo: boolean;
@@ -49,12 +54,13 @@ export function usePfdDocument(): UsePfdDocumentResult {
     // Force re-render when undo/redo stacks change
     const [, setHistoryVersion] = useState(0);
 
-    /** Set data with history tracking (pushes current state to undo stack) */
+    /** Set data with history tracking (pushes deep clone of current state to undo stack) */
     const setDataWithHistory = useCallback((updater: (prev: PfdDocument) => PfdDocument) => {
         setData(prev => {
             const next = updater(prev);
             if (next === prev) return prev; // no-op
-            undoStackRef.current.push(prev);
+            // Deep clone to prevent history corruption if nested objects are later mutated
+            undoStackRef.current.push(JSON.parse(JSON.stringify(prev)));
             if (undoStackRef.current.length > MAX_HISTORY) {
                 undoStackRef.current.shift();
             }
@@ -158,6 +164,27 @@ export function usePfdDocument(): UsePfdDocumentResult {
         }));
     }, [setDataWithHistory]);
 
+    /** Update a field on multiple steps atomically (single undo entry) */
+    const updateMultipleSteps = useCallback((updates: Array<{ stepId: string; field: keyof PfdStep; value: string | boolean }>) => {
+        setDataWithHistory(prev => ({
+            ...prev,
+            steps: prev.steps.map(s => {
+                const update = updates.find(u => u.stepId === s.id);
+                return update ? { ...s, [update.field]: update.value } : s;
+            }),
+            updatedAt: new Date().toISOString(),
+        }));
+    }, [setDataWithHistory]);
+
+    /** Renumber all steps sequentially (single undo entry) */
+    const renumber = useCallback(() => {
+        setDataWithHistory(prev => ({
+            ...prev,
+            steps: renumberSteps(prev.steps),
+            updatedAt: new Date().toISOString(),
+        }));
+    }, [setDataWithHistory]);
+
     const moveStep = useCallback((stepId: string, direction: 'up' | 'down') => {
         setDataWithHistory(prev => {
             const steps = [...prev.steps];
@@ -179,7 +206,8 @@ export function usePfdDocument(): UsePfdDocumentResult {
         if (stack.length === 0) return;
         setData(prev => {
             const previous = stack.pop()!;
-            redoStackRef.current.push(prev);
+            // Deep clone current state before pushing to redo stack
+            redoStackRef.current.push(JSON.parse(JSON.stringify(prev)));
             setHistoryVersion(v => v + 1);
             return previous;
         });
@@ -190,7 +218,8 @@ export function usePfdDocument(): UsePfdDocumentResult {
         if (stack.length === 0) return;
         setData(prev => {
             const next = stack.pop()!;
-            undoStackRef.current.push(prev);
+            // Deep clone current state before pushing to undo stack
+            undoStackRef.current.push(JSON.parse(JSON.stringify(prev)));
             setHistoryVersion(v => v + 1);
             return next;
         });
@@ -207,8 +236,10 @@ export function usePfdDocument(): UsePfdDocumentResult {
         removeStep,
         updateStep,
         updateStepFields,
+        updateMultipleSteps,
         moveStep,
         setSteps,
+        renumber,
         undo,
         redo,
         canUndo: undoStackRef.current.length > 0,

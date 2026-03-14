@@ -1193,6 +1193,10 @@ export interface FSItem {
   kind: 'file' | 'directory';
   // Note: `any` is intentional here for cross-platform interop (Web FileSystemHandle vs Tauri path)
   handle: any;
+  // Legacy Tauri fields — kept for backward compat, not populated in web mode
+  isDirectory?: boolean;
+  isFile?: boolean;
+  path?: string;
 }
 
 // =============================================================================

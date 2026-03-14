@@ -10,6 +10,9 @@
 
 import XLSX from 'xlsx-js-style';
 import { HeijunkaResult, HeijunkaSlot, ProductSummary } from './heijunkaLogic';
+import { sanitizeCellValue } from '../../utils/sanitizeCellValue';
+import { sanitizeFilename } from '../../utils/filenameSanitization';
+import { logger } from '../../utils/logger';
 
 // ============================================================================
 // STYLES (matching existing utils/excel.ts patterns)
@@ -109,8 +112,8 @@ export function exportHeijunkaPlanExcel(
 
     // Title Section
     rows.push([{ v: "🚂 HORARIO DE RETIROS - PLAN HEIJUNKA", s: styles.title }]);
-    rows.push([{ v: `Proyecto: ${projectName}`, s: styles.info }]);
-    rows.push([{ v: `Fecha: ${date}`, s: styles.info }]);
+    rows.push([{ v: sanitizeCellValue(`Proyecto: ${projectName}`), s: styles.info }]);
+    rows.push([{ v: sanitizeCellValue(`Fecha: ${date}`), s: styles.info }]);
     rows.push([{ v: `Pitch: ${result.pitchMinutes} min | Intervalos: ${result.totalSlots}`, s: styles.info }]);
     rows.push([]); // Empty row
 
@@ -123,7 +126,7 @@ export function exportHeijunkaPlanExcel(
     // Add product columns with their colors
     result.productSummaries.forEach(product => {
         headerRow.push({
-            v: product.productName,
+            v: sanitizeCellValue(product.productName),
             s: styles.headerProduct(product.color || '#7C3AED')
         });
     });
@@ -150,7 +153,7 @@ export function exportHeijunkaPlanExcel(
         });
 
         row.push({ v: slot.totalUnits, s: styles.cellHighlight });
-        row.push({ v: routeName, s: styles.cell });
+        row.push({ v: sanitizeCellValue(routeName), s: styles.cell });
         rows.push(row);
     });
 
@@ -205,7 +208,7 @@ export function exportHeijunkaPlanExcel(
     result.productSummaries.forEach(product => {
         const status = product.totalAssigned >= product.totalDemand ? "✅ OK" : "⚠️ Faltante";
         summaryRows.push([
-            { v: product.productName, s: styles.cell },
+            { v: sanitizeCellValue(product.productName), s: styles.cell },
             { v: product.totalDemand, s: styles.cell },
             { v: product.totalAssigned, s: styles.cell },
             { v: product.avgPerSlot.toFixed(1), s: styles.cell },
@@ -234,8 +237,30 @@ export function exportHeijunkaPlanExcel(
     XLSX.utils.book_append_sheet(wb, wsInstructions, "Instrucciones");
 
     // Download file
-    const filename = `${projectName.replace(/[^a-zA-Z0-9]/g, '_')}_Heijunka_${date.replace(/\//g, '-')}.xlsx`;
-    XLSX.writeFile(wb, filename);
+    const filename = sanitizeFilename(
+        `${projectName}_Heijunka_${date.replace(/\//g, '-')}.xlsx`
+    );
+    downloadWorkbook(wb, filename);
+}
+
+/** Download workbook as .xlsx file (browser-safe, same as utils/excel.ts) */
+function downloadWorkbook(wb: XLSX.WorkBook, fileName: string): void {
+    try {
+        const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+        const blob = new Blob([wbout], {
+            type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 1500);
+    } catch (err) {
+        logger.error('Heijunka', 'Error exporting Heijunka Excel', {}, err instanceof Error ? err : undefined);
+    }
 }
 
 /**
@@ -249,7 +274,7 @@ export function validatePitchVsRoute(
     pitchMinutes: number,
     routeTimeMinutes: number
 ): { ok: boolean; severity: 'ok' | 'warning' | 'critical'; message: string } {
-    if (!Number.isFinite(pitchMinutes) || !Number.isFinite(routeTimeMinutes)) {
+    if (!Number.isFinite(pitchMinutes) || !Number.isFinite(routeTimeMinutes) || pitchMinutes <= 0) {
         return {
             ok: true,
             severity: 'ok',

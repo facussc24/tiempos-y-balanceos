@@ -99,8 +99,9 @@ export function useBreadcrumb({
             });
         } else if (activeTab === 'panel' && hasOpenProject) {
             // Si estamos en panel, marcar el nombre del proyecto como activo
+            // FIX: Avoid direct mutation of object in array — create new object
             if (items.length > 0) {
-                items[items.length - 1].isActive = true;
+                items[items.length - 1] = { ...items[items.length - 1], isActive: true };
             }
         }
 

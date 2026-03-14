@@ -16,6 +16,7 @@ import {
     ControlPlanProjectInfo,
 } from './controlPlanPathManager';
 import { logger } from '../../utils/logger';
+import { toast } from '../../components/ui/Toast';
 
 /** State for the PromptModal integration */
 export interface CpProjectPromptState {
@@ -52,45 +53,76 @@ export const useControlPlanProjects = (
     const [networkAvailable, setNetworkAvailable] = useState(true);
     const [promptState, setPromptState] = useState<CpProjectPromptState>(CLOSED_PROMPT);
     const [loadError, setLoadError] = useState<string>('');
+    /** True while loading a project from SQLite (shows skeleton in UI) */
+    const [isLoadingProject, setIsLoadingProject] = useState(false);
 
     const savedSnapshotRef = useRef('');
     const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const changeDetectionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const savingRef = useRef(false);
 
-    useEffect(() => {
-        const check = async () => {
-            const available = await isCpPathAccessible();
-            setNetworkAvailable(available);
-            if (available) refreshProjects();
-        };
-        check();
-    }, []);
-
-    useEffect(() => {
-        return () => { if (timeoutRef.current) clearTimeout(timeoutRef.current); };
-    }, []);
-
-    useEffect(() => {
-        if (!currentProject || !savedSnapshotRef.current) return;
-        setHasUnsavedChanges(JSON.stringify(currentData) !== savedSnapshotRef.current);
-    }, [currentData, currentProject]);
-
+    // FIX: refreshProjects MUST be declared BEFORE the useEffect that references it,
+    // otherwise the dependency array [refreshProjects] triggers a TDZ ReferenceError
+    // ("Cannot access 'refreshProjects' before initialization") because const is not hoisted.
     const refreshProjects = useCallback(async () => {
         try {
             setProjects(await listControlPlanProjects());
         } catch (err) {
-            logger.error('[ControlPlan] Error loading projects', err);
+            logger.error('ControlPlan', 'Error loading projects', { error: err instanceof Error ? err.message : String(err) });
         }
     }, []);
 
-    /** Internal save logic (called with a validated project name). */
+    useEffect(() => {
+        let isMounted = true;
+        const check = async () => {
+            const available = await isCpPathAccessible();
+            if (!isMounted) return;
+            setNetworkAvailable(available);
+            if (available) refreshProjects();
+        };
+        check();
+        return () => { isMounted = false; };
+    }, [refreshProjects]);
+
+    useEffect(() => {
+        return () => {
+            if (timeoutRef.current) clearTimeout(timeoutRef.current);
+            if (changeDetectionTimerRef.current) clearTimeout(changeDetectionTimerRef.current);
+        };
+    }, []);
+
+    // Track unsaved changes (debounced to avoid expensive JSON.stringify on every keystroke)
+    useEffect(() => {
+        if (!currentProject || !savedSnapshotRef.current) {
+            setHasUnsavedChanges(false);
+            return;
+        }
+        if (changeDetectionTimerRef.current) clearTimeout(changeDetectionTimerRef.current);
+        changeDetectionTimerRef.current = setTimeout(() => {
+            setHasUnsavedChanges(JSON.stringify(currentData) !== savedSnapshotRef.current);
+        }, 800);
+        return () => {
+            if (changeDetectionTimerRef.current) clearTimeout(changeDetectionTimerRef.current);
+        };
+    }, [currentData, currentProject]);
+
+    /**
+     * Internal save logic (called with a validated project name).
+     * Mutex pattern: savingRef prevents concurrent saves.
+     * Snapshot captured BEFORE async to match exactly what was persisted.
+     */
     const doSave = useCallback(async (projectName: string) => {
+        if (savingRef.current) return;
+        savingRef.current = true;
+
         setSaveStatus('saving');
+        const snapshotAtSaveTime = JSON.stringify(currentData);
         try {
             const success = await saveControlPlan(projectName, currentData);
             if (success) {
                 setCurrentProject(projectName);
                 setSaveStatus('saved');
-                savedSnapshotRef.current = JSON.stringify(currentData);
+                savedSnapshotRef.current = snapshotAtSaveTime;
                 setHasUnsavedChanges(false);
                 await refreshProjects();
                 if (timeoutRef.current) clearTimeout(timeoutRef.current);
@@ -100,10 +132,13 @@ export const useControlPlanProjects = (
                 if (timeoutRef.current) clearTimeout(timeoutRef.current);
                 timeoutRef.current = setTimeout(() => setSaveStatus('idle'), 3000);
             }
-        } catch {
+        } catch (err) {
+            logger.error('ControlPlan', 'Save failed', { error: String(err) });
             setSaveStatus('error');
             if (timeoutRef.current) clearTimeout(timeoutRef.current);
             timeoutRef.current = setTimeout(() => setSaveStatus('idle'), 3000);
+        } finally {
+            savingRef.current = false;
         }
     }, [currentData, refreshProjects]);
 
@@ -139,16 +174,23 @@ export const useControlPlanProjects = (
             });
             if (!ok) return;
         }
-        const data = await loadControlPlan(name);
-        if (data) {
-            onLoadProject(data);
-            setCurrentProject(name);
-            savedSnapshotRef.current = JSON.stringify(data);
-            setHasUnsavedChanges(false);
-        } else {
-            setLoadError('Error al cargar Plan de Control. El archivo puede estar corrupto o inaccesible.');
-            if (timeoutRef.current) clearTimeout(timeoutRef.current);
-            timeoutRef.current = setTimeout(() => setLoadError(''), 5000);
+        // Show loading skeleton immediately
+        setIsLoadingProject(true);
+        await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+        try {
+            const data = await loadControlPlan(name);
+            if (data) {
+                onLoadProject(data);
+                setCurrentProject(name);
+                savedSnapshotRef.current = JSON.stringify(data);
+                setHasUnsavedChanges(false);
+            } else {
+                setLoadError('Error al cargar Plan de Control. El archivo puede estar corrupto o inaccesible.');
+                if (timeoutRef.current) clearTimeout(timeoutRef.current);
+                timeoutRef.current = setTimeout(() => setLoadError(''), 5000);
+            }
+        } finally {
+            setIsLoadingProject(false);
         }
     }, [hasUnsavedChanges, onLoadProject, requestConfirm]);
 
@@ -167,6 +209,9 @@ export const useControlPlanProjects = (
                 onResetProject();
             }
             await refreshProjects();
+        } else {
+            logger.error('ControlPlan', `Failed to delete: ${name}`);
+            toast.error('Error al Eliminar', `No se pudo eliminar el Plan de Control "${name}". Intente nuevamente.`);
         }
     }, [currentProject, onResetProject, refreshProjects, requestConfirm]);
 
@@ -194,6 +239,7 @@ export const useControlPlanProjects = (
         networkAvailable,
         promptState,
         loadError,
+        isLoadingProject,
         refreshProjects,
         saveCurrentProject,
         loadSelectedProject,

@@ -42,6 +42,16 @@ export const TaskMaterialsModal: React.FC<TaskMaterialsModalProps> = ({
     setHasChanges(false);
   }, [task]);
 
+  // Close on Escape key
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { e.preventDefault(); onClose(); }
+    };
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   const availableMaterials = data.materials || [];
@@ -97,6 +107,7 @@ export const TaskMaterialsModal: React.FC<TaskMaterialsModalProps> = ({
             <button
               onClick={onClose}
               className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+              title="Cerrar" aria-label="Cerrar materiales"
             >
               <X size={20} />
             </button>
@@ -139,7 +150,7 @@ export const TaskMaterialsModal: React.FC<TaskMaterialsModalProps> = ({
                     </span>
                     <button
                       onClick={() => removeMaterial(idx)}
-                      className="text-red-500 hover:text-red-700 p-1"
+                      className="text-red-500 hover:text-red-700 p-1.5"
                       title="Eliminar material"
                     >
                       <Trash2 size={16} />
@@ -174,7 +185,7 @@ export const TaskMaterialsModal: React.FC<TaskMaterialsModalProps> = ({
                         min="0.01"
                         step="0.01"
                         value={mat.quantityPerCycle}
-                        onChange={(e) => updateMaterial(idx, 'quantityPerCycle', parseFloat(e.target.value) || 1)}
+                        onChange={(e) => { const v = parseFloat(e.target.value); updateMaterial(idx, 'quantityPerCycle', isNaN(v) ? 1 : v); }}
                         className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-mono focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
@@ -188,7 +199,7 @@ export const TaskMaterialsModal: React.FC<TaskMaterialsModalProps> = ({
                         type="number"
                         min="1"
                         value={mat.standardPack ?? 10}
-                        onChange={(e) => updateMaterial(idx, 'standardPack', parseInt(e.target.value) || 10)}
+                        onChange={(e) => { const v = parseInt(e.target.value, 10); updateMaterial(idx, 'standardPack', isNaN(v) ? 10 : v); }}
                         className="w-full border border-indigo-300 rounded-lg px-3 py-2 text-sm font-mono bg-white focus:ring-2 focus:ring-indigo-500"
                         placeholder="Piezas por cajón"
                       />

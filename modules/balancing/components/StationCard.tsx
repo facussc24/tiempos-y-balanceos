@@ -1,8 +1,8 @@
 import React from 'react';
-import { Settings, Lock, Plus, X, Bot, Split, AlertTriangle, Cpu, Users } from 'lucide-react';
+import { Settings, Lock, Plus, X, Bot, Split, AlertTriangle, Cpu, Users, XCircle, CheckCircle2 } from 'lucide-react';
 import { useDraggable, useDroppable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
-import { ProjectData, MachineType } from '../../../types';
+import { ProjectData, MachineType, Task, Sector } from '../../../types';
 import { formatNumber } from '../../../utils';
 
 interface StationCardProps {
@@ -16,7 +16,7 @@ interface StationCardProps {
         sectorId?: string;
         rawEffectiveTime?: number; // Total time before dividing by replicas
     };
-    sectorsList: any[];
+    sectorsList: Sector[];
     draggedTask: string | null;
     isOverload: boolean;
     data: ProjectData;
@@ -39,10 +39,9 @@ interface StationCardProps {
 }
 
 const DraggableStationTask: React.FC<{
-    t: any;
+    t: Task;
     formatNumber: (n: number) => string;
     onUnassignTask: (id: string) => void;
-    handleDragStart?: any;
 }> = React.memo(({ t, formatNumber, onUnassignTask }) => {
     const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
         id: t.id,
@@ -71,6 +70,8 @@ const DraggableStationTask: React.FC<{
             {...attributes}
             className={`group relative border px-3 py-1.5 rounded text-xs font-medium cursor-grab active:cursor-grabbing hover:shadow-sm flex items-center gap-2 ${bgClass} ${isDragging ? 'opacity-50' : ''}`}
             title={isAbsorbed ? `↺ ${formatNumber(t.standardTime || t.averageTime)}s absorbido durante ciclo máquina` : undefined}
+            aria-label={`Tarea ${t.id}, ${formatNumber(t.standardTime || t.averageTime)} segundos. Arrastrar para reasignar.`}
+            aria-roledescription="elemento arrastrable"
         >
             <div className="flex flex-col">
                 <span className="font-bold font-mono">{t.id}</span>
@@ -89,7 +90,8 @@ const DraggableStationTask: React.FC<{
                     e.stopPropagation(); // Prevent drag start when clicking remove
                     onUnassignTask(t.id);
                 }}
-                className="opacity-0 group-hover:opacity-100 absolute -top-2 -right-2 bg-white rounded-full p-0.5 border border-slate-200 text-slate-400 hover:text-red-500 shadow-sm transition-opacity"
+                aria-label={`Desasignar tarea ${t.id}`}
+                className="opacity-0 group-hover:opacity-100 focus:opacity-100 absolute -top-2 -right-2 bg-white rounded-full p-0.5 border border-slate-200 text-slate-400 hover:text-red-500 shadow-sm transition-opacity"
             >
                 <X size={12} />
             </button>
@@ -120,9 +122,16 @@ export const StationCard: React.FC<StationCardProps> = React.memo(({
     const isNominalMode = data.meta.capacityLimitMode === 'nominal';
     const isInOeeRiskZone = isNominalMode && effectiveSeconds && st.time > effectiveSeconds && !isOverload;
 
-    const parallelTooltip = isParallel
-        ? `Esta estación requiere ${st.replicas} operarios en paralelo.\nTiempo total: ${formatNumber(rawTime)}s ÷ ${st.replicas} = ${formatNumber(st.time)}s por ciclo.\nSaturación: ${formatNumber(saturationPercent)}%\n${nominalSeconds ? `Takt Time: ${formatNumber(nominalSeconds)}s` : ''}`
-        : '';
+    // Build tooltip parts, join with ' | ' since \n doesn't render in HTML title
+    const parallelTooltipParts = isParallel
+        ? [
+            `${st.replicas} operarios en paralelo`,
+            `Total: ${formatNumber(rawTime)}s ÷ ${st.replicas} = ${formatNumber(st.time)}s/ciclo`,
+            `Saturación: ${formatNumber(saturationPercent)}%`,
+            ...(nominalSeconds ? [`Takt: ${formatNumber(nominalSeconds)}s`] : [])
+        ]
+        : [];
+    const parallelTooltip = parallelTooltipParts.join(' | ');
 
     // V4.1: Determine card styling based on deficit status
     const deficitStyles = hasResourceDeficit
@@ -137,6 +146,8 @@ export const StationCard: React.FC<StationCardProps> = React.memo(({
     return (
         <div
             ref={setNodeRef}
+            aria-label={`Estación ${st.id}, ${formatNumber(st.time)} segundos, ${st.tasks.length} tareas asignadas${isOverload ? ', sobrecargada' : ''}`}
+            aria-roledescription="zona de destino"
             className={`border rounded-xl p-4 transition-all relative ${isOver ? 'border-blue-400 bg-blue-50 ring-2 ring-blue-200' : (draggedTask ? 'border-slate-300 bg-slate-50/50' : 'border-slate-200 bg-white')} ${isOverload ? 'shadow-red-100 border-red-200' : 'shadow-sm'} ${deficitStyles} ${parallelStyles}`}
             style={{ borderLeftColor: stationSector?.color || undefined, borderLeftWidth: stationSector ? 4 : 1 }}
             title={parallelTooltip}
@@ -176,16 +187,25 @@ export const StationCard: React.FC<StationCardProps> = React.memo(({
                             {machineType && (
                                 <span
                                     className={`text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1 ${hasResourceDeficit ? 'bg-red-100 text-red-700 border border-red-300' : 'bg-amber-100 text-amber-700 border border-amber-300'}`}
-                                    title={`Requiere: ${machineType.name} (${machineType.availableUnits} disponibles)`}
+                                    title={`Requiere: ${machineType.name} (${machineType.availableUnits ?? machineType.quantity ?? 0} disponibles)`}
                                 >
                                     <Cpu size={10} />
                                     {machineType.name.substring(0, 8)}
                                 </span>
                             )}
+                            {/* Injection badge: show if any task is injection mode */}
+                            {st.tasks.some(tid => {
+                                const t = data.tasks.find(x => x.id === tid);
+                                return t?.executionMode === 'injection';
+                            }) && (
+                                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-purple-100 text-purple-700 border border-purple-300" title="Estación con tarea de inyección">
+                                    Inj
+                                </span>
+                            )}
                             <div className="flex items-center border border-slate-200 rounded overflow-hidden">
-                                <button onClick={() => onUpdateReplicas(st.id, -1)} className="px-1.5 hover:bg-slate-100 text-slate-500 disabled:opacity-30" disabled={st.replicas <= 1}>-</button>
+                                <button onClick={() => onUpdateReplicas(st.id, -1)} className="px-1.5 hover:bg-slate-100 text-slate-500 disabled:opacity-30 disabled:cursor-not-allowed transition" disabled={st.replicas <= 1} title="Reducir operarios" aria-label="Reducir operarios">-</button>
                                 <span className="px-2 text-xs font-mono font-bold bg-slate-50" title="Operarios en Paralelo (Multi-manning)">{st.replicas}</span>
-                                <button onClick={() => onUpdateReplicas(st.id, 1)} className="px-1.5 hover:bg-slate-100 text-slate-500">+</button>
+                                <button onClick={() => onUpdateReplicas(st.id, 1)} className="px-1.5 hover:bg-slate-100 text-slate-500 transition" title="Agregar operario" aria-label="Agregar operario">+</button>
                             </div>
                         </div>
                         <div className="flex items-center gap-2 text-xs text-slate-500 mt-1">
@@ -193,7 +213,7 @@ export const StationCard: React.FC<StationCardProps> = React.memo(({
                             {data.meta.useSectorOEE ? (
                                 <span title="Bloqueado por Sector"><Lock size={10} className="text-purple-400" /></span>
                             ) : !data.meta.useManualOEE && (
-                                <button onClick={() => onOpenConfig(st.id, st.oee)} className="text-slate-400 hover:text-blue-600"><Settings size={12} /></button>
+                                <button onClick={() => onOpenConfig(st.id, st.oee)} className="text-slate-400 hover:text-blue-600" aria-label={`Configurar OEE de estación ${st.id}`}><Settings size={12} /></button>
                             )}
                         </div>
                     </div>
@@ -205,8 +225,8 @@ export const StationCard: React.FC<StationCardProps> = React.memo(({
                     </div>
                     {/* FIX 9: Show saturation percentage */}
                     <div className={`text-[10px] font-bold mt-0.5 ${isOverload ? 'text-red-500' : isInOeeRiskZone ? 'text-amber-600' : saturationPercent > 90 ? 'text-amber-500' : 'text-emerald-500'}`}>
-                        {formatNumber(saturationPercent)}% sat.
-                        {isInOeeRiskZone && <span className="ml-1">⚠️ OEE</span>}
+                        {formatNumber(saturationPercent)}% saturación
+                        {isInOeeRiskZone && <span className="ml-1 inline-flex items-center gap-0.5"><AlertTriangle size={10} /> OEE</span>}
                     </div>
                 </div>
             </div>
@@ -222,7 +242,7 @@ export const StationCard: React.FC<StationCardProps> = React.memo(({
                 {dragPreview && dragPreview.delta > 0 && (
                     <div
                         className={`h-full opacity-50 ${dragPreview.wouldOverload ? 'bg-red-400' : dragPreview.previewSaturation > 90 ? 'bg-amber-300' : 'bg-blue-300'}`}
-                        style={{ width: `${Math.min(100 - Math.min(100, saturationPercent), (dragPreview.delta / st.limit) * 100)}%` }}
+                        style={{ width: `${Math.min(100 - Math.min(100, saturationPercent), (dragPreview.delta / (st.limit || 1)) * 100)}%` }}
                     ></div>
                 )}
             </div>
@@ -237,8 +257,8 @@ export const StationCard: React.FC<StationCardProps> = React.memo(({
                             : 'bg-emerald-50 border-emerald-300 text-emerald-700'
                 }`}>
                     <span>+{formatNumber(dragPreview.delta)}s</span>
-                    <span>{formatNumber(dragPreview.previewSaturation)}% sat.</span>
-                    <span>{dragPreview.wouldOverload ? '❌ Excede Takt' : dragPreview.previewSaturation > 90 ? '⚠️ Alta carga' : '✅ OK'}</span>
+                    <span>{formatNumber(dragPreview.previewSaturation)}% saturación</span>
+                    <span className="inline-flex items-center gap-1">{dragPreview.wouldOverload ? <><XCircle size={12} /> Excede Takt</> : dragPreview.previewSaturation > 90 ? <><AlertTriangle size={12} /> Alta carga</> : <><CheckCircle2 size={12} /> OK</>}</span>
                 </div>
             )}
 
@@ -247,13 +267,6 @@ export const StationCard: React.FC<StationCardProps> = React.memo(({
                 {st.tasks.map(tid => {
                     const t = data.tasks.find(x => x.id === tid);
                     if (!t) return null;
-
-                    const isMachine = t.executionMode === 'machine';
-                    const isConcurrent = !!t.concurrentWith;
-
-                    let bgClass = "bg-slate-50 border-slate-200 text-slate-700";
-                    if (isMachine) bgClass = "bg-purple-50 border-purple-200 text-purple-700";
-                    if (isConcurrent) bgClass = "bg-emerald-50 border-emerald-200 text-emerald-700 border-dashed";
 
                     return (
                         <DraggableStationTask
@@ -266,7 +279,7 @@ export const StationCard: React.FC<StationCardProps> = React.memo(({
                 })}
                 {st.tasks.length === 0 && (
                     <div className="w-full text-center text-xs text-slate-300 border-2 border-dashed border-slate-100 rounded py-2">
-                        Arrastre tareas aquí
+                        Arrastrá tareas acá
                     </div>
                 )}
             </div>
@@ -282,6 +295,7 @@ export const StationCard: React.FC<StationCardProps> = React.memo(({
         prevProps.st.oee === nextProps.st.oee &&
         prevProps.st.tasks.length === nextProps.st.tasks.length &&
         prevProps.st.tasks.every((t, i) => t === nextProps.st.tasks[i]) &&
+        prevProps.data.tasks === nextProps.data.tasks &&
         prevProps.isOverload === nextProps.isOverload &&
         prevProps.draggedTask === nextProps.draggedTask &&
         prevProps.data.meta.useSectorOEE === nextProps.data.meta.useSectorOEE &&

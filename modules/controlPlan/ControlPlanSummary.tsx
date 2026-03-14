@@ -35,12 +35,12 @@ export interface CpSummaryStats {
 
 const REQUIRED_FIELDS: { key: keyof ControlPlanItem; label: string }[] = [
     { key: 'processStepNumber', label: 'Nro. Proceso' },
-    { key: 'processDescription', label: 'Descripcion' },
+    { key: 'processDescription', label: 'Descripción' },
     { key: 'productCharacteristic', label: 'Producto' },
     { key: 'sampleSize', label: 'Tam. Muestra' },
-    { key: 'controlMethod', label: 'Metodo Control' },
-    { key: 'reactionPlan', label: 'Plan Reaccion' },
-    { key: 'reactionPlanOwner', label: 'Resp. Reaccion' },
+    { key: 'controlMethod', label: 'Método Control' },
+    { key: 'reactionPlan', label: 'Plan Reacción' },
+    { key: 'reactionPlanOwner', label: 'Resp. Reacción' },
 ];
 
 export function computeCpStats(data: ControlPlanDocument): CpSummaryStats {
@@ -60,13 +60,20 @@ export function computeCpStats(data: ControlPlanDocument): CpSummaryStats {
     const withReactionPlanOwner = items.filter(i => (i.reactionPlanOwner || '').trim() !== '').length;
     const withSpecification = items.filter(i => (i.specification || '').trim() !== '').length;
 
-    // Completion: % of required fields filled across all items
-    const totalRequired = totalItems * REQUIRED_FIELDS.length;
+    // Completion: % of required fields filled — context-aware by row type (process vs product)
+    const FIELDS_PER_ROW = 7;
+    const totalRequired = totalItems * FIELDS_PER_ROW;
     let filledCount = 0;
     if (totalRequired > 0) {
         for (const item of items) {
-            for (const rf of REQUIRED_FIELDS) {
-                if (((item[rf.key] as string) || '').trim() !== '') {
+            const hasProcess = ((item.processCharacteristic as string) || '').trim() !== '';
+            const hasProduct = ((item.productCharacteristic as string) || '').trim() !== '';
+            const isProcess = hasProcess && !hasProduct;
+            const fields: (keyof ControlPlanItem)[] = isProcess
+                ? ['processStepNumber', 'processDescription', 'processCharacteristic', 'sampleSize', 'controlMethod', 'reactionPlan', 'reactionPlanOwner']
+                : ['processStepNumber', 'processDescription', 'productCharacteristic', 'sampleSize', 'evaluationTechnique', 'reactionPlan', 'reactionPlanOwner'];
+            for (const f of fields) {
+                if (((item[f] as string) || '').trim() !== '') {
                     filledCount++;
                 }
             }
@@ -83,7 +90,13 @@ export function computeCpStats(data: ControlPlanDocument): CpSummaryStats {
         if (!isSpecial && !isHighAp) continue;
 
         const missing: string[] = [];
-        for (const rf of REQUIRED_FIELDS) {
+        const hasProc = ((item.processCharacteristic as string) || '').trim() !== '';
+        const hasProd = ((item.productCharacteristic as string) || '').trim() !== '';
+        const rowIsProcess = hasProc && !hasProd;
+        const rowFields = rowIsProcess
+            ? REQUIRED_FIELDS.map(rf => rf.key === 'productCharacteristic' ? { key: 'processCharacteristic' as keyof ControlPlanItem, label: 'Proceso' } : rf)
+            : REQUIRED_FIELDS;
+        for (const rf of rowFields) {
             if (((item[rf.key] as string) || '').trim() === '') {
                 missing.push(rf.label);
             }
@@ -91,7 +104,7 @@ export function computeCpStats(data: ControlPlanDocument): CpSummaryStats {
         if (missing.length > 0) {
             criticalItems.push({
                 processStep: item.processStepNumber || '—',
-                description: item.processDescription || item.productCharacteristic || '(sin descripcion)',
+                description: item.processDescription || item.productCharacteristic || '(sin descripción)',
                 missing,
             });
         }
@@ -116,6 +129,23 @@ const ControlPlanSummary: React.FC<Props> = ({ data, filteredItems }) => {
     }, [data, filteredItems, isFiltered]);
     const stats = useMemo(() => computeCpStats(effectiveData), [effectiveData]);
 
+    // Per-operation breakdown
+    const operationBreakdown = useMemo(() => {
+        const groups: Record<string, { step: string; desc: string; total: number; complete: number; cc: number; sc: number }> = {};
+        for (const item of data.items) {
+            const key = item.processStepNumber || '(sin nro)';
+            if (!groups[key]) groups[key] = { step: key, desc: item.processDescription, total: 0, complete: 0, cc: 0, sc: 0 };
+            groups[key].total++;
+            const required = ['processDescription', 'controlMethod', 'reactionPlan', 'reactionPlanOwner'];
+            const allFilled = required.every(f => ((item[f as keyof typeof item] as string) || '').trim() !== '');
+            if (allFilled) groups[key].complete++;
+            const sc = (item.specialCharClass || '').toUpperCase().trim();
+            if (sc === 'CC') groups[key].cc++;
+            if (sc === 'SC') groups[key].sc++;
+        }
+        return Object.values(groups);
+    }, [data.items]);
+
     const apTotal = stats.apH + stats.apM + stats.apL;
     const apBarWidth = (count: number) => apTotal > 0 ? `${(count / apTotal) * 100}%` : '0%';
 
@@ -135,7 +165,7 @@ const ControlPlanSummary: React.FC<Props> = ({ data, filteredItems }) => {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {/* AP Distribution */}
                     <div className="border border-gray-200 rounded-lg p-3">
-                        <h4 className="text-xs font-bold text-gray-600 mb-2">Distribucion AP (del AMFE)</h4>
+                        <h4 className="text-xs font-bold text-gray-600 mb-2">Distribución AP (del AMFE)</h4>
                         {apTotal === 0 && stats.totalItems > 0 ? (
                             <p className="text-[10px] text-gray-400 italic">Sin datos AP — genere desde un AMFE con S/O/D</p>
                         ) : (
@@ -188,21 +218,21 @@ const ControlPlanSummary: React.FC<Props> = ({ data, filteredItems }) => {
                         </div>
                         <div className="grid grid-cols-2 gap-1.5 text-[10px]">
                             <div className="flex items-center justify-between">
-                                <span className="text-gray-500">Metodo Control</span>
+                                <span className="text-gray-500">Método Control</span>
                                 <span className="font-bold text-gray-700">{stats.withControlMethod}/{stats.totalItems}</span>
                             </div>
                             <div className="flex items-center justify-between">
-                                <span className="text-gray-500">Plan Reaccion</span>
+                                <span className="text-gray-500">Plan Reacción</span>
                                 <span className="font-bold text-gray-700">{stats.withReactionPlan}/{stats.totalItems}</span>
                             </div>
                             <div className="flex items-center justify-between">
-                                <span className="text-gray-500">Resp. Reaccion</span>
+                                <span className="text-gray-500">Resp. Reacción</span>
                                 <span className={`font-bold ${stats.withReactionPlanOwner < stats.totalItems ? 'text-red-600' : 'text-gray-700'}`}>
                                     {stats.withReactionPlanOwner}/{stats.totalItems}
                                 </span>
                             </div>
                             <div className="flex items-center justify-between">
-                                <span className="text-gray-500">Especificacion</span>
+                                <span className="text-gray-500">Especificación</span>
                                 <span className="font-bold text-gray-700">{stats.withSpecification}/{stats.totalItems}</span>
                             </div>
                         </div>
@@ -212,7 +242,7 @@ const ControlPlanSummary: React.FC<Props> = ({ data, filteredItems }) => {
                     <div className="border border-gray-200 rounded-lg p-3">
                         <h4 className="text-xs font-bold text-gray-600 mb-2 flex items-center gap-1">
                             <AlertTriangle size={12} className="text-red-500" />
-                            Items Criticos (CC/SC o AP=H incompletos)
+                            Ítems Críticos (CC/SC o AP=H incompletos)
                         </h4>
                         {stats.criticalItems.length === 0 ? (
                             stats.totalItems === 0 ? (
@@ -220,7 +250,7 @@ const ControlPlanSummary: React.FC<Props> = ({ data, filteredItems }) => {
                             ) : (
                                 <p className="text-xs text-teal-600 mt-2 flex items-center gap-1">
                                     <CheckCircle size={12} />
-                                    Todos los items criticos estan completos
+                                    Todos los ítems críticos están completos
                                 </p>
                             )
                         ) : (
@@ -239,6 +269,40 @@ const ControlPlanSummary: React.FC<Props> = ({ data, filteredItems }) => {
                         )}
                     </div>
                 </div>
+
+                {/* Per-operation breakdown table */}
+                {operationBreakdown.length > 1 && (
+                    <div className="mt-3 border border-gray-200 rounded-lg overflow-hidden">
+                        <div className="px-3 py-1.5 bg-gray-50 border-b border-gray-200 text-[10px] font-semibold text-gray-600 uppercase">
+                            Desglose por Operación
+                        </div>
+                        <table className="w-full text-[10px]">
+                            <thead><tr className="bg-gray-50 text-gray-500">
+                                <th className="px-2 py-1 text-left font-medium">Op</th>
+                                <th className="px-2 py-1 text-left font-medium">Descripción</th>
+                                <th className="px-2 py-1 text-center font-medium">Items</th>
+                                <th className="px-2 py-1 text-center font-medium">%</th>
+                                <th className="px-2 py-1 text-center font-medium">CC</th>
+                                <th className="px-2 py-1 text-center font-medium">SC</th>
+                            </tr></thead>
+                            <tbody>
+                                {operationBreakdown.map(op => {
+                                    const pct = op.total > 0 ? Math.round((op.complete / op.total) * 100) : 0;
+                                    return (
+                                        <tr key={op.step} className={pct < 80 ? 'bg-amber-50' : ''}>
+                                            <td className="px-2 py-1 font-mono font-bold">{op.step}</td>
+                                            <td className="px-2 py-1 truncate max-w-[120px]">{op.desc}</td>
+                                            <td className="px-2 py-1 text-center">{op.total}</td>
+                                            <td className="px-2 py-1 text-center font-medium">{pct}%</td>
+                                            <td className="px-2 py-1 text-center">{op.cc > 0 ? <span className="text-red-600 font-bold">{op.cc}</span> : '-'}</td>
+                                            <td className="px-2 py-1 text-center">{op.sc > 0 ? <span className="text-amber-600 font-bold">{op.sc}</span> : '-'}</td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
             </div>
         </div>
     );

@@ -141,7 +141,7 @@ export function RevisionHistory({ directoryPath, currentFilePath, onRestore }: R
                                     <FileJson className="text-emerald-500 mt-0.5 flex-shrink-0" size={18} />
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2 flex-wrap">
-                                            <span className="font-medium text-slate-800 truncate">
+                                            <span className="font-medium text-slate-800 truncate" title={rev.projectName}>
                                                 {rev.projectName}
                                             </span>
                                             <span className="px-2 py-0.5 bg-slate-100 rounded text-xs font-mono text-slate-600">
@@ -171,7 +171,7 @@ export function RevisionHistory({ directoryPath, currentFilePath, onRestore }: R
                                         <button
                                             onClick={() => handleRestoreRequest(rev)}
                                             disabled={isRestoring}
-                                            className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded transition-colors disabled:opacity-50"
+                                            className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                             title="Restaurar esta versión"
                                         >
                                             <RotateCcw size={16} className={isRestoring ? 'animate-spin' : ''} />

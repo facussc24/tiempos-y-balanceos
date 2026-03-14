@@ -86,4 +86,4 @@ const StickyColumnHeader: React.FC<Props> = ({ visibility }) => {
     );
 };
 
-export default StickyColumnHeader;
+export default React.memo(StickyColumnHeader);

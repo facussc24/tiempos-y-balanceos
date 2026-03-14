@@ -74,7 +74,7 @@ describe('getItemValidationState', () => {
         });
         const result = getItemValidationState(item);
         expect(result.level).toBe('error');
-        expect(result.messages.some(m => m.includes('Responsable de Reaccion'))).toBe(true);
+        expect(result.messages.some(m => m.includes('Responsable de Reacción'))).toBe(true);
     });
 
     it('returns error for SC item missing controlMethod', () => {
@@ -85,7 +85,7 @@ describe('getItemValidationState', () => {
         });
         const result = getItemValidationState(item);
         expect(result.level).toBe('error');
-        expect(result.messages.some(m => m.includes('Metodo de Control'))).toBe(true);
+        expect(result.messages.some(m => m.includes('Método de Control'))).toBe(true);
     });
 
     it('returns error for cc (lowercase) item missing reactionPlanOwner', () => {
@@ -112,7 +112,7 @@ describe('getItemValidationState', () => {
         });
         const result = getItemValidationState(item);
         expect(result.level).toBe('warning');
-        expect(result.messages.some(m => m.includes('especificacion'))).toBe(true);
+        expect(result.messages.some(m => m.includes('especificación'))).toBe(true);
     });
 
     it('returns warning when required fields are partially filled', () => {
@@ -267,7 +267,7 @@ describe('getDocumentCompletionErrors', () => {
         })];
         const errors = getDocumentCompletionErrors(makeDoc(items));
         expect(errors[0].processStep).toBe('\u2014');
-        expect(errors[0].processDescription).toBe('(sin descripcion)');
+        expect(errors[0].processDescription).toBe('(sin descripción)');
     });
 
     it('returns empty for empty document', () => {
@@ -291,14 +291,14 @@ describe('getExportWarnings', () => {
             date: '',
         });
         const warnings = getExportWarnings(doc);
-        expect(warnings.some(w => w.includes('encabezado vacios'))).toBe(true);
+        expect(warnings.some(w => w.includes('encabezado vacíos'))).toBe(true);
     });
 
     it('warns about critical items with missing fields', () => {
         const items = [makeItem({ specialCharClass: 'CC' })];
         const doc = makeDoc(items, { controlPlanNumber: 'CP-1', partName: 'P', partNumber: 'N', organization: 'O', responsible: 'R', date: '2025-01-01' });
         const warnings = getExportWarnings(doc);
-        expect(warnings.some(w => w.includes('critico(s)'))).toBe(true);
+        expect(warnings.some(w => w.includes('crítico(s)'))).toBe(true);
     });
 
     it('warns about items without reactionPlanOwner', () => {
@@ -308,7 +308,7 @@ describe('getExportWarnings', () => {
         ];
         const doc = makeDoc(items, { controlPlanNumber: 'CP-1', partName: 'P', partNumber: 'N', organization: 'O', responsible: 'R', date: '2025-01-01' });
         const warnings = getExportWarnings(doc);
-        expect(warnings.some(w => w.includes('1 item(s) sin Responsable'))).toBe(true);
+        expect(warnings.some(w => w.includes('1 ítem(s) sin Responsable'))).toBe(true);
     });
 
     it('warns about empty plan', () => {
@@ -324,7 +324,7 @@ describe('getExportWarnings', () => {
         })];
         const doc = makeDoc(items, { controlPlanNumber: 'CP-1', partName: 'P', partNumber: 'N', organization: 'O', responsible: 'R', date: '2025-01-01' });
         const warnings = getExportWarnings(doc);
-        expect(warnings.some(w => w.includes('exceden el limite'))).toBe(true);
+        expect(warnings.some(w => w.includes('exceden el límite'))).toBe(true);
     });
 
     it('returns no warnings for fully complete document', () => {
@@ -357,7 +357,7 @@ describe('getExportWarnings', () => {
         ];
         const doc = makeDoc(items, { controlPlanNumber: 'CP-1', partName: 'P', partNumber: 'N', organization: 'O', responsible: 'R', date: '2025-01-01' });
         const warnings = getExportWarnings(doc);
-        expect(warnings.some(w => w.includes('2 item(s) sin Responsable'))).toBe(true);
+        expect(warnings.some(w => w.includes('2 ítem(s) sin Responsable'))).toBe(true);
     });
 });
 
@@ -395,7 +395,7 @@ describe('validateControlPlanDocument', () => {
     it('rejects null input', () => {
         const result = validateControlPlanDocument(null);
         expect(result.valid).toBe(false);
-        expect(result.errors[0]).toContain('JSON valido');
+        expect(result.errors[0]).toContain('JSON válido');
     });
 
     it('rejects missing header', () => {
@@ -422,7 +422,7 @@ describe('validateControlPlanDocument', () => {
             items: [],
         });
         expect(result.valid).toBe(false);
-        expect(result.errors.some(e => e.includes('Fase invalida'))).toBe(true);
+        expect(result.errors.some(e => e.includes('Fase inválida'))).toBe(true);
     });
 
     it('rejects missing items array', () => {
@@ -567,7 +567,7 @@ describe('getItemValidationState — context-aware rows', () => {
         });
         const result = getItemValidationState(item);
         expect(result.level).toBe('warning');
-        expect(result.messages.some(m => m.includes('Metodo Control'))).toBe(true);
+        expect(result.messages.some(m => m.includes('Método Control'))).toBe(true);
     });
 
     it('product row missing evaluationTechnique IS flagged as warning', () => {
@@ -583,7 +583,7 @@ describe('getItemValidationState — context-aware rows', () => {
         });
         const result = getItemValidationState(item);
         expect(result.level).toBe('warning');
-        expect(result.messages.some(m => m.includes('Tecnica Evaluacion'))).toBe(true);
+        expect(result.messages.some(m => m.includes('Técnica Evaluación'))).toBe(true);
     });
 
     it('CC product row does NOT trigger missing controlMethod error', () => {
@@ -600,7 +600,7 @@ describe('getItemValidationState — context-aware rows', () => {
             reactionPlanOwner: 'Operador',
         });
         const result = getItemValidationState(item);
-        expect(result.messages.every(m => !m.includes('Metodo de Control'))).toBe(true);
+        expect(result.messages.every(m => !m.includes('Método de Control'))).toBe(true);
     });
 });
 

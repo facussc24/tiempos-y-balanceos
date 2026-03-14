@@ -151,7 +151,8 @@ export function calculateStationSaturations(
             if (task) {
                 // Skip machine-internal tasks (ghost tasks absorbed during machine cycle)
                 if (!task.isMachineInternal) {
-                    cycleTime += task.standardTime;
+                    // FIX: Fall back to averageTime for tasks without completed time study
+                    cycleTime += (task.standardTime || task.averageTime || 0);
                 }
 
                 // Track task types for man-machine detection
@@ -175,8 +176,8 @@ export function calculateStationSaturations(
         const effectiveCycleTime = cycleTime / replicas;
         const saturation = effectiveCycleTime / taktTime;
 
-        if (cycleTime > maxCycleTime) {
-            maxCycleTime = cycleTime;
+        if (effectiveCycleTime > maxCycleTime) {
+            maxCycleTime = effectiveCycleTime;
         }
 
         saturationInfos.push({
@@ -312,6 +313,11 @@ export function analyzeBufferNeeds(
                 case 'high_saturation':
                     explanation = `Saturación alta (${(current.saturation * 100).toFixed(0)}%). ` +
                         `Buffer estándar para absorber microvariaciones.`;
+                    break;
+                default:
+                    // FIX: Exhaustive default prevents empty explanation if new reason types are added
+                    explanation = `Buffer recomendado entre ${current.stationName} y ${next.stationName} ` +
+                        `(saturación: ${(current.saturation * 100).toFixed(0)}%).`;
                     break;
             }
 

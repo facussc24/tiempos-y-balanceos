@@ -11,7 +11,7 @@
 import React, { useMemo } from 'react';
 import { AmfeOperation, ActionPriority, AMFE_STATUS_OPTIONS, WORK_ELEMENT_TYPES, WORK_ELEMENT_LABELS, WorkElementType } from './amfeTypes';
 import { Filter, X, Search, Eye } from 'lucide-react';
-import { ColumnGroupVisibility, COLUMN_GROUP_LABELS, COLUMN_GROUP_COLORS } from './useAmfeColumnVisibility';
+import { ColumnGroupVisibility, COLUMN_GROUP_LABELS, COLUMN_GROUP_COLORS, COLUMN_GROUP_TOOLTIPS } from './useAmfeColumnVisibility';
 
 export interface AmfeFilterState {
     ap: string;       // '' | 'H' | 'M' | 'L'
@@ -129,6 +129,7 @@ const AmfeFilters: React.FC<Props> = ({ filters, onFiltersChange, operations, co
                     value={filters.ap}
                     onChange={e => update('ap', e.target.value)}
                     className={selectClass}
+                    aria-label="Filtrar por prioridad de accion"
                 >
                     <option value="">AP: Todos</option>
                     <option value="H">AP: Alto (H)</option>
@@ -141,6 +142,7 @@ const AmfeFilters: React.FC<Props> = ({ filters, onFiltersChange, operations, co
                     value={filters.status}
                     onChange={e => update('status', e.target.value)}
                     className={selectClass}
+                    aria-label="Filtrar por estado"
                 >
                     <option value="">Estado: Todos</option>
                     {AMFE_STATUS_OPTIONS.map(s => (
@@ -153,6 +155,7 @@ const AmfeFilters: React.FC<Props> = ({ filters, onFiltersChange, operations, co
                     value={filters.operation}
                     onChange={e => update('operation', e.target.value)}
                     className={selectClass}
+                    aria-label="Filtrar por operación"
                 >
                     <option value="">Operación: Todas</option>
                     {operations.map(op => (
@@ -165,6 +168,7 @@ const AmfeFilters: React.FC<Props> = ({ filters, onFiltersChange, operations, co
                     value={filters.weType}
                     onChange={e => update('weType', e.target.value)}
                     className={selectClass}
+                    aria-label="Filtrar por tipo 6M"
                 >
                     <option value="">6M: Todos</option>
                     {WORK_ELEMENT_TYPES.map(t => (
@@ -183,6 +187,7 @@ const AmfeFilters: React.FC<Props> = ({ filters, onFiltersChange, operations, co
                         className={`${selectClass} pl-6 w-40`}
                         data-amfe-search="true"
                         data-shortcut="Ctrl+F"
+                        aria-label="Buscar texto en AMFE"
                     />
                 </div>
 
@@ -217,6 +222,7 @@ const AmfeFilters: React.FC<Props> = ({ filters, onFiltersChange, operations, co
                             <button
                                 key={group}
                                 onClick={() => onToggleColumn(group)}
+                                title={COLUMN_GROUP_TOOLTIPS[group]}
                                 className={`text-[10px] px-2 py-0.5 rounded-full border transition font-medium ${
                                     columnVisibility[group]
                                         ? `${COLUMN_GROUP_COLORS[group]} border-current`

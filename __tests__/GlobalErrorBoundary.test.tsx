@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { GlobalErrorBoundary } from '../components/GlobalErrorBoundary';
+import { GlobalErrorBoundary } from '../components/layout/GlobalErrorBoundary';
 
 // Component that throws on demand
 function ThrowingComponent({ shouldThrow }: { shouldThrow: boolean }) {

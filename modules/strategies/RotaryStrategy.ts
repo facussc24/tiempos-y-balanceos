@@ -24,8 +24,10 @@ export class RotaryInjectionStrategy implements SimulationStrategy {
         const data: InjectionScenario[] = [];
 
         // NORMALIZE INPUTS (User enters Total for Batch, we need Unit Times)
-        const unitInyTime = puInyTime / cycleQuantity;
-        const unitCurTime = puCurTime / cycleQuantity;
+        // FIX: Guard against cycleQuantity=0 to prevent Infinity propagation
+        const safeCycleQty = cycleQuantity > 0 ? cycleQuantity : 1;
+        const unitInyTime = puInyTime / safeCycleQty;
+        const unitCurTime = puCurTime / safeCycleQty;
 
         // N* Calculation (Ratio remains same regardless of normalization)
         const nStar = Math.ceil(1 + (unitCurTime / (unitInyTime || 1)));
@@ -194,7 +196,7 @@ export class RotaryInjectionStrategy implements SimulationStrategy {
                 reqOperators,
                 machinesNeeded,
                 reqCavities,
-                dailyOutput: (shiftSeconds * activeShifts * oee) / finalRealCycle,
+                dailyOutput: (shiftSeconds * oee) / finalRealCycle,
                 manualTime: simEffectiveManualTime,
                 isOversaturated: n > nStar,
                 isFatigueRisk,

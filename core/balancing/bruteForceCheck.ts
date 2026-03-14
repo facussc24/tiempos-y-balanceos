@@ -77,6 +77,10 @@ export function bruteForceFeasibilityCheck(
     N: number,
     takt: number
 ): FeasibilityResult {
+    // FIX: Guard against N=0 causing Math.max(...[]) = -Infinity
+    if (N <= 0 || tasks.length === 0) {
+        return { feasible: tasks.length === 0, maxStationTime: 0 };
+    }
     const predecessorMap = buildPredecessorMap(tasks);
     const taskMap = new Map(tasks.map(t => [t.id, t]));
 
@@ -155,6 +159,8 @@ export function findMinimumFeasibleN(
     takt: number,
     maxN: number = tasks.length
 ): { minN: number; solution?: Assignment[] } {
+    if (takt <= 0) return { minN: -1 }; // No feasible solution with zero/negative takt
+
     // Lower bound: ceil(totalWork / takt)
     const totalWork = tasks.reduce((sum, t) => sum + getTaskTime(t), 0);
     let low = Math.ceil(totalWork / takt);

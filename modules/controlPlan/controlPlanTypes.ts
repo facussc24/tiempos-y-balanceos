@@ -16,7 +16,7 @@ export const CONTROL_PLAN_PHASES: { value: ControlPlanPhase; label: string }[] =
     { value: 'prototype', label: 'Prototipo' },
     { value: 'preLaunch', label: 'Pre-Lanzamiento' },
     { value: 'safeLaunch', label: 'Safe Launch' },
-    { value: 'production', label: 'Produccion' },
+    { value: 'production', label: 'Producción' },
 ];
 
 /** Header metadata for a Control Plan document. */
@@ -26,6 +26,8 @@ export interface ControlPlanHeader {
     partNumber: string;
     latestChangeLevel: string;
     partName: string;
+    /** Applicable part numbers (one per line) for product family documents. */
+    applicableParts: string;
     organization: string;
     supplier: string;
     supplierCode: string;
@@ -89,11 +91,12 @@ export const EMPTY_CP_HEADER: ControlPlanHeader = {
     partNumber: '',
     latestChangeLevel: '',
     partName: '',
+    applicableParts: '',
     organization: '',
     supplier: '',
     supplierCode: '',
     keyContactPhone: '',
-    date: new Date().toISOString().split('T')[0],
+    date: '',
     revision: '',
     responsible: '',
     approvedBy: '',
@@ -123,28 +126,28 @@ export interface CPColumnDef {
 export const CP_COLUMNS: CPColumnDef[] = [
     // Proceso (3)
     { key: 'processStepNumber',     label: 'Nro. Parte/Proceso',                 width: '80px', required: true },
-    { key: 'processDescription',    label: 'Descripcion Proceso/Operacion',      width: '170px', required: true },
-    { key: 'machineDeviceTool',     label: 'Maquina/Dispositivo/Herram.',        width: '140px' },
-    // Caracteristicas (4)
+    { key: 'processDescription',    label: 'Descripción Proceso/Operación',      width: '170px', required: true },
+    { key: 'machineDeviceTool',     label: 'Máquina/Dispositivo/Herram.',        width: '140px' },
+    // Características (4)
     { key: 'characteristicNumber',  label: 'Nro.',                               width: '60px' },
     { key: 'productCharacteristic', label: 'Producto',                           width: '150px', required: true },
     { key: 'processCharacteristic', label: 'Proceso',                            width: '150px' },
     { key: 'specialCharClass',      label: 'Clasif. Caract. Esp.',              width: '80px' },
-    // Metodos (7)
+    // Métodos (7)
     { key: 'specification',         label: 'Espec./Tolerancia Producto/Proceso', width: '160px' },
-    { key: 'evaluationTechnique',   label: 'Tecnica Evaluacion/Medicion',        width: '140px' },
+    { key: 'evaluationTechnique',   label: 'Técnica Evaluación/Medición',        width: '140px' },
     { key: 'sampleSize',            label: 'Tamaño Muestra',                     width: '90px', required: true },
     { key: 'sampleFrequency',       label: 'Frecuencia',                         width: '90px' },
-    { key: 'controlMethod',         label: 'Metodo Control',                     width: '140px', required: true },
-    { key: 'reactionPlan',          label: 'Plan Reaccion',                      width: '160px', required: true },
-    { key: 'reactionPlanOwner',     label: 'Responsable Reaccion',               width: '120px', required: true },
+    { key: 'controlMethod',         label: 'Método Control',                     width: '140px', required: true },
+    { key: 'reactionPlan',          label: 'Plan Reacción',                      width: '160px', required: true },
+    { key: 'reactionPlanOwner',     label: 'Responsable Reacción',               width: '120px', required: true },
 ];
 
 /** AIAG standard column groups for the sticky header. */
 export const CP_COLUMN_GROUPS: { label: string; colSpan: number }[] = [
     { label: 'Proceso',          colSpan: 3 },
-    { label: 'Caracteristicas',  colSpan: 4 },
-    { label: 'Metodos',          colSpan: 7 },
+    { label: 'Características',  colSpan: 4 },
+    { label: 'Métodos',          colSpan: 7 },
 ];
 
 /** Term definition for tooltip display */
@@ -156,40 +159,40 @@ export interface CpTerm {
 /** AIAG CP 1st Ed 2024 — Column definitions with tooltips */
 export const CP_COLUMN_TERMS: Record<string, CpTerm> = {
     processStepNumber: {
-        term: 'Numero de Parte/Proceso',
-        definition: 'Numero de referencia del paso del proceso, generalmente tomado del diagrama de flujo.',
+        term: 'Número de Parte/Proceso',
+        definition: 'Número de referencia del paso del proceso, generalmente tomado del diagrama de flujo.',
     },
     processDescription: {
-        term: 'Descripcion del Proceso/Operacion',
-        definition: 'Descripcion de todos los pasos del proceso/operacion del diagrama de flujo.',
+        term: 'Descripción del Proceso/Operación',
+        definition: 'Descripción de todos los pasos del proceso/operación del diagrama de flujo.',
     },
     machineDeviceTool: {
-        term: 'Maquina/Dispositivo/Herramienta',
-        definition: 'Equipo, maquina, dispositivo o herramienta utilizada en cada operacion del proceso.',
+        term: 'Máquina/Dispositivo/Herramienta',
+        definition: 'Equipo, máquina, dispositivo o herramienta utilizada en cada operación del proceso.',
     },
     characteristicNumber: {
-        term: 'Numero de Caracteristica',
-        definition: 'Numero de referencia cruzada con documentos aplicables (plano, AMFE).',
+        term: 'Número de Característica',
+        definition: 'Número de referencia cruzada con documentos aplicables (plano, AMFE).',
     },
     productCharacteristic: {
-        term: 'Caracteristica de Producto',
-        definition: 'Propiedades o dimensiones del producto que se miden despues de completar el proceso.',
+        term: 'Característica de Producto',
+        definition: 'Propiedades o dimensiones del producto que se miden después de completar el proceso.',
     },
     processCharacteristic: {
-        term: 'Caracteristica de Proceso',
-        definition: 'Variables del proceso con relacion causa-efecto con la caracteristica de producto.',
+        term: 'Característica de Proceso',
+        definition: 'Variables del proceso con relación causa-efecto con la característica de producto.',
     },
     specialCharClass: {
-        term: 'Clasificacion Caract. Especial',
-        definition: 'CC = Critica para el cliente. SC = Significativa. Clasificacion per IATF 16949.',
+        term: 'Clasificación Caract. Especial',
+        definition: 'CC = Crítica para el cliente. SC = Significativa. PTC = Pass-Through (sin modificación en planta). Clasificación per IATF 16949 / CP-1 2024.',
     },
     specification: {
-        term: 'Especificacion/Tolerancia',
-        definition: 'Rango de aceptacion del producto/proceso segun especificacion de ingenieria.',
+        term: 'Especificación/Tolerancia',
+        definition: 'Rango de aceptación del producto/proceso según especificación de ingeniería.',
     },
     evaluationTechnique: {
-        term: 'Tecnica de Evaluacion/Medicion',
-        definition: 'Sistema de medicion utilizado (calibre, CMM, visual, gage R&R, etc.).',
+        term: 'Técnica de Evaluación/Medición',
+        definition: 'Sistema de medición utilizado (calibre, CMM, visual, gage R&R, etc.).',
     },
     sampleSize: {
         term: 'Tamaño de Muestra',
@@ -200,16 +203,16 @@ export const CP_COLUMN_TERMS: Record<string, CpTerm> = {
         definition: 'Periodicidad del muestreo (cada pieza, cada hora, inicio de turno, etc.).',
     },
     controlMethod: {
-        term: 'Metodo de Control',
-        definition: 'Metodo de prevencion o deteccion (Poka-Yoke, SPC, checklist, inspeccion visual, etc.).',
+        term: 'Método de Control',
+        definition: 'Método de prevención o detección (Poka-Yoke, SPC, checklist, inspección visual, etc.).',
     },
     reactionPlan: {
-        term: 'Plan de Reaccion',
-        definition: 'Acciones correctivas cuando se detecta producto no conforme o variacion fuera de control.',
+        term: 'Plan de Reacción',
+        definition: 'Acciones correctivas cuando se detecta producto no conforme o variación fuera de control.',
     },
     reactionPlanOwner: {
-        term: 'Responsable Plan Reaccion',
-        definition: 'Persona o rol responsable de ejecutar el plan de reaccion en piso. Obligatorio per CP 2024.',
+        term: 'Responsable Plan Reacción',
+        definition: 'Persona o rol responsable de ejecutar el plan de reacción en piso. Obligatorio per CP 2024.',
     },
 };
 

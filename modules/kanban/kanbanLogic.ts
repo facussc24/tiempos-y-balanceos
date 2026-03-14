@@ -322,7 +322,9 @@ export function calculateKanban(input: KanbanInput): KanbanResult {
     const reorderPoint = Math.max(1, Math.ceil((demandDuringLeadTime + safetyStockQty) / containerCapacity));
 
     // Coverage time (how long until line stops if no replenishment)
-    const coverageHours = demandPerHour > 0 ? totalPieces / demandPerHour : 0;
+    // FIX: Use effectiveDemand (scrap-inflated) since the supermarket depletes
+    // at the total consumption rate, not just the good-piece rate
+    const coverageHours = effectiveDemand > 0 ? totalPieces / effectiveDemand : 0;
 
     // Overstock detection
     const idealPieces = totalPieces;
@@ -408,11 +410,13 @@ export function formatKanbanDisplay(result: KanbanResult): {
     statusClass: string;
     statusText: string;
 } {
-    const coverageText = result.coverageHours >= 24
-        ? `${(result.coverageHours / 24).toFixed(1)} días`
-        : result.coverageHours >= 1
-            ? `${result.coverageHours.toFixed(1)}h`
-            : `${(result.coverageHours * 60).toFixed(0)} min`;
+    // FIX: Guard against NaN coverageHours causing "NaN" in display text
+    const safeHours = Number.isFinite(result.coverageHours) ? result.coverageHours : 0;
+    const coverageText = safeHours >= 24
+        ? `${(safeHours / 24).toFixed(1)} días`
+        : safeHours >= 1
+            ? `${safeHours.toFixed(1)}h`
+            : `${(safeHours * 60).toFixed(0)} min`;
 
     let statusClass = 'text-green-600';
     let statusText = 'OK';

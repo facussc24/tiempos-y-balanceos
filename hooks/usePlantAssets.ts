@@ -5,7 +5,7 @@
  * El archivo se guarda en 00_CONFIG/plant_assets.json dentro del basePath activo.
  * 
  * @module usePlantAssets
- * @version 7.0.0 - Integrated with storageManager for unified storage
+ * @version 1.0.0-beta - Integrated with storageManager for unified storage
  */
 import { useState, useEffect, useCallback } from 'react';
 import { PlantConfig, MachineType, Sector, DEFAULT_PLANT_CONFIG, MixSavedScenario } from '../types';
@@ -151,17 +151,14 @@ export function usePlantAssets(): UsePlantAssetsResult {
     const [storageSource, setStorageSource] = useState<'local' | 'shared' | 'none'>('none');
     const [storagePath, setStoragePath] = useState<string | null>(null);
 
-    // Load assets on mount
-    useEffect(() => {
-        loadAssets();
-    }, []);
-
-    const loadAssets = async () => {
+    // FIX: loadAssets extracted with isMounted guard to prevent state updates after unmount
+    const loadAssets = useCallback(async (isMountedFn: () => boolean = () => true) => {
         setIsLoading(true);
         try {
             if (isTauri()) {
                 const tauriFs = await import('../utils/tauri_fs');
                 const pathResult = await getAssetsPath();
+                if (!isMountedFn()) return;
 
                 setStorageSource(pathResult.source);
                 setStoragePath(pathResult.path);
@@ -174,9 +171,11 @@ export function usePlantAssets(): UsePlantAssetsResult {
                 }
 
                 const fileExists = await tauriFs.exists(pathResult.path);
+                if (!isMountedFn()) return;
 
                 if (fileExists) {
                     const content = await tauriFs.readTextFile(pathResult.path);
+                    if (!isMountedFn()) return;
                     if (content) {
                         try {
                             const parsed = JSON.parse(content);
@@ -217,6 +216,7 @@ export function usePlantAssets(): UsePlantAssetsResult {
                         path: pathResult.path
                     });
                     await saveAssetsInternal(DEFAULT_PLANT_CONFIG, pathResult.path);
+                    if (!isMountedFn()) return;
                     setConfig(DEFAULT_PLANT_CONFIG);
                     setError(null);
                 }
@@ -253,13 +253,21 @@ export function usePlantAssets(): UsePlantAssetsResult {
                 setError(null);
             }
         } catch (e) {
+            if (!isMountedFn()) return;
             logger.error('usePlantAssets', 'Load error', { error: String(e) });
             setError('No se pudo cargar el catálogo de planta');
             setConfig(DEFAULT_PLANT_CONFIG);
         } finally {
-            setIsLoading(false);
+            if (isMountedFn()) setIsLoading(false);
         }
-    };
+    }, []);
+
+    // Load assets on mount with isMounted guard
+    useEffect(() => {
+        let isMounted = true;
+        loadAssets(() => isMounted);
+        return () => { isMounted = false; };
+    }, [loadAssets]);
 
     const saveAssetsInternal = async (newConfig: PlantConfig, overridePath?: string): Promise<boolean> => {
         try {

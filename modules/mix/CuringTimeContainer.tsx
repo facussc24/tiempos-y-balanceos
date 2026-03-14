@@ -66,8 +66,12 @@ export const CuringTimeContainer: React.FC<CuringTimeContainerProps> = ({
     }, [manualTasks, curingTime]);
 
     // Bar fill percentage (capped at 100% for visual)
-    const internalFillPercent = Math.min((totalInternal / curingTime) * 100, 100);
-    const overflowPercent = totalInternal > curingTime
+    // FIX: Guard against curingTime === 0 to prevent Infinity in CSS width.
+    // When curingTime is 0, internal tasks have no curing window to absorb into.
+    const internalFillPercent = curingTime > 0
+        ? Math.min((totalInternal / curingTime) * 100, 100)
+        : (totalInternal > 0 ? 100 : 0);
+    const overflowPercent = curingTime > 0 && totalInternal > curingTime
         ? ((totalInternal - curingTime) / curingTime) * 100
         : 0;
 
@@ -83,6 +87,8 @@ export const CuringTimeContainer: React.FC<CuringTimeContainerProps> = ({
     };
 
     const formatTime = (seconds: number): string => {
+        // FIX: Guard against NaN bypassing >= comparison and reaching .toFixed()
+        if (!Number.isFinite(seconds)) return '0s';
         if (seconds >= 60) {
             const mins = Math.floor(seconds / 60);
             const secs = seconds % 60;
@@ -111,7 +117,10 @@ export const CuringTimeContainer: React.FC<CuringTimeContainerProps> = ({
                     <input
                         type="number"
                         value={curingTime}
-                        onChange={(e) => onCuringTimeChange?.(Number(e.target.value))}
+                        onChange={(e) => {
+                            const val = Number(e.target.value);
+                            onCuringTimeChange?.(isNaN(val) || val < 0 ? 0 : val);
+                        }}
                         disabled={disabled || !onCuringTimeChange}
                         className="w-20 px-2 py-1 border border-slate-200 rounded text-center text-sm"
                         min={1}
@@ -131,6 +140,7 @@ export const CuringTimeContainer: React.FC<CuringTimeContainerProps> = ({
                     `}
                     onDragOver={(e) => e.preventDefault()}
                     onDrop={() => handleDrop(true)}
+                    aria-label="Zona de tareas internas — se ejecutan durante el curado"
                 >
                     {/* Fill Bar */}
                     <div
@@ -173,10 +183,15 @@ export const CuringTimeContainer: React.FC<CuringTimeContainerProps> = ({
                                     key={task.id}
                                     draggable={!disabled}
                                     onDragStart={() => handleDragStart(task.id)}
+                                    onClick={() => !disabled && onTaskToggle(task.id, false)}
+                                    onKeyDown={(e) => { if (!disabled && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); onTaskToggle(task.id, false); } }}
+                                    tabIndex={disabled ? -1 : 0}
+                                    role="button"
+                                    aria-label={`${task.description}, ${formatTime(task.time)}, tarea interna. Clic o Enter para mover a externa`}
                                     className={`
                                         px-2 py-1 rounded text-xs font-medium cursor-move
                                         ${isOverflowing ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'}
-                                        hover:shadow-md transition-shadow
+                                        hover:shadow-md transition-shadow focus:ring-2 focus:ring-blue-400 outline-none
                                     `}
                                 >
                                     {task.description} ({formatTime(task.time)})
@@ -208,6 +223,7 @@ export const CuringTimeContainer: React.FC<CuringTimeContainerProps> = ({
                     `}
                     onDragOver={(e) => e.preventDefault()}
                     onDrop={() => handleDrop(false)}
+                    aria-label="Zona de tareas externas — agregan tiempo al ciclo"
                 >
                     <div className="flex items-center justify-between mb-2">
                         <span className="text-xs font-medium text-slate-600 flex items-center gap-1">
@@ -224,7 +240,12 @@ export const CuringTimeContainer: React.FC<CuringTimeContainerProps> = ({
                                 key={task.id}
                                 draggable={!disabled}
                                 onDragStart={() => handleDragStart(task.id)}
-                                className="px-2 py-1 rounded text-xs font-medium bg-purple-100 text-purple-700 cursor-move hover:shadow-md transition-shadow"
+                                onClick={() => !disabled && onTaskToggle(task.id, true)}
+                                onKeyDown={(e) => { if (!disabled && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); onTaskToggle(task.id, true); } }}
+                                tabIndex={disabled ? -1 : 0}
+                                role="button"
+                                aria-label={`${task.description}, ${formatTime(task.time)}, tarea externa. Clic o Enter para mover a interna`}
+                                className="px-2 py-1 rounded text-xs font-medium bg-purple-100 text-purple-700 cursor-move hover:shadow-md transition-shadow focus:ring-2 focus:ring-blue-400 outline-none"
                             >
                                 {task.description} ({formatTime(task.time)})
                             </div>

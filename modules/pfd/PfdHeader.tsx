@@ -5,9 +5,13 @@
  * Cyan/teal color theme.
  */
 
-import React from 'react';
+import React, { useCallback } from 'react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import type { PfdHeader as PfdHeaderType } from './pfdTypes';
+import { SGC_FORM_NUMBER } from './pfdTypes';
+import ProductSelector from '../../components/ui/ProductSelector';
+import type { ProductSelection } from '../../components/ui/ProductSelector';
+import { resolveApplicableParts } from '../../utils/productFamilyAutoFill';
 
 interface Props {
     header: PfdHeaderType;
@@ -21,9 +25,24 @@ const inputClass = "w-full border border-gray-300 bg-gray-50 p-1.5 rounded text-
 const labelClass = "block text-[11px] font-medium text-gray-600 mb-0.5";
 
 const PfdHeaderComponent: React.FC<Props> = ({ header, onChange, collapsed, onToggleCollapse, readOnly }) => {
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         onChange(e.target.name as keyof PfdHeaderType, e.target.value);
     };
+
+    const handleProductSelect = useCallback((sel: ProductSelection) => {
+        onChange('partNumber', sel.codigo);
+        onChange('partName', sel.descripcion);
+        onChange('customerName', sel.lineaName);
+
+        // Auto-fill applicableParts with family members (or line siblings as fallback)
+        if (sel.isFromCatalog && sel.lineaCode) {
+            resolveApplicableParts(sel.codigo, sel.lineaCode)
+                .then(parts => {
+                    if (parts) onChange('applicableParts', parts);
+                })
+                .catch(() => { /* optional enrichment */ });
+        }
+    }, [onChange]);
 
     const headerSummary = [
         header.partNumber && `Pieza: ${header.partNumber}`,
@@ -38,11 +57,15 @@ const PfdHeaderComponent: React.FC<Props> = ({ header, onChange, collapsed, onTo
             <button
                 onClick={onToggleCollapse}
                 className="w-full flex items-center gap-2 px-4 py-2 text-left hover:bg-cyan-50/50 transition"
+                title={collapsed ? 'Expandir encabezado' : 'Colapsar encabezado'}
             >
                 {collapsed ? <ChevronRight size={16} className="text-cyan-600" /> : <ChevronDown size={16} className="text-cyan-600" />}
                 <span className="text-xs font-semibold text-cyan-700 uppercase tracking-wider">Encabezado</span>
-                <span className="text-[10px] font-mono text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">I-AC-005.1</span>
-                {collapsed && <span className="text-xs text-gray-500 ml-2 truncate">{headerSummary}</span>}
+                <span className="text-[10px] font-mono text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">{SGC_FORM_NUMBER}</span>
+                {collapsed && <span className="text-xs text-gray-500 ml-2 truncate" title={headerSummary}>{headerSummary}</span>}
+                {collapsed && header.applicableParts?.trim() && (
+                    <span className="bg-cyan-100 text-cyan-700 text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex-shrink-0">Familia</span>
+                )}
             </button>
 
             {!collapsed && (
@@ -53,19 +76,32 @@ const PfdHeaderComponent: React.FC<Props> = ({ header, onChange, collapsed, onTo
                             <div className="grid grid-cols-2 gap-2">
                                 <div>
                                     <label className={labelClass}>Nº de Pieza</label>
-                                    <input name="partNumber" value={header.partNumber} onChange={handleChange} className={inputClass} readOnly={readOnly} tabIndex={readOnly ? -1 : 0} />
+                                    <ProductSelector
+                                        name="partNumber"
+                                        value={header.partNumber}
+                                        onProductSelect={handleProductSelect}
+                                        onTextChange={(val) => onChange('partNumber', val)}
+                                        readOnly={readOnly}
+                                        placeholder="Buscar o escribir nro. pieza..."
+                                        maxLength={50}
+                                    />
                                 </div>
                                 <div>
                                     <label className={labelClass}>Nombre de la Pieza</label>
-                                    <input name="partName" value={header.partName} onChange={handleChange} className={inputClass} readOnly={readOnly} tabIndex={readOnly ? -1 : 0} />
+                                    <input name="partName" value={header.partName} onChange={handleChange} className={inputClass} readOnly={readOnly} tabIndex={readOnly ? -1 : 0} maxLength={150} />
                                 </div>
                                 <div>
                                     <label className={labelClass}>Nivel de Cambio Ing.</label>
-                                    <input name="engineeringChangeLevel" value={header.engineeringChangeLevel} onChange={handleChange} className={inputClass} readOnly={readOnly} tabIndex={readOnly ? -1 : 0} />
+                                    <input name="engineeringChangeLevel" value={header.engineeringChangeLevel} onChange={handleChange} className={inputClass} readOnly={readOnly} tabIndex={readOnly ? -1 : 0} maxLength={30} />
                                 </div>
                                 <div>
                                     <label className={labelClass}>Modelo / Año</label>
-                                    <input name="modelYear" value={header.modelYear} onChange={handleChange} className={inputClass} readOnly={readOnly} tabIndex={readOnly ? -1 : 0} />
+                                    <input name="modelYear" value={header.modelYear} onChange={handleChange} className={inputClass} readOnly={readOnly} tabIndex={readOnly ? -1 : 0} maxLength={100} />
+                                </div>
+                                <div className="col-span-2">
+                                    <label className={labelClass}>Piezas Aplicables</label>
+                                    <textarea name="applicableParts" value={header.applicableParts || ''} onChange={handleChange} className={inputClass + ' resize-y'} readOnly={readOnly} tabIndex={readOnly ? -1 : 0} rows={2} placeholder="Si cubre una familia, listar nros de pieza (uno por línea)" />
+                                    <p className="text-[9px] text-gray-400 mt-0.5">Dejar vacío si el flujo aplica a una sola pieza.</p>
                                 </div>
                             </div>
                         </fieldset>
@@ -75,11 +111,11 @@ const PfdHeaderComponent: React.FC<Props> = ({ header, onChange, collapsed, onTo
                             <div className="grid grid-cols-4 gap-2">
                                 <div>
                                     <label className={labelClass}>Nº de Documento</label>
-                                    <input name="documentNumber" value={header.documentNumber} onChange={handleChange} className={inputClass} readOnly={readOnly} tabIndex={readOnly ? -1 : 0} />
+                                    <input name="documentNumber" value={header.documentNumber} onChange={handleChange} className={inputClass} readOnly={readOnly} tabIndex={readOnly ? -1 : 0} maxLength={30} />
                                 </div>
                                 <div>
                                     <label className={labelClass}>Revisión</label>
-                                    <input name="revisionLevel" value={header.revisionLevel} onChange={handleChange} className={inputClass} readOnly={readOnly} tabIndex={readOnly ? -1 : 0} />
+                                    <input name="revisionLevel" value={header.revisionLevel} onChange={handleChange} className={inputClass} readOnly={readOnly} tabIndex={readOnly ? -1 : 0} maxLength={20} />
                                 </div>
                                 <div>
                                     <label className={labelClass}>Fecha de Revisión</label>
@@ -108,27 +144,27 @@ const PfdHeaderComponent: React.FC<Props> = ({ header, onChange, collapsed, onTo
                             <div className="grid grid-cols-3 gap-2">
                                 <div>
                                     <label className={labelClass}>Empresa</label>
-                                    <input name="companyName" value={header.companyName} onChange={handleChange} className={inputClass} readOnly={readOnly} tabIndex={readOnly ? -1 : 0} />
+                                    <input name="companyName" value={header.companyName} onChange={handleChange} className={inputClass} readOnly={readOnly} tabIndex={readOnly ? -1 : 0} maxLength={100} />
                                 </div>
                                 <div>
                                     <label className={labelClass}>Planta</label>
-                                    <input name="plantLocation" value={header.plantLocation} onChange={handleChange} className={inputClass} readOnly={readOnly} tabIndex={readOnly ? -1 : 0} />
+                                    <input name="plantLocation" value={header.plantLocation} onChange={handleChange} className={inputClass} readOnly={readOnly} tabIndex={readOnly ? -1 : 0} maxLength={100} />
                                 </div>
                                 <div>
                                     <label className={labelClass}>Código Proveedor</label>
-                                    <input name="supplierCode" value={header.supplierCode} onChange={handleChange} className={inputClass} readOnly={readOnly} tabIndex={readOnly ? -1 : 0} />
+                                    <input name="supplierCode" value={header.supplierCode} onChange={handleChange} className={inputClass} readOnly={readOnly} tabIndex={readOnly ? -1 : 0} maxLength={30} />
                                 </div>
                                 <div>
                                     <label className={labelClass}>Cliente</label>
-                                    <input name="customerName" value={header.customerName} onChange={handleChange} className={inputClass} readOnly={readOnly} tabIndex={readOnly ? -1 : 0} />
+                                    <input name="customerName" value={header.customerName} onChange={handleChange} className={inputClass} readOnly={readOnly} tabIndex={readOnly ? -1 : 0} maxLength={100} />
                                 </div>
                                 <div>
                                     <label className={labelClass}>Equipo Multifuncional</label>
-                                    <input name="coreTeam" value={header.coreTeam} onChange={handleChange} className={inputClass} readOnly={readOnly} tabIndex={readOnly ? -1 : 0} />
+                                    <input name="coreTeam" value={header.coreTeam} onChange={handleChange} className={inputClass} readOnly={readOnly} tabIndex={readOnly ? -1 : 0} maxLength={300} />
                                 </div>
                                 <div>
                                     <label className={labelClass}>Contacto Clave</label>
-                                    <input name="keyContact" value={header.keyContact} onChange={handleChange} className={inputClass} readOnly={readOnly} tabIndex={readOnly ? -1 : 0} />
+                                    <input name="keyContact" value={header.keyContact} onChange={handleChange} className={inputClass} readOnly={readOnly} tabIndex={readOnly ? -1 : 0} maxLength={80} />
                                 </div>
                             </div>
                         </fieldset>
@@ -138,7 +174,7 @@ const PfdHeaderComponent: React.FC<Props> = ({ header, onChange, collapsed, onTo
                             <div className="grid grid-cols-2 gap-2">
                                 <div>
                                     <label className={labelClass}>Elaboró</label>
-                                    <input name="preparedBy" value={header.preparedBy} onChange={handleChange} className={inputClass} readOnly={readOnly} tabIndex={readOnly ? -1 : 0} />
+                                    <input name="preparedBy" value={header.preparedBy} onChange={handleChange} className={inputClass} readOnly={readOnly} tabIndex={readOnly ? -1 : 0} maxLength={80} />
                                 </div>
                                 <div>
                                     <label className={labelClass}>Fecha Elaboración</label>
@@ -146,7 +182,7 @@ const PfdHeaderComponent: React.FC<Props> = ({ header, onChange, collapsed, onTo
                                 </div>
                                 <div>
                                     <label className={labelClass}>Aprobó</label>
-                                    <input name="approvedBy" value={header.approvedBy} onChange={handleChange} className={inputClass} readOnly={readOnly} tabIndex={readOnly ? -1 : 0} />
+                                    <input name="approvedBy" value={header.approvedBy} onChange={handleChange} className={inputClass} readOnly={readOnly} tabIndex={readOnly ? -1 : 0} maxLength={80} />
                                 </div>
                                 <div>
                                     <label className={labelClass}>Fecha Aprobación</label>

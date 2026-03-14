@@ -47,7 +47,7 @@ const makeDoc = (): AmfeDocument => ({
         modelYear: '2025', subject: 'Test AMFE', startDate: '2025-01-01',
         team: 'Team', responsible: 'John', revDate: '2025-06-01',
         amfeNumber: '', confidentiality: '',
-        partNumber: 'PN-001', processResponsible: '', revision: '', approvedBy: '', scope: '',
+        partNumber: 'PN-001', processResponsible: '', revision: '', approvedBy: '', scope: '', applicableParts: '',
     },
     operations: [{
         id: 'op1', opNumber: '10', name: 'Soldadura',

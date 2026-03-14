@@ -173,13 +173,15 @@ function mergeFailures(localFails: AmfeFailure[], baseFails: AmfeFailure[]): Amf
  */
 function mergeCauses(localCauses: AmfeCause[], baseCauses: AmfeCause[]): AmfeCause[] {
     const result: AmfeCause[] = [];
-    const localByCause = new Map<string, AmfeCause>();
+    const localByCause = new Map<string, AmfeCause[]>();
     const localEmptyCauses: AmfeCause[] = [];
 
     for (const c of localCauses) {
         const key = c.cause.toLowerCase().trim();
         if (key) {
-            localByCause.set(key, c);
+            const list = localByCause.get(key) || [];
+            list.push(c);
+            localByCause.set(key, list);
         } else {
             localEmptyCauses.push(c);
         }
@@ -205,7 +207,8 @@ function mergeCauses(localCauses: AmfeCause[], baseCauses: AmfeCause[]): AmfeCau
             continue;
         }
 
-        const localCause = localByCause.get(key);
+        const list = localByCause.get(key);
+        const localCause = list?.shift();
 
         if (!localCause) {
             // New cause from base — add with new ID
@@ -219,7 +222,6 @@ function mergeCauses(localCauses: AmfeCause[], baseCauses: AmfeCause[]): AmfeCau
             preventionControl: baseCause.preventionControl || localCause.preventionControl,
             detectionControl: baseCause.detectionControl || localCause.detectionControl,
         });
-        localByCause.delete(key);
     }
 
     // Keep unmatched local empty causes
@@ -227,9 +229,11 @@ function mergeCauses(localCauses: AmfeCause[], baseCauses: AmfeCause[]): AmfeCau
         result.push(localEmptyCauses[i]);
     }
 
-    // Keep local-only causes (not in base)
-    for (const c of localByCause.values()) {
-        result.push(c);
+    // Keep local-only causes (unmatched duplicates and causes not in base)
+    for (const list of localByCause.values()) {
+        for (const c of list) {
+            result.push(c);
+        }
     }
 
     return result;

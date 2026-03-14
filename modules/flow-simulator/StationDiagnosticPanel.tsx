@@ -7,18 +7,7 @@ import React from 'react';
 import { createPortal } from 'react-dom';
 import type { SimulationKPIs } from './flowTypes';
 import type { ProductionStation } from './ProductionLine';
-
-// =============================================================================
-// HELPERS
-// =============================================================================
-
-function formatTime(seconds: number): string {
-    if (!isFinite(seconds) || seconds <= 0) return '-';
-    if (seconds < 60) return `${seconds.toFixed(1)}s`;
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}m ${secs.toFixed(0)}s`;
-}
+import { formatTime } from './flowUtils';
 
 // =============================================================================
 // PROPS
@@ -55,16 +44,16 @@ export const StationDiagnosticPanel: React.FC<StationDiagnosticPanelProps> = ({
         ? (station.cycleTime / (taktTime * station.operators)) * 100
         : 0;
 
-    const isBottleneck = station.id === kpis.bottleneckStationId || stationIndex === kpis.bottleneckStationId;
+    const isBottleneck = station.id === kpis.bottleneckStationId;
 
     const content = (
-        <div className="flow-diagnostic-panel" onClick={e => e.stopPropagation()}>
+        <div className="flow-diagnostic-panel" role="dialog" aria-modal="true" aria-label={`Diagnostico de ${station.name}`} onClick={e => e.stopPropagation()} onKeyDown={e => { if (e.key === 'Escape') onClose(); }}>
             <div className="flow-diagnostic-panel__header">
                 <h3>{station.name}</h3>
                 <span className="flow-diagnostic-panel__sector" style={{ color: station.sectorColor }}>
                     {station.sectorName}
                 </span>
-                <button className="flow-diagnostic-panel__close" onClick={onClose}>&times;</button>
+                <button className="flow-diagnostic-panel__close" onClick={onClose} aria-label="Cerrar">&times;</button>
             </div>
 
             {isBottleneck && (

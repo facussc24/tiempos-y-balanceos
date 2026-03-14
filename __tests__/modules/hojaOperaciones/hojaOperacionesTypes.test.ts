@@ -180,6 +180,7 @@ describe('normalizeHoDocument', () => {
                 client: 'Client',
                 partNumber: 'PN-123',
                 partDescription: 'Part Desc',
+                applicableParts: '',
                 linkedAmfeProject: 'AMFE-1',
                 linkedCpProject: 'CP-1',
             },

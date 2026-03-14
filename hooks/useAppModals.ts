@@ -26,6 +26,8 @@ interface UseAppModalsResult {
     setShowShortcutsHelp: React.Dispatch<React.SetStateAction<boolean>>;
     showCommandPalette: boolean;
     setShowCommandPalette: React.Dispatch<React.SetStateAction<boolean>>;
+    showMediaMigration: boolean;
+    setShowMediaMigration: React.Dispatch<React.SetStateAction<boolean>>;
 
     /** Opens the project wizard after loading clients list */
     openProjectWizard: () => Promise<void>;
@@ -48,6 +50,7 @@ export function useAppModals(): UseAppModalsResult {
     const [showStorageConfig, setShowStorageConfig] = useState(false);
     const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
     const [showCommandPalette, setShowCommandPalette] = useState(false);
+    const [showMediaMigration, setShowMediaMigration] = useState(false);
 
     const openProjectWizard = useCallback(async () => {
         const clients = await listClients();
@@ -87,6 +90,8 @@ export function useAppModals(): UseAppModalsResult {
         setShowShortcutsHelp,
         showCommandPalette,
         setShowCommandPalette,
+        showMediaMigration,
+        setShowMediaMigration,
         openProjectWizard,
         handleCloseProject,
         confirmCloseProject,

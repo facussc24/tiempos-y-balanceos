@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { inferOperationCategory } from '../../utils/processCategory';
+import { inferOperationCategory, inferDepartment } from '../../utils/processCategory';
 
 describe('inferOperationCategory', () => {
     it('detects soldadura', () => {
@@ -116,13 +116,102 @@ describe('inferOperationCategory', () => {
         expect(inferOperationCategory('Curvado de tubo')).toBe('plegado');
     });
 
+    it('detects logistica', () => {
+        expect(inferOperationCategory('Logistica')).toBe('logistica');
+    });
+
+    it('detects embalaje', () => {
+        expect(inferOperationCategory('Empaque')).toBe('embalaje');
+        expect(inferOperationCategory('Embalaje final')).toBe('embalaje');
+    });
+
+    it('detects adhesivado as ensamble', () => {
+        expect(inferOperationCategory('Adhesivado de etiqueta')).toBe('ensamble');
+        expect(inferOperationCategory('Etiquetado de producto')).toBe('ensamble');
+    });
+
+    it('detects costura', () => {
+        expect(inferOperationCategory('Costura de funda')).toBe('costura');
+        expect(inferOperationCategory('Coser lateral')).toBe('costura');
+        expect(inferOperationCategory('Overlock de borde')).toBe('costura');
+    });
+
+    it('detects tapizado as costura', () => {
+        expect(inferOperationCategory('Tapizado de asiento')).toBe('costura');
+    });
+
+    it('detects rebabado as acabado', () => {
+        expect(inferOperationCategory('Rebabado manual')).toBe('acabado');
+    });
+
+    it('WIP guard: returns undefined for in-process operations', () => {
+        expect(inferOperationCategory('Embalaje de medos WIP')).toBeUndefined();
+        expect(inferOperationCategory('Almacenamiento WIP')).toBeUndefined();
+        expect(inferOperationCategory('Empaque intermedio')).toBeUndefined();
+        expect(inferOperationCategory('Stock en proceso')).toBeUndefined();
+    });
+
     it('returns undefined for unknown processes', () => {
-        expect(inferOperationCategory('Logistica')).toBeUndefined();
-        expect(inferOperationCategory('Empaque')).toBeUndefined();
+        expect(inferOperationCategory('Proceso especial XYZ')).toBeUndefined();
+        expect(inferOperationCategory('Actividad genérica')).toBeUndefined();
     });
 
     it('is case-insensitive', () => {
         expect(inferOperationCategory('SOLDADURA MIG')).toBe('soldadura');
         expect(inferOperationCategory('CORTE LASER')).toBe('corte');
+    });
+});
+
+// ============================================================================
+// inferDepartment
+// ============================================================================
+
+describe('inferDepartment', () => {
+    it('returns human-readable department name for known operations', () => {
+        expect(inferDepartment('Soldadura MIG')).toBe('Soldadura');
+        expect(inferDepartment('Mecanizado CNC')).toBe('Mecanizado');
+        expect(inferDepartment('Pintura electrostática')).toBe('Pintura');
+        expect(inferDepartment('Corte de chapa')).toBe('Corte');
+        expect(inferDepartment('Ensamble final')).toBe('Ensamble');
+    });
+
+    it('returns empty string for unknown operations', () => {
+        expect(inferDepartment('Proceso especial XYZ')).toBe('');
+        expect(inferDepartment('Actividad genérica')).toBe('');
+    });
+
+    it('maps adhesivado/etiquetado to Ensamble', () => {
+        expect(inferDepartment('Adhesivado de etiqueta')).toBe('Ensamble');
+        expect(inferDepartment('Etiquetado de producto')).toBe('Ensamble');
+    });
+
+    it('maps almacen/recepcion to Almacén', () => {
+        expect(inferDepartment('Recepción de material')).toBe('Almacén');
+        expect(inferDepartment('Almacenamiento temporal')).toBe('Almacén');
+    });
+
+    it('maps costura to Costura', () => {
+        expect(inferDepartment('Costura de funda')).toBe('Costura');
+        expect(inferDepartment('Tapizado de asiento')).toBe('Costura');
+    });
+
+    it('returns empty for WIP operations', () => {
+        expect(inferDepartment('Embalaje de medos WIP')).toBe('');
+        expect(inferDepartment('Almacenamiento WIP')).toBe('');
+    });
+
+    it('maps embalaje to Embalaje', () => {
+        expect(inferDepartment('Embalaje final')).toBe('Embalaje');
+        expect(inferDepartment('Empaque de producto')).toBe('Embalaje');
+    });
+
+    it('maps tratamiento termico correctly', () => {
+        expect(inferDepartment('Tratamiento térmico')).toBe('Trat. Térmico');
+        expect(inferDepartment('Temple y revenido')).toBe('Trat. Térmico');
+    });
+
+    it('is case-insensitive', () => {
+        expect(inferDepartment('SOLDADURA MIG')).toBe('Soldadura');
+        expect(inferDepartment('MECANIZADO CNC')).toBe('Mecanizado');
     });
 });

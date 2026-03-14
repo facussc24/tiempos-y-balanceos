@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { AmfeDocument } from './amfeTypes';
 import { ControlPlanDocument } from '../controlPlan/controlPlanTypes';
 import { HoDocument } from '../hojaOperaciones/hojaOperacionesTypes';
@@ -29,6 +29,7 @@ interface UseAmfeTabNavigationReturn {
     activeTab: ActiveTab;
     setActiveTab: (tab: ActiveTab) => void;
     pfdInitialData: PfdDocument | null;
+    setPfdInitialData: (doc: PfdDocument | null) => void;
     pfdWarnings: string[];
     setPfdWarnings: (w: string[]) => void;
     /** Opens the PFD generation wizard instead of generating directly. */
@@ -41,9 +42,11 @@ interface UseAmfeTabNavigationReturn {
     /** Called when the wizard completes — receives the generated PFD document. */
     handlePfdWizardComplete: (pfdDoc: PfdDocument) => void;
     cpInitialData: ControlPlanDocument | null;
+    setCpInitialData: (doc: ControlPlanDocument | null) => void;
     cpWarnings: string[];
     setCpWarnings: (w: string[]) => void;
     hoInitialData: HoDocument | null;
+    setHoInitialData: (doc: HoDocument | null) => void;
     hoWarnings: string[];
     setHoWarnings: (w: string[]) => void;
     handleGenerateControlPlan: () => Promise<void>;
@@ -89,13 +92,21 @@ export function useAmfeTabNavigation(params: UseAmfeTabNavigationParams): UseAmf
         setShowPfdWizard(true);
     }, [pfdInitialData, requestConfirm]);
 
+    // Sync initialTab prop changes to activeTab state (e.g. when navigating
+    // back from landing page with a different tab selected)
+    useEffect(() => {
+        if (initialTab && initialTab !== activeTab) {
+            setActiveTab(initialTab);
+        }
+    }, [initialTab]); // eslint-disable-line react-hooks/exhaustive-deps
+
     /** Called when the wizard completes — receives the generated PFD document. */
     const handlePfdWizardComplete = useCallback((pfdDoc: PfdDocument) => {
         setPfdInitialData(pfdDoc);
         setPfdWarnings([]);
         setShowPfdWizard(false);
         setActiveTab('pfd');
-    }, []);
+    }, [setActiveTab]);
 
     /** Simplified PFD import — only operation numbers + descriptions, everything else manual. */
     const handleImportPfdFromAmfe = useCallback(async () => {
@@ -112,7 +123,7 @@ export function useAmfeTabNavigation(params: UseAmfeTabNavigationParams): UseAmf
         setPfdInitialData(pfdDoc);
         setPfdWarnings(warnings);
         setActiveTab('pfd');
-    }, [data, currentProject, pfdInitialData, requestConfirm]);
+    }, [data, currentProject, pfdInitialData, requestConfirm, setActiveTab]);
 
     const handleGenerateControlPlan = useCallback(async () => {
         if (cpInitialData) {
@@ -128,7 +139,7 @@ export function useAmfeTabNavigation(params: UseAmfeTabNavigationParams): UseAmf
         setCpInitialData(cpDoc);
         setCpWarnings(warnings);
         setActiveTab('controlPlan');
-    }, [data, currentProject, cpInitialData, requestConfirm]);
+    }, [data, currentProject, cpInitialData, requestConfirm, setActiveTab]);
 
     const handleGenerateHojasOperaciones = useCallback(async () => {
         // Only ask for confirmation if there are actual sheets to lose
@@ -149,12 +160,13 @@ export function useAmfeTabNavigation(params: UseAmfeTabNavigationParams): UseAmf
         setHoInitialData(hoDoc);
         setHoWarnings(warnings);
         setActiveTab('hojaOperaciones');
-    }, [data, cpInitialData, currentProject, hoInitialData, requestConfirm]);
+    }, [data, cpInitialData, currentProject, hoInitialData, requestConfirm, setActiveTab]);
 
     return {
         activeTab,
         setActiveTab,
         pfdInitialData,
+        setPfdInitialData,
         pfdWarnings,
         setPfdWarnings,
         handleGeneratePfd,
@@ -163,9 +175,11 @@ export function useAmfeTabNavigation(params: UseAmfeTabNavigationParams): UseAmf
         setShowPfdWizard,
         handlePfdWizardComplete,
         cpInitialData,
+        setCpInitialData,
         cpWarnings,
         setCpWarnings,
         hoInitialData,
+        setHoInitialData,
         hoWarnings,
         setHoWarnings,
         handleGenerateControlPlan,
