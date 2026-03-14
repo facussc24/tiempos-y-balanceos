@@ -8,7 +8,6 @@
  * @module settingsStore
  */
 
-import { isTauri } from './unified_fs';
 import {
     loadAppSettings as repoLoadSettings,
     saveAppSettings as repoSaveSettings,
@@ -73,15 +72,6 @@ export async function updateSetting<K extends keyof AppSettings>(
  * Get the default diagnostic export path
  */
 async function getDefaultDiagnosticPath(): Promise<string> {
-    if (isTauri()) {
-        try {
-            const tauriPath = await import('@tauri-apps/api/path');
-            const docs = await tauriPath.documentDir();
-            return `${docs}BarackMercosul\\Diagnostics`;
-        } catch {
-            return 'C:\\BarackMercosul\\Diagnostics';
-        }
-    }
     return 'Descargas';
 }
 

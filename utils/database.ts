@@ -1,13 +1,12 @@
 /**
- * SQLite Database Manager
+ * Database Manager
  *
- * Singleton connection to the Barack Mercosul SQLite database.
- * Uses tauri-plugin-sql in Tauri mode, in-memory fallback for web/dev.
+ * Singleton connection via SupabaseAdapter (web mode) with InMemoryAdapter
+ * as fallback for tests and offline use.
  *
  * @module database
  */
 
-import { isTauri } from './unified_fs';
 import { logger } from './logger';
 
 // ---------------------------------------------------------------------------
@@ -538,46 +537,6 @@ async function runMigrations(adapter: DbAdapter): Promise<void> {
             [8, 'Add pending_exports table for offline export sync']
         );
         logger.info('Database', 'Migration 8: pending_exports table created');
-    }
-}
-
-// ---------------------------------------------------------------------------
-// Tauri SQLite Adapter
-// ---------------------------------------------------------------------------
-
-class TauriSqliteAdapter implements DbAdapter {
-    // The Tauri SQL Database instance (typed loosely because it's dynamically imported)
-    private db: { execute: (sql: string, bindings?: unknown[]) => Promise<{ rowsAffected: number; lastInsertId?: number }>; select: <T>(sql: string, bindings?: unknown[]) => Promise<T[]>; close: () => Promise<boolean> } | null = null;
-    private initialized = false;
-
-    constructor(private dbPath: string) {}
-
-    private async ensureConnection(): Promise<void> {
-        if (this.initialized) return;
-        const SQL = await import('@tauri-apps/plugin-sql');
-        this.db = await SQL.default.load(`sqlite:${this.dbPath}`);
-        this.initialized = true;
-    }
-
-    async execute(sql: string, bindings?: unknown[]): Promise<QueryResult> {
-        await this.ensureConnection();
-        const result = await this.db!.execute(sql, bindings ?? []);
-        return {
-            rowsAffected: result.rowsAffected ?? 0,
-            lastInsertId: result.lastInsertId ?? 0,
-        };
-    }
-
-    async select<T = Record<string, unknown>>(sql: string, bindings?: unknown[]): Promise<T[]> {
-        await this.ensureConnection();
-        return await this.db!.select<T>(sql, bindings ?? []);
-    }
-
-    async close(): Promise<void> {
-        if (this.initialized && this.db) {
-            await this.db.close();
-            this.initialized = false;
-        }
     }
 }
 
@@ -1460,70 +1419,9 @@ export function isValidDbPath(path: string): boolean {
     return true;
 }
 
-/**
- * Get the database path based on settings.
- * Falls back to a default path.
- */
-async function resolveDbPath(): Promise<string> {
-    // SIMPLIFIED: Always use relative path so the Tauri SQL plugin resolves it
-    // to the app config dir (AppData\Roaming\com.barackmercosul.app\).
-    // This avoids: spaces in paths, network drive hangs, stale localStorage paths.
-    // The SQL plugin creates parent dir + DB file automatically if needed.
-    const dbName = 'barack_mercosul.db';
-    logger.info('Database', `resolveDbPath → using relative path: ${dbName}`);
-    return dbName;
-}
 
 async function initializeAdapter(): Promise<DbAdapter> {
-    const tauriDetected = isTauri();
-    logger.info('Database', 'Initializing adapter', { tauri: tauriDetected });
-
-    if (tauriDetected) {
-        const dbPath = await resolveDbPath();
-        logger.info('Database', 'DB path resolved', { path: dbPath });
-
-        try {
-            const adapter = new TauriSqliteAdapter(dbPath);
-
-            // Run pragmas
-            logger.debug('Database', 'Running PRAGMAs');
-            await adapter.execute('PRAGMA journal_mode = WAL');
-
-            // Verify WAL mode activation
-            const walResult = await adapter.select<{ journal_mode: string }>('PRAGMA journal_mode');
-            if (walResult[0] && walResult[0].journal_mode !== 'wal') {
-                logger.warn('Database', 'WAL mode not active', { mode: walResult[0].journal_mode });
-            }
-
-            await adapter.execute('PRAGMA busy_timeout = 5000');
-            await adapter.execute('PRAGMA foreign_keys = ON');
-            await adapter.execute('PRAGMA synchronous = NORMAL');
-            await adapter.execute('PRAGMA cache_size = -8000');
-
-            // Run schema DDL (IF NOT EXISTS makes this idempotent)
-            logger.debug('Database', 'Running DDL');
-            const statements = SCHEMA_DDL.split(';')
-                .map(s => s.trim())
-                // Strip leading SQL comments (-- ...) before checking if statement is empty.
-                // SQLite handles -- comments natively, but we need to avoid filtering out
-                // CREATE TABLE statements that are preceded by a comment line.
-                .map(s => s.replace(/^--[^\n]*\n?/gm, '').trim())
-                .filter(s => s.length > 0);
-
-            for (const stmt of statements) {
-                await adapter.execute(stmt);
-            }
-
-            // Run migrations
-            await runMigrations(adapter);
-
-            logger.info('Database', 'SQLite initialized successfully');
-            return adapter;
-        } catch (err) {
-            logger.error('Database', 'Failed to initialize SQLite', {}, err instanceof Error ? err : undefined);
-            throw err;
-        }
-    }
+    logger.info('Database', 'Initializing adapter (web mode)');
 
     // Web mode: use Supabase adapter
     // Persist adapter on window to survive Vite HMR (module re-execution resets _adapter to null)

@@ -56,16 +56,6 @@ const SETTINGS_KEY = 'storage_settings';
 // ============================================================================
 
 export async function getDefaultLocalPath(): Promise<string> {
-    if (isTauri()) {
-        try {
-            const tauriPath = await import('@tauri-apps/api/path');
-            const docs = await tauriPath.documentDir();
-            const separator = docs.endsWith('\\') || docs.endsWith('/') ? '' : '\\';
-            return `${docs}${separator}${DEFAULT_LOCAL_FOLDER}`;
-        } catch {
-            return `C:\\Users\\User\\Documents\\${DEFAULT_LOCAL_FOLDER}`;
-        }
-    }
     return `Documents/${DEFAULT_LOCAL_FOLDER}`;
 }
 
