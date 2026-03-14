@@ -4,6 +4,7 @@
  */
 
 export * from './settingsRepository';
+export * from './crossDocRepository';
 export * from './projectRepository';
 export * from './amfeRepository';
 export * from './cpRepository';

@@ -80,14 +80,11 @@ const FormatosApp: React.FC<FormatosAppProps> = ({ onBackToLanding }) => {
         }
     }, []);
 
-    // --- Open file with system app ---
-    const handleOpenFile = useCallback(async (filePath: string) => {
-        try {
-            const opener = await import('@tauri-apps/plugin-opener');
-            await opener.openPath(filePath);
-        } catch {
-            // Silent — only works in Tauri
-        }
+    // --- Open file (web: not supported, files live on the server) ---
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const handleOpenFile = useCallback((_filePath: string) => {
+        // Opening local paths with system apps is only possible in native mode.
+        // In web mode the user can access files through the engineering server directly.
     }, []);
 
     // --- Filtered files ---

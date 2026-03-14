@@ -30,45 +30,15 @@ export const parseCSVLine = (line: string): string[] => {
     });
 };
 
-// --- ExcelJS DOWNLOAD (Tauri-native + browser fallback + auto-open) ---
+// --- ExcelJS DOWNLOAD ---
 export async function downloadExcelJSWorkbook(wb: { xlsx: { writeBuffer(): Promise<ArrayBuffer> } }, fileName: string): Promise<void> {
     const buffer = await wb.xlsx.writeBuffer();
     await saveAndOpenExcel(new Uint8Array(buffer as ArrayBuffer), fileName);
 }
 
-// --- Shared save logic (Tauri-native + browser fallback + auto-open) ---
+// --- Shared save logic (browser download) ---
 async function saveAndOpenExcel(data: Uint8Array, fileName: string): Promise<void> {
-    // Try Tauri native save
-    if (typeof window !== 'undefined' && ('__TAURI_INTERNALS__' in window || '__TAURI__' in window)) {
-        try {
-            const dialog = await import('@tauri-apps/plugin-dialog');
-            const fs = await import('@tauri-apps/plugin-fs');
-            const savePath = await dialog.save({
-                title: 'Guardar Excel',
-                defaultPath: fileName,
-                filters: [{ name: 'Excel', extensions: ['xlsx'] }],
-            });
-            if (savePath) {
-                await fs.writeFile(savePath, data);
-                logger.info('Excel', 'File saved via Tauri', { path: savePath });
-                // Auto-open the saved file
-                try {
-                    const opener = await import('@tauri-apps/plugin-opener');
-                    await opener.openPath(savePath);
-                } catch {
-                    logger.warn('Excel', 'Auto-open not available (opener plugin not installed)');
-                }
-                return;
-            }
-            return; // User cancelled
-        } catch (tauriErr) {
-            logger.warn('Excel', 'Tauri save failed, falling back to browser', {
-                error: tauriErr instanceof Error ? tauriErr.message : String(tauriErr),
-            });
-        }
-    }
-
-    // Browser fallback
+    // Browser download via blob URL
     const blob = new Blob([data], {
         type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     });

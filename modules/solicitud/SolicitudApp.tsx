@@ -529,15 +529,9 @@ const SolicitudApp: React.FC<SolicitudAppProps> = ({ onBackToLanding }) => {
 
             logger.debug('SolicitudApp', 'Opening index file', { indexPath });
 
-            const tauriFs = await import('../../utils/tauri_fs');
-            const fileExists = await tauriFs.exists(indexPath);
-            if (!fileExists) {
-                showToast('El archivo de indice no existe. Generelo primero con el boton Indice.', 'error');
-                return;
-            }
-
-            const opener = await import('@tauri-apps/plugin-opener');
-            await opener.openPath(indexPath);
+            // En modo web no se puede abrir archivos locales con apps del sistema.
+            // Mostramos la ruta para que el usuario la abra manualmente.
+            showToast(`Índice en: ${indexPath} — Ábralo desde el explorador de archivos.`, 'info');
         } catch (err) {
             const msg = err instanceof Error ? err.message : String(err);
             try {
