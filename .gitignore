@@ -31,3 +31,7 @@ dist-ssr
 
 # Claude Code
 .claude/
+
+# Project secrets
+SUPABASE_INFO.md
+AUDIT_FUNCIONAL.md
