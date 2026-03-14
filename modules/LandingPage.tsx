@@ -3,10 +3,11 @@ import {
     Clock, ShieldAlert, ClipboardCheck, GitBranch, ArrowRight,
     FolderOpen, FileText, ChevronRight, Sparkles, LayoutGrid,
     ChevronDown, ChevronUp, ExternalLink, FilePlus2, Wrench,
-    BookOpen, Shield,
+    BookOpen, Shield, LogOut,
 } from 'lucide-react';
 import barackLogo from '../src/assets/barack_logo.png';
 import type { DocumentType, DocumentRegistryEntry } from './registry/documentRegistryTypes';
+import { useAuth } from '../components/auth/AuthProvider';
 
 interface LandingPageProps {
     onSelectModule: (module: 'pfd' | 'pfdTest' | 'tiempos' | 'amfe' | 'controlPlan' | 'hojaOperaciones' | 'registry' | 'solicitud' | 'manuales' | 'formatos' | 'dataManager') => void;
@@ -101,6 +102,7 @@ const TYPE_LABELS: Record<DocumentType, string> = {
 const LandingPage: React.FC<LandingPageProps> = ({ onSelectModule, documentCounts = {}, recentDocuments = [] }) => {
     const [showWorkflow, setShowWorkflow] = useState(false);
     const [autoOpenedGuide, setAutoOpenedGuide] = useState(false);
+    const { user, signOut } = useAuth();
 
     const totalDocs = useMemo(() =>
         Object.values(documentCounts).reduce((sum, n) => sum + (n || 0), 0),
@@ -181,6 +183,16 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSelectModule, documentCount
                         >
                             <FolderOpen size={13} />
                             <span>{totalDocs} documentos</span>
+                        </button>
+                    )}
+                    {user && (
+                        <button
+                            onClick={() => signOut()}
+                            title={`Cerrar sesión (${user.email ?? user.id})`}
+                            className="text-xs text-slate-500 hover:text-slate-300 transition-colors flex items-center gap-1.5 bg-white/[0.03] border border-white/[0.06] rounded-lg px-3 py-1.5 hover:border-slate-500/40"
+                        >
+                            <LogOut size={13} />
+                            <span>Salir</span>
                         </button>
                     )}
                 </header>

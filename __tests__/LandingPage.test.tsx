@@ -3,6 +3,11 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import LandingPage from '../modules/LandingPage';
 
+vi.mock('../components/auth/AuthProvider', () => ({
+    useAuth: () => ({ user: null, session: null, loading: false, signIn: vi.fn(), signOut: vi.fn() }),
+    AuthProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
+
 describe('LandingPage', () => {
     const onSelectModule = vi.fn();
 
