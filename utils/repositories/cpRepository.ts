@@ -12,6 +12,7 @@ import { getDatabase } from '../database';
 import { logger } from '../logger';
 import { generateChecksum } from '../crypto';
 import { scheduleBackup } from '../backupService';
+import { getCurrentUserEmail } from '../currentUser';
 
 export interface CpDocumentListItem {
     id: string;
@@ -29,6 +30,8 @@ export interface CpDocumentListItem {
     item_count: number;
     created_at: string;
     updated_at: string;
+    created_by?: string;
+    updated_by?: string;
 }
 
 /**
@@ -40,7 +43,8 @@ export async function listCpDocuments(): Promise<CpDocumentListItem[]> {
         return await db.select<CpDocumentListItem>(
             `SELECT id, project_name, control_plan_number, phase, part_number, part_name,
                     organization, client, responsible, revision, linked_amfe_project,
-                    linked_amfe_id, item_count, created_at, updated_at
+                    linked_amfe_id, item_count, created_at, updated_at,
+                    created_by, updated_by
              FROM cp_documents ORDER BY updated_at DESC`
         );
     } catch (err) {
@@ -126,16 +130,23 @@ export async function saveCpDocument(
             `INSERT OR REPLACE INTO cp_documents
              (id, project_name, control_plan_number, phase, part_number, part_name,
               organization, client, responsible, revision, linked_amfe_project,
-              linked_amfe_id, item_count, created_at, updated_at, data, checksum)
+              linked_amfe_id, item_count, created_at, updated_at,
+              created_by, updated_by, data, checksum)
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
                      COALESCE((SELECT created_at FROM cp_documents WHERE id = ?), datetime('now')),
-                     datetime('now'), ?, ?)`,
+                     datetime('now'),
+                     COALESCE((SELECT created_by FROM cp_documents WHERE id = ?), ?),
+                     ?,
+                     ?, ?)`,
             [
                 id, projectName, h.controlPlanNumber || '', h.phase || 'production',
                 h.partNumber || '', h.partName || '', h.organization || '',
                 h.client || '', h.responsible || '', h.revision || '',
                 h.linkedAmfeProject || '', linkedAmfeId ?? null,
-                doc.items.length, id, data, checksum,
+                doc.items.length, id,
+                id, getCurrentUserEmail(),
+                getCurrentUserEmail(),
+                data, checksum,
             ]
         );
         scheduleBackup();

@@ -15,7 +15,7 @@ import {
 import {
     ArrowLeft, Search, RefreshCcw, GitBranch, ShieldAlert,
     ClipboardCheck, FileText, FolderOpen, Link2, ExternalLink,
-    ChevronUp, ChevronDown, Loader2,
+    ChevronUp, ChevronDown, Loader2, User,
 } from 'lucide-react';
 
 interface DocumentHubProps {
@@ -253,6 +253,7 @@ const DocumentHub: React.FC<DocumentHubProps> = ({ onBackToLanding, onOpenDocume
                                                 Fecha <SortIcon field="updatedAt" />
                                             </button>
                                         </th>
+                                        <th className="text-left px-3 py-2 text-[10px] font-bold text-gray-500 uppercase tracking-wider w-[140px]">Autor</th>
                                         <th className="w-[80px]"></th>
                                     </tr>
                                 </thead>
@@ -341,6 +342,27 @@ const DocumentRow: React.FC<{
             {/* Updated at */}
             <td className="px-3 py-2.5 text-xs text-gray-500">
                 {formatDate(entry.updatedAt)}
+            </td>
+
+            {/* Author info */}
+            <td className="px-3 py-2.5">
+                {(entry.createdBy || entry.updatedBy) ? (
+                    <div className="text-[10px] text-gray-400 leading-relaxed">
+                        {entry.createdBy && (
+                            <div className="flex items-center gap-1" title={entry.createdBy}>
+                                <User size={9} className="text-gray-300 shrink-0" />
+                                <span className="truncate max-w-[110px]">{entry.createdBy.split('@')[0]}</span>
+                            </div>
+                        )}
+                        {entry.updatedBy && entry.updatedBy !== entry.createdBy && (
+                            <div className="text-gray-300 truncate max-w-[120px]" title={`Modificado por ${entry.updatedBy}`}>
+                                mod: {entry.updatedBy.split('@')[0]}
+                            </div>
+                        )}
+                    </div>
+                ) : (
+                    <span className="text-gray-300 text-xs">—</span>
+                )}
             </td>
 
             {/* Action */}

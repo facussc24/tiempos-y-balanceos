@@ -56,6 +56,9 @@ export interface AmfeRegistryEntry {
     // Timestamps
     createdAt: string;
     updatedAt: string;
+    // Audit
+    createdBy?: string;
+    updatedBy?: string;
 }
 
 /** The top-level registry document, stored as _registry.json. */

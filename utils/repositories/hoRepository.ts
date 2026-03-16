@@ -11,6 +11,7 @@ import { getDatabase } from '../database';
 import { logger } from '../logger';
 import { generateChecksum } from '../crypto';
 import { scheduleBackup } from '../backupService';
+import { getCurrentUserEmail } from '../currentUser';
 
 export interface HoDocumentListItem {
     id: string;
@@ -24,6 +25,8 @@ export interface HoDocumentListItem {
     sheet_count: number;
     created_at: string;
     updated_at: string;
+    created_by?: string;
+    updated_by?: string;
 }
 
 /**
@@ -34,7 +37,8 @@ export async function listHoDocuments(): Promise<HoDocumentListItem[]> {
         const db = await getDatabase();
         return await db.select<HoDocumentListItem>(
             `SELECT id, form_number, organization, client, part_number, part_description,
-                    linked_amfe_project, linked_cp_project, sheet_count, created_at, updated_at
+                    linked_amfe_project, linked_cp_project, sheet_count, created_at, updated_at,
+                    created_by, updated_by
              FROM ho_documents ORDER BY updated_at DESC`
         );
     } catch (err) {
@@ -95,16 +99,23 @@ export async function saveHoDocument(id: string, doc: HoDocument, linkedAmfeId?:
             `INSERT OR REPLACE INTO ho_documents
              (id, form_number, organization, client, part_number, part_description,
               linked_amfe_project, linked_cp_project, linked_amfe_id, linked_cp_id,
-              sheet_count, created_at, updated_at, data, checksum)
+              sheet_count, created_at, updated_at,
+              created_by, updated_by, data, checksum)
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
                      COALESCE((SELECT created_at FROM ho_documents WHERE id = ?), datetime('now')),
-                     datetime('now'), ?, ?)`,
+                     datetime('now'),
+                     COALESCE((SELECT created_by FROM ho_documents WHERE id = ?), ?),
+                     ?,
+                     ?, ?)`,
             [
                 id, h.formNumber || 'I-IN-002.4-R01', h.organization || '',
                 h.client || '', h.partNumber || '', h.partDescription || '',
                 h.linkedAmfeProject || '', h.linkedCpProject || '',
                 linkedAmfeId ?? null, linkedCpId ?? null,
-                doc.sheets.length, id, data, checksum,
+                doc.sheets.length, id,
+                id, getCurrentUserEmail(),
+                getCurrentUserEmail(),
+                data, checksum,
             ]
         );
         scheduleBackup();

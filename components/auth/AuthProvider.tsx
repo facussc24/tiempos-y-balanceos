@@ -8,6 +8,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
 import { supabase } from '../../utils/supabaseClient';
 import type { User, Session } from '../../utils/supabaseClient';
+import { setCurrentUserEmail } from '../../utils/currentUser';
 
 // ---------------------------------------------------------------------------
 // Context
@@ -66,6 +67,7 @@ export function AuthProvider({ children, loginPage }: AuthProviderProps) {
             if (session) {
                 setSession(session);
                 setUser(session.user);
+                setCurrentUserEmail(session.user.email ?? '');
             }
             setLoading(false);
         });
@@ -73,6 +75,7 @@ export function AuthProvider({ children, loginPage }: AuthProviderProps) {
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
             setSession(session);
             setUser(session?.user ?? null);
+            setCurrentUserEmail(session?.user?.email ?? '');
         });
 
         return () => subscription.unsubscribe();

@@ -135,6 +135,8 @@ export interface PfdDocumentListItem {
   customer_name: string;
   step_count: number;
   updated_at: string;
+  created_by?: string;
+  updated_by?: string;
 }
 
 /** Column group for visibility toggling */
@@ -148,7 +150,7 @@ export const PFD_COLUMN_GROUPS: {
   autoShow?: (steps: PfdStep[]) => boolean;
 }[] = [
   { id: 'essential', label: 'Esencial', description: 'Nº, Símbolo, Descripción', defaultVisible: true },
-  { id: 'equipment', label: 'Equipo', description: 'Máquina / Dispositivo', defaultVisible: true },
+  { id: 'equipment', label: 'Equipo', description: 'Máquina / Dispositivo', defaultVisible: false },
   { id: 'characteristics', label: 'Características', description: 'Producto y Proceso CC/SC', defaultVisible: true },
   { id: 'flow', label: 'Flujo', description: 'Líneas paralelas', defaultVisible: false, autoShow: (steps) => steps.some(s => s.branchId) },
   { id: 'reference', label: 'Referencia', description: 'Ref., Área, Notas', defaultVisible: false },
@@ -186,7 +188,6 @@ export const PFD_COLUMNS: PfdColumnDef[] = [
   { key: 'stepType',              label: 'Símbolo',             width: '60px',  required: true,  type: 'symbol',      group: 'essential' },
   { key: 'description',           label: 'Descripción',         width: '320px', required: true,  type: 'text',        group: 'essential' },
   { key: 'branchId',              label: 'Línea',               width: '90px',  required: false, type: 'text',        group: 'flow', tooltip: 'Línea paralela (Procesos Interdependientes)' },
-  { key: 'machineDeviceTool',     label: 'Máquina/Disp.',       width: '170px', required: false, type: 'text',        group: 'equipment', tooltip: 'Máquina / Dispositivo / Herramienta' },
   { key: 'productCharacteristic', label: 'Caract. Producto',    width: '170px', required: false, type: 'text',        group: 'characteristics', tooltip: 'Característica de producto' },
   { key: 'productSpecialChar',    label: 'CC/SC',               width: '60px',  required: false, type: 'specialChar', group: 'characteristics', tooltip: 'Característica Crítica / Significativa — Producto' },
   { key: 'processCharacteristic', label: 'Caract. Proceso',     width: '170px', required: false, type: 'text',        group: 'characteristics', tooltip: 'Característica de proceso' },

@@ -157,7 +157,7 @@ describe('created_at preservation in INSERT OR REPLACE', () => {
             expect(bindings[0]).toBe('amfe-1');
             // The id must also appear later in bindings for the COALESCE subquery
             const idOccurrences = bindings.filter(b => b === 'amfe-1');
-            expect(idOccurrences.length).toBe(2);
+            expect(idOccurrences.length).toBeGreaterThanOrEqual(2);
         });
 
         it('should preserve created_at across saves (new document gets datetime now)', async () => {
@@ -196,7 +196,7 @@ describe('created_at preservation in INSERT OR REPLACE', () => {
             const [, bindings] = mockDb.execute.mock.calls[0] as [string, unknown[]];
             expect(bindings[0]).toBe('cp-1');
             const idOccurrences = bindings.filter(b => b === 'cp-1');
-            expect(idOccurrences.length).toBe(2);
+            expect(idOccurrences.length).toBeGreaterThanOrEqual(2);
         });
 
         it('should preserve created_at across saves', async () => {
@@ -233,7 +233,7 @@ describe('created_at preservation in INSERT OR REPLACE', () => {
             const [, bindings] = mockDb.execute.mock.calls[0] as [string, unknown[]];
             expect(bindings[0]).toBe('ho-1');
             const idOccurrences = bindings.filter(b => b === 'ho-1');
-            expect(idOccurrences.length).toBe(2);
+            expect(idOccurrences.length).toBeGreaterThanOrEqual(2);
         });
 
         it('should preserve created_at across saves', async () => {

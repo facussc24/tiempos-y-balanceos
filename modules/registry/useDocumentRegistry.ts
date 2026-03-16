@@ -58,6 +58,8 @@ export function useDocumentRegistry(): UseDocumentRegistryResult {
                             responsible: doc.responsible || '',
                             itemCount: doc.operationCount || 0,
                             updatedAt: doc.lastRevisionDate || '',
+                            createdBy: doc.createdBy || '',
+                            updatedBy: doc.updatedBy || '',
                             meta: {
                                 amfeNumber: doc.amfeNumber,
                                 status: doc.status,
@@ -87,6 +89,8 @@ export function useDocumentRegistry(): UseDocumentRegistryResult {
                             responsible: doc.responsible || '',
                             itemCount: doc.item_count || 0,
                             updatedAt: doc.updated_at || '',
+                            createdBy: doc.created_by || '',
+                            updatedBy: doc.updated_by || '',
                             linkedAmfeProject: doc.linked_amfe_project || undefined,
                             meta: {
                                 phase: doc.phase || '',
@@ -115,6 +119,8 @@ export function useDocumentRegistry(): UseDocumentRegistryResult {
                             responsible: '',
                             itemCount: doc.step_count || 0,
                             updatedAt: doc.updated_at || '',
+                            createdBy: doc.created_by || '',
+                            updatedBy: doc.updated_by || '',
                             meta: {
                                 documentNumber: doc.document_number || '',
                                 revisionLevel: doc.revision_level || '',
@@ -141,6 +147,8 @@ export function useDocumentRegistry(): UseDocumentRegistryResult {
                             responsible: '',
                             itemCount: doc.sheet_count || 0,
                             updatedAt: doc.updated_at || '',
+                            createdBy: doc.created_by || '',
+                            updatedBy: doc.updated_by || '',
                             linkedAmfeProject: doc.linked_amfe_project || undefined,
                             meta: {
                                 formNumber: doc.form_number || '',

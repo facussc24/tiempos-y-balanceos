@@ -26,6 +26,10 @@ export interface DocumentRegistryEntry {
     itemCount: number;
     /** Last update timestamp (ISO string) */
     updatedAt: string;
+    /** Email of user who created the document */
+    createdBy?: string;
+    /** Email of user who last modified the document */
+    updatedBy?: string;
     /** Linked AMFE project name (for CP and HO) */
     linkedAmfeProject?: string;
     /** Additional type-specific metadata */

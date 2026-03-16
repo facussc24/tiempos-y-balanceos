@@ -10,6 +10,7 @@ import { getDatabase } from '../database';
 import { logger } from '../logger';
 import { generateChecksum } from '../crypto';
 import { scheduleBackup } from '../backupService';
+import { getCurrentUserEmail } from '../currentUser';
 
 /**
  * List all PFD documents (metadata only).
@@ -19,7 +20,8 @@ export async function listPfdDocuments(): Promise<PfdDocumentListItem[]> {
         const db = await getDatabase();
         return await db.select<PfdDocumentListItem>(
             `SELECT id, part_number, part_name, document_number, revision_level,
-                    revision_date, customer_name, step_count, updated_at
+                    revision_date, customer_name, step_count, updated_at,
+                    created_by, updated_by
              FROM pfd_documents ORDER BY updated_at DESC`
         );
     } catch (err) {
@@ -66,14 +68,21 @@ export async function savePfdDocument(id: string, doc: PfdDocument): Promise<boo
         await db.execute(
             `INSERT OR REPLACE INTO pfd_documents
              (id, part_number, part_name, document_number, revision_level,
-              revision_date, customer_name, step_count, created_at, updated_at, data, checksum)
+              revision_date, customer_name, step_count, created_at, updated_at,
+              created_by, updated_by, data, checksum)
              VALUES (?, ?, ?, ?, ?, ?, ?, ?,
                      COALESCE((SELECT created_at FROM pfd_documents WHERE id = ?), datetime('now')),
-                     datetime('now'), ?, ?)`,
+                     datetime('now'),
+                     COALESCE((SELECT created_by FROM pfd_documents WHERE id = ?), ?),
+                     ?,
+                     ?, ?)`,
             [
                 id, h.partNumber || '', h.partName || '', h.documentNumber || '',
                 h.revisionLevel || 'A', h.revisionDate || '',
-                h.customerName || '', doc.steps.length, id, data, checksum,
+                h.customerName || '', doc.steps.length, id,
+                id, getCurrentUserEmail(),
+                getCurrentUserEmail(),
+                data, checksum,
             ]
         );
         scheduleBackup();

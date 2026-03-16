@@ -286,8 +286,15 @@ const AmfeRegistryView: React.FC<Props> = ({ onOpenProject, onClose }) => {
                                                     <span className="text-gray-300">0</span>
                                                 )}
                                             </td>
-                                            <td className="px-3 py-2 text-gray-400 text-[10px]">
-                                                {entry.updatedAt && !isNaN(new Date(entry.updatedAt).getTime()) ? new Date(entry.updatedAt).toLocaleDateString('es-AR') : '-'}
+                                            <td className="px-3 py-2 text-[10px]">
+                                                <div className="text-gray-400">
+                                                    {entry.updatedAt && !isNaN(new Date(entry.updatedAt).getTime()) ? new Date(entry.updatedAt).toLocaleDateString('es-AR') : '-'}
+                                                </div>
+                                                {entry.updatedBy && (
+                                                    <div className="text-gray-300 truncate max-w-[80px]" title={entry.updatedBy}>
+                                                        {entry.updatedBy.split('@')[0]}
+                                                    </div>
+                                                )}
                                             </td>
                                             <td className="px-3 py-2">
                                                 <button

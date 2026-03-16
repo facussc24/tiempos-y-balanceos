@@ -10,6 +10,7 @@ import { getDatabase } from '../database';
 import { logger } from '../logger';
 import { generateChecksum } from '../crypto';
 import { scheduleBackup } from '../backupService';
+import { getCurrentUserEmail } from '../currentUser';
 
 /**
  * List all solicitud documents (metadata only).
@@ -20,6 +21,7 @@ export async function listSolicitudes(): Promise<SolicitudListItem[]> {
         return await db.select<SolicitudListItem>(
             `SELECT id, solicitud_number, tipo, codigo, descripcion, solicitante,
                     area_departamento, status, fecha_solicitud, updated_at,
+                    created_by, updated_by,
                     server_folder_path, attachment_count
              FROM solicitud_documents ORDER BY updated_at DESC`
         );
@@ -68,15 +70,22 @@ export async function saveSolicitud(id: string, doc: SolicitudDocument): Promise
         await db.execute(
             `INSERT OR REPLACE INTO solicitud_documents
              (id, solicitud_number, tipo, codigo, descripcion, solicitante,
-              area_departamento, status, fecha_solicitud, created_at, updated_at, data, checksum,
+              area_departamento, status, fecha_solicitud, created_at, updated_at,
+              created_by, updated_by, data, checksum,
               server_folder_path, attachment_count)
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?,
                      COALESCE((SELECT created_at FROM solicitud_documents WHERE id = ?), datetime('now')),
-                     datetime('now'), ?, ?, ?, ?)`,
+                     datetime('now'),
+                     COALESCE((SELECT created_by FROM solicitud_documents WHERE id = ?), ?),
+                     ?,
+                     ?, ?, ?, ?)`,
             [
                 id, h.solicitudNumber || '', doc.tipo || '', codigo, descripcion,
                 h.solicitante || '', h.areaDepartamento || '', doc.status || '',
-                h.fechaSolicitud || '', id, data, checksum,
+                h.fechaSolicitud || '', id,
+                id, getCurrentUserEmail(),
+                getCurrentUserEmail(),
+                data, checksum,
                 doc.serverFolderPath || '', doc.attachments?.length || 0,
             ]
         );

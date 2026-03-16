@@ -28,7 +28,7 @@ export interface DbAdapter {
 // Schema DDL
 // ---------------------------------------------------------------------------
 
-const SCHEMA_VERSION = 8;
+const SCHEMA_VERSION = 9;
 
 const SCHEMA_DDL = `
 -- Version tracking
@@ -78,6 +78,8 @@ CREATE TABLE IF NOT EXISTS amfe_documents (
     last_revision_date  TEXT NOT NULL DEFAULT '',
     created_at          TEXT NOT NULL DEFAULT (datetime('now')),
     updated_at          TEXT NOT NULL DEFAULT (datetime('now')),
+    created_by          TEXT NOT NULL DEFAULT '',
+    updated_by          TEXT NOT NULL DEFAULT '',
     data                TEXT NOT NULL,
     revisions           TEXT NOT NULL DEFAULT '[]',
     checksum            TEXT
@@ -124,6 +126,8 @@ CREATE TABLE IF NOT EXISTS cp_documents (
     item_count          INTEGER NOT NULL DEFAULT 0,
     created_at          TEXT NOT NULL DEFAULT (datetime('now')),
     updated_at          TEXT NOT NULL DEFAULT (datetime('now')),
+    created_by          TEXT NOT NULL DEFAULT '',
+    updated_by          TEXT NOT NULL DEFAULT '',
     data                TEXT NOT NULL,
     checksum            TEXT
 );
@@ -149,6 +153,8 @@ CREATE TABLE IF NOT EXISTS ho_documents (
     sheet_count         INTEGER NOT NULL DEFAULT 0,
     created_at          TEXT NOT NULL DEFAULT (datetime('now')),
     updated_at          TEXT NOT NULL DEFAULT (datetime('now')),
+    created_by          TEXT NOT NULL DEFAULT '',
+    updated_by          TEXT NOT NULL DEFAULT '',
     data                TEXT NOT NULL,
     checksum            TEXT
 );
@@ -167,6 +173,8 @@ CREATE TABLE IF NOT EXISTS pfd_documents (
     revision_date   TEXT NOT NULL DEFAULT '',
     customer_name   TEXT NOT NULL DEFAULT '',
     step_count      INTEGER NOT NULL DEFAULT 0,
+    created_by      TEXT NOT NULL DEFAULT '',
+    updated_by      TEXT NOT NULL DEFAULT '',
     data            TEXT NOT NULL,
     checksum        TEXT NOT NULL DEFAULT '',
     created_at      TEXT NOT NULL DEFAULT (datetime('now')),
@@ -255,6 +263,8 @@ CREATE TABLE IF NOT EXISTS solicitud_documents (
     fecha_solicitud     TEXT NOT NULL DEFAULT '',
     created_at          TEXT NOT NULL DEFAULT (datetime('now')),
     updated_at          TEXT NOT NULL DEFAULT (datetime('now')),
+    created_by          TEXT NOT NULL DEFAULT '',
+    updated_by          TEXT NOT NULL DEFAULT '',
     data                TEXT NOT NULL,
     checksum            TEXT,
     server_folder_path  TEXT NOT NULL DEFAULT '',
@@ -537,6 +547,20 @@ async function runMigrations(adapter: DbAdapter): Promise<void> {
             [8, 'Add pending_exports table for offline export sync']
         );
         logger.info('Database', 'Migration 8: pending_exports table created');
+    }
+
+    // Migration 8→9: Add created_by and updated_by audit columns to document tables
+    if (currentVersion < 9) {
+        const tables = ['amfe_documents', 'cp_documents', 'ho_documents', 'pfd_documents', 'solicitud_documents'];
+        for (const table of tables) {
+            try { await adapter.execute(`ALTER TABLE ${table} ADD COLUMN created_by TEXT NOT NULL DEFAULT ''`); } catch { /* column may already exist */ }
+            try { await adapter.execute(`ALTER TABLE ${table} ADD COLUMN updated_by TEXT NOT NULL DEFAULT ''`); } catch { /* column may already exist */ }
+        }
+        await adapter.execute(
+            `INSERT OR REPLACE INTO schema_version (version, description) VALUES (?, ?)`,
+            [9, 'Add created_by and updated_by audit columns to document tables']
+        );
+        logger.info('Database', 'Migration 9: audit columns (created_by, updated_by) added');
     }
 }
 
