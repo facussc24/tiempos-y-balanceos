@@ -41,6 +41,7 @@ function mkItem(overrides: Partial<ControlPlanItem> & { processDescription: stri
         controlMethod: '',
         reactionPlan: '',
         reactionPlanOwner: '',
+        controlProcedure: '',
         ...overrides,
         id: uuidv4(), // always fresh
     };

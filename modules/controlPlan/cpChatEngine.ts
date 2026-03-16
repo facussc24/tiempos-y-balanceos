@@ -80,6 +80,7 @@ Cada item tiene estos campos editables:
 - controlMethod: Metodo de control (ej: "Poka-Yoke", "SPC carta X-R", "Hoja de registro")
 - reactionPlan: Plan de reaccion ante no conformidad
 - reactionPlanOwner: Responsable del plan de reaccion (OBLIGATORIO, debe ser rol especifico: "Operador", "Supervisor", "Lider de Linea")
+- controlProcedure: Procedimiento o Instruccion de Trabajo aplicable (ej: "IT-001", "P-08")
 
 ACCIONES DISPONIBLES:
 - addItem: Agregar un item nuevo al CP. data contiene los campos del item.
@@ -158,8 +159,8 @@ export function serializeCpCompact(doc: ControlPlanDocument): string {
     }
 
     lines.push('');
-    lines.push('Idx | Proceso | Maquina | Caract.Prod | Caract.Proc | Especificacion | TecnicaEval | MetodoControl | TamMuestra | Frecuencia | PlanReaccion | Responsable | CC/SC | AP');
-    lines.push('--- | ------- | ------- | ----------- | ----------- | -------------- | ----------- | ------------- | ---------- | ---------- | ------------ | ----------- | ----- | --');
+    lines.push('Idx | Proceso | Maquina | Caract.Prod | Caract.Proc | Especificacion | TecnicaEval | MetodoControl | TamMuestra | Frecuencia | PlanReaccion | Responsable | Procedimiento | CC/SC | AP');
+    lines.push('--- | ------- | ------- | ----------- | ----------- | -------------- | ----------- | ------------- | ---------- | ---------- | ------------ | ----------- | ------------- | ----- | --');
 
     doc.items.forEach((item, i) => {
         lines.push(
@@ -169,6 +170,7 @@ export function serializeCpCompact(doc: ControlPlanDocument): string {
             `${item.controlMethod || '-'} | ` +
             `${item.sampleSize || '-'} | ${item.sampleFrequency || '-'} | ` +
             `${item.reactionPlan || '-'} | ${item.reactionPlanOwner || '(vacio)'} | ` +
+            `${item.controlProcedure || '-'} | ` +
             `${item.specialCharClass || '-'} | ${item.amfeAp || '-'}`
         );
     });
@@ -387,7 +389,7 @@ const EDITABLE_FIELDS = new Set<string>([
     'characteristicNumber', 'productCharacteristic', 'processCharacteristic',
     'specialCharClass', 'specification', 'evaluationTechnique',
     'sampleSize', 'sampleFrequency', 'controlMethod',
-    'reactionPlan', 'reactionPlanOwner',
+    'reactionPlan', 'reactionPlanOwner', 'controlProcedure',
 ]);
 
 /**
@@ -529,6 +531,7 @@ function executeAddItem(
         controlMethod: String(data.controlMethod || ''),
         reactionPlan: String(data.reactionPlan || ''),
         reactionPlanOwner: String(data.reactionPlanOwner || ''),
+        controlProcedure: String(data.controlProcedure || ''),
         operationCategory: processDesc ? (inferOperationCategory(processDesc) || '') : '',
         amfeAp: (['H', 'M', 'L', ''].includes(String(data.amfeAp || '')) ? String(data.amfeAp || '') : '') as ControlPlanItem['amfeAp'],
         amfeSeverity: (() => {

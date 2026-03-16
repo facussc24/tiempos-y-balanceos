@@ -195,6 +195,7 @@ export function generateItemsFromAmfe(
             controlMethod: rep.cause.preventionControl || '',    // prevention control
             reactionPlan: defaults.reactionPlan,
             reactionPlanOwner: ownerProcess,
+            controlProcedure: '',
             autoFilledFields: processAutoFilled,
             amfeAp: highestAp,
             amfeSeverity: highestSeverity,
@@ -253,6 +254,7 @@ export function generateItemsFromAmfe(
             controlMethod: '',                                   // EMPTY for product rows
             reactionPlan: defaults.reactionPlan,
             reactionPlanOwner: ownerProduct,
+            controlProcedure: '',
             autoFilledFields: productAutoFilled,
             amfeAp: highestAp,
             amfeSeverity: highestSeverity,

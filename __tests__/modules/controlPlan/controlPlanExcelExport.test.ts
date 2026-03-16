@@ -81,6 +81,7 @@ function makeItem(overrides: Partial<ControlPlanItem> = {}): ControlPlanItem {
         controlMethod: 'Hoja de registro',
         reactionPlan: 'Parar y recalibrar',
         reactionPlanOwner: '',
+        controlProcedure: '',
         ...overrides,
     };
 }
@@ -250,7 +251,7 @@ describe('exportControlPlan', () => {
         const aoaData = getAoaData();
         // Check rows 2-7 (6 metadata rows) — every cell should have border
         for (let r = 2; r <= 7; r++) {
-            for (let c = 0; c < 14; c++) {
+            for (let c = 0; c < 15; c++) {
                 const cell = aoaData[r][c];
                 expect(cell.s?.border, `Row ${r} Col ${c} missing border`).toBeDefined();
             }
@@ -285,7 +286,7 @@ describe('exportControlPlan', () => {
         exportControlPlan(makeDoc());
         const ws = getWorksheet();
         expect(ws['!cols']).toBeDefined();
-        expect(ws['!cols'].length).toBe(14);
+        expect(ws['!cols'].length).toBe(15);
         expect(ws['!cols'][0].wch).toBe(12);
     });
 

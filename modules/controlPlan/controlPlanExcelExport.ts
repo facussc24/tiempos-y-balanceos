@@ -26,7 +26,7 @@ const SGC_FORM_NUMBER = 'I-AC-005.2';
 
 /**
  * Dedicated column widths (wch) — tuned for both metadata labels and data.
- * 14 columns matching CP_COLUMNS order.
+ * 15 columns matching CP_COLUMNS order.
  */
 const CP_COL_WIDTHS: number[] = [
     12,   // 0:  Nro. Parte/Proceso
@@ -43,14 +43,15 @@ const CP_COL_WIDTHS: number[] = [
     20,   // 11: Método Control
     23,   // 12: Plan Reacción
     17,   // 13: Responsable Reacción
-];  //  Total ≈ 252 chars
+    16,   // 14: Procedimiento/IT
+];  //  Total ≈ 268 chars
 
 /**
- * Metadata pair layout: 3 label-value pairs across 14 columns.
+ * Metadata pair layout: 3 label-value pairs across 15 columns.
  *
  *   Pair 0: cols 0-4  (5 cols) → label 0-2 (57ch), value 3-4 (32ch)
  *   Pair 1: cols 5-9  (5 cols) → label 5-6 (34ch), value 7-9 (56ch)
- *   Pair 2: cols 10-13 (4 cols) → label 10-11 (33ch), value 12-13 (40ch)
+ *   Pair 2: cols 10-14 (5 cols) → label 10-11 (33ch), value 12-14 (56ch)
  *
  * Left label has 3 merged cols (57 chars) — fits even the longest label
  * ("Organizacion / Planta" = 21 chars) with room to spare.
@@ -58,7 +59,7 @@ const CP_COL_WIDTHS: number[] = [
 const META_PAIRS = [
     { lStart: 0, lEnd: 2, vStart: 3, vEnd: 4 },
     { lStart: 5, lEnd: 6, vStart: 7, vEnd: 9 },
-    { lStart: 10, lEnd: 11, vStart: 12, vEnd: 13 },
+    { lStart: 10, lEnd: 11, vStart: 12, vEnd: 14 },
 ];
 
 // ============================================================================
@@ -233,7 +234,7 @@ export function buildControlPlanWorkbook(doc: ControlPlanDocument): XLSX.WorkBoo
     const wb = XLSX.utils.book_new();
     const rows: any[][] = [];
     const h = doc.header;
-    const totalCols = CP_COLUMNS.length; // 14
+    const totalCols = CP_COLUMNS.length; // 15
     const merges: XLSX.Range[] = [];
 
     // ── Row 0: Title ──────────────────────────────────────────────
@@ -370,7 +371,7 @@ export function buildControlPlanWorkbook(doc: ControlPlanDocument): XLSX.WorkBoo
     });
 
     // Auto-filter on column header row for easy navigation
-    // 14 columns (A-N), totalCols-1 = 13 → 'N'
+    // 15 columns (A-O), totalCols-1 = 14 → 'O'
     const lastColLetter = String.fromCharCode(65 + totalCols - 1);
     ws['!autofilter'] = { ref: `A${colHeaderIdx + 1}:${lastColLetter}${colHeaderIdx + 1}` };
 

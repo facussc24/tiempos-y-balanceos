@@ -159,7 +159,7 @@ describe('useControlPlan', () => {
             const { result } = renderHook(() => useControlPlan());
             const doc: ControlPlanDocument = {
                 header: { controlPlanNumber: '', phase: 'production' as const, partNumber: 'ABC', latestChangeLevel: '', partName: '', organization: 'Test Org', supplier: '', supplierCode: '', keyContactPhone: '', date: '', revision: '1', responsible: 'Juan', approvedBy: '', client: 'Toyota', coreTeam: '', customerEngApproval: '', customerQualityApproval: '', otherApproval: '', linkedAmfeProject: '', applicableParts: '' },
-                items: [{ id: 'loaded-1', processStepNumber: '10', processDescription: 'Op', machineDeviceTool: '', characteristicNumber: '', productCharacteristic: '', processCharacteristic: '', specialCharClass: '', specification: '', evaluationTechnique: '', sampleSize: '', sampleFrequency: '', controlMethod: '', reactionPlan: '', reactionPlanOwner: '' }],
+                items: [{ id: 'loaded-1', processStepNumber: '10', processDescription: 'Op', machineDeviceTool: '', characteristicNumber: '', productCharacteristic: '', processCharacteristic: '', specialCharClass: '', specification: '', evaluationTechnique: '', sampleSize: '', sampleFrequency: '', controlMethod: '', reactionPlan: '', reactionPlanOwner: '', controlProcedure: '' }],
             };
 
             act(() => result.current.loadData(doc));
@@ -190,7 +190,7 @@ describe('useControlPlan', () => {
             act(() => result.current.addItem());
             act(() => result.current.addItem());
 
-            const newItems = [{ id: 'new-1', processStepNumber: '20', processDescription: 'New', machineDeviceTool: '', characteristicNumber: '', productCharacteristic: '', processCharacteristic: '', specialCharClass: '', specification: '', evaluationTechnique: '', sampleSize: '', sampleFrequency: '', controlMethod: '', reactionPlan: '', reactionPlanOwner: '' }];
+            const newItems = [{ id: 'new-1', processStepNumber: '20', processDescription: 'New', machineDeviceTool: '', characteristicNumber: '', productCharacteristic: '', processCharacteristic: '', specialCharClass: '', specification: '', evaluationTechnique: '', sampleSize: '', sampleFrequency: '', controlMethod: '', reactionPlan: '', reactionPlanOwner: '', controlProcedure: '' }];
             act(() => result.current.setItems(newItems));
 
             expect(result.current.data.items).toHaveLength(1);

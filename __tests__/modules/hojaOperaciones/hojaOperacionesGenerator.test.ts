@@ -54,6 +54,7 @@ function makeCpItem(overrides: Partial<ControlPlanItem> = {}): ControlPlanItem {
         controlMethod: overrides.controlMethod || '',
         reactionPlan: overrides.reactionPlan || '',
         reactionPlanOwner: overrides.reactionPlanOwner || '',
+        controlProcedure: overrides.controlProcedure || '',
     };
 }
 

@@ -36,6 +36,7 @@ function makeItem(overrides?: Partial<ControlPlanItem>): ControlPlanItem {
         controlMethod: 'SPC carta X-R',
         reactionPlan: 'Contener producto',
         reactionPlanOwner: 'Operador',
+        controlProcedure: '',
         amfeAp: 'H',
         amfeSeverity: 8,
         operationCategory: 'soldadura',

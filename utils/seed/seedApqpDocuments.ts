@@ -75,8 +75,8 @@ function mkWe(type: WorkElementType, name: string, fns: AmfeFunction[]): AmfeWor
     return { id: uid(), type, name, functions: fns };
 }
 
-function mkOp(num: string, name: string, wes: AmfeWorkElement[]): AmfeOperation {
-    return { id: uid(), opNumber: num, name, workElements: wes };
+function mkOp(num: string, name: string, wes: AmfeWorkElement[], funcItem = '', funcPaso = ''): AmfeOperation {
+    return { id: uid(), opNumber: num, name, workElements: wes, focusElementFunction: funcItem, operationFunction: funcPaso };
 }
 
 function mkPfdStep(num: string, type: PfdStepType, desc: string, machine = '', pChar = '', prChar = '',
@@ -104,6 +104,7 @@ function mkCpItem(sn: string, desc: string, machine: string, pC: string, prC: st
         evaluationTechnique: evalT, sampleSize: size,
         sampleFrequency: freq, controlMethod: ctrl,
         reactionPlan: react, reactionPlanOwner: 'Líder de Producción',
+        controlProcedure: '',
     };
 }
 
@@ -657,7 +658,22 @@ async function _doSeed(): Promise<string> {
                             [mkCause('Proveedor envía lote fuera de tolerancia', 'Acuerdo de calidad con proveedor, certificado por lote', 'Inspección de recepción: color, gramaje, espesor')]),
                     ]),
                 ]),
-            ]),
+                mkWe('Machine', 'Autoelevador / Zorra hidráulica', [
+                    mkFn('Transportar material recibido a zona de almacén de forma segura.', []),
+                ]),
+                mkWe('Man', 'Operador de recepción / Calidad', [
+                    mkFn('Verificar documentación y estado del material recibido. Registrar en sistema.', []),
+                ]),
+                mkWe('Measurement', 'Calibres / Balanza / Cinta métrica', [
+                    mkFn('Medir gramaje, espesor y verificar color contra muestra aprobada.', []),
+                ]),
+                mkWe('Method', 'Hoja de operaciones / Ayudas visuales de recepción', [
+                    mkFn('Definir criterios de aceptación y secuencia de verificación de materiales.', []),
+                ]),
+                mkWe('Environment', 'Iluminación - Ley 19587', [
+                    mkFn('Proveer condiciones de iluminación adecuadas para inspección visual de materiales.', []),
+                ]),
+            ], 'Asegurar la conformidad de la calidad y cantidad de material recibido', 'Garantizar la estabilidad y la integridad física del material durante el transporte interno'),
             mkOp('OP 20', 'Corte de cuero/vinilo', [
                 mkWe('Machine', 'Cortadora CNC / Mesa de corte', [
                     mkFn('Cortar material de recubrimiento a medida', [
@@ -667,7 +683,19 @@ async function _doSeed(): Promise<string> {
                             [mkCause('Superficie de mesa contaminada o herramienta dañada', 'Limpieza de mesa, MP de herramientas', 'Inspección visual 100%')]),
                     ]),
                 ]),
-            ]),
+                mkWe('Man', 'Operador de corte', [
+                    mkFn('Operar la cortadora según instrucción de trabajo. Verificar primera pieza.', []),
+                ]),
+                mkWe('Method', 'Hoja de operaciones de corte', [
+                    mkFn('Definir programa de corte, secuencia y criterios de verificación dimensional.', []),
+                ]),
+                mkWe('Material', 'Cuchillas / Regla / Plantillas', [
+                    mkFn('Proveer herramientas de corte en buen estado para operación conforme.', []),
+                ]),
+                mkWe('Environment', 'Iluminación - Ley 19587', [
+                    mkFn('Proveer condiciones de iluminación adecuadas para inspección visual de corte.', []),
+                ]),
+            ], 'Proveer material cortado conforme a requerimientos dimensionales y de trazabilidad', 'Lograr el contorno/forma geométrica del patrón conforme al modelo/plano'),
             mkOp('OP 30', 'Refilado', [
                 mkWe('Machine', 'Refiladora / Herramienta de corte', [
                     mkFn('Eliminar exceso de material en bordes', [
@@ -675,7 +703,16 @@ async function _doSeed(): Promise<string> {
                             [mkCause('Desgaste de cuchilla de refilado', 'MP de cuchillas, control de filo', 'Inspección visual de bordes')]),
                     ]),
                 ]),
-            ]),
+                mkWe('Man', 'Operador de refilado', [
+                    mkFn('Operar la refiladora según instrucción de trabajo. Verificar bordes.', []),
+                ]),
+                mkWe('Method', 'Hoja de operaciones de refilado', [
+                    mkFn('Definir técnica de refilado y criterios de aceptación de bordes.', []),
+                ]),
+                mkWe('Environment', 'Iluminación - Ley 19587', [
+                    mkFn('Proveer condiciones de iluminación adecuadas para inspección de bordes.', []),
+                ]),
+            ], 'Proveer piezas refiladas conformes a especificación dimensional', 'Eliminar material excedente manteniendo la geometría de la pieza'),
             mkOp('OP 40', 'Costura', [
                 mkWe('Machine', 'Máquina de coser industrial', [
                     mkFn('Unir piezas de recubrimiento mediante costura decorativa y estructural', [
@@ -691,7 +728,16 @@ async function _doSeed(): Promise<string> {
                             [mkCause('Operador inexperto en costura decorativa VWA', 'Capacitación en costura decorativa, matriz de habilidades', 'Inspección visual 100%')]),
                     ]),
                 ]),
-            ]),
+                mkWe('Method', 'Hoja de operaciones de costura', [
+                    mkFn('Definir patrón de costura, tensión de hilo y secuencia de trabajo.', []),
+                ]),
+                mkWe('Material', 'Hilo / Aguja / Bobina', [
+                    mkFn('Proveer insumos de costura conformes a especificación (tipo, color, calibre).', []),
+                ]),
+                mkWe('Environment', 'Iluminación - Ley 19587', [
+                    mkFn('Proveer condiciones de iluminación adecuadas para costura decorativa.', []),
+                ]),
+            ], 'Unir componentes mediante costura conforme a patrón y especificación', 'Realizar costura según patrón validado'),
             mkOp('OP 50', 'Inyección de sustrato', [
                 mkWe('Machine', 'Inyectora', [
                     mkFn('Inyectar sustrato plástico para estructura del armrest', [
@@ -703,7 +749,19 @@ async function _doSeed(): Promise<string> {
                             [mkCause('Enfriamiento desigual o tiempo de ciclo inadecuado', 'Receta de proceso optimizada', 'Control dimensional con gauge')]),
                     ]),
                 ]),
-            ]),
+                mkWe('Man', 'Operador de inyección', [
+                    mkFn('Operar inyectora según receta de proceso. Verificar piezas y registrar datos.', []),
+                ]),
+                mkWe('Method', 'Hoja de operaciones de inyección', [
+                    mkFn('Definir parámetros de inyección, secuencia de arranque y controles en proceso.', []),
+                ]),
+                mkWe('Material', 'Resina / Materia prima plástica', [
+                    mkFn('Proveer material plástico conforme a especificación (grado, humedad, MFI).', []),
+                ]),
+                mkWe('Environment', 'Temperatura ambiente - Ley 19587', [
+                    mkFn('Mantener condiciones ambientales controladas para estabilidad del proceso de inyección.', []),
+                ]),
+            ], 'Proveer sustrato inyectado con geometría y propiedades mecánicas conformes', 'Inyectar sustrato según parámetros de proceso validados'),
             mkOp('OP 60', 'Adhesivado', [
                 mkWe('Method', 'Proceso de aplicación de adhesivo', [
                     mkFn('Aplicar adhesivo para unión recubrimiento-sustrato', [
@@ -713,7 +771,16 @@ async function _doSeed(): Promise<string> {
                             [mkCause('Dosificación excesiva', 'Control de gramaje de adhesivo', 'Inspección visual')]),
                     ]),
                 ]),
-            ]),
+                mkWe('Man', 'Operador de adhesivado', [
+                    mkFn('Aplicar adhesivo según instrucción de trabajo. Verificar dosificación.', []),
+                ]),
+                mkWe('Material', 'Adhesivo / Solvente de limpieza', [
+                    mkFn('Proveer adhesivo dentro de vida útil y condiciones de almacenamiento correctas.', []),
+                ]),
+                mkWe('Environment', 'Temperatura y ventilación - Ley 19587', [
+                    mkFn('Mantener condiciones ambientales adecuadas para aplicación y curado de adhesivo.', []),
+                ]),
+            ], 'Asegurar adherencia entre materiales según especificación', 'Aplicar adhesivo en cantidades y zonas especificadas'),
             mkOp('OP 70', 'Tapizado', [
                 mkWe('Man', 'Operador de tapizado', [
                     mkFn('Recubrir sustrato con material de cuero/vinilo', [
@@ -723,7 +790,16 @@ async function _doSeed(): Promise<string> {
                             [mkCause('Posicionamiento incorrecto del recubrimiento', 'Marcas de referencia en sustrato', 'Inspección visual vs patrón')]),
                     ]),
                 ]),
-            ]),
+                mkWe('Method', 'Hoja de operaciones de tapizado', [
+                    mkFn('Definir técnica de tensado, secuencia de fijación y criterios visuales.', []),
+                ]),
+                mkWe('Material', 'Cuero/Vinilo cortado y cosido', [
+                    mkFn('Proveer recubrimiento conforme a especificación dimensional y visual.', []),
+                ]),
+                mkWe('Environment', 'Iluminación - Ley 19587', [
+                    mkFn('Proveer condiciones de iluminación adecuadas para inspección de tapizado.', []),
+                ]),
+            ], 'Cubrir sustrato con material de terminación conforme a patrón', 'Tapizar manteniendo tensión uniforme y sin arrugas'),
             mkOp('OP 80', 'Control final e inspección', [
                 mkWe('Measurement', 'Instrumentos de inspección, patrón', [
                     mkFn('Verificar conformidad visual, dimensional y funcional', [
@@ -731,7 +807,16 @@ async function _doSeed(): Promise<string> {
                             [mkCause('Error de inspección, criterio ambiguo', 'Patrón visual actualizado, capacitación', 'Auditoría de producto terminado')]),
                     ]),
                 ]),
-            ]),
+                mkWe('Man', 'Inspector de calidad', [
+                    mkFn('Ejecutar inspección visual y dimensional según plan de control.', []),
+                ]),
+                mkWe('Method', 'Plan de control / Criterios de aceptación VWA', [
+                    mkFn('Definir criterios de aceptación, frecuencia y método de inspección.', []),
+                ]),
+                mkWe('Environment', 'Iluminación - Ley 19587', [
+                    mkFn('Proveer condiciones de iluminación adecuadas para detección de defectos.', []),
+                ]),
+            ], 'Verificar conformidad total del producto terminado', 'Inspeccionar contra criterios de aceptación del cliente'),
             mkOp('OP 90', 'Embalaje y despacho', [
                 mkWe('Method', 'Procedimiento de embalaje VDA', [
                     mkFn('Embalar según requerimientos VWA', [
@@ -739,7 +824,16 @@ async function _doSeed(): Promise<string> {
                             [mkCause('No cumplimiento de instrucción de embalaje', 'Instrucción de embalaje VDA, capacitación', 'Verificación de embalaje antes de despacho')]),
                     ]),
                 ]),
-            ]),
+                mkWe('Man', 'Operador de embalaje', [
+                    mkFn('Embalar y etiquetar producto según instrucción VDA.', []),
+                ]),
+                mkWe('Material', 'Cajas / Film / Etiquetas VDA', [
+                    mkFn('Proveer materiales de embalaje conformes a requerimiento VWA.', []),
+                ]),
+                mkWe('Environment', 'Iluminación - Ley 19587', [
+                    mkFn('Proveer condiciones de iluminación adecuadas para verificación de embalaje.', []),
+                ]),
+            ], 'Proteger y despachar producto conforme a requerimientos logísticos', 'Embalar e identificar producto para transporte seguro'),
         ];
 
         ok(await saveAmfeDocument(amfeId, 'AMFE-3', P, { header: mkAmfeHeader('Armrest Door Panel', CL, PN, 'AMFE-3'), operations: ops }, 'draft'), 'P3-AMFE');
@@ -861,7 +955,22 @@ async function _doSeed(): Promise<string> {
                             [mkCause('Proveedor entrega material no conforme', 'Certificado de calidad por lote', 'Inspección de recepción')]),
                     ]),
                 ]),
-            ]),
+                mkWe('Machine', 'Autoelevador / Zorra hidráulica', [
+                    mkFn('Transportar material recibido a zona de almacén de forma segura.', []),
+                ]),
+                mkWe('Man', 'Operador de recepción / Calidad', [
+                    mkFn('Verificar documentación y estado del material recibido. Registrar en sistema.', []),
+                ]),
+                mkWe('Measurement', 'Calibres / Balanza / Cinta métrica', [
+                    mkFn('Medir gramaje, espesor y verificar color contra muestra aprobada.', []),
+                ]),
+                mkWe('Method', 'Hoja de operaciones / Ayudas visuales de recepción', [
+                    mkFn('Definir criterios de aceptación y secuencia de verificación de materiales.', []),
+                ]),
+                mkWe('Environment', 'Iluminación - Ley 19587', [
+                    mkFn('Proveer condiciones de iluminación adecuadas para inspección visual de materiales.', []),
+                ]),
+            ], 'Asegurar la conformidad de la calidad y cantidad de material recibido', 'Garantizar la estabilidad y la integridad física del material durante el transporte interno'),
             mkOp('OP 20', 'Corte de vinilo', [
                 mkWe('Machine', 'Cortadora CNC', [
                     mkFn('Cortar vinilo a medida según programa', [
@@ -869,7 +978,19 @@ async function _doSeed(): Promise<string> {
                             [mkCause('Error de programa o setup', 'Verificación de programa', 'Control dimensional')]),
                     ]),
                 ]),
-            ]),
+                mkWe('Man', 'Operador de corte', [
+                    mkFn('Operar la cortadora CNC según instrucción de trabajo. Verificar primera pieza.', []),
+                ]),
+                mkWe('Method', 'Hoja de operaciones de corte', [
+                    mkFn('Definir programa de corte, secuencia y criterios de verificación dimensional.', []),
+                ]),
+                mkWe('Material', 'Cuchillas / Regla / Plantillas', [
+                    mkFn('Proveer herramientas de corte en buen estado para operación conforme.', []),
+                ]),
+                mkWe('Environment', 'Iluminación - Ley 19587', [
+                    mkFn('Proveer condiciones de iluminación adecuadas para inspección visual de corte.', []),
+                ]),
+            ], 'Proveer material cortado conforme a requerimientos dimensionales y de trazabilidad', 'Lograr el contorno/forma geométrica del patrón conforme al modelo/plano'),
             mkOp('OP 30', 'Refilado', [
                 mkWe('Machine', 'Refiladora', [
                     mkFn('Eliminar exceso de material', [
@@ -877,7 +998,16 @@ async function _doSeed(): Promise<string> {
                             [mkCause('Cuchilla desgastada', 'MP de cuchillas', 'Inspección visual de bordes')]),
                     ]),
                 ]),
-            ]),
+                mkWe('Man', 'Operador de refilado', [
+                    mkFn('Operar la refiladora según instrucción de trabajo. Verificar bordes.', []),
+                ]),
+                mkWe('Method', 'Hoja de operaciones de refilado', [
+                    mkFn('Definir técnica de refilado y criterios de aceptación de bordes.', []),
+                ]),
+                mkWe('Environment', 'Iluminación - Ley 19587', [
+                    mkFn('Proveer condiciones de iluminación adecuadas para inspección de bordes.', []),
+                ]),
+            ], 'Proveer piezas refiladas conformes a especificación dimensional', 'Eliminar material excedente manteniendo la geometría de la pieza'),
             mkOp('OP 40', 'Costura CNC', [
                 mkWe('Machine', 'Máquina de costura CNC', [
                     mkFn('Realizar costura automatizada de precisión', [
@@ -893,7 +1023,16 @@ async function _doSeed(): Promise<string> {
                             [mkCause('Falta de control de versiones de programas', 'Procedimiento de gestión de programas CNC, backup', 'Verificación de versión vs plano antes de inicio')]),
                     ]),
                 ]),
-            ]),
+                mkWe('Man', 'Operador de costura CNC', [
+                    mkFn('Operar la máquina de costura CNC. Cargar piezas y verificar patrón.', []),
+                ]),
+                mkWe('Material', 'Hilo / Aguja / Bobina', [
+                    mkFn('Proveer insumos de costura conformes a especificación (tipo, color, calibre).', []),
+                ]),
+                mkWe('Environment', 'Iluminación - Ley 19587', [
+                    mkFn('Proveer condiciones de iluminación adecuadas para inspección de costura.', []),
+                ]),
+            ], 'Unir componentes mediante costura conforme a patrón y especificación', 'Realizar costura CNC según programa validado'),
             mkOp('OP 50', 'Troquelado', [
                 mkWe('Machine', 'Troquel / Prensa', [
                     mkFn('Troquelar forma de inserto', [
@@ -901,7 +1040,16 @@ async function _doSeed(): Promise<string> {
                             [mkCause('Troquel desgastado', 'MP de troquel', 'Control con gauge')]),
                     ]),
                 ]),
-            ]),
+                mkWe('Man', 'Operador de troquelado', [
+                    mkFn('Operar la prensa según instrucción de trabajo. Verificar con gauge.', []),
+                ]),
+                mkWe('Method', 'Hoja de operaciones de troquelado', [
+                    mkFn('Definir parámetros de prensa, posicionamiento y criterios dimensionales.', []),
+                ]),
+                mkWe('Environment', 'Iluminación - Ley 19587', [
+                    mkFn('Proveer condiciones de iluminación adecuadas para inspección de troquelado.', []),
+                ]),
+            ], 'Proveer pieza con forma final troquelada conforme a plano', 'Troquelar forma definitiva según especificación'),
             mkOp('OP 60', 'Inyección', [
                 mkWe('Machine', 'Inyectora', [
                     mkFn('Inyectar sustrato plástico', [
@@ -911,7 +1059,19 @@ async function _doSeed(): Promise<string> {
                             [mkCause('Desgaste de molde', 'MP de molde', 'Inspección visual')]),
                     ]),
                 ]),
-            ]),
+                mkWe('Man', 'Operador de inyección', [
+                    mkFn('Operar inyectora según receta de proceso. Verificar piezas y registrar datos.', []),
+                ]),
+                mkWe('Method', 'Hoja de operaciones de inyección', [
+                    mkFn('Definir parámetros de inyección, secuencia de arranque y controles en proceso.', []),
+                ]),
+                mkWe('Material', 'Resina / Materia prima plástica', [
+                    mkFn('Proveer material plástico conforme a especificación (grado, humedad, MFI).', []),
+                ]),
+                mkWe('Environment', 'Temperatura ambiente - Ley 19587', [
+                    mkFn('Mantener condiciones ambientales controladas para estabilidad del proceso de inyección.', []),
+                ]),
+            ], 'Proveer sustrato inyectado con geometría y propiedades mecánicas conformes', 'Inyectar sustrato según parámetros de proceso validados'),
             mkOp('OP 70', 'Prearmado', [
                 mkWe('Method', 'Proceso de preensamble', [
                     mkFn('Ensamblar componentes previo al tapizado', [
@@ -919,7 +1079,16 @@ async function _doSeed(): Promise<string> {
                             [mkCause('Fixture de prearmado desalineado', 'Verificación de fixture periódica', 'Inspección visual + funcional')]),
                     ]),
                 ]),
-            ]),
+                mkWe('Man', 'Operador de prearmado', [
+                    mkFn('Ensamblar subcomponentes según secuencia definida. Verificar posición.', []),
+                ]),
+                mkWe('Machine', 'Fixture de prearmado', [
+                    mkFn('Proveer fixture calibrado para posicionamiento correcto de componentes.', []),
+                ]),
+                mkWe('Environment', 'Iluminación - Ley 19587', [
+                    mkFn('Proveer condiciones de iluminación adecuadas para verificación de ensamble.', []),
+                ]),
+            ], 'Ensamblar subcomponentes preparando la pieza para tapizado', 'Colocar y posicionar componentes según secuencia definida'),
             mkOp('OP 80', 'Adhesivado', [
                 mkWe('Method', 'Proceso de adhesivado', [
                     mkFn('Aplicar adhesivo para unión recubrimiento-sustrato', [
@@ -927,7 +1096,16 @@ async function _doSeed(): Promise<string> {
                             [mkCause('Gramaje insuficiente o superficie contaminada', 'Control de gramaje, limpieza de superficies', 'Ensayo de pelado')]),
                     ]),
                 ]),
-            ]),
+                mkWe('Man', 'Operador de adhesivado', [
+                    mkFn('Aplicar adhesivo según instrucción de trabajo. Verificar dosificación.', []),
+                ]),
+                mkWe('Material', 'Adhesivo / Solvente de limpieza', [
+                    mkFn('Proveer adhesivo dentro de vida útil y condiciones de almacenamiento correctas.', []),
+                ]),
+                mkWe('Environment', 'Temperatura y ventilación - Ley 19587', [
+                    mkFn('Mantener condiciones ambientales adecuadas para aplicación y curado de adhesivo.', []),
+                ]),
+            ], 'Asegurar adherencia entre materiales según especificación', 'Aplicar adhesivo en cantidades y zonas especificadas'),
             mkOp('OP 90', 'Tapizado', [
                 mkWe('Man', 'Operador de tapizado', [
                     mkFn('Recubrir sustrato con vinilo', [
@@ -935,7 +1113,16 @@ async function _doSeed(): Promise<string> {
                             [mkCause('Tensión insuficiente', 'IT con técnica de tensión', 'Inspección visual 100%')]),
                     ]),
                 ]),
-            ]),
+                mkWe('Method', 'Hoja de operaciones de tapizado', [
+                    mkFn('Definir técnica de tensado, secuencia de fijación y criterios visuales.', []),
+                ]),
+                mkWe('Material', 'Vinilo cortado y cosido', [
+                    mkFn('Proveer recubrimiento conforme a especificación dimensional y visual.', []),
+                ]),
+                mkWe('Environment', 'Iluminación - Ley 19587', [
+                    mkFn('Proveer condiciones de iluminación adecuadas para inspección de tapizado.', []),
+                ]),
+            ], 'Cubrir sustrato con material de terminación conforme a patrón', 'Tapizar manteniendo tensión uniforme y sin arrugas'),
             mkOp('OP 100', 'Control final e inspección', [
                 mkWe('Measurement', 'Instrumentos, patrón VWA', [
                     mkFn('Verificar conformidad total', [
@@ -943,7 +1130,16 @@ async function _doSeed(): Promise<string> {
                             [mkCause('Error de inspección', 'Capacitación, patrón actualizado', 'Auditoría de producto')]),
                     ]),
                 ]),
-            ]),
+                mkWe('Man', 'Inspector de calidad', [
+                    mkFn('Ejecutar inspección visual y dimensional según plan de control.', []),
+                ]),
+                mkWe('Method', 'Plan de control / Criterios de aceptación VWA', [
+                    mkFn('Definir criterios de aceptación, frecuencia y método de inspección.', []),
+                ]),
+                mkWe('Environment', 'Iluminación - Ley 19587', [
+                    mkFn('Proveer condiciones de iluminación adecuadas para detección de defectos.', []),
+                ]),
+            ], 'Verificar conformidad total del producto terminado', 'Inspeccionar contra criterios de aceptación del cliente'),
             mkOp('OP 110', 'Embalaje y despacho', [
                 mkWe('Method', 'Procedimiento de embalaje VDA', [
                     mkFn('Embalar según requerimientos VWA', [
@@ -951,7 +1147,16 @@ async function _doSeed(): Promise<string> {
                             [mkCause('Embalaje inadecuado', 'Instrucción de embalaje VDA', 'Verificación antes de despacho')]),
                     ]),
                 ]),
-            ]),
+                mkWe('Man', 'Operador de embalaje', [
+                    mkFn('Embalar y etiquetar producto según instrucción VDA.', []),
+                ]),
+                mkWe('Material', 'Cajas / Film / Etiquetas VDA', [
+                    mkFn('Proveer materiales de embalaje conformes a requerimiento VWA.', []),
+                ]),
+                mkWe('Environment', 'Iluminación - Ley 19587', [
+                    mkFn('Proveer condiciones de iluminación adecuadas para verificación de embalaje.', []),
+                ]),
+            ], 'Proteger y despachar producto conforme a requerimientos logísticos', 'Embalar e identificar producto para transporte seguro'),
         ];
 
         ok(await saveAmfeDocument(amfeId, 'AMFE-4', P, { header: mkAmfeHeader('Insert', CL, PN, 'AMFE-4'), operations: ops }, 'draft'), 'P4-AMFE');
@@ -1076,7 +1281,22 @@ async function _doSeed(): Promise<string> {
                             [mkCause('Material no conforme del proveedor', 'Certificado de calidad, auditoría', 'Inspección de recepción')]),
                     ]),
                 ]),
-            ]),
+                mkWe('Machine', 'Autoelevador / Zorra hidráulica', [
+                    mkFn('Transportar material recibido a zona de almacén de forma segura.', []),
+                ]),
+                mkWe('Man', 'Operador de recepción / Calidad', [
+                    mkFn('Verificar documentación y estado del material recibido. Registrar en sistema.', []),
+                ]),
+                mkWe('Measurement', 'Calibres / Balanza / Cinta métrica', [
+                    mkFn('Medir propiedades del material (MFI, espesor) y verificar contra certificado.', []),
+                ]),
+                mkWe('Method', 'Hoja de operaciones / Ayudas visuales de recepción', [
+                    mkFn('Definir criterios de aceptación y secuencia de verificación de materiales.', []),
+                ]),
+                mkWe('Environment', 'Iluminación - Ley 19587', [
+                    mkFn('Proveer condiciones de iluminación adecuadas para inspección visual de materiales.', []),
+                ]),
+            ], 'Asegurar la conformidad de la calidad y cantidad de material recibido', 'Garantizar la estabilidad y la integridad física del material durante el transporte interno'),
             mkOp('OP 10', 'Inyección de sustrato PP', [
                 mkWe('Machine', 'Inyectora', [
                     mkFn('Inyectar sustrato de polipropileno', [
@@ -1088,7 +1308,19 @@ async function _doSeed(): Promise<string> {
                             [mkCause('Enfriamiento desigual', 'Control de temp. de molde', 'Gauge dimensional')]),
                     ]),
                 ]),
-            ]),
+                mkWe('Man', 'Operador de inyección', [
+                    mkFn('Operar inyectora según receta de proceso. Verificar piezas y registrar datos SPC.', []),
+                ]),
+                mkWe('Method', 'Hoja de operaciones de inyección', [
+                    mkFn('Definir parámetros de inyección, secuencia de arranque y controles en proceso.', []),
+                ]),
+                mkWe('Material', 'Resina PP / Materia prima', [
+                    mkFn('Proveer polipropileno conforme a especificación (grado, humedad, MFI).', []),
+                ]),
+                mkWe('Environment', 'Temperatura ambiente - Ley 19587', [
+                    mkFn('Mantener condiciones ambientales controladas para estabilidad del proceso de inyección.', []),
+                ]),
+            ], 'Proveer sustrato inyectado con geometría y propiedades mecánicas conformes', 'Inyectar sustrato PP según parámetros de proceso validados'),
             mkOp('OP 20', 'Adhesivado HotMelt', [
                 mkWe('Machine', 'Aplicadora de HotMelt', [
                     mkFn('Aplicar adhesivo HotMelt en sustrato para unión con film', [
@@ -1098,7 +1330,19 @@ async function _doSeed(): Promise<string> {
                             [mkCause('Falla de control de temperatura', 'Termopar calibrado, alarma automática', 'Monitoreo de temperatura continuo')]),
                     ]),
                 ]),
-            ]),
+                mkWe('Man', 'Operador de adhesivado HotMelt', [
+                    mkFn('Operar aplicadora HotMelt según instrucción. Verificar cobertura uniforme.', []),
+                ]),
+                mkWe('Method', 'Hoja de operaciones de adhesivado', [
+                    mkFn('Definir temperatura, patrón de aplicación y criterios de verificación de cobertura.', []),
+                ]),
+                mkWe('Material', 'Adhesivo HotMelt', [
+                    mkFn('Proveer adhesivo HotMelt dentro de vida útil y almacenamiento correcto.', []),
+                ]),
+                mkWe('Environment', 'Temperatura y ventilación - Ley 19587', [
+                    mkFn('Mantener condiciones ambientales adecuadas para aplicación de HotMelt.', []),
+                ]),
+            ], 'Asegurar adherencia entre materiales según especificación', 'Aplicar adhesivo HotMelt en cantidades y zonas especificadas'),
             mkOp('OP 30', 'IMG (In-Mold Graining)', [
                 mkWe('Machine', 'Prensa IMG', [
                     mkFn('Aplicar textura y film decorativo mediante IMG', [
@@ -1114,7 +1358,13 @@ async function _doSeed(): Promise<string> {
                             [mkCause('Manipulación incorrecta del film o falta de procedimiento', 'Instrucción de manipulación de film, condiciones de almacenamiento', 'Verificación visual pre-carga en prensa')]),
                     ]),
                 ]),
-            ]),
+                mkWe('Man', 'Operador de prensa IMG', [
+                    mkFn('Operar prensa IMG según receta. Cargar sustrato y film correctamente.', []),
+                ]),
+                mkWe('Environment', 'Temperatura ambiente - Ley 19587', [
+                    mkFn('Mantener condiciones ambientales controladas para estabilidad del proceso IMG.', []),
+                ]),
+            ], 'Aplicar textura superficial conforme a especificación de diseño', 'Gravar textura en molde según parámetros validados'),
             mkOp('OP 40', 'Trimming', [
                 mkWe('Machine', 'Router CNC / Cortadora', [
                     mkFn('Recortar exceso de material post-IMG', [
@@ -1122,7 +1372,16 @@ async function _doSeed(): Promise<string> {
                             [mkCause('Desgaste de herramienta o programa incorrecto', 'MP de herramientas, verificación programa', 'Inspección visual + dimensional')]),
                     ]),
                 ]),
-            ]),
+                mkWe('Man', 'Operador de trimming CNC', [
+                    mkFn('Operar router CNC según programa. Verificar contorno y bordes.', []),
+                ]),
+                mkWe('Method', 'Hoja de operaciones de trimming', [
+                    mkFn('Definir programa CNC de recorte, secuencia y criterios dimensionales.', []),
+                ]),
+                mkWe('Environment', 'Iluminación - Ley 19587', [
+                    mkFn('Proveer condiciones de iluminación adecuadas para inspección de contorno.', []),
+                ]),
+            ], 'Proveer pieza con contorno final conforme a plano', 'Recortar material excedente según programa CNC'),
             mkOp('OP 50', 'Edge Folding (doblado de bordes)', [
                 mkWe('Machine', 'Equipo de edge folding', [
                     mkFn('Doblar bordes del film sobre el sustrato', [
@@ -1132,7 +1391,16 @@ async function _doSeed(): Promise<string> {
                             [mkCause('Exceso de material en esquinas', 'Técnica de doblado optimizada', 'Inspección visual 100%')]),
                     ]),
                 ]),
-            ]),
+                mkWe('Man', 'Operador de edge folding', [
+                    mkFn('Operar equipo de doblado de bordes. Verificar plegado completo.', []),
+                ]),
+                mkWe('Method', 'Hoja de operaciones de edge folding', [
+                    mkFn('Definir parámetros de temperatura, presión y técnica de doblado.', []),
+                ]),
+                mkWe('Environment', 'Iluminación - Ley 19587', [
+                    mkFn('Proveer condiciones de iluminación adecuadas para inspección de bordes plegados.', []),
+                ]),
+            ], 'Doblar bordes de la pieza conforme a especificación', 'Plegar bordes manteniendo adhesión y geometría'),
             mkOp('OP 60', 'Soldado (welding)', [
                 mkWe('Machine', 'Soldadora ultrasónica / térmica', [
                     mkFn('Soldar componentes al conjunto', [
@@ -1142,7 +1410,16 @@ async function _doSeed(): Promise<string> {
                             [mkCause('Energía excesiva o tiempo excesivo', 'Control de parámetros', 'Inspección visual')]),
                     ]),
                 ]),
-            ]),
+                mkWe('Man', 'Operador de soldadura', [
+                    mkFn('Operar soldadora según parámetros validados. Verificar unión y aspecto.', []),
+                ]),
+                mkWe('Method', 'Hoja de operaciones de soldado', [
+                    mkFn('Definir parámetros de soldadura (energía, amplitud, tiempo) y controles.', []),
+                ]),
+                mkWe('Environment', 'Iluminación - Ley 19587', [
+                    mkFn('Proveer condiciones de iluminación adecuadas para inspección de soldadura.', []),
+                ]),
+            ], 'Unir componentes mediante soldadura conforme a especificación', 'Soldar según parámetros validados de tiempo y temperatura'),
             mkOp('OP 70', 'Control final e inspección', [
                 mkWe('Measurement', 'Instrumentos de inspección, patrón VWA', [
                     mkFn('Verificar conformidad visual, dimensional y funcional', [
@@ -1150,7 +1427,16 @@ async function _doSeed(): Promise<string> {
                             [mkCause('Error de inspección', 'Capacitación, patrón actualizado', 'Auditoría de producto')]),
                     ]),
                 ]),
-            ]),
+                mkWe('Man', 'Inspector de calidad', [
+                    mkFn('Ejecutar inspección visual y dimensional según plan de control.', []),
+                ]),
+                mkWe('Method', 'Plan de control / Criterios de aceptación VWA', [
+                    mkFn('Definir criterios de aceptación, frecuencia y método de inspección.', []),
+                ]),
+                mkWe('Environment', 'Iluminación - Ley 19587', [
+                    mkFn('Proveer condiciones de iluminación adecuadas para detección de defectos.', []),
+                ]),
+            ], 'Verificar conformidad total del producto terminado', 'Inspeccionar contra criterios de aceptación del cliente'),
             mkOp('OP 80', 'Embalaje y despacho', [
                 mkWe('Method', 'Procedimiento de embalaje VDA', [
                     mkFn('Embalar según requerimientos VWA', [
@@ -1158,7 +1444,16 @@ async function _doSeed(): Promise<string> {
                             [mkCause('Embalaje inadecuado', 'Instrucción de embalaje VDA', 'Verificación antes de despacho')]),
                     ]),
                 ]),
-            ]),
+                mkWe('Man', 'Operador de embalaje', [
+                    mkFn('Embalar y etiquetar producto según instrucción VDA.', []),
+                ]),
+                mkWe('Material', 'Cajas / Film / Etiquetas VDA', [
+                    mkFn('Proveer materiales de embalaje conformes a requerimiento VWA.', []),
+                ]),
+                mkWe('Environment', 'Iluminación - Ley 19587', [
+                    mkFn('Proveer condiciones de iluminación adecuadas para verificación de embalaje.', []),
+                ]),
+            ], 'Proteger y despachar producto conforme a requerimientos logísticos', 'Embalar e identificar producto para transporte seguro'),
         ];
 
         ok(await saveAmfeDocument(amfeId, 'AMFE-5', P, { header: mkAmfeHeader('Top Roll', CL, PN, 'AMFE-5'), operations: ops }, 'draft'), 'P5-AMFE');

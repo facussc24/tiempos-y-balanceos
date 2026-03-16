@@ -14,7 +14,7 @@ const STORAGE_KEY = 'cp-column-visibility';
 export interface CpColumnGroupVisibility {
     proceso: boolean;         // processStepNumber, processDescription, machineDeviceTool
     caracteristicas: boolean; // characteristicNumber, productCharacteristic, processCharacteristic, specialCharClass
-    metodos: boolean;         // specification, evaluationTechnique, sampleSize, sampleFrequency, controlMethod, reactionPlan, reactionPlanOwner
+    metodos: boolean;         // specification, evaluationTechnique, sampleSize, sampleFrequency, controlMethod, reactionPlan, reactionPlanOwner, controlProcedure
 }
 
 export const CP_DEFAULT_VISIBILITY: CpColumnGroupVisibility = {
@@ -51,13 +51,14 @@ export const CP_COLUMN_TO_GROUP: Record<string, keyof CpColumnGroupVisibility> =
     controlMethod: 'metodos',
     reactionPlan: 'metodos',
     reactionPlanOwner: 'metodos',
+    controlProcedure: 'metodos',
 };
 
 /** Column counts per group (for colspan calculation). */
 export const CP_COLUMN_COUNTS: Record<keyof CpColumnGroupVisibility, number> = {
     proceso: 3,
     caracteristicas: 4,
-    metodos: 7,
+    metodos: 8,
 };
 
 export const useCpColumnVisibility = () => {

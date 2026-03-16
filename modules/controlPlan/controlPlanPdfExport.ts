@@ -2,7 +2,7 @@
  * Control Plan PDF Export
  *
  * Two templates:
- * 1. Full AIAG Table (landscape A3) — complete CP with all 14 columns, rowspan grouping
+ * 1. Full AIAG Table (landscape A3) — complete CP with all 15 columns, rowspan grouping
  * 2. Ítems Críticos (landscape A4) — CC/SC and AP=H items only, compact
  *
  * Uses html2pdf.js (already in package.json as ^0.10.2).
@@ -222,22 +222,23 @@ function buildFullTableHtml(doc: ControlPlanDocument): string {
         `<th style="${headerCellStyle()}">${esc(col.label)}</th>`
     ).join('');
 
-    // Column widths for 14 columns on A3 landscape
+    // Column widths for 15 columns on A3 landscape
     const colWidths = [
         '4%',   // Nro. Parte/Proceso
-        '10%',  // Descripción Proceso/Operación
-        '8%',   // Máquina/Dispositivo/Herram.
+        '9%',   // Descripción Proceso/Operación
+        '7%',   // Máquina/Dispositivo/Herram.
         '3%',   // Nro.
         '9%',   // Producto
         '9%',   // Proceso
         '4%',   // Clasif. Caract. Esp.
-        '10%',  // Espec./Tolerancia
+        '9%',   // Espec./Tolerancia
         '8%',   // Técnica Evaluación/Medición
         '5%',   // Tamaño Muestra
         '5%',   // Frecuencia
-        '9%',   // Método Control
-        '9%',   // Plan Reacción
+        '8%',   // Método Control
+        '8%',   // Plan Reacción
         '7%',   // Responsable Reacción
+        '5%',   // Procedimiento/IT
     ];
     const colgroup = `<colgroup>${colWidths.map(w => `<col style="width:${w}"/>`).join('')}</colgroup>`;
 

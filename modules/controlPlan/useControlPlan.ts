@@ -75,6 +75,7 @@ export function useControlPlan(): UseControlPlanResult {
                 controlMethod: '',
                 reactionPlan: '',
                 reactionPlanOwner: last?.reactionPlanOwner ?? '',
+                controlProcedure: '',
             };
             return { ...prev, items: [...prev.items, newItem] };
         });

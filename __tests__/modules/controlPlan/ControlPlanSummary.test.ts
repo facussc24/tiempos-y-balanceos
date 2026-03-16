@@ -20,6 +20,7 @@ function makeItem(overrides: Partial<ControlPlanItem> = {}): ControlPlanItem {
         controlMethod: '',
         reactionPlan: '',
         reactionPlanOwner: '',
+        controlProcedure: '',
         ...overrides,
     };
 }

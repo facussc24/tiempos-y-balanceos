@@ -47,7 +47,7 @@ const ControlPlanStickyHeader: React.FC<Props> = ({ columnVisibility }) => {
                     </th>
                 )}
                 {showMetodos && (
-                    <th colSpan={7} className="bg-sky-100 px-3 py-2 text-center min-w-[850px] border-r border-sky-200 font-bold text-sky-900">
+                    <th colSpan={8} className="bg-sky-100 px-3 py-2 text-center min-w-[970px] border-r border-sky-200 font-bold text-sky-900">
                         MÉTODOS
                     </th>
                 )}
@@ -112,8 +112,11 @@ const ControlPlanStickyHeader: React.FC<Props> = ({ columnVisibility }) => {
                         <th className="bg-sky-50 p-2 w-40 border-r border-sky-100">
                             <HeaderWithTip termKey="reactionPlan" label="Plan Reacción" />
                         </th>
-                        <th className="bg-sky-50 p-2 w-32 border-r border-gray-300">
+                        <th className="bg-sky-50 p-2 w-32 border-r border-sky-100">
                             <HeaderWithTip termKey="reactionPlanOwner" label="Resp. Reacción" className="text-red-600" />
+                        </th>
+                        <th className="bg-sky-50 p-2 w-32 border-r border-gray-300">
+                            <HeaderWithTip termKey="controlProcedure" label="Procedimiento/IT" />
                         </th>
                     </>
                 )}

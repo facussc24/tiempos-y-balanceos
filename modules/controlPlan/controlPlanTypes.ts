@@ -1,7 +1,7 @@
 /**
  * Control Plan Type Definitions
  *
- * AIAG format Control Plan with 13 standard columns.
+ * AIAG format Control Plan with 15 standard columns.
  * Linked to AMFE via characteristicNumber and process step.
  *
  * Phases: Prototype | Pre-Launch | Safe Launch | Production
@@ -62,6 +62,8 @@ export interface ControlPlanItem {
     reactionPlan: string;
     /** Reaction Plan Owner — required field per CP 1st Ed 2024. Must be a specific person/role on the floor. */
     reactionPlanOwner: string;
+    /** Reference to applicable procedure/work instruction (e.g. "P-REC-001", "IT-TAP-002"). */
+    controlProcedure: string;
     /** Tracks which fields were auto-filled by the generator so the UI can mark them as suggestions. */
     autoFilledFields?: string[];
     /** AMFE AP level at time of generation (for AI suggestion context) */
@@ -141,13 +143,14 @@ export const CP_COLUMNS: CPColumnDef[] = [
     { key: 'controlMethod',         label: 'Método Control',                     width: '140px', required: true },
     { key: 'reactionPlan',          label: 'Plan Reacción',                      width: '160px', required: true },
     { key: 'reactionPlanOwner',     label: 'Responsable Reacción',               width: '120px', required: true },
+    { key: 'controlProcedure',      label: 'Procedimiento/IT',                   width: '120px' },
 ];
 
 /** AIAG standard column groups for the sticky header. */
 export const CP_COLUMN_GROUPS: { label: string; colSpan: number }[] = [
     { label: 'Proceso',          colSpan: 3 },
     { label: 'Características',  colSpan: 4 },
-    { label: 'Métodos',          colSpan: 7 },
+    { label: 'Métodos',          colSpan: 8 },
 ];
 
 /** Term definition for tooltip display */
@@ -214,6 +217,10 @@ export const CP_COLUMN_TERMS: Record<string, CpTerm> = {
         term: 'Responsable Plan Reacción',
         definition: 'Persona o rol responsable de ejecutar el plan de reacción en piso. Obligatorio per CP 2024.',
     },
+    controlProcedure: {
+        term: 'Procedimiento / Instrucción de Trabajo',
+        definition: 'Referencia al procedimiento o instrucción de trabajo aplicable (ej: P-REC-001, IT-TAP-002).',
+    },
 };
 
 /**
@@ -245,6 +252,7 @@ export function normalizeControlPlanDocument(raw: any): ControlPlanDocument {
         controlMethod: item.controlMethod || '',
         reactionPlan: item.reactionPlan || '',
         reactionPlanOwner: item.reactionPlanOwner || '',
+        controlProcedure: item.controlProcedure || '',
         autoFilledFields: item.autoFilledFields,
         amfeAp: item.amfeAp || '',
         amfeSeverity: item.amfeSeverity ?? undefined,
