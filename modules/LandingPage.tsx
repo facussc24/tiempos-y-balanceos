@@ -102,7 +102,7 @@ const TYPE_LABELS: Record<DocumentType, string> = {
 const LandingPage: React.FC<LandingPageProps> = ({ onSelectModule, documentCounts = {}, recentDocuments = [] }) => {
     const [showWorkflow, setShowWorkflow] = useState(false);
     const [autoOpenedGuide, setAutoOpenedGuide] = useState(false);
-    const { user, signOut } = useAuth();
+    const { user, signOut, userDisplayName } = useAuth();
 
     const totalDocs = useMemo(() =>
         Object.values(documentCounts).reduce((sum, n) => sum + (n || 0), 0),
@@ -186,14 +186,19 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSelectModule, documentCount
                         </button>
                     )}
                     {user && (
-                        <button
-                            onClick={() => signOut()}
-                            title={`Cerrar sesión (${user.email ?? user.id})`}
-                            className="text-xs text-slate-500 hover:text-slate-300 transition-colors flex items-center gap-1.5 bg-white/[0.03] border border-white/[0.06] rounded-lg px-3 py-1.5 hover:border-slate-500/40"
-                        >
-                            <LogOut size={13} />
-                            <span>Salir</span>
-                        </button>
+                        <div className="flex items-center gap-2">
+                            <span className="text-xs text-slate-400 hidden sm:inline truncate max-w-[140px]" title={user.email ?? ''}>
+                                {userDisplayName}
+                            </span>
+                            <button
+                                onClick={() => signOut()}
+                                title={`Cerrar sesión (${user.email ?? user.id})`}
+                                className="text-xs text-slate-500 hover:text-slate-300 transition-colors flex items-center gap-1.5 bg-white/[0.03] border border-white/[0.06] rounded-lg px-3 py-1.5 hover:border-slate-500/40"
+                            >
+                                <LogOut size={13} />
+                                <span>Salir</span>
+                            </button>
+                        </div>
                     )}
                 </header>
 

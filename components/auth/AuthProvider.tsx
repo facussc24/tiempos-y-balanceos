@@ -2,10 +2,10 @@
  * Auth Provider
  *
  * Provides Supabase authentication context to the entire app.
- * Auto-signs in using environment variables — no login page needed.
+ * Shows a login page when not authenticated.
  */
 
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
 import { supabase } from '../../utils/supabaseClient';
 import type { User, Session } from '../../utils/supabaseClient';
 
@@ -13,10 +13,12 @@ import type { User, Session } from '../../utils/supabaseClient';
 // Context
 // ---------------------------------------------------------------------------
 
-interface AuthContextValue {
+export interface AuthContextValue {
     user: User | null;
     session: Session | null;
     loading: boolean;
+    /** Display name: user_metadata.display_name → email prefix → 'Usuario' */
+    userDisplayName: string;
     signIn: (email: string, password: string) => Promise<{ error: string | null }>;
     signOut: () => Promise<void>;
 }
@@ -30,47 +32,44 @@ export function useAuth(): AuthContextValue {
 }
 
 // ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+/** Extract a human-readable name from the Supabase user object */
+function resolveDisplayName(user: User | null): string {
+    if (!user) return '';
+    const meta = user.user_metadata;
+    if (meta?.display_name) return meta.display_name as string;
+    if (meta?.full_name) return meta.full_name as string;
+    if (meta?.name) return meta.name as string;
+    if (user.email) return user.email.split('@')[0];
+    return 'Usuario';
+}
+
+// ---------------------------------------------------------------------------
 // Provider
 // ---------------------------------------------------------------------------
 
 interface AuthProviderProps {
     children: React.ReactNode;
-    /** Render this component when user is not authenticated (unused with auto-login) */
+    /** Rendered when the user is not authenticated */
     loginPage?: React.ReactNode;
 }
 
-export function AuthProvider({ children }: AuthProviderProps) {
+export function AuthProvider({ children, loginPage }: AuthProviderProps) {
     const [user, setUser] = useState<User | null>(null);
     const [session, setSession] = useState<Session | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // Get the initial session
-        supabase.auth.getSession().then(async ({ data: { session } }) => {
+        supabase.auth.getSession().then(({ data: { session } }) => {
             if (session) {
-                // Already logged in
                 setSession(session);
                 setUser(session.user);
-                setLoading(false);
-            } else {
-                // No session — auto-login with env vars
-                const email = import.meta.env.VITE_AUTO_LOGIN_EMAIL;
-                const password = import.meta.env.VITE_AUTO_LOGIN_PASSWORD;
-
-                if (email && password) {
-                    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-                    if (!error && data.session) {
-                        setSession(data.session);
-                        setUser(data.session.user);
-                    } else {
-                        console.error('Auto-login failed:', error?.message);
-                    }
-                }
-                setLoading(false);
             }
+            setLoading(false);
         });
 
-        // Listen for auth state changes (login, logout, token refresh)
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
             setSession(session);
             setUser(session?.user ?? null);
@@ -89,7 +88,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
         await supabase.auth.signOut();
     }, []);
 
-    const value: AuthContextValue = { user, session, loading, signIn, signOut };
+    const userDisplayName = useMemo(() => resolveDisplayName(user), [user]);
+
+    const value: AuthContextValue = { user, session, loading, signIn, signOut, userDisplayName };
 
     if (loading) {
         return (
@@ -102,7 +103,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
         );
     }
 
-    // Always render children — no login page gate
+    // Not authenticated → show login page
+    if (!session && loginPage) {
+        return (
+            <AuthContext.Provider value={value}>
+                {loginPage}
+            </AuthContext.Provider>
+        );
+    }
+
     return (
         <AuthContext.Provider value={value}>
             {children}

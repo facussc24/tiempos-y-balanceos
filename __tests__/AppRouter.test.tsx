@@ -6,7 +6,7 @@ import AppRouter from '../AppRouter';
 // Bypass auth in tests — render children directly as if user is logged in
 vi.mock('../components/auth/AuthProvider', () => ({
     AuthProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-    useAuth: () => ({ user: { id: 'test-user' }, session: null, loading: false, signIn: vi.fn(), signOut: vi.fn() }),
+    useAuth: () => ({ user: { id: 'test-user' }, session: null, loading: false, signIn: vi.fn(), signOut: vi.fn(), userDisplayName: 'test-user' }),
 }));
 
 vi.mock('../modules/registry/useDocumentRegistry', () => ({
