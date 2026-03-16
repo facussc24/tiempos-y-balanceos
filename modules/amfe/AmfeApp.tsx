@@ -21,10 +21,13 @@ import { RevisionPromptModal } from '../../components/modals/RevisionPromptModal
 import { CrossDocAlertBanner } from '../../components/ui/CrossDocAlertBanner';
 import { RevisionHistoryPanel } from '../../components/layout/RevisionHistoryPanel';
 import { useRevisionControl } from '../../hooks/useRevisionControl';
+import { useDocumentLock } from '../../hooks/useDocumentLock';
+import DocumentLockBanner from '../../components/ui/DocumentLockBanner';
 import { useCrossDocAlerts } from '../../hooks/useCrossDocAlerts';
 import { getNextRevisionLevel } from '../../utils/revisionUtils';
-import { Plus, Layers, HardDrive, AlertTriangle, X } from 'lucide-react';
+import { Plus, Layers, HardDrive, AlertTriangle, X, FileInput } from 'lucide-react';
 import { AmfeDocument, AmfeHeaderData } from './amfeTypes';
+import { importAmfeOpsFromPfd } from './amfePfdImport';
 import { useAmfeRegistry } from './useAmfeRegistry';
 import { useAmfeColumnVisibility } from './useAmfeColumnVisibility';
 import { AmfeTemplate } from './amfeTemplates';
@@ -49,7 +52,7 @@ import { useAmfeNetworkToast } from './useAmfeNetworkToast';
 import { useAmfeExport } from './useAmfeExport';
 import { useAmfeTabNavigation, ActiveTab } from './useAmfeTabNavigation';
 import { useOpenExportFolder } from '../../hooks/useOpenExportFolder';
-import { detectSyncAlerts, type SyncAlert } from '../controlPlan/cpSyncEngine';
+import { detectSyncAlerts, applySyncAlertToCp, type SyncAlert } from '../controlPlan/cpSyncEngine';
 
 const CpSyncPanel = lazy(() => import('../controlPlan/CpSyncPanel'));
 const PfdApp = lazy(() => import('../pfd/PfdApp'));
@@ -137,6 +140,9 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab }) => {
         confirm.requestConfirm
     );
 
+    // Cross-user edit lock
+    const documentLock = useDocumentLock(projects.currentProject, 'amfe');
+
     // 3. Initialize Auto-Save
     const persistence = useAmfePersistence({
         currentData: amfe.data,
@@ -144,14 +150,14 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab }) => {
         isSaving: projects.saveStatus === 'saving',
     });
 
-    // 3b. Normalize flat project_names at startup (one-time repair)
+    // 3b. Normalize project_names at startup (one-time repair)
     useEffect(() => {
         let cancelled = false;
-        import('./amfePathManager').then(({ normalizeProjectNames }) =>
-            normalizeProjectNames().then(count => {
-                if (!cancelled && count > 0) projects.refreshClients();
-            })
-        ).catch(err => {
+        import('./amfePathManager').then(async ({ normalizeProjectNames, repairMisplacedProjectSuffix }) => {
+            const count1 = await normalizeProjectNames();
+            const count2 = await repairMisplacedProjectSuffix();
+            if (!cancelled && (count1 + count2) > 0) projects.refreshClients();
+        }).catch(err => {
             logger.warn('AmfeApp', 'Project name normalization failed (non-critical)', {
                 error: err instanceof Error ? err.message : String(err),
             });
@@ -266,12 +272,21 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab }) => {
         setDismissedSyncAlerts(new Set(syncAlerts.map(a => a.id)));
     }, [syncAlerts]);
     const handleApplySyncAlert = useCallback((_alert: SyncAlert) => {
-        // For now, just dismiss the alert and show a toast with the suggestion
+        if (_alert.patch && tabNav.cpInitialData) {
+            const updated = applySyncAlertToCp(tabNav.cpInitialData, _alert);
+            if (updated) {
+                tabNav.setCpInitialData(updated);
+                toast.success('Corrección aplicada', _alert.suggestedAction || 'CP actualizado.');
+                setDismissedSyncAlerts(prev => new Set([...prev, _alert.id]));
+                return;
+            }
+        }
+        // Fallback: just dismiss with info
         if (_alert.suggestedAction) {
-            toast.info('Sugerencia aplicada', _alert.suggestedAction);
+            toast.info('Acción manual requerida', _alert.suggestedAction);
         }
         setDismissedSyncAlerts(prev => new Set([...prev, _alert.id]));
-    }, []);
+    }, [tabNav.cpInitialData, tabNav.setCpInitialData]);
 
     // --- SAVE WITH AP=H COMPLIANCE WARNING ---
     const [apHWarning, setApHWarning] = useState<string | null>(null);
@@ -299,6 +314,41 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab }) => {
             }
         }
     }, [amfe.data, projects.saveCurrentProject, projects.currentProject, projects.saveStatus, amfeRegistry.registerAmfe]);
+
+    // --- IMPORT FROM PFD ---
+    const handleImportFromPfd = useCallback(async () => {
+        if (!tabNav.pfdInitialData) {
+            toast.info('Sin PFD', 'Primero genera o importa un Diagrama de Flujo.');
+            return;
+        }
+        const result = importAmfeOpsFromPfd(tabNav.pfdInitialData, amfe.data.operations);
+        if (result.operations.length === 0) {
+            toast.info('Nada que importar', result.warnings.join(' '));
+            return;
+        }
+        const msg = result.warnings.join('\n') +
+            '\n\n¿Importar ' + result.operations.length + ' operación(es)?';
+        const ok = await confirm.requestConfirm({
+            title: 'Importar desde Diagrama de Flujo',
+            message: msg,
+            variant: 'info',
+            confirmText: 'Importar',
+        });
+        if (!ok) return;
+        amfe.batchAddOperations(result.operations);
+        // Set back-references on PFD steps
+        const updatedPfd = {
+            ...tabNav.pfdInitialData,
+            steps: tabNav.pfdInitialData.steps.map(step => {
+                const amfeOpId = result.linkMap.get(step.id);
+                if (amfeOpId) return { ...step, linkedAmfeOperationId: amfeOpId };
+                return step;
+            }),
+            updatedAt: new Date().toISOString(),
+        };
+        tabNav.setPfdInitialData(updatedPfd);
+        toast.success('Importación completada', result.warnings.join(' '));
+    }, [tabNav.pfdInitialData, amfe.data.operations, amfe.batchAddOperations, confirm.requestConfirm, tabNav.setPfdInitialData]);
 
     // Disable AMFE shortcuts when a child module tab is active (PFD, CP, HO)
     // to prevent Ctrl+S/Ctrl+N/Escape conflicts with child module shortcuts
@@ -676,8 +726,9 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab }) => {
         )}
 
         {/* --- AMFE TAB — SIEMPRE MONTADO, oculto con display:none cuando otro tab activo --- */}
-        <div className="min-h-screen bg-gray-50 flex flex-col font-sans text-sm" style={{ display: isAmfeActive ? undefined : 'none' }}>
+        <div className="min-h-screen bg-gray-50 flex flex-col font-sans text-sm" style={{ display: isAmfeActive ? undefined : 'none' }} data-module="amfe" data-mode={viewMode}>
             <AmfeTabBar {...tabBarProps} />
+            <DocumentLockBanner otherEditor={documentLock.otherEditor} />
             <AmfeToolbar
                 projects={projects}
                 lastAutoSave={persistence.lastAutoSave}
@@ -813,6 +864,12 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab }) => {
                                     className="flex items-center gap-2 text-purple-600 hover:text-purple-800 px-4 py-2 rounded font-medium transition text-sm">
                                     <Layers size={16} /> Usar un Template
                                 </button>
+                                {tabNav.pfdInitialData && (
+                                    <button onClick={handleImportFromPfd}
+                                        className="flex items-center gap-2 text-cyan-600 hover:text-cyan-800 px-4 py-2 rounded font-medium transition text-sm">
+                                        <FileInput size={16} /> Importar desde PFD
+                                    </button>
+                                )}
                             </div>
                         </div>
                     </div>

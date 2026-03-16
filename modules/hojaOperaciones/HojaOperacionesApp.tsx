@@ -21,6 +21,8 @@ import { CrossDocAlertBanner } from '../../components/ui/CrossDocAlertBanner';
 import { RevisionHistoryPanel } from '../../components/layout/RevisionHistoryPanel';
 import { ModuleErrorBoundary } from '../../components/ui/ModuleErrorBoundary';
 import { useRevisionControl } from '../../hooks/useRevisionControl';
+import { useDocumentLock } from '../../hooks/useDocumentLock';
+import DocumentLockBanner from '../../components/ui/DocumentLockBanner';
 import { useCrossDocAlerts } from '../../hooks/useCrossDocAlerts';
 import { getNextRevisionLevel } from '../../utils/revisionUtils';
 import { FileText, Download, FileDown, FileSpreadsheet, Loader2, Layers, BookOpen, GitBranch, Undo2, Redo2, Eye, Pencil, FolderOpen } from 'lucide-react';
@@ -72,6 +74,9 @@ const HojaOperacionesApp: React.FC<Props> = ({ embedded, initialData, onDataChan
 
     // Revision control (HO uses linkedAmfeProject as document ID)
     const hoDocId = ho.data.header.linkedAmfeProject || null;
+
+    // Cross-user edit lock (standalone mode only)
+    const documentLock = useDocumentLock(embedded ? null : hoDocId, 'ho');
     const revisionControl = useRevisionControl({
         module: 'ho',
         documentId: hoDocId,
@@ -356,6 +361,8 @@ const HojaOperacionesApp: React.FC<Props> = ({ embedded, initialData, onDataChan
     }
 
     return (
+        <>
+        {!embedded && <DocumentLockBanner otherEditor={documentLock.otherEditor} />}
         <div className="flex flex-1 overflow-hidden">
             {/* Navigator sidebar */}
             <div className="w-52 flex-shrink-0 flex flex-col">
@@ -550,6 +557,7 @@ const HojaOperacionesApp: React.FC<Props> = ({ embedded, initialData, onDataChan
                 />
             )}
         </div>
+        </>
     );
 };
 

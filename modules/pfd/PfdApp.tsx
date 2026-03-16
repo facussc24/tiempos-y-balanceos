@@ -32,6 +32,8 @@ import { toast } from '../../components/ui/Toast';
 import { RevisionHistoryPanel } from '../../components/layout/RevisionHistoryPanel';
 import { ModuleErrorBoundary } from '../../components/ui/ModuleErrorBoundary';
 import { useRevisionControl } from '../../hooks/useRevisionControl';
+import { useDocumentLock } from '../../hooks/useDocumentLock';
+import DocumentLockBanner from '../../components/ui/DocumentLockBanner';
 import { useCrossDocAlerts } from '../../hooks/useCrossDocAlerts';
 import { getNextRevisionLevel } from '../../utils/revisionUtils';
 import {
@@ -140,6 +142,12 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding, embedded, initialData }) => 
     /** Snapshot of pfd.data at last save/load (for unsaved changes comparison) */
     const savedSnapshotRef = useRef('');
     const changeDetectionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    // Cross-user edit lock (standalone mode only)
+    const documentLock = useDocumentLock(
+        embedded ? null : (pfd.data.id || null),
+        'pfd',
+    );
 
     // Revision control
     const revisionControl = useRevisionControl({
@@ -711,7 +719,7 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding, embedded, initialData }) => 
     );
 
     return (
-        <div className={`${embedded ? 'flex flex-col h-full' : 'min-h-screen'} bg-gray-50 flex flex-col font-sans text-sm`}>
+        <div className={`${embedded ? 'flex flex-col h-full' : 'min-h-screen'} bg-gray-50 flex flex-col font-sans text-sm`} data-module="pfd" data-mode={viewMode}>
             {/* C3-E2: Print-friendly CSS */}
             <style>{`
                 @media print {
@@ -722,6 +730,8 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding, embedded, initialData }) => 
                     thead { display: table-header-group; }
                 }
             `}</style>
+
+            {!embedded && <DocumentLockBanner otherEditor={documentLock.otherEditor} />}
 
             {/* Toolbar — full in standalone, compact in embedded */}
             {!embedded ? (
@@ -799,7 +809,7 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding, embedded, initialData }) => 
                         )}
                     </div>
                     <div className="w-px h-5 bg-gray-200" />
-                    <button onClick={() => setViewMode(prev => prev === 'view' ? 'edit' : 'view')} className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium transition ${viewMode === 'view' ? 'bg-cyan-100 text-cyan-800' : 'text-gray-600 hover:bg-gray-100'}`} title="Alternar vista/edicion">
+                    <button onClick={() => setViewMode(prev => prev === 'view' ? 'edit' : 'view')} className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium transition ${viewMode === 'view' ? 'bg-cyan-100 text-cyan-800' : 'text-gray-600 hover:bg-gray-100'}`} title="Alternar vista/edicion" data-testid="toggle-edit-mode">
                         {viewMode === 'view' ? <Eye size={14} /> : <Edit3 size={14} />}
                         <span className="hidden sm:inline">{viewMode === 'view' ? 'Vista' : 'Editar'}</span>
                     </button>

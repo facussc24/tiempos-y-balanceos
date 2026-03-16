@@ -35,6 +35,8 @@ import { ModuleErrorBoundary } from '../../components/ui/ModuleErrorBoundary';
 import { LoadingOverlay } from '../../components/ui/LoadingOverlay';
 import { getCpPdfPreviewHtml, exportCpPdf, CpPdfTemplate } from './controlPlanPdfExport';
 import { useRevisionControl } from '../../hooks/useRevisionControl';
+import { useDocumentLock } from '../../hooks/useDocumentLock';
+import DocumentLockBanner from '../../components/ui/DocumentLockBanner';
 import { useCrossDocAlerts } from '../../hooks/useCrossDocAlerts';
 import { getNextRevisionLevel } from '../../utils/revisionUtils';
 import { Plus, XCircle, Sparkles, Eye } from 'lucide-react';
@@ -131,6 +133,12 @@ const ControlPlanApp: React.FC<Props> = ({ onBackToLanding, embedded, initialDat
         handleLoadProject,
         handleResetProject,
         confirm.requestConfirm
+    );
+
+    // Cross-user edit lock (standalone mode only)
+    const documentLock = useDocumentLock(
+        embedded ? null : projects.currentProject,
+        'cp',
     );
 
     const persistence = useControlPlanPersistence({
@@ -456,7 +464,8 @@ const ControlPlanApp: React.FC<Props> = ({ onBackToLanding, embedded, initialDat
     }, [embedded, headerCollapsed]);
 
     return (
-        <div className="min-h-screen bg-gray-50 flex flex-col font-sans text-sm">
+        <div data-module="controlPlan" data-mode={viewMode} className="min-h-screen bg-gray-50 flex flex-col font-sans text-sm">
+            {!embedded && <DocumentLockBanner otherEditor={documentLock.otherEditor} />}
             <CpToolbar
                 embedded={embedded}
                 onBackToLanding={onBackToLanding}

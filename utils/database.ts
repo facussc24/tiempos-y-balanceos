@@ -28,7 +28,7 @@ export interface DbAdapter {
 // Schema DDL
 // ---------------------------------------------------------------------------
 
-const SCHEMA_VERSION = 9;
+const SCHEMA_VERSION = 10;
 
 const SCHEMA_DDL = `
 -- Version tracking
@@ -355,6 +355,16 @@ CREATE TABLE IF NOT EXISTS pending_exports (
 
 CREATE INDEX IF NOT EXISTS idx_pending_exports_module ON pending_exports(module);
 CREATE INDEX IF NOT EXISTS idx_pending_exports_created ON pending_exports(created_at);
+
+-- Cross-user document edit locks (TTL-based lease)
+CREATE TABLE IF NOT EXISTS document_locks (
+    document_id   TEXT NOT NULL,
+    document_type TEXT NOT NULL CHECK(document_type IN ('amfe','cp','ho','pfd')),
+    locked_by     TEXT NOT NULL,
+    locked_at     TEXT NOT NULL DEFAULT (datetime('now')),
+    expires_at    TEXT NOT NULL,
+    PRIMARY KEY (document_id, document_type)
+);
 `;
 
 // ---------------------------------------------------------------------------
@@ -561,6 +571,16 @@ async function runMigrations(adapter: DbAdapter): Promise<void> {
             [9, 'Add created_by and updated_by audit columns to document tables']
         );
         logger.info('Database', 'Migration 9: audit columns (created_by, updated_by) added');
+    }
+
+    // Migration 9→10: Add document_locks table for cross-user edit protection
+    if (currentVersion < 10) {
+        // Table created by DDL above (IF NOT EXISTS), just record the version
+        await adapter.execute(
+            `INSERT OR REPLACE INTO schema_version (version, description) VALUES (?, ?)`,
+            [10, 'Add document_locks table for cross-user edit protection']
+        );
+        logger.info('Database', 'Migration 10: document_locks table created');
     }
 }
 
@@ -1267,6 +1287,7 @@ class SupabaseAdapter implements DbAdapter {
         recent_projects: 'id',
         customer_lines: 'code',
         product_family_members: '(family_id, product_id)',
+        document_locks: '(document_id, document_type)',
     };
 
     // Tables with BIGSERIAL (auto-increment) primary keys — need RETURNING id
