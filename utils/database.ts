@@ -1317,6 +1317,32 @@ class SupabaseAdapter implements DbAdapter {
         return result;
     }
 
+    /**
+     * Inline parameter values into SQL client-side.
+     * Replaces $1, $2, ... with escaped literal values in REVERSE order
+     * to avoid $1 colliding with $10, $11, etc.
+     * This bypasses the server-side apply_params() which has this bug.
+     */
+    private inlineParams(sql: string, params: unknown[]): string {
+        let result = sql;
+        for (let i = params.length - 1; i >= 0; i--) {
+            const val = params[i];
+            let replacement: string;
+            if (val === null || val === undefined) {
+                replacement = 'NULL';
+            } else if (typeof val === 'number') {
+                replacement = String(val);
+            } else if (typeof val === 'boolean') {
+                replacement = val ? '1' : '0';
+            } else {
+                // Escape single quotes by doubling them (standard SQL)
+                replacement = `'${String(val).replace(/'/g, "''")}'`;
+            }
+            result = result.replaceAll(`$${i + 1}`, replacement);
+        }
+        return result;
+    }
+
     async execute(sql: string, bindings?: unknown[]): Promise<QueryResult> {
         const b = bindings ?? [];
         let pgSql = this.normalizeNow(sql.trim());
@@ -1345,12 +1371,13 @@ class SupabaseAdapter implements DbAdapter {
             }
         }
 
-        // Replace ? → $1, $2, ...
+        // Replace ? → $1, $2, ... then inline values client-side
         pgSql = this.convertPlaceholders(pgSql);
+        const inlinedSql = this.inlineParams(pgSql, b);
 
         const { data, error } = await this.supabase.rpc('exec_sql_write', {
-            query: pgSql,
-            params: b,
+            query: inlinedSql,
+            params: [],
         });
 
         if (error) {
@@ -1367,11 +1394,12 @@ class SupabaseAdapter implements DbAdapter {
 
     async select<T = Record<string, unknown>>(sql: string, bindings?: unknown[]): Promise<T[]> {
         const b = bindings ?? [];
-        const pgSql = this.convertPlaceholders(this.normalizeNow(sql.trim()));
+        let pgSql = this.convertPlaceholders(this.normalizeNow(sql.trim()));
+        const inlinedSql = this.inlineParams(pgSql, b);
 
         const { data, error } = await this.supabase.rpc('exec_sql_read', {
-            query: pgSql,
-            params: b,
+            query: inlinedSql,
+            params: [],
         });
 
         if (error) {

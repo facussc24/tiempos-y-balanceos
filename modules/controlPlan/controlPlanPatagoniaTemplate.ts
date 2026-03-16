@@ -1,12 +1,12 @@
 /**
  * Patagonia Inserto — Manual Control Plan Items
  *
- * 9 items that don't auto-generate from AMFE:
+ * 10 items that don't auto-generate from AMFE:
  * - Op 10:  Material identification (7 materials)
  * - Op 100: Temperature check, Machine parameters
  * - Op 105: Refilado vs pieza patrón
  * - Op 110: ASPECTO CC, COSTURA CC
- * - Op 120: 8 pcs/caja, apilado 3x3, etiqueta
+ * - Op 120: 8 pcs/caja, apilado 3x3, etiqueta, trazabilidad (según P-08)
  *
  * Source: HO PDF (I-IN-002.4-R01) and seed scripts.
  */
@@ -15,7 +15,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { ControlPlanItem } from './controlPlanTypes';
 
 /**
- * Returns the 9 manual CP items for INSERTO PATAGONIA.
+ * Returns the 10 manual CP items for INSERTO PATAGONIA.
  * These are appended to the auto-generated CP items from the AMFE.
  */
 export function getPatagoniaManualCpItems(): ControlPlanItem[] {
@@ -207,6 +207,27 @@ export function getPatagoniaManualCpItems(): ControlPlanItem[] {
             reactionPlanOwner: 'Operador de Producción',
             amfeAp: 'M',
             amfeSeverity: 4,
+            operationCategory: 'embalaje',
+        },
+        // ── Op 120: Trazabilidad según P-08 ───────────────────────────
+        {
+            id: uuidv4(),
+            processStepNumber: '120',
+            processDescription: 'Embalaje - EMBALAJE Y ETIQUETADO DE PRODUCTO TERMINADO',
+            machineDeviceTool: 'Etiqueta / Sistema de registro',
+            characteristicNumber: '',
+            productCharacteristic: '',
+            processCharacteristic: 'Trazabilidad completa del lote según P-08',
+            specialCharClass: 'SC',
+            specification: 'Cada caja identificada con: código de producto, número de lote, fecha de producción, turno y cantidad (según procedimiento P-08)',
+            evaluationTechnique: 'Verificación documental',
+            sampleSize: '100%',
+            sampleFrequency: 'Cada caja',
+            controlMethod: 'Verificación de datos de trazabilidad contra orden de producción y registro en sistema',
+            reactionPlan: 'Detener despacho. Corregir identificación. Verificar trazabilidad del lote completo. Notificar a Calidad según P-09.1.',
+            reactionPlanOwner: 'Líder de Producción / Calidad',
+            amfeAp: 'M',
+            amfeSeverity: 7,
             operationCategory: 'embalaje',
         },
     ];

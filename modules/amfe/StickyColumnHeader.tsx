@@ -3,6 +3,14 @@
  *
  * Two-row header following the AIAG-VDA 7-step process.
  * Op # and Op Name columns are frozen (sticky left) for horizontal scroll context.
+ *
+ * Column layout (VDA standard):
+ * Step 2 (3): Op#, Item/Paso, Elem. Trabajo 6M
+ * Step 3 (3): Func. Item, Func. Paso + Car. Producto, Func. Elem. Trabajo + Car. Proceso
+ * Step 4 (3): Efecto Falla (FE), Modo Falla (FM), Causa Falla (FC)
+ * Step 5 (7): S, PC, O, DC, D, AP, Car. Especiales
+ * Step 6 (11): Actions, Responsible, Dates, New S/O/D/AP
+ * Obs (1): Observations
  */
 
 import React from 'react';
@@ -28,9 +36,9 @@ const StickyColumnHeader: React.FC<Props> = ({ visibility }) => {
             {/* Top Level Headers (Steps) */}
             <tr className="border-b border-gray-300">
                 {v.step2 && <th colSpan={3} className="bg-slate-200 px-3 py-2 text-center min-w-[300px] border-r border-gray-300 font-bold">PASO 2: ESTRUCTURA</th>}
-                {v.step3 && <th colSpan={1} className="bg-slate-200/70 px-3 py-2 text-center min-w-[200px] border-r border-gray-300 font-bold">PASO 3: FUNCIONES</th>}
+                {v.step3 && <th colSpan={3} className="bg-slate-200/70 px-3 py-2 text-center min-w-[400px] border-r border-gray-300 font-bold">PASO 3: ANÁLISIS FUNCIONAL</th>}
                 {v.step4 && <th colSpan={3} className="bg-orange-100 px-3 py-2 text-center min-w-[500px] border-r border-orange-200 font-bold">PASO 4: ANÁLISIS DE FALLAS</th>}
-                {v.step5 && <th colSpan={9} className="bg-yellow-100 px-3 py-2 text-center min-w-[450px] border-r border-yellow-200 font-bold">PASO 5: ANÁLISIS DE RIESGO</th>}
+                {v.step5 && <th colSpan={7} className="bg-yellow-100 px-3 py-2 text-center min-w-[400px] border-r border-yellow-200 font-bold">PASO 5: ANÁLISIS DE RIESGO</th>}
                 {v.step6 && <th colSpan={11} className="bg-blue-100 px-3 py-2 text-center min-w-[700px] border-r border-blue-200 font-bold">PASO 6: OPTIMIZACIÓN</th>}
                 {v.obs && <th rowSpan={2} className="bg-gray-200 p-2 text-center w-40 border-l border-gray-300 font-bold"><HeaderWithTip term={AMFE_TERMS.OBS} label="OBS." /></th>}
             </tr>
@@ -44,27 +52,29 @@ const StickyColumnHeader: React.FC<Props> = ({ visibility }) => {
                     <th className="bg-slate-100 p-2 w-44 border-r border-gray-300"><HeaderWithTip term={AMFE_TERMS.WE} label="3. ELEM. TRABAJO (6M)" /></th>
                 </>}
 
-                {/* Step 3 */}
-                {v.step3 && <th className="bg-slate-100 p-2 w-64 border-r border-gray-200"><HeaderWithTip term={AMFE_TERMS.FUNC} label="1. FUNCIÓN" /></th>}
-
-                {/* Step 4 */}
-                {v.step4 && <>
-                    <th className="bg-orange-50 p-2 w-64 border-r border-orange-100"><HeaderWithTip term={AMFE_TERMS.FE} label="EFECTO DE FALLA (FE)" /></th>
-                    <th className="bg-orange-50 p-2 w-12 border-r border-orange-100 font-bold text-red-600"><HeaderWithTip term={AMFE_TERMS.S} label="S" className="text-red-600" /></th>
-                    <th className="bg-orange-50 p-2 w-48 border-r border-gray-300"><HeaderWithTip term={AMFE_TERMS.FM} label="MODO DE FALLA (FM)" /></th>
+                {/* Step 3 — 3 function columns per VDA standard */}
+                {v.step3 && <>
+                    <th className="bg-slate-100 p-2 w-48 border-r border-gray-200"><HeaderWithTip term={AMFE_TERMS.FUNC_ITEM} label="1. FUNC. ITEM" /></th>
+                    <th className="bg-slate-100 p-2 w-48 border-r border-gray-200"><HeaderWithTip term={AMFE_TERMS.FUNC_PASO} label="2. FUNC. PASO" /></th>
+                    <th className="bg-slate-100 p-2 w-48 border-r border-gray-300"><HeaderWithTip term={AMFE_TERMS.FUNC} label="3. FUNC. ELEM." /></th>
                 </>}
 
-                {/* Step 5 */}
+                {/* Step 4 — VDA: FE, FM, FC */}
+                {v.step4 && <>
+                    <th className="bg-orange-50 p-2 w-64 border-r border-orange-100"><HeaderWithTip term={AMFE_TERMS.FE} label="EFECTO DE FALLA (FE)" /></th>
+                    <th className="bg-orange-50 p-2 w-48 border-r border-orange-100"><HeaderWithTip term={AMFE_TERMS.FM} label="MODO DE FALLA (FM)" /></th>
+                    <th className="bg-orange-50 p-2 w-48 border-r border-gray-300"><HeaderWithTip term={AMFE_TERMS.FC} label="CAUSA RAÍZ (FC)" /></th>
+                </>}
+
+                {/* Step 5 — VDA: S, PC, O, DC, D, AP, Car.Especiales */}
                 {v.step5 && <>
-                    <th className="bg-yellow-50 p-2 w-48 border-r border-yellow-100"><HeaderWithTip term={AMFE_TERMS.FC} label="CAUSA RAÍZ (FC)" /></th>
+                    <th className="bg-yellow-50 p-2 w-12 border-r border-yellow-100 font-bold text-red-600"><HeaderWithTip term={AMFE_TERMS.S} label="S" className="text-red-600" /></th>
                     <th className="bg-yellow-50 p-2 w-48 border-r border-yellow-100"><HeaderWithTip term={AMFE_TERMS.PC} label="PREVENCIÓN (PC)" /></th>
                     <th className="bg-yellow-50 p-2 w-12 border-r border-yellow-100 text-orange-600"><HeaderWithTip term={AMFE_TERMS.O} label="O" className="text-orange-600" /></th>
                     <th className="bg-yellow-50 p-2 w-48 border-r border-yellow-100"><HeaderWithTip term={AMFE_TERMS.DC} label="DETECCIÓN (DC)" /></th>
                     <th className="bg-yellow-50 p-2 w-12 border-r border-yellow-100 text-blue-600"><HeaderWithTip term={AMFE_TERMS.D} label="D" className="text-blue-600" /></th>
                     <th className="bg-yellow-50 p-2 w-16 border-r border-yellow-100 font-black text-slate-800"><HeaderWithTip term={AMFE_TERMS.AP} label="AP" className="font-black" /></th>
-                    <th className="bg-yellow-50 p-2 w-16 border-r border-yellow-100"><HeaderWithTip term={AMFE_TERMS.CHAR_NUM} label="No.Car" /></th>
-                    <th className="bg-yellow-50 p-2 w-12 border-r border-yellow-100"><HeaderWithTip term={AMFE_TERMS.SPECIAL_CHAR} label="Car." /></th>
-                    <th className="bg-yellow-50 p-2 w-12 border-r border-gray-300"><HeaderWithTip term={AMFE_TERMS.FILTER_CODE} label="Filtro" /></th>
+                    <th className="bg-yellow-50 p-2 w-20 border-r border-gray-300"><HeaderWithTip term={AMFE_TERMS.SPECIAL_CHAR} label="CAR. ESP." /></th>
                 </>}
 
                 {/* Step 6 */}

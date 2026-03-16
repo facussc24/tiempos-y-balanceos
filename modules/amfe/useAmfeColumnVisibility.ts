@@ -11,9 +11,9 @@ const STORAGE_KEY = 'amfe-column-visibility';
 
 export interface ColumnGroupVisibility {
     step2: boolean; // Structure: Op#, Item/Step, Work Element
-    step3: boolean; // Functions
-    step4: boolean; // Failure Analysis: FE, S, FM
-    step5: boolean; // Risk Analysis: FC, PC, O, DC, D, AP, No.Car, Car., Filtro
+    step3: boolean; // Functions (3 levels: Item, Paso, Elemento)
+    step4: boolean; // Failure Analysis: FE, FM, FC
+    step5: boolean; // Risk Analysis: S, PC, O, DC, D, AP, Car.Especiales
     step6: boolean; // Optimization: Actions, Responsible, Dates, New S/O/D/AP
     obs: boolean;   // Observations
 }
@@ -38,9 +38,9 @@ export const COLUMN_GROUP_LABELS: Record<keyof ColumnGroupVisibility, string> = 
 
 export const COLUMN_GROUP_TOOLTIPS: Record<keyof ColumnGroupVisibility, string> = {
     step2: 'Paso 2: Operaciones y elementos de trabajo (6M)',
-    step3: 'Paso 3: Funciones de cada elemento',
-    step4: 'Paso 4: Modos de falla, efectos y severidad',
-    step5: 'Paso 5: Causas, controles, O/D y Prioridad de Acción (AP)',
+    step3: 'Paso 3: Funciones del Item, Paso y Elemento de Trabajo',
+    step4: 'Paso 4: Efectos, Modos de Falla y Causas',
+    step5: 'Paso 5: Severidad, Controles, O/D, AP y Características Especiales',
     step6: 'Paso 6: Acciones de mejora, responsables y fechas',
     obs: 'Notas y comentarios adicionales',
 };
@@ -57,9 +57,9 @@ export const COLUMN_GROUP_COLORS: Record<keyof ColumnGroupVisibility, string> = 
 /** Column counts per group (for colspan calculation). */
 export const COLUMN_COUNTS: Record<keyof ColumnGroupVisibility, number> = {
     step2: 3,  // Op#, Item/Step, Work Element
-    step3: 1,  // Function
-    step4: 3,  // FE, S, FM
-    step5: 9,  // FC, PC, O, DC, D, AP, No.Car, Car., Filtro
+    step3: 3,  // Func.Item, Func.Paso, Func.Elem.Trabajo
+    step4: 3,  // FE, FM, FC
+    step5: 7,  // S, PC, O, DC, D, AP, Car.Especiales
     step6: 11, // PrevAction, DetAction, Responsible, TargetDate, Status, ActionTaken, CompletionDate, S_new, O_new, D_new, AP_new
     obs: 1,    // Observations
 };

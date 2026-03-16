@@ -171,7 +171,7 @@ export const PanelControl: React.FC<Props> = ({ data, updateData }) => {
     );
     const totalHeadcount = useMemo(
         () => calculateTotalHeadcount(data),
-        [data.meta.configuredStations, data.stationConfigs]
+        [data.meta.configuredStations, data.stationConfigs, data.assignments]
     );
     const realStations = data.meta.configuredStations > 0 ? data.meta.configuredStations : 1;
 

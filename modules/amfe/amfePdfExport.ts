@@ -179,57 +179,61 @@ function buildFullTableHtml(doc: AmfeDocument): string {
                         const opBorder = isFirstOpRow && !isFirstOp ? `border-top:2px solid ${BLUE_HEADER};` : '';
                         tableRows += `<tr style="${opBorder}">`;
 
-                        // Operation cells — repeated in every row (no rowspan)
+                        // Step 2: Estructura (3) — Op#, Paso, Elem.6M
                         const opBg = isFirstOpRow ? 'background:#EFF6FF;' : 'background:#F8FAFF;';
                         tableRows += `<td style="${cellStyle('center')} font-weight:bold; ${opBg}">${esc(op.opNumber)}</td>`;
                         tableRows += `<td style="${cellStyle()} font-weight:bold; ${opBg}">${isFirstOpRow ? esc(op.name) : ''}</td>`;
-
-                        // WE cells — repeated, show value only on first row of each WE
                         const weBg = isFirstWeRow ? 'background:#F5F3FF;' : '';
-                        tableRows += `<td style="${cellStyle('center')} ${weBg} font-size:7px;">${isFirstWeRow ? esc(weLabel) : ''}</td>`;
-                        tableRows += `<td style="${cellStyle()} ${weBg}">${isFirstWeRow ? esc(we.name) : ''}</td>`;
+                        tableRows += `<td style="${cellStyle()} ${weBg}">${isFirstWeRow ? `<span style="font-size:7px;font-weight:bold;">${esc(weLabel)}</span>: ${esc(we.name)}` : ''}</td>`;
 
-                        // Function cells — show value only on first row
+                        // Step 3: Funcional (3) — Func.Item, Func.Paso, Func.Elem.Trabajo
+                        tableRows += `<td style="${cellStyle()}">${isFirstOpRow ? esc(op.focusElementFunction) : ''}</td>`;
+                        tableRows += `<td style="${cellStyle()}">${isFirstOpRow ? esc(op.operationFunction) : ''}</td>`;
                         tableRows += `<td style="${cellStyle()}">${isFirstFuncRow ? esc(func.description) : ''}</td>`;
-                        tableRows += `<td style="${cellStyle()}">${isFirstFuncRow ? esc(func.requirements) : ''}</td>`;
 
-                        // Failure cells — show value only on first row of each failure
-                        tableRows += `<td style="${cellStyle()}">${isFirstFailRow ? esc(fail.description) : ''}</td>`;
-                        tableRows += `<td style="${cellStyle()} font-size:7px;">${isFirstFailRow ? esc(fail.effectLocal) : ''}</td>`;
-                        tableRows += `<td style="${cellStyle()} font-size:7px;">${isFirstFailRow ? esc(fail.effectNextLevel) : ''}</td>`;
-                        tableRows += `<td style="${cellStyle()} font-size:7px;">${isFirstFailRow ? esc(fail.effectEndUser) : ''}</td>`;
-                        tableRows += `<td style="${cellStyle('center')} font-weight:bold;">${isFirstFailRow ? esc(fail.severity) : ''}</td>`;
+                        // Step 4: Fallas (3) — FE (combined effects), FM, FC
+                        if (isFirstFailRow) {
+                            const feParts: string[] = [];
+                            if (fail.effectLocal) feParts.push(`<b>Int:</b> ${esc(fail.effectLocal)}`);
+                            if (fail.effectNextLevel) feParts.push(`<b>Cli:</b> ${esc(fail.effectNextLevel)}`);
+                            if (fail.effectEndUser) feParts.push(`<b>Usr:</b> ${esc(fail.effectEndUser)}`);
+                            tableRows += `<td style="${cellStyle()} font-size:7px;">${feParts.join('<br/>')}</td>`;
+                            tableRows += `<td style="${cellStyle()}">${esc(fail.description)}</td>`;
+                        } else {
+                            tableRows += `<td style="${cellStyle()}"></td>`;
+                            tableRows += `<td style="${cellStyle()}"></td>`;
+                        }
 
                         // Cause cells (always shown — one per row)
                         if (cause) {
+                            // FC (Causa de Falla)
                             tableRows += `<td style="${cellStyle()}">${esc(cause.cause)}</td>`;
+                            // Step 5: Riesgo (7) — S, PC, O, DC, D, AP, Car.Esp
+                            tableRows += `<td style="${cellStyle('center')} font-weight:bold;">${isFirstFailRow ? esc(fail.severity) : ''}</td>`;
                             tableRows += `<td style="${cellStyle()}">${esc(cause.preventionControl)}</td>`;
                             tableRows += `<td style="${cellStyle('center')}">${esc(cause.occurrence)}</td>`;
                             tableRows += `<td style="${cellStyle()}">${esc(cause.detectionControl)}</td>`;
                             tableRows += `<td style="${cellStyle('center')}">${esc(cause.detection)}</td>`;
                             tableRows += apCell(String(cause.ap));
-                            // Step 5 extras
-                            tableRows += `<td style="${cellStyle('center')}">${esc(cause.characteristicNumber)}</td>`;
-                            tableRows += `<td style="${cellStyle('center')}">${esc(cause.specialChar)}</td>`;
-                            tableRows += `<td style="${cellStyle('center')}">${esc(cause.filterCode)}</td>`;
-                            // Step 6 columns
+                            const carEsp = [cause.specialChar, cause.characteristicNumber ? `#${cause.characteristicNumber}` : ''].filter(Boolean).join(' ');
+                            tableRows += `<td style="${cellStyle('center')}">${esc(carEsp)}</td>`;
+                            // Step 6: Optimización (11)
                             tableRows += `<td style="${cellStyle()}">${esc(cause.preventionAction)}</td>`;
                             tableRows += `<td style="${cellStyle()}">${esc(cause.detectionAction)}</td>`;
                             tableRows += `<td style="${cellStyle()}">${esc(cause.responsible)}</td>`;
                             tableRows += `<td style="${cellStyle('center')}">${esc(cause.targetDate)}</td>`;
                             tableRows += `<td style="${cellStyle('center')}">${esc(cause.status)}</td>`;
-                            // Step 6 results
                             tableRows += `<td style="${cellStyle()}">${esc(cause.actionTaken)}</td>`;
                             tableRows += `<td style="${cellStyle('center')}">${esc(cause.completionDate)}</td>`;
                             tableRows += `<td style="${cellStyle('center')}">${esc(cause.severityNew)}</td>`;
                             tableRows += `<td style="${cellStyle('center')}">${esc(cause.occurrenceNew)}</td>`;
                             tableRows += `<td style="${cellStyle('center')}">${esc(cause.detectionNew)}</td>`;
                             tableRows += apCell(String(cause.apNew || ''));
-                            // Observations
+                            // Obs (1)
                             tableRows += `<td style="${cellStyle()}">${esc(cause.observations)}</td>`;
                         } else {
-                            // Empty cause placeholder (21 cause-level columns)
-                            tableRows += `<td colspan="21" style="${cellStyle('center')} color:#9CA3AF; font-style:italic;">Sin causas definidas</td>`;
+                            // Empty cause placeholder (FC + Step5 + Step6 + Obs = 1+7+11+1 = 20 cause-level columns)
+                            tableRows += `<td colspan="20" style="${cellStyle('center')} color:#9CA3AF; font-style:italic;">Sin causas definidas</td>`;
                         }
 
                         tableRows += '</tr>';
@@ -244,45 +248,42 @@ function buildFullTableHtml(doc: AmfeDocument): string {
         isFirstOp = false;
     }
 
+    // VDA 28-column headers: Step2(3) + Step3(3) + Step4(3) + Step5(7) + Step6(11) + Obs(1)
     const headers = [
-        'Op', 'Paso del Proceso', '6M', 'Elemento', 'Función', 'Requisito',
-        'Modo de Falla', 'Efecto Local', 'Efecto Cliente', 'Efecto Usr. Final', 'S',
-        'Causa', 'Control Prev.', 'O', 'Control Det.', 'D', 'AP',
-        'No.Car', 'Car.', 'Filtro',
-        'Acción Prev.', 'Acción Det.', 'Responsable', 'Fecha Obj.', 'Estado',
-        'Acción Tomada', 'Fecha Real', 'S*', 'O*', 'D*', 'AP*',
+        'Op', 'Paso', 'Elem. 6M',
+        'Func. Item', 'Func. Paso', 'Func. Elem.',
+        'FE', 'FM', 'FC',
+        'S', 'PC', 'O', 'DC', 'D', 'AP', 'Car.Esp',
+        'Acc.Prev.', 'Acc.Det.', 'Resp.', 'F.Obj.', 'Estado',
+        'Acc.Tom.', 'F.Cierre', 'S*', 'O*', 'D*', 'AP*',
         'Obs.',
     ];
 
-    // Column widths for 32 columns on A3 landscape — text-heavy cols get more space
+    // Column widths for 28 columns on A3 landscape
     const colWidths = [
         '2.5%',  // Op
-        '5%',    // Paso del Proceso
-        '2%',    // 6M
-        '4%',    // Elemento
-        '5%',    // Función
-        '4%',    // Requisito
-        '5%',    // Modo de Falla
-        '4%',    // Efecto Local
-        '4%',    // Efecto Cliente
-        '4%',    // Efecto Usr. Final
+        '5%',    // Paso
+        '5%',    // Elem. 6M
+        '5%',    // Func. Item
+        '5%',    // Func. Paso
+        '5%',    // Func. Elem.
+        '6%',    // FE (combined effects)
+        '5%',    // FM
+        '5%',    // FC
         '1.5%',  // S
-        '5%',    // Causa
-        '5%',    // Control Prev.
+        '5%',    // PC
         '1.5%',  // O
-        '5%',    // Control Det.
+        '5%',    // DC
         '1.5%',  // D
         '2%',    // AP
-        '2%',    // No.Car
-        '2%',    // Car.
-        '2%',    // Filtro
-        '5%',    // Acción Prev.
-        '5%',    // Acción Det.
-        '3%',    // Responsable
-        '2.5%',  // Fecha Obj.
+        '2.5%',  // Car.Esp
+        '5%',    // Acc.Prev.
+        '5%',    // Acc.Det.
+        '3%',    // Resp.
+        '2.5%',  // F.Obj.
         '2.5%',  // Estado
-        '5%',    // Acción Tomada
-        '2.5%',  // Fecha Real
+        '5%',    // Acc.Tom.
+        '2.5%',  // F.Cierre
         '1.5%',  // S*
         '1.5%',  // O*
         '1.5%',  // D*

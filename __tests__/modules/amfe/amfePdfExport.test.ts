@@ -148,10 +148,10 @@ describe('amfePdfExport', () => {
             it('renders table headers', () => {
                 const doc = buildTestDoc();
                 const html = getAmfePdfPreviewHtml(doc, 'full');
-                expect(html).toContain('Modo de Falla');
-                expect(html).toContain('Control Prev.');
-                expect(html).toContain('Control Det.');
-                expect(html).toContain('Acción Prev.');
+                expect(html).toContain('>FM<');
+                expect(html).toContain('>PC<');
+                expect(html).toContain('>DC<');
+                expect(html).toContain('>Acc.Prev.<');
             });
 
             it('handles empty document', () => {
@@ -256,7 +256,7 @@ describe('amfePdfExport', () => {
                 const doc = buildTestDoc();
                 doc.operations[0].workElements[0].functions[0].failures[0].causes = [];
                 const html = getAmfePdfPreviewHtml(doc, 'full');
-                expect(html).toContain('colspan="21"');
+                expect(html).toContain('colspan="20"');
             });
 
             it('does not show placeholder when causes exist', () => {

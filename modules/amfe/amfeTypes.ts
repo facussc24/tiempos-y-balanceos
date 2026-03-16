@@ -173,6 +173,12 @@ export interface AmfeOperation {
 
     workElements: AmfeWorkElement[];
 
+    // Step 3: Function Analysis — VDA requires functions at all 3 structural levels
+    /** Función del Item del Proceso (Step 3, col 1) — high-level function of the product/system */
+    focusElementFunction?: string;
+    /** Función del Paso del Proceso y Característica del Producto (Step 3, col 2) */
+    operationFunction?: string;
+
     // Library inheritance (optional - set when imported from global library)
     linkedLibraryOpId?: string;
 }

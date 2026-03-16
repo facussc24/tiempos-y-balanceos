@@ -86,6 +86,7 @@ export const LineBalancing: React.FC<Props> = ({ data, updateData }) => {
         applySimulation,
         toggleBoardSectorCollapse,
         performAssignment,
+        performBulkAssignment,
         confirmClearBalance,
         cancelClearBalance
     } = useLineBalancing(data, updateData);
@@ -543,6 +544,7 @@ export const LineBalancing: React.FC<Props> = ({ data, updateData }) => {
                             unassignedTasks={unassignedTasks}
                             sectorsList={sectorsList}
                             performAssignment={performAssignment}
+                            performBulkAssignment={performBulkAssignment}
                         />
                     </div>
 

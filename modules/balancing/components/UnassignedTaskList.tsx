@@ -9,6 +9,7 @@ interface UnassignedTaskListProps {
     unassignedTasks: Task[];
     sectorsList: any[];
     performAssignment: (taskId: string, stationId: number) => void;
+    performBulkAssignment?: (taskIds: string[], stationId: number) => void;
 }
 
 const DraggableUnassignedTask: React.FC<{
@@ -66,7 +67,8 @@ const DraggableUnassignedTask: React.FC<{
 export const UnassignedTaskList: React.FC<UnassignedTaskListProps> = ({
     unassignedTasks,
     sectorsList,
-    performAssignment
+    performAssignment,
+    performBulkAssignment
 }) => {
     const [showAssignAllConfirm, setShowAssignAllConfirm] = useState(false);
 
@@ -75,9 +77,15 @@ export const UnassignedTaskList: React.FC<UnassignedTaskListProps> = ({
     }, []);
 
     const confirmAssignAll = useCallback(() => {
-        unassignedTasks.forEach(t => performAssignment(t.id, 1));
+        // FIX: Use bulk assignment to avoid stale state from forEach + setState
+        if (performBulkAssignment) {
+            performBulkAssignment(unassignedTasks.map(t => t.id), 1);
+        } else {
+            // Fallback for backwards compatibility
+            unassignedTasks.forEach(t => performAssignment(t.id, 1));
+        }
         setShowAssignAllConfirm(false);
-    }, [unassignedTasks, performAssignment]);
+    }, [unassignedTasks, performAssignment, performBulkAssignment]);
 
     const cancelAssignAll = useCallback(() => {
         setShowAssignAllConfirm(false);

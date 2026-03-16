@@ -1,0 +1,144 @@
+=====================================================================
+  BARACK MERCOSUL - TUTORIAL COMPLETO
+  Ultima actualizacion: 14 de marzo 2026
+=====================================================================
+
+
+1. COMO ABRIR LA APP
+=====================================================================
+
+OPCION FACIL (doble clic):
+  - Ir a la carpeta C:\dev\BarackMercosul
+  - Hacer doble clic en "ABRIR APP.bat"
+  - Se abre una ventana negra (NO CERRARLA)
+  - Se abre el navegador con la app
+  - Listo, ya podes usarla
+
+OPCION MANUAL (si el .bat no funciona):
+  1. Abrir PowerShell o Terminal
+  2. Escribir: cd C:\dev\BarackMercosul
+  3. Escribir: npm run dev
+  4. Abrir el navegador en: http://localhost:3002
+
+PARA CERRAR LA APP:
+  - Cerrar la ventana negra del .bat
+  - O en la terminal apretar Ctrl+C
+
+NOTA: La app corre en TU computadora. La base de datos esta
+en la nube (Supabase). Si otra PC tiene el mismo codigo,
+puede acceder a los MISMOS datos al mismo tiempo.
+
+
+2. DATOS DE ACCESO
+=====================================================================
+
+BASE DE DATOS (Supabase):
+  - Dashboard: https://supabase.com/dashboard
+  - Proyecto: BarackMercosul
+  - URL del proyecto: https://fbfsbbewmgoegjgnkkag.supabase.co
+  - La app se conecta sola, no tenes que hacer nada
+
+LOGIN DE LA APP (automatico, no pide contrasena):
+  - Email: admin@barack.com
+  - Password: Barack2024!
+  - Se loguea sola al abrir, no tenes que escribir nada
+
+GITHUB (donde esta el codigo):
+  - Repo: https://github.com/facussc24/tiempos-y-balanceos
+  - Rama principal: main
+
+
+3. COMO USAR LA APP - FLUJO DE TRABAJO
+=====================================================================
+
+La app tiene 4 modulos principales que se usan EN ORDEN:
+
+  PASO 1: DIAGRAMA DE FLUJO (PFD)
+  --------------------------------
+  - Es lo primero que haces
+  - Dibuja el proceso paso a paso (OP 10, OP 20, etc.)
+  - Cada paso tiene un tipo: Operacion, Inspeccion, Transporte, etc.
+  - Cuando terminas, guardas con el boton "Guardar"
+
+  PASO 2: AMFE VDA
+  --------------------------------
+  - Analiza que puede fallar en cada operacion
+  - Agregas operaciones, funciones, modos de falla
+  - Cada falla tiene Severidad, Ocurrencia, Deteccion
+  - El Copiloto IA te ayuda a completar (necesita API key de Gemini)
+  - Guardas con "Guardar Como..."
+
+  PASO 3: PLAN DE CONTROL
+  --------------------------------
+  - Se genera automaticamente desde el AMFE
+  - Define QUE controlar, COMO medirlo, CADA CUANTO
+  - Podes agregar items manualmente tambien
+  - Guardas con "Guardar Como..."
+
+  PASO 4: HOJA DE OPERACIONES
+  --------------------------------
+  - Se genera automaticamente desde el AMFE + Plan de Control
+  - Es el documento que va al puesto de trabajo
+  - Tiene: pasos, EPP, controles, plan de reaccion
+  - Se guarda automaticamente
+
+OTROS MODULOS:
+  - Tiempos y Balanceos: cronometraje y balanceo de linea
+  - Solicitudes de Codigo: pedir codigos ARB
+  - Manuales: procedimientos en HTML
+  - Formatos Estandar: plantillas Excel, PDF, Word
+  - Datos y Seguridad: backup, exportar, importar
+
+
+4. EXPORTAR DOCUMENTOS
+=====================================================================
+
+EXCEL:
+  - En cada modulo hay botones "Excel Hoja Actual" o "Excel Todas"
+  - Se descarga automaticamente al navegador (carpeta Descargas)
+  - Funciona igual que descargar cualquier archivo de internet
+
+PDF:
+  - En cada modulo hay boton "PDF"
+  - Se genera y descarga automaticamente
+
+SVG (Diagrama de Flujo):
+  - El PFD tiene boton "SVG" para exportar el diagrama
+
+
+5. IMAGENES Y AYUDAS VISUALES
+=====================================================================
+
+  - En Hoja de Operaciones podes subir imagenes
+  - Hace clic en "Agregar imagen" en la seccion "Ayudas Visuales"
+  - Selecciona la imagen de tu PC (JPG, PNG)
+  - Se comprime automaticamente (max 2 MB)
+  - Se guarda en la base de datos
+
+
+6. ATAJOS DE TECLADO (desde la pantalla principal)
+=====================================================================
+
+  1 = Abrir Diagrama de Flujo
+  2 = Abrir AMFE VDA
+  3 = Abrir Plan de Control
+  4 = Abrir Hoja de Operaciones
+  5 = Abrir Tiempos y Balanceos
+  6 = Abrir Hub de Documentos
+  7 = Abrir Solicitudes de Codigo
+
+
+7. SI ALGO NO FUNCIONA
+=====================================================================
+
+  - Cerrar la ventana negra y volver a abrir "ABRIR APP.bat"
+  - Si dice "npm not found": instalar Node.js de https://nodejs.org
+  - Si no carga: verificar que el archivo .env.local existe en
+    C:\dev\BarackMercosul\.env.local con las claves de Supabase
+  - Si la base de datos no responde: entrar a https://supabase.com
+    y verificar que el proyecto "BarackMercosul" este activo
+
+
+=====================================================================
+  FIN DEL TUTORIAL
+=====================================================================

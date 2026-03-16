@@ -119,9 +119,9 @@ describe('pfdSvgExport', () => {
             expect(svg).toContain('OP 10');
             expect(svg).toContain('OP 20');
             expect(svg).toContain('OP 30');
-            // Arrows between steps (cyan color #0891B2)
+            // Arrows between steps (monochrome dark #374151)
             expect(svg).toContain('class="pfd-arrow"');
-            expect(svg).toContain('stroke="#0891B2"');
+            expect(svg).toContain('stroke="#374151"');
             // At least 2 arrows for 3 steps
             const arrowCount = (svg.match(/class="pfd-arrow"/g) || []).length;
             expect(arrowCount).toBe(2);
@@ -144,10 +144,8 @@ describe('pfdSvgExport', () => {
             // Branch labels
             expect(svg).toContain('Linea ZAC');
             expect(svg).toContain('Linea Galvanizado');
-            // Branch A color
-            expect(svg).toContain('#F5F3FF'); // bg for branch A
-            // Branch B color
-            expect(svg).toContain('#F0F9FF'); // bg for branch B
+            // Branch backgrounds (monochrome — same neutral gray for all branches)
+            expect(svg).toContain('#F9FAFB'); // bg for branches
         });
 
         it('should render CC badge when productSpecialChar is CC', () => {
@@ -156,10 +154,8 @@ describe('pfdSvgExport', () => {
             ]);
             const svg = buildPfdSvg(doc);
 
-            // CC badge with red background
+            // CC badge (monochrome — white bg, dark stroke, black text)
             expect(svg).toContain('>CC<');
-            expect(svg).toContain('#FEE2E2'); // CC badge bg
-            expect(svg).toContain('#B91C1C'); // CC badge text fill
         });
 
         it('should render SC badge when processSpecialChar is SC', () => {
@@ -168,10 +164,8 @@ describe('pfdSvgExport', () => {
             ]);
             const svg = buildPfdSvg(doc);
 
-            // SC badge with amber background
+            // SC badge (monochrome — white bg, dark stroke, black text)
             expect(svg).toContain('>SC<');
-            expect(svg).toContain('#FEF3C7'); // SC badge bg
-            expect(svg).toContain('#92400E'); // SC badge text fill
         });
 
         it('should render CC badge (not SC) when both product and process have special chars', () => {
@@ -191,9 +185,8 @@ describe('pfdSvgExport', () => {
             ]);
             const svg = buildPfdSvg(doc);
 
+            // EXT badge (monochrome — white bg, dark stroke, black text)
             expect(svg).toContain('>EXT<');
-            expect(svg).toContain('#DBEAFE'); // EXT badge bg
-            expect(svg).toContain('#1E40AF'); // EXT badge text fill
         });
 
         it('should render legend with all 7 step types', () => {
@@ -253,9 +246,9 @@ describe('pfdSvgExport', () => {
             ]);
             const svg = buildPfdSvg(doc);
 
-            // Operation uses <circle>
+            // Operation uses <circle> with monochrome dark border
             expect(svg).toContain('<circle');
-            expect(svg).toContain(NODE_COLORS_OPERATION_BORDER);
+            expect(svg).toContain('#374151'); // DARK monochrome border
         });
 
         it('should render machine and department as sub-info line', () => {
@@ -301,29 +294,24 @@ describe('pfdSvgExport', () => {
             expect(svg).toContain('I-AC-005.1-R01');
         });
 
-        it('should include SVG defs with gradients, filters, and markers', () => {
+        it('should include SVG defs with filters and markers', () => {
             const doc = makeDoc([makeStep()]);
             const svg = buildPfdSvg(doc);
 
             // Drop shadow filter
             expect(svg).toContain('id="dropShadow"');
             expect(svg).toContain('feDropShadow');
-            // Gradient for operation type
-            expect(svg).toContain('id="grad-operation"');
             // Arrow marker
             expect(svg).toContain('id="arrowMarker"');
-            // Background pattern
-            expect(svg).toContain('id="bgPattern"');
-            // Header gradient
-            expect(svg).toContain('id="headerGrad"');
         });
 
-        it('should apply drop shadow and gradient fill to nodes', () => {
+        it('should apply drop shadow and white fill to nodes', () => {
             const doc = makeDoc([makeStep()]);
             const svg = buildPfdSvg(doc);
 
             expect(svg).toContain('filter="url(#dropShadow)"');
-            expect(svg).toContain('fill="url(#grad-operation)"');
+            // Monochrome nodes use white fill (B/W printable, PPAP-ready)
+            expect(svg).toContain('fill="white"');
         });
 
         it('should render bezier arrows with markers instead of polygons', () => {
@@ -345,28 +333,29 @@ describe('pfdSvgExport', () => {
             ]);
             const svg = buildPfdSvg(doc);
 
-            // Red accent bar (5px wide, fill #EF4444)
-            expect(svg).toContain('width="5"');
-            expect(svg).toContain('fill="#EF4444"');
+            // Black accent bar (3px wide, monochrome)
+            expect(svg).toContain('width="3"');
+            expect(svg).toContain('fill="#111827"');
         });
 
-        it('should render decision nodes taller with stronger shadow', () => {
+        it('should render decision nodes with shadow and thicker border', () => {
             const doc = makeDoc([
                 makeStep({ stepType: 'decision', stepNumber: 'DEC 10', description: 'Aprobado?' }),
             ]);
             const svg = buildPfdSvg(doc);
 
-            // Decision nodes use stronger shadow
-            expect(svg).toContain('filter="url(#dropShadowStrong)"');
-            // Decision nodes have thicker border
-            expect(svg).toContain('stroke-width="3"');
+            // Decision nodes use drop shadow
+            expect(svg).toContain('filter="url(#dropShadow)"');
+            // Decision nodes have thicker border (2.5px)
+            expect(svg).toContain('stroke-width="2.5"');
         });
 
-        it('should render subtle dot background pattern', () => {
+        it('should render clean white background', () => {
             const doc = makeDoc([makeStep()]);
             const svg = buildPfdSvg(doc);
 
-            expect(svg).toContain('fill="url(#bgPattern)"');
+            // Monochrome design: plain white background (B/W printable)
+            expect(svg).toContain('fill="white"');
         });
 
         it('should use responsive width with viewBox for centering', () => {
@@ -499,5 +488,3 @@ describe('pfdSvgExport', () => {
     });
 });
 
-// Reference constant used in assertions (avoid importing internal module constants)
-const NODE_COLORS_OPERATION_BORDER = '#2563EB';

@@ -410,19 +410,40 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
     };
 
     /** Render cause-level columns (FC through observations) */
-    const renderCauseCells = (op: AmfeOperation, we: AmfeWorkElement, func: AmfeFunction, fail: AmfeFailure, cause: AmfeCause, validation?: CauseValidationState | null) => (
+    const renderCauseCells = (op: AmfeOperation, we: AmfeWorkElement, func: AmfeFunction, fail: AmfeFailure, cause: AmfeCause, validation: CauseValidationState | null | undefined, isFirstCause: boolean, failRows: number) => (
         <>
-            {/* Step 5: FC, PC, O, DC, D, AP, No.Car, Car., Filtro */}
+            {/* Step 4: FC (Failure Cause) — per-row, VDA standard */}
+            {v.step4 && <td className={`${cellClass} bg-orange-50/5`}>
+                <div className="flex justify-between group/cause">
+                    {renderText(cause.cause, <SuggestableTextarea value={cause.cause} onChange={e => amfe.updateCause(op.id, we.id, func.id, fail.id, cause.id, 'cause', e.target.value)} onValueChange={v => amfe.updateCause(op.id, we.id, func.id, fail.id, cause.id, 'cause', v)} suggestionIndex={sIdx} aiEnabled={aiEnabled} suggestionField="cause" suggestionContext={buildSugCtx(op, we, func, fail, undefined, fail.causes.map(c => c.cause).filter(Boolean))} className={`${textAreaClass} text-orange-900 bg-orange-50/30`} placeholder="Por que fallo? (ej: Sensor descalibrado)" />)}
+                    {!readOnly && <div className="flex flex-col gap-1 opacity-0 group-hover/cause:opacity-100">
+                        <button onClick={() => amfe.duplicateCause(op.id, we.id, func.id, fail.id, cause.id)} className="text-gray-300 hover:text-blue-500 hover:bg-blue-50 p-0.5 rounded transition" title="Duplicar causa" aria-label="Duplicar causa"><Copy size={10} /></button>
+                        <button onClick={() => confirmDeleteCause(op.id, we.id, func.id, fail.id, cause.id)} className="text-gray-300 hover:text-red-500 hover:bg-red-50 p-0.5 rounded transition" title="Eliminar causa" aria-label="Eliminar causa"><Trash2 size={10} /></button>
+                    </div>}
+                </div>
+            </td>}
+            {/* Step 5: S (rowSpan per failure), PC, O, DC, D, AP, Car.Especiales */}
             {v.step5 && <>
-                <td className={`${cellClass} bg-yellow-50/10`}>
-                    <div className="flex justify-between group/cause">
-                        {renderText(cause.cause, <SuggestableTextarea value={cause.cause} onChange={e => amfe.updateCause(op.id, we.id, func.id, fail.id, cause.id, 'cause', e.target.value)} onValueChange={v => amfe.updateCause(op.id, we.id, func.id, fail.id, cause.id, 'cause', v)} suggestionIndex={sIdx} aiEnabled={aiEnabled} suggestionField="cause" suggestionContext={buildSugCtx(op, we, func, fail, undefined, fail.causes.map(c => c.cause).filter(Boolean))} className={`${textAreaClass} text-orange-900 bg-orange-50/30`} placeholder="Por que fallo? (ej: Sensor descalibrado)" />)}
-                        {!readOnly && <div className="flex flex-col gap-1 opacity-0 group-hover/cause:opacity-100">
-                            <button onClick={() => amfe.duplicateCause(op.id, we.id, func.id, fail.id, cause.id)} className="text-gray-300 hover:text-blue-500 hover:bg-blue-50 p-0.5 rounded transition" title="Duplicar causa" aria-label="Duplicar causa"><Copy size={10} /></button>
-                            <button onClick={() => confirmDeleteCause(op.id, we.id, func.id, fail.id, cause.id)} className="text-gray-300 hover:text-red-500 hover:bg-red-50 p-0.5 rounded transition" title="Eliminar causa" aria-label="Eliminar causa"><Trash2 size={10} /></button>
-                        </div>}
-                    </div>
-                </td>
+                {isFirstCause && (
+                    <td className={`${cellClass} bg-yellow-50/10`} rowSpan={failRows}>
+                        {renderSODBadge(fail.severity, <>
+                            <input
+                                type="number" min={1} max={10} step={1}
+                                value={fail.severity}
+                                onChange={e => handleSeverityChange(op.id, we.id, func.id, fail.id, e.target.value)}
+                                readOnly={hasSubSeverities(fail)}
+                                className={`w-full text-center outline-none text-xs p-0.5 rounded ${getSODColor(fail.severity)} ${hasSubSeverities(fail) ? 'bg-blue-50/50 cursor-not-allowed' : ''}`}
+                                aria-label="Severidad (S) 1-10"
+                                title={hasSubSeverities(fail) ? `S = MAX(${fail.severityLocal || '-'}, ${fail.severityNextLevel || '-'}, ${fail.severityEndUser || '-'})` : 'Severidad 1-10'}
+                            />
+                            {getFailureWarnings(fail).length > 0 && (
+                                <div className="mt-0.5" title={getFailureWarnings(fail).join('\n')}>
+                                    <AlertTriangle size={10} className="text-amber-500 mx-auto" />
+                                </div>
+                            )}
+                        </>)}
+                    </td>
+                )}
                 <td className={`${cellClass} bg-yellow-50/10`}>
                     {renderText(cause.preventionControl, <SuggestableTextarea value={cause.preventionControl} onChange={e => amfe.updateCause(op.id, we.id, func.id, fail.id, cause.id, 'preventionControl', e.target.value)} onValueChange={v => amfe.updateCause(op.id, we.id, func.id, fail.id, cause.id, 'preventionControl', v)} suggestionIndex={sIdx} aiEnabled={aiEnabled} suggestionField="preventionControl" suggestionContext={buildSugCtx(op, we, func, fail, cause, fail.causes.map(c => c.preventionControl).filter(Boolean))} className={textAreaClass} placeholder="Control preventivo (ej: Calibración semanal)" />)}
                 </td>
@@ -439,15 +460,9 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
                 </td>
                 <td className={`${cellClass} bg-yellow-50/10`}>
                     {readOnly
-                        ? <span className="text-[10px] text-center block">{cause.characteristicNumber || '—'}</span>
-                        : <input value={cause.characteristicNumber} onChange={e => amfe.updateCause(op.id, we.id, func.id, fail.id, cause.id, 'characteristicNumber', e.target.value)} className="w-full text-center outline-none bg-transparent text-[10px]" placeholder="-" title="No. Característica" aria-label="Número de característica" />
-                    }
-                </td>
-                <td className={`${cellClass} bg-yellow-50/10`}>
-                    {readOnly
                         ? <span className={`text-[10px] text-center block font-bold ${cause.specialChar === 'CC' ? 'text-red-600' : cause.specialChar === 'SC' ? 'text-orange-600' : ''}`}>{cause.specialChar || '—'}</span>
                         : <>
-                            <input value={cause.specialChar} onChange={e => amfe.updateCause(op.id, we.id, func.id, fail.id, cause.id, 'specialChar', e.target.value)} className="w-full text-center outline-none bg-transparent text-[10px]" placeholder="-" aria-label="Clasificación característica especial" />
+                            <input value={cause.specialChar} onChange={e => amfe.updateCause(op.id, we.id, func.id, fail.id, cause.id, 'specialChar', e.target.value)} className="w-full text-center outline-none bg-transparent text-[10px]" placeholder="-" aria-label="Característica especial (CC/SC)" />
                             {!cause.specialChar && Number(fail.severity) >= 7 && (
                                 <button
                                     onClick={() => amfe.updateCause(op.id, we.id, func.id, fail.id, cause.id, 'specialChar', Number(fail.severity) >= 9 ? 'CC' : 'SC')}
@@ -461,13 +476,8 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
                                     {Number(fail.severity) >= 9 ? '→ CC' : '→ SC'}
                                 </button>
                             )}
+                            {cause.characteristicNumber && <span className="text-[8px] text-gray-400 block text-center mt-0.5">#{cause.characteristicNumber}</span>}
                         </>
-                    }
-                </td>
-                <td className={`${cellClass} bg-yellow-50/10`}>
-                    {readOnly
-                        ? <span className="text-[10px] text-center block">{cause.filterCode || '—'}</span>
-                        : <input value={cause.filterCode} onChange={e => amfe.updateCause(op.id, we.id, func.id, fail.id, cause.id, 'filterCode', e.target.value)} className="w-full text-center outline-none bg-transparent text-[10px]" placeholder="-" aria-label="Código de filtro" />
                     }
                 </td>
             </>}
@@ -501,14 +511,29 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
     );
 
     /** Render empty cause-level columns (when failure has 0 causes) */
-    const renderEmptyCauseCells = (opId: string, weId: string, funcId: string, failId: string) => (
+    const renderEmptyCauseCells = (op: AmfeOperation, we: AmfeWorkElement, func: AmfeFunction, fail: AmfeFailure, failRows: number) => (
         <>
-            {v.step5 && <td className={`${cellClass} bg-yellow-50/10`} colSpan={9}>
+            {v.step4 && <td className={`${cellClass} bg-orange-50/5`}>
                 {readOnly
-                    ? <span className="text-[10px] text-gray-300 italic">Sin causas definidas</span>
-                    : <button onClick={() => amfe.addCause(opId, weId, funcId, failId)} className="text-[10px] text-orange-600 hover:underline font-bold">+ Agregar Causa</button>
+                    ? <span className="text-[10px] text-gray-300 italic">Sin causas</span>
+                    : <button onClick={() => amfe.addCause(op.id, we.id, func.id, fail.id)} className="text-[10px] text-orange-600 hover:underline font-bold">+ Agregar Causa</button>
                 }
             </td>}
+            {v.step5 && <>
+                <td className={`${cellClass} bg-yellow-50/10`} rowSpan={failRows}>
+                    {renderSODBadge(fail.severity, <>
+                        <input
+                            type="number" min={1} max={10} step={1}
+                            value={fail.severity}
+                            onChange={e => handleSeverityChange(op.id, we.id, func.id, fail.id, e.target.value)}
+                            readOnly={hasSubSeverities(fail)}
+                            className={`w-full text-center outline-none text-xs p-0.5 rounded ${getSODColor(fail.severity)} ${hasSubSeverities(fail) ? 'bg-blue-50/50 cursor-not-allowed' : ''}`}
+                            aria-label="Severidad (S) 1-10"
+                        />
+                    </>)}
+                </td>
+                <td className={`${cellClass} bg-yellow-50/10`} colSpan={6}></td>
+            </>}
             {v.step6 && <td className={`${cellClass} bg-blue-50/10`} colSpan={11}></td>}
             {v.obs && <td className={`${cellClass} bg-gray-50/30`}></td>}
         </>
@@ -615,9 +640,19 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
                                         {!readOnly && <button onClick={() => confirmDeleteWE(op.id, we.id)} className="text-gray-300 hover:text-red-500 hover:bg-red-50 p-0.5 rounded transition opacity-0 group-hover/we:opacity-100" title="Eliminar" aria-label="Eliminar"><Trash2 size={12} /></button>}
                                     </div>
                                 </td>
-                                {v.step3 && <td className={cellClass}></td>}
+                                {v.step3 && <>
+                                    {isFirstWE && <>
+                                        <td rowSpan={opRows} className={cellClass}>
+                                            {renderText(op.focusElementFunction || '', <AutoResizeTextarea value={op.focusElementFunction || ''} onChange={e => amfe.updateOp(op.id, 'focusElementFunction', e.target.value)} className={textAreaClass} placeholder="Función del Item" />)}
+                                        </td>
+                                        <td rowSpan={opRows} className={cellClass}>
+                                            {renderText(op.operationFunction || '', <AutoResizeTextarea value={op.operationFunction || ''} onChange={e => amfe.updateOp(op.id, 'operationFunction', e.target.value)} className={textAreaClass} placeholder="Función del Paso" />)}
+                                        </td>
+                                    </>}
+                                    <td className={cellClass}></td>
+                                </>}
                                 {v.step4 && <td colSpan={3} className={cellClass}></td>}
-                                {v.step5 && <td colSpan={9} className={cellClass}></td>}
+                                {v.step5 && <td colSpan={7} className={cellClass}></td>}
                                 {v.step6 && <td colSpan={11} className={cellClass}></td>}
                                 {v.obs && <td className={cellClass}></td>}
                             </tr>
@@ -636,7 +671,7 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
                                         </button>
                                     </td>}
                                     {v.step4 && <td colSpan={3} className={ghostEmptyCell} />}
-                                    {v.step5 && <td colSpan={9} className={ghostEmptyCell} />}
+                                    {v.step5 && <td colSpan={7} className={ghostEmptyCell} />}
                                     {v.step6 && <td colSpan={11} className={ghostEmptyCell} />}
                                     {v.obs && <td className={ghostEmptyCell} />}
                                 </tr>
@@ -682,17 +717,27 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
                                             </div>
                                         </td>
                                     )}
-                                    {v.step3 && <td rowSpan={funcRows} className={cellClass}>
-                                        <div className="flex justify-between group/func">
-                                            {renderText(func.description, <AutoResizeTextarea value={func.description} onChange={e => amfe.updateFunction(op.id, we.id, func.id, 'description', e.target.value)} className={textAreaClass} placeholder="Verbo + Sustantivo (ej: Mantener temperatura)" />)}
-                                            {!readOnly && <div className="flex flex-col gap-1 opacity-0 group-hover/func:opacity-100">
-                                                <button onClick={() => amfe.duplicateFunction(op.id, we.id, func.id)} className="text-gray-300 hover:text-blue-500 hover:bg-blue-50 p-0.5 rounded transition" title="Duplicar" aria-label="Duplicar"><Copy size={12} /></button>
-                                                <button onClick={() => confirmDeleteFunc(op.id, we.id, func.id)} className="text-gray-300 hover:text-red-500 hover:bg-red-50 p-0.5 rounded transition" title="Eliminar" aria-label="Eliminar"><Trash2 size={12} /></button>
-                                            </div>}
-                                        </div>
-                                    </td>}
+                                    {v.step3 && <>
+                                        {isFirstWE && isFirstFunc && <>
+                                            <td rowSpan={opRows} className={cellClass}>
+                                                {renderText(op.focusElementFunction || '', <AutoResizeTextarea value={op.focusElementFunction || ''} onChange={e => amfe.updateOp(op.id, 'focusElementFunction', e.target.value)} className={textAreaClass} placeholder="Función del Item" />)}
+                                            </td>
+                                            <td rowSpan={opRows} className={cellClass}>
+                                                {renderText(op.operationFunction || '', <AutoResizeTextarea value={op.operationFunction || ''} onChange={e => amfe.updateOp(op.id, 'operationFunction', e.target.value)} className={textAreaClass} placeholder="Función del Paso" />)}
+                                            </td>
+                                        </>}
+                                        <td rowSpan={funcRows} className={cellClass}>
+                                            <div className="flex justify-between group/func">
+                                                {renderText(func.description, <AutoResizeTextarea value={func.description} onChange={e => amfe.updateFunction(op.id, we.id, func.id, 'description', e.target.value)} className={textAreaClass} placeholder="Función del Elem. Trabajo" />)}
+                                                {!readOnly && <div className="flex flex-col gap-1 opacity-0 group-hover/func:opacity-100">
+                                                    <button onClick={() => amfe.duplicateFunction(op.id, we.id, func.id)} className="text-gray-300 hover:text-blue-500 hover:bg-blue-50 p-0.5 rounded transition" title="Duplicar" aria-label="Duplicar"><Copy size={12} /></button>
+                                                    <button onClick={() => confirmDeleteFunc(op.id, we.id, func.id)} className="text-gray-300 hover:text-red-500 hover:bg-red-50 p-0.5 rounded transition" title="Eliminar" aria-label="Eliminar"><Trash2 size={12} /></button>
+                                                </div>}
+                                            </div>
+                                        </td>
+                                    </>}
                                     {v.step4 && <td colSpan={3} className={cellClass}></td>}
-                                    {v.step5 && <td colSpan={9} className={cellClass}></td>}
+                                    {v.step5 && <td colSpan={7} className={cellClass}></td>}
                                     {v.step6 && <td colSpan={11} className={cellClass}></td>}
                                     {v.obs && <td className={cellClass}></td>}
                                 </tr>
@@ -711,7 +756,7 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
                                             </button>
                                         </td>}
                                         {v.step4 && <td colSpan={2} className={ghostEmptyCell} />}
-                                        {v.step5 && <td colSpan={9} className={ghostEmptyCell} />}
+                                        {v.step5 && <td colSpan={7} className={ghostEmptyCell} />}
                                         {v.step6 && <td colSpan={11} className={ghostEmptyCell} />}
                                         {v.obs && <td className={ghostEmptyCell} />}
                                     </tr>
@@ -773,44 +818,36 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
                                             </td>
                                         )}
 
-                                        {/* FUNCTION COLUMN */}
-                                        {isFirstFailRow && (
-                                            <td rowSpan={funcRows} className={cellClass}>
-                                                <div className="flex justify-between group/func">
-                                                    {renderText(func.description, <AutoResizeTextarea value={func.description} onChange={e => amfe.updateFunction(op.id, we.id, func.id, 'description', e.target.value)} className={textAreaClass} placeholder="Verbo + Sustantivo (ej: Mantener temperatura)" />)}
-                                                    {!readOnly && <div className="flex flex-col gap-1 opacity-0 group-hover/func:opacity-100">
-                                                        <button onClick={() => amfe.duplicateFunction(op.id, we.id, func.id)} className="text-gray-300 hover:text-blue-500 hover:bg-blue-50 p-0.5 rounded transition" title="Duplicar" aria-label="Duplicar"><Copy size={12} /></button>
-                                                        <button onClick={() => confirmDeleteFunc(op.id, we.id, func.id)} className="text-gray-300 hover:text-red-500 hover:bg-red-50 p-0.5 rounded transition" title="Eliminar" aria-label="Eliminar"><Trash2 size={12} /></button>
-                                                    </div>}
-                                                </div>
-                                            </td>
-                                        )}
+                                        {/* STEP 3: FUNCTION COLUMNS (3 cols per VDA) */}
+                                        {v.step3 && <>
+                                            {/* Func Item + Func Paso: rowSpan per operation */}
+                                            {isFirstWE && isFirstFunc && isFirstFailRow && <>
+                                                <td rowSpan={opRows} className={cellClass}>
+                                                    {renderText(op.focusElementFunction || '', <AutoResizeTextarea value={op.focusElementFunction || ''} onChange={e => amfe.updateOp(op.id, 'focusElementFunction', e.target.value)} className={textAreaClass} placeholder="Función del Item (ej: Asegurar integridad del producto)" />)}
+                                                </td>
+                                                <td rowSpan={opRows} className={cellClass}>
+                                                    {renderText(op.operationFunction || '', <AutoResizeTextarea value={op.operationFunction || ''} onChange={e => amfe.updateOp(op.id, 'operationFunction', e.target.value)} className={textAreaClass} placeholder="Función del Paso y Car. Producto" />)}
+                                                </td>
+                                            </>}
+                                            {/* Func Elem. Trabajo: rowSpan per function */}
+                                            {isFirstFailRow && (
+                                                <td rowSpan={funcRows} className={cellClass}>
+                                                    <div className="flex justify-between group/func">
+                                                        {renderText(func.description, <AutoResizeTextarea value={func.description} onChange={e => amfe.updateFunction(op.id, we.id, func.id, 'description', e.target.value)} className={textAreaClass} placeholder="Función del Elem. Trabajo y Car. Proceso" />)}
+                                                        {!readOnly && <div className="flex flex-col gap-1 opacity-0 group-hover/func:opacity-100">
+                                                            <button onClick={() => amfe.duplicateFunction(op.id, we.id, func.id)} className="text-gray-300 hover:text-blue-500 hover:bg-blue-50 p-0.5 rounded transition" title="Duplicar" aria-label="Duplicar"><Copy size={12} /></button>
+                                                            <button onClick={() => confirmDeleteFunc(op.id, we.id, func.id)} className="text-gray-300 hover:text-red-500 hover:bg-red-50 p-0.5 rounded transition" title="Eliminar" aria-label="Eliminar"><Trash2 size={12} /></button>
+                                                        </div>}
+                                                    </div>
+                                                </td>
+                                            )}
+                                        </>}
 
-                                        {/* FAILURE-LEVEL COLUMNS (FE, S, FM) — only on first cause row */}
-                                        {isFirstCause && (
+                                        {/* STEP 4: FAILURE-LEVEL COLUMNS (FE, FM) — only on first cause row */}
+                                        {isFirstCause && v.step4 && (
                                             <>
                                                 {/* EFFECTS (merged single column with 3 labeled textareas) */}
                                                 {renderEffectsCell(op, we, func, fail, failRows)}
-
-                                                {/* SEVERITY */}
-                                                <td className={`${cellClass} bg-orange-50/10`} rowSpan={failRows}>
-                                                    {renderSODBadge(fail.severity, <>
-                                                        <input
-                                                            type="number" min={1} max={10} step={1}
-                                                            value={fail.severity}
-                                                            onChange={e => handleSeverityChange(op.id, we.id, func.id, fail.id, e.target.value)}
-                                                            readOnly={hasSubSeverities(fail)}
-                                                            className={`w-full text-center outline-none text-xs p-0.5 rounded ${getSODColor(fail.severity)} ${hasSubSeverities(fail) ? 'bg-blue-50/50 cursor-not-allowed' : ''}`}
-                                                            aria-label="Severidad (S) 1-10"
-                                                            title={hasSubSeverities(fail) ? `S = MAX(${fail.severityLocal || '-'}, ${fail.severityNextLevel || '-'}, ${fail.severityEndUser || '-'})` : 'Severidad 1-10'}
-                                                        />
-                                                        {warnings.length > 0 && (
-                                                            <div className="mt-0.5" title={warnings.join('\n')}>
-                                                                <AlertTriangle size={10} className="text-amber-500 mx-auto" />
-                                                            </div>
-                                                        )}
-                                                    </>)}
-                                                </td>
 
                                                 {/* FAILURE MODE (FM) */}
                                                 <td className={cellClass} rowSpan={failRows}>
@@ -825,19 +862,19 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
                                             </>
                                         )}
 
-                                        {/* CAUSE-LEVEL COLUMNS */}
-                                        {cause ? renderCauseCells(op, we, func, fail, cause, causeValidation) : renderEmptyCauseCells(op.id, we.id, func.id, fail.id)}
+                                        {/* CAUSE-LEVEL COLUMNS: FC (Step 4), S+PC+O+DC+D+AP+Car.Esp (Step 5), Step 6, Obs */}
+                                        {cause ? renderCauseCells(op, we, func, fail, cause, causeValidation, isFirstCause, failRows) : renderEmptyCauseCells(op, we, func, fail, failRows)}
                                     </tr>
                                 );
                             });
 
                             // 2A. Ghost row: "Agregar Causa" after each failure's causes
+                            // Note: FE, FM (Step 4) and S (Step 5) cells are covered by rowSpan from above
                             if (!readOnly) {
                                 opResult.push(
                                     <tr key={`${fail.id}-ghost-cause`}>
-                                        {v.step4 && <td colSpan={3} className={ghostEmptyCell} />}
-                                        {v.step5 && (
-                                            <td colSpan={9} className={ghostCellClass}>
+                                        {v.step4 && (
+                                            <td className={ghostCellClass}>
                                                 <button
                                                     onClick={() => amfe.addCause(op.id, we.id, func.id, fail.id)}
                                                     className="w-full text-left text-xs text-gray-400 hover:text-orange-600 hover:bg-orange-50/50 px-2 py-1 rounded transition-colors flex items-center gap-1.5"
@@ -847,6 +884,7 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
                                                 </button>
                                             </td>
                                         )}
+                                        {v.step5 && <td colSpan={6} className={ghostEmptyCell} />}
                                         {v.step6 && <td colSpan={11} className={ghostEmptyCell} />}
                                         {v.obs && <td className={ghostEmptyCell} />}
                                     </tr>
@@ -869,7 +907,7 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
                                             <span>Agregar Modo de Falla</span>
                                         </button>
                                     </td>}
-                                    {v.step5 && <td colSpan={9} className={ghostEmptyCell} />}
+                                    {v.step5 && <td colSpan={7} className={ghostEmptyCell} />}
                                     {v.step6 && <td colSpan={11} className={ghostEmptyCell} />}
                                     {v.obs && <td className={ghostEmptyCell} />}
                                 </tr>
@@ -891,7 +929,7 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
                                     </button>
                                 </td>}
                                 {v.step4 && <td colSpan={3} className={ghostEmptyCell} />}
-                                {v.step5 && <td colSpan={9} className={ghostEmptyCell} />}
+                                {v.step5 && <td colSpan={7} className={ghostEmptyCell} />}
                                 {v.step6 && <td colSpan={11} className={ghostEmptyCell} />}
                                 {v.obs && <td className={ghostEmptyCell} />}
                             </tr>
@@ -901,7 +939,7 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
 
                 // 2D. Ghost row: "Agregar 6M" after all WEs of this operation
                 if (!readOnly) {
-                    const ghostWeCols = 1 + (v.step3 ? 1 : 0) + (v.step4 ? 3 : 0) + (v.step5 ? 9 : 0) + (v.step6 ? 11 : 0) + (v.obs ? 1 : 0);
+                    const ghostWeCols = 1 + (v.step3 ? 1 : 0) + (v.step4 ? 3 : 0) + (v.step5 ? 7 : 0) + (v.step6 ? 11 : 0) + (v.obs ? 1 : 0);
                     opResult.push(
                         <tr key={`${op.id}-ghost-we`}>
                             <td colSpan={ghostWeCols} className={ghostCellClass}>

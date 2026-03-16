@@ -505,6 +505,14 @@ export const useLineBalancing = (data: ProjectData, updateData: (data: ProjectDa
         updateData({ ...data, assignments: newAssignments });
     };
 
+    /** Assign multiple tasks at once (avoids stale state from forEach + setState) */
+    const performBulkAssignment = (taskIds: string[], stationId: number) => {
+        const taskIdSet = new Set(taskIds);
+        const newAssignments = data.assignments.filter(a => !taskIdSet.has(a.taskId));
+        taskIds.forEach(id => newAssignments.push({ taskId: id, stationId }));
+        updateData({ ...data, assignments: newAssignments });
+    };
+
     const unassignTask = useCallback((taskId: string) => {
         const newAssignments = data.assignments.filter(a => a.taskId !== taskId);
         updateData({ ...data, assignments: newAssignments });
@@ -1022,6 +1030,7 @@ export const useLineBalancing = (data: ProjectData, updateData: (data: ProjectDa
         handleOptimization,
         applySimulation,
         toggleBoardSectorCollapse,
-        performAssignment
+        performAssignment,
+        performBulkAssignment
     };
 };

@@ -27,10 +27,20 @@ export const AMFE_TERMS: Record<string, AmfeTerm> = {
         term: 'Elemento de Trabajo (6M)',
         definition: 'Componente del proceso: Máquina, Mano de Obra, Material, Método, Medio Ambiente o Medición.',
     },
+    FUNC_ITEM: {
+        abbrev: 'F.Item',
+        term: 'Función del Item del Proceso',
+        definition: 'Función del producto/sistema a nivel general. Qué debe lograr el item que se está procesando.',
+    },
+    FUNC_PASO: {
+        abbrev: 'F.Paso',
+        term: 'Función del Paso del Proceso',
+        definition: 'Qué debe lograr esta operación y la característica del producto que garantiza (valor cuantitativo opcional).',
+    },
     FUNC: {
         abbrev: 'Func',
-        term: 'Función',
-        definition: 'Qué debe hacer el elemento de trabajo. Formato: Verbo + Sustantivo (ej: "Mantener temperatura > 200C").',
+        term: 'Función del Elemento de Trabajo',
+        definition: 'Qué debe hacer el elemento de trabajo y la característica del proceso que controla. Formato: Verbo + Sustantivo.',
     },
     FE: {
         abbrev: 'FE',

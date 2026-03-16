@@ -534,10 +534,10 @@ describe('Plan de Acciones - empty status handling', () => {
 });
 
 // =========================================================================
-// Bug fix: Resumen AP includes characteristicNumber, specialChar, filterCode
+// Bug fix: Resumen AP includes Car. Especiales (combined from specialChar + characteristicNumber)
 // =========================================================================
 describe('Resumen AP - traceability columns', () => {
-    it('includes characteristicNumber, specialChar, filterCode in export', () => {
+    it('includes Car. Esp. combined column in export', () => {
         const doc = makeDoc({
             operations: [{
                 id: 'op-1', opNumber: '10', name: 'Op',
@@ -565,18 +565,15 @@ describe('Resumen AP - traceability columns', () => {
         const headerRow = aoaData.find((row: any[]) => row[0]?.v === 'Op');
         expect(headerRow).toBeDefined();
         const headerValues = headerRow.map((h: any) => h.v);
-        expect(headerValues).toContain('Nro.Car.');
-        expect(headerValues).toContain('Car.Esp.');
-        expect(headerValues).toContain('Filtro');
+        expect(headerValues).toContain('Car. Esp.');
 
         // Find data row with AP=H
         const dataRow = aoaData.find((row: any[]) =>
             row.length >= 14 && row[10]?.v === 'H'
         );
         expect(dataRow).toBeDefined();
-        expect(dataRow[11].v).toBe('C-42');
-        expect(dataRow[12].v).toBe('CC');
-        expect(dataRow[13].v).toBe('F01');
+        // Car. Esp. is now a combined column (specialChar + #characteristicNumber)
+        expect(dataRow[11].v).toBe('CC #C-42');
     });
 });
 

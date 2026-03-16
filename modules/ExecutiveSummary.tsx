@@ -1,29 +1,128 @@
 /**
- * Executive Summary Module — Clean Report View
- * 
- * Synthesized view of capacity analysis per sector.
- * Designed for clarity, quick scanning, and clean PDF/Excel export.
- * 
+ * Production Capacity Report — "Capacidad de Producción por Proceso"
+ *
+ * Shows the same data as the Excel export in an HTML table:
+ * stations, cycle times, cap/hour, OEE, status, daily production,
+ * capacity %, and dotación. Includes export to Excel button.
+ *
  * @module modules/ExecutiveSummary
- * @version 2.0.0
+ * @version 3.0.0
  */
 
-import React, { useMemo, useState } from 'react';
-import { ProjectData } from '../types';
+import React, { useMemo } from 'react';
+import { ProjectData, Task } from '../types';
+import { Download, BarChart3, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { exportBalancingCapacityExcel } from './balancing/balancingCapacityExcelExport';
 import {
-    calculateExecutiveSummary,
-    exportSummaryToExcel,
-    exportFullSummaryToExcel,
-    exportSummaryToPDF,
-} from '../utils/executiveSummaryCalc';
-import { Download, FileText, Printer, BarChart3 } from 'lucide-react';
+    calculateTaktTime,
+    calculateShiftNetMinutes,
+    calculateEffectiveStationTime,
+    calculateStationOEE,
+} from '../core/balancing/simulation';
 
 // ============================================================================
-// Props
+// Types
 // ============================================================================
+
+interface StationViewRow {
+    id: number;
+    description: string;
+    sectorName: string;
+    cycleTimeSeconds: number;
+    capPerHour: number;
+    oee: number;
+    requiredDaily: number;
+    prodDaily: number;
+    capacityPct: number;
+    dotacion: number;
+    operators: number;
+    machineTime: number;
+    isOk: boolean;
+    replicas: number;
+}
 
 interface Props {
     data: ProjectData;
+}
+
+// ============================================================================
+// Calculation
+// ============================================================================
+
+function buildViewRows(data: ProjectData): StationViewRow[] {
+    const validStationIds = data.assignments.map(a => a.stationId).filter(Number.isFinite);
+    const maxA = validStationIds.length > 0 ? Math.max(...validStationIds) : 0;
+    const count = Math.max(maxA, data.meta.configuredStations || 1);
+    const cfgMap = new Map(data.stationConfigs?.map(c => [c.id, c]) ?? []);
+    const tMap = new Map(data.tasks.map(t => [t.id, t]));
+
+    const globalOee = data.meta.useSectorOEE ? 1 : data.meta.manualOEE;
+    const globalTakt = calculateTaktTime(
+        data.shifts, data.meta.activeShifts, data.meta.dailyDemand || 0, globalOee,
+        data.meta.setupLossPercent || 0
+    );
+    const totalAvailableSeconds = globalTakt.totalAvailableMinutes * 60;
+    const shiftNetMinutes = data.shifts
+        .filter((_, i) => i < data.meta.activeShifts)
+        .reduce((sum, s) => sum + calculateShiftNetMinutes(s), 0);
+
+    const dailyDemand = data.meta.dailyDemand || 0;
+    const rows: StationViewRow[] = [];
+
+    for (let i = 1; i <= count; i++) {
+        const tasks = data.assignments
+            .filter(a => a.stationId === i)
+            .map(a => tMap.get(a.taskId))
+            .filter(Boolean) as Task[];
+
+        if (tasks.length === 0) continue;
+
+        const cfg = cfgMap.get(i);
+        const replicas = cfg?.replicas && cfg.replicas > 0 ? cfg.replicas : 1;
+        let effectiveTime = calculateEffectiveStationTime(tasks);
+        if (!Number.isFinite(effectiveTime) || effectiveTime < 0) effectiveTime = 0;
+        const cycleTime = replicas > 0 ? effectiveTime / replicas : 0;
+
+        const rawOee = calculateStationOEE(data, i, tasks[0]?.sectorId);
+        const oee = Math.max(0, Math.min(1, Number.isFinite(rawOee) ? rawOee : 0.85));
+
+        const sectorId = tasks[0]?.sectorId;
+        const sector = sectorId ? data.sectors?.find(s => s.id === sectorId) : undefined;
+        const sectorName = sector?.name || 'General';
+
+        const taskDescs = tasks.slice(0, 3).map(t => t.description || t.id);
+        const description = taskDescs.join(', ') + (tasks.length > 3 ? '...' : '');
+
+        const capPerHour = cycleTime > 0 ? 3600 / cycleTime : 0;
+        const prodDaily = cycleTime > 0 ? totalAvailableSeconds / cycleTime : 0;
+        const capacityPct = dailyDemand > 0 ? prodDaily / dailyDemand : 0;
+        const dotacion = shiftNetMinutes > 0 ? (cycleTime / 60) * dailyDemand / shiftNetMinutes : 0;
+        const operators = Math.ceil(dotacion);
+        const isOk = prodDaily >= dailyDemand;
+
+        const machineTime = tasks
+            .filter(t => t.executionMode === 'machine' || t.executionMode === 'injection')
+            .reduce((sum, t) => sum + (t.standardTime || t.averageTime || 0), 0);
+
+        rows.push({
+            id: i,
+            description,
+            sectorName,
+            cycleTimeSeconds: cycleTime,
+            capPerHour,
+            oee,
+            requiredDaily: dailyDemand,
+            prodDaily,
+            capacityPct,
+            dotacion,
+            operators,
+            machineTime,
+            isOk,
+            replicas,
+        });
+    }
+
+    return rows;
 }
 
 // ============================================================================
@@ -31,292 +130,196 @@ interface Props {
 // ============================================================================
 
 export const ExecutiveSummary: React.FC<Props> = ({ data }) => {
+    const rows = useMemo(() => buildViewRows(data), [data]);
+    const hasAssignments = data.assignments?.length > 0;
+
+    const dailyDemand = data.meta.dailyDemand || 0;
+    const ppv = Math.max(1, data.meta.piecesPerVehicle || 1);
+    const vehicleDemand = ppv > 0 ? Math.round(dailyDemand / ppv) : dailyDemand;
+    const weeklyDemand = dailyDemand * 5;
     const activeShifts = data.meta.activeShifts || 1;
-    const [selectedShift, setSelectedShift] = useState(activeShifts);
+    const oeeGlobal = data.meta.manualOEE ?? 0.85;
 
-    const summary = useMemo(() => calculateExecutiveSummary(data), [data]);
+    const globalTakt = useMemo(() => calculateTaktTime(
+        data.shifts, activeShifts, dailyDemand, data.meta.useSectorOEE ? 1 : oeeGlobal,
+        data.meta.setupLossPercent || 0
+    ), [data]);
+    const totalAvailableMinutes = globalTakt.totalAvailableMinutes;
 
-    // Only show up to activeShifts (user-configured), not all defined shifts
-    const maxShifts = Math.min(activeShifts, summary.scenarios.length);
-    const currentShift = Math.min(selectedShift, maxShifts);
-    const scenario = summary.scenarios[currentShift - 1];
-    const visibleScenarios = summary.scenarios.slice(0, maxShifts);
+    const totalDotacion = rows.reduce((sum, r) => sum + r.dotacion, 0);
+    const totalOperators = Math.ceil(totalDotacion);
+    const operatorsPerShift = Math.ceil(totalOperators / Math.max(1, activeShifts));
+    const bottleneck = rows.length > 0 ? rows.reduce((max, r) => r.cycleTimeSeconds > max.cycleTimeSeconds ? r : max, rows[0]) : null;
 
-    if (!scenario) {
+    // No assignments state
+    if (!hasAssignments || rows.length === 0) {
         return (
             <div className="flex items-center justify-center h-64">
                 <div className="text-center">
                     <BarChart3 size={40} className="mx-auto mb-3 text-slate-300" strokeWidth={1.5} />
-                    <p className="text-lg font-semibold text-slate-500">Sin datos para generar reporte</p>
-                    <p className="text-sm text-slate-400 mt-1">Configure turnos y demanda en Panel de Control para ver el resumen ejecutivo.</p>
+                    <p className="text-lg font-semibold text-slate-500">Sin datos de balanceo</p>
+                    <p className="text-sm text-slate-400 mt-1">
+                        Asigna tareas a estaciones en la pestaña <span className="font-medium text-slate-500">Balanceo</span> para ver el reporte de capacidad.
+                    </p>
                 </div>
             </div>
         );
     }
 
-    const fatiguePct = data.meta.fatigueCompensation?.globalPercent ?? 10;
-    const fatigueOn = data.meta.fatigueCompensation?.enabled !== false;
+    const handleExport = async () => {
+        try {
+            await exportBalancingCapacityExcel(data);
+        } catch (err) {
+            console.error('Error exporting Excel:', err);
+        }
+    };
 
     return (
-        <div className="max-w-5xl mx-auto py-2">
+        <div className="max-w-[1400px] mx-auto py-2">
 
-            {/* ── Header ────────────────────────────────────────── */}
-            <div className="flex items-start justify-between mb-8">
+            {/* ── Header ──────────────────────────────────────── */}
+            <div className="flex items-start justify-between mb-6">
                 <div>
                     <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
-                        Resumen Ejecutivo
+                        Capacidad de Producción por Proceso
                     </h1>
                     <p className="text-sm text-slate-400 mt-0.5">
-                        {summary.projectName} · {isNaN(new Date(summary.calculatedAt).getTime()) ? '—' : new Date(summary.calculatedAt).toLocaleDateString('es-AR', { day: '2-digit', month: 'short', year: 'numeric' })}
+                        {data.meta.name || 'Sin nombre'} — {data.meta.client || 'Sin cliente'} · {data.meta.date || '—'}
                     </p>
                 </div>
-                <div className="flex items-center gap-2">
-                    {/* Shift tabs — only show active shifts */}
-                    {maxShifts > 1 && (
-                        <div className="flex bg-slate-100 rounded-lg p-0.5 gap-0.5 mr-3">
-                            {Array.from({ length: maxShifts }, (_, i) => i + 1).map(s => (
-                                <button
-                                    key={s}
-                                    onClick={() => setSelectedShift(s)}
-                                    className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${currentShift === s
-                                        ? 'bg-white text-slate-900 shadow-sm'
-                                        : 'text-slate-500 hover:text-slate-700'
-                                        }`}
-                                >
-                                    {s}T
-                                </button>
-                            ))}
-                        </div>
-                    )}
-                    <button
-                        onClick={() => exportSummaryToPDF(summary, currentShift - 1)}
-                        className="p-2 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
-                        title="Exportar PDF"
-                    >
-                        <Printer size={18} />
-                    </button>
-                    <button
-                        onClick={() => exportSummaryToExcel(scenario, summary.projectName)}
-                        className="p-2 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
-                        title={`Excel ${currentShift}T`}
-                    >
-                        <Download size={18} />
-                    </button>
-                    <button
-                        onClick={() => exportFullSummaryToExcel(summary)}
-                        className="p-2 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
-                        title="Excel completo (todos los turnos)"
-                    >
-                        <FileText size={18} />
-                    </button>
-                </div>
+                <button
+                    onClick={handleExport}
+                    className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-sm font-medium shadow-sm"
+                >
+                    <Download size={16} />
+                    Exportar Excel
+                </button>
             </div>
 
-            {/* ── KPI Strip ─────────────────────────────────────── */}
-            <div className="grid grid-cols-3 gap-px bg-slate-200 rounded-xl overflow-hidden mb-8 shadow-sm">
-                {([
-                    {
-                        label: 'Takt Time',
-                        value: `${scenario.taktTime.toFixed(1)}s`,
-                        sub: `Objetivo: ${scenario.dailyDemand.toLocaleString()} pzs/día`,
-                    },
-                    {
-                        label: 'Capacidad Real',
-                        value: scenario.hasBottleneck
-                            ? `${Math.round(scenario.piecesPerHour)} pzs/h`
-                            : 'Sin datos',
-                        sub: scenario.hasBottleneck
-                            ? `${scenario.theoreticalCapacity.toLocaleString()} pzs/día · Cuello: ${scenario.bottleneckCycleTime.toFixed(1)}s`
-                            : 'Balancear primero',
-                        alert: scenario.hasBottleneck && scenario.bottleneckCycleTime > scenario.taktTime,
-                        muted: !scenario.hasBottleneck,
-                    },
-                    {
-                        label: 'Estaciones',
-                        value: scenario.hasBalancingData
-                            ? scenario.totalOperatorsBalanced
-                            : 'Sin datos',
-                        sub: scenario.hasBalancingData
-                            ? `${scenario.sectors.length} sectores`
-                            : 'Balancear primero',
-                        muted: !scenario.hasBalancingData,
-                    },
-                ] as { label: string; value: string | number; sub: string; alert?: boolean; muted?: boolean }[]).map((kpi, i) => (
-                    <div key={i} className={`bg-white p-4 ${kpi.alert ? 'bg-red-50/50' : ''}`}>
-                        <div className="text-[11px] font-medium text-slate-400 uppercase tracking-wider">{kpi.label}</div>
-                        <div className={`text-xl font-bold mt-1 ${kpi.alert ? 'text-red-600' : kpi.muted ? 'text-slate-300' : 'text-slate-900'}`}>
-                            {kpi.value}
-                        </div>
-                        <div className={`text-[11px] mt-0.5 ${kpi.alert ? 'text-red-400 font-medium' : 'text-slate-400'}`}>{kpi.sub}</div>
+            {/* ── Production Params ───────────────────────────── */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+                {[
+                    { label: 'Volumen vehículos diario', value: vehicleDemand.toLocaleString() },
+                    { label: 'Turnos activos', value: activeShifts },
+                    { label: 'Piezas por vehículo', value: ppv },
+                    { label: 'Min. netos disp./día', value: Math.round(totalAvailableMinutes) },
+                    { label: 'Piezas necesarias/día', value: dailyDemand.toLocaleString() },
+                    { label: 'OEE Global', value: `${(oeeGlobal * 100).toFixed(0)}%` },
+                    { label: 'Demanda semanal', value: weeklyDemand.toLocaleString() },
+                    { label: 'Cuello de botella', value: bottleneck ? `Est. ${bottleneck.id} (${bottleneck.cycleTimeSeconds.toFixed(1)}s)` : '—' },
+                ].map((p, i) => (
+                    <div key={i} className="bg-white rounded-lg border border-slate-200 px-4 py-3">
+                        <div className="text-[11px] text-slate-400 font-medium uppercase tracking-wider">{p.label}</div>
+                        <div className="text-lg font-bold text-slate-800 mt-0.5">{p.value}</div>
                     </div>
                 ))}
             </div>
 
-            {/* ── Sector Table ──────────────────────────────────── */}
-            {(() => {
-                const anyMachines = scenario.sectors.some(s => s.totalMachinesRequired > 0);
-                return (
-                    <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden mb-8">
-                        <div className="px-5 py-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
-                            <span className="text-sm font-semibold text-slate-700">Desglose por Sector</span>
-                            <span className="text-xs text-slate-400">
-                                {currentShift}T · Demanda: {scenario.dailyDemand.toLocaleString()} pzs/día
-                                {fatigueOn ? ` · Fatiga +${fatiguePct}%` : ''}
-                            </span>
-                        </div>
-                        <table className="w-full text-sm">
-                            <thead>
-                                <tr className="text-xs text-slate-400 uppercase tracking-wider border-b border-slate-100">
-                                    <th className="px-5 py-2.5 text-left font-medium">Sector</th>
-                                    <th className="px-3 py-2.5 text-center font-medium">Tareas</th>
-                                    <th className="px-3 py-2.5 text-center font-medium">Estaciones</th>
-                                    <th className="px-3 py-2.5 text-center font-medium">Operarios</th>
-                                    {anyMachines && (
-                                        <th className="px-5 py-2.5 text-left font-medium">Máquinas</th>
-                                    )}
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {scenario.sectors.map(s => (
-                                    <tr key={s.sectorId} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
-                                        <td className="px-5 py-3">
-                                            <div className="flex items-center gap-2.5">
-                                                <span
-                                                    className="w-2.5 h-2.5 rounded-full flex-shrink-0"
-                                                    style={{ backgroundColor: s.sectorColor }}
-                                                />
-                                                <span className="font-medium text-slate-800">{s.sectorName}</span>
-                                            </div>
-                                        </td>
-                                        <td className="px-3 py-3 text-center font-mono text-slate-500">
-                                            {s.taskCount}
-                                        </td>
-                                        <td className="px-3 py-3 text-center font-mono font-semibold text-slate-700">
-                                            {s.hasBalancingData ? s.operatorsBalanced : s.operatorsRequired}
-                                        </td>
-                                        <td className="px-3 py-3 text-center font-mono text-slate-600">
-                                            {s.hasBalancingData ? s.operatorsTotal : s.operatorsRequired}
-                                        </td>
-                                        {anyMachines && (
-                                            <td className="px-5 py-3 text-left">
-                                                {s.machines.length > 0 ? (
-                                                    <div className="flex flex-wrap gap-2">
-                                                        {s.machines.map(m => (
-                                                            <span key={m.machineId} className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-slate-100 border border-slate-200 text-xs text-slate-700">
-                                                                <span className="font-semibold">{m.unitsRequired}</span>
-                                                                <span className="text-slate-500 truncate max-w-[120px]" title={m.machineName}>{m.machineName}</span>
-                                                                {m.gap > 0 && (
-                                                                    <span className="text-red-500 font-bold ml-0.5" title={`Faltan ${m.gap}`}>!</span>
-                                                                )}
-                                                            </span>
-                                                        ))}
-                                                    </div>
-                                                ) : (
-                                                    <span className="text-slate-300 text-xs">—</span>
-                                                )}
-                                            </td>
-                                        )}
-                                    </tr>
-                                ))}
-                            </tbody>
-                            <tfoot>
-                                <tr className="bg-slate-50 border-t border-slate-200 font-semibold text-sm">
-                                    <td className="px-5 py-3 text-slate-700">
-                                        Total <span className="text-xs font-normal text-slate-400">({scenario.sectors.length} sectores)</span>
-                                    </td>
-                                    <td className="px-3 py-3 text-center font-mono text-slate-700">
-                                        {scenario.sectors.reduce((sum, s) => sum + s.taskCount, 0)}
-                                    </td>
-                                    <td className="px-3 py-3 text-center font-mono text-slate-700">
-                                        {scenario.hasBalancingData
-                                            ? scenario.totalOperatorsBalanced
-                                            : scenario.totalOperatorsRequired}
-                                    </td>
-                                    <td className="px-3 py-3 text-center font-mono text-slate-700">
-                                        {scenario.hasBalancingData
-                                            ? scenario.sectors.reduce((sum, s) => sum + s.operatorsTotal, 0)
-                                            : scenario.totalOperatorsRequired}
-                                    </td>
-                                    {anyMachines && (
-                                        <td className="px-5 py-3 text-left font-mono text-slate-700">
-                                            {scenario.totalMachinesRequired} u.
-                                        </td>
-                                    )}
-                                </tr>
-                            </tfoot>
-                        </table>
-                    </div>
-                );
-            })()}
-
-            {/* ── Shift Comparison (only if >1 active shift) ────── */}
-            {visibleScenarios.length > 1 && (
-                <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden mb-6">
-                    <div className="px-5 py-3 bg-slate-50 border-b border-slate-200">
-                        <span className="text-sm font-semibold text-slate-700">Comparativa por Turnos</span>
-                    </div>
+            {/* ── Process Table ────────────────────────────────── */}
+            <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden mb-6">
+                <div className="px-5 py-3 bg-slate-800 flex items-center justify-between">
+                    <span className="text-sm font-semibold text-white">Detalle por Estación</span>
+                    <span className="text-xs text-slate-300">
+                        {rows.length} estaciones · {data.tasks.length} tareas
+                    </span>
+                </div>
+                <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                         <thead>
-                            <tr className="text-xs text-slate-400 uppercase tracking-wider border-b border-slate-100">
-                                <th className="px-5 py-2.5 text-left font-medium">Escenario</th>
-                                <th className="px-3 py-2.5 text-right font-medium">Takt</th>
-                                <th className="px-3 py-2.5 text-right font-medium">Pzs/Hora</th>
-                                <th className="px-3 py-2.5 text-right font-medium">Cap. Diaria</th>
-                                <th className="px-3 py-2.5 text-center font-medium">Operadores</th>
-                                <th className="px-3 py-2.5 text-center font-medium">Máquinas</th>
+                            <tr className="text-xs text-slate-500 uppercase tracking-wider border-b border-slate-200 bg-slate-50">
+                                <th className="px-4 py-2.5 text-center font-medium w-14">Nro</th>
+                                <th className="px-4 py-2.5 text-left font-medium">Descripción</th>
+                                <th className="px-3 py-2.5 text-center font-medium">Sector</th>
+                                <th className="px-3 py-2.5 text-center font-medium">Ciclo (s)</th>
+                                <th className="px-3 py-2.5 text-center font-medium">Cap/hora</th>
+                                <th className="px-3 py-2.5 text-center font-medium">OEE %</th>
                                 <th className="px-3 py-2.5 text-center font-medium">Estado</th>
+                                <th className="px-3 py-2.5 text-center font-medium">Pzs Req/Día</th>
+                                <th className="px-3 py-2.5 text-center font-medium">Prod Diaria</th>
+                                <th className="px-3 py-2.5 text-center font-medium">Cap %</th>
+                                <th className="px-3 py-2.5 text-center font-medium">Dotación</th>
+                                <th className="px-3 py-2.5 text-center font-medium">Ops</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {visibleScenarios.map(s => (
+                            {rows.map((row, idx) => (
                                 <tr
-                                    key={s.shiftCount}
-                                    className={`border-b border-slate-50 transition-colors ${s.shiftCount === currentShift
-                                        ? 'bg-blue-50/40'
-                                        : 'hover:bg-slate-50/50'
-                                        }`}
+                                    key={row.id}
+                                    className={`border-b border-slate-100 transition-colors hover:bg-slate-50/50 ${idx % 2 === 1 ? 'bg-slate-50/30' : ''}`}
                                 >
-                                    <td className="px-5 py-3 font-medium text-slate-800">
-                                        {s.shiftCount} Turno{s.shiftCount > 1 ? 's' : ''}
-                                        {s.shiftCount === currentShift && (
-                                            <span className="ml-2 text-[10px] text-blue-500 font-normal">actual</span>
-                                        )}
+                                    <td className="px-4 py-3 text-center font-bold text-slate-600">{row.id}</td>
+                                    <td className="px-4 py-3 text-left text-slate-800 max-w-[250px] truncate" title={row.description}>
+                                        {row.description}
                                     </td>
-                                    <td className="px-3 py-3 text-right font-mono text-slate-600">
-                                        {s.taktTime.toFixed(1)}s
+                                    <td className="px-3 py-3 text-center text-slate-500 text-xs">{row.sectorName}</td>
+                                    <td className="px-3 py-3 text-center font-mono font-bold text-blue-600">
+                                        {row.cycleTimeSeconds.toFixed(2)}
                                     </td>
-                                    <td className="px-3 py-3 text-right font-mono text-slate-600">
-                                        {Math.round(s.piecesPerHour)}
+                                    <td className="px-3 py-3 text-center font-mono text-slate-600">
+                                        {Math.round(row.capPerHour).toLocaleString()}
                                     </td>
-                                    <td className="px-3 py-3 text-right font-mono text-slate-600">
-                                        {s.theoreticalCapacity.toLocaleString()}
-                                    </td>
-                                    <td className="px-3 py-3 text-center font-mono font-semibold text-slate-700">
-                                        {s.totalOperatorsRequired}
-                                    </td>
-                                    <td className="px-3 py-3 text-center font-mono font-semibold text-slate-700">
-                                        {s.totalMachinesRequired}
+                                    <td className="px-3 py-3 text-center font-mono text-blue-600 font-bold">
+                                        {(row.oee * 100).toFixed(0)}%
                                     </td>
                                     <td className="px-3 py-3 text-center">
-                                        {s.totalDeficits > 0 ? (
-                                            <span className="text-xs font-semibold text-red-600">
-                                                {s.totalDeficits} faltantes
+                                        {row.isOk ? (
+                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                                <CheckCircle2 size={12} />
+                                                OK
                                             </span>
                                         ) : (
-                                            <span className="text-xs font-semibold text-emerald-600">✓ OK</span>
+                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-red-50 text-red-700 border border-red-200">
+                                                <AlertTriangle size={12} />
+                                                DEFICIT
+                                            </span>
                                         )}
+                                    </td>
+                                    <td className="px-3 py-3 text-center font-mono text-slate-600">
+                                        {row.requiredDaily.toLocaleString()}
+                                    </td>
+                                    <td className="px-3 py-3 text-center font-mono font-semibold text-slate-700">
+                                        {Math.round(row.prodDaily).toLocaleString()}
+                                    </td>
+                                    <td className="px-3 py-3 text-center">
+                                        <span className={`font-mono font-semibold ${row.capacityPct >= 1 ? 'text-emerald-600' : 'text-red-600'}`}>
+                                            {(row.capacityPct * 100).toFixed(0)}%
+                                        </span>
+                                    </td>
+                                    <td className="px-3 py-3 text-center font-mono text-slate-600">
+                                        {row.dotacion.toFixed(2)}
+                                    </td>
+                                    <td className="px-3 py-3 text-center font-mono font-bold text-slate-800">
+                                        {row.operators}
                                     </td>
                                 </tr>
                             ))}
                         </tbody>
                     </table>
                 </div>
-            )}
+            </div>
 
-            {/* ── Footer ────────────────────────────────────────── */}
-            <p className="text-center text-[11px] text-slate-300 mt-4">
-                Tiempos estándar {fatigueOn ? `con fatiga +${fatiguePct}%` : 'sin fatiga'} · OEE {((data.meta.manualOEE || 1) * 100).toFixed(0)}%
-            </p>
+            {/* ── Summary ─────────────────────────────────────── */}
+            <div className="bg-slate-800 rounded-xl overflow-hidden shadow-sm">
+                <div className="grid grid-cols-3 divide-x divide-slate-700">
+                    <div className="px-6 py-4">
+                        <div className="text-[11px] text-slate-400 uppercase tracking-wider font-medium">Total Dotación (operadores/día)</div>
+                        <div className="text-2xl font-bold text-white mt-1">{totalOperators}</div>
+                        <div className="text-xs text-slate-400 mt-0.5">Dotación exacta: {totalDotacion.toFixed(2)}</div>
+                    </div>
+                    <div className="px-6 py-4">
+                        <div className="text-[11px] text-slate-400 uppercase tracking-wider font-medium">Operadores por turno</div>
+                        <div className="text-2xl font-bold text-white mt-1">{operatorsPerShift}</div>
+                        <div className="text-xs text-slate-400 mt-0.5">{activeShifts} turno{activeShifts > 1 ? 's' : ''} activo{activeShifts > 1 ? 's' : ''}</div>
+                    </div>
+                    <div className="px-6 py-4">
+                        <div className="text-[11px] text-slate-400 uppercase tracking-wider font-medium">Procesos analizados</div>
+                        <div className="text-2xl font-bold text-white mt-1">{rows.length}</div>
+                        <div className="text-xs text-slate-400 mt-0.5">
+                            {rows.filter(r => r.isOk).length} OK · {rows.filter(r => !r.isOk).length} en déficit
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     );
 };

@@ -119,36 +119,51 @@ function getApStyle(ap: string) {
 }
 
 // ============================================================================
-// FULL AMFE FORM — Column definitions (29 columns, AIAG-VDA standard)
+// FULL AMFE FORM — Column definitions (28 columns, AIAG-VDA standard)
 // ============================================================================
 
 const AMFE_COL_GROUPS = [
-    { label: 'Análisis de Estructura', colSpan: 3 },
-    { label: 'Análisis de Fallas', colSpan: 5 },
-    { label: 'Análisis de Causas', colSpan: 6 },
-    { label: 'Clasificación', colSpan: 3 },
-    { label: 'Optimización (Paso 6)', colSpan: 12 },
+    { label: 'Análisis de Estructura (Paso 2)', colSpan: 3 },
+    { label: 'Análisis Funcional (Paso 3)', colSpan: 3 },
+    { label: 'Análisis de Fallas (Paso 4)', colSpan: 3 },
+    { label: 'Análisis de Riesgo (Paso 5)', colSpan: 7 },
+    { label: 'Optimización (Paso 6)', colSpan: 11 },
+    { label: '', colSpan: 1 },
 ];
 
 const AMFE_COL_HEADERS = [
-    'Paso Proceso', 'Elemento 6M', 'Funcion / Requisito',
-    'Modo de Falla', 'Efecto Interno', 'Efecto Planta Cliente', 'Efecto Usuario Final', 'S',
-    'Causa Raiz', 'Control Prevencion', 'Control Deteccion', 'O', 'D', 'AP',
-    'Nro. Car.', 'CC/SC', 'Filtro',
-    'Accion Preventiva', 'Accion Detectiva', 'Responsable', 'Fecha Obj.',
-    'Estado', 'Accion Tomada', 'Fecha Real', "S'", "O'", "D'", "AP'", 'Observaciones',
+    // Step 2: Estructura (3)
+    'Nro. Op.', 'Paso del Proceso', 'Elemento 6M',
+    // Step 3: Funcional (3)
+    'Func. Item', 'Func. Paso', 'Func. Elem. Trabajo',
+    // Step 4: Fallas (3)
+    'Efecto de Falla (FE)', 'Modo de Falla (FM)', 'Causa de Falla (FC)',
+    // Step 5: Riesgo (7)
+    'S', 'Control Prevención (PC)', 'O', 'Control Detección (DC)', 'D', 'AP', 'Car. Especiales',
+    // Step 6: Optimización (11)
+    'Acc. Preventiva', 'Acc. Detectiva', 'Responsable', 'Fecha Obj.',
+    'Estado', 'Acción Tomada', 'Fecha Cierre', "S'", "O'", "D'", "AP'",
+    // Obs (1)
+    'Observaciones',
 ];
 
 const AMFE_COL_WIDTHS = [
-    20, 18, 22,
-    22, 18, 18, 18, 5,
-    22, 20, 20, 4, 4, 5,
-    8, 7, 7,
-    22, 22, 14, 11, 11, 22, 11, 4, 4, 4, 5, 18,
+    // Step 2 (3)
+    8, 20, 18,
+    // Step 3 (3)
+    22, 22, 22,
+    // Step 4 (3)
+    25, 22, 22,
+    // Step 5 (7)
+    5, 20, 4, 20, 4, 5, 10,
+    // Step 6 (11)
+    22, 22, 14, 11, 11, 22, 11, 4, 4, 4, 5,
+    // Obs (1)
+    18,
 ];
 
 const RESUMEN_AP_COL_WIDTHS = [
-    8, 22, 18, 22, 25, 25, 25, 4, 4, 4, 5, 8, 7, 7, 12, 16,
+    8, 22, 18, 22, 25, 25, 25, 4, 4, 4, 5, 10, 12, 16,
 ];
 
 const PLAN_ACCIONES_COL_WIDTHS = [
@@ -193,6 +208,24 @@ function flattenCauseRows(doc: AmfeDocument): FlatCauseRow[] {
         }
     }
     return result;
+}
+
+/** Build combined FE (Failure Effect) text from the 3 effect levels */
+function buildFEText(fail: AmfeFailure | null): string {
+    if (!fail) return '';
+    const parts: string[] = [];
+    if (fail.effectLocal) parts.push(`Interno: ${fail.effectLocal}`);
+    if (fail.effectNextLevel) parts.push(`Cliente: ${fail.effectNextLevel}`);
+    if (fail.effectEndUser) parts.push(`Usr.Final: ${fail.effectEndUser}`);
+    return parts.join('\n');
+}
+
+/** Build combined Car. Especiales text from specialChar + characteristicNumber */
+function buildCarEspText(c: Partial<AmfeCause>): string {
+    const parts: string[] = [];
+    if (c.specialChar) parts.push(c.specialChar);
+    if (c.characteristicNumber) parts.push(`#${c.characteristicNumber}`);
+    return parts.join(' ');
 }
 
 /**
@@ -300,15 +333,15 @@ function buildMetadataRows(doc: AmfeDocument, colWidths: number[]): { rows: any[
 // ============================================================================
 
 /**
- * Export the full AMFE form with all 29 columns and hierarchical cell merging.
- * This is the main export that replicates the official I-AC-005.3 template.
+ * Export the full AMFE form with all 28 columns and hierarchical cell merging.
+ * VDA standard: Estructura(3) + Funcional(3) + Fallas(3) + Riesgo(7) + Optimización(11) + Obs(1)
  */
 /**
  * Build the full AMFE workbook (no download). Used by both export and buffer generation.
  */
 export function buildAmfeCompletoWorkbook(doc: AmfeDocument): XLSX.WorkBook {
     const wb = XLSX.utils.book_new();
-    const totalCols = AMFE_COL_HEADERS.length; // 29
+    const totalCols = AMFE_COL_HEADERS.length; // 28
 
     // --- Header section ---
     const { rows: metaRows, merges } = buildMetadataRows(doc, AMFE_COL_WIDTHS);
@@ -342,6 +375,12 @@ export function buildAmfeCompletoWorkbook(doc: AmfeDocument): XLSX.WorkBook {
     const dataStartRow = rows.length;
 
     // --- Data rows with merge tracking ---
+    // VDA merge hierarchy:
+    //   Cols 0,1 (Op#, Paso) + 3,4 (Func.Item, Func.Paso): merge per operation
+    //   Col 2 (Elem 6M): merge per work element
+    //   Col 5 (Func.Elem.Trabajo): merge per function
+    //   Cols 6,7 (FE, FM) + 9 (S): merge per failure
+    //   Cols 8, 10-27: one per cause row (no merge)
     const dataRows: any[][] = [];
     const dataMerges: { col: number; startRow: number; rowSpan: number }[] = [];
 
@@ -369,28 +408,27 @@ export function buildAmfeCompletoWorkbook(doc: AmfeDocument): XLSX.WorkBook {
                         const c = cause || ({} as Partial<AmfeCause>);
 
                         dataRows.push([
-                            // Structure (3) — merged per level
-                            { v: sanitizeCellValue(`${op.opNumber} ${op.name}`), s: st.cellMerged },
+                            // Step 2: Estructura (3) — cols 0,1 merged per op, col 2 per WE
+                            { v: sanitizeCellValue(op.opNumber), s: st.cellMerged },
+                            { v: sanitizeCellValue(op.name), s: st.cellMerged },
                             { v: sanitizeCellValue(we ? `${WORK_ELEMENT_LABELS[we.type] || we.type}: ${we.name}` : ''), s: st.cellMerged },
-                            { v: sanitizeCellValue(func ? `${func.description}${func.requirements ? '\n' + func.requirements : ''}` : ''), s: st.cellMerged },
-                            // Failure (5) — merged per failure
+                            // Step 3: Funcional (3) — cols 3,4 merged per op, col 5 per func
+                            { v: sanitizeCellValue(op.focusElementFunction || ''), s: st.cellMerged },
+                            { v: sanitizeCellValue(op.operationFunction || ''), s: st.cellMerged },
+                            { v: sanitizeCellValue(func ? func.description : ''), s: st.cellMerged },
+                            // Step 4: Fallas (3) — cols 6,7 merged per failure, col 8 per cause
+                            { v: sanitizeCellValue(buildFEText(fail)), s: st.cell },
                             { v: sanitizeCellValue(fail?.description || ''), s: st.cell },
-                            { v: sanitizeCellValue(fail?.effectLocal || ''), s: st.cell },
-                            { v: sanitizeCellValue(fail?.effectNextLevel || ''), s: st.cell },
-                            { v: sanitizeCellValue(fail?.effectEndUser || ''), s: st.cell },
-                            { v: fail?.severity ?? '', s: st.cellCenter },
-                            // Cause (6) — one per row
                             { v: sanitizeCellValue(c.cause || ''), s: st.cell },
+                            // Step 5: Riesgo (7) — col 9 (S) merged per failure, rest per cause
+                            { v: fail?.severity ?? '', s: st.cellCenter },
                             { v: sanitizeCellValue(c.preventionControl || ''), s: st.cell },
-                            { v: sanitizeCellValue(c.detectionControl || ''), s: st.cell },
                             { v: c.occurrence ?? '', s: st.cellCenter },
+                            { v: sanitizeCellValue(c.detectionControl || ''), s: st.cell },
                             { v: c.detection ?? '', s: st.cellCenter },
                             { v: c.ap ?? '', s: getApStyle(String(c.ap || '')) },
-                            // Classification (3)
-                            { v: sanitizeCellValue(c.characteristicNumber || ''), s: st.cellCenter },
-                            { v: sanitizeCellValue(c.specialChar || ''), s: st.cellCenter },
-                            { v: sanitizeCellValue(c.filterCode || ''), s: st.cellCenter },
-                            // Optimization (12)
+                            { v: sanitizeCellValue(buildCarEspText(c)), s: st.cellCenter },
+                            // Step 6: Optimización (11)
                             { v: sanitizeCellValue(c.preventionAction || ''), s: st.cell },
                             { v: sanitizeCellValue(c.detectionAction || ''), s: st.cell },
                             { v: sanitizeCellValue(c.responsible || ''), s: st.cell },
@@ -402,6 +440,7 @@ export function buildAmfeCompletoWorkbook(doc: AmfeDocument): XLSX.WorkBook {
                             { v: c.occurrenceNew ?? '', s: st.cellCenter },
                             { v: c.detectionNew ?? '', s: st.cellCenter },
                             { v: c.apNew ?? '', s: getApStyle(String(c.apNew || '')) },
+                            // Obs (1)
                             { v: sanitizeCellValue(c.observations || ''), s: st.cell },
                         ]);
 
@@ -411,29 +450,31 @@ export function buildAmfeCompletoWorkbook(doc: AmfeDocument): XLSX.WorkBook {
                         opRowCount++;
                     }
 
-                    // Failure merge: cols 3-7 (FM, 3 effects, S)
+                    // Failure merge: cols 6,7 (FE, FM), 9 (S)
                     if (failRowCount > 1) {
-                        for (const col of [3, 4, 5, 6, 7]) {
+                        for (const col of [6, 7, 9]) {
                             dataMerges.push({ col, startRow: failStartRow, rowSpan: failRowCount });
                         }
                     }
                 }
 
-                // Function merge: col 2
+                // Function merge: col 5 (Func.Elem.Trabajo)
                 if (funcRowCount > 1) {
-                    dataMerges.push({ col: 2, startRow: funcStartRow, rowSpan: funcRowCount });
+                    dataMerges.push({ col: 5, startRow: funcStartRow, rowSpan: funcRowCount });
                 }
             }
 
-            // Work element merge: col 1
+            // Work element merge: col 2 (Elem 6M)
             if (weRowCount > 1) {
-                dataMerges.push({ col: 1, startRow: weStartRow, rowSpan: weRowCount });
+                dataMerges.push({ col: 2, startRow: weStartRow, rowSpan: weRowCount });
             }
         }
 
-        // Operation merge: col 0
+        // Operation merge: cols 0,1 (Op#, Paso), 3,4 (Func.Item, Func.Paso)
         if (opRowCount > 1) {
-            dataMerges.push({ col: 0, startRow: opStartRow, rowSpan: opRowCount });
+            for (const col of [0, 1, 3, 4]) {
+                dataMerges.push({ col, startRow: opStartRow, rowSpan: opRowCount });
+            }
         }
     }
 
@@ -500,7 +541,7 @@ export function exportAmfeResumenAP(doc: AmfeDocument): void {
     const headers = [
         'Op', 'Paso', 'Elemento 6M', 'Funcion', 'Modo de Falla',
         'Efecto Usr. Final', 'Causa Raiz', 'S', 'O', 'D', 'AP',
-        'Nro.Car.', 'Car.Esp.', 'Filtro', 'Estado', 'Responsable',
+        'Car. Esp.', 'Estado', 'Responsable',
     ];
     const { rows: metaRows, merges } = buildMetadataRows(doc, RESUMEN_AP_COL_WIDTHS);
     const rows: any[][] = [...metaRows];
@@ -541,9 +582,7 @@ export function exportAmfeResumenAP(doc: AmfeDocument): void {
             { v: c.occurrence ?? '', s: st.cellCenter },
             { v: c.detection ?? '', s: st.cellCenter },
             { v: c.ap ?? '', s: getApStyle(String(c.ap || '')) },
-            { v: sanitizeCellValue(c.characteristicNumber || ''), s: st.cellCenter },
-            { v: sanitizeCellValue(c.specialChar || ''), s: st.cellCenter },
-            { v: sanitizeCellValue(c.filterCode || ''), s: st.cellCenter },
+            { v: sanitizeCellValue(buildCarEspText(c)), s: st.cellCenter },
             { v: sanitizeCellValue(c.status || ''), s: st.cellCenter },
             { v: sanitizeCellValue(c.responsible || ''), s: st.cell },
         ]);

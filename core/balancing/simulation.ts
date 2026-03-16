@@ -317,12 +317,15 @@ export const calculateTotalEffectiveWorkContent = (data: ProjectData): number =>
 };
 
 // Calculates Total Workforce (Headcount)
-// Sums up replicas from all configured stations.
+// Sums up replicas only from stations that have tasks assigned.
 export const calculateTotalHeadcount = (data: ProjectData): number => {
     const configuredStations = data.meta.configuredStations > 0 ? data.meta.configuredStations : 1;
     const configMap = new Map(data.stationConfigs?.map(c => [c.id, c]) ?? []);
+    // Build set of station IDs that actually have tasks assigned
+    const stationsWithTasks = new Set(data.assignments?.map(a => a.stationId).filter(Number.isFinite) ?? []);
     let totalHeadcount = 0;
     for (let i = 1; i <= configuredStations; i++) {
+        if (!stationsWithTasks.has(i)) continue; // Skip empty stations
         const config = configMap.get(i);
         totalHeadcount += (config?.replicas && config.replicas > 0) ? config.replicas : 1;
     }

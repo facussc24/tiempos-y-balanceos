@@ -447,12 +447,11 @@ export function executeCpChatActions(
         }
     }
 
-    // Report unresolved removes
-    const resolvedCount = resolvedRemoves.length;
-    if (resolvedCount < removeActions.length) {
+    // Report unresolved removes (use pre-resolved set, not re-resolution against mutated array)
+    if (resolvedRemoves.length < removeActions.length) {
+        const resolvedSet = new Set(resolvedRemoves.map(r => r.action));
         for (const action of removeActions) {
-            const item = resolveItem(doc.items, action.target);
-            if (!item) {
+            if (!resolvedSet.has(action)) {
                 const desc = action.target?.processDescription || '?';
                 result.errors.push(`No se encontró item para eliminar: "${desc}"`);
             }
