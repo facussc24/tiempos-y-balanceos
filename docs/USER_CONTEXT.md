@@ -42,7 +42,6 @@ En la practica:
 - **Desktop**: Tauri 2 (Rust backend)
 - **Build**: Vite 6
 - **DB**: SQLite (via tauri-plugin-sql)
-- **IA**: Google Gemini 2.5 Flash (sugerencias y chat copiloto)
 - **Excel**: xlsx-js-style
 - **PDF**: html2pdf.js
 - **Tests**: Vitest con 2,362+ tests pasando
@@ -89,7 +88,6 @@ C:\dev\BarackMercosul\
 
 - **Tailwind en Preview**: Los paths de Windows rompen la deteccion de clases.
   Ver `.claude/memory/tailwind-windows-fix.md`.
-- **API key de Gemini**: Nunca hardcodear. Usar el settings store.
 - **XSS en inputs**: Sanitizar siempre con las utilidades existentes.
 - **Hooks de React 19**: Algunos patterns de React 18 no funcionan igual.
   Ver `.claude/rules/testing.md`.

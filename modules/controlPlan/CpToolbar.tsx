@@ -14,7 +14,7 @@ import { CP_COLUMN_GROUP_LABELS, CP_COLUMN_GROUP_COLORS, CpColumnGroupVisibility
 import {
     ArrowLeft, ClipboardCheck, Save, FolderOpen, FilePlus,
     FileSpreadsheet, Plus, Trash2, FileJson, FileText, Check, Clock,
-    WifiOff, HardDrive, LayoutList, Sparkles, ShieldCheck,
+    WifiOff, HardDrive, LayoutList, ShieldCheck,
     Eye, Pencil, ChevronUp, ChevronDown,
     Search, Filter, Undo2, Redo2, MoreHorizontal, BarChart3, HelpCircle, LayoutTemplate,
     Link2, ExternalLink, GitBranch, Download, Upload,
@@ -52,7 +52,6 @@ interface CpToolbarProps {
     setShowSummary: (v: boolean) => void;
     showOverflowMenu: boolean;
     setShowOverflowMenu: (v: boolean) => void;
-    setShowChat: (v: boolean) => void;
     setShowHelp: (v: boolean) => void;
     setShowTemplates: (v: boolean) => void;
     // Undo/Redo
@@ -105,8 +104,6 @@ interface CpToolbarProps {
     currentRevisionLevel?: string;
     // Product catalog
     onProductSelect?: (fields: Partial<ControlPlanHeader>) => void;
-    // AI
-    aiEnabled?: boolean;
     // Auto-validation badge
     autoValidationCount?: number;
     autoValidationHasErrors?: boolean;
@@ -124,7 +121,7 @@ const CpToolbar: React.FC<CpToolbarProps> = (props) => {
         currentProject, saveStatus, hasUnsavedChanges, networkAvailable, lastAutoSave,
         projects, saveCurrentProject, refreshProjects, loadSelectedProject, deleteSelectedProject, createNewProject,
         showProjectPanel, setShowProjectPanel, showSummary, setShowSummary,
-        showOverflowMenu, setShowOverflowMenu, setShowChat, setShowHelp, setShowTemplates,
+        showOverflowMenu, setShowOverflowMenu, setShowHelp, setShowTemplates,
         canUndo, canRedo, onUndo, onRedo,
         headerCollapsed, setHeaderCollapsed, headerSummary, header, onHeaderChange, inputClass,
         searchQuery, setSearchQuery, filterAp, setFilterAp, filterSpecial, setFilterSpecial,
@@ -282,7 +279,7 @@ const CpToolbar: React.FC<CpToolbarProps> = (props) => {
                                         ? 'bg-teal-50 border-teal-300 text-teal-700 hover:bg-teal-100'
                                         : 'bg-white border-gray-300 text-slate-600 hover:bg-gray-50'
                                 }`}
-                                title={isReadOnly ? 'Cambiar a modo Edicion (Ctrl+D)' : 'Cambiar a modo Vista (Ctrl+D)'} data-shortcut="Ctrl+D">
+                                title={isReadOnly ? 'Cambiar a modo Edicion (Ctrl+D)' : 'Cambiar a modo Vista (Ctrl+D)'} data-testid="toggle-edit-mode" data-shortcut="Ctrl+D">
                                 {isReadOnly ? <Eye size={15} /> : <Pencil size={15} />}
                                 <span>{isReadOnly ? 'Vista' : 'Editar'}</span>
                             </button>
@@ -446,14 +443,6 @@ const CpToolbar: React.FC<CpToolbarProps> = (props) => {
                                     <span className="bg-teal-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
                                         {props.currentRevisionLevel || 'A'}
                                     </span>
-                                </button>
-                            )}
-                            {props.aiEnabled && (
-                                <button onClick={() => setShowChat(true)}
-                                    className="flex items-center gap-1.5 bg-teal-600 hover:bg-teal-500 text-white px-3 py-2 rounded font-semibold transition shadow-sm text-xs"
-                                    title="Copiloto IA (Ctrl+I)" data-shortcut="Ctrl+I">
-                                    <Sparkles size={15} />
-                                    <span className="hidden sm:inline">Copiloto</span>
                                 </button>
                             )}
                         </div>

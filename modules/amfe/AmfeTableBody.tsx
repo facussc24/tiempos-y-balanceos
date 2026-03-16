@@ -18,7 +18,6 @@ interface Props {
     requestConfirm: (options: { title: string; message: string; variant?: 'danger' | 'warning' | 'info'; confirmText?: string }) => Promise<boolean>;
     columnVisibility?: ColumnGroupVisibility;
     suggestionIndex?: SuggestionIndex | null;
-    aiEnabled?: boolean;
     collapsedOps?: Set<string>;
     onToggleCollapse?: (opId: string) => void;
     readOnly?: boolean;
@@ -27,7 +26,7 @@ interface Props {
 // inferOperationCategory re-exported from utils/processCategory
 export { inferOperationCategory } from '../../utils/processCategory';
 
-const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, columnVisibility, suggestionIndex, aiEnabled = false, collapsedOps, onToggleCollapse, readOnly = false }) => {
+const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, columnVisibility, suggestionIndex, collapsedOps, onToggleCollapse, readOnly = false }) => {
     const sIdx = suggestionIndex || null;
     const v = columnVisibility || { step2: true, step3: true, step4: true, step5: true, step6: true, obs: true };
 
@@ -323,7 +322,7 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
         // VIEW MODE: stacked display instead of tabs
         if (readOnly) {
             return (
-                <td className={cellClass} rowSpan={rowSpan}>
+                <td className={cellClass} rowSpan={rowSpan} data-field="failureEffect">
                     <div className="flex flex-col gap-1">
                         {tabs.map((t, i) => {
                             const text = String(t.value || '').trim();
@@ -355,7 +354,7 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
         }
 
         return (
-            <td className={cellClass} rowSpan={rowSpan}>
+            <td className={cellClass} rowSpan={rowSpan} data-field="failureEffect">
                 {/* Tab buttons */}
                 <div className="flex gap-0.5 mb-1" role="tablist">
                     {tabs.map((t, i) => {
@@ -396,7 +395,7 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
                             placeholder="S"
                         />
                     </div>
-                    <SuggestableTextarea value={active.value} onChange={e => amfe.updateFailure(op.id, we.id, func.id, fail.id, active.field, e.target.value)} onValueChange={v => amfe.updateFailure(op.id, we.id, func.id, fail.id, active.field, v)} suggestionIndex={sIdx} aiEnabled={aiEnabled} suggestionField={active.sugField} suggestionContext={buildSugCtx(op, we, func, fail, undefined, active.existing)} className={textAreaClass} placeholder={active.placeholder} />
+                    <SuggestableTextarea value={active.value} onChange={e => amfe.updateFailure(op.id, we.id, func.id, fail.id, active.field, e.target.value)} onValueChange={v => amfe.updateFailure(op.id, we.id, func.id, fail.id, active.field, v)} suggestionIndex={sIdx} suggestionField={active.sugField} suggestionContext={buildSugCtx(op, we, func, fail, undefined, active.existing)} className={textAreaClass} placeholder={active.placeholder} aria-label={`Efecto ${active.label} — ${op.opNumber}`} />
                 </div>
                 {/* S summary */}
                 {maxS > 0 && (
@@ -413,9 +412,9 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
     const renderCauseCells = (op: AmfeOperation, we: AmfeWorkElement, func: AmfeFunction, fail: AmfeFailure, cause: AmfeCause, validation: CauseValidationState | null | undefined, isFirstCause: boolean, failRows: number) => (
         <>
             {/* Step 4: FC (Failure Cause) — per-row, VDA standard */}
-            {v.step4 && <td className={`${cellClass} bg-orange-50/5`}>
+            {v.step4 && <td className={`${cellClass} bg-orange-50/5`} data-field="cause">
                 <div className="flex justify-between group/cause">
-                    {renderText(cause.cause, <SuggestableTextarea value={cause.cause} onChange={e => amfe.updateCause(op.id, we.id, func.id, fail.id, cause.id, 'cause', e.target.value)} onValueChange={v => amfe.updateCause(op.id, we.id, func.id, fail.id, cause.id, 'cause', v)} suggestionIndex={sIdx} aiEnabled={aiEnabled} suggestionField="cause" suggestionContext={buildSugCtx(op, we, func, fail, undefined, fail.causes.map(c => c.cause).filter(Boolean))} className={`${textAreaClass} text-orange-900 bg-orange-50/30`} placeholder="Por que fallo? (ej: Sensor descalibrado)" />)}
+                    {renderText(cause.cause, <SuggestableTextarea value={cause.cause} onChange={e => amfe.updateCause(op.id, we.id, func.id, fail.id, cause.id, 'cause', e.target.value)} onValueChange={v => amfe.updateCause(op.id, we.id, func.id, fail.id, cause.id, 'cause', v)} suggestionIndex={sIdx} suggestionField="cause" suggestionContext={buildSugCtx(op, we, func, fail, undefined, fail.causes.map(c => c.cause).filter(Boolean))} className={`${textAreaClass} text-orange-900 bg-orange-50/30`} placeholder="Por que fallo? (ej: Sensor descalibrado)" aria-label={`Causa (FC) — ${op.opNumber}`} />)}
                     {!readOnly && <div className="flex flex-col gap-1 opacity-0 group-hover/cause:opacity-100">
                         <button onClick={() => amfe.duplicateCause(op.id, we.id, func.id, fail.id, cause.id)} className="text-gray-300 hover:text-blue-500 hover:bg-blue-50 p-0.5 rounded transition" title="Duplicar causa" aria-label="Duplicar causa"><Copy size={10} /></button>
                         <button onClick={() => confirmDeleteCause(op.id, we.id, func.id, fail.id, cause.id)} className="text-gray-300 hover:text-red-500 hover:bg-red-50 p-0.5 rounded transition" title="Eliminar causa" aria-label="Eliminar causa"><Trash2 size={10} /></button>
@@ -425,7 +424,7 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
             {/* Step 5: S (rowSpan per failure), PC, O, DC, D, AP, Car.Especiales */}
             {v.step5 && <>
                 {isFirstCause && (
-                    <td className={`${cellClass} bg-yellow-50/10`} rowSpan={failRows}>
+                    <td className={`${cellClass} bg-yellow-50/10`} rowSpan={failRows} data-field="severity">
                         {renderSODBadge(fail.severity, <>
                             <input
                                 type="number" min={1} max={10} step={1}
@@ -444,21 +443,21 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
                         </>)}
                     </td>
                 )}
-                <td className={`${cellClass} bg-yellow-50/10`}>
-                    {renderText(cause.preventionControl, <SuggestableTextarea value={cause.preventionControl} onChange={e => amfe.updateCause(op.id, we.id, func.id, fail.id, cause.id, 'preventionControl', e.target.value)} onValueChange={v => amfe.updateCause(op.id, we.id, func.id, fail.id, cause.id, 'preventionControl', v)} suggestionIndex={sIdx} aiEnabled={aiEnabled} suggestionField="preventionControl" suggestionContext={buildSugCtx(op, we, func, fail, cause, fail.causes.map(c => c.preventionControl).filter(Boolean))} className={textAreaClass} placeholder="Control preventivo (ej: Calibración semanal)" />)}
+                <td className={`${cellClass} bg-yellow-50/10`} data-field="preventionControl">
+                    {renderText(cause.preventionControl, <SuggestableTextarea value={cause.preventionControl} onChange={e => amfe.updateCause(op.id, we.id, func.id, fail.id, cause.id, 'preventionControl', e.target.value)} onValueChange={v => amfe.updateCause(op.id, we.id, func.id, fail.id, cause.id, 'preventionControl', v)} suggestionIndex={sIdx} suggestionField="preventionControl" suggestionContext={buildSugCtx(op, we, func, fail, cause, fail.causes.map(c => c.preventionControl).filter(Boolean))} className={textAreaClass} placeholder="Control preventivo (ej: Calibración semanal)" aria-label={`Control Preventivo (PC) — ${op.opNumber}`} />)}
                 </td>
-                <td className={`${cellClass} bg-yellow-50/10`}>{renderSODBadge(cause.occurrence, renderCauseSODInput(op.id, we.id, func.id, fail.id, cause.id, 'occurrence', cause.occurrence, 'Ocurrencia (O) 1-10'))}</td>
-                <td className={`${cellClass} bg-yellow-50/10`}>
-                    {renderText(cause.detectionControl, <SuggestableTextarea value={cause.detectionControl} onChange={e => amfe.updateCause(op.id, we.id, func.id, fail.id, cause.id, 'detectionControl', e.target.value)} onValueChange={v => amfe.updateCause(op.id, we.id, func.id, fail.id, cause.id, 'detectionControl', v)} suggestionIndex={sIdx} aiEnabled={aiEnabled} suggestionField="detectionControl" suggestionContext={buildSugCtx(op, we, func, fail, cause, fail.causes.map(c => c.detectionControl).filter(Boolean))} className={textAreaClass} placeholder="Control detección (ej: Inspección visual 100%)" />)}
+                <td className={`${cellClass} bg-yellow-50/10`} data-field="occurrence">{renderSODBadge(cause.occurrence, renderCauseSODInput(op.id, we.id, func.id, fail.id, cause.id, 'occurrence', cause.occurrence, 'Ocurrencia (O) 1-10'))}</td>
+                <td className={`${cellClass} bg-yellow-50/10`} data-field="detectionControl">
+                    {renderText(cause.detectionControl, <SuggestableTextarea value={cause.detectionControl} onChange={e => amfe.updateCause(op.id, we.id, func.id, fail.id, cause.id, 'detectionControl', e.target.value)} onValueChange={v => amfe.updateCause(op.id, we.id, func.id, fail.id, cause.id, 'detectionControl', v)} suggestionIndex={sIdx} suggestionField="detectionControl" suggestionContext={buildSugCtx(op, we, func, fail, cause, fail.causes.map(c => c.detectionControl).filter(Boolean))} className={textAreaClass} placeholder="Control detección (ej: Inspección visual 100%)" aria-label={`Control Detección (DC) — ${op.opNumber}`} />)}
                 </td>
-                <td className={`${cellClass} bg-yellow-50/10`}>{renderSODBadge(cause.detection, renderCauseSODInput(op.id, we.id, func.id, fail.id, cause.id, 'detection', cause.detection, 'Detección (D) 1-10'))}</td>
-                <td className={`${cellClass} text-center align-middle`}>
+                <td className={`${cellClass} bg-yellow-50/10`} data-field="detection">{renderSODBadge(cause.detection, renderCauseSODInput(op.id, we.id, func.id, fail.id, cause.id, 'detection', cause.detection, 'Detección (D) 1-10'))}</td>
+                <td className={`${cellClass} text-center align-middle`} data-field="ap">
                     <div className="flex items-center justify-center gap-0.5">
                         {renderAPBadge(cause.ap as string)}
                         {validation && <CauseValidationIcon validation={validation} />}
                     </div>
                 </td>
-                <td className={`${cellClass} bg-yellow-50/10`}>
+                <td className={`${cellClass} bg-yellow-50/10`} data-field="specialChar">
                     {readOnly
                         ? <span className={`text-[10px] text-center block font-bold ${cause.specialChar === 'CC' ? 'text-red-600' : cause.specialChar === 'SC' ? 'text-orange-600' : ''}`}>{cause.specialChar || '—'}</span>
                         : <>
@@ -484,11 +483,11 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
             {/* Step 6: Optimization */}
             {v.step6 && (() => {
                 return <>
-                    <td className={`${cellClass} bg-blue-50/10`}>{renderText(cause.preventionAction, <AutoResizeTextarea value={cause.preventionAction} onChange={e => amfe.updateCause(op.id, we.id, func.id, fail.id, cause.id, 'preventionAction', e.target.value)} className={textAreaClass} placeholder="Acción Preventiva" />)}</td>
-                    <td className={`${cellClass} bg-blue-50/10`}>{renderText(cause.detectionAction, <AutoResizeTextarea value={cause.detectionAction} onChange={e => amfe.updateCause(op.id, we.id, func.id, fail.id, cause.id, 'detectionAction', e.target.value)} className={textAreaClass} placeholder="Acción Detectiva" />)}</td>
-                    <td className={`${cellClass} bg-blue-50/10`}>{renderText(cause.responsible, <AutoResizeTextarea value={cause.responsible} onChange={e => amfe.updateCause(op.id, we.id, func.id, fail.id, cause.id, 'responsible', e.target.value)} className={textAreaClass} placeholder="Responsable" />)}</td>
-                    <td className={`${cellClass} bg-blue-50/10`}>{readOnly ? <span className="text-[10px] text-center block">{cause.targetDate || '—'}</span> : <input type="date" value={cause.targetDate} onChange={e => amfe.updateCause(op.id, we.id, func.id, fail.id, cause.id, 'targetDate', e.target.value)} className="w-full text-center outline-none bg-transparent text-[10px]" aria-label="Fecha objetivo" />}</td>
-                    <td className={`${cellClass} bg-blue-50/10`}>
+                    <td className={`${cellClass} bg-blue-50/10`} data-field="preventionAction">{renderText(cause.preventionAction, <AutoResizeTextarea value={cause.preventionAction} onChange={e => amfe.updateCause(op.id, we.id, func.id, fail.id, cause.id, 'preventionAction', e.target.value)} className={textAreaClass} placeholder="Acción Preventiva" aria-label={`Acción Preventiva — ${op.opNumber}`} />)}</td>
+                    <td className={`${cellClass} bg-blue-50/10`} data-field="detectionAction">{renderText(cause.detectionAction, <AutoResizeTextarea value={cause.detectionAction} onChange={e => amfe.updateCause(op.id, we.id, func.id, fail.id, cause.id, 'detectionAction', e.target.value)} className={textAreaClass} placeholder="Acción Detectiva" aria-label={`Acción Detectiva — ${op.opNumber}`} />)}</td>
+                    <td className={`${cellClass} bg-blue-50/10`} data-field="responsible">{renderText(cause.responsible, <AutoResizeTextarea value={cause.responsible} onChange={e => amfe.updateCause(op.id, we.id, func.id, fail.id, cause.id, 'responsible', e.target.value)} className={textAreaClass} placeholder="Responsable" aria-label={`Responsable — ${op.opNumber}`} />)}</td>
+                    <td className={`${cellClass} bg-blue-50/10`} data-field="targetDate">{readOnly ? <span className="text-[10px] text-center block">{cause.targetDate || '—'}</span> : <input type="date" value={cause.targetDate} onChange={e => amfe.updateCause(op.id, we.id, func.id, fail.id, cause.id, 'targetDate', e.target.value)} className="w-full text-center outline-none bg-transparent text-[10px]" aria-label="Fecha objetivo" />}</td>
+                    <td className={`${cellClass} bg-blue-50/10`} data-field="status">
                         {readOnly
                             ? <span className="text-[10px] text-center block">{cause.status || '—'}</span>
                             : <select value={cause.status} onChange={e => amfe.updateCause(op.id, we.id, func.id, fail.id, cause.id, 'status', e.target.value)} className="w-full text-center outline-none bg-transparent text-[10px] cursor-pointer" aria-label="Estado de la acción">
@@ -497,16 +496,16 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
                             </select>
                         }
                     </td>
-                    <td className={`${cellClass} bg-blue-50/10`}>{renderText(cause.actionTaken, <AutoResizeTextarea value={cause.actionTaken} onChange={e => amfe.updateCause(op.id, we.id, func.id, fail.id, cause.id, 'actionTaken', e.target.value)} className={textAreaClass} placeholder="Acción tomada y evidencia" />)}</td>
-                    <td className={`${cellClass} bg-blue-50/10`}>{readOnly ? <span className="text-[10px] text-center block">{cause.completionDate || '—'}</span> : <input type="date" value={cause.completionDate} onChange={e => amfe.updateCause(op.id, we.id, func.id, fail.id, cause.id, 'completionDate', e.target.value)} className="w-full text-center outline-none bg-transparent text-[10px]" aria-label="Fecha de completado" />}</td>
-                    <td className={`${cellClass} bg-blue-50/10`}>{renderSODBadge(cause.severityNew, renderCauseSODInput(op.id, we.id, func.id, fail.id, cause.id, 'severityNew', cause.severityNew, 'Severidad nueva (S) 1-10'))}</td>
-                    <td className={`${cellClass} bg-blue-50/10`}>{renderSODBadge(cause.occurrenceNew, renderCauseSODInput(op.id, we.id, func.id, fail.id, cause.id, 'occurrenceNew', cause.occurrenceNew, 'Ocurrencia nueva (O) 1-10'))}</td>
-                    <td className={`${cellClass} bg-blue-50/10`}>{renderSODBadge(cause.detectionNew, renderCauseSODInput(op.id, we.id, func.id, fail.id, cause.id, 'detectionNew', cause.detectionNew, 'Detección nueva (D) 1-10'))}</td>
-                    <td className={`${cellClass} bg-blue-50/10 text-center align-middle`}>{renderAPBadge(cause.apNew as string)}</td>
+                    <td className={`${cellClass} bg-blue-50/10`} data-field="actionTaken">{renderText(cause.actionTaken, <AutoResizeTextarea value={cause.actionTaken} onChange={e => amfe.updateCause(op.id, we.id, func.id, fail.id, cause.id, 'actionTaken', e.target.value)} className={textAreaClass} placeholder="Acción tomada y evidencia" aria-label={`Acción Tomada — ${op.opNumber}`} />)}</td>
+                    <td className={`${cellClass} bg-blue-50/10`} data-field="completionDate">{readOnly ? <span className="text-[10px] text-center block">{cause.completionDate || '—'}</span> : <input type="date" value={cause.completionDate} onChange={e => amfe.updateCause(op.id, we.id, func.id, fail.id, cause.id, 'completionDate', e.target.value)} className="w-full text-center outline-none bg-transparent text-[10px]" aria-label="Fecha de completado" />}</td>
+                    <td className={`${cellClass} bg-blue-50/10`} data-field="severityNew">{renderSODBadge(cause.severityNew, renderCauseSODInput(op.id, we.id, func.id, fail.id, cause.id, 'severityNew', cause.severityNew, 'Severidad nueva (S) 1-10'))}</td>
+                    <td className={`${cellClass} bg-blue-50/10`} data-field="occurrenceNew">{renderSODBadge(cause.occurrenceNew, renderCauseSODInput(op.id, we.id, func.id, fail.id, cause.id, 'occurrenceNew', cause.occurrenceNew, 'Ocurrencia nueva (O) 1-10'))}</td>
+                    <td className={`${cellClass} bg-blue-50/10`} data-field="detectionNew">{renderSODBadge(cause.detectionNew, renderCauseSODInput(op.id, we.id, func.id, fail.id, cause.id, 'detectionNew', cause.detectionNew, 'Detección nueva (D) 1-10'))}</td>
+                    <td className={`${cellClass} bg-blue-50/10 text-center align-middle`} data-field="apNew">{renderAPBadge(cause.apNew as string)}</td>
                 </>;
             })()}
             {/* Observations */}
-            {v.obs && <td className={`${cellClass} bg-gray-50/30`}>{renderText(cause.observations, <AutoResizeTextarea value={cause.observations} onChange={e => amfe.updateCause(op.id, we.id, func.id, fail.id, cause.id, 'observations', e.target.value)} className={textAreaClass} placeholder={(cause.ap === 'L' || !cause.ap) ? "Si no se requiere acción: 'Análisis concluido, controles actuales aceptables'" : "Observaciones"} />)}</td>}
+            {v.obs && <td className={`${cellClass} bg-gray-50/30`} data-field="observations">{renderText(cause.observations, <AutoResizeTextarea value={cause.observations} onChange={e => amfe.updateCause(op.id, we.id, func.id, fail.id, cause.id, 'observations', e.target.value)} className={textAreaClass} placeholder={(cause.ap === 'L' || !cause.ap) ? "Si no se requiere acción: 'Análisis concluido, controles actuales aceptables'" : "Observaciones"} />)}</td>}
         </>
     );
 
@@ -552,14 +551,14 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
                     const { totalWE, totalFails, totalCauses, highAP } = computeOpSummary(op);
 
                     return (
-                        <tr key={op.id} className={`hover:bg-gray-50 bg-slate-50/80 cursor-pointer${opSeparator}`} onClick={() => onToggleCollapse?.(op.id)} onContextMenu={readOnly ? undefined : e => openCtx(e, { opId: op.id })}>
-                            <td className={opNumCellClass}>
+                        <tr key={op.id} className={`hover:bg-gray-50 bg-slate-50/80 cursor-pointer${opSeparator}`} onClick={() => onToggleCollapse?.(op.id)} onContextMenu={readOnly ? undefined : e => openCtx(e, { opId: op.id })} data-amfe-row="operation" data-op={op.opNumber} data-op-id={op.id}>
+                            <td className={opNumCellClass} data-field="opNumber">
                                 <div className="flex items-center gap-1">
                                     <ChevronRight size={14} className="text-gray-400 flex-shrink-0" />
                                     <span className="text-xs font-bold text-slate-700">{op.opNumber || '?'}</span>
                                 </div>
                             </td>
-                            <td className={opNameCellClass} style={opNameShadow}>
+                            <td className={opNameCellClass} style={opNameShadow} data-field="opName">
                                 <span className="text-xs font-semibold text-slate-700">{op.name || '(sin nombre)'}</span>
                             </td>
                             <td className={cellClass} colSpan={restColSpan}>
@@ -577,8 +576,8 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
                 // If Op has no children, render a blank row with 6M selector
                 if (op.workElements.length === 0) {
                     return (
-                        <tr key={op.id} className={`hover:bg-gray-50${opSeparator}`} onContextMenu={readOnly ? undefined : e => openCtx(e, { opId: op.id })}>
-                            <td className={opNumCellClass}>
+                        <tr key={op.id} className={`hover:bg-gray-50${opSeparator}`} onContextMenu={readOnly ? undefined : e => openCtx(e, { opId: op.id })} data-amfe-row="operation" data-op={op.opNumber} data-op-id={op.id}>
+                            <td className={opNumCellClass} data-field="opNumber">
                                 <div className="flex justify-between items-start group/op">
                                     {renderText(op.opNumber, <AutoResizeTextarea value={op.opNumber} onChange={e => amfe.updateOp(op.id, 'opNumber', e.target.value)} className={textAreaClass} placeholder="Op #" />)}
                                     {!readOnly && <div className="flex flex-col gap-1 opacity-0 group-hover/op:opacity-100">
@@ -587,7 +586,7 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
                                     </div>}
                                 </div>
                             </td>
-                            <td className={opNameCellClass} style={opNameShadow}>
+                            <td className={opNameCellClass} style={opNameShadow} data-field="opName">
                                 {renderText(op.name, <AutoResizeTextarea value={op.name} onChange={e => amfe.updateOp(op.id, 'name', e.target.value)} className={textAreaClass} placeholder="Nombre Operación" />)}
                             </td>
                             <td className={cellClass} colSpan={restColSpan}>
@@ -613,10 +612,10 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
                         const rowSep = isFirstOpRow ? opSeparator : '';
                         isFirstOpRow = false;
                         opResult.push(
-                            <tr key={we.id} className={`hover:bg-gray-50${rowSep}`} onContextMenu={readOnly ? undefined : e => openCtx(e, { opId: op.id, weId: we.id })}>
+                            <tr key={we.id} className={`hover:bg-gray-50${rowSep}`} onContextMenu={readOnly ? undefined : e => openCtx(e, { opId: op.id, weId: we.id })} data-amfe-row="workElement" data-op={op.opNumber} data-we-type={we.type}>
                                 {isFirstWE && (
                                     <>
-                                        <td rowSpan={opRows} className={opNumCellClass}>
+                                        <td rowSpan={opRows} className={opNumCellClass} data-field="opNumber">
                                             {onToggleCollapse && <button onClick={() => onToggleCollapse(op.id)} className="text-gray-400 hover:text-gray-600 mb-0.5 block" title="Colapsar operación" aria-label="Colapsar operación"><ChevronDown size={12} /></button>}
                                             <div className="flex justify-between items-start group/op">
                                                 {renderText(op.opNumber, <AutoResizeTextarea value={op.opNumber} onChange={e => amfe.updateOp(op.id, 'opNumber', e.target.value)} className={textAreaClass} placeholder="Op #" />)}
@@ -626,12 +625,12 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
                                                 </div>}
                                             </div>
                                         </td>
-                                        <td rowSpan={opRows} className={opNameCellClass} style={opNameShadow}>
+                                        <td rowSpan={opRows} className={opNameCellClass} style={opNameShadow} data-field="opName">
                                             {renderText(op.name, <AutoResizeTextarea value={op.name} onChange={e => amfe.updateOp(op.id, 'name', e.target.value)} className={textAreaClass} placeholder="Nombre Operación" />)}
                                         </td>
                                     </>
                                 )}
-                                <td className={cellClass}>
+                                <td className={cellClass} data-field="workElementName">
                                     <div className="flex gap-1 justify-between group/we">
                                         <div className="flex gap-1 flex-1">
                                             <span className="text-[9px] font-bold text-gray-400 uppercase p-0.5">{we.type.substring(0, 3)}</span>
@@ -660,11 +659,12 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
                         // Ghost row: "Agregar Función" even when WE has no functions yet
                         if (!readOnly) {
                             opResult.push(
-                                <tr key={`${we.id}-ghost-func`}>
+                                <tr key={`${we.id}-ghost-func`} data-testid={`ghost-add-func-${we.id}`} data-amfe-row="ghost" data-op={op.opNumber}>
                                     {v.step3 && <td className={ghostCellClass}>
                                         <button
                                             onClick={() => amfe.addFunction(op.id, we.id)}
                                             className="w-full text-left text-xs text-gray-400 hover:text-green-600 hover:bg-green-50/50 px-2 py-1 rounded transition-colors flex items-center gap-1.5"
+                                            aria-label="Agregar función al elemento de trabajo"
                                         >
                                             <Plus size={12} className="text-green-400" />
                                             <span>Agregar Función</span>
@@ -688,10 +688,10 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
                             const rowSep = isFirstOpRow ? opSeparator : '';
                             isFirstOpRow = false;
                             opResult.push(
-                                <tr key={func.id} className={`hover:bg-gray-50${rowSep}`} onContextMenu={readOnly ? undefined : e => openCtx(e, { opId: op.id, weId: we.id, funcId: func.id })}>
+                                <tr key={func.id} className={`hover:bg-gray-50${rowSep}`} onContextMenu={readOnly ? undefined : e => openCtx(e, { opId: op.id, weId: we.id, funcId: func.id })} data-amfe-row="function" data-op={op.opNumber} data-we-type={we.type} data-func-index={funcIndex}>
                                     {isFirstWE && isFirstFunc && (
                                         <>
-                                            <td rowSpan={opRows} className={opNumCellClass}>
+                                            <td rowSpan={opRows} className={opNumCellClass} data-field="opNumber">
                                                 {onToggleCollapse && <button onClick={() => onToggleCollapse(op.id)} className="text-gray-400 hover:text-gray-600 mb-0.5 block" title="Colapsar operación" aria-label="Colapsar operación"><ChevronDown size={12} /></button>}
                                                 <div className="flex justify-between items-start group/op">
                                                     {renderText(op.opNumber, <AutoResizeTextarea value={op.opNumber} onChange={e => amfe.updateOp(op.id, 'opNumber', e.target.value)} className={textAreaClass} placeholder="Op #" />)}
@@ -701,13 +701,13 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
                                                     </div>}
                                                 </div>
                                             </td>
-                                            <td rowSpan={opRows} className={opNameCellClass} style={opNameShadow}>
+                                            <td rowSpan={opRows} className={opNameCellClass} style={opNameShadow} data-field="opName">
                                                 {renderText(op.name, <AutoResizeTextarea value={op.name} onChange={e => amfe.updateOp(op.id, 'name', e.target.value)} className={textAreaClass} placeholder="Nombre Operación" />)}
                                             </td>
                                         </>
                                     )}
                                     {isFirstFunc && (
-                                        <td rowSpan={weRows} className={cellClass}>
+                                        <td rowSpan={weRows} className={cellClass} data-field="workElementName">
                                             <div className="flex gap-1 justify-between group/we">
                                                 <div className="flex gap-1 flex-1">
                                                     <span className="text-[9px] font-bold text-gray-400 uppercase p-0.5">{we.type.substring(0, 3)}</span>
@@ -726,7 +726,7 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
                                                 {renderText(op.operationFunction || '', <AutoResizeTextarea value={op.operationFunction || ''} onChange={e => amfe.updateOp(op.id, 'operationFunction', e.target.value)} className={textAreaClass} placeholder="Función del Paso" />)}
                                             </td>
                                         </>}
-                                        <td rowSpan={funcRows} className={cellClass}>
+                                        <td rowSpan={funcRows} className={cellClass} data-field="functionDescription">
                                             <div className="flex justify-between group/func">
                                                 {renderText(func.description, <AutoResizeTextarea value={func.description} onChange={e => amfe.updateFunction(op.id, we.id, func.id, 'description', e.target.value)} className={textAreaClass} placeholder="Función del Elem. Trabajo" />)}
                                                 {!readOnly && <div className="flex flex-col gap-1 opacity-0 group-hover/func:opacity-100">
@@ -745,11 +745,12 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
                             // Ghost row: "Agregar Modo de Falla" when function has no failures
                             if (!readOnly) {
                                 opResult.push(
-                                    <tr key={`${func.id}-ghost-fail`}>
+                                    <tr key={`${func.id}-ghost-fail`} data-testid={`ghost-add-fail-${func.id}`} data-amfe-row="ghost" data-op={op.opNumber}>
                                         {v.step4 && <td className={ghostCellClass}>
                                             <button
                                                 onClick={() => amfe.addFailure(op.id, we.id, func.id)}
                                                 className="w-full text-left text-xs text-gray-400 hover:text-red-600 hover:bg-red-50/50 px-2 py-1 rounded transition-colors flex items-center gap-1.5"
+                                                aria-label="Agregar modo de falla a la función"
                                             >
                                                 <Plus size={12} className="text-red-400" />
                                                 <span>Agregar Modo de Falla</span>
@@ -768,7 +769,8 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
                         // --- Render failures with nested causes ---
                         let isFirstFailInFunc = true;
 
-                        for (const fail of func.failures) {
+                        for (let failIdx = 0; failIdx < func.failures.length; failIdx++) {
+                            const fail = func.failures[failIdx];
                             const failRows = getFailureRowCount(fail);
                             const warnings = getFailureWarnings(fail);
                             const causesToRender = fail.causes.length > 0 ? fail.causes : [null]; // null = empty placeholder
@@ -785,11 +787,11 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
                                 causeCounter++;
 
                                 opResult.push(
-                                    <tr key={cause ? cause.id : `${fail.id}-empty`} className={`hover:bg-gray-50 group ${causeRowBorder}${rowSep}${zebraClass}`} onContextMenu={readOnly ? undefined : e => openCtx(e, { opId: op.id, weId: we.id, funcId: func.id, failId: fail.id, causeId: cause?.id })}>
+                                    <tr key={cause ? cause.id : `${fail.id}-empty`} className={`hover:bg-gray-50 group ${causeRowBorder}${rowSep}${zebraClass}`} onContextMenu={readOnly ? undefined : e => openCtx(e, { opId: op.id, weId: we.id, funcId: func.id, failId: fail.id, causeId: cause?.id })} data-amfe-row="cause" data-op={op.opNumber} data-we-type={we.type} data-fail-index={failIdx} data-cause-index={causeIndex}>
                                         {/* OPERATION COLUMNS */}
                                         {isFirstWE && isFirstFunc && isFirstFailRow && (
                                             <>
-                                                <td rowSpan={opRows} className={opNumCellClass}>
+                                                <td rowSpan={opRows} className={opNumCellClass} data-field="opNumber">
                                                     {onToggleCollapse && <button onClick={() => onToggleCollapse(op.id)} className="text-gray-400 hover:text-gray-600 mb-0.5 block" title="Colapsar operación" aria-label="Colapsar operación"><ChevronDown size={12} /></button>}
                                                     <div className="flex justify-between items-start group/op">
                                                         {renderText(op.opNumber, <AutoResizeTextarea value={op.opNumber} onChange={e => amfe.updateOp(op.id, 'opNumber', e.target.value)} className={textAreaClass} placeholder="Op #" />)}
@@ -799,7 +801,7 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
                                                         </div>}
                                                     </div>
                                                 </td>
-                                                <td rowSpan={opRows} className={opNameCellClass} style={opNameShadow}>
+                                                <td rowSpan={opRows} className={opNameCellClass} style={opNameShadow} data-field="opName">
                                                     {renderText(op.name, <AutoResizeTextarea value={op.name} onChange={e => amfe.updateOp(op.id, 'name', e.target.value)} className={textAreaClass} placeholder="Nombre Operación" />)}
                                                 </td>
                                             </>
@@ -807,7 +809,7 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
 
                                         {/* WORK ELEMENT COLUMN */}
                                         {isFirstFunc && isFirstFailRow && (
-                                            <td rowSpan={weRows} className={`${cellClass} ${readOnly ? 'bg-slate-50/60 min-w-[140px] border-l border-l-slate-200' : ''}`}>
+                                            <td rowSpan={weRows} className={`${cellClass} ${readOnly ? 'bg-slate-50/60 min-w-[140px] border-l border-l-slate-200' : ''}`} data-field="workElementName">
                                                 <div className="flex gap-1 justify-between group/we">
                                                     <div className="flex gap-1 flex-1 items-start">
                                                         <span className={`text-[9px] font-bold uppercase shrink-0 ${readOnly ? 'bg-slate-200 text-slate-600 px-1 py-0.5 rounded' : 'text-gray-400 p-0.5'}`}>{we.type.substring(0, 3)}</span>
@@ -831,7 +833,7 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
                                             </>}
                                             {/* Func Elem. Trabajo: rowSpan per function */}
                                             {isFirstFailRow && (
-                                                <td rowSpan={funcRows} className={cellClass}>
+                                                <td rowSpan={funcRows} className={cellClass} data-field="functionDescription">
                                                     <div className="flex justify-between group/func">
                                                         {renderText(func.description, <AutoResizeTextarea value={func.description} onChange={e => amfe.updateFunction(op.id, we.id, func.id, 'description', e.target.value)} className={textAreaClass} placeholder="Función del Elem. Trabajo y Car. Proceso" />)}
                                                         {!readOnly && <div className="flex flex-col gap-1 opacity-0 group-hover/func:opacity-100">
@@ -850,9 +852,9 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
                                                 {renderEffectsCell(op, we, func, fail, failRows)}
 
                                                 {/* FAILURE MODE (FM) */}
-                                                <td className={cellClass} rowSpan={failRows}>
+                                                <td className={cellClass} rowSpan={failRows} data-field="failureMode">
                                                     <div className="flex justify-between group/fail">
-                                                        {renderText(fail.description, <SuggestableTextarea value={fail.description} onChange={e => amfe.updateFailure(op.id, we.id, func.id, fail.id, 'description', e.target.value)} onValueChange={v => amfe.updateFailure(op.id, we.id, func.id, fail.id, 'description', v)} suggestionIndex={sIdx} aiEnabled={aiEnabled} suggestionField="failureDescription" suggestionContext={buildSugCtx(op, we, func, undefined, undefined, func.failures.map(f => f.description).filter(Boolean))} className={`${textAreaClass} font-bold text-red-900 bg-red-50/30`} placeholder="Negativo de la función (ej: No mantiene temp)" />)}
+                                                        {renderText(fail.description, <SuggestableTextarea value={fail.description} onChange={e => amfe.updateFailure(op.id, we.id, func.id, fail.id, 'description', e.target.value)} onValueChange={v => amfe.updateFailure(op.id, we.id, func.id, fail.id, 'description', v)} suggestionIndex={sIdx} suggestionField="failureDescription" suggestionContext={buildSugCtx(op, we, func, undefined, undefined, func.failures.map(f => f.description).filter(Boolean))} className={`${textAreaClass} font-bold text-red-900 bg-red-50/30`} placeholder="Negativo de la función (ej: No mantiene temp)" aria-label={`Modo de Falla (FM) — ${op.opNumber}`} />)}
                                                         {!readOnly && <div className="flex flex-col gap-1 opacity-0 group-hover/fail:opacity-100">
                                                             <button onClick={() => amfe.duplicateFailure(op.id, we.id, func.id, fail.id)} className="text-gray-300 hover:text-blue-500 hover:bg-blue-50 p-0.5 rounded transition" title="Duplicar" aria-label="Duplicar"><Copy size={12} /></button>
                                                             <button onClick={() => confirmDeleteFailure(op.id, we.id, func.id, fail.id)} className="text-gray-300 hover:text-red-500 hover:bg-red-50 p-0.5 rounded transition" title="Eliminar" aria-label="Eliminar"><Trash2 size={12} /></button>
@@ -872,12 +874,13 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
                             // Note: FE, FM (Step 4) and S (Step 5) cells are covered by rowSpan from above
                             if (!readOnly) {
                                 opResult.push(
-                                    <tr key={`${fail.id}-ghost-cause`}>
+                                    <tr key={`${fail.id}-ghost-cause`} data-testid={`ghost-add-cause-${fail.id}`} data-amfe-row="ghost" data-op={op.opNumber}>
                                         {v.step4 && (
                                             <td className={ghostCellClass}>
                                                 <button
                                                     onClick={() => amfe.addCause(op.id, we.id, func.id, fail.id)}
                                                     className="w-full text-left text-xs text-gray-400 hover:text-orange-600 hover:bg-orange-50/50 px-2 py-1 rounded transition-colors flex items-center gap-1.5"
+                                                    aria-label="Agregar causa a la falla"
                                                 >
                                                     <Plus size={12} className="text-orange-400" />
                                                     <span>Agregar Causa</span>
@@ -897,11 +900,12 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
                         // 2B. Ghost row: "Agregar Modo de Falla" after each function's failures
                         if (!readOnly) {
                             opResult.push(
-                                <tr key={`${func.id}-ghost-fail`}>
+                                <tr key={`${func.id}-ghost-fail`} data-testid={`ghost-add-fail-${func.id}`} data-amfe-row="ghost" data-op={op.opNumber}>
                                     {v.step4 && <td colSpan={3} className={ghostCellClass}>
                                         <button
                                             onClick={() => amfe.addFailure(op.id, we.id, func.id)}
                                             className="w-full text-left text-xs text-gray-400 hover:text-red-600 hover:bg-red-50/50 px-2 py-1 rounded transition-colors flex items-center gap-1.5"
+                                            aria-label="Agregar modo de falla a la función"
                                         >
                                             <Plus size={12} className="text-red-400" />
                                             <span>Agregar Modo de Falla</span>
@@ -918,11 +922,12 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
                     // 2C. Ghost row: "Agregar Función" after each WE's functions
                     if (!readOnly && we.functions.length > 0) {
                         opResult.push(
-                            <tr key={`${we.id}-ghost-func`}>
+                            <tr key={`${we.id}-ghost-func`} data-testid={`ghost-add-func-${we.id}`} data-amfe-row="ghost" data-op={op.opNumber}>
                                 {v.step3 && <td className={ghostCellClass}>
                                     <button
                                         onClick={() => amfe.addFunction(op.id, we.id)}
                                         className="w-full text-left text-xs text-gray-400 hover:text-green-600 hover:bg-green-50/50 px-2 py-1 rounded transition-colors flex items-center gap-1.5"
+                                        aria-label="Agregar función al elemento de trabajo"
                                     >
                                         <Plus size={12} className="text-green-400" />
                                         <span>Agregar Función</span>
@@ -941,7 +946,7 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
                 if (!readOnly) {
                     const ghostWeCols = 1 + (v.step3 ? 1 : 0) + (v.step4 ? 3 : 0) + (v.step5 ? 7 : 0) + (v.step6 ? 11 : 0) + (v.obs ? 1 : 0);
                     opResult.push(
-                        <tr key={`${op.id}-ghost-we`}>
+                        <tr key={`${op.id}-ghost-we`} data-testid={`ghost-add-we-${op.id}`} data-amfe-row="ghost" data-op={op.opNumber}>
                             <td colSpan={ghostWeCols} className={ghostCellClass}>
                                 {render6MSelector(op.id, op.workElements.map(w => w.type))}
                             </td>
@@ -954,11 +959,12 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
 
             {/* 2E. Ghost row: "Agregar Nueva Operación" at the bottom of the table */}
             {!readOnly && (
-                <tr key="ghost-add-operation">
+                <tr key="ghost-add-operation" data-testid="ghost-add-operation" data-amfe-row="ghost">
                     <td colSpan={2} className={`${ghostCellClass} sticky left-0 z-[5] bg-blue-50/30`}>
                         <button
                             onClick={amfe.addOperation}
                             className="w-full text-left text-sm text-blue-500 hover:text-blue-700 hover:bg-blue-100/50 px-3 py-2 rounded transition-colors flex items-center gap-2 font-semibold"
+                            aria-label="Agregar nueva operación"
                         >
                             <Plus size={16} className="text-blue-400" />
                             <span>Agregar Nueva Operación</span>

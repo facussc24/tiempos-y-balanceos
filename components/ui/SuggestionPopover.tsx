@@ -3,13 +3,13 @@
  *
  * Autocomplete dropdown that appears below a textarea when the user types.
  * Shows suggestions from the AMFE suggestion engine with source attribution.
- * Supports dual sources: local pattern-matching (instant) + AI/Gemini (async).
+ * Supports local pattern-matching suggestions with source attribution.
  * Supports keyboard navigation (Up/Down/Enter/Escape).
  */
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Suggestion } from '../../modules/amfe/amfeSuggestionEngine';
-import { Library, FileText, Sparkles, Loader2 } from 'lucide-react';
+import { Library, FileText } from 'lucide-react';
 
 interface Props {
     localSuggestions: Suggestion[];
@@ -132,53 +132,6 @@ const SuggestionPopover: React.FC<Props> = ({
                                             x{suggestion.frequency}
                                         </span>
                                     )}
-                                </div>
-                            </div>
-                        );
-                    })}
-                </>
-            )}
-
-            {/* AI suggestions section */}
-            {(aiLoading || (aiSuggestions && aiSuggestions.length > 0)) && (
-                <>
-                    <div className="px-2 py-0.5 bg-violet-50 border-y border-violet-100 flex items-center gap-1">
-                        <Sparkles size={8} className="text-violet-500" />
-                        <span className="text-[8px] font-medium text-violet-600 uppercase tracking-wider">
-                            Gemini
-                        </span>
-                        {aiLoading && (
-                            <Loader2 size={8} className="text-violet-400 animate-spin ml-auto" />
-                        )}
-                    </div>
-                    {aiLoading && (!aiSuggestions || aiSuggestions.length === 0) && (
-                        <div className="px-2 py-2 text-center">
-                            <span className="text-[9px] text-violet-400">
-                                Consultando Gemini...
-                            </span>
-                        </div>
-                    )}
-                    {aiSuggestions && aiSuggestions.map((suggestion, idx) => {
-                        const currentFlatIndex = flatIndex++;
-                        return (
-                            <div
-                                key={`ai-${idx}`}
-                                data-suggestion-item
-                                onClick={() => onSelect(suggestion.text)}
-                                className={`px-2 py-1.5 cursor-pointer transition-colors ${
-                                    currentFlatIndex === selectedIndex
-                                        ? 'bg-violet-50 text-gray-900'
-                                        : 'text-gray-700 hover:bg-gray-50'
-                                }`}
-                            >
-                                <div className="text-[10px] leading-tight line-clamp-2 flex items-start gap-1">
-                                    <Sparkles size={9} className="text-violet-400 shrink-0 mt-0.5" />
-                                    <span>{suggestion.text}</span>
-                                </div>
-                                <div className="flex items-center gap-1 mt-0.5 ml-3">
-                                    <span className="text-[8px] text-violet-400">
-                                        {suggestion.source}
-                                    </span>
                                 </div>
                             </div>
                         );

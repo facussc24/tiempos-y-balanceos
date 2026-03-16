@@ -79,9 +79,6 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab }) => {
     const [showOverflowMenu, setShowOverflowMenu] = useState(false);
     const [collapsedOps, setCollapsedOps] = useState<Set<string>>(new Set());
     const [filters, setFilters] = useState<AmfeFilterState>(EMPTY_FILTERS);
-    const [showChangeAnalysis, setShowChangeAnalysis] = useState(false);
-    const [showAudit, setShowAudit] = useState(false);
-    const [showChat, setShowChat] = useState(false);
     const [showHelp, setShowHelp] = useState(false);
     const [viewMode, setViewMode] = useState<'view' | 'edit'>('edit');
     const isReadOnly = viewMode === 'view';
@@ -183,20 +180,6 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab }) => {
     // 4c. Soft limit warnings (for badge on summary button)
     const softLimitWarnings = useMemo(() => getSoftLimitWarnings(amfe.data), [amfe.data]);
 
-    // 4d. AI suggestions enabled (read from settings on mount)
-    const [aiEnabled, setAiEnabled] = useState(false);
-
-    useEffect(() => {
-        let cancelled = false;
-        import('../../utils/settingsStore').then(({ loadSettings }) =>
-            loadSettings().then(s => {
-                if (!cancelled) setAiEnabled(s.geminiEnabled && !!s.geminiApiKey);
-            })
-        ).catch(() => {
-            // FIX: Prevent unhandled promise rejection if settings import/load fails
-        });
-        return () => { cancelled = true; };
-    }, []);
 
     // 4e. Revision control
     const revisionControl = useRevisionControl({
@@ -352,15 +335,6 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab }) => {
 
     // Disable AMFE shortcuts when a child module tab is active (PFD, CP, HO)
     // to prevent Ctrl+S/Ctrl+N/Escape conflicts with child module shortcuts
-    // Guard: Ctrl+I only toggles chat if AI is enabled (or to close an already-open chat)
-    const guardedSetShowChat = useCallback((fn: (prev: boolean) => boolean) => {
-        setShowChat(prev => {
-            const next = fn(prev);
-            if (next && !aiEnabled) return prev; // block opening if AI disabled
-            return next;
-        });
-    }, [aiEnabled]);
-
     useAmfeKeyboardShortcuts({
         onUndo: handleUndo,
         onRedo: handleRedo,
@@ -370,8 +344,6 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab }) => {
         setFilters,
         showTemplates,
         setShowTemplates,
-        showChat,
-        setShowChat: guardedSetShowChat,
         showHelp,
         setShowHelp,
         showSummary,
@@ -746,10 +718,6 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab }) => {
                 setShowTemplates={setShowTemplates}
                 showRegistry={showRegistry}
                 showHelp={showHelp}
-                showChat={showChat}
-                setShowChangeAnalysis={setShowChangeAnalysis}
-                setShowAudit={setShowAudit}
-                setShowChat={setShowChat}
                 setShowHelp={setShowHelp}
                 canUndo={history.canUndo}
                 canRedo={history.canRedo}
@@ -764,7 +732,6 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab }) => {
                 onLoadExample={handleLoadFullExample}
                 onNewRevision={revisionControl.handleNewRevision}
                 currentRevisionLevel={amfe.data.header.revision || 'A'}
-                aiEnabled={aiEnabled}
                 onOpenExportFolder={exportFolder.openFolder}
                 canOpenExportFolder={exportFolder.canOpen}
             />
@@ -888,7 +855,6 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab }) => {
                                     requestConfirm={confirm.requestConfirm}
                                     columnVisibility={colVis.visibility}
                                     suggestionIndex={suggestionIndex}
-                                    aiEnabled={aiEnabled}
                                     collapsedOps={collapsedOps}
                                     onToggleCollapse={toggleCollapseOp}
                                     readOnly={isReadOnly}
@@ -949,14 +915,6 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab }) => {
                 confirmState={confirm.confirmState}
                 onConfirm={confirm.handleConfirm}
                 onCancel={confirm.handleCancel}
-                showChangeAnalysis={showChangeAnalysis}
-                setShowChangeAnalysis={setShowChangeAnalysis}
-                showAudit={showAudit}
-                setShowAudit={setShowAudit}
-                showChat={showChat}
-                setShowChat={setShowChat}
-                onApplyChanges={(newDoc) => { history.flushPending(); amfe.loadData(newDoc); }}
-                onSettingsChanged={setAiEnabled}
                 showHelp={showHelp}
                 setShowHelp={setShowHelp}
                 promptState={projects.promptState}
@@ -971,7 +929,6 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab }) => {
                 networkToast={networkToast}
                 onClearNetworkToast={clearNetworkToast}
                 data={amfe.data}
-                aiEnabled={aiEnabled}
             />
 
             {/* Revision Prompt Modal */}

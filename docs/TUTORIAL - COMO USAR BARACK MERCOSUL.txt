@@ -65,7 +65,6 @@ La app tiene 4 modulos principales que se usan EN ORDEN:
   - Analiza que puede fallar en cada operacion
   - Agregas operaciones, funciones, modos de falla
   - Cada falla tiene Severidad, Ocurrencia, Deteccion
-  - El Copiloto IA te ayuda a completar (necesita API key de Gemini)
   - Guardas con "Guardar Como..."
 
   PASO 3: PLAN DE CONTROL

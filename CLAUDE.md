@@ -10,7 +10,6 @@ App de escritorio Tauri + React 19 + TypeScript para gestion de calidad automotr
 |--------------|-----------------------------------------------------|
 | Runtime      | Tauri 2.x, React 19.2, TypeScript 5.8, Vite 6      |
 | Persistencia | SQLite (tauri-plugin-sql) + WAL mode                |
-| AI           | Gemini flash-lite (sugerencias), flash (chat copilot)|
 | Testing      | Vitest 4.x + @testing-library/react + jsdom         |
 | Styling      | TailwindCSS 3.4                                     |
 | Export       | xlsx-js-style, html2pdf.js                          |
@@ -61,8 +60,8 @@ npm run tauri:build  # Build Tauri
     useSessionLock      Lock de sesion en red
 
   modules/              Modulos de negocio
-    amfe/               AMFE VDA (analisis modal de fallas) + AI chat copilot
-    controlPlan/        Plan de Control AIAG + AI copilot + cross-validation
+    amfe/               AMFE VDA (analisis modal de fallas)
+    controlPlan/        Plan de Control AIAG + cross-validation
     hojaOperaciones/    Hojas de operaciones (navy theme, ISO PPE)
     pfd/                Diagrama de Flujo del Proceso (cyan theme, ASME symbols)
     mix/                Mix multi-modelo
@@ -83,7 +82,6 @@ npm run tauri:build  # Build Tauri
       hoRepository.ts         Hojas de Operaciones
       pfdRepository.ts        Diagramas de Flujo (PFD)
       draftRepository.ts      Borradores auto-save unificados
-    geminiClient.ts     Cliente Gemini con cache y circuit breaker
     storageManager.ts   Settings de storage (delega a settingsRepository)
     unified_fs.ts       Abstraccion filesystem (Tauri/web)
     tauri_smart_save.ts Guardado formal a red con locks/atomic/backup
@@ -144,9 +142,8 @@ npm run tauri:build  # Build Tauri
 ### Reglas contextuales (.claude/rules/)
 Reglas detalladas por modulo se cargan automaticamente al editar archivos relevantes:
 - `testing.md` — React 19 gotchas, mock patterns, coverage
-- `amfe-ai.md` — Gemini integration, sugerencias, chat copilot
 - `database.md` — Repositorios, SQLite, persistencia
-- `control-plan.md` — CP AI, cross-validation, trazabilidad
+- `control-plan.md` — CP cross-validation, trazabilidad
 - `exports.md` — Excel/PDF export patterns, NaN prevention
 - `hoja-operaciones.md` — HO UI, PPE, navy theme
 

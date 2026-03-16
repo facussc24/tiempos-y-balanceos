@@ -269,13 +269,6 @@ describe('querySuggestions', () => {
 // queryAllSuggestions tests
 // ---------------------------------------------------------------------------
 
-// Mock AI suggestions module
-vi.mock('../../../modules/amfe/amfeAiSuggestions', () => ({
-    getAiSuggestions: vi.fn(),
-}));
-
-import { getAiSuggestions } from '../../../modules/amfe/amfeAiSuggestions';
-
 describe('queryAllSuggestions', () => {
     let qasIndex: SuggestionIndex;
 
@@ -288,11 +281,7 @@ describe('queryAllSuggestions', () => {
         qasIndex = buildSuggestionIndex(libOps);
     });
 
-    beforeEach(() => {
-        vi.clearAllMocks();
-    });
-
-    it('returns local-only when aiEnabled=false', () => {
+    it('returns local suggestions with ai=null', () => {
         const updates: AllSuggestionsResult[] = [];
         queryAllSuggestions(
             qasIndex, 'failureDescription', 'Poros', {}, false,
@@ -303,120 +292,36 @@ describe('queryAllSuggestions', () => {
         expect(updates[0].local.length).toBeGreaterThan(0);
         expect(updates[0].ai).toBeNull();
         expect(updates[0].aiLoading).toBe(false);
-        expect(getAiSuggestions).not.toHaveBeenCalled();
     });
 
-    it('fires AI query when aiEnabled=true and input >= 3 chars', async () => {
-        vi.mocked(getAiSuggestions).mockResolvedValue([
-            { text: 'AI Suggestion 1', source: 'IA Gemini', frequency: 1 },
-        ]);
-
+    it('returns local suggestions even when aiEnabled=true (AI removed)', () => {
         const updates: AllSuggestionsResult[] = [];
         queryAllSuggestions(
             qasIndex, 'failureDescription', 'Poros', {}, true,
             (result) => updates.push({ ...result }),
         );
 
-        // First update: local + aiLoading=true
         expect(updates).toHaveLength(1);
-        expect(updates[0].aiLoading).toBe(true);
-
-        await vi.waitFor(() => {
-            expect(updates.length).toBe(2);
-        });
-
-        expect(updates[1].aiLoading).toBe(false);
-        expect(updates[1].ai).toHaveLength(1);
-        expect(updates[1].ai![0].text).toBe('AI Suggestion 1');
-    });
-
-    it('deduplicates AI suggestions matching local text', async () => {
-        vi.mocked(getAiSuggestions).mockResolvedValue([
-            { text: 'Porosidad en cordon', source: 'IA Gemini', frequency: 1 },
-            { text: 'Falta de penetracion', source: 'IA Gemini', frequency: 1 },
-        ]);
-
-        const updates: AllSuggestionsResult[] = [];
-        queryAllSuggestions(
-            qasIndex, 'failureDescription', 'Poros', {}, true,
-            (result) => updates.push({ ...result }),
-        );
-
-        await vi.waitFor(() => expect(updates.length).toBe(2));
-
-        const aiTexts = updates[1].ai!.map(s => s.text);
-        expect(aiTexts).not.toContain('Porosidad en cordon');
-        expect(aiTexts).toContain('Falta de penetracion');
-    });
-
-    it('does not call onUpdate after abort', async () => {
-        let resolveAi!: (value: Suggestion[]) => void;
-        vi.mocked(getAiSuggestions).mockImplementation(() =>
-            new Promise(resolve => { resolveAi = resolve; }),
-        );
-
-        const updates: AllSuggestionsResult[] = [];
-        const controller = queryAllSuggestions(
-            qasIndex, 'failureDescription', 'Poros', {}, true,
-            (result) => updates.push({ ...result }),
-        );
-
-        expect(updates).toHaveLength(1);
-        controller.abort();
-        resolveAi([{ text: 'Late', source: 'IA Gemini', frequency: 1 }]);
-
-        await new Promise(r => setTimeout(r, 20));
-        expect(updates).toHaveLength(1);
-    });
-
-    it('skips AI for input shorter than 3 chars', () => {
-        const updates: AllSuggestionsResult[] = [];
-        queryAllSuggestions(
-            qasIndex, 'failureDescription', 'Po', {}, true,
-            (result) => updates.push({ ...result }),
-        );
-
-        expect(updates).toHaveLength(1);
-        expect(updates[0].ai).toEqual([]);
+        expect(updates[0].local.length).toBeGreaterThan(0);
+        expect(updates[0].ai).toBeNull();
         expect(updates[0].aiLoading).toBe(false);
-        expect(getAiSuggestions).not.toHaveBeenCalled();
     });
 
-    it('returns ai:[] on AI error', async () => {
-        vi.mocked(getAiSuggestions).mockRejectedValue(new Error('Network'));
-
-        const updates: AllSuggestionsResult[] = [];
-        queryAllSuggestions(
-            qasIndex, 'failureDescription', 'Poros', {}, true,
-            (result) => updates.push({ ...result }),
-        );
-
-        await vi.waitFor(() => expect(updates.length).toBe(2));
-
-        expect(updates[1].ai).toEqual([]);
-        expect(updates[1].aiLoading).toBe(false);
-    });
-
-    it('uses existingLocal to skip local recomputation', async () => {
-        vi.mocked(getAiSuggestions).mockResolvedValue([
-            { text: 'AI only', source: 'IA Gemini', frequency: 1 },
-        ]);
-
+    it('uses existingLocal to skip local recomputation', () => {
         const existingLocal: Suggestion[] = [
             { text: 'Pre-computed', source: 'Biblioteca: Test', frequency: 1 },
         ];
 
         const updates: AllSuggestionsResult[] = [];
         queryAllSuggestions(
-            qasIndex, 'failureDescription', 'Poros', {}, true,
+            qasIndex, 'failureDescription', 'Poros', {}, false,
             (result) => updates.push({ ...result }),
             existingLocal,
         );
 
+        expect(updates).toHaveLength(1);
         expect(updates[0].local).toEqual(existingLocal);
-
-        await vi.waitFor(() => expect(updates.length).toBe(2));
-        expect(updates[1].local).toEqual(existingLocal);
-        expect(updates[1].ai!.length).toBeGreaterThan(0);
+        expect(updates[0].ai).toBeNull();
+        expect(updates[0].aiLoading).toBe(false);
     });
 });

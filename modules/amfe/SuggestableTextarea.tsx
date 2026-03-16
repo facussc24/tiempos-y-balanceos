@@ -36,8 +36,6 @@ interface Props extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
     suggestionField?: SuggestionField;
     /** Context for filtering suggestions (AMFE mode, 6M aware) */
     suggestionContext?: SuggestionContext;
-    /** Whether AI suggestions are enabled */
-    aiEnabled?: boolean;
     /** Callback when the value changes (replaces onChange for suggestion integration) */
     onValueChange?: (newValue: string) => void;
     /** Custom query function — when provided, replaces the AMFE suggestion engine (generic mode) */
@@ -49,7 +47,6 @@ const SuggestableTextarea: React.FC<Props> = ({
     suggestionIndex,
     suggestionField,
     suggestionContext = {},
-    aiEnabled = false,
     onValueChange,
     onChange,
     onFocus,
@@ -64,7 +61,6 @@ const SuggestableTextarea: React.FC<Props> = ({
     const [isFocused, setIsFocused] = useState(false);
 
     const localDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const aiDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const aiAbortRef = useRef<AbortController | null>(null);
     const blurTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const lastLocalRef = useRef<Suggestion[]>([]);
@@ -73,7 +69,6 @@ const SuggestableTextarea: React.FC<Props> = ({
     useEffect(() => {
         return () => {
             if (localDebounceRef.current) clearTimeout(localDebounceRef.current);
-            if (aiDebounceRef.current) clearTimeout(aiDebounceRef.current);
             if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
             if (aiAbortRef.current) aiAbortRef.current.abort();
         };
@@ -103,45 +98,6 @@ const SuggestableTextarea: React.FC<Props> = ({
         }
     }, [queryFn, suggestionIndex, suggestionField, suggestionContext]);
 
-    // Monotonic request ID to discard stale AI results
-    const aiRequestIdRef = useRef(0);
-
-    // AI-only query: reuses existing local results, fires AI async
-    const triggerAiQuery = useCallback((text: string) => {
-        if (aiAbortRef.current) {
-            aiAbortRef.current.abort();
-            aiAbortRef.current = null;
-        }
-
-        const requestId = ++aiRequestIdRef.current;
-
-        const handleResult = (result: AllSuggestionsResult) => {
-            // Discard stale results from superseded requests
-            if (aiRequestIdRef.current !== requestId) return;
-            setLocalSuggestions(result.local);
-            setAiSuggestions(result.ai);
-            setAiLoading(result.aiLoading);
-            if (result.local.length > 0 || (result.ai && result.ai.length > 0)) {
-                setShowSuggestions(true);
-            }
-        };
-
-        if (queryFn) {
-            const controller = queryFn(text, true, handleResult, lastLocalRef.current);
-            if (controller) aiAbortRef.current = controller;
-        } else {
-            aiAbortRef.current = queryAllSuggestions(
-                suggestionIndex!,
-                suggestionField!,
-                text,
-                suggestionContext,
-                true,
-                handleResult,
-                lastLocalRef.current,
-            );
-        }
-    }, [queryFn, suggestionIndex, suggestionField, suggestionContext]);
-
     const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
         const newValue = e.target.value;
 
@@ -151,9 +107,8 @@ const SuggestableTextarea: React.FC<Props> = ({
 
         // Cancel pending debounces
         if (localDebounceRef.current) clearTimeout(localDebounceRef.current);
-        if (aiDebounceRef.current) clearTimeout(aiDebounceRef.current);
 
-        // Cancel in-flight AI request (user is still typing)
+        // Cancel in-flight request (user is still typing)
         if (aiAbortRef.current) {
             aiAbortRef.current.abort();
             aiAbortRef.current = null;
@@ -163,14 +118,7 @@ const SuggestableTextarea: React.FC<Props> = ({
         localDebounceRef.current = setTimeout(() => {
             triggerLocalQuery(newValue);
         }, 150);
-
-        // AI suggestions: slower debounce (500ms) to avoid excessive API calls
-        if (aiEnabled) {
-            aiDebounceRef.current = setTimeout(() => {
-                triggerAiQuery(newValue);
-            }, 500);
-        }
-    }, [onChange, onValueChange, triggerLocalQuery, triggerAiQuery, aiEnabled]);
+    }, [onChange, onValueChange, triggerLocalQuery]);
 
     const handleFocus = useCallback((e: React.FocusEvent<HTMLTextAreaElement>) => {
         setIsFocused(true);
@@ -199,8 +147,8 @@ const SuggestableTextarea: React.FC<Props> = ({
         setShowSuggestions(false);
     }, []);
 
-    // If no suggestion source and no AI, render plain textarea
-    if (!queryFn && !suggestionIndex && !aiEnabled) {
+    // If no suggestion source, render plain textarea
+    if (!queryFn && !suggestionIndex) {
         return <AutoResizeTextarea value={value} onChange={onChange} onFocus={onFocus} onBlur={onBlur} {...props} />;
     }
 

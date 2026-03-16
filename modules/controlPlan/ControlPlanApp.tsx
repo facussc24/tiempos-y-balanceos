@@ -15,9 +15,6 @@ import { useControlPlanProjects } from './useControlPlanProjects';
 import { useControlPlanPersistence } from './useControlPlanPersistence';
 import { useAmfeConfirm } from '../amfe/useAmfeConfirm';
 import { ControlPlanDocument, ControlPlanHeader, ControlPlanItem, CONTROL_PLAN_PHASES, CP_COLUMNS, EMPTY_CP_DOCUMENT, normalizeControlPlanDocument } from './controlPlanTypes';
-import { CpSuggestionField, CpSuggestionContext } from './cpSuggestionTypes';
-import { createCpQueryFn } from './cpSuggestionEngine';
-import { SuggestionQueryFn } from '../amfe/SuggestableTextarea';
 import { validateCpAgainstAmfe, CpValidationIssue } from './cpCrossValidation';
 import { CP_TEMPLATES } from './controlPlanTemplates';
 import ControlPlanStickyHeader from './ControlPlanStickyHeader';
@@ -39,7 +36,7 @@ import { useDocumentLock } from '../../hooks/useDocumentLock';
 import DocumentLockBanner from '../../components/ui/DocumentLockBanner';
 import { useCrossDocAlerts } from '../../hooks/useCrossDocAlerts';
 import { getNextRevisionLevel } from '../../utils/revisionUtils';
-import { Plus, XCircle, Sparkles, Eye } from 'lucide-react';
+import { Plus, XCircle, Eye } from 'lucide-react';
 import { useShortcutHints } from '../../hooks/useShortcutHints';
 import { toast } from '../../components/ui/Toast';
 import { ShortcutHintsOverlay } from '../../components/ui/ShortcutHintsOverlay';
@@ -51,7 +48,6 @@ import { useCpFilters } from './useCpFilters';
 import { useCpDraftRecovery } from './useCpDraftRecovery';
 import { useOpenExportFolder } from '../../hooks/useOpenExportFolder';
 
-const CpChatPanel = lazy(() => import('./CpChatPanel'));
 const ControlPlanSummary = lazy(() => import('./ControlPlanSummary'));
 const CpHelpPanel = lazy(() => import('./CpHelpPanel'));
 
@@ -69,7 +65,6 @@ interface Props {
 
 const ControlPlanApp: React.FC<Props> = ({ onBackToLanding, embedded, initialData, onDataChange, amfeDoc, onNavigateToAmfe }) => {
     const [showProjectPanel, setShowProjectPanel] = useState(false);
-    const [showChat, setShowChat] = useState(false);
     const [showSummary, setShowSummary] = useState(false);
     const [showOverflowMenu, setShowOverflowMenu] = useState(false);
     const [showHelp, setShowHelp] = useState(false);
@@ -214,22 +209,9 @@ const ControlPlanApp: React.FC<Props> = ({ onBackToLanding, embedded, initialDat
         return () => { if (validationTimerRef.current) clearTimeout(validationTimerRef.current); };
     }, [cp.data.items, amfeDoc]);
 
-    // AI suggestions state (reads global Gemini settings)
-    const [aiEnabled, setAiEnabled] = useState(false);
-    useEffect(() => {
-        let cancelled = false;
-        import('../../utils/settingsStore').then(({ loadSettings }) =>
-            loadSettings().then(s => {
-                if (!cancelled) setAiEnabled(s.geminiEnabled && !!s.geminiApiKey);
-            })
-        ).catch(err => logger.warn('ControlPlan', 'Failed to load AI settings', { error: err instanceof Error ? err.message : String(err) }));
-        return () => { cancelled = true; };
-    }, []);
-
     // Keyboard shortcuts (extracted hook)
     useCpKeyboardShortcuts({
         onSave: projects.saveCurrentProject,
-        onToggleChat: useCallback(() => { if (aiEnabled) setShowChat(prev => !prev); }, [aiEnabled]),
         onToggleViewMode: useCallback(() => setViewMode(prev => prev === 'view' ? 'edit' : 'view'), []),
         onFocusSearch: useCallback(() => searchRef.current?.focus(), [searchRef]),
         onAddItem: cp.addItem,
@@ -237,8 +219,8 @@ const ControlPlanApp: React.FC<Props> = ({ onBackToLanding, embedded, initialDat
         onRedo: handleRedo,
         onToggleSummary: useCallback(() => setShowSummary(prev => !prev), []),
         onToggleHelp: useCallback(() => setShowHelp(prev => !prev), []),
-        showChat, validationIssues, showSummary, showHelp, showTemplates,
-        isReadOnly, setValidationIssues, setShowChat, setShowSummary, setShowHelp, setShowTemplates,
+        validationIssues, showSummary, showHelp, showTemplates,
+        isReadOnly, setValidationIssues, setShowSummary, setShowHelp, setShowTemplates,
         showOverflowMenu, setShowOverflowMenu,
     });
 
@@ -258,28 +240,6 @@ const ControlPlanApp: React.FC<Props> = ({ onBackToLanding, embedded, initialDat
         }, 0);
         return { percent: Math.round((filled / total) * 100), filled, total };
     }, [cp.data.items]);
-
-    // Factory to create queryFn closures for each CP item + field.
-    const phaseRef = useRef(cp.data.header.phase);
-    phaseRef.current = cp.data.header.phase;
-
-    const buildQueryFn = useCallback((item: ControlPlanItem, field: CpSuggestionField): SuggestionQueryFn => {
-        const context: CpSuggestionContext = {
-            processDescription: item.processDescription,
-            machineDeviceTool: item.machineDeviceTool,
-            productCharacteristic: item.productCharacteristic,
-            processCharacteristic: item.processCharacteristic,
-            specialCharClass: item.specialCharClass,
-            specification: item.specification,
-            controlMethod: item.controlMethod,
-            evaluationTechnique: item.evaluationTechnique,
-            amfeAp: item.amfeAp,
-            amfeSeverity: item.amfeSeverity,
-            phase: phaseRef.current,
-            operationCategory: item.operationCategory,
-        };
-        return createCpQueryFn(field, context);
-    }, []);
 
     const handleRemoveItem = useCallback(async (itemId: string) => {
         const idx = cp.data.items.findIndex(i => i.id === itemId);
@@ -304,12 +264,6 @@ const ControlPlanApp: React.FC<Props> = ({ onBackToLanding, embedded, initialDat
             cp.updateHeader(key as keyof ControlPlanHeader, val as string);
         });
     }, [cp.updateHeader]);
-
-    const handleChatApply = useCallback((newDoc: ControlPlanDocument) => {
-        history.flushPending(); // Commit any in-progress typing before AI mutation
-        cp.loadData(newDoc);
-        // Don't reset history — allow Ctrl+Z to undo chat actions
-    }, [cp.loadData, history]);
 
     // FIX: Added history.resetHistory to prevent undo from removing template items
     const handleApplyTemplate = useCallback((templateId: string) => {
@@ -490,7 +444,6 @@ const ControlPlanApp: React.FC<Props> = ({ onBackToLanding, embedded, initialDat
                 setShowSummary={setShowSummary}
                 showOverflowMenu={showOverflowMenu}
                 setShowOverflowMenu={setShowOverflowMenu}
-                setShowChat={setShowChat}
                 setShowHelp={setShowHelp}
                 setShowTemplates={setShowTemplates}
                 canUndo={history.canUndo}
@@ -528,7 +481,6 @@ const ControlPlanApp: React.FC<Props> = ({ onBackToLanding, embedded, initialDat
                 onNewRevision={revisionControl.handleNewRevision}
                 currentRevisionLevel={cp.data.header.revision || 'A'}
                 onProductSelect={handleProductSelect}
-                aiEnabled={aiEnabled}
                 autoValidationCount={autoValidationCount}
                 autoValidationHasErrors={autoValidationHasErrors}
                 onOpenExportFolder={exportFolder.openFolder}
@@ -597,8 +549,6 @@ const ControlPlanApp: React.FC<Props> = ({ onBackToLanding, embedded, initialDat
                                 onRemoveItem={handleRemoveItem}
                                 onMoveItem={cp.moveItem}
                                 onDuplicateItem={cp.duplicateItem}
-                                aiEnabled={aiEnabled}
-                                buildQueryFn={buildQueryFn}
                                 readOnly={isReadOnly}
                                 columnVisibility={colVis.visibility}
                                 onBulkFill={handleBulkFill}
@@ -621,14 +571,6 @@ const ControlPlanApp: React.FC<Props> = ({ onBackToLanding, embedded, initialDat
 
                 {/* FABs */}
                 <div className="fixed bottom-14 right-8 z-40 flex flex-col gap-3 items-end">
-                    {embedded && aiEnabled && (
-                        <button onClick={() => setShowChat(true)}
-                            className="bg-teal-600 hover:bg-teal-500 text-white rounded-full p-3 shadow-lg flex items-center gap-2 transition-transform hover:scale-105"
-                            title="Copiloto IA (Ctrl+I)">
-                            <Sparkles size={20} />
-                            <span className="font-bold pr-1 text-sm">Copiloto</span>
-                        </button>
-                    )}
                     {!isReadOnly && (
                         <button onClick={cp.addItem}
                             className="bg-teal-600 hover:bg-teal-500 text-white rounded-full p-3 shadow-lg flex items-center gap-2 transition-transform hover:scale-105"
@@ -688,32 +630,6 @@ const ControlPlanApp: React.FC<Props> = ({ onBackToLanding, embedded, initialDat
                         <p className="text-xs text-red-700">{projects.loadError}</p>
                     </div>
                 </div>
-            )}
-
-            {/* CP Chat Copilot */}
-            {showChat && (
-                <ModuleErrorBoundary moduleName="Chat Copilot" fallback={
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-                        <div className="bg-white rounded-xl p-6 max-w-sm text-center shadow-xl">
-                            <XCircle size={32} className="text-red-400 mx-auto mb-3" />
-                            <p className="text-sm text-gray-700 mb-4">Error al cargar el Chat Copilot.</p>
-                            <button onClick={() => setShowChat(false)}
-                                className="px-4 py-2 bg-emerald-600 text-white text-xs rounded-lg hover:bg-emerald-700 transition">
-                                Cerrar
-                            </button>
-                        </div>
-                    </div>
-                }>
-                    <Suspense fallback={null}>
-                        <CpChatPanel
-                            doc={cp.data}
-                            amfeDoc={amfeDoc}
-                            onApplyChanges={handleChatApply}
-                            onClose={() => setShowChat(false)}
-                            onSettingsChanged={(enabled) => setAiEnabled(enabled)}
-                        />
-                    </Suspense>
-                </ModuleErrorBoundary>
             )}
 
             {/* Help Panel */}

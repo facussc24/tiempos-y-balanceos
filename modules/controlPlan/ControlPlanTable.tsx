@@ -2,17 +2,14 @@
  * Control Plan Table Body
  *
  * Inline-editable table rows for Control Plan items.
- * 14 AIAG standard columns + actions. AI-eligible fields use SuggestableTextarea.
+ * 14 AIAG standard columns + actions.
  * Supports View/Edit mode with sticky first two columns.
  * Row grouping: consecutive rows with same processStepNumber merge cols 0-1 via rowSpan.
  */
 
 import React, { useCallback, useMemo, useState } from 'react';
 import { ControlPlanItem, CP_COLUMNS, CPColumnDef } from './controlPlanTypes';
-import { CP_AI_FIELDS, CpSuggestionField } from './cpSuggestionTypes';
 import { CpColumnGroupVisibility, CP_COLUMN_TO_GROUP } from './useCpColumnVisibility';
-import { SuggestionQueryFn } from '../amfe/SuggestableTextarea';
-import SuggestableTextarea from '../amfe/SuggestableTextarea';
 import AutoResizeTextarea from '../amfe/AutoResizeTextarea';
 import { Trash2, ChevronUp, ChevronDown, ChevronRight, Copy, ClipboardList } from 'lucide-react';
 
@@ -29,8 +26,6 @@ interface Props {
     onRemoveItem: (itemId: string) => void;
     onMoveItem: (itemId: string, direction: 'up' | 'down') => void;
     onDuplicateItem?: (itemId: string) => void;
-    aiEnabled?: boolean;
-    buildQueryFn?: (item: ControlPlanItem, field: CpSuggestionField) => SuggestionQueryFn;
     readOnly?: boolean;
     columnVisibility?: CpColumnGroupVisibility;
     onBulkFill?: (sourceItemId: string, field: string, value: string) => void;
@@ -80,7 +75,7 @@ function computeRowGroups(items: ControlPlanItem[]): RowGroupInfo[] {
     return result;
 }
 
-const ControlPlanTable: React.FC<Props> = ({ items, onUpdateItem, onRemoveItem, onMoveItem, onDuplicateItem, aiEnabled = false, buildQueryFn, readOnly = false, columnVisibility, onBulkFill }) => {
+const ControlPlanTable: React.FC<Props> = ({ items, onUpdateItem, onRemoveItem, onMoveItem, onDuplicateItem, readOnly = false, columnVisibility, onBulkFill }) => {
     const rowGroups = useMemo(() => computeRowGroups(items), [items]);
     const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
     const [bulkMenu, setBulkMenu] = useState<{x: number; y: number; itemId: string; field: string; value: string; stepNumber: string} | null>(null);
@@ -145,8 +140,6 @@ const ControlPlanTable: React.FC<Props> = ({ items, onUpdateItem, onRemoveItem, 
                                 onRemoveItem={onRemoveItem}
                                 onMoveItem={onMoveItem}
                                 onDuplicateItem={onDuplicateItem}
-                                aiEnabled={aiEnabled}
-                                buildQueryFn={buildQueryFn}
                                 readOnly={readOnly}
                                 columnVisibility={columnVisibility}
                                 groupInfo={groupInfo}
@@ -196,14 +189,12 @@ const ControlPlanRow: React.FC<{
     onRemoveItem: (itemId: string) => void;
     onMoveItem: (itemId: string, direction: 'up' | 'down') => void;
     onDuplicateItem?: (itemId: string) => void;
-    aiEnabled: boolean;
-    buildQueryFn?: (item: ControlPlanItem, field: CpSuggestionField) => SuggestionQueryFn;
     readOnly: boolean;
     columnVisibility?: CpColumnGroupVisibility;
     groupInfo: RowGroupInfo;
     onBulkFill?: (sourceItemId: string, field: string, value: string) => void;
     setBulkMenu?: (menu: {x: number; y: number; itemId: string; field: string; value: string; stepNumber: string} | null) => void;
-}> = React.memo(({ item, idx, total, onUpdateItem, onRemoveItem, onMoveItem, onDuplicateItem, aiEnabled, buildQueryFn, readOnly, columnVisibility, groupInfo, onBulkFill, setBulkMenu }) => {
+}> = React.memo(({ item, idx, total, onUpdateItem, onRemoveItem, onMoveItem, onDuplicateItem, readOnly, columnVisibility, groupInfo, onBulkFill, setBulkMenu }) => {
 
     // Memoize class strings — only recompute when readOnly changes
     // table-fixed + colgroup controla anchos; break-words fuerza wrap de texto largo
@@ -251,7 +242,6 @@ const ControlPlanRow: React.FC<{
         const showCriticalRequired = !readOnly && isRequiredField && isEmpty;
         const showRequiredHint = !readOnly && !isRequiredField && col.required && isEmpty;
         const isAutoFilled = item.autoFilledFields?.includes(col.key) && !!value;
-        const isAiField = CP_AI_FIELDS.has(col.key);
 
         // Sticky columns: processStepNumber (col 0), processDescription (col 1), machineDeviceTool (col 2)
         // Group consecutive rows with same processStepNumber: leader shows content, followers are merged/dimmed
@@ -264,6 +254,7 @@ const ControlPlanRow: React.FC<{
                 const dimmedInput = `${cls.input} text-gray-400 focus:text-slate-700 focus:bg-blue-50`;
                 return (
                     <td key={col.key}
+                        data-field={col.key}
                         className={`${colIdx === 0 ? cls.stickyStep : colIdx === 1 ? cls.stickyDesc : cls.cellBase} opacity-50 focus-within:opacity-100 transition-opacity`}
                         style={colIdx === 1 ? descShadow : undefined}
                     >
@@ -271,12 +262,12 @@ const ControlPlanRow: React.FC<{
                             <AutoResizeTextarea value={value}
                                 onChange={e => onUpdateItem(item.id, col.key, e.target.value)}
                                 className={dimmedInput}
-                                aria-label={`${col.label} para fila ${idx + 1}`} />
+                                aria-label={`${col.label} — ${item.processStepNumber || `fila ${idx + 1}`}`} />
                         ) : (
                             <input type="text" value={value}
                                 onChange={e => onUpdateItem(item.id, col.key, e.target.value)}
                                 className={dimmedInput}
-                                aria-label={`${col.label} para fila ${idx + 1}`} />
+                                aria-label={`${col.label} — ${item.processStepNumber || `fila ${idx + 1}`}`} />
                         )}
                     </td>
                 );
@@ -288,6 +279,7 @@ const ControlPlanRow: React.FC<{
             const useTextarea = TEXTAREA_COLUMNS.has(col.key);
             return (
                 <td key={col.key}
+                    data-field={col.key}
                     className={stickyClass}
                     style={colIdx === 1 ? descShadow : undefined}
                     rowSpan={rSpan}
@@ -296,12 +288,12 @@ const ControlPlanRow: React.FC<{
                         <AutoResizeTextarea value={value}
                             onChange={e => onUpdateItem(item.id, col.key, e.target.value)}
                             className={inputClass}
-                            aria-label={`${col.label} para fila ${idx + 1}`} />
+                            aria-label={`${col.label} — ${item.processStepNumber || `fila ${idx + 1}`}`} />
                     ) : (
                         <input type="text" value={value}
                             onChange={e => onUpdateItem(item.id, col.key, e.target.value)}
                             className={inputClass}
-                            aria-label={`${col.label} para fila ${idx + 1}`} />
+                            aria-label={`${col.label} — ${item.processStepNumber || `fila ${idx + 1}`}`} />
                     ))}
                 </td>
             );
@@ -311,7 +303,7 @@ const ControlPlanRow: React.FC<{
         if (col.key === 'specialCharClass' && readOnly) {
             const scColor = getSpecialCharColor(value);
             return (
-                <td key={col.key} className={cls.cellBase}>
+                <td key={col.key} data-field={col.key} className={cls.cellBase}>
                     {value.trim()
                         ? <span className={`text-[10px] px-1.5 py-0.5 rounded ${scColor}`}>{value.toUpperCase()}</span>
                         : <span className="text-xs text-gray-300 italic">—</span>}
@@ -336,28 +328,10 @@ const ControlPlanRow: React.FC<{
             });
         } : undefined;
 
-        // AI-eligible fields: use SuggestableTextarea with Gemini suggestions
-        if (isAiField && !readOnly && (aiEnabled || buildQueryFn)) {
-            const queryFn = buildQueryFn ? buildQueryFn(item, col.key as CpSuggestionField) : undefined;
-            return (
-                <td key={col.key} className={cellClass} onContextMenu={handleContextMenu}>
-                    <SuggestableTextarea
-                        value={value}
-                        onValueChange={(newVal) => onUpdateItem(item.id, col.key, newVal)}
-                        queryFn={queryFn}
-                        aiEnabled={aiEnabled}
-                        className={cls.input}
-                        aria-label={`${col.label} para fila ${idx + 1}`}
-                        title={isAutoFilled ? 'Derivado del AMFE' : undefined}
-                    />
-                </td>
-            );
-        }
-
         // View mode — render as text
         if (readOnly) {
             return (
-                <td key={col.key} className={cellClass}>
+                <td key={col.key} data-field={col.key} className={cellClass}>
                     {renderText(value, null)}
                 </td>
             );
@@ -370,14 +344,14 @@ const ControlPlanRow: React.FC<{
             : '';
         const editClass = `${cls.input} ${showCriticalRequired ? 'placeholder:text-red-400 placeholder:text-[9px]' : isEmpty && col.key === 'specification' ? 'placeholder:text-gray-300 placeholder:text-[9px] placeholder:italic' : ''}`;
         return (
-            <td key={col.key} className={cellClass} onContextMenu={handleContextMenu}>
+            <td key={col.key} data-field={col.key} className={cellClass} onContextMenu={handleContextMenu}>
                 {useTextarea ? (
                     <AutoResizeTextarea
                         value={value}
                         onChange={e => onUpdateItem(item.id, col.key, e.target.value)}
                         placeholder={placeholder}
                         className={editClass}
-                        aria-label={`${col.label} para fila ${idx + 1}`}
+                        aria-label={`${col.label} — ${item.processStepNumber || `fila ${idx + 1}`}`}
                         title={isAutoFilled ? 'Derivado del AMFE' : undefined}
                     />
                 ) : (
@@ -387,13 +361,13 @@ const ControlPlanRow: React.FC<{
                         onChange={e => onUpdateItem(item.id, col.key, e.target.value)}
                         placeholder={placeholder}
                         className={editClass}
-                        aria-label={`${col.label} para fila ${idx + 1}`}
+                        aria-label={`${col.label} — ${item.processStepNumber || `fila ${idx + 1}`}`}
                         title={isAutoFilled ? 'Derivado del AMFE' : undefined}
                     />
                 )}
             </td>
         );
-    }, [item, idx, aiEnabled, buildQueryFn, onUpdateItem, readOnly, cls, descShadow, renderText, columnVisibility, groupInfo, onBulkFill, setBulkMenu]);
+    }, [item, idx, onUpdateItem, readOnly, cls, descShadow, renderText, columnVisibility, groupInfo, onBulkFill, setBulkMenu]);
 
     // Row background — subtle AP indicator stripe + zebra striping
     const apStripe = item.amfeAp === 'H' ? 'border-l-2 border-l-red-400'
@@ -404,10 +378,10 @@ const ControlPlanRow: React.FC<{
     const groupBorder = groupInfo.isGroupStart && idx > 0 ? 'border-t-2 border-t-teal-200' : '';
 
     return (
-        <tr data-item-id={item.id} className={`${readOnly ? 'hover:bg-gray-50/50' : 'hover:bg-gray-50'} group ${apStripe} ${zebraClass} ${groupBorder}`}>
+        <tr data-item-id={item.id} data-step={item.processStepNumber} data-process={item.processDescription?.slice(0, 50)} className={`${readOnly ? 'hover:bg-gray-50/50' : 'hover:bg-gray-50'} group ${apStripe} ${zebraClass} ${groupBorder}`}>
             {CP_COLUMNS.map((col, colIdx) => renderCell(col, colIdx))}
             {/* Actions — hidden in view mode */}
-            <td className="border border-gray-200 px-1 text-center">
+            <td data-field="actions" className="border border-gray-200 px-1 text-center">
                 {!readOnly && (
                     <div className="flex items-center justify-center gap-0.5 opacity-0 group-hover:opacity-100 transition">
                         <button onClick={() => onMoveItem(item.id, 'up')} disabled={idx === 0}

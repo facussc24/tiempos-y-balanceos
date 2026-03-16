@@ -9,9 +9,6 @@ import type { AmfeDocument } from './amfeTypes';
 import type { AmfeConfirmState } from './useAmfeConfirm';
 import type { PdfTemplate } from './amfePdfExport';
 
-const AmfeChangeAnalysisPanel = lazy(() => import('./AmfeChangeAnalysisPanel'));
-const AmfeAuditPanel = lazy(() => import('./AmfeAuditPanel'));
-const AmfeChatPanel = lazy(() => import('./AmfeChatPanel'));
 const AmfeHelpPanel = lazy(() => import('./AmfeHelpPanel'));
 
 interface AmfeModalsProps {
@@ -19,17 +16,6 @@ interface AmfeModalsProps {
     confirmState: AmfeConfirmState;
     onConfirm: () => void;
     onCancel: () => void;
-    // Change analysis
-    showChangeAnalysis: boolean;
-    setShowChangeAnalysis: (v: boolean) => void;
-    // Audit
-    showAudit: boolean;
-    setShowAudit: (v: boolean) => void;
-    // Chat
-    showChat: boolean;
-    setShowChat: (v: boolean) => void;
-    onApplyChanges: (doc: AmfeDocument) => void;
-    onSettingsChanged: (v: boolean) => void;
     // Help
     showHelp: boolean;
     setShowHelp: (v: boolean) => void;
@@ -65,15 +51,10 @@ interface AmfeModalsProps {
     onClearNetworkToast: () => void;
     // Data for panels
     data: AmfeDocument;
-    // AI
-    aiEnabled?: boolean;
 }
 
 const AmfeModals: React.FC<AmfeModalsProps> = ({
     confirmState, onConfirm, onCancel,
-    showChangeAnalysis, setShowChangeAnalysis,
-    showAudit, setShowAudit,
-    showChat, setShowChat, onApplyChanges, onSettingsChanged,
     showHelp, setShowHelp,
     promptState,
     saveAsState,
@@ -81,7 +62,6 @@ const AmfeModals: React.FC<AmfeModalsProps> = ({
     loadError, apHWarning, onClearApHWarning,
     networkToast, onClearNetworkToast,
     data,
-    aiEnabled,
 }) => {
     const saveAsRef = useFocusTrap(saveAsState.isOpen);
 
@@ -122,45 +102,6 @@ const AmfeModals: React.FC<AmfeModalsProps> = ({
             variant={confirmState.variant}
             confirmText={confirmState.confirmText}
         />
-
-        {/* Change Analysis Panel */}
-        {showChangeAnalysis && (
-            <ModuleErrorBoundary moduleName="Analisis de Cambios" onNavigateHome={() => setShowChangeAnalysis(false)}>
-                <Suspense fallback={null}>
-                    <AmfeChangeAnalysisPanel
-                        doc={data}
-                        onClose={() => setShowChangeAnalysis(false)}
-                    />
-                </Suspense>
-            </ModuleErrorBoundary>
-        )}
-
-        {/* Audit Panel */}
-        {showAudit && (
-            <ModuleErrorBoundary moduleName="Auditoria" onNavigateHome={() => setShowAudit(false)}>
-                <Suspense fallback={null}>
-                    <AmfeAuditPanel
-                        doc={data}
-                        onClose={() => setShowAudit(false)}
-                        aiEnabled={aiEnabled}
-                    />
-                </Suspense>
-            </ModuleErrorBoundary>
-        )}
-
-        {/* Chat Copilot Panel */}
-        {showChat && (
-            <ModuleErrorBoundary moduleName="Chat Copilot" onNavigateHome={() => setShowChat(false)}>
-                <Suspense fallback={null}>
-                    <AmfeChatPanel
-                        doc={data}
-                        onApplyChanges={onApplyChanges}
-                        onClose={() => setShowChat(false)}
-                        onSettingsChanged={onSettingsChanged}
-                    />
-                </Suspense>
-            </ModuleErrorBoundary>
-        )}
 
         {/* Help Panel */}
         {showHelp && (

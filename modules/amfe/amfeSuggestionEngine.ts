@@ -11,7 +11,6 @@
 
 import { AmfeOperation } from './amfeTypes';
 import { AmfeLibraryOperation } from './amfeLibraryTypes';
-import { getAiSuggestions } from './amfeAiSuggestions';
 
 /** A single suggestion with source attribution */
 export interface Suggestion {
@@ -239,7 +238,7 @@ export function querySuggestions(
 }
 
 // ============================================================================
-// COMBINED SUGGESTIONS (local + AI)
+// COMBINED SUGGESTIONS
 // ============================================================================
 
 export interface AllSuggestionsResult {
@@ -249,13 +248,11 @@ export interface AllSuggestionsResult {
 }
 
 /**
- * Query both local and AI suggestions.
- * Local results return immediately via onUpdate. AI results arrive async.
- * The caller receives updates via the onUpdate callback.
- * Returns an AbortController to cancel the AI request.
+ * Query local suggestions.
+ * Local results return immediately via onUpdate.
+ * Returns an AbortController for API compatibility.
  *
  * @param existingLocal - If provided, skip local recomputation and use these.
- *   Useful when the AI query fires after local results are already displayed.
  */
 export function queryAllSuggestions(
     index: SuggestionIndex | null,
@@ -268,35 +265,11 @@ export function queryAllSuggestions(
 ): AbortController {
     const controller = new AbortController();
 
-    // 1. Local suggestions (synchronous, immediate) — skip if caller provides them
+    // Local suggestions (synchronous, immediate) — skip if caller provides them
     const local = existingLocal ?? (index
         ? querySuggestions(index, field, input, context)
         : []);
 
-    if (!aiEnabled || !input || input.trim().length < 3) {
-        onUpdate({ local, ai: aiEnabled ? [] : null, aiLoading: false });
-        return controller;
-    }
-
-    // 2. Fire AI query async, update when done
-    onUpdate({ local, ai: null, aiLoading: true });
-
-    getAiSuggestions(field, context, input, controller.signal)
-        .then(aiResults => {
-            if (controller.signal.aborted) return;
-
-            // Deduplicate: remove AI suggestions that match local text
-            const localTexts = new Set(local.map(s => s.text.toLowerCase().trim()));
-            const dedupedAi = aiResults.filter(
-                s => !localTexts.has(s.text.toLowerCase().trim()),
-            );
-
-            onUpdate({ local, ai: dedupedAi, aiLoading: false });
-        })
-        .catch(() => {
-            if (controller.signal.aborted) return;
-            onUpdate({ local, ai: [], aiLoading: false });
-        });
-
+    onUpdate({ local, ai: null, aiLoading: false });
     return controller;
 }

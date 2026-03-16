@@ -10,8 +10,6 @@ interface UseAmfeKeyboardShortcutsParams {
     setFilters: (f: AmfeFilterState) => void;
     showTemplates: boolean;
     setShowTemplates: (v: boolean) => void;
-    showChat: boolean;
-    setShowChat: (fn: (prev: boolean) => boolean) => void;
     showHelp: boolean;
     setShowHelp: (fn: (prev: boolean) => boolean) => void;
     showSummary: boolean;
@@ -26,7 +24,6 @@ export function useAmfeKeyboardShortcuts(params: UseAmfeKeyboardShortcutsParams)
         onUndo, onRedo, onSave, onAddOperation,
         filters, setFilters,
         showTemplates, setShowTemplates,
-        showChat, setShowChat,
         showHelp, setShowHelp,
         showSummary, setShowSummary,
         setViewMode,
@@ -110,13 +107,6 @@ export function useAmfeKeyboardShortcuts(params: UseAmfeKeyboardShortcutsParams)
                 }
             }
 
-            // Ctrl+I: Toggle Chat Copilot
-            if (mod && e.key === 'i') {
-                e.preventDefault();
-                setShowChat(prev => !prev);
-                return;
-            }
-
             // Ctrl+H: Toggle Help Panel
             if (mod && e.key === 'h') {
                 e.preventDefault();
@@ -141,7 +131,7 @@ export function useAmfeKeyboardShortcuts(params: UseAmfeKeyboardShortcutsParams)
         };
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [onSave, onAddOperation, filters, showTemplates, showChat, showHelp, onUndo, onRedo, showSummary, setShowSummary, setFilters, setShowTemplates, setShowChat, setShowHelp, setViewMode, disabled]);
+    }, [onSave, onAddOperation, filters, showTemplates, showHelp, onUndo, onRedo, showSummary, setShowSummary, setFilters, setShowTemplates, setShowHelp, setViewMode, disabled]);
 
     // Beforeunload warning — uses same hook file since it's a global listener
     // (moved to separate hook below)

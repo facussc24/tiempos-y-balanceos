@@ -3,7 +3,7 @@ import {
     FileJson, Save,
     FolderOpen, Check, Clock, WifiOff, HardDrive,
     BarChart3, FileSpreadsheet, Library, Loader2,
-    Hash, MoreHorizontal, Undo2, Redo2, FileText, Shield, Zap, Bot,
+    Hash, MoreHorizontal, Undo2, Redo2, FileText,
     Eye, Pencil, HelpCircle, Copy, BookOpen, GitBranch, Download, Upload,
 } from 'lucide-react';
 
@@ -38,10 +38,6 @@ interface AmfeToolbarProps {
     setShowTemplates: (v: boolean) => void;
     showRegistry: boolean;
     showHelp: boolean;
-    showChat: boolean;
-    setShowChangeAnalysis: (v: boolean) => void;
-    setShowAudit: (v: boolean) => void;
-    setShowChat: (v: boolean) => void;
     setShowHelp: (v: boolean) => void;
     // History
     canUndo: boolean;
@@ -73,8 +69,6 @@ interface AmfeToolbarProps {
     // Revision control
     onNewRevision?: () => void;
     currentRevisionLevel?: string;
-    // AI
-    aiEnabled?: boolean;
     // Export folder
     onOpenExportFolder?: () => void;
     canOpenExportFolder?: boolean;
@@ -96,10 +90,6 @@ const AmfeToolbar: React.FC<AmfeToolbarProps> = ({
     setShowTemplates,
     showRegistry,
     showHelp,
-    showChat,
-    setShowChangeAnalysis,
-    setShowAudit,
-    setShowChat,
     setShowHelp,
     canUndo,
     canRedo,
@@ -114,7 +104,6 @@ const AmfeToolbar: React.FC<AmfeToolbarProps> = ({
     onLoadExample,
     onNewRevision,
     currentRevisionLevel,
-    aiEnabled,
     onOpenExportFolder,
     canOpenExportFolder,
 }) => {
@@ -183,7 +172,8 @@ const AmfeToolbar: React.FC<AmfeToolbarProps> = ({
                     <button onClick={() => startTransition(() => setViewMode(prev => prev === 'view' ? 'edit' : 'view'))}
                         className={`flex items-center gap-1.5 border px-3 py-2 rounded transition font-medium text-xs ${isReadOnly ? 'bg-indigo-50 border-indigo-300 text-indigo-700' : 'bg-emerald-50 border-emerald-300 text-emerald-700'}`}
                         title={isReadOnly ? 'Cambiar a modo Edición (Ctrl+D)' : 'Cambiar a modo Vista (Ctrl+D)'}
-                        data-shortcut="Ctrl+D">
+                        data-shortcut="Ctrl+D"
+                        data-testid="toggle-edit-mode">
                         {isReadOnly ? <Eye size={15} /> : <Pencil size={15} />}
                         <span className="hidden sm:inline">{isReadOnly ? 'Modo Vista' : 'Modo Edición'}</span>
                     </button>
@@ -278,23 +268,6 @@ const AmfeToolbar: React.FC<AmfeToolbarProps> = ({
                         </button>
                     )}
 
-                    {/* Copiloto IA Button — only visible when AI is enabled */}
-                    {aiEnabled && (
-                        <button
-                            onClick={() => setShowChat(!showChat)}
-                            className={`flex items-center gap-1.5 px-3 py-2 rounded transition font-medium text-xs ${
-                                showChat
-                                    ? 'bg-violet-100 border border-violet-400 text-violet-700'
-                                    : 'bg-gradient-to-r from-violet-600 to-purple-600 text-white hover:from-violet-700 hover:to-purple-700 shadow-sm'
-                            }`}
-                            title="Copiloto IA (Ctrl+I)"
-                            data-shortcut="Ctrl+I"
-                        >
-                            <Bot size={15} />
-                            <span className="hidden sm:inline">Copiloto IA</span>
-                        </button>
-                    )}
-
                     {/* Overflow "Mas" Menu */}
                     <div className="relative">
                         <button
@@ -333,28 +306,6 @@ const AmfeToolbar: React.FC<AmfeToolbarProps> = ({
                                     <div>
                                         <span className="font-bold text-gray-800">Registro IATF</span>
                                         <p className="text-[10px] text-gray-400 mt-0.5">Índice centralizado 16949</p>
-                                    </div>
-                                </button>
-                                {aiEnabled && (
-                                    <button
-                                        onClick={() => { setShowOverflowMenu(false); setShowChangeAnalysis(true); }}
-                                        className="w-full text-left px-4 py-2.5 text-xs hover:bg-gray-50 border-b border-gray-100 flex items-center gap-2"
-                                    >
-                                        <Zap size={14} className="text-purple-500" />
-                                        <div>
-                                            <span className="font-bold text-gray-800">Analizar Cambio</span>
-                                            <p className="text-[10px] text-gray-400 mt-0.5">Impacto de cambio de proceso</p>
-                                        </div>
-                                    </button>
-                                )}
-                                <button
-                                    onClick={() => { setShowOverflowMenu(false); setShowAudit(true); }}
-                                    className="w-full text-left px-4 py-2.5 text-xs hover:bg-gray-50 border-b border-gray-100 flex items-center gap-2"
-                                >
-                                    <Shield size={14} className="text-blue-500" />
-                                    <div>
-                                        <span className="font-bold text-gray-800">Auditar AMFE</span>
-                                        <p className="text-[10px] text-gray-400 mt-0.5">Verificar completitud y calidad</p>
                                     </div>
                                 </button>
                                 <button

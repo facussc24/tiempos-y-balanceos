@@ -85,8 +85,6 @@ beforeEach(() => {
 
     (loadAppSettings as ReturnType<typeof vi.fn>).mockResolvedValue({
         solicitudBasePath: null,
-        geminiApiKey: null,
-        geminiEnabled: false,
     });
 });
 
