@@ -65,6 +65,8 @@ export interface UseHojaOperacionesResult {
 
     // Quality Checks (Section D — only 'registro' is editable)
     updateQualityCheckRegistro: (sheetId: string, checkId: string, value: string) => void;
+    /** Update cpItemId on a quality check (for link validation unlink/relink). */
+    updateQualityCheckCpItemId: (sheetId: string, checkId: string, cpItemId: string | undefined) => void;
 
     // Reaction Plan (Section E)
     updateReactionPlan: (sheetId: string, text: string) => void;
@@ -251,6 +253,15 @@ export function useHojaOperaciones(): UseHojaOperacionesResult {
         })));
     }, []);
 
+    const updateQualityCheckCpItemId = useCallback((sheetId: string, checkId: string, cpItemId: string | undefined) => {
+        setData(prev => mapSheet(prev, sheetId, sheet => ({
+            ...sheet,
+            qualityChecks: sheet.qualityChecks.map(qc =>
+                qc.id === checkId ? { ...qc, cpItemId } : qc,
+            ),
+        })));
+    }, []);
+
     // --- Reaction Plan ---
 
     const updateReactionPlan = useCallback((sheetId: string, text: string) => {
@@ -294,6 +305,7 @@ export function useHojaOperaciones(): UseHojaOperacionesResult {
         removeVisualAid,
         updateVisualAid,
         updateQualityCheckRegistro,
+        updateQualityCheckCpItemId,
         updateReactionPlan,
         updateReactionContact,
         updateStatus,

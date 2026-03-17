@@ -31,6 +31,8 @@ interface Props {
     onUpdateReactionContact: (contact: string) => void;
     readOnly?: boolean;
     stepSearchRef?: React.RefObject<HTMLInputElement | null>;
+    /** Set of quality check IDs with broken CP links (for row highlighting). */
+    brokenCheckIds?: Set<string>;
 }
 
 const NAVY = '#1e3a5f';
@@ -74,6 +76,7 @@ const HoSheetEditor: React.FC<Props> = ({
     onUpdateReactionContact,
     readOnly,
     stepSearchRef,
+    brokenCheckIds,
 }) => {
     const [stepSearch, setStepSearch] = useState('');
 
@@ -308,6 +311,7 @@ const HoSheetEditor: React.FC<Props> = ({
                         checks={sheet.qualityChecks}
                         onUpdateRegistro={onUpdateQualityCheckRegistro}
                         readOnly={readOnly}
+                        brokenCheckIds={brokenCheckIds}
                     />
                 </div>
             </div>

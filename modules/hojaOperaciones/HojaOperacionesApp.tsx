@@ -25,7 +25,7 @@ import { useDocumentLock } from '../../hooks/useDocumentLock';
 import DocumentLockBanner from '../../components/ui/DocumentLockBanner';
 import { useCrossDocAlerts } from '../../hooks/useCrossDocAlerts';
 import { getNextRevisionLevel } from '../../utils/revisionUtils';
-import { FileText, Download, FileDown, FileSpreadsheet, Loader2, Layers, BookOpen, GitBranch, Undo2, Redo2, Eye, Pencil, FolderOpen } from 'lucide-react';
+import { FileText, Download, FileDown, FileSpreadsheet, Loader2, Layers, BookOpen, GitBranch, Undo2, Redo2, Eye, Pencil, FolderOpen, AlertTriangle } from 'lucide-react';
 import HoHelpPanel from './HoHelpPanel';
 import HoHeaderForm from './HoHeaderForm';
 import { useHoHistory } from './useHoHistory';
@@ -34,6 +34,8 @@ import { validateHoDocument, getHoExportErrors } from './hojaOperacionesValidati
 import { logger } from '../../utils/logger';
 import { toast } from '../../components/ui/Toast';
 import { useOpenExportFolder } from '../../hooks/useOpenExportFolder';
+import { useHoCpLinkAlerts } from '../../hooks/useHoCpLinkAlerts';
+import { HoCpLinkValidationPanel } from '../../components/ui/HoCpLinkValidationPanel';
 
 /** Formal persistence methods exposed when operating standalone (not embedded). */
 export interface HoFormalPersistence {
@@ -89,6 +91,16 @@ const HojaOperacionesApp: React.FC<Props> = ({ embedded, initialData, onDataChan
 
     // Cross-document alerts
     const crossDocAlerts = useCrossDocAlerts('ho', hoDocId);
+
+    // HO → CP link validation
+    const hoCpAlerts = useHoCpLinkAlerts(
+        ho.data.sheets.length > 0 ? ho.data : null,
+        ho.data.header.linkedCpProject || null,
+        useCallback((sheetId: string, checkId: string, cpItemId: string | undefined) => {
+            ho.updateQualityCheckCpItemId(sheetId, checkId, cpItemId);
+        }, [ho.updateQualityCheckCpItemId]),
+    );
+    const [showHoCpLinkPanel, setShowHoCpLinkPanel] = useState(false);
 
     // Export folder
     const exportFolder = useOpenExportFolder('ho', ho.data);
@@ -456,6 +468,20 @@ const HojaOperacionesApp: React.FC<Props> = ({ embedded, initialData, onDataChan
                         <BookOpen size={14} />
                         Manual (F1)
                     </button>
+                    {hoCpAlerts.validation.totalBroken > 0 && (
+                        <button
+                            onClick={() => setShowHoCpLinkPanel(v => !v)}
+                            className={`w-full flex items-center gap-2 px-3 py-2 text-[11px] font-medium rounded transition ${
+                                showHoCpLinkPanel
+                                    ? 'bg-orange-100 text-orange-800 border border-orange-300'
+                                    : 'bg-orange-50 text-orange-700 border border-orange-200 hover:bg-orange-100'
+                            }`}
+                            title="Ver vínculos HO → CP rotos"
+                        >
+                            <AlertTriangle size={14} />
+                            CP rotos ({hoCpAlerts.validation.totalBroken})
+                        </button>
+                    )}
                     {onNewRevision && (
                         <>
                             <div className="border-t border-slate-200 my-1" />
@@ -501,6 +527,19 @@ const HojaOperacionesApp: React.FC<Props> = ({ embedded, initialData, onDataChan
                     </div>
                 )}
 
+                {/* HO → CP link validation panel */}
+                {showHoCpLinkPanel && hoCpAlerts.validation.totalBroken > 0 && (
+                    <div className="mx-4 mt-2 flex-shrink-0">
+                        <HoCpLinkValidationPanel
+                            validation={hoCpAlerts.validation}
+                            onUnlinkCheck={hoCpAlerts.unlinkCheck}
+                            onRelinkCheck={hoCpAlerts.relinkCheck}
+                            cpCandidates={hoCpAlerts.cpCandidates}
+                            onClose={() => setShowHoCpLinkPanel(false)}
+                        />
+                    </div>
+                )}
+
                 {/* Editor area */}
                 <div className="flex-1 overflow-y-auto p-4 bg-gray-50">
                     {activeSheet ? (
@@ -522,6 +561,7 @@ const HojaOperacionesApp: React.FC<Props> = ({ embedded, initialData, onDataChan
                             onUpdateReactionContact={handleUpdateReactionContact}
                             readOnly={readOnly}
                             stepSearchRef={stepSearchRef}
+                            brokenCheckIds={hoCpAlerts.brokenCheckIds}
                         />
                     ) : (
                         <div className="flex items-center justify-center h-full text-gray-400 text-xs">
