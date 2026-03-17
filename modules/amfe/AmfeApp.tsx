@@ -53,6 +53,8 @@ import { useAmfeDraftRecovery } from './useAmfeDraftRecovery';
 import { useAmfeNetworkToast } from './useAmfeNetworkToast';
 import { useAmfeExport } from './useAmfeExport';
 import { useAmfeTabNavigation, ActiveTab } from './useAmfeTabNavigation';
+import { useLinkedDocuments } from './useLinkedDocuments';
+import LinkedDocumentsPanel from './LinkedDocumentsPanel';
 import { useOpenExportFolder } from '../../hooks/useOpenExportFolder';
 import { detectSyncAlerts, applySyncAlertToCp, type SyncAlert } from '../controlPlan/cpSyncEngine';
 
@@ -224,6 +226,9 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab }) => {
         requestConfirm: confirm.requestConfirm,
         initialTab,
     });
+
+    // 9a. Linked documents panel (CP, PFD, HO associated with this AMFE project)
+    const linkedDocs = useLinkedDocuments(projects.currentProject, amfe.data);
 
     // 9b. PFD ↔ AMFE link integrity validation (uses in-memory PFD from tab nav)
     const linkValidation = useMemo(
@@ -827,6 +832,16 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab }) => {
             )}
 
             <AmfeStepProgressBar doc={amfe.data} />
+
+            {/* Linked APQP documents panel */}
+            {projects.currentProject && (
+                <div className="px-4 pt-2">
+                    <LinkedDocumentsPanel
+                        linkedDocs={linkedDocs}
+                        onNavigateToTab={tabNav.setActiveTab}
+                    />
+                </div>
+            )}
 
             <AmfeHeaderForm
                 header={amfe.data.header}
