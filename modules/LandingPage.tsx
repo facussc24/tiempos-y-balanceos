@@ -3,14 +3,15 @@ import {
     Clock, ShieldAlert, ClipboardCheck, GitBranch, ArrowRight,
     FolderOpen, FileText, ChevronRight, Sparkles, LayoutGrid,
     ChevronDown, ChevronUp, ExternalLink, FilePlus2, Wrench,
-    BookOpen, Shield, LogOut,
+    BookOpen, Shield, LogOut, Users,
 } from 'lucide-react';
 import barackLogo from '../src/assets/barack_logo.png';
 import type { DocumentType, DocumentRegistryEntry } from './registry/documentRegistryTypes';
 import { useAuth } from '../components/auth/AuthProvider';
+import { useIsAdmin } from '../hooks/useIsAdmin';
 
 interface LandingPageProps {
-    onSelectModule: (module: 'pfd' | 'pfdTest' | 'tiempos' | 'amfe' | 'controlPlan' | 'hojaOperaciones' | 'registry' | 'solicitud' | 'manuales' | 'formatos' | 'dataManager') => void;
+    onSelectModule: (module: 'pfd' | 'pfdTest' | 'tiempos' | 'amfe' | 'controlPlan' | 'hojaOperaciones' | 'registry' | 'solicitud' | 'manuales' | 'formatos' | 'dataManager' | 'admin') => void;
     /** Document counts per type from the registry */
     documentCounts?: Partial<Record<DocumentType, number>>;
     /** Most recently updated documents (up to 5) */
@@ -103,6 +104,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSelectModule, documentCount
     const [showWorkflow, setShowWorkflow] = useState(false);
     const [autoOpenedGuide, setAutoOpenedGuide] = useState(false);
     const { user, signOut, userDisplayName } = useAuth();
+    const { isAdmin } = useIsAdmin();
 
     const totalDocs = useMemo(() =>
         Object.values(documentCounts).reduce((sum, n) => sum + (n || 0), 0),
@@ -380,6 +382,27 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSelectModule, documentCount
                                     <ArrowRight size={14} className="text-rose-400 opacity-0 group-hover:opacity-100 transition-opacity ml-auto flex-shrink-0" />
                                 </div>
                             </button>
+                            {isAdmin && (
+                                <button
+                                    onClick={() => onSelectModule('admin')}
+                                    aria-label="Abrir Administración de Usuarios"
+                                    className="group w-full text-left bg-white/[0.04] backdrop-blur-sm border border-violet-500/30 rounded-xl p-4
+                                               hover:bg-violet-500/10 hover:border-violet-400/60 hover:shadow-lg hover:shadow-violet-500/15 hover:-translate-y-0.5
+                                               focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 focus-visible:ring-white/70
+                                               transition-all duration-200 cursor-pointer"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className="bg-violet-500/15 w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0">
+                                            <Users size={20} className="text-violet-400" />
+                                        </div>
+                                        <div className="min-w-0">
+                                            <h3 className="text-sm font-bold text-white">Administración</h3>
+                                            <p className="text-xs text-slate-400 mt-0.5">Gestionar usuarios y permisos</p>
+                                        </div>
+                                        <ArrowRight size={14} className="text-violet-400 opacity-0 group-hover:opacity-100 transition-opacity ml-auto flex-shrink-0" />
+                                    </div>
+                                </button>
+                            )}
                         </div>
                     </div>
 

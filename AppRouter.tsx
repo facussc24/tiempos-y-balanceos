@@ -30,10 +30,11 @@ const FormatosApp = lazy(() => import('./modules/engineering/FormatosApp'));
 const DataManager = lazy(() => import('./modules/DataManager'));
 const PfdTestRoute = lazy(() => import('./modules/pfd/PfdTestRoute'));
 const PfdSvgAudit = lazy(() => import('./modules/pfd/PfdSvgAudit'));
+const AdminPanel = lazy(() => import('./modules/admin/AdminPanel'));
 
-type AppMode = 'landing' | 'pfd' | 'pfdTest' | 'pfdSvgAudit' | 'tiempos' | 'amfe' | 'controlPlan' | 'hojaOperaciones' | 'registry' | 'solicitud' | 'manuales' | 'formatos' | 'dataManager';
+type AppMode = 'landing' | 'pfd' | 'pfdTest' | 'pfdSvgAudit' | 'tiempos' | 'amfe' | 'controlPlan' | 'hojaOperaciones' | 'registry' | 'solicitud' | 'manuales' | 'formatos' | 'dataManager' | 'admin';
 
-const VALID_MODES = new Set<AppMode>(['landing', 'pfd', 'pfdTest', 'pfdSvgAudit', 'tiempos', 'amfe', 'controlPlan', 'hojaOperaciones', 'registry', 'solicitud', 'manuales', 'formatos', 'dataManager']);
+const VALID_MODES = new Set<AppMode>(['landing', 'pfd', 'pfdTest', 'pfdSvgAudit', 'tiempos', 'amfe', 'controlPlan', 'hojaOperaciones', 'registry', 'solicitud', 'manuales', 'formatos', 'dataManager', 'admin']);
 const LS_KEY_MODE = 'barack_lastModule';
 
 const LoadingFallback: React.FC = () => (
@@ -79,7 +80,7 @@ const AppRouterInner: React.FC = () => {
         return () => { cancelled = true; };
     }, []);
 
-    const handleSelectModule = useCallback((module: 'pfd' | 'pfdTest' | 'pfdSvgAudit' | 'tiempos' | 'amfe' | 'controlPlan' | 'hojaOperaciones' | 'registry' | 'solicitud' | 'manuales' | 'formatos' | 'dataManager') => {
+    const handleSelectModule = useCallback((module: 'pfd' | 'pfdTest' | 'pfdSvgAudit' | 'tiempos' | 'amfe' | 'controlPlan' | 'hojaOperaciones' | 'registry' | 'solicitud' | 'manuales' | 'formatos' | 'dataManager' | 'admin') => {
         setCurrentMode(module);
         try { localStorage.setItem(LS_KEY_MODE, module); } catch { /* ignore */ }
     }, []);
@@ -179,6 +180,11 @@ const AppRouterInner: React.FC = () => {
             {currentMode === 'dataManager' && (
                 <ModuleErrorBoundary moduleName="Datos y Seguridad" onNavigateHome={handleBackToLanding}>
                     <DataManager onBackToLanding={handleBackToLanding} />
+                </ModuleErrorBoundary>
+            )}
+            {currentMode === 'admin' && (
+                <ModuleErrorBoundary moduleName="Administración" onNavigateHome={handleBackToLanding}>
+                    <AdminPanel onBackToLanding={handleBackToLanding} />
                 </ModuleErrorBoundary>
             )}
         </Suspense>
