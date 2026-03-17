@@ -6,7 +6,7 @@
  * and Control Plan 1st Edition (2024) via NotebookLM consultation.
  *
  * Rules:
- * - sampleSize/Frequency: based on AP + phase (Safe Launch = higher freq)
+ * - sampleSize/Frequency: based on AP + phase
  * - reactionPlan: based on severity level
  * - specification: inferred from failure/cause description keywords
  * - reactionPlanOwner: inferred from severity + AP + operation category
@@ -37,13 +37,11 @@ interface DefaultsOutput {
  */
 export function getControlPlanDefaults(input: DefaultsInput): DefaultsOutput {
     const { ap, severity, phase } = input;
-    const isPrototype = phase === 'prototype';
     const isPreLaunch = phase === 'preLaunch';
-    const isSafeLaunch = phase === 'safeLaunch';
     const autoFilledFields: string[] = [];
 
     // --- Sample Size & Frequency ---
-    // Per AIAG CP 2024: Prototype/Pre-Launch = 100%; Safe Launch = intensive; Production = CPK-based
+    // Per AIAG CP 2024: Pre-Launch = 100%; Production = CPK-based
     let sampleSize = '';
     let sampleFrequency = '';
 
@@ -52,18 +50,9 @@ export function getControlPlanDefaults(input: DefaultsInput): DefaultsOutput {
         sampleFrequency = 'Cada pieza';
         autoFilledFields.push('sampleSize', 'sampleFrequency');
     } else if (ap === 'M') {
-        if (isPrototype) {
-            // Prototype: 100% inspection per AIAG
-            sampleSize = '100%';
-            sampleFrequency = 'Cada pieza (Prototipo)';
-        } else if (isPreLaunch) {
-            // Pre-Launch: intensive, near 100% per AIAG
+        if (isPreLaunch) {
             sampleSize = '100%';
             sampleFrequency = 'Cada pieza (Pre-Lanzamiento)';
-        } else if (isSafeLaunch) {
-            // Safe Launch: higher frequency temporarily
-            sampleSize = '100%';
-            sampleFrequency = 'Cada pieza (Safe Launch)';
         } else if (severity >= 9) {
             sampleSize = '5 piezas';
             sampleFrequency = 'Cada hora';

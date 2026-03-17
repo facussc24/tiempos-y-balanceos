@@ -36,9 +36,9 @@ describe('usePfdColumnVisibility', () => {
             expect(result.current.visibleGroups.essential).toBe(true);
         });
 
-        it('should have equipment visible by default', () => {
+        it('should have equipment hidden by default', () => {
             const { result } = renderHook(() => usePfdColumnVisibility([]));
-            expect(result.current.visibleGroups.equipment).toBe(true);
+            expect(result.current.visibleGroups.equipment).toBe(false);
         });
 
         it('should have characteristics visible by default', () => {
@@ -65,18 +65,18 @@ describe('usePfdColumnVisibility', () => {
     describe('toggle behavior', () => {
         it('should toggle a group on/off', () => {
             const { result } = renderHook(() => usePfdColumnVisibility([]));
-            // Equipment is on by default
-            expect(result.current.visibleGroups.equipment).toBe(true);
-
-            act(() => {
-                result.current.toggleGroup('equipment');
-            });
+            // Equipment is off by default (hidden from UI)
             expect(result.current.visibleGroups.equipment).toBe(false);
 
             act(() => {
                 result.current.toggleGroup('equipment');
             });
             expect(result.current.visibleGroups.equipment).toBe(true);
+
+            act(() => {
+                result.current.toggleGroup('equipment');
+            });
+            expect(result.current.visibleGroups.equipment).toBe(false);
         });
 
         it('should toggle a hidden group on', () => {
@@ -99,7 +99,7 @@ describe('usePfdColumnVisibility', () => {
             });
 
             const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
-            expect(stored.equipment).toBe(false);
+            expect(stored.equipment).toBe(true);
         });
 
         it('should load persisted state on mount', () => {
@@ -188,14 +188,14 @@ describe('usePfdColumnVisibility', () => {
                 result.current.toggleGroup('equipment');
                 result.current.toggleGroup('reference');
             });
-            expect(result.current.visibleGroups.equipment).toBe(false);
+            expect(result.current.visibleGroups.equipment).toBe(true);
             expect(result.current.visibleGroups.reference).toBe(true);
 
             // Reset
             act(() => {
                 result.current.resetToDefaults();
             });
-            expect(result.current.visibleGroups.equipment).toBe(true);
+            expect(result.current.visibleGroups.equipment).toBe(false);
             expect(result.current.visibleGroups.reference).toBe(false);
         });
 
@@ -223,8 +223,8 @@ describe('usePfdColumnVisibility', () => {
             expect(visibleKeys).toContain('stepType');
             expect(visibleKeys).toContain('description');
 
-            // Equipment is visible by default
-            expect(visibleKeys).toContain('machineDeviceTool');
+            // Equipment is hidden by default (machineDeviceTool removed from PFD_COLUMNS)
+            // No machineDeviceTool column exists anymore
 
             // Reference is hidden by default
             expect(visibleKeys).not.toContain('reference');

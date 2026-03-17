@@ -39,6 +39,11 @@ export interface SyncAlert {
     amfeCauseId?: string;
     /** Suggested corrective action (human-readable) */
     suggestedAction?: string;
+    /** Structured patch for auto-apply — null if manual action required */
+    patch?: {
+        field: keyof ControlPlanItem;
+        newValue: string | number;
+    } | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -156,6 +161,7 @@ export function detectSyncAlerts(
                         cpItemId: cpItem.id,
                         amfeCauseId: causeId,
                         suggestedAction: 'Eliminar esta fila del CP o revincularlo a otra causa.',
+                        patch: null,
                     });
                     continue;
                 }
@@ -176,6 +182,7 @@ export function detectSyncAlerts(
                         cpItemId: cpItem.id,
                         amfeCauseId: causeId,
                         suggestedAction: `Actualizar "Característica de Proceso" a: "${truncate(cause.cause)}"`,
+                        patch: { field: 'processCharacteristic', newValue: cause.cause },
                     });
                 }
 
@@ -193,6 +200,7 @@ export function detectSyncAlerts(
                         cpItemId: cpItem.id,
                         amfeCauseId: causeId,
                         suggestedAction: `Actualizar "Método de Control" a: "${truncate(cause.preventionControl)}"`,
+                        patch: { field: 'controlMethod', newValue: cause.preventionControl },
                     });
                 }
 
@@ -215,6 +223,7 @@ export function detectSyncAlerts(
                         suggestedAction: isEscalation
                             ? 'Reforzar controles: aumentar frecuencia de muestreo, agregar Poka-Yoke.'
                             : 'Puede considerar reducir frecuencia de muestreo.',
+                        patch: { field: 'amfeAp' as keyof ControlPlanItem, newValue: currentAp },
                     });
                 }
 
@@ -236,6 +245,7 @@ export function detectSyncAlerts(
                         suggestedAction: currentSev >= 9
                             ? 'Con S≥9, el CP debe tener controles especiales (100%, Poka-Yoke).'
                             : undefined,
+                        patch: { field: 'amfeSeverity' as keyof ControlPlanItem, newValue: currentSev },
                     });
                 }
             }
@@ -256,6 +266,7 @@ export function detectSyncAlerts(
                     operationNumber: cpItem.processStepNumber,
                     cpItemId: cpItem.id,
                     suggestedAction: 'Eliminar esta fila del CP o actualizarla manualmente.',
+                    patch: null,
                 });
                 continue;
             }
@@ -273,6 +284,7 @@ export function detectSyncAlerts(
                     operationNumber: entry.operationNumber,
                     cpItemId: cpItem.id,
                     suggestedAction: `Actualizar "Característica de Producto" a: "${truncate(entry.failure.description)}"`,
+                    patch: { field: 'productCharacteristic', newValue: entry.failure.description },
                 });
             }
         }
@@ -296,6 +308,7 @@ export function detectSyncAlerts(
                 suggestedAction: ap === 'H'
                     ? 'Agregar fila al CP con control 100% o Poka-Yoke.'
                     : 'Agregar fila al CP con control estadístico (SPC).',
+                patch: null,
             });
         }
     }
@@ -311,6 +324,32 @@ export function detectSyncAlerts(
     });
 
     return alerts;
+}
+
+/**
+ * Apply a sync alert's patch to a Control Plan document.
+ * Returns the updated document, or null if the alert requires manual action.
+ */
+export function applySyncAlertToCp(
+    cp: ControlPlanDocument,
+    alert: SyncAlert,
+): ControlPlanDocument | null {
+    if (!alert.patch || !alert.cpItemId) return null;
+
+    const { field, newValue } = alert.patch;
+    const itemIndex = cp.items.findIndex(item => item.id === alert.cpItemId);
+    if (itemIndex === -1) return null;
+
+    const updatedItems = [...cp.items];
+    updatedItems[itemIndex] = {
+        ...updatedItems[itemIndex],
+        [field]: newValue,
+    };
+
+    return {
+        ...cp,
+        items: updatedItems,
+    };
 }
 
 /** Normalize text for comparison: lowercase, trim, collapse whitespace. */

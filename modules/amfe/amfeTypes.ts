@@ -181,6 +181,9 @@ export interface AmfeOperation {
 
     // Library inheritance (optional - set when imported from global library)
     linkedLibraryOpId?: string;
+
+    // PFD linkage (set when imported from PFD via "Importar desde PFD")
+    linkedPfdStepId?: string;
 }
 
 /** Header metadata for an AMFE document. */

@@ -196,7 +196,6 @@ describe('PfdStepDetailPanel', () => {
         renderPanel({ readOnly: true });
         const stepNumber = screen.getByTestId('detail-stepNumber') as HTMLInputElement;
         const description = screen.getByTestId('detail-description') as HTMLTextAreaElement;
-        const machine = screen.getByTestId('detail-machineDeviceTool') as HTMLInputElement;
         const productChar = screen.getByTestId('detail-productCharacteristic') as HTMLInputElement;
         const processChar = screen.getByTestId('detail-processCharacteristic') as HTMLInputElement;
         const productSC = screen.getByTestId('detail-productSpecialChar') as HTMLSelectElement;
@@ -210,7 +209,7 @@ describe('PfdStepDetailPanel', () => {
 
         expect(stepNumber.disabled).toBe(true);
         expect(description.disabled).toBe(true);
-        expect(machine.disabled).toBe(true);
+        // machineDeviceTool removed from UI (hidden per spec)
         expect(productChar.disabled).toBe(true);
         expect(processChar.disabled).toBe(true);
         expect(productSC.disabled).toBe(true);

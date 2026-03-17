@@ -19,6 +19,7 @@ import {
     AmfeDocument, AmfeOperation, AmfeWorkElement,
     AmfeFunction, AmfeFailure, AmfeCause,
 } from '../amfe/amfeTypes';
+import { PfdDocument } from '../pfd/pfdTypes';
 import { ControlPlanItem, ControlPlanHeader, ControlPlanDocument, ControlPlanPhase, EMPTY_CP_HEADER } from './controlPlanTypes';
 import { getControlPlanDefaults, inferSpecification, inferReactionPlanOwner } from './controlPlanDefaults';
 import { inferOperationCategory } from '../../utils/processCategory';
@@ -325,4 +326,53 @@ export function generateControlPlanFromAmfe(
     const { items, warnings } = generateItemsFromAmfe(amfeDoc, header.phase);
 
     return { document: { header, items }, warnings };
+}
+
+/**
+ * Link PFD steps to CP items through AMFE operation traceability.
+ * For each PFD step that has `linkedAmfeOperationId`, find the CP items
+ * whose processStepNumber matches the AMFE operation's opNumber,
+ * and set `linkedCpItemIds` on the PFD step.
+ */
+export function linkPfdToCp(
+    pfdDoc: PfdDocument,
+    cpItems: ControlPlanItem[],
+    amfeOps: AmfeOperation[],
+): PfdDocument {
+    // Build map: AMFE op ID → opNumber
+    const opIdToNumber = new Map<string, string>();
+    for (const op of amfeOps) {
+        opIdToNumber.set(op.id, op.opNumber);
+    }
+
+    // Build map: normalized opNumber → list of CP item IDs
+    const opNumberToCpIds = new Map<string, string[]>();
+    for (const item of cpItems) {
+        const normalized = (item.processStepNumber || '').toLowerCase().trim();
+        if (!normalized) continue;
+        const existing = opNumberToCpIds.get(normalized) || [];
+        existing.push(item.id);
+        opNumberToCpIds.set(normalized, existing);
+    }
+
+    // Update PFD steps
+    const updatedSteps = pfdDoc.steps.map(step => {
+        if (!step.linkedAmfeOperationId) return step;
+
+        const amfeOpNumber = opIdToNumber.get(step.linkedAmfeOperationId);
+        if (!amfeOpNumber) return step;
+
+        const normalized = amfeOpNumber.toLowerCase().trim();
+        const cpIds = opNumberToCpIds.get(normalized) || [];
+
+        if (cpIds.length === 0) return step;
+
+        return { ...step, linkedCpItemIds: cpIds };
+    });
+
+    return {
+        ...pfdDoc,
+        steps: updatedSteps,
+        updatedAt: new Date().toISOString(),
+    };
 }

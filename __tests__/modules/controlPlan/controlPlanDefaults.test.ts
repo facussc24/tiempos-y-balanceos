@@ -29,25 +29,6 @@ describe('getControlPlanDefaults', () => {
             expect(result.sampleFrequency).toBe('Cada turno');
         });
 
-        it('uses 100% in Safe Launch phase regardless of severity', () => {
-            const result = getControlPlanDefaults({ ap: 'M', severity: 5, phase: 'safeLaunch' });
-            expect(result.sampleSize).toBe('100%');
-            expect(result.sampleFrequency).toContain('Safe Launch');
-        });
-    });
-
-    describe('Prototype phase', () => {
-        it('uses 100% for AP=M in Prototype phase', () => {
-            const result = getControlPlanDefaults({ ap: 'M', severity: 5, phase: 'prototype' });
-            expect(result.sampleSize).toBe('100%');
-            expect(result.sampleFrequency).toContain('Prototipo');
-        });
-
-        it('still uses 100% for AP=H in Prototype (same as production)', () => {
-            const result = getControlPlanDefaults({ ap: 'H', severity: 5, phase: 'prototype' });
-            expect(result.sampleSize).toBe('100%');
-            expect(result.sampleFrequency).toBe('Cada pieza');
-        });
     });
 
     describe('Pre-Launch phase', () => {

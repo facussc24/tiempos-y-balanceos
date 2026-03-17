@@ -199,6 +199,7 @@ const PfdStepDetailPanel: React.FC<PfdStepDetailPanelProps> = ({
                         placeholder="OP 10"
                         disabled={readOnly}
                         data-testid="detail-stepNumber"
+                        aria-label={`Número de paso — ${step.stepNumber}`}
                     />
                 </div>
 
@@ -213,21 +214,7 @@ const PfdStepDetailPanel: React.FC<PfdStepDetailPanelProps> = ({
                         placeholder="Descripci&oacute;n de la operaci&oacute;n"
                         disabled={readOnly}
                         data-testid="detail-description"
-                    />
-                </div>
-
-                {/* ─── Equipo ──── */}
-                <SectionDivider label="Equipo" />
-
-                <div>
-                    <label className={labelClass}>M&aacute;quina / Dispositivo</label>
-                    <input
-                        value={step.machineDeviceTool}
-                        onChange={handleFieldChange('machineDeviceTool')}
-                        className={inputClass}
-                        placeholder="M&aacute;quina o herramienta"
-                        disabled={readOnly}
-                        data-testid="detail-machineDeviceTool"
+                        aria-label={`Descripción — ${step.stepNumber}`}
                     />
                 </div>
 
@@ -243,6 +230,7 @@ const PfdStepDetailPanel: React.FC<PfdStepDetailPanelProps> = ({
                         placeholder="Caracter&iacute;stica de producto"
                         disabled={readOnly}
                         data-testid="detail-productCharacteristic"
+                        aria-label={`Característica producto — ${step.stepNumber}`}
                     />
                 </div>
 
@@ -253,7 +241,7 @@ const PfdStepDetailPanel: React.FC<PfdStepDetailPanelProps> = ({
                         onChange={handleSelectChange('productSpecialChar')}
                         className={selectClass}
                         disabled={readOnly}
-                        aria-label="CC/SC Producto"
+                        aria-label={`Caract. especial producto — ${step.stepNumber}`}
                         data-testid="detail-productSpecialChar"
                     >
                         <option value="none">&mdash;</option>
@@ -271,6 +259,7 @@ const PfdStepDetailPanel: React.FC<PfdStepDetailPanelProps> = ({
                         placeholder="Variable de proceso"
                         disabled={readOnly}
                         data-testid="detail-processCharacteristic"
+                        aria-label={`Característica proceso — ${step.stepNumber}`}
                     />
                 </div>
 
@@ -281,7 +270,7 @@ const PfdStepDetailPanel: React.FC<PfdStepDetailPanelProps> = ({
                         onChange={handleSelectChange('processSpecialChar')}
                         className={selectClass}
                         disabled={readOnly}
-                        aria-label="CC/SC Proceso"
+                        aria-label={`Caract. especial proceso — ${step.stepNumber}`}
                         data-testid="detail-processSpecialChar"
                     >
                         <option value="none">&mdash;</option>
@@ -302,7 +291,7 @@ const PfdStepDetailPanel: React.FC<PfdStepDetailPanelProps> = ({
                             step.branchId && branchColor ? branchColor.border : ''
                         }`}
                         disabled={readOnly}
-                        aria-label="L&iacute;nea paralela"
+                        aria-label={`Rama paralela — ${step.stepNumber}`}
                         data-testid="detail-branchId"
                     >
                         <option value="">&mdash;</option>
@@ -323,6 +312,7 @@ const PfdStepDetailPanel: React.FC<PfdStepDetailPanelProps> = ({
                             placeholder="ej: Soldadura, Mecanizado"
                             disabled={readOnly}
                             data-testid="detail-branchLabel"
+                            aria-label={`Etiqueta rama — ${step.stepNumber}`}
                         />
                     </div>
                 )}
@@ -339,6 +329,7 @@ const PfdStepDetailPanel: React.FC<PfdStepDetailPanelProps> = ({
                         placeholder="Plano / Especificaci&oacute;n"
                         disabled={readOnly}
                         data-testid="detail-reference"
+                        aria-label={`Referencia — ${step.stepNumber}`}
                     />
                 </div>
 
@@ -351,6 +342,7 @@ const PfdStepDetailPanel: React.FC<PfdStepDetailPanelProps> = ({
                         placeholder="Departamento / &Aacute;rea"
                         disabled={readOnly}
                         data-testid="detail-department"
+                        aria-label={`Departamento — ${step.stepNumber}`}
                     />
                 </div>
 
@@ -370,6 +362,7 @@ const PfdStepDetailPanel: React.FC<PfdStepDetailPanelProps> = ({
                         placeholder="Ej: 3.5"
                         disabled={readOnly}
                         data-testid="detail-cycleTime"
+                        aria-label={`Tiempo de ciclo — ${step.stepNumber}`}
                     />
                 </div>
 
@@ -382,6 +375,7 @@ const PfdStepDetailPanel: React.FC<PfdStepDetailPanelProps> = ({
                         placeholder="Notas adicionales"
                         disabled={readOnly}
                         data-testid="detail-notes"
+                        aria-label={`Notas — ${step.stepNumber}`}
                     />
                 </div>
 

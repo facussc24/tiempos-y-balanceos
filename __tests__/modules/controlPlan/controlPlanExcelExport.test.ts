@@ -157,14 +157,14 @@ describe('exportControlPlan', () => {
         const phaseCell = row1Values.find((v: string) => v.includes('☒'));
         expect(phaseCell).toBeDefined();
         expect(phaseCell).toContain('☒ Producción');
-        expect(phaseCell).toContain('☐ Prototipo');
+        expect(phaseCell).toContain('☐ Pre-Lanzamiento');
     });
 
-    it('checks correct phase when phase is prototype', () => {
-        exportControlPlan(makeDoc({ header: makeHeader({ phase: 'prototype' }) }));
+    it('checks correct phase when phase is preLaunch', () => {
+        exportControlPlan(makeDoc({ header: makeHeader({ phase: 'preLaunch' }) }));
         const row1Values = getAoaData()[1].map((c: any) => typeof c === 'object' ? c.v : c);
         const phaseCell = row1Values.find((v: string) => v.includes('☒'));
-        expect(phaseCell).toContain('☒ Prototipo');
+        expect(phaseCell).toContain('☒ Pre-Lanzamiento');
         expect(phaseCell).toContain('☐ Producción');
     });
 

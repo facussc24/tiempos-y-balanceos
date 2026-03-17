@@ -199,61 +199,207 @@ export async function listLooseAmfeFiles(): Promise<AmfeProjectInfo[]> {
 }
 
 /**
- * Repair flat project_names by rebuilding the hierarchy from client + subject.
+ * Repair project_names by rebuilding the hierarchy from document metadata.
  * Called at startup to normalize any malformed entries.
  *
- * Example: project_name="INSERTO" with client="VWA" and subject="INSERTO"
- *          → checks if "VWA/???/INSERTO" already exists
- *          → if yes, the flat entry is a duplicate → DELETE it
- *          → if no, normalize to "VWA/(Sin proyecto)/INSERTO"
+ * Handles two cases:
+ * 1. Flat names (no slashes): "INSERTO" → "VWA/Patagonia/INSERTO"
+ * 2. "(Sin proyecto)" entries: "VWA/(Sin proyecto)/Patagonia INSERTO" → "VWA/Patagonia/INSERTO"
+ *
+ * Uses header.modelYear as the project name when available.
+ * If the study name starts with the project name, strips it to avoid redundancy.
  */
 export async function normalizeProjectNames(): Promise<number> {
     const entries = await listAmfeDocuments();
     let repaired = 0;
 
     for (const entry of entries) {
-        if (entry.projectName.includes('/')) continue; // already hierarchical
+        const parts = entry.projectName.split('/');
+        const isFlat = !entry.projectName.includes('/');
+        const isSinProyecto = parts.length >= 3 && parts[1] === '(Sin proyecto)';
 
-        const flatName = entry.projectName;
+        if (!isFlat && !isSinProyecto) continue; // already has proper hierarchy
+
         const client = entry.client || '(Sin cliente)';
 
-        // Check if a hierarchical entry already exists for this study name
-        const duplicate = entries.find(other =>
+        // For flat names, check if a hierarchical duplicate already exists
+        if (isFlat) {
+            const duplicate = entries.find(other =>
+                other.id !== entry.id &&
+                other.client === entry.client &&
+                other.projectName.includes('/') &&
+                other.projectName.endsWith(`/${entry.projectName}`)
+            );
+
+            if (duplicate) {
+                logger.warn('AMFE', `Deleting duplicate flat entry "${entry.projectName}" (id=${entry.id}) — hierarchical version exists: "${duplicate.projectName}"`);
+                await deleteAmfeDocument(entry.id);
+                repaired++;
+                continue;
+            }
+        }
+
+        // Load full document to get header.modelYear for project name
+        const fullDoc = await loadAmfeByProjectName(entry.projectName);
+        if (!fullDoc) continue;
+
+        const modelYear = fullDoc.doc.header.modelYear?.trim();
+        const currentName = isFlat ? entry.projectName : parts[parts.length - 1];
+
+        let project: string;
+        let name: string;
+
+        if (modelYear) {
+            project = modelYear;
+            // If the name starts with the project name, strip it to avoid redundancy
+            // e.g. "Patagonia INSERTO" with modelYear="Patagonia" → name="INSERTO"
+            if (currentName.toLowerCase().startsWith(modelYear.toLowerCase())) {
+                const stripped = currentName.substring(modelYear.length).replace(/^[\s\-_/]+/, '').trim();
+                // Only strip if something meaningful remains
+                name = stripped || currentName;
+            } else {
+                name = currentName;
+            }
+        } else {
+            project = '(Sin proyecto)';
+            name = currentName;
+        }
+
+        const newProjectName = buildAmfePath(client, project, name);
+
+        if (newProjectName === entry.projectName) continue; // no change needed
+
+        // Check for conflicts with existing entries
+        const conflict = entries.find(other =>
             other.id !== entry.id &&
-            other.client === entry.client &&
-            other.projectName.includes('/') &&
-            other.projectName.endsWith(`/${flatName}`)
+            other.projectName === newProjectName
         );
 
-        if (duplicate) {
-            // Flat entry is a duplicate of a hierarchical one → delete the flat entry
-            logger.warn('AMFE', `Deleting duplicate flat entry "${flatName}" (id=${entry.id}) — hierarchical version exists: "${duplicate.projectName}"`);
-            await deleteAmfeDocument(entry.id);
-            repaired++;
-        } else {
-            // No hierarchical version exists — rebuild the path
-            const project = '(Sin proyecto)';
-            const newProjectName = buildAmfePath(client, project, flatName);
-            logger.info('AMFE', `Normalizing flat project_name: "${flatName}" → "${newProjectName}"`);
+        if (conflict) {
+            logger.warn('AMFE', `Skipping normalization of "${entry.projectName}" — would conflict with existing "${newProjectName}"`);
+            continue;
+        }
 
-            // Load full document to re-save with corrected project_name
-            const fullDoc = await loadAmfeByProjectName(flatName);
-            if (fullDoc) {
-                await saveAmfeDocument(
-                    fullDoc.meta.id,
-                    fullDoc.meta.amfeNumber,
-                    newProjectName,
-                    fullDoc.doc,
-                    fullDoc.meta.status,
-                    fullDoc.meta.revisions
-                );
-                repaired++;
+        logger.info('AMFE', `Normalizing project_name: "${entry.projectName}" → "${newProjectName}"`);
+
+        await saveAmfeDocument(
+            fullDoc.meta.id,
+            fullDoc.meta.amfeNumber,
+            newProjectName,
+            fullDoc.doc,
+            fullDoc.meta.status,
+            fullDoc.meta.revisions
+        );
+        repaired++;
+    }
+
+    if (repaired > 0) {
+        logger.info('AMFE', `Normalized ${repaired} project name(s)`);
+    }
+    return repaired;
+}
+
+/**
+ * Repair hierarchical entries where a project name is misplaced as a suffix
+ * in the study name instead of being the project segment.
+ *
+ * Detects groups of entries under the same client/project where ALL names
+ * share a common trailing word. Moves that suffix to the project position.
+ *
+ * Example: "VWA/2026/Top Roll Patagonia" → "VWA/Patagonia/Top Roll"
+ *          "VWA/2026/Insert Patagonia"   → "VWA/Patagonia/Insert"
+ *
+ * Also strips the client name from study names when appended redundantly:
+ *          "PWA/2026/Telas Planas PWA" → "PWA/2026/Telas Planas"
+ */
+export async function repairMisplacedProjectSuffix(): Promise<number> {
+    const entries = await listAmfeDocuments();
+    let repaired = 0;
+
+    // Group entries by client + project
+    const groups = new Map<string, typeof entries>();
+    for (const entry of entries) {
+        const parts = entry.projectName.split('/');
+        if (parts.length < 3) continue;
+        const key = `${parts[0]}/${parts[1]}`;
+        const group = groups.get(key) || [];
+        group.push(entry);
+        groups.set(key, group);
+    }
+
+    // Track all target paths to avoid conflicts across groups
+    const plannedPaths = new Set(entries.map(e => e.projectName));
+
+    for (const [groupKey, group] of groups) {
+        if (group.length < 2) continue;
+
+        const [client, currentProject] = groupKey.split('/');
+
+        // Get the last word of each study name
+        const nameData = group.map(e => {
+            const name = e.projectName.split('/').pop()!;
+            const words = name.trim().split(/\s+/);
+            return { entry: e, name, lastWord: words.length > 1 ? words[words.length - 1] : null };
+        });
+
+        // Check if all names share the same last word
+        const commonSuffix = nameData[0].lastWord;
+        if (!commonSuffix) continue;
+        if (!nameData.every(d => d.lastWord === commonSuffix)) continue;
+
+        // Determine the new project name:
+        // - If suffix matches client name, just strip from names (don't create client/client/...)
+        // - If suffix matches current project, just strip from names (redundant in name)
+        // - Otherwise, move suffix to become the project
+        const suffixIsClient = commonSuffix.toLowerCase() === client.toLowerCase();
+        const suffixIsProject = commonSuffix === currentProject;
+        const newProject = (suffixIsClient || suffixIsProject) ? currentProject : commonSuffix;
+
+        // Validate all renames before applying
+        const renames: Array<{ entry: typeof entries[0]; newPath: string }> = [];
+        let canProceed = true;
+
+        for (const { entry, name } of nameData) {
+            const strippedName = name.replace(new RegExp(`\\s+${commonSuffix}$`, 'i'), '').trim();
+            if (!strippedName) { canProceed = false; break; }
+
+            const newPath = buildAmfePath(client, newProject, strippedName);
+
+            // Check for conflicts
+            if (plannedPaths.has(newPath) && !group.some(e => e.projectName === newPath)) {
+                canProceed = false;
+                break;
             }
+            renames.push({ entry, newPath });
+        }
+
+        if (!canProceed) continue;
+
+        // Apply renames
+        for (const { entry, newPath } of renames) {
+            const fullDoc = await loadAmfeByProjectName(entry.projectName);
+            if (!fullDoc) continue;
+
+            logger.info('AMFE', `Repairing project path: "${entry.projectName}" → "${newPath}"`);
+
+            await saveAmfeDocument(
+                fullDoc.meta.id,
+                fullDoc.meta.amfeNumber,
+                newPath,
+                fullDoc.doc,
+                fullDoc.meta.status,
+                fullDoc.meta.revisions
+            );
+
+            // Update planned paths tracking
+            plannedPaths.delete(entry.projectName);
+            plannedPaths.add(newPath);
+            repaired++;
         }
     }
 
     if (repaired > 0) {
-        logger.info('AMFE', `Normalized ${repaired} flat project name(s)`);
+        logger.info('AMFE', `Repaired ${repaired} misplaced project suffix(es)`);
     }
     return repaired;
 }

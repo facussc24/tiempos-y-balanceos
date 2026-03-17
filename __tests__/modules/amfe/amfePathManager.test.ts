@@ -42,6 +42,7 @@ import {
     listLooseAmfeFiles,
     buildAmfePath,
     normalizeProjectNames,
+    repairMisplacedProjectSuffix,
 } from '../../../modules/amfe/amfePathManager';
 
 const mockedListDocs = vi.mocked(listAmfeDocuments);
@@ -381,7 +382,7 @@ describe('normalizeProjectNames', () => {
         expect(mockedSaveDoc).not.toHaveBeenCalled();
     });
 
-    it('normalizes flat entry to "(Sin proyecto)" when no duplicate exists', async () => {
+    it('normalizes flat entry to "(Sin proyecto)" when no modelYear in header', async () => {
         const mockDoc = { header: { subject: 'STANDALONE', client: 'VWA' }, operations: [] } as any;
         mockedListDocs.mockResolvedValue([
             makeEntry({ projectName: 'STANDALONE', client: 'VWA', id: 'id-flat' }),
@@ -401,6 +402,80 @@ describe('normalizeProjectNames', () => {
         );
     });
 
+    it('uses modelYear as project when normalizing flat entry', async () => {
+        const mockDoc = { header: { subject: 'INSERTO', client: 'VWA', modelYear: 'Patagonia' }, operations: [] } as any;
+        mockedListDocs.mockResolvedValue([
+            makeEntry({ projectName: 'INSERTO', client: 'VWA', id: 'id-flat' }),
+        ]);
+        mockedLoadByProject.mockResolvedValue({
+            doc: mockDoc,
+            meta: { id: 'id-flat', amfeNumber: 'AMFE-001', status: 'draft', revisions: [] } as any,
+        });
+        mockedSaveDoc.mockResolvedValue(true);
+
+        const count = await normalizeProjectNames();
+        expect(count).toBe(1);
+        expect(mockedSaveDoc).toHaveBeenCalledWith(
+            'id-flat', 'AMFE-001', 'VWA/Patagonia/INSERTO',
+            mockDoc, 'draft', [],
+        );
+    });
+
+    it('fixes "(Sin proyecto)" entries using modelYear from header', async () => {
+        const mockDoc = { header: { subject: 'INSERTO', client: 'VWA', modelYear: 'Patagonia' }, operations: [] } as any;
+        mockedListDocs.mockResolvedValue([
+            makeEntry({ projectName: 'VWA/(Sin proyecto)/INSERTO', client: 'VWA', id: 'id-sin' }),
+        ]);
+        mockedLoadByProject.mockResolvedValue({
+            doc: mockDoc,
+            meta: { id: 'id-sin', amfeNumber: 'AMFE-001', status: 'draft', revisions: [] } as any,
+        });
+        mockedSaveDoc.mockResolvedValue(true);
+
+        const count = await normalizeProjectNames();
+        expect(count).toBe(1);
+        expect(mockedSaveDoc).toHaveBeenCalledWith(
+            'id-sin', 'AMFE-001', 'VWA/Patagonia/INSERTO',
+            mockDoc, 'draft', [],
+        );
+    });
+
+    it('strips project name from study name when redundant', async () => {
+        const mockDoc = { header: { subject: 'Inserto', client: 'VWA', modelYear: 'Patagonia' }, operations: [] } as any;
+        mockedListDocs.mockResolvedValue([
+            makeEntry({ projectName: 'VWA/(Sin proyecto)/Patagonia INSERTO', client: 'VWA', id: 'id-sin' }),
+        ]);
+        mockedLoadByProject.mockResolvedValue({
+            doc: mockDoc,
+            meta: { id: 'id-sin', amfeNumber: 'AMFE-001', status: 'draft', revisions: [] } as any,
+        });
+        mockedSaveDoc.mockResolvedValue(true);
+
+        const count = await normalizeProjectNames();
+        expect(count).toBe(1);
+        // "Patagonia INSERTO" → project="Patagonia", name="INSERTO"
+        expect(mockedSaveDoc).toHaveBeenCalledWith(
+            'id-sin', 'AMFE-001', 'VWA/Patagonia/INSERTO',
+            mockDoc, 'draft', [],
+        );
+    });
+
+    it('skips "(Sin proyecto)" entries when modelYear is empty', async () => {
+        const mockDoc = { header: { subject: 'TEST', client: 'VWA', modelYear: '' }, operations: [] } as any;
+        mockedListDocs.mockResolvedValue([
+            makeEntry({ projectName: 'VWA/(Sin proyecto)/TEST', client: 'VWA', id: 'id-sin' }),
+        ]);
+        mockedLoadByProject.mockResolvedValue({
+            doc: mockDoc,
+            meta: { id: 'id-sin', amfeNumber: 'AMFE-001', status: 'draft', revisions: [] } as any,
+        });
+
+        const count = await normalizeProjectNames();
+        // No change: project stays "(Sin proyecto)" and path is already correct
+        expect(count).toBe(0);
+        expect(mockedSaveDoc).not.toHaveBeenCalled();
+    });
+
     it('skips hierarchical entries (no-op)', async () => {
         mockedListDocs.mockResolvedValue([
             makeEntry({ projectName: 'VWA/PATAGONIA/INSERTO', client: 'VWA', id: '1' }),
@@ -415,7 +490,7 @@ describe('normalizeProjectNames', () => {
         expect(count).toBe(0);
     });
 
-    it('handles multiple flat entries', async () => {
+    it('handles multiple flat entries with mixed modelYear', async () => {
         mockedListDocs.mockResolvedValue([
             makeEntry({ projectName: 'INSERTO', client: 'VWA', id: 'flat-1' }),
             makeEntry({ projectName: 'VWA/PATAGONIA/INSERTO', client: 'VWA', id: 'hier-1' }),
@@ -423,7 +498,7 @@ describe('normalizeProjectNames', () => {
         ]);
         mockedDeleteDoc.mockResolvedValue(true);
         mockedLoadByProject.mockResolvedValue({
-            doc: { header: {}, operations: [] } as any,
+            doc: { header: { modelYear: 'X5' }, operations: [] } as any,
             meta: { id: 'flat-2', amfeNumber: 'AMFE-002', status: 'draft', revisions: [] } as any,
         });
         mockedSaveDoc.mockResolvedValue(true);
@@ -432,8 +507,139 @@ describe('normalizeProjectNames', () => {
         expect(count).toBe(2);
         expect(mockedDeleteDoc).toHaveBeenCalledWith('flat-1');
         expect(mockedSaveDoc).toHaveBeenCalledWith(
-            'flat-2', 'AMFE-002', 'BMW/(Sin proyecto)/BRACKET',
+            'flat-2', 'AMFE-002', 'BMW/X5/BRACKET',
             expect.anything(), 'draft', [],
         );
+    });
+
+    it('avoids conflict when target path already exists', async () => {
+        const mockDoc = { header: { modelYear: 'Patagonia' }, operations: [] } as any;
+        mockedListDocs.mockResolvedValue([
+            makeEntry({ projectName: 'VWA/(Sin proyecto)/INSERTO', client: 'VWA', id: 'id-sin' }),
+            makeEntry({ projectName: 'VWA/Patagonia/INSERTO', client: 'VWA', id: 'id-existing' }),
+        ]);
+        mockedLoadByProject.mockResolvedValue({
+            doc: mockDoc,
+            meta: { id: 'id-sin', amfeNumber: 'AMFE-001', status: 'draft', revisions: [] } as any,
+        });
+
+        const count = await normalizeProjectNames();
+        expect(count).toBe(0); // skipped due to conflict
+        expect(mockedSaveDoc).not.toHaveBeenCalled();
+    });
+});
+
+// ============================================================================
+// repairMisplacedProjectSuffix — SUFFIX-TO-PROJECT MIGRATION
+// ============================================================================
+
+describe('repairMisplacedProjectSuffix', () => {
+    it('moves common suffix to project position and strips from names', async () => {
+        mockedListDocs.mockResolvedValue([
+            makeEntry({ projectName: 'VWA/2026/Top Roll Patagonia', client: 'VWA', id: 'id-1' }),
+            makeEntry({ projectName: 'VWA/2026/Insert Patagonia', client: 'VWA', id: 'id-2' }),
+            makeEntry({ projectName: 'VWA/2026/Armrest Patagonia', client: 'VWA', id: 'id-3' }),
+        ]);
+        const mockDoc = { header: {}, operations: [] } as any;
+        mockedLoadByProject.mockResolvedValue({
+            doc: mockDoc,
+            meta: { id: 'id-1', amfeNumber: 'AMFE-001', status: 'draft', revisions: [] } as any,
+        });
+        mockedSaveDoc.mockResolvedValue(true);
+
+        const count = await repairMisplacedProjectSuffix();
+        expect(count).toBe(3);
+        expect(mockedSaveDoc).toHaveBeenCalledWith(
+            'id-1', 'AMFE-001', 'VWA/Patagonia/Top Roll',
+            mockDoc, 'draft', [],
+        );
+        expect(mockedSaveDoc).toHaveBeenCalledWith(
+            'id-1', 'AMFE-001', 'VWA/Patagonia/Insert',
+            mockDoc, 'draft', [],
+        );
+        expect(mockedSaveDoc).toHaveBeenCalledWith(
+            'id-1', 'AMFE-001', 'VWA/Patagonia/Armrest',
+            mockDoc, 'draft', [],
+        );
+    });
+
+    it('strips client name from end of names without changing project', async () => {
+        mockedListDocs.mockResolvedValue([
+            makeEntry({ projectName: 'PWA/2026/Telas Termoformadas PWA', client: 'PWA', id: 'id-1' }),
+            makeEntry({ projectName: 'PWA/2026/Telas Planas PWA', client: 'PWA', id: 'id-2' }),
+        ]);
+        const mockDoc = { header: {}, operations: [] } as any;
+        mockedLoadByProject.mockResolvedValue({
+            doc: mockDoc,
+            meta: { id: 'id-1', amfeNumber: 'AMFE-001', status: 'draft', revisions: [] } as any,
+        });
+        mockedSaveDoc.mockResolvedValue(true);
+
+        const count = await repairMisplacedProjectSuffix();
+        expect(count).toBe(2);
+        // Project stays "2026" since suffix matches client name
+        expect(mockedSaveDoc).toHaveBeenCalledWith(
+            'id-1', 'AMFE-001', 'PWA/2026/Telas Termoformadas',
+            mockDoc, 'draft', [],
+        );
+        expect(mockedSaveDoc).toHaveBeenCalledWith(
+            'id-1', 'AMFE-001', 'PWA/2026/Telas Planas',
+            mockDoc, 'draft', [],
+        );
+    });
+
+    it('skips groups with only 1 entry', async () => {
+        mockedListDocs.mockResolvedValue([
+            makeEntry({ projectName: 'VWA/2026/Solo Patagonia', client: 'VWA', id: 'id-1' }),
+        ]);
+
+        const count = await repairMisplacedProjectSuffix();
+        expect(count).toBe(0);
+        expect(mockedSaveDoc).not.toHaveBeenCalled();
+    });
+
+    it('skips when names do not share a common suffix', async () => {
+        mockedListDocs.mockResolvedValue([
+            makeEntry({ projectName: 'VWA/2026/Top Roll', client: 'VWA', id: 'id-1' }),
+            makeEntry({ projectName: 'VWA/2026/Insert Base', client: 'VWA', id: 'id-2' }),
+        ]);
+
+        const count = await repairMisplacedProjectSuffix();
+        expect(count).toBe(0);
+        expect(mockedSaveDoc).not.toHaveBeenCalled();
+    });
+
+    it('skips when suffix already equals current project', async () => {
+        mockedListDocs.mockResolvedValue([
+            makeEntry({ projectName: 'VWA/Patagonia/Top Roll Patagonia', client: 'VWA', id: 'id-1' }),
+            makeEntry({ projectName: 'VWA/Patagonia/Insert Patagonia', client: 'VWA', id: 'id-2' }),
+        ]);
+        const mockDoc = { header: {}, operations: [] } as any;
+        mockedLoadByProject.mockResolvedValue({
+            doc: mockDoc,
+            meta: { id: 'id-1', amfeNumber: 'AMFE-001', status: 'draft', revisions: [] } as any,
+        });
+        mockedSaveDoc.mockResolvedValue(true);
+
+        const count = await repairMisplacedProjectSuffix();
+        // Suffix equals project → still strips it from names
+        expect(count).toBe(2);
+    });
+
+    it('skips single-word names (no suffix to extract)', async () => {
+        mockedListDocs.mockResolvedValue([
+            makeEntry({ projectName: 'VWA/2026/Patagonia', client: 'VWA', id: 'id-1' }),
+            makeEntry({ projectName: 'VWA/2026/Amarok', client: 'VWA', id: 'id-2' }),
+        ]);
+
+        const count = await repairMisplacedProjectSuffix();
+        expect(count).toBe(0);
+        expect(mockedSaveDoc).not.toHaveBeenCalled();
+    });
+
+    it('returns 0 when database is empty', async () => {
+        mockedListDocs.mockResolvedValue([]);
+        const count = await repairMisplacedProjectSuffix();
+        expect(count).toBe(0);
     });
 });

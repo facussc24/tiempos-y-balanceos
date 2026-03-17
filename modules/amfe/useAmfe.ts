@@ -493,6 +493,12 @@ export const useAmfe = () => {
         }));
     }, []);
 
+    /** Add multiple operations in a single state update (used by PFD import). */
+    const batchAddOperations = useCallback((newOps: AmfeOperation[]) => {
+        if (newOps.length === 0) return;
+        setData(prev => ({ ...prev, operations: [...prev.operations, ...newOps] }));
+    }, []);
+
     /** Move an operation up or down in the list. */
     const moveOperation = useCallback((opId: string, direction: 'up' | 'down') => {
         setData(prev => {
@@ -518,6 +524,9 @@ export const useAmfe = () => {
         addFunction, updateFunction, deleteFunction,
         addFailure, updateFailure, deleteFailure,
         addCause, updateCause, deleteCause,
+
+        // BATCH
+        batchAddOperations,
 
         // DUPLICATION
         duplicateOperation,

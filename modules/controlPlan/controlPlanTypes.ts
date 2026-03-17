@@ -4,18 +4,16 @@
  * AIAG format Control Plan with 15 standard columns.
  * Linked to AMFE via characteristicNumber and process step.
  *
- * Phases: Prototype | Pre-Launch | Safe Launch | Production
+ * Phases: Pre-Launch | Production
  */
 
 import { v4 as uuidv4 } from 'uuid';
 
 /** Control Plan phases per AIAG standard. */
-export type ControlPlanPhase = 'prototype' | 'preLaunch' | 'safeLaunch' | 'production';
+export type ControlPlanPhase = 'preLaunch' | 'production';
 
 export const CONTROL_PLAN_PHASES: { value: ControlPlanPhase; label: string }[] = [
-    { value: 'prototype', label: 'Prototipo' },
     { value: 'preLaunch', label: 'Pre-Lanzamiento' },
-    { value: 'safeLaunch', label: 'Safe Launch' },
     { value: 'production', label: 'Producción' },
 ];
 

@@ -3,7 +3,7 @@ import { AmfeDocument } from './amfeTypes';
 import { ControlPlanDocument } from '../controlPlan/controlPlanTypes';
 import { HoDocument } from '../hojaOperaciones/hojaOperacionesTypes';
 import { PfdDocument } from '../pfd/pfdTypes';
-import { generateControlPlanFromAmfe } from '../controlPlan/controlPlanGenerator';
+import { generateControlPlanFromAmfe, linkPfdToCp } from '../controlPlan/controlPlanGenerator';
 import { generateHoFromAmfeAndCp } from '../hojaOperaciones/hojaOperacionesGenerator';
 import { importPfdOpsFromAmfe } from '../pfd/pfdGenerator';
 
@@ -138,8 +138,13 @@ export function useAmfeTabNavigation(params: UseAmfeTabNavigationParams): UseAmf
         const { document: cpDoc, warnings } = generateControlPlanFromAmfe(data, currentProject || 'Sin nombre');
         setCpInitialData(cpDoc);
         setCpWarnings(warnings);
+        // Link PFD steps to CP items for full traceability
+        if (pfdInitialData) {
+            const linkedPfd = linkPfdToCp(pfdInitialData, cpDoc.items, data.operations);
+            setPfdInitialData(linkedPfd);
+        }
         setActiveTab('controlPlan');
-    }, [data, currentProject, cpInitialData, requestConfirm, setActiveTab]);
+    }, [data, currentProject, cpInitialData, pfdInitialData, requestConfirm, setActiveTab]);
 
     const handleGenerateHojasOperaciones = useCallback(async () => {
         // Only ask for confirmation if there are actual sheets to lose

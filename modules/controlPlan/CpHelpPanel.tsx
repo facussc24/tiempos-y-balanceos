@@ -67,21 +67,10 @@ const SHORTCUTS = [
 ];
 
 // ============================================================================
-// PHASE DATA (AIAG CP 2024 — 4 phases + sampling rules)
+// PHASE DATA (AIAG CP 2024 — 2 phases + sampling rules)
 // ============================================================================
 
 const PHASES = [
-    {
-        phase: 'Prototipo',
-        code: 'prototype',
-        color: 'bg-blue-100 text-blue-800 border-blue-200',
-        desc: 'Validacion de concepto y diseño. Todas las piezas inspeccionadas 100%.',
-        sampling: [
-            { ap: 'H', size: '100%', freq: 'Cada pieza' },
-            { ap: 'M', size: '100%', freq: 'Cada pieza' },
-            { ap: 'L', size: 'A discrecion', freq: 'A discrecion' },
-        ],
-    },
     {
         phase: 'Pre-Lanzamiento',
         code: 'preLaunch',
@@ -91,17 +80,6 @@ const PHASES = [
             { ap: 'H', size: '100%', freq: 'Cada pieza' },
             { ap: 'M', size: '100%', freq: 'Cada pieza' },
             { ap: 'L', size: '5 piezas', freq: 'Cada turno' },
-        ],
-    },
-    {
-        phase: 'Safe Launch',
-        code: 'safeLaunch',
-        color: 'bg-purple-100 text-purple-800 border-purple-200',
-        desc: 'Periodo de supervision reforzada (~90 dias). Nuevo en CP 2024.',
-        sampling: [
-            { ap: 'H', size: '100%', freq: 'Cada pieza' },
-            { ap: 'M', size: '100%', freq: 'Cada pieza' },
-            { ap: 'L', size: '5 piezas', freq: 'Cada hora' },
         ],
     },
     {

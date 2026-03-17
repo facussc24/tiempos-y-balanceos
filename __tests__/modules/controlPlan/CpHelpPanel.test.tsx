@@ -36,8 +36,7 @@ describe('CpHelpPanel (R6A)', () => {
     it('clicking Fases tab shows phase content', () => {
         render(<CpHelpPanel onClose={vi.fn()} />);
         fireEvent.click(screen.getByText('Fases'));
-        expect(screen.getByText('Prototipo')).toBeDefined();
-        expect(screen.getByText('Safe Launch')).toBeDefined();
+        expect(screen.getByText('Pre-Lanzamiento')).toBeDefined();
         expect(screen.getByText('Produccion')).toBeDefined();
     });
 
