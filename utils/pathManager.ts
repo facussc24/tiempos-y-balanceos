@@ -184,14 +184,14 @@ export async function ensureStudyStructure(
     }
 
     try {
-        const tauriFs = await import('./tauri_fs');
+        const fs = await import('./unified_fs');
 
         // Create folders for each content type
         const contentTypes: ContentType[] = ['data', 'media'];
 
         for (const type of contentTypes) {
             const path = buildPath(type, client, project, part);
-            await tauriFs.ensureDir(path);
+            await fs.ensureDir(path);
             createdPaths.push(path);
         }
 
@@ -220,15 +220,15 @@ export async function listClients(): Promise<string[]> {
     }
 
     try {
-        const tauriFs = await import('./tauri_fs');
+        const fs = await import('./unified_fs');
         const dataPath = `${currentConfig.basePath}\\${currentConfig.dataFolder}`;
 
-        const exists = await tauriFs.exists(dataPath);
+        const exists = await fs.exists(dataPath);
         if (!exists) {
             return [];
         }
 
-        const entries = await tauriFs.readDir(dataPath);
+        const entries = await fs.readDir(dataPath);
         return entries
             .filter(e => e.isDirectory)
             .map(e => e.name)
@@ -248,15 +248,15 @@ export async function listProjects(client: string): Promise<string[]> {
     }
 
     try {
-        const tauriFs = await import('./tauri_fs');
+        const fs = await import('./unified_fs');
         const clientPath = `${currentConfig.basePath}\\${currentConfig.dataFolder}\\${sanitizeName(client)}`;
 
-        const exists = await tauriFs.exists(clientPath);
+        const exists = await fs.exists(clientPath);
         if (!exists) {
             return [];
         }
 
-        const entries = await tauriFs.readDir(clientPath);
+        const entries = await fs.readDir(clientPath);
         return entries
             .filter(e => e.isDirectory)
             .map(e => e.name)
@@ -276,15 +276,15 @@ export async function listParts(client: string, project: string): Promise<string
     }
 
     try {
-        const tauriFs = await import('./tauri_fs');
+        const fs = await import('./unified_fs');
         const projectPath = `${currentConfig.basePath}\\${currentConfig.dataFolder}\\${sanitizeName(client)}\\${sanitizeName(project)}`;
 
-        const exists = await tauriFs.exists(projectPath);
+        const exists = await fs.exists(projectPath);
         if (!exists) {
             return [];
         }
 
-        const entries = await tauriFs.readDir(projectPath);
+        const entries = await fs.readDir(projectPath);
         return entries
             .filter(e => e.isDirectory)
             .map(e => e.name)
@@ -304,9 +304,9 @@ export async function studyExists(client: string, project: string, part: string)
     }
 
     try {
-        const tauriFs = await import('./tauri_fs');
+        const fs = await import('./unified_fs');
         const masterPath = buildMasterJsonPath(client, project, part);
-        return await tauriFs.exists(masterPath);
+        return await fs.exists(masterPath);
     } catch {
         return false;
     }
@@ -322,16 +322,16 @@ export async function deleteStudy(studyPath: string): Promise<{ success: boolean
     }
 
     try {
-        const tauriFs = await import('./tauri_fs');
+        const fs = await import('./unified_fs');
 
         // Verify path exists
-        const exists = await tauriFs.exists(studyPath);
+        const exists = await fs.exists(studyPath);
         if (!exists) {
             return { success: false, error: 'Study folder not found' };
         }
 
         // Remove the folder recursively
-        await tauriFs.remove(studyPath, { recursive: true });
+        await fs.remove(studyPath, { recursive: true });
 
         return { success: true };
     } catch (e) {
@@ -354,17 +354,17 @@ export async function deleteProject(client: string, project: string): Promise<{ 
     }
 
     try {
-        const tauriFs = await import('./tauri_fs');
+        const fs = await import('./unified_fs');
         const projectPath = `${currentConfig.basePath}\\${currentConfig.dataFolder}\\${sanitizeName(client)}\\${sanitizeName(project)}`;
 
         // Verify path exists
-        const exists = await tauriFs.exists(projectPath);
+        const exists = await fs.exists(projectPath);
         if (!exists) {
             return { success: false, error: 'Project folder not found' };
         }
 
         // Remove the folder recursively
-        await tauriFs.remove(projectPath, { recursive: true });
+        await fs.remove(projectPath, { recursive: true });
 
         return { success: true };
     } catch (e) {
@@ -386,17 +386,17 @@ export async function deleteClient(client: string): Promise<{ success: boolean; 
     }
 
     try {
-        const tauriFs = await import('./tauri_fs');
+        const fs = await import('./unified_fs');
         const clientPath = `${currentConfig.basePath}\\${currentConfig.dataFolder}\\${sanitizeName(client)}`;
 
         // Verify path exists
-        const exists = await tauriFs.exists(clientPath);
+        const exists = await fs.exists(clientPath);
         if (!exists) {
             return { success: false, error: 'Client folder not found' };
         }
 
         // Remove the folder recursively
-        await tauriFs.remove(clientPath, { recursive: true });
+        await fs.remove(clientPath, { recursive: true });
 
         return { success: true };
     } catch (e) {
@@ -430,11 +430,11 @@ export async function resolveBasePath(): Promise<string> {
     }
 
     try {
-        const tauriFs = await import('./tauri_fs');
+        const fs = await import('./unified_fs');
 
         const checkPath = async (path: string, timeout: number): Promise<boolean> => {
             return Promise.race([
-                tauriFs.exists(path),
+                fs.exists(path),
                 new Promise<boolean>((_, reject) => setTimeout(() => reject(false), timeout))
             ]).catch(() => false);
         };

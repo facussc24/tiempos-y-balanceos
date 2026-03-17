@@ -4,7 +4,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // Mock all dependencies
-vi.mock('../../utils/unified_fs', () => ({ isTauri: vi.fn(() => true) }));
 vi.mock('../../utils/logger', () => ({
     logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
 }));
@@ -31,8 +30,9 @@ vi.mock('../../utils/syncManifest', () => ({
     updateManifestEntry: vi.fn().mockResolvedValue(undefined),
 }));
 
-// Mock tauri_fs
-vi.mock('../../utils/tauri_fs', () => ({
+// Mock unified_fs (merges with the mock above)
+vi.mock('../../utils/unified_fs', () => ({
+    isTauri: vi.fn(() => true),
     ensureDir: vi.fn().mockResolvedValue(undefined),
     writeBinaryFile: vi.fn().mockResolvedValue(true),
 }));
@@ -56,7 +56,7 @@ import { isTauri } from '../../utils/unified_fs';
 import { isPathAccessible } from '../../utils/storageManager';
 import { resolveExportBasePath } from '../../utils/exportPathManager';
 import { enqueue } from '../../utils/repositories/pendingExportRepository';
-import { writeBinaryFile } from '../../utils/tauri_fs';
+import { writeBinaryFile } from '../../utils/unified_fs';
 
 describe('autoExportService', () => {
     beforeEach(() => {

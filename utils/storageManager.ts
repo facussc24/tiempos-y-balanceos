@@ -95,8 +95,8 @@ export async function saveStorageSettings(settings: StorageSettings): Promise<bo
 export async function isPathAccessible(path: string, timeoutMs: number = SERVER_CHECK_TIMEOUT_MS): Promise<boolean> {
     if (!isTauri()) return false;
     try {
-        const tauriFs = await import('./tauri_fs');
-        const checkPromise = tauriFs.exists(path);
+        const fs = await import('./unified_fs');
+        const checkPromise = fs.exists(path);
         const timeoutPromise = new Promise<boolean>((_, reject) =>
             setTimeout(() => reject(new Error('Timeout')), timeoutMs)
         );
@@ -227,9 +227,9 @@ export async function isStorageConfigured(): Promise<boolean> {
 async function ensureLocalStorageDir(): Promise<boolean> {
     if (!isTauri()) return false;
     try {
-        const tauriFs = await import('./tauri_fs');
+        const fs = await import('./unified_fs');
         const localPath = await getActiveBasePath();
-        return await tauriFs.ensureDir(localPath);
+        return await fs.ensureDir(localPath);
     } catch (error) {
         logger.error('StorageManager', 'Failed to create local storage directory', {}, error instanceof Error ? error : undefined);
         return false;

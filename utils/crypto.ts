@@ -2,7 +2,7 @@
  * Crypto Utilities
  * 
  * Shared cryptographic functions used across modules.
- * H-07 Fix: Centralized to avoid code duplication between concurrency.ts and tauri_smart_save.ts
+ * H-07 Fix: Centralized to avoid code duplication across modules
  * 
  * @module crypto
  */

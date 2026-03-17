@@ -4,7 +4,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // Mock dependencies
-vi.mock('../../utils/unified_fs', () => ({ isTauri: vi.fn(() => true) }));
+vi.mock('../../utils/unified_fs', () => ({
+    isTauri: vi.fn(() => true),
+    readTextFile: vi.fn().mockResolvedValue(null),
+    writeFile: vi.fn().mockResolvedValue(undefined),
+}));
 vi.mock('../../utils/logger', () => ({
     logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
 }));
@@ -15,10 +19,6 @@ vi.mock('../../utils/exportPathManager', () => ({
     getExportBasePath: vi.fn().mockResolvedValue('Y:\\INGENIERIA'),
     UNC_EXPORT_FALLBACK: '\\\\server\\compartido\\INGENIERIA',
     buildManifestPath: vi.fn((base: string) => `${base}\\_sync_manifest.json`),
-}));
-vi.mock('../../utils/tauri_fs', () => ({
-    readTextFile: vi.fn().mockResolvedValue(null),
-    writeFile: vi.fn().mockResolvedValue(undefined),
 }));
 vi.mock('../../utils/revisionUtils', () => ({
     isNewerRevision: vi.fn((a: string, b: string) => {
@@ -40,7 +40,7 @@ import {
 } from '../../utils/syncManifest';
 import { isTauri } from '../../utils/unified_fs';
 import { isPathAccessible } from '../../utils/storageManager';
-import { readTextFile, writeFile } from '../../utils/tauri_fs';
+import { readTextFile, writeFile } from '../../utils/unified_fs';
 
 describe('syncManifest', () => {
     beforeEach(() => {

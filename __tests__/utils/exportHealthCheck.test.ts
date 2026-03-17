@@ -7,10 +7,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 // Mocks
 // ============================================================================
 
-vi.mock('../../utils/unified_fs', () => ({
-    isTauri: vi.fn(() => true),
-}));
-
 vi.mock('../../utils/storageManager', () => ({
     isPathAccessible: vi.fn(() => Promise.resolve(true)),
 }));
@@ -31,7 +27,8 @@ vi.mock('../../utils/repositories/settingsRepository', () => ({
 
 const mockEnsureDir = vi.fn((_path?: string) => Promise.resolve());
 const mockRename = vi.fn((_src?: string, _dst?: string) => Promise.resolve(true));
-vi.mock('../../utils/tauri_fs', () => ({
+vi.mock('../../utils/unified_fs', () => ({
+    isTauri: vi.fn(() => true),
     ensureDir: (path: string) => mockEnsureDir(path),
     exists: vi.fn(() => Promise.resolve(true)),
     rename: (src: string, dst: string) => mockRename(src, dst),

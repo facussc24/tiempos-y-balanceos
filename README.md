@@ -113,7 +113,7 @@ El botón "Exportar Diagnóstico" descarga un JSON con:
 │   ├── networkUtils.ts          # Path normalization, retry, error classification
 │   ├── logger.ts                # Logging profesional
 │   ├── faultSimulation.ts       # Simulación de errores (DEV)
-│   ├── tauri_smart_save.ts      # Guardado atómico Tauri
+│   ├── unified_fs.ts            # Abstraccion filesystem (web)
 │   └── encryption_v2.ts         # Cifrado portable
 ├── __tests__/
 │   ├── network_utils.test.ts    # 24 tests

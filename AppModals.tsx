@@ -209,8 +209,8 @@ export const AppModals: React.FC<AppModalsProps> = ({
 
                         // Try to write master.json
                         if (isTauri()) {
-                            const tauriFs = await import('./utils/tauri_fs');
-                            await tauriFs.writeTextFile(masterPath, JSON.stringify(initialData, null, 2));
+                            const fs = await import('./utils/unified_fs');
+                            await fs.writeTextFile(masterPath, JSON.stringify(initialData, null, 2));
                         }
 
                         // Load project and navigate

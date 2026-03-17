@@ -3,7 +3,7 @@
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-// Mock tauri_fs
+// Mock unified_fs
 const mockIsTauri = vi.fn(() => true);
 const mockGetProjectsDir = vi.fn();
 const mockReadDir = vi.fn();
@@ -17,7 +17,7 @@ const mockRemove = vi.fn();
 const mockSaveMediaFile = vi.fn();
 const mockLoadMediaFile = vi.fn();
 
-vi.mock('../../utils/tauri_fs', () => ({
+vi.mock('../../utils/unified_fs', () => ({
     isTauri: () => mockIsTauri(),
     getProjectsDir: () => mockGetProjectsDir(),
     readDir: (p: string) => mockReadDir(p),

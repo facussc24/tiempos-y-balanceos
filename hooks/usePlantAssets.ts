@@ -35,7 +35,7 @@ const getAssetsPath = async (): Promise<PathResult> => {
     if (!isTauri()) return { path: null, source: 'none' };
 
     try {
-        const tauriFs = await import('../utils/tauri_fs');
+        const fs = await import('../utils/unified_fs');
 
         // Get the active base path from storageManager
         const basePath = await getActiveBasePath();
@@ -46,7 +46,7 @@ const getAssetsPath = async (): Promise<PathResult> => {
 
         // Ensure config directory exists
         try {
-            await tauriFs.ensureDir(configDir);
+            await fs.ensureDir(configDir);
         } catch (dirError) {
             logger.warn('usePlantAssets', 'Cannot create config dir, trying AppData fallback', {
                 configDir,
@@ -54,9 +54,9 @@ const getAssetsPath = async (): Promise<PathResult> => {
             });
 
             // Fallback to AppData if base path is not accessible
-            const appData = await tauriFs.getAppDataDir();
+            const appData = await fs.getAppDataDir();
             if (appData) {
-                await tauriFs.ensureDir(appData);
+                await fs.ensureDir(appData);
                 return {
                     path: `${appData}${ASSETS_FILE}`,
                     source: 'local'
@@ -156,7 +156,7 @@ export function usePlantAssets(): UsePlantAssetsResult {
         setIsLoading(true);
         try {
             if (isTauri()) {
-                const tauriFs = await import('../utils/tauri_fs');
+                const fs = await import('../utils/unified_fs');
                 const pathResult = await getAssetsPath();
                 if (!isMountedFn()) return;
 
@@ -170,11 +170,11 @@ export function usePlantAssets(): UsePlantAssetsResult {
                     return;
                 }
 
-                const fileExists = await tauriFs.exists(pathResult.path);
+                const fileExists = await fs.exists(pathResult.path);
                 if (!isMountedFn()) return;
 
                 if (fileExists) {
-                    const content = await tauriFs.readTextFile(pathResult.path);
+                    const content = await fs.readTextFile(pathResult.path);
                     if (!isMountedFn()) return;
                     if (content) {
                         try {
@@ -272,7 +272,7 @@ export function usePlantAssets(): UsePlantAssetsResult {
     const saveAssetsInternal = async (newConfig: PlantConfig, overridePath?: string): Promise<boolean> => {
         try {
             if (isTauri()) {
-                const tauriFs = await import('../utils/tauri_fs');
+                const fs = await import('../utils/unified_fs');
 
                 // Use override path if provided, otherwise get current path
                 let path = overridePath;
@@ -288,9 +288,9 @@ export function usePlantAssets(): UsePlantAssetsResult {
 
                 // Ensure directory exists
                 const dir = path.substring(0, path.lastIndexOf('\\'));
-                await tauriFs.ensureDir(dir);
+                await fs.ensureDir(dir);
 
-                const success = await tauriFs.writeTextFile(path, JSON.stringify(newConfig, null, 2));
+                const success = await fs.writeTextFile(path, JSON.stringify(newConfig, null, 2));
                 if (success) {
                     logger.info('usePlantAssets', 'Assets saved successfully', { path });
                 } else {

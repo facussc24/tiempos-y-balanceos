@@ -146,17 +146,17 @@ export async function repairExportStructure(
     if (!resolved) return result;
 
     try {
-        const tauriFs = await import('./tauri_fs');
+        const fs = await import('./unified_fs');
 
         for (const item of missing) {
             try {
                 // Create the module folder
-                await tauriFs.ensureDir(item.expectedPath);
+                await fs.ensureDir(item.expectedPath);
                 result.created.push(item.expectedPath);
 
                 // Also create _Legacy subfolder
                 const legacyPath = `${item.expectedPath}\\${LEGACY_FOLDER_NAME}`;
-                await tauriFs.ensureDir(legacyPath);
+                await fs.ensureDir(legacyPath);
                 result.created.push(legacyPath);
 
                 logger.info('ExportHealthCheck', `Created: ${item.expectedPath} + ${LEGACY_FOLDER_NAME}`);
@@ -227,7 +227,7 @@ const LEGACY_UNNUMBERED_FOLDERS: Record<string, ExportDocModule> = {
  */
 async function migrateLegacyFolders(basePath: string): Promise<void> {
     try {
-        const tauriFs = await import('./tauri_fs');
+        const fs = await import('./unified_fs');
 
         for (const [legacyName, mod] of Object.entries(LEGACY_UNNUMBERED_FOLDERS)) {
             const numberedName = MODULE_FOLDER_NAMES[mod];
@@ -248,7 +248,7 @@ async function migrateLegacyFolders(basePath: string): Promise<void> {
             }
 
             // Rename legacy → numbered
-            const renamed = await tauriFs.rename(legacyPath, numberedPath);
+            const renamed = await fs.rename(legacyPath, numberedPath);
             if (renamed) {
                 logger.info('ExportHealthCheck', `Migrated legacy folder: "${legacyName}" → "${numberedName}"`, {
                     from: legacyPath,

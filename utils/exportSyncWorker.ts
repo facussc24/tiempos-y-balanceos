@@ -102,7 +102,7 @@ export async function flushPendingExports(): Promise<{ flushed: number; errors: 
 
         logger.info('ExportSyncWorker', `Flushing ${items.length} pending exports`);
 
-        const tauriFs = await import('./tauri_fs');
+        const fs = await import('./unified_fs');
 
         for (const item of items) {
             try {
@@ -110,11 +110,11 @@ export async function flushPendingExports(): Promise<{ flushed: number; errors: 
                 const targetDir = rebaseTargetDir(item.targetDir, basePath);
 
                 // Ensure target directory exists
-                await tauriFs.ensureDir(targetDir);
+                await fs.ensureDir(targetDir);
 
                 // Write the file
                 const fullPath = `${targetDir}\\${item.filename}`;
-                await tauriFs.writeFile(fullPath, item.fileData);
+                await fs.writeFile(fullPath, item.fileData);
 
                 // Mark as completed (delete from queue)
                 await markCompleted(item.id!);

@@ -170,8 +170,8 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
 
                                     try {
                                         if (isTauri()) {
-                                            const tauriFs = await import('./utils/tauri_fs');
-                                            const content = await tauriFs.readTextFile(masterPath);
+                                            const fs = await import('./utils/unified_fs');
+                                            const content = await fs.readTextFile(masterPath);
 
                                             if (content) {
                                                 const projectData = JSON.parse(content);

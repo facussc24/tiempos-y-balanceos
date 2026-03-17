@@ -23,7 +23,7 @@ import { logger } from './logger';
 import {
     isTauri, ensureDir, writeTextFile, readTextFile,
     readDir, exists, pickFolder,
-} from './tauri_fs';
+} from './unified_fs';
 
 // ---------------------------------------------------------------------------
 // Constants & Types

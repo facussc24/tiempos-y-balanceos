@@ -290,9 +290,9 @@ export async function ensureExportDirs(
     if (!isTauri()) return false;
 
     try {
-        const tauriFs = await import('./tauri_fs');
+        const fs = await import('./unified_fs');
         const dir = buildExportDir(module, metadata.client, metadata.piece, basePath);
-        await tauriFs.ensureDir(dir);
+        await fs.ensureDir(dir);
         return true;
     } catch (e) {
         logger.error('ExportPathManager', 'Failed to create export dirs', {}, e instanceof Error ? e : undefined);

@@ -50,8 +50,8 @@ export interface MediaMigrationProgress {
 // LAZY IMPORTS (avoid top-level Tauri deps for test compatibility)
 // ============================================================================
 
-async function getTauriFs() {
-    return await import('./tauri_fs');
+async function getFs() {
+    return await import('./unified_fs');
 }
 
 async function getPathManager() {
@@ -81,16 +81,16 @@ function isSafeFilename(name: string): boolean {
  * Reads data.json from each project to get metadata (client/project/part).
  */
 export async function scanLocalMedia(): Promise<LocalMediaFile[]> {
-    const tauriFs = await getTauriFs();
-    if (!tauriFs.isTauri()) return [];
+    const fs = await getFs();
+    if (!fs.isTauri()) return [];
 
-    const projectsDir = await tauriFs.getProjectsDir();
+    const projectsDir = await fs.getProjectsDir();
     if (!projectsDir) return [];
 
     const results: LocalMediaFile[] = [];
 
     try {
-        const projectEntries = await tauriFs.readDir(projectsDir);
+        const projectEntries = await fs.readDir(projectsDir);
 
         for (const projectEntry of projectEntries) {
             if (!projectEntry.isDirectory) continue;
@@ -99,12 +99,12 @@ export async function scanLocalMedia(): Promise<LocalMediaFile[]> {
             const mediaDir = `${projectEntry.path}/media`;
 
             // Check if media/ exists
-            const mediaExists = await tauriFs.exists(mediaDir);
+            const mediaExists = await fs.exists(mediaDir);
             if (!mediaExists) continue;
 
             // Read project metadata
             const dataPath = `${projectEntry.path}/data.json`;
-            const json = await tauriFs.readTextFile(dataPath);
+            const json = await fs.readTextFile(dataPath);
             if (!json) continue;
 
             let meta = { name: projectId, client: '', project: '', part: '' };
@@ -125,7 +125,7 @@ export async function scanLocalMedia(): Promise<LocalMediaFile[]> {
             if (!meta.client) continue;
 
             // Read media files
-            const mediaEntries = await tauriFs.readDir(mediaDir);
+            const mediaEntries = await fs.readDir(mediaDir);
             for (const mediaEntry of mediaEntries) {
                 if (mediaEntry.isDirectory) continue;
                 if (!isSafeFilename(mediaEntry.name)) continue;
@@ -156,27 +156,27 @@ export async function scanLocalMedia(): Promise<LocalMediaFile[]> {
  * Filters by meta.client to match scanLocalMedia behavior.
  */
 export async function countLocalMediaFiles(): Promise<number> {
-    const tauriFs = await getTauriFs();
-    if (!tauriFs.isTauri()) return 0;
+    const fs = await getFs();
+    if (!fs.isTauri()) return 0;
 
-    const projectsDir = await tauriFs.getProjectsDir();
+    const projectsDir = await fs.getProjectsDir();
     if (!projectsDir) return 0;
 
     let count = 0;
 
     try {
-        const projectEntries = await tauriFs.readDir(projectsDir);
+        const projectEntries = await fs.readDir(projectsDir);
         for (const entry of projectEntries) {
             if (!entry.isDirectory) continue;
 
             const mediaDir = `${entry.path}/media`;
-            const mediaExists = await tauriFs.exists(mediaDir);
+            const mediaExists = await fs.exists(mediaDir);
             if (!mediaExists) continue;
 
             // Read project metadata — skip projects without client (same as scanLocalMedia)
             const dataPath = `${entry.path}/data.json`;
             try {
-                const json = await tauriFs.readTextFile(dataPath);
+                const json = await fs.readTextFile(dataPath);
                 if (!json) continue;
                 const data = JSON.parse(json);
                 if (!data.meta?.client) continue;
@@ -184,7 +184,7 @@ export async function countLocalMediaFiles(): Promise<number> {
                 continue;
             }
 
-            const mediaEntries = await tauriFs.readDir(mediaDir);
+            const mediaEntries = await fs.readDir(mediaDir);
             count += mediaEntries.filter(e => !e.isDirectory).length;
         }
     } catch (e) {
@@ -234,7 +234,7 @@ export async function migrateMediaToServer(
     deleteAfterMigration: boolean,
     onProgress?: (progress: MediaMigrationProgress) => void
 ): Promise<MediaMigrationResult & { updatedItems: MediaMigrationItem[] }> {
-    const tauriFs = await getTauriFs();
+    const fs = await getFs();
     const storageManager = await getStorageManager();
 
     // Deep-clone items to avoid mutating React state
@@ -276,13 +276,13 @@ export async function migrateMediaToServer(
                 0,
                 Math.max(item.serverDestination.lastIndexOf('\\'), item.serverDestination.lastIndexOf('/'))
             );
-            await tauriFs.ensureDir(destDir);
+            await fs.ensureDir(destDir);
 
             // Check if file already exists on server (skip copy, still count as migrated)
-            const alreadyExists = await tauriFs.exists(item.serverDestination);
+            const alreadyExists = await fs.exists(item.serverDestination);
             if (!alreadyExists) {
                 // Copy local → server
-                const success = await tauriFs.copyFile(
+                const success = await fs.copyFile(
                     item.localFile.localPath,
                     item.serverDestination
                 );
@@ -292,7 +292,7 @@ export async function migrateMediaToServer(
                 }
 
                 // Verify copy exists
-                const verified = await tauriFs.exists(item.serverDestination);
+                const verified = await fs.exists(item.serverDestination);
                 if (!verified) {
                     throw new Error('File not found after copy');
                 }
@@ -303,7 +303,7 @@ export async function migrateMediaToServer(
 
             // Delete local copy if requested (also for files already on server)
             if (deleteAfterMigration) {
-                await tauriFs.remove(item.localFile.localPath);
+                await fs.remove(item.localFile.localPath);
             }
         } catch (e) {
             item.status = 'error';
@@ -342,20 +342,20 @@ export async function loadMedia(
     projectId: string,
     mediaRef: string
 ): Promise<string | null> {
-    const tauriFs = await getTauriFs();
-    if (!tauriFs.isTauri() || !mediaRef) return null;
+    const fs = await getFs();
+    if (!fs.isTauri() || !mediaRef) return null;
 
     // 1. Try local AppData
-    const localUrl = await tauriFs.loadMediaFile(projectId, mediaRef);
+    const localUrl = await fs.loadMediaFile(projectId, mediaRef);
     if (localUrl) return localUrl;
 
     // 2. Try server location (need project metadata to build path)
     try {
-        const projectsDir = await tauriFs.getProjectsDir();
+        const projectsDir = await fs.getProjectsDir();
         if (!projectsDir) return null;
 
         const dataPath = `${projectsDir}/${projectId}/data.json`;
-        const json = await tauriFs.readTextFile(dataPath);
+        const json = await fs.readTextFile(dataPath);
         if (!json) return null;
 
         const data = JSON.parse(json);
@@ -369,7 +369,7 @@ export async function loadMedia(
         const pathManager = await getPathManager();
         const serverPath = pathManager.buildPath('media', client, project, part, filename);
 
-        const content = await tauriFs.readBinaryFile(serverPath);
+        const content = await fs.readBinaryFile(serverPath);
         if (!content) return null;
 
         // Build blob URL from server file
@@ -402,11 +402,11 @@ export async function saveMedia(
     file: File,
     meta?: { client: string; project?: string; name: string }
 ): Promise<{ localRef: string; savedToServer: boolean } | null> {
-    const tauriFs = await getTauriFs();
-    if (!tauriFs.isTauri()) return null;
+    const fs = await getFs();
+    if (!fs.isTauri()) return null;
 
     // 1. Save locally (always)
-    const localRef = await tauriFs.saveMediaFile(projectId, taskId, file);
+    const localRef = await fs.saveMediaFile(projectId, taskId, file);
     if (!localRef) return null;
 
     // 2. Attempt server copy if metadata available
@@ -428,12 +428,12 @@ export async function saveMedia(
 
                 // Ensure dir + copy
                 const destDir = serverPath.substring(0, Math.max(serverPath.lastIndexOf('\\'), serverPath.lastIndexOf('/')));
-                await tauriFs.ensureDir(destDir);
+                await fs.ensureDir(destDir);
 
-                const projectsDir = await tauriFs.getProjectsDir();
+                const projectsDir = await fs.getProjectsDir();
                 if (projectsDir) {
                     const localPath = `${projectsDir}/${projectId}/${localRef}`;
-                    savedToServer = await tauriFs.copyFile(localPath, serverPath);
+                    savedToServer = await fs.copyFile(localPath, serverPath);
                 }
             }
         } catch (e) {

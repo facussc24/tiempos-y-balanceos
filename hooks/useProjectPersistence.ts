@@ -199,21 +199,12 @@ export function useProjectPersistence(): UsePersistenceResult {
         const MAX_SAVE_RETRIES = 2;
 
         const attemptSave = async (): Promise<ProjectData> => {
-            if (isTauri() && typeof data.fileHandle === 'string') {
-                const { smartSaveProjectTauri } = await import('../utils/tauri_smart_save');
-                return await smartSaveProjectTauri(
-                    data.fileHandle as string,
-                    data.directoryHandle as string,
-                    dataWithUser
-                );
-            } else {
-                const { smartSaveProject } = await import('../utils/webFsHelpers');
-                return await smartSaveProject(
-                    data.fileHandle as FileSystemFileHandle,
-                    data.directoryHandle as FileSystemDirectoryHandle,
-                    dataWithUser
-                );
-            }
+            const { smartSaveProject } = await import('../utils/webFsHelpers');
+            return await smartSaveProject(
+                data.fileHandle as FileSystemFileHandle,
+                data.directoryHandle as FileSystemDirectoryHandle,
+                dataWithUser
+            );
         };
 
         try {
@@ -300,17 +291,12 @@ export function useProjectPersistence(): UsePersistenceResult {
         try {
             setIsSaving(true);
 
-            if (isTauri() && typeof data.fileHandle === 'string') {
-                const { quickSaveTauri } = await import('../utils/tauri_smart_save');
-                await quickSaveTauri(data.fileHandle as string, data);
-            } else {
-                // Web mode fallback - direct JSON write
-                const { fileHandle: _, directoryHandle: __, ...serializable } = data;
-                const content = JSON.stringify({ ...serializable, lastModified: Date.now() }, null, 2);
-                const writable = await (data.fileHandle as FileSystemFileHandle).createWritable();
-                await writable.write(content);
-                await writable.close();
-            }
+            // Web mode - direct JSON write
+            const { fileHandle: _, directoryHandle: __, ...serializable } = data;
+            const content = JSON.stringify({ ...serializable, lastModified: Date.now() }, null, 2);
+            const writable = await (data.fileHandle as FileSystemFileHandle).createWritable();
+            await writable.write(content);
+            await writable.close();
 
             setLastSaved(new Date().toLocaleTimeString());
             markClean(data);
@@ -378,22 +364,14 @@ export function useProjectPersistence(): UsePersistenceResult {
 
         try {
             setIsSaving(true);
-            if (isTauri() && typeof data.fileHandle === 'string') {
-                const { smartSaveProjectTauri } = await import('../utils/tauri_smart_save');
-                const saved = await smartSaveProjectTauri(data.fileHandle as string, data.directoryHandle as string, newData);
-                setData(saved);
-                await saveProject(saved);
-            } else {
-                const { smartSaveProject } = await import('../utils/webFsHelpers');
-                // Type assertion: Web FileSystem API
-                const saved = await smartSaveProject(
-                    data.fileHandle as FileSystemFileHandle,
-                    data.directoryHandle as FileSystemDirectoryHandle,
-                    newData
-                );
-                setData(saved);
-                await saveProject(saved);
-            }
+            const { smartSaveProject } = await import('../utils/webFsHelpers');
+            const saved = await smartSaveProject(
+                data.fileHandle as FileSystemFileHandle,
+                data.directoryHandle as FileSystemDirectoryHandle,
+                newData
+            );
+            setData(saved);
+            await saveProject(saved);
             toast.success('Guardado como Nueva Versión', 'Conflicto resuelto');
         } catch (err) {
             toast.error('Error al Guardar', String(err));

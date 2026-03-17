@@ -87,10 +87,10 @@ export async function readManifest(basePath?: string): Promise<SyncManifest> {
         if (!resolvedBase) return { ...EMPTY_MANIFEST, entries: {} };
 
         const manifestPath = buildManifestPath(resolvedBase);
-        const tauriFs = await import('./tauri_fs');
+        const fs = await import('./unified_fs');
 
         try {
-            const content = await tauriFs.readTextFile(manifestPath);
+            const content = await fs.readTextFile(manifestPath);
             const parsed = JSON.parse(content) as SyncManifest;
 
             // Basic validation
@@ -127,11 +127,11 @@ export async function writeManifest(manifest: SyncManifest, basePath?: string): 
         if (!resolvedBase) return false;
 
         const manifestPath = buildManifestPath(resolvedBase);
-        const tauriFs = await import('./tauri_fs');
+        const fs = await import('./unified_fs');
 
         manifest.lastUpdated = new Date().toISOString();
         const content = JSON.stringify(manifest, null, 2);
-        await tauriFs.writeFile(manifestPath, new TextEncoder().encode(content));
+        await fs.writeFile(manifestPath, new TextEncoder().encode(content));
 
         return true;
     } catch (err) {

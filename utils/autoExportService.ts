@@ -196,7 +196,7 @@ export async function autoExportOnRevision(
 
         // 5. Generate and write each export
         const items = await getExportItems(module, doc);
-        const tauriFs = await import('./tauri_fs');
+        const fs = await import('./unified_fs');
         const writtenFilenames: string[] = [];
 
         for (const item of items) {
@@ -209,8 +209,8 @@ export async function autoExportOnRevision(
 
                 try {
                     // Ensure directory exists
-                    await tauriFs.ensureDir(fileInfo.dir);
-                    await tauriFs.writeBinaryFile(fileInfo.fullPath, buffer);
+                    await fs.ensureDir(fileInfo.dir);
+                    await fs.writeBinaryFile(fileInfo.fullPath, buffer);
 
                     result.written++;
                     writtenFilenames.push(fileInfo.filename);

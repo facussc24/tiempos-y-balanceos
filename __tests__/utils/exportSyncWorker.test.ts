@@ -4,7 +4,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 // Mock dependencies
-vi.mock('../../utils/unified_fs', () => ({ isTauri: vi.fn(() => true) }));
+vi.mock('../../utils/unified_fs', () => ({
+    isTauri: vi.fn(() => true),
+    ensureDir: vi.fn().mockResolvedValue(undefined),
+    writeFile: vi.fn().mockResolvedValue(undefined),
+}));
 vi.mock('../../utils/logger', () => ({
     logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
 }));
@@ -22,10 +26,6 @@ vi.mock('../../utils/repositories/pendingExportRepository', () => ({
     markCompleted: vi.fn().mockResolvedValue(undefined),
     markFailed: vi.fn().mockResolvedValue(undefined),
 }));
-vi.mock('../../utils/tauri_fs', () => ({
-    ensureDir: vi.fn().mockResolvedValue(undefined),
-    writeFile: vi.fn().mockResolvedValue(undefined),
-}));
 
 import {
     startExportSyncWorker,
@@ -37,7 +37,7 @@ import {
 import { isTauri } from '../../utils/unified_fs';
 import { isPathAccessible } from '../../utils/storageManager';
 import { getPendingCount, dequeueAll, markCompleted, markFailed } from '../../utils/repositories/pendingExportRepository';
-import { writeFile, ensureDir } from '../../utils/tauri_fs';
+import { writeFile, ensureDir } from '../../utils/unified_fs';
 
 describe('exportSyncWorker', () => {
     beforeEach(() => {

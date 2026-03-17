@@ -7,7 +7,7 @@
  * @module revisionHistory
  */
 
-import * as tauriFs from './tauri_fs';
+import * as unifiedFs from './unified_fs';
 import { ProjectData } from '../types';
 
 // ============================================================================
@@ -82,7 +82,7 @@ export async function listRevisions(obsoletosPath: string): Promise<RevisionPars
     const errors: string[] = [];
 
     try {
-        const entries = await tauriFs.readDir(obsoletosPath);
+        const entries = await unifiedFs.readDir(obsoletosPath);
 
         for (const entry of entries) {
             if (!entry.isDirectory && entry.name.endsWith('.json')) {
@@ -114,7 +114,7 @@ export async function loadRevisionPreview(revisionPath: string): Promise<{
     error?: string;
 }> {
     try {
-        const content = await tauriFs.readTextFile(revisionPath);
+        const content = await unifiedFs.readTextFile(revisionPath);
         if (!content) {
             return { data: null, error: 'Could not read file' };
         }
@@ -137,20 +137,20 @@ export async function restoreRevision(
 ): Promise<{ success: boolean; error?: string }> {
     try {
         // 1. Read revision content
-        const revisionContent = await tauriFs.readTextFile(revisionPath);
+        const revisionContent = await unifiedFs.readTextFile(revisionPath);
         if (!revisionContent) {
             return { success: false, error: 'Could not read revision file' };
         }
 
         // 2. Read current file for backup
-        const currentContent = await tauriFs.readTextFile(currentFilePath);
+        const currentContent = await unifiedFs.readTextFile(currentFilePath);
 
         // 3. Create backup of current file
         if (currentContent) {
             const currentData = JSON.parse(currentContent) as ProjectData;
             const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
             const backupName = `${currentData.meta.name || 'project'}_${currentData.meta.version || '0.0.0'}_${timestamp}.json`;
-            await tauriFs.writeTextFile(`${obsoletosPath}/${backupName}`, currentContent);
+            await unifiedFs.writeTextFile(`${obsoletosPath}/${backupName}`, currentContent);
         }
 
         // 4. Parse revision and increment version
@@ -167,7 +167,7 @@ export async function restoreRevision(
 
         // 5. Write restored data to current file
         const { fileHandle: _, directoryHandle: __, _loadedTimestamp: ___, _checksum: ____, ...serializableData } = restoredData;
-        await tauriFs.writeTextFile(currentFilePath, JSON.stringify(serializableData, null, 2));
+        await unifiedFs.writeTextFile(currentFilePath, JSON.stringify(serializableData, null, 2));
 
         return { success: true };
     } catch (err) {

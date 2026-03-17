@@ -1,6 +1,6 @@
 # Barack Mercosul - Tiempos y Balanceos
 
-App de escritorio Tauri + React 19 + TypeScript para gestion de calidad automotriz
+App web React 19 + TypeScript para gestion de calidad automotriz
 (AMFE VDA, Plan de Control AIAG, Hojas de Operaciones) y lean manufacturing
 (balanceo de linea, simulador de flujo, kanban, heijunka, mix multi-modelo).
 
@@ -8,8 +8,8 @@ App de escritorio Tauri + React 19 + TypeScript para gestion de calidad automotr
 
 | Capa         | Tecnologia                                          |
 |--------------|-----------------------------------------------------|
-| Runtime      | Tauri 2.x, React 19.2, TypeScript 5.8, Vite 6      |
-| Persistencia | SQLite (tauri-plugin-sql) + WAL mode                |
+| Runtime      | React 19.2, TypeScript 5.8, Vite 6                  |
+| Persistencia | Supabase + SQLite (sql.js)                          |
 | Testing      | Vitest 4.x + @testing-library/react + jsdom         |
 | Styling      | TailwindCSS 3.4                                     |
 | Export       | xlsx-js-style, html2pdf.js                          |
@@ -24,8 +24,6 @@ npx vitest run       # Correr todos los tests
 npx vitest run --coverage  # Tests con coverage (v8)
 npm run build        # Build de produccion
 npx tsc --noEmit     # Chequeo de tipos
-npm run tauri:dev    # Dev con Tauri
-npm run tauri:build  # Build Tauri
 ```
 
 ## Estructura del proyecto
@@ -83,8 +81,7 @@ npm run tauri:build  # Build Tauri
       pfdRepository.ts        Diagramas de Flujo (PFD)
       draftRepository.ts      Borradores auto-save unificados
     storageManager.ts   Settings de storage (delega a settingsRepository)
-    unified_fs.ts       Abstraccion filesystem (Tauri/web)
-    tauri_smart_save.ts Guardado formal a red con locks/atomic/backup
+    unified_fs.ts       Abstraccion filesystem (web)
     logger.ts           Logger centralizado
     settingsStore.ts    Settings (delega a settingsRepository)
     crypto.ts           Hashing para integridad
@@ -124,9 +121,7 @@ npm run tauri:build  # Build Tauri
 - **Usar repositorios para acceso a datos, nunca SQLite directo** — importar de `utils/repositories/`
 - **NO hardcodear API keys** en codigo fuente. Usar `settingsStore` o variables de entorno
 - **Usar logger.ts** en vez de `console.log/warn/error`: `import { logger } from 'utils/logger'`
-- **Imports dinamicos** para `@tauri-apps/*`: `const { readTextFile } = await import('@tauri-apps/plugin-fs')`
 - **NO usar `as any` ni `@ts-ignore`** - tipar correctamente
-- **Guardado formal** a filesystem (Tauri) con locks y atomic writes para red
 - **Auto-save/borradores** via `draftRepository` (SQLite), NO IndexedDB
 - **Modulos lazy-loaded** con `React.lazy()` + `Suspense`
 

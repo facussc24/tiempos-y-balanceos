@@ -12,7 +12,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Package, Loader2, Search, CheckCircle2, Circle } from 'lucide-react';
 import { MixSelectableProduct } from '../../types';
 import { listClients, listProjects, listParts, buildMasterJsonPath } from '../../utils/pathManager';
-import { readTextFile } from '../../utils/tauri_fs';
+import { readTextFile } from '../../utils/unified_fs';
 import { isTauri } from '../../utils/unified_fs';
 import { toast } from '../../components/ui/Toast';
 import { logger } from '../../utils/logger';

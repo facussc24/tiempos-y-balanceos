@@ -76,29 +76,29 @@ async function scanProjects(basePath: string): Promise<Map<string, { path: strin
     }
 
     try {
-        const tauriFs = await import('./tauri_fs');
+        const fs = await import('./unified_fs');
         const pathConfig = getPathConfig();
         const dataPath = `${basePath}\\${pathConfig.dataFolder}`;
 
         // Check if data directory exists
-        if (!await tauriFs.exists(dataPath)) {
+        if (!await fs.exists(dataPath)) {
             return projects;
         }
 
         // Scan clients
-        const clients = await tauriFs.readDir(dataPath);
+        const clients = await fs.readDir(dataPath);
 
         for (const client of clients) {
             if (!client.isDirectory) continue;
 
             const clientPath = `${dataPath}\\${client.name}`;
-            const projectDirs = await tauriFs.readDir(clientPath);
+            const projectDirs = await fs.readDir(clientPath);
 
             for (const project of projectDirs) {
                 if (!project.isDirectory) continue;
 
                 const projectPath = `${clientPath}\\${project.name}`;
-                const parts = await tauriFs.readDir(projectPath);
+                const parts = await fs.readDir(projectPath);
 
                 for (const part of parts) {
                     if (!part.isDirectory) continue;
@@ -107,13 +107,13 @@ async function scanProjects(basePath: string): Promise<Map<string, { path: strin
                     const masterPath = `${partPath}\\${MASTER_FILE_NAME}`;
 
                     // Check if master.json exists
-                    if (await tauriFs.exists(masterPath)) {
+                    if (await fs.exists(masterPath)) {
                         const id = `${client.name}/${project.name}/${part.name}`;
 
                         // Get modification time from file content (lastModified field)
                         let modified = Date.now();
                         try {
-                            const content = await tauriFs.readTextFile(masterPath);
+                            const content = await fs.readTextFile(masterPath);
                             if (content) {
                                 const data = JSON.parse(content);
                                 modified = data.lastModified || Date.now();
@@ -145,8 +145,8 @@ async function getFileChecksum(filePath: string): Promise<string | null> {
     if (!isTauri()) return null;
 
     try {
-        const tauriFs = await import('./tauri_fs');
-        const content = await tauriFs.readTextFile(filePath);
+        const fs = await import('./unified_fs');
+        const content = await fs.readTextFile(filePath);
         if (content) {
             return await generateChecksum(content);
         }
@@ -244,13 +244,13 @@ async function copyProject(
     }
 
     try {
-        const tauriFs = await import('./tauri_fs');
+        const fs = await import('./unified_fs');
 
         // Ensure destination directory exists
-        await tauriFs.ensureDir(destPath);
+        await fs.ensureDir(destPath);
 
         // Read source directory
-        const entries = await tauriFs.readDir(sourcePath);
+        const entries = await fs.readDir(sourcePath);
 
         for (const entry of entries) {
             const srcFile = `${sourcePath}\\${entry.name}`;
@@ -263,14 +263,14 @@ async function copyProject(
 
             if (entry.isDirectory) {
                 // Recursively copy directory
-                await tauriFs.ensureDir(destFile);
+                await fs.ensureDir(destFile);
                 const result = await copyProject(srcFile, destFile, includeMedia);
                 if (!result.success) {
                     return result;
                 }
             } else {
                 // Copy file
-                const success = await tauriFs.copyFile(srcFile, destFile);
+                const success = await fs.copyFile(srcFile, destFile);
                 if (!success) {
                     return { success: false, error: `Failed to copy ${entry.name}` };
                 }
@@ -293,7 +293,7 @@ async function createBackup(projectPath: string, projectId: string): Promise<str
     if (!isTauri()) return null;
 
     try {
-        const tauriFs = await import('./tauri_fs');
+        const fs = await import('./unified_fs');
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
         const backupPath = `${projectPath}${BACKUP_SUFFIX}_${timestamp}`;
 

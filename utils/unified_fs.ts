@@ -3,7 +3,7 @@
  *
  * Provides a unified API for file operations that works in the browser.
  * All file I/O is done via browser APIs (File System Access API or download links).
- * Tauri-specific operations have been removed.
+ * Desktop-specific operations are no-op stubs for backward compatibility.
  *
  * @module unified_fs
  */
@@ -21,6 +21,22 @@ export const hasFileSystemAccess = (): boolean =>
     typeof window !== 'undefined' && 'showOpenFilePicker' in window;
 
 // ---------------------------------------------------------------------------
+// Module init (no-ops in web)
+// ---------------------------------------------------------------------------
+
+export const initTauriModules = async (): Promise<boolean> => false;
+export const ensureTauriFs = async (): Promise<boolean> => false;
+export const ensureTauriDialog = async (): Promise<boolean> => false;
+export const ensureTauriPath = async (): Promise<boolean> => false;
+
+// ---------------------------------------------------------------------------
+// Path utilities
+// ---------------------------------------------------------------------------
+
+export const getAppDataDir = async (): Promise<string | null> => null;
+export const getProjectsDir = async (): Promise<string | null> => null;
+
+// ---------------------------------------------------------------------------
 // Primitive file operations (browser-based)
 // ---------------------------------------------------------------------------
 
@@ -36,6 +52,12 @@ export const pickFolder = async (): Promise<string | null> => {
     }
 };
 
+/** Pick a project file (no-op in web). */
+export const pickProjectFile = async (): Promise<string | null> => null;
+
+/** Pick a save location (no-op in web). */
+export const pickSaveLocation = async (_defaultName?: string, _filters?: unknown[]): Promise<string | null> => null;
+
 /** List files/dirs (stub for compatibility). */
 export const readDir = async (_path: string): Promise<FSItem[]> => {
     logger.warn('UnifiedFS', 'readDir called in web mode — no filesystem access');
@@ -44,6 +66,9 @@ export const readDir = async (_path: string): Promise<FSItem[]> => {
 
 /** Create directory (no-op in web). */
 export const createDir = async (_path: string): Promise<boolean> => false;
+
+/** Alias for createDir. */
+export const ensureDir = async (_path: string): Promise<boolean> => false;
 
 /** Write text file via browser download. */
 export const writeTextFile = async (path: string, content: string): Promise<boolean> => {
@@ -70,17 +95,32 @@ export const readTextFile = async (_path: string): Promise<string | null> => {
     return null;
 };
 
+/** Read binary file (no-op in web). */
+export const readBinaryFile = async (_path: string): Promise<Uint8Array | null> => null;
+
+/** Write binary file (no-op in web). */
+export const writeBinaryFile = async (_path: string, _data: Uint8Array): Promise<boolean> => false;
+
+/** Write raw bytes or text to a path (no-op in web). */
+export const writeFile = async (_path: string, _data: Uint8Array | string): Promise<boolean> => false;
+
+/** Check if a path exists (always false in web). */
+export const exists = async (_path: string): Promise<boolean> => false;
+
 /** Remove file (no-op in web). */
-export const remove = async (_path: string): Promise<boolean> => false;
+export const remove = async (_path: string, _options?: { recursive?: boolean }): Promise<boolean> => false;
+
+/** Copy file (no-op in web). */
+export const copyFile = async (_src: string, _dst: string): Promise<boolean> => false;
+
+/** Rename/move file (no-op in web). */
+export const rename = async (_src: string, _dst: string): Promise<boolean> => false;
 
 // ---------------------------------------------------------------------------
 // Trigger a browser file download
 // ---------------------------------------------------------------------------
 
-/**
- * Trigger a browser download for arbitrary data.
- * Use this instead of Tauri's save-file dialogs.
- */
+/** Trigger a browser download for arbitrary data. */
 export function triggerDownload(filename: string, content: string | Uint8Array, mimeType = 'application/octet-stream'): void {
     const blob = content instanceof Uint8Array
         ? new Blob([content], { type: mimeType })
@@ -154,7 +194,19 @@ export const setCurrentProject = (projectId: string | null): void => {
 };
 
 // ---------------------------------------------------------------------------
-// Media (no-op stubs)
+// Project-specific filesystem operations (no-ops in web)
+// ---------------------------------------------------------------------------
+
+export const saveProjectToAppData = async (_id: string, _data: ProjectData): Promise<boolean> => false;
+
+export const loadProjectFromAppData = async (_id: string): Promise<ProjectData | null> => null;
+
+export const listProjectsInAppData = async (): Promise<Array<{ id: string; name: string; lastModified: number }>> => [];
+
+export const deleteProjectFromAppData = async (_id: string): Promise<boolean> => false;
+
+// ---------------------------------------------------------------------------
+// Media (no-op stubs — use Supabase Storage)
 // ---------------------------------------------------------------------------
 
 /** @deprecated Use Supabase Storage for media files. */
@@ -162,6 +214,18 @@ export const saveTaskMedia = async (_file: File, _taskId: string): Promise<strin
 
 /** @deprecated Use Supabase Storage for media files. */
 export const loadTaskMedia = async (_mediaRef: string): Promise<string | null> => null;
+
+export const saveMediaFile = async (_projectId: string, _taskId: string, _file: File): Promise<string | null> => null;
+
+export const loadMediaFile = async (_projectId: string, _mediaRef: string): Promise<string | null> => null;
+
+// ---------------------------------------------------------------------------
+// Export / Import operations (no-ops in web)
+// ---------------------------------------------------------------------------
+
+export const exportProject = async (_path: string, _data: ProjectData): Promise<boolean> => false;
+
+export const importProject = async (_path: string): Promise<ProjectData | null> => null;
 
 // ---------------------------------------------------------------------------
 // Dialogs (browser-native)
@@ -172,6 +236,20 @@ export const confirm = async (_title: string, message: string): Promise<boolean>
 
 export const alert = async (_title: string, message: string): Promise<void> =>
     window.alert(message);
+
+/** Alias for confirm — uses window.confirm. */
+export const confirmDialog = async (_title: string, message: string): Promise<boolean> =>
+    window.confirm(message);
+
+/** Alias for alert — uses window.alert. */
+export const alertDialog = async (_title: string, message: string): Promise<void> =>
+    window.alert(message);
+
+// ---------------------------------------------------------------------------
+// Security validation
+// ---------------------------------------------------------------------------
+
+export const isSecurePath = (_path: string): boolean => false;
 
 // ---------------------------------------------------------------------------
 // App info

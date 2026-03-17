@@ -85,7 +85,7 @@ export function useResolvedProject(
             setError(undefined);
 
             try {
-                const tauriFs = await import('../utils/tauri_fs');
+                const fs = await import('../utils/unified_fs');
                 if (cancelled) return;
 
                 // Determine base directory from rootHandle or default
@@ -101,12 +101,12 @@ export function useResolvedProject(
                             ? `${baseDir}\\${parentRelPath}`
                             : parentRelPath;
 
-                    const exists = await tauriFs.exists(fullPath);
+                    const exists = await fs.exists(fullPath);
                     if (!exists) {
                         throw new Error(`Parent file not found: ${fullPath}`);
                     }
 
-                    const content = await tauriFs.readTextFile(fullPath);
+                    const content = await fs.readTextFile(fullPath);
                     if (!content) {
                         throw new Error(`Failed to read parent file: ${fullPath}`);
                     }

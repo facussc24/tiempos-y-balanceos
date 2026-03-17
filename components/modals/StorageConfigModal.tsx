@@ -34,7 +34,7 @@ import { getPathConfig } from '../../utils/pathManager';
 import { DEFAULT_EXPORT_BASE_PATH } from '../../utils/exportPathManager';
 import { getSetting, setSetting } from '../../utils/repositories/settingsRepository';
 import { getPendingCount, flushPendingExports } from '../../utils/exportSyncWorker';
-import { pickFolder } from '../../utils/tauri_fs';
+import { pickFolder } from '../../utils/unified_fs';
 import { toast } from '../ui/Toast';
 
 // ============================================================================

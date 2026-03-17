@@ -1,7 +1,6 @@
 /**
  * Web File System Access API helpers.
- * Used as fallback when NOT in Tauri mode (browser environment).
- * Tauri mode uses tauri_fs.ts and tauri_smart_save.ts instead.
+ * Provides browser-based file operations using the File System Access API.
  */
 
 import { ProjectData } from '../types';

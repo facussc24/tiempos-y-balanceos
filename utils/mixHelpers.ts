@@ -142,13 +142,13 @@ export async function verifyMixIntegrity(
 export async function loadMixScenario(path: string): Promise<MixScenario | null> {
     try {
         if (isTauri()) {
-            const tauriFs = await import('./tauri_fs');
-            const exists = await tauriFs.exists(path);
+            const fs = await import('./unified_fs');
+            const exists = await fs.exists(path);
             if (!exists) {
                 logger.warn('mixHelpers', 'Scenario file not found', { path });
                 return null;
             }
-            const content = await tauriFs.readTextFile(path);
+            const content = await fs.readTextFile(path);
             if (content) {
                 const scenario = JSON.parse(content) as MixScenario;
                 if (scenario.type !== 'mix_scenario') {
@@ -181,7 +181,7 @@ export async function saveMixScenario(
 ): Promise<boolean> {
     try {
         if (isTauri()) {
-            const tauriFs = await import('./tauri_fs');
+            const fs = await import('./unified_fs');
 
             // V8.3: Calculate checksums if products are provided
             let productsWithChecksum = scenario.products;
@@ -215,7 +215,7 @@ export async function saveMixScenario(
             };
 
             const json = JSON.stringify(toSave, null, 2);
-            return await tauriFs.writeTextFile(path, json);
+            return await fs.writeTextFile(path, json);
         }
         return false;
     } catch (e) {
@@ -246,7 +246,7 @@ export async function loadMixProducts(
         return { products: [], errors: ['Mix loading requires Tauri mode'], totalDemand: 0, isPartial: false };
     }
 
-    const tauriFs = await import('./tauri_fs');
+    const fs = await import('./unified_fs');
 
     for (const ref of references) {
         try {
@@ -255,14 +255,14 @@ export async function loadMixProducts(
                 ? ref.path  // Absolute path
                 : `${basePath}\\${ref.path}`; // Relative path
 
-            const exists = await tauriFs.exists(fullPath);
+            const exists = await fs.exists(fullPath);
 
             if (!exists) {
                 errors.push(`Archivo no encontrado: ${ref.path}`);
                 continue;
             }
 
-            const content = await tauriFs.readTextFile(fullPath);
+            const content = await fs.readTextFile(fullPath);
             if (content) {
                 // H-04 FIX: Validate JSON structure before casting
                 let project: ProjectData;
@@ -307,12 +307,12 @@ export async function loadMixProducts(
                                 ? parentRelPath
                                 : `${childDir}\\${parentRelPath}`;
 
-                            const parentExists = await tauriFs.exists(parentFullPath);
+                            const parentExists = await fs.exists(parentFullPath);
                             if (!parentExists) {
                                 throw new Error(`Parent file not found: ${parentFullPath}`);
                             }
 
-                            const parentContent = await tauriFs.readTextFile(parentFullPath);
+                            const parentContent = await fs.readTextFile(parentFullPath);
                             if (!parentContent) {
                                 throw new Error(`Failed to read parent file: ${parentFullPath}`);
                             }

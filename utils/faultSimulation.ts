@@ -179,7 +179,7 @@ export async function testAtomicWrite(basePath: string): Promise<QATestResult> {
 
     try {
         // Dynamic import to avoid circular dependencies
-        const tauriFs = await import('./tauri_fs');
+        const fs = await import('./unified_fs');
         const { normalizePath, joinPath } = await import('./networkUtils');
 
         const normalizedPath = normalizePath(basePath);
@@ -188,27 +188,27 @@ export async function testAtomicWrite(basePath: string): Promise<QATestResult> {
         const finalFile = joinPath(testDir, 'test_atomic.json');
 
         // 1. Create test directory
-        await tauriFs.ensureDir(testDir);
+        await fs.ensureDir(testDir);
 
         // 2. Write to temp file
         const testData = { test: true, timestamp: Date.now() };
-        await tauriFs.writeTextFile(tempFile, JSON.stringify(testData, null, 2));
+        await fs.writeTextFile(tempFile, JSON.stringify(testData, null, 2));
 
         // 3. Verify temp file exists
-        const tempContent = await tauriFs.readTextFile(tempFile);
+        const tempContent = await fs.readTextFile(tempFile);
         if (!tempContent) throw new Error('Temp file not created');
 
         // 4. Rename to final (atomic swap)
-        await tauriFs.rename(tempFile, finalFile);
+        await fs.rename(tempFile, finalFile);
 
         // 5. Verify final file
-        const finalContent = await tauriFs.readTextFile(finalFile);
+        const finalContent = await fs.readTextFile(finalFile);
         const parsed = JSON.parse(finalContent || '{}');
         if (parsed.test !== true) throw new Error('Data verification failed');
 
         // 6. Cleanup
-        await tauriFs.remove(finalFile);
-        await tauriFs.remove(testDir);
+        await fs.remove(finalFile);
+        await fs.remove(testDir);
 
         return {
             testName,
@@ -235,7 +235,7 @@ export async function testLockBehavior(basePath: string): Promise<QATestResult> 
     const start = Date.now();
 
     try {
-        const tauriFs = await import('./tauri_fs');
+        const fs = await import('./unified_fs');
         const { normalizePath, joinPath } = await import('./networkUtils');
 
         const normalizedPath = normalizePath(basePath);
@@ -247,10 +247,10 @@ export async function testLockBehavior(basePath: string): Promise<QATestResult> 
             timestamp: Date.now(),
             machineId: 'test_machine'
         };
-        await tauriFs.writeTextFile(lockFile, JSON.stringify(lockData, null, 2));
+        await fs.writeTextFile(lockFile, JSON.stringify(lockData, null, 2));
 
         // 2. Verify lock exists
-        const lockContent = await tauriFs.readTextFile(lockFile);
+        const lockContent = await fs.readTextFile(lockFile);
         if (!lockContent) throw new Error('Lock file not created');
 
         // 3. Simulate checking for expiration
@@ -259,7 +259,7 @@ export async function testLockBehavior(basePath: string): Promise<QATestResult> 
         const isExpired = age > 30000; // 30s TTL
 
         // 4. Cleanup lock
-        await tauriFs.remove(lockFile);
+        await fs.remove(lockFile);
 
         return {
             testName,

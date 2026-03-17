@@ -101,7 +101,7 @@ export const TaskManager: React.FC<Props> = ({ data, updateData, rootHandle }) =
         }
 
         try {
-            const tauriFs = await import('../utils/tauri_fs');
+            const fs = await import('../utils/unified_fs');
 
             // Create child project structure with minimal data
             const childProject: Partial<typeof data> = {
@@ -124,7 +124,7 @@ export const TaskManager: React.FC<Props> = ({ data, updateData, rootHandle }) =
             const sanitizedName = variantName.replace(/[^a-zA-Z0-9_-]/g, '_');
             const variantPath = `${sanitizedName}.json`;
 
-            const success = await tauriFs.writeTextFile(
+            const success = await fs.writeTextFile(
                 variantPath,
                 JSON.stringify(childProject, null, 2)
             );
