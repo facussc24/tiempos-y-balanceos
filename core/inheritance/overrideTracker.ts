@@ -79,7 +79,7 @@ type AnyDocument = AmfeDocument | PfdDocument | ControlPlanDocument | HoDocument
  * Extracts a flat map of item IDs -> serialized content for comparison.
  * Each module defines its own item granularity.
  */
-function extractItems(doc: AnyDocument, module: DocumentModule): Map<string, { itemType: string; data: string }> {
+export function extractItems(doc: AnyDocument, module: DocumentModule): Map<string, { itemType: string; data: string }> {
     switch (module) {
         case 'pfd':
             return extractPfdItems(doc as PfdDocument);
