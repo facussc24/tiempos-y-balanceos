@@ -28,7 +28,7 @@ export interface DbAdapter {
 // Schema DDL
 // ---------------------------------------------------------------------------
 
-const SCHEMA_VERSION = 11;
+const SCHEMA_VERSION = 12;
 
 const SCHEMA_DDL = `
 -- Version tracking
@@ -340,6 +340,59 @@ CREATE TABLE IF NOT EXISTS product_family_members (
 CREATE INDEX IF NOT EXISTS idx_pfm_family ON product_family_members(family_id);
 CREATE INDEX IF NOT EXISTS idx_pfm_product ON product_family_members(product_id);
 
+-- Family documents (master/variant document links)
+CREATE TABLE IF NOT EXISTS family_documents (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    family_id       INTEGER NOT NULL REFERENCES product_families(id) ON DELETE CASCADE,
+    module          TEXT NOT NULL CHECK (module IN ('amfe', 'cp', 'ho', 'pfd')),
+    document_id     TEXT NOT NULL,
+    is_master       INTEGER NOT NULL DEFAULT 0,
+    source_master_id INTEGER REFERENCES family_documents(id) ON DELETE SET NULL,
+    product_id      INTEGER REFERENCES products(id) ON DELETE SET NULL,
+    created_at      TEXT NOT NULL DEFAULT (datetime('now')),
+    UNIQUE(family_id, module, document_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_famdoc_family ON family_documents(family_id);
+CREATE INDEX IF NOT EXISTS idx_famdoc_module ON family_documents(module);
+CREATE INDEX IF NOT EXISTS idx_famdoc_document ON family_documents(document_id);
+CREATE INDEX IF NOT EXISTS idx_famdoc_source_master ON family_documents(source_master_id);
+
+-- Family document overrides (variant changes vs master)
+CREATE TABLE IF NOT EXISTS family_document_overrides (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    family_doc_id   INTEGER NOT NULL REFERENCES family_documents(id) ON DELETE CASCADE,
+    item_type       TEXT NOT NULL,
+    item_id         TEXT NOT NULL,
+    override_type   TEXT NOT NULL CHECK (override_type IN ('modified', 'added', 'removed', 'rejected')),
+    override_data   TEXT,
+    created_at      TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_famoverride_doc ON family_document_overrides(family_doc_id);
+
+-- Family change proposals (master changes pending accept/reject per variant)
+CREATE TABLE IF NOT EXISTS family_change_proposals (
+    id                   INTEGER PRIMARY KEY AUTOINCREMENT,
+    family_id            INTEGER NOT NULL REFERENCES product_families(id) ON DELETE CASCADE,
+    module               TEXT NOT NULL CHECK (module IN ('amfe', 'cp', 'ho', 'pfd')),
+    master_doc_id        TEXT NOT NULL,
+    target_family_doc_id INTEGER NOT NULL REFERENCES family_documents(id) ON DELETE CASCADE,
+    change_type          TEXT NOT NULL,
+    item_type            TEXT NOT NULL,
+    item_id              TEXT NOT NULL,
+    old_data             TEXT,
+    new_data             TEXT,
+    status               TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'rejected', 'auto_applied')),
+    resolved_by          TEXT,
+    resolved_at          TEXT,
+    created_at           TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_famproposal_family ON family_change_proposals(family_id);
+CREATE INDEX IF NOT EXISTS idx_famproposal_target ON family_change_proposals(target_family_doc_id);
+CREATE INDEX IF NOT EXISTS idx_famproposal_status ON family_change_proposals(status);
+
 -- Pending exports queue (offline sync to Y: drive)
 CREATE TABLE IF NOT EXISTS pending_exports (
     id              INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -619,6 +672,25 @@ async function runMigrations(adapter: DbAdapter): Promise<void> {
         );
         logger.info('Database', 'Migration 11: pfd_documents client column + backfill complete');
     }
+
+    // Migration 11→12: Add family_documents, family_document_overrides, family_change_proposals tables + variant_label column
+    if (currentVersion < 12) {
+        // Tables created by DDL above (IF NOT EXISTS), just need to add variant_label to existing installs
+        try {
+            await adapter.execute(
+                `ALTER TABLE product_family_members ADD COLUMN variant_label TEXT NOT NULL DEFAULT ''`
+            );
+            logger.info('Database', 'Migration 12: Added variant_label to product_family_members');
+        } catch {
+            // Column already exists (DDL ran first on fresh install) — safe to ignore
+        }
+
+        await adapter.execute(
+            `INSERT OR REPLACE INTO schema_version (version, description) VALUES (?, ?)`,
+            [12, 'Add family_documents, family_document_overrides, family_change_proposals tables + variant_label']
+        );
+        logger.info('Database', 'Migration 12: family document tables + variant_label complete');
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -637,9 +709,12 @@ class InMemoryAdapter implements DbAdapter {
     // Default column values for tables (applied when INSERT omits them)
     private static readonly TABLE_DEFAULTS: Record<string, Record<string, unknown>> = {
         product_families: { active: 1, description: '', linea_code: '', linea_name: '' },
-        product_family_members: { is_primary: 0 },
+        product_family_members: { is_primary: 0, variant_label: '' },
         products: { active: 1 },
         customer_lines: { active: 1, product_count: 0, is_automotive: 0 },
+        family_documents: { is_master: 0 },
+        family_document_overrides: {},
+        family_change_proposals: { status: 'pending' },
         settings: {},
         schema_version: {},
     };
@@ -649,6 +724,7 @@ class InMemoryAdapter implements DbAdapter {
         product_family_members: [['family_id', 'product_id']],
         products: [['codigo', 'linea_code']],
         drafts: [['module', 'document_key']],
+        family_documents: [['family_id', 'module', 'document_id']],
     };
 
     async execute(sql: string, bindings?: unknown[]): Promise<QueryResult> {

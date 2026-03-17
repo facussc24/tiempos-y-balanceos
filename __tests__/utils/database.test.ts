@@ -139,7 +139,10 @@ describe('database', () => {
             expect(tableNames).toContain('product_family_members');
             expect(tableNames).toContain('pending_exports');
             expect(tableNames).toContain('document_locks');
-            expect(createTables).toHaveLength(19);
+            expect(tableNames).toContain('family_documents');
+            expect(tableNames).toContain('family_document_overrides');
+            expect(tableNames).toContain('family_change_proposals');
+            expect(createTables).toHaveLength(22);
         });
 
         it('should preserve all CREATE INDEX statements', () => {
