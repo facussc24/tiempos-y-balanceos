@@ -23,10 +23,13 @@ import {
     isAmfePathAccessible,
     AmfeProjectInfo,
     ensureAmfeHierarchy,
+    buildAmfePath,
 } from './amfePathManager';
 import { migrateAmfeDocument } from './amfeValidation';
 import { deleteDraft } from './useAmfePersistence';
 import { logger } from '../../utils/logger';
+import { loadAmfeByProjectName } from '../../utils/repositories/amfeRepository';
+import { triggerOverrideTracking } from '../../core/inheritance/triggerOverrideTracking';
 import { toast } from '../../components/ui/Toast';
 
 /** Identifies the current open project in the hierarchy */
@@ -351,6 +354,14 @@ export const useAmfeProjects = (
                 }
                 if (timeoutRef.current) clearTimeout(timeoutRef.current);
                 timeoutRef.current = setTimeout(() => setSaveStatus('idle'), 5000);
+                // Fire-and-forget: trigger override tracking for variant documents
+                try {
+                    const projectName = buildAmfePath(ref.client, ref.project, ref.name);
+                    const loaded = await loadAmfeByProjectName(projectName);
+                    if (loaded) {
+                        triggerOverrideTracking(loaded.meta.id, currentData, 'amfe');
+                    }
+                } catch { /* override tracking is non-critical */ }
             } else {
                 setSaveStatus('error');
                 if (timeoutRef.current) clearTimeout(timeoutRef.current);

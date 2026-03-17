@@ -26,6 +26,7 @@ import {
 } from '../../utils/repositories/hoRepository';
 import type { HoDocumentListItem } from '../../utils/repositories/hoRepository';
 import { AUTOSAVE_DEBOUNCE_MS } from '../../config';
+import { triggerOverrideTracking } from '../../core/inheritance/triggerOverrideTracking';
 
 // ============================================================================
 // DRAFT UTILITIES (unchanged — backward compatible)
@@ -63,6 +64,8 @@ export async function saveHoDocumentFormal(id: string, doc: HoDocument): Promise
         const ok = await saveHoDocument(id, doc);
         if (ok) {
             logger.info('HoPersistence', 'Document saved formally', { id, sheets: doc.sheets.length });
+            // Fire-and-forget: trigger override tracking for variant documents
+            triggerOverrideTracking(id, doc, 'ho');
         }
         return ok;
     } catch (err) {

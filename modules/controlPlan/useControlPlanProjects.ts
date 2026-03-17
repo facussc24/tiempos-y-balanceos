@@ -19,6 +19,8 @@ import {
 } from './controlPlanPathManager';
 import { logger } from '../../utils/logger';
 import { toast } from '../../components/ui/Toast';
+import { loadCpByProjectName } from '../../utils/repositories/cpRepository';
+import { triggerOverrideTracking } from '../../core/inheritance/triggerOverrideTracking';
 
 /** State for the PromptModal integration */
 export interface CpProjectPromptState {
@@ -154,6 +156,13 @@ export const useControlPlanProjects = (
                 await refreshProjects();
                 if (timeoutRef.current) clearTimeout(timeoutRef.current);
                 timeoutRef.current = setTimeout(() => setSaveStatus('idle'), 2000);
+                // Fire-and-forget: trigger override tracking for variant documents
+                try {
+                    const loaded = await loadCpByProjectName(projectName);
+                    if (loaded) {
+                        triggerOverrideTracking(loaded.id, currentData, 'cp');
+                    }
+                } catch { /* override tracking is non-critical */ }
             } else {
                 setSaveStatus('error');
                 if (timeoutRef.current) clearTimeout(timeoutRef.current);

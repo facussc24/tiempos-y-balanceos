@@ -59,6 +59,7 @@ import { useOpenExportFolder } from '../../hooks/useOpenExportFolder';
 import { useInheritanceStatus } from '../../hooks/useInheritanceStatus';
 import { detectSyncAlerts, applySyncAlertToCp, type SyncAlert } from '../controlPlan/cpSyncEngine';
 
+
 const CpSyncPanel = lazy(() => import('../controlPlan/CpSyncPanel'));
 const PfdApp = lazy(() => import('../pfd/PfdApp'));
 const PfdGenerationWizard = lazy(() => import('../pfd/PfdGenerationWizard'));

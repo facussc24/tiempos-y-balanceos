@@ -50,6 +50,7 @@ import ProjectHierarchySelector from '../../components/ui/ProjectHierarchySelect
 import { logger } from '../../utils/logger';
 import { useOpenExportFolder } from '../../hooks/useOpenExportFolder';
 import { useInheritanceStatus } from '../../hooks/useInheritanceStatus';
+import { triggerOverrideTracking } from '../../core/inheritance/triggerOverrideTracking';
 import {
     Plus, XCircle, AlertTriangle, CheckCircle, Info, ArrowRight,
     HelpCircle, Save, FileText, FolderOpen, Check, Clock,
@@ -367,6 +368,8 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding, embedded, initialData }) => 
                 } catch { /* noop */ }
                 toast.success('Guardado', currentProject || pfd.data.header.partName || 'Documento guardado correctamente');
                 setTimeout(() => setSaveStatus('idle'), 2000);
+                // Fire-and-forget: trigger override tracking for variant documents
+                triggerOverrideTracking(pfd.data.id, pfd.data, 'pfd');
             }
         } finally {
             savingRef.current = false;
