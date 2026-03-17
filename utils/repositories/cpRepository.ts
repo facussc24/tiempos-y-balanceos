@@ -12,7 +12,7 @@ import { getDatabase } from '../database';
 import { logger } from '../logger';
 import { generateChecksum } from '../crypto';
 import { scheduleBackup } from '../backupService';
-import { getCurrentUserEmail } from '../currentUser';
+
 
 export interface CpDocumentListItem {
     id: string;
@@ -43,8 +43,7 @@ export async function listCpDocuments(): Promise<CpDocumentListItem[]> {
         return await db.select<CpDocumentListItem>(
             `SELECT id, project_name, control_plan_number, phase, part_number, part_name,
                     organization, client, responsible, revision, linked_amfe_project,
-                    linked_amfe_id, item_count, created_at, updated_at,
-                    created_by, updated_by
+                    linked_amfe_id, item_count, created_at, updated_at
              FROM cp_documents ORDER BY updated_at DESC`
         );
     } catch (err) {
@@ -131,12 +130,10 @@ export async function saveCpDocument(
              (id, project_name, control_plan_number, phase, part_number, part_name,
               organization, client, responsible, revision, linked_amfe_project,
               linked_amfe_id, item_count, created_at, updated_at,
-              created_by, updated_by, data, checksum)
+              data, checksum)
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
                      COALESCE((SELECT created_at FROM cp_documents WHERE id = ?), datetime('now')),
                      datetime('now'),
-                     COALESCE((SELECT created_by FROM cp_documents WHERE id = ?), ?),
-                     ?,
                      ?, ?)`,
             [
                 id, projectName, h.controlPlanNumber || '', h.phase || 'production',
@@ -144,8 +141,6 @@ export async function saveCpDocument(
                 h.client || '', h.responsible || '', h.revision || '',
                 h.linkedAmfeProject || '', linkedAmfeId ?? null,
                 doc.items.length, id,
-                id, getCurrentUserEmail(),
-                getCurrentUserEmail(),
                 data, checksum,
             ]
         );

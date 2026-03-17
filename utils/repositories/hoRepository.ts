@@ -11,7 +11,6 @@ import { getDatabase } from '../database';
 import { logger } from '../logger';
 import { generateChecksum } from '../crypto';
 import { scheduleBackup } from '../backupService';
-import { getCurrentUserEmail } from '../currentUser';
 
 export interface HoDocumentListItem {
     id: string;
@@ -37,8 +36,7 @@ export async function listHoDocuments(): Promise<HoDocumentListItem[]> {
         const db = await getDatabase();
         return await db.select<HoDocumentListItem>(
             `SELECT id, form_number, organization, client, part_number, part_description,
-                    linked_amfe_project, linked_cp_project, sheet_count, created_at, updated_at,
-                    created_by, updated_by
+                    linked_amfe_project, linked_cp_project, sheet_count, created_at, updated_at
              FROM ho_documents ORDER BY updated_at DESC`
         );
     } catch (err) {
@@ -100,12 +98,10 @@ export async function saveHoDocument(id: string, doc: HoDocument, linkedAmfeId?:
              (id, form_number, organization, client, part_number, part_description,
               linked_amfe_project, linked_cp_project, linked_amfe_id, linked_cp_id,
               sheet_count, created_at, updated_at,
-              created_by, updated_by, data, checksum)
+              data, checksum)
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
                      COALESCE((SELECT created_at FROM ho_documents WHERE id = ?), datetime('now')),
                      datetime('now'),
-                     COALESCE((SELECT created_by FROM ho_documents WHERE id = ?), ?),
-                     ?,
                      ?, ?)`,
             [
                 id, h.formNumber || 'I-IN-002.4-R01', h.organization || '',
@@ -113,8 +109,6 @@ export async function saveHoDocument(id: string, doc: HoDocument, linkedAmfeId?:
                 h.linkedAmfeProject || '', h.linkedCpProject || '',
                 linkedAmfeId ?? null, linkedCpId ?? null,
                 doc.sheets.length, id,
-                id, getCurrentUserEmail(),
-                getCurrentUserEmail(),
                 data, checksum,
             ]
         );

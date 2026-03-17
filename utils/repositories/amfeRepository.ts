@@ -15,7 +15,6 @@ import { getDatabase } from '../database';
 import { logger } from '../logger';
 import { generateChecksum } from '../crypto';
 import { scheduleBackup } from '../backupService';
-import { getCurrentUserEmail } from '../currentUser';
 
 // ---------------------------------------------------------------------------
 // AMFE Document CRUD
@@ -87,7 +86,7 @@ export async function listAmfeDocuments(): Promise<AmfeRegistryEntry[]> {
             `SELECT id, amfe_number, project_name, status, subject, client, part_number,
                     responsible, operation_count, cause_count, ap_h_count, ap_m_count,
                     coverage_percent, start_date, last_revision_date, created_at, updated_at,
-                    created_by, updated_by, revisions
+                    revisions
              FROM amfe_documents ORDER BY updated_at DESC`
         );
 
@@ -237,12 +236,10 @@ export async function saveAmfeDocument(
              (id, amfe_number, project_name, subject, client, part_number, responsible,
               organization, status, operation_count, cause_count, ap_h_count, ap_m_count,
               coverage_percent, start_date, last_revision_date, created_at, updated_at,
-              created_by, updated_by, data, revisions, checksum)
+              data, revisions, checksum)
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
                      COALESCE((SELECT created_at FROM amfe_documents WHERE id = ?), datetime('now')),
                      datetime('now'),
-                     COALESCE((SELECT created_by FROM amfe_documents WHERE id = ?), ?),
-                     ?,
                      ?, ?, ?)`,
             [
                 id, amfeNumber, projectName,
@@ -251,8 +248,6 @@ export async function saveAmfeDocument(
                 stats.operationCount, stats.causeCount, stats.apHCount, stats.apMCount,
                 stats.coveragePercent, header.startDate || '', header.revDate || '',
                 id,
-                id, getCurrentUserEmail(),
-                getCurrentUserEmail(),
                 data, JSON.stringify(revisions), checksum,
             ]
         );
@@ -333,8 +328,8 @@ export async function updateAmfeStatus(id: string, status: AmfeLifecycleStatus):
     try {
         const db = await getDatabase();
         await db.execute(
-            `UPDATE amfe_documents SET status = ?, updated_at = datetime('now'), updated_by = ? WHERE id = ?`,
-            [status, getCurrentUserEmail(), id]
+            `UPDATE amfe_documents SET status = ?, updated_at = datetime('now') WHERE id = ?`,
+            [status, id]
         );
         return true;
     } catch (err) {
