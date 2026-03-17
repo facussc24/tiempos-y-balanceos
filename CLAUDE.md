@@ -51,7 +51,11 @@ npx tsc --noEmit     # Chequeo de tipos
     math/               Funciones matematicas
     services/           Servicios de negocio
     config/             Configuracion de core
-    inheritance/        Herencia de configuracion
+    inheritance/        Herencia maestro→variante (familias de producto)
+      documentInheritance.ts   Clonado de docs maestro→variante (UUID regen)
+      overrideTracker.ts       Diff variante vs maestro + persistencia overrides
+      triggerOverrideTracking.ts  Fire-and-forget post-save para variantes
+      changePropagation.ts     Propagacion cambios maestro→variantes (proposals)
 
   hooks/                18 custom hooks
     useLineBalancing    Motor principal de balanceo
@@ -64,6 +68,7 @@ npx tsc --noEmit     # Chequeo de tipos
     controlPlan/        Plan de Control AIAG + cross-validation (V1-V5) + link HO
     hojaOperaciones/    Hojas de operaciones (navy theme, ISO PPE) + link CP
     pfd/                Diagrama de Flujo del Proceso (cyan theme, ASME symbols) + link AMFE
+    family/             Familias de producto (ChangeProposalPanel, useChangeProposals)
     mix/                Mix multi-modelo
     flow-simulator/     Simulador de flujo (SimScript)
     heijunka/           Nivelado heijunka
@@ -74,14 +79,16 @@ npx tsc --noEmit     # Chequeo de tipos
 
   utils/                Utilidades
     database.ts         Singleton SQLite, schema DDL, migraciones, adapters
-    repositories/       8 repositorios tipados (CRUD sobre SQLite)
-      settingsRepository.ts   Key-value de configuracion
-      projectRepository.ts    Proyectos de balanceo
-      amfeRepository.ts       Documentos AMFE + biblioteca
-      cpRepository.ts         Planes de Control
-      hoRepository.ts         Hojas de Operaciones
-      pfdRepository.ts        Diagramas de Flujo (PFD)
-      draftRepository.ts      Borradores auto-save unificados
+    repositories/       9 repositorios tipados (CRUD sobre SQLite)
+      settingsRepository.ts        Key-value de configuracion
+      projectRepository.ts         Proyectos de balanceo
+      amfeRepository.ts            Documentos AMFE + biblioteca
+      cpRepository.ts              Planes de Control
+      hoRepository.ts              Hojas de Operaciones
+      pfdRepository.ts             Diagramas de Flujo (PFD)
+      draftRepository.ts           Borradores auto-save unificados
+      familyRepository.ts          Familias de producto + miembros
+      familyDocumentRepository.ts  Docs familia, overrides, change proposals
     supabaseClient.ts   Singleton Supabase client
     pfdAmfeLinkValidation.ts   Validacion cruzada PFD ↔ AMFE
     hoCpLinkValidation.ts      Validacion cruzada HO ↔ CP
@@ -94,7 +101,7 @@ npx tsc --noEmit     # Chequeo de tipos
     networkUtils.ts     Deteccion de red
     processCategory.ts  Inferencia de categoria de proceso
 
-  __tests__/            450+ archivos de test (3720 tests)
+  __tests__/            460+ archivos de test (3964 tests)
 
   src/                  Assets y datos
     assets/             Imagenes, iconos PPE, logo
@@ -134,7 +141,7 @@ npx tsc --noEmit     # Chequeo de tipos
 ### Testing (detalle en .claude/rules/testing.md)
 - Framework: Vitest con globals habilitados (`describe`, `it`, `expect` sin import)
 - Correr: `npx vitest run` | Coverage: `npx vitest run --coverage`
-- Test dir: `__tests__/` (450+ archivos, 3720 tests)
+- Test dir: `__tests__/` (460+ archivos, 3964 tests)
 - Mocks: repositorios, `unified_fs`, `logger`, `crypto` (nunca filesystem real)
 
 ### Path aliases
@@ -167,6 +174,34 @@ Reglas detalladas por modulo se cargan automaticamente al editar archivos releva
 - HO ↔ CP: `hoCpLinkValidation.ts` + `useHoCpLinkAlerts` hook + `HoCpLinkValidationPanel` UI
 - CP interna: `cpCrossValidation.ts` (V1-V5: CC/SC, orphan failures, 4M, reaction owners, poka-yoke)
 - Cascada APQP: `crossDocumentAlerts.ts` (PFD→AMFE→CP→HO)
+
+## Familias de Producto (Herencia Maestro→Variante)
+
+### Tablas SQLite
+- `product_families` — Familias (nombre, linea, miembros)
+- `product_family_members` — Productos en familia (M:N, uno `is_primary`)
+- `family_documents` — Vincula docs a familias (`is_master`, `source_master_id`, modulo)
+- `family_document_overrides` — Cambios de variante vs maestro (por item: step/op/item/sheet)
+- `family_change_proposals` — Propuestas de cambio maestro→variante (pending/auto_applied/accepted/rejected)
+
+### Flujo de herencia
+1. **Clonado**: `documentInheritance.ts` clona maestro→variante regenerando UUIDs
+2. **Override tracking**: Al guardar variante, `triggerOverrideTracking` diffs vs maestro (fire-and-forget)
+3. **Change propagation**: Al guardar maestro, `triggerChangePropagation` genera proposals para variantes
+   - Item sin override en variante → `auto_applied`
+   - Item con override en variante → `pending` (requiere confirmacion manual)
+4. **UI**: `ChangeProposalPanel` muestra proposals pendientes en docs variante (aceptar/rechazar)
+
+### Granularidad de items (por modulo)
+- PFD: `pfd_step` (step.id)
+- AMFE: `amfe_operation` (operation.id)
+- CP: `cp_item` (item.id)
+- HO: `ho_sheet` (sheet.id)
+
+### Hooks relevantes
+- `useInheritanceStatus` — Status de herencia por item (inherited/modified/own)
+- `useChangeProposals` — Proposals pendientes para variantes
+- `useFamilyDocuments` — Docs vinculados a familia
 
 ## Preview & Verificacion Visual
 
