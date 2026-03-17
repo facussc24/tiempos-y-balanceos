@@ -25,7 +25,8 @@ CREATE INDEX IF NOT EXISTS idx_famdoc_source_master ON family_documents(source_m
 
 ALTER TABLE family_documents ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY IF NOT EXISTS "authenticated_all_family_documents" ON family_documents
+DROP POLICY IF EXISTS "authenticated_all_family_documents" ON family_documents;
+CREATE POLICY "authenticated_all_family_documents" ON family_documents
     FOR ALL TO authenticated USING (true) WITH CHECK (true);
 
 -- ---------------------------------------------------------------------------
@@ -45,7 +46,8 @@ CREATE INDEX IF NOT EXISTS idx_famoverride_doc ON family_document_overrides(fami
 
 ALTER TABLE family_document_overrides ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY IF NOT EXISTS "authenticated_all_family_document_overrides" ON family_document_overrides
+DROP POLICY IF EXISTS "authenticated_all_family_document_overrides" ON family_document_overrides;
+CREATE POLICY "authenticated_all_family_document_overrides" ON family_document_overrides
     FOR ALL TO authenticated USING (true) WITH CHECK (true);
 
 -- ---------------------------------------------------------------------------
@@ -74,7 +76,8 @@ CREATE INDEX IF NOT EXISTS idx_famproposal_status ON family_change_proposals(sta
 
 ALTER TABLE family_change_proposals ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY IF NOT EXISTS "authenticated_all_family_change_proposals" ON family_change_proposals
+DROP POLICY IF EXISTS "authenticated_all_family_change_proposals" ON family_change_proposals;
+CREATE POLICY "authenticated_all_family_change_proposals" ON family_change_proposals
     FOR ALL TO authenticated USING (true) WITH CHECK (true);
 
 -- ---------------------------------------------------------------------------

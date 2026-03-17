@@ -56,6 +56,7 @@ import { useAmfeTabNavigation, ActiveTab } from './useAmfeTabNavigation';
 import { useLinkedDocuments } from './useLinkedDocuments';
 import LinkedDocumentsPanel from './LinkedDocumentsPanel';
 import { useOpenExportFolder } from '../../hooks/useOpenExportFolder';
+import { useInheritanceStatus } from '../../hooks/useInheritanceStatus';
 import { detectSyncAlerts, applySyncAlertToCp, type SyncAlert } from '../controlPlan/cpSyncEngine';
 
 const CpSyncPanel = lazy(() => import('../controlPlan/CpSyncPanel'));
@@ -241,6 +242,10 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab }) => {
         [tabNav.pfdInitialData, amfe.data],
     );
     const [showLinkPanel, setShowLinkPanel] = useState(false);
+
+    // 9c. Inheritance status for variant documents
+    const amfeOperationIds = useMemo(() => amfe.data.operations.map(op => op.id), [amfe.data.operations]);
+    const inheritanceStatus = useInheritanceStatus(projects.currentProject, amfeOperationIds);
 
     // 10. Export (PDF + Excel)
     const amfeExport = useAmfeExport({
@@ -914,6 +919,7 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab }) => {
                                     onToggleCollapse={toggleCollapseOp}
                                     readOnly={isReadOnly}
                                     brokenLinkOpIds={brokenAmfeOpIds}
+                                    inheritanceStatusMap={inheritanceStatus.statusMap}
                                 />
                             </table>
                         </div>

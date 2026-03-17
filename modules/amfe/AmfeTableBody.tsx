@@ -11,6 +11,8 @@ import { ColumnGroupVisibility, COLUMN_COUNTS } from './useAmfeColumnVisibility'
 import { inferOperationCategory } from '../../utils/processCategory';
 import { WE_ICONS, getApColor, getSODColor, getCauseRowBorderClass, computeOpSummary, hasSubSeverities, CauseValidationIcon, TAB_ACTIVE_CLASSES, TAB_DOT_CLASSES, TAB_BORDER_CLASSES, TAB_LABEL_CLASSES, TAB_SEV_HIGH_CLASSES } from './amfeTableHelpers';
 import AmfeContextMenu, { CtxTarget } from './AmfeContextMenu';
+import { InheritanceBadge } from '../../components/ui/InheritanceBadge';
+import type { InheritanceStatusMap } from '../../hooks/useInheritanceStatus';
 
 interface Props {
     operations: AmfeOperation[];
@@ -23,12 +25,14 @@ interface Props {
     readOnly?: boolean;
     /** Operation IDs with broken PFD links (for visual warning) */
     brokenLinkOpIds?: Set<string>;
+    /** Inheritance status map for variant documents (null = not a variant) */
+    inheritanceStatusMap?: InheritanceStatusMap | null;
 }
 
 // inferOperationCategory re-exported from utils/processCategory
 export { inferOperationCategory } from '../../utils/processCategory';
 
-const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, columnVisibility, suggestionIndex, collapsedOps, onToggleCollapse, readOnly = false, brokenLinkOpIds }) => {
+const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, columnVisibility, suggestionIndex, collapsedOps, onToggleCollapse, readOnly = false, brokenLinkOpIds, inheritanceStatusMap }) => {
     const sIdx = suggestionIndex || null;
     const v = columnVisibility || { step2: true, step3: true, step4: true, step5: true, step6: true, obs: true };
 
@@ -599,6 +603,9 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
                                     </div>}
                                 </div>
                                 <BrokenPfdBadge opId={op.id} />
+                                {inheritanceStatusMap?.items.get(op.id) && (
+                                    <InheritanceBadge status={inheritanceStatusMap.items.get(op.id)!} compact className="mt-0.5" />
+                                )}
                             </td>
                             <td className={opNameCellClass} style={opNameShadow} data-field="opName">
                                 {renderText(op.name, <AutoResizeTextarea value={op.name} onChange={e => amfe.updateOp(op.id, 'name', e.target.value)} className={textAreaClass} placeholder="Nombre Operación" />)}
@@ -639,6 +646,9 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
                                                 </div>}
                                             </div>
                                             <BrokenPfdBadge opId={op.id} />
+                                            {inheritanceStatusMap?.items.get(op.id) && (
+                                                <InheritanceBadge status={inheritanceStatusMap.items.get(op.id)!} compact className="mt-0.5" />
+                                            )}
                                         </td>
                                         <td rowSpan={opRows} className={opNameCellClass} style={opNameShadow} data-field="opName">
                                             {renderText(op.name, <AutoResizeTextarea value={op.name} onChange={e => amfe.updateOp(op.id, 'name', e.target.value)} className={textAreaClass} placeholder="Nombre Operación" />)}
@@ -716,6 +726,9 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
                                                     </div>}
                                                 </div>
                                                 <BrokenPfdBadge opId={op.id} />
+                                                {inheritanceStatusMap?.items.get(op.id) && (
+                                                    <InheritanceBadge status={inheritanceStatusMap.items.get(op.id)!} compact className="mt-0.5" />
+                                                )}
                                             </td>
                                             <td rowSpan={opRows} className={opNameCellClass} style={opNameShadow} data-field="opName">
                                                 {renderText(op.name, <AutoResizeTextarea value={op.name} onChange={e => amfe.updateOp(op.id, 'name', e.target.value)} className={textAreaClass} placeholder="Nombre Operación" />)}
@@ -817,6 +830,9 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
                                                         </div>}
                                                     </div>
                                                     <BrokenPfdBadge opId={op.id} />
+                                                    {inheritanceStatusMap?.items.get(op.id) && (
+                                                        <InheritanceBadge status={inheritanceStatusMap.items.get(op.id)!} compact className="mt-0.5" />
+                                                    )}
                                                 </td>
                                                 <td rowSpan={opRows} className={opNameCellClass} style={opNameShadow} data-field="opName">
                                                     {renderText(op.name, <AutoResizeTextarea value={op.name} onChange={e => amfe.updateOp(op.id, 'name', e.target.value)} className={textAreaClass} placeholder="Nombre Operación" />)}

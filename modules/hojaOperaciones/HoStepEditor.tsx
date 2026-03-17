@@ -10,6 +10,9 @@ import { Plus, Trash2, Star, ListChecks, GripVertical } from 'lucide-react';
 import { DndContext, closestCenter, DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { InheritanceBadge } from '../../components/ui/InheritanceBadge';
+import type { InheritanceStatus } from '../../components/ui/InheritanceBadge';
+import type { InheritanceStatusMap } from '../../hooks/useInheritanceStatus';
 
 interface Props {
     steps: HoStep[];
@@ -20,6 +23,8 @@ interface Props {
     readOnly?: boolean;
     disableDrag?: boolean;
     highlightQuery?: string;
+    /** Inheritance status map for variant documents (null = not a variant) */
+    inheritanceStatusMap?: InheritanceStatusMap | null;
 }
 
 /* ──────── Sortable Step Row Wrapper ──────── */
@@ -37,11 +42,13 @@ interface SortableStepRowProps {
     onDelete: (stepId: string) => void;
     onConfirmDelete: () => void;
     onCancelDelete: () => void;
+    inheritanceStatus?: InheritanceStatus | null;
 }
 
 const SortableStepRow: React.FC<SortableStepRowProps> = ({
     step, index, stepsLength, readOnly, disableDrag, highlightQuery,
     onUpdate, onReorder, confirmDeleteId, onDelete, onConfirmDelete, onCancelDelete,
+    inheritanceStatus,
 }) => {
     const dragDisabled = readOnly || disableDrag;
     const {
@@ -117,6 +124,9 @@ const SortableStepRow: React.FC<SortableStepRowProps> = ({
                 <span className={`text-sm font-bold ${step.isKeyPoint ? 'text-blue-700' : 'text-gray-400'}`}>
                     {step.stepNumber}
                 </span>
+                {inheritanceStatus && (
+                    <InheritanceBadge status={inheritanceStatus} compact />
+                )}
             </div>
 
             {/* Content */}
@@ -198,7 +208,7 @@ const SortableStepRow: React.FC<SortableStepRowProps> = ({
 
 /* ──────── Main Component ──────── */
 
-const HoStepEditor: React.FC<Props> = ({ steps, onAdd, onRemove, onUpdate, onReorder, readOnly, disableDrag, highlightQuery }) => {
+const HoStepEditor: React.FC<Props> = ({ steps, onAdd, onRemove, onUpdate, onReorder, readOnly, disableDrag, highlightQuery, inheritanceStatusMap }) => {
     const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
     const handleDelete = useCallback((stepId: string) => {
@@ -245,6 +255,7 @@ const HoStepEditor: React.FC<Props> = ({ steps, onAdd, onRemove, onUpdate, onReo
                             onDelete={handleDelete}
                             onConfirmDelete={confirmDelete}
                             onCancelDelete={cancelDelete}
+                            inheritanceStatus={inheritanceStatusMap?.items.get(step.id) ?? null}
                         />
                     ))}
                 </SortableContext>

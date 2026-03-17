@@ -36,6 +36,7 @@ import { toast } from '../../components/ui/Toast';
 import { useOpenExportFolder } from '../../hooks/useOpenExportFolder';
 import { useHoCpLinkAlerts } from '../../hooks/useHoCpLinkAlerts';
 import { HoCpLinkValidationPanel } from '../../components/ui/HoCpLinkValidationPanel';
+import { useInheritanceStatus } from '../../hooks/useInheritanceStatus';
 
 /** Formal persistence methods exposed when operating standalone (not embedded). */
 export interface HoFormalPersistence {
@@ -101,6 +102,13 @@ const HojaOperacionesApp: React.FC<Props> = ({ embedded, initialData, onDataChan
         }, [ho.updateQualityCheckCpItemId]),
     );
     const [showHoCpLinkPanel, setShowHoCpLinkPanel] = useState(false);
+
+    // Inheritance status for variant documents
+    const hoAllStepIds = useMemo(
+        () => ho.data.sheets.flatMap(sheet => sheet.steps.map(s => s.id)),
+        [ho.data.sheets],
+    );
+    const inheritanceStatus = useInheritanceStatus(hoDocId, hoAllStepIds);
 
     // Export folder
     const exportFolder = useOpenExportFolder('ho', ho.data);
@@ -562,6 +570,7 @@ const HojaOperacionesApp: React.FC<Props> = ({ embedded, initialData, onDataChan
                             readOnly={readOnly}
                             stepSearchRef={stepSearchRef}
                             brokenCheckIds={hoCpAlerts.brokenCheckIds}
+                            inheritanceStatusMap={inheritanceStatus.statusMap}
                         />
                     ) : (
                         <div className="flex items-center justify-center h-full text-gray-400 text-xs">

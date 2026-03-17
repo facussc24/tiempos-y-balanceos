@@ -14,6 +14,7 @@ import { ArrowDown, Plus, FileText, Factory, GitBranch, GitMerge, CornerDownLeft
 import type { PfdStep, PfdColumnDef, RejectDisposition } from './pfdTypes';
 import { PFD_COLUMNS, getBranchColor, collectForkBranches } from './pfdTypes';
 import PfdTableRow from './PfdTableRow';
+import type { InheritanceStatusMap } from '../../hooks/useInheritanceStatus';
 
 interface Props {
     steps: PfdStep[];
@@ -34,6 +35,8 @@ interface Props {
     visibleColumns?: PfdColumnDef[];
     /** Step IDs with broken AMFE links (for visual warning) */
     brokenLinkStepIds?: Set<string>;
+    /** Inheritance status map for variant documents (null = not a variant) */
+    inheritanceStatusMap?: InheritanceStatusMap | null;
 }
 
 /** C9-N1: Disposition labels in Spanish */
@@ -200,7 +203,7 @@ function FlowArrow({
     );
 }
 
-const PfdTable: React.FC<Props> = ({ steps, onUpdateStep, onBatchUpdateStep, onRemoveStep, onMoveStep, onInsertAfter, onDuplicate, onAddStep, onLoadTemplate, onLoadManufacturingTemplate, showFlowArrows = true, readOnly, visibleColumns, brokenLinkStepIds }) => {
+const PfdTable: React.FC<Props> = ({ steps, onUpdateStep, onBatchUpdateStep, onRemoveStep, onMoveStep, onInsertAfter, onDuplicate, onAddStep, onLoadTemplate, onLoadManufacturingTemplate, showFlowArrows = true, readOnly, visibleColumns, brokenLinkStepIds, inheritanceStatusMap }) => {
     const columnsToRender = visibleColumns || PFD_COLUMNS;
     const colCount = columnsToRender.length + (readOnly ? 0 : 1);
 
@@ -288,6 +291,7 @@ const PfdTable: React.FC<Props> = ({ steps, onUpdateStep, onBatchUpdateStep, onR
                                 readOnly={readOnly}
                                 visibleColumns={visibleColumns}
                                 hasBrokenLink={brokenLinkStepIds?.has(step.id)}
+                                inheritanceStatus={inheritanceStatusMap?.items.get(step.id) ?? null}
                             />
                             {/* C9-N1: Enhanced flow arrows with fork/join/NG-path */}
                             {showFlowArrows && index < steps.length - 1 && (

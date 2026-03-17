@@ -47,6 +47,7 @@ import { useCpKeyboardShortcuts } from './useCpKeyboardShortcuts';
 import { useCpFilters } from './useCpFilters';
 import { useCpDraftRecovery } from './useCpDraftRecovery';
 import { useOpenExportFolder } from '../../hooks/useOpenExportFolder';
+import { useInheritanceStatus } from '../../hooks/useInheritanceStatus';
 
 const ControlPlanSummary = lazy(() => import('./ControlPlanSummary'));
 const CpHelpPanel = lazy(() => import('./CpHelpPanel'));
@@ -158,6 +159,10 @@ const ControlPlanApp: React.FC<Props> = ({ onBackToLanding, embedded, initialDat
 
     // Export folder
     const exportFolder = useOpenExportFolder('cp', cp.data);
+
+    // Inheritance status for variant documents
+    const cpItemIds = useMemo(() => cp.data.items.map(i => i.id), [cp.data.items]);
+    const inheritanceStatus = useInheritanceStatus(projects.currentProject, cpItemIds);
 
     // Load initial data if provided (from AMFE generator)
     useEffect(() => {
@@ -555,6 +560,7 @@ const ControlPlanApp: React.FC<Props> = ({ onBackToLanding, embedded, initialDat
                                 readOnly={isReadOnly}
                                 columnVisibility={colVis.visibility}
                                 onBulkFill={handleBulkFill}
+                                inheritanceStatusMap={inheritanceStatus.statusMap}
                             />
                         </table>
                     </div>

@@ -12,6 +12,7 @@ import HoQualityCheckTable from './HoQualityCheckTable';
 import HoVisualAidPanel from './HoVisualAidPanel';
 import barackLogo from '../../src/assets/barack_logo.png';
 import { Shield, ClipboardCheck, AlertTriangle, Camera, ListOrdered, Search, X } from 'lucide-react';
+import type { InheritanceStatusMap } from '../../hooks/useInheritanceStatus';
 
 interface Props {
     sheet: HojaOperacion;
@@ -33,6 +34,8 @@ interface Props {
     stepSearchRef?: React.RefObject<HTMLInputElement | null>;
     /** Set of quality check IDs with broken CP links (for row highlighting). */
     brokenCheckIds?: Set<string>;
+    /** Inheritance status map for variant documents (null = not a variant) */
+    inheritanceStatusMap?: InheritanceStatusMap | null;
 }
 
 const NAVY = '#1e3a5f';
@@ -77,6 +80,7 @@ const HoSheetEditor: React.FC<Props> = ({
     readOnly,
     stepSearchRef,
     brokenCheckIds,
+    inheritanceStatusMap,
 }) => {
     const [stepSearch, setStepSearch] = useState('');
 
@@ -278,6 +282,7 @@ const HoSheetEditor: React.FC<Props> = ({
                             readOnly={readOnly}
                             disableDrag={!!stepSearch.trim()}
                             highlightQuery={stepSearch}
+                            inheritanceStatusMap={inheritanceStatusMap}
                         />
                         {stepSearch.trim() && (
                             <p className="text-[11px] text-amber-600 px-2 py-1">

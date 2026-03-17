@@ -49,6 +49,7 @@ import {
 import ProjectHierarchySelector from '../../components/ui/ProjectHierarchySelector';
 import { logger } from '../../utils/logger';
 import { useOpenExportFolder } from '../../hooks/useOpenExportFolder';
+import { useInheritanceStatus } from '../../hooks/useInheritanceStatus';
 import {
     Plus, XCircle, AlertTriangle, CheckCircle, Info, ArrowRight,
     HelpCircle, Save, FileText, FolderOpen, Check, Clock,
@@ -184,6 +185,10 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding, embedded, initialData }) => 
 
     // Export folder
     const exportFolder = useOpenExportFolder('pfd', pfd.data);
+
+    // Inheritance status for variant documents
+    const pfdStepIds = useMemo(() => pfd.data.steps.map(s => s.id), [pfd.data.steps]);
+    const inheritanceStatus = useInheritanceStatus(pfd.data.id || null, pfdStepIds);
 
     // Track unsaved changes via snapshot comparison (debounced to avoid expensive JSON.stringify per keystroke).
     // This correctly resets hasUnsavedChanges when user undoes back to saved state.
@@ -1048,6 +1053,7 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding, embedded, initialData }) => 
                             searchQuery={pfdSearch}
                             onSearchChange={setPfdSearch}
                             brokenLinkStepIds={linkAlerts.brokenPfdStepIds}
+                            inheritanceStatusMap={inheritanceStatus.statusMap}
                         />
                     </div>
 

@@ -35,6 +35,9 @@ import {
 import type { PfdStep, PfdStepType, RejectDisposition } from './pfdTypes';
 import { getBranchColor, PFD_STEP_TYPES } from './pfdTypes';
 import { PfdSymbol } from './PfdSymbols';
+import { InheritanceBadge } from '../../components/ui/InheritanceBadge';
+import type { InheritanceStatus } from '../../components/ui/InheritanceBadge';
+import type { InheritanceStatusMap } from '../../hooks/useInheritanceStatus';
 
 /* ────────────────────────────────── Types ────────────────────────────────── */
 
@@ -55,6 +58,8 @@ interface PfdFlowEditorProps {
     onSearchChange?: (query: string) => void;
     /** Step IDs with broken AMFE links */
     brokenLinkStepIds?: Set<string>;
+    /** Inheritance status map for variant documents (null = not a variant) */
+    inheritanceStatusMap?: InheritanceStatusMap | null;
 }
 
 interface ContextMenuState {
@@ -262,9 +267,10 @@ interface StepCardProps {
     branchColor?: string;
     dimmed?: boolean;
     hasBrokenLink?: boolean;
+    inheritanceStatus?: InheritanceStatus | null;
 }
 
-function StepCard({ step, stepIndex, totalSteps, isSelected, onSelect, onContextMenu, onMoveStep, readOnly, compact, branchColor, dimmed, hasBrokenLink }: StepCardProps) {
+function StepCard({ step, stepIndex, totalSteps, isSelected, onSelect, onContextMenu, onMoveStep, readOnly, compact, branchColor, dimmed, hasBrokenLink, inheritanceStatus }: StepCardProps) {
     const hasCC = step.productSpecialChar === 'CC' || step.processSpecialChar === 'CC';
     const hasSC = !hasCC && (step.productSpecialChar === 'SC' || step.processSpecialChar === 'SC');
     const hasDisp = step.rejectDisposition !== 'none' && (step.stepType === 'inspection' || step.stepType === 'combined');
@@ -348,6 +354,9 @@ function StepCard({ step, stepIndex, totalSteps, isSelected, onSelect, onContext
                             ⚠ AMFE
                         </span>
                     )}
+                    {inheritanceStatus && (
+                        <InheritanceBadge status={inheritanceStatus} compact />
+                    )}
                 </div>
             </button>
             {!readOnly && (
@@ -419,6 +428,7 @@ const PfdFlowEditor: React.FC<PfdFlowEditorProps> = ({
     searchQuery = '',
     onSearchChange,
     brokenLinkStepIds,
+    inheritanceStatusMap,
 }) => {
     const groups = useMemo(() => groupStepsByFlow(steps), [steps]);
 
@@ -526,6 +536,7 @@ const PfdFlowEditor: React.FC<PfdFlowEditorProps> = ({
                             readOnly={readOnly}
                             dimmed={matchingStepIds !== null && !matchingStepIds.has(step.id)}
                             hasBrokenLink={brokenLinkStepIds?.has(step.id)}
+                            inheritanceStatus={inheritanceStatusMap?.items.get(step.id) ?? null}
                         />
                     </React.Fragment>
                 );
@@ -611,6 +622,7 @@ const PfdFlowEditor: React.FC<PfdFlowEditorProps> = ({
                                             compact
                                             dimmed={matchingStepIds !== null && !matchingStepIds.has(step.id)}
                                             hasBrokenLink={brokenLinkStepIds?.has(step.id)}
+                                            inheritanceStatus={inheritanceStatusMap?.items.get(step.id) ?? null}
                                         />
                                     </React.Fragment>
                                 );

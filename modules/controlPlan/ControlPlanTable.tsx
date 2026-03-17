@@ -12,6 +12,8 @@ import { ControlPlanItem, CP_COLUMNS, CPColumnDef } from './controlPlanTypes';
 import { CpColumnGroupVisibility, CP_COLUMN_TO_GROUP } from './useCpColumnVisibility';
 import AutoResizeTextarea from '../amfe/AutoResizeTextarea';
 import { Trash2, ChevronUp, ChevronDown, ChevronRight, Copy, ClipboardList } from 'lucide-react';
+import { InheritanceBadge } from '../../components/ui/InheritanceBadge';
+import type { InheritanceStatusMap } from '../../hooks/useInheritanceStatus';
 
 /** Columns that should use textarea (multi-line wrap) instead of single-line input */
 const TEXTAREA_COLUMNS = new Set<string>([
@@ -29,6 +31,8 @@ interface Props {
     readOnly?: boolean;
     columnVisibility?: CpColumnGroupVisibility;
     onBulkFill?: (sourceItemId: string, field: string, value: string) => void;
+    /** Inheritance status map for variant documents (null = not a variant) */
+    inheritanceStatusMap?: InheritanceStatusMap | null;
 }
 
 /** Get AP badge color */
@@ -75,7 +79,7 @@ function computeRowGroups(items: ControlPlanItem[]): RowGroupInfo[] {
     return result;
 }
 
-const ControlPlanTable: React.FC<Props> = ({ items, onUpdateItem, onRemoveItem, onMoveItem, onDuplicateItem, readOnly = false, columnVisibility, onBulkFill }) => {
+const ControlPlanTable: React.FC<Props> = ({ items, onUpdateItem, onRemoveItem, onMoveItem, onDuplicateItem, readOnly = false, columnVisibility, onBulkFill, inheritanceStatusMap }) => {
     const rowGroups = useMemo(() => computeRowGroups(items), [items]);
     const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
     const [bulkMenu, setBulkMenu] = useState<{x: number; y: number; itemId: string; field: string; value: string; stepNumber: string} | null>(null);
@@ -145,6 +149,7 @@ const ControlPlanTable: React.FC<Props> = ({ items, onUpdateItem, onRemoveItem, 
                                 groupInfo={groupInfo}
                                 onBulkFill={onBulkFill}
                                 setBulkMenu={setBulkMenu}
+                                inheritanceStatusMap={inheritanceStatusMap}
                             />
                         )}
                     </React.Fragment>
@@ -194,7 +199,8 @@ const ControlPlanRow: React.FC<{
     groupInfo: RowGroupInfo;
     onBulkFill?: (sourceItemId: string, field: string, value: string) => void;
     setBulkMenu?: (menu: {x: number; y: number; itemId: string; field: string; value: string; stepNumber: string} | null) => void;
-}> = React.memo(({ item, idx, total, onUpdateItem, onRemoveItem, onMoveItem, onDuplicateItem, readOnly, columnVisibility, groupInfo, onBulkFill, setBulkMenu }) => {
+    inheritanceStatusMap?: InheritanceStatusMap | null;
+}> = React.memo(({ item, idx, total, onUpdateItem, onRemoveItem, onMoveItem, onDuplicateItem, readOnly, columnVisibility, groupInfo, onBulkFill, setBulkMenu, inheritanceStatusMap }) => {
 
     // Memoize class strings — only recompute when readOnly changes
     // table-fixed + colgroup controla anchos; break-words fuerza wrap de texto largo
@@ -408,6 +414,9 @@ const ControlPlanRow: React.FC<{
                     <span className={`text-[9px] px-1.5 py-0.5 rounded border whitespace-nowrap ${getApColor(item.amfeAp)}`}>
                         {item.amfeAp}
                     </span>
+                )}
+                {inheritanceStatusMap?.items.get(item.id) && (
+                    <InheritanceBadge status={inheritanceStatusMap.items.get(item.id)!} compact className="mt-0.5" />
                 )}
             </td>
         </tr>
