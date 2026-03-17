@@ -6,7 +6,7 @@
  */
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { X, Plus, Trash2, Star, Users, Search, Package, AlertCircle, Loader2, FileText, Link2, Unlink } from 'lucide-react';
+import { X, Plus, Trash2, Star, Users, Search, Package, AlertCircle, Loader2, FileText, Link2, Unlink, GitBranch, Copy, CheckCircle } from 'lucide-react';
 import type { ProductFamily, ProductFamilyMember } from '../../utils/repositories/familyRepository';
 import {
     listFamilies,
@@ -28,6 +28,7 @@ import { listAmfeDocuments } from '../../utils/repositories/amfeRepository';
 import { listCpDocuments } from '../../utils/repositories/cpRepository';
 import { listHoDocuments } from '../../utils/repositories/hoRepository';
 import { listPfdDocuments } from '../../utils/repositories/pfdRepository';
+import { logger } from '../../utils/logger';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -38,7 +39,7 @@ interface FamilyManagerProps {
 }
 
 type View = 'list' | 'create' | 'edit';
-type EditTab = 'productos' | 'documentos';
+type EditTab = 'productos' | 'documentos' | 'variantes';
 
 interface DocModuleConfig {
     key: DocumentModule;
@@ -94,6 +95,22 @@ const DOC_MODULE_CONFIGS: DocModuleConfig[] = [
     },
 ];
 
+/** Result type for document cloning (mirrors core/inheritance/documentInheritance) */
+interface CloneResult {
+    success: boolean;
+    newDocumentId: string | null;
+    familyDocId: number | null;
+    error?: string;
+}
+
+/** Module color config lookup for variant badges */
+const MODULE_BADGE_COLORS: Record<string, { text: string; bg: string; border: string }> = {
+    pfd: { text: 'text-cyan-700', bg: 'bg-cyan-50', border: 'border-cyan-200' },
+    amfe: { text: 'text-amber-700', bg: 'bg-amber-50', border: 'border-amber-200' },
+    cp: { text: 'text-emerald-700', bg: 'bg-emerald-50', border: 'border-emerald-200' },
+    ho: { text: 'text-blue-700', bg: 'bg-blue-50', border: 'border-blue-200' },
+};
+
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
@@ -129,11 +146,18 @@ const FamilyManager: React.FC<FamilyManagerProps> = ({ onClose }) => {
     // Family documents hook
     const {
         masterDocs,
+        variantDocs,
         loading: docsLoading,
         error: docsError,
         linkMaster,
         unlinkMaster,
+        refresh: refreshDocs,
     } = useFamilyDocuments(selectedFamily?.id ?? null);
+
+    // Variant creation state
+    const [variantLabel, setVariantLabel] = useState('');
+    const [selectedModules, setSelectedModules] = useState<Set<DocumentModule>>(new Set());
+    const [isCloning, setIsCloning] = useState(false);
 
     // Refs for mutex and stale-state prevention
     const addingRef = useRef(false);
@@ -340,6 +364,66 @@ const FamilyManager: React.FC<FamilyManagerProps> = ({ onClose }) => {
     const handleUnlinkDocument = useCallback(async (familyDocId: number) => {
         await unlinkMaster(familyDocId);
     }, [unlinkMaster]);
+
+    // Variant module checkbox toggle
+    const handleToggleModule = useCallback((mod: DocumentModule) => {
+        setSelectedModules(prev => {
+            const next = new Set(prev);
+            if (next.has(mod)) {
+                next.delete(mod);
+            } else {
+                next.add(mod);
+            }
+            return next;
+        });
+    }, []);
+
+    // Create variant handler
+    const handleCreateVariant = useCallback(async () => {
+        if (!selectedFamily || !variantLabel.trim() || selectedModules.size === 0) return;
+        setIsCloning(true);
+        try {
+            const mod = await import('../../core/inheritance/documentInheritance') as {
+                cloneDocumentForVariant: (params: {
+                    familyId: number;
+                    module: DocumentModule;
+                    masterDocumentId: string;
+                    masterFamilyDocId: number;
+                    variantLabel: string;
+                }) => Promise<CloneResult>;
+            };
+
+            const errors: string[] = [];
+            for (const modKey of selectedModules) {
+                const master = masterDocs[modKey];
+                if (!master) continue;
+                const result = await mod.cloneDocumentForVariant({
+                    familyId: selectedFamily.id,
+                    module: modKey,
+                    masterDocumentId: master.documentId,
+                    masterFamilyDocId: master.id,
+                    variantLabel: variantLabel.trim(),
+                });
+                if (!result.success) {
+                    errors.push(`${modKey.toUpperCase()}: ${result.error}`);
+                }
+            }
+
+            if (errors.length > 0) {
+                setError(`Errores al clonar: ${errors.join(', ')}`);
+            }
+
+            // Refresh document lists
+            await refreshDocs();
+            setVariantLabel('');
+            setSelectedModules(new Set());
+        } catch (err) {
+            logger.error('FamilyManager', 'Error creating variant', { error: String(err) });
+            setError('Error al crear variante');
+        } finally {
+            setIsCloning(false);
+        }
+    }, [selectedFamily, variantLabel, selectedModules, masterDocs, refreshDocs]);
 
     // Close on Escape
     useEffect(() => {
@@ -567,6 +651,22 @@ const FamilyManager: React.FC<FamilyManagerProps> = ({ onClose }) => {
                                         Documentos Maestros
                                     </div>
                                     {editTab === 'documentos' && (
+                                        <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-purple-600 rounded-t" />
+                                    )}
+                                </button>
+                                <button
+                                    onClick={() => setEditTab('variantes')}
+                                    className={`px-3 py-2 text-[11px] font-medium transition-colors relative ${
+                                        editTab === 'variantes'
+                                            ? 'text-purple-600'
+                                            : 'text-gray-500 hover:text-gray-700'
+                                    }`}
+                                >
+                                    <div className="flex items-center gap-1.5">
+                                        <GitBranch size={12} />
+                                        {`Variantes (${variantDocs.length})`}
+                                    </div>
+                                    {editTab === 'variantes' && (
                                         <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-purple-600 rounded-t" />
                                     )}
                                 </button>
@@ -819,6 +919,118 @@ const FamilyManager: React.FC<FamilyManagerProps> = ({ onClose }) => {
                                     </>
                                 )}
 
+                                {/* ===== VARIANTES TAB ===== */}
+                                {editTab === 'variantes' && (
+                                    <>
+                                        {/* Create variant section */}
+                                        <div className="border border-gray-200 rounded-lg overflow-hidden">
+                                            <div className="px-3 py-2 bg-purple-50 border-b border-purple-100">
+                                                <span className="text-[11px] font-semibold text-purple-700">Crear nueva variante</span>
+                                            </div>
+                                            <div className="p-3 space-y-3">
+                                                <div>
+                                                    <label className="block text-[10px] font-medium text-gray-500 mb-1">Label de variante</label>
+                                                    <input
+                                                        type="text"
+                                                        value={variantLabel}
+                                                        onChange={e => setVariantLabel(e.target.value)}
+                                                        placeholder="Ej: L0, L1, Izquierdo, Derecho..."
+                                                        className="w-full px-2 py-1.5 text-[11px] border border-gray-300 rounded-lg focus:ring-1 focus:ring-purple-300 focus:border-purple-400"
+                                                        maxLength={50}
+                                                        disabled={isCloning}
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-[10px] font-medium text-gray-500 mb-1">Clonar documentos</label>
+                                                    <div className="space-y-1.5">
+                                                        {DOC_MODULE_CONFIGS.map(config => {
+                                                            const hasMaster = masterDocs[config.key] !== null;
+                                                            const isSelected = selectedModules.has(config.key);
+                                                            return (
+                                                                <label
+                                                                    key={config.key}
+                                                                    className={`flex items-center gap-2 px-2 py-1 rounded-lg transition-colors ${
+                                                                        hasMaster
+                                                                            ? 'cursor-pointer hover:bg-gray-50'
+                                                                            : 'opacity-50 cursor-not-allowed'
+                                                                    }`}
+                                                                    title={hasMaster ? `Clonar ${config.label}` : `Sin maestro vinculado para ${config.label}`}
+                                                                >
+                                                                    <input
+                                                                        type="checkbox"
+                                                                        checked={isSelected}
+                                                                        onChange={() => handleToggleModule(config.key)}
+                                                                        disabled={!hasMaster || isCloning}
+                                                                        className="w-3.5 h-3.5 rounded border-gray-300 text-purple-600 focus:ring-purple-300"
+                                                                    />
+                                                                    <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold ${config.colorBg} ${config.colorText}`}>
+                                                                        {config.label}
+                                                                    </span>
+                                                                    <span className="text-[10px] text-gray-400">
+                                                                        {hasMaster ? '(vinculado)' : '(sin maestro)'}
+                                                                    </span>
+                                                                </label>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                </div>
+                                                <div className="flex justify-end pt-1">
+                                                    <button
+                                                        onClick={handleCreateVariant}
+                                                        disabled={!variantLabel.trim() || selectedModules.size === 0 || isCloning}
+                                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-600 text-white text-[11px] font-medium rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    >
+                                                        {isCloning ? (
+                                                            <Loader2 size={12} className="animate-spin" />
+                                                        ) : (
+                                                            <Copy size={12} />
+                                                        )}
+                                                        {isCloning ? 'Clonando...' : 'Crear variante'}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Existing variants section */}
+                                        <div className="border border-gray-200 rounded-lg overflow-hidden">
+                                            <div className="px-3 py-2 bg-gray-50 border-b border-gray-100">
+                                                <span className="text-[11px] font-semibold text-gray-600">Variantes existentes</span>
+                                            </div>
+                                            {variantDocs.length === 0 ? (
+                                                <div className="px-3 py-6 text-center">
+                                                    <GitBranch size={24} className="text-gray-300 mx-auto mb-1.5" />
+                                                    <p className="text-[10px] text-gray-400">
+                                                        No hay variantes creadas para esta familia.
+                                                    </p>
+                                                    <p className="text-[10px] text-gray-400 mt-0.5">
+                                                        Use el formulario de arriba para clonar documentos maestros.
+                                                    </p>
+                                                </div>
+                                            ) : (
+                                                <div className="divide-y divide-gray-100 max-h-[200px] overflow-y-auto">
+                                                    {variantDocs.map(vDoc => {
+                                                        const colors = MODULE_BADGE_COLORS[vDoc.module] ?? { text: 'text-gray-600', bg: 'bg-gray-50', border: 'border-gray-200' };
+                                                        return (
+                                                            <div key={vDoc.id} className="px-3 py-1.5 flex items-center gap-2">
+                                                                <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold border ${colors.bg} ${colors.text} ${colors.border}`}>
+                                                                    {vDoc.module.toUpperCase()}
+                                                                </span>
+                                                                <span className="text-[10px] font-mono text-gray-700 truncate flex-1">
+                                                                    {vDoc.documentId}
+                                                                </span>
+                                                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                                                    <CheckCircle size={9} />
+                                                                    Sincronizado
+                                                                </span>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </>
+                                )}
+
                                 {/* Back button */}
                                 <div className="flex justify-start pt-2">
                                     <button
@@ -831,6 +1043,8 @@ const FamilyManager: React.FC<FamilyManagerProps> = ({ onClose }) => {
                                             setOpenPicker(null);
                                             setPickerDocs([]);
                                             setPickerSearch('');
+                                            setVariantLabel('');
+                                            setSelectedModules(new Set());
                                         }}
                                         className="px-3 py-1.5 text-[11px] text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
                                     >

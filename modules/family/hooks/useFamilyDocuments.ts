@@ -19,6 +19,7 @@ const ALL_MODULES: DocumentModule[] = ['pfd', 'amfe', 'cp', 'ho'];
 
 export interface UseFamilyDocumentsReturn {
     masterDocs: Record<DocumentModule, FamilyDocument | null>;
+    variantDocs: FamilyDocument[];
     loading: boolean;
     error: string | null;
     linkMaster: (module: DocumentModule, documentId: string) => Promise<void>;
@@ -33,12 +34,14 @@ export function useFamilyDocuments(familyId: number | null): UseFamilyDocumentsR
         cp: null,
         ho: null,
     });
+    const [variantDocs, setVariantDocs] = useState<FamilyDocument[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     const loadMasterDocs = useCallback(async () => {
         if (!familyId) {
             setMasterDocs({ pfd: null, amfe: null, cp: null, ho: null });
+            setVariantDocs([]);
             return;
         }
         setLoading(true);
@@ -51,13 +54,17 @@ export function useFamilyDocuments(familyId: number | null): UseFamilyDocumentsR
                 cp: null,
                 ho: null,
             };
+            const variants: FamilyDocument[] = [];
             for (const doc of docs) {
                 const mod = doc.module as DocumentModule;
                 if (ALL_MODULES.includes(mod) && doc.isMaster) {
                     result[mod] = doc;
+                } else if (ALL_MODULES.includes(mod) && !doc.isMaster) {
+                    variants.push(doc);
                 }
             }
             setMasterDocs(result);
+            setVariantDocs(variants);
         } catch {
             setError('Error al cargar documentos maestros');
         } finally {
@@ -98,6 +105,7 @@ export function useFamilyDocuments(familyId: number | null): UseFamilyDocumentsR
 
     return {
         masterDocs,
+        variantDocs,
         loading,
         error,
         linkMaster,

@@ -34,6 +34,7 @@ vi.mock('../../utils/repositories/productRepository', () => ({
 vi.mock('../../modules/family/hooks/useFamilyDocuments', () => ({
     useFamilyDocuments: vi.fn().mockReturnValue({
         masterDocs: { pfd: null, amfe: null, cp: null, ho: null },
+        variantDocs: [],
         loading: false,
         error: null,
         linkMaster: vi.fn(),
@@ -56,6 +57,11 @@ vi.mock('../../utils/repositories/hoRepository', () => ({
 
 vi.mock('../../utils/repositories/pfdRepository', () => ({
     listPfdDocuments: vi.fn().mockResolvedValue([]),
+}));
+
+vi.mock('../../utils/logger', () => ({
+    logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
+    exportDiagnosticJSON: vi.fn(),
 }));
 
 // Import mocked functions after vi.mock
@@ -874,6 +880,65 @@ describe('FamilyManager', () => {
             await waitFor(() => {
                 expect(screen.getByText('NODESC')).toBeDefined();
                 expect(screen.getByText(/sin descripción/)).toBeDefined();
+            });
+        });
+    });
+
+    // -----------------------------------------------------------------------
+    // 9. Variantes tab
+    // -----------------------------------------------------------------------
+
+    describe('Variantes tab', () => {
+        async function enterEditView(
+            members: ProductFamilyMember[] = [makeMember()],
+            family: ProductFamily = makeFamily(),
+        ) {
+            setupDefaultMocks([family]);
+            mockGetFamilyMembers.mockResolvedValue(members);
+            await renderAndWait();
+            await waitFor(() => {
+                expect(screen.getByText(family.name)).toBeDefined();
+            });
+            fireEvent.click(screen.getByText(family.name));
+            await waitFor(() => {
+                expect(screen.getByText(`Productos (${members.length})`)).toBeDefined();
+            });
+        }
+
+        it('should render Variantes tab in edit mode', async () => {
+            await enterEditView();
+            expect(screen.getByText('Variantes (0)')).toBeDefined();
+        });
+
+        it('should switch to Variantes tab and show empty state', async () => {
+            await enterEditView();
+            fireEvent.click(screen.getByText('Variantes (0)'));
+            await waitFor(() => {
+                expect(screen.getByText('No hay variantes creadas para esta familia.')).toBeDefined();
+            });
+        });
+
+        it('should show variant creation form with module checkboxes', async () => {
+            await enterEditView();
+            fireEvent.click(screen.getByText('Variantes (0)'));
+            await waitFor(() => {
+                expect(screen.getByText('Crear nueva variante')).toBeDefined();
+                expect(screen.getByPlaceholderText(/L0, L1, Izquierdo/)).toBeDefined();
+                expect(screen.getByText('Clonar documentos')).toBeDefined();
+                // All modules shown as disabled (no masters linked)
+                expect(screen.getByText('PFD')).toBeDefined();
+                expect(screen.getByText('AMFE')).toBeDefined();
+                expect(screen.getByText('Plan de Control')).toBeDefined();
+                expect(screen.getByText('Hoja de Operaciones')).toBeDefined();
+            });
+        });
+
+        it('should disable "Crear variante" button when label is empty', async () => {
+            await enterEditView();
+            fireEvent.click(screen.getByText('Variantes (0)'));
+            await waitFor(() => {
+                const createBtn = screen.getByText('Crear variante') as HTMLButtonElement;
+                expect(createBtn.closest('button')?.disabled).toBe(true);
             });
         });
     });
