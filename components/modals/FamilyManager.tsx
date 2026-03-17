@@ -6,7 +6,7 @@
  */
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { X, Plus, Trash2, Star, Users, Search, Package, AlertCircle, Loader2 } from 'lucide-react';
+import { X, Plus, Trash2, Star, Users, Search, Package, AlertCircle, Loader2, FileText, Link2, Unlink } from 'lucide-react';
 import type { ProductFamily, ProductFamilyMember } from '../../utils/repositories/familyRepository';
 import {
     listFamilies,
@@ -22,6 +22,12 @@ import {
 } from '../../utils/repositories/familyRepository';
 import { listProducts } from '../../utils/repositories/productRepository';
 import type { Product } from '../../utils/repositories/productRepository';
+import { useFamilyDocuments } from '../../modules/family/hooks/useFamilyDocuments';
+import type { DocumentModule } from '../../modules/family/hooks/useFamilyDocuments';
+import { listAmfeDocuments } from '../../utils/repositories/amfeRepository';
+import { listCpDocuments } from '../../utils/repositories/cpRepository';
+import { listHoDocuments } from '../../utils/repositories/hoRepository';
+import { listPfdDocuments } from '../../utils/repositories/pfdRepository';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -32,6 +38,61 @@ interface FamilyManagerProps {
 }
 
 type View = 'list' | 'create' | 'edit';
+type EditTab = 'productos' | 'documentos';
+
+interface DocModuleConfig {
+    key: DocumentModule;
+    label: string;
+    colorText: string;
+    colorBg: string;
+    getIdentifier: (doc: Record<string, unknown>) => string;
+    getPartNumber: (doc: Record<string, unknown>) => string;
+    getClient: (doc: Record<string, unknown>) => string;
+    listFn: () => Promise<Record<string, unknown>[]>;
+}
+
+const DOC_MODULE_CONFIGS: DocModuleConfig[] = [
+    {
+        key: 'pfd',
+        label: 'PFD',
+        colorText: 'text-cyan-600',
+        colorBg: 'bg-cyan-50',
+        getIdentifier: (d) => String(d.documentNumber || d.document_number || '—'),
+        getPartNumber: (d) => String(d.partNumber || d.part_number || ''),
+        getClient: (d) => String(d.customerName || d.customer_name || d.client || ''),
+        listFn: listPfdDocuments as unknown as () => Promise<Record<string, unknown>[]>,
+    },
+    {
+        key: 'amfe',
+        label: 'AMFE',
+        colorText: 'text-amber-600',
+        colorBg: 'bg-amber-50',
+        getIdentifier: (d) => String(d.amfeNumber || d.amfe_number || '—'),
+        getPartNumber: (d) => String(d.partNumber || d.part_number || ''),
+        getClient: (d) => String(d.client || ''),
+        listFn: listAmfeDocuments as unknown as () => Promise<Record<string, unknown>[]>,
+    },
+    {
+        key: 'cp',
+        label: 'Plan de Control',
+        colorText: 'text-emerald-600',
+        colorBg: 'bg-emerald-50',
+        getIdentifier: (d) => String(d.controlPlanNumber || d.control_plan_number || '—'),
+        getPartNumber: (d) => String(d.partNumber || d.part_number || ''),
+        getClient: (d) => String(d.client || ''),
+        listFn: listCpDocuments as unknown as () => Promise<Record<string, unknown>[]>,
+    },
+    {
+        key: 'ho',
+        label: 'Hoja de Operaciones',
+        colorText: 'text-blue-600',
+        colorBg: 'bg-blue-50',
+        getIdentifier: (d) => String(d.formNumber || d.form_number || '—'),
+        getPartNumber: (d) => String(d.partNumber || d.part_number || ''),
+        getClient: (d) => String(d.client || ''),
+        listFn: listHoDocuments as unknown as () => Promise<Record<string, unknown>[]>,
+    },
+];
 
 // ---------------------------------------------------------------------------
 // Component
@@ -55,6 +116,24 @@ const FamilyManager: React.FC<FamilyManagerProps> = ({ onClose }) => {
     const [productResults, setProductResults] = useState<Product[]>([]);
     const [isSearching, setIsSearching] = useState(false);
     const [isAdding, setIsAdding] = useState(false);
+
+    // Edit tab state
+    const [editTab, setEditTab] = useState<EditTab>('productos');
+
+    // Document picker state
+    const [openPicker, setOpenPicker] = useState<DocumentModule | null>(null);
+    const [pickerDocs, setPickerDocs] = useState<Record<string, unknown>[]>([]);
+    const [pickerLoading, setPickerLoading] = useState(false);
+    const [pickerSearch, setPickerSearch] = useState('');
+
+    // Family documents hook
+    const {
+        masterDocs,
+        loading: docsLoading,
+        error: docsError,
+        linkMaster,
+        unlinkMaster,
+    } = useFamilyDocuments(selectedFamily?.id ?? null);
 
     // Refs for mutex and stale-state prevention
     const addingRef = useRef(false);
@@ -230,6 +309,38 @@ const FamilyManager: React.FC<FamilyManagerProps> = ({ onClose }) => {
         }
     }, [selectedFamily, loadMembers]);
 
+    // Document picker handlers
+    const handleOpenPicker = useCallback(async (config: DocModuleConfig) => {
+        if (openPicker === config.key) {
+            setOpenPicker(null);
+            setPickerDocs([]);
+            setPickerSearch('');
+            return;
+        }
+        setOpenPicker(config.key);
+        setPickerSearch('');
+        setPickerLoading(true);
+        try {
+            const docs = await config.listFn();
+            setPickerDocs(docs);
+        } catch {
+            setPickerDocs([]);
+        } finally {
+            setPickerLoading(false);
+        }
+    }, [openPicker]);
+
+    const handleLinkDocument = useCallback(async (module: DocumentModule, documentId: string) => {
+        await linkMaster(module, documentId);
+        setOpenPicker(null);
+        setPickerDocs([]);
+        setPickerSearch('');
+    }, [linkMaster]);
+
+    const handleUnlinkDocument = useCallback(async (familyDocId: number) => {
+        await unlinkMaster(familyDocId);
+    }, [unlinkMaster]);
+
     // Close on Escape
     useEffect(() => {
         const handleEsc = (e: KeyboardEvent) => {
@@ -393,136 +504,339 @@ const FamilyManager: React.FC<FamilyManagerProps> = ({ onClose }) => {
                     )}
 
                     {view === 'edit' && selectedFamily && (
-                        <div className="p-4 space-y-3">
+                        <div className="flex flex-col">
                             {/* Family name + description */}
-                            <div className="flex items-start gap-3">
-                                <div className="flex-1 space-y-2">
-                                    <div>
-                                        <label className="block text-[10px] font-medium text-gray-500 mb-1">Nombre</label>
-                                        <input
-                                            type="text"
-                                            value={formName}
-                                            onChange={e => setFormName(e.target.value)}
-                                            onBlur={handleUpdateFamily}
-                                            className="w-full px-2 py-1.5 text-[11px] border border-gray-300 rounded-lg focus:ring-1 focus:ring-purple-300"
-                                            maxLength={100}
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-[10px] font-medium text-gray-500 mb-1">Descripción</label>
-                                        <input
-                                            type="text"
-                                            value={formDescription}
-                                            onChange={e => setFormDescription(e.target.value)}
-                                            onBlur={handleUpdateFamily}
-                                            placeholder="Descripción opcional..."
-                                            className="w-full px-2 py-1.5 text-[11px] border border-gray-300 rounded-lg focus:ring-1 focus:ring-purple-300"
-                                            maxLength={500}
-                                        />
+                            <div className="p-4 space-y-2">
+                                <div className="flex items-start gap-3">
+                                    <div className="flex-1 space-y-2">
+                                        <div>
+                                            <label className="block text-[10px] font-medium text-gray-500 mb-1">Nombre</label>
+                                            <input
+                                                type="text"
+                                                value={formName}
+                                                onChange={e => setFormName(e.target.value)}
+                                                onBlur={handleUpdateFamily}
+                                                className="w-full px-2 py-1.5 text-[11px] border border-gray-300 rounded-lg focus:ring-1 focus:ring-purple-300"
+                                                maxLength={100}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-[10px] font-medium text-gray-500 mb-1">Descripción</label>
+                                            <input
+                                                type="text"
+                                                value={formDescription}
+                                                onChange={e => setFormDescription(e.target.value)}
+                                                onBlur={handleUpdateFamily}
+                                                placeholder="Descripción opcional..."
+                                                className="w-full px-2 py-1.5 text-[11px] border border-gray-300 rounded-lg focus:ring-1 focus:ring-purple-300"
+                                                maxLength={500}
+                                            />
+                                        </div>
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Members list */}
-                            <div>
-                                <h4 className="text-[10px] font-semibold text-gray-500 mb-1.5">
-                                    Productos ({members.length})
-                                </h4>
-                                {members.length === 0 ? (
-                                    <div className="px-3 py-4 text-center bg-gray-50 rounded-lg">
-                                        <Package size={20} className="text-gray-300 mx-auto mb-1" />
-                                        <p className="text-[10px] text-gray-400">Sin productos. Use el buscador de abajo para agregar.</p>
-                                    </div>
-                                ) : (
-                                    <div className="border border-gray-200 rounded-lg divide-y divide-gray-100 max-h-[200px] overflow-y-auto">
-                                        {members.map(member => (
-                                            <div key={member.id} className="px-2.5 py-1.5 flex items-center gap-2">
-                                                <button
-                                                    onClick={() => handleSetPrimary(member)}
-                                                    className={`p-0.5 transition-colors ${
-                                                        member.isPrimary ? 'text-amber-500' : 'text-gray-300 hover:text-amber-400'
-                                                    }`}
-                                                    title={member.isPrimary ? 'Producto primario' : 'Establecer como primario'}
-                                                >
-                                                    <Star size={12} fill={member.isPrimary ? 'currentColor' : 'none'} />
-                                                </button>
-                                                <span className="text-[10px] font-mono font-semibold text-blue-700 shrink-0">
-                                                    {member.codigo || `ID:${member.productId}`}
-                                                </span>
-                                                <span className="text-[10px] text-gray-500 truncate flex-1">
-                                                    {member.descripcion || '(sin descripción)'}
-                                                </span>
-                                                <span className="text-[9px] text-gray-400 shrink-0">
-                                                    {member.lineaName || ''}
-                                                </span>
-                                                <button
-                                                    onClick={() => handleRemoveMember(member)}
-                                                    className="p-0.5 text-gray-300 hover:text-red-500 transition-colors"
-                                                    title="Quitar de la familia"
-                                                >
-                                                    <X size={12} />
-                                                </button>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Add product search */}
-                            <div>
-                                <label className="block text-[10px] font-medium text-gray-500 mb-1">Agregar producto</label>
-                                <div className="relative">
-                                    <Search size={12} className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400" />
-                                    <input
-                                        type="text"
-                                        value={productSearch}
-                                        onChange={e => setProductSearch(e.target.value)}
-                                        placeholder="Buscar por código o descripción..."
-                                        className="w-full pl-7 pr-2 py-1.5 text-[11px] border border-gray-300 rounded-lg focus:ring-1 focus:ring-purple-300"
-                                    />
-                                </div>
-                                {isAdding && (
-                                    <div className="flex items-center gap-1.5 mt-1 text-[10px] text-purple-500 justify-center">
-                                        <Loader2 size={12} className="animate-spin" />
-                                        Agregando...
-                                    </div>
-                                )}
-                                {productResults.length > 0 && !isAdding && (
-                                    <div className="mt-1 border border-gray-200 rounded-lg max-h-[150px] overflow-y-auto">
-                                        {productResults.map(product => (
-                                            <div
-                                                key={product.id}
-                                                onClick={() => handleAddMember(product)}
-                                                className="px-2.5 py-1.5 cursor-pointer hover:bg-purple-50 transition-colors border-b border-gray-50 last:border-b-0"
-                                            >
-                                                <div className="flex items-baseline gap-2">
-                                                    <Plus size={10} className="text-purple-400 shrink-0" />
-                                                    <span className="text-[10px] font-mono font-semibold text-blue-700">{product.codigo}</span>
-                                                    <span className="text-[9px] text-gray-500 truncate">{product.descripcion}</span>
-                                                </div>
-                                                <div className="text-[8px] text-gray-400 ml-5">{product.lineaName}</div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                                {isSearching && (
-                                    <div className="text-[10px] text-gray-400 mt-1 text-center">Buscando...</div>
-                                )}
-                            </div>
-
-                            {/* Back button */}
-                            <div className="flex justify-start pt-2">
+                            {/* Tab bar */}
+                            <div className="flex border-b border-gray-200 px-4">
                                 <button
-                                    onClick={() => {
-                                        setView('list');
-                                        setSelectedFamily(null);
-                                        setProductSearch('');
-                                        setProductResults([]);
-                                    }}
-                                    className="px-3 py-1.5 text-[11px] text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                                    onClick={() => setEditTab('productos')}
+                                    className={`px-3 py-2 text-[11px] font-medium transition-colors relative ${
+                                        editTab === 'productos'
+                                            ? 'text-purple-600'
+                                            : 'text-gray-500 hover:text-gray-700'
+                                    }`}
                                 >
-                                    ← Volver a la lista
+                                    <div className="flex items-center gap-1.5">
+                                        <Package size={12} />
+                                        {`Productos (${members.length})`}
+                                    </div>
+                                    {editTab === 'productos' && (
+                                        <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-purple-600 rounded-t" />
+                                    )}
                                 </button>
+                                <button
+                                    onClick={() => setEditTab('documentos')}
+                                    className={`px-3 py-2 text-[11px] font-medium transition-colors relative ${
+                                        editTab === 'documentos'
+                                            ? 'text-purple-600'
+                                            : 'text-gray-500 hover:text-gray-700'
+                                    }`}
+                                >
+                                    <div className="flex items-center gap-1.5">
+                                        <FileText size={12} />
+                                        Documentos Maestros
+                                    </div>
+                                    {editTab === 'documentos' && (
+                                        <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-purple-600 rounded-t" />
+                                    )}
+                                </button>
+                            </div>
+
+                            {/* Tab content */}
+                            <div className="p-4 space-y-3">
+                                {/* ===== PRODUCTOS TAB ===== */}
+                                {editTab === 'productos' && (
+                                    <>
+                                        {/* Members list */}
+                                        <div>
+                                            {members.length === 0 ? (
+                                                <div className="px-3 py-4 text-center bg-gray-50 rounded-lg">
+                                                    <Package size={20} className="text-gray-300 mx-auto mb-1" />
+                                                    <p className="text-[10px] text-gray-400">Sin productos. Use el buscador de abajo para agregar.</p>
+                                                </div>
+                                            ) : (
+                                                <div className="border border-gray-200 rounded-lg divide-y divide-gray-100 max-h-[200px] overflow-y-auto">
+                                                    {members.map(member => (
+                                                        <div key={member.id} className="px-2.5 py-1.5 flex items-center gap-2">
+                                                            <button
+                                                                onClick={() => handleSetPrimary(member)}
+                                                                className={`p-0.5 transition-colors ${
+                                                                    member.isPrimary ? 'text-amber-500' : 'text-gray-300 hover:text-amber-400'
+                                                                }`}
+                                                                title={member.isPrimary ? 'Producto primario' : 'Establecer como primario'}
+                                                            >
+                                                                <Star size={12} fill={member.isPrimary ? 'currentColor' : 'none'} />
+                                                            </button>
+                                                            <span className="text-[10px] font-mono font-semibold text-blue-700 shrink-0">
+                                                                {member.codigo || `ID:${member.productId}`}
+                                                            </span>
+                                                            <span className="text-[10px] text-gray-500 truncate flex-1">
+                                                                {member.descripcion || '(sin descripción)'}
+                                                            </span>
+                                                            <span className="text-[9px] text-gray-400 shrink-0">
+                                                                {member.lineaName || ''}
+                                                            </span>
+                                                            <button
+                                                                onClick={() => handleRemoveMember(member)}
+                                                                className="p-0.5 text-gray-300 hover:text-red-500 transition-colors"
+                                                                title="Quitar de la familia"
+                                                            >
+                                                                <X size={12} />
+                                                            </button>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Add product search */}
+                                        <div>
+                                            <label className="block text-[10px] font-medium text-gray-500 mb-1">Agregar producto</label>
+                                            <div className="relative">
+                                                <Search size={12} className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400" />
+                                                <input
+                                                    type="text"
+                                                    value={productSearch}
+                                                    onChange={e => setProductSearch(e.target.value)}
+                                                    placeholder="Buscar por código o descripción..."
+                                                    className="w-full pl-7 pr-2 py-1.5 text-[11px] border border-gray-300 rounded-lg focus:ring-1 focus:ring-purple-300"
+                                                />
+                                            </div>
+                                            {isAdding && (
+                                                <div className="flex items-center gap-1.5 mt-1 text-[10px] text-purple-500 justify-center">
+                                                    <Loader2 size={12} className="animate-spin" />
+                                                    Agregando...
+                                                </div>
+                                            )}
+                                            {productResults.length > 0 && !isAdding && (
+                                                <div className="mt-1 border border-gray-200 rounded-lg max-h-[150px] overflow-y-auto">
+                                                    {productResults.map(product => (
+                                                        <div
+                                                            key={product.id}
+                                                            onClick={() => handleAddMember(product)}
+                                                            className="px-2.5 py-1.5 cursor-pointer hover:bg-purple-50 transition-colors border-b border-gray-50 last:border-b-0"
+                                                        >
+                                                            <div className="flex items-baseline gap-2">
+                                                                <Plus size={10} className="text-purple-400 shrink-0" />
+                                                                <span className="text-[10px] font-mono font-semibold text-blue-700">{product.codigo}</span>
+                                                                <span className="text-[9px] text-gray-500 truncate">{product.descripcion}</span>
+                                                            </div>
+                                                            <div className="text-[8px] text-gray-400 ml-5">{product.lineaName}</div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                            {isSearching && (
+                                                <div className="text-[10px] text-gray-400 mt-1 text-center">Buscando...</div>
+                                            )}
+                                        </div>
+                                    </>
+                                )}
+
+                                {/* ===== DOCUMENTOS MAESTROS TAB ===== */}
+                                {editTab === 'documentos' && (
+                                    <>
+                                        {docsError && (
+                                            <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-red-50 rounded-lg">
+                                                <AlertCircle size={12} className="text-red-500 shrink-0" />
+                                                <span className="text-[10px] text-red-700">{docsError}</span>
+                                            </div>
+                                        )}
+
+                                        {docsLoading ? (
+                                            <div className="flex items-center justify-center py-6">
+                                                <Loader2 size={16} className="animate-spin text-purple-400" />
+                                                <span className="text-[10px] text-gray-400 ml-2">Cargando documentos...</span>
+                                            </div>
+                                        ) : (
+                                            <div className="space-y-2">
+                                                {DOC_MODULE_CONFIGS.map(config => {
+                                                    const linked = masterDocs[config.key];
+                                                    const isPickerOpen = openPicker === config.key;
+
+                                                    return (
+                                                        <div key={config.key} className="border border-gray-200 rounded-lg overflow-hidden">
+                                                            {/* Slot header */}
+                                                            <div className={`px-3 py-2 flex items-center gap-2.5 ${config.colorBg}`}>
+                                                                <FileText size={14} className={config.colorText} />
+                                                                <span className={`text-[11px] font-semibold ${config.colorText}`}>
+                                                                    {config.label}
+                                                                </span>
+                                                                <div className="flex-1" />
+                                                                {linked ? (
+                                                                    <button
+                                                                        onClick={() => handleUnlinkDocument(linked.id)}
+                                                                        className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] text-red-600 bg-white border border-red-200 rounded-lg hover:bg-red-50 transition-colors"
+                                                                    >
+                                                                        <Unlink size={10} />
+                                                                        Desvincular
+                                                                    </button>
+                                                                ) : (
+                                                                    <button
+                                                                        onClick={() => handleOpenPicker(config)}
+                                                                        className={`flex items-center gap-1 px-2.5 py-1.5 text-[11px] rounded-lg transition-colors ${
+                                                                            isPickerOpen
+                                                                                ? 'text-purple-700 bg-purple-100 border border-purple-300'
+                                                                                : 'text-purple-600 bg-white border border-purple-200 hover:bg-purple-50'
+                                                                        }`}
+                                                                    >
+                                                                        <Link2 size={10} />
+                                                                        Vincular
+                                                                    </button>
+                                                                )}
+                                                            </div>
+
+                                                            {/* Linked document info */}
+                                                            {linked && (
+                                                                <div className="px-3 py-2 bg-white border-t border-gray-100">
+                                                                    <div className="flex items-center gap-2">
+                                                                        <span className="text-[11px] font-mono font-semibold text-gray-800">
+                                                                            {linked.documentId}
+                                                                        </span>
+                                                                    </div>
+                                                                    {linked.productId && (
+                                                                        <div className="text-[10px] text-gray-400 mt-0.5">
+                                                                            Producto: {linked.productId}
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            )}
+
+                                                            {/* No document placeholder */}
+                                                            {!linked && !isPickerOpen && (
+                                                                <div className="px-3 py-2 bg-white border-t border-gray-100">
+                                                                    <span className="text-[10px] text-gray-400 italic">Sin documento maestro</span>
+                                                                </div>
+                                                            )}
+
+                                                            {/* Inline document picker */}
+                                                            {isPickerOpen && (
+                                                                <div className="border-t border-gray-200 bg-gray-50">
+                                                                    <div className="p-2">
+                                                                        <div className="relative">
+                                                                            <Search size={11} className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400" />
+                                                                            <input
+                                                                                type="text"
+                                                                                value={pickerSearch}
+                                                                                onChange={e => setPickerSearch(e.target.value)}
+                                                                                placeholder="Filtrar documentos..."
+                                                                                className="w-full pl-7 pr-2 py-1.5 text-[10px] border border-gray-200 rounded-lg focus:ring-1 focus:ring-purple-300 focus:border-purple-400"
+                                                                                autoFocus
+                                                                            />
+                                                                        </div>
+                                                                    </div>
+                                                                    {pickerLoading ? (
+                                                                        <div className="flex items-center justify-center py-3">
+                                                                            <Loader2 size={12} className="animate-spin text-gray-400" />
+                                                                            <span className="text-[10px] text-gray-400 ml-1.5">Cargando...</span>
+                                                                        </div>
+                                                                    ) : (
+                                                                        <div className="max-h-[140px] overflow-y-auto">
+                                                                            {(() => {
+                                                                                const searchLower = pickerSearch.toLowerCase();
+                                                                                const filtered = pickerDocs.filter(d => {
+                                                                                    if (!searchLower) return true;
+                                                                                    const ident = config.getIdentifier(d).toLowerCase();
+                                                                                    const pn = config.getPartNumber(d).toLowerCase();
+                                                                                    const cl = config.getClient(d).toLowerCase();
+                                                                                    return ident.includes(searchLower) || pn.includes(searchLower) || cl.includes(searchLower);
+                                                                                });
+                                                                                if (filtered.length === 0) {
+                                                                                    return (
+                                                                                        <div className="px-3 py-3 text-center">
+                                                                                            <span className="text-[10px] text-gray-400">
+                                                                                                {pickerDocs.length === 0
+                                                                                                    ? 'No hay documentos de este tipo'
+                                                                                                    : 'Sin resultados para el filtro'}
+                                                                                            </span>
+                                                                                        </div>
+                                                                                    );
+                                                                                }
+                                                                                return filtered.map(doc => (
+                                                                                    <div
+                                                                                        key={String(doc.id)}
+                                                                                        onClick={() => handleLinkDocument(config.key, String(doc.id))}
+                                                                                        className="px-3 py-1.5 cursor-pointer hover:bg-purple-50 transition-colors border-b border-gray-100 last:border-b-0"
+                                                                                    >
+                                                                                        <div className="flex items-center gap-2">
+                                                                                            <Link2 size={10} className="text-purple-400 shrink-0" />
+                                                                                            <span className="text-[10px] font-mono font-semibold text-gray-800">
+                                                                                                {config.getIdentifier(doc)}
+                                                                                            </span>
+                                                                                            {config.getPartNumber(doc) && (
+                                                                                                <span className="text-[9px] text-gray-500">
+                                                                                                    {config.getPartNumber(doc)}
+                                                                                                </span>
+                                                                                            )}
+                                                                                        </div>
+                                                                                        {config.getClient(doc) && (
+                                                                                            <div className="text-[9px] text-gray-400 ml-5">
+                                                                                                {config.getClient(doc)}
+                                                                                            </div>
+                                                                                        )}
+                                                                                    </div>
+                                                                                ));
+                                                                            })()}
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        )}
+                                    </>
+                                )}
+
+                                {/* Back button */}
+                                <div className="flex justify-start pt-2">
+                                    <button
+                                        onClick={() => {
+                                            setView('list');
+                                            setSelectedFamily(null);
+                                            setProductSearch('');
+                                            setProductResults([]);
+                                            setEditTab('productos');
+                                            setOpenPicker(null);
+                                            setPickerDocs([]);
+                                            setPickerSearch('');
+                                        }}
+                                        className="px-3 py-1.5 text-[11px] text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                                    >
+                                        ← Volver a la lista
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     )}

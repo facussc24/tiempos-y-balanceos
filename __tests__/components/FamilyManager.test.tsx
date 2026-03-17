@@ -31,6 +31,33 @@ vi.mock('../../utils/repositories/productRepository', () => ({
     listProducts: vi.fn(),
 }));
 
+vi.mock('../../modules/family/hooks/useFamilyDocuments', () => ({
+    useFamilyDocuments: vi.fn().mockReturnValue({
+        masterDocs: { pfd: null, amfe: null, cp: null, ho: null },
+        loading: false,
+        error: null,
+        linkMaster: vi.fn(),
+        unlinkMaster: vi.fn(),
+        refresh: vi.fn(),
+    }),
+}));
+
+vi.mock('../../utils/repositories/amfeRepository', () => ({
+    listAmfeDocuments: vi.fn().mockResolvedValue([]),
+}));
+
+vi.mock('../../utils/repositories/cpRepository', () => ({
+    listCpDocuments: vi.fn().mockResolvedValue([]),
+}));
+
+vi.mock('../../utils/repositories/hoRepository', () => ({
+    listHoDocuments: vi.fn().mockResolvedValue([]),
+}));
+
+vi.mock('../../utils/repositories/pfdRepository', () => ({
+    listPfdDocuments: vi.fn().mockResolvedValue([]),
+}));
+
 // Import mocked functions after vi.mock
 import FamilyManager from '../../components/modals/FamilyManager';
 import {
