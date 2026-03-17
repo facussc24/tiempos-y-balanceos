@@ -51,6 +51,8 @@ import { logger } from '../../utils/logger';
 import { useOpenExportFolder } from '../../hooks/useOpenExportFolder';
 import { useInheritanceStatus } from '../../hooks/useInheritanceStatus';
 import { triggerOverrideTracking } from '../../core/inheritance/triggerOverrideTracking';
+import { triggerChangePropagation } from '../../core/inheritance/changePropagation';
+import ChangeProposalPanel from '../../modules/family/ChangeProposalPanel';
 import {
     Plus, XCircle, AlertTriangle, CheckCircle, Info, ArrowRight,
     HelpCircle, Save, FileText, FolderOpen, Check, Clock,
@@ -350,6 +352,11 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding, embedded, initialData }) => 
         const snapshotAtSaveTime = JSON.stringify(pfd.data);
         try {
             setSaveStatus('saving');
+            // Load old doc for change propagation (before overwriting)
+            let oldDoc: PfdDocument | null = null;
+            try {
+                oldDoc = await loadPfdDocument(pfd.data.id);
+            } catch { /* non-critical */ }
             const ok = await savePfdDocument(pfd.data.id, pfd.data);
             setSaveStatus(ok ? 'saved' : 'error');
             if (!ok) {
@@ -370,6 +377,10 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding, embedded, initialData }) => 
                 setTimeout(() => setSaveStatus('idle'), 2000);
                 // Fire-and-forget: trigger override tracking for variant documents
                 triggerOverrideTracking(pfd.data.id, pfd.data, 'pfd');
+                // Fire-and-forget: propagate master changes to variants
+                if (oldDoc) {
+                    triggerChangePropagation(pfd.data.id, oldDoc, pfd.data, 'pfd');
+                }
             }
         } finally {
             savingRef.current = false;
@@ -935,6 +946,11 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding, embedded, initialData }) => 
                 onDismiss={crossDocAlerts.dismissAlert}
                 onDismissAll={crossDocAlerts.dismissAll}
             />
+
+            {/* Change proposals from master (for variant documents) */}
+            {pfd.data.id && (
+                <ChangeProposalPanel documentId={pfd.data.id} />
+            )}
 
             {/* PFD ↔ AMFE broken link banner */}
             {linkAlerts.validation.totalBroken > 0 && !showLinkPanel && (

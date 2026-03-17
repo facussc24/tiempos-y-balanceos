@@ -21,6 +21,7 @@ import { logger } from '../../utils/logger';
 import { toast } from '../../components/ui/Toast';
 import { loadCpByProjectName } from '../../utils/repositories/cpRepository';
 import { triggerOverrideTracking } from '../../core/inheritance/triggerOverrideTracking';
+import { triggerChangePropagation } from '../../core/inheritance/changePropagation';
 
 /** State for the PromptModal integration */
 export interface CpProjectPromptState {
@@ -147,6 +148,15 @@ export const useControlPlanProjects = (
         setSaveStatus('saving');
         const snapshotAtSaveTime = JSON.stringify(currentData);
         try {
+            // Load old doc for change propagation (before overwriting)
+            let oldCpDoc: typeof currentData | null = null;
+            try {
+                const oldLoaded = await loadCpByProjectName(projectName);
+                if (oldLoaded) {
+                    oldCpDoc = oldLoaded.doc;
+                }
+            } catch { /* non-critical */ }
+
             const success = await saveControlPlan(projectName, currentData);
             if (success) {
                 setCurrentProject(projectName);
@@ -161,6 +171,10 @@ export const useControlPlanProjects = (
                     const loaded = await loadCpByProjectName(projectName);
                     if (loaded) {
                         triggerOverrideTracking(loaded.id, currentData, 'cp');
+                        // Fire-and-forget: propagate master changes to variants
+                        if (oldCpDoc) {
+                            triggerChangePropagation(loaded.id, oldCpDoc, currentData, 'cp');
+                        }
                     }
                 } catch { /* override tracking is non-critical */ }
             } else {

@@ -27,6 +27,7 @@ import {
 import type { HoDocumentListItem } from '../../utils/repositories/hoRepository';
 import { AUTOSAVE_DEBOUNCE_MS } from '../../config';
 import { triggerOverrideTracking } from '../../core/inheritance/triggerOverrideTracking';
+import { triggerChangePropagation } from '../../core/inheritance/changePropagation';
 
 // ============================================================================
 // DRAFT UTILITIES (unchanged — backward compatible)
@@ -61,11 +62,21 @@ export async function deleteHoDraft(key: string): Promise<void> {
  */
 export async function saveHoDocumentFormal(id: string, doc: HoDocument): Promise<boolean> {
     try {
+        // Load old doc for change propagation (before overwriting)
+        let oldHoDoc: HoDocument | null = null;
+        try {
+            oldHoDoc = await loadHoDocument(id);
+        } catch { /* non-critical */ }
+
         const ok = await saveHoDocument(id, doc);
         if (ok) {
             logger.info('HoPersistence', 'Document saved formally', { id, sheets: doc.sheets.length });
             // Fire-and-forget: trigger override tracking for variant documents
             triggerOverrideTracking(id, doc, 'ho');
+            // Fire-and-forget: propagate master changes to variants
+            if (oldHoDoc) {
+                triggerChangePropagation(id, oldHoDoc, doc, 'ho');
+            }
         }
         return ok;
     } catch (err) {

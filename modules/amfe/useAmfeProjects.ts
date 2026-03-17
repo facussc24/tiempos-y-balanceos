@@ -30,6 +30,7 @@ import { deleteDraft } from './useAmfePersistence';
 import { logger } from '../../utils/logger';
 import { loadAmfeByProjectName } from '../../utils/repositories/amfeRepository';
 import { triggerOverrideTracking } from '../../core/inheritance/triggerOverrideTracking';
+import { triggerChangePropagation } from '../../core/inheritance/changePropagation';
 import { toast } from '../../components/ui/Toast';
 
 /** Identifies the current open project in the hierarchy */
@@ -341,6 +342,16 @@ export const useAmfeProjects = (
         setSaveStatus('saving');
         const snapshotAtSaveTime = JSON.stringify(currentData);
         try {
+            // Load old doc for change propagation (before overwriting)
+            let oldAmfeDoc: typeof currentData | null = null;
+            try {
+                const projectName = buildAmfePath(ref.client, ref.project, ref.name);
+                const oldLoaded = await loadAmfeByProjectName(projectName);
+                if (oldLoaded) {
+                    oldAmfeDoc = oldLoaded.doc;
+                }
+            } catch { /* non-critical */ }
+
             const success = await saveAmfeHierarchical(ref.client, ref.project, ref.name, currentData);
             if (success) {
                 setCurrentProjectRef(ref);
@@ -360,6 +371,10 @@ export const useAmfeProjects = (
                     const loaded = await loadAmfeByProjectName(projectName);
                     if (loaded) {
                         triggerOverrideTracking(loaded.meta.id, currentData, 'amfe');
+                        // Fire-and-forget: propagate master changes to variants
+                        if (oldAmfeDoc) {
+                            triggerChangePropagation(loaded.meta.id, oldAmfeDoc, currentData, 'amfe');
+                        }
                     }
                 } catch { /* override tracking is non-critical */ }
             } else {

@@ -48,6 +48,7 @@ import { useCpFilters } from './useCpFilters';
 import { useCpDraftRecovery } from './useCpDraftRecovery';
 import { useOpenExportFolder } from '../../hooks/useOpenExportFolder';
 import { useInheritanceStatus } from '../../hooks/useInheritanceStatus';
+import ChangeProposalPanel from '../../modules/family/ChangeProposalPanel';
 
 const ControlPlanSummary = lazy(() => import('./ControlPlanSummary'));
 const CpHelpPanel = lazy(() => import('./CpHelpPanel'));
@@ -501,6 +502,11 @@ const ControlPlanApp: React.FC<Props> = ({ onBackToLanding, embedded, initialDat
                 onDismiss={crossDocAlerts.dismissAlert}
                 onDismissAll={crossDocAlerts.dismissAll}
             />
+
+            {/* Change proposals from master (for variant documents) */}
+            {projects.currentProject && (
+                <ChangeProposalPanel documentId={projects.currentProject} />
+            )}
 
             {/* Revision history panel */}
             <RevisionHistoryPanel

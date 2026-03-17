@@ -27,6 +27,7 @@ import { useCrossDocAlerts } from '../../hooks/useCrossDocAlerts';
 import { LinkValidationPanel } from '../../components/ui/LinkValidationPanel';
 import { validatePfdAmfeLinks, getBrokenAmfeOperationIds, getRelinkCandidates } from '../../utils/pfdAmfeLinkValidation';
 import { getNextRevisionLevel } from '../../utils/revisionUtils';
+import ChangeProposalPanel from '../../modules/family/ChangeProposalPanel';
 import { Plus, Layers, HardDrive, AlertTriangle, X, FileInput } from 'lucide-react';
 import { AmfeDocument, AmfeHeaderData } from './amfeTypes';
 import { importAmfeOpsFromPfd } from './amfePfdImport';
@@ -775,6 +776,11 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab }) => {
                 onDismiss={crossDocAlerts.dismissAlert}
                 onDismissAll={crossDocAlerts.dismissAll}
             />
+
+            {/* Change proposals from master (for variant documents) */}
+            {projects.currentProject && (
+                <ChangeProposalPanel documentId={projects.currentProject} />
+            )}
 
             {/* PFD ↔ AMFE broken link banner */}
             {linkValidation.totalBroken > 0 && !showLinkPanel && (

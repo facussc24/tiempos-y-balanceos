@@ -37,6 +37,7 @@ import { useOpenExportFolder } from '../../hooks/useOpenExportFolder';
 import { useHoCpLinkAlerts } from '../../hooks/useHoCpLinkAlerts';
 import { HoCpLinkValidationPanel } from '../../components/ui/HoCpLinkValidationPanel';
 import { useInheritanceStatus } from '../../hooks/useInheritanceStatus';
+import ChangeProposalPanel from '../../modules/family/ChangeProposalPanel';
 
 /** Formal persistence methods exposed when operating standalone (not embedded). */
 export interface HoFormalPersistence {
@@ -517,6 +518,11 @@ const HojaOperacionesApp: React.FC<Props> = ({ embedded, initialData, onDataChan
                     onDismiss={crossDocAlerts.dismissAlert}
                     onDismissAll={crossDocAlerts.dismissAll}
                 />
+
+                {/* Change proposals from master (for variant documents) */}
+                {hoDocId && (
+                    <ChangeProposalPanel documentId={hoDocId} />
+                )}
 
                 {/* Header form (standalone mode only) */}
                 {!embedded && (
