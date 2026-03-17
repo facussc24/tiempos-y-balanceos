@@ -1,18 +1,19 @@
 # Barack Mercosul - Tiempos y Balanceos
 
-App web React 19 + TypeScript para gestion de calidad automotriz
+App 100% web React 19 + TypeScript + Supabase para gestion de calidad automotriz
 (AMFE VDA, Plan de Control AIAG, Hojas de Operaciones) y lean manufacturing
 (balanceo de linea, simulador de flujo, kanban, heijunka, mix multi-modelo).
+Multi-usuario con auth Supabase (email/password). Sin Tauri, sin Gemini.
 
 ## Stack
 
 | Capa         | Tecnologia                                          |
 |--------------|-----------------------------------------------------|
 | Runtime      | React 19.2, TypeScript 5.8, Vite 6                  |
-| Persistencia | Supabase + SQLite (sql.js)                          |
+| Auth + DB    | Supabase (@supabase/supabase-js) + SQLite (sql.js)  |
 | Testing      | Vitest 4.x + @testing-library/react + jsdom         |
 | Styling      | TailwindCSS 3.4                                     |
-| Export       | xlsx-js-style, html2pdf.js                          |
+| Export       | ExcelJS, html2pdf.js                                |
 | Charts       | Recharts 3.4                                        |
 | DnD          | @dnd-kit/core                                       |
 
@@ -36,7 +37,8 @@ npx tsc --noEmit     # Chequeo de tipos
   config.ts             Configuracion global
   index.tsx             React root
 
-  components/           UI reutilizable (14 carpetas/archivos)
+  components/           UI reutilizable
+    auth/               AuthProvider, LoginPage (Supabase auth)
     ui/                 Componentes base (Button, Input, Modal, etc.)
     modals/             ConfirmModal, ExportModal, etc.
     layout/             AppShell, Sidebar, Header
@@ -58,10 +60,10 @@ npx tsc --noEmit     # Chequeo de tipos
     useSessionLock      Lock de sesion en red
 
   modules/              Modulos de negocio
-    amfe/               AMFE VDA (analisis modal de fallas)
-    controlPlan/        Plan de Control AIAG + cross-validation
-    hojaOperaciones/    Hojas de operaciones (navy theme, ISO PPE)
-    pfd/                Diagrama de Flujo del Proceso (cyan theme, ASME symbols)
+    amfe/               AMFE VDA + validacion cruzada con PFD
+    controlPlan/        Plan de Control AIAG + cross-validation (V1-V5) + link HO
+    hojaOperaciones/    Hojas de operaciones (navy theme, ISO PPE) + link CP
+    pfd/                Diagrama de Flujo del Proceso (cyan theme, ASME symbols) + link AMFE
     mix/                Mix multi-modelo
     flow-simulator/     Simulador de flujo (SimScript)
     heijunka/           Nivelado heijunka
@@ -80,6 +82,10 @@ npx tsc --noEmit     # Chequeo de tipos
       hoRepository.ts         Hojas de Operaciones
       pfdRepository.ts        Diagramas de Flujo (PFD)
       draftRepository.ts      Borradores auto-save unificados
+    supabaseClient.ts   Singleton Supabase client
+    pfdAmfeLinkValidation.ts   Validacion cruzada PFD ↔ AMFE
+    hoCpLinkValidation.ts      Validacion cruzada HO ↔ CP
+    crossDocumentAlerts.ts     Alertas APQP cascade (PFD→AMFE→CP→HO)
     storageManager.ts   Settings de storage (delega a settingsRepository)
     unified_fs.ts       Abstraccion filesystem (web)
     logger.ts           Logger centralizado
@@ -88,7 +94,7 @@ npx tsc --noEmit     # Chequeo de tipos
     networkUtils.ts     Deteccion de red
     processCategory.ts  Inferencia de categoria de proceso
 
-  __tests__/            209 archivos de test (3753+ tests)
+  __tests__/            450+ archivos de test (3720 tests)
 
   src/                  Assets y datos
     assets/             Imagenes, iconos PPE, logo
@@ -119,7 +125,7 @@ npx tsc --noEmit     # Chequeo de tipos
 
 ### Reglas de codigo
 - **Usar repositorios para acceso a datos, nunca SQLite directo** — importar de `utils/repositories/`
-- **NO hardcodear API keys** en codigo fuente. Usar `settingsStore` o variables de entorno
+- **NO hardcodear API keys** en codigo fuente. Usar variables de entorno (`VITE_*`)
 - **Usar logger.ts** en vez de `console.log/warn/error`: `import { logger } from 'utils/logger'`
 - **NO usar `as any` ni `@ts-ignore`** - tipar correctamente
 - **Auto-save/borradores** via `draftRepository` (SQLite), NO IndexedDB
@@ -128,7 +134,7 @@ npx tsc --noEmit     # Chequeo de tipos
 ### Testing (detalle en .claude/rules/testing.md)
 - Framework: Vitest con globals habilitados (`describe`, `it`, `expect` sin import)
 - Correr: `npx vitest run` | Coverage: `npx vitest run --coverage`
-- Test dir: `__tests__/` (209 archivos, 3753+ tests)
+- Test dir: `__tests__/` (450+ archivos, 3720 tests)
 - Mocks: repositorios, `unified_fs`, `logger`, `crypto` (nunca filesystem real)
 
 ### Path aliases
@@ -148,7 +154,33 @@ Reglas detalladas por modulo se cargan automaticamente al editar archivos releva
 - Tipos principales: `Project`, `Operation`, `WorkElement`, `AmfeDocument`, `ControlPlanDocument`
 - SGC docs catalogados en `src/data/sgc/`
 
+## Auth & Multi-usuario
+
+- Supabase auth con email/password (`components/auth/AuthProvider.tsx`)
+- Login page en `components/auth/LoginPage.tsx`
+- En dev mode: boton "Entrar como admin (dev)" usa `VITE_AUTO_LOGIN_EMAIL` / `VITE_AUTO_LOGIN_PASSWORD`
+- Variables de entorno requeridas: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`
+
+## Validaciones cruzadas APQP
+
+- PFD ↔ AMFE: `pfdAmfeLinkValidation.ts` + `usePfdAmfeLinkAlerts` hook + `LinkValidationPanel` UI
+- HO ↔ CP: `hoCpLinkValidation.ts` + `useHoCpLinkAlerts` hook + `HoCpLinkValidationPanel` UI
+- CP interna: `cpCrossValidation.ts` (V1-V5: CC/SC, orphan failures, 4M, reaction owners, poka-yoke)
+- Cascada APQP: `crossDocumentAlerts.ts` (PFD→AMFE→CP→HO)
+
 ## Preview & Verificacion Visual
 
 Usar `preview_start` con name "dev" para levantar Vite en puerto 3002.
 La configuracion esta en `.claude/launch.json`.
+
+## Design System y Testing
+
+### UI Consistente
+- Toda UI nueva DEBE seguir el design system documentado en `docs/DESIGN_SYSTEM.md`
+- Antes de crear cualquier componente visual nuevo, consultar ese archivo para usar los mismos colores, componentes, patrones de layout e iconografía
+- No inventar estilos nuevos si ya existe un patrón establecido
+
+### Estrategia de Testing
+- Durante desarrollo: correr solo tests del módulo afectado con `npx vitest run --testPathPattern=<módulo>`
+- Tests generales completos (`npx vitest run`) solo antes del commit final
+- Siempre verificar TypeScript con `npx tsc --noEmit` antes de commitear
