@@ -24,6 +24,7 @@ import ProductSelector from '../../components/ui/ProductSelector';
 import type { ProductSelection } from '../../components/ui/ProductSelector';
 import { resolveApplicableParts } from '../../utils/productFamilyAutoFill';
 import SyncStatusIndicator from '../../components/ui/SyncStatusIndicator';
+import ProjectHierarchySelector from '../../components/ui/ProjectHierarchySelector';
 
 interface CpToolbarProps {
     // App state
@@ -39,12 +40,16 @@ interface CpToolbarProps {
     networkAvailable: boolean;
     lastAutoSave: string | null;
     autoSaveError?: boolean;
-    projects: Array<{ filename: string; name: string; header?: { partName?: string; linkedAmfeProject?: string } }>;
+    projects: Array<{ filename: string; name: string; header?: { partName?: string; client?: string; linkedAmfeProject?: string } }>;
     saveCurrentProject: () => void;
     refreshProjects: () => void;
     loadSelectedProject: (name: string) => void;
     deleteSelectedProject: (name: string) => void;
     createNewProject: () => void;
+    // Client hierarchy filter
+    clients?: string[];
+    selectedClient?: string;
+    onClientChange?: (client: string) => void;
     // Panel toggles
     showProjectPanel: boolean;
     setShowProjectPanel: (v: boolean) => void;
@@ -464,10 +469,22 @@ const CpToolbar: React.FC<CpToolbarProps> = (props) => {
                                 <FilePlus size={14} /> Nuevo Plan
                             </button>
                         </div>
+
+                        {/* Client hierarchy filter */}
+                        {props.clients && props.clients.length > 0 && props.onClientChange && (
+                            <ProjectHierarchySelector
+                                clients={props.clients}
+                                selectedClient={props.selectedClient || ''}
+                                onClientChange={props.onClientChange}
+                                accentColor="teal"
+                                moduleLabel="Plan de Control"
+                            />
+                        )}
+
                         {projects.length === 0 ? (
                             <div className="text-center py-8 text-gray-400">
                                 <FolderOpen size={32} className="mx-auto mb-2 opacity-50" />
-                                <p className="text-sm">No hay planes guardados.</p>
+                                <p className="text-sm">No hay planes guardados{props.selectedClient ? ` para "${props.selectedClient}"` : ''}.</p>
                             </div>
                         ) : (
                             <div className="grid gap-2">
@@ -482,6 +499,7 @@ const CpToolbar: React.FC<CpToolbarProps> = (props) => {
                                                 {currentProject === p.name && <span className="text-[10px] bg-teal-500 text-white px-1.5 py-0.5 rounded-full">activo</span>}
                                             </div>
                                             <div className="text-[10px] text-gray-400 ml-6 mt-0.5">
+                                                {p.header?.client && <span className="mr-3 font-medium text-gray-500">{p.header.client}</span>}
                                                 {p.header?.partName && <span className="mr-3">{p.header.partName}</span>}
                                                 {p.header?.linkedAmfeProject && <span className="mr-3">AMFE: {p.header.linkedAmfeProject}</span>}
                                             </div>

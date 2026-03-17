@@ -46,6 +46,40 @@ export async function listHoDocuments(): Promise<HoDocumentListItem[]> {
 }
 
 /**
+ * List distinct client names from HO documents.
+ */
+export async function listHoClients(): Promise<string[]> {
+    try {
+        const db = await getDatabase();
+        const rows = await db.select<{ client: string }>(
+            `SELECT DISTINCT client FROM ho_documents WHERE client != '' ORDER BY client`
+        );
+        return rows.map(r => r.client);
+    } catch (err) {
+        logger.error('HoRepo', 'Failed to list clients', {}, err instanceof Error ? err : undefined);
+        return [];
+    }
+}
+
+/**
+ * List HO documents filtered by client.
+ */
+export async function listHoByClient(client: string): Promise<HoDocumentListItem[]> {
+    try {
+        const db = await getDatabase();
+        return await db.select<HoDocumentListItem>(
+            `SELECT id, form_number, organization, client, part_number, part_description,
+                    linked_amfe_project, linked_cp_project, sheet_count, created_at, updated_at
+             FROM ho_documents WHERE client = ? ORDER BY updated_at DESC`,
+            [client]
+        );
+    } catch (err) {
+        logger.error('HoRepo', 'Failed to list documents by client', {}, err instanceof Error ? err : undefined);
+        return [];
+    }
+}
+
+/**
  * Load an HO document by ID.
  */
 export async function loadHoDocument(id: string): Promise<HoDocument | null> {

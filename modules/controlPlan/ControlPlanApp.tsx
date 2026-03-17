@@ -485,6 +485,9 @@ const ControlPlanApp: React.FC<Props> = ({ onBackToLanding, embedded, initialDat
                 autoValidationHasErrors={autoValidationHasErrors}
                 onOpenExportFolder={exportFolder.openFolder}
                 canOpenExportFolder={exportFolder.canOpen}
+                clients={projects.clients}
+                selectedClient={projects.selectedClient}
+                onClientChange={projects.setSelectedClient}
             />
 
             {/* Cross-document alert banner */}

@@ -40,10 +40,13 @@ import { LinkValidationPanel } from '../../components/ui/LinkValidationPanel';
 import { getNextRevisionLevel } from '../../utils/revisionUtils';
 import {
     listPfdDocuments,
+    listPfdClients,
+    listPfdByClient,
     loadPfdDocument,
     savePfdDocument,
     deletePfdDocument,
 } from '../../utils/repositories/pfdRepository';
+import ProjectHierarchySelector from '../../components/ui/ProjectHierarchySelector';
 import { logger } from '../../utils/logger';
 import { useOpenExportFolder } from '../../hooks/useOpenExportFolder';
 import {
@@ -74,6 +77,10 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding, embedded, initialData }) => 
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
     const [loadError, setLoadError] = useState('');
     const [toastMessage, setToastMessage] = useState('');
+
+    // Client hierarchy filter
+    const [pfdClients, setPfdClients] = useState<string[]>([]);
+    const [selectedPfdClient, setSelectedPfdClient] = useState('');
 
     // UI state
     const [viewMode, setViewMode] = useState<'view' | 'edit'>('edit');
@@ -223,15 +230,31 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding, embedded, initialData }) => 
         try { localStorage.setItem('pfd_flow_editor_open', String(flowEditorOpen)); } catch {}
     }, [flowEditorOpen]);
 
-    // Load projects list
+    // Load clients list
+    const refreshPfdClients = useCallback(async () => {
+        try {
+            const list = await listPfdClients();
+            setPfdClients(list);
+        } catch (err) {
+            logger.error('PfdApp', 'Failed to list PFD clients', {}, err instanceof Error ? err : undefined);
+        }
+    }, []);
+
+    // Load projects list (filtered by client if selected)
     const refreshProjects = useCallback(async () => {
         try {
-            const docs = await listPfdDocuments();
-            setProjects(docs);
+            if (selectedPfdClient) {
+                const docs = await listPfdByClient(selectedPfdClient);
+                setProjects(docs);
+            } else {
+                const docs = await listPfdDocuments();
+                setProjects(docs);
+            }
+            refreshPfdClients();
         } catch (err) {
             logger.error('PfdApp', 'Failed to list projects', {}, err instanceof Error ? err : undefined);
         }
-    }, []);
+    }, [selectedPfdClient, refreshPfdClients]);
 
     useEffect(() => { refreshProjects(); }, [refreshProjects]);
 
@@ -956,15 +979,31 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding, embedded, initialData }) => 
                             <XCircle size={16} />
                         </button>
                     </div>
+
+                    {/* Client hierarchy filter */}
+                    {pfdClients.length > 0 && (
+                        <ProjectHierarchySelector
+                            clients={pfdClients}
+                            selectedClient={selectedPfdClient}
+                            onClientChange={setSelectedPfdClient}
+                            accentColor="cyan"
+                            moduleLabel="PFD"
+                        />
+                    )}
+
                     {projects.length === 0 ? (
-                        <p className="text-xs text-gray-400">No hay documentos guardados.</p>
+                        <p className="text-xs text-gray-400">No hay documentos guardados{selectedPfdClient ? ` para "${selectedPfdClient}"` : ''}.</p>
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 max-h-48 overflow-y-auto">
                             {projects.map(p => (
                                 <div key={p.id} className="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2 border border-gray-200 hover:border-cyan-300 transition">
                                     <button onClick={() => handleLoadProject(p.id)} className="text-left flex-1 min-w-0">
                                         <div className="text-sm font-medium text-gray-800 truncate" title={p.part_name || p.document_number || 'Sin nombre'}>{p.part_name || p.document_number || 'Sin nombre'}</div>
-                                        <div className="text-[10px] text-gray-400">{p.customer_name} · {p.step_count} pasos · Rev. {p.revision_level}</div>
+                                        <div className="text-[10px] text-gray-400">
+                                            {p.client && <span className="font-medium text-gray-500 mr-1">{p.client} ·</span>}
+                                            {!p.client && p.customer_name && <span>{p.customer_name} · </span>}
+                                            {p.step_count} pasos · Rev. {p.revision_level}
+                                        </div>
                                     </button>
                                     <button onClick={() => handleDeleteProject(p.id)} className="ml-2 text-gray-300 hover:text-red-500 transition" title="Eliminar">
                                         <XCircle size={14} />

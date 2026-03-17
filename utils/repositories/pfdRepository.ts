@@ -19,11 +19,45 @@ export async function listPfdDocuments(): Promise<PfdDocumentListItem[]> {
         const db = await getDatabase();
         return await db.select<PfdDocumentListItem>(
             `SELECT id, part_number, part_name, document_number, revision_level,
-                    revision_date, customer_name, step_count, updated_at
+                    revision_date, customer_name, client, step_count, updated_at
              FROM pfd_documents ORDER BY updated_at DESC`
         );
     } catch (err) {
         logger.error('PfdRepo', 'Failed to list documents', {}, err instanceof Error ? err : undefined);
+        return [];
+    }
+}
+
+/**
+ * List distinct client names from PFD documents.
+ */
+export async function listPfdClients(): Promise<string[]> {
+    try {
+        const db = await getDatabase();
+        const rows = await db.select<{ client: string }>(
+            `SELECT DISTINCT client FROM pfd_documents WHERE client != '' ORDER BY client`
+        );
+        return rows.map(r => r.client);
+    } catch (err) {
+        logger.error('PfdRepo', 'Failed to list clients', {}, err instanceof Error ? err : undefined);
+        return [];
+    }
+}
+
+/**
+ * List PFD documents filtered by client.
+ */
+export async function listPfdByClient(client: string): Promise<PfdDocumentListItem[]> {
+    try {
+        const db = await getDatabase();
+        return await db.select<PfdDocumentListItem>(
+            `SELECT id, part_number, part_name, document_number, revision_level,
+                    revision_date, customer_name, client, step_count, updated_at
+             FROM pfd_documents WHERE client = ? ORDER BY updated_at DESC`,
+            [client]
+        );
+    } catch (err) {
+        logger.error('PfdRepo', 'Failed to list documents by client', {}, err instanceof Error ? err : undefined);
         return [];
     }
 }
@@ -56,26 +90,28 @@ export async function loadPfdDocument(id: string): Promise<PfdDocument | null> {
 /**
  * Save a PFD document (insert or update).
  */
-export async function savePfdDocument(id: string, doc: PfdDocument): Promise<boolean> {
+export async function savePfdDocument(id: string, doc: PfdDocument, client?: string): Promise<boolean> {
     try {
         const db = await getDatabase();
         const data = JSON.stringify(doc);
         const checksum = await generateChecksum(data);
         const h = doc.header;
+        // Client: explicit param > header.customerName > ''
+        const resolvedClient = client ?? h.customerName ?? '';
 
         await db.execute(
             `INSERT OR REPLACE INTO pfd_documents
              (id, part_number, part_name, document_number, revision_level,
-              revision_date, customer_name, step_count, created_at, updated_at,
+              revision_date, customer_name, client, step_count, created_at, updated_at,
               data, checksum)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?,
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?,
                      COALESCE((SELECT created_at FROM pfd_documents WHERE id = ?), datetime('now')),
                      datetime('now'),
                      ?, ?)`,
             [
                 id, h.partNumber || '', h.partName || '', h.documentNumber || '',
                 h.revisionLevel || 'A', h.revisionDate || '',
-                h.customerName || '', doc.steps.length, id,
+                h.customerName || '', resolvedClient, doc.steps.length, id,
                 data, checksum,
             ]
         );

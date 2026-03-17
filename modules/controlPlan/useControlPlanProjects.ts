@@ -9,6 +9,8 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { ControlPlanDocument } from './controlPlanTypes';
 import {
     listControlPlanProjects,
+    listControlPlanClients,
+    listControlPlanProjectsByClient,
     loadControlPlan,
     saveControlPlan,
     deleteControlPlan,
@@ -56,21 +58,46 @@ export const useControlPlanProjects = (
     /** True while loading a project from SQLite (shows skeleton in UI) */
     const [isLoadingProject, setIsLoadingProject] = useState(false);
 
+    // Client hierarchy filter state
+    const [clients, setClients] = useState<string[]>([]);
+    const [selectedClient, setSelectedClient] = useState('');
+
     const savedSnapshotRef = useRef('');
     const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const changeDetectionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const savingRef = useRef(false);
+
+    /** Refresh the client list for hierarchy filtering */
+    const refreshClients = useCallback(async () => {
+        try {
+            const list = await listControlPlanClients();
+            setClients(list);
+        } catch (err) {
+            logger.error('ControlPlan', 'Error loading clients', { error: err instanceof Error ? err.message : String(err) });
+        }
+    }, []);
 
     // FIX: refreshProjects MUST be declared BEFORE the useEffect that references it,
     // otherwise the dependency array [refreshProjects] triggers a TDZ ReferenceError
     // ("Cannot access 'refreshProjects' before initialization") because const is not hoisted.
     const refreshProjects = useCallback(async () => {
         try {
-            setProjects(await listControlPlanProjects());
+            if (selectedClient) {
+                setProjects(await listControlPlanProjectsByClient(selectedClient));
+            } else {
+                setProjects(await listControlPlanProjects());
+            }
+            // Also refresh clients list
+            refreshClients();
         } catch (err) {
             logger.error('ControlPlan', 'Error loading projects', { error: err instanceof Error ? err.message : String(err) });
         }
-    }, []);
+    }, [selectedClient, refreshClients]);
+
+    // Re-fetch projects when selectedClient changes
+    useEffect(() => {
+        refreshProjects();
+    }, [selectedClient]); // eslint-disable-line react-hooks/exhaustive-deps
 
     useEffect(() => {
         let isMounted = true;
@@ -245,5 +272,9 @@ export const useControlPlanProjects = (
         loadSelectedProject,
         deleteSelectedProject,
         createNewProject,
+        // Client hierarchy filter
+        clients,
+        selectedClient,
+        setSelectedClient,
     };
 };

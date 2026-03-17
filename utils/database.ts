@@ -28,7 +28,7 @@ export interface DbAdapter {
 // Schema DDL
 // ---------------------------------------------------------------------------
 
-const SCHEMA_VERSION = 10;
+const SCHEMA_VERSION = 11;
 
 const SCHEMA_DDL = `
 -- Version tracking
@@ -172,6 +172,7 @@ CREATE TABLE IF NOT EXISTS pfd_documents (
     revision_level  TEXT NOT NULL DEFAULT 'A',
     revision_date   TEXT NOT NULL DEFAULT '',
     customer_name   TEXT NOT NULL DEFAULT '',
+    client          TEXT NOT NULL DEFAULT '',
     step_count      INTEGER NOT NULL DEFAULT 0,
     created_by      TEXT NOT NULL DEFAULT '',
     updated_by      TEXT NOT NULL DEFAULT '',
@@ -183,6 +184,7 @@ CREATE TABLE IF NOT EXISTS pfd_documents (
 
 CREATE INDEX IF NOT EXISTS idx_pfd_updated ON pfd_documents(updated_at DESC);
 CREATE INDEX IF NOT EXISTS idx_pfd_customer ON pfd_documents(customer_name);
+CREATE INDEX IF NOT EXISTS idx_pfd_client ON pfd_documents(client);
 
 -- Unified drafts (replaces 4 IndexedDB databases)
 CREATE TABLE IF NOT EXISTS drafts (
@@ -581,6 +583,41 @@ async function runMigrations(adapter: DbAdapter): Promise<void> {
             [10, 'Add document_locks table for cross-user edit protection']
         );
         logger.info('Database', 'Migration 10: document_locks table created');
+    }
+
+    // Migration 10→11: Add client column to pfd_documents for unified hierarchy
+    if (currentVersion < 11) {
+        try {
+            await adapter.execute(
+                `ALTER TABLE pfd_documents ADD COLUMN client TEXT NOT NULL DEFAULT ''`
+            );
+            logger.info('Database', 'Migration 11: Added client column to pfd_documents');
+        } catch {
+            // Column already exists (DDL ran first on fresh install) — safe to ignore
+        }
+
+        try {
+            await adapter.execute(
+                `CREATE INDEX IF NOT EXISTS idx_pfd_client ON pfd_documents(client)`
+            );
+        } catch {
+            // Index may already exist
+        }
+
+        // Backfill: copy customer_name into client for existing PFD documents that have no client set
+        try {
+            await adapter.execute(
+                `UPDATE pfd_documents SET client = customer_name WHERE client = '' AND customer_name != ''`
+            );
+        } catch {
+            // Best-effort backfill
+        }
+
+        await adapter.execute(
+            `INSERT OR REPLACE INTO schema_version (version, description) VALUES (?, ?)`,
+            [11, 'Add client column to pfd_documents for unified hierarchy']
+        );
+        logger.info('Database', 'Migration 11: pfd_documents client column + backfill complete');
     }
 }
 

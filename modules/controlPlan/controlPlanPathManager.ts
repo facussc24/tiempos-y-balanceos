@@ -12,6 +12,8 @@
 import { ControlPlanDocument } from './controlPlanTypes';
 import {
     listCpDocuments,
+    listCpClients,
+    listCpByClient,
     loadCpByProjectName,
     saveCpDocument,
     deleteCpByProjectName,
@@ -229,6 +231,41 @@ export async function deleteControlPlan(name: string): Promise<boolean> {
     } catch (err) {
         logger.error('CpPath', 'Delete failed', {}, err instanceof Error ? err : undefined);
         return false;
+    }
+}
+
+/**
+ * List distinct client names from CP documents.
+ */
+export async function listControlPlanClients(): Promise<string[]> {
+    try {
+        return await listCpClients();
+    } catch (err) {
+        logger.error('CpPath', 'Error listing clients', {}, err instanceof Error ? err : undefined);
+        return [];
+    }
+}
+
+/**
+ * List CP projects filtered by client.
+ */
+export async function listControlPlanProjectsByClient(client: string): Promise<ControlPlanProjectInfo[]> {
+    try {
+        const dbEntries = await listCpByClient(client);
+        return dbEntries.map(e => ({
+            name: e.project_name,
+            filename: `${e.project_name}.json`,
+            path: `${_cpBasePath}\\${e.project_name}.json`,
+            header: {
+                partName: e.part_name,
+                client: e.client,
+                phase: e.phase,
+                linkedAmfeProject: e.linked_amfe_project,
+            },
+        }));
+    } catch (err) {
+        logger.error('CpPath', 'Error listing projects by client', {}, err instanceof Error ? err : undefined);
+        return [];
     }
 }
 

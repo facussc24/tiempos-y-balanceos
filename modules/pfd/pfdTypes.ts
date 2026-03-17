@@ -133,6 +133,7 @@ export interface PfdDocumentListItem {
   revision_level: string;
   revision_date: string;
   customer_name: string;
+  client: string;
   step_count: number;
   updated_at: string;
   created_by?: string;

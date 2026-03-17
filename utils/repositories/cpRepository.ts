@@ -53,6 +53,41 @@ export async function listCpDocuments(): Promise<CpDocumentListItem[]> {
 }
 
 /**
+ * List distinct client names from CP documents.
+ */
+export async function listCpClients(): Promise<string[]> {
+    try {
+        const db = await getDatabase();
+        const rows = await db.select<{ client: string }>(
+            `SELECT DISTINCT client FROM cp_documents WHERE client != '' ORDER BY client`
+        );
+        return rows.map(r => r.client);
+    } catch (err) {
+        logger.error('CpRepo', 'Failed to list clients', {}, err instanceof Error ? err : undefined);
+        return [];
+    }
+}
+
+/**
+ * List CP documents filtered by client.
+ */
+export async function listCpByClient(client: string): Promise<CpDocumentListItem[]> {
+    try {
+        const db = await getDatabase();
+        return await db.select<CpDocumentListItem>(
+            `SELECT id, project_name, control_plan_number, phase, part_number, part_name,
+                    organization, client, responsible, revision, linked_amfe_project,
+                    linked_amfe_id, item_count, created_at, updated_at
+             FROM cp_documents WHERE client = ? ORDER BY updated_at DESC`,
+            [client]
+        );
+    } catch (err) {
+        logger.error('CpRepo', 'Failed to list documents by client', {}, err instanceof Error ? err : undefined);
+        return [];
+    }
+}
+
+/**
  * Load a CP document by ID.
  */
 export async function loadCpDocument(id: string): Promise<ControlPlanDocument | null> {
