@@ -30,6 +30,27 @@ export function LoginPage() {
         }
     }, [email, password, signIn]);
 
+    const handleDevLogin = useCallback(async () => {
+        const devEmail = import.meta.env.VITE_AUTO_LOGIN_EMAIL;
+        const devPassword = import.meta.env.VITE_AUTO_LOGIN_PASSWORD;
+        if (!devEmail || !devPassword) {
+            setError('Faltan VITE_AUTO_LOGIN_EMAIL o VITE_AUTO_LOGIN_PASSWORD en .env.local');
+            return;
+        }
+        setEmail(devEmail);
+        setPassword(devPassword);
+        setError(null);
+        setLoading(true);
+        try {
+            const result = await signIn(devEmail, devPassword);
+            if (result.error) {
+                setError(result.error);
+            }
+        } finally {
+            setLoading(false);
+        }
+    }, [signIn]);
+
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-950 px-4">
             <div className="w-full max-w-sm">
@@ -120,6 +141,19 @@ export function LoginPage() {
                     <p className="text-center text-xs text-gray-600 mt-4">
                         Contacta a tu administrador si no tenes acceso.
                     </p>
+
+                    {import.meta.env.DEV && (
+                        <button
+                            type="button"
+                            onClick={handleDevLogin}
+                            disabled={loading}
+                            className="w-full mt-3 py-2 px-4 bg-amber-600/20 hover:bg-amber-600/30 border border-amber-600/40
+                                       text-amber-400 font-medium text-xs rounded-lg transition-colors
+                                       disabled:opacity-50"
+                        >
+                            Entrar como admin (dev)
+                        </button>
+                    )}
                 </div>
             </div>
         </div>
