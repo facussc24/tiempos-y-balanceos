@@ -32,6 +32,8 @@ interface Props {
     readOnly?: boolean;
     /** Phase C: Filtered columns to render (when provided, overrides PFD_COLUMNS) */
     visibleColumns?: PfdColumnDef[];
+    /** Step IDs with broken AMFE links (for visual warning) */
+    brokenLinkStepIds?: Set<string>;
 }
 
 /** C9-N1: Disposition labels in Spanish */
@@ -198,7 +200,7 @@ function FlowArrow({
     );
 }
 
-const PfdTable: React.FC<Props> = ({ steps, onUpdateStep, onBatchUpdateStep, onRemoveStep, onMoveStep, onInsertAfter, onDuplicate, onAddStep, onLoadTemplate, onLoadManufacturingTemplate, showFlowArrows = true, readOnly, visibleColumns }) => {
+const PfdTable: React.FC<Props> = ({ steps, onUpdateStep, onBatchUpdateStep, onRemoveStep, onMoveStep, onInsertAfter, onDuplicate, onAddStep, onLoadTemplate, onLoadManufacturingTemplate, showFlowArrows = true, readOnly, visibleColumns, brokenLinkStepIds }) => {
     const columnsToRender = visibleColumns || PFD_COLUMNS;
     const colCount = columnsToRender.length + (readOnly ? 0 : 1);
 
@@ -285,6 +287,7 @@ const PfdTable: React.FC<Props> = ({ steps, onUpdateStep, onBatchUpdateStep, onR
                                 onDuplicate={onDuplicate}
                                 readOnly={readOnly}
                                 visibleColumns={visibleColumns}
+                                hasBrokenLink={brokenLinkStepIds?.has(step.id)}
                             />
                             {/* C9-N1: Enhanced flow arrows with fork/join/NG-path */}
                             {showFlowArrows && index < steps.length - 1 && (

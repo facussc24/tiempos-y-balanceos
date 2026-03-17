@@ -24,6 +24,8 @@ import { useRevisionControl } from '../../hooks/useRevisionControl';
 import { useDocumentLock } from '../../hooks/useDocumentLock';
 import DocumentLockBanner from '../../components/ui/DocumentLockBanner';
 import { useCrossDocAlerts } from '../../hooks/useCrossDocAlerts';
+import { LinkValidationPanel } from '../../components/ui/LinkValidationPanel';
+import { validatePfdAmfeLinks, getBrokenAmfeOperationIds, getRelinkCandidates } from '../../utils/pfdAmfeLinkValidation';
 import { getNextRevisionLevel } from '../../utils/revisionUtils';
 import { Plus, Layers, HardDrive, AlertTriangle, X, FileInput } from 'lucide-react';
 import { AmfeDocument, AmfeHeaderData } from './amfeTypes';
@@ -195,6 +197,18 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab }) => {
     // 4f. Cross-document alerts
     const crossDocAlerts = useCrossDocAlerts('amfe', projects.currentProject);
 
+    // 4g. PFD ↔ AMFE link integrity validation (uses in-memory PFD from tab nav)
+    const linkValidation = useMemo(
+        () => validatePfdAmfeLinks(tabNav.pfdInitialData, amfe.data),
+        [tabNav.pfdInitialData, amfe.data],
+    );
+    const brokenAmfeOpIds = useMemo(() => getBrokenAmfeOperationIds(linkValidation), [linkValidation]);
+    const linkCandidates = useMemo(
+        () => tabNav.pfdInitialData && amfe.data ? getRelinkCandidates(tabNav.pfdInitialData, amfe.data) : { amfeCandidates: [], pfdCandidates: [] },
+        [tabNav.pfdInitialData, amfe.data],
+    );
+    const [showLinkPanel, setShowLinkPanel] = useState(false);
+
     // 5. Registry (IATF 16949 centralized index)
     const amfeRegistry = useAmfeRegistry();
 
@@ -299,6 +313,14 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab }) => {
     }, [amfe.data, projects.saveCurrentProject, projects.currentProject, projects.saveStatus, amfeRegistry.registerAmfe]);
 
     // --- IMPORT FROM PFD ---
+    const handleUnlinkAmfeOp = useCallback((operationId: string) => {
+        amfe.updateOp(operationId, 'linkedPfdStepId', undefined as unknown as string);
+    }, [amfe]);
+
+    const handleRelinkAmfeOp = useCallback((operationId: string, newPfdStepId: string) => {
+        amfe.updateOp(operationId, 'linkedPfdStepId', newPfdStepId);
+    }, [amfe]);
+
     const handleImportFromPfd = useCallback(async () => {
         if (!tabNav.pfdInitialData) {
             toast.info('Sin PFD', 'Primero genera o importa un Diagrama de Flujo.');
@@ -743,6 +765,24 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab }) => {
                 onDismissAll={crossDocAlerts.dismissAll}
             />
 
+            {/* PFD ↔ AMFE broken link banner */}
+            {linkValidation.totalBroken > 0 && !showLinkPanel && (
+                <div className="bg-orange-50 border-b border-orange-200 px-4 py-2 no-print animate-in fade-in slide-in-from-top-2 duration-300">
+                    <div className="flex items-center gap-2 text-xs text-orange-800">
+                        <AlertTriangle size={14} className="text-orange-500 flex-shrink-0" />
+                        <span className="flex-1">
+                            {linkValidation.totalBroken} vínculo{linkValidation.totalBroken !== 1 ? 's' : ''} PFD ↔ AMFE roto{linkValidation.totalBroken !== 1 ? 's' : ''} detectado{linkValidation.totalBroken !== 1 ? 's' : ''}
+                        </span>
+                        <button
+                            onClick={() => setShowLinkPanel(true)}
+                            className="text-orange-600 hover:text-orange-800 font-medium underline"
+                        >
+                            Ver detalle
+                        </button>
+                    </div>
+                </div>
+            )}
+
             {/* Revision history panel */}
             <RevisionHistoryPanel
                 revisions={revisionControl.revisions}
@@ -858,6 +898,7 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab }) => {
                                     collapsedOps={collapsedOps}
                                     onToggleCollapse={toggleCollapseOp}
                                     readOnly={isReadOnly}
+                                    brokenLinkOpIds={brokenAmfeOpIds}
                                 />
                             </table>
                         </div>
@@ -875,6 +916,17 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab }) => {
                 )}
 
                 <ShortcutHintsOverlay isVisible={shortcutHints.hintsVisible} />
+
+                {showLinkPanel && linkValidation && !linkValidation.isValid && (
+                    <LinkValidationPanel
+                        validation={linkValidation}
+                        context="amfe"
+                        onUnlinkAmfeOp={handleUnlinkAmfeOp}
+                        onRelinkAmfeOp={handleRelinkAmfeOp}
+                        pfdCandidates={linkCandidates.pfdCandidates}
+                        onClose={() => setShowLinkPanel(false)}
+                    />
+                )}
             </div>
 
             {/* Library Side Panel */}

@@ -35,6 +35,8 @@ import { useRevisionControl } from '../../hooks/useRevisionControl';
 import { useDocumentLock } from '../../hooks/useDocumentLock';
 import DocumentLockBanner from '../../components/ui/DocumentLockBanner';
 import { useCrossDocAlerts } from '../../hooks/useCrossDocAlerts';
+import { usePfdAmfeLinkAlerts } from '../../hooks/usePfdAmfeLinkAlerts';
+import { LinkValidationPanel } from '../../components/ui/LinkValidationPanel';
 import { getNextRevisionLevel } from '../../utils/revisionUtils';
 import {
     listPfdDocuments,
@@ -162,6 +164,16 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding, embedded, initialData }) => 
 
     // Cross-document alerts
     const crossDocAlerts = useCrossDocAlerts('pfd', pfd.data.id || null);
+
+    // PFD ↔ AMFE link integrity validation
+    const linkAlerts = usePfdAmfeLinkAlerts(
+        pfd.data.id ? pfd.data : null,
+        pfd.data.header.linkedAmfeId || null,
+        useCallback((stepId: string, field: string, value: unknown) => {
+            pfd.updateStep(stepId, field as keyof PfdStep, value as string);
+        }, [pfd]),
+    );
+    const [showLinkPanel, setShowLinkPanel] = useState(false);
 
     // Export folder
     const exportFolder = useOpenExportFolder('pfd', pfd.data);
@@ -893,6 +905,24 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding, embedded, initialData }) => 
                 onDismissAll={crossDocAlerts.dismissAll}
             />
 
+            {/* PFD ↔ AMFE broken link banner */}
+            {linkAlerts.validation.totalBroken > 0 && !showLinkPanel && (
+                <div className="bg-orange-50 border-b border-orange-200 px-4 py-2 no-print animate-in fade-in slide-in-from-top-2 duration-300">
+                    <div className="flex items-center gap-2 text-xs text-orange-800">
+                        <AlertTriangle size={14} className="text-orange-500 flex-shrink-0" />
+                        <span className="flex-1">
+                            {linkAlerts.validation.totalBroken} vínculo{linkAlerts.validation.totalBroken !== 1 ? 's' : ''} PFD ↔ AMFE roto{linkAlerts.validation.totalBroken !== 1 ? 's' : ''} detectado{linkAlerts.validation.totalBroken !== 1 ? 's' : ''}
+                        </span>
+                        <button
+                            onClick={() => setShowLinkPanel(true)}
+                            className="text-orange-600 hover:text-orange-800 font-medium underline"
+                        >
+                            Ver detalle
+                        </button>
+                    </div>
+                </div>
+            )}
+
             {/* Revision history panel */}
             <RevisionHistoryPanel
                 revisions={revisionControl.revisions}
@@ -978,6 +1008,7 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding, embedded, initialData }) => 
                             onToggle={() => setFlowEditorOpen(prev => !prev)}
                             searchQuery={pfdSearch}
                             onSearchChange={setPfdSearch}
+                            brokenLinkStepIds={linkAlerts.brokenPfdStepIds}
                         />
                     </div>
 
@@ -995,6 +1026,21 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding, embedded, initialData }) => 
 
                 {/* Symbol Legend */}
                 <PfdSymbolLegend />
+
+                {/* PFD ↔ AMFE Link Validation Panel */}
+                {showLinkPanel && (
+                    <div className="mt-4 no-print">
+                        <LinkValidationPanel
+                            validation={linkAlerts.validation}
+                            context="pfd"
+                            onUnlinkPfdStep={linkAlerts.unlinkPfdStep}
+                            onRelinkPfdStep={linkAlerts.relinkPfdStep}
+                            amfeCandidates={linkAlerts.amfeCandidates}
+                            pfdCandidates={linkAlerts.pfdCandidates}
+                            onClose={() => setShowLinkPanel(false)}
+                        />
+                    </div>
+                )}
 
                 {/* Validation Results Panel */}
                 {validationIssues && (

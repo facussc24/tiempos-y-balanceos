@@ -8,7 +8,7 @@
  */
 
 import React from 'react';
-import { Trash2, ArrowUp, ArrowDown, Plus, Copy } from 'lucide-react';
+import { Trash2, ArrowUp, ArrowDown, Plus, Copy, AlertTriangle } from 'lucide-react';
 import type { PfdStep, PfdStepType, SpecialCharClass, RejectDisposition, PfdColumnDef } from './pfdTypes';
 import { PFD_COLUMNS, getBranchColor } from './pfdTypes';
 import PfdSymbolPicker from './PfdSymbolPicker';
@@ -27,6 +27,8 @@ interface Props {
     readOnly?: boolean;
     /** Phase C: Filtered columns to render (when provided, overrides PFD_COLUMNS) */
     visibleColumns?: PfdColumnDef[];
+    /** Whether this step has a broken AMFE link */
+    hasBrokenLink?: boolean;
 }
 
 const cellClass = "px-2 py-1.5 border-r border-gray-200 text-sm";
@@ -61,7 +63,7 @@ function SpecialCharBadge({ value }: { value: SpecialCharClass }) {
     return <span className="text-gray-300 text-[10px]">—</span>;
 }
 
-const PfdTableRow: React.FC<Props> = ({ step, index, totalSteps, onUpdate, onBatchUpdate, onRemove, onMove, onInsertAfter, onDuplicate, readOnly, visibleColumns }) => {
+const PfdTableRow: React.FC<Props> = ({ step, index, totalSteps, onUpdate, onBatchUpdate, onRemove, onMove, onInsertAfter, onDuplicate, readOnly, visibleColumns, hasBrokenLink }) => {
     const columnsToRender = visibleColumns || PFD_COLUMNS;
 
     // C9-N1: Branch color takes priority for parallel flow steps
@@ -164,6 +166,11 @@ const PfdTableRow: React.FC<Props> = ({ step, index, totalSteps, onUpdate, onBat
                             )}
                             {step.isExternalProcess && (
                                 <span className="inline-block bg-blue-100 text-blue-700 border border-blue-300 text-[9px] font-bold px-1.5 py-0.5 rounded whitespace-nowrap">EXTERNO</span>
+                            )}
+                            {hasBrokenLink && (
+                                <span className="inline-flex items-center gap-0.5 bg-orange-100 text-orange-700 border border-orange-300 text-[9px] font-bold px-1.5 py-0.5 rounded whitespace-nowrap" title="Vínculo AMFE roto: la operación vinculada no existe">
+                                    <AlertTriangle size={10} />AMFE
+                                </span>
                             )}
                         </div>
                         {/* C3-N1: Sub-fields per disposition type */}

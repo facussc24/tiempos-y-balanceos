@@ -53,6 +53,8 @@ interface PfdFlowEditorProps {
     /** Search query — steps that don't match are dimmed */
     searchQuery?: string;
     onSearchChange?: (query: string) => void;
+    /** Step IDs with broken AMFE links */
+    brokenLinkStepIds?: Set<string>;
 }
 
 interface ContextMenuState {
@@ -250,15 +252,19 @@ function InsertButton({ stepId, onInsertAfter }: { stepId: string; onInsertAfter
 interface StepCardProps {
     step: PfdStep;
     stepIndex: number;
+    totalSteps: number;
     isSelected: boolean;
     onSelect: (stepId: string) => void;
     onContextMenu: (stepId: string, stepIndex: number, e: React.MouseEvent) => void;
+    onMoveStep: (stepId: string, direction: 'up' | 'down') => void;
+    readOnly?: boolean;
     compact?: boolean;
     branchColor?: string;
     dimmed?: boolean;
+    hasBrokenLink?: boolean;
 }
 
-function StepCard({ step, stepIndex, isSelected, onSelect, onContextMenu, compact, branchColor, dimmed }: StepCardProps) {
+function StepCard({ step, stepIndex, totalSteps, isSelected, onSelect, onContextMenu, onMoveStep, readOnly, compact, branchColor, dimmed, hasBrokenLink }: StepCardProps) {
     const hasCC = step.productSpecialChar === 'CC' || step.processSpecialChar === 'CC';
     const hasSC = !hasCC && (step.productSpecialChar === 'SC' || step.processSpecialChar === 'SC');
     const hasDisp = step.rejectDisposition !== 'none' && (step.stepType === 'inspection' || step.stepType === 'combined');
@@ -281,7 +287,7 @@ function StepCard({ step, stepIndex, isSelected, onSelect, onContextMenu, compac
     };
 
     return (
-        <div className="flex flex-col items-center w-full max-w-[320px]">
+        <div className="relative group flex flex-col items-center w-full max-w-[320px]">
             <button
                 onClick={handleClick}
                 onContextMenu={handleContextMenu}
@@ -303,11 +309,6 @@ function StepCard({ step, stepIndex, isSelected, onSelect, onContextMenu, compac
                             {step.description}
                         </span>
                     </div>
-                    {step.machineDeviceTool && !compact && (
-                        <div className="text-[10px] text-gray-400 truncate mt-0.5">
-                            {step.machineDeviceTool}
-                        </div>
-                    )}
                 </div>
                 <div className="flex items-center gap-0.5 shrink-0">
                     {hasCC && (
@@ -341,8 +342,37 @@ function StepCard({ step, stepIndex, isSelected, onSelect, onContextMenu, compac
                             CP&thinsp;0
                         </span>
                     ) : null}
+                    {hasBrokenLink && (
+                        <span className="text-[8px] font-bold text-orange-600 bg-orange-50 border border-orange-300 px-1 rounded"
+                              title="Vínculo AMFE roto: la operación vinculada no existe" data-testid="badge-broken-amfe">
+                            ⚠ AMFE
+                        </span>
+                    )}
                 </div>
             </button>
+            {!readOnly && (
+                <div className="absolute -right-1 top-1/2 -translate-y-1/2 flex flex-col gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                     data-testid={`step-actions-${step.id}`}>
+                    <button
+                        data-testid={`move-up-${step.id}`}
+                        aria-label={`Mover ${step.stepNumber} arriba`}
+                        onClick={e => { e.stopPropagation(); onMoveStep(step.id, 'up'); }}
+                        disabled={stepIndex === 0}
+                        className="p-0.5 rounded bg-white border border-gray-200 shadow-sm hover:bg-gray-100 disabled:opacity-30 text-gray-500"
+                    >
+                        <ChevronUp size={10} />
+                    </button>
+                    <button
+                        data-testid={`move-down-${step.id}`}
+                        aria-label={`Mover ${step.stepNumber} abajo`}
+                        onClick={e => { e.stopPropagation(); onMoveStep(step.id, 'down'); }}
+                        disabled={stepIndex === totalSteps - 1}
+                        className="p-0.5 rounded bg-white border border-gray-200 shadow-sm hover:bg-gray-100 disabled:opacity-30 text-gray-500"
+                    >
+                        <ChevronDown size={10} />
+                    </button>
+                </div>
+            )}
             {/* NG Disposition badge below card */}
             {hasDisp && !compact && (
                 <div className="flex items-center gap-1 mt-0.5">
@@ -388,6 +418,7 @@ const PfdFlowEditor: React.FC<PfdFlowEditorProps> = ({
     onToggle,
     searchQuery = '',
     onSearchChange,
+    brokenLinkStepIds,
 }) => {
     const groups = useMemo(() => groupStepsByFlow(steps), [steps]);
 
@@ -487,10 +518,14 @@ const PfdFlowEditor: React.FC<PfdFlowEditorProps> = ({
                         <StepCard
                             step={step}
                             stepIndex={globalIndex}
+                            totalSteps={steps.length}
                             isSelected={selectedStepId === step.id}
                             onSelect={onSelectStep}
                             onContextMenu={handleContextMenu}
+                            onMoveStep={onMoveStep}
+                            readOnly={readOnly}
                             dimmed={matchingStepIds !== null && !matchingStepIds.has(step.id)}
+                            hasBrokenLink={brokenLinkStepIds?.has(step.id)}
                         />
                     </React.Fragment>
                 );
@@ -567,11 +602,15 @@ const PfdFlowEditor: React.FC<PfdFlowEditorProps> = ({
                                         <StepCard
                                             step={step}
                                             stepIndex={globalIndex}
+                                            totalSteps={steps.length}
                                             isSelected={selectedStepId === step.id}
                                             onSelect={onSelectStep}
                                             onContextMenu={handleContextMenu}
+                                            onMoveStep={onMoveStep}
+                                            readOnly={readOnly}
                                             compact
                                             dimmed={matchingStepIds !== null && !matchingStepIds.has(step.id)}
+                                            hasBrokenLink={brokenLinkStepIds?.has(step.id)}
                                         />
                                     </React.Fragment>
                                 );
