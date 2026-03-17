@@ -49,7 +49,7 @@ function makePfdDoc(steps: Partial<PfdDocument['steps'][0]>[]): PfdDocument {
         })) as PfdDocument['steps'],
         createdAt: '2026-01-01',
         updatedAt: '2026-01-01',
-    } as PfdDocument;
+    } as unknown as PfdDocument;
 }
 
 function makeAmfeDoc(operations: Partial<AmfeDocument['operations'][0]>[]): AmfeDocument {
@@ -74,7 +74,7 @@ function makeAmfeDoc(operations: Partial<AmfeDocument['operations'][0]>[]): Amfe
             linkedPfdStepId: op.linkedPfdStepId,
             ...op,
         })) as AmfeDocument['operations'],
-    } as AmfeDocument;
+    } as unknown as AmfeDocument;
 }
 
 // ---------------------------------------------------------------------------

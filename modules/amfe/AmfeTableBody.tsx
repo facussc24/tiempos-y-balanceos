@@ -568,7 +568,7 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
                                 <div className="flex items-center gap-1">
                                     <ChevronRight size={14} className="text-gray-400 flex-shrink-0" />
                                     <span className="text-xs font-bold text-slate-700">{op.opNumber || '?'}</span>
-                                    {brokenLinkOpIds?.has(op.id) && <AlertTriangle size={11} className="text-orange-500 flex-shrink-0" title="Vínculo PFD roto" />}
+                                    {brokenLinkOpIds?.has(op.id) && <span title="Vínculo PFD roto"><AlertTriangle size={11} className="text-orange-500 flex-shrink-0" /></span>}
                                 </div>
                             </td>
                             <td className={opNameCellClass} style={opNameShadow} data-field="opName">

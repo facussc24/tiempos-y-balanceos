@@ -197,18 +197,6 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab }) => {
     // 4f. Cross-document alerts
     const crossDocAlerts = useCrossDocAlerts('amfe', projects.currentProject);
 
-    // 4g. PFD ↔ AMFE link integrity validation (uses in-memory PFD from tab nav)
-    const linkValidation = useMemo(
-        () => validatePfdAmfeLinks(tabNav.pfdInitialData, amfe.data),
-        [tabNav.pfdInitialData, amfe.data],
-    );
-    const brokenAmfeOpIds = useMemo(() => getBrokenAmfeOperationIds(linkValidation), [linkValidation]);
-    const linkCandidates = useMemo(
-        () => tabNav.pfdInitialData && amfe.data ? getRelinkCandidates(tabNav.pfdInitialData, amfe.data) : { amfeCandidates: [], pfdCandidates: [] },
-        [tabNav.pfdInitialData, amfe.data],
-    );
-    const [showLinkPanel, setShowLinkPanel] = useState(false);
-
     // 5. Registry (IATF 16949 centralized index)
     const amfeRegistry = useAmfeRegistry();
 
@@ -236,6 +224,18 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab }) => {
         requestConfirm: confirm.requestConfirm,
         initialTab,
     });
+
+    // 9b. PFD ↔ AMFE link integrity validation (uses in-memory PFD from tab nav)
+    const linkValidation = useMemo(
+        () => validatePfdAmfeLinks(tabNav.pfdInitialData, amfe.data),
+        [tabNav.pfdInitialData, amfe.data],
+    );
+    const brokenAmfeOpIds = useMemo(() => getBrokenAmfeOperationIds(linkValidation), [linkValidation]);
+    const linkCandidates = useMemo(
+        () => tabNav.pfdInitialData && amfe.data ? getRelinkCandidates(tabNav.pfdInitialData, amfe.data) : { amfeCandidates: [], pfdCandidates: [] },
+        [tabNav.pfdInitialData, amfe.data],
+    );
+    const [showLinkPanel, setShowLinkPanel] = useState(false);
 
     // 10. Export (PDF + Excel)
     const amfeExport = useAmfeExport({
