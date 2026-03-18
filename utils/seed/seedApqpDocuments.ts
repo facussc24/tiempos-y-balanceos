@@ -146,7 +146,7 @@ function mkAmfeHeader(partName: string, client: string, pn: string, amfeNum: str
     };
 }
 
-function mkPfdHeader(partName: string, pn: string, customer: string, docNum: string): PfdHeader {
+function mkPfdHeader(partName: string, pn: string, customer: string, docNum: string, amfePrj = ''): PfdHeader {
     return {
         partNumber: pn, partName, engineeringChangeLevel: '', modelYear: '2026',
         documentNumber: docNum, revisionLevel: 'A', revisionDate: '2026-03-14',
@@ -156,6 +156,7 @@ function mkPfdHeader(partName: string, pn: string, customer: string, docNum: str
         coreTeam: TEAM, keyContact: 'F. Santoro',
         preparedBy: 'F. Santoro', preparedDate: '2026-03-14',
         approvedBy: '', approvedDate: '',
+        linkedAmfeProject: amfePrj,
     };
 }
 
@@ -342,7 +343,7 @@ async function _doSeed(): Promise<string> {
         // --- PFD ---
         const pfdDoc: PfdDocument = {
             id: pfdId,
-            header: mkPfdHeader('Telas Planas', PN, CL, 'PFD-TP-001'),
+            header: mkPfdHeader('Telas Planas', PN, CL, 'PFD-TP-001', 'PWA/TELAS_PLANAS'),
             steps: [
                 mkPfdStep('OP 10', 'storage', 'Recepción de materia prima (tela, hilo)', '', 'Certificado de calidad', 'Condición del material', 'scrap', 'Material no conforme → Rechazo a proveedor'),
                 mkPfdStep('OP 15', 'operation', 'Preparación de corte (tendido y ploteo)', 'Mesa de corte, plotter', 'Calidad del tendido', 'Programa de ploteo', 'rework', 'OP 15'),
@@ -544,7 +545,7 @@ async function _doSeed(): Promise<string> {
 
         ok(await savePfdDocument(pfdId, {
             id: pfdId,
-            header: mkPfdHeader('Telas Termoformadas', PN, CL, 'PFD-TT-001'),
+            header: mkPfdHeader('Telas Termoformadas', PN, CL, 'PFD-TT-001', 'PWA/TELAS_TERMOFORMADAS'),
             steps: [
                 mkPfdStep('OP 10', 'storage', 'Recepción de materia prima (tela, material termoformable, adhesivo, Aplix)', '', 'Certificado de calidad', '', 'scrap', 'Material no conforme → Rechazo a proveedor'),
                 mkPfdStep('OP 20', 'operation', 'Corte de tela según plano', 'Cortadora', 'Dimensiones de corte', 'Velocidad de corte', 'scrap', 'Pieza fuera de dimensión → Scrap'),
@@ -840,7 +841,7 @@ async function _doSeed(): Promise<string> {
 
         ok(await savePfdDocument(pfdId, {
             id: pfdId,
-            header: mkPfdHeader('Armrest Door Panel', PN, CL, 'PFD-ARM-001'),
+            header: mkPfdHeader('Armrest Door Panel', PN, CL, 'PFD-ARM-001', 'VWA/PATAGONIA/ARMREST_DOOR_PANEL'),
             steps: [
                 mkPfdStep('OP 10', 'storage', 'Recepción MP (cuero/vinilo, sustrato, adhesivo, hilo)', '', 'Color, gramaje, espesor', '', 'scrap', 'Material no conforme → Rechazo a proveedor'),
                 mkPfdStep('OP 20', 'operation', 'Corte de cuero/vinilo', 'Cortadora CNC', 'Dimensiones, aspecto superficie', 'Programa CNC', 'scrap', 'Corte incorrecto en material costoso → Scrap'),
@@ -1163,7 +1164,7 @@ async function _doSeed(): Promise<string> {
 
         ok(await savePfdDocument(pfdId, {
             id: pfdId,
-            header: mkPfdHeader('Insert', PN, CL, 'PFD-INS-001'),
+            header: mkPfdHeader('Insert', PN, CL, 'PFD-INS-001', 'VWA/PATAGONIA/INSERTO'),
             steps: [
                 mkPfdStep('OP 10', 'storage', 'Recepción MP (vinilo, sustrato, adhesivo, insertos, hilo)', '', 'Color, gramaje, espesor', '', 'scrap', 'Material no conforme → Rechazo a proveedor'),
                 mkPfdStep('OP 20', 'operation', 'Corte de vinilo', 'Cortadora CNC', 'Dimensiones', 'Programa CNC', 'scrap', 'Pieza fuera de dimensión → Scrap'),
@@ -1460,7 +1461,7 @@ async function _doSeed(): Promise<string> {
 
         ok(await savePfdDocument(pfdId, {
             id: pfdId,
-            header: mkPfdHeader('Top Roll', PN, CL, 'PFD-TR-001'),
+            header: mkPfdHeader('Top Roll', PN, CL, 'PFD-TR-001', 'VWA/PATAGONIA/TOP_ROLL'),
             steps: [
                 mkPfdStep('OP 5', 'storage', 'Recepción MP (PP, adhesivo HotMelt, film IMG)', '', 'Certificado calidad', '', 'scrap', 'Material no conforme → Rechazo a proveedor'),
                 mkPfdStep('OP 10', 'operation', 'Inyección de sustrato PP', 'Inyectora', 'Peso, dimensiones, aspecto', 'Presión, temp, tiempo ciclo', 'scrap', 'Short shot / deformación → Scrap (regrind)'),

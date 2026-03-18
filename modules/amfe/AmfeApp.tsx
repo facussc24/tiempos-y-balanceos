@@ -231,7 +231,27 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab }) => {
     });
 
     // 9a. Linked documents panel (CP, PFD, HO associated with this AMFE project)
-    const linkedDocs = useLinkedDocuments(projects.currentProject, amfe.data);
+    // Use full hierarchical path for cross-document lookups (e.g. 'VWA/PATAGONIA/TOP_ROLL')
+    const linkedDocs = useLinkedDocuments(projects.currentProjectPath, amfe.data);
+
+    // 9a2. Auto-load linked PFD from database when project changes
+    useEffect(() => {
+        const projectPath = projects.currentProjectPath;
+        if (!projectPath) return;
+        let cancelled = false;
+        import('../../utils/repositories/pfdRepository').then(({ loadPfdByAmfeProject }) =>
+            loadPfdByAmfeProject(projectPath).then(result => {
+                if (cancelled) return;
+                if (result) {
+                    tabNav.setPfdInitialData(result.doc);
+                    logger.info('AmfeApp', `Auto-loaded linked PFD for ${projectPath}`);
+                }
+            })
+        ).catch(err => {
+            logger.warn('AmfeApp', 'Failed to auto-load linked PFD', { error: String(err) });
+        });
+        return () => { cancelled = true; };
+    }, [projects.currentProjectPath]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // 9b. PFD ↔ AMFE link integrity validation (uses in-memory PFD from tab nav)
     const linkValidation = useMemo(
@@ -577,18 +597,18 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab }) => {
     }, [amfe.data.operations]);
     const expandAll = useCallback(() => setCollapsedOps(new Set()), []);
 
-    // Check if a saved CP exists for this AMFE project
+    // Check if a saved CP exists for this AMFE project (use full path for lookup)
     const [hasSavedCp, setHasSavedCp] = useState(false);
     useEffect(() => {
-        if (!projects.currentProject) { setHasSavedCp(false); return; }
+        if (!projects.currentProjectPath) { setHasSavedCp(false); return; }
         let cancelled = false;
         import('../../utils/repositories/cpRepository').then(({ loadCpByAmfeProject }) =>
-            loadCpByAmfeProject(projects.currentProject!).then(result => {
+            loadCpByAmfeProject(projects.currentProjectPath).then(result => {
                 if (!cancelled) setHasSavedCp(!!result);
             })
         ).catch(() => { if (!cancelled) setHasSavedCp(false); });
         return () => { cancelled = true; };
-    }, [projects.currentProject]);
+    }, [projects.currentProjectPath]);
 
     // Project context for the tab bar (shows family/part across all tabs)
     const projectContext = useMemo(() => ({

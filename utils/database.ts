@@ -28,7 +28,7 @@ export interface DbAdapter {
 // Schema DDL
 // ---------------------------------------------------------------------------
 
-const SCHEMA_VERSION = 13;
+const SCHEMA_VERSION = 14;
 
 const SCHEMA_DDL = `
 -- Version tracking
@@ -165,26 +165,28 @@ CREATE INDEX IF NOT EXISTS idx_ho_linked_amfe_project ON ho_documents(linked_amf
 
 -- PFD (Process Flow Diagram) documents
 CREATE TABLE IF NOT EXISTS pfd_documents (
-    id              TEXT PRIMARY KEY,
-    part_number     TEXT NOT NULL DEFAULT '',
-    part_name       TEXT NOT NULL DEFAULT '',
-    document_number TEXT NOT NULL DEFAULT '',
-    revision_level  TEXT NOT NULL DEFAULT 'A',
-    revision_date   TEXT NOT NULL DEFAULT '',
-    customer_name   TEXT NOT NULL DEFAULT '',
-    client          TEXT NOT NULL DEFAULT '',
-    step_count      INTEGER NOT NULL DEFAULT 0,
-    created_by      TEXT NOT NULL DEFAULT '',
-    updated_by      TEXT NOT NULL DEFAULT '',
-    data            TEXT NOT NULL,
-    checksum        TEXT NOT NULL DEFAULT '',
-    created_at      TEXT NOT NULL DEFAULT (datetime('now')),
-    updated_at      TEXT NOT NULL DEFAULT (datetime('now'))
+    id                  TEXT PRIMARY KEY,
+    part_number         TEXT NOT NULL DEFAULT '',
+    part_name           TEXT NOT NULL DEFAULT '',
+    document_number     TEXT NOT NULL DEFAULT '',
+    revision_level      TEXT NOT NULL DEFAULT 'A',
+    revision_date       TEXT NOT NULL DEFAULT '',
+    customer_name       TEXT NOT NULL DEFAULT '',
+    client              TEXT NOT NULL DEFAULT '',
+    linked_amfe_project TEXT DEFAULT '',
+    step_count          INTEGER NOT NULL DEFAULT 0,
+    created_by          TEXT NOT NULL DEFAULT '',
+    updated_by          TEXT NOT NULL DEFAULT '',
+    data                TEXT NOT NULL,
+    checksum            TEXT NOT NULL DEFAULT '',
+    created_at          TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at          TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
 CREATE INDEX IF NOT EXISTS idx_pfd_updated ON pfd_documents(updated_at DESC);
 CREATE INDEX IF NOT EXISTS idx_pfd_customer ON pfd_documents(customer_name);
 CREATE INDEX IF NOT EXISTS idx_pfd_client ON pfd_documents(client);
+CREATE INDEX IF NOT EXISTS idx_pfd_linked_amfe_project ON pfd_documents(linked_amfe_project);
 
 -- Unified drafts (replaces 4 IndexedDB databases)
 CREATE TABLE IF NOT EXISTS drafts (
@@ -711,6 +713,54 @@ async function runMigrations(adapter: DbAdapter): Promise<void> {
             `INSERT OR REPLACE INTO schema_version (version, description) VALUES (?, ?)`,
             [13, 'Fix phase data for production CP documents']
         );
+    }
+
+    // Migration 13→14: Add linked_amfe_project column to pfd_documents
+    if (currentVersion < 14) {
+        try {
+            await adapter.execute(
+                `ALTER TABLE pfd_documents ADD COLUMN linked_amfe_project TEXT DEFAULT ''`
+            );
+            logger.info('Database', 'Migration 14: Added linked_amfe_project column to pfd_documents');
+        } catch {
+            // Column already exists (DDL ran first on fresh install) — safe to ignore
+        }
+
+        try {
+            await adapter.execute(
+                `CREATE INDEX IF NOT EXISTS idx_pfd_linked_amfe_project ON pfd_documents(linked_amfe_project)`
+            );
+        } catch {
+            // Index may already exist
+        }
+
+        // Backfill: extract linkedAmfeProject from JSON data for existing PFD documents
+        try {
+            const rows = await adapter.select<{ id: string; data: string }>(
+                `SELECT id, data FROM pfd_documents WHERE linked_amfe_project = '' OR linked_amfe_project IS NULL`
+            );
+            for (const row of rows) {
+                try {
+                    const doc = JSON.parse(row.data);
+                    const linkedProject = doc.header?.linkedAmfeProject || '';
+                    if (linkedProject) {
+                        await adapter.execute(
+                            `UPDATE pfd_documents SET linked_amfe_project = ? WHERE id = ?`,
+                            [linkedProject, row.id]
+                        );
+                    }
+                } catch { /* skip malformed rows */ }
+            }
+            logger.info('Database', 'Migration 14: Backfilled linked_amfe_project from JSON data');
+        } catch (e) {
+            logger.warn('Database', 'Migration 14: backfill skipped', {}, e instanceof Error ? e : undefined);
+        }
+
+        await adapter.execute(
+            `INSERT OR REPLACE INTO schema_version (version, description) VALUES (?, ?)`,
+            [14, 'Add linked_amfe_project column to pfd_documents']
+        );
+        logger.info('Database', 'Migration 14: pfd_documents linked_amfe_project column complete');
     }
 }
 

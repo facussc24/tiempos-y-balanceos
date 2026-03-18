@@ -80,37 +80,47 @@ export function useLinkedDocuments(
             // HO: lookup by linked_amfe_project
             const hoResult = await hoRepo.loadHoByAmfeProject(amfeProjectName);
 
-            // PFD: find PFDs whose steps are referenced by AMFE operations via linkedPfdStepId
-            const pfdStepIds = new Set<string>();
-            for (const op of amfeDoc.operations) {
-                if (op.linkedPfdStepId) {
-                    pfdStepIds.add(op.linkedPfdStepId);
-                }
-            }
-
+            // PFD: primary lookup by linked_amfe_project, fallback to linkedPfdStepId scan
             let pfdInfo: LinkedDocInfo = {
                 type: 'pfd', exists: false, name: 'Diagrama de Flujo', itemCount: 0,
             };
 
-            if (pfdStepIds.size > 0) {
-                // List all PFDs and find the one containing matching step IDs
-                const allPfds = await pfdRepo.listPfdDocuments();
-                // We need to load each PFD to check step IDs — but that's expensive.
-                // Instead, try loading them one by one until we find a match.
-                for (const pfdItem of allPfds) {
-                    const pfdDoc = await pfdRepo.loadPfdDocument(pfdItem.id);
-                    if (pfdDoc) {
-                        const hasMatch = pfdDoc.steps.some(s => pfdStepIds.has(s.id));
-                        if (hasMatch) {
-                            pfdInfo = {
-                                type: 'pfd',
-                                exists: true,
-                                id: pfdItem.id,
-                                name: pfdItem.part_name || pfdItem.part_number || 'Diagrama de Flujo',
-                                itemCount: pfdItem.step_count,
-                                updatedAt: pfdItem.updated_at,
-                            };
-                            break;
+            // Primary: lookup by linked_amfe_project column (consistent with CP/HO pattern)
+            const pfdResult = await pfdRepo.loadPfdByAmfeProject(amfeProjectName);
+            if (pfdResult) {
+                pfdInfo = {
+                    type: 'pfd',
+                    exists: true,
+                    id: pfdResult.id,
+                    name: pfdResult.doc.header.partName || pfdResult.doc.header.partNumber || 'Diagrama de Flujo',
+                    itemCount: pfdResult.doc.steps.length,
+                };
+            } else {
+                // Fallback: find PFDs whose steps are referenced by AMFE operations via linkedPfdStepId
+                const pfdStepIds = new Set<string>();
+                for (const op of amfeDoc.operations) {
+                    if (op.linkedPfdStepId) {
+                        pfdStepIds.add(op.linkedPfdStepId);
+                    }
+                }
+
+                if (pfdStepIds.size > 0) {
+                    const allPfds = await pfdRepo.listPfdDocuments();
+                    for (const pfdItem of allPfds) {
+                        const pfdDoc = await pfdRepo.loadPfdDocument(pfdItem.id);
+                        if (pfdDoc) {
+                            const hasMatch = pfdDoc.steps.some(s => pfdStepIds.has(s.id));
+                            if (hasMatch) {
+                                pfdInfo = {
+                                    type: 'pfd',
+                                    exists: true,
+                                    id: pfdItem.id,
+                                    name: pfdItem.part_name || pfdItem.part_number || 'Diagrama de Flujo',
+                                    itemCount: pfdItem.step_count,
+                                    updatedAt: pfdItem.updated_at,
+                                };
+                                break;
+                            }
                         }
                     }
                 }

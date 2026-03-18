@@ -66,6 +66,8 @@ export interface PfdHeader {
   linkedProjectId?: string;
   linkedAmfeId?: string;
   linkedCpId?: string;
+  /** AMFE project name (e.g. 'VWA/PATAGONIA/TOP_ROLL') for cross-document lookup */
+  linkedAmfeProject?: string;
 }
 
 /** SGC document form reference number */

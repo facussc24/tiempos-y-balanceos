@@ -88,6 +88,57 @@ export async function loadPfdDocument(id: string): Promise<PfdDocument | null> {
 }
 
 /**
+ * Load a PFD document by linked AMFE project name.
+ * Primary: query the linked_amfe_project column.
+ * Fallback: scan all PFDs and check header.linkedAmfeProject in JSON data
+ * (needed when the column doesn't exist yet, e.g. Supabase before manual migration).
+ */
+export async function loadPfdByAmfeProject(amfeProject: string): Promise<{ id: string; doc: PfdDocument } | null> {
+    try {
+        const db = await getDatabase();
+
+        // Primary: column-based query
+        let rows: { id: string; data: string }[] = [];
+        try {
+            rows = await db.select<{ id: string; data: string }>(
+                'SELECT id, data FROM pfd_documents WHERE linked_amfe_project = ?',
+                [amfeProject]
+            );
+        } catch {
+            // Column may not exist yet (Supabase without manual migration) — continue to fallback
+        }
+
+        // Fallback: scan JSON data for linkedAmfeProject in header
+        if (rows.length === 0) {
+            const allRows = await db.select<{ id: string; data: string }>(
+                'SELECT id, data FROM pfd_documents'
+            );
+            for (const row of allRows) {
+                try {
+                    const parsed = JSON.parse(row.data);
+                    if (parsed.header?.linkedAmfeProject === amfeProject) {
+                        rows = [row];
+                        break;
+                    }
+                } catch { /* skip malformed */ }
+            }
+        }
+
+        if (rows.length === 0) return null;
+        const doc = JSON.parse(rows[0].data) as PfdDocument;
+        if (doc.steps && Array.isArray(doc.steps)) {
+            doc.steps = doc.steps.map(s =>
+                normalizePfdStep(s as unknown as Record<string, unknown> & { id: string })
+            );
+        }
+        return { id: rows[0].id, doc };
+    } catch (err) {
+        logger.error('PfdRepo', `Failed to load by AMFE project: ${amfeProject}`, {}, err instanceof Error ? err : undefined);
+        return null;
+    }
+}
+
+/**
  * Save a PFD document (insert or update).
  */
 export async function savePfdDocument(id: string, doc: PfdDocument, client?: string): Promise<boolean> {
@@ -98,20 +149,22 @@ export async function savePfdDocument(id: string, doc: PfdDocument, client?: str
         const h = doc.header;
         // Client: explicit param > header.customerName > ''
         const resolvedClient = client ?? h.customerName ?? '';
+        const linkedAmfeProject = h.linkedAmfeProject || '';
 
         await db.execute(
             `INSERT OR REPLACE INTO pfd_documents
              (id, part_number, part_name, document_number, revision_level,
-              revision_date, customer_name, step_count, created_at, updated_at,
+              revision_date, customer_name, linked_amfe_project, step_count,
+              created_at, updated_at,
               data, checksum)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?,
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?,
                      COALESCE((SELECT created_at FROM pfd_documents WHERE id = ?), datetime('now')),
                      datetime('now'),
                      ?, ?)`,
             [
                 id, h.partNumber || '', h.partName || '', h.documentNumber || '',
                 h.revisionLevel || 'A', h.revisionDate || '',
-                resolvedClient, doc.steps.length, id,
+                resolvedClient, linkedAmfeProject, doc.steps.length, id,
                 data, checksum,
             ]
         );

@@ -91,6 +91,12 @@ export const useAmfeProjects = (
     const [currentProjectRef, setCurrentProjectRef] = useState<AmfeProjectRef | null>(null);
     // Legacy flat name (for backward compat with AmfeApp references to `currentProject`)
     const currentProject = currentProjectRef?.name ?? '';
+    // Full hierarchical path for cross-document lookups (e.g. 'VWA/PATAGONIA/TOP_ROLL')
+    const currentProjectPath = currentProjectRef
+        ? (currentProjectRef.client
+            ? buildAmfePath(currentProjectRef.client, currentProjectRef.project, currentProjectRef.name)
+            : currentProjectRef.name)
+        : '';
     // Document UUID from amfe_documents table (needed for family/inheritance features)
     const [currentDocumentId, setCurrentDocumentId] = useState<string | null>(null);
 
@@ -746,6 +752,8 @@ export const useAmfeProjects = (
         // Legacy flat API (backward compat)
         projects,
         currentProject,
+        /** Full hierarchical path for cross-document lookups (e.g. 'VWA/PATAGONIA/TOP_ROLL') */
+        currentProjectPath,
         currentDocumentId,
         promptState,
         loadSelectedProject,
