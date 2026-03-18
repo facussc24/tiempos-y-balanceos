@@ -131,7 +131,16 @@ export async function listAmfeStudies(client: string, project: string): Promise<
             if (e.client !== client) return false;
             // Match flat names (no slashes) OR hierarchical names with "(Sin proyecto)"
             if (isSinProyecto) return !e.projectName.includes('/') || e.projectName.startsWith(prefix);
-            return e.projectName.startsWith(prefix);
+            // Standard 3-part match
+            if (e.projectName.startsWith(prefix)) return true;
+            // Handle 2-part paths (e.g. "PWA/TELAS_PLANAS") where extractProject
+            // returns parts[0] as the project. When project === parts[0], the prefix
+            // "client/project/" won't match "client/name". Match these explicitly.
+            const parts = e.projectName.split('/');
+            if (parts.length === 2 && parts[0] === client && extractProject(e.projectName) === project) {
+                return true;
+            }
+            return false;
         })
         .map(e => ({
             name: e.projectName.split('/').pop() || e.projectName,
@@ -158,12 +167,27 @@ export async function saveAmfeHierarchical(client: string, project: string, name
 
 export async function loadAmfeHierarchical(client: string, project: string, name: string): Promise<AmfeDocument | null> {
     const projectName = buildAmfePath(client, project, name);
-    return loadAmfe(projectName);
+    const result = await loadAmfe(projectName);
+    if (result) return result;
+    // Fallback: try 2-part path "client/name" for entries stored without the project segment
+    // (e.g. "PWA/TELAS_PLANAS" instead of "PWA/PWA/TELAS_PLANAS")
+    if (client === project) {
+        const fallbackName = `${client}/${name}`;
+        return loadAmfe(fallbackName);
+    }
+    return null;
 }
 
 export async function deleteAmfeHierarchical(client: string, project: string, name: string): Promise<boolean> {
     const projectName = buildAmfePath(client, project, name);
-    return deleteAmfe(projectName);
+    const result = await deleteAmfe(projectName);
+    if (result) return true;
+    // Fallback: try 2-part path for entries stored without the project segment
+    if (client === project) {
+        const fallbackName = `${client}/${name}`;
+        return deleteAmfe(fallbackName);
+    }
+    return false;
 }
 
 export async function deleteAmfeProject(client: string, project: string): Promise<boolean> {
