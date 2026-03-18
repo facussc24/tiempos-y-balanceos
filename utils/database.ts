@@ -28,7 +28,7 @@ export interface DbAdapter {
 // Schema DDL
 // ---------------------------------------------------------------------------
 
-const SCHEMA_VERSION = 12;
+const SCHEMA_VERSION = 13;
 
 const SCHEMA_DDL = `
 -- Version tracking
@@ -640,6 +640,8 @@ async function runMigrations(adapter: DbAdapter): Promise<void> {
 
     // Migration 10→11: Add client column to pfd_documents for unified hierarchy
     if (currentVersion < 11) {
+        // DDL: ALTER TABLE + CREATE INDEX (will be skipped on SupabaseAdapter —
+        // must be applied manually via Dashboard if not present)
         try {
             await adapter.execute(
                 `ALTER TABLE pfd_documents ADD COLUMN client TEXT NOT NULL DEFAULT ''`
@@ -663,7 +665,8 @@ async function runMigrations(adapter: DbAdapter): Promise<void> {
                 `UPDATE pfd_documents SET client = customer_name WHERE client = '' AND customer_name != ''`
             );
         } catch {
-            // Best-effort backfill
+            // Best-effort backfill — may fail on Supabase if column doesn't exist yet
+            // (DDL above is skipped by SupabaseAdapter; apply manually via Dashboard/CLI)
         }
 
         await adapter.execute(
@@ -690,6 +693,24 @@ async function runMigrations(adapter: DbAdapter): Promise<void> {
             [12, 'Add family_documents, family_document_overrides, family_change_proposals tables + variant_label']
         );
         logger.info('Database', 'Migration 12: family document tables + variant_label complete');
+    }
+
+    // Migration 12→13: Fix phase data for production CP documents
+    if (currentVersion < 13) {
+        try {
+            await adapter.execute(
+                `UPDATE cp_documents SET phase = 'production'
+                 WHERE project_name IN ('PWA/TELAS_PLANAS', 'PWA/TELAS_TERMOFORMADAS', 'VWA/PATAGONIA/TOP_ROLL')`
+            );
+            logger.info('Database', 'Migration 13: Updated phase to production for Telas Planas, Telas Termoformadas, Top Roll');
+        } catch (e) {
+            logger.warn('Database', 'Migration 13: phase update skipped', {}, e instanceof Error ? e : undefined);
+        }
+
+        await adapter.execute(
+            `INSERT OR REPLACE INTO schema_version (version, description) VALUES (?, ?)`,
+            [13, 'Fix phase data for production CP documents']
+        );
     }
 }
 
@@ -1506,7 +1527,8 @@ class SupabaseAdapter implements DbAdapter {
         let pgSql = this.normalizeNow(sql.trim());
         const upper = pgSql.toUpperCase();
 
-        // DDL + transactions → no-op (schema managed via migrations)
+        // DDL + transactions + schema_version tracking → no-op
+        // (Supabase schema is managed via Dashboard/CLI, not via RPC)
         if (/^(CREATE|ALTER|DROP|BEGIN|COMMIT|ROLLBACK|PRAGMA)/i.test(pgSql) ||
             /INSERT\s+(?:OR\s+\w+\s+)?INTO\s+SCHEMA_VERSION/i.test(pgSql)) {
             return { rowsAffected: 0, lastInsertId: 0 };
@@ -1629,6 +1651,19 @@ async function initializeAdapter(): Promise<DbAdapter> {
         const adapter = new SupabaseAdapter(supabase);
         win.__BARACK_SUPABASE_DB__ = adapter;
         logger.info('Database', 'Using Supabase adapter (web mode)');
+
+        // Run migrations for DML-only steps (backfills, schema_version tracking).
+        // DDL statements (ALTER TABLE, CREATE INDEX) are logged-and-skipped by
+        // SupabaseAdapter.execute() because the `authenticated` role lacks DDL
+        // permissions.  Schema changes must be applied manually via the Supabase
+        // Dashboard SQL Editor or CLI.
+        try {
+            await runMigrations(adapter);
+        } catch (migErr) {
+            logger.warn('Database', 'Supabase migrations had errors (DML parts may have succeeded)',
+                {}, migErr instanceof Error ? migErr : undefined);
+        }
+
         return adapter;
     } catch (err) {
         // Supabase unavailable (e.g., test environment without network)

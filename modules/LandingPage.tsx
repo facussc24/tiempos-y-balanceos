@@ -1,14 +1,17 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
     Clock, ShieldAlert, ClipboardCheck, GitBranch, ArrowRight,
-    FolderOpen, FileText, ChevronRight, Sparkles, LayoutGrid,
+    FolderOpen, FileText, Sparkles, AlertTriangle, GitMerge,
     ChevronDown, ChevronUp, ExternalLink, FilePlus2, Wrench,
-    BookOpen, Shield, LogOut, Users,
+    BookOpen, Shield, LogOut, Users, Package,
 } from 'lucide-react';
 import barackLogo from '../src/assets/barack_logo.png';
 import type { DocumentType, DocumentRegistryEntry } from './registry/documentRegistryTypes';
 import { useAuth } from '../components/auth/AuthProvider';
 import { useIsAdmin } from '../hooks/useIsAdmin';
+import { useProjectHub } from '../hooks/useProjectHub';
+import type { PendingItem } from '../hooks/useProjectHub';
+import { ProjectTable } from '../components/landing/ProjectTable';
 
 interface LandingPageProps {
     onSelectModule: (module: 'pfd' | 'pfdTest' | 'tiempos' | 'amfe' | 'controlPlan' | 'hojaOperaciones' | 'registry' | 'solicitud' | 'manuales' | 'formatos' | 'dataManager' | 'admin') => void;
@@ -105,6 +108,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSelectModule, documentCount
     const [autoOpenedGuide, setAutoOpenedGuide] = useState(false);
     const { user, signOut, userDisplayName } = useAuth();
     const { isAdmin } = useIsAdmin();
+    const { projects, pendingItems, loading: projectsLoading } = useProjectHub();
 
     const totalDocs = useMemo(() =>
         Object.values(documentCounts).reduce((sum, n) => sum + (n || 0), 0),
@@ -147,6 +151,17 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSelectModule, documentCount
         } catch {
             return '';
         }
+    };
+
+    /** Strip hierarchy path (e.g. "VWA/PATAGONIA/TOP_ROLL" -> "Top Roll") */
+    const cleanDocumentName = (name: string): string => {
+        if (!name || !name.includes('/')) return name;
+        const lastSegment = name.split('/').pop() || name;
+        return lastSegment
+            .replace(/_/g, ' ')
+            .split(' ')
+            .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+            .join(' ');
     };
 
     return (
@@ -204,78 +219,57 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSelectModule, documentCount
                     )}
                 </header>
 
-                {/* ===== APQP WORKFLOW MODULES ===== */}
-                <section className="mb-10 opacity-0 animate-fade-in-up stagger-1" aria-label="Módulos APQP">
-                    <div className="flex items-center gap-3 mb-5">
-                        <h2 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
-                            <LayoutGrid size={14} />
-                            Documentación APQP
+                {/* ===== PENDIENTES (only if items exist) ===== */}
+                {!projectsLoading && pendingItems.length > 0 && (
+                    <section className="mb-8 opacity-0 animate-fade-in-up stagger-1" aria-label="Pendientes">
+                        <h2 className="text-xs font-bold text-red-400 uppercase tracking-wider flex items-center gap-2 mb-3">
+                            <AlertTriangle size={14} />
+                            Requiere atención
                         </h2>
-                        <p className="text-xs text-slate-500">
-                            Seguí el flujo: cada paso alimenta al siguiente
-                        </p>
-                    </div>
-
-                    {/* 4 APQP cards in a row with workflow arrows */}
-                    <nav className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" aria-label="Módulos de documentación">
-                        {APQP_MODULES.map((mod, idx) => {
-                            const Icon = mod.icon;
-                            const count = documentCounts[mod.key] || 0;
-                            return (
-                                <div key={mod.key} className="relative">
-                                    {/* Workflow arrow between cards (desktop only) */}
-                                    {idx > 0 && (
-                                        <div className="absolute -left-3.5 top-1/2 -translate-y-1/2 hidden lg:flex items-center z-10">
-                                            <ChevronRight size={20} className="text-slate-400 drop-shadow-sm" />
-                                        </div>
-                                    )}
-                                    <button
-                                        onClick={() => onSelectModule(mod.key)}
-                                        aria-label={`Abrir ${mod.title}`}
-                                        className={`group w-full text-left bg-white/[0.04] backdrop-blur-sm border ${mod.colors.border} rounded-xl p-5
-                                                   ${mod.colors.bgHover} ${mod.colors.borderHover} ${mod.colors.glow}
-                                                   hover:shadow-lg hover:-translate-y-0.5
-                                                   focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 focus-visible:ring-white/70
-                                                   transition-all duration-200 cursor-pointer`}
-                                    >
-                                        {/* Step number + icon row */}
-                                        <div className="flex items-center justify-between mb-3">
-                                            <div className={`${mod.colors.bg} w-11 h-11 rounded-lg flex items-center justify-center`}>
-                                                <Icon size={22} className={mod.colors.text} />
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                {count > 0 && (
-                                                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${mod.colors.badge} flex items-center gap-1`}>
-                                                        <FileText size={10} />
-                                                        {count}
-                                                    </span>
-                                                )}
-                                                <span className={`text-xs font-bold ${mod.colors.text} opacity-50`}>
-                                                    PASO {mod.step}
-                                                </span>
-                                            </div>
-                                        </div>
-
-                                        {/* Title + description */}
-                                        <h3 className="text-base font-bold text-white mb-1">
-                                            {mod.title}
-                                        </h3>
-                                        <p className="text-xs text-slate-400 leading-relaxed">
-                                            {mod.shortDesc}
-                                        </p>
-
-                                        {/* CTA - always subtly visible */}
-                                        <div className="mt-3 flex items-center gap-1 opacity-30 group-hover:opacity-100 transition-opacity">
-                                            <span className={`text-xs font-medium ${mod.colors.text}`}>Abrir</span>
-                                            <ArrowRight size={12} className={mod.colors.text} />
-                                        </div>
-                                    </button>
+                        <div className="bg-red-500/[0.06] border border-red-500/20 rounded-xl divide-y divide-red-500/10 overflow-hidden">
+                            {pendingItems.map((item: PendingItem) => (
+                                <div key={`${item.type}-${item.familyId}`} className="flex items-center gap-3 px-4 py-3">
+                                    <div className={`w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0 ${
+                                        item.type === 'ap_h_unmitigated' ? 'bg-red-500/20' : 'bg-amber-500/20'
+                                    }`}>
+                                        {item.type === 'ap_h_unmitigated'
+                                            ? <AlertTriangle size={14} className="text-red-400" />
+                                            : <GitMerge size={14} className="text-amber-400" />
+                                        }
+                                    </div>
+                                    <div className="flex-grow min-w-0">
+                                        <span className="text-sm text-white font-medium">{item.familyName}</span>
+                                        <span className="text-xs text-slate-400 ml-2">
+                                            {item.type === 'ap_h_unmitigated'
+                                                ? `${item.count} causa${item.count !== 1 ? 's' : ''} AP=H sin acciones`
+                                                : `${item.count} propuesta${item.count !== 1 ? 's' : ''} de cambio pendiente${item.count !== 1 ? 's' : ''}`
+                                            }
+                                        </span>
+                                    </div>
                                 </div>
-                            );
-                        })}
-                    </nav>
+                            ))}
+                        </div>
+                    </section>
+                )}
 
-                </section>
+                {/* ===== MIS PROYECTOS ===== */}
+                {!projectsLoading && projects.length > 0 && (
+                    <section className="mb-10 opacity-0 animate-fade-in-up stagger-1" aria-label="Mis Proyectos">
+                        <div className="flex items-center gap-3 mb-5">
+                            <h2 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+                                <Package size={14} />
+                                Mis Proyectos
+                            </h2>
+                            <p className="text-xs text-slate-500">
+                                Familias de producto con documentación APQP vinculada
+                            </p>
+                        </div>
+                        <ProjectTable
+                            projects={projects}
+                            onSelectProject={() => onSelectModule('amfe')}
+                        />
+                    </section>
+                )}
 
                 {/* ===== TWO-COLUMN: Gestion de Ingenieria + Recientes ===== */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10 opacity-0 animate-fade-in-up stagger-2">
@@ -425,7 +419,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSelectModule, documentCount
                                             {TYPE_ICONS[doc.type]}
                                         </div>
                                         <div className="flex-grow min-w-0">
-                                            <div className="text-sm text-white font-medium truncate" title={doc.name}>{doc.name}</div>
+                                            <div className="text-sm text-white font-medium truncate" title={doc.name}>{cleanDocumentName(doc.name)}</div>
                                             <div className="text-xs text-slate-500 flex items-center gap-2">
                                                 <span className="font-bold">{TYPE_LABELS[doc.type]}</span>
                                                 {doc.client && <span>{doc.client}</span>}
