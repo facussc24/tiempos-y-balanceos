@@ -1,8 +1,8 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import {
     Clock, ShieldAlert, ClipboardCheck, GitBranch, ArrowRight,
     FolderOpen, FileText, Sparkles, AlertTriangle, GitMerge,
-    ChevronDown, ChevronUp, ExternalLink, FilePlus2, Wrench,
+    ExternalLink, FilePlus2, Wrench,
     BookOpen, Shield, LogOut, Users, Package,
 } from 'lucide-react';
 import barackLogo from '../src/assets/barack_logo.png';
@@ -21,74 +21,6 @@ interface LandingPageProps {
     recentDocuments?: DocumentRegistryEntry[];
 }
 
-/** Module definitions with APQP order */
-const APQP_MODULES = [
-    {
-        step: 1,
-        key: 'pfd' as const,
-        title: 'Diagrama de Flujo',
-        shortDesc: 'Dibujá el proceso paso a paso',
-        icon: GitBranch,
-        colors: {
-            bg: 'bg-cyan-500/15',
-            bgHover: 'hover:bg-cyan-500/25',
-            text: 'text-cyan-400',
-            border: 'border-cyan-500/30',
-            borderHover: 'hover:border-cyan-400/60',
-            badge: 'bg-cyan-500/20 text-cyan-300',
-            glow: 'hover:shadow-cyan-500/15',
-        },
-    },
-    {
-        step: 2,
-        key: 'amfe' as const,
-        title: 'AMFE VDA',
-        shortDesc: 'Analizá fallas y riesgos',
-        icon: ShieldAlert,
-        colors: {
-            bg: 'bg-orange-500/15',
-            bgHover: 'hover:bg-orange-500/25',
-            text: 'text-orange-400',
-            border: 'border-orange-500/30',
-            borderHover: 'hover:border-orange-400/60',
-            badge: 'bg-orange-500/20 text-orange-300',
-            glow: 'hover:shadow-orange-500/15',
-        },
-    },
-    {
-        step: 3,
-        key: 'controlPlan' as const,
-        title: 'Plan de Control',
-        shortDesc: 'Definí los controles de calidad',
-        icon: ClipboardCheck,
-        colors: {
-            bg: 'bg-green-500/15',
-            bgHover: 'hover:bg-green-500/25',
-            text: 'text-green-400',
-            border: 'border-green-500/30',
-            borderHover: 'hover:border-green-400/60',
-            badge: 'bg-green-500/20 text-green-300',
-            glow: 'hover:shadow-green-500/15',
-        },
-    },
-    {
-        step: 4,
-        key: 'hojaOperaciones' as const,
-        title: 'Hoja de Operaciones',
-        shortDesc: 'Instrucciones para el operador',
-        icon: FileText,
-        colors: {
-            bg: 'bg-indigo-500/15',
-            bgHover: 'hover:bg-indigo-500/25',
-            text: 'text-indigo-400',
-            border: 'border-indigo-500/30',
-            borderHover: 'hover:border-indigo-400/60',
-            badge: 'bg-indigo-500/20 text-indigo-300',
-            glow: 'hover:shadow-indigo-500/15',
-        },
-    },
-];
-
 const TYPE_ICONS: Record<DocumentType, React.ReactNode> = {
     pfd: <GitBranch size={14} className="text-cyan-400" />,
     amfe: <ShieldAlert size={14} className="text-orange-400" />,
@@ -104,8 +36,6 @@ const TYPE_LABELS: Record<DocumentType, string> = {
 };
 
 const LandingPage: React.FC<LandingPageProps> = ({ onSelectModule, documentCounts = {}, recentDocuments = [] }) => {
-    const [showWorkflow, setShowWorkflow] = useState(false);
-    const [autoOpenedGuide, setAutoOpenedGuide] = useState(false);
     const { user, signOut, userDisplayName } = useAuth();
     const { isAdmin } = useIsAdmin();
     const { projects, pendingItems, loading: projectsLoading } = useProjectHub();
@@ -114,14 +44,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSelectModule, documentCount
         Object.values(documentCounts).reduce((sum, n) => sum + (n || 0), 0),
         [documentCounts]
     );
-
-    // Auto-open APQP guide for new users (no documents yet)
-    useEffect(() => {
-        if (totalDocs === 0 && !autoOpenedGuide) {
-            setShowWorkflow(true);
-            setAutoOpenedGuide(true);
-        }
-    }, [totalDocs, autoOpenedGuide]);
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -153,13 +75,20 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSelectModule, documentCount
         }
     };
 
-    /** Strip hierarchy path (e.g. "VWA/PATAGONIA/TOP_ROLL" -> "Top Roll") */
+    /** Normalize document names to Title Case.
+     *  - Strips hierarchy path (e.g. "VWA/PATAGONIA/TOP_ROLL" -> "Top Roll")
+     *  - Converts ALL_CAPS or ALL CAPS names to Title Case
+     */
     const cleanDocumentName = (name: string): string => {
-        if (!name || !name.includes('/')) return name;
-        const lastSegment = name.split('/').pop() || name;
-        return lastSegment
-            .replace(/_/g, ' ')
-            .split(' ')
+        if (!name) return name;
+        // For hierarchical paths, take the last segment
+        const segment = name.includes('/') ? (name.split('/').pop() || name) : name;
+        // Replace underscores with spaces and normalize to Title Case
+        const words = segment.replace(/_/g, ' ').trim().split(/\s+/);
+        // Only transform if the name looks ALL CAPS (every word is uppercase)
+        const isAllCaps = words.every(w => w === w.toUpperCase() && /[A-Z]/.test(w));
+        if (!isAllCaps) return segment;
+        return words
             .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
             .join(' ');
     };
@@ -460,60 +389,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSelectModule, documentCount
                     </div>
                 </div>
 
-                {/* ===== WORKFLOW GUIDE (collapsible) ===== */}
-                <div className="mb-8 opacity-0 animate-fade-in-up stagger-3">
-                    <button
-                        onClick={() => setShowWorkflow(!showWorkflow)}
-                        className="group inline-flex items-center gap-2 text-slate-500 hover:text-slate-300 transition-colors text-xs font-medium"
-                        aria-expanded={showWorkflow}
-                        aria-controls="workflow-guide"
-                    >
-                        <span className="text-blue-400/70 font-bold">
-                            {showWorkflow ? 'Ocultar' : '¿Primera vez?'} Guía de flujo APQP
-                        </span>
-                        {showWorkflow
-                            ? <ChevronUp size={14} className="text-blue-400/70" />
-                            : <ChevronDown size={14} className="text-blue-400/70" />
-                        }
-                    </button>
-
-                    {showWorkflow && (
-                        <div id="workflow-guide" className="mt-4 bg-white/[0.03] border border-white/10 rounded-xl p-5" role="region" aria-label="Guía APQP">
-                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                                {APQP_MODULES.map((step) => {
-                                    const Icon = step.icon;
-                                    return (
-                                        <div key={step.key} className="flex gap-3">
-                                            <div className={`flex-shrink-0 w-8 h-8 rounded-full ${step.colors.bg} flex items-center justify-center`}>
-                                                <span className={`text-xs font-black ${step.colors.text}`}>{step.step}</span>
-                                            </div>
-                                            <div>
-                                                <h4 className="text-sm font-bold text-white flex items-center gap-1.5">
-                                                    <Icon size={12} className={step.colors.text} />
-                                                    {step.title}
-                                                </h4>
-                                                <p className="text-xs text-slate-400 leading-relaxed mt-0.5">
-                                                    {step.key === 'pfd' && 'Definí cada operación del proceso productivo usando simbología ASME. Este es el punto de partida.'}
-                                                    {step.key === 'amfe' && 'Para cada operación, analizá fallas, causas, severidad (S), ocurrencia (O) y detección (D). La IA te ayuda.'}
-                                                    {step.key === 'controlPlan' && 'Se genera desde el AMFE. Qué controlar, cómo medirlo, cada cuánto, y qué hacer si falla.'}
-                                                    {step.key === 'hojaOperaciones' && 'El documento para el puesto de trabajo: pasos, EPP, controles CC/SC y plan de reacción.'}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                            <div className="mt-4 bg-blue-500/10 border border-blue-500/20 rounded-lg px-4 py-2.5 text-center">
-                                <p className="text-blue-300 text-xs">
-                                    <span className="font-bold">Consejo:</span> Si ya tenés un AMFE hecho en papel o Excel, podés empezar directamente por el AMFE. El Copiloto IA te ayuda a completarlo.
-                                </p>
-                            </div>
-                        </div>
-                    )}
-                </div>
-
                 {/* ===== FOOTER ===== */}
-                <footer className="text-center text-xs opacity-0 animate-fade-in-up stagger-4 pb-4" role="contentinfo">
+                <footer className="text-center text-xs opacity-0 animate-fade-in-up stagger-3 pb-4" role="contentinfo">
                     <p className="text-slate-400">
                         Atajos: <kbd className="bg-white/10 px-1.5 py-0.5 rounded font-mono text-slate-300 border border-white/10">1</kbd>-<kbd className="bg-white/10 px-1.5 py-0.5 rounded font-mono text-slate-300 border border-white/10">4</kbd> APQP
                         <span className="mx-1.5 text-slate-500">·</span>
