@@ -168,16 +168,30 @@ Reglas detalladas por modulo se cargan automaticamente al editar archivos releva
 - En dev mode: boton "Entrar como admin (dev)" usa `VITE_AUTO_LOGIN_EMAIL` / `VITE_AUTO_LOGIN_PASSWORD`
 - Variables de entorno requeridas: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`
 
-## Documentos APQP en Supabase (77 total, auditados 2026-03-17)
+## Documentos APQP en Supabase (59 docs, 8 familias — limpieza 2026-03-18)
 
 | Tipo | Cantidad | Estado |
 |------|----------|--------|
-| PFD  | 11       | Links PFD↔AMFE: 0 rotos |
-| AMFE | 26       | 100% S/O/D, 260 AP=H con acciones |
-| CP   | 26       | 100% CC/SC, 0 warnings V1/V2 |
-| HO   | 25 (250 sheets) | TWI steps + 1,256 QCs vinculados |
+| PFD  | 6        | Links PFD↔AMFE: 0 rotos |
+| AMFE | 18       | 100% S/O/D, AP=H con acciones |
+| CP   | 18       | 100% CC/SC, 0 warnings V1/V2 |
+| HO   | 17       | TWI steps + QCs vinculados |
 
-Productos: Insert, Top Roll, Armrest, Telas Planas, Telas Termoformadas, Headrest (Front/Rear Cen/Rear Out x L0-L3)
+### Productos VWA (proyecto PATAGONIA)
+- **Insert** (master + [L0] variante) — VWA/PATAGONIA/INSERT
+- **Armrest Door Panel** — VWA/PATAGONIA/ARMREST_DOOR_PANEL
+- **Top Roll** — VWA/PATAGONIA/TOP_ROLL
+- **Headrest Front** (L0 + L1/L2/L3) — VWA/PATAGONIA/HEADREST_FRONT
+- **Headrest Rear Center** (L0 + L1/L2/L3) — VWA/PATAGONIA/HEADREST_REAR_CEN
+- **Headrest Rear Outer** (L0 + L1/L2/L3) — VWA/PATAGONIA/HEADREST_REAR_OUT
+
+### Productos PWA
+- **Telas Planas** — PWA/TELAS_PLANAS — HILUX 581D
+- **Telas Termoformadas** — PWA/TELAS_TERMOFORMADAS — HILUX 582D
+
+### Gaps conocidos
+- Headrests: no tienen PFD (no habia archivos fuente)
+- Toyota 737 RR1 MHV: 0 documentos en Supabase (carpeta fisica existe pero sin datos)
 
 Reportes de auditoria: `docs/AUDIT_AMFE.md`, `docs/AUDIT_CP_HO.md`, `docs/AUDIT_CROSSVALIDATION.md`
 
