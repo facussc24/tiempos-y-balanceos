@@ -168,11 +168,24 @@ Reglas detalladas por modulo se cargan automaticamente al editar archivos releva
 - En dev mode: boton "Entrar como admin (dev)" usa `VITE_AUTO_LOGIN_EMAIL` / `VITE_AUTO_LOGIN_PASSWORD`
 - Variables de entorno requeridas: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`
 
+## Documentos APQP en Supabase (77 total, auditados 2026-03-17)
+
+| Tipo | Cantidad | Estado |
+|------|----------|--------|
+| PFD  | 11       | Links PFD↔AMFE: 0 rotos |
+| AMFE | 26       | 100% S/O/D, 260 AP=H con acciones |
+| CP   | 26       | 100% CC/SC, 0 warnings V1/V2 |
+| HO   | 25 (250 sheets) | TWI steps + 1,256 QCs vinculados |
+
+Productos: Insert, Top Roll, Armrest, Telas Planas, Telas Termoformadas, Headrest (Front/Rear Cen/Rear Out x L0-L3)
+
+Reportes de auditoria: `docs/AUDIT_AMFE.md`, `docs/AUDIT_CP_HO.md`, `docs/AUDIT_CROSSVALIDATION.md`
+
 ## Validaciones cruzadas APQP
 
 - PFD ↔ AMFE: `pfdAmfeLinkValidation.ts` + `usePfdAmfeLinkAlerts` hook + `LinkValidationPanel` UI
 - HO ↔ CP: `hoCpLinkValidation.ts` + `useHoCpLinkAlerts` hook + `HoCpLinkValidationPanel` UI
-- CP interna: `cpCrossValidation.ts` (V1-V5: CC/SC, orphan failures, 4M, reaction owners, poka-yoke)
+- CP interna: `cpCrossValidation.ts` (V1-V8: CC/SC, orphan failures, 4M, reaction owners, poka-yoke, sampling, machines)
 - Cascada APQP: `crossDocumentAlerts.ts` (PFD→AMFE→CP→HO)
 
 ## Familias de Producto (Herencia Maestro→Variante)
