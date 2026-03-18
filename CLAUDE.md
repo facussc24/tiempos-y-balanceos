@@ -168,30 +168,30 @@ Reglas detalladas por modulo se cargan automaticamente al editar archivos releva
 - En dev mode: boton "Entrar como admin (dev)" usa `VITE_AUTO_LOGIN_EMAIL` / `VITE_AUTO_LOGIN_PASSWORD`
 - Variables de entorno requeridas: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`
 
-## Documentos APQP en Supabase (59 docs, 8 familias — limpieza 2026-03-18)
+## Documentos APQP en Supabase (63 docs, 8 familias — actualizado 2026-03-18)
 
 | Tipo | Cantidad | Estado |
 |------|----------|--------|
-| PFD  | 6        | Links PFD↔AMFE: 0 rotos |
-| AMFE | 18       | 100% S/O/D, AP=H con acciones |
-| CP   | 18       | 100% CC/SC, 0 warnings V1/V2 |
-| HO   | 17       | TWI steps + QCs vinculados |
+| PFD  | 8        | Links PFD↔AMFE: 0 rotos (incluye 3 headrest PFDs nuevos del Flujograma 152) |
+| AMFE | 18       | 100% S/O/D, AP=H con acciones, headrest masters con datos reales (AMFEs 151/153/155) |
+| CP   | 19       | 100% CC/SC, 0 warnings V1/V2 |
+| HO   | 18       | TWI steps + QCs vinculados, headrests enriquecidos con SET UP Mesa de Corte + Costura APC |
 
 ### Productos VWA (proyecto PATAGONIA)
 - **Insert** (master + [L0] variante) — VWA/PATAGONIA/INSERT
 - **Armrest Door Panel** — VWA/PATAGONIA/ARMREST_DOOR_PANEL
 - **Top Roll** — VWA/PATAGONIA/TOP_ROLL
-- **Headrest Front** (L0 + L1/L2/L3) — VWA/PATAGONIA/HEADREST_FRONT
-- **Headrest Rear Center** (L0 + L1/L2/L3) — VWA/PATAGONIA/HEADREST_REAR_CEN
-- **Headrest Rear Outer** (L0 + L1/L2/L3) — VWA/PATAGONIA/HEADREST_REAR_OUT
+- **Headrest Front** (L0 + L1/L2/L3) — VWA/PATAGONIA/HEADREST_FRONT — AMFE real (60 causas, AMFE-151)
+- **Headrest Rear Center** (L0 + L1/L2/L3) — VWA/PATAGONIA/HEADREST_REAR_CEN — AMFE real (55 causas, AMFE-153)
+- **Headrest Rear Outer** (L0 + L1/L2/L3) — VWA/PATAGONIA/HEADREST_REAR_OUT — AMFE real (55 causas, AMFE-155)
 
 ### Productos PWA
 - **Telas Planas** — PWA/TELAS_PLANAS — HILUX 581D
 - **Telas Termoformadas** — PWA/TELAS_TERMOFORMADAS — HILUX 582D
 
 ### Gaps conocidos
-- Headrests: no tienen PFD (no habia archivos fuente)
 - Toyota 737 RR1 MHV: 0 documentos en Supabase (carpeta fisica existe pero sin datos)
+- Headrest variantes (L1/L2/L3): AMFEs aun tienen datos stub (2 causas) — pendiente propagacion desde masters
 
 Reportes de auditoria: `docs/AUDIT_AMFE.md`, `docs/AUDIT_CP_HO.md`, `docs/AUDIT_CROSSVALIDATION.md`
 

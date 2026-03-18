@@ -163,7 +163,7 @@ const ControlPlanApp: React.FC<Props> = ({ onBackToLanding, embedded, initialDat
 
     // Inheritance status for variant documents
     const cpItemIds = useMemo(() => cp.data.items.map(i => i.id), [cp.data.items]);
-    const inheritanceStatus = useInheritanceStatus(projects.currentProject, cpItemIds);
+    const inheritanceStatus = useInheritanceStatus(projects.currentDocumentId ?? '', cpItemIds);
 
     // Load initial data if provided (from AMFE generator)
     useEffect(() => {
@@ -504,8 +504,8 @@ const ControlPlanApp: React.FC<Props> = ({ onBackToLanding, embedded, initialDat
             />
 
             {/* Change proposals from master (for variant documents) */}
-            {projects.currentProject && (
-                <ChangeProposalPanel documentId={projects.currentProject} />
+            {projects.currentDocumentId && (
+                <ChangeProposalPanel documentId={projects.currentDocumentId} />
             )}
 
             {/* Revision history panel */}

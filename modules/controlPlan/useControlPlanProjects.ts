@@ -52,6 +52,7 @@ export const useControlPlanProjects = (
     requestConfirm: RequestConfirmFn
 ) => {
     const [currentProject, setCurrentProject] = useState('');
+    const [currentDocumentId, setCurrentDocumentId] = useState<string | null>(null);
     const [projects, setProjects] = useState<ControlPlanProjectInfo[]>([]);
     const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -234,6 +235,10 @@ export const useControlPlanProjects = (
                 setCurrentProject(name);
                 savedSnapshotRef.current = JSON.stringify(data);
                 setHasUnsavedChanges(false);
+                // Resolve document UUID for inheritance features
+                loadCpByProjectName(name).then(loaded => {
+                    setCurrentDocumentId(loaded?.id ?? null);
+                }).catch(() => setCurrentDocumentId(null));
             } else {
                 setLoadError('Error al cargar Plan de Control. El archivo puede estar corrupto o inaccesible.');
                 if (timeoutRef.current) clearTimeout(timeoutRef.current);
@@ -256,6 +261,7 @@ export const useControlPlanProjects = (
         if (success) {
             if (currentProject === name) {
                 setCurrentProject('');
+                setCurrentDocumentId(null);
                 onResetProject();
             }
             await refreshProjects();
@@ -277,6 +283,7 @@ export const useControlPlanProjects = (
         }
         onResetProject();
         setCurrentProject('');
+        setCurrentDocumentId(null);
         savedSnapshotRef.current = '';
         setHasUnsavedChanges(false);
     }, [hasUnsavedChanges, onResetProject, requestConfirm]);
@@ -284,6 +291,7 @@ export const useControlPlanProjects = (
     return {
         projects,
         currentProject,
+        currentDocumentId,
         saveStatus,
         hasUnsavedChanges,
         networkAvailable,

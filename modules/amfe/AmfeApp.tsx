@@ -247,7 +247,7 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab }) => {
 
     // 9c. Inheritance status for variant documents
     const amfeOperationIds = useMemo(() => amfe.data.operations.map(op => op.id), [amfe.data.operations]);
-    const inheritanceStatus = useInheritanceStatus(projects.currentProject, amfeOperationIds);
+    const inheritanceStatus = useInheritanceStatus(projects.currentDocumentId ?? '', amfeOperationIds);
 
     // 10. Export (PDF + Excel)
     const amfeExport = useAmfeExport({
@@ -778,8 +778,8 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab }) => {
             />
 
             {/* Change proposals from master (for variant documents) */}
-            {projects.currentProject && (
-                <ChangeProposalPanel documentId={projects.currentProject} />
+            {projects.currentDocumentId && (
+                <ChangeProposalPanel documentId={projects.currentDocumentId} />
             )}
 
             {/* PFD ↔ AMFE broken link banner */}

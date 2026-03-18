@@ -7,7 +7,7 @@
  * project CRUD operations with confirmation modal integration.
  */
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { AmfeDocument } from './amfeTypes';
 import {
     listAmfeClients,
@@ -91,6 +91,8 @@ export const useAmfeProjects = (
     const [currentProjectRef, setCurrentProjectRef] = useState<AmfeProjectRef | null>(null);
     // Legacy flat name (for backward compat with AmfeApp references to `currentProject`)
     const currentProject = currentProjectRef?.name ?? '';
+    // Document UUID from amfe_documents table (needed for family/inheritance features)
+    const [currentDocumentId, setCurrentDocumentId] = useState<string | null>(null);
 
     // Hierarchical browser state
     const [clients, setClients] = useState<string[]>([]);
@@ -99,6 +101,7 @@ export const useAmfeProjects = (
     const [looseFiles, setLooseFiles] = useState<AmfeProjectInfo[]>([]);
     const [selectedClient, setSelectedClient] = useState<string>('');
     const [selectedProject, setSelectedProject] = useState<string>('');
+    const [selectedFamily, setSelectedFamily] = useState<string>('');
     const [isLoadingBrowser, setIsLoadingBrowser] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
 
@@ -176,20 +179,24 @@ export const useAmfeProjects = (
         if (selectedClient) {
             refreshClientProjects(selectedClient);
             setSelectedProject('');
+            setSelectedFamily('');
             setStudies([]);
         } else {
             setClientProjects([]);
             setSelectedProject('');
+            setSelectedFamily('');
             setStudies([]);
         }
     }, [selectedClient, refreshClientProjects]);
 
-    // When selectedProject changes, load studies
+    // When selectedProject changes, load studies and reset family filter
     useEffect(() => {
         if (selectedClient && selectedProject) {
             refreshStudies(selectedClient, selectedProject);
+            setSelectedFamily('');
         } else {
             setStudies([]);
+            setSelectedFamily('');
         }
     }, [selectedClient, selectedProject, refreshStudies]);
 
@@ -294,9 +301,11 @@ export const useAmfeProjects = (
                     setCurrentProjectRef(ref);
                     savedSnapshotRef.current = JSON.stringify(data);
                     setHasUnsavedChanges(false);
+                    resolveDocumentId(ref);
                     logger.info('AMFE', `Auto-loaded last project: ${ref.client}/${ref.project}/${ref.name}`);
                 } else {
                     // Project no longer exists — clear saved ref
+                    setCurrentDocumentId(null);
                     try { localStorage.removeItem(LS_KEY_LAST_PROJECT); } catch { /* ignore */ }
                 }
             } catch (err) {
@@ -307,6 +316,27 @@ export const useAmfeProjects = (
             }
         })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    // Clear project + document ID together
+    const clearCurrentProject = useCallback(() => {
+        setCurrentProjectRef(null);
+        setCurrentDocumentId(null);
+    }, []);
+
+    // Resolve document UUID whenever currentProjectRef changes
+    const resolveDocumentId = useCallback(async (ref: AmfeProjectRef) => {
+        try {
+            const projectName = buildAmfePath(ref.client, ref.project, ref.name);
+            const loaded = await loadAmfeByProjectName(projectName);
+            if (loaded) {
+                setCurrentDocumentId(loaded.meta.id);
+            } else {
+                setCurrentDocumentId(null);
+            }
+        } catch {
+            setCurrentDocumentId(null);
+        }
     }, []);
 
     // Track unsaved changes (debounced to avoid expensive JSON.stringify on every keystroke)
@@ -507,9 +537,11 @@ export const useAmfeProjects = (
             const data = rawData ? migrateAmfeDocument(rawData) : null;
             if (data) {
                 onLoadProject(data);
-                setCurrentProjectRef({ client, project, name });
+                const ref = { client, project, name };
+                setCurrentProjectRef(ref);
                 savedSnapshotRef.current = JSON.stringify(data);
                 setHasUnsavedChanges(false);
+                resolveDocumentId(ref);
             } else {
                 setLoadError('Error al cargar proyecto. El archivo puede estar corrupto o inaccesible.');
                 if (timeoutRef.current) clearTimeout(timeoutRef.current);
@@ -539,9 +571,11 @@ export const useAmfeProjects = (
             const data = rawData ? migrateAmfeDocument(rawData) : null;
             if (data) {
                 onLoadProject(data);
-                setCurrentProjectRef({ client: '', project: '', name });
+                const ref = { client: '', project: '', name };
+                setCurrentProjectRef(ref);
                 savedSnapshotRef.current = JSON.stringify(data);
                 setHasUnsavedChanges(false);
+                resolveDocumentId(ref);
             } else {
                 setLoadError('Error al cargar proyecto. El archivo puede estar corrupto o inaccesible.');
                 if (timeoutRef.current) clearTimeout(timeoutRef.current);
@@ -568,7 +602,7 @@ export const useAmfeProjects = (
         }
         if (success) {
             if (currentProjectRef?.client === client && currentProjectRef?.project === project && currentProjectRef?.name === name) {
-                setCurrentProjectRef(null);
+                clearCurrentProject();
                 onResetProject();
             }
             if (selectedClient === client && selectedProject === project) {
@@ -592,7 +626,7 @@ export const useAmfeProjects = (
         const success = await deleteAmfeProject(client, project);
         if (success) {
             if (currentProjectRef?.client === client && currentProjectRef?.project === project) {
-                setCurrentProjectRef(null);
+                clearCurrentProject();
                 onResetProject();
             }
             if (selectedClient === client) {
@@ -617,7 +651,7 @@ export const useAmfeProjects = (
         const success = await deleteAmfeClient(client);
         if (success) {
             if (currentProjectRef?.client === client) {
-                setCurrentProjectRef(null);
+                clearCurrentProject();
                 onResetProject();
             }
             setSelectedClient('');
@@ -646,7 +680,7 @@ export const useAmfeProjects = (
         }
         if (success) {
             if (currentProject === name) {
-                setCurrentProjectRef(null);
+                clearCurrentProject();
                 onResetProject();
             }
             await refreshClients();
@@ -667,24 +701,40 @@ export const useAmfeProjects = (
             if (!ok) return;
         }
         onResetProject();
-        setCurrentProjectRef(null);
+        clearCurrentProject();
         savedSnapshotRef.current = '';
         setHasUnsavedChanges(false);
-    }, [hasUnsavedChanges, onResetProject, requestConfirm]);
+    }, [hasUnsavedChanges, onResetProject, requestConfirm, clearCurrentProject]);
 
     const clearFilters = useCallback(() => {
         setSelectedClient('');
         setSelectedProject('');
+        setSelectedFamily('');
         setSearchQuery('');
         try { localStorage.removeItem('amfe_selectedClient'); localStorage.removeItem('amfe_selectedProject'); } catch { /* FIX */ }
     }, []);
 
-    // Filtered studies by search query
-    const filteredStudies = studies.filter(s =>
-        !searchQuery ||
-        s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (s.header?.subject || '').toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    // Extract unique family names from studies (based on study name)
+    const familyOptions = useMemo(() => {
+        const set = new Set<string>();
+        for (const s of studies) {
+            if (s.name) set.add(s.name);
+        }
+        return Array.from(set).sort((a, b) => a.localeCompare(b));
+    }, [studies]);
+
+    // Filtered studies by family and search query
+    const filteredStudies = studies.filter(s => {
+        // Family filter
+        if (selectedFamily && s.name !== selectedFamily) return false;
+        // Search filter
+        if (searchQuery) {
+            const q = searchQuery.toLowerCase();
+            return s.name.toLowerCase().includes(q) ||
+                (s.header?.subject || '').toLowerCase().includes(q);
+        }
+        return true;
+    });
 
     const filteredLooseFiles = looseFiles.filter(s =>
         !searchQuery ||
@@ -696,6 +746,7 @@ export const useAmfeProjects = (
         // Legacy flat API (backward compat)
         projects,
         currentProject,
+        currentDocumentId,
         promptState,
         loadSelectedProject,
         deleteSelectedProject,
@@ -707,10 +758,13 @@ export const useAmfeProjects = (
         looseFiles: filteredLooseFiles,
         selectedClient,
         selectedProject,
+        selectedFamily,
+        familyOptions,
         isLoadingBrowser,
         searchQuery,
         setSelectedClient,
         setSelectedProject,
+        setSelectedFamily,
         setSearchQuery,
         clearFilters,
         currentProjectRef,

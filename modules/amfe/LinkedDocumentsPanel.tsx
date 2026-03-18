@@ -135,9 +135,12 @@ const LinkedDocumentsPanel: React.FC<LinkedDocumentsPanelProps> = ({
     return (
         <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
             {/* Header — always visible */}
-            <button
+            <div
                 onClick={() => setCollapsed(prev => !prev)}
-                className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-gray-600 hover:bg-gray-50 rounded-t-lg transition-colors"
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setCollapsed(prev => !prev); } }}
+                className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-gray-600 hover:bg-gray-50 rounded-t-lg transition-colors cursor-pointer"
             >
                 {collapsed ? <ChevronRight size={12} /> : <ChevronDown size={12} />}
                 <span>Documentos del Proyecto</span>
@@ -158,7 +161,7 @@ const LinkedDocumentsPanel: React.FC<LinkedDocumentsPanelProps> = ({
                         <RefreshCw size={10} />
                     </button>
                 )}
-            </button>
+            </div>
 
             {/* Body — collapsible */}
             {!collapsed && (

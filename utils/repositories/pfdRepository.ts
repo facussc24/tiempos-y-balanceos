@@ -19,7 +19,7 @@ export async function listPfdDocuments(): Promise<PfdDocumentListItem[]> {
         const db = await getDatabase();
         return await db.select<PfdDocumentListItem>(
             `SELECT id, part_number, part_name, document_number, revision_level,
-                    revision_date, customer_name, client, step_count, updated_at
+                    revision_date, customer_name, customer_name AS client, step_count, updated_at
              FROM pfd_documents ORDER BY updated_at DESC`
         );
     } catch (err) {
@@ -35,7 +35,7 @@ export async function listPfdClients(): Promise<string[]> {
     try {
         const db = await getDatabase();
         const rows = await db.select<{ client: string }>(
-            `SELECT DISTINCT client FROM pfd_documents WHERE client != '' ORDER BY client`
+            `SELECT DISTINCT customer_name AS client FROM pfd_documents WHERE customer_name != '' ORDER BY customer_name`
         );
         return rows.map(r => r.client);
     } catch (err) {
@@ -52,8 +52,8 @@ export async function listPfdByClient(client: string): Promise<PfdDocumentListIt
         const db = await getDatabase();
         return await db.select<PfdDocumentListItem>(
             `SELECT id, part_number, part_name, document_number, revision_level,
-                    revision_date, customer_name, client, step_count, updated_at
-             FROM pfd_documents WHERE client = ? ORDER BY updated_at DESC`,
+                    revision_date, customer_name, customer_name AS client, step_count, updated_at
+             FROM pfd_documents WHERE customer_name = ? ORDER BY updated_at DESC`,
             [client]
         );
     } catch (err) {
@@ -102,16 +102,16 @@ export async function savePfdDocument(id: string, doc: PfdDocument, client?: str
         await db.execute(
             `INSERT OR REPLACE INTO pfd_documents
              (id, part_number, part_name, document_number, revision_level,
-              revision_date, customer_name, client, step_count, created_at, updated_at,
+              revision_date, customer_name, step_count, created_at, updated_at,
               data, checksum)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?,
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?,
                      COALESCE((SELECT created_at FROM pfd_documents WHERE id = ?), datetime('now')),
                      datetime('now'),
                      ?, ?)`,
             [
                 id, h.partNumber || '', h.partName || '', h.documentNumber || '',
                 h.revisionLevel || 'A', h.revisionDate || '',
-                h.customerName || '', resolvedClient, doc.steps.length, id,
+                resolvedClient, doc.steps.length, id,
                 data, checksum,
             ]
         );

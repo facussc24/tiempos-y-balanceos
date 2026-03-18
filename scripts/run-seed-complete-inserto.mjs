@@ -9,15 +9,13 @@
  *   4. Creates HO document (22 sheets, 5 with full detail)
  *   5. Creates product families (16 codes, 2 families)
  *   6. Updates the AMFE header with applicableParts
- *   7. Inserts everything into the production SQLite database
+ *   7. Inserts everything into the Supabase PostgreSQL database
  *
  * Usage: node scripts/run-seed-complete-inserto.mjs
  */
 
-import initSqlJs from 'sql.js';
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
-import { join } from 'path';
 import { createHash, randomUUID } from 'crypto';
+import { initSupabase, execSql, selectSql, close } from './supabaseHelper.mjs';
 
 // ─── Import data sources ────────────────────────────────────────────────────
 
@@ -28,12 +26,6 @@ import { applyAmfeUpdates } from './seed-amfe-updates.mjs';
 import { hoDocument, hoSheets, PRODUCT_FAMILIES } from './seed-ho-inserto.mjs';
 
 // ─── Config ─────────────────────────────────────────────────────────────────
-
-const DB_PATH = join(
-    process.env.APPDATA || join(process.env.USERPROFILE || 'C:\\Users\\FacundoS-PC', 'AppData', 'Roaming'),
-    'com.barackmercosul.app',
-    'barack_mercosul.db'
-);
 
 const PROJECT_NAME = 'VWA/PATAGONIA/INSERTO';
 
@@ -560,8 +552,11 @@ function getManualCpItems() {
 async function main() {
     console.log('═══════════════════════════════════════════════════════════════');
     console.log('  SEED COMPLETO: AMFE + HO + CP + FAMILIAS');
-    console.log('  INSERTO PATAGONIA (VW)');
+    console.log('  INSERTO PATAGONIA (VW) — SUPABASE');
     console.log('═══════════════════════════════════════════════════════════════');
+
+    // ── 0. Connect to Supabase ─────────────────────────────────────────
+    await initSupabase();
 
     // ── 1. AMFE Info ────────────────────────────────────────────────────
     const { total: causeCount, apH, apM } = countCauses(allOperations);
@@ -569,7 +564,7 @@ async function main() {
     const amfeId = uuid();
 
     console.log('\n── AMFE UPDATES ──');
-    for (const change of amfeChanges) console.log(`  ✓ ${change}`);
+    for (const change of amfeChanges) console.log(`  + ${change}`);
     console.log(`\n  Total operations: ${allOperations.length}`);
     console.log(`  Total causes: ${causeCount} (H=${apH}, M=${apM})`);
     console.log(`  Coverage: ${coverage}%`);
@@ -620,65 +615,29 @@ async function main() {
     // ── 4. Families ─────────────────────────────────────────────────────
     console.log('\n── FAMILIAS DE PRODUCTO ──');
     for (const fam of PRODUCT_FAMILIES) {
-        console.log(`  ${fam.name}: ${fam.members.length} códigos`);
-        for (const m of fam.members) console.log(`    ${m.codigo} — ${m.descripcion}`);
+        console.log(`  ${fam.name}: ${fam.members.length} codigos`);
+        for (const m of fam.members) console.log(`    ${m.codigo} - ${m.descripcion}`);
     }
 
     // ═══════════════════════════════════════════════════════════════════
-    // DATABASE
+    // DATABASE (Supabase PostgreSQL)
     // ═══════════════════════════════════════════════════════════════════
 
-    console.log(`\n── INSERTING INTO SQLite ──`);
-    console.log(`  DB: ${DB_PATH}`);
-
-    const SQL = await initSqlJs();
-    let db;
-
-    if (existsSync(DB_PATH)) {
-        const buf = readFileSync(DB_PATH);
-        db = new SQL.Database(buf);
-        console.log(`  Loaded existing DB (${buf.length} bytes)`);
-    } else {
-        const dir = join(DB_PATH, '..');
-        if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
-        db = new SQL.Database();
-        console.log('  Created new DB');
-    }
-
-    // ── Ensure tables ───────────────────────────────────────────────────
-    // product_families and product_family_members might not exist
-    db.run(`CREATE TABLE IF NOT EXISTS product_families (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL UNIQUE,
-        description TEXT NOT NULL DEFAULT '',
-        linea_code TEXT NOT NULL DEFAULT '',
-        linea_name TEXT NOT NULL DEFAULT '',
-        active INTEGER NOT NULL DEFAULT 1,
-        created_at TEXT NOT NULL DEFAULT (datetime('now')),
-        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
-    )`);
-    db.run(`CREATE TABLE IF NOT EXISTS product_family_members (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        family_id INTEGER NOT NULL REFERENCES product_families(id) ON DELETE CASCADE,
-        product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
-        is_primary INTEGER NOT NULL DEFAULT 0,
-        added_at TEXT NOT NULL DEFAULT (datetime('now')),
-        UNIQUE(family_id, product_id)
-    )`);
+    console.log(`\n── INSERTING INTO SUPABASE ──`);
 
     // ── AMFE: Upsert ───────────────────────────────────────────────────
     const amfeDataJson = JSON.stringify(amfeDoc);
     const amfeChecksum = sha256(amfeDataJson);
 
-    // Search by amfe_number OR project_name (old seed used 'VWA/PATAGONIA/INSERTO')
-    const existingAmfe = db.exec(
-        `SELECT id FROM amfe_documents WHERE amfe_number = '${header.amfeNumber}'
-         OR project_name = '${PROJECT_NAME}'
-         OR project_name = 'VWA/PATAGONIA/INSERTO'`
+    // Search by amfe_number OR project_name
+    const existingAmfe = await selectSql(
+        `SELECT id FROM amfe_documents WHERE amfe_number = ? OR project_name = ?`,
+        [header.amfeNumber, PROJECT_NAME]
     );
-    if (existingAmfe.length > 0 && existingAmfe[0].values.length > 0) {
-        const existId = existingAmfe[0].values[0][0];
-        db.run(`UPDATE amfe_documents SET
+
+    if (existingAmfe.length > 0) {
+        const existId = existingAmfe[0].id;
+        await execSql(`UPDATE amfe_documents SET
             data = ?, checksum = ?, updated_at = datetime('now'),
             project_name = ?,
             operation_count = ?, cause_count = ?, ap_h_count = ?, ap_m_count = ?,
@@ -688,9 +647,9 @@ async function main() {
             [amfeDataJson, amfeChecksum, PROJECT_NAME,
              allOperations.length, causeCount, apH, apM,
              coverage, '2026-03-09', 'N 227 a N 403', 'INSERTO', 'VWA', existId]);
-        console.log(`  ✓ AMFE updated (existing ID: ${existId})`);
+        console.log(`  + AMFE updated (existing ID: ${existId})`);
     } else {
-        db.run(`INSERT INTO amfe_documents (
+        await execSql(`INSERT INTO amfe_documents (
             id, amfe_number, project_name, subject, client, part_number,
             responsible, organization, status,
             operation_count, cause_count, ap_h_count, ap_m_count, coverage_percent,
@@ -700,29 +659,30 @@ async function main() {
              header.responsible, header.organization, 'draft',
              allOperations.length, causeCount, apH, apM, coverage,
              header.startDate, '2026-03-09', amfeDataJson, amfeChecksum]);
-        console.log(`  ✓ AMFE inserted: ${header.amfeNumber}`);
+        console.log(`  + AMFE inserted: ${header.amfeNumber}`);
     }
 
     // ── Control Plan: Upsert ────────────────────────────────────────────
     const cpDataJson = JSON.stringify(cpDoc);
     const cpChecksum = sha256(cpDataJson);
 
-    const existingCp = db.exec(
-        `SELECT id FROM cp_documents WHERE project_name = '${PROJECT_NAME}'
-         OR project_name = 'VWA/PATAGONIA/INSERTO'
-         OR linked_amfe_project = '${PROJECT_NAME}'
-         OR linked_amfe_project = 'VWA/PATAGONIA/INSERTO'`
+    const existingCp = await selectSql(
+        `SELECT id FROM cp_documents WHERE project_name = ? OR linked_amfe_project = ?`,
+        [PROJECT_NAME, PROJECT_NAME]
     );
-    if (existingCp.length > 0 && existingCp[0].values.length > 0) {
-        const existCpId = existingCp[0].values[0][0];
-        db.run(`UPDATE cp_documents SET
+
+    if (existingCp.length > 0) {
+        const existCpId = existingCp[0].id;
+        await execSql(`UPDATE cp_documents SET
             data = ?, checksum = ?, updated_at = datetime('now'),
             item_count = ?, phase = ?, revision = ?, part_number = ?
             WHERE id = ?`,
             [cpDataJson, cpChecksum, cpItems.length, cpPhase, '1', 'N 227 a N 403', existCpId]);
-        console.log(`  ✓ CP updated (existing ID: ${existCpId})`);
+        console.log(`  + CP updated (existing ID: ${existCpId})`);
     } else {
-        db.run(`INSERT INTO cp_documents (
+        // Determine the AMFE ID to link — use existing or the one we just created
+        const linkedAmfeId = existingAmfe.length > 0 ? existingAmfe[0].id : amfeId;
+        await execSql(`INSERT INTO cp_documents (
             id, project_name, control_plan_number, phase,
             part_number, part_name, organization, client,
             responsible, revision, linked_amfe_project, linked_amfe_id,
@@ -730,26 +690,30 @@ async function main() {
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [cpId, PROJECT_NAME, 'CP-INSERTO-001', cpPhase,
              'N 227 a N 403', 'INSERTO TAPIZADO', 'BARACK MERCOSUL', 'VWA',
-             'Carlos Baptista', '1', PROJECT_NAME, amfeId,
+             'Carlos Baptista', '1', PROJECT_NAME, linkedAmfeId,
              cpItems.length, cpDataJson, cpChecksum]);
-        console.log(`  ✓ CP inserted: CP-INSERTO-001 (${cpItems.length} items)`);
+        console.log(`  + CP inserted: CP-INSERTO-001 (${cpItems.length} items)`);
     }
 
     // ── HO: Upsert ─────────────────────────────────────────────────────
     const hoDataJson = JSON.stringify(hoDocument);
     const hoChecksum = sha256(hoDataJson);
 
-    const existingHo = db.exec(`SELECT id FROM ho_documents WHERE linked_amfe_project = '${PROJECT_NAME}'`);
-    if (existingHo.length > 0 && existingHo[0].values.length > 0) {
-        const existHoId = existingHo[0].values[0][0];
-        db.run(`UPDATE ho_documents SET
+    const existingHo = await selectSql(
+        `SELECT id FROM ho_documents WHERE linked_amfe_project = ?`,
+        [PROJECT_NAME]
+    );
+
+    if (existingHo.length > 0) {
+        const existHoId = existingHo[0].id;
+        await execSql(`UPDATE ho_documents SET
             data = ?, checksum = ?, updated_at = datetime('now'),
             sheet_count = ?, part_number = ?, part_description = ?
             WHERE id = ?`,
             [hoDataJson, hoChecksum, hoSheets.length, 'INSERTO', 'TAPIZADO INSERT', existHoId]);
-        console.log(`  ✓ HO updated (existing ID: ${existHoId})`);
+        console.log(`  + HO updated (existing ID: ${existHoId})`);
     } else {
-        db.run(`INSERT INTO ho_documents (
+        await execSql(`INSERT INTO ho_documents (
             id, form_number, organization, client,
             part_number, part_description,
             linked_amfe_project, linked_cp_project,
@@ -759,83 +723,106 @@ async function main() {
              'INSERTO', 'TAPIZADO INSERT',
              PROJECT_NAME, PROJECT_NAME,
              hoSheets.length, hoDataJson, hoChecksum]);
-        console.log(`  ✓ HO inserted: HO-215 (${hoSheets.length} sheets)`);
+        console.log(`  + HO inserted: HO (${hoSheets.length} sheets)`);
     }
 
     // ── Families: Upsert ────────────────────────────────────────────────
-    // Ensure products table exists (created by app at schema v7)
-    db.run(`CREATE TABLE IF NOT EXISTS products (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        codigo TEXT NOT NULL,
-        descripcion TEXT NOT NULL,
-        linea_code TEXT NOT NULL,
-        linea_name TEXT NOT NULL,
-        active INTEGER NOT NULL DEFAULT 1,
-        created_at TEXT NOT NULL DEFAULT (datetime('now')),
-        updated_at TEXT NOT NULL DEFAULT (datetime('now')),
-        UNIQUE(codigo, linea_code)
-    )`);
-    db.run(`CREATE TABLE IF NOT EXISTS customer_lines (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        code TEXT NOT NULL UNIQUE,
-        name TEXT NOT NULL,
-        product_count INTEGER NOT NULL DEFAULT 0,
-        is_automotive INTEGER NOT NULL DEFAULT 0,
-        active INTEGER NOT NULL DEFAULT 1,
-        created_at TEXT NOT NULL DEFAULT (datetime('now'))
-    )`);
-
     // Ensure customer line exists
-    db.run(`INSERT OR IGNORE INTO customer_lines (code, name, product_count, is_automotive)
-        VALUES ('095', '095 VOLKSWAGEN', 16, 1)`);
+    await execSql(`INSERT OR IGNORE INTO customer_lines (code, name, product_count, is_automotive)
+        VALUES (?, ?, ?, ?)`,
+        ['095', '095 VOLKSWAGEN', 16, 1]);
 
     for (const fam of PRODUCT_FAMILIES) {
         // Check if family exists
-        const existFam = db.exec(`SELECT id FROM product_families WHERE name = '${fam.name.replace(/'/g, "''")}'`);
+        const existFam = await selectSql(
+            `SELECT id FROM product_families WHERE name = ?`,
+            [fam.name]
+        );
         let familyId;
 
-        if (existFam.length > 0 && existFam[0].values.length > 0) {
-            familyId = existFam[0].values[0][0];
-            console.log(`  ✓ Family "${fam.name}" already exists (ID: ${familyId})`);
+        if (existFam.length > 0) {
+            familyId = existFam[0].id;
+            console.log(`  + Family "${fam.name}" already exists (ID: ${familyId})`);
         } else {
-            db.run(`INSERT INTO product_families (name, description, linea_code, linea_name)
+            const result = await execSql(
+                `INSERT INTO product_families (name, description, linea_code, linea_name)
                 VALUES (?, ?, ?, ?)`,
                 [fam.name, fam.description, fam.lineaCode, fam.lineaName]);
-            const result = db.exec('SELECT last_insert_rowid()');
-            familyId = result[0].values[0][0];
-            console.log(`  ✓ Family created: "${fam.name}" (ID: ${familyId})`);
+            familyId = result.lastInsertId;
+            console.log(`  + Family created: "${fam.name}" (ID: ${familyId})`);
         }
 
         // Insert products if they don't exist, then link to family
         for (const member of fam.members) {
-            db.run(`INSERT OR IGNORE INTO products (codigo, descripcion, linea_code, linea_name)
+            await execSql(
+                `INSERT OR IGNORE INTO products (codigo, descripcion, linea_code, linea_name)
                 VALUES (?, ?, ?, ?)`,
                 [member.codigo, member.descripcion, fam.lineaCode, fam.lineaName]);
 
-            const productResult = db.exec(
-                `SELECT id FROM products WHERE codigo = '${member.codigo.replace(/'/g, "''")}'`
+            const productResult = await selectSql(
+                `SELECT id FROM products WHERE codigo = ? AND linea_code = ?`,
+                [member.codigo, fam.lineaCode]
             );
-            if (productResult.length > 0 && productResult[0].values.length > 0) {
-                const productId = productResult[0].values[0][0];
-                db.run(`INSERT OR IGNORE INTO product_family_members (family_id, product_id, is_primary)
+            if (productResult.length > 0) {
+                const productId = productResult[0].id;
+                await execSql(
+                    `INSERT OR IGNORE INTO product_family_members (family_id, product_id, is_primary)
                     VALUES (?, ?, ?)`,
                     [familyId, productId, member.codigo === 'N 227' ? 1 : 0]);
             }
         }
-        console.log(`  ✓ Family "${fam.name}": ${fam.members.length} products linked`);
+        console.log(`  + Family "${fam.name}": ${fam.members.length} products linked`);
     }
 
-    // ── Recent projects ─────────────────────────────────────────────────
-    db.run(`INSERT OR IGNORE INTO recent_projects (module, document_id, name) VALUES ('ho', ?, ?)`,
-        [hoId, PROJECT_NAME]);
+    // ═══════════════════════════════════════════════════════════════════
+    // VERIFICATION
+    // ═══════════════════════════════════════════════════════════════════
 
-    // ── Save ────────────────────────────────────────────────────────────
-    const output = db.export();
-    const buffer = Buffer.from(output);
-    writeFileSync(DB_PATH, buffer);
-    db.close();
+    console.log('\n── VERIFICATION ──');
 
-    console.log(`\n  ✓ DB saved (${(buffer.length / 1024).toFixed(0)} KB)`);
+    const amfeCheck = await selectSql(
+        `SELECT id, amfe_number, project_name, operation_count, cause_count, ap_h_count, ap_m_count
+         FROM amfe_documents WHERE project_name = ?`, [PROJECT_NAME]);
+    console.log(`  AMFE: ${amfeCheck.length} document(s)`);
+    if (amfeCheck[0]) {
+        const a = amfeCheck[0];
+        console.log(`    ID: ${a.id}`);
+        console.log(`    Number: ${a.amfe_number}`);
+        console.log(`    Ops: ${a.operation_count}, Causes: ${a.cause_count} (H=${a.ap_h_count}, M=${a.ap_m_count})`);
+    }
+
+    const cpCheck = await selectSql(
+        `SELECT id, control_plan_number, item_count, phase
+         FROM cp_documents WHERE project_name = ?`, [PROJECT_NAME]);
+    console.log(`  CP: ${cpCheck.length} document(s)`);
+    if (cpCheck[0]) {
+        const c = cpCheck[0];
+        console.log(`    ID: ${c.id}`);
+        console.log(`    Number: ${c.control_plan_number}, Items: ${c.item_count}, Phase: ${c.phase}`);
+    }
+
+    const hoCheck = await selectSql(
+        `SELECT id, sheet_count, linked_amfe_project
+         FROM ho_documents WHERE linked_amfe_project = ?`, [PROJECT_NAME]);
+    console.log(`  HO: ${hoCheck.length} document(s)`);
+    if (hoCheck[0]) {
+        const h = hoCheck[0];
+        console.log(`    ID: ${h.id}`);
+        console.log(`    Sheets: ${h.sheet_count}`);
+    }
+
+    const famCheck = await selectSql(
+        `SELECT pf.id, pf.name, COUNT(pfm.id) as member_count
+         FROM product_families pf
+         LEFT JOIN product_family_members pfm ON pfm.family_id = pf.id
+         GROUP BY pf.id, pf.name`);
+    console.log(`  Families: ${famCheck.length}`);
+    for (const f of famCheck) {
+        console.log(`    "${f.name}": ${f.member_count} members`);
+    }
+
+    const productCount = await selectSql(`SELECT COUNT(*) as cnt FROM products WHERE linea_code = '095'`);
+    console.log(`  Products (linea 095): ${productCount[0]?.cnt ?? 0}`);
 
     // ═══════════════════════════════════════════════════════════════════
     // SUMMARY
@@ -845,32 +832,35 @@ async function main() {
     console.log('  RESUMEN DE CAMBIOS');
     console.log('═══════════════════════════════════════════════════════════════');
     console.log('\n  AMFE ACTUALIZADO:');
-    for (const c of amfeChanges) console.log(`    • ${c}`);
-    console.log(`    • Header: applicableParts actualizado con 16 códigos`);
-    console.log(`    • Header: partNumber = "N 227 a N 403"`);
-    console.log(`    → ${allOperations.length} operaciones, ${causeCount} causas`);
+    for (const c of amfeChanges) console.log(`    * ${c}`);
+    console.log(`    * Header: applicableParts actualizado con 16 codigos`);
+    console.log(`    * Header: partNumber = "N 227 a N 403"`);
+    console.log(`    -> ${allOperations.length} operaciones, ${causeCount} causas`);
 
     console.log('\n  HOJA DE OPERACIONES CREADA:');
-    console.log(`    → ${hoSheets.length} hojas (5 con detalle, ${hoSheets.length - 5} placeholder)`);
-    console.log(`    → Ops con detalle: 10, 100, 105, 110, 120`);
-    console.log(`    → applicableParts: 16 códigos`);
+    console.log(`    -> ${hoSheets.length} hojas (5 con detalle, ${hoSheets.length - 5} placeholder)`);
+    console.log(`    -> Ops con detalle: 10, 100, 105, 110, 120`);
+    console.log(`    -> applicableParts: 16 codigos`);
 
     console.log('\n  PLAN DE CONTROL CREADO:');
-    console.log(`    → ${cpItems.length} items (todos los campos completos)`);
-    console.log(`    → Fase: ${cpPhase}`);
-    console.log(`    → Incluye items manuales de HO: temperatura, parámetros, refilado, aspecto CC, costura CC, embalaje`);
+    console.log(`    -> ${cpItems.length} items (todos los campos completos)`);
+    console.log(`    -> Fase: ${cpPhase}`);
+    console.log(`    -> Incluye items manuales de HO: temperatura, parametros, refilado, aspecto CC, costura CC, embalaje`);
 
     console.log('\n  FAMILIAS DE PRODUCTO:');
     for (const f of PRODUCT_FAMILIES) {
-        console.log(`    → ${f.name}: ${f.members.map(m => m.codigo).join(', ')}`);
+        console.log(`    -> ${f.name}: ${f.members.map(m => m.codigo).join(', ')}`);
     }
 
     console.log('\n═══════════════════════════════════════════════════════════════');
-    console.log('  ✅ SEED COMPLETO — AMFE + HO + CP + FAMILIAS');
+    console.log('  SEED COMPLETO — AMFE + HO + CP + FAMILIAS (SUPABASE)');
     console.log('═══════════════════════════════════════════════════════════════');
+
+    close();
 }
 
 main().catch(err => {
-    console.error('\n✗ ERROR:', err);
+    console.error('\nERROR:', err);
+    close();
     process.exit(1);
 });

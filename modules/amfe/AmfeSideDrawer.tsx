@@ -18,6 +18,9 @@ interface AmfeSideDrawerProps {
         setSelectedClient: (v: string) => void;
         selectedProject: string;
         setSelectedProject: (v: string) => void;
+        selectedFamily: string;
+        setSelectedFamily: (v: string) => void;
+        familyOptions: string[];
         clients: string[];
         clientProjects: string[];
         studies: Array<{ filename: string; name: string; header?: { subject?: string } }>;
@@ -85,8 +88,8 @@ const AmfeSideDrawer: React.FC<AmfeSideDrawerProps> = ({ activePanel, setActiveP
                                 <span className="text-xs font-medium text-gray-600">Filtrar por Jerarquía</span>
                                 <button
                                     onClick={projects.clearFilters}
-                                    disabled={!projects.selectedClient && !projects.searchQuery}
-                                    className={`ml-auto text-[10px] px-2 py-0.5 rounded transition ${projects.selectedClient || projects.searchQuery
+                                    disabled={!projects.selectedClient && !projects.selectedFamily && !projects.searchQuery}
+                                    className={`ml-auto text-[10px] px-2 py-0.5 rounded transition ${projects.selectedClient || projects.selectedFamily || projects.searchQuery
                                         ? 'text-blue-600 hover:text-blue-700 hover:bg-blue-50'
                                         : 'text-gray-300 cursor-not-allowed'}`}
                                 >
@@ -129,6 +132,23 @@ const AmfeSideDrawer: React.FC<AmfeSideDrawerProps> = ({ activePanel, setActiveP
                                     >
                                         <option value="">{projects.selectedClient ? 'Todos los proyectos' : 'Selecciona cliente primero'}</option>
                                         {projects.clientProjects.map(p => <option key={p} value={p}>{p}</option>)}
+                                    </select>
+                                    <ChevronDown size={14} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                                </div>
+                            </div>
+
+                            {/* Family / Product filter */}
+                            <div className="mb-2">
+                                <label className="block text-[10px] font-medium text-gray-500 mb-1">Familia / Producto</label>
+                                <div className="relative">
+                                    <select
+                                        value={projects.selectedFamily}
+                                        onChange={(e) => projects.setSelectedFamily(e.target.value)}
+                                        disabled={!projects.selectedClient || !projects.selectedProject}
+                                        className="w-full px-2.5 py-2 text-xs border border-gray-200 rounded-lg bg-white appearance-none cursor-pointer focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-50"
+                                    >
+                                        <option value="">{projects.selectedProject ? `Todas las familias (${projects.familyOptions.length})` : 'Selecciona proyecto primero'}</option>
+                                        {projects.familyOptions.map(f => <option key={f} value={f}>{f}</option>)}
                                     </select>
                                     <ChevronDown size={14} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
                                 </div>

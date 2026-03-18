@@ -43,6 +43,10 @@ vi.mock('../../../modules/amfe/useAmfePersistence', () => ({
     deleteDraft: vi.fn().mockResolvedValue(undefined),
 }));
 
+vi.mock('../../../utils/repositories/amfeRepository', () => ({
+    loadAmfeByProjectName: vi.fn().mockResolvedValue(null),
+}));
+
 import { useAmfeProjects } from '../../../modules/amfe/useAmfeProjects';
 import { AmfeDocument } from '../../../modules/amfe/amfeTypes';
 

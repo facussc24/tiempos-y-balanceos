@@ -5,15 +5,16 @@
  * AMFE, CP, PFD, and HO repositories.
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { useDocumentRegistry } from './useDocumentRegistry';
 import {
     DocumentType,
     DocumentRegistryEntry,
     DOCUMENT_TYPE_CONFIG,
 } from './documentRegistryTypes';
+import DocumentListFilters from '../../components/ui/DocumentListFilters';
 import {
-    ArrowLeft, Search, RefreshCcw, GitBranch, ShieldAlert,
+    ArrowLeft, RefreshCcw, GitBranch, ShieldAlert,
     ClipboardCheck, FileText, FolderOpen, Link2, ExternalLink,
     ChevronUp, ChevronDown, Loader2, User,
 } from 'lucide-react';
@@ -35,33 +36,25 @@ const TYPE_ICONS: Record<DocumentType, React.ReactNode> = {
 
 const DocumentHub: React.FC<DocumentHubProps> = ({ onBackToLanding, onOpenDocument }) => {
     const { entries, loading, error, refresh } = useDocumentRegistry();
-    const [search, setSearch] = useState('');
     const [filterType, setFilterType] = useState<DocumentType | ''>('');
+    const [detailFiltered, setDetailFiltered] = useState<DocumentRegistryEntry[]>([]);
     const [sortField, setSortField] = useState<SortField>('updatedAt');
     const [sortDir, setSortDir] = useState<SortDir>('desc');
 
-    // Filter + sort
+    // Type-filtered entries (input to DocumentListFilters)
+    const typeFiltered = useMemo(() => {
+        if (!filterType) return entries;
+        return entries.filter(e => e.type === filterType);
+    }, [entries, filterType]);
+
+    // Callback for DocumentListFilters
+    const handleDetailFilteredChange = useCallback((result: DocumentRegistryEntry[]) => {
+        setDetailFiltered(result);
+    }, []);
+
+    // Sort the detail-filtered results
     const filtered = useMemo(() => {
-        let result = entries;
-
-        // Type filter
-        if (filterType) {
-            result = result.filter(e => e.type === filterType);
-        }
-
-        // Search filter (name, partNumber, partName, client)
-        if (search.trim()) {
-            const q = search.toLowerCase();
-            result = result.filter(e =>
-                e.name.toLowerCase().includes(q) ||
-                e.partNumber.toLowerCase().includes(q) ||
-                e.partName.toLowerCase().includes(q) ||
-                e.client.toLowerCase().includes(q)
-            );
-        }
-
-        // Sort
-        result = [...result].sort((a, b) => {
+        return [...detailFiltered].sort((a, b) => {
             let cmp = 0;
             switch (sortField) {
                 case 'name': cmp = a.name.localeCompare(b.name); break;
@@ -73,9 +66,7 @@ const DocumentHub: React.FC<DocumentHubProps> = ({ onBackToLanding, onOpenDocume
             }
             return sortDir === 'asc' ? cmp : -cmp;
         });
-
-        return result;
-    }, [entries, search, filterType, sortField, sortDir]);
+    }, [detailFiltered, sortField, sortDir]);
 
     const handleSort = (field: SortField) => {
         if (sortField === field) {
@@ -149,10 +140,9 @@ const DocumentHub: React.FC<DocumentHubProps> = ({ onBackToLanding, onOpenDocume
                 </div>
             </header>
 
-            {/* Filter bar */}
+            {/* Type filter pills */}
             <div className="bg-white border-b border-gray-200 px-4 py-2">
                 <div className="max-w-[1400px] mx-auto flex items-center gap-3 flex-wrap">
-                    {/* Type filter pills */}
                     <div className="flex items-center gap-1">
                         <span className="text-[10px] text-gray-500 font-bold mr-1">Tipo:</span>
                         <button onClick={() => setFilterType('')}
@@ -173,20 +163,15 @@ const DocumentHub: React.FC<DocumentHubProps> = ({ onBackToLanding, onOpenDocume
                             );
                         })}
                     </div>
-
-                    {/* Search */}
-                    <div className="relative flex-1 max-w-xs ml-auto">
-                        <Search size={12} className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400" />
-                        <input
-                            type="text"
-                            value={search}
-                            onChange={e => setSearch(e.target.value)}
-                            placeholder="Buscar por nombre, pieza, cliente..."
-                            className="w-full pl-7 pr-2 py-1 text-xs border border-gray-200 rounded focus:ring-1 focus:ring-blue-200 focus:border-blue-300 outline-none"
-                        />
-                    </div>
                 </div>
             </div>
+
+            {/* Client / Project / Search filters */}
+            <DocumentListFilters
+                documents={typeFiltered}
+                onFilteredChange={handleDetailFilteredChange}
+                moduleType={filterType || undefined}
+            />
 
             {/* Main content */}
             <div className="flex-grow p-4">
