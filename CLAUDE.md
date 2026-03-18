@@ -173,7 +173,7 @@ Reglas detalladas por modulo se cargan automaticamente al editar archivos releva
 | Tipo | Cantidad | Estado |
 |------|----------|--------|
 | PFD  | 8        | Links PFD↔AMFE: 0 rotos (incluye 3 headrest PFDs nuevos del Flujograma 152) |
-| AMFE | 18       | 100% S/O/D, AP=H con acciones, headrest masters con datos reales (AMFEs 151/153/155) |
+| AMFE | 18       | 100% S/O/D, AP=H con acciones, headrest masters+variantes con datos reales (AMFEs 151/153/155) |
 | CP   | 19       | 100% CC/SC, 0 warnings V1/V2 |
 | HO   | 18       | TWI steps + QCs vinculados, headrests enriquecidos con SET UP Mesa de Corte + Costura APC |
 
@@ -181,9 +181,9 @@ Reglas detalladas por modulo se cargan automaticamente al editar archivos releva
 - **Insert** (master + [L0] variante) — VWA/PATAGONIA/INSERT
 - **Armrest Door Panel** — VWA/PATAGONIA/ARMREST_DOOR_PANEL
 - **Top Roll** — VWA/PATAGONIA/TOP_ROLL
-- **Headrest Front** (L0 + L1/L2/L3) — VWA/PATAGONIA/HEADREST_FRONT — AMFE real (60 causas, AMFE-151)
-- **Headrest Rear Center** (L0 + L1/L2/L3) — VWA/PATAGONIA/HEADREST_REAR_CEN — AMFE real (55 causas, AMFE-153)
-- **Headrest Rear Outer** (L0 + L1/L2/L3) — VWA/PATAGONIA/HEADREST_REAR_OUT — AMFE real (55 causas, AMFE-155)
+- **Headrest Front** (L0 + L1/L2/L3) — VWA/PATAGONIA/HEADREST_FRONT — AMFE real (60 causas, AMFE-151), variantes propagadas
+- **Headrest Rear Center** (L0 + L1/L2/L3) — VWA/PATAGONIA/HEADREST_REAR_CEN — AMFE real (55 causas, AMFE-153), variantes propagadas
+- **Headrest Rear Outer** (L0 + L1/L2/L3) — VWA/PATAGONIA/HEADREST_REAR_OUT — AMFE real (55 causas, AMFE-155), variantes propagadas
 
 ### Productos PWA
 - **Telas Planas** — PWA/TELAS_PLANAS — HILUX 581D
@@ -191,7 +191,6 @@ Reglas detalladas por modulo se cargan automaticamente al editar archivos releva
 
 ### Gaps conocidos
 - Toyota 737 RR1 MHV: 0 documentos en Supabase (carpeta fisica existe pero sin datos)
-- Headrest variantes (L1/L2/L3): AMFEs aun tienen datos stub (2 causas) — pendiente propagacion desde masters
 
 Reportes de auditoria: `docs/AUDIT_AMFE.md`, `docs/AUDIT_CP_HO.md`, `docs/AUDIT_CROSSVALIDATION.md`
 
