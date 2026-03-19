@@ -339,6 +339,9 @@ async function buildHoSheet(
         { width: 18 },  // I: registro/values
     ];
 
+    // Ensure HO number has proper "HO-XX" format (some records have just "HO")
+    const hoNro = /^HO-\d/.test(sheet.hoNumber || '') ? sheet.hoNumber : `HO-${sheet.operationNumber}`;
+
     let r = ROW_OFFSET + 1; // Start at row 2
 
     // ─────────────────────────────────────────────────────────────
@@ -411,7 +414,7 @@ async function buildHoSheet(
     });
 
     ws.mergeCells(r + 1, FIRST_COL + 5, r + 1, LAST_COL);
-    setVal(ws, r + 1, FIRST_COL + 5, sheet.hoNumber, {
+    setVal(ws, r + 1, FIRST_COL + 5, hoNro, {
         font: { bold: true, size: 18, color: { argb: `FF${NAVY}` } },
         alignment: { horizontal: 'center', vertical: 'middle' },
     });
@@ -423,7 +426,7 @@ async function buildHoSheet(
 
     // Row 4: N° Operación | Denominación | Modelo
     addLabel(ws, r, FIRST_COL, 'N° DE OPERACIÓN');
-    setVal(ws, r, FIRST_COL + 1, sheet.hoNumber || `HO-${sheet.operationNumber}`, { font: { size: 10, bold: true } });
+    setVal(ws, r, FIRST_COL + 1, hoNro, { font: { size: 10, bold: true } });
 
     addLabel(ws, r, FIRST_COL + 2, 'DENOMINACIÓN DE LA OPERACIÓN');
     ws.mergeCells(r, FIRST_COL + 3, r, FIRST_COL + 5);
