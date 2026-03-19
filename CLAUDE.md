@@ -168,11 +168,11 @@ Reglas detalladas por modulo se cargan automaticamente al editar archivos releva
 - En dev mode: boton "Entrar como admin (dev)" usa `VITE_AUTO_LOGIN_EMAIL` / `VITE_AUTO_LOGIN_PASSWORD`
 - Variables de entorno requeridas: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`
 
-## Documentos APQP en Supabase (61 docs, 8 familias — actualizado 2026-03-18)
+## Documentos APQP en Supabase (62 docs, 8 familias — actualizado 2026-03-18)
 
 | Tipo | Cantidad | Estado |
 |------|----------|--------|
-| PFD  | 8        | Links PFD↔AMFE: 0 rotos (incluye 3 headrest PFDs del Flujograma 152) |
+| PFD  | 9        | 100% NG paths: all 9 PFDs have decision rombos, scrap dispositions, rework where applicable. Sources: Flujograma 152 (headrests), 153 (armrest), 154 (insert), 122 (top roll), 150 (telas planas), 156 (telas termo) |
 | AMFE | 18       | 100% S/O/D, AP=H con acciones, headrest masters+variantes con datos reales (AMFEs 151/153/155) |
 | CP   | 18       | 100% controlMethod (1,448 items), 100% CC/SC, 0 warnings V1/V2 |
 | HO   | 17       | 171 sheets, 1,038 TWI steps (100% >= 3 steps), QCs vinculados, headrests con SET UP |
@@ -191,7 +191,6 @@ Reglas detalladas por modulo se cargan automaticamente al editar archivos releva
 
 ### Gaps conocidos
 - Toyota 737 RR1 MHV: 0 documentos en Supabase (carpeta fisica existe pero sin datos)
-- Armrest Door Panel: no tiene PFD (referencia fantasma eliminada 2026-03-18)
 - AMFE-00001 Insert master: 94% S/O/D coverage (6% causas incompletas)
 
 Reportes de auditoria: `docs/AUDIT_AMFE.md`, `docs/AUDIT_CP_HO.md`, `docs/AUDIT_CROSSVALIDATION.md`, `docs/AUDIT_CURRENT_STATE.md`
