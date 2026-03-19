@@ -178,16 +178,20 @@ Reglas detalladas por modulo se cargan automaticamente al editar archivos releva
 | HO   | 17       | 171 sheets, 1,038 TWI steps (100% >= 3 steps), QCs vinculados, headrests con SET UP |
 
 ### Productos VWA (proyecto PATAGONIA)
-- **Insert** (master + [L0] variante) — VWA/PATAGONIA/INSERT
-- **Armrest Door Panel** — VWA/PATAGONIA/ARMREST_DOOR_PANEL
-- **Top Roll** — VWA/PATAGONIA/TOP_ROLL
-- **Headrest Front** (L0 + L1/L2/L3) — VWA/PATAGONIA/HEADREST_FRONT — AMFE real (60 causas, AMFE-151), variantes propagadas
-- **Headrest Rear Center** (L0 + L1/L2/L3) — VWA/PATAGONIA/HEADREST_REAR_CEN — AMFE real (55 causas, AMFE-153), variantes propagadas
-- **Headrest Rear Outer** (L0 + L1/L2/L3) — VWA/PATAGONIA/HEADREST_REAR_OUT — AMFE real (55 causas, AMFE-155), variantes propagadas
+- **Insert** (master + [L0] variante) — VWA/PATAGONIA/INSERT — Primary: N 227, 1 producto vinculado
+- **Armrest Door Panel** — VWA/PATAGONIA/ARMREST_DOOR_PANEL — Primary: N 231, + 2HC885081 RL1 y variantes color (4 productos)
+- **Top Roll** — VWA/PATAGONIA/TOP_ROLL — Primary: 2GJ.868.087, + 2GJ.868.088 (2 productos)
+- **Headrest Front** (L0 + L1/L2/L3) — VWA/PATAGONIA/HEADREST_FRONT — Primary: 2HC881901 RL1, + GFV/GEV/EFG (4 productos, AMFE-151)
+- **Headrest Rear Center** (L0 + L1/L2/L3) — VWA/PATAGONIA/HEADREST_REAR_CEN — Primary: 2HC885900 RL1, + EIF/SIY/SIY (4 productos, AMFE-153)
+- **Headrest Rear Outer** (L0 + L1/L2/L3) — VWA/PATAGONIA/HEADREST_REAR_OUT — Primary: 2HC885901 RL1, + GFU/GEQ/DZS (4 productos, AMFE-155)
 
 ### Productos PWA
-- **Telas Planas** — PWA/TELAS_PLANAS — HILUX 581D
-- **Telas Termoformadas** — PWA/TELAS_TERMOFORMADAS — HILUX 582D
+- **Telas Planas** — PWA/TELAS_PLANAS — HILUX 581D — Primary: 21-9463, 12 productos (TELA HILUX)
+- **Telas Termoformadas** — PWA/TELAS_TERMOFORMADAS — HILUX 582D — Primary: 21-9640, 4 productos (TELA DE RESPALDO MOLDEADA)
+
+### Part numbers en landing page
+- `useProjectHub` resuelve part number: 1ro `product_family_members` (primary), fallback a `amfe_documents.part_number` del master
+- Todas las 8 familias tienen productos vinculados con `is_primary=true` en `product_family_members`
 
 ### Gaps conocidos
 - Toyota 737 RR1 MHV: 0 documentos en Supabase (carpeta fisica existe pero sin datos)
