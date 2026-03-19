@@ -170,10 +170,17 @@ export function validateHoDocument(doc: HoDocument): HoValidationIssue[] {
 }
 
 /**
- * Get only errors (blocking issues) for pre-export check.
+ * Get only errors (blocking issues) for pre-export check (all sheets).
  */
 export function getHoExportErrors(doc: HoDocument): HoValidationIssue[] {
     return validateHoDocument(doc).filter(i => i.severity === 'error');
+}
+
+/**
+ * Get only errors for a single sheet (for "Hoja Actual" export).
+ */
+export function getSheetExportErrors(sheet: HojaOperacion): HoValidationIssue[] {
+    return validateSheet(sheet).filter(i => i.severity === 'error');
 }
 
 /**

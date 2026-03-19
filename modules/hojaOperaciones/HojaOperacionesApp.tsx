@@ -30,7 +30,7 @@ import HoHelpPanel from './HoHelpPanel';
 import HoHeaderForm from './HoHeaderForm';
 import { useHoHistory } from './useHoHistory';
 import { useHoKeyboardShortcuts } from './useHoKeyboardShortcuts';
-import { validateHoDocument, getHoExportErrors } from './hojaOperacionesValidation';
+import { validateHoDocument, getHoExportErrors, getSheetExportErrors } from './hojaOperacionesValidation';
 import { logger } from '../../utils/logger';
 import { toast } from '../../components/ui/Toast';
 import { useOpenExportFolder } from '../../hooks/useOpenExportFolder';
@@ -271,9 +271,9 @@ const HojaOperacionesApp: React.FC<Props> = ({ embedded, initialData, onDataChan
 
     const handleExcelSheet = useCallback(async () => {
         if (!activeSheet || exportingExcelRef.current) return;
-        const exportErrors = getHoExportErrors(ho.data);
+        const exportErrors = getSheetExportErrors(activeSheet);
         if (exportErrors.length > 0) {
-            toast.error('No se puede exportar', `${exportErrors.length} error(es): ${exportErrors.map(e => e.message).join('. ')}`);
+            toast.error('No se puede exportar', `${exportErrors.length} error(es) en esta hoja: ${exportErrors.map(e => e.message).join('. ')}`);
             return;
         }
         warnExportIssues();
@@ -342,7 +342,9 @@ const HojaOperacionesApp: React.FC<Props> = ({ embedded, initialData, onDataChan
 
     const handlePdfExport = useCallback(async () => {
         if (!pdfPreview) return;
-        const exportErrors = getHoExportErrors(ho.data);
+        const exportErrors = pdfPreview.mode === 'sheet' && activeSheet
+            ? getSheetExportErrors(activeSheet)
+            : getHoExportErrors(ho.data);
         if (exportErrors.length > 0) {
             toast.error('No se puede exportar', `${exportErrors.length} error(es): ${exportErrors.map(e => e.message).join('. ')}`);
             return;
