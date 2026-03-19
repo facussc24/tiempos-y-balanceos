@@ -353,3 +353,10 @@ export function exportApqpPackage(data: ApqpPackageData, options: ApqpExportOpti
     const safeName = sanitizeFilename(data.familyName || 'Paquete_APQP', { allowSpaces: true });
     downloadWorkbook(wb, `Paquete APQP - ${safeName}.xlsx`);
 }
+
+/** Generate APQP package as Uint8Array buffer (for auto-export / testing). */
+export function generateApqpPackageBuffer(data: ApqpPackageData, options: ApqpExportOptions): Uint8Array {
+    const wb = buildApqpPackageWorkbook(data, options);
+    const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' }) as ArrayBuffer;
+    return new Uint8Array(wbout);
+}
