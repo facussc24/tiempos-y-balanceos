@@ -69,13 +69,24 @@ const AmfeTabBar: React.FC<AmfeTabBarProps> = ({
     projectContext,
     onOpenTemplates,
 }) => {
+    /** Prompt for unsaved changes before navigating away from the AMFE tab. */
+    const confirmIfDirty = async (): Promise<boolean> => {
+        if (!hasUnsavedChanges || activeTab !== 'amfe') return true;
+        return requestConfirm({
+            title: 'Cambios sin guardar',
+            message: 'Tiene cambios sin guardar. ¿Desea descartarlos?',
+            variant: 'warning',
+            confirmText: 'Descartar',
+        });
+    };
+
     const handleBack = async () => {
         if (hasUnsavedChanges) {
             const ok = await requestConfirm({
                 title: 'Cambios sin guardar',
-                message: 'Hay cambios sin guardar. ¿Volver al inicio?',
+                message: 'Tiene cambios sin guardar. ¿Desea descartarlos?',
                 variant: 'warning',
-                confirmText: 'Volver',
+                confirmText: 'Descartar',
             });
             if (!ok) return;
         }
@@ -96,7 +107,10 @@ const AmfeTabBar: React.FC<AmfeTabBarProps> = ({
         <div className="bg-white border-b border-gray-300 sticky top-0 z-50">
             <div className="px-4 flex items-center gap-0">
                 <button
-                    onClick={() => pfdInitialData ? onTabChange('pfd') : (onImportPfdFromAmfe || onGeneratePfd)()}
+                    onClick={async () => {
+                        if (!(await confirmIfDirty())) return;
+                        pfdInitialData ? onTabChange('pfd') : (onImportPfdFromAmfe || onGeneratePfd)();
+                    }}
                     className={`px-4 py-2.5 text-xs font-medium transition-colors duration-150 flex items-center gap-1.5 ${getTabClass('pfd')}`}
                 >
                     <GitBranch size={13} />
@@ -110,7 +124,10 @@ const AmfeTabBar: React.FC<AmfeTabBarProps> = ({
                     AMFE VDA
                 </button>
                 <button
-                    onClick={() => cpInitialData ? onTabChange('controlPlan') : onGenerateControlPlan()}
+                    onClick={async () => {
+                        if (!(await confirmIfDirty())) return;
+                        cpInitialData ? onTabChange('controlPlan') : onGenerateControlPlan();
+                    }}
                     className={`px-4 py-2.5 text-xs font-medium transition-colors duration-150 flex items-center gap-1.5 ${getTabClass('controlPlan')}`}
                 >
                     <ClipboardCheck size={13} />
@@ -122,7 +139,8 @@ const AmfeTabBar: React.FC<AmfeTabBarProps> = ({
                     )}
                 </button>
                 <button
-                    onClick={() => {
+                    onClick={async () => {
+                        if (!(await confirmIfDirty())) return;
                         // Auto-regenerate if previous generation produced empty result but AMFE now has operations
                         const hoIsStaleEmpty = hoInitialData && hoInitialData.sheets.length === 0 && amfeOperationCount > 0;
                         (hoInitialData && !hoIsStaleEmpty) ? onTabChange('hojaOperaciones') : onGenerateHojasOperaciones();

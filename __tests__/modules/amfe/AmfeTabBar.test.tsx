@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import AmfeTabBar from '../../../modules/amfe/AmfeTabBar';
 
 const defaultProps = () => ({
@@ -29,25 +29,29 @@ describe('AmfeTabBar', () => {
         expect(buttons[3].textContent).toContain('Hojas de Operaciones');
     });
 
-    it('clicking Diagrama de Flujo calls onGeneratePfd when pfdInitialData is null', () => {
+    it('clicking Diagrama de Flujo calls onGeneratePfd when pfdInitialData is null', async () => {
         const props = defaultProps();
         props.pfdInitialData = null;
         render(<AmfeTabBar {...props} />);
 
         fireEvent.click(screen.getByText('Diagrama de Flujo'));
 
-        expect(props.onGeneratePfd).toHaveBeenCalledTimes(1);
+        await waitFor(() => {
+            expect(props.onGeneratePfd).toHaveBeenCalledTimes(1);
+        });
         expect(props.onTabChange).not.toHaveBeenCalled();
     });
 
-    it('clicking Diagrama de Flujo calls onTabChange when pfdInitialData is not null', () => {
+    it('clicking Diagrama de Flujo calls onTabChange when pfdInitialData is not null', async () => {
         const props = defaultProps();
         props.pfdInitialData = { id: 'pfd-1' } as any;
         render(<AmfeTabBar {...props} />);
 
         fireEvent.click(screen.getByText('Diagrama de Flujo'));
 
-        expect(props.onTabChange).toHaveBeenCalledWith('pfd');
+        await waitFor(() => {
+            expect(props.onTabChange).toHaveBeenCalledWith('pfd');
+        });
         expect(props.onGeneratePfd).not.toHaveBeenCalled();
     });
 
@@ -69,37 +73,58 @@ describe('AmfeTabBar', () => {
         expect(amfeButton.className).toContain('text-blue-700');
     });
 
-    it('clicking Plan de Control calls onGenerateControlPlan when cpInitialData is null', () => {
+    it('clicking Plan de Control calls onGenerateControlPlan when cpInitialData is null', async () => {
         const props = defaultProps();
         props.cpInitialData = null;
         render(<AmfeTabBar {...props} />);
 
         fireEvent.click(screen.getByText('Plan de Control'));
 
-        expect(props.onGenerateControlPlan).toHaveBeenCalledTimes(1);
+        await waitFor(() => {
+            expect(props.onGenerateControlPlan).toHaveBeenCalledTimes(1);
+        });
         expect(props.onTabChange).not.toHaveBeenCalled();
     });
 
-    it('clicking Plan de Control calls onTabChange when cpInitialData is not null', () => {
+    it('clicking Plan de Control calls onTabChange when cpInitialData is not null', async () => {
         const props = defaultProps();
         props.cpInitialData = { id: 'cp-1' } as any;
         render(<AmfeTabBar {...props} />);
 
         fireEvent.click(screen.getByText('Plan de Control'));
 
-        expect(props.onTabChange).toHaveBeenCalledWith('controlPlan');
+        await waitFor(() => {
+            expect(props.onTabChange).toHaveBeenCalledWith('controlPlan');
+        });
         expect(props.onGenerateControlPlan).not.toHaveBeenCalled();
     });
 
-    it('clicking Inicio calls onBackToLanding when no unsaved changes', () => {
+    it('clicking Inicio calls onBackToLanding when no unsaved changes', async () => {
         const props = defaultProps();
         props.hasUnsavedChanges = false;
         render(<AmfeTabBar {...props} />);
 
         fireEvent.click(screen.getByText('Inicio'));
 
-        expect(props.onBackToLanding).toHaveBeenCalledTimes(1);
+        await waitFor(() => {
+            expect(props.onBackToLanding).toHaveBeenCalledTimes(1);
+        });
         expect(props.requestConfirm).not.toHaveBeenCalled();
+    });
+
+    it('tab navigation blocked by unsaved changes until confirmed', async () => {
+        const props = defaultProps();
+        props.hasUnsavedChanges = true;
+        props.cpInitialData = { id: 'cp-1' } as any;
+        props.requestConfirm = vi.fn().mockResolvedValue(false);
+        render(<AmfeTabBar {...props} />);
+
+        fireEvent.click(screen.getByText('Plan de Control'));
+
+        await waitFor(() => {
+            expect(props.requestConfirm).toHaveBeenCalledTimes(1);
+        });
+        expect(props.onTabChange).not.toHaveBeenCalled();
     });
 
     it('all tabs present with correct text content', () => {
