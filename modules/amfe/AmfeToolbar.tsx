@@ -221,7 +221,7 @@ const AmfeToolbar: React.FC<AmfeToolbarProps> = ({
                     </div>
 
                     {/* Projects Panel Toggle */}
-                    <button onClick={() => { setShowProjectPanel(!showProjectPanel); projects.refreshProjects(); }}
+                    <button onClick={(e) => { e.stopPropagation(); setShowProjectPanel(!showProjectPanel); projects.refreshProjects(); }}
                         className="flex items-center gap-1.5 bg-gray-100 hover:bg-gray-200 border border-gray-300 px-3 py-2 rounded transition text-slate-700 font-medium text-xs">
                         <FolderOpen size={15} />
                         <span className="hidden sm:inline">Proyectos</span>

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useCallback, useRef } from 'react';
 import {
     FolderOpen, FilePlus, Trash2, FileJson, ChevronDown,
     AlertTriangle, X, Loader2, Search, Filter,
@@ -44,24 +44,46 @@ const AmfeSideDrawer: React.FC<AmfeSideDrawerProps> = ({ activePanel, setActiveP
     const showProjectPanel = activePanel === 'projects';
     const showRegistry = activePanel === 'registry';
     const showSummary = activePanel === 'summary';
+    const isOpen = showProjectPanel || showRegistry || showSummary;
+
+    // Track when the drawer opens to ignore the opening click event
+    const openedAtRef = useRef(0);
+    useEffect(() => {
+        if (isOpen) {
+            openedAtRef.current = Date.now();
+        }
+    }, [isOpen]);
 
     useEffect(() => {
-        if (!showProjectPanel && !showRegistry && !showSummary) return;
+        if (!isOpen) return;
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === 'Escape') { e.preventDefault(); setActivePanel('none'); }
         };
         document.addEventListener('keydown', handleKeyDown);
         return () => document.removeEventListener('keydown', handleKeyDown);
-    }, [showProjectPanel, showRegistry, showSummary, setActivePanel]);
+    }, [isOpen, setActivePanel]);
 
-    if (!showProjectPanel && !showRegistry && !showSummary) return null;
+    // Close on backdrop click — uses onMouseDown instead of onClick to avoid
+    // the opening click event (from the toolbar button) from immediately
+    // closing the panel due to event bubbling through the fixed overlay.
+    const handleBackdropMouseDown = useCallback((e: React.MouseEvent) => {
+        // Ignore clicks within 100ms of the drawer opening — these are
+        // the same physical click that triggered the panel to open.
+        if (Date.now() - openedAtRef.current < 100) return;
+        // Only close if the click target is the backdrop itself, not children
+        if (e.target === e.currentTarget) {
+            setActivePanel('none');
+        }
+    }, [setActivePanel]);
+
+    if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex justify-end" role="presentation" onClick={() => setActivePanel('none')}>
+        <div className="fixed inset-0 z-50 flex justify-end" role="presentation" onMouseDown={handleBackdropMouseDown}>
             {/* Backdrop */}
-            <div className="absolute inset-0 bg-black/20 animate-in fade-in duration-150" />
+            <div className="absolute inset-0 bg-black/20 animate-in fade-in duration-150" onMouseDown={() => { if (Date.now() - openedAtRef.current >= 100) setActivePanel('none'); }} />
             {/* Drawer */}
-            <div className="relative w-[480px] max-w-full bg-white shadow-2xl overflow-y-auto animate-in slide-in-from-right" onClick={e => e.stopPropagation()}>
+            <div className="relative w-[480px] max-w-full bg-white shadow-2xl overflow-y-auto animate-in slide-in-from-right" onMouseDown={e => e.stopPropagation()}>
                 {/* Close button */}
                 <button onClick={() => setActivePanel('none')} className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 z-10" aria-label="Cerrar panel" title="Cerrar panel">
                     <X size={18} />
