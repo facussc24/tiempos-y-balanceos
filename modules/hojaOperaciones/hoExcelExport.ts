@@ -57,7 +57,7 @@ const LAST_COL = COL_OFFSET + DATA_COLS; // I = col 9
  * Must match the ws.columns array in buildHoSheet.
  * Used for dynamic centering of images within columns.
  */
-const COL_WIDTHS = [2, 14, 16, 20, 28, 18, 16, 12, 20];
+const COL_WIDTHS = [2, 12, 14, 16, 24, 14, 12, 8, 18];
 
 /** Approximate pixels per Excel character width unit (96 DPI, Arial default) */
 const CHARS_TO_PX = 7.5;
@@ -138,6 +138,37 @@ function addLabel(ws: ExcelJS.Worksheet, row: number, col: number, label: string
         font: { size: 7, bold: true, color: { argb: `FF${GRAY_LABEL}` } },
         alignment: { vertical: 'top', wrapText: true },
     });
+}
+
+// ============================================================================
+// TEXT HELPERS
+// ============================================================================
+
+/** Convert ALL CAPS text to Title Case */
+function toTitleCase(text: string): string {
+    return text.replace(/\S+/g, word =>
+        word.charAt(0).toUpperCase() + word.slice(1).toLowerCase(),
+    );
+}
+
+/** Wrap text at ~80 chars per line, breaking at word boundaries */
+function wrapText80(text: string): string {
+    return text.split(/\r?\n/).map(line => {
+        if (line.length <= 80) return line;
+        const words = line.split(' ');
+        const lines: string[] = [];
+        let current = '';
+        for (const word of words) {
+            if (current.length + word.length + 1 > 80 && current.length > 0) {
+                lines.push(current);
+                current = word;
+            } else {
+                current = current ? `${current} ${word}` : word;
+            }
+        }
+        if (current) lines.push(current);
+        return lines.join('\n');
+    }).join('\n');
 }
 
 // ============================================================================
@@ -295,17 +326,17 @@ async function buildHoSheet(
         },
     });
 
-    // Column widths: A(offset) B C D E F G H I — optimized for A4 landscape
+    // Column widths: A(offset) B C D E F G H I — narrower for A4 landscape fit
     ws.columns = [
         { width: 2 },   // A: blank offset
-        { width: 14 },  // B: labels (fits "N° DE OPERACIÓN")
-        { width: 16 },  // C: values
-        { width: 20 },  // D: labels/values (fits "DENOMINACIÓN..." with wrap)
-        { width: 28 },  // E: descriptions (wide for operation names)
-        { width: 18 },  // F: values (client, model)
-        { width: 16 },  // G: values (revision, status)
-        { width: 12 },  // H: CC/SC badge
-        { width: 20 },  // I: registro/values
+        { width: 12 },  // B: labels
+        { width: 14 },  // C: values
+        { width: 16 },  // D: labels/values
+        { width: 24 },  // E: descriptions
+        { width: 14 },  // F: values (client, model)
+        { width: 12 },  // G: values (revision, status)
+        { width: 8 },   // H: CC/SC badge
+        { width: 18 },  // I: registro/values
     ];
 
     let r = ROW_OFFSET + 1; // Start at row 2
@@ -328,7 +359,7 @@ async function buildHoSheet(
             // Center logo in B2:C3: B(14)+C(16)=30 chars, rows 24+28=52pt
             ws.addImage(logoId, imgPosNative(
                 1, 1,  // column B (0-based), row 2 (0-based)
-                centerHorizEmu(14 + 16, 140),  // center 140px across 30 chars
+                centerHorizEmu(COL_WIDTHS[1] + COL_WIDTHS[2], 140),  // center 140px across B+C
                 centerVertEmu(24 + 28, 42),    // center 42px across 52pt
                 140, 42,
             ));
@@ -392,7 +423,7 @@ async function buildHoSheet(
 
     // Row 4: N° Operación | Denominación | Modelo
     addLabel(ws, r, FIRST_COL, 'N° DE OPERACIÓN');
-    setVal(ws, r, FIRST_COL + 1, sheet.operationNumber, { font: { size: 10, bold: true } });
+    setVal(ws, r, FIRST_COL + 1, sheet.hoNumber || `HO-${sheet.operationNumber}`, { font: { size: 10, bold: true } });
 
     addLabel(ws, r, FIRST_COL + 2, 'DENOMINACIÓN DE LA OPERACIÓN');
     ws.mergeCells(r, FIRST_COL + 3, r, FIRST_COL + 5);
@@ -661,69 +692,44 @@ async function buildHoSheet(
         fillBorders(ws, r, FIRST_COL, r, LAST_COL);
         r++;
     } else {
-        // Center N icons within 8 data columns (B-I)
-        // e.g. 6 icons → start at col C (offset 1), leaving B and I as margins
-        const PPE_ICON_PX = 55;
-        const PPE_ROW_HEIGHT_PT = 22;
-        const PPE_ROWS = 3;
-        const ppeCount = safetyItems.length;
-        const ppeStartCol = Math.max(0, Math.floor((DATA_COLS - ppeCount) / 2));
-        let ppeCol = COL_OFFSET + ppeStartCol; // 0-based for image anchors
-        let hasAnyImage = false;
-
-        // Vertical centering via native EMU (bypasses ExcelJS anchor fraction bug)
-        // 3 rows × 22pt = 66pt total. Icon 55px. Offset = (66pt*12700 - 55px*9525)/2 EMU
-        const vOffEmu = centerVertEmu(PPE_ROWS * PPE_ROW_HEIGHT_PT, PPE_ICON_PX);
+        // One PPE item per row with icon + description
+        const PPE_ROW_ICON_PX = 30;
+        const PPE_ROW_HEIGHT = 28;
 
         for (const ppeId of safetyItems) {
+            const ppeCatalog = PPE_CATALOG.find(p => p.id === ppeId);
+            const label = ppeCatalog?.label || ppeId;
+
+            // Icon in column B
             const ppeDataUri = assets.ppeBase64Map[ppeId];
-            if (ppeDataUri && ppeCol < LAST_COL) {
+            if (ppeDataUri) {
                 try {
                     const imgId = workbook.addImage({
                         base64: stripDataUri(ppeDataUri),
                         extension: getExtension(ppeDataUri),
                     });
-
-                    // Center icon using native EMU offsets (bypasses ExcelJS anchor bug
-                    // where col setter uses width*10000 instead of actual EMU values)
-                    const colWidthChars = COL_WIDTHS[ppeCol] || 12;
-                    const hOffEmu = centerHorizEmu(colWidthChars, PPE_ICON_PX);
-
+                    const hOffEmu = centerHorizEmu(COL_WIDTHS[1], PPE_ROW_ICON_PX);
+                    const vOffEmu = centerVertEmu(PPE_ROW_HEIGHT, PPE_ROW_ICON_PX);
                     ws.addImage(imgId, imgPosNative(
-                        ppeCol, r - 1,  // 0-based col, 0-based row (r is 1-based)
+                        1, r - 1,  // column B (0-based), row (0-based)
                         hOffEmu, vOffEmu,
-                        PPE_ICON_PX, PPE_ICON_PX,
+                        PPE_ROW_ICON_PX, PPE_ROW_ICON_PX,
                     ));
-                    hasAnyImage = true;
                 } catch {
-                    // Just show label below
+                    // Fallback: no icon, text only
                 }
             }
-            ppeCol++;
-        }
 
-        if (hasAnyImage) {
-            for (let pr = r; pr < r + PPE_ROWS; pr++) {
-                ws.getRow(pr).height = PPE_ROW_HEIGHT_PT;
-            }
-            r += PPE_ROWS;
+            // Description in C-I (merged)
+            ws.mergeCells(r, FIRST_COL + 1, r, LAST_COL);
+            setVal(ws, r, FIRST_COL + 1, label, {
+                font: { size: 9 },
+                alignment: { vertical: 'middle' },
+            });
+            fillBorders(ws, r, FIRST_COL, r, LAST_COL);
+            ws.getRow(r).height = PPE_ROW_HEIGHT;
+            r++;
         }
-
-        // Labels row under icons — same centering as icons
-        let labelCol = FIRST_COL + ppeStartCol; // 1-based for cells
-        for (const ppeId of safetyItems) {
-            const ppeCatalog = PPE_CATALOG.find(p => p.id === ppeId);
-            if (labelCol <= LAST_COL && ppeCatalog) {
-                setVal(ws, r, labelCol, ppeCatalog.label, {
-                    font: { size: 7, color: { argb: `FF${GRAY_LABEL}` } },
-                    alignment: { horizontal: 'center', wrapText: true },
-                    border: {},
-                });
-            }
-            labelCol++;
-        }
-        ws.getRow(r).height = 22;
-        r++;
     }
 
     r++; // separator
@@ -815,7 +821,7 @@ async function buildHoSheet(
     addSectionHeader(ws, r, 'PLAN DE REACCIÓN ANTE NO CONFORME', 'red');
     r++;
 
-    const reactionText = sheet.reactionPlanText || '';
+    const reactionText = wrapText80(toTitleCase(sheet.reactionPlanText || ''));
     ws.mergeCells(r, FIRST_COL, r + 2, LAST_COL);
     setVal(ws, r, FIRST_COL, reactionText, {
         font: { bold: true, size: 9, color: { argb: `FF${RED_TEXT}` } },

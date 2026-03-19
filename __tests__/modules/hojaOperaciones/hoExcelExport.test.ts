@@ -231,7 +231,8 @@ describe('exportHoSheetExcel', () => {
         });
         const wb = await buildAndCapture(sheet, makeDoc([sheet]));
         const ws = wb.worksheets[0];
-        expect(findCellValue(ws, 'Detener producción')).toBe(true);
+        // Reaction plan text is now title-cased in export
+        expect(findCellValue(ws, 'Detener Producción')).toBe(true);
         expect(findCellValue(ws, 'Supervisor de línea')).toBe(true);
     }, 15000);
 
@@ -411,7 +412,8 @@ describe('Edge cases', () => {
     it('includes default reaction plan text', async () => {
         const sheet = makeSheet({ reactionPlanText: DEFAULT_REACTION_PLAN_TEXT });
         const wb = await buildAndCapture(sheet, makeDoc([sheet]));
-        expect(findCellValue(wb.worksheets[0], 'DETENGA LA OPERACION')).toBe(true);
+        // Default reaction plan is now title-cased
+        expect(findCellValue(wb.worksheets[0], 'Detenga La Operacion')).toBe(true);
     }, 15000);
 
     it('CC has red fill, SC has amber fill', async () => {
