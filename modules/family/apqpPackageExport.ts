@@ -5,7 +5,8 @@
  * Reuses buildControlPlanWorkbook() and buildAmfeCompletoWorkbook().
  *
  * Company standard: all sheets start at B2 (1 empty row + 1 empty column).
- * HO sheets use ExcelJS (dynamic import) for visual-aid image embedding.
+ * Uses xlsx-js-style only — no ExcelJS mixing (causes XML corruption).
+ * HO images use placeholder text; full images available in standalone HO export.
  */
 
 import XLSX from 'xlsx-js-style';
@@ -15,11 +16,11 @@ import type { AmfeDocument } from '../amfe/amfeTypes';
 import { buildAmfeCompletoWorkbook } from '../amfe/amfeExcelExport';
 import type { ControlPlanDocument } from '../controlPlan/controlPlanTypes';
 import { buildControlPlanWorkbook } from '../controlPlan/controlPlanExcelExport';
-import type { HoDocument, HojaOperacion } from '../hojaOperaciones/hojaOperacionesTypes';
+import type { HoDocument } from '../hojaOperaciones/hojaOperacionesTypes';
 import { PPE_CATALOG } from '../hojaOperaciones/hojaOperacionesTypes';
 import { sanitizeCellValue } from '../../utils/sanitizeCellValue';
 import { sanitizeFilename } from '../../utils/filenameSanitization';
-import { downloadWorkbook, downloadExcelJSWorkbook } from '../../utils/excel';
+import { downloadWorkbook } from '../../utils/excel';
 
 // ============================================================================
 // TYPES
@@ -208,97 +209,118 @@ export function buildFlujogramaSheet(wb: XLSX.WorkBook, pfd: PfdDocument): void 
 }
 
 // ============================================================================
-// ExcelJS HO SHEET (images + B2 offset + EPP ISO names)
+// HO SUMMARY SHEETS (xlsx-js-style, B2 offset, EPP text, image placeholders)
 // ============================================================================
 
-const EJB = { top: { style: 'thin' as const, color: { argb: 'FF000000' } }, bottom: { style: 'thin' as const, color: { argb: 'FF000000' } }, left: { style: 'thin' as const, color: { argb: 'FF000000' } }, right: { style: 'thin' as const, color: { argb: 'FF000000' } } };
-const ej = {
-    sec: { font: { bold: true, size: 10, name: 'Arial', color: { argb: 'FFFFFFFF' } }, fill: { type: 'pattern' as const, pattern: 'solid' as const, fgColor: { argb: 'FF1E3A5F' } }, alignment: { horizontal: 'center' as const, vertical: 'middle' as const }, border: EJB },
-    mL:  { font: { bold: true, size: 10, name: 'Arial' }, fill: { type: 'pattern' as const, pattern: 'solid' as const, fgColor: { argb: 'FFF2F2F2' } }, border: EJB },
-    mV:  { font: { size: 10, name: 'Arial' }, border: EJB },
-    cH:  { font: { bold: true, size: 9, name: 'Arial' }, fill: { type: 'pattern' as const, pattern: 'solid' as const, fgColor: { argb: 'FFD9E2F3' } }, alignment: { horizontal: 'center' as const, vertical: 'middle' as const, wrapText: true }, border: EJB },
-    cl:  { font: { size: 9, name: 'Arial' }, alignment: { vertical: 'top' as const, wrapText: true }, border: EJB },
-    cC:  { font: { size: 9, name: 'Arial' }, alignment: { horizontal: 'center' as const, vertical: 'middle' as const }, border: EJB },
-    kp:  { font: { bold: true, size: 9, name: 'Arial' }, fill: { type: 'pattern' as const, pattern: 'solid' as const, fgColor: { argb: 'FFFFEB9C' } }, alignment: { vertical: 'top' as const, wrapText: true }, border: EJB },
-    gH:  { font: { bold: true, size: 10, name: 'Arial', color: { argb: 'FFFFFFFF' } }, fill: { type: 'pattern' as const, pattern: 'solid' as const, fgColor: { argb: 'FF2E7D32' } }, alignment: { horizontal: 'center' as const, vertical: 'middle' as const }, border: EJB },
-};
+export function buildHoSummarySheets(wb: XLSX.WorkBook, ho: HoDocument): void {
+    const usedNames = new Set<string>();
+    for (const sheet of ho.sheets) {
+        let baseName = `HO ${sheet.operationNumber || sheet.hoNumber}`.substring(0, 28);
+        let sheetName = baseName; let counter = 1;
+        while (usedNames.has(sheetName)) sheetName = `${baseName} (${counter++})`;
+        usedNames.add(sheetName);
 
-type EjsWb = import('exceljs').Workbook;
-function eS(ws: any, r: number, c: number, v: any, s: any) { const cell = ws.getCell(r, c); cell.value = v; if (s.font) cell.font = s.font; if (s.fill) cell.fill = s.fill; if (s.alignment) cell.alignment = s.alignment; if (s.border) cell.border = s.border; }
-function eM(ws: any, r: number, c1: number, c2: number, v: any, s: any) { ws.mergeCells(r, c1, r, c2); eS(ws, r, c1, v, s); }
+        const rows: any[][] = [], merges: XLSX.Range[] = [], TC = 8;
 
-function addHoSheet(wb: EjsWb, ho: HojaOperacion, name: string): void {
-    const ws = wb.addWorksheet(name);
-    const B = 2, C = 8;
-    ws.columns = [{ width: 3 }, { width: 10 }, { width: 24 }, { width: 16 }, { width: 16 }, { width: 14 }, { width: 10 }, { width: 20 }, { width: 16 }];
-    let r = 2;
-    eM(ws, r, B, B + C - 1, `HOJA DE OPERACIONES \u2014 ${ho.operationName}`, ej.sec); r++;
-    for (const [l, v] of [['Operacion', `${ho.operationNumber} \u2014 ${ho.operationName}`], ['HO Nro.', ho.hoNumber], ['Sector', ho.sector], ['Puesto', ho.puestoNumber], ['Modelo', ho.vehicleModel], ['Revision', ho.revision]] as [string, string][]) {
-        ws.mergeCells(r, B, r, B + 1); eS(ws, r, B, l, ej.mL);
-        ws.mergeCells(r, B + 2, r, B + C - 1); eS(ws, r, B + 2, String(sanitizeCellValue(v)), ej.mV); r++;
-    }
-    r++;
-    if (ho.safetyElements.length > 0) {
-        eM(ws, r, B, B + C - 1, 'ELEMENTOS DE SEGURIDAD (EPP)', ej.sec); r++;
-        const labels = ho.safetyElements.map(id => { const p = PPE_CATALOG.find(x => x.id === id); return p ? p.label : id; });
-        eM(ws, r, B, B + C - 1, labels.join('\n'), ej.cl);
-        ws.getRow(r).height = Math.max(18, labels.length * 14); r++; r++;
-    }
-    if (ho.steps.length > 0) {
-        eM(ws, r, B, B + C - 1, 'DESCRIPCION DE LA OPERACION', ej.sec); r++;
-        eS(ws, r, B, 'Nro', ej.cH);
-        ws.mergeCells(r, B + 1, r, B + 3); eS(ws, r, B + 1, 'Descripcion', ej.cH);
-        ws.mergeCells(r, B + 4, r, B + 5); eS(ws, r, B + 4, 'Punto Clave', ej.cH);
-        ws.mergeCells(r, B + 6, r, B + 7); eS(ws, r, B + 6, 'Razon', ej.cH); r++;
-        for (const step of ho.steps) {
-            const ss = step.isKeyPoint ? ej.kp : ej.cl;
-            eS(ws, r, B, step.stepNumber, ej.cC);
-            ws.mergeCells(r, B + 1, r, B + 3); eS(ws, r, B + 1, String(sanitizeCellValue(step.description)), ss);
-            ws.mergeCells(r, B + 4, r, B + 5); eS(ws, r, B + 4, step.isKeyPoint ? '\u2605' : '', ej.cC);
-            ws.mergeCells(r, B + 6, r, B + 7); eS(ws, r, B + 6, String(sanitizeCellValue(step.keyPointReason)), ss);
-            if (step.visualAidId) {
-                const va = ho.visualAids.find(v => v.id === step.visualAidId);
-                if (va?.imageData) {
-                    try {
-                        const b64 = va.imageData.replace(/^data:image\/\w+;base64,/, '');
-                        const ext = va.imageData.startsWith('data:image/jpeg') ? 'jpeg' as const : 'png' as const;
-                        const imgId = wb.addImage({ base64: b64, extension: ext });
-                        ws.addImage(imgId, { tl: { col: B + C - 0.5, row: r - 1 } as any, ext: { width: 180, height: 120 } });
-                        ws.getRow(r).height = Math.max(ws.getRow(r).height || 18, 95);
-                    } catch { /* skip */ }
-                }
+        // Title
+        const titleRow: any[] = Array(TC).fill(null).map(() => ({ v: '', s: st.section }));
+        titleRow[0] = { v: `HOJA DE OPERACIONES \u2014 ${sheet.operationName}`, s: st.section };
+        rows.push(titleRow); merges.push({ s: { r: 0, c: 0 }, e: { r: 0, c: TC - 1 } });
+
+        // Metadata
+        for (const [l, v] of [['Operacion', `${sheet.operationNumber} \u2014 ${sheet.operationName}`], ['HO Nro.', sheet.hoNumber], ['Sector', sheet.sector], ['Puesto', sheet.puestoNumber], ['Modelo', sheet.vehicleModel], ['Revision', sheet.revision]] as [string, string][]) {
+            const ri = rows.length, row: any[] = Array(TC).fill(null).map(() => ({ v: '', s: { border: BORDER } }));
+            row[0] = { v: l, s: st.metaLabel }; row[1] = { v: '', s: st.metaLabel };
+            row[2] = { v: sanitizeCellValue(v), s: st.metaValue };
+            for (let c = 3; c < TC; c++) row[c] = { v: '', s: st.metaValue };
+            merges.push({ s: { r: ri, c: 0 }, e: { r: ri, c: 1 } }, { s: { r: ri, c: 2 }, e: { r: ri, c: TC - 1 } }); rows.push(row);
+        }
+        rows.push(Array(TC).fill(''));
+
+        // EPP — ISO names from PPE_CATALOG
+        if (sheet.safetyElements.length > 0) {
+            const ppeIdx = rows.length;
+            const ppeHdr: any[] = Array(TC).fill(null).map(() => ({ v: '', s: st.section }));
+            ppeHdr[0] = { v: 'ELEMENTOS DE SEGURIDAD (EPP)', s: st.section };
+            rows.push(ppeHdr); merges.push({ s: { r: ppeIdx, c: 0 }, e: { r: ppeIdx, c: TC - 1 } });
+            const labels = sheet.safetyElements.map(id => { const p = PPE_CATALOG.find(x => x.id === id); return p ? p.label : id; });
+            const ppeListIdx = rows.length;
+            const ppeRow: any[] = Array(TC).fill(null).map(() => ({ v: '', s: st.cell }));
+            ppeRow[0] = { v: labels.join('\n'), s: { ...st.cell, alignment: { vertical: 'top' as const, wrapText: true } } };
+            rows.push(ppeRow); merges.push({ s: { r: ppeListIdx, c: 0 }, e: { r: ppeListIdx, c: TC - 1 } });
+            rows.push(Array(TC).fill(''));
+        }
+
+        // Steps
+        if (sheet.steps.length > 0) {
+            const stHdrIdx = rows.length;
+            const stHdr: any[] = Array(TC).fill(null).map(() => ({ v: '', s: st.section }));
+            stHdr[0] = { v: 'DESCRIPCION DE LA OPERACION', s: st.section };
+            rows.push(stHdr); merges.push({ s: { r: stHdrIdx, c: 0 }, e: { r: stHdrIdx, c: TC - 1 } });
+            const stepHeaders = ['Nro', 'Descripcion', '', '', 'Punto Clave', '', 'Razon', ''];
+            rows.push(stepHeaders.map(h => ({ v: h, s: st.colHdr })));
+            const scIdx = rows.length - 1;
+            merges.push({ s: { r: scIdx, c: 1 }, e: { r: scIdx, c: 3 } }, { s: { r: scIdx, c: 4 }, e: { r: scIdx, c: 5 } }, { s: { r: scIdx, c: 6 }, e: { r: scIdx, c: 7 } });
+
+            for (const step of sheet.steps) {
+                const rowIdx = rows.length; const cs = step.isKeyPoint ? st.keyPt : st.cell;
+                rows.push([
+                    { v: step.stepNumber, s: st.cc },
+                    { v: sanitizeCellValue(step.description), s: cs }, { v: '', s: cs }, { v: '', s: cs },
+                    { v: step.isKeyPoint ? '\u2605' : '', s: st.cc }, { v: '', s: st.cc },
+                    { v: sanitizeCellValue(step.keyPointReason), s: cs }, { v: '', s: cs },
+                ]);
+                merges.push({ s: { r: rowIdx, c: 1 }, e: { r: rowIdx, c: 3 } }, { s: { r: rowIdx, c: 4 }, e: { r: rowIdx, c: 5 } }, { s: { r: rowIdx, c: 6 }, e: { r: rowIdx, c: 7 } });
             }
-            r++;
+            rows.push(Array(TC).fill(''));
         }
-        r++;
-    }
-    const unlinked = ho.visualAids.filter(va => va.imageData && !ho.steps.some(s => s.visualAidId === va.id));
-    if (unlinked.length > 0) {
-        eM(ws, r, B, B + C - 1, 'AYUDAS VISUALES', ej.sec); r++;
-        for (const va of unlinked) {
-            try {
-                const b64 = va.imageData.replace(/^data:image\/\w+;base64,/, '');
-                const ext = va.imageData.startsWith('data:image/jpeg') ? 'jpeg' as const : 'png' as const;
-                const imgId = wb.addImage({ base64: b64, extension: ext });
-                ws.addImage(imgId, { tl: { col: B - 1, row: r - 1 } as any, ext: { width: 300, height: 200 } });
-                ws.getRow(r).height = 160; r++;
-                if (va.caption) { eM(ws, r, B, B + C - 1, va.caption, { font: { size: 8, name: 'Arial', italic: true, color: { argb: 'FF808080' } } }); r++; }
-            } catch { /* skip */ }
+
+        // Visual aids — text placeholders (xlsx-js-style cannot embed images)
+        if (sheet.visualAids.length > 0) {
+            const vaIdx = rows.length;
+            const vaHdr: any[] = Array(TC).fill(null).map(() => ({ v: '', s: st.section }));
+            vaHdr[0] = { v: 'AYUDAS VISUALES', s: st.section };
+            rows.push(vaHdr); merges.push({ s: { r: vaIdx, c: 0 }, e: { r: vaIdx, c: TC - 1 } });
+            for (const va of sheet.visualAids) {
+                const linkedStep = sheet.steps.find(s => s.visualAidId === va.id);
+                const caption = va.caption || 'Ayuda visual';
+                const stepRef = linkedStep ? `Paso ${linkedStep.stepNumber}` : '';
+                const ri = rows.length;
+                const row: any[] = Array(TC).fill(null).map(() => ({ v: '', s: st.imgRef }));
+                row[0] = { v: `${stepRef ? stepRef + ': ' : ''}${caption} [Ver imagen en sistema]`, s: st.imgRef };
+                rows.push(row); merges.push({ s: { r: ri, c: 0 }, e: { r: ri, c: TC - 1 } });
+            }
+            rows.push(Array(TC).fill(''));
         }
-        r++;
-    }
-    if (ho.qualityChecks.length > 0) {
-        eM(ws, r, B, B + C - 1, 'CICLO DE CONTROL', ej.gH); r++;
-        for (const [i, h] of ['Nro', 'Caracteristica', 'Especificacion', 'Metodo', 'Frecuencia', 'CC/SC', 'Reaccion', 'Registro'].entries()) eS(ws, r, B + i, h, ej.cH);
-        r++;
-        for (let i = 0; i < ho.qualityChecks.length; i++) {
-            const q = ho.qualityChecks[i];
-            eS(ws, r, B, i + 1, ej.cC); eS(ws, r, B + 1, String(sanitizeCellValue(q.characteristic)), ej.cl);
-            eS(ws, r, B + 2, String(sanitizeCellValue(q.specification)), ej.cl); eS(ws, r, B + 3, String(sanitizeCellValue(q.controlMethod)), ej.cl);
-            eS(ws, r, B + 4, String(sanitizeCellValue(q.frequency)), ej.cC); eS(ws, r, B + 5, String(sanitizeCellValue(q.specialCharSymbol)), ej.cC);
-            eS(ws, r, B + 6, String(sanitizeCellValue(q.reactionAction)), ej.cl); eS(ws, r, B + 7, String(sanitizeCellValue(q.registro)), ej.cl);
-            r++;
+
+        // Quality checks
+        if (sheet.qualityChecks.length > 0) {
+            const qcIdx = rows.length;
+            const qcHdr: any[] = Array(TC).fill(null).map(() => ({ v: '', s: st.greenSec }));
+            qcHdr[0] = { v: 'CICLO DE CONTROL', s: st.greenSec };
+            rows.push(qcHdr); merges.push({ s: { r: qcIdx, c: 0 }, e: { r: qcIdx, c: TC - 1 } });
+            rows.push(['Nro', 'Caracteristica', 'Especificacion', 'Metodo', 'Frecuencia', 'CC/SC', 'Reaccion', 'Registro'].map(h => ({ v: h, s: st.colHdr })));
+            for (let i = 0; i < sheet.qualityChecks.length; i++) {
+                const qc = sheet.qualityChecks[i];
+                rows.push([
+                    { v: i + 1, s: st.cc },
+                    { v: sanitizeCellValue(qc.characteristic), s: st.cell },
+                    { v: sanitizeCellValue(qc.specification), s: st.cell },
+                    { v: sanitizeCellValue(qc.controlMethod), s: st.cell },
+                    { v: sanitizeCellValue(qc.frequency), s: st.cc },
+                    { v: sanitizeCellValue(qc.specialCharSymbol), s: ccStyle(qc.specialCharSymbol) },
+                    { v: sanitizeCellValue(qc.reactionAction), s: st.cell },
+                    { v: sanitizeCellValue(qc.registro), s: st.cell },
+                ]);
+            }
         }
+
+        const rawCw = [8, 22, 14, 14, 12, 8, 18, 14];
+        const { rows: oR, merges: oM, cw: oC } = applyB2(rows, merges, rawCw);
+        const wsOut = XLSX.utils.aoa_to_sheet(oR);
+        wsOut['!cols'] = oC.map(w => ({ wch: w }));
+        wsOut['!merges'] = oM;
+        XLSX.utils.book_append_sheet(wb, wsOut, sheetName);
     }
 }
 
@@ -306,7 +328,7 @@ function addHoSheet(wb: EjsWb, ho: HojaOperacion, name: string): void {
 // MAIN EXPORT
 // ============================================================================
 
-/** Build xlsx-js-style portion (Portada + Flujograma + AMFE + CP) with B2 offset. */
+/** Build the complete APQP package workbook (xlsx-js-style only, B2 offset). */
 export function buildApqpPackageWorkbook(data: ApqpPackageData, options: ApqpExportOptions): XLSX.WorkBook {
     const wb = XLSX.utils.book_new();
     const planned: string[] = [];
@@ -320,25 +342,14 @@ export function buildApqpPackageWorkbook(data: ApqpPackageData, options: ApqpExp
     if (options.includeFlujograma && data.pfd) buildFlujogramaSheet(wb, data.pfd);
     if (options.includeAmfe && data.amfe) { const w = buildAmfeCompletoWorkbook(data.amfe); const s = w.SheetNames[0]; if (s) XLSX.utils.book_append_sheet(wb, shiftWorksheet(w.Sheets[s]), 'AMFE VDA'); }
     if (options.includeCp && data.cp) { const w = buildControlPlanWorkbook(data.cp); const s = w.SheetNames[0]; if (s) XLSX.utils.book_append_sheet(wb, shiftWorksheet(w.Sheets[s]), 'Plan de Control'); }
+    if (options.includeHo && data.ho && data.ho.sheets.length > 0) buildHoSummarySheets(wb, data.ho);
+
     return wb;
 }
 
-/** Export APQP package — async hybrid (xlsx-js-style + ExcelJS for HO with images). */
-export async function exportApqpPackage(data: ApqpPackageData, options: ApqpExportOptions): Promise<void> {
-    const safeName = sanitizeFilename(data.familyName || 'Paquete_APQP', { allowSpaces: true });
-    const fileName = `Paquete APQP - ${safeName}.xlsx`;
+/** Export APQP package — builds workbook and triggers download. */
+export function exportApqpPackage(data: ApqpPackageData, options: ApqpExportOptions): void {
     const wb = buildApqpPackageWorkbook(data, options);
-    const needsHo = options.includeHo && data.ho && data.ho.sheets.length > 0;
-
-    if (needsHo) {
-        const buf = XLSX.write(wb, { bookType: 'xlsx', type: 'array' }) as ArrayBuffer;
-        const ExcelJS = (await import('exceljs')).default;
-        const ejsWb = new ExcelJS.Workbook();
-        await ejsWb.xlsx.load(buf);
-        const names = hoSheetNames(data.ho!);
-        for (let i = 0; i < data.ho!.sheets.length; i++) addHoSheet(ejsWb, data.ho!.sheets[i], names[i]);
-        await downloadExcelJSWorkbook(ejsWb, fileName);
-    } else {
-        downloadWorkbook(wb, fileName);
-    }
+    const safeName = sanitizeFilename(data.familyName || 'Paquete_APQP', { allowSpaces: true });
+    downloadWorkbook(wb, `Paquete APQP - ${safeName}.xlsx`);
 }

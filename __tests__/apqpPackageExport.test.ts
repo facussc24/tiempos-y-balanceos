@@ -18,7 +18,6 @@ vi.mock('xlsx-js-style', () => ({
 const mockDownloadWorkbook = vi.fn();
 vi.mock('../utils/excel', () => ({
     downloadWorkbook: (...args: any[]) => mockDownloadWorkbook(...args),
-    downloadExcelJSWorkbook: vi.fn().mockResolvedValue(undefined),
     generateWorkbookBuffer: vi.fn().mockReturnValue(new Uint8Array(10)),
 }));
 vi.mock('../utils/logger', () => ({ logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn() } }));
@@ -70,13 +69,13 @@ describe('APQP Package Export', () => {
     beforeEach(() => vi.clearAllMocks());
 
     describe('buildApqpPackageWorkbook', () => {
-        it('should create Portada + Flujograma + AMFE + CP sheets (HO via ExcelJS)', () => {
+        it('should create all 5 sections when all data present', () => {
             const wb = buildApqpPackageWorkbook(makeData(), makeOpts());
             expect(wb.SheetNames).toContain('Portada');
             expect(wb.SheetNames).toContain('Flujograma');
             expect(wb.SheetNames).toContain('AMFE VDA');
             expect(wb.SheetNames).toContain('Plan de Control');
-            // HO sheets are NOT in the xlsx-js-style workbook (added by ExcelJS in exportApqpPackage)
+            expect(wb.SheetNames.some(n => n.startsWith('HO '))).toBe(true);
         });
 
         it('should skip sections when options are false', () => {
@@ -117,17 +116,16 @@ describe('APQP Package Export', () => {
     });
 
     describe('exportApqpPackage', () => {
-        it('should call downloadWorkbook when no HO', async () => {
-            const data = makeData(); data.ho = null;
-            await exportApqpPackage(data, makeOpts());
+        it('should call downloadWorkbook with correct filename', () => {
+            exportApqpPackage(makeData(), makeOpts());
             expect(mockDownloadWorkbook).toHaveBeenCalledTimes(1);
             const [, filename] = mockDownloadWorkbook.mock.calls[0];
             expect(filename).toMatch(/Paquete APQP.*Insert VWA.*\.xlsx$/);
         });
 
-        it('should sanitize special characters in filename', async () => {
-            const data = makeData(); data.ho = null; data.familyName = 'Insert <VWA> / Test';
-            await exportApqpPackage(data, makeOpts());
+        it('should sanitize special characters in filename', () => {
+            const data = makeData(); data.familyName = 'Insert <VWA> / Test';
+            exportApqpPackage(data, makeOpts());
             const [, filename] = mockDownloadWorkbook.mock.calls[0];
             expect(filename).not.toContain('<');
             expect(filename).not.toContain('>');
