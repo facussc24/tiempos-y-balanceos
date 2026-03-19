@@ -78,6 +78,9 @@ const st = {
     subStep:   { font: { sz: 9, name: 'Arial', color: { rgb: '555555' } }, fill: { fgColor: { rgb: 'F5F5F5' } }, alignment: { vertical: 'top' as const, wrapText: true }, border: BORDER },
     subCC:     { font: { sz: 9, name: 'Arial', color: { rgb: '555555' } }, fill: { fgColor: { rgb: 'F5F5F5' } }, alignment: { horizontal: 'center' as const, vertical: 'center' as const }, border: BORDER },
     branchLbl: { font: { bold: true, sz: 9, name: 'Arial', color: { rgb: 'FFFFFF' } }, fill: { fgColor: { rgb: '7B61FF' } }, alignment: { horizontal: 'center' as const, vertical: 'center' as const }, border: BORDER },
+    keyPt:     { font: { bold: true, sz: 9, name: 'Arial' }, fill: { fgColor: { rgb: 'FFEB9C' } }, alignment: { vertical: 'top' as const, wrapText: true }, border: BORDER },
+    imgRef:    { font: { sz: 9, name: 'Arial', color: { rgb: '4472C4' } }, alignment: { vertical: 'center' as const, wrapText: true }, border: BORDER },
+    greenSec:  { font: { bold: true, sz: 10, name: 'Arial', color: { rgb: 'FFFFFF' } }, fill: { fgColor: { rgb: '4CAF50' } }, alignment: { horizontal: 'center' as const, vertical: 'center' as const }, border: BORDER },
 };
 
 function ccStyle(v: string) { const u = (v || '').toUpperCase().trim(); return u === 'CC' ? st.ccBadge : u === 'SC' ? st.scBadge : st.cc; }
