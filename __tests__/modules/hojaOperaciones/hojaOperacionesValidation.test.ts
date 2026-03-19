@@ -66,22 +66,22 @@ describe('validateHoDocument – errors', () => {
         expect(issues.some(i => i.severity === 'error' && i.message.includes('pasos'))).toBe(true);
     });
 
-    it('error: no PPE selected', () => {
+    it('warning: no PPE selected', () => {
         const doc = makeDoc([makeSheet({ safetyElements: [] })]);
         const issues = validateHoDocument(doc);
-        expect(issues.some(i => i.severity === 'error' && i.message.includes('EPP'))).toBe(true);
+        expect(issues.some(i => i.severity === 'warning' && i.message.includes('EPP'))).toBe(true);
     });
 
-    it('error: preparedBy empty', () => {
+    it('warning: preparedBy empty', () => {
         const doc = makeDoc([makeSheet({ preparedBy: '' })]);
         const issues = validateHoDocument(doc);
-        expect(issues.some(i => i.severity === 'error' && i.message.includes('Realizo'))).toBe(true);
+        expect(issues.some(i => i.severity === 'warning' && i.message.includes('Realizo'))).toBe(true);
     });
 
-    it('error: approvedBy empty', () => {
+    it('warning: approvedBy empty', () => {
         const doc = makeDoc([makeSheet({ approvedBy: '' })]);
         const issues = validateHoDocument(doc);
-        expect(issues.some(i => i.severity === 'error' && i.message.includes('Aprobo'))).toBe(true);
+        expect(issues.some(i => i.severity === 'warning' && i.message.includes('Aprobo'))).toBe(true);
     });
 });
 

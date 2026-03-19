@@ -37,29 +37,29 @@ function validateSheet(sheet: HojaOperacion): HoValidationIssue[] {
         });
     }
 
-    // ERROR: No PPE selected
+    // WARNING: No PPE selected (some operations may not require PPE)
     if (sheet.safetyElements.length === 0) {
         issues.push({
             ...ctx,
-            severity: 'error',
+            severity: 'warning',
             message: 'No tiene elementos de seguridad (EPP) seleccionados.',
         });
     }
 
-    // ERROR: preparedBy empty
+    // WARNING: preparedBy empty (don't block export for missing metadata)
     if (!sheet.preparedBy.trim()) {
         issues.push({
             ...ctx,
-            severity: 'error',
+            severity: 'warning',
             message: 'Campo "Realizo" esta vacio.',
         });
     }
 
-    // ERROR: approvedBy empty
+    // WARNING: approvedBy empty (don't block export for missing metadata)
     if (!sheet.approvedBy.trim()) {
         issues.push({
             ...ctx,
-            severity: 'error',
+            severity: 'warning',
             message: 'Campo "Aprobo" esta vacio.',
         });
     }
