@@ -85,7 +85,9 @@ export const useAmfeProjects = (
     currentData: AmfeDocument,
     onLoadProject: (data: AmfeDocument) => void,
     onResetProject: () => void,
-    requestConfirm: RequestConfirmFn
+    requestConfirm: RequestConfirmFn,
+    /** Skip auto-loading the last opened project from localStorage (e.g. when navigating from landing page with a specific family) */
+    skipAutoLoad?: boolean
 ) => {
     // Current project reference (hierarchical)
     const [currentProjectRef, setCurrentProjectRef] = useState<AmfeProjectRef | null>(null);
@@ -282,11 +284,12 @@ export const useAmfeProjects = (
         } catch { /* ignore */ }
     }, [currentProjectRef]);
 
-    // Auto-load last opened project on mount
+    // Auto-load last opened project on mount (skipped when navigating from landing with a specific family)
     const autoLoadDoneRef = useRef(false);
     useEffect(() => {
         if (autoLoadDoneRef.current) return;
         autoLoadDoneRef.current = true;
+        if (skipAutoLoad) return;
         let saved: AmfeProjectRef | null = null;
         try {
             const raw = localStorage.getItem(LS_KEY_LAST_PROJECT);

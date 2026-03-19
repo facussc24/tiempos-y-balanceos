@@ -62,6 +62,8 @@ const AppRouterInner: React.FC = () => {
         } catch { /* ignore */ }
         return 'landing';
     });
+    /** Family ID to auto-load when navigating to AMFE from landing page */
+    const [pendingFamilyId, setPendingFamilyId] = useState<number | null>(null);
     const { entries: registryEntries } = useDocumentRegistry();
 
     // Seed product catalog on first launch (idempotent)
@@ -87,7 +89,15 @@ const AppRouterInner: React.FC = () => {
 
     const handleBackToLanding = useCallback(() => {
         setCurrentMode('landing');
+        setPendingFamilyId(null);
         try { localStorage.removeItem(LS_KEY_MODE); } catch { /* ignore */ }
+    }, []);
+
+    /** Navigate to AMFE and auto-load a project by family ID */
+    const handleOpenProjectFamily = useCallback((familyId: number) => {
+        setPendingFamilyId(familyId);
+        setCurrentMode('amfe');
+        try { localStorage.setItem(LS_KEY_MODE, 'amfe'); } catch { /* ignore */ }
     }, []);
 
     /** Open a document from the Hub — navigates to the correct module */
@@ -114,6 +124,7 @@ const AppRouterInner: React.FC = () => {
         return (
             <LandingPage
                 onSelectModule={handleSelectModule}
+                onOpenProjectFamily={handleOpenProjectFamily}
                 documentCounts={documentCounts}
                 recentDocuments={recentDocuments}
             />
@@ -144,7 +155,7 @@ const AppRouterInner: React.FC = () => {
             )}
             {currentMode === 'amfe' && (
                 <ModuleErrorBoundary moduleName="AMFE VDA" onNavigateHome={handleBackToLanding}>
-                    <AmfeApp onBackToLanding={handleBackToLanding} initialTab="amfe" />
+                    <AmfeApp onBackToLanding={handleBackToLanding} initialTab="amfe" initialFamilyId={pendingFamilyId} onFamilyIdConsumed={() => setPendingFamilyId(null)} />
                 </ModuleErrorBoundary>
             )}
             {currentMode === 'controlPlan' && (

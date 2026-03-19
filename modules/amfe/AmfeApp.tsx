@@ -71,6 +71,10 @@ interface AmfeAppProps {
     onBackToLanding: () => void;
     /** Initial tab to show (e.g. 'pfd' when entering PFD from landing page) */
     initialTab?: 'pfd' | 'amfe' | 'controlPlan' | 'hojaOperaciones';
+    /** Family ID to auto-load on mount (from landing page "Abrir" button) */
+    initialFamilyId?: number | null;
+    /** Called after the initialFamilyId has been consumed (prevents re-loading on re-render) */
+    onFamilyIdConsumed?: () => void;
 }
 
 /**
@@ -81,7 +85,7 @@ interface AmfeAppProps {
  */
 type ActivePanel = 'none' | 'projects' | 'summary' | 'library' | 'registry' | 'templates';
 
-const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab }) => {
+const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab, initialFamilyId, onFamilyIdConsumed }) => {
     const [activePanel, setActivePanel] = useState<ActivePanel>('none');
     const [showOverflowMenu, setShowOverflowMenu] = useState(false);
     const [collapsedOps, setCollapsedOps] = useState<Set<string>>(new Set());
@@ -141,7 +145,8 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab }) => {
         amfe.data,
         loadDataWithHistoryReset,
         amfe.resetData,
-        confirm.requestConfirm
+        confirm.requestConfirm,
+        !!initialFamilyId  // skip localStorage auto-load when navigating from landing page with a specific family
     );
 
     // Cross-user edit lock
@@ -167,6 +172,50 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab }) => {
             });
         });
         return () => { cancelled = true; };
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // 3c. Auto-load project from landing page "Abrir" button
+    // Use a ref to capture the familyId so the effect doesn't re-run when the parent
+    // clears it (which would abort the async load via the cancelled flag).
+    const initialFamilyIdRef = useRef(initialFamilyId);
+    const initialFamilyIdConsumedRef = useRef(false);
+    useEffect(() => {
+        const familyId = initialFamilyIdRef.current;
+        if (!familyId || initialFamilyIdConsumedRef.current) return;
+        initialFamilyIdConsumedRef.current = true;
+        // Signal to parent that the familyId has been consumed (prevents re-load on re-render)
+        onFamilyIdConsumed?.();
+
+        (async () => {
+            try {
+                // 1. Find the AMFE document linked to this family
+                const { listFamilyDocuments } = await import('../../utils/repositories/familyDocumentRepository');
+                const familyDocs = await listFamilyDocuments(familyId);
+                const amfeDocs = familyDocs.filter(d => d.module === 'amfe');
+                const masterAmfe = amfeDocs.find(d => d.isMaster) ?? amfeDocs[0];
+                if (!masterAmfe) return;
+
+                // 2. Load the AMFE document to get the project_name
+                const { loadAmfeDocument } = await import('../../utils/repositories/amfeRepository');
+                const result = await loadAmfeDocument(masterAmfe.documentId);
+                if (!result) return;
+
+                // 3. Parse project_name (format: "CLIENT/PROJECT/NAME")
+                const parts = result.meta.projectName.split('/');
+                if (parts.length === 3) {
+                    const [client, project, name] = parts;
+                    logger.info('AmfeApp', `Auto-loading project from landing: ${client}/${project}/${name}`);
+                    projects.loadHierarchicalProject(client, project, name);
+                } else {
+                    projects.loadSelectedProject(result.meta.projectName);
+                }
+            } catch (err) {
+                logger.warn('AmfeApp', 'Failed to auto-load project from family ID', {
+                    familyId,
+                    error: err instanceof Error ? err.message : String(err),
+                });
+            }
+        })();
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     // 4. Library

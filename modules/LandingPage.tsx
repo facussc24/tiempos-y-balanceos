@@ -15,6 +15,8 @@ import { ProjectTable } from '../components/landing/ProjectTable';
 
 interface LandingPageProps {
     onSelectModule: (module: 'pfd' | 'pfdTest' | 'tiempos' | 'amfe' | 'controlPlan' | 'hojaOperaciones' | 'registry' | 'solicitud' | 'manuales' | 'formatos' | 'dataManager' | 'admin') => void;
+    /** Navigate to AMFE module and auto-load the project for this family */
+    onOpenProjectFamily?: (familyId: number) => void;
     /** Document counts per type from the registry */
     documentCounts?: Partial<Record<DocumentType, number>>;
     /** Most recently updated documents (up to 5) */
@@ -35,7 +37,7 @@ const TYPE_LABELS: Record<DocumentType, string> = {
     hojaOperaciones: 'HO',
 };
 
-const LandingPage: React.FC<LandingPageProps> = ({ onSelectModule, documentCounts = {}, recentDocuments = [] }) => {
+const LandingPage: React.FC<LandingPageProps> = ({ onSelectModule, onOpenProjectFamily, documentCounts = {}, recentDocuments = [] }) => {
     const { user, signOut, userDisplayName } = useAuth();
     const { isAdmin } = useIsAdmin();
     const { projects, pendingItems, loading: projectsLoading } = useProjectHub();
@@ -195,7 +197,13 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSelectModule, documentCount
                         </div>
                         <ProjectTable
                             projects={projects}
-                            onSelectProject={() => onSelectModule('amfe')}
+                            onSelectProject={(familyId) => {
+                                if (onOpenProjectFamily) {
+                                    onOpenProjectFamily(familyId);
+                                } else {
+                                    onSelectModule('amfe');
+                                }
+                            }}
                         />
                     </section>
                 )}
