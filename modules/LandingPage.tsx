@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState, useCallback, lazy, Suspense } from 'react';
 import {
     Clock, ShieldAlert, ClipboardCheck, GitBranch, ArrowRight,
     FolderOpen, FileText, Sparkles, AlertTriangle, GitMerge,
@@ -12,6 +12,8 @@ import { useIsAdmin } from '../hooks/useIsAdmin';
 import { useProjectHub } from '../hooks/useProjectHub';
 import type { PendingItem } from '../hooks/useProjectHub';
 import { ProjectTable } from '../components/landing/ProjectTable';
+
+const ApqpExportDialog = lazy(() => import('./family/ApqpExportDialog'));
 
 interface LandingPageProps {
     onSelectModule: (module: 'pfd' | 'pfdTest' | 'tiempos' | 'amfe' | 'controlPlan' | 'hojaOperaciones' | 'registry' | 'solicitud' | 'manuales' | 'formatos' | 'dataManager' | 'admin') => void;
@@ -41,6 +43,14 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSelectModule, onOpenProject
     const { user, signOut, userDisplayName } = useAuth();
     const { isAdmin } = useIsAdmin();
     const { projects, pendingItems, loading: projectsLoading } = useProjectHub();
+
+    // APQP export dialog state
+    const [exportFamilyId, setExportFamilyId] = useState<number | null>(null);
+    const exportFamily = useMemo(
+        () => exportFamilyId !== null ? projects.find(p => p.family.id === exportFamilyId)?.family ?? null : null,
+        [exportFamilyId, projects],
+    );
+    const handleCloseExport = useCallback(() => setExportFamilyId(null), []);
 
     const totalDocs = useMemo(() =>
         Object.values(documentCounts).reduce((sum, n) => sum + (n || 0), 0),
@@ -204,6 +214,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSelectModule, onOpenProject
                                     onSelectModule('amfe');
                                 }
                             }}
+                            onExportApqp={setExportFamilyId}
                         />
                     </section>
                 )}
@@ -410,6 +421,17 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSelectModule, onOpenProject
                     </p>
                 </footer>
             </div>
+
+            {/* APQP Export Dialog */}
+            {exportFamily && (
+                <Suspense fallback={null}>
+                    <ApqpExportDialog
+                        isOpen={exportFamilyId !== null}
+                        onClose={handleCloseExport}
+                        family={exportFamily}
+                    />
+                </Suspense>
+            )}
         </div>
     );
 };

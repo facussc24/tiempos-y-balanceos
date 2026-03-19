@@ -18,7 +18,7 @@
 
 import React, { useMemo, useState } from 'react';
 import {
-    Search, ArrowRight, Check, GitMerge, Rocket, Factory,
+    Search, ArrowRight, Check, GitMerge, Rocket, Factory, FileSpreadsheet,
 } from 'lucide-react';
 import { Tooltip } from '../ui/Tooltip';
 import type { ProjectEntry, ProjectHealth } from '../../hooks/useProjectHub';
@@ -30,6 +30,7 @@ import type { ProjectEntry, ProjectHealth } from '../../hooks/useProjectHub';
 interface ProjectTableProps {
     projects: ProjectEntry[];
     onSelectProject: (familyId: number) => void;
+    onExportApqp?: (familyId: number) => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -113,7 +114,7 @@ function sortProjects(projects: ProjectEntry[]): ProjectEntry[] {
 // Component
 // ---------------------------------------------------------------------------
 
-const ProjectTable: React.FC<ProjectTableProps> = ({ projects, onSelectProject }) => {
+const ProjectTable: React.FC<ProjectTableProps> = ({ projects, onSelectProject, onExportApqp }) => {
     const [search, setSearch] = useState('');
 
     const filtered = useMemo(() => {
@@ -254,8 +255,21 @@ const ProjectTable: React.FC<ProjectTableProps> = ({ projects, onSelectProject }
 
                                     {/* Acciones */}
                                     <td className="px-4 py-3 text-right">
-                                        <span className="inline-flex items-center gap-1 text-xs font-medium text-blue-400 opacity-50 group-hover:opacity-100 transition-opacity">
-                                            Abrir <ArrowRight size={12} className="group-hover:translate-x-0.5 transition-transform" />
+                                        <span className="inline-flex items-center gap-2">
+                                            {onExportApqp && (
+                                                <Tooltip content="Exportar Paquete APQP">
+                                                    <button
+                                                        onClick={e => { e.stopPropagation(); onExportApqp(entry.family.id); }}
+                                                        className="p-1.5 rounded-md text-slate-500 hover:text-blue-400 hover:bg-blue-500/10 opacity-0 group-hover:opacity-100 transition-all"
+                                                        aria-label={`Exportar APQP de ${entry.family.name}`}
+                                                    >
+                                                        <FileSpreadsheet size={14} />
+                                                    </button>
+                                                </Tooltip>
+                                            )}
+                                            <span className="inline-flex items-center gap-1 text-xs font-medium text-blue-400 opacity-50 group-hover:opacity-100 transition-opacity">
+                                                Abrir <ArrowRight size={12} className="group-hover:translate-x-0.5 transition-transform" />
+                                            </span>
                                         </span>
                                     </td>
                                 </tr>
