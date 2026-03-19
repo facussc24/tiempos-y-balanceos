@@ -223,7 +223,7 @@ export const ApqpExportDialog: React.FC<ApqpExportDialogProps> = ({
                 revision,
             };
 
-            exportApqpPackage(data, exportOptions);
+            await exportApqpPackage(data, exportOptions);
             onClose();
         } catch (err) {
             logger.error('ApqpExport', 'Export error', {}, err instanceof Error ? err : undefined);
