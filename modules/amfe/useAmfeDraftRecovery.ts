@@ -27,8 +27,19 @@ export function useAmfeDraftRecovery(params: UseAmfeDraftRecoveryParams): UseAmf
     const [draftRecovery, setDraftRecovery] = useState<{ key: string; name: string } | null>(null);
 
     useEffect(() => {
-        // Only check for drafts when no project is loaded
-        if (currentProject) return;
+        // When a project is loaded, clear any stale draft recovery banner
+        // that belongs to a different project (or suppress it entirely).
+        if (currentProject) {
+            setDraftRecovery(prev => {
+                if (!prev) return prev;
+                // If the draft belongs to the currently loaded project, suppress
+                // it — the project is already open, so no recovery is needed.
+                // If it belongs to a different project, also suppress — showing
+                // a banner for a different project is confusing.
+                return null;
+            });
+            return;
+        }
 
         let cancelled = false;
         const checkDrafts = async () => {
