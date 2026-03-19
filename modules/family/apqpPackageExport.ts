@@ -75,6 +75,9 @@ const st = {
     ngScrap:   { font: { bold: true, sz: 9, name: 'Arial', color: { rgb: '9C0006' } }, fill: { fgColor: { rgb: 'FFC7CE' } }, alignment: { horizontal: 'center' as const, vertical: 'center' as const }, border: BORDER },
     ngRework:  { font: { bold: true, sz: 9, name: 'Arial', color: { rgb: '9C6500' } }, fill: { fgColor: { rgb: 'FFEB9C' } }, alignment: { horizontal: 'center' as const, vertical: 'center' as const }, border: BORDER },
     ngSort:    { font: { bold: true, sz: 9, name: 'Arial', color: { rgb: '1D4ED8' } }, fill: { fgColor: { rgb: 'DBEAFE' } }, alignment: { horizontal: 'center' as const, vertical: 'center' as const }, border: BORDER },
+    subStep:   { font: { sz: 9, name: 'Arial', color: { rgb: '555555' } }, fill: { fgColor: { rgb: 'F5F5F5' } }, alignment: { vertical: 'top' as const, wrapText: true }, border: BORDER },
+    subCC:     { font: { sz: 9, name: 'Arial', color: { rgb: '555555' } }, fill: { fgColor: { rgb: 'F5F5F5' } }, alignment: { horizontal: 'center' as const, vertical: 'center' as const }, border: BORDER },
+    branchLbl: { font: { bold: true, sz: 9, name: 'Arial', color: { rgb: 'FFFFFF' } }, fill: { fgColor: { rgb: '7B61FF' } }, alignment: { horizontal: 'center' as const, vertical: 'center' as const }, border: BORDER },
 };
 
 function ccStyle(v: string) { const u = (v || '').toUpperCase().trim(); return u === 'CC' ? st.ccBadge : u === 'SC' ? st.scBadge : st.cc; }
@@ -183,21 +186,37 @@ export function buildFlujogramaSheet(wb: XLSX.WorkBook, pfd: PfdDocument): void 
     rows.push(Array(TC).fill(''));
     rows.push(hdrs.map(h => ({ v: h, s: st.colHdr }))); const dsr = rows.length;
 
+    let lastBranch = '';
     for (const s of pfd.steps) {
+        // Branch label row when entering a new parallel flow
+        if (s.branchId && s.branchId !== lastBranch) {
+            const brLabel = s.branchLabel || `RAMA ${s.branchId}`;
+            const brIdx = rows.length;
+            const brRow: any[] = Array(TC).fill(null).map(() => ({ v: '', s: st.branchLbl }));
+            brRow[0] = { v: brLabel, s: st.branchLbl };
+            rows.push(brRow); merges.push({ s: { r: brIdx, c: 0 }, e: { r: brIdx, c: TC - 1 } });
+        }
+        lastBranch = s.branchId || '';
+
         const sym = STEP_LABELS[s.stepType] || s.stepType;
         const ng = NG_LABELS[s.rejectDisposition] || '';
         const pCC = s.productSpecialChar !== 'none' ? s.productSpecialChar : '';
         const prCC = s.processSpecialChar !== 'none' ? s.processSpecialChar : '';
+        // Sub-steps (transport, storage, delay) get gray background + indented description
+        const isSub = s.stepType === 'transport' || s.stepType === 'storage' || s.stepType === 'delay';
+        const cellS = isSub ? st.subStep : st.cell;
+        const ccS = isSub ? st.subCC : st.cc;
+        const desc = isSub ? `  ${String(s.description)}` : String(s.description);
         rows.push([
-            { v: sanitizeCellValue(s.stepNumber), s: st.cc },
-            { v: sanitizeCellValue(sym), s: st.cc },
-            { v: sanitizeCellValue(s.description), s: st.cell },
-            { v: sanitizeCellValue(s.machineDeviceTool), s: st.cell },
-            { v: sanitizeCellValue(s.productCharacteristic), s: st.cell },
-            { v: sanitizeCellValue(pCC), s: ccStyle(pCC) },
-            { v: sanitizeCellValue(s.processCharacteristic), s: st.cell },
-            { v: sanitizeCellValue(prCC), s: ccStyle(prCC) },
-            { v: sanitizeCellValue(ng), s: s.rejectDisposition !== 'none' ? ngStyle(s.rejectDisposition) : st.cc },
+            { v: sanitizeCellValue(s.stepNumber), s: ccS },
+            { v: sanitizeCellValue(sym), s: ccS },
+            { v: sanitizeCellValue(desc), s: cellS },
+            { v: sanitizeCellValue(s.machineDeviceTool), s: cellS },
+            { v: sanitizeCellValue(s.productCharacteristic), s: cellS },
+            { v: sanitizeCellValue(pCC), s: pCC ? ccStyle(pCC) : ccS },
+            { v: sanitizeCellValue(s.processCharacteristic), s: cellS },
+            { v: sanitizeCellValue(prCC), s: prCC ? ccStyle(prCC) : ccS },
+            { v: sanitizeCellValue(ng), s: s.rejectDisposition !== 'none' ? ngStyle(s.rejectDisposition) : ccS },
         ]);
     }
     const rh = rows.map((row, i) => { if (i === 0) return 30; if (i >= dsr && Array.isArray(row)) { const l = String(row[2]?.v || '').length; return Math.min(60, Math.max(15, Math.max(1, Math.ceil(l / 30)) * 13)); } return 18; });
@@ -302,6 +321,9 @@ export function buildHoSummarySheets(wb: XLSX.WorkBook, ho: HoDocument): void {
             rows.push(['Nro', 'Caracteristica', 'Especificacion', 'Metodo', 'Frecuencia', 'CC/SC', 'Reaccion', 'Registro'].map(h => ({ v: h, s: st.colHdr })));
             for (let i = 0; i < sheet.qualityChecks.length; i++) {
                 const qc = sheet.qualityChecks[i];
+                // Truncate reaction plan to 120 chars for readability
+                const reaction = String(qc.reactionAction || '');
+                const truncReaction = reaction.length > 120 ? reaction.substring(0, 117) + '...' : reaction;
                 rows.push([
                     { v: i + 1, s: st.cc },
                     { v: sanitizeCellValue(qc.characteristic), s: st.cell },
@@ -309,7 +331,7 @@ export function buildHoSummarySheets(wb: XLSX.WorkBook, ho: HoDocument): void {
                     { v: sanitizeCellValue(qc.controlMethod), s: st.cell },
                     { v: sanitizeCellValue(qc.frequency), s: st.cc },
                     { v: sanitizeCellValue(qc.specialCharSymbol), s: ccStyle(qc.specialCharSymbol) },
-                    { v: sanitizeCellValue(qc.reactionAction), s: st.cell },
+                    { v: sanitizeCellValue(truncReaction), s: st.cell },
                     { v: sanitizeCellValue(qc.registro), s: st.cell },
                 ]);
             }
