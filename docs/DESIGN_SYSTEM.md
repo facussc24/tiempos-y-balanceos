@@ -731,3 +731,136 @@ Todos los toolbars tienen clase `no-print`.
 /* Shadow sutil */        shadow-sm
 /* Shadow interaccion */  shadow-md, shadow-xl (modales)
 ```
+
+---
+
+## HO Export Format
+
+### Overview
+
+Hoja de Operaciones exports use **ExcelJS** for Excel (.xlsx) and **html2pdf.js** for PDF.
+Both formats replicate the company paper form "HO 952 REV.06".
+
+Source files:
+- Excel: `modules/hojaOperaciones/hoExcelExport.ts`
+- PDF: `modules/hojaOperaciones/hojaOperacionesPdfExport.ts`
+- Types: `modules/hojaOperaciones/hojaOperacionesTypes.ts`
+- Validation: `modules/hojaOperaciones/hojaOperacionesValidation.ts`
+- Assets: `src/assets/ppe/ppeBase64.ts` (logo + PPE icons as base64)
+
+### Excel Layout (A4 Landscape)
+
+**Grid**: Data starts at B2 (1 blank row + 1 blank column offset). Columns B through I (8 data columns).
+
+**Column widths** (Excel character units):
+
+| Col | Width | Content |
+|-----|-------|---------|
+| A   | 2     | Blank offset |
+| B   | 14    | Labels, step numbers |
+| C   | 16    | Values |
+| D   | 20    | Labels/values |
+| E   | 28    | Descriptions (widest) |
+| F   | 18    | Client, model |
+| G   | 16    | Revision, status |
+| H   | 12    | CC/SC badge |
+| I   | 20    | Registro/values |
+
+**Sections** (top to bottom):
+
+1. **Header** (rows 2-7)
+   - Row 2-3: Logo (B2:C3, 140x42px centered) | Title "HOJA DE OPERACIONES" (D2:F3) | Form number + HO number (G2:I3)
+   - Row 4: N. de Operacion | Denominacion | Modelo
+   - Row 5: Realizo | Aprobo | Fecha | Rev
+   - Row 6: Sector | Cod Pieza | Cliente | N. Puesto
+   - Optional row: Piezas Aplicables (if product family)
+
+2. **Ayudas Visuales** (if any)
+   - 2-column grid layout (left: cols B-E, right: cols F-I)
+   - Images scaled to max 340x200px with captions below
+
+3. **Descripcion de la Operacion** (steps)
+   - Headers: Nro | Descripcion del Paso (merged C-G) | Punto Clave | Razon
+   - Key points highlighted with yellow background (`FFEB9C`)
+   - Row height dynamic: `max(18, ceil(description.length / 50) * 14)`
+
+4. **Elementos de Seguridad** (PPE)
+   - Icons (55px) centered horizontally across columns, 3 rows tall
+   - Labels below icons in gray size-7 text
+   - Vertical centering via native EMU offsets (bypasses ExcelJS anchor bug)
+
+5. **Ciclo de Control** (quality checks, green theme)
+   - Headers: Nro | Caracteristica | Especificacion | Metodo Control | Resp. | Frecuencia | CC/SC | Registro
+   - CC badge: red fill (`DC2626`) white text
+   - SC badge: amber fill (`F59E0B`) white text
+   - Row height dynamic based on longest characteristic/specification
+
+6. **Plan de Reaccion Ante No Conforme** (red theme)
+   - 3 merged rows with red background (`FFC7CE`) and dark red text (`9C0006`)
+   - Contact row below if `reactionContact` is set
+
+**Print setup**: A4 landscape, fit to 1 page wide, margins 0.3in L/R 0.4in T/B.
+Header/footer: org name | "HOJA DE OPERACIONES" | HO number; form number | page X of N | revision.
+
+### PDF Layout (A4 Portrait)
+
+Two-column layout: Visual aids (40%) | Steps + PPE (60%).
+
+- Header: 4-row table matching Excel header
+- Steps: numbered list with key point stars and italic reasons
+- PPE: circular ISO pictogram images (36px, blue border) or text badges
+- Quality checks: 7-column table with CC/SC colored badges
+- Reaction plan: red-bordered box with bold text
+
+### Color Constants
+
+| Name | Hex | Usage |
+|------|-----|-------|
+| NAVY | `#1E3A5F` | Section headers, title text |
+| NAVY_LIGHT | `#D6E4F0` | Step header background |
+| GREEN_HEADER | `#E2EFDA` | Quality check header |
+| GREEN_TEXT | `#166534` | Quality check section title |
+| RED_HEADER | `#FFC7CE` | Reaction plan background |
+| RED_TEXT | `#9C0006` | Reaction plan text |
+| YELLOW_HIGHLIGHT | `#FFEB9C` | Key point step rows |
+| CC_RED | `#DC2626` | CC badge fill |
+| SC_AMBER | `#F59E0B` | SC badge fill |
+
+### Validation (Pre-Export)
+
+Export is blocked (error) only for:
+- No steps defined on the sheet
+
+Export shows warning (non-blocking) for:
+- No PPE selected
+- Realizo/Aprobo empty
+- No visual aids
+- CC/SC quality checks without key points in steps
+- Sector empty
+- Very large images (>2MB)
+- Very long step descriptions (>500 chars)
+- Reaction plan without escalation contact
+
+For "Hoja Actual" exports, only the active sheet is validated.
+For "Todas las Hojas" exports, all sheets are validated.
+
+### PPE Catalog (6 items)
+
+| ID | Label | Icon File |
+|----|-------|-----------|
+| anteojos | Anteojos de seguridad | anteojos.png |
+| guantes | Guantes | guantes.png |
+| zapatos | Zapatos de seguridad | zapatos.jpg |
+| proteccionAuditiva | Proteccion auditiva | proteccionAuditiva.png |
+| delantal | Ropa de proteccion | delantal.png |
+| respirador | Respirador | respirador.jpg |
+
+### Image Positioning (ExcelJS Workaround)
+
+ExcelJS has a bug in `anchor.js` where fractional column offsets use `width * 10000`
+instead of actual EMU values. The codebase uses `imgPosNative()` with `nativeCol` /
+`nativeColOff` to bypass this and pass EMU offsets directly. Helper functions:
+
+- `centerHorizEmu(totalWidthChars, imagePx)` — horizontal centering offset
+- `centerVertEmu(totalHeightPt, imagePx)` — vertical centering offset
+- `imgPosNative(col, row, colOffEmu, rowOffEmu, widthPx, heightPx)` — native EMU positioning
