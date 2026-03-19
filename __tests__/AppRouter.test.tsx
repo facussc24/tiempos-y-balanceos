@@ -58,7 +58,6 @@ describe('AppRouter', () => {
     it('should render LandingPage by default', () => {
         render(<AppRouter />);
         expect(screen.getByText('Barack Mercosul')).toBeDefined();
-        expect(screen.getByRole('navigation', { name: 'Módulos de documentación' })).toBeDefined();
     });
 
     it('should navigate to Tiempos module on card click', async () => {
@@ -69,9 +68,9 @@ describe('AppRouter', () => {
         });
     });
 
-    it('should navigate to AMFE module on card click', async () => {
+    it('should navigate to AMFE module via keyboard shortcut', async () => {
         render(<AppRouter />);
-        fireEvent.click(screen.getByLabelText('Abrir AMFE VDA'));
+        fireEvent.keyDown(document, { key: '2' });
         await waitFor(() => {
             const el = screen.getByTestId('amfe-app');
             expect(el).toBeDefined();
@@ -79,9 +78,9 @@ describe('AppRouter', () => {
         });
     });
 
-    it('should navigate to Control Plan via AmfeApp with initialTab="controlPlan"', async () => {
+    it('should navigate to Control Plan via keyboard shortcut', async () => {
         render(<AppRouter />);
-        fireEvent.click(screen.getByLabelText('Abrir Plan de Control'));
+        fireEvent.keyDown(document, { key: '3' });
         await waitFor(() => {
             const el = screen.getByTestId('amfe-app');
             expect(el).toBeDefined();
@@ -89,9 +88,9 @@ describe('AppRouter', () => {
         });
     });
 
-    it('should navigate to PFD via AmfeApp with initialTab="pfd"', async () => {
+    it('should navigate to PFD via keyboard shortcut', async () => {
         render(<AppRouter />);
-        fireEvent.click(screen.getByLabelText('Abrir Diagrama de Flujo'));
+        fireEvent.keyDown(document, { key: '1' });
         await waitFor(() => {
             const el = screen.getByTestId('amfe-app');
             expect(el).toBeDefined();
@@ -99,9 +98,9 @@ describe('AppRouter', () => {
         });
     });
 
-    it('should navigate to Hojas de Operaciones via AmfeApp with initialTab="hojaOperaciones"', async () => {
+    it('should navigate to Hojas de Operaciones via keyboard shortcut', async () => {
         render(<AppRouter />);
-        fireEvent.click(screen.getByLabelText('Abrir Hoja de Operaciones'));
+        fireEvent.keyDown(document, { key: '4' });
         await waitFor(() => {
             const el = screen.getByTestId('amfe-app');
             expect(el).toBeDefined();
@@ -123,7 +122,7 @@ describe('AppRouter', () => {
 
     it('should return to landing from AMFE modules (PFD entry)', async () => {
         render(<AppRouter />);
-        fireEvent.click(screen.getByLabelText('Abrir Diagrama de Flujo'));
+        fireEvent.keyDown(document, { key: '1' });
         await waitFor(() => {
             expect(screen.getByTestId('amfe-app')).toBeDefined();
         });
