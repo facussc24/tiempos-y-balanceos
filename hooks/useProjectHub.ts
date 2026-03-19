@@ -49,6 +49,8 @@ export interface ProjectEntry {
     phase: string | null;
     hasMaster: boolean;
     variantCount: number;
+    /** Part number from family members (primary), or fallback from master AMFE header */
+    partNumber: string;
 }
 
 export interface PendingItem {
@@ -207,6 +209,12 @@ export function useProjectHub(): UseProjectHubReturn {
 
                 if (cancelled) return;
 
+                // Part-number map from AMFE document headers (fallback when no family members)
+                const amfePartNumberMap = new Map<string, string>();
+                for (const d of amfeDocs) {
+                    if (d.partNumber) amfePartNumberMap.set(d.id, d.partNumber);
+                }
+
                 // Build entries per family
                 const allPending: PendingItem[] = [];
                 const entries = await Promise.all(
@@ -250,6 +258,16 @@ export function useProjectHub(): UseProjectHubReturn {
                             }
                         }
 
+                        // Resolve part number: primary member's codigo → master AMFE header fallback
+                        const primaryMember = members.find(m => m.isPrimary) ?? members[0];
+                        let partNumber = primaryMember?.codigo || '';
+                        if (!partNumber) {
+                            // Fallback: find the master AMFE doc's part_number
+                            const masterAmfe = familyDocs.find(d => d.isMaster && canonicalModule(d.module) === 'amfe');
+                            const anyAmfe = masterAmfe ?? familyDocs.find(d => canonicalModule(d.module) === 'amfe');
+                            if (anyAmfe) partNumber = amfePartNumberMap.get(anyAmfe.documentId) || '';
+                        }
+
                         const documents = buildDocumentStatuses(familyDocs);
                         const health = computeHealth(documents, kpis);
 
@@ -279,6 +297,7 @@ export function useProjectHub(): UseProjectHubReturn {
                             phase,
                             hasMaster,
                             variantCount,
+                            partNumber,
                         };
                     })
                 );
