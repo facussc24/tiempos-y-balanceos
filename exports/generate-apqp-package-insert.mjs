@@ -115,6 +115,15 @@ const st = {
     keyPt:     { font: { bold: true, sz: 9, name: 'Arial' }, fill: { fgColor: { rgb: 'FFEB9C' } }, alignment: { vertical: 'top', wrapText: true }, border: BORDER },
     imgRef:    { font: { sz: 9, name: 'Arial', color: { rgb: '4472C4' } }, alignment: { vertical: 'center', wrapText: true }, border: BORDER },
     greenSec:  { font: { bold: true, sz: 10, name: 'Arial', color: { rgb: 'FFFFFF' } }, fill: { fgColor: { rgb: '4CAF50' } }, alignment: { horizontal: 'center', vertical: 'center' }, border: BORDER },
+    // HO-matching styles
+    redSec:    { font: { bold: true, sz: 10, name: 'Arial', color: { rgb: 'FFFFFF' } }, fill: { fgColor: { rgb: 'E53935' } }, alignment: { horizontal: 'center', vertical: 'center' }, border: BORDER },
+    redCell:   { font: { bold: true, sz: 9, name: 'Arial', color: { rgb: '9C0006' } }, fill: { fgColor: { rgb: 'FFC7CE' } }, alignment: { vertical: 'top', wrapText: true }, border: BORDER },
+    greenHdr:  { font: { bold: true, sz: 8, name: 'Arial' }, fill: { fgColor: { rgb: 'E2EFDA' } }, alignment: { horizontal: 'center', vertical: 'center', wrapText: true }, border: BORDER },
+    navyLight: { font: { bold: true, sz: 8, name: 'Arial' }, fill: { fgColor: { rgb: 'D6E4F0' } }, alignment: { horizontal: 'center', vertical: 'center', wrapText: true }, border: BORDER },
+    grayLabel: { font: { bold: true, sz: 7, name: 'Arial', color: { rgb: '808080' } }, alignment: { vertical: 'top', wrapText: true }, border: BORDER },
+    // Flujograma decision-row style
+    decisionRow: { font: { sz: 9, name: 'Arial', color: { rgb: '6B21A8' } }, fill: { fgColor: { rgb: 'F3E8FF' } }, alignment: { vertical: 'top', wrapText: true }, border: BORDER },
+    decisionCC:  { font: { sz: 9, name: 'Arial', color: { rgb: '6B21A8' } }, fill: { fgColor: { rgb: 'F3E8FF' } }, alignment: { horizontal: 'center', vertical: 'center' }, border: BORDER },
 };
 
 function ccStyle(v) { const u = (v || '').toUpperCase().trim(); return u === 'CC' ? st.ccBadge : u === 'SC' ? st.scBadge : st.cc; }
@@ -136,6 +145,33 @@ const PFD_STEP_TYPES = [
 const STEP_LABELS = {};
 for (const t of PFD_STEP_TYPES) STEP_LABELS[t.value] = t.label;
 const NG_LABELS = { none: '', rework: 'Retrabajo', scrap: 'Descarte', sort: 'Seleccion' };
+
+const ASME_SYMBOLS = {
+    operation: '\u25EF', transport: '\u21E8', inspection: '\u25FB', storage: '\u25BD',
+    delay: 'D', decision: '\u25C7', combined: '\u25EF\u25FB',
+};
+
+function buildNgDescription(s) {
+    if (s.rejectDisposition === 'none' || !s.rejectDisposition) return '';
+    if (s.rejectDisposition === 'scrap') {
+        const reason = s.scrapDescription?.trim();
+        return reason ? `Scrap \u2014 segregar en \u00E1rea de rechazo (${reason})` : 'Scrap \u2014 segregar en \u00E1rea de rechazo';
+    }
+    if (s.rejectDisposition === 'rework') {
+        const target = s.reworkReturnStep?.trim();
+        return target ? `Retrabajo \u2014 retorna a ${target} para re-inspecci\u00F3n` : 'Retrabajo \u2014 retorna a operaci\u00F3n anterior';
+    }
+    if (s.rejectDisposition === 'sort') {
+        const reason = s.scrapDescription?.trim();
+        return reason ? `Selecci\u00F3n \u2014 ${reason}` : 'Selecci\u00F3n 100%';
+    }
+    return s.rejectDisposition;
+}
+
+function build4MText(s) {
+    const machine = s.machineDeviceTool?.trim();
+    return `M: ${machine || '\u2014'}\nMO: ${s.isExternalProcess ? 'Proveedor externo' : 'Operador'}\nMat: \u2014\nMA: \u2014`;
+}
 
 const PPE_CATALOG = [
     { id: 'anteojos',           label: 'Anteojos de seguridad' },
@@ -228,8 +264,8 @@ function buildPortadaSheet(wb, data, opts, tocNames) {
 
 function buildFlujogramaSheet(wb, pfd) {
     const rows = [], merges = [];
-    const hdrs = ['Nro. Op.', 'Simbolo', 'Descripcion', 'Maquina / Dispositivo', 'Caract. Producto', 'CC/SC Prod.', 'Caract. Proceso', 'CC/SC Proc.', 'Disp. NG'];
-    const cw = [10, 16, 35, 22, 22, 10, 22, 10, 14]; const TC = hdrs.length;
+    const hdrs = ['Nro. Op.', 'S\u00EDmbolo', 'Descripci\u00F3n', 'Elementos de Trabajo (4M)', 'Caract. Producto', 'CC/SC Prod.', 'Caract. Proceso', 'CC/SC Proc.', 'Ruteo / Disposici\u00F3n NG'];
+    const cw = [10, 16, 35, 26, 22, 10, 22, 10, 28]; const TC = hdrs.length;
 
     const tR = Array(TC).fill(null).map(() => ({ v: '', s: st.title }));
     tR[0] = { v: 'DIAGRAMA DE FLUJO DEL PROCESO', s: { ...st.title, font: { ...st.title.font, sz: 14 } } };
@@ -244,7 +280,8 @@ function buildFlujogramaSheet(wb, pfd) {
     rows.push(hdrs.map(h => ({ v: h, s: st.colHdr }))); const dsr = rows.length;
 
     let lastBranch = '';
-    for (const s of pfd.steps) {
+    for (let si = 0; si < pfd.steps.length; si++) {
+        const s = pfd.steps[si];
         if (s.branchId && s.branchId !== lastBranch) {
             const brLabel = s.branchLabel || `RAMA ${s.branchId}`;
             const brIdx = rows.length;
@@ -253,8 +290,13 @@ function buildFlujogramaSheet(wb, pfd) {
             rows.push(brRow); merges.push({ s: { r: brIdx, c: 0 }, e: { r: brIdx, c: TC - 1 } });
         }
         lastBranch = s.branchId || '';
-        const sym = STEP_LABELS[s.stepType] || s.stepType;
-        const ng = NG_LABELS[s.rejectDisposition] || '';
+
+        const symUnicode = ASME_SYMBOLS[s.stepType] || '';
+        const symLabel = STEP_LABELS[s.stepType] || s.stepType;
+        const sym = symUnicode ? `${symUnicode} ${symLabel}` : symLabel;
+        const ngText = buildNgDescription(s);
+        const fourM = build4MText(s);
+
         const pCC = s.productSpecialChar !== 'none' ? s.productSpecialChar : '';
         const prCC = s.processSpecialChar !== 'none' ? s.processSpecialChar : '';
         const isSub = s.stepType === 'transport' || s.stepType === 'storage' || s.stepType === 'delay';
@@ -265,15 +307,34 @@ function buildFlujogramaSheet(wb, pfd) {
             { v: sanitizeCellValue(s.stepNumber), s: ccS },
             { v: sanitizeCellValue(sym), s: ccS },
             { v: sanitizeCellValue(desc), s: cellS },
-            { v: sanitizeCellValue(s.machineDeviceTool), s: cellS },
+            { v: sanitizeCellValue(fourM), s: { ...cellS, alignment: { vertical: 'top', wrapText: true } } },
             { v: sanitizeCellValue(s.productCharacteristic), s: cellS },
             { v: sanitizeCellValue(pCC), s: pCC ? ccStyle(pCC) : ccS },
             { v: sanitizeCellValue(s.processCharacteristic), s: cellS },
             { v: sanitizeCellValue(prCC), s: prCC ? ccStyle(prCC) : ccS },
-            { v: sanitizeCellValue(ng), s: s.rejectDisposition !== 'none' ? ngStyle(s.rejectDisposition) : ccS },
+            { v: sanitizeCellValue(ngText), s: s.rejectDisposition !== 'none' ? ngStyle(s.rejectDisposition) : ccS },
         ]);
+
+        // Auto-insert decision row after inspection/combined with NG disposition
+        if ((s.stepType === 'inspection' || s.stepType === 'combined') && s.rejectDisposition !== 'none') {
+            const nextStep = si + 1 < pfd.steps.length ? pfd.steps[si + 1] : null;
+            if (!nextStep || nextStep.stepType !== 'decision') {
+                const decDesc = `OK \u2192 contin\u00FAa | NG \u2192 ${ngText}`;
+                rows.push([
+                    { v: '', s: st.decisionCC },
+                    { v: '\u25C7 Decisi\u00F3n', s: st.decisionCC },
+                    { v: sanitizeCellValue(decDesc), s: st.decisionRow },
+                    { v: '', s: st.decisionRow },
+                    { v: '', s: st.decisionRow },
+                    { v: '', s: st.decisionCC },
+                    { v: '', s: st.decisionRow },
+                    { v: '', s: st.decisionCC },
+                    { v: '', s: st.decisionCC },
+                ]);
+            }
+        }
     }
-    const rh = rows.map((row, i) => { if (i === 0) return 30; if (i >= dsr && Array.isArray(row)) { const l = String(row[2]?.v || '').length; return Math.min(60, Math.max(15, Math.max(1, Math.ceil(l / 30)) * 13)); } return 18; });
+    const rh = rows.map((row, i) => { if (i === 0) return 30; if (i >= dsr && Array.isArray(row)) { const l = Math.max(String(row[2]?.v || '').length, String(row[3]?.v || '').length); return Math.min(60, Math.max(15, Math.max(1, Math.ceil(l / 30)) * 13)); } return 18; });
     const { rows: oR, merges: oM, cw: oC } = applyB2(rows, merges, cw);
     const ws = XLSX.utils.aoa_to_sheet(oR); ws['!cols'] = oC.map(w => ({ wch: w })); ws['!merges'] = oM;
     ws['!rows'] = [{ hpt: OFF_R }, ...rh.map(h => ({ hpt: h }))];
@@ -572,55 +633,66 @@ function buildHoSummarySheets(wb, ho) {
         while (usedNames.has(sheetName)) sheetName = `${baseName} (${counter++})`;
         usedNames.add(sheetName);
         const rows = [], merges = [], TC = 8;
-        const titleRow = Array(TC).fill(null).map(() => ({ v: '', s: st.section }));
-        titleRow[0] = { v: `HOJA DE OPERACIONES \u2014 ${sheet.operationName}`, s: st.section };
-        rows.push(titleRow); merges.push({ s: { r: 0, c: 0 }, e: { r: 0, c: TC - 1 } });
-        for (const [l, v] of [['Operacion', `${sheet.operationNumber} \u2014 ${sheet.operationName}`], ['HO Nro.', sheet.hoNumber], ['Sector', sheet.sector], ['Puesto', sheet.puestoNumber], ['Modelo', sheet.vehicleModel], ['Revision', sheet.revision]]) {
-            const ri = rows.length, row = Array(TC).fill(null).map(() => ({ v: '', s: { border: BORDER } }));
-            row[0] = { v: l, s: st.metaLabel }; row[1] = { v: '', s: st.metaLabel }; row[2] = { v: sanitizeCellValue(v), s: st.metaValue };
-            for (let c = 3; c < TC; c++) row[c] = { v: '', s: st.metaValue };
-            merges.push({ s: { r: ri, c: 0 }, e: { r: ri, c: 1 } }, { s: { r: ri, c: 2 }, e: { r: ri, c: TC - 1 } }); rows.push(row);
+
+        // Header rows 0-1: Org | Title | HO Number
+        const r0 = Array(TC).fill(null).map(() => ({ v: '', s: { border: BORDER } }));
+        r0[0] = { v: ho.header?.organization || 'BARACK MERCOSUL', s: { font: { bold: true, sz: 11, name: 'Arial', color: { rgb: '1E3A5F' } }, alignment: { horizontal: 'center', vertical: 'center' }, border: BORDER } };
+        r0[2] = { v: 'HOJA DE OPERACIONES', s: { font: { bold: true, sz: 14, name: 'Arial', color: { rgb: '1E3A5F' } }, alignment: { horizontal: 'center', vertical: 'center' }, border: BORDER } };
+        r0[5] = { v: `Form: ${ho.header?.formNumber || ''}`, s: { font: { sz: 7, name: 'Arial', color: { rgb: '808080' } }, alignment: { horizontal: 'right', vertical: 'bottom' }, border: BORDER } };
+        const statusLabel = sheet.status === 'aprobado' ? 'APROBADO' : sheet.status === 'pendienteRevision' ? 'PEND. REV.' : 'BORRADOR';
+        const statusFill = sheet.status === 'aprobado' ? '22C55E' : sheet.status === 'pendienteRevision' ? 'FACC15' : 'E5E7EB';
+        const statusTxt = sheet.status === 'aprobado' ? 'FFFFFF' : sheet.status === 'pendienteRevision' ? '854D0E' : '4B5563';
+        r0[7] = { v: statusLabel, s: { font: { bold: true, sz: 8, name: 'Arial', color: { rgb: statusTxt } }, fill: { fgColor: { rgb: statusFill } }, alignment: { horizontal: 'center', vertical: 'center' }, border: BORDER } };
+        rows.push(r0);
+        merges.push({ s: { r: 0, c: 0 }, e: { r: 0, c: 1 } }, { s: { r: 0, c: 2 }, e: { r: 0, c: 4 } }, { s: { r: 0, c: 5 }, e: { r: 0, c: 6 } });
+
+        const r1 = Array(TC).fill(null).map(() => ({ v: '', s: { border: BORDER } }));
+        r1[5] = { v: sheet.hoNumber, s: { font: { bold: true, sz: 18, name: 'Arial', color: { rgb: '1E3A5F' } }, alignment: { horizontal: 'center', vertical: 'center' }, border: BORDER } };
+        rows.push(r1);
+        merges.push({ s: { r: 1, c: 0 }, e: { r: 1, c: 1 } }, { s: { r: 1, c: 2 }, e: { r: 1, c: 4 } }, { s: { r: 1, c: 5 }, e: { r: 1, c: 7 } });
+        merges.push({ s: { r: 0, c: 0 }, e: { r: 1, c: 1 } }, { s: { r: 0, c: 2 }, e: { r: 1, c: 4 } });
+
+        // Row 2: N° Operación | Denominación | Modelo
+        const r2 = Array(TC).fill(null).map(() => ({ v: '', s: { border: BORDER } }));
+        r2[0] = { v: 'N\u00B0 DE OPERACI\u00D3N', s: st.grayLabel }; r2[1] = { v: sheet.operationNumber, s: { font: { sz: 10, bold: true, name: 'Arial' }, border: BORDER } };
+        r2[2] = { v: 'DENOMINACI\u00D3N DE LA OPERACI\u00D3N', s: st.grayLabel };
+        r2[3] = { v: sanitizeCellValue(sheet.operationName), s: { font: { sz: 10, bold: true, name: 'Arial' }, border: BORDER } };
+        r2[6] = { v: 'MODELO O VEH\u00CDCULO', s: st.grayLabel }; r2[7] = { v: sanitizeCellValue(sheet.vehicleModel), s: st.metaValue };
+        rows.push(r2); merges.push({ s: { r: 2, c: 3 }, e: { r: 2, c: 5 } });
+
+        // Row 3: Realizó | Aprobó | Fecha | Rev
+        const r3 = Array(TC).fill(null).map(() => ({ v: '', s: { border: BORDER } }));
+        r3[0] = { v: 'REALIZ\u00D3', s: st.grayLabel }; r3[1] = { v: sanitizeCellValue(sheet.preparedBy), s: st.metaValue };
+        r3[2] = { v: 'APROB\u00D3', s: st.grayLabel }; r3[3] = { v: sanitizeCellValue(sheet.approvedBy), s: st.metaValue };
+        r3[4] = { v: 'FECHA', s: st.grayLabel }; r3[5] = { v: sanitizeCellValue(sheet.date), s: st.metaValue };
+        r3[6] = { v: 'REV.', s: st.grayLabel }; r3[7] = { v: sanitizeCellValue(sheet.revision), s: st.metaValue };
+        rows.push(r3);
+
+        // Row 4: Sector | Cod. Pieza | Cliente | N° Puesto
+        const r4 = Array(TC).fill(null).map(() => ({ v: '', s: { border: BORDER } }));
+        r4[0] = { v: 'SECTOR', s: st.grayLabel }; r4[1] = { v: sanitizeCellValue(sheet.sector), s: st.metaValue };
+        r4[2] = { v: 'COD. PIEZA', s: st.grayLabel }; r4[3] = { v: sanitizeCellValue(sheet.partCodeDescription), s: { ...st.metaValue, alignment: { vertical: 'center', wrapText: true } } };
+        r4[4] = { v: 'CLIENTE', s: st.grayLabel }; r4[5] = { v: sanitizeCellValue(ho.header?.client || ''), s: st.metaValue };
+        r4[6] = { v: 'N\u00B0 PUESTO', s: st.grayLabel }; r4[7] = { v: sanitizeCellValue(sheet.puestoNumber), s: st.metaValue };
+        rows.push(r4);
+
+        // Optional: Piezas Aplicables
+        if (ho.header.applicableParts?.trim()) {
+            const apIdx = rows.length;
+            const apRow = Array(TC).fill(null).map(() => ({ v: '', s: st.metaValue }));
+            apRow[0] = { v: 'PIEZAS APLICABLES', s: st.grayLabel };
+            apRow[1] = { v: sanitizeCellValue(ho.header.applicableParts.replace(/\n/g, ' \u00B7 ')), s: st.metaValue };
+            rows.push(apRow); merges.push({ s: { r: apIdx, c: 1 }, e: { r: apIdx, c: TC - 1 } });
         }
         rows.push(Array(TC).fill(''));
-        if (sheet.safetyElements.length > 0) {
-            const ppeIdx = rows.length;
-            const ppeHdr = Array(TC).fill(null).map(() => ({ v: '', s: st.section }));
-            ppeHdr[0] = { v: 'ELEMENTOS DE SEGURIDAD (EPP)', s: st.section };
-            rows.push(ppeHdr); merges.push({ s: { r: ppeIdx, c: 0 }, e: { r: ppeIdx, c: TC - 1 } });
-            const labels = sheet.safetyElements.map(id => { const p = PPE_CATALOG.find(x => x.id === id); return p ? p.label : id; });
-            const ppeListIdx = rows.length;
-            const ppeRow = Array(TC).fill(null).map(() => ({ v: '', s: st.cell }));
-            ppeRow[0] = { v: labels.join('\n'), s: { ...st.cell, alignment: { vertical: 'top', wrapText: true } } };
-            rows.push(ppeRow); merges.push({ s: { r: ppeListIdx, c: 0 }, e: { r: ppeListIdx, c: TC - 1 } });
-            rows.push(Array(TC).fill(''));
-        }
-        if (sheet.steps.length > 0) {
-            const stHdrIdx = rows.length;
-            const stHdr = Array(TC).fill(null).map(() => ({ v: '', s: st.section }));
-            stHdr[0] = { v: 'DESCRIPCION DE LA OPERACION', s: st.section };
-            rows.push(stHdr); merges.push({ s: { r: stHdrIdx, c: 0 }, e: { r: stHdrIdx, c: TC - 1 } });
-            const stepHeaders = ['Nro', 'Descripcion', '', '', 'Punto Clave', '', 'Razon', ''];
-            rows.push(stepHeaders.map(h => ({ v: h, s: st.colHdr })));
-            const scIdx = rows.length - 1;
-            merges.push({ s: { r: scIdx, c: 1 }, e: { r: scIdx, c: 3 } }, { s: { r: scIdx, c: 4 }, e: { r: scIdx, c: 5 } }, { s: { r: scIdx, c: 6 }, e: { r: scIdx, c: 7 } });
-            for (const step of sheet.steps) {
-                const rowIdx = rows.length; const cs = step.isKeyPoint ? st.keyPt : st.cell;
-                rows.push([
-                    { v: step.stepNumber, s: st.cc },
-                    { v: sanitizeCellValue(step.description), s: cs }, { v: '', s: cs }, { v: '', s: cs },
-                    { v: step.isKeyPoint ? '\u2605' : '', s: st.cc }, { v: '', s: st.cc },
-                    { v: sanitizeCellValue(step.keyPointReason), s: cs }, { v: '', s: cs },
-                ]);
-                merges.push({ s: { r: rowIdx, c: 1 }, e: { r: rowIdx, c: 3 } }, { s: { r: rowIdx, c: 4 }, e: { r: rowIdx, c: 5 } }, { s: { r: rowIdx, c: 6 }, e: { r: rowIdx, c: 7 } });
-            }
-            rows.push(Array(TC).fill(''));
-        }
-        if (sheet.visualAids.length > 0) {
+
+        // Visual Aids
+        if ((sheet.visualAids || []).length > 0) {
             const vaIdx = rows.length;
             const vaHdr = Array(TC).fill(null).map(() => ({ v: '', s: st.section }));
             vaHdr[0] = { v: 'AYUDAS VISUALES', s: st.section };
             rows.push(vaHdr); merges.push({ s: { r: vaIdx, c: 0 }, e: { r: vaIdx, c: TC - 1 } });
-            for (const va of sheet.visualAids) {
+            for (const va of (sheet.visualAids || [])) {
                 const linkedStep = sheet.steps.find(s => s.visualAidId === va.id);
                 const caption = va.caption || 'Ayuda visual';
                 const stepRef = linkedStep ? `Paso ${linkedStep.stepNumber}` : '';
@@ -631,31 +703,127 @@ function buildHoSummarySheets(wb, ho) {
             }
             rows.push(Array(TC).fill(''));
         }
-        if (sheet.qualityChecks.length > 0) {
+
+        // Steps
+        {
+            const stHdrIdx = rows.length;
+            const stHdr = Array(TC).fill(null).map(() => ({ v: '', s: st.section }));
+            stHdr[0] = { v: 'DESCRIPCI\u00D3N DE LA OPERACI\u00D3N', s: st.section };
+            rows.push(stHdr); merges.push({ s: { r: stHdrIdx, c: 0 }, e: { r: stHdrIdx, c: TC - 1 } });
+            const chIdx = rows.length;
+            rows.push([
+                { v: 'Nro', s: st.navyLight },
+                { v: 'Descripci\u00F3n del Paso', s: st.navyLight }, { v: '', s: st.navyLight }, { v: '', s: st.navyLight }, { v: '', s: st.navyLight },
+                { v: 'Punto Clave', s: st.navyLight },
+                { v: 'Raz\u00F3n', s: st.navyLight }, { v: '', s: st.navyLight },
+            ]);
+            merges.push({ s: { r: chIdx, c: 1 }, e: { r: chIdx, c: 4 } }, { s: { r: chIdx, c: 6 }, e: { r: chIdx, c: 7 } });
+            const steps = sheet.steps || [];
+            if (steps.length === 0) {
+                const emIdx = rows.length;
+                const emRow = Array(TC).fill(null).map(() => ({ v: '', s: st.cell }));
+                emRow[0] = { v: 'Sin pasos definidos', s: { ...st.cell, font: { ...st.cell.font, italic: true, color: { rgb: '808080' } }, alignment: { horizontal: 'center' } } };
+                rows.push(emRow); merges.push({ s: { r: emIdx, c: 0 }, e: { r: emIdx, c: TC - 1 } });
+            } else {
+                for (const step of steps) {
+                    const rowIdx = rows.length;
+                    const isKP = step.isKeyPoint;
+                    const cs = isKP ? st.keyPt : st.cell;
+                    rows.push([
+                        { v: step.stepNumber, s: isKP ? { ...st.cc, fill: { fgColor: { rgb: 'FFEB9C' } }, font: { ...st.cc.font, bold: true } } : st.cc },
+                        { v: sanitizeCellValue(step.description), s: cs }, { v: '', s: cs }, { v: '', s: cs }, { v: '', s: cs },
+                        { v: isKP ? 'SI' : '', s: isKP ? { ...st.cc, fill: { fgColor: { rgb: 'FFEB9C' } }, font: { ...st.cc.font, bold: true } } : st.cc },
+                        { v: sanitizeCellValue(step.keyPointReason || ''), s: cs }, { v: '', s: cs },
+                    ]);
+                    merges.push({ s: { r: rowIdx, c: 1 }, e: { r: rowIdx, c: 4 } }, { s: { r: rowIdx, c: 6 }, e: { r: rowIdx, c: 7 } });
+                }
+            }
+            rows.push(Array(TC).fill(''));
+        }
+
+        // PPE
+        {
+            const ppeIdx = rows.length;
+            const ppeHdr = Array(TC).fill(null).map(() => ({ v: '', s: st.section }));
+            ppeHdr[0] = { v: 'ELEMENTOS DE SEGURIDAD', s: st.section };
+            rows.push(ppeHdr); merges.push({ s: { r: ppeIdx, c: 0 }, e: { r: ppeIdx, c: TC - 1 } });
+            const safetyItems = sheet.safetyElements || [];
+            if (safetyItems.length === 0) {
+                const emIdx = rows.length;
+                const emRow = Array(TC).fill(null).map(() => ({ v: '', s: st.cell }));
+                emRow[0] = { v: 'Ninguno', s: { ...st.cell, font: { ...st.cell.font, italic: true, color: { rgb: '808080' } }, alignment: { horizontal: 'center' } } };
+                rows.push(emRow); merges.push({ s: { r: emIdx, c: 0 }, e: { r: emIdx, c: TC - 1 } });
+            } else {
+                const labels = safetyItems.map(id => { const p = PPE_CATALOG.find(x => x.id === id); return p ? p.label : id; });
+                const ppeListIdx = rows.length;
+                const ppeRow = Array(TC).fill(null).map(() => ({ v: '', s: st.cell }));
+                ppeRow[0] = { v: labels.join('  \u2022  '), s: { ...st.cell, alignment: { vertical: 'center', wrapText: true } } };
+                rows.push(ppeRow); merges.push({ s: { r: ppeListIdx, c: 0 }, e: { r: ppeListIdx, c: TC - 1 } });
+            }
+            rows.push(Array(TC).fill(''));
+        }
+
+        // Quality Checks — 8 cols matching individual
+        {
             const qcIdx = rows.length;
             const qcHdr = Array(TC).fill(null).map(() => ({ v: '', s: st.greenSec }));
             qcHdr[0] = { v: 'CICLO DE CONTROL', s: st.greenSec };
             rows.push(qcHdr); merges.push({ s: { r: qcIdx, c: 0 }, e: { r: qcIdx, c: TC - 1 } });
-            rows.push(['Nro', 'Caracteristica', 'Especificacion', 'Metodo', 'Frecuencia', 'CC/SC', 'Reaccion', 'Registro'].map(h => ({ v: h, s: st.colHdr })));
-            for (let i = 0; i < sheet.qualityChecks.length; i++) {
-                const qc = sheet.qualityChecks[i];
-                const reaction = String(qc.reactionAction || '');
-                const truncReaction = reaction.length > 120 ? reaction.substring(0, 117) + '...' : reaction;
-                rows.push([
-                    { v: i + 1, s: st.cc },
-                    { v: sanitizeCellValue(qc.characteristic), s: st.cell },
-                    { v: sanitizeCellValue(qc.specification), s: st.cell },
-                    { v: sanitizeCellValue(qc.controlMethod), s: st.cell },
-                    { v: sanitizeCellValue(qc.frequency), s: st.cc },
-                    { v: sanitizeCellValue(qc.specialCharSymbol), s: ccStyle(qc.specialCharSymbol) },
-                    { v: sanitizeCellValue(truncReaction), s: st.cell },
-                    { v: sanitizeCellValue(qc.registro), s: st.cell },
-                ]);
+            const refIdx = rows.length;
+            const refRow = Array(TC).fill(null).map(() => ({ v: '', s: { border: {} } }));
+            refRow[0] = { v: 'Referencia: OP - Operador de Producci\u00F3n', s: { font: { sz: 7, italic: true, name: 'Arial', color: { rgb: '808080' } }, alignment: { horizontal: 'left' }, border: {} } };
+            rows.push(refRow); merges.push({ s: { r: refIdx, c: 0 }, e: { r: refIdx, c: TC - 1 } });
+            rows.push(['Nro', 'Caracter\u00EDstica', 'Especificaci\u00F3n', 'M\u00E9todo Control', 'Resp.', 'Frecuencia', 'CC/SC', 'Registro'].map(h => ({ v: h, s: st.greenHdr })));
+            const qualityChecks = sheet.qualityChecks || [];
+            if (qualityChecks.length === 0) {
+                const emIdx = rows.length;
+                const emRow = Array(TC).fill(null).map(() => ({ v: '', s: st.cell }));
+                emRow[0] = { v: 'Sin verificaciones de calidad.', s: { ...st.cell, font: { ...st.cell.font, italic: true, color: { rgb: '808080' } }, alignment: { horizontal: 'center' } } };
+                rows.push(emRow); merges.push({ s: { r: emIdx, c: 0 }, e: { r: emIdx, c: TC - 1 } });
+            } else {
+                for (let i = 0; i < qualityChecks.length; i++) {
+                    const qc = qualityChecks[i];
+                    rows.push([
+                        { v: i + 1, s: st.cc },
+                        { v: sanitizeCellValue(qc.characteristic), s: st.cell },
+                        { v: sanitizeCellValue(qc.specification), s: st.cell },
+                        { v: sanitizeCellValue(qc.controlMethod || qc.evaluationTechnique || ''), s: st.cell },
+                        { v: sanitizeCellValue(qc.reactionContact || ''), s: st.cc },
+                        { v: sanitizeCellValue(qc.frequency), s: st.cc },
+                        { v: sanitizeCellValue(qc.specialCharSymbol), s: ccStyle(qc.specialCharSymbol) },
+                        { v: sanitizeCellValue(qc.registro), s: st.cell },
+                    ]);
+                }
+            }
+            rows.push(Array(TC).fill(''));
+        }
+
+        // Reaction Plan
+        {
+            const rpIdx = rows.length;
+            const rpHdr = Array(TC).fill(null).map(() => ({ v: '', s: st.redSec }));
+            rpHdr[0] = { v: 'PLAN DE REACCI\u00D3N ANTE NO CONFORME', s: st.redSec };
+            rows.push(rpHdr); merges.push({ s: { r: rpIdx, c: 0 }, e: { r: rpIdx, c: TC - 1 } });
+            const reactionText = sheet.reactionPlanText || '';
+            const rtIdx = rows.length;
+            const rtRow = Array(TC).fill(null).map(() => ({ v: '', s: st.redCell }));
+            rtRow[0] = { v: sanitizeCellValue(reactionText), s: st.redCell };
+            rows.push(rtRow); merges.push({ s: { r: rtIdx, c: 0 }, e: { r: rtIdx, c: TC - 1 } });
+            rows.push(Array(TC).fill(null).map(() => ({ v: '', s: st.redCell })));
+            merges.push({ s: { r: rtIdx, c: 0 }, e: { r: rtIdx + 1, c: TC - 1 } });
+            if (sheet.reactionContact) {
+                const rcIdx = rows.length;
+                const rcRow = Array(TC).fill(null).map(() => ({ v: '', s: st.redCell }));
+                rcRow[0] = { v: `CONTACTO: ${sanitizeCellValue(sheet.reactionContact)}`, s: st.redCell };
+                rows.push(rcRow); merges.push({ s: { r: rcIdx, c: 0 }, e: { r: rcIdx, c: TC - 1 } });
             }
         }
-        const rawCw = [8, 22, 14, 14, 12, 8, 18, 14];
+
+        const rawCw = [14, 16, 20, 28, 18, 16, 12, 20];
+        const rh = rows.map((_, i) => (i <= 1 ? 24 : i <= 4 ? 28 : 20));
         const { rows: oR, merges: oM, cw: oC } = applyB2(rows, merges, rawCw);
         const wsOut = XLSX.utils.aoa_to_sheet(oR); wsOut['!cols'] = oC.map(w => ({ wch: w })); wsOut['!merges'] = oM;
+        wsOut['!rows'] = [{ hpt: OFF_R }, ...rh.map(h => ({ hpt: h }))];
         XLSX.utils.book_append_sheet(wb, wsOut, sheetName);
     }
 }
@@ -742,7 +910,7 @@ async function main() {
     const wb = buildApqpPackageWorkbook(packageData, options);
 
     const buffer = XLSX.write(wb, { bookType: 'xlsx', type: 'buffer' });
-    const outputPath = path.join(PROJECT_ROOT, 'exports', 'test-paquete-apqp-insert.xlsx');
+    const outputPath = path.join(PROJECT_ROOT, 'exports', 'test-paquete-apqp-v2.xlsx');
     fs.writeFileSync(outputPath, buffer);
     const stats = fs.statSync(outputPath);
 
