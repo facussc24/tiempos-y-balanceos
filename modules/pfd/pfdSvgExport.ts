@@ -664,7 +664,12 @@ function renderWatermark(centerX: number, centerY: number): string {
 // Main SVG builder
 // ============================================================================
 
-export function buildPfdSvg(doc: PfdDocument, logoBase64 = ''): string {
+export interface BuildPfdSvgOptions {
+    /** Skip the notes section at the bottom (used in PDF export) */
+    skipNotes?: boolean;
+}
+
+export function buildPfdSvg(doc: PfdDocument, logoBase64 = '', options?: BuildPfdSvgOptions): string {
     if (doc.steps.length === 0) {
         return `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="200" viewBox="0 0 400 200">
             <rect width="400" height="200" fill="white"/>
@@ -817,14 +822,16 @@ export function buildPfdSvg(doc: PfdDocument, logoBase64 = ''): string {
     const reworkSvg = renderReworkArrows(doc.steps, stepPositions, canvasWidth);
     if (reworkSvg) elements.push(reworkSvg);
 
-    // Notes section (if any step has notes)
-    const stepsWithNotes = doc.steps.filter(s => s.notes);
-    if (stepsWithNotes.length > 0) {
-        curY += 32;
-        const notesResult = renderNotesSection(centerX, curY, canvasWidth, stepsWithNotes);
-        if (notesResult.svg) {
-            elements.push(notesResult.svg);
-            curY += notesResult.height;
+    // Notes section (if any step has notes) — skippable via options
+    if (!options?.skipNotes) {
+        const stepsWithNotes = doc.steps.filter(s => s.notes);
+        if (stepsWithNotes.length > 0) {
+            curY += 32;
+            const notesResult = renderNotesSection(centerX, curY, canvasWidth, stepsWithNotes);
+            if (notesResult.svg) {
+                elements.push(notesResult.svg);
+                curY += notesResult.height;
+            }
         }
     }
 

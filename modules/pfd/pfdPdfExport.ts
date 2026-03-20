@@ -67,7 +67,7 @@ async function renderPfdPdf(
     const html2pdf = (await import('html2pdf.js')).default;
 
     const logoBase64 = await getLogoBase64();
-    const rawSvg = buildPfdSvg(doc, logoBase64);
+    const rawSvg = buildPfdSvg(doc, logoBase64, { skipNotes: true });
     const svgContent = prepareSvgForPdf(rawSvg);
 
     // Calculate custom page height from SVG aspect ratio
@@ -139,7 +139,6 @@ async function renderPfdPdf(
             jsPDF: {
                 unit: 'mm' as const,
                 format: [PAGE_W_MM, pageH],
-                orientation: 'landscape' as const,
             },
             pagebreak: { mode: ['avoid-all', 'css'] as string[] },
         };
