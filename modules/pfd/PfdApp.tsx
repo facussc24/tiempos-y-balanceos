@@ -545,11 +545,11 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding, embedded, initialData }) => 
         }
     }, [pfd.data]);
 
-    // Export — PDF (via print dialog)
+    // Export — PDF (direct download via html2pdf.js)
     const handleExportPdf = useCallback(async () => {
         try {
             await exportPfdPdf(pfd.data);
-            setToastMessage('Diálogo de impresión abierto — seleccione "Guardar como PDF"');
+            setToastMessage('PDF exportado correctamente');
         } catch (err) {
             logger.error('PfdApp', 'PDF export failed', {}, err instanceof Error ? err : undefined);
             setToastMessage('Error al exportar PDF');
@@ -895,7 +895,7 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding, embedded, initialData }) => 
                         <Image size={14} />
                         <span className="hidden sm:inline">SVG</span>
                     </button>
-                    <button onClick={handleExportPdf} className="flex items-center gap-1 px-2.5 py-1 rounded text-xs text-gray-600 hover:bg-gray-100" title="Exportar PDF (imprimir)">
+                    <button onClick={handleExportPdf} className="flex items-center gap-1 px-2.5 py-1 rounded text-xs text-gray-600 hover:bg-gray-100" title="Exportar PDF">
                         <FileText size={14} />
                         <span className="hidden sm:inline">PDF</span>
                     </button>

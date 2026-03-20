@@ -115,9 +115,11 @@ async function getExportItems(module: ExportDocModule, doc: unknown): Promise<Ex
         }
         case 'pfd': {
             const { generatePfdSvgBuffer } = await import('../modules/pfd/pfdSvgExport');
+            const { generatePfdPdfBuffer } = await import('../modules/pfd/pfdPdfExport');
             const typedDoc = doc as import('../modules/pfd/pfdTypes').PfdDocument;
             items.push(
                 { module, format: 'svg', generate: () => generatePfdSvgBuffer(typedDoc) },
+                { module, format: 'pdf', generate: () => generatePfdPdfBuffer(typedDoc) },
             );
             break;
         }
