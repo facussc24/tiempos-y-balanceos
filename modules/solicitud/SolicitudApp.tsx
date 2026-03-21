@@ -821,9 +821,9 @@ const SolicitudApp: React.FC<SolicitudAppProps> = ({ onBackToLanding }) => {
             )}
 
             {/* Main content: sidebar + form */}
-            <div className="flex-1 flex overflow-hidden">
+            <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
                 {/* Sidebar */}
-                <div className="w-[280px] flex-shrink-0 overflow-hidden">
+                <div className="w-full md:w-[280px] max-h-[200px] md:max-h-none flex-shrink-0 overflow-auto md:overflow-hidden border-b md:border-b-0">
                     <SolicitudList
                         items={solicitudList}
                         selectedId={selectedId}
