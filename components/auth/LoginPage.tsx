@@ -142,16 +142,16 @@ export function LoginPage() {
                         Contacta a tu administrador si no tenes acceso.
                     </p>
 
-                    {import.meta.env.DEV && (
+                    {import.meta.env.VITE_AUTO_LOGIN_EMAIL && (
                         <button
                             type="button"
                             onClick={handleDevLogin}
                             disabled={loading}
-                            className="w-full mt-3 py-2 px-4 bg-amber-600/20 hover:bg-amber-600/30 border border-amber-600/40
-                                       text-amber-400 font-medium text-xs rounded-lg transition-colors
+                            className="w-full mt-3 py-2 px-4 bg-amber-600 hover:bg-amber-500
+                                       text-white font-medium text-sm rounded-lg transition-colors
                                        disabled:opacity-50"
                         >
-                            Entrar como admin (dev)
+                            Acceso rapido
                         </button>
                     )}
                 </div>
