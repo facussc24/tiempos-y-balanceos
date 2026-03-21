@@ -35,3 +35,4 @@ dist-ssr
 # Project secrets
 SUPABASE_INFO.md
 AUDIT_FUNCIONAL.md
+.env.production
