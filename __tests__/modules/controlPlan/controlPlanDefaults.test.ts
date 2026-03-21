@@ -3,10 +3,10 @@ import { getControlPlanDefaults, validateControlPlanForExport } from '../../../m
 
 describe('getControlPlanDefaults', () => {
     describe('AP Alto (H)', () => {
-        it('sets 100% sample size and every piece frequency', () => {
+        it('sets 100% sample size and 100% frequency', () => {
             const result = getControlPlanDefaults({ ap: 'H', severity: 8, phase: 'production' });
             expect(result.sampleSize).toBe('100%');
-            expect(result.sampleFrequency).toBe('Cada pieza');
+            expect(result.sampleFrequency).toBe('100%');
         });
 
         it('marks sampleSize and sampleFrequency as auto-filled', () => {
@@ -17,16 +17,16 @@ describe('getControlPlanDefaults', () => {
     });
 
     describe('AP Medio (M)', () => {
-        it('uses higher frequency for severity >= 9', () => {
+        it('uses shift start/end frequency for severity >= 9', () => {
             const result = getControlPlanDefaults({ ap: 'M', severity: 9, phase: 'production' });
-            expect(result.sampleSize).toBe('5 piezas');
-            expect(result.sampleFrequency).toBe('Cada hora');
+            expect(result.sampleSize).toBe('1 pieza');
+            expect(result.sampleFrequency).toBe('Inicio y fin de turno');
         });
 
-        it('uses standard frequency for severity < 9', () => {
+        it('uses lot-based frequency for severity < 9', () => {
             const result = getControlPlanDefaults({ ap: 'M', severity: 6, phase: 'production' });
-            expect(result.sampleSize).toBe('5 piezas');
-            expect(result.sampleFrequency).toBe('Cada turno');
+            expect(result.sampleSize).toBe('1 pieza');
+            expect(result.sampleFrequency).toBe('Cada lote');
         });
 
     });
@@ -60,34 +60,34 @@ describe('getControlPlanDefaults', () => {
     });
 
     describe('AP Low — SC/CC (IATF 16949 §8.3.3.3)', () => {
-        it('S=9 (CC) → 3 piezas, Cada 2 horas', () => {
+        it('S=9 (CC) → 1 pieza, Cada lote', () => {
             const result = getControlPlanDefaults({ ap: 'L', severity: 9, phase: 'production' });
-            expect(result.sampleSize).toBe('3 piezas');
-            expect(result.sampleFrequency).toBe('Cada 2 horas');
+            expect(result.sampleSize).toBe('1 pieza');
+            expect(result.sampleFrequency).toBe('Cada lote');
         });
 
-        it('S=10 (CC) → 3 piezas, Cada 2 horas', () => {
+        it('S=10 (CC) → 1 pieza, Cada lote', () => {
             const result = getControlPlanDefaults({ ap: 'L', severity: 10, phase: 'production' });
-            expect(result.sampleSize).toBe('3 piezas');
-            expect(result.sampleFrequency).toBe('Cada 2 horas');
+            expect(result.sampleSize).toBe('1 pieza');
+            expect(result.sampleFrequency).toBe('Cada lote');
         });
 
-        it('S=5 (SC lower bound) → 1 pieza, Cada turno', () => {
+        it('S=5 (SC lower bound) → 1 pieza, Cada lote', () => {
             const result = getControlPlanDefaults({ ap: 'L', severity: 5, phase: 'production' });
             expect(result.sampleSize).toBe('1 pieza');
-            expect(result.sampleFrequency).toBe('Cada turno');
+            expect(result.sampleFrequency).toBe('Cada lote');
         });
 
-        it('S=6 (SC) → 1 pieza, Cada turno', () => {
+        it('S=6 (SC) → 1 pieza, Cada lote', () => {
             const result = getControlPlanDefaults({ ap: 'L', severity: 6, phase: 'production' });
             expect(result.sampleSize).toBe('1 pieza');
-            expect(result.sampleFrequency).toBe('Cada turno');
+            expect(result.sampleFrequency).toBe('Cada lote');
         });
 
-        it('S=8 (SC) → 1 pieza, Cada turno', () => {
+        it('S=8 (SC) → 1 pieza, Cada lote', () => {
             const result = getControlPlanDefaults({ ap: 'L', severity: 8, phase: 'production' });
             expect(result.sampleSize).toBe('1 pieza');
-            expect(result.sampleFrequency).toBe('Cada turno');
+            expect(result.sampleFrequency).toBe('Cada lote');
         });
 
         it('reactionPlan is severity-based even for AP=L (consequence unchanged)', () => {

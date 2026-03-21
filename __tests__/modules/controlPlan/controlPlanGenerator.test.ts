@@ -926,18 +926,18 @@ describe('generateItemsFromAmfe — SC/CC with AP=L (IATF 16949)', () => {
         expect(items[0].specialCharClass).toBe('D');
     });
 
-    it('AP=L defaults: S=9 → sampleSize=3 piezas, sampleFrequency=Cada 2 horas', () => {
+    it('AP=L defaults: S=9 → sampleSize=1 pieza, sampleFrequency=Cada lote', () => {
         const doc = makeAmfeDoc({
             severity: 9,
             causes: [makeCause({ id: 'c1', cause: 'CC low', ap: 'L', preventionControl: 'SPC', detectionControl: 'CMM' })],
         });
         const { items } = generateItemsFromAmfe(doc);
         const proc = processRows(items);
-        expect(proc[0].sampleSize).toBe('3 piezas');
-        expect(proc[0].sampleFrequency).toBe('Cada 2 horas');
+        expect(proc[0].sampleSize).toBe('1 pieza');
+        expect(proc[0].sampleFrequency).toBe('Cada lote');
     });
 
-    it('AP=L defaults: S=6 → sampleSize=1 pieza, sampleFrequency=Cada turno', () => {
+    it('AP=L defaults: S=6 → sampleSize=1 pieza, sampleFrequency=Cada lote', () => {
         const doc = makeAmfeDoc({
             severity: 6,
             causes: [makeCause({ id: 'c1', cause: 'SC low', ap: 'L', preventionControl: 'Audit', detectionControl: 'Visual' })],
@@ -945,7 +945,7 @@ describe('generateItemsFromAmfe — SC/CC with AP=L (IATF 16949)', () => {
         const { items } = generateItemsFromAmfe(doc);
         const proc = processRows(items);
         expect(proc[0].sampleSize).toBe('1 pieza');
-        expect(proc[0].sampleFrequency).toBe('Cada turno');
+        expect(proc[0].sampleFrequency).toBe('Cada lote');
     });
 
     it('AP=L with S>=9: reactionPlan still auto-filled based on severity (consequence is the same)', () => {

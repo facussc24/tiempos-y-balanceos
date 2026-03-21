@@ -41,37 +41,37 @@ export function getControlPlanDefaults(input: DefaultsInput): DefaultsOutput {
     const autoFilledFields: string[] = [];
 
     // --- Sample Size & Frequency ---
-    // Per AIAG CP 2024: Pre-Launch = 100%; Production = CPK-based
+    // Per AIAG CP 2024: Pre-Launch = 100%; Production = event-based (plant standard)
     let sampleSize = '';
     let sampleFrequency = '';
 
     if (ap === 'H') {
         sampleSize = '100%';
-        sampleFrequency = 'Cada pieza';
+        sampleFrequency = '100%';
         autoFilledFields.push('sampleSize', 'sampleFrequency');
     } else if (ap === 'M') {
         if (isPreLaunch) {
             sampleSize = '100%';
-            sampleFrequency = 'Cada pieza (Pre-Lanzamiento)';
+            sampleFrequency = '100% (Pre-Lanzamiento)';
         } else if (severity >= 9) {
-            sampleSize = '5 piezas';
-            sampleFrequency = 'Cada hora';
+            sampleSize = '1 pieza';
+            sampleFrequency = 'Inicio y fin de turno';
         } else {
-            sampleSize = '5 piezas';
-            sampleFrequency = 'Cada turno';
+            sampleSize = '1 pieza';
+            sampleFrequency = 'Cada lote';
         }
         autoFilledFields.push('sampleSize', 'sampleFrequency');
     } else if (ap === 'L') {
         // AP=L items only reach here if they are SC/CC (IATF 16949 §8.3.3.3).
-        // Reduced controls: periodic monitoring, not 100%.
+        // Reduced controls: event-based monitoring.
         if (severity >= 9) {
             // CC with low AP: residual risk high due to severity
-            sampleSize = '3 piezas';
-            sampleFrequency = 'Cada 2 horas';
+            sampleSize = '1 pieza';
+            sampleFrequency = 'Cada lote';
         } else if (severity >= 5) {
             // SC with low AP: periodic control
             sampleSize = '1 pieza';
-            sampleFrequency = 'Cada turno';
+            sampleFrequency = 'Cada lote';
         }
         if (sampleSize) {
             autoFilledFields.push('sampleSize', 'sampleFrequency');

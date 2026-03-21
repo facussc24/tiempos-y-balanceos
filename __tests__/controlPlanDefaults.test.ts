@@ -15,10 +15,10 @@ import {
 } from '../modules/controlPlan/controlPlanDefaults';
 
 describe('getControlPlanDefaults', () => {
-    it('AP=H: always 100% sample, every piece', () => {
+    it('AP=H: always 100% sample, 100% frequency', () => {
         const result = getControlPlanDefaults({ ap: 'H', severity: 5, phase: 'production' });
         expect(result.sampleSize).toBe('100%');
-        expect(result.sampleFrequency).toBe('Cada pieza');
+        expect(result.sampleFrequency).toBe('100%');
         expect(result.autoFilledFields).toContain('sampleSize');
         expect(result.autoFilledFields).toContain('sampleFrequency');
     });
@@ -29,28 +29,28 @@ describe('getControlPlanDefaults', () => {
         expect(result.sampleFrequency).toContain('Pre-Lanzamiento');
     });
 
-    it('AP=M, production, severity >= 9: 5 pieces every hour', () => {
+    it('AP=M, production, severity >= 9: 1 pieza, inicio y fin de turno', () => {
         const result = getControlPlanDefaults({ ap: 'M', severity: 9, phase: 'production' });
-        expect(result.sampleSize).toBe('5 piezas');
-        expect(result.sampleFrequency).toBe('Cada hora');
+        expect(result.sampleSize).toBe('1 pieza');
+        expect(result.sampleFrequency).toBe('Inicio y fin de turno');
     });
 
-    it('AP=M, production, severity < 9: 5 pieces every shift', () => {
+    it('AP=M, production, severity < 9: 1 pieza, cada lote', () => {
         const result = getControlPlanDefaults({ ap: 'M', severity: 7, phase: 'production' });
-        expect(result.sampleSize).toBe('5 piezas');
-        expect(result.sampleFrequency).toBe('Cada turno');
+        expect(result.sampleSize).toBe('1 pieza');
+        expect(result.sampleFrequency).toBe('Cada lote');
     });
 
-    it('AP=L, severity >= 9: 3 pieces every 2 hours', () => {
+    it('AP=L, severity >= 9: 1 pieza, cada lote', () => {
         const result = getControlPlanDefaults({ ap: 'L', severity: 10, phase: 'production' });
-        expect(result.sampleSize).toBe('3 piezas');
-        expect(result.sampleFrequency).toBe('Cada 2 horas');
+        expect(result.sampleSize).toBe('1 pieza');
+        expect(result.sampleFrequency).toBe('Cada lote');
     });
 
-    it('AP=L, severity 5-8: 1 piece every shift', () => {
+    it('AP=L, severity 5-8: 1 pieza, cada lote', () => {
         const result = getControlPlanDefaults({ ap: 'L', severity: 5, phase: 'production' });
         expect(result.sampleSize).toBe('1 pieza');
-        expect(result.sampleFrequency).toBe('Cada turno');
+        expect(result.sampleFrequency).toBe('Cada lote');
     });
 
     it('AP=L, severity < 5: no sample defaults', () => {
