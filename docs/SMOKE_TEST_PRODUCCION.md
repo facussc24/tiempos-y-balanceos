@@ -20,7 +20,7 @@
 | Diagrama de Flujo (PFD) | ✅ OK | Módulo carga, 9 proyectos guardados |
 | Tiempos y Balanceos | ✅ OK | Datos, gráficos de saturación, KPIs completos |
 | Assets/Network | ✅ OK | 0 errores 4xx/5xx, 0 localhost, 0 mixed content |
-| Mobile responsive | ⚠️ PARCIAL | Meta viewport OK, media queries existen (450px/768px), no se pudo testear viewport real |
+| Mobile responsive | ⚠️ PARCIAL | Login/Home OK, tablas APQP desbordan, Solicitudes no responsive, bug de redirect a Home |
 
 **Resultado global: ✅ PRODUCCIÓN FUNCIONAL — Sin errores críticos**
 
@@ -234,18 +234,53 @@
 
 ## 5. Mobile Responsive (375px)
 
-### Limitación del test
-- El side panel de la extensión Chrome impide reducir el viewport real a 375px
-- El viewport efectivo se mantuvo en ~1047px a pesar del resize de ventana
-- Test parcial basado en análisis de código CSS
+**Testeado via Preview (dev server) con viewport real 375x812px.**
 
-### Hallazgos
-- **Meta viewport**: ✅ `width=device-width, initial-scale=1.0` (correcto)
-- **Media queries CSS**: ✅ Breakpoints detectados:
-  - `max-width: 450px` (mobile)
-  - `max-width: 768px` (tablet)
-- **Overflow horizontal**: ✅ No detectado al ancho actual
-- **Evaluación**: La app tiene soporte responsive básico implementado (viewport meta + media queries). Se requiere test manual en dispositivo real o Chrome DevTools para verificación completa.
+### Landing page (Login)
+- **Usable**: ✅ SÍ
+- **Overflow horizontal**: NO (scrollWidth = clientWidth = 375)
+- Login centrado, campos adecuados para tap, botones legibles
+
+### Login en mobile
+- **Funciona**: ✅ SÍ
+- Formulario renderiza correctamente, "Acceso rápido" funciona
+
+### Navegación/Menú en mobile
+- **Accesible**: ⚠️ PARCIALMENTE
+- **Home Hub**: Perfecto — cards full-width apiladas, sin overflow
+- **Tabs T&B** (Inicio/Datos/Análisis): Funcionan, dropdowns abren bien
+- **Tabs APQP**: "Hojas de Operaciones" se trunca por falta de espacio
+- **Bug**: Navegación inestable — la app redirige al Home Hub inesperadamente al interactuar o hacer scroll a 375px (posible listener de resize/breakpoint)
+
+### Módulos principales en mobile
+
+| Módulo | Navegable | Overflow | Notas |
+|--------|-----------|----------|-------|
+| Home Hub | ✅ SÍ | NO | Cards full-width, excelente |
+| Dashboard T&B | ✅ SÍ | NO | Filtros y stats bien |
+| AMFE VDA | ✅ SÍ | **SÍ** (606px→2800px) | Header/toolbar OK, tabla AMFE desborda masivamente |
+| Plan de Control | ✅ SÍ | **SÍ** | ~15 columnas, desborda con datos |
+| APQP Home (Mis Proyectos) | ✅ SÍ | NO | Badge "62 documentos" se corta parcialmente |
+| Solicitudes de Código | ⚠️ PROBLEMA | **SÍ** (606px) | Layout 2 paneles no colapsa a 1 columna |
+| Config Planta | ✅ SÍ | NO | Sectores correctos |
+| Datos y Seguridad | ✅ SÍ | NO | Stats de BD correctas |
+
+### Problemas de overflow detectados
+1. **AMFE VDA**: Tabla ~2800px, header "Templates"+"Inicio" desborda (833px)
+2. **Plan de Control**: ~15 columnas, requiere scroll horizontal contenido
+3. **Solicitudes de Código**: Layout 2 paneles no responsive, panel derecho cortado
+4. **Badge "62 documentos"**: Se corta en borde derecho
+5. **Tab "Hojas de Operaciones"**: Texto truncado en barra de tabs
+
+### Errores de consola en mobile
+- Ninguno
+
+### Evaluación general
+- **PARCIALMENTE USABLE** en mobile
+- Navegación principal (Home Hub, Dashboard, login, config planta): **excelente**
+- Documentos APQP (AMFE, CP): tablas inherentemente anchas desbordan (necesitan `overflow-x: auto` en el contenedor de la tabla, no en toda la página)
+- Solicitudes de Código: necesita layout responsive que colapse 2 paneles a 1 columna
+- **Bug de navegación**: redirige al Home Hub inesperadamente al interactuar a 375px
 
 ---
 
