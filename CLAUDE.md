@@ -5,6 +5,33 @@ App 100% web React 19 + TypeScript + Supabase para gestion de calidad automotriz
 (balanceo de linea, simulador de flujo, kanban, heijunka, mix multi-modelo).
 Multi-usuario con auth Supabase (email/password). Sin Tauri, sin Gemini.
 
+## Reglas Críticas — NO ROMPER
+### 1. NUNCA usar datos mock/placeholder
+- Todo dato que se muestre, exporte o teste DEBE venir de Supabase real
+- Si una función de export necesita datos, debe reusar los mismos hooks/repositories que ya funcionan en la UI
+- Si un seed script carga datos, debe verificar que no existan antes de insertar (upsert o check-then-insert)
+- PROHIBIDO: strings como "datos reales generados", "placeholder", "TODO: cargar datos"
+### 2. NUNCA crear duplicados en Supabase
+- Antes de insertar familias, documentos o members: query primero si ya existen
+- Las 8 familias canónicas son: Insert Patagonia, Armrest Door Panel Patagonia, Top Roll Patagonia, Headrest Front/Rear Center/Rear Outer Patagonia, Telas Planas PWA, Telas Termoformadas PWA
+- Si un seed/migration crea más de 8 familias, algo está mal — abortar y reportar
+- Nombres de cliente: "Volkswagen Argentina" (no "VWA", no "095 VOLKSWAGEN")
+### 3. Export Excel: solo xlsx-js-style
+- PROHIBIDO usar ExcelJS en cualquier export
+- PROHIBIDO mezclar librerías de Excel
+- Todos los workbooks se crean con `XLSX.utils.book_new()` de xlsx-js-style
+- Si necesitás funcionalidad que xlsx-js-style no tiene, reportar antes de implementar
+- **Paquete APQP**: solo Portada + Flujograma + AMFE + Plan de Control. Las HO se exportan individualmente con ExcelJS (necesitan imagenes logo + PPE que xlsx-js-style no soporta)
+### 4. Reusar antes de crear
+- Antes de crear una función nueva, buscar si ya existe una que haga lo mismo
+- Los exports individuales (AMFE→Excel, CP→Excel) ya funcionan — el paquete APQP debe llamarlos, no reimplementar
+- Los hooks de Supabase (useAmfe, usePlanControl, etc.) ya funcionan — reusar para cualquier feature nueva
+### 5. Verificación obligatoria
+- Después de cualquier seed/migration: contar familias (debe ser 8), contar documentos, verificar 0 duplicados
+- Después de cualquier export: abrir el archivo y verificar que tiene datos reales, no placeholders
+- TypeScript: `npx tsc --noEmit` sin errores
+- Tests: `npx vitest run --testPathPattern="módulo-afectado"`
+
 ## Stack
 
 | Capa         | Tecnologia                                          |
@@ -13,7 +40,7 @@ Multi-usuario con auth Supabase (email/password). Sin Tauri, sin Gemini.
 | Auth + DB    | Supabase (@supabase/supabase-js) + SQLite (sql.js)  |
 | Testing      | Vitest 4.x + @testing-library/react + jsdom         |
 | Styling      | TailwindCSS 3.4                                     |
-| Export       | ExcelJS, html2pdf.js                                |
+| Export       | xlsx-js-style, html2pdf.js                          |
 | Charts       | Recharts 3.4                                        |
 | DnD          | @dnd-kit/core                                       |
 
@@ -250,3 +277,18 @@ La configuracion esta en `.claude/launch.json`.
 - Durante desarrollo: correr solo tests del módulo afectado con `npx vitest run --testPathPattern=<módulo>`
 - Tests generales completos (`npx vitest run`) solo antes del commit final
 - Siempre verificar TypeScript con `npx tsc --noEmit` antes de commitear
+
+## Produccion (GitHub Pages)
+
+- **URL**: https://facussc24.github.io/tiempos-y-balanceos/
+- **Hosting**: GitHub Pages (branch `gh-pages`)
+- **Repo**: https://github.com/facussc24/tiempos-y-balanceos (publico)
+- **Variables de entorno**: Baked at build time via `.env.production` (Supabase URL + anon key)
+- **Dev-login**: Solo visible en `npm run dev` (gateado con `import.meta.env.DEV`)
+
+### Deploy a produccion
+```bash
+npm run build        # Buildea con base path /tiempos-y-balanceos/
+npx gh-pages -d dist # Publica dist/ al branch gh-pages
+```
+GitHub Pages detecta el push al branch `gh-pages` y actualiza automaticamente (~1 min).

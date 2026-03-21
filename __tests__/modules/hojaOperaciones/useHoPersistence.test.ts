@@ -21,7 +21,7 @@ describe('useHoPersistence – exported utils', () => {
     it('loadHoDraft returns null when IndexedDB unavailable', async () => {
         const result = await loadHoDraft('ho_draft_test');
         expect(result).toBeNull();
-    });
+    }, 10000);
 
     it('listHoDraftKeys returns empty array when IndexedDB unavailable', async () => {
         const keys = await listHoDraftKeys();

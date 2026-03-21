@@ -20,6 +20,7 @@ const BASE_ENTRY: ProjectEntry = {
     phase: 'production',
     hasMaster: true,
     variantCount: 1,
+    partNumber: 'PAT-001',
 };
 
 const RED_ENTRY: ProjectEntry = {

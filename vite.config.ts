@@ -7,7 +7,7 @@ import autoprefixer from 'autoprefixer';
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, '.', '');
   return {
-    base: '/',
+    base: mode === 'production' ? '/tiempos-y-balanceos/' : '/',
     server: {
       port: 3000,
       host: 'localhost',
