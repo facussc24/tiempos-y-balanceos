@@ -266,9 +266,33 @@
 3. **Warning Supabase lock**: Puede indicar un componente que no limpia su auth listener al desmontarse (cosmético, no funcional)
 4. **Warning Recharts -1**: Chart se renderiza antes de que su container tenga dimensiones (cosmético, no funcional)
 5. **PFD del INSERTO**: Aparece vacío al abrir — podría ser confuso para el usuario
+6. **Archivo innecesario**: `test-export.svg` (60KB) publicado en `dist/` en producción, no referenciado por la app
+7. **Falta favicon**: No hay favicon.ico — genera 404 silencioso del browser
+8. **Falta `.nojekyll`**: Buena práctica para GitHub Pages (evita que Jekyll ignore archivos con `_` prefix)
+
+### 🔴 PROBLEMA CRÍTICO DE SEGURIDAD
+
+**Credenciales admin expuestas en el bundle de producción**
+
+Las variables `VITE_AUTO_LOGIN_EMAIL` (`admin@barack.com`) y `VITE_AUTO_LOGIN_PASSWORD` están definidas en `.env.production` y se bakearon en el JavaScript del build. El botón "Acceso rápido" está **VISIBLE en producción** porque la condición `import.meta.env.VITE_AUTO_LOGIN_EMAIL` evalúa a la string real del email (truthy) — no se gatilla solo con `import.meta.env.DEV`.
+
+**Impacto**: Cualquier persona que visite la URL puede hacer login como admin con un solo click.
+
+**Nota**: El CLAUDE.md dice "Dev-login: Solo visible en `npm run dev`" pero la implementación real NO gatilla con `import.meta.env.DEV` sino con la presencia de `VITE_AUTO_LOGIN_EMAIL`, que está en `.env.production`.
+
+### ⚠️ Falta `404.html` para SPA Routing
+
+GitHub Pages no soporta SPA routing nativo. Navegar directamente a rutas internas como `https://facussc24.github.io/tiempos-y-balanceos/apqp` devuelve HTTP 404 de GitHub Pages. Esto afecta:
+- Navegación directa por URL
+- Refresh del browser en rutas internas
+- Links compartidos a secciones específicas
+
+**Solución**: Agregar un `404.html` que redirija a `index.html` (patrón estándar para SPAs en GitHub Pages).
 
 ---
 
 ## Conclusión
 
-La app funciona correctamente en producción. No se encontraron errores críticos que impidan su uso. Todos los módulos principales (AMFE, CP, HO, PFD, Tiempos y Balanceos) cargan datos reales desde Supabase, las validaciones cruzadas funcionan, y los exports están operativos. La infraestructura (GitHub Pages + Supabase) está correctamente configurada sin fugas de localhost ni mixed content.
+La app funciona correctamente en producción para uso normal (navegación interna, datos, exports). **Sin embargo, se detectó un problema crítico de seguridad**: las credenciales de admin están expuestas en el bundle público, permitiendo a cualquier visitante hacer login como admin. Este issue requiere atención inmediata.
+
+Fuera de ese problema, todos los módulos principales (AMFE, CP, HO, PFD, Tiempos y Balanceos) cargan datos reales desde Supabase, las validaciones cruzadas funcionan, y los exports están operativos. La infraestructura (GitHub Pages + Supabase) está correctamente configurada sin fugas de localhost ni mixed content.
