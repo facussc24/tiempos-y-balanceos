@@ -88,11 +88,11 @@ const HEALTH_DOT: Record<ProjectHealth, { color: string; ring: string; label: st
 // Phase config
 // ---------------------------------------------------------------------------
 
-const PHASE_CONFIG: Record<string, { label: string; icon: React.ElementType; color: string; bg: string }> = {
-    preLaunch: { label: 'Pre-lanzamiento', icon: Rocket, color: 'text-blue-300', bg: 'bg-blue-500/15' },
-    safeLaunch: { label: 'Safe Launch', icon: Rocket, color: 'text-blue-300', bg: 'bg-blue-500/15' },
-    production: { label: 'Producción', icon: Factory, color: 'text-emerald-300', bg: 'bg-emerald-500/15' },
-    prototype: { label: 'Prototipo', icon: Rocket, color: 'text-purple-300', bg: 'bg-purple-500/15' },
+const PHASE_CONFIG: Record<string, { label: string; icon: React.ElementType; color: string; bg: string; border: string }> = {
+    preLaunch: { label: 'Pre-lanzamiento', icon: Rocket, color: 'text-blue-700', bg: 'bg-blue-50', border: 'border border-blue-200' },
+    safeLaunch: { label: 'Safe Launch', icon: Rocket, color: 'text-blue-700', bg: 'bg-blue-50', border: 'border border-blue-200' },
+    production: { label: 'Producción', icon: Factory, color: 'text-emerald-700', bg: 'bg-emerald-50', border: 'border border-emerald-200' },
+    prototype: { label: 'Prototipo', icon: Rocket, color: 'text-purple-700', bg: 'bg-purple-50', border: 'border border-purple-200' },
 };
 
 // ---------------------------------------------------------------------------
@@ -144,16 +144,16 @@ const ProjectTable: React.FC<ProjectTableProps> = ({ projects, onSelectProject, 
                     onChange={e => setSearch(e.target.value)}
                     placeholder="Buscar producto o cliente..."
                     aria-label="Buscar proyectos"
-                    className="w-full pl-9 pr-3 py-2 bg-white/[0.05] border border-white/10 rounded-lg text-sm text-white placeholder-slate-500
+                    className="w-full pl-9 pr-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-800 placeholder-slate-400
                                focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/40 transition-colors"
                 />
             </div>
 
             {/* Table */}
-            <div className="bg-white/[0.04] backdrop-blur-sm border border-white/10 rounded-xl overflow-hidden">
+            <div className="bg-white shadow-sm border border-slate-200/60 rounded-xl overflow-hidden">
                 <table className="w-full text-left" role="grid" aria-label="Tabla de proyectos">
                     <thead>
-                        <tr className="border-b border-white/10">
+                        <tr className="border-b border-slate-200">
                             <th className="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider w-8" aria-label="Estado" />
                             <th className="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Producto</th>
                             <th className="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider hidden md:table-cell">Nº de Parte</th>
@@ -163,7 +163,7 @@ const ProjectTable: React.FC<ProjectTableProps> = ({ projects, onSelectProject, 
                             <th className="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider text-right w-24">Acciones</th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-white/5">
+                    <tbody className="divide-y divide-slate-100">
                         {filtered.map(entry => {
                             const primary = getPrimaryMember(entry);
                             const rawClient = entry.family.lineaName || primary?.lineaName || primary?.lineaCode || '';
@@ -181,7 +181,7 @@ const ProjectTable: React.FC<ProjectTableProps> = ({ projects, onSelectProject, 
                                     onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelectProject(entry.family.id); } }}
                                     role="row"
                                     aria-label={`Abrir proyecto ${entry.family.name}`}
-                                    className="group cursor-pointer hover:bg-white/[0.04] focus-visible:bg-white/[0.06] focus-visible:outline-none transition-colors"
+                                    className="group cursor-pointer hover:bg-slate-50 focus-visible:bg-slate-100 focus-visible:outline-none transition-colors"
                                 >
                                     {/* Health dot */}
                                     <td className="px-4 py-3">
@@ -196,7 +196,7 @@ const ProjectTable: React.FC<ProjectTableProps> = ({ projects, onSelectProject, 
 
                                     {/* Producto */}
                                     <td className="px-4 py-3 min-w-0">
-                                        <div className="text-sm font-medium text-white truncate max-w-[260px]" title={entry.family.name}>
+                                        <div className="text-sm font-medium text-slate-800 truncate max-w-[260px]" title={entry.family.name}>
                                             {entry.family.name}
                                         </div>
                                         {clientName && (
@@ -208,7 +208,7 @@ const ProjectTable: React.FC<ProjectTableProps> = ({ projects, onSelectProject, 
 
                                     {/* Nº de Parte */}
                                     <td className="px-4 py-3 hidden md:table-cell">
-                                        <span className="text-xs text-slate-400 font-mono">
+                                        <span className="text-xs text-slate-500 font-mono">
                                             {partNumber || '\u2014'}
                                         </span>
                                     </td>
@@ -216,7 +216,7 @@ const ProjectTable: React.FC<ProjectTableProps> = ({ projects, onSelectProject, 
                                     {/* Fase */}
                                     <td className="px-4 py-3 hidden lg:table-cell">
                                         {phaseCfg ? (
-                                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold ${phaseCfg.color} ${phaseCfg.bg}`}>
+                                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold ${phaseCfg.color} ${phaseCfg.bg} ${phaseCfg.border}`}>
                                                 <phaseCfg.icon size={10} />
                                                 {phaseCfg.label}
                                             </span>
@@ -228,12 +228,12 @@ const ProjectTable: React.FC<ProjectTableProps> = ({ projects, onSelectProject, 
                                     {/* Tipo */}
                                     <td className="px-4 py-3 hidden lg:table-cell">
                                         {entry.hasMaster ? (
-                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold text-slate-300 bg-slate-500/20">
+                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold text-slate-600 bg-slate-100 border border-slate-200">
                                                 <GitMerge size={10} />
                                                 Maestro{entry.variantCount > 0 ? ` +${entry.variantCount}v` : ''}
                                             </span>
                                         ) : entry.variantCount > 0 ? (
-                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold text-purple-300 bg-purple-500/15">
+                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold text-purple-700 bg-purple-50 border border-purple-200">
                                                 <GitMerge size={10} />
                                                 Variante
                                             </span>
@@ -246,7 +246,7 @@ const ProjectTable: React.FC<ProjectTableProps> = ({ projects, onSelectProject, 
                                     <td className="px-4 py-3 text-center">
                                         {apH > 0 ? (
                                             <Tooltip content="Action Priority = High (Prioridad de Acción Alta)">
-                                                <span className="inline-flex items-center justify-center min-w-[20px] px-1.5 py-0.5 rounded-md text-xs font-bold text-red-400 bg-red-500/15">
+                                                <span className="inline-flex items-center justify-center min-w-[20px] px-1.5 py-0.5 rounded-md text-xs font-bold text-red-600 bg-red-50 border border-red-200">
                                                     {apH}
                                                 </span>
                                             </Tooltip>
@@ -264,14 +264,14 @@ const ProjectTable: React.FC<ProjectTableProps> = ({ projects, onSelectProject, 
                                                 <Tooltip content="Exportar Paquete APQP">
                                                     <button
                                                         onClick={e => { e.stopPropagation(); onExportApqp(entry.family.id); }}
-                                                        className="p-1.5 rounded-md text-slate-500 hover:text-blue-400 hover:bg-blue-500/10 opacity-0 group-hover:opacity-100 transition-all"
+                                                        className="p-1.5 rounded-md text-slate-400 hover:text-blue-600 hover:bg-blue-50 opacity-0 group-hover:opacity-100 transition-all"
                                                         aria-label={`Exportar APQP de ${entry.family.name}`}
                                                     >
                                                         <FileSpreadsheet size={14} />
                                                     </button>
                                                 </Tooltip>
                                             )}
-                                            <span className="inline-flex items-center gap-1 text-xs font-medium text-blue-400 opacity-50 group-hover:opacity-100 transition-opacity">
+                                            <span className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 opacity-50 group-hover:opacity-100 transition-opacity">
                                                 Abrir <ArrowRight size={12} className="group-hover:translate-x-0.5 transition-transform" />
                                             </span>
                                         </span>

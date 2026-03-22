@@ -26,10 +26,10 @@ interface LandingPageProps {
 }
 
 const TYPE_ICONS: Record<DocumentType, React.ReactNode> = {
-    pfd: <GitBranch size={14} className="text-cyan-400" />,
-    amfe: <ShieldAlert size={14} className="text-orange-400" />,
-    controlPlan: <ClipboardCheck size={14} className="text-green-400" />,
-    hojaOperaciones: <FileText size={14} className="text-indigo-400" />,
+    pfd: <GitBranch size={14} className="text-cyan-600" />,
+    amfe: <ShieldAlert size={14} className="text-orange-500" />,
+    controlPlan: <ClipboardCheck size={14} className="text-green-600" />,
+    hojaOperaciones: <FileText size={14} className="text-indigo-500" />,
 };
 
 const TYPE_LABELS: Record<DocumentType, string> = {
@@ -106,14 +106,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSelectModule, onOpenProject
     };
 
     return (
-        <div className="min-h-full bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 font-sans">
-            {/* Background pattern */}
-            <div className="absolute inset-0 opacity-[0.03] pointer-events-none">
-                <div className="absolute inset-0" style={{
-                    backgroundImage: `radial-gradient(circle at 1px 1px, white 1px, transparent 0)`,
-                    backgroundSize: '40px 40px'
-                }} />
-            </div>
+        <div className="min-h-full bg-slate-50 font-sans">
 
             <div className="relative z-10 max-w-7xl mx-auto px-6 py-10">
 
@@ -123,13 +116,13 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSelectModule, onOpenProject
                         src={barackLogo}
                         alt="Barack Mercosul"
                         className="h-12"
-                        style={{ filter: 'drop-shadow(0 4px 12px rgba(59, 130, 246, 0.25))' }}
+                        style={{ filter: 'drop-shadow(0 2px 6px rgba(0, 0, 0, 0.1))' }}
                     />
                     <div>
-                        <h1 className="text-2xl font-bold text-white tracking-tight leading-tight">
+                        <h1 className="text-2xl font-bold text-slate-800 tracking-tight leading-tight">
                             Barack Mercosul
                         </h1>
-                        <p className="text-sm text-blue-400 font-medium">
+                        <p className="text-sm text-blue-600 font-medium">
                             Ingeniería de Calidad Automotriz
                         </p>
                     </div>
@@ -137,7 +130,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSelectModule, onOpenProject
                     {totalDocs > 0 && (
                         <button
                             onClick={() => onSelectModule('registry')}
-                            className="text-xs text-slate-400 hover:text-blue-300 transition-colors flex items-center gap-1.5 bg-white/[0.04] border border-white/10 rounded-lg px-3 py-1.5 hover:border-blue-400/40"
+                            className="text-xs text-slate-500 hover:text-blue-600 transition-colors flex items-center gap-1.5 bg-white shadow-sm border border-slate-200/60 rounded-lg px-3 py-1.5 hover:border-blue-300"
                         >
                             <FolderOpen size={13} />
                             <span>{totalDocs} documentos</span>
@@ -145,13 +138,13 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSelectModule, onOpenProject
                     )}
                     {user && (
                         <div className="flex items-center gap-2">
-                            <span className="text-xs text-slate-400 hidden sm:inline truncate max-w-[140px]" title={user.email ?? ''}>
+                            <span className="text-xs text-slate-500 hidden sm:inline truncate max-w-[140px]" title={user.email ?? ''}>
                                 {userDisplayName}
                             </span>
                             <button
                                 onClick={() => signOut()}
                                 title={`Cerrar sesión (${user.email ?? user.id})`}
-                                className="text-xs text-slate-500 hover:text-slate-300 transition-colors flex items-center gap-1.5 bg-white/[0.03] border border-white/[0.06] rounded-lg px-3 py-1.5 hover:border-slate-500/40"
+                                className="text-xs text-slate-400 hover:text-slate-600 transition-colors flex items-center gap-1.5 bg-white shadow-sm border border-slate-200/60 rounded-lg px-3 py-1.5 hover:border-slate-300"
                             >
                                 <LogOut size={13} />
                                 <span>Salir</span>
@@ -167,11 +160,11 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSelectModule, onOpenProject
                             <AlertTriangle size={14} />
                             Requiere atención
                         </h2>
-                        <div className="bg-red-500/[0.06] border border-red-500/20 rounded-xl divide-y divide-red-500/10 overflow-hidden">
+                        <div className="bg-red-50 border border-red-200 rounded-xl divide-y divide-red-100 overflow-hidden">
                             {pendingItems.map((item: PendingItem) => (
                                 <div key={`${item.type}-${item.familyId}`} className="flex items-center gap-3 px-4 py-3">
                                     <div className={`w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0 ${
-                                        item.type === 'ap_h_unmitigated' ? 'bg-red-500/20' : 'bg-amber-500/20'
+                                        item.type === 'ap_h_unmitigated' ? 'bg-red-100' : 'bg-amber-100'
                                     }`}>
                                         {item.type === 'ap_h_unmitigated'
                                             ? <AlertTriangle size={14} className="text-red-400" />
@@ -179,8 +172,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSelectModule, onOpenProject
                                         }
                                     </div>
                                     <div className="flex-grow min-w-0">
-                                        <span className="text-sm text-white font-medium">{item.familyName}</span>
-                                        <span className="text-xs text-slate-400 ml-2">
+                                        <span className="text-sm text-slate-800 font-medium">{item.familyName}</span>
+                                        <span className="text-xs text-slate-500 ml-2">
                                             {item.type === 'ap_h_unmitigated'
                                                 ? `${item.count} causa${item.count !== 1 ? 's' : ''} AP=H sin acciones`
                                                 : `${item.count} propuesta${item.count !== 1 ? 's' : ''} de cambio pendiente${item.count !== 1 ? 's' : ''}`
@@ -197,11 +190,11 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSelectModule, onOpenProject
                 {!projectsLoading && projects.length > 0 && (
                     <section className="mb-10 opacity-0 animate-fade-in-up stagger-1" aria-label="Mis Proyectos">
                         <div className="flex items-center gap-3 mb-5">
-                            <h2 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+                            <h2 className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2">
                                 <Package size={14} />
                                 Mis Proyectos
                             </h2>
-                            <p className="text-xs text-slate-500">
+                            <p className="text-xs text-slate-400">
                                 Familias de producto con documentación APQP vinculada
                             </p>
                         </div>
@@ -224,7 +217,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSelectModule, onOpenProject
 
                     {/* Gestión de Ingeniería - standalone tools */}
                     <div>
-                        <h2 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2 mb-4">
+                        <h2 className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2 mb-4">
                             <Wrench size={14} />
                             Herramientas
                         </h2>
@@ -232,116 +225,116 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSelectModule, onOpenProject
                             <button
                                 onClick={() => onSelectModule('tiempos')}
                                 aria-label="Abrir Tiempos y Balanceos"
-                                className="group w-full text-left bg-white/[0.04] backdrop-blur-sm border border-blue-500/30 rounded-xl p-4
-                                           hover:bg-blue-500/10 hover:border-blue-400/60 hover:shadow-lg hover:shadow-blue-500/15 hover:-translate-y-0.5
-                                           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 focus-visible:ring-white/70
+                                className="group w-full text-left bg-white shadow-sm border border-blue-200 rounded-xl p-4
+                                           hover:bg-blue-50 hover:border-blue-300 hover:shadow-md hover:-translate-y-0.5
+                                           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-white focus-visible:ring-blue-500/50
                                            transition-all duration-200 cursor-pointer"
                             >
                                 <div className="flex items-center gap-3">
-                                    <div className="bg-blue-500/15 w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0">
-                                        <Clock size={20} className="text-blue-400" />
+                                    <div className="bg-blue-50 w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0">
+                                        <Clock size={20} className="text-blue-600" />
                                     </div>
                                     <div className="min-w-0">
-                                        <h3 className="text-sm font-bold text-white">Tiempos y Balanceos</h3>
-                                        <p className="text-xs text-slate-400 mt-0.5">Cronometraje y balanceo de línea</p>
+                                        <h3 className="text-sm font-bold text-slate-800">Tiempos y Balanceos</h3>
+                                        <p className="text-xs text-slate-500 mt-0.5">Cronometraje y balanceo de línea</p>
                                     </div>
-                                    <ArrowRight size={14} className="text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity ml-auto flex-shrink-0" />
+                                    <ArrowRight size={14} className="text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity ml-auto flex-shrink-0" />
                                 </div>
                             </button>
                             <button
                                 onClick={() => onSelectModule('solicitud')}
                                 aria-label="Abrir Solicitudes de Código"
-                                className="group w-full text-left bg-white/[0.04] backdrop-blur-sm border border-amber-500/30 rounded-xl p-4
-                                           hover:bg-amber-500/10 hover:border-amber-400/60 hover:shadow-lg hover:shadow-amber-500/15 hover:-translate-y-0.5
-                                           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 focus-visible:ring-white/70
+                                className="group w-full text-left bg-white shadow-sm border border-amber-200 rounded-xl p-4
+                                           hover:bg-amber-50 hover:border-amber-300 hover:shadow-md hover:-translate-y-0.5
+                                           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-white focus-visible:ring-blue-500/50
                                            transition-all duration-200 cursor-pointer"
                             >
                                 <div className="flex items-center gap-3">
-                                    <div className="bg-amber-500/15 w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0">
-                                        <FilePlus2 size={20} className="text-amber-400" />
+                                    <div className="bg-amber-50 w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0">
+                                        <FilePlus2 size={20} className="text-amber-600" />
                                     </div>
                                     <div className="min-w-0">
-                                        <h3 className="text-sm font-bold text-white">Solicitudes de Código</h3>
-                                        <p className="text-xs text-slate-400 mt-0.5">Solicitar generación de códigos ARB</p>
+                                        <h3 className="text-sm font-bold text-slate-800">Solicitudes de Código</h3>
+                                        <p className="text-xs text-slate-500 mt-0.5">Solicitar generación de códigos ARB</p>
                                     </div>
-                                    <ArrowRight size={14} className="text-amber-400 opacity-0 group-hover:opacity-100 transition-opacity ml-auto flex-shrink-0" />
+                                    <ArrowRight size={14} className="text-amber-600 opacity-0 group-hover:opacity-100 transition-opacity ml-auto flex-shrink-0" />
                                 </div>
                             </button>
                             <button
                                 onClick={() => onSelectModule('manuales')}
                                 aria-label="Abrir Manuales de Ingeniería"
-                                className="group w-full text-left bg-white/[0.04] backdrop-blur-sm border border-teal-500/30 rounded-xl p-4
-                                           hover:bg-teal-500/10 hover:border-teal-400/60 hover:shadow-lg hover:shadow-teal-500/15 hover:-translate-y-0.5
-                                           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 focus-visible:ring-white/70
+                                className="group w-full text-left bg-white shadow-sm border border-teal-200 rounded-xl p-4
+                                           hover:bg-teal-50 hover:border-teal-300 hover:shadow-md hover:-translate-y-0.5
+                                           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-white focus-visible:ring-blue-500/50
                                            transition-all duration-200 cursor-pointer"
                             >
                                 <div className="flex items-center gap-3">
-                                    <div className="bg-teal-500/15 w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0">
-                                        <BookOpen size={20} className="text-teal-400" />
+                                    <div className="bg-teal-50 w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0">
+                                        <BookOpen size={20} className="text-teal-600" />
                                     </div>
                                     <div className="min-w-0">
-                                        <h3 className="text-sm font-bold text-white">Manuales</h3>
-                                        <p className="text-xs text-slate-400 mt-0.5">Procedimientos y documentos HTML</p>
+                                        <h3 className="text-sm font-bold text-slate-800">Manuales</h3>
+                                        <p className="text-xs text-slate-500 mt-0.5">Procedimientos y documentos HTML</p>
                                     </div>
-                                    <ArrowRight size={14} className="text-teal-400 opacity-0 group-hover:opacity-100 transition-opacity ml-auto flex-shrink-0" />
+                                    <ArrowRight size={14} className="text-teal-600 opacity-0 group-hover:opacity-100 transition-opacity ml-auto flex-shrink-0" />
                                 </div>
                             </button>
                             <button
                                 onClick={() => onSelectModule('formatos')}
                                 aria-label="Abrir Formatos Estándar"
-                                className="group w-full text-left bg-white/[0.04] backdrop-blur-sm border border-purple-500/30 rounded-xl p-4
-                                           hover:bg-purple-500/10 hover:border-purple-400/60 hover:shadow-lg hover:shadow-purple-500/15 hover:-translate-y-0.5
-                                           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 focus-visible:ring-white/70
+                                className="group w-full text-left bg-white shadow-sm border border-purple-200 rounded-xl p-4
+                                           hover:bg-purple-50 hover:border-purple-300 hover:shadow-md hover:-translate-y-0.5
+                                           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-white focus-visible:ring-blue-500/50
                                            transition-all duration-200 cursor-pointer"
                             >
                                 <div className="flex items-center gap-3">
-                                    <div className="bg-purple-500/15 w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0">
-                                        <FolderOpen size={20} className="text-purple-400" />
+                                    <div className="bg-purple-50 w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0">
+                                        <FolderOpen size={20} className="text-purple-600" />
                                     </div>
                                     <div className="min-w-0">
-                                        <h3 className="text-sm font-bold text-white">Formatos Estándar</h3>
-                                        <p className="text-xs text-slate-400 mt-0.5">Plantillas Excel, PDF y Word</p>
+                                        <h3 className="text-sm font-bold text-slate-800">Formatos Estándar</h3>
+                                        <p className="text-xs text-slate-500 mt-0.5">Plantillas Excel, PDF y Word</p>
                                     </div>
-                                    <ArrowRight size={14} className="text-purple-400 opacity-0 group-hover:opacity-100 transition-opacity ml-auto flex-shrink-0" />
+                                    <ArrowRight size={14} className="text-purple-600 opacity-0 group-hover:opacity-100 transition-opacity ml-auto flex-shrink-0" />
                                 </div>
                             </button>
                             <button
                                 onClick={() => onSelectModule('dataManager')}
                                 aria-label="Abrir Datos y Seguridad"
-                                className="group w-full text-left bg-white/[0.04] backdrop-blur-sm border border-rose-500/30 rounded-xl p-4
-                                           hover:bg-rose-500/10 hover:border-rose-400/60 hover:shadow-lg hover:shadow-rose-500/15 hover:-translate-y-0.5
-                                           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 focus-visible:ring-white/70
+                                className="group w-full text-left bg-white shadow-sm border border-rose-200 rounded-xl p-4
+                                           hover:bg-rose-50 hover:border-rose-300 hover:shadow-md hover:-translate-y-0.5
+                                           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-white focus-visible:ring-blue-500/50
                                            transition-all duration-200 cursor-pointer"
                             >
                                 <div className="flex items-center gap-3">
-                                    <div className="bg-rose-500/15 w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0">
-                                        <Shield size={20} className="text-rose-400" />
+                                    <div className="bg-rose-50 w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0">
+                                        <Shield size={20} className="text-rose-600" />
                                     </div>
                                     <div className="min-w-0">
-                                        <h3 className="text-sm font-bold text-white">Datos y Seguridad</h3>
-                                        <p className="text-xs text-slate-400 mt-0.5">Backups, exportar, importar y sincronizar datos</p>
+                                        <h3 className="text-sm font-bold text-slate-800">Datos y Seguridad</h3>
+                                        <p className="text-xs text-slate-500 mt-0.5">Backups, exportar, importar y sincronizar datos</p>
                                     </div>
-                                    <ArrowRight size={14} className="text-rose-400 opacity-0 group-hover:opacity-100 transition-opacity ml-auto flex-shrink-0" />
+                                    <ArrowRight size={14} className="text-rose-600 opacity-0 group-hover:opacity-100 transition-opacity ml-auto flex-shrink-0" />
                                 </div>
                             </button>
                             {isAdmin && (
                                 <button
                                     onClick={() => onSelectModule('admin')}
                                     aria-label="Abrir Administración de Usuarios"
-                                    className="group w-full text-left bg-white/[0.04] backdrop-blur-sm border border-violet-500/30 rounded-xl p-4
-                                               hover:bg-violet-500/10 hover:border-violet-400/60 hover:shadow-lg hover:shadow-violet-500/15 hover:-translate-y-0.5
-                                               focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 focus-visible:ring-white/70
+                                    className="group w-full text-left bg-white shadow-sm border border-violet-200 rounded-xl p-4
+                                               hover:bg-violet-50 hover:border-violet-300 hover:shadow-md hover:-translate-y-0.5
+                                               focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-white focus-visible:ring-blue-500/50
                                                transition-all duration-200 cursor-pointer"
                                 >
                                     <div className="flex items-center gap-3">
-                                        <div className="bg-violet-500/15 w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0">
-                                            <Users size={20} className="text-violet-400" />
+                                        <div className="bg-violet-50 w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0">
+                                            <Users size={20} className="text-violet-600" />
                                         </div>
                                         <div className="min-w-0">
-                                            <h3 className="text-sm font-bold text-white">Administración</h3>
-                                            <p className="text-xs text-slate-400 mt-0.5">Gestionar usuarios y permisos</p>
+                                            <h3 className="text-sm font-bold text-slate-800">Administración</h3>
+                                            <p className="text-xs text-slate-500 mt-0.5">Gestionar usuarios y permisos</p>
                                         </div>
-                                        <ArrowRight size={14} className="text-violet-400 opacity-0 group-hover:opacity-100 transition-opacity ml-auto flex-shrink-0" />
+                                        <ArrowRight size={14} className="text-violet-600 opacity-0 group-hover:opacity-100 transition-opacity ml-auto flex-shrink-0" />
                                     </div>
                                 </button>
                             )}
@@ -350,24 +343,24 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSelectModule, onOpenProject
 
                     {/* Recent documents */}
                     <div>
-                        <h2 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2 mb-4">
+                        <h2 className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2 mb-4">
                             <Sparkles size={14} />
                             Documentos Recientes
                         </h2>
 
                         {recentDocuments.length > 0 ? (
-                            <div className="bg-white/[0.04] backdrop-blur-sm border border-white/10 rounded-xl overflow-hidden divide-y divide-white/5">
+                            <div className="bg-white shadow-sm border border-slate-200/60 rounded-xl overflow-hidden divide-y divide-slate-100">
                                 {recentDocuments.slice(0, 5).map(doc => (
                                     <button
                                         key={`${doc.type}-${doc.id}`}
                                         onClick={() => onSelectModule(doc.type === 'controlPlan' ? 'controlPlan' : doc.type === 'hojaOperaciones' ? 'hojaOperaciones' : doc.type === 'pfd' ? 'pfd' : doc.type === 'amfe' ? 'amfe' : 'registry')}
-                                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/[0.04] transition-colors text-left group"
+                                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 transition-colors text-left group"
                                     >
-                                        <div className="flex-shrink-0 w-7 h-7 rounded-md bg-white/5 flex items-center justify-center">
+                                        <div className="flex-shrink-0 w-7 h-7 rounded-md bg-slate-100 flex items-center justify-center">
                                             {TYPE_ICONS[doc.type]}
                                         </div>
                                         <div className="flex-grow min-w-0">
-                                            <div className="text-sm text-white font-medium truncate" title={doc.name}>{cleanDocumentName(doc.name)}</div>
+                                            <div className="text-sm text-slate-800 font-medium truncate" title={doc.name}>{cleanDocumentName(doc.name)}</div>
                                             <div className="text-xs text-slate-500 flex items-center gap-2">
                                                 <span className="font-bold">{TYPE_LABELS[doc.type]}</span>
                                                 {doc.client && <span>{doc.client}</span>}
@@ -383,7 +376,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSelectModule, onOpenProject
                                 {/* Ver todos link */}
                                 <button
                                     onClick={() => onSelectModule('registry')}
-                                    className="w-full flex items-center justify-center gap-1.5 px-4 py-2.5 text-xs text-blue-400 hover:text-blue-300 hover:bg-white/[0.03] transition-colors font-medium"
+                                    className="w-full flex items-center justify-center gap-1.5 px-4 py-2.5 text-xs text-blue-600 hover:text-blue-700 hover:bg-slate-50 transition-colors font-medium"
                                 >
                                     <FolderOpen size={12} />
                                     Ver todos los documentos
@@ -391,15 +384,15 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSelectModule, onOpenProject
                                 </button>
                             </div>
                         ) : (
-                            <div className="bg-white/[0.04] backdrop-blur-sm border border-white/10 rounded-xl p-6 text-center">
-                                <FolderOpen size={28} className="mx-auto mb-2 text-slate-600" />
-                                <p className="text-sm text-slate-400">No hay documentos aún</p>
-                                <p className="text-xs text-slate-500 mt-1">
+                            <div className="bg-white shadow-sm border border-slate-200/60 rounded-xl p-6 text-center">
+                                <FolderOpen size={28} className="mx-auto mb-2 text-slate-400" />
+                                <p className="text-sm text-slate-500">No hay documentos aún</p>
+                                <p className="text-xs text-slate-400 mt-1">
                                     Empezá creando un Diagrama de Flujo para iniciar tu proyecto APQP
                                 </p>
                                 <button
                                     onClick={() => onSelectModule('pfd')}
-                                    className="mt-3 text-xs text-cyan-400 hover:text-cyan-300 font-medium transition-colors"
+                                    className="mt-3 text-xs text-cyan-600 hover:text-cyan-700 font-medium transition-colors"
                                 >
                                     Crear Diagrama de Flujo →
                                 </button>
@@ -411,13 +404,13 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSelectModule, onOpenProject
                 {/* ===== FOOTER ===== */}
                 <footer className="text-center text-xs opacity-0 animate-fade-in-up stagger-3 pb-4" role="contentinfo">
                     <p className="text-slate-400">
-                        Atajos: <kbd className="bg-white/10 px-1.5 py-0.5 rounded font-mono text-slate-300 border border-white/10">1</kbd>-<kbd className="bg-white/10 px-1.5 py-0.5 rounded font-mono text-slate-300 border border-white/10">4</kbd> APQP
-                        <span className="mx-1.5 text-slate-500">·</span>
-                        <kbd className="bg-white/10 px-1.5 py-0.5 rounded font-mono text-slate-300 border border-white/10">5</kbd> Tiempos
-                        <span className="mx-1.5 text-slate-500">·</span>
-                        <kbd className="bg-white/10 px-1.5 py-0.5 rounded font-mono text-slate-300 border border-white/10">6</kbd> Hub
-                        <span className="mx-1.5 text-slate-500">·</span>
-                        <kbd className="bg-white/10 px-1.5 py-0.5 rounded font-mono text-slate-300 border border-white/10">7</kbd>-<kbd className="bg-white/10 px-1.5 py-0.5 rounded font-mono text-slate-300 border border-white/10">9</kbd> Herramientas
+                        Atajos: <kbd className="bg-slate-100 px-1.5 py-0.5 rounded font-mono text-slate-600 border border-slate-300">1</kbd>-<kbd className="bg-slate-100 px-1.5 py-0.5 rounded font-mono text-slate-600 border border-slate-300">4</kbd> APQP
+                        <span className="mx-1.5 text-slate-400">·</span>
+                        <kbd className="bg-slate-100 px-1.5 py-0.5 rounded font-mono text-slate-600 border border-slate-300">5</kbd> Tiempos
+                        <span className="mx-1.5 text-slate-400">·</span>
+                        <kbd className="bg-slate-100 px-1.5 py-0.5 rounded font-mono text-slate-600 border border-slate-300">6</kbd> Hub
+                        <span className="mx-1.5 text-slate-400">·</span>
+                        <kbd className="bg-slate-100 px-1.5 py-0.5 rounded font-mono text-slate-600 border border-slate-300">7</kbd>-<kbd className="bg-slate-100 px-1.5 py-0.5 rounded font-mono text-slate-600 border border-slate-300">9</kbd> Herramientas
                     </p>
                 </footer>
             </div>
