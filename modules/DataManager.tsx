@@ -14,6 +14,7 @@ import {
     AlertTriangle, Loader2, Plus, FolderOpen, Wifi, WifiOff,
 } from 'lucide-react';
 import { DataManagerCard } from '../components/ui/DataManagerCard';
+import { Breadcrumb } from '../components/navigation/Breadcrumb';
 import { ImportPreviewModal } from '../components/modals/ImportPreviewModal';
 import { ImportConflictModal } from '../components/modals/ImportConflictModal';
 import { logger } from '../utils/logger';
@@ -340,7 +341,7 @@ const DataManager: React.FC<DataManagerProps> = ({ onBackToLanding }) => {
     // ---------------------------------------------------------------------------
     if (loading) {
         return (
-            <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+            <div className="min-h-full bg-slate-900 flex items-center justify-center">
                 <div className="text-center">
                     <div className="w-12 h-12 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin mx-auto mb-4" />
                     <p className="text-slate-400 text-sm">Cargando datos...</p>
@@ -350,7 +351,7 @@ const DataManager: React.FC<DataManagerProps> = ({ onBackToLanding }) => {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+        <div className="min-h-full bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
             {/* Toast */}
             {toast && (
                 <div className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-lg shadow-lg text-sm font-medium animate-fade-in-up ${
@@ -402,6 +403,14 @@ const DataManager: React.FC<DataManagerProps> = ({ onBackToLanding }) => {
                         )}
                     </div>
                 </div>
+
+                <Breadcrumb
+                    items={[
+                        { label: 'Inicio', onClick: onBackToLanding },
+                        { label: 'Datos y Seguridad', isActive: true },
+                    ]}
+                    className="mb-6 px-2 py-1"
+                />
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
                     {/* ===== Section 1: Database Overview ===== */}

@@ -29,6 +29,7 @@ import { validatePfdAmfeLinks, getBrokenAmfeOperationIds, getRelinkCandidates } 
 import { getNextRevisionLevel } from '../../utils/revisionUtils';
 import ChangeProposalPanel from '../../modules/family/ChangeProposalPanel';
 import { Plus, Layers, HardDrive, AlertTriangle, X, FileInput } from 'lucide-react';
+import { Breadcrumb } from '../../components/navigation/Breadcrumb';
 import { AmfeDocument, AmfeHeaderData } from './amfeTypes';
 import { importAmfeOpsFromPfd } from './amfePfdImport';
 import { useAmfeRegistry } from './useAmfeRegistry';
@@ -83,6 +84,13 @@ interface AmfeAppProps {
  * Do NOT replace this with a Wizard/Step View.
  * The 6M Structure (Work Elements) must be integrated into this table view.
  */
+const APQP_TAB_LABELS: Record<string, string> = {
+    pfd: 'Diagrama de Flujo',
+    amfe: 'AMFE VDA',
+    controlPlan: 'Plan de Control',
+    hojaOperaciones: 'Hojas de Operaciones',
+};
+
 type ActivePanel = 'none' | 'projects' | 'summary' | 'library' | 'registry' | 'templates';
 
 const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab, initialFamilyId, onFamilyIdConsumed }) => {
@@ -713,9 +721,18 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab, initialF
         <>
         {/* --- PFD (DIAGRAMA DE FLUJO) TAB --- mount once, then display:none */}
         {(tabNav.activeTab === 'pfd' || mountedTabs.has('pfd')) && (
-            <div className="h-screen bg-gray-50 flex flex-col font-sans text-sm overflow-hidden"
+            <div className="h-full bg-gray-50 flex flex-col font-sans text-sm overflow-hidden"
                  style={{ display: tabNav.activeTab === 'pfd' ? undefined : 'none' }}>
                 <AmfeTabBar {...tabBarProps} />
+                <Breadcrumb
+                    items={[
+                        { label: 'Inicio', onClick: onBackToLanding },
+                        ...(amfe.data.header.client ? [{ label: amfe.data.header.client }] : []),
+                        ...(amfe.data.header.subject ? [{ label: amfe.data.header.subject }] : []),
+                        { label: APQP_TAB_LABELS['pfd'], isActive: true },
+                    ]}
+                    className="bg-white border-b border-gray-100 px-4 py-1"
+                />
                 <div className="flex-1 overflow-auto">
                     <ModuleErrorBoundary moduleName="Diagrama de Flujo" onNavigateHome={() => tabNav.setActiveTab('amfe')}>
                     <Suspense fallback={<LoadingOverlay message="Cargando Diagrama de Flujo..." accentColor="text-cyan-600" showSkeleton={false} />}>
@@ -737,9 +754,18 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab, initialF
 
         {/* --- HOJA DE OPERACIONES TAB --- mount once, then display:none */}
         {(tabNav.activeTab === 'hojaOperaciones' || mountedTabs.has('hojaOperaciones')) && (
-            <div className="h-screen bg-gray-50 flex flex-col font-sans text-sm overflow-hidden"
+            <div className="h-full bg-gray-50 flex flex-col font-sans text-sm overflow-hidden"
                  style={{ display: tabNav.activeTab === 'hojaOperaciones' ? undefined : 'none' }}>
                 <AmfeTabBar {...tabBarProps} />
+                <Breadcrumb
+                    items={[
+                        { label: 'Inicio', onClick: onBackToLanding },
+                        ...(amfe.data.header.client ? [{ label: amfe.data.header.client }] : []),
+                        ...(amfe.data.header.subject ? [{ label: amfe.data.header.subject }] : []),
+                        { label: APQP_TAB_LABELS['hojaOperaciones'], isActive: true },
+                    ]}
+                    className="bg-white border-b border-gray-100 px-4 py-1"
+                />
                 <div className="flex-1 overflow-auto">
                     <ModuleErrorBoundary moduleName="Hojas de Operaciones" onNavigateHome={() => tabNav.setActiveTab('amfe')}>
                     <Suspense fallback={<LoadingOverlay message="Cargando Hojas de Operaciones..." accentColor="text-[#1e3a5f]" showSkeleton={false} />}>
@@ -761,9 +787,18 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab, initialF
 
         {/* --- CONTROL PLAN TAB --- mount once, then display:none */}
         {(tabNav.activeTab === 'controlPlan' || mountedTabs.has('controlPlan')) && (
-            <div className="h-screen bg-gray-50 flex flex-col font-sans text-sm overflow-hidden"
+            <div className="h-full bg-gray-50 flex flex-col font-sans text-sm overflow-hidden"
                  style={{ display: tabNav.activeTab === 'controlPlan' ? undefined : 'none' }}>
                 <AmfeTabBar {...tabBarProps} />
+                <Breadcrumb
+                    items={[
+                        { label: 'Inicio', onClick: onBackToLanding },
+                        ...(amfe.data.header.client ? [{ label: amfe.data.header.client }] : []),
+                        ...(amfe.data.header.subject ? [{ label: amfe.data.header.subject }] : []),
+                        { label: APQP_TAB_LABELS['controlPlan'], isActive: true },
+                    ]}
+                    className="bg-white border-b border-gray-100 px-4 py-1"
+                />
                 <div className="flex-1 overflow-auto">
                     <ModuleErrorBoundary moduleName="Plan de Control" onNavigateHome={() => tabNav.setActiveTab('amfe')}>
                     <Suspense fallback={<LoadingOverlay message="Cargando Plan de Control..." accentColor="text-green-600" showSkeleton={false} />}>
@@ -801,8 +836,17 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab, initialF
         )}
 
         {/* --- AMFE TAB — SIEMPRE MONTADO, oculto con display:none cuando otro tab activo --- */}
-        <div className="min-h-screen bg-gray-50 flex flex-col font-sans text-sm" style={{ display: isAmfeActive ? undefined : 'none' }} data-module="amfe" data-mode={viewMode}>
+        <div className="min-h-full bg-gray-50 flex flex-col font-sans text-sm" style={{ display: isAmfeActive ? undefined : 'none' }} data-module="amfe" data-mode={viewMode}>
             <AmfeTabBar {...tabBarProps} />
+            <Breadcrumb
+                items={[
+                    { label: 'Inicio', onClick: onBackToLanding },
+                    ...(amfe.data.header.client ? [{ label: amfe.data.header.client }] : []),
+                    ...(amfe.data.header.subject ? [{ label: amfe.data.header.subject }] : []),
+                    { label: APQP_TAB_LABELS['amfe'], isActive: true },
+                ]}
+                className="bg-white border-b border-gray-100 px-4 py-1"
+            />
             <DocumentLockBanner otherEditor={documentLock.otherEditor} />
             <AmfeToolbar
                 projects={projects}

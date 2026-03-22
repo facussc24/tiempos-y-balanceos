@@ -13,6 +13,7 @@ import {
     RefreshCw, FileSpreadsheet, FileText, File, Search,
 } from 'lucide-react';
 import type { EngineeringFileEntry, FileTypeCategory } from './engineeringTypes';
+import { Breadcrumb } from '../../components/navigation/Breadcrumb';
 import { logger } from '../../utils/logger';
 import { classifyFileType, FILE_TYPE_COLORS, FORMATOS_DIR } from './engineeringTypes';
 
@@ -149,7 +150,7 @@ const FormatosApp: React.FC<FormatosAppProps> = ({ onBackToLanding }) => {
     };
 
     return (
-        <div className="h-screen flex flex-col bg-gray-50">
+        <div className="h-full flex flex-col bg-gray-50">
             {/* ===== TOOLBAR ===== */}
             <div className="bg-white border-b border-gray-200 px-4 py-2 flex items-center gap-3 flex-shrink-0">
                 <button
@@ -183,6 +184,14 @@ const FormatosApp: React.FC<FormatosAppProps> = ({ onBackToLanding }) => {
                     </button>
                 )}
             </div>
+
+            <Breadcrumb
+                items={[
+                    { label: 'Inicio', onClick: onBackToLanding },
+                    { label: 'Formatos Estándar', isActive: true },
+                ]}
+                className="bg-white border-b border-gray-100 px-4 py-1"
+            />
 
             {/* ===== MAIN CONTENT ===== */}
             {serverStatus === 'disconnected' ? (

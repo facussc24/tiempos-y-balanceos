@@ -16,6 +16,7 @@ import {
     type AdminUser,
 } from '../../utils/repositories/adminRepository';
 import { useAuth } from '../../components/auth/AuthProvider';
+import { Breadcrumb } from '../../components/navigation/Breadcrumb';
 import { logger } from '../../utils/logger';
 
 interface AdminPanelProps {
@@ -210,7 +211,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onBackToLanding }) => {
     // ---------------------------------------------------------------------------
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 font-sans">
+        <div className="min-h-full bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 font-sans">
             <div className="max-w-6xl mx-auto px-6 py-8">
 
                 {/* Header */}
@@ -246,6 +247,14 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onBackToLanding }) => {
                         Nuevo usuario
                     </button>
                 </header>
+
+                <Breadcrumb
+                    items={[
+                        { label: 'Inicio', onClick: onBackToLanding },
+                        { label: 'Administración', isActive: true },
+                    ]}
+                    className="mb-6 px-2 py-1"
+                />
 
                 {/* Error banner */}
                 {error && (

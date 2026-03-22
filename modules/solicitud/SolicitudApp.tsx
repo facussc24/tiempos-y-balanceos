@@ -30,6 +30,7 @@ import { RevisionPromptModal } from '../../components/modals/RevisionPromptModal
 import { RevisionHistoryPanel } from '../../components/layout/RevisionHistoryPanel';
 import { getNextRevisionLevel } from '../../utils/revisionUtils';
 import { useOpenExportFolder } from '../../hooks/useOpenExportFolder';
+import { Breadcrumb } from '../../components/navigation/Breadcrumb';
 
 // Lazy-loaded overlays
 const SolicitudProcedureViewer = lazy(() => import('./SolicitudProcedureViewer'));
@@ -676,7 +677,7 @@ const SolicitudApp: React.FC<SolicitudAppProps> = ({ onBackToLanding }) => {
     const isReadOnly = solicitud.data.status === 'obsoleta';
 
     return (
-        <div className="h-screen flex flex-col bg-gray-50 font-sans text-sm">
+        <div className="h-full flex flex-col bg-gray-50 font-sans text-sm">
             {/* Toolbar */}
             <SolicitudToolbar
                 onBack={handleBack}
@@ -704,6 +705,14 @@ const SolicitudApp: React.FC<SolicitudAppProps> = ({ onBackToLanding }) => {
                 revisionLevel={solicitud.data.header.revision || 'A'}
                 onOpenExportFolder={exportFolder.openFolder}
                 canOpenExportFolder={exportFolder.canOpen}
+            />
+
+            <Breadcrumb
+                items={[
+                    ...(onBackToLanding ? [{ label: 'Inicio', onClick: onBackToLanding }] : [{ label: 'Inicio' }]),
+                    { label: 'Solicitudes de Código', isActive: true },
+                ]}
+                className="bg-white border-b border-gray-100 px-4 py-1"
             />
 
             {/* Reconciliation banner */}
