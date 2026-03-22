@@ -11,6 +11,7 @@
 | `.env.local` en .gitignore | SI (via `*.local`) | OK |
 | `SUPABASE_INFO.md` en .gitignore | SI | OK |
 | API keys hardcodeadas | **3 archivos con anon key** | HALLAZGO |
+| Boton "Acceso rapido" en produccion | **Visible si .env.production tiene VITE_AUTO_LOGIN_EMAIL** | HALLAZGO |
 
 ## Hallazgos de Seguridad
 
@@ -58,15 +59,36 @@ Tambien protege:
 - `.claude/` (configuracion local)
 - `node_modules/`, `dist/`
 
-## Archivos src/ — Limpios
+## CRITICO: Boton "Acceso rapido" visible en produccion
+
+**Archivo**: `components/auth/LoginPage.tsx:145`
+
+La condicion para mostrar el boton de auto-login es:
+```tsx
+{import.meta.env.VITE_AUTO_LOGIN_EMAIL && (
+    <button onClick={handleDevLogin}>Acceso rapido</button>
+)}
+```
+
+El CLAUDE.md dice que esta "gateado con `import.meta.env.DEV`" pero **el codigo real NO usa `import.meta.env.DEV`**. Usa `VITE_AUTO_LOGIN_EMAIL` que es truthy en produccion si `.env.production` tiene esa variable.
+
+**Impacto**: Cualquier visitante de la URL de produccion puede hacer click en "Acceso rapido" y entrar como admin sin conocer la password.
+
+**Fix recomendado**: Cambiar la condicion a:
+```tsx
+{import.meta.env.DEV && import.meta.env.VITE_AUTO_LOGIN_EMAIL && (
+```
+
+## Archivos src/ — Limpios (excepto LoginPage)
 
 - `utils/supabaseClient.ts`: usa `import.meta.env.VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` correctamente
-- `components/auth/LoginPage.tsx`: usa `import.meta.env.VITE_AUTO_LOGIN_EMAIL` gateado con `import.meta.env.DEV`
+- `components/auth/LoginPage.tsx`: NO esta gateado con `import.meta.env.DEV` como dice CLAUDE.md
 - No hay API keys, tokens o passwords en ningun archivo `.ts` o `.tsx`
 
 ## Recomendaciones
 
-1. **URGENTE**: Migrar `scripts/seed-family-inserto.mjs` y `exports/generate-apqp-package-insert.mjs` para usar `supabaseHelper.mjs` en vez de credenciales hardcodeadas
-2. **URGENTE**: Cambiar la password `Barack2024!` si todavia es valida
-3. **MENOR**: Considerar agregar `scripts/seed-*.mjs` y `exports/generate-*.mjs` a .gitignore si contienen datos sensibles
-4. **INFO**: La anon key es publica por diseño pero es mejor practica no hardcodearla en scripts
+1. **CRITICO**: Corregir LoginPage.tsx para usar `import.meta.env.DEV` como guard del boton "Acceso rapido"
+2. **URGENTE**: Migrar `scripts/seed-family-inserto.mjs` y `exports/generate-apqp-package-insert.mjs` para usar `supabaseHelper.mjs` en vez de credenciales hardcodeadas
+3. **URGENTE**: Cambiar la password `Barack2024!` si todavia es valida
+4. **MENOR**: Considerar agregar `scripts/seed-*.mjs` y `exports/generate-*.mjs` a .gitignore si contienen datos sensibles
+5. **INFO**: La anon key es publica por diseño pero es mejor practica no hardcodearla en scripts

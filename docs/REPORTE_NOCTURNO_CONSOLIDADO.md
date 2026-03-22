@@ -12,7 +12,13 @@ El proyecto Barack Mercosul esta en buen estado general. TypeScript compila sin 
 - **Riesgo**: Password vieja visible en historial de git publico
 - **Accion**: Migrar scripts a usar `supabaseHelper.mjs`, cambiar password si sigue activa
 
-### 2.2 Frecuencias time-based residuales en CP-TOPROLL-001 (Datos)
+### 2.2 Boton "Acceso rapido" visible en produccion (Seguridad)
+- `LoginPage.tsx:145` usa `import.meta.env.VITE_AUTO_LOGIN_EMAIL` en vez de `import.meta.env.DEV`
+- Si `.env.production` tiene esa variable, el boton aparece en produccion
+- **Cualquier visitante puede auto-login como admin**
+- **Accion**: Agregar `import.meta.env.DEV &&` como guard
+
+### 2.3 Frecuencias time-based residuales en CP-TOPROLL-001 (Datos)
 - El CP-TOPROLL-001 aun contiene "cada hora" y "cada 2 horas" en su data JSON
 - Deberia ser event-based como el resto de los CPs
 - **Accion**: Actualizar en proxima sesion de edicion
@@ -93,6 +99,7 @@ El proyecto Barack Mercosul esta en buen estado general. TypeScript compila sin 
 | `admin@barack` en src/ | 0 |
 | `service_role` en src/ | 0 |
 | Credenciales en scripts trackeados | 3 archivos |
+| Boton auto-login en produccion | SI (falta guard DEV) |
 | .env.production en .gitignore | SI |
 
 ### Codigo
@@ -105,18 +112,19 @@ El proyecto Barack Mercosul esta en buen estado general. TypeScript compila sin 
 ## 5. Acciones Recomendadas (Priorizadas)
 
 ### Prioridad Alta
-1. **Seguridad**: Migrar `seed-family-inserto.mjs` y `generate-apqp-package-insert.mjs` a `supabaseHelper.mjs` — eliminar credenciales hardcodeadas
-2. **Seguridad**: Verificar si password `Barack2024!` sigue activa — cambiarla si es asi
-3. **Datos**: Actualizar frecuencias de CP-TOPROLL-001 a event-based
+1. **Seguridad**: Corregir `LoginPage.tsx:145` — agregar `import.meta.env.DEV &&` para ocultar "Acceso rapido" en produccion
+2. **Seguridad**: Migrar `seed-family-inserto.mjs` y `generate-apqp-package-insert.mjs` a `supabaseHelper.mjs` — eliminar credenciales hardcodeadas
+3. **Seguridad**: Verificar si password `Barack2024!` sigue activa — cambiarla si es asi
+4. **Datos**: Actualizar frecuencias de CP-TOPROLL-001 a event-based
 
 ### Prioridad Media
-4. **Tests**: Corregir 3-4 tests fallando (texto duplicado "Inicio", threshold performance)
-5. **Deps**: Remover `@tanstack/react-virtual`, `simscript`, `@types/uuid` de package.json
-6. **AMFE**: Informar al equipo de calidad sobre 147 causas AP=H infladas para revision formal
+5. **Tests**: Corregir 3-4 tests fallando (texto duplicado "Inicio", threshold performance)
+6. **Deps**: Remover `@tanstack/react-virtual`, `simscript`, `@types/uuid` de package.json
+7. **AMFE**: Informar al equipo de calidad sobre 147 causas AP=H infladas para revision formal
 
 ### Prioridad Baja
-7. **Bundle**: Evaluar lazy loading de ExcelJS/xlsx-js-style (solo al exportar)
-8. **Build**: Resolver circular dependency pfdNormalize ↔ pfdTypes
+8. **Bundle**: Evaluar lazy loading de ExcelJS/xlsx-js-style (solo al exportar)
+9. **Build**: Resolver circular dependency pfdNormalize ↔ pfdTypes
 
 ## Reportes Individuales
 
