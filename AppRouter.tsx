@@ -19,6 +19,7 @@ import { PRODUCTS, CUSTOMER_LINES } from './src/data/productCatalogSeed';
 import { logger } from './utils/logger';
 import { AuthProvider } from './components/auth/AuthProvider';
 import { LoginPage } from './components/auth/LoginPage';
+import AppSidebar from './components/layout/AppSidebar';
 
 // Lazy-load the heavy modules
 const TiemposApp = lazy(() => import('./App'));
@@ -38,7 +39,7 @@ const VALID_MODES = new Set<AppMode>(['landing', 'pfd', 'pfdTest', 'pfdSvgAudit'
 const LS_KEY_MODE = 'barack_lastModule';
 
 const LoadingFallback: React.FC = () => (
-    <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+    <div className="min-h-full bg-slate-900 flex items-center justify-center">
         <div className="text-center">
             <div className="w-12 h-12 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin mx-auto mb-4" />
             <p className="text-slate-400 text-sm">Cargando módulo...</p>
@@ -120,85 +121,92 @@ const AppRouterInner: React.FC = () => {
         return registryEntries.slice(0, 5);
     }, [registryEntries]);
 
-    if (currentMode === 'landing') {
-        return (
-            <LandingPage
-                onSelectModule={handleSelectModule}
-                onOpenProjectFamily={handleOpenProjectFamily}
-                documentCounts={documentCounts}
-                recentDocuments={recentDocuments}
-            />
-        );
-    }
-
     return (
-        <Suspense fallback={<LoadingFallback />}>
-            {currentMode === 'pfd' && (
-                <ModuleErrorBoundary moduleName="Diagrama de Flujo" onNavigateHome={handleBackToLanding}>
-                    <AmfeApp onBackToLanding={handleBackToLanding} initialTab="pfd" />
-                </ModuleErrorBoundary>
-            )}
-            {currentMode === 'pfdTest' && (
-                <ModuleErrorBoundary moduleName="PFD Test" onNavigateHome={handleBackToLanding}>
-                    <PfdTestRoute onBackToLanding={handleBackToLanding} />
-                </ModuleErrorBoundary>
-            )}
-            {currentMode === 'pfdSvgAudit' && (
-                <ModuleErrorBoundary moduleName="PFD SVG Audit" onNavigateHome={handleBackToLanding}>
-                    <PfdSvgAudit />
-                </ModuleErrorBoundary>
-            )}
-            {currentMode === 'tiempos' && (
-                <ModuleErrorBoundary moduleName="Tiempos y Balanceos" onNavigateHome={handleBackToLanding}>
-                    <TiemposApp onBackToLanding={handleBackToLanding} />
-                </ModuleErrorBoundary>
-            )}
-            {currentMode === 'amfe' && (
-                <ModuleErrorBoundary moduleName="AMFE VDA" onNavigateHome={handleBackToLanding}>
-                    <AmfeApp onBackToLanding={handleBackToLanding} initialTab="amfe" initialFamilyId={pendingFamilyId} onFamilyIdConsumed={() => setPendingFamilyId(null)} />
-                </ModuleErrorBoundary>
-            )}
-            {currentMode === 'controlPlan' && (
-                <ModuleErrorBoundary moduleName="Plan de Control" onNavigateHome={handleBackToLanding}>
-                    <AmfeApp onBackToLanding={handleBackToLanding} initialTab="controlPlan" />
-                </ModuleErrorBoundary>
-            )}
-            {currentMode === 'hojaOperaciones' && (
-                <ModuleErrorBoundary moduleName="Hojas de Operaciones" onNavigateHome={handleBackToLanding}>
-                    <AmfeApp onBackToLanding={handleBackToLanding} initialTab="hojaOperaciones" />
-                </ModuleErrorBoundary>
-            )}
-            {currentMode === 'solicitud' && (
-                <ModuleErrorBoundary moduleName="Solicitudes de Código" onNavigateHome={handleBackToLanding}>
-                    <SolicitudApp onBackToLanding={handleBackToLanding} />
-                </ModuleErrorBoundary>
-            )}
-            {currentMode === 'manuales' && (
-                <ModuleErrorBoundary moduleName="Manuales de Ingeniería" onNavigateHome={handleBackToLanding}>
-                    <ManualesApp onBackToLanding={handleBackToLanding} />
-                </ModuleErrorBoundary>
-            )}
-            {currentMode === 'formatos' && (
-                <ModuleErrorBoundary moduleName="Formatos Estándar" onNavigateHome={handleBackToLanding}>
-                    <FormatosApp onBackToLanding={handleBackToLanding} />
-                </ModuleErrorBoundary>
-            )}
-            {currentMode === 'registry' && (
-                <ModuleErrorBoundary moduleName="Registro de Documentos" onNavigateHome={handleBackToLanding}>
-                    <DocumentHub onBackToLanding={handleBackToLanding} onOpenDocument={handleOpenDocument} />
-                </ModuleErrorBoundary>
-            )}
-            {currentMode === 'dataManager' && (
-                <ModuleErrorBoundary moduleName="Datos y Seguridad" onNavigateHome={handleBackToLanding}>
-                    <DataManager onBackToLanding={handleBackToLanding} />
-                </ModuleErrorBoundary>
-            )}
-            {currentMode === 'admin' && (
-                <ModuleErrorBoundary moduleName="Administración" onNavigateHome={handleBackToLanding}>
-                    <AdminPanel onBackToLanding={handleBackToLanding} />
-                </ModuleErrorBoundary>
-            )}
-        </Suspense>
+        <div className="flex h-screen overflow-hidden">
+            <AppSidebar
+                currentMode={currentMode}
+                onSelectModule={handleSelectModule}
+                onBackToLanding={handleBackToLanding}
+            />
+            <main className="flex-1 overflow-auto">
+                {currentMode === 'landing' ? (
+                    <LandingPage
+                        onSelectModule={handleSelectModule}
+                        onOpenProjectFamily={handleOpenProjectFamily}
+                        documentCounts={documentCounts}
+                        recentDocuments={recentDocuments}
+                    />
+                ) : (
+                    <Suspense fallback={<LoadingFallback />}>
+                        {currentMode === 'pfd' && (
+                            <ModuleErrorBoundary moduleName="Diagrama de Flujo" onNavigateHome={handleBackToLanding}>
+                                <AmfeApp onBackToLanding={handleBackToLanding} initialTab="pfd" />
+                            </ModuleErrorBoundary>
+                        )}
+                        {currentMode === 'pfdTest' && (
+                            <ModuleErrorBoundary moduleName="PFD Test" onNavigateHome={handleBackToLanding}>
+                                <PfdTestRoute onBackToLanding={handleBackToLanding} />
+                            </ModuleErrorBoundary>
+                        )}
+                        {currentMode === 'pfdSvgAudit' && (
+                            <ModuleErrorBoundary moduleName="PFD SVG Audit" onNavigateHome={handleBackToLanding}>
+                                <PfdSvgAudit />
+                            </ModuleErrorBoundary>
+                        )}
+                        {currentMode === 'tiempos' && (
+                            <ModuleErrorBoundary moduleName="Tiempos y Balanceos" onNavigateHome={handleBackToLanding}>
+                                <TiemposApp onBackToLanding={handleBackToLanding} />
+                            </ModuleErrorBoundary>
+                        )}
+                        {currentMode === 'amfe' && (
+                            <ModuleErrorBoundary moduleName="AMFE VDA" onNavigateHome={handleBackToLanding}>
+                                <AmfeApp onBackToLanding={handleBackToLanding} initialTab="amfe" initialFamilyId={pendingFamilyId} onFamilyIdConsumed={() => setPendingFamilyId(null)} />
+                            </ModuleErrorBoundary>
+                        )}
+                        {currentMode === 'controlPlan' && (
+                            <ModuleErrorBoundary moduleName="Plan de Control" onNavigateHome={handleBackToLanding}>
+                                <AmfeApp onBackToLanding={handleBackToLanding} initialTab="controlPlan" />
+                            </ModuleErrorBoundary>
+                        )}
+                        {currentMode === 'hojaOperaciones' && (
+                            <ModuleErrorBoundary moduleName="Hojas de Operaciones" onNavigateHome={handleBackToLanding}>
+                                <AmfeApp onBackToLanding={handleBackToLanding} initialTab="hojaOperaciones" />
+                            </ModuleErrorBoundary>
+                        )}
+                        {currentMode === 'solicitud' && (
+                            <ModuleErrorBoundary moduleName="Solicitudes de Código" onNavigateHome={handleBackToLanding}>
+                                <SolicitudApp onBackToLanding={handleBackToLanding} />
+                            </ModuleErrorBoundary>
+                        )}
+                        {currentMode === 'manuales' && (
+                            <ModuleErrorBoundary moduleName="Manuales de Ingeniería" onNavigateHome={handleBackToLanding}>
+                                <ManualesApp onBackToLanding={handleBackToLanding} />
+                            </ModuleErrorBoundary>
+                        )}
+                        {currentMode === 'formatos' && (
+                            <ModuleErrorBoundary moduleName="Formatos Estándar" onNavigateHome={handleBackToLanding}>
+                                <FormatosApp onBackToLanding={handleBackToLanding} />
+                            </ModuleErrorBoundary>
+                        )}
+                        {currentMode === 'registry' && (
+                            <ModuleErrorBoundary moduleName="Registro de Documentos" onNavigateHome={handleBackToLanding}>
+                                <DocumentHub onBackToLanding={handleBackToLanding} onOpenDocument={handleOpenDocument} />
+                            </ModuleErrorBoundary>
+                        )}
+                        {currentMode === 'dataManager' && (
+                            <ModuleErrorBoundary moduleName="Datos y Seguridad" onNavigateHome={handleBackToLanding}>
+                                <DataManager onBackToLanding={handleBackToLanding} />
+                            </ModuleErrorBoundary>
+                        )}
+                        {currentMode === 'admin' && (
+                            <ModuleErrorBoundary moduleName="Administración" onNavigateHome={handleBackToLanding}>
+                                <AdminPanel onBackToLanding={handleBackToLanding} />
+                            </ModuleErrorBoundary>
+                        )}
+                    </Suspense>
+                )}
+            </main>
+        </div>
     );
 };
 

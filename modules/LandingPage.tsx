@@ -106,7 +106,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSelectModule, onOpenProject
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 font-sans">
+        <div className="min-h-full bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 font-sans">
             {/* Background pattern */}
             <div className="absolute inset-0 opacity-[0.03] pointer-events-none">
                 <div className="absolute inset-0" style={{

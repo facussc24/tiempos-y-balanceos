@@ -363,7 +363,7 @@ const PfdSvgAudit: React.FC = () => {
     }, []);
 
     return (
-        <div className="min-h-screen bg-gray-100">
+        <div className="min-h-full bg-gray-100">
             {/* Top bar */}
             <div className="bg-gray-900 text-white px-4 py-3 flex items-center gap-4 sticky top-0 z-50">
                 <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded">AUDIT</span>

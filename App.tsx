@@ -359,7 +359,7 @@ const App: React.FC<AppProps> = ({ onBackToLanding }) => {
                 onMediaMigrationComplete={handleMediaMigrationComplete}
             />
 
-            <div className="min-h-screen bg-slate-50 print:bg-white text-slate-900 selection:bg-blue-100 animate-fade-in-up">
+            <div className="min-h-full bg-slate-50 print:bg-white text-slate-900 selection:bg-blue-100 animate-fade-in-up">
                 <AppHeader
                     onBackToLanding={onBackToLanding}
                     localMediaCount={localMediaCount}
