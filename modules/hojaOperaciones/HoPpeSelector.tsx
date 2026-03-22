@@ -22,34 +22,38 @@ const HoPpeSelector: React.FC<Props> = ({ selected, onToggle, readOnly }) => {
                 const isSelected = selected.includes(ppe.id);
                 const imgSrc = PPE_IMAGES[ppe.id];
                 return (
-                    <button
-                        key={ppe.id}
-                        type="button"
-                        disabled={readOnly}
-                        onClick={() => onToggle(ppe.id)}
-                        title={ppe.label}
-                        aria-pressed={isSelected}
-                        aria-label={`${ppe.label}${isSelected ? ' (seleccionado)' : ''}`}
-                        className={`
-                            relative w-12 h-12 rounded-full border-2 overflow-hidden transition-all
-                            ${isSelected
-                                ? 'border-blue-600 ring-2 ring-blue-300 shadow-md opacity-100'
-                                : 'border-gray-300 opacity-40 hover:opacity-70 hover:border-blue-400'}
-                            ${readOnly ? 'cursor-default' : 'cursor-pointer'}
-                        `}
-                    >
-                        <img
-                            src={imgSrc}
-                            alt={ppe.label}
-                            className="w-full h-full object-cover"
-                            draggable={false}
-                        />
-                        {isSelected && (
-                            <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center border border-white">
-                                <Check size={10} className="text-white" strokeWidth={3} />
-                            </div>
-                        )}
-                    </button>
+                    <div key={ppe.id} className="flex flex-col items-center gap-0.5">
+                        <button
+                            type="button"
+                            disabled={readOnly}
+                            onClick={() => onToggle(ppe.id)}
+                            title={ppe.label}
+                            aria-pressed={isSelected}
+                            aria-label={`${ppe.label}${isSelected ? ' (seleccionado)' : ''}`}
+                            className={`
+                                relative w-12 h-12 rounded-full border-2 overflow-hidden transition-all
+                                ${isSelected
+                                    ? 'border-blue-600 ring-2 ring-blue-300 shadow-md opacity-100'
+                                    : 'border-gray-300 opacity-40 hover:opacity-70 hover:border-blue-400'}
+                                ${readOnly ? 'cursor-default' : 'cursor-pointer'}
+                            `}
+                        >
+                            <img
+                                src={imgSrc}
+                                alt={ppe.label}
+                                className="w-full h-full object-cover"
+                                draggable={false}
+                            />
+                            {isSelected && (
+                                <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center border border-white">
+                                    <Check size={10} className="text-white" strokeWidth={3} />
+                                </div>
+                            )}
+                        </button>
+                        <span className="text-[9px] text-center text-gray-500 truncate w-14 mt-0.5">
+                            {ppe.label}
+                        </span>
+                    </div>
                 );
             })}
         </div>

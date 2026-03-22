@@ -204,6 +204,22 @@ const HoVisualAidPanel: React.FC<Props> = ({ aids, onAdd, onRemove, onUpdateCapt
         input.click();
     }, [processAndAdd]);
 
+    // When empty and not readOnly, show a compact add button instead of the large grid placeholder
+    if (aids.length === 0 && !readOnly) {
+        return (
+            <div className="px-1 py-1">
+                <button
+                    type="button"
+                    onClick={handleFileSelect}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-500 hover:text-amber-600 hover:bg-amber-50 border border-dashed border-gray-300 hover:border-amber-400 rounded-lg transition"
+                >
+                    <Plus size={14} />
+                    Agregar imagen
+                </button>
+            </div>
+        );
+    }
+
     return (
         <div className="space-y-2">
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">

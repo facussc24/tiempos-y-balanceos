@@ -293,7 +293,7 @@ function StepCard({ step, stepIndex, totalSteps, isSelected, onSelect, onContext
     };
 
     return (
-        <div className="relative group flex flex-col items-center w-full max-w-[320px]">
+        <div className="relative group flex flex-col items-center w-full max-w-md">
             <button
                 onClick={handleClick}
                 onContextMenu={handleContextMenu}
@@ -311,7 +311,7 @@ function StepCard({ step, stepIndex, totalSteps, isSelected, onSelect, onContext
                         <span className={`font-mono font-bold text-gray-700 ${compact ? 'text-[10px]' : 'text-xs'}`}>
                             {step.stepNumber}
                         </span>
-                        <span className={`text-gray-600 truncate block ${compact ? 'text-[10px] max-w-[140px]' : 'text-xs max-w-[220px]'}`}>
+                        <span className={`text-gray-600 whitespace-normal break-words block ${compact ? 'text-[10px] max-w-[200px]' : 'text-xs max-w-xs'}`}>
                             {step.description}
                         </span>
                     </div>

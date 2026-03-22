@@ -245,11 +245,15 @@ const ProjectTable: React.FC<ProjectTableProps> = ({ projects, onSelectProject, 
                                     {/* AP=H */}
                                     <td className="px-4 py-3 text-center">
                                         {apH > 0 ? (
-                                            <span className="inline-flex items-center justify-center min-w-[20px] px-1.5 py-0.5 rounded-md text-xs font-bold text-red-400 bg-red-500/15">
-                                                {apH}
-                                            </span>
+                                            <Tooltip content="Action Priority = High (Prioridad de Acción Alta)">
+                                                <span className="inline-flex items-center justify-center min-w-[20px] px-1.5 py-0.5 rounded-md text-xs font-bold text-red-400 bg-red-500/15">
+                                                    {apH}
+                                                </span>
+                                            </Tooltip>
                                         ) : (
-                                            <Check size={14} className="mx-auto text-emerald-500" />
+                                            <Tooltip content="Sin prioridades altas pendientes">
+                                                <Check size={14} className="mx-auto text-emerald-500" />
+                                            </Tooltip>
                                         )}
                                     </td>
 

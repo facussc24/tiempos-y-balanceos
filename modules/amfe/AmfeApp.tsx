@@ -94,7 +94,7 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab, initialF
     const [viewMode, setViewMode] = useState<'view' | 'edit'>('edit');
     const isReadOnly = viewMode === 'view';
     const [headerCollapsed, setHeaderCollapsed] = useState(() => {
-        try { return localStorage.getItem('amfe-header-collapsed') === 'true'; } catch { return false; }
+        try { return localStorage.getItem('amfe-header-collapsed') !== 'false'; } catch { return true; }
     });
     const shortcutHints = useShortcutHints();
 
