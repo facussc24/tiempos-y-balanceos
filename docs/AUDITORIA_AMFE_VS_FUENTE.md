@@ -11,13 +11,13 @@
 
 | Producto | Ops PDF | Ops Supabase | Coinciden | Inventadas | Faltantes | S/O/D Precision |
 |----------|---------|-------------|-----------|------------|-----------|-----------------|
-| Insert Patagonia | 17 | 22 | 16/17 | 3 (OP 60, 100, 105) | 0 | ~85% fiel |
+| Insert Patagonia | 19 | 22 | 19/19 | 1 (OP 105) | 0 | ~90% fiel |
 | Armrest Door Panel | ~18 | 22 | ~16/18 | ~4 (WIP almacenamiento) | 0 | ~90% fiel |
 | Top Roll | ~9 | 11 | ~8/9 | ~2 (interpolados) | 0 | ~85% fiel |
 
 ### Hallazgos principales
 
-1. **3 operaciones completamente inventadas en Insert**: OP 60 (Troquelado espuma), OP 100 (Tapizado semiautomatico), OP 105 (Refilado post-tapizado) no existen en el PDF fuente
+1. **1 operacion potencialmente inventada en Insert**: OP 105 (Refilado post-tapizado) no se encontro en el PDF fuente. **CORRECCION**: OP 60 (Troquelado) y OP 100 (Tapizado semiautomatico) SI estan en el PDF original — el extracto de texto era incompleto y la comparacion inicial las marco incorrectamente como inventadas
 2. **Operaciones de almacenamiento WIP agregadas sistematicamente**: Los seeds agregan operaciones de almacenamiento WIP entre cada proceso principal que no siempre estan en el PDF
 3. **Valores S/O/D mayormente fieles**: ~85-90% de los valores S/O/D coinciden con el PDF, con discrepancias puntuales en severidad (+-1)
 4. **AP calculado con funcion simplificada**: Los AP se calcularon con `calcAP()` simplificada en los seeds, no con la tabla AIAG-VDA 2019 exacta (ver Tarea 1)
@@ -28,7 +28,7 @@
 
 ### PDF fuente: AMFE_INSERT_Rev.pdf (3,138 lineas de texto extraido)
 
-### Operaciones que coinciden (16 de 17 del PDF)
+### Operaciones que coinciden (19 de 19 del PDF)
 
 | OP# | PDF | Supabase | Verificacion |
 |-----|-----|----------|-------------|
@@ -38,7 +38,8 @@
 | 25 | Control con mylar | Control con mylar | Coincide |
 | 30 | Almacenamiento WIP | Almacenamiento WIP | Coincide |
 | 40 | Refilado | Costura - Refilado | Coincide |
-| 50 | Costura CNC | Costura CNC | Coincide. 2 failures extras posiblemente extrapolados (S=9) |
+| 50 | Costura CNC | Costura CNC | Coincide. 4 failure modes en PDF, todos presentes en Supabase |
+| 60 | Troquelado | Troquelado de espuma | Coincide. 4 failure modes (S=7) en PDF |
 | 61 | Troquelado WIP | Troquelado WIP | Coincide |
 | 70 | Inyeccion plastica | Inyeccion plastica | Coincide |
 | 71 | Inyeccion WIP | Inyeccion WIP | Coincide |
@@ -47,18 +48,19 @@
 | 90 | Adhesivar piezas | Adhesivar piezas | Coincide perfectamente |
 | 91 | Inspeccion adhesivado | Inspeccion adhesivado | Coincide |
 | 92 | Adhesivado WIP | Adhesivado WIP | Coincide |
-| 103 | Reproceso adhesivo | Reproceso adhesivo | Parcialmente coincide |
+| 100 | Tapizado semiautomatico | Tapizado semiautomatico | Coincide. 5 failure modes incl. S=10 poka-yoke (CC) |
+| 103 | Reproceso adhesivo | Reproceso adhesivo | Coincide |
 | 110 | Control final | Control final | Coincide |
 | 111 | Clasificacion PNC | Clasificacion PNC | Coincide |
 | 120 | Embalaje | Embalaje | Coincide |
 
-### Operaciones INVENTADAS (no en PDF)
+### Operaciones potencialmente INVENTADAS (no confirmadas en PDF)
 
 | OP# | Nombre | Veredicto |
 |-----|--------|-----------|
-| **60** | Troquelado de espuma | **INVENTADA** — El PDF tiene OP 61 (WIP troquelado) pero no un proceso de troquelado separado numerado 60. 4 modos de falla fabricados con conocimiento generico |
-| **100** | Tapizado semiautomatico | **INVENTADA** — No existe OP 100 en el PDF. 6 modos de falla con poka-yoke y sensores fabricados |
-| **105** | Refilado post-tapizado | **INVENTADA** — No existe OP 105 en el PDF. 3 modos de falla fabricados |
+| ~~60~~ | ~~Troquelado de espuma~~ | **CORREGIDO**: SI esta en el PDF (4 failure modes, S=7). El extracto de texto era incompleto |
+| ~~100~~ | ~~Tapizado semiautomatico~~ | **CORREGIDO**: SI esta en el PDF (5 failure modes incl. S=10 poka-yoke CC). El extracto de texto era incompleto |
+| **105** | Refilado post-tapizado | **POSIBLEMENTE INVENTADA** — No se encontro OP 105 en el PDF. 3 modos de falla sobre refilado post-tapizado |
 
 ### Discrepancias de S/O/D
 
@@ -66,8 +68,8 @@
 |----|--------------|-------|-----|----------|---------|
 | 10 | Material con spec erronea | D (Procesos admin) | 4 | 7 | Cambia AP |
 | 15 | Corte fuera de medida | S | 8 | 7 | Cambia AP |
-| 50 | Fallo componente maquina | Nuevo failure | N/A | S=9 | Agregado, no en PDF |
-| 50 | Patron costura incorrecto | Nuevo failure | N/A | S=9 | Agregado, no en PDF |
+| 50 | Fallo componente maquina | S | 8 (PDF) | 9 (Supabase) | Severidad elevada en seed |
+| 50 | Patron costura incorrecto | S | 8 (PDF) | 8 (Supabase) | Coincide |
 
 ### Causas sin S/O/D (solo en Supabase)
 
@@ -139,7 +141,7 @@ El seed script `seed-top-roll.mjs` cargo los datos con `calcAP()` simplificada.
 
 ### Lo que hay que corregir
 
-1. **3 operaciones inventadas en Insert** (OP 60, 100, 105): Decidir si se mantienen como extension valida del AMFE o se eliminan
+1. **1 operacion potencialmente inventada en Insert** (OP 105 Refilado post-tapizado): Verificar si existe en revision mas reciente del PDF
 2. **Funcion calcAP en seeds**: Reemplazar con la tabla AIAG-VDA 2019 exacta para futuros seeds
 3. **Discrepancias puntuales de S/O/D**: Documentar y resolver en la proxima revision formal
 

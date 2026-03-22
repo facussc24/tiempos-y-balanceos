@@ -9,13 +9,13 @@
 
 ## 1. Resumen Ejecutivo
 
-La calidad de datos APQP en Barack Mercosul es **moderada con areas criticas que requieren atencion inmediata**. El 85-90% de los datos AMFE son fieles a las fuentes PDF originales, pero existen problemas sistematicos en la clasificacion de Action Priority, operaciones inventadas en el Insert, y un CP master faltante para 90 causas significativas.
+La calidad de datos APQP en Barack Mercosul es **moderada con areas criticas que requieren atencion inmediata**. El ~90% de los datos AMFE son fieles a las fuentes PDF originales, pero existen problemas sistematicos en la clasificacion de Action Priority y un CP master faltante para 90 causas significativas.
 
 **Cifras clave:**
 - 1,112 causas AMFE auditadas, 629 (57%) con AP mal clasificada segun AIAG-VDA 2019
 - 113 causas AP=H infladas (deberian ser M o L)
 - 51 causas sub-clasificadas que deberian ser AP=H (riesgo no gestionado)
-- 3 operaciones inventadas en Insert master (OP 60, 100, 105)
+- 1 operacion potencialmente inventada en Insert master (OP 105). **CORRECCION**: OP 60 y OP 100 inicialmente marcadas como inventadas SI estan en el PDF fuente
 - 90 causas SC del Insert master sin cobertura de Plan de Control
 - 15 inconsistencias HO vs CP (5 frecuencias, 10 operaciones faltantes)
 
@@ -70,9 +70,9 @@ Funcion `calcAP()` simplificada en los seed scripts no replica la tabla AIAG-VDA
 
 ### Operaciones inventadas (Insert)
 
-- **OP 60** Troquelado de espuma — no en PDF, 4 modos de falla fabricados
-- **OP 100** Tapizado semiautomatico — no en PDF, 6 modos de falla fabricados
-- **OP 105** Refilado post-tapizado — no en PDF, 3 modos de falla fabricados
+- ~~OP 60 Troquelado~~ — **CORREGIDO**: SI esta en el PDF (4 failure modes, S=7)
+- ~~OP 100 Tapizado semiautomatico~~ — **CORREGIDO**: SI esta en el PDF (5 failure modes incl. S=10 poka-yoke CC)
+- **OP 105** Refilado post-tapizado — no confirmado en PDF, 3 modos de falla
 
 ### Discrepancias S/O/D
 
@@ -171,7 +171,7 @@ Causadas por numeracion de operaciones incompatible entre HO y CP, no por conten
 ### IMPORTANTE (resolver en proxima revision formal)
 
 4. **Recalcular AP** de las 113 causas infladas usando tabla AIAG-VDA 2019 exacta
-5. **Decidir sobre 3 operaciones inventadas del Insert** (OP 60, 100, 105) — mantener como extension o eliminar
+5. **Verificar OP 105 (Refilado post-tapizado) del Insert** — unica operacion no confirmada en PDF fuente
 6. **Alinear numeracion HO↔CP de Telas PWA** — actualmente incompatible
 
 ### MEJORA CONTINUA
