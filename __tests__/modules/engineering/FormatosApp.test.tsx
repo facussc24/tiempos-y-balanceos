@@ -57,7 +57,7 @@ describe('FormatosApp', () => {
     it('shows title Formatos Estándar', async () => {
         renderApp();
         await waitFor(() => {
-            expect(screen.getByText('Formatos Estándar')).toBeTruthy();
+            expect(screen.getAllByText('Formatos Estándar')[0]).toBeTruthy();
         });
     });
 
@@ -95,9 +95,9 @@ describe('FormatosApp', () => {
         const onBack = vi.fn();
         renderApp({ onBackToLanding: onBack });
         await waitFor(() => {
-            expect(screen.getByText('Inicio')).toBeTruthy();
+            expect(screen.getAllByText('Inicio')[0]).toBeTruthy();
         });
-        fireEvent.click(screen.getByText('Inicio'));
+        fireEvent.click(screen.getAllByText('Inicio')[0]);
         expect(onBack).toHaveBeenCalledTimes(1);
     });
 

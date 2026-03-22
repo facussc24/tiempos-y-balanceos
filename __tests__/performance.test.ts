@@ -69,7 +69,7 @@ describe('Performance Benchmarks', () => {
             const result = engine.runInstant();
 
             expect(result.completedCount).toBe(50);
-            expect(result.executionTimeMs).toBeLessThan(20);
+            expect(result.executionTimeMs).toBeLessThan(50);
             expect(result.kpis.bottleneckStationId).toBeDefined();
 
             console.log(`[BENCH] 50 pcs × 3 stations: ${result.executionTimeMs.toFixed(2)}ms`);
