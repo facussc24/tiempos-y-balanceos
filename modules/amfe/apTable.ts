@@ -1,12 +1,12 @@
 /**
  * AIAG-VDA FMEA Action Priority (AP) Lookup Table
- * 
- * Based on the AIAG & VDA FMEA Handbook (1st Edition, 2019).
- * Maps every combination of Severity (1-10), Occurrence (1-10), Detection (1-10)
- * to an Action Priority level: H (High), M (Medium), or L (Low).
- * 
- * Key principle: Severity is the DOMINANT factor. Safety-critical severities (9-10)
- * almost always result in H, regardless of O and D.
+ *
+ * Exact reproduction of the AIAG & VDA FMEA Handbook (1st Edition, June 2019)
+ * PFMEA Action Priority table. Maps every combination of Severity (1-10),
+ * Occurrence (1-10), Detection (1-10) to H (High), M (Medium), or L (Low).
+ *
+ * The standard groups severity into 5 ranges: 9-10, 7-8, 4-6, 2-3, 1.
+ * Within each range, O and D thresholds determine the AP level.
  */
 
 type AP = 'H' | 'M' | 'L';
@@ -16,187 +16,64 @@ type AP = 'H' | 'M' | 'L';
 const apLookup: AP[][][] = buildAPTable();
 
 function buildAPTable(): AP[][][] {
-    // Initialize 11x11x11 (index 0 unused)
+    // Initialize 11x11x11 (index 0 unused) — default all to 'L'
     const table: AP[][][] = Array.from({ length: 11 }, () =>
         Array.from({ length: 11 }, () =>
             Array(11).fill('L')
         )
     );
 
-    // ═══════════════════════════════════════════════════
-    // SEVERITY 10 (Safety / Regulatory — highest urgency)
-    // ═══════════════════════════════════════════════════
-    for (let o = 1; o <= 10; o++) {
-        for (let d = 1; d <= 10; d++) {
-            if (o <= 2 && d <= 2) {
-                table[10][o][d] = 'M';
-            } else if (o === 1 && d <= 3) {
-                table[10][o][d] = 'M';
-            } else {
-                table[10][o][d] = 'H';
+    for (let s = 1; s <= 10; s++) {
+        for (let o = 1; o <= 10; o++) {
+            for (let d = 1; d <= 10; d++) {
+                table[s][o][d] = apRule(s, o, d);
             }
         }
     }
-
-    // ═══════════════════════════════════════════════════
-    // SEVERITY 9 (Safety / Regulatory with warning)
-    // ═══════════════════════════════════════════════════
-    for (let o = 1; o <= 10; o++) {
-        for (let d = 1; d <= 10; d++) {
-            if (o <= 2 && d <= 3) {
-                table[9][o][d] = 'M';
-            } else if (o <= 3 && d <= 2) {
-                table[9][o][d] = 'M';
-            } else {
-                table[9][o][d] = 'H';
-            }
-        }
-    }
-
-    // ═══════════════════════════════════════════════════
-    // SEVERITY 8 (High severity — major disruption)
-    // ═══════════════════════════════════════════════════
-    for (let o = 1; o <= 10; o++) {
-        for (let d = 1; d <= 10; d++) {
-            if (o <= 2 && d <= 3) {
-                table[8][o][d] = 'L';
-            } else if (o <= 3 && d <= 4) {
-                table[8][o][d] = 'M';
-            } else if (o <= 4 && d <= 3) {
-                table[8][o][d] = 'M';
-            } else if (o >= 7 || d >= 7) {
-                table[8][o][d] = 'H';
-            } else {
-                table[8][o][d] = 'M';
-            }
-        }
-    }
-
-    // ═══════════════════════════════════════════════════
-    // SEVERITY 7 (High severity)
-    // ═══════════════════════════════════════════════════
-    for (let o = 1; o <= 10; o++) {
-        for (let d = 1; d <= 10; d++) {
-            if (o <= 2 && d <= 3) {
-                table[7][o][d] = 'L';
-            } else if (o <= 3 && d <= 5) {
-                table[7][o][d] = 'L';
-            } else if (o <= 5 && d <= 3) {
-                table[7][o][d] = 'L';
-            } else if (o >= 8 || d >= 8) {
-                table[7][o][d] = 'H';
-            } else if (o >= 6 && d >= 6) {
-                table[7][o][d] = 'H';
-            } else {
-                table[7][o][d] = 'M';
-            }
-        }
-    }
-
-    // ═══════════════════════════════════════════════════
-    // SEVERITY 6 (Moderate severity)
-    // ═══════════════════════════════════════════════════
-    for (let o = 1; o <= 10; o++) {
-        for (let d = 1; d <= 10; d++) {
-            if (o <= 3 && d <= 5) {
-                table[6][o][d] = 'L';
-            } else if (o <= 5 && d <= 3) {
-                table[6][o][d] = 'L';
-            } else if (o >= 8 && d >= 8) {
-                table[6][o][d] = 'H';
-            } else if (o >= 9 || d >= 9) {
-                table[6][o][d] = 'H';
-            } else if (o >= 7 && d >= 7) {
-                table[6][o][d] = 'H';
-            } else {
-                table[6][o][d] = 'M';
-            }
-        }
-    }
-
-    // ═══════════════════════════════════════════════════
-    // SEVERITY 5 (Moderate severity)
-    // ═══════════════════════════════════════════════════
-    for (let o = 1; o <= 10; o++) {
-        for (let d = 1; d <= 10; d++) {
-            if (o <= 4 && d <= 5) {
-                table[5][o][d] = 'L';
-            } else if (o <= 5 && d <= 4) {
-                table[5][o][d] = 'L';
-            } else if (o >= 8 && d >= 8) {
-                table[5][o][d] = 'H';
-            } else if (o >= 9 && d >= 6) {
-                table[5][o][d] = 'H';
-            } else if (o >= 6 && d >= 9) {
-                table[5][o][d] = 'H';
-            } else {
-                table[5][o][d] = 'M';
-            }
-        }
-    }
-
-    // ═══════════════════════════════════════════════════
-    // SEVERITY 4 (Low-moderate severity)
-    // ═══════════════════════════════════════════════════
-    for (let o = 1; o <= 10; o++) {
-        for (let d = 1; d <= 10; d++) {
-            if (o <= 5 && d <= 6) {
-                table[4][o][d] = 'L';
-            } else if (o <= 6 && d <= 5) {
-                table[4][o][d] = 'L';
-            } else if (o >= 9 && d >= 9) {
-                table[4][o][d] = 'H';
-            } else if (o >= 9 && d >= 7) {
-                table[4][o][d] = 'M';
-            } else if (o >= 7 && d >= 9) {
-                table[4][o][d] = 'M';
-            } else {
-                table[4][o][d] = 'M';
-            }
-        }
-    }
-    // Fix: S=4 with moderate combinations should be L
-    for (let o = 1; o <= 10; o++) {
-        for (let d = 1; d <= 10; d++) {
-            if (o <= 5 && d <= 6) table[4][o][d] = 'L';
-            if (o <= 6 && d <= 5) table[4][o][d] = 'L';
-        }
-    }
-
-    // ═══════════════════════════════════════════════════
-    // SEVERITY 3 (Low severity — minor annoyance)
-    // ═══════════════════════════════════════════════════
-    for (let o = 1; o <= 10; o++) {
-        for (let d = 1; d <= 10; d++) {
-            if (o >= 10 && d >= 10) {
-                table[3][o][d] = 'M';
-            } else if (o >= 9 && d >= 9) {
-                table[3][o][d] = 'M';
-            } else {
-                table[3][o][d] = 'L';
-            }
-        }
-    }
-
-    // ═══════════════════════════════════════════════════
-    // SEVERITY 2 (Very low — minor effect)
-    // ═══════════════════════════════════════════════════
-    for (let o = 1; o <= 10; o++) {
-        for (let d = 1; d <= 10; d++) {
-            if (o >= 10 && d >= 10) {
-                table[2][o][d] = 'M';
-            } else {
-                table[2][o][d] = 'L';
-            }
-        }
-    }
-
-    // ═══════════════════════════════════════════════════
-    // SEVERITY 1 (No effect) — Always L
-    // ═══════════════════════════════════════════════════
-    // Already initialized to 'L'
 
     return table;
+}
+
+/**
+ * Pure rule-based AP determination per AIAG-VDA 2019 PFMEA standard.
+ * Grouped by the 5 severity ranges published in the handbook.
+ */
+function apRule(s: number, o: number, d: number): AP {
+    // ── S = 1: Always L ──────────────────────────────────────
+    if (s <= 1) return 'L';
+
+    // ── S = 2-3: Only M when O=8-10 AND D=5-10 ──────────────
+    if (s <= 3) {
+        if (o >= 8 && d >= 5) return 'M';
+        return 'L';
+    }
+
+    // ── S = 4-6 ──────────────────────────────────────────────
+    if (s <= 6) {
+        if (o >= 8) return d >= 5 ? 'H' : 'M';     // O=8-10: D≥5→H, D≤4→M
+        if (o >= 6) return d >= 2 ? 'M' : 'L';      // O=6-7:  D≥2→M, D=1→L
+        if (o >= 4) return d >= 7 ? 'M' : 'L';      // O=4-5:  D≥7→M, D≤6→L
+        return 'L';                                   // O=1-3:  always L
+    }
+
+    // ── S = 7-8 ──────────────────────────────────────────────
+    if (s <= 8) {
+        if (o >= 8) return 'H';                       // O=8-10: always H
+        if (o >= 6) return d >= 2 ? 'H' : 'M';       // O=6-7:  D≥2→H, D=1→M
+        if (o >= 4) return d >= 7 ? 'H' : 'M';       // O=4-5:  D≥7→H, D≤6→M
+        if (o >= 2) return d >= 5 ? 'M' : 'L';       // O=2-3:  D≥5→M, D≤4→L
+        return 'L';                                    // O=1:    always L
+    }
+
+    // ── S = 9-10 ─────────────────────────────────────────────
+    if (o >= 6) return 'H';                            // O=6-10: always H
+    if (o >= 4) return d >= 2 ? 'H' : 'M';            // O=4-5:  D≥2→H, D=1→M
+    if (o >= 2) {                                      // O=2-3:
+        if (d >= 7) return 'H';                        //   D≥7→H
+        if (d >= 5) return 'M';                        //   D=5-6→M
+        return 'L';                                    //   D≤4→L
+    }
+    return 'L';                                        // O=1:    always L
 }
 
 /**
