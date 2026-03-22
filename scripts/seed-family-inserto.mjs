@@ -15,70 +15,18 @@
  * Usage: node scripts/seed-family-inserto.mjs
  */
 
-import { createClient } from '@supabase/supabase-js';
+import { initSupabase, execSql, selectSql, close } from './supabaseHelper.mjs';
 import { randomUUID, createHash } from 'crypto';
 
 // ─── Config ──────────────────────────────────────────────────────────────────
-
-const SUPABASE_URL = 'https://fbfsbbewmgoegjgnkkag.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZiZnNiYmV3bWdvZWdqZ25ra2FnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1MTI4NDksImV4cCI6MjA4OTA4ODg0OX0.YKHwbbwcnqNCnxFMSyeoM6VzZgvGuIctVSfdMNyQfL4';
-const LOGIN_EMAIL = 'admin@barack.com';
-const LOGIN_PASSWORD = 'Barack2024!';
 
 const FAMILY_NAME = 'Patagonia Inserto';
 const FAMILY_LINE = 'VWA';
 const FAMILY_DESCRIPTION = 'Familia de insertos para plataforma Patagonia VW';
 const VARIANT_LABEL = 'L0';
 
-// ─── Supabase Helpers ────────────────────────────────────────────────────────
-
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
 function sha256(str) {
     return createHash('sha256').update(str).digest('hex');
-}
-
-/** Replace ? placeholders with inlined literal values (matches SupabaseAdapter pattern) */
-function inlineParams(sql, params) {
-    // First convert ? to $1, $2, ...
-    let counter = 0;
-    let pgSql = sql.replace(/\?/g, () => `$${++counter}`);
-
-    // Then inline params in reverse order to avoid $1/$10 collision
-    for (let i = params.length - 1; i >= 0; i--) {
-        const val = params[i];
-        let replacement;
-        if (val === null || val === undefined) {
-            replacement = 'NULL';
-        } else if (typeof val === 'number') {
-            replacement = String(val);
-        } else if (typeof val === 'boolean') {
-            replacement = val ? '1' : '0';
-        } else {
-            replacement = `'${String(val).replace(/'/g, "''")}'`;
-        }
-        pgSql = pgSql.replaceAll(`$${i + 1}`, replacement);
-    }
-    return pgSql;
-}
-
-/** Execute a write query via Supabase RPC (matches SupabaseAdapter.execute) */
-async function dbExecute(sql, params = []) {
-    const query = inlineParams(sql.replace(/datetime\s*\(\s*'now'\s*\)/gi, 'NOW()'), params);
-    const { data, error } = await supabase.rpc('exec_sql_write', { query, params: [] });
-    if (error) throw new Error(`DB execute failed: ${error.message}\nSQL: ${query}`);
-    return {
-        rowsAffected: data?.rows_affected ?? 1,
-        lastInsertId: data?.last_insert_id ?? 0,
-    };
-}
-
-/** Execute a read query via Supabase RPC (matches SupabaseAdapter.select) */
-async function dbSelect(sql, params = []) {
-    const query = inlineParams(sql.replace(/datetime\s*\(\s*'now'\s*\)/gi, 'NOW()'), params);
-    const { data, error } = await supabase.rpc('exec_sql_read', { query, params: [] });
-    if (error) throw new Error(`DB select failed: ${error.message}\nSQL: ${query}`);
-    return data ?? [];
 }
 
 // ─── UUID Regeneration (port of documentInheritance.ts) ──────────────────────
@@ -210,7 +158,7 @@ async function saveAmfeVariant(id, amfeNumber, projectName, doc) {
     const stats = computeAmfeStats(doc);
     const h = doc.header;
 
-    await dbExecute(
+    await execSql(
         `INSERT INTO amfe_documents
          (id, amfe_number, project_name, subject, client, part_number, responsible,
           organization, status, operation_count, cause_count, ap_h_count, ap_m_count,
@@ -253,7 +201,7 @@ async function saveCpVariant(id, projectName, doc) {
     const checksum = sha256(data);
     const h = doc.header;
 
-    await dbExecute(
+    await execSql(
         `INSERT INTO cp_documents
          (id, project_name, control_plan_number, phase, part_number, part_name,
           organization, client, responsible, revision, linked_amfe_project,
@@ -291,7 +239,7 @@ async function savePfdVariant(id, doc) {
     // client: use explicit header field, fall back to customerName
     const client = h.client || h.customerName || '';
 
-    await dbExecute(
+    await execSql(
         `INSERT INTO pfd_documents
          (id, part_number, part_name, document_number, revision_level,
           revision_date, customer_name, client, step_count, created_at, updated_at,
@@ -323,7 +271,7 @@ async function saveHoVariant(id, doc) {
     const checksum = sha256(data);
     const h = doc.header;
 
-    await dbExecute(
+    await execSql(
         `INSERT INTO ho_documents
          (id, form_number, organization, client, part_number, part_description,
           linked_amfe_project, linked_cp_project, linked_amfe_id, linked_cp_id,
@@ -360,21 +308,13 @@ async function main() {
 
     // ─── Step 0: Authenticate ────────────────────────────────────────────────
     console.log('Step 0: Authenticating...');
-    const { error: authErr } = await supabase.auth.signInWithPassword({
-        email: LOGIN_EMAIL,
-        password: LOGIN_PASSWORD,
-    });
-    if (authErr) {
-        console.error('  FAILED:', authErr.message);
-        process.exit(1);
-    }
-    console.log('  OK: Logged in as', LOGIN_EMAIL);
+    await initSupabase();
 
     // ─── Step 1: Find existing Insert documents ──────────────────────────────
     console.log('\nStep 1: Finding existing Insert documents...');
 
     // AMFE
-    const amfeDocs = await dbSelect(
+    const amfeDocs = await selectSql(
         `SELECT id, amfe_number, project_name, operation_count, data
          FROM amfe_documents WHERE UPPER(project_name) LIKE '%INSERTO%' ORDER BY operation_count DESC LIMIT 1`
     );
@@ -386,7 +326,7 @@ async function main() {
     console.log(`  AMFE: ${masterAmfe.id} (${masterAmfe.project_name}, ${masterAmfe.operation_count} ops)`);
 
     // CP
-    const cpDocs = await dbSelect(
+    const cpDocs = await selectSql(
         `SELECT id, project_name, data
          FROM cp_documents WHERE UPPER(project_name) LIKE '%INSERTO%' ORDER BY item_count DESC LIMIT 1`
     );
@@ -398,7 +338,7 @@ async function main() {
     console.log(`  CP:   ${masterCp.id} (${masterCp.project_name})`);
 
     // PFD
-    const pfdDocs = await dbSelect(
+    const pfdDocs = await selectSql(
         `SELECT id, part_name, data
          FROM pfd_documents WHERE part_name LIKE '%Insert%' LIMIT 1`
     );
@@ -410,7 +350,7 @@ async function main() {
     console.log(`  PFD:  ${masterPfd.id} (${masterPfd.part_name})`);
 
     // HO
-    const hoDocs = await dbSelect(
+    const hoDocs = await selectSql(
         `SELECT id, part_description, data
          FROM ho_documents WHERE part_description LIKE '%Insert%' LIMIT 1`
     );
@@ -425,7 +365,7 @@ async function main() {
     console.log('\nStep 2: Creating product family...');
 
     // Check if family already exists
-    const existingFamilies = await dbSelect(
+    const existingFamilies = await selectSql(
         `SELECT id FROM product_families WHERE name = ?`, [FAMILY_NAME]
     );
 
@@ -434,7 +374,7 @@ async function main() {
         familyId = existingFamilies[0].id;
         console.log(`  Family "${FAMILY_NAME}" already exists (id=${familyId}), reusing.`);
     } else {
-        const result = await dbExecute(
+        const result = await execSql(
             `INSERT INTO product_families (name, description, linea_code, linea_name)
              VALUES (?, ?, ?, ?) RETURNING id`,
             [FAMILY_NAME, FAMILY_DESCRIPTION, FAMILY_LINE, 'Volkswagen Argentina']
@@ -455,7 +395,7 @@ async function main() {
         { module: 'ho', documentId: masterHo.id, label: 'HO' },
     ]) {
         // Check if already linked
-        const existing = await dbSelect(
+        const existing = await selectSql(
             `SELECT id FROM family_documents WHERE family_id = ? AND module = ? AND document_id = ?`,
             [familyId, module, documentId]
         );
@@ -464,7 +404,7 @@ async function main() {
             masterDocIds[module] = existing[0].id;
             console.log(`  ${label}: Already linked as master (family_doc_id=${existing[0].id})`);
         } else {
-            const result = await dbExecute(
+            const result = await execSql(
                 `INSERT INTO family_documents (family_id, module, document_id, is_master, source_master_id, product_id)
                  VALUES (?, ?, ?, 1, NULL, NULL) RETURNING id`,
                 [familyId, module, documentId]
@@ -535,7 +475,7 @@ async function main() {
         { module: 'ho', documentId: variantHoId, sourceMasterId: masterDocIds.ho, label: 'HO' },
     ]) {
         // Check if already linked
-        const existing = await dbSelect(
+        const existing = await selectSql(
             `SELECT id FROM family_documents WHERE family_id = ? AND module = ? AND document_id = ?`,
             [familyId, module, documentId]
         );
@@ -544,7 +484,7 @@ async function main() {
             variantDocIds[module] = existing[0].id;
             console.log(`  ${label}: Already linked as variant (family_doc_id=${existing[0].id})`);
         } else {
-            const result = await dbExecute(
+            const result = await execSql(
                 `INSERT INTO family_documents (family_id, module, document_id, is_master, source_master_id, product_id)
                  VALUES (?, ?, ?, 0, ?, NULL) RETURNING id`,
                 [familyId, module, documentId, sourceMasterId]
@@ -557,12 +497,12 @@ async function main() {
     // ─── Step 6: Verify ──────────────────────────────────────────────────────
     console.log('\nStep 6: Verifying...');
 
-    const family = await dbSelect(
+    const family = await selectSql(
         `SELECT * FROM product_families WHERE id = ?`, [familyId]
     );
     console.log(`  Family: ${JSON.stringify(family[0], null, 2)}`);
 
-    const familyDocs = await dbSelect(
+    const familyDocs = await selectSql(
         `SELECT id, module, document_id, is_master, source_master_id
          FROM family_documents WHERE family_id = ? ORDER BY module, is_master DESC`,
         [familyId]
@@ -575,10 +515,10 @@ async function main() {
     }
 
     // Verify variant documents exist in their tables
-    const varAmfe = await dbSelect(`SELECT id, project_name FROM amfe_documents WHERE id = ?`, [variantAmfeId]);
-    const varCp = await dbSelect(`SELECT id, project_name FROM cp_documents WHERE id = ?`, [variantCpId]);
-    const varPfd = await dbSelect(`SELECT id, part_name FROM pfd_documents WHERE id = ?`, [variantPfdId]);
-    const varHo = await dbSelect(`SELECT id, part_description FROM ho_documents WHERE id = ?`, [variantHoId]);
+    const varAmfe = await selectSql(`SELECT id, project_name FROM amfe_documents WHERE id = ?`, [variantAmfeId]);
+    const varCp = await selectSql(`SELECT id, project_name FROM cp_documents WHERE id = ?`, [variantCpId]);
+    const varPfd = await selectSql(`SELECT id, part_name FROM pfd_documents WHERE id = ?`, [variantPfdId]);
+    const varHo = await selectSql(`SELECT id, part_description FROM ho_documents WHERE id = ?`, [variantHoId]);
 
     console.log(`\n  Variant documents in their tables:`);
     console.log(`    AMFE: ${varAmfe.length > 0 ? varAmfe[0].project_name : 'NOT FOUND'}`);
@@ -599,6 +539,8 @@ async function main() {
     console.log(`    PFD:     ${variantPfdId}`);
     console.log(`    HO:      ${variantHoId}`);
     console.log('================================================================');
+
+    close();
 }
 
 main().catch(err => {

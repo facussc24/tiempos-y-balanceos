@@ -1,14 +1,14 @@
 /**
  * Generate APQP Package XLSX for "Insert Patagonia" product family.
  *
- * Connects to Supabase, loads PFD/AMFE/CP/HO master documents,
+ * Connects to Supabase, loads PFD/AMFE/CP master documents,
  * builds a single multi-sheet workbook reusing the same logic as
- * apqpPackageExport.ts (Portada + Flujograma + AMFE VDA + CP + HO sheets).
+ * apqpPackageExport.ts (Portada + Flujograma + AMFE VDA + Plan de Control).
  *
  * Run: node exports/generate-apqp-package-insert.mjs
  */
 
-import { createClient } from '@supabase/supabase-js';
+import { initSupabase, selectSql, close } from '../scripts/supabaseHelper.mjs';
 import XLSX from 'xlsx-js-style';
 import fs from 'fs';
 import path from 'path';
@@ -18,53 +18,29 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = path.resolve(__dirname, '..');
 
 // ============================================================================
-// SUPABASE CONNECTION (reused from generate-insert-exports.mjs)
-// ============================================================================
-
-const SUPABASE_URL = 'https://fbfsbbewmgoegjgnkkag.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZiZnNiYmV3bWdvZWdqZ25ra2FnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1MTI4NDksImV4cCI6MjA4OTA4ODg0OX0.YKHwbbwcnqNCnxFMSyeoM6VzZgvGuIctVSfdMNyQfL4';
-
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-async function signIn() {
-    const { data, error } = await supabase.auth.signInWithPassword({
-        email: 'admin@barack.com',
-        password: 'Barack2024!',
-    });
-    if (error) throw new Error(`Auth failed: ${error.message}`);
-    console.log(`  Signed in as ${data.user.email}`);
-}
-
-async function query(sql) {
-    const { data, error } = await supabase.rpc('exec_sql_read', { query: sql, params: [] });
-    if (error) throw new Error(`Query failed: ${error.message}\nSQL: ${sql}`);
-    return data || [];
-}
-
-// ============================================================================
 // DATA LOADERS
 // ============================================================================
 
 async function findInsertFamily() {
-    const rows = await query(`SELECT * FROM product_families WHERE name LIKE '%Insert Patagonia%' AND active = 1`);
+    const rows = await selectSql(`SELECT * FROM product_families WHERE name LIKE '%Insert Patagonia%' AND active = 1`);
     if (rows.length === 0) throw new Error('Insert Patagonia family not found');
     console.log(`  Family: "${rows[0].name}" (id=${rows[0].id})`);
     return rows[0];
 }
 
 async function findMasterDocs(familyId) {
-    const rows = await query(`SELECT * FROM family_documents WHERE family_id = ${familyId} AND is_master = 1 ORDER BY module`);
+    const rows = await selectSql(`SELECT * FROM family_documents WHERE family_id = ${familyId} AND is_master = 1 ORDER BY module`);
     console.log(`  Found ${rows.length} master documents:`);
     for (const r of rows) console.log(`    - ${r.module}: document_id=${r.document_id}`);
     return rows;
 }
 
 async function findFamilyMembers(familyId) {
-    return query(`SELECT * FROM product_family_members WHERE family_id = ${familyId} ORDER BY is_primary DESC`);
+    return selectSql(`SELECT * FROM product_family_members WHERE family_id = ${familyId} ORDER BY is_primary DESC`);
 }
 
 async function loadDoc(table, docId, label) {
-    const rows = await query(`SELECT id, data FROM ${table} WHERE id = '${docId}'`);
+    const rows = await selectSql(`SELECT id, data FROM ${table} WHERE id = '${docId}'`);
     if (rows.length === 0) throw new Error(`${label} document ${docId} not found`);
     return typeof rows[0].data === 'string' ? JSON.parse(rows[0].data) : rows[0].data;
 }
@@ -106,21 +82,12 @@ const st = {
     tocNum:    { font: { bold: true, sz: 10, name: 'Arial', color: { rgb: '4472C4' } }, border: BORDER, alignment: { horizontal: 'center', vertical: 'center' } },
     ccBadge:   { font: { bold: true, sz: 9, name: 'Arial', color: { rgb: '9C0006' } }, fill: { fgColor: { rgb: 'FFC7CE' } }, alignment: { horizontal: 'center', vertical: 'center' }, border: BORDER },
     scBadge:   { font: { bold: true, sz: 9, name: 'Arial', color: { rgb: '9C6500' } }, fill: { fgColor: { rgb: 'FFEB9C' } }, alignment: { horizontal: 'center', vertical: 'center' }, border: BORDER },
-    ngScrap:   { font: { bold: true, sz: 9, name: 'Arial', color: { rgb: '9C0006' } }, fill: { fgColor: { rgb: 'FFC7CE' } }, alignment: { horizontal: 'center', vertical: 'center' }, border: BORDER },
-    ngRework:  { font: { bold: true, sz: 9, name: 'Arial', color: { rgb: '9C6500' } }, fill: { fgColor: { rgb: 'FFEB9C' } }, alignment: { horizontal: 'center', vertical: 'center' }, border: BORDER },
-    ngSort:    { font: { bold: true, sz: 9, name: 'Arial', color: { rgb: '1D4ED8' } }, fill: { fgColor: { rgb: 'DBEAFE' } }, alignment: { horizontal: 'center', vertical: 'center' }, border: BORDER },
+    ngScrap:   { font: { bold: true, sz: 9, name: 'Arial', color: { rgb: '9C0006' } }, fill: { fgColor: { rgb: 'FFC7CE' } }, alignment: { horizontal: 'center', vertical: 'center', wrapText: true }, border: BORDER },
+    ngRework:  { font: { bold: true, sz: 9, name: 'Arial', color: { rgb: '9C6500' } }, fill: { fgColor: { rgb: 'FFEB9C' } }, alignment: { horizontal: 'center', vertical: 'center', wrapText: true }, border: BORDER },
+    ngSort:    { font: { bold: true, sz: 9, name: 'Arial', color: { rgb: '1D4ED8' } }, fill: { fgColor: { rgb: 'DBEAFE' } }, alignment: { horizontal: 'center', vertical: 'center', wrapText: true }, border: BORDER },
     subStep:   { font: { sz: 9, name: 'Arial', color: { rgb: '555555' } }, fill: { fgColor: { rgb: 'F5F5F5' } }, alignment: { vertical: 'top', wrapText: true }, border: BORDER },
     subCC:     { font: { sz: 9, name: 'Arial', color: { rgb: '555555' } }, fill: { fgColor: { rgb: 'F5F5F5' } }, alignment: { horizontal: 'center', vertical: 'center' }, border: BORDER },
     branchLbl: { font: { bold: true, sz: 9, name: 'Arial', color: { rgb: 'FFFFFF' } }, fill: { fgColor: { rgb: '7B61FF' } }, alignment: { horizontal: 'center', vertical: 'center' }, border: BORDER },
-    keyPt:     { font: { bold: true, sz: 9, name: 'Arial' }, fill: { fgColor: { rgb: 'FFEB9C' } }, alignment: { vertical: 'top', wrapText: true }, border: BORDER },
-    imgRef:    { font: { sz: 9, name: 'Arial', color: { rgb: '4472C4' } }, alignment: { vertical: 'center', wrapText: true }, border: BORDER },
-    greenSec:  { font: { bold: true, sz: 10, name: 'Arial', color: { rgb: 'FFFFFF' } }, fill: { fgColor: { rgb: '4CAF50' } }, alignment: { horizontal: 'center', vertical: 'center' }, border: BORDER },
-    // HO-matching styles
-    redSec:    { font: { bold: true, sz: 10, name: 'Arial', color: { rgb: 'FFFFFF' } }, fill: { fgColor: { rgb: 'E53935' } }, alignment: { horizontal: 'center', vertical: 'center' }, border: BORDER },
-    redCell:   { font: { bold: true, sz: 9, name: 'Arial', color: { rgb: '9C0006' } }, fill: { fgColor: { rgb: 'FFC7CE' } }, alignment: { vertical: 'top', wrapText: true }, border: BORDER },
-    greenHdr:  { font: { bold: true, sz: 8, name: 'Arial' }, fill: { fgColor: { rgb: 'E2EFDA' } }, alignment: { horizontal: 'center', vertical: 'center', wrapText: true }, border: BORDER },
-    navyLight: { font: { bold: true, sz: 8, name: 'Arial' }, fill: { fgColor: { rgb: 'D6E4F0' } }, alignment: { horizontal: 'center', vertical: 'center', wrapText: true }, border: BORDER },
-    grayLabel: { font: { bold: true, sz: 7, name: 'Arial', color: { rgb: '808080' } }, alignment: { vertical: 'top', wrapText: true }, border: BORDER },
     // Flujograma decision-row style
     decisionRow: { font: { sz: 9, name: 'Arial', color: { rgb: '6B21A8' } }, fill: { fgColor: { rgb: 'F3E8FF' } }, alignment: { vertical: 'top', wrapText: true }, border: BORDER },
     decisionCC:  { font: { sz: 9, name: 'Arial', color: { rgb: '6B21A8' } }, fill: { fgColor: { rgb: 'F3E8FF' } }, alignment: { horizontal: 'center', vertical: 'center' }, border: BORDER },
@@ -173,15 +140,6 @@ function build4MText(s) {
     return `M: ${machine || '\u2014'}\nMO: ${s.isExternalProcess ? 'Proveedor externo' : 'Operador'}\nMat: \u2014\nMA: \u2014`;
 }
 
-const PPE_CATALOG = [
-    { id: 'anteojos',           label: 'Anteojos de seguridad' },
-    { id: 'guantes',            label: 'Guantes' },
-    { id: 'zapatos',            label: 'Zapatos de seguridad' },
-    { id: 'proteccionAuditiva', label: 'Proteccion auditiva' },
-    { id: 'delantal',           label: 'Ropa de proteccion' },
-    { id: 'respirador',         label: 'Respirador' },
-];
-
 const OFF_C = 2;
 const OFF_R = 8;
 
@@ -213,15 +171,6 @@ function shiftWorksheet(ws) {
     if (ws['!freeze']) { const y = ws['!freeze'].ySplit || 0; n['!freeze'] = { xSplit: 0, ySplit: y + 1, topLeftCell: `A${y + 2}` }; }
     if (ws['!autofilter']) { const ref = ws['!autofilter'].ref; if (ref) { const rng = XLSX.utils.decode_range(ref); rng.s.r++; rng.s.c++; rng.e.r++; rng.e.c++; n['!autofilter'] = { ref: XLSX.utils.encode_range(rng) }; } }
     return n;
-}
-
-function hoSheetNames(ho) {
-    const u = new Set();
-    return ho.sheets.map(s => {
-        let b = `HO ${s.operationNumber || s.hoNumber}`.substring(0, 28), nm = b, c = 1;
-        while (u.has(nm)) nm = `${b} (${c++})`;
-        u.add(nm); return nm;
-    });
 }
 
 // ============================================================================
@@ -265,7 +214,7 @@ function buildPortadaSheet(wb, data, opts, tocNames) {
 function buildFlujogramaSheet(wb, pfd) {
     const rows = [], merges = [];
     const hdrs = ['Nro. Op.', 'S\u00EDmbolo', 'Descripci\u00F3n', 'Elementos de Trabajo (4M)', 'Caract. Producto', 'CC/SC Prod.', 'Caract. Proceso', 'CC/SC Proc.', 'Ruteo / Disposici\u00F3n NG'];
-    const cw = [10, 16, 35, 26, 22, 10, 22, 10, 28]; const TC = hdrs.length;
+    const cw = [10, 16, 35, 30, 22, 10, 22, 10, 45]; const TC = hdrs.length;
 
     const tR = Array(TC).fill(null).map(() => ({ v: '', s: st.title }));
     tR[0] = { v: 'DIAGRAMA DE FLUJO DEL PROCESO', s: { ...st.title, font: { ...st.title.font, sz: 14 } } };
@@ -334,7 +283,19 @@ function buildFlujogramaSheet(wb, pfd) {
             }
         }
     }
-    const rh = rows.map((row, i) => { if (i === 0) return 30; if (i >= dsr && Array.isArray(row)) { const l = Math.max(String(row[2]?.v || '').length, String(row[3]?.v || '').length); return Math.min(60, Math.max(15, Math.max(1, Math.ceil(l / 30)) * 13)); } return 18; });
+    const rh = rows.map((row, i) => {
+        if (i === 0) return 30;
+        if (i >= dsr && Array.isArray(row)) {
+            const descLen = String(row[2]?.v || '').length;
+            const fourMStr = String(row[3]?.v || '');
+            const fourMLines = fourMStr.split('\n').length;
+            const fourMLen = Math.max(fourMStr.length, fourMLines * 30);
+            const ngLen = String(row[8]?.v || '').length;
+            const maxLen = Math.max(descLen, fourMLen, Math.ceil(ngLen * 30 / 45));
+            return Math.min(80, Math.max(15, Math.max(1, Math.ceil(maxLen / 30)) * 13));
+        }
+        return 18;
+    });
     const { rows: oR, merges: oM, cw: oC } = applyB2(rows, merges, cw);
     const ws = XLSX.utils.aoa_to_sheet(oR); ws['!cols'] = oC.map(w => ({ wch: w })); ws['!merges'] = oM;
     ws['!rows'] = [{ hpt: OFF_R }, ...rh.map(h => ({ hpt: h }))];
@@ -622,213 +583,9 @@ function buildControlPlanWorkbook(doc) {
 }
 
 // ============================================================================
-// HO SUMMARY SHEETS (matching apqpPackageExport.ts buildHoSummarySheets)
+// (HO sheets removed — exported individually with ExcelJS for image support)
 // ============================================================================
 
-function buildHoSummarySheets(wb, ho) {
-    const usedNames = new Set();
-    for (const sheet of ho.sheets) {
-        let baseName = `HO ${sheet.operationNumber || sheet.hoNumber}`.substring(0, 28);
-        let sheetName = baseName; let counter = 1;
-        while (usedNames.has(sheetName)) sheetName = `${baseName} (${counter++})`;
-        usedNames.add(sheetName);
-        const rows = [], merges = [], TC = 8;
-
-        // Header rows 0-1: Org | Title | HO Number
-        const r0 = Array(TC).fill(null).map(() => ({ v: '', s: { border: BORDER } }));
-        r0[0] = { v: ho.header?.organization || 'BARACK MERCOSUL', s: { font: { bold: true, sz: 11, name: 'Arial', color: { rgb: '1E3A5F' } }, alignment: { horizontal: 'center', vertical: 'center' }, border: BORDER } };
-        r0[2] = { v: 'HOJA DE OPERACIONES', s: { font: { bold: true, sz: 14, name: 'Arial', color: { rgb: '1E3A5F' } }, alignment: { horizontal: 'center', vertical: 'center' }, border: BORDER } };
-        r0[5] = { v: `Form: ${ho.header?.formNumber || ''}`, s: { font: { sz: 7, name: 'Arial', color: { rgb: '808080' } }, alignment: { horizontal: 'right', vertical: 'bottom' }, border: BORDER } };
-        const statusLabel = sheet.status === 'aprobado' ? 'APROBADO' : sheet.status === 'pendienteRevision' ? 'PEND. REV.' : 'BORRADOR';
-        const statusFill = sheet.status === 'aprobado' ? '22C55E' : sheet.status === 'pendienteRevision' ? 'FACC15' : 'E5E7EB';
-        const statusTxt = sheet.status === 'aprobado' ? 'FFFFFF' : sheet.status === 'pendienteRevision' ? '854D0E' : '4B5563';
-        r0[7] = { v: statusLabel, s: { font: { bold: true, sz: 8, name: 'Arial', color: { rgb: statusTxt } }, fill: { fgColor: { rgb: statusFill } }, alignment: { horizontal: 'center', vertical: 'center' }, border: BORDER } };
-        rows.push(r0);
-        merges.push({ s: { r: 0, c: 0 }, e: { r: 0, c: 1 } }, { s: { r: 0, c: 2 }, e: { r: 0, c: 4 } }, { s: { r: 0, c: 5 }, e: { r: 0, c: 6 } });
-
-        const r1 = Array(TC).fill(null).map(() => ({ v: '', s: { border: BORDER } }));
-        r1[5] = { v: sheet.hoNumber, s: { font: { bold: true, sz: 18, name: 'Arial', color: { rgb: '1E3A5F' } }, alignment: { horizontal: 'center', vertical: 'center' }, border: BORDER } };
-        rows.push(r1);
-        merges.push({ s: { r: 1, c: 0 }, e: { r: 1, c: 1 } }, { s: { r: 1, c: 2 }, e: { r: 1, c: 4 } }, { s: { r: 1, c: 5 }, e: { r: 1, c: 7 } });
-        merges.push({ s: { r: 0, c: 0 }, e: { r: 1, c: 1 } }, { s: { r: 0, c: 2 }, e: { r: 1, c: 4 } });
-
-        // Row 2: N° Operación | Denominación | Modelo
-        const r2 = Array(TC).fill(null).map(() => ({ v: '', s: { border: BORDER } }));
-        r2[0] = { v: 'N\u00B0 DE OPERACI\u00D3N', s: st.grayLabel }; r2[1] = { v: sheet.operationNumber, s: { font: { sz: 10, bold: true, name: 'Arial' }, border: BORDER } };
-        r2[2] = { v: 'DENOMINACI\u00D3N DE LA OPERACI\u00D3N', s: st.grayLabel };
-        r2[3] = { v: sanitizeCellValue(sheet.operationName), s: { font: { sz: 10, bold: true, name: 'Arial' }, border: BORDER } };
-        r2[6] = { v: 'MODELO O VEH\u00CDCULO', s: st.grayLabel }; r2[7] = { v: sanitizeCellValue(sheet.vehicleModel), s: st.metaValue };
-        rows.push(r2); merges.push({ s: { r: 2, c: 3 }, e: { r: 2, c: 5 } });
-
-        // Row 3: Realizó | Aprobó | Fecha | Rev
-        const r3 = Array(TC).fill(null).map(() => ({ v: '', s: { border: BORDER } }));
-        r3[0] = { v: 'REALIZ\u00D3', s: st.grayLabel }; r3[1] = { v: sanitizeCellValue(sheet.preparedBy), s: st.metaValue };
-        r3[2] = { v: 'APROB\u00D3', s: st.grayLabel }; r3[3] = { v: sanitizeCellValue(sheet.approvedBy), s: st.metaValue };
-        r3[4] = { v: 'FECHA', s: st.grayLabel }; r3[5] = { v: sanitizeCellValue(sheet.date), s: st.metaValue };
-        r3[6] = { v: 'REV.', s: st.grayLabel }; r3[7] = { v: sanitizeCellValue(sheet.revision), s: st.metaValue };
-        rows.push(r3);
-
-        // Row 4: Sector | Cod. Pieza | Cliente | N° Puesto
-        const r4 = Array(TC).fill(null).map(() => ({ v: '', s: { border: BORDER } }));
-        r4[0] = { v: 'SECTOR', s: st.grayLabel }; r4[1] = { v: sanitizeCellValue(sheet.sector), s: st.metaValue };
-        r4[2] = { v: 'COD. PIEZA', s: st.grayLabel }; r4[3] = { v: sanitizeCellValue(sheet.partCodeDescription), s: { ...st.metaValue, alignment: { vertical: 'center', wrapText: true } } };
-        r4[4] = { v: 'CLIENTE', s: st.grayLabel }; r4[5] = { v: sanitizeCellValue(ho.header?.client || ''), s: st.metaValue };
-        r4[6] = { v: 'N\u00B0 PUESTO', s: st.grayLabel }; r4[7] = { v: sanitizeCellValue(sheet.puestoNumber), s: st.metaValue };
-        rows.push(r4);
-
-        // Optional: Piezas Aplicables
-        if (ho.header.applicableParts?.trim()) {
-            const apIdx = rows.length;
-            const apRow = Array(TC).fill(null).map(() => ({ v: '', s: st.metaValue }));
-            apRow[0] = { v: 'PIEZAS APLICABLES', s: st.grayLabel };
-            apRow[1] = { v: sanitizeCellValue(ho.header.applicableParts.replace(/\n/g, ' \u00B7 ')), s: st.metaValue };
-            rows.push(apRow); merges.push({ s: { r: apIdx, c: 1 }, e: { r: apIdx, c: TC - 1 } });
-        }
-        rows.push(Array(TC).fill(''));
-
-        // Visual Aids
-        if ((sheet.visualAids || []).length > 0) {
-            const vaIdx = rows.length;
-            const vaHdr = Array(TC).fill(null).map(() => ({ v: '', s: st.section }));
-            vaHdr[0] = { v: 'AYUDAS VISUALES', s: st.section };
-            rows.push(vaHdr); merges.push({ s: { r: vaIdx, c: 0 }, e: { r: vaIdx, c: TC - 1 } });
-            for (const va of (sheet.visualAids || [])) {
-                const linkedStep = sheet.steps.find(s => s.visualAidId === va.id);
-                const caption = va.caption || 'Ayuda visual';
-                const stepRef = linkedStep ? `Paso ${linkedStep.stepNumber}` : '';
-                const ri = rows.length;
-                const row = Array(TC).fill(null).map(() => ({ v: '', s: st.imgRef }));
-                row[0] = { v: `${stepRef ? stepRef + ': ' : ''}${caption} [Ver imagen en sistema]`, s: st.imgRef };
-                rows.push(row); merges.push({ s: { r: ri, c: 0 }, e: { r: ri, c: TC - 1 } });
-            }
-            rows.push(Array(TC).fill(''));
-        }
-
-        // Steps
-        {
-            const stHdrIdx = rows.length;
-            const stHdr = Array(TC).fill(null).map(() => ({ v: '', s: st.section }));
-            stHdr[0] = { v: 'DESCRIPCI\u00D3N DE LA OPERACI\u00D3N', s: st.section };
-            rows.push(stHdr); merges.push({ s: { r: stHdrIdx, c: 0 }, e: { r: stHdrIdx, c: TC - 1 } });
-            const chIdx = rows.length;
-            rows.push([
-                { v: 'Nro', s: st.navyLight },
-                { v: 'Descripci\u00F3n del Paso', s: st.navyLight }, { v: '', s: st.navyLight }, { v: '', s: st.navyLight }, { v: '', s: st.navyLight },
-                { v: 'Punto Clave', s: st.navyLight },
-                { v: 'Raz\u00F3n', s: st.navyLight }, { v: '', s: st.navyLight },
-            ]);
-            merges.push({ s: { r: chIdx, c: 1 }, e: { r: chIdx, c: 4 } }, { s: { r: chIdx, c: 6 }, e: { r: chIdx, c: 7 } });
-            const steps = sheet.steps || [];
-            if (steps.length === 0) {
-                const emIdx = rows.length;
-                const emRow = Array(TC).fill(null).map(() => ({ v: '', s: st.cell }));
-                emRow[0] = { v: 'Sin pasos definidos', s: { ...st.cell, font: { ...st.cell.font, italic: true, color: { rgb: '808080' } }, alignment: { horizontal: 'center' } } };
-                rows.push(emRow); merges.push({ s: { r: emIdx, c: 0 }, e: { r: emIdx, c: TC - 1 } });
-            } else {
-                for (const step of steps) {
-                    const rowIdx = rows.length;
-                    const isKP = step.isKeyPoint;
-                    const cs = isKP ? st.keyPt : st.cell;
-                    rows.push([
-                        { v: step.stepNumber, s: isKP ? { ...st.cc, fill: { fgColor: { rgb: 'FFEB9C' } }, font: { ...st.cc.font, bold: true } } : st.cc },
-                        { v: sanitizeCellValue(step.description), s: cs }, { v: '', s: cs }, { v: '', s: cs }, { v: '', s: cs },
-                        { v: isKP ? 'SI' : '', s: isKP ? { ...st.cc, fill: { fgColor: { rgb: 'FFEB9C' } }, font: { ...st.cc.font, bold: true } } : st.cc },
-                        { v: sanitizeCellValue(step.keyPointReason || ''), s: cs }, { v: '', s: cs },
-                    ]);
-                    merges.push({ s: { r: rowIdx, c: 1 }, e: { r: rowIdx, c: 4 } }, { s: { r: rowIdx, c: 6 }, e: { r: rowIdx, c: 7 } });
-                }
-            }
-            rows.push(Array(TC).fill(''));
-        }
-
-        // PPE
-        {
-            const ppeIdx = rows.length;
-            const ppeHdr = Array(TC).fill(null).map(() => ({ v: '', s: st.section }));
-            ppeHdr[0] = { v: 'ELEMENTOS DE SEGURIDAD', s: st.section };
-            rows.push(ppeHdr); merges.push({ s: { r: ppeIdx, c: 0 }, e: { r: ppeIdx, c: TC - 1 } });
-            const safetyItems = sheet.safetyElements || [];
-            if (safetyItems.length === 0) {
-                const emIdx = rows.length;
-                const emRow = Array(TC).fill(null).map(() => ({ v: '', s: st.cell }));
-                emRow[0] = { v: 'Ninguno', s: { ...st.cell, font: { ...st.cell.font, italic: true, color: { rgb: '808080' } }, alignment: { horizontal: 'center' } } };
-                rows.push(emRow); merges.push({ s: { r: emIdx, c: 0 }, e: { r: emIdx, c: TC - 1 } });
-            } else {
-                const labels = safetyItems.map(id => { const p = PPE_CATALOG.find(x => x.id === id); return p ? p.label : id; });
-                const ppeListIdx = rows.length;
-                const ppeRow = Array(TC).fill(null).map(() => ({ v: '', s: st.cell }));
-                ppeRow[0] = { v: labels.join('  \u2022  '), s: { ...st.cell, alignment: { vertical: 'center', wrapText: true } } };
-                rows.push(ppeRow); merges.push({ s: { r: ppeListIdx, c: 0 }, e: { r: ppeListIdx, c: TC - 1 } });
-            }
-            rows.push(Array(TC).fill(''));
-        }
-
-        // Quality Checks — 8 cols matching individual
-        {
-            const qcIdx = rows.length;
-            const qcHdr = Array(TC).fill(null).map(() => ({ v: '', s: st.greenSec }));
-            qcHdr[0] = { v: 'CICLO DE CONTROL', s: st.greenSec };
-            rows.push(qcHdr); merges.push({ s: { r: qcIdx, c: 0 }, e: { r: qcIdx, c: TC - 1 } });
-            const refIdx = rows.length;
-            const refRow = Array(TC).fill(null).map(() => ({ v: '', s: { border: {} } }));
-            refRow[0] = { v: 'Referencia: OP - Operador de Producci\u00F3n', s: { font: { sz: 7, italic: true, name: 'Arial', color: { rgb: '808080' } }, alignment: { horizontal: 'left' }, border: {} } };
-            rows.push(refRow); merges.push({ s: { r: refIdx, c: 0 }, e: { r: refIdx, c: TC - 1 } });
-            rows.push(['Nro', 'Caracter\u00EDstica', 'Especificaci\u00F3n', 'M\u00E9todo Control', 'Resp.', 'Frecuencia', 'CC/SC', 'Registro'].map(h => ({ v: h, s: st.greenHdr })));
-            const qualityChecks = sheet.qualityChecks || [];
-            if (qualityChecks.length === 0) {
-                const emIdx = rows.length;
-                const emRow = Array(TC).fill(null).map(() => ({ v: '', s: st.cell }));
-                emRow[0] = { v: 'Sin verificaciones de calidad.', s: { ...st.cell, font: { ...st.cell.font, italic: true, color: { rgb: '808080' } }, alignment: { horizontal: 'center' } } };
-                rows.push(emRow); merges.push({ s: { r: emIdx, c: 0 }, e: { r: emIdx, c: TC - 1 } });
-            } else {
-                for (let i = 0; i < qualityChecks.length; i++) {
-                    const qc = qualityChecks[i];
-                    rows.push([
-                        { v: i + 1, s: st.cc },
-                        { v: sanitizeCellValue(qc.characteristic), s: st.cell },
-                        { v: sanitizeCellValue(qc.specification), s: st.cell },
-                        { v: sanitizeCellValue(qc.controlMethod || qc.evaluationTechnique || ''), s: st.cell },
-                        { v: sanitizeCellValue(qc.reactionContact || ''), s: st.cc },
-                        { v: sanitizeCellValue(qc.frequency), s: st.cc },
-                        { v: sanitizeCellValue(qc.specialCharSymbol), s: ccStyle(qc.specialCharSymbol) },
-                        { v: sanitizeCellValue(qc.registro), s: st.cell },
-                    ]);
-                }
-            }
-            rows.push(Array(TC).fill(''));
-        }
-
-        // Reaction Plan
-        {
-            const rpIdx = rows.length;
-            const rpHdr = Array(TC).fill(null).map(() => ({ v: '', s: st.redSec }));
-            rpHdr[0] = { v: 'PLAN DE REACCI\u00D3N ANTE NO CONFORME', s: st.redSec };
-            rows.push(rpHdr); merges.push({ s: { r: rpIdx, c: 0 }, e: { r: rpIdx, c: TC - 1 } });
-            const reactionText = sheet.reactionPlanText || '';
-            const rtIdx = rows.length;
-            const rtRow = Array(TC).fill(null).map(() => ({ v: '', s: st.redCell }));
-            rtRow[0] = { v: sanitizeCellValue(reactionText), s: st.redCell };
-            rows.push(rtRow); merges.push({ s: { r: rtIdx, c: 0 }, e: { r: rtIdx, c: TC - 1 } });
-            rows.push(Array(TC).fill(null).map(() => ({ v: '', s: st.redCell })));
-            merges.push({ s: { r: rtIdx, c: 0 }, e: { r: rtIdx + 1, c: TC - 1 } });
-            if (sheet.reactionContact) {
-                const rcIdx = rows.length;
-                const rcRow = Array(TC).fill(null).map(() => ({ v: '', s: st.redCell }));
-                rcRow[0] = { v: `CONTACTO: ${sanitizeCellValue(sheet.reactionContact)}`, s: st.redCell };
-                rows.push(rcRow); merges.push({ s: { r: rcIdx, c: 0 }, e: { r: rcIdx, c: TC - 1 } });
-            }
-        }
-
-        const rawCw = [14, 16, 20, 28, 18, 16, 12, 20];
-        const rh = rows.map((_, i) => (i <= 1 ? 24 : i <= 4 ? 28 : 20));
-        const { rows: oR, merges: oM, cw: oC } = applyB2(rows, merges, rawCw);
-        const wsOut = XLSX.utils.aoa_to_sheet(oR); wsOut['!cols'] = oC.map(w => ({ wch: w })); wsOut['!merges'] = oM;
-        wsOut['!rows'] = [{ hpt: OFF_R }, ...rh.map(h => ({ hpt: h }))];
-        XLSX.utils.book_append_sheet(wb, wsOut, sheetName);
-    }
-}
-
-// ============================================================================
 // MAIN PACKAGE BUILDER (matching apqpPackageExport.ts buildApqpPackageWorkbook)
 // ============================================================================
 
@@ -839,13 +596,11 @@ function buildApqpPackageWorkbook(data, options) {
     if (options.includeFlujograma && data.pfd) planned.push('Flujograma');
     if (options.includeAmfe && data.amfe) planned.push('AMFE VDA');
     if (options.includeCp && data.cp) planned.push('Plan de Control');
-    if (options.includeHo && data.ho && data.ho.sheets.length > 0) planned.push(...hoSheetNames(data.ho));
 
     if (options.includePortada) buildPortadaSheet(wb, data, options, planned.filter(n => n !== 'Portada'));
     if (options.includeFlujograma && data.pfd) buildFlujogramaSheet(wb, data.pfd);
     if (options.includeAmfe && data.amfe) { const w = buildAmfeCompletoWorkbook(data.amfe); const s = w.SheetNames[0]; if (s) XLSX.utils.book_append_sheet(wb, shiftWorksheet(w.Sheets[s]), 'AMFE VDA'); }
     if (options.includeCp && data.cp) { const w = buildControlPlanWorkbook(data.cp); const s = w.SheetNames[0]; if (s) XLSX.utils.book_append_sheet(wb, shiftWorksheet(w.Sheets[s]), 'Plan de Control'); }
-    if (options.includeHo && data.ho && data.ho.sheets.length > 0) buildHoSummarySheets(wb, data.ho);
     return wb;
 }
 
@@ -857,7 +612,7 @@ async function main() {
     console.log('=== APQP Package Export — Insert Patagonia ===\n');
 
     console.log('[1] Authenticating...');
-    await signIn();
+    await initSupabase();
 
     console.log('\n[2] Finding Insert Patagonia family...');
     const family = await findInsertFamily();
@@ -870,20 +625,17 @@ async function main() {
     const pfdRef = familyDocs.find(d => d.module === 'pfd');
     const amfeRef = familyDocs.find(d => d.module === 'amfe');
     const cpRef = familyDocs.find(d => d.module === 'cp');
-    const hoRef = familyDocs.find(d => d.module === 'ho');
 
     console.log('\n[4] Loading documents...');
-    const [pfdData, amfeData, cpData, hoData] = await Promise.all([
+    const [pfdData, amfeData, cpData] = await Promise.all([
         pfdRef ? loadDoc('pfd_documents', pfdRef.document_id, 'PFD') : null,
         amfeRef ? loadDoc('amfe_documents', amfeRef.document_id, 'AMFE') : null,
         cpRef ? loadDoc('cp_documents', cpRef.document_id, 'CP') : null,
-        hoRef ? loadDoc('ho_documents', hoRef.document_id, 'HO') : null,
     ]);
 
     if (pfdData) console.log(`  PFD: ${pfdData.steps?.length || 0} steps`);
     if (amfeData) console.log(`  AMFE: ${amfeData.operations?.length || 0} operations`);
     if (cpData) console.log(`  CP: ${(cpData.items || []).length} items`);
-    if (hoData) console.log(`  HO: ${(hoData.sheets || []).length} sheets`);
 
     console.log('\n[5] Building APQP package workbook...');
     const packageData = {
@@ -896,21 +648,19 @@ async function main() {
         pfd: pfdData,
         amfe: amfeData,
         cp: cpData,
-        ho: hoData,
     };
     const options = {
         includePortada: true,
         includeFlujograma: pfdData !== null,
         includeAmfe: amfeData !== null,
         includeCp: cpData !== null,
-        includeHo: hoData !== null && (hoData.sheets || []).length > 0,
         revision: 'A',
     };
 
     const wb = buildApqpPackageWorkbook(packageData, options);
 
     const buffer = XLSX.write(wb, { bookType: 'xlsx', type: 'buffer' });
-    const outputPath = path.join(PROJECT_ROOT, 'exports', 'test-paquete-apqp-v2.xlsx');
+    const outputPath = path.join(PROJECT_ROOT, 'exports', 'test-paquete-apqp-v5.xlsx');
     fs.writeFileSync(outputPath, buffer);
     const stats = fs.statSync(outputPath);
 
@@ -935,11 +685,6 @@ async function main() {
         const withCM = (cpData.items || []).filter(i => i.controlMethod?.trim()).length;
         console.log(`  CP      : ${(cpData.items || []).length} items, ${withCM} con controlMethod`);
     }
-    if (hoData) {
-        let totalSteps = 0, totalQCs = 0;
-        for (const s of hoData.sheets || []) { totalSteps += (s.steps || []).length; totalQCs += (s.qualityChecks || []).length; }
-        console.log(`  HO      : ${(hoData.sheets || []).length} hojas, ${totalSteps} pasos, ${totalQCs} QCs`);
-    }
     if (pfdData) {
         const ngSteps = (pfdData.steps || []).filter(s => s.rejectDisposition && s.rejectDisposition !== 'none').length;
         console.log(`  PFD     : ${(pfdData.steps || []).length} pasos, ${ngSteps} con NG disposition`);
@@ -948,6 +693,8 @@ async function main() {
     console.log('  Datos reales: SI');
     console.log('  Abre sin errores: verificar abriendo el archivo');
     console.log('========================================\n');
+
+    close();
 }
 
 main().catch(err => { console.error('\nFATAL:', err.message || err); process.exit(1); });
