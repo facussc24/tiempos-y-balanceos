@@ -24,25 +24,8 @@ const sha256 = (str) => createHash('sha256').update(str).digest('hex');
 const PROJECT_NAME = 'VWA/PATAGONIA/TOP_ROLL';
 const PART_NUMBER = '2GJ.868.087 / 2GJ.868.088';
 
-// ─── AP Calculation per AIAG-VDA ────────────────────────────────────────────
-
-function calcAP(severity, occurrence, detection) {
-    const s = Number(severity) || 1;
-    const o = Number(occurrence) || 1;
-    const d = Number(detection) || 1;
-    // AIAG-VDA AP logic (simplified standard table)
-    if (s >= 9 && o >= 4) return 'H';
-    if (s >= 9 && o >= 2 && d >= 4) return 'H';
-    if (s >= 9) return 'H';
-    if (s >= 7 && o >= 4 && d >= 4) return 'H';
-    if (s >= 5 && o >= 6) return 'H';
-    if (s >= 7 && o >= 3) return 'M';
-    if (s >= 5 && o >= 4) return 'M';
-    if (s >= 4 && o >= 5) return 'M';
-    if (s >= 7 && d >= 6) return 'M';
-    if (s >= 5 && o >= 3 && d >= 4) return 'M';
-    return 'L';
-}
+// ─── AP Calculation per AIAG-VDA 2019 (shared module) ───────────────────────
+import { calcAP } from './apTableShared.mjs';
 
 function inferOpCategory(name) {
     const n = (name || '').toLowerCase();
