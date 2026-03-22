@@ -7,6 +7,7 @@
 import React, { useState, useCallback } from 'react';
 import {
     Menu,
+    LayoutDashboard,
     GitBranch,
     FileJson,
     ClipboardCheck,
@@ -38,6 +39,12 @@ interface SidebarSection {
 }
 
 const SECTIONS: SidebarSection[] = [
+    {
+        title: 'General',
+        items: [
+            { label: 'Dashboard', mode: 'dashboard', icon: <LayoutDashboard size={18} /> },
+        ],
+    },
     {
         title: 'APQP',
         items: [
