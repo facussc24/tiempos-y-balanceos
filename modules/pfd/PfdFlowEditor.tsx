@@ -747,7 +747,7 @@ const PfdFlowEditor: React.FC<PfdFlowEditorProps> = ({
             {/* Flow editor content */}
             {isOpen && (
                 <div
-                    className={`px-4 pb-4 pt-1 max-h-[60vh] overflow-auto bg-gradient-to-b from-gray-50/50 to-white ${isPanning ? 'cursor-grabbing' : 'cursor-grab'}`}
+                    className={`px-4 pb-4 pt-1 max-h-[75vh] overflow-auto bg-gradient-to-b from-gray-50/50 to-white ${isPanning ? 'cursor-grabbing' : 'cursor-grab'}`}
                     onWheel={handleWheel}
                     onMouseDown={handlePanStart}
                     onMouseMove={handlePanMove}

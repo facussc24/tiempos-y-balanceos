@@ -103,7 +103,7 @@ function StepCard({ step, compact }: { step: PfdStep; compact?: boolean }) {
     return (
         <button
             onClick={scrollToStep}
-            className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border border-gray-200 bg-white hover:bg-cyan-50 hover:border-cyan-300 transition-all cursor-pointer text-left group ${ccBorder} ${compact ? 'py-0.5' : ''}`}
+            className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border border-gray-200 bg-white hover:bg-cyan-50 hover:border-cyan-300 transition-all cursor-pointer text-left group w-full max-w-md ${ccBorder} ${compact ? 'py-0.5' : ''}`}
             title={`${step.stepNumber} — ${step.description}${hasCC ? ' [CC]' : hasSC ? ' [SC]' : ''}\nClic para ir al paso en la tabla`}
         >
             <PfdSymbol type={step.stepType} size={compact ? 14 : 18} />
@@ -111,7 +111,7 @@ function StepCard({ step, compact }: { step: PfdStep; compact?: boolean }) {
                 <span className={`font-mono font-bold text-gray-700 ${compact ? 'text-[9px]' : 'text-[10px]'}`}>
                     {step.stepNumber}
                 </span>
-                <span className={`ml-1 text-gray-600 truncate block ${compact ? 'text-[9px] max-w-[130px]' : 'text-[10px] max-w-[200px]'}`}>
+                <span className={`ml-1 text-gray-600 whitespace-normal break-words block ${compact ? 'text-[9px] max-w-[200px]' : 'text-xs max-w-xs'}`}>
                     {step.description}
                 </span>
             </div>
@@ -215,7 +215,7 @@ const PfdFlowMap: React.FC<Props> = ({ steps, isOpen, onToggle }) => {
                                                 return (
                                                     <div
                                                         key={branch.branchId}
-                                                        className={`flex flex-col items-center gap-0 px-3 py-2 rounded-lg border-2 ${color.border} ${color.bg} min-w-[180px] flex-1 max-w-[320px]`}
+                                                        className={`flex flex-col items-center gap-0 px-3 py-2 rounded-lg border-2 ${color.border} ${color.bg} min-w-[180px] flex-1 max-w-md`}
                                                     >
                                                         <div className={`text-[10px] font-bold ${color.text} mb-1`}>
                                                             {branch.label}
