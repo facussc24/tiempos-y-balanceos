@@ -131,6 +131,7 @@
 | Feature | AIAG CTS / Competidores | Nuestra App | Gap | Clasificación | Esfuerzo |
 |---------|-------------------------|-------------|-----|---------------|----------|
 | Consistencia visual / design system | Todos tienen tema único y consistente. | 3-4 temas coexisten (oscuro, claro verde, claro azul, claro teal). | GRANDE | **CRÍTICO** | MEDIO (5-7 días) |
+| Deep linking / URL routing | Competidores: URL cambia al navegar, se puede compartir link a documento específico. | URL queda en `#menu` siempre. No hay deep linking. No se puede compartir ni bookmarkear un doc. | GRANDE | **CRÍTICO** | MEDIO (5-7 días) |
 | Tooltips informativos | Competidores explican cada indicador con tooltips. | "AP=H" sin tooltip. Botones sin label. | MEDIO | IMPORTANTE | BAJO (1-2 días) |
 | Botones de acción adecuados | Botones prominentes con iconos + texto. | Botones export pequeños. Toolbar Solicitudes con 14+ botones. | MEDIO | IMPORTANTE | BAJO (2-3 días) |
 
@@ -138,7 +139,7 @@
 
 | Clasificación | Cantidad | Detalle |
 |---------------|----------|---------|
-| **CRÍTICO** | 8 | Breadcrumbs, sidebar, sticky headers, color coding, dashboard, criticality matrix, PFD layout, consistencia visual |
+| **CRÍTICO** | 9 | Breadcrumbs, sidebar, sticky headers, color coding, dashboard, criticality matrix, PFD layout, consistencia visual, deep linking/URL routing |
 | **IMPORTANTE** | 15 | Layout multi-panel, árbol proyecto, column pin/hide, doble vista, texto truncado, botón agregar, progreso APQP, top RPN, to-do list, historial granular, notificaciones, acciones correctivas, tooltips, botones acción, iconografía |
 | **NICE-TO-HAVE** | 8 | Paneles reordenables, headers rotados, filtro avanzado, gauges, block diagram, P-diagram, correlation matrix, multi-layout FMEA |
 | **VENTAJA NUESTRA** | 6 | Familias maestro→variante, validación cascade, vinculación viva, draft recovery, control versiones visual, templates |
