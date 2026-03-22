@@ -999,7 +999,7 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding, embedded, initialData }) => 
                 <div className="bg-white border-b border-gray-200 px-4 py-3 shadow-sm no-print">
                     <div className="flex items-center justify-between mb-2">
                         <h3 className="text-sm font-semibold text-cyan-700">Documentos guardados</h3>
-                        <button onClick={() => setShowProjectPanel(false)} className="text-gray-400 hover:text-gray-600">
+                        <button onClick={() => setShowProjectPanel(false)} className="text-gray-400 hover:text-gray-600" title="Cerrar proyectos">
                             <XCircle size={16} />
                         </button>
                     </div>
@@ -1113,7 +1113,7 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding, embedded, initialData }) => 
                             <h3 className="text-sm font-semibold text-gray-700">
                                 Resultado de validación ({validationIssues.length} {validationIssues.length === 1 ? 'hallazgo' : 'hallazgos'})
                             </h3>
-                            <button onClick={() => setValidationIssues(null)} className="text-gray-400 hover:text-gray-600">
+                            <button onClick={() => setValidationIssues(null)} className="text-gray-400 hover:text-gray-600" title="Cerrar validación">
                                 <XCircle size={16} />
                             </button>
                         </div>

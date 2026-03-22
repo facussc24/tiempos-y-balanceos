@@ -450,7 +450,7 @@ const FamilyManager: React.FC<FamilyManagerProps> = ({ onClose }) => {
                             {stats.familyCount} familia{stats.familyCount !== 1 ? 's' : ''}
                         </span>
                     </div>
-                    <button onClick={onClose} className="p-1 text-gray-400 hover:text-gray-600 transition-colors">
+                    <button onClick={onClose} className="p-1 text-gray-400 hover:text-gray-600 transition-colors" title="Cerrar">
                         <X size={16} />
                     </button>
                 </div>
@@ -460,7 +460,7 @@ const FamilyManager: React.FC<FamilyManagerProps> = ({ onClose }) => {
                     <div className="px-4 py-2 bg-red-50 border-b border-red-100 flex items-center gap-2">
                         <AlertCircle size={14} className="text-red-500 shrink-0" />
                         <span className="text-[11px] text-red-700">{error}</span>
-                        <button onClick={() => setError(null)} className="ml-auto text-red-400 hover:text-red-600">
+                        <button onClick={() => setError(null)} className="ml-auto text-red-400 hover:text-red-600" title="Cerrar error">
                             <X size={12} />
                         </button>
                     </div>

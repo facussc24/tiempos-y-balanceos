@@ -363,6 +363,7 @@ export const ChangeProposalPanel: React.FC<ChangeProposalPanelProps> = ({
                 "
                 aria-expanded={isExpanded}
                 data-testid="change-proposal-header"
+                title="Alternar propuestas de cambio"
             >
                 {isExpanded ? (
                     <ChevronDown size={16} className="text-slate-500 flex-shrink-0" />

@@ -313,7 +313,8 @@ const CpToolbar: React.FC<CpToolbarProps> = (props) => {
                             </div>
                             <div className="w-px h-6 bg-gray-300 mx-0.5" />
                             <button onClick={() => { setShowProjectPanel(!showProjectPanel); refreshProjects(); }}
-                                className="flex items-center gap-1.5 bg-gray-100 hover:bg-gray-200 border border-gray-300 px-3 py-2 rounded transition text-slate-700 font-medium text-xs">
+                                className="flex items-center gap-1.5 bg-gray-100 hover:bg-gray-200 border border-gray-300 px-3 py-2 rounded transition text-slate-700 font-medium text-xs"
+                                title="Abrir proyectos">
                                 <FolderOpen size={15} />
                                 <span className="hidden sm:inline">Proyectos</span>
                             </button>

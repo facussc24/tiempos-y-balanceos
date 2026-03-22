@@ -52,7 +52,7 @@ export const ShiftStructure: React.FC<Props> = ({
                     <div className="bg-white rounded-lg shadow-xl w-full max-w-md overflow-hidden border border-slate-200 animate-in zoom-in-95 duration-200">
                         <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
                             <h3 className="font-bold text-slate-800">Descansos - {activeShiftToEdit.name}</h3>
-                            <button onClick={() => setEditingBreaksShiftId(null)} className="text-slate-400 hover:text-slate-700">
+                            <button onClick={() => setEditingBreaksShiftId(null)} className="text-slate-400 hover:text-slate-700" title="Cancelar edición">
                                 <X size={20} />
                             </button>
                         </div>
@@ -83,7 +83,7 @@ export const ShiftStructure: React.FC<Props> = ({
                                             />
                                             <span className="absolute right-6 top-1.5 text-xs text-slate-400 pointer-events-none">m</span>
                                         </div>
-                                        <button onClick={() => onRemoveBreak(activeShiftToEdit.id, b.id)} className="text-slate-400 hover:text-red-600 p-1">
+                                        <button onClick={() => onRemoveBreak(activeShiftToEdit.id, b.id)} className="text-slate-400 hover:text-red-600 p-1" title="Eliminar descanso">
                                             <Trash2 size={16} />
                                         </button>
                                     </div>

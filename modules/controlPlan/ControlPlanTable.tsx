@@ -125,7 +125,8 @@ const ControlPlanTable: React.FC<Props> = ({ items, onUpdateItem, onRemoveItem, 
                             <tr className="bg-teal-50/50 border-t-2 border-teal-200">
                                 <td colSpan={999} className="px-3 py-1.5">
                                     <button onClick={() => toggleGroupCollapse(item.processStepNumber)}
-                                        className="flex items-center gap-2 text-xs font-semibold text-teal-700 w-full text-left">
+                                        className="flex items-center gap-2 text-xs font-semibold text-teal-700 w-full text-left"
+                                        title="Alternar grupo">
                                         {isCollapsed ? <ChevronRight size={14} /> : <ChevronDown size={14} />}
                                         <span>OP {item.processStepNumber}</span>
                                         <span className="font-normal text-teal-500">{item.processDescription}</span>

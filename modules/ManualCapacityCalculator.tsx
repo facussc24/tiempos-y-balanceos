@@ -155,7 +155,7 @@ export const ManualCapacityCalculator: React.FC<Props> = ({ task, shifts, dailyD
 
                 {/* RIGHT: RESULTS & VISUALS */}
                 <div className="flex-1 bg-white p-8 flex flex-col relative">
-                    <button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-700 hover:bg-slate-100 p-2 rounded-full transition-colors z-10">
+                    <button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-700 hover:bg-slate-100 p-2 rounded-full transition-colors z-10" title="Cerrar calculadora">
                         <X size={24} />
                     </button>
 

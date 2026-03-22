@@ -254,7 +254,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onBackToLanding }) => {
                         <div className="flex-grow">
                             <p className="text-sm text-red-300">{error}</p>
                         </div>
-                        <button onClick={() => setError(null)} className="text-red-400 hover:text-red-300">
+                        <button onClick={() => setError(null)} className="text-red-400 hover:text-red-300" title="Cerrar error">
                             <X size={16} />
                         </button>
                     </div>
@@ -268,7 +268,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onBackToLanding }) => {
                                 <UserPlus size={18} className="text-violet-400" />
                                 Crear nuevo usuario
                             </h2>
-                            <button onClick={resetInviteForm} className="text-slate-400 hover:text-white">
+                            <button onClick={resetInviteForm} className="text-slate-400 hover:text-white" title="Cerrar formulario">
                                 <X size={18} />
                             </button>
                         </div>

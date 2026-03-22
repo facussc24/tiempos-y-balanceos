@@ -288,7 +288,7 @@ const AmfeLibraryPanel: React.FC<Props> = ({
                     <div className="flex items-center gap-2 px-4 py-2 bg-green-50 border-b border-green-200 text-green-700 text-xs">
                         <Check size={14} />
                         {syncMessage}
-                        <button onClick={() => setSyncMessage(null)} className="ml-auto text-green-600 hover:text-green-800">
+                        <button onClick={() => setSyncMessage(null)} className="ml-auto text-green-600 hover:text-green-800" title="Cerrar mensaje">
                             <X size={12} />
                         </button>
                     </div>

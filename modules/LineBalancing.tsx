@@ -577,7 +577,7 @@ export const LineBalancing: React.FC<Props> = ({ data, updateData }) => {
                                         className="flex items-center gap-3 mb-3 pb-2 border-b border-slate-200 cursor-pointer hover:bg-white/50 p-2 rounded-lg transition-all"
                                         onClick={() => toggleBoardSectorCollapse(sector.id)}
                                     >
-                                        <button className="text-slate-400 hover:text-slate-600">
+                                        <button className="text-slate-400 hover:text-slate-600" title="Alternar sección">
                                             {isCollapsed ? <ChevronRight size={16} /> : <ChevronDown size={16} />}
                                         </button>
                                         <div

@@ -25,12 +25,15 @@ interface Props {
 export const CavityCalculator: React.FC<Props> = ({
     task, projectTasks = [], shifts = [], dailyDemand, activeShifts = 1, oee = 0.85, setupLossPercent = 0, onClose, onApply
 }) => {
+    // Local editable setup loss (initialized from prop)
+    const [localSetupLoss, setLocalSetupLoss] = useState(setupLossPercent);
+
     // FIX Bug #3: Calculate real available seconds from shift configuration
     const availableSeconds = useMemo(() => {
         if (!shifts || shifts.length === 0) return undefined; // Fallback to constant in core
-        const taktResult = calculateTaktTime(shifts, activeShifts, dailyDemand, oee, setupLossPercent);
+        const taktResult = calculateTaktTime(shifts, activeShifts, dailyDemand, oee, localSetupLoss);
         return taktResult.totalAvailableMinutes * 60;
-    }, [shifts, activeShifts, dailyDemand, oee, setupLossPercent]);
+    }, [shifts, activeShifts, dailyDemand, oee, localSetupLoss]);
 
     // 1. STATE HOOK (Managed Inputs)
     const state = useInjectionState(task, projectTasks);
@@ -49,6 +52,11 @@ export const CavityCalculator: React.FC<Props> = ({
 
     const handleApply = () => {
         const totalShotTime = calculator.metrics.realCycleTime * calculator.activeN;
+        // FIX: Only persist user-added manual ops, not concurrent tasks (those are dynamic)
+        const concurrentIds = new Set(
+            projectTasks.filter(t => t.concurrentWith === task.id).map(t => t.id)
+        );
+        const opsToSave = state.manualOps.filter(op => !concurrentIds.has(op.id));
         onApply({
             productionVolume: dailyDemand,
             investmentRatio: 0,
@@ -56,12 +64,14 @@ export const CavityCalculator: React.FC<Props> = ({
             pInyectionTime: calculator.puInyTime,
             pCuringTime: calculator.puCurTime,
             manualInteractionTime: calculator.metrics.currentEffectiveManualTime,
-            manualOperations: state.manualOps,
+            manualOperations: opsToSave,
             // FIX-1: Persist both cavity and headcount modes
             cavityMode: state.cavityMode,
             userSelectedN: state.cavityMode === 'manual' ? calculator.activeN : undefined,
             headcountMode: state.headcountMode,
-            userHeadcount: state.headcountMode === 'manual' ? calculator.userHeadcountOverride : undefined
+            userHeadcount: state.headcountMode === 'manual' ? calculator.userHeadcountOverride : undefined,
+            injectionMode: state.injectionMode,
+            indexTime: state.injectionMode === 'carousel' ? (parseFloat(state.indexTimeStr.replace(',', '.')) || 0) : undefined
         }, totalShotTime);
         onClose();
     };
@@ -74,7 +84,7 @@ export const CavityCalculator: React.FC<Props> = ({
                     <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full border border-slate-200 overflow-hidden relative">
                         <div className="bg-slate-50 px-6 py-4 border-b border-slate-200 flex justify-between items-center">
                             <h3 className="font-bold text-slate-800 text-lg flex items-center gap-2"><HelpCircle size={20} /> Guía de Interpretación</h3>
-                            <button onClick={() => setShowHelp(false)} className="text-slate-400 hover:text-slate-700"><X size={20} /></button>
+                            <button onClick={() => setShowHelp(false)} className="text-slate-400 hover:text-slate-700" title="Cerrar ayuda"><X size={20} /></button>
                         </div>
                         <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6 overflow-y-auto max-h-[70vh]">
                             <div>
@@ -123,7 +133,7 @@ export const CavityCalculator: React.FC<Props> = ({
                             <h3 className="font-bold text-lg text-slate-800 flex items-center gap-2">
                                 <BookOpen className="text-indigo-600" /> Guía de Carga de Tareas
                             </h3>
-                            <button onClick={() => setShowGuideModal(false)} className="p-1 hover:bg-slate-100 rounded-full transition-colors">
+                            <button onClick={() => setShowGuideModal(false)} className="p-1 hover:bg-slate-100 rounded-full transition-colors" title="Cerrar guía">
                                 <X size={20} className="text-slate-400" />
                             </button>
                         </div>
@@ -204,6 +214,12 @@ export const CavityCalculator: React.FC<Props> = ({
                                 setPuCurTimeStr={state.setPuCurTimeStr}
                                 nStar={calculator.metrics.nStar}
                                 errors={calculator.validation.errors}
+                                injectionMode={state.injectionMode}
+                                setInjectionMode={state.setInjectionMode}
+                                indexTimeStr={state.indexTimeStr}
+                                setIndexTimeStr={state.setIndexTimeStr}
+                                setupLossPercent={localSetupLoss}
+                                setSetupLossPercent={setLocalSetupLoss}
                             />
 
                             <ManualOperations
@@ -263,6 +279,9 @@ export const CavityCalculator: React.FC<Props> = ({
                             activeHeadcount={calculator.metrics.activeHeadcount}
                             currentEffectiveManualTime={calculator.metrics.currentEffectiveManualTime}
                             nStar={calculator.metrics.nStar}
+                            dailyDemand={dailyDemand}
+                            availableSeconds={availableSeconds}
+                            oee={oee}
                         />
 
                         <div className="mt-4 flex justify-between items-center">

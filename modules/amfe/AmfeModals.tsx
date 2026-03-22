@@ -228,7 +228,7 @@ const AmfeModals: React.FC<AmfeModalsProps> = ({
                         <p className="text-xs font-bold text-amber-800">Advertencia AIAG-VDA</p>
                         <p className="text-[11px] text-amber-700 mt-0.5">{apHWarning}</p>
                     </div>
-                    <button onClick={onClearApHWarning} className="text-amber-400 hover:text-amber-600 ml-2">
+                    <button onClick={onClearApHWarning} className="text-amber-400 hover:text-amber-600 ml-2" title="Descartar advertencia">
                         <XCircle size={14} />
                     </button>
                 </div>
@@ -241,7 +241,7 @@ const AmfeModals: React.FC<AmfeModalsProps> = ({
                 <div className="flex items-center gap-2">
                     <WifiOff size={16} className="text-red-500 flex-shrink-0" />
                     <p className="text-xs text-red-700">Red no disponible — los borradores se guardan localmente</p>
-                    <button onClick={onClearNetworkToast} className="text-red-400 hover:text-red-600 ml-1">
+                    <button onClick={onClearNetworkToast} className="text-red-400 hover:text-red-600 ml-1" title="Cerrar error de red">
                         <X size={14} />
                     </button>
                 </div>
