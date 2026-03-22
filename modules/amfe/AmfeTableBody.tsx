@@ -55,7 +55,7 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
             textArea: "w-full min-h-[40px] bg-transparent outline-none text-xs font-medium text-slate-700 placeholder-slate-300 focus:bg-white focus:ring-1 focus:ring-blue-200 rounded px-1 transition-colors",
             textSpan: "text-xs font-medium text-slate-700 leading-relaxed whitespace-pre-wrap break-words",
             opNum: `${cell} ${readOnly ? 'bg-slate-100' : 'bg-slate-50'} sticky left-0 z-[5] w-24 min-w-[96px]`,
-            opName: `${cell} ${readOnly ? 'bg-slate-100' : 'bg-slate-50'} sticky left-[96px] z-[5] w-48 min-w-[192px]`,
+            opName: `${cell} ${readOnly ? 'bg-slate-100' : 'bg-slate-50'} sticky left-[96px] z-[5] w-48 min-w-[192px] border-r-2 border-r-slate-300`,
             ghostCell: "p-0.5 border-r border-b border-dashed border-gray-200 bg-gray-50/30 align-middle",
             ghostEmpty: "border-r border-b border-dashed border-gray-200 bg-gray-50/20",
         };

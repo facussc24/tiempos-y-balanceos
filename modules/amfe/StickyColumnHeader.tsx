@@ -37,9 +37,9 @@ const StickyColumnHeader: React.FC<Props> = ({ visibility }) => {
             <tr className="border-b border-gray-300">
                 {v.step2 && <th colSpan={3} className="bg-slate-200 px-3 py-2 text-center min-w-[300px] border-r border-gray-300 font-bold">PASO 2: ESTRUCTURA</th>}
                 {v.step3 && <th colSpan={3} className="bg-slate-200/70 px-3 py-2 text-center min-w-[400px] border-r border-gray-300 font-bold">PASO 3: ANÁLISIS FUNCIONAL</th>}
-                {v.step4 && <th colSpan={3} className="bg-orange-100 px-3 py-2 text-center min-w-[500px] border-r border-orange-200 font-bold">PASO 4: ANÁLISIS DE FALLAS</th>}
-                {v.step5 && <th colSpan={7} className="bg-yellow-100 px-3 py-2 text-center min-w-[400px] border-r border-yellow-200 font-bold">PASO 5: ANÁLISIS DE RIESGO</th>}
-                {v.step6 && <th colSpan={11} className="bg-blue-100 px-3 py-2 text-center min-w-[700px] border-r border-blue-200 font-bold">PASO 6: OPTIMIZACIÓN</th>}
+                {v.step4 && <th colSpan={3} className="bg-orange-200 px-3 py-2 text-center min-w-[500px] border-r border-orange-300 font-bold text-orange-800">PASO 4: ANÁLISIS DE FALLAS</th>}
+                {v.step5 && <th colSpan={7} className="bg-yellow-200 px-3 py-2 text-center min-w-[400px] border-r border-yellow-300 font-bold text-yellow-800">PASO 5: ANÁLISIS DE RIESGO</th>}
+                {v.step6 && <th colSpan={11} className="bg-blue-200 px-3 py-2 text-center min-w-[700px] border-r border-blue-300 font-bold text-blue-800">PASO 6: OPTIMIZACIÓN</th>}
                 {v.obs && <th rowSpan={2} className="bg-gray-200 p-2 text-center w-40 border-l border-gray-300 font-bold"><HeaderWithTip term={AMFE_TERMS.OBS} label="OBS." /></th>}
             </tr>
 
@@ -48,7 +48,7 @@ const StickyColumnHeader: React.FC<Props> = ({ visibility }) => {
                 {/* Step 2 — Op# and Op Name are frozen (sticky left) */}
                 {v.step2 && <>
                     <th className="bg-slate-100 p-2 w-24 border-r border-gray-200 sticky left-0 z-20" style={{ boxShadow: 'none' }}><HeaderWithTip term={AMFE_TERMS.OP_NUMBER} label="1. NO. OP" /></th>
-                    <th className="bg-slate-100 p-2 w-48 border-r border-gray-200 sticky left-[96px] z-20" style={{ boxShadow: '2px 0 4px rgba(0,0,0,0.06)' }}><HeaderWithTip term={AMFE_TERMS.OP_NAME} label="2. ITEM / PASO" /></th>
+                    <th className="bg-slate-100 p-2 w-48 border-r-2 border-r-slate-300 sticky left-[96px] z-20" style={{ boxShadow: '2px 0 4px rgba(0,0,0,0.06)' }}><HeaderWithTip term={AMFE_TERMS.OP_NAME} label="2. ITEM / PASO" /></th>
                     <th className="bg-slate-100 p-2 w-44 border-r border-gray-300"><HeaderWithTip term={AMFE_TERMS.WE} label="3. ELEM. TRABAJO (6M)" /></th>
                 </>}
 
