@@ -17,6 +17,7 @@ import AmfeSideDrawer from './AmfeSideDrawer';
 import AmfeModals from './AmfeModals';
 import AmfeToolbar from './AmfeToolbar';
 import AmfeTemplatesModal from './AmfeTemplatesModal';
+import AmfeRiskSummaryBar from './AmfeRiskSummaryBar';
 import { RevisionPromptModal } from '../../components/modals/RevisionPromptModal';
 import { CrossDocAlertBanner } from '../../components/ui/CrossDocAlertBanner';
 import { RevisionHistoryPanel } from '../../components/layout/RevisionHistoryPanel';
@@ -990,6 +991,8 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab, initialF
                 onExpandAll={expandAll}
                 readOnly={isReadOnly}
             />
+
+            <AmfeRiskSummaryBar data={amfe.data} />
 
             {/* Main Grid Area */}
             <div className="flex-grow p-4 pb-8">
