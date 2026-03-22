@@ -103,7 +103,7 @@
 | Dashboard con widgets/métricas | Relyence: drag-and-drop. Omnex: BI real-time. | No existe dashboard de métricas. Landing = tabla + docs recientes. | GRANDE | **CRÍTICO** | ALTO (2-3 semanas) |
 | Criticality Matrix / Heat Map | Relyence: matriz S×O con color. LA visualización signature de FMEA. | No existe. Valores de riesgo solo en tabla. | GRANDE | **CRÍTICO** | MEDIO (5-7 días) |
 | Progreso APQP consolidado | Tracking de completitud por fase. | Existe en CP individual. Sin vista consolidada por proyecto. | MEDIO | IMPORTANTE | MEDIO (3-5 días) |
-| Top RPN / Top riesgos | Relyence: Top 10 RPN widget. Omnex: alertas riesgos críticos. | No existe vista consolidada de riesgos altos. | MEDIO | IMPORTANTE | BAJO (2-3 días) |
+| Top AP / Top riesgos | Relyence: Top 10 RPN widget. Omnex: alertas riesgos críticos. | No existe vista consolidada de riesgos altos. | MEDIO | IMPORTANTE | BAJO (2-3 días) |
 | Gauges / indicadores visuales | Relyence: zonas roja/amarilla/verde. | No existen. Estado solo numérico en tablas. | BAJO | NICE-TO-HAVE | MEDIO (3-5 días) |
 
 ### 3.4 Documentos APQP
@@ -140,7 +140,7 @@
 | Clasificación | Cantidad | Detalle |
 |---------------|----------|---------|
 | **CRÍTICO** | 9 | Breadcrumbs, sidebar, sticky headers, color coding, dashboard, criticality matrix, PFD layout, consistencia visual, deep linking/URL routing |
-| **IMPORTANTE** | 15 | Layout multi-panel, árbol proyecto, column pin/hide, doble vista, texto truncado, botón agregar, progreso APQP, top RPN, to-do list, historial granular, notificaciones, acciones correctivas, tooltips, botones acción, iconografía |
+| **IMPORTANTE** | 15 | Layout multi-panel, árbol proyecto, column pin/hide, doble vista, texto truncado, botón agregar, progreso APQP, top AP, to-do list, historial granular, notificaciones, acciones correctivas, tooltips, botones acción, iconografía |
 | **NICE-TO-HAVE** | 8 | Paneles reordenables, headers rotados, filtro avanzado, gauges, block diagram, P-diagram, correlation matrix, multi-layout FMEA |
 | **VENTAJA NUESTRA** | 6 | Familias maestro→variante, validación cascade, vinculación viva, draft recovery, control versiones visual, templates |
 
@@ -316,7 +316,7 @@ Implementar mejoras 3 (sidebar), 4 (breadcrumbs), 6 (toggle columnas AMFE). Resu
 Implementar mejoras 7 (landing tema claro), 8 (PFD cards anchas), 10 (sticky headers). Resultado: consistencia visual, se siente como UN producto.
 
 ### Fase 4: Dashboard y Métricas (Semana 3-4, ~2-3 semanas)
-Dashboard con Criticality Matrix, Top RPN, progreso APQP consolidado. Resultado: la app deja de ser solo un editor de documentos y se convierte en una herramienta de análisis de riesgo.
+Dashboard con Criticality Matrix, Top AP, progreso APQP consolidado. Resultado: la app deja de ser solo un editor de documentos y se convierte en una herramienta de análisis de riesgo.
 
 ### Fase 5: Colaboración (Semana 5+)
 My To Do List, historial granular por campo, notificaciones. Resultado: la app soporta equipos de trabajo reales.
@@ -327,7 +327,7 @@ My To Do List, historial granular por campo, notificaciones. Resultado: la app s
 1. **Unificar la presentación** (3-4 temas → 1 design system)
 2. **Mejorar la navegación** (breadcrumbs + sidebar)
 3. **Hacer las tablas más manejables** (toggle columnas + sticky headers + color coding)
-4. **Agregar visualizaciones de riesgo** (criticality matrix, top RPN)
+4. **Agregar visualizaciones de riesgo** (criticality matrix, top AP)
 
 Estas 4 líneas de trabajo, ejecutadas en orden, transforman la percepción de la app de "herramienta interna funcional" a "producto profesional que compite con AIAG CTS y Relyence".
 
