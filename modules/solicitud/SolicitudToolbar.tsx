@@ -4,13 +4,14 @@
  * Horizontal bar with navigation, actions, server status, and save status indicator.
  * Phase 2: Added procedure viewer, mark obsolete, server sync buttons.
  * Phase 2 Fixes: Added delete button, update index button.
+ * Phase 3: Overflow menu pattern (same as AmfeToolbar / CpToolbar).
  */
 
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
     ArrowLeft, Plus, Save, FileDown, FileSpreadsheet, Loader2,
     BookOpen, Archive, RefreshCw, Trash2, Table2, ExternalLink, ShieldCheck,
-    GitBranch, History, FolderOutput,
+    GitBranch, History, FolderOutput, MoreHorizontal,
 } from 'lucide-react';
 import type { SolicitudStatus } from './solicitudTypes';
 import { STATUS_CONFIG } from './solicitudTypes';
@@ -76,6 +77,21 @@ const SolicitudToolbar: React.FC<SolicitudToolbarProps> = ({
     const statusCfg = STATUS_CONFIG[status] || STATUS_CONFIG.borrador;
     const canMarkObsolete = status !== 'obsoleta';
 
+    const [showOverflowMenu, setShowOverflowMenu] = useState(false);
+    const overflowRef = useRef<HTMLDivElement>(null);
+
+    // Click-outside to close overflow menu
+    useEffect(() => {
+        if (!showOverflowMenu) return;
+        const handleClickOutside = (e: MouseEvent) => {
+            if (overflowRef.current && !overflowRef.current.contains(e.target as Node)) {
+                setShowOverflowMenu(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [showOverflowMenu]);
+
     return (
         <div className="bg-white border-b border-gray-200 px-4 py-2 flex items-center justify-between flex-shrink-0">
             {/* Left: Back + Title + Status Badge */}
@@ -123,15 +139,12 @@ const SolicitudToolbar: React.FC<SolicitudToolbarProps> = ({
                     </span>
                 ) : null}
 
-                {/* Procedure */}
-                <button
-                    onClick={onShowProcedure}
-                    className={`${btnBase} border border-gray-300 text-gray-600 hover:bg-gray-50`}
-                    title="Ver procedimiento SGC"
-                >
-                    <BookOpen size={14} />
-                    <span className="hidden lg:inline">Procedimiento</span>
-                </button>
+                {/* Revision badge */}
+                {revisionLevel && (
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold text-violet-700 bg-violet-100 border border-violet-200">
+                        Rev {revisionLevel}
+                    </span>
+                )}
 
                 {/* New */}
                 <button
@@ -156,113 +169,11 @@ const SolicitudToolbar: React.FC<SolicitudToolbarProps> = ({
                     Guardar
                 </button>
 
-                {/* Revision badge */}
-                {revisionLevel && (
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold text-violet-700 bg-violet-100 border border-violet-200">
-                        Rev {revisionLevel}
-                    </span>
-                )}
-
-                {/* New Revision */}
-                {onNewRevision && (
-                    <button
-                        onClick={onNewRevision}
-                        disabled={hasErrors || status === 'obsoleta'}
-                        className={`${btnBase} border border-violet-400 text-violet-600 hover:bg-violet-50`}
-                        title="Crear nueva revision (guarda snapshot al servidor)"
-                    >
-                        <GitBranch size={14} />
-                        <span className="hidden lg:inline">Revision</span>
-                    </button>
-                )}
-
-                {/* Revision History */}
-                {onShowHistory && (
-                    <button
-                        onClick={onShowHistory}
-                        className={`${btnBase} border border-gray-300 text-gray-600 hover:bg-gray-50`}
-                        title="Ver historial de revisiones"
-                    >
-                        <History size={14} />
-                        <span className="hidden lg:inline">Historial</span>
-                    </button>
-                )}
-
-                {/* Delete */}
-                <button
-                    onClick={onDelete}
-                    className={`${btnBase} border border-gray-300 text-gray-400 hover:text-red-500 hover:border-red-300 hover:bg-red-50`}
-                    title="Eliminar solicitud"
-                >
-                    <Trash2 size={14} />
-                    <span className="hidden lg:inline">Eliminar</span>
-                </button>
-
-                {/* Sync to server */}
-                <button
-                    onClick={onSyncServer}
-                    disabled={isSyncing || serverStatus !== 'connected'}
-                    className={`${btnBase} border border-blue-400 text-blue-600 hover:bg-blue-50`}
-                    title="Sincronizar carpeta y PDF al servidor"
-                >
-                    {isSyncing ? (
-                        <Loader2 size={14} className="animate-spin" />
-                    ) : (
-                        <RefreshCw size={14} />
-                    )}
-                    <span className="hidden lg:inline">Sync</span>
-                </button>
-
-                {/* Update Index */}
-                <button
-                    onClick={onUpdateIndex}
-                    disabled={serverStatus !== 'connected'}
-                    className={`${btnBase} border border-green-400 text-green-600 hover:bg-green-50`}
-                    title="Actualizar indice de solicitudes en el servidor"
-                >
-                    <Table2 size={14} />
-                    <span className="hidden lg:inline">Indice</span>
-                </button>
-
-                {/* Open Index in Excel */}
-                <button
-                    onClick={onOpenIndex}
-                    disabled={serverStatus !== 'connected'}
-                    className={`${btnBase} border border-green-400 text-green-600 hover:bg-green-50`}
-                    title="Abrir Indice_Solicitudes.xlsx en Excel"
-                >
-                    <ExternalLink size={14} />
-                    <span className="hidden lg:inline">Abrir Indice</span>
-                </button>
-
-                {/* Open Export Folder */}
-                {onOpenExportFolder && (
-                    <button
-                        onClick={onOpenExportFolder}
-                        disabled={!canOpenExportFolder}
-                        className={`${btnBase} border border-amber-400 text-amber-600 hover:bg-amber-50 disabled:opacity-50 disabled:cursor-not-allowed`}
-                        title="Abrir carpeta de exportacion en Explorador"
-                    >
-                        <FolderOutput size={14} />
-                        <span className="hidden lg:inline">Carpeta</span>
-                    </button>
-                )}
-
-                {/* Reconcile / Verify server */}
-                <button
-                    onClick={onReconcile}
-                    disabled={serverStatus !== 'connected'}
-                    className={`${btnBase} border border-amber-400 text-amber-600 hover:bg-amber-50`}
-                    title="Verificar carpetas del servidor vs base de datos"
-                >
-                    <ShieldCheck size={14} />
-                    <span className="hidden lg:inline">Verificar</span>
-                </button>
-
                 {/* Export PDF */}
                 <button
                     onClick={onExportPdf}
                     className={`${btnBase} border border-gray-300 text-gray-600 hover:bg-gray-50`}
+                    title="Exportar PDF"
                 >
                     <FileDown size={14} />
                     PDF
@@ -272,22 +183,144 @@ const SolicitudToolbar: React.FC<SolicitudToolbarProps> = ({
                 <button
                     onClick={onExportExcel}
                     className={`${btnBase} border border-gray-300 text-gray-600 hover:bg-gray-50`}
+                    title="Exportar Excel"
                 >
                     <FileSpreadsheet size={14} />
                     Excel
                 </button>
 
-                {/* Mark Obsolete */}
-                {canMarkObsolete && (
+                {/* Overflow "Más" Menu */}
+                <div className="relative" ref={overflowRef}>
                     <button
-                        onClick={onMarkObsolete}
-                        className={`${btnBase} border border-gray-300 text-gray-400 hover:text-red-500 hover:border-red-300 hover:bg-red-50`}
-                        title="Marcar como obsoleta"
+                        onClick={(e) => { e.stopPropagation(); setShowOverflowMenu(!showOverflowMenu); }}
+                        className="flex items-center gap-1.5 bg-gray-100 hover:bg-gray-200 border border-gray-300 px-3 py-1.5 rounded transition text-slate-700 font-medium text-xs"
+                        title="Más opciones"
+                        aria-haspopup="menu"
+                        aria-expanded={showOverflowMenu}
                     >
-                        <Archive size={14} />
-                        <span className="hidden lg:inline">Obsoleta</span>
+                        <MoreHorizontal size={15} />
+                        <span className="hidden sm:inline">Más</span>
                     </button>
-                )}
+                    {showOverflowMenu && (
+                        <div
+                            className="absolute right-0 top-full mt-1 w-64 bg-white rounded-lg shadow-xl border z-50"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            {/* HERRAMIENTAS Section */}
+                            <div className="px-4 py-1.5 text-[9px] font-bold text-gray-400 uppercase tracking-wider bg-gray-50 border-b border-gray-100 rounded-t-lg">
+                                Herramientas
+                            </div>
+                            <button
+                                onClick={() => { setShowOverflowMenu(false); onShowProcedure(); }}
+                                className="flex items-center gap-2.5 w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 border-b border-gray-100"
+                                title="Ver procedimiento SGC"
+                            >
+                                <BookOpen size={14} className="text-blue-500 flex-shrink-0" />
+                                <span className="text-gray-800 text-xs font-medium">Ver procedimiento SGC</span>
+                            </button>
+                            {onNewRevision && (
+                                <button
+                                    onClick={() => { setShowOverflowMenu(false); onNewRevision(); }}
+                                    disabled={hasErrors || status === 'obsoleta'}
+                                    className="flex items-center gap-2.5 w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 border-b border-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    title="Crear nueva revisión"
+                                >
+                                    <GitBranch size={14} className="text-violet-500 flex-shrink-0" />
+                                    <span className="text-gray-800 text-xs font-medium">Crear nueva revisión</span>
+                                </button>
+                            )}
+                            {onShowHistory && (
+                                <button
+                                    onClick={() => { setShowOverflowMenu(false); onShowHistory(); }}
+                                    className="flex items-center gap-2.5 w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 border-b border-gray-100"
+                                    title="Ver historial de revisiones"
+                                >
+                                    <History size={14} className="text-gray-500 flex-shrink-0" />
+                                    <span className="text-gray-800 text-xs font-medium">Ver historial de revisiones</span>
+                                </button>
+                            )}
+
+                            {/* SERVIDOR Section */}
+                            <div className="px-4 py-1.5 text-[9px] font-bold text-gray-400 uppercase tracking-wider bg-gray-50 border-b border-gray-100">
+                                Servidor
+                            </div>
+                            <button
+                                onClick={() => { setShowOverflowMenu(false); onSyncServer(); }}
+                                disabled={isSyncing || serverStatus !== 'connected'}
+                                className="flex items-center gap-2.5 w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 border-b border-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                                title="Sincronizar al servidor"
+                            >
+                                {isSyncing ? (
+                                    <Loader2 size={14} className="text-blue-500 animate-spin flex-shrink-0" />
+                                ) : (
+                                    <RefreshCw size={14} className="text-blue-500 flex-shrink-0" />
+                                )}
+                                <span className="text-gray-800 text-xs font-medium">Sincronizar al servidor</span>
+                            </button>
+                            <button
+                                onClick={() => { setShowOverflowMenu(false); onUpdateIndex(); }}
+                                disabled={serverStatus !== 'connected'}
+                                className="flex items-center gap-2.5 w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 border-b border-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                                title="Actualizar índice"
+                            >
+                                <Table2 size={14} className="text-green-500 flex-shrink-0" />
+                                <span className="text-gray-800 text-xs font-medium">Actualizar índice</span>
+                            </button>
+                            <button
+                                onClick={() => { setShowOverflowMenu(false); onOpenIndex(); }}
+                                disabled={serverStatus !== 'connected'}
+                                className="flex items-center gap-2.5 w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 border-b border-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                                title="Abrir índice en Excel"
+                            >
+                                <ExternalLink size={14} className="text-green-500 flex-shrink-0" />
+                                <span className="text-gray-800 text-xs font-medium">Abrir índice en Excel</span>
+                            </button>
+                            {onOpenExportFolder && (
+                                <button
+                                    onClick={() => { setShowOverflowMenu(false); onOpenExportFolder(); }}
+                                    disabled={!canOpenExportFolder}
+                                    className="flex items-center gap-2.5 w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 border-b border-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    title="Abrir carpeta de exportación"
+                                >
+                                    <FolderOutput size={14} className="text-amber-500 flex-shrink-0" />
+                                    <span className="text-gray-800 text-xs font-medium">Abrir carpeta de exportación</span>
+                                </button>
+                            )}
+                            <button
+                                onClick={() => { setShowOverflowMenu(false); onReconcile(); }}
+                                disabled={serverStatus !== 'connected'}
+                                className="flex items-center gap-2.5 w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 border-b border-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                                title="Verificar carpetas del servidor"
+                            >
+                                <ShieldCheck size={14} className="text-amber-500 flex-shrink-0" />
+                                <span className="text-gray-800 text-xs font-medium">Verificar carpetas del servidor</span>
+                            </button>
+
+                            {/* PELIGROSO Section */}
+                            <div className="px-4 py-1.5 text-[9px] font-bold text-gray-400 uppercase tracking-wider bg-gray-50 border-b border-gray-100">
+                                Peligroso
+                            </div>
+                            <button
+                                onClick={() => { setShowOverflowMenu(false); onDelete(); }}
+                                className="flex items-center gap-2.5 w-full text-left px-4 py-2.5 text-sm hover:bg-red-50 border-b border-gray-100"
+                                title="Eliminar solicitud"
+                            >
+                                <Trash2 size={14} className="text-red-500 flex-shrink-0" />
+                                <span className="text-red-600 text-xs font-medium">Eliminar solicitud</span>
+                            </button>
+                            {canMarkObsolete && (
+                                <button
+                                    onClick={() => { setShowOverflowMenu(false); onMarkObsolete(); }}
+                                    className="flex items-center gap-2.5 w-full text-left px-4 py-2.5 text-sm hover:bg-red-50 rounded-b-lg"
+                                    title="Marcar como obsoleta"
+                                >
+                                    <Archive size={14} className="text-red-500 flex-shrink-0" />
+                                    <span className="text-red-600 text-xs font-medium">Marcar como obsoleta</span>
+                                </button>
+                            )}
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );
