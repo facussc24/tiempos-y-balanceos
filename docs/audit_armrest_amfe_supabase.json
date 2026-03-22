@@ -1,0 +1,1196 @@
+[
+  {
+    "num": "10",
+    "name": "RECEPCIONAR MATERIA PRIMA",
+    "failures": [
+      {
+        "desc": "Material / pieza golpeada o danada durante transporte",
+        "S": 6,
+        "causes": [
+          {
+            "cause": "Mala estiba y embalaje inadecuado",
+            "O": 6,
+            "D": 6,
+            "AP": "M"
+          },
+          {
+            "cause": "Manipulacion incorrecta en transito",
+            "O": 6,
+            "D": 6,
+            "AP": "M"
+          },
+          {
+            "cause": "Almacenaje inadecuado en transporte (sin protecciones)",
+            "O": 5,
+            "D": 6,
+            "AP": "M"
+          }
+        ]
+      },
+      {
+        "desc": "Material con especificacion erronea (dimensiones, color, dureza, etc.)",
+        "S": 7,
+        "causes": [
+          {
+            "cause": "Proveedor no respeta tolerancias",
+            "O": 6,
+            "D": 6,
+            "AP": "H"
+          },
+          {
+            "cause": "Error en la orden de compra o ficha tecnica",
+            "O": 5,
+            "D": 6,
+            "AP": "H"
+          }
+        ]
+      },
+      {
+        "desc": "Contaminacion / suciedad en la materia prima",
+        "S": 6,
+        "causes": [
+          {
+            "cause": "Ambiente sucio en planta del proveedor",
+            "O": 6,
+            "D": 6,
+            "AP": "M"
+          },
+          {
+            "cause": "Falta de inspeccion visual al recibir",
+            "O": 5,
+            "D": 5,
+            "AP": "M"
+          }
+        ]
+      },
+      {
+        "desc": "Falta de documentacion o trazabilidad",
+        "S": 6,
+        "causes": [
+          {
+            "cause": "Proveedor sin sistema robusto de trazabilidad",
+            "O": 6,
+            "D": 6,
+            "AP": "H"
+          },
+          {
+            "cause": "No se utiliza el sistema ARB",
+            "O": 3,
+            "D": 7,
+            "AP": "M"
+          },
+          {
+            "cause": "Procesos administrativos deficientes",
+            "O": 4,
+            "D": 4,
+            "AP": "H"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "num": "15",
+    "name": "CORTE DE COMPONENTES - PREPARACION DE CORTE",
+    "failures": [
+      {
+        "desc": "Corte fuera de medida (pano mas corto o mas largo que la especificacion)",
+        "S": 7,
+        "causes": [
+          {
+            "cause": "Error del operario al medir con la regla metalica",
+            "O": 5,
+            "D": 10,
+            "AP": "H"
+          }
+        ]
+      },
+      {
+        "desc": "Contaminacion / suciedad en la materia prima",
+        "S": 6,
+        "causes": [
+          {
+            "cause": "Ambiente sucio en planta del proveedor",
+            "O": 6,
+            "D": 6,
+            "AP": "M"
+          },
+          {
+            "cause": "Falta de inspeccion al llegar",
+            "O": 6,
+            "D": 6,
+            "AP": "M"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "num": "20",
+    "name": "CORTE DE COMPONENTES DE VINILO O TELA",
+    "failures": [
+      {
+        "desc": "Seleccion incorrecta del material (vinilo mal identificado)",
+        "S": 8,
+        "causes": [
+          {
+            "cause": "Falta de verificacion del codigo de material antes del corte",
+            "O": 5,
+            "D": 6,
+            "AP": "H"
+          }
+        ]
+      },
+      {
+        "desc": "Corte incompleto o irregular",
+        "S": 7,
+        "causes": [
+          {
+            "cause": "Desgaste de la cuchilla de corte",
+            "O": 5,
+            "D": 7,
+            "AP": "M"
+          },
+          {
+            "cause": "Falla en la maquina",
+            "O": 3,
+            "D": 6,
+            "AP": "L"
+          }
+        ]
+      },
+      {
+        "desc": "Contaminacion del material durante el corte o almacenamiento",
+        "S": 6,
+        "causes": [
+          {
+            "cause": "Ambiente de trabajo con polvo o particulas",
+            "O": 5,
+            "D": 6,
+            "AP": "L"
+          }
+        ]
+      },
+      {
+        "desc": "Desviacion en el corte de los pliegos",
+        "S": 7,
+        "causes": [
+          {
+            "cause": "Parametros de corte mal ingresados",
+            "O": 8,
+            "D": 3,
+            "AP": "H"
+          },
+          {
+            "cause": "Instructivo para colocar correctamente tension y velocidad d",
+            "O": 7,
+            "D": 6,
+            "AP": "L"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "num": "25",
+    "name": "CORTE DE COMPONENTES - CONTROL CON MYLAR",
+    "failures": [
+      {
+        "desc": "Omitir la operacion de inspeccion",
+        "S": 6,
+        "causes": [
+          {
+            "cause": "Operador de produccion omite la tarea de verificacion visual",
+            "O": 3,
+            "D": 9,
+            "AP": "H"
+          }
+        ]
+      },
+      {
+        "desc": "Contaminacion del material durante el corte o almacenamiento",
+        "S": 6,
+        "causes": [
+          {
+            "cause": "Ambiente de trabajo con polvo o particulas",
+            "O": 5,
+            "D": 6,
+            "AP": "L"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "num": "30",
+    "name": "CORTE DE COMPONENTES - ALMACENAMIENTO EN MEDIOS WIP",
+    "failures": [
+      {
+        "desc": "Faltante/exceso de componentes en la caja del kit",
+        "S": 7,
+        "causes": [
+          {
+            "cause": "El Operador no realiza el conteo/verificacion completo de la",
+            "O": 5,
+            "D": 7,
+            "AP": "H"
+          }
+        ]
+      },
+      {
+        "desc": "Componente incorrecto (variante o color) incluido",
+        "S": 7,
+        "causes": [
+          {
+            "cause": "Mano de Obra no realiza la verificacion visual contra la Ord",
+            "O": 5,
+            "D": 7,
+            "AP": "H"
+          }
+        ]
+      },
+      {
+        "desc": "Pieza danada (rasgadura, mancha) incluida en el kit",
+        "S": 8,
+        "causes": [
+          {
+            "cause": "El Operador no sigue el procedimiento de revision visual de ",
+            "O": 5,
+            "D": 8,
+            "AP": "H"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "num": "40",
+    "name": "COSTURA - REFILADO",
+    "failures": [
+      {
+        "desc": "Posicionado de cortes NOK",
+        "S": 7,
+        "causes": [
+          {
+            "cause": "Operador posiciona el corte en la refiladora fuera de la tol",
+            "O": 7,
+            "D": 6,
+            "AP": "M"
+          }
+        ]
+      },
+      {
+        "desc": "Refilado fuera de especificaciones",
+        "S": 7,
+        "causes": [
+          {
+            "cause": "Cuchilla desafilada / desgastada",
+            "O": 6,
+            "D": 6,
+            "AP": "M"
+          },
+          {
+            "cause": "Operador posiciona el corte fuera de la tolerancia",
+            "O": 7,
+            "D": 6,
+            "AP": "L"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "num": "50",
+    "name": "COSTURA - COSTURA UNION",
+    "failures": [
+      {
+        "desc": "Costura descosida o debil",
+        "S": 8,
+        "causes": [
+          {
+            "cause": "Tension de hilo incorrecta",
+            "O": 4,
+            "D": 4,
+            "AP": "M"
+          },
+          {
+            "cause": "Puntadas demasiado largas",
+            "O": 4,
+            "D": 4,
+            "AP": "M"
+          },
+          {
+            "cause": "Hilo inadecuado",
+            "O": 5,
+            "D": 6,
+            "AP": "M"
+          }
+        ]
+      },
+      {
+        "desc": "Costura desviada o fuera de especificacion",
+        "S": 8,
+        "causes": [
+          {
+            "cause": "Falta de guia en costura",
+            "O": 4,
+            "D": 4,
+            "AP": "M"
+          },
+          {
+            "cause": "Error del operario",
+            "O": 5,
+            "D": 5,
+            "AP": "M"
+          }
+        ]
+      },
+      {
+        "desc": "Puntadas irregulares o arrugas",
+        "S": 4,
+        "causes": [
+          {
+            "cause": "Mala configuracion de la maquina",
+            "O": 6,
+            "D": 6,
+            "AP": "M"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "num": "51",
+    "name": "COSTURA - COSTURA DOBLE",
+    "failures": [
+      {
+        "desc": "Costura descosida o debil",
+        "S": 8,
+        "causes": [
+          {
+            "cause": "Tension de hilo incorrecta",
+            "O": 4,
+            "D": 4,
+            "AP": "M"
+          },
+          {
+            "cause": "Puntadas demasiado largas",
+            "O": 4,
+            "D": 4,
+            "AP": "M"
+          },
+          {
+            "cause": "Hilo inadecuado",
+            "O": 5,
+            "D": 6,
+            "AP": "M"
+          }
+        ]
+      },
+      {
+        "desc": "Costura desviada o fuera de especificacion",
+        "S": 8,
+        "causes": [
+          {
+            "cause": "Falta de guia en costura",
+            "O": 4,
+            "D": 4,
+            "AP": "M"
+          },
+          {
+            "cause": "Error del operario",
+            "O": 5,
+            "D": 5,
+            "AP": "M"
+          }
+        ]
+      },
+      {
+        "desc": "Puntadas irregulares o arrugas",
+        "S": 4,
+        "causes": [
+          {
+            "cause": "Mala configuracion de la maquina",
+            "O": 6,
+            "D": 6,
+            "AP": "M"
+          },
+          {
+            "cause": "Falta de mantenimiento",
+            "O": 4,
+            "D": 4,
+            "AP": "M"
+          }
+        ]
+      },
+      {
+        "desc": "Rotura del vinilo en la zona de la costura",
+        "S": 8,
+        "causes": [
+          {
+            "cause": "Agujas inadecuadas",
+            "O": 3,
+            "D": 6,
+            "AP": "M"
+          },
+          {
+            "cause": "Puntada demasiado apretada",
+            "O": 3,
+            "D": 6,
+            "AP": "M"
+          }
+        ]
+      },
+      {
+        "desc": "Seleccion incorrecta del hilo",
+        "S": 6,
+        "causes": [
+          {
+            "cause": "Error en la carga de hilo en maquina",
+            "O": 2,
+            "D": 6,
+            "AP": "M"
+          }
+        ]
+      },
+      {
+        "desc": "Largo de puntada fuera de especificacion",
+        "S": 8,
+        "causes": [
+          {
+            "cause": "Error en la configuracion de la maquina",
+            "O": 5,
+            "D": 6,
+            "AP": "M"
+          }
+        ]
+      },
+      {
+        "desc": "Toma de costura fuera de especificacion",
+        "S": 8,
+        "causes": [
+          {
+            "cause": "Error en la configuracion de la maquina",
+            "O": 5,
+            "D": 6,
+            "AP": "M"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "num": "52",
+    "name": "COSTURA - ALMACENAMIENTO EN MEDIOS WIP",
+    "failures": [
+      {
+        "desc": "Faltante/exceso de componentes en la caja del kit",
+        "S": 7,
+        "causes": [
+          {
+            "cause": "El Operador no realiza el conteo/verificacion completo de la",
+            "O": 5,
+            "D": 7,
+            "AP": "H"
+          }
+        ]
+      },
+      {
+        "desc": "Componente incorrecto (variante o color) incluido",
+        "S": 7,
+        "causes": [
+          {
+            "cause": "Mano de Obra no realiza la verificacion visual contra la Ord",
+            "O": 5,
+            "D": 7,
+            "AP": "H"
+          }
+        ]
+      },
+      {
+        "desc": "Pieza danada (rasgadura, mancha) incluida en el kit",
+        "S": 8,
+        "causes": [
+          {
+            "cause": "El Operador no sigue el procedimiento de revision visual de ",
+            "O": 5,
+            "D": 8,
+            "AP": "H"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "num": "60",
+    "name": "INYECCION PLASTICA - INYECCION DE PIEZAS PLASTICAS",
+    "failures": [
+      {
+        "desc": "Llenado Incompleto de Pieza",
+        "S": 9,
+        "causes": [
+          {
+            "cause": "Presion de Inyeccion configurada fuera de especificacion",
+            "O": 5,
+            "D": 5,
+            "AP": "H"
+          },
+          {
+            "cause": "Temperatura de fusion del material demasiado baja",
+            "O": 4,
+            "D": 8,
+            "AP": "H"
+          }
+        ]
+      },
+      {
+        "desc": "Omitir la operacion de inspeccion dimensional de cotas index",
+        "S": 8,
+        "causes": [
+          {
+            "cause": "Operador omite la verificacion dimensional de la cota index",
+            "O": 5,
+            "D": 5,
+            "AP": "M"
+          },
+          {
+            "cause": "Instruccion de trabajo ambigua sobre la frecuencia o metodol",
+            "O": 4,
+            "D": 5,
+            "AP": "M"
+          }
+        ]
+      },
+      {
+        "desc": "Rebaba Excesiva / Exceso de Material",
+        "S": 7,
+        "causes": [
+          {
+            "cause": "Fuerza de Cierre insuficiente",
+            "O": 5,
+            "D": 3,
+            "AP": "L"
+          },
+          {
+            "cause": "Molde o cavidad contaminada con material residual",
+            "O": 5,
+            "D": 8,
+            "AP": "M"
+          },
+          {
+            "cause": "Parametros de Inyeccion configurados incorrectamente",
+            "O": 7,
+            "D": 5,
+            "AP": "H"
+          },
+          {
+            "cause": "Mantenimiento Preventivo del molde para verificar el correct",
+            "O": 5,
+            "D": 8,
+            "AP": "M"
+          },
+          {
+            "cause": "Mantenimiento Preventivo y Calibracion de Sensores de la maq",
+            "O": 8,
+            "D": 5,
+            "AP": "M"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "num": "61",
+    "name": "INYECCION PLASTICA - ALMACENAMIENTO EN MEDIOS WIP",
+    "failures": [
+      {
+        "desc": "Faltante/exceso de componentes en la caja del kit",
+        "S": 7,
+        "causes": [
+          {
+            "cause": "El Operador no realiza el conteo/verificacion completo de la",
+            "O": 5,
+            "D": 7,
+            "AP": "H"
+          }
+        ]
+      },
+      {
+        "desc": "Componente incorrecto (variante o color) incluido",
+        "S": 7,
+        "causes": [
+          {
+            "cause": "Mano de Obra no realiza la verificacion visual contra la Ord",
+            "O": 5,
+            "D": 7,
+            "AP": "H"
+          }
+        ]
+      },
+      {
+        "desc": "Pieza danada (rasgadura, mancha) incluida en el kit",
+        "S": 8,
+        "causes": [
+          {
+            "cause": "El Operador no sigue el procedimiento de revision visual de ",
+            "O": 5,
+            "D": 8,
+            "AP": "H"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "num": "70",
+    "name": "INYECCION PU",
+    "failures": [
+      {
+        "desc": "Vertido incorrecto de mezcla sobre molde",
+        "S": 5,
+        "causes": [
+          {
+            "cause": "Error de operario",
+            "O": 3,
+            "D": 7,
+            "AP": "M"
+          }
+        ]
+      },
+      {
+        "desc": "Inyeccion incompleta o exceso de material en el molde",
+        "S": 5,
+        "causes": [
+          {
+            "cause": "Falla de dispositivo",
+            "O": 2,
+            "D": 7,
+            "AP": "M"
+          }
+        ]
+      },
+      {
+        "desc": "Aplicacion de forma no uniforme de desmoldante",
+        "S": 5,
+        "causes": [
+          {
+            "cause": "Error de operario",
+            "O": 3,
+            "D": 7,
+            "AP": "M"
+          }
+        ]
+      },
+      {
+        "desc": "Colocar cabezal fuera de la referencia definida",
+        "S": 5,
+        "causes": [
+          {
+            "cause": "Error de operario",
+            "O": 3,
+            "D": 7,
+            "AP": "M"
+          }
+        ]
+      },
+      {
+        "desc": "Colocacion de Material en tanque incorrecto",
+        "S": 5,
+        "causes": [
+          {
+            "cause": "Error de operario",
+            "O": 3,
+            "D": 7,
+            "AP": "M"
+          }
+        ]
+      },
+      {
+        "desc": "Colocar fuera del tacho de limpieza el cabezal de inyeccion luego de inyectar",
+        "S": 5,
+        "causes": [
+          {
+            "cause": "Error de operario",
+            "O": 2,
+            "D": 5,
+            "AP": "M"
+          }
+        ]
+      },
+      {
+        "desc": "Retirar de forma incorrecta la pieza dentro del molde",
+        "S": 5,
+        "causes": [
+          {
+            "cause": "Error de operario",
+            "O": 3,
+            "D": 7,
+            "AP": "M"
+          }
+        ]
+      },
+      {
+        "desc": "Retirar la pieza antes de los 4 min de curado",
+        "S": 5,
+        "causes": [
+          {
+            "cause": "Error de operario",
+            "O": 3,
+            "D": 7,
+            "AP": "M"
+          }
+        ]
+      },
+      {
+        "desc": "Peso de la pieza distinto de 420 +/- 25 grs",
+        "S": 7,
+        "causes": [
+          {
+            "cause": "Error de operario",
+            "O": 3,
+            "D": 5,
+            "AP": "M"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "num": "71",
+    "name": "PREARMADO - PREARMADO DE ESPUMA",
+    "failures": [
+      {
+        "desc": "Espuma se suelta",
+        "S": 7,
+        "causes": [
+          {
+            "cause": "Error del operario: Incorrecta colocacion del separador de e",
+            "O": 7,
+            "D": 8,
+            "AP": "H"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "num": "72",
+    "name": "INYECCION PU - ALMACENAMIENTO EN MEDIOS WIP",
+    "failures": [
+      {
+        "desc": "Cantidad de piezas incorrecta en medio definido",
+        "S": 5,
+        "causes": [
+          {
+            "cause": "Error de operario",
+            "O": 3,
+            "D": 7,
+            "AP": "M"
+          }
+        ]
+      },
+      {
+        "desc": "Piezas danadas por no respetar disposicion",
+        "S": 5,
+        "causes": [
+          {
+            "cause": "Error de operario",
+            "O": 3,
+            "D": 7,
+            "AP": "M"
+          }
+        ]
+      },
+      {
+        "desc": "Medio equivocado",
+        "S": 5,
+        "causes": [
+          {
+            "cause": "Error de operario",
+            "O": 2,
+            "D": 7,
+            "AP": "M"
+          }
+        ]
+      },
+      {
+        "desc": "Peso de la pieza distinto de 420 +/- 25 grs",
+        "S": 7,
+        "causes": [
+          {
+            "cause": "Error de operario",
+            "O": 3,
+            "D": 5,
+            "AP": "M"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "num": "80",
+    "name": "ADHESIVADO - ADHESIVAR PIEZAS",
+    "failures": [
+      {
+        "desc": "Adhesion insuficiente o fuera de especificacion",
+        "S": 8,
+        "causes": [
+          {
+            "cause": "Uso de adhesivo o reticulante vencido/degradado (Mala gestio",
+            "O": 4,
+            "D": 5,
+            "AP": "H"
+          },
+          {
+            "cause": "Proporcion de mezcla incorrecta",
+            "O": 7,
+            "D": 8,
+            "AP": "H"
+          },
+          {
+            "cause": "Exceso o falta de adhesivo",
+            "O": 6,
+            "D": 8,
+            "AP": "H"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "num": "81",
+    "name": "ADHESIVADO - INSPECCIONAR PIEZA ADHESIVADA",
+    "failures": [
+      {
+        "desc": "Adhesion insuficiente o fuera de especificacion",
+        "S": 8,
+        "causes": [
+          {
+            "cause": "Uso de adhesivo o reticulante vencido/degradado",
+            "O": 4,
+            "D": 5,
+            "AP": "H"
+          },
+          {
+            "cause": "Proporcion de mezcla incorrecta",
+            "O": 7,
+            "D": 8,
+            "AP": "H"
+          },
+          {
+            "cause": "Exceso o falta de adhesivo",
+            "O": 6,
+            "D": 8,
+            "AP": "H"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "num": "82",
+    "name": "ADHESIVADO - ALMACENAMIENTO EN MEDIOS WIP",
+    "failures": [
+      {
+        "desc": "Faltante/exceso de componentes en la caja del kit",
+        "S": 7,
+        "causes": [
+          {
+            "cause": "El Operador no realiza el conteo/verificacion completo de la",
+            "O": 5,
+            "D": 7,
+            "AP": "H"
+          }
+        ]
+      },
+      {
+        "desc": "Componente incorrecto (variante o color) incluido",
+        "S": 7,
+        "causes": [
+          {
+            "cause": "Mano de Obra no realiza la verificacion visual contra la Ord",
+            "O": 5,
+            "D": 7,
+            "AP": "H"
+          }
+        ]
+      },
+      {
+        "desc": "Pieza danada (rasgadura, mancha) incluida en el kit",
+        "S": 8,
+        "causes": [
+          {
+            "cause": "El Operador no sigue el procedimiento de revision visual de ",
+            "O": 5,
+            "D": 8,
+            "AP": "H"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "num": "90",
+    "name": "TAPIZADO - TAPIZADO SEMIAUTOMATICO",
+    "failures": [
+      {
+        "desc": "El operador intenta quitar la pieza durante el proceso de tapizado antes de finalizado",
+        "S": 10,
+        "causes": [
+          {
+            "cause": "Error del operario",
+            "O": 1,
+            "D": 2,
+            "AP": "L"
+          }
+        ]
+      },
+      {
+        "desc": "Vinilo despegado (falta / ausencia de adhesivo)",
+        "S": 8,
+        "causes": [
+          {
+            "cause": "Falta / ausencia de adhesivo",
+            "O": 5,
+            "D": 8,
+            "AP": "H"
+          }
+        ]
+      },
+      {
+        "desc": "Se coloca una pieza plastica de otro producto",
+        "S": 8,
+        "causes": [
+          {
+            "cause": "Error del operario",
+            "O": 1,
+            "D": 5,
+            "AP": "L"
+          }
+        ]
+      },
+      {
+        "desc": "Se coloca mal el vinilo",
+        "S": 8,
+        "causes": [
+          {
+            "cause": "Error del operario",
+            "O": 3,
+            "D": 5,
+            "AP": "M"
+          }
+        ]
+      },
+      {
+        "desc": "Mal colocado de la pieza plastica",
+        "S": 8,
+        "causes": [
+          {
+            "cause": "Error del operario",
+            "O": 1,
+            "D": 5,
+            "AP": "L"
+          }
+        ]
+      },
+      {
+        "desc": "Falla el proceso automatico",
+        "S": 8,
+        "causes": [
+          {
+            "cause": "Falla de la maquina",
+            "O": 2,
+            "D": 5,
+            "AP": "L"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "num": "100",
+    "name": "INSPECCION FINAL - CONTROL FINAL DE CALIDAD",
+    "failures": [
+      {
+        "desc": "Aprobacion de Pieza No Conforme",
+        "S": 8,
+        "causes": [
+          {
+            "cause": "Omision o error en la ejecucion de la verificacion",
+            "O": 5,
+            "D": 8,
+            "AP": "M"
+          }
+        ]
+      },
+      {
+        "desc": "Vinilo despegado (falta / ausencia de adhesivo)",
+        "S": 8,
+        "causes": [
+          {
+            "cause": "Falta / ausencia de adhesivo",
+            "O": 4,
+            "D": 8,
+            "AP": "M"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "num": "101",
+    "name": "CLASIFICACION Y SEGREGACION DE PRODUCTO NO CONFORME",
+    "failures": [
+      {
+        "desc": "Pieza No Conforme (NC) es clasificada como Conforme (OK)",
+        "S": 10,
+        "causes": [
+          {
+            "cause": "Operador coloca la Pieza NC en el contenedor de Embalaje/OK ",
+            "O": 5,
+            "D": 8,
+            "AP": "H"
+          },
+          {
+            "cause": "Contenedor de Producto Conforme y No Conforme no estan clara",
+            "O": 4,
+            "D": 8,
+            "AP": "H"
+          },
+          {
+            "cause": "Instruccion de Trabajo del puesto de Clasificacion y Segrega",
+            "O": 5,
+            "D": 8,
+            "AP": "H"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "num": "103",
+    "name": "REPROCESO: FALTA DE ADHESIVO",
+    "failures": [
+      {
+        "desc": "Falta de adhesivo / Cobertura incompleta",
+        "S": 8,
+        "causes": [
+          {
+            "cause": "Omision por fatiga o distraccion: El operador olvida aplicar",
+            "O": 5,
+            "D": 8,
+            "AP": "H"
+          },
+          {
+            "cause": "Instruccion deficiente: La Hoja de Operacion Estandar de rep",
+            "O": 4,
+            "D": 3,
+            "AP": "M"
+          },
+          {
+            "cause": "La herramienta manual no carga suficiente adhesivo o el adhe",
+            "O": 7,
+            "D": 5,
+            "AP": "H"
+          }
+        ]
+      },
+      {
+        "desc": "Exceso de adhesivo / se aplica adhesivo donde no corresponde",
+        "S": 8,
+        "causes": [
+          {
+            "cause": "Sobre-procesamiento: El operador aplica doble capa",
+            "O": 3,
+            "D": 8,
+            "AP": "M"
+          },
+          {
+            "cause": "No existe una plantilla o mascara de proteccion para tapar z",
+            "O": 5,
+            "D": 8,
+            "AP": "H"
+          }
+        ]
+      },
+      {
+        "desc": "Mezcla de producto No Conforme (NC) con producto Conforme (OK)",
+        "S": 8,
+        "causes": [
+          {
+            "cause": "Operador coloca piezas NC en el contenedor de OK por error d",
+            "O": 5,
+            "D": 8,
+            "AP": "H"
+          },
+          {
+            "cause": "Contenedores de Producto Conforme y No Conforme no estan fis",
+            "O": 4,
+            "D": 8,
+            "AP": "H"
+          },
+          {
+            "cause": "Instruccion de Trabajo del puesto de Clasificacion y Segrega",
+            "O": 5,
+            "D": 8,
+            "AP": "H"
+          }
+        ]
+      },
+      {
+        "desc": "Etiqueta o tarjeta de identificacion de Scrap/Retrabajo omitida",
+        "S": 8,
+        "causes": [
+          {
+            "cause": "Operador omite el paso de identificacion",
+            "O": 4,
+            "D": 8,
+            "AP": "H"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "num": "110",
+    "name": "EMBALAJE Y ETIQUETADO DE PRODUCTO TERMINADO",
+    "failures": [
+      {
+        "desc": "Pieza deformada por mal posicionamiento en el embalaje",
+        "S": 8,
+        "causes": [
+          {
+            "cause": "Mal posicionamiento / Sin separadores",
+            "O": 3,
+            "D": 8,
+            "AP": "M"
+          }
+        ]
+      },
+      {
+        "desc": "Colocacion de mayor o menor cantidad de piezas por medio",
+        "S": 6,
+        "causes": [
+          {
+            "cause": "Falta de control en la cantidad cargada por medio",
+            "O": 3,
+            "D": 6,
+            "AP": "M"
+          }
+        ]
+      },
+      {
+        "desc": "Hilos sobrantes, rebabas textiles o imperfecciones en costuras",
+        "S": 4,
+        "causes": [
+          {
+            "cause": "Omision de la operacion de eliminacion de hilos sobrantes",
+            "O": 3,
+            "D": 8,
+            "AP": "M"
+          }
+        ]
+      }
+    ]
+  }
+]

@@ -1,0 +1,560 @@
+[
+  {
+    "num": "5",
+    "name": "RECEPCIONAR MATERIA PRIMA",
+    "failures": [
+      {
+        "desc": "Material / pieza golpeada o dañada durante transporte",
+        "S": 7,
+        "causes": [
+          {
+            "cause": "Mala estiba y embalaje inadecuado",
+            "O": 6,
+            "D": 6,
+            "AP": "H"
+          },
+          {
+            "cause": "Manipulación incorrecta en tránsito",
+            "O": 5,
+            "D": 6,
+            "AP": "H"
+          },
+          {
+            "cause": "Almacenaje inadecuado en transporte (sin protecciones)",
+            "O": 5,
+            "D": 6,
+            "AP": "H"
+          }
+        ]
+      },
+      {
+        "desc": "Falta de documentación o trazabilidad",
+        "S": 7,
+        "causes": [
+          {
+            "cause": "Procesos administrativos deficientes",
+            "O": 3,
+            "D": 7,
+            "AP": "M"
+          },
+          {
+            "cause": "Proveedor sin sistema robusto de trazabilidad",
+            "O": 5,
+            "D": 5,
+            "AP": "H"
+          }
+        ]
+      },
+      {
+        "desc": "Material con especificación errónea (dimensiones, color, dureza, etc.)",
+        "S": 8,
+        "causes": [
+          {
+            "cause": "Error en la orden de compra o ficha técnica",
+            "O": 6,
+            "D": 6,
+            "AP": "H"
+          },
+          {
+            "cause": "Proveedor no respeta tolerancias",
+            "O": 7,
+            "D": 6,
+            "AP": "H"
+          }
+        ]
+      },
+      {
+        "desc": "Contaminación / suciedad en la materia prima",
+        "S": 6,
+        "causes": [
+          {
+            "cause": "Ambiente sucio en planta del proveedor",
+            "O": 6,
+            "D": 6,
+            "AP": "H"
+          },
+          {
+            "cause": "Falta de inspección visual al recibir",
+            "O": 5,
+            "D": 5,
+            "AP": "M"
+          }
+        ]
+      },
+      {
+        "desc": "No se utiliza el sistema ARB",
+        "S": 6,
+        "causes": [
+          {
+            "cause": "Falta de control dimensional en recepción",
+            "O": 4,
+            "D": 4,
+            "AP": "M"
+          }
+        ]
+      },
+      {
+        "desc": "Condiciones ambientales inadecuadas",
+        "S": 6,
+        "causes": [
+          {
+            "cause": "Iluminación insuficiente en zona de recepción",
+            "O": 3,
+            "D": 6,
+            "AP": "M"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "num": "10",
+    "name": "INYECCIÓN DE PIEZAS PLÁSTICAS",
+    "failures": [
+      {
+        "desc": "Llenado Incompleto de Pieza",
+        "S": 9,
+        "causes": [
+          {
+            "cause": "Presión de Inyección configurada fuera de especificación",
+            "O": 5,
+            "D": 5,
+            "AP": "H"
+          },
+          {
+            "cause": "Temperatura de fusión del material (T°) demasiado baja",
+            "O": 4,
+            "D": 5,
+            "AP": "H"
+          }
+        ]
+      },
+      {
+        "desc": "Rebaba Excesiva / Exceso de Material",
+        "S": 8,
+        "causes": [
+          {
+            "cause": "Fuerza de Cierre insuficiente",
+            "O": 5,
+            "D": 3,
+            "AP": "M"
+          },
+          {
+            "cause": "Molde o cavidad contaminada con material residual",
+            "O": 5,
+            "D": 8,
+            "AP": "H"
+          },
+          {
+            "cause": "Parámetros de Inyección configurados incorrectamente",
+            "O": 5,
+            "D": 8,
+            "AP": "H"
+          }
+        ]
+      },
+      {
+        "desc": "Omitir inspección dimensional de cotas index",
+        "S": 7,
+        "causes": [
+          {
+            "cause": "Operador omite la verificación dimensional de la cota index",
+            "O": 5,
+            "D": 5,
+            "AP": "H"
+          },
+          {
+            "cause": "Instrucción de trabajo ambigua sobre la frecuencia o la meto",
+            "O": 5,
+            "D": 5,
+            "AP": "H"
+          }
+        ]
+      },
+      {
+        "desc": "Contaminación / suciedad en la materia prima",
+        "S": 6,
+        "causes": [
+          {
+            "cause": "Ambiente sucio en planta del proveedor",
+            "O": 5,
+            "D": 6,
+            "AP": "M"
+          },
+          {
+            "cause": "Falta de inspección al llegar",
+            "O": 6,
+            "D": 6,
+            "AP": "H"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "num": "11",
+    "name": "ALMACENAMIENTO EN MEDIOS WIP",
+    "failures": [
+      {
+        "desc": "Faltante/exceso de componentes en la caja del kit",
+        "S": 7,
+        "causes": [
+          {
+            "cause": "El Operador no realiza el conteo/verificación completo de la",
+            "O": 5,
+            "D": 5,
+            "AP": "H"
+          }
+        ]
+      },
+      {
+        "desc": "Componente incorrecto (variante o color) incluido",
+        "S": 8,
+        "causes": [
+          {
+            "cause": "Mano de Obra no realiza la verificación visual contra la Ord",
+            "O": 5,
+            "D": 5,
+            "AP": "H"
+          }
+        ]
+      },
+      {
+        "desc": "Pieza dañada (rasgadura, mancha) incluida en el kit",
+        "S": 7,
+        "causes": [
+          {
+            "cause": "El Operador no sigue el procedimiento de revisión visual de ",
+            "O": 5,
+            "D": 5,
+            "AP": "H"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "num": "20",
+    "name": "ADHESIVADO HOT MELT",
+    "failures": [
+      {
+        "desc": "Adhesión deficiente del vinilo en la pieza plástica / quemaduras en el vinilo",
+        "S": 8,
+        "causes": [
+          {
+            "cause": "Temperatura de aplicación mayor o menor a 190-210°C",
+            "O": 4,
+            "D": 8,
+            "AP": "H"
+          },
+          {
+            "cause": "Superficie de la pieza con polvo, grasa o oleosidad",
+            "O": 3,
+            "D": 8,
+            "AP": "M"
+          },
+          {
+            "cause": "Error del operario / máquina empastada",
+            "O": 3,
+            "D": 8,
+            "AP": "M"
+          }
+        ]
+      },
+      {
+        "desc": "Peso del vinilo adhesivado incorrecto",
+        "S": 8,
+        "causes": [
+          {
+            "cause": "Falta de control de peso de adhesivo",
+            "O": 4,
+            "D": 8,
+            "AP": "H"
+          }
+        ]
+      },
+      {
+        "desc": "Posible quemadura en el operario",
+        "S": 10,
+        "causes": [
+          {
+            "cause": "Falta de EPP y herramientas",
+            "O": 1,
+            "D": 4,
+            "AP": "H"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "num": "30",
+    "name": "PROCESO DE IMG",
+    "failures": [
+      {
+        "desc": "Temperatura de lámina TPO insuficiente",
+        "S": 10,
+        "causes": [
+          {
+            "cause": "Sensor de temperatura de horno descalibrado o desplazado",
+            "O": 4,
+            "D": 7,
+            "AP": "H"
+          }
+        ]
+      },
+      {
+        "desc": "Espesor de pared excesivo en zona de ruptura de Airbag",
+        "S": 10,
+        "causes": [
+          {
+            "cause": "Obstrucción parcial de micro-canales de vacío por acumulació",
+            "O": 6,
+            "D": 3,
+            "AP": "H"
+          }
+        ]
+      },
+      {
+        "desc": "Ancho de bobina de TPO fuera de tolerancia",
+        "S": 3,
+        "causes": [
+          {
+            "cause": "Error en el pedido de compras o variación del proveedor de l",
+            "O": 3,
+            "D": 4,
+            "AP": "L"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "num": "40",
+    "name": "TRIMMING CORTE FINAL",
+    "failures": [
+      {
+        "desc": "Contorno de corte desplazado (Fuera de tolerancia geométrica)",
+        "S": 8,
+        "causes": [
+          {
+            "cause": "Desgaste en los pines de centrado del fixture o pieza mal as",
+            "O": 3,
+            "D": 7,
+            "AP": "M"
+          }
+        ]
+      },
+      {
+        "desc": "Borde de corte quemado o con hilachas (Angel hair)",
+        "S": 5,
+        "causes": [
+          {
+            "cause": "Velocidad de avance de cuchilla incorrecta por fuga de aire ",
+            "O": 6,
+            "D": 5,
+            "AP": "H"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "num": "50",
+    "name": "EDGE FOLDING",
+    "failures": [
+      {
+        "desc": "Espesor de borde fuera de especificación (Plegado abierto o incompleto)",
+        "S": 6,
+        "causes": [
+          {
+            "cause": "Fuga de aire o baja presión en cilindros neumáticos de los s",
+            "O": 6,
+            "D": 6,
+            "AP": "H"
+          }
+        ]
+      },
+      {
+        "desc": "Arrugas o pliegues irregulares visibles en el radio del borde",
+        "S": 5,
+        "causes": [
+          {
+            "cause": "Pieza mal posicionada en el nido por el operador al cargar",
+            "O": 6,
+            "D": 5,
+            "AP": "H"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "num": "60",
+    "name": "SOLDADO DE REFUERZOS INTERNOS",
+    "failures": [
+      {
+        "desc": "Soldadura fría / Falta de fusión (Cold Weld)",
+        "S": 7,
+        "causes": [
+          {
+            "cause": "Energía entregada insuficiente (Joules/Tiempo) por desajuste",
+            "O": 3,
+            "D": 7,
+            "AP": "M"
+          }
+        ]
+      },
+      {
+        "desc": "Marca de rechupe o quemadura visible en la Cara A (Read-through)",
+        "S": 7,
+        "causes": [
+          {
+            "cause": "Exceso de colapso (profundidad de soldadura) por presión de ",
+            "O": 2,
+            "D": 2,
+            "AP": "L"
+          }
+        ]
+      },
+      {
+        "desc": "Refuerzo / Inserto faltante en el ensamble",
+        "S": 7,
+        "causes": [
+          {
+            "cause": "Error de operario: olvido de cargar el componente en el nido",
+            "O": 2,
+            "D": 2,
+            "AP": "L"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "num": "70",
+    "name": "SOLDADO TWEETER",
+    "failures": [
+      {
+        "desc": "Soldadura fría / Juego libre del Tweeter (Loose assembly)",
+        "S": 7,
+        "causes": [
+          {
+            "cause": "Tiempo de soldadura muy corto o amplitud baja",
+            "O": 3,
+            "D": 7,
+            "AP": "M"
+          }
+        ]
+      },
+      {
+        "desc": "Marca de rechupe o brillo visible en superficie A (Read-through)",
+        "S": 7,
+        "causes": [
+          {
+            "cause": "Ausencia de soporte (yunco) o soporte dañado en el nido",
+            "O": 2,
+            "D": 2,
+            "AP": "L"
+          }
+        ]
+      },
+      {
+        "desc": "Tweeter dañado internamente (Bobina abierta / Membrana rota)",
+        "S": 10,
+        "causes": [
+          {
+            "cause": "Contacto directo del sonotrodo con la malla/cono del Tweeter",
+            "O": 2,
+            "D": 10,
+            "AP": "H"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "num": "80",
+    "name": "INSPECCIÓN FINAL Y EMPAQUE",
+    "failures": [
+      {
+        "desc": "Pieza NO CONFORME aceptada y enviada (Fuga de defecto de seguridad)",
+        "S": 10,
+        "causes": [
+          {
+            "cause": "Energía/señal del sensor de presencia en el Fixture falsa (s",
+            "O": 3,
+            "D": 4,
+            "AP": "H"
+          }
+        ]
+      },
+      {
+        "desc": "Pieza mal identificada / Etiqueta mixta (Wrong Label)",
+        "S": 9,
+        "causes": [
+          {
+            "cause": "Error humano en la selección de etiqueta: el operario tomó e",
+            "O": 2,
+            "D": 2,
+            "AP": "H"
+          }
+        ]
+      },
+      {
+        "desc": "Fuga de defecto visual (Pieza con raya/rechupe aceptada)",
+        "S": 7,
+        "causes": [
+          {
+            "cause": "Fatiga visual del inspector / Criterio no alineado",
+            "O": 5,
+            "D": 7,
+            "AP": "H"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "num": "90",
+    "name": "EMPAQUE FINAL Y ETIQUETADO DE PRODUCTO TERMINADO",
+    "failures": [
+      {
+        "desc": "Piezas rayadas / Marcas de abrasión (Scuffing)",
+        "S": 5,
+        "causes": [
+          {
+            "cause": "Separadores (Dunnage) dañados, sucios o con polvo excesivo",
+            "O": 5,
+            "D": 7,
+            "AP": "M"
+          }
+        ]
+      },
+      {
+        "desc": "Etiqueta incorrecta / Piezas mezcladas (Mixed Parts)",
+        "S": 7,
+        "causes": [
+          {
+            "cause": "Error humano en la selección de etiqueta: operador tomó etiq",
+            "O": 5,
+            "D": 7,
+            "AP": "H"
+          }
+        ]
+      },
+      {
+        "desc": "Cantidad incorrecta en el contenedor (Shortage)",
+        "S": 4,
+        "causes": [
+          {
+            "cause": "Distracción del operador / Interrupción del ciclo",
+            "O": 6,
+            "D": 3,
+            "AP": "M"
+          }
+        ]
+      }
+    ]
+  }
+]
