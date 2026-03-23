@@ -106,12 +106,12 @@ export const SimulationControls: React.FC<SimulationControlsProps> = ({
                 ) : (
                     <button className="flow-btn flow-btn--primary" onClick={onStart}><PlayIcon /> {status === 'paused' ? 'Continuar' : 'Iniciar'}</button>
                 )}
-                <button className="flow-btn flow-btn--secondary" onClick={onReset}><ResetIcon /> Reset</button>
+                <button className="flow-btn flow-btn--secondary" onClick={onReset}><ResetIcon /> Reiniciar</button>
                 <button
                     className="flow-btn flow-btn--instant"
                     onClick={onInstantSimulation}
                     disabled={status === 'running'}
-                    title="Ejecutar simulacion completa instantaneamente"
+                    title="Ejecutar simulación completa instantáneamente"
                 >
                     ⚡ Simular Completo
                 </button>

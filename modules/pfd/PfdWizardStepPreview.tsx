@@ -73,20 +73,20 @@ const PfdWizardStepPreview: React.FC<WizardStepPreviewProps> = ({
                     </h4>
                 </div>
                 <p className="text-sm text-cyan-700">
-                    Se generaran{' '}
+                    Se generarán{' '}
                     <span className="font-bold">{steps.length} pasos</span>:
-                    {' '}{stats.opCount} operacion{stats.opCount !== 1 ? 'es' : ''}
+                    {' '}{stats.opCount} {stats.opCount !== 1 ? 'operaciones' : 'operación'}
                     {stats.transportCount > 0 && (
                         <>, {stats.transportCount} transporte{stats.transportCount !== 1 ? 's' : ''}</>
                     )}
                     {stats.inspectionCount > 0 && (
-                        <>, {stats.inspectionCount} inspeccion{stats.inspectionCount !== 1 ? 'es' : ''}</>
+                        <>, {stats.inspectionCount} {stats.inspectionCount !== 1 ? 'inspecciones' : 'inspección'}</>
                     )}
                     {stats.storageCount > 0 && (
                         <>, {stats.storageCount} almacenamiento{stats.storageCount !== 1 ? 's' : ''}</>
                     )}
                     {stats.branchCount > 0 && (
-                        <>, {stats.branchCount} linea{stats.branchCount !== 1 ? 's' : ''} paralela{stats.branchCount !== 1 ? 's' : ''}</>
+                        <>, {stats.branchCount} {stats.branchCount !== 1 ? 'líneas paralelas' : 'línea paralela'}</>
                     )}
                     .
                 </p>

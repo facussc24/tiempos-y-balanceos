@@ -79,7 +79,7 @@ export const StationDiagnosticPanel: React.FC<StationDiagnosticPanelProps> = ({
 
             {/* Configuration */}
             <div className="flow-diagnostic-panel__section">
-                <h4>Configuracion</h4>
+                <h4>Configuración</h4>
                 <div className="flow-diagnostic-panel__grid">
                     <span>Ciclo:</span>
                     <span>{station.cycleTime.toFixed(1)}s</span>

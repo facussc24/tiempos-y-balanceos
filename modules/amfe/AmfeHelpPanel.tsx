@@ -308,8 +308,8 @@ function FamilyInfoBox() {
             </div>
             <div className="px-3 py-2 text-[11px] text-gray-600 space-y-1.5">
                 <p>
-                    Un <strong>Family FMEA</strong> cubre piezas multiples similares en aplicacion, diseno,
-                    manufactura, requerimientos y especificacion (ej: espejos izq/der, variaciones dimensionales).
+                    Un <strong>Family FMEA</strong> cubre piezas múltiples similares en aplicación, diseño,
+                    manufactura, requerimientos y especificación (ej: espejos izq/der, variaciones dimensionales).
                 </p>
                 <div className="grid grid-cols-2 gap-2">
                     <div className="bg-green-50 border border-green-200 rounded p-1.5">

@@ -210,14 +210,14 @@ const PfdHelpPanel: React.FC<Props> = ({ isOpen, onClose }) => {
 
                     <Section title="Familias de productos (AIAG-VDA)" icon={<FileText size={14} />}>
                         <p>
-                            Segun AIAG-VDA, una <strong>familia de productos</strong> son piezas multiples
-                            similares en aplicacion, diseno, manufactura, requerimientos y especificacion.
+                            Según AIAG-VDA, una <strong>familia de productos</strong> son piezas múltiples
+                            similares en aplicación, diseño, manufactura, requerimientos y especificación.
                             Ejemplo: espejos izq/der, interiores en distintos colores, variaciones dimensionales.
                         </p>
                         <div className="bg-cyan-50 border border-cyan-200 rounded-lg p-2.5 my-2">
-                            <p className="font-semibold text-cyan-800 mb-1">¿Cuando usar un DFP por familia?</p>
+                            <p className="font-semibold text-cyan-800 mb-1">¿Cuándo usar un DFP por familia?</p>
                             <div className="text-[11px] space-y-1">
-                                <p><span className="text-green-600 font-bold">✓</span> <strong>Un solo DFP</strong> cuando las piezas comparten el mismo flujo de manufactura y difieren solo en dimensiones, colores u orientacion.</p>
+                                <p><span className="text-green-600 font-bold">✓</span> <strong>Un solo DFP</strong> cuando las piezas comparten el mismo flujo de manufactura y difieren solo en dimensiones, colores u orientación.</p>
                                 <p><span className="text-red-600 font-bold">✗</span> <strong>DFP separados</strong> cuando los procesos, modos de falla o controles son diferentes entre piezas.</p>
                             </div>
                         </div>

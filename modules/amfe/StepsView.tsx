@@ -101,7 +101,7 @@ const StepsView: React.FC<Props> = ({ operations, amfe }) => {
         <div className="space-y-6">
             <div className="bg-green-50 p-4 rounded-lg border border-green-100">
                 <h2 className="text-lg font-bold text-green-900">Paso 2: Funciones</h2>
-                <p className="text-sm text-green-700">Describe que debe hacer (la funcion positiva) cada elemento de trabajo.</p>
+                <p className="text-sm text-green-700">Describí qué debe hacer (la función positiva) cada elemento de trabajo.</p>
             </div>
 
             {operations.map(op => (
@@ -122,14 +122,14 @@ const StepsView: React.FC<Props> = ({ operations, amfe }) => {
                                                 value={func.description}
                                                 onChange={e => amfe.updateFunction(op.id, we.id, func.id, 'description', e.target.value)}
                                                 className="w-full border border-gray-200 rounded p-2 text-sm focus:border-green-500 outline-none transition-colors shadow-sm"
-                                                placeholder="Cual es la funcion de este elemento? (Ej: Apretar tuerca a 50Nm)"
+                                                placeholder="¿Cuál es la función de este elemento? (Ej: Apretar tuerca a 50Nm)"
                                             />
                                         </div>
-                                        <button onClick={() => amfe.deleteFunction(op.id, we.id, func.id)} className="text-gray-300 hover:text-red-500 pt-2 opacity-0 group-hover:opacity-100" title="Eliminar funcion" aria-label="Eliminar funcion"><Trash2 size={14} /></button>
+                                        <button onClick={() => amfe.deleteFunction(op.id, we.id, func.id)} className="text-gray-300 hover:text-red-500 pt-2 opacity-0 group-hover:opacity-100" title="Eliminar función" aria-label="Eliminar función"><Trash2 size={14} /></button>
                                     </div>
                                 ))}
                                 <button onClick={() => amfe.addFunction(op.id, we.id)} className="text-green-600 text-xs font-bold hover:underline flex items-center gap-1">
-                                    <Plus size={12} /> Agregar Funcion
+                                    <Plus size={12} /> Agregar Función
                                 </button>
                             </div>
                         </div>
@@ -144,7 +144,7 @@ const StepsView: React.FC<Props> = ({ operations, amfe }) => {
         <div className="space-y-6">
             <div className="bg-red-50 p-4 rounded-lg border border-red-100">
                 <h2 className="text-lg font-bold text-red-900">Paso 3: Falla y Causa Raiz</h2>
-                <p className="text-sm text-red-700">Como puede fallar la funcion? (El negativo de la funcion). Cada falla puede tener multiples causas.</p>
+                <p className="text-sm text-red-700">¿Cómo puede fallar la función? (El negativo de la función). Cada falla puede tener múltiples causas.</p>
             </div>
 
             {operations.map(op => (

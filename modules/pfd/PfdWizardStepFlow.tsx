@@ -117,7 +117,7 @@ const PfdWizardStepFlow: React.FC<WizardStepProps> = ({ amfeDoc, annotations, on
             <div className="flex items-start gap-2 p-3 bg-cyan-50 border border-cyan-200 rounded-lg">
                 <GitBranch size={18} className="text-cyan-600 mt-0.5 shrink-0" />
                 <p className="text-sm text-cyan-800">
-                    Asigna operaciones a lineas paralelas. Las operaciones no asignadas
+                    Asigna operaciones a líneas paralelas. Las operaciones no asignadas
                     quedan en el flujo principal.
                 </p>
             </div>
@@ -194,7 +194,7 @@ const PfdWizardStepFlow: React.FC<WizardStepProps> = ({ amfeDoc, annotations, on
             {activeBranches.length > 0 && (
                 <div className="space-y-2 pt-2">
                     <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                        Etiquetas de lineas paralelas
+                        Etiquetas de líneas paralelas
                     </h4>
                     <div className="grid grid-cols-2 gap-3">
                         {activeBranches.map((bid) => {

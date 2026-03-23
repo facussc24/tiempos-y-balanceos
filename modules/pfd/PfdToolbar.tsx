@@ -277,7 +277,7 @@ const PfdToolbar: React.FC<Props> = ({
                     onClick={onOpenExportFolder}
                     disabled={!canOpenExportFolder}
                     className={`${btnClass} text-gray-600 hover:bg-amber-50 hover:text-amber-700`}
-                    title="Abrir carpeta de exportacion en Explorador"
+                    title="Abrir carpeta de exportación en Explorador"
                 >
                     <FolderOutput size={16} />
                     <span className="hidden sm:inline">Carpeta</span>

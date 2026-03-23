@@ -62,7 +62,7 @@ const CpTemplateModal: React.FC<CpTemplateModalProps> = ({ isOpen, onClose, onAp
                     </div>
                 </div>
                 <div className="px-5 py-3 border-t bg-gray-50 text-[10px] text-gray-500">
-                    Los items se agregan al final del plan actual. Puede editarlos despues.
+                    Los ítems se agregan al final del plan actual. Puede editarlos después.
                 </div>
             </div>
         </div>

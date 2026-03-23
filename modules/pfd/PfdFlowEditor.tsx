@@ -759,7 +759,7 @@ const PfdFlowEditor: React.FC<PfdFlowEditorProps> = ({
                         <div className="flex flex-col items-center justify-center py-8 text-gray-400" data-testid="empty-state">
                             <Map size={32} className="text-gray-300 mb-2" />
                             <p className="text-sm text-center">
-                                No hay pasos. Agrega uno con el boton + o usa una plantilla.
+                                No hay pasos. Agregá uno con el botón + o usá una plantilla.
                             </p>
                         </div>
                     ) : (

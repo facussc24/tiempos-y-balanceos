@@ -209,7 +209,7 @@ const DocumentListFilters: React.FC<DocumentListFiltersProps> = ({
                             <button
                                 onClick={() => updateFilter('search', '')}
                                 className="absolute right-1.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                                aria-label="Limpiar busqueda"
+                                aria-label="Limpiar búsqueda"
                             >
                                 <X size={12} />
                             </button>
@@ -287,7 +287,7 @@ const DocumentListFilters: React.FC<DocumentListFiltersProps> = ({
                         <button
                             onClick={() => updateFilter('search', '')}
                             className="absolute right-1.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                            aria-label="Limpiar busqueda"
+                            aria-label="Limpiar búsqueda"
                         >
                             <X size={12} />
                         </button>

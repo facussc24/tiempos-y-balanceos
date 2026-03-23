@@ -342,7 +342,7 @@ export const DependencyGraph: React.FC<Props> = ({ data, initialState, onStateCh
                         <span className="text-xs font-mono w-10 text-center">{(zoom * 100).toFixed(0)}%</span>
                         <button onClick={zoomIn} className="p-1.5 hover:bg-white rounded text-slate-600" title="Acercar" aria-label="Acercar"><ZoomIn size={16} /></button>
                         <div className="w-px h-4 bg-slate-300 mx-1"></div>
-                        <button onClick={resetView} className="p-1.5 hover:bg-white rounded text-slate-600 text-xs px-2" title="Restablecer vista">Reset</button>
+                        <button onClick={resetView} className="p-1.5 hover:bg-white rounded text-slate-600 text-xs px-2" title="Restablecer vista">Restablecer</button>
                     </div>
                     <button
                         onClick={handlePrint}

@@ -438,7 +438,7 @@ const DataManager: React.FC<DataManagerProps> = ({ onBackToLanding }) => {
                         <div className="space-y-3">
                             {/* Toggle */}
                             <div className="flex items-center justify-between">
-                                <span className="text-sm text-slate-300">Backup automatico</span>
+                                <span className="text-sm text-slate-300">Backup automático</span>
                                 <button
                                     onClick={handleToggleAutoBackup}
                                     className={`relative w-10 h-5 rounded-full transition-colors ${autoBackup ? 'bg-emerald-600' : 'bg-slate-600'}`}
@@ -522,7 +522,7 @@ const DataManager: React.FC<DataManagerProps> = ({ onBackToLanding }) => {
 
                             {/* Info */}
                             <p className="text-xs text-slate-500">
-                                Los backups al servidor se crean automaticamente cada vez que guardas. Si el servidor no esta disponible, se crearan solo localmente.
+                                Los backups al servidor se crean automáticamente cada vez que guardás. Si el servidor no está disponible, se crearán solo localmente.
                             </p>
 
                             {/* Force backup button */}
@@ -578,7 +578,7 @@ const DataManager: React.FC<DataManagerProps> = ({ onBackToLanding }) => {
                             {!syncStatus?.configured ? (
                                 <>
                                     <p className="text-xs text-slate-400">
-                                        Configura una carpeta compartida (OneDrive, Dropbox, carpeta de red) para sincronizar datos entre computadoras automaticamente.
+                                        Configura una carpeta compartida (OneDrive, Dropbox, carpeta de red) para sincronizar datos entre computadoras automáticamente.
                                     </p>
                                     <button
                                         onClick={handleConfigureSync}

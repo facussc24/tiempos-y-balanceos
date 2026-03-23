@@ -225,8 +225,8 @@ const AmfeRegistryView: React.FC<Props> = ({ onOpenProject, onClose }) => {
                 ) : entries.length === 0 ? (
                     <div className="py-12 text-center text-gray-400">
                         <FolderOpen size={32} className="mx-auto mb-2 opacity-50" />
-                        <p className="text-sm">{hasFilters ? 'No se encontraron AMFEs con esos filtros.' : 'No hay AMFEs registrados todavia.'}</p>
-                        {!hasFilters && <p className="text-xs mt-1">Los AMFEs se registran automaticamente al guardar.</p>}
+                        <p className="text-sm">{hasFilters ? 'No se encontraron AMFEs con esos filtros.' : 'No hay AMFEs registrados todavía.'}</p>
+                        {!hasFilters && <p className="text-xs mt-1">Los AMFEs se registran automáticamente al guardar.</p>}
                     </div>
                 ) : (
                     <div className="border border-gray-200 rounded-lg overflow-hidden">

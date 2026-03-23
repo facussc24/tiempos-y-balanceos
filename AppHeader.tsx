@@ -215,8 +215,8 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
                                 onClick={exportFolder.openFolder}
                                 disabled={!exportFolder.canOpen || exportFolder.isOpening}
                                 className="p-2 text-slate-500 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                                title="Abrir carpeta de exportacion en Explorador"
-                                aria-label="Abrir carpeta de exportacion"
+                                title="Abrir carpeta de exportación en Explorador"
+                                aria-label="Abrir carpeta de exportación"
                             >
                                 <FolderOutput size={18} />
                             </button>

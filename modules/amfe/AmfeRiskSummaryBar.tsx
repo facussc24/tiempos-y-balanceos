@@ -170,7 +170,7 @@ const AmfeRiskSummaryBar: React.FC<AmfeRiskSummaryBarProps> = ({ data }) => {
                         {stats.apH > 0 ? (
                             <>
                                 <AlertTriangle size={13} className="text-amber-500 flex-shrink-0" />
-                                <span>{stats.apH} {stats.apH === 1 ? 'causa' : 'causas'} con prioridad alta {stats.apH === 1 ? 'requiere' : 'requieren'} accion inmediata</span>
+                                <span>{stats.apH} {stats.apH === 1 ? 'causa' : 'causas'} con prioridad alta {stats.apH === 1 ? 'requiere' : 'requieren'} acción inmediata</span>
                             </>
                         ) : (
                             <>

@@ -60,7 +60,7 @@ const SolicitudServerStatus: React.FC<SolicitudServerStatusProps> = ({
                     type="button"
                     onClick={onRetryPending}
                     className="relative flex items-center justify-center w-5 h-5 rounded-full bg-amber-500 text-white text-[10px] font-bold hover:bg-amber-600 transition focus:outline-none focus:ring-2 focus:ring-amber-300"
-                    title={`${pendingOps} operacion${pendingOps > 1 ? 'es' : ''} pendiente${pendingOps > 1 ? 's' : ''} — clic para reintentar`}
+                    title={`${pendingOps} ${pendingOps > 1 ? 'operaciones pendientes' : 'operación pendiente'} — clic para reintentar`}
                     aria-label={`${pendingOps} operaciones pendientes, reintentar`}
                 >
                     {pendingOps > 99 ? '99+' : pendingOps}

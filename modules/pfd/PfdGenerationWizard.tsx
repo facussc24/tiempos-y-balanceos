@@ -50,8 +50,8 @@ export interface WizardStepPreviewProps extends WizardStepProps {
 
 const WIZARD_STEPS = [
     { title: 'Revisar Operaciones', description: 'Ajusta los tipos de paso y marca procesos externos', icon: ClipboardList },
-    { title: 'Organizar Flujo', description: 'Asigna operaciones a lineas paralelas si las hay', icon: GitBranch },
-    { title: 'Inspecciones', description: 'Inserta puntos de inspeccion y rutas de rechazo', icon: Search },
+    { title: 'Organizar Flujo', description: 'Asigna operaciones a líneas paralelas si las hay', icon: GitBranch },
+    { title: 'Inspecciones', description: 'Inserta puntos de inspección y rutas de rechazo', icon: Search },
     { title: 'Vista Previa', description: 'Revisa el flujo generado antes de confirmar', icon: Eye },
 ];
 

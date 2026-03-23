@@ -101,7 +101,7 @@ export const ImportConflictModal: React.FC<ImportConflictModalProps> = ({
                             <h2 className="text-lg font-semibold">Resolver Conflictos</h2>
                             <p className="text-sm text-slate-400">
                                 {conflicts.length} conflicto{conflicts.length !== 1 ? 's' : ''}
-                                {autoApplyCount > 0 && ` + ${autoApplyCount} cambios automaticos`}
+                                {autoApplyCount > 0 && ` + ${autoApplyCount} cambios automáticos`}
                             </p>
                         </div>
                     </div>

@@ -10,7 +10,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
     X, Download, Loader2, FileSpreadsheet,
-    GitBranch, ShieldAlert, ClipboardCheck, FileText,
+    GitBranch, ShieldAlert, ClipboardCheck, Info,
     CheckSquare, Square,
 } from 'lucide-react';
 import { useModalTransition } from '../../hooks/useModalTransition';
@@ -19,7 +19,6 @@ import { listFamilyDocuments } from '../../utils/repositories/familyDocumentRepo
 import { loadPfdDocument } from '../../utils/repositories/pfdRepository';
 import { loadAmfeDocument } from '../../utils/repositories/amfeRepository';
 import { loadCpDocument } from '../../utils/repositories/cpRepository';
-import { loadHoDocument } from '../../utils/repositories/hoRepository';
 import { getFamilyMembers } from '../../utils/repositories/familyRepository';
 import { exportApqpPackage } from './apqpPackageExport';
 import type { ApqpPackageData, ApqpExportOptions } from './apqpPackageExport';
@@ -27,7 +26,6 @@ import type { ProductFamily } from '../../utils/repositories/familyRepository';
 import type { PfdDocument } from '../pfd/pfdTypes';
 import type { AmfeDocument } from '../amfe/amfeTypes';
 import type { ControlPlanDocument } from '../controlPlan/controlPlanTypes';
-import type { HoDocument } from '../hojaOperaciones/hojaOperacionesTypes';
 import { logger } from '../../utils/logger';
 
 // ---------------------------------------------------------------------------
@@ -40,13 +38,12 @@ interface ApqpExportDialogProps {
     family: ProductFamily;
 }
 
-type DocumentModule = 'pfd' | 'amfe' | 'cp' | 'ho';
+type DocumentModule = 'pfd' | 'amfe' | 'cp';
 
 interface LoadedDocs {
     pfd: PfdDocument | null;
     amfe: AmfeDocument | null;
     cp: ControlPlanDocument | null;
-    ho: HoDocument | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -58,7 +55,6 @@ const SECTIONS = [
     { key: 'includeFlujograma' as const, label: 'Flujograma (PFD)', icon: GitBranch, color: 'text-cyan-500', docKey: 'pfd' as DocumentModule },
     { key: 'includeAmfe' as const, label: 'AMFE VDA', icon: ShieldAlert, color: 'text-blue-500', docKey: 'amfe' as DocumentModule },
     { key: 'includeCp' as const, label: 'Plan de Control', icon: ClipboardCheck, color: 'text-teal-500', docKey: 'cp' as DocumentModule },
-    { key: 'includeHo' as const, label: 'Hojas de Operaciones', icon: FileText, color: 'text-indigo-500', docKey: 'ho' as DocumentModule },
 ];
 
 // ---------------------------------------------------------------------------
@@ -78,7 +74,7 @@ export const ApqpExportDialog: React.FC<ApqpExportDialogProps> = ({
     const [loading, setLoading] = useState(false);
     const [exporting, setExporting] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [docs, setDocs] = useState<LoadedDocs>({ pfd: null, amfe: null, cp: null, ho: null });
+    const [docs, setDocs] = useState<LoadedDocs>({ pfd: null, amfe: null, cp: null });
     const [partNumbers, setPartNumbers] = useState<string[]>([]);
     const [revision, setRevision] = useState('A');
     const [options, setOptions] = useState<ApqpExportOptions>({
@@ -86,7 +82,6 @@ export const ApqpExportDialog: React.FC<ApqpExportDialogProps> = ({
         includeFlujograma: true,
         includeAmfe: true,
         includeCp: true,
-        includeHo: true,
         revision: 'A',
     });
 
@@ -100,7 +95,7 @@ export const ApqpExportDialog: React.FC<ApqpExportDialogProps> = ({
             const familyDocs = await listFamilyDocuments(family.id);
             const masters = familyDocs.filter(d => d.isMaster);
 
-            const loaded: LoadedDocs = { pfd: null, amfe: null, cp: null, ho: null };
+            const loaded: LoadedDocs = { pfd: null, amfe: null, cp: null };
 
             // Load each master document in parallel
             const promises: Promise<void>[] = [];
@@ -125,12 +120,6 @@ export const ApqpExportDialog: React.FC<ApqpExportDialogProps> = ({
                             if (result) loaded.cp = result;
                         })
                     );
-                } else if (mod === 'ho') {
-                    promises.push(
-                        loadHoDocument(doc.documentId).then(result => {
-                            if (result) loaded.ho = result;
-                        })
-                    );
                 }
             }
 
@@ -150,7 +139,6 @@ export const ApqpExportDialog: React.FC<ApqpExportDialogProps> = ({
                 includeFlujograma: prev.includeFlujograma && loaded.pfd !== null,
                 includeAmfe: prev.includeAmfe && loaded.amfe !== null,
                 includeCp: prev.includeCp && loaded.cp !== null,
-                includeHo: prev.includeHo && loaded.ho !== null && loaded.ho.sheets.length > 0,
             }));
         } catch (err) {
             logger.error('ApqpExport', 'Error loading documents', {}, err instanceof Error ? err : undefined);
@@ -170,7 +158,6 @@ export const ApqpExportDialog: React.FC<ApqpExportDialogProps> = ({
                 includeFlujograma: true,
                 includeAmfe: true,
                 includeCp: true,
-                includeHo: true,
                 revision: 'A',
             });
         }
@@ -215,7 +202,6 @@ export const ApqpExportDialog: React.FC<ApqpExportDialogProps> = ({
                 pfd: docs.pfd,
                 amfe: docs.amfe,
                 cp: docs.cp,
-                ho: docs.ho,
             };
 
             const exportOptions: ApqpExportOptions = {
@@ -234,7 +220,7 @@ export const ApqpExportDialog: React.FC<ApqpExportDialogProps> = ({
     };
 
     const hasAnySection = options.includePortada || options.includeFlujograma ||
-        options.includeAmfe || options.includeCp || options.includeHo;
+        options.includeAmfe || options.includeCp;
 
     if (!shouldRender) return null;
 
@@ -286,7 +272,7 @@ export const ApqpExportDialog: React.FC<ApqpExportDialogProps> = ({
                     ) : (
                         <>
                             {/* Section checkboxes */}
-                            <div className="space-y-2 mb-5">
+                            <div className="space-y-2 mb-3">
                                 {SECTIONS.map(section => {
                                     const docAvailable = section.always || (section.docKey && docs[section.docKey] !== null);
                                     const isChecked = options[section.key];
@@ -315,14 +301,17 @@ export const ApqpExportDialog: React.FC<ApqpExportDialogProps> = ({
                                             {!docAvailable && !section.always && (
                                                 <span className="text-xs text-slate-400 italic">Sin documento</span>
                                             )}
-                                            {section.docKey === 'ho' && docs.ho && docs.ho.sheets.length > 0 && (
-                                                <span className="text-xs text-slate-400">
-                                                    {docs.ho.sheets.length} hojas
-                                                </span>
-                                            )}
-                                        </button>
+                                                        </button>
                                     );
                                 })}
+                            </div>
+
+                            {/* HO info note */}
+                            <div className="flex items-start gap-2 px-3 py-2 mb-5 bg-slate-50 border border-slate-200 rounded-lg">
+                                <Info size={14} className="text-slate-400 mt-0.5 shrink-0" />
+                                <span className="text-xs text-slate-500">
+                                    Las Hojas de Operaciones se exportan individualmente desde el módulo HO (requieren imágenes no soportadas por este formato).
+                                </span>
                             </div>
 
                             {/* Revision field */}

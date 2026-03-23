@@ -116,8 +116,8 @@ const AmfeTemplatesModal: React.FC<AmfeTemplatesModalProps> = ({ onApplyTemplate
                                     <div className="flex-1 min-w-0">
                                         <h4 className="text-sm font-bold text-emerald-800 mb-0.5">Subchasis Soldado (Ejemplo)</h4>
                                         <p className="text-[10px] text-emerald-700 leading-tight mb-2">
-                                            AMFE de ejemplo: 3 operaciones (Soldadura MIG, Inspeccion, E-coat).
-                                            Ideal para ver como se ve un AMFE terminado.
+                                            AMFE de ejemplo: 3 operaciones (Soldadura MIG, Inspección, E-coat).
+                                            Ideal para ver cómo se ve un AMFE terminado.
                                         </p>
                                         <button
                                             onClick={onLoadFullExample}
@@ -134,8 +134,8 @@ const AmfeTemplatesModal: React.FC<AmfeTemplatesModalProps> = ({ onApplyTemplate
 
                 {/* Info note */}
                 <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-100 text-[10px] text-blue-700">
-                    <strong>Nota:</strong> Los templates agregan una operacion pre-armada con elementos 6M, funciones, modos de falla y causas tipicas.
-                    Podes editar todos los campos despues de insertar. Los valores S, O, D quedan vacios para que los completes segun tu proceso.
+                    <strong>Nota:</strong> Los templates agregan una operación pre-armada con elementos 6M, funciones, modos de falla y causas típicas.
+                    Podés editar todos los campos después de insertar. Los valores S, O, D quedan vacíos para que los completes según tu proceso.
                 </div>
             </div>
         </div>

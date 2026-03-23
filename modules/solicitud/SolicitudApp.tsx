@@ -459,7 +459,7 @@ const SolicitudApp: React.FC<SolicitudAppProps> = ({ onBackToLanding }) => {
                     const { enqueueOp } = await import('./solicitudPendingOps');
                     await enqueueOp('moveToObsoletos', solicitud.data.id, { doc: solicitud.data });
                     refreshPendingOps();
-                    showToast('No se pudo mover la carpeta. Se reintentara automaticamente.', 'error');
+                    showToast('No se pudo mover la carpeta. Se reintentará automáticamente.', 'error');
                 }
             }
 

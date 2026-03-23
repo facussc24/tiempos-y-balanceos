@@ -227,7 +227,7 @@ const PfdWizardStepInspections: React.FC<WizardStepProps> = ({
                     type="button"
                     onClick={() => removeInspection(insp.id)}
                     className="p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors shrink-0"
-                    title="Eliminar inspeccion"
+                    title="Eliminar inspección"
                 >
                     <X size={16} />
                 </button>
@@ -245,7 +245,7 @@ const PfdWizardStepInspections: React.FC<WizardStepProps> = ({
                 title="Agregar inspección después de esta operación"
             >
                 <Plus size={14} />
-                Inspeccion
+                Inspección
             </button>
         </div>
     );
@@ -258,11 +258,11 @@ const PfdWizardStepInspections: React.FC<WizardStepProps> = ({
                 <span className="inline-flex items-center gap-0.5 text-purple-600 font-medium">
                     <Sparkles size={12} /> Auto
                 </span>{' '}
-                fueron detectadas del AMFE. Usa el boton{' '}
+                fueron detectadas del AMFE. Usá el botón{' '}
                 <span className="inline-flex items-center gap-0.5 text-emerald-600 font-medium">
-                    <Plus size={12} /> Inspeccion
+                    <Plus size={12} /> Inspección
                 </span>{' '}
-                para agregar mas.
+                para agregar más.
             </p>
 
             {includedOps.length === 0 && (

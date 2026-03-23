@@ -75,7 +75,7 @@ const SolicitudList: React.FC<SolicitudListProps> = ({
                         <p className="text-xs text-gray-400 mb-3">
                             {items.length === 0
                                 ? 'No hay solicitudes'
-                                : 'Sin resultados para la busqueda'}
+                                : 'Sin resultados para la búsqueda'}
                         </p>
                         {items.length === 0 && (
                             <button

@@ -433,7 +433,7 @@ const HojaOperacionesApp: React.FC<Props> = ({ embedded, initialData, onDataChan
                         onClick={exportFolder.openFolder}
                         disabled={!exportFolder.canOpen || exportFolder.isOpening}
                         className="w-full flex items-center gap-2 px-3 py-2 text-[11px] font-medium text-slate-600 bg-white border border-slate-200 rounded hover:bg-amber-50 hover:text-amber-700 hover:border-amber-300 transition disabled:opacity-40 disabled:cursor-not-allowed"
-                        title="Abrir carpeta de exportacion en Explorador"
+                        title="Abrir carpeta de exportación en Explorador"
                     >
                         <FolderOpen size={14} />
                         Abrir Carpeta

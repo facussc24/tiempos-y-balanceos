@@ -152,11 +152,11 @@ const AmfeLibraryPanel: React.FC<Props> = ({
                     {/* Impact info */}
                     <div className="p-4 border-b border-gray-200 bg-amber-50/50">
                         <p className="text-xs text-gray-700">
-                            La operacion <strong>{impactResult.libraryOpName}</strong> fue actualizada en la biblioteca.
+                            La operación <strong>{impactResult.libraryOpName}</strong> fue actualizada en la biblioteca.
                         </p>
                         <p className="text-xs text-gray-600 mt-1">
-                            <strong>{impactResult.totalLinked}</strong> AMFE(s) estan vinculados a esta operacion.
-                            Selecciona cuales sincronizar:
+                            <strong>{impactResult.totalLinked}</strong> AMFE(s) están vinculados a esta operación.
+                            Seleccioná cuáles sincronizar:
                         </p>
                     </div>
 
@@ -387,14 +387,14 @@ const AmfeLibraryPanel: React.FC<Props> = ({
                                 ) : libraryOps.length === 0 ? (
                                     <div className="text-center py-8 text-gray-400">
                                         <Package size={28} className="mx-auto mb-2 opacity-50" />
-                                        <p className="text-xs">La biblioteca esta vacia.</p>
+                                        <p className="text-xs">La biblioteca está vacía.</p>
                                         <p className="text-[10px] mt-1">Guarda operaciones desde tu AMFE para reutilizarlas.</p>
                                     </div>
                                 ) : filteredOps.length === 0 ? (
                                     <div className="text-center py-6 text-gray-400">
                                         <Search size={20} className="mx-auto mb-2 opacity-50" />
-                                        <p className="text-xs">Sin resultados para esta busqueda.</p>
-                                        <p className="text-[10px] mt-1">Intenta con otros terminos o quita el filtro de categoria.</p>
+                                        <p className="text-xs">Sin resultados para esta búsqueda.</p>
+                                        <p className="text-[10px] mt-1">Intenta con otros términos o quita el filtro de categoría.</p>
                                     </div>
                                 ) : (
                                     <>
@@ -451,7 +451,7 @@ const AmfeLibraryPanel: React.FC<Props> = ({
                             ) : (
                                 <>
                                     <p className="text-[10px] text-gray-400 mb-2">
-                                        Selecciona una operacion para guardarla como template reutilizable.
+                                        Seleccioná una operación para guardarla como template reutilizable.
                                     </p>
                                     {currentOperations.map(op => {
                                         const isLinked = !!op.linkedLibraryOpId;
@@ -707,13 +707,13 @@ const SaveOpCard: React.FC<{
             {showSaveForm && (
                 <div className="mt-2 pt-2 border-t border-gray-100 space-y-2">
                     <div>
-                        <label className="text-[10px] text-gray-500 font-medium">Categoria</label>
+                        <label className="text-[10px] text-gray-500 font-medium">Categoría</label>
                         <select
                             value={category}
                             onChange={e => setCategory(e.target.value)}
                             className="w-full mt-0.5 text-[10px] px-2 py-1.5 border border-gray-200 rounded focus:outline-none focus:border-purple-400 bg-white"
                         >
-                            <option value="">Sin categoria</option>
+                            <option value="">Sin categoría</option>
                             {LIBRARY_CATEGORIES.map(c => (
                                 <option key={c.value} value={c.value}>{c.label}</option>
                             ))}

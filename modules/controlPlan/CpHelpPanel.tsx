@@ -75,7 +75,7 @@ const PHASES = [
         phase: 'Pre-Lanzamiento',
         code: 'preLaunch',
         color: 'bg-amber-100 text-amber-800 border-amber-200',
-        desc: 'Corrida piloto de produccion. Inspeccion intensiva para validar proceso.',
+        desc: 'Corrida piloto de producción. Inspección intensiva para validar proceso.',
         sampling: [
             { ap: 'H', size: '100%', freq: 'Cada pieza' },
             { ap: 'M', size: '100%', freq: 'Cada pieza' },
@@ -83,23 +83,23 @@ const PHASES = [
         ],
     },
     {
-        phase: 'Produccion',
+        phase: 'Producción',
         code: 'production',
         color: 'bg-green-100 text-green-800 border-green-200',
-        desc: 'Produccion serie. Muestreo basado en CPK y estabilidad del proceso.',
+        desc: 'Producción serie. Muestreo basado en CPK y estabilidad del proceso.',
         sampling: [
             { ap: 'H', size: '100%', freq: 'Cada pieza' },
             { ap: 'M (S>=9)', size: '5 piezas', freq: 'Cada hora' },
             { ap: 'M (S<9)', size: '5 piezas', freq: 'Cada turno' },
-            { ap: 'L', size: 'A discrecion', freq: 'A discrecion' },
+            { ap: 'L', size: 'A discreción', freq: 'A discreción' },
         ],
     },
 ];
 
 const AP_DEFAULTS = [
-    { level: 'H', label: 'Alto', color: 'bg-red-100 text-red-800 border-red-300', rules: 'Muestreo 100% obligatorio. Control Method requerido. Plan de reaccion: detener linea, escalar, segregar.' },
-    { level: 'M', label: 'Medio', color: 'bg-amber-100 text-amber-800 border-amber-300', rules: 'Muestreo intensivo (varia por fase). Evaluar mejora de prevencion o deteccion.' },
-    { level: 'L', label: 'Bajo', color: 'bg-green-100 text-green-800 border-green-300', rules: 'Muestreo a discrecion del equipo. Monitorear tendencias.' },
+    { level: 'H', label: 'Alto', color: 'bg-red-100 text-red-800 border-red-300', rules: 'Muestreo 100% obligatorio. Control Method requerido. Plan de reacción: detener línea, escalar, segregar.' },
+    { level: 'M', label: 'Medio', color: 'bg-amber-100 text-amber-800 border-amber-300', rules: 'Muestreo intensivo (varía por fase). Evaluar mejora de prevención o detección.' },
+    { level: 'L', label: 'Bajo', color: 'bg-green-100 text-green-800 border-green-300', rules: 'Muestreo a discreción del equipo. Monitorear tendencias.' },
 ];
 
 // ============================================================================
@@ -193,7 +193,7 @@ function ColumnsTab() {
                     </p>
                     <p>
                         Al generar el CP desde el AMFE, el campo <strong>"Piezas Aplicables"</strong> se
-                        copia automaticamente del AMFE. Si necesita ajustarlo, editelo en el encabezado del CP.
+                        copia automáticamente del AMFE. Si necesita ajustarlo, edítelo en el encabezado del CP.
                     </p>
                     <p className="text-[10px] text-gray-500 italic">
                         IATF 16949 no obliga a usar familia o pieza individual — es decision del equipo multifuncional.
@@ -375,7 +375,7 @@ function PhasesTab() {
                         <span className="text-sm font-black min-w-[24px]">CC</span>
                         <div>
                             <span className="font-bold text-xs">Critica</span>
-                            <p className="text-[11px] mt-0.5 opacity-80">Severidad &gt;= 9. Requiere controles especiales, SPC, y Plan de Reaccion con responsable.</p>
+                            <p className="text-[11px] mt-0.5 opacity-80">Severidad &gt;= 9. Requiere controles especiales, SPC, y Plan de Reacción con responsable.</p>
                         </div>
                     </div>
                     <div className="flex items-start gap-2 px-3 py-2 rounded-lg border text-amber-700 bg-amber-50 border-amber-200">

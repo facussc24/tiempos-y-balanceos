@@ -74,24 +74,24 @@ const HoHelpPanel: React.FC<Props> = ({ isOpen, onClose }) => {
 
                 {/* Content */}
                 <div className="flex-1 overflow-y-auto">
-                    <Section title="¿Que es la Hoja de Operaciones?" icon={<HelpCircle size={14} />} defaultOpen>
+                    <Section title="¿Qué es la Hoja de Operaciones?" icon={<HelpCircle size={14} />} defaultOpen>
                         <p>
                             La <strong>Hoja de Operaciones (HO)</strong> es el documento de planta que describe
-                            paso a paso como realizar una operacion de manufactura. Es el documento que
+                            paso a paso cómo realizar una operación de manufactura. Es el documento que
                             el operador consulta en su puesto de trabajo.
                         </p>
                         <div className="bg-slate-50 border border-slate-200 rounded-lg p-2.5 my-2">
                             <p className="font-semibold text-slate-800 text-[11px] mb-1">Contenido de cada hoja:</p>
                             <div className="grid grid-cols-2 gap-2 text-[10px]">
                                 <div className="space-y-0.5">
-                                    <p>📋 <strong>Encabezado:</strong> Pieza, cliente, operacion</p>
+                                    <p>📋 <strong>Encabezado:</strong> Pieza, cliente, operación</p>
                                     <p>👣 <strong>Pasos:</strong> Secuencia de trabajo detallada</p>
-                                    <p>🛡️ <strong>EPP:</strong> Equipos de proteccion personal</p>
+                                    <p>🛡️ <strong>EPP:</strong> Equipos de protección personal</p>
                                 </div>
                                 <div className="space-y-0.5">
                                     <p>✅ <strong>Controles:</strong> Verificaciones de calidad</p>
                                     <p>📷 <strong>Ayudas visuales:</strong> Fotos y diagramas</p>
-                                    <p>⚠️ <strong>Plan de reaccion:</strong> Que hacer ante NOK</p>
+                                    <p>⚠️ <strong>Plan de reacción:</strong> Qué hacer ante NOK</p>
                                 </div>
                             </div>
                         </div>
@@ -101,14 +101,14 @@ const HoHelpPanel: React.FC<Props> = ({ isOpen, onClose }) => {
                     </Section>
 
                     <Section title="Estructura del documento" icon={<FileText size={14} />}>
-                        <p>Un documento HO puede contener <strong>multiples hojas</strong> (una por operacion).</p>
+                        <p>Un documento HO puede contener <strong>múltiples hojas</strong> (una por operación).</p>
                         <div className="bg-blue-50 border border-blue-200 rounded-lg p-2.5 my-2">
                             <p className="font-semibold text-blue-800 text-[11px] mb-1">Encabezado (3 filas en PDF)</p>
                             <table className="w-full text-[10px] mt-1">
                                 <tbody>
                                     <tr className="border-b border-blue-100">
                                         <td className="py-0.5 font-medium text-blue-700 w-24">Fila 1:</td>
-                                        <td>Logo Barack + titulo "HOJA DE OPERACIONES" + formulario HO 952 REV.06</td>
+                                        <td>Logo Barack + título "HOJA DE OPERACIONES" + formulario HO 952 REV.06</td>
                                     </tr>
                                     <tr className="border-b border-blue-100">
                                         <td className="py-0.5 font-medium text-blue-700">Fila 2:</td>
@@ -137,11 +137,11 @@ const HoHelpPanel: React.FC<Props> = ({ isOpen, onClose }) => {
                         </div>
                     </Section>
 
-                    <Section title="Equipos de Proteccion Personal (EPP)" icon={<Shield size={14} />}>
+                    <Section title="Equipos de Protección Personal (EPP)" icon={<Shield size={14} />}>
                         <p>
-                            Segun <strong>IATF 16949 §8.5.1.2</strong>, las instrucciones de trabajo deben
+                            Según <strong>IATF 16949 §8.5.1.2</strong>, las instrucciones de trabajo deben
                             indicar <strong>visualmente</strong> los EPP requeridos. Usamos pictogramas ISO
-                            de senalizacion obligatoria (circulos azules).
+                            de señalización obligatoria (círculos azules).
                         </p>
                         <div className="bg-blue-50 border border-blue-200 rounded-lg p-2.5 my-2">
                             <p className="font-semibold text-blue-800 text-[11px] mb-1.5">6 EPP disponibles:</p>
@@ -160,15 +160,15 @@ const HoHelpPanel: React.FC<Props> = ({ isOpen, onClose }) => {
                                 </div>
                                 <div className="flex items-center gap-1.5">
                                     <span className="w-5 h-5 rounded-full bg-blue-600 flex items-center justify-center text-white text-[8px] font-bold">🎧</span>
-                                    <span><strong>Proteccion auditiva</strong></span>
+                                    <span><strong>Protección auditiva</strong></span>
                                 </div>
                                 <div className="flex items-center gap-1.5">
                                     <span className="w-5 h-5 rounded-full bg-blue-600 flex items-center justify-center text-white text-[8px] font-bold">🥼</span>
-                                    <span><strong>Ropa</strong> de proteccion (delantal)</span>
+                                    <span><strong>Ropa</strong> de protección (delantal)</span>
                                 </div>
                                 <div className="flex items-center gap-1.5">
                                     <span className="w-5 h-5 rounded-full bg-blue-600 flex items-center justify-center text-white text-[8px] font-bold">😷</span>
-                                    <span><strong>Respirador</strong> / mascara</span>
+                                    <span><strong>Respirador</strong> / máscara</span>
                                 </div>
                             </div>
                         </div>
@@ -179,7 +179,7 @@ const HoHelpPanel: React.FC<Props> = ({ isOpen, onClose }) => {
 
                     <Section title="Controles de Calidad" icon={<CheckSquare size={14} />}>
                         <p>
-                            Cada hoja puede tener <strong>multiples controles de calidad</strong>, organizados
+                            Cada hoja puede tener <strong>múltiples controles de calidad</strong>, organizados
                             en tabla:
                         </p>
                         <div className="bg-gray-50 border border-gray-200 rounded-lg overflow-hidden my-2">
@@ -215,8 +215,8 @@ const HoHelpPanel: React.FC<Props> = ({ isOpen, onClose }) => {
                                         </td>
                                     </tr>
                                     <tr className="border-t border-gray-100">
-                                        <td className="px-2 py-1 font-medium">Plan de reaccion</td>
-                                        <td className="px-2 py-1">Que hacer si la pieza esta fuera de tolerancia</td>
+                                        <td className="px-2 py-1 font-medium">Plan de reacción</td>
+                                        <td className="px-2 py-1">Qué hacer si la pieza está fuera de tolerancia</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -224,34 +224,34 @@ const HoHelpPanel: React.FC<Props> = ({ isOpen, onClose }) => {
                         <div className="bg-red-50 border border-red-200 rounded p-2">
                             <p className="text-[10px] text-red-800">
                                 <strong>Importante:</strong> Los controles CC/SC de la HO deben coincidir con
-                                los del Plan de Control y el AMFE. Es un requisito de auditoria IATF.
+                                los del Plan de Control y el AMFE. Es un requisito de auditoría IATF.
                             </p>
                         </div>
                     </Section>
 
                     <Section title="Ayudas Visuales" icon={<Image size={14} />}>
                         <p>
-                            Las <strong>ayudas visuales</strong> son fotos, diagramas o esquemas que acompanan
-                            a los pasos de la operacion. Son obligatorias per IATF 16949 §8.5.1.2.
+                            Las <strong>ayudas visuales</strong> son fotos, diagramas o esquemas que acompañan
+                            a los pasos de la operación. Son obligatorias per IATF 16949 §8.5.1.2.
                         </p>
                         <div className="bg-purple-50 border border-purple-200 rounded-lg p-2.5 my-2">
-                            <p className="font-semibold text-purple-800 text-[11px] mb-1">Como agregar una ayuda visual:</p>
+                            <p className="font-semibold text-purple-800 text-[11px] mb-1">Cómo agregar una ayuda visual:</p>
                             <ol className="list-decimal list-inside text-[10px] text-purple-700 space-y-0.5">
                                 <li>Click en <strong>"+ Ayuda Visual"</strong> dentro de un paso</li>
-                                <li>Escribir un <strong>titulo descriptivo</strong> (ej: "Posicion correcta de la pieza")</li>
+                                <li>Escribir un <strong>título descriptivo</strong> (ej: "Posición correcta de la pieza")</li>
                                 <li><strong>Pegar o cargar una imagen</strong> (fotos de celular, capturas, diagramas)</li>
-                                <li>Opcionalmente agregar <strong>descripcion</strong> con detalles</li>
+                                <li>Opcionalmente agregar <strong>descripción</strong> con detalles</li>
                             </ol>
                         </div>
                         <p className="text-[10px] text-gray-500 italic">
-                            Las imagenes se almacenan dentro del documento (base64). No necesitan archivos externos.
-                            En el PDF se imprimen con tamano optimizado.
+                            Las imágenes se almacenan dentro del documento (base64). No necesitan archivos externos.
+                            En el PDF se imprimen con tamaño optimizado.
                         </p>
                     </Section>
 
                     <Section title="Familias de productos" icon={<Users size={14} />}>
                         <p>
-                            Una <strong>Hoja de Operaciones por familia</strong> cubre multiples piezas similares
+                            Una <strong>Hoja de Operaciones por familia</strong> cubre múltiples piezas similares
                             que comparten el mismo proceso. El campo <strong>"Piezas Aplicables"</strong> en el
                             encabezado lista las piezas cubiertas.
                         </p>
@@ -268,7 +268,7 @@ const HoHelpPanel: React.FC<Props> = ({ isOpen, onClose }) => {
                                 <div className="bg-red-50 border border-red-200 rounded p-1.5">
                                     <p className="font-bold text-red-800 text-[10px]">✗ HO separadas cuando:</p>
                                     <ul className="list-disc list-inside text-red-700 space-y-0.5">
-                                        <li>Pasos de operacion diferentes</li>
+                                        <li>Pasos de operación diferentes</li>
                                         <li>Controles de calidad diferentes</li>
                                         <li>Herramental diferente</li>
                                     </ul>
@@ -276,7 +276,7 @@ const HoHelpPanel: React.FC<Props> = ({ isOpen, onClose }) => {
                             </div>
                         </div>
                         <p className="text-[10px] text-gray-500 italic">
-                            Si el documento se hereda del AMFE, las piezas aplicables se copian automaticamente.
+                            Si el documento se hereda del AMFE, las piezas aplicables se copian automáticamente.
                         </p>
                     </Section>
 
@@ -286,16 +286,16 @@ const HoHelpPanel: React.FC<Props> = ({ isOpen, onClose }) => {
                         </p>
                         <ul className="list-disc list-inside space-y-0.5 text-[11px] my-1">
                             <li><strong>Logo Barack</strong> en el encabezado (esquina izquierda)</li>
-                            <li><strong>Pictogramas EPP</strong> reales (imagenes ISO circulares)</li>
+                            <li><strong>Pictogramas EPP</strong> reales (imágenes ISO circulares)</li>
                             <li><strong>Controles de calidad</strong> en tabla con badges CC/SC</li>
-                            <li><strong>Ayudas visuales</strong> con imagenes embebidas</li>
-                            <li><strong>Plan de reaccion</strong> con saltos de linea correctos</li>
+                            <li><strong>Ayudas visuales</strong> con imágenes embebidas</li>
+                            <li><strong>Plan de reacción</strong> con saltos de línea correctos</li>
                             <li><strong>Familias:</strong> piezas aplicables en el encabezado</li>
                         </ul>
                         <div className="bg-amber-50 border border-amber-200 rounded p-2 mt-1">
                             <p className="text-[10px] text-amber-800">
-                                <strong>Tip:</strong> Para imprimir, use Ctrl+P o el boton "PDF" en la barra superior.
-                                Se genera una hoja por cada operacion del documento.
+                                <strong>Tip:</strong> Para imprimir, use Ctrl+P o el botón "PDF" en la barra superior.
+                                Se genera una hoja por cada operación del documento.
                             </p>
                         </div>
                     </Section>

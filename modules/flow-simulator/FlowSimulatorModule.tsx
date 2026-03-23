@@ -725,7 +725,7 @@ export const FlowSimulatorModule: React.FC<Props> = ({ data, rootHandle }) => {
                 <div className="flow-empty-state">
                     <div className="flow-empty-state__icon">⚙️</div>
                     <h2>Sin estaciones configuradas</h2>
-                    <p>Para usar el simulador, primero realiza un balanceo de linea en el modulo de Balanceo.</p>
+                    <p>Para usar el simulador, primero realizá un balanceo de línea en el módulo de Balanceo.</p>
                 </div>
             ) : (<>
 
@@ -753,7 +753,7 @@ export const FlowSimulatorModule: React.FC<Props> = ({ data, rootHandle }) => {
                                                 : 'bg-amber-100 text-amber-700 border border-amber-300'}`}
                                         title={rec.explanation}
                                     >
-                                        Buffer despues de {rec.stationName}: {rec.recommendedSize} pcs
+                                        Buffer después de {rec.stationName}: {rec.recommendedSize} pcs
                                     </span>
                                 ))}
                             </div>
