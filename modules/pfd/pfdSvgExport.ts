@@ -435,7 +435,7 @@ function renderHeader(doc: PfdDocument, totalWidth: number, logoBase64: string):
         </text>
         <!-- Row 2: Elaboró | Aprobó | Equipo -->
         <text x="16" y="${metaY + 12 + rowH}" font-size="${fontSize}" fill="${BLACK}" font-family="${FONT}">
-            <tspan font-weight="700">Elaboró:</tspan> ${esc(h.preparedBy)}${h.preparedDate ? ` (${esc(h.preparedDate)})` : ''}  |  <tspan font-weight="700">Aprobó:</tspan> ${esc(h.approvedBy)}${h.approvedDate ? ` (${esc(h.approvedDate)})` : ''}  |  <tspan font-weight="700">Cód. Prov.:</tspan> ${esc(h.supplierCode)}  |  <tspan font-weight="700">Equipo:</tspan> ${esc(h.coreTeam)}
+            <tspan font-weight="700">Elaboró:</tspan> ${esc(h.preparedBy)}${h.preparedDate ? ` (${esc(h.preparedDate)})` : ''}  |  <tspan font-weight="700">Aprobó:</tspan> ${esc(h.approvedBy)}${h.approvedDate ? ` (${esc(h.approvedDate)})` : ''}  |  <tspan font-weight="700">Cód. Prov.:</tspan> ${esc(h.supplierCode)}  |  <tspan font-weight="700">Equipo:</tspan> ${esc(truncate(h.coreTeam, 60))}
         </text>
         <!-- Row 3: Fecha Rev. | Cambio Ing. | Contacto -->
         ${(h.engineeringChangeLevel || h.revisionDate || h.keyContact) ? `<text x="16" y="${metaY + 12 + rowH * 2}" font-size="${fontSize}" fill="${BLACK}" font-family="${FONT}">
