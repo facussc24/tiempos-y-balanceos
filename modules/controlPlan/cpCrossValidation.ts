@@ -95,7 +95,9 @@ export function validateSpecialCharConsistency(
                     if (!fail?.causes) continue;
                     for (const cause of fail.causes) {
                         const sev = typeof fail.severity === 'number' ? fail.severity : Number(fail.severity) || 0;
-                        const hasSpecialChar = !!(cause.specialChar?.trim()) || sev >= 5;
+                        const occ = typeof cause.occurrence === 'number' ? cause.occurrence : Number(cause.occurrence) || 0;
+                        // AIAG-VDA 2019: CC=S≥9, SC=S=5-8 AND O≥4
+                        const hasSpecialChar = !!(cause.specialChar?.trim()) || sev >= 9 || (sev >= 5 && occ >= 4);
                         // Include AP=H, AP=M, and SC/CC with AP=L (IATF 16949 §8.3.3.3)
                         if (cause.ap !== 'H' && cause.ap !== 'M' && !hasSpecialChar) continue;
                         const explicit = cause.specialChar?.trim();
@@ -104,8 +106,8 @@ export function validateSpecialCharConsistency(
                             expected = explicit;
                         } else if (sev >= 9) {
                             expected = 'CC';
-                        // AIAG-VDA: S=5-8 → SC (Significant Characteristic)
-                        } else if (sev >= 5) {
+                        // AIAG-VDA 2019: SC = S=5-8 AND O≥4 (Significant Characteristic)
+                        } else if (sev >= 5 && occ >= 4) {
                             expected = 'SC';
                         }
                         if (expected) {
@@ -180,7 +182,9 @@ export function validateOrphanFailures(
                     if (!fail?.causes) continue;
                     for (const cause of fail.causes) {
                         const sev = typeof fail.severity === 'number' ? fail.severity : Number(fail.severity) || 0;
-                        const hasSpecialChar = !!(cause.specialChar?.trim()) || sev >= 5;
+                        const occ2 = typeof cause.occurrence === 'number' ? cause.occurrence : Number(cause.occurrence) || 0;
+                        // AIAG-VDA 2019: CC=S≥9, SC=S=5-8 AND O≥4
+                        const hasSpecialChar = !!(cause.specialChar?.trim()) || sev >= 9 || (sev >= 5 && occ2 >= 4);
 
                         // Skip causes with no CP relevance (AP=L without SC/CC)
                         if (cause.ap !== 'H' && cause.ap !== 'M' && !hasSpecialChar) continue;
@@ -192,7 +196,7 @@ export function validateOrphanFailures(
                         );
 
                         if (!covered) {
-                            const scLabel = sev >= 9 ? ' [CC]' : sev >= 5 ? ' [SC]' : '';
+                            const scLabel = sev >= 9 ? ' [CC]' : (sev >= 5 && occ2 >= 4) ? ' [SC]' : '';
                             issues.push({
                                 severity: cause.ap === 'H' ? 'error' : 'warning',
                                 code: 'ORPHAN_FAILURE',

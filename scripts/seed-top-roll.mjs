@@ -891,7 +891,9 @@ function generateControlPlan(amfeDocument) {
                             reactionPlanOwner = 'Operador de Producción';
                         }
 
-                        const autoSpecialChar = c.specialChar || (sev >= 9 ? 'CC' : sev >= 5 ? 'SC' : '');
+                        const occ = Number(c.occurrence) || 0;
+                        // AIAG-VDA 2019: CC=S≥9, SC=S=5-8 AND O≥4
+                        const autoSpecialChar = c.specialChar || (sev >= 9 ? 'CC' : (sev >= 5 && occ >= 4) ? 'SC' : '');
 
                         // PROCESS row
                         items.push({

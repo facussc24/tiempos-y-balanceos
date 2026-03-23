@@ -155,7 +155,9 @@ async function main() {
 
                         // Create new CP item
                         const severity = Number(fail.severity) || 0;
-                        const specialChar = cause.specialChar || (severity >= 9 ? 'CC' : 'SC');
+                        const occurrence = Number(cause.occurrence) || 0;
+                        // AIAG-VDA 2019: CC=S≥9, SC=S=5-8 AND O≥4
+                        const specialChar = cause.specialChar || (severity >= 9 ? 'CC' : (severity >= 5 && occurrence >= 4) ? 'SC' : '');
 
                         opNewItems.push({
                             id: randomUUID(),

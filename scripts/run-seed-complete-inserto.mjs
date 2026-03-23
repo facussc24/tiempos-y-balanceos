@@ -115,8 +115,10 @@ function generateControlPlan(amfeDoc, phase) {
                 for (const fail of (func.failures || [])) {
                     for (const cause of (fail.causes || [])) {
                         const severity = Number(fail.severity) || 0;
+                        const occurrence = Number(cause.occurrence) || 0;
+                        // AIAG-VDA 2019: CC=S≥9, SC=S=5-8 AND O≥4
                         const autoSpecialChar = cause.specialChar
-                            || (severity >= 9 ? 'CC' : severity >= 5 ? 'SC' : '');
+                            || (severity >= 9 ? 'CC' : (severity >= 5 && occurrence >= 4) ? 'SC' : '');
                         if (cause.ap !== 'H' && cause.ap !== 'M') {
                             if (cause.ap !== 'L' || !autoSpecialChar) continue;
                         }

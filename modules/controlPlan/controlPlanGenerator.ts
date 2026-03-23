@@ -125,8 +125,10 @@ export function generateItemsFromAmfe(
                         totalCauses++;
 
                         const severity = Number(fail.severity) || 0;
+                        const occurrence = Number(cause.occurrence) || 0;
+                        // AIAG-VDA 2019 + IATF 16949: CC=S≥9, SC=S=5-8 AND O≥4, else empty
                         const autoSpecialChar = cause.specialChar
-                            || (severity >= 9 ? 'CC' : severity >= 5 ? 'SC' : '');
+                            || (severity >= 9 ? 'CC' : (severity >= 5 && occurrence >= 4) ? 'SC' : '');
 
                         // IATF 16949 §8.3.3.3: SC/CC characteristics MUST be in CP
                         // regardless of AP level. Include AP=L causes if they have SC/CC.

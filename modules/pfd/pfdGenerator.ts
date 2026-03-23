@@ -113,12 +113,16 @@ export function extractSpecialChar(workElements: AmfeWorkElement[]): { productSp
             if (!func?.failures) continue;
             for (const fail of func.failures) {
                 const severity = typeof fail.severity === 'number' ? fail.severity : parseInt(String(fail.severity), 10) || 0;
-                // Product: CC if severity >= 9 (safety/regulatory per AIAG-VDA)
-                // SC if severity >= 5 (significant characteristic, matching CP generator threshold)
+                // AIAG-VDA 2019: CC if severity >= 9 (safety/regulatory)
+                // SC if severity >= 5 AND any cause O >= 4 (significant + frequent)
                 if (severity >= 9 && productSpecialChar !== 'CC') {
                     productSpecialChar = 'CC';
                 } else if (severity >= 5 && productSpecialChar === 'none') {
-                    productSpecialChar = 'SC';
+                    const hasHighOcc = (fail.causes || []).some(c => {
+                        const o = typeof c.occurrence === 'number' ? c.occurrence : Number(c.occurrence) || 0;
+                        return o >= 4;
+                    });
+                    if (hasHighOcc) productSpecialChar = 'SC';
                 }
 
                 for (const cause of fail.causes) {
