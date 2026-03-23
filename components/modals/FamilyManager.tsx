@@ -514,9 +514,9 @@ const FamilyManager: React.FC<FamilyManagerProps> = ({ onClose }) => {
                                             onClick={() => handleEditFamily(family)}
                                         >
                                             <div className="flex-1 min-w-0">
-                                                <div className="text-[11px] font-medium text-gray-800 truncate">{family.name}</div>
+                                                <div className="text-[11px] font-medium text-gray-800 truncate" title={family.name}>{family.name}</div>
                                                 {family.description && (
-                                                    <div className="text-[10px] text-gray-400 truncate">{family.description}</div>
+                                                    <div className="text-[10px] text-gray-400 truncate" title={family.description}>{family.description}</div>
                                                 )}
                                             </div>
                                             <span className="text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded-full shrink-0">
@@ -700,7 +700,7 @@ const FamilyManager: React.FC<FamilyManagerProps> = ({ onClose }) => {
                                                             <span className="text-[10px] font-mono font-semibold text-blue-700 shrink-0">
                                                                 {member.codigo || `ID:${member.productId}`}
                                                             </span>
-                                                            <span className="text-[10px] text-gray-500 truncate flex-1">
+                                                            <span className="text-[10px] text-gray-500 truncate flex-1" title={member.descripcion || '(sin descripción)'}>
                                                                 {member.descripcion || '(sin descripción)'}
                                                             </span>
                                                             <span className="text-[9px] text-gray-400 shrink-0">
@@ -749,7 +749,7 @@ const FamilyManager: React.FC<FamilyManagerProps> = ({ onClose }) => {
                                                             <div className="flex items-baseline gap-2">
                                                                 <Plus size={10} className="text-purple-400 shrink-0" />
                                                                 <span className="text-[10px] font-mono font-semibold text-blue-700">{product.codigo}</span>
-                                                                <span className="text-[9px] text-gray-500 truncate">{product.descripcion}</span>
+                                                                <span className="text-[9px] text-gray-500 truncate" title={product.descripcion}>{product.descripcion}</span>
                                                             </div>
                                                             <div className="text-[8px] text-gray-400 ml-5">{product.lineaName}</div>
                                                         </div>
@@ -1015,7 +1015,7 @@ const FamilyManager: React.FC<FamilyManagerProps> = ({ onClose }) => {
                                                                 <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold border ${colors.bg} ${colors.text} ${colors.border}`}>
                                                                     {vDoc.module.toUpperCase()}
                                                                 </span>
-                                                                <span className="text-[10px] font-mono text-gray-700 truncate flex-1">
+                                                                <span className="text-[10px] font-mono text-gray-700 truncate flex-1" title={vDoc.documentId}>
                                                                     {vDoc.documentId}
                                                                 </span>
                                                                 <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">

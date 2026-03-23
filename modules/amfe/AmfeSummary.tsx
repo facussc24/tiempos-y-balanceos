@@ -186,28 +186,28 @@ const AmfeSummary: React.FC<Props> = ({ data }) => {
                             <div className="flex items-center justify-between gap-1.5">
                                 <div className="flex items-center gap-1.5 min-w-0">
                                     <Clock size={12} className="text-orange-500 flex-shrink-0" />
-                                    <span className="text-xs truncate">Pendiente</span>
+                                    <span className="text-xs truncate" title="Pendiente">Pendiente</span>
                                 </div>
                                 <span className="text-xs font-bold text-orange-600 flex-shrink-0">{stats.statusPendiente}</span>
                             </div>
                             <div className="flex items-center justify-between gap-1.5">
                                 <div className="flex items-center gap-1.5 min-w-0">
                                     <Clock size={12} className="text-blue-500 animate-pulse flex-shrink-0" />
-                                    <span className="text-xs truncate">En Proceso</span>
+                                    <span className="text-xs truncate" title="En Proceso">En Proceso</span>
                                 </div>
                                 <span className="text-xs font-bold text-blue-600 flex-shrink-0">{stats.statusEnProceso}</span>
                             </div>
                             <div className="flex items-center justify-between gap-1.5">
                                 <div className="flex items-center gap-1.5 min-w-0">
                                     <CheckCircle size={12} className="text-green-500 flex-shrink-0" />
-                                    <span className="text-xs truncate">Completado</span>
+                                    <span className="text-xs truncate" title="Completado">Completado</span>
                                 </div>
                                 <span className="text-xs font-bold text-green-600 flex-shrink-0">{stats.statusCompletado}</span>
                             </div>
                             <div className="flex items-center justify-between gap-1.5">
                                 <div className="flex items-center gap-1.5 min-w-0">
                                     <XCircle size={12} className="text-gray-400 flex-shrink-0" />
-                                    <span className="text-xs truncate">Cancelado</span>
+                                    <span className="text-xs truncate" title="Cancelado">Cancelado</span>
                                 </div>
                                 <span className="text-xs font-bold text-gray-500 flex-shrink-0">{stats.statusCancelado}</span>
                             </div>

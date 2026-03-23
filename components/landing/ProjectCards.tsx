@@ -171,7 +171,7 @@ const ProjectCards: React.FC<ProjectCardsProps> = ({ projects, onSelectProject }
                         </div>
 
                         {/* Row 2: Family name */}
-                        <h3 className="text-base font-bold text-white mb-1 truncate" title={entry.family.name}>
+                        <h3 className="text-base font-bold text-white mb-1 break-words line-clamp-2" title={entry.family.name}>
                             {entry.family.name}
                         </h3>
 

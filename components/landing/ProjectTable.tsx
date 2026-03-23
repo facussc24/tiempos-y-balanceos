@@ -200,7 +200,7 @@ const ProjectTable: React.FC<ProjectTableProps> = ({ projects, onSelectProject, 
                                             {entry.family.name}
                                         </div>
                                         {clientName && (
-                                            <div className="text-xs text-slate-500 truncate max-w-[260px]">
+                                            <div className="text-xs text-slate-500 truncate max-w-[260px]" title={clientName}>
                                                 {clientName}
                                             </div>
                                         )}

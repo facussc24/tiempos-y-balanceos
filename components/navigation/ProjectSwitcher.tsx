@@ -148,7 +148,7 @@ export const ProjectSwitcher: React.FC<ProjectSwitcherProps> = ({
                 title="Cambiar Proyecto"
             >
                 <FolderOpen size={14} className="text-blue-500" />
-                <span className="max-w-[120px] truncate" title={currentProjectName || 'Sin Proyecto'}>
+                <span className="max-w-[180px] truncate" title={currentProjectName || 'Sin Proyecto'}>
                     {currentProjectName || 'Sin Proyecto'}
                 </span>
                 <ChevronDown

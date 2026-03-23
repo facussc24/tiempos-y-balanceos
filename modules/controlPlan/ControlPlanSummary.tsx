@@ -291,7 +291,7 @@ const ControlPlanSummary: React.FC<Props> = ({ data, filteredItems }) => {
                                     return (
                                         <tr key={op.step} className={pct < 80 ? 'bg-amber-50' : ''}>
                                             <td className="px-2 py-1 font-mono font-bold">{op.step}</td>
-                                            <td className="px-2 py-1 truncate max-w-[120px]">{op.desc}</td>
+                                            <td className="px-2 py-1 truncate max-w-[120px]" title={op.desc}>{op.desc}</td>
                                             <td className="px-2 py-1 text-center">{op.total}</td>
                                             <td className="px-2 py-1 text-center font-medium">{pct}%</td>
                                             <td className="px-2 py-1 text-center">{op.cc > 0 ? <span className="text-red-600 font-bold">{op.cc}</span> : '-'}</td>
