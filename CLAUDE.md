@@ -5,6 +5,13 @@ App 100% web React 19 + TypeScript + Supabase para gestion de calidad automotriz
 (balanceo de linea, simulador de flujo, kanban, heijunka, mix multi-modelo).
 Multi-usuario con auth Supabase (email/password). Sin Tauri, sin Gemini.
 
+## Guías de Estilo APQP (OBLIGATORIO leer antes de modificar)
+- **Antes de tocar cualquier Plan de Control**: leer `docs/GUIA_PLAN_DE_CONTROL.md`
+- **Antes de tocar cualquier AMFE**: leer `docs/GUIA_AMFE.md`
+- **Clasificación CC/SC** (AIAG-VDA 2019): CC = S≥9, SC = S=5-8 AND O≥4, vacío = resto
+- **Idioma**: TODO en español, CERO textos en inglés entre paréntesis
+- **Plan de reacción**: usar referencias SGC (P-09/I, P-10/I, P-14)
+
 ## Reglas Críticas — NO ROMPER
 ### 1. NUNCA usar datos mock/placeholder
 - Todo dato que se muestre, exporte o teste DEBE venir de Supabase real
