@@ -3,7 +3,7 @@ import {
     Clock, ShieldAlert, ClipboardCheck, GitBranch, ArrowRight,
     FolderOpen, FileText, Sparkles, AlertTriangle, GitMerge,
     ExternalLink, FilePlus2, Wrench,
-    BookOpen, Shield, LogOut, Users, Package,
+    BookOpen, Shield, LogOut, Users, Package, Loader2,
 } from 'lucide-react';
 import barackLogo from '../src/assets/barack_logo.png';
 import type { DocumentType, DocumentRegistryEntry } from './registry/documentRegistryTypes';
@@ -152,6 +152,16 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSelectModule, onOpenProject
                         </div>
                     )}
                 </header>
+
+                {/* ===== LOADING INDICATOR ===== */}
+                {projectsLoading && (
+                    <div className="flex items-center justify-center py-16 opacity-0 animate-fade-in-up">
+                        <div className="text-center">
+                            <Loader2 size={32} className="text-blue-500 animate-spin mx-auto mb-3" />
+                            <p className="text-sm text-slate-400">Cargando proyectos...</p>
+                        </div>
+                    </div>
+                )}
 
                 {/* ===== PENDIENTES (only if items exist) ===== */}
                 {!projectsLoading && pendingItems.length > 0 && (

@@ -31,6 +31,7 @@ import { RevisionHistoryPanel } from '../../components/layout/RevisionHistoryPan
 import { getNextRevisionLevel } from '../../utils/revisionUtils';
 import { useOpenExportFolder } from '../../hooks/useOpenExportFolder';
 import { Breadcrumb } from '../../components/navigation/Breadcrumb';
+import { Loader2 } from 'lucide-react';
 
 // Lazy-loaded overlays
 const SolicitudProcedureViewer = lazy(() => import('./SolicitudProcedureViewer'));
@@ -69,6 +70,9 @@ const SolicitudApp: React.FC<SolicitudAppProps> = ({ onBackToLanding }) => {
     const [pendingOpsCount, setPendingOpsCount] = useState(0);
     const [isSyncing, setIsSyncing] = useState(false);
     const [showProcedure, setShowProcedure] = useState(false);
+
+    // Initial loading state
+    const [isInitialLoading, setIsInitialLoading] = useState(true);
 
     // Reconciliation state
     const [reconciliationResult, setReconciliationResult] = useState<ReconciliationResult | null>(null);
@@ -233,14 +237,17 @@ const SolicitudApp: React.FC<SolicitudAppProps> = ({ onBackToLanding }) => {
 
     useEffect(() => {
         let cancelled = false;
-        refreshList().then(items => {
+        setIsInitialLoading(true);
+        refreshList().then(async items => {
             if (cancelled) return;
             if (items.length > 0) {
-                handleSelect(items[0].id);
+                await handleSelect(items[0].id);
             }
         }).catch(() => {
             // FIX: Prevent unhandled promise rejection on mount if DB fails
             if (!cancelled) showToast('Error al cargar solicitudes', 'error');
+        }).finally(() => {
+            if (!cancelled) setIsInitialLoading(false);
         });
         return () => { cancelled = true; };
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -830,6 +837,14 @@ const SolicitudApp: React.FC<SolicitudAppProps> = ({ onBackToLanding }) => {
             )}
 
             {/* Main content: sidebar + form */}
+            {isInitialLoading ? (
+                <div className="flex-1 flex items-center justify-center">
+                    <div className="text-center">
+                        <Loader2 size={32} className="text-amber-500 animate-spin mx-auto mb-3" />
+                        <p className="text-sm text-gray-400">Cargando solicitudes...</p>
+                    </div>
+                </div>
+            ) : (
             <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
                 {/* Sidebar */}
                 <div className="w-full md:w-[280px] max-h-[200px] md:max-h-none flex-shrink-0 overflow-auto md:overflow-hidden border-b md:border-b-0">
@@ -892,6 +907,7 @@ const SolicitudApp: React.FC<SolicitudAppProps> = ({ onBackToLanding }) => {
                     )}
                 </div>
             </div>
+            )}
 
             {/* Toast notification */}
             <div

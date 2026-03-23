@@ -31,6 +31,7 @@ import { CrossDocAlertBanner } from '../../components/ui/CrossDocAlertBanner';
 import { toast } from '../../components/ui/Toast';
 import { RevisionHistoryPanel } from '../../components/layout/RevisionHistoryPanel';
 import { ModuleErrorBoundary } from '../../components/ui/ModuleErrorBoundary';
+import { LoadingOverlay } from '../../components/ui/LoadingOverlay';
 import { useRevisionControl } from '../../hooks/useRevisionControl';
 import { useDocumentLock } from '../../hooks/useDocumentLock';
 import DocumentLockBanner from '../../components/ui/DocumentLockBanner';
@@ -56,7 +57,7 @@ import ChangeProposalPanel from '../../modules/family/ChangeProposalPanel';
 import {
     Plus, XCircle, AlertTriangle, CheckCircle, Info, ArrowRight,
     HelpCircle, Save, FileText, FolderOpen, Check, Clock,
-    Undo2, Redo2, Eye, Edit3, Hash, GitBranch, Image, ChevronDown,
+    Undo2, Redo2, Eye, Edit3, Hash, GitBranch, Image, ChevronDown, Loader2,
 } from 'lucide-react';
 
 interface Props {
@@ -80,6 +81,7 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding, embedded, initialData }) => 
     const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
     const [loadError, setLoadError] = useState('');
+    const [isLoadingProject, setIsLoadingProject] = useState(false);
     const [toastMessage, setToastMessage] = useState('');
 
     // Client hierarchy filter
@@ -317,6 +319,7 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding, embedded, initialData }) => 
         let cancelled = false;
         const lastId = (() => { try { return localStorage.getItem(LS_LAST_PROJECT); } catch { return null; } })();
         if (!lastId) return;
+        setIsLoadingProject(true);
         (async () => {
             try {
                 const doc = await loadPfdDocument(lastId);
@@ -336,6 +339,8 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding, embedded, initialData }) => 
             } catch (err) {
                 logger.warn('PfdApp', 'Auto-load failed', { error: String(err) });
                 try { localStorage.removeItem(LS_LAST_PROJECT); } catch { /* noop */ }
+            } finally {
+                if (!cancelled) setIsLoadingProject(false);
             }
         })();
         return () => { cancelled = true; };
@@ -459,6 +464,7 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding, embedded, initialData }) => 
 
     // Load project
     const handleLoadProject = useCallback(async (id: string) => {
+        setIsLoadingProject(true);
         try {
             const doc = await loadPfdDocument(id);
             if (doc) {
@@ -479,6 +485,8 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding, embedded, initialData }) => 
         } catch (err) {
             logger.error('PfdApp', 'Failed to load project', {}, err instanceof Error ? err : undefined);
             setLoadError('Error al cargar el documento.');
+        } finally {
+            setIsLoadingProject(false);
         }
     }, [pfd.loadData, projects]);
 
@@ -1051,6 +1059,10 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding, embedded, initialData }) => 
             {/* Main content area */}
             <div className="flex-grow p-4 pb-20">
 
+                {isLoadingProject ? (
+                    <LoadingOverlay message="Cargando Diagrama de Flujo..." accentColor="text-cyan-500" />
+                ) : (
+                <>
                 {/* ═══ Phase B: Flow Editor + Detail Panel (primary editing) ═══ */}
                 <div className="flex gap-0 mb-4 no-print" onClick={() => {
                     // Click on empty area deselects (but not when clicking inside panels)
@@ -1182,6 +1194,8 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding, embedded, initialData }) => 
                         </button>
                         {currentProject && <span className="ml-4 text-gray-400">Proyecto: <strong className="text-cyan-600">{currentProject}</strong></span>}
                     </div>
+                )}
+                </>
                 )}
             </div>
 
