@@ -263,6 +263,7 @@ const CpToolbar: React.FC<CpToolbarProps> = (props) => {
                                 onClick={onRunValidation}
                                 className="flex items-center gap-1.5 bg-gray-100 hover:bg-gray-200 border border-gray-300 px-2.5 py-2 rounded transition text-slate-700 font-medium text-xs relative"
                                 title="Validar Plan de Control"
+                                aria-label="Validar Plan de Control"
                             >
                                 <ShieldCheck size={15} className={
                                     props.autoValidationHasErrors ? 'text-red-500'
@@ -302,12 +303,12 @@ const CpToolbar: React.FC<CpToolbarProps> = (props) => {
                             <div className="flex border border-gray-300 rounded overflow-hidden">
                                 <button onClick={onUndo} disabled={!canUndo}
                                     className="flex items-center gap-1 bg-gray-100 hover:bg-gray-200 px-2.5 py-2 transition text-slate-700 text-xs disabled:opacity-50 disabled:cursor-not-allowed border-r border-gray-300"
-                                    title="Deshacer (Ctrl+Z)" data-shortcut="Ctrl+Z">
+                                    title="Deshacer (Ctrl+Z)" aria-label="Deshacer" data-shortcut="Ctrl+Z">
                                     <Undo2 size={15} />
                                 </button>
                                 <button onClick={onRedo} disabled={!canRedo}
                                     className="flex items-center gap-1 bg-gray-100 hover:bg-gray-200 px-2.5 py-2 transition text-slate-700 text-xs disabled:opacity-50 disabled:cursor-not-allowed"
-                                    title="Rehacer (Ctrl+Y)" data-shortcut="Ctrl+Y">
+                                    title="Rehacer (Ctrl+Y)" aria-label="Rehacer" data-shortcut="Ctrl+Y">
                                     <Redo2 size={15} />
                                 </button>
                             </div>
@@ -523,7 +524,9 @@ const CpToolbar: React.FC<CpToolbarProps> = (props) => {
                     <div className="flex items-center gap-2 mb-2">
                         <button onClick={() => setHeaderCollapsed(!headerCollapsed)}
                             className="text-gray-400 hover:text-gray-600 p-0.5 rounded hover:bg-gray-100 transition"
-                            title={headerCollapsed ? 'Expandir header' : 'Colapsar header'}>
+                            title={headerCollapsed ? 'Expandir header' : 'Colapsar header'}
+                            aria-label={headerCollapsed ? 'Expandir encabezado' : 'Colapsar encabezado'}
+                            aria-expanded={!headerCollapsed}>
                             {headerCollapsed ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
                         </button>
                         <LayoutList className="text-teal-600" size={18} />
@@ -737,6 +740,7 @@ const CpToolbar: React.FC<CpToolbarProps> = (props) => {
                             value={searchQuery}
                             onChange={e => setSearchQuery(e.target.value)}
                             placeholder="Buscar... (Ctrl+F)"
+                            aria-label="Buscar en Plan de Control"
                             className="w-full pl-7 pr-2 py-1 text-xs border border-gray-200 rounded focus:ring-1 focus:ring-teal-200 focus:border-teal-300 outline-none"
                             data-shortcut="Ctrl+F" />
                     </div>
@@ -769,7 +773,7 @@ const CpToolbar: React.FC<CpToolbarProps> = (props) => {
                     <div className="flex items-center gap-2 ml-auto">
                         {totalItems > 0 && (
                             <div className="flex items-center gap-1.5">
-                                <div className="w-20 bg-gray-200 rounded-full h-1.5 overflow-hidden">
+                                <div className="w-20 bg-gray-200 rounded-full h-1.5 overflow-hidden" role="progressbar" aria-valuenow={completionPercent} aria-valuemin={0} aria-valuemax={100} aria-label={`Completitud: ${completionPercent}%`}>
                                     <div className={`h-full rounded-full transition-all ${
                                         completionPercent === 100 ? 'bg-teal-500' :
                                         completionPercent > 70 ? 'bg-teal-400' :

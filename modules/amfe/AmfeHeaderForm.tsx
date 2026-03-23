@@ -98,7 +98,10 @@ const AmfeHeaderForm: React.FC<AmfeHeaderFormProps> = ({
                         </div>
                     )}
                     {hasEmptyRequiredHeaders && headerCollapsed && (
-                        <span className="w-2 h-2 rounded-full bg-amber-400 flex-shrink-0" title="Campos obligatorios vacíos" />
+                        <span className="flex-shrink-0" title="Campos obligatorios vacíos">
+                            <span className="block w-2 h-2 rounded-full bg-amber-400" aria-hidden="true" />
+                            <span className="sr-only">Campos obligatorios vacíos</span>
+                        </span>
                     )}
                     {headerCollapsed ? <ChevronDown size={14} className="text-gray-400 flex-shrink-0" /> : <ChevronUp size={14} className="text-gray-400 flex-shrink-0" />}
                 </button>

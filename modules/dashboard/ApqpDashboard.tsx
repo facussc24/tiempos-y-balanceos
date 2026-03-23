@@ -348,6 +348,7 @@ const ApqpDashboard: React.FC<ApqpDashboardProps> = ({ onBackToLanding }) => {
                                                     <div
                                                         className="w-3 h-3 rounded-full"
                                                         style={{ backgroundColor: item.color }}
+                                                        aria-hidden="true"
                                                     />
                                                     <span className="text-sm font-medium text-slate-700">{item.name}</span>
                                                 </div>
@@ -515,30 +516,30 @@ const ApqpDashboard: React.FC<ApqpDashboardProps> = ({ onBackToLanding }) => {
                                                 </td>
                                                 <td className="text-center px-4 py-3">
                                                     {fc.hasPfd ? (
-                                                        <CheckCircle size={18} className="text-emerald-500 mx-auto" />
+                                                        <span title="PFD presente"><CheckCircle size={18} className="text-emerald-500 mx-auto" aria-hidden="true" /><span className="sr-only">Presente</span></span>
                                                     ) : (
-                                                        <XCircle size={18} className="text-red-400 mx-auto" />
+                                                        <span title="PFD faltante"><XCircle size={18} className="text-red-400 mx-auto" aria-hidden="true" /><span className="sr-only">Faltante</span></span>
                                                     )}
                                                 </td>
                                                 <td className="text-center px-4 py-3">
                                                     {fc.hasAmfe ? (
-                                                        <CheckCircle size={18} className="text-emerald-500 mx-auto" />
+                                                        <span title="AMFE presente"><CheckCircle size={18} className="text-emerald-500 mx-auto" aria-hidden="true" /><span className="sr-only">Presente</span></span>
                                                     ) : (
-                                                        <XCircle size={18} className="text-red-400 mx-auto" />
+                                                        <span title="AMFE faltante"><XCircle size={18} className="text-red-400 mx-auto" aria-hidden="true" /><span className="sr-only">Faltante</span></span>
                                                     )}
                                                 </td>
                                                 <td className="text-center px-4 py-3">
                                                     {fc.hasCp ? (
-                                                        <CheckCircle size={18} className="text-emerald-500 mx-auto" />
+                                                        <span title="CP presente"><CheckCircle size={18} className="text-emerald-500 mx-auto" aria-hidden="true" /><span className="sr-only">Presente</span></span>
                                                     ) : (
-                                                        <XCircle size={18} className="text-red-400 mx-auto" />
+                                                        <span title="CP faltante"><XCircle size={18} className="text-red-400 mx-auto" aria-hidden="true" /><span className="sr-only">Faltante</span></span>
                                                     )}
                                                 </td>
                                                 <td className="text-center px-4 py-3">
                                                     {fc.hasHo ? (
-                                                        <CheckCircle size={18} className="text-emerald-500 mx-auto" />
+                                                        <span title="HO presente"><CheckCircle size={18} className="text-emerald-500 mx-auto" aria-hidden="true" /><span className="sr-only">Presente</span></span>
                                                     ) : (
-                                                        <XCircle size={18} className="text-red-400 mx-auto" />
+                                                        <span title="HO faltante"><XCircle size={18} className="text-red-400 mx-auto" aria-hidden="true" /><span className="sr-only">Faltante</span></span>
                                                     )}
                                                 </td>
                                                 <td className="text-center px-4 py-3">
