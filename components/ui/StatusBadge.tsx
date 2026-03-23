@@ -119,6 +119,8 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({
                 ${pulse ? 'animate-pulse' : ''}
                 ${className}
             `.trim().replace(/\s+/g, ' ')}
+            title={label || STATUS_LABELS[status]}
+            role="status"
         >
             {showIcon && config.icon}
             {label && <span>{label}</span>}

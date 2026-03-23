@@ -130,6 +130,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSelectModule, onOpenProject
                     {totalDocs > 0 && (
                         <button
                             onClick={() => onSelectModule('registry')}
+                            title="Abrir Hub de Documentos"
                             className="text-xs text-slate-500 hover:text-blue-600 transition-colors flex items-center gap-1.5 bg-white shadow-sm border border-slate-200/60 rounded-lg px-3 py-1.5 hover:border-blue-300"
                         >
                             <FolderOpen size={13} />
@@ -387,6 +388,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSelectModule, onOpenProject
                                 <button
                                     onClick={() => onSelectModule('registry')}
                                     className="w-full flex items-center justify-center gap-1.5 px-4 py-2.5 text-xs text-blue-600 hover:text-blue-700 hover:bg-slate-50 transition-colors font-medium"
+                                    title="Abrir Hub de Documentos APQP"
                                 >
                                     <FolderOpen size={12} />
                                     Ver todos los documentos

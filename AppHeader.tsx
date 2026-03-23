@@ -362,6 +362,8 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
                     <div className="ml-auto border-l border-slate-200 pl-2">
                         <button
                             onClick={() => navigation.setActiveTab('help')}
+                            title="Centro de Ayuda"
+                            aria-label="Centro de Ayuda"
                             className={`flex items-center gap-2 px-4 py-3 border-b-2 transition-all whitespace-nowrap text-sm font-medium ${navigation.activeTab === 'help'
                                 ? 'border-indigo-500 text-indigo-600 bg-indigo-50/50'
                                 : 'border-transparent text-slate-400 hover:text-indigo-600 hover:bg-slate-50'

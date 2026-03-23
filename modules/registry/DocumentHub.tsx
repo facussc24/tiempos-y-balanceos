@@ -111,7 +111,9 @@ const DocumentHub: React.FC<DocumentHubProps> = ({ onBackToLanding, onOpenDocume
                 <div className="flex items-center justify-between max-w-[1400px] mx-auto">
                     <div className="flex items-center gap-3">
                         <button onClick={onBackToLanding}
-                            className="flex items-center gap-1 text-slate-500 hover:text-slate-800 px-2 py-1.5 rounded hover:bg-slate-100 transition text-xs">
+                            className="flex items-center gap-1 text-slate-500 hover:text-slate-800 px-2 py-1.5 rounded hover:bg-slate-100 transition text-xs"
+                            title="Volver al menú principal"
+                            aria-label="Volver al menú principal">
                             <ArrowLeft size={16} />
                             <span>Inicio</span>
                         </button>
@@ -134,7 +136,8 @@ const DocumentHub: React.FC<DocumentHubProps> = ({ onBackToLanding, onOpenDocume
                         </span>
                     </div>
                     <button onClick={refresh} disabled={loading}
-                        className="flex items-center gap-1.5 text-xs bg-gray-100 hover:bg-gray-200 border border-gray-300 px-3 py-1.5 rounded transition text-slate-600 disabled:opacity-50">
+                        className="flex items-center gap-1.5 text-xs bg-gray-100 hover:bg-gray-200 border border-gray-300 px-3 py-1.5 rounded transition text-slate-600 disabled:opacity-50"
+                        title="Actualizar lista de documentos">
                         <RefreshCcw size={14} className={loading ? 'animate-spin' : ''} />
                         Actualizar
                     </button>
@@ -364,6 +367,8 @@ const DocumentRow: React.FC<{
                 <button
                     onClick={(e) => { e.stopPropagation(); onOpen(); }}
                     className="text-[10px] text-blue-600 hover:text-blue-800 font-medium opacity-0 group-hover:opacity-100 transition flex items-center gap-0.5 ml-auto"
+                    title="Abrir documento"
+                    aria-label="Abrir documento"
                 >
                     Abrir <ExternalLink size={10} />
                 </button>

@@ -194,7 +194,9 @@ const CpToolbar: React.FC<CpToolbarProps> = (props) => {
                         <div className="flex items-center gap-3">
                             {onBackToLanding && (
                                 <button onClick={onBackToLanding}
-                                    className="flex items-center gap-1 text-slate-500 hover:text-slate-800 px-2 py-1.5 rounded hover:bg-slate-100 transition text-xs">
+                                    className="flex items-center gap-1 text-slate-500 hover:text-slate-800 px-2 py-1.5 rounded hover:bg-slate-100 transition text-xs"
+                                    title="Volver al menú principal"
+                                    aria-label="Volver al menú principal">
                                     <ArrowLeft size={16} />
                                     <span>Inicio</span>
                                 </button>

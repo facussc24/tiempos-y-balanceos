@@ -400,6 +400,7 @@ const HojaOperacionesApp: React.FC<Props> = ({ embedded, initialData, onDataChan
                         onClick={handlePreviewSheet}
                         disabled={!activeSheet || isLoadingPreview}
                         className="w-full flex items-center gap-2 px-3 py-2 text-[11px] font-medium text-slate-600 bg-white border border-slate-200 rounded hover:bg-slate-100 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                        title="Vista previa PDF de la hoja seleccionada"
                     >
                         {isLoadingPreview ? <Loader2 size={14} className="animate-spin" /> : <FileDown size={14} />}
                         PDF Hoja Actual
@@ -408,6 +409,7 @@ const HojaOperacionesApp: React.FC<Props> = ({ embedded, initialData, onDataChan
                         onClick={handlePreviewAll}
                         disabled={isLoadingPreview}
                         className="w-full flex items-center gap-2 px-3 py-2 text-[11px] font-medium text-slate-600 bg-white border border-slate-200 rounded hover:bg-slate-100 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                        title="Vista previa PDF de todas las hojas"
                     >
                         {isLoadingPreview ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
                         PDF Todas las Hojas
@@ -417,6 +419,7 @@ const HojaOperacionesApp: React.FC<Props> = ({ embedded, initialData, onDataChan
                         onClick={handleExcelSheet}
                         disabled={!activeSheet || isExportingExcel}
                         className="w-full flex items-center gap-2 px-3 py-2 text-[11px] font-medium text-slate-600 bg-white border border-slate-200 rounded hover:bg-slate-100 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                        title="Exportar hoja seleccionada a Excel"
                     >
                         {isExportingExcel ? <Loader2 size={14} className="animate-spin" /> : <FileSpreadsheet size={14} />}
                         Excel Hoja Actual
@@ -425,6 +428,7 @@ const HojaOperacionesApp: React.FC<Props> = ({ embedded, initialData, onDataChan
                         onClick={handleExcelAll}
                         disabled={isExportingExcel}
                         className="w-full flex items-center gap-2 px-3 py-2 text-[11px] font-medium text-slate-600 bg-white border border-slate-200 rounded hover:bg-slate-100 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                        title="Exportar todas las hojas a Excel"
                     >
                         {isExportingExcel ? <Loader2 size={14} className="animate-spin" /> : <FileSpreadsheet size={14} />}
                         Excel Todas las Hojas

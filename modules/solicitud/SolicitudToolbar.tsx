@@ -99,6 +99,8 @@ const SolicitudToolbar: React.FC<SolicitudToolbarProps> = ({
                 <button
                     onClick={onBack}
                     className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-800 transition font-medium"
+                    title="Volver al menú principal"
+                    aria-label="Volver al menú principal"
                 >
                     <ArrowLeft size={16} />
                     Inicio
@@ -150,6 +152,7 @@ const SolicitudToolbar: React.FC<SolicitudToolbarProps> = ({
                 <button
                     onClick={onNew}
                     className={`${btnBase} border border-amber-500 text-amber-600 hover:bg-amber-50`}
+                    title="Crear nueva solicitud"
                 >
                     <Plus size={14} />
                     Nueva
@@ -160,6 +163,7 @@ const SolicitudToolbar: React.FC<SolicitudToolbarProps> = ({
                     onClick={onSave}
                     disabled={hasErrors || isSaving}
                     className={`${btnBase} bg-amber-500 hover:bg-amber-600 text-white shadow-sm`}
+                    title="Guardar solicitud (Ctrl+S)"
                 >
                     {isSaving ? (
                         <Loader2 size={14} className="animate-spin" />

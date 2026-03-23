@@ -59,6 +59,9 @@ const AmfeStepProgressBar: React.FC<Props> = ({ doc }) => {
             <button
                 onClick={() => setExpanded(prev => !prev)}
                 className="w-full flex items-center gap-3 px-4 py-1.5 hover:bg-gray-50 transition text-left"
+                title="Progreso AIAG-VDA 7 pasos — click para expandir"
+                aria-label={`Progreso metodología AMFE: ${completedCount} de ${steps.length} pasos completados (${completedCount === 0 && overall < 5 ? 0 : Math.round(overall)}%)`}
+                aria-expanded={expanded}
             >
                 {/* Thin gradient progress bar */}
                 <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">

@@ -207,6 +207,7 @@ const AmfeRegistryView: React.FC<Props> = ({ onOpenProject, onClose }) => {
                         <button
                             onClick={() => reg.setFilters(EMPTY_REGISTRY_FILTERS)}
                             className="text-xs text-gray-500 hover:text-red-500 flex items-center gap-1"
+                            title="Limpiar todos los filtros"
                         >
                             <X size={12} /> Limpiar
                         </button>
@@ -300,6 +301,7 @@ const AmfeRegistryView: React.FC<Props> = ({ onOpenProject, onClose }) => {
                                                 <button
                                                     onClick={(e) => { e.stopPropagation(); onOpenProject(entry.projectName); }}
                                                     className="text-indigo-600 hover:text-indigo-800 font-medium hover:underline"
+                                                    title={`Abrir AMFE: ${entry.subject || entry.projectName}`}
                                                 >
                                                     Abrir
                                                 </button>
