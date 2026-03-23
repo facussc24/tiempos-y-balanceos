@@ -70,7 +70,7 @@ const PfdHeaderComponent: React.FC<Props> = ({ header, onChange, collapsed, onTo
 
             {!collapsed && (
                 <div className="px-4 pb-3">
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <fieldset className="border border-gray-200 rounded-lg p-2.5">
                             <legend className="text-[11px] font-semibold text-cyan-700 px-1.5">Identificación del Producto</legend>
                             <div className="grid grid-cols-2 gap-2">
@@ -108,7 +108,7 @@ const PfdHeaderComponent: React.FC<Props> = ({ header, onChange, collapsed, onTo
 
                         <fieldset className="border border-gray-200 rounded-lg p-2.5">
                             <legend className="text-[11px] font-semibold text-cyan-700 px-1.5">Control del Documento</legend>
-                            <div className="grid grid-cols-4 gap-2">
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                                 <div>
                                     <label className={labelClass}>Nº de Documento</label>
                                     <input name="documentNumber" value={header.documentNumber} onChange={handleChange} className={inputClass} readOnly={readOnly} tabIndex={readOnly ? -1 : 0} maxLength={30} />
@@ -141,7 +141,7 @@ const PfdHeaderComponent: React.FC<Props> = ({ header, onChange, collapsed, onTo
 
                         <fieldset className="border border-gray-200 rounded-lg p-2.5">
                             <legend className="text-[11px] font-semibold text-cyan-700 px-1.5">Organización</legend>
-                            <div className="grid grid-cols-3 gap-2">
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                                 <div>
                                     <label className={labelClass}>Empresa</label>
                                     <input name="companyName" value={header.companyName} onChange={handleChange} className={inputClass} readOnly={readOnly} tabIndex={readOnly ? -1 : 0} maxLength={100} />

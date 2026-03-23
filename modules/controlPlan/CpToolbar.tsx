@@ -691,7 +691,7 @@ const CpToolbar: React.FC<CpToolbarProps> = (props) => {
             </div>
 
             {/* Filter Bar */}
-            <div className="bg-white border-b border-gray-200 px-4 py-2">
+            <div className="bg-white border-b border-gray-200 px-4 py-2 overflow-x-auto">
                 <div className="max-w-[1800px] mx-auto flex items-center gap-3 flex-wrap">
                     <Filter size={14} className="text-gray-400" />
                     {isReadOnly && (

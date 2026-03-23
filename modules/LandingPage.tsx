@@ -108,10 +108,10 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSelectModule, onOpenProject
     return (
         <div className="min-h-full bg-slate-50 font-sans">
 
-            <div className="relative z-10 max-w-7xl mx-auto px-6 py-10">
+            <div className="relative z-10 max-w-7xl mx-auto px-3 sm:px-6 py-10">
 
                 {/* ===== HEADER ===== */}
-                <header className="flex items-center gap-4 mb-10 opacity-0 animate-fade-in-up">
+                <header className="flex flex-wrap items-center gap-4 mb-10 opacity-0 animate-fade-in-up">
                     <img
                         src={barackLogo}
                         alt="Barack Mercosul"

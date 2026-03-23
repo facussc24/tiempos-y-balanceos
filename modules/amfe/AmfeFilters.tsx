@@ -110,7 +110,7 @@ const AmfeFilters: React.FC<Props> = ({ filters, onFiltersChange, operations, co
     const selectClass = "border border-gray-300 rounded px-2 py-1 text-xs bg-white focus:ring-1 focus:ring-blue-200 focus:border-blue-400 outline-none";
 
     return (
-        <div className="bg-gray-50 border-b border-gray-200 px-4 py-1.5">
+        <div className="bg-gray-50 border-b border-gray-200 px-4 py-1.5 overflow-x-auto">
             <div className="max-w-[1800px] mx-auto flex items-center gap-3 flex-wrap">
                 <div className="flex items-center gap-1 text-xs font-bold text-gray-600">
                     <Filter size={13} />

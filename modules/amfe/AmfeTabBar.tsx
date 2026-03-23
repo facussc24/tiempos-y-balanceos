@@ -105,7 +105,7 @@ const AmfeTabBar: React.FC<AmfeTabBarProps> = ({
 
     return (
         <div className="bg-white border-b border-gray-300 sticky top-0 z-50">
-            <div className="px-4 flex items-center gap-0">
+            <div className="px-4 flex items-center gap-0 overflow-x-auto">
                 <button
                     onClick={async () => {
                         if (!(await confirmIfDirty())) return;

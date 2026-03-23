@@ -229,7 +229,7 @@ const DocumentListFilters: React.FC<DocumentListFiltersProps> = ({
 
     // Standard layout for Document Hub (white background bar)
     return (
-        <div className="bg-gray-50 border-b border-gray-200 px-4 py-1.5">
+        <div className="bg-gray-50 border-b border-gray-200 px-4 py-1.5 overflow-x-auto">
             <div className="max-w-[1400px] mx-auto flex items-center gap-3 flex-wrap">
                 <div className="flex items-center gap-1.5">
                     <Filter size={14} className="text-gray-500" />

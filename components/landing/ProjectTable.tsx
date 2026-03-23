@@ -150,7 +150,7 @@ const ProjectTable: React.FC<ProjectTableProps> = ({ projects, onSelectProject, 
             </div>
 
             {/* Table */}
-            <div className="bg-white shadow-sm border border-slate-200/60 rounded-xl overflow-hidden">
+            <div className="bg-white shadow-sm border border-slate-200/60 rounded-xl overflow-hidden overflow-x-auto">
                 <table className="w-full text-left" role="grid" aria-label="Tabla de proyectos">
                     <thead>
                         <tr className="border-b border-slate-200">
