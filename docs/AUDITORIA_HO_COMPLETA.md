@@ -60,27 +60,41 @@ Las HOs tienen instrucciones propias redactadas como instruccion al operador. Lo
 
 **Conclusion: Los pasos de la HO son correctos y propios.**
 
+### Niveles de detalle por producto
+
+| Tier | Productos | Descripcion |
+|---|---|---|
+| **Tier 1** | Insert Patagonia | 5 hojas del PDF real + 17 enriquecidas via script. 116 pasos, 50 QCs. El mas completo. |
+| **Tier 2** | Armrest, Top Roll, Telas Planas, Telas Termoformadas | 3-5 pasos por hoja (seed scripts). Moderadamente detallado. |
+| **Tier 3** | 12 Headrest variantes | 2 hojas MUY detalladas (Op 20: 14 pasos SET UP, Op 30: 21 pasos SET UP), 6 hojas con 3-5 pasos generados. |
+
 ---
 
 ## 3. Discrepancias HO vs CP
 
-### Quality Checks presentes
+### Discrepancia critica: HO QCs vs CP items (Insert Patagonia)
 
-Los productos con CP vinculado (Insert, Armrest, Headrests) tienen quality checks correctamente mapeados:
-- `characteristic` coincide con `productCharacteristic` del CP
-- `specification` coincide con `specification` del CP
-- `frequency` coincide con `sampleFrequency` del CP
-- Badges CC/SC correctamente heredados
+Los quality checks del Insert fueron escritos **independientemente** del CP, no via el generador `cpItemToQualityCheck()`. Son mas especificos que los CP items:
 
-### Productos SIN quality checks (falta CP vinculado)
+| Campo | CP (generico) | HO (especifico) |
+|---|---|---|
+| characteristic | "Color del vinilo" | "Identificacion de Hilo Needle thread (Linanhyl) - Verificar color segun variante" |
+| specification | "Conforme a muestra" | Referencia a set-up y parametros especificos |
+| frequency | "Cada lote" | "Inicio de turno", "Cada 2 horas" |
+| cpItemId | N/A | **Vacio en la mayoria** — sin link de trazabilidad |
 
-| Producto | Causa |
-|---|---|
-| Top Roll | No tiene Plan de Control vinculado |
-| Telas Planas PWA | No tiene Plan de Control vinculado |
-| Telas Termoformadas PWA | No tiene Plan de Control vinculado |
+**Accion requerida sesion 2**: Alinear los QCs de la HO con los items del CP, o actualizar el CP para que sea igual de especifico.
 
-**Accion requerida**: Vincular los CPs existentes a estos productos. Los CPs existen en Supabase pero no estan linkeados a las HOs.
+### Productos SIN quality checks
+
+| Producto | QCs | Causa |
+|---|---|---|
+| Top Roll | 0 | No tiene CP vinculado |
+| Telas Planas PWA | 0 | No tiene CP vinculado |
+| Telas Termoformadas PWA | 0 | No tiene CP vinculado |
+| Armrest Door Panel | 174 (OK) | CP vinculado |
+
+**Accion requerida**: Vincular los CPs existentes a Top Roll y ambas Telas.
 
 ---
 
