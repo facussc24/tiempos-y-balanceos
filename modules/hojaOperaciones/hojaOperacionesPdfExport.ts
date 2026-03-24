@@ -74,13 +74,14 @@ function headerCellStyle(): string {
     return `border:1px solid ${NAVY}; padding:4px 6px; font-size:8px; font-family:Arial,sans-serif; font-weight:bold; color:#fff; background:${NAVY}; text-align:center; vertical-align:middle;`;
 }
 
-function sectionTitle(title: string, color: 'navy' | 'red' | 'green' = 'navy'): string {
+function sectionTitle(title: string, color: 'navy' | 'red' | 'green' = 'navy', center = false): string {
     const styles: Record<string, string> = {
         navy: `background:${NAVY}; color:#fff; border:1px solid ${NAVY};`,
         red: `background:#fef2f2; color:#991b1b; border:1px solid #fca5a5;`,
         green: `background:#f0fdf4; color:#166534; border:1px solid #86efac;`,
     };
-    return `<div style="${styles[color]} padding:4px 8px; font-size:9px; font-family:Arial,sans-serif; font-weight:bold; margin-top:8px; margin-bottom:2px;">${esc(title)}</div>`;
+    const align = center ? ' text-align:center;' : '';
+    return `<div style="${styles[color]} padding:4px 8px; font-size:9px; font-family:Arial,sans-serif; font-weight:bold; margin-top:8px; margin-bottom:2px;${align}">${esc(title)}</div>`;
 }
 
 function specialCharBadge(sc: string): string {
@@ -175,7 +176,7 @@ function buildSheetHeaderHtml(sheet: HojaOperacion, doc: HoDocument, assets: Pdf
         ${doc.header.applicableParts?.trim() ? `<!-- Row 4: Piezas Aplicables -->
         <tr>
             <td style="border:1px solid #d1d5db; padding:4px 6px;" colspan="3">
-                <div style="font-size:7px; color:#6b7280; font-weight:600; text-transform:uppercase; font-family:Arial,sans-serif;">${esc('PIEZAS APLICABLES')}</div><div style="font-size:9px; font-family:Arial,sans-serif;">${esc(truncateParts(doc.header.applicableParts)).replace(/\n/g, '<br/>')}</div>
+                <div style="font-size:7px; color:#6b7280; font-weight:600; text-transform:uppercase; font-family:Arial,sans-serif;">PIEZAS APLICABLES</div><div style="font-size:9px; font-family:Arial,sans-serif; display:flex; flex-wrap:wrap; gap:2px 6px;">${truncateParts(doc.header.applicableParts).split('\n').filter(Boolean).map(p => `<span>${esc(p.trim())}</span>`).join('<span style="color:#9ca3af;"> · </span>')}</div>
             </td>
         </tr>` : ''}
     </table>`;
@@ -304,7 +305,7 @@ export function buildSheetHtml(sheet: HojaOperacion, doc: HoDocument, assets: Pd
         <table style="width:100%; border-collapse:collapse; margin-top:6px; margin-bottom:4px;">
             <tr>
                 <td style="width:40%; vertical-align:top; border:1px solid #e5e7eb; padding:0;">
-                    ${sectionTitle('AYUDAS VISUALES')}
+                    ${sectionTitle('AYUDAS VISUALES', 'navy', true)}
                     ${buildVisualAidsHtml(sheet.visualAids)}
                 </td>
                 <td style="width:60%; vertical-align:top; border:1px solid #e5e7eb; padding:0;">
@@ -312,7 +313,7 @@ export function buildSheetHtml(sheet: HojaOperacion, doc: HoDocument, assets: Pd
                     ${buildStepsHtml(sheet.steps)}
                     <!-- EPP inside right column -->
                     ${sectionTitle('ELEMENTOS DE SEGURIDAD')}
-                    <div style="padding:4px 8px;">
+                    <div style="padding:4px 8px; display:flex; flex-wrap:wrap; align-items:center; gap:4px;">
                         ${buildPpeHtml(sheet.safetyElements, assets)}
                     </div>
                 </td>
