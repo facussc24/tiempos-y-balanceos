@@ -82,7 +82,7 @@ export function createPatagoniaTapizadoTemplate(): PfdTemplateResult {
     const header: Partial<PfdHeader> = {
         partName: 'INSERTO PATAGONIA',
         partNumber: 'N 227 a N 403',
-        customerName: 'VWA',
+        customerName: 'Volkswagen Argentina',
         modelYear: 'PATAGONIA',
         companyName: 'BARACK MERCOSUL',
         plantLocation: 'PLANTA HURLINGHAM',

@@ -52,7 +52,7 @@ function inferOpCategory(name) {
 const amfeHeader = {
     organization: 'BARACK MERCOSUL',
     location: 'PLANTA HURLINGHAM',
-    client: 'VWA',
+    client: 'Volkswagen Argentina',
     modelYear: 'PATAGONIA',
     subject: 'TOP ROLL',
     startDate: '2026-02-13',
@@ -1084,7 +1084,7 @@ const cpHeader = {
     revision: '0',
     responsible: 'M. Nieve',
     approvedBy: 'M. Meszaros / P. Centurion / L. Lattanzi',
-    client: 'VWA',
+    client: 'Volkswagen Argentina',
     coreTeam: 'M. Nieve / M. Meszaros / P. Centurion / L. Lattanzi',
     customerEngApproval: '',
     customerQualityApproval: '',
@@ -1152,7 +1152,7 @@ const hoDoc = {
     header: {
         formNumber: 'I-IN-002.4-R01',
         organization: 'BARACK MERCOSUL',
-        client: 'VWA',
+        client: 'Volkswagen Argentina',
         partNumber: 'TOP ROLL',
         partDescription: 'TOP ROLL FRONT DI - DD TAOS',
         applicableParts: '2GJ.868.087\n2GJ.868.088',

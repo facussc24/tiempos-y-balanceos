@@ -152,7 +152,7 @@ function mkWipOp(opNumber, parentProcess, funcInternal, funcClient, funcUser, se
 const header = {
     organization: 'BARACK MERCOSUL',
     location: 'PLANTA HURLINGHAM',
-    client: 'VWA',
+    client: 'Volkswagen Argentina',
     modelYear: 'PATAGONIA',
     subject: 'INSERTO',
     partNumber: 'TBD',

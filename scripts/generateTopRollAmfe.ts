@@ -162,7 +162,7 @@ function makeCause(
 const header = {
     organization: 'BARACK MERCOSUL',
     location: 'PLANTA HURLINGHAM',
-    client: 'VWA',
+    client: 'Volkswagen Argentina',
     modelYear: 'PATAGONIA',
     subject: 'TOP ROLL',
     startDate: '13/2/2026',
