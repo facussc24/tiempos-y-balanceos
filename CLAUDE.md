@@ -8,6 +8,7 @@ Multi-usuario con auth Supabase (email/password). Sin Tauri, sin Gemini.
 ## Guías de Estilo APQP (OBLIGATORIO leer antes de modificar)
 - **Antes de tocar cualquier Plan de Control**: leer `docs/GUIA_PLAN_DE_CONTROL.md`
 - **Antes de tocar cualquier AMFE**: leer `docs/GUIA_AMFE.md`
+- **Antes de tocar cualquier Hoja de Operaciones**: leer `docs/GUIA_HOJA_DE_OPERACIONES.md`
 - **Clasificación CC/SC** (AIAG-VDA 2019): CC = S≥9, SC = S=5-8 AND O≥4, vacío = resto
 - **Idioma**: TODO en español, CERO textos en inglés entre paréntesis
 - **Plan de reacción**: usar referencias SGC (P-09/I, P-10/I, P-14)
