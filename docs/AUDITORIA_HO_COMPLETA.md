@@ -92,20 +92,28 @@ Ninguno de los 17 documentos HO tiene ayudas visuales cargadas en la app.
 
 ### Imagenes disponibles en archivos originales
 
-Se encontraron fotos en `Documents/AMFES PC HO/VWA/INSERT/imagenes para HO/`:
+Solo **6 imagenes** existen en total, todas del Insert Patagonia (~2.6 MB):
 
-| Subcarpeta | Operacion | Archivos |
-|---|---|---|
-| OP30 | Almacenamiento WIP | Imagen1.png, Imagen2.png |
-| 40 | Refilado | (imagenes) |
-| 50 | Costura | (imagenes) |
-| 60 | Troquelado | 1.png, 2.png, 3.png |
+| Subcarpeta | Operacion | Archivo | Contenido |
+|---|---|---|---|
+| OP30 | Inyeccion | Imagen1.png (571 KB) | Foto de maquina inyectora (prensa) |
+| OP30 | Inyeccion | Imagen2.png (716 KB) | Foto de insertos terminados colgados en rack |
+| 40 | Inspeccion | Imagen3.png (1.15 MB) | Foto tecnica de pieza con lineas dimensionales |
+| 50 | (vacio) | — | Subcarpeta existe pero esta vacia |
+| 60 | Embalaje | 1.png (41 KB) | Diagrama de caja: 496x634x170mm, 8 piezas/caja |
+| 60 | Embalaje | 2.png (25 KB) | Layout de pallet: 3 cajas/nivel = 24 piezas, hasta 72/pallet |
+| 60 | Embalaje | 3.png (92 KB) | Dibujo tecnico: vista superior de pieza en caja |
 
-### Como cargar
+Ningun otro producto tiene imagenes disponibles (Armrest, Top Roll, Headrests, Telas — sin carpeta de imagenes).
 
-La app tiene un panel "Agregar imagen" en cada hoja. Las imagenes se almacenan como base64 en el JSON del documento (campo `visualAids`). No se usa Supabase Storage.
+### Almacenamiento de imagenes
 
-**Pendiente para sesion 2**: Cargar las imagenes del Insert en las hojas correspondientes.
+- Las imagenes se guardan como **base64 en el JSON** del documento (campo `visualAids`)
+- La app comprime automaticamente: max 1024px, JPEG quality 0.7, limite 2 MB por imagen
+- **Supabase Storage NO esta configurado** — todo es inline base64
+- Para cargar: usar el boton "Agregar imagen" en cada hoja de la app
+
+**Pendiente para sesion 2**: Cargar las 6 imagenes del Insert en las hojas correspondientes (OP30→Inyeccion, 40→Inspeccion, 60→Embalaje).
 
 ---
 
