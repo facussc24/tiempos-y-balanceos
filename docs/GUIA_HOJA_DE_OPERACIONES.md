@@ -30,6 +30,10 @@ Usar verbos imperativos en segunda persona. El operador lee la HO y sabe que hac
 | "Retirar las piezas cortadas. Verificar dimensiones contra plano" | "Control dimensional" (eso es del CP) |
 | "Tomar la pieza y posicionarla sobre la mesa de trabajo" | "Realizar costura" (stub del generador) |
 
+### Consistencia verbal
+
+Los originales de la empresa mezclan infinitivo formal ("Verificar") con voseo rioplatense ("Presiona", "Dirigite"). Para la app, usar siempre **infinitivo instruccional** ("Verificar", "Posicionar") que es neutro y profesional.
+
 ### Verbos recomendados
 
 Usar verbos que describan la accion fisica:

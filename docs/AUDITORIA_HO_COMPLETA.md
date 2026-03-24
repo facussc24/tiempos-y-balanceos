@@ -205,7 +205,35 @@ Los PCs originales en papel pueden servir para verificar que los CPs en Supabase
 
 ---
 
-## 9. Plan de Correccion Priorizado (Sesion 2)
+## 9. Hallazgos de los PDFs Originales
+
+### 4 PDFs analizados
+
+| PDF | Paginas | Operaciones | Imagenes | Estado |
+|---|---|---|---|---|
+| HO - INSERT PATAGONIA.pdf | 13 | 13 ops (10, 20-27, 30, 40, 50, 60) | ~95 fotos | Completo (Rev.1) |
+| APB PATAGONIA.pdf | 14 | 14 ops (10, 20-27, 30-32, 40, 50) | ~120 fotos | Completo (Rev.1) |
+| TOP ROLL.pdf | 13 | 13 ops (10, 20-27, 30, 40, 50, 60) | ~95 fotos | Completo (Rev.1) |
+| COSTURA APC DELANTERO.pdf | 4 | 4 ops (10-40, solo costura) | ~25 diagramas | Borrador (sin rev/fecha/firma) |
+
+### Mesa de corte compartida (Ops 20-27)
+
+Las operaciones 20-27 (mesa de corte) son **texto identico** en Insert, APB y Top Roll. Solo cambia el nombre del sector. Esto confirma que la mesa de corte es proceso compartido y podria tratarse como bloque comun.
+
+### Inconsistencia verbal en originales
+
+Los PDFs mezclan infinitivo formal ("Verificar", "Controlar") con voseo rioplatense ("Presiona", "Dirigite", "Move"). Para la app se estandarizo en infinitivo instruccional.
+
+### Info exclusiva de los PDFs (no esta en AMFE ni CP)
+
+- Fotos referenciadas y numeradas en el texto ("ver imagen N5")
+- Especificaciones de embalaje (dimensiones de caja, piezas por caja, pisos por pallet)
+- Parametros de maquina (velocidad, tension, tiempos de ciclo)
+- Secuencia de componentes de costura (piezas 101-106)
+
+---
+
+## 10. Plan de Correccion Priorizado (Sesion 2)
 
 ### Prioridad Alta
 
