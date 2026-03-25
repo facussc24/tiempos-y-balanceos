@@ -1391,7 +1391,7 @@ async function main() {
         const famResult = await execSql(
             `INSERT INTO product_families (name, description, linea_code, linea_name)
             VALUES (?, ?, ?, ?)`,
-            [FAMILY_NAME, 'Top Roll Front para plataforma Patagonia VW', FAMILY_LINE, 'Volkswagen Argentina']);
+            [FAMILY_NAME, 'Top Roll Front para plataforma Patagonia VW', FAMILY_LINE, 'VWA']);
         familyId = famResult.lastInsertId;
         console.log(`  + Family created: "${FAMILY_NAME}" (ID: ${familyId})`);
     }

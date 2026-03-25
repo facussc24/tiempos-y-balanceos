@@ -641,7 +641,7 @@ async function main() {
     const packageData = {
         familyName: family.name,
         partNumbers,
-        client: family.linea_name || 'Volkswagen Argentina',
+        client: family.linea_name || 'VWA',
         revision: 'A',
         team: amfeData?.header?.team || cpData?.header?.coreTeam || '',
         date: new Date().toISOString().split('T')[0],

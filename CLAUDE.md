@@ -23,7 +23,7 @@ Multi-usuario con auth Supabase (email/password). Sin Tauri, sin Gemini.
 - Antes de insertar familias, documentos o members: query primero si ya existen
 - Las 8 familias canónicas son: Insert Patagonia, Armrest Door Panel Patagonia, Top Roll Patagonia, Headrest Front/Rear Center/Rear Outer Patagonia, Telas Planas PWA, Telas Termoformadas PWA
 - Si un seed/migration crea más de 8 familias, algo está mal — abortar y reportar
-- Nombres de cliente: "Volkswagen Argentina" (no "VWA", no "095 VOLKSWAGEN")
+- Nombres de cliente: "VWA" (no "Volkswagen Argentina", no "095 VOLKSWAGEN")
 ### 3. Export Excel: solo xlsx-js-style
 - PROHIBIDO usar ExcelJS en cualquier export
 - PROHIBIDO mezclar librerías de Excel

@@ -38,8 +38,8 @@ interface ProjectTableProps {
 // ---------------------------------------------------------------------------
 
 const CLIENT_DISPLAY_NAMES: Record<string, string> = {
-    'VOLKSWAGEN': 'Volkswagen Argentina',
-    'VWA': 'Volkswagen Argentina',
+    'VOLKSWAGEN': 'VWA',
+    'VWA': 'VWA',
     'TOYOTA': 'Toyota Argentina',
     'PWA': 'Toyota Argentina',
 };

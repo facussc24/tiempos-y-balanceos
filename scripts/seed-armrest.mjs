@@ -1686,7 +1686,7 @@ async function main() {
         const result = await execSql(
             `INSERT INTO product_families (name, description, linea_code, linea_name)
              VALUES (?, ?, ?, ?)`,
-            [FAMILY_NAME, FAMILY_DESCRIPTION, 'VWA', 'Volkswagen Argentina']);
+            [FAMILY_NAME, FAMILY_DESCRIPTION, 'VWA', 'VWA']);
         familyId = result.lastInsertId;
         console.log(`  + Family created: "${FAMILY_NAME}" (id=${familyId})`);
     }

@@ -1022,7 +1022,7 @@ async function main() {
             const famResult = await execSql(
                 `INSERT INTO product_families (name, description, linea_code, linea_name)
                 VALUES (?, ?, ?, ?)`,
-                [pos.familyName, pos.familyDesc, 'VWA', 'Volkswagen Argentina']);
+                [pos.familyName, pos.familyDesc, 'VWA', 'VWA']);
             familyId = famResult.lastInsertId;
             console.log(`    Family created: "${pos.familyName}" (ID: ${familyId})`);
         }

@@ -13,16 +13,16 @@ vi.mock('../../../components/ui/Tooltip', () => ({
 // ---------------------------------------------------------------------------
 
 describe('normalizeClientName', () => {
-    it('maps VWA to Volkswagen Argentina', () => {
-        expect(normalizeClientName('VWA')).toBe('Volkswagen Argentina');
+    it('maps VWA to VWA', () => {
+        expect(normalizeClientName('VWA')).toBe('VWA');
     });
 
-    it('strips leading numeric code and maps to Volkswagen Argentina', () => {
-        expect(normalizeClientName('095 VOLKSWAGEN')).toBe('Volkswagen Argentina');
+    it('strips leading numeric code and maps to VWA', () => {
+        expect(normalizeClientName('095 VOLKSWAGEN')).toBe('VWA');
     });
 
-    it('maps VOLKSWAGEN to Volkswagen Argentina', () => {
-        expect(normalizeClientName('VOLKSWAGEN')).toBe('Volkswagen Argentina');
+    it('maps VOLKSWAGEN to VWA', () => {
+        expect(normalizeClientName('VOLKSWAGEN')).toBe('VWA');
     });
 
     it('maps PWA to Toyota Argentina', () => {
@@ -30,7 +30,7 @@ describe('normalizeClientName', () => {
     });
 
     it('returns already-proper names as-is', () => {
-        expect(normalizeClientName('Volkswagen Argentina')).toBe('Volkswagen Argentina');
+        expect(normalizeClientName('VWA')).toBe('VWA');
     });
 
     it('returns empty string for empty input', () => {
@@ -91,6 +91,6 @@ describe('ProjectCards', () => {
 
     it('shows client and part number', () => {
         render(<ProjectCards projects={TEST_PROJECTS} onSelectProject={vi.fn()} />);
-        expect(screen.getByText(/Volkswagen Argentina/)).toBeTruthy();
+        expect(screen.getByText(/VWA/)).toBeTruthy();
     });
 });
