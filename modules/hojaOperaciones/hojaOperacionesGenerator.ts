@@ -155,6 +155,16 @@ export function generateHoFromAmfeAndCp(
             qualityChecks.push(cpItemToQualityCheck(cpItem));
         }
 
+        // Deduplicate by normalized characteristic (CP may have duplicate items)
+        const seenChars = new Set<string>();
+        const dedupedChecks: HoQualityCheck[] = [];
+        for (const qc of qualityChecks) {
+            const key = qc.characteristic.trim().toLowerCase().replace(/\s+/g, ' ');
+            if (!key || seenChars.has(key)) continue;
+            seenChars.add(key);
+            dedupedChecks.push(qc);
+        }
+
         if (matchingCpItems.length === 0 && cpDoc) {
             opsWithoutCp++;
         }
@@ -178,7 +188,7 @@ export function generateHoFromAmfeAndCp(
             safetyElements: inferSafetyElements(op.name),
             hazardWarnings: [],
             steps: [createStubStep(op.name)],
-            qualityChecks,
+            qualityChecks: dedupedChecks,
             reactionPlanText: DEFAULT_REACTION_PLAN_TEXT,
             reactionContact,
             visualAids: [],
