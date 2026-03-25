@@ -1,7 +1,7 @@
 # Errores Conceptuales APQP — NO REPETIR
 
 > Documento permanente. Registra errores de concepto detectados en datos APQP.
-> Auditoria: 2026-03-25
+> Auditoria inicial: 2026-03-25 | Correcciones aplicadas: 2026-03-25
 
 ---
 
@@ -29,6 +29,8 @@ Productos mas afectados: Insert (93+36), Armrest Door Panel (72), Telas Planas (
 
 **Correcto**: En el PFD, el almacenamiento se representa como simbolo de almacenamiento. NO debe tener operaciones AMFE, items CP ni hojas HO propias.
 
+**CORREGIDO**: Eliminado de AMFE (1 operacion, 5 work elements) y CP (6 items).
+
 ### 2. Nombres combinados "PROCESO - ALMACENAMIENTO EN MEDIOS WIP" (B1)
 
 **Patron detectado**: 124 operaciones en Insert, Armrest y Top Roll usan nombres como:
@@ -42,11 +44,13 @@ Productos mas afectados: Insert (93+36), Armrest Door Panel (72), Telas Planas (
 
 ### 3. CC/SC faltantes para severidades altas (B4-R1)
 
-| Producto | OP | Severidad | Ocurrencia | Tiene | Deberia |
-|----------|-----|-----------|------------|-------|---------|
+| Producto | OP | Severidad | Ocurrencia | Tenia | Corregido a |
+|----------|-----|-----------|------------|-------|-------------|
 | ARMREST | 90 | 10 (seguridad) | - | SC | **CC** |
 | ARMREST | 25 | 6 | >=4 | vacio | **SC** |
-| HEADREST_FRONT | 60 | 6 | >=4 | vacio | **SC** |
+| HEADREST_FRONT + vars | 60 | 6 | >=4 | vacio | **SC** |
+
+**CORREGIDO**: 19 items de CP actualizados (2 ARMREST OP90, 2 ARMREST OP25, 15 HEADREST_FRONT OP60).
 
 ### 4. AP=H sin acciones correctivas (B4-R2) — 52 causas
 
@@ -100,6 +104,10 @@ D<=3 con inspeccion visual. Para defectos obvios, D=2-3 puede ser aceptable sin 
 
 8. **Nombres de operacion deben coincidir** entre PFD, AMFE, CP y HO.
 
+9. **"Remito" NO es operacion de proceso.** Solo aplica como documento en Recepcion de MP del proveedor.
+
+10. **Transporte interno NO es operacion con controles.** Se representa como simbolo de transporte en PFD, sin AMFE/CP/HO.
+
 ---
 
 ## Hallazgos por Producto
@@ -123,11 +131,13 @@ D<=3 con inspeccion visual. Para defectos obvios, D=2-3 puede ser aceptable sin 
 
 ## Acciones Correctivas (2026-03-25)
 
-### Automaticas (aplicadas en Supabase)
-- [ ] TOP_ROLL OP 11: eliminar de AMFE y CP (almacenamiento WIP con controles)
-- [ ] ARMREST OP 90: cambiar SC -> CC en CP (S=10)
-- [ ] ARMREST OP 25: agregar SC en CP (S=6, O>=4)
-- [ ] HEADREST_FRONT OP 60: agregar SC en CP (S=6, O>=4)
+### Automaticas (APLICADAS en Supabase — 2026-03-25)
+- [x] TOP_ROLL OP 11: eliminado de AMFE (1 op, 5 work elements) y CP (6 items)
+- [x] ARMREST OP 90: 2 items SC -> CC en CP (Severidad=10, seguridad)
+- [x] ARMREST OP 25: 2 items sin clasificacion -> SC en CP (S=6, O>=4)
+- [x] HEADREST_FRONT OP 60: 15 items sin clasificacion -> SC en CP (S=6, O>=4) — master + 3 variantes
+
+Script: `scripts/audit/D_applyCorrections.ts` | Backups: `scripts/audit/backups/`
 
 ### Para revision manual
 - [ ] 52 causas AP=H sin acciones (requiere definir acciones reales con el equipo)
