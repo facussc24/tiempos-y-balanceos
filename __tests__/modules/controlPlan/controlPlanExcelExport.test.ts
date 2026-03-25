@@ -251,7 +251,7 @@ describe('exportControlPlan', () => {
         const aoaData = getAoaData();
         // Check rows 2-7 (6 metadata rows) — every cell should have border
         for (let r = 2; r <= 7; r++) {
-            for (let c = 0; c < 15; c++) {
+            for (let c = 0; c < 14; c++) {
                 const cell = aoaData[r][c];
                 expect(cell.s?.border, `Row ${r} Col ${c} missing border`).toBeDefined();
             }
@@ -286,7 +286,7 @@ describe('exportControlPlan', () => {
         exportControlPlan(makeDoc());
         const ws = getWorksheet();
         expect(ws['!cols']).toBeDefined();
-        expect(ws['!cols'].length).toBe(15);
+        expect(ws['!cols'].length).toBe(14);
         expect(ws['!cols'][0].wch).toBe(12);
     });
 
@@ -302,12 +302,14 @@ describe('exportControlPlan', () => {
 
     // ── Column headers ──
 
-    it('includes column headers for all CP columns', () => {
+    it('includes column headers for all CP columns (excluding controlProcedure)', () => {
         exportControlPlan(makeDoc());
         const values = getFlatValues();
-        for (const col of CP_COLUMNS) {
+        for (const col of CP_COLUMNS.filter(c => c.key !== 'controlProcedure')) {
             expect(values).toContain(col.label);
         }
+        // controlProcedure (IT column) must NOT appear in export
+        expect(values).not.toContain('Plan Reacción ante Descontrol');
     });
 
     // ── Data rows ──

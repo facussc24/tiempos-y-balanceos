@@ -12,7 +12,7 @@
  */
 
 import XLSX from 'xlsx-js-style';
-import { ControlPlanDocument, ControlPlanItem, CP_COLUMNS, CP_COLUMN_GROUPS, CONTROL_PLAN_PHASES } from './controlPlanTypes';
+import { ControlPlanDocument, ControlPlanItem, CP_COLUMNS, CONTROL_PLAN_PHASES } from './controlPlanTypes';
 import { sanitizeFilename } from '../../utils/filenameSanitization';
 import { sanitizeCellValue } from '../../utils/sanitizeCellValue';
 import { downloadWorkbook, generateWorkbookBuffer } from '../../utils/excel';
@@ -25,8 +25,20 @@ import { truncateApplicableParts as truncateParts } from '../../utils/productFam
 const SGC_FORM_NUMBER = 'I-AC-005.2';
 
 /**
+ * Export columns — AIAG standard (excludes controlProcedure / IT column).
+ */
+const EXPORT_COLUMNS = CP_COLUMNS.filter(c => c.key !== 'controlProcedure');
+
+/** Column groups for export — Métodos has 7 cols (no controlProcedure). */
+const EXPORT_COLUMN_GROUPS: { label: string; colSpan: number }[] = [
+    { label: 'Proceso',          colSpan: 3 },
+    { label: 'Características',  colSpan: 4 },
+    { label: 'Métodos',          colSpan: 7 },
+];
+
+/**
  * Dedicated column widths (wch) — tuned for both metadata labels and data.
- * 15 columns matching CP_COLUMNS order.
+ * 14 columns matching EXPORT_COLUMNS order (no controlProcedure).
  */
 const CP_COL_WIDTHS: number[] = [
     12,   // 0:  Nro. Parte/Proceso
@@ -43,23 +55,19 @@ const CP_COL_WIDTHS: number[] = [
     20,   // 11: Método Control
     23,   // 12: Plan Reacción
     17,   // 13: Responsable Reacción
-    22,   // 14: Plan Reacción ante Descontrol
-];  //  Total ≈ 268 chars
+];  //  Total ≈ 246 chars
 
 /**
- * Metadata pair layout: 3 label-value pairs across 15 columns.
+ * Metadata pair layout: 3 label-value pairs across 14 columns.
  *
- *   Pair 0: cols 0-4  (5 cols) → label 0-2 (57ch), value 3-4 (32ch)
- *   Pair 1: cols 5-9  (5 cols) → label 5-6 (34ch), value 7-9 (56ch)
- *   Pair 2: cols 10-14 (5 cols) → label 10-11 (33ch), value 12-14 (56ch)
- *
- * Left label has 3 merged cols (57 chars) — fits even the longest label
- * ("Organizacion / Planta" = 21 chars) with room to spare.
+ *   Pair 0: cols 0-4  (5 cols) → label 0-2, value 3-4
+ *   Pair 1: cols 5-9  (5 cols) → label 5-6, value 7-9
+ *   Pair 2: cols 10-13 (4 cols) → label 10-11, value 12-13
  */
 const META_PAIRS = [
     { lStart: 0, lEnd: 2, vStart: 3, vEnd: 4 },
     { lStart: 5, lEnd: 6, vStart: 7, vEnd: 9 },
-    { lStart: 10, lEnd: 11, vStart: 12, vEnd: 14 },
+    { lStart: 10, lEnd: 11, vStart: 12, vEnd: 13 },
 ];
 
 // ============================================================================
@@ -234,7 +242,7 @@ export function buildControlPlanWorkbook(doc: ControlPlanDocument): XLSX.WorkBoo
     const wb = XLSX.utils.book_new();
     const rows: any[][] = [];
     const h = doc.header;
-    const totalCols = CP_COLUMNS.length; // 15
+    const totalCols = EXPORT_COLUMNS.length; // 14
     const merges: XLSX.Range[] = [];
 
     // ── Row 0: Title ──────────────────────────────────────────────
@@ -279,7 +287,7 @@ export function buildControlPlanWorkbook(doc: ControlPlanDocument): XLSX.WorkBoo
 
     // ── Group header row (Proceso / Características / Métodos) ──
     const groupRow: any[] = [];
-    for (const group of CP_COLUMN_GROUPS) {
+    for (const group of EXPORT_COLUMN_GROUPS) {
         groupRow.push({ v: group.label, s: st.groupHeader });
         for (let i = 1; i < group.colSpan; i++) {
             groupRow.push({ v: '', s: st.groupHeader });
@@ -289,7 +297,7 @@ export function buildControlPlanWorkbook(doc: ControlPlanDocument): XLSX.WorkBoo
     const groupRowIdx = rows.length - 1;
 
     let colOff = 0;
-    for (const group of CP_COLUMN_GROUPS) {
+    for (const group of EXPORT_COLUMN_GROUPS) {
         if (group.colSpan > 1) {
             merges.push({
                 s: { r: groupRowIdx, c: colOff },
@@ -300,7 +308,7 @@ export function buildControlPlanWorkbook(doc: ControlPlanDocument): XLSX.WorkBoo
     }
 
     // ── Column headers ──
-    rows.push(CP_COLUMNS.map(col => ({ v: col.label, s: st.colHeader })));
+    rows.push(EXPORT_COLUMNS.map(col => ({ v: col.label, s: st.colHeader })));
     const colHeaderIdx = rows.length - 1;
 
     // ── Data rows (sorted numerically by operation number) ──
@@ -311,7 +319,7 @@ export function buildControlPlanWorkbook(doc: ControlPlanDocument): XLSX.WorkBoo
     });
     const dataStartIdx = rows.length;
     for (const item of sortedItems) {
-        rows.push(CP_COLUMNS.map(col => {
+        rows.push(EXPORT_COLUMNS.map(col => {
             const value = (item[col.key] as string) || '';
             if (col.key === 'specialCharClass') {
                 return { v: sanitizeCellValue(value), s: getSpecialCharStyle(value) };
@@ -376,7 +384,7 @@ export function buildControlPlanWorkbook(doc: ControlPlanDocument): XLSX.WorkBoo
     });
 
     // Auto-filter on column header row for easy navigation
-    // 15 columns (A-O), totalCols-1 = 14 → 'O'
+    // 14 columns (A-N), totalCols-1 = 13 → 'N'
     const lastColLetter = String.fromCharCode(65 + totalCols - 1);
     ws['!autofilter'] = { ref: `A${colHeaderIdx + 1}:${lastColLetter}${colHeaderIdx + 1}` };
 
