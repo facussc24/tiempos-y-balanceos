@@ -65,7 +65,7 @@ const amfeHeader = {
     processResponsible: 'Carlos Baptista',
     revision: '01',
     approvedBy: 'Manuel Meszaros',
-    scope: 'TOP ROLL FRONT DI - DD TAOS',
+    scope: 'TOP ROLL PATAGONIA',
     applicableParts: '2GJ.868.087\n2GJ.868.088',
 };
 
@@ -830,7 +830,7 @@ const pfdDoc = {
     id: uuid(),
     header: {
         partNumber: PART_NUMBER,
-        partName: 'TOP ROLL FRONT DI - DD TAOS',
+        partName: 'TOP ROLL PATAGONIA',
         engineeringChangeLevel: '',
         modelYear: 'PATAGONIA',
         documentNumber: 'PFD-TOPROLL-001',
@@ -1074,7 +1074,7 @@ const cpHeader = {
     phase: 'production',
     partNumber: PART_NUMBER,
     latestChangeLevel: '01',
-    partName: 'TOP ROLL FRONT DI - DD TAOS',
+    partName: 'TOP ROLL PATAGONIA',
     applicableParts: '2GJ.868.087\n2GJ.868.088',
     organization: 'BARACK MERCOSUL',
     supplier: '',
@@ -1154,7 +1154,7 @@ const hoDoc = {
         organization: 'BARACK MERCOSUL',
         client: 'VWA',
         partNumber: 'TOP ROLL',
-        partDescription: 'TOP ROLL FRONT DI - DD TAOS',
+        partDescription: 'TOP ROLL PATAGONIA',
         applicableParts: '2GJ.868.087\n2GJ.868.088',
         linkedAmfeProject: PROJECT_NAME,
         linkedCpProject: PROJECT_NAME,
@@ -1277,7 +1277,7 @@ async function main() {
     const pfdChecksum = sha256(pfdDataJson);
 
     const existingPfd = await selectSql(
-        `SELECT id FROM pfd_documents WHERE part_name = 'TOP ROLL FRONT DI - DD TAOS'`
+        `SELECT id FROM pfd_documents WHERE part_name = 'TOP ROLL PATAGONIA'`
     );
 
     if (existingPfd.length > 0) {
@@ -1293,13 +1293,13 @@ async function main() {
             id, part_number, part_name, document_number, revision_level,
             revision_date, customer_name, step_count, data, checksum)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [pfdDoc.id, PART_NUMBER, 'TOP ROLL FRONT DI - DD TAOS', 'PFD-TOPROLL-001',
+            [pfdDoc.id, PART_NUMBER, 'TOP ROLL PATAGONIA', 'PFD-TOPROLL-001',
              '01', '2025-12-29', 'VW Argentina',
              pfdSteps.length, pfdDataJson, pfdChecksum]);
         console.log(`  + PFD inserted: PFD-TOPROLL-001`);
     }
 
-    const pfdRows = await selectSql(`SELECT id FROM pfd_documents WHERE part_name = 'TOP ROLL FRONT DI - DD TAOS'`);
+    const pfdRows = await selectSql(`SELECT id FROM pfd_documents WHERE part_name = 'TOP ROLL PATAGONIA'`);
     const finalPfdId = pfdRows[0]?.id || pfdDoc.id;
 
     // ── CONTROL PLAN ─────────────────────────────────────────────────────
@@ -1327,7 +1327,7 @@ async function main() {
             item_count, data, checksum)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [cpId, PROJECT_NAME, 'CP-TOPROLL-001', 'production',
-             PART_NUMBER, 'TOP ROLL FRONT DI - DD TAOS', 'BARACK MERCOSUL', 'VWA',
+             PART_NUMBER, 'TOP ROLL PATAGONIA', 'BARACK MERCOSUL', 'VWA',
              'M. Nieve', '0', PROJECT_NAME, finalAmfeId,
              cpItems.length, cpDataJson, cpChecksum]);
         console.log(`  + CP inserted: CP-TOPROLL-001 (${cpItems.length} items)`);
@@ -1351,7 +1351,7 @@ async function main() {
             data = ?, checksum = ?, updated_at = datetime('now'),
             sheet_count = ?, part_number = ?, part_description = ?
             WHERE id = ?`,
-            [hoDataJson, hoChecksum, hoSheets.length, 'TOP ROLL', 'TOP ROLL FRONT DI - DD TAOS', existHoId]);
+            [hoDataJson, hoChecksum, hoSheets.length, 'TOP ROLL', 'TOP ROLL PATAGONIA', existHoId]);
         console.log(`  + HO updated (ID: ${existHoId})`);
     } else {
         await execSql(`INSERT INTO ho_documents (
@@ -1361,7 +1361,7 @@ async function main() {
             sheet_count, data, checksum)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [hoId, 'I-IN-002.4-R01', 'BARACK MERCOSUL', 'VWA',
-             'TOP ROLL', 'TOP ROLL FRONT DI - DD TAOS',
+             'TOP ROLL', 'TOP ROLL PATAGONIA',
              PROJECT_NAME, PROJECT_NAME,
              hoSheets.length, hoDataJson, hoChecksum]);
         console.log(`  + HO inserted: HO (${hoSheets.length} sheets)`);
@@ -1398,8 +1398,8 @@ async function main() {
 
     // Insert products
     const productCodes = [
-        { codigo: '2GJ.868.087', descripcion: 'TOP ROLL FRONT DI TAOS' },
-        { codigo: '2GJ.868.088', descripcion: 'TOP ROLL FRONT DD TAOS' },
+        { codigo: '2GJ.868.087', descripcion: 'TOP ROLL PATAGONIA DI' },
+        { codigo: '2GJ.868.088', descripcion: 'TOP ROLL PATAGONIA DD' },
     ];
 
     for (const prod of productCodes) {
@@ -1467,7 +1467,7 @@ async function main() {
 
     const pfdCheck = await selectSql(
         `SELECT id, part_name, step_count
-         FROM pfd_documents WHERE part_name = 'TOP ROLL FRONT DI - DD TAOS'`);
+         FROM pfd_documents WHERE part_name = 'TOP ROLL PATAGONIA'`);
     console.log(`  PFD: ${pfdCheck.length} document(s)`);
     if (pfdCheck[0]) {
         const p = pfdCheck[0];
