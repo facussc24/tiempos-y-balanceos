@@ -99,7 +99,7 @@ export async function fetchAllHoDocs(): Promise<Array<{ id: string; raw: RawDoc;
 }
 
 export async function fetchProductFamilies(): Promise<any[]> {
-    return execSqlRead(`SELECT * FROM product_families WHERE active = true ORDER BY name`);
+    return execSqlRead(`SELECT * FROM product_families WHERE active = 1 ORDER BY name`);
 }
 
 export async function fetchFamilyMembers(): Promise<any[]> {

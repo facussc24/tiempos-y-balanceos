@@ -1,0 +1,3330 @@
+{
+  "timestamp": "2026-03-25T17:44:43.178Z",
+  "summary": {
+    "totalFindings": 207,
+    "withControls": 127,
+    "withoutControls": 80,
+    "suspiciousCombinedNames": 124,
+    "productsAffected": 13,
+    "byDocType": {
+      "PFD": 80,
+      "AMFE": 16,
+      "CP": 111,
+      "HO": 0
+    }
+  },
+  "findings": [
+    {
+      "product": "VWA/Apoyacabezas Trasero Lateral - Patagonia VW",
+      "docType": "PFD",
+      "docId": "689c06c6-144a-4a13-bc78-f121d9d940ac",
+      "operation": "TRASLADO: VINILOS / TELAS A SECTOR DE MESA DE CORTE",
+      "opNumber": "Step ",
+      "reason": "Transporte interno no transforma el producto. No debería tener controles de calidad del producto.",
+      "hasControls": false,
+      "controlCount": 0
+    },
+    {
+      "product": "VWA/Apoyacabezas Trasero Lateral - Patagonia VW",
+      "docType": "PFD",
+      "docId": "689c06c6-144a-4a13-bc78-f121d9d940ac",
+      "operation": "TRASLADO: KITS DE COMPONENTES DE COSTURA A SECTOR DE COSTURA",
+      "opNumber": "Step ",
+      "reason": "Transporte interno no transforma el producto. No debería tener controles de calidad del producto.",
+      "hasControls": false,
+      "controlCount": 0
+    },
+    {
+      "product": "VWA/Apoyacabezas Trasero Lateral - Patagonia VW",
+      "docType": "PFD",
+      "docId": "689c06c6-144a-4a13-bc78-f121d9d940ac",
+      "operation": "TRASLADO: FUNDAS COSIDAS APROBADAS A AREA DE INYECCION",
+      "opNumber": "Step ",
+      "reason": "Transporte interno no transforma el producto. No debería tener controles de calidad del producto.",
+      "hasControls": false,
+      "controlCount": 0
+    },
+    {
+      "product": "VWA/Apoyacabezas Trasero Lateral - Patagonia VW",
+      "docType": "PFD",
+      "docId": "689c06c6-144a-4a13-bc78-f121d9d940ac",
+      "operation": "TRASLADO: MATERIAL APROBADO A ALMACEN TEMPORAL (FIFO)",
+      "opNumber": "Step ",
+      "reason": "Transporte interno no transforma el producto. No debería tener controles de calidad del producto.",
+      "hasControls": false,
+      "controlCount": 0
+    },
+    {
+      "product": "VWA/Apoyacabezas Trasero Lateral - Patagonia VW",
+      "docType": "PFD",
+      "docId": "689c06c6-144a-4a13-bc78-f121d9d940ac",
+      "operation": "ALMACENAMIENTO: PRODUCTO TERMINADO (FIFO)",
+      "opNumber": "Step ",
+      "reason": "Operación de almacenamiento, no es transformación ni inspección del producto.",
+      "hasControls": false,
+      "controlCount": 0
+    },
+    {
+      "product": "VWA/Apoyacabezas Trasero Lateral - Patagonia VW",
+      "docType": "PFD",
+      "docId": "689c06c6-144a-4a13-bc78-f121d9d940ac",
+      "operation": "TRASLADO A SECTOR DE PRODUCTO TERMINADO",
+      "opNumber": "Step ",
+      "reason": "Transporte interno no transforma el producto. No debería tener controles de calidad del producto.",
+      "hasControls": false,
+      "controlCount": 0
+    },
+    {
+      "product": "PWA/Telas Planas PWA - HILUX 581D",
+      "docType": "PFD",
+      "docId": "687eed17-209a-42d3-995e-aa0aa24e33d3",
+      "operation": "ALMACENAMIENTO PRODUCTO TERMINADO (FIFO)",
+      "opNumber": "Step ",
+      "reason": "Operación de almacenamiento, no es transformación ni inspección del producto.",
+      "hasControls": false,
+      "controlCount": 0
+    },
+    {
+      "product": "PWA/Telas Termoformadas PWA - Asiento Respaldo",
+      "docType": "PFD",
+      "docId": "d69f56c2-a177-4c51-a5cd-ebf3f003d109",
+      "operation": "ALMACENAMIENTO PRODUCTO TERMINADO (FIFO)",
+      "opNumber": "Step ",
+      "reason": "Operación de almacenamiento, no es transformación ni inspección del producto.",
+      "hasControls": false,
+      "controlCount": 0
+    },
+    {
+      "product": "VWA/Armrest Door Panel - Patagonia VW",
+      "docType": "PFD",
+      "docId": "ebb83668-9894-4495-830c-29e856f8bfc2",
+      "operation": "TRASLADO: MATERIAL APROBADO A ALMACEN TEMPORAL (FIFO)",
+      "opNumber": "Step ",
+      "reason": "Transporte interno no transforma el producto. No debería tener controles de calidad del producto.",
+      "hasControls": false,
+      "controlCount": 0
+    },
+    {
+      "product": "VWA/Armrest Door Panel - Patagonia VW",
+      "docType": "PFD",
+      "docId": "ebb83668-9894-4495-830c-29e856f8bfc2",
+      "operation": "TRASLADO: VINILOS Y TELAS A SECTOR DE MESA DE CORTE",
+      "opNumber": "Step ",
+      "reason": "Transporte interno no transforma el producto. No debería tener controles de calidad del producto.",
+      "hasControls": false,
+      "controlCount": 0
+    },
+    {
+      "product": "VWA/Armrest Door Panel - Patagonia VW",
+      "docType": "PFD",
+      "docId": "ebb83668-9894-4495-830c-29e856f8bfc2",
+      "operation": "ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "Step 30",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto.",
+      "hasControls": false,
+      "controlCount": 0
+    },
+    {
+      "product": "VWA/Armrest Door Panel - Patagonia VW",
+      "docType": "PFD",
+      "docId": "ebb83668-9894-4495-830c-29e856f8bfc2",
+      "operation": "TRASLADO: KITS DE COMPONENTES A SECTOR DE COSTURA",
+      "opNumber": "Step ",
+      "reason": "Transporte interno no transforma el producto. No debería tener controles de calidad del producto.",
+      "hasControls": false,
+      "controlCount": 0
+    },
+    {
+      "product": "VWA/Armrest Door Panel - Patagonia VW",
+      "docType": "PFD",
+      "docId": "ebb83668-9894-4495-830c-29e856f8bfc2",
+      "operation": "TRASLADO: HILOS A SECTOR DE COSTURA",
+      "opNumber": "Step ",
+      "reason": "Transporte interno no transforma el producto. No debería tener controles de calidad del producto.",
+      "hasControls": false,
+      "controlCount": 0
+    },
+    {
+      "product": "VWA/Armrest Door Panel - Patagonia VW",
+      "docType": "PFD",
+      "docId": "ebb83668-9894-4495-830c-29e856f8bfc2",
+      "operation": "ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "Step 52",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto.",
+      "hasControls": false,
+      "controlCount": 0
+    },
+    {
+      "product": "VWA/Armrest Door Panel - Patagonia VW",
+      "docType": "PFD",
+      "docId": "ebb83668-9894-4495-830c-29e856f8bfc2",
+      "operation": "TRASLADO: SEMITERMINADOS COSIDOS A SECTOR DE ADHESIVADO",
+      "opNumber": "Step ",
+      "reason": "Transporte interno no transforma el producto. No debería tener controles de calidad del producto.",
+      "hasControls": false,
+      "controlCount": 0
+    },
+    {
+      "product": "VWA/Armrest Door Panel - Patagonia VW",
+      "docType": "PFD",
+      "docId": "ebb83668-9894-4495-830c-29e856f8bfc2",
+      "operation": "TRASLADO: MATERIA PRIMA A SECTOR DE INYECCION PLASTICA",
+      "opNumber": "Step ",
+      "reason": "Transporte interno no transforma el producto. No debería tener controles de calidad del producto.",
+      "hasControls": false,
+      "controlCount": 0
+    },
+    {
+      "product": "VWA/Armrest Door Panel - Patagonia VW",
+      "docType": "PFD",
+      "docId": "ebb83668-9894-4495-830c-29e856f8bfc2",
+      "operation": "ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "Step 61",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto.",
+      "hasControls": false,
+      "controlCount": 0
+    },
+    {
+      "product": "VWA/Armrest Door Panel - Patagonia VW",
+      "docType": "PFD",
+      "docId": "ebb83668-9894-4495-830c-29e856f8bfc2",
+      "operation": "TRASLADO: SUSTRATO A SECTOR DE INYECCION PU",
+      "opNumber": "Step ",
+      "reason": "Transporte interno no transforma el producto. No debería tener controles de calidad del producto.",
+      "hasControls": false,
+      "controlCount": 0
+    },
+    {
+      "product": "VWA/Armrest Door Panel - Patagonia VW",
+      "docType": "PFD",
+      "docId": "ebb83668-9894-4495-830c-29e856f8bfc2",
+      "operation": "TRASLADO: BARRIL AL SECTOR DE INYECCION PU",
+      "opNumber": "Step ",
+      "reason": "Transporte interno no transforma el producto. No debería tener controles de calidad del producto.",
+      "hasControls": false,
+      "controlCount": 0
+    },
+    {
+      "product": "VWA/Armrest Door Panel - Patagonia VW",
+      "docType": "PFD",
+      "docId": "ebb83668-9894-4495-830c-29e856f8bfc2",
+      "operation": "ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "Step 71",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto.",
+      "hasControls": false,
+      "controlCount": 0
+    },
+    {
+      "product": "VWA/Armrest Door Panel - Patagonia VW",
+      "docType": "PFD",
+      "docId": "ebb83668-9894-4495-830c-29e856f8bfc2",
+      "operation": "TRASLADO: SUSTRATO + ESPUMA A SECTOR DE ADHESIVADO",
+      "opNumber": "Step ",
+      "reason": "Transporte interno no transforma el producto. No debería tener controles de calidad del producto.",
+      "hasControls": false,
+      "controlCount": 0
+    },
+    {
+      "product": "VWA/Armrest Door Panel - Patagonia VW",
+      "docType": "PFD",
+      "docId": "ebb83668-9894-4495-830c-29e856f8bfc2",
+      "operation": "ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "Step 82",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto.",
+      "hasControls": false,
+      "controlCount": 0
+    },
+    {
+      "product": "VWA/Armrest Door Panel - Patagonia VW",
+      "docType": "PFD",
+      "docId": "ebb83668-9894-4495-830c-29e856f8bfc2",
+      "operation": "TRASLADO: PIEZA ADHESIVADA AL SECTOR DE TAPIZADO",
+      "opNumber": "Step ",
+      "reason": "Transporte interno no transforma el producto. No debería tener controles de calidad del producto.",
+      "hasControls": false,
+      "controlCount": 0
+    },
+    {
+      "product": "VWA/Armrest Door Panel - Patagonia VW",
+      "docType": "PFD",
+      "docId": "ebb83668-9894-4495-830c-29e856f8bfc2",
+      "operation": "TRASLADO A SECTOR DE PRODUCTO TERMINADO",
+      "opNumber": "Step ",
+      "reason": "Transporte interno no transforma el producto. No debería tener controles de calidad del producto.",
+      "hasControls": false,
+      "controlCount": 0
+    },
+    {
+      "product": "VWA/Armrest Door Panel - Patagonia VW",
+      "docType": "PFD",
+      "docId": "ebb83668-9894-4495-830c-29e856f8bfc2",
+      "operation": "ALMACENAMIENTO: PRODUCTO TERMINADO (FIFO)",
+      "opNumber": "Step ",
+      "reason": "Operación de almacenamiento, no es transformación ni inspección del producto.",
+      "hasControls": false,
+      "controlCount": 0
+    },
+    {
+      "product": "VWA/Insert",
+      "docType": "PFD",
+      "docId": "70e4f391-f558-4208-be3d-0c770a6040c5",
+      "operation": "TRASLADO: MATERIAL APROBADO A ALMACEN TEMPORAL (FIFO)",
+      "opNumber": "Step ",
+      "reason": "Transporte interno no transforma el producto. No debería tener controles de calidad del producto.",
+      "hasControls": false,
+      "controlCount": 0
+    },
+    {
+      "product": "VWA/Insert",
+      "docType": "PFD",
+      "docId": "70e4f391-f558-4208-be3d-0c770a6040c5",
+      "operation": "TRASLADO: VINILOS Y TELAS A SECTOR DE MESA DE CORTE",
+      "opNumber": "Step ",
+      "reason": "Transporte interno no transforma el producto. No debería tener controles de calidad del producto.",
+      "hasControls": false,
+      "controlCount": 0
+    },
+    {
+      "product": "VWA/Insert",
+      "docType": "PFD",
+      "docId": "70e4f391-f558-4208-be3d-0c770a6040c5",
+      "operation": "ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "Step 30",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto.",
+      "hasControls": false,
+      "controlCount": 0
+    },
+    {
+      "product": "VWA/Insert",
+      "docType": "PFD",
+      "docId": "70e4f391-f558-4208-be3d-0c770a6040c5",
+      "operation": "TRASLADO: KITS DE COMPONENTES A SECTOR DE COSTURA",
+      "opNumber": "Step ",
+      "reason": "Transporte interno no transforma el producto. No debería tener controles de calidad del producto.",
+      "hasControls": false,
+      "controlCount": 0
+    },
+    {
+      "product": "VWA/Insert",
+      "docType": "PFD",
+      "docId": "70e4f391-f558-4208-be3d-0c770a6040c5",
+      "operation": "TRASLADO: HILOS A SECTOR DE COSTURA",
+      "opNumber": "Step ",
+      "reason": "Transporte interno no transforma el producto. No debería tener controles de calidad del producto.",
+      "hasControls": false,
+      "controlCount": 0
+    },
+    {
+      "product": "VWA/Insert",
+      "docType": "PFD",
+      "docId": "70e4f391-f558-4208-be3d-0c770a6040c5",
+      "operation": "ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "Step 51",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto.",
+      "hasControls": false,
+      "controlCount": 0
+    },
+    {
+      "product": "VWA/Insert",
+      "docType": "PFD",
+      "docId": "70e4f391-f558-4208-be3d-0c770a6040c5",
+      "operation": "TRASLADO: SEMITERMINADOS COSIDOS SECTOR DE COSTURA",
+      "opNumber": "Step ",
+      "reason": "Transporte interno no transforma el producto. No debería tener controles de calidad del producto.",
+      "hasControls": false,
+      "controlCount": 0
+    },
+    {
+      "product": "VWA/Insert",
+      "docType": "PFD",
+      "docId": "70e4f391-f558-4208-be3d-0c770a6040c5",
+      "operation": "TRASLADO: ESPUMAS A SECTOR DE TROQUELADO",
+      "opNumber": "Step ",
+      "reason": "Transporte interno no transforma el producto. No debería tener controles de calidad del producto.",
+      "hasControls": false,
+      "controlCount": 0
+    },
+    {
+      "product": "VWA/Insert",
+      "docType": "PFD",
+      "docId": "70e4f391-f558-4208-be3d-0c770a6040c5",
+      "operation": "ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "Step 61",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto.",
+      "hasControls": false,
+      "controlCount": 0
+    },
+    {
+      "product": "VWA/Insert",
+      "docType": "PFD",
+      "docId": "70e4f391-f558-4208-be3d-0c770a6040c5",
+      "operation": "TRASLADO: PIEZAS TROQUELADAS A SECTOR DE PREARMADO",
+      "opNumber": "Step ",
+      "reason": "Transporte interno no transforma el producto. No debería tener controles de calidad del producto.",
+      "hasControls": false,
+      "controlCount": 0
+    },
+    {
+      "product": "VWA/Insert",
+      "docType": "PFD",
+      "docId": "70e4f391-f558-4208-be3d-0c770a6040c5",
+      "operation": "TRASLADO: MATERIA PRIMA A SECTOR DE INYECCION PLASTICA",
+      "opNumber": "Step ",
+      "reason": "Transporte interno no transforma el producto. No debería tener controles de calidad del producto.",
+      "hasControls": false,
+      "controlCount": 0
+    },
+    {
+      "product": "VWA/Insert",
+      "docType": "PFD",
+      "docId": "70e4f391-f558-4208-be3d-0c770a6040c5",
+      "operation": "ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "Step 71",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto.",
+      "hasControls": false,
+      "controlCount": 0
+    },
+    {
+      "product": "VWA/Insert",
+      "docType": "PFD",
+      "docId": "70e4f391-f558-4208-be3d-0c770a6040c5",
+      "operation": "TRASLADO: SUSTRATO A SECTOR DE PREARMADO DE ESPUMA",
+      "opNumber": "Step ",
+      "reason": "Transporte interno no transforma el producto. No debería tener controles de calidad del producto.",
+      "hasControls": false,
+      "controlCount": 0
+    },
+    {
+      "product": "VWA/Insert",
+      "docType": "PFD",
+      "docId": "70e4f391-f558-4208-be3d-0c770a6040c5",
+      "operation": "ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "Step 81",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto.",
+      "hasControls": false,
+      "controlCount": 0
+    },
+    {
+      "product": "VWA/Insert",
+      "docType": "PFD",
+      "docId": "70e4f391-f558-4208-be3d-0c770a6040c5",
+      "operation": "TRASLADO: PIEZA PREARMADA AL SECTOR DE ADHESIVADO",
+      "opNumber": "Step ",
+      "reason": "Transporte interno no transforma el producto. No debería tener controles de calidad del producto.",
+      "hasControls": false,
+      "controlCount": 0
+    },
+    {
+      "product": "VWA/Insert",
+      "docType": "PFD",
+      "docId": "70e4f391-f558-4208-be3d-0c770a6040c5",
+      "operation": "ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "Step 92",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto.",
+      "hasControls": false,
+      "controlCount": 0
+    },
+    {
+      "product": "VWA/Insert",
+      "docType": "PFD",
+      "docId": "70e4f391-f558-4208-be3d-0c770a6040c5",
+      "operation": "TRASLADO: PIEZA PREARMADA AL SECTOR DE TAPIZADO",
+      "opNumber": "Step ",
+      "reason": "Transporte interno no transforma el producto. No debería tener controles de calidad del producto.",
+      "hasControls": false,
+      "controlCount": 0
+    },
+    {
+      "product": "VWA/Insert",
+      "docType": "PFD",
+      "docId": "70e4f391-f558-4208-be3d-0c770a6040c5",
+      "operation": "TRASLADO A SECTOR DE PRODUCTO TERMINADO",
+      "opNumber": "Step ",
+      "reason": "Transporte interno no transforma el producto. No debería tener controles de calidad del producto.",
+      "hasControls": false,
+      "controlCount": 0
+    },
+    {
+      "product": "VWA/Insert",
+      "docType": "PFD",
+      "docId": "70e4f391-f558-4208-be3d-0c770a6040c5",
+      "operation": "TRASLADO A SECTOR DE ALMACENAMIENTO",
+      "opNumber": "Step ",
+      "reason": "Transporte interno no transforma el producto. No debería tener controles de calidad del producto.",
+      "hasControls": false,
+      "controlCount": 0
+    },
+    {
+      "product": "VWA/Insert",
+      "docType": "PFD",
+      "docId": "70e4f391-f558-4208-be3d-0c770a6040c5",
+      "operation": "ALMACENAMIENTO: PRODUCTO TERMINADO (FIFO)",
+      "opNumber": "Step ",
+      "reason": "Operación de almacenamiento, no es transformación ni inspección del producto.",
+      "hasControls": false,
+      "controlCount": 0
+    },
+    {
+      "product": "VWA/Insert [L0]",
+      "docType": "PFD",
+      "docId": "f7b3b574-1a68-42e6-bb87-27f24d2914d2",
+      "operation": "TRASLADO: MATERIAL APROBADO A ALMACEN TEMPORAL (FIFO)",
+      "opNumber": "Step ",
+      "reason": "Transporte interno no transforma el producto. No debería tener controles de calidad del producto.",
+      "hasControls": false,
+      "controlCount": 0
+    },
+    {
+      "product": "VWA/Insert [L0]",
+      "docType": "PFD",
+      "docId": "f7b3b574-1a68-42e6-bb87-27f24d2914d2",
+      "operation": "TRASLADO: VINILOS Y TELAS A SECTOR DE MESA DE CORTE",
+      "opNumber": "Step ",
+      "reason": "Transporte interno no transforma el producto. No debería tener controles de calidad del producto.",
+      "hasControls": false,
+      "controlCount": 0
+    },
+    {
+      "product": "VWA/Insert [L0]",
+      "docType": "PFD",
+      "docId": "f7b3b574-1a68-42e6-bb87-27f24d2914d2",
+      "operation": "ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "Step 30",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto.",
+      "hasControls": false,
+      "controlCount": 0
+    },
+    {
+      "product": "VWA/Insert [L0]",
+      "docType": "PFD",
+      "docId": "f7b3b574-1a68-42e6-bb87-27f24d2914d2",
+      "operation": "TRASLADO: KITS DE COMPONENTES A SECTOR DE COSTURA",
+      "opNumber": "Step ",
+      "reason": "Transporte interno no transforma el producto. No debería tener controles de calidad del producto.",
+      "hasControls": false,
+      "controlCount": 0
+    },
+    {
+      "product": "VWA/Insert [L0]",
+      "docType": "PFD",
+      "docId": "f7b3b574-1a68-42e6-bb87-27f24d2914d2",
+      "operation": "TRASLADO: HILOS A SECTOR DE COSTURA",
+      "opNumber": "Step ",
+      "reason": "Transporte interno no transforma el producto. No debería tener controles de calidad del producto.",
+      "hasControls": false,
+      "controlCount": 0
+    },
+    {
+      "product": "VWA/Insert [L0]",
+      "docType": "PFD",
+      "docId": "f7b3b574-1a68-42e6-bb87-27f24d2914d2",
+      "operation": "ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "Step 51",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto.",
+      "hasControls": false,
+      "controlCount": 0
+    },
+    {
+      "product": "VWA/Insert [L0]",
+      "docType": "PFD",
+      "docId": "f7b3b574-1a68-42e6-bb87-27f24d2914d2",
+      "operation": "TRASLADO: SEMITERMINADOS COSIDOS SECTOR DE COSTURA",
+      "opNumber": "Step ",
+      "reason": "Transporte interno no transforma el producto. No debería tener controles de calidad del producto.",
+      "hasControls": false,
+      "controlCount": 0
+    },
+    {
+      "product": "VWA/Insert [L0]",
+      "docType": "PFD",
+      "docId": "f7b3b574-1a68-42e6-bb87-27f24d2914d2",
+      "operation": "TRASLADO: ESPUMAS A SECTOR DE TROQUELADO",
+      "opNumber": "Step ",
+      "reason": "Transporte interno no transforma el producto. No debería tener controles de calidad del producto.",
+      "hasControls": false,
+      "controlCount": 0
+    },
+    {
+      "product": "VWA/Insert [L0]",
+      "docType": "PFD",
+      "docId": "f7b3b574-1a68-42e6-bb87-27f24d2914d2",
+      "operation": "ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "Step 61",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto.",
+      "hasControls": false,
+      "controlCount": 0
+    },
+    {
+      "product": "VWA/Insert [L0]",
+      "docType": "PFD",
+      "docId": "f7b3b574-1a68-42e6-bb87-27f24d2914d2",
+      "operation": "TRASLADO: PIEZAS TROQUELADAS A SECTOR DE PREARMADO",
+      "opNumber": "Step ",
+      "reason": "Transporte interno no transforma el producto. No debería tener controles de calidad del producto.",
+      "hasControls": false,
+      "controlCount": 0
+    },
+    {
+      "product": "VWA/Insert [L0]",
+      "docType": "PFD",
+      "docId": "f7b3b574-1a68-42e6-bb87-27f24d2914d2",
+      "operation": "TRASLADO: MATERIA PRIMA A SECTOR DE INYECCION PLASTICA",
+      "opNumber": "Step ",
+      "reason": "Transporte interno no transforma el producto. No debería tener controles de calidad del producto.",
+      "hasControls": false,
+      "controlCount": 0
+    },
+    {
+      "product": "VWA/Insert [L0]",
+      "docType": "PFD",
+      "docId": "f7b3b574-1a68-42e6-bb87-27f24d2914d2",
+      "operation": "ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "Step 71",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto.",
+      "hasControls": false,
+      "controlCount": 0
+    },
+    {
+      "product": "VWA/Insert [L0]",
+      "docType": "PFD",
+      "docId": "f7b3b574-1a68-42e6-bb87-27f24d2914d2",
+      "operation": "TRASLADO: SUSTRATO A SECTOR DE PREARMADO DE ESPUMA",
+      "opNumber": "Step ",
+      "reason": "Transporte interno no transforma el producto. No debería tener controles de calidad del producto.",
+      "hasControls": false,
+      "controlCount": 0
+    },
+    {
+      "product": "VWA/Insert [L0]",
+      "docType": "PFD",
+      "docId": "f7b3b574-1a68-42e6-bb87-27f24d2914d2",
+      "operation": "ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "Step 81",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto.",
+      "hasControls": false,
+      "controlCount": 0
+    },
+    {
+      "product": "VWA/Insert [L0]",
+      "docType": "PFD",
+      "docId": "f7b3b574-1a68-42e6-bb87-27f24d2914d2",
+      "operation": "TRASLADO: PIEZA PREARMADA AL SECTOR DE ADHESIVADO",
+      "opNumber": "Step ",
+      "reason": "Transporte interno no transforma el producto. No debería tener controles de calidad del producto.",
+      "hasControls": false,
+      "controlCount": 0
+    },
+    {
+      "product": "VWA/Insert [L0]",
+      "docType": "PFD",
+      "docId": "f7b3b574-1a68-42e6-bb87-27f24d2914d2",
+      "operation": "ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "Step 92",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto.",
+      "hasControls": false,
+      "controlCount": 0
+    },
+    {
+      "product": "VWA/Insert [L0]",
+      "docType": "PFD",
+      "docId": "f7b3b574-1a68-42e6-bb87-27f24d2914d2",
+      "operation": "TRASLADO: PIEZA PREARMADA AL SECTOR DE TAPIZADO",
+      "opNumber": "Step ",
+      "reason": "Transporte interno no transforma el producto. No debería tener controles de calidad del producto.",
+      "hasControls": false,
+      "controlCount": 0
+    },
+    {
+      "product": "VWA/Insert [L0]",
+      "docType": "PFD",
+      "docId": "f7b3b574-1a68-42e6-bb87-27f24d2914d2",
+      "operation": "TRASLADO A SECTOR DE PRODUCTO TERMINADO",
+      "opNumber": "Step ",
+      "reason": "Transporte interno no transforma el producto. No debería tener controles de calidad del producto.",
+      "hasControls": false,
+      "controlCount": 0
+    },
+    {
+      "product": "VWA/Insert [L0]",
+      "docType": "PFD",
+      "docId": "f7b3b574-1a68-42e6-bb87-27f24d2914d2",
+      "operation": "TRASLADO A SECTOR DE ALMACENAMIENTO",
+      "opNumber": "Step ",
+      "reason": "Transporte interno no transforma el producto. No debería tener controles de calidad del producto.",
+      "hasControls": false,
+      "controlCount": 0
+    },
+    {
+      "product": "VWA/Insert [L0]",
+      "docType": "PFD",
+      "docId": "f7b3b574-1a68-42e6-bb87-27f24d2914d2",
+      "operation": "ALMACENAMIENTO: PRODUCTO TERMINADO (FIFO)",
+      "opNumber": "Step ",
+      "reason": "Operación de almacenamiento, no es transformación ni inspección del producto.",
+      "hasControls": false,
+      "controlCount": 0
+    },
+    {
+      "product": "VWA/TOP ROLL FRONT DI - DD TAOS",
+      "docType": "PFD",
+      "docId": "efa71449-10a0-43f8-a6b7-5edf078f37eb",
+      "operation": "TRASLADO DE PIEZAS AL SECTOR DE PRODUCTO TERMINADO",
+      "opNumber": "Step ",
+      "reason": "Transporte interno no transforma el producto. No debería tener controles de calidad del producto.",
+      "hasControls": false,
+      "controlCount": 0
+    },
+    {
+      "product": "VWA/TOP ROLL FRONT DI - DD TAOS",
+      "docType": "PFD",
+      "docId": "efa71449-10a0-43f8-a6b7-5edf078f37eb",
+      "operation": "CONTROL DE LAS CANTIDADES DE DESPACHO",
+      "opNumber": "Step ",
+      "reason": "Despacho/expedición es logística, no transforma ni inspecciona el producto.",
+      "hasControls": false,
+      "controlCount": 0
+    },
+    {
+      "product": "VWA/TOP ROLL FRONT DI - DD TAOS",
+      "docType": "PFD",
+      "docId": "efa71449-10a0-43f8-a6b7-5edf078f37eb",
+      "operation": "ALMACENADO EN SECTOR DE PRODUCTO TERMINADO",
+      "opNumber": "Step ",
+      "reason": "Operación de almacenamiento, no es transformación ni inspección del producto.",
+      "hasControls": false,
+      "controlCount": 0
+    },
+    {
+      "product": "VWA/Apoyacabezas Delantero - Patagonia VW",
+      "docType": "PFD",
+      "docId": "c51fc067-1431-47d0-b206-dc9ec029c7a2",
+      "operation": "TRASLADO: VINILOS / TELAS A SECTOR DE MESA DE CORTE",
+      "opNumber": "Step ",
+      "reason": "Transporte interno no transforma el producto. No debería tener controles de calidad del producto.",
+      "hasControls": false,
+      "controlCount": 0
+    },
+    {
+      "product": "VWA/Apoyacabezas Delantero - Patagonia VW",
+      "docType": "PFD",
+      "docId": "c51fc067-1431-47d0-b206-dc9ec029c7a2",
+      "operation": "TRASLADO: KITS DE COMPONENTES DE COSTURA A SECTOR DE COSTURA",
+      "opNumber": "Step ",
+      "reason": "Transporte interno no transforma el producto. No debería tener controles de calidad del producto.",
+      "hasControls": false,
+      "controlCount": 0
+    },
+    {
+      "product": "VWA/Apoyacabezas Delantero - Patagonia VW",
+      "docType": "PFD",
+      "docId": "c51fc067-1431-47d0-b206-dc9ec029c7a2",
+      "operation": "TRASLADO: FUNDAS COSIDAS APROBADAS A AREA DE INYECCION",
+      "opNumber": "Step ",
+      "reason": "Transporte interno no transforma el producto. No debería tener controles de calidad del producto.",
+      "hasControls": false,
+      "controlCount": 0
+    },
+    {
+      "product": "VWA/Apoyacabezas Delantero - Patagonia VW",
+      "docType": "PFD",
+      "docId": "c51fc067-1431-47d0-b206-dc9ec029c7a2",
+      "operation": "TRASLADO: MATERIAL APROBADO A ALMACEN TEMPORAL (FIFO)",
+      "opNumber": "Step ",
+      "reason": "Transporte interno no transforma el producto. No debería tener controles de calidad del producto.",
+      "hasControls": false,
+      "controlCount": 0
+    },
+    {
+      "product": "VWA/Apoyacabezas Delantero - Patagonia VW",
+      "docType": "PFD",
+      "docId": "c51fc067-1431-47d0-b206-dc9ec029c7a2",
+      "operation": "ALMACENAMIENTO: PRODUCTO TERMINADO (FIFO)",
+      "opNumber": "Step ",
+      "reason": "Operación de almacenamiento, no es transformación ni inspección del producto.",
+      "hasControls": false,
+      "controlCount": 0
+    },
+    {
+      "product": "VWA/Apoyacabezas Delantero - Patagonia VW",
+      "docType": "PFD",
+      "docId": "c51fc067-1431-47d0-b206-dc9ec029c7a2",
+      "operation": "TRASLADO A SECTOR DE PRODUCTO TERMINADO",
+      "opNumber": "Step ",
+      "reason": "Transporte interno no transforma el producto. No debería tener controles de calidad del producto.",
+      "hasControls": false,
+      "controlCount": 0
+    },
+    {
+      "product": "VWA/Apoyacabezas Trasero Central - Patagonia VW",
+      "docType": "PFD",
+      "docId": "73a17ed0-964b-407e-8485-fd1bfd16b9f0",
+      "operation": "TRASLADO: VINILOS / TELAS A SECTOR DE MESA DE CORTE",
+      "opNumber": "Step ",
+      "reason": "Transporte interno no transforma el producto. No debería tener controles de calidad del producto.",
+      "hasControls": false,
+      "controlCount": 0
+    },
+    {
+      "product": "VWA/Apoyacabezas Trasero Central - Patagonia VW",
+      "docType": "PFD",
+      "docId": "73a17ed0-964b-407e-8485-fd1bfd16b9f0",
+      "operation": "TRASLADO: KITS DE COMPONENTES DE COSTURA A SECTOR DE COSTURA",
+      "opNumber": "Step ",
+      "reason": "Transporte interno no transforma el producto. No debería tener controles de calidad del producto.",
+      "hasControls": false,
+      "controlCount": 0
+    },
+    {
+      "product": "VWA/Apoyacabezas Trasero Central - Patagonia VW",
+      "docType": "PFD",
+      "docId": "73a17ed0-964b-407e-8485-fd1bfd16b9f0",
+      "operation": "TRASLADO: FUNDAS COSIDAS APROBADAS A AREA DE INYECCION",
+      "opNumber": "Step ",
+      "reason": "Transporte interno no transforma el producto. No debería tener controles de calidad del producto.",
+      "hasControls": false,
+      "controlCount": 0
+    },
+    {
+      "product": "VWA/Apoyacabezas Trasero Central - Patagonia VW",
+      "docType": "PFD",
+      "docId": "73a17ed0-964b-407e-8485-fd1bfd16b9f0",
+      "operation": "TRASLADO: MATERIAL APROBADO A ALMACEN TEMPORAL (FIFO)",
+      "opNumber": "Step ",
+      "reason": "Transporte interno no transforma el producto. No debería tener controles de calidad del producto.",
+      "hasControls": false,
+      "controlCount": 0
+    },
+    {
+      "product": "VWA/Apoyacabezas Trasero Central - Patagonia VW",
+      "docType": "PFD",
+      "docId": "73a17ed0-964b-407e-8485-fd1bfd16b9f0",
+      "operation": "ALMACENAMIENTO: PRODUCTO TERMINADO (FIFO)",
+      "opNumber": "Step ",
+      "reason": "Operación de almacenamiento, no es transformación ni inspección del producto.",
+      "hasControls": false,
+      "controlCount": 0
+    },
+    {
+      "product": "VWA/Apoyacabezas Trasero Central - Patagonia VW",
+      "docType": "PFD",
+      "docId": "73a17ed0-964b-407e-8485-fd1bfd16b9f0",
+      "operation": "TRASLADO A SECTOR DE PRODUCTO TERMINADO",
+      "opNumber": "Step ",
+      "reason": "Transporte interno no transforma el producto. No debería tener controles de calidad del producto.",
+      "hasControls": false,
+      "controlCount": 0
+    },
+    {
+      "product": "VWA/PATAGONIA/ARMREST_DOOR_PANEL",
+      "docType": "AMFE",
+      "docId": "83b52df8-98ed-465c-b841-421b286a3a52",
+      "operation": "CORTE DE COMPONENTES - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 30",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Tiene 3 fallas y 3 causas definidas en AMFE.",
+      "hasControls": true,
+      "controlCount": 6
+    },
+    {
+      "product": "VWA/PATAGONIA/ARMREST_DOOR_PANEL",
+      "docType": "AMFE",
+      "docId": "83b52df8-98ed-465c-b841-421b286a3a52",
+      "operation": "COSTURA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 52",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Tiene 3 fallas y 3 causas definidas en AMFE.",
+      "hasControls": true,
+      "controlCount": 6
+    },
+    {
+      "product": "VWA/PATAGONIA/ARMREST_DOOR_PANEL",
+      "docType": "AMFE",
+      "docId": "83b52df8-98ed-465c-b841-421b286a3a52",
+      "operation": "INYECCION PLASTICA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 61",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Tiene 3 fallas y 3 causas definidas en AMFE.",
+      "hasControls": true,
+      "controlCount": 6
+    },
+    {
+      "product": "VWA/PATAGONIA/ARMREST_DOOR_PANEL",
+      "docType": "AMFE",
+      "docId": "83b52df8-98ed-465c-b841-421b286a3a52",
+      "operation": "INYECCION PU - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 72",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Tiene 4 fallas y 4 causas definidas en AMFE.",
+      "hasControls": true,
+      "controlCount": 8
+    },
+    {
+      "product": "VWA/PATAGONIA/ARMREST_DOOR_PANEL",
+      "docType": "AMFE",
+      "docId": "83b52df8-98ed-465c-b841-421b286a3a52",
+      "operation": "ADHESIVADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 82",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Tiene 3 fallas y 3 causas definidas en AMFE.",
+      "hasControls": true,
+      "controlCount": 6
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT [L0]",
+      "docType": "AMFE",
+      "docId": "2bad8095-69c6-4e5c-90c5-b59f4358808a",
+      "operation": "CORTE DE COMPONENTES DE VINILO O TELA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 30",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Tiene 3 fallas y 3 causas definidas en AMFE.",
+      "hasControls": true,
+      "controlCount": 6
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT [L0]",
+      "docType": "AMFE",
+      "docId": "2bad8095-69c6-4e5c-90c5-b59f4358808a",
+      "operation": "TROQUELADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 61",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Tiene 3 fallas y 3 causas definidas en AMFE.",
+      "hasControls": true,
+      "controlCount": 6
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT [L0]",
+      "docType": "AMFE",
+      "docId": "2bad8095-69c6-4e5c-90c5-b59f4358808a",
+      "operation": "INYECCIÓN PLÁSTICA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 71",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Tiene 3 fallas y 3 causas definidas en AMFE.",
+      "hasControls": true,
+      "controlCount": 6
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT [L0]",
+      "docType": "AMFE",
+      "docId": "2bad8095-69c6-4e5c-90c5-b59f4358808a",
+      "operation": "PREARMADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 81",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Tiene 3 fallas y 3 causas definidas en AMFE.",
+      "hasControls": true,
+      "controlCount": 6
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT [L0]",
+      "docType": "AMFE",
+      "docId": "2bad8095-69c6-4e5c-90c5-b59f4358808a",
+      "operation": "ADHESIVADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 92",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Tiene 3 fallas y 3 causas definidas en AMFE.",
+      "hasControls": true,
+      "controlCount": 6
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "AMFE",
+      "docId": "938978d7-7e49-4d72-bc3e-8673320e9737",
+      "operation": "CORTE DE COMPONENTES DE VINILO O TELA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 30",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Tiene 3 fallas y 3 causas definidas en AMFE.",
+      "hasControls": true,
+      "controlCount": 6
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "AMFE",
+      "docId": "938978d7-7e49-4d72-bc3e-8673320e9737",
+      "operation": "TROQUELADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 61",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Tiene 3 fallas y 3 causas definidas en AMFE.",
+      "hasControls": true,
+      "controlCount": 6
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "AMFE",
+      "docId": "938978d7-7e49-4d72-bc3e-8673320e9737",
+      "operation": "INYECCIÓN PLÁSTICA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 71",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Tiene 3 fallas y 3 causas definidas en AMFE.",
+      "hasControls": true,
+      "controlCount": 6
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "AMFE",
+      "docId": "938978d7-7e49-4d72-bc3e-8673320e9737",
+      "operation": "PREARMADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 81",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Tiene 3 fallas y 3 causas definidas en AMFE.",
+      "hasControls": true,
+      "controlCount": 6
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "AMFE",
+      "docId": "938978d7-7e49-4d72-bc3e-8673320e9737",
+      "operation": "ADHESIVADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 92",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Tiene 3 fallas y 3 causas definidas en AMFE.",
+      "hasControls": true,
+      "controlCount": 6
+    },
+    {
+      "product": "VWA/PATAGONIA/TOP_ROLL",
+      "docType": "AMFE",
+      "docId": "d50794b6-2c64-4a83-8083-f55049be1f73",
+      "operation": "ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 11",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Tiene 3 fallas y 3 causas definidas en AMFE.",
+      "hasControls": true,
+      "controlCount": 6
+    },
+    {
+      "product": "VWA/PATAGONIA/ARMREST_DOOR_PANEL",
+      "docType": "CP",
+      "docId": "d99ada1f-4db0-4bb2-a0f8-60e04d8751e6",
+      "operation": "CORTE DE COMPONENTES - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 30",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/ARMREST_DOOR_PANEL",
+      "docType": "CP",
+      "docId": "d99ada1f-4db0-4bb2-a0f8-60e04d8751e6",
+      "operation": "CORTE DE COMPONENTES - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 30",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/ARMREST_DOOR_PANEL",
+      "docType": "CP",
+      "docId": "d99ada1f-4db0-4bb2-a0f8-60e04d8751e6",
+      "operation": "CORTE DE COMPONENTES - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 30",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/ARMREST_DOOR_PANEL",
+      "docType": "CP",
+      "docId": "d99ada1f-4db0-4bb2-a0f8-60e04d8751e6",
+      "operation": "CORTE DE COMPONENTES - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 30",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/ARMREST_DOOR_PANEL",
+      "docType": "CP",
+      "docId": "d99ada1f-4db0-4bb2-a0f8-60e04d8751e6",
+      "operation": "CORTE DE COMPONENTES - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 30",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/ARMREST_DOOR_PANEL",
+      "docType": "CP",
+      "docId": "d99ada1f-4db0-4bb2-a0f8-60e04d8751e6",
+      "operation": "CORTE DE COMPONENTES - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 30",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/ARMREST_DOOR_PANEL",
+      "docType": "CP",
+      "docId": "d99ada1f-4db0-4bb2-a0f8-60e04d8751e6",
+      "operation": "COSTURA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 52",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/ARMREST_DOOR_PANEL",
+      "docType": "CP",
+      "docId": "d99ada1f-4db0-4bb2-a0f8-60e04d8751e6",
+      "operation": "COSTURA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 52",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/ARMREST_DOOR_PANEL",
+      "docType": "CP",
+      "docId": "d99ada1f-4db0-4bb2-a0f8-60e04d8751e6",
+      "operation": "COSTURA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 52",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/ARMREST_DOOR_PANEL",
+      "docType": "CP",
+      "docId": "d99ada1f-4db0-4bb2-a0f8-60e04d8751e6",
+      "operation": "COSTURA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 52",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/ARMREST_DOOR_PANEL",
+      "docType": "CP",
+      "docId": "d99ada1f-4db0-4bb2-a0f8-60e04d8751e6",
+      "operation": "COSTURA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 52",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/ARMREST_DOOR_PANEL",
+      "docType": "CP",
+      "docId": "d99ada1f-4db0-4bb2-a0f8-60e04d8751e6",
+      "operation": "COSTURA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 52",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/ARMREST_DOOR_PANEL",
+      "docType": "CP",
+      "docId": "d99ada1f-4db0-4bb2-a0f8-60e04d8751e6",
+      "operation": "INYECCION PLASTICA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 61",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/ARMREST_DOOR_PANEL",
+      "docType": "CP",
+      "docId": "d99ada1f-4db0-4bb2-a0f8-60e04d8751e6",
+      "operation": "INYECCION PLASTICA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 61",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/ARMREST_DOOR_PANEL",
+      "docType": "CP",
+      "docId": "d99ada1f-4db0-4bb2-a0f8-60e04d8751e6",
+      "operation": "INYECCION PLASTICA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 61",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/ARMREST_DOOR_PANEL",
+      "docType": "CP",
+      "docId": "d99ada1f-4db0-4bb2-a0f8-60e04d8751e6",
+      "operation": "INYECCION PLASTICA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 61",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/ARMREST_DOOR_PANEL",
+      "docType": "CP",
+      "docId": "d99ada1f-4db0-4bb2-a0f8-60e04d8751e6",
+      "operation": "INYECCION PLASTICA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 61",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/ARMREST_DOOR_PANEL",
+      "docType": "CP",
+      "docId": "d99ada1f-4db0-4bb2-a0f8-60e04d8751e6",
+      "operation": "INYECCION PLASTICA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 61",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/ARMREST_DOOR_PANEL",
+      "docType": "CP",
+      "docId": "d99ada1f-4db0-4bb2-a0f8-60e04d8751e6",
+      "operation": "INYECCION PU - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 72",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/ARMREST_DOOR_PANEL",
+      "docType": "CP",
+      "docId": "d99ada1f-4db0-4bb2-a0f8-60e04d8751e6",
+      "operation": "INYECCION PU - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 72",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/ARMREST_DOOR_PANEL",
+      "docType": "CP",
+      "docId": "d99ada1f-4db0-4bb2-a0f8-60e04d8751e6",
+      "operation": "INYECCION PU - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 72",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/ARMREST_DOOR_PANEL",
+      "docType": "CP",
+      "docId": "d99ada1f-4db0-4bb2-a0f8-60e04d8751e6",
+      "operation": "INYECCION PU - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 72",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/ARMREST_DOOR_PANEL",
+      "docType": "CP",
+      "docId": "d99ada1f-4db0-4bb2-a0f8-60e04d8751e6",
+      "operation": "INYECCION PU - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 72",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/ARMREST_DOOR_PANEL",
+      "docType": "CP",
+      "docId": "d99ada1f-4db0-4bb2-a0f8-60e04d8751e6",
+      "operation": "INYECCION PU - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 72",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/ARMREST_DOOR_PANEL",
+      "docType": "CP",
+      "docId": "d99ada1f-4db0-4bb2-a0f8-60e04d8751e6",
+      "operation": "ADHESIVADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 82",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/ARMREST_DOOR_PANEL",
+      "docType": "CP",
+      "docId": "d99ada1f-4db0-4bb2-a0f8-60e04d8751e6",
+      "operation": "ADHESIVADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 82",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/ARMREST_DOOR_PANEL",
+      "docType": "CP",
+      "docId": "d99ada1f-4db0-4bb2-a0f8-60e04d8751e6",
+      "operation": "ADHESIVADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 82",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/ARMREST_DOOR_PANEL",
+      "docType": "CP",
+      "docId": "d99ada1f-4db0-4bb2-a0f8-60e04d8751e6",
+      "operation": "ADHESIVADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 82",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/ARMREST_DOOR_PANEL",
+      "docType": "CP",
+      "docId": "d99ada1f-4db0-4bb2-a0f8-60e04d8751e6",
+      "operation": "ADHESIVADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 82",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/ARMREST_DOOR_PANEL",
+      "docType": "CP",
+      "docId": "d99ada1f-4db0-4bb2-a0f8-60e04d8751e6",
+      "operation": "ADHESIVADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 82",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT [L0]",
+      "docType": "CP",
+      "docId": "7d3d8116-b65b-4c26-91e6-8e5527f8b9b5",
+      "operation": "CORTE DE COMPONENTES DE VINILO O TELA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 30",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT [L0]",
+      "docType": "CP",
+      "docId": "7d3d8116-b65b-4c26-91e6-8e5527f8b9b5",
+      "operation": "CORTE DE COMPONENTES DE VINILO O TELA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 30",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT [L0]",
+      "docType": "CP",
+      "docId": "7d3d8116-b65b-4c26-91e6-8e5527f8b9b5",
+      "operation": "CORTE DE COMPONENTES DE VINILO O TELA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 30",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT [L0]",
+      "docType": "CP",
+      "docId": "7d3d8116-b65b-4c26-91e6-8e5527f8b9b5",
+      "operation": "CORTE DE COMPONENTES DE VINILO O TELA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 30",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT [L0]",
+      "docType": "CP",
+      "docId": "7d3d8116-b65b-4c26-91e6-8e5527f8b9b5",
+      "operation": "CORTE DE COMPONENTES DE VINILO O TELA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 30",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT [L0]",
+      "docType": "CP",
+      "docId": "7d3d8116-b65b-4c26-91e6-8e5527f8b9b5",
+      "operation": "CORTE DE COMPONENTES DE VINILO O TELA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 30",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT [L0]",
+      "docType": "CP",
+      "docId": "7d3d8116-b65b-4c26-91e6-8e5527f8b9b5",
+      "operation": "TROQUELADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 61",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT [L0]",
+      "docType": "CP",
+      "docId": "7d3d8116-b65b-4c26-91e6-8e5527f8b9b5",
+      "operation": "TROQUELADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 61",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT [L0]",
+      "docType": "CP",
+      "docId": "7d3d8116-b65b-4c26-91e6-8e5527f8b9b5",
+      "operation": "TROQUELADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 61",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT [L0]",
+      "docType": "CP",
+      "docId": "7d3d8116-b65b-4c26-91e6-8e5527f8b9b5",
+      "operation": "TROQUELADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 61",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT [L0]",
+      "docType": "CP",
+      "docId": "7d3d8116-b65b-4c26-91e6-8e5527f8b9b5",
+      "operation": "TROQUELADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 61",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT [L0]",
+      "docType": "CP",
+      "docId": "7d3d8116-b65b-4c26-91e6-8e5527f8b9b5",
+      "operation": "TROQUELADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 61",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT [L0]",
+      "docType": "CP",
+      "docId": "7d3d8116-b65b-4c26-91e6-8e5527f8b9b5",
+      "operation": "INYECCIÓN PLÁSTICA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 71",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT [L0]",
+      "docType": "CP",
+      "docId": "7d3d8116-b65b-4c26-91e6-8e5527f8b9b5",
+      "operation": "INYECCIÓN PLÁSTICA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 71",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT [L0]",
+      "docType": "CP",
+      "docId": "7d3d8116-b65b-4c26-91e6-8e5527f8b9b5",
+      "operation": "INYECCIÓN PLÁSTICA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 71",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT [L0]",
+      "docType": "CP",
+      "docId": "7d3d8116-b65b-4c26-91e6-8e5527f8b9b5",
+      "operation": "INYECCIÓN PLÁSTICA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 71",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT [L0]",
+      "docType": "CP",
+      "docId": "7d3d8116-b65b-4c26-91e6-8e5527f8b9b5",
+      "operation": "INYECCIÓN PLÁSTICA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 71",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT [L0]",
+      "docType": "CP",
+      "docId": "7d3d8116-b65b-4c26-91e6-8e5527f8b9b5",
+      "operation": "INYECCIÓN PLÁSTICA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 71",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT [L0]",
+      "docType": "CP",
+      "docId": "7d3d8116-b65b-4c26-91e6-8e5527f8b9b5",
+      "operation": "PREARMADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 81",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT [L0]",
+      "docType": "CP",
+      "docId": "7d3d8116-b65b-4c26-91e6-8e5527f8b9b5",
+      "operation": "PREARMADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 81",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT [L0]",
+      "docType": "CP",
+      "docId": "7d3d8116-b65b-4c26-91e6-8e5527f8b9b5",
+      "operation": "PREARMADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 81",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT [L0]",
+      "docType": "CP",
+      "docId": "7d3d8116-b65b-4c26-91e6-8e5527f8b9b5",
+      "operation": "PREARMADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 81",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT [L0]",
+      "docType": "CP",
+      "docId": "7d3d8116-b65b-4c26-91e6-8e5527f8b9b5",
+      "operation": "PREARMADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 81",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT [L0]",
+      "docType": "CP",
+      "docId": "7d3d8116-b65b-4c26-91e6-8e5527f8b9b5",
+      "operation": "PREARMADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 81",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT [L0]",
+      "docType": "CP",
+      "docId": "7d3d8116-b65b-4c26-91e6-8e5527f8b9b5",
+      "operation": "ADHESIVADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 92",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT [L0]",
+      "docType": "CP",
+      "docId": "7d3d8116-b65b-4c26-91e6-8e5527f8b9b5",
+      "operation": "ADHESIVADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 92",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT [L0]",
+      "docType": "CP",
+      "docId": "7d3d8116-b65b-4c26-91e6-8e5527f8b9b5",
+      "operation": "ADHESIVADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 92",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT [L0]",
+      "docType": "CP",
+      "docId": "7d3d8116-b65b-4c26-91e6-8e5527f8b9b5",
+      "operation": "ADHESIVADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 92",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT [L0]",
+      "docType": "CP",
+      "docId": "7d3d8116-b65b-4c26-91e6-8e5527f8b9b5",
+      "operation": "ADHESIVADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 92",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT [L0]",
+      "docType": "CP",
+      "docId": "7d3d8116-b65b-4c26-91e6-8e5527f8b9b5",
+      "operation": "ADHESIVADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 92",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/TOP_ROLL",
+      "docType": "CP",
+      "docId": "69f6daf9-f2aa-49bd-a70a-ff1b02fcec0d",
+      "operation": "ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 11",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/TOP_ROLL",
+      "docType": "CP",
+      "docId": "69f6daf9-f2aa-49bd-a70a-ff1b02fcec0d",
+      "operation": "ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 11",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/TOP_ROLL",
+      "docType": "CP",
+      "docId": "69f6daf9-f2aa-49bd-a70a-ff1b02fcec0d",
+      "operation": "ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 11",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/TOP_ROLL",
+      "docType": "CP",
+      "docId": "69f6daf9-f2aa-49bd-a70a-ff1b02fcec0d",
+      "operation": "ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 11",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/TOP_ROLL",
+      "docType": "CP",
+      "docId": "69f6daf9-f2aa-49bd-a70a-ff1b02fcec0d",
+      "operation": "ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 11",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/TOP_ROLL",
+      "docType": "CP",
+      "docId": "69f6daf9-f2aa-49bd-a70a-ff1b02fcec0d",
+      "operation": "ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 11",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "CORTE DE COMPONENTES DE VINILO O TELA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 30",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "CORTE DE COMPONENTES DE VINILO O TELA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 30",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "CORTE DE COMPONENTES DE VINILO O TELA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 30",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "CORTE DE COMPONENTES DE VINILO O TELA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 30",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "CORTE DE COMPONENTES DE VINILO O TELA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 30",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "CORTE DE COMPONENTES DE VINILO O TELA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 30",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "CORTE DE COMPONENTES DE VINILO O TELA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 30",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "CORTE DE COMPONENTES DE VINILO O TELA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 30",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "CORTE DE COMPONENTES DE VINILO O TELA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 30",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "TROQUELADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 61",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "TROQUELADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 61",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "TROQUELADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 61",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "TROQUELADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 61",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "TROQUELADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 61",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "TROQUELADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 61",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "TROQUELADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 61",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "TROQUELADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 61",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "TROQUELADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 61",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "INYECCIÓN PLÁSTICA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 71",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "INYECCIÓN PLÁSTICA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 71",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "INYECCIÓN PLÁSTICA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 71",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "INYECCIÓN PLÁSTICA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 71",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "INYECCIÓN PLÁSTICA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 71",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "INYECCIÓN PLÁSTICA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 71",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "INYECCIÓN PLÁSTICA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 71",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "INYECCIÓN PLÁSTICA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 71",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "INYECCIÓN PLÁSTICA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 71",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "PREARMADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 81",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "PREARMADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 81",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "PREARMADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 81",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "PREARMADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 81",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "PREARMADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 81",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "PREARMADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 81",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "PREARMADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 81",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "PREARMADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 81",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "PREARMADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 81",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "ADHESIVADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 92",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "ADHESIVADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 92",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "ADHESIVADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 92",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "ADHESIVADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 92",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "ADHESIVADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 92",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "ADHESIVADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 92",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "ADHESIVADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 92",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "ADHESIVADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 92",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "ADHESIVADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 92",
+      "reason": "Almacenamiento intermedio no es una operación productiva. No transforma ni inspecciona el producto. Este ítem del Plan de Control define controles de calidad para una operación no productiva.",
+      "hasControls": true,
+      "controlCount": 1
+    }
+  ],
+  "suspiciousCombined": [
+    {
+      "product": "VWA/Apoyacabezas Trasero Lateral - Patagonia VW",
+      "docType": "PFD",
+      "docId": "689c06c6-144a-4a13-bc78-f121d9d940ac",
+      "operation": "TRASLADO: VINILOS / TELAS A SECTOR DE MESA DE CORTE",
+      "opNumber": "Step ",
+      "realPart": "TELAS A SECTOR DE MESA DE CORTE",
+      "storagePart": "TRASLADO: VINILOS",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Deberían ser pasos separados."
+    },
+    {
+      "product": "VWA/Armrest Door Panel - Patagonia VW",
+      "docType": "PFD",
+      "docId": "ebb83668-9894-4495-830c-29e856f8bfc2",
+      "operation": "TRASLADO: SUSTRATO + ESPUMA A SECTOR DE ADHESIVADO",
+      "opNumber": "Step ",
+      "realPart": "ESPUMA A SECTOR DE ADHESIVADO",
+      "storagePart": "TRASLADO: SUSTRATO",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Deberían ser pasos separados."
+    },
+    {
+      "product": "VWA/Apoyacabezas Delantero - Patagonia VW",
+      "docType": "PFD",
+      "docId": "c51fc067-1431-47d0-b206-dc9ec029c7a2",
+      "operation": "TRASLADO: VINILOS / TELAS A SECTOR DE MESA DE CORTE",
+      "opNumber": "Step ",
+      "realPart": "TELAS A SECTOR DE MESA DE CORTE",
+      "storagePart": "TRASLADO: VINILOS",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Deberían ser pasos separados."
+    },
+    {
+      "product": "VWA/Apoyacabezas Trasero Central - Patagonia VW",
+      "docType": "PFD",
+      "docId": "73a17ed0-964b-407e-8485-fd1bfd16b9f0",
+      "operation": "TRASLADO: VINILOS / TELAS A SECTOR DE MESA DE CORTE",
+      "opNumber": "Step ",
+      "realPart": "TELAS A SECTOR DE MESA DE CORTE",
+      "storagePart": "TRASLADO: VINILOS",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Deberían ser pasos separados."
+    },
+    {
+      "product": "VWA/PATAGONIA/ARMREST_DOOR_PANEL",
+      "docType": "AMFE",
+      "docId": "83b52df8-98ed-465c-b841-421b286a3a52",
+      "operation": "CORTE DE COMPONENTES - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 30",
+      "realPart": "CORTE DE COMPONENTES",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Deberían ser pasos separados en AMFE."
+    },
+    {
+      "product": "VWA/PATAGONIA/ARMREST_DOOR_PANEL",
+      "docType": "AMFE",
+      "docId": "83b52df8-98ed-465c-b841-421b286a3a52",
+      "operation": "COSTURA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 52",
+      "realPart": "COSTURA",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Deberían ser pasos separados en AMFE."
+    },
+    {
+      "product": "VWA/PATAGONIA/ARMREST_DOOR_PANEL",
+      "docType": "AMFE",
+      "docId": "83b52df8-98ed-465c-b841-421b286a3a52",
+      "operation": "INYECCION PLASTICA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 61",
+      "realPart": "INYECCION PLASTICA",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Deberían ser pasos separados en AMFE."
+    },
+    {
+      "product": "VWA/PATAGONIA/ARMREST_DOOR_PANEL",
+      "docType": "AMFE",
+      "docId": "83b52df8-98ed-465c-b841-421b286a3a52",
+      "operation": "INYECCION PU - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 72",
+      "realPart": "INYECCION PU",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Deberían ser pasos separados en AMFE."
+    },
+    {
+      "product": "VWA/PATAGONIA/ARMREST_DOOR_PANEL",
+      "docType": "AMFE",
+      "docId": "83b52df8-98ed-465c-b841-421b286a3a52",
+      "operation": "ADHESIVADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 82",
+      "realPart": "ADHESIVADO",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Deberían ser pasos separados en AMFE."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT [L0]",
+      "docType": "AMFE",
+      "docId": "2bad8095-69c6-4e5c-90c5-b59f4358808a",
+      "operation": "CORTE DE COMPONENTES DE VINILO O TELA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 30",
+      "realPart": "CORTE DE COMPONENTES DE VINILO O TELA",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Deberían ser pasos separados en AMFE."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT [L0]",
+      "docType": "AMFE",
+      "docId": "2bad8095-69c6-4e5c-90c5-b59f4358808a",
+      "operation": "TROQUELADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 61",
+      "realPart": "TROQUELADO",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Deberían ser pasos separados en AMFE."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT [L0]",
+      "docType": "AMFE",
+      "docId": "2bad8095-69c6-4e5c-90c5-b59f4358808a",
+      "operation": "INYECCIÓN PLÁSTICA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 71",
+      "realPart": "INYECCIÓN PLÁSTICA",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Deberían ser pasos separados en AMFE."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT [L0]",
+      "docType": "AMFE",
+      "docId": "2bad8095-69c6-4e5c-90c5-b59f4358808a",
+      "operation": "PREARMADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 81",
+      "realPart": "PREARMADO",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Deberían ser pasos separados en AMFE."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT [L0]",
+      "docType": "AMFE",
+      "docId": "2bad8095-69c6-4e5c-90c5-b59f4358808a",
+      "operation": "ADHESIVADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 92",
+      "realPart": "ADHESIVADO",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Deberían ser pasos separados en AMFE."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "AMFE",
+      "docId": "938978d7-7e49-4d72-bc3e-8673320e9737",
+      "operation": "CORTE DE COMPONENTES DE VINILO O TELA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 30",
+      "realPart": "CORTE DE COMPONENTES DE VINILO O TELA",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Deberían ser pasos separados en AMFE."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "AMFE",
+      "docId": "938978d7-7e49-4d72-bc3e-8673320e9737",
+      "operation": "TROQUELADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 61",
+      "realPart": "TROQUELADO",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Deberían ser pasos separados en AMFE."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "AMFE",
+      "docId": "938978d7-7e49-4d72-bc3e-8673320e9737",
+      "operation": "INYECCIÓN PLÁSTICA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 71",
+      "realPart": "INYECCIÓN PLÁSTICA",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Deberían ser pasos separados en AMFE."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "AMFE",
+      "docId": "938978d7-7e49-4d72-bc3e-8673320e9737",
+      "operation": "PREARMADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 81",
+      "realPart": "PREARMADO",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Deberían ser pasos separados en AMFE."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "AMFE",
+      "docId": "938978d7-7e49-4d72-bc3e-8673320e9737",
+      "operation": "ADHESIVADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 92",
+      "realPart": "ADHESIVADO",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Deberían ser pasos separados en AMFE."
+    },
+    {
+      "product": "VWA/PATAGONIA/ARMREST_DOOR_PANEL",
+      "docType": "CP",
+      "docId": "d99ada1f-4db0-4bb2-a0f8-60e04d8751e6",
+      "operation": "CORTE DE COMPONENTES - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 30",
+      "realPart": "CORTE DE COMPONENTES",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/ARMREST_DOOR_PANEL",
+      "docType": "CP",
+      "docId": "d99ada1f-4db0-4bb2-a0f8-60e04d8751e6",
+      "operation": "CORTE DE COMPONENTES - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 30",
+      "realPart": "CORTE DE COMPONENTES",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/ARMREST_DOOR_PANEL",
+      "docType": "CP",
+      "docId": "d99ada1f-4db0-4bb2-a0f8-60e04d8751e6",
+      "operation": "CORTE DE COMPONENTES - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 30",
+      "realPart": "CORTE DE COMPONENTES",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/ARMREST_DOOR_PANEL",
+      "docType": "CP",
+      "docId": "d99ada1f-4db0-4bb2-a0f8-60e04d8751e6",
+      "operation": "CORTE DE COMPONENTES - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 30",
+      "realPart": "CORTE DE COMPONENTES",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/ARMREST_DOOR_PANEL",
+      "docType": "CP",
+      "docId": "d99ada1f-4db0-4bb2-a0f8-60e04d8751e6",
+      "operation": "CORTE DE COMPONENTES - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 30",
+      "realPart": "CORTE DE COMPONENTES",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/ARMREST_DOOR_PANEL",
+      "docType": "CP",
+      "docId": "d99ada1f-4db0-4bb2-a0f8-60e04d8751e6",
+      "operation": "CORTE DE COMPONENTES - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 30",
+      "realPart": "CORTE DE COMPONENTES",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/ARMREST_DOOR_PANEL",
+      "docType": "CP",
+      "docId": "d99ada1f-4db0-4bb2-a0f8-60e04d8751e6",
+      "operation": "COSTURA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 52",
+      "realPart": "COSTURA",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/ARMREST_DOOR_PANEL",
+      "docType": "CP",
+      "docId": "d99ada1f-4db0-4bb2-a0f8-60e04d8751e6",
+      "operation": "COSTURA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 52",
+      "realPart": "COSTURA",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/ARMREST_DOOR_PANEL",
+      "docType": "CP",
+      "docId": "d99ada1f-4db0-4bb2-a0f8-60e04d8751e6",
+      "operation": "COSTURA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 52",
+      "realPart": "COSTURA",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/ARMREST_DOOR_PANEL",
+      "docType": "CP",
+      "docId": "d99ada1f-4db0-4bb2-a0f8-60e04d8751e6",
+      "operation": "COSTURA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 52",
+      "realPart": "COSTURA",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/ARMREST_DOOR_PANEL",
+      "docType": "CP",
+      "docId": "d99ada1f-4db0-4bb2-a0f8-60e04d8751e6",
+      "operation": "COSTURA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 52",
+      "realPart": "COSTURA",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/ARMREST_DOOR_PANEL",
+      "docType": "CP",
+      "docId": "d99ada1f-4db0-4bb2-a0f8-60e04d8751e6",
+      "operation": "COSTURA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 52",
+      "realPart": "COSTURA",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/ARMREST_DOOR_PANEL",
+      "docType": "CP",
+      "docId": "d99ada1f-4db0-4bb2-a0f8-60e04d8751e6",
+      "operation": "INYECCION PLASTICA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 61",
+      "realPart": "INYECCION PLASTICA",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/ARMREST_DOOR_PANEL",
+      "docType": "CP",
+      "docId": "d99ada1f-4db0-4bb2-a0f8-60e04d8751e6",
+      "operation": "INYECCION PLASTICA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 61",
+      "realPart": "INYECCION PLASTICA",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/ARMREST_DOOR_PANEL",
+      "docType": "CP",
+      "docId": "d99ada1f-4db0-4bb2-a0f8-60e04d8751e6",
+      "operation": "INYECCION PLASTICA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 61",
+      "realPart": "INYECCION PLASTICA",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/ARMREST_DOOR_PANEL",
+      "docType": "CP",
+      "docId": "d99ada1f-4db0-4bb2-a0f8-60e04d8751e6",
+      "operation": "INYECCION PLASTICA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 61",
+      "realPart": "INYECCION PLASTICA",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/ARMREST_DOOR_PANEL",
+      "docType": "CP",
+      "docId": "d99ada1f-4db0-4bb2-a0f8-60e04d8751e6",
+      "operation": "INYECCION PLASTICA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 61",
+      "realPart": "INYECCION PLASTICA",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/ARMREST_DOOR_PANEL",
+      "docType": "CP",
+      "docId": "d99ada1f-4db0-4bb2-a0f8-60e04d8751e6",
+      "operation": "INYECCION PLASTICA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 61",
+      "realPart": "INYECCION PLASTICA",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/ARMREST_DOOR_PANEL",
+      "docType": "CP",
+      "docId": "d99ada1f-4db0-4bb2-a0f8-60e04d8751e6",
+      "operation": "INYECCION PU - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 72",
+      "realPart": "INYECCION PU",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/ARMREST_DOOR_PANEL",
+      "docType": "CP",
+      "docId": "d99ada1f-4db0-4bb2-a0f8-60e04d8751e6",
+      "operation": "INYECCION PU - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 72",
+      "realPart": "INYECCION PU",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/ARMREST_DOOR_PANEL",
+      "docType": "CP",
+      "docId": "d99ada1f-4db0-4bb2-a0f8-60e04d8751e6",
+      "operation": "INYECCION PU - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 72",
+      "realPart": "INYECCION PU",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/ARMREST_DOOR_PANEL",
+      "docType": "CP",
+      "docId": "d99ada1f-4db0-4bb2-a0f8-60e04d8751e6",
+      "operation": "INYECCION PU - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 72",
+      "realPart": "INYECCION PU",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/ARMREST_DOOR_PANEL",
+      "docType": "CP",
+      "docId": "d99ada1f-4db0-4bb2-a0f8-60e04d8751e6",
+      "operation": "INYECCION PU - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 72",
+      "realPart": "INYECCION PU",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/ARMREST_DOOR_PANEL",
+      "docType": "CP",
+      "docId": "d99ada1f-4db0-4bb2-a0f8-60e04d8751e6",
+      "operation": "INYECCION PU - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 72",
+      "realPart": "INYECCION PU",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/ARMREST_DOOR_PANEL",
+      "docType": "CP",
+      "docId": "d99ada1f-4db0-4bb2-a0f8-60e04d8751e6",
+      "operation": "ADHESIVADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 82",
+      "realPart": "ADHESIVADO",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/ARMREST_DOOR_PANEL",
+      "docType": "CP",
+      "docId": "d99ada1f-4db0-4bb2-a0f8-60e04d8751e6",
+      "operation": "ADHESIVADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 82",
+      "realPart": "ADHESIVADO",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/ARMREST_DOOR_PANEL",
+      "docType": "CP",
+      "docId": "d99ada1f-4db0-4bb2-a0f8-60e04d8751e6",
+      "operation": "ADHESIVADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 82",
+      "realPart": "ADHESIVADO",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/ARMREST_DOOR_PANEL",
+      "docType": "CP",
+      "docId": "d99ada1f-4db0-4bb2-a0f8-60e04d8751e6",
+      "operation": "ADHESIVADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 82",
+      "realPart": "ADHESIVADO",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/ARMREST_DOOR_PANEL",
+      "docType": "CP",
+      "docId": "d99ada1f-4db0-4bb2-a0f8-60e04d8751e6",
+      "operation": "ADHESIVADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 82",
+      "realPart": "ADHESIVADO",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/ARMREST_DOOR_PANEL",
+      "docType": "CP",
+      "docId": "d99ada1f-4db0-4bb2-a0f8-60e04d8751e6",
+      "operation": "ADHESIVADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 82",
+      "realPart": "ADHESIVADO",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT [L0]",
+      "docType": "CP",
+      "docId": "7d3d8116-b65b-4c26-91e6-8e5527f8b9b5",
+      "operation": "CORTE DE COMPONENTES DE VINILO O TELA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 30",
+      "realPart": "CORTE DE COMPONENTES DE VINILO O TELA",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT [L0]",
+      "docType": "CP",
+      "docId": "7d3d8116-b65b-4c26-91e6-8e5527f8b9b5",
+      "operation": "CORTE DE COMPONENTES DE VINILO O TELA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 30",
+      "realPart": "CORTE DE COMPONENTES DE VINILO O TELA",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT [L0]",
+      "docType": "CP",
+      "docId": "7d3d8116-b65b-4c26-91e6-8e5527f8b9b5",
+      "operation": "CORTE DE COMPONENTES DE VINILO O TELA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 30",
+      "realPart": "CORTE DE COMPONENTES DE VINILO O TELA",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT [L0]",
+      "docType": "CP",
+      "docId": "7d3d8116-b65b-4c26-91e6-8e5527f8b9b5",
+      "operation": "CORTE DE COMPONENTES DE VINILO O TELA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 30",
+      "realPart": "CORTE DE COMPONENTES DE VINILO O TELA",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT [L0]",
+      "docType": "CP",
+      "docId": "7d3d8116-b65b-4c26-91e6-8e5527f8b9b5",
+      "operation": "CORTE DE COMPONENTES DE VINILO O TELA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 30",
+      "realPart": "CORTE DE COMPONENTES DE VINILO O TELA",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT [L0]",
+      "docType": "CP",
+      "docId": "7d3d8116-b65b-4c26-91e6-8e5527f8b9b5",
+      "operation": "CORTE DE COMPONENTES DE VINILO O TELA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 30",
+      "realPart": "CORTE DE COMPONENTES DE VINILO O TELA",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT [L0]",
+      "docType": "CP",
+      "docId": "7d3d8116-b65b-4c26-91e6-8e5527f8b9b5",
+      "operation": "TROQUELADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 61",
+      "realPart": "TROQUELADO",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT [L0]",
+      "docType": "CP",
+      "docId": "7d3d8116-b65b-4c26-91e6-8e5527f8b9b5",
+      "operation": "TROQUELADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 61",
+      "realPart": "TROQUELADO",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT [L0]",
+      "docType": "CP",
+      "docId": "7d3d8116-b65b-4c26-91e6-8e5527f8b9b5",
+      "operation": "TROQUELADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 61",
+      "realPart": "TROQUELADO",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT [L0]",
+      "docType": "CP",
+      "docId": "7d3d8116-b65b-4c26-91e6-8e5527f8b9b5",
+      "operation": "TROQUELADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 61",
+      "realPart": "TROQUELADO",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT [L0]",
+      "docType": "CP",
+      "docId": "7d3d8116-b65b-4c26-91e6-8e5527f8b9b5",
+      "operation": "TROQUELADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 61",
+      "realPart": "TROQUELADO",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT [L0]",
+      "docType": "CP",
+      "docId": "7d3d8116-b65b-4c26-91e6-8e5527f8b9b5",
+      "operation": "TROQUELADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 61",
+      "realPart": "TROQUELADO",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT [L0]",
+      "docType": "CP",
+      "docId": "7d3d8116-b65b-4c26-91e6-8e5527f8b9b5",
+      "operation": "INYECCIÓN PLÁSTICA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 71",
+      "realPart": "INYECCIÓN PLÁSTICA",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT [L0]",
+      "docType": "CP",
+      "docId": "7d3d8116-b65b-4c26-91e6-8e5527f8b9b5",
+      "operation": "INYECCIÓN PLÁSTICA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 71",
+      "realPart": "INYECCIÓN PLÁSTICA",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT [L0]",
+      "docType": "CP",
+      "docId": "7d3d8116-b65b-4c26-91e6-8e5527f8b9b5",
+      "operation": "INYECCIÓN PLÁSTICA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 71",
+      "realPart": "INYECCIÓN PLÁSTICA",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT [L0]",
+      "docType": "CP",
+      "docId": "7d3d8116-b65b-4c26-91e6-8e5527f8b9b5",
+      "operation": "INYECCIÓN PLÁSTICA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 71",
+      "realPart": "INYECCIÓN PLÁSTICA",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT [L0]",
+      "docType": "CP",
+      "docId": "7d3d8116-b65b-4c26-91e6-8e5527f8b9b5",
+      "operation": "INYECCIÓN PLÁSTICA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 71",
+      "realPart": "INYECCIÓN PLÁSTICA",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT [L0]",
+      "docType": "CP",
+      "docId": "7d3d8116-b65b-4c26-91e6-8e5527f8b9b5",
+      "operation": "INYECCIÓN PLÁSTICA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 71",
+      "realPart": "INYECCIÓN PLÁSTICA",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT [L0]",
+      "docType": "CP",
+      "docId": "7d3d8116-b65b-4c26-91e6-8e5527f8b9b5",
+      "operation": "PREARMADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 81",
+      "realPart": "PREARMADO",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT [L0]",
+      "docType": "CP",
+      "docId": "7d3d8116-b65b-4c26-91e6-8e5527f8b9b5",
+      "operation": "PREARMADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 81",
+      "realPart": "PREARMADO",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT [L0]",
+      "docType": "CP",
+      "docId": "7d3d8116-b65b-4c26-91e6-8e5527f8b9b5",
+      "operation": "PREARMADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 81",
+      "realPart": "PREARMADO",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT [L0]",
+      "docType": "CP",
+      "docId": "7d3d8116-b65b-4c26-91e6-8e5527f8b9b5",
+      "operation": "PREARMADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 81",
+      "realPart": "PREARMADO",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT [L0]",
+      "docType": "CP",
+      "docId": "7d3d8116-b65b-4c26-91e6-8e5527f8b9b5",
+      "operation": "PREARMADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 81",
+      "realPart": "PREARMADO",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT [L0]",
+      "docType": "CP",
+      "docId": "7d3d8116-b65b-4c26-91e6-8e5527f8b9b5",
+      "operation": "PREARMADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 81",
+      "realPart": "PREARMADO",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT [L0]",
+      "docType": "CP",
+      "docId": "7d3d8116-b65b-4c26-91e6-8e5527f8b9b5",
+      "operation": "ADHESIVADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 92",
+      "realPart": "ADHESIVADO",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT [L0]",
+      "docType": "CP",
+      "docId": "7d3d8116-b65b-4c26-91e6-8e5527f8b9b5",
+      "operation": "ADHESIVADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 92",
+      "realPart": "ADHESIVADO",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT [L0]",
+      "docType": "CP",
+      "docId": "7d3d8116-b65b-4c26-91e6-8e5527f8b9b5",
+      "operation": "ADHESIVADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 92",
+      "realPart": "ADHESIVADO",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT [L0]",
+      "docType": "CP",
+      "docId": "7d3d8116-b65b-4c26-91e6-8e5527f8b9b5",
+      "operation": "ADHESIVADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 92",
+      "realPart": "ADHESIVADO",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT [L0]",
+      "docType": "CP",
+      "docId": "7d3d8116-b65b-4c26-91e6-8e5527f8b9b5",
+      "operation": "ADHESIVADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 92",
+      "realPart": "ADHESIVADO",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT [L0]",
+      "docType": "CP",
+      "docId": "7d3d8116-b65b-4c26-91e6-8e5527f8b9b5",
+      "operation": "ADHESIVADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 92",
+      "realPart": "ADHESIVADO",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "CORTE DE COMPONENTES DE VINILO O TELA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 30",
+      "realPart": "CORTE DE COMPONENTES DE VINILO O TELA",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "CORTE DE COMPONENTES DE VINILO O TELA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 30",
+      "realPart": "CORTE DE COMPONENTES DE VINILO O TELA",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "CORTE DE COMPONENTES DE VINILO O TELA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 30",
+      "realPart": "CORTE DE COMPONENTES DE VINILO O TELA",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "CORTE DE COMPONENTES DE VINILO O TELA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 30",
+      "realPart": "CORTE DE COMPONENTES DE VINILO O TELA",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "CORTE DE COMPONENTES DE VINILO O TELA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 30",
+      "realPart": "CORTE DE COMPONENTES DE VINILO O TELA",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "CORTE DE COMPONENTES DE VINILO O TELA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 30",
+      "realPart": "CORTE DE COMPONENTES DE VINILO O TELA",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "CORTE DE COMPONENTES DE VINILO O TELA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 30",
+      "realPart": "CORTE DE COMPONENTES DE VINILO O TELA",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "CORTE DE COMPONENTES DE VINILO O TELA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 30",
+      "realPart": "CORTE DE COMPONENTES DE VINILO O TELA",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "CORTE DE COMPONENTES DE VINILO O TELA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 30",
+      "realPart": "CORTE DE COMPONENTES DE VINILO O TELA",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "TROQUELADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 61",
+      "realPart": "TROQUELADO",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "TROQUELADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 61",
+      "realPart": "TROQUELADO",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "TROQUELADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 61",
+      "realPart": "TROQUELADO",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "TROQUELADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 61",
+      "realPart": "TROQUELADO",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "TROQUELADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 61",
+      "realPart": "TROQUELADO",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "TROQUELADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 61",
+      "realPart": "TROQUELADO",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "TROQUELADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 61",
+      "realPart": "TROQUELADO",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "TROQUELADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 61",
+      "realPart": "TROQUELADO",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "TROQUELADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 61",
+      "realPart": "TROQUELADO",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "INYECCIÓN PLÁSTICA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 71",
+      "realPart": "INYECCIÓN PLÁSTICA",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "INYECCIÓN PLÁSTICA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 71",
+      "realPart": "INYECCIÓN PLÁSTICA",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "INYECCIÓN PLÁSTICA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 71",
+      "realPart": "INYECCIÓN PLÁSTICA",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "INYECCIÓN PLÁSTICA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 71",
+      "realPart": "INYECCIÓN PLÁSTICA",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "INYECCIÓN PLÁSTICA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 71",
+      "realPart": "INYECCIÓN PLÁSTICA",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "INYECCIÓN PLÁSTICA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 71",
+      "realPart": "INYECCIÓN PLÁSTICA",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "INYECCIÓN PLÁSTICA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 71",
+      "realPart": "INYECCIÓN PLÁSTICA",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "INYECCIÓN PLÁSTICA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 71",
+      "realPart": "INYECCIÓN PLÁSTICA",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "INYECCIÓN PLÁSTICA - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 71",
+      "realPart": "INYECCIÓN PLÁSTICA",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "PREARMADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 81",
+      "realPart": "PREARMADO",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "PREARMADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 81",
+      "realPart": "PREARMADO",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "PREARMADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 81",
+      "realPart": "PREARMADO",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "PREARMADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 81",
+      "realPart": "PREARMADO",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "PREARMADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 81",
+      "realPart": "PREARMADO",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "PREARMADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 81",
+      "realPart": "PREARMADO",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "PREARMADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 81",
+      "realPart": "PREARMADO",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "PREARMADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 81",
+      "realPart": "PREARMADO",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "PREARMADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 81",
+      "realPart": "PREARMADO",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "ADHESIVADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 92",
+      "realPart": "ADHESIVADO",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "ADHESIVADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 92",
+      "realPart": "ADHESIVADO",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "ADHESIVADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 92",
+      "realPart": "ADHESIVADO",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "ADHESIVADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 92",
+      "realPart": "ADHESIVADO",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "ADHESIVADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 92",
+      "realPart": "ADHESIVADO",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "ADHESIVADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 92",
+      "realPart": "ADHESIVADO",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "ADHESIVADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 92",
+      "realPart": "ADHESIVADO",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "ADHESIVADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 92",
+      "realPart": "ADHESIVADO",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docType": "CP",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "operation": "ADHESIVADO - ALMACENAMIENTO EN MEDIOS WIP",
+      "opNumber": "OP 92",
+      "realPart": "ADHESIVADO",
+      "storagePart": "ALMACENAMIENTO EN MEDIOS WIP",
+      "note": "Nombre combina operación real con almacenamiento/transporte. Controles podrían estar mal asignados."
+    }
+  ]
+}
