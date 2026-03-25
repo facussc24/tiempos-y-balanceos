@@ -228,7 +228,7 @@ async function main() {
             const qcs: any[] = sheet.qualityChecks ?? [];
 
             for (const qc of qcs) {
-                const desc = String(qc.description ?? '');
+                const desc = String(qc.characteristic ?? qc.description ?? '');
                 const spec = String(qc.specification ?? '');
                 const freq = String(qc.frequency ?? '');
                 const reaction = String(qc.reactionAction ?? '');

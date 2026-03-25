@@ -5,6 +5,7 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import * as fs from 'fs';
 import * as path from 'path';
+import * as crypto from 'crypto';
 import { fileURLToPath } from 'url';
 
 // ---------- ESM compatibility ----------
@@ -136,6 +137,28 @@ export function backupDoc(table: string, id: string, dataJson: string): void {
     if (!fs.existsSync(backupDir)) fs.mkdirSync(backupDir, { recursive: true });
     const filePath = path.join(backupDir, `${table}_${id}.json`);
     fs.writeFileSync(filePath, dataJson, 'utf-8');
+}
+
+// ---------- Direct table update (for large documents that exceed SQL string limits) ----------
+
+export async function updateDocDirect(
+    table: string,
+    id: string,
+    dataJson: string,
+    extraCols: Record<string, string | number> = {},
+): Promise<void> {
+    await ensureAuth();
+    const checksum = crypto.createHash('sha256').update(dataJson).digest('hex');
+    const { error } = await supabase
+        .from(table)
+        .update({
+            data: dataJson,
+            checksum,
+            updated_at: new Date().toISOString(),
+            ...extraCols,
+        })
+        .eq('id', id);
+    if (error) throw new Error(`Direct update failed on ${table}/${id}: ${error.message}`);
 }
 
 export { supabase };

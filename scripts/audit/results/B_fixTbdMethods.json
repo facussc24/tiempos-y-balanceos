@@ -1,0 +1,161 @@
+{
+  "timestamp": "2026-03-25T22:10:14.542Z",
+  "summary": {
+    "totalFixed": 17
+  },
+  "corrections": [
+    {
+      "product": "PWA/TELAS_PLANAS",
+      "docId": "984fd34d-a819-42af-9326-60bfc49b2e40",
+      "opNumber": "80",
+      "operation": "Embalaje",
+      "control": "Error de conteo Segun instruccion de proceso",
+      "evaluationTechnique": "Visual / Segun instruccion de proceso",
+      "controlMethod": "Autocontrol del operador"
+    },
+    {
+      "product": "PWA/TELAS_TERMOFORMADAS",
+      "docId": "2f8abfa2-a721-40b1-84d5-7bd0fffa27f4",
+      "opNumber": "50",
+      "operation": "Pegado de dots en posicion correcta",
+      "control": "Orificios fuera de posicion Segun instruccion de proceso",
+      "evaluationTechnique": "Visual / Segun instruccion de proceso",
+      "controlMethod": "Autocontrol del operador"
+    },
+    {
+      "product": "PWA/TELAS_TERMOFORMADAS",
+      "docId": "2f8abfa2-a721-40b1-84d5-7bd0fffa27f4",
+      "opNumber": "50",
+      "operation": "Pegado de dots en posicion correcta",
+      "control": "Falta de orificios Segun instruccion de proceso",
+      "evaluationTechnique": "Visual / Segun instruccion de proceso",
+      "controlMethod": "Autocontrol del operador"
+    },
+    {
+      "product": "PWA/TELAS_TERMOFORMADAS",
+      "docId": "2f8abfa2-a721-40b1-84d5-7bd0fffa27f4",
+      "opNumber": "60",
+      "operation": "Inspeccion final de la pieza",
+      "control": "Programacion equivocada de la maquina de corte automatica Segun instruccion de proceso",
+      "evaluationTechnique": "Visual / Segun instruccion de proceso",
+      "controlMethod": "Autocontrol del operador"
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT [L0]",
+      "docId": "7d3d8116-b65b-4c26-91e6-8e5527f8b9b5",
+      "opNumber": "10",
+      "operation": "RECEPCIONAR MATERIA PRIMA",
+      "control": "Conforme a especificación de proceso",
+      "evaluationTechnique": "Visual / Lectura de etiqueta",
+      "controlMethod": "Inspeccion visual en recepcion"
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT [L0]",
+      "docId": "7d3d8116-b65b-4c26-91e6-8e5527f8b9b5",
+      "opNumber": "100",
+      "operation": "Tapizado - Tapizado semiautomático",
+      "control": "Parámetros de máquina fuera de especificación (tiempos de ciclo, temperatura, presión de vacío)  Den",
+      "evaluationTechnique": "Termometro infrarrojo / Pirometro",
+      "controlMethod": "Medicion de temperatura segun parametros de proceso"
+    },
+    {
+      "product": "VWA/PATAGONIA/TOP_ROLL",
+      "docId": "69f6daf9-f2aa-49bd-a70a-ff1b02fcec0d",
+      "opNumber": "50",
+      "operation": "Plegado de bordes / Plegado de bordes",
+      "control": "Adherencia del material en zona de plegado Temperatura de aire caliente/IR por debajo del set-point",
+      "evaluationTechnique": "Visual / Segun instruccion de proceso",
+      "controlMethod": "Autocontrol del operador"
+    },
+    {
+      "product": "VWA/PATAGONIA/TOP_ROLL",
+      "docId": "69f6daf9-f2aa-49bd-a70a-ff1b02fcec0d",
+      "opNumber": "50",
+      "operation": "Plegado de bordes / Plegado de bordes",
+      "control": "Adherencia del material en zona de plegado Temperatura de aire caliente/IR por debajo del set-point",
+      "evaluationTechnique": "Visual / Segun instruccion de proceso",
+      "controlMethod": "Autocontrol del operador"
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "opNumber": "10",
+      "operation": "RECEPCIONAR MATERIA PRIMA",
+      "control": "No se verifica color del Hilo Needle thread Linanhyl según variante (Jet Black / Alpe Gray) TBD — Ve",
+      "evaluationTechnique": "Visual contra muestra patron",
+      "controlMethod": "Inspeccion visual de recepcion"
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "opNumber": "10",
+      "operation": "RECEPCIONAR MATERIA PRIMA",
+      "control": "No se verifica fecha de vencimiento del adhesivo SikaMelt® 171IMG (SIKA) TBD — Verificar contra plan",
+      "evaluationTechnique": "Visual / Lectura de etiqueta",
+      "controlMethod": "Verificacion de certificado y etiqueta"
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "opNumber": "10",
+      "operation": "RECEPCIONAR MATERIA PRIMA",
+      "control": "No se verifica identificación de la cinta Tessa 52110 1500mm x 200m (TESA) TBD — Verificar contra pl",
+      "evaluationTechnique": "Visual / Lectura de etiqueta",
+      "controlMethod": "Verificacion de identificacion en recepcion"
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "opNumber": "10",
+      "operation": "RECEPCIONAR MATERIA PRIMA",
+      "control": "No se verifica color/estado del Vinilo PVC 1mm+3mm PU (SANSUY) según variante (Titan Black / Platini",
+      "evaluationTechnique": "Visual contra muestra patron",
+      "controlMethod": "Inspeccion visual de recepcion"
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "opNumber": "10",
+      "operation": "RECEPCIONAR MATERIA PRIMA",
+      "control": "No se verifica lote del PC/ABS CYCOLOY™ LG9000 (SABIC) TBD — Verificar contra plano/instruccion",
+      "evaluationTechnique": "Visual / Lectura de etiqueta",
+      "controlMethod": "Verificacion de certificado de lote"
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "opNumber": "10",
+      "operation": "RECEPCIONAR MATERIA PRIMA",
+      "control": "No se verifica identificación del PU FOAM 35Kg/m3 + 3mm (Capa de espuma) TBD — Verificar contra plan",
+      "evaluationTechnique": "Visual / Lectura de etiqueta",
+      "controlMethod": "Verificacion de identificacion en recepcion"
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "opNumber": "10",
+      "operation": "RECEPCIONAR MATERIA PRIMA",
+      "control": "Conforme a especificación de proceso",
+      "evaluationTechnique": "Visual / Lectura de etiqueta",
+      "controlMethod": "Inspeccion visual en recepcion"
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "opNumber": "100",
+      "operation": "Tapizado - Tapizado semiautomático",
+      "control": "Temperatura del vinilo o sustrato fuera de rango operativo (verificación con termómetro infrarrojo n",
+      "evaluationTechnique": "Termometro infrarrojo / Pirometro",
+      "controlMethod": "Medicion de temperatura segun parametros de proceso"
+    },
+    {
+      "product": "VWA/PATAGONIA/INSERT",
+      "docId": "8942ef5b-2a20-42cd-ba71-84817a6b784b",
+      "opNumber": "100",
+      "operation": "Tapizado - Tapizado semiautomático",
+      "control": "Parámetros de máquina fuera de especificación (tiempos de ciclo, temperatura, presión de vacío)  Den",
+      "evaluationTechnique": "Termometro infrarrojo / Pirometro",
+      "controlMethod": "Medicion de temperatura segun parametros de proceso"
+    }
+  ]
+}
