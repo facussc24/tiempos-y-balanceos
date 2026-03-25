@@ -589,7 +589,7 @@ async function main() {
         revision: '1',
         responsible: 'Carlos Baptista',
         approvedBy: 'G.Cal',
-        client: 'Volkswagen Argentina',
+        client: 'VWA',
         coreTeam: header.team,
         customerEngApproval: '',
         customerQualityApproval: '',

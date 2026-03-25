@@ -165,7 +165,7 @@ const AmfeModals: React.FC<AmfeModalsProps> = ({
                                     required
                                     autoFocus
                                     className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                    placeholder="Ej: Volkswagen Argentina, Toyota Argentina..."
+                                    placeholder="Ej: VWA, TOYOTA..."
                                 />
                                 <datalist id="saveAsClients">
                                     {saveAsState.existingClients.map(c => <option key={c} value={c} />)}

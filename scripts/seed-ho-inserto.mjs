@@ -26,7 +26,7 @@ const APPLICABLE_PARTS = [
 export const hoHeader = {
     formNumber: 'I-IN-002.4-R01',
     organization: 'BARACK MERCOSUL',
-    client: 'Volkswagen Argentina',
+    client: 'VWA',
     partNumber: 'INSERTO',
     partDescription: 'TAPIZADO INSERT',
     applicableParts: APPLICABLE_PARTS,

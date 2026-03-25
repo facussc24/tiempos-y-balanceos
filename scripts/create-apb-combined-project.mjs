@@ -64,7 +64,7 @@ const newProject = {
     meta: {
         name: PROJECT_NAME,
         date: new Date().toISOString().split('T')[0],
-        client: 'Volkswagen Argentina',
+        client: 'VWA',
         version: 'Rev A',
         engineer: '',
         project: 'PATAGONIA',

@@ -866,7 +866,7 @@ async function main() {
                 revision: '0',
                 responsible: 'M. Nieve',
                 approvedBy: 'M. Meszaros',
-                client: 'Volkswagen Argentina',
+                client: 'VWA',
                 coreTeam: 'M. Nieve / M. Meszaros / L. Lattanzi / F. Santoro / G. Cal',
                 customerEngApproval: '', customerQualityApproval: '', otherApproval: '',
                 linkedAmfeProject: PROJECT_NAME,
@@ -884,7 +884,7 @@ async function main() {
             header: {
                 organization: 'BARACK MERCOSUL',
                 location: 'PLANTA HURLINGHAM',
-                client: 'Volkswagen Argentina',
+                client: 'VWA',
                 modelYear: 'PATAGONIA',
                 subject: pos.l0Description,
                 startDate: '2025-04-10',
@@ -915,7 +915,7 @@ async function main() {
             header: {
                 formNumber: 'I-IN-002.4-R01',
                 organization: 'BARACK MERCOSUL',
-                client: 'Volkswagen Argentina',
+                client: 'VWA',
                 partNumber: pos.l0PartNumber,
                 partDescription: pos.l0Description,
                 applicableParts: pos.l0PartNumber,

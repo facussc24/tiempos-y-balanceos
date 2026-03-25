@@ -1931,7 +1931,7 @@ export function createPatagoniaAmfeDocument(): AmfeDocument {
         header: {
             organization: 'BARACK MERCOSUL',
             location: 'PLANTA HURLINGHAM',
-            client: 'Volkswagen Argentina',
+            client: 'VWA',
             modelYear: 'PATAGONIA',
             subject: 'INSERTO',
             startDate: '2025-11-27',
