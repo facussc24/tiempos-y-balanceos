@@ -37,17 +37,17 @@
         },
         {
           "type": "AMFE_CC_NO_CP",
-          "severity": "error",
+          "severity": "warning",
           "message": "AMFE op 10, cause \"Mala estiba y embalaje inadecuado\" (SC) has no CP coverage"
         },
         {
           "type": "AMFE_CC_NO_CP",
-          "severity": "error",
+          "severity": "warning",
           "message": "AMFE op 10, cause \"Manipulación incorrecta en tránsito\" (SC) has no CP coverage"
         },
         {
           "type": "AMFE_CC_NO_CP",
-          "severity": "error",
+          "severity": "warning",
           "message": "AMFE op 10, cause \"Almacenaje inadecuado en transporte (sin proteccio\" (SC) has no CP coverage"
         },
         {
@@ -67,7 +67,7 @@
         },
         {
           "type": "AMFE_CC_NO_CP",
-          "severity": "error",
+          "severity": "warning",
           "message": "AMFE op 10, cause \"Proveedor no respeta tolerancias\" (SC) has no CP coverage"
         },
         {
@@ -97,12 +97,12 @@
         },
         {
           "type": "AMFE_CC_NO_CP",
-          "severity": "error",
+          "severity": "warning",
           "message": "AMFE op 20, cause \"Falla en la máquina de corte\" (SC) has no CP coverage"
         },
         {
           "type": "AMFE_CC_NO_CP",
-          "severity": "error",
+          "severity": "warning",
           "message": "AMFE op 20, cause \"Falta de verificación del código de material antes\" (SC) has no CP coverage"
         },
         {
@@ -112,12 +112,12 @@
         },
         {
           "type": "AMFE_CC_NO_CP",
-          "severity": "warning",
+          "severity": "error",
           "message": "AMFE op 20, cause \"Desgaste de la cuchilla de corte.\" (SC) has no CP coverage"
         },
         {
           "type": "AMFE_CC_NO_CP",
-          "severity": "error",
+          "severity": "warning",
           "message": "AMFE op 25, cause \"Operador de producción omite la tarea de verificac\" (SC) has no CP coverage"
         },
         {
@@ -252,12 +252,12 @@
         },
         {
           "type": "AMFE_CC_NO_CP",
-          "severity": "warning",
+          "severity": "error",
           "message": "AMFE op 70, cause \"Presión de Inyección fuera de especificación\" (SC) has no CP coverage"
         },
         {
           "type": "AMFE_CC_NO_CP",
-          "severity": "warning",
+          "severity": "error",
           "message": "AMFE op 70, cause \"Temperatura de fusión del material demasiado baja\" (SC) has no CP coverage"
         },
         {
@@ -277,13 +277,18 @@
         },
         {
           "type": "AMFE_CC_NO_CP",
-          "severity": "warning",
+          "severity": "error",
           "message": "AMFE op 70, cause \"Molde o cavidad contaminada con material residual\" (SC) has no CP coverage"
         },
         {
           "type": "AMFE_CC_NO_CP",
-          "severity": "warning",
+          "severity": "error",
           "message": "AMFE op 70, cause \"Parámetros de Inyección configurados incorrectamen\" (SC) has no CP coverage"
+        },
+        {
+          "type": "AMFE_CC_NO_CP",
+          "severity": "error",
+          "message": "AMFE op 70, cause \"Mantenimiento Preventivo y Calibración de Sensores\" (AP=H) has no CP coverage"
         },
         {
           "type": "AMFE_CC_NO_CP",
@@ -302,12 +307,12 @@
         },
         {
           "type": "AMFE_CC_NO_CP",
-          "severity": "error",
+          "severity": "warning",
           "message": "AMFE op 80, cause \"Error del operario / Incorrecta alineación del sep\" (SC) has no CP coverage"
         },
         {
           "type": "AMFE_CC_NO_CP",
-          "severity": "error",
+          "severity": "warning",
           "message": "AMFE op 80, cause \"Error del operario / Burbujas en el adhesivo del s\" (SC) has no CP coverage"
         },
         {
@@ -327,7 +332,7 @@
         },
         {
           "type": "AMFE_CC_NO_CP",
-          "severity": "error",
+          "severity": "warning",
           "message": "AMFE op 90, cause \"Uso de adhesivo o reticulante vencido/degradado (M\" (SC) has no CP coverage"
         },
         {
@@ -342,7 +347,7 @@
         },
         {
           "type": "AMFE_CC_NO_CP",
-          "severity": "error",
+          "severity": "warning",
           "message": "AMFE op 91, cause \"Uso de adhesivo o reticulante vencido/degradado (M\" (SC) has no CP coverage"
         },
         {
@@ -372,17 +377,17 @@
         },
         {
           "type": "AMFE_CC_NO_CP",
-          "severity": "warning",
+          "severity": "error",
           "message": "AMFE op 100, cause \"Error del operario\" (CC) has no CP coverage"
         },
         {
           "type": "AMFE_CC_NO_CP",
-          "severity": "warning",
+          "severity": "error",
           "message": "AMFE op 100, cause \"Falla de la máquina\" (SC) has no CP coverage"
         },
         {
           "type": "AMFE_CC_NO_CP",
-          "severity": "error",
+          "severity": "warning",
           "message": "AMFE op 100, cause \"Tiempos de ciclo no verificados al inicio de turno\" (SC) has no CP coverage"
         },
         {
@@ -402,7 +407,7 @@
         },
         {
           "type": "AMFE_CC_NO_CP",
-          "severity": "error",
+          "severity": "warning",
           "message": "AMFE op 103, cause \"No existe una plantilla o máscara de protección pa\" (SC) has no CP coverage"
         },
         {
@@ -417,7 +422,7 @@
         },
         {
           "type": "AMFE_CC_NO_CP",
-          "severity": "error",
+          "severity": "warning",
           "message": "AMFE op 105, cause \"Operador aplica presión excesiva o desvía el cutte\" (SC) has no CP coverage"
         },
         {
@@ -472,17 +477,17 @@
         },
         {
           "type": "AMFE_CC_NO_CP",
-          "severity": "error",
+          "severity": "warning",
           "message": "AMFE op 111, cause \"Operador omite el paso de identificación\" (SC) has no CP coverage"
         },
         {
           "type": "AMFE_CC_NO_CP",
-          "severity": "error",
+          "severity": "warning",
           "message": "AMFE op 111, cause \"Insumos de identificación no disponibles (No hay e\" (SC) has no CP coverage"
         },
         {
           "type": "AMFE_CC_NO_CP",
-          "severity": "error",
+          "severity": "warning",
           "message": "AMFE op 111, cause \"El procedimiento de segregación no requiere la col\" (SC) has no CP coverage"
         }
       ]
@@ -807,6 +812,16 @@
           "type": "CP_NO_PFD",
           "severity": "info",
           "message": "CP operation 20b has no matching PFD step"
+        },
+        {
+          "type": "CP_NO_PFD",
+          "severity": "info",
+          "message": "CP operation 21 has no matching PFD step"
+        },
+        {
+          "type": "CP_NO_PFD",
+          "severity": "info",
+          "message": "CP operation 10d has no matching PFD step"
         }
       ]
     },
@@ -886,27 +901,12 @@
         {
           "type": "HO_CP_FREQ_MISMATCH",
           "severity": "info",
-          "message": "HO op 60 QC \"Llenado Incompleto de Pieza\": freq=\"Inicio de turno\" vs CP freq=\"Inicio y fin de turno\""
+          "message": "HO op 80 QC \"Adhesion insuficiente o fuera de especif\": freq=\"Inicio de turno\" vs CP freq=\"Inicio y fin de turno\""
         },
         {
           "type": "HO_CP_FREQ_MISMATCH",
           "severity": "info",
-          "message": "HO op 80 QC \"Adhesion insuficiente o fuera de especif\": freq=\"Inicio y fin de turno\" vs CP freq=\"Inicio de turno\""
-        },
-        {
-          "type": "HO_CP_FREQ_MISMATCH",
-          "severity": "info",
-          "message": "HO op 80 QC \"Adhesion insuficiente o fuera de especif\": freq=\"Inicio y fin de turno\" vs CP freq=\"Inicio de turno\""
-        },
-        {
-          "type": "HO_CP_FREQ_MISMATCH",
-          "severity": "info",
-          "message": "HO op 81 QC \"Adhesion insuficiente o fuera de especif\": freq=\"Inicio y fin de turno\" vs CP freq=\"Inicio de turno\""
-        },
-        {
-          "type": "HO_CP_FREQ_MISMATCH",
-          "severity": "info",
-          "message": "HO op 81 QC \"Adhesion insuficiente o fuera de especif\": freq=\"Inicio y fin de turno\" vs CP freq=\"Inicio de turno\""
+          "message": "HO op 81 QC \"Adhesion insuficiente o fuera de especif\": freq=\"Inicio de turno\" vs CP freq=\"Inicio y fin de turno\""
         }
       ]
     },
@@ -933,70 +933,18 @@
     {
       "family": "Telas Planas PWA",
       "project": "PWA/TELAS_PLANAS",
-      "issues": [
-        {
-          "type": "HO_NO_CP",
-          "severity": "warning",
-          "message": "HO sheet \"Corte por maquina de pieza Central\" (op 20) has no matching CP operation"
-        },
-        {
-          "type": "HO_NO_CP",
-          "severity": "warning",
-          "message": "HO sheet \"Corte por maquina, Blank de piezas laterales\" (op 21) has no matching CP operation"
-        },
-        {
-          "type": "HO_NO_CP",
-          "severity": "warning",
-          "message": "HO sheet \"Colocado de Aplix\" (op 10d) has no matching CP operation"
-        },
-        {
-          "type": "HO_NO_CP",
-          "severity": "warning",
-          "message": "HO sheet \"Embalaje\" (op 80) has no matching CP operation"
-        }
-      ]
+      "issues": []
     },
     {
       "family": "Telas Termoformadas PWA",
       "project": "PWA/TELAS_TERMOFORMADAS",
-      "issues": [
-        {
-          "type": "HO_NO_CP",
-          "severity": "warning",
-          "message": "HO sheet \"Preparacion de corte\" (op 15) has no matching CP operation"
-        },
-        {
-          "type": "HO_NO_CP",
-          "severity": "warning",
-          "message": "HO sheet \"Corte por maquina automatica segun dimensional\" (op 20) has no matching CP operation"
-        },
-        {
-          "type": "HO_NO_CP",
-          "severity": "warning",
-          "message": "HO sheet \"Costura fuerte, sin arruga ni pliegues\" (op 30) has no matching CP operation"
-        },
-        {
-          "type": "HO_NO_CP",
-          "severity": "warning",
-          "message": "HO sheet \"Colocado de clips en posicion correcta\" (op 40) has no matching CP operation"
-        },
-        {
-          "type": "HO_NO_CP",
-          "severity": "warning",
-          "message": "HO sheet \"Pegado de dots en posicion correcta\" (op 50) has no matching CP operation"
-        },
-        {
-          "type": "HO_NO_CP",
-          "severity": "warning",
-          "message": "HO sheet \"Inspeccion final de la pieza\" (op 60) has no matching CP operation"
-        }
-      ]
+      "issues": []
     }
   ],
   "summary": {
     "totalFamiliesAnalyzed": 9,
-    "totalIssues": 167,
-    "crossConsistencyIssues": 152,
-    "hoCpIssues": 15
+    "totalIssues": 157,
+    "crossConsistencyIssues": 155,
+    "hoCpIssues": 2
   }
 }
