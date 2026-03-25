@@ -185,10 +185,19 @@ interface FlatCauseRow {
     cause: AmfeCause;
 }
 
+/** Sort operations numerically by opNumber */
+function sortOperations(operations: AmfeOperation[]): AmfeOperation[] {
+    return [...operations].sort((a, b) => {
+        const numA = parseInt(a.opNumber) || 0;
+        const numB = parseInt(b.opNumber) || 0;
+        return numA - numB;
+    });
+}
+
 /** Flatten the AMFE hierarchy to a list of cause rows with their parent context */
 function flattenCauseRows(doc: AmfeDocument): FlatCauseRow[] {
     const result: FlatCauseRow[] = [];
-    for (const op of doc.operations) {
+    for (const op of sortOperations(doc.operations)) {
         for (const we of op.workElements) {
             for (const func of we.functions) {
                 for (const fail of func.failures) {
@@ -384,7 +393,7 @@ export function buildAmfeCompletoWorkbook(doc: AmfeDocument): XLSX.WorkBook {
     const dataRows: any[][] = [];
     const dataMerges: { col: number; startRow: number; rowSpan: number }[] = [];
 
-    for (const op of doc.operations) {
+    for (const op of sortOperations(doc.operations)) {
         const opStartRow = dataRows.length;
         let opRowCount = 0;
 

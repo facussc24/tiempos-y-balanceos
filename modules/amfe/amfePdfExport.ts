@@ -11,7 +11,7 @@
  * Inline styles are required because html2pdf.js does not inherit external CSS.
  */
 
-import { AmfeDocument, AmfeCause, AmfeFailure, ActionPriority } from './amfeTypes';
+import { AmfeDocument, AmfeCause, AmfeFailure, AmfeOperation, ActionPriority } from './amfeTypes';
 import { WORK_ELEMENT_LABELS, WorkElementType } from './amfeTypes';
 import { sanitizeFilename } from '../../utils/filenameSanitization';
 import { renderHtmlToPdf, renderHtmlToPdfBuffer } from '../../utils/pdfRenderer';
@@ -64,9 +64,18 @@ interface FlatRow {
     cause: AmfeCause;
 }
 
+/** Sort operations numerically by opNumber */
+function sortOperations(operations: AmfeOperation[]): AmfeOperation[] {
+    return [...operations].sort((a, b) => {
+        const numA = parseInt(a.opNumber) || 0;
+        const numB = parseInt(b.opNumber) || 0;
+        return numA - numB;
+    });
+}
+
 function flattenCauseRows(doc: AmfeDocument): FlatRow[] {
     const rows: FlatRow[] = [];
-    for (const op of doc.operations) {
+    for (const op of sortOperations(doc.operations)) {
         for (const we of op.workElements) {
             for (const func of we.functions) {
                 for (const fail of func.failures) {
@@ -164,7 +173,7 @@ function buildFullTableHtml(doc: AmfeDocument): string {
     // Visual grouping is achieved via top borders and background colors on first rows.
     let tableRows = '';
     let isFirstOp = true;
-    for (const op of doc.operations) {
+    for (const op of sortOperations(doc.operations)) {
         let isFirstOpRow = true;
         for (const we of op.workElements) {
             const weLabel = WORK_ELEMENT_LABELS[we.type as WorkElementType] || we.type;

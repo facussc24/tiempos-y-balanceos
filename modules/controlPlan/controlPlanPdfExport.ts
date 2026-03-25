@@ -168,7 +168,12 @@ function buildHeaderHtml(header: ControlPlanHeader, title: string): string {
 
 function buildFullTableHtml(doc: ControlPlanDocument): string {
     const header = buildHeaderHtml(doc.header, 'Plan de Control Completo (AIAG)');
-    const groups = groupByProcessStep(doc.items);
+    const sortedItems = [...doc.items].sort((a, b) => {
+        const numA = parseInt(a.processStepNumber) || 0;
+        const numB = parseInt(b.processStepNumber) || 0;
+        return numA - numB;
+    });
+    const groups = groupByProcessStep(sortedItems);
 
     // Column keys in order (matches CP_COLUMNS, minus first 2 which are grouped)
     const remainingCols = CP_COLUMNS.slice(2); // skip processStepNumber & processDescription
@@ -238,7 +243,7 @@ function buildFullTableHtml(doc: ControlPlanDocument): string {
         '8%',   // Método Control
         '8%',   // Plan Reacción
         '7%',   // Responsable Reacción
-        '5%',   // Procedimiento/IT
+        '5%',   // Plan Reacción ante Descontrol
     ];
     const colgroup = `<colgroup>${colWidths.map(w => `<col style="width:${w}"/>`).join('')}</colgroup>`;
 
@@ -271,7 +276,7 @@ function buildCriticalItemsHtml(doc: ControlPlanDocument): string {
         return sc === 'CC' || sc === 'SC' || sc === 'PTC' || i.amfeAp === 'H';
     });
 
-    // Sort: CC first, then SC, then PTC, then AP=H only
+    // Sort: CC first, then SC, then PTC, then AP=H only; sub-sort by operation number
     critical.sort((a, b) => {
         const order = (item: ControlPlanItem) => {
             const sc = (item.specialCharClass || '').toUpperCase().trim();
@@ -280,7 +285,9 @@ function buildCriticalItemsHtml(doc: ControlPlanDocument): string {
             if (sc === 'PTC') return 2;
             return 3;
         };
-        return order(a) - order(b);
+        const typeDiff = order(a) - order(b);
+        if (typeDiff !== 0) return typeDiff;
+        return (parseInt(a.processStepNumber) || 0) - (parseInt(b.processStepNumber) || 0);
     });
 
     // Context-aware required keys per row type (CP 2024)

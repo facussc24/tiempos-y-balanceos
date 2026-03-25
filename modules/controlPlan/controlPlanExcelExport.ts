@@ -43,7 +43,7 @@ const CP_COL_WIDTHS: number[] = [
     20,   // 11: Método Control
     23,   // 12: Plan Reacción
     17,   // 13: Responsable Reacción
-    16,   // 14: Procedimiento/IT
+    22,   // 14: Plan Reacción ante Descontrol
 ];  //  Total ≈ 268 chars
 
 /**
@@ -303,9 +303,14 @@ export function buildControlPlanWorkbook(doc: ControlPlanDocument): XLSX.WorkBoo
     rows.push(CP_COLUMNS.map(col => ({ v: col.label, s: st.colHeader })));
     const colHeaderIdx = rows.length - 1;
 
-    // ── Data rows ──
+    // ── Data rows (sorted numerically by operation number) ──
+    const sortedItems = [...doc.items].sort((a, b) => {
+        const numA = parseInt(a.processStepNumber) || 0;
+        const numB = parseInt(b.processStepNumber) || 0;
+        return numA - numB;
+    });
     const dataStartIdx = rows.length;
-    for (const item of doc.items) {
+    for (const item of sortedItems) {
         rows.push(CP_COLUMNS.map(col => {
             const value = (item[col.key] as string) || '';
             if (col.key === 'specialCharClass') {
@@ -316,7 +321,7 @@ export function buildControlPlanWorkbook(doc: ControlPlanDocument): XLSX.WorkBoo
     }
 
     // ── Vertical merging for same-process groups (cols 0-2) ──
-    const processGroups = computeProcessGroups(doc.items);
+    const processGroups = computeProcessGroups(sortedItems);
     for (const group of processGroups) {
         for (const col of [0, 1, 2]) {
             // Merge from first row to last row of the group
