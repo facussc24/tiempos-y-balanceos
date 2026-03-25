@@ -400,7 +400,9 @@ async function buildHoSheet(
     fillBorders(ws, r, FIRST_COL + 3, r, FIRST_COL + 5);
 
     addLabel(ws, r, FIRST_COL + 6, 'MODELO O VEHICULO');
-    setVal(ws, r, LAST_COL, sheet.vehicleModel);
+    ws.mergeCells(r, FIRST_COL + 7, r, LAST_COL);
+    setVal(ws, r, FIRST_COL + 7, sheet.vehicleModel);
+    fillBorders(ws, r, FIRST_COL + 7, r, LAST_COL);
     ws.getRow(r).height = 28;
     r++;
 
