@@ -540,8 +540,7 @@ function buildCpHeader(amfeHeader, amfeProjectName) {
         approvedBy: amfeHeader.approvedBy || '',
         client: amfeHeader.client || '',
         coreTeam: amfeHeader.team || '',
-        customerEngApproval: '',
-        customerQualityApproval: '',
+        customerApproval: '',
         otherApproval: '',
         linkedAmfeProject: amfeProjectName,
     };

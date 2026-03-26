@@ -158,7 +158,7 @@ describe('useControlPlan', () => {
         it('replaces entire document', () => {
             const { result } = renderHook(() => useControlPlan());
             const doc: ControlPlanDocument = {
-                header: { controlPlanNumber: '', phase: 'production' as const, partNumber: 'ABC', latestChangeLevel: '', partName: '', organization: 'Test Org', supplier: '', supplierCode: '', keyContactPhone: '', date: '', revision: '1', responsible: 'Juan', approvedBy: '', client: 'Toyota', coreTeam: '', customerEngApproval: '', customerQualityApproval: '', otherApproval: '', linkedAmfeProject: '', applicableParts: '' },
+                header: { controlPlanNumber: '', phase: 'production' as const, partNumber: 'ABC', latestChangeLevel: '', partName: '', organization: 'Test Org', supplier: '', supplierCode: '', keyContactPhone: '', date: '', revision: '1', responsible: 'Juan', approvedBy: '', client: 'Toyota', coreTeam: '', customerApproval: '', otherApproval: '', linkedAmfeProject: '', applicableParts: '' },
                 items: [{ id: 'loaded-1', processStepNumber: '10', processDescription: 'Op', machineDeviceTool: '', characteristicNumber: '', productCharacteristic: '', processCharacteristic: '', specialCharClass: '', specification: '', evaluationTechnique: '', sampleSize: '', sampleFrequency: '', controlMethod: '', reactionPlan: '', reactionPlanOwner: '', controlProcedure: '' }],
             };
 

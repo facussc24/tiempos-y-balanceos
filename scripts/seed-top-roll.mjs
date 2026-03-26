@@ -1086,8 +1086,7 @@ const cpHeader = {
     approvedBy: 'M. Meszaros / P. Centurion / L. Lattanzi',
     client: 'VWA',
     coreTeam: 'M. Nieve / M. Meszaros / P. Centurion / L. Lattanzi',
-    customerEngApproval: '',
-    customerQualityApproval: '',
+    customerApproval: '',
     otherApproval: '',
     linkedAmfeProject: PROJECT_NAME,
 };

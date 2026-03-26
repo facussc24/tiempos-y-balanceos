@@ -36,8 +36,7 @@ export interface ControlPlanHeader {
     approvedBy: string;
     client: string;
     coreTeam: string;
-    customerEngApproval: string;
-    customerQualityApproval: string;
+    customerApproval: string;
     otherApproval: string;
     linkedAmfeProject: string;
 }
@@ -102,8 +101,7 @@ export const EMPTY_CP_HEADER: ControlPlanHeader = {
     approvedBy: '',
     client: '',
     coreTeam: '',
-    customerEngApproval: '',
-    customerQualityApproval: '',
+    customerApproval: '',
     otherApproval: '',
     linkedAmfeProject: '',
 };
@@ -141,7 +139,7 @@ export const CP_COLUMNS: CPColumnDef[] = [
     { key: 'controlMethod',         label: 'Método Control',                     width: '140px', required: true },
     { key: 'reactionPlan',          label: 'Plan Reacción',                      width: '160px', required: true },
     { key: 'reactionPlanOwner',     label: 'Responsable Reacción',               width: '120px', required: true },
-    { key: 'controlProcedure',      label: 'Procedimiento/IT',                   width: '120px' },
+    { key: 'controlProcedure',      label: 'Plan Reacción ante Descontrol',      width: '160px' },
 ];
 
 /** AIAG standard column groups for the sticky header. */
@@ -216,8 +214,8 @@ export const CP_COLUMN_TERMS: Record<string, CpTerm> = {
         definition: 'Persona o rol responsable de ejecutar el plan de reacción en piso. Obligatorio per CP 2024.',
     },
     controlProcedure: {
-        term: 'Procedimiento / Instrucción de Trabajo',
-        definition: 'Referencia al procedimiento o instrucción de trabajo aplicable (ej: P-REC-001, IT-TAP-002).',
+        term: 'Plan Reacción ante Descontrol',
+        definition: 'Referencia al procedimiento SGC aplicable ante descontrol del proceso (ej: P-09/I, P-10/I, P-14).',
     },
 };
 
@@ -226,13 +224,24 @@ export const CP_COLUMN_TERMS: Record<string, CpTerm> = {
  * Ensures backward compatibility when fields are added or removed.
  */
 export function normalizeControlPlanDocument(raw: any): ControlPlanDocument {
+    const rawHeader = raw.header || {};
+    // Backward compat: merge old split customer approval fields into single field
+    let customerApproval = rawHeader.customerApproval || '';
+    if (!customerApproval && (rawHeader.customerEngApproval || rawHeader.customerQualityApproval)) {
+        const parts = [rawHeader.customerEngApproval, rawHeader.customerQualityApproval].filter(Boolean);
+        customerApproval = parts.join(' / ');
+    }
     const header: ControlPlanHeader = {
         ...EMPTY_CP_HEADER,
-        ...(raw.header || {}),
-        phase: CONTROL_PLAN_PHASES.some(p => p.value === raw.header?.phase)
-            ? raw.header.phase
+        ...rawHeader,
+        customerApproval,
+        phase: CONTROL_PLAN_PHASES.some(p => p.value === rawHeader.phase)
+            ? rawHeader.phase
             : 'production',
     };
+    // Remove legacy fields that may have spread in
+    delete (header as any).customerEngApproval;
+    delete (header as any).customerQualityApproval;
 
     const items: ControlPlanItem[] = (raw.items || []).map((item: any) => ({
         id: item.id || uuidv4(),

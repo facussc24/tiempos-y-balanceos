@@ -905,8 +905,7 @@ async function main() {
             approvedBy: 'G.Cal',
             client: 'PWA',
             coreTeam: amfeDoc.header.teamMembers || amfeDoc.header.team || '',
-            customerEngApproval: '',
-            customerQualityApproval: '',
+            customerApproval: '',
             otherApproval: '',
             linkedAmfeProject: product.projectName,
         };

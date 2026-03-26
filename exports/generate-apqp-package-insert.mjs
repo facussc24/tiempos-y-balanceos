@@ -543,8 +543,8 @@ function buildControlPlanWorkbook(doc) {
         ['Pieza', h.partName || '', 'Nivel de Cambio', h.latestChangeLevel || '', 'Revision', h.revision || ''],
         ['Organizacion / Planta', h.organization || '', 'Proveedor', h.supplier || '', 'Cod. Proveedor', h.supplierCode || ''],
         ['Contacto / Telefono', h.keyContactPhone || '', 'Cliente', h.client || '', 'Responsable', h.responsible || ''],
-        ['Equipo', h.coreTeam || '', 'AMFE Vinculado', h.linkedAmfeProject || '', 'Otra Aprobacion', h.otherApproval || ''],
-        ['Aprob. Planta', h.approvedBy || '', 'Aprob. Ing. Cliente', h.customerEngApproval || '', 'Aprob. Cal. Cliente', h.customerQualityApproval || ''],
+        ['Equipo', h.coreTeam || '', 'AMFE Vinculado', h.linkedAmfeProject || '', '', ''],
+        ['Aprob. Planta', h.approvedBy || '', 'Aprob. Cliente / Fecha', h.customerApproval || '', 'Otra Aprobacion', h.otherApproval || ''],
     ];
     for (const info of headerInfo) { const ri = rows.length; rows.push(buildCpMetaRow(info, totalCols, ri, merges)); }
     rows.push(Array(totalCols).fill(''));

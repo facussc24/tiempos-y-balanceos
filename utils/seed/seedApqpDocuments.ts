@@ -169,7 +169,7 @@ function mkCpHeader(partName: string, pn: string, client: string, cpNum: string,
         date: '2026-03-14', revision: 'A',
         responsible: 'F. Santoro', approvedBy: '', client,
         coreTeam: TEAM,
-        customerEngApproval: '', customerQualityApproval: '', otherApproval: '',
+        customerApproval: '', otherApproval: '',
         linkedAmfeProject: amfePrj,
     };
 }

@@ -178,8 +178,8 @@ describe('exportControlPlan', () => {
             'Pieza', 'Nivel de Cambio', 'Revision',
             'Organizacion / Planta', 'Proveedor', 'Cod. Proveedor',
             'Contacto / Telefono', 'Cliente', 'Responsable',
-            'Equipo', 'AMFE Vinculado', 'Otra Aprobacion',
-            'Aprob. Planta', 'Aprob. Ing. Cliente', 'Aprob. Cal. Cliente',
+            'Equipo', 'AMFE Vinculado',
+            'Aprob. Planta', 'Aprob. Cliente / Fecha', 'Otra Aprobacion',
         ];
         for (const label of expectedLabels) {
             expect(values).toContain(label);
@@ -210,8 +210,7 @@ describe('exportControlPlan', () => {
             linkedAmfeProject: 'AMFE-001',
             otherApproval: 'Ing. Calidad',
             approvedBy: 'Director',
-            customerEngApproval: 'Toyota Eng.',
-            customerQualityApproval: 'Toyota QA',
+            customerApproval: 'Toyota Eng. / Toyota QA',
         });
         exportControlPlan(makeDoc({ header }));
         const values = getFlatValues();
@@ -221,8 +220,7 @@ describe('exportControlPlan', () => {
         expect(values).toContain('Proveedor X');
         expect(values).toContain('AMFE-001');
         expect(values).toContain('Ing. Calidad');
-        expect(values).toContain('Toyota Eng.');
-        expect(values).toContain('Toyota QA');
+        expect(values).toContain('Toyota Eng. / Toyota QA');
     });
 
     // ── Metadata layout ──

@@ -660,18 +660,14 @@ const CpToolbar: React.FC<CpToolbarProps> = (props) => {
                             {/* Row 5: Approvals section */}
                             <div className="border-l-4 border-teal-300 pl-3 mt-1">
                                 <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Aprobaciones</span>
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs mt-1">
+                                <div className="grid grid-cols-3 gap-3 text-xs mt-1">
                                     <div>
                                         <label className="block text-gray-500 font-bold mb-1">Aprobación Proveedor/Planta</label>
                                         <input name="approvedBy" value={header.approvedBy} onChange={onHeaderChange} maxLength={80} className={inputClass} />
                                     </div>
                                     <div>
-                                        <label className="block text-gray-500 font-bold mb-1">Aprobación Ing. Cliente</label>
-                                        <input name="customerEngApproval" value={header.customerEngApproval} onChange={onHeaderChange} maxLength={80} className={inputClass} />
-                                    </div>
-                                    <div>
-                                        <label className="block text-gray-500 font-bold mb-1">Aprobación Calidad Cliente</label>
-                                        <input name="customerQualityApproval" value={header.customerQualityApproval} onChange={onHeaderChange} maxLength={80} className={inputClass} />
+                                        <label className="block text-gray-500 font-bold mb-1">Aprobación del Cliente / Fecha</label>
+                                        <input name="customerApproval" value={header.customerApproval} onChange={onHeaderChange} maxLength={160} className={inputClass} />
                                     </div>
                                     <div>
                                         <label className="block text-gray-500 font-bold mb-1">Otra Aprobación</label>

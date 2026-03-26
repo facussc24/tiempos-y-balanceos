@@ -591,8 +591,7 @@ async function main() {
         approvedBy: 'G.Cal',
         client: 'VWA',
         coreTeam: header.team,
-        customerEngApproval: '',
-        customerQualityApproval: '',
+        customerApproval: '',
         otherApproval: '',
         linkedAmfeProject: PROJECT_NAME,
     };

@@ -46,40 +46,33 @@ function makeAmfeDoc(): any {
 
 function makeCpDoc(): any {
     return {
-        header: { controlPlanNumber: 'CP1', phase: 'production', partNumber: 'N 227', latestChangeLevel: '', partName: 'Insert', applicableParts: '', organization: '', supplier: '', supplierCode: '', keyContactPhone: '', date: '', revision: 'A', responsible: '', approvedBy: '', client: '', coreTeam: 'Equipo A', customerEngApproval: '', customerQualityApproval: '', otherApproval: '', linkedAmfeProject: '' },
+        header: { controlPlanNumber: 'CP1', phase: 'production', partNumber: 'N 227', latestChangeLevel: '', partName: 'Insert', applicableParts: '', organization: '', supplier: '', supplierCode: '', keyContactPhone: '', date: '', revision: 'A', responsible: '', approvedBy: '', client: '', coreTeam: 'Equipo A', customerApproval: '', otherApproval: '', linkedAmfeProject: '' },
         items: [{ id: 'cp1', processStepNumber: 'OP 10', processDescription: 'Test', machineDeviceTool: '', characteristicNumber: '', productCharacteristic: '', processCharacteristic: '', specialCharClass: 'CC', specification: '', evaluationTechnique: '', sampleSize: '', sampleFrequency: '', controlMethod: '', reactionPlan: '', reactionPlanOwner: '', controlProcedure: '' }],
     };
 }
 
-function makeHoDoc(): any {
-    return {
-        header: { formNumber: '', organization: '', client: '', partNumber: '', partDescription: '', applicableParts: '', linkedAmfeProject: '', linkedCpProject: '' },
-        sheets: [{ id: 'ho1', amfeOperationId: '', operationNumber: 'OP 10', operationName: 'Test', hoNumber: 'HO-1', sector: '', puestoNumber: '', vehicleModel: '', partCodeDescription: '', safetyElements: ['anteojos', 'guantes'], hazardWarnings: [], steps: [{ id: 'st1', stepNumber: 1, description: 'Step1', isKeyPoint: true, keyPointReason: 'Why' }], qualityChecks: [], reactionPlanText: '', reactionContact: '', visualAids: [], preparedBy: '', approvedBy: '', date: '', revision: 'A', status: 'aprobado' }],
-    };
-}
-
 function makeData(): ApqpPackageData {
-    return { familyName: 'Insert VWA', partNumbers: ['N 227'], client: 'VWA', revision: 'A', team: 'Equipo A', date: '2026-03-19', pfd: makePfdDoc(), amfe: makeAmfeDoc(), cp: makeCpDoc(), ho: makeHoDoc() };
+    return { familyName: 'Insert VWA', partNumbers: ['N 227'], client: 'VWA', revision: 'A', team: 'Equipo A', date: '2026-03-19', pfd: makePfdDoc(), amfe: makeAmfeDoc(), cp: makeCpDoc() };
 }
 function makeOpts(): ApqpExportOptions {
-    return { includePortada: true, includeFlujograma: true, includeAmfe: true, includeCp: true, includeHo: true, revision: 'A' };
+    return { includePortada: true, includeFlujograma: true, includeAmfe: true, includeCp: true, revision: 'A' };
 }
 
 describe('APQP Package Export', () => {
     beforeEach(() => vi.clearAllMocks());
 
     describe('buildApqpPackageWorkbook', () => {
-        it('should create all 5 sections when all data present', () => {
+        it('should create all 4 sections when all data present', () => {
             const wb = buildApqpPackageWorkbook(makeData(), makeOpts());
             expect(wb.SheetNames).toContain('Portada');
             expect(wb.SheetNames).toContain('Flujograma');
             expect(wb.SheetNames).toContain('AMFE VDA');
             expect(wb.SheetNames).toContain('Plan de Control');
-            expect(wb.SheetNames.some(n => n.startsWith('HO '))).toBe(true);
+            expect(wb.SheetNames.some(n => n.startsWith('HO '))).toBe(false);
         });
 
         it('should skip sections when options are false', () => {
-            const opts: ApqpExportOptions = { includePortada: false, includeFlujograma: false, includeAmfe: true, includeCp: true, includeHo: false, revision: 'A' };
+            const opts: ApqpExportOptions = { includePortada: false, includeFlujograma: false, includeAmfe: true, includeCp: true, revision: 'A' };
             const wb = buildApqpPackageWorkbook(makeData(), opts);
             expect(wb.SheetNames).not.toContain('Portada');
             expect(wb.SheetNames).not.toContain('Flujograma');
@@ -97,7 +90,7 @@ describe('APQP Package Export', () => {
         });
 
         it('should produce only Portada when all docs are null', () => {
-            const data: ApqpPackageData = { familyName: 'Empty', partNumbers: [], client: '', revision: 'A', team: '', date: '2026-03-19', pfd: null, amfe: null, cp: null, ho: null };
+            const data: ApqpPackageData = { familyName: 'Empty', partNumbers: [], client: '', revision: 'A', team: '', date: '2026-03-19', pfd: null, amfe: null, cp: null };
             const wb = buildApqpPackageWorkbook(data, makeOpts());
             expect(wb.SheetNames).toEqual(['Portada']);
         });

@@ -127,7 +127,7 @@ function makeCpDocument(): ControlPlanDocument {
             latestChangeLevel: '', partName: 'Test', applicableParts: '',
             organization: '', supplier: '', supplierCode: '', keyContactPhone: '',
             date: '', revision: 'A', responsible: '', approvedBy: '', client: '',
-            coreTeam: '', customerEngApproval: '', customerQualityApproval: '',
+            coreTeam: '', customerApproval: '',
             otherApproval: '', linkedAmfeProject: '',
         },
         items: [],

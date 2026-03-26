@@ -271,8 +271,8 @@ export function buildControlPlanWorkbook(doc: ControlPlanDocument): XLSX.WorkBoo
         ['Pieza',                h.partName,           'Nivel de Cambio',       h.latestChangeLevel,      'Revision',           h.revision],
         ['Organizacion / Planta', h.organization,      'Proveedor',             h.supplier,               'Cod. Proveedor',     h.supplierCode],
         ['Contacto / Telefono', h.keyContactPhone,     'Cliente',               h.client,                 'Responsable',        h.responsible],
-        ['Equipo',              h.coreTeam,             'AMFE Vinculado',        h.linkedAmfeProject,      'Otra Aprobacion',    h.otherApproval],
-        ['Aprob. Planta',       h.approvedBy,           'Aprob. Ing. Cliente',   h.customerEngApproval,    'Aprob. Cal. Cliente', h.customerQualityApproval],
+        ['Equipo',              h.coreTeam,             'AMFE Vinculado',        h.linkedAmfeProject,      '',                   ''],
+        ['Aprob. Planta',       h.approvedBy,           'Aprob. Cliente / Fecha', h.customerApproval,      'Otra Aprobacion',    h.otherApproval],
         ...(h.applicableParts?.trim() ? [['Piezas Aplicables', truncateParts(h.applicableParts).replace(/\n/g, ' · '), '', '', '', ''] as [string, string, string, string, string, string]] : []),
     ];
 

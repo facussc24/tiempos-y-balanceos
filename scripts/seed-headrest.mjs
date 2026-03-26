@@ -868,7 +868,7 @@ async function main() {
                 approvedBy: 'M. Meszaros',
                 client: 'VWA',
                 coreTeam: 'M. Nieve / M. Meszaros / L. Lattanzi / F. Santoro / G. Cal',
-                customerEngApproval: '', customerQualityApproval: '', otherApproval: '',
+                customerApproval: '', otherApproval: '',
                 linkedAmfeProject: PROJECT_NAME,
             },
             items: l0CpItems,
