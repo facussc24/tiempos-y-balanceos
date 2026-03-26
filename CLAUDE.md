@@ -312,6 +312,19 @@ Para documentos grandes (>100KB), usar `updateDocDirect()` del helper si existe.
 - "Laboratorio" — ensayos funcionales/materiales
 - "Supervisor de Producción" — verificaciones periódicas
 
+## Reglas contextuales (.claude/rules/)
+
+Reglas que se cargan automaticamente al tocar archivos del modulo correspondiente:
+
+| Archivo | Globs | Contenido |
+|---------|-------|-----------|
+| `amfe.md` | `modules/amfe/**` | Severidades calibradas, CC/SC, efectos 3 niveles VDA, familias |
+| `control-plan.md` | `modules/controlPlan/**` | Cross-validation, filtrado AMFE→CP, responsables, familias |
+| `hoja-operaciones.md` | `modules/hojaOperaciones/**` | Filtrado CP→HO, EPP coherente, duplicados, familias |
+| `exports.md` | `modules/**/export*.ts` | Ordenamiento numerico, librerias por modulo, columnas |
+| `testing.md` | `__tests__/**` | React 19 gotchas, mocks, datos de test |
+| `database.md` | `utils/repositories/**` | Repositorios tipados, Supabase, race conditions |
+
 ## Stack
 
 | Capa         | Tecnologia                                          |

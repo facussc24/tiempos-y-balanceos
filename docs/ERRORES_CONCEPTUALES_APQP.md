@@ -108,6 +108,14 @@ D<=3 con inspeccion visual. Para defectos obvios, D=2-3 puede ser aceptable sin 
 
 10. **Transporte interno NO es operacion con controles.** Se representa como simbolo de transporte en PFD, sin AMFE/CP/HO.
 
+11. **1 documento por familia si el proceso es identico.** Variantes de color del mismo producto (ej: 4 headrests) = 1 AMFE, 1 CP, 1 set de HOs con todos los part numbers en `applicableParts`. NO crear documentos separados.
+
+12. **Consolidar master y variantes con mismo proceso.** Si el Insert master y su variante [L0] tienen exactamente el mismo proceso productivo, considerar consolidar en un solo juego de documentos.
+
+13. **Unico modo de falla exclusivo de variante de color: "ensamblar el color equivocado".** Ese si va como control especifico en CP. Todos los demas modos de falla son identicos al master y no requieren documento separado.
+
+14. **Severidades infladas — patron detectado y corregido.** Error frecuente: asignar S=7-8 a defectos cosmeticos (arrugas, manchas) que realmente son S=5-6 o S=3-4. Inflar severidades genera CC/SC falsos, planes de reaccion desproporcionados y no conformidades en auditoria. Recalibrar siempre contra la tabla de severidades de cabina interior (ver `.claude/rules/amfe.md`).
+
 ---
 
 ## Hallazgos por Producto

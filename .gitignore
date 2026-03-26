@@ -30,7 +30,8 @@ dist-ssr
 *.sw?
 
 # Claude Code
-.claude/
+.claude/*
+!.claude/rules/
 
 # Project secrets
 SUPABASE_INFO.md
