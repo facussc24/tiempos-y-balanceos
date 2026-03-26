@@ -115,6 +115,7 @@ D<=3 con inspeccion visual. Para defectos obvios, D=2-3 puede ser aceptable sin 
 13. **Unico modo de falla exclusivo de variante de color: "ensamblar el color equivocado".** Ese si va como control especifico en CP. Todos los demas modos de falla son identicos al master y no requieren documento separado.
 
 14. **Severidades infladas — patron detectado y corregido.** Error frecuente: asignar S=7-8 a defectos cosmeticos (arrugas, manchas) que realmente son S=5-6 o S=3-4. Inflar severidades genera CC/SC falsos, planes de reaccion desproporcionados y no conformidades en auditoria. Recalibrar siempre contra la tabla de severidades de cabina interior (ver `.claude/rules/amfe.md`).
+n15. **Normas de ensayo/material son ESPECIFICAS por cliente.** VW tiene normas TL (ej: TL 1010 para flamabilidad), Toyota tiene sus propias normas. NUNCA mezclar normas entre clientes. Si no se conoce la norma exacta del cliente, usar "Segun requisito de flamabilidad del cliente (XXX)" con el nombre del cliente. Detectado 2026-03-26: headrests y Top Roll tenian spec "<100 mm/min" (norma Toyota) en vez de "TL 1010 VW".
 
 ---
 

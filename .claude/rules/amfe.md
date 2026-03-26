@@ -22,7 +22,15 @@ globs:
 - **SC (Significativa):** Cliente designo con simbolo O funcion primaria (S=7-8 encastre). Benchmark: 10-15%.
 - **Estandar:** Todo lo demas. Benchmark: 80-90%.
 - "Quitar pieza durante tapizado" NO es CC — riesgo al operador se gestiona con EPP, no con clasificacion de producto.
-- Flamabilidad TL 1010 VW es OBLIGATORIA como CC en toda pieza de cabina interior.
+- Flamabilidad es OBLIGATORIA como CC en toda pieza de cabina interior.
+
+## Normas de flamabilidad por cliente
+
+- La norma de flamabilidad es ESPECIFICA por cliente:
+  - VW (VWA): TL 1010
+  - Toyota/PWA: norma propia del cliente (NO es TL 1010)
+- NUNCA poner TL 1010 en productos que no son VW.
+- Cada cliente tiene sus propias normas de materiales, tolerancias y ensayos. No extrapolar normas de un cliente a otro.
 
 ## Efectos VDA — 3 niveles obligatorios
 
