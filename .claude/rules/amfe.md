@@ -44,6 +44,12 @@ NUNCA dejar ningun nivel vacio.
 - Ejemplo: 4 colores del mismo headrest = 1 AMFE con todos los part numbers en `applicableParts`.
 - NO crear AMFEs separados para variantes de color con proceso identico.
 
+## Operaciones condicionales por variante
+
+- Operaciones que no aplican a todos los PN de la familia: marcar "(Aplica solo a PN X, Y, Z)" en el nombre de la operacion. NUNCA crear documentos separados por esto.
+- Ejemplo headrests: Costura Vista aplica solo a L1/L2/L3 (Rennes Black, Andino Gray, Dark Slate), no a L0 (Titan Black). Se documenta en 1 solo AMFE/CP/HO con la restriccion en el nombre.
+- La HO de la operacion condicional debe incluir instruccion explicita de verificar numero de parte antes de ejecutar.
+
 ## Reglas especificas
 
 - "Remito" NO es una operacion de proceso interno. Solo aplica en Recepcion de MP.
