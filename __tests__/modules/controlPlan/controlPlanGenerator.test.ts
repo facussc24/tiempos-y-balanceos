@@ -355,7 +355,7 @@ describe('generateItemsFromAmfe — AP filtering', () => {
         expect(prod).toHaveLength(3);
     });
 
-    it('excludes AP=L causes when severity < 5 (no SC/CC)', () => {
+    it('groups AP=L causes into 1 generic line per operation (no SC/CC)', () => {
         const doc = makeAmfeDoc({
             severity: 3, // S=3 → no SC/CC
             causes: [
@@ -365,7 +365,10 @@ describe('generateItemsFromAmfe — AP filtering', () => {
         });
         const { items } = generateItemsFromAmfe(doc);
         const proc = processRows(items);
-        expect(proc).toHaveLength(1); // Only AP=H qualifies
+        // 1 individual H process row + 1 generic L line
+        expect(proc).toHaveLength(2);
+        const genericLine = proc.find(i => i.amfeAp === 'L');
+        expect(genericLine?.processCharacteristic).toBe('Autocontrol visual general');
     });
 
     it('returns empty items with warning when no operations exist', () => {
@@ -379,15 +382,16 @@ describe('generateItemsFromAmfe — AP filtering', () => {
         expect(warnings[0]).toContain('no tiene causas definidas');
     });
 
-    it('returns empty items with warning when no causes qualify (AP=L, no SC/CC)', () => {
+    it('AP=L only → produces 1 generic line per operation', () => {
         const doc = makeAmfeDoc({
-            severity: 3, // S=3 → no SC/CC → AP=L truly excluded
+            severity: 3, // S=3 → no SC/CC
             causes: [makeCause({ id: 'c1', cause: 'Low risk', ap: 'L' })],
         });
-        const { items, warnings } = generateItemsFromAmfe(doc);
-        expect(items).toEqual([]);
-        expect(warnings.length).toBeGreaterThan(0);
-        expect(warnings[0]).toContain('No se encontraron causas');
+        const { items } = generateItemsFromAmfe(doc);
+        // 1 generic L line for the operation
+        expect(items).toHaveLength(1);
+        expect(items[0].amfeAp).toBe('L');
+        expect(items[0].processCharacteristic).toBe('Autocontrol visual general');
     });
 });
 
@@ -818,13 +822,15 @@ describe('generateItemsFromAmfe — SC/CC with AP=L (IATF 16949)', () => {
         expect(productRows(items)).toHaveLength(1);
     });
 
-    it('excludes cause (S=3, AP=L) — no SC/CC', () => {
+    it('AP=L (S=3) without SC/CC → 1 generic grouped line', () => {
         const doc = makeAmfeDoc({
             severity: 3,
             causes: [makeCause({ id: 'c1', cause: 'Low low', ap: 'L' })],
         });
         const { items } = generateItemsFromAmfe(doc);
-        expect(items).toHaveLength(0);
+        expect(items).toHaveLength(1);
+        expect(items[0].amfeAp).toBe('L');
+        expect(items[0].processCharacteristic).toBe('Autocontrol visual general');
     });
 
     it('SC cause (S=5, AP=L) gets specialCharClass=SC', () => {

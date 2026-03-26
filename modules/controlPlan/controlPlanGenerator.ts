@@ -21,7 +21,7 @@ import {
 } from '../amfe/amfeTypes';
 import { PfdDocument } from '../pfd/pfdTypes';
 import { ControlPlanItem, ControlPlanHeader, ControlPlanDocument, ControlPlanPhase, EMPTY_CP_HEADER } from './controlPlanTypes';
-import { getControlPlanDefaults, inferSpecification, inferReactionPlanOwner } from './controlPlanDefaults';
+import { getControlPlanDefaults, inferSpecification, inferReactionPlanOwner, inferControlProcedure } from './controlPlanDefaults';
 import { inferOperationCategory } from '../../utils/processCategory';
 
 // ============================================================================
@@ -115,6 +115,8 @@ export function generateItemsFromAmfe(
 
     // ─── PHASE 1: Collect all qualifying causes with context ───
     const qualifying: QualifyingCause[] = [];
+    // AP=L causes without CC/SC → grouped into 1 generic line per operation (AIAG rule)
+    const lowApByOp = new Map<string, QualifyingCause[]>();
 
     // FIX: Guard against undefined/null operations from corrupted or partially-loaded data
     for (const op of (amfeDoc?.operations ?? [])) {
@@ -130,14 +132,16 @@ export function generateItemsFromAmfe(
                         const autoSpecialChar = cause.specialChar
                             || (severity >= 9 ? 'CC' : (severity >= 5 && occurrence >= 4) ? 'SC' : '');
 
-                        // IATF 16949 §8.3.3.3: SC/CC characteristics MUST be in CP
-                        // regardless of AP level. Include AP=L causes if they have SC/CC.
-                        // Skip empty/invalid AP and AP=L without SC/CC.
-                        if (cause.ap !== 'H' && cause.ap !== 'M') {
-                            if (cause.ap !== 'L' || !autoSpecialChar) continue;
+                        // AP=H/M: individual row. AP=L with CC/SC: individual row.
+                        if (cause.ap === 'H' || cause.ap === 'M' || (cause.ap === 'L' && autoSpecialChar)) {
+                            qualifying.push({ op, we, func, fail, cause, severity, autoSpecialChar });
+                        } else if (cause.ap === 'L') {
+                            // AP=L without CC/SC: collect for generic grouping per operation
+                            const opGroup = lowApByOp.get(op.opNumber) || [];
+                            opGroup.push({ op, we, func, fail, cause, severity, autoSpecialChar });
+                            lowApByOp.set(op.opNumber, opGroup);
                         }
-
-                        qualifying.push({ op, we, func, fail, cause, severity, autoSpecialChar });
+                        // Skip causes with empty/invalid AP
                     }
                 }
             }
@@ -181,6 +185,7 @@ export function generateItemsFromAmfe(
         const processAutoFilled = [...defaults.autoFilledFields];
         if (specProcess) processAutoFilled.push('specification');
         if (ownerProcess) processAutoFilled.push('reactionPlanOwner');
+        processAutoFilled.push('controlProcedure');
 
         items.push({
             id: uuidv4(),
@@ -198,7 +203,7 @@ export function generateItemsFromAmfe(
             controlMethod: rep.cause.preventionControl || '',    // prevention control
             reactionPlan: defaults.reactionPlan,
             reactionPlanOwner: ownerProcess,
-            controlProcedure: '',
+            controlProcedure: inferControlProcedure(opCategory),
             autoFilledFields: processAutoFilled,
             amfeAp: highestAp,
             amfeSeverity: highestSeverity,
@@ -240,6 +245,7 @@ export function generateItemsFromAmfe(
         const productAutoFilled = [...defaults.autoFilledFields];
         if (specProduct) productAutoFilled.push('specification');
         if (ownerProduct) productAutoFilled.push('reactionPlanOwner');
+        productAutoFilled.push('controlProcedure');
 
         items.push({
             id: uuidv4(),
@@ -257,11 +263,46 @@ export function generateItemsFromAmfe(
             controlMethod: '',                                   // EMPTY for product rows
             reactionPlan: defaults.reactionPlan,
             reactionPlanOwner: ownerProduct,
-            controlProcedure: '',
+            controlProcedure: inferControlProcedure(opCatProd),
             autoFilledFields: productAutoFilled,
             amfeAp: highestAp,
             amfeSeverity: highestSeverity,
             operationCategory: opCatProd,
+            amfeCauseIds: [...new Set(group.map(g => g.cause.id))],
+            amfeFailureId: rep.fail.id,
+            amfeFailureIds: [...new Set(group.map(g => g.fail.id))],
+        });
+    }
+
+    // ─── PHASE 3.5: Generic lines for AP=L causes (1 per operation) ───
+    for (const [opNumber, group] of lowApByOp) {
+        if (group.length === 0) continue;
+        const rep = group[0];
+        const opCategory = inferOperationCategory(rep.op.name) || '';
+        const validSevs = group.map(g => g.severity).filter(Number.isFinite);
+        const maxSev = validSevs.length > 0 ? Math.max(...validSevs) : 1;
+
+        items.push({
+            id: uuidv4(),
+            processStepNumber: opNumber,
+            processDescription: rep.op.name,
+            machineDeviceTool: 'N/A',
+            characteristicNumber: '',
+            productCharacteristic: '',
+            processCharacteristic: 'Autocontrol visual general',
+            specialCharClass: '',
+            specification: 'Según instrucción de trabajo / HO',
+            evaluationTechnique: 'Inspección visual',
+            sampleSize: '100%',
+            sampleFrequency: 'Continuo',
+            controlMethod: 'Autocontrol del operador según instrucción de trabajo',
+            reactionPlan: 'Contener producto sospechoso. Notificar a Líder. Según P-10/I. P-14.',
+            reactionPlanOwner: 'Operador de producción',
+            controlProcedure: inferControlProcedure(opCategory),
+            autoFilledFields: ['sampleSize', 'sampleFrequency', 'reactionPlan', 'reactionPlanOwner', 'controlProcedure'],
+            amfeAp: 'L',
+            amfeSeverity: maxSev,
+            operationCategory: opCategory,
             amfeCauseIds: [...new Set(group.map(g => g.cause.id))],
             amfeFailureId: rep.fail.id,
             amfeFailureIds: [...new Set(group.map(g => g.fail.id))],
@@ -294,8 +335,10 @@ export function generateItemsFromAmfe(
         const scCcCount = qualifying.filter(q => q.cause.ap !== 'H' && q.cause.ap !== 'M').length;
         const apHmCount = qualifying.length - scCcCount;
         const scCcNote = scCcCount > 0 ? ` + ${scCcCount} SC/CC` : '';
+        const lowGrouped = lowApByOp.size;
+        const lowNote = lowGrouped > 0 ? ` + ${lowGrouped} línea(s) genérica(s) AP=L` : '';
         warnings.push(
-            `Plan de Control generado: ${items.length} ítems (${processRowCount} de proceso + ${productRowCount} de producto) en ${opCount} operación(es), a partir de ${apHmCount} causa(s) AP Alto/Medio${scCcNote}.`
+            `Plan de Control generado: ${items.length} ítems (${processRowCount} de proceso + ${productRowCount} de producto) en ${opCount} operación(es), a partir de ${apHmCount} causa(s) AP Alto/Medio${scCcNote}${lowNote}.`
         );
     }
 
