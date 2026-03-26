@@ -130,7 +130,7 @@ function mkHoSheet(opId: string, num: string, name: string, ppe: PpeItem[],
     };
 }
 
-const TEAM = 'F. Santoro, C. Baptista (Ingeniería), L. Pérez (Calidad), R. Fernández (Producción)';
+const TEAM = 'Carlos Baptista (Ingeniería), Manuel Meszaros (Calidad), Marianna Vera (Producción)';
 
 function mkAmfeHeader(partName: string, client: string, pn: string, amfeNum: string): AmfeHeaderData {
     return {
