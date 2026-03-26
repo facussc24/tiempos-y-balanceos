@@ -5,40 +5,312 @@ App 100% web React 19 + TypeScript + Supabase para gestion de calidad automotriz
 (balanceo de linea, simulador de flujo, kanban, heijunka, mix multi-modelo).
 Multi-usuario con auth Supabase (email/password). Sin Tauri, sin Gemini.
 
-## Guías de Estilo APQP (OBLIGATORIO leer antes de modificar)
-- **Antes de tocar cualquier Plan de Control**: leer `docs/GUIA_PLAN_DE_CONTROL.md`
-- **Antes de tocar cualquier AMFE**: leer `docs/GUIA_AMFE.md`
-- **Antes de tocar cualquier Hoja de Operaciones**: leer `docs/GUIA_HOJA_DE_OPERACIONES.md`
-- **Clasificación CC/SC** (AIAG-VDA 2019): CC = S≥9, SC = S=5-8 AND O≥4, vacío = resto
-- **Idioma**: TODO en español, CERO textos en inglés entre paréntesis
-- **Plan de reacción**: usar referencias SGC (P-09/I, P-10/I, P-14)
+## Reglas de Negocio APQP (OBLIGATORIO — validadas por AIAG-VDA 2019 y AIAG CP 2024)
+
+### Clasificación CC/SC (CORREGIDA — la regla anterior era incorrecta)
+- **CC (Crítica):** SOLO Severidad 9-10 O requerimiento legal/seguridad del cliente. Benchmark: 1-5% de items.
+- **SC (Significativa):** SOLO si el cliente la designó con símbolo, O equipo multidisciplinario demuestra impacto en función primaria (típicamente S=7-8 en puntos de fijación, dimensiones de ensamble críticas). Benchmark: 10-15%.
+- **Estándar (sin clasificación):** TODO lo demás. Benchmark: 80-90% de items.
+- **PROHIBIDO:** SC = S≥5 AND O≥4 — esa regla infla las clasificaciones y genera no conformidades en auditoría IATF.
+
+### Calibración de Severidad para piezas de cabina interior (Insert, Armrest, Top Roll, Headrest)
+- **S=9-10:** Flamabilidad, emisiones VOC, interferencia airbag, bordes filosos expuestos al habitáculo.
+- **S=7-8:** Falla de encastre severa que para línea VW, desprendimiento en campo (clips rotos).
+- **S=5-6:** Arrugas masivas, delaminación, costura torcida, Squeak & Rattle, retrabajo offline.
+- **S=3-4:** Hilo suelto, mancha limpiable, retrabajo in-station.
+
+### Filtrado AMFE→CP→HO
+- **AMFE→CP:** Todo pasa al CP, pero AP=L se agrupa en líneas genéricas por operación. AP=H/M y CC/SC van como línea individual.
+- **CP→HO:** SOLO pasan los controles que el operario ejecuta en su estación. Controles de laboratorio, metrología especializada y auditoría NO van en la HO.
+- **Los responsables en CP y HO deben coincidir para el mismo control.**
+
+### Idioma y formato
+- TODO en español, CERO textos en inglés entre paréntesis.
+- Plan de reacción: usar referencias SGC (P-09/I, P-10/I, P-14).
+
+### Guías detalladas (leer antes de modificar módulos APQP)
+- `docs/GUIA_PLAN_DE_CONTROL.md`
+- `docs/GUIA_AMFE.md`
+- `docs/GUIA_HOJA_DE_OPERACIONES.md`
+- `docs/ERRORES_CONCEPTUALES_APQP.md` — errores graves ya detectados, NO repetirlos.
 
 ## Reglas Críticas — NO ROMPER
+
 ### 1. NUNCA usar datos mock/placeholder
-- Todo dato que se muestre, exporte o teste DEBE venir de Supabase real
-- Si una función de export necesita datos, debe reusar los mismos hooks/repositories que ya funcionan en la UI
-- Si un seed script carga datos, debe verificar que no existan antes de insertar (upsert o check-then-insert)
-- PROHIBIDO: strings como "datos reales generados", "placeholder", "TODO: cargar datos"
+- Todo dato que se muestre, exporte o teste DEBE venir de Supabase real.
+- Si una función de export necesita datos, debe reusar los mismos hooks/repositories que ya funcionan en la UI.
+- Si un seed script carga datos, debe verificar que no existan antes de insertar (upsert o check-then-insert).
+- PROHIBIDO: strings como "datos reales generados", "placeholder", "TODO: cargar datos".
+
 ### 2. NUNCA crear duplicados en Supabase
-- Antes de insertar familias, documentos o members: query primero si ya existen
-- Las 8 familias canónicas son: Insert Patagonia, Armrest Door Panel Patagonia, Top Roll Patagonia, Headrest Front/Rear Center/Rear Outer Patagonia, Telas Planas PWA, Telas Termoformadas PWA
-- Si un seed/migration crea más de 8 familias, algo está mal — abortar y reportar
-- Nombres de cliente: "VWA" (no "Volkswagen Argentina", no "095 VOLKSWAGEN")
-### 3. Export Excel: solo xlsx-js-style
-- PROHIBIDO usar ExcelJS en cualquier export
-- PROHIBIDO mezclar librerías de Excel
-- Todos los workbooks se crean con `XLSX.utils.book_new()` de xlsx-js-style
-- Si necesitás funcionalidad que xlsx-js-style no tiene, reportar antes de implementar
-- **Paquete APQP**: solo Portada + Flujograma + AMFE + Plan de Control. Las HO se exportan individualmente con ExcelJS (necesitan imagenes logo + PPE que xlsx-js-style no soporta)
+- Antes de insertar familias, documentos o members: query primero si ya existen.
+- Las 8 familias canónicas son: Insert Patagonia, Armrest Door Panel Patagonia, Top Roll Patagonia, Headrest Front/Rear Center/Rear Outer Patagonia, Telas Planas PWA, Telas Termoformadas PWA.
+- Si un seed/migration crea más de 8 familias, algo está mal — abortar y reportar.
+- Nombres de cliente: "VWA" (no "Volkswagen Argentina", no "095 VOLKSWAGEN").
+
+### 3. Export Excel: xlsx-js-style para AMFE/CP, ExcelJS para HO
+- AMFE y CP: SOLO xlsx-js-style (`XLSX.utils.book_new()`).
+- HO: SOLO ExcelJS (necesita imágenes: logo + pictogramas PPE).
+- PROHIBIDO mezclar librerías en el mismo export.
+- Paquete APQP: Portada + Flujograma + AMFE + CP en xlsx-js-style. HO se exporta individualmente.
+
 ### 4. Reusar antes de crear
-- Antes de crear una función nueva, buscar si ya existe una que haga lo mismo
-- Los exports individuales (AMFE→Excel, CP→Excel) ya funcionan — el paquete APQP debe llamarlos, no reimplementar
-- Los hooks de Supabase (useAmfe, usePlanControl, etc.) ya funcionan — reusar para cualquier feature nueva
+- Buscar si ya existe una función que haga lo mismo antes de crear una nueva.
+- Los exports individuales ya funcionan — el paquete APQP debe llamarlos, no reimplementar.
+- Los hooks de Supabase (useAmfe, usePlanControl, etc.) ya funcionan — reusar.
+
 ### 5. Verificación obligatoria
-- Después de cualquier seed/migration: contar familias (debe ser 8), contar documentos, verificar 0 duplicados
-- Después de cualquier export: abrir el archivo y verificar que tiene datos reales, no placeholders
-- TypeScript: `npx tsc --noEmit` sin errores
-- Tests: `npx vitest run --testPathPattern="módulo-afectado"`
+- Después de cualquier seed/migration: contar familias (debe ser 8), contar documentos, verificar 0 duplicados.
+- Después de cualquier export: abrir el archivo y verificar que tiene datos reales.
+- TypeScript: `npx tsc --noEmit` sin errores.
+- Tests: `npx vitest run --testPathPattern="módulo-afectado"`.
+
+## Supabase — Estructura de Datos APQP (MAPA OBLIGATORIO)
+
+### Tablas principales de documentos
+
+Todos los documentos APQP guardan sus datos en una columna `data` de tipo JSONB. La estructura es:
+
+```
+amfe_documents    → data: { header: {...}, operations: [...] }
+cp_documents      → data: { header: {...}, items: [...] }
+ho_documents      → data: { header: {...}, sheets: [...] }
+pfd_documents     → data: { header: {...}, steps: [...] }
+```
+
+### Estructura JSON del AMFE (amfe_documents.data)
+
+```jsonc
+{
+  "header": {
+    "companyName", "scope", "partNumber", "applicableParts",
+    "responsibleEngineer", "coreTeam", "preparedBy", "approvedBy",
+    "amfeDate", "revisionLevel", "revisionDate"
+  },
+  "operations": [
+    {
+      "id": "uuid",
+      "operationNumber": "10",      // STRING, ordenar con parseInt()
+      "operationName": "RECEPCION DE MATERIA PRIMA",
+      "linkedPfdStepId": "uuid",
+      "workElements": [
+        {
+          "id": "uuid",
+          "description": "...",
+          "functions": [
+            {
+              "id": "uuid",
+              "description": "...",
+              "failures": [
+                {
+                  "id": "uuid",
+                  "description": "modo de falla",
+                  "effectLocal": "...",
+                  "effectNextLevel": "...",    // OBLIGATORIO (3 niveles VDA)
+                  "effectEndUser": "...",      // OBLIGATORIO
+                  "causes": [
+                    {
+                      "id": "uuid",
+                      "description": "causa",
+                      "severity": 7,           // 1-10
+                      "occurrence": 4,         // 1-10
+                      "detection": 6,          // 1-10
+                      "actionPriority": "M",   // "H", "M", "L"
+                      "preventionControl": "...",
+                      "detectionControl": "...",
+                      "preventionAction": "...",  // OBLIGATORIO si AP=H
+                      "detectionAction": "...",
+                      "responsible": "Carlos Baptista (Ingeniería)",
+                      "targetDate": "2026-07-01",
+                      "status": "Pendiente"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
+
+### Estructura JSON del Plan de Control (cp_documents.data)
+
+```jsonc
+{
+  "header": {
+    "partName", "partNumber", "applicableParts",
+    "companyName", "customerName",
+    "coreTeam": "Carlos Baptista (Ingeniería), Manuel Meszaros (Calidad), Marianna Vera (Producción)",
+    "preparedBy": "Facundo Santoro",
+    "approvedBy": "Carlos Baptista",
+    "customerApproval": "",         // Campo ÚNICO (no separar ing/cal)
+    "revisionLevel", "revisionDate"
+  },
+  "items": [
+    {
+      "id": "uuid",
+      "processStepNumber": "10",    // STRING, ordenar con parseInt()
+      "processStepName": "RECEPCION DE MATERIA PRIMA",
+      "machineTool": "N/A",         // NUNCA poner "Visual" acá — eso es método
+      "characteristic": "Flamabilidad del material",
+      "classification": "CC",       // "CC", "SC", o "" (vacío = estándar)
+      "specification": "Según TL 1010 VW",  // NUNCA "Conforme a especificación" genérico
+      "evaluationTechnique": "Certificado de laboratorio",
+      "sampleSize": "1 muestra",
+      "sampleFrequency": "Por entrega",
+      "controlMethod": "Inspección documental de certificado",
+      "reactionPlanOwner": "Inspector de Calidad",  // SIEMPRE rol, nunca nombre de persona
+      "reactionPlan": "Segregar lote, notificar s/ P-09/I",
+      "amfeCauseIds": ["uuid"],     // Vínculo con causas del AMFE
+      "linkedAmfeOperationId": "uuid"
+    }
+  ]
+}
+```
+
+### Estructura JSON de Hoja de Operaciones (ho_documents.data)
+
+```jsonc
+{
+  "header": {
+    "documentNumber": "I-IN-002.4-R01",
+    "partDescription", "hoNumber": "HO-10",  // Formato "HO-{opNumber}"
+    "preparedBy": "Facundo Santoro",
+    "approvedBy": "Carlos Baptista"
+  },
+  "sheets": [
+    {
+      "id": "uuid",
+      "hoNumber": "HO-10",
+      "operationNumber": "10",
+      "operationName": "RECEPCION DE MATERIA PRIMA",
+      "linkedCpOperationNumber": "10",
+      "steps": [                    // Pasos TWI (Training Within Industry)
+        {
+          "id": "uuid",
+          "stepNumber": 1,
+          "description": "Verificar documentación del proveedor",
+          "keyPoints": [            // Puntos clave ★
+            { "text": "Comparar remito con orden de compra", "symbol": "★" }
+          ],
+          "reasons": ["Asegurar trazabilidad del lote"]
+        }
+      ],
+      "qcItems": [                  // Ciclo de control (viene del CP)
+        {
+          "id": "uuid",
+          "cpItemId": "uuid",       // Vínculo 1:1 con CP item
+          "characteristic": "Flamabilidad",
+          "controlMethod": "Certificado de laboratorio",
+          "frequency": "Por entrega",
+          "responsible": "Inspector de Calidad",  // DEBE coincidir con CP
+          "specification": "Según TL 1010 VW",
+          "reactionPlan": "Segregar lote s/ P-09/I"
+        }
+      ],
+      "ppe": ["anteojos", "guantes", "zapatos"],  // EPP por operación
+      "visualAids": []
+    }
+  ]
+}
+```
+
+### Estructura JSON del PFD (pfd_documents.data)
+
+```jsonc
+{
+  "header": { "partName", "partNumber", "companyName" },
+  "steps": [
+    {
+      "id": "uuid",
+      "stepNumber": "10",
+      "name": "RECEPCION DE MATERIA PRIMA",
+      "type": "operation",  // "operation", "inspection", "transport", "storage", "decision"
+      "linkedAmfeOperationId": "uuid"
+    }
+  ]
+}
+```
+
+### Tablas de soporte
+
+```
+products                    → id, nombre, descripcion, part_number
+product_families            → id, name, description, linea_code, linea_name, active
+product_family_members      → family_id, product_id, is_primary (M:N)
+customer_lines              → id, name, customer_id
+```
+
+### Cómo actualizar datos en Supabase eficientemente
+
+Para actualizar campos DENTRO del JSON `data`, usar el patrón:
+
+```javascript
+// 1. Leer el documento completo
+const { data: doc } = await supabase
+  .from('cp_documents')
+  .select('id, data')
+  .eq('id', docId)
+  .single();
+
+// 2. Modificar el objeto JavaScript
+const updatedData = { ...doc.data };
+updatedData.items = updatedData.items.map(item => {
+  if (item.processStepNumber === '10') {
+    return { ...item, reactionPlanOwner: 'Inspector de Calidad' };
+  }
+  return item;
+});
+
+// 3. Guardar el documento completo
+await supabase
+  .from('cp_documents')
+  .update({ data: updatedData })
+  .eq('id', docId);
+```
+
+Para documentos grandes (>100KB), usar `updateDocDirect()` del helper si existe.
+
+## Productos — Mapa Completo (8 familias, 62 documentos)
+
+### VWA — Proyecto PATAGONIA
+
+| Familia | Part Number | Docs | Master | Variantes |
+|---------|------------|------|--------|-----------|
+| Insert Patagonia | N 227 a N 403 | 4+3 | AMFE+CP+HO+PFD | [L0]: AMFE+CP+PFD (sin HO) |
+| Armrest Door Panel | N 231 | 4 | AMFE+CP+HO+PFD | — |
+| Top Roll | 2GJ.868.087 / .088 | 4 | AMFE+CP+HO+PFD | — |
+| Headrest Front | 2HC881901 RL1 | 4+9 | AMFE+CP+HO+PFD | [L1][L2][L3]: AMFE+CP+HO (sin PFD) |
+| Headrest Rear Center | 2HC885900 RL1 | 4+9 | AMFE+CP+HO+PFD | [L1][L2][L3]: AMFE+CP+HO (sin PFD) |
+| Headrest Rear Outer | 2HC885901 RL1 | 4+9 | AMFE+CP+HO+PFD | [L1][L2][L3]: AMFE+CP+HO (sin PFD) |
+
+### PWA — Proyecto HILUX
+
+| Familia | Part Number | Proyecto | Docs |
+|---------|------------|----------|------|
+| Telas Planas | 21-9463 | HILUX 581D | AMFE+CP+HO+PFD |
+| Telas Termoformadas | 21-9640 | HILUX 582D | AMFE+CP+HO+PFD |
+
+### Equipo APQP (datos correctos para headers)
+- **Carlos Baptista** — Ingeniería (responsibleEngineer, approvedBy)
+- **Manuel Meszaros** — Calidad
+- **Facundo Santoro** — Realizador (preparedBy)
+- **Marianna Vera** — Producción
+- **Gonzalo Cal** — G.Cal (HO)
+- **Cristina Rabago** — Seguridad e Higiene
+- Core team CP: "Carlos Baptista (Ingeniería), Manuel Meszaros (Calidad), Marianna Vera (Producción)"
+
+### Roles válidos para controles (CP reactionPlanOwner / HO qcItem.responsible)
+- "Operador de producción" — autocontrol en estación
+- "Líder de Producción" — verificaciones, liberación arranque
+- "Inspector de Calidad" — controles especiales, recepción MP
+- "Recepción de materiales" — inspección de entrada
+- "Metrología" — mediciones con instrumentos calibrados
+- "Laboratorio" — ensayos funcionales/materiales
+- "Supervisor de Producción" — verificaciones periódicas
 
 ## Stack
 
@@ -48,7 +320,7 @@ Multi-usuario con auth Supabase (email/password). Sin Tauri, sin Gemini.
 | Auth + DB    | Supabase (@supabase/supabase-js) + SQLite (sql.js)  |
 | Testing      | Vitest 4.x + @testing-library/react + jsdom         |
 | Styling      | TailwindCSS 3.4                                     |
-| Export       | xlsx-js-style, html2pdf.js                          |
+| Export       | xlsx-js-style (AMFE/CP), ExcelJS (HO), html2pdf.js  |
 | Charts       | Recharts 3.4                                        |
 | DnD          | @dnd-kit/core                                       |
 
@@ -83,220 +355,92 @@ npx tsc --noEmit     # Chequeo de tipos
 
   core/                 Motores de calculo
     balancing/          Algoritmos de balanceo (SALBP-1, SALBP-2, COMSOAL, etc.)
-    math/               Funciones matematicas
-    services/           Servicios de negocio
-    config/             Configuracion de core
     inheritance/        Herencia maestro→variante (familias de producto)
-      documentInheritance.ts   Clonado de docs maestro→variante (UUID regen)
-      overrideTracker.ts       Diff variante vs maestro + persistencia overrides
-      triggerOverrideTracking.ts  Fire-and-forget post-save para variantes
-      changePropagation.ts     Propagacion cambios maestro→variantes (proposals)
+      documentInheritance.ts   Clonado maestro→variante (UUID regen)
+      overrideTracker.ts       Diff variante vs maestro
+      changePropagation.ts     Propagacion cambios maestro→variantes
 
-  hooks/                18 custom hooks
-    useLineBalancing    Motor principal de balanceo
-    useProjectPersistence  Guardado a filesystem + SQLite auto-save
-    useUndoRedo         Undo/redo con snapshots
-    useSessionLock      Lock de sesion en red
+  hooks/                Custom hooks (useLineBalancing, useProjectPersistence, etc.)
 
   modules/              Modulos de negocio
     amfe/               AMFE VDA + validacion cruzada con PFD
-    controlPlan/        Plan de Control AIAG + cross-validation (V1-V5) + link HO
-    hojaOperaciones/    Hojas de operaciones (navy theme, ISO PPE) + link CP
-    pfd/                Diagrama de Flujo del Proceso (cyan theme, ASME symbols) + link AMFE
-    family/             Familias de producto (ChangeProposalPanel, useChangeProposals)
-    mix/                Mix multi-modelo
-    flow-simulator/     Simulador de flujo (SimScript)
-    heijunka/           Nivelado heijunka
-    kanban/             Tablero kanban
-    balancing/          UI de balanceo
+    controlPlan/        Plan de Control AIAG + cross-validation + link HO
+    hojaOperaciones/    Hojas de operaciones (TWI, EPP, navy theme) + link CP
+    pfd/                Diagrama de Flujo (cyan theme, ASME symbols) + link AMFE
+    family/             Familias de producto (herencia, proposals)
+    balancing/          UI de balanceo de línea
     dashboard/          Dashboard ejecutivo
-    logistics-backlog/  Backlog logistico
+    (mix, flow-simulator, heijunka, kanban, logistics-backlog)
 
-  utils/                Utilidades
-    database.ts         Singleton SQLite, schema DDL, migraciones, adapters
-    repositories/       9 repositorios tipados (CRUD sobre SQLite)
-      settingsRepository.ts        Key-value de configuracion
-      projectRepository.ts         Proyectos de balanceo
-      amfeRepository.ts            Documentos AMFE + biblioteca
-      cpRepository.ts              Planes de Control
-      hoRepository.ts              Hojas de Operaciones
-      pfdRepository.ts             Diagramas de Flujo (PFD)
-      draftRepository.ts           Borradores auto-save unificados
-      familyRepository.ts          Familias de producto + miembros
-      familyDocumentRepository.ts  Docs familia, overrides, change proposals
+  utils/
+    repositories/       9 repositorios tipados (CRUD)
     supabaseClient.ts   Singleton Supabase client
     pfdAmfeLinkValidation.ts   Validacion cruzada PFD ↔ AMFE
     hoCpLinkValidation.ts      Validacion cruzada HO ↔ CP
-    crossDocumentAlerts.ts     Alertas APQP cascade (PFD→AMFE→CP→HO)
-    storageManager.ts   Settings de storage (delega a settingsRepository)
-    unified_fs.ts       Abstraccion filesystem (web)
-    logger.ts           Logger centralizado
-    settingsStore.ts    Settings (delega a settingsRepository)
-    crypto.ts           Hashing para integridad
-    networkUtils.ts     Deteccion de red
-    processCategory.ts  Inferencia de categoria de proceso
+    crossDocumentAlerts.ts     Alertas cascada APQP
 
-  __tests__/            460+ archivos de test (3964 tests)
-
-  src/                  Assets y datos
-    assets/             Imagenes, iconos PPE, logo
-    data/               Datos estaticos (SGC catalog)
+  __tests__/            460+ archivos de test
 ```
 
 ## Estandares de calidad
 
 ### Mentalidad
-- **Nivel senior obligatorio**: nunca entregar algo que no aprobaria un ingeniero de software senior.
-- **Cero esfuerzo minimo**: si encontras un bug, busca si hay mas del mismo patron en todo el codebase.
-  Ejemplo: si `Math.max(...arr)` puede recibir NaN, busca TODOS los Math.max del proyecto.
-- **Verificar antes de editar**: lee el codigo completo, entende el flujo, recien ahi modifica.
-  Los fixes basados en suposiciones son peores que no hacer nada.
-- **Subagentes no son infalibles**: ~40-50% de hallazgos de audit agents son false positives.
-  Siempre verificar manualmente trazando la ejecucion real del codigo antes de aplicar.
-- **Cada fix debe mejorar legibilidad**: si un fix agrega complejidad sin valor, no aplicar.
-- **Correr tests despues de cada batch de cambios**: `npx vitest run`. No commitear si fallan.
-- **NO fixes cosmeticos**: no perder tiempo en acentos/tildes, renombrar variables por estilo,
-  o reformatear codigo. Enfocarse en logica, formulas, data flow, race conditions.
+- Nivel senior obligatorio. Verificar antes de editar. Leer el codigo completo.
+- Subagentes no son infalibles (~40-50% false positives en audits). Verificar manualmente.
+- Cada fix debe mejorar legibilidad. NO fixes cosméticos.
+- Correr tests después de cada batch de cambios.
 
-### Modo autonomo (deep audits)
+### Modo autónomo (deep audits)
 - Trabajar sin parar hasta agotar el contexto.
-- Usar subagentes para escaneo de archivos (reduce contaminacion del contexto principal).
-- Priorizar modulos: PFD, AMFE, HO, Plan de Control, core/balancing.
-- Clasificar hallazgos: TRUE BUG > ROBUSTNESS > FALSE POSITIVE.
-- Ante la duda, NO aplicar el fix. Es mejor dejar codigo correcto intacto.
+- Usar subagentes para escaneo de archivos.
+- Priorizar: PFD, AMFE, HO, Plan de Control, core/balancing.
+- Clasificar: TRUE BUG > ROBUSTNESS > FALSE POSITIVE.
+- Ante la duda, NO aplicar el fix.
 
 ### Reglas de codigo
-- **Usar repositorios para acceso a datos, nunca SQLite directo** — importar de `utils/repositories/`
-- **NO hardcodear API keys** en codigo fuente. Usar variables de entorno (`VITE_*`)
-- **Usar logger.ts** en vez de `console.log/warn/error`: `import { logger } from 'utils/logger'`
-- **NO usar `as any` ni `@ts-ignore`** - tipar correctamente
-- **Auto-save/borradores** via `draftRepository` (SQLite), NO IndexedDB
-- **Modulos lazy-loaded** con `React.lazy()` + `Suspense`
+- Usar repositorios para acceso a datos, nunca SQLite directo.
+- NO hardcodear API keys. Usar `VITE_*`.
+- Usar `logger.ts` en vez de `console.log`.
+- NO usar `as any` ni `@ts-ignore`.
+- Modulos lazy-loaded con `React.lazy()` + `Suspense`.
 
-### Testing (detalle en .claude/rules/testing.md)
-- Framework: Vitest con globals habilitados (`describe`, `it`, `expect` sin import)
-- Correr: `npx vitest run` | Coverage: `npx vitest run --coverage`
-- Test dir: `__tests__/` (460+ archivos, 3964 tests)
-- Mocks: repositorios, `unified_fs`, `logger`, `crypto` (nunca filesystem real)
+### Testing
+- Framework: Vitest con globals habilitados.
+- Durante desarrollo: `npx vitest run --testPathPattern=<módulo>`.
+- Tests generales solo antes del commit final.
 
 ### Path aliases
-- `@/*` mapea a la raiz del proyecto (configurado en tsconfig.json y vite.config.ts)
-
-### Reglas contextuales (.claude/rules/)
-Reglas detalladas por modulo se cargan automaticamente al editar archivos relevantes:
-- `testing.md` — React 19 gotchas, mock patterns, coverage
-- `database.md` — Repositorios, SQLite, persistencia
-- `control-plan.md` — CP cross-validation, trazabilidad
-- `exports.md` — Excel/PDF export patterns, NaN prevention
-- `hoja-operaciones.md` — HO UI, PPE, navy theme
-
-## Datos de referencia
-
-- `INITIAL_PROJECT` y `EXAMPLE_PROJECT` en `types.ts` para datos de test
-- Tipos principales: `Project`, `Operation`, `WorkElement`, `AmfeDocument`, `ControlPlanDocument`
-- SGC docs catalogados en `src/data/sgc/`
+- `@/*` mapea a la raiz del proyecto.
 
 ## Auth & Multi-usuario
 
-- Supabase auth con email/password (`components/auth/AuthProvider.tsx`)
-- Login page en `components/auth/LoginPage.tsx`
-- En dev mode: boton "Entrar como admin (dev)" usa `VITE_AUTO_LOGIN_EMAIL` / `VITE_AUTO_LOGIN_PASSWORD`
-- Variables de entorno requeridas: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`
-
-## Documentos APQP en Supabase (62 docs, 8 familias — actualizado 2026-03-18)
-
-| Tipo | Cantidad | Estado |
-|------|----------|--------|
-| PFD  | 9        | 100% NG paths: all 9 PFDs have decision rombos, scrap dispositions, rework where applicable. Sources: Flujograma 152 (headrests), 153 (armrest), 154 (insert), 122 (top roll), 150 (telas planas), 156 (telas termo) |
-| AMFE | 18       | 100% S/O/D, AP=H con acciones, headrest masters+variantes con datos reales (AMFEs 151/153/155) |
-| CP   | 18       | 100% controlMethod (1,448 items), 100% CC/SC, 0 warnings V1/V2 |
-| HO   | 17       | 171 sheets, 1,038 TWI steps (100% >= 3 steps), QCs vinculados, headrests con SET UP |
-
-### Productos VWA (proyecto PATAGONIA)
-- **Insert** (master + [L0] variante) — VWA/PATAGONIA/INSERT — Primary: N 227, 1 producto vinculado
-- **Armrest Door Panel** — VWA/PATAGONIA/ARMREST_DOOR_PANEL — Primary: N 231, + 2HC885081 RL1 y variantes color (4 productos)
-- **Top Roll** — VWA/PATAGONIA/TOP_ROLL — Primary: 2GJ.868.087, + 2GJ.868.088 (2 productos)
-- **Headrest Front** (L0 + L1/L2/L3) — VWA/PATAGONIA/HEADREST_FRONT — Primary: 2HC881901 RL1, + GFV/GEV/EFG (4 productos, AMFE-151)
-- **Headrest Rear Center** (L0 + L1/L2/L3) — VWA/PATAGONIA/HEADREST_REAR_CEN — Primary: 2HC885900 RL1, + EIF/SIY/SIY (4 productos, AMFE-153)
-- **Headrest Rear Outer** (L0 + L1/L2/L3) — VWA/PATAGONIA/HEADREST_REAR_OUT — Primary: 2HC885901 RL1, + GFU/GEQ/DZS (4 productos, AMFE-155)
-
-### Productos PWA
-- **Telas Planas** — PWA/TELAS_PLANAS — HILUX 581D — Primary: 21-9463, 12 productos (TELA HILUX)
-- **Telas Termoformadas** — PWA/TELAS_TERMOFORMADAS — HILUX 582D — Primary: 21-9640, 4 productos (TELA DE RESPALDO MOLDEADA)
-
-### Part numbers en landing page
-- `useProjectHub` resuelve part number: 1ro `product_family_members` (primary), fallback a `amfe_documents.part_number` del master
-- Todas las 8 familias tienen productos vinculados con `is_primary=true` en `product_family_members`
-
-### Gaps conocidos
-- Toyota 737 RR1 MHV: 0 documentos en Supabase (carpeta fisica existe pero sin datos)
-- AMFE-00001 Insert master: 94% S/O/D coverage (6% causas incompletas)
-
-Reportes de auditoria: `docs/AUDIT_AMFE.md`, `docs/AUDIT_CP_HO.md`, `docs/AUDIT_CROSSVALIDATION.md`, `docs/AUDIT_CURRENT_STATE.md`
+- Supabase auth con email/password.
+- Dev mode: botón "Entrar como admin (dev)" con `VITE_AUTO_LOGIN_EMAIL` / `VITE_AUTO_LOGIN_PASSWORD`.
 
 ## Validaciones cruzadas APQP
 
-- PFD ↔ AMFE: `pfdAmfeLinkValidation.ts` + `usePfdAmfeLinkAlerts` hook + `LinkValidationPanel` UI
-- HO ↔ CP: `hoCpLinkValidation.ts` + `useHoCpLinkAlerts` hook + `HoCpLinkValidationPanel` UI
-- CP interna: `cpCrossValidation.ts` (V1-V8: CC/SC, orphan failures, 4M, reaction owners, poka-yoke, sampling, machines)
-- Cascada APQP: `crossDocumentAlerts.ts` (PFD→AMFE→CP→HO)
+- PFD ↔ AMFE: `pfdAmfeLinkValidation.ts`
+- HO ↔ CP: `hoCpLinkValidation.ts`
+- CP interna: `cpCrossValidation.ts` (V1-V8)
+- Cascada: `crossDocumentAlerts.ts` (PFD→AMFE→CP→HO)
 
 ## Familias de Producto (Herencia Maestro→Variante)
 
-### Tablas SQLite
-- `product_families` — Familias (nombre, linea, miembros)
+### Tablas
+- `product_families` — Familias
 - `product_family_members` — Productos en familia (M:N, uno `is_primary`)
-- `family_documents` — Vincula docs a familias (`is_master`, `source_master_id`, modulo)
-- `family_document_overrides` — Cambios de variante vs maestro (por item: step/op/item/sheet)
-- `family_change_proposals` — Propuestas de cambio maestro→variante (pending/auto_applied/accepted/rejected)
+- `family_documents` — Docs a familias (`is_master`, modulo)
+- `family_document_overrides` — Cambios de variante vs maestro
+- `family_change_proposals` — Propuestas maestro→variante (pending/auto_applied/accepted/rejected)
 
-### Flujo de herencia
-1. **Clonado**: `documentInheritance.ts` clona maestro→variante regenerando UUIDs
-2. **Override tracking**: Al guardar variante, `triggerOverrideTracking` diffs vs maestro (fire-and-forget)
-3. **Change propagation**: Al guardar maestro, `triggerChangePropagation` genera proposals para variantes
-   - Item sin override en variante → `auto_applied`
-   - Item con override en variante → `pending` (requiere confirmacion manual)
-4. **UI**: `ChangeProposalPanel` muestra proposals pendientes en docs variante (aceptar/rechazar)
-
-### Granularidad de items (por modulo)
-- PFD: `pfd_step` (step.id)
-- AMFE: `amfe_operation` (operation.id)
-- CP: `cp_item` (item.id)
-- HO: `ho_sheet` (sheet.id)
-
-### Hooks relevantes
-- `useInheritanceStatus` — Status de herencia por item (inherited/modified/own)
-- `useChangeProposals` — Proposals pendientes para variantes
-- `useFamilyDocuments` — Docs vinculados a familia
-
-## Preview & Verificacion Visual
-
-Usar `preview_start` con name "dev" para levantar Vite en puerto 3002.
-La configuracion esta en `.claude/launch.json`.
-
-## Design System y Testing
-
-### UI Consistente
-- Toda UI nueva DEBE seguir el design system documentado en `docs/DESIGN_SYSTEM.md`
-- Antes de crear cualquier componente visual nuevo, consultar ese archivo para usar los mismos colores, componentes, patrones de layout e iconografía
-- No inventar estilos nuevos si ya existe un patrón establecido
-
-### Estrategia de Testing
-- Durante desarrollo: correr solo tests del módulo afectado con `npx vitest run --testPathPattern=<módulo>`
-- Tests generales completos (`npx vitest run`) solo antes del commit final
-- Siempre verificar TypeScript con `npx tsc --noEmit` antes de commitear
+### Flujo
+1. Clonado: `documentInheritance.ts` clona maestro→variante regenerando UUIDs.
+2. Override: Al guardar variante, `triggerOverrideTracking` diffs vs maestro.
+3. Propagación: Al guardar maestro, `triggerChangePropagation` genera proposals.
+4. UI: `ChangeProposalPanel` muestra proposals pendientes.
 
 ## Produccion (GitHub Pages)
 
-- **URL**: https://facussc24.github.io/tiempos-y-balanceos/
-- **Hosting**: GitHub Pages (branch `gh-pages`)
-- **Repo**: https://github.com/facussc24/tiempos-y-balanceos (publico)
-- **Variables de entorno**: Baked at build time via `.env.production` (Supabase URL + anon key)
-- **Dev-login**: Solo visible en `npm run dev` (gateado con `import.meta.env.DEV`)
-
-### Deploy a produccion
-```bash
-npm run build        # Buildea con base path /tiempos-y-balanceos/
-npx gh-pages -d dist # Publica dist/ al branch gh-pages
-```
-GitHub Pages detecta el push al branch `gh-pages` y actualiza automaticamente (~1 min).
+- URL: https://facussc24.github.io/tiempos-y-balanceos/
+- Repo: https://github.com/facussc24/tiempos-y-balanceos (publico)
+- Deploy: `npm run build && npx gh-pages -d dist`
