@@ -171,7 +171,7 @@ export async function saveCpDocument(
                      datetime('now'),
                      ?, ?)`,
             [
-                id, projectName, h.controlPlanNumber || '', h.phase || 'production',
+                id, projectName, h.controlPlanNumber || '', h.phase || 'preLaunch',
                 h.partNumber || '', h.partName || '', h.organization || '',
                 h.client || '', h.responsible || '', h.revision || '',
                 h.linkedAmfeProject || '', linkedAmfeId ?? null,

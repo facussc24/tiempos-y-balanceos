@@ -200,7 +200,7 @@ CREATE TABLE IF NOT EXISTS cp_documents (
     id                  TEXT PRIMARY KEY,
     project_name        TEXT NOT NULL DEFAULT '',
     control_plan_number TEXT NOT NULL DEFAULT '',
-    phase               TEXT NOT NULL DEFAULT 'production'
+    phase               TEXT NOT NULL DEFAULT 'preLaunch'
                         CHECK(phase IN ('prototype','preLaunch','safeLaunch','production')),
     part_number         TEXT NOT NULL DEFAULT '',
     part_name           TEXT NOT NULL DEFAULT '',

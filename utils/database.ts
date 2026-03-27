@@ -113,7 +113,7 @@ CREATE TABLE IF NOT EXISTS cp_documents (
     id                  TEXT PRIMARY KEY,
     project_name        TEXT NOT NULL DEFAULT '',
     control_plan_number TEXT NOT NULL DEFAULT '',
-    phase               TEXT NOT NULL DEFAULT 'production'
+    phase               TEXT NOT NULL DEFAULT 'preLaunch'
                         CHECK(phase IN ('prototype','preLaunch','safeLaunch','production')),
     part_number         TEXT NOT NULL DEFAULT '',
     part_name           TEXT NOT NULL DEFAULT '',
@@ -697,21 +697,20 @@ async function runMigrations(adapter: DbAdapter): Promise<void> {
         logger.info('Database', 'Migration 12: family document tables + variant_label complete');
     }
 
-    // Migration 12→13: Fix phase data for production CP documents
+    // Migration 12→13: Set phase to preLaunch for all CP documents
     if (currentVersion < 13) {
         try {
             await adapter.execute(
-                `UPDATE cp_documents SET phase = 'production'
-                 WHERE project_name IN ('PWA/TELAS_PLANAS', 'PWA/TELAS_TERMOFORMADAS', 'VWA/PATAGONIA/TOP_ROLL')`
+                `UPDATE cp_documents SET phase = 'preLaunch' WHERE phase != 'preLaunch'`
             );
-            logger.info('Database', 'Migration 13: Updated phase to production for Telas Planas, Telas Termoformadas, Top Roll');
+            logger.info('Database', 'Migration 13: Updated phase to preLaunch for all CP documents');
         } catch (e) {
             logger.warn('Database', 'Migration 13: phase update skipped', {}, e instanceof Error ? e : undefined);
         }
 
         await adapter.execute(
             `INSERT OR REPLACE INTO schema_version (version, description) VALUES (?, ?)`,
-            [13, 'Fix phase data for production CP documents']
+            [13, 'Set phase to preLaunch for all CP documents']
         );
     }
 

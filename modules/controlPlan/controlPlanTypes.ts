@@ -86,7 +86,7 @@ export interface ControlPlanDocument {
 /** Default empty header. */
 export const EMPTY_CP_HEADER: ControlPlanHeader = {
     controlPlanNumber: '',
-    phase: 'production',
+    phase: 'preLaunch',
     partNumber: '',
     latestChangeLevel: '',
     partName: '',
