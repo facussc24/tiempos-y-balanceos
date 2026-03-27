@@ -180,7 +180,7 @@ describe('exportControlPlan', () => {
             'Organizacion / Planta', 'Proveedor', 'Cod. Proveedor',
             'Contacto / Telefono', 'Cliente', 'Responsable',
             'Equipo', 'AMFE Vinculado',
-            'Aprob. Planta', 'Aprob. Cliente / Fecha', 'Otra Aprobacion',
+            'Aprob. Planta', 'Aprob. Cliente/Fecha',
         ];
         for (const label of expectedLabels) {
             expect(values).toContain(label);
@@ -220,7 +220,6 @@ describe('exportControlPlan', () => {
         expect(values).toContain('Soporte Motor');
         expect(values).toContain('Proveedor X');
         expect(values).toContain('AMFE-001');
-        expect(values).toContain('Ing. Calidad');
         expect(values).toContain('Toyota Eng. / Toyota QA');
     });
 
@@ -250,14 +249,14 @@ describe('exportControlPlan', () => {
         const aoaData = getAoaData();
         // Check rows 2-7 (6 metadata rows) — every cell should have border
         for (let r = 2; r <= 7; r++) {
-            for (let c = 0; c < 14; c++) {
+            for (let c = 0; c < 15; c++) {
                 const cell = aoaData[r][c];
                 expect(cell.s?.border, `Row ${r} Col ${c} missing border`).toBeDefined();
             }
         }
     });
 
-    it('has 7 metadata rows (compact layout with split approvals)', () => {
+    it('has 6 metadata rows (compact layout with all approvals in 1 row)', () => {
         exportControlPlan(makeDoc());
         const aoaData = getAoaData();
         let metaCount = 0;
@@ -265,7 +264,7 @@ describe('exportControlPlan', () => {
             if (aoaData[r][0]?.s?.fill?.fgColor?.rgb === 'F2F2F2') metaCount++;
             else break;
         }
-        expect(metaCount).toBe(7);
+        expect(metaCount).toBe(6);
     });
 
     // ── Row heights ──
@@ -285,7 +284,7 @@ describe('exportControlPlan', () => {
         exportControlPlan(makeDoc());
         const ws = getWorksheet();
         expect(ws['!cols']).toBeDefined();
-        expect(ws['!cols'].length).toBe(14);
+        expect(ws['!cols'].length).toBe(15);
         expect(ws['!cols'][0].wch).toBe(12);
     });
 

@@ -7,7 +7,7 @@
  * Features:
  *  - Compact 3-pair metadata with merged label cells (never truncated)
  *  - Phase checkboxes (☒/☐) per AIAG template
- *  - Vertical merging for same-process groups (cols 0-2)
+ *  - Vertical merging for same-process groups (cols 0-2) and componentMaterial (col 3)
  *  - Explicit row heights for professional appearance
  */
 
@@ -29,33 +29,34 @@ const SGC_FORM_NUMBER = 'I-AC-005.2';
  */
 const EXPORT_COLUMNS = CP_COLUMNS.filter(c => c.key !== 'controlProcedure');
 
-/** Column groups for export — Proceso has 3 cols, Métodos has 7 (no controlProcedure). */
+/** Column groups for export — Proceso has 4 cols (incl. Componente/Material), Métodos has 7 (no controlProcedure). */
 const EXPORT_COLUMN_GROUPS: { label: string; colSpan: number }[] = [
-    { label: 'Proceso',          colSpan: 3 },
+    { label: 'Proceso',          colSpan: 4 },
     { label: 'Características',  colSpan: 4 },
     { label: 'Métodos',          colSpan: 7 },
 ];
 
 /**
  * Dedicated column widths (wch) — tuned for both metadata labels and data.
- * 14 columns matching EXPORT_COLUMNS order (no controlProcedure).
+ * 15 columns matching EXPORT_COLUMNS order (no controlProcedure).
  */
 const CP_COL_WIDTHS: number[] = [
     12,   // 0:  Nro. Parte/Proceso
     25,   // 1:  Descripción Proceso/Operación
     20,   // 2:  Máquina/Dispositivo/Herram.
-    10,   // 3:  Nro. (Característica)
-    22,   // 4:  Producto
-    22,   // 5:  Proceso
-    12,   // 6:  Clasif. Caract. Esp.
-    23,   // 7:  Espec./Tolerancia
-    20,   // 8:  Técnica Evaluación/Medición
-    13,   // 9:  Tamaño Muestra
-    13,   // 10: Frecuencia
-    20,   // 11: Método Control
-    23,   // 12: Plan Reacción
-    17,   // 13: Responsable Reacción
-];  //  Total ≈ 246 chars
+    15,   // 3:  Componente/Material
+    10,   // 4:  Nro. (Característica)
+    22,   // 5:  Producto
+    22,   // 6:  Proceso
+    12,   // 7:  Clasif. Caract. Esp.
+    23,   // 8:  Espec./Tolerancia
+    20,   // 9:  Técnica Evaluación/Medición
+    13,   // 10: Tamaño Muestra
+    13,   // 11: Frecuencia
+    20,   // 12: Método Control
+    23,   // 13: Plan Reacción
+    17,   // 14: Responsable Reacción
+];
 
 /**
  * Metadata pair layout: 3 label-value pairs across 15 columns.
@@ -242,7 +243,7 @@ export function buildControlPlanWorkbook(doc: ControlPlanDocument): XLSX.WorkBoo
     const wb = XLSX.utils.book_new();
     const rows: any[][] = [];
     const h = doc.header;
-    const totalCols = EXPORT_COLUMNS.length; // 14
+    const totalCols = EXPORT_COLUMNS.length; // 15
     const merges: XLSX.Range[] = [];
 
     // ── Row 0: Title ──────────────────────────────────────────────
@@ -272,8 +273,7 @@ export function buildControlPlanWorkbook(doc: ControlPlanDocument): XLSX.WorkBoo
         ['Organizacion / Planta', h.organization,      'Proveedor',             h.supplier,               'Cod. Proveedor',     h.supplierCode],
         ['Contacto / Telefono', h.keyContactPhone,     'Cliente',               h.client,                 'Responsable',        h.responsible],
         ['Equipo',              h.coreTeam,             'AMFE Vinculado',        h.linkedAmfeProject,      '',                   ''],
-        ['Aprob. Ingenieria',   h.approvedBy,           'Aprob. Planta',          h.plantApproval,          '',                   ''],
-        ['Aprob. Cliente / Fecha', h.customerApproval,  'Otra Aprobacion',        h.otherApproval,          '',                   ''],
+        ['Aprob. Ingenieria',   h.approvedBy,           'Aprob. Planta',          h.plantApproval,          'Aprob. Cliente/Fecha', h.customerApproval],
         ...(h.applicableParts?.trim() ? [['Piezas Aplicables', truncateParts(h.applicableParts).replace(/\n/g, ' · '), '', '', '', ''] as [string, string, string, string, string, string]] : []),
     ];
 
@@ -312,11 +312,15 @@ export function buildControlPlanWorkbook(doc: ControlPlanDocument): XLSX.WorkBoo
     rows.push(EXPORT_COLUMNS.map(col => ({ v: col.label, s: st.colHeader })));
     const colHeaderIdx = rows.length - 1;
 
-    // ── Data rows (sorted numerically by operation number) ──
+    // ── Data rows (sorted numerically by operation, then grouped by material) ──
     const sortedItems = [...doc.items].sort((a, b) => {
         const numA = parseInt(a.processStepNumber) || 0;
         const numB = parseInt(b.processStepNumber) || 0;
-        return numA - numB;
+        if (numA !== numB) return numA - numB;
+        // Sub-sort: items with material first, grouped by material name
+        const matA = a.componentMaterial || '';
+        const matB = b.componentMaterial || '';
+        return matA.localeCompare(matB);
     });
     const dataStartIdx = rows.length;
     for (const item of sortedItems) {
@@ -346,11 +350,38 @@ export function buildControlPlanWorkbook(doc: ControlPlanDocument): XLSX.WorkBoo
             // Clear duplicate text in follower cells
             for (let r = 1; r < group.span; r++) {
                 const rowIdx = dataStartIdx + group.startIdx + r;
-                // FIX: Bounds check prevents crash if doc.items changed mid-export
                 if (rowIdx >= rows.length) break;
                 const followerRow = rows[rowIdx];
                 followerRow[col] = { v: '', s: st.cellMerged };
             }
+        }
+
+        // ── Col 3 (Componente/Material): sub-merge within process group ──
+        const materialColIdx = 3;
+        let subStart = group.startIdx;
+        while (subStart < group.startIdx + group.span) {
+            const mat = (sortedItems[subStart].componentMaterial || '').trim();
+            if (!mat) { subStart++; continue; } // skip empty material cells
+            let subEnd = subStart + 1;
+            while (subEnd < group.startIdx + group.span &&
+                   (sortedItems[subEnd].componentMaterial || '').trim() === mat) {
+                subEnd++;
+            }
+            const subSpan = subEnd - subStart;
+            if (subSpan > 1) {
+                merges.push({
+                    s: { r: dataStartIdx + subStart, c: materialColIdx },
+                    e: { r: dataStartIdx + subEnd - 1, c: materialColIdx },
+                });
+                const leader = rows[dataStartIdx + subStart];
+                leader[materialColIdx] = { ...leader[materialColIdx], s: st.cellMerged };
+                for (let r = subStart + 1; r < subEnd; r++) {
+                    const rowIdx = dataStartIdx + r;
+                    if (rowIdx >= rows.length) break;
+                    rows[rowIdx][materialColIdx] = { v: '', s: st.cellMerged };
+                }
+            }
+            subStart = subEnd;
         }
     }
 
@@ -385,7 +416,7 @@ export function buildControlPlanWorkbook(doc: ControlPlanDocument): XLSX.WorkBoo
     });
 
     // Auto-filter on column header row for easy navigation
-    // 14 columns (A-N), totalCols-1 = 13 → 'N'
+    // 15 columns (A-O), totalCols-1 = 14 → 'O'
     const lastColLetter = String.fromCharCode(65 + totalCols - 1);
     ws['!autofilter'] = { ref: `A${colHeaderIdx + 1}:${lastColLetter}${colHeaderIdx + 1}` };
 

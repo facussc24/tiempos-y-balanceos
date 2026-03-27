@@ -127,14 +127,16 @@ export interface CPColumnDef {
 }
 
 /**
- * Column definitions for the Control Plan table (14 AIAG standard columns).
- * material/componente se identifica en processStepNumber (ej: "10 - PVC/Vinilo")
+ * Column definitions for the Control Plan table (14 AIAG standard + 1 extra).
+ * Columna adicional "Componente/Material" (AIAG CP 2024 Cap 1.1 permite columnas extra).
+ * Se usa para identificar a qué material aplica cada control, especialmente en Recepción MP.
  */
 export const CP_COLUMNS: CPColumnDef[] = [
-    // Proceso (3)
+    // Proceso (4)
     { key: 'processStepNumber',     label: 'Nro. Parte/Proceso',                 width: '80px', required: true },
     { key: 'processDescription',    label: 'Descripción Proceso/Operación',      width: '170px', required: true },
     { key: 'machineDeviceTool',     label: 'Máquina/Dispositivo/Herram.',        width: '140px' },
+    { key: 'componentMaterial',     label: 'Componente/Material',                width: '120px' },
     // Características (4)
     { key: 'characteristicNumber',  label: 'Nro.',                               width: '60px' },
     { key: 'productCharacteristic', label: 'Producto',                           width: '150px', required: true },
@@ -153,7 +155,7 @@ export const CP_COLUMNS: CPColumnDef[] = [
 
 /** AIAG standard column groups for the sticky header. */
 export const CP_COLUMN_GROUPS: { label: string; colSpan: number }[] = [
-    { label: 'Proceso',          colSpan: 3 },
+    { label: 'Proceso',          colSpan: 4 },
     { label: 'Características',  colSpan: 4 },
     { label: 'Métodos',          colSpan: 8 },
 ];

@@ -121,7 +121,7 @@ D<=3 con inspeccion visual. Para defectos obvios, D=2-3 puede ser aceptable sin 
 
 17. **"Aprob. Planta" y "approvedBy" son campos DISTINTOS.** `approvedBy` = Aprobacion de Ingenieria (Carlos Baptista). `plantApproval` = Aprobacion de Planta (Gonzalo Cal / G.Cal). El script normalize-names-amfe-cp.mjs sobreescribia approvedBy con "Carlos Baptista" para todas las aprobaciones — corregido.
 
-18. **Material/componente en CP: va en la columna de Nro. Parte/Proceso** (ej: "OP 10 - PVC/Vinilo"), NO como columna separada. Agrupado con merge de celdas en el export.
+18. **Material/componente en CP: va en columna separada "Componente/Material"** (`componentMaterial`). NUNCA meter el nombre del material dentro del processStepNumber — rompe merges y layout del export. El processStepNumber debe ser SOLO el numero de operacion ("10", "20").
 
 19. **Nombres de operaciones deben ser consistentes.** "RECEPCIONAR MATERIA PRIMA" → "RECEPCION DE MATERIA PRIMA". "INSPECCION FINAL" → "CONTROL FINAL DE CALIDAD". "EMBALAJE Y ETIQUETADO DE PRODUCTO TERMINADO" → "EMBALAJE". Mismos nombres en PFD, AMFE, CP y HO.
 
