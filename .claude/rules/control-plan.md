@@ -55,8 +55,15 @@ globs:
 - Si hay multiples causas para la misma caracteristica, combinar metodos de deteccion en 1 fila (separados con " / ").
 - `buildProcessKey` agrupa por (opNumber + causeText). `buildProductKey` agrupa por (opNumber + failDescription).
 
-### Componente/Material
-- Campo `componentMaterial` en ControlPlanItem para identificar a que material aplica el control.
-- Usado principalmente en Recepcion de MP. NO usar columna Producto ni Proceso para esto.
+### Material/Componente en CP
+- Para identificar materiales/componentes: reutilizar columna "Nro. Parte/Proceso" (Col 14 AIAG). Formato: "10 - PVC/Vinilo", "10 - Espuma PUR". NO agregar columna nueva.
+- En el export Excel, mergear celdas de items con el mismo Nro. Parte/Proceso para agrupar visualmente los controles del mismo material.
+- Si algun commit anterior agrego una columna "Componente/Material", eliminarla. La norma AIAG permite columnas extra pero preferimos reutilizar Col 14 por simplicidad.
 - Columna Producto = propiedad medible del producto (espesor, color, aspecto). NUNCA nombre de componente.
 - Columna Proceso = parametro de maquina/proceso (temperatura, presion). NUNCA tipo de producto ni color.
+
+### Nombres de Operaciones
+- Nombres estandarizados entre PFD, AMFE, CP y HO:
+  - Recepcion: "RECEPCION DE MATERIA PRIMA" (no "RECEPCIONAR", no "RECEPCION DE MATERIALES")
+  - Control final: "CONTROL FINAL DE CALIDAD" (no "INSPECCION FINAL", no variantes)
+  - Embalaje: "EMBALAJE" (no "EMBALAJE Y ETIQUETADO DE PRODUCTO TERMINADO")
