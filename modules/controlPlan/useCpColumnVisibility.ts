@@ -12,7 +12,7 @@ import { useState, useCallback, useEffect } from 'react';
 const STORAGE_KEY = 'cp-column-visibility';
 
 export interface CpColumnGroupVisibility {
-    proceso: boolean;         // processStepNumber, processDescription, machineDeviceTool, componentMaterial
+    proceso: boolean;         // processStepNumber, processDescription, machineDeviceTool
     caracteristicas: boolean; // characteristicNumber, productCharacteristic, processCharacteristic, specialCharClass
     metodos: boolean;         // specification, evaluationTechnique, sampleSize, sampleFrequency, controlMethod, reactionPlan, reactionPlanOwner, controlProcedure
 }
@@ -40,7 +40,6 @@ export const CP_COLUMN_TO_GROUP: Record<string, keyof CpColumnGroupVisibility> =
     processStepNumber: 'proceso',
     processDescription: 'proceso',
     machineDeviceTool: 'proceso',
-    componentMaterial: 'proceso',
     characteristicNumber: 'caracteristicas',
     productCharacteristic: 'caracteristicas',
     processCharacteristic: 'caracteristicas',
@@ -57,7 +56,7 @@ export const CP_COLUMN_TO_GROUP: Record<string, keyof CpColumnGroupVisibility> =
 
 /** Column counts per group (for colspan calculation). */
 export const CP_COLUMN_COUNTS: Record<keyof CpColumnGroupVisibility, number> = {
-    proceso: 4,
+    proceso: 3,
     caracteristicas: 4,
     metodos: 8,
 };

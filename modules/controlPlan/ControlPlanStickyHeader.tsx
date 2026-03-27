@@ -37,7 +37,7 @@ const ControlPlanStickyHeader: React.FC<Props> = ({ columnVisibility }) => {
             {/* Top Level Headers (Groups) */}
             <tr className="border-b border-gray-300">
                 {showProceso && (
-                    <th colSpan={4} className="bg-teal-200 px-3 py-2 text-center min-w-[530px] border-r border-teal-300 font-bold text-teal-900">
+                    <th colSpan={3} className="bg-teal-200 px-3 py-2 text-center min-w-[390px] border-r border-teal-300 font-bold text-teal-900">
                         PROCESO
                     </th>
                 )}
@@ -67,11 +67,8 @@ const ControlPlanStickyHeader: React.FC<Props> = ({ columnVisibility }) => {
                         <th className="bg-teal-50 p-2 w-44 min-w-[170px] border-r border-teal-100 sticky left-[80px] z-20" style={{ boxShadow: '2px 0 4px rgba(0,0,0,0.06)' }}>
                             <HeaderWithTip termKey="processDescription" label="Descripción Proceso" />
                         </th>
-                        <th className="bg-teal-50 p-2 w-36 border-r border-teal-100">
-                            <HeaderWithTip termKey="machineDeviceTool" label="Máquina/Disp./Herram." />
-                        </th>
                         <th className="bg-teal-50 p-2 w-36 border-r border-gray-300">
-                            <HeaderWithTip termKey="componentMaterial" label="Componente/Material" />
+                            <HeaderWithTip termKey="machineDeviceTool" label="Máquina/Disp./Herram." />
                         </th>
                     </>
                 )}

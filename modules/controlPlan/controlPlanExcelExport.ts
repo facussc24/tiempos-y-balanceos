@@ -29,34 +29,33 @@ const SGC_FORM_NUMBER = 'I-AC-005.2';
  */
 const EXPORT_COLUMNS = CP_COLUMNS.filter(c => c.key !== 'controlProcedure');
 
-/** Column groups for export — Proceso has 4 cols (includes componentMaterial), Métodos has 7 (no controlProcedure). */
+/** Column groups for export — Proceso has 3 cols, Métodos has 7 (no controlProcedure). */
 const EXPORT_COLUMN_GROUPS: { label: string; colSpan: number }[] = [
-    { label: 'Proceso',          colSpan: 4 },
+    { label: 'Proceso',          colSpan: 3 },
     { label: 'Características',  colSpan: 4 },
     { label: 'Métodos',          colSpan: 7 },
 ];
 
 /**
  * Dedicated column widths (wch) — tuned for both metadata labels and data.
- * 15 columns matching EXPORT_COLUMNS order (no controlProcedure, includes componentMaterial).
+ * 14 columns matching EXPORT_COLUMNS order (no controlProcedure).
  */
 const CP_COL_WIDTHS: number[] = [
     12,   // 0:  Nro. Parte/Proceso
     25,   // 1:  Descripción Proceso/Operación
     20,   // 2:  Máquina/Dispositivo/Herram.
-    18,   // 3:  Componente/Material
-    10,   // 4:  Nro. (Característica)
-    22,   // 5:  Producto
-    22,   // 6:  Proceso
-    12,   // 7:  Clasif. Caract. Esp.
-    23,   // 8:  Espec./Tolerancia
-    20,   // 9:  Técnica Evaluación/Medición
-    13,   // 10: Tamaño Muestra
-    13,   // 11: Frecuencia
-    20,   // 12: Método Control
-    23,   // 13: Plan Reacción
-    17,   // 14: Responsable Reacción
-];  //  Total ≈ 264 chars
+    10,   // 3:  Nro. (Característica)
+    22,   // 4:  Producto
+    22,   // 5:  Proceso
+    12,   // 6:  Clasif. Caract. Esp.
+    23,   // 7:  Espec./Tolerancia
+    20,   // 8:  Técnica Evaluación/Medición
+    13,   // 9:  Tamaño Muestra
+    13,   // 10: Frecuencia
+    20,   // 11: Método Control
+    23,   // 12: Plan Reacción
+    17,   // 13: Responsable Reacción
+];  //  Total ≈ 246 chars
 
 /**
  * Metadata pair layout: 3 label-value pairs across 15 columns.
