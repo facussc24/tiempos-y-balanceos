@@ -64,6 +64,7 @@ export function useControlPlan(): UseControlPlanResult {
                 processStepNumber: last?.processStepNumber ?? '',
                 processDescription: last?.processDescription ?? '',
                 machineDeviceTool: last?.machineDeviceTool ?? '',
+                componentMaterial: '',
                 characteristicNumber: '',
                 productCharacteristic: '',
                 processCharacteristic: '',

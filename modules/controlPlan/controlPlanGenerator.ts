@@ -192,6 +192,7 @@ export function generateItemsFromAmfe(
             processStepNumber: rep.op.opNumber,
             processDescription: rep.op.name,
             machineDeviceTool: rep.we.name || '',
+            componentMaterial: '',
             characteristicNumber: pickCharacteristicNumber(group),
             productCharacteristic: '',                           // EMPTY for process rows
             processCharacteristic: rep.cause.cause || '',        // cause = process parameter
@@ -252,6 +253,7 @@ export function generateItemsFromAmfe(
             processStepNumber: rep.op.opNumber,
             processDescription: rep.op.name,
             machineDeviceTool: rep.we.name || '',
+            componentMaterial: '',
             characteristicNumber: pickCharacteristicNumber(group),
             productCharacteristic: rep.fail.description || '',   // failure mode = product defect
             processCharacteristic: '',                           // EMPTY for product rows
@@ -287,6 +289,7 @@ export function generateItemsFromAmfe(
             processStepNumber: opNumber,
             processDescription: rep.op.name,
             machineDeviceTool: 'N/A',
+            componentMaterial: '',
             characteristicNumber: '',
             productCharacteristic: '',
             processCharacteristic: 'Autocontrol visual general',

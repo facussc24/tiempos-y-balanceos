@@ -211,6 +211,7 @@ function makeCpItem(overrides: Partial<ControlPlanItem> = {}): ControlPlanItem {
         processStepNumber: 'OP 10',
         processDescription: 'Torneado',
         machineDeviceTool: 'CNC',
+        componentMaterial: '',
         characteristicNumber: '1',
         productCharacteristic: 'Diametro',
         processCharacteristic: 'RPM',

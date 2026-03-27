@@ -43,6 +43,7 @@ function makeCpItem(overrides: Partial<ControlPlanItem> = {}): ControlPlanItem {
         processStepNumber: overrides.processStepNumber || '10',
         processDescription: overrides.processDescription || 'Op 10',
         machineDeviceTool: overrides.machineDeviceTool || '',
+        componentMaterial: overrides.componentMaterial || '',
         characteristicNumber: overrides.characteristicNumber || '',
         productCharacteristic: overrides.productCharacteristic || '',
         processCharacteristic: overrides.processCharacteristic || '',

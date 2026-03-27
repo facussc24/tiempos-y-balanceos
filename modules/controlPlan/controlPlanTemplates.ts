@@ -30,6 +30,7 @@ function mkItem(overrides: Partial<ControlPlanItem> & { processDescription: stri
         processStepNumber: '',
         processDescription: overrides.processDescription,
         machineDeviceTool: '',
+        componentMaterial: '',
         characteristicNumber: '',
         productCharacteristic: '',
         processCharacteristic: '',

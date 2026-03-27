@@ -243,6 +243,7 @@ function createMinimalCpDoc(): ControlPlanDocument {
                 processStepNumber: 'OP 10',
                 processDescription: 'Corte',
                 machineDeviceTool: 'Prensa',
+                componentMaterial: '',
                 characteristicNumber: '1',
                 productCharacteristic: 'Longitud',
                 processCharacteristic: '',

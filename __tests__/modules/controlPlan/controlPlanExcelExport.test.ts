@@ -70,6 +70,7 @@ function makeItem(overrides: Partial<ControlPlanItem> = {}): ControlPlanItem {
         processStepNumber: '10',
         processDescription: 'Soldadura MIG',
         machineDeviceTool: 'Robot MIG',
+        componentMaterial: '',
         characteristicNumber: 'CC-1',
         productCharacteristic: 'Penetracion cordones',
         processCharacteristic: 'Amperaje',
@@ -284,7 +285,7 @@ describe('exportControlPlan', () => {
         exportControlPlan(makeDoc());
         const ws = getWorksheet();
         expect(ws['!cols']).toBeDefined();
-        expect(ws['!cols'].length).toBe(14);
+        expect(ws['!cols'].length).toBe(15);
         expect(ws['!cols'][0].wch).toBe(12);
     });
 

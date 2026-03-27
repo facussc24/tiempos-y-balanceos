@@ -549,7 +549,7 @@ const ControlPlanApp: React.FC<Props> = ({ onBackToLanding, embedded, initialDat
                 ) : (
                 <div className="bg-white shadow-lg rounded border border-gray-300">
                     <div className={`overflow-x-auto overflow-y-auto ${tableMaxH}`} style={{ scrollbarGutter: 'stable' }}>
-                        <table className="border-collapse table-fixed" style={{ minWidth: '1794px' }}>
+                        <table className="border-collapse table-fixed" style={{ minWidth: '1934px' }}>
                             <colgroup>
                                 {CP_COLUMNS.map(col => (
                                     <col key={col.key} style={{ width: col.width }} />

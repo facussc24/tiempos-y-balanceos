@@ -98,7 +98,7 @@ function mkCpItem(sn: string, desc: string, machine: string, pC: string, prC: st
     spec: string, evalT: string, size: string, freq: string, ctrl: string, react: string, sc = ''): ControlPlanItem {
     return {
         id: uid(), processStepNumber: sn, processDescription: desc,
-        machineDeviceTool: machine, characteristicNumber: '',
+        machineDeviceTool: machine, componentMaterial: '', characteristicNumber: '',
         productCharacteristic: pC, processCharacteristic: prC,
         specialCharClass: sc, specification: spec,
         evaluationTechnique: evalT, sampleSize: size,

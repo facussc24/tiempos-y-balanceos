@@ -9,6 +9,7 @@ function makeItem(overrides: Partial<ControlPlanItem> = {}): ControlPlanItem {
         processStepNumber: '',
         processDescription: '',
         machineDeviceTool: '',
+        componentMaterial: '',
         characteristicNumber: '',
         productCharacteristic: '',
         processCharacteristic: '',

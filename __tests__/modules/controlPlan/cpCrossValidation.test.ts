@@ -22,6 +22,7 @@ function makeItem(overrides?: Partial<ControlPlanItem>): ControlPlanItem {
         processStepNumber: '10',
         processDescription: 'Soldadura MIG',
         machineDeviceTool: 'Robot Soldador',
+        componentMaterial: '',
         characteristicNumber: 'C-001',
         productCharacteristic: 'Cordón de soldadura',
         processCharacteristic: 'Corriente de soldadura',

@@ -29,45 +29,46 @@ const SGC_FORM_NUMBER = 'I-AC-005.2';
  */
 const EXPORT_COLUMNS = CP_COLUMNS.filter(c => c.key !== 'controlProcedure');
 
-/** Column groups for export — Métodos has 7 cols (no controlProcedure). */
+/** Column groups for export — Proceso has 4 cols (includes componentMaterial), Métodos has 7 (no controlProcedure). */
 const EXPORT_COLUMN_GROUPS: { label: string; colSpan: number }[] = [
-    { label: 'Proceso',          colSpan: 3 },
+    { label: 'Proceso',          colSpan: 4 },
     { label: 'Características',  colSpan: 4 },
     { label: 'Métodos',          colSpan: 7 },
 ];
 
 /**
  * Dedicated column widths (wch) — tuned for both metadata labels and data.
- * 14 columns matching EXPORT_COLUMNS order (no controlProcedure).
+ * 15 columns matching EXPORT_COLUMNS order (no controlProcedure, includes componentMaterial).
  */
 const CP_COL_WIDTHS: number[] = [
     12,   // 0:  Nro. Parte/Proceso
     25,   // 1:  Descripción Proceso/Operación
     20,   // 2:  Máquina/Dispositivo/Herram.
-    10,   // 3:  Nro. (Característica)
-    22,   // 4:  Producto
-    22,   // 5:  Proceso
-    12,   // 6:  Clasif. Caract. Esp.
-    23,   // 7:  Espec./Tolerancia
-    20,   // 8:  Técnica Evaluación/Medición
-    13,   // 9:  Tamaño Muestra
-    13,   // 10: Frecuencia
-    20,   // 11: Método Control
-    23,   // 12: Plan Reacción
-    17,   // 13: Responsable Reacción
-];  //  Total ≈ 246 chars
+    18,   // 3:  Componente/Material
+    10,   // 4:  Nro. (Característica)
+    22,   // 5:  Producto
+    22,   // 6:  Proceso
+    12,   // 7:  Clasif. Caract. Esp.
+    23,   // 8:  Espec./Tolerancia
+    20,   // 9:  Técnica Evaluación/Medición
+    13,   // 10: Tamaño Muestra
+    13,   // 11: Frecuencia
+    20,   // 12: Método Control
+    23,   // 13: Plan Reacción
+    17,   // 14: Responsable Reacción
+];  //  Total ≈ 264 chars
 
 /**
- * Metadata pair layout: 3 label-value pairs across 14 columns.
+ * Metadata pair layout: 3 label-value pairs across 15 columns.
  *
  *   Pair 0: cols 0-4  (5 cols) → label 0-2, value 3-4
  *   Pair 1: cols 5-9  (5 cols) → label 5-6, value 7-9
- *   Pair 2: cols 10-13 (4 cols) → label 10-11, value 12-13
+ *   Pair 2: cols 10-14 (5 cols) → label 10-11, value 12-14
  */
 const META_PAIRS = [
     { lStart: 0, lEnd: 2, vStart: 3, vEnd: 4 },
     { lStart: 5, lEnd: 6, vStart: 7, vEnd: 9 },
-    { lStart: 10, lEnd: 11, vStart: 12, vEnd: 13 },
+    { lStart: 10, lEnd: 11, vStart: 12, vEnd: 14 },
 ];
 
 // ============================================================================

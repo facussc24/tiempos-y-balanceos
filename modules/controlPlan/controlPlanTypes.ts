@@ -50,6 +50,8 @@ export interface ControlPlanItem {
     processStepNumber: string;
     processDescription: string;
     machineDeviceTool: string;
+    /** Component or material being controlled (e.g. "Espuma PUR", "Tela/Vinilo"). Mainly for Recepcion MP. */
+    componentMaterial: string;
     characteristicNumber: string;
     productCharacteristic: string;
     processCharacteristic: string;
@@ -124,12 +126,13 @@ export interface CPColumnDef {
     required?: boolean;
 }
 
-/** Column definitions for the Control Plan table (13 AIAG standard columns). */
+/** Column definitions for the Control Plan table (14 AIAG standard columns + componentMaterial). */
 export const CP_COLUMNS: CPColumnDef[] = [
-    // Proceso (3)
+    // Proceso (4)
     { key: 'processStepNumber',     label: 'Nro. Parte/Proceso',                 width: '80px', required: true },
     { key: 'processDescription',    label: 'Descripción Proceso/Operación',      width: '170px', required: true },
     { key: 'machineDeviceTool',     label: 'Máquina/Dispositivo/Herram.',        width: '140px' },
+    { key: 'componentMaterial',     label: 'Componente/Material',                width: '140px' },
     // Características (4)
     { key: 'characteristicNumber',  label: 'Nro.',                               width: '60px' },
     { key: 'productCharacteristic', label: 'Producto',                           width: '150px', required: true },
@@ -148,7 +151,7 @@ export const CP_COLUMNS: CPColumnDef[] = [
 
 /** AIAG standard column groups for the sticky header. */
 export const CP_COLUMN_GROUPS: { label: string; colSpan: number }[] = [
-    { label: 'Proceso',          colSpan: 3 },
+    { label: 'Proceso',          colSpan: 4 },
     { label: 'Características',  colSpan: 4 },
     { label: 'Métodos',          colSpan: 8 },
 ];
@@ -172,6 +175,10 @@ export const CP_COLUMN_TERMS: Record<string, CpTerm> = {
     machineDeviceTool: {
         term: 'Máquina/Dispositivo/Herramienta',
         definition: 'Equipo, máquina, dispositivo o herramienta utilizada en cada operación del proceso.',
+    },
+    componentMaterial: {
+        term: 'Componente/Material',
+        definition: 'Componente o material al que aplica el control (ej: tela, adhesivo, armazon). Usado principalmente en Recepcion de MP.',
     },
     characteristicNumber: {
         term: 'Número de Característica',
@@ -252,6 +259,7 @@ export function normalizeControlPlanDocument(raw: any): ControlPlanDocument {
         processStepNumber: item.processStepNumber || '',
         processDescription: item.processDescription || '',
         machineDeviceTool: item.machineDeviceTool || '',
+        componentMaterial: item.componentMaterial || '',
         characteristicNumber: item.characteristicNumber || '',
         productCharacteristic: item.productCharacteristic || '',
         processCharacteristic: item.processCharacteristic || '',
