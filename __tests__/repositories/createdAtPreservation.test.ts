@@ -82,6 +82,7 @@ function createMinimalCpDoc(): ControlPlanDocument {
             revision: 'A',
             responsible: 'John Doe',
             approvedBy: '',
+            plantApproval: '',
             client: 'Test Client',
             coreTeam: '',
             customerApproval: '',

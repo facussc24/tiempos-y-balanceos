@@ -26,7 +26,8 @@ const AMFE_HEADER = {
 
 const CP_HEADER = {
     responsible: 'Manuel Meszaros',
-    approvedBy: 'Carlos Baptista',
+    approvedBy: 'Carlos Baptista',       // Engineering approval
+    plantApproval: 'Gonzalo Cal',        // Plant approval (separate field)
     coreTeam: 'Carlos Baptista (Ingeniería), Manuel Meszaros (Calidad)',
 };
 

@@ -145,10 +145,10 @@ function buildHeaderHtml(header: ControlPlanHeader, title: string): string {
                     <td style="font-family:Arial,sans-serif; font-size:8px; padding:2px 4px;">${esc(header.linkedAmfeProject)}</td>
                 </tr>
                 <tr>
-                    <td style="font-family:Arial,sans-serif; font-size:8px; padding:2px 4px; font-weight:bold; background:${TEAL_LIGHT};">Aprobado por</td>
+                    <td style="font-family:Arial,sans-serif; font-size:8px; padding:2px 4px; font-weight:bold; background:${TEAL_LIGHT};">Aprob. Ingenieria</td>
                     <td style="font-family:Arial,sans-serif; font-size:8px; padding:2px 4px;">${esc(header.approvedBy)}</td>
-                    <td style="font-family:Arial,sans-serif; font-size:8px; padding:2px 4px; font-weight:bold; background:${TEAL_LIGHT};">Nivel Cambio</td>
-                    <td style="font-family:Arial,sans-serif; font-size:8px; padding:2px 4px;">${esc(header.latestChangeLevel)}</td>
+                    <td style="font-family:Arial,sans-serif; font-size:8px; padding:2px 4px; font-weight:bold; background:${TEAL_LIGHT};">Aprob. Planta</td>
+                    <td style="font-family:Arial,sans-serif; font-size:8px; padding:2px 4px;">${esc(header.plantApproval)}</td>
                     <td style="font-family:Arial,sans-serif; font-size:8px; padding:2px 4px; font-weight:bold; background:${TEAL_LIGHT};">Proveedor</td>
                     <td style="font-family:Arial,sans-serif; font-size:8px; padding:2px 4px;">${esc(header.supplier)}</td>
                 </tr>

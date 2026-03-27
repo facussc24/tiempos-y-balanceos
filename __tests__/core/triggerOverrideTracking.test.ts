@@ -126,7 +126,7 @@ function makeCpDocument(): ControlPlanDocument {
             controlPlanNumber: 'CP-001', phase: 'production', partNumber: 'P-001',
             latestChangeLevel: '', partName: 'Test', applicableParts: '',
             organization: '', supplier: '', supplierCode: '', keyContactPhone: '',
-            date: '', revision: 'A', responsible: '', approvedBy: '', client: '',
+            date: '', revision: 'A', responsible: '', approvedBy: '', plantApproval: '', client: '',
             coreTeam: '', customerApproval: '',
             otherApproval: '', linkedAmfeProject: '',
         },

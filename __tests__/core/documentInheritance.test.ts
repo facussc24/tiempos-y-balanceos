@@ -230,6 +230,7 @@ function createMinimalCpDoc(): ControlPlanDocument {
             revision: 'A',
             responsible: 'Ing. Test',
             approvedBy: '',
+            plantApproval: '',
             client: 'OEM',
             coreTeam: '',
             customerApproval: '',

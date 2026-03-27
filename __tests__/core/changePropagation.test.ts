@@ -250,6 +250,7 @@ function makeCpDocument(items: ControlPlanItem[]): ControlPlanDocument {
             revision: 'A',
             responsible: '',
             approvedBy: '',
+            plantApproval: '',
             client: '',
             coreTeam: '',
             customerApproval: '',

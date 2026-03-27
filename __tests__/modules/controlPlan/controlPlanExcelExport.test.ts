@@ -256,7 +256,7 @@ describe('exportControlPlan', () => {
         }
     });
 
-    it('has 6 metadata rows (compact layout)', () => {
+    it('has 7 metadata rows (compact layout with split approvals)', () => {
         exportControlPlan(makeDoc());
         const aoaData = getAoaData();
         let metaCount = 0;
@@ -264,7 +264,7 @@ describe('exportControlPlan', () => {
             if (aoaData[r][0]?.s?.fill?.fgColor?.rgb === 'F2F2F2') metaCount++;
             else break;
         }
-        expect(metaCount).toBe(6);
+        expect(metaCount).toBe(7);
     });
 
     // ── Row heights ──

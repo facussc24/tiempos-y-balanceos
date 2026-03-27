@@ -33,7 +33,10 @@ export interface ControlPlanHeader {
     date: string;
     revision: string;
     responsible: string;
+    /** Engineering approval (e.g. Carlos Baptista). NOT plant approval — see plantApproval. */
     approvedBy: string;
+    /** Plant/supplier approval (e.g. Gonzalo Cal). Separate from engineering approvedBy. */
+    plantApproval: string;
     client: string;
     coreTeam: string;
     customerApproval: string;
@@ -99,6 +102,7 @@ export const EMPTY_CP_HEADER: ControlPlanHeader = {
     revision: '',
     responsible: '',
     approvedBy: '',
+    plantApproval: '',
     client: '',
     coreTeam: '',
     customerApproval: '',

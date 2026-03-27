@@ -60,6 +60,7 @@ const sampleDoc: ControlPlanDocument = {
         revision: 'A',
         responsible: 'Eng',
         approvedBy: '',
+        plantApproval: '',
         client: 'Acme',
         coreTeam: '',
         customerApproval: '',
