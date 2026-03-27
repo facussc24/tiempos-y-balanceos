@@ -348,11 +348,15 @@ describe('generateItemsFromAmfe — AP filtering', () => {
             ],
         });
         const { items } = generateItemsFromAmfe(doc);
-        // 3 qualifying causes (H, M, and L with SC) → 3 process rows + product rows
+        // 3 qualifying causes with different cause text → 3 process rows
         const proc = processRows(items);
-        const prod = productRows(items);
         expect(proc).toHaveLength(3);
-        expect(prod).toHaveLength(3);
+        // 3 causes share same failure → 1 product row with combined detection controls
+        const prod = productRows(items);
+        expect(prod).toHaveLength(1);
+        expect(prod[0].evaluationTechnique).toContain('DC1');
+        expect(prod[0].evaluationTechnique).toContain('DC2');
+        expect(prod[0].evaluationTechnique).toContain('DC3');
     });
 
     it('groups AP=L causes into 1 generic line per operation (no SC/CC)', () => {
@@ -443,7 +447,7 @@ describe('generateItemsFromAmfe — dedup', () => {
         expect(proc).toHaveLength(2);
     });
 
-    it('same cause text with different preventionControl = separate process rows', () => {
+    it('same cause text with different preventionControl = 1 process row with combined controls', () => {
         const doc = makeAmfeDoc({
             causes: [
                 makeCause({ id: 'c1', cause: 'Temperatura', preventionControl: 'SPC', ap: 'H' }),
@@ -452,7 +456,11 @@ describe('generateItemsFromAmfe — dedup', () => {
         });
         const { items } = generateItemsFromAmfe(doc);
         const proc = processRows(items);
-        expect(proc).toHaveLength(2);
+        // Same cause text → 1 row with combined controlMethod
+        expect(proc).toHaveLength(1);
+        expect(proc[0].controlMethod).toContain('SPC');
+        expect(proc[0].controlMethod).toContain('Poka-Yoke');
+        expect(proc[0].controlMethod).toContain(' / ');
     });
 
     it('dedup takes highest severity from grouped causes', () => {

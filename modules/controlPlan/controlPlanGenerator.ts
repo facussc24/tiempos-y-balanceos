@@ -8,7 +8,7 @@
  * - AMFE Cause → CP Process Characteristic row (prevention control → control method)
  * - AMFE Failure Mode → CP Product Characteristic row (detection control → evaluation technique)
  * - CP 2024 PROHIBITS mixing product and process characteristics in the same row
- * - Dedup: same cause+prevention → 1 process row; same failure+detection → 1 product row
+ * - Dedup: same cause → 1 process row; same failure → 1 product row. Multiple controls combined with " / ".
  * - specification: inferred from failure/cause keywords (heuristic)
  * - reactionPlanOwner: inferred from severity + AP + operation category
  * - evaluationTechnique (process rows): inferred from detection control
@@ -54,14 +54,14 @@ function normalizeForKey(s: string): string {
     return s.toLowerCase().trim().replace(/\s+/g, ' ');
 }
 
-/** Build dedup key for process rows: opNumber + cause text + prevention control. */
-function buildProcessKey(opNumber: string, causeText: string, preventionControl: string): string {
-    return JSON.stringify([normalizeForKey(opNumber), normalizeForKey(causeText), normalizeForKey(preventionControl)]);
+/** Build dedup key for process rows: opNumber + cause text (1 row per characteristic, NOT per control). */
+function buildProcessKey(opNumber: string, causeText: string): string {
+    return JSON.stringify([normalizeForKey(opNumber), normalizeForKey(causeText)]);
 }
 
-/** Build dedup key for product rows: opNumber + failure description + detection control. */
-function buildProductKey(opNumber: string, failDesc: string, detectionControl: string): string {
-    return JSON.stringify([normalizeForKey(opNumber), normalizeForKey(failDesc), normalizeForKey(detectionControl)]);
+/** Build dedup key for product rows: opNumber + failure description (1 row per characteristic, NOT per control). */
+function buildProductKey(opNumber: string, failDesc: string): string {
+    return JSON.stringify([normalizeForKey(opNumber), normalizeForKey(failDesc)]);
 }
 
 /** Pick highest AP from a group: H > M > L. */
@@ -153,7 +153,7 @@ export function generateItemsFromAmfe(
     const processGroups = new Map<string, QualifyingCause[]>();
 
     for (const q of qualifying) {
-        const key = buildProcessKey(q.op.opNumber, q.cause.cause, q.cause.preventionControl);
+        const key = buildProcessKey(q.op.opNumber, q.cause.cause);
         const group = processGroups.get(key) || [];
         group.push(q);
         processGroups.set(key, group);
@@ -201,7 +201,7 @@ export function generateItemsFromAmfe(
             evaluationTechnique: '',                             // EMPTY for process rows (AIAG-VDA)
             sampleSize: defaults.sampleSize,
             sampleFrequency: defaults.sampleFrequency,
-            controlMethod: rep.cause.preventionControl || '',    // prevention control
+            controlMethod: [...new Set(group.map(g => (g.cause.preventionControl || '').trim()).filter(Boolean))].join(' / ') || '',
             reactionPlan: defaults.reactionPlan,
             reactionPlanOwner: ownerProcess,
             controlProcedure: inferControlProcedure(opCategory),
@@ -220,7 +220,7 @@ export function generateItemsFromAmfe(
     const productGroups = new Map<string, QualifyingCause[]>();
 
     for (const q of qualifying) {
-        const key = buildProductKey(q.op.opNumber, q.fail.description, q.cause.detectionControl);
+        const key = buildProductKey(q.op.opNumber, q.fail.description);
         const group = productGroups.get(key) || [];
         group.push(q);
         productGroups.set(key, group);
@@ -259,7 +259,7 @@ export function generateItemsFromAmfe(
             processCharacteristic: '',                           // EMPTY for product rows
             specialCharClass: bestSpecialChar,
             specification: specProduct,
-            evaluationTechnique: rep.cause.detectionControl || '', // detection control
+            evaluationTechnique: [...new Set(group.map(g => (g.cause.detectionControl || '').trim()).filter(Boolean))].join(' / ') || '',
             sampleSize: defaults.sampleSize,
             sampleFrequency: defaults.sampleFrequency,
             controlMethod: '',                                   // EMPTY for product rows
