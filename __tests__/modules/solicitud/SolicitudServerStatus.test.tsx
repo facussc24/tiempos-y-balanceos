@@ -83,7 +83,7 @@ describe('SolicitudServerStatus', () => {
     it('renders correct title tooltip on pending ops button for singular', () => {
         renderStatus({ status: 'connected', pendingOps: 1 });
         const button = screen.getByRole('button');
-        expect(button.getAttribute('title')).toContain('1 operacion pendiente');
+        expect(button.getAttribute('title')).toContain('1 operación pendiente');
     });
 
     it('renders correct title tooltip on pending ops button for plural', () => {

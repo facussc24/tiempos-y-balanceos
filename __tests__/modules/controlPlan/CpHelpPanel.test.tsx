@@ -37,7 +37,7 @@ describe('CpHelpPanel (R6A)', () => {
         render(<CpHelpPanel onClose={vi.fn()} />);
         fireEvent.click(screen.getByText('Fases'));
         expect(screen.getByText('Pre-Lanzamiento')).toBeDefined();
-        expect(screen.getByText('Produccion')).toBeDefined();
+        expect(screen.getByText('Producción')).toBeDefined();
     });
 
     it('calls onClose when the X button is clicked', () => {

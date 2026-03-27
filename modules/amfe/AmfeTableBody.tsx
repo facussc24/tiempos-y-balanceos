@@ -658,7 +658,7 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
                                 <td className={cellClass} data-field="workElementName">
                                     <div className="flex gap-1 justify-between group/we">
                                         <div className="flex gap-1 flex-1">
-                                            <span className="text-[9px] font-bold text-gray-400 uppercase p-0.5">{we.type.substring(0, 3)}</span>
+                                            <span className="text-[9px] font-bold text-gray-400 uppercase p-0.5">{(we.type || '').substring(0, 3)}</span>
                                             {renderText(we.name, <AutoResizeTextarea value={we.name} onChange={e => amfe.updateWorkElement(op.id, we.id, 'name', e.target.value)} className={textAreaClass} placeholder="Nombre Elemento" />)}
                                         </div>
                                         {!readOnly && <button onClick={() => confirmDeleteWE(op.id, we.id)} className="text-gray-300 hover:text-red-500 hover:bg-red-50 p-0.5 rounded transition opacity-0 group-hover/we:opacity-100" title="Eliminar" aria-label="Eliminar"><Trash2 size={12} /></button>}
@@ -739,7 +739,7 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
                                         <td rowSpan={weRows} className={cellClass} data-field="workElementName">
                                             <div className="flex gap-1 justify-between group/we">
                                                 <div className="flex gap-1 flex-1">
-                                                    <span className="text-[9px] font-bold text-gray-400 uppercase p-0.5">{we.type.substring(0, 3)}</span>
+                                                    <span className="text-[9px] font-bold text-gray-400 uppercase p-0.5">{(we.type || '').substring(0, 3)}</span>
                                                     {renderText(we.name, <AutoResizeTextarea value={we.name} onChange={e => amfe.updateWorkElement(op.id, we.id, 'name', e.target.value)} className={textAreaClass} placeholder="Nombre Elemento" />)}
                                                 </div>
                                                 {!readOnly && <button onClick={() => confirmDeleteWE(op.id, we.id)} className="text-gray-300 hover:text-red-500 hover:bg-red-50 p-0.5 rounded transition opacity-0 group-hover/we:opacity-100" title="Eliminar" aria-label="Eliminar"><Trash2 size={12} /></button>}
@@ -845,7 +845,7 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
                                             <td rowSpan={weRows} className={`${cellClass} ${readOnly ? 'bg-slate-50/60 min-w-[140px] border-l border-l-slate-200' : ''}`} data-field="workElementName">
                                                 <div className="flex gap-1 justify-between group/we">
                                                     <div className="flex gap-1 flex-1 items-start">
-                                                        <span className={`text-[9px] font-bold uppercase shrink-0 ${readOnly ? 'bg-slate-200 text-slate-600 px-1 py-0.5 rounded' : 'text-gray-400 p-0.5'}`}>{we.type.substring(0, 3)}</span>
+                                                        <span className={`text-[9px] font-bold uppercase shrink-0 ${readOnly ? 'bg-slate-200 text-slate-600 px-1 py-0.5 rounded' : 'text-gray-400 p-0.5'}`}>{(we.type || '').substring(0, 3)}</span>
                                                         {renderText(we.name, <AutoResizeTextarea value={we.name} onChange={e => amfe.updateWorkElement(op.id, we.id, 'name', e.target.value)} className={textAreaClass} placeholder="Nombre Elemento" />)}
                                                     </div>
                                                     {!readOnly && <button onClick={() => confirmDeleteWE(op.id, we.id)} className="text-gray-300 hover:text-red-500 hover:bg-red-50 p-0.5 rounded transition opacity-0 group-hover/we:opacity-100" title="Eliminar" aria-label="Eliminar"><Trash2 size={12} /></button>}
