@@ -115,7 +115,13 @@ D<=3 con inspeccion visual. Para defectos obvios, D=2-3 puede ser aceptable sin 
 13. **Unico modo de falla exclusivo de variante de color: "ensamblar el color equivocado".** Ese si va como control especifico en CP. Todos los demas modos de falla son identicos al master y no requieren documento separado.
 
 14. **Severidades infladas — patron detectado y corregido.** Error frecuente: asignar S=7-8 a defectos cosmeticos (arrugas, manchas) que realmente son S=5-6 o S=3-4. Inflar severidades genera CC/SC falsos, planes de reaccion desproporcionados y no conformidades en auditoria. Recalibrar siempre contra la tabla de severidades de cabina interior (ver `.claude/rules/amfe.md`).
-n15. **Normas de ensayo/material son ESPECIFICAS por cliente.** VW tiene normas TL (ej: TL 1010 para flamabilidad), Toyota tiene sus propias normas. NUNCA mezclar normas entre clientes. Si no se conoce la norma exacta del cliente, usar "Segun requisito de flamabilidad del cliente (XXX)" con el nombre del cliente. Detectado 2026-03-26: headrests y Top Roll tenian spec "<100 mm/min" (norma Toyota) en vez de "TL 1010 VW".
+15. **Normas de ensayo/material son ESPECIFICAS por cliente.** VW tiene normas TL (ej: TL 1010 para flamabilidad), Toyota tiene sus propias normas. NUNCA mezclar normas entre clientes. Si no se conoce la norma exacta del cliente, usar "Segun requisito de flamabilidad del cliente (XXX)" con el nombre del cliente. Detectado 2026-03-26: headrests y Top Roll tenian spec "<100 mm/min" (norma Toyota) en vez de "TL 1010 VW".
+
+16. **El generador CP creaba 1 fila por causa AMFE en vez de 1 por caracteristica.** Eso multiplicaba filas (803 items → 653 tras consolidacion). CORREGIDO 2026-03-27 — nunca repetir. buildProcessKey y buildProductKey ya no incluyen el control method en la clave de dedup.
+
+17. **"Aprob. Planta" y "approvedBy" son campos DISTINTOS.** `approvedBy` = Aprobacion de Ingenieria (Carlos Baptista). `plantApproval` = Aprobacion de Planta (Gonzalo Cal / G.Cal). El script normalize-names-amfe-cp.mjs sobreescribia approvedBy con "Carlos Baptista" para todas las aprobaciones — corregido.
+
+18. **Columna Producto = propiedad medible del producto.** Columna Proceso = parametro de maquina/proceso. Material/componente va en campo aparte (`componentMaterial`).
 
 ---
 

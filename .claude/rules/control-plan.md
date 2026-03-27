@@ -47,3 +47,16 @@ globs:
 ### Header
 - `customerApproval` es campo UNICO (no separar ingenieria/calidad).
 - Core team incluye Produccion: "Carlos Baptista (Ingenieria), Manuel Meszaros (Calidad), Marianna Vera (Produccion)".
+- `approvedBy` = Aprobacion de Ingenieria (Carlos Baptista). Campo separado de planta.
+- `plantApproval` = Aprobacion de Planta (Gonzalo Cal / G.Cal). NUNCA usar `approvedBy` para esto.
+
+### Dedup del Generador
+- CP items: 1 fila por caracteristica por operacion. NUNCA 1 fila por causa del AMFE.
+- Si hay multiples causas para la misma caracteristica, combinar metodos de deteccion en 1 fila (separados con " / ").
+- `buildProcessKey` agrupa por (opNumber + causeText). `buildProductKey` agrupa por (opNumber + failDescription).
+
+### Componente/Material
+- Campo `componentMaterial` en ControlPlanItem para identificar a que material aplica el control.
+- Usado principalmente en Recepcion de MP. NO usar columna Producto ni Proceso para esto.
+- Columna Producto = propiedad medible del producto (espesor, color, aspecto). NUNCA nombre de componente.
+- Columna Proceso = parametro de maquina/proceso (temperatura, presion). NUNCA tipo de producto ni color.
