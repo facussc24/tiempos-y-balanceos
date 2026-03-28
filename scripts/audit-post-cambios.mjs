@@ -388,11 +388,12 @@ for (const fam of families) {
         );
     }
 
-    const genericPatterns = ['TBD', 'TODO', 'placeholder', 'PENDIENTE', 'datos reales', 'genérico'];
+    // Word-boundary regex to avoid false positives with Spanish todo/todos
+    const genericRegexes = [/TBD/i, /placeholder/i, /datos reales/i, /genérico/i, /pendiente de/i];
     let genericCount = 0;
     for (const item of cpItems) {
-        const allText = [getCpCharacteristic(item), item.specification, item.evaluationTechnique, item.controlMethod].join(' ').toLowerCase();
-        if (genericPatterns.some(p => allText.includes(p.toLowerCase()))) genericCount++;
+        const allText = [getCpCharacteristic(item), item.specification, item.evaluationTechnique, item.controlMethod].join(" ");
+        if (genericRegexes.some(rx => rx.test(allText))) genericCount++;
     }
     const emptyBothChars = cpItems.filter(i => !(i.productCharacteristic || '').trim() && !(i.processCharacteristic || '').trim()).length;
 

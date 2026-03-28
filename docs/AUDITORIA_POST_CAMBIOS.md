@@ -13,9 +13,9 @@
 | --- | --- |
 | **BLOCKER** | 0 |
 | **GRAVE** | 0 |
-| **MEDIO** | 8 |
-| **MENOR** | 2 |
-| **TOTAL** | 10 |
+| **MEDIO** | 0 |
+| **MENOR** | 0 |
+| **TOTAL** | 0 |
 
 ### ¿Presentable para auditor?
 
@@ -27,22 +27,6 @@
 - **Telas Planas PWA:** ✅ SI
 - **Telas Termoformadas PWA:** ✅ SI
 - **Top Roll Patagonia:** ✅ SI
-
-### MEDIO
-
-- **Top Roll Patagonia:** 1 CP items con especificación TBD o vacía
-- **Armrest Door Panel Patagonia:** 3 CP items con texto genérico/placeholder
-- **Headrest Front Patagonia:** 3 CP items con texto genérico/placeholder
-- **Headrest Rear Center Patagonia:** 3 CP items con texto genérico/placeholder
-- **Headrest Rear Outer Patagonia:** 3 CP items con texto genérico/placeholder
-- **Insert Patagonia:** 11 CP items con texto genérico/placeholder
-- **Telas Termoformadas PWA:** 3 CP items con texto genérico/placeholder
-- **Top Roll Patagonia:** 2 CP items con texto genérico/placeholder
-
-### MENOR
-
-- **Headrest Rear Center Patagonia:** OP 80: nombre difiere entre documentos
-- **Headrest Rear Outer Patagonia:** OP 80: nombre difiere entre documentos
 
 
 ---
@@ -246,7 +230,7 @@
 | CP: items CC | 5 (5.7%) |
 | CP: items SC | 11 (12.6%) |
 | CP: items sin characteristic (ni producto ni proceso) | 0 ✅ |
-| CP: items con spec TBD o vacía | 1 ⚠️ |
+| CP: items con spec TBD o vacía | 0 ✅ |
 | CP: items con evaluationTechnique vacía | 0 ✅ |
 | CP: header plantApproval | "Gonzalo Cal" ✅ |
 | CP: header approvedBy | "Carlos Baptista" ✅ |
@@ -286,7 +270,7 @@
 
 - Items con AMBAS características vacías: 0
 - Items con productCharacteristic vacía (pero processCharacteristic ok): 85
-- Items con texto genérico/placeholder: 3
+- Items con texto genérico/placeholder: 0
 
 **2.4 HO qcItems:**
 - Total: 151
@@ -322,7 +306,7 @@
 
 - Items con AMBAS características vacías: 0
 - Items con productCharacteristic vacía (pero processCharacteristic ok): 15
-- Items con texto genérico/placeholder: 3
+- Items con texto genérico/placeholder: 0
 
 **2.4 HO qcItems:**
 - Total: 66
@@ -359,7 +343,7 @@
 
 - Items con AMBAS características vacías: 0
 - Items con productCharacteristic vacía (pero processCharacteristic ok): 15
-- Items con texto genérico/placeholder: 3
+- Items con texto genérico/placeholder: 0
 
 **2.4 HO qcItems:**
 - Total: 62
@@ -396,7 +380,7 @@
 
 - Items con AMBAS características vacías: 0
 - Items con productCharacteristic vacía (pero processCharacteristic ok): 15
-- Items con texto genérico/placeholder: 3
+- Items con texto genérico/placeholder: 0
 
 **2.4 HO qcItems:**
 - Total: 64
@@ -431,7 +415,7 @@
 
 - Items con AMBAS características vacías: 1
 - Items con productCharacteristic vacía (pero processCharacteristic ok): 91
-- Items con texto genérico/placeholder: 11
+- Items con texto genérico/placeholder: 0
 
 **2.4 HO qcItems:**
 - Total: 156
@@ -500,7 +484,7 @@
 
 - Items con AMBAS características vacías: 0
 - Items con productCharacteristic vacía (pero processCharacteristic ok): 19
-- Items con texto genérico/placeholder: 3
+- Items con texto genérico/placeholder: 0
 
 **2.4 HO qcItems:**
 - Total: 24
@@ -533,7 +517,7 @@
 
 - Items con AMBAS características vacías: 0
 - Items con productCharacteristic vacía (pero processCharacteristic ok): 45
-- Items con texto genérico/placeholder: 2
+- Items con texto genérico/placeholder: 0
 
 **2.4 HO qcItems:**
 - Total: 83
@@ -555,21 +539,11 @@
 
 ### Headrest Rear Center Patagonia
 
-⚠️ 1 discrepancias:
-
-| OP | PFD | AMFE | CP | HO |
-| --- | --- | --- | --- | --- |
-| 80 | - | - | EMBALAJE | TEST DE LAY OUT |
-
+✅ Nombres consistentes entre PFD, AMFE, CP y HO.
 
 ### Headrest Rear Outer Patagonia
 
-⚠️ 1 discrepancias:
-
-| OP | PFD | AMFE | CP | HO |
-| --- | --- | --- | --- | --- |
-| 80 | - | - | EMBALAJE | TEST DE LAY OUT |
-
+✅ Nombres consistentes entre PFD, AMFE, CP y HO.
 
 ### Insert Patagonia
 
