@@ -354,5 +354,5 @@ export function applySyncAlertToCp(
 
 /** Normalize text for comparison: lowercase, trim, collapse whitespace. */
 function normalize(s: string): string {
-    return s.toLowerCase().trim().replace(/\s+/g, ' ');
+    return (s || '').toLowerCase().trim().replace(/\s+/g, ' ');
 }

@@ -45,19 +45,19 @@ export function useCpFilters({ items }: UseCpFiltersParams): UseCpFiltersReturn 
         if (debouncedSearch.trim()) {
             const q = debouncedSearch.toLowerCase();
             result = result.filter(i =>
-                i.processDescription.toLowerCase().includes(q) ||
-                i.controlMethod.toLowerCase().includes(q) ||
-                i.reactionPlan.toLowerCase().includes(q) ||
-                i.processStepNumber.toLowerCase().includes(q) ||
-                i.productCharacteristic.toLowerCase().includes(q) ||
-                i.machineDeviceTool.toLowerCase().includes(q)
+                (i.processDescription || '').toLowerCase().includes(q) ||
+                (i.controlMethod || '').toLowerCase().includes(q) ||
+                (i.reactionPlan || '').toLowerCase().includes(q) ||
+                (i.processStepNumber || '').toLowerCase().includes(q) ||
+                (i.productCharacteristic || '').toLowerCase().includes(q) ||
+                (i.machineDeviceTool || '').toLowerCase().includes(q)
             );
         }
         if (filterAp) {
             result = result.filter(i => i.amfeAp === filterAp);
         }
         if (filterSpecial) {
-            result = result.filter(i => i.specialCharClass?.toUpperCase().trim() === filterSpecial);
+            result = result.filter(i => (i.specialCharClass || '').toUpperCase().trim() === filterSpecial);
         }
         return result;
     }, [items, debouncedSearch, filterAp, filterSpecial]);

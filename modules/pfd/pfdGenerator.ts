@@ -49,7 +49,7 @@ export interface PfdGenerationOptions {
  * Order matters: more specific patterns are checked first.
  */
 export function inferStepType(opName: string): PfdStepType {
-    const n = opName.toLowerCase().trim();
+    const n = (opName || '').toLowerCase().trim();
     if (!n) return 'operation';
 
     // Combined: operation keyword + inspection keyword together

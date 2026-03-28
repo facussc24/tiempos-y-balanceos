@@ -68,8 +68,8 @@ const SortableStepRow: React.FC<SortableStepRowProps> = ({
     };
 
     const q = highlightQuery?.toLowerCase().trim() || '';
-    const descMatch = q && step.description.toLowerCase().includes(q);
-    const reasonMatch = q && step.keyPointReason.toLowerCase().includes(q);
+    const descMatch = q && (step.description || '').toLowerCase().includes(q);
+    const reasonMatch = q && (step.keyPointReason || '').toLowerCase().includes(q);
 
     return (
         <div

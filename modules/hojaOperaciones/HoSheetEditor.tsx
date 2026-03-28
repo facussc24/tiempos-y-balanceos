@@ -88,8 +88,8 @@ const HoSheetEditor: React.FC<Props> = ({
         if (!stepSearch.trim()) return sheet.steps;
         const q = stepSearch.toLowerCase();
         return sheet.steps.filter(s =>
-            s.description.toLowerCase().includes(q) ||
-            s.keyPointReason.toLowerCase().includes(q)
+            (s.description || '').toLowerCase().includes(q) ||
+            (s.keyPointReason || '').toLowerCase().includes(q)
         );
     }, [sheet.steps, stepSearch]);
 

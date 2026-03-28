@@ -41,9 +41,9 @@ const HoSheetNavigator: React.FC<Props> = ({ sheets, activeSheetId, onSelect }) 
         if (!search.trim()) return true;
         const q = search.toLowerCase();
         return (
-            s.operationNumber.toLowerCase().includes(q) ||
-            s.operationName.toLowerCase().includes(q) ||
-            s.hoNumber.toLowerCase().includes(q)
+            (s.operationNumber || '').toLowerCase().includes(q) ||
+            (s.operationName || '').toLowerCase().includes(q) ||
+            (s.hoNumber || '').toLowerCase().includes(q)
         );
     });
 

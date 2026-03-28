@@ -73,7 +73,7 @@ const INSPECTION_PATTERN = /inspecci[oó]n|verific|control\s*(por|de|con|visual|
  * Returns a reasonable default based on common patterns.
  */
 function inferRejectDisposition(opName: string): 'none' | 'rework' | 'scrap' | 'sort' {
-    const n = opName.toLowerCase();
+    const n = (opName || '').toLowerCase();
     // Visual/dimensional/mylar/galga inspections typically lead to sorting
     if (/muestreo|selecci[oó]n|clasific|sort/.test(n)) return 'sort';
     // Rework patterns

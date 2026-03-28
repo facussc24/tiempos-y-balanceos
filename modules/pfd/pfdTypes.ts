@@ -235,7 +235,7 @@ export const BRANCH_COLORS: Record<string, { bg: string; border: string; text: s
 /** Get branch color (cycles through palette for unknown IDs) */
 export function getBranchColor(branchId: string): { bg: string; border: string; text: string; badge: string } {
   if (!branchId) return { bg: '', border: '', text: 'text-gray-500', badge: 'bg-gray-100 text-gray-600 border-gray-300' };
-  return BRANCH_COLORS[branchId.toUpperCase()] || BRANCH_COLORS.A;
+  return BRANCH_COLORS[(branchId || '').toUpperCase()] || BRANCH_COLORS.A;
 }
 
 /**

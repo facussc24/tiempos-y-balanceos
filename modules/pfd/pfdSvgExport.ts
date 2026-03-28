@@ -57,7 +57,7 @@ const BRANCH_COLORS: Record<string, { bg: string; text: string; border: string }
 };
 
 function getBranchColor(branchId: string) {
-    return BRANCH_COLORS[branchId.toUpperCase()] || BRANCH_COLORS.A;
+    return BRANCH_COLORS[(branchId || '').toUpperCase()] || BRANCH_COLORS.A;
 }
 
 /** Get effective node height — accounts for characteristics content and disposition */

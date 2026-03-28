@@ -47,7 +47,7 @@ function buildPartCodeDescription(partNumber: string, subject: string): string {
 
 /** Infer basic PPE from operation name using regex patterns. */
 function inferSafetyElements(opName: string): PpeItem[] {
-    const n = opName.toLowerCase();
+    const n = (opName || '').toLowerCase();
     if (/soldadura|soldar|weld/.test(n))        return ['anteojos', 'guantes', 'delantal', 'proteccionAuditiva'];
     if (/pintura|e-coat|lacado|paint/.test(n))   return ['respirador', 'guantes', 'anteojos'];
     if (/prensa|estampado|corte|troquel/.test(n)) return ['anteojos', 'guantes', 'proteccionAuditiva'];
@@ -159,7 +159,7 @@ export function generateHoFromAmfeAndCp(
         const seenChars = new Set<string>();
         const dedupedChecks: HoQualityCheck[] = [];
         for (const qc of qualityChecks) {
-            const key = qc.characteristic.trim().toLowerCase().replace(/\s+/g, ' ');
+            const key = (qc.characteristic || '').trim().toLowerCase().replace(/\s+/g, ' ');
             if (!key || seenChars.has(key)) continue;
             seenChars.add(key);
             dedupedChecks.push(qc);

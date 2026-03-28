@@ -477,10 +477,10 @@ const PfdFlowEditor: React.FC<PfdFlowEditorProps> = ({
         const ids = new Set<string>();
         for (const step of steps) {
             if (
-                step.description.toLowerCase().includes(q) ||
-                step.machineDeviceTool.toLowerCase().includes(q) ||
-                step.department.toLowerCase().includes(q) ||
-                step.notes.toLowerCase().includes(q)
+                (step.description || '').toLowerCase().includes(q) ||
+                (step.machineDeviceTool || '').toLowerCase().includes(q) ||
+                (step.department || '').toLowerCase().includes(q) ||
+                (step.notes || '').toLowerCase().includes(q)
             ) {
                 ids.add(step.id);
             }

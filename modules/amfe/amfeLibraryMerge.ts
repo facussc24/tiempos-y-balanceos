@@ -83,14 +83,14 @@ function mergeFunctions(localFuncs: AmfeFunction[], baseFuncs: AmfeFunction[]): 
     const result: AmfeFunction[] = [];
     const localByDesc = new Map<string, AmfeFunction[]>();
     for (const f of localFuncs) {
-        const key = f.description.toLowerCase().trim();
+        const key = (f.description || '').toLowerCase().trim();
         const list = localByDesc.get(key) || [];
         list.push(f);
         localByDesc.set(key, list);
     }
 
     for (const baseFunc of baseFuncs) {
-        const key = baseFunc.description.toLowerCase().trim();
+        const key = (baseFunc.description || '').toLowerCase().trim();
         const list = localByDesc.get(key);
         const localFunc = list?.shift();
 
@@ -123,14 +123,14 @@ function mergeFailures(localFails: AmfeFailure[], baseFails: AmfeFailure[]): Amf
     const result: AmfeFailure[] = [];
     const localByDesc = new Map<string, AmfeFailure[]>();
     for (const f of localFails) {
-        const key = f.description.toLowerCase().trim();
+        const key = (f.description || '').toLowerCase().trim();
         const list = localByDesc.get(key) || [];
         list.push(f);
         localByDesc.set(key, list);
     }
 
     for (const baseFail of baseFails) {
-        const key = baseFail.description.toLowerCase().trim();
+        const key = (baseFail.description || '').toLowerCase().trim();
         const list = localByDesc.get(key);
         const localFail = list?.shift();
 
@@ -177,7 +177,7 @@ function mergeCauses(localCauses: AmfeCause[], baseCauses: AmfeCause[]): AmfeCau
     const localEmptyCauses: AmfeCause[] = [];
 
     for (const c of localCauses) {
-        const key = c.cause.toLowerCase().trim();
+        const key = (c.cause || '').toLowerCase().trim();
         if (key) {
             const list = localByCause.get(key) || [];
             list.push(c);
@@ -190,7 +190,7 @@ function mergeCauses(localCauses: AmfeCause[], baseCauses: AmfeCause[]): AmfeCau
     let emptyBaseIndex = 0;
 
     for (const baseCause of baseCauses) {
-        const key = baseCause.cause.toLowerCase().trim();
+        const key = (baseCause.cause || '').toLowerCase().trim();
 
         if (!key) {
             // Match empty causes positionally

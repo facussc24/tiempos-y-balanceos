@@ -64,7 +64,7 @@ export function applyFilters(operations: AmfeOperation[], filters: AmfeFilterSta
                                 ].join(' ').toLowerCase();
 
                                 // Cause-level fields (aggregate all causes)
-                                const causesHaystack = fail.causes.map(c => [
+                                const causesHaystack = (fail.causes || []).map(c => [
                                     c.cause, c.preventionControl, c.detectionControl,
                                     c.preventionAction, c.detectionAction, c.responsible,
                                     c.actionTaken, c.observations,

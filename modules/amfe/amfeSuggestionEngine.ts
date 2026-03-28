@@ -178,7 +178,7 @@ export function querySuggestions(
     const scored = new Map<string, { score: number; source: string; count: number }>();
 
     for (const entry of entries) {
-        const textLower = entry.text.toLowerCase();
+        const textLower = (entry.text || '').toLowerCase();
 
         // Must match input (prefix or contains)
         if (!textLower.includes(query)) continue;
@@ -192,13 +192,13 @@ export function querySuggestions(
         if (context.workElementType && entry.weType === context.workElementType) {
             score += 3;
         }
-        if (context.workElementName && entry.weName.toLowerCase().includes(context.workElementName.toLowerCase())) {
+        if (context.workElementName && (entry.weName || '').toLowerCase().includes(context.workElementName.toLowerCase())) {
             score += 4;
         }
-        if (context.operationName && entry.opName.toLowerCase().includes(context.operationName.toLowerCase())) {
+        if (context.operationName && (entry.opName || '').toLowerCase().includes(context.operationName.toLowerCase())) {
             score += 2;
         }
-        if (context.failureDescription && entry.failDesc.toLowerCase().includes(context.failureDescription.toLowerCase())) {
+        if (context.failureDescription && (entry.failDesc || '').toLowerCase().includes(context.failureDescription.toLowerCase())) {
             score += 3;
         }
 

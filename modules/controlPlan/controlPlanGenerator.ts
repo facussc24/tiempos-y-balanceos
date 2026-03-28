@@ -51,7 +51,7 @@ interface QualifyingCause {
 
 /** Normalize text for dedup key comparison: lowercase, trim, collapse whitespace. */
 function normalizeForKey(s: string): string {
-    return s.toLowerCase().trim().replace(/\s+/g, ' ');
+    return (s || '').toLowerCase().trim().replace(/\s+/g, ' ');
 }
 
 /** Build dedup key for process rows: opNumber + cause text (1 row per characteristic, NOT per control). */
@@ -410,7 +410,7 @@ export function linkPfdToCp(
         const amfeOpNumber = opIdToNumber.get(step.linkedAmfeOperationId);
         if (!amfeOpNumber) return step;
 
-        const normalized = amfeOpNumber.toLowerCase().trim();
+        const normalized = (amfeOpNumber || '').toLowerCase().trim();
         const cpIds = opNumberToCpIds.get(normalized) || [];
 
         if (cpIds.length === 0) return step;

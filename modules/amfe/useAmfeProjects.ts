@@ -739,7 +739,7 @@ export const useAmfeProjects = (
         // Search filter
         if (searchQuery) {
             const q = searchQuery.toLowerCase();
-            return s.name.toLowerCase().includes(q) ||
+            return (s.name || '').toLowerCase().includes(q) ||
                 (s.header?.subject || '').toLowerCase().includes(q);
         }
         return true;
@@ -747,7 +747,7 @@ export const useAmfeProjects = (
 
     const filteredLooseFiles = looseFiles.filter(s =>
         !searchQuery ||
-        s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (s.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
         (s.header?.subject || '').toLowerCase().includes(searchQuery.toLowerCase())
     );
 

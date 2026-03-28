@@ -19,7 +19,7 @@ interface Props {
 
 function SpecialCharBadge({ symbol }: { symbol: string }) {
     if (!symbol) return null;
-    const upper = symbol.toUpperCase().trim();
+    const upper = (symbol || '').toUpperCase().trim();
     const colorClass = upper === 'CC'
         ? 'bg-red-100 text-red-700 border border-red-300'
         : upper === 'SC'

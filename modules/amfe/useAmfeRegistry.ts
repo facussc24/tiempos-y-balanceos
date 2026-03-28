@@ -196,11 +196,11 @@ export const useAmfeRegistry = () => {
         if (filters.search) {
             const q = filters.search.toLowerCase();
             entries = entries.filter(e =>
-                e.amfeNumber.toLowerCase().includes(q) ||
-                e.subject.toLowerCase().includes(q) ||
-                e.client.toLowerCase().includes(q) ||
-                e.projectName.toLowerCase().includes(q) ||
-                e.responsible.toLowerCase().includes(q)
+                (e.amfeNumber || '').toLowerCase().includes(q) ||
+                (e.subject || '').toLowerCase().includes(q) ||
+                (e.client || '').toLowerCase().includes(q) ||
+                (e.projectName || '').toLowerCase().includes(q) ||
+                (e.responsible || '').toLowerCase().includes(q)
             );
         }
         if (filters.status !== 'all') {
