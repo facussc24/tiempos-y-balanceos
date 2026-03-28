@@ -435,50 +435,37 @@ export function buildControlPlanWorkbook(doc: ControlPlanDocument): XLSX.WorkBoo
         }
 
         // ── Col 1 (Componente/Material): sub-merge within process group ──
+        // Groups consecutive items by material name. Empty material → merged "N/A".
         const materialColIdx = 1;
         let subStart = group.startIdx;
         while (subStart < group.startIdx + group.span) {
             const mat = (sortedItems[subStart].componentMaterial || '').trim();
-            if (!mat) { subStart++; continue; } // skip empty material cells
+            // Group consecutive items with same material (including empty → "N/A")
             let subEnd = subStart + 1;
             while (subEnd < group.startIdx + group.span &&
                    (sortedItems[subEnd].componentMaterial || '').trim() === mat) {
                 subEnd++;
             }
             const subSpan = subEnd - subStart;
+            const displayVal = mat || 'N/A';
             if (subSpan > 1) {
                 merges.push({
                     s: { r: dataStartIdx + subStart, c: materialColIdx },
                     e: { r: dataStartIdx + subEnd - 1, c: materialColIdx },
                 });
-                const leader = rows[dataStartIdx + subStart];
-                leader[materialColIdx] = { ...leader[materialColIdx], s: st.cellMaterialMerged };
-                for (let r = subStart + 1; r < subEnd; r++) {
-                    const rowIdx = dataStartIdx + r;
-                    if (rowIdx >= rows.length) break;
-                    rows[rowIdx][materialColIdx] = { v: '', s: st.cellMaterialMerged };
-                }
             }
-            subStart = subEnd;
-        }
-
-        // If NO items in this group have material, merge col 1 and write "N/A"
-        const hasAnyMaterial = sortedItems
-            .slice(group.startIdx, group.startIdx + group.span)
-            .some(item => (item.componentMaterial || '').trim());
-        if (!hasAnyMaterial) {
-            if (group.span > 1) {
-                merges.push({
-                    s: { r: dataStartIdx + group.startIdx, c: materialColIdx },
-                    e: { r: dataStartIdx + group.startIdx + group.span - 1, c: materialColIdx },
-                });
-            }
-            rows[dataStartIdx + group.startIdx][materialColIdx] = { v: 'N/A', s: st.cellMaterialMerged };
-            for (let r = 1; r < group.span; r++) {
-                const rowIdx = dataStartIdx + group.startIdx + r;
+            // Leader cell: material name or "N/A"
+            rows[dataStartIdx + subStart][materialColIdx] = {
+                v: sanitizeCellValue(displayVal),
+                s: subSpan > 1 ? st.cellMaterialMerged : st.cellMaterialRotated,
+            };
+            // Follower cells: empty with merged style
+            for (let r = subStart + 1; r < subEnd; r++) {
+                const rowIdx = dataStartIdx + r;
                 if (rowIdx >= rows.length) break;
                 rows[rowIdx][materialColIdx] = { v: '', s: st.cellMaterialMerged };
             }
+            subStart = subEnd;
         }
     }
 
