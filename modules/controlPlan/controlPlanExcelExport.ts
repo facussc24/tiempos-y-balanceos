@@ -76,7 +76,7 @@ const CP_COL_WIDTHS: number[] = [
     23,   // 8:  ESPECIFICACIONES / TOLERANCIAS
     20,   // 9:  CALIBRES O TECNICAS DE EVALUACION
      6,   // 10: TAM
-     6,   // 11: FREC
+    10,   // 11: FREC (wider for "Cada recepción")
     20,   // 12: METODOS DE CONTROL Y REGISTROS
     15,   // 13: RESPONSABLES
     23,   // 14: PLAN DE REACCION ANTE DESCONTROL
@@ -176,6 +176,12 @@ const st = {
     cellMaterialMerged: {
         font: { sz: 8, name: 'Arial' },
         alignment: { textRotation: 90, vertical: 'center' as const, horizontal: 'center' as const, wrapText: false },
+        border: BORDER,
+    },
+    /** Responsible column: vertically centered, left-aligned, wrap. */
+    cellResponsible: {
+        font: { sz: 9, name: 'Arial' },
+        alignment: { vertical: 'center' as const, horizontal: 'left' as const, wrapText: true },
         border: BORDER,
     },
     ccBadge: {
@@ -404,6 +410,10 @@ export function buildControlPlanWorkbook(doc: ControlPlanDocument): XLSX.WorkBoo
             // Short columns: center both axes
             if (col.key === 'sampleSize' || col.key === 'sampleFrequency') {
                 return { v: sanitizeCellValue(value), s: st.cellCenter };
+            }
+            // Responsible: vertically centered, left-aligned
+            if (col.key === 'reactionPlanOwner') {
+                return { v: sanitizeCellValue(value), s: st.cellResponsible };
             }
             return { v: sanitizeCellValue(value), s: st.cell };
         }));
