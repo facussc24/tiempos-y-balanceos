@@ -285,7 +285,7 @@ describe('exportControlPlan', () => {
         const ws = getWorksheet();
         expect(ws['!cols']).toBeDefined();
         expect(ws['!cols'].length).toBe(15);
-        expect(ws['!cols'][0].wch).toBe(12);
+        expect(ws['!cols'][0].wch).toBe(10);
     });
 
     // ── Column group headers ──
@@ -300,14 +300,25 @@ describe('exportControlPlan', () => {
 
     // ── Column headers ──
 
-    it('includes column headers for all CP columns (excluding controlProcedure)', () => {
+    it('includes column headers matching company reference format', () => {
         exportControlPlan(makeDoc());
         const values = getFlatValues();
-        for (const col of CP_COLUMNS.filter(c => c.key !== 'controlProcedure')) {
-            expect(values).toContain(col.label);
+        // Key reference labels that must appear exactly
+        const referenceLabels = [
+            'N° PIEZA / PROCESO',
+            'NOMBRE DEL PROCESO / DESCRIPCION DE LA OPERACIÓN',
+            'MAQUINA EQUIPAMIENTO HERRAMIENTA',
+            'PRODUCTO', 'PROCESO',
+            'CLASIF. CARAC. ESPEC.',
+            'CALIBRES O TECNICAS DE EVALUACION',
+            'TAM', 'FREC',
+            'METODOS DE CONTROL Y REGISTROS',
+            'RESPONSABLES',
+            'PLAN DE REACCION ANTE DESCONTROL',
+        ];
+        for (const label of referenceLabels) {
+            expect(values).toContain(label);
         }
-        // controlProcedure (IT column) must NOT appear in export
-        expect(values).not.toContain('Plan Reacción ante Descontrol');
     });
 
     // ── Data rows ──
@@ -334,8 +345,8 @@ describe('exportControlPlan', () => {
         exportControlPlan(makeDoc({ items: [makeItem({ specialCharClass: 'CC' })] }));
         const aoaData = getAoaData();
         const dataRows = aoaData.slice(-1);
-        const ccColIdx = CP_COLUMNS.findIndex(c => c.key === 'specialCharClass');
-        const ccCell = dataRows[0][ccColIdx];
+        // specialCharClass is at export col index 7
+        const ccCell = dataRows[0][7];
         expect(ccCell.s.fill?.fgColor?.rgb).toBe('FFC7CE');
         expect(ccCell.s.font?.color?.rgb).toBe('9C0006');
     });
@@ -344,14 +355,14 @@ describe('exportControlPlan', () => {
         exportControlPlan(makeDoc({ items: [makeItem({ specialCharClass: 'SC' })] }));
         const aoaData = getAoaData();
         const dataRows = aoaData.slice(-1);
-        const ccColIdx = CP_COLUMNS.findIndex(c => c.key === 'specialCharClass');
-        const scCell = dataRows[0][ccColIdx];
+        // specialCharClass is at export col index 7
+        const scCell = dataRows[0][7];
         expect(scCell.s.fill?.fgColor?.rgb).toBe('FFEB9C');
     });
 
     // ── Vertical merging for process groups ──
 
-    it('merges cols 0-2 for items with same processStepNumber', () => {
+    it('merges cols 0, 2, 3 for items with same processStepNumber', () => {
         exportControlPlan(makeDoc({
             items: [
                 makeItem({ id: 'i1', processStepNumber: '10', processDescription: 'Soldadura', productCharacteristic: 'Penetracion' }),
@@ -361,11 +372,12 @@ describe('exportControlPlan', () => {
         }));
         const ws = getWorksheet();
         const merges: any[] = ws['!merges'];
-        // Should have data merges for cols 0, 1, 2 spanning 3 rows
+        // Should have data merges for cols 0, 2, 3 (psn, desc, machine) spanning 3 rows
+        // Col 1 (material) is NOT merged with the process group
         const dataMerges = merges.filter((m: any) =>
-            m.s.c <= 2 && m.e.r - m.s.r === 2 // spans 3 rows
+            [0, 2, 3].includes(m.s.c) && m.e.r - m.s.r === 2 // spans 3 rows
         );
-        expect(dataMerges.length).toBe(3); // one per col 0, 1, 2
+        expect(dataMerges.length).toBe(3); // one per col 0, 2, 3
     });
 
     it('clears duplicate text in follower rows of merged groups', () => {
@@ -377,16 +389,16 @@ describe('exportControlPlan', () => {
         }));
         const aoaData = getAoaData();
         const dataStart = aoaData.length - 2; // 2 data rows
+        // Col 0 = processStepNumber, Col 2 = processDescription (export order)
         // Leader row keeps text
         expect(aoaData[dataStart][0].v).toBe('10');
-        expect(aoaData[dataStart][1].v).toBe('Soldadura');
+        expect(aoaData[dataStart][2].v).toBe('Soldadura');
         // Follower row cleared
         expect(aoaData[dataStart + 1][0].v).toBe('');
-        expect(aoaData[dataStart + 1][1].v).toBe('');
-        // But non-merged cols still have their data
-        const prodIdx = CP_COLUMNS.findIndex(c => c.key === 'productCharacteristic');
-        expect(aoaData[dataStart][prodIdx].v).toBe('Penetracion');
-        expect(aoaData[dataStart + 1][prodIdx].v).toBe('Longitud');
+        expect(aoaData[dataStart + 1][2].v).toBe('');
+        // Non-merged cols still have their data (productCharacteristic = col 5 in export)
+        expect(aoaData[dataStart][5].v).toBe('Penetracion');
+        expect(aoaData[dataStart + 1][5].v).toBe('Longitud');
     });
 
     it('does NOT merge items with different processStepNumbers', () => {
@@ -398,10 +410,10 @@ describe('exportControlPlan', () => {
         }));
         const ws = getWorksheet();
         const merges: any[] = ws['!merges'];
-        // No data merges (header merges exist but data col merges should not)
+        // No data merges for process cols (0, 2, 3)
         const dataMerges = merges.filter((m: any) => {
             const isDataRow = m.s.r >= (getAoaData().length - 2);
-            return isDataRow && m.s.c <= 2;
+            return isDataRow && [0, 2, 3].includes(m.s.c);
         });
         expect(dataMerges.length).toBe(0);
     });
@@ -417,7 +429,7 @@ describe('exportControlPlan', () => {
         const merges: any[] = ws['!merges'];
         const dataMerges = merges.filter((m: any) => {
             const isDataRow = m.s.r >= (getAoaData().length - 2);
-            return isDataRow && m.s.c <= 2;
+            return isDataRow && [0, 2, 3].includes(m.s.c);
         });
         expect(dataMerges.length).toBe(0);
     });

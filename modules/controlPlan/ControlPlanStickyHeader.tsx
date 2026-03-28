@@ -64,14 +64,14 @@ const ControlPlanStickyHeader: React.FC<Props> = ({ columnVisibility }) => {
                         <th className="bg-teal-50 p-2 w-20 min-w-[80px] border-r border-teal-100 sticky left-0 z-20" style={{ boxShadow: 'none' }}>
                             <HeaderWithTip termKey="processStepNumber" label="Nro. Parte" />
                         </th>
+                        <th className="bg-teal-50 p-2 w-24 border-r border-teal-100">
+                            <HeaderWithTip termKey="componentMaterial" label="Comp./Mat." />
+                        </th>
                         <th className="bg-teal-50 p-2 w-44 min-w-[170px] border-r border-teal-100 sticky left-[80px] z-20" style={{ boxShadow: '2px 0 4px rgba(0,0,0,0.06)' }}>
                             <HeaderWithTip termKey="processDescription" label="Descripción Proceso" />
                         </th>
-                        <th className="bg-teal-50 p-2 w-36 border-r border-teal-100">
+                        <th className="bg-teal-50 p-2 w-36 border-r border-gray-300">
                             <HeaderWithTip termKey="machineDeviceTool" label="Máquina/Disp./Herram." />
-                        </th>
-                        <th className="bg-teal-50 p-2 w-28 border-r border-gray-300">
-                            <HeaderWithTip termKey="componentMaterial" label="Comp./Material" />
                         </th>
                     </>
                 )}

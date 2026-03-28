@@ -56,10 +56,9 @@ globs:
 - `buildProcessKey` agrupa por (opNumber + causeText). `buildProductKey` agrupa por (opNumber + failDescription).
 
 ### Material/Componente en CP
-- Columna adicional "Componente/Material" (AIAG CP 2024 Cap 1.1 avala columnas extra).
-- Se usa para identificar a que material aplica cada control, especialmente en Recepcion MP.
-- En el export Excel, mergear celdas verticalmente cuando items consecutivos tienen el mismo componentMaterial.
-- El processStepNumber debe ser SOLO el numero de operacion ("10", "20"). NUNCA agregar sufijos de material.
+- Columna "Componente/Material": va a la IZQUIERDA junto a N° Pieza/Proceso en el export (2da columna del grupo Proceso).
+- Texto rotado 90° vertical en el Excel, merge vertical para agrupar controles del mismo material. Ancho angosto (~5 chars).
+- NUNCA meter material dentro de processStepNumber. El PSN debe ser SOLO el numero de operacion ("10", "20").
 - Para operaciones que NO son recepcion, componentMaterial queda vacio.
 - Columna Producto = propiedad medible del producto (espesor, color, aspecto). NUNCA nombre de componente.
 - Columna Proceso = parametro de maquina/proceso (temperatura, presion). NUNCA tipo de producto ni color.

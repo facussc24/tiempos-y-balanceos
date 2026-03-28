@@ -134,9 +134,9 @@ export interface CPColumnDef {
 export const CP_COLUMNS: CPColumnDef[] = [
     // Proceso (4)
     { key: 'processStepNumber',     label: 'Nro. Parte/Proceso',                 width: '80px', required: true },
+    { key: 'componentMaterial',     label: 'Comp./Material',                     width: '100px' },
     { key: 'processDescription',    label: 'Descripción Proceso/Operación',      width: '170px', required: true },
     { key: 'machineDeviceTool',     label: 'Máquina/Dispositivo/Herram.',        width: '140px' },
-    { key: 'componentMaterial',     label: 'Componente/Material',                width: '120px' },
     // Características (4)
     { key: 'characteristicNumber',  label: 'Nro.',                               width: '60px' },
     { key: 'productCharacteristic', label: 'Producto',                           width: '150px', required: true },

@@ -1,18 +1,19 @@
 /**
  * Control Plan Excel Export — I-AC-005.2
  *
- * Exports the Control Plan in AIAG standard format.
- * Styling matches manually-created Excel templates (standard Excel palette).
+ * Exports the Control Plan matching the company reference format exactly.
+ * Column names, order, and styling replicate the official template.
  *
  * Features:
  *  - Compact 3-pair metadata with merged label cells (never truncated)
  *  - Phase checkboxes (☒/☐) per AIAG template
- *  - Vertical merging for same-process groups (cols 0-2) and componentMaterial (col 3)
+ *  - Vertical merging for same-process groups (cols 0, 2, 3) and componentMaterial (col 1)
+ *  - componentMaterial text rotated 90° vertical, narrow column
  *  - Explicit row heights for professional appearance
  */
 
 import XLSX from 'xlsx-js-style';
-import { ControlPlanDocument, ControlPlanItem, CP_COLUMNS, CONTROL_PLAN_PHASES } from './controlPlanTypes';
+import { ControlPlanDocument, ControlPlanItem, CONTROL_PLAN_PHASES } from './controlPlanTypes';
 import { sanitizeFilename } from '../../utils/filenameSanitization';
 import { sanitizeCellValue } from '../../utils/sanitizeCellValue';
 import { downloadWorkbook, generateWorkbookBuffer } from '../../utils/excel';
@@ -25,11 +26,34 @@ import { truncateApplicableParts as truncateParts } from '../../utils/productFam
 const SGC_FORM_NUMBER = 'I-AC-005.2';
 
 /**
- * Export columns — AIAG standard (excludes controlProcedure / IT column).
+ * Export column definition — labels match the company reference template exactly.
+ * Order: N° Pieza/Proceso, Componente/Material (rotated), Nombre Proceso, Maquina, ...
+ * Excludes controlProcedure (IT column not in export per rule).
  */
-const EXPORT_COLUMNS = CP_COLUMNS.filter(c => c.key !== 'controlProcedure');
+interface ExportColumnDef {
+    key: keyof ControlPlanItem;
+    label: string;
+}
 
-/** Column groups for export — Proceso has 4 cols (incl. Componente/Material), Métodos has 7 (no controlProcedure). */
+const EXPORT_COLUMNS: ExportColumnDef[] = [
+    { key: 'processStepNumber',     label: 'N° PIEZA / PROCESO' },
+    { key: 'componentMaterial',     label: 'COMPONENTE / MATERIAL' },
+    { key: 'processDescription',    label: 'NOMBRE DEL PROCESO / DESCRIPCION DE LA OPERACIÓN' },
+    { key: 'machineDeviceTool',     label: 'MAQUINA EQUIPAMIENTO HERRAMIENTA' },
+    { key: 'characteristicNumber',  label: 'N°' },
+    { key: 'productCharacteristic', label: 'PRODUCTO' },
+    { key: 'processCharacteristic', label: 'PROCESO' },
+    { key: 'specialCharClass',      label: 'CLASIF. CARAC. ESPEC.' },
+    { key: 'specification',         label: 'ESPECIFICACIONES / TOLERANCIAS DE PRODUCTO / PROCESO' },
+    { key: 'evaluationTechnique',   label: 'CALIBRES O TECNICAS DE EVALUACION' },
+    { key: 'sampleSize',            label: 'TAM' },
+    { key: 'sampleFrequency',       label: 'FREC' },
+    { key: 'controlMethod',         label: 'METODOS DE CONTROL Y REGISTROS' },
+    { key: 'reactionPlanOwner',     label: 'RESPONSABLES' },
+    { key: 'reactionPlan',          label: 'PLAN DE REACCION ANTE DESCONTROL' },
+];
+
+/** Column groups for export — Proceso 4, Características 4, Métodos 7. */
 const EXPORT_COLUMN_GROUPS: { label: string; colSpan: number }[] = [
     { label: 'Proceso',          colSpan: 4 },
     { label: 'Características',  colSpan: 4 },
@@ -37,25 +61,25 @@ const EXPORT_COLUMN_GROUPS: { label: string; colSpan: number }[] = [
 ];
 
 /**
- * Dedicated column widths (wch) — tuned for both metadata labels and data.
- * 15 columns matching EXPORT_COLUMNS order (no controlProcedure).
+ * Dedicated column widths (wch) — 15 columns matching EXPORT_COLUMNS order.
+ * Col 1 (Componente/Material) is narrow because text is rotated 90°.
  */
 const CP_COL_WIDTHS: number[] = [
-    12,   // 0:  Nro. Parte/Proceso
-    25,   // 1:  Descripción Proceso/Operación
-    20,   // 2:  Máquina/Dispositivo/Herram.
-    15,   // 3:  Componente/Material
-    10,   // 4:  Nro. (Característica)
-    22,   // 5:  Producto
-    22,   // 6:  Proceso
-    12,   // 7:  Clasif. Caract. Esp.
-    23,   // 8:  Espec./Tolerancia
-    20,   // 9:  Técnica Evaluación/Medición
-    13,   // 10: Tamaño Muestra
-    13,   // 11: Frecuencia
-    20,   // 12: Método Control
-    23,   // 13: Plan Reacción
-    17,   // 14: Responsable Reacción
+    10,   // 0:  N° PIEZA / PROCESO
+     5,   // 1:  COMPONENTE / MATERIAL (narrow — text rotated 90°)
+    28,   // 2:  NOMBRE DEL PROCESO / DESCRIPCION DE LA OPERACIÓN
+    20,   // 3:  MAQUINA EQUIPAMIENTO HERRAMIENTA
+     8,   // 4:  N°
+    22,   // 5:  PRODUCTO
+    22,   // 6:  PROCESO
+    10,   // 7:  CLASIF. CARAC. ESPEC.
+    23,   // 8:  ESPECIFICACIONES / TOLERANCIAS
+    20,   // 9:  CALIBRES O TECNICAS DE EVALUACION
+     6,   // 10: TAM
+     6,   // 11: FREC
+    20,   // 12: METODOS DE CONTROL Y REGISTROS
+    15,   // 13: RESPONSABLES
+    23,   // 14: PLAN DE REACCION ANTE DESCONTROL
 ];
 
 /**
@@ -119,6 +143,13 @@ const st = {
         alignment: { horizontal: 'center' as const, vertical: 'center' as const, wrapText: true },
         border: BORDER,
     },
+    /** Column header with 90° text rotation (for narrow Componente/Material column). */
+    colHeaderRotated: {
+        font: { bold: true, sz: 7, name: 'Arial' },
+        fill: { fgColor: { rgb: 'D9E2F3' } },
+        alignment: { textRotation: 90, horizontal: 'center' as const, vertical: 'center' as const, wrapText: false },
+        border: BORDER,
+    },
     cell: {
         font: { sz: 9, name: 'Arial' },
         alignment: { vertical: 'top' as const, wrapText: true },
@@ -133,6 +164,18 @@ const st = {
     cellMerged: {
         font: { sz: 9, name: 'Arial' },
         alignment: { vertical: 'center' as const, wrapText: true },
+        border: BORDER,
+    },
+    /** Data cell with 90° text rotation for componentMaterial column. */
+    cellMaterialRotated: {
+        font: { sz: 8, name: 'Arial' },
+        alignment: { textRotation: 90, vertical: 'center' as const, horizontal: 'center' as const, wrapText: false },
+        border: BORDER,
+    },
+    /** Merged leader cell with 90° rotation for componentMaterial. */
+    cellMaterialMerged: {
+        font: { sz: 8, name: 'Arial' },
+        alignment: { textRotation: 90, vertical: 'center' as const, horizontal: 'center' as const, wrapText: false },
         border: BORDER,
     },
     ccBadge: {
@@ -308,8 +351,11 @@ export function buildControlPlanWorkbook(doc: ControlPlanDocument): XLSX.WorkBoo
         colOff += group.colSpan;
     }
 
-    // ── Column headers ──
-    rows.push(EXPORT_COLUMNS.map(col => ({ v: col.label, s: st.colHeader })));
+    // ── Column headers — col 1 (material) uses rotated style ──
+    rows.push(EXPORT_COLUMNS.map((col, idx) => {
+        if (idx === 1) return { v: col.label, s: st.colHeaderRotated };
+        return { v: col.label, s: st.colHeader };
+    }));
     const colHeaderIdx = rows.length - 1;
 
     // ── Data rows (sorted numerically by operation, then grouped by material) ──
@@ -329,14 +375,19 @@ export function buildControlPlanWorkbook(doc: ControlPlanDocument): XLSX.WorkBoo
             if (col.key === 'specialCharClass') {
                 return { v: sanitizeCellValue(value), s: getSpecialCharStyle(value) };
             }
+            if (col.key === 'componentMaterial') {
+                return { v: sanitizeCellValue(value), s: st.cellMaterialRotated };
+            }
             return { v: sanitizeCellValue(value), s: st.cell };
         }));
     }
 
-    // ── Vertical merging for same-process groups (cols 0-2) ──
+    // ── Vertical merging for same-process groups (cols 0, 2, 3) ──
+    // Col 0 = N° Pieza/Proceso, Col 2 = Nombre Proceso, Col 3 = Maquina
+    // Col 1 (Componente/Material) has its own sub-merge logic below.
     const processGroups = computeProcessGroups(sortedItems);
     for (const group of processGroups) {
-        for (const col of [0, 1, 2]) {
+        for (const col of [0, 2, 3]) {
             // Merge from first row to last row of the group
             merges.push({
                 s: { r: dataStartIdx + group.startIdx, c: col },
@@ -356,8 +407,8 @@ export function buildControlPlanWorkbook(doc: ControlPlanDocument): XLSX.WorkBoo
             }
         }
 
-        // ── Col 3 (Componente/Material): sub-merge within process group ──
-        const materialColIdx = 3;
+        // ── Col 1 (Componente/Material): sub-merge within process group ──
+        const materialColIdx = 1;
         let subStart = group.startIdx;
         while (subStart < group.startIdx + group.span) {
             const mat = (sortedItems[subStart].componentMaterial || '').trim();
@@ -374,11 +425,11 @@ export function buildControlPlanWorkbook(doc: ControlPlanDocument): XLSX.WorkBoo
                     e: { r: dataStartIdx + subEnd - 1, c: materialColIdx },
                 });
                 const leader = rows[dataStartIdx + subStart];
-                leader[materialColIdx] = { ...leader[materialColIdx], s: st.cellMerged };
+                leader[materialColIdx] = { ...leader[materialColIdx], s: st.cellMaterialMerged };
                 for (let r = subStart + 1; r < subEnd; r++) {
                     const rowIdx = dataStartIdx + r;
                     if (rowIdx >= rows.length) break;
-                    rows[rowIdx][materialColIdx] = { v: '', s: st.cellMerged };
+                    rows[rowIdx][materialColIdx] = { v: '', s: st.cellMaterialMerged };
                 }
             }
             subStart = subEnd;
@@ -397,11 +448,12 @@ export function buildControlPlanWorkbook(doc: ControlPlanDocument): XLSX.WorkBoo
         if (idx >= 2 && idx < separatorIdx) return { hpt: 18 };  // Metadata (dynamic)
         if (idx === separatorIdx) return { hpt: 6 };    // Thin separator
         if (idx === groupRowIdx) return { hpt: 28 };    // Group headers
-        if (idx === colHeaderIdx) return { hpt: 24 };   // Column headers
+        if (idx === colHeaderIdx) return { hpt: 60 };   // Column headers (taller for rotated text)
         // Data rows: calculate height from longest cell text vs its column width
         if (idx >= dataStartIdx && Array.isArray(row)) {
             let maxLines = 1;
             for (let c = 0; c < row.length; c++) {
+                if (c === 1) continue; // skip material col (rotated text doesn't affect row height)
                 const text = String(row[c]?.v || '');
                 if (!text) continue;
                 const colW = CP_COL_WIDTHS[c] || 15;

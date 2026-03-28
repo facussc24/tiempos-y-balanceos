@@ -38,6 +38,9 @@ globs:
 
 ### CP Export
 - NO incluir columna IT/controlProcedure en el export de CP.
+- Nombres de columnas deben ser IDENTICOS al formato referencia empresa. NO usar nombres abreviados distintos al formato oficial.
+- Columna Componente/Material: 2da columna del grupo Proceso, texto rotado 90° vertical, merge vertical por material, ancho angosto (~5 chars).
+- EXPORT_COLUMNS definido en el export file con labels propios (NO derivar de CP_COLUMNS que tiene labels cortos para la UI).
 
 ### Librerias por modulo
 - AMFE y CP: SOLO `xlsx-js-style`.
