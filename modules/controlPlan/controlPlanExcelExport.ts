@@ -66,7 +66,7 @@ const EXPORT_COLUMN_GROUPS: { label: string; colSpan: number }[] = [
  */
 const CP_COL_WIDTHS: number[] = [
     10,   // 0:  N° PIEZA / PROCESO
-     5,   // 1:  COMPONENTE / MATERIAL (narrow — text rotated 90°)
+     8,   // 1:  COMPONENTE / MATERIAL (rotated 90° — wider for "Espuma PUR")
     28,   // 2:  NOMBRE DEL PROCESO / DESCRIPCION DE LA OPERACIÓN
     20,   // 3:  MAQUINA EQUIPAMIENTO HERRAMIENTA
      8,   // 4:  N°
@@ -369,14 +369,41 @@ export function buildControlPlanWorkbook(doc: ControlPlanDocument): XLSX.WorkBoo
         return matA.localeCompare(matB);
     });
     const dataStartIdx = rows.length;
-    for (const item of sortedItems) {
+
+    // Compute sequential characteristic numbers per operation (resets on each new op)
+    const seqCharNumbers: number[] = [];
+    {
+        let currentOp = '';
+        let counter = 0;
+        for (const item of sortedItems) {
+            const op = (item.processStepNumber || '').trim();
+            if (op !== currentOp) {
+                currentOp = op;
+                counter = 0;
+            }
+            counter++;
+            seqCharNumbers.push(counter);
+        }
+    }
+
+    for (let itemIdx = 0; itemIdx < sortedItems.length; itemIdx++) {
+        const item = sortedItems[itemIdx];
         rows.push(EXPORT_COLUMNS.map(col => {
+            // Override characteristicNumber with sequential counter per operation
+            if (col.key === 'characteristicNumber') {
+                return { v: sanitizeCellValue(String(seqCharNumbers[itemIdx])), s: st.cellCenter };
+            }
             const value = (item[col.key] as string) || '';
             if (col.key === 'specialCharClass') {
                 return { v: sanitizeCellValue(value), s: getSpecialCharStyle(value) };
             }
             if (col.key === 'componentMaterial') {
-                return { v: sanitizeCellValue(value), s: st.cellMaterialRotated };
+                const matVal = value.trim();
+                return { v: sanitizeCellValue(matVal || 'N/A'), s: st.cellMaterialRotated };
+            }
+            // Short columns: center both axes
+            if (col.key === 'sampleSize' || col.key === 'sampleFrequency') {
+                return { v: sanitizeCellValue(value), s: st.cellCenter };
             }
             return { v: sanitizeCellValue(value), s: st.cell };
         }));
@@ -433,6 +460,78 @@ export function buildControlPlanWorkbook(doc: ControlPlanDocument): XLSX.WorkBoo
                 }
             }
             subStart = subEnd;
+        }
+
+        // If NO items in this group have material, merge col 1 and write "N/A"
+        const hasAnyMaterial = sortedItems
+            .slice(group.startIdx, group.startIdx + group.span)
+            .some(item => (item.componentMaterial || '').trim());
+        if (!hasAnyMaterial) {
+            if (group.span > 1) {
+                merges.push({
+                    s: { r: dataStartIdx + group.startIdx, c: materialColIdx },
+                    e: { r: dataStartIdx + group.startIdx + group.span - 1, c: materialColIdx },
+                });
+            }
+            rows[dataStartIdx + group.startIdx][materialColIdx] = { v: 'N/A', s: st.cellMaterialMerged };
+            for (let r = 1; r < group.span; r++) {
+                const rowIdx = dataStartIdx + group.startIdx + r;
+                if (rowIdx >= rows.length) break;
+                rows[rowIdx][materialColIdx] = { v: '', s: st.cellMaterialMerged };
+            }
+        }
+    }
+
+    // Single-item operations without material: write "N/A"
+    for (let si = 0; si < sortedItems.length; si++) {
+        if ((sortedItems[si].componentMaterial || '').trim()) continue;
+        const inGroup = processGroups.some(g => si >= g.startIdx && si < g.startIdx + g.span);
+        if (!inGroup) {
+            rows[dataStartIdx + si][1] = { v: 'N/A', s: st.cellMaterialRotated };
+        }
+    }
+
+    // ── Thick borders between material groups within same operation ──
+    {
+        let i = 0;
+        while (i < sortedItems.length) {
+            const opNum = (sortedItems[i].processStepNumber || '').trim();
+            let j = i + 1;
+            while (j < sortedItems.length && (sortedItems[j].processStepNumber || '').trim() === opNum) {
+                j++;
+            }
+            // Find material transitions within this operation
+            for (let k = i + 1; k < j; k++) {
+                const prevMat = (sortedItems[k - 1].componentMaterial || '').trim();
+                const currMat = (sortedItems[k].componentMaterial || '').trim();
+                if (prevMat !== currMat) {
+                    // Thick bottom on last row of previous material group
+                    const prevRow = rows[dataStartIdx + k - 1];
+                    if (prevRow) {
+                        for (let c = 0; c < totalCols; c++) {
+                            if (prevRow[c]?.s) {
+                                prevRow[c] = {
+                                    ...prevRow[c],
+                                    s: { ...prevRow[c].s, border: { ...(prevRow[c].s.border || BORDER), bottom: { style: 'medium' as const, color: { rgb: '000000' } } } },
+                                };
+                            }
+                        }
+                    }
+                    // Thick top on first row of next material group
+                    const currRow = rows[dataStartIdx + k];
+                    if (currRow) {
+                        for (let c = 0; c < totalCols; c++) {
+                            if (currRow[c]?.s) {
+                                currRow[c] = {
+                                    ...currRow[c],
+                                    s: { ...currRow[c].s, border: { ...(currRow[c].s.border || BORDER), top: { style: 'medium' as const, color: { rgb: '000000' } } } },
+                                };
+                            }
+                        }
+                    }
+                }
+            }
+            i = j;
         }
     }
 
