@@ -121,7 +121,7 @@ export async function deleteProject(id: number): Promise<void> {
 /**
  * Search projects by name or client.
  */
-export async function searchProjects(query: string): Promise<ProjectListItem[]> {
+async function searchProjects(query: string): Promise<ProjectListItem[]> {
     try {
         const db = await getDatabase();
         const pattern = `%${query}%`;

@@ -114,7 +114,7 @@ export async function configureSyncFolder(): Promise<string | null> {
 /**
  * Set the sync folder path programmatically (for testing or restore).
  */
-export async function setSyncFolderPath(folder: string): Promise<string> {
+async function setSyncFolderPath(folder: string): Promise<string> {
     const syncDir = `${folder}/${SYNC_SUBFOLDER}`;
     await ensureDir(syncDir);
 
@@ -126,12 +126,12 @@ export async function setSyncFolderPath(folder: string): Promise<string> {
     return folder;
 }
 
-export async function isSyncFolderConfigured(): Promise<boolean> {
+async function isSyncFolderConfigured(): Promise<boolean> {
     const settings = await loadSettings();
     return !!settings.syncFolderPath;
 }
 
-export async function getSyncFolderPath(): Promise<string | null> {
+async function getSyncFolderPath(): Promise<string | null> {
     const settings = await loadSettings();
     return settings.syncFolderPath;
 }
@@ -317,7 +317,7 @@ export async function pullApply(
  * Push local changes, then pull remote changes.
  * Returns combined results for the UI.
  */
-export async function syncBidirectional(
+async function syncBidirectional(
     resolutions: ResolvedConflict[] = [],
 ): Promise<SyncResult> {
     // 1. Push first so others can see our latest

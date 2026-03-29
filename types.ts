@@ -235,6 +235,12 @@ export interface InjectionParams {
 
   // Calculated Real Cycle Time (Phase 25 - for balancing)
   realCycle?: number;
+
+  // Injection mode: batch (sequential) or carousel (parallel)
+  injectionMode?: 'batch' | 'carousel';
+
+  // Carousel index time (rotation between stations, seconds)
+  indexTime?: number;
 }
 
 // --- MMALBP (Mixed Model Balancing) TYPES [v2.0] ---
@@ -1220,21 +1226,21 @@ export type FSDirectoryHandle = FileSystemDirectoryHandle | string;
 /**
  * Type guard: Check if handle is a Tauri path (string)
  */
-export function isTauriPath(handle: FSFileHandle | FSDirectoryHandle | null | undefined): handle is string {
+function isTauriPath(handle: FSFileHandle | FSDirectoryHandle | null | undefined): handle is string {
   return typeof handle === 'string';
 }
 
 /**
  * Type guard: Check if handle is a Web FileSystemFileHandle
  */
-export function isWebFileHandle(handle: FSFileHandle | null | undefined): handle is FileSystemFileHandle {
+function isWebFileHandle(handle: FSFileHandle | null | undefined): handle is FileSystemFileHandle {
   return handle !== null && handle !== undefined && typeof handle !== 'string' && 'getFile' in handle;
 }
 
 /**
  * Type guard: Check if handle is a Web FileSystemDirectoryHandle
  */
-export function isWebDirectoryHandle(handle: FSDirectoryHandle | null | undefined): handle is FileSystemDirectoryHandle {
+function isWebDirectoryHandle(handle: FSDirectoryHandle | null | undefined): handle is FileSystemDirectoryHandle {
   return handle !== null && handle !== undefined && typeof handle !== 'string' && 'getDirectoryHandle' in handle;
 }
 
@@ -1337,6 +1343,8 @@ export interface InjectionSimulationParams {
   oee: number;
   cycleQuantity?: number; // New param for normalization
   availableSeconds?: number; // FIX Bug #4: Pre-calculated from real shift config
+  injectionMode?: 'batch' | 'carousel'; // Batch = sequential (Iny+Cur/N), Carousel = parallel (MAX(Iny,Cur/N))
+  indexTime?: number; // Carousel rotation time between stations (seconds)
 }
 
 export interface InjectionScenario {

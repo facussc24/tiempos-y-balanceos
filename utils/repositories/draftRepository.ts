@@ -80,7 +80,7 @@ export async function listDraftKeys(module: DraftModule): Promise<string[]> {
 /**
  * Delete all drafts for a module.
  */
-export async function clearDrafts(module: DraftModule): Promise<void> {
+async function clearDrafts(module: DraftModule): Promise<void> {
     try {
         const db = await getDatabase();
         await db.execute('DELETE FROM drafts WHERE module = ?', [module]);

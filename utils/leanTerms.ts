@@ -189,7 +189,7 @@ export function getTerm(key: string): LeanTermDefinition | undefined {
  * Get all terms for a category
  * Useful for building help pages or glossaries
  */
-export function getAllTerms(): LeanTermDefinition[] {
+function getAllTerms(): LeanTermDefinition[] {
     return Object.values(LEAN_TERMS);
 }
 
@@ -198,7 +198,7 @@ export function getAllTerms(): LeanTermDefinition[] {
  * @param keyword - Search keyword
  * @returns Array of matching terms
  */
-export function searchTerms(keyword: string): LeanTermDefinition[] {
+function searchTerms(keyword: string): LeanTermDefinition[] {
     const lowerKeyword = keyword.toLowerCase();
     return Object.values(LEAN_TERMS).filter(term =>
         term.term.toLowerCase().includes(lowerKeyword) ||

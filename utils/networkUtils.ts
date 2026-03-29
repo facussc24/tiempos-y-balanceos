@@ -389,7 +389,7 @@ export function isOrphanLockFile(
 /**
  * Patterns for temp/orphan files to clean up
  */
-export const CLEANUP_PATTERNS = {
+const CLEANUP_PATTERNS = {
     tempFiles: /\.(tmp|temp)$/i,
     lockFiles: /\.lock$/i,
     hiddenTemp: /^\.[^.]+\.(json|tmp)\.tmp$/i, // e.g., .proceso.json.tmp
@@ -510,7 +510,7 @@ export function formatBytes(bytes: number): string {
 /**
  * Format duration for display
  */
-export function formatDuration(ms: number): string {
+function formatDuration(ms: number): string {
     if (ms < 1000) return `${ms}ms`;
     if (ms < 60000) return `${(ms / 1000).toFixed(1)}s`;
     return `${(ms / 60000).toFixed(1)}min`;

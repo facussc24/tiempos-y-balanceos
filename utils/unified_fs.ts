@@ -210,10 +210,10 @@ const deleteProjectFromAppData = async (_id: string): Promise<boolean> => false;
 // ---------------------------------------------------------------------------
 
 /** @deprecated Use Supabase Storage for media files. */
-export const saveTaskMedia = async (_file: File, _taskId: string): Promise<string | null> => null;
+const saveTaskMedia = async (_file: File, _taskId: string): Promise<string | null> => null;
 
 /** @deprecated Use Supabase Storage for media files. */
-export const loadTaskMedia = async (_mediaRef: string): Promise<string | null> => null;
+const loadTaskMedia = async (_mediaRef: string): Promise<string | null> => null;
 
 export const saveMediaFile = async (_projectId: string, _taskId: string, _file: File): Promise<string | null> => null;
 
@@ -223,9 +223,9 @@ export const loadMediaFile = async (_projectId: string, _mediaRef: string): Prom
 // Export / Import operations (no-ops in web)
 // ---------------------------------------------------------------------------
 
-export const exportProject = async (_path: string, _data: ProjectData): Promise<boolean> => false;
+const exportProject = async (_path: string, _data: ProjectData): Promise<boolean> => false;
 
-export const importProject = async (_path: string): Promise<ProjectData | null> => null;
+const importProject = async (_path: string): Promise<ProjectData | null> => null;
 
 // ---------------------------------------------------------------------------
 // Dialogs (browser-native)
@@ -249,7 +249,7 @@ const alertDialog = async (_title: string, message: string): Promise<void> =>
 // Security validation
 // ---------------------------------------------------------------------------
 
-export const isSecurePath = (_path: string): boolean => false;
+const isSecurePath = (_path: string): boolean => false;
 
 // ---------------------------------------------------------------------------
 // App info

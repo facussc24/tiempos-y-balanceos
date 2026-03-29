@@ -153,7 +153,7 @@ export async function getCurrentMode(): Promise<StorageMode> {
     return settings.storageMode;
 }
 
-export async function setStorageMode(mode: StorageMode): Promise<boolean> {
+async function setStorageMode(mode: StorageMode): Promise<boolean> {
     const settings = await loadStorageSettings();
     const oldMode = settings.storageMode;
     settings.storageMode = mode;
@@ -175,7 +175,7 @@ export async function getActiveBasePath(): Promise<string> {
     return settings.sharedStoragePath || getPathConfig().basePath;
 }
 
-export async function getStorageModeInfo(): Promise<{ local: StorageModeInfo; shared: StorageModeInfo; current: StorageMode }> {
+async function getStorageModeInfo(): Promise<{ local: StorageModeInfo; shared: StorageModeInfo; current: StorageMode }> {
     const settings = await loadStorageSettings();
     const localPath = settings.localStoragePath || await getDefaultLocalPath();
     const sharedPath = settings.sharedStoragePath || getPathConfig().basePath;

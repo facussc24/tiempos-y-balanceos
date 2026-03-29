@@ -95,7 +95,7 @@ import {
 } from '../config';
 
 // Re-export for backward compatibility
-export const LOCK_HEARTBEAT_INTERVAL_MS = LOCK_HEARTBEAT_MS;
+const LOCK_HEARTBEAT_INTERVAL_MS = LOCK_HEARTBEAT_MS;
 
 const DEFAULT_BACKOFF_MS = [100, 500, 1000];
 const LOCK_FILE_SUFFIX = '.lock';

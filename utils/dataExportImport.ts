@@ -114,7 +114,7 @@ export async function openAndAnalyzeImport(): Promise<{
  * In web mode this always returns null since filesystem paths are not accessible.
  * TODO: Implement via backend API when a server-side proxy is available.
  */
-export async function analyzeImportFile(filePath: string): Promise<{
+async function analyzeImportFile(filePath: string): Promise<{
     filePath: string;
     dataset: ExportDataset;
     analysis: MergeResult;
@@ -173,7 +173,7 @@ const IMPORTABLE_TABLES = new Set([
  * This inserts new records and updates existing ones individually
  * (unlike restore which wipes everything).
  */
-export async function executeImportActions(actions: MergeAction[]): Promise<{
+async function executeImportActions(actions: MergeAction[]): Promise<{
     success: boolean;
     applied: number;
     errors: number;

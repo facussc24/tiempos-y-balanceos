@@ -241,7 +241,7 @@ function stopHeartbeat(): void {
 /**
  * Check if we currently hold the lock for a project
  */
-export function hasLock(projectId: string | number): boolean {
+function hasLock(projectId: string | number): boolean {
     const lockKey = `${LOCK_PREFIX}${projectId}`;
     const existingLock = localStorage.getItem(lockKey);
 
@@ -259,7 +259,7 @@ export function hasLock(projectId: string | number): boolean {
 /**
  * Get current tab ID (useful for debugging)
  */
-export function getTabId(): string {
+function getTabId(): string {
     return TAB_ID;
 }
 

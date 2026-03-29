@@ -57,7 +57,7 @@ export async function saveSettings(settings: AppSettings): Promise<boolean> {
 /**
  * Update a single setting
  */
-export async function updateSetting<K extends keyof AppSettings>(
+async function updateSetting<K extends keyof AppSettings>(
     key: K,
     value: AppSettings[K]
 ): Promise<boolean> {
@@ -78,7 +78,7 @@ async function getDefaultDiagnosticPath(): Promise<string> {
 /**
  * Get the configured or default diagnostic path
  */
-export async function getDiagnosticExportPath(): Promise<string> {
+async function getDiagnosticExportPath(): Promise<string> {
     const settings = await loadSettings();
     if (settings.diagnosticExportPath) {
         return settings.diagnosticExportPath;

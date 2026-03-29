@@ -22,7 +22,7 @@ export interface AppSettings {
     lastReconciliationCheck: string | null;
 }
 
-export const DEFAULT_APP_SETTINGS: AppSettings = {
+const DEFAULT_APP_SETTINGS: AppSettings = {
     diagnosticExportPath: null,
     qaEnabled: false,
     lastProjectPath: null,

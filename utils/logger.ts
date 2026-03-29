@@ -262,7 +262,7 @@ export const logger = {
 /**
  * Generate a diagnostic report (sanitized, no sensitive data)
  */
-export function generateDiagnosticReport(projectPath?: string | null): DiagnosticReport {
+function generateDiagnosticReport(projectPath?: string | null): DiagnosticReport {
     return {
         generatedAt: new Date().toISOString(),
         appVersion: typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '5.0.0',
@@ -301,7 +301,7 @@ export function exportDiagnosticJSON(projectPath?: string | null): string {
 /**
  * Format logs for display
  */
-export function formatLogsForDisplay(entries: LogEntry[]): string {
+function formatLogsForDisplay(entries: LogEntry[]): string {
     return entries
         .map(e => {
             let line = `[${e.timestamp}] [${e.level.toUpperCase()}] [${e.category}] ${e.message}`;
@@ -323,7 +323,7 @@ export function formatLogsForDisplay(entries: LogEntry[]): string {
 /**
  * Log an error and return a formatted user message
  */
-export function logErrorForUser(
+function logErrorForUser(
     category: string,
     error: unknown,
     context?: Record<string, any>

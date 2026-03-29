@@ -61,14 +61,14 @@ export async function getDeviceInfo(): Promise<DeviceInfo> {
 /**
  * Shorthand: get just the device ID.
  */
-export async function getDeviceId(): Promise<string> {
+async function getDeviceId(): Promise<string> {
     return (await getDeviceInfo()).id;
 }
 
 /**
  * Shorthand: get just the friendly device name.
  */
-export async function getDeviceName(): Promise<string> {
+async function getDeviceName(): Promise<string> {
     return (await getDeviceInfo()).name;
 }
 

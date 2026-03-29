@@ -449,7 +449,7 @@ export async function saveLibrary(library: AmfeLibrary): Promise<boolean> {
 /**
  * Delete a library operation.
  */
-export async function deleteLibraryOperation(id: string): Promise<boolean> {
+async function deleteLibraryOperation(id: string): Promise<boolean> {
     try {
         const db = await getDatabase();
         await db.execute('DELETE FROM amfe_library_operations WHERE id = ?', [id]);
@@ -463,7 +463,7 @@ export async function deleteLibraryOperation(id: string): Promise<boolean> {
 /**
  * Search library operations by text.
  */
-export async function searchLibrary(query: string): Promise<AmfeLibraryOperation[]> {
+async function searchLibrary(query: string): Promise<AmfeLibraryOperation[]> {
     try {
         const db = await getDatabase();
         const pattern = `%${query.toLowerCase()}%`;

@@ -190,7 +190,7 @@ export async function saveCpDocument(
 /**
  * Delete a CP document by ID.
  */
-export async function deleteCpDocument(id: string): Promise<boolean> {
+async function deleteCpDocument(id: string): Promise<boolean> {
     try {
         const db = await getDatabase();
         await db.execute('DELETE FROM cp_documents WHERE id = ?', [id]);

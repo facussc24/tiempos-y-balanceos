@@ -73,7 +73,7 @@ export const parsePercentage = (value: string, defaultValue: number = 0): number
 /**
  * Validates and parses OEE value (0-1)
  */
-export const parseOEEValue = (value: string, defaultValue: number = 0.85): number => {
+const parseOEEValue = (value: string, defaultValue: number = 0.85): number => {
     const percentage = parseNumberInput(value, {
         min: 0,
         max: 100,
@@ -86,7 +86,7 @@ export const parseOEEValue = (value: string, defaultValue: number = 0.85): numbe
 /**
  * Validates time input (seconds, must be positive)
  */
-export const parseTimeSeconds = (value: string, defaultValue: number = 0): number => {
+const parseTimeSeconds = (value: string, defaultValue: number = 0): number => {
     return parseNumberInput(value, {
         min: 0,
         max: 86400, // 24 hours in seconds

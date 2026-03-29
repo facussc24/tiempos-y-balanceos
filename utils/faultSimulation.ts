@@ -102,7 +102,7 @@ export function disableFaultSimulation(): void {
 /**
  * Get current fault simulation status
  */
-export function getFaultSimulationStatus(): FaultConfig {
+function getFaultSimulationStatus(): FaultConfig {
     return { ...faultConfig };
 }
 
@@ -110,7 +110,7 @@ export function getFaultSimulationStatus(): FaultConfig {
  * Check if should simulate fault (and potentially throw)
  * Call this at the beginning of file operations in DEV mode
  */
-export async function maybeSimulateFault(operation: string): Promise<void> {
+async function maybeSimulateFault(operation: string): Promise<void> {
     if (!isDevMode() || !faultConfig.enabled || !faultConfig.errorType) {
         return;
     }

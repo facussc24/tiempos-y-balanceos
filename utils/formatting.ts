@@ -106,7 +106,7 @@ export const parseTime = (timeStr: string): number => {
  * Safe wrapper around Date.toLocaleString that guards against Invalid Date.
  * Returns fallback (default '') if the input produces an Invalid Date.
  */
-export const safeFormatDate = (
+const safeFormatDate = (
     input: string | number | Date | null | undefined,
     options?: Intl.DateTimeFormatOptions,
     fallback = ''

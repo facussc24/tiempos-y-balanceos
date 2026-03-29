@@ -34,7 +34,7 @@ export interface PathConfig {
  * The mapped drive letter (Y:) can break when Windows loses the network mapping
  * (sleep, reboot, VPN reconnect). The UNC fallback ensures the app always connects.
  */
-export const DEFAULT_PATH_CONFIG: PathConfig = {
+const DEFAULT_PATH_CONFIG: PathConfig = {
     basePath: 'Y:\\INGENIERIA\\Datos Software',
     dataFolder: '01_DATA',
     mediaFolder: '02_MEDIA',
@@ -46,14 +46,14 @@ export const DEFAULT_PATH_CONFIG: PathConfig = {
  * UNC fallback path — same folder as basePath but via direct network name.
  * Used when the mapped drive letter (Y:) is unavailable.
  */
-export const UNC_FALLBACK_BASE_PATH = '\\\\server\\compartido\\INGENIERIA\\Datos Software';
+const UNC_FALLBACK_BASE_PATH = '\\\\server\\compartido\\INGENIERIA\\Datos Software';
 
 /**
  * Legacy paths — for backward compatibility with data saved before the reorganization.
  * resolveBasePath() will try these if the new path doesn't exist yet.
  */
-export const LEGACY_BASE_PATH = 'Y:\\Ingenieria\\Documentacion Gestion Ingenieria\\15. Tiempos\\Software';
-export const LEGACY_UNC_FALLBACK = '\\\\server\\compartido\\Ingenieria\\Documentacion Gestion Ingenieria\\15. Tiempos\\Software';
+const LEGACY_BASE_PATH = 'Y:\\Ingenieria\\Documentacion Gestion Ingenieria\\15. Tiempos\\Software';
+const LEGACY_UNC_FALLBACK = '\\\\server\\compartido\\Ingenieria\\Documentacion Gestion Ingenieria\\15. Tiempos\\Software';
 
 // In-memory config (can be updated at runtime)
 let currentConfig: PathConfig = { ...DEFAULT_PATH_CONFIG };
@@ -79,7 +79,7 @@ export function getPathConfig(): PathConfig {
 /**
  * Load config from localStorage if available
  */
-export function loadPathConfig(): void {
+function loadPathConfig(): void {
     if (!isTauri() && typeof localStorage !== 'undefined') {
         const stored = localStorage.getItem('path_config');
         if (stored) {
@@ -215,8 +215,11 @@ export async function ensureStudyStructure(
  */
 export async function listClients(): Promise<string[]> {
     if (!isTauri()) {
-        // Web mode - return demo data
-        return ['DEMO_CLIENT'];
+        // Web mode - query Supabase projects table
+        const { listProjects: listAllProjects } = await import('./repositories/projectRepository');
+        const projects = await listAllProjects();
+        const clients = [...new Set(projects.map(p => p.client).filter(Boolean))];
+        return clients.sort();
     }
 
     try {
@@ -244,7 +247,11 @@ export async function listClients(): Promise<string[]> {
  */
 export async function listProjects(client: string): Promise<string[]> {
     if (!isTauri()) {
-        return ['DEMO_PROJECT'];
+        // Web mode - query Supabase projects table
+        const { getProjectsByClient } = await import('./repositories/projectRepository');
+        const projects = await getProjectsByClient(client);
+        const projectCodes = [...new Set(projects.map(p => p.project_code).filter(Boolean))];
+        return projectCodes.sort();
     }
 
     try {
@@ -272,7 +279,13 @@ export async function listProjects(client: string): Promise<string[]> {
  */
 export async function listParts(client: string, project: string): Promise<string[]> {
     if (!isTauri()) {
-        return ['DEMO_PART'];
+        // Web mode - query Supabase projects table
+        const { getProjectsByClient } = await import('./repositories/projectRepository');
+        const projects = await getProjectsByClient(client);
+        return projects
+            .filter(p => p.project_code === project)
+            .map(p => p.name)
+            .sort();
     }
 
     try {
@@ -298,7 +311,7 @@ export async function listParts(client: string, project: string): Promise<string
 /**
  * Check if a study already exists
  */
-export async function studyExists(client: string, project: string, part: string): Promise<boolean> {
+async function studyExists(client: string, project: string, part: string): Promise<boolean> {
     if (!isTauri()) {
         return false;
     }

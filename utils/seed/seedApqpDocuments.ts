@@ -188,7 +188,7 @@ function mkHoHeader(client: string, pn: string, desc: string, amfePrj: string, c
 
 let _seedRunning = false;
 
-export async function seedAllApqpDocuments(): Promise<string> {
+async function seedAllApqpDocuments(): Promise<string> {
     // Prevent concurrent runs
     if (_seedRunning) return 'SKIPPED: Seed already running';
     _seedRunning = true;

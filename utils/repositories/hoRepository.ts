@@ -48,7 +48,7 @@ export async function listHoDocuments(): Promise<HoDocumentListItem[]> {
 /**
  * List distinct client names from HO documents.
  */
-export async function listHoClients(): Promise<string[]> {
+async function listHoClients(): Promise<string[]> {
     try {
         const db = await getDatabase();
         const rows = await db.select<{ client: string }>(
@@ -64,7 +64,7 @@ export async function listHoClients(): Promise<string[]> {
 /**
  * List HO documents filtered by client.
  */
-export async function listHoByClient(client: string): Promise<HoDocumentListItem[]> {
+async function listHoByClient(client: string): Promise<HoDocumentListItem[]> {
     try {
         const db = await getDatabase();
         return await db.select<HoDocumentListItem>(
