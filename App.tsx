@@ -11,11 +11,10 @@ import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { initializeStorageManager } from './utils/storageManager';
 import { ProjectData } from './types';
 import { isTauri } from './utils/unified_fs';
-import { setPathConfig } from './utils/pathManager';
 import { FABConfig } from './components/ui/FloatingActionButton';
 
 // Custom Hooks
-import { useAppNavigation, Tab } from './hooks/useAppNavigation';
+import { useAppNavigation } from './hooks/useAppNavigation';
 import { useProjectPersistence } from './hooks/useProjectPersistence';
 import { useSessionLock } from './hooks/useSessionLock';
 import { useBreadcrumb } from './hooks/useBreadcrumb';
@@ -284,16 +283,6 @@ const App: React.FC<AppProps> = ({ onBackToLanding }) => {
 
     const [fsRoot, setFsRoot] = useState<FileSystemDirectoryHandle | string | null>(null);
 
-    const handleSetRootWithSync = (root: FileSystemDirectoryHandle | string | null) => {
-        if (typeof root === 'string') {
-            setPathConfig({ basePath: root });
-            setFsRoot(root);
-        } else if (root) {
-            setFsRoot(root);
-        } else {
-            setFsRoot(null);
-        }
-    };
 
     const [graphState, setGraphState] = useState({ zoom: 1, pan: { x: 0, y: 0 } });
     const [mixInitialProducts, setMixInitialProducts] = useState<Array<{ path: string; demand: number }>>([]);
@@ -353,7 +342,6 @@ const App: React.FC<AppProps> = ({ onBackToLanding }) => {
                 modals={modals}
                 fabConfig={fabConfig}
                 closeModalRef={closeModalRef}
-                storageVersion={storageVersion}
                 setStorageVersion={setStorageVersion}
                 confirmCloseProject={confirmCloseProject}
                 onMediaMigrationComplete={handleMediaMigrationComplete}

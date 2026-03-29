@@ -41,7 +41,6 @@ interface AppModalsProps {
     modals: ReturnType<typeof useAppModals>;
     fabConfig: FABConfig | null;
     closeModalRef: React.RefObject<HTMLDivElement | null>;
-    storageVersion: number;
     setStorageVersion: React.Dispatch<React.SetStateAction<number>>;
     confirmCloseProject: () => void;
     onMediaMigrationComplete?: () => void;
@@ -56,7 +55,6 @@ export const AppModals: React.FC<AppModalsProps> = ({
     modals,
     fabConfig,
     closeModalRef,
-    storageVersion,
     setStorageVersion,
     confirmCloseProject,
     onMediaMigrationComplete,

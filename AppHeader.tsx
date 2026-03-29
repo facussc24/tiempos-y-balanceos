@@ -4,7 +4,7 @@
  */
 import React from 'react';
 import barackLogo from './src/assets/barack_logo.png';
-import { Save, LayoutDashboard, ListTodo, BarChart2, FileText, Network, HardDrive, CircleHelp, Gauge, GitBranch, AlertTriangle, History, Settings, RefreshCw, ArrowLeft, Film, Factory, Layers, FolderOutput } from 'lucide-react';
+import { Save, LayoutDashboard, ListTodo, BarChart2, FileText, Network, HardDrive, CircleHelp, Gauge, GitBranch, AlertTriangle, History, RefreshCw, ArrowLeft, Film, Factory, Layers, FolderOutput } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { isTauri } from './utils/unified_fs';
 import { buildMasterJsonPath, buildPath } from './utils/pathManager';
@@ -20,7 +20,6 @@ import type { useUndoRedo } from './hooks/useUndoRedo';
 import type { useShortcutHints } from './hooks/useShortcutHints';
 import type { useAppModals } from './hooks/useAppModals';
 import type { NetworkHealth } from './hooks/useNetworkHealth';
-import type { ProjectData } from './types';
 
 interface AppHeaderProps {
     onBackToLanding?: () => void;
