@@ -7,6 +7,7 @@
 
 import { v4 as uuidv4 } from 'uuid';
 import { AmfeDocument, AmfeFailure, AmfeCause, WorkElementType } from './amfeTypes';
+import type { SaveValidationResult } from '../../utils/repositories/validationTypes';
 
 /** Maximum recommended field length (warn above this). */
 export const MAX_FIELD_LENGTH = 10_000;
@@ -543,4 +544,42 @@ export function getSoftLimitWarnings(doc: AmfeDocument): string[] {
     }
 
     return warnings;
+}
+
+// ---------------------------------------------------------------------------
+// Pre-save validation (blocks save on errors, warns on soft limits)
+// ---------------------------------------------------------------------------
+
+/**
+ * Validate an AMFE document before saving.
+ * Returns { valid: true } if all blocking checks pass.
+ * Reuses existing validation functions — does NOT add new rules.
+ */
+export function validateAmfeBeforeSave(doc: AmfeDocument): SaveValidationResult {
+    const errors: string[] = [];
+    const warnings: string[] = [];
+
+    // AP=H compliance (blocking — required by AIAG-VDA)
+    const apHErrors = getDocumentCompletionErrors(doc);
+    if (apHErrors.length > 0) {
+        errors.push(`${apHErrors.length} causa(s) AP=H sin acciones completas`);
+    }
+
+    // 3-level effects (blocking — required by VDA)
+    for (const op of doc.operations) {
+        for (const we of op.workElements) {
+            for (const func of we.functions) {
+                for (const fail of func.failures) {
+                    if (fail.causes.length > 0 && (!fail.effectLocal || !fail.effectNextLevel || !fail.effectEndUser)) {
+                        errors.push(`Falla "${fail.description || '(sin desc)'}" op ${op.opNumber}: efectos 3-niveles incompletos`);
+                    }
+                }
+            }
+        }
+    }
+
+    // Soft limits (non-blocking advisories)
+    warnings.push(...getSoftLimitWarnings(doc));
+
+    return { valid: errors.length === 0, errors, warnings };
 }

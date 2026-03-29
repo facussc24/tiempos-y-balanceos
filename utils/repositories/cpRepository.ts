@@ -214,3 +214,36 @@ export async function deleteCpByProjectName(projectName: string): Promise<boolea
         return false;
     }
 }
+
+// ---------------------------------------------------------------------------
+// Validated save wrapper (for AI-driven modifications)
+// ---------------------------------------------------------------------------
+
+import type { AmfeDocument } from '../../modules/amfe/amfeTypes';
+import { validateCpAgainstAmfe } from '../../modules/controlPlan/cpCrossValidation';
+import type { SaveValidationResult } from './validationTypes';
+
+/**
+ * Validate a CP document against its linked AMFE, then save only if no errors.
+ * Warnings are returned but do NOT block save.
+ *
+ * Existing `saveCpDocument()` is NOT modified — this is a new wrapper.
+ */
+export async function validateAndSaveCpDocument(
+    id: string,
+    projectName: string,
+    doc: ControlPlanDocument,
+    linkedAmfeId?: string,
+    amfeDoc?: AmfeDocument,
+): Promise<SaveValidationResult & { saved: boolean }> {
+    const issues = validateCpAgainstAmfe(doc, amfeDoc);
+    const errors = issues.filter(i => i.severity === 'error').map(i => i.message);
+    const warnings = issues.filter(i => i.severity === 'warning').map(i => i.message);
+
+    if (errors.length > 0) {
+        return { valid: false, errors, warnings, saved: false };
+    }
+
+    const saved = await saveCpDocument(id, projectName, doc, linkedAmfeId);
+    return { valid: true, errors: [], warnings, saved };
+}

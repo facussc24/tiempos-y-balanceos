@@ -488,3 +488,32 @@ async function searchLibrary(query: string): Promise<AmfeLibraryOperation[]> {
         return [];
     }
 }
+
+// ---------------------------------------------------------------------------
+// Validated save wrapper (for AI-driven modifications)
+// ---------------------------------------------------------------------------
+
+import { validateAmfeBeforeSave } from '../../modules/amfe/amfeValidation';
+import type { SaveValidationResult } from './validationTypes';
+
+/**
+ * Validate an AMFE document, then save it only if validation passes.
+ * Returns validation result + whether the save was executed.
+ *
+ * Existing `saveAmfeDocument()` is NOT modified — this is a new wrapper.
+ */
+export async function validateAndSaveAmfeDocument(
+    id: string,
+    amfeNumber: string,
+    projectName: string,
+    doc: AmfeDocument,
+    status: AmfeLifecycleStatus = 'draft',
+    revisions: AmfeRevisionEntry[] = [],
+): Promise<SaveValidationResult & { saved: boolean }> {
+    const validation = validateAmfeBeforeSave(doc);
+    if (!validation.valid) {
+        return { ...validation, saved: false };
+    }
+    const saved = await saveAmfeDocument(id, amfeNumber, projectName, doc, status, revisions);
+    return { ...validation, saved };
+}
