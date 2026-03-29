@@ -231,18 +231,18 @@ export const importProject = async (_path: string): Promise<ProjectData | null> 
 // Dialogs (browser-native)
 // ---------------------------------------------------------------------------
 
-export const confirm = async (_title: string, message: string): Promise<boolean> =>
+const confirm = async (_title: string, message: string): Promise<boolean> =>
     window.confirm(message);
 
-export const alert = async (_title: string, message: string): Promise<void> =>
+const alert = async (_title: string, message: string): Promise<void> =>
     window.alert(message);
 
 /** Alias for confirm — uses window.confirm. */
-export const confirmDialog = async (_title: string, message: string): Promise<boolean> =>
+const confirmDialog = async (_title: string, message: string): Promise<boolean> =>
     window.confirm(message);
 
 /** Alias for alert — uses window.alert. */
-export const alertDialog = async (_title: string, message: string): Promise<void> =>
+const alertDialog = async (_title: string, message: string): Promise<void> =>
     window.alert(message);
 
 // ---------------------------------------------------------------------------
