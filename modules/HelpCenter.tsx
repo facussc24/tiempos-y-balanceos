@@ -1,13 +1,10 @@
 
 import React, { useState, useMemo, useCallback } from 'react';
-import { Card } from '../components/ui/Card';
 import { Search, BookOpen, Calculator, AlertTriangle, HelpCircle, ChevronDown, ChevronUp, Rocket, CheckCircle2, ArrowRight, Activity, Zap } from 'lucide-react';
 
 // Import all static content from extracted module
 import {
-    HelpItem,
     HelpTab,
-    ColorKey,
     COLOR_MAP,
     GLOSSARY,
     QUICK_START,

@@ -108,7 +108,7 @@ const SolicitudApp: React.FC<SolicitudAppProps> = ({ onBackToLanding }) => {
             // Auto-update index on Y: (fire-and-forget)
             if (serverStatus === 'connected') {
                 try {
-                    const { updateSolicitudIndex } = await import('./solicitudIndexExcel');
+                    const { updateSolicitudIndex } = await import('./SolicitudIndexExcel');
                     const { getSolicitudBasePath } = await import('./solicitudServerManager');
                     const basePath = await getSolicitudBasePath();
                     await updateSolicitudIndex(basePath);
@@ -313,7 +313,7 @@ const SolicitudApp: React.FC<SolicitudAppProps> = ({ onBackToLanding }) => {
 
                     // Update index Excel (non-critical)
                     try {
-                        const { updateSolicitudIndex } = await import('./solicitudIndexExcel');
+                        const { updateSolicitudIndex } = await import('./SolicitudIndexExcel');
                         const basePath = await getSolicitudBasePath();
                         await updateSolicitudIndex(basePath);
                     } catch {
@@ -368,7 +368,7 @@ const SolicitudApp: React.FC<SolicitudAppProps> = ({ onBackToLanding }) => {
             // Update index after deletion (non-critical)
             if (serverStatus === 'connected') {
                 try {
-                    const { updateSolicitudIndex } = await import('./solicitudIndexExcel');
+                    const { updateSolicitudIndex } = await import('./SolicitudIndexExcel');
                     const { getSolicitudBasePath } = await import('./solicitudServerManager');
                     const basePath = await getSolicitudBasePath();
                     await updateSolicitudIndex(basePath);
@@ -417,7 +417,7 @@ const SolicitudApp: React.FC<SolicitudAppProps> = ({ onBackToLanding }) => {
 
                 // Update the index Excel (non-critical)
                 try {
-                    const { updateSolicitudIndex } = await import('./solicitudIndexExcel');
+                    const { updateSolicitudIndex } = await import('./SolicitudIndexExcel');
                     const { getSolicitudBasePath } = await import('./solicitudServerManager');
                     const basePath = await getSolicitudBasePath();
                     await updateSolicitudIndex(basePath);
@@ -483,7 +483,7 @@ const SolicitudApp: React.FC<SolicitudAppProps> = ({ onBackToLanding }) => {
             // Update index (non-critical)
             if (serverStatus === 'connected') {
                 try {
-                    const { updateSolicitudIndex } = await import('./solicitudIndexExcel');
+                    const { updateSolicitudIndex } = await import('./SolicitudIndexExcel');
                     const { getSolicitudBasePath } = await import('./solicitudServerManager');
                     const basePath = await getSolicitudBasePath();
                     await updateSolicitudIndex(basePath);
@@ -508,7 +508,7 @@ const SolicitudApp: React.FC<SolicitudAppProps> = ({ onBackToLanding }) => {
 
         try {
             showToast('Actualizando indice...', 'info');
-            const { updateSolicitudIndex } = await import('./solicitudIndexExcel');
+            const { updateSolicitudIndex } = await import('./SolicitudIndexExcel');
             const { getSolicitudBasePath } = await import('./solicitudServerManager');
             const basePath = await getSolicitudBasePath();
             const ok = await updateSolicitudIndex(basePath);
@@ -635,7 +635,7 @@ const SolicitudApp: React.FC<SolicitudAppProps> = ({ onBackToLanding }) => {
     const handleRegenerateIndex = useCallback(async () => {
         try {
             showToast('Regenerando indice...', 'info');
-            const { updateSolicitudIndex } = await import('./solicitudIndexExcel');
+            const { updateSolicitudIndex } = await import('./SolicitudIndexExcel');
             const { getSolicitudBasePath } = await import('./solicitudServerManager');
             const basePath = await getSolicitudBasePath();
             const ok = await updateSolicitudIndex(basePath);

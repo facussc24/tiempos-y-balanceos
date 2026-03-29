@@ -8,9 +8,9 @@
  * @version 1.0.0 - Phase 1 Completion
  */
 import React, { useMemo } from 'react';
-import { Clock, TrendingDown, AlertTriangle, Settings } from 'lucide-react';
+import { Clock, AlertTriangle, Settings } from 'lucide-react';
 import { Shift } from '../../types';
-import { calculateTaktTime, calculateShiftNetMinutes } from '../../core/balancing/simulation';
+import { calculateTaktTime } from '../../core/balancing/simulation';
 import { formatTime } from '../../modules/flow-simulator/flowUtils';
 
 export interface TaktPreviewProps {

@@ -82,7 +82,6 @@ export function bruteForceFeasibilityCheck(
         return { feasible: tasks.length === 0, maxStationTime: 0 };
     }
     const predecessorMap = buildPredecessorMap(tasks);
-    const taskMap = new Map(tasks.map(t => [t.id, t]));
 
     // Station state: time used
     const stationTimes: number[] = Array(N).fill(0);

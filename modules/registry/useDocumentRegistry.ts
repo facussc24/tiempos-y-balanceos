@@ -6,7 +6,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import type { DocumentRegistryEntry, DocumentType } from './documentRegistryTypes';
+import type { DocumentRegistryEntry } from './documentRegistryTypes';
 import { logger } from '../../utils/logger';
 import { DEMO_REGISTRY_ENTRIES } from './demoRegistryData';
 

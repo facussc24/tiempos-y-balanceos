@@ -8,9 +8,9 @@
  */
 
 import React from 'react';
-import { X, Keyboard, Command, Navigation, BarChart2, ListTodo, Binary, GitBranch } from 'lucide-react';
+import { X, Keyboard, Command, Navigation, BarChart2, ListTodo, GitBranch } from 'lucide-react';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
-import { SHORTCUTS, formatShortcut, getShortcutsGrouped } from '../../hooks/useKeyboardShortcuts';
+import { formatShortcut, getShortcutsGrouped } from '../../hooks/useKeyboardShortcuts';
 
 // ============================================================================
 // TYPES

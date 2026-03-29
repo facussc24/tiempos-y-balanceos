@@ -9,7 +9,7 @@
  */
 
 import React, { useState } from 'react';
-import { LucideIcon, Plus, Zap, Search, Scale, Play, FileText, ChevronUp } from 'lucide-react';
+import { LucideIcon, Plus, Zap, Search, Play, FileText, ChevronUp } from 'lucide-react';
 
 export interface FABAction {
     /** Button label */

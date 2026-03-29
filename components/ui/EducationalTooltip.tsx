@@ -16,7 +16,7 @@
 import React, { useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { HelpCircle, BookOpen, Calculator, Lightbulb } from 'lucide-react';
-import { LEAN_TERMS, LeanTermDefinition, getTerm } from '../../utils/leanTerms';
+import { getTerm } from '../../utils/leanTerms';
 import { logger } from '../../utils/logger';
 
 interface EducationalTooltipProps {

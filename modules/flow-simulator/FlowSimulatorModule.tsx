@@ -27,7 +27,7 @@ import { useResolvedProject } from '../../hooks/useResolvedProject';
 import { analyzeBufferNeeds } from '../../core/balancing/bufferLogic';
 import { BlockingStarvingDashboard } from './BlockingStarvingDashboard';
 
-import { SimulationControls, SIMULATION_SCENARIOS, type SimScenario } from './SimulationControls';
+import { SimulationControls, type SimScenario } from './SimulationControls';
 import { ProductionLine, type ProductionStation, type FlowingPiece } from './ProductionLine';
 import { KPIDashboard } from './KPIDashboard';
 import { StationDiagnosticPanel } from './StationDiagnosticPanel';
@@ -260,14 +260,12 @@ export const FlowSimulatorModule: React.FC<Props> = ({ data, rootHandle }) => {
     const completionTimesRef = useRef<number[]>([]);
     const warmupSecondsRef = useRef<number>(0);
     const completedAtWarmupRef = useRef<number>(-1);
-    const tickCountRef = useRef(0);
-
     const [selectedStationId, setSelectedStationId] = useState<number | null>(null);
     const [showAdvancedControls, setShowAdvancedControls] = useState(false);
     const [selectedScenarioId, setSelectedScenarioId] = useState<string | null>(null);
     const [productMixMode, _setProductMixMode] = useState<ProductMixMode>('random');
     const setProductMixMode = useCallback((mode: ProductMixMode) => { _setProductMixMode(mode); productMixModeRef.current = mode; }, []);
-    const [heijunkaSequence, _setHeijunkaSequence] = useState<string[]>([]);
+    const [_heijunkaSequence, _setHeijunkaSequence] = useState<string[]>([]);
     const setHeijunkaSequence = useCallback((seq: string[]) => { _setHeijunkaSequence(seq); heijunkaSequenceRef.current = seq; }, []);
     const heijunkaIndexRef = useRef<number>(0);
 

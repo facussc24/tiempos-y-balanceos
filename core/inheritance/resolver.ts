@@ -7,7 +7,7 @@
  * @module core/inheritance/resolver
  */
 
-import { ProjectData, Task, TaskOverride, TaskMaterial } from '../../types';
+import { ProjectData, Task, TaskOverride } from '../../types';
 
 // =============================================================================
 // PUBLIC TYPES

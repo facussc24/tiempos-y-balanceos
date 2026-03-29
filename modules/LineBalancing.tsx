@@ -9,7 +9,7 @@ import { UnassignedTaskList } from './balancing/components/UnassignedTaskList';
 import { OptimizationResultsModal } from './balancing/components/OptimizationResultsModal';
 import { BalancingMetrics } from './balancing/components/BalancingMetrics';
 import { ZoningConstraintsModal } from './balancing/components/ZoningConstraintsModal';
-import { Unlink, TrendingUp, X, ChevronDown, ChevronRight, Info, Plus, AlertTriangle, Minus, Layers } from 'lucide-react';
+import { Unlink, TrendingUp, X, ChevronDown, ChevronRight, Info, Plus, AlertTriangle, Minus } from 'lucide-react';
 import { Tooltip } from '../components/ui/Tooltip';
 import { AlertCenter, Alert } from '../components/ui/AlertCenter';
 import { detectOverloadAndRecommend } from '../core/balancing/simulation';
@@ -35,7 +35,7 @@ export const LineBalancing: React.FC<Props> = ({ data, updateData }) => {
         configStationId,
         stationOeeInput,
         optimizationResults,
-        showPriorityTable,
+        // showPriorityTable (unused),
         warningState,
         collapsedBoardSectors,
         showClearBalanceConfirm,
@@ -58,18 +58,18 @@ export const LineBalancing: React.FC<Props> = ({ data, updateData }) => {
         totalIdleTimePerCycle,
         dailyLostHours,
         sectorsList,
-        machinesList,
+        // machinesList (unused),
         machineValidation,
 
         // Drag Preview
-        dragOverStation,
+        // dragOverStation (unused),
         dragPreview,
 
         // Actions
         setConfigStationId,
         setStationOeeInput,
         setOptimizationResults,
-        setShowPriorityTable,
+        // setShowPriorityTable (unused),
         openStationConfig,
         saveStationConfig,
         updateStationReplicas,

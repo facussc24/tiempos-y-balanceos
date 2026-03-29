@@ -8,7 +8,7 @@
  * @module mixBalancing
  * @version 4.0.0
  */
-import { Task, ProjectData, MixEnrichedProduct, MixScenario, Assignment, StationConfig, MachineType } from '../../types';
+import { Task, ProjectData, MixEnrichedProduct, MixScenario, MachineType } from '../../types';
 import { simulateBalance, SimulationResult } from './engine';
 
 // Extended task with mix-specific properties
@@ -484,7 +484,7 @@ export interface ModelVariabilityAlert {
 export function validateModelVariability(
     tasks: MixTask[],
     taktTime: number,
-    totalDemand: number
+    _totalDemand: number
 ): {
     valid: boolean;
     alerts: ModelVariabilityAlert[];
@@ -734,10 +734,7 @@ import {
     MixSectorAnalysis,
     SectorRequirement,
     MachineRequirement,
-    ProductContribution,
     PlantConfig,
-    Sector,
-    TaktViolation,
     ParallelStationAlert
 } from '../../types';
 import { PRODUCT_COLORS } from '../../utils/constants';
@@ -810,7 +807,6 @@ export function analyzeMixBySector(
                 });
             }
 
-            const sector = sectorsMap.get(sectorInfo.id)!;
             const machineKey = `${sectorInfo.id}:${machineInfo.id}`;
 
             // Ensure machine exists in map

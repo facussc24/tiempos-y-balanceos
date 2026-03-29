@@ -114,7 +114,7 @@ function extractPfdItems(doc: PfdDocument): Map<string, { itemType: string; data
 /** Serialize a PfdStep for comparison, excluding volatile fields. */
 function serializePfdStep(step: PfdStep): string {
     // Omit id (used as key), and linkage metadata that may differ between master/variant
-    const { id, linkedAmfeOperationId, linkedCpItemIds, ...comparable } = step;
+    const { id: _id, linkedAmfeOperationId: _linkedAmfeOperationId, linkedCpItemIds: _linkedCpItemIds, ...comparable } = step;
     return JSON.stringify(comparable, Object.keys(comparable).sort());
 }
 
@@ -160,8 +160,8 @@ function extractCpItems(doc: ControlPlanDocument): Map<string, { itemType: strin
 
 function serializeCpItem(item: ControlPlanItem): string {
     const {
-        id, autoFilledFields, amfeAp, amfeSeverity, operationCategory,
-        amfeCauseIds, amfeFailureId, amfeFailureIds,
+        id: _id, autoFilledFields: _autoFilledFields, amfeAp: _amfeAp, amfeSeverity: _amfeSeverity, operationCategory: _operationCategory,
+        amfeCauseIds: _amfeCauseIds, amfeFailureId: _amfeFailureId, amfeFailureIds: _amfeFailureIds,
         ...comparable
     } = item;
     return JSON.stringify(comparable, Object.keys(comparable).sort());

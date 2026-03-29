@@ -8,7 +8,7 @@
  * @version 9.0.0
  */
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { ProjectData } from '../types';
 import { resolveProductProcess, ResolvedProduct, ParentLoaderFn } from '../core/inheritance/resolver';
 import { isTauri } from '../utils/unified_fs';

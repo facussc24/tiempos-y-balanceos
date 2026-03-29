@@ -64,7 +64,6 @@ interface Individual {
  * Uses Kahn's algorithm with random selection among available tasks.
  */
 export const generateValidSequence = (tasks: Task[]): Chromosome => {
-    const taskMap = new Map(tasks.map(t => [t.id, t]));
     const inDegree = new Map<string, number>();
     const adjList = new Map<string, string[]>();
 
@@ -192,7 +191,7 @@ const calculateZonePenalty = (
     }
 
     // Check each station for zone homogeneity
-    for (const [stationId, taskIds] of stationTasks) {
+    for (const [_stationId, taskIds] of stationTasks) {
         const zonesInStation = new Set<string>();
 
         for (const taskId of taskIds) {

@@ -8,7 +8,7 @@
  * @version 1.1.0 - Added focus trap and ARIA improvements (H-07)
  */
 import React, { useEffect, useRef } from 'react';
-import { AlertTriangle, Trash2, AlertCircle, Info, X, Loader2 } from 'lucide-react';
+import { AlertTriangle, Trash2, Info, X, Loader2 } from 'lucide-react';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { useModalTransition } from '../../hooks/useModalTransition';
 

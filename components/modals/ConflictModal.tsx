@@ -6,7 +6,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { AlertTriangle, RefreshCw, FilePlus, X, Clock, User, Hash } from 'lucide-react';
+import { AlertTriangle, RefreshCw, FilePlus, X, Clock, Hash } from 'lucide-react';
 import { SaveConflict } from '../../utils/concurrency';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
 

@@ -9,7 +9,7 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useHojaOperaciones } from './useHojaOperaciones';
 import { useHoPersistence } from './useHoPersistence';
-import type { HoDocument, HojaOperacion, HoStep, HoVisualAid, PpeItem } from './hojaOperacionesTypes';
+import type { HoDocument, HojaOperacion, HoStep, PpeItem } from './hojaOperacionesTypes';
 import type { HoDocumentListItem } from '../../utils/repositories/hoRepository';
 import { getHoSheetPreviewHtml, getHoAllSheetsPreviewHtml, exportHoSheetPdf, exportAllHoSheetsPdf } from './hojaOperacionesPdfExport';
 import { exportHoSheetExcel, exportAllHoSheetsExcel } from './hoExcelExport';
@@ -18,7 +18,6 @@ import HoSheetEditor from './HoSheetEditor';
 import PdfPreviewModal from '../../components/modals/PdfPreviewModal';
 import { RevisionPromptModal } from '../../components/modals/RevisionPromptModal';
 import { CrossDocAlertBanner } from '../../components/ui/CrossDocAlertBanner';
-import { RevisionHistoryPanel } from '../../components/layout/RevisionHistoryPanel';
 import { ModuleErrorBoundary } from '../../components/ui/ModuleErrorBoundary';
 import { useRevisionControl } from '../../hooks/useRevisionControl';
 import { useDocumentLock } from '../../hooks/useDocumentLock';
@@ -64,7 +63,7 @@ interface Props {
 const HojaOperacionesApp: React.FC<Props> = ({ embedded, initialData, onDataChange, onPersistenceReady, onNewRevision, currentRevisionLevel }) => {
     const ho = useHojaOperaciones();
     const history = useHoHistory(ho.data);
-    const [isFormalSaving, setIsFormalSaving] = useState(false);
+    const [isFormalSaving] = useState(false);
     const [showHelp, setShowHelp] = useState(false);
     const [readOnly, setReadOnly] = useState(false);
     const stepSearchRef = useRef<HTMLInputElement>(null);

@@ -69,7 +69,7 @@ import {
     formatDateForIndex,
     buildIndexWorkbook,
     updateSolicitudIndex,
-} from '../../../modules/solicitud/solicitudIndexExcel';
+} from '../../../modules/solicitud/SolicitudIndexExcel';
 import type { SolicitudListItem } from '../../../modules/solicitud/solicitudTypes';
 import { logger } from '../../../utils/logger';
 

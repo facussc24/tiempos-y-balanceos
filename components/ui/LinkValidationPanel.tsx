@@ -9,7 +9,7 @@
  */
 
 import React, { useState } from 'react';
-import { AlertTriangle, Unlink, Link2, X, ChevronDown } from 'lucide-react';
+import { AlertTriangle, Unlink, Link2, X } from 'lucide-react';
 import type { PfdAmfeLinkValidationResult, BrokenPfdLink, BrokenAmfeLink } from '../../utils/pfdAmfeLinkValidation';
 
 interface LinkValidationPanelProps {

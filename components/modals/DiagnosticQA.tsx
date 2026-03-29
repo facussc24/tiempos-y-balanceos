@@ -30,7 +30,6 @@ import {
     isFaultSimulationAvailable,
     enableFaultSimulation,
     disableFaultSimulation,
-    getFaultSimulationStatus,
     testAtomicWrite,
     testLockBehavior,
     testRetryBehavior,

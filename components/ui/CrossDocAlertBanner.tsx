@@ -29,7 +29,7 @@ export const CrossDocAlertBanner: React.FC<CrossDocAlertBannerProps> = ({
             <div className="flex items-start gap-2">
                 <AlertTriangle size={16} className="text-amber-500 flex-shrink-0 mt-0.5" />
                 <div className="flex-1 min-w-0">
-                    {alerts.map((alert, i) => (
+                    {alerts.map((alert) => (
                         <div key={`${alert.sourceModule}-${alert.sourceDocId}`} className="flex items-center gap-2 text-xs text-amber-800">
                             <span className="flex-1">{alert.message}</span>
                             <button

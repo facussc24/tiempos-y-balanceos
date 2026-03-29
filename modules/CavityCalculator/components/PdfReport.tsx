@@ -1,5 +1,5 @@
 import React from 'react';
-import { Factory, Target, Activity, Layers, MousePointer2, CheckCircle2, AlertTriangle, TrendingDown } from 'lucide-react';
+import { Factory, Target, Activity, Layers, MousePointer2, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { Task, ManualOperation } from '../../../types';
 import { formatNumber } from '../../../utils';
 
@@ -19,12 +19,13 @@ interface Props {
     realSaturation: number;
     manualOps: ManualOperation[];
     isCurrentFeasible: boolean;
+    injectionMode?: 'batch' | 'carousel';
 }
 
 export const PdfReport: React.FC<Props> = ({
     task, dailyDemand, activeShifts, oee, taktTime, machineLimitCycle, puCurTime, nStar,
     activeN, activeHeadcount, realCycleTime, hourlyOutput, realSaturation, manualOps,
-    isCurrentFeasible
+    isCurrentFeasible, injectionMode = 'batch'
 }) => {
     return (
         <div className="fixed inset-0 z-[10000] bg-slate-900/90 overflow-auto flex justify-center items-start pt-10">
@@ -88,6 +89,12 @@ export const PdfReport: React.FC<Props> = ({
                                 <div className="flex justify-between">
                                     <span className="text-slate-600">Tiempo Curado</span>
                                     <span className="font-mono font-bold text-slate-900">{formatNumber(puCurTime)}s</span>
+                                </div>
+                                <div className="flex justify-between mt-2 pt-2 border-t border-slate-100">
+                                    <span className="text-slate-600">Modo Operación</span>
+                                    <span className="font-bold text-slate-900">
+                                        {injectionMode === 'carousel' ? 'Carrusel — MAX(Iny, Cur/N)' : 'Batch — Iny + Cur/N'}
+                                    </span>
                                 </div>
                                 <div className="mt-6 bg-emerald-50 rounded-lg p-4 text-center border border-emerald-100">
                                     <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider mb-1">Saturación Máxima (N*)</p>

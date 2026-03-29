@@ -9,7 +9,7 @@
  */
 
 import React from 'react';
-import { Check, Circle, Loader2 } from 'lucide-react';
+import { Check, Loader2 } from 'lucide-react';
 import { WorkflowStep, WorkflowStepStatus } from '../../hooks/useWorkflowProgress';
 import { Tab } from '../../hooks/useAppNavigation';
 
@@ -65,7 +65,7 @@ const StepConnector: React.FC<{ isCompleted: boolean }> = ({ isCompleted }) => (
  */
 export const WorkflowProgress: React.FC<WorkflowProgressProps> = ({
     steps,
-    currentStepIndex,
+    currentStepIndex: _currentStepIndex,
     overallProgress,
     onNavigate,
     compact = false

@@ -1,6 +1,6 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { DragEndEvent, DragStartEvent, DragOverEvent } from '@dnd-kit/core';
-import { ProjectData, Task, StationConfig, Assignment } from '../types';
+import { ProjectData, Task, StationConfig } from '../types';
 import { toast } from '../components/ui/Toast';
 import { logger } from '../utils/logger';
 import {
@@ -9,7 +9,6 @@ import {
     parseNumberInput,
     calculateEffectiveStationTime,
     calculateTotalHeadcount,
-    calculateTotalEffectiveWorkContent,
     calculateTotalManualWork,
     calculateLineSaturation,
     calculateAvailableTimeVsTakt,
@@ -18,13 +17,9 @@ import {
 } from '../utils';
 import { detectCycles, calculateTaskWeights } from '../utils/graph';
 import {
-    simulateBalance as simulateBalanceUtils,
-    simulateBalanceType2,
-    multiPassOptimize,
-    HeuristicType,
     SimulationResult
 } from '../core/balancing/engine';
-import { runGeneticAlgorithm, GAResult } from '../core/balancing/geneticAlgorithm';
+import { runGeneticAlgorithm } from '../core/balancing/geneticAlgorithm';
 import { validateMachineResources, MachineValidationResult } from '../core/balancing/machineValidation';
 import { usePlantAssets } from './usePlantAssets'; // V4.0: Use Global Assets for Validation
 
@@ -59,7 +54,7 @@ export const useLineBalancing = (data: ProjectData, updateData: (data: ProjectDa
     const [showClearBalanceConfirm, setShowClearBalanceConfirm] = useState(false);
 
     // Phase 27: Multi-Pass Optimization Progress State
-    const [optimizationProgress, setOptimizationProgress] = useState<{
+    const [, setOptimizationProgress] = useState<{
         current: number;
         total: number;
         isOptimizing: boolean;
@@ -745,22 +740,6 @@ export const useLineBalancing = (data: ProjectData, updateData: (data: ProjectDa
         performAssignment(taskId, targetStationId);
     };
 
-    const simulateBalance = (targetHeuristic: HeuristicType, name: string): SimulationResult => {
-        // FIX: Inject Global Machines into the Data Snapshot used for Simulation
-        // This ensures the optimizer validates against Real Inventory (assets.json)
-        // BUG-08 FIX: Removed 'as any' - properly typed PlantConfig
-        const simulationData: ProjectData = {
-            ...data,
-            plantConfig: {
-                version: data.plantConfig?.version ?? 1,
-                lastModified: data.plantConfig?.lastModified ?? Date.now(),
-                sectors: data.plantConfig?.sectors ?? [],
-                machines: machinesList // Global List
-            }
-        };
-        return simulateBalanceUtils(simulationData, targetHeuristic, name, nominalSeconds, effectiveSeconds);
-    };
-
     const handleOptimization = () => {
         // Validación 1: Takt Time definido
         if (nominalSeconds <= 0) {
@@ -822,9 +801,6 @@ export const useLineBalancing = (data: ProjectData, updateData: (data: ProjectDa
         try {
             // Phase 5: Check balancing mode and objective passed via Data Snapshot
             // The unified engine now handles Strategy Selection (SALBP-1 vs SALBP-2 vs Smoothing)
-
-            const balancingMode = data.meta.balancingMode || 'SALBP1';
-            const targetOps = data.meta.targetOperators || 8;
 
             // Phase 29: Genetic Algorithm Optimization
             const gaConfig = {

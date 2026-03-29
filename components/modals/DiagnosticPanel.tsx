@@ -12,7 +12,6 @@ import {
     LogEntry,
     LogLevel,
     exportDiagnosticJSON,
-    formatLogsForDisplay
 } from '../../utils/logger';
 import { toast } from '../ui/Toast';
 

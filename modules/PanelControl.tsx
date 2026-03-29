@@ -3,7 +3,7 @@ import { ProjectData, INITIAL_PROJECT, Task } from '../types';
 import { Card, Badge } from '../components/ui/Card';
 import { calculateTaktTime, formatNumber, calculateTotalEffectiveWorkContent, calculateTotalHeadcount, calculateEffectiveStationTime } from '../utils';
 import { parseDemand } from '../utils/validation';
-import { AlertTriangle, CheckCircle2, X, Trash2, Layers, PieChart } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, Trash2, Layers, PieChart } from 'lucide-react';
 import ProductSelector from '../components/ui/ProductSelector';
 import type { ProductSelection } from '../components/ui/ProductSelector';
 import { Tooltip } from '../components/ui/Tooltip';
@@ -20,7 +20,7 @@ import { ShiftStructure } from './panel/ShiftStructure';
 import { ModelManagerModal } from './task/modals/ModelManagerModal';
 
 // Phase 1 Completion: New UI Components
-import { TaktSemaphore, calculateCapacity } from '../components/ui/TaktSemaphore';
+import { TaktSemaphore } from '../components/ui/TaktSemaphore';
 import TaktPreview from '../components/ui/TaktPreview';
 
 interface Props {

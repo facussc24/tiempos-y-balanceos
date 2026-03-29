@@ -18,7 +18,6 @@ import {
     AlertCircle,
     CheckCircle,
     Settings,
-    HardDrive,
     Upload,
     RefreshCw,
     Loader2,
@@ -28,7 +27,6 @@ import {
     updateStorageConfig,
     getDefaultLocalPath,
     isPathAccessible,
-    type StorageSettings
 } from '../../utils/storageManager';
 import { getPathConfig } from '../../utils/pathManager';
 import { DEFAULT_EXPORT_BASE_PATH } from '../../utils/exportPathManager';

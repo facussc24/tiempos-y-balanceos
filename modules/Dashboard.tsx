@@ -12,8 +12,8 @@
  */
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
-    Plus, FileText, Video, Users, FolderOpen, Search,
-    Clock, ArrowRight, TrendingUp, Sparkles, Filter, ChevronDown,
+    Plus, FileText, Users, FolderOpen, Search,
+    TrendingUp, Sparkles, Filter, ChevronDown,
     RefreshCw, Loader2, ExternalLink, Layers, Settings, Trash2
 } from 'lucide-react';
 import { HeroSection } from '../components/landing/HeroSection';
@@ -286,6 +286,9 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
     const executeClientChange = (client: string) => {
         setSelectedClient(client);
+        setSelectedProject('');  // FIX: Reset project when client changes to avoid stale filter
+        setParts([]);
+        setStudies([]);
         setSelectedForMix(new Set());
     };
 

@@ -27,8 +27,6 @@ export function toSectorCards(
     analysis: MixSectorAnalysis,
     products: Array<{ path: string; name: string; demand: number }>
 ): MixSectorCard[] {
-    const totalDemand = products.reduce((sum, p) => sum + p.demand, 0);
-
     return analysis.sectors.map(sector => {
         // Detectar qué productos usan este sector
         const sharedProducts = detectSharedProducts(sector, products);

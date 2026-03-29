@@ -40,7 +40,7 @@
  * - Phase 27: Multi-pass stochastic optimization (weighted random selection)
  */
 
-import { Task, ProjectData, Assignment, StationConfig, MachineType } from '../../types';
+import { Task, ProjectData, Assignment, StationConfig } from '../../types';
 import { postProcessRALBP } from './ralbpLogic';
 import { validateNoCycles, PrecedenceCycleError } from './detectCycles';
 import { calculateEffectiveStationTime, calculateStationOEE } from './simulation';
@@ -215,21 +215,6 @@ export const canAssignToStationRC = (
 };
 
 /**
- * Helper: Calculate Variance of Station Loads
- * Used for Smoothing Objective
- */
-const calculateLoadVariance = (
-    stations: SimStation[],
-    targetLoad: number
-): number => {
-    if (stations.length === 0) return 0;
-    // Minimize sum of squared deviations from ideal target
-    // Use effectiveTime which represents the load
-    const variance = stations.reduce((sum, st) => sum + Math.pow(st.effectiveTime - targetLoad, 2), 0) / stations.length;
-    return variance;
-};
-
-/**
  * Post-Processing: Hill Climbing for Workload Smoothing (Heijunka)
  * 
  * Strategy:
@@ -322,7 +307,6 @@ const optimizeWorkloadSmoothing = (
         improved = false;
         iterations++;
 
-        let currentVariance = calculateLoadVariance(stations, targetLoad);
         let bestMove: { fromIdx: number, toIdx: number, taskIdx: number, reduction: number } | null = null;
 
         // Iterate all stations
@@ -1538,10 +1522,6 @@ export function simulateBalanceType2(
                     }
                 }
 
-                // FIX v10.1: standardTime already includes fatigue
-                const taskTime = task.isMachineInternal ? 0 :
-                    (task.standardTime || task.averageTime || 0);
-
                 // Find the best station that can fit this task
                 // Sector affinity is a HARD constraint (unless disableSectorAffinity is true)
                 const useSectorAffinity = !data.meta.disableSectorAffinity;
@@ -1615,7 +1595,6 @@ export function simulateBalanceType2(
     let low = theoreticalMin;
     let high = totalWorkContent; // Worst case: all in one station
     let bestAssignments: Assignment[] | null = null;
-    let bestCycleTime = high;
 
     const EPSILON = 0.1; // 100ms precision
 
@@ -1625,7 +1604,6 @@ export function simulateBalanceType2(
 
         if (result !== null) {
             bestAssignments = result;
-            bestCycleTime = mid;
             high = mid;
         } else {
             low = mid;
@@ -1635,7 +1613,6 @@ export function simulateBalanceType2(
     // If binary search didn't find a solution, try with high (should always work)
     if (!bestAssignments) {
         bestAssignments = tryFitWithLimit(high) || [];
-        bestCycleTime = high;
     }
 
     // 4. Build result structures

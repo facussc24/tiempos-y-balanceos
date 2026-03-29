@@ -1,5 +1,5 @@
 import React from 'react';
-import { Layers, Plus, AlertTriangle, ClipboardPaste, ListTodo, Link2, ChevronDown, GitBranch } from 'lucide-react';
+import { Layers, Plus, AlertTriangle, ListTodo, Link2, ChevronDown, GitBranch } from 'lucide-react';
 import { ProjectData } from '../types';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
@@ -33,7 +33,7 @@ export const TaskManager: React.FC<Props> = ({ data, updateData, rootHandle }) =
         calcTask, setCalcTask,
         docTask, setDocTask,
         isPasteModalOpen, setIsPasteModalOpen,
-        pasteTargetTaskId, setPasteTargetTaskId,
+        pasteTargetTaskId, // setPasteTargetTaskId (unused)
         isSectorModalOpen, setIsSectorModalOpen,
         newTaskID, setNewTaskID,
         newTaskDesc, setNewTaskDesc,
@@ -89,6 +89,7 @@ export const TaskManager: React.FC<Props> = ({ data, updateData, rootHandle }) =
 
 
     // V9.0: Handler for creating a variant
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const handleCreateVariant = async (variantName: string, parentRelPath: string): Promise<boolean> => {
         // Mejora 1: Prevenir doble-click
         if (isCreatingVariant) return false;

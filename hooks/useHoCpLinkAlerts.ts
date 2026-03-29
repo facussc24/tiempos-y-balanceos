@@ -41,12 +41,6 @@ export interface UseHoCpLinkAlertsReturn {
     revalidate: () => void;
 }
 
-const EMPTY_RESULT: HoCpLinkValidationResult = {
-    brokenLinks: [],
-    totalBroken: 0,
-    isValid: false,
-};
-
 const EMPTY_SET = new Set<string>();
 
 // ---------------------------------------------------------------------------

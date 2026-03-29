@@ -10,7 +10,7 @@
  * Uses CSS print media queries for clean PDF generation via browser print.
  */
 import React from 'react';
-import { ProjectData, Task, StationConfig } from '../../types';
+import { ProjectData, Task } from '../../types';
 import { formatNumber } from '../../utils';
 import { calculateEffectiveStationTime } from '../../core/balancing/simulation';
 import { toast } from '../ui/Toast';
@@ -100,7 +100,7 @@ export const generateStandardWorkSheetHTML = (
     projectMeta: ProjectData['meta'],
     taktTime: number
 ): string => {
-    const { stationId, stationName, sectorName, sectorColor, tasks, totalTime, replicas, machineNames } = stationData;
+    const { stationName, sectorName, sectorColor, tasks, totalTime, replicas, machineNames } = stationData;
 
     const cycleTimePerOperator = replicas > 0 ? totalTime / replicas : totalTime;
     const saturation = taktTime > 0 ? (cycleTimePerOperator / taktTime) * 100 : 0;

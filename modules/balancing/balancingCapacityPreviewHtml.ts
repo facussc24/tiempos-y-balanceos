@@ -97,11 +97,6 @@ export function buildCapacityStationInfos(data: ProjectData): CapacityStationInf
         .reduce((sum, s) => sum + calculateShiftNetMinutes(s), 0);
 
     const dailyDemand = data.meta.dailyDemand || 1;
-    // B4: Clamp piecesPerVehicle ≥ 1 to prevent division by zero.
-    // FIX: Use Number.isFinite instead of ?? — nullish coalescing does NOT catch NaN,
-    // so Math.max(1, NaN) would still return NaN and corrupt all capacity calculations.
-    const rawPpv = data.meta.piecesPerVehicle;
-    const ppv = Math.max(1, Number.isFinite(rawPpv) && rawPpv > 0 ? rawPpv : 1);
 
     const stations: CapacityStationInfo[] = [];
 
@@ -142,7 +137,9 @@ export function buildCapacityStationInfos(data: ProjectData): CapacityStationInf
         let injectionNote: string | undefined;
         if (injTask?.injectionParams) {
             const ip = injTask.injectionParams;
-            injectionNote = `Inyección PU: t_iny=${fmtNum(ip.pInyectionTime || 0)}s, t_cur=${fmtNum(ip.pCuringTime || 0)}s`;
+            const n = ip.userSelectedN ?? ip.optimalCavities ?? 0;
+            const mode = ip.injectionMode === 'carousel' ? 'Carrusel' : 'Batch';
+            injectionNote = `Inyección PU: N=${n} cavidades (${mode}), t_iny=${fmtNum(ip.pInyectionTime || 0)}s, t_cur=${fmtNum(ip.pCuringTime || 0)}s`;
         }
 
         // Machine time (sum of machine/injection tasks)

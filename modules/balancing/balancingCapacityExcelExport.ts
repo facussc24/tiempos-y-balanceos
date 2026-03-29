@@ -114,14 +114,6 @@ function colL(col: number): string {
     return result;
 }
 
-function applyBorders(ws: ExcelJS.Worksheet, r1: number, c1: number, r2: number, c2: number) {
-    for (let r = r1; r <= r2; r++) {
-        for (let c = c1; c <= c2; c++) {
-            ws.getCell(r, c).border = B_ALL;
-        }
-    }
-}
-
 function sanitizeSheetName(name: string): string {
     return name.replace(/[[\]:*?/\\]/g, '').substring(0, 31) || 'Hoja';
 }
@@ -194,7 +186,11 @@ function buildStationRows(data: ProjectData, sectorFilter?: string): StationRow[
         let injectionNote: string | undefined;
         if (injTask?.injectionParams) {
             const ip = injTask.injectionParams;
-            injectionNote = `Inyección PU: t_iny=${(ip.pInyectionTime || 0).toFixed(1)}s, t_cur=${(ip.pCuringTime || 0).toFixed(1)}s`;
+            const n = ip.userSelectedN ?? ip.optimalCavities ?? 0;
+            const mode = ip.injectionMode === 'carousel' ? 'Carrusel' : 'Batch';
+            const tIny = (ip.pInyectionTime || 0).toFixed(1);
+            const tCur = (ip.pCuringTime || 0).toFixed(1);
+            injectionNote = `Inyección PU: N=${n} cavidades (${mode}), t_iny=${tIny}s, t_cur=${tCur}s`;
         }
 
         const machineTime = tasks
@@ -279,11 +275,6 @@ async function buildSheet(
         );
         totalAvailableMinutes = globalTakt.totalAvailableMinutes;
     }
-
-    const totalAvailableSeconds = totalAvailableMinutes * 60;
-    const shiftNetMinutes = data.shifts
-        .filter((_, i) => i < displayShifts)
-        .reduce((sum, s) => sum + calculateShiftNetMinutes(s), 0);
 
     // Layout: Column A and Row 1 are empty padding for a clean Excel look
     const CO = 1; // Column offset — all data starts at column B (index 2)
@@ -384,7 +375,6 @@ async function buildSheet(
     row += 2; // Skip a row before table
 
     // ---- TABLE HEADER ----
-    const headerRow = row;
     const headers = ['Nro', 'Descripción del Proceso', 'Sector', 'Int/Ext', 'Ciclo (s)', 'Cap/hora', 'OEE %', 'Estado', 'Pzs Req/Día', 'Prod Diaria', 'Capacidad %', 'Dotación', 'Ops', 'T.Máq (s)'];
     headers.forEach((h, i) => {
         sc(ws, row, i + 1 + CO, h, {
@@ -413,7 +403,6 @@ async function buildSheet(
         const shiftNetMinStr = st.shiftNetMinutes.toString();
         // Column letters (with offset): F=Ciclo, H=OEE, J=PzsReq, K=ProdDiaria, M=Dotación
         const eCol = colL(5 + CO); // F = Ciclo
-        const gCol = colL(7 + CO); // H = OEE
         const iCol = colL(9 + CO); // J = Pzs Req
         const jCol = colL(10 + CO); // K = Prod Diaria
 

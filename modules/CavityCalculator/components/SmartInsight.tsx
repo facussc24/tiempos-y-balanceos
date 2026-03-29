@@ -1,5 +1,5 @@
 import React from 'react';
-import { Lightbulb, TrendingUp, CheckCircle, AlertOctagon, ArrowRight } from 'lucide-react';
+import { Lightbulb, TrendingUp, CheckCircle, ArrowRight } from 'lucide-react';
 import { ImprovementInsight } from '../logic/optimizationAnalysis';
 
 interface Props {

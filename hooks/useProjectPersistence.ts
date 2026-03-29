@@ -55,7 +55,7 @@ export function useProjectPersistence(): UsePersistenceResult {
 
     // Estados para modales de confirmación (reemplazan confirm/prompt nativos)
     const [saveConfirmPending, setSaveConfirmPending] = useState(false);
-    const [userInputPending, setUserInputPending] = useState<{ resolve: (value: string | null) => void } | null>(null);
+    const [userInputPending] = useState<{ resolve: (value: string | null) => void } | null>(null);
 
     // P0-3 Fix: Guard refs to prevent auto-saving INITIAL_PROJECT over real data
     const hasLoadedRealDataRef = useRef(false);
@@ -212,7 +212,6 @@ export function useProjectPersistence(): UsePersistenceResult {
             setLastSaveError(null);
 
             let newData: ProjectData | null = null;
-            let lastErr: unknown = null;
 
             // Auto-retry for transient network errors
             for (let attempt = 0; attempt <= MAX_SAVE_RETRIES; attempt++) {
@@ -220,8 +219,6 @@ export function useProjectPersistence(): UsePersistenceResult {
                     newData = await attemptSave();
                     break; // Success
                 } catch (err) {
-                    lastErr = err;
-
                     // Don't retry conflicts - they need user resolution
                     if (err instanceof ConflictError) throw err;
 

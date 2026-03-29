@@ -4,9 +4,9 @@
  * @module PlantConfigPanel
  * @version 5.0.0 - FIX: Removed redundant Category field (derived from Sector)
  */
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Plus, Trash2, Edit2, Save, X, Factory, AlertTriangle } from 'lucide-react';
-import { MachineType, Sector } from '../types';
+import { MachineType } from '../types';
 import { usePlantAssets } from '../hooks/usePlantAssets';
 
 /**
@@ -62,7 +62,6 @@ export const PlantConfigPanel: React.FC = () => {
 
     const [form, setForm] = useState<NewMachineForm>(INITIAL_FORM);
     const [formError, setFormError] = useState<string | null>(null);
-    const [selectedSector, setSelectedSector] = useState<string | null>(null);
     const [touched, setTouched] = useState<Record<string, boolean>>({});
 
     // Helper para clases de input con validación visual

@@ -1,6 +1,6 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { ProjectData, Task, FatigueCategory, InjectionParams } from '../types';
-import { calculateTaskWeights, parseCSVLine, syncSuccessors } from '../utils';
+import { calculateTaskWeights, syncSuccessors } from '../utils';
 import { detectPrecedenceCycles } from '../core/balancing/detectCycles';
 import { toast } from '../components/ui/Toast';
 

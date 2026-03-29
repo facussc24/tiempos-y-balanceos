@@ -49,15 +49,6 @@ export interface UsePfdAmfeLinkAlertsReturn {
     revalidate: () => void;
 }
 
-const EMPTY_RESULT: PfdAmfeLinkValidationResult = {
-    brokenPfdLinks: [],
-    brokenAmfeLinks: [],
-    totalBroken: 0,
-    isValid: false,
-};
-
-const EMPTY_SET = new Set<string>();
-
 // ---------------------------------------------------------------------------
 // Hook: for PFD module (has PFD doc, needs to load AMFE)
 // ---------------------------------------------------------------------------

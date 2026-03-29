@@ -1,8 +1,8 @@
 
 import React, { useState } from 'react';
-import { ProjectData, Sector, OeeLog } from '../types';
+import { ProjectData, OeeLog } from '../types';
 import { Card, Badge } from '../components/ui/Card';
-import { Activity, Save, History, AlertOctagon, ArrowRight, Calculator } from 'lucide-react';
+import { Activity, Save, ArrowRight } from 'lucide-react';
 import { formatNumber, parseNumberInput } from '../utils';
 import { toast } from '../components/ui/Toast';
 

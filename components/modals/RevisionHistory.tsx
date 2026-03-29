@@ -6,7 +6,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { History, FileJson, Eye, RotateCcw, Loader2, Calendar, Tag, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react';
+import { History, FileJson, Eye, RotateCcw, Loader2, Calendar, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import {
     RevisionInfo,
     listRevisions,
