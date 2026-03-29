@@ -356,9 +356,7 @@ export function createEmptyStep(stepNumber?: string): PfdStep {
   };
 }
 
-// Re-export from pfdNormalize to avoid duplicate code
-// (pfdNormalize exists to break circular deps with pfdRepository)
-export { normalizePfdStep } from './pfdNormalize';
+// normalizePfdStep lives in ./pfdNormalize — import it directly from there.
 
 /**
  * Renumber all steps sequentially.

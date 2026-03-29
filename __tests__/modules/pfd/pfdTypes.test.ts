@@ -1,4 +1,5 @@
-import { createEmptyStep, createEmptyPfdDocument, PFD_COLUMNS, PFD_STEP_TYPES, EMPTY_PFD_HEADER, normalizePfdStep, getIntermediateStepNumber, parseStepNumber, getNextStepNumber, getBranchColor, BRANCH_COLORS, analyzeFlowTransition, collectForkBranches, renumberSteps } from '../../../modules/pfd/pfdTypes';
+import { createEmptyStep, createEmptyPfdDocument, PFD_COLUMNS, PFD_STEP_TYPES, EMPTY_PFD_HEADER, getIntermediateStepNumber, parseStepNumber, getNextStepNumber, getBranchColor, BRANCH_COLORS, analyzeFlowTransition, collectForkBranches, renumberSteps } from '../../../modules/pfd/pfdTypes';
+import { normalizePfdStep } from '../../../modules/pfd/pfdNormalize';
 
 describe('pfdTypes', () => {
     describe('createEmptyStep', () => {

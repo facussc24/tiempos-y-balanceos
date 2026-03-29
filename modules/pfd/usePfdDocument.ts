@@ -15,9 +15,9 @@ import {
     createEmptyPfdDocument,
     getNextStepNumber,
     getIntermediateStepNumber,
-    normalizePfdStep,
     renumberSteps,
 } from './pfdTypes';
+import { normalizePfdStep } from './pfdNormalize';
 
 const MAX_HISTORY = 20;
 
