@@ -70,6 +70,8 @@ export function AuthProvider({ children, loginPage }: AuthProviderProps) {
                 setCurrentUserEmail(session.user.email ?? '');
             }
             setLoading(false);
+        }).catch(() => {
+            setLoading(false);
         });
 
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
