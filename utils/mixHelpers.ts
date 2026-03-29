@@ -139,7 +139,7 @@ export async function verifyMixIntegrity(
 /**
  * Load a mix scenario from a JSON file
  */
-export async function loadMixScenario(path: string): Promise<MixScenario | null> {
+async function loadMixScenario(path: string): Promise<MixScenario | null> {
     try {
         if (isTauri()) {
             const fs = await import('./unified_fs');
@@ -381,7 +381,7 @@ export async function loadMixProducts(
  * 
  * V8.3: Now includes checksum validation for integrity checking
  */
-export async function validateMixIntegrity(
+async function validateMixIntegrity(
     scenario: MixScenario,
     basePath: string
 ): Promise<{
@@ -456,7 +456,7 @@ export function createEmptyMixScenario(name: string, createdBy: string): MixScen
 /**
  * Add a product reference to a mix scenario
  */
-export function addProductToMix(
+function addProductToMix(
     scenario: MixScenario,
     path: string,
     demand: number
@@ -491,7 +491,7 @@ export function addProductToMix(
 /**
  * Remove a product from a mix scenario by path
  */
-export function removeProductFromMix(
+function removeProductFromMix(
     scenario: MixScenario,
     path: string
 ): MixScenario {
@@ -518,7 +518,7 @@ export function removeProductFromMix(
 /**
  * Update the demand for a product in a mix scenario
  */
-export function updateProductDemand(
+function updateProductDemand(
     scenario: MixScenario,
     path: string,
     demand: number

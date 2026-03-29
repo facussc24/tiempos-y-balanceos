@@ -200,7 +200,7 @@ export function calculateContainersPerPallet(container: VDAContainer): number {
  * @param piecesPerContainer - Pieces per container (user-defined or default)
  * @returns Total pieces that fit on one pallet
  */
-export function calculatePiecesPerPallet(
+function calculatePiecesPerPallet(
     container: VDAContainer,
     piecesPerContainer?: number
 ): number {

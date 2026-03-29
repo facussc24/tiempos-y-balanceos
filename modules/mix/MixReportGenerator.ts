@@ -1,6 +1,6 @@
 import { Recommendation } from '../../core/balancing/recommendationLogic';
 
-export const generateMixReport = (
+const generateMixReport = (
     scenarioName: string,
     recommendations: Recommendation[],
     totalDemand: number,
