@@ -217,7 +217,7 @@ export interface AmfeDocument {
 
 /** Valid status options for AMFE failure action tracking */
 export const AMFE_STATUS_OPTIONS = ['Pendiente', 'En Proceso', 'Completado', 'Cancelado'] as const;
-export type AmfeStatus = typeof AMFE_STATUS_OPTIONS[number] | '';
+type AmfeStatus = typeof AMFE_STATUS_OPTIONS[number] | '';
 
 /** All 6M work element types */
 export const WORK_ELEMENT_TYPES: WorkElementType[] = ['Machine', 'Man', 'Material', 'Method', 'Environment', 'Measurement'];
