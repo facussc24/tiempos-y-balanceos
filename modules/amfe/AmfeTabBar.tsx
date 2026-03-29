@@ -98,7 +98,7 @@ const AmfeTabBar: React.FC<AmfeTabBarProps> = ({
                 <button
                     onClick={async () => {
                         if (!(await confirmIfDirty())) return;
-                        pfdInitialData ? onTabChange('pfd') : (onImportPfdFromAmfe || onGeneratePfd)();
+                        if (pfdInitialData) { onTabChange('pfd'); } else { (onImportPfdFromAmfe || onGeneratePfd)(); }
                     }}
                     className={`px-4 py-2.5 text-xs font-medium transition-colors duration-150 flex items-center gap-1.5 ${getTabClass('pfd')}`}
                 >
