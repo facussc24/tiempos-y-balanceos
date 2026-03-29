@@ -118,10 +118,20 @@
 
 ## Estadísticas Finales
 
+### Commit 10: `290a33d` — NaN-safe visual aid sort
+- HO Excel/PDF exports: guard sort comparator against NaN order values
+
+### Commit 11: `7e56933` — Async callback type fix
+- ConflictModal.tsx: fix `() => void` to `() => void | Promise<void>` for awaited callback
+
+## Estadísticas Finales (5 pasadas completas)
+
 - **Total archivos auditados**: ~493 archivos de producción
 - **Total archivos corregidos**: ~135
-- **Total líneas removidas**: ~800+
-- **Bugs corregidos**: 4 (AuthProvider, useDocumentLock, 3 null safety guards)
-- **Total commits**: 9
+- **Total líneas de dead code removidas**: ~800+
+- **Bugs corregidos**: 7 (AuthProvider, useDocumentLock, 3 null safety, NaN sort, async type)
+- **Dead code eliminado**: ~480 imports/vars, 7 dead exports, 3 `as any` casts
+- **Total commits**: 11
 - **Tests rotos introducidos**: 0
 - **Errores TypeScript introducidos**: 0
+- **Estado final tests**: 258/258 passed, 4086/4086 tests passed
