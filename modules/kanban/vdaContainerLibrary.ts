@@ -71,7 +71,7 @@ export interface VDAContainer {
  * Naming convention: R-KLT [Length/100][Width/100][Height/10]
  * Example: R-KLT 3215 = 300mm × 200mm × 150mm
  */
-export const VDA_CONTAINERS: VDAContainer[] = [
+const VDA_CONTAINERS: VDAContainer[] = [
     {
         id: 'R-KLT-3215',
         name: 'R-KLT 3215',
@@ -142,7 +142,7 @@ export const VDA_CONTAINERS: VDAContainer[] = [
 /**
  * Custom container placeholder for user-defined sizes.
  */
-export const CUSTOM_CONTAINER: VDAContainer = {
+const CUSTOM_CONTAINER: VDAContainer = {
     id: 'CUSTOM',
     name: 'Personalizado',
     lengthMm: 0,
@@ -248,7 +248,7 @@ export function formatDimensions(container: VDAContainer): string {
  * @param container - VDA container specification
  * @returns Volume in liters (1L = 1,000,000 mm³)
  */
-export function calculateVolumeL(container: VDAContainer): number {
+function calculateVolumeL(container: VDAContainer): number {
     if (container.category === 'custom' && (container.lengthMm === 0 || container.widthMm === 0 || container.heightMm === 0)) {
         return 0;
     }
@@ -270,7 +270,7 @@ export function calculateVolumeL(container: VDAContainer): number {
  * @param pieceHeightMm - Piece height in mm
  * @returns Suggested piece count (0 if invalid inputs)
  */
-export function suggestPiecesFromVolume(
+function suggestPiecesFromVolume(
     containerVolumeL: number,
     pieceLengthMm: number,
     pieceWidthMm: number,
