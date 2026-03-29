@@ -28,6 +28,7 @@ export default tseslint.config(
             'react/jsx-runtime': 'off', // React 17+ doesn't need this, but good to be explicit if needed
             ...react.configs.recommended.rules,
             'react/react-in-jsx-scope': 'off',
+            'react/prop-types': 'off',
             '@typescript-eslint/no-explicit-any': 'warn',
             // Prevent console.log in production code (allow warn/error/info)
             'no-console': ['warn', {
