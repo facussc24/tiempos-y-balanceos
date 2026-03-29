@@ -36,7 +36,7 @@ interface CuringTimeContainerProps {
     disabled?: boolean;
 }
 
-export const CuringTimeContainer: React.FC<CuringTimeContainerProps> = ({
+const CuringTimeContainer: React.FC<CuringTimeContainerProps> = ({
     curingTime,
     manualTasks,
     onTaskToggle,
@@ -287,7 +287,7 @@ export const CuringTimeContainer: React.FC<CuringTimeContainerProps> = ({
 /**
  * Helper: Apply curing logic to calculate effective cycle time
  */
-export function calculateCuringCycleTime(
+function calculateCuringCycleTime(
     curingTime: number,
     internalTasksTime: number,
     externalTasksTime: number

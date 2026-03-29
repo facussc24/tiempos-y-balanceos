@@ -12,7 +12,7 @@ interface SectorAccordionProps {
  * SectorAccordion - Expandable sector with machine list
  * "🔧 COSTURA (18 puestos)" -> expands to show machines
  */
-export const SectorAccordion: React.FC<SectorAccordionProps> = ({
+const SectorAccordion: React.FC<SectorAccordionProps> = ({
     sector,
     defaultExpanded = true
 }) => {

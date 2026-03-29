@@ -35,7 +35,7 @@ interface PitchConfiguratorProps {
 // Standard pitch intervals (per expert recommendation)
 const PITCH_OPTIONS = [15, 20, 30, 60];
 
-export const PitchConfigurator: React.FC<PitchConfiguratorProps> = ({
+const PitchConfigurator: React.FC<PitchConfiguratorProps> = ({
     taktTime,
     packageQuantity,
     selectedPitch,

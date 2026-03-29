@@ -12,7 +12,7 @@ interface HeroMetricsProps {
     saturacion: number;
 }
 
-export const HeroMetrics: React.FC<HeroMetricsProps> = ({
+const HeroMetrics: React.FC<HeroMetricsProps> = ({
     personas,
     taktTime,
     saturacion

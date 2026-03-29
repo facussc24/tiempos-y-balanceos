@@ -39,7 +39,7 @@ interface HeijunkaTaskListProps {
     operatorName?: string;
 }
 
-export const HeijunkaTaskList: React.FC<HeijunkaTaskListProps> = ({
+const HeijunkaTaskList: React.FC<HeijunkaTaskListProps> = ({
     slots,
     currentTime,
     onSlotComplete,
@@ -224,7 +224,7 @@ export const HeijunkaTaskList: React.FC<HeijunkaTaskListProps> = ({
 /**
  * Helper to convert HeijunkaBox data to TaskList format
  */
-export function convertToTaskList(
+function convertToTaskList(
     heijunkaSlots: Array<{ time: string; products: Array<{ name: string; qty: number; color: string }> }>,
     pitchMinutes: number
 ): TimeSlot[] {

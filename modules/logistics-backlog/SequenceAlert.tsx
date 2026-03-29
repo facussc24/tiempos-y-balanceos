@@ -12,7 +12,7 @@ interface SequenceAlertProps {
     explanation: string;
 }
 
-export const SequenceAlert: React.FC<SequenceAlertProps> = ({
+const SequenceAlert: React.FC<SequenceAlertProps> = ({
     pattern,
     explanation
 }) => {

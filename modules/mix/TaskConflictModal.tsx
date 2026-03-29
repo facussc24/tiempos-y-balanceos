@@ -23,7 +23,7 @@ interface TaskConflictModalProps {
     onCancel: () => void;
 }
 
-export const TaskConflictModal: React.FC<TaskConflictModalProps> = ({
+const TaskConflictModal: React.FC<TaskConflictModalProps> = ({
     conflicts,
     onResolve,
     onCancel

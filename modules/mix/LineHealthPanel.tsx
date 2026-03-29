@@ -76,7 +76,7 @@ const getStatusText = (status: HealthCheck['status']) => {
     }
 };
 
-export const LineHealthPanel: React.FC<LineHealthPanelProps> = ({
+const LineHealthPanel: React.FC<LineHealthPanelProps> = ({
     checks,
     isViable
 }) => {
@@ -178,7 +178,7 @@ export const LineHealthPanel: React.FC<LineHealthPanelProps> = ({
 /**
  * Helper function to generate health checks from mix analysis data
  */
-export function generateHealthChecks(
+function generateHealthChecks(
     taktTime: number,
     cycleTime: number,
     hasDeficit: boolean,

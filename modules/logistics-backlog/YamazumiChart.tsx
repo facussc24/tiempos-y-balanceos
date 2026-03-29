@@ -18,7 +18,7 @@ interface YamazumiChartProps {
     taktTime: number;
 }
 
-export const YamazumiChart: React.FC<YamazumiChartProps> = ({
+const YamazumiChart: React.FC<YamazumiChartProps> = ({
     bars,
     taktTime
 }) => {

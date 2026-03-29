@@ -38,7 +38,7 @@ interface YamazumiStackedChartProps {
     title?: string;
 }
 
-export const YamazumiStackedChart: React.FC<YamazumiStackedChartProps> = ({
+const YamazumiStackedChart: React.FC<YamazumiStackedChartProps> = ({
     bars,
     taktTime,
     products,

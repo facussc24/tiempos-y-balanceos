@@ -22,7 +22,7 @@ interface TaskMaterialsModalProps {
   onSave: (materials: TaskMaterial[]) => void;
 }
 
-export const TaskMaterialsModal: React.FC<TaskMaterialsModalProps> = ({
+const TaskMaterialsModal: React.FC<TaskMaterialsModalProps> = ({
   isOpen,
   onClose,
   task,

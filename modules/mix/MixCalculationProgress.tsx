@@ -27,7 +27,7 @@ const STEPS = [
     { key: 'generating-analysis', label: 'Generando análisis', icon: '📊' }
 ] as const;
 
-export const MixCalculationProgress: React.FC<MixCalculationProgressProps> = ({
+const MixCalculationProgress: React.FC<MixCalculationProgressProps> = ({
     currentStep,
     productCount
 }) => {
@@ -94,7 +94,7 @@ export const MixCalculationProgress: React.FC<MixCalculationProgressProps> = ({
 /**
  * Skeleton placeholder for results while loading
  */
-export const MixResultsSkeleton: React.FC = () => {
+const MixResultsSkeleton: React.FC = () => {
     return (
         <div className="space-y-4 animate-pulse">
             {/* KPIs Skeleton */}

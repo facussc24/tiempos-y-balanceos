@@ -16,7 +16,7 @@ interface MixStatusBannerProps {
     saturacion: number;
 }
 
-export const MixStatusBanner: React.FC<MixStatusBannerProps> = ({
+const MixStatusBanner: React.FC<MixStatusBannerProps> = ({
     isViable,
     isTight,
     personas,

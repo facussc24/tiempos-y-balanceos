@@ -25,7 +25,7 @@ interface ResourceTableProps {
     totalDemand?: number; // For formula explanation
 }
 
-export const ResourceTable: React.FC<ResourceTableProps> = ({
+const ResourceTable: React.FC<ResourceTableProps> = ({
     rows,
     avgSaturation,
     taktTime,

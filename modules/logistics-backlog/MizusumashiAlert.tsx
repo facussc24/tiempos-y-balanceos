@@ -18,7 +18,7 @@ interface MizusumashiAlertProps {
     workers: UnderutilizedWorker[];
 }
 
-export const MizusumashiAlert: React.FC<MizusumashiAlertProps> = ({
+const MizusumashiAlert: React.FC<MizusumashiAlertProps> = ({
     workers
 }) => {
     if (workers.length === 0) return null;

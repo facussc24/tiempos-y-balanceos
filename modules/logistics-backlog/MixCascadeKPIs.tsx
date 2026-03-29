@@ -26,7 +26,7 @@ interface MixCascadeKPIsProps {
     onGoToHeijunka?: () => void;
 }
 
-export const MixCascadeKPIs: React.FC<MixCascadeKPIsProps> = ({
+const MixCascadeKPIs: React.FC<MixCascadeKPIsProps> = ({
     isViable,
     viabilityReason,
     totalHeadcount,

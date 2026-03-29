@@ -35,7 +35,7 @@ interface MixEngineeringKPIsProps {
     isViable: boolean;
 }
 
-export const MixEngineeringKPIs: React.FC<MixEngineeringKPIsProps> = ({
+const MixEngineeringKPIs: React.FC<MixEngineeringKPIsProps> = ({
     taktTime,
     maxCycleTime,
     bottleneckStation,

@@ -21,7 +21,7 @@ interface LoadCapacityChartProps {
     taktTime: number;
 }
 
-export const LoadCapacityChart: React.FC<LoadCapacityChartProps> = ({ sectors = [], taktTime = 1 }) => {
+const LoadCapacityChart: React.FC<LoadCapacityChartProps> = ({ sectors = [], taktTime = 1 }) => {
     // Safety: Ensure taktTime is valid
     const safeTakt = (taktTime && taktTime > 0 && isFinite(taktTime)) ? taktTime : 1;
 
