@@ -48,12 +48,16 @@ interface AppProps {
     onBackToLanding?: () => void;
 }
 
-const App: React.FC<AppProps> = ({ onBackToLanding }) => {
-    // 0. Special Route for Printing (Bypasses Main Layout)
+/** Wrapper that handles the print route without violating hooks rules. */
+const App: React.FC<AppProps> = (props) => {
     if (window.location.hash === '#print') {
         return <PrintView />;
     }
+    return <AppMain {...props} />;
+};
 
+/** Main app component — all hooks are called unconditionally here. */
+const AppMain: React.FC<AppProps> = ({ onBackToLanding }) => {
     // =========================================================================
     // CUSTOM HOOKS
     // =========================================================================
