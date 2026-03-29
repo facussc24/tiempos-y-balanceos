@@ -423,5 +423,6 @@ const ControlPlanRow: React.FC<{
         </tr>
     );
 });
+ControlPlanRow.displayName = 'ControlPlanRow';
 
 export default React.memo(ControlPlanTable);

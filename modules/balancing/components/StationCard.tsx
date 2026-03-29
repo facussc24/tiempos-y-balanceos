@@ -98,6 +98,7 @@ const DraggableStationTask: React.FC<{
         </div>
     );
 });
+DraggableStationTask.displayName = 'DraggableStationTask';
 
 export const StationCard: React.FC<StationCardProps> = React.memo(({
     st, sectorsList, draggedTask, isOverload, data, nominalSeconds, effectiveSeconds,
@@ -306,3 +307,4 @@ export const StationCard: React.FC<StationCardProps> = React.memo(({
         prevProps.dragPreview?.previewTime === nextProps.dragPreview?.previewTime
     );
 });
+StationCard.displayName = 'StationCard';

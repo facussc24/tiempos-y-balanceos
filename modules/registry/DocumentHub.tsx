@@ -376,5 +376,6 @@ const DocumentRow: React.FC<{
         </tr>
     );
 });
+DocumentRow.displayName = 'DocumentRow';
 
 export default DocumentHub;
