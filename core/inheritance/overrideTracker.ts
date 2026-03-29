@@ -137,10 +137,9 @@ function extractAmfeItems(doc: AmfeDocument): Map<string, { itemType: string; da
 function serializeAmfeOperation(op: AmfeOperation): string {
     // Deep clone and remove all `id` fields for content-only comparison
     const cleaned = stripIds(op);
-    // Also remove linkage fields that are variant-specific
-    delete (cleaned as any).linkedLibraryOpId;
-    delete (cleaned as any).linkedPfdStepId;
-    return JSON.stringify(cleaned);
+    // Remove linkage fields that are variant-specific via destructuring
+    const { linkedLibraryOpId: _llo, linkedPfdStepId: _lps, ...comparable } = cleaned as Record<string, unknown>;
+    return JSON.stringify(comparable);
 }
 
 // ---------------------------------------------------------------------------
@@ -184,9 +183,9 @@ function extractHoItems(doc: HoDocument): Map<string, { itemType: string; data: 
 
 function serializeHoSheet(sheet: HojaOperacion): string {
     const cleaned = stripIds(sheet);
-    // Remove linkage metadata
-    delete (cleaned as any).amfeOperationId;
-    return JSON.stringify(cleaned);
+    // Remove linkage metadata via destructuring
+    const { amfeOperationId: _aoi, ...comparable } = cleaned as Record<string, unknown>;
+    return JSON.stringify(comparable);
 }
 
 // =============================================================================

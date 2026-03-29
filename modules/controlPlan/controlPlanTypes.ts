@@ -242,17 +242,15 @@ export function normalizeControlPlanDocument(raw: any): ControlPlanDocument {
         const parts = [rawHeader.customerEngApproval, rawHeader.customerQualityApproval].filter(Boolean);
         customerApproval = parts.join(' / ');
     }
+    const { customerEngApproval: _cEng, customerQualityApproval: _cQual, ...cleanRawHeader } = rawHeader as Record<string, unknown>;
     const header: ControlPlanHeader = {
         ...EMPTY_CP_HEADER,
-        ...rawHeader,
+        ...cleanRawHeader as typeof rawHeader,
         customerApproval,
         phase: CONTROL_PLAN_PHASES.some(p => p.value === rawHeader.phase)
             ? rawHeader.phase
             : 'production',
     };
-    // Remove legacy fields that may have spread in
-    delete (header as any).customerEngApproval;
-    delete (header as any).customerQualityApproval;
 
     const items: ControlPlanItem[] = (raw.items || []).map((item: any) => ({
         id: item.id || uuidv4(),
