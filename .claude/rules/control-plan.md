@@ -79,3 +79,77 @@ globs:
   - Recepcion: "RECEPCION DE MATERIA PRIMA" (no "RECEPCIONAR", no "RECEPCION DE MATERIALES")
   - Control final: "CONTROL FINAL DE CALIDAD" (no "INSPECCION FINAL", no variantes)
   - Embalaje: "EMBALAJE" (no "EMBALAJE Y ETIQUETADO DE PRODUCTO TERMINADO")
+
+## Fases del Generador de CP (controlPlanGenerator.ts)
+
+El generador crea CP items desde un AMFE en 4 fases:
+
+### Fase 1: Recolectar causas calificadas
+- AP=H o AP=M → individual
+- AP=L + CC/SC → individual
+- AP=L sin CC/SC → se agrupan por operacion (Fase 3.5)
+
+### Fase 2: Filas de PROCESO (prevencion)
+- Clave de dedup: `buildProcessKey(opNumber, causeText)`
+- `processCharacteristic` = causa (que parametro de proceso fallo)
+- `productCharacteristic` = VACIO
+- `controlMethod` = preventionControl (combinado con " / " si multiples)
+- `evaluationTechnique` = VACIO (AIAG CP 2024 prohibe en filas de prevencion)
+
+### Fase 3: Filas de PRODUCTO (deteccion)
+- Clave de dedup: `buildProductKey(opNumber, failDescription)`
+- `productCharacteristic` = modo de falla (que defecto se detecta)
+- `processCharacteristic` = VACIO
+- `evaluationTechnique` = detectionControl (combinado con " / " si multiples)
+- `controlMethod` = VACIO
+
+### Fase 3.5: Filas genericas AP=L
+- UNA fila por operacion agrupando TODAS las causas AP=L sin CC/SC
+- processCharacteristic = "Autocontrol visual general"
+- evaluationTechnique = "Inspeccion visual"
+- reactionPlanOwner = "Operador de produccion"
+
+### Fase 4: Ordenamiento
+- Por parseInt(processStepNumber) numerico
+- Dentro de misma operacion: filas de proceso primero, producto despues
+
+## Funciones de inferencia (controlPlanDefaults.ts)
+
+### getControlPlanDefaults(ap, severity, phase)
+- AP=H → sampleSize="100%", sampleFrequency="100%"
+- AP=M + preLaunch → "100% (Pre-Lanzamiento)"
+- AP=M + S>=9 → "1 pieza" / "Inicio y fin de turno"
+- AP=M + otro → "1 pieza" / "Cada lote"
+- Reaction plan: S>=9 "Detener linea", S>=7 "Contener producto", S>=4 "Ajustar proceso"
+
+### inferReactionPlanOwner(severity, ap, operationCategory)
+- S>=9 o AP=H + inspeccion/control → "Supervisor de Calidad"
+- S>=9 o AP=H + otro → "Lider de Produccion / Calidad"
+- S>=7 → "Lider de Produccion"
+- Otro → "Operador de Produccion"
+
+### inferSpecification(rowType, failDescription, causeDescription)
+- Busca keywords en la descripcion y sugiere especificacion
+- Producto: "fuera de medida" → "Segun plano / tolerancia dimensional"
+- Proceso: "temperatura" → "Rango de temperatura segun set-up"
+- Si no matchea → "" (vacio, el usuario debe completar)
+
+### inferControlProcedure(operationCategory)
+- Recepcion/almacen → "P-14."
+- Todo lo demas → "Segun P-09/I."
+
+## autoFilledFields
+- Array de strings en ControlPlanItem que registra que campos fueron auto-llenados
+- UI muestra icono Sparkles + tinte violeta en esos campos
+- Al editar manualmente un campo auto-llenado, el campo se saca del array
+- Al regenerar desde AMFE, el array se recalcula
+
+## Procedimientos SGC para Plan de Reaccion
+| Procedimiento | Nombre | Uso en CP |
+|---------------|--------|-----------|
+| P-05 | Control de Documentos | Referencia en header |
+| P-08 | Identificacion y Trazabilidad | Items de trazabilidad |
+| P-09/I | Control de Proceso | Reaccion default produccion |
+| P-10/I | Inspeccion y Ensayo | Controles de laboratorio |
+| P-13 | Producto No Conforme | Segregacion de rechazos |
+| P-14 | Recepcion de Materiales | Reaccion recepcion MP |

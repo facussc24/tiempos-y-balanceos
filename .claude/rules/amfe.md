@@ -64,6 +64,55 @@ NUNCA dejar ningun nivel vacio.
 - "Almacenamiento WIP" NO es operacion de proceso. No debe tener AMFE propio.
 - Transporte interno NO es operacion con controles.
 
+## Escala de Ocurrencia (O) — guia de asignacion
+
+| O | Significado | Ejemplo tipico (piezas interiores) |
+|---|-------------|-----------------------------------|
+| 10 | Muy alta, falla inevitable | Proceso sin control alguno |
+| 8-9 | Alta, fallas frecuentes | Falla en 5-10% de produccion |
+| 6-7 | Moderada, fallas ocasionales | Costura saltada 1-2 veces/semana |
+| 4-5 | Baja, fallas infrecuentes | Problema 1 vez/mes |
+| 2-3 | Muy baja, fallas raras | Problema 1-2 veces/ano |
+| 1 | Remota, casi imposible | Nunca ocurrio en la historia del proceso |
+
+## Escala de Deteccion (D) — guia de asignacion
+
+| D | Significado | Ejemplo tipico |
+|---|-------------|---------------|
+| 10 | No hay deteccion | Sin control, sin inspeccion |
+| 8-9 | Deteccion muy baja | Solo se detecta en campo |
+| 6-7 | Deteccion moderada | Inspeccion visual cada lote |
+| 4-5 | Deteccion buena | Inspeccion 100% visual + dimensional |
+| 2-3 | Deteccion muy buena | Poka-Yoke o inspeccion automatica |
+| 1 | Deteccion casi perfecta | Sensor automatico con interlock (para linea) |
+
+## Campos de AmfeCause — documentacion completa
+
+### characteristicNumber
+- Numero secuencial de caracteristica dentro de la operacion (ej: "1", "2", "3")
+- Se reinicia en cada operacion
+- Formato: string numerico sin prefijos
+- Vinculo con ControlPlanItem.characteristicNumber
+
+### specialChar
+- Valores validos: `"CC"` (Critica), `"SC"` (Significativa), `""` (estandar)
+- Override manual: si se llena explicitamente, toma prioridad sobre el calculo automatico
+- Calculo automatico: S>=9 → "CC", S=7-8 (funcion primaria) → "SC", otro → ""
+- NUNCA poner otros valores como "CRITICO", "C", "S", etc.
+
+### filterCode
+- Campo libre para filtrado/agrupacion de causas en documentos grandes
+- NO se usa en calculo de AP ni en generacion de CP
+- Uso tipico: codigo de area, codigo de proceso, o referencia interna
+
+## Campos deprecados (NO USAR)
+
+AmfeFailure tiene 13 campos @deprecated (effect, cause, preventionControl, etc.)
+que fueron migrados a AmfeCause[]. La funcion `migrateFailureToCausesModel` en
+`amfeValidation.ts` maneja la migracion automaticamente.
+Al crear o modificar datos, SIEMPRE usar `failure.causes[]` — NUNCA los campos
+deprecados del failure.
+
 ## Guias obligatorias
 
 Leer ANTES de modificar datos AMFE:
