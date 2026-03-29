@@ -77,6 +77,37 @@
 - Falla intermitentemente con timeout de 5s
 - Pre-existente, no relacionado con cambios de auditoría
 
+### Commit 7: `5755bb3` — AuthProvider error handling
+- `AuthProvider.tsx`: agregado `.catch()` a `getSession()` para evitar loading infinito si Supabase falla
+
+### Commit 8: `f33a80b` — useDocumentLock race condition
+- Guard de `cancelled` antes de crear heartbeat/recheck intervals
+- Previene intervals huérfanos si unmount ocurre durante lock acquisition
+
+### Commit 9: `1c94126` — Null safety en cross-validation
+- `pfdAmfeLinkValidation.ts`: guard contra `.operations` o `.steps` faltantes
+- `hoCpLinkValidation.ts`: guard contra `.items` o `.sheets` faltantes + fallback sheetName
+- `cpCrossValidation.ts`: reemplazo de `!` non-null assertion con null check explícito
+
+## Observaciones de Lógica de Negocio (NO corregidas — REGLA 3)
+
+### 🟢 cpCrossValidation.ts: Regla SC incorrecta (S>=5 AND O>=4)
+- Líneas 102, 112-114, 188-189 implementan `sev >= 5 && occ >= 4` como regla SC
+- CLAUDE.md dice explícitamente: "PROHIBIDO: SC = S≥5 AND O≥4"
+- La regla correcta es: SC solo si cliente designó o función primaria (S=7-8)
+- **No se corrigió** porque es regla CC/SC (lógica de negocio per REGLA 3)
+
+### 🟢 documentInheritance.ts: idMap no propagado en clonado
+- `regenerateUuids()` retorna `idMap` (old→new UUID mapping) pero se ignora
+- Cross-references internas (linkedPfdStepId, linkedAmfeOperationId) no se actualizan
+- Las variantes clonadas pueden tener links rotos a IDs que ya no existen
+- **No se corrigió** porque es lógica core de herencia
+
+### 🟢 changePropagation.ts: Variable status no usada
+- Línea 191: `status` se computa pero no se pasa a `createProposal()`
+- Las proposals pueden tener el status incorrecto (siempre default)
+- **No se corrigió** porque es lógica de propagación de cambios
+
 ## Top 5 Archivos Más Problemáticos
 
 1. **`App.tsx`** — 30+ hooks rules violations (condicionales), dead state
@@ -88,8 +119,9 @@
 ## Estadísticas Finales
 
 - **Total archivos auditados**: ~493 archivos de producción
-- **Total archivos corregidos**: ~130
+- **Total archivos corregidos**: ~135
 - **Total líneas removidas**: ~800+
-- **Total commits**: 6
+- **Bugs corregidos**: 4 (AuthProvider, useDocumentLock, 3 null safety guards)
+- **Total commits**: 9
 - **Tests rotos introducidos**: 0
 - **Errores TypeScript introducidos**: 0
