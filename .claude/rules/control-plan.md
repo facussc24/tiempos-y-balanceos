@@ -8,11 +8,22 @@ globs:
 # Plan de Control (CP)
 
 ## Cross-Validation (cpCrossValidation.ts)
-- V1: CC/SC consistencia (severity-derived vs specialChar explicito)
-- V2: Orphan failures (causas AMFE AP=H/M no cubiertas en CP) — error AP=H, warning AP=M
-- V3: 4M alignment (machineDeviceTool vs work element names)
-- V4: Reaction plan owners (CP 2024 mandatory)
-- V5: Poka-Yoke frequency verification
+- validateCpAgainstAmfe: comparacion general CP vs AMFE
+- validateSpecialCharConsistency: CC/SC consistencia (severity-derived vs specialChar explicito)
+- validateOrphanFailures: causas AMFE AP=H/M no cubiertas en CP — error AP=H, warning AP=M
+- validate4MAlignment: machineDeviceTool vs work element names
+- validateReactionPlanOwners: reaction plan owners (CP 2024 mandatory)
+- validatePokaYokeFrequency: Poka-Yoke frequency verification
+- validatePokaYokeDetectionCoherence: coherencia poka-yoke vs detection rating
+- validateSamplingConsistency: muestreo coherente con tipo de control
+- validateMachineConsolidation: maquinas consolidadas por operacion
+- validateFailureCoverage: modos de falla AMFE sin CP item vinculado (a nivel de failure)
+
+## Deteccion automatica de gaps AMFE→CP y CP→HO
+- `cpCrossValidation.ts` V9: detecta modos de falla del AMFE sin item correspondiente en el CP (via amfeFailureId)
+- `hoCpLinkValidation.ts` validateCpHoCoverage: detecta CP items sin qcItem en la HO (filtra lab/metrologia/auditor)
+- Cuando se modifica un AMFE, verificar si hay modos de falla nuevos sin cobertura en CP
+- El generador de CP crea 1 item por caracteristica, AP=L agrupado, CC/SC individual
 
 ## Trazabilidad AMFE → CP
 - `amfeCauseIds`, `amfeFailureId` en ControlPlanItem
