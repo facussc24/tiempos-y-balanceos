@@ -804,7 +804,7 @@ const runGreedyAssignment = (
             if (rcResult.status === 'OK_WITH_PENALTY' && rcResult.penalty) {
                 additionalPenalty = rcResult.penalty;
             }
-            let hasDeficit = rcResult.status === 'GLOBAL_DEFICIT';
+            const hasDeficit = rcResult.status === 'GLOBAL_DEFICIT';
 
             // 3. Capacity Check
             const testTasks = [...currentStation.tasks, task];
@@ -1641,7 +1641,7 @@ export function simulateBalanceType2(
     });
 
     // Calculate metrics
-    let totalHeadcount = usedStationIds.length;
+    const totalHeadcount = usedStationIds.length;
     let maxStationCycle = 0;
     let totalEffWork = 0;
 
