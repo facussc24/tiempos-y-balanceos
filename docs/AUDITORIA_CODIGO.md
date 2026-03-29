@@ -150,14 +150,24 @@
 - Credenciales admin@barack.com están en history
 - Recomendación: rotar la contraseña de Supabase
 
-## Estadísticas Finales (7 pasadas completas)
+### Commits 14-18 (Pasada 8):
+- `eb48e8c`: fix regex escapes y empty catch blocks (6 archivos)
+- `c8e7358`: replace ternary expression statement con if-else en AmfeTabBar
+- `5af808e`: escape remaining unescaped quotes en JSX (13 archivos)
+- `98df471` + `ec2f1cc`: use const for never-reassigned variables
+- `18ec375` + `2547a3e`: escape quotes en JSX (8 archivos)
+- `ce434a7`: add displayName to React.memo components
+
+## Estadísticas Finales (8 pasadas completas)
 
 - **Total archivos auditados**: ~493 archivos de producción
 - **Total archivos corregidos**: ~135
 - **Total líneas de dead code removidas**: ~800+
 - **Bugs corregidos**: 10 (AuthProvider, useDocumentLock, 3 null safety, NaN sort, async type, logger sanitization, SQL injection guard, dev login gate, clipboard handling)
 - **Dead code eliminado**: ~480 imports/vars, 7 dead exports, 3 `as any` casts
-- **Total commits**: 14
+- **Lint fixes**: unescaped JSX entities, prefer-const, displayName, regex escapes, empty blocks, ternary expressions
+- **Total commits**: ~24
+- **ESLint errores accionables restantes**: 0 (los ~450 restantes son prop-types falsos positivos, underscore-prefix, React compiler hints, y hooks condicionales ya documentados)
 - **Tests rotos introducidos**: 0
 - **Errores TypeScript introducidos**: 0
 - **Estado final tests**: 258/258 passed, 4086/4086 tests passed
