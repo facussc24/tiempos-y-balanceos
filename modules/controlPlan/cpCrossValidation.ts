@@ -12,6 +12,7 @@
  * V5: Poka-Yoke frequency verification
  * V6: Poka-Yoke vs Detection rating coherence
  * V7: Sampling consistency (100% must say "each piece")
+ * V9: Failure coverage (AMFE failure modes without linked CP items) — failure-level
  */
 
 import { ControlPlanDocument, ControlPlanItem } from './controlPlanTypes';
@@ -57,6 +58,7 @@ export function validateCpAgainstAmfe(
     if (amfeDoc?.operations && amfeDoc.operations.length > 0) {
         issues.push(...validateSpecialCharConsistency(cpDoc, amfeDoc));
         issues.push(...validateOrphanFailures(cpDoc, amfeDoc));
+        issues.push(...validateFailureCoverage(cpDoc, amfeDoc));
         issues.push(...validate4MAlignment(cpDoc, amfeDoc));
     }
 
@@ -248,7 +250,8 @@ export function validate4MAlignment(
         );
         if (!matchKey) continue;
 
-        const weNames = amfe4M.get(matchKey)!;
+        const weNames = amfe4M.get(matchKey);
+        if (!weNames) continue;
         const cpMachine = norm(item.machineDeviceTool);
 
         const matches = weNames.some(
@@ -479,6 +482,87 @@ export function validateMachineConsolidation(
                 message: `Proceso ${psn} "${items[0].processDescription}": ${machineList.length} maquinas distintas (${machineList.join(', ')}). Considere consolidar en una unica descripcion de equipo.`,
                 itemId: items[0].id,
             });
+        }
+    }
+
+    return issues;
+}
+
+// ============================================================================
+// V9: AMFE Failure Coverage (failure-level, not just operation-level)
+// ============================================================================
+
+/**
+ * Check that every AMFE failure mode with AP=H/M causes has at least one
+ * CP item linked via amfeFailureId/amfeFailureIds.
+ * More granular than V2 which only checks at the operation level.
+ */
+export function validateFailureCoverage(
+    cpDoc: ControlPlanDocument,
+    amfeDoc: AmfeDocument,
+): CpValidationIssue[] {
+    const issues: CpValidationIssue[] = [];
+    if (!cpDoc?.items || !amfeDoc?.operations) return issues;
+
+    // Build set of AMFE failure IDs explicitly covered by CP items
+    const coveredFailureIds = new Set<string>();
+    for (const item of cpDoc.items) {
+        if (item.amfeFailureId) coveredFailureIds.add(item.amfeFailureId);
+        for (const fid of (item.amfeFailureIds ?? [])) coveredFailureIds.add(fid);
+    }
+
+    // Build set of CP-covered operations (by processDescription) for implicit coverage
+    const cpProcesses = new Set(cpDoc.items.map(item => norm(item.processDescription)));
+
+    for (const op of amfeDoc.operations) {
+        if (!op?.workElements) continue;
+
+        // Check if this operation has ANY CP items (implicit coverage)
+        const opNorm = norm(op.name);
+        const opHasCpItems = [...cpProcesses].some(
+            cpProc => cpProc.includes(opNorm) || opNorm.includes(cpProc)
+        );
+
+        for (const we of op.workElements) {
+            if (!we?.functions) continue;
+            for (const func of we.functions) {
+                if (!func?.failures) continue;
+                for (const fail of func.failures) {
+                    if (coveredFailureIds.has(fail.id)) continue;
+
+                    // If operation has CP items but no explicit failure link,
+                    // the failure might be implicitly covered — skip (V2 handles operation-level)
+                    if (opHasCpItems) continue;
+
+                    const causes = fail.causes ?? [];
+                    const aps = causes.map(c => (c.ap || '').toUpperCase()).filter(Boolean);
+                    const hasH = aps.includes('H');
+                    const hasM = aps.includes('M');
+
+                    if (hasH) {
+                        issues.push({
+                            severity: 'error',
+                            code: 'FAILURE_NO_CP_ITEM',
+                            message: `Modo de falla sin cobertura en CP: Op ${op.opNumber} "${op.name}" → "${fail.description}" (causas AP=H)`,
+                            amfePath: `${op.name} > ${fail.description}`,
+                        });
+                    } else if (hasM) {
+                        issues.push({
+                            severity: 'warning',
+                            code: 'FAILURE_NO_CP_ITEM',
+                            message: `Modo de falla sin cobertura en CP: Op ${op.opNumber} "${op.name}" → "${fail.description}" (causas AP=M)`,
+                            amfePath: `${op.name} > ${fail.description}`,
+                        });
+                    } else if (aps.length > 0) {
+                        issues.push({
+                            severity: 'info',
+                            code: 'FAILURE_NO_CP_ITEM_LOW',
+                            message: `Modo de falla AP=L sin cobertura en CP: Op ${op.opNumber} "${op.name}" → "${fail.description}"`,
+                            amfePath: `${op.name} > ${fail.description}`,
+                        });
+                    }
+                }
+            }
         }
     }
 

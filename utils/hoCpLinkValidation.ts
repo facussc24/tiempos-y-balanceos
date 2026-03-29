@@ -10,8 +10,8 @@
  * @module hoCpLinkValidation
  */
 
-import type { HoDocument, HoQualityCheck } from '../modules/hojaOperaciones/hojaOperacionesTypes';
-import type { ControlPlanDocument, ControlPlanItem } from '../modules/controlPlan/controlPlanTypes';
+import type { HoDocument } from '../modules/hojaOperaciones/hojaOperacionesTypes';
+import type { ControlPlanDocument } from '../modules/controlPlan/controlPlanTypes';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -51,7 +51,7 @@ export function validateHoCpLinks(
 ): HoCpLinkValidationResult {
     const brokenLinks: BrokenHoCpLink[] = [];
 
-    if (!hoDoc || !cpDoc) {
+    if (!hoDoc || !cpDoc || !cpDoc.items || !hoDoc.sheets) {
         return { brokenLinks, totalBroken: 0, isValid: false };
     }
 
@@ -64,7 +64,7 @@ export function validateHoCpLinks(
             if (qc.cpItemId && !cpItemIds.has(qc.cpItemId)) {
                 brokenLinks.push({
                     sheetId: sheet.id,
-                    sheetName: sheet.operationName || sheet.hoNumber || sheet.operationNumber,
+                    sheetName: sheet.operationName || sheet.hoNumber || sheet.operationNumber || `Sheet ${sheet.id}`,
                     checkId: qc.id,
                     characteristic: qc.characteristic,
                     cpItemId: qc.cpItemId,
@@ -94,4 +94,61 @@ export function getCpRelinkCandidates(
         id: item.id,
         label: `${item.processStepNumber} — ${item.productCharacteristic || item.processCharacteristic || '(sin característica)'}`,
     }));
+}
+
+// ---------------------------------------------------------------------------
+// CP → HO Coverage Gap Detection
+// ---------------------------------------------------------------------------
+
+export interface CpHoCoverageGap {
+    cpItemId: string;
+    processStepNumber: string;
+    characteristic: string;
+    reactionPlanOwner: string;
+}
+
+export interface CpHoCoverageResult {
+    gaps: CpHoCoverageGap[];
+    totalGaps: number;
+}
+
+/** Roles whose controls should NOT go to the HO (lab, metrology, audits). */
+const NON_HO_ROLES = ['laboratorio', 'metrología', 'metrologia', 'metrologo', 'auditor'];
+
+/**
+ * Find CP items that have no corresponding HO qcItem (by cpItemId).
+ * Only reports items whose reactionPlanOwner is a shop-floor role
+ * (excludes laboratory, metrology, and audit controls per CP→HO filtering rules).
+ */
+export function validateCpHoCoverage(
+    cpDoc: ControlPlanDocument | null,
+    hoDoc: HoDocument | null,
+): CpHoCoverageResult {
+    const gaps: CpHoCoverageGap[] = [];
+    if (!cpDoc || !hoDoc) return { gaps, totalGaps: 0 };
+
+    // Build set of CP item IDs referenced by HO qcItems
+    const coveredCpIds = new Set<string>();
+    for (const sheet of hoDoc.sheets) {
+        for (const qc of sheet.qualityChecks) {
+            if (qc.cpItemId) coveredCpIds.add(qc.cpItemId);
+        }
+    }
+
+    for (const item of cpDoc.items) {
+        if (coveredCpIds.has(item.id)) continue;
+
+        // Skip items whose owner is lab/metrology/audit (they don't go to HO)
+        const ownerLower = (item.reactionPlanOwner || '').toLowerCase();
+        if (NON_HO_ROLES.some(role => ownerLower.includes(role))) continue;
+
+        gaps.push({
+            cpItemId: item.id,
+            processStepNumber: item.processStepNumber,
+            characteristic: item.productCharacteristic || item.processCharacteristic || '',
+            reactionPlanOwner: item.reactionPlanOwner || '',
+        });
+    }
+
+    return { gaps, totalGaps: gaps.length };
 }

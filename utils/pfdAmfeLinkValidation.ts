@@ -60,7 +60,7 @@ export function validatePfdAmfeLinks(
     const brokenPfdLinks: BrokenPfdLink[] = [];
     const brokenAmfeLinks: BrokenAmfeLink[] = [];
 
-    if (!pfdDoc || !amfeDoc) {
+    if (!pfdDoc || !amfeDoc || !amfeDoc.operations || !pfdDoc.steps) {
         return { brokenPfdLinks, brokenAmfeLinks, totalBroken: 0, isValid: false };
     }
 
