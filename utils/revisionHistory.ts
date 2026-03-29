@@ -88,7 +88,7 @@ export async function listRevisions(obsoletosPath: string): Promise<RevisionPars
             if (!entry.isDirectory && entry.name.endsWith('.json')) {
                 const parsed = parseRevisionFilename(entry.name);
                 if (parsed) {
-                    parsed.path = entry.path;
+                    parsed.path = entry.path ?? '';
                     revisions.push(parsed);
                 } else {
                     errors.push(`Could not parse: ${entry.name}`);

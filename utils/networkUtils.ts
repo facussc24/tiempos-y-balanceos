@@ -191,7 +191,7 @@ export function classifyError(error: unknown): ErrorClassification {
 
     // Check for network errors (expanded to include Windows codes)
     const isNetworkError =
-        TRANSIENT_ERROR_CODES.includes(code) ||
+        (code !== null && TRANSIENT_ERROR_CODES.includes(code)) ||
         isWindowsNetworkError ||
         message.toLowerCase().includes('network') ||
         message.toLowerCase().includes('connection') ||
@@ -208,7 +208,7 @@ export function classifyError(error: unknown): ErrorClassification {
         !isConflictError &&
         !isLockError &&
         !isNetworkPathError &&
-        (TRANSIENT_ERROR_CODES.includes(code) || (isNetworkError && !isNetworkPathError));
+        ((code !== null && TRANSIENT_ERROR_CODES.includes(code)) || (isNetworkError && !isNetworkPathError));
 
     // Determine if permanent (don't retry)
     const isPermanent =
@@ -216,7 +216,7 @@ export function classifyError(error: unknown): ErrorClassification {
         isLockError ||
         isPermissionError ||
         isNetworkPathError ||
-        PERMANENT_ERROR_CODES.includes(code);
+        (code !== null && PERMANENT_ERROR_CODES.includes(code));
 
     // Generate user-friendly message + suggested action for non-technical users
     let userMessage = 'Error desconocido. Intente de nuevo en unos segundos.';

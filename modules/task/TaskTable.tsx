@@ -249,7 +249,7 @@ export const TaskTable: React.FC<TaskTableProps> = ({
                                         onUpdateTime(task.id, idx, validated);
                                     }}
                                     isIgnored={task.ignoredTimeIndices?.includes(idx) || false}
-                                    isOutlier={time !== null && isOutlier(time, task.averageTime, task.stdDev)}
+                                    isOutlier={time !== null && isOutlier(time, task.averageTime, task.stdDev ?? 0)}
                                     onToggleIgnore={() => onToggleIgnored(task.id, idx)}
                                     disabled={false}
                                 />

@@ -248,11 +248,14 @@ export async function pullAnalyze(): Promise<{
         const combinedResult: MergeResult = { added: [], updated: [], conflicts: [], skipped: 0, summary: '' };
 
         for (const file of otherFiles) {
-            const json = await readTextFile(file.path);
+            const filePath = file.path ?? '';
+            if (!filePath) continue;
+            const json = await readTextFile(filePath);
             if (!json) continue;
 
             try {
                 const remoteDataset = JSON.parse(json) as import('./mergeEngine').ExportDataset;
+                if (!localSnapshot) continue;
                 const analysis = analyzeDatasets(localSnapshot, remoteDataset);
 
                 // Accumulate results

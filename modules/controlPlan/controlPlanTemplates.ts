@@ -26,9 +26,10 @@ export interface CpTemplate {
 // --- Helper ---
 
 function mkItem(overrides: Partial<ControlPlanItem> & { processDescription: string }): ControlPlanItem {
+    const { processDescription, ...rest } = overrides;
     return {
         processStepNumber: '',
-        processDescription: overrides.processDescription,
+        processDescription,
         machineDeviceTool: '',
         componentMaterial: '',
         characteristicNumber: '',
@@ -43,7 +44,7 @@ function mkItem(overrides: Partial<ControlPlanItem> & { processDescription: stri
         reactionPlan: '',
         reactionPlanOwner: '',
         controlProcedure: '',
-        ...overrides,
+        ...rest,
         id: uuidv4(), // always fresh
     };
 }

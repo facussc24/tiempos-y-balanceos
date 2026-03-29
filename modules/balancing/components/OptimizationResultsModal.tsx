@@ -87,7 +87,7 @@ const ScenarioCard: React.FC<{
                     <span className="text-slate-500 flex items-center gap-1.5">
                         <Timer size={12} /> Ciclo Real
                     </span>
-                    <span className="font-bold text-slate-800">{formatNumber(result.realCycleTime)}s</span>
+                    <span className="font-bold text-slate-800">{formatNumber(result.realCycleTime ?? 0)}s</span>
                 </div>
                 <div className="flex items-center justify-between text-xs pt-1 border-t border-slate-100">
                     <span className="text-slate-500">Estado</span>
@@ -324,7 +324,7 @@ export const OptimizationResultsModal: React.FC<OptimizationResultsModalProps> =
                                 </div>
                                 <div className="flex justify-between border-b border-slate-100 pb-1.5">
                                     <span>Ciclo Real (Botella):</span>
-                                    <span className="font-mono text-slate-800">{formatNumber(res.realCycleTime)}s</span>
+                                    <span className="font-mono text-slate-800">{formatNumber(res.realCycleTime ?? 0)}s</span>
                                 </div>
                                 {res.improvementVsBaseline && (
                                     <div className="flex justify-between border-b border-slate-100 pb-1.5">

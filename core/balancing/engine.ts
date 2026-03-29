@@ -988,8 +988,9 @@ const runGreedyAssignment = (
 
         if (totalManualLoad > cycleLimit) {
             const requiredOps = cycleLimit > 0 ? Math.ceil(totalManualLoad / cycleLimit) : 1;
-            if (proposedConfigs[existingConfigIndex].replicas < requiredOps) {
-                proposedConfigs[existingConfigIndex].replicas = requiredOps;
+            const config = proposedConfigs[existingConfigIndex];
+            if (config && (config.replicas ?? 1) < requiredOps) {
+                config.replicas = requiredOps;
             }
         }
     });
@@ -1391,7 +1392,7 @@ const simulateBalanceInternal = (
 
             // Check Feasibility: Did it fit within Takt?
             // Tolerance is configurable: 1.05 = 5% overflow allowed, 1.0 = strict (pure SALBP)
-            if (result.realCycleTime <= nominalSeconds * taktTolerance) {
+            if ((result.realCycleTime ?? Infinity) <= nominalSeconds * taktTolerance) {
                 // SUCCESS: This is the minimum N.
                 result.heuristicName = name; // UI Name
                 result.technicalName = targetHeuristic; // Maintain requested technical label

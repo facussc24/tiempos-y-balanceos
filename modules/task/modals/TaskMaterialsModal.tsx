@@ -210,7 +210,7 @@ const TaskMaterialsModal: React.FC<TaskMaterialsModalProps> = ({
                         type="number"
                         min="1"
                         value={mat.replenishmentMinutes ?? ''}
-                        onChange={(e) => updateMaterial(idx, 'replenishmentMinutes', e.target.value ? parseInt(e.target.value) : undefined)}
+                        onChange={(e) => updateMaterial(idx, 'replenishmentMinutes', e.target.value ? parseInt(e.target.value) : 0)}
                         className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-mono focus:ring-2 focus:ring-blue-500"
                         placeholder="Global"
                       />

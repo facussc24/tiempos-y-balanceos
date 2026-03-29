@@ -138,7 +138,7 @@ export async function scanLocalMedia(): Promise<LocalMediaFile[]> {
                     project: meta.project,
                     part: meta.part,
                     filename: mediaEntry.name,
-                    localPath: mediaEntry.path,
+                    localPath: mediaEntry.path ?? '',
                     mediaRef: `media/${mediaEntry.name}`,
                     extension: ext,
                 });

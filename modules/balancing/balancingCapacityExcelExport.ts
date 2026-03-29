@@ -248,7 +248,7 @@ async function buildSheet(
     // FIX: Use Number.isFinite instead of ?? — nullish coalescing does NOT catch NaN,
     // so Math.max(1, NaN) would still return NaN and corrupt all capacity calculations.
     const rawPpv = data.meta.piecesPerVehicle;
-    const ppv = Math.max(1, Number.isFinite(rawPpv) && rawPpv > 0 ? rawPpv : 1);
+    const ppv = Math.max(1, Number.isFinite(rawPpv) && (rawPpv ?? 0) > 0 ? (rawPpv ?? 1) : 1);
     const dailyDemand = data.meta.dailyDemand || 0;
     const vehicleDemand = ppv > 0 ? Math.round(dailyDemand / ppv) : dailyDemand;
     const weeklyDemand = dailyDemand * 5;

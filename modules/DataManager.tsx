@@ -183,6 +183,11 @@ const DataManager: React.FC<DataManagerProps> = ({ onBackToLanding }) => {
         setIsServerBackingUp(true);
         try {
             const snapshot = await snapshotDatabase();
+            if (!snapshot) {
+                showToast('No se pudo crear snapshot de la base de datos', 'error');
+                setIsServerBackingUp(false);
+                return;
+            }
             const path = await writeServerBackup(snapshot);
             if (path) {
                 showToast('Backup al servidor creado correctamente');

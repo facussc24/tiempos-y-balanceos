@@ -278,7 +278,7 @@ export function usePlantAssets(): UsePlantAssetsResult {
                 let path = overridePath;
                 if (!path) {
                     const pathResult = await getAssetsPath();
-                    path = pathResult.path;
+                    path = pathResult.path ?? undefined;
                 }
 
                 if (!path) {

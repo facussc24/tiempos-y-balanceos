@@ -281,8 +281,9 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
     const opCategoryMap = useMemo(() => {
         const map = new Map<string, string>();
         for (const op of operations) {
-            if (op.name && !map.has(op.name)) {
-                map.set(op.name, inferOperationCategory(op.name));
+            const opName = op.name ?? '';
+            if (opName && !map.has(opName)) {
+                map.set(opName, inferOperationCategory(opName) ?? '');
             }
         }
         return map;

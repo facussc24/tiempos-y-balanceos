@@ -86,6 +86,10 @@ export async function openAndAnalyzeImport(): Promise<{
                 }
 
                 const localSnapshot = await snapshotDatabase();
+                if (!localSnapshot) {
+                    resolve(null);
+                    return;
+                }
                 const analysis = analyzeDatasets(localSnapshot, dataset);
 
                 logger.info('ExportImport', 'Import analysis complete', {
@@ -138,6 +142,10 @@ async function analyzeImportFile(filePath: string): Promise<{
 
         // Snapshot current DB for comparison
         const localSnapshot = await snapshotDatabase();
+        if (!localSnapshot) {
+            logger.error('ExportImport', 'Failed to snapshot database');
+            return null;
+        }
 
         // Analyze differences
         const analysis = analyzeDatasets(localSnapshot, dataset);

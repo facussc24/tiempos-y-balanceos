@@ -90,7 +90,7 @@ export async function readManifest(basePath?: string): Promise<SyncManifest> {
         const fs = await import('./unified_fs');
 
         try {
-            const content = await fs.readTextFile(manifestPath);
+            const content = await fs.readTextFile(manifestPath) ?? '';
             const parsed = JSON.parse(content) as SyncManifest;
 
             // Basic validation

@@ -26,7 +26,7 @@ const CustomChartTooltip = ({ active, payload, label }: any) => {
                         let labelText = entry.name;
                         let valueText = `${formatNumber(entry.value)}s`;
                         let color = entry.color;
-                        let extraInfo = null;
+                        let extraInfo: string | null = null;
 
                         // Custom Logic for Display Names and Colors
                         if (entry.dataKey === 'withinLimit') {
