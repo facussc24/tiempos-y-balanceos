@@ -124,14 +124,40 @@
 ### Commit 11: `7e56933` — Async callback type fix
 - ConflictModal.tsx: fix `() => void` to `() => void | Promise<void>` for awaited callback
 
-## Estadísticas Finales (5 pasadas completas)
+### Commit 12: `6171c8c` — Logger sanitization y import table whitelist
+- Logger: removed 'client', 'engineer', 'key' from sensitive keys (domain terms, not secrets)
+- Import: added IMPORTABLE_TABLES whitelist to prevent SQL injection via .barack files
+
+### Commit 13: `a36385f` — Dev login gate y clipboard error handling
+- LoginPage: dev login button now requires `import.meta.env.DEV` (never in production)
+- SequenceAlert: clipboard.writeText() promise now properly handled
+
+## Observaciones Adicionales (Pasadas 5-7)
+
+### 🟢 JSON.parse(JSON.stringify()) deep clone pattern
+- 12 usages across undo/redo, inheritance, and PFD modules
+- Could be replaced with `structuredClone()` for performance
+- Risk: different edge case handling (Dates, undefined, NaN)
+- **No se corrigió** por riesgo de cambio de comportamiento sutil
+
+### 🟢 Vulnerable npm dependencies
+- html2pdf.js, jspdf, rollup, minimatch tienen vulnerabilidades reportadas
+- `npm audit fix` podría resolver la mayoría
+- **No se ejecutó** — requiere testing de exports después
+
+### 🟢 Credenciales de dev en git history
+- `.env.production` fue commiteado y luego gitignored
+- Credenciales admin@barack.com están en history
+- Recomendación: rotar la contraseña de Supabase
+
+## Estadísticas Finales (7 pasadas completas)
 
 - **Total archivos auditados**: ~493 archivos de producción
 - **Total archivos corregidos**: ~135
 - **Total líneas de dead code removidas**: ~800+
-- **Bugs corregidos**: 7 (AuthProvider, useDocumentLock, 3 null safety, NaN sort, async type)
+- **Bugs corregidos**: 10 (AuthProvider, useDocumentLock, 3 null safety, NaN sort, async type, logger sanitization, SQL injection guard, dev login gate, clipboard handling)
 - **Dead code eliminado**: ~480 imports/vars, 7 dead exports, 3 `as any` casts
-- **Total commits**: 11
+- **Total commits**: 14
 - **Tests rotos introducidos**: 0
 - **Errores TypeScript introducidos**: 0
 - **Estado final tests**: 258/258 passed, 4086/4086 tests passed
