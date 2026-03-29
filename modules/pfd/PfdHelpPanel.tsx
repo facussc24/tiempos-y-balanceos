@@ -119,7 +119,7 @@ const PfdHelpPanel: React.FC<Props> = ({ isOpen, onClose }) => {
                             <ol className="list-decimal list-inside space-y-1 text-[11px]">
                                 <li>El paso donde se bifurca el flujo queda en <strong>flujo principal</strong> (sin línea asignada).</li>
                                 <li>Los pasos que corren en paralelo se asignan a un <strong>Flujo</strong> (A, B, C, D) usando la columna <strong>Flujo</strong> de la tabla.</li>
-                                <li>Debajo del selector aparece un campo para <strong>nombrar el flujo</strong> (ej: "Mecanizado", "Soldadura").</li>
+                                <li>Debajo del selector aparece un campo para <strong>nombrar el flujo</strong> (ej: &ldquo;Mecanizado&rdquo;, &ldquo;Soldadura&rdquo;).</li>
                                 <li>El paso donde convergen las líneas vuelve a <strong>flujo principal</strong>.</li>
                             </ol>
                         </div>
@@ -142,7 +142,7 @@ const PfdHelpPanel: React.FC<Props> = ({ isOpen, onClose }) => {
                             con ellas usando la columna <strong>Disp.</strong> (Disposición):
                         </p>
                         <ul className="list-disc list-inside space-y-1 ml-2">
-                            <li><strong>Retrabajo:</strong> La pieza vuelve a un paso anterior para ser reparada. Indicar el paso de retorno (ej: "OP 20"). La pieza DEBE reingresar al flujo y pasar todas las inspecciones posteriores.</li>
+                            <li><strong>Retrabajo:</strong> La pieza vuelve a un paso anterior para ser reparada. Indicar el paso de retorno (ej: &ldquo;OP 20&rdquo;). La pieza DEBE reingresar al flujo y pasar todas las inspecciones posteriores.</li>
                             <li><strong>Descarte (Scrap):</strong> La pieza se descarta. Indicar el motivo.</li>
                             <li><strong>Selección (Sort):</strong> Las piezas se separan y clasifican. Indicar el criterio.</li>
                         </ul>
@@ -177,13 +177,13 @@ const PfdHelpPanel: React.FC<Props> = ({ isOpen, onClose }) => {
                     <Section title="Cómo armar un flujograma paso a paso" icon={<ArrowDown size={14} />}>
                         <ol className="list-decimal list-inside space-y-1.5 text-[11px]">
                             <li><strong>Completar el encabezado:</strong> Nro. de pieza, nombre, cliente, revisión, equipo, fase del proceso.</li>
-                            <li><strong>Iniciar con Recepción:</strong> El primer paso debe ser tipo Almacenamiento — "Recepción de materia prima". Usar la plantilla como base.</li>
+                            <li><strong>Iniciar con Recepción:</strong> El primer paso debe ser tipo Almacenamiento — &ldquo;Recepción de materia prima&rdquo;. Usar la plantilla como base.</li>
                             <li><strong>Agregar operaciones:</strong> Cada transformación del material es una Operación. Indicar máquina/equipo.</li>
                             <li><strong>Intercalar transportes:</strong> Entre áreas, agregar pasos de Transporte indicando el destino.</li>
                             <li><strong>Agregar inspecciones:</strong> Puntos de verificación. Indicar qué se inspecciona, referencia al plano, y disposición de no conformes.</li>
                             <li><strong>Marcar CC/SC:</strong> Identificar características especiales en cada paso.</li>
                             <li><strong>Configurar flujos paralelos:</strong> Si el material se divide, asignar flujos paralelos (A/B/C/D).</li>
-                            <li><strong>Terminar con Envío:</strong> Último paso tipo Almacenamiento — "Almacenamiento y envío al cliente".</li>
+                            <li><strong>Terminar con Envío:</strong> Último paso tipo Almacenamiento — &ldquo;Almacenamiento y envío al cliente&rdquo;.</li>
                             <li><strong>Validar:</strong> Usar el botón Validar para verificar completitud y coherencia.</li>
                             <li><strong>Exportar:</strong> PDF para impresión, Excel para análisis. El PDF incluye simbología y resumen.</li>
                         </ol>
@@ -223,7 +223,7 @@ const PfdHelpPanel: React.FC<Props> = ({ isOpen, onClose }) => {
                         </div>
                         <p className="text-[11px]">
                             <strong>¿Como indicarlo?</strong> En el encabezado del DFP, completar el campo
-                            {' '}<strong>"Piezas Aplicables"</strong> con todos los numeros de pieza que cubre este flujo (uno por linea).
+                            {' '}<strong>&ldquo;Piezas Aplicables&rdquo;</strong> con todos los numeros de pieza que cubre este flujo (uno por linea).
                             Dejar vacio si el documento es para pieza unica.
                         </p>
                         <div className="bg-amber-50 border border-amber-200 rounded-lg p-2 mt-1">
@@ -235,7 +235,7 @@ const PfdHelpPanel: React.FC<Props> = ({ isOpen, onClose }) => {
 
                     <Section title="Integración con AMFE y Plan de Control" icon={<GitMerge size={14} />}>
                         <p>
-                            El Diagrama de Flujo es el <strong>documento base</strong> del "hilo digital" AIAG APQP:
+                            El Diagrama de Flujo es el <strong>documento base</strong> del &ldquo;hilo digital&rdquo; AIAG APQP:
                         </p>
                         <div className="flex items-center gap-2 justify-center py-2 text-[11px] font-medium">
                             <span className="bg-cyan-100 text-cyan-800 px-2 py-1 rounded">DFP</span>

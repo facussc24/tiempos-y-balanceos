@@ -89,7 +89,7 @@ export const MixHistoryModal: React.FC<MixHistoryModalProps> = ({
                                 <Package size={48} className="mx-auto mb-4 opacity-50" />
                                 <p>No hay escenarios guardados</p>
                                 <p className="text-sm mt-1">
-                                    Calculá un Mix y presioná "Guardar" para guardarlo aquí
+                                    Calculá un Mix y presioná &ldquo;Guardar&rdquo; para guardarlo aquí
                                 </p>
                             </div>
                         ) : (

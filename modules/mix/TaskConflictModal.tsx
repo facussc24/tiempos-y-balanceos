@@ -80,7 +80,7 @@ export const TaskConflictModal: React.FC<TaskConflictModalProps> = ({
                             <div className="flex items-center gap-2 mb-3">
                                 <HelpCircle size={18} className="text-amber-500" />
                                 <span className="font-medium text-slate-700">
-                                    Tarea "{conflict.taskId}"
+                                    Tarea &ldquo;{conflict.taskId}&rdquo;
                                 </span>
                             </div>
 

@@ -206,7 +206,7 @@ const AmfeSideDrawer: React.FC<AmfeSideDrawerProps> = ({ activePanel, setActiveP
                             <div className="text-center py-8 text-gray-400">
                                 <FolderOpen size={32} className="mx-auto mb-2 opacity-50" />
                                 <p className="text-sm">No se encontraron carpetas de clientes.</p>
-                                <p className="text-[10px] mt-1">Usa "Guardar Como" para crear la primera.</p>
+                                <p className="text-[10px] mt-1">Usa &ldquo;Guardar Como&rdquo; para crear la primera.</p>
                             </div>
                         )}
 
@@ -252,7 +252,7 @@ const AmfeSideDrawer: React.FC<AmfeSideDrawerProps> = ({ activePanel, setActiveP
                                     <div className="text-center py-6 text-gray-400">
                                         <FileJson size={24} className="mx-auto mb-1 opacity-50" />
                                         <p className="text-xs">Sin AMFEs en esta carpeta.</p>
-                                        <p className="text-[10px] mt-1">Usa "Guardar Como" para crear uno.</p>
+                                        <p className="text-[10px] mt-1">Usa &ldquo;Guardar Como&rdquo; para crear uno.</p>
                                     </div>
                                 ) : (
                                     <div className="grid gap-2">

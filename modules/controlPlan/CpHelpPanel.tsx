@@ -192,7 +192,7 @@ function ColumnsTab() {
                         similares que comparten proceso, modos de falla y controles.
                     </p>
                     <p>
-                        Al generar el CP desde el AMFE, el campo <strong>"Piezas Aplicables"</strong> se
+                        Al generar el CP desde el AMFE, el campo <strong>&ldquo;Piezas Aplicables&rdquo;</strong> se
                         copia automáticamente del AMFE. Si necesita ajustarlo, edítelo en el encabezado del CP.
                     </p>
                     <p className="text-[10px] text-gray-500 italic">
@@ -204,7 +204,7 @@ function ColumnsTab() {
             {/* Product vs Process Explanation */}
             <div className="border border-sky-200 rounded-lg overflow-hidden">
                 <div className="bg-sky-50 px-3 py-2 border-b border-sky-200">
-                    <h5 className="text-xs font-bold text-sky-800">¿Por qué hay columnas "Producto" Y "Proceso"?</h5>
+                    <h5 className="text-xs font-bold text-sky-800">¿Por qué hay columnas &ldquo;Producto&rdquo; Y &ldquo;Proceso&rdquo;?</h5>
                 </div>
                 <div className="px-3 py-2 text-[11px] text-gray-600 space-y-2">
                     <p>

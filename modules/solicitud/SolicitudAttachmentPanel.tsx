@@ -218,7 +218,7 @@ const SolicitudAttachmentPanel: React.FC<SolicitudAttachmentPanelProps> = ({
                             <p className="text-xs text-gray-400">Sin archivos adjuntos</p>
                             {canUpload && (
                                 <p className="text-xs text-gray-300 mt-1">
-                                    Haga click en "Adjuntar" para agregar archivos
+                                    Haga click en &ldquo;Adjuntar&rdquo; para agregar archivos
                                 </p>
                             )}
                         </div>

@@ -330,8 +330,8 @@ function FamilyInfoBox() {
                     </div>
                 </div>
                 <p className="text-[10px] text-gray-500 italic">
-                    En el encabezado: usar <strong>"Alcance / Familia"</strong> para describir la familia
-                    y <strong>"Piezas Aplicables"</strong> para listar los nros de pieza cubiertos.
+                    En el encabezado: usar <strong>&ldquo;Alcance / Familia&rdquo;</strong> para describir la familia
+                    y <strong>&ldquo;Piezas Aplicables&rdquo;</strong> para listar los nros de pieza cubiertos.
                     IATF 16949 no obliga un enfoque — es decision del equipo.
                 </p>
             </div>

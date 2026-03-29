@@ -88,7 +88,7 @@ export const CreateVariantModal: React.FC<CreateVariantModalProps> = ({
                         </button>
                     </div>
                     <p className="text-purple-100 text-sm mt-2">
-                        Crear un producto hijo que hereda de "{parentName}"
+                        Crear un producto hijo que hereda de &ldquo;{parentName}&rdquo;
                     </p>
                 </div>
 

@@ -122,7 +122,7 @@ const HoSheetNavigator: React.FC<Props> = ({ sheets, activeSheetId, onSelect }) 
                         {!search && (
                             <p className="text-[10px] text-gray-400 leading-relaxed">
                                 Se generan desde el AMFE y el Plan de Control.
-                                Volvé a la pestaña AMFE y usá "Generar Hojas de Operaciones".
+                                Volvé a la pestaña AMFE y usá &ldquo;Generar Hojas de Operaciones&rdquo;.
                             </p>
                         )}
                     </div>

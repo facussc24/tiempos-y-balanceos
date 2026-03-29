@@ -148,7 +148,7 @@ export const MixResultsSummary: React.FC<MixResultsSummaryProps> = ({ result }) 
                         <div className="space-y-1">
                             {result.modelAlerts.filter(a => a.severity === 'critical').map((a, idx) => (
                                 <p key={idx} className="text-amber-800 dark:text-amber-200 text-sm">
-                                    <strong>{a.modelName}</strong> en tarea "{a.taskDescription}": {a.message}
+                                    <strong>{a.modelName}</strong> en tarea &ldquo;{a.taskDescription}&rdquo;: {a.message}
                                 </p>
                             ))}
                         </div>

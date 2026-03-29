@@ -374,7 +374,7 @@ const HojaOperacionesApp: React.FC<Props> = ({ embedded, initialData, onDataChan
                     <p className="text-sm font-medium text-gray-500 mb-1">Sin hojas de operaciones</p>
                     <p className="text-xs text-gray-400 max-w-sm text-center">
                         Las Hojas de Operaciones se generan automáticamente desde el AMFE y el Plan de Control.
-                        Vuelva a la pestaña AMFE y use "Generar Hojas de Operaciones".
+                        Vuelva a la pestaña AMFE y use &ldquo;Generar Hojas de Operaciones&rdquo;.
                     </p>
                 </div>
                 <HoHelpPanel isOpen={showHelp} onClose={() => setShowHelp(false)} />

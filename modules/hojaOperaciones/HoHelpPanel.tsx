@@ -108,7 +108,7 @@ const HoHelpPanel: React.FC<Props> = ({ isOpen, onClose }) => {
                                 <tbody>
                                     <tr className="border-b border-blue-100">
                                         <td className="py-0.5 font-medium text-blue-700 w-24">Fila 1:</td>
-                                        <td>Logo Barack + título "HOJA DE OPERACIONES" + formulario HO 952 REV.06</td>
+                                        <td>Logo Barack + título &ldquo;HOJA DE OPERACIONES&rdquo; + formulario HO 952 REV.06</td>
                                     </tr>
                                     <tr className="border-b border-blue-100">
                                         <td className="py-0.5 font-medium text-blue-700">Fila 2:</td>
@@ -237,8 +237,8 @@ const HoHelpPanel: React.FC<Props> = ({ isOpen, onClose }) => {
                         <div className="bg-purple-50 border border-purple-200 rounded-lg p-2.5 my-2">
                             <p className="font-semibold text-purple-800 text-[11px] mb-1">Cómo agregar una ayuda visual:</p>
                             <ol className="list-decimal list-inside text-[10px] text-purple-700 space-y-0.5">
-                                <li>Click en <strong>"+ Ayuda Visual"</strong> dentro de un paso</li>
-                                <li>Escribir un <strong>título descriptivo</strong> (ej: "Posición correcta de la pieza")</li>
+                                <li>Click en <strong>&ldquo;+ Ayuda Visual&rdquo;</strong> dentro de un paso</li>
+                                <li>Escribir un <strong>título descriptivo</strong> (ej: &ldquo;Posición correcta de la pieza&rdquo;)</li>
                                 <li><strong>Pegar o cargar una imagen</strong> (fotos de celular, capturas, diagramas)</li>
                                 <li>Opcionalmente agregar <strong>descripción</strong> con detalles</li>
                             </ol>
@@ -252,7 +252,7 @@ const HoHelpPanel: React.FC<Props> = ({ isOpen, onClose }) => {
                     <Section title="Familias de productos" icon={<Users size={14} />}>
                         <p>
                             Una <strong>Hoja de Operaciones por familia</strong> cubre múltiples piezas similares
-                            que comparten el mismo proceso. El campo <strong>"Piezas Aplicables"</strong> en el
+                            que comparten el mismo proceso. El campo <strong>&ldquo;Piezas Aplicables&rdquo;</strong> en el
                             encabezado lista las piezas cubiertas.
                         </p>
                         <div className="bg-slate-50 border border-slate-200 rounded-lg p-2.5 my-2">
@@ -294,7 +294,7 @@ const HoHelpPanel: React.FC<Props> = ({ isOpen, onClose }) => {
                         </ul>
                         <div className="bg-amber-50 border border-amber-200 rounded p-2 mt-1">
                             <p className="text-[10px] text-amber-800">
-                                <strong>Tip:</strong> Para imprimir, use Ctrl+P o el botón "PDF" en la barra superior.
+                                <strong>Tip:</strong> Para imprimir, use Ctrl+P o el botón &ldquo;PDF&rdquo; en la barra superior.
                                 Se genera una hoja por cada operación del documento.
                             </p>
                         </div>

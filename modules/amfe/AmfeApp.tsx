@@ -964,7 +964,7 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab, initialF
                 <div className="bg-blue-50 border border-blue-200 px-4 py-3 flex items-center justify-between">
                     <div className="flex items-center gap-2 text-xs text-blue-800">
                         <HardDrive size={14} className="text-blue-500" />
-                        <span>Se encontro un borrador de <strong>"{draftRecovery.name}"</strong></span>
+                        <span>Se encontro un borrador de <strong>&ldquo;{draftRecovery.name}&rdquo;</strong></span>
                     </div>
                     <div className="flex gap-2">
                         <button onClick={handleRecoverDraft}
