@@ -41,7 +41,7 @@ export function ConflictModal({ conflict, onReload, onSaveAsNew, onCancel }: Con
         });
     };
 
-    const handleAction = async (action: () => void) => {
+    const handleAction = async (action: () => void | Promise<void>) => {
         setIsLoading(true);
         try {
             await action();
