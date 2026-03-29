@@ -30,27 +30,6 @@ export function LoginPage() {
         }
     }, [email, password, signIn]);
 
-    const handleDevLogin = useCallback(async () => {
-        const devEmail = import.meta.env.VITE_AUTO_LOGIN_EMAIL;
-        const devPassword = import.meta.env.VITE_AUTO_LOGIN_PASSWORD;
-        if (!devEmail || !devPassword) {
-            setError('Faltan VITE_AUTO_LOGIN_EMAIL o VITE_AUTO_LOGIN_PASSWORD en .env.local');
-            return;
-        }
-        setEmail(devEmail);
-        setPassword(devPassword);
-        setError(null);
-        setLoading(true);
-        try {
-            const result = await signIn(devEmail, devPassword);
-            if (result.error) {
-                setError(result.error);
-            }
-        } finally {
-            setLoading(false);
-        }
-    }, [signIn]);
-
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-950 px-4">
             <div className="w-full max-w-sm">
@@ -145,7 +124,24 @@ export function LoginPage() {
                     {import.meta.env.DEV && import.meta.env.VITE_AUTO_LOGIN_EMAIL && (
                         <button
                             type="button"
-                            onClick={handleDevLogin}
+                            onClick={async () => {
+                                const devEmail = import.meta.env.VITE_AUTO_LOGIN_EMAIL;
+                                const devPassword = import.meta.env.VITE_AUTO_LOGIN_PASSWORD;
+                                if (!devEmail || !devPassword) {
+                                    setError('Faltan VITE_AUTO_LOGIN_EMAIL o VITE_AUTO_LOGIN_PASSWORD en .env.local');
+                                    return;
+                                }
+                                setEmail(devEmail);
+                                setPassword(devPassword);
+                                setError(null);
+                                setLoading(true);
+                                try {
+                                    const result = await signIn(devEmail, devPassword);
+                                    if (result.error) setError(result.error);
+                                } finally {
+                                    setLoading(false);
+                                }
+                            }}
                             disabled={loading}
                             className="w-full mt-3 py-2 px-4 bg-amber-600 hover:bg-amber-500
                                        text-white font-medium text-sm rounded-lg transition-colors
