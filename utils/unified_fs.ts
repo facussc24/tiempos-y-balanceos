@@ -17,17 +17,17 @@ import { logger } from './logger';
 // ---------------------------------------------------------------------------
 
 export const isTauri = (): boolean => false;
-export const hasFileSystemAccess = (): boolean =>
+const hasFileSystemAccess = (): boolean =>
     typeof window !== 'undefined' && 'showOpenFilePicker' in window;
 
 // ---------------------------------------------------------------------------
 // Module init (no-ops in web)
 // ---------------------------------------------------------------------------
 
-export const initTauriModules = async (): Promise<boolean> => false;
-export const ensureTauriFs = async (): Promise<boolean> => false;
-export const ensureTauriDialog = async (): Promise<boolean> => false;
-export const ensureTauriPath = async (): Promise<boolean> => false;
+const initTauriModules = async (): Promise<boolean> => false;
+const ensureTauriFs = async (): Promise<boolean> => false;
+const ensureTauriDialog = async (): Promise<boolean> => false;
+const ensureTauriPath = async (): Promise<boolean> => false;
 
 // ---------------------------------------------------------------------------
 // Path utilities
@@ -53,10 +53,10 @@ export const pickFolder = async (): Promise<string | null> => {
 };
 
 /** Pick a project file (no-op in web). */
-export const pickProjectFile = async (): Promise<string | null> => null;
+const pickProjectFile = async (): Promise<string | null> => null;
 
 /** Pick a save location (no-op in web). */
-export const pickSaveLocation = async (_defaultName?: string, _filters?: unknown[]): Promise<string | null> => null;
+const pickSaveLocation = async (_defaultName?: string, _filters?: unknown[]): Promise<string | null> => null;
 
 /** List files/dirs (stub for compatibility). */
 export const readDir = async (_path: string): Promise<FSItem[]> => {
@@ -65,7 +65,7 @@ export const readDir = async (_path: string): Promise<FSItem[]> => {
 };
 
 /** Create directory (no-op in web). */
-export const createDir = async (_path: string): Promise<boolean> => false;
+const createDir = async (_path: string): Promise<boolean> => false;
 
 /** Alias for createDir. */
 export const ensureDir = async (_path: string): Promise<boolean> => false;
@@ -121,7 +121,7 @@ export const rename = async (_src: string, _dst: string): Promise<boolean> => fa
 // ---------------------------------------------------------------------------
 
 /** Trigger a browser download for arbitrary data. */
-export function triggerDownload(filename: string, content: string | Uint8Array, mimeType = 'application/octet-stream'): void {
+function triggerDownload(filename: string, content: string | Uint8Array, mimeType = 'application/octet-stream'): void {
     const blob = content instanceof Uint8Array
         ? new Blob([content], { type: mimeType })
         : new Blob([content], { type: mimeType });
@@ -156,7 +156,7 @@ export const initFileSystem = async (): Promise<void> => {
 // Storage mode
 // ---------------------------------------------------------------------------
 
-export const getStorageMode = (): 'web' => 'web';
+const getStorageMode = (): 'web' => 'web';
 
 // ---------------------------------------------------------------------------
 // Project operations (handled by repositories in web mode)
@@ -197,13 +197,13 @@ export const setCurrentProject = (projectId: string | null): void => {
 // Project-specific filesystem operations (no-ops in web)
 // ---------------------------------------------------------------------------
 
-export const saveProjectToAppData = async (_id: string, _data: ProjectData): Promise<boolean> => false;
+const saveProjectToAppData = async (_id: string, _data: ProjectData): Promise<boolean> => false;
 
-export const loadProjectFromAppData = async (_id: string): Promise<ProjectData | null> => null;
+const loadProjectFromAppData = async (_id: string): Promise<ProjectData | null> => null;
 
-export const listProjectsInAppData = async (): Promise<Array<{ id: string; name: string; lastModified: number }>> => [];
+const listProjectsInAppData = async (): Promise<Array<{ id: string; name: string; lastModified: number }>> => [];
 
-export const deleteProjectFromAppData = async (_id: string): Promise<boolean> => false;
+const deleteProjectFromAppData = async (_id: string): Promise<boolean> => false;
 
 // ---------------------------------------------------------------------------
 // Media (no-op stubs — use Supabase Storage)
