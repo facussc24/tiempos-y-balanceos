@@ -57,14 +57,9 @@ export const EducationalTooltip: React.FC<EducationalTooltipProps> = ({
     // Get term definition from dictionary
     const termDef = getTerm(termKey);
 
-    // If term not found, render nothing or fallback
-    if (!termDef) {
-        logger.warn('EducationalTooltip', 'Term not found in dictionary', { termKey });
-        return null;
-    }
-
-    // Calculate position when visible
+    // Calculate position when visible (must be before early return to satisfy hooks rules)
     React.useLayoutEffect(() => {
+        if (!termDef || !isVisible || !triggerRef.current || !tooltipRef.current) return;
         if (isVisible && triggerRef.current && tooltipRef.current) {
             const triggerRect = triggerRef.current.getBoundingClientRect();
             const tooltipRect = tooltipRef.current.getBoundingClientRect();
@@ -93,7 +88,12 @@ export const EducationalTooltip: React.FC<EducationalTooltipProps> = ({
 
             setCoords({ top, left });
         }
-    }, [isVisible]);
+    }, [isVisible, termDef]);
+
+    // If term not found, render nothing
+    if (!termDef) {
+        return null;
+    }
 
     const handleMouseEnter = () => {
         setIsVisible(true);
