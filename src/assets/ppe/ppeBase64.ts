@@ -16,9 +16,10 @@ let logoBase64Cache: string | null = null;
 async function urlToBase64(url: string): Promise<string> {
     const response = await fetch(url);
     const blob = await response.blob();
-    return new Promise<string>((resolve) => {
+    return new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
         reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = () => reject(new Error('FileReader failed'));
         reader.readAsDataURL(blob);
     });
 }
