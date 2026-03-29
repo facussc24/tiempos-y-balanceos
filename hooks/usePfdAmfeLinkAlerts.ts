@@ -133,7 +133,7 @@ export function usePfdAmfeLinkAlerts(
 // Hook: for AMFE module (has AMFE doc, needs to load PFD)
 // ---------------------------------------------------------------------------
 
-export function useAmfePfdLinkAlerts(
+function useAmfePfdLinkAlerts(
     amfeDoc: AmfeDocument | null,
     linkedPfdId: string | null | undefined,
     onUpdateOperation: ((operationId: string, field: string, value: unknown) => void) | null,

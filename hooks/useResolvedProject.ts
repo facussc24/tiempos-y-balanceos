@@ -186,7 +186,7 @@ export function useResolvedProject(
  * Sync version for components that already have resolved data
  * or don't need async resolution (e.g., Mix already resolves in loadMixProducts)
  */
-export function useResolvedProjectSync(data: ProjectData): ProjectData {
+function useResolvedProjectSync(data: ProjectData): ProjectData {
     // Just return data as-is - useful as a placeholder for future optimization
     return data;
 }
