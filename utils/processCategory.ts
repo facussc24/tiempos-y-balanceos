@@ -8,6 +8,7 @@
 
 /** Infer process category from operation name for process-specific AI vocabulary */
 export function inferOperationCategory(opName: string): string | undefined {
+    if (!opName) return undefined;
     const n = opName.toLowerCase();
     // WIP/in-process guard: intermediate packaging/storage is NOT a sector change
     if (/\bwip\b|work.in.process|en.proceso|intermedi[oa]/.test(n)) return undefined;
@@ -72,6 +73,7 @@ const CATEGORY_TO_DEPARTMENT: Record<string, string> = {
  * Returns empty string if the sector cannot be determined.
  */
 export function inferDepartment(opName: string): string {
+    if (!opName) return '';
     const category = inferOperationCategory(opName);
     if (!category) return '';
     return CATEGORY_TO_DEPARTMENT[category] || '';
