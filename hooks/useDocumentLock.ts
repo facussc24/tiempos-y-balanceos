@@ -66,19 +66,19 @@ export function useDocumentLock(
                 // Clean expired locks occasionally
                 await repo.cleanExpiredLocks();
 
+                if (cancelled) return;
+
                 // Start heartbeat to keep our lock alive
                 heartbeatRef.current = setInterval(() => {
                     repo.refreshDocumentLock(documentId, documentType).catch(() => {});
                 }, HEARTBEAT_MS);
 
                 // Periodically re-check if another user started editing
-                recheckRef.current = setInterval(async () => {
-                    try {
-                        const newConflict = await repo.checkDocumentLock(documentId, documentType);
-                        if (!cancelled) setOtherEditor(newConflict);
-                    } catch {
-                        // Ignore recheck errors
-                    }
+                recheckRef.current = setInterval(() => {
+                    if (cancelled) return;
+                    repo.checkDocumentLock(documentId, documentType)
+                        .then(newConflict => { if (!cancelled) setOtherEditor(newConflict); })
+                        .catch(() => {});
                 }, RECHECK_MS);
             } catch (err) {
                 logger.warn('useDocumentLock', 'Failed to initialize lock', { error: String(err) });
