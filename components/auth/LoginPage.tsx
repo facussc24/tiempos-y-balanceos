@@ -142,7 +142,7 @@ export function LoginPage() {
                         Contacta a tu administrador si no tenes acceso.
                     </p>
 
-                    {import.meta.env.VITE_AUTO_LOGIN_EMAIL && (
+                    {import.meta.env.DEV && import.meta.env.VITE_AUTO_LOGIN_EMAIL && (
                         <button
                             type="button"
                             onClick={handleDevLogin}

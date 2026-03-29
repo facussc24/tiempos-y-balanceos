@@ -19,9 +19,10 @@ export const SequenceAlert: React.FC<SequenceAlertProps> = ({
     const [copied, setCopied] = useState(false);
 
     const handleCopy = () => {
-        navigator.clipboard.writeText(pattern.replace(/→/g, '>'));
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
+        navigator.clipboard.writeText(pattern.replace(/→/g, '>')).then(() => {
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        }).catch(() => { /* clipboard unavailable */ });
     };
 
     return (
