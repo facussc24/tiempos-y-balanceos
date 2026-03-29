@@ -158,6 +158,16 @@ export async function analyzeImportFile(filePath: string): Promise<{
 // Import: apply changes
 // ---------------------------------------------------------------------------
 
+/** Whitelist of tables that can be written during import. */
+const IMPORTABLE_TABLES = new Set([
+    'projects', 'settings', 'drafts',
+    'amfe_documents', 'amfe_library_operations',
+    'cp_documents', 'ho_documents', 'pfd_documents',
+    'product_families', 'product_family_members',
+    'family_documents', 'family_document_overrides', 'family_change_proposals',
+    'document_revisions', 'cross_doc_checks',
+]);
+
 /**
  * Apply resolved merge actions to the database.
  * This inserts new records and updates existing ones individually
@@ -177,6 +187,11 @@ export async function executeImportActions(actions: MergeAction[]): Promise<{
 
         for (const action of actions) {
             try {
+                if (!IMPORTABLE_TABLES.has(action.table)) {
+                    logger.warn('ExportImport', `Skipping unknown table: ${action.table}`);
+                    errors++;
+                    continue;
+                }
                 const columns = Object.keys(action.record);
                 const placeholders = columns.map(() => '?').join(', ');
                 const values = columns.map(c => {

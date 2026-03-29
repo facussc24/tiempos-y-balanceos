@@ -151,7 +151,7 @@ function createEntry(
  * Remove sensitive data from log details
  */
 function sanitizeDetails(details: Record<string, any>): Record<string, any> {
-    const sensitiveKeys = ['password', 'passphrase', 'secret', 'token', 'key', 'client', 'engineer'];
+    const sensitiveKeys = ['password', 'passphrase', 'secret', 'token', 'apikey', 'api_key'];
     const sanitized: Record<string, any> = {};
 
     for (const [key, value] of Object.entries(details)) {
