@@ -12,6 +12,7 @@ import { getDatabase } from '../database';
 import { logger } from '../logger';
 import { generateChecksum } from '../crypto';
 import { scheduleBackup } from '../backupService';
+import { getCurrentUserEmail } from '../currentUser';
 
 
 export interface CpDocumentListItem {
@@ -152,30 +153,38 @@ export async function saveCpDocument(
     id: string,
     projectName: string,
     doc: ControlPlanDocument,
-    linkedAmfeId?: string
+    linkedAmfeId?: string,
+    modifiedBy?: { email: string; type: 'user' | 'ai' },
 ): Promise<boolean> {
     try {
         const db = await getDatabase();
         const data = JSON.stringify(doc);
         const checksum = await generateChecksum(data);
         const h = doc.header;
+        const byEmail = modifiedBy?.email || getCurrentUserEmail();
+        const byType = modifiedBy?.type || 'user';
 
         await db.execute(
             `INSERT OR REPLACE INTO cp_documents
              (id, project_name, control_plan_number, phase, part_number, part_name,
               organization, client, responsible, revision, linked_amfe_project,
-              linked_amfe_id, item_count, created_at, updated_at,
+              linked_amfe_id, item_count,
+              created_at, updated_at, created_by, updated_by, modified_by_type,
               data, checksum)
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
                      COALESCE((SELECT created_at FROM cp_documents WHERE id = ?), datetime('now')),
                      datetime('now'),
+                     COALESCE((SELECT created_by FROM cp_documents WHERE id = ?), ?),
+                     ?, ?,
                      ?, ?)`,
             [
                 id, projectName, h.controlPlanNumber || '', h.phase || 'preLaunch',
                 h.partNumber || '', h.partName || '', h.organization || '',
                 h.client || '', h.responsible || '', h.revision || '',
                 h.linkedAmfeProject || '', linkedAmfeId ?? null,
-                doc.items.length, id,
+                doc.items.length,
+                id, id, byEmail,
+                byEmail, byType,
                 data, checksum,
             ]
         );

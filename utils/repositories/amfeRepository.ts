@@ -13,6 +13,7 @@ import { buildSearchableText } from '../../modules/amfe/amfeLibraryTypes';
 import { ActionPriority } from '../../modules/amfe/amfeTypes';
 import { getDatabase } from '../database';
 import { logger } from '../logger';
+import { getCurrentUserEmail } from '../currentUser';
 import { generateChecksum } from '../crypto';
 import { scheduleBackup } from '../backupService';
 
@@ -222,7 +223,8 @@ export async function saveAmfeDocument(
     projectName: string,
     doc: AmfeDocument,
     status: AmfeLifecycleStatus = 'draft',
-    revisions: AmfeRevisionEntry[] = []
+    revisions: AmfeRevisionEntry[] = [],
+    modifiedBy?: { email: string; type: 'user' | 'ai' },
 ): Promise<boolean> {
     try {
         const db = await getDatabase();
@@ -230,16 +232,21 @@ export async function saveAmfeDocument(
         const checksum = await generateChecksum(data);
         const stats = computeAmfeStats(doc);
         const header = doc.header;
+        const byEmail = modifiedBy?.email || getCurrentUserEmail();
+        const byType = modifiedBy?.type || 'user';
 
         await db.execute(
             `INSERT OR REPLACE INTO amfe_documents
              (id, amfe_number, project_name, subject, client, part_number, responsible,
               organization, status, operation_count, cause_count, ap_h_count, ap_m_count,
-              coverage_percent, start_date, last_revision_date, created_at, updated_at,
+              coverage_percent, start_date, last_revision_date,
+              created_at, updated_at, created_by, updated_by, modified_by_type,
               data, revisions, checksum)
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
                      COALESCE((SELECT created_at FROM amfe_documents WHERE id = ?), datetime('now')),
                      datetime('now'),
+                     COALESCE((SELECT created_by FROM amfe_documents WHERE id = ?), ?),
+                     ?, ?,
                      ?, ?, ?)`,
             [
                 id, amfeNumber, projectName,
@@ -247,7 +254,8 @@ export async function saveAmfeDocument(
                 header.responsible || '', header.organization || '', status,
                 stats.operationCount, stats.causeCount, stats.apHCount, stats.apMCount,
                 stats.coveragePercent, header.startDate || '', header.revDate || '',
-                id,
+                id, id, byEmail,
+                byEmail, byType,
                 data, JSON.stringify(revisions), checksum,
             ]
         );

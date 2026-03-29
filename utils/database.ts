@@ -28,7 +28,7 @@ export interface DbAdapter {
 // Schema DDL
 // ---------------------------------------------------------------------------
 
-const SCHEMA_VERSION = 14;
+const SCHEMA_VERSION = 15;
 
 const SCHEMA_DDL = `
 -- Version tracking
@@ -760,6 +760,23 @@ async function runMigrations(adapter: DbAdapter): Promise<void> {
             [14, 'Add linked_amfe_project column to pfd_documents']
         );
         logger.info('Database', 'Migration 14: pfd_documents linked_amfe_project column complete');
+    }
+
+    // Migration 14 → 15: Add modified_by_type column for AI tracking
+    if (currentVersion < 15) {
+        const tables = ['amfe_documents', 'cp_documents', 'ho_documents', 'pfd_documents'];
+        for (const table of tables) {
+            try {
+                await adapter.execute(
+                    `ALTER TABLE ${table} ADD COLUMN modified_by_type TEXT NOT NULL DEFAULT 'user'`
+                );
+            } catch { /* column may already exist */ }
+        }
+        await adapter.execute(
+            `INSERT OR REPLACE INTO schema_version (version, description) VALUES (?, ?)`,
+            [15, 'Add modified_by_type column for AI/user tracking']
+        );
+        logger.info('Database', 'Migration 15: modified_by_type column added to document tables');
     }
 }
 
