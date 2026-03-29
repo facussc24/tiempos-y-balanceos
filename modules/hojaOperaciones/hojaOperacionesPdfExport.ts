@@ -189,7 +189,7 @@ function buildVisualAidsHtml(aids: HoVisualAid[]): string {
     if (aids.length === 0) {
         return `<div style="padding:8px; font-size:8px; color:#999; font-style:italic; font-family:Arial,sans-serif;">Sin ayudas visuales</div>`;
     }
-    const shown = [...aids].sort((a, b) => a.order - b.order).slice(0, MAX_PDF_VISUAL_AIDS);
+    const shown = [...aids].sort((a, b) => (Number.isFinite(a.order) ? a.order : 0) - (Number.isFinite(b.order) ? b.order : 0)).slice(0, MAX_PDF_VISUAL_AIDS);
     const overflow = aids.length - shown.length;
     // Use 3-column grid for 5-6 images, 2-column for fewer
     const colWidth = shown.length > 4 ? '31%' : '48%';

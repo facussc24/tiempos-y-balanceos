@@ -430,7 +430,7 @@ async function buildHoSheet(
         addSectionHeader(ws, r, 'AYUDAS VISUALES');
         r++;
 
-        const sortedAids = [...sheet.visualAids].sort((a, b) => a.order - b.order);
+        const sortedAids = [...sheet.visualAids].sort((a, b) => (Number.isFinite(a.order) ? a.order : 0) - (Number.isFinite(b.order) ? b.order : 0));
         const aidsWithImages = sortedAids.filter(a => a.imageData);
 
         // Grid layout: 2 images per row (matches UI grid-cols-2 pattern)
