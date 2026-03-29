@@ -164,9 +164,9 @@
 - **Total archivos corregidos**: ~135
 - **Total líneas de dead code removidas**: ~800+
 - **Bugs corregidos**: 10 (AuthProvider, useDocumentLock, 3 null safety, NaN sort, async type, logger sanitization, SQL injection guard, dev login gate, clipboard handling)
-- **Dead code eliminado**: ~480 imports/vars, 7 dead exports, 3 `as any` casts
+- **Dead code eliminado**: ~480 imports/vars, 77 dead exports, 3 `as any` casts, 1 dead type
 - **Lint fixes**: unescaped JSX entities, prefer-const, displayName, regex escapes, empty blocks, ternary expressions
-- **Total commits**: ~24
+- **Total commits**: ~42
 - **ESLint errores accionables restantes**: 0 (los ~450 restantes son prop-types falsos positivos, underscore-prefix, React compiler hints, y hooks condicionales ya documentados)
 
 ## Candidatos a Dead Files (requieren verificación manual)
