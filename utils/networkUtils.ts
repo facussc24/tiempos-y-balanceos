@@ -56,7 +56,7 @@ export function normalizePath(path: string): string {
 export function joinPath(...segments: string[]): string {
     const joined = segments
         .filter(Boolean)
-        .map((s, i) => i === 0 ? s : s.replace(/^[\/\\]+/, ''))
+        .map((s, i) => i === 0 ? s : s.replace(/^[/\\]+/, ''))
         .join('\\');
     return normalizePath(joined);
 }

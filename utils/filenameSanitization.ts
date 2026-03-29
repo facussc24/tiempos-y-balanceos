@@ -38,7 +38,7 @@ export const sanitizeFilename = (
     let clean = filename.trim();
 
     // Remove path separators to prevent directory traversal
-    clean = clean.replace(/[\/\\]/g, replacement);
+    clean = clean.replace(/[/\\]/g, replacement);
 
     // Remove or replace forbidden characters
     // Windows: < > : " / \ | ? *
@@ -94,7 +94,7 @@ export const isValidFilename = (filename: string): boolean => {
     if (!filename || filename.trim() === '') return false;
 
     // Check for path separators
-    if (/[\/\\]/.test(filename)) return false;
+    if (/[/\\]/.test(filename)) return false;
 
     // Check for forbidden characters
     if (/[<>:"|?*\x00-\x1f]/.test(filename)) return false;

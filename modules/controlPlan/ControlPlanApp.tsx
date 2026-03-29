@@ -199,7 +199,7 @@ const ControlPlanApp: React.FC<Props> = ({ onBackToLanding, embedded, initialDat
 
     // Persist header collapse state
     useEffect(() => {
-        try { localStorage.setItem('cp_header_collapsed', String(headerCollapsed)); } catch {}
+        try { localStorage.setItem('cp_header_collapsed', String(headerCollapsed)); } catch { /* localStorage unavailable */ }
     }, [headerCollapsed]);
 
     // Auto-validate CP against AMFE with 2-second debounce

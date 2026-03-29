@@ -21,7 +21,7 @@ const PfdSymbolLegend: React.FC = () => {
     });
 
     useEffect(() => {
-        try { localStorage.setItem(STORAGE_KEY, String(expanded)); } catch {}
+        try { localStorage.setItem(STORAGE_KEY, String(expanded)); } catch { /* localStorage unavailable */ }
     }, [expanded]);
 
     return (

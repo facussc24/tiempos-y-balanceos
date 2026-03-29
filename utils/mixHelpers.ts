@@ -90,7 +90,7 @@ export async function verifyMixIntegrity(
         if (!loaded) {
             changes.push({
                 productPath: ref.path,
-                productName: ref.path.split(/[\/\\]/).pop()?.replace('.json', '') || 'Desconocido',
+                productName: ref.path.split(/[/\\]/).pop()?.replace('.json', '') || 'Desconocido',
                 status: 'missing',
                 details: 'Archivo no encontrado'
             });

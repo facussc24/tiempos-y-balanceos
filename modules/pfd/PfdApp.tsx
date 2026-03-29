@@ -232,12 +232,12 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding, embedded, initialData }) => 
 
     // Persist header collapse
     useEffect(() => {
-        try { localStorage.setItem('pfd_header_collapsed', String(headerCollapsed)); } catch {}
+        try { localStorage.setItem('pfd_header_collapsed', String(headerCollapsed)); } catch { /* localStorage unavailable */ }
     }, [headerCollapsed]);
 
     // Phase B: Persist flow editor collapse
     useEffect(() => {
-        try { localStorage.setItem('pfd_flow_editor_open', String(flowEditorOpen)); } catch {}
+        try { localStorage.setItem('pfd_flow_editor_open', String(flowEditorOpen)); } catch { /* localStorage unavailable */ }
     }, [flowEditorOpen]);
 
     // Load clients list
