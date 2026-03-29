@@ -1,12 +1,10 @@
 ---
 description: Reglas para exportacion Excel y PDF
 globs:
-  - "modules/**/amfeExcelExport.ts"
-  - "modules/**/amfePdfExport.ts"
-  - "modules/**/hoExcelExport.ts"
-  - "modules/**/hojaOperacionesPdfExport.ts"
-  - "modules/**/controlPlanExcelExport.ts"
-  - "modules/**/controlPlanPdfExport.ts"
+  - "modules/**/*Export*.ts"
+  - "modules/**/*export*.ts"
+  - "modules/**/pfdSvgExport.ts"
+  - "modules/**/pfdPdfExport.ts"
 ---
 
 # Exportacion Excel/PDF
