@@ -41,7 +41,7 @@ vi.mock('../../../utils/sanitizeCellValue', () => ({
 function realSanitizeFilename(filename: string): string {
     if (!filename || filename.trim() === '') return 'unnamed_file';
     let clean = filename.trim();
-    clean = clean.replace(/[\/\\]/g, '_');
+    clean = clean.replace(/[/\\]/g, '_');
     clean = clean.replace(/[<>:"|?*\x00-\x1f]/g, '_');
     clean = clean.replace(/^[\s.]+|[\s.]+$/g, '');
     if (!clean) clean = 'unnamed_file';

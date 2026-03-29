@@ -192,7 +192,7 @@ describe('Multi-Pass Stochastic Optimization (Phase 27)', () => {
 
             // Create 35 tasks with a complex precedence structure
             for (let i = 1; i <= 35; i++) {
-                let preds: string[] = [];
+                const preds: string[] = [];
 
                 if (i > 1) {
                     // Each task depends on 1-3 previous tasks
