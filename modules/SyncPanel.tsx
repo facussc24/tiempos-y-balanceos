@@ -10,7 +10,7 @@
  * @module SyncPanel
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     RefreshCw,
     Upload,
@@ -31,7 +31,6 @@ import {
 } from 'lucide-react';
 import {
     getCurrentMode,
-    getStorageModeInfo,
     isServerAvailable,
     isSyncRecommended,
     getLastSyncTimestamp,
@@ -43,7 +42,6 @@ import {
     type SyncItem,
     type SyncDirection,
     type SyncProgress,
-    type SyncResult,
     type ConflictResolution
 } from '../utils/syncEngine';
 import { toast } from '../components/ui/Toast';
@@ -177,7 +175,7 @@ function ProgressBar({ progress }: { progress: SyncProgress }) {
 // MAIN COMPONENT
 // ============================================================================
 
-export function SyncPanel({ onClose, onOpenConfig }: SyncPanelProps) {
+export function SyncPanel({ onClose: _onClose, onOpenConfig }: SyncPanelProps) {
     const [mode, setMode] = useState<StorageMode>('shared');
     const [items, setItems] = useState<SyncItem[]>([]);
     const [serverOnline, setServerOnline] = useState(false);

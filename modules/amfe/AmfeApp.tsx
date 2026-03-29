@@ -311,6 +311,44 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab, initialF
         return () => { cancelled = true; };
     }, [projects.currentProjectPath]); // eslint-disable-line react-hooks/exhaustive-deps
 
+    // 9a3. Auto-load linked CP from database when project changes
+    useEffect(() => {
+        const projectPath = projects.currentProjectPath;
+        if (!projectPath) return;
+        let cancelled = false;
+        import('../../utils/repositories/cpRepository').then(({ loadCpByAmfeProject }) =>
+            loadCpByAmfeProject(projectPath).then(result => {
+                if (cancelled) return;
+                if (result) {
+                    tabNav.setCpInitialData(result.doc);
+                    logger.info('AmfeApp', `Auto-loaded linked CP for ${projectPath}`);
+                }
+            })
+        ).catch(err => {
+            logger.warn('AmfeApp', 'Failed to auto-load linked CP', { error: String(err) });
+        });
+        return () => { cancelled = true; };
+    }, [projects.currentProjectPath]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // 9a4. Auto-load linked HO from database when project changes
+    useEffect(() => {
+        const projectPath = projects.currentProjectPath;
+        if (!projectPath) return;
+        let cancelled = false;
+        import('../../utils/repositories/hoRepository').then(({ loadHoByAmfeProject }) =>
+            loadHoByAmfeProject(projectPath).then(result => {
+                if (cancelled) return;
+                if (result) {
+                    tabNav.setHoInitialData(result.doc);
+                    logger.info('AmfeApp', `Auto-loaded linked HO for ${projectPath}`);
+                }
+            })
+        ).catch(err => {
+            logger.warn('AmfeApp', 'Failed to auto-load linked HO', { error: String(err) });
+        });
+        return () => { cancelled = true; };
+    }, [projects.currentProjectPath]); // eslint-disable-line react-hooks/exhaustive-deps
+
     // 9b. PFD ↔ AMFE link integrity validation (uses in-memory PFD from tab nav)
     const linkValidation = useMemo(
         () => validatePfdAmfeLinks(tabNav.pfdInitialData, amfe.data),
@@ -655,18 +693,6 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab, initialF
     }, [amfe.data.operations]);
     const expandAll = useCallback(() => setCollapsedOps(new Set()), []);
 
-    // Check if a saved CP exists for this AMFE project (use full path for lookup)
-    const [hasSavedCp, setHasSavedCp] = useState(false);
-    useEffect(() => {
-        if (!projects.currentProjectPath) { setHasSavedCp(false); return; }
-        let cancelled = false;
-        import('../../utils/repositories/cpRepository').then(({ loadCpByAmfeProject }) =>
-            loadCpByAmfeProject(projects.currentProjectPath).then(result => {
-                if (!cancelled) setHasSavedCp(!!result);
-            })
-        ).catch(() => { if (!cancelled) setHasSavedCp(false); });
-        return () => { cancelled = true; };
-    }, [projects.currentProjectPath]);
 
     // Project context for the tab bar (shows family/part across all tabs)
     const projectContext = useMemo(() => ({
@@ -685,13 +711,9 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab, initialF
         onImportPfdFromAmfe: tabNav.handleImportPfdFromAmfe,
         cpInitialData: tabNav.cpInitialData,
         hoInitialData: tabNav.hoInitialData,
-        onGenerateControlPlan: tabNav.handleGenerateControlPlan,
-        onGenerateHojasOperaciones: tabNav.handleGenerateHojasOperaciones,
         onBackToLanding,
         hasUnsavedChanges: projects.hasUnsavedChanges,
         requestConfirm: confirm.requestConfirm,
-        hasSavedCp,
-        amfeOperationCount: amfe.data.operations.length,
         projectContext,
         onOpenTemplates: () => setShowTemplates(true),
     };
@@ -1124,7 +1146,6 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab, initialF
                 onClearApHWarning={() => setApHWarning(null)}
                 networkToast={networkToast}
                 onClearNetworkToast={clearNetworkToast}
-                data={amfe.data}
             />
 
             {/* Revision Prompt Modal */}

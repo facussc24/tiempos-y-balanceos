@@ -19,7 +19,6 @@ import {
     ensureAuth,
     fetchAllAmfeDocs,
     fetchAllCpDocs,
-    execSqlRead,
     execSqlWrite,
     backupDoc,
     writeResults,

@@ -140,7 +140,7 @@ export function triggerDownload(filename: string, content: string | Uint8Array, 
 // ---------------------------------------------------------------------------
 
 let isInitialized = false;
-let currentProjectId: string | null = null;
+let _currentProjectId: string | null = null;
 
 /**
  * Initialize the unified file system.
@@ -190,7 +190,7 @@ export const saveProject = async (_data: ProjectData): Promise<boolean> => false
 export const deleteProject = async (_projectId: string): Promise<boolean> => false;
 
 export const setCurrentProject = (projectId: string | null): void => {
-    currentProjectId = projectId;
+    _currentProjectId = projectId;
 };
 
 // ---------------------------------------------------------------------------

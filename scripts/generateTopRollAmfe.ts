@@ -1363,7 +1363,7 @@ let totalCauses = 0;
 let apH = 0;
 let apM = 0;
 let apL = 0;
-const apMismatches: string[] = [];
+const _apMismatches: string[] = [];
 
 for (const op of doc.operations) {
     totalOps++;

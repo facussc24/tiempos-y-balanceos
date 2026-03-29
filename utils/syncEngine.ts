@@ -8,7 +8,7 @@
  */
 
 import { isTauri } from './unified_fs';
-import { loadStorageSettings, isPathAccessible, updateLastSyncTimestamp, type StorageMode } from './storageManager';
+import { loadStorageSettings, isPathAccessible, updateLastSyncTimestamp } from './storageManager';
 import { getPathConfig } from './pathManager';
 import { generateChecksum } from './crypto';
 import { logger } from './logger';
@@ -293,7 +293,6 @@ async function createBackup(projectPath: string, projectId: string): Promise<str
     if (!isTauri()) return null;
 
     try {
-        const fs = await import('./unified_fs');
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
         const backupPath = `${projectPath}${BACKUP_SUFFIX}_${timestamp}`;
 

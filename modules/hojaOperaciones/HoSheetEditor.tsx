@@ -5,7 +5,7 @@
  */
 
 import React, { useState, useMemo } from 'react';
-import { HojaOperacion, HoStep, HoVisualAid, PpeItem, HoStatus } from './hojaOperacionesTypes';
+import { HojaOperacion, HoStep, PpeItem } from './hojaOperacionesTypes';
 import HoPpeSelector from './HoPpeSelector';
 import HoStepEditor from './HoStepEditor';
 import HoQualityCheckTable from './HoQualityCheckTable';

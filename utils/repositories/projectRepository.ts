@@ -68,7 +68,7 @@ export async function saveProject(project: ProjectData): Promise<number> {
         const db = await getDatabase();
 
         // Strip transient fields from persisted data
-        const { id, fileHandle, directoryHandle, _loadedTimestamp, _checksum, ...persistData } = project;
+        const { id, fileHandle: _fileHandle, directoryHandle: _directoryHandle, _loadedTimestamp, _checksum, ...persistData } = project;
         const data = JSON.stringify(persistData);
         const checksum = await generateChecksum(data);
 

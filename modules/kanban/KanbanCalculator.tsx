@@ -19,14 +19,12 @@ import { X, Package, Calculator, AlertTriangle, Check, Info, Clock, Box, Chevron
 import {
     calculateKanban,
     convertToHours,
-    calculateDemandPerHour,
     formatKanbanDisplay,
     KanbanResult,
     calculateTotalLeadTime,
     LeadTimeBreakdown
 } from './kanbanLogic';
 import {
-    VDAContainer,
     getAllContainers,
     getContainerById,
     calculateContainersPerPallet,

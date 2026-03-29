@@ -13,7 +13,7 @@
 
 import React, { useMemo } from 'react';
 import { Map, ArrowDown, GitBranch, GitMerge, CornerDownLeft, XOctagon, Filter, ChevronUp, ChevronDown } from 'lucide-react';
-import type { PfdStep, PfdStepType, RejectDisposition } from './pfdTypes';
+import type { PfdStep, RejectDisposition } from './pfdTypes';
 import { getBranchColor } from './pfdTypes';
 import { PfdSymbol } from './PfdSymbols';
 

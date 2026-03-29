@@ -32,8 +32,8 @@ import {
     Search,
     X,
 } from 'lucide-react';
-import type { PfdStep, PfdStepType, RejectDisposition } from './pfdTypes';
-import { getBranchColor, PFD_STEP_TYPES } from './pfdTypes';
+import type { PfdStep } from './pfdTypes';
+import { getBranchColor } from './pfdTypes';
 import { PfdSymbol } from './PfdSymbols';
 import { InheritanceBadge } from '../../components/ui/InheritanceBadge';
 import type { InheritanceStatus } from '../../components/ui/InheritanceBadge';
@@ -420,7 +420,6 @@ const PfdFlowEditor: React.FC<PfdFlowEditorProps> = ({
     onInsertAfter,
     onRemoveStep,
     onMoveStep,
-    onUpdateStep,
     onDuplicateStep,
     readOnly = false,
     isOpen = true,

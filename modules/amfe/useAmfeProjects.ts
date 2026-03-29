@@ -22,7 +22,6 @@ import {
     loadAmfe,
     isAmfePathAccessible,
     AmfeProjectInfo,
-    ensureAmfeHierarchy,
     buildAmfePath,
 } from './amfePathManager';
 import { migrateAmfeDocument } from './amfeValidation';
@@ -114,11 +113,11 @@ export const useAmfeProjects = (
     const [searchQuery, setSearchQuery] = useState('');
 
     // Save/load state
-    const [projects, setProjects] = useState<AmfeProjectInfo[]>([]);
+    const [projects] = useState<AmfeProjectInfo[]>([]);
     const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
     const [networkAvailable, setNetworkAvailable] = useState(true);
-    const [promptState, setPromptState] = useState<ProjectPromptState>(CLOSED_PROMPT);
+    const [promptState] = useState<ProjectPromptState>(CLOSED_PROMPT);
     const [saveAsState, setSaveAsState] = useState<SaveAsState>(CLOSED_SAVE_AS);
     const [loadError, setLoadError] = useState<string>('');
     /** True while loading a project from SQLite (shows skeleton in UI) */

@@ -8,8 +8,8 @@
  * the filter if ANY of its causes match the AP/status/search criteria.
  */
 
-import React, { useMemo } from 'react';
-import { AmfeOperation, ActionPriority, AMFE_STATUS_OPTIONS, WORK_ELEMENT_TYPES, WORK_ELEMENT_LABELS, WorkElementType } from './amfeTypes';
+import React from 'react';
+import { AmfeOperation, AMFE_STATUS_OPTIONS, WORK_ELEMENT_TYPES, WORK_ELEMENT_LABELS } from './amfeTypes';
 import { Filter, X, Search, Eye } from 'lucide-react';
 import { ColumnGroupVisibility, COLUMN_GROUP_LABELS, COLUMN_GROUP_COLORS, COLUMN_GROUP_TOOLTIPS } from './useAmfeColumnVisibility';
 

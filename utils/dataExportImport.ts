@@ -7,9 +7,9 @@
  * .barack files use the same ExportDataset format as backups.
  */
 
-import { snapshotDatabase, writeDatasetToDb } from './backupService';
+import { snapshotDatabase } from './backupService';
 import {
-    analyzeDatasets, resolveMerge, countByTable,
+    analyzeDatasets, resolveMerge,
     type ExportDataset, type MergeResult, type ResolvedConflict, type MergeAction,
 } from './mergeEngine';
 import { getDatabase } from './database';

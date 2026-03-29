@@ -14,12 +14,8 @@
 import React, { useState, useMemo } from 'react';
 import {
     Package,
-    Clock,
     CheckCircle,
-    Circle,
-    ChevronRight,
     Truck,
-    AlertCircle
 } from 'lucide-react';
 
 interface ProductMission {
@@ -232,7 +228,7 @@ export function convertToTaskList(
     heijunkaSlots: Array<{ time: string; products: Array<{ name: string; qty: number; color: string }> }>,
     pitchMinutes: number
 ): TimeSlot[] {
-    return heijunkaSlots.map((slot, idx) => {
+    return heijunkaSlots.map((slot) => {
         const startHour = parseInt(slot.time.split(':')[0]) || 0;
         const startMin = parseInt(slot.time.split(':')[1]) || 0;
         const endMin = startMin + pitchMinutes;

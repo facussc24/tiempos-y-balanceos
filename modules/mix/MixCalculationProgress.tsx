@@ -50,7 +50,6 @@ export const MixCalculationProgress: React.FC<MixCalculationProgressProps> = ({
                 {STEPS.map((step, index) => {
                     const isComplete = index < currentIndex;
                     const isCurrent = index === currentIndex;
-                    const isPending = index > currentIndex;
 
                     return (
                         <div key={step.key} className="flex items-center gap-3">

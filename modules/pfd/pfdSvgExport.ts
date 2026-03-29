@@ -49,17 +49,6 @@ const NODE_COLORS: Record<PfdStepType, { border: string; bg: string; bgDark: str
     combined:   MONO,
 };
 
-const BRANCH_COLORS: Record<string, { bg: string; text: string; border: string }> = {
-    A: { bg: '#F9FAFB', text: BLACK, border: '#D1D5DB' },
-    B: { bg: '#F9FAFB', text: BLACK, border: '#D1D5DB' },
-    C: { bg: '#F9FAFB', text: BLACK, border: '#D1D5DB' },
-    D: { bg: '#F9FAFB', text: BLACK, border: '#D1D5DB' },
-};
-
-function getBranchColor(branchId: string) {
-    return BRANCH_COLORS[(branchId || '').toUpperCase()] || BRANCH_COLORS.A;
-}
-
 /** Get effective node height — accounts for characteristics content and disposition */
 function getNodeHeight(step: PfdStep): number {
     let h = step.stepType === 'decision' ? NODE_H_DECISION : NODE_H;
@@ -770,7 +759,6 @@ export function buildPfdSvg(doc: PfdDocument, logoBase64 = '', options?: BuildPf
             // Render each lane
             for (let li = 0; li < branches.length; li++) {
                 const branch = branches[li];
-                const branchColor = getBranchColor(branch.branchId);
                 const laneX = startX + li * (laneW + PARALLEL_GAP);
 
                 // Lane background

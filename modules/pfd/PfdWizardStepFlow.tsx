@@ -16,7 +16,7 @@ import type {
     PfdBranchGroup,
 } from './pfdWizardTypes';
 import { BRANCH_IDS } from './pfdWizardTypes';
-import { BRANCH_COLORS, getBranchColor } from './pfdTypes';
+import { getBranchColor } from './pfdTypes';
 import { PfdSymbol } from './PfdSymbols';
 
 interface WizardStepProps {

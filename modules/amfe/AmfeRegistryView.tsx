@@ -21,8 +21,8 @@ import {
 } from './useAmfeRegistry';
 import {
     Search, RefreshCw, ArrowUpDown, ChevronUp, ChevronDown,
-    FileJson, Calendar, User, ShieldCheck, AlertTriangle,
-    FolderOpen, X, Filter, Hash,
+    AlertTriangle,
+    FolderOpen, X, Hash,
 } from 'lucide-react';
 
 interface Props {

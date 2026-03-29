@@ -15,16 +15,13 @@ import {
     Clock,
     Package,
     AlertTriangle,
-    Check,
     Truck,
-    Info,
     Printer,
     Download
 } from 'lucide-react';
 import {
     calculateHeijunka,
     ProductDemand,
-    HeijunkaResult,
     HeijunkaSlot,
     getProductColor
 } from './heijunkaLogic';

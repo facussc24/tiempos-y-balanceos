@@ -9,9 +9,11 @@ export class RotaryInjectionStrategy implements SimulationStrategy {
         const {
             puInyTime, puCurTime,
             manualOps, manualTimeOverride,
-            taktTime, headcountMode, userHeadcountOverride, activeShifts, oee,
+            taktTime, headcountMode, userHeadcountOverride, oee,
             cycleQuantity = 1,
-            availableSeconds
+            availableSeconds,
+            injectionMode = 'batch',
+            indexTime = 0
         } = params;
 
         // FIX Bug #4: Use real shift seconds or fallback to 8h constant
@@ -46,7 +48,10 @@ export class RotaryInjectionStrategy implements SimulationStrategy {
             // Rotary Logic: Injection + Distributed Curing (Sequential Process)
             // N* Logic: When N >= N*, distributedCure <= puInyTime, so cycle approaches Iny floor
             const distributedCure = puCurTime / n;
-            cyclePerPiece = puInyTime + distributedCure;
+            const indexT = injectionMode === 'carousel' ? (indexTime ?? 0) : 0;
+            cyclePerPiece = injectionMode === 'carousel'
+                ? Math.max(puInyTime, distributedCure) + indexT
+                : puInyTime + distributedCure;
 
             // 2. Machine Loop Time (Time to produce N pieces / 1 Revolution)
             const machineLoopTime = cyclePerPiece * n;
@@ -84,18 +89,11 @@ export class RotaryInjectionStrategy implements SimulationStrategy {
             // External Manual always adds to the loop
             const realLoopTime = internalConstraint + totalExternalTime;
 
-            // 5. Real Cycle Per Piece (Simulating Constraints)
-            // Logic: (Max(MachineLoop, Internal) + External) / N
-            const realCycle = realLoopTime / n;
-
             const isSingleMachineFeasible = taktTime > 0 ? cyclePerPiece <= taktTime : true;
 
             // 6. Slacks (Per Shot)
             // Operator Slack: Amount of time Operator waits for Machine
             const waitOp = Math.max(0, machineLoopTime - totalInternalTime);
-
-            // Machine Slack: Amount of time Machine waits for Operator
-            const waitMachine = Math.max(0, totalInternalTime - machineLoopTime);
 
             // 7. Bottleneck Analysis
             const isBottleneckLabor = (totalInternalTime > machineLoopTime);
@@ -175,7 +173,6 @@ export class RotaryInjectionStrategy implements SimulationStrategy {
                 : 1;
 
             // E. ZERO CAPEX LOGIC
-            const loopTime = puInyTime + unitCurTime; // Fallback for pure machine sizing?
             // Actually, for Rotary, the reqCavities logic is: TargetCycle <= Takt.
             // Max(Iny, Cur/N) <= Takt.
             // So Cur/N <= Takt => N >= Cur/Takt.

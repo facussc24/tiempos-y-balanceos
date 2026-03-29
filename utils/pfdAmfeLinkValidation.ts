@@ -9,8 +9,8 @@
  * @module pfdAmfeLinkValidation
  */
 
-import type { PfdDocument, PfdStep } from '../modules/pfd/pfdTypes';
-import type { AmfeDocument, AmfeOperation } from '../modules/amfe/amfeTypes';
+import type { PfdDocument } from '../modules/pfd/pfdTypes';
+import type { AmfeDocument } from '../modules/amfe/amfeTypes';
 
 // ---------------------------------------------------------------------------
 // Types

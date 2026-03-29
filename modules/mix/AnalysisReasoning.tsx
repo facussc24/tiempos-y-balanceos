@@ -1,5 +1,5 @@
 import React from 'react';
-import { AlertCircle, CheckCircle, Info } from 'lucide-react';
+import { AlertCircle, CheckCircle } from 'lucide-react';
 
 interface AnalysisReasoningProps {
     isViable: boolean;
@@ -12,7 +12,7 @@ interface AnalysisReasoningProps {
     taktTime: number;
 }
 
-export const AnalysisReasoning: React.FC<AnalysisReasoningProps> = ({ isViable, sectors, taktTime }) => {
+export const AnalysisReasoning: React.FC<AnalysisReasoningProps> = ({ isViable, sectors }) => {
     // Determine the primary reason for the status
     const criticalSectors = sectors.filter(s => s.available < s.required);
     const tightSectors = sectors.filter(s => s.saturation > 95 && s.available >= s.required);

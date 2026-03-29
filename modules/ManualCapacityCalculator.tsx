@@ -1,9 +1,9 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Task, Shift } from '../types';
 import { formatNumber, calculateTaktTime } from '../utils';
 import { ComposedChart, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Bar, Cell } from 'recharts';
-import { Calculator, X, Users, Activity, Clock, Save, AlertTriangle, ArrowRight, CheckCircle2, Zap, Scale } from 'lucide-react';
+import { Calculator, X, Users, Activity, Clock, Save, AlertTriangle, CheckCircle2, Zap, Scale } from 'lucide-react';
 
 interface Props {
     task: Task;
@@ -26,7 +26,6 @@ export const ManualCapacityCalculator: React.FC<Props> = ({ task, shifts, dailyD
 
     // 2. Constants & Takt Calculation (FIX: Use centralized function with real shift data)
     const taktResult = calculateTaktTime(shifts, activeShifts, dailyDemand, oee, setupLossPercent);
-    const taktNominal = taktResult.nominalSeconds;
     const taktEffective = taktResult.effectiveSeconds;
 
     // 3. Time Calculations

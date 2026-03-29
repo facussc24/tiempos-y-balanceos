@@ -25,7 +25,7 @@ export const ProductStackedBar: React.FC<ProductStackedBarProps> = ({
                 className="w-full rounded-full overflow-hidden flex"
                 style={{ height }}
             >
-                {products.map((product, idx) => (
+                {products.map((product) => (
                     <div
                         key={product.productPath}
                         className="h-full transition-all hover:opacity-80"

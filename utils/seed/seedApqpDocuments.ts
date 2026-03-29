@@ -13,7 +13,7 @@
  */
 
 import type {
-    AmfeDocument, AmfeOperation, AmfeWorkElement, AmfeFunction,
+    AmfeOperation, AmfeWorkElement, AmfeFunction,
     AmfeFailure, AmfeCause, WorkElementType, AmfeHeaderData,
 } from '../../modules/amfe/amfeTypes';
 import type {
@@ -23,7 +23,7 @@ import type {
     PfdDocument, PfdStep, PfdStepType, PfdHeader,
 } from '../../modules/pfd/pfdTypes';
 import type {
-    HoDocument, HojaOperacion, HoStep, PpeItem, HoDocumentHeader,
+    HoDocument, HojaOperacion, PpeItem, HoDocumentHeader,
 } from '../../modules/hojaOperaciones/hojaOperacionesTypes';
 import { DEFAULT_REACTION_PLAN_TEXT } from '../../modules/hojaOperaciones/hojaOperacionesTypes';
 import { saveAmfeDocument } from '../repositories/amfeRepository';

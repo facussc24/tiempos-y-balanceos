@@ -74,12 +74,6 @@ function opsMatch(name1: string, name2: string): boolean {
     return false;
 }
 
-function numbersMatch(num1: string | number, num2: string | number): boolean {
-    const n1 = parseInt(String(num1).replace(/\D/g, ''), 10);
-    const n2 = parseInt(String(num2).replace(/\D/g, ''), 10);
-    return !isNaN(n1) && !isNaN(n2) && n1 === n2;
-}
-
 /** Normalize a step/op number to a plain integer string, or '' if invalid */
 function normalizeNum(num: string | number | undefined): string {
     if (num == null) return '';

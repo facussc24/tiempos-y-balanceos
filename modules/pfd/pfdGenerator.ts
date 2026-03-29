@@ -10,8 +10,7 @@
  */
 
 import {
-    AmfeDocument, AmfeOperation, AmfeWorkElement,
-    AmfeFailure, AmfeCause,
+    AmfeDocument, AmfeWorkElement,
 } from '../amfe/amfeTypes';
 import {
     PfdDocument, PfdStep, PfdHeader, PfdStepType, TransportMode,
@@ -204,16 +203,6 @@ export function buildPfdHeader(amfeDoc: AmfeDocument, amfeProjectName: string): 
         modelYear: h.modelYear || '',
         linkedAmfeId: amfeProjectName,
     };
-}
-
-// ============================================================================
-// STEP NUMBER HELPERS
-// ============================================================================
-
-/** Parse numeric portion from an AMFE opNumber like "10", "OP 20", etc. */
-function parseOpNumber(opNumber: string): number {
-    const match = opNumber.match(/(\d+)\s*$/);
-    return match ? parseInt(match[1], 10) : 0;
 }
 
 // ============================================================================

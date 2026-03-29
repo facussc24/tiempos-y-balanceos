@@ -5,7 +5,7 @@
  * don't start from a blank slate.
  */
 
-import { PfdStep, PfdHeader, createEmptyStep, EMPTY_PFD_HEADER } from './pfdTypes';
+import { PfdStep, PfdHeader, createEmptyStep } from './pfdTypes';
 
 /**
  * Template result that can optionally include pre-filled header data.

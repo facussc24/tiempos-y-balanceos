@@ -8,7 +8,7 @@
  */
 
 import React, { useMemo } from 'react';
-import { ControlPlanDocument, ControlPlanItem, CP_COLUMNS } from './controlPlanTypes';
+import { ControlPlanDocument, ControlPlanItem } from './controlPlanTypes';
 import { AlertTriangle, BarChart3, CheckCircle, ShieldAlert } from 'lucide-react';
 
 interface Props {

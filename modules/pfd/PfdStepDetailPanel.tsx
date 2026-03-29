@@ -6,7 +6,7 @@
  */
 
 import React, { useCallback, useEffect } from 'react';
-import type { PfdStep, PfdStepType, SpecialCharClass, RejectDisposition } from './pfdTypes';
+import type { PfdStep, PfdStepType, RejectDisposition } from './pfdTypes';
 import { getBranchColor, PFD_STEP_TYPES } from './pfdTypes';
 import PfdSymbolPicker from './PfdSymbolPicker';
 import { PfdSymbol } from './PfdSymbols';

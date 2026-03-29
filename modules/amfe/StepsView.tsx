@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { AmfeOperation, AmfeWorkElement, AmfeFunction, AmfeFailure, AmfeCause, WorkElementType } from './amfeTypes';
-import { Plus, Trash2, ChevronRight, ChevronDown, User, Monitor, Box, Settings, Thermometer, PenTool } from 'lucide-react';
+import { Plus, Trash2, User, Monitor, Box, Settings } from 'lucide-react';
 
 /** Subset of the useAmfe hook result that StepsView requires */
 interface AmfeActions {

@@ -21,8 +21,6 @@ interface AmfeTabBarProps {
     onImportPfdFromAmfe?: () => void;
     cpInitialData: ControlPlanDocument | null;
     hoInitialData: HoDocument | null;
-    onGenerateControlPlan: () => void;
-    onGenerateHojasOperaciones: () => void;
     onBackToLanding: () => void;
     hasUnsavedChanges: boolean;
     requestConfirm: (options: {
@@ -31,10 +29,6 @@ interface AmfeTabBarProps {
         variant?: 'danger' | 'warning' | 'info';
         confirmText?: string;
     }) => Promise<boolean>;
-    /** Indicates a saved CP exists for this AMFE project */
-    hasSavedCp?: boolean;
-    /** Number of operations in the current AMFE document */
-    amfeOperationCount?: number;
     /** Project context: client, part name, etc. to show across all tabs */
     projectContext?: ProjectContext;
     /** Open the templates modal (accessible from any tab) */
@@ -58,14 +52,9 @@ const AmfeTabBar: React.FC<AmfeTabBarProps> = ({
     onGeneratePfd,
     onImportPfdFromAmfe,
     cpInitialData,
-    hoInitialData,
-    onGenerateControlPlan,
-    onGenerateHojasOperaciones,
     onBackToLanding,
     hasUnsavedChanges,
     requestConfirm,
-    hasSavedCp,
-    amfeOperationCount = 0,
     projectContext,
     onOpenTemplates,
 }) => {
@@ -126,13 +115,13 @@ const AmfeTabBar: React.FC<AmfeTabBarProps> = ({
                 <button
                     onClick={async () => {
                         if (!(await confirmIfDirty())) return;
-                        cpInitialData ? onTabChange('controlPlan') : onGenerateControlPlan();
+                        onTabChange('controlPlan');
                     }}
                     className={`px-4 py-2.5 text-xs font-medium transition-colors duration-150 flex items-center gap-1.5 ${getTabClass('controlPlan')}`}
                 >
                     <ClipboardCheck size={13} />
                     Plan de Control
-                    {hasSavedCp && (
+                    {cpInitialData && (
                         <span className="flex items-center gap-0.5 text-[9px] bg-green-100 text-green-700 px-1.5 py-0 rounded-full font-bold" title="CP guardado vinculado">
                             <Check size={9} /> Guardado
                         </span>
@@ -141,9 +130,7 @@ const AmfeTabBar: React.FC<AmfeTabBarProps> = ({
                 <button
                     onClick={async () => {
                         if (!(await confirmIfDirty())) return;
-                        // Auto-regenerate if previous generation produced empty result but AMFE now has operations
-                        const hoIsStaleEmpty = hoInitialData && hoInitialData.sheets.length === 0 && amfeOperationCount > 0;
-                        (hoInitialData && !hoIsStaleEmpty) ? onTabChange('hojaOperaciones') : onGenerateHojasOperaciones();
+                        onTabChange('hojaOperaciones');
                     }}
                     className={`px-4 py-2.5 text-xs font-medium transition-colors duration-150 flex items-center gap-1.5 ${getTabClass('hojaOperaciones')}`}
                 >

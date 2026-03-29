@@ -11,9 +11,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Package, Loader2, Search, CheckCircle2, Circle } from 'lucide-react';
 import { MixSelectableProduct } from '../../types';
-import { listClients, listProjects, listParts, buildMasterJsonPath } from '../../utils/pathManager';
-import { readTextFile } from '../../utils/unified_fs';
-import { isTauri } from '../../utils/unified_fs';
+import { listFamilies, getFamilyMembers } from '../../utils/repositories/familyRepository';
 import { toast } from '../../components/ui/Toast';
 import { logger } from '../../utils/logger';
 
@@ -77,55 +75,42 @@ export const MixProductGrid: React.FC<MixProductGridProps> = ({
     }, [initialSelection]);
 
     /**
-     * Carga todos los productos de la jerarquía Cliente/Proyecto/Pieza
+     * Carga todos los productos desde familias de producto (SQLite)
+     * Reemplaza la carga por filesystem de Tauri que ya no existe
      */
     const loadAllProducts = async () => {
-        if (!isTauri()) {
-            setError('Esta función solo está disponible en modo escritorio.');
-            setIsLoading(false);
-            return;
-        }
-
         setIsLoading(true);
         setError(null);
 
         try {
-            const clients = await listClients();
+            const families = await listFamilies({ activeOnly: true });
             const allProducts: MixSelectableProduct[] = [];
 
-            // UX Mejora #1: Report progress per client
-            setLoadingProgress({ current: 0, total: clients.length, currentClient: '' });
+            setLoadingProgress({ current: 0, total: families.length, currentClient: '' });
 
-            for (let i = 0; i < clients.length; i++) {
-                const client = clients[i];
-                setLoadingProgress({ current: i + 1, total: clients.length, currentClient: client });
+            for (let i = 0; i < families.length; i++) {
+                const family = families[i];
+                setLoadingProgress({ current: i + 1, total: families.length, currentClient: family.name });
 
-                const projects = await listProjects(client);
-                for (const project of projects) {
-                    const parts = await listParts(client, project);
-                    for (const part of parts) {
-                        // Extraer demanda del master.json
-                        const { demand, isDefault } = await extractDemand(client, project, part);
-                        const path = buildMasterJsonPath(client, project, part);
-
-                        allProducts.push({
-                            path,
-                            displayName: part,
-                            client,
-                            project,
-                            part,
-                            dailyDemand: demand,
-                            isSelected: false,
-                            isDefaultDemand: isDefault
-                        });
-                    }
+                const members = await getFamilyMembers(family.id);
+                for (const member of members) {
+                    allProducts.push({
+                        path: `family/${family.id}/product/${member.productId}`,
+                        displayName: member.codigo || member.descripcion || `Producto ${member.productId}`,
+                        client: family.lineaName || family.lineaCode || 'Sin cliente',
+                        project: family.name,
+                        part: member.codigo || `ID-${member.productId}`,
+                        dailyDemand: 100,
+                        isSelected: false,
+                        isDefaultDemand: true
+                    });
                 }
             }
 
             setProducts(allProducts);
 
             if (allProducts.length === 0) {
-                setError('No se encontraron productos. Crea estudios primero desde el Dashboard.');
+                setError('No hay productos configurados. Crea familias de producto primero.');
             }
         } catch (e) {
             logger.error('MixProductGrid', 'Error loading products', {}, e instanceof Error ? e : undefined);
@@ -134,27 +119,6 @@ export const MixProductGrid: React.FC<MixProductGridProps> = ({
             setIsLoading(false);
             setLoadingProgress(null);
         }
-    };
-
-    /**
-     * Extrae la demanda diaria del archivo master.json
-     * V5.3: Retorna flag indicando si es valor por defecto
-     */
-    const extractDemand = async (client: string, project: string, part: string): Promise<{ demand: number; isDefault: boolean }> => {
-        try {
-            const path = buildMasterJsonPath(client, project, part);
-            const content = await readTextFile(path);
-            if (content) {
-                const data = JSON.parse(content);
-                const demand = data.meta?.dailyDemand;
-                if (typeof demand === 'number' && demand > 0) {
-                    return { demand, isDefault: false };
-                }
-            }
-        } catch {
-            // Silenciar error, usar default
-        }
-        return { demand: 100, isDefault: true };
     };
 
     /**
@@ -309,7 +273,7 @@ export const MixProductGrid: React.FC<MixProductGridProps> = ({
                     </div>
                 ) : (
                     <div className="space-y-2">
-                        {filteredProducts.map((product, idx) => {
+                        {filteredProducts.map((product) => {
                             const safeIndex = products.findIndex(p => p.path === product.path);
 
                             return (

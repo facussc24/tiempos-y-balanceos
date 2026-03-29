@@ -801,7 +801,6 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
                         for (let failIdx = 0; failIdx < func.failures.length; failIdx++) {
                             const fail = func.failures[failIdx];
                             const failRows = getFailureRowCount(fail);
-                            const warnings = getFailureWarnings(fail);
                             const causesToRender = fail.causes.length > 0 ? fail.causes : [null]; // null = empty placeholder
 
                             causesToRender.forEach((cause, causeIndex) => {

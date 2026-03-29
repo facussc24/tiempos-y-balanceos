@@ -11,7 +11,6 @@ import {
     fetchAllAmfeDocs,
     fetchAllCpDocs,
     fetchAllHoDocs,
-    normOp,
     writeResults,
 } from './supabaseHelper.js';
 

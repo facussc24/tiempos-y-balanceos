@@ -13,8 +13,6 @@ import {
     listAmfeDocuments,
     saveAmfeDocument,
     updateAmfeStatus,
-    getNextAmfeNumber as repoGetNextNumber,
-    loadAmfeByProjectName,
     computeAmfeStats,
 } from '../../utils/repositories/amfeRepository';
 import { logger } from '../../utils/logger';
@@ -245,7 +243,7 @@ export function addRevisionToEntry(
 /**
  * Sync registry from SQLite (replaces syncRegistryFromProjects which scanned filesystem).
  */
-export async function syncRegistryFromProjects(registry: AmfeRegistry): Promise<AmfeRegistry> {
+export async function syncRegistryFromProjects(_registry: AmfeRegistry): Promise<AmfeRegistry> {
     // Just reload from DB — it's the source of truth
     return loadRegistry();
 }

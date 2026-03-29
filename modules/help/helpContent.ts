@@ -8,9 +8,9 @@
  */
 
 import {
-    BookOpen, Activity, BarChart2, Calculator,
+    Activity, BarChart2, Calculator,
     Users, Clock, Split, ClipboardCheck, LayoutList,
-    Network, Box, Rocket, Target, Layers, Binary, Scale, SortDesc
+    Network, Box, Target, Layers, Binary, Scale, SortDesc
 } from 'lucide-react';
 
 // ==================== TYPES ====================

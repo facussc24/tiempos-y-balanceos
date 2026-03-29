@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ClipboardPaste, X, Zap } from 'lucide-react';
-import { ProjectData, Task } from '../../../types';
+import { ProjectData } from '../../../types';
 import { calculateTaskWeights } from '../../../utils';
 import { parseTaskTime } from '../../../utils/validation';
 import { toast } from '../../../components/ui/Toast';

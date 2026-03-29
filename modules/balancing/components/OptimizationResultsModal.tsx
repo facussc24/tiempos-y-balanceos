@@ -6,7 +6,6 @@ import {
     CheckCircle2,
     AlertTriangle,
     XCircle,
-    ChevronRight,
     Users,
     Factory,
     ChevronDown,

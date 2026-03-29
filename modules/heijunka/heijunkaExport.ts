@@ -9,7 +9,7 @@
  */
 
 import XLSX from 'xlsx-js-style';
-import { HeijunkaResult, HeijunkaSlot, ProductSummary } from './heijunkaLogic';
+import { HeijunkaResult, HeijunkaSlot } from './heijunkaLogic';
 import { sanitizeCellValue } from '../../utils/sanitizeCellValue';
 import { sanitizeFilename } from '../../utils/filenameSanitization';
 import { logger } from '../../utils/logger';

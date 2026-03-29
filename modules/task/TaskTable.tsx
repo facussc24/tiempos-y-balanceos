@@ -5,7 +5,7 @@ import { Video, Trash2, Hash, ChevronDown, ChevronRight, PieChart, CheckCircle2,
 import { DependencySelector } from './components/DependencySelector';
 import { TimeInputCell } from './components/TimeInputCell';
 import { isOutlier } from '../../utils/math';
-import { parsePositiveInt, parsePercentage, parseTaskTime } from '../../utils/validation';
+import { parsePositiveInt, parseTaskTime } from '../../utils/validation';
 import { Tooltip } from '../../components/ui/Tooltip';
 
 interface TaskTableProps {
@@ -98,9 +98,6 @@ export const TaskTable: React.FC<TaskTableProps> = ({
 
     const renderTaskRow = (task: Task) => {
         // Refinement: Only flag outliers if we have enough samples (N >= 3) to establish a trend
-        const validSamplesCount = task.times.filter(t => t !== null && t > 0).length;
-        const hasOutliers = validSamplesCount >= 3 && task.times.some(t => t !== null && isOutlier(t, task.averageTime, task.stdDev));
-
         const isMachine = task.executionMode === 'machine' || task.executionMode === 'injection';
         const isInternal = task.isMachineInternal;
 

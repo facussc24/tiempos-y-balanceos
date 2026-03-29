@@ -9,7 +9,7 @@
  */
 
 import { v4 as uuidv4 } from 'uuid';
-import { PfdDocument, PfdStep } from '../pfd/pfdTypes';
+import { PfdDocument } from '../pfd/pfdTypes';
 import { AmfeOperation, AmfeWorkElement } from './amfeTypes';
 
 export interface AmfePfdImportResult {

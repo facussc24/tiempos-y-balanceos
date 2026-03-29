@@ -10,8 +10,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
     ArrowLeft, Database, Shield, Download, Upload, FolderSync,
-    RefreshCw, Trash2, HardDrive, Monitor, Clock, CheckCircle,
-    AlertTriangle, Loader2, Plus, FolderOpen, Wifi, WifiOff,
+    RefreshCw, HardDrive, Monitor, Clock,
+    Loader2, Plus, FolderOpen, Wifi, WifiOff,
 } from 'lucide-react';
 import { DataManagerCard } from '../components/ui/DataManagerCard';
 import { Breadcrumb } from '../components/navigation/Breadcrumb';
@@ -23,7 +23,7 @@ import { logger } from '../utils/logger';
 import {
     createBackup, listBackups, restoreFromBackup, getBackupStats,
     isBackupEnabled, setBackupEnabled, writeServerBackup, snapshotDatabase,
-    isServerAvailable, getServerBackupStats,
+    getServerBackupStats,
     type BackupInfo, type BackupStats, type ServerBackupStats,
 } from '../utils/backupService';
 import {
@@ -72,7 +72,7 @@ const DataManager: React.FC<DataManagerProps> = ({ onBackToLanding }) => {
     // Folder sync
     const [syncStatus, setSyncStatus] = useState<SyncFolderStatus | null>(null);
     const [isSyncing, setIsSyncing] = useState(false);
-    const [pullResult, setPullResult] = useState<MergeResult | null>(null);
+    const [, setPullResult] = useState<MergeResult | null>(null);
 
     // Device
     const [deviceName, setDeviceNameState] = useState('');

@@ -5,7 +5,6 @@ import { ConfirmModal } from '../../components/modals/ConfirmModal';
 import { PromptModal } from '../../components/modals/PromptModal';
 import PdfPreviewModal from '../../components/modals/PdfPreviewModal';
 import { ModuleErrorBoundary } from '../../components/ui/ModuleErrorBoundary';
-import type { AmfeDocument } from './amfeTypes';
 import type { AmfeConfirmState } from './useAmfeConfirm';
 import type { PdfTemplate } from './amfePdfExport';
 
@@ -49,8 +48,6 @@ interface AmfeModalsProps {
     onClearApHWarning: () => void;
     networkToast: 'lost' | 'recovered' | null;
     onClearNetworkToast: () => void;
-    // Data for panels
-    data: AmfeDocument;
 }
 
 const AmfeModals: React.FC<AmfeModalsProps> = ({
@@ -61,7 +58,6 @@ const AmfeModals: React.FC<AmfeModalsProps> = ({
     pdfPreview, isExportingPdf, onPdfExport, onClearPdfPreview,
     loadError, apHWarning, onClearApHWarning,
     networkToast, onClearNetworkToast,
-    data,
 }) => {
     const saveAsRef = useFocusTrap(saveAsState.isOpen);
 

@@ -80,7 +80,6 @@ function FlowArrow({
     const isFork = !curBranch && !!nextBranch;
     const isJoin = !!curBranch && !nextBranch;
     const isBranchSwitch = !!curBranch && !!nextBranch && curBranch !== nextBranch;
-    const isSameBranch = curBranch === nextBranch;
 
     // NG path info from current step
     const hasDisposition = current.rejectDisposition !== 'none';

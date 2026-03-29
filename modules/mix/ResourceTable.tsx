@@ -27,7 +27,6 @@ interface ResourceTableProps {
 
 export const ResourceTable: React.FC<ResourceTableProps> = ({
     rows,
-    totalPersonas,
     avgSaturation,
     taktTime,
     totalDemand

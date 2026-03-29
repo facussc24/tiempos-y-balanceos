@@ -35,7 +35,6 @@ import { truncateApplicableParts as truncateParts } from '../../utils/productFam
 const NAVY = '1E3A5F';
 const NAVY_LIGHT = 'D6E4F0';
 const GREEN_HEADER = 'E2EFDA';
-const GREEN_TEXT = '166534';
 const RED_HEADER = 'FFC7CE';
 const RED_TEXT = '9C0006';
 const YELLOW_HIGHLIGHT = 'FFEB9C';
@@ -61,9 +60,6 @@ const COL_WIDTHS = [2, 14, 16, 20, 28, 18, 16, 12, 20];
 
 /** Approximate pixels per Excel character width unit (96 DPI, Arial default) */
 const CHARS_TO_PX = 7.5;
-
-/** Points to pixels conversion at 96 DPI */
-const PT_TO_PX = 1.333;
 
 /** Pixel to EMU conversion (1 pixel ≈ 9525 EMU at 96 DPI) */
 const PX_TO_EMU = 9525;
@@ -153,28 +149,6 @@ interface ExcelAssets {
 function stripDataUri(dataUri: string): string {
     const idx = dataUri.indexOf(',');
     return idx >= 0 ? dataUri.substring(idx + 1) : dataUri;
-}
-
-/**
- * @deprecated Use imgPos() instead — imgRange stretches images ignoring aspect ratio.
- * Create image range for ws.addImage() with tl+br (stretches to fill rectangle).
- */
-function imgRange(tl: { col: number; row: number }, br: { col: number; row: number }) {
-    return { tl, br } as unknown as ExcelJS.ImageRange;
-}
-
-/**
- * Create image position with explicit pixel dimensions (preserves aspect ratio).
- * Uses tl + ext instead of tl + br, so the image keeps its exact size.
- * NOTE: ExcelJS ext-xform.js multiplies by 9525 internally (EMU conversion),
- * so we pass raw pixel values here — NOT EMUs.
- */
-function imgPos(tl: { col: number; row: number }, widthPx: number, heightPx: number) {
-    return {
-        tl,
-        ext: { width: widthPx, height: heightPx },
-        editAs: 'oneCell',
-    } as unknown as ExcelJS.ImageRange;
 }
 
 /**
@@ -313,8 +287,6 @@ async function buildHoSheet(
     // ─────────────────────────────────────────────────────────────
     // HEADER SECTION — Row 2-6 (matching paper format HO 952)
     // ─────────────────────────────────────────────────────────────
-
-    const headerStartRow = r;
 
     // Row 2-3: Logo | HOJA DE OPERACIONES | HO Number
     // Logo (B2:C3)

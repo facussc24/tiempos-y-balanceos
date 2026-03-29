@@ -1,5 +1,5 @@
 import React from 'react';
-import { Settings, Lock, Plus, X, Bot, Split, AlertTriangle, Cpu, Users, XCircle, CheckCircle2 } from 'lucide-react';
+import { Settings, Lock, X, Bot, Split, AlertTriangle, Cpu, Users, XCircle, CheckCircle2 } from 'lucide-react';
 import { useDraggable, useDroppable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import { ProjectData, MachineType, Task, Sector } from '../../../types';

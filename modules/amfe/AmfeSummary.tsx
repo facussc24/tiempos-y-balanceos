@@ -10,7 +10,7 @@
 
 import React, { useMemo } from 'react';
 import { AmfeDocument, ActionPriority, AmfeFailure, AmfeCause } from './amfeTypes';
-import { getDocumentCompletionErrors, ApHComplianceError, getSoftLimitWarnings } from './amfeValidation';
+import { getDocumentCompletionErrors, getSoftLimitWarnings } from './amfeValidation';
 import { AlertTriangle, CheckCircle, Clock, XCircle, BarChart3, ShieldAlert, ShieldCheck } from 'lucide-react';
 
 interface Props {
@@ -261,7 +261,7 @@ const AmfeSummary: React.FC<Props> = ({ data }) => {
                     </h4>
                     {complianceErrors.length > 0 && (
                         <div className="space-y-1 max-h-40 overflow-y-auto">
-                            {complianceErrors.slice(0, 15).map((err, i) => {
+                            {complianceErrors.slice(0, 15).map((err) => {
                                 const missingLabels = err.missing.map(m =>
                                     m === 'actions' ? 'acciones' : m === 'responsible' ? 'responsable' : 'fecha objetivo'
                                 );

@@ -350,7 +350,6 @@ function buildMetadataRows(doc: AmfeDocument, colWidths: number[]): { rows: any[
  */
 export function buildAmfeCompletoWorkbook(doc: AmfeDocument): XLSX.WorkBook {
     const wb = XLSX.utils.book_new();
-    const totalCols = AMFE_COL_HEADERS.length; // 28
 
     // --- Header section ---
     const { rows: metaRows, merges } = buildMetadataRows(doc, AMFE_COL_WIDTHS);

@@ -15,13 +15,13 @@
  */
 
 import { snapshotDatabase } from './backupService';
-import { analyzeImportFile, executeFullImport } from './dataExportImport';
+import { executeFullImport } from './dataExportImport';
 import { analyzeDatasets, type MergeResult, type ResolvedConflict } from './mergeEngine';
 import { getDeviceInfo } from './deviceId';
 import { getSetting, setSetting } from './repositories/settingsRepository';
 import { logger } from './logger';
 import {
-    isTauri, ensureDir, writeTextFile, readTextFile,
+    ensureDir, writeTextFile, readTextFile,
     readDir, exists, pickFolder,
 } from './unified_fs';
 

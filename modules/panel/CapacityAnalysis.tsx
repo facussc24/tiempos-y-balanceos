@@ -25,18 +25,15 @@ export const CapacityAnalysis: React.FC<Props> = ({
     const minTheoreticalStations = idealHeadcount;
 
     // -- SEMAPHORE 1: HEADCOUNT (DOTACIÓN) --
-    let headcountStatus: 'under' | 'optimal' | 'over' = 'optimal';
     let headcountMsg = "Dotación Correcta";
     let headcountColor = "bg-emerald-50 text-emerald-700 border-emerald-200";
     let HeadcountIcon = UserCheck;
 
     if (totalHeadcount < idealHeadcount) {
-        headcountStatus = 'under';
         headcountMsg = "Falta Personal (Riesgo)";
         headcountColor = "bg-red-50 text-red-700 border-red-200";
         HeadcountIcon = UserX;
     } else if (totalHeadcount > idealHeadcount + 1) {
-        headcountStatus = 'over';
         headcountMsg = "Exceso de Personal (Desperdicio)";
         headcountColor = "bg-amber-50 text-amber-700 border-amber-200";
         HeadcountIcon = UserMinus;

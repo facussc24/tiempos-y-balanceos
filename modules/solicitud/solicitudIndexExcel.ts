@@ -49,7 +49,6 @@ const STATUS_FONTS: Record<string, string> = {
 };
 
 const INDEX_FILENAME = 'Indice_Solicitudes.xlsx';
-const TEMP_FILENAME = 'Indice_Solicitudes.tmp.xlsx';
 
 /** Offset: data starts at column B (index 2) and row 2 */
 const COL_OFFSET = 1;

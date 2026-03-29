@@ -330,7 +330,7 @@ export class DESSimulationEngine {
         this.warmupTime = validatedConfig.stations.length * taktTime;
 
         // Initialize stations with pre-computed values
-        this.stations = validatedConfig.stations.map((s, index) => ({
+        this.stations = validatedConfig.stations.map((s) => ({
             id: s.id,
             name: s.name,
             cycleTime: s.cycleTime,
@@ -876,7 +876,6 @@ export class DESSimulationEngine {
     private calculateFinalKPIs(): void {
         // Calculate utilization per station
         let totalActiveTime = 0;
-        let totalIdleTime = 0;
         let totalPlannedTime = 0;
 
         for (let i = 0; i < this.stations.length; i++) {
@@ -893,7 +892,6 @@ export class DESSimulationEngine {
 
             // Accumulate for line-level OEE
             totalActiveTime += activeTime;
-            totalIdleTime += idleTime;
             totalPlannedTime += totalTime;
         }
 

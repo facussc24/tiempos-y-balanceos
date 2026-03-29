@@ -11,8 +11,6 @@ import {
     PfdDocument,
     PfdStep,
     PfdHeader,
-    PfdStepType,
-    SpecialCharClass,
     createEmptyStep,
     createEmptyPfdDocument,
     getNextStepNumber,

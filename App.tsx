@@ -281,7 +281,7 @@ const App: React.FC<AppProps> = ({ onBackToLanding }) => {
     // LIFTED STATE
     // =========================================================================
 
-    const [fsRoot, setFsRoot] = useState<FileSystemDirectoryHandle | string | null>(null);
+    const [fsRoot] = useState<FileSystemDirectoryHandle | string | null>(null);
 
 
     const [graphState, setGraphState] = useState({ zoom: 1, pan: { x: 0, y: 0 } });

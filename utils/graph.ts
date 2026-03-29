@@ -1,4 +1,4 @@
-import { Task, FatigueCategory, FATIGUE_OPTIONS, ProductModel } from "../types";
+import { Task, FATIGUE_OPTIONS, ProductModel } from "../types";
 import { calculateRequiredSampleSize } from "./math";
 
 export const syncSuccessors = (tasks: Task[]): Task[] => {

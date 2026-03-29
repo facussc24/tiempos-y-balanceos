@@ -12,7 +12,7 @@
  */
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { ArrowLeft, Play, RefreshCw, Loader2, Save, FileText, History, Settings } from 'lucide-react';
-import { MixSelectableProduct, MixSimplifiedResult, MixScenario, ProjectData, MixSavedScenario } from '../../types';
+import { MixSelectableProduct, MixSimplifiedResult, MixScenario, MixSavedScenario } from '../../types';
 import { MixProductGrid } from './MixProductGrid';
 import { MixResultsSummary } from './MixResultsSummary';
 import { MixSectorCardView } from './MixSectorCardView';
@@ -165,7 +165,7 @@ export const MixModeView: React.FC<MixModeViewProps> = ({
             }));
 
             // 2. Cargar productos usando lógica existente
-            const { products: loadedProducts, errors, totalDemand, isPartial } = await loadMixProducts(
+            const { products: loadedProducts, errors, totalDemand } = await loadMixProducts(
                 basePath,
                 productRefs
             );
@@ -266,7 +266,7 @@ export const MixModeView: React.FC<MixModeViewProps> = ({
             }
 
             // 6. Analizar por sector (lógica existente)
-            const productNames = selectedProducts.map((p, idx) => ({
+            const productNames = selectedProducts.map((p) => ({
                 path: p.path,
                 name: p.displayName,
                 demand: p.dailyDemand

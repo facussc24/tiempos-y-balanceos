@@ -215,7 +215,7 @@ export const RouteCanvas: React.FC<RouteCanvasProps> = ({
                 </g>
 
                 {/* Station Nodes */}
-                {stations.map((station, index) => {
+                {stations.map((station) => {
                     const pos = nodePositions[station.id];
                     const isInRoute = stops.some(s => s.stationId === station.id);
                     const stopOrder = stops.findIndex(s => s.stationId === station.id) + 1;

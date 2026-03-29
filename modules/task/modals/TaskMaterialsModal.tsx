@@ -11,8 +11,8 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { X, Package, Truck, Plus, Trash2, AlertTriangle, Save } from 'lucide-react';
-import { ProjectData, TaskMaterial, Task, Material } from '../../../types';
+import { X, Package, Truck, Plus, Trash2, Save } from 'lucide-react';
+import { ProjectData, TaskMaterial, Task } from '../../../types';
 
 interface TaskMaterialsModalProps {
   isOpen: boolean;
@@ -85,10 +85,6 @@ export const TaskMaterialsModal: React.FC<TaskMaterialsModalProps> = ({
     const validMaterials = materials.filter(m => m.materialId && m.materialId.trim() !== '');
     onSave(validMaterials);
     onClose();
-  };
-
-  const getMaterialName = (id: string): string => {
-    return availableMaterials.find(m => m.id === id)?.name || id || '(seleccionar)';
   };
 
   return (

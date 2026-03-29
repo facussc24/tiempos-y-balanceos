@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Link, Unlink, X, Plus, Trash2, AlertTriangle } from 'lucide-react';
-import { ProjectData, ZoningConstraint, Task } from '../../../types';
+import { ProjectData, ZoningConstraint } from '../../../types';
 import { toast } from '../../../components/ui/Toast';
 
 interface Props {
@@ -92,12 +92,6 @@ export const ZoningConstraintsModal: React.FC<Props> = ({ isOpen, onClose, data,
             ...data,
             zoningConstraints: constraints.filter(c => c.id !== id)
         });
-    };
-
-    // Helper to get task description for display
-    const getTaskLabel = (taskId: string): string => {
-        const task = tasks.find(t => t.id === taskId);
-        return task ? `${task.id} - ${task.description?.substring(0, 30) || 'Sin descripción'}` : taskId;
     };
 
     return (

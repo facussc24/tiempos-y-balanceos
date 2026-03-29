@@ -87,7 +87,6 @@ const AmfeToolbar: React.FC<AmfeToolbarProps> = ({
     showProjectPanel,
     setShowProjectPanel,
     setShowRegistry,
-    setShowTemplates,
     showRegistry,
     showHelp,
     setShowHelp,

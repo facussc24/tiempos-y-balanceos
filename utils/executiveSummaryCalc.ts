@@ -8,8 +8,8 @@
  * @version 1.0.0 - Phase 1 MVP
  */
 
-import { ProjectData, Shift, Sector, Task, MachineType, Assignment } from '../types';
-import { calculateTaktTime, calculateShiftNetMinutes, calculateEffectiveStationTime, calculateSectorTaktTime } from '../core/balancing/simulation';
+import { ProjectData, Task, MachineType } from '../types';
+import { calculateTaktTime, calculateEffectiveStationTime, calculateSectorTaktTime } from '../core/balancing/simulation';
 import XLSX from 'xlsx-js-style';
 import { logger } from './logger';
 import { sanitizeCellValue } from './sanitizeCellValue';

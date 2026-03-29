@@ -11,7 +11,6 @@
 import {
     ControlPlanDocument,
     ControlPlanItem,
-    ControlPlanHeader,
     CP_COLUMNS,
     CONTROL_PLAN_PHASES,
 } from './controlPlanTypes';

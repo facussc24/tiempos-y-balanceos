@@ -12,7 +12,6 @@ import React from 'react';
 import {
     Timer,
     AlertTriangle,
-    Gauge,
     Users,
     Cog,
     TrendingUp,

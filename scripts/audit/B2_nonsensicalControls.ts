@@ -16,7 +16,6 @@ import {
     fetchAllCpDocs,
     fetchAllHoDocs,
     fetchAllAmfeDocs,
-    normOp,
     writeResults,
 } from './supabaseHelper.js';
 
@@ -231,7 +230,6 @@ async function main() {
                 const desc = String(qc.characteristic ?? qc.description ?? '');
                 const spec = String(qc.specification ?? '');
                 const freq = String(qc.frequency ?? '');
-                const reaction = String(qc.reactionAction ?? '');
 
                 // R6-R1: Traceability controls in non-reception HO sheets
                 if (RE_TRACEABILITY.test(desc) && !RE_RECEPTION.test(sheetTitle)) {

@@ -6,7 +6,7 @@
  * Replaces: amfePathManager.ts, amfeRegistryManager.ts, amfeLibraryPathManager.ts
  */
 
-import type { AmfeDocument, AmfeOperation } from '../../modules/amfe/amfeTypes';
+import type { AmfeDocument } from '../../modules/amfe/amfeTypes';
 import type { AmfeRegistryEntry, AmfeRevisionEntry, AmfeLifecycleStatus } from '../../modules/amfe/amfeRegistryTypes';
 import type { AmfeLibrary, AmfeLibraryOperation } from '../../modules/amfe/amfeLibraryTypes';
 import { buildSearchableText } from '../../modules/amfe/amfeLibraryTypes';

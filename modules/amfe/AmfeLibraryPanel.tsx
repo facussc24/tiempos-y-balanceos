@@ -18,7 +18,7 @@ import { ImpactScanResult } from './amfeImpactAnalysis';
 import {
     Library, Plus, Trash2, Download, RefreshCw, Link2, X,
     ChevronRight, ChevronDown, WifiOff, Package, UploadCloud,
-    Search, Tag, Layers, AlertTriangle, Zap, Loader2, ArrowLeft, Check
+    Search, Tag, Layers, AlertTriangle, Zap, Loader2, Check
 } from 'lucide-react';
 
 interface Props {

@@ -286,7 +286,7 @@ export async function testRetryBehavior(): Promise<QATestResult> {
     const start = Date.now();
 
     try {
-        const { withSmartRetry, classifyError } = await import('./networkUtils');
+        const { withSmartRetry } = await import('./networkUtils');
 
         let attemptCount = 0;
         const failTimes = 2;

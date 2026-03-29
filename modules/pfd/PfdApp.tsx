@@ -16,7 +16,7 @@ import { validatePfdDocument, ValidationIssue } from './pfdValidation';
 import { exportPfdSvg } from './pfdSvgExport';
 import { exportPfdPdf } from './pfdPdfExport';
 import type { PfdDocument, PfdStep, PfdHeader } from './pfdTypes';
-import { PfdDocumentListItem, createEmptyPfdDocument } from './pfdTypes';
+import { PfdDocumentListItem } from './pfdTypes';
 import { createBasicProcessTemplate, createManufacturingProcessTemplate, createPatagoniaTapizadoTemplate, type PfdTemplateResult } from './pfdTemplates';
 import PfdToolbar from './PfdToolbar';
 import PfdHeaderComponent from './PfdHeader';
@@ -57,7 +57,7 @@ import ChangeProposalPanel from '../../modules/family/ChangeProposalPanel';
 import {
     Plus, XCircle, AlertTriangle, CheckCircle, Info, ArrowRight,
     HelpCircle, Save, FileText, FolderOpen, Check, Clock,
-    Undo2, Redo2, Eye, Edit3, Hash, GitBranch, Image, ChevronDown, Loader2,
+    Undo2, Redo2, Eye, Edit3, Hash, GitBranch, Image, ChevronDown,
 } from 'lucide-react';
 
 interface Props {

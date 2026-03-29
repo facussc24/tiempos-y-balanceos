@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { X, Sparkles, AlertCircle, AlertTriangle, Lightbulb, Info, ChevronRight, CheckCircle2, ListOrdered, ChevronUp, ChevronDown, Check, Users } from 'lucide-react';
-import { Tooltip } from '../../../components/ui/Tooltip';
+import { X, Sparkles, AlertCircle, AlertTriangle, Lightbulb, Info, ChevronRight, CheckCircle2, ChevronUp, ChevronDown, Users } from 'lucide-react';
 import { formatNumber } from '../../../utils';
 import { SimulationResult } from '../../../core/balancing/engine';
 
@@ -167,7 +166,7 @@ export const OptimizationDrawer: React.FC<OptimizationDrawerProps> = ({ results,
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-50">
-                                        {bestResult.sortedTasks.slice(0, 15).map((t, i) => (
+                                        {bestResult.sortedTasks.slice(0, 15).map((t) => (
                                             <tr key={t.id} className="hover:bg-slate-50">
                                                 <td className="p-2 font-mono text-slate-500">{t.id}</td>
                                                 <td className="p-2 truncate max-w-[120px]" title={t.description}>{t.description}</td>

@@ -26,7 +26,6 @@ export interface UsePfdSelectionReturn {
 
 export function usePfdSelection({
     steps,
-    onInsertAfter,
     onRemoveStep,
 }: UsePfdSelectionParams): UsePfdSelectionReturn {
     const [selectedStepId, setSelectedStepId] = useState<string | null>(null);

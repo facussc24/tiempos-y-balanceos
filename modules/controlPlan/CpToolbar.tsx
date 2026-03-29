@@ -6,14 +6,14 @@
  */
 
 import React, { startTransition } from 'react';
-import { ControlPlanDocument, ControlPlanHeader, ControlPlanItem, CONTROL_PLAN_PHASES } from './controlPlanTypes';
+import { ControlPlanDocument, ControlPlanHeader, CONTROL_PLAN_PHASES } from './controlPlanTypes';
 import { CpValidationIssue } from './cpCrossValidation';
 import { exportControlPlan } from './controlPlanExcelExport';
 import { getExportWarnings } from './controlPlanValidation';
 import { CP_COLUMN_GROUP_LABELS, CP_COLUMN_GROUP_COLORS, CpColumnGroupVisibility } from './useCpColumnVisibility';
 import {
     ArrowLeft, ClipboardCheck, Save, FolderOpen, FilePlus,
-    FileSpreadsheet, Plus, Trash2, FileJson, FileText, Check, Clock,
+    FileSpreadsheet, Trash2, FileText, Check, Clock,
     WifiOff, HardDrive, LayoutList, ShieldCheck,
     Eye, Pencil, ChevronUp, ChevronDown,
     Search, Filter, Undo2, Redo2, MoreHorizontal, BarChart3, HelpCircle, LayoutTemplate,
@@ -122,7 +122,7 @@ interface CpToolbarProps {
 
 const CpToolbar: React.FC<CpToolbarProps> = (props) => {
     const {
-        embedded, onBackToLanding, isReadOnly, viewMode, setViewMode,
+        onBackToLanding, isReadOnly, setViewMode,
         currentProject, saveStatus, hasUnsavedChanges, networkAvailable, lastAutoSave,
         projects, saveCurrentProject, refreshProjects, loadSelectedProject, deleteSelectedProject, createNewProject,
         showProjectPanel, setShowProjectPanel, showSummary, setShowSummary,

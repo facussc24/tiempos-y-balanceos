@@ -2,7 +2,7 @@
 import React, { useMemo, useState, useRef, useEffect } from 'react';
 import { ProjectData } from '../types';
 import { Card } from '../components/ui/Card';
-import { FileDown, ZoomIn, ZoomOut, Move, Maximize, MousePointer2, Network, HelpCircle } from 'lucide-react';
+import { FileDown, ZoomIn, ZoomOut, Network } from 'lucide-react';
 import { formatNumber } from '../utils';
 import { toast } from '../components/ui/Toast';
 

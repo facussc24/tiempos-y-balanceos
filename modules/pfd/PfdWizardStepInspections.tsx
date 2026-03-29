@@ -10,7 +10,7 @@
  */
 
 import React, { useCallback, useMemo } from 'react';
-import { Plus, X, ArrowDown, CornerDownLeft, Trash2, Sparkles } from 'lucide-react';
+import { Plus, X, ArrowDown, CornerDownLeft, Sparkles } from 'lucide-react';
 import type { AmfeDocument, AmfeOperation } from '../amfe/amfeTypes';
 import type {
     PfdWizardAnnotations,

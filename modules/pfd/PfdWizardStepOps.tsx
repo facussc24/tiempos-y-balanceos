@@ -16,7 +16,6 @@ import { Truck, Package, AlertTriangle } from 'lucide-react';
 import type { AmfeDocument } from '../amfe/amfeTypes';
 import type { PfdWizardAnnotations, PfdOperationAnnotation } from './pfdWizardTypes';
 import type { PfdStepType, TransportMode } from './pfdTypes';
-import { PfdSymbol } from './PfdSymbols';
 import PfdSymbolPicker from './PfdSymbolPicker';
 import { extractMachine, getMaxSeverity } from './pfdGenerator';
 

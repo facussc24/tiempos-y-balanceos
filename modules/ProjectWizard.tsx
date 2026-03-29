@@ -45,9 +45,9 @@ export const ProjectWizard: React.FC<ProjectWizardProps> = ({
     const [part, setPart] = useState('');
     const [isNewClient, setIsNewClient] = useState(false);
     const [isNewProject, setIsNewProject] = useState(false);
-    const [isNewPart, setIsNewPart] = useState(false);
+    const [_isNewPart, setIsNewPart] = useState(false);
     const [projects, setProjects] = useState<string[]>([]);
-    const [parts, setParts] = useState<string[]>([]);
+    const [_parts, setParts] = useState<string[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [isCreating, setIsCreating] = useState(false);
 

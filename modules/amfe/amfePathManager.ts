@@ -15,7 +15,6 @@ import {
     saveAmfeDocument,
     deleteAmfeDocument,
     deleteAmfeDocumentsBatch,
-    countLinkedDocuments,
     getNextAmfeNumber,
 } from '../../utils/repositories/amfeRepository';
 import { loadAppSettings } from '../../utils/repositories/settingsRepository';

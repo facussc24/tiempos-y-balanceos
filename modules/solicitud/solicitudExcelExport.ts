@@ -216,8 +216,6 @@ async function buildSolicitudSheet(
     // HEADER — Logo | Title | Form Number
     // ─────────────────────────────────────────────────────────────
 
-    const headerStartRow = r;
-
     // Logo area (B2:C3)
     ws.mergeCells(r, FIRST_COL, r + 1, FIRST_COL + 1);
     if (logoBase64) {
