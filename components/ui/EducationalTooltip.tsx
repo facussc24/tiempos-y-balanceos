@@ -222,7 +222,7 @@ interface InlineTermTooltipProps {
     children: React.ReactNode;
 }
 
-export const InlineTermTooltip: React.FC<InlineTermTooltipProps> = ({ termKey, children }) => {
+const InlineTermTooltip: React.FC<InlineTermTooltipProps> = ({ termKey, children }) => {
     return (
         <EducationalTooltip termKey={termKey} className="inline">
             <span className="border-b border-dotted border-slate-400 hover:border-blue-500 hover:text-blue-600 transition-colors cursor-help">

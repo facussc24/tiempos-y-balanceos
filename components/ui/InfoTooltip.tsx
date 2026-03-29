@@ -136,7 +136,7 @@ export const InfoTooltip: React.FC<InfoTooltipProps> = ({
 /**
  * Compact version for table headers - keyboard accessible
  */
-export const InfoTooltipCompact: React.FC<{
+const InfoTooltipCompact: React.FC<{
     term: string;
     simple: string;
 }> = ({ term, simple }) => {

@@ -122,7 +122,7 @@ export const toast = {
 // REACT HOOK
 // ============================================================================
 
-export function useToasts(): Toast[] {
+function useToasts(): Toast[] {
     const [toasts, setToasts] = useState<Toast[]>([]);
 
     useEffect(() => {
