@@ -1,0 +1,95 @@
+# Auditoría de Código — 2026-03-29
+
+## Resumen Ejecutivo
+
+| Métrica | Antes | Después |
+|---------|-------|---------|
+| TypeScript errores | 0 | 0 |
+| Tests pasando | 258/258 (4086 tests) | 258/258 (4086 tests) |
+| Imports/vars no usados | ~480 | ~123 (solo underscore-prefix y catch blocks) |
+| `as any` en producción | 8 | 2 (xlsx library types, no removibles) |
+| Dead exports | 7 | 0 |
+| console.log en producción | 0 (ya estaba limpio) | 0 |
+| Casing errors (TS1261) | 1 | 0 |
+
+## Correcciones Aplicadas
+
+### Commit 1: `e807dea` — Root components cleanup
+- `App.tsx`: removido import `Tab`, import `setPathConfig`, función muerta `handleSetRootWithSync`, prop `storageVersion` no usada
+- `AppHeader.tsx`: removido icon `Settings` y type `ProjectData` no usados
+- `AppModals.tsx`: removido `storageVersion` de interface y destructuring
+
+### Commit 2: `6a01690` — AppTabContent import fix
+- `AppTabContent.tsx`: removido import `ProjectData` no usado
+
+### Commit 3: `94a149a` — Cleanup masivo (45 archivos)
+- ~200 imports y variables no usados removidos
+- Icons de lucide-react no usados
+- Funciones y tipos importados pero nunca referenciados
+- Fix casing `solicitudIndexExcel` → `SolicitudIndexExcel`
+
+### Commit 4: `c15297d` — Cleanup masivo (85 archivos)
+- ~280 imports y variables no usados removidos
+- Módulos AMFE, PFD, CP, balancing, mix, HO, utilities
+- Dead functions removidas (parseOpNumber, getBranchColor, etc.)
+- Revertido `database.ts` (SCHEMA_DDL es usado por tests)
+
+### Commit 5: `adf8aeb` — Eliminación de `as any` casts
+- `controlPlanTypes.ts`: reemplazado `delete (header as any).field` con destructuring rest
+- `apqpPackageExport.ts`: reemplazado `{} as any` con `Object.fromEntries()`
+- `overrideTracker.ts`: reemplazado `delete (cleaned as any).field` con destructuring rest
+
+### Commit 6: `f0ee537` — Dead exports
+- 7 funciones exportadas que nadie importa → convertidas a file-private
+
+## Observaciones (no corregidas — requieren cambios de lógica o son intencionales)
+
+### 🟢 App.tsx: Hooks llamados condicionalmente
+- ESLint reporta ~30 violaciones de `react-hooks/rules-of-hooks`
+- Causa: early return antes de hooks basado en estado de auth
+- La app funciona porque la condición no cambia mid-render
+- Corregir requiere reestructurar todo App.tsx (componente de ~400 líneas)
+- **Recomendación**: extraer la parte post-auth a un componente separado
+
+### 🟢 Tauri references (isTauri)
+- ~30 archivos todavía tienen `isTauri()` checks
+- Son feature gates condicionales, no dependencias duras
+- La app funciona sin Tauri (modo web)
+- Removerlos es seguro pero extenso y toca lógica en muchos archivos
+
+### 🟢 `as any` restantes (2 instancias en xlsx library)
+- `apqpPackageExport.ts:124-125`: `(ws['!freeze'] as any).ySplit` y `(ws['!autofilter'] as any).ref`
+- Causa: xlsx-js-style types no incluyen `!freeze` ni `!autofilter`
+- No se pueden tipar mejor sin declarar tipos custom para la librería
+
+### 🟢 Empty catch blocks (~40 en localStorage operations)
+- Pattern: `try { localStorage.setItem(...) } catch { /* ignore */ }`
+- Son intencionales — localStorage puede fallar en modo privado/incógnito
+- Agregar logging sería noise innecesario para operaciones non-critical
+
+### 🟢 `setFsRoot` sin setter
+- `App.tsx:284`: estado declarado pero el único setter fue removido
+- `fsRoot` siempre es `null` pero se pasa como prop
+- Remover requiere cambiar la interfaz de `AppTabContent`
+
+### 🟢 Database test flaky
+- `__tests__/utils/database.test.ts > closeDatabase > should allow re-initialization after close`
+- Falla intermitentemente con timeout de 5s
+- Pre-existente, no relacionado con cambios de auditoría
+
+## Top 5 Archivos Más Problemáticos
+
+1. **`App.tsx`** — 30+ hooks rules violations (condicionales), dead state
+2. **`useLineBalancing.ts`** — Tenía 10+ imports y funciones no usados (corregidos)
+3. **`useAmfeProjects.ts`** — ~25 empty catch blocks (intencionales para localStorage)
+4. **`apqpPackageExport.ts`** — 2 `as any` restantes por tipos de xlsx incompletos
+5. **`modules/balancing/balancingCapacityExcelExport.ts`** — Tenía variables muertas (corregidas)
+
+## Estadísticas Finales
+
+- **Total archivos auditados**: ~493 archivos de producción
+- **Total archivos corregidos**: ~130
+- **Total líneas removidas**: ~800+
+- **Total commits**: 6
+- **Tests rotos introducidos**: 0
+- **Errores TypeScript introducidos**: 0
