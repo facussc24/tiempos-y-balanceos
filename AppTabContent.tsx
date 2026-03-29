@@ -3,7 +3,7 @@
  * Renders the active tab's module/component.
  */
 import React from 'react';
-import { ProjectData, INITIAL_PROJECT } from './types';
+import { INITIAL_PROJECT } from './types';
 import { PanelControl } from './modules/PanelControl';
 import { TaskManager } from './modules/TaskManager';
 import { LineBalancing } from './modules/LineBalancing';
