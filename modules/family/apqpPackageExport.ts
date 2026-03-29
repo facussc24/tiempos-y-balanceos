@@ -108,7 +108,7 @@ function applyB2(rows: any[][], merges: XLSX.Range[], cw: number[]) {
 }
 
 /** Shift existing xlsx-js-style worksheet by +1 row/col for B2 offset. */
-export function shiftWorksheet(ws: XLSX.WorkSheet): XLSX.WorkSheet {
+function shiftWorksheet(ws: XLSX.WorkSheet): XLSX.WorkSheet {
     const n: any = {};
     for (const k in ws) {
         if (k.startsWith('!')) continue;
@@ -129,7 +129,7 @@ export function shiftWorksheet(ws: XLSX.WorkSheet): XLSX.WorkSheet {
 // PORTADA (with B2 offset)
 // ============================================================================
 
-export function buildPortadaSheet(wb: XLSX.WorkBook, data: ApqpPackageData, opts: ApqpExportOptions, tocNames: string[]): void {
+function buildPortadaSheet(wb: XLSX.WorkBook, data: ApqpPackageData, opts: ApqpExportOptions, tocNames: string[]): void {
     const rows: any[][] = [], merges: XLSX.Range[] = [], TC = 6, er = () => Array(TC).fill('');
     rows.push(er(), er());
     const tR: any[] = Array(TC).fill(null).map(() => ({ v: '', s: st.title }));
@@ -163,7 +163,7 @@ export function buildPortadaSheet(wb: XLSX.WorkBook, data: ApqpPackageData, opts
 // FLUJOGRAMA — CC/SC red/yellow badges, NG disposition, all steps
 // ============================================================================
 
-export function buildFlujogramaSheet(wb: XLSX.WorkBook, pfd: PfdDocument): void {
+function buildFlujogramaSheet(wb: XLSX.WorkBook, pfd: PfdDocument): void {
     const rows: any[][] = [], merges: XLSX.Range[] = [];
     const hdrs = ['Nro. Op.', 'S\u00EDmbolo', 'Descripci\u00F3n', 'Elementos de Trabajo (4M)', 'Caract. Producto', 'CC/SC Prod.', 'Caract. Proceso', 'CC/SC Proc.', 'Ruteo / Disposici\u00F3n NG'];
     const cw = [10, 16, 35, 30, 22, 10, 22, 10, 45]; const TC = hdrs.length;
@@ -320,7 +320,7 @@ export function exportApqpPackage(data: ApqpPackageData, options: ApqpExportOpti
 }
 
 /** Generate APQP package as Uint8Array buffer (for auto-export / testing). */
-export function generateApqpPackageBuffer(data: ApqpPackageData, options: ApqpExportOptions): Uint8Array {
+function generateApqpPackageBuffer(data: ApqpPackageData, options: ApqpExportOptions): Uint8Array {
     const wb = buildApqpPackageWorkbook(data, options);
     const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' }) as ArrayBuffer;
     return new Uint8Array(wbout);

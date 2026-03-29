@@ -56,7 +56,7 @@ export const CP_COLUMN_TO_GROUP: Record<string, keyof CpColumnGroupVisibility> =
 };
 
 /** Column counts per group (for colspan calculation). */
-export const CP_COLUMN_COUNTS: Record<keyof CpColumnGroupVisibility, number> = {
+const CP_COLUMN_COUNTS: Record<keyof CpColumnGroupVisibility, number> = {
     proceso: 4,
     caracteristicas: 4,
     metodos: 8,

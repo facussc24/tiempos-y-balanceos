@@ -454,7 +454,7 @@ export function validateSamplingConsistency(
  * AIAG CP 2024 recommends consolidating machines per process step
  * or referencing the automation/MES system instead.
  */
-export function validateMachineConsolidation(
+function validateMachineConsolidation(
     cpDoc: ControlPlanDocument,
 ): CpValidationIssue[] {
     const issues: CpValidationIssue[] = [];
@@ -497,7 +497,7 @@ export function validateMachineConsolidation(
  * CP item linked via amfeFailureId/amfeFailureIds.
  * More granular than V2 which only checks at the operation level.
  */
-export function validateFailureCoverage(
+function validateFailureCoverage(
     cpDoc: ControlPlanDocument,
     amfeDoc: AmfeDocument,
 ): CpValidationIssue[] {

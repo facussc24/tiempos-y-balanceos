@@ -32,7 +32,7 @@ export interface CpSuggestionContext {
 }
 
 /** Set of CP fields that support AI suggestions */
-export const CP_AI_FIELDS = new Set<string>([
+const CP_AI_FIELDS = new Set<string>([
     'controlMethod',
     'evaluationTechnique',
     'sampleSize',
