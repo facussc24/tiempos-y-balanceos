@@ -9,7 +9,7 @@ interface OptimizationDrawerProps {
     onApply: (result: SimulationResult) => void;
 }
 
-export const OptimizationDrawer: React.FC<OptimizationDrawerProps> = ({ results, onClose, onApply }) => {
+const OptimizationDrawer: React.FC<OptimizationDrawerProps> = ({ results, onClose, onApply }) => {
     const [showPriorityTable, setShowPriorityTable] = useState(false);
 
     if (!results) return null;

@@ -22,7 +22,7 @@ interface Props {
     injectionMode?: 'batch' | 'carousel';
 }
 
-export const PdfReport: React.FC<Props> = ({
+const PdfReport: React.FC<Props> = ({
     task, dailyDemand, activeShifts, oee, taktTime, machineLimitCycle, puCurTime, nStar,
     activeN, activeHeadcount, realCycleTime, hourlyOutput, realSaturation, manualOps,
     isCurrentFeasible, injectionMode = 'batch'

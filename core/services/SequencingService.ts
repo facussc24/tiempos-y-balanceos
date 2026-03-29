@@ -143,7 +143,7 @@ export function euclideanDistribute(total: number, slots: number): number[] {
  * @param totalSlots - Number of time slots
  * @returns Array of slots with balanced product assignments
  */
-export function generateSequence(
+function generateSequence(
     products: SequencingProduct[],
     totalSlots: number
 ): SequencingSlot[] {
@@ -192,7 +192,7 @@ export function generateSequence(
  * @param separator - Separator between items (default: " → ")
  * @returns Pattern string for display
  */
-export function generatePatternString(
+function generatePatternString(
     products: SequencingProduct[],
     totalSlots: number,
     separator: string = ' → '

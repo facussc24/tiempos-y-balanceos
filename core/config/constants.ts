@@ -30,7 +30,7 @@ export const BUSINESS_RULES = {
     MAX_FILENAME_LENGTH: 255,
 };
 
-export const UI_CONSTANTS = {
+const UI_CONSTANTS = {
     DEFAULT_SECTOR_COLOR: '#3b82f6',
     TOAST_DURATION: 3000,
 };
