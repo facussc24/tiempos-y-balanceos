@@ -285,7 +285,7 @@ const ProjectTable: React.FC<ProjectTableProps> = ({ projects, onSelectProject, 
                 {/* Empty filtered state */}
                 {filtered.length === 0 && search.trim() && (
                     <div className="px-6 py-8 text-center">
-                        <p className="text-sm text-slate-500">No se encontraron proyectos para "{search.trim()}"</p>
+                        <p className="text-sm text-slate-500">No se encontraron proyectos para &ldquo;{search.trim()}&rdquo;</p>
                     </div>
                 )}
             </div>

@@ -413,7 +413,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
                     {filteredCommands.length === 0 ? (
                         <div className="px-4 py-8 text-center text-slate-400">
                             <Search size={32} className="mx-auto mb-2 opacity-50" />
-                            <p>No se encontraron resultados para "{query}"</p>
+                            <p>No se encontraron resultados para &ldquo;{query}&rdquo;</p>
                         </div>
                     ) : (
                         Object.entries(groupedCommands).map(([category, items]) => {
