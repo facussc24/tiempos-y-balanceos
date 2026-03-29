@@ -36,7 +36,7 @@ const MAX_RECENT = 5;
 /**
  * Get recent projects from localStorage
  */
-export const getRecentProjects = (): RecentProject[] => {
+const getRecentProjects = (): RecentProject[] => {
     try {
         const stored = localStorage.getItem(STORAGE_KEY);
         return stored ? JSON.parse(stored) : [];

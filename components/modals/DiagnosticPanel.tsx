@@ -35,7 +35,7 @@ const levelColors: Record<LogLevel, string> = {
     error: 'text-red-600'
 };
 
-export function DiagnosticPanel({ isOpen, onClose, projectPath }: DiagnosticPanelProps) {
+function DiagnosticPanel({ isOpen, onClose, projectPath }: DiagnosticPanelProps) {
     const [logs, setLogs] = useState<LogEntry[]>([]);
     const [filter, setFilter] = useState<LogLevel | 'all'>('all');
 
