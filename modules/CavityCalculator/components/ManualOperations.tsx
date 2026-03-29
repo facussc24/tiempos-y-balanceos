@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { MousePointer2, ChevronUp, ChevronDown, Eye, Plus, Trash2, Edit2, RotateCcw } from 'lucide-react';
+import React from 'react';
+import { MousePointer2, ChevronUp, ChevronDown, Eye } from 'lucide-react';
 import { ManualOperation } from '../../../types';
-import { formatNumber, parseNumberInput } from '../../../utils';
+import { formatNumber } from '../../../utils';
 
 interface Props {
     isOpen: boolean;
@@ -20,7 +20,7 @@ interface Props {
 
 // READ ONLY VERSION - LINKED TO MAIN TASK LIST
 export const ManualOperations: React.FC<Props> = ({
-    isOpen, onToggle, manualOps, onShowGuide, currentEffectiveManualTime, isUsingDefaultManual
+    isOpen, onToggle, manualOps, currentEffectiveManualTime
 }) => {
     // Calculate Breakdown for UI Clarity (Audit Phase 11)
     const internalSum = manualOps.filter(op => op.type === 'internal').reduce((acc, op) => acc + op.time, 0);
@@ -44,7 +44,7 @@ export const ManualOperations: React.FC<Props> = ({
                         <div className="bg-blue-50 border border-blue-100 p-2 rounded-lg mb-4 text-[10px] text-blue-800 flex items-start gap-2">
                             <div className="bg-blue-100 p-1 rounded-full"><Eye size={10} /></div>
                             <div>
-                                <strong>Gestión Centralizada:</strong> Estas tareas se administran desde el "Listado de Tareas" principal.
+                                <strong>Gestión Centralizada:</strong> Estas tareas se administran desde el &ldquo;Listado de Tareas&rdquo; principal.
                                 <br />
                                 <span className="opacity-80">Para agregar más, cree una nueva tarea y asígnela a este ciclo (Concurrent With).</span>
                             </div>
@@ -67,10 +67,24 @@ export const ManualOperations: React.FC<Props> = ({
                             </div>
                         ))}
                         {manualOps.length === 0 && (
-                            <div className="text-[10px] text-slate-400 italic text-center py-4 border-2 border-dashed border-slate-100 rounded-lg">
-                                No hay tareas vinculadas a esta máquina.<br />
-                                <span className="text-[9px]">Asigne tareas usando "Ejecutar durante..." en la lista principal.</span>
-                            </div>
+                            <>
+                                <div className="text-[10px] text-slate-400 italic text-center py-4 border-2 border-dashed border-slate-100 rounded-lg">
+                                    No hay tareas vinculadas a esta máquina.<br />
+                                    <span className="text-[9px]">Asigne tareas usando &ldquo;Ejecutar durante...&rdquo; en la lista principal.</span>
+                                </div>
+                                <details className="mt-3">
+                                    <summary className="text-[10px] font-bold text-amber-700 cursor-pointer hover:text-amber-800 select-none">
+                                        Tiempos típicos PU (referencia)
+                                    </summary>
+                                    <div className="mt-2 bg-amber-50 border border-amber-200 rounded-lg p-3 text-[10px] text-amber-800 space-y-1.5">
+                                        <div className="flex justify-between"><span>Desmoldeo (ext)</span><span className="font-mono font-bold">15-30 s</span></div>
+                                        <div className="flex justify-between"><span>Prep molde / release agent (int)</span><span className="font-mono font-bold">20-45 s</span></div>
+                                        <div className="flex justify-between"><span>Colocación insertos (int)</span><span className="font-mono font-bold">10-60 s</span></div>
+                                        <div className="flex justify-between"><span>Post-curado / crush (ext)</span><span className="font-mono font-bold">15-120 s</span></div>
+                                        <p className="text-[9px] text-amber-600 italic pt-1 border-t border-amber-200">Valores orientativos. Configurar desde lista de tareas principal.</p>
+                                    </div>
+                                </details>
+                            </>
                         )}
                     </div>
 

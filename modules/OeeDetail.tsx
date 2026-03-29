@@ -109,7 +109,7 @@ export const OeeDetail: React.FC<Props> = ({ data, updateData }) => {
             {/* SIDEBAR: SECTOR LIST */}
             <Card title="Sectores" className="lg:col-span-1 h-full overflow-hidden flex flex-col">
                 <div className="flex-1 overflow-y-auto space-y-2 pr-2">
-                    {sectors.length === 0 && <p className="text-sm text-slate-400 p-4">No hay sectores definidos. Vaya a "Tareas" para crear uno.</p>}
+                    {sectors.length === 0 && <p className="text-sm text-slate-400 p-4">No hay sectores definidos. Vaya a &ldquo;Tareas&rdquo; para crear uno.</p>}
                     {sectors.map(s => (
                         <button
                             key={s.id}

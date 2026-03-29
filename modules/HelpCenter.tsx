@@ -146,7 +146,7 @@ export const HelpCenter: React.FC = () => {
                         {filteredItems.length === 0 ? (
                             <div className="col-span-2 text-center py-12 text-slate-400">
                                 <BookOpen size={48} className="mx-auto mb-2 opacity-50" />
-                                <p>No se encontraron resultados para "{searchTerm}"</p>
+                                <p>No se encontraron resultados para &ldquo;{searchTerm}&rdquo;</p>
                             </div>
                         ) : (
                             filteredItems.map((item, idx) => (
@@ -274,7 +274,7 @@ export const HelpCenter: React.FC = () => {
                             </div>
                         </div>
                         <p className="text-xs italic text-indigo-800 mt-3">
-                            <strong>Nota:</strong> Ambos valores son "correctos" según el contexto. El software prioriza la visión de flujo (100%) para asegurar que la máquina quepa en el Takt Time.
+                            <strong>Nota:</strong> Ambos valores son &ldquo;correctos&rdquo; según el contexto. El software prioriza la visión de flujo (100%) para asegurar que la máquina quepa en el Takt Time.
                         </p>
                     </div>
                 </div>

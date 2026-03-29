@@ -96,7 +96,7 @@ export const CavityCalculator: React.FC<Props> = ({
                                     </li>
                                     <li className="bg-amber-50 p-2 rounded border border-amber-100">
                                         <div className="font-bold text-amber-800 mb-1">Modo MANUAL (What-If)</div>
-                                        Le permite forzar una cantidad de operarios (ej: "Solo tengo 1 persona"). El sistema recalculará el ciclo mostrando cuánto tiempo pierde la máquina esperando al operario.
+                                        Le permite forzar una cantidad de operarios (ej: &ldquo;Solo tengo 1 persona&rdquo;). El sistema recalculará el ciclo mostrando cuánto tiempo pierde la máquina esperando al operario.
                                     </li>
                                 </ul>
                             </div>

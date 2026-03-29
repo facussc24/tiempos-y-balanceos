@@ -445,7 +445,7 @@ export const PanelControl: React.FC<Props> = ({ data, updateData }) => {
                                         <CheckCircle2 size={12} className="mt-0.5 flex-shrink-0" />
                                         <div>
                                             <p className="font-bold">Promedio Ponderado Activo</p>
-                                            <p className="opacity-80">Si el valor es bajo, asegúrese de asignar sus tareas a los sectores correspondientes en la pestaña "Tareas".</p>
+                                            <p className="opacity-80">Si el valor es bajo, asegúrese de asignar sus tareas a los sectores correspondientes en la pestaña &ldquo;Tareas&rdquo;.</p>
                                         </div>
                                     </div>
                                 )}
@@ -516,7 +516,7 @@ export const PanelControl: React.FC<Props> = ({ data, updateData }) => {
                                             <AlertTriangle size={12} className="mt-0.5 flex-shrink-0" />
                                             <div>
                                                 <p className="font-bold">Atención: Tareas sin Sector</p>
-                                                <p className="opacity-80">Las tareas "General" usan el OEE Global. Asigne sectores para mayor precisión.</p>
+                                                <p className="opacity-80">Las tareas &ldquo;General&rdquo; usan el OEE Global. Asigne sectores para mayor precisión.</p>
                                             </div>
                                         </div>
                                     )}

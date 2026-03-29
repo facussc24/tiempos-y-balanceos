@@ -343,7 +343,7 @@ export const LineBalancing: React.FC<Props> = ({ data, updateData }) => {
                                     </div>
                                 </div>
                                 <p className="text-xs text-slate-500 italic text-center">
-                                    El tiempo "absorbido" se convertirá en tiempo real penalizando la eficiencia.
+                                    El tiempo &ldquo;absorbido&rdquo; se convertirá en tiempo real penalizando la eficiencia.
                                 </p>
                             </div>
                             <div className="bg-slate-50 px-6 py-4 border-t border-slate-100 flex gap-3 justify-end">
@@ -392,7 +392,7 @@ export const LineBalancing: React.FC<Props> = ({ data, updateData }) => {
                                         <Info size={20} className="text-amber-500" />
                                     </div>
                                     <div className="text-xs text-amber-800">
-                                        <strong>Tip:</strong> Esta acción no se puede deshacer. Las tareas volverán a la lista "Sin Asignar".
+                                        <strong>Tip:</strong> Esta acción no se puede deshacer. Las tareas volverán a la lista &ldquo;Sin Asignar&rdquo;.
                                     </div>
                                 </div>
                             </div>
