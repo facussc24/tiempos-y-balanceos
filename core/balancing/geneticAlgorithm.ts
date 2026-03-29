@@ -735,7 +735,7 @@ export const runGeneticAlgorithm = (
 /**
  * Async version of GA that yields to the event loop for UI responsiveness
  */
-export const runGeneticAlgorithmAsync = async (
+const runGeneticAlgorithmAsync = async (
     data: ProjectData,
     nominalSeconds: number,
     effectiveSeconds: number,

@@ -72,7 +72,7 @@ function getTaskTime(task: Task): number {
  * @param takt - Maximum time per station
  * @returns FeasibilityResult with solution if feasible
  */
-export function bruteForceFeasibilityCheck(
+function bruteForceFeasibilityCheck(
     tasks: Task[],
     N: number,
     takt: number
@@ -153,7 +153,7 @@ export function bruteForceFeasibilityCheck(
  * Find minimum feasible N using binary search + brute force
  * Useful for determining theoretical minimum stations
  */
-export function findMinimumFeasibleN(
+function findMinimumFeasibleN(
     tasks: Task[],
     takt: number,
     maxN: number = tasks.length

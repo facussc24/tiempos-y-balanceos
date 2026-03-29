@@ -61,7 +61,7 @@ export interface SectorAnalysisRow {
 /**
  * V4.7 Phase 26: Enhanced recommendations with detailed breakdown
  */
-export function generateMixRecommendations(
+function generateMixRecommendations(
     sectors: SectorAnalysisRow[],
     currentShifts: number,
     taktTime: number,

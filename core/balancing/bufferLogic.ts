@@ -366,7 +366,7 @@ export function analyzeBufferNeeds(
  * Apply buffer recommendations to station configs
  * Returns a new array with updated wipBuffer fields
  */
-export function applyBufferRecommendations(
+function applyBufferRecommendations(
     stations: StationConfig[],
     recommendations: BufferRecommendation[]
 ): StationConfig[] {

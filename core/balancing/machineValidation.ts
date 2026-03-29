@@ -153,7 +153,7 @@ export function validateMachineResources(
 /**
  * Get the primary machine for a station (first required machine, or undefined)
  */
-export function getStationPrimaryMachine(
+function getStationPrimaryMachine(
     stationId: number,
     stationRequirements: StationMachineRequirement[],
     machines: MachineType[]

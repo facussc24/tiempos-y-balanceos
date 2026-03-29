@@ -378,7 +378,7 @@ export function balanceMixedModel(
  * Calculate product breakdown for a station
  * Used for stacked bar visualization
  */
-export function calculateStationProductBreakdown(
+function calculateStationProductBreakdown(
     stationTasks: MixTask[],
     totalDemand: number
 ): Record<string, number> {
@@ -954,7 +954,7 @@ export function analyzeMixBySector(
  * @param taktTime Calculated Takt Time in seconds
  * @returns Array of alerts for tasks requiring parallel stations
  */
-export function detectParallelStationNeeds(
+function detectParallelStationNeeds(
     products: ProjectData[],
     taktTime: number
 ): ParallelStationAlert[] {
@@ -988,4 +988,4 @@ export function detectParallelStationNeeds(
 }
 
 // Backward compatibility alias
-export const detectTaktViolations = detectParallelStationNeeds;
+const detectTaktViolations = detectParallelStationNeeds;
