@@ -1623,7 +1623,7 @@ class SupabaseAdapter implements DbAdapter {
 
     async select<T = Record<string, unknown>>(sql: string, bindings?: unknown[]): Promise<T[]> {
         const b = bindings ?? [];
-        let pgSql = this.convertPlaceholders(this.normalizeNow(sql.trim()));
+        const pgSql = this.convertPlaceholders(this.normalizeNow(sql.trim()));
         const inlinedSql = this.inlineParams(pgSql, b);
 
         const { data, error } = await this.supabase.rpc('exec_sql_read', {

@@ -245,7 +245,7 @@ export async function pullAnalyze(): Promise<{
 
         // Merge all remote datasets into one combined analysis
         const devices: SyncDeviceInfo[] = [];
-        let combinedResult: MergeResult = { added: [], updated: [], conflicts: [], skipped: 0, summary: '' };
+        const combinedResult: MergeResult = { added: [], updated: [], conflicts: [], skipped: 0, summary: '' };
 
         for (const file of otherFiles) {
             const json = await readTextFile(file.path);
