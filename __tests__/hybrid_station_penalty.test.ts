@@ -31,7 +31,7 @@ const createTestTask = (requiredMachineId?: string): Task => ({
     predecessors: [],
     positionalWeight: 1,
     requiredMachineId
-} as Task);
+} as unknown as Task);
 
 describe('Hybrid Station Penalty (Phase 4)', () => {
     const emptyUsageMap = new Map<string, number>();

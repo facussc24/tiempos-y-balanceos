@@ -40,7 +40,7 @@ function createMockResult(tasks: Array<{
             fatigueCategory: 'standard',
             executionMode: 'manual',
             modelApplicability: {}
-        } as Task)),
+        } as unknown as Task)),
         assignments: [],
         proposedConfigs: []
     } as SimulationResult;

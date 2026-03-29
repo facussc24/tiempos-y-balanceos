@@ -158,7 +158,7 @@ describe('INDUSTRIAL STRESS TEST SCENARIO', () => {
             const hasAssembly = sectorsInSt5.has('ASSEMBLY');
 
             // Smoothing
-            const loads = best.proposedConfigs.map(c => c.effectiveTime / c.replicas);
+            const loads = best.proposedConfigs.map(c => c.effectiveTime! / c.replicas!);
             const mean = loads.reduce((a, b) => a + b, 0) / loads.length;
             const variance = loads.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / loads.length;
             const stdDev = Math.sqrt(variance);

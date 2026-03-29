@@ -154,6 +154,7 @@ async function main() {
         interface OpEntry { num: string; name: string; }
         const pfdOps: OpEntry[] = [];
         for (const doc of masterPfd) {
+            if (!doc) continue;
             const steps = doc.parsed?.steps || [];
             for (const step of steps) {
                 if (!isAuditablePfdStep(step)) continue;
@@ -167,6 +168,7 @@ async function main() {
         // AMFE operations
         const amfeOps: OpEntry[] = [];
         for (const doc of masterAmfe) {
+            if (!doc) continue;
             const ops = doc.parsed?.operations || [];
             for (const op of ops) {
                 amfeOps.push({
@@ -179,6 +181,7 @@ async function main() {
         // CP items → unique operations
         const cpOpsMap = new Map<string, OpEntry>();
         for (const doc of masterCp) {
+            if (!doc) continue;
             const items = doc.parsed?.items || [];
             for (const item of items) {
                 const num = normalizeNum(item.processStepNumber);
@@ -195,6 +198,7 @@ async function main() {
         // HO sheets
         const hoOps: OpEntry[] = [];
         for (const doc of masterHo) {
+            if (!doc) continue;
             const sheets = doc.parsed?.sheets || [];
             for (const sheet of sheets) {
                 hoOps.push({

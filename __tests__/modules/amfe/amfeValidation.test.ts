@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { clampSOD, validateAmfeDocument, migrateFailureToCausesModel, migrateFailureEffects, getFailureWarnings, getCauseValidationState, getSoftLimitWarnings, SOFT_LIMIT_OPERATIONS, SOFT_LIMIT_CAUSES_PER_FAILURE, SOFT_LIMIT_TOTAL_CAUSES } from '../../../modules/amfe/amfeValidation';
-import { AmfeDocument, AmfeFailure, AmfeCause } from '../../../modules/amfe/amfeTypes';
+import { AmfeDocument, AmfeFailure, AmfeCause, AmfeOperation } from '../../../modules/amfe/amfeTypes';
 
 describe('clampSOD', () => {
     it('returns valid integers 1-10', () => {
@@ -475,14 +475,14 @@ describe('getSoftLimitWarnings (R5D)', () => {
     }): AmfeDocument {
         const { opCount = 1, causesPerFailure = 1, totalCausesOverride } = opts;
 
-        const operations = [];
+        const operations: AmfeOperation[] = [];
         for (let i = 0; i < opCount; i++) {
             // If totalCausesOverride: put all causes in the first op's first failure
             const numCauses = totalCausesOverride
                 ? (i === 0 ? totalCausesOverride : 0)
                 : causesPerFailure;
 
-            const causes = [];
+            const causes: AmfeCause[] = [];
             for (let j = 0; j < numCauses; j++) {
                 causes.push({
                     id: `c-${i}-${j}`, cause: `Causa ${j}`,

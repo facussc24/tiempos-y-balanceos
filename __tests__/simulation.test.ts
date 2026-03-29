@@ -109,7 +109,7 @@ describe('Monte Carlo Simulation - stdDev Fallback', () => {
         const hasMissingStdDev = !task.stdDev || task.stdDev <= 0;
         return hasMissingStdDev
             ? task.standardTime * FALLBACK_STDDEV_PERCENT
-            : task.stdDev;
+            : task.stdDev!;
     }
 
     it('should use 10% fallback when stdDev is 0', () => {

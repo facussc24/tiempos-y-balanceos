@@ -63,7 +63,7 @@ describe('Phase 17: Comprehensive System Verification', () => {
                 ratingFactor: 100, fatigueCategory: "standard",
                 predecessors: [], successors: [], positionalWeight: 10
             }
-        ] as Task[];
+        ] as unknown as Task[];
 
         // Add required Task properties
         tasks.forEach(t => { t.calculatedSuccessorSum = 0; });

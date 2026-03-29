@@ -460,9 +460,9 @@ describe('DES Simulation Engine Input Validation', () => {
 
             expect(isFinite(result.throughput)).toBe(true);
             expect(isFinite(result.avgCycleTime)).toBe(true);
-            expect(isFinite(result.kpis.oee)).toBe(true);
-            expect(isFinite(result.kpis.availability)).toBe(true);
-            expect(isFinite(result.kpis.performance)).toBe(true);
+            expect(isFinite(result.kpis.oee ?? 0)).toBe(true);
+            expect(isFinite(result.kpis.availability ?? 0)).toBe(true);
+            expect(isFinite(result.kpis.performance ?? 0)).toBe(true);
         });
 
         it('OEE is within valid range [0, 1]', () => {

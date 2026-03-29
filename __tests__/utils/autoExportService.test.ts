@@ -98,7 +98,7 @@ describe('autoExportService', () => {
         it('should queue individual exports that fail to write', async () => {
             vi.mocked(writeBinaryFile)
                 .mockRejectedValueOnce(new Error('disk full'))
-                .mockResolvedValueOnce(undefined);
+                .mockResolvedValueOnce(false);
 
             const result = await autoExportOnRevision('amfe', fakeAmfeDoc, 'A', 'doc-1');
             // First fails and gets queued, second succeeds
