@@ -37,3 +37,9 @@ dist-ssr
 SUPABASE_INFO.md
 AUDIT_FUNCIONAL.md
 .env.production
+
+# Test exports and debug scripts
+exports/test-*
+*.bak
+/*.mjs
+!eslint.config.mjs
