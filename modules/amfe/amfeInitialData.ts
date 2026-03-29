@@ -39,4 +39,4 @@ export function createEmptyAmfeDoc(): AmfeDocument {
 /**
  * @deprecated Use createEmptyAmfeDoc() instead. Kept for backward compatibility.
  */
-export const EMPTY_AMFE_DOC: AmfeDocument = createEmptyAmfeDoc();
+const EMPTY_AMFE_DOC: AmfeDocument = createEmptyAmfeDoc();

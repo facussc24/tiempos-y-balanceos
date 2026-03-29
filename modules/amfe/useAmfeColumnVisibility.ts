@@ -18,7 +18,7 @@ export interface ColumnGroupVisibility {
     obs: boolean;   // Observations
 }
 
-export const DEFAULT_VISIBILITY: ColumnGroupVisibility = {
+const DEFAULT_VISIBILITY: ColumnGroupVisibility = {
     step2: true,
     step3: true,
     step4: true,
