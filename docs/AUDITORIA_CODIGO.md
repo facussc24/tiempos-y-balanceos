@@ -168,6 +168,17 @@
 - **Lint fixes**: unescaped JSX entities, prefer-const, displayName, regex escapes, empty blocks, ternary expressions
 - **Total commits**: ~24
 - **ESLint errores accionables restantes**: 0 (los ~450 restantes son prop-types falsos positivos, underscore-prefix, React compiler hints, y hooks condicionales ya documentados)
+
+## Candidatos a Dead Files (requieren verificación manual)
+
+Los siguientes archivos podrían estar huérfanos (no importados por ningún otro archivo de producción). VERIFICAR manualmente antes de borrar — el análisis automático tiene ~40-50% de falsos positivos:
+
+- `core/balancing/bruteForceCheck.ts` — verificado: solo test lo importa
+- `utils/executiveSummaryCalc.ts` — verificado: solo test lo importa
+- `modules/mix/MixReportGenerator.ts` — ya unexported en esta auditoría
+- Varios componentes en `modules/logistics-backlog/`, `modules/mix/` — posiblemente importados por barrel files o lazy loading
+
+**NO SE BORRARON** porque requieren verificación manual caso por caso.
 - **Tests rotos introducidos**: 0
 - **Errores TypeScript introducidos**: 0
 - **Estado final tests**: 258/258 passed, 4086/4086 tests passed
