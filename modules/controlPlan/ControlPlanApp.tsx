@@ -320,7 +320,7 @@ const ControlPlanApp: React.FC<Props> = ({ onBackToLanding, embedded, initialDat
             .forEach(i => cp.updateItem(i.id, field as keyof ControlPlanItem, value));
     }, [cp.data.items, cp.updateItem]);
 
-    const inputClass = "w-full border border-gray-300 bg-gray-50 p-2 rounded focus:ring-2 focus:ring-teal-100 focus:border-teal-400 outline-none transition";
+    const inputClass = "w-full border border-gray-300 bg-gray-50 py-1.5 px-2 rounded text-xs focus:ring-2 focus:ring-teal-100 focus:border-teal-400 outline-none transition";
 
     const blobTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const exportToJson = useCallback(() => {
@@ -543,7 +543,7 @@ const ControlPlanApp: React.FC<Props> = ({ onBackToLanding, embedded, initialDat
             )}
 
             {/* Table */}
-            <div className="flex-grow p-4 pb-20">
+            <div className="flex-grow px-3 pt-2 pb-16">
                 {projects.isLoadingProject ? (
                     <LoadingOverlay message="Cargando Plan de Control..." accentColor="text-green-600" />
                 ) : (

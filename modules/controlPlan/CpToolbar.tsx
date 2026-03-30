@@ -522,8 +522,8 @@ const CpToolbar: React.FC<CpToolbarProps> = (props) => {
 
             {/* Header Form -- Collapsible */}
             <div className="bg-white shadow-sm border-b border-gray-200">
-                <div className="max-w-[1800px] mx-auto p-4">
-                    <div className="flex items-center gap-2 mb-2">
+                <div className="max-w-[1800px] mx-auto px-4 py-2">
+                    <div className="flex items-center gap-2 mb-1">
                         <button onClick={() => setHeaderCollapsed(!headerCollapsed)}
                             className="text-gray-400 hover:text-gray-600 p-0.5 rounded hover:bg-gray-100 transition"
                             title={headerCollapsed ? 'Expandir header' : 'Colapsar header'}
@@ -531,8 +531,8 @@ const CpToolbar: React.FC<CpToolbarProps> = (props) => {
                             aria-expanded={!headerCollapsed}>
                             {headerCollapsed ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
                         </button>
-                        <LayoutList className="text-teal-600" size={18} />
-                        <h2 className="text-sm font-bold text-gray-800">Datos del Plan de Control</h2>
+                        <LayoutList className="text-teal-600" size={16} />
+                        <h2 className="text-xs font-bold text-gray-800">Datos del Plan de Control</h2>
                         {headerCollapsed && (
                             <span className="text-xs text-gray-400 ml-3 truncate max-w-[600px]" title={headerSummary}>{headerSummary}</span>
                         )}
@@ -543,17 +543,17 @@ const CpToolbar: React.FC<CpToolbarProps> = (props) => {
 
                     {!headerCollapsed && (
                         <>
-                            {/* Row 1: Document ID + Phase */}
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs mb-3">
+                            {/* Row 1: Doc ID + Phase + Date + Rev */}
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs mb-1.5">
                                 <div>
-                                    <label className="block text-gray-500 font-bold mb-1">Nro. Plan de Control</label>
+                                    <label className="block text-gray-500 font-bold mb-0.5">Nro. Plan de Control</label>
                                     <input name="controlPlanNumber" value={header.controlPlanNumber} onChange={onHeaderChange} maxLength={30} className={inputClass} />
                                 </div>
                                 <div>
-                                    <label className="block text-gray-500 font-bold mb-1">Fase</label>
-                                    <div className="flex gap-3 items-center h-[38px] flex-wrap">
+                                    <label className="block text-gray-500 font-bold mb-0.5">Fase</label>
+                                    <div className="flex gap-3 items-center h-[34px] flex-wrap">
                                         {CONTROL_PLAN_PHASES.map(p => (
-                                            <label key={p.value} className="flex items-center gap-1.5 cursor-pointer text-xs whitespace-nowrap">
+                                            <label key={p.value} className="flex items-center gap-1 cursor-pointer text-xs whitespace-nowrap">
                                                 <input type="radio" name="phase" value={p.value}
                                                     checked={header.phase === p.value}
                                                     onChange={onHeaderChange}
@@ -564,19 +564,19 @@ const CpToolbar: React.FC<CpToolbarProps> = (props) => {
                                     </div>
                                 </div>
                                 <div>
-                                    <label className="block text-gray-500 font-bold mb-1">Fecha</label>
+                                    <label className="block text-gray-500 font-bold mb-0.5">Fecha</label>
                                     <input name="date" type="date" value={header.date} onChange={onHeaderChange} className={inputClass} />
                                 </div>
                                 <div>
-                                    <label className="block text-gray-500 font-bold mb-1">Revision</label>
+                                    <label className="block text-gray-500 font-bold mb-0.5">Revision</label>
                                     <input name="revision" value={header.revision} onChange={onHeaderChange} maxLength={20} className={inputClass} />
                                 </div>
                             </div>
 
-                            {/* Row 2: Part identification */}
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs mb-3">
+                            {/* Row 2: Part + Piezas Aplicables */}
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs mb-1.5">
                                 <div>
-                                    <label className="block text-gray-500 font-bold mb-1">Nro. Pieza</label>
+                                    <label className="block text-gray-500 font-bold mb-0.5">Nro. Pieza</label>
                                     <ProductSelector
                                         name="partNumber"
                                         value={header.partNumber}
@@ -586,7 +586,6 @@ const CpToolbar: React.FC<CpToolbarProps> = (props) => {
                                                 partName: sel.descripcion,
                                                 client: sel.lineaName,
                                             });
-                                            // Auto-fill applicableParts with family members (or line siblings)
                                             if (sel.isFromCatalog && sel.lineaCode) {
                                                 resolveApplicableParts(sel.codigo, sel.lineaCode)
                                                     .then(parts => {
@@ -607,83 +606,81 @@ const CpToolbar: React.FC<CpToolbarProps> = (props) => {
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-gray-500 font-bold mb-1">Nivel de Cambio</label>
+                                    <label className="block text-gray-500 font-bold mb-0.5">Nivel de Cambio</label>
                                     <input name="latestChangeLevel" value={header.latestChangeLevel} onChange={onHeaderChange} maxLength={30} className={inputClass} />
                                 </div>
                                 <div className="col-span-2">
-                                    <label className="block text-gray-500 font-bold mb-1">Nombre Pieza / Descripción</label>
+                                    <label className="block text-gray-500 font-bold mb-0.5">Nombre Pieza / Descripción</label>
                                     <input name="partName" value={header.partName} onChange={onHeaderChange} maxLength={150} className={inputClass} />
-                                </div>
-                                <div className="col-span-4">
-                                    <label className="block text-gray-500 font-bold mb-1">Piezas Aplicables</label>
-                                    <textarea name="applicableParts" value={header.applicableParts || ''} onChange={onHeaderChange} className={inputClass + ' resize-y'} rows={2} placeholder="Si cubre una familia, listar nros de pieza (uno por línea). Dejar vacío si es pieza única." />
-                                    <p className="text-[9px] text-gray-400 mt-0.5">Se hereda del AMFE al generar. Editable para ajustes.</p>
                                 </div>
                             </div>
 
-                            {/* Row 3: Organization / Supplier */}
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs mb-3">
+                            {/* Piezas Aplicables - compact */}
+                            <div className="text-xs mb-1.5">
+                                <label className="block text-gray-500 font-bold mb-0.5">Piezas Aplicables</label>
+                                <textarea name="applicableParts" value={header.applicableParts || ''} onChange={onHeaderChange} className={inputClass + ' resize-y'} rows={1} placeholder="Si cubre una familia, listar nros de pieza (uno por línea). Dejar vacío si es pieza única." />
+                            </div>
+
+                            {/* Row 3: Org + Client (merged) */}
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs mb-1.5">
                                 <div>
-                                    <label className="block text-gray-500 font-bold mb-1">Organización / Planta</label>
+                                    <label className="block text-gray-500 font-bold mb-0.5">Organización / Planta</label>
                                     <input name="organization" value={header.organization} onChange={onHeaderChange} maxLength={100} className={inputClass} />
                                 </div>
                                 <div>
-                                    <label className="block text-gray-500 font-bold mb-1">Proveedor</label>
-                                    <input name="supplier" value={header.supplier} onChange={onHeaderChange} maxLength={100} className={inputClass} />
-                                </div>
-                                <div>
-                                    <label className="block text-gray-500 font-bold mb-1">Código Proveedor</label>
-                                    <input name="supplierCode" value={header.supplierCode} onChange={onHeaderChange} maxLength={30} className={inputClass} />
-                                </div>
-                                <div>
-                                    <label className="block text-gray-500 font-bold mb-1">Contacto Clave / Teléfono</label>
-                                    <input name="keyContactPhone" value={header.keyContactPhone} onChange={onHeaderChange} maxLength={80} className={inputClass} />
-                                </div>
-                            </div>
-
-                            {/* Row 4: Team */}
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs mb-3">
-                                <div>
-                                    <label className="block text-gray-500 font-bold mb-1">Cliente</label>
+                                    <label className="block text-gray-500 font-bold mb-0.5">Cliente</label>
                                     <input name="client" value={header.client} onChange={onHeaderChange} maxLength={100} className={inputClass} />
                                 </div>
                                 <div>
-                                    <label className="block text-gray-500 font-bold mb-1">Responsable</label>
+                                    <label className="block text-gray-500 font-bold mb-0.5">Responsable</label>
                                     <input name="responsible" value={header.responsible} onChange={onHeaderChange} maxLength={80} className={inputClass} />
                                 </div>
-                                <div className="col-span-2">
-                                    <label className="block text-gray-500 font-bold mb-1">Equipo</label>
+                                <div>
+                                    <label className="block text-gray-500 font-bold mb-0.5">Equipo</label>
                                     <input name="coreTeam" value={header.coreTeam} onChange={onHeaderChange} maxLength={300} className={inputClass} />
                                 </div>
                             </div>
 
-                            {/* Row 5: Approvals section */}
-                            <div className="border-l-4 border-slate-300 pl-3 mt-1">
-                                <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Aprobaciones</span>
-                                <div className="grid grid-cols-4 gap-3 text-xs mt-1">
-                                    <div>
-                                        <label className="block text-gray-500 font-bold mb-1">Aprob. Ingenieria</label>
-                                        <input name="approvedBy" value={header.approvedBy} onChange={onHeaderChange} maxLength={80} className={inputClass} />
-                                    </div>
-                                    <div>
-                                        <label className="block text-gray-500 font-bold mb-1">Aprob. Planta</label>
-                                        <input name="plantApproval" value={header.plantApproval} onChange={onHeaderChange} maxLength={80} className={inputClass} />
-                                    </div>
-                                    <div>
-                                        <label className="block text-gray-500 font-bold mb-1">Aprob. Cliente / Fecha</label>
-                                        <input name="customerApproval" value={header.customerApproval} onChange={onHeaderChange} maxLength={160} className={inputClass} />
-                                    </div>
-                                    <div>
-                                        <label className="block text-gray-500 font-bold mb-1">Otra Aprobacion</label>
-                                        <input name="otherApproval" value={header.otherApproval} onChange={onHeaderChange} maxLength={80} className={inputClass} />
-                                    </div>
+                            {/* Row 4: Supplier (less important, compact) */}
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs mb-1.5">
+                                <div>
+                                    <label className="block text-gray-500 font-bold mb-0.5">Proveedor</label>
+                                    <input name="supplier" value={header.supplier} onChange={onHeaderChange} maxLength={100} className={inputClass} />
+                                </div>
+                                <div>
+                                    <label className="block text-gray-500 font-bold mb-0.5">Código Proveedor</label>
+                                    <input name="supplierCode" value={header.supplierCode} onChange={onHeaderChange} maxLength={30} className={inputClass} />
+                                </div>
+                                <div>
+                                    <label className="block text-gray-500 font-bold mb-0.5">Contacto Clave / Teléfono</label>
+                                    <input name="keyContactPhone" value={header.keyContactPhone} onChange={onHeaderChange} maxLength={80} className={inputClass} />
+                                </div>
+                            </div>
+
+                            {/* Row 5: Approvals - compact inline */}
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+                                <div>
+                                    <label className="block text-gray-400 font-bold mb-0.5">Aprob. Ingenieria</label>
+                                    <input name="approvedBy" value={header.approvedBy} onChange={onHeaderChange} maxLength={80} className={inputClass} />
+                                </div>
+                                <div>
+                                    <label className="block text-gray-400 font-bold mb-0.5">Aprob. Planta</label>
+                                    <input name="plantApproval" value={header.plantApproval} onChange={onHeaderChange} maxLength={80} className={inputClass} />
+                                </div>
+                                <div>
+                                    <label className="block text-gray-400 font-bold mb-0.5">Aprob. Cliente / Fecha</label>
+                                    <input name="customerApproval" value={header.customerApproval} onChange={onHeaderChange} maxLength={160} className={inputClass} />
+                                </div>
+                                <div>
+                                    <label className="block text-gray-400 font-bold mb-0.5">Otra Aprobacion</label>
+                                    <input name="otherApproval" value={header.otherApproval} onChange={onHeaderChange} maxLength={80} className={inputClass} />
                                 </div>
                             </div>
 
                             {/* AMFE link (only shown when linked) */}
                             {header.linkedAmfeProject && (
-                                <div className="mt-3 text-xs">
-                                    <label className="block text-gray-500 font-bold mb-1">AMFE Vinculado</label>
+                                <div className="mt-1.5 text-xs">
+                                    <label className="block text-gray-500 font-bold mb-0.5">AMFE Vinculado</label>
                                     <input name="linkedAmfeProject" value={header.linkedAmfeProject} onChange={onHeaderChange} className={inputClass} readOnly />
                                 </div>
                             )}
