@@ -178,6 +178,16 @@ export function inferProcessEvaluationTechnique(detectionControl: string): strin
     return '';
 }
 
+/** Infer SGC control procedure reference from operation category. */
+export function inferControlProcedure(operationCategory: string): string {
+    if (!operationCategory) return 'Según P-09/I.';
+    const cat = operationCategory.toLowerCase();
+    if (cat === 'almacen' || cat === 'recepcion' || cat.includes('recep') || cat.includes('almac')) {
+        return 'P-14.';
+    }
+    return 'Según P-09/I.';
+}
+
 /**
  * Check if a Control Plan document has missing required fields that should
  * block export. Returns list of issues.
