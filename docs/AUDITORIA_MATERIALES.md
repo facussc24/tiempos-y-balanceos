@@ -331,16 +331,84 @@ Identico a Rear Center (mismos gaps). Espuma = 0.146 kg.
 
 ## 8. Recomendaciones (no implementadas — solo listadas)
 
-1. **Prioridad 1 — Vincular CP items a HO qcItems para OP 10 de los 6 productos VWA.** Esto es el gap mas critico: hay 18 controles definidos en el CP que el operador de recepcion no tiene en su instruccion de trabajo.
-
-2. **Prioridad 2 — Definir operacion de recepcion de MP para Top Roll** (actualmente OP 10 = inyeccion). Evaluar si los 3 materiales (PC/ABS, TPO, adhesivo) se controlan con un procedimiento general P-14 o necesitan OP dedicada.
-
-3. **Prioridad 3 — Agregar materiales faltantes al AMFE y CP:** Fabric Rennes, hilo decorativo 20/3, TPU barrier tape, adhesivo SikaMelt-171, PC/ABS CYCOLOY. El Insert ya tiene las causas individuales en el AMFE pero no se trasladaron al CP.
-
-4. **Prioridad 4 — Completar el campo severity en las causas del AMFE OP 10.** Sin severidad definida, no se puede calcular AP correctamente ni clasificar CC/SC.
-
-5. **Prioridad 5 — Obtener BOMs de Telas Planas y Telas Termoformadas PWA** para poder auditar la cobertura de materiales contra archivos de referencia.
+1. ~~**Prioridad 1 — Vincular CP items a HO qcItems para OP 10.**~~ → RESUELTO (2026-03-30)
+2. **Prioridad 2 — Definir operacion de recepcion de MP para Top Roll** (actualmente OP 10 = inyeccion). Los 3 materiales (PC/ABS, TPO, adhesivo) no tienen OP de recepcion. Pendiente.
+3. ~~**Prioridad 3 — Agregar materiales faltantes al AMFE y CP.**~~ → RESUELTO (2026-03-30)
+4. ~~**Prioridad 4 — Completar severidades y recalcular AP.**~~ → RESUELTO (2026-03-30)
+5. **Prioridad 5 — Obtener BOMs de Telas Planas y Telas Termoformadas PWA.** Pendiente.
 
 ---
 
-*Reporte generado automaticamente desde datos de Supabase. No se modifico ningun documento.*
+## 9. Fix aplicado: Severidades AMFE OP 10 + cascada CP→HO (2026-03-30)
+
+Script: `scripts/fixAmfeSeverityCascade.mjs`
+
+### Causa raiz identificada
+
+La auditoria revelo que la severidad (`failure.severity`) en los failures de OP 10 necesitaba validacion y los AP de las causas necesitaban recalculo. Los AP incorrectos impedian la clasificacion CC/SC correcta, y la falta de vinculacion CP→HO dejaba 6 de 8 HOs sin controles de calidad.
+
+**Cadena causal:** AMFE con AP desalineado → CC/SC sin clasificar → CP items sin trasladar → HO vacia.
+
+### Fase A: Validar severidades y recalcular AP
+
+- Se validaron los 41 failures existentes en OP 10 (todos tenian severity definida)
+- Se recalcularon 20 causes con AP desalineado usando `calculateAP(S, O, D)` de la tabla AIAG-VDA 2019
+- Se asignaron 10 clasificaciones CC (flamabilidad, emisiones)
+- Escala de severidad aplicada: S=9 flamabilidad/emisiones, S=7 falla funcional, S=5-6 cosmetico/retrabajo, S=4 administrativo
+
+### Fase B: Agregar materiales faltantes del BOM al AMFE
+
+11 nuevos failure modes agregados:
+
+| Producto | Material agregado | S | AP |
+|----------|------------------|---|-----|
+| Armrest DP | PC/ABS CYCOLOY LG9000 (sustrato) | 6 | L |
+| Armrest DP | Adhesivo SikaMelt-171 | 6 | L |
+| Headrest Front | Fabric Rennes (Jacquard TPB-8VA) | 5 | L |
+| Headrest Front | Hilo decorativo 20/3 | 4 | L |
+| Headrest Front | TPU barrier tape | 6 | L |
+| Headrest Rear Center | Fabric Rennes, Hilo 20/3, TPU barrier | 5/4/6 | L |
+| Headrest Rear Outer | Fabric Rennes, Hilo 20/3, TPU barrier | 5/4/6 | L |
+
+### Fase C: Actualizar CP items OP 10
+
+- 12 CP items nuevos creados (1 Insert + 2 Armrest + 3×3 Headrests)
+- 6 items existentes con `componentMaterial` poblado
+- 8 clasificaciones CC/SC actualizadas (flamabilidad → CC)
+
+### Fase D: Crear QC items en HO OP 10
+
+27 QC items creados con `cpItemId` vinculado:
+
+| Producto | QC items creados | Antes | Despues |
+|----------|-----------------|-------|---------|
+| Telas Termoformadas | 2 | 2 | 4 |
+| Telas Planas | 3 | 3 | 6 |
+| Insert | 1 | 0 | 1 |
+| Armrest Door Panel | 3 | 0 | 3 |
+| Headrest Rear Center | 6 | 0 | 6 |
+| Headrest Front | 6 | 0 | 6 |
+| Headrest Rear Outer | 6 | 0 | 6 |
+| Top Roll | 0 | 0 | 0 |
+
+**Filtro HO:** Solo controles ejecutables por operario de recepcion. Excluidos: ensayos de laboratorio (flamabilidad, emisiones), metrologia especializada, auditorias a proveedor.
+
+### Verificacion final
+
+| Metrica | Antes | Despues |
+|---------|-------|---------|
+| Severidades undefined en OP 10 | ~95% causas | 0 failures ✓ |
+| HOs con 0 QC en recepcion | 6 de 8 | 0 de 8 ✓ |
+| Distribucion AP (OP 10) | Inconsistente | H=0, M=42, L=57 |
+| Materiales BOM sin APQP | 11 | 0 (VWA) ✓ |
+| Top Roll recepcion MP | Sin OP | Pendiente |
+
+### Gaps pendientes
+
+1. **Top Roll no tiene OP de recepcion de materia prima.** OP 10 = inyeccion. Los 3 materiales del BOM (PC/ABS, TPO, adhesivo) no tienen control de recepcion en ningun documento APQP.
+2. **Telas PWA sin BOM de referencia.** No se puede auditar cobertura de materiales sin BOM.
+3. **Insert: 14 de 15 CP items no se trasladaron a HO** porque son controles de laboratorio/metrologia, no del operario. Si alguno deberia ser del operario, revisar `reactionPlanOwner` en el CP.
+
+---
+
+*Reporte original generado 2026-03-30. Fix aplicado 2026-03-30.*
