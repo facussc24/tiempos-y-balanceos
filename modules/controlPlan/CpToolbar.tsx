@@ -658,7 +658,7 @@ const CpToolbar: React.FC<CpToolbarProps> = (props) => {
                             </div>
 
                             {/* Row 5: Approvals section */}
-                            <div className="border-l-4 border-teal-300 pl-3 mt-1">
+                            <div className="border-l-4 border-slate-300 pl-3 mt-1">
                                 <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Aprobaciones</span>
                                 <div className="grid grid-cols-4 gap-3 text-xs mt-1">
                                     <div>

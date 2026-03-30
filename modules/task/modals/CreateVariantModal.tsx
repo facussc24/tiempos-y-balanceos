@@ -73,7 +73,7 @@ export const CreateVariantModal: React.FC<CreateVariantModalProps> = ({
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-xl shadow-xl max-w-md w-full overflow-hidden">
                 {/* Header */}
-                <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-6">
+                <div className="bg-blue-600 text-white p-6">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <GitBranch size={24} />

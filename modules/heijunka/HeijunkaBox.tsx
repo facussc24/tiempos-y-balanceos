@@ -88,7 +88,7 @@ export const HeijunkaBox: React.FC<HeijunkaBoxProps> = ({
     const content = (
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
             {/* Header */}
-            <div className="bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-4 flex items-center justify-between print:bg-purple-600">
+            <div className="bg-blue-600 px-6 py-4 flex items-center justify-between print:bg-blue-600">
                 <div className="flex items-center gap-3">
                     <Grid3X3 className="w-6 h-6 text-white" />
                     <div>
@@ -302,7 +302,7 @@ export const HeijunkaBox: React.FC<HeijunkaBoxProps> = ({
             {selectedSlot && (
                 <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 print:hidden">
                     <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 animate-in zoom-in-95 duration-200">
-                        <div className="bg-purple-600 px-4 py-3 flex items-center justify-between rounded-t-xl">
+                        <div className="bg-blue-600 px-4 py-3 flex items-center justify-between rounded-t-xl">
                             <div className="flex items-center gap-2 text-white">
                                 <Truck size={20} />
                                 <span className="font-semibold">

@@ -307,7 +307,7 @@ const AmfeLibraryPanel: React.FC<Props> = ({
                     <button
                         onClick={() => setActiveTab('browse')}
                         className={`flex-1 px-4 py-2.5 font-medium transition ${activeTab === 'browse'
-                            ? 'text-purple-700 border-b-2 border-purple-600 bg-purple-50/50'
+                            ? 'text-blue-700 border-b-2 border-blue-600 bg-blue-50/50'
                             : 'text-gray-500 hover:text-gray-700'}`}
                     >
                         Disponibles ({libraryOps.length})
@@ -315,7 +315,7 @@ const AmfeLibraryPanel: React.FC<Props> = ({
                     <button
                         onClick={() => setActiveTab('save')}
                         className={`flex-1 px-4 py-2.5 font-medium transition ${activeTab === 'save'
-                            ? 'text-purple-700 border-b-2 border-purple-600 bg-purple-50/50'
+                            ? 'text-blue-700 border-b-2 border-blue-600 bg-blue-50/50'
                             : 'text-gray-500 hover:text-gray-700'}`}
                     >
                         Guardar en Biblioteca
@@ -738,7 +738,7 @@ const SaveOpCard: React.FC<{
                         </button>
                         <button
                             onClick={handleSave}
-                            className="text-[10px] text-white bg-purple-600 hover:bg-purple-700 px-3 py-1 rounded transition font-medium"
+                            className="text-[10px] text-white bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded transition font-medium"
                         >
                             Guardar en Biblioteca
                         </button>

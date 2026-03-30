@@ -123,7 +123,7 @@ export const BalancingMetrics: React.FC<BalancingMetricsProps> = ({
         <div className="flex flex-col gap-3 bg-white p-3 rounded-lg border border-slate-200 shadow-sm relative z-40">
             {/* GA Progress Bar */}
             {gaProgress && (
-                <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-4 py-3 rounded-lg shadow-lg animate-in fade-in duration-300">
+                <div className="bg-blue-600 text-white px-4 py-3 rounded-lg shadow-lg animate-in fade-in duration-300">
                     <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">
                             <Sparkles size={16} className="animate-pulse" />

@@ -196,7 +196,7 @@ export const TaskTable: React.FC<TaskTableProps> = ({
                                 </button>
                                 <button
                                     onClick={() => onModeChange(task.id, 'injection')}
-                                    className={`px-2.5 py-1 text-[10px] font-bold transition-all min-w-[44px] rounded-md ${task.executionMode === 'injection' ? 'bg-purple-500 text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-white'}`}
+                                    className={`px-2.5 py-1 text-[10px] font-bold transition-all min-w-[44px] rounded-md ${task.executionMode === 'injection' ? 'bg-blue-500 text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-white'}`}
                                     title="Inyectora con ciclo automático"
                                 >
                                     Inyec.
