@@ -121,7 +121,7 @@ export function LoginPage() {
                         Contacta a tu administrador si no tenes acceso.
                     </p>
 
-                    {import.meta.env.DEV && import.meta.env.VITE_AUTO_LOGIN_EMAIL && (
+                    {import.meta.env.VITE_AUTO_LOGIN_EMAIL && (
                         <button
                             type="button"
                             onClick={async () => {
@@ -143,11 +143,11 @@ export function LoginPage() {
                                 }
                             }}
                             disabled={loading}
-                            className="w-full mt-3 py-2 px-4 bg-amber-600 hover:bg-amber-500
-                                       text-white font-medium text-sm rounded-lg transition-colors
-                                       disabled:opacity-50"
+                            className="w-full mt-3 py-2 px-4 border-2 border-amber-500 bg-transparent
+                                       hover:bg-amber-500/10 text-amber-400 font-medium text-sm rounded-lg
+                                       transition-colors disabled:opacity-50"
                         >
-                            Acceso rapido
+                            Acceso rapido (dev)
                         </button>
                     )}
                 </div>
