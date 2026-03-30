@@ -408,7 +408,7 @@ La auditoria revelo que la severidad (`failure.severity`) en los failures de OP 
 1. ~~**Top Roll no tiene OP de recepcion de materia prima.**~~ → FALSO POSITIVO (2026-03-30). Top Roll SI tiene OP 05 "RECEPCION DE MATERIA PRIMA" con 7 failures (S=4 a S=10), flamabilidad CC (S=10), 19 CP items, 19 HO QC items. La auditoria original solo busco en OP 10 (que es inyeccion) y no detecto OP 05. Ver seccion 10 para detalles.
 2. **Telas PWA sin BOM de referencia.** No se puede auditar cobertura de materiales sin BOM.
 3. **Insert: 14 de 15 CP items no se trasladaron a HO** porque son controles de laboratorio/metrologia, no del operario. Si alguno deberia ser del operario, revisar `reactionPlanOwner` en el CP.
-4. **Top Roll no tiene PFD en Supabase.** El documento PFD no existe para project_name='VWA/PATAGONIA/TOP_ROLL'. No se puede validar el flujograma.
+4. ~~**Top Roll no tiene PFD en Supabase.**~~ → RESUELTO (2026-03-30). Los 8 PFDs existen: Top Roll 25 steps, Headrests 23 steps, Insert 46 steps, Armrest 43 steps, Telas Planas 17 steps, Telas Termoformadas 21 steps.
 
 ---
 
@@ -423,7 +423,7 @@ La auditoria original (seccion 5) reporto que Top Roll "no tiene operacion de re
 | AMFE OP 05 | 7 failures, 14 causes | Completo |
 | CP OP 05 | 19 items | Completo |
 | HO OP 05 | 19 QC items, 5 steps TWI | Completo |
-| PFD | No existe en Supabase | Gap |
+| PFD | 25 steps (OP 5 a OP 90) | Completo |
 
 ### Failures de Top Roll OP 05 (datos reales)
 
