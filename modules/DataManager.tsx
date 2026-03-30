@@ -556,7 +556,7 @@ const DataManager: React.FC<DataManagerProps> = ({ onBackToLanding }) => {
                                 <button
                                     onClick={handleExport}
                                     disabled={isExporting}
-                                    className="flex-1 px-3 py-2.5 bg-blue-600/20 text-blue-400 text-sm font-medium rounded-lg hover:bg-violet-600/30 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                                    className="flex-1 px-3 py-2.5 bg-blue-600/20 text-blue-400 text-sm font-medium rounded-lg hover:bg-blue-600/30 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                                 >
                                     {isExporting ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
                                     Exportar

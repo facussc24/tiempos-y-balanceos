@@ -33,9 +33,9 @@ const CpTemplateModal: React.FC<CpTemplateModalProps> = ({ isOpen, onClose, onAp
             <div className="absolute inset-0 bg-black/30 backdrop-blur-sm animate-in fade-in duration-150" />
             <div className="relative bg-white rounded-xl shadow-2xl max-w-lg w-full mx-4 max-h-[80vh] overflow-hidden flex flex-col animate-in zoom-in-95 duration-200"
                 onClick={e => e.stopPropagation()}>
-                <div className="flex items-center justify-between px-5 py-3 border-b bg-gradient-to-r from-purple-50 to-violet-50">
+                <div className="flex items-center justify-between px-5 py-3 border-b bg-slate-50">
                     <div className="flex items-center gap-2">
-                        <LayoutTemplate size={18} className="text-purple-600" />
+                        <LayoutTemplate size={18} className="text-blue-600" />
                         <div>
                             <h3 className="text-sm font-bold text-gray-800">Templates de Plan de Control</h3>
                             <p className="text-[10px] text-gray-500">Items predefinidos por proceso</p>
