@@ -40,7 +40,7 @@ const MixCalculationProgress: React.FC<MixCalculationProgressProps> = ({
     return (
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
             <div className="flex items-center gap-3 mb-4">
-                <Loader2 className="animate-spin text-indigo-600" size={24} />
+                <Loader2 className="animate-spin text-blue-600" size={24} />
                 <h3 className="font-semibold text-slate-800">
                     Calculando balance para {productCount} productos...
                 </h3>
@@ -57,7 +57,7 @@ const MixCalculationProgress: React.FC<MixCalculationProgressProps> = ({
                             {isComplete ? (
                                 <CheckCircle className="text-emerald-500" size={20} />
                             ) : isCurrent ? (
-                                <Loader2 className="animate-spin text-indigo-600" size={20} />
+                                <Loader2 className="animate-spin text-blue-600" size={20} />
                             ) : (
                                 <Circle className="text-slate-300" size={20} />
                             )}

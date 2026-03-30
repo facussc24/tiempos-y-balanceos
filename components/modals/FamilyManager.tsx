@@ -775,7 +775,7 @@ const FamilyManager: React.FC<FamilyManagerProps> = ({ onClose }) => {
 
                                         {docsLoading ? (
                                             <div className="flex items-center justify-center py-6">
-                                                <Loader2 size={16} className="animate-spin text-purple-400" />
+                                                <Loader2 size={16} className="animate-spin text-blue-400" />
                                                 <span className="text-[10px] text-gray-400 ml-2">Cargando documentos...</span>
                                             </div>
                                         ) : (
