@@ -401,14 +401,44 @@ La auditoria revelo que la severidad (`failure.severity`) en los failures de OP 
 | HOs con 0 QC en recepcion | 6 de 8 | 0 de 8 ✓ |
 | Distribucion AP (OP 10) | Inconsistente | H=0, M=42, L=57 |
 | Materiales BOM sin APQP | 11 | 0 (VWA) ✓ |
-| Top Roll recepcion MP | Sin OP | Pendiente |
+| Top Roll recepcion MP | Sin OP | **OP 05 existe** ✓ (ver correccion abajo) |
 
 ### Gaps pendientes
 
-1. **Top Roll no tiene OP de recepcion de materia prima.** OP 10 = inyeccion. Los 3 materiales del BOM (PC/ABS, TPO, adhesivo) no tienen control de recepcion en ningun documento APQP.
+1. ~~**Top Roll no tiene OP de recepcion de materia prima.**~~ → FALSO POSITIVO (2026-03-30). Top Roll SI tiene OP 05 "RECEPCION DE MATERIA PRIMA" con 7 failures (S=4 a S=10), flamabilidad CC (S=10), 19 CP items, 19 HO QC items. La auditoria original solo busco en OP 10 (que es inyeccion) y no detecto OP 05. Ver seccion 10 para detalles.
 2. **Telas PWA sin BOM de referencia.** No se puede auditar cobertura de materiales sin BOM.
 3. **Insert: 14 de 15 CP items no se trasladaron a HO** porque son controles de laboratorio/metrologia, no del operario. Si alguno deberia ser del operario, revisar `reactionPlanOwner` en el CP.
+4. **Top Roll no tiene PFD en Supabase.** El documento PFD no existe para project_name='VWA/PATAGONIA/TOP_ROLL'. No se puede validar el flujograma.
 
 ---
 
-*Reporte original generado 2026-03-30. Fix aplicado 2026-03-30.*
+## 10. Correccion: Top Roll OP 05 ya existia (2026-03-30)
+
+La auditoria original (seccion 5) reporto que Top Roll "no tiene operacion de recepcion de materia prima" porque solo busco en OP 10. Sin embargo, **Top Roll tiene OP 05 "RECEPCION DE MATERIA PRIMA"** que estaba completamente poblada desde el seed.
+
+### Estado real de Top Roll OP 05
+
+| Documento | Items | Estado |
+|-----------|-------|--------|
+| AMFE OP 05 | 7 failures, 14 causes | Completo |
+| CP OP 05 | 19 items | Completo |
+| HO OP 05 | 19 QC items, 5 steps TWI | Completo |
+| PFD | No existe en Supabase | Gap |
+
+### Failures de Top Roll OP 05 (datos reales)
+
+| Failure | S | CC/SC | Causes | AP max |
+|---------|---|-------|--------|--------|
+| Material golpeado o danado durante transporte | 5 | — | 3 | M |
+| Material no cumple flamabilidad TL 1010 VW | 10 | **CC** | 1 | M |
+| Falta de documentacion o trazabilidad | 4 | — | 2 | L |
+| Material con especificacion erronea | 6 | — | 2 | M |
+| Contaminacion / suciedad | 5 | — | 2 | M |
+| No se utiliza el sistema ARB | 5 | — | 1 | L |
+| Condiciones ambientales inadecuadas | 5 | — | 1 | L |
+
+**Nota:** Los 3 materiales del BOM (PC/ABS CYCOLOY, TPO Bilaminate, SikaMelt-171) estan cubiertos implicitamente por los failures genericos. No hay failures material-especificos (como si tiene el Insert), pero la cobertura es completa.
+
+---
+
+*Reporte original generado 2026-03-30. Fix aplicado 2026-03-30. Correccion Top Roll 2026-03-30.*
