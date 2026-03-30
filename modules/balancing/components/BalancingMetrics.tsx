@@ -516,7 +516,7 @@ export const BalancingMetrics: React.FC<BalancingMetricsProps> = ({
                     {/* Optimize Button */}
                     <button
                         onClick={handleOptimization}
-                        className="px-5 py-2 rounded-lg shadow-md hover:shadow-lg transition-all flex items-center gap-2 font-bold text-sm ml-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
+                        className="px-5 py-2 rounded-lg shadow-md hover:shadow-lg transition-all flex items-center gap-2 font-bold text-sm ml-2 bg-blue-600 hover:bg-blue-700 text-white"
                         title="Asigna las tareas automáticamente minimizando estaciones y operarios"
                     >
                         <Sparkles size={16} /> Balanceo Automático

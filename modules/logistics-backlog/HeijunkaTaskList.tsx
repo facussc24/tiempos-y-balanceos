@@ -96,7 +96,7 @@ const HeijunkaTaskList: React.FC<HeijunkaTaskListProps> = ({
     return (
         <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl shadow-xl overflow-hidden">
             {/* Header */}
-            <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-4">
+            <div className="bg-blue-600 px-6 py-4">
                 <div className="flex items-center justify-between">
                     <div>
                         <p className="text-indigo-200 text-sm">Hola, {operatorName}</p>

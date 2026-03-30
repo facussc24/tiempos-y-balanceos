@@ -88,7 +88,7 @@ export const SectorManagementModal: React.FC<Props> = ({ isOpen, onClose, data, 
             <div className="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden">
 
                 {/* HEADER - Diseño moderno con gradiente */}
-                <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-5">
+                <div className="bg-blue-600 px-6 py-5">
                     <div className="flex justify-between items-center">
                         <div className="flex items-center gap-3">
                             <div className="bg-white/20 p-2 rounded-xl">

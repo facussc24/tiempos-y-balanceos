@@ -105,7 +105,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
                                     font-medium text-sm transition-all duration-200
                                     active:scale-95 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-400
                                     ${isPrimary
-                                        ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md hover:shadow-lg hover:-translate-y-0.5'
+                                        ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-sm hover:shadow-md'
                                         : isGhost
                                             ? 'text-slate-600 hover:text-slate-800 hover:bg-slate-100'
                                             : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'

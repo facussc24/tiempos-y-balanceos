@@ -468,7 +468,7 @@ export const MixModeView: React.FC<MixModeViewProps> = ({
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
             {/* Header */}
-            <div className="bg-gradient-to-r from-indigo-600 to-blue-600 text-white">
+            <div className="bg-blue-600 text-white">
                 <div className="max-w-5xl mx-auto px-6 py-8">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
@@ -579,7 +579,7 @@ export const MixModeView: React.FC<MixModeViewProps> = ({
                                 <button
                                     onClick={handleCalculate}
                                     disabled={isCalculating}
-                                    className={`flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl text-lg font-semibold shadow-lg transition-all ${isCalculating
+                                    className={`flex items-center gap-3 px-8 py-4 bg-blue-600 text-white rounded-xl text-lg font-semibold shadow-lg transition-all ${isCalculating
                                         ? 'opacity-50 cursor-not-allowed'
                                         : 'hover:from-blue-700 hover:to-indigo-700 hover:shadow-xl active:scale-95'
                                         }`}
