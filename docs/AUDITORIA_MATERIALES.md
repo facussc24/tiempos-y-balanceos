@@ -406,7 +406,7 @@ La auditoria revelo que la severidad (`failure.severity`) en los failures de OP 
 ### Gaps pendientes
 
 1. ~~**Top Roll no tiene OP de recepcion de materia prima.**~~ → FALSO POSITIVO (2026-03-30). Top Roll SI tiene OP 05 "RECEPCION DE MATERIA PRIMA" con 7 failures (S=4 a S=10), flamabilidad CC (S=10), 19 CP items, 19 HO QC items. La auditoria original solo busco en OP 10 (que es inyeccion) y no detecto OP 05. Ver seccion 10 para detalles.
-2. **Telas PWA sin BOM de referencia.** No se puede auditar cobertura de materiales sin BOM.
+2. ~~**Telas PWA sin BOM de referencia.**~~ → RESUELTO (2026-03-30). BOM leido desde red. 5 materiales agregados a Telas Planas, 2 refuerzos a Termoformadas. Ver seccion 11.
 3. **Insert: 14 de 15 CP items no se trasladaron a HO** porque son controles de laboratorio/metrologia, no del operario. Si alguno deberia ser del operario, revisar `reactionPlanOwner` en el CP.
 4. ~~**Top Roll no tiene PFD en Supabase.**~~ → RESUELTO (2026-03-30). Los 8 PFDs existen: Top Roll 25 steps, Headrests 23 steps, Insert 46 steps, Armrest 43 steps, Telas Planas 17 steps, Telas Termoformadas 21 steps.
 
@@ -442,3 +442,55 @@ La auditoria original (seccion 5) reporto que Top Roll "no tiene operacion de re
 ---
 
 *Reporte original generado 2026-03-30. Fix aplicado 2026-03-30. Correccion Top Roll 2026-03-30.*
+
+## 11. Materiales Telas PWA completados desde BOM (2026-03-30)
+
+### BOM Telas Planas 581D — Fuente
+
+Leido desde `\SERVER\compartido\BARACK\CALIDAD\DOCUMENTACION SGC\PPAP CLIENTES\PWA\1- TOYOTA_TELAS_ PLANAS_581D\APQP\7-Lista de materiales\Listado de materiales.pdf`.
+
+13 articulos (21-9463 a 21-9475), 6 materias primas unicas.
+
+### Materiales del BOM
+
+| Material | Codigo | UM | Antes | Despues |
+|----------|--------|----|-------|---------|
+| Tela PES 110 + TNT PP 30 BCO 2m | TPES110/PP30B | MT2 | YA en AMFE OP 10 (gramaje, ancho, flamabilidad) | Sin cambio |
+| APLIX Metal Resin 208mm | APLIX-A999R8395 | MT2 | NO estaba | Agregado S=5, AP=L |
+| Hilo Caiman Poliester 120 | HILO CAIMAN 120 | KG | NO estaba | Agregado S=4, AP=L |
+| Hilo Poliester Texturizado | HILO POLI TEXT | KG | NO estaba | Agregado S=4, AP=L |
+| Refuerzo 1000 g/m2 | FIEL31000MUL | MT2 | NO estaba | Agregado S=6, AP=L |
+| Refuerzo 250 g/m2 | 3250T_30_2000_5 | MT2 | NO estaba | Agregado S=5, AP=L |
+
+### Resultados Telas Planas
+
+| Doc | Antes | Despues |
+|-----|-------|---------|
+| AMFE OP 10 | 4 FM | 9 FM (0 sin severidad) |
+| CP OP 10 | 5 items | 10 items |
+| HO OP 10 | 5 QC | 10 QC (todos con cpItemId) |
+
+### Telas Termoformadas — Refuerzos de fichas tecnicas
+
+No tiene BOM formal, pero se encontraron fichas tecnicas en `\SERVER\...\8- Ficha tecnica\`:
+- FT153: Refuerzo 600 g/m2
+- FT154: Refuerzo 1500 g/m2
+
+| Material | Codigo | Agregado |
+|----------|--------|----------|
+| Refuerzo 600 g/m2 | FT153 | S=6, AP=L |
+| Refuerzo 1500 g/m2 | FT154 | S=6, AP=L |
+
+| Doc | Antes | Despues |
+|-----|-------|---------|
+| AMFE OP 10 | 4 FM | 6 FM (0 sin severidad) |
+| CP OP 10 | 5 items | 7 items |
+| HO OP 10 | 5 QC | 7 QC (todos con cpItemId) |
+
+### Nota sobre flamabilidad PWA
+
+Los items existentes de flamabilidad usan "100 mm/min" (Telas Planas) y "segun norma del cliente" (Termoformadas). Ninguno referencia TL 1010 (que es VW). Correcto para PWA/Toyota.
+
+---
+
+*Materiales Telas PWA completados 2026-03-30.*
