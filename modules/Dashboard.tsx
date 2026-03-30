@@ -735,7 +735,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                                         type="checkbox"
                                         checked={selectedForMix.has(study.path)}
                                         onChange={() => toggleMixSelection(study.path)}
-                                        className="w-4 h-4 rounded border-slate-300 text-purple-600 focus:ring-purple-500 cursor-pointer"
+                                        className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
                                         title="Seleccionar para Mix"
                                     />
                                     <div className="p-2 rounded-lg bg-[var(--primary-50)] text-[var(--primary-600)]">
@@ -773,7 +773,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
             {/* Floating action bar for Mix selection */}
             {
                 selectedForMix.size > 0 && (
-                    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-4 animate-fade-in-up z-50">
+                    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-4 animate-fade-in-up z-50">
                         <Layers size={24} />
                         <span className="font-medium">
                             {selectedForMix.size} producto{selectedForMix.size > 1 ? 's' : ''} seleccionado{selectedForMix.size > 1 ? 's' : ''}
@@ -816,7 +816,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                                 }
                             }}
                             disabled={isCreatingMix}
-                            className={`px-4 py-2 bg-white text-purple-600 font-semibold rounded-lg hover:bg-slate-100 transition-colors ${isCreatingMix ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            className={`px-4 py-2 bg-white text-blue-600 font-semibold rounded-lg hover:bg-slate-100 transition-colors ${isCreatingMix ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
                             {isCreatingMix ? 'Cargando...' : 'Crear Mix →'}
                         </button>

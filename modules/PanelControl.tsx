@@ -421,7 +421,7 @@ export const PanelControl: React.FC<Props> = ({ data, updateData }) => {
                                         </button>
                                         <button
                                             onClick={() => oeeLogic.toggleSectorOEE(true)}
-                                            className={`text-[10px] px-3 py-1 rounded-md font-bold transition-all ${data.meta.useSectorOEE ? 'bg-purple-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                                            className={`text-[10px] px-3 py-1 rounded-md font-bold transition-all ${data.meta.useSectorOEE ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
                                         >
                                             Por Sector
                                         </button>
@@ -441,7 +441,7 @@ export const PanelControl: React.FC<Props> = ({ data, updateData }) => {
                                 </div>
 
                                 {data.meta.useSectorOEE && (
-                                    <div className="mt-2 text-[10px] text-purple-700 bg-purple-50 p-2 rounded border border-purple-100 flex items-start gap-2">
+                                    <div className="mt-2 text-[10px] text-blue-700 bg-blue-50 p-2 rounded border border-blue-100 flex items-start gap-2">
                                         <CheckCircle2 size={12} className="mt-0.5 flex-shrink-0" />
                                         <div>
                                             <p className="font-bold">Promedio Ponderado Activo</p>

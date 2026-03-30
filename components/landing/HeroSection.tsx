@@ -19,7 +19,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onNewStudy }) => {
             {/* Content */}
             <div className="relative text-center space-y-8 max-w-2xl mx-auto">
                 {/* Icon */}
-                <div className="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 flex items-center justify-center shadow-lg animate-fade-in-up">
+                <div className="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-blue-600 to-sky-400 flex items-center justify-center shadow-lg animate-fade-in-up">
                     <Sparkles size={40} className="text-white" />
                 </div>
 
@@ -75,7 +75,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onNewStudy }) => {
                         Balanceo de líneas
                     </span>
                     <span className="flex items-center gap-1.5">
-                        <span className="w-1.5 h-1.5 rounded-full bg-purple-400"></span>
+                        <span className="w-1.5 h-1.5 rounded-full bg-sky-400"></span>
                         Simulación de flujo
                     </span>
                 </div>
