@@ -518,7 +518,7 @@ export async function validateAndSaveAmfeDocument(
     status: AmfeLifecycleStatus = 'draft',
     revisions: AmfeRevisionEntry[] = [],
 ): Promise<SaveValidationResult & { saved: boolean }> {
-    const validation = validateAmfeBeforeSave(doc);
+    const validation = validateAmfeBeforeSave(doc, status);
     if (!validation.valid) {
         return { ...validation, saved: false };
     }

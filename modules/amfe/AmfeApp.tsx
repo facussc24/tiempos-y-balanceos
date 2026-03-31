@@ -5,7 +5,7 @@ import { useAmfeProjects } from './useAmfeProjects';
 import { useAmfePersistence } from './useAmfePersistence';
 import { useAmfeConfirm } from './useAmfeConfirm';
 import { useAmfeLibrary } from './useAmfeLibrary';
-import { getDocumentCompletionErrors, getSoftLimitWarnings } from './amfeValidation';
+import { validateAmfeBeforeSave, getSoftLimitWarnings } from './amfeValidation';
 import StickyColumnHeader from './StickyColumnHeader';
 import AmfeTableBody from './AmfeTableBody';
 import AmfeStepProgressBar from './AmfeStepProgressBar';
@@ -29,7 +29,7 @@ import { LinkValidationPanel } from '../../components/ui/LinkValidationPanel';
 import { validatePfdAmfeLinks, getBrokenAmfeOperationIds, getRelinkCandidates } from '../../utils/pfdAmfeLinkValidation';
 import { getNextRevisionLevel } from '../../utils/revisionUtils';
 import ChangeProposalPanel from '../../modules/family/ChangeProposalPanel';
-import { Plus, Layers, HardDrive, AlertTriangle, X, FileInput } from 'lucide-react';
+import { Plus, Layers, HardDrive, AlertTriangle, X, FileInput, ShieldCheck } from 'lucide-react';
 import { Breadcrumb } from '../../components/navigation/Breadcrumb';
 import { AmfeDocument, AmfeHeaderData } from './amfeTypes';
 import { importAmfeOpsFromPfd } from './amfePfdImport';
@@ -63,6 +63,8 @@ import { useInheritanceStatus } from '../../hooks/useInheritanceStatus';
 import { detectSyncAlerts, applySyncAlertToCp, type SyncAlert } from '../controlPlan/cpSyncEngine';
 
 
+import { runCoherenceCheck, type CoherenceResult } from '../../utils/crossDocumentCoherence';
+const CoherencePanel = lazy(() => import('../../components/ui/CoherencePanel'));
 const CpSyncPanel = lazy(() => import('../controlPlan/CpSyncPanel'));
 const PfdApp = lazy(() => import('../pfd/PfdApp'));
 const PfdGenerationWizard = lazy(() => import('../pfd/PfdGenerationWizard'));
@@ -413,6 +415,18 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab, initialF
         setDismissedSyncAlerts(prev => new Set([...prev, _alert.id]));
     }, [tabNav.cpInitialData, tabNav.setCpInitialData]);
 
+    // 14. Cross-document coherence check (on-demand, not on every save)
+    const [coherenceResult, setCoherenceResult] = useState<CoherenceResult | null>(null);
+    const handleCoherenceCheck = useCallback(() => {
+        const result = runCoherenceCheck(
+            tabNav.pfdInitialData,
+            amfe.data,
+            tabNav.cpInitialData,
+            tabNav.hoInitialData,
+        );
+        setCoherenceResult(result);
+    }, [tabNav.pfdInitialData, amfe.data, tabNav.cpInitialData, tabNav.hoInitialData]);
+
     // --- SAVE WITH AP=H COMPLIANCE WARNING ---
     const [apHWarning, setApHWarning] = useState<string | null>(null);
     const apHWarningTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -423,12 +437,35 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab, initialF
     const saveWithComplianceCheck = useCallback(async () => {
         if (projects.saveStatus === 'saving') return;
 
-        const errors = getDocumentCompletionErrors(amfe.data);
-        if (errors.length > 0) {
-            setApHWarning(`${errors.length} causa${errors.length > 1 ? 's' : ''} AP=H sin acciones completas. Se recomienda completar antes de cerrar.`);
-            if (apHWarningTimerRef.current) clearTimeout(apHWarningTimerRef.current);
-            apHWarningTimerRef.current = setTimeout(() => setApHWarning(null), 5000);
+        // Get current document lifecycle status for status-aware validation
+        const currentStatus = amfeRegistry.registry.entries.find(
+            e => e.id === projects.currentDocumentId
+        )?.status ?? 'draft';
+
+        const validation = validateAmfeBeforeSave(amfe.data, currentStatus);
+
+        if (!validation.valid) {
+            toast.error(
+                'No se puede guardar',
+                `${validation.errors.length} error(es) de validacion. Corrija antes de guardar.`
+            );
+            // Show up to 5 individual errors
+            for (const err of validation.errors.slice(0, 5)) {
+                toast.warning('Detalle', err);
+            }
+            if (validation.errors.length > 5) {
+                toast.info('Info', `...y ${validation.errors.length - 5} error(es) mas.`);
+            }
+            return; // BLOCK SAVE
         }
+
+        if (validation.warnings.length > 0) {
+            toast.warning(
+                'Guardado con advertencias',
+                `${validation.warnings.length} advertencia(s) detectadas.`
+            );
+        }
+
         await projects.saveCurrentProject();
 
         if (projects.currentProject) {
@@ -438,7 +475,7 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab, initialF
                 logger.warn('AMFE', 'Registry update skipped', { error: err instanceof Error ? err.message : String(err) });
             }
         }
-    }, [amfe.data, projects.saveCurrentProject, projects.currentProject, projects.saveStatus, amfeRegistry.registerAmfe]);
+    }, [amfe.data, projects.saveCurrentProject, projects.currentProject, projects.saveStatus, projects.currentDocumentId, amfeRegistry.registerAmfe, amfeRegistry.registry.entries]);
 
     // --- IMPORT FROM PFD ---
     const handleUnlinkAmfeOp = useCallback((operationId: string) => {
@@ -984,10 +1021,22 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab, initialF
             {/* Linked APQP documents panel */}
             {projects.currentProject && (
                 <div className="px-4 pt-2">
-                    <LinkedDocumentsPanel
-                        linkedDocs={linkedDocs}
-                        onNavigateToTab={tabNav.setActiveTab}
-                    />
+                    <div className="flex items-center gap-2">
+                        <div className="flex-1">
+                            <LinkedDocumentsPanel
+                                linkedDocs={linkedDocs}
+                                onNavigateToTab={tabNav.setActiveTab}
+                            />
+                        </div>
+                        <button
+                            onClick={handleCoherenceCheck}
+                            className="px-3 py-1.5 text-sm bg-indigo-50 text-indigo-700 border border-indigo-200 rounded hover:bg-indigo-100 flex items-center gap-1.5 shrink-0"
+                            title="Verificar coherencia entre PFD, AMFE, CP y HO"
+                        >
+                            <ShieldCheck className="w-4 h-4" />
+                            Verificar coherencia
+                        </button>
+                    </div>
                 </div>
             )}
 
@@ -1199,6 +1248,26 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab, initialF
                         await tabNav.handleGenerateControlPlan();
                     }}
                 />
+            </Suspense>
+        )}
+
+        {/* Cross-document coherence panel (modal overlay) */}
+        {coherenceResult && (
+            <Suspense fallback={null}>
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30" onClick={() => setCoherenceResult(null)}>
+                    <div className="w-full max-w-2xl mx-4" onClick={e => e.stopPropagation()}>
+                        <CoherencePanel
+                            result={coherenceResult}
+                            onNavigate={(module, _itemId) => {
+                                const tabMap: Record<string, ActiveTab> = { pfd: 'pfd', amfe: 'amfe', cp: 'controlPlan', ho: 'hojaOperaciones' };
+                                const tab = tabMap[module];
+                                if (tab) tabNav.setActiveTab(tab);
+                                setCoherenceResult(null);
+                            }}
+                            onClose={() => setCoherenceResult(null)}
+                        />
+                    </div>
+                </div>
             </Suspense>
         )}
 

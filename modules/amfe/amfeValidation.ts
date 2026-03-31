@@ -8,6 +8,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import { AmfeDocument, AmfeFailure, AmfeCause, WorkElementType } from './amfeTypes';
 import type { SaveValidationResult } from '../../utils/repositories/validationTypes';
+import type { AmfeLifecycleStatus } from './amfeRegistryTypes';
 
 /** Maximum recommended field length (warn above this). */
 export const MAX_FIELD_LENGTH = 10_000;
@@ -547,38 +548,195 @@ export function getSoftLimitWarnings(doc: AmfeDocument): string[] {
 }
 
 // ---------------------------------------------------------------------------
+// Pre-save validation helpers
+// ---------------------------------------------------------------------------
+
+/** Whether the status requires blocking validation (approved/archived block; draft/inReview warn). */
+function isBlockingStatus(status?: AmfeLifecycleStatus): boolean {
+    return status === 'approved' || status === 'archived';
+}
+
+/** A1: Causes with partial S/O/D (at least 1 filled but not all 3). Skip brand-new empty causes. */
+function validateSodCompleteness(doc: AmfeDocument): string[] {
+    const issues: string[] = [];
+    for (const op of doc.operations) {
+        for (const we of op.workElements) {
+            for (const func of we.functions) {
+                for (const fail of func.failures) {
+                    const s = Number(fail.severity);
+                    const hasS = !isNaN(s) && s >= 1 && s <= 10;
+                    for (const cause of fail.causes) {
+                        const o = Number(cause.occurrence);
+                        const d = Number(cause.detection);
+                        const hasO = !isNaN(o) && o >= 1 && o <= 10;
+                        const hasD = !isNaN(d) && d >= 1 && d <= 10;
+                        const anyFilled = hasS || hasO || hasD;
+                        if (anyFilled && (!hasS || !hasO || !hasD)) {
+                            const missing: string[] = [];
+                            if (!hasS) missing.push('S');
+                            if (!hasO) missing.push('O');
+                            if (!hasD) missing.push('D');
+                            issues.push(
+                                `Op ${op.opNumber} "${fail.description || '(sin desc)'}": causa "${cause.cause || '(sin texto)'}" tiene ${missing.join('/')} sin valor valido (1-10)`
+                            );
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return issues;
+}
+
+/** A3: Failure modes with description but 0 causes. */
+function validateFailuresHaveCauses(doc: AmfeDocument): string[] {
+    const issues: string[] = [];
+    for (const op of doc.operations) {
+        for (const we of op.workElements) {
+            for (const func of we.functions) {
+                for (const fail of func.failures) {
+                    if ((fail.description || '').trim() && fail.causes.length === 0) {
+                        issues.push(
+                            `Op ${op.opNumber} "${fail.description}": modo de falla sin causas definidas`
+                        );
+                    }
+                }
+            }
+        }
+    }
+    return issues;
+}
+
+/** A4: Causes with S/O/D data but no prevention NOR detection control. */
+function validateCauseHasControls(doc: AmfeDocument): string[] {
+    const issues: string[] = [];
+    for (const op of doc.operations) {
+        for (const we of op.workElements) {
+            for (const func of we.functions) {
+                for (const fail of func.failures) {
+                    for (const cause of fail.causes) {
+                        const hasRatings = Number(cause.occurrence) >= 1 || Number(cause.detection) >= 1;
+                        if (hasRatings && !(cause.preventionControl || '').trim() && !(cause.detectionControl || '').trim()) {
+                            issues.push(
+                                `Op ${op.opNumber} "${fail.description || '(sin desc)'}": causa "${cause.cause || '(sin texto)'}" sin control de prevencion ni de deteccion`
+                            );
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return issues;
+}
+
+const FLAMABILITY_LEGAL_KEYWORDS = ['flamabilidad', 'flamable', 'tl 1010', 'voc', 'emisiones', 'airbag', 'legal', 'seguridad'];
+
+/** A6: CC classification on causes where severity < 9 (unless flamability/legal). */
+function validateCcSeverity(doc: AmfeDocument): string[] {
+    const issues: string[] = [];
+    for (const op of doc.operations) {
+        for (const we of op.workElements) {
+            for (const func of we.functions) {
+                for (const fail of func.failures) {
+                    const s = Number(fail.severity) || 0;
+                    for (const cause of fail.causes) {
+                        if (cause.specialChar !== 'CC') continue;
+                        if (s >= 9) continue;
+                        const haystack = [fail.description, fail.effectLocal, fail.effectNextLevel, fail.effectEndUser, cause.cause].join(' ').toLowerCase();
+                        const isExempt = FLAMABILITY_LEGAL_KEYWORDS.some(kw => haystack.includes(kw));
+                        if (!isExempt) {
+                            issues.push(
+                                `Op ${op.opNumber} "${fail.description || '(sin desc)'}": causa marcada CC pero Severidad=${s} (se requiere S>=9 salvo flamabilidad/legal)`
+                            );
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return issues;
+}
+
+/** A7: SC classification guard — SC with S < 7 is suspicious (likely old formula remnant). */
+function validateScNotByFormula(doc: AmfeDocument): string[] {
+    const issues: string[] = [];
+    for (const op of doc.operations) {
+        for (const we of op.workElements) {
+            for (const func of we.functions) {
+                for (const fail of func.failures) {
+                    const s = Number(fail.severity) || 0;
+                    for (const cause of fail.causes) {
+                        if (cause.specialChar !== 'SC') continue;
+                        if (s < 7) {
+                            issues.push(
+                                `Op ${op.opNumber} "${fail.description || '(sin desc)'}": causa marcada SC con S=${s}. SC solo es valido por designacion explicita del cliente o funcion primaria (tipicamente S=7-8)`
+                            );
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return issues;
+}
+
+// ---------------------------------------------------------------------------
 // Pre-save validation (blocks save on errors, warns on soft limits)
 // ---------------------------------------------------------------------------
 
 /**
  * Validate an AMFE document before saving.
  * Returns { valid: true } if all blocking checks pass.
- * Reuses existing validation functions — does NOT add new rules.
+ *
+ * Status-aware: draft/inReview → issues become warnings (allow save).
+ * approved/archived → issues become blocking errors (prevent save).
  */
-export function validateAmfeBeforeSave(doc: AmfeDocument): SaveValidationResult {
+export function validateAmfeBeforeSave(doc: AmfeDocument, status?: AmfeLifecycleStatus): SaveValidationResult {
     const errors: string[] = [];
     const warnings: string[] = [];
+    const blocking = isBlockingStatus(status);
 
-    // AP=H compliance (blocking — required by AIAG-VDA)
+    // A1: S/O/D completeness
+    const sodIssues = validateSodCompleteness(doc);
+    (blocking ? errors : warnings).push(...sodIssues);
+
+    // A2: AP=H compliance (reuse existing function)
     const apHErrors = getDocumentCompletionErrors(doc);
     if (apHErrors.length > 0) {
-        errors.push(`${apHErrors.length} causa(s) AP=H sin acciones completas`);
+        const msg = `${apHErrors.length} causa(s) AP=H sin acciones completas`;
+        (blocking ? errors : warnings).push(msg);
     }
 
-    // 3-level effects (blocking — required by VDA)
+    // A3: Failure without causes
+    const noCauseIssues = validateFailuresHaveCauses(doc);
+    (blocking ? errors : warnings).push(...noCauseIssues);
+
+    // A4: Cause without controls
+    const noControlIssues = validateCauseHasControls(doc);
+    (blocking ? errors : warnings).push(...noControlIssues);
+
+    // A5: 3-level effects (existing logic, now status-aware)
     for (const op of doc.operations) {
         for (const we of op.workElements) {
             for (const func of we.functions) {
                 for (const fail of func.failures) {
                     if (fail.causes.length > 0 && (!fail.effectLocal || !fail.effectNextLevel || !fail.effectEndUser)) {
-                        errors.push(`Falla "${fail.description || '(sin desc)'}" op ${op.opNumber}: efectos 3-niveles incompletos`);
+                        const msg = `Falla "${fail.description || '(sin desc)'}" op ${op.opNumber}: efectos 3-niveles incompletos`;
+                        (blocking ? errors : warnings).push(msg);
                     }
                 }
             }
         }
     }
 
-    // Soft limits (non-blocking advisories)
+    // A6: CC with S < 9
+    const ccIssues = validateCcSeverity(doc);
+    (blocking ? errors : warnings).push(...ccIssues);
+
+    // A7: SC by formula guard (always warning, never blocking)
+    warnings.push(...validateScNotByFormula(doc));
+
+    // Soft limits (always non-blocking advisories)
     warnings.push(...getSoftLimitWarnings(doc));
 
     return { valid: errors.length === 0, errors, warnings };

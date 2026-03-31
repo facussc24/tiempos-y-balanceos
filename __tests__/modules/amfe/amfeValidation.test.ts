@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { clampSOD, validateAmfeDocument, migrateFailureToCausesModel, migrateFailureEffects, getFailureWarnings, getCauseValidationState, getSoftLimitWarnings, SOFT_LIMIT_OPERATIONS, SOFT_LIMIT_CAUSES_PER_FAILURE, SOFT_LIMIT_TOTAL_CAUSES } from '../../../modules/amfe/amfeValidation';
+import { clampSOD, validateAmfeDocument, migrateFailureToCausesModel, migrateFailureEffects, getFailureWarnings, getCauseValidationState, getSoftLimitWarnings, validateAmfeBeforeSave, SOFT_LIMIT_OPERATIONS, SOFT_LIMIT_CAUSES_PER_FAILURE, SOFT_LIMIT_TOTAL_CAUSES } from '../../../modules/amfe/amfeValidation';
 import { AmfeDocument, AmfeFailure, AmfeCause, AmfeOperation } from '../../../modules/amfe/amfeTypes';
 
 describe('clampSOD', () => {
@@ -576,5 +576,159 @@ describe('getSoftLimitWarnings (R5D)', () => {
         expect(hasOpWarning).toBe(true);
         expect(hasPerFailureWarning).toBe(true);
         expect(hasTotalWarning).toBe(true);
+    });
+});
+
+// ============================================================================
+// Preventive Validation Rules (pre-save)
+// ============================================================================
+
+// Minimal doc builder helpers
+function makeCause(overrides: Partial<AmfeCause> = {}): AmfeCause {
+    return {
+        id: 'c1', cause: 'Test cause', occurrence: 4, detection: 6,
+        ap: 'M', specialChar: '', characteristicNumber: '', filterCode: '',
+        preventionControl: 'Control prev', detectionControl: 'Control det',
+        preventionAction: '', detectionAction: '', responsible: '', targetDate: '',
+        status: '', actionTaken: '', completionDate: '',
+        severityNew: '', occurrenceNew: '', detectionNew: '', apNew: '', observations: '',
+        ...overrides,
+    };
+}
+
+function makeFailure(overrides: Partial<AmfeFailure> = {}, causes: AmfeCause[] = [makeCause()]): AmfeFailure {
+    return {
+        id: 'f1', description: 'Test failure mode',
+        effectLocal: 'Local effect', effectNextLevel: 'Next level effect', effectEndUser: 'End user effect',
+        severity: 7, causes,
+        characteristicNumber: '',
+        severityLocal: '', severityNextLevel: '', severityEndUser: '',
+        ...overrides,
+    };
+}
+
+function makeDoc(failures: AmfeFailure[] = [makeFailure()]): AmfeDocument {
+    return {
+        header: {
+            organization: 'BARACK', location: 'HURLINGHAM', client: 'VWA', modelYear: '2026',
+            subject: 'Test', startDate: '2026-01-01', revDate: '2026-03-30', team: 'Team',
+            responsible: 'Carlos', amfeNumber: 'AMFE-TEST', confidentiality: 'Interno',
+            processResponsible: 'Manuel', partNumber: 'PN-TEST', revision: '01',
+            approvedBy: 'Carlos', scope: 'Test', applicableParts: '',
+        },
+        operations: [{
+            id: 'op1', opNumber: '10', name: 'INYECCION',
+            workElements: [{
+                id: 'we1', type: 'Machine' as const, name: 'Inyectora',
+                functions: [{
+                    id: 'fn1', description: 'Inyectar espuma', requirements: '',
+                    failures,
+                }],
+            }],
+        }],
+    };
+}
+
+describe('validateAmfeBeforeSave - Rule A1: S/O/D completeness', () => {
+    it('passes when all S/O/D are filled', () => {
+        const doc = makeDoc([makeFailure({ severity: 7 }, [makeCause({ occurrence: 4, detection: 6 })])]);
+        const result = validateAmfeBeforeSave(doc, 'approved');
+        expect(result.errors.filter(e => e.includes('sin valor valido'))).toHaveLength(0);
+    });
+
+    it('flags partial S/O/D as error when approved', () => {
+        const doc = makeDoc([makeFailure({ severity: 7 }, [makeCause({ occurrence: '' as any, detection: 6 })])]);
+        const result = validateAmfeBeforeSave(doc, 'approved');
+        expect(result.errors.some(e => e.includes('O') && e.includes('sin valor valido'))).toBe(true);
+    });
+
+    it('skips brand-new empty causes (no S/O/D at all)', () => {
+        const doc = makeDoc([makeFailure({ severity: '' as any }, [makeCause({ occurrence: '' as any, detection: '' as any })])]);
+        const result = validateAmfeBeforeSave(doc, 'approved');
+        expect(result.errors.filter(e => e.includes('sin valor valido'))).toHaveLength(0);
+    });
+});
+
+describe('validateAmfeBeforeSave - Rule A3: Failure without causes', () => {
+    it('flags failure with description but no causes', () => {
+        const doc = makeDoc([makeFailure({ description: 'Deformacion' }, [])]);
+        const result = validateAmfeBeforeSave(doc, 'approved');
+        expect(result.errors.some(e => e.includes('sin causas definidas'))).toBe(true);
+    });
+
+    it('passes failure with causes', () => {
+        const doc = makeDoc([makeFailure({}, [makeCause()])]);
+        const result = validateAmfeBeforeSave(doc, 'approved');
+        expect(result.errors.filter(e => e.includes('sin causas definidas'))).toHaveLength(0);
+    });
+});
+
+describe('validateAmfeBeforeSave - Rule A4: Cause without controls', () => {
+    it('flags cause with ratings but no controls', () => {
+        const doc = makeDoc([makeFailure({ severity: 7 }, [makeCause({ preventionControl: '', detectionControl: '' })])]);
+        const result = validateAmfeBeforeSave(doc, 'approved');
+        expect(result.errors.some(e => e.includes('sin control de prevencion ni de deteccion'))).toBe(true);
+    });
+
+    it('passes cause with only prevention control', () => {
+        const doc = makeDoc([makeFailure({ severity: 7 }, [makeCause({ preventionControl: 'Poka-Yoke', detectionControl: '' })])]);
+        const result = validateAmfeBeforeSave(doc, 'approved');
+        expect(result.errors.filter(e => e.includes('sin control'))).toHaveLength(0);
+    });
+
+    it('passes cause with only detection control', () => {
+        const doc = makeDoc([makeFailure({ severity: 7 }, [makeCause({ preventionControl: '', detectionControl: 'Inspeccion visual' })])]);
+        const result = validateAmfeBeforeSave(doc, 'approved');
+        expect(result.errors.filter(e => e.includes('sin control'))).toHaveLength(0);
+    });
+});
+
+describe('validateAmfeBeforeSave - Rule A6: CC with S < 9', () => {
+    it('passes CC with S >= 9', () => {
+        const doc = makeDoc([makeFailure({ severity: 9 }, [makeCause({ specialChar: 'CC' })])]);
+        const result = validateAmfeBeforeSave(doc, 'approved');
+        expect(result.errors.filter(e => e.includes('CC pero Severidad'))).toHaveLength(0);
+    });
+
+    it('flags CC with S < 9 and no exemption', () => {
+        const doc = makeDoc([makeFailure({ severity: 5 }, [makeCause({ specialChar: 'CC' })])]);
+        const result = validateAmfeBeforeSave(doc, 'approved');
+        expect(result.errors.some(e => e.includes('CC pero Severidad=5'))).toBe(true);
+    });
+
+    it('exempts CC with S < 9 if flamability keyword present', () => {
+        const doc = makeDoc([makeFailure({ severity: 7, description: 'Flamabilidad del material' }, [makeCause({ specialChar: 'CC' })])]);
+        const result = validateAmfeBeforeSave(doc, 'approved');
+        expect(result.errors.filter(e => e.includes('CC pero Severidad'))).toHaveLength(0);
+    });
+});
+
+describe('validateAmfeBeforeSave - Rule A7: SC guard', () => {
+    it('passes SC with S >= 7', () => {
+        const doc = makeDoc([makeFailure({ severity: 7 }, [makeCause({ specialChar: 'SC' })])]);
+        const result = validateAmfeBeforeSave(doc);
+        expect(result.warnings.filter(w => w.includes('SC con S='))).toHaveLength(0);
+    });
+
+    it('warns SC with S < 7', () => {
+        const doc = makeDoc([makeFailure({ severity: 5 }, [makeCause({ specialChar: 'SC' })])]);
+        const result = validateAmfeBeforeSave(doc);
+        expect(result.warnings.some(w => w.includes('SC con S=5'))).toBe(true);
+    });
+});
+
+describe('validateAmfeBeforeSave - Status-aware: draft vs approved', () => {
+    it('draft: issues become warnings, valid = true', () => {
+        const doc = makeDoc([makeFailure({ severity: 7 }, [makeCause({ occurrence: '' as any, detection: 6 })])]);
+        const result = validateAmfeBeforeSave(doc, 'draft');
+        expect(result.valid).toBe(true);
+        expect(result.warnings.some(w => w.includes('sin valor valido'))).toBe(true);
+    });
+
+    it('approved: same issues become errors, valid = false', () => {
+        const doc = makeDoc([makeFailure({ severity: 7 }, [makeCause({ occurrence: '' as any, detection: 6 })])]);
+        const result = validateAmfeBeforeSave(doc, 'approved');
+        expect(result.valid).toBe(false);
+        expect(result.errors.some(e => e.includes('sin valor valido'))).toBe(true);
     });
 });
