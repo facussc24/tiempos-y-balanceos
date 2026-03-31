@@ -113,6 +113,23 @@ que fueron migrados a AmfeCause[]. La funcion `migrateFailureToCausesModel` en
 Al crear o modificar datos, SIEMPRE usar `failure.causes[]` — NUNCA los campos
 deprecados del failure.
 
+## Validaciones preventivas (pre-guardado)
+
+El modulo AMFE tiene validacion automatica antes de cada guardado (`amfeValidation.ts`).
+7 reglas, sensibles al estado del documento:
+
+| # | Regla | Draft/InReview | Approved/Archived |
+|---|-------|----------------|-------------------|
+| A1 | S/O/D parciales (al menos 1 llenado pero no los 3) | warning | bloqueo |
+| A2 | AP=H sin acciones correctivas | warning | bloqueo |
+| A3 | Modo de falla con descripcion pero sin causas | warning | bloqueo |
+| A4 | Causa con ratings pero sin control prevencion ni deteccion | warning | bloqueo |
+| A5 | Efectos 3-niveles VDA incompletos | warning | bloqueo |
+| A6 | CC marcado con S<9 (salvo flamabilidad/legal) | warning | bloqueo |
+| A7 | SC con S<7 (sospechoso de formula vieja) | warning siempre | warning siempre |
+
+Keywords exentos para A6: flamabilidad, flamable, tl 1010, voc, emisiones, airbag, legal, seguridad.
+
 ## Guias obligatorias
 
 Leer ANTES de modificar datos AMFE:

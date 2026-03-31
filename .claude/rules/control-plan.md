@@ -144,6 +144,21 @@ El generador crea CP items desde un AMFE en 4 fases:
 - Al editar manualmente un campo auto-llenado, el campo se saca del array
 - Al regenerar desde AMFE, el array se recalcula
 
+## Validaciones preventivas (pre-guardado)
+
+El modulo CP tiene validacion automatica antes de cada guardado (`cpPreSaveValidation.ts`).
+7 reglas:
+
+| # | Regla | Tipo |
+|---|-------|------|
+| B1 | Items recepcion (OP<=10) sin componentMaterial | warning |
+| B2 | Especificacion generica ("TBD", "Segun especificacion", vacia) | warning |
+| B3 | Producto Y Proceso en la misma fila | bloqueo |
+| B4 | Tecnica evaluacion solo "Visual" o "Inspeccion" sin detalle | warning |
+| B5 | Items recepcion sin P-14 en plan de reaccion | warning |
+| B6 | CC/SC difiere entre CP y AMFE vinculado | warning |
+| B7 | approvedBy Y plantApproval ambos vacios | bloqueo |
+
 ## Procedimientos SGC para Plan de Reaccion
 | Procedimiento | Nombre | Uso en CP |
 |---------------|--------|-----------|

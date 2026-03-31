@@ -162,3 +162,15 @@ Script: `scripts/audit/D_applyCorrections.ts` | Backups: `scripts/audit/backups/
 - [ ] 43 HO QCs vacios (requiere completar descripcion y especificacion)
 - [ ] 124 nombres combinados "PROCESO - ALMACENAMIENTO WIP" (requiere decision de nomenclatura)
 - [ ] 42 discrepancias de nombre PFD vs AMFE (requiere alinear manualmente)
+
+---
+
+## Sistema de Validacion Preventiva (2026-03-31)
+
+A partir de esta fecha, el software previene automaticamente los errores basicos que antes solo se detectaban en auditorias manuales:
+
+- **AMFE pre-guardado**: 7 reglas que bloquean guardado de datos incompletos (S/O/D parciales, AP=H sin acciones, fallas sin causas, causas sin controles, efectos VDA incompletos, CC/SC mal clasificados). En borradores son advertencias; en documentos aprobados son bloqueos.
+- **CP pre-guardado**: 7 reglas que detectan especificaciones genericas, filas con producto+proceso mezclados, items de recepcion sin P-14, aprobaciones faltantes.
+- **Verificacion de coherencia**: Boton "Verificar coherencia" que compara PFD, AMFE, CP y HO de un producto. Detecta links rotos, gaps de cobertura AMFE→CP y CP→HO, responsables que difieren, nombres de operacion inconsistentes. Semaforo verde/amarillo/rojo.
+
+Esto reemplaza la necesidad de auditorias manuales para errores basicos de completitud y sincronizacion.
