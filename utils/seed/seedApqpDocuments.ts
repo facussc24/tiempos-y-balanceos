@@ -137,7 +137,7 @@ function mkAmfeHeader(partName: string, client: string, pn: string, amfeNum: str
         organization: 'Barack Mercosul', location: 'Hurlingham, Buenos Aires',
         client, modelYear: '2026',
         subject: `Proceso de fabricación - ${partName}`,
-        startDate: '2026-03-14', revDate: '2026-03-14',
+        startDate: '14/03/2026', revDate: '14/03/2026',
         team: TEAM, amfeNumber: amfeNum,
         responsible: 'F. Santoro', confidentiality: 'Confidencial',
         partNumber: pn, processResponsible: 'F. Santoro',
@@ -450,24 +450,65 @@ async function _doSeed(): Promise<string> {
         const CL = 'PWA';
         const amfeId = uid(), cpId = uid(), pfdId = uid(), hoId = uid();
 
+        // CC cause for flamabilidad
+        const ccFlamabilidad: AmfeCause = { ...mkCause('Material no cumple ensayo de flamabilidad', 'Certificado de flamabilidad del proveedor', 'Ensayo de flamabilidad por lote'), specialChar: 'CC' };
+
         const ops = [
             mkOp('OP 10', 'Recepción de materia prima', [
-                mkWe('Material', 'Tela / Material termoformable / Adhesivo / Aplix', [
-                    mkFn('Recibir material conforme a especificación', [
-                        mkFail('Material fuera de especificación', 'Retraso en producción', 'Defecto en producto', 'Insatisfacción del cliente',
-                            [mkCause('Material no conforme del proveedor', 'Certificado de calidad, auditoría a proveedor', 'Inspección de recepción')]),
+                mkWe('Material', 'Tela termoformable / Refuerzos / Hilos / Aplix', [
+                    mkFn('Recibir e identificar materiales conforme a plan de control', [
+                        mkFail('Identificación incorrecta del material', 'Material incorrecto ingresa al proceso', 'Producto con material equivocado', 'Reclamo de cliente',
+                            [mkCause('Etiqueta del proveedor no coincide con OC', 'Verificación de remito vs orden de compra', 'Inspección visual de identificación')]),
+                        mkFail('Material distinto según plan de control', 'Producción con material no aprobado', 'Producto fuera de especificación', 'Rechazo del cliente',
+                            [mkCause('Error de despacho del proveedor', 'Auditoría a proveedor, acuerdo de calidad', 'Inspección de recepción contra ficha técnica')]),
+                        mkFail('Omisión de la recepción', 'Material ingresa sin control', 'Producto con material no verificado', 'Riesgo de calidad en campo',
+                            [mkCause('Falta de procedimiento o no se cumple', 'Procedimiento de recepción documentado', 'Registro de recepción obligatorio')]),
+                        mkFail('Material no cumple flamabilidad', 'Material no conforme segregado', 'Producto con riesgo de inflamabilidad', 'Riesgo de seguridad al usuario',
+                            [ccFlamabilidad]),
+                        mkFail('Refuerzo 600 g/m2 fuera de especificación', 'Refuerzo no conforme', 'Producto con rigidez incorrecta', 'Falla funcional del producto',
+                            [mkCause('Lote de refuerzo fuera de tolerancia de gramaje', 'Certificado de gramaje del proveedor', 'Verificación de gramaje en recepción')]),
+                        mkFail('Refuerzo 1500 g/m2 fuera de especificación', 'Refuerzo no conforme', 'Producto con rigidez incorrecta', 'Falla funcional del producto',
+                            [mkCause('Lote de refuerzo fuera de tolerancia de gramaje', 'Certificado de gramaje del proveedor', 'Verificación de gramaje en recepción')]),
+                        mkFail('Hilo Caimán Polyester 120 fuera de especificación', 'Hilo no conforme', 'Costura con resistencia incorrecta', 'Falla de costura en campo',
+                            [mkCause('Proveedor entrega hilo fuera de tolerancia', 'Certificado de calidad del proveedor', 'Verificación visual y dimensional en recepción')]),
+                        mkFail('Hilo Polyester texturizado fuera de especificación', 'Hilo no conforme', 'Costura con resistencia incorrecta', 'Falla de costura en campo',
+                            [mkCause('Proveedor entrega hilo fuera de tolerancia', 'Certificado de calidad del proveedor', 'Verificación visual y dimensional en recepción')]),
+                        mkFail('Aplix fuera de especificación', 'Aplix no conforme', 'Fijación deficiente del producto', 'Desprendimiento en uso',
+                            [mkCause('Lote de Aplix fuera de tolerancia', 'Certificado de calidad del proveedor', 'Verificación visual y dimensional en recepción')]),
                     ]),
                 ]),
-            ]),
-            mkOp('OP 20', 'Corte de tela', [
-                mkWe('Machine', 'Cortadora', [
-                    mkFn('Cortar tela a dimensiones especificadas', [
+            ], 'Asegurar la conformidad de materiales recibidos', 'Verificar e identificar materiales según plan de control'),
+            mkOp('OP 15', 'Preparación de corte', [
+                mkWe('Method', 'Procedimiento de tendido y ploteo', [
+                    mkFn('Tender tela sobre mesa de corte y plotear patrón', [
+                        mkFail('Tela mal tendida (arrugas, tensión desigual)', 'Corte impreciso', 'Piezas fuera de dimensión', 'Producto defectuoso',
+                            [mkCause('Operador no sigue procedimiento de tendido', 'Instrucción de trabajo de tendido documentada', 'Verificación visual antes de corte')]),
+                        mkFail('Ploteo de patrón incorrecto', 'Desperdicio de material', 'Piezas con forma incorrecta', 'Retrabajo o scrap',
+                            [mkCause('Programa de ploteo erróneo o desactualizado', 'Verificación de programa vs plano vigente', 'Control de primera pieza cortada')]),
+                    ]),
+                ]),
+            ], 'Preparar material para corte conforme', 'Tender tela y plotear patrón correctamente'),
+            mkOp('OP 20', 'Corte de componentes', [
+                mkWe('Machine', 'Cortadora / Mesa de corte', [
+                    mkFn('Cortar tela a dimensiones especificadas según plano', [
                         mkFail('Dimensiones fuera de tolerancia', 'Pieza no conforme', 'Retrabajo en cliente', 'Producto defectuoso',
-                            [mkCause('Calibración incorrecta', 'Plan de calibración', 'Control dimensional con plantilla')]),
+                            [mkCause('Calibración incorrecta de cortadora', 'Plan de calibración periódico', 'Control dimensional con plantilla')]),
+                        mkFail('Corte irregular con rebabas', 'Aspecto visual deficiente', 'Rechazo en inspección', 'Insatisfacción visual',
+                            [mkCause('Desgaste de cuchilla', 'Mantenimiento preventivo de cuchillas', 'Inspección visual 100%')]),
                     ]),
                 ]),
-            ]),
-            mkOp('OP 30', 'Termoformado', [
+            ], 'Obtener componentes cortados conformes a plano', 'Cortar material según dimensiones especificadas'),
+            mkOp('OP 30', 'Preparación de kits de componentes', [
+                mkWe('Man', 'Operador de preparación', [
+                    mkFn('Armar kits con todos los componentes necesarios por pieza', [
+                        mkFail('Kit incompleto (falta componente)', 'Parada en operación siguiente', 'Producto incompleto', 'Retrabajo o scrap',
+                            [mkCause('Error del operador en armado de kit', 'Lista de componentes por producto, instrucción de trabajo', 'Verificación visual del kit armado')]),
+                        mkFail('Componente equivocado en el kit', 'Producto con componente incorrecto', 'Producto fuera de especificación', 'Reclamo de cliente',
+                            [mkCause('Confusión de componentes similares', 'Identificación clara por componente, ayuda visual', 'Control visual vs lista de kit')]),
+                    ]),
+                ]),
+            ], 'Proveer kits completos y correctos para producción', 'Armar y verificar kits de componentes'),
+            mkOp('OP 40', 'Termoformado de telas', [
                 mkWe('Machine', 'Termoformadora', [
                     mkFn('Conformar pieza a geometría 3D mediante calor y presión', [
                         mkFail('Deformación dimensional', 'Pieza fuera de tolerancia', 'No ensambla en cliente', 'Producto no funcional',
@@ -482,63 +523,89 @@ async function _doSeed(): Promise<string> {
                             [mkCause('Tiempo de calentamiento insuficiente', 'Receta de proceso documentada', 'Medición de espesor con micrómetro')]),
                     ]),
                 ]),
-            ]),
-            mkOp('OP 40', 'Corte termoformado', [
-                mkWe('Machine', 'Troquel de corte / Prensa', [
-                    mkFn('Cortar contorno de pieza termoformada con troquel', [
-                        mkFail('Corte incompleto o fuera de forma', 'Pieza requiere retrabajo', 'Rebabas en cliente', 'Pieza defectuosa',
-                            [mkCause('Troquel desgastado o mal alineado', 'Mantenimiento preventivo de troquel', 'Inspección visual del corte + gauge')]),
-                        mkFail('Rebabas en bordes de corte', 'Retrabajo manual', 'Posible daño al operador cliente', 'Riesgo de seguridad',
+            ], 'Obtener pieza termoformada conforme a geometría', 'Conformar tela mediante calor y presión'),
+            mkOp('OP 50', 'Corte láser de telas termoformadas', [
+                mkWe('Machine', 'Cortadora láser', [
+                    mkFn('Cortar contorno de pieza termoformada con láser', [
+                        mkFail('Contorno fuera de dimensión', 'Pieza requiere retrabajo', 'No ensambla en cliente', 'Producto defectuoso',
+                            [mkCause('Programa de corte láser desactualizado o error de setup', 'Verificación de programa antes de inicio', 'Control dimensional con plantilla')]),
+                        mkFail('Quemaduras o marcas de láser', 'Defecto visual', 'Rechazo por apariencia', 'Aspecto no aceptable',
+                            [mkCause('Potencia de láser excesiva o velocidad incorrecta', 'Parámetros documentados en receta', 'Inspección visual 100%')]),
+                    ]),
+                ]),
+            ], 'Obtener pieza con contorno conforme a plano', 'Cortar contorno de pieza termoformada con láser'),
+            mkOp('OP 60', 'Troquelado de refuerzos', [
+                mkWe('Machine', 'Troquel / Prensa hidráulica', [
+                    mkFn('Troquelar refuerzos a forma según plano', [
+                        mkFail('Forma fuera de especificación', 'Refuerzo no conforme', 'Refuerzo no ensambla correctamente', 'Producto con rigidez deficiente',
+                            [mkCause('Troquel desgastado o dañado', 'Mantenimiento preventivo de troquel', 'Control dimensional con gauge')]),
+                        mkFail('Rebabas en bordes de corte', 'Retrabajo manual necesario', 'Posible daño al operador o material', 'Riesgo de calidad',
                             [mkCause('Holgura excesiva en troquel', 'Control de gap de troquel en setup', 'Inspección visual y táctil 100%')]),
                     ]),
                 ]),
-            ]),
-            mkOp('OP 50', 'Perforado', [
-                mkWe('Machine', 'Perforadora / Punzón', [
-                    mkFn('Realizar perforaciones en pieza según plano', [
-                        mkFail('Perforación fuera de posición', 'Pieza no ensambla correctamente', 'Interferencia en montaje', 'Producto defectuoso',
-                            [mkCause('Fixture de perforado desalineado', 'Verificación de fixture en setup', 'Control de posición con plantilla')]),
-                        mkFail('Diámetro fuera de tolerancia', 'Componente no encaja', 'Retrabajo en cliente', 'Producto defectuoso',
-                            [mkCause('Punzón desgastado', 'Mantenimiento preventivo de punzones', 'Control dimensional con calibre pasa/no pasa')]),
+            ], 'Obtener refuerzos troquelados conformes a plano', 'Troquelar refuerzos según especificación'),
+            mkOp('OP 70', 'Troquelado de Aplix', [
+                mkWe('Machine', 'Troquel / Prensa', [
+                    mkFn('Troquelar Aplix a dimensiones según plano', [
+                        mkFail('Dimensión incorrecta del Aplix troquelado', 'Aplix no conforme', 'Fijación deficiente', 'Desprendimiento en uso',
+                            [mkCause('Troquel de Aplix desgastado', 'Mantenimiento preventivo de troquel', 'Control dimensional del Aplix troquelado')]),
+                        mkFail('Rebabas en Aplix troquelado', 'Retrabajo manual', 'Dificultad de aplicación', 'Aspecto deficiente',
+                            [mkCause('Holgura en troquel de Aplix', 'Control de gap en setup', 'Inspección visual y táctil')]),
                     ]),
                 ]),
-            ]),
-            mkOp('OP 60', 'Adhesivado', [
-                mkWe('Method', 'Proceso de aplicación de adhesivo', [
-                    mkFn('Aplicar adhesivo para unión de capas o componentes', [
-                        mkFail('Adherencia insuficiente', 'Desprendimiento de capas', 'Desprendimiento en uso', 'Reclamo de garantía',
-                            [mkCause('Cantidad de adhesivo insuficiente o superficie contaminada', 'Dosificación controlada, limpieza de superficies', 'Ensayo de pelado periódico')]),
-                        mkFail('Exceso de adhesivo visible', 'Defecto visual', 'Manchas visibles', 'Aspecto no aceptable',
-                            [mkCause('Dosificación excesiva', 'Control de gramaje de adhesivo', 'Inspección visual')]),
+            ], 'Obtener Aplix troquelado conforme a plano', 'Troquelar Aplix a dimensión especificada'),
+            mkOp('OP 80', 'Costura de refuerzos', [
+                mkWe('Machine', 'Máquina de coser industrial', [
+                    mkFn('Coser refuerzos a la pieza termoformada', [
+                        mkFail('Costura salteada', 'Refuerzo mal fijado', 'Desprendimiento en ensamble', 'Falla funcional del producto',
+                            [mkCause('Aguja desgastada o tensión incorrecta', 'Cambio de aguja programado, control de tensión', 'Inspección visual en proceso')]),
+                        mkFail('Costura floja', 'Refuerzo con fijación débil', 'Desprendimiento en uso', 'Falla funcional del producto',
+                            [mkCause('Ajuste incorrecto del tensor de hilo', 'Parámetros documentados en instrucción de trabajo', 'Inspección visual y ensayo manual')]),
+                        mkFail('Hilo incorrecto', 'Costura con material inadecuado', 'Resistencia de costura incorrecta', 'Falla de costura en campo',
+                            [mkCause('Error en selección de hilo', 'Instrucción de trabajo con especificación de hilo', 'Verificación de hilo antes de inicio')]),
+                        mkFail('Posición del refuerzo incorrecta', 'Refuerzo descentrado', 'Producto fuera de especificación', 'Falla funcional',
+                            [mkCause('Falta de plantilla o error de posicionamiento', 'Plantilla de posición, instrucción de trabajo', 'Inspección visual vs plano')]),
                     ]),
                 ]),
-            ]),
-            mkOp('OP 70', 'Colocado de Aplix', [
-                mkWe('Man', 'Operador de colocado', [
-                    mkFn('Posicionar dots de Aplix en ubicaciones según plano', [
-                        mkFail('Aplix mal posicionado', 'Pieza no sujeta correctamente', 'Desprendimiento parcial en uso', 'Insatisfacción del cliente',
-                            [mkCause('Error del operador o falta de plantilla', 'Plantilla de posicionamiento, instrucción de trabajo', 'Inspección visual vs plano')]),
-                        mkFail('Aplix se despega', 'Retrabajo de re-pegado', 'Falla de sujeción', 'Producto no funcional',
-                            [mkCause('Superficie contaminada o presión insuficiente', 'Limpieza pre-pegado, presión documentada', 'Ensayo de tracción periódico')]),
+            ], 'Fijar refuerzos mediante costura conforme a especificación', 'Coser refuerzos en posición correcta'),
+            mkOp('OP 90', 'Aplicación de Aplix', [
+                mkWe('Man', 'Operador de aplicación', [
+                    mkFn('Aplicar Aplix en posiciones según plano', [
+                        mkFail('Cantidad incorrecta de Aplix', 'Producto con fijación incompleta', 'Fijación deficiente en ensamble', 'Desprendimiento en uso',
+                            [mkCause('Error del operador en conteo', 'Instrucción de trabajo con cantidad especificada', 'Verificación de cantidad por pieza')]),
+                        mkFail('Posición incorrecta del Aplix', 'Aplix fuera de zona especificada', 'Interferencia en ensamble', 'Fijación deficiente',
+                            [mkCause('Falta de plantilla o error de posicionamiento', 'Plantilla de posición, instrucción de trabajo', 'Inspección visual vs plano')]),
+                        mkFail('Aplix no adherido correctamente', 'Aplix se despega en manipulación', 'Falla de fijación', 'Desprendimiento en uso',
+                            [mkCause('Superficie contaminada o presión insuficiente', 'Limpieza de superficie, presión documentada', 'Verificación de adherencia manual')]),
                     ]),
                 ]),
-            ]),
-            mkOp('OP 80', 'Control final e inspección', [
-                mkWe('Measurement', 'Instrumentos de inspección', [
-                    mkFn('Verificar conformidad del producto', [
-                        mkFail('Liberación de producto no conforme', 'Scrap interno', 'Reclamo de cliente', 'Riesgo al usuario',
-                            [mkCause('Error del inspector', 'Capacitación, patrón visual actualizado', 'Auditoría de producto')]),
+            ], 'Aplicar Aplix en cantidad y posición correcta', 'Posicionar y adherir Aplix según plano'),
+            mkOp('OP 100', 'Control final de calidad', [
+                mkWe('Measurement', 'Instrumentos de inspección / Patrón visual', [
+                    mkFn('Verificar conformidad total del producto terminado', [
+                        mkFail('Defecto de apariencia no detectado', 'Producto no conforme liberado', 'Rechazo visual en cliente', 'Insatisfacción del cliente',
+                            [mkCause('Error del inspector o criterio insuficiente', 'Capacitación en criterios de aceptación, patrón visual actualizado', 'Auditoría de producto terminado')]),
+                        mkFail('Defecto dimensional no detectado', 'Producto fuera de tolerancia liberado', 'No ensambla en cliente', 'Producto defectuoso',
+                            [mkCause('Falta de control dimensional o instrumento inadecuado', 'Instrucción de control con instrumentos especificados', 'Control dimensional con gauge')]),
+                        mkFail('Falta de componentes no detectada', 'Producto incompleto liberado', 'Producto no funcional en cliente', 'Reclamo de cliente',
+                            [mkCause('Inspector no verifica lista de componentes', 'Lista de verificación obligatoria', 'Control visual vs lista de componentes')]),
                     ]),
                 ]),
-            ]),
-            mkOp('OP 90', 'Embalaje y despacho', [
+            ], 'Asegurar que solo producto conforme sea liberado', 'Verificar conformidad visual, dimensional y de componentes'),
+            mkOp('OP 120', 'Embalaje y etiquetado', [
                 mkWe('Method', 'Procedimiento de embalaje', [
-                    mkFn('Embalar y proteger producto', [
-                        mkFail('Protección insuficiente', 'Daño en transporte', 'Rechazo', 'Cliente insatisfecho',
-                            [mkCause('Embalaje inadecuado', 'Instrucción de embalaje visual', 'Verificación antes de despacho')]),
+                    mkFn('Embalar, identificar y proteger producto para despacho', [
+                        mkFail('Mayor cantidad embalada', 'Diferencia de inventario', 'Cliente recibe cantidad incorrecta', 'Reclamo de cliente por exceso',
+                            [mkCause('Error de conteo del operador', 'Instrucción de embalaje con cantidad especificada', 'Verificación de cantidad antes de cerrar')]),
+                        mkFail('Menor cantidad embalada', 'Diferencia de inventario', 'Cliente recibe cantidad insuficiente', 'Parada de línea en cliente',
+                            [mkCause('Error de conteo del operador', 'Instrucción de embalaje con cantidad especificada', 'Verificación de cantidad antes de cerrar')]),
+                        mkFail('Error de identificación en etiqueta', 'Confusión de producto', 'Cliente recibe producto equivocado', 'Reclamo de cliente',
+                            [mkCause('Error en carga de datos de etiqueta', 'Procedimiento de etiquetado con verificación cruzada', 'Verificación de etiqueta vs producto')]),
+                        mkFail('Falta de identificación', 'Producto sin trazabilidad', 'Cliente no puede identificar producto', 'Rechazo de cliente',
+                            [mkCause('Omisión del etiquetado', 'Procedimiento de etiquetado obligatorio', 'Verificación de etiqueta antes de despacho')]),
                     ]),
                 ]),
-            ]),
+            ], 'Embalar y etiquetar producto conforme para despacho', 'Proteger e identificar producto terminado'),
         ];
 
         ok(await saveAmfeDocument(amfeId, 'AMFE-2', P, { header: mkAmfeHeader('Telas Termoformadas', CL, PN, 'AMFE-2'), operations: ops }, 'draft'), 'P2-AMFE');
@@ -547,15 +614,28 @@ async function _doSeed(): Promise<string> {
             id: pfdId,
             header: mkPfdHeader('Telas Termoformadas', PN, CL, 'PFD-TT-001', 'PWA/TELAS_TERMOFORMADAS'),
             steps: [
-                mkPfdStep('OP 10', 'storage', 'Recepción de materia prima (tela, material termoformable, adhesivo, Aplix)', '', 'Certificado de calidad', '', 'scrap', 'Material no conforme → Rechazo a proveedor'),
-                mkPfdStep('OP 20', 'operation', 'Corte de tela según plano', 'Cortadora', 'Dimensiones de corte', 'Velocidad de corte', 'scrap', 'Pieza fuera de dimensión → Scrap'),
-                mkPfdStep('OP 30', 'operation', 'Termoformado (conformado 3D por calor y presión)', 'Termoformadora', 'Forma, espesor, aspecto', 'Temperatura, presión, tiempo', 'scrap', 'Deformación irreversible → Scrap'),
-                mkPfdStep('OP 40', 'operation', 'Corte termoformado con troquel', 'Troquel de corte / Prensa', 'Contorno, bordes limpios', 'Alineación troquel, presión', 'scrap', 'Corte defectuoso → Scrap'),
-                mkPfdStep('OP 50', 'operation', 'Perforado según plano', 'Perforadora / Punzón', 'Posición y diámetro de perforaciones', 'Alineación fixture', 'scrap', 'Perforación incorrecta → Scrap'),
-                mkPfdStep('OP 60', 'operation', 'Adhesivado de capas', 'Equipo de adhesivado', 'Adherencia', 'Gramaje adhesivo, limpieza', 'rework', 'OP 60'),
-                mkPfdStep('OP 70', 'operation', 'Colocado de Aplix (pegado de dots)', 'Plantilla de posición', 'Posición y adherencia de Aplix', 'Presión de pegado', 'rework', 'OP 70'),
-                mkPfdStep('OP 80', 'inspection', 'Control final e inspección', 'Patrón visual, instrumentos', 'Aspecto, dimensiones', '', 'sort', ''),
-                mkPfdStep('OP 90', 'storage', 'Embalaje y despacho', 'Caja, film, etiquetadora', 'Identificación', '', 'rework', 'OP 90'),
+                mkPfdStep('OP 10', 'storage', 'Recepción de materia prima (tela termoformable, refuerzos, hilos, Aplix)', '', 'Certificado de calidad, flamabilidad', 'Condición del material', 'scrap', 'Material no conforme → Rechazo a proveedor'),
+                mkPfdStep('', 'storage', 'Almacenado en sector de materia prima'),
+                mkPfdStep('', 'transport', 'Traslado: material aprobado a sector de corte'),
+                mkPfdStep('OP 15', 'operation', 'Preparación de corte (tendido y ploteo)', 'Mesa de corte, plotter', 'Calidad del tendido', 'Programa de ploteo', 'rework', 'OP 15'),
+                mkPfdStep('OP 20', 'operation', 'Corte de componentes según plano', 'Cortadora / Mesa de corte', 'Dimensiones de corte', 'Velocidad y presión de corte', 'scrap', 'Pieza fuera de dimensión → Scrap'),
+                mkPfdStep('OP 30', 'operation', 'Preparación de kits de componentes', '', 'Kit completo y correcto', '', 'rework', 'OP 30'),
+                mkPfdStep('', 'inspection', 'Control con Mylar'),
+                mkPfdStep('', 'storage', 'Almacenamiento en medios WIP'),
+                mkPfdStep('', 'transport', 'Traslado: a termoformado'),
+                mkPfdStep('OP 40', 'operation', 'Termoformado de telas (conformado 3D por calor y presión)', 'Termoformadora', 'Forma, espesor, aspecto', 'Temperatura, presión, tiempo', 'scrap', 'Deformación irreversible → Scrap'),
+                mkPfdStep('', 'transport', 'Traslado: a corte láser'),
+                mkPfdStep('OP 50', 'operation', 'Corte láser de telas termoformadas', 'Cortadora láser', 'Contorno, bordes limpios', 'Potencia, velocidad', 'scrap', 'Corte defectuoso → Scrap'),
+                mkPfdStep('', 'transport', 'Traslado: a troquelado'),
+                mkPfdStep('OP 60', 'operation', 'Troquelado de refuerzos', 'Troquel / Prensa hidráulica', 'Forma y dimensiones', 'Presión, alineación', 'scrap', 'Forma incorrecta → Scrap'),
+                mkPfdStep('OP 70', 'operation', 'Troquelado de Aplix', 'Troquel / Prensa', 'Dimensión de Aplix', 'Alineación troquel', 'scrap', 'Dimensión incorrecta → Scrap'),
+                mkPfdStep('', 'storage', 'Almacenamiento en medios WIP'),
+                mkPfdStep('', 'transport', 'Traslado: a costura'),
+                mkPfdStep('OP 80', 'operation', 'Costura de refuerzos', 'Máquina de coser industrial', 'Costura, posición refuerzo', 'Tensión de hilo', 'rework', 'OP 80'),
+                mkPfdStep('OP 90', 'operation', 'Aplicación de Aplix', '', 'Cantidad, posición, adherencia', '', 'rework', 'OP 90'),
+                mkPfdStep('', 'transport', 'Traslado: a control final'),
+                mkPfdStep('OP 100', 'inspection', 'Control final de calidad', 'Patrón visual, instrumentos', 'Aspecto, dimensiones, componentes', '', 'sort', ''),
+                mkPfdStep('OP 120', 'storage', 'Embalaje y etiquetado de producto terminado', 'Caja, film, etiquetadora', 'Identificación, cantidad', 'Protección adecuada', 'rework', 'OP 120'),
             ],
             createdAt: '2026-03-14T12:00:00.000Z', updatedAt: '2026-03-14T12:00:00.000Z',
         }), 'P2-PFD');
@@ -563,19 +643,28 @@ async function _doSeed(): Promise<string> {
         ok(await saveCpDocument(cpId, P, {
             header: mkCpHeader('Telas Termoformadas', PN, CL, 'CP-TT-001', P),
             items: [
-                mkCpItem('OP 10', 'Recepción', '', 'Estado del material', '', 'Sin daños ni manchas', 'Visual', '1 rollo', 'Cada recepción', 'Registro de recepción', 'Rechazar y notificar proveedor'),
-                mkCpItem('OP 10', 'Recepción', '', 'Flamabilidad (FMVSS 302)', '', 'Vel. propagación ≤ 100 mm/min', 'Ensayo de flamabilidad', '1 muestra', 'Cada lote de material', 'Certificado proveedor + ensayo periódico', 'Rechazar lote, notificar proveedor', 'SC'),
-                mkCpItem('OP 20', 'Corte', 'Cortadora', 'Dimensiones', 'Velocidad', '±2mm vs plano', 'Plantilla / cinta métrica', '5 pzas', 'Inicio lote', 'Control dimensional', 'Ajustar y re-cortar'),
-                mkCpItem('OP 30', 'Termoformado', 'Termoformadora', 'Forma 3D', 'Temperatura', 'Conforme a plano, T=TBD°C ±5°C', 'Gauge + termocupla', '3 pzas', 'Inicio + c/hora', 'SPC de temperatura', 'Ajustar parámetros, retener lote'),
-                mkCpItem('OP 30', 'Termoformado', 'Termoformadora', 'Espesor', 'Tiempo ciclo', 'TBD mm ±0.2mm', 'Micrómetro', '1 pza', 'C/hora', 'Registro de espesor', 'Ajustar tiempo de calentamiento'),
-                mkCpItem('OP 30', 'Termoformado', 'Termoformadora', 'Aspecto superficial', '', 'Sin arrugas ni burbujas', 'Visual', '100%', 'Cada pieza', 'Inspección visual', 'Separar, ajustar proceso'),
-                mkCpItem('OP 40', 'Corte termoformado', 'Troquel / Prensa', 'Contorno de corte', 'Alineación troquel', 'Conforme a plano', 'Visual + gauge', '5 pzas', 'Inicio lote', 'Control de contorno', 'Ajustar troquel'),
-                mkCpItem('OP 40', 'Corte termoformado', 'Troquel / Prensa', 'Rebabas', '', 'Sin rebabas visibles', 'Visual + tacto', '100%', 'Cada pieza', 'Inspección visual', 'Refilar, notificar mantenimiento'),
-                mkCpItem('OP 50', 'Perforado', 'Perforadora', 'Posición de perforaciones', 'Alineación fixture', 'Conforme a plano (±1mm)', 'Plantilla / calibre', '5 pzas', 'Inicio lote', 'Control de posición', 'Ajustar fixture'),
-                mkCpItem('OP 60', 'Adhesivado', 'Equipo adhesivado', 'Adherencia', 'Gramaje adhesivo', 'Min. TBD N (ensayo pelado)', 'Ensayo de pelado', '1 pza', '1x turno', 'Registro de ensayo', 'Detener, revisar proceso'),
-                mkCpItem('OP 70', 'Colocado de Aplix', 'Plantilla', 'Posición de Aplix', '', 'Conforme a plano (±2mm)', 'Visual vs plano', '100%', 'Cada pieza', 'Inspección visual', 'Reposicionar Aplix'),
-                mkCpItem('OP 80', 'Control final', 'Patrón visual', 'Aspecto general', '', 'Sin defectos', 'Visual vs patrón', '100%', 'Cada pieza', 'Inspección final', 'Separar NOK, notificar calidad'),
-                mkCpItem('OP 90', 'Embalaje', 'Etiquetadora', 'Identificación', '', 'Etiqueta correcta', 'Visual', '100%', 'Cada caja', 'Check de embalaje', 'Corregir etiqueta'),
+                mkCpItem('OP 10', 'Recepción de materia prima', '', 'Identificación del material', '', 'Coincide con OC y ficha técnica', 'Visual vs remito', '100%', 'Cada recepción', 'Registro de recepción', 'Separar y verificar con compras'),
+                mkCpItem('OP 10', 'Recepción de materia prima', '', 'Estado del material', '', 'Sin daños, manchas ni arrugas', 'Visual', '1 rollo', 'Cada recepción', 'Registro de recepción', 'Rechazar y notificar proveedor'),
+                mkCpItem('OP 10', 'Recepción de materia prima', '', 'Flamabilidad', '', 'Según norma del cliente', 'Certificado de flamabilidad', 'Por certificado', 'Cada lote de material', 'Certificado proveedor + ensayo periódico', 'Rechazar lote, notificar proveedor', 'CC'),
+                mkCpItem('OP 10', 'Recepción de materia prima', '', 'Gramaje refuerzo 600 g/m2', '', '600 g/m2 ±TBD%', 'Balanza / Certificado', 'Por certificado', 'Cada lote', 'Registro de recepción', 'Rechazar lote, notificar proveedor'),
+                mkCpItem('OP 10', 'Recepción de materia prima', '', 'Gramaje refuerzo 1500 g/m2', '', '1500 g/m2 ±TBD%', 'Balanza / Certificado', 'Por certificado', 'Cada lote', 'Registro de recepción', 'Rechazar lote, notificar proveedor'),
+                mkCpItem('OP 15', 'Preparación de corte', 'Mesa de corte, plotter', 'Calidad del tendido', 'Programa de ploteo', 'Tela sin arrugas ni tensión desigual', 'Visual', '100%', 'Cada tendido', 'Verificación de tendido', 'Re-tender tela'),
+                mkCpItem('OP 20', 'Corte de componentes', 'Cortadora', 'Dimensiones de corte', 'Velocidad de corte', '±2mm vs plano', 'Cinta métrica / plantilla', '5 pzas', 'Inicio lote', 'Control dimensional', 'Ajustar cortadora y re-cortar'),
+                mkCpItem('OP 30', 'Preparación de kits', '', 'Kit completo', '', 'Todos los componentes según lista', 'Visual vs lista', '100%', 'Cada kit', 'Lista de componentes', 'Completar kit antes de liberar'),
+                mkCpItem('OP 40', 'Termoformado', 'Termoformadora', 'Forma 3D', 'Temperatura', 'Conforme a plano, T=TBD°C ±5°C', 'Gauge + termocupla', '3 pzas', 'Inicio + c/hora', 'SPC de temperatura', 'Ajustar parámetros, retener lote'),
+                mkCpItem('OP 40', 'Termoformado', 'Termoformadora', 'Espesor', 'Tiempo ciclo', 'TBD mm ±0.2mm', 'Micrómetro', '1 pza', 'C/hora', 'Registro de espesor', 'Ajustar tiempo de calentamiento'),
+                mkCpItem('OP 40', 'Termoformado', 'Termoformadora', 'Aspecto superficial', '', 'Sin arrugas ni burbujas', 'Visual', '100%', 'Cada pieza', 'Inspección visual', 'Separar, ajustar proceso'),
+                mkCpItem('OP 50', 'Corte láser', 'Cortadora láser', 'Contorno de corte', 'Potencia y velocidad', 'Conforme a plano', 'Control dimensional con plantilla', '5 pzas', 'Inicio lote', 'Control de contorno', 'Ajustar programa'),
+                mkCpItem('OP 60', 'Troquelado de refuerzos', 'Troquel / Prensa', 'Forma troquelada', 'Presión de prensa', 'Conforme a plano', 'Gauge', '5 pzas', 'Inicio + c/50 pzas', 'Control con gauge', 'Cambiar troquel, separar lote'),
+                mkCpItem('OP 70', 'Troquelado de Aplix', 'Troquel / Prensa', 'Dimensión de Aplix', 'Alineación troquel', 'Conforme a plano', 'Control dimensional', '5 pzas', 'Inicio lote', 'Control dimensional', 'Ajustar troquel'),
+                mkCpItem('OP 80', 'Costura de refuerzos', 'Máquina de coser', 'Costura continua sin saltos', 'Tensión de hilo', 'Sin costuras salteadas ni flojas', 'Visual', '100%', 'Cada pieza', 'Inspección en proceso', 'Ajustar máquina, separar sospechosas'),
+                mkCpItem('OP 80', 'Costura de refuerzos', 'Máquina de coser', 'Posición del refuerzo', '', 'Conforme a plano (±TBD mm)', 'Visual vs plano', '100%', 'Cada pieza', 'Inspección visual', 'Reposicionar y re-coser'),
+                mkCpItem('OP 90', 'Aplicación de Aplix', '', 'Cantidad de Aplix', '', 'Según especificación por pieza', 'Visual vs instrucción', '100%', 'Cada pieza', 'Inspección visual', 'Completar cantidad faltante'),
+                mkCpItem('OP 90', 'Aplicación de Aplix', '', 'Posición y adherencia de Aplix', '', 'Conforme a plano (±2mm), adherido', 'Visual vs plano + verificación manual', '100%', 'Cada pieza', 'Inspección visual', 'Reposicionar o reemplazar Aplix'),
+                mkCpItem('OP 100', 'Control final de calidad', 'Patrón visual, instrumentos', 'Aspecto visual general', '', 'Sin defectos según patrón', 'Visual vs patrón', '100%', 'Cada pieza', 'Inspección final', 'Separar NOK, notificar calidad'),
+                mkCpItem('OP 100', 'Control final de calidad', 'Cinta métrica / gauge', 'Dimensiones generales', '', '±2mm vs plano', 'Cinta métrica / gauge', '5 pzas', 'Cada lote', 'Planilla dimensional', 'Retener lote, verificar proceso'),
+                mkCpItem('OP 120', 'Embalaje y etiquetado', 'Etiquetadora', 'Cantidad embalada', '', 'Según orden de producción', 'Conteo', '100%', 'Cada caja', 'Verificación de cantidad', 'Corregir cantidad'),
+                mkCpItem('OP 120', 'Embalaje y etiquetado', 'Etiquetadora', 'Identificación (etiqueta)', '', 'Etiqueta correcta (código, cant., lote)', 'Visual', '100%', 'Cada caja', 'Verificación de etiqueta', 'Corregir etiqueta'),
             ],
         }, amfeId), 'P2-CP');
 
@@ -584,58 +673,83 @@ async function _doSeed(): Promise<string> {
             sheets: [
                 mkHoSheet(ops[0].id, 'OP 10', 'Recepción de materia prima', ['guantes', 'zapatos'], [
                     { d: 'Recibir material, verificar remito vs OC' },
-                    { d: 'Inspeccionar visualmente el material', k: true, r: 'Detectar daños antes de ingresar al proceso' },
+                    { d: 'Inspeccionar visualmente el material (sin daños, manchas, arrugas)', k: true, r: 'Detectar material no conforme antes de ingresar al proceso' },
+                    { d: 'Verificar identificación del material contra ficha técnica' },
                     { d: 'Registrar recepción en planilla' },
-                    { d: 'Almacenar con identificación de lote' },
+                    { d: 'Almacenar con identificación de lote en sector de MP' },
                 ]),
-                mkHoSheet(ops[1].id, 'OP 20', 'Corte de tela', ['guantes', 'anteojos', 'zapatos'], [
-                    { d: 'Verificar calibración de cortadora' },
+                mkHoSheet(ops[1].id, 'OP 15', 'Preparación de corte', ['guantes', 'zapatos'], [
+                    { d: 'Verificar que la tela está en condiciones (sin defectos visibles)' },
+                    { d: 'Tender tela sobre mesa de corte sin arrugas ni tensión desigual', k: true, r: 'Tendido correcto para corte preciso' },
+                    { d: 'Cargar programa de ploteo y verificar que corresponde al plano vigente' },
+                    { d: 'Ejecutar ploteo del patrón sobre la tela' },
+                ]),
+                mkHoSheet(ops[2].id, 'OP 20', 'Corte de componentes', ['guantes', 'anteojos', 'zapatos'], [
+                    { d: 'Verificar calibración de cortadora y estado de cuchilla' },
                     { d: 'Posicionar tela según plantilla', k: true, r: 'Alineación para dimensiones correctas' },
-                    { d: 'Ejecutar corte' },
-                    { d: 'Verificar primeras 5 piezas' },
+                    { d: 'Ejecutar corte según programa/plantilla' },
+                    { d: 'Verificar dimensiones de las primeras 5 piezas contra plano' },
+                    { d: 'Separar piezas cortadas e identificar lote' },
                 ]),
-                mkHoSheet(ops[2].id, 'OP 30', 'Termoformado', ['guantes', 'anteojos', 'zapatos', 'proteccionAuditiva'], [
+                mkHoSheet(ops[3].id, 'OP 30', 'Preparación de kits', ['guantes', 'zapatos'], [
+                    { d: 'Consultar lista de componentes para el producto a armar' },
+                    { d: 'Seleccionar y verificar cada componente del kit', k: true, r: 'Kit completo y correcto para evitar paradas' },
+                    { d: 'Armar kit en bandeja identificada' },
+                    { d: 'Verificar kit armado vs lista de componentes' },
+                ]),
+                mkHoSheet(ops[4].id, 'OP 40', 'Termoformado', ['guantes', 'anteojos', 'zapatos', 'proteccionAuditiva'], [
                     { d: 'Verificar temperatura de termoformadora según receta' },
                     { d: 'Cargar material en molde asegurando distribución uniforme', k: true, r: 'Evitar arrugas y variación de espesor' },
                     { d: 'Ejecutar ciclo de termoformado' },
                     { d: 'Retirar pieza y verificar forma visualmente' },
                     { d: 'Medir espesor con micrómetro según frecuencia' },
                 ]),
-                mkHoSheet(ops[3].id, 'OP 40', 'Corte termoformado', ['guantes', 'anteojos', 'zapatos', 'proteccionAuditiva'], [
-                    { d: 'Verificar estado del troquel de corte (sin desgaste)' },
-                    { d: 'Posicionar pieza termoformada en troquel', k: true, r: 'Posicionamiento correcto para contorno conforme' },
-                    { d: 'Accionar prensa de corte según parámetros' },
-                    { d: 'Verificar contorno y ausencia de rebabas' },
+                mkHoSheet(ops[5].id, 'OP 50', 'Corte láser', ['guantes', 'anteojos', 'zapatos'], [
+                    { d: 'Verificar programa de corte láser vs plano vigente' },
+                    { d: 'Posicionar pieza termoformada en fixture', k: true, r: 'Alineación correcta para contorno conforme' },
+                    { d: 'Ejecutar ciclo de corte láser' },
+                    { d: 'Verificar contorno con plantilla' },
+                    { d: 'Inspeccionar bordes (sin quemaduras ni marcas)' },
                 ]),
-                mkHoSheet(ops[4].id, 'OP 50', 'Perforado', ['guantes', 'anteojos', 'zapatos', 'proteccionAuditiva'], [
-                    { d: 'Verificar estado de punzones y fixture' },
-                    { d: 'Posicionar pieza en fixture de perforado', k: true, r: 'Posición correcta para perforaciones conformes' },
-                    { d: 'Ejecutar perforado' },
-                    { d: 'Verificar posición y diámetro de perforaciones con calibre' },
+                mkHoSheet(ops[6].id, 'OP 60', 'Troquelado de refuerzos', ['guantes', 'anteojos', 'zapatos', 'proteccionAuditiva'], [
+                    { d: 'Verificar estado del troquel (sin desgaste, sin daños)' },
+                    { d: 'Posicionar refuerzo en troquel', k: true, r: 'Centrado correcto para forma conforme' },
+                    { d: 'Accionar prensa según parámetros de proceso' },
+                    { d: 'Retirar refuerzo troquelado y verificar con gauge' },
                 ]),
-                mkHoSheet(ops[5].id, 'OP 60', 'Adhesivado', ['guantes', 'anteojos', 'zapatos', 'respirador'], [
-                    { d: 'Preparar superficies: limpiar pieza' },
-                    { d: 'Aplicar adhesivo según gramaje especificado', k: true, r: 'Gramaje correcto para adherencia conforme' },
-                    { d: 'Unir capas y aplicar presión según procedimiento' },
-                    { d: 'Verificar visualmente que no haya exceso de adhesivo' },
+                mkHoSheet(ops[7].id, 'OP 70', 'Troquelado de Aplix', ['guantes', 'anteojos', 'zapatos'], [
+                    { d: 'Verificar estado del troquel de Aplix' },
+                    { d: 'Posicionar Aplix en troquel', k: true, r: 'Dimensión correcta para fijación' },
+                    { d: 'Accionar prensa de corte' },
+                    { d: 'Verificar dimensión del Aplix troquelado' },
                 ]),
-                mkHoSheet(ops[6].id, 'OP 70', 'Colocado de Aplix', ['guantes', 'zapatos'], [
+                mkHoSheet(ops[8].id, 'OP 80', 'Costura de refuerzos', ['anteojos', 'zapatos', 'proteccionAuditiva'], [
+                    { d: 'Verificar tipo de hilo y tensión de la máquina de coser' },
+                    { d: 'Posicionar refuerzo en la pieza según plantilla', k: true, r: 'Posición correcta para funcionalidad del producto' },
+                    { d: 'Ejecutar costura según instrucción de trabajo' },
+                    { d: 'Inspeccionar costura (sin saltos, tensión correcta)' },
+                ]),
+                mkHoSheet(ops[9].id, 'OP 90', 'Aplicación de Aplix', ['guantes', 'zapatos'], [
                     { d: 'Verificar que la superficie está limpia y seca' },
-                    { d: 'Posicionar dots de Aplix usando plantilla', k: true, r: 'Posición correcta para sujeción' },
-                    { d: 'Presionar cada dot con firmeza' },
-                    { d: 'Verificar posición vs plano' },
+                    { d: 'Posicionar Aplix usando plantilla de referencia', k: true, r: 'Posición y cantidad correcta para fijación' },
+                    { d: 'Presionar cada Aplix con firmeza para asegurar adherencia' },
+                    { d: 'Verificar cantidad y posición vs plano' },
                 ]),
-                mkHoSheet(ops[7].id, 'OP 80', 'Control final', ['anteojos', 'zapatos'], [
-                    { d: 'Inspeccionar aspecto visual vs patrón', k: true, r: 'Detectar todos los defectos' },
-                    { d: 'Verificar dimensiones' },
-                    { d: 'Registrar en planilla de control final' },
-                    { d: 'Separar OK y NOK' },
+                mkHoSheet(ops[10].id, 'OP 100', 'Control final de calidad', ['anteojos', 'zapatos'], [
+                    { d: 'Tomar pieza del buffer de producción' },
+                    { d: 'Inspeccionar aspecto visual comparando con patrón de referencia', k: true, r: 'Detectar todos los defectos visuales' },
+                    { d: 'Verificar dimensiones con cinta métrica/gauge' },
+                    { d: 'Verificar presencia de todos los componentes (refuerzos, Aplix)' },
+                    { d: 'Registrar resultado en planilla de control final' },
+                    { d: 'Separar piezas OK y NOK en contenedores identificados' },
                 ]),
-                mkHoSheet(ops[8].id, 'OP 90', 'Embalaje y despacho', ['guantes', 'zapatos'], [
-                    { d: 'Verificar aprobación de control final' },
-                    { d: 'Embalar según instrucción' },
-                    { d: 'Etiquetar con datos correctos' },
-                    { d: 'Ubicar en zona de despacho' },
+                mkHoSheet(ops[11].id, 'OP 120', 'Embalaje y etiquetado', ['guantes', 'zapatos'], [
+                    { d: 'Verificar que las piezas pasaron control final (etiqueta verde)' },
+                    { d: 'Contar piezas y verificar cantidad vs orden de producción', k: true, r: 'Cantidad correcta para evitar reclamos' },
+                    { d: 'Colocar piezas en caja según instrucción de embalaje' },
+                    { d: 'Completar etiqueta con código de pieza, cantidad, lote, fecha' },
+                    { d: 'Verificar etiqueta vs producto antes de cerrar' },
+                    { d: 'Cerrar caja y posicionar en zona de despacho' },
                 ]),
             ],
         }, amfeId, cpId), 'P2-HO');
