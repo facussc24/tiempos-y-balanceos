@@ -424,7 +424,7 @@ function renderHeader(doc: PfdDocument, totalWidth: number, logoBase64: string):
         </text>
         <!-- Row 2: Elaboró | Aprobó | Equipo -->
         <text x="16" y="${metaY + 12 + rowH}" font-size="${fontSize}" fill="${BLACK}" font-family="${FONT}">
-            <tspan font-weight="700">Elaboró:</tspan> ${esc(h.preparedBy)}${h.preparedDate ? ` (${esc(h.preparedDate)})` : ''}  |  <tspan font-weight="700">Aprobó:</tspan> ${esc(h.approvedBy)}${h.approvedDate ? ` (${esc(h.approvedDate)})` : ''}  |  <tspan font-weight="700">Cód. Prov.:</tspan> ${esc(h.supplierCode)}  |  <tspan font-weight="700">Equipo:</tspan> ${esc(truncate(h.coreTeam, 60))}
+            <tspan font-weight="700">Elaboró:</tspan> ${esc(h.preparedBy)}${h.preparedDate ? ` (${esc(h.preparedDate)})` : ''}  |  <tspan font-weight="700">Aprobó:</tspan> ${esc(h.approvedBy)}${h.approvedDate ? ` (${esc(h.approvedDate)})` : ''}  |  <tspan font-weight="700">Cód. Prov.:</tspan> ${esc(h.supplierCode)}  |  <tspan font-weight="700">Equipo:</tspan> ${esc(truncate(h.coreTeam, 200))}
         </text>
         <!-- Row 3: Fecha Rev. | Cambio Ing. | Contacto -->
         ${(h.engineeringChangeLevel || h.revisionDate || h.keyContact) ? `<text x="16" y="${metaY + 12 + rowH * 2}" font-size="${fontSize}" fill="${BLACK}" font-family="${FONT}">
@@ -634,7 +634,7 @@ function renderFooter(centerX: number, y: number, totalWidth: number, _doc: PfdD
     return `<g class="pfd-footer">
         <line x1="24" y1="${y}" x2="${totalWidth - 24}" y2="${y}" stroke="#D1D5DB" stroke-width="1"/>
         <text x="${centerX}" y="${y + 16}" font-size="9" fill="#94A3B8" text-anchor="middle" font-family="${FONT}">
-            Generado por Barack Mercosul Software
+            BARACK MERCOSUL
         </text>
     </g>`;
 }
