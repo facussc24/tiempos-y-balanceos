@@ -17,6 +17,7 @@ import { ModuleErrorBoundary } from './components/ui/ModuleErrorBoundary';
 import { isProductCatalogSeeded, seedProductCatalog } from './utils/repositories/productRepository';
 import { PRODUCTS, CUSTOMER_LINES } from './src/data/productCatalogSeed';
 import { logger } from './utils/logger';
+import './utils/seed/cleanupAmfeActions'; // One-time cleanup script (window.__cleanupAmfeActions)
 import { AuthProvider } from './components/auth/AuthProvider';
 import { LoginPage } from './components/auth/LoginPage';
 import AppSidebar from './components/layout/AppSidebar';
