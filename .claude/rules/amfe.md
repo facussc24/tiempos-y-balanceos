@@ -130,6 +130,10 @@ El modulo AMFE tiene validacion automatica antes de cada guardado (`amfeValidati
 
 Keywords exentos para A6: flamabilidad, flamable, tl 1010, voc, emisiones, airbag, legal, seguridad.
 
+## Acciones de optimizacion
+Ver regla completa en `.claude/rules/amfe-actions.md`.
+RESUMEN: NUNCA inventar acciones. Solo el equipo humano las define.
+
 ## Guias obligatorias
 
 Leer ANTES de modificar datos AMFE:
