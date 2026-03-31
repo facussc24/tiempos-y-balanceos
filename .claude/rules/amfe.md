@@ -134,6 +134,10 @@ Keywords exentos para A6: flamabilidad, flamable, tl 1010, voc, emisiones, airba
 Ver regla completa en `.claude/rules/amfe-actions.md`.
 RESUMEN: NUNCA inventar acciones. Solo el equipo humano las define.
 
+## Valores numericos (pesos, tolerancias, consumos)
+NUNCA confirmar ni conservar valores numericos sin confirmacion explicita de Fak.
+En caso de duda: TBD. Solo Fak valida datos de ingenieria.
+
 ## Guias obligatorias
 
 Leer ANTES de modificar datos AMFE:

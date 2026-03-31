@@ -159,6 +159,10 @@ El modulo CP tiene validacion automatica antes de cada guardado (`cpPreSaveValid
 | B6 | CC/SC difiere entre CP y AMFE vinculado | warning |
 | B7 | approvedBy Y plantApproval ambos vacios | bloqueo |
 
+## Valores numericos (pesos, tolerancias, consumos)
+NUNCA confirmar ni conservar valores numericos sin confirmacion explicita de Fak.
+En caso de duda: TBD. Solo Fak valida datos de ingenieria.
+
 ## Procedimientos SGC para Plan de Reaccion
 | Procedimiento | Nombre | Uso en CP |
 |---------------|--------|-----------|
