@@ -120,7 +120,7 @@ const NON_HO_ROLES = ['laboratorio', 'metrología', 'metrologia', 'metrologo', '
  * Only reports items whose reactionPlanOwner is a shop-floor role
  * (excludes laboratory, metrology, and audit controls per CP→HO filtering rules).
  */
-function validateCpHoCoverage(
+export function validateCpHoCoverage(
     cpDoc: ControlPlanDocument | null,
     hoDoc: HoDocument | null,
 ): CpHoCoverageResult {
