@@ -28,6 +28,11 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_AUTO_LOGIN_EMAIL: ${{ secrets.VITE_AUTO_LOGIN_EMAIL }}
+          VITE_AUTO_LOGIN_PASSWORD: ${{ secrets.VITE_AUTO_LOGIN_PASSWORD }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
