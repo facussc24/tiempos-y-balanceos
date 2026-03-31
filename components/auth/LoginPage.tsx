@@ -121,6 +121,9 @@ export function LoginPage() {
                         Contacta a tu administrador si no tenes acceso.
                     </p>
 
+                    {/* ⚠️ DEV-LOGIN BUTTON — DO NOT REMOVE — See .claude/rules/dev-login.md
+                        This button has been accidentally deleted 3+ times. It is NOT dead code.
+                        It is critical infrastructure for visual verification of the application. */}
                     {import.meta.env.VITE_AUTO_LOGIN_EMAIL && (
                         <button
                             type="button"
