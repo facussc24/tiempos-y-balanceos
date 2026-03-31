@@ -16,6 +16,7 @@ import { useControlPlanPersistence } from './useControlPlanPersistence';
 import { useAmfeConfirm } from '../amfe/useAmfeConfirm';
 import { ControlPlanDocument, ControlPlanHeader, ControlPlanItem, CONTROL_PLAN_PHASES, CP_COLUMNS, EMPTY_CP_DOCUMENT, normalizeControlPlanDocument } from './controlPlanTypes';
 import { validateCpAgainstAmfe, CpValidationIssue } from './cpCrossValidation';
+import { validateCpBeforeSave } from './cpPreSaveValidation';
 import { CP_TEMPLATES } from './controlPlanTemplates';
 import ControlPlanStickyHeader from './ControlPlanStickyHeader';
 import ControlPlanTable from './ControlPlanTable';
@@ -132,6 +133,32 @@ const ControlPlanApp: React.FC<Props> = ({ onBackToLanding, embedded, initialDat
         confirm.requestConfirm
     );
 
+    // Pre-save validation wrapper
+    const saveWithValidation = useCallback(async () => {
+        if (projects.saveStatus === 'saving') return;
+        const validation = validateCpBeforeSave(cp.data, amfeDoc);
+        if (!validation.valid) {
+            toast.error(
+                'No se puede guardar',
+                `${validation.errors.length} error(es) de validacion. Corrija antes de guardar.`
+            );
+            for (const err of validation.errors.slice(0, 5)) {
+                toast.warning('Detalle', err);
+            }
+            if (validation.errors.length > 5) {
+                toast.info('Info', `...y ${validation.errors.length - 5} error(es) mas.`);
+            }
+            return;
+        }
+        if (validation.warnings.length > 0) {
+            toast.warning(
+                'Guardado con advertencias',
+                `${validation.warnings.length} advertencia(s) detectadas.`
+            );
+        }
+        await projects.saveCurrentProject();
+    }, [cp.data, amfeDoc, projects.saveCurrentProject, projects.saveStatus]);
+
     // Cross-user edit lock (standalone mode only)
     const documentLock = useDocumentLock(
         embedded ? null : projects.currentProject,
@@ -217,7 +244,7 @@ const ControlPlanApp: React.FC<Props> = ({ onBackToLanding, embedded, initialDat
 
     // Keyboard shortcuts (extracted hook)
     useCpKeyboardShortcuts({
-        onSave: projects.saveCurrentProject,
+        onSave: saveWithValidation,
         onToggleViewMode: useCallback(() => setViewMode(prev => prev === 'view' ? 'edit' : 'view'), []),
         onFocusSearch: useCallback(() => searchRef.current?.focus(), [searchRef]),
         onAddItem: cp.addItem,
@@ -439,7 +466,7 @@ const ControlPlanApp: React.FC<Props> = ({ onBackToLanding, embedded, initialDat
                 lastAutoSave={persistence.lastAutoSave}
                 autoSaveError={persistence.autoSaveError}
                 projects={projects.projects}
-                saveCurrentProject={projects.saveCurrentProject}
+                saveCurrentProject={saveWithValidation}
                 refreshProjects={projects.refreshProjects}
                 loadSelectedProject={projects.loadSelectedProject}
                 deleteSelectedProject={projects.deleteSelectedProject}
