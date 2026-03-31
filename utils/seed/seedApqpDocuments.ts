@@ -137,7 +137,7 @@ function mkAmfeHeader(partName: string, client: string, pn: string, amfeNum: str
         organization: 'Barack Mercosul', location: 'Hurlingham, Buenos Aires',
         client, modelYear: '2026',
         subject: `Proceso de fabricación - ${partName}`,
-        startDate: '14/03/2026', revDate: '14/03/2026',
+        startDate: '2026-03-14', revDate: '2026-03-14',
         team: TEAM, amfeNumber: amfeNum,
         responsible: 'F. Santoro', confidentiality: 'Confidencial',
         partNumber: pn, processResponsible: 'F. Santoro',
