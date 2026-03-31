@@ -113,16 +113,24 @@ describe('validateSpecialCharConsistency', () => {
         expect(issues.some(i => i.code === 'CC_SC_MISSING' && i.message.includes('CC'))).toBe(true);
     });
 
-    it('detects missing SC when AMFE severity 5-8 (AIAG S=5-8 → SC)', () => {
+    it('does NOT auto-derive SC for severity 5-8 without explicit specialChar', () => {
         const cp = makeCpDoc([makeItem({ specialCharClass: '' })]);
         const amfe = makeAmfeDoc({ severity: 7 });
         const issues = validateSpecialCharConsistency(cp, amfe);
-        expect(issues.some(i => i.code === 'CC_SC_MISSING' && i.message.includes('SC'))).toBe(true);
+        // SC no longer auto-derived from severity alone — only from explicit cause.specialChar
+        expect(issues).toHaveLength(0);
     });
 
-    it('detects missing SC when AMFE severity = 5 (lower SC bound)', () => {
+    it('does NOT auto-derive SC for severity = 5 without explicit specialChar', () => {
         const cp = makeCpDoc([makeItem({ specialCharClass: '' })]);
         const amfe = makeAmfeDoc({ severity: 5 });
+        const issues = validateSpecialCharConsistency(cp, amfe);
+        expect(issues).toHaveLength(0);
+    });
+
+    it('detects missing SC when AMFE has explicit specialChar SC', () => {
+        const cp = makeCpDoc([makeItem({ specialCharClass: '' })]);
+        const amfe = makeAmfeDoc({ severity: 7, specialChar: 'SC' });
         const issues = validateSpecialCharConsistency(cp, amfe);
         expect(issues.some(i => i.code === 'CC_SC_MISSING' && i.message.includes('SC'))).toBe(true);
     });
@@ -486,9 +494,17 @@ describe('validateOrphanFailures — SC/CC with AP=L', () => {
         expect(orphan!.message).toContain('[CC]');
     });
 
-    it('flags SC cause (S=6, AP=L) without CP coverage as warning', () => {
+    it('does NOT flag S=6 AP=L without explicit specialChar (no longer auto-SC)', () => {
         const cp = makeCpDoc([makeItem({ processDescription: 'Ensamble' })]);
         const amfe = makeAmfeDoc({ opName: 'Soldadura MIG', ap: 'L', severity: 6 });
+        const issues = validateOrphanFailures(cp, amfe);
+        // S=6 AP=L without explicit specialChar → no SC/CC → not checked for orphans
+        expect(issues.filter(i => i.code === 'ORPHAN_FAILURE')).toHaveLength(0);
+    });
+
+    it('flags explicit SC cause (S=6, AP=L) without CP coverage as warning', () => {
+        const cp = makeCpDoc([makeItem({ processDescription: 'Ensamble' })]);
+        const amfe = makeAmfeDoc({ opName: 'Soldadura MIG', ap: 'L', severity: 6, specialChar: 'SC' });
         const issues = validateOrphanFailures(cp, amfe);
         const orphan = issues.find(i => i.code === 'ORPHAN_FAILURE');
         expect(orphan).toBeDefined();
@@ -539,9 +555,17 @@ describe('validateSpecialCharConsistency — AP=L with SC/CC', () => {
         expect(issues.some(i => i.code === 'CC_SC_MISMATCH')).toBe(true);
     });
 
-    it('detects missing SC when S=6 AP=L', () => {
+    it('does NOT flag missing SC when S=6 AP=L without explicit specialChar', () => {
         const cp = makeCpDoc([makeItem({ specialCharClass: '' })]);
         const amfe = makeAmfeDoc({ severity: 6, ap: 'L' });
+        const issues = validateSpecialCharConsistency(cp, amfe);
+        // SC no longer auto-derived from severity alone
+        expect(issues).toHaveLength(0);
+    });
+
+    it('detects missing SC when S=6 AP=L with explicit specialChar SC', () => {
+        const cp = makeCpDoc([makeItem({ specialCharClass: '' })]);
+        const amfe = makeAmfeDoc({ severity: 6, ap: 'L', specialChar: 'SC' });
         const issues = validateSpecialCharConsistency(cp, amfe);
         expect(issues.some(i => i.code === 'CC_SC_MISSING' && i.message.includes('SC'))).toBe(true);
     });

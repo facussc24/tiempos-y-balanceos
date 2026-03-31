@@ -128,9 +128,9 @@ export function generateItemsFromAmfe(
 
                         const severity = Number(fail.severity) || 0;
                         const occurrence = Number(cause.occurrence) || 0;
-                        // AIAG-VDA 2019 + IATF 16949: CC=S≥9, SC=S=5-8 AND O≥4, else empty
+                        // CC=S≥9 (auto). SC=solo si cause.specialChar explícito del AMFE.
                         const autoSpecialChar = cause.specialChar
-                            || (severity >= 9 ? 'CC' : (severity >= 5 && occurrence >= 4) ? 'SC' : '');
+                            || (severity >= 9 ? 'CC' : '');
 
                         // AP=H/M: individual row. AP=L with CC/SC: individual row.
                         if (cause.ap === 'H' || cause.ap === 'M' || (cause.ap === 'L' && autoSpecialChar)) {

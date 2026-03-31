@@ -98,8 +98,8 @@ export function validateSpecialCharConsistency(
                     for (const cause of fail.causes) {
                         const sev = typeof fail.severity === 'number' ? fail.severity : Number(fail.severity) || 0;
                         const occ = typeof cause.occurrence === 'number' ? cause.occurrence : Number(cause.occurrence) || 0;
-                        // AIAG-VDA 2019: CC=S≥9, SC=S=5-8 AND O≥4
-                        const hasSpecialChar = !!(cause.specialChar?.trim()) || sev >= 9 || (sev >= 5 && occ >= 4);
+                        // CC=S≥9 (auto). SC=solo si cause.specialChar explícito del AMFE.
+                        const hasSpecialChar = !!(cause.specialChar?.trim()) || sev >= 9;
                         // Include AP=H, AP=M, and SC/CC with AP=L (IATF 16949 §8.3.3.3)
                         if (cause.ap !== 'H' && cause.ap !== 'M' && !hasSpecialChar) continue;
                         const explicit = cause.specialChar?.trim();
@@ -108,9 +108,6 @@ export function validateSpecialCharConsistency(
                             expected = explicit;
                         } else if (sev >= 9) {
                             expected = 'CC';
-                        // AIAG-VDA 2019: SC = S=5-8 AND O≥4 (Significant Characteristic)
-                        } else if (sev >= 5 && occ >= 4) {
-                            expected = 'SC';
                         }
                         if (expected) {
                             const existing = amfeClassMap.get(norm(op.name));
@@ -185,8 +182,8 @@ export function validateOrphanFailures(
                     for (const cause of fail.causes) {
                         const sev = typeof fail.severity === 'number' ? fail.severity : Number(fail.severity) || 0;
                         const occ2 = typeof cause.occurrence === 'number' ? cause.occurrence : Number(cause.occurrence) || 0;
-                        // AIAG-VDA 2019: CC=S≥9, SC=S=5-8 AND O≥4
-                        const hasSpecialChar = !!(cause.specialChar?.trim()) || sev >= 9 || (sev >= 5 && occ2 >= 4);
+                        // CC=S≥9 (auto). SC=solo si cause.specialChar explícito del AMFE.
+                        const hasSpecialChar = !!(cause.specialChar?.trim()) || sev >= 9;
 
                         // Skip causes with no CP relevance (AP=L without SC/CC)
                         if (cause.ap !== 'H' && cause.ap !== 'M' && !hasSpecialChar) continue;
@@ -198,7 +195,7 @@ export function validateOrphanFailures(
                         );
 
                         if (!covered) {
-                            const scLabel = sev >= 9 ? ' [CC]' : (sev >= 5 && occ2 >= 4) ? ' [SC]' : '';
+                            const scLabel = sev >= 9 ? ' [CC]' : (cause.specialChar?.trim() ? ` [${cause.specialChar.trim()}]` : '');
                             issues.push({
                                 severity: cause.ap === 'H' ? 'error' : 'warning',
                                 code: 'ORPHAN_FAILURE',

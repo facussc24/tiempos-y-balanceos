@@ -96,7 +96,7 @@ D<=3 con inspeccion visual. Para defectos obvios, D=2-3 puede ser aceptable sin 
 
 4. **Todo quality check en HO DEBE tener descripcion y especificacion.** QCs vacios confunden al operario.
 
-5. **CC/SC se deriva de la severidad AMFE:** S >= 9 -> CC. S = 5-8 AND O >= 4 -> SC.
+5. **CC/SC:** CC = S >= 9 (auto-derivado). SC = SOLO si `cause.specialChar` esta explicitamente marcado como "SC" en el AMFE (designacion del cliente o decision del equipo multidisciplinario). El codigo NO debe auto-asignar SC por formula. **Bug corregido 2026-03-30:** la regla `SC = S>=5 AND O>=4` estaba en 4 ubicaciones del codigo (cpCrossValidation.ts x3, controlPlanGenerator.ts x1). Generaba SC falsos. Eliminada.
 
 6. **AP=H requiere accion correctiva obligatoria.** Al menos una accion con responsable y fecha.
 

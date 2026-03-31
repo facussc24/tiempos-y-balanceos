@@ -272,32 +272,43 @@ describe('generateItemsFromAmfe — specialChar classification', () => {
         }
     });
 
-    it('auto-derives SC when severity = 7', () => {
+    it('does NOT auto-derive SC when severity = 7 without explicit specialChar', () => {
         const doc = makeAmfeDoc({ severity: 7 });
         const { items } = generateItemsFromAmfe(doc);
         for (const item of items) {
-            expect(item.specialCharClass).toBe('SC');
+            expect(item.specialCharClass).toBe('');
         }
     });
 
-    it('auto-derives SC when severity = 8', () => {
+    it('does NOT auto-derive SC when severity = 8 without explicit specialChar', () => {
         const doc = makeAmfeDoc({ severity: 8 });
         const { items } = generateItemsFromAmfe(doc);
         for (const item of items) {
-            expect(item.specialCharClass).toBe('SC');
+            expect(item.specialCharClass).toBe('');
         }
     });
 
-    it('auto-derives SC when severity = 6 (AIAG S=5-8 → SC)', () => {
+    it('does NOT auto-derive SC when severity = 6 without explicit specialChar', () => {
         const doc = makeAmfeDoc({ severity: 6 });
         const { items } = generateItemsFromAmfe(doc);
         for (const item of items) {
-            expect(item.specialCharClass).toBe('SC');
+            expect(item.specialCharClass).toBe('');
         }
     });
 
-    it('auto-derives SC when severity = 5 (lower bound of SC range)', () => {
+    it('does NOT auto-derive SC when severity = 5 without explicit specialChar', () => {
         const doc = makeAmfeDoc({ severity: 5 });
+        const { items } = generateItemsFromAmfe(doc);
+        for (const item of items) {
+            expect(item.specialCharClass).toBe('');
+        }
+    });
+
+    it('preserves explicit specialChar SC from AMFE cause', () => {
+        const doc = makeAmfeDoc({
+            severity: 7,
+            causes: [makeCause({ id: 'c1', ap: 'H', specialChar: 'SC' })],
+        });
         const { items } = generateItemsFromAmfe(doc);
         for (const item of items) {
             expect(item.specialCharClass).toBe('SC');
@@ -337,13 +348,13 @@ describe('generateItemsFromAmfe — specialChar classification', () => {
 // ============================================================================
 
 describe('generateItemsFromAmfe — AP filtering', () => {
-    it('filters AP=H, AP=M, and SC/CC AP=L causes (IATF 16949)', () => {
+    it('filters AP=H, AP=M, and explicit SC/CC AP=L causes (IATF 16949)', () => {
         const doc = makeAmfeDoc({
-            severity: 8, // S=8 → SC, so AP=L with SC still qualifies
+            severity: 8,
             causes: [
                 makeCause({ id: 'c1', cause: 'High', ap: 'H', preventionControl: 'PC1', detectionControl: 'DC1' }),
                 makeCause({ id: 'c2', cause: 'Medium', ap: 'M', preventionControl: 'PC2', detectionControl: 'DC2' }),
-                makeCause({ id: 'c3', cause: 'Low SC', ap: 'L', preventionControl: 'PC3', detectionControl: 'DC3' }),
+                makeCause({ id: 'c3', cause: 'Low SC', ap: 'L', preventionControl: 'PC3', detectionControl: 'DC3', specialChar: 'SC' }),
                 makeCause({ id: 'c4', cause: 'None', ap: '', preventionControl: '', detectionControl: '' }),
             ],
         });
@@ -536,7 +547,7 @@ describe('generateItemsFromAmfe — dedup', () => {
         const { items } = generateItemsFromAmfe(doc);
         const proc = processRows(items);
         expect(proc).toHaveLength(1);
-        expect(proc[0].specialCharClass).toBe('CC'); // severity 10 → CC wins over severity 6 → SC
+        expect(proc[0].specialCharClass).toBe('CC'); // severity 10 → CC wins over severity 6 → '' (no auto SC)
     });
 
     it('dedup key does not collide when fields contain pipe characters (Audit R8)', () => {
@@ -808,10 +819,10 @@ describe('generateItemsFromAmfe — traceability fields (R5A)', () => {
 // ============================================================================
 
 describe('generateItemsFromAmfe — SC/CC with AP=L (IATF 16949)', () => {
-    it('includes SC cause (S=6, AP=L) in CP', () => {
+    it('includes explicit SC cause (S=6, AP=L) in CP', () => {
         const doc = makeAmfeDoc({
             severity: 6,
-            causes: [makeCause({ id: 'c1', cause: 'SC cause', ap: 'L', preventionControl: 'Audit', detectionControl: 'Visual' })],
+            causes: [makeCause({ id: 'c1', cause: 'SC cause', ap: 'L', preventionControl: 'Audit', detectionControl: 'Visual', specialChar: 'SC' })],
         });
         const { items } = generateItemsFromAmfe(doc);
         expect(items.length).toBeGreaterThan(0);
@@ -841,10 +852,10 @@ describe('generateItemsFromAmfe — SC/CC with AP=L (IATF 16949)', () => {
         expect(items[0].processCharacteristic).toBe('Autocontrol visual general');
     });
 
-    it('SC cause (S=5, AP=L) gets specialCharClass=SC', () => {
+    it('explicit SC cause (S=5, AP=L) gets specialCharClass=SC', () => {
         const doc = makeAmfeDoc({
             severity: 5,
-            causes: [makeCause({ id: 'c1', cause: 'SC edge', ap: 'L' })],
+            causes: [makeCause({ id: 'c1', cause: 'SC edge', ap: 'L', specialChar: 'SC' })],
         });
         const { items } = generateItemsFromAmfe(doc);
         for (const item of items) {
@@ -863,10 +874,10 @@ describe('generateItemsFromAmfe — SC/CC with AP=L (IATF 16949)', () => {
         }
     });
 
-    it('SC/CC cause with AP=L gets amfeAp=L', () => {
+    it('explicit SC cause with AP=L gets amfeAp=L', () => {
         const doc = makeAmfeDoc({
             severity: 7,
-            causes: [makeCause({ id: 'c1', cause: 'SC L cause', ap: 'L' })],
+            causes: [makeCause({ id: 'c1', cause: 'SC L cause', ap: 'L', specialChar: 'SC' })],
         });
         const { items } = generateItemsFromAmfe(doc);
         for (const item of items) {
@@ -879,7 +890,7 @@ describe('generateItemsFromAmfe — SC/CC with AP=L (IATF 16949)', () => {
             severity: 8,
             causes: [
                 makeCause({ id: 'c1', cause: 'Same cause', preventionControl: 'SPC', ap: 'H' }),
-                makeCause({ id: 'c2', cause: 'Same cause', preventionControl: 'SPC', ap: 'L' }),
+                makeCause({ id: 'c2', cause: 'Same cause', preventionControl: 'SPC', ap: 'L', specialChar: 'SC' }),
             ],
         });
         const { items } = generateItemsFromAmfe(doc);
@@ -893,7 +904,7 @@ describe('generateItemsFromAmfe — SC/CC with AP=L (IATF 16949)', () => {
             severity: 6,
             causes: [
                 makeCause({ id: 'c1', cause: 'Same cause', preventionControl: 'SPC', ap: 'M' }),
-                makeCause({ id: 'c2', cause: 'Same cause', preventionControl: 'SPC', ap: 'L' }),
+                makeCause({ id: 'c2', cause: 'Same cause', preventionControl: 'SPC', ap: 'L', specialChar: 'SC' }),
             ],
         });
         const { items } = generateItemsFromAmfe(doc);
@@ -902,12 +913,12 @@ describe('generateItemsFromAmfe — SC/CC with AP=L (IATF 16949)', () => {
         expect(proc[0].amfeAp).toBe('M');
     });
 
-    it('group of only AP=L → pickHighestAp returns L', () => {
+    it('group of only AP=L with explicit SC → pickHighestAp returns L', () => {
         const doc = makeAmfeDoc({
             severity: 7,
             causes: [
-                makeCause({ id: 'c1', cause: 'Same SC', preventionControl: 'SPC', ap: 'L' }),
-                makeCause({ id: 'c2', cause: 'Same SC', preventionControl: 'SPC', ap: 'L' }),
+                makeCause({ id: 'c1', cause: 'Same SC', preventionControl: 'SPC', ap: 'L', specialChar: 'SC' }),
+                makeCause({ id: 'c2', cause: 'Same SC', preventionControl: 'SPC', ap: 'L', specialChar: 'SC' }),
             ],
         });
         const { items } = generateItemsFromAmfe(doc);
@@ -916,12 +927,12 @@ describe('generateItemsFromAmfe — SC/CC with AP=L (IATF 16949)', () => {
         expect(proc[0].amfeAp).toBe('L');
     });
 
-    it('summary includes SC/CC count when AP=L causes qualify', () => {
+    it('summary includes SC/CC count when AP=L causes qualify via explicit specialChar', () => {
         const doc = makeAmfeDoc({
             severity: 8,
             causes: [
                 makeCause({ id: 'c1', cause: 'H cause', ap: 'H', preventionControl: 'PC1', detectionControl: 'DC1' }),
-                makeCause({ id: 'c2', cause: 'L SC cause', ap: 'L', preventionControl: 'PC2', detectionControl: 'DC2' }),
+                makeCause({ id: 'c2', cause: 'L SC cause', ap: 'L', preventionControl: 'PC2', detectionControl: 'DC2', specialChar: 'SC' }),
             ],
         });
         const { warnings } = generateItemsFromAmfe(doc);
@@ -951,10 +962,10 @@ describe('generateItemsFromAmfe — SC/CC with AP=L (IATF 16949)', () => {
         expect(proc[0].sampleFrequency).toBe('Cada lote');
     });
 
-    it('AP=L defaults: S=6 → sampleSize=1 pieza, sampleFrequency=Cada lote', () => {
+    it('AP=L defaults with explicit SC: S=6 → sampleSize=1 pieza, sampleFrequency=Cada lote', () => {
         const doc = makeAmfeDoc({
             severity: 6,
-            causes: [makeCause({ id: 'c1', cause: 'SC low', ap: 'L', preventionControl: 'Audit', detectionControl: 'Visual' })],
+            causes: [makeCause({ id: 'c1', cause: 'SC low', ap: 'L', preventionControl: 'Audit', detectionControl: 'Visual', specialChar: 'SC' })],
         });
         const { items } = generateItemsFromAmfe(doc);
         const proc = processRows(items);
@@ -973,12 +984,10 @@ describe('generateItemsFromAmfe — SC/CC with AP=L (IATF 16949)', () => {
         expect(proc[0].reactionPlan).toContain('Detener');
     });
 
-    it('AP=L with S<4: reactionPlan is empty (no severity-based plan)', () => {
-        // This should never happen in practice (S<5 → no SC/CC → AP=L excluded)
-        // but defensively testing the severity-based reaction plan logic
+    it('AP=L with explicit SC and S=6: reactionPlan is severity-based', () => {
         const doc = makeAmfeDoc({
             severity: 6,
-            causes: [makeCause({ id: 'c1', cause: 'SC mid react', ap: 'L' })],
+            causes: [makeCause({ id: 'c1', cause: 'SC mid react', ap: 'L', specialChar: 'SC' })],
         });
         const { items } = generateItemsFromAmfe(doc);
         const proc = processRows(items);
