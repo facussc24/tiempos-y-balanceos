@@ -80,6 +80,10 @@ export interface ControlPlanItem {
     amfeFailureId?: string;
     /** AMFE failure IDs when multiple failures are grouped into one CP row */
     amfeFailureIds?: string[];
+    /** True when the AMFE source for this item no longer exists after regeneration. */
+    orphaned?: boolean;
+    /** Inherited fields the user manually edited — skipped on next regeneration. */
+    overriddenFields?: string[];
 }
 
 /** Top-level Control Plan document. */
@@ -277,6 +281,8 @@ export function normalizeControlPlanDocument(raw: any): ControlPlanDocument {
         amfeCauseIds: item.amfeCauseIds,
         amfeFailureId: item.amfeFailureId,
         amfeFailureIds: item.amfeFailureIds,
+        orphaned: item.orphaned || false,
+        overriddenFields: item.overriddenFields,
     }));
 
     return { header, items };

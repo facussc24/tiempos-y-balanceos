@@ -121,6 +121,8 @@ export interface HoQualityCheck {
     registro: string;
     /** Source CP item ID for traceability. */
     cpItemId?: string;
+    /** True when the CP source for this QC no longer exists after regeneration. */
+    orphaned?: boolean;
 }
 
 // ============================================================================
@@ -185,6 +187,8 @@ export interface HojaOperacion {
     date: string;
     revision: string;
     status: HoStatus;
+    /** True when the AMFE operation for this sheet no longer exists after regeneration. */
+    orphaned?: boolean;
 }
 
 // ============================================================================
@@ -321,6 +325,7 @@ export function normalizeHoDocument(raw: any): HoDocument {
             specialCharSymbol: qc.specialCharSymbol || '',
             registro: qc.registro || '',
             cpItemId: qc.cpItemId,
+            orphaned: qc.orphaned || false,
         })),
         reactionPlanText: s.reactionPlanText ?? DEFAULT_REACTION_PLAN_TEXT,
         reactionContact: s.reactionContact || '',
@@ -335,6 +340,7 @@ export function normalizeHoDocument(raw: any): HoDocument {
         date: s.date || '',
         revision: s.revision || '',
         status: s.status || 'borrador',
+        orphaned: s.orphaned || false,
     }));
 
     return { header, sheets };
