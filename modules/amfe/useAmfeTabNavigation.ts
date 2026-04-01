@@ -3,8 +3,8 @@ import { AmfeDocument } from './amfeTypes';
 import { ControlPlanDocument } from '../controlPlan/controlPlanTypes';
 import { HoDocument } from '../hojaOperaciones/hojaOperacionesTypes';
 import { PfdDocument } from '../pfd/pfdTypes';
-import { generateControlPlanFromAmfe, linkPfdToCp } from '../controlPlan/controlPlanGenerator';
-import { generateHoFromAmfeAndCp } from '../hojaOperaciones/hojaOperacionesGenerator';
+import { generateControlPlanFromAmfe, linkPfdToCp, mergeGeneratedWithExisting } from '../controlPlan/controlPlanGenerator';
+import { generateHoFromAmfeAndCp, mergeHoWithExisting } from '../hojaOperaciones/hojaOperacionesGenerator';
 import { importPfdOpsFromAmfe } from '../pfd/pfdGenerator';
 
 export type ActiveTab = 'pfd' | 'amfe' | 'controlPlan' | 'hojaOperaciones';
@@ -126,34 +126,45 @@ export function useAmfeTabNavigation(params: UseAmfeTabNavigationParams): UseAmf
     }, [data, currentProject, pfdInitialData, requestConfirm, setActiveTab]);
 
     const handleGenerateControlPlan = useCallback(async () => {
-        if (cpInitialData) {
+        const hasExisting = cpInitialData && cpInitialData.items.length > 0;
+        if (hasExisting) {
             const ok = await requestConfirm({
-                title: 'Regenerar Plan de Control',
-                message: 'Se regenerará el Plan de Control desde el AMFE actual. Se perderán los cambios manuales realizados.',
-                variant: 'warning',
-                confirmText: 'Regenerar',
+                title: 'Actualizar Plan de Control',
+                message: 'Se actualizaran los datos heredados del AMFE preservando los campos que completaste manualmente (especificacion, muestreo, metodo, etc.).',
+                variant: 'info',
+                confirmText: 'Actualizar',
             });
             if (!ok) return;
         }
         const { document: cpDoc, warnings } = generateControlPlanFromAmfe(data, currentProject || 'Sin nombre');
-        setCpInitialData(cpDoc);
-        setCpWarnings(warnings);
+
+        let finalDoc = cpDoc;
+        let mergeWarnings: string[] = [];
+
+        if (hasExisting) {
+            const result = mergeGeneratedWithExisting(cpDoc.items, cpInitialData!.items);
+            finalDoc = { header: cpInitialData!.header, items: result.items };
+            mergeWarnings = result.warnings;
+        }
+
+        setCpInitialData(finalDoc);
+        setCpWarnings([...warnings, ...mergeWarnings]);
         // Link PFD steps to CP items for full traceability
         if (pfdInitialData) {
-            const linkedPfd = linkPfdToCp(pfdInitialData, cpDoc.items, data.operations);
+            const linkedPfd = linkPfdToCp(pfdInitialData, finalDoc.items, data.operations);
             setPfdInitialData(linkedPfd);
         }
         setActiveTab('controlPlan');
     }, [data, currentProject, cpInitialData, pfdInitialData, requestConfirm, setActiveTab]);
 
     const handleGenerateHojasOperaciones = useCallback(async () => {
-        // Only ask for confirmation if there are actual sheets to lose
-        if (hoInitialData && hoInitialData.sheets.length > 0) {
+        const hasExisting = hoInitialData && hoInitialData.sheets.length > 0;
+        if (hasExisting) {
             const ok = await requestConfirm({
-                title: 'Regenerar Hojas de Operaciones',
-                message: 'Se regenerarán las Hojas de Operaciones desde el AMFE y Plan de Control actuales. Se perderán los cambios manuales realizados.',
-                variant: 'warning',
-                confirmText: 'Regenerar',
+                title: 'Actualizar Hojas de Operaciones',
+                message: 'Se actualizaran los datos del CP/AMFE preservando pasos TWI, ayudas visuales, EPP y registros.',
+                variant: 'info',
+                confirmText: 'Actualizar',
             });
             if (!ok) return;
         }
@@ -162,8 +173,18 @@ export function useAmfeTabNavigation(params: UseAmfeTabNavigationParams): UseAmf
             cpInitialData || null,
             currentProject || 'Sin nombre',
         );
-        setHoInitialData(hoDoc);
-        setHoWarnings(warnings);
+
+        let finalDoc = hoDoc;
+        let mergeWarnings: string[] = [];
+
+        if (hasExisting) {
+            const result = mergeHoWithExisting(hoDoc, hoInitialData!);
+            finalDoc = result.document;
+            mergeWarnings = result.warnings;
+        }
+
+        setHoInitialData(finalDoc);
+        setHoWarnings([...warnings, ...mergeWarnings]);
         setActiveTab('hojaOperaciones');
     }, [data, cpInitialData, currentProject, hoInitialData, requestConfirm, setActiveTab]);
 
