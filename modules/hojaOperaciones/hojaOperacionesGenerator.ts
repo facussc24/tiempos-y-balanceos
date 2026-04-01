@@ -231,3 +231,209 @@ export function generateHoFromAmfeAndCp(
 
     return { document: { header, sheets }, warnings };
 }
+
+// ============================================================================
+// MERGE TYPES
+// ============================================================================
+
+export interface HoMergeStats {
+    sheetsMatched: number;
+    sheetsAdded: number;
+    sheetsOrphaned: number;
+    qcMatched: number;
+    qcAdded: number;
+    qcOrphaned: number;
+}
+
+export interface HoMergeResult {
+    document: HoDocument;
+    stats: HoMergeStats;
+    warnings: string[];
+}
+
+// ============================================================================
+// MERGE FUNCTION
+// ============================================================================
+
+/**
+ * Merge a freshly generated HO document with an existing one, preserving
+ * local user-entered data (steps, visual aids, PPE, metadata) while updating
+ * inherited fields from AMFE/CP.
+ *
+ * Matching: sheets matched by operationNumber, then by amfeOperationId.
+ * QCs within sheets matched by cpItemId.
+ *
+ * Unmatched existing sheets/QCs are marked orphaned and appended at the end.
+ */
+export function mergeHoWithExisting(
+    generated: HoDocument,
+    existing: HoDocument,
+): HoMergeResult {
+    const warnings: string[] = [];
+    const stats: HoMergeStats = {
+        sheetsMatched: 0,
+        sheetsAdded: 0,
+        sheetsOrphaned: 0,
+        qcMatched: 0,
+        qcAdded: 0,
+        qcOrphaned: 0,
+    };
+
+    // --- Build indexes for existing sheets ---
+    const existingByOpNum = new Map<string, HojaOperacion>();
+    const existingByAmfeOpId = new Map<string, HojaOperacion>();
+
+    for (const sheet of existing.sheets) {
+        const opKey = sheet.operationNumber.trim();
+        if (opKey) existingByOpNum.set(opKey, sheet);
+        if (sheet.amfeOperationId) existingByAmfeOpId.set(sheet.amfeOperationId, sheet);
+    }
+
+    const matchedSheetIds = new Set<string>();
+    const resultSheets: HojaOperacion[] = [];
+
+    // --- Process each generated sheet ---
+    for (const genSheet of generated.sheets) {
+        // Try to find a matching existing sheet
+        let existingSheet: HojaOperacion | undefined =
+            existingByOpNum.get(genSheet.operationNumber.trim());
+
+        if (!existingSheet || matchedSheetIds.has(existingSheet.id)) {
+            existingSheet = existingByAmfeOpId.get(genSheet.amfeOperationId);
+        }
+
+        // Only accept if not already matched
+        if (existingSheet && matchedSheetIds.has(existingSheet.id)) {
+            existingSheet = undefined;
+        }
+
+        if (existingSheet) {
+            // --- Match found: merge sheet ---
+            matchedSheetIds.add(existingSheet.id);
+
+            // Start from existing, update inherited fields from generated
+            const mergedSheet: HojaOperacion = {
+                ...existingSheet,
+                // Inherited fields (from AMFE/CP via generator)
+                amfeOperationId: genSheet.amfeOperationId,
+                operationNumber: genSheet.operationNumber,
+                operationName: genSheet.operationName,
+                hoNumber: genSheet.hoNumber,
+                partCodeDescription: genSheet.partCodeDescription,
+                vehicleModel: genSheet.vehicleModel,
+                reactionContact: genSheet.reactionContact,
+                // Preserve local fields from existing (spread already covers them):
+                // steps, visualAids, safetyElements, hazardWarnings, sector,
+                // puestoNumber, preparedBy, approvedBy, date, revision, status,
+                // reactionPlanText
+                orphaned: false,
+            };
+
+            // --- QC merge within the sheet ---
+            const existingQcByCpItemId = new Map<string, HoQualityCheck>();
+            for (const qc of existingSheet.qualityChecks) {
+                if (qc.cpItemId) {
+                    existingQcByCpItemId.set(qc.cpItemId, qc);
+                }
+            }
+
+            const matchedQcIds = new Set<string>();
+            const mergedQcs: HoQualityCheck[] = [];
+
+            for (const genQc of genSheet.qualityChecks) {
+                // Defensive: skip QCs without cpItemId (treat as new)
+                if (!genQc.cpItemId) {
+                    mergedQcs.push(genQc);
+                    stats.qcAdded++;
+                    continue;
+                }
+
+                const existingQc = existingQcByCpItemId.get(genQc.cpItemId);
+
+                if (existingQc && !matchedQcIds.has(existingQc.id)) {
+                    // QC matched: keep existing id and registro, update inherited fields
+                    matchedQcIds.add(existingQc.id);
+                    mergedQcs.push({
+                        ...existingQc,
+                        // Inherited fields from CP
+                        characteristic: genQc.characteristic,
+                        specification: genQc.specification,
+                        evaluationTechnique: genQc.evaluationTechnique,
+                        frequency: genQc.frequency,
+                        controlMethod: genQc.controlMethod,
+                        reactionAction: genQc.reactionAction,
+                        reactionContact: genQc.reactionContact,
+                        specialCharSymbol: genQc.specialCharSymbol,
+                        cpItemId: genQc.cpItemId,
+                        orphaned: false,
+                    });
+                    stats.qcMatched++;
+                } else {
+                    // No match: use generated QC as-is (new)
+                    mergedQcs.push(genQc);
+                    stats.qcAdded++;
+                }
+            }
+
+            // Unmatched existing QCs → orphaned
+            for (const existingQc of existingSheet.qualityChecks) {
+                if (!matchedQcIds.has(existingQc.id)) {
+                    mergedQcs.push({
+                        ...existingQc,
+                        orphaned: true,
+                    });
+                    stats.qcOrphaned++;
+                }
+            }
+
+            mergedSheet.qualityChecks = mergedQcs;
+            stats.sheetsMatched++;
+            resultSheets.push(mergedSheet);
+        } else {
+            // --- No match: use generated sheet as-is ---
+            resultSheets.push(genSheet);
+            stats.sheetsAdded++;
+            stats.qcAdded += genSheet.qualityChecks.length;
+        }
+    }
+
+    // --- Unmatched existing sheets → orphaned ---
+    for (const existingSheet of existing.sheets) {
+        if (!matchedSheetIds.has(existingSheet.id)) {
+            resultSheets.push({
+                ...existingSheet,
+                orphaned: true,
+            });
+            stats.sheetsOrphaned++;
+            stats.qcOrphaned += existingSheet.qualityChecks.length;
+        }
+    }
+
+    // --- Sort: by parseInt(operationNumber), orphaned sheets last ---
+    resultSheets.sort((a, b) => {
+        const aOrphaned = a.orphaned ? 1 : 0;
+        const bOrphaned = b.orphaned ? 1 : 0;
+        if (aOrphaned !== bOrphaned) return aOrphaned - bOrphaned;
+        const numA = parseInt(a.operationNumber) || 0;
+        const numB = parseInt(b.operationNumber) || 0;
+        return numA - numB;
+    });
+
+    // --- Warnings ---
+    if (stats.sheetsOrphaned > 0) {
+        warnings.push(
+            `${stats.sheetsOrphaned} hoja(s) de operaciones ya no tienen operación AMFE correspondiente (marcadas como huérfanas).`
+        );
+    }
+
+    warnings.push(
+        `Merge HO: ${stats.sheetsMatched} hojas actualizadas, ${stats.sheetsAdded} nuevas, ${stats.sheetsOrphaned} huérfanas. ` +
+        `QCs: ${stats.qcMatched} actualizados, ${stats.qcAdded} nuevos, ${stats.qcOrphaned} huérfanos.`
+    );
+
+    return {
+        document: { header: generated.header, sheets: resultSheets },
+        stats,
+        warnings,
+    };
+}
