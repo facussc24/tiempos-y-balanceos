@@ -62,7 +62,10 @@ const HoQualityCheckTable: React.FC<Props> = ({ checks, onUpdateRegistro, readOn
                 <tbody>
                     {checks.map((qc, i) => {
                         const isBroken = brokenCheckIds?.has(qc.id) ?? false;
-                        const rowBg = isBroken
+                        const isOrphaned = qc.orphaned === true;
+                        const rowBg = isOrphaned
+                            ? 'bg-amber-50 border-l-2 border-l-amber-400'
+                            : isBroken
                             ? 'bg-orange-50 border-l-2 border-l-orange-400'
                             : i % 2 === 0 ? 'bg-white' : 'bg-gray-50/50';
                         return (

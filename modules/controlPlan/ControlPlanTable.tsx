@@ -10,6 +10,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { ControlPlanItem, CP_COLUMNS, CPColumnDef } from './controlPlanTypes';
 import { CpColumnGroupVisibility, CP_COLUMN_TO_GROUP } from './useCpColumnVisibility';
+import { CP_INHERITED_SET } from './fieldClassification';
 import AutoResizeTextarea from '../amfe/AutoResizeTextarea';
 import { Trash2, ChevronUp, ChevronDown, ChevronRight, Copy, ClipboardList } from 'lucide-react';
 import { InheritanceBadge } from '../../components/ui/InheritanceBadge';
@@ -384,8 +385,9 @@ const ControlPlanRow: React.FC<{
     // Visual separator at group boundaries
     const groupBorder = groupInfo.isGroupStart && idx > 0 ? 'border-t-2 border-t-teal-200' : '';
 
+    const orphanedClass = item.orphaned ? "bg-amber-50 border-l-2 border-l-amber-400" : "";
     return (
-        <tr data-item-id={item.id} data-step={item.processStepNumber} data-process={item.processDescription?.slice(0, 50)} className={`${readOnly ? 'hover:bg-gray-50/50' : 'hover:bg-gray-50'} group ${apStripe} ${zebraClass} ${groupBorder}`}>
+        <tr data-item-id={item.id} data-step={item.processStepNumber} data-process={item.processDescription?.slice(0, 50)} className={`${readOnly ? 'hover:bg-gray-50/50' : 'hover:bg-gray-50'} group ${apStripe} ${zebraClass} ${groupBorder} ${orphanedClass}`}>
             {CP_COLUMNS.map((col, colIdx) => renderCell(col, colIdx))}
             {/* Actions — hidden in view mode */}
             <td data-field="actions" className="border border-gray-200 px-1 text-center">

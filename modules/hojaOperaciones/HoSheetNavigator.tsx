@@ -82,6 +82,8 @@ const HoSheetNavigator: React.FC<Props> = ({ sheets, activeSheetId, onSelect }) 
                             className={`w-full flex items-center gap-2 px-3 py-2 text-left border-b border-gray-50 transition text-xs ${
                                 isActive
                                     ? 'bg-blue-50 border-l-2 border-l-blue-700'
+                                    : sheet.orphaned
+                                    ? 'bg-amber-50 border-l-2 border-l-amber-400 hover:bg-amber-100'
                                     : 'hover:bg-gray-50 border-l-2 border-l-transparent'
                             }`}
                         >
