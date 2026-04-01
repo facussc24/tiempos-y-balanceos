@@ -23,6 +23,7 @@ import { PfdDocument } from '../pfd/pfdTypes';
 import { ControlPlanItem, ControlPlanHeader, ControlPlanDocument, ControlPlanPhase, EMPTY_CP_HEADER } from './controlPlanTypes';
 import { getControlPlanDefaults, inferSpecification, inferReactionPlanOwner, inferControlProcedure } from './controlPlanDefaults';
 import { inferOperationCategory } from '../../utils/processCategory';
+import { CP_LOCAL_FIELDS } from './fieldClassification';
 
 // ============================================================================
 // TYPES
@@ -55,12 +56,12 @@ function normalizeForKey(s: string): string {
 }
 
 /** Build dedup key for process rows: opNumber + cause text (1 row per characteristic, NOT per control). */
-function buildProcessKey(opNumber: string, causeText: string): string {
+export function buildProcessKey(opNumber: string, causeText: string): string {
     return JSON.stringify([normalizeForKey(opNumber), normalizeForKey(causeText)]);
 }
 
 /** Build dedup key for product rows: opNumber + failure description (1 row per characteristic, NOT per control). */
-function buildProductKey(opNumber: string, failDesc: string): string {
+export function buildProductKey(opNumber: string, failDesc: string): string {
     return JSON.stringify([normalizeForKey(opNumber), normalizeForKey(failDesc)]);
 }
 
@@ -423,4 +424,226 @@ export function linkPfdToCp(
         steps: updatedSteps,
         updatedAt: new Date().toISOString(),
     };
+}
+
+// ============================================================================
+// MERGE TYPES
+// ============================================================================
+
+export interface CpMergeStats {
+    matched: number;
+    added: number;
+    orphaned: number;
+}
+
+export interface CpMergeResult {
+    items: ControlPlanItem[];
+    stats: CpMergeStats;
+    warnings: string[];
+}
+
+// ============================================================================
+// MERGE: GENERATED + EXISTING
+// ============================================================================
+
+/** Check if a value is non-empty (not undefined, null, or blank string). */
+function isNonEmpty(value: unknown): boolean {
+    return value !== undefined && value !== null && String(value).trim() !== '';
+}
+
+/**
+ * Merge newly generated CP items with existing (user-edited) CP items.
+ *
+ * - Matches generated items to existing items by process/product key or fallback indexes.
+ * - Preserves user-edited local fields on matched items.
+ * - Marks unmatched existing items as orphaned.
+ * - Returns merged items sorted by processStepNumber, row type, then orphaned last.
+ */
+export function mergeGeneratedWithExisting(
+    generated: ControlPlanItem[],
+    existing: ControlPlanItem[],
+): CpMergeResult {
+    const stats: CpMergeStats = { matched: 0, added: 0, orphaned: 0 };
+    const warnings: string[] = [];
+    const resultItems: ControlPlanItem[] = [];
+
+    const cpLocalFieldSet = new Set<string>(CP_LOCAL_FIELDS);
+
+    // ─── Step 1: Build indexes for existing items ───
+    const existingByProcessKey = new Map<string, ControlPlanItem>();
+    const existingByProductKey = new Map<string, ControlPlanItem>();
+    const existingByCauseIds = new Map<string, ControlPlanItem>();
+    const existingByFailureId = new Map<string, ControlPlanItem>();
+
+    for (const item of existing) {
+        if (item.processCharacteristic) {
+            // Process row
+            existingByProcessKey.set(
+                buildProcessKey(item.processStepNumber, item.processCharacteristic),
+                item,
+            );
+            if (item.amfeCauseIds && item.amfeCauseIds.length > 0) {
+                const sortedKey = [...item.amfeCauseIds].sort().join('|');
+                existingByCauseIds.set(sortedKey, item);
+            }
+        }
+        if (item.productCharacteristic) {
+            // Product row
+            existingByProductKey.set(
+                buildProductKey(item.processStepNumber, item.productCharacteristic),
+                item,
+            );
+            if (item.amfeFailureId) {
+                existingByFailureId.set(item.amfeFailureId, item);
+            }
+        }
+    }
+
+    // ─── Step 2: Track matched existing items ───
+    const matchedIds = new Set<string>();
+
+    // ─── Step 3: Match each generated item ───
+    for (const genItem of generated) {
+        const isProcessRow = !!genItem.processCharacteristic;
+        let match: ControlPlanItem | undefined;
+
+        // Primary index lookup
+        if (isProcessRow) {
+            match = existingByProcessKey.get(
+                buildProcessKey(genItem.processStepNumber, genItem.processCharacteristic),
+            );
+        } else {
+            match = existingByProductKey.get(
+                buildProductKey(genItem.processStepNumber, genItem.productCharacteristic),
+            );
+        }
+
+        // Only accept if not already matched
+        if (match && matchedIds.has(match.id)) {
+            match = undefined;
+        }
+
+        // Fallback index lookup
+        if (!match) {
+            if (isProcessRow) {
+                if (genItem.amfeCauseIds && genItem.amfeCauseIds.length > 0) {
+                    const sortedKey = [...genItem.amfeCauseIds].sort().join('|');
+                    const fallback = existingByCauseIds.get(sortedKey);
+                    if (fallback && !matchedIds.has(fallback.id)) {
+                        match = fallback;
+                    }
+                }
+            } else {
+                if (genItem.amfeFailureId) {
+                    const fallback = existingByFailureId.get(genItem.amfeFailureId);
+                    if (fallback && !matchedIds.has(fallback.id)) {
+                        match = fallback;
+                    }
+                }
+            }
+        }
+
+        if (match) {
+            // ─── Merge: existing + generated ───
+            const merged: ControlPlanItem = { ...match };
+            const existingAutoFilled = new Set<string>(match.autoFilledFields || []);
+            const existingOverridden = new Set<string>(match.overriddenFields || []);
+            const newAutoFilled: string[] = [];
+            const genAutoFilled = new Set<string>(genItem.autoFilledFields || []);
+
+            for (const field of Object.keys(genItem) as (keyof ControlPlanItem)[]) {
+                if (field === 'id') {
+                    // CRITICAL: keep existing id for cpItemId links in HO
+                    continue;
+                }
+                if (field === 'orphaned') {
+                    merged.orphaned = false;
+                    continue;
+                }
+                if (field === 'overriddenFields') {
+                    // Keep from existing
+                    continue;
+                }
+                if (field === 'autoFilledFields') {
+                    // Handled separately below
+                    continue;
+                }
+                if (cpLocalFieldSet.has(field)) {
+                    // Local field: check if user edited it
+                    if (existingOverridden.has(field)) {
+                        // User explicitly overrode this field — preserve existing value
+                        continue;
+                    }
+                    const existingValue = (match as unknown as Record<string, unknown>)[field];
+                    if (isNonEmpty(existingValue) && !existingAutoFilled.has(field)) {
+                        // User-edited value: preserve it, remove from autoFilledFields
+                        continue;
+                    }
+                    // Auto-filled or empty: use generated value
+                    (merged as unknown as Record<string, unknown>)[field] = (genItem as unknown as Record<string, unknown>)[field];
+                    if (genAutoFilled.has(field)) {
+                        newAutoFilled.push(field);
+                    }
+                    continue;
+                }
+                // All other fields (inherited): use generated value
+                (merged as unknown as Record<string, unknown>)[field] = (genItem as unknown as Record<string, unknown>)[field];
+            }
+
+            // Build final autoFilledFields:
+            // - Local fields preserved by user → NOT in autoFilled
+            // - Local fields that used generated value → in autoFilled if generated had them
+            // - Non-local auto-filled fields from generated → include them
+            for (const af of (genItem.autoFilledFields || [])) {
+                if (!cpLocalFieldSet.has(af)) {
+                    // Non-local auto-filled field from generated
+                    if (!newAutoFilled.includes(af)) {
+                        newAutoFilled.push(af);
+                    }
+                }
+            }
+            merged.autoFilledFields = newAutoFilled.length > 0 ? newAutoFilled : undefined;
+
+            matchedIds.add(match.id);
+            resultItems.push(merged);
+            stats.matched++;
+        } else {
+            // No match: new item
+            resultItems.push({ ...genItem });
+            stats.added++;
+        }
+    }
+
+    // ─── Step 4: Orphaned existing items ───
+    for (const item of existing) {
+        if (!matchedIds.has(item.id)) {
+            resultItems.push({ ...item, orphaned: true });
+            stats.orphaned++;
+        }
+    }
+
+    // ─── Step 5: Sort ───
+    resultItems.sort((a, b) => {
+        const numA = parseInt(a.processStepNumber) || 0;
+        const numB = parseInt(b.processStepNumber) || 0;
+        if (numA !== numB) return numA - numB;
+
+        // Within same operation: process rows first, then product rows
+        const typeA = a.processCharacteristic ? 0 : 1;
+        const typeB = b.processCharacteristic ? 0 : 1;
+        if (typeA !== typeB) return typeA - typeB;
+
+        // Orphaned items last within each operation group
+        const orphA = a.orphaned ? 1 : 0;
+        const orphB = b.orphaned ? 1 : 0;
+        return orphA - orphB;
+    });
+
+    // ─── Step 6: Warnings ───
+    if (stats.orphaned > 0) {
+        warnings.push(`${stats.orphaned} item(s) del CP ya no tienen base en el AMFE (marcados como huérfanos).`);
+    }
+    warnings.push(`Merge CP: ${stats.matched} actualizados, ${stats.added} nuevos, ${stats.orphaned} huérfanos.`);
+
+    return { items: resultItems, stats, warnings };
 }
