@@ -131,6 +131,8 @@ D<=3 con inspeccion visual. Para defectos obvios, D=2-3 puede ser aceptable sin 
 
 22. **Backup obligatorio al fin de cada sesion.** 2026-04-06: se perdieron 6 AMFEs VWA por borrado accidental sin backup reciente. SIEMPRE correr `node scripts/_backup.mjs` antes de cerrar sesion.
 
+23. **Proteccion contra borrado masivo.** Codigo de proteccion agregado a la app (2026-04-06) para prevenir eliminacion accidental de multiples documentos. NUNCA permitir borrado en lote sin confirmacion explicita del usuario. El incidente de los 6 AMFEs VWA demostro que un borrado accidental sin backup puede costar horas de reconstruccion.
+
 ---
 
 ## Hallazgos por Producto

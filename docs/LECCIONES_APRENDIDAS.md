@@ -87,6 +87,13 @@ Leer al inicio de cada sesion para no repetir errores.
 - Agregado al protocolo de fin de sesion en CLAUDE.md como paso 4.
 - El script `_backup.mjs` guarda 12 tablas: amfe_documents, cp_documents, ho_documents, pfd_documents, product_families, product_family_members, family_documents, family_document_overrides, family_change_proposals, products, customer_lines, settings.
 
+### Borrado masivo de 6 AMFEs VWA — incidente y recuperacion (2026-04-06)
+- **Incidente**: 6 AMFEs VWA fueron borrados accidentalmente (Insert, Armrest, Top Roll, Headrest Front/Rear Center/Rear Outer). No habia backup reciente.
+- **Recuperacion**: Se restauraron desde el seed original + se enriquecieron con datos reales extraidos de los PDFs/Excels de referencia del servidor (AMFEs oficiales de planta).
+- **Enriquecimiento VWA**: 206 causas fueron pobladas con datos reales de los AMFEs de referencia (severidades, ocurrencias, detecciones, controles). Los AMFEs VWA pasaron de tener datos genericos del seed a tener datos calibrados con la documentacion oficial.
+- **Proteccion implementada**: Se agrego codigo de proteccion contra borrado masivo en la app. Antes de eliminar multiples documentos, el sistema ahora pide confirmacion explicita y no permite borrar mas de un umbral sin validacion extra.
+- **Leccion**: SIEMPRE tener un backup reciente antes de operar sobre documentos. El backup se agrego como paso obligatorio de fin de sesion (ver regla de backup).
+
 ### componentMaterial en CP (2026-04-06)
 - El generador de CP NUNCA llena componentMaterial automaticamente — siempre queda vacio.
 - Los materiales en items de recepcion (OP 10) deben asignarse manualmente o via script post-generacion.
