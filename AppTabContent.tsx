@@ -106,8 +106,23 @@ export const AppTabContent: React.FC<AppTabContentProps> = ({
                                     toast.info('Nuevo Proyecto', 'Creando estructura inicial...');
                                 }
                             } else {
-                                // Web mode
-                                navigation.setActiveTab('panel');
+                                // Web mode: buscar proyecto por metadata y cargarlo
+                                const { getProjectsByClient, loadProject: loadProjectFromDb } = await import('./utils/repositories/projectRepository');
+                                const dbProjects = await getProjectsByClient(client);
+                                const match = dbProjects.find(p => p.project_code === project && p.name === part);
+                                if (match) {
+                                    const loadedData = await loadProjectFromDb(match.id);
+                                    if (loadedData) {
+                                        persistence.setData(loadedData);
+                                        undoRedo.resetHistory(loadedData);
+                                        navigation.setActiveTab('panel');
+                                        toast.success('Proyecto Cargado', loadedData.meta?.name || part);
+                                    } else {
+                                        toast.error('Error', 'No se pudo cargar el proyecto');
+                                    }
+                                } else {
+                                    toast.error('Proyecto no encontrado', `${client}/${project}/${part}`);
+                                }
                             }
                         } catch (e) {
                             logger.error('App', 'Error opening project', {}, e instanceof Error ? e : undefined);

@@ -5,6 +5,56 @@ App 100% web React 19 + TypeScript + Supabase para gestion de calidad automotriz
 (balanceo de linea, simulador de flujo, kanban, heijunka, mix multi-modelo).
 Multi-usuario con auth Supabase (email/password). Sin Tauri, sin Gemini.
 
+## Protocolo de inicio de sesion
+
+Al arrancar CADA sesion:
+1. Leer `docs/LECCIONES_APRENDIDAS.md` — para no repetir errores
+2. Leer `.claude/rules/` relevantes al modulo que se va a tocar
+3. Si Fak menciona un producto, leer el AMFE/CP/HO/PFD de ese producto ANTES de hacer cambios
+4. Si hay PDFs de referencia, leerlos con el metodo de `docs/COMO_LEER_PDF.md`
+
+## Protocolo de fin de sesion — OBLIGATORIO, NO OPCIONAL
+
+ANTES de decirle a Fak que terminaste, SIEMPRE:
+1. Actualizar docs/LECCIONES_APRENDIDAS.md con errores cometidos y correcciones de Fak
+2. Si descubriste algo nuevo: actualizar la guia correspondiente
+3. Si creaste reglas nuevas: verificar que esten en `.claude/rules/`
+
+Si no actualizas estos archivos, el proximo Claude va a cometer los mismos errores.
+Esto NO es opcional. NO preguntar si Fak quiere que lo hagas. HACERLO.
+
+## Comportamiento proactivo
+
+Despues de CADA tarea completada:
+- Si modificaste un AMFE: verificar que CP y HO del mismo producto esten alineados. Si no, REPORTAR.
+- Si modificaste un CP: verificar que la HO refleje los cambios. Si no, REPORTAR.
+- Si un cambio afecta a TODOS los productos (ej: formato de fechas, nombres de columnas): SUGERIR aplicarlo a los 8 productos, no esperar a que Fak lo pida.
+- Si detectas inconsistencias entre documentos: reportarlas INMEDIATAMENTE.
+- Si tenes dudas sobre un dato: poner TBD y avisar a Fak. NUNCA inventar.
+
+## Control de revisiones
+
+Los documentos APQP son "documentos vivos" segun IATF 16949:
+- Cambios diarios se registran en audit trail (fecha + que cambio)
+- Las revisiones mayores (A, B, C) solo cambian en hitos oficiales:
+  - Rev A: Prelanzamiento
+  - Rev B: PPAP aprobado / Produccion masiva
+  - Rev C: Cambio de ingenieria mayor (ECN del cliente)
+- Los cambios pequenos NO generan nueva revision — se acumulan en el borrador de trabajo
+
+## Como interactuar con Fak
+
+- Fak escribe en espanol informal con typos. Entender sin corregir.
+- Fak NO es programador. Explicar decisiones tecnicas en lenguaje simple.
+- NUNCA preguntar "queres que haga X?" — HACERLO y reportar.
+- REFUERZO: Si te encontras a punto de escribir "queres que...?" o "lo hago?" — PARA. La respuesta es siempre SI. Hacelo y reporta que lo hiciste.
+- NUNCA inventar datos numericos (pesos, tolerancias, temperaturas). Si no sabes: TBD.
+- NUNCA inventar acciones de optimizacion en AMFEs (ver `.claude/rules/amfe-actions.md`).
+- Si Fak te corrige: agregar a `docs/LECCIONES_APRENDIDAS.md` inmediatamente.
+- Si detectas un problema: reportar sin esperar a que Fak pregunte.
+- Si un cambio afecta multiples productos: sugerir verificar los demas.
+- Evolucionar: despues de cada sesion, preguntarte "que puedo hacer mejor la proxima vez?" y documentarlo.
+
 ## Reglas de Negocio APQP (OBLIGATORIO — validadas por AIAG-VDA 2019 y AIAG CP 2024)
 
 ### Clasificación CC/SC (CORREGIDA — la regla anterior era incorrecta)
@@ -32,7 +82,11 @@ Multi-usuario con auth Supabase (email/password). Sin Tauri, sin Gemini.
 - `docs/GUIA_PLAN_DE_CONTROL.md`
 - `docs/GUIA_AMFE.md`
 - `docs/GUIA_HOJA_DE_OPERACIONES.md`
+- `docs/GUIA_PFD.md`
 - `docs/ERRORES_CONCEPTUALES_APQP.md` — errores graves ya detectados, NO repetirlos.
+- `docs/LECCIONES_APRENDIDAS.md` — historial de errores, leer al inicio de cada sesion.
+- `docs/ARQUITECTURA_CAMPOS_HEREDADOS.md` — campos heredados vs locales en CP/HO.
+- `docs/COMO_LEER_PDF.md` — metodos para leer PDFs de referencia.
 
 ## Reglas Críticas — NO ROMPER
 

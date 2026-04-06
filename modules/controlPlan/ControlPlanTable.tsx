@@ -319,7 +319,15 @@ const ControlPlanRow: React.FC<{
             );
         }
 
-        const criticalBorder = showCriticalRequired ? 'border-l-2 border-l-red-500 bg-red-50/30' : showRequiredHint ? 'border-l-2 border-l-amber-400' : '';
+        // Inherited field indicator (blue border) — shown in both modes
+        const isInherited = CP_INHERITED_SET.has(col.key);
+        const isOverridden = isInherited && item.overriddenFields?.includes(col.key);
+        const inheritedBorder = isOverridden
+            ? 'border-l-2 border-l-orange-300'
+            : isInherited
+            ? 'border-l-2 border-l-blue-200'
+            : '';
+        const criticalBorder = showCriticalRequired ? 'border-l-2 border-l-red-500 bg-red-50/30' : showRequiredHint ? 'border-l-2 border-l-amber-400' : inheritedBorder;
         const cellClass = `${cls.cellBase} ${criticalBorder}`;
 
         // Bulk fill context menu handler for eligible fields
@@ -336,10 +344,15 @@ const ControlPlanRow: React.FC<{
             });
         } : undefined;
 
-        // View mode — render as text
+        // View mode — render as text with inherited/local tooltip
         if (readOnly) {
+            const inheritedTitle = isOverridden
+                ? 'Editado manualmente — no se actualiza al regenerar'
+                : isInherited
+                ? 'Dato del AMFE — se actualiza al regenerar'
+                : undefined;
             return (
-                <td key={col.key} data-field={col.key} className={cellClass}>
+                <td key={col.key} data-field={col.key} className={cellClass} title={inheritedTitle}>
                     {renderText(value, null)}
                 </td>
             );
@@ -352,7 +365,7 @@ const ControlPlanRow: React.FC<{
             : '';
         const editClass = `${cls.input} ${showCriticalRequired ? 'placeholder:text-red-400 placeholder:text-[9px]' : isEmpty && col.key === 'specification' ? 'placeholder:text-gray-300 placeholder:text-[9px] placeholder:italic' : ''}`;
         return (
-            <td key={col.key} data-field={col.key} className={cellClass} onContextMenu={handleContextMenu}>
+            <td key={col.key} data-field={col.key} className={cellClass} onContextMenu={handleContextMenu} title={isOverridden ? 'Editado manualmente' : isInherited ? 'Dato del AMFE' : undefined}>
                 {useTextarea ? (
                     <AutoResizeTextarea
                         value={value}

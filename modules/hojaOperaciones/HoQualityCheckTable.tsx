@@ -6,6 +6,7 @@
 
 import React from 'react';
 import { HoQualityCheck } from './hojaOperacionesTypes';
+import { HO_QC_INHERITED_SET } from '../controlPlan/fieldClassification';
 import { ExternalLink, AlertTriangle } from 'lucide-react';
 
 interface Props {
@@ -77,22 +78,22 @@ const HoQualityCheckTable: React.FC<Props> = ({ checks, onUpdateRegistro, readOn
                                         i + 1
                                     )}
                                 </td>
-                                <td className="px-2 py-1.5 border border-gray-200">
+                                <td className="px-2 py-1.5 border border-gray-200 border-l-2 border-l-blue-200" title="Dato del CP — se actualiza al regenerar">
                                     <div className="flex items-center gap-1.5">
                                         <SpecialCharBadge symbol={qc.specialCharSymbol} />
                                         <span>{qc.characteristic}</span>
                                     </div>
                                 </td>
-                                <td className="px-2 py-1.5 border border-gray-200 text-gray-600">
+                                <td className="px-2 py-1.5 border border-gray-200 text-gray-600 border-l-2 border-l-blue-200" title="Dato del CP — se actualiza al regenerar">
                                     {qc.specification || <span className="text-gray-300 italic text-[10px]">Según plano</span>}
                                 </td>
-                                <td className="px-2 py-1.5 border border-gray-200 text-gray-600">
+                                <td className="px-2 py-1.5 border border-gray-200 text-gray-600 border-l-2 border-l-blue-200" title="Dato del CP — se actualiza al regenerar">
                                     {qc.controlMethod || qc.evaluationTechnique}
                                 </td>
-                                <td className="px-2 py-1.5 border border-gray-200 text-gray-600">
+                                <td className="px-2 py-1.5 border border-gray-200 text-gray-600 border-l-2 border-l-blue-200" title="Dato del CP — se actualiza al regenerar">
                                     {qc.reactionContact || <span className="text-gray-300 italic text-[10px]">Ver CP</span>}
                                 </td>
-                                <td className="px-2 py-1.5 border border-gray-200 text-gray-600">
+                                <td className="px-2 py-1.5 border border-gray-200 text-gray-600 border-l-2 border-l-blue-200" title="Dato del CP — se actualiza al regenerar">
                                     {qc.frequency}
                                 </td>
                                 <td className="px-2 py-1.5 border border-gray-200">
