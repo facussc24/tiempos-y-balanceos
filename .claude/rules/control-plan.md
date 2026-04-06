@@ -172,3 +172,11 @@ En caso de duda: TBD. Solo Fak valida datos de ingenieria.
 | P-10/I | Inspeccion y Ensayo | Controles de laboratorio |
 | P-13 | Producto No Conforme | Segregacion de rechazos |
 | P-14 | Recepcion de Materiales | Reaccion recepcion MP |
+
+## componentMaterial — campo NO automatizado
+
+- El generador de CP NUNCA llena `componentMaterial` automaticamente — siempre queda "".
+- Despues de regenerar un CP desde AMFE, VERIFICAR que items de recepcion (OP 10) tengan material asignado.
+- Asignar material manualmente o con script post-generacion (`scripts/fixCpMaterials.mjs`).
+- El material se extrae del nombre del Work Element del AMFE OP 10 (lista de materiales separada por " / ").
+- Validacion B1 advierte items de recepcion sin material pero no bloquea.

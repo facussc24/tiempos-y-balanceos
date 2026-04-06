@@ -71,3 +71,13 @@ Leer al inicio de cada sesion para no repetir errores.
 - E. Gramajes Termo actuales
 - F. Norma flamabilidad PWA (NO TL 1010)
 - G. Planas no tiene FM flamabilidad en AMFE
+
+### Regla nueva: Backup obligatorio al fin de sesion (2026-04-06)
+- **SIEMPRE** correr `node scripts/_backup.mjs` al final de cada sesion. Esto genera un snapshot JSON de toda la base Supabase en `backups/`. Si se borran datos accidentalmente (como los 6 AMFEs VWA), se pueden restaurar desde el ultimo backup.
+- Agregado al protocolo de fin de sesion en CLAUDE.md como paso 4.
+- El script `_backup.mjs` guarda 12 tablas: amfe_documents, cp_documents, ho_documents, pfd_documents, product_families, product_family_members, family_documents, family_document_overrides, family_change_proposals, products, customer_lines, settings.
+
+### componentMaterial en CP (2026-04-06)
+- El generador de CP NUNCA llena componentMaterial automaticamente — siempre queda vacio.
+- Los materiales en items de recepcion (OP 10) deben asignarse manualmente o via script post-generacion.
+- Validacion B1 advierte pero no bloquea items de recepcion sin material.

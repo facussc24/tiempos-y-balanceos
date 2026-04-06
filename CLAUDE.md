@@ -19,6 +19,7 @@ ANTES de decirle a Fak que terminaste, SIEMPRE:
 1. Actualizar docs/LECCIONES_APRENDIDAS.md con errores cometidos y correcciones de Fak
 2. Si descubriste algo nuevo: actualizar la guia correspondiente
 3. Si creaste reglas nuevas: verificar que esten en `.claude/rules/`
+4. Correr `node scripts/_backup.mjs` para guardar snapshot de Supabase (previene perdida de datos)
 
 Si no actualizas estos archivos, el proximo Claude va a cometer los mismos errores.
 Esto NO es opcional. NO preguntar si Fak quiere que lo hagas. HACERLO.
