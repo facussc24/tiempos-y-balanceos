@@ -50,3 +50,26 @@ globs:
 ## Schema
 - SCHEMA_VERSION 14 (25 tablas incluyendo views)
 - Migraciones en `database.ts` (runMigrations)
+
+## Scripts que modifican Supabase — reglas obligatorias
+
+### NUNCA double-serializar JSONB
+- Las columnas `data` de amfe_documents, cp_documents, ho_documents, pfd_documents son JSONB.
+- Al hacer `.update({ data: objeto })`, pasar el OBJETO JavaScript directo. NUNCA hacer `.update({ data: JSON.stringify(objeto) })`.
+- `JSON.stringify()` convierte el objeto a string, y Supabase lo guarda como string dentro de JSONB = double-serialized.
+- La app lee `doc.data.operations` y recibe `undefined` porque `data` es un string, no un objeto.
+- **Incidente 2026-04-06:** 8 AMFEs quedaron ilegibles por double-serialization. El auditor lo detecto.
+- **Verificacion obligatoria:** Despues de cualquier `.update({ data })` en scripts, verificar con `typeof doc.data === 'object'`.
+
+### SIEMPRE usar tabla AP oficial para calcular Action Priority
+- NUNCA usar formulas simplificadas como `S * O * D > umbral` para calcular AP.
+- La tabla AP oficial esta en `modules/amfe/apTable.ts` → funcion `calculateAP(s, o, d)`.
+- Si el script es .mjs y no puede importar .ts, COPIAR la tabla de lookup completa (ver `docs/GUIA_AMFE.md` seccion 6).
+- **Incidente 2026-04-06:** 56 causas tenian AP incorrecto por usar formula S*O*D. Un item de seguridad S=10 quedo como M en vez de H.
+
+### Verificacion post-script obligatoria
+Despues de ejecutar cualquier script que modifique documentos APQP en Supabase:
+1. Verificar `typeof data === 'object'` (no string) para documentos modificados
+2. Verificar que `data.operations` (AMFE), `data.items` (CP), `data.sheets` (HO), `data.steps` (PFD) sean arrays
+3. Contar operaciones/items/sheets y comparar con lo esperado
+4. Hacer backup con `node scripts/_backup.mjs`
