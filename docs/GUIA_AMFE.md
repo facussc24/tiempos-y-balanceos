@@ -345,7 +345,47 @@ AmfeDocument
 
 ---
 
-## 10. Checklist Rapido para Revision de AMFE
+## 11. Work Elements — Regla 1M por linea
+
+### Regla AIAG-VDA 2019: UN solo elemento por fila
+
+El estandar AIAG-VDA FMEA Handbook 1st Edition 2019 exige que cada Work Element sea UN SOLO item de las categorias 4M/6M (Material, Maquina, Metodo, Mano de obra, Medio ambiente, Medicion). Agrupar multiples items en un solo Work Element destruye el hilo digital del AMFE porque cada item tiene funciones y causas de falla distintas.
+
+**Reglas:**
+- Cada Work Element DEBE ser UN SOLO item de las 4M/6M
+- PROHIBIDO agrupar multiples items en un solo WE: "Material: Tela / Hilos / Refuerzos" es INCORRECTO
+- Cada material/maquina/etc. va en su propia fila con su propia cadena de funcion → falla → causa
+
+**Ejemplo correcto:**
+
+| Work Element | Funcion | Fallas |
+|---|---|---|
+| WE 1: "Material: Tela termoformable" | Proveer cobertura estetica | Fallas propias de la tela (manchas, gramaje, etc.) |
+| WE 2: "Material: Hilo de costura" | Unir piezas cosidas | Fallas propias del hilo (rotura, color incorrecto, etc.) |
+| WE 3: "Material: Refuerzos" | Proveer rigidez estructural | Fallas propias del refuerzo (deformacion, espesor, etc.) |
+
+**Ejemplo INCORRECTO:**
+
+| Work Element | Problema |
+|---|---|
+| "Material: Tela / Hilo / Refuerzos" | Destruye el hilo digital: cada material tiene funciones y fallas distintas |
+
+### Materiales Directos vs Indirectos en operaciones de proceso
+
+En operaciones de proceso (NO recepcion), la categoria "Material" de las 4M/6M se refiere tipicamente a **materiales INDIRECTOS** (aceite, grasa, pegamento, concentracion de lavado). El estandar ASUME que los materiales directos (tela, hilo, sustrato) llegan correctos del proveedor.
+
+**Los riesgos de materiales directos se evaluan en:**
+- **OP 10 Recepcion de Materia Prima** — inspeccion de entrada
+- **DFMEA** (AMFE de Diseno, no de Proceso)
+
+**Solo listar materiales directos como WE en una estacion de proceso cuando:**
+- Existe riesgo de que el operador cargue material equivocado (color equivocado, tipo de hilo incorrecto)
+- El material puede danarse/contaminarse durante manipuleo en esa estacion
+- Historial de problemas recurrentes con proveedor en inspeccion de entrada
+
+---
+
+## 12. Checklist Rapido para Revision de AMFE
 
 Antes de dar por terminado un AMFE, verificar:
 
@@ -361,4 +401,6 @@ Antes de dar por terminado un AMFE, verificar:
 - [ ] Severidad 9-10 solo se usa para seguridad/regulatorio
 - [ ] Prevencion y deteccion son controles diferentes en cada causa
 - [ ] Modo de falla != causa (son conceptos distintos)
+- [ ] Cada Work Element es UN SOLO item (no agrupaciones de materiales/maquinas)
+- [ ] Materiales directos en ops de proceso solo si hay riesgo de interaccion
 - [ ] Cross-validation PFD <-> AMFE pasa sin errores

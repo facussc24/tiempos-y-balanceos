@@ -3,6 +3,16 @@
 Archivo mantenido por Claude Code. Se actualiza despues de cada sesion donde algo salio mal o se aprendio algo nuevo.
 Leer al inicio de cada sesion para no repetir errores.
 
+## 2026-04-06 — Work Elements: UN solo item por fila (regla 1M por linea)
+
+**Error**: Se agrupaban multiples materiales en un solo Work Element: "Material: Tela / Refuerzos / Hilos / Aplix". Esto destruye el hilo digital del AMFE porque cada material tiene funciones y causas de falla distintas.
+
+**Correccion**: Un experto AIAG-VDA confirmo que el estandar exige UNA sola M por linea. Cada material/maquina/metodo debe tener su propia fila con su propia cadena funcion → falla → causa.
+
+**Regla adicional**: En operaciones de proceso, "Material" en 4M/6M se refiere a materiales INDIRECTOS. Los directos se evaluan en Recepcion o DFMEA. Solo listar directos en una estacion si hay riesgo de interaccion (operador carga material equivocado, material se dana en manipuleo).
+
+**Impacto**: Todos los 8 AMFEs deben ser revisados para separar WE agrupados.
+
 ## Errores de datos
 
 - **2026-03-30:** Acciones de optimizacion inventadas en 8 AMFEs (408 acciones falsas eliminadas). REGLA: NUNCA inventar acciones de optimizacion. Solo el equipo APQP humano las define.

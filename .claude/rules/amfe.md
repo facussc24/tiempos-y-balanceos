@@ -52,6 +52,29 @@ NUNCA dejar ningun nivel vacio.
 - Ejemplo: 4 colores del mismo headrest = 1 AMFE con todos los part numbers en `applicableParts`.
 - NO crear AMFEs separados para variantes de color con proceso identico.
 
+## Elementos de Trabajo (Work Elements) — Regla 1M por linea
+
+### Regla AIAG-VDA 2019: UN solo elemento por fila
+- Cada Work Element DEBE ser UN SOLO item de las 4M/6M (Material, Maquina, Metodo, Mano de obra, Medio ambiente, Medicion)
+- PROHIBIDO agrupar multiples items en un solo WE: "Material: Tela / Hilos / Refuerzos" es INCORRECTO
+- Cada material/maquina/etc. va en su propia fila con su propia cadena de funcion → falla → causa
+- Ejemplo correcto:
+  - WE 1: "Material: Tela termoformable" → funcion: "Proveer cobertura estetica" → fallas propias de la tela
+  - WE 2: "Material: Hilo de costura" → funcion: "Unir piezas cosidas" → fallas propias del hilo
+  - WE 3: "Material: Refuerzos" → funcion: "Proveer rigidez estructural" → fallas propias del refuerzo
+- Ejemplo INCORRECTO: "Material: Tela / Hilo / Refuerzos" (destruye el hilo digital del AMFE)
+
+### Materiales Directos vs Indirectos en operaciones de proceso
+- En operaciones de proceso (NO recepcion), la categoria "Material" de las 4M/6M se refiere tipicamente a materiales INDIRECTOS (aceite, grasa, pegamento, concentracion de lavado)
+- El estandar ASUME que los materiales directos (tela, hilo, sustrato) llegan correctos del proveedor
+- Los riesgos de materiales directos se evaluan en:
+  - OP 10 Recepcion de Materia Prima (inspeccion de entrada)
+  - DFMEA (AMFE de Diseno, no de Proceso)
+- Solo listar materiales directos como WE en una estacion de proceso cuando:
+  - Existe riesgo de que el operador cargue material equivocado (color, tipo)
+  - El material puede danarse/contaminarse durante manipuleo en esa estacion
+  - Historial de problemas recurrentes con proveedor en inspeccion de entrada
+
 ## Operaciones condicionales por variante
 
 - Operaciones que no aplican a todos los PN de la familia: marcar "(Aplica solo a PN X, Y, Z)" en el nombre de la operacion. NUNCA crear documentos separados por esto.

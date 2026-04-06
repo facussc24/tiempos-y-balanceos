@@ -125,6 +125,12 @@ D<=3 con inspeccion visual. Para defectos obvios, D=2-3 puede ser aceptable sin 
 
 19. **Nombres de operaciones deben ser consistentes.** "RECEPCIONAR MATERIA PRIMA" → "RECEPCION DE MATERIA PRIMA". "INSPECCION FINAL" → "CONTROL FINAL DE CALIDAD". "EMBALAJE Y ETIQUETADO DE PRODUCTO TERMINADO" → "EMBALAJE". Mismos nombres en PFD, AMFE, CP y HO.
 
+20. **Work Elements: UN solo item por fila (regla 1M por linea).** AIAG-VDA 2019 exige que cada Work Element sea UNA sola M de las 4M/6M. Agrupar "Material: Tela / Hilos / Refuerzos" en una celda destruye el hilo digital del AMFE (cada material tiene funciones y causas distintas). Detectado 2026-04-06 por consulta a experto AIAG-VDA.
+
+21. **Materiales directos vs indirectos en operaciones de proceso.** En el PFMEA, la categoria "Material" de las 4M/6M se refiere tipicamente a materiales INDIRECTOS (adhesivos, lubricantes). El estandar ASUME que los directos (tela, hilo, sustrato) llegan correctos del proveedor. Solo listar directos en una estacion si hay riesgo de interaccion.
+
+22. **Backup obligatorio al fin de cada sesion.** 2026-04-06: se perdieron 6 AMFEs VWA por borrado accidental sin backup reciente. SIEMPRE correr `node scripts/_backup.mjs` antes de cerrar sesion.
+
 ---
 
 ## Hallazgos por Producto
