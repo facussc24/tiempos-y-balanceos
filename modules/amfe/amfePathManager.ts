@@ -189,18 +189,32 @@ export async function deleteAmfeHierarchical(client: string, project: string, na
     return false;
 }
 
-export async function deleteAmfeProject(client: string, project: string): Promise<boolean> {
+export async function deleteAmfeProject(client: string, project: string, options?: { force?: boolean }): Promise<boolean> {
     const entries = await listAmfeDocuments();
     const prefix = `${client}/${project}/`;
     const ids = entries.filter(e => e.projectName.startsWith(prefix)).map(e => e.id);
     if (ids.length === 0) return true;
+    logger.warn('AMFE', `deleteAmfeProject: about to delete ${ids.length} document(s) from project "${client}/${project}"`);
+    if (ids.length > 1 && !options?.force) {
+        throw new Error(
+            `Batch delete refused: ${ids.length} documents would be deleted from project "${client}/${project}". ` +
+            `Pass { force: true } to confirm bulk deletion.`
+        );
+    }
     return deleteAmfeDocumentsBatch(ids);
 }
 
-export async function deleteAmfeClient(client: string): Promise<boolean> {
+export async function deleteAmfeClient(client: string, options?: { force?: boolean }): Promise<boolean> {
     const entries = await listAmfeDocuments();
     const ids = entries.filter(e => e.client === client).map(e => e.id);
     if (ids.length === 0) return true;
+    logger.warn('AMFE', `deleteAmfeClient: about to delete ${ids.length} document(s) from client "${client}"`);
+    if (ids.length > 1 && !options?.force) {
+        throw new Error(
+            `Batch delete refused: ${ids.length} documents would be deleted from client "${client}". ` +
+            `Pass { force: true } to confirm bulk deletion.`
+        );
+    }
     return deleteAmfeDocumentsBatch(ids);
 }
 

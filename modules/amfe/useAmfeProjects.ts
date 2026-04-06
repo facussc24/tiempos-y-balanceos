@@ -624,50 +624,70 @@ export const useAmfeProjects = (
 
     /** Delete an entire project folder */
     const deleteProjectFolder = useCallback(async (client: string, project: string) => {
+        // Fetch document count to show in confirmation
+        const projectStudies = await listAmfeStudies(client, project);
+        const docCount = projectStudies.length;
         const ok = await requestConfirm({
             title: 'Eliminar Carpeta de Proyecto',
-            message: `¿Eliminar "${project}" y todos sus AMFEs? Esta accion no se puede deshacer.`,
+            message: `¿Eliminar "${project}" y ${docCount === 1 ? 'su 1 AMFE' : `todos sus ${docCount} AMFEs`}? Esta accion no se puede deshacer.`,
             variant: 'danger',
             confirmText: 'Eliminar todo',
         });
         if (!ok) return;
-        const success = await deleteAmfeProject(client, project);
-        if (success) {
-            if (currentProjectRef?.client === client && currentProjectRef?.project === project) {
-                clearCurrentProject();
-                onResetProject();
+        try {
+            const success = await deleteAmfeProject(client, project, { force: true });
+            if (success) {
+                if (currentProjectRef?.client === client && currentProjectRef?.project === project) {
+                    clearCurrentProject();
+                    onResetProject();
+                }
+                if (selectedClient === client) {
+                    setSelectedProject('');
+                    refreshClientProjects(client);
+                }
+            } else {
+                logger.error('AMFE', `Failed to delete project folder: ${client}/${project}`);
+                toast.error('Error al Eliminar', `No se pudo eliminar el proyecto "${project}". Algunos documentos pueden estar bloqueados.`);
             }
-            if (selectedClient === client) {
-                setSelectedProject('');
-                refreshClientProjects(client);
-            }
-        } else {
-            logger.error('AMFE', `Failed to delete project folder: ${client}/${project}`);
-            toast.error('Error al Eliminar', `No se pudo eliminar el proyecto "${project}". Algunos documentos pueden estar bloqueados.`);
+        } catch (err) {
+            logger.error('AMFE', `Failed to delete project folder: ${client}/${project}`, { error: err instanceof Error ? err.message : String(err) });
+            toast.error('Error al Eliminar', `No se pudo eliminar el proyecto "${project}". ${err instanceof Error ? err.message : ''}`);
         }
     }, [currentProjectRef, onResetProject, requestConfirm, selectedClient, refreshClientProjects]);
 
     /** Delete an entire client folder */
     const deleteClientFolder = useCallback(async (client: string) => {
+        // Fetch document count across all projects for this client
+        const clientProjectList = await listAmfeClientProjects(client);
+        let totalDocs = 0;
+        for (const proj of clientProjectList) {
+            const projectStudies = await listAmfeStudies(client, proj);
+            totalDocs += projectStudies.length;
+        }
         const ok = await requestConfirm({
             title: 'Eliminar Carpeta de Cliente',
-            message: `¿Eliminar "${client}" y todos sus proyectos? Esta accion no se puede deshacer.`,
+            message: `¿Eliminar "${client}" y todos sus proyectos (${totalDocs} AMFE${totalDocs !== 1 ? 's' : ''} en ${clientProjectList.length} proyecto${clientProjectList.length !== 1 ? 's' : ''})? Esta accion no se puede deshacer.`,
             variant: 'danger',
             confirmText: 'Eliminar todo',
         });
         if (!ok) return;
-        const success = await deleteAmfeClient(client);
-        if (success) {
-            if (currentProjectRef?.client === client) {
-                clearCurrentProject();
-                onResetProject();
+        try {
+            const success = await deleteAmfeClient(client, { force: true });
+            if (success) {
+                if (currentProjectRef?.client === client) {
+                    clearCurrentProject();
+                    onResetProject();
+                }
+                setSelectedClient('');
+                setSelectedProject('');
+                refreshClients();
+            } else {
+                logger.error('AMFE', `Failed to delete client folder: ${client}`);
+                toast.error('Error al Eliminar', `No se pudo eliminar el cliente "${client}". Algunos documentos pueden estar bloqueados.`);
             }
-            setSelectedClient('');
-            setSelectedProject('');
-            refreshClients();
-        } else {
-            logger.error('AMFE', `Failed to delete client folder: ${client}`);
-            toast.error('Error al Eliminar', `No se pudo eliminar el cliente "${client}". Algunos documentos pueden estar bloqueados.`);
+        } catch (err) {
+            logger.error('AMFE', `Failed to delete client folder: ${client}`, { error: err instanceof Error ? err.message : String(err) });
+            toast.error('Error al Eliminar', `No se pudo eliminar el cliente "${client}". ${err instanceof Error ? err.message : ''}`);
         }
     }, [currentProjectRef, onResetProject, requestConfirm, refreshClients]);
 
