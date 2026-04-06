@@ -1,47 +1,48 @@
+---
+name: audit-amfe
+description: Audit AMFE documents in Supabase for data integrity, AIAG-VDA compliance, and cross-document coherence. Use this whenever you need to verify AMFE data quality — after enrichments, fix scripts, data migrations, or when the user asks to check/audit/verify AMFEs. Accepts an optional product filter (e.g., "ARMREST", "PWA").
+---
+
 # Auditar AMFE en Supabase
 
-Ejecuta una auditoria completa de un producto AMFE en Supabase. Si no se especifica producto, auditar TODOS.
+Run a comprehensive audit of AMFE documents in Supabase. If an argument is provided, filter to matching products; otherwise audit ALL 8 AMFEs.
 
-## Pasos
+## Connection
 
-1. Conectar a Supabase (patron .env.local)
-2. Leer el/los AMFEs especificados
-3. Para CADA AMFE, verificar:
+Connect to Supabase using `.env.local` credentials (same pattern as all project scripts).
 
-### Integridad de datos
-- `typeof data === 'object'` (NO string — ver regla anti-double-serialization en database.md)
-- `data.operations` es un array
-- Contar operaciones, work elements, failures, causes
+## Audit Checklist
 
-### Reglas AMFE (de .claude/rules/amfe.md)
-- Operaciones en MAYUSCULAS
-- Todo texto en espanol (sin parentesis en ingles)
-- Efectos VDA 3 niveles completos (effectLocal, effectNextLevel, effectEndUser)
-- S/O/D en rango 1-10 para todas las causas
-- AP calculado con tabla AIAG-VDA oficial (NO formula S*O*D)
-- CC solo para S>=9 o flamabilidad/seguridad/legal
-- Flamabilidad presente como CC en productos de cabina interior
-- Norma correcta por cliente (TL 1010 solo VW, NO en PWA)
+For EACH AMFE, verify all of the following:
 
-### Regla 1M por linea
-- Cada Work Element es UN solo item (no agrupaciones con "/")
-- Materiales directos en ops de proceso solo si hay riesgo de interaccion
+### A. Data Integrity
+- `typeof data === 'object'` (NOT string — double-serialization bug, see `.claude/rules/database.md`)
+- `data.operations` is an array
+- Count operations, work elements, failures, causes
+- No operations with 0 work elements
 
-### Acciones (CRITICO)
-- Campos de optimizacion VACIOS: preventionAction, detectionAction, responsible, targetDate, status
-- Si alguno tiene contenido, reportar como CRITICO
+### B. AMFE Rules (from `.claude/rules/amfe.md`)
+- Operation names in UPPERCASE
+- All text in Spanish (no English in parentheses)
+- VDA 3-level effects complete (effectLocal, effectNextLevel, effectEndUser)
+- S/O/D in range 1-10 for all causes
+- AP matches AIAG-VDA official table (from `modules/amfe/apTable.ts`), NOT S*O*D formula
+- CC only for S>=9 or flamabilidad/seguridad/legal
+- Flamabilidad present as CC in all interior cabin products
+- Correct norm per client (TL 1010 for VW only, NOT for PWA)
 
-### Cross-document
-- Comparar nombres de operaciones AMFE vs CP del mismo producto
-- Comparar nombres de operaciones AMFE vs PFD del mismo producto
-- Reportar mismatches
+### C. 1M Per Line Rule
+- Each Work Element is ONE single item (no "/" groupings)
+- Direct materials in process ops only if interaction risk exists
 
-4. Generar reporte PASS/FAIL con detalle por seccion
-5. Si hay FAIL, listar acciones correctivas recomendadas
+### D. Actions (CRITICAL — `.claude/rules/amfe-actions.md`)
+- ALL action fields EMPTY: preventionAction, detectionAction, responsible, targetDate, status
+- Any non-empty action = CRITICAL failure
 
-## Formato de uso
-```
-/audit-amfe              # Audita los 8 AMFEs
-/audit-amfe ARMREST      # Audita solo Armrest
-/audit-amfe PWA          # Audita los 2 PWA
-```
+### E. Cross-Document Coherence
+- Compare operation names: AMFE vs CP, AMFE vs PFD, AMFE vs HO
+- Report mismatches
+
+## Output
+
+Generate a PASS/FAIL report per product with details per section. List corrective actions for any failures.

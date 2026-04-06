@@ -1,29 +1,42 @@
+---
+name: backup
+description: Run a Supabase backup and verify data integrity of all APQP documents. Use this at the end of every session, after running fix/enrichment scripts, or whenever the user says "backup", "hacer backup", or "guardar snapshot". This is a mandatory end-of-session step per project rules.
+---
+
 # Backup Supabase + Verificacion de Integridad
 
-Ejecuta backup completo de Supabase Y verifica integridad de los datos.
+Run a full backup of all Supabase tables and verify data integrity.
 
-## Pasos
+## Steps
 
-1. Correr `node scripts/_backup.mjs` para snapshot de todas las tablas
-2. Conectar a Supabase y verificar integridad de los 8 AMFEs + 8 CPs:
+### 1. Run backup script
+```bash
+node scripts/_backup.mjs
+```
+This saves a JSON snapshot of all 12 tables to `backups/YYYY-MM-DDTHH-MM-SS/`.
 
-### Verificacion de integridad (de database.md reglas post-script)
-Para cada documento APQP:
-- `typeof data === 'object'` (NO string)
-- AMFEs: `data.operations` es array, contar ops/WE/failures/causes
-- CPs: `data.items` es array, contar items
-- HOs: `data.sheets` es array, contar sheets
-- PFDs: `data.steps` es array, contar steps
+### 2. Verify data integrity
 
-### Conteo esperado
+Connect to Supabase and check every APQP document:
+
+For each document type, verify:
+- `typeof data === 'object'` (NOT string — catches double-serialization)
+- The main array exists and is an array:
+  - AMFEs: `data.operations`
+  - CPs: `data.items`
+  - HOs: `data.sheets`
+  - PFDs: `data.steps`
+
+### 3. Verify expected counts
 - 8 amfe_documents (6 VWA + 2 PWA)
 - 8 cp_documents
 - 8 ho_documents
 - 6 pfd_documents
 - 8 product_families
-- Si alguno falta, ALERTAR
+- If any count is wrong, ALERT immediately
 
-3. Reportar resumen:
+### 4. Report
+
 ```
 === BACKUP + INTEGRIDAD ===
 Backup: backups/YYYY-MM-DDTHH-MM-SS/
@@ -35,9 +48,4 @@ INTEGRIDAD:
 ✅ 8/8 HOs: data es objeto, sheets es array
 ✅ 6/6 PFDs: data es objeto, steps es array
 ⚠️ [alertas si hay]
-```
-
-## Formato de uso
-```
-/backup          # Backup + verificacion completa
 ```
