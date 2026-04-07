@@ -28,7 +28,7 @@ export interface DbAdapter {
 // Schema DDL
 // ---------------------------------------------------------------------------
 
-const SCHEMA_VERSION = 15;
+const SCHEMA_VERSION = 16;
 
 const SCHEMA_DDL = `
 -- Version tracking
@@ -422,6 +422,19 @@ CREATE TABLE IF NOT EXISTS document_locks (
     expires_at    TEXT NOT NULL,
     PRIMARY KEY (document_id, document_type)
 );
+
+-- Soft-delete trash for APQP documents (recovery)
+CREATE TABLE IF NOT EXISTS deleted_documents (
+    id          TEXT PRIMARY KEY,
+    doc_type    TEXT NOT NULL CHECK(doc_type IN ('amfe','cp','ho','pfd')),
+    project_name TEXT,
+    data        TEXT NOT NULL,
+    deleted_at  TEXT NOT NULL DEFAULT (datetime('now')),
+    deleted_by  TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_deleted_doc_type ON deleted_documents(doc_type);
+CREATE INDEX IF NOT EXISTS idx_deleted_at ON deleted_documents(deleted_at DESC);
 `;
 
 // ---------------------------------------------------------------------------
@@ -777,6 +790,30 @@ async function runMigrations(adapter: DbAdapter): Promise<void> {
             [15, 'Add modified_by_type column for AI/user tracking']
         );
         logger.info('Database', 'Migration 15: modified_by_type column added to document tables');
+    }
+
+    // Migration 15 → 16: Add deleted_documents trash table for soft-delete recovery
+    if (currentVersion < 16) {
+        try {
+            await adapter.execute(`CREATE TABLE IF NOT EXISTS deleted_documents (
+                id          TEXT PRIMARY KEY,
+                doc_type    TEXT NOT NULL CHECK(doc_type IN ('amfe','cp','ho','pfd')),
+                project_name TEXT,
+                data        TEXT NOT NULL,
+                deleted_at  TEXT NOT NULL DEFAULT (datetime('now')),
+                deleted_by  TEXT
+            )`);
+            await adapter.execute(`CREATE INDEX IF NOT EXISTS idx_deleted_doc_type ON deleted_documents(doc_type)`);
+            await adapter.execute(`CREATE INDEX IF NOT EXISTS idx_deleted_at ON deleted_documents(deleted_at DESC)`);
+        } catch (e) {
+            logger.warn('Database', 'Migration 16: deleted_documents table creation skipped', {}, e instanceof Error ? e : undefined);
+        }
+
+        await adapter.execute(
+            `INSERT OR REPLACE INTO schema_version (version, description) VALUES (?, ?)`,
+            [16, 'Add deleted_documents trash table for soft-delete recovery']
+        );
+        logger.info('Database', 'Migration 16: deleted_documents trash table created');
     }
 }
 

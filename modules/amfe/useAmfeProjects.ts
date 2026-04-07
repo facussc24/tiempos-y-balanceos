@@ -78,6 +78,7 @@ type RequestConfirmFn = (options: {
     message: string;
     variant?: 'danger' | 'warning' | 'info';
     confirmText?: string;
+    requireTextConfirm?: string;
 }) => Promise<boolean>;
 
 export const useAmfeProjects = (
@@ -632,6 +633,7 @@ export const useAmfeProjects = (
             message: `¿Eliminar "${project}" y ${docCount === 1 ? 'su 1 AMFE' : `todos sus ${docCount} AMFEs`}? Esta accion no se puede deshacer.`,
             variant: 'danger',
             confirmText: 'Eliminar todo',
+            requireTextConfirm: project,
         });
         if (!ok) return;
         try {
@@ -669,6 +671,7 @@ export const useAmfeProjects = (
             message: `¿Eliminar "${client}" y todos sus proyectos (${totalDocs} AMFE${totalDocs !== 1 ? 's' : ''} en ${clientProjectList.length} proyecto${clientProjectList.length !== 1 ? 's' : ''})? Esta accion no se puede deshacer.`,
             variant: 'danger',
             confirmText: 'Eliminar todo',
+            requireTextConfirm: client,
         });
         if (!ok) return;
         try {

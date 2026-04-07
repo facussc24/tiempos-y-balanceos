@@ -8,6 +8,7 @@ import type { PfdDocument, PfdDocumentListItem } from '../../modules/pfd/pfdType
 import { normalizePfdStep } from '../../modules/pfd/pfdNormalize';
 import { getDatabase } from '../database';
 import { logger } from '../logger';
+import { getCurrentUserEmail } from '../currentUser';
 import { generateChecksum } from '../crypto';
 import { scheduleBackup } from '../backupService';
 
@@ -177,11 +178,25 @@ export async function savePfdDocument(id: string, doc: PfdDocument, client?: str
 }
 
 /**
- * Delete a PFD document.
+ * Delete a PFD document (with soft-delete to trash).
  */
 export async function deletePfdDocument(id: string): Promise<boolean> {
     try {
         const db = await getDatabase();
+
+        // Soft-delete: save to trash before hard delete
+        try {
+            await db.execute(
+                `INSERT OR REPLACE INTO deleted_documents (id, doc_type, project_name, data, deleted_at, deleted_by)
+                 SELECT id, 'pfd', linked_amfe_project, data, datetime('now'), ?
+                 FROM pfd_documents WHERE id = ?`,
+                [getCurrentUserEmail(), id]
+            );
+            logger.info('PfdRepo', `Document ${id} saved to trash before deletion`);
+        } catch (trashErr) {
+            logger.warn('PfdRepo', `Failed to save document ${id} to trash, proceeding with delete`, {}, trashErr instanceof Error ? trashErr : undefined);
+        }
+
         await db.execute('DELETE FROM pfd_documents WHERE id = ?', [id]);
         return true;
     } catch (err) {

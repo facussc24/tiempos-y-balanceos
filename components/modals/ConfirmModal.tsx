@@ -7,7 +7,7 @@
  * @module ConfirmModal
  * @version 1.1.0 - Added focus trap and ARIA improvements (H-07)
  */
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { AlertTriangle, Trash2, Info, X, Loader2 } from 'lucide-react';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { useModalTransition } from '../../hooks/useModalTransition';
@@ -22,6 +22,8 @@ export interface ConfirmModalProps {
     cancelText?: string;
     variant?: 'danger' | 'warning' | 'info';
     isLoading?: boolean;
+    /** If set, user must type this exact text to enable the confirm button (for high-risk bulk actions) */
+    requireTextConfirm?: string;
 }
 
 export const ConfirmModal: React.FC<ConfirmModalProps> = ({
@@ -33,7 +35,8 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
     confirmText = 'Confirmar',
     cancelText = 'Cancelar',
     variant = 'danger',
-    isLoading = false
+    isLoading = false,
+    requireTextConfirm
 }) => {
     // Animation state
     const { shouldRender, isClosing } = useModalTransition(isOpen, 200);
@@ -41,6 +44,15 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
     // A11y: Focus trap to keep Tab navigation within modal
     const modalRef = useFocusTrap(isOpen);
     const cancelButtonRef = useRef<HTMLButtonElement>(null);
+
+    // Type-to-confirm state for high-risk actions
+    const [typedConfirm, setTypedConfirm] = useState('');
+    const textConfirmMatches = !requireTextConfirm || typedConfirm === requireTextConfirm;
+
+    // Reset typed text when modal opens/closes
+    useEffect(() => {
+        if (!isOpen) setTypedConfirm('');
+    }, [isOpen]);
 
     // A11y: Auto-focus cancel button when modal opens
     useEffect(() => {
@@ -132,6 +144,24 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
                     <p id="confirm-modal-message" className="text-slate-600 text-center mb-6 whitespace-pre-line">
                         {message}
                     </p>
+
+                    {/* Type-to-confirm input for high-risk actions */}
+                    {requireTextConfirm && (
+                        <div className="mb-4">
+                            <label className="block text-sm text-slate-500 mb-1.5">
+                                Escribi <span className="font-mono font-bold text-red-600">{requireTextConfirm}</span> para confirmar:
+                            </label>
+                            <input
+                                type="text"
+                                value={typedConfirm}
+                                onChange={e => setTypedConfirm(e.target.value)}
+                                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-red-400 focus:border-red-400 outline-none"
+                                placeholder={requireTextConfirm}
+                                autoComplete="off"
+                                spellCheck={false}
+                            />
+                        </div>
+                    )}
 
                     {/* Actions */}
                     <div className="flex gap-3">

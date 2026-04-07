@@ -7,7 +7,7 @@
  * - Export / Import (.barack files)
  * - Folder sync (shared folder configuration)
  */
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
     ArrowLeft, Database, Shield, Download, Upload, FolderSync,
     RefreshCw, HardDrive, Monitor, Clock,
@@ -16,6 +16,7 @@ import {
 import { DataManagerCard } from '../components/ui/DataManagerCard';
 import { Breadcrumb } from '../components/navigation/Breadcrumb';
 import { ImportPreviewModal } from '../components/modals/ImportPreviewModal';
+import { ConfirmModal } from '../components/modals/ConfirmModal';
 import { ImportConflictModal } from '../components/modals/ImportConflictModal';
 import { logger } from '../utils/logger';
 
@@ -78,6 +79,10 @@ const DataManager: React.FC<DataManagerProps> = ({ onBackToLanding }) => {
     const [deviceName, setDeviceNameState] = useState('');
     const [editingName, setEditingName] = useState(false);
 
+    // Restore confirmation
+    const [showRestoreConfirm, setShowRestoreConfirm] = useState(false);
+    const pendingRestoreRef = useRef<BackupInfo | null>(null);
+
     // Toast
     const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
@@ -95,6 +100,7 @@ const DataManager: React.FC<DataManagerProps> = ({ onBackToLanding }) => {
             try {
                 // Document counts
                 const db = await getDatabase();
+                // Table names from hardcoded allowlist — safe to interpolate
                 const tables = ['projects', 'amfe_documents', 'cp_documents', 'ho_documents', 'pfd_documents', 'solicitud_documents'];
                 const counts: Record<string, number> = {};
                 for (const t of tables) {
@@ -149,8 +155,16 @@ const DataManager: React.FC<DataManagerProps> = ({ onBackToLanding }) => {
         }
     };
 
-    const handleRestore = async (backup: BackupInfo) => {
-        if (!confirm(`Esto va a REEMPLAZAR toda tu data actual con el backup del ${formatDate(backup.createdAt)}.\n\nEstas seguro?`)) return;
+    const handleRestore = useCallback((backup: BackupInfo) => {
+        pendingRestoreRef.current = backup;
+        setShowRestoreConfirm(true);
+    }, []);
+
+    const handleRestoreConfirm = useCallback(async () => {
+        const backup = pendingRestoreRef.current;
+        if (!backup) return;
+        setShowRestoreConfirm(false);
+        pendingRestoreRef.current = null;
         setIsRestoring(true);
         try {
             const ok = await restoreFromBackup(backup.path);
@@ -158,9 +172,9 @@ const DataManager: React.FC<DataManagerProps> = ({ onBackToLanding }) => {
                 showToast('Base de datos restaurada correctamente');
                 // Refresh counts
                 const db = await getDatabase();
-                const tables = ['projects', 'amfe_documents', 'cp_documents', 'ho_documents', 'pfd_documents', 'solicitud_documents'];
+                const ALLOWED_TABLES = ['projects', 'amfe_documents', 'cp_documents', 'ho_documents', 'pfd_documents', 'solicitud_documents'] as const;
                 const counts: Record<string, number> = {};
-                for (const t of tables) {
+                for (const t of ALLOWED_TABLES) {
                     const rows = await db.select<{ cnt: number }>(`SELECT COUNT(*) as cnt FROM ${t}`);
                     counts[t] = rows[0]?.cnt ?? 0;
                 }
@@ -171,7 +185,12 @@ const DataManager: React.FC<DataManagerProps> = ({ onBackToLanding }) => {
         } finally {
             setIsRestoring(false);
         }
-    };
+    }, [showToast]);
+
+    const handleRestoreCancel = useCallback(() => {
+        setShowRestoreConfirm(false);
+        pendingRestoreRef.current = null;
+    }, []);
 
     const handleToggleAutoBackup = () => {
         const next = !autoBackup;
@@ -658,6 +677,20 @@ const DataManager: React.FC<DataManagerProps> = ({ onBackToLanding }) => {
                     </DataManagerCard>
                 </div>
             </div>
+
+            {/* Restore Backup Confirmation Modal */}
+            <ConfirmModal
+                isOpen={showRestoreConfirm}
+                onClose={handleRestoreCancel}
+                onConfirm={handleRestoreConfirm}
+                title="Restaurar Backup"
+                message="Esto va a REEMPLAZAR toda tu data actual con el backup seleccionado.
+
+Toda la informacion actual se perdera. Esta accion no se puede deshacer."
+                confirmText="Restaurar"
+                variant="danger"
+                isLoading={isRestoring}
+            />
 
             {/* Import Preview Modal */}
             <ImportPreviewModal

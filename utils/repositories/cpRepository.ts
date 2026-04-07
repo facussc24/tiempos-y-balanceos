@@ -197,11 +197,25 @@ export async function saveCpDocument(
 }
 
 /**
- * Delete a CP document by ID.
+ * Delete a CP document by ID (with soft-delete to trash).
  */
 async function deleteCpDocument(id: string): Promise<boolean> {
     try {
         const db = await getDatabase();
+
+        // Soft-delete: save to trash before hard delete
+        try {
+            await db.execute(
+                `INSERT OR REPLACE INTO deleted_documents (id, doc_type, project_name, data, deleted_at, deleted_by)
+                 SELECT id, 'cp', project_name, data, datetime('now'), ?
+                 FROM cp_documents WHERE id = ?`,
+                [getCurrentUserEmail(), id]
+            );
+            logger.info('CpRepo', `Document ${id} saved to trash before deletion`);
+        } catch (trashErr) {
+            logger.warn('CpRepo', `Failed to save document ${id} to trash, proceeding with delete`, {}, trashErr instanceof Error ? trashErr : undefined);
+        }
+
         await db.execute('DELETE FROM cp_documents WHERE id = ?', [id]);
         return true;
     } catch (err) {
@@ -211,11 +225,25 @@ async function deleteCpDocument(id: string): Promise<boolean> {
 }
 
 /**
- * Delete a CP document by project name.
+ * Delete a CP document by project name (with soft-delete to trash).
  */
 export async function deleteCpByProjectName(projectName: string): Promise<boolean> {
     try {
         const db = await getDatabase();
+
+        // Soft-delete: save to trash before hard delete
+        try {
+            await db.execute(
+                `INSERT OR REPLACE INTO deleted_documents (id, doc_type, project_name, data, deleted_at, deleted_by)
+                 SELECT id, 'cp', project_name, data, datetime('now'), ?
+                 FROM cp_documents WHERE project_name = ?`,
+                [getCurrentUserEmail(), projectName]
+            );
+            logger.info('CpRepo', `CP document(s) for project '${projectName}' saved to trash before deletion`);
+        } catch (trashErr) {
+            logger.warn('CpRepo', `Failed to save CP document(s) for project '${projectName}' to trash, proceeding with delete`, {}, trashErr instanceof Error ? trashErr : undefined);
+        }
+
         await db.execute('DELETE FROM cp_documents WHERE project_name = ?', [projectName]);
         return true;
     } catch (err) {

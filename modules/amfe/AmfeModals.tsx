@@ -97,6 +97,7 @@ const AmfeModals: React.FC<AmfeModalsProps> = ({
             message={confirmState.message}
             variant={confirmState.variant}
             confirmText={confirmState.confirmText}
+            requireTextConfirm={confirmState.requireTextConfirm}
         />
 
         {/* Help Panel */}

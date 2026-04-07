@@ -14,6 +14,8 @@ export interface AmfeConfirmState {
     message: string;
     variant: 'danger' | 'warning' | 'info';
     confirmText: string;
+    /** If set, user must type this exact text to enable the confirm button */
+    requireTextConfirm?: string;
 }
 
 const INITIAL_STATE: AmfeConfirmState = {
@@ -22,6 +24,7 @@ const INITIAL_STATE: AmfeConfirmState = {
     message: '',
     variant: 'danger',
     confirmText: 'Confirmar',
+    requireTextConfirm: undefined,
 };
 
 /**
@@ -43,6 +46,7 @@ export function useAmfeConfirm() {
         message: string;
         variant?: 'danger' | 'warning' | 'info';
         confirmText?: string;
+        requireTextConfirm?: string;
     }): Promise<boolean> => {
         return new Promise(resolve => {
             resolverRef.current = resolve;
@@ -52,6 +56,7 @@ export function useAmfeConfirm() {
                 message: options.message,
                 variant: options.variant || 'danger',
                 confirmText: options.confirmText || 'Confirmar',
+                requireTextConfirm: options.requireTextConfirm,
             });
         });
     }, []);

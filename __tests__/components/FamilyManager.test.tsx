@@ -684,10 +684,9 @@ describe('FamilyManager', () => {
     // -----------------------------------------------------------------------
 
     describe('Delete', () => {
-        it('trash icon click shows confirm dialog (mock window.confirm)', async () => {
+        it('trash icon click shows ConfirmModal dialog', async () => {
             const family = makeFamily({ id: 10, name: 'Delete Me' });
             setupDefaultMocks([family]);
-            const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false);
 
             await renderAndWait();
             await waitFor(() => {
@@ -697,19 +696,21 @@ describe('FamilyManager', () => {
             const deleteBtn = screen.getByTitle('Eliminar familia');
             fireEvent.click(deleteBtn);
 
-            expect(confirmSpy).toHaveBeenCalledWith(
-                expect.stringContaining('Delete Me')
-            );
-            // Since confirm returned false, deleteFamily should NOT be called
-            expect(mockDeleteFamily).not.toHaveBeenCalled();
+            // ConfirmModal should appear with the title "Eliminar Familia"
+            await waitFor(() => {
+                expect(screen.getByText('Eliminar Familia')).toBeDefined();
+            });
 
-            confirmSpy.mockRestore();
+            // Click "Cancelar" to dismiss the modal
+            fireEvent.click(screen.getByText('Cancelar'));
+
+            // Since we cancelled, deleteFamily should NOT be called
+            expect(mockDeleteFamily).not.toHaveBeenCalled();
         });
 
         it('calls deleteFamily on confirm', async () => {
             const family = makeFamily({ id: 10, name: 'Delete Me' });
             setupDefaultMocks([family]);
-            const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
 
             await renderAndWait();
             await waitFor(() => {
@@ -719,18 +720,23 @@ describe('FamilyManager', () => {
             const deleteBtn = screen.getByTitle('Eliminar familia');
             fireEvent.click(deleteBtn);
 
+            // Wait for ConfirmModal to appear
+            await waitFor(() => {
+                expect(screen.getByText('Eliminar Familia')).toBeDefined();
+            });
+
+            // Click "Eliminar" to confirm deletion
+            fireEvent.click(screen.getByText('Eliminar'));
+
             await waitFor(() => {
                 expect(mockDeleteFamily).toHaveBeenCalledWith(10);
             });
-
-            confirmSpy.mockRestore();
         });
 
         it('selected family cleared if deleted (returns to list view)', async () => {
             const family = makeFamily({ id: 10, name: 'Active Family' });
             setupDefaultMocks([family]);
             mockGetFamilyMembers.mockResolvedValue([]);
-            const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
 
             await renderAndWait();
             await waitFor(() => {
@@ -753,12 +759,18 @@ describe('FamilyManager', () => {
             const deleteBtn = screen.getByTitle('Eliminar familia');
             fireEvent.click(deleteBtn);
 
+            // Wait for ConfirmModal to appear
+            await waitFor(() => {
+                expect(screen.getByText('Eliminar Familia')).toBeDefined();
+            });
+
+            // Click "Eliminar" to confirm deletion
+            fireEvent.click(screen.getByText('Eliminar'));
+
             await waitFor(() => {
                 expect(mockDeleteFamily).toHaveBeenCalledWith(10);
                 expect(mockListFamilies).toHaveBeenCalled();
             });
-
-            confirmSpy.mockRestore();
         });
     });
 

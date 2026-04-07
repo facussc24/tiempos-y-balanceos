@@ -6,6 +6,7 @@
  */
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { ConfirmModal } from './ConfirmModal';
 import { X, Plus, Trash2, Star, Users, Search, Package, AlertCircle, Loader2, FileText, Link2, Unlink, GitBranch, Copy, CheckCircle } from 'lucide-react';
 import type { ProductFamily, ProductFamilyMember } from '../../utils/repositories/familyRepository';
 import {
@@ -122,6 +123,7 @@ const FamilyManager: React.FC<FamilyManagerProps> = ({ onClose }) => {
     const [stats, setStats] = useState({ familyCount: 0, orphanCount: 0 });
     const [selectedFamily, setSelectedFamily] = useState<ProductFamily | null>(null);
     const [members, setMembers] = useState<ProductFamilyMember[]>([]);
+    const [deletePending, setDeletePending] = useState<ProductFamily | null>(null);
     const [error, setError] = useState<string | null>(null);
 
     // Form state
@@ -252,8 +254,15 @@ const FamilyManager: React.FC<FamilyManagerProps> = ({ onClose }) => {
         }
     }, [formName, formDescription, loadFamilies]);
 
-    const handleDelete = useCallback(async (family: ProductFamily) => {
-        if (!confirm(`¿Eliminar la familia "${family.name}" y todas sus asignaciones?`)) return;
+    const handleDelete = useCallback((family: ProductFamily) => {
+        setDeletePending(family);
+    }, []);
+
+    const handleDeleteConfirm = useCallback(async () => {
+        const family = deletePending;
+        if (!family) return;
+        setDeletePending(null);
+        // was: if (!confirm(`¿Eliminar la familia "${family.name}" y todas sus asignaciones?`)) return;
         try {
             await deleteFamily(family.id);
             loadFamilies();
@@ -264,7 +273,7 @@ const FamilyManager: React.FC<FamilyManagerProps> = ({ onClose }) => {
         } catch {
             setError('Error al eliminar familia');
         }
-    }, [loadFamilies, selectedFamily]);
+    }, [deletePending, loadFamilies, selectedFamily]);
 
     const handleEditFamily = useCallback(async (family: ProductFamily) => {
         setError(null);
@@ -1056,6 +1065,16 @@ const FamilyManager: React.FC<FamilyManagerProps> = ({ onClose }) => {
                     )}
                 </div>
             </div>
+            {/* Delete Family Confirmation Modal */}
+            <ConfirmModal
+                isOpen={deletePending !== null}
+                onClose={() => setDeletePending(null)}
+                onConfirm={handleDeleteConfirm}
+                title="Eliminar Familia"
+                message={`¿Eliminar la familia "${deletePending?.name ?? ""}" y todas sus asignaciones? Esta accion no se puede deshacer.`}
+                confirmText="Eliminar"
+                variant="danger"
+            />
         </div>
     );
 };

@@ -9,6 +9,7 @@ import type { HoDocument } from '../../modules/hojaOperaciones/hojaOperacionesTy
 import { normalizeHoDocument } from '../../modules/hojaOperaciones/hojaOperacionesTypes';
 import { getDatabase } from '../database';
 import { logger } from '../logger';
+import { getCurrentUserEmail } from '../currentUser';
 import { generateChecksum } from '../crypto';
 import { scheduleBackup } from '../backupService';
 
@@ -155,11 +156,25 @@ export async function saveHoDocument(id: string, doc: HoDocument, linkedAmfeId?:
 }
 
 /**
- * Delete an HO document.
+ * Delete an HO document (with soft-delete to trash).
  */
 export async function deleteHoDocument(id: string): Promise<boolean> {
     try {
         const db = await getDatabase();
+
+        // Soft-delete: save to trash before hard delete
+        try {
+            await db.execute(
+                `INSERT OR REPLACE INTO deleted_documents (id, doc_type, project_name, data, deleted_at, deleted_by)
+                 SELECT id, 'ho', linked_amfe_project, data, datetime('now'), ?
+                 FROM ho_documents WHERE id = ?`,
+                [getCurrentUserEmail(), id]
+            );
+            logger.info('HoRepo', `Document ${id} saved to trash before deletion`);
+        } catch (trashErr) {
+            logger.warn('HoRepo', `Failed to save document ${id} to trash, proceeding with delete`, {}, trashErr instanceof Error ? trashErr : undefined);
+        }
+
         await db.execute('DELETE FROM ho_documents WHERE id = ?', [id]);
         return true;
     } catch (err) {
