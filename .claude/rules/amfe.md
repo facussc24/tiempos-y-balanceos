@@ -83,17 +83,29 @@ NUNCA dejar ningun nivel vacio.
 
 ## PROHIBIDO: "Capacitacion" como causa de falla
 
-- NUNCA poner "Falta de capacitacion", "Falta de entrenamiento", "Operario no capacitado" como causa de falla.
+- NUNCA poner "Falta de capacitacion", "Falta de entrenamiento", "Operario no capacitado" como causa.
 - Se ASUME que los operarios SIEMPRE estan capacitados (requisito IATF 16949).
-- Si la causa fuera "falta de capacitacion", la solucion es "capacitar" → loop infinito sin control real.
-- La causa REAL debe ser un defecto del PROCESO, METODO o SISTEMA.
-- "Capacitacion" SI puede aparecer como CONTROL DE PREVENCION, pero NUNCA como causa raiz.
+- La causa REAL debe ser defecto del PROCESO, METODO o SISTEMA (ej: "Instruccion de trabajo incompleta").
+- "Capacitacion" SI puede aparecer como CONTROL DE PREVENCION (es control conductual), pero:
+  - Es control CONDUCTUAL -> asignar O=7-8 si es el unico control preventivo
+  - Para bajar O a 4 o menos -> necesita controles TECNICOS (poka-yoke, scanner, sensor)
+  - Un auditor IATF la considerara insuficiente sola
 
-## Funcion del Item (focusElementFunction) — nivel PRODUCTO
+## Funcion del Item (focusElementFunction) — 3 FUNCIONES OBLIGATORIAS
 
-- `op.focusElementFunction` es la funcion del PRODUCTO/SISTEMA para el cliente final.
-- Es la MISMA para todas las operaciones del mismo AMFE (no cambia por OP).
-- NO confundir con la funcion del PASO (operationFunction) que SI es especifica por operacion.
+`op.focusElementFunction` requiere 3 perspectivas (AIAG-VDA):
+1. **Funcion INTERNA (tu planta):** que hace la pieza en Barack (ensamble, encastre, integridad bordes)
+2. **Funcion CLIENTE (OEM):** que hace en la linea del cliente (montaje, Gap & Flush, fuerza insercion)
+3. **Funcion USUARIO FINAL:** que hace para el conductor (estetica, confort, seguridad airbag, S&R)
+
+Es la MISMA para todas las operaciones del mismo AMFE. Separar con " / ".
+
+## Material en 6M — SOLO indirectos de proceso
+
+- Material 6M = adhesivo, grasa, solvente, concentracion lavado (indirectos de proceso)
+- Clips, film, etiquetas, tornillos = COMPONENTES -> van en WE tipo "Man" (riesgo de error humano)
+- Materiales directos (tela, hilo, sustrato, plastico) -> solo en OP 10 Recepcion
+- Quimicos de proceso (primer, fenoclor) -> SI van como Material 6M (son indirectos)
 
 ## Reglas especificas
 
