@@ -3,6 +3,44 @@
 Archivo mantenido por Claude Code. Se actualiza despues de cada sesion donde algo salio mal o se aprendio algo nuevo.
 Leer al inicio de cada sesion para no repetir errores.
 
+
+## 2026-04-07 — Inconsistencia de nombres de campos entre documentos VWA
+
+**Problema**: Los AMFEs VWA usaban nombres de campos no estandarizados heredados de los PDFs de referencia de planta. Especificamente:
+- `operationNumber` en vez de `opNumber` (el campo que usa el TypeScript)
+- `operationName` en vez de `name`
+- `actionPriority` en vez de `ap`
+- `severity` en la causa en vez de en el failure (el estandar VDA lo pone en el failure)
+
+Esto afectaba a los 6 AMFEs VWA (HEADREST_FRONT, HEADREST_REAR_CEN, HEADREST_REAR_OUT, ARMREST_DOOR_PANEL, TOP_ROLL, INSERT) y al IP PAD. Los PWA tambien tenian string "undefined" en campos ap/actionPriority.
+
+**Correccion aplicada**:
+- Se crearon aliases bidireccionales: cada operacion ahora tiene TANTO `opNumber` como `operationNumber`, TANTO `name` como `operationName`.
+- Se movio `severity` de la causa al failure (max de las causas hijas).
+- Se agrego `ap` como alias de `actionPriority` en todas las causas.
+- Se limpiaron strings literales "undefined" en todos los documentos.
+- La funcion `normalizeAmfeDoc()` en `amfeRepository.ts` ayuda en runtime pero solo rellena defaults vacios, NO renombra campos existentes.
+
+**Regla**: Al cargar datos desde PDFs de referencia, verificar que los nombres de campos coincidan con los tipos TypeScript (`amfeTypes.ts`). Los campos canonicos son `opNumber`, `name`, `ap`, y severity en el failure (no en la causa).
+
+## 2026-04-07 — Auditoria de seguridad: protecciones contra eliminacion accidental
+
+**Problema**: Fak reportó que todos los AMFEs se borraron de Supabase. Se investigó el código y se encontraron vulnerabilidades:
+1. `DataManager.tsx` usaba `window.confirm()` nativo para restaurar backups — un click rápido podía destruir toda la data
+2. Eliminaciones masivas (carpeta cliente/proyecto) solo pedían un click de confirmación
+3. Las operaciones DELETE en repositorios no guardaban copia de seguridad — una vez borrado, irrecuperable
+4. No existía tabla `deleted_documents` para recuperar documentos borrados
+
+**Correcciones aplicadas**:
+- Reemplazado `window.confirm()` por `ConfirmModal` con variant=danger en DataManager
+- Agregado `requireTextConfirm` al ConfirmModal — para eliminaciones masivas hay que escribir el nombre del proyecto/cliente
+- Implementado soft-delete en todos los repositorios APQP (amfe, cp, ho, pfd) — antes de DELETE, se guarda copia en `deleted_documents`
+- Creada tabla `deleted_documents` en migración SQLite v15→v16
+- Los names de tabla en queries SQL ahora usan allowlist hardcodeada (no interpolación de variables)
+
+**Regla**: Toda operación destructiva debe tener al menos ConfirmModal con variant=danger. Eliminaciones masivas (>1 doc) requieren escribir el nombre para confirmar.
+
+
 ## 2026-04-06 — Work Elements: UN solo item por fila (regla 1M por linea)
 
 **Error**: Se agrupaban multiples materiales en un solo Work Element: "Material: Tela / Refuerzos / Hilos / Aplix". Esto destruye el hilo digital del AMFE porque cada material tiene funciones y causas de falla distintas.

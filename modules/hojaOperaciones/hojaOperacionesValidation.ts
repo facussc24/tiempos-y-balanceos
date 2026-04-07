@@ -47,7 +47,7 @@ function validateSheet(sheet: HojaOperacion): HoValidationIssue[] {
     }
 
     // WARNING: preparedBy empty (don't block export for missing metadata)
-    if (!sheet.preparedBy.trim()) {
+    if (!(sheet.preparedBy || '').trim()) {
         issues.push({
             ...ctx,
             severity: 'warning',
@@ -56,7 +56,7 @@ function validateSheet(sheet: HojaOperacion): HoValidationIssue[] {
     }
 
     // WARNING: approvedBy empty (don't block export for missing metadata)
-    if (!sheet.approvedBy.trim()) {
+    if (!(sheet.approvedBy || '').trim()) {
         issues.push({
             ...ctx,
             severity: 'warning',
@@ -92,7 +92,7 @@ function validateSheet(sheet: HojaOperacion): HoValidationIssue[] {
     }
 
     // WARNING: Sector empty
-    if (!sheet.sector.trim()) {
+    if (!(sheet.sector || '').trim()) {
         issues.push({
             ...ctx,
             severity: 'warning',
@@ -123,7 +123,7 @@ function validateSheet(sheet: HojaOperacion): HoValidationIssue[] {
     }
 
     // WARNING: Reaction plan has content but no escalation contact
-    if (sheet.reactionPlanText.trim() && !sheet.reactionContact.trim()) {
+    if ((sheet.reactionPlanText || '').trim() && !(sheet.reactionContact || '').trim()) {
         issues.push({
             ...ctx,
             severity: 'warning',

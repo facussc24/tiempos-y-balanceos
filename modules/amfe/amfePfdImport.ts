@@ -106,5 +106,5 @@ export function importAmfeOpsFromPfd(
 
 /** Normalize operation number for comparison: lowercase, trim, strip "OP " prefix */
 function normalizeOpNumber(opNumber: string): string {
-    return opNumber.toLowerCase().trim().replace(/^op\s*/i, '');
+    return (opNumber || '').toLowerCase().trim().replace(/^op\s*/i, '');
 }

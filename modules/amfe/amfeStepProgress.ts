@@ -53,7 +53,7 @@ export function computeAmfeStepProgress(doc: AmfeDocument): AmfeStepStatus[] {
     let step3Pct = 0;
     if (allWEs.length > 0) {
         const wesWithFunc = allWEs.filter(we =>
-            we.functions.length > 0 && we.functions.some(f => f.description.trim() !== '')
+            we.functions.length > 0 && we.functions.some(f => (f.description || '').trim() !== '')
         );
         step3Pct = Math.round((wesWithFunc.length / allWEs.length) * 100);
     }
@@ -64,7 +64,7 @@ export function computeAmfeStepProgress(doc: AmfeDocument): AmfeStepStatus[] {
     if (allFuncs.length > 0) {
         const funcsWithFailures = allFuncs.filter(f =>
             f.failures.length > 0 && f.failures.some(fail =>
-                fail.description.trim() !== '' &&
+                (fail.description || '').trim() !== '' &&
                 (fail.effectLocal || fail.effectNextLevel || fail.effectEndUser) &&
                 Number(fail.severity) >= 1
             )

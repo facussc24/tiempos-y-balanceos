@@ -11,11 +11,65 @@ import type { AmfeRegistryEntry, AmfeRevisionEntry, AmfeLifecycleStatus } from '
 import type { AmfeLibrary, AmfeLibraryOperation } from '../../modules/amfe/amfeLibraryTypes';
 import { buildSearchableText } from '../../modules/amfe/amfeLibraryTypes';
 import { ActionPriority } from '../../modules/amfe/amfeTypes';
+import { createEmptyAmfeDoc } from '../../modules/amfe/amfeInitialData';
 import { getDatabase } from '../database';
 import { logger } from '../logger';
 import { getCurrentUserEmail } from '../currentUser';
 import { generateChecksum } from '../crypto';
 import { scheduleBackup } from '../backupService';
+
+// ---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+// Data normalization — prevents .trim() crashes on undefined fields
+// ---------------------------------------------------------------------------
+
+/** Ensure all string fields exist after JSON.parse to prevent runtime crashes. */
+function normalizeAmfeDoc(doc: AmfeDocument): void {
+    const defaults = createEmptyAmfeDoc();
+    for (const key of Object.keys(defaults.header) as (keyof typeof defaults.header)[]) {
+        if (doc.header[key] == null) {
+            (doc.header as unknown as Record<string, string>)[key] = defaults.header[key];
+        }
+    }
+    if (!Array.isArray(doc.operations)) doc.operations = [];
+    for (const op of doc.operations) {
+        op.opNumber = op.opNumber ?? '';
+        op.name = op.name ?? '';
+        if (!Array.isArray(op.workElements)) op.workElements = [];
+        for (const we of op.workElements) {
+            we.name = we.name ?? '';
+            if (!Array.isArray(we.functions)) we.functions = [];
+            for (const fn of we.functions) {
+                fn.description = fn.description ?? '';
+                if (!Array.isArray(fn.failures)) fn.failures = [];
+                for (const fail of fn.failures) {
+                    fail.description = fail.description ?? '';
+                    fail.effectLocal = fail.effectLocal ?? '';
+                    fail.effectNextLevel = fail.effectNextLevel ?? '';
+                    fail.effectEndUser = fail.effectEndUser ?? '';
+                    if (!Array.isArray(fail.causes)) fail.causes = [];
+                    for (const cause of fail.causes) {
+                        cause.cause = cause.cause ?? '';
+                        cause.preventionControl = cause.preventionControl ?? '';
+                        cause.detectionControl = cause.detectionControl ?? '';
+                        cause.preventionAction = cause.preventionAction ?? '';
+                        cause.detectionAction = cause.detectionAction ?? '';
+                        cause.responsible = cause.responsible ?? '';
+                        cause.targetDate = cause.targetDate ?? '';
+                        cause.status = cause.status ?? '';
+                        cause.observations = cause.observations ?? '';
+                        cause.ap = cause.ap ?? '';
+                        cause.specialChar = cause.specialChar ?? '';
+                        cause.characteristicNumber = cause.characteristicNumber ?? '';
+                        cause.filterCode = cause.filterCode ?? '';
+                        cause.actionTaken = cause.actionTaken ?? '';
+                        cause.completionDate = cause.completionDate ?? '';
+                    }
+                }
+            }
+        }
+    }
+}
 
 // ---------------------------------------------------------------------------
 // AMFE Document CRUD
@@ -141,6 +195,7 @@ export async function loadAmfeDocument(id: string): Promise<{ doc: AmfeDocument;
 
         const r = rows[0];
         const doc = JSON.parse(r.data) as AmfeDocument;
+        normalizeAmfeDoc(doc);
         const meta: AmfeRegistryEntry = {
             id: r.id,
             amfeNumber: r.amfe_number,
@@ -185,6 +240,7 @@ export async function loadAmfeByProjectName(projectName: string): Promise<{ doc:
 
         const r = rows[0];
         const doc = JSON.parse(r.data) as AmfeDocument;
+        normalizeAmfeDoc(doc);
         const meta: AmfeRegistryEntry = {
             id: r.id,
             amfeNumber: r.amfe_number,
@@ -268,11 +324,25 @@ export async function saveAmfeDocument(
 }
 
 /**
- * Delete an AMFE document.
+ * Delete an AMFE document (with soft-delete to trash).
  */
 export async function deleteAmfeDocument(id: string): Promise<boolean> {
     try {
         const db = await getDatabase();
+
+        // Soft-delete: save to trash before hard delete
+        try {
+            await db.execute(
+                `INSERT OR REPLACE INTO deleted_documents (id, doc_type, project_name, data, deleted_at, deleted_by)
+                 SELECT id, 'amfe', project_name, data, datetime('now'), ?
+                 FROM amfe_documents WHERE id = ?`,
+                [getCurrentUserEmail(), id]
+            );
+            logger.info('AmfeRepo', `Document ${id} saved to trash before deletion`);
+        } catch (trashErr) {
+            logger.warn('AmfeRepo', `Failed to save document ${id} to trash, proceeding with delete`, {}, trashErr instanceof Error ? trashErr : undefined);
+        }
+
         await db.execute('DELETE FROM amfe_documents WHERE id = ?', [id]);
         return true;
     } catch (err) {
@@ -291,10 +361,23 @@ export async function deleteAmfeDocumentsBatch(ids: string[]): Promise<boolean> 
         const db = await getDatabase();
         await db.execute('BEGIN TRANSACTION', []);
         try {
+            const userEmail = getCurrentUserEmail();
             for (const id of ids) {
+                // Soft-delete: save to trash before hard delete
+                try {
+                    await db.execute(
+                        `INSERT OR REPLACE INTO deleted_documents (id, doc_type, project_name, data, deleted_at, deleted_by)
+                         SELECT id, 'amfe', project_name, data, datetime('now'), ?
+                         FROM amfe_documents WHERE id = ?`,
+                        [userEmail, id]
+                    );
+                } catch (trashErr) {
+                    logger.warn('AmfeRepo', `Failed to save document ${id} to trash during batch delete`, {}, trashErr instanceof Error ? trashErr : undefined);
+                }
                 await db.execute('DELETE FROM amfe_documents WHERE id = ?', [id]);
             }
             await db.execute('COMMIT', []);
+            logger.info('AmfeRepo', `Batch-deleted ${ids.length} documents (saved to trash)`);
             return true;
         } catch (innerErr) {
             try { await db.execute('ROLLBACK', []); } catch { /* rollback best-effort */ }

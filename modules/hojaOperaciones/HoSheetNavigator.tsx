@@ -23,10 +23,10 @@ function getSheetCompletionScore(sheet: HojaOperacion): SheetScore {
         { done: sheet.steps.length > 0, label: 'Pasos' },
         { done: sheet.qualityChecks.length > 0, label: 'Controles' },
         { done: sheet.safetyElements.length > 0, label: 'EPP' },
-        { done: sheet.preparedBy.trim() !== '', label: 'Realizó' },
-        { done: sheet.approvedBy.trim() !== '', label: 'Aprobó' },
+        { done: (sheet.preparedBy || '').trim() !== '', label: 'Realizó' },
+        { done: (sheet.approvedBy || '').trim() !== '', label: 'Aprobó' },
         { done: sheet.visualAids.length > 0, label: 'Ayudas visuales' },
-        { done: sheet.reactionContact.trim() !== '', label: 'Contacto reacción' },
+        { done: (sheet.reactionContact || '').trim() !== '', label: 'Contacto reacción' },
     ];
     const done = checks.filter(c => c.done).length;
     const percent = Math.round((done / checks.length) * 100);

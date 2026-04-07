@@ -199,7 +199,7 @@ export function validateControlPlanForExport(
     let missingOwnerCount = 0;
 
     for (const item of items) {
-        if (!item.reactionPlanOwner.trim()) {
+        if (!(item.reactionPlanOwner || '').trim()) {
             missingOwnerCount++;
         }
     }
