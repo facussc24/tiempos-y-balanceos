@@ -81,6 +81,20 @@ NUNCA dejar ningun nivel vacio.
 - Ejemplo headrests: Costura Vista aplica solo a L1/L2/L3 (Rennes Black, Andino Gray, Dark Slate), no a L0 (Titan Black). Se documenta en 1 solo AMFE/CP/HO con la restriccion en el nombre.
 - La HO de la operacion condicional debe incluir instruccion explicita de verificar numero de parte antes de ejecutar.
 
+## PROHIBIDO: "Capacitacion" como causa de falla
+
+- NUNCA poner "Falta de capacitacion", "Falta de entrenamiento", "Operario no capacitado" como causa de falla.
+- Se ASUME que los operarios SIEMPRE estan capacitados (requisito IATF 16949).
+- Si la causa fuera "falta de capacitacion", la solucion es "capacitar" → loop infinito sin control real.
+- La causa REAL debe ser un defecto del PROCESO, METODO o SISTEMA.
+- "Capacitacion" SI puede aparecer como CONTROL DE PREVENCION, pero NUNCA como causa raiz.
+
+## Funcion del Item (focusElementFunction) — nivel PRODUCTO
+
+- `op.focusElementFunction` es la funcion del PRODUCTO/SISTEMA para el cliente final.
+- Es la MISMA para todas las operaciones del mismo AMFE (no cambia por OP).
+- NO confundir con la funcion del PASO (operationFunction) que SI es especifica por operacion.
+
 ## Reglas especificas
 
 - "Remito" NO es una operacion de proceso interno. Solo aplica en Recepcion de MP.
