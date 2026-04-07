@@ -94,6 +94,16 @@ Leer al inicio de cada sesion para no repetir errores.
 - **Proteccion implementada**: Se agrego codigo de proteccion contra borrado masivo en la app. Antes de eliminar multiples documentos, el sistema ahora pide confirmacion explicita y no permite borrar mas de un umbral sin validacion extra.
 - **Leccion**: SIEMPRE tener un backup reciente antes de operar sobre documentos. El backup se agrego como paso obligatorio de fin de sesion (ver regla de backup).
 
+### Carga AMFE IP PADs / TRIM ASM-UPR WRAPPING (2026-04-06)
+- **Producto nuevo** (no es una de las 8 familias canonicas). Equipo diferente: Paulo Centurion (no Carlos Baptista).
+- La columna data en Supabase amfe_documents es TEXT. typeof data === 'string' es normal. Verificar con JSON.parse(data).
+- La tabla amfe_documents NO tiene columna name. Usar subject y project_name.
+- Al insertar, campos obligatorios: id, amfe_number (UNIQUE), project_name, subject, data.
+- **Flamabilidad faltante:** El PDF fuente NO incluye flamabilidad. Es OBLIGATORIO para VWA interior. Equipo APQP debe agregarla.
+- CC solo para producto/usuario final. Seguridad del operador (cortadura, quemadura, ventilacion) NO es CC.
+- **Error copy-paste OP 130:** causa 'Falta de EPP' en FM 'Falta de identificacion' no tiene sentido. Revisar.
+- OP 120 se llamo 'INSPECCION FINAL' pero el estandar es 'CONTROL FINAL DE CALIDAD'.
+
 ### componentMaterial en CP (2026-04-06)
 - El generador de CP NUNCA llena componentMaterial automaticamente — siempre queda vacio.
 - Los materiales en items de recepcion (OP 10) deben asignarse manualmente o via script post-generacion.
