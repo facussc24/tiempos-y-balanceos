@@ -4,6 +4,30 @@ Archivo mantenido por Claude Code. Se actualiza despues de cada sesion donde alg
 Leer al inicio de cada sesion para no repetir errores.
 
 
+## 2026-04-08 — Agentes NO leen documentacion automaticamente — ERROR GRAVE
+
+**Problema**: Los agentes auditor y de modificacion AMFE NO leian los archivos de referencia (feedback_auditor_role.md, GUIA_AMFE.md, .claude/rules/amfe.md). Claude les pasaba instrucciones en el prompt pero no les decia que leyeran los protocolos. Resultado: errores obvios no detectados.
+
+**Causa raiz**: Claude asumia que el prompt era suficiente. Los archivos tienen checks que Claude puede olvidar.
+
+**Prevencion OBLIGATORIA**:
+- Agente AUDITOR: incluir en prompt "Leer feedback_auditor_role.md y ejecutar TODOS los checks"
+- Agente que MODIFICA AMFE: incluir "Leer docs/GUIA_AMFE.md y .claude/rules/amfe.md"
+- Agente que MODIFICA CP: incluir "Leer .claude/rules/control-plan.md"
+- Agente que MODIFICA HO: incluir "Leer .claude/rules/hoja-operaciones.md"
+
+---
+
+## 2026-04-08 — Failures sin severity = celdas vacias en export
+
+**Problema**: 9 failures tenian severity=undefined. Export mostraba celdas vacias. Auditor buscaba severity en causa (c.severity) en vez de failure (f.severity).
+
+**Causa raiz**: severity vive en AmfeFailure, NO en AmfeCause. Scripts que crean ops nuevas no asignaban severity al failure.
+
+**Prevencion**: Validacion A8 + checks 2a/2b en protocolo auditor.
+
+---
+
 ## 2026-04-08 — Export Excel roto por campos AMFE con nombre equivocado
 
 **Problema**: Scripts .mjs crearon WEs con campo `description` en vez de `name`+`type`, y no sincronizaron aliases `opNumber`/`operationNumber`. Export Excel lee `op.opNumber` y `we.name` — columnas vacias si faltan.
