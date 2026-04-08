@@ -121,6 +121,36 @@ const safeFormatDate = (
     }
 };
 
+/**
+ * Format any date string to Argentine format dd/MM/yyyy.
+ * Handles: ISO (2026-04-08), long Spanish, yankee (4/8/2026), etc.
+ * Returns original string if parsing fails.
+ */
+export function formatDateAR(dateStr: string | null | undefined): string {
+    if (!dateStr || typeof dateStr !== 'string' || !dateStr.trim()) return '';
+    const trimmed = dateStr.trim();
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(trimmed)) return trimmed;
+    const d = new Date(trimmed);
+    if (!isNaN(d.getTime()) && d.getFullYear() > 1900 && d.getFullYear() < 2100) {
+        const day = String(d.getDate()).padStart(2, '0');
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        return day + '/' + month + '/' + d.getFullYear();
+    }
+    const spanishMonths: Record<string, string> = {
+        'enero': '01', 'febrero': '02', 'marzo': '03', 'abril': '04',
+        'mayo': '05', 'junio': '06', 'julio': '07', 'agosto': '08',
+        'septiembre': '09', 'octubre': '10', 'noviembre': '11', 'diciembre': '12',
+    };
+    const spanishMatch = trimmed.match(/(\d{1,2})\s+de\s+(\w+)\s+de\s+(\d{4})/i);
+    if (spanishMatch) {
+        const monthNum = spanishMonths[spanishMatch[2].toLowerCase()];
+        if (monthNum) {
+            return spanishMatch[1].padStart(2, '0') + '/' + monthNum + '/' + spanishMatch[3];
+        }
+    }
+    return trimmed;
+}
+
 export const formatTime = (minutes: number): string => {
     // FIX: Guard against NaN and negative values producing invalid time strings
     if (!Number.isFinite(minutes)) return '00:00';

@@ -27,6 +27,7 @@ import { logger } from '../../utils/logger';
 import { toast } from '../../components/ui/Toast';
 import { downloadExcelJSWorkbook as downloadExcelJSWb } from '../../utils/excel';
 import { truncateApplicableParts as truncateParts } from '../../utils/productFamilyAutoFill';
+import { formatDateAR } from '../../utils/formatting';
 
 // ============================================================================
 // CONSTANTS
@@ -384,7 +385,7 @@ async function buildHoSheet(
     addLabel(ws, r, FIRST_COL + 2, 'APROBÓ');
     setVal(ws, r, FIRST_COL + 3, sheet.approvedBy);
     addLabel(ws, r, FIRST_COL + 4, 'FECHA');
-    setVal(ws, r, FIRST_COL + 5, sheet.date);
+    setVal(ws, r, FIRST_COL + 5, formatDateAR(sheet.date));
     addLabel(ws, r, FIRST_COL + 6, 'REV.');
     setVal(ws, r, LAST_COL, sheet.revision);
     ws.getRow(r).height = 24;

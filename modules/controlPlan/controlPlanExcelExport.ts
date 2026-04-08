@@ -18,6 +18,7 @@ import { sanitizeFilename } from '../../utils/filenameSanitization';
 import { sanitizeCellValue } from '../../utils/sanitizeCellValue';
 import { downloadWorkbook, generateWorkbookBuffer } from '../../utils/excel';
 import { truncateApplicableParts as truncateParts } from '../../utils/productFamilyAutoFill';
+import { formatDateAR } from '../../utils/formatting';
 
 // ============================================================================
 // CONSTANTS
@@ -317,7 +318,7 @@ export function buildControlPlanWorkbook(doc: ControlPlanDocument): XLSX.WorkBoo
 
     // ── Rows 2-7: Header metadata (3 label-value pairs per row) ──
     const headerInfo: [string, string, string, string, string, string][] = [
-        ['Nro. Plan de Control', h.controlPlanNumber, 'Nro. Pieza',            h.partNumber,             'Fecha',              h.date],
+        ['Nro. Plan de Control', h.controlPlanNumber, 'Nro. Pieza',            h.partNumber,             'Fecha',              formatDateAR(h.date)],
         ['Pieza',                h.partName,           'Nivel de Cambio',       h.latestChangeLevel,      'Revision',           h.revision],
         ['Organizacion / Planta', h.organization,      'Proveedor',             h.supplier,               'Cod. Proveedor',     h.supplierCode],
         ['Contacto / Telefono', h.keyContactPhone,     'Cliente',               h.client,                 'Responsable',        h.responsible],

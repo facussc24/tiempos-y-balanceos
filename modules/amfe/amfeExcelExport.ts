@@ -19,6 +19,7 @@ import { sanitizeFilename } from '../../utils/filenameSanitization';
 import { sanitizeCellValue } from '../../utils/sanitizeCellValue';
 import { downloadWorkbook, generateWorkbookBuffer } from '../../utils/excel';
 import { truncateApplicableParts as truncateParts } from '../../utils/productFamilyAutoFill';
+import { formatDateAR } from '../../utils/formatting';
 
 export { sanitizeCellValue } from '../../utils/sanitizeCellValue';
 
@@ -283,7 +284,7 @@ function buildMetadataRows(doc: AmfeDocument, colWidths: number[]): { rows: any[
         ['Ubicacion', h.location, 'Nro. Pieza', h.partNumber],
         ['Responsable', h.responsible, 'Resp. Proceso', h.processResponsible],
         ['Equipo', h.team, 'Modelo / Año', h.modelYear],
-        ['Fecha Inicio', h.startDate, 'Fecha Rev.', h.revDate],
+        ['Fecha Inicio', formatDateAR(h.startDate), 'Fecha Rev.', formatDateAR(h.revDate)],
         ['Revision', h.revision, 'Aprobado por', h.approvedBy],
         ['Alcance', h.scope, 'Asunto', h.subject],
         ...(h.applicableParts?.trim() ? [['Piezas Aplicables', truncateParts(h.applicableParts).replace(/\n/g, ' · '), '', ''] as [string, string, string, string]] : []),
