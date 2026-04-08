@@ -187,6 +187,35 @@ RESUMEN: NUNCA inventar acciones. Solo el equipo humano las define.
 NUNCA confirmar ni conservar valores numericos sin confirmacion explicita de Fak.
 En caso de duda: TBD. Solo Fak valida datos de ingenieria.
 
+## Schema de campos AMFE — OBLIGATORIO para scripts .mjs
+
+Los scripts .mjs DEBEN usar AMBOS nombres de campo (alias). El TypeScript usa unos, el export Excel usa otros. Si falta uno, el export se rompe.
+
+### AmfeOperation (los 2 aliases son OBLIGATORIOS)
+- `opNumber` + `operationNumber` (AMBOS, identicos)
+- `name` + `operationName` (AMBOS, identicos)
+- `focusElementFunction`, `operationFunction`
+- `workElements[]`
+
+### AmfeWorkElement
+- `name` (NO usar "description" — campo inexistente)
+- `type` ("Machine", "Man", "Method", "Material", "Measurement", "Environment")
+- `functions[]`
+
+### AmfeFunction
+- `description` + `functionDescription` (AMBOS)
+- `requirements` (puede ser vacio)
+- `failures[]`
+
+### AmfeCause
+- `ap` + `actionPriority` (AMBOS, identicos)
+- `cause` + `description` (AMBOS — "cause" es el texto de la causa)
+- `severity`, `occurrence`, `detection` (numeros)
+- `preventionControl`, `detectionControl`
+- `specialChar`, `characteristicNumber`, `filterCode`
+
+**INCIDENTE 2026-04-08:** Scripts usaron nombres de campo incorrectos (description vs name, operationNumber sin opNumber). Rompieron el export Excel completamente. SIEMPRE verificar contra un WE existente que funcione antes de crear nuevos.
+
 ## Guias obligatorias
 
 Leer ANTES de modificar datos AMFE:

@@ -4,6 +4,18 @@ Archivo mantenido por Claude Code. Se actualiza despues de cada sesion donde alg
 Leer al inicio de cada sesion para no repetir errores.
 
 
+## 2026-04-08 — Export Excel roto por campos AMFE con nombre equivocado
+
+**Problema**: Scripts .mjs crearon WEs con campo `description` en vez de `name`+`type`, y no sincronizaron aliases `opNumber`/`operationNumber`. Export Excel lee `op.opNumber` y `we.name` — columnas vacias si faltan.
+
+**Causa raiz**: Scripts no conocen el schema TypeScript. AMBOS aliases deben existir: opNumber+operationNumber, name+operationName, ap+actionPriority, cause+description.
+
+**Fix**: fixIpPadWeFields.mjs + fixIpPadAliases.mjs. Regla agregada en .claude/rules/amfe.md seccion Schema.
+
+**Prevencion**: SIEMPRE leer un WE existente como referencia antes de crear nuevos. SIEMPRE usar ambos aliases.
+
+---
+
 ## 2026-04-07 — Inconsistencia de nombres de campos entre documentos VWA
 
 **Problema**: Los AMFEs VWA usaban nombres de campos no estandarizados heredados de los PDFs de referencia de planta. Especificamente:
@@ -22,6 +34,18 @@ Esto afectaba a los 6 AMFEs VWA (HEADREST_FRONT, HEADREST_REAR_CEN, HEADREST_REA
 - La funcion `normalizeAmfeDoc()` en `amfeRepository.ts` ayuda en runtime pero solo rellena defaults vacios, NO renombra campos existentes.
 
 **Regla**: Al cargar datos desde PDFs de referencia, verificar que los nombres de campos coincidan con los tipos TypeScript (`amfeTypes.ts`). Los campos canonicos son `opNumber`, `name`, `ap`, y severity en el failure (no en la causa).
+
+## 2026-04-08 — Export Excel roto por campos AMFE con nombre equivocado
+
+**Problema**: Scripts .mjs crearon WEs con campo `description` en vez de `name`+`type`, y no sincronizaron aliases `opNumber`/`operationNumber`. Export Excel lee `op.opNumber` y `we.name` — columnas vacias si faltan.
+
+**Causa raiz**: Scripts no conocen el schema TypeScript. AMBOS aliases deben existir: opNumber+operationNumber, name+operationName, ap+actionPriority, cause+description.
+
+**Fix**: fixIpPadWeFields.mjs + fixIpPadAliases.mjs. Regla agregada en .claude/rules/amfe.md seccion Schema.
+
+**Prevencion**: SIEMPRE leer un WE existente como referencia antes de crear nuevos. SIEMPRE usar ambos aliases.
+
+---
 
 ## 2026-04-07 — Auditoria de seguridad: protecciones contra eliminacion accidental
 
@@ -146,6 +170,18 @@ Esto afectaba a los 6 AMFEs VWA (HEADREST_FRONT, HEADREST_REAR_CEN, HEADREST_REA
 - El generador de CP NUNCA llena componentMaterial automaticamente — siempre queda vacio.
 - Los materiales en items de recepcion (OP 10) deben asignarse manualmente o via script post-generacion.
 - Validacion B1 advierte pero no bloquea items de recepcion sin material.
+
+## 2026-04-08 — Export Excel roto por campos AMFE con nombre equivocado
+
+**Problema**: Scripts .mjs crearon WEs con campo `description` en vez de `name`+`type`, y no sincronizaron aliases `opNumber`/`operationNumber`. Export Excel lee `op.opNumber` y `we.name` — columnas vacias si faltan.
+
+**Causa raiz**: Scripts no conocen el schema TypeScript. AMBOS aliases deben existir: opNumber+operationNumber, name+operationName, ap+actionPriority, cause+description.
+
+**Fix**: fixIpPadWeFields.mjs + fixIpPadAliases.mjs. Regla agregada en .claude/rules/amfe.md seccion Schema.
+
+**Prevencion**: SIEMPRE leer un WE existente como referencia antes de crear nuevos. SIEMPRE usar ambos aliases.
+
+---
 
 ## 2026-04-07 — Reemplazo motor PFD: SVG → HTML/Tailwind
 
