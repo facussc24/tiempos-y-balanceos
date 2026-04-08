@@ -1,0 +1,96 @@
+{
+  "pages": [
+    {
+      "page_num": 1,
+      "text": "LC:\nA\nFICHA TÉCNICA\nDENOMINACIÓN: CODIGO:\nRefuerzo Tricapa 600 g/m2 TBD\nREFERENCIA: CLIENTE/MODELO:\n-\nHilux\nEMITIO APROBO FUM\nFecha 27/01/202 27/01/202\n6\nResponsable P. Centurión\nFirma\nFECHA LC DETALLE DEL CAMBIO\n27/01/2026 A Emisión inicial.\nESTA COPIA NO TIENE VALIDEZ SIN EL SELLO CORRESPONDIENTE"
+    }
+  ],
+  "tables": [
+    {
+      "page": 1,
+      "table_index": 0,
+      "data": [
+        [
+          "",
+          "FICHA TÉCNICA",
+          null,
+          "LC:\nA"
+        ],
+        [
+          "DENOMINACIÓN:\nRefuerzo Tricapa 600 g/m2",
+          null,
+          "CODIGO:\nTBD",
+          null
+        ],
+        [
+          "REFERENCIA:\n-",
+          null,
+          "CLIENTE/MODELO:\nHilux",
+          null
+        ],
+        [
+          "",
+          null,
+          null,
+          null
+        ]
+      ]
+    },
+    {
+      "page": 1,
+      "table_index": 1,
+      "data": [
+        [
+          "",
+          "EMITIO",
+          "APROBO",
+          "FUM"
+        ],
+        [
+          "Fecha",
+          "",
+          "27/01/202",
+          "27/01/202\n6"
+        ],
+        [
+          "Responsable",
+          "",
+          "P. Centurión",
+          ""
+        ],
+        [
+          "Firma",
+          "",
+          "",
+          ""
+        ]
+      ]
+    },
+    {
+      "page": 1,
+      "table_index": 2,
+      "data": [
+        [
+          "FECHA",
+          "LC",
+          "DETALLE DEL CAMBIO"
+        ],
+        [
+          "27/01/2026",
+          "A",
+          "Emisión inicial."
+        ],
+        [
+          "",
+          "",
+          ""
+        ],
+        [
+          "",
+          "",
+          ""
+        ]
+      ]
+    }
+  ]
+}

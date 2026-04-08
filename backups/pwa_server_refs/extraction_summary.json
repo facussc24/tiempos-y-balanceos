@@ -1,0 +1,247 @@
+{
+  "extraction_date": "2026-04-06",
+  "files_extracted": [
+    {
+      "source": "\\\\SERVER\\compartido\\BARACK\\CALIDAD\\DOCUMENTACION SGC\\PPAP CLIENTES\\PWA\\1- TOYOTA_TELAS_ PLANAS_581D\\APQP\\7-Lista de materiales\\Listado de materiales.xlsx",
+      "output": "C:\\Users\\FacundoS-PC\\dev\\BarackMercosul\\backups\\pwa_server_refs\\planas_581d_materials_list.json",
+      "type": "xlsx",
+      "sheets": [
+        "Hoja1"
+      ],
+      "status": "OK"
+    },
+    {
+      "source": "\\\\SERVER\\compartido\\BARACK\\CALIDAD\\DOCUMENTACION SGC\\PPAP CLIENTES\\PWA\\1- TOYOTA_TELAS_ PLANAS_581D\\APQP\\9-Flujograma del proceso preliminar\\FLUJOGRAMA_150_TELAS_581D_REV.pdf",
+      "output": "C:\\Users\\FacundoS-PC\\dev\\BarackMercosul\\backups\\pwa_server_refs\\planas_581d_flujograma.json",
+      "type": "pdf",
+      "pages": 1,
+      "tables_found": 14,
+      "status": "OK"
+    },
+    {
+      "source": "\\\\SERVER\\compartido\\BARACK\\CALIDAD\\DOCUMENTACION SGC\\PPAP CLIENTES\\PWA\\1- TOYOTA_TELAS_ PLANAS_581D\\APQP\\19-Normas y Especificaciones de embalaje\\FICHA DE EMBALAJE HILUX 581D REV.A.pdf",
+      "output": "C:\\Users\\FacundoS-PC\\dev\\BarackMercosul\\backups\\pwa_server_refs\\planas_581d_embalaje.json",
+      "type": "pdf",
+      "pages": 1,
+      "tables_found": 1,
+      "status": "OK"
+    },
+    {
+      "source": "\\\\SERVER\\compartido\\BARACK\\CALIDAD\\DOCUMENTACION SGC\\PPAP CLIENTES\\PWA\\1- TOYOTA_TELAS_ PLANAS_581D\\APQP\\8- Ficha tecnica\\Ficha técnica 3250T_30_2000_50 Rev 01.docx",
+      "output": "C:\\Users\\FacundoS-PC\\dev\\BarackMercosul\\backups\\pwa_server_refs\\planas_581d_ft_Ficha_técnica_3250T_30_2000_50_Rev_01.json",
+      "type": "docx",
+      "paragraphs": 0,
+      "tables_found": 1,
+      "status": "OK"
+    },
+    {
+      "source": "\\\\SERVER\\compartido\\BARACK\\CALIDAD\\DOCUMENTACION SGC\\PPAP CLIENTES\\PWA\\1- TOYOTA_TELAS_ PLANAS_581D\\APQP\\8- Ficha tecnica\\Ficha técnica FIEL31000 Rev 01.docx",
+      "output": "C:\\Users\\FacundoS-PC\\dev\\BarackMercosul\\backups\\pwa_server_refs\\planas_581d_ft_Ficha_técnica_FIEL31000_Rev_01.json",
+      "type": "docx",
+      "paragraphs": 0,
+      "tables_found": 1,
+      "status": "OK"
+    },
+    {
+      "source": "\\\\SERVER\\compartido\\BARACK\\CALIDAD\\DOCUMENTACION SGC\\PPAP CLIENTES\\PWA\\1- TOYOTA_TELAS_ PLANAS_581D\\APQP\\14-Especificaciones de Materiales\\Peso de muestras 100 x 100 mm.xlsx",
+      "output": "C:\\Users\\FacundoS-PC\\dev\\BarackMercosul\\backups\\pwa_server_refs\\planas_581d_material_weights.json",
+      "type": "xlsx",
+      "sheets": [
+        "Hoja1"
+      ],
+      "status": "OK"
+    },
+    {
+      "source": "\\\\SERVER\\compartido\\BARACK\\CALIDAD\\DOCUMENTACION SGC\\PPAP CLIENTES\\PWA\\1- TOYOTA_TELAS_ PLANAS_581D\\APQP\\14-Especificaciones de Materiales\\s-felt-300.pdf",
+      "output": "C:\\Users\\FacundoS-PC\\dev\\BarackMercosul\\backups\\pwa_server_refs\\planas_581d_sfelt_300.json",
+      "type": "pdf",
+      "pages": 7,
+      "tables_found": 0,
+      "status": "OK"
+    },
+    {
+      "source": "\\\\SERVER\\compartido\\BARACK\\CALIDAD\\DOCUMENTACION SGC\\PPAP CLIENTES\\PWA\\1- TOYOTA_TELAS_ PLANAS_581D\\APQP\\7-Lista de materiales\\Listado de materiales.pdf",
+      "output": "C:\\Users\\FacundoS-PC\\dev\\BarackMercosul\\backups\\pwa_server_refs\\planas_581d_materials_list_pdf.json",
+      "type": "pdf",
+      "pages": 1,
+      "tables_found": 1,
+      "status": "OK"
+    },
+    {
+      "source": "\\\\SERVER\\compartido\\BARACK\\CALIDAD\\DOCUMENTACION SGC\\PPAP CLIENTES\\PWA\\2-TOYOTA_TELAS_TERMOFORMADAS_582D\\APQP\\7-Lista de materiales\\TOYOTA_TELAS_TERMOFORMADAS_582D_BOM Barack_Preliminar .xlsx",
+      "output": "C:\\Users\\FacundoS-PC\\dev\\BarackMercosul\\backups\\pwa_server_refs\\termo_582d_bom.json",
+      "type": "xlsx",
+      "sheets": [
+        "BOM ASIENTO",
+        "BOM RESPALDO",
+        "REFUERZO LATERAL RESPALDO"
+      ],
+      "status": "OK"
+    },
+    {
+      "source": "\\\\SERVER\\compartido\\BARACK\\CALIDAD\\DOCUMENTACION SGC\\PPAP CLIENTES\\PWA\\2-TOYOTA_TELAS_TERMOFORMADAS_582D\\APQP\\9-Flujograma del proceso preliminar\\FLUJOGRAMA_156_ASIENTO_RESPALDO_REV.pdf",
+      "output": "C:\\Users\\FacundoS-PC\\dev\\BarackMercosul\\backups\\pwa_server_refs\\termo_582d_flujograma.json",
+      "type": "pdf",
+      "pages": 1,
+      "tables_found": 13,
+      "status": "OK"
+    },
+    {
+      "source": "\\\\SERVER\\compartido\\BARACK\\CALIDAD\\DOCUMENTACION SGC\\PPAP CLIENTES\\PWA\\2-TOYOTA_TELAS_TERMOFORMADAS_582D\\APQP\\8- Ficha tecnica\\FT153 Refuerzo Tricapa .pdf",
+      "output": "C:\\Users\\FacundoS-PC\\dev\\BarackMercosul\\backups\\pwa_server_refs\\termo_582d_ft153_refuerzo_tricapa.json",
+      "type": "pdf",
+      "pages": 1,
+      "tables_found": 3,
+      "status": "OK"
+    },
+    {
+      "source": "\\\\SERVER\\compartido\\BARACK\\CALIDAD\\DOCUMENTACION SGC\\PPAP CLIENTES\\PWA\\2-TOYOTA_TELAS_TERMOFORMADAS_582D\\APQP\\8- Ficha tecnica\\FT154 Refuerzo 1500 gm2 .pdf",
+      "output": "C:\\Users\\FacundoS-PC\\dev\\BarackMercosul\\backups\\pwa_server_refs\\termo_582d_ft154_refuerzo_1500.json",
+      "type": "pdf",
+      "pages": 1,
+      "tables_found": 3,
+      "status": "OK"
+    },
+    {
+      "source": "\\\\SERVER\\compartido\\BARACK\\CALIDAD\\DOCUMENTACION SGC\\PPAP CLIENTES\\PWA\\PPAP - PWA PROYECTO (TELAS HILUX)\\5- Process Flow",
+      "type": "folder_check",
+      "files_found": [],
+      "status": "EMPTY"
+    },
+    {
+      "source": "\\\\SERVER\\compartido\\BARACK\\CALIDAD\\DOCUMENTACION SGC\\PPAP CLIENTES\\PWA\\PPAP - PWA PROYECTO (TELAS HILUX)\\6- PFMEA",
+      "type": "folder_check",
+      "files_found": [],
+      "status": "EMPTY"
+    },
+    {
+      "source": "\\\\SERVER\\compartido\\BARACK\\CALIDAD\\DOCUMENTACION SGC\\PPAP CLIENTES\\PWA\\PPAP - PWA PROYECTO (TELAS HILUX)\\7- Control plan\\PC APOYABRAZOS P21 rev H 08-10-2024.xls",
+      "output": "C:\\Users\\FacundoS-PC\\dev\\BarackMercosul\\backups\\pwa_server_refs\\ppap_control_plan_apoyabrazos.json",
+      "type": "xls",
+      "sheets": [
+        "PC"
+      ],
+      "status": "OK"
+    }
+  ],
+  "part_numbers": [
+    {
+      "folder_name": "219463",
+      "part_number_formatted": "21-9463",
+      "files": [
+        "219463_Lado frontal.jpg",
+        "219463_Lado trasero.jpg",
+        "Thumbs.db"
+      ]
+    },
+    {
+      "folder_name": "219464",
+      "part_number_formatted": "21-9464",
+      "files": [
+        "Lado frontal.jpg",
+        "Lado trasero.jpg",
+        "Thumbs.db"
+      ]
+    },
+    {
+      "folder_name": "219465",
+      "part_number_formatted": "21-9465",
+      "files": [
+        "Lado frontal.jpg",
+        "Lado trasero.jpg",
+        "Thumbs.db"
+      ]
+    },
+    {
+      "folder_name": "219466",
+      "part_number_formatted": "21-9466",
+      "files": [
+        "Lado frontal.png",
+        "Lado trasero.jpg",
+        "Thumbs.db"
+      ]
+    },
+    {
+      "folder_name": "219467",
+      "part_number_formatted": "21-9467",
+      "files": [
+        "Lado frontal.jpg",
+        "Lado trasero.jpg",
+        "Thumbs.db"
+      ]
+    },
+    {
+      "folder_name": "219468",
+      "part_number_formatted": "21-9468",
+      "files": [
+        "Lado frontal.jpg",
+        "Lado trasero.jpg",
+        "Thumbs.db"
+      ]
+    },
+    {
+      "folder_name": "219469",
+      "part_number_formatted": "21-9469",
+      "files": [
+        "Lado frontal.JPG",
+        "Lado trasero.jpg",
+        "Thumbs.db"
+      ]
+    },
+    {
+      "folder_name": "219470",
+      "part_number_formatted": "21-9470",
+      "files": [
+        "Lado frontal.jpg",
+        "Lado trasero.jpg",
+        "Thumbs.db"
+      ]
+    },
+    {
+      "folder_name": "219471",
+      "part_number_formatted": "21-9471",
+      "files": [
+        "Lado frontal.jpg",
+        "Lado trasero.jpg",
+        "Thumbs.db"
+      ]
+    },
+    {
+      "folder_name": "219472",
+      "part_number_formatted": "21-9472",
+      "files": [
+        "Lado frontal.jpg",
+        "Lado trasero.jpg",
+        "Thumbs.db"
+      ]
+    },
+    {
+      "folder_name": "219474",
+      "part_number_formatted": "21-9474",
+      "files": [
+        "Lado frontal.jpg",
+        "Lado trasero.jpg",
+        "Thumbs.db"
+      ]
+    },
+    {
+      "folder_name": "219475",
+      "part_number_formatted": "21-9475",
+      "files": [
+        "Lado frontal.png",
+        "Lado trasero.jpg",
+        "Thumbs.db"
+      ]
+    },
+    {
+      "folder_name": "Refuerzos",
+      "part_number_formatted": "Refuerzos",
+      "files": [
+        "R025J79979-X7A02-##-01-01-A-025JSS0078-02 (1).tif",
+        "R578W71765-X7A00-##-01-01-A-578WAF1738-02 (2).tif",
+        "Thumbs.db"
+      ]
+    }
+  ],
+  "errors": []
+}

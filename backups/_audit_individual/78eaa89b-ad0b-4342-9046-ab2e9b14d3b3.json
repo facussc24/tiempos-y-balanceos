@@ -1,0 +1,2799 @@
+{
+  "id": "78eaa89b-ad0b-4342-9046-ab2e9b14d3b3",
+  "status": "draft",
+  "data": {
+    "header": {
+      "companyName": "BARACK MERCOSUL",
+      "scope": "TOP ROLL PATAGONIA",
+      "partNumber": "N 216 / N 256 / N 285 / N 315",
+      "applicableParts": "N 216, N 256",
+      "responsibleEngineer": "Carlos Baptista (Ingeniería)",
+      "coreTeam": "Carlos Baptista (Ingeniería), Manuel Meszaros (Calidad), Facundo Santoro, Marianna Vera (Producción), Cristina Rabago (Seguridad e Higiene)",
+      "preparedBy": "Facundo Santoro",
+      "approvedBy": "Gonzalo Cal",
+      "amfeDate": "2026-02-13",
+      "revisionLevel": "01",
+      "revisionDate": "2026-02-13",
+      "subject": "TOP ROLL",
+      "client": "VWA",
+      "location": "PLANTA HURLINGHAM"
+    },
+    "operations": [
+      {
+        "id": "b0f3294e-bce9-4981-874d-9addad375d32",
+        "operationNumber": "5",
+        "operationName": "RECEPCION DE MATERIA PRIMA",
+        "workElements": [
+          {
+            "id": "fdcb09f2-87c5-4fb2-8600-58d9875cd6e7",
+            "name": "Autoelevador",
+            "type": "Maquina",
+            "functions": [
+              {
+                "id": "4f322823-94cd-4e9b-90a4-1469827d945f",
+                "functionDescription": "Garantizar la estabilidad y la integridad física del material durante el transporte interno",
+                "failures": [
+                  {
+                    "id": "a5a0383b-29df-4a70-9d89-1791780972d6",
+                    "description": "Material / pieza golpeada o dañada durante transporte",
+                    "effectLocal": "Retrabajo",
+                    "effectNextLevel": "Problemas en el ensamble final",
+                    "effectEndUser": "Potencial reclamo de aspecto/comfort",
+                    "causes": [
+                      {
+                        "id": "20206f21-26f0-4edf-b0bb-56104351b3b6",
+                        "description": "Mala estiba y embalaje inadecuado",
+                        "severity": 5,
+                        "occurrence": 6,
+                        "detection": 6,
+                        "actionPriority": "M",
+                        "preventionControl": "Medios de embalaje validados",
+                        "detectionControl": "Inspección Visual de daños/suciedad en el empaque al recibir",
+                        "specialChar": "",
+                        "characteristicNumber": "",
+                        "preventionAction": "",
+                        "detectionAction": "",
+                        "responsible": "",
+                        "targetDate": "",
+                        "status": "",
+                        "ap": "M",
+                        "cause": "Mala estiba y embalaje inadecuado"
+                      },
+                      {
+                        "id": "0a602d80-9ec3-4fee-9b67-0af3edf21ddf",
+                        "description": "Manipulación incorrecta en tránsito",
+                        "severity": 5,
+                        "occurrence": 5,
+                        "detection": 6,
+                        "actionPriority": "L",
+                        "preventionControl": "Existencia de instrucciones de trabajo que definen cómo debe estibarse y manipularse el material",
+                        "detectionControl": "Inspección Visual del estado de la pieza/empaque",
+                        "specialChar": "",
+                        "characteristicNumber": "",
+                        "preventionAction": "",
+                        "detectionAction": "",
+                        "responsible": "",
+                        "targetDate": "",
+                        "status": "",
+                        "ap": "L",
+                        "cause": "Manipulación incorrecta en tránsito"
+                      },
+                      {
+                        "id": "cb587a78-e0e6-445d-aeae-33de1492b51a",
+                        "description": "Almacenaje inadecuado en transporte (sin protecciones)",
+                        "severity": 5,
+                        "occurrence": 5,
+                        "detection": 6,
+                        "actionPriority": "L",
+                        "preventionControl": "Procedimientos de Logística sobre estiba segura y uso de Embalajes Cubiertos o cerrados",
+                        "detectionControl": "Verificación del estado del embalaje antes de que el camión salga",
+                        "specialChar": "",
+                        "characteristicNumber": "",
+                        "preventionAction": "",
+                        "detectionAction": "",
+                        "responsible": "",
+                        "targetDate": "",
+                        "status": "",
+                        "ap": "L",
+                        "cause": "Almacenaje inadecuado en transporte (sin protecciones)"
+                      }
+                    ],
+                    "severity": 5
+                  },
+                  {
+                    "id": "88695fdc-fac8-4be8-9190-c093ab6a7602",
+                    "description": "Material no cumple requisito de flamabilidad TL 1010 VW",
+                    "effectLocal": "Material no apto para uso",
+                    "effectNextLevel": "Paro de linea VW por incumplimiento normativo",
+                    "effectEndUser": "Riesgo de propagacion de fuego en habitaculo",
+                    "causes": [
+                      {
+                        "id": "578595d6-04b6-417c-be26-777f3dab9356",
+                        "description": "Material fuera de especificacion requerida",
+                        "severity": 10,
+                        "occurrence": 2,
+                        "detection": 3,
+                        "actionPriority": "L",
+                        "preventionControl": "Certificado de flamabilidad del proveedor segun TL 1010",
+                        "detectionControl": "Verificacion documental en recepcion",
+                        "specialChar": "CC",
+                        "characteristicNumber": "",
+                        "preventionAction": "",
+                        "detectionAction": "",
+                        "responsible": "",
+                        "targetDate": "",
+                        "status": "",
+                        "ap": "L",
+                        "cause": "Material fuera de especificacion requerida"
+                      }
+                    ],
+                    "severity": 10
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "b8ca6860-9dac-4a4c-869a-70e045c6a675",
+            "name": "Operador de producción / Operador de calidad",
+            "type": "Mano de Obra",
+            "functions": [
+              {
+                "id": "146ef90e-a06f-4a6b-80cd-13fb8690ba24",
+                "functionDescription": "Verificar el cumplimiento y la trazabilidad de la materia prima recibida",
+                "failures": [
+                  {
+                    "id": "d916ba01-4807-4c59-a476-ba1678c495be",
+                    "description": "Falta de documentación o trazabilidad",
+                    "effectLocal": "Riesgo de mezclar lotes no conformes",
+                    "effectNextLevel": "Dificultades en trazabilidad si surge un reclamo",
+                    "effectEndUser": "Potencial reclamo",
+                    "causes": [
+                      {
+                        "id": "fec5d8d5-1ad3-42e6-b737-370d77192913",
+                        "description": "Procesos administrativos deficientes",
+                        "severity": 4,
+                        "occurrence": 3,
+                        "detection": 7,
+                        "actionPriority": "L",
+                        "preventionControl": "El sistema ARB obliga a registrar lote y código en recepción y verifica contra base de datos",
+                        "detectionControl": "Verificación automática del lote/código registrado contra la base de datos",
+                        "specialChar": "",
+                        "characteristicNumber": "",
+                        "preventionAction": "",
+                        "detectionAction": "",
+                        "responsible": "",
+                        "targetDate": "",
+                        "status": "",
+                        "ap": "L",
+                        "cause": "Procesos administrativos deficientes"
+                      },
+                      {
+                        "id": "3259867c-82c8-4b1f-b3a9-f943af96c42f",
+                        "description": "Proveedor sin sistema robusto de trazabilidad",
+                        "severity": 4,
+                        "occurrence": 5,
+                        "detection": 5,
+                        "actionPriority": "L",
+                        "preventionControl": "Auditorías de Sistema y Requisitos que validan la capacidad de trazabilidad del proveedor",
+                        "detectionControl": "Verificación del Certificado de Conformidad y registro obligatorio de lote",
+                        "specialChar": "",
+                        "characteristicNumber": "",
+                        "preventionAction": "",
+                        "detectionAction": "",
+                        "responsible": "",
+                        "targetDate": "",
+                        "status": "",
+                        "ap": "L",
+                        "cause": "Proveedor sin sistema robusto de trazabilidad"
+                      }
+                    ],
+                    "severity": 4
+                  },
+                  {
+                    "id": "34242488-5fa5-48c4-9df1-4651fb54308a",
+                    "description": "Material con especificación errónea (dimensiones, color, dureza, etc.)",
+                    "effectLocal": "Potencial Descarte",
+                    "effectNextLevel": "Potencial parada de línea",
+                    "effectEndUser": "Potencial reclamo de aspecto",
+                    "causes": [
+                      {
+                        "id": "30197a68-9ced-414d-99c1-b048e26efd36",
+                        "description": "Error en la orden de compra o ficha técnica",
+                        "severity": 6,
+                        "occurrence": 6,
+                        "detection": 6,
+                        "actionPriority": "M",
+                        "preventionControl": "Revisión de Ingeniería de la Ficha Técnica/OC antes de la emisión al proveedor",
+                        "detectionControl": "Revisión del Certificado de Calidad y Control Dimensional por Muestreo en recepción",
+                        "specialChar": "",
+                        "characteristicNumber": "",
+                        "preventionAction": "",
+                        "detectionAction": "",
+                        "responsible": "",
+                        "targetDate": "",
+                        "status": "",
+                        "ap": "M",
+                        "cause": "Error en la orden de compra o ficha técnica"
+                      },
+                      {
+                        "id": "d544ffb5-91dd-4ae4-a8a4-14ae60ae8f6b",
+                        "description": "Proveedor no respeta tolerancias",
+                        "severity": 6,
+                        "occurrence": 7,
+                        "detection": 6,
+                        "actionPriority": "M",
+                        "preventionControl": "Requisitos Contractuales de Calidad y Auditorías al Proveedor",
+                        "detectionControl": "Control dimensional por muestreo en recepción y Revisión obligatoria del Certificado de Calidad",
+                        "specialChar": "",
+                        "characteristicNumber": "",
+                        "preventionAction": "",
+                        "detectionAction": "",
+                        "responsible": "",
+                        "targetDate": "",
+                        "status": "",
+                        "ap": "M",
+                        "cause": "Proveedor no respeta tolerancias"
+                      }
+                    ],
+                    "severity": 6
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "e974707c-ea91-4f6a-9062-c5f9e931dd7f",
+            "name": "Calibres, Micrómetro, Probeta de flamabilidad, Probeta de peeling",
+            "type": "Material",
+            "functions": [
+              {
+                "id": "1901c137-2596-4fe2-8297-eec51fa5232d",
+                "functionDescription": "Disponer y utilizar instrumentos de medición y ensayo",
+                "failures": [
+                  {
+                    "id": "a15c65e4-b078-4b90-b9a4-9089867c876c",
+                    "description": "Contaminación / suciedad en la materia prima",
+                    "effectLocal": "Potencial Descarte",
+                    "effectNextLevel": "Reclamo de aspecto",
+                    "effectEndUser": "Problemas de calidad durante el ensamble",
+                    "causes": [
+                      {
+                        "id": "95091496-3ad7-42c4-8dc7-391590f6c92c",
+                        "description": "Ambiente sucio en planta del proveedor",
+                        "severity": 5,
+                        "occurrence": 6,
+                        "detection": 6,
+                        "actionPriority": "M",
+                        "preventionControl": "Auditorías de Calidad",
+                        "detectionControl": "Inspección Visual de la pieza y Revisión del Certificado de Calidad del proveedor",
+                        "specialChar": "",
+                        "characteristicNumber": "",
+                        "preventionAction": "",
+                        "detectionAction": "",
+                        "responsible": "",
+                        "targetDate": "",
+                        "status": "",
+                        "ap": "M",
+                        "cause": "Ambiente sucio en planta del proveedor"
+                      },
+                      {
+                        "id": "56d45b24-7216-4732-b8e9-2bfecb598b1a",
+                        "description": "Falta de inspección visual al recibir",
+                        "severity": 5,
+                        "occurrence": 5,
+                        "detection": 5,
+                        "actionPriority": "L",
+                        "preventionControl": "Instrucción de Trabajo de Recepción que exige la verificación física y visual",
+                        "detectionControl": "Inspección visual en recepción",
+                        "specialChar": "",
+                        "characteristicNumber": "",
+                        "preventionAction": "",
+                        "detectionAction": "",
+                        "responsible": "",
+                        "targetDate": "",
+                        "status": "",
+                        "ap": "L",
+                        "cause": "Falta de inspección visual al recibir"
+                      }
+                    ],
+                    "severity": 5
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "9e756c6a-25b2-4bd5-9f15-bebbbe0ec662",
+            "name": "Método de Fabricación",
+            "type": "Metodo",
+            "functions": [
+              {
+                "id": "eca8ff75-4ae8-4766-8231-99b5e6b672aa",
+                "functionDescription": "Comprobar que el embalaje no esté dañado. Corroborar que la orden sea la correcta. Cargar la materia prima en ARB.",
+                "failures": [
+                  {
+                    "id": "0f15652d-6227-420f-9722-4d1bb5b96fa8",
+                    "description": "No se utiliza el sistema ARB",
+                    "effectLocal": "Falta de trazabilidad",
+                    "effectNextLevel": "Potencial mezcla de lotes",
+                    "effectEndUser": "Reclamo por trazabilidad",
+                    "causes": [
+                      {
+                        "id": "370686ed-785a-4119-b43f-0e18725757cc",
+                        "description": "Falta de control dimensional en recepción",
+                        "severity": 5,
+                        "occurrence": 4,
+                        "detection": 4,
+                        "actionPriority": "L",
+                        "preventionControl": "Procedimiento Operacional Estándar de Inspección",
+                        "detectionControl": "El sistema impide la emisión de ubicaciones hasta que todos los campos del ARB sean completados",
+                        "specialChar": "",
+                        "characteristicNumber": "",
+                        "preventionAction": "",
+                        "detectionAction": "",
+                        "responsible": "",
+                        "targetDate": "",
+                        "status": "",
+                        "ap": "L",
+                        "cause": "Falta de control dimensional en recepción"
+                      }
+                    ],
+                    "severity": 5
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "c2f7a510-6b48-4f38-868f-a163bd8e8537",
+            "name": "Iluminación/Ruido, Ley 19587",
+            "type": "Medio Ambiente",
+            "functions": [
+              {
+                "id": "e96a259f-5ad6-4c07-bed7-9c7cfd5d2abe",
+                "functionDescription": "Mantener las condiciones de seguridad ocupacional según la Ley 19587",
+                "failures": [
+                  {
+                    "id": "965ef920-d40d-4eba-8ff0-c9dbdef8b7b2",
+                    "description": "Condiciones ambientales inadecuadas",
+                    "effectLocal": "Posible error de inspección",
+                    "effectNextLevel": "N/A",
+                    "effectEndUser": "N/A",
+                    "causes": [
+                      {
+                        "id": "44e91951-ac8a-4ea3-83cb-509c38579810",
+                        "description": "Iluminación insuficiente en zona de recepción",
+                        "severity": 5,
+                        "occurrence": 3,
+                        "detection": 6,
+                        "actionPriority": "L",
+                        "preventionControl": "Programa de mantenimiento de luminarias",
+                        "detectionControl": "Auditoría de condiciones ambientales",
+                        "specialChar": "",
+                        "characteristicNumber": "",
+                        "preventionAction": "",
+                        "detectionAction": "",
+                        "responsible": "",
+                        "targetDate": "",
+                        "status": "",
+                        "ap": "L",
+                        "cause": "Iluminación insuficiente en zona de recepción"
+                      }
+                    ],
+                    "severity": 5
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "opNumber": "5",
+        "name": "RECEPCION DE MATERIA PRIMA"
+      },
+      {
+        "id": "ba2e2c59-29ba-496e-ad25-8cbb22d73446",
+        "operationNumber": "10",
+        "operationName": "INYECCION DE PIEZA PLASTICA",
+        "workElements": [
+          {
+            "id": "95633b7c-0afc-4dd1-9595-5470e551d349",
+            "name": "Máquina inyectora de plástico",
+            "type": "Maquina",
+            "functions": [
+              {
+                "id": "0c12f340-9b0e-4e2e-9fb3-38683148cda1",
+                "functionDescription": "Moldear la pieza plástica inyectando la materia prima en la cavidad",
+                "failures": [
+                  {
+                    "id": "c7c97490-b064-4a3c-9b37-2b1dd886fce0",
+                    "description": "Llenado Incompleto de Pieza",
+                    "effectLocal": "100% de la producción en ese ciclo tiene que ser Scrapeada",
+                    "effectNextLevel": "Parada de línea mayor a un turno",
+                    "effectEndUser": "Pérdida de la Función Primaria del vehículo",
+                    "causes": [
+                      {
+                        "id": "735e7174-ea64-45be-8cec-3c2673c21bec",
+                        "description": "Presión de Inyección configurada fuera de especificación",
+                        "severity": 6,
+                        "occurrence": 5,
+                        "detection": 5,
+                        "actionPriority": "L",
+                        "preventionControl": "Monitoreo automático de presión y mantenimiento preventivo con calibración periódica de sensores",
+                        "detectionControl": "Detección automática de llenado incompleto",
+                        "specialChar": "SC",
+                        "characteristicNumber": "",
+                        "preventionAction": "",
+                        "detectionAction": "",
+                        "responsible": "",
+                        "targetDate": "",
+                        "status": "",
+                        "ap": "L",
+                        "cause": "Presión de Inyección configurada fuera de especificación"
+                      },
+                      {
+                        "id": "b4309bdd-6fee-4417-8e03-03282d2b33a2",
+                        "description": "Temperatura de fusión del material (T°) demasiado baja",
+                        "severity": 6,
+                        "occurrence": 4,
+                        "detection": 5,
+                        "actionPriority": "L",
+                        "preventionControl": "Programa de Mantenimiento y Calibración del Sistema Térmico",
+                        "detectionControl": "Verificación Visual y Dimensional de Aprobación de la Primera Pieza",
+                        "specialChar": "SC",
+                        "characteristicNumber": "",
+                        "preventionAction": "",
+                        "detectionAction": "",
+                        "responsible": "",
+                        "targetDate": "",
+                        "status": "",
+                        "ap": "L",
+                        "cause": "Temperatura de fusión del material (T°) demasiado baja"
+                      }
+                    ],
+                    "severity": 6
+                  },
+                  {
+                    "id": "56393e1e-51ac-4da6-a083-6e0785fa5ac7",
+                    "description": "Rebaba Excesiva / Exceso de Material",
+                    "effectLocal": "100% de la producción tiene que ser Retrabajada Fuera de Línea",
+                    "effectNextLevel": "Parada de línea de producción menor a una hora",
+                    "effectEndUser": "Pérdida de la Función Secundaria del vehículo",
+                    "causes": [
+                      {
+                        "id": "2810170a-db82-406a-b898-2b2550f9f97e",
+                        "description": "Fuerza de Cierre insuficiente",
+                        "severity": 5,
+                        "occurrence": 5,
+                        "detection": 3,
+                        "actionPriority": "L",
+                        "preventionControl": "Mantenimiento Preventivo de la Unidad de Cierre / Instrucción de Puesta a punto detallada",
+                        "detectionControl": "Monitoreo Automático de Presión de Cierre / Inspección dimensional manual por muestreo",
+                        "specialChar": "",
+                        "characteristicNumber": "",
+                        "preventionAction": "",
+                        "detectionAction": "",
+                        "responsible": "",
+                        "targetDate": "",
+                        "status": "",
+                        "ap": "L",
+                        "cause": "Fuerza de Cierre insuficiente"
+                      },
+                      {
+                        "id": "c0146fbd-a868-476a-b56a-e876b376491b",
+                        "description": "Molde o cavidad contaminada con material residual",
+                        "severity": 5,
+                        "occurrence": 5,
+                        "detection": 8,
+                        "actionPriority": "M",
+                        "preventionControl": "Procedimiento de limpieza y purga estandarizado para la cavidad",
+                        "detectionControl": "Inspección visual por parte del operador de la cavidad",
+                        "specialChar": "",
+                        "characteristicNumber": "",
+                        "preventionAction": "",
+                        "detectionAction": "",
+                        "responsible": "",
+                        "targetDate": "",
+                        "status": "",
+                        "ap": "M",
+                        "cause": "Molde o cavidad contaminada con material residual"
+                      },
+                      {
+                        "id": "1a9ab9ae-a076-49f9-8a3e-33c28c5b6e8a",
+                        "description": "Parámetros de Inyección configurados incorrectamente",
+                        "severity": 5,
+                        "occurrence": 5,
+                        "detection": 8,
+                        "actionPriority": "M",
+                        "preventionControl": "Instrucción de Puesta a punto Estandarizada detallando valores nominales y rangos",
+                        "detectionControl": "Aprobación de la Primera Pieza por personal de Calidad/Supervisión",
+                        "specialChar": "",
+                        "characteristicNumber": "",
+                        "preventionAction": "",
+                        "detectionAction": "",
+                        "responsible": "",
+                        "targetDate": "",
+                        "status": "",
+                        "ap": "M",
+                        "cause": "Parámetros de Inyección configurados incorrectamente"
+                      }
+                    ],
+                    "severity": 5
+                  },
+                  {
+                    "id": "ba4ef210-4aec-4a39-9f0b-08bd138f3992",
+                    "description": "Omitir inspección dimensional de cotas index",
+                    "effectLocal": "Una porción de la producción requiere Retrabajo",
+                    "effectNextLevel": "Se desencadena un Plan de Reacción Importante",
+                    "effectEndUser": "Degradación de la Función Secundaria",
+                    "causes": [
+                      {
+                        "id": "355adbfa-c5ad-4ae6-adab-9c91a679024f",
+                        "description": "Operador omite la verificación dimensional de la cota index",
+                        "severity": 5,
+                        "occurrence": 5,
+                        "detection": 5,
+                        "actionPriority": "L",
+                        "preventionControl": "Lista de Verificación para asegurar que el paso se incluya al inicio del turno",
+                        "detectionControl": "Auditoría de Proceso",
+                        "specialChar": "SC",
+                        "characteristicNumber": "",
+                        "preventionAction": "",
+                        "detectionAction": "",
+                        "responsible": "",
+                        "targetDate": "",
+                        "status": "",
+                        "ap": "L",
+                        "cause": "Operador omite la verificación dimensional de la cota index"
+                      },
+                      {
+                        "id": "209790f2-d1e4-4dca-8a2c-40eaba8f2650",
+                        "description": "Instrucción de trabajo ambigua sobre la frecuencia o la metodología",
+                        "severity": 5,
+                        "occurrence": 5,
+                        "detection": 5,
+                        "actionPriority": "L",
+                        "preventionControl": "Las Hojas de Proceso describen el método operativo y las pautas de control",
+                        "detectionControl": "Cada dos meses se verifica una pieza con su documentación",
+                        "specialChar": "SC",
+                        "characteristicNumber": "",
+                        "preventionAction": "",
+                        "detectionAction": "",
+                        "responsible": "",
+                        "targetDate": "",
+                        "status": "",
+                        "ap": "L",
+                        "cause": "Instrucción de trabajo ambigua sobre la frecuencia o la metodología"
+                      }
+                    ],
+                    "severity": 5
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "7b8081de-4579-4bf3-8e70-d087066c9c9b",
+            "name": "Operador de producción / Líder de equipo",
+            "type": "Mano de Obra",
+            "functions": [
+              {
+                "id": "ced0d9f4-e059-47e3-9b8a-cae1fe1d8906",
+                "functionDescription": "Supervisar las actividades del operario según las hojas de operaciones",
+                "failures": [
+                  {
+                    "id": "6896e010-1a6b-4ba0-b387-61c7b16830b3",
+                    "description": "Contaminación / suciedad en la materia prima",
+                    "effectLocal": "Potencial Descarte",
+                    "effectNextLevel": "Reclamo de aspecto",
+                    "effectEndUser": "Problemas de calidad",
+                    "causes": [
+                      {
+                        "id": "f2659e54-37a5-4a2d-9f86-874f84a12014",
+                        "description": "Ambiente sucio en planta del proveedor",
+                        "severity": 5,
+                        "occurrence": 5,
+                        "detection": 6,
+                        "actionPriority": "L",
+                        "preventionControl": "Auditorías de Calidad",
+                        "detectionControl": "Inspección Visual de la pieza y Revisión del Certificado de Calidad del proveedor",
+                        "specialChar": "",
+                        "characteristicNumber": "",
+                        "preventionAction": "",
+                        "detectionAction": "",
+                        "responsible": "",
+                        "targetDate": "",
+                        "status": "",
+                        "ap": "L",
+                        "cause": "Ambiente sucio en planta del proveedor"
+                      }
+                    ],
+                    "severity": 5
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "0c905433-ed20-4830-88cc-66d66397ae2f",
+            "name": "Método de Fabricación",
+            "type": "Metodo",
+            "functions": [
+              {
+                "id": "353f2e61-24a4-4952-a380-caeee7345ac1",
+                "functionDescription": "Utilizar la Hoja de Operaciones vigente. Definir el plan de reacción ante un No conforme.",
+                "failures": [
+                  {
+                    "id": "ae9ed052-55eb-44de-8b48-2e161b4f04f4",
+                    "description": "Falta de inspección al llegar",
+                    "effectLocal": "TBD",
+                    "effectNextLevel": "TBD",
+                    "effectEndUser": "TBD",
+                    "causes": [
+                      {
+                        "id": "243090f0-e9cb-4b39-9384-904d43744a76",
+                        "description": "Falta de inspección al llegar",
+                        "severity": 5,
+                        "occurrence": 6,
+                        "detection": 6,
+                        "actionPriority": "M",
+                        "preventionControl": "Instrucción de Trabajo",
+                        "detectionControl": "Inspección visual en recepción",
+                        "specialChar": "",
+                        "characteristicNumber": "",
+                        "preventionAction": "",
+                        "detectionAction": "",
+                        "responsible": "",
+                        "targetDate": "",
+                        "status": "",
+                        "ap": "M",
+                        "cause": "Falta de inspección al llegar"
+                      }
+                    ],
+                    "severity": 5
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "93ce4945-9de8-4199-866c-a873221976d5",
+            "name": "Iluminación/Ruido, Ley 19587",
+            "type": "Medio Ambiente",
+            "functions": []
+          },
+          {
+            "id": "b59acc86-48e7-4818-848f-8bd9e285f5bf",
+            "name": "Inyectora",
+            "type": "Machine",
+            "functions": [
+              {
+                "id": "1fd3ae92-15f8-4b84-bbca-1a287fce2c03",
+                "description": "Inyectar piezas plásticas conformes según especificación",
+                "requirements": "Piezas sin defectos visuales, dimensionales ni estructurales",
+                "failures": [
+                  {
+                    "id": "b83e5499-2ab7-41d0-bbff-68951d1e8cdd",
+                    "description": "Rebarbas en pieza inyectada",
+                    "effectLocal": "Retrabajo fuera del puesto",
+                    "effectNextLevel": "Parada de hasta 1 hora. Reparación en cliente",
+                    "effectEndUser": "Pérdida de función secundaria del vehículo",
+                    "causes": [
+                      {
+                        "id": "2e8c1433-0e5f-4719-aee2-bfae09d556ac",
+                        "description": "Parámetros de proceso desajustados / inestabilidad de la máquina de inyección",
+                        "severity": 6,
+                        "occurrence": 2,
+                        "detection": 8,
+                        "actionPriority": "L",
+                        "preventionControl": "Dossier de parámetros de proceso / Procedimiento de arranque de fabricación inyección",
+                        "detectionControl": "Autocontrol: Inspección visual del operador a 100% de las piezas",
+                        "specialChar": "",
+                        "characteristicNumber": "",
+                        "filterCode": "",
+                        "preventionAction": "",
+                        "detectionAction": "",
+                        "responsible": "",
+                        "targetDate": "",
+                        "status": "",
+                        "actionTaken": "",
+                        "completionDate": "",
+                        "severityNew": "",
+                        "occurrenceNew": "",
+                        "detectionNew": "",
+                        "apNew": "",
+                        "observations": "",
+                        "ap": "L",
+                        "cause": "Parámetros de proceso desajustados / inestabilidad de la máquina de inyección"
+                      },
+                      {
+                        "id": "e8c1f4fb-dd56-464c-ad41-82aaf18cf480",
+                        "description": "Línea de junta del molde dañada o desgastada",
+                        "severity": 6,
+                        "occurrence": 2,
+                        "detection": 8,
+                        "actionPriority": "L",
+                        "preventionControl": "Procedimiento de arranque / Mantenimiento de molde",
+                        "detectionControl": "Autocontrol: Inspección visual del operador a 100%",
+                        "specialChar": "",
+                        "characteristicNumber": "",
+                        "filterCode": "",
+                        "preventionAction": "",
+                        "detectionAction": "",
+                        "responsible": "",
+                        "targetDate": "",
+                        "status": "",
+                        "actionTaken": "",
+                        "completionDate": "",
+                        "severityNew": "",
+                        "occurrenceNew": "",
+                        "detectionNew": "",
+                        "apNew": "",
+                        "observations": "",
+                        "ap": "L",
+                        "cause": "Línea de junta del molde dañada o desgastada"
+                      },
+                      {
+                        "id": "416b63a2-1234-4100-bcd8-64cdf23a6064",
+                        "description": "Fuerza de cierre insuficiente",
+                        "severity": 6,
+                        "occurrence": 2,
+                        "detection": 8,
+                        "actionPriority": "L",
+                        "preventionControl": "Dossier de parámetros de proceso",
+                        "detectionControl": "Autocontrol: Inspección visual 100%",
+                        "specialChar": "",
+                        "characteristicNumber": "",
+                        "filterCode": "",
+                        "preventionAction": "",
+                        "detectionAction": "",
+                        "responsible": "",
+                        "targetDate": "",
+                        "status": "",
+                        "actionTaken": "",
+                        "completionDate": "",
+                        "severityNew": "",
+                        "occurrenceNew": "",
+                        "detectionNew": "",
+                        "apNew": "",
+                        "observations": "",
+                        "ap": "L",
+                        "cause": "Fuerza de cierre insuficiente"
+                      }
+                    ],
+                    "severity": 6
+                  },
+                  {
+                    "id": "7447d9f7-8f08-4354-affe-5bd09fe436ff",
+                    "description": "Pieza incompleta (llenado insuficiente)",
+                    "effectLocal": "Retrabajo fuera del puesto",
+                    "effectNextLevel": "Parada de hasta 1 hora",
+                    "effectEndUser": "Pérdida de función secundaria del vehículo",
+                    "causes": [
+                      {
+                        "id": "b740d434-0fb5-45c4-85b6-c6f314e458d3",
+                        "description": "Parámetros de proceso desajustados / inestabilidad de la máquina",
+                        "severity": 6,
+                        "occurrence": 2,
+                        "detection": 8,
+                        "actionPriority": "L",
+                        "preventionControl": "Dossier de parámetros de proceso / Procedimiento de arranque de fabricación inyección",
+                        "detectionControl": "Autocontrol: Inspección visual del operador a 100% de las piezas",
+                        "specialChar": "",
+                        "characteristicNumber": "",
+                        "filterCode": "",
+                        "preventionAction": "",
+                        "detectionAction": "",
+                        "responsible": "",
+                        "targetDate": "",
+                        "status": "",
+                        "actionTaken": "",
+                        "completionDate": "",
+                        "severityNew": "",
+                        "occurrenceNew": "",
+                        "detectionNew": "",
+                        "apNew": "",
+                        "observations": "",
+                        "ap": "L",
+                        "cause": "Parámetros de proceso desajustados / inestabilidad de la máquina"
+                      },
+                      {
+                        "id": "80cedf45-f48a-404f-8558-6a2e9a6a06dd",
+                        "description": "Punto de inyección obstruido en el molde",
+                        "severity": 6,
+                        "occurrence": 2,
+                        "detection": 8,
+                        "actionPriority": "L",
+                        "preventionControl": "Dossier de parámetros de proceso / Procedimiento de arranque de fabricación inyección",
+                        "detectionControl": "Autocontrol: Inspección visual del operador a 100% de las piezas",
+                        "specialChar": "",
+                        "characteristicNumber": "",
+                        "filterCode": "",
+                        "preventionAction": "",
+                        "detectionAction": "",
+                        "responsible": "",
+                        "targetDate": "",
+                        "status": "",
+                        "actionTaken": "",
+                        "completionDate": "",
+                        "severityNew": "",
+                        "occurrenceNew": "",
+                        "detectionNew": "",
+                        "apNew": "",
+                        "observations": "",
+                        "ap": "L",
+                        "cause": "Punto de inyección obstruido en el molde"
+                      },
+                      {
+                        "id": "1533746f-5fcd-4c07-bd0a-65fc1783a2f2",
+                        "description": "Volumen de inyección demasiado pequeño (dosificación corta)",
+                        "severity": 6,
+                        "occurrence": 2,
+                        "detection": 6,
+                        "actionPriority": "L",
+                        "preventionControl": "Dossier de parámetros de proceso / Procedimiento de arranque de fabricación inyección",
+                        "detectionControl": "Autocontrol: Inspección visual del operador a 100% de las piezas",
+                        "specialChar": "",
+                        "characteristicNumber": "",
+                        "filterCode": "",
+                        "preventionAction": "",
+                        "detectionAction": "",
+                        "responsible": "",
+                        "targetDate": "",
+                        "status": "",
+                        "actionTaken": "",
+                        "completionDate": "",
+                        "severityNew": "",
+                        "occurrenceNew": "",
+                        "detectionNew": "",
+                        "apNew": "",
+                        "observations": "",
+                        "ap": "L",
+                        "cause": "Volumen de inyección demasiado pequeño (dosificación corta)"
+                      },
+                      {
+                        "id": "af55baad-5d42-419d-a4cc-485b1610b6d4",
+                        "description": "Presión de inyección insuficiente",
+                        "severity": 6,
+                        "occurrence": 2,
+                        "detection": 6,
+                        "actionPriority": "L",
+                        "preventionControl": "Dossier de parámetros de proceso / Procedimiento de arranque de fabricación inyección",
+                        "detectionControl": "Autocontrol: Inspección visual del operador a 100% de las piezas",
+                        "specialChar": "",
+                        "characteristicNumber": "",
+                        "filterCode": "",
+                        "preventionAction": "",
+                        "detectionAction": "",
+                        "responsible": "",
+                        "targetDate": "",
+                        "status": "",
+                        "actionTaken": "",
+                        "completionDate": "",
+                        "severityNew": "",
+                        "occurrenceNew": "",
+                        "detectionNew": "",
+                        "apNew": "",
+                        "observations": "",
+                        "ap": "L",
+                        "cause": "Presión de inyección insuficiente"
+                      }
+                    ],
+                    "severity": 6
+                  },
+                  {
+                    "id": "a3066f63-87fe-4dff-b56e-916306c78f61",
+                    "description": "Pieza deformada",
+                    "effectLocal": "Retrabajo fuera del puesto",
+                    "effectNextLevel": "Parada de hasta 1 hora",
+                    "effectEndUser": "Pérdida de función secundaria del vehículo",
+                    "causes": [
+                      {
+                        "id": "73ef6c5f-a779-4fb3-9a78-25d108370e15",
+                        "description": "Parámetros de proceso desajustados",
+                        "severity": 6,
+                        "occurrence": 2,
+                        "detection": 8,
+                        "actionPriority": "L",
+                        "preventionControl": "Dossier de parámetros de proceso / Procedimiento de arranque de fabricación inyección",
+                        "detectionControl": "Autocontrol: Inspección visual del operador a 100% de las piezas",
+                        "specialChar": "",
+                        "characteristicNumber": "",
+                        "filterCode": "",
+                        "preventionAction": "",
+                        "detectionAction": "",
+                        "responsible": "",
+                        "targetDate": "",
+                        "status": "",
+                        "actionTaken": "",
+                        "completionDate": "",
+                        "severityNew": "",
+                        "occurrenceNew": "",
+                        "detectionNew": "",
+                        "apNew": "",
+                        "observations": "",
+                        "ap": "L",
+                        "cause": "Parámetros de proceso desajustados"
+                      },
+                      {
+                        "id": "114a7052-6313-4c82-8108-1defdc42e793",
+                        "description": "Tiempo de compactación insuficiente (segunda presión)",
+                        "severity": 6,
+                        "occurrence": 2,
+                        "detection": 8,
+                        "actionPriority": "L",
+                        "preventionControl": "Dossier de parámetros de proceso / Procedimiento de arranque de fabricación inyección",
+                        "detectionControl": "Autocontrol: Inspección visual del operador a 100% de las piezas",
+                        "specialChar": "",
+                        "characteristicNumber": "",
+                        "filterCode": "",
+                        "preventionAction": "",
+                        "detectionAction": "",
+                        "responsible": "",
+                        "targetDate": "",
+                        "status": "",
+                        "actionTaken": "",
+                        "completionDate": "",
+                        "severityNew": "",
+                        "occurrenceNew": "",
+                        "detectionNew": "",
+                        "apNew": "",
+                        "observations": "",
+                        "ap": "L",
+                        "cause": "Tiempo de compactación insuficiente (segunda presión)"
+                      },
+                      {
+                        "id": "594b4aa7-e8cb-4a45-9ca8-ef5b95d850b1",
+                        "description": "Falla del equipo de refrigeración",
+                        "severity": 6,
+                        "occurrence": 2,
+                        "detection": 7,
+                        "actionPriority": "L",
+                        "preventionControl": "Dossier de parámetros de proceso / Procedimiento de arranque de fabricación inyección",
+                        "detectionControl": "Autocontrol: Inspección visual del operador a 100% de las piezas",
+                        "specialChar": "",
+                        "characteristicNumber": "",
+                        "filterCode": "",
+                        "preventionAction": "",
+                        "detectionAction": "",
+                        "responsible": "",
+                        "targetDate": "",
+                        "status": "",
+                        "actionTaken": "",
+                        "completionDate": "",
+                        "severityNew": "",
+                        "occurrenceNew": "",
+                        "detectionNew": "",
+                        "apNew": "",
+                        "observations": "",
+                        "ap": "L",
+                        "cause": "Falla del equipo de refrigeración"
+                      },
+                      {
+                        "id": "d4e69a5a-6656-4781-8065-926acc49cc05",
+                        "description": "Tiempo de enfriamiento insuficiente",
+                        "severity": 6,
+                        "occurrence": 2,
+                        "detection": 8,
+                        "actionPriority": "L",
+                        "preventionControl": "Dossier de parámetros de proceso / Procedimiento de arranque de fabricación inyección",
+                        "detectionControl": "Autocontrol: Inspección visual del operador a 100% de las piezas",
+                        "specialChar": "",
+                        "characteristicNumber": "",
+                        "filterCode": "",
+                        "preventionAction": "",
+                        "detectionAction": "",
+                        "responsible": "",
+                        "targetDate": "",
+                        "status": "",
+                        "actionTaken": "",
+                        "completionDate": "",
+                        "severityNew": "",
+                        "occurrenceNew": "",
+                        "detectionNew": "",
+                        "apNew": "",
+                        "observations": "",
+                        "ap": "L",
+                        "cause": "Tiempo de enfriamiento insuficiente"
+                      }
+                    ],
+                    "severity": 6
+                  },
+                  {
+                    "id": "8e9323fd-d53f-413c-9f6e-f7a06bc0a2fa",
+                    "description": "Quemados en pieza inyectada",
+                    "effectLocal": "Retrabajo fuera del puesto",
+                    "effectNextLevel": "Parada de hasta 1 hora",
+                    "effectEndUser": "Pérdida de función secundaria del vehículo",
+                    "causes": [
+                      {
+                        "id": "acd68f06-98c2-4b53-8f13-19fff254dbbd",
+                        "description": "Parámetros de proceso desajustados",
+                        "severity": 5,
+                        "occurrence": 2,
+                        "detection": 8,
+                        "actionPriority": "L",
+                        "preventionControl": "Dossier de parámetros de proceso / Procedimiento de arranque de fabricación inyección",
+                        "detectionControl": "Autocontrol: Inspección visual del operador a 100% de las piezas",
+                        "specialChar": "",
+                        "characteristicNumber": "",
+                        "filterCode": "",
+                        "preventionAction": "",
+                        "detectionAction": "",
+                        "responsible": "",
+                        "targetDate": "",
+                        "status": "",
+                        "actionTaken": "",
+                        "completionDate": "",
+                        "severityNew": "",
+                        "occurrenceNew": "",
+                        "detectionNew": "",
+                        "apNew": "",
+                        "observations": "",
+                        "ap": "L",
+                        "cause": "Parámetros de proceso desajustados"
+                      },
+                      {
+                        "id": "2810662b-6a30-4ec4-b9a8-10396bb9e721",
+                        "description": "Obstrucción / insuficiencia de fugas de aire en el molde",
+                        "severity": 5,
+                        "occurrence": 2,
+                        "detection": 8,
+                        "actionPriority": "L",
+                        "preventionControl": "Dossier de parámetros de proceso / Procedimiento de arranque de fabricación inyección",
+                        "detectionControl": "Autocontrol: Inspección visual del operador a 100% de las piezas",
+                        "specialChar": "",
+                        "characteristicNumber": "",
+                        "filterCode": "",
+                        "preventionAction": "",
+                        "detectionAction": "",
+                        "responsible": "",
+                        "targetDate": "",
+                        "status": "",
+                        "actionTaken": "",
+                        "completionDate": "",
+                        "severityNew": "",
+                        "occurrenceNew": "",
+                        "detectionNew": "",
+                        "apNew": "",
+                        "observations": "",
+                        "ap": "L",
+                        "cause": "Obstrucción / insuficiencia de fugas de aire en el molde"
+                      }
+                    ],
+                    "severity": 5
+                  },
+                  {
+                    "id": "e72f095a-eecf-4e52-8f4c-27bb2666d5f2",
+                    "description": "Chupados (rechupes) en pieza inyectada",
+                    "effectLocal": "Retrabajo fuera del puesto",
+                    "effectNextLevel": "Parada de hasta 1 hora",
+                    "effectEndUser": "Pérdida de función secundaria del vehículo",
+                    "causes": [
+                      {
+                        "id": "1208ee8b-1b9d-49b7-aec2-e83c8d386a58",
+                        "description": "Presión de compactación baja",
+                        "severity": 5,
+                        "occurrence": 2,
+                        "detection": 8,
+                        "actionPriority": "L",
+                        "preventionControl": "Dossier de parámetros de proceso / Procedimiento de arranque de fabricación inyección",
+                        "detectionControl": "Autocontrol: Inspección visual del operador a 100% de las piezas",
+                        "specialChar": "",
+                        "characteristicNumber": "",
+                        "filterCode": "",
+                        "preventionAction": "",
+                        "detectionAction": "",
+                        "responsible": "",
+                        "targetDate": "",
+                        "status": "",
+                        "actionTaken": "",
+                        "completionDate": "",
+                        "severityNew": "",
+                        "occurrenceNew": "",
+                        "detectionNew": "",
+                        "apNew": "",
+                        "observations": "",
+                        "ap": "L",
+                        "cause": "Presión de compactación baja"
+                      },
+                      {
+                        "id": "2b079993-6b8c-4760-8fa9-f5ece47e8f43",
+                        "description": "Tiempo de compactación bajo",
+                        "severity": 5,
+                        "occurrence": 2,
+                        "detection": 6,
+                        "actionPriority": "L",
+                        "preventionControl": "Dossier de parámetros de proceso / Procedimiento de arranque de fabricación inyección",
+                        "detectionControl": "Autocontrol: Inspección visual del operador a 100% de las piezas",
+                        "specialChar": "",
+                        "characteristicNumber": "",
+                        "filterCode": "",
+                        "preventionAction": "",
+                        "detectionAction": "",
+                        "responsible": "",
+                        "targetDate": "",
+                        "status": "",
+                        "actionTaken": "",
+                        "completionDate": "",
+                        "severityNew": "",
+                        "occurrenceNew": "",
+                        "detectionNew": "",
+                        "apNew": "",
+                        "observations": "",
+                        "ap": "L",
+                        "cause": "Tiempo de compactación bajo"
+                      },
+                      {
+                        "id": "d7e1d40a-4a8f-4714-840c-b1fd994ba891",
+                        "description": "Ponto de inyección (ataque) reducido",
+                        "severity": 5,
+                        "occurrence": 2,
+                        "detection": 8,
+                        "actionPriority": "L",
+                        "preventionControl": "Dossier de parámetros de proceso / Procedimiento de arranque de fabricación inyección",
+                        "detectionControl": "Autocontrol: Inspección visual del operador a 100% de las piezas",
+                        "specialChar": "",
+                        "characteristicNumber": "",
+                        "filterCode": "",
+                        "preventionAction": "",
+                        "detectionAction": "",
+                        "responsible": "",
+                        "targetDate": "",
+                        "status": "",
+                        "actionTaken": "",
+                        "completionDate": "",
+                        "severityNew": "",
+                        "occurrenceNew": "",
+                        "detectionNew": "",
+                        "apNew": "",
+                        "observations": "",
+                        "ap": "L",
+                        "cause": "Ponto de inyección (ataque) reducido"
+                      }
+                    ],
+                    "severity": 5
+                  },
+                  {
+                    "id": "f735dd98-c92f-4b93-b701-4a13aac78aa5",
+                    "description": "Dimensional NOK en pieza inyectada",
+                    "effectLocal": "Retrabajo fuera del puesto",
+                    "effectNextLevel": "Parada de hasta 1 hora",
+                    "effectEndUser": "Pérdida de función secundaria del vehículo",
+                    "causes": [
+                      {
+                        "id": "b4e5157e-01f6-4cf6-a94d-5e012abd406d",
+                        "description": "Parámetros de proceso desajustados",
+                        "severity": 6,
+                        "occurrence": 2,
+                        "detection": 8,
+                        "actionPriority": "L",
+                        "preventionControl": "Dossier de parámetros de proceso / Procedimiento de arranque de fabricación inyección",
+                        "detectionControl": "Autocontrol: Inspección visual del operador a 100% de las piezas",
+                        "specialChar": "",
+                        "characteristicNumber": "",
+                        "filterCode": "",
+                        "preventionAction": "",
+                        "detectionAction": "",
+                        "responsible": "",
+                        "targetDate": "",
+                        "status": "",
+                        "actionTaken": "",
+                        "completionDate": "",
+                        "severityNew": "",
+                        "occurrenceNew": "",
+                        "detectionNew": "",
+                        "apNew": "",
+                        "observations": "",
+                        "ap": "L",
+                        "cause": "Parámetros de proceso desajustados"
+                      },
+                      {
+                        "id": "de98020c-4290-498e-95fc-36f503037254",
+                        "description": "Equipo de refrigeración averiado",
+                        "severity": 6,
+                        "occurrence": 2,
+                        "detection": 8,
+                        "actionPriority": "L",
+                        "preventionControl": "Dossier de parámetros de proceso / Procedimiento de arranque de fabricación inyección",
+                        "detectionControl": "Autocontrol: Inspección visual del operador a 100% de las piezas",
+                        "specialChar": "",
+                        "characteristicNumber": "",
+                        "filterCode": "",
+                        "preventionAction": "",
+                        "detectionAction": "",
+                        "responsible": "",
+                        "targetDate": "",
+                        "status": "",
+                        "actionTaken": "",
+                        "completionDate": "",
+                        "severityNew": "",
+                        "occurrenceNew": "",
+                        "detectionNew": "",
+                        "apNew": "",
+                        "observations": "",
+                        "ap": "L",
+                        "cause": "Equipo de refrigeración averiado"
+                      },
+                      {
+                        "id": "c71d3998-28dc-4c8d-9438-acaab3fd0428",
+                        "description": "Contracción de la pieza / enfriamiento del molde",
+                        "severity": 6,
+                        "occurrence": 2,
+                        "detection": 8,
+                        "actionPriority": "L",
+                        "preventionControl": "Dossier de parámetros de proceso / Procedimiento de arranque de fabricación inyección",
+                        "detectionControl": "Autocontrol: Inspección visual del operador a 100% de las piezas",
+                        "specialChar": "",
+                        "characteristicNumber": "",
+                        "filterCode": "",
+                        "preventionAction": "",
+                        "detectionAction": "",
+                        "responsible": "",
+                        "targetDate": "",
+                        "status": "",
+                        "actionTaken": "",
+                        "completionDate": "",
+                        "severityNew": "",
+                        "occurrenceNew": "",
+                        "detectionNew": "",
+                        "apNew": "",
+                        "observations": "",
+                        "ap": "L",
+                        "cause": "Contracción de la pieza / enfriamiento del molde"
+                      }
+                    ],
+                    "severity": 6
+                  },
+                  {
+                    "id": "23353739-628d-4ae2-afdc-ec6e762d4b63",
+                    "description": "Color no conforme en pieza inyectada",
+                    "effectLocal": "Retrabajo fuera del puesto",
+                    "effectNextLevel": "Parada de hasta 1 hora",
+                    "effectEndUser": "Pérdida de función secundaria del vehículo",
+                    "causes": [
+                      {
+                        "id": "8d718d11-4536-44d1-b48e-bc1558283c2e",
+                        "description": "Parámetros de proceso desajustados (temperatura del fundido)",
+                        "severity": 6,
+                        "occurrence": 2,
+                        "detection": 4,
+                        "actionPriority": "L",
+                        "preventionControl": "Dossier de parámetros de proceso / Procedimiento de arranque de fabricación inyección",
+                        "detectionControl": "Autocontrol: Inspección visual del operador a 100% de las piezas",
+                        "specialChar": "",
+                        "characteristicNumber": "",
+                        "filterCode": "",
+                        "preventionAction": "",
+                        "detectionAction": "",
+                        "responsible": "",
+                        "targetDate": "",
+                        "status": "",
+                        "actionTaken": "",
+                        "completionDate": "",
+                        "severityNew": "",
+                        "occurrenceNew": "",
+                        "detectionNew": "",
+                        "apNew": "",
+                        "observations": "",
+                        "ap": "L",
+                        "cause": "Parámetros de proceso desajustados (temperatura del fundido)"
+                      },
+                      {
+                        "id": "1b276e35-9f10-48c2-8fa7-9139365c4723",
+                        "description": "Mezcla con materia prima de la última producción (mala limpieza del husillo)",
+                        "severity": 6,
+                        "occurrence": 1,
+                        "detection": 8,
+                        "actionPriority": "L",
+                        "preventionControl": "Dossier de parámetros de proceso / Procedimiento de arranque de fabricación inyección",
+                        "detectionControl": "Autocontrol: Inspección visual del operador a 100% de las piezas",
+                        "specialChar": "",
+                        "characteristicNumber": "",
+                        "filterCode": "",
+                        "preventionAction": "",
+                        "detectionAction": "",
+                        "responsible": "",
+                        "targetDate": "",
+                        "status": "",
+                        "actionTaken": "",
+                        "completionDate": "",
+                        "severityNew": "",
+                        "occurrenceNew": "",
+                        "detectionNew": "",
+                        "apNew": "",
+                        "observations": "",
+                        "ap": "L",
+                        "cause": "Mezcla con materia prima de la última producción (mala limpieza del husillo)"
+                      }
+                    ],
+                    "severity": 6
+                  },
+                  {
+                    "id": "9a02ee80-28c3-4d43-bdc2-ade34c4db0f6",
+                    "description": "Peso NOK en pieza inyectada",
+                    "effectLocal": "Retrabajo fuera del puesto",
+                    "effectNextLevel": "Parada de hasta 1 hora",
+                    "effectEndUser": "Pérdida de función secundaria del vehículo",
+                    "causes": [
+                      {
+                        "id": "cdccc4c1-ff47-4b51-a21e-6d7f9e558bf0",
+                        "description": "Parámetros de proceso desajustados",
+                        "severity": 5,
+                        "occurrence": 1,
+                        "detection": 8,
+                        "actionPriority": "L",
+                        "preventionControl": "Dossier de parámetros de proceso / Procedimiento de arranque de fabricación inyección",
+                        "detectionControl": "Autocontrol: Inspección visual del operador a 100% de las piezas",
+                        "specialChar": "",
+                        "characteristicNumber": "",
+                        "filterCode": "",
+                        "preventionAction": "",
+                        "detectionAction": "",
+                        "responsible": "",
+                        "targetDate": "",
+                        "status": "",
+                        "actionTaken": "",
+                        "completionDate": "",
+                        "severityNew": "",
+                        "occurrenceNew": "",
+                        "detectionNew": "",
+                        "apNew": "",
+                        "observations": "",
+                        "ap": "L",
+                        "cause": "Parámetros de proceso desajustados"
+                      }
+                    ],
+                    "severity": 5
+                  },
+                  {
+                    "id": "c6983b82-8949-4978-83ac-e547e7ee1bd4",
+                    "description": "Piezas con rayas/marcas",
+                    "effectLocal": "Retrabajo fuera del puesto",
+                    "effectNextLevel": "Parada de hasta 1 hora",
+                    "effectEndUser": "Pérdida de función secundaria del vehículo",
+                    "causes": [
+                      {
+                        "id": "e74bb260-6e23-48bb-8099-bb395421ccbf",
+                        "description": "Degradación / desajuste del funcionamiento del robot",
+                        "severity": 6,
+                        "occurrence": 2,
+                        "detection": 8,
+                        "actionPriority": "L",
+                        "preventionControl": "Dossier de parámetros de proceso / Procedimiento de arranque de fabricación inyección",
+                        "detectionControl": "Autocontrol: Inspección visual del operador a 100% de las piezas",
+                        "specialChar": "",
+                        "characteristicNumber": "",
+                        "filterCode": "",
+                        "preventionAction": "",
+                        "detectionAction": "",
+                        "responsible": "",
+                        "targetDate": "",
+                        "status": "",
+                        "actionTaken": "",
+                        "completionDate": "",
+                        "severityNew": "",
+                        "occurrenceNew": "",
+                        "detectionNew": "",
+                        "apNew": "",
+                        "observations": "",
+                        "ap": "L",
+                        "cause": "Degradación / desajuste del funcionamiento del robot"
+                      },
+                      {
+                        "id": "454d7013-53ea-4dc6-8358-861ed6be5632",
+                        "description": "Error del operador por falta de formación",
+                        "severity": 6,
+                        "occurrence": 2,
+                        "detection": 8,
+                        "actionPriority": "L",
+                        "preventionControl": "Dossier de parámetros de proceso / Procedimiento de arranque de fabricación inyección",
+                        "detectionControl": "Autocontrol: Inspección visual del operador a 100% de las piezas",
+                        "specialChar": "",
+                        "characteristicNumber": "",
+                        "filterCode": "",
+                        "preventionAction": "",
+                        "detectionAction": "",
+                        "responsible": "",
+                        "targetDate": "",
+                        "status": "",
+                        "actionTaken": "",
+                        "completionDate": "",
+                        "severityNew": "",
+                        "occurrenceNew": "",
+                        "detectionNew": "",
+                        "apNew": "",
+                        "observations": "",
+                        "ap": "L",
+                        "cause": "Error del operador por falta de formación"
+                      },
+                      {
+                        "id": "a756a627-fae3-4c17-ab82-e7cdf3308dfe",
+                        "description": "Línea de junta del molde dañada",
+                        "severity": 6,
+                        "occurrence": 2,
+                        "detection": 8,
+                        "actionPriority": "L",
+                        "preventionControl": "Dossier de parámetros de proceso / Procedimiento de arranque de fabricación inyección",
+                        "detectionControl": "Autocontrol: Inspección visual del operador a 100% de las piezas",
+                        "specialChar": "",
+                        "characteristicNumber": "",
+                        "filterCode": "",
+                        "preventionAction": "",
+                        "detectionAction": "",
+                        "responsible": "",
+                        "targetDate": "",
+                        "status": "",
+                        "actionTaken": "",
+                        "completionDate": "",
+                        "severityNew": "",
+                        "occurrenceNew": "",
+                        "detectionNew": "",
+                        "apNew": "",
+                        "observations": "",
+                        "ap": "L",
+                        "cause": "Línea de junta del molde dañada"
+                      }
+                    ],
+                    "severity": 6
+                  },
+                  {
+                    "id": "09e0883a-5291-4a0c-beec-e25175f64da9",
+                    "description": "Material con humedad",
+                    "effectLocal": "Retrabajo fuera del puesto",
+                    "effectNextLevel": "Parada de hasta 1 hora",
+                    "effectEndUser": "Pérdida de función secundaria del vehículo",
+                    "causes": [
+                      {
+                        "id": "1ecde47c-8570-4867-a1e5-b8ece7565357",
+                        "description": "Tiempo de secado incorrecto",
+                        "severity": 6,
+                        "occurrence": 2,
+                        "detection": 8,
+                        "actionPriority": "L",
+                        "preventionControl": "Dossier de parámetros de proceso / Procedimiento de arranque de fabricación inyección",
+                        "detectionControl": "Autocontrol: Inspección visual del operador a 100% de las piezas",
+                        "specialChar": "",
+                        "characteristicNumber": "",
+                        "filterCode": "",
+                        "preventionAction": "",
+                        "detectionAction": "",
+                        "responsible": "",
+                        "targetDate": "",
+                        "status": "",
+                        "actionTaken": "",
+                        "completionDate": "",
+                        "severityNew": "",
+                        "occurrenceNew": "",
+                        "detectionNew": "",
+                        "apNew": "",
+                        "observations": "",
+                        "ap": "L",
+                        "cause": "Tiempo de secado incorrecto"
+                      },
+                      {
+                        "id": "3036f8b3-4476-4830-9c57-02fdbc06e027",
+                        "description": "Temperatura de secado incorrecta",
+                        "severity": 6,
+                        "occurrence": 2,
+                        "detection": 8,
+                        "actionPriority": "L",
+                        "preventionControl": "Dossier de parámetros de proceso / Procedimiento de arranque de fabricación inyección",
+                        "detectionControl": "Autocontrol: Inspección visual del operador a 100% de las piezas",
+                        "specialChar": "",
+                        "characteristicNumber": "",
+                        "filterCode": "",
+                        "preventionAction": "",
+                        "detectionAction": "",
+                        "responsible": "",
+                        "targetDate": "",
+                        "status": "",
+                        "actionTaken": "",
+                        "completionDate": "",
+                        "severityNew": "",
+                        "occurrenceNew": "",
+                        "detectionNew": "",
+                        "apNew": "",
+                        "observations": "",
+                        "ap": "L",
+                        "cause": "Temperatura de secado incorrecta"
+                      },
+                      {
+                        "id": "71df55a8-bd4d-4068-b4a2-ae6250cc7ee8",
+                        "description": "Exceso de humedad de los materiales (mal acondicionamiento)",
+                        "severity": 6,
+                        "occurrence": 2,
+                        "detection": 8,
+                        "actionPriority": "L",
+                        "preventionControl": "Dossier de parámetros de proceso / Procedimiento de arranque de fabricación inyección",
+                        "detectionControl": "Autocontrol: Inspección visual del operador a 100% de las piezas",
+                        "specialChar": "",
+                        "characteristicNumber": "",
+                        "filterCode": "",
+                        "preventionAction": "",
+                        "detectionAction": "",
+                        "responsible": "",
+                        "targetDate": "",
+                        "status": "",
+                        "actionTaken": "",
+                        "completionDate": "",
+                        "severityNew": "",
+                        "occurrenceNew": "",
+                        "detectionNew": "",
+                        "apNew": "",
+                        "observations": "",
+                        "ap": "L",
+                        "cause": "Exceso de humedad de los materiales (mal acondicionamiento)"
+                      }
+                    ],
+                    "severity": 6
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "opNumber": "10",
+        "name": "INYECCION DE PIEZA PLASTICA"
+      },
+      {
+        "id": "6ac5d8f6-2a71-4c62-a880-00f5170a8ce8",
+        "operationNumber": "11",
+        "operationName": "ALMACENAMIENTO EN MEDIOS WIP",
+        "workElements": [
+          {
+            "id": "071dda03-8525-472f-8cf6-643bde4bd18d",
+            "name": "Zorras manuales",
+            "type": "Maquina",
+            "functions": [
+              {
+                "id": "70dde71a-2e50-44c6-91d3-7a2177862f05",
+                "functionDescription": "Mantener la Estabilidad de la Carga durante el Movimiento Interno",
+                "failures": []
+              }
+            ]
+          },
+          {
+            "id": "d672c89c-6379-44db-af86-9b4b87e2f046",
+            "name": "Operador de producción / Líder de equipo",
+            "type": "Mano de Obra",
+            "functions": [
+              {
+                "id": "2db0a25d-95b4-4eae-8cf4-b3c464610f06",
+                "functionDescription": "Preparar Kit completo y ordenado de componentes según la Orden de Producción",
+                "failures": [
+                  {
+                    "id": "6bdaf2fc-2b8d-4898-8a1b-6d737929b8ce",
+                    "description": "Faltante/exceso de componentes en la caja del kit",
+                    "effectLocal": "Una porción de la producción sea descartada (Descarte)",
+                    "effectNextLevel": "Parada de línea entre una hora y un turno",
+                    "effectEndUser": "Degradación de la función secundaria del vehículo",
+                    "causes": [
+                      {
+                        "id": "56901339-87b5-4c22-a4a8-3a52e0688dbd",
+                        "description": "El Operador no realiza el conteo/verificación completo de la cantidad de componentes según la OP",
+                        "severity": 5,
+                        "occurrence": 5,
+                        "detection": 5,
+                        "actionPriority": "L",
+                        "preventionControl": "Existencia de documentación de proceso (Ayuda visual / Hoja de operación estándar)",
+                        "detectionControl": "Verificación manual o conteo visual del kit por parte del operador",
+                        "specialChar": "",
+                        "characteristicNumber": "",
+                        "preventionAction": "",
+                        "detectionAction": "",
+                        "responsible": "",
+                        "targetDate": "",
+                        "status": "",
+                        "ap": "L",
+                        "cause": "El Operador no realiza el conteo/verificación completo de la cantidad de componentes según la OP"
+                      }
+                    ],
+                    "severity": 5
+                  },
+                  {
+                    "id": "9a612429-5177-4876-a27c-8c4ad7129d18",
+                    "description": "Componente incorrecto (variante o color) incluido",
+                    "effectLocal": "Una porción de la producción afectada debe ser desechada",
+                    "effectNextLevel": "Parada de línea",
+                    "effectEndUser": "Degradación de la función secundaria del vehículo",
+                    "causes": [
+                      {
+                        "id": "55aa5cb8-983e-42d3-9041-41d54b523d18",
+                        "description": "Mano de Obra no realiza la verificación visual contra la Orden de Producción",
+                        "severity": 5,
+                        "occurrence": 5,
+                        "detection": 5,
+                        "actionPriority": "L",
+                        "preventionControl": "La Orden de Producción (OP) se encuentra disponible y formalizada",
+                        "detectionControl": "El operador realiza una verificación visual del componente contra el código en la OP",
+                        "specialChar": "",
+                        "characteristicNumber": "",
+                        "preventionAction": "",
+                        "detectionAction": "",
+                        "responsible": "",
+                        "targetDate": "",
+                        "status": "",
+                        "ap": "L",
+                        "cause": "Mano de Obra no realiza la verificación visual contra la Orden de Producción"
+                      }
+                    ],
+                    "severity": 5
+                  },
+                  {
+                    "id": "75e95626-d58e-4e0f-a127-43a3ff8c7546",
+                    "description": "Pieza dañada (rasgadura, mancha) incluida en el kit",
+                    "effectLocal": "Descartar (Descarte) una porción de la producción",
+                    "effectNextLevel": "Parada de línea",
+                    "effectEndUser": "Degradación de la función secundaria del vehículo",
+                    "causes": [
+                      {
+                        "id": "3dd39515-0020-47d2-b065-aeb8c80ab5fe",
+                        "description": "El Operador no sigue el procedimiento de revisión visual de defectos",
+                        "severity": 5,
+                        "occurrence": 5,
+                        "detection": 5,
+                        "actionPriority": "L",
+                        "preventionControl": "Instrucción o procedimiento que establece que el operador debe buscar rasgaduras o manchas",
+                        "detectionControl": "Inspección visual por operador",
+                        "specialChar": "",
+                        "characteristicNumber": "",
+                        "preventionAction": "",
+                        "detectionAction": "",
+                        "responsible": "",
+                        "targetDate": "",
+                        "status": "",
+                        "ap": "L",
+                        "cause": "El Operador no sigue el procedimiento de revisión visual de defectos"
+                      }
+                    ],
+                    "severity": 5
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "f3904869-4918-4374-b66e-d4f871f4595b",
+            "name": "Etiquetas blancas 100x60mm / Etiquetas de rechazo",
+            "type": "Material",
+            "functions": [
+              {
+                "id": "48ba51fc-0a51-4735-a25d-215a3d02eea3",
+                "functionDescription": "Identificar Producto/Kit. Asegurar Trazabilidad.",
+                "failures": []
+              }
+            ]
+          },
+          {
+            "id": "efff9b81-ef0d-4324-b3f8-5937b45941ab",
+            "name": "Método de Fabricación",
+            "type": "Metodo",
+            "functions": [
+              {
+                "id": "eefa3064-7987-4942-b4ac-fd3c51862a34",
+                "functionDescription": "Utilizar la Hoja de Operaciones vigente.",
+                "failures": []
+              }
+            ]
+          },
+          {
+            "id": "36495051-5665-424e-af5d-bd708b99a526",
+            "name": "Iluminación/Ruido, Ley 19587",
+            "type": "Medio Ambiente",
+            "functions": [
+              {
+                "id": "fae6cfe7-27c9-4535-ad31-9467e4988f9e",
+                "functionDescription": "Mantener condiciones de seguridad ocupacional según Ley 19587",
+                "failures": []
+              }
+            ]
+          }
+        ],
+        "opNumber": "11",
+        "name": "ALMACENAMIENTO EN MEDIOS WIP"
+      },
+      {
+        "id": "6d78dc24-88de-426e-88d7-a928c6ec7486",
+        "operationNumber": "20",
+        "operationName": "ADHESIVADO HOT MELT",
+        "workElements": [
+          {
+            "id": "776e232c-d46b-4f8f-9edf-f64b2c0029db",
+            "name": "Sistema de Fusión / Sistema de Aplicación / Sistema de Desenrollado y Tensión / Sistema de Enfriamiento",
+            "type": "Maquina",
+            "functions": [
+              {
+                "id": "645153c7-df41-4816-b4d1-24a158f8f77b",
+                "functionDescription": "Calentar y fundir el adhesivo, transferir capa controlada sobre sustrato TPO, suministrar sustrato continuo, reducir temperatura",
+                "failures": [
+                  {
+                    "id": "e5f4e3b0-5cbe-4c73-8244-2c1710921393",
+                    "description": "Adhesión deficiente del vinilo en la pieza plástica / quemaduras en el vinilo",
+                    "effectLocal": "Descarte",
+                    "effectNextLevel": "Potencial parada de línea",
+                    "effectEndUser": "Reclamo de aspecto",
+                    "causes": [
+                      {
+                        "id": "f23e302c-ecb9-4f4d-b607-39661db9321f",
+                        "description": "TBD",
+                        "severity": 6,
+                        "occurrence": 4,
+                        "detection": 8,
+                        "actionPriority": "M",
+                        "preventionControl": "Hojas de operaciones / ayudas visuales",
+                        "detectionControl": "Visual",
+                        "specialChar": "",
+                        "characteristicNumber": "",
+                        "preventionAction": "",
+                        "detectionAction": "",
+                        "responsible": "",
+                        "targetDate": "",
+                        "status": "",
+                        "ap": "M",
+                        "cause": "TBD"
+                      },
+                      {
+                        "id": "e9a64d9b-728f-4abf-99ec-82e5c58f1f2a",
+                        "description": "Superficie de la pieza con polvo, grasa o oleosidad",
+                        "severity": 6,
+                        "occurrence": 3,
+                        "detection": 8,
+                        "actionPriority": "L",
+                        "preventionControl": "Hojas de operaciones / ayudas visuales",
+                        "detectionControl": "Visual",
+                        "specialChar": "",
+                        "characteristicNumber": "",
+                        "preventionAction": "",
+                        "detectionAction": "",
+                        "responsible": "",
+                        "targetDate": "",
+                        "status": "",
+                        "ap": "L",
+                        "cause": "Superficie de la pieza con polvo, grasa o oleosidad"
+                      },
+                      {
+                        "id": "8bf7b35d-c313-487b-a214-f5e5537ce022",
+                        "description": "Error del operario / máquina empastada",
+                        "severity": 6,
+                        "occurrence": 3,
+                        "detection": 8,
+                        "actionPriority": "L",
+                        "preventionControl": "Limpieza constante del rodillo / Hojas de operaciones",
+                        "detectionControl": "Visual",
+                        "specialChar": "",
+                        "characteristicNumber": "",
+                        "preventionAction": "",
+                        "detectionAction": "",
+                        "responsible": "",
+                        "targetDate": "",
+                        "status": "",
+                        "ap": "L",
+                        "cause": "Error del operario / máquina empastada"
+                      }
+                    ],
+                    "severity": 6
+                  },
+                  {
+                    "id": "b424f28e-0071-4e17-a922-3ec592648099",
+                    "description": "Peso del vinilo adhesivado incorrecto",
+                    "effectLocal": "Adhesión deficiente",
+                    "effectNextLevel": "Potencial parada de línea",
+                    "effectEndUser": "Reclamo de aspecto",
+                    "causes": [
+                      {
+                        "id": "530f795f-6ae3-47ac-a339-093b31c5d67e",
+                        "description": "Falta de control de peso de adhesivo",
+                        "severity": 6,
+                        "occurrence": 4,
+                        "detection": 8,
+                        "actionPriority": "M",
+                        "preventionControl": "Plan de reacción",
+                        "detectionControl": "Pesaje por muestreo",
+                        "specialChar": "",
+                        "characteristicNumber": "",
+                        "preventionAction": "",
+                        "detectionAction": "",
+                        "responsible": "",
+                        "targetDate": "",
+                        "status": "",
+                        "ap": "M",
+                        "cause": "Falta de control de peso de adhesivo"
+                      }
+                    ],
+                    "severity": 6
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "cd2e6b4d-de18-4d6a-bf8f-8e402dc28652",
+            "name": "Operador de producción / Líder de equipo",
+            "type": "Mano de Obra",
+            "functions": [
+              {
+                "id": "6df32568-adaf-4659-8c8d-d762f0ade6ae",
+                "functionDescription": "Cargar los parámetros correctos de la receta en el HMI y realizar la carga/empalme de la bobina de TPO sin arrugas",
+                "failures": [
+                  {
+                    "id": "db117bcb-b2f3-40ec-b1c1-dfeba44179e8",
+                    "description": "Posible quemadura en el operario",
+                    "effectLocal": "Accidente laboral",
+                    "effectNextLevel": "N/A",
+                    "effectEndUser": "Riesgo de seguridad",
+                    "causes": [
+                      {
+                        "id": "3c0f8d2c-4a3c-4981-a4fe-741144aeb5f6",
+                        "description": "Falta de EPP y herramientas",
+                        "severity": 4,
+                        "occurrence": 1,
+                        "detection": 4,
+                        "actionPriority": "L",
+                        "preventionControl": "Pinzas para tomar el vinilo",
+                        "detectionControl": "Visual",
+                        "specialChar": "",
+                        "characteristicNumber": "",
+                        "preventionAction": "",
+                        "detectionAction": "",
+                        "responsible": "",
+                        "targetDate": "",
+                        "status": "",
+                        "ap": "L",
+                        "cause": "Falta de EPP y herramientas"
+                      }
+                    ],
+                    "severity": 4
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "b54b906b-011a-4646-8278-a7888e7a0717",
+            "name": "Adhesivo Hot Melt / Rollo de TPO (Sustrato)",
+            "type": "Material",
+            "functions": [
+              {
+                "id": "206d97e8-98b3-458c-8f34-9bc297b7e1d1",
+                "functionDescription": "Adhesión química y resistencia térmica. Fundirse homogéneamente con viscosidad adecuada.",
+                "failures": []
+              }
+            ]
+          },
+          {
+            "id": "a963508c-b1e2-4fb1-9196-9cfd5ab4f224",
+            "name": "Método de Fabricación",
+            "type": "Metodo",
+            "functions": [
+              {
+                "id": "3edde8e3-df55-4621-9cba-3d2ea020647f",
+                "functionDescription": "Utilizar la Hoja de Operaciones vigente.",
+                "failures": []
+              }
+            ]
+          },
+          {
+            "id": "a2c390ad-bfa7-4354-8b5e-c7d2e5018b33",
+            "name": "Iluminación/Ruido, Ley 19587",
+            "type": "Medio Ambiente",
+            "functions": [
+              {
+                "id": "703735eb-8109-4ae9-baf6-dee4b1e6543f",
+                "functionDescription": "Mantener condiciones de seguridad ocupacional según Ley 19587",
+                "failures": []
+              }
+            ]
+          }
+        ],
+        "opNumber": "20",
+        "name": "ADHESIVADO HOT MELT"
+      },
+      {
+        "id": "eb7d6b45-b74b-4641-977a-afd7ac2aead6",
+        "operationNumber": "30",
+        "operationName": "PROCESO DE IMG (TERMOFORMADO)",
+        "workElements": [
+          {
+            "id": "66f7437c-b09b-4738-a010-307f033f0e56",
+            "name": "Estación de Calentamiento / Estación de Formado / Sistema de Vacío / Sistema de Enfriamiento / Mecanismo de Transporte",
+            "type": "Maquina",
+            "functions": [
+              {
+                "id": "d86dc8da-b109-4fb5-8a68-94219171da07",
+                "functionDescription": "Calentar la lámina pre-laminada, conformarla por vacío sobre un molde texturizado, enfriar la pieza",
+                "failures": [
+                  {
+                    "id": "a80da163-ae30-4e92-bbd6-0b1f23b716f9",
+                    "description": "Temperatura de lámina TPO insuficiente",
+                    "effectLocal": "Descarte / Retrabajo",
+                    "effectNextLevel": "Potencial parada de línea",
+                    "effectEndUser": "Deformaciones o pérdida de textura",
+                    "causes": [
+                      {
+                        "id": "42a10e3b-c8c0-4434-befd-f18d4d672d17",
+                        "description": "Sensor de temperatura de horno descalibrado o desplazado",
+                        "severity": 5,
+                        "occurrence": 4,
+                        "detection": 7,
+                        "actionPriority": "M",
+                        "preventionControl": "Calibración del sensor cada turno con pirómetro de referencia",
+                        "detectionControl": "Inspección visual 100% de textura en estación de control",
+                        "specialChar": "",
+                        "characteristicNumber": "",
+                        "preventionAction": "",
+                        "detectionAction": "",
+                        "responsible": "",
+                        "targetDate": "",
+                        "status": "",
+                        "ap": "M",
+                        "cause": "Sensor de temperatura de horno descalibrado o desplazado"
+                      }
+                    ],
+                    "severity": 5
+                  },
+                  {
+                    "id": "b6510913-6bd7-46b4-b2a8-c52d507ea3c7",
+                    "description": "Espesor de pared excesivo en zona de ruptura de Airbag",
+                    "effectLocal": "Descarte / Retrabajo",
+                    "effectNextLevel": "Riesgo de seguridad - Airbag no despliega correctamente",
+                    "effectEndUser": "Riesgo de seguridad",
+                    "causes": [
+                      {
+                        "id": "c098bc6e-ec7d-4e06-a6e0-e38a8c202d21",
+                        "description": "Obstrucción parcial de micro-canales de vacío por acumulación de vapores Hot Melt",
+                        "severity": 10,
+                        "occurrence": 6,
+                        "detection": 3,
+                        "actionPriority": "H",
+                        "preventionControl": "Limpieza de molde programada cada 4 hs con hielo seco",
+                        "detectionControl": "Medición por Ultrasonido cada 2 horas",
+                        "specialChar": "CC",
+                        "characteristicNumber": "",
+                        "preventionAction": "",
+                        "detectionAction": "",
+                        "responsible": "",
+                        "targetDate": "",
+                        "status": "",
+                        "ap": "H",
+                        "cause": "Obstrucción parcial de micro-canales de vacío por acumulación de vapores Hot Melt"
+                      }
+                    ],
+                    "severity": 10
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "6f15cb87-6c4d-4e00-9edc-4e7328c9e9ae",
+            "name": "Operador de Proceso",
+            "type": "Mano de Obra",
+            "functions": [
+              {
+                "id": "dae9b27b-dcbd-47df-a577-3cabfc9bb6e7",
+                "functionDescription": "Cargar parámetros en el HMI, vigilar el ciclo automático y verificar visualmente las piezas conformadas",
+                "failures": []
+              }
+            ]
+          },
+          {
+            "id": "59333e49-3fed-46a7-b7c7-8ccf79f361a1",
+            "name": "Rollo Pre-laminado (TPO + Hot Melt) / Molde de IMG",
+            "type": "Material",
+            "functions": [
+              {
+                "id": "20334fe9-aa88-4213-9c6e-e9f4b2a4ce3c",
+                "functionDescription": "Base receptora del adhesivo con tensión superficial correcta y estabilidad dimensional",
+                "failures": [
+                  {
+                    "id": "26a2d972-bf6b-4e69-ad45-c4873842c9b3",
+                    "description": "Ancho de bobina de TPO fuera de tolerancia",
+                    "effectLocal": "Desperdicio de material / Costo adicional",
+                    "effectNextLevel": "Sin efecto significativo",
+                    "effectEndUser": "Sin efecto",
+                    "causes": [
+                      {
+                        "id": "def70917-f99b-40b5-9641-a01cf80eac13",
+                        "description": "Error en el pedido de compras o variación del proveedor de lámina",
+                        "severity": 3,
+                        "occurrence": 3,
+                        "detection": 4,
+                        "actionPriority": "L",
+                        "preventionControl": "Certificado de calidad del proveedor verificado en recepción",
+                        "detectionControl": "Medición de ancho con flexómetro al inicio de cada bobina",
+                        "specialChar": "",
+                        "characteristicNumber": "",
+                        "preventionAction": "",
+                        "detectionAction": "",
+                        "responsible": "",
+                        "targetDate": "",
+                        "status": "",
+                        "ap": "L",
+                        "cause": "Error en el pedido de compras o variación del proveedor de lámina"
+                      }
+                    ],
+                    "severity": 3
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "af1e15eb-01ce-423c-b835-c29ee20dceaa",
+            "name": "Método de Fabricación",
+            "type": "Metodo",
+            "functions": [
+              {
+                "id": "dd2002d8-a188-4597-b4a7-570612f29f1b",
+                "functionDescription": "Utilizar la Hoja de Operaciones vigente.",
+                "failures": []
+              }
+            ]
+          },
+          {
+            "id": "92e4e9b7-5613-499a-b4d9-185f96a5c5a9",
+            "name": "Suministro de Agua / Suministro de Aire Comprimido",
+            "type": "Medio Ambiente",
+            "functions": [
+              {
+                "id": "b0c1591d-fba6-42c5-bf00-6c2b94417b14",
+                "functionDescription": "Mantener condiciones de seguridad ocupacional según Ley 19587",
+                "failures": []
+              }
+            ]
+          }
+        ],
+        "opNumber": "30",
+        "name": "PROCESO DE IMG (TERMOFORMADO)"
+      },
+      {
+        "id": "8e9f0392-f10c-4421-a661-4466fab3bca0",
+        "operationNumber": "40",
+        "operationName": "TRIMMING - CORTE FINAL",
+        "workElements": [
+          {
+            "id": "f395df08-7ca3-4746-b130-b5122e983938",
+            "name": "Componentes de Cuchilla (Cuchilla caliente) / Sistema Neumático / Plataforma del Molde Inferior / Sistema de Control Eléctrico",
+            "type": "Maquina",
+            "functions": [
+              {
+                "id": "6ddcda19-2755-4921-bdb5-c23e8349311d",
+                "functionDescription": "Proveer fuerza y movimiento preciso para desplazar módulos de corte, controlar tiempos y secuencia",
+                "failures": [
+                  {
+                    "id": "31e87ce3-fd3b-4f75-ba57-ef176a0ef3f3",
+                    "description": "Contorno de corte desplazado (Fuera de tolerancia geométrica)",
+                    "effectLocal": "Retrabajo manual costoso (lijado/recorte)",
+                    "effectNextLevel": "Gap excesivo entre panel y chapa",
+                    "effectEndUser": "Ruidos (Squeak & Rattle)",
+                    "causes": [
+                      {
+                        "id": "e6dd47fe-dc53-4ce0-9858-365b48a93a53",
+                        "description": "Desgaste en los pines de centrado del fixture o pieza mal asentada por suciedad",
+                        "severity": 5,
+                        "occurrence": 3,
+                        "detection": 7,
+                        "actionPriority": "L",
+                        "preventionControl": "Mantenimiento Preventivo de Fixtures: verificación dimensional de pines cada 3 meses",
+                        "detectionControl": "Medición en Dispositivo de Control: 1 pieza cada hora",
+                        "specialChar": "",
+                        "characteristicNumber": "",
+                        "preventionAction": "",
+                        "detectionAction": "",
+                        "responsible": "",
+                        "targetDate": "",
+                        "status": "",
+                        "ap": "L",
+                        "cause": "Desgaste en los pines de centrado del fixture o pieza mal asentada por suciedad"
+                      }
+                    ],
+                    "severity": 5
+                  },
+                  {
+                    "id": "44e31a10-0d4f-4fcc-9b54-6e8dd0a6f3bb",
+                    "description": "Borde de corte quemado o con hilachas (Hilos sueltos)",
+                    "effectLocal": "Retrabajo",
+                    "effectNextLevel": "Defecto visual menor",
+                    "effectEndUser": "Mala apariencia de bordes",
+                    "causes": [
+                      {
+                        "id": "4de444f1-76d7-4ef1-a537-e04a59d2eea2",
+                        "description": "Velocidad de avance de cuchilla incorrecta por fuga de aire o regulador desajustado",
+                        "severity": 5,
+                        "occurrence": 6,
+                        "detection": 5,
+                        "actionPriority": "M",
+                        "preventionControl": "Hoja de Parámetros Estándar: verificación de presiones de aire al inicio de turno",
+                        "detectionControl": "Inspección Visual 100%: el operario retira las hilachas manualmente",
+                        "specialChar": "",
+                        "characteristicNumber": "",
+                        "preventionAction": "",
+                        "detectionAction": "",
+                        "responsible": "",
+                        "targetDate": "",
+                        "status": "",
+                        "ap": "M",
+                        "cause": "Velocidad de avance de cuchilla incorrecta por fuga de aire o regulador desajustado"
+                      }
+                    ],
+                    "severity": 5
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "3912ba24-d3b5-448b-aadb-0d4590cbaffc",
+            "name": "Operador de Carga/Descarga",
+            "type": "Mano de Obra",
+            "functions": [
+              {
+                "id": "a9f62b8a-18fb-4333-a0e6-7fa58c18bcab",
+                "functionDescription": "Cargar pieza en fixture, iniciar ciclo, descargar y verificar",
+                "failures": []
+              }
+            ]
+          },
+          {
+            "id": "7746a11d-52fe-4940-b8fe-390d09b6c651",
+            "name": "Pieza Termoformada (Formed Part) / Aire Comprimido",
+            "type": "Material",
+            "functions": [
+              {
+                "id": "77511968-19e9-4c45-ac69-e81d52729b0e",
+                "functionDescription": "Mantener geometría al ser colocada en el nido, permitir corte sin fracturarse ni delaminarse",
+                "failures": []
+              }
+            ]
+          },
+          {
+            "id": "4a246f31-d613-415a-b9e0-2a7bdbd493d8",
+            "name": "Método de Fabricación",
+            "type": "Metodo",
+            "functions": [
+              {
+                "id": "f2fcfa5f-82cc-4d37-834b-c6dd41e80572",
+                "functionDescription": "Utilizar la Hoja de Operaciones vigente.",
+                "failures": []
+              }
+            ]
+          },
+          {
+            "id": "d18de0c3-688b-4877-bd0c-e7f3dbfaf6a0",
+            "name": "Iluminación/Ruido, Ley 19587",
+            "type": "Medio Ambiente",
+            "functions": [
+              {
+                "id": "3425b132-606b-4cff-8a1e-e864967c3ad0",
+                "functionDescription": "Mantener condiciones de seguridad ocupacional según Ley 19587",
+                "failures": []
+              }
+            ]
+          }
+        ],
+        "opNumber": "40",
+        "name": "TRIMMING - CORTE FINAL"
+      },
+      {
+        "id": "dabbb24b-2c32-4fe2-babb-1505c77fef74",
+        "operationNumber": "50",
+        "operationName": "PLEGADO DE BORDES",
+        "workElements": [
+          {
+            "id": "fffec47e-29b9-4a8f-b3bc-e0457d5f7975",
+            "name": "Línea de Carga/Descarga",
+            "type": "Maquina",
+            "functions": [
+              {
+                "id": "95c6979c-31c1-4828-a7d9-c4f0b05ba4b5",
+                "functionDescription": "Plegado de bordes: revertir los bordes sobrantes de TPO sobre la pieza",
+                "failures": [
+                  {
+                    "id": "d0917066-070c-4ef3-ba08-b85a28de9a8e",
+                    "description": "Delaminación del material en zona de plegado",
+                    "effectLocal": "Desconocimiento de la falla",
+                    "effectNextLevel": "Desgaste o rotura del material por debajo del punto de-tiro",
+                    "effectEndUser": "TBD",
+                    "causes": [
+                      {
+                        "id": "161e0ee3-49d9-4374-84be-1ef62f260f39",
+                        "description": "Temperatura del set-point fuera de rango (< 180°C)",
+                        "severity": 7,
+                        "occurrence": 5,
+                        "detection": 6,
+                        "actionPriority": "M",
+                        "preventionControl": "Verificación de temperatura del horno IR al inicio de turno",
+                        "detectionControl": "Test de adherencia post-plegado manual",
+                        "specialChar": "SC",
+                        "characteristicNumber": "",
+                        "preventionAction": "",
+                        "detectionAction": "",
+                        "responsible": "",
+                        "targetDate": "",
+                        "status": "",
+                        "ap": "M",
+                        "cause": "Temperatura del set-point fuera de rango (< 180°C)"
+                      }
+                    ],
+                    "severity": 7
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "7731a29f-f31e-451b-9dde-eace8d8d175b",
+            "name": "Pieza Recortada (Trimmed Part) / Adhesivo Reactivo (Hot Melt)",
+            "type": "Material",
+            "functions": [
+              {
+                "id": "e464924e-bd6f-4681-a7a3-9063b69a337b",
+                "functionDescription": "Proveer superficie rígida y estable para recibir el plegado",
+                "failures": []
+              }
+            ]
+          },
+          {
+            "id": "f08ec3c3-4f6b-48d6-9442-be123af9f01c",
+            "name": "Método de Fabricación",
+            "type": "Metodo",
+            "functions": [
+              {
+                "id": "b6c1fc6c-6ab6-4eb5-9aa8-7fd26cc33b2e",
+                "functionDescription": "Utilizar la Hoja de Operaciones vigente.",
+                "failures": []
+              }
+            ]
+          },
+          {
+            "id": "bd8778e1-76a6-422f-aac5-39e6a87b1fce",
+            "name": "Temperatura Ambiente / Energía",
+            "type": "Medio Ambiente",
+            "functions": [
+              {
+                "id": "3e262961-0df2-45b6-87cd-f9fa401e953e",
+                "functionDescription": "Mantener condiciones de seguridad ocupacional según Ley 19587",
+                "failures": []
+              }
+            ]
+          }
+        ],
+        "opNumber": "50",
+        "name": "PLEGADO DE BORDES"
+      },
+      {
+        "id": "3e52f277-b23e-4b21-a71e-4e3d3bb329eb",
+        "operationNumber": "60",
+        "operationName": "SOLDADURA DE REFUERZOS INTERNOS",
+        "workElements": [
+          {
+            "id": "c1221712-274d-40d3-a65d-99b78ef0f90c",
+            "name": "Fixture-Nido / Cjto. Presión-Captación / Energía (20 kHz)",
+            "type": "Maquina",
+            "functions": [
+              {
+                "id": "ed25e7cc-f736-468a-9938-2e8a39373d73",
+                "functionDescription": "Unir refuerzos plásticos mediante fusión en los puntos previstos del Top Roll",
+                "failures": [
+                  {
+                    "id": "a13f0d10-72c2-4170-a932-b1f8ea1a2030",
+                    "description": "Soldadura fría / Falta de fusión (Joint débil)",
+                    "effectLocal": "Despacho de piezas con falla no detectable",
+                    "effectNextLevel": "Rechazo en estampado y montaje",
+                    "effectEndUser": "Ruidos (Squeak & Rattle)",
+                    "causes": [
+                      {
+                        "id": "c1ac9728-bc00-480c-b275-ee8c229ee317",
+                        "description": "Tiempo de soldadura muy corto o amplitud baja",
+                        "severity": 5,
+                        "occurrence": 3,
+                        "detection": 7,
+                        "actionPriority": "L",
+                        "preventionControl": "Monitoreo de Energía/Tiempo en cada ciclo (HMI)",
+                        "detectionControl": "Prueba de Torque/Push manual",
+                        "specialChar": "",
+                        "characteristicNumber": "",
+                        "preventionAction": "",
+                        "detectionAction": "",
+                        "responsible": "",
+                        "targetDate": "",
+                        "status": "",
+                        "ap": "L",
+                        "cause": "Tiempo de soldadura muy corto o amplitud baja"
+                      }
+                    ],
+                    "severity": 5
+                  },
+                  {
+                    "id": "bcac3584-559d-478b-ae3d-f9765125a7bc",
+                    "description": "Marca visible (Traspaso) en el lado A",
+                    "effectLocal": "Defectos estéticos y funcionales no detectables",
+                    "effectNextLevel": "TBD",
+                    "effectEndUser": "TBD",
+                    "causes": [
+                      {
+                        "id": "a83b3417-0e15-404f-94ab-0887c0077f9a",
+                        "description": "Exceso de amplitud o presión",
+                        "severity": 5,
+                        "occurrence": 2,
+                        "detection": 2,
+                        "actionPriority": "L",
+                        "preventionControl": "Nidos/Soportes: verificación de Mantenimiento Preventivo semestral",
+                        "detectionControl": "Inspección Visual 100% (Lado A)",
+                        "specialChar": "",
+                        "characteristicNumber": "",
+                        "preventionAction": "",
+                        "detectionAction": "",
+                        "responsible": "",
+                        "targetDate": "",
+                        "status": "",
+                        "ap": "L",
+                        "cause": "Exceso de amplitud o presión"
+                      }
+                    ],
+                    "severity": 5
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "0f8eb422-9750-401d-80e2-ab7b0cae01d6",
+            "name": "Operador de Soldadura",
+            "type": "Mano de Obra",
+            "functions": [
+              {
+                "id": "669ee127-8283-4d59-9506-e864bc4c2aba",
+                "functionDescription": "Colocar todos los refuerzos en sus alojamientos del fixture y posicionar el Top Roll correctamente",
+                "failures": [
+                  {
+                    "id": "4ad99199-7914-4449-b233-83d91e57ae74",
+                    "description": "Refuerzo / Inserto faltante en el ensamble",
+                    "effectLocal": "Componentes faltantes, por error del operario el nido no se carga completamente",
+                    "effectNextLevel": "Potencial parada de línea",
+                    "effectEndUser": "Degradación de la función secundaria",
+                    "causes": [
+                      {
+                        "id": "3761a779-d4eb-4430-b979-8e558591b8c6",
+                        "description": "Error del operario: olvido de cargar el componente en el nido",
+                        "severity": 5,
+                        "occurrence": 2,
+                        "detection": 2,
+                        "actionPriority": "L",
+                        "preventionControl": "Pines y sensores (Poka-Yoke): Sientan en la pieza. Pin de NO encaja",
+                        "detectionControl": "La máquina Falta Pieza y aborta el ciclo: la pantalla muestra el error",
+                        "specialChar": "",
+                        "characteristicNumber": "",
+                        "preventionAction": "",
+                        "detectionAction": "",
+                        "responsible": "",
+                        "targetDate": "",
+                        "status": "",
+                        "ap": "L",
+                        "cause": "Error del operario: olvido de cargar el componente en el nido"
+                      }
+                    ],
+                    "severity": 5
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "a1504ddc-388a-49b1-a3ad-d430e5198f90",
+            "name": "Pieza Plegada (Edgewrapped Part) / Refuerzos Plásticos (Brackets/Bosses)",
+            "type": "Material",
+            "functions": [
+              {
+                "id": "a3723409-f8d5-414f-9e30-739396390bfd",
+                "functionDescription": "Proveer superficie rígida y estable para recibir la soldadura",
+                "failures": []
+              }
+            ]
+          },
+          {
+            "id": "521e21cc-9cf0-4506-9613-009dc8569acf",
+            "name": "Método de Fabricación",
+            "type": "Metodo",
+            "functions": [
+              {
+                "id": "c7547ba6-45f3-468b-92a0-eb970d3ad0d1",
+                "functionDescription": "Utilizar la Hoja de Operaciones vigente.",
+                "failures": []
+              }
+            ]
+          },
+          {
+            "id": "a15ef086-d405-47f3-833e-09802564ef82",
+            "name": "Ruido / Cabina Insonorizada",
+            "type": "Medio Ambiente",
+            "functions": [
+              {
+                "id": "cce69540-1623-4e45-b07b-bc9e4a4724db",
+                "functionDescription": "Mantener condiciones de seguridad ocupacional (Iluminación, protección auditiva por ruido ultrasónico)",
+                "failures": []
+              }
+            ]
+          }
+        ],
+        "opNumber": "60",
+        "name": "SOLDADURA DE REFUERZOS INTERNOS"
+      },
+      {
+        "id": "ebc1a554-2427-4ee2-aca2-187088cb3a52",
+        "operationNumber": "70",
+        "operationName": "SOLDADO TWEETER",
+        "workElements": [
+          {
+            "id": "7c78b19a-64a3-4c4d-9463-515d93e6047a",
+            "name": "Soldadora de ultrasonido",
+            "type": "Maquina",
+            "functions": [
+              {
+                "id": "e3a86160-b402-4f87-bc3c-0aaae3b80977",
+                "functionDescription": "Unir el Tweeter en los alojamientos del Top Roll mediante soldadura de ultrasonido",
+                "failures": [
+                  {
+                    "id": "fbdfcb8b-77a8-44fa-8cff-ac0bf83f7668",
+                    "description": "Falla eléctrica de audio del Tweeter dañado o mal contacto",
+                    "effectLocal": "Si no se prueba, defecto se detecta en el vehículo",
+                    "effectNextLevel": "Pérdida de la función eléctrica de audio final del Top Roll",
+                    "effectEndUser": "TBD",
+                    "causes": [
+                      {
+                        "id": "f61fa5ba-77be-4c6f-ad01-7a0c3cd18d6e",
+                        "description": "Bobina del Tweeter dañada internamente o mal contacto",
+                        "severity": 5,
+                        "occurrence": 2,
+                        "detection": 10,
+                        "actionPriority": "L",
+                        "preventionControl": "Diseño (Repacking): Shot no ectan correcto de colocado en la cavidad",
+                        "detectionControl": "Ninguna: hay tests eléctricos destinados. No hay test de sonido",
+                        "specialChar": "",
+                        "characteristicNumber": "",
+                        "preventionAction": "",
+                        "detectionAction": "",
+                        "responsible": "",
+                        "targetDate": "",
+                        "status": "",
+                        "ap": "L",
+                        "cause": "Bobina del Tweeter dañada internamente o mal contacto"
+                      }
+                    ],
+                    "severity": 5
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "63b93527-583e-4195-8ba9-5f4a0efa6680",
+            "name": "Operador de Soldadura",
+            "type": "Mano de Obra",
+            "functions": [
+              {
+                "id": "909190d7-cd1d-4fd3-a482-1f310a2b44fa",
+                "functionDescription": "Insertar el Tweeter en los alojamientos del Top Roll asegurando que asiente a fondo antes de activar la máquina",
+                "failures": [
+                  {
+                    "id": "27a8ac1b-6c18-4374-bfcd-3fba33c90324",
+                    "description": "Contaminación / mal contacto / soldadura incompleta de la membrana del Tweeter",
+                    "effectLocal": "TBD",
+                    "effectNextLevel": "TBD",
+                    "effectEndUser": "TBD",
+                    "causes": [
+                      {
+                        "id": "7f7cc651-4b09-463f-8b25-22066e8f30f2",
+                        "description": "Contacto mal alineado o soldadura incompleta",
+                        "severity": 5,
+                        "occurrence": 2,
+                        "detection": 10,
+                        "actionPriority": "L",
+                        "preventionControl": "TBD",
+                        "detectionControl": "TBD",
+                        "specialChar": "",
+                        "characteristicNumber": "",
+                        "preventionAction": "",
+                        "detectionAction": "",
+                        "responsible": "",
+                        "targetDate": "",
+                        "status": "",
+                        "ap": "L",
+                        "cause": "Contacto mal alineado o soldadura incompleta"
+                      }
+                    ],
+                    "severity": 5
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "294b3839-48ba-4ee0-89a5-ca79ca97e7f0",
+            "name": "Top Roll (Sustrato) / Tweeter-Grilla de Altavoz",
+            "type": "Material",
+            "functions": [
+              {
+                "id": "f0bc75ed-e641-47a7-a8ac-c839592e5a9b",
+                "functionDescription": "Suministrar componentes para la operación y verificación de calidad",
+                "failures": []
+              }
+            ]
+          },
+          {
+            "id": "2b4a7aa2-e21c-49ac-b927-a9cbce44c46f",
+            "name": "Método de Fabricación",
+            "type": "Metodo",
+            "functions": [
+              {
+                "id": "afa6367a-b48a-4a59-9732-5eb30bf8e6f5",
+                "functionDescription": "Utilizar la Hoja de Operaciones vigente.",
+                "failures": []
+              }
+            ]
+          },
+          {
+            "id": "9befbf80-1d5f-49e1-8969-d28b33adb404",
+            "name": "Temperatura Ambiente / Iluminación",
+            "type": "Medio Ambiente",
+            "functions": [
+              {
+                "id": "f38c0d87-4e38-48a5-a226-7adb9288ae6c",
+                "functionDescription": "Mantener condiciones de seguridad ocupacional según Ley 19587",
+                "failures": []
+              }
+            ]
+          }
+        ],
+        "opNumber": "70",
+        "name": "SOLDADO TWEETER"
+      },
+      {
+        "id": "f29008c5-a802-413a-be9c-1d9c046e7ac4",
+        "operationNumber": "80",
+        "operationName": "CONTROL FINAL DE CALIDAD",
+        "workElements": [
+          {
+            "id": "b4dfc3ed-5023-4397-a093-910b13b262d8",
+            "name": "Dispositivo de Verificación / Dispositivo de Control / Sistema de Etiquetado",
+            "type": "Maquina",
+            "functions": [
+              {
+                "id": "fca0646b-0176-4dfb-a7d7-9af78dc0fc5a",
+                "functionDescription": "Verificar conformidad según Plan de Control",
+                "failures": [
+                  {
+                    "id": "8326ca71-e825-49d5-8265-56321f110627",
+                    "description": "Pieza NO CONFORME (Fuga de rayado / rechupado visible)",
+                    "effectLocal": "Desgaste de partes del controlador",
+                    "effectNextLevel": "Reclamo del lote completo",
+                    "effectEndUser": "TBD",
+                    "causes": [
+                      {
+                        "id": "46c26aaf-7bc4-4b32-81d7-78b5c6728470",
+                        "description": "Criterio visual del inspector / fatiga",
+                        "severity": 5,
+                        "occurrence": 5,
+                        "detection": 7,
+                        "actionPriority": "M",
+                        "preventionControl": "Ayudas Visuales (Muestras y Mímicos). Listas de Verificación",
+                        "detectionControl": "Inspección Visual al 100%",
+                        "specialChar": "",
+                        "characteristicNumber": "",
+                        "preventionAction": "",
+                        "detectionAction": "",
+                        "responsible": "",
+                        "targetDate": "",
+                        "status": "",
+                        "ap": "M",
+                        "cause": "Criterio visual del inspector / fatiga"
+                      }
+                    ],
+                    "severity": 5
+                  },
+                  {
+                    "id": "2be390cd-5fea-40fa-8838-a64ff33aa221",
+                    "description": "Pieza mixta identificada incorrectamente (Etiqueta / Etiqueta incorrecta)",
+                    "effectLocal": "Etiqueta errónea: el operario toma el rollo equivocado de etiquetas",
+                    "effectNextLevel": "Pieza con etiqueta errónea en el lote",
+                    "effectEndUser": "TBD",
+                    "causes": [
+                      {
+                        "id": "c8c9fbd6-f286-4399-9191-35901d3c9ec7",
+                        "description": "Error humano: operario toma el rollo de etiquetas equivocado",
+                        "severity": 7,
+                        "occurrence": 2,
+                        "detection": 2,
+                        "actionPriority": "L",
+                        "preventionControl": "Impresión SOY-SOL OK: sistema de la cámara de escáner personal y corrobora",
+                        "detectionControl": "Escaneo de la etiqueta validación final: una escáner",
+                        "specialChar": "SC",
+                        "characteristicNumber": "",
+                        "preventionAction": "",
+                        "detectionAction": "",
+                        "responsible": "",
+                        "targetDate": "",
+                        "status": "",
+                        "ap": "L",
+                        "cause": "Error humano: operario toma el rollo de etiquetas equivocado"
+                      }
+                    ],
+                    "severity": 7
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "988a1ee6-6676-44ef-9968-3b9a0d3cf74a",
+            "name": "Operador de Control Final / Inspector",
+            "type": "Mano de Obra",
+            "functions": [
+              {
+                "id": "4ae831a4-6289-4a69-8236-fb8ffb04c5cc",
+                "functionDescription": "Verificar y confirmar que el Top Roll cumple con todas las especificaciones",
+                "failures": []
+              }
+            ]
+          },
+          {
+            "id": "9f7aa143-96ab-4f98-b9bf-8065c6f6ddbe",
+            "name": "Etiquetas / Contenedor / Pieza Top Roll",
+            "type": "Material",
+            "functions": [
+              {
+                "id": "17232201-8b9f-48e4-bc3d-a5a6be5c2589",
+                "functionDescription": "Proveer insumos y protecciones para control e identificación",
+                "failures": []
+              }
+            ]
+          },
+          {
+            "id": "95246191-a167-46d3-a421-a2e948c5e719",
+            "name": "Método de Fabricación",
+            "type": "Metodo",
+            "functions": [
+              {
+                "id": "dc435986-0059-42ba-ae0b-d1fdc96b8f08",
+                "functionDescription": "Utilizar la Hoja de Operaciones vigente.",
+                "failures": []
+              }
+            ]
+          },
+          {
+            "id": "c48e0f47-4911-491e-8262-c1568dc508d8",
+            "name": "Iluminación estandarizada (> 1000 Lux)",
+            "type": "Medio Ambiente",
+            "functions": [
+              {
+                "id": "d46c5ce3-4ad2-460d-95e3-5d27b3a4cc7e",
+                "functionDescription": "Proveer condiciones de iluminación estándar para inspección",
+                "failures": [
+                  {
+                    "id": "66547c47-d3b0-4665-89a4-6e1b7b0a9a04",
+                    "description": "Pieza con abrasiones / Marcas de transporte",
+                    "effectLocal": "TBD",
+                    "effectNextLevel": "TBD",
+                    "effectEndUser": "TBD",
+                    "causes": [
+                      {
+                        "id": "26577be6-db67-44cf-88e0-dbd62fadf5ed",
+                        "description": "Separadores o polvo en la estación de revisado",
+                        "severity": 5,
+                        "occurrence": 5,
+                        "detection": 7,
+                        "actionPriority": "M",
+                        "preventionControl": "Contenedores de piezas limpios / aspirinas",
+                        "detectionControl": "Inspección Visual del Operador / Revisado del contenedor",
+                        "specialChar": "",
+                        "characteristicNumber": "",
+                        "preventionAction": "",
+                        "detectionAction": "",
+                        "responsible": "",
+                        "targetDate": "",
+                        "status": "",
+                        "ap": "M",
+                        "cause": "Separadores o polvo en la estación de revisado"
+                      }
+                    ],
+                    "severity": 5
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "opNumber": "80",
+        "name": "CONTROL FINAL DE CALIDAD"
+      },
+      {
+        "id": "4b41faf2-dae7-4bfe-bf44-23cbb1ebd281",
+        "operationNumber": "90",
+        "operationName": "EMBALAJE",
+        "workElements": [
+          {
+            "id": "1d83f2b4-8411-4f4a-ab62-d734055de45b",
+            "name": "Operador de Empaque / Líder de equipo",
+            "type": "Mano de Obra",
+            "functions": [
+              {
+                "id": "086c4527-c961-4ee2-8be7-bf9751f47868",
+                "functionDescription": "Colocar piezas en contenedor siguiendo patrón de estiba definido",
+                "failures": [
+                  {
+                    "id": "bb0f8cf2-b3f6-41d7-9972-f0025aeb7be6",
+                    "description": "Cantidad incorrecta (Faltante) en el contenedor",
+                    "effectLocal": "Distracción del operador / error en el ciclo de llenado",
+                    "effectNextLevel": "TBD",
+                    "effectEndUser": "TBD",
+                    "causes": [
+                      {
+                        "id": "f71c163a-3d9a-4e68-8778-ea9bc1754ee6",
+                        "description": "Distracción del operador / error en el ciclo de llenado",
+                        "severity": 4,
+                        "occurrence": 6,
+                        "detection": 3,
+                        "actionPriority": "M",
+                        "preventionControl": "Diseño del Contenido (Poka-Yoke): disposición de los espacios definidos",
+                        "detectionControl": "Inspección Visual final de Caja / Llenado de contenedor",
+                        "specialChar": "",
+                        "characteristicNumber": "",
+                        "preventionAction": "",
+                        "detectionAction": "",
+                        "responsible": "",
+                        "targetDate": "",
+                        "status": "",
+                        "ap": "M",
+                        "cause": "Distracción del operador / error en el ciclo de llenado"
+                      }
+                    ],
+                    "severity": 4
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "872e3e81-a191-4c8f-919f-9be34c14304a",
+            "name": "Bolsas Plásticas / Contenedor / Etiqueta / piezas Top Roll",
+            "type": "Material",
+            "functions": [
+              {
+                "id": "913c4bd7-7a28-4c5c-a48f-49a04d635831",
+                "functionDescription": "Proveer protección, contención e identificación y almacenamiento, calvo y polvo",
+                "failures": []
+              }
+            ]
+          },
+          {
+            "id": "fa7e4f11-7a03-4ca7-9fa1-299b96dab033",
+            "name": "Método de Fabricación",
+            "type": "Metodo",
+            "functions": [
+              {
+                "id": "35797bb2-03cd-44f7-9b3e-450be8e73d1a",
+                "functionDescription": "Utilizar la Hoja de Operaciones vigente.",
+                "failures": []
+              }
+            ]
+          },
+          {
+            "id": "a28db6f6-94b6-4bf1-aab1-55ca697e07a5",
+            "name": "Iluminación/Ruido, Ley 19587",
+            "type": "Medio Ambiente",
+            "functions": [
+              {
+                "id": "b27e003b-2df5-4294-91ff-30d948866cab",
+                "functionDescription": "Mantener condiciones de seguridad ocupacional según Ley 19587",
+                "failures": []
+              }
+            ]
+          }
+        ],
+        "opNumber": "90",
+        "name": "EMBALAJE"
+      }
+    ]
+  }
+}

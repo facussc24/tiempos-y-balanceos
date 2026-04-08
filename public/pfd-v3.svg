@@ -1,0 +1,323 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="100%" height="2720" viewBox="0 0 1062 2720" preserveAspectRatio="xMidYMin meet">
+    <style>
+        .pfd-node { cursor: default; }
+    </style>
+    <defs>
+    <marker id="arrowMarker" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+        <path d="M 0 0.5 L 10 5 L 0 9.5 z" fill="#4A90D9"/>
+    </marker>
+    <marker id="reworkArrowMarker" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+        <path d="M 0 0.5 L 10 5 L 0 9.5 z" fill="#1a1a1a"/>
+    </marker>
+    </defs>
+    <!-- Background -->
+    <rect width="100%" height="100%" fill="white"/>
+    <g class="pfd-header">
+        <!-- Header background (no border) -->
+        <rect x="0" y="0" width="1062" height="180" fill="white" stroke="none"/>
+
+        <!-- Logo column -->
+        <image x="8" y="6" width="196" height="60" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJcAAABLCAYAAAEKZCW7AAAACXBIWXMAAAsTAAALEwEAmpwYAAA4H2lUWHRYTUw6Y29tLmFkb2JlLnhtcAAAAAAAPD94cGFja2V0IGJlZ2luPSLvu78iIGlkPSJXNU0wTXBDZWhpSHpyZVN6TlRjemtjOWQiPz4KPHg6eG1wbWV0YSB4bWxuczp4PSJhZG9iZTpuczptZXRhLyIgeDp4bXB0az0iQWRvYmUgWE1QIENvcmUgNS42LWMxMTEgNzkuMTU4MzI1LCAyMDE1LzA5LzEwLTAxOjEwOjIwICAgICAgICAiPgogICA8cmRmOlJERiB4bWxuczpyZGY9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkvMDIvMjItcmRmLXN5bnRheC1ucyMiPgogICAgICA8cmRmOkRlc2NyaXB0aW9uIHJkZjphYm91dD0iIgogICAgICAgICAgICB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iCiAgICAgICAgICAgIHhtbG5zOmRjPSJodHRwOi8vcHVybC5vcmcvZGMvZWxlbWVudHMvMS4xLyIKICAgICAgICAgICAgeG1sbnM6cGhvdG9zaG9wPSJodHRwOi8vbnMuYWRvYmUuY29tL3Bob3Rvc2hvcC8xLjAvIgogICAgICAgICAgICB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIKICAgICAgICAgICAgeG1sbnM6c3RFdnQ9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZUV2ZW50IyIKICAgICAgICAgICAgeG1sbnM6dGlmZj0iaHR0cDovL25zLmFkb2JlLmNvbS90aWZmLzEuMC8iCiAgICAgICAgICAgIHhtbG5zOmV4aWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20vZXhpZi8xLjAvIj4KICAgICAgICAgPHhtcDpDcmVhdG9yVG9vbD5BZG9iZSBQaG90b3Nob3AgQ0MgMjAxNSAoV2luZG93cyk8L3htcDpDcmVhdG9yVG9vbD4KICAgICAgICAgPHhtcDpDcmVhdGVEYXRlPjIwMTYtMTEtMDNUMTA6MTY6NTEtMDM6MDA8L3htcDpDcmVhdGVEYXRlPgogICAgICAgICA8eG1wOk1vZGlmeURhdGU+MjAxNi0xMS0wM1QxMzoyMy0wMzowMDwveG1wOk1vZGlmeURhdGU+CiAgICAgICAgIDx4bXA6TWV0YWRhdGFEYXRlPjIwMTYtMTEtMDNUMTM6MjMtMDM6MDA8L3htcDpNZXRhZGF0YURhdGU+CiAgICAgICAgIDxkYzpmb3JtYXQ+aW1hZ2UvcG5nPC9kYzpmb3JtYXQ+CiAgICAgICAgIDxwaG90b3Nob3A6Q29sb3JNb2RlPjM8L3Bob3Rvc2hvcDpDb2xvck1vZGU+CiAgICAgICAgIDx4bXBNTTpJbnN0YW5jZUlEPnhtcC5paWQ6MDM1OTZjYTctNWUzNC02ZjQ1LWFhMjUtZTQ2Y2Q1YmY5Y2NiPC94bXBNTTpJbnN0YW5jZUlEPgogICAgICAgICA8eG1wTU06RG9jdW1lbnRJRD54bXAuZGlkOjAzNTk2Y2E3LTVlMzQtNmY0NS1hYTI1LWU0NmNkNWJmOWNjYjwveG1wTU06RG9jdW1lbnRJRD4KICAgICAgICAgPHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD54bXAuZGlkOjAzNTk2Y2E3LTVlMzQtNmY0NS1hYTI1LWU0NmNkNWJmOWNjYjwveG1wTU06T3JpZ2luYWxEb2N1bWVudElEPgogICAgICAgICA8eG1wTU06SGlzdG9yeT4KICAgICAgICAgICAgPHJkZjpTZXE+CiAgICAgICAgICAgICAgIDxyZGY6bGkgcmRmOnBhcnNlVHlwZT0iUmVzb3VyY2UiPgogICAgICAgICAgICAgICAgICA8c3RFdnQ6YWN0aW9uPmNyZWF0ZWQ8L3N0RXZ0OmFjdGlvbj4KICAgICAgICAgICAgICAgICAgPHN0RXZ0Omluc3RhbmNlSUQ+eG1wLmlpZDowMzU5NmNhNy01ZTM0LTZmNDUtYWEyNS1lNDZjZDViZjljY2I8L3N0RXZ0Omluc3RhbmNlSUQ+CiAgICAgICAgICAgICAgICAgIDxzdEV2dDp3aGVuPjIwMTYtMTEtMDNUMTA6MTY6NTEtMDM6MDA8L3N0RXZ0OndoZW4+CiAgICAgICAgICAgICAgICAgIDxzdEV2dDpzb2Z0d2FyZUFnZW50PkFkb2JlIFBob3Rvc2hvcCBDQyAyMDE1IChXaW5kb3dzKTwvc3RFdnQ6c29mdHdhcmVBZ2VudD4KICAgICAgICAgICAgICAgPC9yZGY6bGk+CiAgICAgICAgICAgIDwvcmRmOlNlcT4KICAgICAgICAgPC94bXBNTTpIaXN0b3J5PgogICAgICAgICA8dGlmZjpPcmllbnRhdGlvbj4xPC90aWZmOk9yaWVudGF0aW9uPgogICAgICAgICA8dGlmZjpYUmVzb2x1dGlvbj43MjAwMDAvMTAwMDA8L3RpZmY6WFJlc29sdXRpb24+CiAgICAgICAgIDx0aWZmOllSZXNvbHV0aW9uPjcyMDAwMC8xMDAwMDwvdGlmZjpZUmVzb2x1dGlvbj4KICAgICAgICAgPHRpZmY6UmVzb2x1dGlvblVuaXQ+MjwvdGlmZjpSZXNvbHV0aW9uVW5pdD4KICAgICAgICAgPGV4aWY6Q29sb3JTcGFjZT42NTUzNTwvZXhpZjpDb2xvclNwYWNlPgogICAgICAgICA8ZXhpZjpQaXhlbFhEaW1lbnNpb24+MTUxPC9leGlmOlBpeGVsWERpbWVuc2lvbj4KICAgICAgICAgPGV4aWY6UGl4ZWxZRGltZW5zaW9uPjc1PC9leGlmOlBpeGVsWURpbWVuc2lvbj4KICAgICAgPC9yZGY6RGVzY3JpcHRpb24+CiAgIDwvcmRmOlJERj4KPC94OnhtcG1ldGE+CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAg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" preserveAspectRatio="xMidYMid meet"/>
+
+        <!-- Title column — italic, blue celeste -->
+        <text x="450.5" y="30" font-size="16" font-weight="700" font-style="italic" fill="#4A90D9" text-anchor="middle" font-family="Inter,Arial,Helvetica,sans-serif" letter-spacing="0.5">FLUJOGRAMA DE PROCESO</text>
+        <text x="450.5" y="50" font-size="12" font-style="italic" fill="#4A90D9" text-anchor="middle" font-family="Inter,Arial,Helvetica,sans-serif" font-weight="500">Apoyacabezas Trasero Lateral - Patagonia VW</text>
+
+        <!-- Data column — blue celeste labels -->
+        <text x="1054" y="18" font-size="9" fill="#4A90D9" text-anchor="end" font-family="Inter,Arial,Helvetica,sans-serif">
+            <tspan font-weight="700">CÓDIGO DEL DOCUMENTO:</tspan> I-IN-002/III-HR-LAT
+        </text><text x="1054" y="32" font-size="9" fill="#4A90D9" text-anchor="end" font-family="Inter,Arial,Helvetica,sans-serif">
+            <tspan font-weight="700">FECHA DE EMISIÓN:</tspan> 2025-09-18
+        </text><text x="1054" y="46" font-size="9" fill="#4A90D9" text-anchor="end" font-family="Inter,Arial,Helvetica,sans-serif">
+            <tspan font-weight="700">FECHA DE REVISIÓN:</tspan> 2025-09-18
+        </text><text x="1054" y="60" font-size="9" fill="#4A90D9" text-anchor="end" font-family="Inter,Arial,Helvetica,sans-serif">
+            <tspan font-weight="700">NÚMERO DE REVISIÓN:</tspan> A
+        </text><text x="1054" y="74" font-size="9" fill="#4A90D9" text-anchor="end" font-family="Inter,Arial,Helvetica,sans-serif">
+            <tspan font-weight="700">ELABORADO POR:</tspan> Facundo Santoro
+        </text><text x="1054" y="88" font-size="9" fill="#4A90D9" text-anchor="end" font-family="Inter,Arial,Helvetica,sans-serif">
+            <tspan font-weight="700">REVISADO POR:</tspan> PAULO CENTURIÓN
+        </text><text x="1054" y="102" font-size="9" fill="#4A90D9" text-anchor="end" font-family="Inter,Arial,Helvetica,sans-serif">
+            <tspan font-weight="700">APROBADO POR:</tspan> Carlos Baptista
+        </text><text x="1054" y="116" font-size="9" fill="#4A90D9" text-anchor="end" font-family="Inter,Arial,Helvetica,sans-serif">
+            <tspan font-weight="700">NOMBRE DE LA ORGANIZACIÓN:</tspan> BARACK MERCOSUL
+        </text><text x="1054" y="130" font-size="9" fill="#4A90D9" text-anchor="end" font-family="Inter,Arial,Helvetica,sans-serif">
+            <tspan font-weight="700">RESPONSABLE DE ÁREA:</tspan> Carlos Baptista
+        </text><text x="1054" y="144" font-size="9" fill="#4A90D9" text-anchor="end" font-family="Inter,Arial,Helvetica,sans-serif">
+            <tspan font-weight="700">PROYECTO:</tspan> PATAGONIA
+        </text><text x="1054" y="158" font-size="9" fill="#4A90D9" text-anchor="end" font-family="Inter,Arial,Helvetica,sans-serif">
+            <tspan font-weight="700">CLIENTE:</tspan> VWA
+        </text>
+    </g>
+    <g class="pfd-reference-box">
+        <rect x="598" y="242" width="320" height="100" rx="0" fill="white" stroke="#4A90D9" stroke-width="1.5"/>
+        <!-- Title bar -->
+        <rect x="598" y="242" width="320" height="22" rx="0" fill="white" stroke="#4A90D9" stroke-width="1.5"/>
+        <text x="758" y="257" font-size="8" font-weight="700" fill="#1a1a1a" text-anchor="middle" font-family="Inter,Arial,Helvetica,sans-serif" letter-spacing="0.3">LISTADO DE REFERENCIAS A PIEZAS / PRODUCTOS</text><text x="608" y="278" font-size="9" fill="#1a1a1a" font-family="Inter,Arial,Helvetica,sans-serif">Apoyacabezas Trasero Lateral - Patagonia VW:…</text><text x="608" y="292" font-size="9" fill="#1a1a1a" font-family="Inter,Arial,Helvetica,sans-serif">2HC885901 RL1 (Titan Black)</text><text x="608" y="306" font-size="9" fill="#1a1a1a" font-family="Inter,Arial,Helvetica,sans-serif">2HC885901A GFU (Rennes Black)</text><text x="608" y="320" font-size="9" fill="#1a1a1a" font-family="Inter,Arial,Helvetica,sans-serif">2HC885901B GEQ (Andino Gray)</text><text x="608" y="334" font-size="9" fill="#1a1a1a" font-family="Inter,Arial,Helvetica,sans-serif">2HC885901C DZS (Dark Slate)</text></g>
+    <g class="pfd-traceability">
+        <rect x="231" y="242" width="600" height="28" rx="0" fill="white" stroke="#4A90D9" stroke-width="1"/>
+        <text x="531" y="253" font-size="8" font-weight="700" fill="#1a1a1a" text-anchor="middle" font-family="Inter,Arial,Helvetica,sans-serif" letter-spacing="0.5">TRAZABILIDAD DOCUMENTAL</text>
+        <text x="531" y="264" font-size="9" fill="#1a1a1a" text-anchor="middle" font-family="Inter,Arial,Helvetica,sans-serif">AMFE de Proceso: 0446af1c-e76a-44bf-ab1a-d4fc2b6c9d16</text>
+    </g>
+    <g class="pfd-node" data-step-id="a3b508de-b355-4458-a5a9-443eeede2861" data-step-number="10">
+        <polygon points="218,328 200,296 236,296" fill="white" stroke="#4A90D9" stroke-width="2" stroke-linejoin="round"/>
+        <text x="256" y="313.5" font-size="12" font-weight="500" fill="#1a1a1a" text-anchor="start" font-family="Inter,Arial,Helvetica,sans-serif">RECEPCION DE MATERIA PRIMA</text><text x="256" y="329.5" font-size="9" fill="#888888" text-anchor="start" font-family="Inter,Arial,Helvetica,sans-serif">Recepcion</text>
+        
+        
+        <text x="80" y="314" font-size="10" font-weight="700" fill="#4A90D9" text-anchor="middle" font-family="Inter,Arial,Helvetica,sans-serif">▽, SC</text>
+    </g>
+    <g class="pfd-arrow">
+        <line x1="218" y1="342" x2="218" y2="364" stroke="#4A90D9" stroke-width="2" stroke-linecap="round" marker-end="url(#arrowMarker)"/>
+    </g>
+    <g class="pfd-node" data-step-id="9ac62838-9251-407b-8f0f-3a853b82f3bd" data-step-number="">
+        <rect x="200" y="384" width="36" height="36" rx="2" fill="white" stroke="#4A90D9" stroke-width="2"/>
+        <text x="256" y="405.5" font-size="12" font-weight="500" fill="#1a1a1a" text-anchor="start" font-family="Inter,Arial,Helvetica,sans-serif">INSPECCION DE MATERIA PRIMA</text><text x="256" y="421.5" font-size="9" fill="#888888" text-anchor="start" font-family="Inter,Arial,Helvetica,sans-serif">Calidad</text>
+        
+        
+        <text x="80" y="406" font-size="10" font-weight="700" fill="#4A90D9" text-anchor="middle" font-family="Inter,Arial,Helvetica,sans-serif">▽, SC</text>
+    </g>
+    <g class="pfd-reject-path"><line x1="240" y1="402" x2="376" y2="402" stroke="#4A90D9" stroke-width="2" marker-end="url(#arrowMarker)"/><text x="248" y="396" font-size="10" font-weight="700" fill="#1a1a1a" font-family="Inter,Arial,Helvetica,sans-serif">NO</text><text x="280" y="418" font-size="9" fill="#1a1a1a" text-anchor="start" font-family="Inter,Arial,Helvetica,sans-serif">Reclamo de calidad al proveed…</text><ellipse cx="420" cy="402" rx="44" ry="16" fill="white" stroke="#4A90D9" stroke-width="2"/><text x="420" y="406" font-size="10" font-weight="700" fill="#1a1a1a" text-anchor="middle" font-family="Inter,Arial,Helvetica,sans-serif">SCRAP</text></g>
+    <text x="230" y="420" font-size="10" font-weight="700" fill="#1a1a1a" font-family="Inter,Arial,Helvetica,sans-serif">SI</text>
+    <g class="pfd-arrow">
+        <line x1="218" y1="434" x2="218" y2="456" stroke="#4A90D9" stroke-width="2" stroke-linecap="round" marker-end="url(#arrowMarker)"/>
+    </g>
+    <g class="pfd-node" data-step-id="45c9be59-2ff6-4d88-bd13-d06473df02d1" data-step-number="">
+        <polygon points="218,519 200,487 236,487" fill="white" stroke="#4A90D9" stroke-width="2" stroke-linejoin="round"/>
+        <text x="256" y="490.5" font-size="12" font-weight="500" fill="#1a1a1a" text-anchor="start" font-family="Inter,Arial,Helvetica,sans-serif">ALMACENADO EN SECTOR DE RECEPCION</text><text x="256" y="504.5" font-size="12" font-weight="500" fill="#1a1a1a" text-anchor="start" font-family="Inter,Arial,Helvetica,sans-serif">DE MATERIA PRIMA CONTROLADA E</text><text x="256" y="518.5" font-size="12" font-weight="500" fill="#1a1a1a" text-anchor="start" font-family="Inter,Arial,Helvetica,sans-serif">IDENTIFICADA</text><text x="256" y="534.5" font-size="9" fill="#888888" text-anchor="start" font-family="Inter,Arial,Helvetica,sans-serif">Almacen</text>
+        
+        
+        
+    </g>
+    <g class="pfd-arrow">
+        <line x1="218" y1="540" x2="218" y2="562" stroke="#4A90D9" stroke-width="2" stroke-linecap="round" marker-end="url(#arrowMarker)"/>
+    </g>
+    <g class="pfd-node" data-step-id="4e12d440-92ff-4b9e-a933-adbffd291492" data-step-number="">
+        <circle cx="218" cy="593" r="6.5" fill="white" stroke="#4A90D9" stroke-width="2"/>
+        <text x="256" y="589.5" font-size="12" font-weight="500" fill="#1a1a1a" text-anchor="start" font-family="Inter,Arial,Helvetica,sans-serif">TRASLADO: VINILOS / TELAS A SECTOR</text><text x="256" y="603.5" font-size="12" font-weight="500" fill="#1a1a1a" text-anchor="start" font-family="Inter,Arial,Helvetica,sans-serif">DE MESA DE CORTE</text>
+        
+        
+        
+    </g>
+    <g class="pfd-arrow">
+        <line x1="218" y1="618" x2="218" y2="640" stroke="#4A90D9" stroke-width="2" stroke-linecap="round" marker-end="url(#arrowMarker)"/>
+    </g>
+    <g class="pfd-node" data-step-id="138e82c9-db27-4928-b8de-c2d7eb82b4d1" data-step-number="20">
+        <circle cx="218" cy="678" r="18" fill="white" stroke="#4A90D9" stroke-width="2"/>
+        <text x="218" y="682" font-size="11" font-weight="700" fill="#1a1a1a" text-anchor="middle" font-family="Inter,Arial,Helvetica,sans-serif">20</text>
+        <text x="256" y="681.5" font-size="12" font-weight="500" fill="#1a1a1a" text-anchor="start" font-family="Inter,Arial,Helvetica,sans-serif">CORTE DEL VINILO / TELA (FUNDA)</text><text x="256" y="697.5" font-size="9" fill="#888888" text-anchor="start" font-family="Inter,Arial,Helvetica,sans-serif">Maquina de corte · Mesa de Corte</text>
+        
+        
+        <text x="80" y="682" font-size="10" font-weight="700" fill="#4A90D9" text-anchor="middle" font-family="Inter,Arial,Helvetica,sans-serif">▽, SC</text>
+    </g>
+    <g class="pfd-arrow">
+        <line x1="218" y1="710" x2="218" y2="732" stroke="#4A90D9" stroke-width="2" stroke-linecap="round" marker-end="url(#arrowMarker)"/>
+    </g>
+    <g class="pfd-node" data-step-id="f6c32f4d-d813-4e49-acfa-9d750bd75dae" data-step-number="">
+        <circle cx="218" cy="770" r="18" fill="white" stroke="#4A90D9" stroke-width="2"/>
+        <text x="256" y="766.5" font-size="12" font-weight="500" fill="#1a1a1a" text-anchor="start" font-family="Inter,Arial,Helvetica,sans-serif">PREPARACION DE KITS DE COMPONENTES</text><text x="256" y="780.5" font-size="12" font-weight="500" fill="#1a1a1a" text-anchor="start" font-family="Inter,Arial,Helvetica,sans-serif">DE COSTURA</text><text x="256" y="796.5" font-size="9" fill="#888888" text-anchor="start" font-family="Inter,Arial,Helvetica,sans-serif">Blanco</text>
+        
+        
+        <text x="80" y="774" font-size="10" font-weight="700" fill="#4A90D9" text-anchor="middle" font-family="Inter,Arial,Helvetica,sans-serif">▽, SC</text>
+    </g>
+    <g class="pfd-arrow">
+        <line x1="218" y1="802" x2="218" y2="824" stroke="#4A90D9" stroke-width="2" stroke-linecap="round" marker-end="url(#arrowMarker)"/>
+    </g>
+    <g class="pfd-node" data-step-id="6dc85a0a-174e-4e4d-9c9e-7c003e9788e0" data-step-number="">
+        <circle cx="218" cy="855" r="6.5" fill="white" stroke="#4A90D9" stroke-width="2"/>
+        <text x="256" y="851.5" font-size="12" font-weight="500" fill="#1a1a1a" text-anchor="start" font-family="Inter,Arial,Helvetica,sans-serif">TRASLADO: KITS DE COMPONENTES DE</text><text x="256" y="865.5" font-size="12" font-weight="500" fill="#1a1a1a" text-anchor="start" font-family="Inter,Arial,Helvetica,sans-serif">COSTURA A SECTOR DE COSTURA</text>
+        
+        
+        
+    </g>
+    <g class="pfd-arrow">
+        <line x1="218" y1="880" x2="218" y2="902" stroke="#4A90D9" stroke-width="2" stroke-linecap="round" marker-end="url(#arrowMarker)"/>
+    </g>
+    <g class="pfd-node" data-step-id="e3c1b98a-e910-4b5d-8b24-d8da0990b321" data-step-number="30">
+        <circle cx="218" cy="940" r="18" fill="white" stroke="#4A90D9" stroke-width="2"/>
+        <text x="218" y="944" font-size="11" font-weight="700" fill="#1a1a1a" text-anchor="middle" font-family="Inter,Arial,Helvetica,sans-serif">30</text>
+        <text x="256" y="943.5" font-size="12" font-weight="500" fill="#1a1a1a" text-anchor="start" font-family="Inter,Arial,Helvetica,sans-serif">COSTURA UNION ENTRE PANELES</text><text x="256" y="959.5" font-size="9" fill="#888888" text-anchor="start" font-family="Inter,Arial,Helvetica,sans-serif">Maquina de coser industrial · Costura</text>
+        
+        
+        <text x="80" y="944" font-size="10" font-weight="700" fill="#4A90D9" text-anchor="middle" font-family="Inter,Arial,Helvetica,sans-serif">▽, SC</text>
+    </g>
+    <g class="pfd-arrow">
+        <line x1="218" y1="972" x2="218" y2="994" stroke="#4A90D9" stroke-width="2" stroke-linecap="round" marker-end="url(#arrowMarker)"/>
+    </g>
+    <g class="pfd-node" data-step-id="578b195c-a4dd-4c6d-9027-079c5fb31963" data-step-number="35">
+        <circle cx="218" cy="1039" r="18" fill="white" stroke="#4A90D9" stroke-width="2"/>
+        <text x="218" y="1043" font-size="11" font-weight="700" fill="#1a1a1a" text-anchor="middle" font-family="Inter,Arial,Helvetica,sans-serif">35</text>
+        <text x="256" y="1021.5" font-size="12" font-weight="500" fill="#1a1a1a" text-anchor="start" font-family="Inter,Arial,Helvetica,sans-serif">COSTURA VISTA (Aplica solo a L1</text><text x="256" y="1035.5" font-size="12" font-weight="500" fill="#1a1a1a" text-anchor="start" font-family="Inter,Arial,Helvetica,sans-serif">Rennes Black, L2 Andino Gray, L3</text><text x="256" y="1049.5" font-size="12" font-weight="500" fill="#1a1a1a" text-anchor="start" font-family="Inter,Arial,Helvetica,sans-serif">Dark Slate — NO aplica a L0 Titan</text><text x="256" y="1063.5" font-size="12" font-weight="500" fill="#1a1a1a" text-anchor="start" font-family="Inter,Arial,Helvetica,sans-serif">Black)</text><text x="256" y="1079.5" font-size="9" fill="#888888" text-anchor="start" font-family="Inter,Arial,Helvetica,sans-serif">Maquina de coser industrial · Costura</text>
+        
+        <text x="242" y="1025" font-size="10" font-weight="bold" fill="#1a1a1a" font-family="Inter,Arial,Helvetica,sans-serif">*</text>
+        <text x="80" y="1043" font-size="10" font-weight="700" fill="#4A90D9" text-anchor="middle" font-family="Inter,Arial,Helvetica,sans-serif">▽, SC</text>
+    </g>
+    <g class="pfd-arrow">
+        <line x1="218" y1="1078" x2="218" y2="1100" stroke="#4A90D9" stroke-width="2" stroke-linecap="round" marker-end="url(#arrowMarker)"/>
+    </g>
+    <g class="pfd-node" data-step-id="8a999b4a-5590-4b3f-8a47-7d8f613fc654" data-step-number="">
+        <circle cx="218" cy="1131" r="6.5" fill="white" stroke="#4A90D9" stroke-width="2"/>
+        <text x="256" y="1127.5" font-size="12" font-weight="500" fill="#1a1a1a" text-anchor="start" font-family="Inter,Arial,Helvetica,sans-serif">TRASLADO: FUNDAS COSIDAS APROBADAS</text><text x="256" y="1141.5" font-size="12" font-weight="500" fill="#1a1a1a" text-anchor="start" font-family="Inter,Arial,Helvetica,sans-serif">A AREA DE INYECCION</text>
+        
+        
+        
+    </g>
+    <g class="pfd-arrow">
+        <line x1="218" y1="1156" x2="218" y2="1178" stroke="#4A90D9" stroke-width="2" stroke-linecap="round" marker-end="url(#arrowMarker)"/>
+    </g>
+    <g class="pfd-node" data-step-id="b5397977-28fc-44d7-84f5-90b80cde1deb" data-step-number="50">
+        <circle cx="218" cy="1216" r="18" fill="white" stroke="#4A90D9" stroke-width="2"/>
+        <text x="218" y="1220" font-size="11" font-weight="700" fill="#1a1a1a" text-anchor="middle" font-family="Inter,Arial,Helvetica,sans-serif">50</text>
+        <text x="256" y="1219.5" font-size="12" font-weight="500" fill="#1a1a1a" text-anchor="start" font-family="Inter,Arial,Helvetica,sans-serif">INYECCION PUR - APOYACABEZAS</text><text x="256" y="1235.5" font-size="9" fill="#888888" text-anchor="start" font-family="Inter,Arial,Helvetica,sans-serif">Inyectora de poliuretano (PUR) · Inyeccion</text>
+        
+        <text x="242" y="1202" font-size="10" font-weight="bold" fill="#1a1a1a" font-family="Inter,Arial,Helvetica,sans-serif">*</text>
+        <text x="80" y="1220" font-size="10" font-weight="700" fill="#4A90D9" text-anchor="middle" font-family="Inter,Arial,Helvetica,sans-serif">▽, SC</text>
+    </g>
+    <g class="pfd-arrow">
+        <line x1="218" y1="1248" x2="218" y2="1270" stroke="#4A90D9" stroke-width="2" stroke-linecap="round" marker-end="url(#arrowMarker)"/>
+    </g>
+    <g class="pfd-node" data-step-id="b6501262-10d1-4249-8eaf-afa8efc2bdab" data-step-number="">
+        <circle cx="218" cy="1308" r="18" fill="white" stroke="#4A90D9" stroke-width="2"/>
+        <text x="256" y="1311.5" font-size="12" font-weight="500" fill="#1a1a1a" text-anchor="start" font-family="Inter,Arial,Helvetica,sans-serif">CURADO Y ESTABILIZACION DE ESPUMA</text><text x="256" y="1327.5" font-size="9" fill="#888888" text-anchor="start" font-family="Inter,Arial,Helvetica,sans-serif">Inyeccion</text>
+        
+        
+        <text x="80" y="1312" font-size="10" font-weight="700" fill="#4A90D9" text-anchor="middle" font-family="Inter,Arial,Helvetica,sans-serif">▽, SC</text>
+    </g>
+    <g class="pfd-arrow">
+        <line x1="218" y1="1340" x2="218" y2="1362" stroke="#4A90D9" stroke-width="2" stroke-linecap="round" marker-end="url(#arrowMarker)"/>
+    </g>
+    <g class="pfd-node" data-step-id="1876a7f0-9738-4ea1-8a51-e7b476a78402" data-step-number="">
+        <circle cx="218" cy="1393" r="6.5" fill="white" stroke="#4A90D9" stroke-width="2"/>
+        <text x="256" y="1389.5" font-size="12" font-weight="500" fill="#1a1a1a" text-anchor="start" font-family="Inter,Arial,Helvetica,sans-serif">TRASLADO: MATERIAL APROBADO A</text><text x="256" y="1403.5" font-size="12" font-weight="500" fill="#1a1a1a" text-anchor="start" font-family="Inter,Arial,Helvetica,sans-serif">ALMACEN TEMPORAL (FIFO)</text>
+        
+        <text x="242" y="1379" font-size="10" font-weight="bold" fill="#1a1a1a" font-family="Inter,Arial,Helvetica,sans-serif">*</text>
+        
+    </g>
+    <g class="pfd-arrow">
+        <line x1="218" y1="1418" x2="218" y2="1440" stroke="#4A90D9" stroke-width="2" stroke-linecap="round" marker-end="url(#arrowMarker)"/>
+    </g>
+    <g class="pfd-node" data-step-id="9bdb0ba8-d921-4e03-84ec-6d830084628f" data-step-number="60">
+        <rect x="200" y="1460" width="36" height="36" rx="2" fill="white" stroke="#4A90D9" stroke-width="2"/>
+        <text x="256" y="1481.5" font-size="12" font-weight="500" fill="#1a1a1a" text-anchor="start" font-family="Inter,Arial,Helvetica,sans-serif">CONTROL FINAL DE CALIDAD</text><text x="256" y="1497.5" font-size="9" fill="#888888" text-anchor="start" font-family="Inter,Arial,Helvetica,sans-serif">Calidad</text>
+        
+        
+        <text x="80" y="1482" font-size="10" font-weight="700" fill="#4A90D9" text-anchor="middle" font-family="Inter,Arial,Helvetica,sans-serif">▽, SC</text>
+    </g>
+    <g class="pfd-reject-path"><line x1="240" y1="1478" x2="376" y2="1478" stroke="#4A90D9" stroke-width="2" marker-end="url(#arrowMarker)"/><text x="248" y="1472" font-size="10" font-weight="700" fill="#1a1a1a" font-family="Inter,Arial,Helvetica,sans-serif">NO</text><text x="280" y="1494" font-size="9" fill="#1a1a1a" text-anchor="start" font-family="Inter,Arial,Helvetica,sans-serif">Clasificacion y segregacion d…</text><ellipse cx="420" cy="1478" rx="44" ry="16" fill="white" stroke="#4A90D9" stroke-width="2"/><text x="420" y="1482" font-size="10" font-weight="700" fill="#1a1a1a" text-anchor="middle" font-family="Inter,Arial,Helvetica,sans-serif">SEGREGAR</text></g>
+    <text x="230" y="1496" font-size="10" font-weight="700" fill="#1a1a1a" font-family="Inter,Arial,Helvetica,sans-serif">SI</text>
+    <g class="pfd-arrow">
+        <line x1="218" y1="1510" x2="218" y2="1532" stroke="#4A90D9" stroke-width="2" stroke-linecap="round" marker-end="url(#arrowMarker)"/>
+    </g>
+    <g class="pfd-node" data-step-id="dc17536e-9a51-44df-9288-0dc1664fe5c6" data-step-number="">
+        <polygon points="218,1546 240,1568 218,1590 196,1568" fill="white" stroke="#4A90D9" stroke-width="2" stroke-linejoin="round"/><text x="218" y="1571" font-size="8" font-weight="600" fill="#1a1a1a" text-anchor="middle" font-family="Inter,Arial,Helvetica,sans-serif">PRODUCTO CONFORME?</text>
+        
+        
+        <text x="242" y="1554" font-size="10" font-weight="bold" fill="#1a1a1a" font-family="Inter,Arial,Helvetica,sans-serif">*</text>
+        
+    </g>
+    <g class="pfd-arrow">
+        <line x1="218" y1="1598" x2="218" y2="1620" stroke="#4A90D9" stroke-width="2" stroke-linecap="round" marker-end="url(#arrowMarker)"/>
+    </g>
+    <g class="pfd-node" data-step-id="4702e6ee-6095-4a06-b6f2-d482c60b7f4d" data-step-number="100">
+        <circle cx="218" cy="1658" r="18" fill="white" stroke="#4A90D9" stroke-width="2"/>
+        <text x="218" y="1662" font-size="11" font-weight="700" fill="#1a1a1a" text-anchor="middle" font-family="Inter,Arial,Helvetica,sans-serif">100</text>
+        <text x="256" y="1654.5" font-size="12" font-weight="500" fill="#1a1a1a" text-anchor="start" font-family="Inter,Arial,Helvetica,sans-serif">CLASIFICACION Y SEGREGACION DE</text><text x="256" y="1668.5" font-size="12" font-weight="500" fill="#1a1a1a" text-anchor="start" font-family="Inter,Arial,Helvetica,sans-serif">PRODUCTO NO CONFORME</text><text x="256" y="1684.5" font-size="9" fill="#888888" text-anchor="start" font-family="Inter,Arial,Helvetica,sans-serif">Calidad</text>
+        
+        <text x="242" y="1644" font-size="10" font-weight="bold" fill="#1a1a1a" font-family="Inter,Arial,Helvetica,sans-serif">*</text>
+        
+    </g>
+    <g class="pfd-arrow">
+        <line x1="218" y1="1690" x2="218" y2="1712" stroke="#4A90D9" stroke-width="2" stroke-linecap="round" marker-end="url(#arrowMarker)"/>
+    </g>
+    <g class="pfd-node" data-step-id="49889eaa-6e8e-45d7-875c-2ce503cc2d41" data-step-number="110">
+        <circle cx="218" cy="1750" r="18" fill="white" stroke="#4A90D9" stroke-width="2"/>
+        <text x="218" y="1754" font-size="11" font-weight="700" fill="#1a1a1a" text-anchor="middle" font-family="Inter,Arial,Helvetica,sans-serif">110</text>
+        <text x="256" y="1746.5" font-size="12" font-weight="500" fill="#1a1a1a" text-anchor="start" font-family="Inter,Arial,Helvetica,sans-serif">REPROCESO: ELIMINACION DE HILO</text><text x="256" y="1760.5" font-size="12" font-weight="500" fill="#1a1a1a" text-anchor="start" font-family="Inter,Arial,Helvetica,sans-serif">SOBRANTE</text><text x="256" y="1776.5" font-size="9" fill="#888888" text-anchor="start" font-family="Inter,Arial,Helvetica,sans-serif">Reproceso</text>
+        
+        <text x="242" y="1736" font-size="10" font-weight="bold" fill="#1a1a1a" font-family="Inter,Arial,Helvetica,sans-serif">*</text>
+        
+    </g>
+    <g class="pfd-arrow">
+        <line x1="218" y1="1782" x2="218" y2="1804" stroke="#4A90D9" stroke-width="2" stroke-linecap="round" marker-end="url(#arrowMarker)"/>
+    </g>
+    <g class="pfd-node" data-step-id="f0eed307-1b14-4f1b-854d-5b40aeb6d90b" data-step-number="111">
+        <circle cx="218" cy="1842" r="18" fill="white" stroke="#4A90D9" stroke-width="2"/>
+        <text x="218" y="1846" font-size="11" font-weight="700" fill="#1a1a1a" text-anchor="middle" font-family="Inter,Arial,Helvetica,sans-serif">111</text>
+        <text x="256" y="1845.5" font-size="12" font-weight="500" fill="#1a1a1a" text-anchor="start" font-family="Inter,Arial,Helvetica,sans-serif">REPROCESO: PUNTADA FLOJA</text><text x="256" y="1861.5" font-size="9" fill="#888888" text-anchor="start" font-family="Inter,Arial,Helvetica,sans-serif">Reproceso</text>
+        
+        <text x="242" y="1828" font-size="10" font-weight="bold" fill="#1a1a1a" font-family="Inter,Arial,Helvetica,sans-serif">*</text>
+        
+    </g>
+    <g class="pfd-arrow">
+        <line x1="218" y1="1874" x2="218" y2="1896" stroke="#4A90D9" stroke-width="2" stroke-linecap="round" marker-end="url(#arrowMarker)"/>
+    </g>
+    <g class="pfd-node" data-step-id="cb30fee5-35df-4a8d-ac82-963d5a0e6eb9" data-step-number="112">
+        <circle cx="218" cy="1934" r="18" fill="white" stroke="#4A90D9" stroke-width="2"/>
+        <text x="218" y="1938" font-size="11" font-weight="700" fill="#1a1a1a" text-anchor="middle" font-family="Inter,Arial,Helvetica,sans-serif">112</text>
+        <text x="256" y="1930.5" font-size="12" font-weight="500" fill="#1a1a1a" text-anchor="start" font-family="Inter,Arial,Helvetica,sans-serif">REPROCESO: ELIMINACION DE ARRUGAS</text><text x="256" y="1944.5" font-size="12" font-weight="500" fill="#1a1a1a" text-anchor="start" font-family="Inter,Arial,Helvetica,sans-serif">EN HORNO</text><text x="256" y="1960.5" font-size="9" fill="#888888" text-anchor="start" font-family="Inter,Arial,Helvetica,sans-serif">Horno · Reproceso</text>
+        
+        <text x="242" y="1920" font-size="10" font-weight="bold" fill="#1a1a1a" font-family="Inter,Arial,Helvetica,sans-serif">*</text>
+        
+    </g>
+    <g class="pfd-arrow">
+        <line x1="218" y1="1966" x2="218" y2="1988" stroke="#4A90D9" stroke-width="2" stroke-linecap="round" marker-end="url(#arrowMarker)"/>
+    </g>
+    <g class="pfd-node" data-step-id="68dab87e-6527-429a-8207-ea474b3c1b8a" data-step-number="70">
+        <circle cx="218" cy="2026" r="18" fill="white" stroke="#4A90D9" stroke-width="2"/>
+        <text x="218" y="2030" font-size="11" font-weight="700" fill="#1a1a1a" text-anchor="middle" font-family="Inter,Arial,Helvetica,sans-serif">70</text>
+        <text x="256" y="2022.5" font-size="12" font-weight="500" fill="#1a1a1a" text-anchor="start" font-family="Inter,Arial,Helvetica,sans-serif">EMBALAJE Y ETIQUETADO DE PRODUCTO</text><text x="256" y="2036.5" font-size="12" font-weight="500" fill="#1a1a1a" text-anchor="start" font-family="Inter,Arial,Helvetica,sans-serif">TERMINADO</text><text x="256" y="2052.5" font-size="9" fill="#888888" text-anchor="start" font-family="Inter,Arial,Helvetica,sans-serif">Embalaje</text>
+        
+        
+        <text x="80" y="2030" font-size="10" font-weight="700" fill="#4A90D9" text-anchor="middle" font-family="Inter,Arial,Helvetica,sans-serif">▽, SC</text>
+    </g>
+    <g class="pfd-arrow">
+        <line x1="218" y1="2058" x2="218" y2="2080" stroke="#4A90D9" stroke-width="2" stroke-linecap="round" marker-end="url(#arrowMarker)"/>
+    </g>
+    <g class="pfd-node" data-step-id="7169098a-920e-4077-a536-5be02e247be8" data-step-number="">
+        <polygon points="218,2136 200,2104 236,2104" fill="white" stroke="#4A90D9" stroke-width="2" stroke-linejoin="round"/>
+        <text x="256" y="2114.5" font-size="12" font-weight="500" fill="#1a1a1a" text-anchor="start" font-family="Inter,Arial,Helvetica,sans-serif">ALMACENAMIENTO: PRODUCTO TERMINADO</text><text x="256" y="2128.5" font-size="12" font-weight="500" fill="#1a1a1a" text-anchor="start" font-family="Inter,Arial,Helvetica,sans-serif">(FIFO)</text><text x="256" y="2144.5" font-size="9" fill="#888888" text-anchor="start" font-family="Inter,Arial,Helvetica,sans-serif">Almacen</text>
+        
+        
+        
+    </g>
+    <g class="pfd-arrow">
+        <line x1="218" y1="2150" x2="218" y2="2172" stroke="#4A90D9" stroke-width="2" stroke-linecap="round" marker-end="url(#arrowMarker)"/>
+    </g>
+    <g class="pfd-node" data-step-id="8619e70e-9884-4789-82e5-5a939a6901f6" data-step-number="">
+        <circle cx="218" cy="2203" r="6.5" fill="white" stroke="#4A90D9" stroke-width="2"/>
+        <text x="256" y="2199.5" font-size="12" font-weight="500" fill="#1a1a1a" text-anchor="start" font-family="Inter,Arial,Helvetica,sans-serif">TRASLADO A SECTOR DE PRODUCTO</text><text x="256" y="2213.5" font-size="12" font-weight="500" fill="#1a1a1a" text-anchor="start" font-family="Inter,Arial,Helvetica,sans-serif">TERMINADO</text>
+        
+        
+        
+    </g>
+    <g class="pfd-notes">
+        <rect x="181" y="2260" width="700" height="142" rx="0" fill="white" stroke="#4A90D9" stroke-width="1"/>
+        <text x="193" y="2275" font-size="9" font-weight="700" fill="#1a1a1a" font-family="Inter,Arial,Helvetica,sans-serif" letter-spacing="0.3">NOTAS</text><text x="193" y="2284" font-size="8" fill="#1a1a1a" font-family="Inter,Arial,Helvetica,sans-serif">
+            <tspan font-weight="600">* 35:</tspan> Caracteristica critica (D/TLD)
+        </text><text x="193" y="2298" font-size="8" fill="#1a1a1a" font-family="Inter,Arial,Helvetica,sans-serif">
+            <tspan font-weight="600">* 50:</tspan> Caracteristica critica (D/TLD)
+        </text><text x="193" y="2312" font-size="8" fill="#1a1a1a" font-family="Inter,Arial,Helvetica,sans-serif">
+            <tspan font-weight="600">* ?:</tspan> Caracteristica critica (D/TLD)
+        </text><text x="193" y="2326" font-size="8" fill="#1a1a1a" font-family="Inter,Arial,Helvetica,sans-serif">
+            <tspan font-weight="600">* ?:</tspan> SI: continua flujo. NO: clasificacion → reproceso o scrap
+        </text><text x="193" y="2340" font-size="8" fill="#1a1a1a" font-family="Inter,Arial,Helvetica,sans-serif">
+            <tspan font-weight="600">* 100:</tspan> Caracteristica critica (D/TLD)
+        </text><text x="193" y="2354" font-size="8" fill="#1a1a1a" font-family="Inter,Arial,Helvetica,sans-serif">
+            <tspan font-weight="600">* 110:</tspan> DEFECTO: HILO SOBRANTE — RE-ENTRADA AL FLUJO PRINCIPAL
+        </text><text x="193" y="2368" font-size="8" fill="#1a1a1a" font-family="Inter,Arial,Helvetica,sans-serif">
+            <tspan font-weight="600">* 111:</tspan> DEFECTO: PUNTADA FLOJA — RE-ENTRADA AL FLUJO PRINCIPAL
+        </text><text x="193" y="2382" font-size="8" fill="#1a1a1a" font-family="Inter,Arial,Helvetica,sans-serif">
+            <tspan font-weight="600">* 112:</tspan> DEFECTO: ARRUGAS — RE-ENTRADA AL FLUJO PRINCIPAL
+        </text></g>
+    <g class="pfd-ccsc-note">
+        <rect x="231" y="2426" width="600" height="52" rx="0" fill="white" stroke="#4A90D9" stroke-width="1.5"/>
+        <text x="531" y="2444" font-size="9" fill="#1a1a1a" text-anchor="middle" font-family="Inter,Arial,Helvetica,sans-serif">
+            Para todas las operaciones marcadas con <tspan font-weight="700">CC</tspan> (Característica Crítica) o <tspan font-weight="700">SC</tspan> (Característica Significativa),
+        </text>
+        <text x="531" y="2458" font-size="9" fill="#1a1a1a" text-anchor="middle" font-family="Inter,Arial,Helvetica,sans-serif">es obligatorio consultar el Plan de Control N° correspondiente</text>
+        <text x="531" y="2470" font-size="9" fill="#1a1a1a" text-anchor="middle" font-family="Inter,Arial,Helvetica,sans-serif">y el PFMEA N° 0446af1c-e76a-44bf-ab1a-d4fc2b6c9d16 asociado a cada operación.</text>
+    </g>
+    <g class="pfd-legend">
+        <rect x="858" y="2510" width="180" height="170" rx="0" fill="white" stroke="#4A90D9" stroke-width="1.5"/>
+        <text x="948" y="2526" font-size="10" font-weight="700" fill="#1a1a1a" text-anchor="middle" font-family="Inter,Arial,Helvetica,sans-serif" letter-spacing="0.5">REFERENCIAS</text>
+        <line x1="858" y1="2532" x2="1038" y2="2532" stroke="#4A90D9" stroke-width="1"/><circle cx="882" cy="2552" r="11" fill="white" stroke="#4A90D9" stroke-width="2"/><text x="904" y="2556" font-size="10" fill="#1a1a1a" font-family="Inter,Arial,Helvetica,sans-serif" font-weight="500">OPERACIÓN</text><circle cx="882" cy="2580" r="6.5" fill="white" stroke="#4A90D9" stroke-width="2"/><text x="904" y="2584" font-size="10" fill="#1a1a1a" font-family="Inter,Arial,Helvetica,sans-serif" font-weight="500">TRASLADO</text><polygon points="882,2619 871,2601 893,2601" fill="white" stroke="#4A90D9" stroke-width="2" stroke-linejoin="round"/><text x="904" y="2612" font-size="10" fill="#1a1a1a" font-family="Inter,Arial,Helvetica,sans-serif" font-weight="500">ALMACENADO</text><rect x="871" y="2625" width="22" height="22" rx="2" fill="white" stroke="#4A90D9" stroke-width="2"/><text x="904" y="2640" font-size="10" fill="#1a1a1a" font-family="Inter,Arial,Helvetica,sans-serif" font-weight="500">INSPECCIÓN</text><polygon points="882,2653 893,2664 882,2675 871,2664" fill="white" stroke="#4A90D9" stroke-width="2" stroke-linejoin="round"/><text x="904" y="2668" font-size="10" fill="#1a1a1a" font-family="Inter,Arial,Helvetica,sans-serif" font-weight="500">CONDICIÓN</text></g>
+</svg>

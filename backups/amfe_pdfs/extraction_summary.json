@@ -1,0 +1,36 @@
+{
+  "extraction_date": "2026-04-06T09:42:53.632627",
+  "files_processed": 3,
+  "results": [
+    {
+      "file": "AMFE de Proceso - TOP ROLL.pdf",
+      "pages": 3,
+      "summary": {
+        "total_tables": 3,
+        "total_data_rows": 83,
+        "pages_with_tables": 3,
+        "pages_with_text": 3
+      }
+    },
+    {
+      "file": "AMFE de Proceso - INSERTO.pdf",
+      "pages": 3,
+      "summary": {
+        "total_tables": 3,
+        "total_data_rows": 161,
+        "pages_with_tables": 3,
+        "pages_with_text": 3
+      }
+    },
+    {
+      "file": "AMFE de Proceso - ARMREST DOOR PANEL.pdf",
+      "pages": 3,
+      "summary": {
+        "total_tables": 3,
+        "total_data_rows": 153,
+        "pages_with_tables": 3,
+        "pages_with_text": 3
+      }
+    }
+  ]
+}

@@ -1,0 +1,334 @@
+{
+  "header": {
+    "companyName": "BARACK MERCOSUL",
+    "scope": "ARMREST DOOR PANEL PATAGONIA",
+    "partNumber": "N 231",
+    "applicableParts": "N 231",
+    "responsibleEngineer": "Carlos Baptista (Ingeniería)",
+    "coreTeam": "Carlos Baptista (Ingeniería), Manuel Meszaros (Calidad), Facundo Santoro, Marianna Vera (Producción), Cristina Rabago (Seguridad e Higiene)",
+    "preparedBy": "Facundo Santoro",
+    "approvedBy": "Carlos Baptista",
+    "amfeDate": "2026-02-13",
+    "revisionLevel": "01",
+    "revisionDate": "2026-02-13",
+    "subject": "ARMREST DOOR PANEL",
+    "client": "VWA",
+    "location": "PLANTA HURLINGHAM"
+  },
+  "operations": [
+    {
+      "id": "b164a1c9-62c6-4c79-93aa-f702c8d748e7",
+      "operationNumber": "5",
+      "operationName": "RECEPCION DE MATERIA PRIMA",
+      "workElements": [
+        {
+          "id": "e0a7597a-ca6e-4271-ab27-672d392b5bc4",
+          "name": "Autoelevador",
+          "type": "Maquina",
+          "functions": [
+            {
+              "id": "0039a47a-160a-4d22-ac6d-bf9f8e696846",
+              "functionDescription": "Garantizar la estabilidad y la integridad física del material durante el transporte interno",
+              "failures": [
+                {
+                  "id": "5457d511-01e7-43df-b973-f896c5b2141d",
+                  "description": "Material / pieza golpeada o dañada durante transporte",
+                  "effectLocal": "Retrabajo",
+                  "effectNextLevel": "Problemas en el ensamble final",
+                  "effectEndUser": "Potencial reclamo de aspecto/comfort",
+                  "causes": [
+                    {
+                      "id": "c00851cc-6f05-4857-a1f9-712ee95b700c",
+                      "description": "Mala estiba y embalaje inadecuado",
+                      "severity": 5,
+                      "occurrence": 6,
+                      "detection": 6,
+                      "actionPriority": "M",
+                      "preventionControl": "Medios de embalaje validados",
+                      "detectionControl": "Inspección Visual de daños/suciedad en el empaque al recibir",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": ""
+                    },
+                    {
+                      "id": "4d1180e8-7532-4ecd-b1b3-4fdc0ba96829",
+                      "description": "Manipulación incorrecta en tránsito",
+                      "severity": 5,
+                      "occurrence": 6,
+                      "detection": 6,
+                      "actionPriority": "M",
+                      "preventionControl": "Existencia de instrucciones de trabajo que definen cómo debe estibarse y manipularse el material",
+                      "detectionControl": "Inspección Visual del estado de la pieza/empaque",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": ""
+                    },
+                    {
+                      "id": "da9b6b66-4973-4345-b6dd-58122b4a7ad3",
+                      "description": "Almacenaje inadecuado en transporte (sin protecciones)",
+                      "severity": 5,
+                      "occurrence": 5,
+                      "detection": 6,
+                      "actionPriority": "M",
+                      "preventionControl": "Procedimientos de Logística sobre estiba segura y uso de Embalajes Cubiertos o cerrados",
+                      "detectionControl": "Inspección Visual de daños/suciedad en el empaque al recibir",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": ""
+                    }
+                  ]
+                },
+                {
+                  "id": "cf5c1937-4b22-424d-a3c2-1bcdd69b44d4",
+                  "description": "Material no cumple requisito de flamabilidad TL 1010 VW",
+                  "effectLocal": "Material no apto para uso",
+                  "effectNextLevel": "Paro de linea VW por incumplimiento normativo",
+                  "effectEndUser": "Riesgo de propagacion de fuego en habitaculo",
+                  "causes": [
+                    {
+                      "id": "bed7e8ab-7ac2-4b41-8a8e-7486ed15a2ee",
+                      "description": "Material fuera de especificacion requerida",
+                      "severity": 9,
+                      "occurrence": 2,
+                      "detection": 3,
+                      "actionPriority": "L",
+                      "preventionControl": "Certificado de flamabilidad del proveedor segun TL 1010",
+                      "detectionControl": "Verificacion documental en recepcion",
+                      "specialChar": "CC",
+                      "characteristicNumber": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": ""
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "716d8a3d-12bc-4028-b20e-8d166b4150d7",
+          "name": "Operador de producción / Operador de calidad",
+          "type": "Mano de Obra",
+          "functions": [
+            {
+              "id": "a737d8de-6b32-4dd9-8d87-8ac519d7ef24",
+              "functionDescription": "Verificar el cumplimiento y la trazabilidad de la materia prima recibida",
+              "failures": [
+                {
+                  "id": "32fc55af-5a5b-4313-9963-75df89404a3a",
+                  "description": "Falta de documentación o trazabilidad",
+                  "effectLocal": "Riesgo de mezclar lotes no conformes",
+                  "effectNextLevel": "Dificultades en trazabilidad si surge un reclamo",
+                  "effectEndUser": "Potencial reclamo",
+                  "causes": [
+                    {
+                      "id": "5a199b2c-e05d-43c1-aad0-7a305b4f1d89",
+                      "description": "Procesos administrativos deficientes",
+                      "severity": 4,
+                      "occurrence": 4,
+                      "detection": 4,
+                      "actionPriority": "L",
+                      "preventionControl": "El sistema ARB obliga a registrar lote y código en recepción y verifica contra base de datos",
+                      "detectionControl": "Verificación automática del lote/código registrado contra la base de datos",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": ""
+                    },
+                    {
+                      "id": "d261ddf6-59c2-4c8c-96c7-c763ff88e438",
+                      "description": "Proveedor sin sistema robusto de trazabilidad",
+                      "severity": 4,
+                      "occurrence": 6,
+                      "detection": 6,
+                      "actionPriority": "L",
+                      "preventionControl": "Auditorías de Sistema y Requisitos que validan la capacidad de trazabilidad del proveedor",
+                      "detectionControl": "Verificación del Certificado de Conformidad y registro obligatorio de lote",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": ""
+                    },
+                    {
+                      "id": "0a04b1fb-5a74-42e7-9a10-565215997494",
+                      "description": "No se utiliza el sistema ARB",
+                      "severity": 4,
+                      "occurrence": 3,
+                      "detection": 7,
+                      "actionPriority": "L",
+                      "preventionControl": "Estándar Operacional que exige el uso del sistema ARB",
+                      "detectionControl": "El sistema impide la emisión de ubicaciones hasta que todos los campos del ARB sean completados",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": ""
+                    }
+                  ]
+                },
+                {
+                  "id": "ba4b7840-0b86-4080-a556-2b3686933a53",
+                  "description": "Material con especificación errónea (dimensiones, color, dureza, etc.)",
+                  "effectLocal": "Potencial Descarte",
+                  "effectNextLevel": "Potencial parada de línea",
+                  "effectEndUser": "Potencial reclamo de aspecto",
+                  "causes": [
+                    {
+                      "id": "9b950f24-1d91-457f-8587-e32c5af68f60",
+                      "description": "Proveedor no respeta tolerancias",
+                      "severity": 6,
+                      "occurrence": 6,
+                      "detection": 6,
+                      "actionPriority": "H",
+                      "preventionControl": "Requisitos Contractuales de Calidad y Auditorías al Proveedor",
+                      "detectionControl": "Control Dimensional por muestreo (Certificado de Calidad) y Revisión obligatoria",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": ""
+                    },
+                    {
+                      "id": "b0b9c1f6-110a-4915-b024-572449c39dbf",
+                      "description": "Error en la orden de compra o ficha técnica",
+                      "severity": 6,
+                      "occurrence": 5,
+                      "detection": 6,
+                      "actionPriority": "M",
+                      "preventionControl": "Revisión de Ingeniería de la Ficha Técnica/OC antes de la emisión al proveedor",
+                      "detectionControl": "Control dimensional por muestreo en recepción y Revisión obligatoria del Certificado de Calidad",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": ""
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "32692770-2c92-46f0-befc-74c71982b9f8",
+          "name": "Calibres, Micrómetro, Probeta de flamabilidad, Probeta de peeling",
+          "type": "Material",
+          "functions": [
+            {
+              "id": "e44e2081-7a51-4b4b-8e3d-8db202115e52",
+              "functionDescription": "Disponer y utilizar instrumentos de medición y ensayo",
+              "failures": [
+                {
+                  "id": "4b4a4593-3ae6-49cb-90bd-9fe535061602",
+                  "description": "Contaminación / suciedad en la materia prima",
+                  "effectLocal": "Potencial Descarte",
+                  "effectNextLevel": "Reclamo de aspecto",
+                  "effectEndUser": "Problemas de calidad durante el ensamble",
+                  "causes": [
+                    {
+                      "id": "0ae6195a-bf5c-48a9-9763-8f5c4f81d5a4",
+                      "description": "Ambiente sucio en planta del proveedor",
+                      "severity": 5,
+                      "occurrence": 6,
+                      "detection": 6,
+                      "actionPriority": "M",
+                      "preventionControl": "Auditorías de Calidad",
+                      "detectionControl": "Inspección Visual de la pieza y Revisión del Certificado de Calidad del proveedor",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": ""
+                    },
+                    {
+                      "id": "a8af6271-3406-415f-9544-b9a4338472e4",
+                      "description": "Falta de inspección visual al recibir",
+                      "severity": 5,
+                      "occurrence": 5,
+                      "detection": 5,
+                      "actionPriority": "M",
+                      "preventionControl": "Instrucción de Trabajo de Recepción que exige la verificación física y visual",
+                      "detectionControl": "Inspección visual en recepción",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": ""
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "dac8b4df-c73a-4839-9619-fb03c8a04705",
+          "name": "Etiquetas Blancas / Etiquetas de rechazo",
+          "type": "Material",
+          "functions": [
+            {
+              "id": "29c92b4e-2cca-4a5a-9cf6-1c4219f81d69",
+              "functionDescription": "Identificar y etiquetar material recibido",
+              "failures": []
+            }
+          ]
+        },
+        {
+          "id": "4f7d13e0-4a04-4fbf-af59-19cfeffe46a9",
+          "name": "Hojas de operaciones / Ayudas visuales",
+          "type": "Metodo",
+          "functions": [
+            {
+              "id": "f67946b1-98cc-4765-ab0c-c8eaa696d775",
+              "functionDescription": "Comprobar que el embalaje no esté dañado. Corroborar que la orden sea la correcta. Cargar la materia prima en ARB.",
+              "failures": []
+            }
+          ]
+        },
+        {
+          "id": "f87a1b63-8b9c-4f46-8c0f-5594d82f7c33",
+          "name": "Iluminación/Ruido, Ley 19587",
+          "type": "Medio Ambiente",
+          "functions": [
+            {
+              "id": "8a1ea275-c38d-423c-82e3-2477546be1db",
+              "functionDescription": "Mantener las condiciones de seguridad ocupacional según la Ley 19587",
+              "failures": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1959 @@
+{
+  "_meta": {
+    "sourceFile": "\\\\SERVER\\compartido\\BARACK\\CALIDAD\\DOCUMENTACION SGC\\PPAP CLIENTES\\PWA\\AMFE Y FLUJOGRAMA UNIFICADO\\Obsoleto\\AMFE y Flujograma unificado - TELAS.xlsx",
+    "label": "TELAS Original (sin revision)",
+    "extractedAt": "2026-04-06T18:12:56.661Z",
+    "sheetsFound": [
+      "Corte y pegado de aplix",
+      "Corte sin costura",
+      "Troquelado y costura",
+      "Corte y costura",
+      "Telas por sector",
+      "Telas por op"
+    ],
+    "sheetDimensions": {
+      "Corte y pegado de aplix": {
+        "rows": 65,
+        "maxCols": 35
+      },
+      "Corte sin costura": {
+        "rows": 67,
+        "maxCols": 41
+      },
+      "Troquelado y costura": {
+        "rows": 74,
+        "maxCols": 35
+      },
+      "Corte y costura": {
+        "rows": 76,
+        "maxCols": 42
+      },
+      "Telas por sector": {
+        "rows": 47,
+        "maxCols": 14
+      },
+      "Telas por op": {
+        "rows": 47,
+        "maxCols": 13
+      }
+    }
+  },
+  "caratula": {},
+  "amfeBySheet": {
+    "Corte y pegado de aplix": {
+      "sheetName": "Corte y pegado de aplix",
+      "headerDetected": false,
+      "headerLabels": {},
+      "rows": [],
+      "totalRawRows": 67
+    },
+    "Corte sin costura": {
+      "sheetName": "Corte sin costura",
+      "headerDetected": false,
+      "headerLabels": {},
+      "rows": [],
+      "totalRawRows": 69
+    },
+    "Troquelado y costura": {
+      "sheetName": "Troquelado y costura",
+      "headerDetected": false,
+      "headerLabels": {},
+      "rows": [],
+      "totalRawRows": 76
+    },
+    "Corte y costura": {
+      "sheetName": "Corte y costura",
+      "headerDetected": false,
+      "headerLabels": {},
+      "rows": [],
+      "totalRawRows": 78
+    },
+    "Telas por sector": {
+      "sheetName": "Telas por sector",
+      "headerDetected": false,
+      "headerLabels": {},
+      "rows": [],
+      "totalRawRows": 47
+    },
+    "Telas por op": {
+      "sheetName": "Telas por op",
+      "headerDetected": false,
+      "headerLabels": {},
+      "rows": [],
+      "totalRawRows": 47
+    }
+  },
+  "keyFindings": {
+    "partNumbers": [
+      "21-5569",
+      "21-6481",
+      "21-5194",
+      "21-5376",
+      "21-6414",
+      "21-6899",
+      "21-7339",
+      "21-7340",
+      "21-7341",
+      "21-6614",
+      "21-6576",
+      "21-6619",
+      "21-7467",
+      "21-6534",
+      "21-6535",
+      "21-6536",
+      "21-6537",
+      "21-6538",
+      "21-6539",
+      "21-6595",
+      "21-6718",
+      "21-6756",
+      "21-6758",
+      "21-5586",
+      "21-6479",
+      "21-6480",
+      "21-6482",
+      "21-6483",
+      "21-6757",
+      "21-6032",
+      "21-6523",
+      "21-6530",
+      "21-6531",
+      "21-6532",
+      "21-6567",
+      "21-6612",
+      "21-6613",
+      "21-6621",
+      "21-6699",
+      "21-6767",
+      "21-7763",
+      "21-6034",
+      "21-6900",
+      "21-6416",
+      "21-6766",
+      "21-7964"
+    ],
+    "operations": [
+      {
+        "sheet": "Corte y pegado de aplix",
+        "row": 52,
+        "col": 11,
+        "value": "OP. 10 Recepción de materiales con identificacion correcta en en sector indicado"
+      },
+      {
+        "sheet": "Corte y pegado de aplix",
+        "row": 55,
+        "col": 11,
+        "value": "OP.20 Corte segu ndimensional con orificios en posicion y con la cantidad correspondiente."
+      },
+      {
+        "sheet": "Corte y pegado de aplix",
+        "row": 59,
+        "col": 11,
+        "value": "OP. 30 Pegado de dots en correcta posicion con cantidad de dots correspondiente."
+      },
+      {
+        "sheet": "Corte y pegado de aplix",
+        "row": 61,
+        "col": 11,
+        "value": "OP. 40 Inspección final del dimensional."
+      },
+      {
+        "sheet": "Corte y pegado de aplix",
+        "row": 62,
+        "col": 11,
+        "value": "OP. 50 Embalaje identificado con cantidad de piezas especificas."
+      },
+      {
+        "sheet": "Corte sin costura",
+        "row": 55,
+        "col": 11,
+        "value": "OP. 10 Recepción de materiales con identificacion correcta en en sector indicado"
+      },
+      {
+        "sheet": "Corte sin costura",
+        "row": 58,
+        "col": 11,
+        "value": "OP.20 Corte según dimensional, libre de arrugas y marcas."
+      },
+      {
+        "sheet": "Corte sin costura",
+        "row": 61,
+        "col": 11,
+        "value": "OP. 30 Colocado de clips en posicion correcta sin falta de clips."
+      },
+      {
+        "sheet": "Corte sin costura",
+        "row": 63,
+        "col": 11,
+        "value": "OP. 40 Inspeccion final de deimensional."
+      },
+      {
+        "sheet": "Corte sin costura",
+        "row": 64,
+        "col": 11,
+        "value": "OP. 50 Embalaje identificado con cantidad de piezas especificas."
+      },
+      {
+        "sheet": "Troquelado y costura",
+        "row": 52,
+        "col": 11,
+        "value": "OP. 10 Recepción de materiales con identificacion correcta en en sector indicado"
+      },
+      {
+        "sheet": "Troquelado y costura",
+        "row": 55,
+        "col": 11,
+        "value": "OP.20 Troquelado prolijo sin deficiencia con orificios según dimensional."
+      },
+      {
+        "sheet": "Troquelado y costura",
+        "row": 60,
+        "col": 11,
+        "value": "OP. 30 Costura completa sin pliegues ni arrugas con hilo segun especificaciones."
+      },
+      {
+        "sheet": "Troquelado y costura",
+        "row": 68,
+        "col": 11,
+        "value": "OP. 40 Pegado de dots aplix en posicion correcta con cantidad indicada."
+      },
+      {
+        "sheet": "Troquelado y costura",
+        "row": 70,
+        "col": 11,
+        "value": "OP. 50 Inspección final de dimensional."
+      },
+      {
+        "sheet": "Troquelado y costura",
+        "row": 71,
+        "col": 11,
+        "value": "OP. 60 Embalaje identificado con cantidad de piezas especificas."
+      },
+      {
+        "sheet": "Corte y costura",
+        "row": 52,
+        "col": 11,
+        "value": "OP. 10 Recepción de materiales con identificacion correcta en en sector indicado"
+      },
+      {
+        "sheet": "Corte y costura",
+        "row": 55,
+        "col": 11,
+        "value": "OP.20 Corte por máquina autómatica según dimensional con cantidad de orificios según plan de control."
+      },
+      {
+        "sheet": "Corte y costura",
+        "row": 60,
+        "col": 11,
+        "value": "OP. 30 Costura fuerte, sin arruga ni pliegues con hilo según especificaciones."
+      },
+      {
+        "sheet": "Corte y costura",
+        "row": 68,
+        "col": 11,
+        "value": "OP. 40 Colocado de clips en posicion correcta con cantidad de clips correcta ."
+      },
+      {
+        "sheet": "Corte y costura",
+        "row": 70,
+        "col": 11,
+        "value": "OP. 50 Pegado de dots  en posicion correcta con cantidad de dots correcta."
+      },
+      {
+        "sheet": "Corte y costura",
+        "row": 72,
+        "col": 11,
+        "value": "OP. 60 Inspección final de la pieza."
+      },
+      {
+        "sheet": "Corte y costura",
+        "row": 73,
+        "col": 11,
+        "value": "OP. 70 Embalaje identificado con cantidad de piezas especificas."
+      }
+    ],
+    "materials": [
+      "TELA FSC MANUAL PES FLEECE",
+      "TELA FSB WO AB 14588",
+      "OP. 10 Recepción de materiales con identificacion correcta en en sector indicado",
+      "Recepción de materiales.",
+      "Omision de la recepcion de material",
+      "Inutilización del material.",
+      "Recepcion de materiales",
+      "FSB FOAM NON WOBEN",
+      "TELA ASSENTO DIANT FIAT 326",
+      "TELA ASSENTO DIANTEIRO",
+      "TELA DE TNT 60 GR/M2 ENCOSTO TRASEIRO 100% FIAT X6S",
+      "TELA TNT RESPALDO TRASERO 40% - FIAT X65",
+      "TELA TNT RESPALDO TRASERO 60 %",
+      "TELA ASSENTO TRASEIRO 50% 3° FILA",
+      "TELA ASSENTO TRASEIRO 60%",
+      "TELA BIFELT FSC 60% RH",
+      "TELA BIFELT 140 GR/M2 ASSENTO DIANTEIRO TOY. GENZU 338.",
+      "Material fuera de especificación requerida",
+      "Recepción de materiales / Control visual.",
+      "TELA BIFELT ASSENTO TRASEIRO 40%",
+      "TELA BIFELT ASSENTO TRASEIRO 60% -",
+      "TELA BIFELT ASSENTO DIANTEIRO RH",
+      "TELA BIFELT ASSENTO DIANTEIRO LH",
+      "RECEPCIÓN DE MATERIA PRIMA (TELA BIFELT 100 GR/M2 - DOTS APLIX)",
+      "TELA BIFELT ENCOSTO TRASEIRO 40%",
+      "TELA BIFELT ENCOSTO TRASEIRO 60%",
+      "OP. 30 Costura completa sin pliegues ni arrugas con hilo segun especificaciones.",
+      "Falla en la tensión del hilo.",
+      "Hilo enredado.",
+      "Hilo equivocado.",
+      "TELA DE REFORCO ASSENTO LH DIANTEIRO",
+      "TELA ASSENTO DIANTEIRO LH",
+      "TELA FLEECE FRONT RSC",
+      "TELA FSC LH T7 RFX",
+      "TELA FSC RH T7 RFX",
+      "TELA FSB W AB LH 14589",
+      "TELA FSB W AB RH 14590",
+      "TELA ENCOSTO DIANTEIRO LH COM CAPUZ",
+      "TELA ENCOSTO DIANTEIRO LH",
+      "TELA BIFELT ENCOSTO DIANTEIRO LH/RH - HONDA SCUV",
+      "TELA BIFELT ENCOSTO DIANTEIRO LH - HONDA SCUV",
+      "TELA BIFELT ENCOSTO DIANTEIRO RH - HONDA SCUV",
+      "TELA ENCOSTO DIANTEIRO",
+      "TELA ENCOSTO TRASEIRO LH 3° FILA",
+      "TELA ENCOSTO DIANTEIRO 60% RH COM CAPUZ",
+      "TELA ENCOSTO DIANTEIRO LH.",
+      "TELA ENCOSTO TRASEIRO 40% LH",
+      "TELA ENCOSTO TRASEIRO 60% LH",
+      "OP. 30 Costura fuerte, sin arruga ni pliegues con hilo según especificaciones.",
+      "TELA ASSENTO TRASEIRO 40%",
+      "TELA BIFELT ASSENTO DIANTEIRO RH - HONDA SCUV -",
+      "TELA BIFELT ASSENTO DIANTEIRO LH - HONDA SCUV -"
+    ],
+    "temperatureReferences": [],
+    "flamabilidadReferences": [],
+    "allKeywords": {
+      "plana": [],
+      "termoformada": [],
+      "costura": [
+        {
+          "sheet": "Corte y pegado de aplix",
+          "row": 5,
+          "col": 31,
+          "value": "Maq. Corte-Costura-Ganchos"
+        },
+        {
+          "sheet": "Corte sin costura",
+          "row": 12,
+          "col": 31,
+          "value": "Maq. Corte-Costura-Ganchos"
+        },
+        {
+          "sheet": "Corte sin costura",
+          "row": 13,
+          "col": 31,
+          "value": "Maq. Corte-Costura-Ganchos"
+        },
+        {
+          "sheet": "Corte sin costura",
+          "row": 14,
+          "col": 31,
+          "value": "Maq. Corte-Costura-Ganchos"
+        },
+        {
+          "sheet": "Troquelado y costura",
+          "row": 3,
+          "col": 31,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Troquelado y costura",
+          "row": 4,
+          "col": 31,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Troquelado y costura",
+          "row": 5,
+          "col": 31,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Troquelado y costura",
+          "row": 6,
+          "col": 31,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Troquelado y costura",
+          "row": 7,
+          "col": 31,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Troquelado y costura",
+          "row": 8,
+          "col": 31,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Troquelado y costura",
+          "row": 35,
+          "col": 4,
+          "value": "TRASLADO A ESTACIÓN DE COSTURA"
+        },
+        {
+          "sheet": "Troquelado y costura",
+          "row": 39,
+          "col": 4,
+          "value": "PROCESO DE COSTURA"
+        },
+        {
+          "sheet": "Troquelado y costura",
+          "row": 60,
+          "col": 11,
+          "value": "OP. 30 Costura completa sin pliegues ni arrugas con hilo segun especificaciones."
+        },
+        {
+          "sheet": "Troquelado y costura",
+          "row": 60,
+          "col": 12,
+          "value": "Falta de costura."
+        },
+        {
+          "sheet": "Troquelado y costura",
+          "row": 62,
+          "col": 12,
+          "value": "Costura floja / deficiente."
+        },
+        {
+          "sheet": "Troquelado y costura",
+          "row": 63,
+          "col": 12,
+          "value": "Costura salteada."
+        },
+        {
+          "sheet": "Corte y costura",
+          "row": 3,
+          "col": 37,
+          "value": "costura"
+        },
+        {
+          "sheet": "Corte y costura",
+          "row": 4,
+          "col": 31,
+          "value": "Maq. Corte-Costura-Ganchos"
+        },
+        {
+          "sheet": "Corte y costura",
+          "row": 5,
+          "col": 31,
+          "value": "Maq. Corte-Costura-Ganchos"
+        },
+        {
+          "sheet": "Corte y costura",
+          "row": 6,
+          "col": 31,
+          "value": "Maq. Corte-Costura-Ganchos"
+        },
+        {
+          "sheet": "Corte y costura",
+          "row": 7,
+          "col": 31,
+          "value": "Maq. Corte-Costura-Ganchos"
+        },
+        {
+          "sheet": "Corte y costura",
+          "row": 9,
+          "col": 31,
+          "value": "Maq. Corte-Costura-Ganchos"
+        },
+        {
+          "sheet": "Corte y costura",
+          "row": 10,
+          "col": 31,
+          "value": "Maq. Corte-Costura-Ganchos"
+        },
+        {
+          "sheet": "Corte y costura",
+          "row": 11,
+          "col": 31,
+          "value": "Maq. Corte-Costura-Ganchos"
+        },
+        {
+          "sheet": "Corte y costura",
+          "row": 12,
+          "col": 31,
+          "value": "Maq. Corte-Costura-Ganchos"
+        },
+        {
+          "sheet": "Corte y costura",
+          "row": 13,
+          "col": 31,
+          "value": "Maq. Corte-Costura-Ganchos"
+        },
+        {
+          "sheet": "Corte y costura",
+          "row": 14,
+          "col": 31,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Corte y costura",
+          "row": 15,
+          "col": 31,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Corte y costura",
+          "row": 16,
+          "col": 31,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Corte y costura",
+          "row": 17,
+          "col": 31,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Corte y costura",
+          "row": 18,
+          "col": 31,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Corte y costura",
+          "row": 19,
+          "col": 31,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Corte y costura",
+          "row": 20,
+          "col": 31,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Corte y costura",
+          "row": 21,
+          "col": 31,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Corte y costura",
+          "row": 22,
+          "col": 31,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Corte y costura",
+          "row": 23,
+          "col": 31,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Corte y costura",
+          "row": 24,
+          "col": 31,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Corte y costura",
+          "row": 25,
+          "col": 31,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Corte y costura",
+          "row": 26,
+          "col": 31,
+          "value": "Maq. Corte (Alam.)-Costura-Aplix"
+        },
+        {
+          "sheet": "Corte y costura",
+          "row": 60,
+          "col": 11,
+          "value": "OP. 30 Costura fuerte, sin arruga ni pliegues con hilo según especificaciones."
+        },
+        {
+          "sheet": "Corte y costura",
+          "row": 60,
+          "col": 12,
+          "value": "Falta de costura."
+        },
+        {
+          "sheet": "Corte y costura",
+          "row": 62,
+          "col": 12,
+          "value": "Costura floja / deficiente."
+        },
+        {
+          "sheet": "Corte y costura",
+          "row": 63,
+          "col": 12,
+          "value": "Costura salteada."
+        },
+        {
+          "sheet": "Telas por sector",
+          "row": 1,
+          "col": 8,
+          "value": "costura"
+        },
+        {
+          "sheet": "Telas por sector",
+          "row": 15,
+          "col": 1,
+          "value": "Maq. Corte-Costura-Ganchos"
+        },
+        {
+          "sheet": "Telas por sector",
+          "row": 16,
+          "col": 1,
+          "value": "Maq. Corte-Costura-Ganchos"
+        },
+        {
+          "sheet": "Telas por sector",
+          "row": 17,
+          "col": 1,
+          "value": "Maq. Corte-Costura-Ganchos"
+        },
+        {
+          "sheet": "Telas por sector",
+          "row": 18,
+          "col": 1,
+          "value": "Maq. Corte-Costura-Ganchos"
+        },
+        {
+          "sheet": "Telas por sector",
+          "row": 19,
+          "col": 1,
+          "value": "Maq. Corte-Costura-Ganchos"
+        },
+        {
+          "sheet": "Telas por sector",
+          "row": 20,
+          "col": 1,
+          "value": "Maq. Corte-Costura-Ganchos"
+        },
+        {
+          "sheet": "Telas por sector",
+          "row": 21,
+          "col": 1,
+          "value": "Maq. Corte-Costura-Ganchos"
+        },
+        {
+          "sheet": "Telas por sector",
+          "row": 22,
+          "col": 1,
+          "value": "Maq. Corte-Costura-Ganchos"
+        },
+        {
+          "sheet": "Telas por sector",
+          "row": 23,
+          "col": 1,
+          "value": "Maq. Corte-Costura-Ganchos"
+        },
+        {
+          "sheet": "Telas por sector",
+          "row": 24,
+          "col": 1,
+          "value": "Maq. Corte-Costura-Ganchos"
+        },
+        {
+          "sheet": "Telas por sector",
+          "row": 25,
+          "col": 1,
+          "value": "Maq. Corte-Costura-Ganchos"
+        },
+        {
+          "sheet": "Telas por sector",
+          "row": 26,
+          "col": 1,
+          "value": "Maq. Corte-Costura-Ganchos"
+        },
+        {
+          "sheet": "Telas por sector",
+          "row": 27,
+          "col": 1,
+          "value": "Maq. Corte-Costura-Ganchos"
+        },
+        {
+          "sheet": "Telas por sector",
+          "row": 28,
+          "col": 1,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Telas por sector",
+          "row": 29,
+          "col": 1,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Telas por sector",
+          "row": 30,
+          "col": 1,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Telas por sector",
+          "row": 31,
+          "col": 1,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Telas por sector",
+          "row": 32,
+          "col": 1,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Telas por sector",
+          "row": 33,
+          "col": 1,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Telas por sector",
+          "row": 34,
+          "col": 1,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Telas por sector",
+          "row": 35,
+          "col": 1,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Telas por sector",
+          "row": 36,
+          "col": 1,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Telas por sector",
+          "row": 37,
+          "col": 1,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Telas por sector",
+          "row": 38,
+          "col": 1,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Telas por sector",
+          "row": 39,
+          "col": 1,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Telas por sector",
+          "row": 40,
+          "col": 1,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Telas por sector",
+          "row": 41,
+          "col": 1,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Telas por sector",
+          "row": 42,
+          "col": 1,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Telas por sector",
+          "row": 43,
+          "col": 1,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Telas por sector",
+          "row": 44,
+          "col": 1,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Telas por sector",
+          "row": 45,
+          "col": 1,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Telas por sector",
+          "row": 46,
+          "col": 1,
+          "value": "Maq. Corte (Alam.)-Costura-Aplix"
+        },
+        {
+          "sheet": "Telas por op",
+          "row": 1,
+          "col": 7,
+          "value": "costura"
+        },
+        {
+          "sheet": "Telas por op",
+          "row": 2,
+          "col": 0,
+          "value": "Maq. Corte-Costura-Ganchos"
+        },
+        {
+          "sheet": "Telas por op",
+          "row": 3,
+          "col": 0,
+          "value": "Maq. Corte-Costura-Ganchos"
+        },
+        {
+          "sheet": "Telas por op",
+          "row": 4,
+          "col": 0,
+          "value": "Maq. Corte-Costura-Ganchos"
+        },
+        {
+          "sheet": "Telas por op",
+          "row": 5,
+          "col": 0,
+          "value": "Maq. Corte-Costura-Ganchos"
+        },
+        {
+          "sheet": "Telas por op",
+          "row": 7,
+          "col": 0,
+          "value": "Maq. Corte-Costura-Ganchos"
+        },
+        {
+          "sheet": "Telas por op",
+          "row": 8,
+          "col": 0,
+          "value": "Maq. Corte-Costura-Ganchos"
+        },
+        {
+          "sheet": "Telas por op",
+          "row": 9,
+          "col": 0,
+          "value": "Maq. Corte-Costura-Ganchos"
+        },
+        {
+          "sheet": "Telas por op",
+          "row": 10,
+          "col": 0,
+          "value": "Maq. Corte-Costura-Ganchos"
+        },
+        {
+          "sheet": "Telas por op",
+          "row": 11,
+          "col": 0,
+          "value": "Maq. Corte-Costura-Ganchos"
+        },
+        {
+          "sheet": "Telas por op",
+          "row": 12,
+          "col": 0,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Telas por op",
+          "row": 13,
+          "col": 0,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Telas por op",
+          "row": 14,
+          "col": 0,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Telas por op",
+          "row": 15,
+          "col": 0,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Telas por op",
+          "row": 16,
+          "col": 0,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Telas por op",
+          "row": 17,
+          "col": 0,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Telas por op",
+          "row": 18,
+          "col": 0,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Telas por op",
+          "row": 19,
+          "col": 0,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Telas por op",
+          "row": 20,
+          "col": 0,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Telas por op",
+          "row": 21,
+          "col": 0,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Telas por op",
+          "row": 22,
+          "col": 0,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Telas por op",
+          "row": 23,
+          "col": 0,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Telas por op",
+          "row": 24,
+          "col": 0,
+          "value": "Maq. Corte (Alam.)-Costura-Aplix"
+        },
+        {
+          "sheet": "Telas por op",
+          "row": 25,
+          "col": 0,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Telas por op",
+          "row": 26,
+          "col": 0,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Telas por op",
+          "row": 27,
+          "col": 0,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Telas por op",
+          "row": 28,
+          "col": 0,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Telas por op",
+          "row": 29,
+          "col": 0,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Telas por op",
+          "row": 30,
+          "col": 0,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Telas por op",
+          "row": 41,
+          "col": 0,
+          "value": "Maq. Corte-Costura-Ganchos"
+        },
+        {
+          "sheet": "Telas por op",
+          "row": 42,
+          "col": 0,
+          "value": "Maq. Corte-Costura-Ganchos"
+        },
+        {
+          "sheet": "Telas por op",
+          "row": 43,
+          "col": 0,
+          "value": "Maq. Corte-Costura-Ganchos"
+        },
+        {
+          "sheet": "Telas por op",
+          "row": 44,
+          "col": 0,
+          "value": "Maq. Corte-Costura-Ganchos"
+        }
+      ],
+      "corte": [
+        {
+          "sheet": "Corte y pegado de aplix",
+          "row": 4,
+          "col": 31,
+          "value": "Maq. Corte-Aplix"
+        },
+        {
+          "sheet": "Corte y pegado de aplix",
+          "row": 5,
+          "col": 31,
+          "value": "Maq. Corte-Costura-Ganchos"
+        },
+        {
+          "sheet": "Corte y pegado de aplix",
+          "row": 55,
+          "col": 11,
+          "value": "OP.20 Corte segu ndimensional con orificios en posicion y con la cantidad correspondiente."
+        },
+        {
+          "sheet": "Corte sin costura",
+          "row": 3,
+          "col": 36,
+          "value": "Corte"
+        },
+        {
+          "sheet": "Corte sin costura",
+          "row": 4,
+          "col": 31,
+          "value": "Maq. Corte-Aplix"
+        },
+        {
+          "sheet": "Corte sin costura",
+          "row": 5,
+          "col": 31,
+          "value": "Maq. Corte"
+        },
+        {
+          "sheet": "Corte sin costura",
+          "row": 6,
+          "col": 31,
+          "value": "Maq. Corte"
+        },
+        {
+          "sheet": "Corte sin costura",
+          "row": 7,
+          "col": 31,
+          "value": "Maq. Corte"
+        },
+        {
+          "sheet": "Corte sin costura",
+          "row": 8,
+          "col": 31,
+          "value": "Maq. Corte"
+        },
+        {
+          "sheet": "Corte sin costura",
+          "row": 9,
+          "col": 31,
+          "value": "Maq. Corte"
+        },
+        {
+          "sheet": "Corte sin costura",
+          "row": 10,
+          "col": 31,
+          "value": "Maq. Corte"
+        },
+        {
+          "sheet": "Corte sin costura",
+          "row": 11,
+          "col": 31,
+          "value": "Maq. Corte-Ganchos"
+        },
+        {
+          "sheet": "Corte sin costura",
+          "row": 12,
+          "col": 31,
+          "value": "Maq. Corte-Costura-Ganchos"
+        },
+        {
+          "sheet": "Corte sin costura",
+          "row": 13,
+          "col": 31,
+          "value": "Maq. Corte-Costura-Ganchos"
+        },
+        {
+          "sheet": "Corte sin costura",
+          "row": 14,
+          "col": 31,
+          "value": "Maq. Corte-Costura-Ganchos"
+        },
+        {
+          "sheet": "Corte sin costura",
+          "row": 58,
+          "col": 11,
+          "value": "OP.20 Corte según dimensional, libre de arrugas y marcas."
+        },
+        {
+          "sheet": "Corte sin costura",
+          "row": 58,
+          "col": 17,
+          "value": "Error en la regla de guia de la mesa de corte."
+        },
+        {
+          "sheet": "Corte sin costura",
+          "row": 59,
+          "col": 17,
+          "value": "Error en la regla de guia de la mesa de corte."
+        },
+        {
+          "sheet": "Troquelado y costura",
+          "row": 3,
+          "col": 31,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Troquelado y costura",
+          "row": 4,
+          "col": 31,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Troquelado y costura",
+          "row": 5,
+          "col": 31,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Troquelado y costura",
+          "row": 6,
+          "col": 31,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Troquelado y costura",
+          "row": 7,
+          "col": 31,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Troquelado y costura",
+          "row": 8,
+          "col": 31,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Corte y costura",
+          "row": 3,
+          "col": 36,
+          "value": "Corte (Mesa de corte)"
+        },
+        {
+          "sheet": "Corte y costura",
+          "row": 4,
+          "col": 31,
+          "value": "Maq. Corte-Costura-Ganchos"
+        },
+        {
+          "sheet": "Corte y costura",
+          "row": 5,
+          "col": 31,
+          "value": "Maq. Corte-Costura-Ganchos"
+        },
+        {
+          "sheet": "Corte y costura",
+          "row": 6,
+          "col": 31,
+          "value": "Maq. Corte-Costura-Ganchos"
+        },
+        {
+          "sheet": "Corte y costura",
+          "row": 7,
+          "col": 31,
+          "value": "Maq. Corte-Costura-Ganchos"
+        },
+        {
+          "sheet": "Corte y costura",
+          "row": 8,
+          "col": 31,
+          "value": "Maq. Corte-Aplix"
+        },
+        {
+          "sheet": "Corte y costura",
+          "row": 9,
+          "col": 31,
+          "value": "Maq. Corte-Costura-Ganchos"
+        },
+        {
+          "sheet": "Corte y costura",
+          "row": 10,
+          "col": 31,
+          "value": "Maq. Corte-Costura-Ganchos"
+        },
+        {
+          "sheet": "Corte y costura",
+          "row": 11,
+          "col": 31,
+          "value": "Maq. Corte-Costura-Ganchos"
+        },
+        {
+          "sheet": "Corte y costura",
+          "row": 12,
+          "col": 31,
+          "value": "Maq. Corte-Costura-Ganchos"
+        },
+        {
+          "sheet": "Corte y costura",
+          "row": 13,
+          "col": 31,
+          "value": "Maq. Corte-Costura-Ganchos"
+        },
+        {
+          "sheet": "Corte y costura",
+          "row": 14,
+          "col": 31,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Corte y costura",
+          "row": 15,
+          "col": 31,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Corte y costura",
+          "row": 16,
+          "col": 31,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Corte y costura",
+          "row": 17,
+          "col": 31,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Corte y costura",
+          "row": 18,
+          "col": 31,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Corte y costura",
+          "row": 19,
+          "col": 31,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Corte y costura",
+          "row": 20,
+          "col": 31,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Corte y costura",
+          "row": 21,
+          "col": 31,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Corte y costura",
+          "row": 22,
+          "col": 31,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Corte y costura",
+          "row": 23,
+          "col": 31,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Corte y costura",
+          "row": 24,
+          "col": 31,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Corte y costura",
+          "row": 25,
+          "col": 31,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Corte y costura",
+          "row": 26,
+          "col": 31,
+          "value": "Maq. Corte (Alam.)-Costura-Aplix"
+        },
+        {
+          "sheet": "Corte y costura",
+          "row": 55,
+          "col": 11,
+          "value": "OP.20 Corte por máquina autómatica según dimensional con cantidad de orificios según plan de control."
+        },
+        {
+          "sheet": "Corte y costura",
+          "row": 55,
+          "col": 17,
+          "value": "Programación equivocada de la máquina de corte automática."
+        },
+        {
+          "sheet": "Corte y costura",
+          "row": 55,
+          "col": 19,
+          "value": "Set up de la máquina de corte automática."
+        },
+        {
+          "sheet": "Corte y costura",
+          "row": 56,
+          "col": 17,
+          "value": "Programación equivocada de la máquina de corte automática."
+        },
+        {
+          "sheet": "Corte y costura",
+          "row": 56,
+          "col": 19,
+          "value": "Set up de la máquina de corte automática."
+        },
+        {
+          "sheet": "Corte y costura",
+          "row": 57,
+          "col": 17,
+          "value": "Programación equivocada de la máquina de corte automática."
+        },
+        {
+          "sheet": "Corte y costura",
+          "row": 57,
+          "col": 19,
+          "value": "Set up de la máquina de corte automática."
+        },
+        {
+          "sheet": "Corte y costura",
+          "row": 58,
+          "col": 17,
+          "value": "Programación equivocada de la máquina de corte automática."
+        },
+        {
+          "sheet": "Corte y costura",
+          "row": 58,
+          "col": 19,
+          "value": "Set up de la máquina de corte automática."
+        },
+        {
+          "sheet": "Corte y costura",
+          "row": 59,
+          "col": 17,
+          "value": "Programación equivocada de la máquina de corte automática."
+        },
+        {
+          "sheet": "Corte y costura",
+          "row": 59,
+          "col": 19,
+          "value": "Set up de la máquina de corte automática."
+        },
+        {
+          "sheet": "Corte y costura",
+          "row": 72,
+          "col": 17,
+          "value": "Programación equivocada de la máquina de corte automática."
+        },
+        {
+          "sheet": "Telas por sector",
+          "row": 1,
+          "col": 6,
+          "value": "Corte (Mesa de corte)"
+        },
+        {
+          "sheet": "Telas por sector",
+          "row": 2,
+          "col": 1,
+          "value": "Maq. Corte-Aplix"
+        },
+        {
+          "sheet": "Telas por sector",
+          "row": 3,
+          "col": 1,
+          "value": "Maq. Corte-Aplix"
+        },
+        {
+          "sheet": "Telas por sector",
+          "row": 4,
+          "col": 1,
+          "value": "Maq. Corte-Aplix"
+        },
+        {
+          "sheet": "Telas por sector",
+          "row": 5,
+          "col": 1,
+          "value": "Maq. Corte"
+        },
+        {
+          "sheet": "Telas por sector",
+          "row": 6,
+          "col": 1,
+          "value": "Maq. Corte"
+        },
+        {
+          "sheet": "Telas por sector",
+          "row": 7,
+          "col": 1,
+          "value": "Maq. Corte"
+        },
+        {
+          "sheet": "Telas por sector",
+          "row": 8,
+          "col": 1,
+          "value": "Maq. Corte"
+        },
+        {
+          "sheet": "Telas por sector",
+          "row": 9,
+          "col": 1,
+          "value": "Maq. Corte"
+        },
+        {
+          "sheet": "Telas por sector",
+          "row": 10,
+          "col": 1,
+          "value": "Maq. Corte"
+        },
+        {
+          "sheet": "Telas por sector",
+          "row": 11,
+          "col": 1,
+          "value": "Maq. Corte"
+        },
+        {
+          "sheet": "Telas por sector",
+          "row": 12,
+          "col": 1,
+          "value": "Maq. Corte-Ganchos"
+        },
+        {
+          "sheet": "Telas por sector",
+          "row": 13,
+          "col": 1,
+          "value": "Maq. Corte-Ganchos"
+        },
+        {
+          "sheet": "Telas por sector",
+          "row": 14,
+          "col": 1,
+          "value": "Maq. Corte-Ganchos"
+        },
+        {
+          "sheet": "Telas por sector",
+          "row": 15,
+          "col": 1,
+          "value": "Maq. Corte-Costura-Ganchos"
+        },
+        {
+          "sheet": "Telas por sector",
+          "row": 16,
+          "col": 1,
+          "value": "Maq. Corte-Costura-Ganchos"
+        },
+        {
+          "sheet": "Telas por sector",
+          "row": 17,
+          "col": 1,
+          "value": "Maq. Corte-Costura-Ganchos"
+        },
+        {
+          "sheet": "Telas por sector",
+          "row": 18,
+          "col": 1,
+          "value": "Maq. Corte-Costura-Ganchos"
+        },
+        {
+          "sheet": "Telas por sector",
+          "row": 19,
+          "col": 1,
+          "value": "Maq. Corte-Costura-Ganchos"
+        },
+        {
+          "sheet": "Telas por sector",
+          "row": 20,
+          "col": 1,
+          "value": "Maq. Corte-Costura-Ganchos"
+        },
+        {
+          "sheet": "Telas por sector",
+          "row": 21,
+          "col": 1,
+          "value": "Maq. Corte-Costura-Ganchos"
+        },
+        {
+          "sheet": "Telas por sector",
+          "row": 22,
+          "col": 1,
+          "value": "Maq. Corte-Costura-Ganchos"
+        },
+        {
+          "sheet": "Telas por sector",
+          "row": 23,
+          "col": 1,
+          "value": "Maq. Corte-Costura-Ganchos"
+        },
+        {
+          "sheet": "Telas por sector",
+          "row": 24,
+          "col": 1,
+          "value": "Maq. Corte-Costura-Ganchos"
+        },
+        {
+          "sheet": "Telas por sector",
+          "row": 25,
+          "col": 1,
+          "value": "Maq. Corte-Costura-Ganchos"
+        },
+        {
+          "sheet": "Telas por sector",
+          "row": 26,
+          "col": 1,
+          "value": "Maq. Corte-Costura-Ganchos"
+        },
+        {
+          "sheet": "Telas por sector",
+          "row": 27,
+          "col": 1,
+          "value": "Maq. Corte-Costura-Ganchos"
+        },
+        {
+          "sheet": "Telas por sector",
+          "row": 28,
+          "col": 1,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Telas por sector",
+          "row": 29,
+          "col": 1,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Telas por sector",
+          "row": 30,
+          "col": 1,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Telas por sector",
+          "row": 31,
+          "col": 1,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Telas por sector",
+          "row": 32,
+          "col": 1,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Telas por sector",
+          "row": 33,
+          "col": 1,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Telas por sector",
+          "row": 34,
+          "col": 1,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Telas por sector",
+          "row": 35,
+          "col": 1,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Telas por sector",
+          "row": 36,
+          "col": 1,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Telas por sector",
+          "row": 37,
+          "col": 1,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Telas por sector",
+          "row": 38,
+          "col": 1,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Telas por sector",
+          "row": 39,
+          "col": 1,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Telas por sector",
+          "row": 40,
+          "col": 1,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Telas por sector",
+          "row": 41,
+          "col": 1,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Telas por sector",
+          "row": 42,
+          "col": 1,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Telas por sector",
+          "row": 43,
+          "col": 1,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Telas por sector",
+          "row": 44,
+          "col": 1,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Telas por sector",
+          "row": 45,
+          "col": 1,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Telas por sector",
+          "row": 46,
+          "col": 1,
+          "value": "Maq. Corte (Alam.)-Costura-Aplix"
+        },
+        {
+          "sheet": "Telas por op",
+          "row": 1,
+          "col": 5,
+          "value": "Corte (Mesa de corte)"
+        },
+        {
+          "sheet": "Telas por op",
+          "row": 2,
+          "col": 0,
+          "value": "Maq. Corte-Costura-Ganchos"
+        },
+        {
+          "sheet": "Telas por op",
+          "row": 3,
+          "col": 0,
+          "value": "Maq. Corte-Costura-Ganchos"
+        },
+        {
+          "sheet": "Telas por op",
+          "row": 4,
+          "col": 0,
+          "value": "Maq. Corte-Costura-Ganchos"
+        },
+        {
+          "sheet": "Telas por op",
+          "row": 5,
+          "col": 0,
+          "value": "Maq. Corte-Costura-Ganchos"
+        },
+        {
+          "sheet": "Telas por op",
+          "row": 6,
+          "col": 0,
+          "value": "Maq. Corte-Aplix"
+        },
+        {
+          "sheet": "Telas por op",
+          "row": 7,
+          "col": 0,
+          "value": "Maq. Corte-Costura-Ganchos"
+        },
+        {
+          "sheet": "Telas por op",
+          "row": 8,
+          "col": 0,
+          "value": "Maq. Corte-Costura-Ganchos"
+        },
+        {
+          "sheet": "Telas por op",
+          "row": 9,
+          "col": 0,
+          "value": "Maq. Corte-Costura-Ganchos"
+        },
+        {
+          "sheet": "Telas por op",
+          "row": 10,
+          "col": 0,
+          "value": "Maq. Corte-Costura-Ganchos"
+        },
+        {
+          "sheet": "Telas por op",
+          "row": 11,
+          "col": 0,
+          "value": "Maq. Corte-Costura-Ganchos"
+        },
+        {
+          "sheet": "Telas por op",
+          "row": 12,
+          "col": 0,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Telas por op",
+          "row": 13,
+          "col": 0,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Telas por op",
+          "row": 14,
+          "col": 0,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Telas por op",
+          "row": 15,
+          "col": 0,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Telas por op",
+          "row": 16,
+          "col": 0,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Telas por op",
+          "row": 17,
+          "col": 0,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Telas por op",
+          "row": 18,
+          "col": 0,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Telas por op",
+          "row": 19,
+          "col": 0,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Telas por op",
+          "row": 20,
+          "col": 0,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Telas por op",
+          "row": 21,
+          "col": 0,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Telas por op",
+          "row": 22,
+          "col": 0,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Telas por op",
+          "row": 23,
+          "col": 0,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Telas por op",
+          "row": 24,
+          "col": 0,
+          "value": "Maq. Corte (Alam.)-Costura-Aplix"
+        },
+        {
+          "sheet": "Telas por op",
+          "row": 25,
+          "col": 0,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Telas por op",
+          "row": 26,
+          "col": 0,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Telas por op",
+          "row": 27,
+          "col": 0,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Telas por op",
+          "row": 28,
+          "col": 0,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Telas por op",
+          "row": 29,
+          "col": 0,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Telas por op",
+          "row": 30,
+          "col": 0,
+          "value": "Maq. Corte-Costura-Aplix"
+        },
+        {
+          "sheet": "Telas por op",
+          "row": 31,
+          "col": 0,
+          "value": "Maq. Corte-Aplix"
+        },
+        {
+          "sheet": "Telas por op",
+          "row": 32,
+          "col": 0,
+          "value": "Maq. Corte-Aplix"
+        },
+        {
+          "sheet": "Telas por op",
+          "row": 33,
+          "col": 0,
+          "value": "Maq. Corte"
+        },
+        {
+          "sheet": "Telas por op",
+          "row": 34,
+          "col": 0,
+          "value": "Maq. Corte"
+        },
+        {
+          "sheet": "Telas por op",
+          "row": 35,
+          "col": 0,
+          "value": "Maq. Corte"
+        },
+        {
+          "sheet": "Telas por op",
+          "row": 36,
+          "col": 0,
+          "value": "Maq. Corte"
+        },
+        {
+          "sheet": "Telas por op",
+          "row": 37,
+          "col": 0,
+          "value": "Maq. Corte"
+        },
+        {
+          "sheet": "Telas por op",
+          "row": 38,
+          "col": 0,
+          "value": "Maq. Corte"
+        },
+        {
+          "sheet": "Telas por op",
+          "row": 39,
+          "col": 0,
+          "value": "Maq. Corte"
+        },
+        {
+          "sheet": "Telas por op",
+          "row": 40,
+          "col": 0,
+          "value": "Maq. Corte-Ganchos"
+        },
+        {
+          "sheet": "Telas por op",
+          "row": 41,
+          "col": 0,
+          "value": "Maq. Corte-Costura-Ganchos"
+        },
+        {
+          "sheet": "Telas por op",
+          "row": 42,
+          "col": 0,
+          "value": "Maq. Corte-Costura-Ganchos"
+        },
+        {
+          "sheet": "Telas por op",
+          "row": 43,
+          "col": 0,
+          "value": "Maq. Corte-Costura-Ganchos"
+        },
+        {
+          "sheet": "Telas por op",
+          "row": 44,
+          "col": 0,
+          "value": "Maq. Corte-Costura-Ganchos"
+        },
+        {
+          "sheet": "Telas por op",
+          "row": 45,
+          "col": 0,
+          "value": "Maq. Corte-Ganchos"
+        },
+        {
+          "sheet": "Telas por op",
+          "row": 46,
+          "col": 0,
+          "value": "Maq. Corte-Ganchos"
+        }
+      ],
+      "temperatura": [],
+      "flamabilidad": [],
+      "tl_1010": [],
+      "pwa": [
+        {
+          "sheet": "Corte y pegado de aplix",
+          "row": 5,
+          "col": 6,
+          "value": "Cliente: PWA"
+        },
+        {
+          "sheet": "Corte y pegado de aplix",
+          "row": 46,
+          "col": 11,
+          "value": "PLANTAS Y CLIENTES AFECTADOS: PWA."
+        },
+        {
+          "sheet": "Corte sin costura",
+          "row": 5,
+          "col": 6,
+          "value": "Cliente: PWA"
+        },
+        {
+          "sheet": "Corte sin costura",
+          "row": 49,
+          "col": 11,
+          "value": "PLANTAS Y CLIENTES AFECTADOS: PWA"
+        },
+        {
+          "sheet": "Troquelado y costura",
+          "row": 5,
+          "col": 6,
+          "value": "Cliente: PWA"
+        },
+        {
+          "sheet": "Troquelado y costura",
+          "row": 46,
+          "col": 11,
+          "value": "PLANTAS Y CLIENTES AFECTADOS: PWA."
+        },
+        {
+          "sheet": "Corte y costura",
+          "row": 5,
+          "col": 6,
+          "value": "Cliente: PWA"
+        },
+        {
+          "sheet": "Corte y costura",
+          "row": 46,
+          "col": 11,
+          "value": "PLANTAS Y CLIENTES AFECTADOS: PWA."
+        }
+      ]
+    }
+  }
+}

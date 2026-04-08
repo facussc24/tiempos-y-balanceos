@@ -1,0 +1,2872 @@
+{
+  "_meta": {
+    "sourceFile": "\\\\SERVER\\compartido\\BARACK\\CALIDAD\\DOCUMENTACION SGC\\PPAP CLIENTES\\VW\\VW427-1LA_K-PATAGONIA\\Headrest\\Apqp\\22- FMEA de proceso\\AMFE - Apoyacabezas Lateral Preliminar Rev.1 - Patagonia.xlsx",
+    "label": "Lateral",
+    "extractedAt": "2026-04-06T12:40:38.340Z",
+    "sheetsFound": [
+      "Caratula",
+      "Apoyacabezas"
+    ]
+  },
+  "caratula": {
+    "45680": "",
+    "titulo": "",
+    "descripcion_codigo_apoyacabezas_trasero_lateral_l0_pvc_xxx_885_901_apoyacabezas_trasero_lateral_l1_fabric_pvc_xxx_885_901_x_apoyacabezas_trasero_lateral_l2_leather_pvc_xxx_885_901_y_apoyacabezas_trasero_lateral_l3_leather_pvc_xxx_885_901_z": "",
+    "fecha_de_emision": "",
+    "fecha": "ITEM CAMBIADO",
+    "detalles": "",
+    "fecha_psw": "",
+    "modifico": ""
+  },
+  "amfe": {
+    "headerLabels": {
+      "0": "1-SIGUIENTE NIVEL SUPERIOR (SISTEMA)",
+      "1": "2-ELEMENTO FOCO (ELEMENTO DEL SISTEMA)",
+      "2": "3-SIGUIENTE NIVEL INFERIOR O TIPO DE CARACTERISTICA (ELEMENTO COMPONENTE)",
+      "3": "1-SIGUIENTE NIVEL DE FUNCION Y REQUERIMIENTOS",
+      "4": "2-ELEMENTO FOCO-FUNCION Y REQUERIMIENTO",
+      "5": "3-PROXIMO NIVEL MAS BAJO DE FUNCION Y REQUERIMIENTOS O CARACTERISTICAS",
+      "6": "EFECTO DE LA FALLA (EF)   PARA EL ELEMENTO DEL PROXIMO NIVEL  Y EN EL USUARIO",
+      "7": "MODOS DE FALLAS (FM) DE LOS ELEMENTOS FOCO",
+      "8": "CAUSA DE LA FALLA (FC) DE LOS ELEMENTOS MAS BAJOS O CARACTERISTICAS",
+      "9": "SEVERIDAD",
+      "10": "CONTROLES PREVENTIVOS CORRIENTES (PC) DE LA FC",
+      "11": "OCURRENCIA",
+      "12": "CONTROLES DETECTIVOS CORRIENTES DEL (FM) O DE LA (FC)",
+      "13": "DETECCION",
+      "14": "AP DFMEA",
+      "15": "Filter Code (Opcional)",
+      "16": "ACCION PREVENTIVA",
+      "17": "ACCION DETECTIVA",
+      "18": "NOMBRE DE LA PERSONA RESPSONSABLE",
+      "19": "FECHA OBJETIVO DE TERMINACION",
+      "20": "ESTATUS",
+      "21": "ACCION TOMADA",
+      "22": "FECHA DE TERMINACION",
+      "23": "SEVERIDAD",
+      "24": "OCURRENCIA",
+      "25": "DETECCION",
+      "26": "AP DFMEA",
+      "27": "OBSERVACIONES"
+    },
+    "columnMapping": {
+      "0": "siguienteNivelSuperior",
+      "1": "elementoFoco",
+      "2": "siguienteNivelInferior",
+      "3": "funcionNivelSuperior",
+      "4": "funcionElementoFoco",
+      "5": "funcionNivelInferior",
+      "6": "efectoFalla",
+      "7": "modoFalla",
+      "8": "causaFalla",
+      "9": "severidad",
+      "10": "controlPreventivo",
+      "11": "ocurrencia",
+      "12": "controlDetectivo",
+      "13": "deteccion",
+      "14": "apDfmea",
+      "15": "filterCode",
+      "16": "accionPreventiva",
+      "17": "accionDetectiva",
+      "18": "responsable",
+      "19": "fechaObjetivo",
+      "20": "estatus",
+      "21": "accionTomada",
+      "22": "fechaTerminacion",
+      "23": "severidadOptimizada",
+      "24": "ocurrenciaOptimizada",
+      "25": "deteccionOptimizada",
+      "26": "apDfmeaOptimizado",
+      "27": "observaciones"
+    },
+    "totalRawRows": 649,
+    "dataRowCount": 549,
+    "rows": [
+      {
+        "_rowIndex": 16,
+        "siguienteNivelInferior": "Maquina",
+        "funcionNivelSuperior": "Vehículo",
+        "funcionElementoFoco": "¿Qué hace?",
+        "funcionNivelInferior": "Maquina",
+        "efectoFalla": "Cliente Interno-Barack",
+        "modoFalla": "1- Material / pieza golpeada o dañada durante transporte",
+        "causaFalla": "Mala estiba y embalaje inadecuado",
+        "controlPreventivo": "Medios de embalaje validados",
+        "controlDetectivo": "Inspección visual en recepción"
+      },
+      {
+        "_rowIndex": 17,
+        "siguienteNivelInferior": "No aplica",
+        "funcionNivelSuperior": "Brindar comodidad al usuario",
+        "funcionElementoFoco": "Se recepciona la materia prima",
+        "funcionNivelInferior": "No aplica",
+        "efectoFalla": "Riesgo de reproceso o scrap; paro de línea si no hay stock",
+        "severidad": 6
+      },
+      {
+        "_rowIndex": 18,
+        "siguienteNivelSuperior": "Apoyacabezas Trasero Lateral",
+        "elementoFoco": "OPERACIÓN 10"
+      },
+      {
+        "_rowIndex": 19,
+        "siguienteNivelInferior": "Mano de Obra"
+      },
+      {
+        "_rowIndex": 20,
+        "siguienteNivelInferior": "Operador",
+        "funcionElementoFoco": "Requerimientos",
+        "funcionNivelInferior": "Mano de Obra"
+      },
+      {
+        "_rowIndex": 21,
+        "elementoFoco": "Recepción de materiales",
+        "funcionElementoFoco": "1- Utilizar sistema ARB",
+        "efectoFalla": "Cliente Externo"
+      },
+      {
+        "_rowIndex": 22,
+        "siguienteNivelInferior": "Leader de equipo",
+        "funcionElementoFoco": "2- Utilizar conos de colores",
+        "funcionNivelInferior": "Operador",
+        "efectoFalla": "Montaje con ajuste forzado/imposibilidad de ensamblar",
+        "causaFalla": "Manipulación incorrecta en tránsito"
+      },
+      {
+        "_rowIndex": 23,
+        "funcionNivelSuperior": "VW",
+        "severidad": 7,
+        "ocurrencia": 4,
+        "deteccion": 6,
+        "apDfmea": "Medio"
+      },
+      {
+        "_rowIndex": 24,
+        "siguienteNivelInferior": "Supervisor",
+        "funcionNivelSuperior": "Permitir el acabado del producto final",
+        "funcionElementoFoco": "3- Realizar check list antes de utilizar el clark",
+        "funcionNivelInferior": "1- Comprobar que el embalaje no este dañado"
+      },
+      {
+        "_rowIndex": 26,
+        "siguienteNivelInferior": "Material (Indirectos)"
+      },
+      {
+        "_rowIndex": 27,
+        "siguienteNivelInferior": "Etiquetas blancas 100x60",
+        "funcionNivelInferior": "2- Corroborar que la orden sea la correcta",
+        "efectoFalla": "Cliente Externo",
+        "causaFalla": "Falta de inspección visual al recibir"
+      },
+      {
+        "_rowIndex": 28,
+        "efectoFalla": "Posible ruido o falla estética",
+        "severidad": 5
+      },
+      {
+        "_rowIndex": 29,
+        "siguienteNivelInferior": "Fibras",
+        "funcionNivelInferior": "3- Si alguno de los pasos 1 y 2 es NOK devolver al proveedor"
+      },
+      {
+        "_rowIndex": 30,
+        "siguienteNivelInferior": "Engrapadora",
+        "efectoFalla": "Organismos regulatorios"
+      },
+      {
+        "_rowIndex": 31,
+        "siguienteNivelInferior": "Libretas"
+      },
+      {
+        "_rowIndex": 32,
+        "siguienteNivelInferior": "Etiquetas de rechazo 100x60",
+        "funcionNivelInferior": "4- Cargar la materia prima en arb y posteriormente colocar el cono correspondiente",
+        "efectoFalla": "Cliente Interno-Barack",
+        "modoFalla": "2- Material con especificación errónea (dimensiones, color, dureza, etc.)",
+        "causaFalla": "Error en la orden de compra o ficha técnica",
+        "controlPreventivo": "El proveedor entrega certificado de calidad y adicionalmente se realiza control dimensional por muestreo en recepción",
+        "controlDetectivo": "Control dimensional"
+      },
+      {
+        "_rowIndex": 33,
+        "efectoFalla": "Potencial scrap"
+      },
+      {
+        "_rowIndex": 34,
+        "siguienteNivelInferior": "Post it",
+        "severidad": 8
+      },
+      {
+        "_rowIndex": 35,
+        "siguienteNivelInferior": "Lápiz blanco"
+      },
+      {
+        "_rowIndex": 36,
+        "siguienteNivelInferior": "Calibres de diferentes tamaños"
+      },
+      {
+        "_rowIndex": 37,
+        "funcionNivelInferior": "5-Almacenar materia prima dentro del deposito",
+        "efectoFalla": "Cliente Externo"
+      },
+      {
+        "_rowIndex": 38,
+        "siguienteNivelInferior": "Micrómetro",
+        "efectoFalla": "Potencial parada de línea",
+        "causaFalla": "Proveedor no respeta tolerancias",
+        "severidad": 7
+      },
+      {
+        "_rowIndex": 39,
+        "siguienteNivelInferior": "Metro",
+        "ocurrencia": 5,
+        "deteccion": 4,
+        "apDfmea": "Medio"
+      },
+      {
+        "_rowIndex": 40,
+        "siguienteNivelInferior": "Tijera",
+        "funcionNivelInferior": "Leader de equipo",
+        "efectoFalla": "Problemas en el ensamble final"
+      },
+      {
+        "_rowIndex": 41,
+        "siguienteNivelInferior": "Lapicera",
+        "funcionNivelInferior": "Supervisar las actividades"
+      },
+      {
+        "_rowIndex": 42,
+        "siguienteNivelInferior": "Probeta de flamabilidad",
+        "efectoFalla": "Cliente Externo"
+      },
+      {
+        "_rowIndex": 43,
+        "funcionNivelInferior": "que realizan los",
+        "efectoFalla": "Potencial reclamo de aspecto/comfort",
+        "causaFalla": "Falta de control dimensional en recepción",
+        "severidad": 6
+      },
+      {
+        "_rowIndex": 44,
+        "siguienteNivelInferior": "Probeta de peeling",
+        "funcionNivelInferior": "operarios según"
+      },
+      {
+        "_rowIndex": 45,
+        "siguienteNivelInferior": "Bandas elásticas",
+        "funcionNivelInferior": "las hojas de operaciones"
+      },
+      {
+        "_rowIndex": 46,
+        "siguienteNivelInferior": "Cinta scotch",
+        "funcionNivelInferior": "Ante la presencia de",
+        "efectoFalla": "Organismos regulatorios"
+      },
+      {
+        "_rowIndex": 47,
+        "funcionNivelInferior": "algún inconveniente"
+      },
+      {
+        "_rowIndex": 48,
+        "siguienteNivelInferior": "Medio Ambiente",
+        "funcionNivelInferior": "se comunica con el",
+        "efectoFalla": "Cliente Interno-Barack",
+        "modoFalla": "3- Falta de documentación o trazabilidad",
+        "causaFalla": "Procesos administrativos deficientes",
+        "controlPreventivo": "Control de recepción materia prima / sistema arb",
+        "controlDetectivo": "El sistema obliga a registrar lote y código en recepción y verifica contra base de datos."
+      },
+      {
+        "_rowIndex": 49,
+        "siguienteNivelInferior": "Ley 19587",
+        "funcionNivelInferior": "gerente de producción.",
+        "efectoFalla": "Riesgo de mezclar lotes no conformes",
+        "severidad": 7
+      },
+      {
+        "_rowIndex": 50,
+        "siguienteNivelInferior": "Decreto Reglamentario",
+        "funcionNivelInferior": "Registrar información de:"
+      },
+      {
+        "_rowIndex": 51,
+        "siguienteNivelInferior": "351/79"
+      },
+      {
+        "_rowIndex": 52,
+        "funcionNivelInferior": ".Scrap"
+      },
+      {
+        "_rowIndex": 53,
+        "siguienteNivelInferior": "Método de Fabricación",
+        "funcionNivelInferior": ".Ausentismo.",
+        "efectoFalla": "Cliente Externo"
+      },
+      {
+        "_rowIndex": 54,
+        "siguienteNivelInferior": "Hoja de Operación",
+        "funcionNivelInferior": ".Cantidad producida",
+        "efectoFalla": "Dificultades en trazabilidad si surge un reclamo",
+        "causaFalla": "Proveedor sin sistema robusto de trazabilidad"
+      },
+      {
+        "_rowIndex": 55,
+        "funcionNivelInferior": "capacitación de personal",
+        "severidad": 6,
+        "ocurrencia": 3,
+        "deteccion": 3,
+        "apDfmea": "Medio"
+      },
+      {
+        "_rowIndex": 56,
+        "siguienteNivelInferior": "Medición"
+      },
+      {
+        "_rowIndex": 57,
+        "siguienteNivelInferior": "Registros de control en calidad según plan de control"
+      },
+      {
+        "_rowIndex": 58,
+        "funcionNivelInferior": "Medio Ambiente",
+        "efectoFalla": "Cliente Externo"
+      },
+      {
+        "_rowIndex": 59,
+        "funcionNivelInferior": "Iluminación",
+        "efectoFalla": "No afecta",
+        "causaFalla": "No se utiliza el sistema ARB"
+      },
+      {
+        "_rowIndex": 60,
+        "funcionNivelInferior": "1500 Lux",
+        "severidad": 1
+      },
+      {
+        "_rowIndex": 61,
+        "siguienteNivelInferior": "Método de Fabricación"
+      },
+      {
+        "_rowIndex": 62,
+        "siguienteNivelInferior": "Hoja de Operación",
+        "funcionNivelInferior": "Método de Fabricación",
+        "efectoFalla": "Organismos regulatorios"
+      },
+      {
+        "_rowIndex": 63,
+        "funcionNivelInferior": "Hoja de Operación"
+      },
+      {
+        "_rowIndex": 64,
+        "funcionNivelInferior": "1-Definir las distintas",
+        "efectoFalla": "Cliente Interno-Barack",
+        "modoFalla": "4- Contaminación / suciedad en la materia prima",
+        "causaFalla": "Almacenaje inadecuado en transporte (sin protecciones)",
+        "controlPreventivo": "Control de recepción materia prima y limpieza básica en recepción",
+        "controlDetectivo": "Inspección visual"
+      },
+      {
+        "_rowIndex": 65,
+        "funcionNivelInferior": "actividades o pasos",
+        "efectoFalla": "Problemas de calidad durante el ensamble",
+        "severidad": 6
+      },
+      {
+        "_rowIndex": 66,
+        "funcionNivelInferior": "de la operación"
+      },
+      {
+        "_rowIndex": 67,
+        "funcionNivelInferior": "mediante explicación"
+      },
+      {
+        "_rowIndex": 68,
+        "funcionNivelInferior": "escrita + presencia",
+        "efectoFalla": "Retrabajo"
+      },
+      {
+        "_rowIndex": 69,
+        "funcionNivelInferior": "de imágenes",
+        "efectoFalla": "Cliente Externo"
+      },
+      {
+        "_rowIndex": 70,
+        "funcionNivelInferior": "2- Definir el plan de reacción ante un \"No conforme\"",
+        "efectoFalla": "Potencial parada de línea",
+        "causaFalla": "Ambiente sucio en planta del proveedor",
+        "severidad": 5
+      },
+      {
+        "_rowIndex": 71,
+        "ocurrencia": 4,
+        "deteccion": 6,
+        "apDfmea": "Medio"
+      },
+      {
+        "_rowIndex": 73,
+        "funcionNivelInferior": "3-Definir los EPP que"
+      },
+      {
+        "_rowIndex": 74,
+        "funcionNivelInferior": "debe tener en cuenta",
+        "efectoFalla": "Cliente Externo"
+      },
+      {
+        "_rowIndex": 75,
+        "funcionNivelInferior": "para la realización de",
+        "efectoFalla": "Reclamo de aspecto",
+        "causaFalla": "Falta de inspección al llegar",
+        "severidad": 5
+      },
+      {
+        "_rowIndex": 76,
+        "funcionNivelInferior": "operación"
+      },
+      {
+        "_rowIndex": 78,
+        "funcionNivelInferior": "Ayudas visuales",
+        "efectoFalla": "Organismos regulatorios"
+      },
+      {
+        "_rowIndex": 79,
+        "funcionNivelInferior": "Mostrar como debe"
+      },
+      {
+        "_rowIndex": 80,
+        "funcionNivelInferior": "quedar el producto"
+      },
+      {
+        "_rowIndex": 81,
+        "funcionNivelInferior": "para evitar ciertos"
+      },
+      {
+        "_rowIndex": 82,
+        "funcionNivelInferior": "defectos"
+      },
+      {
+        "_rowIndex": 84,
+        "funcionNivelInferior": "Medición"
+      },
+      {
+        "_rowIndex": 85,
+        "funcionNivelInferior": "Hoja de Operación"
+      },
+      {
+        "_rowIndex": 86,
+        "funcionNivelInferior": "1-Definir las distintas"
+      },
+      {
+        "_rowIndex": 87,
+        "funcionNivelInferior": "características que"
+      },
+      {
+        "_rowIndex": 88,
+        "funcionNivelInferior": "pueden ser de producto"
+      },
+      {
+        "_rowIndex": 89,
+        "funcionNivelInferior": "o de proceso que debe"
+      },
+      {
+        "_rowIndex": 90,
+        "funcionNivelInferior": "controlar el operador"
+      },
+      {
+        "_rowIndex": 91,
+        "funcionNivelInferior": "(autocontrol)"
+      },
+      {
+        "_rowIndex": 92,
+        "siguienteNivelInferior": "Maquina",
+        "funcionNivelSuperior": "Vehículo",
+        "funcionElementoFoco": "¿Qué hace?",
+        "funcionNivelInferior": "Maquina",
+        "efectoFalla": "Cliente Interno-Barack",
+        "modoFalla": "1- Desviación en el corte de los pliegos",
+        "causaFalla": "1- Parámetros de corte mal ingresados",
+        "controlPreventivo": "La maquina alinea y corta automáticamente el vinilo / tela",
+        "controlDetectivo": "Set up de lanzamiento / Regla / Inspección visual"
+      },
+      {
+        "_rowIndex": 93,
+        "siguienteNivelInferior": "BMA090 / BMA089",
+        "funcionNivelSuperior": "Brindar comodidad al usuario",
+        "funcionElementoFoco": "Se obtienen los paneles que formarán la funda del apoyacabezas",
+        "funcionNivelInferior": "Corte de paneles utilizando programa cutter control",
+        "efectoFalla": "Retrabajo"
+      },
+      {
+        "_rowIndex": 94,
+        "siguienteNivelSuperior": "Apoyacabezas Trasero Lateral",
+        "elementoFoco": "OPERACIÓN 20",
+        "severidad": 5
+      },
+      {
+        "_rowIndex": 95,
+        "siguienteNivelInferior": "Mano de Obra"
+      },
+      {
+        "_rowIndex": 96,
+        "elementoFoco": "Corte del vinilo / tela (funda)",
+        "siguienteNivelInferior": "Operador",
+        "funcionNivelInferior": "Mano de Obra"
+      },
+      {
+        "_rowIndex": 97,
+        "efectoFalla": "Cliente Externo"
+      },
+      {
+        "_rowIndex": 98,
+        "siguienteNivelInferior": "Leader de equipo",
+        "funcionNivelInferior": "Operador",
+        "efectoFalla": "Parada de línea entre una hora y un turno de producción completo."
+      },
+      {
+        "_rowIndex": 99,
+        "funcionNivelSuperior": "VW",
+        "funcionNivelInferior": "1. Montar: Colocar el rollo correcto en la máquina",
+        "severidad": 7
+      },
+      {
+        "_rowIndex": 100,
+        "siguienteNivelInferior": "Supervisor",
+        "funcionNivelSuperior": "Permitir el acabado del producto final",
+        "causaFalla": "2- Falla en la maquina",
+        "ocurrencia": 2,
+        "deteccion": 6,
+        "apDfmea": "Medio"
+      },
+      {
+        "_rowIndex": 101,
+        "controlPreventivo": "Instructivo para colocar correctamente tensión y velocidad de rollo"
+      },
+      {
+        "_rowIndex": 102,
+        "siguienteNivelInferior": "Material (Indirectos)",
+        "funcionElementoFoco": "Requerimientos:",
+        "funcionNivelInferior": "2. Preparar: Pasar vinilo bajo rodillos y descartar sobrante",
+        "efectoFalla": "Cliente Externo"
+      },
+      {
+        "_rowIndex": 103,
+        "siguienteNivelInferior": "Nylon",
+        "efectoFalla": "Degradación de la función secundaria del vehículo.",
+        "severidad": 6
+      },
+      {
+        "_rowIndex": 104,
+        "siguienteNivelInferior": "Calibre MC167"
+      },
+      {
+        "_rowIndex": 105,
+        "siguienteNivelInferior": "Bin plástico",
+        "funcionNivelInferior": "3. Configurar: Ingresar capas y largo, medir cuchilla si aplica, cubrir con nylon y activar succión."
+      },
+      {
+        "_rowIndex": 106,
+        "siguienteNivelInferior": "Etiqueta"
+      },
+      {
+        "_rowIndex": 107,
+        "siguienteNivelInferior": "Tijera",
+        "efectoFalla": "Organismos regulatorios"
+      },
+      {
+        "_rowIndex": 108,
+        "siguienteNivelInferior": "Cinta métrica"
+      },
+      {
+        "_rowIndex": 109,
+        "efectoFalla": "Cliente Interno-Barack",
+        "modoFalla": "2- Selección incorrecta del material (vinilo equivocado)",
+        "causaFalla": "1- Falta de verificación del código de material antes del corte.",
+        "controlPreventivo": "El sistema genera automáticamente una orden de producción con código y descripción del vinilo.",
+        "controlDetectivo": "Inspección visual"
+      },
+      {
+        "_rowIndex": 110,
+        "funcionNivelInferior": "4. Cortar: Alinear cabezal (2,5 cm margen), pulsar Start en panel y PC.",
+        "efectoFalla": "100% del material cortado es scrap por material incorrecto."
+      },
+      {
+        "_rowIndex": 111,
+        "siguienteNivelInferior": "Medio Ambiente",
+        "severidad": 8
+      },
+      {
+        "_rowIndex": 112,
+        "siguienteNivelInferior": "Ley 19587"
+      },
+      {
+        "_rowIndex": 113,
+        "siguienteNivelInferior": "Decreto Reglamentario"
+      },
+      {
+        "_rowIndex": 114,
+        "siguienteNivelInferior": "351/79",
+        "funcionNivelInferior": "5. Retirar: Mover capas a la mesa (botón verde), detener (Stop) y extraer el vinilo cortado.",
+        "efectoFalla": "Cliente Externo"
+      },
+      {
+        "_rowIndex": 115,
+        "efectoFalla": "Parada de línea mayor a un turno de producción completo. Paro de envíos.",
+        "controlPreventivo": "El operario verifica esa orden contra una planilla de mesa de corte."
+      },
+      {
+        "_rowIndex": 116,
+        "siguienteNivelInferior": "Método de Fabricación",
+        "severidad": 8,
+        "ocurrencia": 5,
+        "deteccion": 6,
+        "apDfmea": "Medio"
+      },
+      {
+        "_rowIndex": 117,
+        "siguienteNivelInferior": "Hoja de Operación",
+        "causaFalla": "2- Vinilo mal identificado"
+      },
+      {
+        "_rowIndex": 119,
+        "siguienteNivelInferior": "Medición"
+      },
+      {
+        "_rowIndex": 120,
+        "siguienteNivelInferior": "Registros de control en calidad según plan de control",
+        "funcionNivelInferior": "Leader de equipo",
+        "efectoFalla": "Cliente Externo",
+        "severidad": 7
+      },
+      {
+        "_rowIndex": 121,
+        "funcionNivelInferior": "Supervisar las actividades",
+        "efectoFalla": "Degradación de la función primaria del vehículo.",
+        "controlPreventivo": "Etiquetado de vinilo por logística"
+      },
+      {
+        "_rowIndex": 123,
+        "funcionNivelInferior": "que realizan los"
+      },
+      {
+        "_rowIndex": 124,
+        "siguienteNivelInferior": "Método de Fabricación",
+        "funcionNivelInferior": "operarios según",
+        "efectoFalla": "Organismos regulatorios"
+      },
+      {
+        "_rowIndex": 125,
+        "siguienteNivelInferior": "Hoja de Operación",
+        "funcionNivelInferior": "las hojas de operaciones"
+      },
+      {
+        "_rowIndex": 126,
+        "funcionNivelInferior": "Ante la presencia de",
+        "efectoFalla": "Cliente Interno-Barack",
+        "modoFalla": "3- Corte incompleto o irregular",
+        "causaFalla": "Desgaste de la cuchilla de corte.",
+        "controlPreventivo": "Mantenimiento preventivo de la máquina.",
+        "controlDetectivo": "Verificación de las piezas cortadas mediante un mylar de control físico, utilizado por el operario en la estación de corte."
+      },
+      {
+        "_rowIndex": 127,
+        "funcionNivelInferior": "algún inconveniente",
+        "efectoFalla": "Una porción de la producción tiene que ser descartada (scrap)",
+        "severidad": 7
+      },
+      {
+        "_rowIndex": 128,
+        "funcionNivelInferior": "se comunica con el"
+      },
+      {
+        "_rowIndex": 129,
+        "funcionNivelInferior": "gerente de producción."
+      },
+      {
+        "_rowIndex": 130,
+        "funcionNivelInferior": "Registrar información de:"
+      },
+      {
+        "_rowIndex": 131,
+        "efectoFalla": "Cliente Externo"
+      },
+      {
+        "_rowIndex": 132,
+        "funcionNivelInferior": ".Scrap",
+        "efectoFalla": "Parada de línea entre una hora y un turno de producción completo."
+      },
+      {
+        "_rowIndex": 133,
+        "funcionNivelInferior": ".Ausentismo.",
+        "severidad": 7,
+        "ocurrencia": 5,
+        "deteccion": 5,
+        "apDfmea": "Medio"
+      },
+      {
+        "_rowIndex": 134,
+        "funcionNivelInferior": ".Cantidad producida"
+      },
+      {
+        "_rowIndex": 135,
+        "funcionNivelInferior": "capacitación de personal",
+        "controlPreventivo": "Verificación de cuchillas antes del inicio del lote."
+      },
+      {
+        "_rowIndex": 137,
+        "efectoFalla": "Cliente Externo"
+      },
+      {
+        "_rowIndex": 138,
+        "funcionNivelInferior": "Medio Ambiente",
+        "efectoFalla": "Degradación de la función secundaria del vehículo."
+      },
+      {
+        "_rowIndex": 139,
+        "funcionNivelInferior": "Iluminación",
+        "severidad": 6
+      },
+      {
+        "_rowIndex": 140,
+        "funcionNivelInferior": "1500 Lux"
+      },
+      {
+        "_rowIndex": 141,
+        "efectoFalla": "Organismos regulatorios"
+      },
+      {
+        "_rowIndex": 143,
+        "funcionNivelInferior": "Método de Fabricación",
+        "efectoFalla": "Cliente Interno-Barack",
+        "modoFalla": "4- Contaminación del material durante el corte o almacenamiento en el área",
+        "causaFalla": "Ambiente de trabajo con polvo o partículas.",
+        "controlPreventivo": "Procedimientos de limpieza periódica en el área de corte.",
+        "controlDetectivo": "Inspección visual"
+      },
+      {
+        "_rowIndex": 144,
+        "funcionNivelInferior": "Hoja de Operación",
+        "efectoFalla": "Retrabajo de una porción de la producción.",
+        "severidad": 4
+      },
+      {
+        "_rowIndex": 145,
+        "funcionNivelInferior": "1-Definir las distintas"
+      },
+      {
+        "_rowIndex": 146,
+        "funcionNivelInferior": "actividades o pasos"
+      },
+      {
+        "_rowIndex": 147,
+        "funcionNivelInferior": "de la operación",
+        "efectoFalla": "Cliente Externo"
+      },
+      {
+        "_rowIndex": 148,
+        "funcionNivelInferior": "mediante explicación",
+        "efectoFalla": "Menos del 10% de los productos afectados, requiere clasificación adicional."
+      },
+      {
+        "_rowIndex": 149,
+        "funcionNivelInferior": "escrita + presencia"
+      },
+      {
+        "_rowIndex": 150,
+        "funcionNivelInferior": "de imágenes",
+        "severidad": 5,
+        "ocurrencia": 3,
+        "deteccion": 6,
+        "apDfmea": "Medio"
+      },
+      {
+        "_rowIndex": 151,
+        "funcionNivelInferior": "2- Definir el plan de reacción ante un \"No conforme\""
+      },
+      {
+        "_rowIndex": 153,
+        "efectoFalla": "Cliente Externo"
+      },
+      {
+        "_rowIndex": 154,
+        "funcionNivelInferior": "3-Definir los EPP que",
+        "efectoFalla": "Defecto visual moderado en apariencia o vibración."
+      },
+      {
+        "_rowIndex": 155,
+        "funcionNivelInferior": "debe tener en cuenta"
+      },
+      {
+        "_rowIndex": 156,
+        "funcionNivelInferior": "para la realización de",
+        "severidad": 4
+      },
+      {
+        "_rowIndex": 157,
+        "funcionNivelInferior": "operación"
+      },
+      {
+        "_rowIndex": 158,
+        "efectoFalla": "Organismos regulatorios"
+      },
+      {
+        "_rowIndex": 159,
+        "funcionNivelInferior": "Ayudas visuales"
+      },
+      {
+        "_rowIndex": 160,
+        "funcionNivelInferior": "Mostrar como debe"
+      },
+      {
+        "_rowIndex": 161,
+        "funcionNivelInferior": "quedar el producto"
+      },
+      {
+        "_rowIndex": 162,
+        "funcionNivelInferior": "para evitar ciertos"
+      },
+      {
+        "_rowIndex": 163,
+        "funcionNivelInferior": "defectos"
+      },
+      {
+        "_rowIndex": 165,
+        "funcionNivelInferior": "Medición"
+      },
+      {
+        "_rowIndex": 166,
+        "funcionNivelInferior": "Hoja de Operación"
+      },
+      {
+        "_rowIndex": 167,
+        "funcionNivelInferior": "1-Definir las distintas"
+      },
+      {
+        "_rowIndex": 168,
+        "funcionNivelInferior": "características que"
+      },
+      {
+        "_rowIndex": 169,
+        "funcionNivelInferior": "pueden ser de producto"
+      },
+      {
+        "_rowIndex": 170,
+        "funcionNivelInferior": "o de proceso que debe"
+      },
+      {
+        "_rowIndex": 171,
+        "funcionNivelInferior": "controlar el operador"
+      },
+      {
+        "_rowIndex": 172,
+        "funcionNivelInferior": "(autocontrol)"
+      },
+      {
+        "_rowIndex": 173,
+        "siguienteNivelInferior": "Maquina",
+        "funcionNivelSuperior": "Vehículo",
+        "funcionElementoFoco": "¿Qué hace?",
+        "funcionNivelInferior": "Maquina",
+        "efectoFalla": "Cliente Interno-Barack",
+        "modoFalla": "1- Costura descosida o débil",
+        "causaFalla": "Tensión de hilo incorrecta",
+        "controlPreventivo": "Las costureras configuran la máquina según hojas de operaciones.",
+        "controlDetectivo": "Calibre para verificar puntadas"
+      },
+      {
+        "_rowIndex": 174,
+        "siguienteNivelInferior": "Maquina de coser",
+        "funcionNivelSuperior": "Brindar comodidad al usuario",
+        "funcionElementoFoco": "Permite la unión de los paneles",
+        "funcionNivelInferior": "Costura unión entre paneles",
+        "efectoFalla": "Impacta en producción, genera scrap o retrabajos"
+      },
+      {
+        "_rowIndex": 175,
+        "siguienteNivelSuperior": "Apoyacabezas Trasero Lateral",
+        "elementoFoco": "OPERACIÓN 30",
+        "severidad": 5
+      },
+      {
+        "_rowIndex": 176,
+        "siguienteNivelInferior": "Mano de Obra"
+      },
+      {
+        "_rowIndex": 177,
+        "elementoFoco": "Costura unión",
+        "siguienteNivelInferior": "Operador",
+        "funcionNivelInferior": "Mano de Obra"
+      },
+      {
+        "_rowIndex": 178,
+        "efectoFalla": "Cliente Externo",
+        "causaFalla": "Puntadas demasiado largas"
+      },
+      {
+        "_rowIndex": 179,
+        "siguienteNivelInferior": "Leader de equipo",
+        "funcionNivelInferior": "Operador",
+        "efectoFalla": "Puede causar fallas en ensamble y rechazo del lote"
+      },
+      {
+        "_rowIndex": 180,
+        "funcionNivelSuperior": "VW",
+        "funcionNivelInferior": "1- Tomar la pieza en producción, alinear ambas puntas de los cortes y realizar la costura de unión",
+        "severidad": 8,
+        "ocurrencia": 4,
+        "deteccion": 4,
+        "apDfmea": "Medio"
+      },
+      {
+        "_rowIndex": 181,
+        "siguienteNivelInferior": "Supervisor",
+        "funcionNivelSuperior": "Permitir el acabado del producto final",
+        "controlPreventivo": "Checklist diaria de configuración de máquina, mediante un set-up de control de lanzamiento."
+      },
+      {
+        "_rowIndex": 182,
+        "controlDetectivo": "Inspección visual"
+      },
+      {
+        "_rowIndex": 183,
+        "siguienteNivelInferior": "Material (Indirectos)",
+        "funcionElementoFoco": "Requerimientos:",
+        "efectoFalla": "Cliente Externo"
+      },
+      {
+        "_rowIndex": 184,
+        "siguienteNivelInferior": "Piquete",
+        "funcionElementoFoco": "1- Costura completa",
+        "efectoFalla": "Defecto estético sin impacto funcional ni de seguridad.",
+        "causaFalla": "Hilo inadecuado",
+        "severidad": 4
+      },
+      {
+        "_rowIndex": 185,
+        "siguienteNivelInferior": "Lapicera",
+        "funcionElementoFoco": "2- Costura firme"
+      },
+      {
+        "_rowIndex": 188,
+        "efectoFalla": "Organismos regulatorios"
+      },
+      {
+        "_rowIndex": 190,
+        "efectoFalla": "Cliente Interno-Barack",
+        "modoFalla": "2- Costura desviada o fuera de especificación",
+        "causaFalla": "Falta de guía en costura",
+        "controlPreventivo": "Las máquinas poseen una guía",
+        "controlDetectivo": "Inspección visual en línea"
+      },
+      {
+        "_rowIndex": 191,
+        "efectoFalla": "Scrap"
+      },
+      {
+        "_rowIndex": 192,
+        "siguienteNivelInferior": "Medio Ambiente",
+        "severidad": 8
+      },
+      {
+        "_rowIndex": 193,
+        "siguienteNivelInferior": "Ley 19587"
+      },
+      {
+        "_rowIndex": 194,
+        "siguienteNivelInferior": "Decreto Reglamentario"
+      },
+      {
+        "_rowIndex": 195,
+        "siguienteNivelInferior": "351/79"
+      },
+      {
+        "_rowIndex": 196,
+        "efectoFalla": "Cliente Externo"
+      },
+      {
+        "_rowIndex": 197,
+        "siguienteNivelInferior": "Método de Fabricación",
+        "efectoFalla": "Defecto estético, posible rechazo del lote",
+        "ocurrencia": 4,
+        "apDfmea": "Medio"
+      },
+      {
+        "_rowIndex": 198,
+        "siguienteNivelInferior": "Hoja de Operación",
+        "causaFalla": "Error del operario",
+        "severidad": 8,
+        "deteccion": 5
+      },
+      {
+        "_rowIndex": 199,
+        "controlPreventivo": "Verificación de piquetes en piezas antes de coser para asegurar alineación correcta.",
+        "controlDetectivo": "Uso de plantillas de referencia"
+      },
+      {
+        "_rowIndex": 200,
+        "siguienteNivelInferior": "Medición",
+        "efectoFalla": "Cliente Externo"
+      },
+      {
+        "_rowIndex": 201,
+        "siguienteNivelInferior": "Registros de control en calidad según plan de control",
+        "funcionNivelInferior": "Leader de equipo",
+        "efectoFalla": "No afecta funcionalidad, pero impacta percepción de calidad",
+        "severidad": 6
+      },
+      {
+        "_rowIndex": 202,
+        "funcionNivelInferior": "Supervisar las actividades"
+      },
+      {
+        "_rowIndex": 204,
+        "funcionNivelInferior": "que realizan los"
+      },
+      {
+        "_rowIndex": 205,
+        "siguienteNivelInferior": "Método de Fabricación",
+        "funcionNivelInferior": "operarios según",
+        "efectoFalla": "Organismos regulatorios"
+      },
+      {
+        "_rowIndex": 206,
+        "siguienteNivelInferior": "Hoja de Operación",
+        "funcionNivelInferior": "las hojas de operaciones"
+      },
+      {
+        "_rowIndex": 207,
+        "funcionNivelInferior": "Ante la presencia de",
+        "efectoFalla": "Cliente Interno-Barack",
+        "modoFalla": "3- Puntadas irregulares o arrugas",
+        "causaFalla": "Mala configuración de la máquina",
+        "controlPreventivo": "Mantenimiento preventivo",
+        "controlDetectivo": "Visual"
+      },
+      {
+        "_rowIndex": 208,
+        "funcionNivelInferior": "algún inconveniente",
+        "efectoFalla": "Puede corregirse en producción",
+        "severidad": 3
+      },
+      {
+        "_rowIndex": 209,
+        "funcionNivelInferior": "se comunica con el"
+      },
+      {
+        "_rowIndex": 210,
+        "funcionNivelInferior": "gerente de producción."
+      },
+      {
+        "_rowIndex": 211,
+        "funcionNivelInferior": "Registrar información de:"
+      },
+      {
+        "_rowIndex": 212,
+        "efectoFalla": "Cliente Externo"
+      },
+      {
+        "_rowIndex": 213,
+        "funcionNivelInferior": ".Scrap",
+        "efectoFalla": "Puede provocar rechazo por calidad visual"
+      },
+      {
+        "_rowIndex": 214,
+        "funcionNivelInferior": ".Ausentismo.",
+        "severidad": 6,
+        "deteccion": 6,
+        "apDfmea": "Medio"
+      },
+      {
+        "_rowIndex": 215,
+        "funcionNivelInferior": ".Cantidad producida",
+        "ocurrencia": 4
+      },
+      {
+        "_rowIndex": 216,
+        "funcionNivelInferior": "capacitación de personal",
+        "causaFalla": "Falta de mantenimiento"
+      },
+      {
+        "_rowIndex": 218,
+        "efectoFalla": "Cliente Externo"
+      },
+      {
+        "_rowIndex": 219,
+        "funcionNivelInferior": "Medio Ambiente",
+        "efectoFalla": "No afecta funcionalidad, solo estética",
+        "severidad": 3
+      },
+      {
+        "_rowIndex": 220,
+        "funcionNivelInferior": "Iluminación"
+      },
+      {
+        "_rowIndex": 221,
+        "funcionNivelInferior": "1500 Lux"
+      },
+      {
+        "_rowIndex": 222,
+        "efectoFalla": "Organismos regulatorios"
+      },
+      {
+        "_rowIndex": 224,
+        "funcionNivelInferior": "Método de Fabricación",
+        "efectoFalla": "Cliente Interno-Barack",
+        "modoFalla": "4- Rotura del vinilo en la zona de la costura",
+        "causaFalla": "Agujas inadecuadas",
+        "controlPreventivo": "Se utilizan agujas especificas para vinilos",
+        "controlDetectivo": "Inspección visual"
+      },
+      {
+        "_rowIndex": 225,
+        "funcionNivelInferior": "Hoja de Operación",
+        "efectoFalla": "Scrap o retrabajo"
+      },
+      {
+        "_rowIndex": 226,
+        "funcionNivelInferior": "1-Definir las distintas",
+        "severidad": 8
+      },
+      {
+        "_rowIndex": 227,
+        "funcionNivelInferior": "actividades o pasos"
+      },
+      {
+        "_rowIndex": 228,
+        "funcionNivelInferior": "de la operación",
+        "efectoFalla": "Cliente Externo"
+      },
+      {
+        "_rowIndex": 229,
+        "funcionNivelInferior": "mediante explicación",
+        "efectoFalla": "Pieza no conforme, posible rechazo total"
+      },
+      {
+        "_rowIndex": 230,
+        "funcionNivelInferior": "escrita + presencia",
+        "severidad": 10
+      },
+      {
+        "_rowIndex": 231,
+        "funcionNivelInferior": "de imágenes"
+      },
+      {
+        "_rowIndex": 232,
+        "funcionNivelInferior": "2- Definir el plan de reacción ante un \"No conforme\"",
+        "ocurrencia": 3,
+        "deteccion": 6,
+        "apDfmea": "Medio"
+      },
+      {
+        "_rowIndex": 233,
+        "causaFalla": "Puntada demasiado apretada.",
+        "controlPreventivo": "Se configura la longitud de la puntada en la maquina"
+      },
+      {
+        "_rowIndex": 234,
+        "efectoFalla": "Cliente Externo"
+      },
+      {
+        "_rowIndex": 235,
+        "funcionNivelInferior": "3-Definir los EPP que",
+        "efectoFalla": "Puede causar falla en el uso, riesgo de seguridad"
+      },
+      {
+        "_rowIndex": 236,
+        "funcionNivelInferior": "debe tener en cuenta",
+        "severidad": 10
+      },
+      {
+        "_rowIndex": 237,
+        "funcionNivelInferior": "para la realización de"
+      },
+      {
+        "_rowIndex": 238,
+        "funcionNivelInferior": "operación"
+      },
+      {
+        "_rowIndex": 239,
+        "efectoFalla": "Organismos regulatorios"
+      },
+      {
+        "_rowIndex": 240,
+        "funcionNivelInferior": "Ayudas visuales"
+      },
+      {
+        "_rowIndex": 241,
+        "funcionNivelInferior": "Mostrar como debe",
+        "efectoFalla": "Cliente Interno-Barack",
+        "modoFalla": "5-Selección incorrecta del hilo",
+        "causaFalla": "Error en la carga de hilo en máquina.",
+        "controlPreventivo": "Las hojas de operaciones indican que hilo utilizar",
+        "controlDetectivo": "Visual"
+      },
+      {
+        "_rowIndex": 242,
+        "funcionNivelInferior": "quedar el producto",
+        "efectoFalla": "Detectable en línea de producción"
+      },
+      {
+        "_rowIndex": 243,
+        "funcionNivelInferior": "para evitar ciertos",
+        "severidad": 6
+      },
+      {
+        "_rowIndex": 244,
+        "funcionNivelInferior": "defectos"
+      },
+      {
+        "_rowIndex": 245,
+        "efectoFalla": "Cliente Externo"
+      },
+      {
+        "_rowIndex": 246,
+        "funcionNivelInferior": "Medición",
+        "efectoFalla": "Puede generar rechazo por incumplimiento de especificaciones"
+      },
+      {
+        "_rowIndex": 247,
+        "funcionNivelInferior": "Hoja de Operación",
+        "severidad": 8
+      },
+      {
+        "_rowIndex": 248,
+        "funcionNivelInferior": "1-Definir las distintas",
+        "ocurrencia": 2,
+        "deteccion": 6,
+        "apDfmea": "Medio"
+      },
+      {
+        "_rowIndex": 249,
+        "funcionNivelInferior": "características que",
+        "controlPreventivo": "Checklist diaria de configuración de máquina, mediante un set-up de control de lanzamiento."
+      },
+      {
+        "_rowIndex": 250,
+        "funcionNivelInferior": "pueden ser de producto"
+      },
+      {
+        "_rowIndex": 251,
+        "funcionNivelInferior": "o de proceso que debe",
+        "efectoFalla": "Cliente Externo"
+      },
+      {
+        "_rowIndex": 252,
+        "funcionNivelInferior": "controlar el operador",
+        "efectoFalla": "No afecta funcionalidad, solo percepción de calidad"
+      },
+      {
+        "_rowIndex": 253,
+        "funcionNivelInferior": "(autocontrol)",
+        "severidad": 3
+      },
+      {
+        "_rowIndex": 256,
+        "efectoFalla": "Organismos regulatorios"
+      },
+      {
+        "_rowIndex": 258,
+        "efectoFalla": "Cliente Interno-Barack",
+        "modoFalla": "6- Largo de puntada fuera de especificación",
+        "causaFalla": "Error en la configuración de la máquina",
+        "controlPreventivo": "Configuración de la máquina según especificaciones",
+        "controlDetectivo": "Calibre"
+      },
+      {
+        "_rowIndex": 259,
+        "efectoFalla": "Scrap"
+      },
+      {
+        "_rowIndex": 260,
+        "severidad": 6
+      },
+      {
+        "_rowIndex": 262,
+        "efectoFalla": "Cliente Externo"
+      },
+      {
+        "_rowIndex": 263,
+        "efectoFalla": "Puede generar rechazo por incumplimiento de especificaciones"
+      },
+      {
+        "_rowIndex": 264,
+        "severidad": 6
+      },
+      {
+        "_rowIndex": 265,
+        "ocurrencia": 5,
+        "deteccion": 6,
+        "apDfmea": "Medio"
+      },
+      {
+        "_rowIndex": 267,
+        "controlPreventivo": "Checklist diaria de configuración de máquina, mediante un set-up de control de lanzamiento."
+      },
+      {
+        "_rowIndex": 268,
+        "efectoFalla": "Cliente Externo"
+      },
+      {
+        "_rowIndex": 269,
+        "efectoFalla": "Potencial reclamo de aspecto",
+        "severidad": 4
+      },
+      {
+        "_rowIndex": 273,
+        "efectoFalla": "Organismos regulatorios"
+      },
+      {
+        "_rowIndex": 275,
+        "efectoFalla": "Cliente Interno-Barack",
+        "modoFalla": "7- Toma de costura fuera de especificación",
+        "causaFalla": "Error en la configuración de la máquina",
+        "controlPreventivo": "Configuración de la máquina según especificaciones",
+        "controlDetectivo": "Calibre"
+      },
+      {
+        "_rowIndex": 276,
+        "efectoFalla": "Scrap"
+      },
+      {
+        "_rowIndex": 277,
+        "severidad": 6
+      },
+      {
+        "_rowIndex": 279,
+        "efectoFalla": "Cliente Externo"
+      },
+      {
+        "_rowIndex": 280,
+        "efectoFalla": "Puede generar rechazo por incumplimiento de especificaciones"
+      },
+      {
+        "_rowIndex": 281,
+        "severidad": 6
+      },
+      {
+        "_rowIndex": 282,
+        "ocurrencia": 5,
+        "deteccion": 6,
+        "apDfmea": "Medio"
+      },
+      {
+        "_rowIndex": 284,
+        "controlPreventivo": "Checklist diaria de configuración de máquina, mediante un set-up de control de lanzamiento."
+      },
+      {
+        "_rowIndex": 285,
+        "efectoFalla": "Cliente Externo"
+      },
+      {
+        "_rowIndex": 286,
+        "efectoFalla": "Potencial reclamo de aspecto"
+      },
+      {
+        "_rowIndex": 287,
+        "severidad": 4
+      },
+      {
+        "_rowIndex": 290,
+        "efectoFalla": "Organismos regulatorios"
+      },
+      {
+        "_rowIndex": 292,
+        "siguienteNivelInferior": "Maquina",
+        "funcionNivelSuperior": "Vehículo",
+        "funcionElementoFoco": "¿Qué hace?",
+        "funcionNivelInferior": "Maquina",
+        "efectoFalla": "Cliente Interno-Barack",
+        "modoFalla": "1- Costura descosida o débil",
+        "causaFalla": "Tensión de hilo incorrecta",
+        "controlPreventivo": "Las costureras configuran la máquina según hojas de operaciones.",
+        "controlDetectivo": "Calibre para verificar puntadas"
+      },
+      {
+        "_rowIndex": 293,
+        "siguienteNivelInferior": "Maquina de coser",
+        "funcionNivelSuperior": "Brindar comodidad al usuario",
+        "funcionElementoFoco": "Permite la costura decorativa",
+        "funcionNivelInferior": "Realiza costura decorativa",
+        "efectoFalla": "Impacta en producción, genera scrap o retrabajos"
+      },
+      {
+        "_rowIndex": 294,
+        "siguienteNivelSuperior": "Apoyacabezas Trasero Lateral",
+        "elementoFoco": "OPERACIÓN 40",
+        "severidad": 5
+      },
+      {
+        "_rowIndex": 295,
+        "siguienteNivelInferior": "Mano de Obra"
+      },
+      {
+        "_rowIndex": 296,
+        "elementoFoco": "Costura vista",
+        "siguienteNivelInferior": "Operador",
+        "funcionNivelInferior": "Mano de Obra"
+      },
+      {
+        "_rowIndex": 297,
+        "efectoFalla": "Cliente Externo",
+        "causaFalla": "Puntadas demasiado largas"
+      },
+      {
+        "_rowIndex": 298,
+        "siguienteNivelInferior": "Leader de equipo",
+        "funcionNivelInferior": "Operador",
+        "efectoFalla": "Puede causar fallas en ensamble y rechazo del lote"
+      },
+      {
+        "_rowIndex": 299,
+        "funcionNivelSuperior": "VW",
+        "funcionNivelInferior": "1- Posicionar la pieza en la máquina según la referencia indicada y realizar la costura vista según lo especificado en la hoja de operaciones.",
+        "severidad": 8,
+        "ocurrencia": 4,
+        "deteccion": 4,
+        "apDfmea": "Medio"
+      },
+      {
+        "_rowIndex": 300,
+        "siguienteNivelInferior": "Supervisor",
+        "funcionNivelSuperior": "Permitir el acabado del producto final",
+        "controlPreventivo": "Checklist diaria de configuración de máquina, mediante un set-up de control de lanzamiento."
+      },
+      {
+        "_rowIndex": 301,
+        "controlDetectivo": "Inspección visual"
+      },
+      {
+        "_rowIndex": 302,
+        "siguienteNivelInferior": "Material (Indirectos)",
+        "funcionElementoFoco": "Requerimientos:",
+        "efectoFalla": "Cliente Externo"
+      },
+      {
+        "_rowIndex": 303,
+        "siguienteNivelInferior": "Piquete",
+        "funcionElementoFoco": "1- Costura completa",
+        "efectoFalla": "Defecto estético sin impacto funcional ni de seguridad.",
+        "causaFalla": "Hilo inadecuado",
+        "severidad": 4
+      },
+      {
+        "_rowIndex": 304,
+        "siguienteNivelInferior": "Lapicera",
+        "funcionElementoFoco": "2- Costura firme"
+      },
+      {
+        "_rowIndex": 307,
+        "efectoFalla": "Organismos regulatorios"
+      },
+      {
+        "_rowIndex": 309,
+        "efectoFalla": "Cliente Interno-Barack",
+        "modoFalla": "2- Costura desviada o fuera de especificación",
+        "causaFalla": "Falta de guía en costura",
+        "controlPreventivo": "Las máquinas poseen una guía",
+        "controlDetectivo": "Inspección visual en línea"
+      },
+      {
+        "_rowIndex": 310,
+        "efectoFalla": "Scrap"
+      },
+      {
+        "_rowIndex": 311,
+        "siguienteNivelInferior": "Medio Ambiente",
+        "severidad": 8
+      },
+      {
+        "_rowIndex": 312,
+        "siguienteNivelInferior": "Ley 19587"
+      },
+      {
+        "_rowIndex": 313,
+        "siguienteNivelInferior": "Decreto Reglamentario"
+      },
+      {
+        "_rowIndex": 314,
+        "siguienteNivelInferior": "351/79"
+      },
+      {
+        "_rowIndex": 315,
+        "efectoFalla": "Cliente Externo"
+      },
+      {
+        "_rowIndex": 316,
+        "siguienteNivelInferior": "Método de Fabricación",
+        "efectoFalla": "Defecto estético, posible rechazo del lote",
+        "ocurrencia": 4,
+        "apDfmea": "Medio"
+      },
+      {
+        "_rowIndex": 317,
+        "siguienteNivelInferior": "Hoja de Operación",
+        "causaFalla": "Error del operario",
+        "severidad": 8,
+        "deteccion": 5
+      },
+      {
+        "_rowIndex": 318,
+        "controlPreventivo": "Verificación de piquetes en piezas antes de coser para asegurar alineación correcta.",
+        "controlDetectivo": "Uso de plantillas de referencia"
+      },
+      {
+        "_rowIndex": 319,
+        "siguienteNivelInferior": "Medición",
+        "efectoFalla": "Cliente Externo"
+      },
+      {
+        "_rowIndex": 320,
+        "siguienteNivelInferior": "Registros de control en calidad según plan de control",
+        "funcionNivelInferior": "Leader de equipo",
+        "efectoFalla": "No afecta funcionalidad, pero impacta percepción de calidad",
+        "severidad": 6
+      },
+      {
+        "_rowIndex": 321,
+        "funcionNivelInferior": "Supervisar las actividades"
+      },
+      {
+        "_rowIndex": 323,
+        "funcionNivelInferior": "que realizan los"
+      },
+      {
+        "_rowIndex": 324,
+        "siguienteNivelInferior": "Método de Fabricación",
+        "funcionNivelInferior": "operarios según",
+        "efectoFalla": "Organismos regulatorios"
+      },
+      {
+        "_rowIndex": 325,
+        "siguienteNivelInferior": "Hoja de Operación",
+        "funcionNivelInferior": "las hojas de operaciones"
+      },
+      {
+        "_rowIndex": 326,
+        "funcionNivelInferior": "Ante la presencia de",
+        "efectoFalla": "Cliente Interno-Barack",
+        "modoFalla": "3- Puntadas irregulares o arrugas",
+        "causaFalla": "Mala configuración de la máquina",
+        "controlPreventivo": "Mantenimiento preventivo",
+        "controlDetectivo": "Visual"
+      },
+      {
+        "_rowIndex": 327,
+        "funcionNivelInferior": "algún inconveniente",
+        "efectoFalla": "Puede corregirse en producción",
+        "severidad": 3
+      },
+      {
+        "_rowIndex": 328,
+        "funcionNivelInferior": "se comunica con el"
+      },
+      {
+        "_rowIndex": 329,
+        "funcionNivelInferior": "gerente de producción."
+      },
+      {
+        "_rowIndex": 330,
+        "funcionNivelInferior": "Registrar información de:"
+      },
+      {
+        "_rowIndex": 331,
+        "efectoFalla": "Cliente Externo"
+      },
+      {
+        "_rowIndex": 332,
+        "funcionNivelInferior": ".Scrap",
+        "efectoFalla": "Puede provocar rechazo por calidad visual"
+      },
+      {
+        "_rowIndex": 333,
+        "funcionNivelInferior": ".Ausentismo.",
+        "severidad": 6,
+        "deteccion": 6,
+        "apDfmea": "Medio"
+      },
+      {
+        "_rowIndex": 334,
+        "funcionNivelInferior": ".Cantidad producida",
+        "ocurrencia": 4
+      },
+      {
+        "_rowIndex": 335,
+        "funcionNivelInferior": "capacitación de personal",
+        "causaFalla": "Falta de mantenimiento"
+      },
+      {
+        "_rowIndex": 337,
+        "efectoFalla": "Cliente Externo"
+      },
+      {
+        "_rowIndex": 338,
+        "funcionNivelInferior": "Medio Ambiente",
+        "efectoFalla": "No afecta funcionalidad, solo estética",
+        "severidad": 3
+      },
+      {
+        "_rowIndex": 339,
+        "funcionNivelInferior": "Iluminación"
+      },
+      {
+        "_rowIndex": 340,
+        "funcionNivelInferior": "1500 Lux"
+      },
+      {
+        "_rowIndex": 341,
+        "efectoFalla": "Organismos regulatorios"
+      },
+      {
+        "_rowIndex": 343,
+        "funcionNivelInferior": "Método de Fabricación",
+        "efectoFalla": "Cliente Interno-Barack",
+        "modoFalla": "4- Rotura del vinilo en la zona de la costura",
+        "causaFalla": "Agujas inadecuadas",
+        "controlPreventivo": "Se utilizan agujas especificas para vinilos",
+        "controlDetectivo": "Inspección visual"
+      },
+      {
+        "_rowIndex": 344,
+        "funcionNivelInferior": "Hoja de Operación",
+        "efectoFalla": "Scrap o retrabajo"
+      },
+      {
+        "_rowIndex": 345,
+        "funcionNivelInferior": "1-Definir las distintas",
+        "severidad": 8
+      },
+      {
+        "_rowIndex": 346,
+        "funcionNivelInferior": "actividades o pasos"
+      },
+      {
+        "_rowIndex": 347,
+        "funcionNivelInferior": "de la operación",
+        "efectoFalla": "Cliente Externo"
+      },
+      {
+        "_rowIndex": 348,
+        "funcionNivelInferior": "mediante explicación",
+        "efectoFalla": "Pieza no conforme, posible rechazo total"
+      },
+      {
+        "_rowIndex": 349,
+        "funcionNivelInferior": "escrita + presencia",
+        "severidad": 10
+      },
+      {
+        "_rowIndex": 350,
+        "funcionNivelInferior": "de imágenes"
+      },
+      {
+        "_rowIndex": 351,
+        "funcionNivelInferior": "2- Definir el plan de reacción ante un \"No conforme\"",
+        "ocurrencia": 3,
+        "deteccion": 6,
+        "apDfmea": "Medio"
+      },
+      {
+        "_rowIndex": 352,
+        "causaFalla": "Puntada demasiado apretada.",
+        "controlPreventivo": "Se configura la longitud de la puntada en la maquina"
+      },
+      {
+        "_rowIndex": 353,
+        "efectoFalla": "Cliente Externo"
+      },
+      {
+        "_rowIndex": 354,
+        "funcionNivelInferior": "3-Definir los EPP que",
+        "efectoFalla": "Puede causar falla en el uso, riesgo de seguridad"
+      },
+      {
+        "_rowIndex": 355,
+        "funcionNivelInferior": "debe tener en cuenta",
+        "severidad": 10
+      },
+      {
+        "_rowIndex": 356,
+        "funcionNivelInferior": "para la realización de"
+      },
+      {
+        "_rowIndex": 357,
+        "funcionNivelInferior": "operación"
+      },
+      {
+        "_rowIndex": 358,
+        "efectoFalla": "Organismos regulatorios"
+      },
+      {
+        "_rowIndex": 359,
+        "funcionNivelInferior": "Ayudas visuales"
+      },
+      {
+        "_rowIndex": 360,
+        "funcionNivelInferior": "Mostrar como debe",
+        "efectoFalla": "Cliente Interno-Barack",
+        "modoFalla": "5-Selección incorrecta del hilo",
+        "causaFalla": "Error en la carga de hilo en máquina.",
+        "controlPreventivo": "Las hojas de operaciones indican que hilo utilizar",
+        "controlDetectivo": "Visual"
+      },
+      {
+        "_rowIndex": 361,
+        "funcionNivelInferior": "quedar el producto",
+        "efectoFalla": "Detectable en línea de producción"
+      },
+      {
+        "_rowIndex": 362,
+        "funcionNivelInferior": "para evitar ciertos",
+        "severidad": 6
+      },
+      {
+        "_rowIndex": 363,
+        "funcionNivelInferior": "defectos"
+      },
+      {
+        "_rowIndex": 364,
+        "efectoFalla": "Cliente Externo"
+      },
+      {
+        "_rowIndex": 365,
+        "funcionNivelInferior": "Medición",
+        "efectoFalla": "Puede generar rechazo por incumplimiento de especificaciones"
+      },
+      {
+        "_rowIndex": 366,
+        "funcionNivelInferior": "Hoja de Operación",
+        "severidad": 8
+      },
+      {
+        "_rowIndex": 367,
+        "funcionNivelInferior": "1-Definir las distintas",
+        "ocurrencia": 2,
+        "deteccion": 6,
+        "apDfmea": "Medio"
+      },
+      {
+        "_rowIndex": 368,
+        "funcionNivelInferior": "características que",
+        "controlPreventivo": "Set up de lanzamiento"
+      },
+      {
+        "_rowIndex": 369,
+        "funcionNivelInferior": "pueden ser de producto"
+      },
+      {
+        "_rowIndex": 370,
+        "funcionNivelInferior": "o de proceso que debe",
+        "efectoFalla": "Cliente Externo"
+      },
+      {
+        "_rowIndex": 371,
+        "funcionNivelInferior": "controlar el operador",
+        "efectoFalla": "No afecta funcionalidad, solo percepción de calidad"
+      },
+      {
+        "_rowIndex": 372,
+        "funcionNivelInferior": "(autocontrol)",
+        "severidad": 3
+      },
+      {
+        "_rowIndex": 375,
+        "efectoFalla": "Organismos regulatorios"
+      },
+      {
+        "_rowIndex": 377,
+        "efectoFalla": "Cliente Interno-Barack",
+        "modoFalla": "6- Largo de puntada fuera de especificación",
+        "causaFalla": "Error en la configuración de la máquina",
+        "controlPreventivo": "Configuración de la máquina según especificaciones",
+        "controlDetectivo": "Calibre"
+      },
+      {
+        "_rowIndex": 378,
+        "efectoFalla": "Scrap"
+      },
+      {
+        "_rowIndex": 379,
+        "severidad": 6
+      },
+      {
+        "_rowIndex": 381,
+        "efectoFalla": "Cliente Externo"
+      },
+      {
+        "_rowIndex": 382,
+        "efectoFalla": "Puede generar rechazo por incumplimiento de especificaciones"
+      },
+      {
+        "_rowIndex": 383,
+        "severidad": 6
+      },
+      {
+        "_rowIndex": 384,
+        "ocurrencia": 5,
+        "deteccion": 6,
+        "apDfmea": "Medio"
+      },
+      {
+        "_rowIndex": 386,
+        "controlPreventivo": "Checklist diaria de configuración de máquina, mediante un set-up de control de lanzamiento."
+      },
+      {
+        "_rowIndex": 387,
+        "efectoFalla": "Cliente Externo"
+      },
+      {
+        "_rowIndex": 388,
+        "efectoFalla": "Potencial reclamo de aspecto",
+        "severidad": 4
+      },
+      {
+        "_rowIndex": 392,
+        "efectoFalla": "Organismos regulatorios"
+      },
+      {
+        "_rowIndex": 394,
+        "efectoFalla": "Cliente Interno-Barack",
+        "modoFalla": "7- Distancia entre costuras fuera de especificación",
+        "causaFalla": "Error en la configuración de la máquina",
+        "controlPreventivo": "Configuración de la máquina según especificaciones",
+        "controlDetectivo": "Calibre"
+      },
+      {
+        "_rowIndex": 395,
+        "efectoFalla": "Scrap"
+      },
+      {
+        "_rowIndex": 396,
+        "severidad": 6
+      },
+      {
+        "_rowIndex": 398,
+        "efectoFalla": "Cliente Externo"
+      },
+      {
+        "_rowIndex": 399,
+        "efectoFalla": "Puede generar rechazo por incumplimiento de especificaciones"
+      },
+      {
+        "_rowIndex": 400,
+        "severidad": 6
+      },
+      {
+        "_rowIndex": 401,
+        "ocurrencia": 5,
+        "deteccion": 6,
+        "apDfmea": "Medio"
+      },
+      {
+        "_rowIndex": 403,
+        "controlPreventivo": "Checklist diaria de configuración de máquina, mediante un set-up de control de lanzamiento."
+      },
+      {
+        "_rowIndex": 404,
+        "efectoFalla": "Cliente Externo"
+      },
+      {
+        "_rowIndex": 405,
+        "efectoFalla": "Potencial reclamo de aspecto"
+      },
+      {
+        "_rowIndex": 406,
+        "severidad": 4
+      },
+      {
+        "_rowIndex": 409,
+        "efectoFalla": "Organismos regulatorios"
+      },
+      {
+        "_rowIndex": 411,
+        "siguienteNivelInferior": "Maquina",
+        "funcionNivelSuperior": "Vehículo",
+        "funcionElementoFoco": "¿Qué hace?",
+        "funcionNivelInferior": "Maquina",
+        "efectoFalla": "Cliente Interno-Barack",
+        "modoFalla": "1- Sellado incompleto del orificio inferior",
+        "causaFalla": "Fórmula incorrecta",
+        "controlPreventivo": "Configuración inicial del dosificador (setup)",
+        "controlDetectivo": "Inspección visual post-desmoldeo"
+      },
+      {
+        "_rowIndex": 412,
+        "siguienteNivelInferior": "Sistema de vertido de PUR.",
+        "funcionNivelSuperior": "Brindar comodidad al usuario",
+        "funcionElementoFoco": "Se inyecta PUR en la funda con varilla e inserto, se espuma, cura y desmoldea el apoyacabezas.",
+        "funcionNivelInferior": "Vierte PUR líquido en la funda colocada dentro del molde.",
+        "efectoFalla": "Pieza con rebaba o pérdida de PUR (puede requerir retrabajo en estación)"
+      },
+      {
+        "_rowIndex": 413,
+        "siguienteNivelSuperior": "Apoyacabezas Trasero Lateral",
+        "elementoFoco": "OPERACIÓN 50",
+        "severidad": 4
+      },
+      {
+        "_rowIndex": 414,
+        "siguienteNivelInferior": "Unidad de curado"
+      },
+      {
+        "_rowIndex": 415,
+        "elementoFoco": "Inyección PUR - Apoyacabezas",
+        "siguienteNivelInferior": "Mano de Obra",
+        "funcionNivelInferior": "Permite que el PUR se expanda, endurezca y selle la abertura automáticamente."
+      },
+      {
+        "_rowIndex": 416,
+        "siguienteNivelInferior": "Operador",
+        "efectoFalla": "Cliente Externo"
+      },
+      {
+        "_rowIndex": 417,
+        "efectoFalla": "Apariencia visual alterada, activa plan de reacción.",
+        "severidad": 4
+      },
+      {
+        "_rowIndex": 418,
+        "siguienteNivelInferior": "Leader de equipo",
+        "funcionNivelSuperior": "VW",
+        "ocurrencia": 6,
+        "deteccion": 6,
+        "apDfmea": "Medio"
+      },
+      {
+        "_rowIndex": 419,
+        "funcionNivelSuperior": "Permitir el acabado del producto final",
+        "funcionNivelInferior": "Mano de Obra",
+        "causaFalla": "Dosificación insuficiente de PUR."
+      },
+      {
+        "_rowIndex": 420,
+        "siguienteNivelInferior": "Supervisor"
+      },
+      {
+        "_rowIndex": 421,
+        "funcionElementoFoco": "Requerimientos:",
+        "funcionNivelInferior": "Operador",
+        "efectoFalla": "Cliente Externo"
+      },
+      {
+        "_rowIndex": 422,
+        "siguienteNivelInferior": "Material (Indirectos)",
+        "funcionElementoFoco": "1- El sellado del orificio debe ser automático por efecto del PUR curado.",
+        "funcionNivelInferior": "1- Colocar el conjunto apoyacabezas dentro del molde y cerrarlo",
+        "efectoFalla": "Defecto visual perceptible (rebaba o marca)."
+      },
+      {
+        "_rowIndex": 423,
+        "severidad": 4
+      },
+      {
+        "_rowIndex": 426,
+        "funcionElementoFoco": "2- La pieza final debe tener apariencia completa y estética.",
+        "efectoFalla": "Organismos regulatorios"
+      },
+      {
+        "_rowIndex": 427,
+        "funcionNivelInferior": "2- Verter material de poliuretano líquido a través de la abertura en la funda."
+      },
+      {
+        "_rowIndex": 428,
+        "efectoFalla": "Cliente Interno-Barack",
+        "modoFalla": "2- Inserto EPP mal posicionado dentro de la funda",
+        "causaFalla": "Inserto colocado sin guía, se mueve al cerrar el molde.",
+        "controlPreventivo": "Guía física dentro del molde que limita el movimiento del inserto EPP y asegura su correcta posición al momento del cierre.",
+        "controlDetectivo": "Inspección visual del operador antes del cierre del molde"
+      },
+      {
+        "_rowIndex": 429,
+        "efectoFalla": "ligera deformación o asimetría genera retrabajo parcial en estación",
+        "severidad": 3
+      },
+      {
+        "_rowIndex": 430,
+        "siguienteNivelInferior": "Medio Ambiente"
+      },
+      {
+        "_rowIndex": 431,
+        "siguienteNivelInferior": "Ley 19587"
+      },
+      {
+        "_rowIndex": 432,
+        "siguienteNivelInferior": "Decreto Reglamentario",
+        "funcionNivelInferior": "3- Se realiza un curado del PUR"
+      },
+      {
+        "_rowIndex": 433,
+        "siguienteNivelInferior": "351/79"
+      },
+      {
+        "_rowIndex": 434,
+        "funcionNivelInferior": "4- Se abre el molde y se extrae la pieza terminada",
+        "efectoFalla": "Cliente Externo"
+      },
+      {
+        "_rowIndex": 435,
+        "siguienteNivelInferior": "Método de Fabricación",
+        "efectoFalla": "plan de reacción menor",
+        "severidad": 3,
+        "ocurrencia": 2,
+        "deteccion": 5,
+        "apDfmea": "Bajo"
+      },
+      {
+        "_rowIndex": 436,
+        "siguienteNivelInferior": "Hoja de Operación"
+      },
+      {
+        "_rowIndex": 438,
+        "siguienteNivelInferior": "Medición",
+        "efectoFalla": "Cliente Externo"
+      },
+      {
+        "_rowIndex": 439,
+        "siguienteNivelInferior": "Registros de control en calidad según plan de control",
+        "funcionNivelInferior": "Leader de equipo",
+        "efectoFalla": "defecto moderado perceptible.",
+        "severidad": 3
+      },
+      {
+        "_rowIndex": 440,
+        "funcionNivelInferior": "Supervisar las actividades"
+      },
+      {
+        "_rowIndex": 442,
+        "funcionNivelInferior": "que realizan los"
+      },
+      {
+        "_rowIndex": 443,
+        "siguienteNivelInferior": "Método de Fabricación",
+        "funcionNivelInferior": "operarios según",
+        "efectoFalla": "Organismos regulatorios"
+      },
+      {
+        "_rowIndex": 444,
+        "siguienteNivelInferior": "Hoja de Operación",
+        "funcionNivelInferior": "las hojas de operaciones"
+      },
+      {
+        "_rowIndex": 445,
+        "funcionNivelInferior": "Ante la presencia de",
+        "efectoFalla": "Cliente Interno-Barack",
+        "modoFalla": "3- Pérdida de material (fuga leve de PUR por costura abierta)",
+        "causaFalla": "Costura previa abierta, sin cierre completo antes de espumado.",
+        "controlPreventivo": "Control del volumen y presión de inyección del PUR dentro de los límites validados para el diseño de la funda.",
+        "controlDetectivo": "Inspección visual post-desmoldeo"
+      },
+      {
+        "_rowIndex": 446,
+        "funcionNivelInferior": "algún inconveniente",
+        "efectoFalla": "Rebabas o restos externos (retrabajo parcial en estación)",
+        "severidad": 3
+      },
+      {
+        "_rowIndex": 447,
+        "funcionNivelInferior": "se comunica con el"
+      },
+      {
+        "_rowIndex": 448,
+        "funcionNivelInferior": "gerente de producción."
+      },
+      {
+        "_rowIndex": 449,
+        "funcionNivelInferior": "Registrar información de:",
+        "efectoFalla": "Cliente Externo"
+      },
+      {
+        "_rowIndex": 450,
+        "efectoFalla": "Activa plan de reacción menor",
+        "severidad": 3
+      },
+      {
+        "_rowIndex": 451,
+        "funcionNivelInferior": ".Scrap"
+      },
+      {
+        "_rowIndex": 452,
+        "funcionNivelInferior": ".Ausentismo.",
+        "ocurrencia": 4,
+        "deteccion": 6,
+        "apDfmea": "Bajo"
+      },
+      {
+        "_rowIndex": 453,
+        "funcionNivelInferior": ".Cantidad producida"
+      },
+      {
+        "_rowIndex": 454,
+        "funcionNivelInferior": "capacitación de personal"
+      },
+      {
+        "_rowIndex": 455,
+        "efectoFalla": "Cliente Externo"
+      },
+      {
+        "_rowIndex": 456,
+        "efectoFalla": "Defecto moderado perceptible",
+        "severidad": 3
+      },
+      {
+        "_rowIndex": 457,
+        "funcionNivelInferior": "Medio Ambiente"
+      },
+      {
+        "_rowIndex": 458,
+        "funcionNivelInferior": "Iluminación"
+      },
+      {
+        "_rowIndex": 459,
+        "funcionNivelInferior": "1500 Lux"
+      },
+      {
+        "_rowIndex": 460,
+        "efectoFalla": "Organismos regulatorios"
+      },
+      {
+        "_rowIndex": 462,
+        "funcionNivelInferior": "Método de Fabricación",
+        "efectoFalla": "Cliente Interno-Barack",
+        "modoFalla": "4- Pieza fuera de peso especificado (Apoyacabezas delantero:→ 600 g , Apoyacabezas trasero lateral: → 589 g , Apoyacabezas trasero central:→ 529 g)",
+        "causaFalla": "Variación en la dosificación del PUR (componente A y B), burbuja interna, fuga parcial durante el espumado o carga incorrecta en el ciclo.",
+        "controlPreventivo": "Calibración y mantenimiento periódico del dosificador de PUR, junto con configuración validada del programa de inyección para asegurar cantidad correcta.",
+        "controlDetectivo": "Control de peso en balanza tras el desmoldeo, con hoja de registro o validación por lote."
+      },
+      {
+        "_rowIndex": 463,
+        "funcionNivelInferior": "Hoja de Operación",
+        "efectoFalla": "Scrap de la espuma / retrabajo",
+        "severidad": 8
+      },
+      {
+        "_rowIndex": 464,
+        "funcionNivelInferior": "1-Definir las distintas"
+      },
+      {
+        "_rowIndex": 465,
+        "funcionNivelInferior": "actividades o pasos"
+      },
+      {
+        "_rowIndex": 466,
+        "funcionNivelInferior": "de la operación",
+        "efectoFalla": "Cliente Externo"
+      },
+      {
+        "_rowIndex": 467,
+        "funcionNivelInferior": "mediante explicación",
+        "efectoFalla": "Plan de reacción importante",
+        "severidad": 7
+      },
+      {
+        "_rowIndex": 468,
+        "funcionNivelInferior": "escrita + presencia"
+      },
+      {
+        "_rowIndex": 469,
+        "funcionNivelInferior": "de imágenes"
+      },
+      {
+        "_rowIndex": 470,
+        "funcionNivelInferior": "2- Definir el plan de reacción ante un \"No conforme\"",
+        "ocurrencia": 3,
+        "deteccion": 5,
+        "apDfmea": "Medio"
+      },
+      {
+        "_rowIndex": 472,
+        "efectoFalla": "Cliente Externo"
+      },
+      {
+        "_rowIndex": 473,
+        "funcionNivelInferior": "3-Definir los EPP que",
+        "efectoFalla": "Afecta función secundaria, posible percepción de calidad o seguridad",
+        "severidad": 8
+      },
+      {
+        "_rowIndex": 474,
+        "funcionNivelInferior": "debe tener en cuenta"
+      },
+      {
+        "_rowIndex": 475,
+        "funcionNivelInferior": "para la realización de"
+      },
+      {
+        "_rowIndex": 476,
+        "funcionNivelInferior": "operación"
+      },
+      {
+        "_rowIndex": 477,
+        "efectoFalla": "Organismos regulatorios"
+      },
+      {
+        "_rowIndex": 478,
+        "funcionNivelInferior": "Ayudas visuales"
+      },
+      {
+        "_rowIndex": 479,
+        "funcionNivelInferior": "Mostrar como debe"
+      },
+      {
+        "_rowIndex": 480,
+        "funcionNivelInferior": "quedar el producto"
+      },
+      {
+        "_rowIndex": 481,
+        "funcionNivelInferior": "para evitar ciertos"
+      },
+      {
+        "_rowIndex": 482,
+        "funcionNivelInferior": "defectos"
+      },
+      {
+        "_rowIndex": 484,
+        "funcionNivelInferior": "Medición"
+      },
+      {
+        "_rowIndex": 485,
+        "funcionNivelInferior": "Hoja de Operación"
+      },
+      {
+        "_rowIndex": 486,
+        "funcionNivelInferior": "1-Definir las distintas"
+      },
+      {
+        "_rowIndex": 487,
+        "funcionNivelInferior": "características que"
+      },
+      {
+        "_rowIndex": 488,
+        "funcionNivelInferior": "pueden ser de producto"
+      },
+      {
+        "_rowIndex": 489,
+        "funcionNivelInferior": "o de proceso que debe"
+      },
+      {
+        "_rowIndex": 490,
+        "funcionNivelInferior": "controlar el operador"
+      },
+      {
+        "_rowIndex": 491,
+        "funcionNivelInferior": "(autocontrol)"
+      },
+      {
+        "_rowIndex": 493,
+        "siguienteNivelInferior": "Maquina",
+        "funcionNivelSuperior": "Vehículo",
+        "funcionElementoFoco": "¿Qué hace?",
+        "funcionNivelInferior": "Maquina",
+        "efectoFalla": "Cliente Interno-Barack",
+        "modoFalla": "1- Pieza con rebaba visible",
+        "causaFalla": "Fuga leve de PUR durante inyección (por mala posición o presión)",
+        "controlPreventivo": "Control del volumen y presión del PUR para evitar que se genere rebaba.",
+        "controlDetectivo": "Inspección visual con iluminación dirigida y estándar visual con muestra límite."
+      },
+      {
+        "_rowIndex": 494,
+        "siguienteNivelInferior": "-",
+        "funcionNivelSuperior": "Brindar comodidad al usuario",
+        "funcionElementoFoco": "Se realiza la inspección final del apoyacabezas.",
+        "funcionNivelInferior": "-",
+        "efectoFalla": "Separamos la pieza, requiere retrabajo parcial en estación (corte o recorte).",
+        "severidad": 3
+      },
+      {
+        "_rowIndex": 495,
+        "siguienteNivelSuperior": "Apoyacabezas Trasero Lateral",
+        "elementoFoco": "OPERACIÓN 60"
+      },
+      {
+        "_rowIndex": 497,
+        "elementoFoco": "Inspección Final - Apoyacabezas Inyectado",
+        "siguienteNivelInferior": "Mano de Obra"
+      },
+      {
+        "_rowIndex": 498,
+        "siguienteNivelInferior": "Operador",
+        "efectoFalla": "Cliente Externo"
+      },
+      {
+        "_rowIndex": 499,
+        "efectoFalla": "Plan de reacción menor."
+      },
+      {
+        "_rowIndex": 500,
+        "siguienteNivelInferior": "Leader de equipo",
+        "funcionNivelSuperior": "VW",
+        "funcionNivelInferior": "Mano de Obra",
+        "severidad": 3,
+        "ocurrencia": 4,
+        "deteccion": 6,
+        "apDfmea": "Medio"
+      },
+      {
+        "_rowIndex": 501,
+        "funcionNivelSuperior": "Permitir el acabado del producto final",
+        "funcionNivelInferior": "Operador"
+      },
+      {
+        "_rowIndex": 502,
+        "siguienteNivelInferior": "Supervisor",
+        "funcionNivelInferior": "1- Verificar visualmente el estado de la costura externa."
+      },
+      {
+        "_rowIndex": 503,
+        "funcionElementoFoco": "Requerimientos:",
+        "efectoFalla": "Cliente Externo"
+      },
+      {
+        "_rowIndex": 504,
+        "siguienteNivelInferior": "Material (Indirectos)",
+        "efectoFalla": "Defecto moderado perceptible"
+      },
+      {
+        "_rowIndex": 505,
+        "funcionNivelInferior": "2-Revisa la apariencia general del apoyacabezas (rebabas, marcas, deformaciones).",
+        "severidad": 3
+      },
+      {
+        "_rowIndex": 508,
+        "efectoFalla": "Organismos regulatorios"
+      },
+      {
+        "_rowIndex": 510,
+        "funcionNivelInferior": "3- Revisa que el orificio inferior esté correctamente sellado (sin fugas visibles).",
+        "efectoFalla": "Cliente Interno-Barack",
+        "modoFalla": "2- Costura vista con desviación o imperfección estética",
+        "causaFalla": "Desajuste en guía",
+        "controlPreventivo": "Guía física en la máquina de coser y ajuste validado del pie y avance, junto con setup estandarizado para asegurar alineación de la costura decorativa.",
+        "controlDetectivo": "Inspección visual con plantilla de referencia"
+      },
+      {
+        "_rowIndex": 511,
+        "efectoFalla": "pieza es rechazada y se descarta (scrap)",
+        "severidad": 8
+      },
+      {
+        "_rowIndex": 512,
+        "siguienteNivelInferior": "Medio Ambiente"
+      },
+      {
+        "_rowIndex": 513,
+        "siguienteNivelInferior": "Ley 19587"
+      },
+      {
+        "_rowIndex": 514,
+        "siguienteNivelInferior": "Decreto Reglamentario",
+        "funcionNivelInferior": "4- Confirma presencia y posición correcta de la varilla e inserto EPP"
+      },
+      {
+        "_rowIndex": 515,
+        "siguienteNivelInferior": "351/79",
+        "causaFalla": "Mal centrado del operador"
+      },
+      {
+        "_rowIndex": 516,
+        "efectoFalla": "Cliente Externo"
+      },
+      {
+        "_rowIndex": 517,
+        "siguienteNivelInferior": "Método de Fabricación",
+        "funcionNivelInferior": "5- Etiquetar piezas conformes",
+        "efectoFalla": "Paro de línea >1 turno y reclamo severo",
+        "severidad": 8,
+        "ocurrencia": 3,
+        "deteccion": 5,
+        "apDfmea": "Medio"
+      },
+      {
+        "_rowIndex": 518,
+        "siguienteNivelInferior": "Hoja de Operación"
+      },
+      {
+        "_rowIndex": 520,
+        "siguienteNivelInferior": "Medición",
+        "efectoFalla": "Cliente Externo",
+        "causaFalla": "Variación en tensiones o avance del material"
+      },
+      {
+        "_rowIndex": 521,
+        "siguienteNivelInferior": "Registros de control en calidad según plan de control",
+        "funcionNivelInferior": "Leader de equipo",
+        "efectoFalla": "Defecto notorio visual.",
+        "severidad": 4
+      },
+      {
+        "_rowIndex": 522,
+        "funcionNivelInferior": "Supervisar las actividades"
+      },
+      {
+        "_rowIndex": 524,
+        "funcionNivelInferior": "que realizan los"
+      },
+      {
+        "_rowIndex": 525,
+        "siguienteNivelInferior": "Método de Fabricación",
+        "funcionNivelInferior": "operarios según",
+        "efectoFalla": "Organismos regulatorios"
+      },
+      {
+        "_rowIndex": 526,
+        "siguienteNivelInferior": "Hoja de Operación",
+        "funcionNivelInferior": "las hojas de operaciones"
+      },
+      {
+        "_rowIndex": 527,
+        "funcionNivelInferior": "Ante la presencia de"
+      },
+      {
+        "_rowIndex": 528,
+        "funcionNivelInferior": "algún inconveniente"
+      },
+      {
+        "_rowIndex": 529,
+        "funcionNivelInferior": "se comunica con el"
+      },
+      {
+        "_rowIndex": 530,
+        "funcionNivelInferior": "gerente de producción."
+      },
+      {
+        "_rowIndex": 531,
+        "funcionNivelInferior": "Registrar información de:"
+      },
+      {
+        "_rowIndex": 533,
+        "funcionNivelInferior": ".Scrap"
+      },
+      {
+        "_rowIndex": 534,
+        "funcionNivelInferior": ".Ausentismo."
+      },
+      {
+        "_rowIndex": 535,
+        "funcionNivelInferior": ".Cantidad producida"
+      },
+      {
+        "_rowIndex": 536,
+        "funcionNivelInferior": "capacitación de personal"
+      },
+      {
+        "_rowIndex": 539,
+        "funcionNivelInferior": "Medio Ambiente"
+      },
+      {
+        "_rowIndex": 540,
+        "funcionNivelInferior": "Iluminación"
+      },
+      {
+        "_rowIndex": 541,
+        "funcionNivelInferior": "1500 Lux"
+      },
+      {
+        "_rowIndex": 544,
+        "funcionNivelInferior": "Método de Fabricación"
+      },
+      {
+        "_rowIndex": 545,
+        "funcionNivelInferior": "Hoja de Operación"
+      },
+      {
+        "_rowIndex": 546,
+        "funcionNivelInferior": "1-Definir las distintas"
+      },
+      {
+        "_rowIndex": 547,
+        "funcionNivelInferior": "actividades o pasos"
+      },
+      {
+        "_rowIndex": 548,
+        "funcionNivelInferior": "de la operación"
+      },
+      {
+        "_rowIndex": 549,
+        "funcionNivelInferior": "mediante explicación"
+      },
+      {
+        "_rowIndex": 550,
+        "funcionNivelInferior": "escrita + presencia"
+      },
+      {
+        "_rowIndex": 551,
+        "funcionNivelInferior": "de imágenes"
+      },
+      {
+        "_rowIndex": 552,
+        "funcionNivelInferior": "2- Definir el plan de reacción ante un \"No conforme\""
+      },
+      {
+        "_rowIndex": 555,
+        "funcionNivelInferior": "3-Definir los EPP que"
+      },
+      {
+        "_rowIndex": 556,
+        "funcionNivelInferior": "debe tener en cuenta"
+      },
+      {
+        "_rowIndex": 557,
+        "funcionNivelInferior": "para la realización de"
+      },
+      {
+        "_rowIndex": 558,
+        "funcionNivelInferior": "operación"
+      },
+      {
+        "_rowIndex": 560,
+        "funcionNivelInferior": "Ayudas visuales"
+      },
+      {
+        "_rowIndex": 561,
+        "funcionNivelInferior": "Mostrar como debe"
+      },
+      {
+        "_rowIndex": 562,
+        "funcionNivelInferior": "quedar el producto"
+      },
+      {
+        "_rowIndex": 563,
+        "funcionNivelInferior": "para evitar ciertos"
+      },
+      {
+        "_rowIndex": 564,
+        "funcionNivelInferior": "defectos"
+      },
+      {
+        "_rowIndex": 566,
+        "funcionNivelInferior": "Medición"
+      },
+      {
+        "_rowIndex": 567,
+        "funcionNivelInferior": "Hoja de Operación"
+      },
+      {
+        "_rowIndex": 568,
+        "funcionNivelInferior": "1-Definir las distintas"
+      },
+      {
+        "_rowIndex": 569,
+        "funcionNivelInferior": "características que"
+      },
+      {
+        "_rowIndex": 570,
+        "funcionNivelInferior": "pueden ser de producto"
+      },
+      {
+        "_rowIndex": 571,
+        "funcionNivelInferior": "o de proceso que debe"
+      },
+      {
+        "_rowIndex": 572,
+        "funcionNivelInferior": "controlar el operador"
+      },
+      {
+        "_rowIndex": 573,
+        "funcionNivelInferior": "(autocontrol)"
+      },
+      {
+        "_rowIndex": 575,
+        "siguienteNivelInferior": "Maquina",
+        "funcionNivelSuperior": "Vehículo",
+        "funcionElementoFoco": "¿Qué hace?",
+        "funcionNivelInferior": "Maquina",
+        "efectoFalla": "Cliente Interno-Barack",
+        "modoFalla": "1- Pieza deformada por mal posicionamiento en el embalaje",
+        "causaFalla": "Las piezas se colocan sin separadores adecuados, con contacto directo o presión entre ellas, lo que genera deformación durante el almacenamiento o traslado.",
+        "controlPreventivo": "Uso de separadores, bandejas o estructuras que mantienen la forma del apoyacabezas durante el embalaje y almacenaje.",
+        "controlDetectivo": "Inspección visual del operador al momento de ubicar las piezas en el embalaje, verificando que no haya contacto directo, presión excesiva o mala colocación."
+      },
+      {
+        "_rowIndex": 576,
+        "siguienteNivelInferior": "-",
+        "funcionNivelSuperior": "Brindar comodidad al usuario",
+        "funcionElementoFoco": "Se colocan los apoyacabezas inspeccionados en su embalaje para su traslado o almacenamiento.",
+        "funcionNivelInferior": "-",
+        "efectoFalla": "Daño permanente en la espuma o en la costura.",
+        "severidad": 8
+      },
+      {
+        "_rowIndex": 577,
+        "siguienteNivelSuperior": "Apoyacabezas Trasero Lateral",
+        "elementoFoco": "OPERACIÓN 70"
+      },
+      {
+        "_rowIndex": 579,
+        "elementoFoco": "Embalaje",
+        "siguienteNivelInferior": "Mano de Obra"
+      },
+      {
+        "_rowIndex": 580,
+        "siguienteNivelInferior": "Operador",
+        "efectoFalla": "Cliente Externo"
+      },
+      {
+        "_rowIndex": 581,
+        "efectoFalla": "Paro de línea temporal o devolución del lote",
+        "severidad": 7
+      },
+      {
+        "_rowIndex": 582,
+        "siguienteNivelInferior": "Leader de equipo",
+        "funcionNivelSuperior": "VW",
+        "funcionNivelInferior": "Mano de Obra",
+        "ocurrencia": 3,
+        "deteccion": 5,
+        "apDfmea": "Medio"
+      },
+      {
+        "_rowIndex": 583,
+        "funcionNivelSuperior": "Permitir el acabado del producto final"
+      },
+      {
+        "_rowIndex": 584,
+        "siguienteNivelInferior": "Supervisor"
+      },
+      {
+        "_rowIndex": 585,
+        "funcionElementoFoco": "Requerimientos:",
+        "funcionNivelInferior": "Operador",
+        "efectoFalla": "Cliente Externo"
+      },
+      {
+        "_rowIndex": 586,
+        "siguienteNivelInferior": "Material (Indirectos)",
+        "funcionNivelInferior": "1- Separar piezas conformes.",
+        "efectoFalla": "Defecto notorio y disconformidad inmediata",
+        "severidad": 4
+      },
+      {
+        "_rowIndex": 588,
+        "siguienteNivelInferior": "Bolsas plásticas",
+        "funcionNivelInferior": "2- Coloca cada pieza en bolsas protectoras."
+      },
+      {
+        "_rowIndex": 589,
+        "siguienteNivelInferior": "Etiquetas adhesivas"
+      },
+      {
+        "_rowIndex": 590,
+        "siguienteNivelInferior": "Medios de embalaje",
+        "funcionNivelInferior": "3- Acomodar piezas dentro del medio de embalaje",
+        "efectoFalla": "Organismos regulatorios"
+      },
+      {
+        "_rowIndex": 592,
+        "efectoFalla": "Cliente Interno-Barack",
+        "modoFalla": "2- Colocación de mayor o menor cantidad de piezas por medio",
+        "causaFalla": "Falta de control en la cantidad cargada por medio debido a ausencia de guía visual o desatención del operador",
+        "controlPreventivo": "Estándar visual con foto de referencia indicando la cantidad por medio, visible en el puesto de trabajo.",
+        "controlDetectivo": "Verificación visual del medio completo antes del cierre"
+      },
+      {
+        "_rowIndex": 593,
+        "funcionNivelInferior": "4- Colocar etiquetas de trazabilidad en los medios",
+        "efectoFalla": "100% producción requiere retrabajo en estación",
+        "severidad": 4
+      },
+      {
+        "_rowIndex": 594,
+        "siguienteNivelInferior": "Medio Ambiente"
+      },
+      {
+        "_rowIndex": 595,
+        "siguienteNivelInferior": "Ley 19587"
+      },
+      {
+        "_rowIndex": 596,
+        "siguienteNivelInferior": "Decreto Reglamentario"
+      },
+      {
+        "_rowIndex": 597,
+        "siguienteNivelInferior": "351/79",
+        "funcionNivelInferior": "Leader de equipo",
+        "efectoFalla": "Cliente Externo"
+      },
+      {
+        "_rowIndex": 598,
+        "funcionNivelInferior": "Supervisar las actividades",
+        "efectoFalla": "Plan de reacción importante por desvío de cantidad (stock incorrecto, paro leve)",
+        "severidad": 4
+      },
+      {
+        "_rowIndex": 599,
+        "siguienteNivelInferior": "Método de Fabricación",
+        "ocurrencia": 3,
+        "deteccion": 6,
+        "apDfmea": "Medio"
+      },
+      {
+        "_rowIndex": 600,
+        "siguienteNivelInferior": "Hoja de Operación",
+        "funcionNivelInferior": "que realizan los"
+      },
+      {
+        "_rowIndex": 601,
+        "funcionNivelInferior": "operarios según"
+      },
+      {
+        "_rowIndex": 602,
+        "siguienteNivelInferior": "Medición",
+        "funcionNivelInferior": "las hojas de operaciones",
+        "efectoFalla": "Cliente Externo"
+      },
+      {
+        "_rowIndex": 603,
+        "siguienteNivelInferior": "Registros de control en calidad según plan de control",
+        "funcionNivelInferior": "Ante la presencia de",
+        "efectoFalla": "El error se corrige antes de llegar al usuario.",
+        "severidad": 1
+      },
+      {
+        "_rowIndex": 604,
+        "funcionNivelInferior": "algún inconveniente"
+      },
+      {
+        "_rowIndex": 605,
+        "funcionNivelInferior": "se comunica con el"
+      },
+      {
+        "_rowIndex": 606,
+        "funcionNivelInferior": "gerente de producción."
+      },
+      {
+        "_rowIndex": 607,
+        "siguienteNivelInferior": "Método de Fabricación",
+        "funcionNivelInferior": "Registrar información de:",
+        "efectoFalla": "Organismos regulatorios"
+      },
+      {
+        "_rowIndex": 608,
+        "siguienteNivelInferior": "Hoja de Operación"
+      },
+      {
+        "_rowIndex": 609,
+        "funcionNivelInferior": ".Scrap"
+      },
+      {
+        "_rowIndex": 610,
+        "funcionNivelInferior": ".Ausentismo."
+      },
+      {
+        "_rowIndex": 611,
+        "funcionNivelInferior": ".Cantidad producida"
+      },
+      {
+        "_rowIndex": 612,
+        "funcionNivelInferior": "capacitación de personal"
+      },
+      {
+        "_rowIndex": 615,
+        "funcionNivelInferior": "Medio Ambiente"
+      },
+      {
+        "_rowIndex": 616,
+        "funcionNivelInferior": "Iluminación"
+      },
+      {
+        "_rowIndex": 617,
+        "funcionNivelInferior": "1500 Lux"
+      },
+      {
+        "_rowIndex": 620,
+        "funcionNivelInferior": "Método de Fabricación"
+      },
+      {
+        "_rowIndex": 621,
+        "funcionNivelInferior": "Hoja de Operación"
+      },
+      {
+        "_rowIndex": 622,
+        "funcionNivelInferior": "1-Definir las distintas"
+      },
+      {
+        "_rowIndex": 623,
+        "funcionNivelInferior": "actividades o pasos"
+      },
+      {
+        "_rowIndex": 624,
+        "funcionNivelInferior": "de la operación"
+      },
+      {
+        "_rowIndex": 625,
+        "funcionNivelInferior": "mediante explicación"
+      },
+      {
+        "_rowIndex": 626,
+        "funcionNivelInferior": "escrita + presencia"
+      },
+      {
+        "_rowIndex": 627,
+        "funcionNivelInferior": "de imágenes"
+      },
+      {
+        "_rowIndex": 628,
+        "funcionNivelInferior": "2- Definir el plan de reacción ante un \"No conforme\""
+      },
+      {
+        "_rowIndex": 631,
+        "funcionNivelInferior": "3-Definir los EPP que"
+      },
+      {
+        "_rowIndex": 632,
+        "funcionNivelInferior": "debe tener en cuenta"
+      },
+      {
+        "_rowIndex": 633,
+        "funcionNivelInferior": "para la realización de"
+      },
+      {
+        "_rowIndex": 634,
+        "funcionNivelInferior": "operación"
+      },
+      {
+        "_rowIndex": 636,
+        "funcionNivelInferior": "Ayudas visuales"
+      },
+      {
+        "_rowIndex": 637,
+        "funcionNivelInferior": "Mostrar como debe"
+      },
+      {
+        "_rowIndex": 638,
+        "funcionNivelInferior": "quedar el producto"
+      },
+      {
+        "_rowIndex": 639,
+        "funcionNivelInferior": "para evitar ciertos"
+      },
+      {
+        "_rowIndex": 640,
+        "funcionNivelInferior": "defectos"
+      },
+      {
+        "_rowIndex": 642,
+        "funcionNivelInferior": "Medición"
+      },
+      {
+        "_rowIndex": 643,
+        "funcionNivelInferior": "Hoja de Operación"
+      },
+      {
+        "_rowIndex": 644,
+        "funcionNivelInferior": "1-Definir las distintas"
+      },
+      {
+        "_rowIndex": 645,
+        "funcionNivelInferior": "características que"
+      },
+      {
+        "_rowIndex": 646,
+        "funcionNivelInferior": "pueden ser de producto"
+      },
+      {
+        "_rowIndex": 647,
+        "funcionNivelInferior": "o de proceso que debe"
+      },
+      {
+        "_rowIndex": 648,
+        "funcionNivelInferior": "controlar el operador"
+      },
+      {
+        "_rowIndex": 649,
+        "funcionNivelInferior": "(autocontrol)"
+      }
+    ]
+  }
+}

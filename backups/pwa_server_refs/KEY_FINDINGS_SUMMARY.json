@@ -1,0 +1,319 @@
+{
+  "extraction_date": "2026-04-06",
+  "total_files_extracted": 15,
+  "errors": 0,
+
+  "planas_581d": {
+    "project": "HILUX 581D",
+    "client": "PWA",
+    "document_code": "I-IN-002/III",
+    "flujograma_number": "150",
+    "pfmea_number": "157",
+
+    "part_numbers": [
+      {"pn": "21-9463", "folder": "219463", "description": "PAD, FR SEAT BACK, LH", "dimensions": "568 x 638 mm", "ecn": "ECN 01", "ecn_date": "30/6/2025", "aplix_qty": 11, "weight_gm2": 152, "material": "TPES110/PP30B A (140 g/m2)"},
+      {"pn": "21-9464", "folder": "219464", "description": "PAD, FR SEAT CUSHION, LH", "dimensions": "568 x 638 mm", "ecn": "ECN 01", "ecn_date": "30/6/2025", "aplix_qty": 11, "weight_gm2": 158, "material": "TPES110/PP30B A"},
+      {"pn": "21-9465", "folder": "219465", "description": "PAD, FR SEAT BACK, RH", "dimensions": "568 x 638 mm", "ecn": "ECN 01", "ecn_date": "30/6/2025", "aplix_qty": 11, "weight_gm2": 143, "material": "TPES110/PP30B A"},
+      {"pn": "21-9466", "folder": "219466", "description": "PAD, FR SEAT CUSHION, RH", "dimensions": "568 x 638 mm", "ecn": "ECN 01", "ecn_date": "30/6/2025", "aplix_qty": 11, "weight_gm2": 151, "material": "TPES110/PP30B A"},
+      {"pn": "21-9467", "folder": "219467", "description": "PAD, FR SEAT BACK, RH (with refuerzo)", "dimensions": "-", "ecn": "ECN 00", "ecn_date": "1/10/2024", "aplix_qty": 5, "weight_gm2": 155, "material": "TPES110/PP30B A"},
+      {"pn": "21-9468", "folder": "219468", "description": "PAD, FR SEAT BACK, LH (with refuerzo)", "dimensions": "-", "ecn": "ECN 00", "ecn_date": "1/10/2024", "aplix_qty": 5, "weight_gm2": 152, "material": "TPES110/PP30B A"},
+      {"pn": "21-9469", "folder": "219469", "description": "PAD, FR SEAT CUSHION, RH (large, with refuerzo 250)", "dimensions": "1340 x 925 mm", "ecn": "ECN 01", "ecn_date": "30/6/2025", "aplix_qty": 39, "weight_gm2": 144, "material": "TPES110/PP30B A"},
+      {"pn": "21-9470", "folder": "219470", "description": "PAD, FR SEAT CUSHION, RH (large, with refuerzo 250)", "dimensions": "1340 x 925 mm", "ecn": "ECN 01", "ecn_date": "30/6/2025", "aplix_qty": 39, "weight_gm2": 158, "material": "TPES110/PP30B A"},
+      {"pn": "21-9471", "folder": "219471", "description": "PAD, FR SEAT CUSHION, LH (large, with refuerzo 250)", "dimensions": "1338 x 909 mm", "ecn": "ECN 01", "ecn_date": "30/6/2025", "aplix_qty": 42, "weight_gm2": 145, "material": "TPES110/PP30B A"},
+      {"pn": "21-9472", "folder": "219472", "description": "PAD, FR SEAT CUSHION, LH (large, with refuerzo 250)", "dimensions": "1338 x 909 mm", "ecn": "ECN 01", "ecn_date": "30/6/2025", "aplix_qty": 42, "weight_gm2": 145, "material": "TPES110/PP30B A"},
+      {"pn": "21-9474", "folder": "219474", "description": "PAD, FR SEAT BACK, LH (large, with refuerzo 250)", "dimensions": "820 x 1028 mm", "ecn": "ECN 00", "ecn_date": "4/11/2024", "aplix_qty": 34, "weight_gm2": 145, "material": "TPES110/PP30B A"},
+      {"pn": "21-9475", "folder": "219475", "description": "PAD, FR SEAT BACK, RH (large, with refuerzo 250)", "dimensions": "820 x 1028 mm", "ecn": "ECN 00", "ecn_date": "4/11/2024", "aplix_qty": 34, "weight_gm2": null, "material": "TPES110/PP30B A"}
+    ],
+
+    "materials": [
+      {
+        "code": "TPES110/PP30B",
+        "description": "Punz. PES 110 + TNT PP 30 BCO. Ancho: 2m",
+        "type": "Tela base",
+        "unit": "MT2",
+        "note": "Used in ALL 12 part numbers"
+      },
+      {
+        "code": "APLIX-A999R8395",
+        "description": "APLIX METAL RESIN 208MM UNCUT ROLLS W/-Y",
+        "type": "Velcro/hook",
+        "unit": "MT2"
+      },
+      {
+        "code": "HILO CAIMAN 120",
+        "description": "HILO CAIMAN POLIESTER 120 BLANCO",
+        "type": "Hilo costura",
+        "unit": "KG"
+      },
+      {
+        "code": "HILO POLI TEXT",
+        "description": "HILO POLIESTER TEXTURIZADO BLANCO",
+        "type": "Hilo costura",
+        "unit": "KG"
+      },
+      {
+        "code": "FIEL31000MUL",
+        "description": "MATERIAL REFUERZO 1000 G/M2",
+        "type": "Refuerzo",
+        "unit": "MT2",
+        "gramaje": "1000 g/m2",
+        "espesor": "6.0 - 7.0 mm",
+        "composicion": "60% Acrilico, 40% Poliester 30 D x 50 mm",
+        "applies_to": ["21-9467", "21-9468"],
+        "ficha_tecnica": "FIEL31000_Rev_01.docx"
+      },
+      {
+        "code": "3250T_30_2000_5",
+        "description": "MATERIAL REFUERZO 250 G/M2",
+        "type": "Refuerzo",
+        "unit": "MT2",
+        "gramaje": "250 g/m2",
+        "espesor": "2.3 mm",
+        "composicion": "30% LMF 4.0 D x 51 mm, 30% PSF 15.0 D x 51 mm, 40% PSF 6.0 D x 51 mm",
+        "applies_to": ["21-9469", "21-9470", "21-9471", "21-9472", "21-9474", "21-9475"],
+        "ficha_tecnica": "3250T_30_2000_50_Rev_01.docx"
+      }
+    ],
+
+    "operations_from_flujograma": [
+      {"op": "10", "name": "RECEPCION DE MATERIA PRIMA", "type": "storage", "classification": "CC, SC"},
+      {"op": null, "name": "INSPECCION DE MATERIA PRIMA", "type": "inspection"},
+      {"op": null, "name": "TRASLADO: MATERIAL APROBADO A ALMACEN TEMPORAL (FIFO)", "type": "transport"},
+      {"op": null, "name": "ALMACENADO EN SECTOR DE RECEPCION DE MATERIA PRIMA CONTROLADA E IDENTIFICADA", "type": "storage"},
+      {"op": null, "name": "TRASLADO: TELAS A SECTOR DE MESA DE CORTE", "type": "transport"},
+      {"op": "15", "name": "PREPARACION DE CORTE", "type": "operation"},
+      {"op": "20", "name": "CORTE DE COMPONENTES", "type": "operation"},
+      {"op": "25", "name": "CONTROL CON MYLAR", "type": "inspection", "classification": "CC"},
+      {"op": "30", "name": "PREPRACCION DE KITS DE COMPONENTES", "type": "operation"},
+      {"op": "40", "name": "COSTURA RECTA", "type": "operation"},
+      {"op": "50", "name": "TROQUELADO DE REFUERZOS", "type": "operation"},
+      {"op": "60", "name": "TROQUELADO DE APLIX", "type": "operation"},
+      {"op": "70", "name": "PEGADO DE DOTS APLIX", "type": "operation"},
+      {"op": "80", "name": "CONTROL FINAL DE CALIDAD", "type": "inspection", "classification": "SC"},
+      {"op": "90", "name": "CLASIFICACION Y SEGREGACION DE PRODUCTO NO CONFORME", "type": "inspection"},
+      {"op": "100", "name": "REPROCESO: ELIMINACION DE HILO SOBRANTE", "type": "rework"},
+      {"op": "101", "name": "REPROCESO: REUBICACION DE APLIX", "type": "rework"},
+      {"op": "102", "name": "REPROCESO: CORRECCION DE COSTURA DESVIADA / FLOJA", "type": "rework"},
+      {"op": null, "name": "EMBALAJE Y ETIQUETADO DE PRODUCTO TERMINADO", "type": "operation"},
+      {"op": "110", "name": "ALMACENAMIENTO: PRODUCTO TERMINADO (FIFO)", "type": "storage"}
+    ],
+
+    "embalaje": {
+      "form": "I-IN-002.4-R01",
+      "code": "GE-251",
+      "revision": "A",
+      "date": "6/10/2025",
+      "prepared_by": "F.Santoro",
+      "delivery_address": "C. 22 229, Fatima, Provincia de Buenos Aires",
+      "packaging_materials": [
+        {"code": "BA 80 100", "description": "BOLSA PLASTICA", "size": "800 X 1000mm", "retornable": false},
+        {"code": "ET-SATO-100X60", "description": "ETIQUETA ILUSTRACION AUTOADHESIVA", "size": "100mm x 60mm", "retornable": false}
+      ],
+      "pieces_per_bag": {
+        "small_parts_63_68": 50,
+        "large_parts_69_75": 25
+      }
+    }
+  },
+
+  "termoformadas_582d": {
+    "project": "HILUX 582D",
+    "client": "PWA",
+    "document_code": "I-IN-002/III",
+    "flujograma_number": "156",
+
+    "part_numbers": {
+      "bom_asiento": {
+        "pn": "21-9640 LH / 21-9641 RH",
+        "description": "TELA ASIENTO TERMOFORMADA"
+      },
+      "bom_respaldo": {
+        "pn": "21-9642 LH / 21-9643 RH",
+        "description": "TELA RESPALDO TERMOFORMADA"
+      },
+      "refuerzo_lateral_respaldo": {
+        "pn": "304883 / 304884",
+        "description": "REFUERZO LATERAL RESPALDO"
+      },
+      "from_flujograma": [
+        {"pn": "21-9440", "description": "Backing cloth, LH"},
+        {"pn": "21-9441", "description": "Backing cloth, RH"},
+        {"pn": "21-9642", "description": "Backing cloth, LH (also in BOM RESPALDO)"},
+        {"pn": "21-9643", "description": "Backing cloth, RH (also in BOM RESPALDO)"}
+      ]
+    },
+
+    "materials": [
+      {
+        "code": "3160_1700_BCM",
+        "type": "Punzonado Bicomp.",
+        "gramaje": "170 +/- 10 g/m2",
+        "description": "Tela no tejida Monofelt (Bicomponente)",
+        "consumo": 0.701,
+        "unit": "MT2",
+        "used_in": "BOM ASIENTO and BOM RESPALDO"
+      },
+      {
+        "code": "APLIX (no code specified)",
+        "type": "Fieltro punzonado + Cinta no tejida (15x15 mm)",
+        "gramaje": "N/A",
+        "description": "APLIX"
+      },
+      {
+        "code": "TRO-TEL0001-V1",
+        "type": "Fieltro prensado",
+        "description": "Refuerzo BSDL2603-3N - Gramaje: 1500 g/m2, Espesor: t = 5.0 mm",
+        "ficha_tecnica_code": "BSDL2603-3N",
+        "consumo": 0.002,
+        "unit": "MT2",
+        "qty_per_piece": 2,
+        "used_in": "BOM ASIENTO"
+      },
+      {
+        "code": "304883 / 304884 (producto terminado)",
+        "type": "Refuerzo Multicapa",
+        "description": "Densidad Total: 600 +/- 60 kg/m3, Espesor Ref: 2.5 mm, Dureza Shore A: >= 50",
+        "consumo": "~0.0051 (respaldo) / ~0.0099 (asiento via sub-BOM)",
+        "unit": "MT2",
+        "qty_per_piece": 2,
+        "used_in": "BOM RESPALDO"
+      },
+      {
+        "code": "Adhesivo",
+        "description": "Adhesivo (code TBD)",
+        "used_in": "Both BOMs"
+      }
+    ],
+
+    "operations_from_flujograma": [
+      {"op": "10", "name": "RECEPCION DE MATERIA PRIMA", "type": "storage", "classification": "CC, SC"},
+      {"op": null, "name": "INSPECCION DE MATERIA PRIMA", "type": "inspection"},
+      {"op": null, "name": "TRASLADO: MATERIAL APROBADO A ALMACEN TEMPORAL (FIFO)", "type": "transport"},
+      {"op": null, "name": "ALMACENADO EN SECTOR DE RECEPCION DE MATERIA PRIMA CONTROLADA E IDENTIFICADA", "type": "storage"},
+      {"op": null, "name": "TRASLADO: TELAS A SECTOR DE MESA DE CORTE", "type": "transport"},
+      {"op": "15", "name": "PREPARACION DE CORTE", "type": "operation"},
+      {"op": "20", "name": "CORTE DE COMPONENTES", "type": "operation"},
+      {"op": "25", "name": "CONTROL CON MYLAR", "type": "inspection", "classification": "CC"},
+      {"op": "30", "name": "PREPARACION DE KITS DE COMPONENTES", "type": "operation"},
+      {"op": "40", "name": "TERMOFORMADO DE TELAS", "type": "operation", "note": "KEY DIFFERENCE vs Planas"},
+      {"op": "50", "name": "CORTE LASER DE TELAS TERMOFORMADAS", "type": "operation", "note": "KEY DIFFERENCE vs Planas"},
+      {"op": "60", "name": "TROQUELADO DE REFUERZOS", "type": "operation"},
+      {"op": "70", "name": "TROQUELADO DE APLIX", "type": "operation"},
+      {"op": "80", "name": "COSTURA DE REFUERZOS", "type": "operation"},
+      {"op": "90", "name": "APLICACION DE APLIX", "type": "operation"},
+      {"op": "100", "name": "CONTROL FINAL DE CALIDAD", "type": "inspection", "classification": "CC, SC"},
+      {"op": "110", "name": "CLASIFICACION Y SEGREGACION DE PRODUCTO NO CONFORME", "type": "inspection"},
+      {"op": null, "name": "EMBALAJE Y ETIQUETADO DE PRODUCTO TERMINADO", "type": "operation"},
+      {"op": "120", "name": "ALMACENAMIENTO: PRODUCTO TERMINADO (FIFO)", "type": "storage"}
+    ],
+
+    "fichas_tecnicas": {
+      "FT153_refuerzo_tricapa": {
+        "denominacion": "Refuerzo Tricapa 600 g/m2",
+        "codigo": "TBD",
+        "cliente_modelo": "Hilux",
+        "revision": "A",
+        "date": "27/01/2026",
+        "approved_by": "P. Centurion"
+      },
+      "FT154_refuerzo_1500": {
+        "denominacion": "Fieltro prensado",
+        "material_code": "BSDL2603-3N",
+        "gramaje": "1500 g/m2",
+        "espesor": "5.0 mm",
+        "fogging": "BSDM0503 (glass fogging test)",
+        "permeabilidad": "segun BSDL7530, max 155 cm2/s",
+        "inflamabilidad": "BSDM0500, max 100/min",
+        "revision": "A",
+        "date": "13/11/2025",
+        "approved_by": "P. Centurion"
+      }
+    }
+  },
+
+  "ppap_project": {
+    "folder": "PPAP - PWA PROYECTO (TELAS HILUX)",
+    "process_flow_folder": "EMPTY",
+    "pfmea_folder": "EMPTY",
+    "control_plan_file": "PC APOYABRAZOS P21 rev H 08-10-2024.xls",
+    "control_plan_note": "This appears to be a DIFFERENT product (Apoyabrazos P21, rev H). May be used as a template/reference for the HILUX telas control plan format."
+  },
+
+  "additional_apqp_folders_checked": {
+    "planas_581d_plan_de_control_12": "EMPTY",
+    "planas_581d_fmea_de_proceso_22": "EMPTY",
+    "planas_581d_flujograma_de_proceso_20": "EMPTY",
+    "termoformadas_582d_plan_de_control_12": "EMPTY",
+    "termoformadas_582d_fmea_de_proceso_22": "EMPTY",
+    "termoformadas_582d_flujograma_de_proceso_20": "EMPTY"
+  },
+
+  "key_differences_planas_vs_termoformadas": [
+    "Planas 581D has 12 part numbers (21-9463 to 21-9475, skipping 21-9473); Termoformadas 582D has 4+2 PNs (21-9640/41/42/43 + 304883/84 refuerzos)",
+    "Planas uses COSTURA RECTA (OP 40); Termoformadas uses TERMOFORMADO (OP 40) + CORTE LASER (OP 50)",
+    "Planas material: TPES110/PP30B (PES 110 + TNT PP 30); Termoformadas material: 3160_1700_BCM (Monofelt Bicomponente 170 g/m2)",
+    "Planas refuerzos: FIEL31000 (1000 g/m2) for 67/68, 3250T (250 g/m2) for 69-75; Termoformadas refuerzos: BSDL2603-3N (1500 g/m2) + Tricapa (600 g/m2)",
+    "Termoformadas has a sub-BOM structure (Asiento + Respaldo + Refuerzo Lateral sheets); Planas has flat BOM",
+    "Planas PFMEA number is 157; Termoformadas does not specify PFMEA number"
+  ],
+
+  "refuerzo_specs_summary": {
+    "planas_FIEL31000_1000gm2": {
+      "gramaje": "1000 g/m2",
+      "espesor": "6.0-7.0 mm",
+      "composicion": "60% Acrilico, 40% Poliester 30D x 50mm",
+      "tolerancia_gramaje": "+/- 10%",
+      "tolerancia_espesor": "+/- 10%"
+    },
+    "planas_3250T_250gm2": {
+      "gramaje": "250 g/m2",
+      "espesor": "2.3 mm",
+      "composicion": "30% LMF 4.0D x 51mm, 30% PSF 15.0D x 51mm, 40% PSF 6.0D x 51mm",
+      "tolerancia_gramaje": "+/- 10%",
+      "tolerancia_espesor": "+/- 10%",
+      "nombre": "Alfombra Lisa"
+    },
+    "termoformadas_BSDL2603_1500gm2": {
+      "gramaje": "1500 g/m2",
+      "espesor": "5.0 mm",
+      "material_code": "BSDL2603-3N",
+      "fogging": "BSDM0503",
+      "permeabilidad_max": "155 cm2/s (BSDL7530)",
+      "inflamabilidad": "max 100/min (BSDM0500)"
+    },
+    "termoformadas_tricapa_600gm2": {
+      "gramaje": "600 g/m2",
+      "codigo": "TBD"
+    },
+    "termoformadas_refuerzo_multicapa": {
+      "densidad": "600 +/- 60 kg/m3",
+      "espesor": "2.5 mm",
+      "dureza_shore_a": ">= 50",
+      "product_codes": "304883 / 304884"
+    }
+  },
+
+  "flamabilidad_norms_toyota_pwa": {
+    "refuerzo_1500_BSDL2603": "BSDM0500 - max 100/min",
+    "note": "Toyota/PWA uses its own flammability norms (NOT TL 1010 VW). See BSDM0500 reference in FT154."
+  },
+
+  "files_in_backup": [
+    "planas_581d_materials_list.json",
+    "planas_581d_materials_list_pdf.json",
+    "planas_581d_flujograma.json",
+    "planas_581d_embalaje.json",
+    "planas_581d_ft_Ficha_tecnica_3250T_30_2000_50_Rev_01.json",
+    "planas_581d_ft_Ficha_tecnica_FIEL31000_Rev_01.json",
+    "planas_581d_material_weights.json",
+    "planas_581d_sfelt_300.json",
+    "planas_581d_part_numbers.json",
+    "termo_582d_bom.json",
+    "termo_582d_flujograma.json",
+    "termo_582d_ft153_refuerzo_tricapa.json",
+    "termo_582d_ft154_refuerzo_1500.json",
+    "ppap_control_plan_apoyabrazos.json",
+    "extraction_summary.json",
+    "KEY_FINDINGS_SUMMARY.json"
+  ]
+}

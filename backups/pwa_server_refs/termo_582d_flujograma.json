@@ -1,0 +1,160 @@
+{
+  "pages": [
+    {
+      "page_num": 1,
+      "text": "DIAGRAMA DE FLUJO DE PROCESO TELAS TERMOFORMADAS\nCÓDIGO DEL DOCUMENTO: I-IN-002/III\nFECHA DE EMISIÓN: 29/01/2026\nFECHA DE REVISIÓN: 29/01/2026\nREVISIÓN: A\nELABORADO POR: FACUNDO SANTORO\n▽ , SC 10 RECEPCION DE MATERIA PRIMA\nREVISADO POR: PAULO CENTURIÓN\nAPROBADO POR: GONZALO CAL\nNOMBRE DE LA ORGANIZACIÓN: BARACK MERCOSUL\nPROYECTO:\nCLIENTE: PWA\nALMACENADO EN SECTOR DE RECEPCION DE LISTADO DE REFERENCIAS A\nMATERIA PRIMA PENDIENTE DE CONTROL PIEZAS / PRODUCTOS\nBacking cloth, LH: 21-9440\nINSPECCION DE MATERIA PRIMA Backing cloth, RH:21-9441\nBacking cloth, LH: 21-9642\nBacking cloth, RH: 21-9643\n¿MATERIAL RECLAMO DE CALIDAD\nNO\nCONFORME? AL PROVEEDOR\nSI\nTRASLADO: MATERIAL APROBADO\nA ALMACÉN TEMPORAL (FIFO)\nPara todas las operaciones marcadas con ▽\nALMACENADO EN SECTOR DE RECEPCION DE (Característica Crítica) o SC (Característica Significativa),\nMATERIA PRIMA CONTROLADA E IDENTIFICADA es obligatorio consultar el Plan de Control N° [X] y el\nPFMEA N° [X] asociado a cada operación.\nTRASLADO: TELAS A SECTOR\nDE MESA DE CORTE\nPREPARACIÓN DE\n15\nCORTE\nCORTE DE\n20\nCOMPONENTES\n25\n▽ CONTROL CON MYLAR\n¿PRODUCTO\nNO SCRAP\nCONFORME?\nSI\nTRASLADO: MATERIAL APLIX Y\nPREPRACIÓN DE KITS DE REFUERZOS A SECTOR DE\n30\nCOMPONENTES TROQUELADO\nTRASLADO: TELAS CORTADAS A TROQUELADO DE\n60\nSECTOR DE TERMOFORMADO REFUERZOS\nTERMOFORMADO DE\n40 70\nTROQUELADO DE APLIX\nTELAS\nTRASLADO: APLIX Y\nCORTE LAZER DE TELAS\n50\nREFUERZOS A SECTOR DE\nTERMOFORMADAS\nBLANCO\nTRASLADO DE TELAS\nTERMOFORMADAS A ZONA DE\nCOSTURA BLANCO\nCOSTURA DE REFUERZOS\n80\n90\nAPLICACIÓN DE APLIX\nCONTROL FINAL DE\n100\nRE-ENTRADA AL FLUJO PRINCIPAL\nCALIDAD\n▽ , SC\nREPROCESO: ELIMINACIÓN DE\nCLASIFICACIÓN Y SEGREGACIÓN 100\nDEFECTO: HILO SOBRANTE\nHILO SOBRANTE\nDE PRODUCTO NO CONFORME\nREPROCESO: REUBICACIÓN REFERENCIAS\n¿PRODUCTO ¿REPROCESO\nNO 110 DEFECTO: APLIX MAL COLOCADO 101\nDE APLIX\nCONFORME? OK?\nOPERACIÓN\nREPROCESO: CORRECCIIÓN DE\nDEFECTO: COSTURA DESVIADA / FLOJA 102\nEMBALAJE Y ETIQUETADO DE\nCOSTURA DESVIADA / FLOJA\nSI PRODUCTO TERMINADO TRASLADO\nTRASLADO A SECTOR DE\nALMACENADO\nPRODUCTO TERMINADO\nPIEZA IRRECUPERABLE SCRAP NO\nINSPECCIÓN\nALMACENAMIENTO: PRODUCTO\n120\nTERMINADO (FIFO)\nCONDICIÓN"
+    }
+  ],
+  "tables": [
+    {
+      "page": 1,
+      "table_index": 0,
+      "data": [
+        [
+          ""
+        ],
+        [
+          "NO"
+        ]
+      ]
+    },
+    {
+      "page": 1,
+      "table_index": 1,
+      "data": [
+        [
+          "S",
+          "I"
+        ]
+      ]
+    },
+    {
+      "page": 1,
+      "table_index": 2,
+      "data": [
+        [
+          ""
+        ],
+        [
+          "NO"
+        ]
+      ]
+    },
+    {
+      "page": 1,
+      "table_index": 3,
+      "data": [
+        [
+          "S",
+          "I"
+        ]
+      ]
+    },
+    {
+      "page": 1,
+      "table_index": 4,
+      "data": [
+        [
+          ""
+        ],
+        [
+          "RE-ENTRADA AL FLUJO PRINCIPAL"
+        ]
+      ]
+    },
+    {
+      "page": 1,
+      "table_index": 5,
+      "data": [
+        [
+          ""
+        ],
+        [
+          "DEFECTO: HILO SOBRANTE"
+        ]
+      ]
+    },
+    {
+      "page": 1,
+      "table_index": 6,
+      "data": [
+        [
+          "REFERENCIAS"
+        ],
+        [
+          "OPERACIÓN\nTRASLADO\nALMACENADO\nINSPECCIÓN\nCONDICIÓN"
+        ]
+      ]
+    },
+    {
+      "page": 1,
+      "table_index": 7,
+      "data": [
+        [
+          ""
+        ],
+        [
+          "NO"
+        ]
+      ]
+    },
+    {
+      "page": 1,
+      "table_index": 8,
+      "data": [
+        [
+          "DEFECTO: APLIX MAL COLOCADO"
+        ],
+        [
+          ""
+        ]
+      ]
+    },
+    {
+      "page": 1,
+      "table_index": 9,
+      "data": [
+        [
+          ""
+        ],
+        [
+          "DEFECTO: COSTURA DESVIADA / FLOJA"
+        ]
+      ]
+    },
+    {
+      "page": 1,
+      "table_index": 10,
+      "data": [
+        [
+          "S",
+          "I"
+        ]
+      ]
+    },
+    {
+      "page": 1,
+      "table_index": 11,
+      "data": [
+        [
+          "PIEZA IRRECUPERABLE"
+        ],
+        [
+          ""
+        ]
+      ]
+    },
+    {
+      "page": 1,
+      "table_index": 12,
+      "data": [
+        [
+          "NO"
+        ],
+        [
+          ""
+        ]
+      ]
+    }
+  ]
+}

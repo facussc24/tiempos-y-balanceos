@@ -1,0 +1,17 @@
+[
+  {
+    "key": "device_info",
+    "value": "{\"id\":\"fe30fb0f-230d-4496-b730-edcbbe44743d\",\"name\":\"PC-M055\"}",
+    "updated_at": "2026-03-14T21:54:07.430468+00:00"
+  },
+  {
+    "key": "assets",
+    "value": "{\n  \"version\": 1,\n  \"lastModified\": 1767045296002,\n  \"sectors\": [\n    {\n      \"id\": \"COSTURA\",\n      \"name\": \"Costura\",\n      \"color\": \"#8B5CF6\"\n    },\n    {\n      \"id\": \"INYECCION\",\n      \"name\": \"Inyección\",\n      \"color\": \"#F59E0B\"\n    },\n    {\n      \"id\": \"TAPIZADO\",\n      \"name\": \"Tapizado\",\n      \"color\": \"#10B981\"\n    },\n    {\n      \"id\": \"EMBALAJE\",\n      \"name\": \"Embalaje\",\n      \"color\": \"#6366F1\"\n    }\n  ],\n  \"machines\": [\n    {\n      \"id\": \"XXX\",\n      \"name\": \"Máquina costura unión\",\n      \"sectorId\": \"COSTURA\",\n      \"category\": \"costura\",\n      \"availableUnits\": 16\n    },\n    {\n      \"id\": \"XXXX\",\n      \"name\": \"Máquina costura vista\",\n      \"sectorId\": \"COSTURA\",\n      \"category\": \"costura\",\n      \"availableUnits\": 10\n    },\n    {\n      \"id\": \"XX\",\n      \"name\": \"Refilado\",\n      \"sectorId\": \"COSTURA\",\n      \"category\": \"costura\",\n      \"availableUnits\": 2\n    }\n  ]\n}",
+    "updated_at": "2026-03-20T12:16:05.044431+00:00"
+  },
+  {
+    "key": "plant_assets",
+    "value": "{\n  \"version\": 1,\n  \"lastModified\": 1773315783831,\n  \"sectors\": [\n    {\n      \"id\": \"COSTURA\",\n      \"name\": \"Costura\",\n      \"color\": \"#8B5CF6\"\n    },\n    {\n      \"id\": \"INYECCION\",\n      \"name\": \"Inyección\",\n      \"color\": \"#F59E0B\"\n    },\n    {\n      \"id\": \"TAPIZADO\",\n      \"name\": \"Tapizado\",\n      \"color\": \"#10B981\"\n    },\n    {\n      \"id\": \"EMBALAJE\",\n      \"name\": \"Embalaje\",\n      \"color\": \"#6366F1\"\n    }\n  ],\n  \"machines\": [\n    {\n      \"id\": \"XXX\",\n      \"name\": \"Máquina costura vista Patagonia\",\n      \"sectorId\": \"COSTURA\",\n      \"availableUnits\": 3\n    },\n    {\n      \"id\": \"XXXX\",\n      \"name\": \"Máquina costura unión\",\n      \"sectorId\": \"COSTURA\",\n      \"availableUnits\": 9\n    }\n  ],\n  \"savedMixScenarios\": []\n}",
+    "updated_at": "2026-03-20T12:16:05.401026+00:00"
+  }
+]

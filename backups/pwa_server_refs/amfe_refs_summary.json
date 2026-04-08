@@ -1,0 +1,428 @@
+{
+  "source_files": {
+    "telas_planas": "C:\\Users\\FacundoS-PC\\Documents\\AMFES PC HO\\PWA\\TELAS PWA PLANAS\\amfe viejo referencia\\AMFE_TELAS_PLANAS.txt",
+    "termoformadas": "C:\\Users\\FacundoS-PC\\Documents\\AMFES PC HO\\PWA\\TELAS PWA TERMOFORMADAS\\AMFE REFERENCIA\\AMFE_TERMOFORMADAS.txt",
+    "pdf_planas": "AMFE y Flujograma unificado - TELAS REV D.pdf (NOT READABLE - pdftoppm not available)",
+    "pdf_termoformadas": "AMFE 148 REV.2.pdf (NOT READABLE - pdftoppm not available)"
+  },
+  "extraction_date": "2026-04-06",
+
+  "amfe_telas_planas": {
+    "header": {
+      "proveedor": "BARACK MERCOSUL",
+      "telefono": "4752-7142",
+      "fax": "4878-3418",
+      "descripcion_codigo": "Segun tabla",
+      "plantas_clientes": "PWA",
+      "responsable_proceso": "PROD: G.Cal",
+      "preparado_por": "F.Santoro",
+      "equipo_trabajo": {
+        "calidad": "M.Nieve",
+        "ingenieria": "P.Centurion"
+      },
+      "fecha_emision": "18/06/2020",
+      "fecha_revision": "29/04/2025",
+      "revision": "D",
+      "caract_sr": "NO"
+    },
+    "part_numbers": {
+      "note": "Descripcion/Codigo says 'Segun tabla' - part numbers referenced in revision history",
+      "referenced_codes": ["21-8455", "21-8454"]
+    },
+    "revisiones": [
+      {
+        "fecha": "25/02/2021",
+        "detalle": "Se actualiza documento, se agregan codigos 21-8455 y 21-8454"
+      },
+      {
+        "fecha": "20/07/2021",
+        "detalle": "Se incorpora falla potencial en cliente final"
+      },
+      {
+        "fecha": "27/08/2024",
+        "detalle": "Se incorpora reclamo de cliente con fecha de apertura 10/05/2024"
+      },
+      {
+        "fecha": "29/04/2025",
+        "detalle": "Se incorpora modo de falla 'TNT plegado involuntariamente al cargar', la OP 15 por cortadora de extremo, y se mejora modo de falla costura floja incorporando un instructivo",
+        "items_cambiados": "20 / 15 / 30"
+      }
+    ],
+    "operations": [
+      {
+        "op_number": 10,
+        "name": "Recepcion de materiales con identificacion correcta en sector indicado y distinto al plan de control de recepcion",
+        "fallas_potenciales": [
+          "Identificacion incorrecta",
+          "Ubicacion en sector incorrecto",
+          "Material distinto segun plan de control de recepcion",
+          "Omision de la recepcion de material"
+        ]
+      },
+      {
+        "op_number": 15,
+        "name": "Preparacion de corte",
+        "fallas_potenciales": [
+          "Desplazamiento involuntario del material TNT provocando falta de perforaciones y colocacion incorrecta de los aplix",
+          "Largo distinto al especificado",
+          "TNT plegado involuntariamente al cargar provocando desplazamiento del contorno y perdida de posicion de referencia"
+        ]
+      },
+      {
+        "op_number": 20,
+        "name": "Corte por maquina automatica segun dimensional con cantidad de orificios segun plan de control",
+        "fallas_potenciales": [
+          "Ancho distinto al especificado",
+          "Falta de orificios",
+          "Orificios fuera de posicion",
+          "Diametro de orificios fuera de especificacion"
+        ]
+      },
+      {
+        "op_number": 30,
+        "name": "Costura fuerte, sin arruga ni pliegues con hilo segun especificaciones",
+        "fallas_potenciales": [
+          "Refuerzo costurado opuesto al airbag se encuentra posicionado de manera inversa",
+          "Falta de costura",
+          "Costura floja / deficiente",
+          "Costura salteada",
+          "Arrugas / Pliegues"
+        ]
+      },
+      {
+        "op_number": 40,
+        "name": "Colocado de clips en posicion correcta con cantidad de clips correcta",
+        "fallas_potenciales": [
+          "Clips colocados en posicion incorrecta",
+          "Falta de clips"
+        ]
+      },
+      {
+        "op_number": 50,
+        "name": "Pegado de dots en posicion correcta con cantidad de dots correcta",
+        "fallas_potenciales": [
+          "Dots colocados en posicion incorrecta",
+          "Falta de dots"
+        ]
+      },
+      {
+        "op_number": 60,
+        "name": "Inspeccion final de la pieza",
+        "fallas_potenciales": [
+          "Dimensional fuera de especificacion",
+          "Mayor cantidad de piezas por medio",
+          "Menor cantidad de piezas por medio"
+        ]
+      },
+      {
+        "op_number": 70,
+        "name": "Embalaje identificado con cantidad de piezas especificas",
+        "fallas_potenciales": [
+          "Error de identificacion",
+          "Falta de identificacion"
+        ]
+      }
+    ],
+    "materials_mentioned": [
+      "TNT (tela no tejida / non-woven textile)",
+      "Hilo (segun especificaciones)",
+      "Clips",
+      "Dots",
+      "Aplix",
+      "Refuerzo (costurado)"
+    ],
+    "temperature_parameters": {
+      "note": "No temperature parameters specified in Telas Planas AMFE"
+    },
+    "flamabilidad": {
+      "note": "Not explicitly mentioned in Telas Planas AMFE - no flamabilidad norm reference found in TXT"
+    },
+    "sod_ratings": {
+      "note": "S/O/D ratings found inline per failure mode",
+      "summary": [
+        {"op": 10, "falla": "Material distinto segun plan de control", "S": 7, "O": 3, "D": 7, "NPR": 147},
+        {"op": 30, "falla": "Costura floja / deficiente", "S": 8, "O": 2, "D": 6, "NPR": 96, "action_taken": "Se crea instructivo de retrabajo", "revised_S": 7, "revised_O": 2, "revised_D": 6, "revised_NPR": 84},
+        {"op": 30, "falla": "Refuerzo costurado inverso", "S": 7, "O": 2, "D": 6, "NPR": 84, "action_taken": "Identificar con tilde en refuerzo costurado en Costura / Identificar en packaging", "revised_S": 7, "revised_O": 2, "revised_D": 4, "revised_NPR": 56},
+        {"op": 40, "falla": "Clips en posicion incorrecta", "S": 7, "O": 2, "D": 7, "NPR": 98},
+        {"op": 40, "falla": "Falta de clips", "S": 7, "O": 2, "D": 7, "NPR": 98},
+        {"op": 50, "falla": "Dots en posicion incorrecta", "S": 7, "O": 2, "D": 7, "NPR": 98},
+        {"op": 50, "falla": "Falta de dots", "S": 7, "O": 2, "D": 7, "NPR": 98},
+        {"op": 60, "falla": "Dimensional fuera de especificacion", "S": 8, "O": 2, "D": 6, "NPR": 96},
+        {"op": 60, "falla": "Mayor cantidad de piezas por medio", "S": 7, "O": 2, "D": 7, "NPR": 98},
+        {"op": 60, "falla": "Menor cantidad de piezas por medio", "S": 8, "O": 2, "D": 7, "NPR": 112, "action_taken": "Control del despacho segun ficha de embalaje", "revised_S": 8, "revised_O": 2, "revised_D": 6, "revised_NPR": 96},
+        {"op": 70, "falla": "Error de identificacion", "S": 8, "O": 2, "D": 7, "NPR": 112, "action_taken": "Control del despacho segun ficha de embalaje", "revised_S": 8, "revised_O": 2, "revised_D": 6, "revised_NPR": 96},
+        {"op": 70, "falla": "Falta de identificacion", "S": 8, "O": 2, "D": 7, "NPR": 112, "action_taken": "Control del despacho segun ficha de embalaje", "revised_S": 8, "revised_O": 2, "revised_D": 6, "revised_NPR": 96}
+      ],
+      "most_common_S_O_D": "S=7, O=2, D=6, NPR=84 (standard low-risk)",
+      "highest_NPR_original": 147,
+      "highest_NPR_description": "OP.10 Material distinto segun plan de control (S=7, O=3, D=7)"
+    },
+    "falla_cliente_final": "NO SE DETECTAN FALLAS POTENCIALES SOBRE EL PRODUCTO DE LA REFERENCIA EN EL CLIENTE FINAL"
+  },
+
+  "amfe_termoformadas": {
+    "header": {
+      "proveedor": "BARACK MERCOSUL",
+      "telefono": "4839 0978",
+      "descripcion_codigo": "21-8909 CONJ TELA FSC LH P2X",
+      "plantas_clientes": "PWA",
+      "nombre_parte_proceso": "TELA ASSENTO DIANTEIRO",
+      "responsable_proceso": "G.CAL",
+      "preparado_por": "F.SANTORO",
+      "equipo_trabajo": {
+        "calidad": "M.NIEVE",
+        "produccion": "G.CAL",
+        "ingenieria": "F.SANTORO"
+      },
+      "fecha_emision": "31/10/2022",
+      "fecha_revision": "02/12/2024",
+      "revision": "2",
+      "caract_sr": "NO"
+    },
+    "part_numbers": {
+      "main_code": "21-8909",
+      "description": "CONJ TELA FSC LH P2X",
+      "referenced_in_operations": [
+        "21-8875 R (pieza lateral derecha)",
+        "21-8876 L (pieza lateral izquierda)",
+        "21-8877 (pieza central - soldadura)",
+        "21-8800 (retrabajo soldadura)",
+        "21-8878 (retrabajo soldadura)",
+        "21-8879 (retrabajo soldadura)"
+      ]
+    },
+    "revisiones": [
+      {
+        "fecha": "31/10/2022",
+        "detalle": "Emision inicial",
+        "modifico": "N.H"
+      },
+      {
+        "fecha": "24/01/2023",
+        "detalle": "OP.60 Se agregan cantidades de agujeros a Perforar en cada pieza lateral 21-8875 R y 21-8876 L",
+        "modifico": "N.H"
+      },
+      {
+        "fecha": "02/12/2024",
+        "detalle": "Se modifican las cantidades de piezas que se colocan en el medio de embalaje. Los numeros de operaciones cambian y se incorporan operaciones de retrabajo",
+        "modifico": "FS"
+      }
+    ],
+    "operations": [
+      {
+        "op_number": 10,
+        "name": "Recepcion de Punzonado con gramaje",
+        "sub_variants": [
+          "Recepcion de Punzonado con gramaje (120g/m2)",
+          "Recepcion de Punzonado CON BI-COMPONENTE (280g/m2)",
+          "Recepcion de Rollo de Aplix (ancho 0.25m)",
+          "Colocado de Aplix (9 aplix por pieza)"
+        ],
+        "fallas_potenciales": [
+          "Gramaje Mayor a 120g/m2 +15%",
+          "Gramaje Menor a 120g/m2 -15%",
+          "Ancho de material distinto a 2m",
+          "Flamabilidad fuera de especificacion (100 mm/min)",
+          "Gramaje Mayor a 280g/m2 +15%",
+          "Gramaje Menor a 280g/m2 -15%",
+          "Ancho de material distinto a 1.5m",
+          "Flamabilidad fuera de especificacion (100 mm/min) [bi-componente]",
+          "Ancho de rollo distinto a 0.25m",
+          "Colocacion de menos/mas de 9 aplix",
+          "Colocacion de Aplix en posicion distinta a la especificada"
+        ]
+      },
+      {
+        "op_number": 11,
+        "name": "Retrabajo de la pieza (Aplix)",
+        "fallas_potenciales": [
+          "Colocacion de menos/mas de 9 aplix",
+          "Colocacion de Aplix en posicion distinta a la especificada"
+        ]
+      },
+      {
+        "op_number": 20,
+        "name": "Horno",
+        "fallas_potenciales": [
+          "Temperatura del horno distinta de 150C +/- 20C",
+          "Tiempo de calentamiento distinto de 60s",
+          "Calentar el material de manera no uniforme"
+        ]
+      },
+      {
+        "op_number": 21,
+        "name": "Corte por maquina - Blanck de piezas laterales",
+        "sub_variants": [
+          "Corte por maquina de pieza Central",
+          "Corte por maquina - Blanck de piezas laterales"
+        ],
+        "fallas_potenciales": [
+          "Agujeros de D4 menor a 17 agujeros por pieza",
+          "Agujeros de D4 mayor a 17 agujeros por pieza",
+          "Agujeros de D4 fuera de especificacion (4mm)",
+          "Orificios fuera de posicion segun pieza patron",
+          "Material distinto a punzonado de 120g/m2",
+          "Forma fuera de especificacion segun pieza patron",
+          "Medida mayor/menor a 550mm x 500mm",
+          "Material distinto a punzonado de 280g/m2"
+        ]
+      },
+      {
+        "op_number": 30,
+        "name": "Termoformado",
+        "fallas_potenciales": [
+          "Termoformar de forma desprolija",
+          "Termoformar de forma incompleta",
+          "Termoformado de pieza con roturas",
+          "Pieza con roturas"
+        ]
+      },
+      {
+        "op_number": 40,
+        "name": "Corte de la pieza en prensa",
+        "fallas_potenciales": [
+          "Corte desprolijo",
+          "Corte Perimetral incompleto"
+        ]
+      },
+      {
+        "op_number": 50,
+        "name": "Perforado (Cod: 21-8875 R y 21-8876 L)",
+        "fallas_potenciales": [
+          "Apertura de Menos de 9 agujeros en 21-8875 R y 21-8876 L",
+          "Apertura de no mas de 9 agujeros en 21-8875 R y 21-8876 L",
+          "Apertura de agujeros desprolija",
+          "Apertura No pasante o incompleta",
+          "Apertura con arrastres",
+          "No utilizacion de dispositivo de apertura de agujeros"
+        ]
+      },
+      {
+        "op_number": 60,
+        "name": "Soldadura (Cod: 21-8877, 21-8875 y 21-8876)",
+        "fallas_potenciales": [
+          "Realizar el proceso de soldadura con piezas distintas a las centrales y laterales",
+          "Realizar mas de 5 puntos de soldadura en cada extremo",
+          "Realizar menos de 5 puntos de soldadura en cada extremo",
+          "Soldadura de pieza distinta a pieza patron",
+          "No union de las piezas despues del proceso"
+        ]
+      },
+      {
+        "op_number": 61,
+        "name": "Retrabajo soldadura (Cod: 21-8800, 21-8878 y 21-8879)",
+        "fallas_potenciales": [
+          "Realizar el proceso de soldadura con piezas distintas a las centrales y laterales",
+          "Realizar mas de 5 puntos de soldadura en cada extremo",
+          "Realizar menos de 5 puntos de soldadura en cada extremo",
+          "Soldadura de pieza distinta a pieza patron",
+          "No union de las piezas despues del proceso"
+        ]
+      },
+      {
+        "op_number": 70,
+        "name": "Control de pieza final",
+        "fallas_potenciales": [
+          "Pieza terminada con aplix mayor o menor a 9 unidades por pieza",
+          "Pieza Terminada con mas o menos de 10 puntos de soldadura (5 de cada lado)",
+          "Pieza Desunida distinta a pieza Patron"
+        ]
+      },
+      {
+        "op_number": 80,
+        "name": "Embalaje",
+        "fallas_potenciales": [
+          "Mayor de 25 piezas por medio",
+          "Menor de 25 piezas por medio",
+          "Error de identificacion",
+          "Falta de identificacion"
+        ]
+      }
+    ],
+    "materials_mentioned": [
+      "Punzonado 120g/m2 (ancho 2m)",
+      "Bi-componente 280g/m2 (ancho 1.5m)",
+      "Aplix (rollo ancho 0.25m, 9 unidades por pieza)",
+      "Material para soldadura (ultrasonido implicito)"
+    ],
+    "temperature_parameters": {
+      "horno_temperatura": "150 C +/- 20 C",
+      "horno_tiempo_calentamiento": "60 segundos",
+      "operation": "OP. 20 Horno",
+      "fallas_relacionadas": [
+        "Pieza con quemaduras (temperatura incorrecta)",
+        "Pieza con quemaduras (tiempo incorrecto)",
+        "Calentar material de manera no uniforme"
+      ]
+    },
+    "flamabilidad": {
+      "norm_reference": "100 mm/min",
+      "clasificacion": "CC (Caracteristica Critica)",
+      "aplica_a": [
+        "Punzonado 120g/m2 - Flamabilidad fuera de especificacion (100 mm/min)",
+        "Bi-componente 280g/m2 - Flamabilidad fuera de especificacion (100 mm/min)"
+      ],
+      "severidad": 10,
+      "nota": "Severidad 10 es la mas alta del documento, indicando importancia critica de seguridad"
+    },
+    "sod_ratings": {
+      "summary": [
+        {"op": 10, "falla": "Flamabilidad fuera de especificacion (120g/m2)", "S": 10, "O": 2, "D": 6, "NPR": 120, "clasificacion": "CC"},
+        {"op": 10, "falla": "Flamabilidad fuera de especificacion (280g/m2)", "S": 10, "O": 2, "D": 6, "NPR": 120, "clasificacion": "CC"},
+        {"op": 10, "falla": "Gramaje Mayor/Menor (120g/m2)", "S": 7, "O": 2, "D": 6, "NPR": 84},
+        {"op": 10, "falla": "Gramaje Mayor/Menor (280g/m2)", "S": 7, "O": 2, "D": 6, "NPR": 84},
+        {"op": 10, "falla": "Aplix cantidad incorrecta", "S": 7, "O": 2, "D": 7, "NPR": 98},
+        {"op": 20, "falla": "Temperatura horno distinta de 150C", "S": 7, "O": 2, "D": 7, "NPR": 98},
+        {"op": 20, "falla": "Tiempo calentamiento distinto de 60s", "S": 7, "O": 2, "D": 7, "NPR": 98},
+        {"op": 20, "falla": "Calentar material no uniforme (mal posicionamiento)", "S": 7, "O": 3, "D": 7, "NPR": 147},
+        {"op": 20, "falla": "Calentar material no uniforme (falla en horno)", "S": 7, "O": 3, "D": 6, "NPR": 126},
+        {"op": 21, "falla": "Material distinto a punzonado 120g/m2", "S": 7, "O": 2, "D": 7, "NPR": 98},
+        {"op": 21, "falla": "Material distinto a punzonado 280g/m2", "S": 7, "O": 2, "D": 7, "NPR": 98},
+        {"op": 30, "falla": "Termoformar desprolija/incompleta/roturas", "S": 7, "O": 6, "D": 3, "NPR": 126},
+        {"op": 40, "falla": "Corte desprolijo / incompleto", "S": 7, "O": 6, "D": 3, "NPR": 126},
+        {"op": 50, "falla": "Apertura agujeros (mal posicionamiento)", "S": 7, "O": 6, "D": 4, "NPR": 168},
+        {"op": 50, "falla": "Apertura agujeros (punzones danados)", "S": 7, "O": 5, "D": 4, "NPR": 140},
+        {"op": 60, "falla": "Soldadura con piezas incorrectas", "S": 7, "O": 4, "D": 6, "NPR": 168},
+        {"op": 60, "falla": "Puntos de soldadura incorrectos", "S": 7, "O": 4, "D": 6, "NPR": 168},
+        {"op": 60, "falla": "No union de piezas", "S": 7, "O": 4, "D": 6, "NPR": 168},
+        {"op": 70, "falla": "Pieza con aplix mayor/menor a 9", "S": 7, "O": 4, "D": 6, "NPR": 168},
+        {"op": 70, "falla": "Pieza con puntos soldadura incorrectos", "S": 7, "O": 4, "D": 6, "NPR": 168},
+        {"op": 80, "falla": "Mayor de 25 piezas por medio", "S": 7, "O": 2, "D": 7, "NPR": 98},
+        {"op": 80, "falla": "Menor de 25 piezas por medio", "S": 8, "O": 2, "D": 6, "NPR": 96},
+        {"op": 80, "falla": "Error de identificacion", "S": 8, "O": 2, "D": 6, "NPR": 96},
+        {"op": 80, "falla": "Falta de identificacion", "S": 8, "O": 2, "D": 6, "NPR": 96}
+      ],
+      "highest_NPR": 168,
+      "highest_NPR_operations": ["OP.50 Perforado", "OP.60 Soldadura", "OP.70 Control de pieza final"],
+      "critical_characteristics": "Flamabilidad rated CC with S=10, NPR=120"
+    },
+    "falla_cliente_final": "Not explicitly stated in TXT (may be in PDF version)"
+  },
+
+  "comparison_key_differences": {
+    "planas_vs_termoformadas": {
+      "operations_count": {
+        "planas": "8 operations (OP 10-70)",
+        "termoformadas": "12 operations (OP 10-80, includes OP 11, OP 21, OP 61 retrabajo)"
+      },
+      "temperature": {
+        "planas": "No temperature/horno operation",
+        "termoformadas": "OP.20 Horno: 150C +/- 20C, 60 segundos"
+      },
+      "flamabilidad": {
+        "planas": "Not referenced in TXT",
+        "termoformadas": "100 mm/min, CC classification, S=10"
+      },
+      "max_NPR": {
+        "planas": 147,
+        "termoformadas": 168
+      },
+      "part_numbers": {
+        "planas": "21-8455, 21-8454 (Segun tabla)",
+        "termoformadas": "21-8909, 21-8877, 21-8875 R, 21-8876 L, 21-8800, 21-8878, 21-8879"
+      },
+      "unique_ops_termoformadas": ["Horno (OP.20)", "Termoformado (OP.30)", "Corte en prensa (OP.40)", "Perforado (OP.50)", "Soldadura (OP.60)"],
+      "unique_ops_planas": ["Preparacion de corte (OP.15)", "Colocado de clips (OP.40)", "Pegado de dots (OP.50)"]
+    }
+  }
+}

@@ -1,0 +1,4882 @@
+[
+  {
+    "id": 1,
+    "codigo": "002",
+    "descripcion": "DIFERENCIA DE PRECIOS",
+    "linea_code": "0118",
+    "linea_name": "IMAGO",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:20.907865+00:00",
+    "updated_at": "2026-03-14T19:48:20.907865+00:00"
+  },
+  {
+    "id": 2,
+    "codigo": "40-12825",
+    "descripcion": "CONJ. PAÑO D/I PVC JET BLACK FENIX",
+    "linea_code": "012",
+    "linea_name": "LEQUIPE",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:21.163718+00:00",
+    "updated_at": "2026-03-14T19:48:21.163718+00:00"
+  },
+  {
+    "id": 3,
+    "codigo": "40-12826",
+    "descripcion": "CONJ. PAÑO D/D PVC JET BLACK FENIX",
+    "linea_code": "012",
+    "linea_name": "LEQUIPE",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:21.684103+00:00",
+    "updated_at": "2026-03-14T19:48:21.684103+00:00"
+  },
+  {
+    "id": 4,
+    "codigo": "40-12827",
+    "descripcion": "CONJ. PAÑO D/I PVC MED ATM FENIX",
+    "linea_code": "012",
+    "linea_name": "LEQUIPE",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:21.951574+00:00",
+    "updated_at": "2026-03-14T19:48:21.951574+00:00"
+  },
+  {
+    "id": 5,
+    "codigo": "40-12828",
+    "descripcion": "CONJ. PAÑO D/D PVC MED ATM FENIX",
+    "linea_code": "012",
+    "linea_name": "LEQUIPE",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:22.202204+00:00",
+    "updated_at": "2026-03-14T19:48:22.202204+00:00"
+  },
+  {
+    "id": 6,
+    "codigo": "40-12829",
+    "descripcion": "PAÑO D/I PVC UMBER",
+    "linea_code": "012",
+    "linea_name": "LEQUIPE",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:22.721885+00:00",
+    "updated_at": "2026-03-14T19:48:22.721885+00:00"
+  },
+  {
+    "id": 7,
+    "codigo": "40-12830",
+    "descripcion": "PAÑO D/D PVC UMBER",
+    "linea_code": "012",
+    "linea_name": "LEQUIPE",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:23.418784+00:00",
+    "updated_at": "2026-03-14T19:48:23.418784+00:00"
+  },
+  {
+    "id": 8,
+    "codigo": "40-12925",
+    "descripcion": "CONJ. PAÑO T/I PVC JET BLACK FENIX",
+    "linea_code": "012",
+    "linea_name": "LEQUIPE",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:23.668833+00:00",
+    "updated_at": "2026-03-14T19:48:23.668833+00:00"
+  },
+  {
+    "id": 9,
+    "codigo": "40-12926",
+    "descripcion": "CONJ. PAÑO T/D PVC JET BLACK FENIX",
+    "linea_code": "012",
+    "linea_name": "LEQUIPE",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:23.916148+00:00",
+    "updated_at": "2026-03-14T19:48:23.916148+00:00"
+  },
+  {
+    "id": 10,
+    "codigo": "40-12927",
+    "descripcion": "CONJUNTO PAÑO T/I MED ATM FENIX",
+    "linea_code": "012",
+    "linea_name": "LEQUIPE",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:24.161202+00:00",
+    "updated_at": "2026-03-14T19:48:24.161202+00:00"
+  },
+  {
+    "id": 11,
+    "codigo": "40-12931",
+    "descripcion": "PAÑO T/I PVC UMBER",
+    "linea_code": "012",
+    "linea_name": "LEQUIPE",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:24.704669+00:00",
+    "updated_at": "2026-03-14T19:48:24.704669+00:00"
+  },
+  {
+    "id": 12,
+    "codigo": "40-12932",
+    "descripcion": "PAÑO T/D PVC UMBER",
+    "linea_code": "012",
+    "linea_name": "LEQUIPE",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:24.976846+00:00",
+    "updated_at": "2026-03-14T19:48:24.976846+00:00"
+  },
+  {
+    "id": 13,
+    "codigo": "40-12934",
+    "descripcion": "CONJ. PAÑO D/D PVC JET BLACK - RS",
+    "linea_code": "012",
+    "linea_name": "LEQUIPE",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:25.69854+00:00",
+    "updated_at": "2026-03-14T19:48:25.69854+00:00"
+  },
+  {
+    "id": 14,
+    "codigo": "40-12935",
+    "descripcion": "CONJ. PAÑO T/I PVC JET BLACK - RS",
+    "linea_code": "012",
+    "linea_name": "LEQUIPE",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:25.981938+00:00",
+    "updated_at": "2026-03-14T19:48:25.981938+00:00"
+  },
+  {
+    "id": 15,
+    "codigo": "40-12936",
+    "descripcion": "CONJ. PAÑO T/D PVC JET BLACK - RS",
+    "linea_code": "012",
+    "linea_name": "LEQUIPE",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:26.747746+00:00",
+    "updated_at": "2026-03-14T19:48:26.747746+00:00"
+  },
+  {
+    "id": 16,
+    "codigo": "40-15137",
+    "descripcion": "VINILO ARMREST COSIDO - JB",
+    "linea_code": "012",
+    "linea_name": "LEQUIPE",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:27.024785+00:00",
+    "updated_at": "2026-03-14T19:48:27.024785+00:00"
+  },
+  {
+    "id": 17,
+    "codigo": "40-15138",
+    "descripcion": "INILO ARMREST COSIDO-DA",
+    "linea_code": "012",
+    "linea_name": "LEQUIPE",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:27.680084+00:00",
+    "updated_at": "2026-03-14T19:48:27.680084+00:00"
+  },
+  {
+    "id": 18,
+    "codigo": "40-15139",
+    "descripcion": "VINILO ARMREST COSIDO -JB -RS",
+    "linea_code": "012",
+    "linea_name": "LEQUIPE",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:27.938653+00:00",
+    "updated_at": "2026-03-14T19:48:27.938653+00:00"
+  },
+  {
+    "id": 19,
+    "codigo": "80-00513",
+    "descripcion": "Funda Pnl Midzone CTR c/costura (L.Cen",
+    "linea_code": "012",
+    "linea_name": "LEQUIPE",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:28.216356+00:00",
+    "updated_at": "2026-03-14T19:48:28.216356+00:00"
+  },
+  {
+    "id": 20,
+    "codigo": "80-00711",
+    "descripcion": "FUNDA PASAJ C/COST - JB",
+    "linea_code": "012",
+    "linea_name": "LEQUIPE",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:28.719597+00:00",
+    "updated_at": "2026-03-14T19:48:28.719597+00:00"
+  },
+  {
+    "id": 21,
+    "codigo": "80-00712",
+    "descripcion": "FUNDA COND. C/COST - JB",
+    "linea_code": "012",
+    "linea_name": "LEQUIPE",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:28.97064+00:00",
+    "updated_at": "2026-03-14T19:48:28.97064+00:00"
+  },
+  {
+    "id": 22,
+    "codigo": "80-00715",
+    "descripcion": "FUNDA PASAJ C/COST - MA",
+    "linea_code": "012",
+    "linea_name": "LEQUIPE",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:29.684914+00:00",
+    "updated_at": "2026-03-14T19:48:29.684914+00:00"
+  },
+  {
+    "id": 23,
+    "codigo": "80-00716",
+    "descripcion": "FUNDA COND. C/COST - MA",
+    "linea_code": "012",
+    "linea_name": "LEQUIPE",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:29.952611+00:00",
+    "updated_at": "2026-03-14T19:48:29.952611+00:00"
+  },
+  {
+    "id": 24,
+    "codigo": "80-00717",
+    "descripcion": "FUNDA CTR. C/COST - MA",
+    "linea_code": "012",
+    "linea_name": "LEQUIPE",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:30.211582+00:00",
+    "updated_at": "2026-03-14T19:48:30.211582+00:00"
+  },
+  {
+    "id": 25,
+    "codigo": "80-00718",
+    "descripcion": "FUNDA PASAJ C/COST - UM",
+    "linea_code": "012",
+    "linea_name": "LEQUIPE",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:30.700603+00:00",
+    "updated_at": "2026-03-14T19:48:30.700603+00:00"
+  },
+  {
+    "id": 26,
+    "codigo": "80-00719",
+    "descripcion": "FNDA COND C/COST - UM",
+    "linea_code": "012",
+    "linea_name": "LEQUIPE",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:30.954305+00:00",
+    "updated_at": "2026-03-14T19:48:30.954305+00:00"
+  },
+  {
+    "id": 27,
+    "codigo": "80-00720",
+    "descripcion": "FUNDA CTR C/COS - UM",
+    "linea_code": "012",
+    "linea_name": "LEQUIPE",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:31.215311+00:00",
+    "updated_at": "2026-03-14T19:48:31.215311+00:00"
+  },
+  {
+    "id": 28,
+    "codigo": "80-01056",
+    "descripcion": "FUNDA CONDUCTOR - JB - C/COST - RS",
+    "linea_code": "012",
+    "linea_name": "LEQUIPE",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:31.657471+00:00",
+    "updated_at": "2026-03-14T19:48:31.657471+00:00"
+  },
+  {
+    "id": 29,
+    "codigo": "80-01057",
+    "descripcion": "FUNDA CTR C/COST.JB - RS",
+    "linea_code": "012",
+    "linea_name": "LEQUIPE",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:31.912695+00:00",
+    "updated_at": "2026-03-14T19:48:31.912695+00:00"
+  },
+  {
+    "id": 30,
+    "codigo": "80-01058",
+    "descripcion": "FUNDA PASAJ FILM-JB-C/COST - RS",
+    "linea_code": "012",
+    "linea_name": "LEQUIPE",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:32.163528+00:00",
+    "updated_at": "2026-03-14T19:48:32.163528+00:00"
+  },
+  {
+    "id": 31,
+    "codigo": "DN",
+    "descripcion": "ACEPTACION NOTA DE PEDIDO",
+    "linea_code": "0120",
+    "linea_name": "FUNDACION HNOS.AGUSTIN Y ENRIQUE ROCCA",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:32.713018+00:00",
+    "updated_at": "2026-03-14T19:48:32.713018+00:00"
+  },
+  {
+    "id": 32,
+    "codigo": "AN",
+    "descripcion": "DTO. POR ANTICIPO",
+    "linea_code": "0129",
+    "linea_name": "DROGUERIA DEL SUR",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:32.968938+00:00",
+    "updated_at": "2026-03-14T19:48:32.968938+00:00"
+  },
+  {
+    "id": 33,
+    "codigo": "AN01",
+    "descripcion": "ANTICIPO 30% COMPRA 150000 CAMIS. SMS",
+    "linea_code": "0129",
+    "linea_name": "DROGUERIA DEL SUR",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:33.660244+00:00",
+    "updated_at": "2026-03-14T19:48:33.660244+00:00"
+  },
+  {
+    "id": 34,
+    "codigo": "AN02",
+    "descripcion": "ANTICIPO 30%  COMPRA DE 150000 CAMIS.",
+    "linea_code": "0129",
+    "linea_name": "DROGUERIA DEL SUR",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:34.063212+00:00",
+    "updated_at": "2026-03-14T19:48:34.063212+00:00"
+  },
+  {
+    "id": 35,
+    "codigo": "AN03",
+    "descripcion": "ANTICIPO 30% COMPRA DE 50100 COFIAS 30",
+    "linea_code": "0129",
+    "linea_name": "DROGUERIA DEL SUR",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:34.693389+00:00",
+    "updated_at": "2026-03-14T19:48:34.693389+00:00"
+  },
+  {
+    "id": 36,
+    "codigo": "AN04",
+    "descripcion": "ANTICIPO 30% COMPRA DE 50400 CUBRE CAL",
+    "linea_code": "0129",
+    "linea_name": "DROGUERIA DEL SUR",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:34.995287+00:00",
+    "updated_at": "2026-03-14T19:48:34.995287+00:00"
+  },
+  {
+    "id": 37,
+    "codigo": "02",
+    "descripcion": "LIMPIEZA Y SERVICIO MANO DE OBRA",
+    "linea_code": "013",
+    "linea_name": "LONGVIE S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:35.743042+00:00",
+    "updated_at": "2026-03-14T19:48:35.743042+00:00"
+  },
+  {
+    "id": 38,
+    "codigo": "2413/1",
+    "descripcion": "PT1100",
+    "linea_code": "013",
+    "linea_name": "LONGVIE S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:36.067226+00:00",
+    "updated_at": "2026-03-14T19:48:36.067226+00:00"
+  },
+  {
+    "id": 39,
+    "codigo": "T290401",
+    "descripcion": "ESPUMA X6S LAMPARA DOMO",
+    "linea_code": "013",
+    "linea_name": "LONGVIE S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:36.663671+00:00",
+    "updated_at": "2026-03-14T19:48:36.663671+00:00"
+  },
+  {
+    "id": 40,
+    "codigo": "T290420",
+    "descripcion": "H60B SPACER 1A 20X20X5",
+    "linea_code": "013",
+    "linea_name": "LONGVIE S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:36.935288+00:00",
+    "updated_at": "2026-03-14T19:48:36.935288+00:00"
+  },
+  {
+    "id": 41,
+    "codigo": "001021",
+    "descripcion": "ENVASE DE GLP X 13.5 KG",
+    "linea_code": "0178",
+    "linea_name": "YPF GAS S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:37.208142+00:00",
+    "updated_at": "2026-03-14T19:48:37.208142+00:00"
+  },
+  {
+    "id": 42,
+    "codigo": "001022",
+    "descripcion": "ENVASE DE GLP X 10 KG",
+    "linea_code": "0178",
+    "linea_name": "YPF GAS S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:37.655141+00:00",
+    "updated_at": "2026-03-14T19:48:37.655141+00:00"
+  },
+  {
+    "id": 43,
+    "codigo": "111001022",
+    "descripcion": "ENVSE DE GLP X 10 KG",
+    "linea_code": "0178",
+    "linea_name": "YPF GAS S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:37.905301+00:00",
+    "updated_at": "2026-03-14T19:48:37.905301+00:00"
+  },
+  {
+    "id": 44,
+    "codigo": "20-062692",
+    "descripcion": "ENVASE AUTOELEV. AM PLASTICO P/14 KG",
+    "linea_code": "0178",
+    "linea_name": "YPF GAS S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:38.165206+00:00",
+    "updated_at": "2026-03-14T19:48:38.165206+00:00"
+  },
+  {
+    "id": 45,
+    "codigo": "6337",
+    "descripcion": "CUELLO ENVASE AE",
+    "linea_code": "0178",
+    "linea_name": "YPF GAS S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:38.692153+00:00",
+    "updated_at": "2026-03-14T19:48:38.692153+00:00"
+  },
+  {
+    "id": 46,
+    "codigo": "YPF01",
+    "descripcion": "CUELLO ENVASE AE",
+    "linea_code": "0178",
+    "linea_name": "YPF GAS S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:38.940754+00:00",
+    "updated_at": "2026-03-14T19:48:38.940754+00:00"
+  },
+  {
+    "id": 47,
+    "codigo": "YPF2",
+    "descripcion": "INSTALACION EQ GNC",
+    "linea_code": "0178",
+    "linea_name": "YPF GAS S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:39.200038+00:00",
+    "updated_at": "2026-03-14T19:48:39.200038+00:00"
+  },
+  {
+    "id": 48,
+    "codigo": "0024997503-NHZD",
+    "descripcion": "ACCOUDOIR P21-AV.D-TEP  LH",
+    "linea_code": "0198",
+    "linea_name": "SAS AUTOMOTRIZ ARGENTINA S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:39.661731+00:00",
+    "updated_at": "2026-03-14T19:48:39.661731+00:00"
+  },
+  {
+    "id": 49,
+    "codigo": "2H0967749",
+    "descripcion": "2H0967749 TIRANTE FIJACION",
+    "linea_code": "0198",
+    "linea_name": "SAS AUTOMOTRIZ ARGENTINA S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:39.902385+00:00",
+    "updated_at": "2026-03-14T19:48:39.902385+00:00"
+  },
+  {
+    "id": 50,
+    "codigo": "2H7885901BPUTV",
+    "descripcion": "HR TRIM LATERAL RPU TEP ANTHRAZIT",
+    "linea_code": "0198",
+    "linea_name": "SAS AUTOMOTRIZ ARGENTINA S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:40.172249+00:00",
+    "updated_at": "2026-03-14T19:48:40.172249+00:00"
+  },
+  {
+    "id": 51,
+    "codigo": "2H7885901BQUTV",
+    "descripcion": "HR TRIM CENTRAL RPU TEP ANTHRAZIT",
+    "linea_code": "0198",
+    "linea_name": "SAS AUTOMOTRIZ ARGENTINA S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:40.664679+00:00",
+    "updated_at": "2026-03-14T19:48:40.664679+00:00"
+  },
+  {
+    "id": 52,
+    "codigo": "2HP885901D",
+    "descripcion": "HR TRIM LATERAL RPU CLIP UNI TITAN",
+    "linea_code": "0198",
+    "linea_name": "SAS AUTOMOTRIZ ARGENTINA S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:40.915756+00:00",
+    "updated_at": "2026-03-14T19:48:40.915756+00:00"
+  },
+  {
+    "id": 53,
+    "codigo": "2HP885901F",
+    "descripcion": "HR TRIM LATERAL RPU TEP BIZON MINI",
+    "linea_code": "0198",
+    "linea_name": "SAS AUTOMOTRIZ ARGENTINA S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:41.161354+00:00",
+    "updated_at": "2026-03-14T19:48:41.161354+00:00"
+  },
+  {
+    "id": 54,
+    "codigo": "2HP885901G",
+    "descripcion": "HR TRIM CENTRAL RPU CLIP UNI TITAN",
+    "linea_code": "0198",
+    "linea_name": "SAS AUTOMOTRIZ ARGENTINA S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:41.693263+00:00",
+    "updated_at": "2026-03-14T19:48:41.693263+00:00"
+  },
+  {
+    "id": 55,
+    "codigo": "2HP885901J",
+    "descripcion": "HR TRIM CENTRAL RPU TEP BIZON MINI",
+    "linea_code": "0198",
+    "linea_name": "SAS AUTOMOTRIZ ARGENTINA S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:41.95192+00:00",
+    "updated_at": "2026-03-14T19:48:41.95192+00:00"
+  },
+  {
+    "id": 56,
+    "codigo": "COR-2GJ-900A-IC",
+    "descripcion": "CORTE 2GJ885900A-ICE APC TRASERO CENTR",
+    "linea_code": "0198",
+    "linea_name": "SAS AUTOMOTRIZ ARGENTINA S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:42.216522+00:00",
+    "updated_at": "2026-03-14T19:48:42.216522+00:00"
+  },
+  {
+    "id": 59,
+    "codigo": "COR-2H6-761B",
+    "descripcion": "CORTE 2H6761B CENTRAL AMAROK",
+    "linea_code": "0198",
+    "linea_name": "SAS AUTOMOTRIZ ARGENTINA S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:43.21754+00:00",
+    "updated_at": "2026-03-14T19:48:43.21754+00:00"
+  },
+  {
+    "id": 60,
+    "codigo": "COR-2H6-761B-CS",
+    "descripcion": "CORTE 2H6863761BCSY CENTRAL AMAROK BIS",
+    "linea_code": "0198",
+    "linea_name": "SAS AUTOMOTRIZ ARGENTINA S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:43.700208+00:00",
+    "updated_at": "2026-03-14T19:48:43.700208+00:00"
+  },
+  {
+    "id": 61,
+    "codigo": "COR-2H6-761B-IC",
+    "descripcion": "CORTE 2H6863761BICE AMAROK CENTRAL BIS",
+    "linea_code": "0198",
+    "linea_name": "SAS AUTOMOTRIZ ARGENTINA S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:43.96179+00:00",
+    "updated_at": "2026-03-14T19:48:43.96179+00:00"
+  },
+  {
+    "id": 62,
+    "codigo": "COR-2H7-901BP",
+    "descripcion": "CORTE 2H7885901BPUTV AMAROK LATERAL TE",
+    "linea_code": "0198",
+    "linea_name": "SAS AUTOMOTRIZ ARGENTINA S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:44.707436+00:00",
+    "updated_at": "2026-03-14T19:48:44.707436+00:00"
+  },
+  {
+    "id": 63,
+    "codigo": "COR-2H7-901BQ",
+    "descripcion": "CORTE 2H7885901BQUTV AMAROK CENTRAL TE",
+    "linea_code": "0198",
+    "linea_name": "SAS AUTOMOTRIZ ARGENTINA S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:44.976246+00:00",
+    "updated_at": "2026-03-14T19:48:44.976246+00:00"
+  },
+  {
+    "id": 64,
+    "codigo": "COR-2H7-901BR-U",
+    "descripcion": "CORTE 2H7885901BR UTV",
+    "linea_code": "0198",
+    "linea_name": "SAS AUTOMOTRIZ ARGENTINA S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:45.71747+00:00",
+    "updated_at": "2026-03-14T19:48:45.71747+00:00"
+  },
+  {
+    "id": 65,
+    "codigo": "COR-2H7-901BS-U",
+    "descripcion": "CORTE 2H7885901BS UTV",
+    "linea_code": "0198",
+    "linea_name": "SAS AUTOMOTRIZ ARGENTINA S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:45.976339+00:00",
+    "updated_at": "2026-03-14T19:48:45.976339+00:00"
+  },
+  {
+    "id": 66,
+    "codigo": "COR-2HP-901D",
+    "descripcion": "CORTE APC 2HP 885 901D AMAROK LAT CLIP",
+    "linea_code": "0198",
+    "linea_name": "SAS AUTOMOTRIZ ARGENTINA S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:46.649696+00:00",
+    "updated_at": "2026-03-14T19:48:46.649696+00:00"
+  },
+  {
+    "id": 67,
+    "codigo": "COR-2HP-901G",
+    "descripcion": "CORTE 2HP885901G AMAROK CENTRAL CLIP U",
+    "linea_code": "0198",
+    "linea_name": "SAS AUTOMOTRIZ ARGENTINA S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:46.907964+00:00",
+    "updated_at": "2026-03-14T19:48:46.907964+00:00"
+  },
+  {
+    "id": 68,
+    "codigo": "COR-2HP-901G-L1",
+    "descripcion": "CORTE 2HP885901G L18 APC CENTRAL AMARO",
+    "linea_code": "0198",
+    "linea_name": "SAS AUTOMOTRIZ ARGENTINA S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:47.169134+00:00",
+    "updated_at": "2026-03-14T19:48:47.169134+00:00"
+  },
+  {
+    "id": 69,
+    "codigo": "COR-2HP-901J",
+    "descripcion": "CORTE 2HP885901J AMAROK CENTRAL TEP BI",
+    "linea_code": "0198",
+    "linea_name": "SAS AUTOMOTRIZ ARGENTINA S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:47.656164+00:00",
+    "updated_at": "2026-03-14T19:48:47.656164+00:00"
+  },
+  {
+    "id": 72,
+    "codigo": "COR-2HT-115-HOA",
+    "descripcion": "CORTE 2HT857115 HOA IP DECORATIVE TRIM",
+    "linea_code": "0198",
+    "linea_name": "SAS AUTOMOTRIZ ARGENTINA S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:48.708741+00:00",
+    "updated_at": "2026-03-14T19:48:48.708741+00:00"
+  },
+  {
+    "id": 75,
+    "codigo": "COR-2HT-116-HOA",
+    "descripcion": "CORTE 2HT857116 HOA IP DECORATIVE TRIM",
+    "linea_code": "0198",
+    "linea_name": "SAS AUTOMOTRIZ ARGENTINA S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:49.727105+00:00",
+    "updated_at": "2026-03-14T19:48:49.727105+00:00"
+  },
+  {
+    "id": 78,
+    "codigo": "COR-2HT-900A-OH",
+    "descripcion": "CORTE 2HT885900A OHE APC AMAROK CENTRA",
+    "linea_code": "0198",
+    "linea_name": "SAS AUTOMOTRIZ ARGENTINA S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:50.926769+00:00",
+    "updated_at": "2026-03-14T19:48:50.926769+00:00"
+  },
+  {
+    "id": 81,
+    "codigo": "COR-2HT-901A-OH",
+    "descripcion": "CORTE APC AMAROK LATERAL",
+    "linea_code": "0198",
+    "linea_name": "SAS AUTOMOTRIZ ARGENTINA S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:51.902203+00:00",
+    "updated_at": "2026-03-14T19:48:51.902203+00:00"
+  },
+  {
+    "id": 87,
+    "codigo": "FUN-2H6-761B-IC",
+    "descripcion": "FUNDA 2H6863761BICE CENTRAL AMAROK BIS",
+    "linea_code": "0198",
+    "linea_name": "SAS AUTOMOTRIZ ARGENTINA S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:53.957281+00:00",
+    "updated_at": "2026-03-14T19:48:53.957281+00:00"
+  },
+  {
+    "id": 90,
+    "codigo": "FUN-2H7-901BR-U",
+    "descripcion": "FUNDA 2H7885901BR UTV",
+    "linea_code": "0198",
+    "linea_name": "SAS AUTOMOTRIZ ARGENTINA S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:54.936421+00:00",
+    "updated_at": "2026-03-14T19:48:54.936421+00:00"
+  },
+  {
+    "id": 93,
+    "codigo": "FUN-2HP-901G",
+    "descripcion": "FUNDA 2HP885901G AMAROK CENTRAL CLIP U",
+    "linea_code": "0198",
+    "linea_name": "SAS AUTOMOTRIZ ARGENTINA S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:55.90978+00:00",
+    "updated_at": "2026-03-14T19:48:55.90978+00:00"
+  },
+  {
+    "id": 96,
+    "codigo": "FUN-2HP-901J-IC",
+    "descripcion": "FUNDA 2HP885901J ICE APC CENTRAL AMARO",
+    "linea_code": "0198",
+    "linea_name": "SAS AUTOMOTRIZ ARGENTINA S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:56.930311+00:00",
+    "updated_at": "2026-03-14T19:48:56.930311+00:00"
+  },
+  {
+    "id": 99,
+    "codigo": "FUN-2HT-115-YZM",
+    "descripcion": "FUNDA 2HT857115 YZM IP DECORATIVE TRIM",
+    "linea_code": "0198",
+    "linea_name": "SAS AUTOMOTRIZ ARGENTINA S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:57.975684+00:00",
+    "updated_at": "2026-03-14T19:48:57.975684+00:00"
+  },
+  {
+    "id": 102,
+    "codigo": "FUN-2HT-900-9NY",
+    "descripcion": "FUNDA 2HT885900 9NY APC AMAROK CENTRAL",
+    "linea_code": "0198",
+    "linea_name": "SAS AUTOMOTRIZ ARGENTINA S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:59.219069+00:00",
+    "updated_at": "2026-03-14T19:48:59.219069+00:00"
+  },
+  {
+    "id": 105,
+    "codigo": "FUN-2HT-901-9NY",
+    "descripcion": "FUNDA APC AMAROK LATERAL",
+    "linea_code": "0198",
+    "linea_name": "SAS AUTOMOTRIZ ARGENTINA S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:00.649073+00:00",
+    "updated_at": "2026-03-14T19:49:00.649073+00:00"
+  },
+  {
+    "id": 108,
+    "codigo": "INY-2H6-761B",
+    "descripcion": "INYECCION 2H6863761B",
+    "linea_code": "0198",
+    "linea_name": "SAS AUTOMOTRIZ ARGENTINA S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:01.708885+00:00",
+    "updated_at": "2026-03-14T19:49:01.708885+00:00"
+  },
+  {
+    "id": 111,
+    "codigo": "INY2H6-761B-CS",
+    "descripcion": "INYECCION A 2H6863761BCS CENTRAL AMARO",
+    "linea_code": "0198",
+    "linea_name": "SAS AUTOMOTRIZ ARGENTINA S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:02.918946+00:00",
+    "updated_at": "2026-03-14T19:49:02.918946+00:00"
+  },
+  {
+    "id": 114,
+    "codigo": "BA947195",
+    "descripcion": "CINTA BIFAZ 9471 (ROLLO)",
+    "linea_code": "02",
+    "linea_name": "BURKOL S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:03.904294+00:00",
+    "updated_at": "2026-03-14T19:49:03.904294+00:00"
+  },
+  {
+    "id": 117,
+    "codigo": "00249787",
+    "descripcion": "ALAMBRE FORRADO 2.7 MM DOBLE CABEZAL P",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:04.957632+00:00",
+    "updated_at": "2026-03-14T19:49:04.957632+00:00"
+  },
+  {
+    "id": 120,
+    "codigo": "21-8454",
+    "descripcion": "Tela asiento Nueva RANGER",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:06.685017+00:00",
+    "updated_at": "2026-03-14T19:49:06.685017+00:00"
+  },
+  {
+    "id": 123,
+    "codigo": "21-8455-P",
+    "descripcion": "Proyecto tela Ranger PWA",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:07.92988+00:00",
+    "updated_at": "2026-03-14T19:49:07.92988+00:00"
+  },
+  {
+    "id": 126,
+    "codigo": "21-8909",
+    "descripcion": "TELA_ASIENTO_P21_AÑO/MODELO_2022_PWA",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:08.910054+00:00",
+    "updated_at": "2026-03-14T19:49:08.910054+00:00"
+  },
+  {
+    "id": 129,
+    "codigo": "24-8047",
+    "descripcion": "ALAMBRE BORDER WIRE FIAT H6X",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:09.919222+00:00",
+    "updated_at": "2026-03-14T19:49:09.919222+00:00"
+  },
+  {
+    "id": 132,
+    "codigo": "24-9782",
+    "descripcion": "BSUV PWA Alambre forrado 180+225 confo",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:10.989299+00:00",
+    "updated_at": "2026-03-14T19:49:10.989299+00:00"
+  },
+  {
+    "id": 84,
+    "codigo": "FUN-2GJ-901A-I",
+    "descripcion": "FUNDA 2GJ881901A ICE DELANTERO PATAGONIA",
+    "linea_code": "0198",
+    "linea_name": "SAS AUTOMOTRIZ ARGENTINA S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:52.910501+00:00",
+    "updated_at": "2026-03-14T19:48:52.910501+00:00"
+  },
+  {
+    "id": 70,
+    "codigo": "COR-2HP-901J-IC",
+    "descripcion": "CORTE 2HP885901J ICE APC CENTRAL AMARO",
+    "linea_code": "0198",
+    "linea_name": "SAS AUTOMOTRIZ ARGENTINA S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:47.913411+00:00",
+    "updated_at": "2026-03-14T19:48:47.913411+00:00"
+  },
+  {
+    "id": 73,
+    "codigo": "COR-2HT-115-YZM",
+    "descripcion": "CORTE 2HT857115 YZM IP DECORATIVE TRIM",
+    "linea_code": "0198",
+    "linea_name": "SAS AUTOMOTRIZ ARGENTINA S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:48.963718+00:00",
+    "updated_at": "2026-03-14T19:48:48.963718+00:00"
+  },
+  {
+    "id": 76,
+    "codigo": "COR-2HT-116-YZM",
+    "descripcion": "CORTE 2HT857116 YZM IP DECORATIVE TRIM",
+    "linea_code": "0198",
+    "linea_name": "SAS AUTOMOTRIZ ARGENTINA S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:49.976458+00:00",
+    "updated_at": "2026-03-14T19:48:49.976458+00:00"
+  },
+  {
+    "id": 79,
+    "codigo": "COR-2HT-900B-YZ",
+    "descripcion": "CORTE 2HT885900B YZM APC AMAROK CENTRA",
+    "linea_code": "0198",
+    "linea_name": "SAS AUTOMOTRIZ ARGENTINA S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:51.178014+00:00",
+    "updated_at": "2026-03-14T19:48:51.178014+00:00"
+  },
+  {
+    "id": 82,
+    "codigo": "COR-2HT-901B-YZ",
+    "descripcion": "CORTE APC AMAROK LATERAL",
+    "linea_code": "0198",
+    "linea_name": "SAS AUTOMOTRIZ ARGENTINA S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:52.150112+00:00",
+    "updated_at": "2026-03-14T19:48:52.150112+00:00"
+  },
+  {
+    "id": 88,
+    "codigo": "FUN-2H7-901BP",
+    "descripcion": "FUNDA 2H7885901BPUTV AMAROK LATERAL TE",
+    "linea_code": "0198",
+    "linea_name": "SAS AUTOMOTRIZ ARGENTINA S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:54.208014+00:00",
+    "updated_at": "2026-03-14T19:48:54.208014+00:00"
+  },
+  {
+    "id": 91,
+    "codigo": "FUN-2H7-901BS-U",
+    "descripcion": "FUNDA 2H7885901BS UTV",
+    "linea_code": "0198",
+    "linea_name": "SAS AUTOMOTRIZ ARGENTINA S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:55.189483+00:00",
+    "updated_at": "2026-03-14T19:48:55.189483+00:00"
+  },
+  {
+    "id": 94,
+    "codigo": "FUN-2HP-901G-L1",
+    "descripcion": "FUNDA 2HP885901G L18 APC CENTRAL AMARO",
+    "linea_code": "0198",
+    "linea_name": "SAS AUTOMOTRIZ ARGENTINA S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:56.166046+00:00",
+    "updated_at": "2026-03-14T19:48:56.166046+00:00"
+  },
+  {
+    "id": 97,
+    "codigo": "FUN-2HT-115-DEC",
+    "descripcion": "FUNDA 2HT857115 DEC IP DECORATIVE TRIM",
+    "linea_code": "0198",
+    "linea_name": "SAS AUTOMOTRIZ ARGENTINA S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:57.18433+00:00",
+    "updated_at": "2026-03-14T19:48:57.18433+00:00"
+  },
+  {
+    "id": 100,
+    "codigo": "FUN-2HT-116-DEC",
+    "descripcion": "FUNDA 2HT857116 DEC IP DECORATIVE TRIM",
+    "linea_code": "0198",
+    "linea_name": "SAS AUTOMOTRIZ ARGENTINA S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:58.698423+00:00",
+    "updated_at": "2026-03-14T19:48:58.698423+00:00"
+  },
+  {
+    "id": 103,
+    "codigo": "FUN-2HT-900A-OH",
+    "descripcion": "FUNDA 2HT885900A OHE APC AMAROK CENTRA",
+    "linea_code": "0198",
+    "linea_name": "SAS AUTOMOTRIZ ARGENTINA S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:59.679376+00:00",
+    "updated_at": "2026-03-14T19:48:59.679376+00:00"
+  },
+  {
+    "id": 106,
+    "codigo": "FUN-2HT-901A-OH",
+    "descripcion": "FUNDA APC AMAROK LATERAL",
+    "linea_code": "0198",
+    "linea_name": "SAS AUTOMOTRIZ ARGENTINA S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:00.905986+00:00",
+    "updated_at": "2026-03-14T19:49:00.905986+00:00"
+  },
+  {
+    "id": 109,
+    "codigo": "INY-2H6-761B-CS",
+    "descripcion": "INYECCION 2H6863761BCSY CENTRAL AMAROK",
+    "linea_code": "0198",
+    "linea_name": "SAS AUTOMOTRIZ ARGENTINA S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:02.002578+00:00",
+    "updated_at": "2026-03-14T19:49:02.002578+00:00"
+  },
+  {
+    "id": 112,
+    "codigo": "PRODUCTO-PRUEBA",
+    "descripcion": "PRUEBA",
+    "linea_code": "0198",
+    "linea_name": "SAS AUTOMOTRIZ ARGENTINA S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:03.181368+00:00",
+    "updated_at": "2026-03-14T19:49:03.181368+00:00"
+  },
+  {
+    "id": 115,
+    "codigo": "MS1015",
+    "descripcion": "CINTA ACRILICA PT 1100 8 MM",
+    "linea_code": "02",
+    "linea_name": "BURKOL S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:04.216221+00:00",
+    "updated_at": "2026-03-14T19:49:04.216221+00:00"
+  },
+  {
+    "id": 118,
+    "codigo": "21-0871",
+    "descripcion": "ALAMBRE TELAS",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:05.711066+00:00",
+    "updated_at": "2026-03-14T19:49:05.711066+00:00"
+  },
+  {
+    "id": 121,
+    "codigo": "21-8454-P",
+    "descripcion": "Proyecto Tela Ranger PWA",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:06.976809+00:00",
+    "updated_at": "2026-03-14T19:49:06.976809+00:00"
+  },
+  {
+    "id": 124,
+    "codigo": "21-8656",
+    "descripcion": "Tela Ford Asiento T6",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:08.18721+00:00",
+    "updated_at": "2026-03-14T19:49:08.18721+00:00"
+  },
+  {
+    "id": 127,
+    "codigo": "24-0871",
+    "descripcion": "ALAMBRE TELA",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:09.16584+00:00",
+    "updated_at": "2026-03-14T19:49:09.16584+00:00"
+  },
+  {
+    "id": 130,
+    "codigo": "24-9347",
+    "descripcion": "ALAMBRE DE CAPA ASSENTO",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:10.178363+00:00",
+    "updated_at": "2026-03-14T19:49:10.178363+00:00"
+  },
+  {
+    "id": 133,
+    "codigo": "24-9783",
+    "descripcion": "BSUV PWA Alambre forrado 180+225 confo",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:11.718833+00:00",
+    "updated_at": "2026-03-14T19:49:11.718833+00:00"
+  },
+  {
+    "id": 85,
+    "codigo": "FUN-2GJ-901A-IC",
+    "descripcion": "FUNDA 2GJ885901A-ICE APC TRASERO PATAGONIA",
+    "linea_code": "0198",
+    "linea_name": "SAS AUTOMOTRIZ ARGENTINA S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:53.171362+00:00",
+    "updated_at": "2026-03-14T19:48:53.171362+00:00"
+  },
+  {
+    "id": 71,
+    "codigo": "COR-2HT-115-DEC",
+    "descripcion": "CORTE 2HT857115 DEC IP DECORATIVE TRIM",
+    "linea_code": "0198",
+    "linea_name": "SAS AUTOMOTRIZ ARGENTINA S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:48.212195+00:00",
+    "updated_at": "2026-03-14T19:48:48.212195+00:00"
+  },
+  {
+    "id": 74,
+    "codigo": "COR-2HT-116-DEC",
+    "descripcion": "CORTE 2HT857116 DEC IP DECORATIVE TRIM",
+    "linea_code": "0198",
+    "linea_name": "SAS AUTOMOTRIZ ARGENTINA S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:49.213768+00:00",
+    "updated_at": "2026-03-14T19:48:49.213768+00:00"
+  },
+  {
+    "id": 77,
+    "codigo": "COR-2HT-900-9NY",
+    "descripcion": "CORTE 2HT885900 9NY APC AMAROK CENTRAL",
+    "linea_code": "0198",
+    "linea_name": "SAS AUTOMOTRIZ ARGENTINA S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:50.673795+00:00",
+    "updated_at": "2026-03-14T19:48:50.673795+00:00"
+  },
+  {
+    "id": 80,
+    "codigo": "COR-2HT-901-9NY",
+    "descripcion": "CORTE APC AMAROK LATERAL",
+    "linea_code": "0198",
+    "linea_name": "SAS AUTOMOTRIZ ARGENTINA S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:51.651508+00:00",
+    "updated_at": "2026-03-14T19:48:51.651508+00:00"
+  },
+  {
+    "id": 83,
+    "codigo": "FUN-2GJ-900A-IC",
+    "descripcion": "FUNDA 2GJ885900A-ICE APC TRASERO CENTR",
+    "linea_code": "0198",
+    "linea_name": "SAS AUTOMOTRIZ ARGENTINA S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:52.651066+00:00",
+    "updated_at": "2026-03-14T19:48:52.651066+00:00"
+  },
+  {
+    "id": 86,
+    "codigo": "FUN-2H6-761B-CS",
+    "descripcion": "FUNDA 2H6863761BCSY CENTRAL AMAROK BIS",
+    "linea_code": "0198",
+    "linea_name": "SAS AUTOMOTRIZ ARGENTINA S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:53.707716+00:00",
+    "updated_at": "2026-03-14T19:48:53.707716+00:00"
+  },
+  {
+    "id": 89,
+    "codigo": "FUN-2H7-901BQ",
+    "descripcion": "FUNDA 2H7885901BQUTV AMAROK CENTRAL TE",
+    "linea_code": "0198",
+    "linea_name": "SAS AUTOMOTRIZ ARGENTINA S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:54.682474+00:00",
+    "updated_at": "2026-03-14T19:48:54.682474+00:00"
+  },
+  {
+    "id": 92,
+    "codigo": "FUN-2HP-901D",
+    "descripcion": "FUNDA APC 2HP 885 901D AMAROK CLIP UNI",
+    "linea_code": "0198",
+    "linea_name": "SAS AUTOMOTRIZ ARGENTINA S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:55.65883+00:00",
+    "updated_at": "2026-03-14T19:48:55.65883+00:00"
+  },
+  {
+    "id": 95,
+    "codigo": "FUN-2HP-901J",
+    "descripcion": "FUNDA 2HP885901J AMAROK CENTRAL TEP BI",
+    "linea_code": "0198",
+    "linea_name": "SAS AUTOMOTRIZ ARGENTINA S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:56.666811+00:00",
+    "updated_at": "2026-03-14T19:48:56.666811+00:00"
+  },
+  {
+    "id": 98,
+    "codigo": "FUN-2HT-115-HOA",
+    "descripcion": "FUNDA 2HT857115 HOA IP DECORATIVE TRIM",
+    "linea_code": "0198",
+    "linea_name": "SAS AUTOMOTRIZ ARGENTINA S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:57.682124+00:00",
+    "updated_at": "2026-03-14T19:48:57.682124+00:00"
+  },
+  {
+    "id": 101,
+    "codigo": "FUN-2HT-116-HOA",
+    "descripcion": "FUNDA 2HT857116 HOA",
+    "linea_code": "0198",
+    "linea_name": "SAS AUTOMOTRIZ ARGENTINA S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:58.96991+00:00",
+    "updated_at": "2026-03-14T19:48:58.96991+00:00"
+  },
+  {
+    "id": 104,
+    "codigo": "FUN-2HT-900B-YZ",
+    "descripcion": "FUNDA 2HT885900B YZM APC AMAROK CENTRA",
+    "linea_code": "0198",
+    "linea_name": "SAS AUTOMOTRIZ ARGENTINA S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:59.954482+00:00",
+    "updated_at": "2026-03-14T19:48:59.954482+00:00"
+  },
+  {
+    "id": 107,
+    "codigo": "FUN-2HT-901B-YZ",
+    "descripcion": "FUNDA APC AMAROK LATERAL",
+    "linea_code": "0198",
+    "linea_name": "SAS AUTOMOTRIZ ARGENTINA S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:01.165243+00:00",
+    "updated_at": "2026-03-14T19:49:01.165243+00:00"
+  },
+  {
+    "id": 110,
+    "codigo": "INY-2H6-761B-IC",
+    "descripcion": "INYECCION 2H6863761BICE CENTRAL AMAROK",
+    "linea_code": "0198",
+    "linea_name": "SAS AUTOMOTRIZ ARGENTINA S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:02.652355+00:00",
+    "updated_at": "2026-03-14T19:49:02.652355+00:00"
+  },
+  {
+    "id": 113,
+    "codigo": "TRO-2GK-011QUE",
+    "descripcion": "TROQUELADO 2GK863011QUE INSTERT MAT",
+    "linea_code": "0198",
+    "linea_name": "SAS AUTOMOTRIZ ARGENTINA S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:03.650713+00:00",
+    "updated_at": "2026-03-14T19:49:03.650713+00:00"
+  },
+  {
+    "id": 116,
+    "codigo": "ROLL-PT110-8XM",
+    "descripcion": "Rollo de PT 1100 con ancho de 8mm x m",
+    "linea_code": "02",
+    "linea_name": "BURKOL S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:04.688626+00:00",
+    "updated_at": "2026-03-14T19:49:04.688626+00:00"
+  },
+  {
+    "id": 119,
+    "codigo": "21-7763",
+    "descripcion": "Tela TOY A640 Bifelt 140 grs/m2",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:05.975203+00:00",
+    "updated_at": "2026-03-14T19:49:05.975203+00:00"
+  },
+  {
+    "id": 122,
+    "codigo": "21-8455",
+    "descripcion": "Tela asiento nueva RANGER",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:07.67453+00:00",
+    "updated_at": "2026-03-14T19:49:07.67453+00:00"
+  },
+  {
+    "id": 125,
+    "codigo": "21-8908",
+    "descripcion": "TELA_ASIENTO_P21_AÑO/MODELO_2022_PWA",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:08.649628+00:00",
+    "updated_at": "2026-03-14T19:49:08.649628+00:00"
+  },
+  {
+    "id": 128,
+    "codigo": "24-3403",
+    "descripcion": "ALAMBRE RECTO 288 CRUDO RT100% RANGER",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:09.672201+00:00",
+    "updated_at": "2026-03-14T19:49:09.672201+00:00"
+  },
+  {
+    "id": 131,
+    "codigo": "24-9493",
+    "descripcion": "ALAMBRE P21 PSA",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:10.725179+00:00",
+    "updated_at": "2026-03-14T19:49:10.725179+00:00"
+  },
+  {
+    "id": 134,
+    "codigo": "24-9784",
+    "descripcion": "BSUV PWA Alambre forrado 280 recto",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:12.09221+00:00",
+    "updated_at": "2026-03-14T19:49:12.09221+00:00"
+  },
+  {
+    "id": 135,
+    "codigo": "24-9785",
+    "descripcion": "BSUV PWA Alambre forrado 300 recto",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:12.692751+00:00",
+    "updated_at": "2026-03-14T19:49:12.692751+00:00"
+  },
+  {
+    "id": 136,
+    "codigo": "24-9786",
+    "descripcion": "BSUV PWA Alambre forrado 260 recto",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:12.969145+00:00",
+    "updated_at": "2026-03-14T19:49:12.969145+00:00"
+  },
+  {
+    "id": 137,
+    "codigo": "24-9787",
+    "descripcion": "BSUV PWA Alambre forrado RSB 40-60",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:13.636263+00:00",
+    "updated_at": "2026-03-14T19:49:13.636263+00:00"
+  },
+  {
+    "id": 138,
+    "codigo": "24-9788",
+    "descripcion": "BSUV PWA Alambre forrado 200 recto",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:13.904351+00:00",
+    "updated_at": "2026-03-14T19:49:13.904351+00:00"
+  },
+  {
+    "id": 139,
+    "codigo": "24-9789",
+    "descripcion": "BSUV PWA Alambre forrado 280 con doble",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:14.188096+00:00",
+    "updated_at": "2026-03-14T19:49:14.188096+00:00"
+  },
+  {
+    "id": 140,
+    "codigo": "24-9790",
+    "descripcion": "BSUV PWA Alambre forrado 240 con doble",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:14.639593+00:00",
+    "updated_at": "2026-03-14T19:49:14.639593+00:00"
+  },
+  {
+    "id": 141,
+    "codigo": "24-9791",
+    "descripcion": "BSUV PWA Alambre forrado RSC 100",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:14.913186+00:00",
+    "updated_at": "2026-03-14T19:49:14.913186+00:00"
+  },
+  {
+    "id": 142,
+    "codigo": "24-9792",
+    "descripcion": "BSUV PWA Alambre forrado 240 recto",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:15.166273+00:00",
+    "updated_at": "2026-03-14T19:49:15.166273+00:00"
+  },
+  {
+    "id": 143,
+    "codigo": "24-9793",
+    "descripcion": "BSUV PWA Alambre forrado FSB LH",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:15.664064+00:00",
+    "updated_at": "2026-03-14T19:49:15.664064+00:00"
+  },
+  {
+    "id": 144,
+    "codigo": "24-9794",
+    "descripcion": "BSUV PWA Alambre forrado FSB RH",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:15.936066+00:00",
+    "updated_at": "2026-03-14T19:49:15.936066+00:00"
+  },
+  {
+    "id": 145,
+    "codigo": "24-9795",
+    "descripcion": "BSUV PWA Alambre forrado FSB Central",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:16.223787+00:00",
+    "updated_at": "2026-03-14T19:49:16.223787+00:00"
+  },
+  {
+    "id": 146,
+    "codigo": "30-4450",
+    "descripcion": "BSUV PWA Espuma de PUR apoyabrazos cen",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:16.681698+00:00",
+    "updated_at": "2026-03-14T19:49:16.681698+00:00"
+  },
+  {
+    "id": 147,
+    "codigo": "31-2007",
+    "descripcion": "BSUV PWA Conjunto estructura de apoyab",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:16.957629+00:00",
+    "updated_at": "2026-03-14T19:49:16.957629+00:00"
+  },
+  {
+    "id": 148,
+    "codigo": "34-1932",
+    "descripcion": "EXTRUCTURA 100% PHENIX",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:17.652137+00:00",
+    "updated_at": "2026-03-14T19:49:17.652137+00:00"
+  },
+  {
+    "id": 149,
+    "codigo": "34-4439",
+    "descripcion": "BSUV PWA Conjunto estructura de banco",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:17.907107+00:00",
+    "updated_at": "2026-03-14T19:49:17.907107+00:00"
+  },
+  {
+    "id": 150,
+    "codigo": "APLIX-A999R8395",
+    "descripcion": "APLIX METAL RESIN 208mm",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:18.171503+00:00",
+    "updated_at": "2026-03-14T19:49:18.171503+00:00"
+  },
+  {
+    "id": 151,
+    "codigo": "CAJ-CHIP",
+    "descripcion": "Cajones Chip Urethane",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:18.684288+00:00",
+    "updated_at": "2026-03-14T19:49:18.684288+00:00"
+  },
+  {
+    "id": 152,
+    "codigo": "MC-21-5194",
+    "descripcion": "MAQCORT 21-5194",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:18.934563+00:00",
+    "updated_at": "2026-03-14T19:49:18.934563+00:00"
+  },
+  {
+    "id": 153,
+    "codigo": "MC-21-5200",
+    "descripcion": "MAQCORT 21-5200",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:19.210049+00:00",
+    "updated_at": "2026-03-14T19:49:19.210049+00:00"
+  },
+  {
+    "id": 154,
+    "codigo": "MC-21-5376",
+    "descripcion": "MAQ CORTE 21-5376",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:19.68257+00:00",
+    "updated_at": "2026-03-14T19:49:19.68257+00:00"
+  },
+  {
+    "id": 155,
+    "codigo": "MC-21-5553",
+    "descripcion": "MAQCORT 21-5553",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:19.940329+00:00",
+    "updated_at": "2026-03-14T19:49:19.940329+00:00"
+  },
+  {
+    "id": 156,
+    "codigo": "MC-21-5569",
+    "descripcion": "MAQCORT 21-5569",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:20.203168+00:00",
+    "updated_at": "2026-03-14T19:49:20.203168+00:00"
+  },
+  {
+    "id": 157,
+    "codigo": "MC-21-5586",
+    "descripcion": "MAQCORTE 21-5586",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:20.69063+00:00",
+    "updated_at": "2026-03-14T19:49:20.69063+00:00"
+  },
+  {
+    "id": 158,
+    "codigo": "MC-21-6032",
+    "descripcion": "MAQCORT 21-6032",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:20.952316+00:00",
+    "updated_at": "2026-03-14T19:49:20.952316+00:00"
+  },
+  {
+    "id": 159,
+    "codigo": "MC-21-6034",
+    "descripcion": "MAQCORT 21-6034",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:21.206516+00:00",
+    "updated_at": "2026-03-14T19:49:21.206516+00:00"
+  },
+  {
+    "id": 160,
+    "codigo": "MC-21-6414",
+    "descripcion": "MAQ CORTE 21-6414",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:21.656558+00:00",
+    "updated_at": "2026-03-14T19:49:21.656558+00:00"
+  },
+  {
+    "id": 161,
+    "codigo": "MC-21-6479",
+    "descripcion": "MAQCORT 21-6479",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:21.933001+00:00",
+    "updated_at": "2026-03-14T19:49:21.933001+00:00"
+  },
+  {
+    "id": 162,
+    "codigo": "MC-21-6480",
+    "descripcion": "MAQCORT 21-6480",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:22.204371+00:00",
+    "updated_at": "2026-03-14T19:49:22.204371+00:00"
+  },
+  {
+    "id": 163,
+    "codigo": "MC-21-6481",
+    "descripcion": "MAQCORT 21-6481",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:22.658052+00:00",
+    "updated_at": "2026-03-14T19:49:22.658052+00:00"
+  },
+  {
+    "id": 164,
+    "codigo": "MC-21-6482",
+    "descripcion": "MAQCORT 21-6482",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:22.919492+00:00",
+    "updated_at": "2026-03-14T19:49:22.919492+00:00"
+  },
+  {
+    "id": 165,
+    "codigo": "MC-21-6483",
+    "descripcion": "MAQCORT 21-6483",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:23.210686+00:00",
+    "updated_at": "2026-03-14T19:49:23.210686+00:00"
+  },
+  {
+    "id": 166,
+    "codigo": "MC-21-6523",
+    "descripcion": "MAQCORT 21-6523",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:23.661182+00:00",
+    "updated_at": "2026-03-14T19:49:23.661182+00:00"
+  },
+  {
+    "id": 167,
+    "codigo": "MC-21-6530",
+    "descripcion": "MAQCORT 21-6530",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:23.920184+00:00",
+    "updated_at": "2026-03-14T19:49:23.920184+00:00"
+  },
+  {
+    "id": 168,
+    "codigo": "MC-21-6531",
+    "descripcion": "MAQCORT 21-6531",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:24.658141+00:00",
+    "updated_at": "2026-03-14T19:49:24.658141+00:00"
+  },
+  {
+    "id": 169,
+    "codigo": "MC-21-6532",
+    "descripcion": "MAQCORT 21-6532",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:24.924587+00:00",
+    "updated_at": "2026-03-14T19:49:24.924587+00:00"
+  },
+  {
+    "id": 170,
+    "codigo": "MC-21-6534",
+    "descripcion": "MAQCOTR 21-6534",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:25.182866+00:00",
+    "updated_at": "2026-03-14T19:49:25.182866+00:00"
+  },
+  {
+    "id": 171,
+    "codigo": "MC-21-6535",
+    "descripcion": "MAQCORT 21-6535",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:25.731331+00:00",
+    "updated_at": "2026-03-14T19:49:25.731331+00:00"
+  },
+  {
+    "id": 172,
+    "codigo": "MC-21-6536",
+    "descripcion": "MAQCORT 21-6536",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:25.998149+00:00",
+    "updated_at": "2026-03-14T19:49:25.998149+00:00"
+  },
+  {
+    "id": 173,
+    "codigo": "MC-21-6537",
+    "descripcion": "MAQCORT 21-6537",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:26.645596+00:00",
+    "updated_at": "2026-03-14T19:49:26.645596+00:00"
+  },
+  {
+    "id": 174,
+    "codigo": "MC-21-6538",
+    "descripcion": "MAQCORT 21-6538",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:26.896665+00:00",
+    "updated_at": "2026-03-14T19:49:26.896665+00:00"
+  },
+  {
+    "id": 175,
+    "codigo": "MC-21-6539",
+    "descripcion": "MAQCORT 21-6539",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:27.156651+00:00",
+    "updated_at": "2026-03-14T19:49:27.156651+00:00"
+  },
+  {
+    "id": 176,
+    "codigo": "MC-21-6567",
+    "descripcion": "MAQCORT 21-6567",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:27.707329+00:00",
+    "updated_at": "2026-03-14T19:49:27.707329+00:00"
+  },
+  {
+    "id": 177,
+    "codigo": "MC-21-6576",
+    "descripcion": "MAQCORT 21-6576",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:27.959244+00:00",
+    "updated_at": "2026-03-14T19:49:27.959244+00:00"
+  },
+  {
+    "id": 178,
+    "codigo": "MC-21-6595",
+    "descripcion": "MAQCORT 21-6595",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:28.242248+00:00",
+    "updated_at": "2026-03-14T19:49:28.242248+00:00"
+  },
+  {
+    "id": 179,
+    "codigo": "MC-21-6612",
+    "descripcion": "MAQCORT 21-6612",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:28.724956+00:00",
+    "updated_at": "2026-03-14T19:49:28.724956+00:00"
+  },
+  {
+    "id": 180,
+    "codigo": "MC-21-6613",
+    "descripcion": "MAQCORT 21-6613",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:29.001307+00:00",
+    "updated_at": "2026-03-14T19:49:29.001307+00:00"
+  },
+  {
+    "id": 181,
+    "codigo": "MC-21-6614",
+    "descripcion": "MAQCORT 21-6614",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:29.670299+00:00",
+    "updated_at": "2026-03-14T19:49:29.670299+00:00"
+  },
+  {
+    "id": 182,
+    "codigo": "MC-21-6619",
+    "descripcion": "MAQCORT 21-6619",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:29.938101+00:00",
+    "updated_at": "2026-03-14T19:49:29.938101+00:00"
+  },
+  {
+    "id": 183,
+    "codigo": "MC-21-6621",
+    "descripcion": "MAQCORT 21-6621",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:30.211778+00:00",
+    "updated_at": "2026-03-14T19:49:30.211778+00:00"
+  },
+  {
+    "id": 184,
+    "codigo": "MC-21-6699",
+    "descripcion": "MAQCORT 21-6699",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:30.669031+00:00",
+    "updated_at": "2026-03-14T19:49:30.669031+00:00"
+  },
+  {
+    "id": 185,
+    "codigo": "MC-21-6718",
+    "descripcion": "MAQCORT 21-6718",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:30.928916+00:00",
+    "updated_at": "2026-03-14T19:49:30.928916+00:00"
+  },
+  {
+    "id": 186,
+    "codigo": "MC-21-6756",
+    "descripcion": "MÁQUINA DE CORTE 21-6756",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:31.180875+00:00",
+    "updated_at": "2026-03-14T19:49:31.180875+00:00"
+  },
+  {
+    "id": 187,
+    "codigo": "MC-21-6757",
+    "descripcion": "MAQCORT21-6757",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:31.646711+00:00",
+    "updated_at": "2026-03-14T19:49:31.646711+00:00"
+  },
+  {
+    "id": 188,
+    "codigo": "MC-21-6758",
+    "descripcion": "MAQCORT 21-6758",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:31.895362+00:00",
+    "updated_at": "2026-03-14T19:49:31.895362+00:00"
+  },
+  {
+    "id": 191,
+    "codigo": "MC-21-6899",
+    "descripcion": "MAQ CORTE 21-6899",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:32.92975+00:00",
+    "updated_at": "2026-03-14T19:49:32.92975+00:00"
+  },
+  {
+    "id": 194,
+    "codigo": "MC-21-7340",
+    "descripcion": "MAQ CORTE 21-7340",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:33.921941+00:00",
+    "updated_at": "2026-03-14T19:49:33.921941+00:00"
+  },
+  {
+    "id": 197,
+    "codigo": "MC-21-7763",
+    "descripcion": "MAQCORT 21-7763",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:35.147184+00:00",
+    "updated_at": "2026-03-14T19:49:35.147184+00:00"
+  },
+  {
+    "id": 200,
+    "codigo": "MC-REF-CORT",
+    "descripcion": "MAQCORT REFUERZO CORTO",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:36.727352+00:00",
+    "updated_at": "2026-03-14T19:49:36.727352+00:00"
+  },
+  {
+    "id": 203,
+    "codigo": "MOE-21-5200",
+    "descripcion": "MOE APLIX 21-5200",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:37.920968+00:00",
+    "updated_at": "2026-03-14T19:49:37.920968+00:00"
+  },
+  {
+    "id": 206,
+    "codigo": "MOE-21-5586",
+    "descripcion": "MOE APLIX 21-5586",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:38.990595+00:00",
+    "updated_at": "2026-03-14T19:49:38.990595+00:00"
+  },
+  {
+    "id": 209,
+    "codigo": "MOE-21-6479",
+    "descripcion": "MOE  BROCHES 21-6479",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:40.672232+00:00",
+    "updated_at": "2026-03-14T19:49:40.672232+00:00"
+  },
+  {
+    "id": 212,
+    "codigo": "MOE-21-6482",
+    "descripcion": "MOE BROCHES 21-6482",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:42.011223+00:00",
+    "updated_at": "2026-03-14T19:49:42.011223+00:00"
+  },
+  {
+    "id": 215,
+    "codigo": "MOE-21-6530",
+    "descripcion": "MOE APLIX 21-6530",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:43.705809+00:00",
+    "updated_at": "2026-03-14T19:49:43.705809+00:00"
+  },
+  {
+    "id": 218,
+    "codigo": "MOE-21-6534",
+    "descripcion": "MOE APLIX 21-6534",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:45.056+00:00",
+    "updated_at": "2026-03-14T19:49:45.056+00:00"
+  },
+  {
+    "id": 221,
+    "codigo": "MOE-21-6537",
+    "descripcion": "MOE APLIX 21-6537",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:46.682727+00:00",
+    "updated_at": "2026-03-14T19:49:46.682727+00:00"
+  },
+  {
+    "id": 224,
+    "codigo": "MOE-21-6567",
+    "descripcion": "MOE APLIX 21-6567",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:48.006467+00:00",
+    "updated_at": "2026-03-14T19:49:48.006467+00:00"
+  },
+  {
+    "id": 227,
+    "codigo": "MOE-21-6612",
+    "descripcion": "MOE APLIX 21-6612",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:49.691612+00:00",
+    "updated_at": "2026-03-14T19:49:49.691612+00:00"
+  },
+  {
+    "id": 230,
+    "codigo": "MOE-21-6619",
+    "descripcion": "MOE BROCHES 21-6619",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:51.016194+00:00",
+    "updated_at": "2026-03-14T19:49:51.016194+00:00"
+  },
+  {
+    "id": 233,
+    "codigo": "MOE-21-6718",
+    "descripcion": "MOE BROCHES 21-6718",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:53.227999+00:00",
+    "updated_at": "2026-03-14T19:49:53.227999+00:00"
+  },
+  {
+    "id": 236,
+    "codigo": "MOE-21-6758",
+    "descripcion": "MOE BROCHES 21-6758",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:54.688635+00:00",
+    "updated_at": "2026-03-14T19:49:54.688635+00:00"
+  },
+  {
+    "id": 239,
+    "codigo": "MOE-21-7340",
+    "descripcion": "MANO OBRA EXTERNA 21-7340",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:55.751097+00:00",
+    "updated_at": "2026-03-14T19:49:55.751097+00:00"
+  },
+  {
+    "id": 242,
+    "codigo": "MOE-21-7763",
+    "descripcion": "MOE APLIX 21-7763",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:56.934419+00:00",
+    "updated_at": "2026-03-14T19:49:56.934419+00:00"
+  },
+  {
+    "id": 245,
+    "codigo": "MOI-21-6034",
+    "descripcion": "MOI COST 21-6034",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:57.997418+00:00",
+    "updated_at": "2026-03-14T19:49:57.997418+00:00"
+  },
+  {
+    "id": 248,
+    "codigo": "MOI-21-6481",
+    "descripcion": "MOI COST 21-6481",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:59.815136+00:00",
+    "updated_at": "2026-03-14T19:49:59.815136+00:00"
+  },
+  {
+    "id": 251,
+    "codigo": "MOI-21-6523",
+    "descripcion": "MOI COST 21-6523",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:01.038907+00:00",
+    "updated_at": "2026-03-14T19:50:01.038907+00:00"
+  },
+  {
+    "id": 254,
+    "codigo": "MOI-21-6532",
+    "descripcion": "MOI COST 21-6532",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:02.768534+00:00",
+    "updated_at": "2026-03-14T19:50:02.768534+00:00"
+  },
+  {
+    "id": 257,
+    "codigo": "MOI-21-6536",
+    "descripcion": "MOI COST 21-6536",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:04.03932+00:00",
+    "updated_at": "2026-03-14T19:50:04.03932+00:00"
+  },
+  {
+    "id": 260,
+    "codigo": "MOI-21-6539",
+    "descripcion": "MOI COST 21-6539",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:05.823362+00:00",
+    "updated_at": "2026-03-14T19:50:05.823362+00:00"
+  },
+  {
+    "id": 263,
+    "codigo": "MOI-21-6612",
+    "descripcion": "MOI COST 21-6612",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:07.017234+00:00",
+    "updated_at": "2026-03-14T19:50:07.017234+00:00"
+  },
+  {
+    "id": 266,
+    "codigo": "MOI-21-6621",
+    "descripcion": "MOI COST 21-6621",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:08.176788+00:00",
+    "updated_at": "2026-03-14T19:50:08.176788+00:00"
+  },
+  {
+    "id": 269,
+    "codigo": "MOI-21-6756",
+    "descripcion": "MANO DE OBRE INTERNA 21-6756",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:09.977072+00:00",
+    "updated_at": "2026-03-14T19:50:09.977072+00:00"
+  },
+  {
+    "id": 272,
+    "codigo": "MOI-21-6766",
+    "descripcion": "MOI COST 21-6766",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:11.776313+00:00",
+    "updated_at": "2026-03-14T19:50:11.776313+00:00"
+  },
+  {
+    "id": 189,
+    "codigo": "MC-21-6766",
+    "descripcion": "MAQCORT 21-6766",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:32.183501+00:00",
+    "updated_at": "2026-03-14T19:49:32.183501+00:00"
+  },
+  {
+    "id": 192,
+    "codigo": "MC-21-6900",
+    "descripcion": "MAQ CORTE 21-6900",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:33.187485+00:00",
+    "updated_at": "2026-03-14T19:49:33.187485+00:00"
+  },
+  {
+    "id": 195,
+    "codigo": "MC-21-7341",
+    "descripcion": "MAQ CORTE 21-7341",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:34.175641+00:00",
+    "updated_at": "2026-03-14T19:49:34.175641+00:00"
+  },
+  {
+    "id": 198,
+    "codigo": "MC-5569",
+    "descripcion": "MAQCORT 21-5569",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:35.674251+00:00",
+    "updated_at": "2026-03-14T19:49:35.674251+00:00"
+  },
+  {
+    "id": 201,
+    "codigo": "MC-REF-LARG",
+    "descripcion": "MAQCORT REFUERZO LARGO",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:37.011002+00:00",
+    "updated_at": "2026-03-14T19:49:37.011002+00:00"
+  },
+  {
+    "id": 204,
+    "codigo": "MOE-21-5553",
+    "descripcion": "MOE APLIX 21-5553",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:38.179552+00:00",
+    "updated_at": "2026-03-14T19:49:38.179552+00:00"
+  },
+  {
+    "id": 207,
+    "codigo": "MOE-21-6032",
+    "descripcion": "MOE APLIX 21-6032",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:39.703091+00:00",
+    "updated_at": "2026-03-14T19:49:39.703091+00:00"
+  },
+  {
+    "id": 210,
+    "codigo": "MOE-21-6480",
+    "descripcion": "MOE BROCHES 21-6480",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:40.962061+00:00",
+    "updated_at": "2026-03-14T19:49:40.962061+00:00"
+  },
+  {
+    "id": 213,
+    "codigo": "MOE-21-6483",
+    "descripcion": "MOE BROCHES 21-6483",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:42.731772+00:00",
+    "updated_at": "2026-03-14T19:49:42.731772+00:00"
+  },
+  {
+    "id": 216,
+    "codigo": "MOE-21-6531",
+    "descripcion": "MOE APLIX 21-6531",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:43.972113+00:00",
+    "updated_at": "2026-03-14T19:49:43.972113+00:00"
+  },
+  {
+    "id": 219,
+    "codigo": "MOE-21-6535",
+    "descripcion": "MOE APLIX 21-6535",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:45.778221+00:00",
+    "updated_at": "2026-03-14T19:49:45.778221+00:00"
+  },
+  {
+    "id": 222,
+    "codigo": "MOE-21-6538",
+    "descripcion": "MOE APLIX 21-6538",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:46.95228+00:00",
+    "updated_at": "2026-03-14T19:49:46.95228+00:00"
+  },
+  {
+    "id": 225,
+    "codigo": "MOE-21-6576",
+    "descripcion": "MOE BROCHES 21-6576",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:48.713275+00:00",
+    "updated_at": "2026-03-14T19:49:48.713275+00:00"
+  },
+  {
+    "id": 228,
+    "codigo": "MOE-21-6613",
+    "descripcion": "MOE APLIX 21-6613",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:49.940181+00:00",
+    "updated_at": "2026-03-14T19:49:49.940181+00:00"
+  },
+  {
+    "id": 231,
+    "codigo": "MOE-21-6621",
+    "descripcion": "MOE APLIX 21-6621",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:52.101533+00:00",
+    "updated_at": "2026-03-14T19:49:52.101533+00:00"
+  },
+  {
+    "id": 234,
+    "codigo": "MOE-21-6756",
+    "descripcion": "MANO DE OBRA EXTERNA 21-6756",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:53.810353+00:00",
+    "updated_at": "2026-03-14T19:49:53.810353+00:00"
+  },
+  {
+    "id": 237,
+    "codigo": "MOE-21-6766",
+    "descripcion": "MOE APLIX 21-6766",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:54.941323+00:00",
+    "updated_at": "2026-03-14T19:49:54.941323+00:00"
+  },
+  {
+    "id": 240,
+    "codigo": "MOE-21-7341",
+    "descripcion": "MANO OBRA EXTERNA 21-7341",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:56.013654+00:00",
+    "updated_at": "2026-03-14T19:49:56.013654+00:00"
+  },
+  {
+    "id": 243,
+    "codigo": "MOE-P280819",
+    "descripcion": "MOE BROCHES P280819",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:57.193469+00:00",
+    "updated_at": "2026-03-14T19:49:57.193469+00:00"
+  },
+  {
+    "id": 246,
+    "codigo": "MOI-21-6479",
+    "descripcion": "MOI COST 21-6479",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:58.739657+00:00",
+    "updated_at": "2026-03-14T19:49:58.739657+00:00"
+  },
+  {
+    "id": 249,
+    "codigo": "MOI-21-6482",
+    "descripcion": "MOI COST 21-6482",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:00.071683+00:00",
+    "updated_at": "2026-03-14T19:50:00.071683+00:00"
+  },
+  {
+    "id": 252,
+    "codigo": "MOI-21-6530",
+    "descripcion": "MOI COST 21-6530",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:01.676873+00:00",
+    "updated_at": "2026-03-14T19:50:01.676873+00:00"
+  },
+  {
+    "id": 255,
+    "codigo": "MOI-21-6534",
+    "descripcion": "MOI COST 21-6534",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:03.044911+00:00",
+    "updated_at": "2026-03-14T19:50:03.044911+00:00"
+  },
+  {
+    "id": 258,
+    "codigo": "MOI-21-6537",
+    "descripcion": "MOI COST 21-6537",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:04.932019+00:00",
+    "updated_at": "2026-03-14T19:50:04.932019+00:00"
+  },
+  {
+    "id": 261,
+    "codigo": "MOI-21-6567",
+    "descripcion": "MOI COST 21-6567",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:06.101721+00:00",
+    "updated_at": "2026-03-14T19:50:06.101721+00:00"
+  },
+  {
+    "id": 264,
+    "codigo": "MOI-21-6613",
+    "descripcion": "MOI COST 21-6613",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:07.664402+00:00",
+    "updated_at": "2026-03-14T19:50:07.664402+00:00"
+  },
+  {
+    "id": 267,
+    "codigo": "MOI-21-6699",
+    "descripcion": "MOI COST 21-6699",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:08.838768+00:00",
+    "updated_at": "2026-03-14T19:50:08.838768+00:00"
+  },
+  {
+    "id": 270,
+    "codigo": "MOI-21-6757",
+    "descripcion": "MOI COST 21-6757",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:10.855649+00:00",
+    "updated_at": "2026-03-14T19:50:10.855649+00:00"
+  },
+  {
+    "id": 190,
+    "codigo": "MC-21-6767",
+    "descripcion": "MAQCORT 21-6767",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:32.652558+00:00",
+    "updated_at": "2026-03-14T19:49:32.652558+00:00"
+  },
+  {
+    "id": 193,
+    "codigo": "MC-21-7339",
+    "descripcion": "MAQ CORTE 21-7339",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:33.668378+00:00",
+    "updated_at": "2026-03-14T19:49:33.668378+00:00"
+  },
+  {
+    "id": 196,
+    "codigo": "MC-21-7467",
+    "descripcion": "MAQCORT 21-7467",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:34.734641+00:00",
+    "updated_at": "2026-03-14T19:49:34.734641+00:00"
+  },
+  {
+    "id": 199,
+    "codigo": "MC-P280819",
+    "descripcion": "MAQCORT P280819",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:35.988618+00:00",
+    "updated_at": "2026-03-14T19:49:35.988618+00:00"
+  },
+  {
+    "id": 202,
+    "codigo": "MOE-21-5194",
+    "descripcion": "MOE APLIX 21-5194",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:37.655538+00:00",
+    "updated_at": "2026-03-14T19:49:37.655538+00:00"
+  },
+  {
+    "id": 205,
+    "codigo": "MOE-21-5569",
+    "descripcion": "MOE APLIX 21-5569",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:38.73839+00:00",
+    "updated_at": "2026-03-14T19:49:38.73839+00:00"
+  },
+  {
+    "id": 208,
+    "codigo": "MOE-21-6034",
+    "descripcion": "MOE APLIX 21-6034",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:39.975206+00:00",
+    "updated_at": "2026-03-14T19:49:39.975206+00:00"
+  },
+  {
+    "id": 211,
+    "codigo": "MOE-21-6481",
+    "descripcion": "MOE BROCHES 21-6481",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:41.745509+00:00",
+    "updated_at": "2026-03-14T19:49:41.745509+00:00"
+  },
+  {
+    "id": 214,
+    "codigo": "MOE-21-6523",
+    "descripcion": "MOE APLIX 21-6523",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:43.04316+00:00",
+    "updated_at": "2026-03-14T19:49:43.04316+00:00"
+  },
+  {
+    "id": 217,
+    "codigo": "MOE-21-6532",
+    "descripcion": "MOE APLIX 21-6532",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:44.799297+00:00",
+    "updated_at": "2026-03-14T19:49:44.799297+00:00"
+  },
+  {
+    "id": 220,
+    "codigo": "MOE-21-6536",
+    "descripcion": "MOE APLIX 21-6536",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:46.045953+00:00",
+    "updated_at": "2026-03-14T19:49:46.045953+00:00"
+  },
+  {
+    "id": 223,
+    "codigo": "MOE-21-6539",
+    "descripcion": "MOE APLIX 21-6539",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:47.741372+00:00",
+    "updated_at": "2026-03-14T19:49:47.741372+00:00"
+  },
+  {
+    "id": 226,
+    "codigo": "MOE-21-6595",
+    "descripcion": "MOE APLIX 21-6595",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:48.965849+00:00",
+    "updated_at": "2026-03-14T19:49:48.965849+00:00"
+  },
+  {
+    "id": 229,
+    "codigo": "MOE-21-6614",
+    "descripcion": "MOE APLIX 21-6614",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:50.203356+00:00",
+    "updated_at": "2026-03-14T19:49:50.203356+00:00"
+  },
+  {
+    "id": 232,
+    "codigo": "MOE-21-6699",
+    "descripcion": "MOE APLIX 21-6699",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:52.978959+00:00",
+    "updated_at": "2026-03-14T19:49:52.978959+00:00"
+  },
+  {
+    "id": 235,
+    "codigo": "MOE-21-6757",
+    "descripcion": "MOE APLIX 21-6757",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:54.078276+00:00",
+    "updated_at": "2026-03-14T19:49:54.078276+00:00"
+  },
+  {
+    "id": 238,
+    "codigo": "MOE-21-6767",
+    "descripcion": "MOE APLIX 21-6767",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:55.201584+00:00",
+    "updated_at": "2026-03-14T19:49:55.201584+00:00"
+  },
+  {
+    "id": 241,
+    "codigo": "MOE-21-7467",
+    "descripcion": "MOE BROCHES 21-7467",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:56.676577+00:00",
+    "updated_at": "2026-03-14T19:49:56.676577+00:00"
+  },
+  {
+    "id": 244,
+    "codigo": "MOI-21-6032",
+    "descripcion": "MOI COST 21-6032",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:57.752479+00:00",
+    "updated_at": "2026-03-14T19:49:57.752479+00:00"
+  },
+  {
+    "id": 247,
+    "codigo": "MOI-21-6480",
+    "descripcion": "MOI COST 21-6480",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:49:58.99798+00:00",
+    "updated_at": "2026-03-14T19:49:58.99798+00:00"
+  },
+  {
+    "id": 250,
+    "codigo": "MOI-21-6483",
+    "descripcion": "MOI COST 21-6483",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:00.722427+00:00",
+    "updated_at": "2026-03-14T19:50:00.722427+00:00"
+  },
+  {
+    "id": 253,
+    "codigo": "MOI-21-6531",
+    "descripcion": "MOI COST 21-6531",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:01.991215+00:00",
+    "updated_at": "2026-03-14T19:50:01.991215+00:00"
+  },
+  {
+    "id": 256,
+    "codigo": "MOI-21-6535",
+    "descripcion": "MOI COST 21-6535",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:03.74872+00:00",
+    "updated_at": "2026-03-14T19:50:03.74872+00:00"
+  },
+  {
+    "id": 259,
+    "codigo": "MOI-21-6538",
+    "descripcion": "MOI COST 21-6538",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:05.21+00:00",
+    "updated_at": "2026-03-14T19:50:05.21+00:00"
+  },
+  {
+    "id": 262,
+    "codigo": "MOI-21-6595",
+    "descripcion": "MOI COST 21-6595",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:06.746326+00:00",
+    "updated_at": "2026-03-14T19:50:06.746326+00:00"
+  },
+  {
+    "id": 265,
+    "codigo": "MOI-21-6619",
+    "descripcion": "MOI COST 21-6619",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:07.922772+00:00",
+    "updated_at": "2026-03-14T19:50:07.922772+00:00"
+  },
+  {
+    "id": 268,
+    "codigo": "MOI-21-6718",
+    "descripcion": "MOI COST 21-6718",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:09.107477+00:00",
+    "updated_at": "2026-03-14T19:50:09.107477+00:00"
+  },
+  {
+    "id": 271,
+    "codigo": "MOI-21-6758",
+    "descripcion": "MOI COST 21-6758",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:11.158948+00:00",
+    "updated_at": "2026-03-14T19:50:11.158948+00:00"
+  },
+  {
+    "id": 273,
+    "codigo": "MOI-21-6767",
+    "descripcion": "MOI COST 21-6767",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:12.01847+00:00",
+    "updated_at": "2026-03-14T19:50:12.01847+00:00"
+  },
+  {
+    "id": 274,
+    "codigo": "MOI-21-7467",
+    "descripcion": "MOI COST 21-7467",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:12.743833+00:00",
+    "updated_at": "2026-03-14T19:50:12.743833+00:00"
+  },
+  {
+    "id": 275,
+    "codigo": "MOI-21-7763",
+    "descripcion": "MOI COST 21-7763",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:13.008297+00:00",
+    "updated_at": "2026-03-14T19:50:13.008297+00:00"
+  },
+  {
+    "id": 276,
+    "codigo": "MOR-21-6479",
+    "descripcion": "MOE BROCHES 21-6479",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:13.80051+00:00",
+    "updated_at": "2026-03-14T19:50:13.80051+00:00"
+  },
+  {
+    "id": 277,
+    "codigo": "PRUEBA2024",
+    "descripcion": "Introducción de procesos en artículos",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:14.064557+00:00",
+    "updated_at": "2026-03-14T19:50:14.064557+00:00"
+  },
+  {
+    "id": 278,
+    "codigo": "PW002",
+    "descripcion": "50% HERRAMENTAL 31-2007 FRAME APB 1-20",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:14.668462+00:00",
+    "updated_at": "2026-03-14T19:50:14.668462+00:00"
+  },
+  {
+    "id": 279,
+    "codigo": "PW01",
+    "descripcion": "50% HERRAMENTAL CODIGO 34-4439 FRAME R",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:14.952632+00:00",
+    "updated_at": "2026-03-14T19:50:14.952632+00:00"
+  },
+  {
+    "id": 280,
+    "codigo": "PWA-01",
+    "descripcion": "MATERIALES",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:15.202592+00:00",
+    "updated_at": "2026-03-14T19:50:15.202592+00:00"
+  },
+  {
+    "id": 281,
+    "codigo": "REF-21-6619",
+    "descripcion": "REFUERZO PLASTICO 21-6619",
+    "linea_code": "020",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:15.691909+00:00",
+    "updated_at": "2026-03-14T19:50:15.691909+00:00"
+  },
+  {
+    "id": 282,
+    "codigo": "FEGO-001",
+    "descripcion": "ESPUMA DE PU 80X40MM",
+    "linea_code": "0200",
+    "linea_name": "YAZAKI ARGENTINA S.R.L.",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:15.986575+00:00",
+    "updated_at": "2026-03-14T19:50:15.986575+00:00"
+  },
+  {
+    "id": 283,
+    "codigo": "LID01",
+    "descripcion": "ENVASES MAT. COMP MARCA LIDERGAS FABR.",
+    "linea_code": "0210",
+    "linea_name": "DISTRIBUIDORA LIDERGAS",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:16.669162+00:00",
+    "updated_at": "2026-03-14T19:50:16.669162+00:00"
+  },
+  {
+    "id": 284,
+    "codigo": "LID02",
+    "descripcion": "DESCUENTO  50% ANTICIPO FAC 2 A 889",
+    "linea_code": "0210",
+    "linea_name": "DISTRIBUIDORA LIDERGAS",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:16.91816+00:00",
+    "updated_at": "2026-03-14T19:50:16.91816+00:00"
+  },
+  {
+    "id": 285,
+    "codigo": "PH661-10010",
+    "descripcion": "ETIQUETA TOYOTA GR ARG",
+    "linea_code": "0215",
+    "linea_name": "TOYOTA ARGENTINA S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:17.187118+00:00",
+    "updated_at": "2026-03-14T19:50:17.187118+00:00"
+  },
+  {
+    "id": 286,
+    "codigo": "PH661-10020",
+    "descripcion": "ETIQUETA TOYOTA GR BRA",
+    "linea_code": "0215",
+    "linea_name": "TOYOTA ARGENTINA S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:17.731386+00:00",
+    "updated_at": "2026-03-14T19:50:17.731386+00:00"
+  },
+  {
+    "id": 287,
+    "codigo": "58904KK070-C0",
+    "descripcion": "COFIA VUTEQ-TASA HIGHLINE GRIS 205",
+    "linea_code": "0216",
+    "linea_name": "VUTEQ",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:18.0071+00:00",
+    "updated_at": "2026-03-14T19:50:18.0071+00:00"
+  },
+  {
+    "id": 288,
+    "codigo": "58904KK070-C3",
+    "descripcion": "COFIA VUTEQ-TASA HIGHLINE GRIS",
+    "linea_code": "0216",
+    "linea_name": "VUTEQ",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:18.685202+00:00",
+    "updated_at": "2026-03-14T19:50:18.685202+00:00"
+  },
+  {
+    "id": 289,
+    "codigo": "58904KK070-C4",
+    "descripcion": "COFIA VUTEQ-TASA HIGHLINE ROJO Y55",
+    "linea_code": "0216",
+    "linea_name": "VUTEQ",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:18.939286+00:00",
+    "updated_at": "2026-03-14T19:50:18.939286+00:00"
+  },
+  {
+    "id": 290,
+    "codigo": "58904KK090-C0",
+    "descripcion": "COFIA VUTEQ-TASA LOW GRIS 205",
+    "linea_code": "0216",
+    "linea_name": "VUTEQ",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:19.191245+00:00",
+    "updated_at": "2026-03-14T19:50:19.191245+00:00"
+  },
+  {
+    "id": 291,
+    "codigo": "ALAM-KK070",
+    "descripcion": "SEMITERMINADO VUTEQ COFIAS O70",
+    "linea_code": "0216",
+    "linea_name": "VUTEQ",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:19.738319+00:00",
+    "updated_at": "2026-03-14T19:50:19.738319+00:00"
+  },
+  {
+    "id": 292,
+    "codigo": "ALAM-KK090",
+    "descripcion": "SEMITERMINADO VUTEQ COFIAS O90",
+    "linea_code": "0216",
+    "linea_name": "VUTEQ",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:20.012948+00:00",
+    "updated_at": "2026-03-14T19:50:20.012948+00:00"
+  },
+  {
+    "id": 293,
+    "codigo": "V01",
+    "descripcion": "ANTICIPO",
+    "linea_code": "0216",
+    "linea_name": "VUTEQ",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:20.850499+00:00",
+    "updated_at": "2026-03-14T19:50:20.850499+00:00"
+  },
+  {
+    "id": 294,
+    "codigo": "VU001",
+    "descripcion": "POR ANULACION FAC 002A0000280",
+    "linea_code": "0216",
+    "linea_name": "VUTEQ",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:21.143961+00:00",
+    "updated_at": "2026-03-14T19:50:21.143961+00:00"
+  },
+  {
+    "id": 295,
+    "codigo": "4055",
+    "descripcion": "TAPA CONS CENTRAL TELA 58951-KK090-C9",
+    "linea_code": "0217",
+    "linea_name": "MIRGOR SACIFIA",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:21.736861+00:00",
+    "updated_at": "2026-03-14T19:50:21.736861+00:00"
+  },
+  {
+    "id": 296,
+    "codigo": "4111",
+    "descripcion": "TAPA CONS. CUERO NEGRO HILO GRIS OSCUR",
+    "linea_code": "0217",
+    "linea_name": "MIRGOR SACIFIA",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:21.986482+00:00",
+    "updated_at": "2026-03-14T19:50:21.986482+00:00"
+  },
+  {
+    "id": 297,
+    "codigo": "4112",
+    "descripcion": "TAPA CONS.CUERO BLANCO HILO BLANCO 589",
+    "linea_code": "0217",
+    "linea_name": "MIRGOR SACIFIA",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:22.663181+00:00",
+    "updated_at": "2026-03-14T19:50:22.663181+00:00"
+  },
+  {
+    "id": 298,
+    "codigo": "4113",
+    "descripcion": "TAPA CONS. CUERO NEGRO HILO ROJO 58951",
+    "linea_code": "0217",
+    "linea_name": "MIRGOR SACIFIA",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:22.926398+00:00",
+    "updated_at": "2026-03-14T19:50:22.926398+00:00"
+  },
+  {
+    "id": 299,
+    "codigo": "4114",
+    "descripcion": "TAPA CONS. CUERO NEGRO HILO GRIS CLARO",
+    "linea_code": "0217",
+    "linea_name": "MIRGOR SACIFIA",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:23.209437+00:00",
+    "updated_at": "2026-03-14T19:50:23.209437+00:00"
+  },
+  {
+    "id": 300,
+    "codigo": "43667",
+    "descripcion": "STEEL PAINT PEN 50 CC",
+    "linea_code": "0217",
+    "linea_name": "MIRGOR SACIFIA",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:23.74497+00:00",
+    "updated_at": "2026-03-14T19:50:23.74497+00:00"
+  },
+  {
+    "id": 301,
+    "codigo": "58905-KK040-23",
+    "descripcion": "TAPA CONS CUERO BLANCO HILO BLANCO A08",
+    "linea_code": "0217",
+    "linea_name": "MIRGOR SACIFIA",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:24.014904+00:00",
+    "updated_at": "2026-03-14T19:50:24.014904+00:00"
+  },
+  {
+    "id": 302,
+    "codigo": "58905-KK040-26",
+    "descripcion": "TAPA CONS CUERO NEGRO HILO GRIS X1E9",
+    "linea_code": "0217",
+    "linea_name": "MIRGOR SACIFIA",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:24.899782+00:00",
+    "updated_at": "2026-03-14T19:50:24.899782+00:00"
+  },
+  {
+    "id": 303,
+    "codigo": "58905-KK040-27",
+    "descripcion": "TAPA CONS CUERO NEGRO HILO ROJO A3H2",
+    "linea_code": "0217",
+    "linea_name": "MIRGOR SACIFIA",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:25.196021+00:00",
+    "updated_at": "2026-03-14T19:50:25.196021+00:00"
+  },
+  {
+    "id": 304,
+    "codigo": "58905-KK080-C8",
+    "descripcion": "TAPA CONS CENTRAL TELA",
+    "linea_code": "0217",
+    "linea_name": "MIRGOR SACIFIA",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:25.784792+00:00",
+    "updated_at": "2026-03-14T19:50:25.784792+00:00"
+  },
+  {
+    "id": 305,
+    "codigo": "58951-KK080",
+    "descripcion": "Tapa consola Tela Hilo X196 Gris",
+    "linea_code": "0217",
+    "linea_name": "MIRGOR SACIFIA",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:26.150635+00:00",
+    "updated_at": "2026-03-14T19:50:26.150635+00:00"
+  },
+  {
+    "id": 306,
+    "codigo": "58951-KK090-23",
+    "descripcion": "Tapa consola vinilo Blanco Hilo A085 B",
+    "linea_code": "0217",
+    "linea_name": "MIRGOR SACIFIA",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:26.727867+00:00",
+    "updated_at": "2026-03-14T19:50:26.727867+00:00"
+  },
+  {
+    "id": 307,
+    "codigo": "58951-KK090-26",
+    "descripcion": "Tapa consola vinilo negro Hilo X1E9 Gr",
+    "linea_code": "0217",
+    "linea_name": "MIRGOR SACIFIA",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:26.97842+00:00",
+    "updated_at": "2026-03-14T19:50:26.97842+00:00"
+  },
+  {
+    "id": 308,
+    "codigo": "58951-KK090-27",
+    "descripcion": "Tapa consola vinilo Negro Hilo A3H2 Ro",
+    "linea_code": "0217",
+    "linea_name": "MIRGOR SACIFIA",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:27.243657+00:00",
+    "updated_at": "2026-03-14T19:50:27.243657+00:00"
+  },
+  {
+    "id": 309,
+    "codigo": "58951-KK090-C5",
+    "descripcion": "Tapa consola versión vinilo NEGRO Hilo",
+    "linea_code": "0217",
+    "linea_name": "MIRGOR SACIFIA",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:27.768891+00:00",
+    "updated_at": "2026-03-14T19:50:27.768891+00:00"
+  },
+  {
+    "id": 310,
+    "codigo": "COR-4055",
+    "descripcion": "CORTE 4055 TAPA CONSOLA FIXERA HILO GR",
+    "linea_code": "0217",
+    "linea_name": "MIRGOR SACIFIA",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:28.080683+00:00",
+    "updated_at": "2026-03-14T19:50:28.080683+00:00"
+  },
+  {
+    "id": 311,
+    "codigo": "COR-411",
+    "descripcion": "CORTE TAPA CONSOLA MIRGOR",
+    "linea_code": "0217",
+    "linea_name": "MIRGOR SACIFIA",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:28.800029+00:00",
+    "updated_at": "2026-03-14T19:50:28.800029+00:00"
+  },
+  {
+    "id": 312,
+    "codigo": "COR-4112",
+    "descripcion": "CORTE 4112 TAPA CONSOLA BLANCO HILO BL",
+    "linea_code": "0217",
+    "linea_name": "MIRGOR SACIFIA",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:29.053766+00:00",
+    "updated_at": "2026-03-14T19:50:29.053766+00:00"
+  },
+  {
+    "id": 313,
+    "codigo": "FUN-4055",
+    "descripcion": "FUNDA 4055 TAPA CONSOLA FIXERA HILO GR",
+    "linea_code": "0217",
+    "linea_name": "MIRGOR SACIFIA",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:29.958409+00:00",
+    "updated_at": "2026-03-14T19:50:29.958409+00:00"
+  },
+  {
+    "id": 314,
+    "codigo": "FUN-4111",
+    "descripcion": "FUNDA 4111 TAPA CONSOLA NEGRO HILO GRI",
+    "linea_code": "0217",
+    "linea_name": "MIRGOR SACIFIA",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:30.246969+00:00",
+    "updated_at": "2026-03-14T19:50:30.246969+00:00"
+  },
+  {
+    "id": 315,
+    "codigo": "FUN-4112",
+    "descripcion": "FUNDA 4112 TAPA CONSOLA BLANCO HILO BL",
+    "linea_code": "0217",
+    "linea_name": "MIRGOR SACIFIA",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:31.086349+00:00",
+    "updated_at": "2026-03-14T19:50:31.086349+00:00"
+  },
+  {
+    "id": 316,
+    "codigo": "FUN-4113",
+    "descripcion": "FUNDA 4113 TAPA CONSOLA NEGRO HILO ROJ",
+    "linea_code": "0217",
+    "linea_name": "MIRGOR SACIFIA",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:31.884666+00:00",
+    "updated_at": "2026-03-14T19:50:31.884666+00:00"
+  },
+  {
+    "id": 317,
+    "codigo": "FUN-4114",
+    "descripcion": "FUNDA 4114 TAPA CONSOLA NEGRO HILO GRI",
+    "linea_code": "0217",
+    "linea_name": "MIRGOR SACIFIA",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:32.149188+00:00",
+    "updated_at": "2026-03-14T19:50:32.149188+00:00"
+  },
+  {
+    "id": 318,
+    "codigo": "INY-411",
+    "descripcion": "INYECTADO TAPA CONSOLA MIRGOR",
+    "linea_code": "0217",
+    "linea_name": "MIRGOR SACIFIA",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:32.879505+00:00",
+    "updated_at": "2026-03-14T19:50:32.879505+00:00"
+  },
+  {
+    "id": 321,
+    "codigo": "MI01",
+    "descripcion": "MODIFICACION MOLDE",
+    "linea_code": "0217",
+    "linea_name": "MIRGOR SACIFIA",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:34.04647+00:00",
+    "updated_at": "2026-03-14T19:50:34.04647+00:00"
+  },
+  {
+    "id": 324,
+    "codigo": "PRUEBA",
+    "descripcion": "PRUEBA DE OP Y SCRAP",
+    "linea_code": "0217",
+    "linea_name": "MIRGOR SACIFIA",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:35.669797+00:00",
+    "updated_at": "2026-03-14T19:50:35.669797+00:00"
+  },
+  {
+    "id": 327,
+    "codigo": "F0202-24",
+    "descripcion": "PALA DE MANO CLIP",
+    "linea_code": "0218",
+    "linea_name": "PATRONAS",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:36.793922+00:00",
+    "updated_at": "2026-03-14T19:50:36.793922+00:00"
+  },
+  {
+    "id": 330,
+    "codigo": "LB1",
+    "descripcion": "VENTANAS VARIAS",
+    "linea_code": "0220",
+    "linea_name": "LEBEN GELUK",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:38.021893+00:00",
+    "updated_at": "2026-03-14T19:50:38.021893+00:00"
+  },
+  {
+    "id": 333,
+    "codigo": "X1",
+    "descripcion": "TELA PP BLANCO 150 X 500 60 GR.",
+    "linea_code": "0222",
+    "linea_name": "INSUMOS XXI S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:39.219484+00:00",
+    "updated_at": "2026-03-14T19:50:39.219484+00:00"
+  },
+  {
+    "id": 336,
+    "codigo": "ZESPUM19A",
+    "descripcion": "ESPUMA CABECER0  RESPALDO SEMICAMA",
+    "linea_code": "0229",
+    "linea_name": "METALSUR CARROCERIAS S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:40.654183+00:00",
+    "updated_at": "2026-03-14T19:50:40.654183+00:00"
+  },
+  {
+    "id": 339,
+    "codigo": "DO-01",
+    "descripcion": "ACOMPAÑAMIENTO COMERCIAL POR PAGO DE S",
+    "linea_code": "0233",
+    "linea_name": "D ́ONOFRIO LEANDRO JAVIER",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:41.691345+00:00",
+    "updated_at": "2026-03-14T19:50:41.691345+00:00"
+  },
+  {
+    "id": 342,
+    "codigo": "GU-03",
+    "descripcion": "KIT CONVERSION GLP DIS RTI MODELO F150",
+    "linea_code": "0235",
+    "linea_name": "GUARDERIA NAUTICA SARTHOU S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:42.733574+00:00",
+    "updated_at": "2026-03-14T19:50:42.733574+00:00"
+  },
+  {
+    "id": 345,
+    "codigo": "75427-0K030/110",
+    "descripcion": "HILUX RT8020",
+    "linea_code": "024",
+    "linea_name": "UNE S.R.L.",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:43.899797+00:00",
+    "updated_at": "2026-03-14T19:50:43.899797+00:00"
+  },
+  {
+    "id": 348,
+    "codigo": "75428-0K050",
+    "descripcion": "MOD. VVTI FLEX CINTA 3M RT8008",
+    "linea_code": "024",
+    "linea_name": "UNE S.R.L.",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:44.936686+00:00",
+    "updated_at": "2026-03-14T19:50:44.936686+00:00"
+  },
+  {
+    "id": 351,
+    "codigo": "75459-0K190",
+    "descripcion": "MOD. SRX CINTA 3M RT8008",
+    "linea_code": "024",
+    "linea_name": "UNE S.R.L.",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:45.909755+00:00",
+    "updated_at": "2026-03-14T19:50:45.909755+00:00"
+  },
+  {
+    "id": 354,
+    "codigo": "75473-0K080",
+    "descripcion": "MOD. 2.8 CINTA 3M RT8008",
+    "linea_code": "024",
+    "linea_name": "UNE S.R.L.",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:46.922149+00:00",
+    "updated_at": "2026-03-14T19:50:46.922149+00:00"
+  },
+  {
+    "id": 357,
+    "codigo": "75770-0K380-P",
+    "descripcion": "PROYECTO TIRA DE UNE RT8006",
+    "linea_code": "024",
+    "linea_name": "UNE S.R.L.",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:47.92521+00:00",
+    "updated_at": "2026-03-14T19:50:47.92521+00:00"
+  },
+  {
+    "id": 360,
+    "codigo": "7775-RT8006",
+    "descripcion": "CINTA OK38",
+    "linea_code": "024",
+    "linea_name": "UNE S.R.L.",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:49.84683+00:00",
+    "updated_at": "2026-03-14T19:50:49.84683+00:00"
+  },
+  {
+    "id": 363,
+    "codigo": "GANCHOS",
+    "descripcion": "PIEZA DE FORMA \"S\" AC. INOX. AISI 1.80",
+    "linea_code": "024",
+    "linea_name": "UNE S.R.L.",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:51.168244+00:00",
+    "updated_at": "2026-03-14T19:50:51.168244+00:00"
+  },
+  {
+    "id": 366,
+    "codigo": "PERNOS",
+    "descripcion": "PERNOS ACERO INOX. AISI 316 3MM DIAMET",
+    "linea_code": "024",
+    "linea_name": "UNE S.R.L.",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:52.758378+00:00",
+    "updated_at": "2026-03-14T19:50:52.758378+00:00"
+  },
+  {
+    "id": 369,
+    "codigo": "RT8012",
+    "descripcion": "CINTA",
+    "linea_code": "024",
+    "linea_name": "UNE S.R.L.",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:53.98243+00:00",
+    "updated_at": "2026-03-14T19:50:53.98243+00:00"
+  },
+  {
+    "id": 372,
+    "codigo": "S0001",
+    "descripcion": "RETROACTIVO ABRIL/JULIO 2021 S/PEDIDO",
+    "linea_code": "028",
+    "linea_name": "TESTORI S.R.L.",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:55.109898+00:00",
+    "updated_at": "2026-03-14T19:50:55.109898+00:00"
+  },
+  {
+    "id": 375,
+    "codigo": "TEI-CIN-007-L",
+    "descripcion": "FOAM TAPE 8012 IZQ",
+    "linea_code": "028",
+    "linea_name": "TESTORI S.R.L.",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:56.194344+00:00",
+    "updated_at": "2026-03-14T19:50:56.194344+00:00"
+  },
+  {
+    "id": 378,
+    "codigo": "TERT8012DER",
+    "descripcion": "FOAM TAPE RT8012 DER",
+    "linea_code": "028",
+    "linea_name": "TESTORI S.R.L.",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:57.880683+00:00",
+    "updated_at": "2026-03-14T19:50:57.880683+00:00"
+  },
+  {
+    "id": 381,
+    "codigo": "71122-X7A34",
+    "descripcion": "TOOLING CHIP URETHANE 71122-X7A34 (A K",
+    "linea_code": "030",
+    "linea_name": "TOYOTA BOSHOKU ARGENTINA SRL",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:59.128417+00:00",
+    "updated_at": "2026-03-14T19:50:59.128417+00:00"
+  },
+  {
+    "id": 384,
+    "codigo": "71122-X7A39",
+    "descripcion": "TOOLING CHIP URETHANE 71122-X7A39 (A K",
+    "linea_code": "030",
+    "linea_name": "TOYOTA BOSHOKU ARGENTINA SRL",
+    "active": 1,
+    "created_at": "2026-03-14T19:51:01.211459+00:00",
+    "updated_at": "2026-03-14T19:51:01.211459+00:00"
+  },
+  {
+    "id": 387,
+    "codigo": "71226-X7A05",
+    "descripcion": "WIRE, RR SEAT CUSHION CONNECTING, E",
+    "linea_code": "030",
+    "linea_name": "TOYOTA BOSHOKU ARGENTINA SRL",
+    "active": 1,
+    "created_at": "2026-03-14T19:51:02.69622+00:00",
+    "updated_at": "2026-03-14T19:51:02.69622+00:00"
+  },
+  {
+    "id": 390,
+    "codigo": "71401-X7A03",
+    "descripcion": "WIRE SUB-ASSY, RR SEAT CUSHION",
+    "linea_code": "030",
+    "linea_name": "TOYOTA BOSHOKU ARGENTINA SRL",
+    "active": 1,
+    "created_at": "2026-03-14T19:51:04.014255+00:00",
+    "updated_at": "2026-03-14T19:51:04.014255+00:00"
+  },
+  {
+    "id": 393,
+    "codigo": "71415-X7A06",
+    "descripcion": "WIRE, FR SEAT CUSHION SPRING, UPR NO.3",
+    "linea_code": "030",
+    "linea_name": "TOYOTA BOSHOKU ARGENTINA SRL",
+    "active": 1,
+    "created_at": "2026-03-14T19:51:05.769375+00:00",
+    "updated_at": "2026-03-14T19:51:05.769375+00:00"
+  },
+  {
+    "id": 396,
+    "codigo": "71909-X7A27",
+    "descripcion": "COVER SUB-ASSY RR SEAT HEADREST LOW",
+    "linea_code": "030",
+    "linea_name": "TOYOTA BOSHOKU ARGENTINA SRL",
+    "active": 1,
+    "created_at": "2026-03-14T19:51:06.955035+00:00",
+    "updated_at": "2026-03-14T19:51:06.955035+00:00"
+  },
+  {
+    "id": 399,
+    "codigo": "71951-X7A42",
+    "descripcion": "COVER FR SEAT HEADREST HIGH",
+    "linea_code": "030",
+    "linea_name": "TOYOTA BOSHOKU ARGENTINA SRL",
+    "active": 1,
+    "created_at": "2026-03-14T19:51:08.015721+00:00",
+    "updated_at": "2026-03-14T19:51:08.015721+00:00"
+  },
+  {
+    "id": 402,
+    "codigo": "71952-X7A08-CO",
+    "descripcion": "COVER FR SEAT HEADREST HIGH",
+    "linea_code": "030",
+    "linea_name": "TOYOTA BOSHOKU ARGENTINA SRL",
+    "active": 1,
+    "created_at": "2026-03-14T19:51:09.734376+00:00",
+    "updated_at": "2026-03-14T19:51:09.734376+00:00"
+  },
+  {
+    "id": 405,
+    "codigo": "72087-X7A15",
+    "descripcion": "COVER SUB-ASSY, RR SEAT CTR ARMREST",
+    "linea_code": "030",
+    "linea_name": "TOYOTA BOSHOKU ARGENTINA SRL",
+    "active": 1,
+    "created_at": "2026-03-14T19:51:10.888818+00:00",
+    "updated_at": "2026-03-14T19:51:10.888818+00:00"
+  },
+  {
+    "id": 319,
+    "codigo": "MI001",
+    "descripcion": "RETROACTIVO PRECIOS 1ª QUINCENA JULIO",
+    "linea_code": "0217",
+    "linea_name": "MIRGOR SACIFIA",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:33.204738+00:00",
+    "updated_at": "2026-03-14T19:50:33.204738+00:00"
+  },
+  {
+    "id": 322,
+    "codigo": "MI02",
+    "descripcion": "ENSAYO DE PRODUCTOS Y CERTIFICACION",
+    "linea_code": "0217",
+    "linea_name": "MIRGOR SACIFIA",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:34.710297+00:00",
+    "updated_at": "2026-03-14T19:50:34.710297+00:00"
+  },
+  {
+    "id": 325,
+    "codigo": "TRO-411",
+    "descripcion": "TROQUELADO TAPA CONSOLA MIRGOR",
+    "linea_code": "0217",
+    "linea_name": "MIRGOR SACIFIA",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:35.933088+00:00",
+    "updated_at": "2026-03-14T19:50:35.933088+00:00"
+  },
+  {
+    "id": 328,
+    "codigo": "F0354-12",
+    "descripcion": "CABO GULLIVER MAX METALICO PLASTIFICAD",
+    "linea_code": "0218",
+    "linea_name": "PATRONAS",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:37.045378+00:00",
+    "updated_at": "2026-03-14T19:50:37.045378+00:00"
+  },
+  {
+    "id": 331,
+    "codigo": "LG01",
+    "descripcion": "ARTICULOS PARA HORMIGON",
+    "linea_code": "0220",
+    "linea_name": "LEBEN GELUK",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:38.715218+00:00",
+    "updated_at": "2026-03-14T19:50:38.715218+00:00"
+  },
+  {
+    "id": 334,
+    "codigo": "X2",
+    "descripcion": "TELA PP BLANCO 150 X 250 100 GR.",
+    "linea_code": "0222",
+    "linea_name": "INSUMOS XXI S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:39.796689+00:00",
+    "updated_at": "2026-03-14T19:50:39.796689+00:00"
+  },
+  {
+    "id": 337,
+    "codigo": "D01",
+    "descripcion": "PRENSA HIDRAULICA",
+    "linea_code": "0230",
+    "linea_name": "DOMARCO ALBERTO CARLOS",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:40.914123+00:00",
+    "updated_at": "2026-03-14T19:50:40.914123+00:00"
+  },
+  {
+    "id": 340,
+    "codigo": "GU-01",
+    "descripcion": "KIT CONVERSION GLP DIS RTI MODELO GENI",
+    "linea_code": "0235",
+    "linea_name": "GUARDERIA NAUTICA SARTHOU S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:41.966373+00:00",
+    "updated_at": "2026-03-14T19:50:41.966373+00:00"
+  },
+  {
+    "id": 343,
+    "codigo": "S-01",
+    "descripcion": "SCRAP",
+    "linea_code": "0236",
+    "linea_name": "PLASWAG S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:42.990351+00:00",
+    "updated_at": "2026-03-14T19:50:42.990351+00:00"
+  },
+  {
+    "id": 346,
+    "codigo": "75427-0K110",
+    "descripcion": "MOD. HILUX TRASERO CINTA 3M RT8008",
+    "linea_code": "024",
+    "linea_name": "UNE S.R.L.",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:44.150195+00:00",
+    "updated_at": "2026-03-14T19:50:44.150195+00:00"
+  },
+  {
+    "id": 349,
+    "codigo": "75441-0K120",
+    "descripcion": "MOD. TOYOTA 650 CINTA 3M RT8008",
+    "linea_code": "024",
+    "linea_name": "UNE S.R.L.",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:45.185404+00:00",
+    "updated_at": "2026-03-14T19:50:45.185404+00:00"
+  },
+  {
+    "id": 352,
+    "codigo": "75469-0K040",
+    "descripcion": "MOD. TOYOTA 640 CINTA 3M RT8008",
+    "linea_code": "024",
+    "linea_name": "UNE S.R.L.",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:46.173589+00:00",
+    "updated_at": "2026-03-14T19:50:46.173589+00:00"
+  },
+  {
+    "id": 355,
+    "codigo": "75473-0K100",
+    "descripcion": "MOD. 3.0 CINTA 3M RT8008",
+    "linea_code": "024",
+    "linea_name": "UNE S.R.L.",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:47.187708+00:00",
+    "updated_at": "2026-03-14T19:50:47.187708+00:00"
+  },
+  {
+    "id": 358,
+    "codigo": "75770-CINTA",
+    "descripcion": "Cinta de RT8006",
+    "linea_code": "024",
+    "linea_name": "UNE S.R.L.",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:48.77565+00:00",
+    "updated_at": "2026-03-14T19:50:48.77565+00:00"
+  },
+  {
+    "id": 361,
+    "codigo": "ALAM-UNE-1.8MM",
+    "descripcion": "Resorte \"S\" AISI 302 1.8mm",
+    "linea_code": "024",
+    "linea_name": "UNE S.R.L.",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:50.10319+00:00",
+    "updated_at": "2026-03-14T19:50:50.10319+00:00"
+  },
+  {
+    "id": 364,
+    "codigo": "M-*V6",
+    "descripcion": "Muestra V6",
+    "linea_code": "024",
+    "linea_name": "UNE S.R.L.",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:51.822281+00:00",
+    "updated_at": "2026-03-14T19:50:51.822281+00:00"
+  },
+  {
+    "id": 367,
+    "codigo": "R-HILUX-L/T",
+    "descripcion": "Released Paper Hilux trasero y lateral",
+    "linea_code": "024",
+    "linea_name": "UNE S.R.L.",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:53.011824+00:00",
+    "updated_at": "2026-03-14T19:50:53.011824+00:00"
+  },
+  {
+    "id": 370,
+    "codigo": "I-PAD-001",
+    "descripcion": "ABROJO 3M 30X30X3.5",
+    "linea_code": "028",
+    "linea_name": "TESTORI S.R.L.",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:54.242842+00:00",
+    "updated_at": "2026-03-14T19:50:54.242842+00:00"
+  },
+  {
+    "id": 373,
+    "codigo": "TEI-BUR-148",
+    "descripcion": "Esponja Protector Body",
+    "linea_code": "028",
+    "linea_name": "TESTORI S.R.L.",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:55.672566+00:00",
+    "updated_at": "2026-03-14T19:50:55.672566+00:00"
+  },
+  {
+    "id": 376,
+    "codigo": "TEI-CIN-009",
+    "descripcion": "BURLETE DOBLE FAZ \"PROT. BODY\"",
+    "linea_code": "028",
+    "linea_name": "TESTORI S.R.L.",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:56.798481+00:00",
+    "updated_at": "2026-03-14T19:50:56.798481+00:00"
+  },
+  {
+    "id": 379,
+    "codigo": "TERT8012IZQ",
+    "descripcion": "FOAM TAPE RT8012 IZQ",
+    "linea_code": "028",
+    "linea_name": "TESTORI S.R.L.",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:58.157285+00:00",
+    "updated_at": "2026-03-14T19:50:58.157285+00:00"
+  },
+  {
+    "id": 382,
+    "codigo": "71122-X7A37",
+    "descripcion": "TOOLING CHIP URETHANE 71122-X7A37 (A K",
+    "linea_code": "030",
+    "linea_name": "TOYOTA BOSHOKU ARGENTINA SRL",
+    "active": 1,
+    "created_at": "2026-03-14T19:51:00.003351+00:00",
+    "updated_at": "2026-03-14T19:51:00.003351+00:00"
+  },
+  {
+    "id": 385,
+    "codigo": "71157-X7A10",
+    "descripcion": "WIRE FR SEAT BACK",
+    "linea_code": "030",
+    "linea_name": "TOYOTA BOSHOKU ARGENTINA SRL",
+    "active": 1,
+    "created_at": "2026-03-14T19:51:01.855756+00:00",
+    "updated_at": "2026-03-14T19:51:01.855756+00:00"
+  },
+  {
+    "id": 388,
+    "codigo": "71265-X7A02",
+    "descripcion": "WIRE, RR SEAT BACK CONNECTING, C",
+    "linea_code": "030",
+    "linea_name": "TOYOTA BOSHOKU ARGENTINA SRL",
+    "active": 1,
+    "created_at": "2026-03-14T19:51:02.985407+00:00",
+    "updated_at": "2026-03-14T19:51:02.985407+00:00"
+  },
+  {
+    "id": 391,
+    "codigo": "71411-X7A05",
+    "descripcion": "WIRE, FR SEAT CUSHION SPRING, UPR",
+    "linea_code": "030",
+    "linea_name": "TOYOTA BOSHOKU ARGENTINA SRL",
+    "active": 1,
+    "created_at": "2026-03-14T19:51:04.759927+00:00",
+    "updated_at": "2026-03-14T19:51:04.759927+00:00"
+  },
+  {
+    "id": 394,
+    "codigo": "71415-X7A10",
+    "descripcion": "WIRE, FR SEAT CUSHION SPRING, UPR NO.3",
+    "linea_code": "030",
+    "linea_name": "TOYOTA BOSHOKU ARGENTINA SRL",
+    "active": 1,
+    "created_at": "2026-03-14T19:51:06.028779+00:00",
+    "updated_at": "2026-03-14T19:51:06.028779+00:00"
+  },
+  {
+    "id": 397,
+    "codigo": "71921-X7A18",
+    "descripcion": "COVER FR SEAT HEADREST HIGH",
+    "linea_code": "030",
+    "linea_name": "TOYOTA BOSHOKU ARGENTINA SRL",
+    "active": 1,
+    "created_at": "2026-03-14T19:51:07.201469+00:00",
+    "updated_at": "2026-03-14T19:51:07.201469+00:00"
+  },
+  {
+    "id": 400,
+    "codigo": "71951-X7A47",
+    "descripcion": "COVER RR SEAT HEADREST",
+    "linea_code": "030",
+    "linea_name": "TOYOTA BOSHOKU ARGENTINA SRL",
+    "active": 1,
+    "created_at": "2026-03-14T19:51:08.765374+00:00",
+    "updated_at": "2026-03-14T19:51:08.765374+00:00"
+  },
+  {
+    "id": 403,
+    "codigo": "71981-X7A23-C0",
+    "descripcion": "COVER NO 2 SEAT HEADREST",
+    "linea_code": "030",
+    "linea_name": "TOYOTA BOSHOKU ARGENTINA SRL",
+    "active": 1,
+    "created_at": "2026-03-14T19:51:09.994972+00:00",
+    "updated_at": "2026-03-14T19:51:09.994972+00:00"
+  },
+  {
+    "id": 406,
+    "codigo": "73755-X7A08",
+    "descripcion": "WIRE, CRS ANCHOR, NO.1",
+    "linea_code": "030",
+    "linea_name": "TOYOTA BOSHOKU ARGENTINA SRL",
+    "active": 1,
+    "created_at": "2026-03-14T19:51:11.148331+00:00",
+    "updated_at": "2026-03-14T19:51:11.148331+00:00"
+  },
+  {
+    "id": 320,
+    "codigo": "MI003",
+    "descripcion": "ENTREGAS CPRE SERIE S CONSOLA CENTRAL",
+    "linea_code": "0217",
+    "linea_name": "MIRGOR SACIFIA",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:33.761485+00:00",
+    "updated_at": "2026-03-14T19:50:33.761485+00:00"
+  },
+  {
+    "id": 323,
+    "codigo": "MIR-01",
+    "descripcion": "TRATAMIENTO DE SRAP Y FU",
+    "linea_code": "0217",
+    "linea_name": "MIRGOR SACIFIA",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:34.9821+00:00",
+    "updated_at": "2026-03-14T19:50:34.9821+00:00"
+  },
+  {
+    "id": 326,
+    "codigo": "F0151-24",
+    "descripcion": "SECADOR DE PISO AQUARAPID 40 CM",
+    "linea_code": "0218",
+    "linea_name": "PATRONAS",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:36.18686+00:00",
+    "updated_at": "2026-03-14T19:50:36.18686+00:00"
+  },
+  {
+    "id": 329,
+    "codigo": "F0400-6",
+    "descripcion": "BALDE ANATOMICO",
+    "linea_code": "0218",
+    "linea_name": "PATRONAS",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:37.761042+00:00",
+    "updated_at": "2026-03-14T19:50:37.761042+00:00"
+  },
+  {
+    "id": 332,
+    "codigo": "RI001",
+    "descripcion": "MATERIAL RECICLABLE",
+    "linea_code": "0221",
+    "linea_name": "RIGHETTI ALVAREZ SERGIO",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:38.973661+00:00",
+    "updated_at": "2026-03-14T19:50:38.973661+00:00"
+  },
+  {
+    "id": 335,
+    "codigo": "TECCO-01",
+    "descripcion": "CLAIM ESPUMAS LATERALES AMAROK",
+    "linea_code": "0224",
+    "linea_name": "TECCO AUTOMOTIVE",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:40.048988+00:00",
+    "updated_at": "2026-03-14T19:50:40.048988+00:00"
+  },
+  {
+    "id": 338,
+    "codigo": "DO01",
+    "descripcion": "PRENSA HIDRAULICA",
+    "linea_code": "0230",
+    "linea_name": "DOMARCO ALBERTO CARLOS",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:41.161667+00:00",
+    "updated_at": "2026-03-14T19:50:41.161667+00:00"
+  },
+  {
+    "id": 341,
+    "codigo": "GU-02",
+    "descripcion": "KIT CONVERSION GLP DIS RTI MODELO GENI",
+    "linea_code": "0235",
+    "linea_name": "GUARDERIA NAUTICA SARTHOU S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:42.207651+00:00",
+    "updated_at": "2026-03-14T19:50:42.207651+00:00"
+  },
+  {
+    "id": 344,
+    "codigo": "75427-0K030",
+    "descripcion": "MOD. HILUX LATERAL CINTA 3M RT8008",
+    "linea_code": "024",
+    "linea_name": "UNE S.R.L.",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:43.6457+00:00",
+    "updated_at": "2026-03-14T19:50:43.6457+00:00"
+  },
+  {
+    "id": 347,
+    "codigo": "75427-OK030-6",
+    "descripcion": "MOD HILUX LATERAL CCINTA 3M RT8006",
+    "linea_code": "024",
+    "linea_name": "UNE S.R.L.",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:44.649714+00:00",
+    "updated_at": "2026-03-14T19:50:44.649714+00:00"
+  },
+  {
+    "id": 350,
+    "codigo": "75441-0K150",
+    "descripcion": "MOD. SW4 CINTA 3M RT8008",
+    "linea_code": "024",
+    "linea_name": "UNE S.R.L.",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:45.651706+00:00",
+    "updated_at": "2026-03-14T19:50:45.651706+00:00"
+  },
+  {
+    "id": 353,
+    "codigo": "75473-0K050",
+    "descripcion": "MOD 2.7 CINTA 3M RT8008",
+    "linea_code": "024",
+    "linea_name": "UNE S.R.L.",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:46.639906+00:00",
+    "updated_at": "2026-03-14T19:50:46.639906+00:00"
+  },
+  {
+    "id": 356,
+    "codigo": "75473-0K300",
+    "descripcion": "MOD. DUAL VVTI FLEX CINTA 3M RT8008",
+    "linea_code": "024",
+    "linea_name": "UNE S.R.L.",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:47.651705+00:00",
+    "updated_at": "2026-03-14T19:50:47.651705+00:00"
+  },
+  {
+    "id": 359,
+    "codigo": "75770-RT8012",
+    "descripcion": "Cinta 80x10 RT 8012",
+    "linea_code": "024",
+    "linea_name": "UNE S.R.L.",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:49.040182+00:00",
+    "updated_at": "2026-03-14T19:50:49.040182+00:00"
+  },
+  {
+    "id": 362,
+    "codigo": "ALAMB-UNE-3MM",
+    "descripcion": "Eje AISI 316 3mm Ø Largo 72 mm",
+    "linea_code": "024",
+    "linea_name": "UNE S.R.L.",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:50.906753+00:00",
+    "updated_at": "2026-03-14T19:50:50.906753+00:00"
+  },
+  {
+    "id": 365,
+    "codigo": "M-V6",
+    "descripcion": "Muestras de Monograma V6",
+    "linea_code": "024",
+    "linea_name": "UNE S.R.L.",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:52.110496+00:00",
+    "updated_at": "2026-03-14T19:50:52.110496+00:00"
+  },
+  {
+    "id": 368,
+    "codigo": "RT8006-7775",
+    "descripcion": "OK38",
+    "linea_code": "024",
+    "linea_name": "UNE S.R.L.",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:53.734103+00:00",
+    "updated_at": "2026-03-14T19:50:53.734103+00:00"
+  },
+  {
+    "id": 371,
+    "codigo": "PT1500",
+    "descripcion": "TROQUELADO ADHESIVO 3M PT1500",
+    "linea_code": "028",
+    "linea_name": "TESTORI S.R.L.",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:54.850557+00:00",
+    "updated_at": "2026-03-14T19:50:54.850557+00:00"
+  },
+  {
+    "id": 374,
+    "codigo": "TEI-CIN-006-R",
+    "descripcion": "FOAM TAPE 8012 DER",
+    "linea_code": "028",
+    "linea_name": "TESTORI S.R.L.",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:55.933905+00:00",
+    "updated_at": "2026-03-14T19:50:55.933905+00:00"
+  },
+  {
+    "id": 377,
+    "codigo": "TEIPAD-001",
+    "descripcion": "ABROJO 3M 30X30X3.5",
+    "linea_code": "028",
+    "linea_name": "TESTORI S.R.L.",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:57.05491+00:00",
+    "updated_at": "2026-03-14T19:50:57.05491+00:00"
+  },
+  {
+    "id": 380,
+    "codigo": "71045-X7A02",
+    "descripcion": "WIRE SUB-ASSY, RR SEAT BACK",
+    "linea_code": "030",
+    "linea_name": "TOYOTA BOSHOKU ARGENTINA SRL",
+    "active": 1,
+    "created_at": "2026-03-14T19:50:58.86008+00:00",
+    "updated_at": "2026-03-14T19:50:58.86008+00:00"
+  },
+  {
+    "id": 383,
+    "codigo": "71122-X7A38",
+    "descripcion": "TOOLING CHIP URETHANE 711-X7A38 (A KIM",
+    "linea_code": "030",
+    "linea_name": "TOYOTA BOSHOKU ARGENTINA SRL",
+    "active": 1,
+    "created_at": "2026-03-14T19:51:00.911344+00:00",
+    "updated_at": "2026-03-14T19:51:00.911344+00:00"
+  },
+  {
+    "id": 386,
+    "codigo": "71226-X7A04",
+    "descripcion": "WIRE, RR SEAT CUSHION CONNECTING, E",
+    "linea_code": "030",
+    "linea_name": "TOYOTA BOSHOKU ARGENTINA SRL",
+    "active": 1,
+    "created_at": "2026-03-14T19:51:02.133844+00:00",
+    "updated_at": "2026-03-14T19:51:02.133844+00:00"
+  },
+  {
+    "id": 389,
+    "codigo": "71272-X7A04",
+    "descripcion": "WIRE, RR SEAT BACK UPR H",
+    "linea_code": "030",
+    "linea_name": "TOYOTA BOSHOKU ARGENTINA SRL",
+    "active": 1,
+    "created_at": "2026-03-14T19:51:03.756178+00:00",
+    "updated_at": "2026-03-14T19:51:03.756178+00:00"
+  },
+  {
+    "id": 392,
+    "codigo": "71415-X7A05",
+    "descripcion": "WIRE, FR SEAT CUSHION SPRING, UPR NO.3",
+    "linea_code": "030",
+    "linea_name": "TOYOTA BOSHOKU ARGENTINA SRL",
+    "active": 1,
+    "created_at": "2026-03-14T19:51:05.010474+00:00",
+    "updated_at": "2026-03-14T19:51:05.010474+00:00"
+  },
+  {
+    "id": 395,
+    "codigo": "71909-X7A23",
+    "descripcion": "COVER SUB-ASSY RR SEAT HEADREST HIGH",
+    "linea_code": "030",
+    "linea_name": "TOYOTA BOSHOKU ARGENTINA SRL",
+    "active": 1,
+    "created_at": "2026-03-14T19:51:06.693557+00:00",
+    "updated_at": "2026-03-14T19:51:06.693557+00:00"
+  },
+  {
+    "id": 398,
+    "codigo": "71921-X7A71",
+    "descripcion": "COVER FR SEAT HEADREST",
+    "linea_code": "030",
+    "linea_name": "TOYOTA BOSHOKU ARGENTINA SRL",
+    "active": 1,
+    "created_at": "2026-03-14T19:51:07.758401+00:00",
+    "updated_at": "2026-03-14T19:51:07.758401+00:00"
+  },
+  {
+    "id": 401,
+    "codigo": "71952-X7A08-C0",
+    "descripcion": "COVER RR SEAT HEADREST",
+    "linea_code": "030",
+    "linea_name": "TOYOTA BOSHOKU ARGENTINA SRL",
+    "active": 1,
+    "created_at": "2026-03-14T19:51:09.02828+00:00",
+    "updated_at": "2026-03-14T19:51:09.02828+00:00"
+  },
+  {
+    "id": 404,
+    "codigo": "71981-X7A23-CO",
+    "descripcion": "COVER FR SEAT HEADREST HIGH",
+    "linea_code": "030",
+    "linea_name": "TOYOTA BOSHOKU ARGENTINA SRL",
+    "active": 1,
+    "created_at": "2026-03-14T19:51:10.241065+00:00",
+    "updated_at": "2026-03-14T19:51:10.241065+00:00"
+  },
+  {
+    "id": 407,
+    "codigo": "73755-X7A09",
+    "descripcion": "WIRE, CRS ANCHOR, No.1",
+    "linea_code": "030",
+    "linea_name": "TOYOTA BOSHOKU ARGENTINA SRL",
+    "active": 1,
+    "created_at": "2026-03-14T19:51:11.966473+00:00",
+    "updated_at": "2026-03-14T19:51:11.966473+00:00"
+  },
+  {
+    "id": 408,
+    "codigo": "73756-X7A02",
+    "descripcion": "WIRE, CRS ANCHOR, NO.2",
+    "linea_code": "030",
+    "linea_name": "TOYOTA BOSHOKU ARGENTINA SRL",
+    "active": 1,
+    "created_at": "2026-03-14T19:51:12.222236+00:00",
+    "updated_at": "2026-03-14T19:51:12.222236+00:00"
+  },
+  {
+    "id": 409,
+    "codigo": "79383-X7A03",
+    "descripcion": "WIRE, NO.3 SEAT BACK",
+    "linea_code": "030",
+    "linea_name": "TOYOTA BOSHOKU ARGENTINA SRL",
+    "active": 1,
+    "created_at": "2026-03-14T19:51:13.081685+00:00",
+    "updated_at": "2026-03-14T19:51:13.081685+00:00"
+  },
+  {
+    "id": 410,
+    "codigo": "95512-23013",
+    "descripcion": "WIRE COVER 2.3 x 130",
+    "linea_code": "030",
+    "linea_name": "TOYOTA BOSHOKU ARGENTINA SRL",
+    "active": 1,
+    "created_at": "2026-03-14T19:51:14.203661+00:00",
+    "updated_at": "2026-03-14T19:51:14.203661+00:00"
+  },
+  {
+    "id": 411,
+    "codigo": "95512-23033",
+    "descripcion": "WIRE COVER 2.3 x 330",
+    "linea_code": "030",
+    "linea_name": "TOYOTA BOSHOKU ARGENTINA SRL",
+    "active": 1,
+    "created_at": "2026-03-14T19:51:15.301492+00:00",
+    "updated_at": "2026-03-14T19:51:15.301492+00:00"
+  },
+  {
+    "id": 412,
+    "codigo": "ALCO-01",
+    "descripcion": "RETROACTIVO ABRIL, MAYO Y JUNIO S/DETA",
+    "linea_code": "030",
+    "linea_name": "TOYOTA BOSHOKU ARGENTINA SRL",
+    "active": 1,
+    "created_at": "2026-03-14T19:51:16.236592+00:00",
+    "updated_at": "2026-03-14T19:51:16.236592+00:00"
+  },
+  {
+    "id": 413,
+    "codigo": "PM3195C/EZ",
+    "descripcion": "PM3195C/EZ 100 MM X 304.8 M",
+    "linea_code": "030",
+    "linea_name": "TOYOTA BOSHOKU ARGENTINA SRL",
+    "active": 1,
+    "created_at": "2026-03-14T19:51:17.142005+00:00",
+    "updated_at": "2026-03-14T19:51:17.142005+00:00"
+  },
+  {
+    "id": 414,
+    "codigo": "TBA-01",
+    "descripcion": "ROLLOS TEXFYT ORDEN DE COMPRA 45000568",
+    "linea_code": "030",
+    "linea_name": "TOYOTA BOSHOKU ARGENTINA SRL",
+    "active": 1,
+    "created_at": "2026-03-14T19:51:18.203375+00:00",
+    "updated_at": "2026-03-14T19:51:18.203375+00:00"
+  },
+  {
+    "id": 415,
+    "codigo": "THINSULATE",
+    "descripcion": "THINSULATE 1803 M2",
+    "linea_code": "031",
+    "linea_name": "DIECINUEVE CUARENTA Y OCHO S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:51:19.037323+00:00",
+    "updated_at": "2026-03-14T19:51:19.037323+00:00"
+  },
+  {
+    "id": 416,
+    "codigo": "4298UV-3M",
+    "descripcion": "PROMOTOR ADHERENCIA",
+    "linea_code": "032",
+    "linea_name": "INDUSTRIAS MARO S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:51:19.832485+00:00",
+    "updated_at": "2026-03-14T19:51:19.832485+00:00"
+  },
+  {
+    "id": 417,
+    "codigo": "Z11080016",
+    "descripcion": "JUNTA CERAM. PB11-3M INTERAM",
+    "linea_code": "037",
+    "linea_name": "POLIMETAL S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:51:20.098341+00:00",
+    "updated_at": "2026-03-14T19:51:20.098341+00:00"
+  },
+  {
+    "id": 418,
+    "codigo": "Z11080017",
+    "descripcion": "JUNTA CERAM. PB12-3M INTERAM",
+    "linea_code": "037",
+    "linea_name": "POLIMETAL S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:51:20.929974+00:00",
+    "updated_at": "2026-03-14T19:51:20.929974+00:00"
+  },
+  {
+    "id": 419,
+    "codigo": "Z11080018",
+    "descripcion": "JUNTA CERAM. PB13-3M INTERAM",
+    "linea_code": "037",
+    "linea_name": "POLIMETAL S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:51:21.19107+00:00",
+    "updated_at": "2026-03-14T19:51:21.19107+00:00"
+  },
+  {
+    "id": 420,
+    "codigo": "Z11080019",
+    "descripcion": "JUNTA CERAM. PB14-3M INTERAM",
+    "linea_code": "037",
+    "linea_name": "POLIMETAL S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:51:21.956631+00:00",
+    "updated_at": "2026-03-14T19:51:21.956631+00:00"
+  },
+  {
+    "id": 421,
+    "codigo": "Z11080020",
+    "descripcion": "JUNTA CERAM. PB15-3M INTERAM",
+    "linea_code": "037",
+    "linea_name": "POLIMETAL S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:51:23.167407+00:00",
+    "updated_at": "2026-03-14T19:51:23.167407+00:00"
+  },
+  {
+    "id": 422,
+    "codigo": "Z11080021",
+    "descripcion": "JUNTA CERAM. PB16-3M INTERAM",
+    "linea_code": "037",
+    "linea_name": "POLIMETAL S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:51:23.422554+00:00",
+    "updated_at": "2026-03-14T19:51:23.422554+00:00"
+  },
+  {
+    "id": 423,
+    "codigo": "Z11080022",
+    "descripcion": "JUNTA CERAM. PB17-3M INTERAM",
+    "linea_code": "037",
+    "linea_name": "POLIMETAL S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:51:23.6993+00:00",
+    "updated_at": "2026-03-14T19:51:23.6993+00:00"
+  },
+  {
+    "id": 424,
+    "codigo": "N 227",
+    "descripcion": "INSERTO PTA. DEL. IZQ. L0",
+    "linea_code": "095",
+    "linea_name": "095 VOLKSWAGEN",
+    "active": 1,
+    "created_at": "2026-03-17T21:58:50.807464+00:00",
+    "updated_at": "2026-03-17T21:58:50.807464+00:00"
+  },
+  {
+    "id": 425,
+    "codigo": "N 392",
+    "descripcion": "INSERTO PTA. DEL. DER. L0",
+    "linea_code": "095",
+    "linea_name": "095 VOLKSWAGEN",
+    "active": 1,
+    "created_at": "2026-03-17T21:58:51.752908+00:00",
+    "updated_at": "2026-03-17T21:58:51.752908+00:00"
+  },
+  {
+    "id": 426,
+    "codigo": "N 389",
+    "descripcion": "INSERTO PTA. DEL. IZQ. L1",
+    "linea_code": "095",
+    "linea_name": "095 VOLKSWAGEN",
+    "active": 1,
+    "created_at": "2026-03-17T21:58:52.57646+00:00",
+    "updated_at": "2026-03-17T21:58:52.57646+00:00"
+  },
+  {
+    "id": 427,
+    "codigo": "N 393",
+    "descripcion": "INSERTO PTA. DEL. DER. L1",
+    "linea_code": "095",
+    "linea_name": "095 VOLKSWAGEN",
+    "active": 1,
+    "created_at": "2026-03-17T21:58:53.46279+00:00",
+    "updated_at": "2026-03-17T21:58:53.46279+00:00"
+  },
+  {
+    "id": 428,
+    "codigo": "N 390",
+    "descripcion": "INSERTO PTA. DEL. IZQ. L2",
+    "linea_code": "095",
+    "linea_name": "095 VOLKSWAGEN",
+    "active": 1,
+    "created_at": "2026-03-17T21:58:54.374682+00:00",
+    "updated_at": "2026-03-17T21:58:54.374682+00:00"
+  },
+  {
+    "id": 429,
+    "codigo": "N 394",
+    "descripcion": "INSERTO PTA. DEL. DER. L2",
+    "linea_code": "095",
+    "linea_name": "095 VOLKSWAGEN",
+    "active": 1,
+    "created_at": "2026-03-17T21:58:55.151862+00:00",
+    "updated_at": "2026-03-17T21:58:55.151862+00:00"
+  },
+  {
+    "id": 430,
+    "codigo": "N 391",
+    "descripcion": "INSERTO PTA. DEL. IZQ. L3",
+    "linea_code": "095",
+    "linea_name": "095 VOLKSWAGEN",
+    "active": 1,
+    "created_at": "2026-03-17T21:58:55.942145+00:00",
+    "updated_at": "2026-03-17T21:58:55.942145+00:00"
+  },
+  {
+    "id": 431,
+    "codigo": "N 395",
+    "descripcion": "INSERTO PTA. DEL. DER. L3",
+    "linea_code": "095",
+    "linea_name": "095 VOLKSWAGEN",
+    "active": 1,
+    "created_at": "2026-03-17T21:58:56.7184+00:00",
+    "updated_at": "2026-03-17T21:58:56.7184+00:00"
+  },
+  {
+    "id": 432,
+    "codigo": "N 396",
+    "descripcion": "INSERTO PTA. TRAS. IZQ. L0",
+    "linea_code": "095",
+    "linea_name": "095 VOLKSWAGEN",
+    "active": 1,
+    "created_at": "2026-03-17T21:58:58.041489+00:00",
+    "updated_at": "2026-03-17T21:58:58.041489+00:00"
+  },
+  {
+    "id": 433,
+    "codigo": "N 400",
+    "descripcion": "INSERTO PTA. TRAS. DER. L0",
+    "linea_code": "095",
+    "linea_name": "095 VOLKSWAGEN",
+    "active": 1,
+    "created_at": "2026-03-17T21:58:58.872219+00:00",
+    "updated_at": "2026-03-17T21:58:58.872219+00:00"
+  },
+  {
+    "id": 434,
+    "codigo": "N 397",
+    "descripcion": "INSERTO PTA. TRAS. IZQ. L1",
+    "linea_code": "095",
+    "linea_name": "095 VOLKSWAGEN",
+    "active": 1,
+    "created_at": "2026-03-17T21:58:59.623614+00:00",
+    "updated_at": "2026-03-17T21:58:59.623614+00:00"
+  },
+  {
+    "id": 435,
+    "codigo": "N 401",
+    "descripcion": "INSERTO PTA. TRAS. DER. L1",
+    "linea_code": "095",
+    "linea_name": "095 VOLKSWAGEN",
+    "active": 1,
+    "created_at": "2026-03-17T21:59:00.468174+00:00",
+    "updated_at": "2026-03-17T21:59:00.468174+00:00"
+  },
+  {
+    "id": 436,
+    "codigo": "N 398",
+    "descripcion": "INSERTO PTA. TRAS. IZQ. L2",
+    "linea_code": "095",
+    "linea_name": "095 VOLKSWAGEN",
+    "active": 1,
+    "created_at": "2026-03-17T21:59:01.280844+00:00",
+    "updated_at": "2026-03-17T21:59:01.280844+00:00"
+  },
+  {
+    "id": 437,
+    "codigo": "N 402",
+    "descripcion": "INSERTO PTA. TRAS. DER. L2",
+    "linea_code": "095",
+    "linea_name": "095 VOLKSWAGEN",
+    "active": 1,
+    "created_at": "2026-03-17T21:59:02.233808+00:00",
+    "updated_at": "2026-03-17T21:59:02.233808+00:00"
+  },
+  {
+    "id": 438,
+    "codigo": "N 399",
+    "descripcion": "INSERTO PTA. TRAS. IZQ. L3",
+    "linea_code": "095",
+    "linea_name": "095 VOLKSWAGEN",
+    "active": 1,
+    "created_at": "2026-03-17T21:59:03.108057+00:00",
+    "updated_at": "2026-03-17T21:59:03.108057+00:00"
+  },
+  {
+    "id": 439,
+    "codigo": "N 403",
+    "descripcion": "INSERTO PTA. TRAS. DER. L3",
+    "linea_code": "095",
+    "linea_name": "095 VOLKSWAGEN",
+    "active": 1,
+    "created_at": "2026-03-17T21:59:03.898026+00:00",
+    "updated_at": "2026-03-17T21:59:03.898026+00:00"
+  },
+  {
+    "id": 456,
+    "codigo": "219463",
+    "descripcion": "PAD FR SEAT BACK LH",
+    "linea_code": "PWA",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-17T23:16:47.727317+00:00",
+    "updated_at": "2026-03-17T23:16:47.727317+00:00"
+  },
+  {
+    "id": 457,
+    "codigo": "219464",
+    "descripcion": "PAD FR SEAT CUSHION LH",
+    "linea_code": "PWA",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-17T23:16:48.665344+00:00",
+    "updated_at": "2026-03-17T23:16:48.665344+00:00"
+  },
+  {
+    "id": 458,
+    "codigo": "219465",
+    "descripcion": "PAD FR SEAT BACK RH",
+    "linea_code": "PWA",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-17T23:16:49.519937+00:00",
+    "updated_at": "2026-03-17T23:16:49.519937+00:00"
+  },
+  {
+    "id": 459,
+    "codigo": "219466",
+    "descripcion": "PAD FR SEAT CUSHION RH",
+    "linea_code": "PWA",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-17T23:16:50.403596+00:00",
+    "updated_at": "2026-03-17T23:16:50.403596+00:00"
+  },
+  {
+    "id": 460,
+    "codigo": "219467",
+    "descripcion": "PAD FR SEAT BACK RH",
+    "linea_code": "PWA",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-17T23:16:51.309095+00:00",
+    "updated_at": "2026-03-17T23:16:51.309095+00:00"
+  },
+  {
+    "id": 461,
+    "codigo": "219468",
+    "descripcion": "PAD FR SEAT BACK LH",
+    "linea_code": "PWA",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-17T23:16:52.05847+00:00",
+    "updated_at": "2026-03-17T23:16:52.05847+00:00"
+  },
+  {
+    "id": 462,
+    "codigo": "219469",
+    "descripcion": "PAD FR SEAT CUSHION RH",
+    "linea_code": "PWA",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-17T23:16:52.824543+00:00",
+    "updated_at": "2026-03-17T23:16:52.824543+00:00"
+  },
+  {
+    "id": 463,
+    "codigo": "219470",
+    "descripcion": "PAD FR SEAT CUSHION RH",
+    "linea_code": "PWA",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-17T23:16:53.586807+00:00",
+    "updated_at": "2026-03-17T23:16:53.586807+00:00"
+  },
+  {
+    "id": 464,
+    "codigo": "219471",
+    "descripcion": "PAD FR SEAT CUSHION LH",
+    "linea_code": "PWA",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-17T23:16:54.399576+00:00",
+    "updated_at": "2026-03-17T23:16:54.399576+00:00"
+  },
+  {
+    "id": 465,
+    "codigo": "219472",
+    "descripcion": "PAD FR SEAT CUSHION LH",
+    "linea_code": "PWA",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-17T23:16:55.16649+00:00",
+    "updated_at": "2026-03-17T23:16:55.16649+00:00"
+  },
+  {
+    "id": 466,
+    "codigo": "219474",
+    "descripcion": "PAD FR SEAT BACK LH",
+    "linea_code": "PWA",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-17T23:16:55.952178+00:00",
+    "updated_at": "2026-03-17T23:16:55.952178+00:00"
+  },
+  {
+    "id": 468,
+    "codigo": "21-9440",
+    "descripcion": "Backing cloth LH",
+    "linea_code": "PWA",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-17T23:17:03.881349+00:00",
+    "updated_at": "2026-03-17T23:17:03.881349+00:00"
+  },
+  {
+    "id": 467,
+    "codigo": "219475",
+    "descripcion": "PAD FR SEAT BACK RH",
+    "linea_code": "PWA",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-17T23:16:56.809411+00:00",
+    "updated_at": "2026-03-17T23:16:56.809411+00:00"
+  },
+  {
+    "id": 469,
+    "codigo": "21-9441",
+    "descripcion": "Backing cloth RH",
+    "linea_code": "PWA",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-17T23:17:04.661948+00:00",
+    "updated_at": "2026-03-17T23:17:04.661948+00:00"
+  },
+  {
+    "id": 470,
+    "codigo": "21-9642",
+    "descripcion": "Backing cloth LH",
+    "linea_code": "PWA",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-17T23:17:05.455334+00:00",
+    "updated_at": "2026-03-17T23:17:05.455334+00:00"
+  },
+  {
+    "id": 472,
+    "codigo": "2GJ.868.087",
+    "descripcion": "TOP ROLL FRONT DI PATAGONIA",
+    "linea_code": "095",
+    "linea_name": "095 VOLKSWAGEN",
+    "active": 1,
+    "created_at": "2026-03-17T23:17:30.158019+00:00",
+    "updated_at": "2026-03-17T23:17:30.158019+00:00"
+  },
+  {
+    "id": 471,
+    "codigo": "21-9643",
+    "descripcion": "Backing cloth RH",
+    "linea_code": "PWA",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-17T23:17:06.205715+00:00",
+    "updated_at": "2026-03-17T23:17:06.205715+00:00"
+  },
+  {
+    "id": 544,
+    "codigo": "21-9463",
+    "descripcion": "TELA HILUX",
+    "linea_code": "20",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-19T12:08:11.906783+00:00",
+    "updated_at": "2026-03-19T12:08:11.906783+00:00"
+  },
+  {
+    "id": 545,
+    "codigo": "21-9464",
+    "descripcion": "TELA HILUX",
+    "linea_code": "20",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-19T12:08:12.225565+00:00",
+    "updated_at": "2026-03-19T12:08:12.225565+00:00"
+  },
+  {
+    "id": 546,
+    "codigo": "21-9465",
+    "descripcion": "TELA HILUX",
+    "linea_code": "20",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-19T12:08:12.519346+00:00",
+    "updated_at": "2026-03-19T12:08:12.519346+00:00"
+  },
+  {
+    "id": 547,
+    "codigo": "21-9466",
+    "descripcion": "TELA HILUX",
+    "linea_code": "20",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-19T12:08:12.809476+00:00",
+    "updated_at": "2026-03-19T12:08:12.809476+00:00"
+  },
+  {
+    "id": 548,
+    "codigo": "21-9467",
+    "descripcion": "TELA HILUX",
+    "linea_code": "20",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-19T12:08:13.075939+00:00",
+    "updated_at": "2026-03-19T12:08:13.075939+00:00"
+  },
+  {
+    "id": 549,
+    "codigo": "21-9468",
+    "descripcion": "TELA HILUX",
+    "linea_code": "20",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-19T12:08:13.350509+00:00",
+    "updated_at": "2026-03-19T12:08:13.350509+00:00"
+  },
+  {
+    "id": 550,
+    "codigo": "21-9469",
+    "descripcion": "TELA HILUX",
+    "linea_code": "20",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-19T12:08:13.613579+00:00",
+    "updated_at": "2026-03-19T12:08:13.613579+00:00"
+  },
+  {
+    "id": 551,
+    "codigo": "21-9470",
+    "descripcion": "TELA HILUX",
+    "linea_code": "20",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-19T12:08:13.875705+00:00",
+    "updated_at": "2026-03-19T12:08:13.875705+00:00"
+  },
+  {
+    "id": 552,
+    "codigo": "21-9471",
+    "descripcion": "TELA HILUX",
+    "linea_code": "20",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-19T12:08:14.134129+00:00",
+    "updated_at": "2026-03-19T12:08:14.134129+00:00"
+  },
+  {
+    "id": 553,
+    "codigo": "21-9472",
+    "descripcion": "TELA HILUX",
+    "linea_code": "20",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-19T12:08:14.384013+00:00",
+    "updated_at": "2026-03-19T12:08:14.384013+00:00"
+  },
+  {
+    "id": 554,
+    "codigo": "21-9474",
+    "descripcion": "TELA HILUX",
+    "linea_code": "20",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-19T12:08:14.617249+00:00",
+    "updated_at": "2026-03-19T12:08:14.617249+00:00"
+  },
+  {
+    "id": 555,
+    "codigo": "21-9475",
+    "descripcion": "TELA HILUX",
+    "linea_code": "20",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-19T12:08:14.864066+00:00",
+    "updated_at": "2026-03-19T12:08:14.864066+00:00"
+  },
+  {
+    "id": 556,
+    "codigo": "21-9640",
+    "descripcion": "TELA DE RESPALDO MOLDEADA ASIENTO",
+    "linea_code": "20",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-19T12:08:15.183932+00:00",
+    "updated_at": "2026-03-19T12:08:15.183932+00:00"
+  },
+  {
+    "id": 557,
+    "codigo": "21-9641",
+    "descripcion": "TELA DE RESPALDO MOLDEADA ASIENTO",
+    "linea_code": "20",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-19T12:08:15.426937+00:00",
+    "updated_at": "2026-03-19T12:08:15.426937+00:00"
+  },
+  {
+    "id": 558,
+    "codigo": "21-9642",
+    "descripcion": "TELA DE RESPALDO MOLDEADA RESPALDO",
+    "linea_code": "20",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-19T12:08:15.659122+00:00",
+    "updated_at": "2026-03-19T12:08:15.659122+00:00"
+  },
+  {
+    "id": 559,
+    "codigo": "21-9643",
+    "descripcion": "TELA DE RESPALDO MOLDEADA RESPALDO",
+    "linea_code": "20",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-19T12:08:15.917239+00:00",
+    "updated_at": "2026-03-19T12:08:15.917239+00:00"
+  },
+  {
+    "id": 560,
+    "codigo": "2HC881901 RL1",
+    "descripcion": "FRONT HEADREST TITAN BLACK",
+    "linea_code": "VWA",
+    "linea_name": "Volkswagen Argentina",
+    "active": 1,
+    "created_at": "2026-03-19T12:13:06.80596+00:00",
+    "updated_at": "2026-03-19T12:13:06.80596+00:00"
+  },
+  {
+    "id": 561,
+    "codigo": "2HC881901A GFV",
+    "descripcion": "FRONT HEADREST RENNES BLACK MELLANGE",
+    "linea_code": "VWA",
+    "linea_name": "Volkswagen Argentina",
+    "active": 1,
+    "created_at": "2026-03-19T12:13:07.92308+00:00",
+    "updated_at": "2026-03-19T12:13:07.92308+00:00"
+  },
+  {
+    "id": 562,
+    "codigo": "2HC881901B GEV",
+    "descripcion": "FRONT HEADREST ANDINO GRAY",
+    "linea_code": "VWA",
+    "linea_name": "Volkswagen Argentina",
+    "active": 1,
+    "created_at": "2026-03-19T12:13:08.928836+00:00",
+    "updated_at": "2026-03-19T12:13:08.928836+00:00"
+  },
+  {
+    "id": 563,
+    "codigo": "2HC881901C EFG",
+    "descripcion": "FRONT HEADREST DARK SLATE",
+    "linea_code": "VWA",
+    "linea_name": "Volkswagen Argentina",
+    "active": 1,
+    "created_at": "2026-03-19T12:13:10.0485+00:00",
+    "updated_at": "2026-03-19T12:13:10.0485+00:00"
+  },
+  {
+    "id": 564,
+    "codigo": "2HC885900 RL1",
+    "descripcion": "REAR CENTER HEADREST TITAN BLACK",
+    "linea_code": "VWA",
+    "linea_name": "Volkswagen Argentina",
+    "active": 1,
+    "created_at": "2026-03-19T12:13:10.908842+00:00",
+    "updated_at": "2026-03-19T12:13:10.908842+00:00"
+  },
+  {
+    "id": 565,
+    "codigo": "2HC885900A EIF",
+    "descripcion": "REAR CENTER HEADREST RENNES BLACK MELL",
+    "linea_code": "VWA",
+    "linea_name": "Volkswagen Argentina",
+    "active": 1,
+    "created_at": "2026-03-19T12:13:11.809193+00:00",
+    "updated_at": "2026-03-19T12:13:11.809193+00:00"
+  },
+  {
+    "id": 566,
+    "codigo": "2HC885900B SIY",
+    "descripcion": "REAR CENTER HEADREST ANDINO GRAY",
+    "linea_code": "VWA",
+    "linea_name": "Volkswagen Argentina",
+    "active": 1,
+    "created_at": "2026-03-19T12:13:12.636912+00:00",
+    "updated_at": "2026-03-19T12:13:12.636912+00:00"
+  },
+  {
+    "id": 567,
+    "codigo": "2HC885900C SIY",
+    "descripcion": "REAR CENTER HEADREST DARK SLATE",
+    "linea_code": "VWA",
+    "linea_name": "Volkswagen Argentina",
+    "active": 1,
+    "created_at": "2026-03-19T12:13:13.512823+00:00",
+    "updated_at": "2026-03-19T12:13:13.512823+00:00"
+  },
+  {
+    "id": 568,
+    "codigo": "2HC885901 RL1",
+    "descripcion": "REAR OUTER HEADREST TITAN BLACK",
+    "linea_code": "VWA",
+    "linea_name": "Volkswagen Argentina",
+    "active": 1,
+    "created_at": "2026-03-19T12:13:14.373747+00:00",
+    "updated_at": "2026-03-19T12:13:14.373747+00:00"
+  },
+  {
+    "id": 569,
+    "codigo": "2HC885901A GFU",
+    "descripcion": "REAR OUTER HEADREST RENNES BLACK MELLA",
+    "linea_code": "VWA",
+    "linea_name": "Volkswagen Argentina",
+    "active": 1,
+    "created_at": "2026-03-19T12:13:16.028802+00:00",
+    "updated_at": "2026-03-19T12:13:16.028802+00:00"
+  },
+  {
+    "id": 570,
+    "codigo": "2HC885901B GEQ",
+    "descripcion": "REAR OUTER HEADREST ANDINO GRAY",
+    "linea_code": "VWA",
+    "linea_name": "Volkswagen Argentina",
+    "active": 1,
+    "created_at": "2026-03-19T12:13:17.246381+00:00",
+    "updated_at": "2026-03-19T12:13:17.246381+00:00"
+  },
+  {
+    "id": 571,
+    "codigo": "2HC885901C DZS",
+    "descripcion": "REAR OUTER HEADREST DARK SLATE",
+    "linea_code": "VWA",
+    "linea_name": "Volkswagen Argentina",
+    "active": 1,
+    "created_at": "2026-03-19T12:13:18.170948+00:00",
+    "updated_at": "2026-03-19T12:13:18.170948+00:00"
+  },
+  {
+    "id": 572,
+    "codigo": "2HC885081 RL1",
+    "descripcion": "ARMREST REAR, L3 TITAN BLACK",
+    "linea_code": "VWA",
+    "linea_name": "Volkswagen Argentina",
+    "active": 1,
+    "created_at": "2026-03-19T12:13:19.379841+00:00",
+    "updated_at": "2026-03-19T12:13:19.379841+00:00"
+  },
+  {
+    "id": 573,
+    "codigo": "N 231",
+    "descripcion": "ARMREST DOOR PANEL",
+    "linea_code": "VWA",
+    "linea_name": "Volkswagen Argentina",
+    "active": 1,
+    "created_at": "2026-03-19T12:16:26.507199+00:00",
+    "updated_at": "2026-03-19T12:16:26.507199+00:00"
+  },
+  {
+    "id": 574,
+    "codigo": "N 227",
+    "descripcion": "INSERT DELANTERO IZQUIERDO L0",
+    "linea_code": "VWA",
+    "linea_name": "Volkswagen Argentina",
+    "active": 1,
+    "created_at": "2026-03-19T12:16:27.756378+00:00",
+    "updated_at": "2026-03-19T12:16:27.756378+00:00"
+  },
+  {
+    "id": 57,
+    "codigo": "COR-2GJ-901A-I",
+    "descripcion": "CORTE 2GJ881901A ICE APC DEL PATAGONIA",
+    "linea_code": "0198",
+    "linea_name": "SAS AUTOMOTRIZ ARGENTINA S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:42.675016+00:00",
+    "updated_at": "2026-03-14T19:48:42.675016+00:00"
+  },
+  {
+    "id": 58,
+    "codigo": "COR-2GJ-901A-IC",
+    "descripcion": "CORTE 2GJ885901A-ICE APC TRASERO PATAGONIA",
+    "linea_code": "0198",
+    "linea_name": "SAS AUTOMOTRIZ ARGENTINA S.A.",
+    "active": 1,
+    "created_at": "2026-03-14T19:48:42.9503+00:00",
+    "updated_at": "2026-03-14T19:48:42.9503+00:00"
+  },
+  {
+    "id": 473,
+    "codigo": "2GJ.868.088",
+    "descripcion": "TOP ROLL FRONT DD PATAGONIA",
+    "linea_code": "095",
+    "linea_name": "095 VOLKSWAGEN",
+    "active": 1,
+    "created_at": "2026-03-17T23:17:31.214048+00:00",
+    "updated_at": "2026-03-17T23:17:31.214048+00:00"
+  }
+]

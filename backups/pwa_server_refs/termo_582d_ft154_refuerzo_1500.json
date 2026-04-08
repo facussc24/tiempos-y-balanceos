@@ -1,0 +1,96 @@
+{
+  "pages": [
+    {
+      "page_num": 1,
+      "text": "LC:\nA\nFICHA TÉCNICA\nDENOMINACIÓN: CODIGO:\nTBD\nREFERENCIA: CLIENTE/MODELO:\nVarios. Varios.\nPRODUCTO:\nFieltro prensado\nMaterial:\n• Código de material: BSDL2603-3N\nPropiedades:\n• Gramaje (peso areal): 1500 g/m²\n• Espesor: t = 5,0 mm\nRequisitos:\n• Fogging / empañamiento (según nota): Ensayo conforme BSDM0503 (glass\nfogging test)\n• Permeabilidad: según BSDL7530 → máx. 155 cm²/s\n• Inflamabilidad: BSDM0500 → máx. 100/min\nEMITIO APROBO FUM\nFecha 30/12/2025 30/12/2025\nResponsable P.Centurión\nFirma\nFECHA LC DETALLE DEL CAMBIO\n13/11/2025 A Emisión inicial.\nESTA COPIA NO TIENE VALIDEZ SIN EL SELLO CORRESPONDIENTE"
+    }
+  ],
+  "tables": [
+    {
+      "page": 1,
+      "table_index": 0,
+      "data": [
+        [
+          "",
+          "FICHA TÉCNICA",
+          null,
+          "LC:\nA"
+        ],
+        [
+          "DENOMINACIÓN:",
+          null,
+          "CODIGO:\nTBD",
+          null
+        ],
+        [
+          "REFERENCIA:\nVarios.",
+          null,
+          "CLIENTE/MODELO:\nVarios.",
+          null
+        ],
+        [
+          "PRODUCTO:\nFieltro prensado\nMaterial:\n• Código de material: BSDL2603-3N\nPropiedades:\n• Gramaje (peso areal): 1500 g/m²\n• Espesor: t = 5,0 mm\nRequisitos:\n• Fogging / empañamiento (según nota): Ensayo conforme BSDM0503 (glass\nfogging test)\n• Permeabilidad: según BSDL7530 → máx. 155 cm²/s\n• Inflamabilidad: BSDM0500 → máx. 100/min",
+          null,
+          null,
+          null
+        ]
+      ]
+    },
+    {
+      "page": 1,
+      "table_index": 1,
+      "data": [
+        [
+          "",
+          "EMITIO",
+          "APROBO",
+          "FUM"
+        ],
+        [
+          "Fecha",
+          "",
+          "30/12/2025",
+          "30/12/2025"
+        ],
+        [
+          "Responsable",
+          "",
+          "P.Centurión",
+          ""
+        ],
+        [
+          "Firma",
+          "",
+          "",
+          ""
+        ]
+      ]
+    },
+    {
+      "page": 1,
+      "table_index": 2,
+      "data": [
+        [
+          "FECHA",
+          "LC",
+          "DETALLE DEL CAMBIO"
+        ],
+        [
+          "13/11/2025",
+          "A",
+          "Emisión inicial."
+        ],
+        [
+          "",
+          "",
+          ""
+        ],
+        [
+          "",
+          "",
+          ""
+        ]
+      ]
+    }
+  ]
+}

@@ -1,0 +1,3545 @@
+{
+  "_meta": {
+    "sourceFile": "AMFE y Flujograma unificado - TELAS REV 03.xlsx",
+    "extractedAt": "2026-04-06T18:15:36.466Z",
+    "format": "AIAG-3 (classic NPR, not VDA AP)",
+    "client": "PWA",
+    "sheetsFound": [
+      "Corte y pegado de aplix",
+      "Corte sin costura",
+      "Troquelado y costura",
+      "Corte y costura",
+      "Telas por sector",
+      "Hoja1",
+      "Telas por op"
+    ],
+    "description": "Unified AMFE & Process Flow for ALL PWA Telas (Planas) products. Each sheet represents a process family."
+  },
+  "processTypes": {
+    "Corte y pegado de aplix": {
+      "docHeader": {
+        "realizo": "S. Montevecchi",
+        "fechaElaboracion": "19/06/2020",
+        "reviso": "Carlos Baptista",
+        "fechaRevision": "25/06/2020",
+        "proveedor": "BARACK MERCOSUL.",
+        "aprobo": "Carlos Baptista",
+        "hoja": "HOJA 1 DE 1",
+        "piezaCodigo": "Según tabla",
+        "denominacion": "Según tabla",
+        "cliente": "PWA"
+      },
+      "amfeHeader": {
+        "clientesAfectados": "PWA.",
+        "responsableProceso": "W. RIVEIRA.",
+        "nombreParte": "Según tabla",
+        "fechaFum": "Según tabla",
+        "preparadoPor": "J. RAMIREZ.",
+        "modeloAnio": "",
+        "revision": "A",
+        "fechaOrig": "19/06/2020",
+        "equipoTrabajo": "CAL : O. BENIGNO.                      PROD: W. RIVEIRA.                      INGEN: J. RAMIREZ.",
+        "fechaRev": "19/06/2020"
+      },
+      "operations": [
+        "OP. 10 Recepción de materiales con identificacion correcta en en sector indicado",
+        "OP.20 Corte segu ndimensional con orificios en posicion y con la cantidad correspondiente.",
+        "OP. 30 Pegado de dots en correcta posicion con cantidad de dots correspondiente.",
+        "OP. 40 Inspección final del dimensional.",
+        "OP. 50 Embalaje identificado con cantidad de piezas especificas."
+      ],
+      "amfeRows": [
+        {
+          "_rowIndex": 52,
+          "operacion": "OP. 10 Recepción de materiales con identificacion correcta en en sector indicado",
+          "fallaPotencial": "Identificacion incorrecta",
+          "efectoFallaPotencial": "Problemas en orden del stock",
+          "severidad": 7,
+          "causaPotencialFalla": "Falta de capacitacion",
+          "ocurrencia": 2,
+          "controlesPreventivos": "Capacitacion de operario",
+          "controlesDeteccion": "Recepción de materiales.",
+          "deteccion": 6,
+          "npr": 84
+        },
+        {
+          "_rowIndex": 53,
+          "operacion": "OP. 10 Recepción de materiales con identificacion correcta en en sector indicado",
+          "fallaPotencial": "Ubicación en sector incorrecto",
+          "efectoFallaPotencial": "Problemas en orden del stock",
+          "severidad": 7,
+          "causaPotencialFalla": "Falta de identifiacion de sector / Falta de capacitacion",
+          "ocurrencia": 2,
+          "controlesPreventivos": "Capacitacion de operario / identificacion de sectores",
+          "controlesDeteccion": "Recepción de materiales.",
+          "deteccion": 6,
+          "npr": 84
+        },
+        {
+          "_rowIndex": 54,
+          "operacion": "OP. 10 Recepción de materiales con identificacion correcta en en sector indicado",
+          "fallaPotencial": "Omision de la recepcion de material",
+          "efectoFallaPotencial": "Problemas en orden del stock",
+          "severidad": 7,
+          "causaPotencialFalla": "Falta de capacitacion",
+          "ocurrencia": 2,
+          "controlesPreventivos": "Capacitacion de operario",
+          "controlesDeteccion": "Recepción de materiales.",
+          "deteccion": 6,
+          "npr": 84
+        },
+        {
+          "_rowIndex": 55,
+          "operacion": "OP.20 Corte segu ndimensional con orificios en posicion y con la cantidad correspondiente.",
+          "fallaPotencial": "Largo mayor a lo especificado.",
+          "efectoFallaPotencial": "Inutilización del material.",
+          "severidad": 7,
+          "causaPotencialFalla": "Programación equivocada del laser.",
+          "ocurrencia": 2,
+          "controlesPreventivos": "Set up del laser.",
+          "controlesDeteccion": "Control de cotas 1 y 2.",
+          "deteccion": 6,
+          "npr": 84
+        },
+        {
+          "_rowIndex": 56,
+          "operacion": "OP.20 Corte segu ndimensional con orificios en posicion y con la cantidad correspondiente.",
+          "fallaPotencial": "Largo menor a lo especificado.",
+          "efectoFallaPotencial": "Inutilización del material.",
+          "severidad": 7,
+          "causaPotencialFalla": "Programación equivocada del laser.",
+          "ocurrencia": 2,
+          "controlesPreventivos": "Set up del laser.",
+          "controlesDeteccion": "Control de cotas 1 y 2.",
+          "deteccion": 6,
+          "npr": 84
+        },
+        {
+          "_rowIndex": 57,
+          "operacion": "OP.20 Corte segu ndimensional con orificios en posicion y con la cantidad correspondiente.",
+          "fallaPotencial": "Falta de orificios.",
+          "efectoFallaPotencial": "Imposibilidad de realizar el proceso posterior.",
+          "severidad": 7,
+          "causaPotencialFalla": "Programación equivocada del laser.",
+          "ocurrencia": 2,
+          "controlesPreventivos": "Set up del laser.",
+          "controlesDeteccion": "Control visual.",
+          "deteccion": 6,
+          "npr": 84
+        },
+        {
+          "_rowIndex": 58,
+          "operacion": "OP.20 Corte segu ndimensional con orificios en posicion y con la cantidad correspondiente.",
+          "fallaPotencial": "Orificios fuera de posición.",
+          "efectoFallaPotencial": "Imposibilidad de realizar el proceso posterior.",
+          "severidad": 7,
+          "causaPotencialFalla": "Programación equivocada del laser.",
+          "ocurrencia": 2,
+          "controlesPreventivos": "Set up del laser.",
+          "controlesDeteccion": "Control con pieza patrón.",
+          "deteccion": 7,
+          "npr": 98
+        },
+        {
+          "_rowIndex": 59,
+          "operacion": "OP. 30 Pegado de dots en correcta posicion con cantidad de dots correspondiente.",
+          "fallaPotencial": "Dots colocados en posición incorrecta.",
+          "efectoFallaPotencial": "Retrabajo de la pieza.",
+          "severidad": 7,
+          "causaPotencialFalla": "Orificios fuera de posición.",
+          "ocurrencia": 2,
+          "controlesDeteccion": "Control visual.",
+          "deteccion": 7,
+          "npr": 98
+        },
+        {
+          "_rowIndex": 60,
+          "operacion": "OP. 30 Pegado de dots en correcta posicion con cantidad de dots correspondiente.",
+          "fallaPotencial": "Falta de dots.",
+          "efectoFallaPotencial": "Retrabajo de la pieza.",
+          "severidad": 7,
+          "causaPotencialFalla": "Falta de orificios.",
+          "ocurrencia": 2,
+          "controlesDeteccion": "Control visual.",
+          "deteccion": 7,
+          "npr": 98
+        },
+        {
+          "_rowIndex": 61,
+          "operacion": "OP. 40 Inspección final del dimensional.",
+          "fallaPotencial": "Dimensional fuera de especificación.",
+          "efectoFallaPotencial": "Rechazo de Cliente.",
+          "severidad": 8,
+          "causaPotencialFalla": "Programación equivocada del laser.",
+          "ocurrencia": 2,
+          "controlesDeteccion": "Control dimensional de la pieza.",
+          "deteccion": 6,
+          "npr": 96
+        },
+        {
+          "_rowIndex": 62,
+          "operacion": "OP. 50 Embalaje identificado con cantidad de piezas especificas.",
+          "fallaPotencial": "Mayor cantidad de piezas por medio.",
+          "efectoFallaPotencial": "Reclamo de cliente.",
+          "severidad": 7,
+          "causaPotencialFalla": "Error de conteo.",
+          "ocurrencia": 2,
+          "controlesPreventivos": "Control adicional con otro metodo",
+          "controlesDeteccion": "Autocontrol / Audit de producto terminado.",
+          "deteccion": 7,
+          "npr": 98
+        },
+        {
+          "_rowIndex": 63,
+          "operacion": "OP. 50 Embalaje identificado con cantidad de piezas especificas.",
+          "fallaPotencial": "Menor cantidad de piezas por medio.",
+          "efectoFallaPotencial": "Reclamo de cliente.",
+          "severidad": 8,
+          "causaPotencialFalla": "Error de conteo.",
+          "ocurrencia": 2,
+          "controlesPreventivos": "Control adicional con otro metodo",
+          "controlesDeteccion": "Autocontrol / Audit de producto terminado.",
+          "deteccion": 7,
+          "npr": 112,
+          "accionesRecomendadas": "Control del despacho según ficha de embalaje.",
+          "responsablesPlazos": "Logistica / Previo a envio",
+          "accionesTomadas": "Control del despacho según ficha de embalaje.",
+          "severidadPost": 8,
+          "ocurrenciaPost": 2,
+          "deteccionPost": 6,
+          "nprPost": 96
+        },
+        {
+          "_rowIndex": 64,
+          "operacion": "OP. 50 Embalaje identificado con cantidad de piezas especificas.",
+          "fallaPotencial": "Error de identificación.",
+          "efectoFallaPotencial": "Perdida de rastreabilidad del producto / Reclamo del Cliente.",
+          "severidad": 8,
+          "causaPotencialFalla": "Error de identificación por parte del operador.",
+          "ocurrencia": 2,
+          "controlesPreventivos": "Organización de etiquetas",
+          "controlesDeteccion": "Autocontrol / Audit de producto terminado.",
+          "deteccion": 7,
+          "npr": 112,
+          "accionesRecomendadas": "Control del despacho según ficha de embalaje.",
+          "responsablesPlazos": "Logistica / Previo a envio",
+          "accionesTomadas": "Control del despacho según ficha de embalaje.",
+          "severidadPost": 8,
+          "ocurrenciaPost": 2,
+          "deteccionPost": 6,
+          "nprPost": 96
+        },
+        {
+          "_rowIndex": 65,
+          "operacion": "OP. 50 Embalaje identificado con cantidad de piezas especificas.",
+          "fallaPotencial": "Falta de identificación.",
+          "efectoFallaPotencial": "Perdida de rastreabilidad del producto / Reclamo del Cliente.",
+          "severidad": 8,
+          "causaPotencialFalla": "Falla de operario",
+          "ocurrencia": 2,
+          "controlesDeteccion": "Autocontrol / Audit de producto terminado.",
+          "deteccion": 7,
+          "npr": 112,
+          "accionesRecomendadas": "Control del despacho según ficha de embalaje.",
+          "responsablesPlazos": "Logistica / Previo a envio",
+          "accionesTomadas": "Control del despacho según ficha de embalaje.",
+          "severidadPost": 8,
+          "ocurrenciaPost": 2,
+          "deteccionPost": 6,
+          "nprPost": 96
+        }
+      ],
+      "flujograma": [
+        {
+          "row": 2,
+          "col": 8,
+          "text": "Fecha de elaboración: 19/06/2020"
+        },
+        {
+          "row": 3,
+          "col": 8,
+          "text": "Fecha de revisión: 25/06/2020"
+        }
+      ],
+      "amfeRowCount": 14
+    },
+    "Corte sin costura": {
+      "docHeader": {
+        "realizo": "S. Montevecchi",
+        "fechaElaboracion": "19/06/2020",
+        "reviso": "Carlos Baptista",
+        "fechaRevision": "25/06/2020",
+        "proveedor": "BARACK MERCOSUL.",
+        "aprobo": "Carlos Baptista",
+        "hoja": "HOJA 1 DE 1",
+        "piezaCodigo": "Según tabla",
+        "denominacion": "Según tabla",
+        "cliente": "PWA"
+      },
+      "amfeHeader": {
+        "clientesAfectados": "PWA",
+        "responsableProceso": "H. CUELICHE.",
+        "nombreParte": "Según tabla",
+        "fechaFum": "",
+        "preparadoPor": "J. RAMIREZ.",
+        "modeloAnio": "",
+        "revision": "",
+        "fechaOrig": "19/06/2020",
+        "equipoTrabajo": "CAL : L. PEREZ.                      PROD: H. CUELICHE.                     INGEN: R. FERNANDEZ.",
+        "fechaRev": "19/06/2020"
+      },
+      "operations": [
+        "MODELO/ AÑO :",
+        "EQUIPO DE TRABAJO :     CAL : L. PEREZ.                      PROD: H. CUELICHE.                     INGEN: R. FERNANDEZ.",
+        "PROCESO / OPERACIÓN",
+        "OP. 10 Recepción de materiales con identificacion correcta en en sector indicado",
+        "OP.20 Corte según dimensional, libre de arrugas y marcas.",
+        "OP. 30 Colocado de clips en posicion correcta sin falta de clips.",
+        "OP. 40 Inspeccion final de deimensional.",
+        "OP. 50 Embalaje identificado con cantidad de piezas especificas."
+      ],
+      "amfeRows": [
+        {
+          "_rowIndex": 51,
+          "operacion": "MODELO/ AÑO :",
+          "controlesPreventivos": "REV:",
+          "responsablesPlazos": "FECHA  (ORIG) : 19/06/2020"
+        },
+        {
+          "_rowIndex": 52,
+          "operacion": "EQUIPO DE TRABAJO :     CAL : L. PEREZ.                      PROD: H. CUELICHE.                     INGEN: R. FERNANDEZ.",
+          "responsablesPlazos": "FECHA (REV) : 19/06/2020"
+        },
+        {
+          "_rowIndex": 53,
+          "responsablesPlazos": "CARACT S/R:",
+          "accionesTomadas": "SI: X",
+          "severidadPost": null
+        },
+        {
+          "_rowIndex": 54,
+          "operacion": "PROCESO / OPERACIÓN",
+          "fallaPotencial": "FALLA POTENCIAL",
+          "efectoFallaPotencial": "EFECTO DE FALLA POTENCIAL",
+          "item": "ITEM",
+          "severidad": null,
+          "clasificacion": "CLASIFICACION",
+          "causaPotencialFalla": "CAUSA POTENCIAL DE FALLA",
+          "ocurrencia": null,
+          "controlesPreventivos": "CONTROLES PREVENTIVOS",
+          "controlesDeteccion": "CONTROLES DE DETECCION",
+          "deteccion": null,
+          "npr": null,
+          "accionesRecomendadas": "ACCIONES RECOMENDADAS",
+          "responsablesPlazos": "RESPONS. Y PLAZOS  PREVISTOS",
+          "accionesTomadas": "ACCIONES                                                                                                                                   TOMADAS",
+          "severidadPost": null,
+          "ocurrenciaPost": null,
+          "deteccionPost": null,
+          "nprPost": null
+        },
+        {
+          "_rowIndex": 55,
+          "operacion": "OP. 10 Recepción de materiales con identificacion correcta en en sector indicado",
+          "fallaPotencial": "Identificacion incorrecta",
+          "efectoFallaPotencial": "Problemas en orden del stock",
+          "severidad": 7,
+          "causaPotencialFalla": "Falta de capacitacion",
+          "ocurrencia": 2,
+          "controlesPreventivos": "Capacitacion de operario",
+          "controlesDeteccion": "Recepción de materiales.",
+          "deteccion": 6,
+          "npr": 84
+        },
+        {
+          "_rowIndex": 56,
+          "operacion": "OP. 10 Recepción de materiales con identificacion correcta en en sector indicado",
+          "fallaPotencial": "Ubicación en sector incorrecto",
+          "efectoFallaPotencial": "Problemas en orden del stock",
+          "severidad": 7,
+          "causaPotencialFalla": "Falta de identifiacion de sector / Falta de capacitacion",
+          "ocurrencia": 2,
+          "controlesPreventivos": "Capacitacion de operario / identificacion de sectores",
+          "controlesDeteccion": "Recepción de materiales.",
+          "deteccion": 6,
+          "npr": 84
+        },
+        {
+          "_rowIndex": 57,
+          "operacion": "OP. 10 Recepción de materiales con identificacion correcta en en sector indicado",
+          "fallaPotencial": "Omision de la recepcion de material",
+          "efectoFallaPotencial": "Problemas en orden del stock",
+          "severidad": 7,
+          "causaPotencialFalla": "Falta de capacitacion",
+          "ocurrencia": 2,
+          "controlesPreventivos": "Capacitacion de operario",
+          "controlesDeteccion": "Recepción de materiales.",
+          "deteccion": 6,
+          "npr": 84
+        },
+        {
+          "_rowIndex": 58,
+          "operacion": "OP.20 Corte según dimensional, libre de arrugas y marcas.",
+          "fallaPotencial": "Largo mayor a lo especificado.",
+          "efectoFallaPotencial": "Scrap",
+          "severidad": 7,
+          "causaPotencialFalla": "Error en la regla de guia de la mesa de corte.",
+          "ocurrencia": 2,
+          "controlesPreventivos": "Verificacion de la regla con cinta metrica calibrada.",
+          "controlesDeteccion": "Control de Longitud.",
+          "deteccion": 6,
+          "npr": 84
+        },
+        {
+          "_rowIndex": 59,
+          "operacion": "OP.20 Corte según dimensional, libre de arrugas y marcas.",
+          "fallaPotencial": "Largo menor a lo especificado.",
+          "efectoFallaPotencial": "Imposibilidad de realizar el proceso posterior.",
+          "severidad": 7,
+          "causaPotencialFalla": "Error en la regla de guia de la mesa de corte.",
+          "ocurrencia": 2,
+          "controlesPreventivos": "Verificacion de la regla con cinta metrica calibrada.",
+          "controlesDeteccion": "Control de Longitud.",
+          "deteccion": 6,
+          "npr": 84
+        },
+        {
+          "_rowIndex": 60,
+          "operacion": "OP.20 Corte según dimensional, libre de arrugas y marcas.",
+          "fallaPotencial": "Presencia de arrugas y marcas.",
+          "efectoFallaPotencial": "Inutilización del material.",
+          "severidad": 7,
+          "causaPotencialFalla": "Material fuera de especificación requerida",
+          "ocurrencia": 2,
+          "controlesDeteccion": "Recepción de materiales / Control visual.",
+          "deteccion": 6,
+          "npr": 84
+        },
+        {
+          "_rowIndex": 61,
+          "operacion": "OP. 30 Colocado de clips en posicion correcta sin falta de clips.",
+          "fallaPotencial": "Clips colocados en posición incorrecta.",
+          "efectoFallaPotencial": "Retrabajo de la pieza.",
+          "severidad": 7,
+          "causaPotencialFalla": "Orificios fuera de posición.",
+          "ocurrencia": 2,
+          "controlesPreventivos": "Control con plantilla de control.",
+          "controlesDeteccion": "Control visual.",
+          "deteccion": 7,
+          "npr": 98
+        },
+        {
+          "_rowIndex": 62,
+          "operacion": "OP. 30 Colocado de clips en posicion correcta sin falta de clips.",
+          "fallaPotencial": "Falta de Clips.",
+          "efectoFallaPotencial": "Retrabajo de la pieza.",
+          "severidad": 7,
+          "causaPotencialFalla": "Falta de orificios.",
+          "ocurrencia": 2,
+          "controlesPreventivos": "Control con plantilla de control.",
+          "controlesDeteccion": "Control visual.",
+          "deteccion": 7,
+          "npr": 98
+        },
+        {
+          "_rowIndex": 63,
+          "operacion": "OP. 40 Inspeccion final de deimensional.",
+          "fallaPotencial": "Dimensional fuera de especificacion.",
+          "efectoFallaPotencial": "Rechazo de Cliente.",
+          "severidad": 8,
+          "causaPotencialFalla": "Mal posicionado de la placa sobre el troquel.",
+          "ocurrencia": 2,
+          "controlesDeteccion": "Control dimensional de la pieza.",
+          "deteccion": 6,
+          "npr": 96
+        },
+        {
+          "_rowIndex": 64,
+          "operacion": "OP. 50 Embalaje identificado con cantidad de piezas especificas.",
+          "fallaPotencial": "Mayor cantidad de piezas por medio.",
+          "efectoFallaPotencial": "Reclamo de cliente.",
+          "severidad": 7,
+          "causaPotencialFalla": "Error de conteo.",
+          "ocurrencia": 2,
+          "controlesPreventivos": "Control adicional con otro metodo",
+          "controlesDeteccion": "Autocontrol / Audit de producto terminado.",
+          "deteccion": 7,
+          "npr": 98
+        },
+        {
+          "_rowIndex": 65,
+          "operacion": "OP. 50 Embalaje identificado con cantidad de piezas especificas.",
+          "fallaPotencial": "Menor cantidad de piezas por medio.",
+          "efectoFallaPotencial": "Reclamo de cliente.",
+          "severidad": 8,
+          "causaPotencialFalla": "Error de conteo.",
+          "ocurrencia": 2,
+          "controlesPreventivos": "Control adicional con otro metodo",
+          "controlesDeteccion": "Autocontrol / Audit de producto terminado.",
+          "deteccion": 7,
+          "npr": 112,
+          "accionesRecomendadas": "Control del despacho según ficha de embalaje.",
+          "responsablesPlazos": "Logistica / Previo a envio",
+          "accionesTomadas": "Control del despacho según ficha de embalaje.",
+          "severidadPost": 8,
+          "ocurrenciaPost": 2,
+          "deteccionPost": 6,
+          "nprPost": 96
+        },
+        {
+          "_rowIndex": 66,
+          "operacion": "OP. 50 Embalaje identificado con cantidad de piezas especificas.",
+          "fallaPotencial": "Error de identificación.",
+          "efectoFallaPotencial": "Perdida de rastreabilidad del producto / Reclamo del Cliente.",
+          "severidad": 8,
+          "causaPotencialFalla": "Error de identificación por parte del operador.",
+          "ocurrencia": 2,
+          "controlesPreventivos": "Organización de etiquetas",
+          "controlesDeteccion": "Autocontrol / Audit de producto terminado.",
+          "deteccion": 7,
+          "npr": 112,
+          "accionesRecomendadas": "Control del despacho según ficha de embalaje.",
+          "responsablesPlazos": "Logistica / Previo a envio",
+          "accionesTomadas": "Control del despacho según ficha de embalaje.",
+          "severidadPost": 8,
+          "ocurrenciaPost": 2,
+          "deteccionPost": 6,
+          "nprPost": 96
+        },
+        {
+          "_rowIndex": 67,
+          "operacion": "OP. 50 Embalaje identificado con cantidad de piezas especificas.",
+          "fallaPotencial": "Falta de identificación.",
+          "efectoFallaPotencial": "Perdida de rastreabilidad del producto / Reclamo del Cliente.",
+          "severidad": 8,
+          "causaPotencialFalla": "Falla de operario",
+          "ocurrencia": 2,
+          "controlesDeteccion": "Autocontrol / Audit de producto terminado.",
+          "deteccion": 7,
+          "npr": 112,
+          "accionesRecomendadas": "Control del despacho según ficha de embalaje.",
+          "responsablesPlazos": "Logistica / Previo a envio",
+          "accionesTomadas": "Control del despacho según ficha de embalaje.",
+          "severidadPost": 8,
+          "ocurrenciaPost": 2,
+          "deteccionPost": 6,
+          "nprPost": 96
+        }
+      ],
+      "flujograma": [
+        {
+          "row": 2,
+          "col": 8,
+          "text": "Fecha de elaboración: 19/06/2020"
+        },
+        {
+          "row": 3,
+          "col": 8,
+          "text": "Fecha de revisión: 25/06/2020"
+        }
+      ],
+      "amfeRowCount": 17
+    },
+    "Troquelado y costura": {
+      "docHeader": {
+        "realizo": "S. Montevecchi",
+        "fechaElaboracion": "19/06/2020",
+        "reviso": "Carlos Baptista",
+        "fechaRevision": "25/06/2020",
+        "proveedor": "BARACK MERCOSUL.",
+        "aprobo": "Carlos Baptista",
+        "hoja": "HOJA 1 DE 1",
+        "piezaCodigo": "Según tabla",
+        "denominacion": "Según tabla",
+        "cliente": "PWA"
+      },
+      "amfeHeader": {
+        "clientesAfectados": "PWA.",
+        "responsableProceso": "O. BENIGNO.",
+        "nombreParte": "Según tabla",
+        "fechaFum": "",
+        "preparadoPor": "S. MONTEVECCHI.",
+        "modeloAnio": "",
+        "revision": "",
+        "fechaOrig": "19/06/2020",
+        "equipoTrabajo": "CAL : O. BENIGNO.                      PROD: A. MARCHINI.                      INGEN: R. FERNANDEZ.",
+        "fechaRev": "19/06/2020"
+      },
+      "operations": [
+        "OP. 10 Recepción de materiales con identificacion correcta en en sector indicado",
+        "OP.20 Troquelado prolijo sin deficiencia con orificios según dimensional.",
+        "OP. 30 Costura completa sin pliegues ni arrugas con hilo segun especificaciones.",
+        "OP. 40 Pegado de dots aplix en posicion correcta con cantidad indicada.",
+        "OP. 50 Inspección final de dimensional.",
+        "OP. 60 Embalaje identificado con cantidad de piezas especificas."
+      ],
+      "amfeRows": [
+        {
+          "_rowIndex": 52,
+          "operacion": "OP. 10 Recepción de materiales con identificacion correcta en en sector indicado",
+          "fallaPotencial": "Identificacion incorrecta",
+          "efectoFallaPotencial": "Problemas en orden del stock",
+          "severidad": 7,
+          "causaPotencialFalla": "Falta de capacitacion",
+          "ocurrencia": 2,
+          "controlesPreventivos": "Capacitacion de operario",
+          "controlesDeteccion": "Recepción de materiales.",
+          "deteccion": 6,
+          "npr": 84
+        },
+        {
+          "_rowIndex": 53,
+          "operacion": "OP. 10 Recepción de materiales con identificacion correcta en en sector indicado",
+          "fallaPotencial": "Ubicación en sector incorrecto",
+          "efectoFallaPotencial": "Problemas en orden del stock",
+          "severidad": 7,
+          "causaPotencialFalla": "Falta de identifiacion de sector / Falta de capacitacion",
+          "ocurrencia": 2,
+          "controlesPreventivos": "Capacitacion de operario / identificacion de sectores",
+          "controlesDeteccion": "Recepción de materiales.",
+          "deteccion": 6,
+          "npr": 84
+        },
+        {
+          "_rowIndex": 54,
+          "operacion": "OP. 10 Recepción de materiales con identificacion correcta en en sector indicado",
+          "fallaPotencial": "Omision de la recepcion de material",
+          "efectoFallaPotencial": "Problemas en orden del stock",
+          "severidad": 7,
+          "causaPotencialFalla": "Falta de capacitacion",
+          "ocurrencia": 2,
+          "controlesPreventivos": "Capacitacion de operario",
+          "controlesDeteccion": "Recepción de materiales.",
+          "deteccion": 6,
+          "npr": 84
+        },
+        {
+          "_rowIndex": 55,
+          "operacion": "OP.20 Troquelado prolijo sin deficiencia con orificios según dimensional.",
+          "fallaPotencial": "Troquelado desprolijo.",
+          "efectoFallaPotencial": "Inutilización de la pieza.",
+          "severidad": 8,
+          "causaPotencialFalla": "Mal posicionado de la placa sobre el troquel.",
+          "ocurrencia": 2,
+          "controlesDeteccion": "Control con calibre de forma.",
+          "deteccion": 6,
+          "npr": 96
+        },
+        {
+          "_rowIndex": 56,
+          "operacion": "OP.20 Troquelado prolijo sin deficiencia con orificios según dimensional.",
+          "fallaPotencial": "Troquelado deficiente.",
+          "efectoFallaPotencial": "Retrabajo de la pieza.",
+          "severidad": 7,
+          "causaPotencialFalla": "Troquel en mal estado.",
+          "ocurrencia": 2,
+          "controlesPreventivos": "Mantenimiento preventivo del troquel.",
+          "controlesDeteccion": "Control con calibre de forma.",
+          "deteccion": 6,
+          "npr": 84
+        },
+        {
+          "_rowIndex": 57,
+          "operacion": "OP.20 Troquelado prolijo sin deficiencia con orificios según dimensional.",
+          "fallaPotencial": "Falta de orificios.",
+          "efectoFallaPotencial": "Inutilización de la pieza.",
+          "severidad": 8,
+          "causaPotencialFalla": "Troquel en mal estado.",
+          "ocurrencia": 2,
+          "controlesPreventivos": "Mantenimiento preventivo del troquel.",
+          "controlesDeteccion": "Control visual.",
+          "deteccion": 6,
+          "npr": 96
+        },
+        {
+          "_rowIndex": 58,
+          "operacion": "OP.20 Troquelado prolijo sin deficiencia con orificios según dimensional.",
+          "fallaPotencial": "Orificios mal realizados.",
+          "efectoFallaPotencial": "Rechazo del cliente.",
+          "severidad": 8,
+          "causaPotencialFalla": "Troquel en mal estado.",
+          "ocurrencia": 2,
+          "controlesPreventivos": "Mantenimiento preventivo del troquel.",
+          "controlesDeteccion": "Control visual.",
+          "deteccion": 6,
+          "npr": 96
+        },
+        {
+          "_rowIndex": 59,
+          "operacion": "OP.20 Troquelado prolijo sin deficiencia con orificios según dimensional.",
+          "fallaPotencial": "Orificios fuera de medida.",
+          "efectoFallaPotencial": "Rechazo del cliente.",
+          "severidad": 8,
+          "causaPotencialFalla": "Troquel en mal estado.",
+          "ocurrencia": 2,
+          "controlesPreventivos": "Mantenimiento preventivo del troquel.",
+          "controlesDeteccion": "Control de cotas 8, 9 y 10.",
+          "deteccion": 6,
+          "npr": 96
+        },
+        {
+          "_rowIndex": 60,
+          "operacion": "OP. 30 Costura completa sin pliegues ni arrugas con hilo segun especificaciones.",
+          "fallaPotencial": "Falta de costura.",
+          "efectoFallaPotencial": "Scrap",
+          "severidad": 7,
+          "causaPotencialFalla": "Carreteles mal ubicados.",
+          "ocurrencia": 2,
+          "controlesPreventivos": "Mantenimiento primer nivel.",
+          "controlesDeteccion": "Control visual / Muestra patrón.",
+          "deteccion": 6,
+          "npr": 84
+        },
+        {
+          "_rowIndex": 61,
+          "operacion": "OP. 30 Costura completa sin pliegues ni arrugas con hilo segun especificaciones.",
+          "causaPotencialFalla": "Aguja mal ubicada.",
+          "ocurrencia": 2,
+          "controlesPreventivos": "Mantenimiento primer nivel.",
+          "controlesDeteccion": "Control visual / Muestra patrón.",
+          "deteccion": 6,
+          "npr": 84
+        },
+        {
+          "_rowIndex": 62,
+          "operacion": "OP. 30 Costura completa sin pliegues ni arrugas con hilo segun especificaciones.",
+          "fallaPotencial": "Costura floja / deficiente.",
+          "efectoFallaPotencial": "Scrap",
+          "severidad": 7,
+          "causaPotencialFalla": "Falla en la tensión del hilo.",
+          "ocurrencia": 2,
+          "controlesPreventivos": "Mantenimiento primer nivel.",
+          "controlesDeteccion": "Control visual / Muestra patrón.",
+          "deteccion": 6,
+          "npr": 84
+        },
+        {
+          "_rowIndex": 63,
+          "operacion": "OP. 30 Costura completa sin pliegues ni arrugas con hilo segun especificaciones.",
+          "fallaPotencial": "Costura salteada.",
+          "efectoFallaPotencial": "Scrap",
+          "severidad": 7,
+          "causaPotencialFalla": "Peine dañado.",
+          "ocurrencia": 2,
+          "controlesPreventivos": "Mantenimiento primer nivel.",
+          "controlesDeteccion": "Control visual / Muestra patrón.",
+          "deteccion": 6,
+          "npr": 84
+        },
+        {
+          "_rowIndex": 64,
+          "operacion": "OP. 30 Costura completa sin pliegues ni arrugas con hilo segun especificaciones.",
+          "causaPotencialFalla": "Aguja despuntada.",
+          "ocurrencia": 2,
+          "controlesPreventivos": "Mantenimiento primer nivel.",
+          "controlesDeteccion": "Control visual / Muestra patrón.",
+          "deteccion": 6,
+          "npr": 84
+        },
+        {
+          "_rowIndex": 65,
+          "operacion": "OP. 30 Costura completa sin pliegues ni arrugas con hilo segun especificaciones.",
+          "fallaPotencial": "Arrugas / Pliegues.",
+          "efectoFallaPotencial": "Scrap",
+          "severidad": 7,
+          "causaPotencialFalla": "Hilo enredado.",
+          "ocurrencia": 2,
+          "controlesPreventivos": "Mantenimiento primer nivel.",
+          "controlesDeteccion": "Control visual / Muestra patrón.",
+          "deteccion": 6,
+          "npr": 84
+        },
+        {
+          "_rowIndex": 66,
+          "operacion": "OP. 30 Costura completa sin pliegues ni arrugas con hilo segun especificaciones.",
+          "fallaPotencial": "Hilo equivocado.",
+          "efectoFallaPotencial": "Scrap",
+          "severidad": 7,
+          "causaPotencialFalla": "Material fuera de especificación requerida",
+          "ocurrencia": 2,
+          "controlesDeteccion": "Recepción de materiales.",
+          "deteccion": 6,
+          "npr": 84
+        },
+        {
+          "_rowIndex": 67,
+          "operacion": "OP. 30 Costura completa sin pliegues ni arrugas con hilo segun especificaciones.",
+          "fallaPotencial": "Aguja equivocada.",
+          "efectoFallaPotencial": "Scrap",
+          "severidad": 7,
+          "causaPotencialFalla": "Error en el control de mantenimiento primer nivel.",
+          "ocurrencia": 2,
+          "controlesPreventivos": "Mantenimiento primer nivel.",
+          "deteccion": 6,
+          "npr": 84
+        },
+        {
+          "_rowIndex": 68,
+          "operacion": "OP. 40 Pegado de dots aplix en posicion correcta con cantidad indicada.",
+          "fallaPotencial": "Dots aplix colocados en posición incorrecta.",
+          "efectoFallaPotencial": "Retrabajo de la pieza.",
+          "severidad": 7,
+          "causaPotencialFalla": "Orificios fuera de posición.",
+          "ocurrencia": 2,
+          "controlesDeteccion": "Control visual.",
+          "deteccion": 6,
+          "npr": 84
+        },
+        {
+          "_rowIndex": 69,
+          "operacion": "OP. 40 Pegado de dots aplix en posicion correcta con cantidad indicada.",
+          "fallaPotencial": "Falta de dots aplix.",
+          "efectoFallaPotencial": "Retrabajo de la pieza.",
+          "severidad": 7,
+          "causaPotencialFalla": "Falta de orificios.",
+          "ocurrencia": 2,
+          "controlesDeteccion": "Control visual.",
+          "deteccion": 6,
+          "npr": 84
+        },
+        {
+          "_rowIndex": 70,
+          "operacion": "OP. 50 Inspección final de dimensional.",
+          "fallaPotencial": "Dimensional fuera de especificación.",
+          "efectoFallaPotencial": "Rechazo de Cliente.",
+          "severidad": 8,
+          "causaPotencialFalla": "Programación equivocada del laser.",
+          "ocurrencia": 2,
+          "controlesDeteccion": "Control dimensional de la pieza.",
+          "deteccion": 6,
+          "npr": 96
+        },
+        {
+          "_rowIndex": 71,
+          "operacion": "OP. 60 Embalaje identificado con cantidad de piezas especificas.",
+          "fallaPotencial": "Mayor cantidad de piezas por medio.",
+          "efectoFallaPotencial": "Reclamo de cliente.",
+          "severidad": 7,
+          "causaPotencialFalla": "Error de conteo.",
+          "ocurrencia": 2,
+          "controlesPreventivos": "Control adicional con otro metodo",
+          "controlesDeteccion": "Autocontrol / Audit de producto terminado.",
+          "deteccion": 7,
+          "npr": 98
+        },
+        {
+          "_rowIndex": 72,
+          "operacion": "OP. 60 Embalaje identificado con cantidad de piezas especificas.",
+          "fallaPotencial": "Menor cantidad de piezas por medio.",
+          "efectoFallaPotencial": "Reclamo de cliente.",
+          "severidad": 8,
+          "causaPotencialFalla": "Error de conteo.",
+          "ocurrencia": 2,
+          "controlesPreventivos": "Control adicional con otro metodo",
+          "controlesDeteccion": "Autocontrol / Audit de producto terminado.",
+          "deteccion": 7,
+          "npr": 112,
+          "accionesRecomendadas": "Control del despacho según ficha de embalaje.",
+          "responsablesPlazos": "Logistica / Previo a envio",
+          "accionesTomadas": "Control del despacho según ficha de embalaje.",
+          "severidadPost": 8,
+          "ocurrenciaPost": 2,
+          "deteccionPost": 6,
+          "nprPost": 96
+        },
+        {
+          "_rowIndex": 73,
+          "operacion": "OP. 60 Embalaje identificado con cantidad de piezas especificas.",
+          "fallaPotencial": "Error de identificación.",
+          "efectoFallaPotencial": "Perdida de rastreabilidad del producto / Reclamo del Cliente.",
+          "severidad": 8,
+          "causaPotencialFalla": "Error de identificación por parte del operador.",
+          "ocurrencia": 2,
+          "controlesPreventivos": "Organización de etiquetas",
+          "controlesDeteccion": "Autocontrol / Audit de producto terminado.",
+          "deteccion": 7,
+          "npr": 112,
+          "accionesRecomendadas": "Control del despacho según ficha de embalaje.",
+          "responsablesPlazos": "Logistica / Previo a envio",
+          "accionesTomadas": "Control del despacho según ficha de embalaje.",
+          "severidadPost": 8,
+          "ocurrenciaPost": 2,
+          "deteccionPost": 6,
+          "nprPost": 96
+        },
+        {
+          "_rowIndex": 74,
+          "operacion": "OP. 60 Embalaje identificado con cantidad de piezas especificas.",
+          "fallaPotencial": "Falta de identificación.",
+          "efectoFallaPotencial": "Perdida de rastreabilidad del producto / Reclamo del Cliente.",
+          "severidad": 8,
+          "causaPotencialFalla": "Falla de operario",
+          "ocurrencia": 2,
+          "controlesDeteccion": "Autocontrol / Audit de producto terminado.",
+          "deteccion": 7,
+          "npr": 112,
+          "accionesRecomendadas": "Control del despacho según ficha de embalaje.",
+          "responsablesPlazos": "Logistica / Previo a envio",
+          "accionesTomadas": "Control del despacho según ficha de embalaje.",
+          "severidadPost": 8,
+          "ocurrenciaPost": 2,
+          "deteccionPost": 6,
+          "nprPost": 96
+        }
+      ],
+      "flujograma": [
+        {
+          "row": 2,
+          "col": 8,
+          "text": "Fecha de elaboración: 19/06/2020"
+        },
+        {
+          "row": 3,
+          "col": 8,
+          "text": "Fecha de revisión: 25/06/2020"
+        },
+        {
+          "row": 7,
+          "col": 4,
+          "text": "RECEPCIÓN DE MATERIA PRIMA (TELA BIFELT 100 GR/M2 - DOTS APLIX)"
+        },
+        {
+          "row": 11,
+          "col": 4,
+          "text": "ALMACENADO EN SECTOR DE RECEPCIÓN DE MATERIA PRIMA"
+        },
+        {
+          "row": 15,
+          "col": 4,
+          "text": "INSPECCIÓN DE MATERIA PRIMA"
+        },
+        {
+          "row": 18,
+          "col": 5,
+          "text": "RECLAMO DE CALIDAD A PROVEEDOR"
+        },
+        {
+          "row": 23,
+          "col": 4,
+          "text": "ALMACENADO EN SECTOR DE MATERIA PRIMA CONTROLADA"
+        },
+        {
+          "row": 27,
+          "col": 4,
+          "text": "TRASLADO A ESTACIÓN DE TROQUELADO"
+        },
+        {
+          "row": 31,
+          "col": 4,
+          "text": "PROCESO DE TROQUELADO"
+        },
+        {
+          "row": 35,
+          "col": 4,
+          "text": "TRASLADO A ESTACIÓN DE COSTURA"
+        },
+        {
+          "row": 39,
+          "col": 4,
+          "text": "PROCESO DE COSTURA"
+        },
+        {
+          "row": 42,
+          "col": 4,
+          "text": "TRASLADO A ESTACIÓN DE PEGADO DE DOTS APLIX"
+        },
+        {
+          "row": 46,
+          "col": 4,
+          "text": "PROCESO DE PEGADO DE DOTS APLIX"
+        },
+        {
+          "row": 50,
+          "col": 4,
+          "text": "TRASLADO A CONTROL DE CALIDAD FINAL"
+        },
+        {
+          "row": 54,
+          "col": 4,
+          "text": "INSPECCIÓN FINAL"
+        },
+        {
+          "row": 56,
+          "col": 7,
+          "text": "REFERENCIAS"
+        },
+        {
+          "row": 58,
+          "col": 8,
+          "text": "OPERACIÓN"
+        }
+      ],
+      "amfeRowCount": 23
+    },
+    "Corte y costura": {
+      "docHeader": {
+        "realizo": "S. Montevecchi",
+        "fechaElaboracion": "19/06/2020",
+        "reviso": "Carlos Baptista",
+        "fechaRevision": "25/06/2020",
+        "proveedor": "BARACK MERCOSUL.",
+        "aprobo": "Carlos Baptista",
+        "hoja": "HOJA 1 DE 1",
+        "piezaCodigo": "Según tabla",
+        "denominacion": "Según tabla",
+        "cliente": "PWA"
+      },
+      "amfeHeader": {
+        "clientesAfectados": "PWA.",
+        "responsableProceso": "O. BENIGNO.",
+        "nombreParte": "Según tabla",
+        "fechaFum": "",
+        "preparadoPor": "S. Montevecchi",
+        "modeloAnio": "",
+        "revision": "A",
+        "fechaOrig": "18/06/2020",
+        "equipoTrabajo": "CAL : J. RAMIREZ.                      PROD: O. BENIGNO.                      INGEN: R. FERNANDEZ.",
+        "fechaRev": "18/06/2020"
+      },
+      "operations": [
+        "OP. 10 Recepción de materiales con identificacion correcta en en sector indicado",
+        "OP.20 Corte por máquina autómatica según dimensional con cantidad de orificios según plan de control.",
+        "OP. 30 Costura fuerte, sin arruga ni pliegues con hilo según especificaciones.",
+        "OP. 40 Colocado de clips en posicion correcta con cantidad de clips correcta .",
+        "OP. 50 Pegado de dots  en posicion correcta con cantidad de dots correcta.",
+        "OP. 60 Inspección final de la pieza.",
+        "OP. 70 Embalaje identificado con cantidad de piezas especificas."
+      ],
+      "amfeRows": [
+        {
+          "_rowIndex": 52,
+          "operacion": "OP. 10 Recepción de materiales con identificacion correcta en en sector indicado",
+          "fallaPotencial": "Identificacion incorrecta",
+          "efectoFallaPotencial": "Problemas en orden del stock",
+          "severidad": 7,
+          "causaPotencialFalla": "Falta de capacitacion",
+          "ocurrencia": 2,
+          "controlesPreventivos": "Capacitacion de operario",
+          "controlesDeteccion": "Recepción de materiales.",
+          "deteccion": 6,
+          "npr": 84
+        },
+        {
+          "_rowIndex": 53,
+          "operacion": "OP. 10 Recepción de materiales con identificacion correcta en en sector indicado",
+          "fallaPotencial": "Ubicación en sector incorrecto",
+          "efectoFallaPotencial": "Problemas en orden del stock",
+          "severidad": 7,
+          "causaPotencialFalla": "Falta de identifiacion de sector / Falta de capacitacion",
+          "ocurrencia": 2,
+          "controlesPreventivos": "Capacitacion de operario / identificacion de sectores",
+          "controlesDeteccion": "Recepción de materiales.",
+          "deteccion": 6,
+          "npr": 84
+        },
+        {
+          "_rowIndex": 54,
+          "operacion": "OP. 10 Recepción de materiales con identificacion correcta en en sector indicado",
+          "fallaPotencial": "Omision de la recepcion de material",
+          "efectoFallaPotencial": "Problemas en orden del stock",
+          "severidad": 7,
+          "causaPotencialFalla": "Falta de capacitacion",
+          "ocurrencia": 2,
+          "controlesPreventivos": "Capacitacion de operario",
+          "controlesDeteccion": "Recepción de materiales.",
+          "deteccion": 6,
+          "npr": 84
+        },
+        {
+          "_rowIndex": 55,
+          "operacion": "OP.20 Corte por máquina autómatica según dimensional con cantidad de orificios según plan de control.",
+          "fallaPotencial": "Largo mayor a lo especificado.",
+          "efectoFallaPotencial": "Inutilización del material.",
+          "severidad": 7,
+          "causaPotencialFalla": "Programación equivocada de la máquina de corte automática.",
+          "ocurrencia": 2,
+          "controlesPreventivos": "Set up de la máquina de corte automática.",
+          "controlesDeteccion": "Control con pieza patron.",
+          "deteccion": 6,
+          "npr": 84
+        },
+        {
+          "_rowIndex": 56,
+          "operacion": "OP.20 Corte por máquina autómatica según dimensional con cantidad de orificios según plan de control.",
+          "fallaPotencial": "Largo menor a lo especificado.",
+          "efectoFallaPotencial": "Inutilización del material.",
+          "severidad": 7,
+          "causaPotencialFalla": "Programación equivocada de la máquina de corte automática.",
+          "ocurrencia": 2,
+          "controlesPreventivos": "Set up de la máquina de corte automática.",
+          "controlesDeteccion": "Control con pieza patron.",
+          "deteccion": 6,
+          "npr": 84
+        },
+        {
+          "_rowIndex": 57,
+          "operacion": "OP.20 Corte por máquina autómatica según dimensional con cantidad de orificios según plan de control.",
+          "fallaPotencial": "Falta de orificios.",
+          "efectoFallaPotencial": "Imposibilidad de realizar el proceso posterior.",
+          "severidad": 7,
+          "causaPotencialFalla": "Programación equivocada de la máquina de corte automática.",
+          "ocurrencia": 2,
+          "controlesPreventivos": "Set up de la máquina de corte automática.",
+          "controlesDeteccion": "Control visual.",
+          "deteccion": 6,
+          "npr": 84
+        },
+        {
+          "_rowIndex": 58,
+          "operacion": "OP.20 Corte por máquina autómatica según dimensional con cantidad de orificios según plan de control.",
+          "fallaPotencial": "Orificios fuera de posición.",
+          "efectoFallaPotencial": "Imposibilidad de realizar el proceso posterior.",
+          "severidad": 7,
+          "causaPotencialFalla": "Programación equivocada de la máquina de corte automática.",
+          "ocurrencia": 2,
+          "controlesPreventivos": "Set up de la máquina de corte automática.",
+          "controlesDeteccion": "Control con pieza patrón.",
+          "deteccion": 6,
+          "npr": 84
+        },
+        {
+          "_rowIndex": 59,
+          "operacion": "OP.20 Corte por máquina autómatica según dimensional con cantidad de orificios según plan de control.",
+          "fallaPotencial": "Diametro de orificios fuera de especificacion.",
+          "efectoFallaPotencial": "Imposibilidad de realizar el proceso posterior.",
+          "severidad": 7,
+          "causaPotencialFalla": "Programación equivocada de la máquina de corte automática.",
+          "ocurrencia": 2,
+          "controlesPreventivos": "Set up de la máquina de corte automática.",
+          "controlesDeteccion": "Control con pieza patrón.",
+          "deteccion": 6,
+          "npr": 84
+        },
+        {
+          "_rowIndex": 60,
+          "operacion": "OP. 30 Costura fuerte, sin arruga ni pliegues con hilo según especificaciones.",
+          "fallaPotencial": "Falta de costura.",
+          "efectoFallaPotencial": "Scrap",
+          "severidad": 7,
+          "causaPotencialFalla": "Carreteles mal ubicados.",
+          "ocurrencia": 2,
+          "controlesPreventivos": "Mantenimiento primer nivel.",
+          "controlesDeteccion": "Control visual / Muestra patrón.",
+          "deteccion": 6,
+          "npr": 84
+        },
+        {
+          "_rowIndex": 61,
+          "operacion": "OP. 30 Costura fuerte, sin arruga ni pliegues con hilo según especificaciones.",
+          "causaPotencialFalla": "Aguja mal ubicada.",
+          "ocurrencia": 2,
+          "controlesPreventivos": "Mantenimiento primer nivel.",
+          "controlesDeteccion": "Control visual / Muestra patrón.",
+          "deteccion": 6,
+          "npr": 84
+        },
+        {
+          "_rowIndex": 62,
+          "operacion": "OP. 30 Costura fuerte, sin arruga ni pliegues con hilo según especificaciones.",
+          "fallaPotencial": "Costura floja / deficiente.",
+          "efectoFallaPotencial": "Scrap",
+          "severidad": 7,
+          "causaPotencialFalla": "Falla en la tensión del hilo.",
+          "ocurrencia": 2,
+          "controlesPreventivos": "Mantenimiento primer nivel.",
+          "controlesDeteccion": "Control visual / Muestra patrón.",
+          "deteccion": 6,
+          "npr": 84
+        },
+        {
+          "_rowIndex": 63,
+          "operacion": "OP. 30 Costura fuerte, sin arruga ni pliegues con hilo según especificaciones.",
+          "fallaPotencial": "Costura salteada.",
+          "efectoFallaPotencial": "Scrap",
+          "severidad": 7,
+          "causaPotencialFalla": "Peine dañado.",
+          "ocurrencia": 2,
+          "controlesPreventivos": "Mantenimiento primer nivel.",
+          "controlesDeteccion": "Control visual / Muestra patrón.",
+          "deteccion": 6,
+          "npr": 84
+        },
+        {
+          "_rowIndex": 64,
+          "operacion": "OP. 30 Costura fuerte, sin arruga ni pliegues con hilo según especificaciones.",
+          "causaPotencialFalla": "Aguja despuntada.",
+          "ocurrencia": 2,
+          "controlesPreventivos": "Mantenimiento primer nivel.",
+          "controlesDeteccion": "Control visual / Muestra patrón.",
+          "deteccion": 6,
+          "npr": 84
+        },
+        {
+          "_rowIndex": 65,
+          "operacion": "OP. 30 Costura fuerte, sin arruga ni pliegues con hilo según especificaciones.",
+          "fallaPotencial": "Arrugas / Pliegues.",
+          "efectoFallaPotencial": "Scrap",
+          "severidad": 7,
+          "causaPotencialFalla": "Hilo enredado.",
+          "ocurrencia": 2,
+          "controlesPreventivos": "Mantenimiento primer nivel.",
+          "controlesDeteccion": "Control visual / Muestra patrón.",
+          "deteccion": 6,
+          "npr": 84
+        },
+        {
+          "_rowIndex": 66,
+          "operacion": "OP. 30 Costura fuerte, sin arruga ni pliegues con hilo según especificaciones.",
+          "fallaPotencial": "Hilo equivocado.",
+          "efectoFallaPotencial": "Scrap",
+          "severidad": 7,
+          "causaPotencialFalla": "Material fuera de especificación requerida",
+          "ocurrencia": 2,
+          "controlesDeteccion": "Recepción de materiales.",
+          "deteccion": 6,
+          "npr": 84
+        },
+        {
+          "_rowIndex": 67,
+          "operacion": "OP. 30 Costura fuerte, sin arruga ni pliegues con hilo según especificaciones.",
+          "fallaPotencial": "Aguja equivocada.",
+          "efectoFallaPotencial": "Scrap",
+          "severidad": 7,
+          "causaPotencialFalla": "Error en el control de mantenimiento primer nivel.",
+          "ocurrencia": 2,
+          "controlesPreventivos": "Mantenimiento primer nivel.",
+          "deteccion": 6,
+          "npr": 84
+        },
+        {
+          "_rowIndex": 68,
+          "operacion": "OP. 40 Colocado de clips en posicion correcta con cantidad de clips correcta .",
+          "fallaPotencial": "Clips colocados en posición incorrecta.",
+          "efectoFallaPotencial": "Retrabajo de la pieza.",
+          "severidad": 7,
+          "causaPotencialFalla": "Orificios fuera de posición.",
+          "ocurrencia": 2,
+          "controlesPreventivos": "Control con pieza patron.",
+          "controlesDeteccion": "Control visual.",
+          "deteccion": 7,
+          "npr": 98
+        },
+        {
+          "_rowIndex": 69,
+          "operacion": "OP. 40 Colocado de clips en posicion correcta con cantidad de clips correcta .",
+          "fallaPotencial": "Falta de clips.",
+          "efectoFallaPotencial": "Retrabajo de la pieza.",
+          "severidad": 7,
+          "causaPotencialFalla": "Falta de orificios.",
+          "ocurrencia": 2,
+          "controlesPreventivos": "Control con pieza patron.",
+          "controlesDeteccion": "Control visual.",
+          "deteccion": 7,
+          "npr": 98
+        },
+        {
+          "_rowIndex": 70,
+          "operacion": "OP. 50 Pegado de dots  en posicion correcta con cantidad de dots correcta.",
+          "fallaPotencial": "Dots colocados en posición incorrecta.",
+          "efectoFallaPotencial": "Retrabajo de la pieza.",
+          "severidad": 7,
+          "causaPotencialFalla": "Orificios fuera de posición.",
+          "ocurrencia": 2,
+          "controlesDeteccion": "Control visual.",
+          "deteccion": 7,
+          "npr": 98
+        },
+        {
+          "_rowIndex": 71,
+          "operacion": "OP. 50 Pegado de dots  en posicion correcta con cantidad de dots correcta.",
+          "fallaPotencial": "Falta de dots.",
+          "efectoFallaPotencial": "Retrabajo de la pieza.",
+          "severidad": 7,
+          "causaPotencialFalla": "Falta de orificios.",
+          "ocurrencia": 2,
+          "controlesDeteccion": "Control visual.",
+          "deteccion": 7,
+          "npr": 98
+        },
+        {
+          "_rowIndex": 72,
+          "operacion": "OP. 60 Inspección final de la pieza.",
+          "fallaPotencial": "Dimensional fuera de especificación.",
+          "efectoFallaPotencial": "Rechazo de Cliente.",
+          "severidad": 8,
+          "causaPotencialFalla": "Programación equivocada de la máquina de corte automática.",
+          "ocurrencia": 2,
+          "controlesDeteccion": "Control dimensional de la pieza.",
+          "deteccion": 6,
+          "npr": 96
+        },
+        {
+          "_rowIndex": 73,
+          "operacion": "OP. 70 Embalaje identificado con cantidad de piezas especificas.",
+          "fallaPotencial": "Mayor cantidad de piezas por medio.",
+          "efectoFallaPotencial": "Reclamo de cliente.",
+          "severidad": 7,
+          "causaPotencialFalla": "Error de conteo.",
+          "ocurrencia": 2,
+          "controlesPreventivos": "Control adicional con otro metodo",
+          "controlesDeteccion": "Autocontrol / Audit de producto terminado.",
+          "deteccion": 7,
+          "npr": 98
+        },
+        {
+          "_rowIndex": 74,
+          "operacion": "OP. 70 Embalaje identificado con cantidad de piezas especificas.",
+          "fallaPotencial": "Menor cantidad de piezas por medio.",
+          "efectoFallaPotencial": "Reclamo de cliente.",
+          "severidad": 8,
+          "causaPotencialFalla": "Error de conteo.",
+          "ocurrencia": 2,
+          "controlesPreventivos": "Control adicional con otro metodo",
+          "controlesDeteccion": "Autocontrol / Audit de producto terminado.",
+          "deteccion": 7,
+          "npr": 112,
+          "accionesRecomendadas": "Control del despacho según ficha de embalaje.",
+          "responsablesPlazos": "Logistica / Previo a envio",
+          "accionesTomadas": "Control del despacho según ficha de embalaje.",
+          "severidadPost": 8,
+          "ocurrenciaPost": 2,
+          "deteccionPost": 6,
+          "nprPost": 96
+        },
+        {
+          "_rowIndex": 75,
+          "operacion": "OP. 70 Embalaje identificado con cantidad de piezas especificas.",
+          "fallaPotencial": "Error de identificación.",
+          "efectoFallaPotencial": "Perdida de rastreabilidad del producto / Reclamo del Cliente.",
+          "severidad": 8,
+          "causaPotencialFalla": "Error de identificación por parte del operador.",
+          "ocurrencia": 2,
+          "controlesPreventivos": "Organización de etiquetas",
+          "controlesDeteccion": "Autocontrol / Audit de producto terminado.",
+          "deteccion": 7,
+          "npr": 112,
+          "accionesRecomendadas": "Control del despacho según ficha de embalaje.",
+          "responsablesPlazos": "Logistica / Previo a envio",
+          "accionesTomadas": "Control del despacho según ficha de embalaje.",
+          "severidadPost": 8,
+          "ocurrenciaPost": 2,
+          "deteccionPost": 6,
+          "nprPost": 96
+        },
+        {
+          "_rowIndex": 76,
+          "operacion": "OP. 70 Embalaje identificado con cantidad de piezas especificas.",
+          "fallaPotencial": "Falta de identificación.",
+          "efectoFallaPotencial": "Perdida de rastreabilidad del producto / Reclamo del Cliente.",
+          "severidad": 8,
+          "causaPotencialFalla": "Falla de operario",
+          "ocurrencia": 2,
+          "controlesDeteccion": "Autocontrol / Audit de producto terminado.",
+          "deteccion": 7,
+          "npr": 112,
+          "accionesRecomendadas": "Control del despacho según ficha de embalaje.",
+          "responsablesPlazos": "Logistica / Previo a envio",
+          "accionesTomadas": "Control del despacho según ficha de embalaje.",
+          "severidadPost": 8,
+          "ocurrenciaPost": 2,
+          "deteccionPost": 6,
+          "nprPost": 96
+        }
+      ],
+      "flujograma": [
+        {
+          "row": 2,
+          "col": 8,
+          "text": "Fecha de elaboración: 19/06/2020"
+        },
+        {
+          "row": 3,
+          "col": 8,
+          "text": "Fecha de revisión: 25/06/2020"
+        }
+      ],
+      "amfeRowCount": 25
+    }
+  },
+  "productCatalog": {
+    "bySheet": {
+      "Corte y pegado de aplix": [
+        {
+          "sector": "Maq. Corte-Aplix",
+          "codigo": "21-5569",
+          "denominacion": "TELA FSC MANUAL PES FLEECE",
+          "fechaEmision": 41292
+        },
+        {
+          "sector": "Maq. Corte-Costura-Ganchos",
+          "codigo": "21-6481",
+          "denominacion": "TELA FSB WO AB 14588",
+          "fechaEmision": 41271
+        }
+      ],
+      "Corte sin costura": [
+        {
+          "sector": "Maq. Corte-Aplix",
+          "codigo": "21-5194",
+          "denominacion": "FSB FOAM NON WOBEN",
+          "fechaEmision": 42062,
+          "operationApplicability": {
+            "Recepcion de materiales": true,
+            "Corte": true,
+            "Colocacion de clips": false,
+            "Inspeccion final": true,
+            "Embalaje": true
+          }
+        },
+        {
+          "sector": "Maq. Corte",
+          "codigo": "21-5376",
+          "denominacion": "TELA ASSENTO DIANT FIAT 326",
+          "fechaEmision": 43074,
+          "operationApplicability": {
+            "Recepcion de materiales": true,
+            "Corte": true,
+            "Colocacion de clips": false,
+            "Inspeccion final": true,
+            "Embalaje": true
+          }
+        },
+        {
+          "sector": "Maq. Corte",
+          "codigo": "21-6414",
+          "denominacion": "PROTECTOR, FR SEAT CUSHION",
+          "fechaEmision": 42181,
+          "operationApplicability": {
+            "Recepcion de materiales": true,
+            "Corte": true,
+            "Colocacion de clips": false,
+            "Inspeccion final": true,
+            "Embalaje": true
+          }
+        },
+        {
+          "sector": "Maq. Corte",
+          "codigo": "21-6899",
+          "denominacion": "TELA ASSENTO DIANTEIRO",
+          "fechaEmision": 42149,
+          "operationApplicability": {
+            "Recepcion de materiales": true,
+            "Corte": true,
+            "Colocacion de clips": false,
+            "Inspeccion final": true,
+            "Embalaje": true
+          }
+        },
+        {
+          "sector": "Maq. Corte",
+          "codigo": "21-7339",
+          "denominacion": "TELA DE TNT 60 GR/M2 ENCOSTO TRASEIRO 100% FIAT X6S",
+          "fechaEmision": 42600,
+          "operationApplicability": {
+            "Recepcion de materiales": true,
+            "Corte": true,
+            "Colocacion de clips": false,
+            "Inspeccion final": true,
+            "Embalaje": true
+          }
+        },
+        {
+          "sector": "Maq. Corte",
+          "codigo": "21-7340",
+          "denominacion": "TELA TNT RESPALDO TRASERO 40% - FIAT X65",
+          "fechaEmision": 42600,
+          "operationApplicability": {
+            "Recepcion de materiales": true,
+            "Corte": true,
+            "Colocacion de clips": false,
+            "Inspeccion final": true,
+            "Embalaje": true
+          }
+        },
+        {
+          "sector": "Maq. Corte",
+          "codigo": "21-7341",
+          "denominacion": "TELA TNT RESPALDO TRASERO 60 %",
+          "fechaEmision": 42600,
+          "operationApplicability": {
+            "Recepcion de materiales": true,
+            "Corte": true,
+            "Colocacion de clips": false,
+            "Inspeccion final": true,
+            "Embalaje": true
+          }
+        },
+        {
+          "sector": "Maq. Corte-Ganchos",
+          "codigo": "21-6614",
+          "denominacion": "TELA ASSENTO TRASEIRO 50% 3° FILA",
+          "fechaEmision": 42181,
+          "operationApplicability": {
+            "Recepcion de materiales": true,
+            "Corte": true,
+            "Colocacion de clips": true,
+            "Inspeccion final": true,
+            "Embalaje": true
+          }
+        },
+        {
+          "sector": "Maq. Corte-Costura-Ganchos",
+          "codigo": "21-6576",
+          "denominacion": "TELA ASSENTO TRASEIRO 60%",
+          "fechaEmision": 42181,
+          "operationApplicability": {
+            "Recepcion de materiales": true,
+            "Corte": true,
+            "Colocacion de clips": true,
+            "Inspeccion final": true,
+            "Embalaje": true
+          }
+        },
+        {
+          "sector": "Maq. Corte-Costura-Ganchos",
+          "codigo": "21-6619",
+          "denominacion": "TELA BIFELT FSC 60% RH",
+          "fechaEmision": 42181,
+          "operationApplicability": {
+            "Recepcion de materiales": true,
+            "Corte": true,
+            "Colocacion de clips": true,
+            "Inspeccion final": true,
+            "Embalaje": true
+          }
+        },
+        {
+          "sector": "Maq. Corte-Costura-Ganchos",
+          "codigo": "21-7467",
+          "denominacion": "TELA BIFELT 140 GR/M2 ASSENTO DIANTEIRO TOY. GENZU 338.",
+          "fechaEmision": 42948,
+          "operationApplicability": {
+            "Recepcion de materiales": true,
+            "Corte": true,
+            "Colocacion de clips": true,
+            "Inspeccion final": true,
+            "Embalaje": true
+          }
+        }
+      ],
+      "Troquelado y costura": [
+        {
+          "sector": "Maq. Corte-Costura-Aplix",
+          "codigo": "21-6534",
+          "denominacion": "TELA BIFELT ASSENTO TRASEIRO 40%",
+          "fechaEmision": 42095
+        },
+        {
+          "sector": "Maq. Corte-Costura-Aplix",
+          "codigo": "21-6535",
+          "denominacion": "TELA BIFELT ASSENTO TRASEIRO 60% -",
+          "fechaEmision": 42095
+        },
+        {
+          "sector": "Maq. Corte-Costura-Aplix",
+          "codigo": "21-6536",
+          "denominacion": "TELA BIFELT ASSENTO DIANTEIRO RH",
+          "fechaEmision": 42095
+        },
+        {
+          "sector": "Maq. Corte-Costura-Aplix",
+          "codigo": "21-6537",
+          "denominacion": "TELA BIFELT ASSENTO DIANTEIRO LH",
+          "fechaEmision": 42095
+        },
+        {
+          "sector": "Maq. Corte-Costura-Aplix",
+          "codigo": "21-6538",
+          "denominacion": "TELA BIFELT ENCOSTO TRASEIRO 40%",
+          "fechaEmision": 42095
+        },
+        {
+          "sector": "Maq. Corte-Costura-Aplix",
+          "codigo": "21-6539",
+          "denominacion": "TELA BIFELT ENCOSTO TRASEIRO 60%",
+          "fechaEmision": 42095
+        }
+      ],
+      "Corte y costura": [
+        {
+          "sector": "Maq. Corte-Costura-Ganchos",
+          "codigo": "21-6595",
+          "denominacion": "TELA DE REFORCO ASSENTO LH DIANTEIRO",
+          "fechaEmision": 42355,
+          "operationApplicability": {
+            "Recepcion de materiales": true,
+            "Corte (Mesa de corte)": true,
+            "costura": true,
+            "Colocacion de clips": true,
+            "Pegado de dots aplix": false,
+            "Inspeccion final": true,
+            "Embalaje": true
+          }
+        },
+        {
+          "sector": "Maq. Corte-Costura-Ganchos",
+          "codigo": "21-6718",
+          "denominacion": "TELA ASSENTO DIANTEIRO LH",
+          "fechaEmision": 42181,
+          "operationApplicability": {
+            "Recepcion de materiales": true,
+            "Corte (Mesa de corte)": true,
+            "costura": true,
+            "Colocacion de clips": true,
+            "Pegado de dots aplix": false,
+            "Inspeccion final": true,
+            "Embalaje": true
+          }
+        },
+        {
+          "sector": "Maq. Corte-Costura-Ganchos",
+          "codigo": "21-6756",
+          "denominacion": "ENCOSTO TRASEIRO 100% C/APB.",
+          "fechaEmision": 42412,
+          "operationApplicability": {
+            "Recepcion de materiales": true,
+            "Corte (Mesa de corte)": true,
+            "costura": true,
+            "Colocacion de clips": true,
+            "Pegado de dots aplix": false,
+            "Inspeccion final": true,
+            "Embalaje": true
+          }
+        },
+        {
+          "sector": "Maq. Corte-Costura-Ganchos",
+          "codigo": "21-6758",
+          "denominacion": "ENCOSTO TRASEIRO 100% S/ APB",
+          "fechaEmision": 42181,
+          "operationApplicability": {
+            "Recepcion de materiales": true,
+            "Corte (Mesa de corte)": true,
+            "costura": true,
+            "Colocacion de clips": true,
+            "Pegado de dots aplix": false,
+            "Inspeccion final": true,
+            "Embalaje": true
+          }
+        },
+        {
+          "sector": "Maq. Corte-Aplix",
+          "codigo": "21-5586",
+          "denominacion": "TELA FLEECE FRONT RSC",
+          "fechaEmision": 41292,
+          "operationApplicability": {
+            "Recepcion de materiales": true,
+            "Corte (Mesa de corte)": true,
+            "costura": true,
+            "Colocacion de clips": false,
+            "Pegado de dots aplix": true,
+            "Inspeccion final": true,
+            "Embalaje": true
+          }
+        },
+        {
+          "sector": "Maq. Corte-Costura-Ganchos",
+          "codigo": "21-6479",
+          "denominacion": "TELA FSC LH T7 RFX",
+          "fechaEmision": 41271,
+          "operationApplicability": {
+            "Recepcion de materiales": true,
+            "Corte (Mesa de corte)": true,
+            "costura": true,
+            "Colocacion de clips": false,
+            "Pegado de dots aplix": true,
+            "Inspeccion final": true,
+            "Embalaje": true
+          }
+        },
+        {
+          "sector": "Maq. Corte-Costura-Ganchos",
+          "codigo": "21-6480",
+          "denominacion": "TELA FSC RH T7 RFX",
+          "fechaEmision": 41271,
+          "operationApplicability": {
+            "Recepcion de materiales": true,
+            "Corte (Mesa de corte)": true,
+            "costura": true,
+            "Colocacion de clips": false,
+            "Pegado de dots aplix": true,
+            "Inspeccion final": true,
+            "Embalaje": true
+          }
+        },
+        {
+          "sector": "Maq. Corte-Costura-Ganchos",
+          "codigo": "21-6482",
+          "denominacion": "TELA FSB W AB LH 14589",
+          "fechaEmision": 41271,
+          "operationApplicability": {
+            "Recepcion de materiales": true,
+            "Corte (Mesa de corte)": true,
+            "costura": true,
+            "Colocacion de clips": false,
+            "Pegado de dots aplix": true,
+            "Inspeccion final": true,
+            "Embalaje": true
+          }
+        },
+        {
+          "sector": "Maq. Corte-Costura-Ganchos",
+          "codigo": "21-6483",
+          "denominacion": "TELA FSB W AB RH 14590",
+          "fechaEmision": 41271,
+          "operationApplicability": {
+            "Recepcion de materiales": true,
+            "Corte (Mesa de corte)": true,
+            "costura": true,
+            "Colocacion de clips": false,
+            "Pegado de dots aplix": true,
+            "Inspeccion final": true,
+            "Embalaje": true
+          }
+        },
+        {
+          "sector": "Maq. Corte-Costura-Ganchos",
+          "codigo": "21-6757",
+          "denominacion": "TELA ASSENTO DIANTEIRO LH",
+          "fechaEmision": 42181,
+          "operationApplicability": {
+            "Recepcion de materiales": true,
+            "Corte (Mesa de corte)": true,
+            "costura": true,
+            "Colocacion de clips": false,
+            "Pegado de dots aplix": true,
+            "Inspeccion final": true,
+            "Embalaje": true
+          }
+        },
+        {
+          "sector": "Maq. Corte-Costura-Aplix",
+          "codigo": "21-6032",
+          "denominacion": "TELA ENCOSTO DIANTEIRO LH COM CAPUZ",
+          "fechaEmision": 42181,
+          "operationApplicability": {
+            "Recepcion de materiales": true,
+            "Corte (Mesa de corte)": true,
+            "costura": true,
+            "Colocacion de clips": false,
+            "Pegado de dots aplix": true,
+            "Inspeccion final": true,
+            "Embalaje": true
+          }
+        },
+        {
+          "sector": "Maq. Corte-Costura-Aplix",
+          "codigo": "21-6523",
+          "denominacion": "TELA ENCOSTO DIANTEIRO LH",
+          "fechaEmision": 42355,
+          "operationApplicability": {
+            "Recepcion de materiales": true,
+            "Corte (Mesa de corte)": true,
+            "costura": true,
+            "Colocacion de clips": false,
+            "Pegado de dots aplix": true,
+            "Inspeccion final": true,
+            "Embalaje": true
+          }
+        },
+        {
+          "sector": "Maq. Corte-Costura-Aplix",
+          "codigo": "21-6530",
+          "denominacion": "TELA BIFELT ENCOSTO DIANTEIRO LH/RH - HONDA SCUV",
+          "fechaEmision": 42095,
+          "operationApplicability": {
+            "Recepcion de materiales": true,
+            "Corte (Mesa de corte)": true,
+            "costura": true,
+            "Colocacion de clips": false,
+            "Pegado de dots aplix": true,
+            "Inspeccion final": true,
+            "Embalaje": true
+          }
+        },
+        {
+          "sector": "Maq. Corte-Costura-Aplix",
+          "codigo": "21-6531",
+          "denominacion": "TELA BIFELT ENCOSTO DIANTEIRO LH - HONDA SCUV",
+          "fechaEmision": 42095,
+          "operationApplicability": {
+            "Recepcion de materiales": true,
+            "Corte (Mesa de corte)": true,
+            "costura": true,
+            "Colocacion de clips": false,
+            "Pegado de dots aplix": true,
+            "Inspeccion final": true,
+            "Embalaje": true
+          }
+        },
+        {
+          "sector": "Maq. Corte-Costura-Aplix",
+          "codigo": "21-6532",
+          "denominacion": "TELA BIFELT ENCOSTO DIANTEIRO RH - HONDA SCUV",
+          "fechaEmision": 42095,
+          "operationApplicability": {
+            "Recepcion de materiales": true,
+            "Corte (Mesa de corte)": true,
+            "costura": true,
+            "Colocacion de clips": false,
+            "Pegado de dots aplix": true,
+            "Inspeccion final": true,
+            "Embalaje": true
+          }
+        },
+        {
+          "sector": "Maq. Corte-Costura-Aplix",
+          "codigo": "21-6567",
+          "denominacion": "TELA ENCOSTO DIANTEIRO",
+          "fechaEmision": 42181,
+          "operationApplicability": {
+            "Recepcion de materiales": true,
+            "Corte (Mesa de corte)": true,
+            "costura": true,
+            "Colocacion de clips": false,
+            "Pegado de dots aplix": true,
+            "Inspeccion final": true,
+            "Embalaje": true
+          }
+        },
+        {
+          "sector": "Maq. Corte-Costura-Aplix",
+          "codigo": "21-6612",
+          "denominacion": "TELA ENCOSTO TRASEIRO LH 3° FILA",
+          "fechaEmision": 42181,
+          "operationApplicability": {
+            "Recepcion de materiales": true,
+            "Corte (Mesa de corte)": true,
+            "costura": true,
+            "Colocacion de clips": false,
+            "Pegado de dots aplix": true,
+            "Inspeccion final": true,
+            "Embalaje": true
+          }
+        },
+        {
+          "sector": "Maq. Corte-Costura-Aplix",
+          "codigo": "21-6613",
+          "denominacion": "TELA ENCOSTO TRASEIRO LH 3° FILA",
+          "fechaEmision": 42181,
+          "operationApplicability": {
+            "Recepcion de materiales": true,
+            "Corte (Mesa de corte)": true,
+            "costura": true,
+            "Colocacion de clips": false,
+            "Pegado de dots aplix": true,
+            "Inspeccion final": true,
+            "Embalaje": true
+          }
+        },
+        {
+          "sector": "Maq. Corte-Costura-Aplix",
+          "codigo": "21-6621",
+          "denominacion": "TELA ENCOSTO DIANTEIRO 60% RH COM CAPUZ",
+          "fechaEmision": 42181,
+          "operationApplicability": {
+            "Recepcion de materiales": true,
+            "Corte (Mesa de corte)": true,
+            "costura": true,
+            "Colocacion de clips": false,
+            "Pegado de dots aplix": true,
+            "Inspeccion final": true,
+            "Embalaje": true
+          }
+        },
+        {
+          "sector": "Maq. Corte-Costura-Aplix",
+          "codigo": "21-6699",
+          "denominacion": "TELA ENCOSTO DIANTEIRO LH.",
+          "fechaEmision": 42179,
+          "operationApplicability": {
+            "Recepcion de materiales": true,
+            "Corte (Mesa de corte)": true,
+            "costura": true,
+            "Colocacion de clips": false,
+            "Pegado de dots aplix": true,
+            "Inspeccion final": true,
+            "Embalaje": true
+          }
+        },
+        {
+          "sector": "Maq. Corte-Costura-Aplix",
+          "codigo": "21-6767",
+          "denominacion": "TELA ENCOSTO TRASEIRO 40% LH",
+          "fechaEmision": 42181,
+          "operationApplicability": {
+            "Recepcion de materiales": true,
+            "Corte (Mesa de corte)": true,
+            "costura": true,
+            "Colocacion de clips": false,
+            "Pegado de dots aplix": true,
+            "Inspeccion final": true,
+            "Embalaje": true
+          }
+        },
+        {
+          "sector": "Maq. Corte-Costura-Aplix",
+          "codigo": "21-7763",
+          "denominacion": "TELA ASSENTO DIANTEIRO LH",
+          "fechaEmision": 43325,
+          "operationApplicability": {
+            "Recepcion de materiales": true,
+            "Corte (Mesa de corte)": true,
+            "costura": true,
+            "Colocacion de clips": false,
+            "Pegado de dots aplix": true,
+            "Inspeccion final": true,
+            "Embalaje": true
+          }
+        },
+        {
+          "sector": "Maq. Corte (Alam.)-Costura-Aplix",
+          "codigo": "21-6034",
+          "denominacion": "TELA ENCOSTO TRASEIRO 60% LH",
+          "fechaEmision": 42181,
+          "operationApplicability": {
+            "Recepcion de materiales": true,
+            "Corte (Mesa de corte)": true,
+            "costura": true,
+            "Colocacion de clips": false,
+            "Pegado de dots aplix": true,
+            "Inspeccion final": true,
+            "Embalaje": true
+          }
+        },
+        {
+          "sector": "Maq. Corte-Costura-Aplix",
+          "codigo": "21-8454",
+          "denominacion": "TELA TNT 60% LH",
+          "fechaEmision": 44130,
+          "operationApplicability": {
+            "Recepcion de materiales": true,
+            "Corte (Mesa de corte)": true,
+            "costura": true,
+            "Colocacion de clips": false,
+            "Pegado de dots aplix": true,
+            "Inspeccion final": true,
+            "Embalaje": true
+          }
+        },
+        {
+          "sector": "Maq. Corte-Costura-Aplix",
+          "codigo": "21-8455",
+          "denominacion": "TELA TNT 60% RH",
+          "fechaEmision": 44130,
+          "operationApplicability": {
+            "Recepcion de materiales": true,
+            "Corte (Mesa de corte)": true,
+            "costura": true,
+            "Colocacion de clips": false,
+            "Pegado de dots aplix": true,
+            "Inspeccion final": true,
+            "Embalaje": true
+          }
+        }
+      ]
+    },
+    "allPartNumbers": [
+      "21-5194",
+      "21-5376",
+      "21-5569",
+      "21-5586",
+      "21-6032",
+      "21-6034",
+      "21-6414",
+      "21-6479",
+      "21-6480",
+      "21-6481",
+      "21-6482",
+      "21-6483",
+      "21-6523",
+      "21-6530",
+      "21-6531",
+      "21-6532",
+      "21-6534",
+      "21-6535",
+      "21-6536",
+      "21-6537",
+      "21-6538",
+      "21-6539",
+      "21-6567",
+      "21-6576",
+      "21-6595",
+      "21-6612",
+      "21-6613",
+      "21-6614",
+      "21-6619",
+      "21-6621",
+      "21-6699",
+      "21-6718",
+      "21-6756",
+      "21-6757",
+      "21-6758",
+      "21-6767",
+      "21-6899",
+      "21-7339",
+      "21-7340",
+      "21-7341",
+      "21-7467",
+      "21-7763",
+      "21-8454",
+      "21-8455"
+    ]
+  },
+  "telasLookup": {
+    "porSector": [
+      {
+        "sector": "Maq. Corte-Aplix",
+        "codigo": "21-5194",
+        "denominacion": "FSB FOAM NON WOBEN",
+        "fechaEmision": 42062,
+        "operations": {
+          "recepcion": true,
+          "corte": true,
+          "troquelado": false,
+          "costura": false,
+          "pegadoDotsAplix": false,
+          "colocacionClips": false,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte-Aplix",
+        "codigo": "21-5569",
+        "denominacion": "TELA FSC MANUAL PES FLEECE",
+        "fechaEmision": 41292,
+        "operations": {
+          "recepcion": true,
+          "corte": true,
+          "troquelado": false,
+          "costura": false,
+          "pegadoDotsAplix": true,
+          "colocacionClips": false,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte-Aplix",
+        "codigo": "21-5586",
+        "denominacion": "TELA FLEECE FRONT RSC",
+        "fechaEmision": 41292,
+        "operations": {
+          "recepcion": true,
+          "corte": true,
+          "troquelado": false,
+          "costura": true,
+          "pegadoDotsAplix": true,
+          "colocacionClips": false,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte",
+        "codigo": "21-5376",
+        "denominacion": "TELA ASSENTO DIANT FIAT 326",
+        "fechaEmision": 43074,
+        "operations": {
+          "recepcion": true,
+          "corte": true,
+          "troquelado": false,
+          "costura": false,
+          "pegadoDotsAplix": false,
+          "colocacionClips": false,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte",
+        "codigo": "21-6414",
+        "denominacion": "PROTECTOR, FR SEAT CUSHION",
+        "fechaEmision": 42181,
+        "operations": {
+          "recepcion": true,
+          "corte": true,
+          "troquelado": false,
+          "costura": false,
+          "pegadoDotsAplix": false,
+          "colocacionClips": false,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte",
+        "codigo": "21-6899",
+        "denominacion": "TELA ASSENTO DIANTEIRO",
+        "fechaEmision": 42149,
+        "operations": {
+          "recepcion": true,
+          "corte": true,
+          "troquelado": false,
+          "costura": false,
+          "pegadoDotsAplix": false,
+          "colocacionClips": false,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte",
+        "codigo": "21-6900",
+        "denominacion": "",
+        "fechaEmision": "",
+        "operations": {
+          "recepcion": false,
+          "corte": false,
+          "troquelado": false,
+          "costura": false,
+          "pegadoDotsAplix": false,
+          "colocacionClips": false,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte",
+        "codigo": "21-7339",
+        "denominacion": "TELA DE TNT 60 GR/M2 ENCOSTO TRASEIRO 100% FIAT X6S",
+        "fechaEmision": 42600,
+        "operations": {
+          "recepcion": true,
+          "corte": true,
+          "troquelado": false,
+          "costura": false,
+          "pegadoDotsAplix": false,
+          "colocacionClips": false,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte",
+        "codigo": "21-7340",
+        "denominacion": "TELA TNT RESPALDO TRASERO 40% - FIAT X65",
+        "fechaEmision": 42600,
+        "operations": {
+          "recepcion": true,
+          "corte": true,
+          "troquelado": false,
+          "costura": false,
+          "pegadoDotsAplix": false,
+          "colocacionClips": false,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte",
+        "codigo": "21-7341",
+        "denominacion": "TELA TNT RESPALDO TRASERO 60 %",
+        "fechaEmision": 42600,
+        "operations": {
+          "recepcion": true,
+          "corte": true,
+          "troquelado": false,
+          "costura": false,
+          "pegadoDotsAplix": false,
+          "colocacionClips": false,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte-Ganchos",
+        "codigo": "21-6416",
+        "denominacion": "FR SEAT CTR ARMREST SIDE",
+        "fechaEmision": 42181,
+        "operations": {
+          "recepcion": true,
+          "corte": false,
+          "troquelado": true,
+          "costura": false,
+          "pegadoDotsAplix": false,
+          "colocacionClips": false,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte-Ganchos",
+        "codigo": "21-6614",
+        "denominacion": "TELA ASSENTO TRASEIRO 50% 3° FILA",
+        "fechaEmision": 42181,
+        "operations": {
+          "recepcion": true,
+          "corte": true,
+          "troquelado": false,
+          "costura": false,
+          "pegadoDotsAplix": false,
+          "colocacionClips": true,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte-Ganchos",
+        "codigo": "21-6766",
+        "denominacion": "TELA ASSENTO TRASEIRO 40%",
+        "fechaEmision": 42181,
+        "operations": {
+          "recepcion": true,
+          "corte": false,
+          "troquelado": false,
+          "costura": false,
+          "pegadoDotsAplix": false,
+          "colocacionClips": true,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte-Costura-Ganchos",
+        "codigo": "21-6479",
+        "denominacion": "TELA FSC LH T7 RFX",
+        "fechaEmision": 41271,
+        "operations": {
+          "recepcion": true,
+          "corte": true,
+          "troquelado": false,
+          "costura": true,
+          "pegadoDotsAplix": true,
+          "colocacionClips": false,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte-Costura-Ganchos",
+        "codigo": "21-6480",
+        "denominacion": "TELA FSC RH T7 RFX",
+        "fechaEmision": 41271,
+        "operations": {
+          "recepcion": true,
+          "corte": true,
+          "troquelado": false,
+          "costura": true,
+          "pegadoDotsAplix": true,
+          "colocacionClips": false,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte-Costura-Ganchos",
+        "codigo": "21-6481",
+        "denominacion": "TELA FSB WO AB 14588",
+        "fechaEmision": 41271,
+        "operations": {
+          "recepcion": true,
+          "corte": true,
+          "troquelado": false,
+          "costura": false,
+          "pegadoDotsAplix": true,
+          "colocacionClips": false,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte-Costura-Ganchos",
+        "codigo": "21-6482",
+        "denominacion": "TELA FSB W AB LH 14589",
+        "fechaEmision": 41271,
+        "operations": {
+          "recepcion": true,
+          "corte": true,
+          "troquelado": false,
+          "costura": true,
+          "pegadoDotsAplix": true,
+          "colocacionClips": false,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte-Costura-Ganchos",
+        "codigo": "21-6483",
+        "denominacion": "TELA FSB W AB RH 14590",
+        "fechaEmision": 41271,
+        "operations": {
+          "recepcion": true,
+          "corte": true,
+          "troquelado": false,
+          "costura": true,
+          "pegadoDotsAplix": true,
+          "colocacionClips": false,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte-Costura-Ganchos",
+        "codigo": "21-6576",
+        "denominacion": "TELA ASSENTO TRASEIRO 60%",
+        "fechaEmision": 42181,
+        "operations": {
+          "recepcion": true,
+          "corte": true,
+          "troquelado": false,
+          "costura": false,
+          "pegadoDotsAplix": false,
+          "colocacionClips": true,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte-Costura-Ganchos",
+        "codigo": "21-6595",
+        "denominacion": "TELA DE REFORCO ASSENTO LH DIANTEIRO",
+        "fechaEmision": 42355,
+        "operations": {
+          "recepcion": true,
+          "corte": true,
+          "troquelado": false,
+          "costura": true,
+          "pegadoDotsAplix": false,
+          "colocacionClips": true,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte-Costura-Ganchos",
+        "codigo": "21-6619",
+        "denominacion": "TELA BIFELT FSC 60% RH",
+        "fechaEmision": 42181,
+        "operations": {
+          "recepcion": true,
+          "corte": true,
+          "troquelado": false,
+          "costura": false,
+          "pegadoDotsAplix": false,
+          "colocacionClips": true,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte-Costura-Ganchos",
+        "codigo": "21-6718",
+        "denominacion": "TELA ASSENTO DIANTEIRO LH",
+        "fechaEmision": 42181,
+        "operations": {
+          "recepcion": true,
+          "corte": true,
+          "troquelado": false,
+          "costura": true,
+          "pegadoDotsAplix": false,
+          "colocacionClips": true,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte-Costura-Ganchos",
+        "codigo": "21-6756",
+        "denominacion": "ENCOSTO TRASEIRO 100% C/APB.",
+        "fechaEmision": 42412,
+        "operations": {
+          "recepcion": true,
+          "corte": true,
+          "troquelado": false,
+          "costura": true,
+          "pegadoDotsAplix": false,
+          "colocacionClips": true,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte-Costura-Ganchos",
+        "codigo": "21-6757",
+        "denominacion": "TELA ASSENTO DIANTEIRO LH",
+        "fechaEmision": 42181,
+        "operations": {
+          "recepcion": true,
+          "corte": true,
+          "troquelado": false,
+          "costura": true,
+          "pegadoDotsAplix": true,
+          "colocacionClips": false,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte-Costura-Ganchos",
+        "codigo": "21-6758",
+        "denominacion": "ENCOSTO TRASEIRO 100% S/ APB",
+        "fechaEmision": 42181,
+        "operations": {
+          "recepcion": true,
+          "corte": true,
+          "troquelado": false,
+          "costura": true,
+          "pegadoDotsAplix": false,
+          "colocacionClips": true,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte-Costura-Ganchos",
+        "codigo": "21-7467",
+        "denominacion": "TELA BIFELT 140 GR/M2 ASSENTO DIANTEIRO TOY. GENZU 338.",
+        "fechaEmision": 42948,
+        "operations": {
+          "recepcion": true,
+          "corte": true,
+          "troquelado": false,
+          "costura": false,
+          "pegadoDotsAplix": false,
+          "colocacionClips": true,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte-Costura-Aplix",
+        "codigo": "21-6032",
+        "denominacion": "TELA ENCOSTO DIANTEIRO LH COM CAPUZ",
+        "fechaEmision": 42181,
+        "operations": {
+          "recepcion": true,
+          "corte": true,
+          "troquelado": false,
+          "costura": true,
+          "pegadoDotsAplix": true,
+          "colocacionClips": false,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte-Costura-Aplix",
+        "codigo": "21-6523",
+        "denominacion": "TELA ENCOSTO DIANTEIRO LH",
+        "fechaEmision": 42355,
+        "operations": {
+          "recepcion": true,
+          "corte": true,
+          "troquelado": false,
+          "costura": true,
+          "pegadoDotsAplix": true,
+          "colocacionClips": false,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte-Costura-Aplix",
+        "codigo": "21-6530",
+        "denominacion": "TELA BIFELT ENCOSTO DIANTEIRO LH/RH - HONDA SCUV",
+        "fechaEmision": 42095,
+        "operations": {
+          "recepcion": true,
+          "corte": true,
+          "troquelado": false,
+          "costura": true,
+          "pegadoDotsAplix": true,
+          "colocacionClips": false,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte-Costura-Aplix",
+        "codigo": "21-6531",
+        "denominacion": "TELA BIFELT ENCOSTO DIANTEIRO LH - HONDA SCUV",
+        "fechaEmision": 42095,
+        "operations": {
+          "recepcion": true,
+          "corte": true,
+          "troquelado": false,
+          "costura": true,
+          "pegadoDotsAplix": true,
+          "colocacionClips": false,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte-Costura-Aplix",
+        "codigo": "21-6532",
+        "denominacion": "TELA BIFELT ENCOSTO DIANTEIRO RH - HONDA SCUV",
+        "fechaEmision": 42095,
+        "operations": {
+          "recepcion": true,
+          "corte": true,
+          "troquelado": false,
+          "costura": true,
+          "pegadoDotsAplix": true,
+          "colocacionClips": false,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte-Costura-Aplix",
+        "codigo": "21-6534",
+        "denominacion": "TELA BIFELT ASSENTO TRASEIRO 40%",
+        "fechaEmision": 42095,
+        "operations": {
+          "recepcion": true,
+          "corte": false,
+          "troquelado": true,
+          "costura": true,
+          "pegadoDotsAplix": true,
+          "colocacionClips": false,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte-Costura-Aplix",
+        "codigo": "21-6535",
+        "denominacion": "TELA BIFELT ASSENTO TRASEIRO 60% -",
+        "fechaEmision": 42095,
+        "operations": {
+          "recepcion": true,
+          "corte": false,
+          "troquelado": true,
+          "costura": true,
+          "pegadoDotsAplix": true,
+          "colocacionClips": false,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte-Costura-Aplix",
+        "codigo": "21-6536",
+        "denominacion": "TELA BIFELT ASSENTO DIANTEIRO RH - HONDA SCUV -",
+        "fechaEmision": 42095,
+        "operations": {
+          "recepcion": true,
+          "corte": false,
+          "troquelado": true,
+          "costura": true,
+          "pegadoDotsAplix": true,
+          "colocacionClips": false,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte-Costura-Aplix",
+        "codigo": "21-6537",
+        "denominacion": "TELA BIFELT ASSENTO DIANTEIRO LH - HONDA SCUV -",
+        "fechaEmision": 42095,
+        "operations": {
+          "recepcion": true,
+          "corte": false,
+          "troquelado": true,
+          "costura": true,
+          "pegadoDotsAplix": true,
+          "colocacionClips": false,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte-Costura-Aplix",
+        "codigo": "21-6538",
+        "denominacion": "TELA BIFELT ENCOSTO TRASEIRO 40%",
+        "fechaEmision": 42095,
+        "operations": {
+          "recepcion": true,
+          "corte": false,
+          "troquelado": true,
+          "costura": true,
+          "pegadoDotsAplix": true,
+          "colocacionClips": false,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte-Costura-Aplix",
+        "codigo": "21-6539",
+        "denominacion": "TELA BIFELT ENCOSTO TRASEIRO 60%",
+        "fechaEmision": 42095,
+        "operations": {
+          "recepcion": true,
+          "corte": false,
+          "troquelado": true,
+          "costura": true,
+          "pegadoDotsAplix": true,
+          "colocacionClips": false,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte-Costura-Aplix",
+        "codigo": "21-6567",
+        "denominacion": "TELA ENCOSTO DIANTEIRO",
+        "fechaEmision": 42181,
+        "operations": {
+          "recepcion": true,
+          "corte": true,
+          "troquelado": false,
+          "costura": true,
+          "pegadoDotsAplix": true,
+          "colocacionClips": false,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte-Costura-Aplix",
+        "codigo": "21-6612",
+        "denominacion": "TELA ENCOSTO TRASEIRO LH 3° FILA",
+        "fechaEmision": 42181,
+        "operations": {
+          "recepcion": true,
+          "corte": true,
+          "troquelado": false,
+          "costura": true,
+          "pegadoDotsAplix": true,
+          "colocacionClips": true,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte-Costura-Aplix",
+        "codigo": "21-6613",
+        "denominacion": "TELA ENCOSTO TRASEIRO LH 3° FILA",
+        "fechaEmision": 42181,
+        "operations": {
+          "recepcion": true,
+          "corte": true,
+          "troquelado": false,
+          "costura": true,
+          "pegadoDotsAplix": true,
+          "colocacionClips": false,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte-Costura-Aplix",
+        "codigo": "21-6621",
+        "denominacion": "TELA ENCOSTO DIANTEIRO 60% RH COM CAPUZ",
+        "fechaEmision": 42181,
+        "operations": {
+          "recepcion": true,
+          "corte": true,
+          "troquelado": false,
+          "costura": true,
+          "pegadoDotsAplix": true,
+          "colocacionClips": false,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte-Costura-Aplix",
+        "codigo": "21-6699",
+        "denominacion": "TELA ENCOSTO DIANTEIRO LH.",
+        "fechaEmision": 42179,
+        "operations": {
+          "recepcion": true,
+          "corte": true,
+          "troquelado": false,
+          "costura": true,
+          "pegadoDotsAplix": true,
+          "colocacionClips": false,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte-Costura-Aplix",
+        "codigo": "21-6767",
+        "denominacion": "TELA ENCOSTO TRASEIRO 40% LH",
+        "fechaEmision": 42181,
+        "operations": {
+          "recepcion": true,
+          "corte": true,
+          "troquelado": false,
+          "costura": true,
+          "pegadoDotsAplix": true,
+          "colocacionClips": false,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte-Costura-Aplix",
+        "codigo": "21-7763",
+        "denominacion": "TELA ASSENTO DIANTEIRO LH",
+        "fechaEmision": 43325,
+        "operations": {
+          "recepcion": true,
+          "corte": true,
+          "troquelado": false,
+          "costura": true,
+          "pegadoDotsAplix": true,
+          "colocacionClips": false,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte (Alam.)-Costura-Aplix",
+        "codigo": "21-6034",
+        "denominacion": "TELA ENCOSTO TRASEIRO 60% LH",
+        "fechaEmision": 42181,
+        "operations": {
+          "recepcion": true,
+          "corte": true,
+          "troquelado": false,
+          "costura": true,
+          "pegadoDotsAplix": true,
+          "colocacionClips": false,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "",
+        "codigo": "21-7964",
+        "denominacion": "TELA ASSENTO DIANTEIRO",
+        "fechaEmision": 43717,
+        "operations": {
+          "recepcion": false,
+          "corte": false,
+          "troquelado": false,
+          "costura": false,
+          "pegadoDotsAplix": false,
+          "colocacionClips": false,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      }
+    ],
+    "porOp": [
+      {
+        "sector": "Maq. Corte-Costura-Ganchos",
+        "codigo": "21-6595",
+        "denominacion": "TELA DE REFORCO ASSENTO LH DIANTEIRO",
+        "fechaEmision": 42355,
+        "operations": {
+          "recepcion": true,
+          "corte": true,
+          "troquelado": false,
+          "costura": true,
+          "pegadoDotsAplix": false,
+          "colocacionClips": true,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte-Costura-Ganchos",
+        "codigo": "21-6718",
+        "denominacion": "TELA ASSENTO DIANTEIRO LH",
+        "fechaEmision": 42181,
+        "operations": {
+          "recepcion": true,
+          "corte": true,
+          "troquelado": false,
+          "costura": true,
+          "pegadoDotsAplix": false,
+          "colocacionClips": true,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte-Costura-Ganchos",
+        "codigo": "21-6756",
+        "denominacion": "ENCOSTO TRASEIRO 100% C/APB.",
+        "fechaEmision": 42412,
+        "operations": {
+          "recepcion": true,
+          "corte": true,
+          "troquelado": false,
+          "costura": true,
+          "pegadoDotsAplix": false,
+          "colocacionClips": true,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte-Costura-Ganchos",
+        "codigo": "21-6758",
+        "denominacion": "ENCOSTO TRASEIRO 100% S/ APB",
+        "fechaEmision": 42181,
+        "operations": {
+          "recepcion": true,
+          "corte": true,
+          "troquelado": false,
+          "costura": true,
+          "pegadoDotsAplix": false,
+          "colocacionClips": true,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte-Aplix",
+        "codigo": "21-5586",
+        "denominacion": "TELA FLEECE FRONT RSC",
+        "fechaEmision": 41292,
+        "operations": {
+          "recepcion": true,
+          "corte": true,
+          "troquelado": false,
+          "costura": true,
+          "pegadoDotsAplix": true,
+          "colocacionClips": false,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte-Costura-Ganchos",
+        "codigo": "21-6479",
+        "denominacion": "TELA FSC LH T7 RFX",
+        "fechaEmision": 41271,
+        "operations": {
+          "recepcion": true,
+          "corte": true,
+          "troquelado": false,
+          "costura": true,
+          "pegadoDotsAplix": true,
+          "colocacionClips": false,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte-Costura-Ganchos",
+        "codigo": "21-6480",
+        "denominacion": "TELA FSC RH T7 RFX",
+        "fechaEmision": 41271,
+        "operations": {
+          "recepcion": true,
+          "corte": true,
+          "troquelado": false,
+          "costura": true,
+          "pegadoDotsAplix": true,
+          "colocacionClips": false,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte-Costura-Ganchos",
+        "codigo": "21-6482",
+        "denominacion": "TELA FSB W AB LH 14589",
+        "fechaEmision": 41271,
+        "operations": {
+          "recepcion": true,
+          "corte": true,
+          "troquelado": false,
+          "costura": true,
+          "pegadoDotsAplix": true,
+          "colocacionClips": false,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte-Costura-Ganchos",
+        "codigo": "21-6483",
+        "denominacion": "TELA FSB W AB RH 14590",
+        "fechaEmision": 41271,
+        "operations": {
+          "recepcion": true,
+          "corte": true,
+          "troquelado": false,
+          "costura": true,
+          "pegadoDotsAplix": true,
+          "colocacionClips": false,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte-Costura-Ganchos",
+        "codigo": "21-6757",
+        "denominacion": "TELA ASSENTO DIANTEIRO LH",
+        "fechaEmision": 42181,
+        "operations": {
+          "recepcion": true,
+          "corte": true,
+          "troquelado": false,
+          "costura": true,
+          "pegadoDotsAplix": true,
+          "colocacionClips": false,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte-Costura-Aplix",
+        "codigo": "21-6032",
+        "denominacion": "TELA ENCOSTO DIANTEIRO LH COM CAPUZ",
+        "fechaEmision": 42181,
+        "operations": {
+          "recepcion": true,
+          "corte": true,
+          "troquelado": false,
+          "costura": true,
+          "pegadoDotsAplix": true,
+          "colocacionClips": false,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte-Costura-Aplix",
+        "codigo": "21-6523",
+        "denominacion": "TELA ENCOSTO DIANTEIRO LH",
+        "fechaEmision": 42355,
+        "operations": {
+          "recepcion": true,
+          "corte": true,
+          "troquelado": false,
+          "costura": true,
+          "pegadoDotsAplix": true,
+          "colocacionClips": false,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte-Costura-Aplix",
+        "codigo": "21-6530",
+        "denominacion": "TELA BIFELT ENCOSTO DIANTEIRO LH/RH - HONDA SCUV",
+        "fechaEmision": 42095,
+        "operations": {
+          "recepcion": true,
+          "corte": true,
+          "troquelado": false,
+          "costura": true,
+          "pegadoDotsAplix": true,
+          "colocacionClips": false,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte-Costura-Aplix",
+        "codigo": "21-6531",
+        "denominacion": "TELA BIFELT ENCOSTO DIANTEIRO LH - HONDA SCUV",
+        "fechaEmision": 42095,
+        "operations": {
+          "recepcion": true,
+          "corte": true,
+          "troquelado": false,
+          "costura": true,
+          "pegadoDotsAplix": true,
+          "colocacionClips": false,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte-Costura-Aplix",
+        "codigo": "21-6532",
+        "denominacion": "TELA BIFELT ENCOSTO DIANTEIRO RH - HONDA SCUV",
+        "fechaEmision": 42095,
+        "operations": {
+          "recepcion": true,
+          "corte": true,
+          "troquelado": false,
+          "costura": true,
+          "pegadoDotsAplix": true,
+          "colocacionClips": false,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte-Costura-Aplix",
+        "codigo": "21-6567",
+        "denominacion": "TELA ENCOSTO DIANTEIRO",
+        "fechaEmision": 42181,
+        "operations": {
+          "recepcion": true,
+          "corte": true,
+          "troquelado": false,
+          "costura": true,
+          "pegadoDotsAplix": true,
+          "colocacionClips": false,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte-Costura-Aplix",
+        "codigo": "21-6612",
+        "denominacion": "TELA ENCOSTO TRASEIRO LH 3° FILA",
+        "fechaEmision": 42181,
+        "operations": {
+          "recepcion": true,
+          "corte": true,
+          "troquelado": false,
+          "costura": true,
+          "pegadoDotsAplix": true,
+          "colocacionClips": false,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte-Costura-Aplix",
+        "codigo": "21-6613",
+        "denominacion": "TELA ENCOSTO TRASEIRO LH 3° FILA",
+        "fechaEmision": 42181,
+        "operations": {
+          "recepcion": true,
+          "corte": true,
+          "troquelado": false,
+          "costura": true,
+          "pegadoDotsAplix": true,
+          "colocacionClips": false,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte-Costura-Aplix",
+        "codigo": "21-6621",
+        "denominacion": "TELA ENCOSTO DIANTEIRO 60% RH COM CAPUZ",
+        "fechaEmision": 42181,
+        "operations": {
+          "recepcion": true,
+          "corte": true,
+          "troquelado": false,
+          "costura": true,
+          "pegadoDotsAplix": true,
+          "colocacionClips": false,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte-Costura-Aplix",
+        "codigo": "21-6699",
+        "denominacion": "TELA ENCOSTO DIANTEIRO LH.",
+        "fechaEmision": 42179,
+        "operations": {
+          "recepcion": true,
+          "corte": true,
+          "troquelado": false,
+          "costura": true,
+          "pegadoDotsAplix": true,
+          "colocacionClips": false,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte-Costura-Aplix",
+        "codigo": "21-6767",
+        "denominacion": "TELA ENCOSTO TRASEIRO 40% LH",
+        "fechaEmision": 42181,
+        "operations": {
+          "recepcion": true,
+          "corte": true,
+          "troquelado": false,
+          "costura": true,
+          "pegadoDotsAplix": true,
+          "colocacionClips": false,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte-Costura-Aplix",
+        "codigo": "21-7763",
+        "denominacion": "TELA ASSENTO DIANTEIRO LH",
+        "fechaEmision": 43325,
+        "operations": {
+          "recepcion": true,
+          "corte": true,
+          "troquelado": false,
+          "costura": true,
+          "pegadoDotsAplix": true,
+          "colocacionClips": false,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte (Alam.)-Costura-Aplix",
+        "codigo": "21-6034",
+        "denominacion": "TELA ENCOSTO TRASEIRO 60% LH",
+        "fechaEmision": 42181,
+        "operations": {
+          "recepcion": true,
+          "corte": true,
+          "troquelado": false,
+          "costura": true,
+          "pegadoDotsAplix": true,
+          "colocacionClips": false,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte-Costura-Aplix",
+        "codigo": "21-6534",
+        "denominacion": "TELA BIFELT ASSENTO TRASEIRO 40%",
+        "fechaEmision": 42095,
+        "operations": {
+          "recepcion": true,
+          "corte": false,
+          "troquelado": true,
+          "costura": true,
+          "pegadoDotsAplix": true,
+          "colocacionClips": false,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte-Costura-Aplix",
+        "codigo": "21-6535",
+        "denominacion": "TELA BIFELT ASSENTO TRASEIRO 60% -",
+        "fechaEmision": 42095,
+        "operations": {
+          "recepcion": true,
+          "corte": false,
+          "troquelado": true,
+          "costura": true,
+          "pegadoDotsAplix": true,
+          "colocacionClips": false,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte-Costura-Aplix",
+        "codigo": "21-6536",
+        "denominacion": "TELA BIFELT ASSENTO DIANTEIRO RH - HONDA SCUV -",
+        "fechaEmision": 42095,
+        "operations": {
+          "recepcion": true,
+          "corte": false,
+          "troquelado": true,
+          "costura": true,
+          "pegadoDotsAplix": true,
+          "colocacionClips": false,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte-Costura-Aplix",
+        "codigo": "21-6537",
+        "denominacion": "TELA BIFELT ASSENTO DIANTEIRO LH - HONDA SCUV -",
+        "fechaEmision": 42095,
+        "operations": {
+          "recepcion": true,
+          "corte": false,
+          "troquelado": true,
+          "costura": true,
+          "pegadoDotsAplix": true,
+          "colocacionClips": false,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte-Costura-Aplix",
+        "codigo": "21-6538",
+        "denominacion": "TELA BIFELT ENCOSTO TRASEIRO 40%",
+        "fechaEmision": 42095,
+        "operations": {
+          "recepcion": true,
+          "corte": false,
+          "troquelado": true,
+          "costura": true,
+          "pegadoDotsAplix": true,
+          "colocacionClips": false,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte-Costura-Aplix",
+        "codigo": "21-6539",
+        "denominacion": "TELA BIFELT ENCOSTO TRASEIRO 60%",
+        "fechaEmision": 42095,
+        "operations": {
+          "recepcion": true,
+          "corte": false,
+          "troquelado": true,
+          "costura": true,
+          "pegadoDotsAplix": true,
+          "colocacionClips": false,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte-Aplix",
+        "codigo": "21-5194",
+        "denominacion": "FSB FOAM NON WOBEN",
+        "fechaEmision": 42062,
+        "operations": {
+          "recepcion": true,
+          "corte": true,
+          "troquelado": false,
+          "costura": false,
+          "pegadoDotsAplix": false,
+          "colocacionClips": false,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte-Aplix",
+        "codigo": "21-5569",
+        "denominacion": "TELA FSC MANUAL PES FLEECE",
+        "fechaEmision": 41292,
+        "operations": {
+          "recepcion": true,
+          "corte": true,
+          "troquelado": false,
+          "costura": false,
+          "pegadoDotsAplix": true,
+          "colocacionClips": false,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte",
+        "codigo": "21-5376",
+        "denominacion": "TELA ASSENTO DIANT FIAT 326",
+        "fechaEmision": 43074,
+        "operations": {
+          "recepcion": true,
+          "corte": true,
+          "troquelado": false,
+          "costura": false,
+          "pegadoDotsAplix": false,
+          "colocacionClips": false,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte",
+        "codigo": "21-6414",
+        "denominacion": "PROTECTOR, FR SEAT CUSHION",
+        "fechaEmision": 42181,
+        "operations": {
+          "recepcion": true,
+          "corte": true,
+          "troquelado": false,
+          "costura": false,
+          "pegadoDotsAplix": false,
+          "colocacionClips": false,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte",
+        "codigo": "21-6899",
+        "denominacion": "TELA ASSENTO DIANTEIRO",
+        "fechaEmision": 42149,
+        "operations": {
+          "recepcion": true,
+          "corte": true,
+          "troquelado": false,
+          "costura": false,
+          "pegadoDotsAplix": false,
+          "colocacionClips": false,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte",
+        "codigo": "21-6900",
+        "denominacion": "",
+        "fechaEmision": "",
+        "operations": {
+          "recepcion": false,
+          "corte": false,
+          "troquelado": false,
+          "costura": false,
+          "pegadoDotsAplix": false,
+          "colocacionClips": false,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte",
+        "codigo": "21-7339",
+        "denominacion": "TELA DE TNT 60 GR/M2 ENCOSTO TRASEIRO 100% FIAT X6S",
+        "fechaEmision": 42600,
+        "operations": {
+          "recepcion": true,
+          "corte": true,
+          "troquelado": false,
+          "costura": false,
+          "pegadoDotsAplix": false,
+          "colocacionClips": false,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte",
+        "codigo": "21-7340",
+        "denominacion": "TELA TNT RESPALDO TRASERO 40% - FIAT X65",
+        "fechaEmision": 42600,
+        "operations": {
+          "recepcion": true,
+          "corte": true,
+          "troquelado": false,
+          "costura": false,
+          "pegadoDotsAplix": false,
+          "colocacionClips": false,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte",
+        "codigo": "21-7341",
+        "denominacion": "TELA TNT RESPALDO TRASERO 60 %",
+        "fechaEmision": 42600,
+        "operations": {
+          "recepcion": true,
+          "corte": true,
+          "troquelado": false,
+          "costura": false,
+          "pegadoDotsAplix": false,
+          "colocacionClips": false,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte-Ganchos",
+        "codigo": "21-6614",
+        "denominacion": "TELA ASSENTO TRASEIRO 50% 3° FILA",
+        "fechaEmision": 42181,
+        "operations": {
+          "recepcion": true,
+          "corte": true,
+          "troquelado": false,
+          "costura": false,
+          "pegadoDotsAplix": false,
+          "colocacionClips": true,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte-Costura-Ganchos",
+        "codigo": "21-6576",
+        "denominacion": "TELA ASSENTO TRASEIRO 60%",
+        "fechaEmision": 42181,
+        "operations": {
+          "recepcion": true,
+          "corte": true,
+          "troquelado": false,
+          "costura": false,
+          "pegadoDotsAplix": false,
+          "colocacionClips": true,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte-Costura-Ganchos",
+        "codigo": "21-6619",
+        "denominacion": "TELA BIFELT FSC 60% RH",
+        "fechaEmision": 42181,
+        "operations": {
+          "recepcion": true,
+          "corte": true,
+          "troquelado": false,
+          "costura": false,
+          "pegadoDotsAplix": false,
+          "colocacionClips": true,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte-Costura-Ganchos",
+        "codigo": "21-7467",
+        "denominacion": "TELA BIFELT 140 GR/M2 ASSENTO DIANTEIRO TOY. GENZU 338.",
+        "fechaEmision": 42948,
+        "operations": {
+          "recepcion": true,
+          "corte": true,
+          "troquelado": false,
+          "costura": false,
+          "pegadoDotsAplix": false,
+          "colocacionClips": true,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte-Costura-Ganchos",
+        "codigo": "21-6481",
+        "denominacion": "TELA FSB WO AB 14588",
+        "fechaEmision": 41271,
+        "operations": {
+          "recepcion": true,
+          "corte": true,
+          "troquelado": false,
+          "costura": false,
+          "pegadoDotsAplix": true,
+          "colocacionClips": false,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte-Ganchos",
+        "codigo": "21-6766",
+        "denominacion": "TELA ASSENTO TRASEIRO 40%",
+        "fechaEmision": 42181,
+        "operations": {
+          "recepcion": true,
+          "corte": false,
+          "troquelado": false,
+          "costura": false,
+          "pegadoDotsAplix": false,
+          "colocacionClips": true,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      },
+      {
+        "sector": "Maq. Corte-Ganchos",
+        "codigo": "21-6416",
+        "denominacion": "FR SEAT CTR ARMREST SIDE",
+        "fechaEmision": 42181,
+        "operations": {
+          "recepcion": true,
+          "corte": false,
+          "troquelado": true,
+          "costura": false,
+          "pegadoDotsAplix": false,
+          "colocacionClips": false,
+          "inspeccionFinal": true,
+          "embalaje": true
+        }
+      }
+    ]
+  },
+  "summary": {
+    "totalPartNumbers": 44,
+    "totalAmfeDataRows": 79,
+    "processTypeCount": 4,
+    "processTypes": [
+      "Corte y pegado de aplix",
+      "Corte sin costura",
+      "Troquelado y costura",
+      "Corte y costura"
+    ],
+    "operationsAcrossSheets": {
+      "OP. 10 Recepción de materiales con identificacion correcta en en sector indicado": [
+        "Corte y pegado de aplix",
+        "Corte sin costura",
+        "Troquelado y costura",
+        "Corte y costura"
+      ],
+      "OP.20 Corte segu ndimensional con orificios en posicion y con la cantidad correspondiente.": [
+        "Corte y pegado de aplix"
+      ],
+      "OP. 30 Pegado de dots en correcta posicion con cantidad de dots correspondiente.": [
+        "Corte y pegado de aplix"
+      ],
+      "OP. 40 Inspección final del dimensional.": [
+        "Corte y pegado de aplix"
+      ],
+      "OP. 50 Embalaje identificado con cantidad de piezas especificas.": [
+        "Corte y pegado de aplix",
+        "Corte sin costura"
+      ],
+      "MODELO/ AÑO :": [
+        "Corte sin costura"
+      ],
+      "EQUIPO DE TRABAJO :     CAL : L. PEREZ.                      PROD: H. CUELICHE.                     INGEN: R. FERNANDEZ.": [
+        "Corte sin costura"
+      ],
+      "PROCESO / OPERACIÓN": [
+        "Corte sin costura"
+      ],
+      "OP.20 Corte según dimensional, libre de arrugas y marcas.": [
+        "Corte sin costura"
+      ],
+      "OP. 30 Colocado de clips en posicion correcta sin falta de clips.": [
+        "Corte sin costura"
+      ],
+      "OP. 40 Inspeccion final de deimensional.": [
+        "Corte sin costura"
+      ],
+      "OP.20 Troquelado prolijo sin deficiencia con orificios según dimensional.": [
+        "Troquelado y costura"
+      ],
+      "OP. 30 Costura completa sin pliegues ni arrugas con hilo segun especificaciones.": [
+        "Troquelado y costura"
+      ],
+      "OP. 40 Pegado de dots aplix en posicion correcta con cantidad indicada.": [
+        "Troquelado y costura"
+      ],
+      "OP. 50 Inspección final de dimensional.": [
+        "Troquelado y costura"
+      ],
+      "OP. 60 Embalaje identificado con cantidad de piezas especificas.": [
+        "Troquelado y costura"
+      ],
+      "OP.20 Corte por máquina autómatica según dimensional con cantidad de orificios según plan de control.": [
+        "Corte y costura"
+      ],
+      "OP. 30 Costura fuerte, sin arruga ni pliegues con hilo según especificaciones.": [
+        "Corte y costura"
+      ],
+      "OP. 40 Colocado de clips en posicion correcta con cantidad de clips correcta .": [
+        "Corte y costura"
+      ],
+      "OP. 50 Pegado de dots  en posicion correcta con cantidad de dots correcta.": [
+        "Corte y costura"
+      ],
+      "OP. 60 Inspección final de la pieza.": [
+        "Corte y costura"
+      ],
+      "OP. 70 Embalaje identificado con cantidad de piezas especificas.": [
+        "Corte y costura"
+      ]
+    },
+    "sevDistribution": {
+      "7": 51,
+      "8": 20
+    },
+    "rowsWithActions": 14,
+    "rowsWithPostActionRatings": 12,
+    "nprStats": {
+      "min": 84,
+      "max": 112,
+      "uniqueValues": [
+        84,
+        96,
+        98,
+        112
+      ],
+      "count": 75
+    }
+  }
+}

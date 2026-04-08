@@ -1,0 +1,749 @@
+[
+  {
+    "id": 1,
+    "code": "0118",
+    "name": "IMAGO",
+    "product_count": 1,
+    "is_automotive": 0,
+    "active": 1,
+    "created_at": "2026-03-14T19:47:35.014954+00:00"
+  },
+  {
+    "id": 2,
+    "code": "012",
+    "name": "LEQUIPE",
+    "product_count": 29,
+    "is_automotive": 1,
+    "active": 1,
+    "created_at": "2026-03-14T19:47:35.964016+00:00"
+  },
+  {
+    "id": 3,
+    "code": "0120",
+    "name": "FUNDACION HNOS.AGUSTIN Y ENRIQUE ROCCA",
+    "product_count": 1,
+    "is_automotive": 0,
+    "active": 1,
+    "created_at": "2026-03-14T19:47:37.085599+00:00"
+  },
+  {
+    "id": 4,
+    "code": "0129",
+    "name": "DROGUERIA DEL SUR",
+    "product_count": 5,
+    "is_automotive": 0,
+    "active": 1,
+    "created_at": "2026-03-14T19:47:38.202491+00:00"
+  },
+  {
+    "id": 5,
+    "code": "013",
+    "name": "LONGVIE S.A.",
+    "product_count": 4,
+    "is_automotive": 0,
+    "active": 1,
+    "created_at": "2026-03-14T19:47:39.043815+00:00"
+  },
+  {
+    "id": 6,
+    "code": "0178",
+    "name": "YPF GAS S.A.",
+    "product_count": 7,
+    "is_automotive": 0,
+    "active": 1,
+    "created_at": "2026-03-14T19:47:39.349679+00:00"
+  },
+  {
+    "id": 7,
+    "code": "0198",
+    "name": "SAS AUTOMOTRIZ ARGENTINA S.A.",
+    "product_count": 66,
+    "is_automotive": 1,
+    "active": 1,
+    "created_at": "2026-03-14T19:47:40.490601+00:00"
+  },
+  {
+    "id": 8,
+    "code": "02",
+    "name": "BURKOL S.A.",
+    "product_count": 3,
+    "is_automotive": 0,
+    "active": 1,
+    "created_at": "2026-03-14T19:47:41.356082+00:00"
+  },
+  {
+    "id": 9,
+    "code": "020",
+    "name": "PWA",
+    "product_count": 165,
+    "is_automotive": 1,
+    "active": 1,
+    "created_at": "2026-03-14T19:47:42.119189+00:00"
+  },
+  {
+    "id": 10,
+    "code": "0200",
+    "name": "YAZAKI ARGENTINA S.R.L.",
+    "product_count": 1,
+    "is_automotive": 1,
+    "active": 1,
+    "created_at": "2026-03-14T19:47:42.918329+00:00"
+  },
+  {
+    "id": 11,
+    "code": "0210",
+    "name": "DISTRIBUIDORA LIDERGAS",
+    "product_count": 2,
+    "is_automotive": 0,
+    "active": 1,
+    "created_at": "2026-03-14T19:47:44.414268+00:00"
+  },
+  {
+    "id": 12,
+    "code": "0215",
+    "name": "TOYOTA ARGENTINA S.A.",
+    "product_count": 2,
+    "is_automotive": 1,
+    "active": 1,
+    "created_at": "2026-03-14T19:47:45.813568+00:00"
+  },
+  {
+    "id": 13,
+    "code": "0216",
+    "name": "VUTEQ",
+    "product_count": 8,
+    "is_automotive": 1,
+    "active": 1,
+    "created_at": "2026-03-14T19:47:46.760859+00:00"
+  },
+  {
+    "id": 14,
+    "code": "0217",
+    "name": "MIRGOR SACIFIA",
+    "product_count": 31,
+    "is_automotive": 1,
+    "active": 1,
+    "created_at": "2026-03-14T19:47:47.551862+00:00"
+  },
+  {
+    "id": 15,
+    "code": "0218",
+    "name": "PATRONAS",
+    "product_count": 4,
+    "is_automotive": 0,
+    "active": 1,
+    "created_at": "2026-03-14T19:47:48.347793+00:00"
+  },
+  {
+    "id": 16,
+    "code": "0220",
+    "name": "LEBEN GELUK",
+    "product_count": 2,
+    "is_automotive": 0,
+    "active": 1,
+    "created_at": "2026-03-14T19:47:48.979922+00:00"
+  },
+  {
+    "id": 17,
+    "code": "0221",
+    "name": "RIGHETTI ALVAREZ SERGIO",
+    "product_count": 1,
+    "is_automotive": 0,
+    "active": 1,
+    "created_at": "2026-03-14T19:47:49.879796+00:00"
+  },
+  {
+    "id": 18,
+    "code": "0222",
+    "name": "INSUMOS XXI S.A.",
+    "product_count": 2,
+    "is_automotive": 0,
+    "active": 1,
+    "created_at": "2026-03-14T19:47:50.151738+00:00"
+  },
+  {
+    "id": 19,
+    "code": "0224",
+    "name": "TECCO AUTOMOTIVE",
+    "product_count": 1,
+    "is_automotive": 1,
+    "active": 1,
+    "created_at": "2026-03-14T19:47:50.924531+00:00"
+  },
+  {
+    "id": 20,
+    "code": "0229",
+    "name": "METALSUR CARROCERIAS S.A.",
+    "product_count": 1,
+    "is_automotive": 0,
+    "active": 1,
+    "created_at": "2026-03-14T19:47:51.326054+00:00"
+  },
+  {
+    "id": 21,
+    "code": "0230",
+    "name": "DOMARCO ALBERTO CARLOS",
+    "product_count": 2,
+    "is_automotive": 0,
+    "active": 1,
+    "created_at": "2026-03-14T19:47:52.111394+00:00"
+  },
+  {
+    "id": 22,
+    "code": "0233",
+    "name": "D ́ONOFRIO LEANDRO JAVIER",
+    "product_count": 1,
+    "is_automotive": 0,
+    "active": 1,
+    "created_at": "2026-03-14T19:47:53.198166+00:00"
+  },
+  {
+    "id": 23,
+    "code": "0235",
+    "name": "GUARDERIA NAUTICA SARTHOU S.A.",
+    "product_count": 3,
+    "is_automotive": 0,
+    "active": 1,
+    "created_at": "2026-03-14T19:47:54.031148+00:00"
+  },
+  {
+    "id": 24,
+    "code": "0236",
+    "name": "PLASWAG S.A.",
+    "product_count": 1,
+    "is_automotive": 0,
+    "active": 1,
+    "created_at": "2026-03-14T19:47:54.886113+00:00"
+  },
+  {
+    "id": 25,
+    "code": "024",
+    "name": "UNE S.R.L.",
+    "product_count": 26,
+    "is_automotive": 0,
+    "active": 1,
+    "created_at": "2026-03-14T19:47:55.19055+00:00"
+  },
+  {
+    "id": 26,
+    "code": "028",
+    "name": "TESTORI S.R.L.",
+    "product_count": 10,
+    "is_automotive": 0,
+    "active": 1,
+    "created_at": "2026-03-14T19:47:55.897538+00:00"
+  },
+  {
+    "id": 27,
+    "code": "030",
+    "name": "TOYOTA BOSHOKU ARGENTINA SRL",
+    "product_count": 35,
+    "is_automotive": 1,
+    "active": 1,
+    "created_at": "2026-03-14T19:47:56.182679+00:00"
+  },
+  {
+    "id": 28,
+    "code": "031",
+    "name": "DIECINUEVE CUARENTA Y OCHO S.A.",
+    "product_count": 1,
+    "is_automotive": 0,
+    "active": 1,
+    "created_at": "2026-03-14T19:47:56.910772+00:00"
+  },
+  {
+    "id": 29,
+    "code": "032",
+    "name": "INDUSTRIAS MARO S.A.",
+    "product_count": 1,
+    "is_automotive": 0,
+    "active": 1,
+    "created_at": "2026-03-14T19:47:57.291765+00:00"
+  },
+  {
+    "id": 30,
+    "code": "037",
+    "name": "POLIMETAL S.A.",
+    "product_count": 8,
+    "is_automotive": 0,
+    "active": 1,
+    "created_at": "2026-03-14T19:47:57.861649+00:00"
+  },
+  {
+    "id": 31,
+    "code": "039",
+    "name": "GESTAMP BAIRES S.A.",
+    "product_count": 1,
+    "is_automotive": 1,
+    "active": 1,
+    "created_at": "2026-03-14T19:47:58.136049+00:00"
+  },
+  {
+    "id": 32,
+    "code": "040",
+    "name": "FAMAR FUEGUINA S.A.",
+    "product_count": 2,
+    "is_automotive": 0,
+    "active": 1,
+    "created_at": "2026-03-14T19:47:58.878398+00:00"
+  },
+  {
+    "id": 33,
+    "code": "041",
+    "name": "METALURGICA RUAL S.A.",
+    "product_count": 3,
+    "is_automotive": 0,
+    "active": 1,
+    "created_at": "2026-03-14T19:47:59.149776+00:00"
+  },
+  {
+    "id": 34,
+    "code": "042",
+    "name": "DITECAR",
+    "product_count": 1,
+    "is_automotive": 0,
+    "active": 1,
+    "created_at": "2026-03-14T19:47:59.874529+00:00"
+  },
+  {
+    "id": 35,
+    "code": "044",
+    "name": "CRIOLLO S.A.",
+    "product_count": 1,
+    "is_automotive": 0,
+    "active": 1,
+    "created_at": "2026-03-14T19:48:00.13253+00:00"
+  },
+  {
+    "id": 36,
+    "code": "047",
+    "name": "Electro Fleming SRL",
+    "product_count": 58,
+    "is_automotive": 0,
+    "active": 1,
+    "created_at": "2026-03-14T19:48:00.899192+00:00"
+  },
+  {
+    "id": 37,
+    "code": "048",
+    "name": "Profield SA",
+    "product_count": 42,
+    "is_automotive": 0,
+    "active": 1,
+    "created_at": "2026-03-14T19:48:01.161697+00:00"
+  },
+  {
+    "id": 38,
+    "code": "049",
+    "name": "La esquina del parabrisas SA",
+    "product_count": 6,
+    "is_automotive": 1,
+    "active": 1,
+    "created_at": "2026-03-14T19:48:01.898187+00:00"
+  },
+  {
+    "id": 39,
+    "code": "050",
+    "name": "Pelegri Adolfo Osmar",
+    "product_count": 11,
+    "is_automotive": 0,
+    "active": 1,
+    "created_at": "2026-03-14T19:48:02.17231+00:00"
+  },
+  {
+    "id": 40,
+    "code": "051",
+    "name": "Dingen Revestimientos SA",
+    "product_count": 2,
+    "is_automotive": 0,
+    "active": 1,
+    "created_at": "2026-03-14T19:48:02.886499+00:00"
+  },
+  {
+    "id": 41,
+    "code": "052",
+    "name": "YAMAHA MOTOR ARGENTINA S.A.",
+    "product_count": 5,
+    "is_automotive": 1,
+    "active": 1,
+    "created_at": "2026-03-14T19:48:03.177943+00:00"
+  },
+  {
+    "id": 42,
+    "code": "054",
+    "name": "SILWAL SA",
+    "product_count": 183,
+    "is_automotive": 0,
+    "active": 1,
+    "created_at": "2026-03-14T19:48:03.93672+00:00"
+  },
+  {
+    "id": 43,
+    "code": "055",
+    "name": "Merlift Merino SRL",
+    "product_count": 1,
+    "is_automotive": 0,
+    "active": 1,
+    "created_at": "2026-03-14T19:48:04.891236+00:00"
+  },
+  {
+    "id": 44,
+    "code": "057",
+    "name": "Electrónica Alsina",
+    "product_count": 1,
+    "is_automotive": 0,
+    "active": 1,
+    "created_at": "2026-03-14T19:48:05.159744+00:00"
+  },
+  {
+    "id": 45,
+    "code": "058",
+    "name": "MARABOTTO ARMANDO Y MARABOTTO MARCOS SH",
+    "product_count": 2,
+    "is_automotive": 0,
+    "active": 1,
+    "created_at": "2026-03-14T19:48:05.873495+00:00"
+  },
+  {
+    "id": 46,
+    "code": "06",
+    "name": "FAURECIA ARGENTINA",
+    "product_count": 47,
+    "is_automotive": 1,
+    "active": 1,
+    "created_at": "2026-03-14T19:48:06.1478+00:00"
+  },
+  {
+    "id": 47,
+    "code": "061",
+    "name": "Trotta Eduardo",
+    "product_count": 3,
+    "is_automotive": 0,
+    "active": 1,
+    "created_at": "2026-03-14T19:48:06.890863+00:00"
+  },
+  {
+    "id": 48,
+    "code": "07",
+    "name": "FAURECIA EXTERIOR ARGENTINA",
+    "product_count": 5,
+    "is_automotive": 1,
+    "active": 1,
+    "created_at": "2026-03-14T19:48:07.169497+00:00"
+  },
+  {
+    "id": 49,
+    "code": "072",
+    "name": "PILKINGTON AUTOMOTIVE ARGENTINA S.A.",
+    "product_count": 8,
+    "is_automotive": 1,
+    "active": 1,
+    "created_at": "2026-03-14T19:48:07.933009+00:00"
+  },
+  {
+    "id": 50,
+    "code": "074",
+    "name": "GUADOLTEC SRL",
+    "product_count": 12,
+    "is_automotive": 0,
+    "active": 1,
+    "created_at": "2026-03-14T19:48:08.197703+00:00"
+  },
+  {
+    "id": 51,
+    "code": "075",
+    "name": "FILEIV CARLOS MARIA",
+    "product_count": 4,
+    "is_automotive": 0,
+    "active": 1,
+    "created_at": "2026-03-14T19:48:09.081096+00:00"
+  },
+  {
+    "id": 52,
+    "code": "076",
+    "name": "TOP GUN MAZAEDA MANUEL",
+    "product_count": 2,
+    "is_automotive": 0,
+    "active": 1,
+    "created_at": "2026-03-14T19:48:09.912381+00:00"
+  },
+  {
+    "id": 53,
+    "code": "080",
+    "name": "VENTALUM S.A.",
+    "product_count": 12,
+    "is_automotive": 0,
+    "active": 1,
+    "created_at": "2026-03-14T19:48:10.167333+00:00"
+  },
+  {
+    "id": 54,
+    "code": "082",
+    "name": "RENAULT ARGENTINA S.A.",
+    "product_count": 20,
+    "is_automotive": 1,
+    "active": 1,
+    "created_at": "2026-03-14T19:48:10.707079+00:00"
+  },
+  {
+    "id": 55,
+    "code": "085",
+    "name": "INSUMOS Y MASIVOS S.R.L.",
+    "product_count": 1,
+    "is_automotive": 0,
+    "active": 1,
+    "created_at": "2026-03-14T19:48:10.960117+00:00"
+  },
+  {
+    "id": 56,
+    "code": "088",
+    "name": "FEGOMAT S.A.",
+    "product_count": 4,
+    "is_automotive": 0,
+    "active": 1,
+    "created_at": "2026-03-14T19:48:11.215956+00:00"
+  },
+  {
+    "id": 57,
+    "code": "089",
+    "name": "NISSAN ARGENTINA S.A.",
+    "product_count": 7,
+    "is_automotive": 1,
+    "active": 1,
+    "created_at": "2026-03-14T19:48:11.690582+00:00"
+  },
+  {
+    "id": 58,
+    "code": "09",
+    "name": "ALBANO COZZUOL S.A.",
+    "product_count": 94,
+    "is_automotive": 1,
+    "active": 1,
+    "created_at": "2026-03-14T19:48:11.944805+00:00"
+  },
+  {
+    "id": 59,
+    "code": "092",
+    "name": "MASTROPOR",
+    "product_count": 4,
+    "is_automotive": 1,
+    "active": 1,
+    "created_at": "2026-03-14T19:48:12.202913+00:00"
+  },
+  {
+    "id": 60,
+    "code": "093",
+    "name": "VOLT S.R.L.",
+    "product_count": 3,
+    "is_automotive": 0,
+    "active": 1,
+    "created_at": "2026-03-14T19:48:12.661897+00:00"
+  },
+  {
+    "id": 61,
+    "code": "094",
+    "name": "DI GREGORIO, MARIA ROSA",
+    "product_count": 1,
+    "is_automotive": 0,
+    "active": 1,
+    "created_at": "2026-03-14T19:48:12.93749+00:00"
+  },
+  {
+    "id": 62,
+    "code": "095",
+    "name": "VOLKSWAGEN",
+    "product_count": 122,
+    "is_automotive": 1,
+    "active": 1,
+    "created_at": "2026-03-14T19:48:13.189898+00:00"
+  },
+  {
+    "id": 63,
+    "code": "096",
+    "name": "TEXTIL VALERIO",
+    "product_count": 1,
+    "is_automotive": 0,
+    "active": 1,
+    "created_at": "2026-03-14T19:48:13.671501+00:00"
+  },
+  {
+    "id": 64,
+    "code": "098",
+    "name": "DROGUERIA BOEDO S.A.",
+    "product_count": 1,
+    "is_automotive": 0,
+    "active": 1,
+    "created_at": "2026-03-14T19:48:13.922155+00:00"
+  },
+  {
+    "id": 65,
+    "code": "1",
+    "name": "GENERAL",
+    "product_count": 164,
+    "is_automotive": 1,
+    "active": 1,
+    "created_at": "2026-03-14T19:48:14.182013+00:00"
+  },
+  {
+    "id": 66,
+    "code": "10",
+    "name": "IRAUTO S.A.",
+    "product_count": 77,
+    "is_automotive": 0,
+    "active": 1,
+    "created_at": "2026-03-14T19:48:14.656086+00:00"
+  },
+  {
+    "id": 67,
+    "code": "12",
+    "name": "L'EQUIPE MONTEUR S.A.",
+    "product_count": 42,
+    "is_automotive": 1,
+    "active": 1,
+    "created_at": "2026-03-14T19:48:14.916126+00:00"
+  },
+  {
+    "id": 68,
+    "code": "15",
+    "name": "PABSA SA",
+    "product_count": 21,
+    "is_automotive": 0,
+    "active": 1,
+    "created_at": "2026-03-14T19:48:15.197301+00:00"
+  },
+  {
+    "id": 69,
+    "code": "19",
+    "name": "PRENSIPLAST",
+    "product_count": 73,
+    "is_automotive": 1,
+    "active": 1,
+    "created_at": "2026-03-14T19:48:15.665411+00:00"
+  },
+  {
+    "id": 70,
+    "code": "1983",
+    "name": "APB AMK",
+    "product_count": 1,
+    "is_automotive": 1,
+    "active": 1,
+    "created_at": "2026-03-14T19:48:15.976732+00:00"
+  },
+  {
+    "id": 71,
+    "code": "20",
+    "name": "PWA",
+    "product_count": 204,
+    "is_automotive": 1,
+    "active": 1,
+    "created_at": "2026-03-14T19:48:16.674978+00:00"
+  },
+  {
+    "id": 72,
+    "code": "23",
+    "name": "REYDEL AUTOMOTIVE ARGENTINA S.A.",
+    "product_count": 178,
+    "is_automotive": 1,
+    "active": 1,
+    "created_at": "2026-03-14T19:48:16.931892+00:00"
+  },
+  {
+    "id": 73,
+    "code": "231",
+    "name": "APB FORD",
+    "product_count": 18,
+    "is_automotive": 1,
+    "active": 1,
+    "created_at": "2026-03-14T19:48:17.188491+00:00"
+  },
+  {
+    "id": 74,
+    "code": "232",
+    "name": "APB P21",
+    "product_count": 9,
+    "is_automotive": 1,
+    "active": 1,
+    "created_at": "2026-03-14T19:48:17.659502+00:00"
+  },
+  {
+    "id": 75,
+    "code": "233",
+    "name": "BSUV",
+    "product_count": 5,
+    "is_automotive": 1,
+    "active": 1,
+    "created_at": "2026-03-14T19:48:17.91733+00:00"
+  },
+  {
+    "id": 78,
+    "code": "24",
+    "name": "UNE",
+    "product_count": 3,
+    "is_automotive": 0,
+    "active": 1,
+    "created_at": "2026-03-14T19:48:18.929073+00:00"
+  },
+  {
+    "id": 79,
+    "code": "38",
+    "name": "EDACI",
+    "product_count": 3,
+    "is_automotive": 0,
+    "active": 1,
+    "created_at": "2026-03-14T19:48:19.175048+00:00"
+  },
+  {
+    "id": 80,
+    "code": "46",
+    "name": "Ottado Karina Verónica",
+    "product_count": 59,
+    "is_automotive": 0,
+    "active": 1,
+    "created_at": "2026-03-14T19:48:19.706738+00:00"
+  },
+  {
+    "id": 81,
+    "code": "51",
+    "name": "VAER",
+    "product_count": 2,
+    "is_automotive": 0,
+    "active": 1,
+    "created_at": "2026-03-14T19:48:20.004663+00:00"
+  },
+  {
+    "id": 82,
+    "code": "63",
+    "name": "IVECO",
+    "product_count": 2,
+    "is_automotive": 1,
+    "active": 1,
+    "created_at": "2026-03-14T19:48:20.657617+00:00"
+  },
+  {
+    "id": 271,
+    "code": "PWA",
+    "name": "PWA",
+    "product_count": 12,
+    "is_automotive": 1,
+    "active": 1,
+    "created_at": "2026-03-17T23:16:44.390178+00:00"
+  },
+  {
+    "id": 76,
+    "code": "235",
+    "name": "INSERT PATAGONIA",
+    "product_count": 2,
+    "is_automotive": 1,
+    "active": 1,
+    "created_at": "2026-03-14T19:48:18.166294+00:00"
+  },
+  {
+    "id": 77,
+    "code": "236",
+    "name": "APB PATAGONIA",
+    "product_count": 4,
+    "is_automotive": 1,
+    "active": 1,
+    "created_at": "2026-03-14T19:48:18.663209+00:00"
+  }
+]
