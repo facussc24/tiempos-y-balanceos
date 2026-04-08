@@ -88,125 +88,95 @@ describe('pfdSvgExport', () => {
             expect(svg).toContain('height="200"');
         });
 
-        it('should include xml declaration and xmlns attribute', () => {
+        it('should include DOCTYPE html and <html tag for non-empty documents', () => {
             const doc = makeDoc([makeStep()]);
-            const svg = buildPfdSvg(doc);
+            const html = buildPfdSvg(doc);
 
-            expect(svg).toMatch(/^<\?xml version="1\.0" encoding="UTF-8"\?>/);
-            expect(svg).toContain('xmlns="http://www.w3.org/2000/svg"');
+            expect(html).toMatch(/^<!DOCTYPE html>/);
+            expect(html).toContain('<html');
         });
 
         it('should render a single step with step number and description', () => {
             const doc = makeDoc([
                 makeStep({ stepNumber: 'OP 10', description: 'Corte de chapa' }),
             ]);
-            const svg = buildPfdSvg(doc);
+            const html = buildPfdSvg(doc);
 
-            expect(svg).toContain('OP 10');
-            expect(svg).toContain('Corte de chapa');
-            expect(svg).toContain('class="pfd-node"');
-            expect(svg).toContain('data-step-number="OP 10"');
+            // The mapper extracts just the number from "OP 10"
+            expect(html).toContain('10');
+            expect(html).toContain('Corte de chapa');
         });
 
-        it('should render arrows between multiple steps', () => {
+        it('should render step numbers for multiple steps', () => {
             const doc = makeDoc([
                 makeStep({ id: 's1', stepNumber: 'OP 10', description: 'Corte' }),
                 makeStep({ id: 's2', stepNumber: 'OP 20', description: 'Soldadura' }),
                 makeStep({ id: 's3', stepNumber: 'OP 30', description: 'Pintura' }),
             ]);
-            const svg = buildPfdSvg(doc);
+            const html = buildPfdSvg(doc);
 
-            expect(svg).toContain('OP 10');
-            expect(svg).toContain('OP 20');
-            expect(svg).toContain('OP 30');
-            // Arrows between steps (monochrome dark #374151)
-            expect(svg).toContain('class="pfd-arrow"');
-            expect(svg).toContain('stroke="#374151"');
-            // At least 2 arrows for 3 steps
-            const arrowCount = (svg.match(/class="pfd-arrow"/g) || []).length;
-            expect(arrowCount).toBe(2);
+            expect(html).toContain('Corte');
+            expect(html).toContain('Soldadura');
+            expect(html).toContain('Pintura');
         });
 
-        it('should render parallel branches with lane backgrounds and FLUJO PARALELO label', () => {
+        it('should render parallel branches with lane backgrounds and labels', () => {
             const doc = makeDoc([
-                makeStep({ id: 's1', stepNumber: 'OP 10', description: 'Recepcion', branchId: '', }),
+                makeStep({ id: 's1', stepNumber: 'OP 10', description: 'Recepcion', branchId: '' }),
                 makeStep({ id: 's2', stepNumber: 'OP 20', description: 'Soldadura', branchId: 'A', branchLabel: 'Linea ZAC' }),
                 makeStep({ id: 's3', stepNumber: 'OP 30', description: 'Pintura', branchId: 'B', branchLabel: 'Linea Galvanizado' }),
                 makeStep({ id: 's4', stepNumber: 'OP 40', description: 'Ensamble', branchId: '' }),
             ]);
-            const svg = buildPfdSvg(doc);
+            const html = buildPfdSvg(doc);
 
-            expect(svg).toContain('FLUJO PARALELO');
-            expect(svg).toContain('CONVERGENCIA');
-            // Fork/join visual elements
-            expect(svg).toContain('class="pfd-fork"');
-            expect(svg).toContain('class="pfd-join"');
-            // Branch labels
-            expect(svg).toContain('Linea ZAC');
-            expect(svg).toContain('Linea Galvanizado');
-            // Branch backgrounds (monochrome — same neutral gray for all branches)
-            expect(svg).toContain('#F9FAFB'); // bg for branches
+            // Branch structure renders with parallel lanes
+            expect(html).toContain('min-w-[400px]');
+            // Step descriptions appear
+            expect(html).toContain('Soldadura');
+            expect(html).toContain('Pintura');
         });
 
-        it('should render CC badge when productSpecialChar is CC', () => {
+        it('should render CC label when productSpecialChar is CC', () => {
             const doc = makeDoc([
                 makeStep({ productSpecialChar: 'CC' }),
             ]);
-            const svg = buildPfdSvg(doc);
+            const html = buildPfdSvg(doc);
 
-            // CC badge (monochrome — white bg, dark stroke, black text)
-            expect(svg).toContain('>CC<');
+            expect(html).toContain('CC');
         });
 
-        it('should render SC badge when processSpecialChar is SC', () => {
+        it('should render SC label when processSpecialChar is SC', () => {
             const doc = makeDoc([
                 makeStep({ processSpecialChar: 'SC' }),
             ]);
-            const svg = buildPfdSvg(doc);
+            const html = buildPfdSvg(doc);
 
-            // SC badge (monochrome — white bg, dark stroke, black text)
-            expect(svg).toContain('>SC<');
+            expect(html).toContain('SC');
         });
 
-        it('should render CC badge (not SC) when both product and process have special chars', () => {
+        it('should render both CC and SC labels when both are present', () => {
             const doc = makeDoc([
                 makeStep({ productSpecialChar: 'CC', processSpecialChar: 'SC' }),
             ]);
-            const svg = buildPfdSvg(doc);
+            const html = buildPfdSvg(doc);
 
-            // CC takes priority: hasCC = true means hasSC = false
-            expect(svg).toContain('>CC<');
-            expect(svg).not.toContain('>SC<');
+            expect(html).toContain('CC, SC');
         });
 
-        it('should render EXT badge when isExternalProcess is true', () => {
-            const doc = makeDoc([
-                makeStep({ isExternalProcess: true }),
-            ]);
-            const svg = buildPfdSvg(doc);
-
-            // EXT badge (monochrome — white bg, dark stroke, black text)
-            expect(svg).toContain('>EXT<');
-        });
-
-        it('should render legend with all 7 step types', () => {
+        it('should render legend with REFERENCIAS title and 5 step type labels', () => {
             const doc = makeDoc([makeStep()]);
-            const svg = buildPfdSvg(doc);
+            const html = buildPfdSvg(doc);
 
-            expect(svg).toContain('LEYENDA:');
-            expect(svg).toContain('class="pfd-legend"');
-            // All 7 step type labels from PFD_STEP_TYPES
+            expect(html).toContain('REFERENCIAS');
             const expectedLabels = [
-                'Operaci\u00F3n',
-                'Transporte',
-                'Inspecci\u00F3n',
-                'Almacenamiento',
-                'Demora / Espera',
-                'Decisi\u00F3n',
-                'Op. + Inspecci\u00F3n',
+                'OPERACION',
+                'TRASLADO',
+                'ALMACENADO',
+                'INSPECCION',
+                'CONDICION',
             ];
             for (const label of expectedLabels) {
-                expect(svg).toContain(label);
+                expect(html).toContain(label);
             }
         });
 
@@ -215,179 +185,106 @@ describe('pfdSvgExport', () => {
                 partName: 'Cubierta izquierda',
                 partNumber: 'P-001',
                 companyName: 'Barack Mercosul',
-                plantLocation: 'Hurlingham',
                 customerName: 'ACME Corp',
                 modelYear: '2026',
             });
-            const svg = buildPfdSvg(doc);
+            const html = buildPfdSvg(doc);
 
-            expect(svg).toContain('DIAGRAMA DE FLUJO DEL PROCESO');
-            expect(svg).toContain('Cubierta izquierda');
-            expect(svg).toContain('P-001');
-            expect(svg).toContain('Barack Mercosul');
-            expect(svg).toContain('Hurlingham');
-            expect(svg).toContain('ACME Corp');
-            expect(svg).toContain('2026');
+            expect(html).toContain('DIAGRAMA DE FLUJO DE PROCESO');
+            expect(html).toContain('Cubierta izquierda');
+            expect(html).toContain('Barack Mercosul');
+            expect(html).toContain('ACME Corp');
+            expect(html).toContain('2026');
         });
 
         it('should escape HTML special characters in descriptions', () => {
             const doc = makeDoc([
                 makeStep({ description: '<script>alert("xss")</script>' }),
             ]);
-            const svg = buildPfdSvg(doc);
+            const html = buildPfdSvg(doc);
 
-            expect(svg).not.toContain('<script>');
-            expect(svg).toContain('&lt;script&gt;');
+            expect(html).not.toContain('<script>');
+            expect(html).toContain('&lt;script&gt;');
         });
 
-        it('should render correct SVG symbol for each step type', () => {
+        it('should render step number inside the shape for an operation', () => {
             const doc = makeDoc([
                 makeStep({ id: 's1', stepType: 'operation', stepNumber: 'OP 10' }),
             ]);
-            const svg = buildPfdSvg(doc);
+            const html = buildPfdSvg(doc);
 
-            // Operation uses <circle> with monochrome dark border
-            expect(svg).toContain('<circle');
-            expect(svg).toContain('#374151'); // DARK monochrome border
+            // Step number "10" (extracted from "OP 10") appears in output
+            expect(html).toContain('>10<');
         });
 
-        it('should render machine and department as sub-info line', () => {
+        it('should render machine and department text', () => {
             const doc = makeDoc([
                 makeStep({ machineDeviceTool: 'Prensa 200T', department: 'Estampado' }),
             ]);
-            const svg = buildPfdSvg(doc);
+            const html = buildPfdSvg(doc);
 
-            expect(svg).toContain('Prensa 200T');
-            expect(svg).toContain('Estampado');
+            expect(html).toContain('Prensa 200T');
+            expect(html).toContain('Estampado');
         });
 
-        it('should embed logo when logoBase64 is provided', () => {
+        it('should embed logo as <img> tag when logoBase64 is provided', () => {
             const doc = makeDoc([makeStep()]);
-            const svg = buildPfdSvg(doc, 'data:image/png;base64,TESTLOGO');
+            const html = buildPfdSvg(doc, 'data:image/png;base64,TESTLOGO');
 
-            expect(svg).toContain('<image');
-            expect(svg).toContain('data:image/png;base64,TESTLOGO');
-            expect(svg).toContain('preserveAspectRatio="xMidYMid meet"');
+            expect(html).toContain('<img');
+            expect(html).toContain('data:image/png;base64,TESTLOGO');
         });
 
-        it('should show text fallback when no logo provided', () => {
+        it('should show BARACK MERCOSUL text fallback when no logo provided', () => {
             const doc = makeDoc([makeStep()]);
-            const svg = buildPfdSvg(doc);
+            const html = buildPfdSvg(doc);
 
-            // No <image> element, instead shows BARACK text
-            expect(svg).not.toContain('<image');
-            expect(svg).toContain('BARACK');
-            expect(svg).toContain('MERCOSUL');
+            expect(html).toContain('BARACK');
+            expect(html).toContain('MERCOSUL');
         });
 
-        it('should include xmlns:xlink for image support', () => {
+        it('should render document number in header', () => {
             const doc = makeDoc([makeStep()]);
-            const svg = buildPfdSvg(doc);
+            const html = buildPfdSvg(doc);
 
-            expect(svg).toContain('xmlns:xlink');
+            expect(html).toContain('DOC-100');
+            expect(html).toContain('Código del Documento');
         });
 
-        it('should render SGC form number in header', () => {
+        it('should not contain SVG artifacts in non-empty HTML output', () => {
             const doc = makeDoc([makeStep()]);
-            const svg = buildPfdSvg(doc);
+            const html = buildPfdSvg(doc);
 
-            expect(svg).toContain('I-AC-005.1-R01');
+            // No SVG defs, no arrowMarker, no dropShadow
+            expect(html).not.toContain('id="arrowMarker"');
+            expect(html).not.toContain('id="dropShadow"');
+            expect(html).not.toContain('feDropShadow');
         });
 
-        it('should include SVG defs with filters and markers', () => {
-            const doc = makeDoc([makeStep()]);
-            const svg = buildPfdSvg(doc);
-
-            // Drop shadow filter
-            expect(svg).toContain('id="dropShadow"');
-            expect(svg).toContain('feDropShadow');
-            // Arrow marker
-            expect(svg).toContain('id="arrowMarker"');
-        });
-
-        it('should apply drop shadow and white fill to nodes', () => {
-            const doc = makeDoc([makeStep()]);
-            const svg = buildPfdSvg(doc);
-
-            expect(svg).toContain('filter="url(#dropShadow)"');
-            // Monochrome nodes use white fill (B/W printable, PPAP-ready)
-            expect(svg).toContain('fill="white"');
-        });
-
-        it('should render bezier arrows with markers instead of polygons', () => {
-            const doc = makeDoc([
-                makeStep({ id: 's1' }),
-                makeStep({ id: 's2' }),
-            ]);
-            const svg = buildPfdSvg(doc);
-
-            // Arrow uses path with curve (C command)
-            expect(svg).toContain('marker-end="url(#arrowMarker)"');
-            const arrowPaths = svg.match(/<path d="M [^"]*C [^"]*"/g);
-            expect(arrowPaths).toBeTruthy();
-        });
-
-        it('should render CC accent bar on CC steps', () => {
-            const doc = makeDoc([
-                makeStep({ productSpecialChar: 'CC' }),
-            ]);
-            const svg = buildPfdSvg(doc);
-
-            // Black accent bar (3px wide, monochrome)
-            expect(svg).toContain('width="3"');
-            expect(svg).toContain('fill="#111827"');
-        });
-
-        it('should render decision nodes with shadow and thicker border', () => {
+        it('should render decision node description', () => {
             const doc = makeDoc([
                 makeStep({ stepType: 'decision', stepNumber: 'DEC 10', description: 'Aprobado?' }),
             ]);
-            const svg = buildPfdSvg(doc);
+            const html = buildPfdSvg(doc);
 
-            // Decision nodes use drop shadow
-            expect(svg).toContain('filter="url(#dropShadow)"');
-            // Decision nodes have thicker border (2.5px)
-            expect(svg).toContain('stroke-width="2.5"');
+            expect(html).toContain('Aprobado?');
         });
 
-        it('should render clean white background', () => {
+        it('should render white background via inline style', () => {
             const doc = makeDoc([makeStep()]);
-            const svg = buildPfdSvg(doc);
+            const html = buildPfdSvg(doc);
 
-            // Monochrome design: plain white background (B/W printable)
-            expect(svg).toContain('fill="white"');
+            // Tailwind bg-white class or CSS body background
+            expect(html).toContain('bg-white');
         });
 
-        it('should use responsive width with viewBox for centering', () => {
+        it('should produce a valid HTML document with DOCTYPE', () => {
             const doc = makeDoc([makeStep()]);
-            const svg = buildPfdSvg(doc);
+            const html = buildPfdSvg(doc);
 
-            // SVG uses width="100%" for responsive centering in browsers
-            expect(svg).toContain('width="100%"');
-            expect(svg).toContain('preserveAspectRatio="xMidYMin meet"');
-            // viewBox contains the real canvas dimensions
-            const viewBoxMatch = svg.match(/viewBox="0 0 (\d+) (\d+)"/);
-            expect(viewBoxMatch).toBeTruthy();
-            const canvasW = parseInt(viewBoxMatch![1], 10);
-            // Canvas must be at least as wide as the legend (7 items × 135 + 75 = 1020) + 2×48 pad = 1116
-            expect(canvasW).toBeGreaterThanOrEqual(1116);
-        });
-
-        it('should not let legend overflow canvas (startX must be >= 0)', () => {
-            // Single-node doc (narrow content) — legend must still fit
-            const doc = makeDoc([makeStep()]);
-            const svg = buildPfdSvg(doc);
-
-            // The LEYENDA text should be fully visible
-            expect(svg).toContain('LEYENDA:');
-            // Canvas dimensions are in viewBox
-            const viewBoxMatch = svg.match(/viewBox="0 0 (\d+) (\d+)"/);
-            expect(viewBoxMatch).toBeTruthy();
-            // Verify no negative x coordinates on legend text
-            const legendMatch = svg.match(/class="pfd-legend"[\s\S]*?<text x="([^"]+)"/);
-            expect(legendMatch).toBeTruthy();
-            const legendX = parseFloat(legendMatch![1]);
-            expect(legendX).toBeGreaterThanOrEqual(0);
+            expect(html).toMatch(/^<!DOCTYPE html>/);
+            expect(html).toContain('<html');
+            expect(html).toContain('</html>');
         });
     });
 
@@ -439,7 +336,7 @@ describe('pfdSvgExport', () => {
             vi.restoreAllMocks();
         });
 
-        it('should create a Blob with SVG content and trigger download', async () => {
+        it('should create a Blob with HTML content and trigger download', async () => {
             const doc = makeDoc([makeStep()]);
             await exportPfdSvg(doc);
 
@@ -456,8 +353,8 @@ describe('pfdSvgExport', () => {
             expect(document.body.appendChild).toHaveBeenCalled();
             expect(document.body.removeChild).toHaveBeenCalled();
 
-            // Filename includes PFD_ prefix and .svg extension
-            expect(capturedDownload).toMatch(/^PFD_.*\.svg$/);
+            // Filename includes PFD_ prefix and .html extension
+            expect(capturedDownload).toMatch(/^PFD_.*\.html$/);
         });
 
         it('should revoke object URL after timeout', async () => {
@@ -476,15 +373,13 @@ describe('pfdSvgExport', () => {
             expect(capturedDownload).toContain('Cubierta');
         });
 
-        it('should fetch logo and embed it in SVG content', async () => {
+        it('should create blob with text/html MIME type', async () => {
             const doc = makeDoc([makeStep()]);
             await exportPfdSvg(doc);
 
-            // The blob should contain SVG with the logo
             const blobArg = mockCreateObjectURL.mock.calls[0][0] as Blob;
             expect(blobArg).toBeInstanceOf(Blob);
-            expect(blobArg.type).toBe('image/svg+xml;charset=utf-8');
+            expect(blobArg.type).toBe('text/html;charset=utf-8');
         });
     });
 });
-

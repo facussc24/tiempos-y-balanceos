@@ -354,7 +354,7 @@ const PfdSvgAudit: React.FC = () => {
 
     const blobUrl = useMemo(() => {
         if (!svgContent) return '';
-        const blob = new Blob([svgContent], { type: 'image/svg+xml;charset=utf-8' });
+        const blob = new Blob([svgContent], { type: 'text/html;charset=utf-8' });
         return URL.createObjectURL(blob);
     }, [svgContent]);
 

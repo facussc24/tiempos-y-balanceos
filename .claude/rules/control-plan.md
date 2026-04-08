@@ -60,6 +60,7 @@ globs:
 - Core team incluye Produccion: "Carlos Baptista (Ingenieria), Manuel Meszaros (Calidad), Marianna Vera (Produccion)".
 - `approvedBy` = Aprobacion de Ingenieria (Carlos Baptista). Campo separado de planta.
 - `plantApproval` = Aprobacion de Planta (Gonzalo Cal / G.Cal). NUNCA usar `approvedBy` para esto.
+- `approvedBy` y el campo Revisado NUNCA pueden ser la misma persona. Revisado = verificacion tecnica, Aprobado = autorizacion formal.
 
 ### Dedup del Generador
 - CP items: 1 fila por caracteristica por operacion. NUNCA 1 fila por causa del AMFE.

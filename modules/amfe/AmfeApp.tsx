@@ -67,7 +67,7 @@ import { runCoherenceCheck, type CoherenceResult } from '../../utils/crossDocume
 const CoherencePanel = lazy(() => import('../../components/ui/CoherencePanel'));
 const CpSyncPanel = lazy(() => import('../controlPlan/CpSyncPanel'));
 const PfdApp = lazy(() => import('../pfd/PfdApp'));
-const PfdGenerationWizard = lazy(() => import('../pfd/PfdGenerationWizard'));
+// PfdGenerationWizard removed — PFD generation is now manual only
 const ControlPlanApp = lazy(() => import('../controlPlan/ControlPlanApp'));
 const HojaOperacionesApp = lazy(() => import('../hojaOperaciones/HojaOperacionesApp'));
 
@@ -1208,20 +1208,6 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab, initialF
 
         </div>
 
-        {/* PFD Generation Wizard — modal overlay */}
-        {tabNav.showPfdWizard && (
-            <ModuleErrorBoundary moduleName="Asistente PFD" onNavigateHome={() => tabNav.setShowPfdWizard(false)}>
-            <Suspense fallback={null}>
-                <PfdGenerationWizard
-                    amfeDoc={amfe.data}
-                    projectName={projects.currentProject || 'Sin nombre'}
-                    isOpen={tabNav.showPfdWizard}
-                    onComplete={tabNav.handlePfdWizardComplete}
-                    onCancel={() => tabNav.setShowPfdWizard(false)}
-                />
-            </Suspense>
-            </ModuleErrorBoundary>
-        )}
 
         {/* Templates modal — global overlay accessible from any tab */}
         {showTemplates && (

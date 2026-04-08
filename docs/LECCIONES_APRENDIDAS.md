@@ -146,3 +146,44 @@ Esto afectaba a los 6 AMFEs VWA (HEADREST_FRONT, HEADREST_REAR_CEN, HEADREST_REA
 - El generador de CP NUNCA llena componentMaterial automaticamente — siempre queda vacio.
 - Los materiales en items de recepcion (OP 10) deben asignarse manualmente o via script post-generacion.
 - Validacion B1 advierte pero no bloquea items de recepcion sin material.
+
+## 2026-04-07 — Reemplazo motor PFD: SVG → HTML/Tailwind
+
+**Cambio**: Se reemplazo el motor SVG manual (pfdSvgExport.ts, 850 lineas) con un motor React+Tailwind basado en el generador de Fak (industrial-flowchart-generator.zip).
+
+**Arquitectura nueva**:
+- `flowTypes.ts` + `pfdToFlowData.ts` — tipos intermedios y mapper
+- `modules/pfd/flow/` — 8 componentes React con inline styles
+- `pfdHtmlExport.ts` — ReactDOMServer.renderToStaticMarkup() para HTML standalone
+- `pfdSvgExport.ts` — facade de re-export (backward compat)
+- API publica sin cambios: buildPfdSvg(), exportPfdSvg(), generatePfdSvgBuffer()
+
+**Lecciones**:
+- Usar inline styles (no Tailwind classes) en componentes para renderToStaticMarkup
+- Decision nodes no repetir descripcion en columna derecha (ya esta como labelCondition)
+- Virtual split nodes (branches sin stepId) no renderizar FlowNode, solo BranchSplit
+- Deduplicar reference lines: applicableParts como fuente primaria
+
+**Pendientes proxima sesion**: leyenda posicionar derecha, labels ramas paralelas, cargar datos IP PAD, auditor
+
+### 2026-04-07 — Sesion 2: Motor PFD HTML/Tailwind
+
+**Errores cometidos:**
+- Verificar visualmente antes de reportar "listo" — varias veces reporté como terminado sin haber verificado realmente el output
+- scale(0.6) en CSS transform no reduce el espacio reservado del elemento — usar SVGs inline de tamaño fijo
+- tsx cachea módulos — usar --no-cache flag al regenerar test HTML
+- "CLAVE" no existe como clasificación APQP — solo CC y SC son válidas
+- Revisado por ≠ Aprobado por — son roles diferentes, nunca la misma persona
+
+**Correcciones de Fak:**
+- Header del flujograma era gigante — compactar con py-[3px], grid-cols-[1fr_2fr_1fr], juntar Elaborado+Revisado y Proyecto+Cliente
+- Nota CC/SC y leyenda flotaban en espacio vacío gris — mover dentro del contenedor blanco <main>
+- Leyenda REFERENCIAS va dentro de la caja de listado de piezas, no separada abajo
+- Alineación de leyenda: usar CSS grid 2 columnas (30px | auto) centrado, NO flex con items-center
+- Eliminar "CLAVE" de todo el código PFD — solo existen CC y SC
+
+**Lo que funcionó bien:**
+- Motor React+Tailwind con renderToStaticMarkup para export standalone HTML
+- SVGs inline mini (24x16 viewBox) para leyenda compacta perfectamente alineada
+- Script genTestPfd.ts para regenerar HTML sin depender del dev server
+- flowStyles.ts con CSS utilities embebidas para export standalone
