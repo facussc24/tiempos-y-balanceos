@@ -11,17 +11,10 @@ interface Props {
     setPuCurTimeStr: (val: string) => void;
     nStar: number;
     errors: ValidationError[];
-    injectionMode: 'batch' | 'carousel';
-    setInjectionMode: (val: 'batch' | 'carousel') => void;
-    indexTimeStr: string;
-    setIndexTimeStr: (val: string) => void;
-    setupLossPercent: number;
-    setSetupLossPercent: (val: number) => void;
 }
 
 export const MachineConfiguration: React.FC<Props> = ({
-    isOpen, onToggle, puInyTimeStr, setPuInyTimeStr, puCurTimeStr, setPuCurTimeStr, nStar, errors,
-    injectionMode, setInjectionMode, indexTimeStr, setIndexTimeStr, setupLossPercent, setSetupLossPercent
+    isOpen, onToggle, puInyTimeStr, setPuInyTimeStr, puCurTimeStr, setPuCurTimeStr, nStar, errors
 }) => {
     const getError = (field: string) => errors.find(e => e.field === field);
 
@@ -39,24 +32,6 @@ export const MachineConfiguration: React.FC<Props> = ({
 
             {isOpen && (
                 <div className="p-4 animate-in slide-in-from-top-2">
-                    <div className="mb-4">
-                        <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Modo de Inyección</label>
-                        <div className="flex gap-2">
-                            <button
-                                onClick={() => setInjectionMode('batch')}
-                                className={`flex-1 py-1.5 rounded text-[10px] font-bold transition-colors border ${injectionMode === 'batch' ? 'bg-teal-600 border-teal-600 text-white shadow-sm' : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50'}`}
-                            >
-                                ESTÁNDAR (Prensa)
-                            </button>
-                            <button
-                                onClick={() => setInjectionMode('carousel')}
-                                className={`flex-1 py-1.5 rounded text-[10px] font-bold transition-colors border ${injectionMode === 'carousel' ? 'bg-indigo-600 border-indigo-600 text-white shadow-sm' : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50'}`}
-                            >
-                                CARRUSEL (Rotativa)
-                            </button>
-                        </div>
-                    </div>
-
                     <div className="grid grid-cols-2 gap-4 mb-4">
                         <div>
                             <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Tiempo Inyección (s)</label>
@@ -96,35 +71,6 @@ export const MachineConfiguration: React.FC<Props> = ({
                                 </div>
                             )}
                         </div>
-                    </div>
-
-                    {injectionMode === 'carousel' && (
-                        <div className="mb-4">
-                            <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Tiempo de Indice / Giro (s)</label>
-                            <input
-                                type="text"
-                                placeholder="Ej: 5"
-                                className="w-full border border-indigo-300 bg-white text-slate-900 rounded p-2 text-sm font-bold text-right outline-none focus:ring-2 focus:ring-indigo-500"
-                                value={indexTimeStr}
-                                onChange={e => setIndexTimeStr(e.target.value)}
-                            />
-                        </div>
-                    )}
-
-                    <div className="mb-4">
-                        <div className="flex justify-between items-center mb-1">
-                            <label className="text-[10px] font-bold text-slate-500 uppercase">Pérdida por Setup (%)</label>
-                            <span className="text-[10px] font-black text-slate-800">{setupLossPercent}%</span>
-                        </div>
-                        <input
-                            type="range"
-                            min="0"
-                            max="30"
-                            step="1"
-                            className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-teal-600"
-                            value={setupLossPercent}
-                            onChange={e => setSetupLossPercent(parseInt(e.target.value))}
-                        />
                     </div>
 
                     <div className="flex items-center justify-between text-[10px] bg-slate-50 p-2 rounded border border-slate-100 text-slate-500">
