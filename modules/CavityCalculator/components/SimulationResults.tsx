@@ -23,7 +23,10 @@ interface Props {
     // We strictly need N* for analysis. 
     // We can iterate chartData to find max feasible N or rely on props.
     // 'activeN' usually points to 'n' in chartData.
-    nStar: number; // ADDED PROP
+    nStar: number;
+    dailyDemand: number;
+    availableSeconds?: number;
+    oee: number;
 }
 
 export const SimulationResults: React.FC<Props> = ({

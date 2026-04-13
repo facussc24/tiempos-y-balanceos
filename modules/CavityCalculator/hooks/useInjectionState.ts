@@ -11,6 +11,14 @@ export const useInjectionState = (task: Task, projectTasks: Task[] = []) => {
         (task.injectionParams?.pCuringTime ? task.injectionParams.pCuringTime : 120).toString()
     );
 
+    const [injectionMode, setInjectionMode] = useState<'batch' | 'carousel'>(
+        task.injectionParams?.injectionMode || 'batch'
+    );
+
+    const [indexTimeStr, setIndexTimeStr] = useState(
+        (task.injectionParams?.indexTime ? task.injectionParams.indexTime : 5).toString()
+    );
+
     // 2. MANUAL OPERATIONS
     // Merge internal manual ops with Project Tasks marked as concurrent with this machine
     const concurrentOps: ManualOperation[] = projectTasks
@@ -123,6 +131,10 @@ export const useInjectionState = (task: Task, projectTasks: Task[] = []) => {
 
         // Headcount
         headcountMode, setHeadcountMode,
-        userHeadcountStr, setUserHeadcountStr, updateHeadcount
+        userHeadcountStr, setUserHeadcountStr, updateHeadcount,
+
+        // Injection Extension
+        injectionMode, setInjectionMode,
+        indexTimeStr, setIndexTimeStr
     };
 };
