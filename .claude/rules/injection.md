@@ -10,7 +10,20 @@ Leer `docs/GUIA_INYECCION.md` antes de editar cualquier AMFE, CP o HO de inyecci
 - **family.name**: "Proceso de Inyeccion Plastica"
 - **AMFE master document_id**: `4a5fa0d1-46ee-4d6b-b699-2cbaeb14602c`
 - **amfe_number**: AMFE-MAESTRO-INY-001
-- CP master document_id: TBD (crear en Fase 5)
+- **CP master document_id**: `81b60cdd-1296-4821-a348-a8e3c2433b0d`
+- **cp_number**: CP-MAESTRO-INY-001
+- **Operaciones**: OP 20 (Inyeccion) + OP 30 (Control Dimensional + Corte Colada)
+- **NOTA**: OP 10 (Recepcion) fue movida al Maestro de Logistica y Recepcion (family 16)
+
+## Maestro de Logistica y Recepcion en Supabase
+- **family_id**: 16
+- **family.name**: "Proceso de Logistica y Recepcion"
+- **AMFE master document_id**: `ef327ae0-c147-4716-ba22-601cedf5b3d1`
+- **amfe_number**: AMFE-MAESTRO-LOG-REC-001
+- **CP master document_id**: `34943c75-b9ad-4284-8dd6-d491d1dccf95`
+- **cp_number**: CP-MAESTRO-LOG-REC-001
+- **Operaciones**: OP 10 (Recepcion y Preparacion de Materia Prima)
+- **Justificacion**: AIAG CP 2024 "Procesos Interdependientes" — recepcion es transversal a multiples procesos
 
 ## 6M obligatorio para operacion de INYECCION
 
@@ -71,12 +84,12 @@ NUNCA "Capacitacion" como unico prevention control. PROHIBIDO "Falta de capacita
 | Flamabilidad | Certificado de laboratorio por lote (TL 1010 VW u otras) |
 | Material contaminado | Certificado de proveedor + filtro en aspiradora |
 
-## Operaciones esperadas en un proceso completo de inyeccion
+## Operaciones en el Maestro de Inyeccion (family 15)
 
-- **OP 10: RECEPCION DE MATERIA PRIMA (o PREPARACION Y SECADO)** — certificado proveedor, secado de higroscopicos (ABS/PC a 80-120 C, 2-4 h), carga de tolva
-- **OP 20: INYECCION** — ciclo de inyeccion, zonas de temperatura, refrigeracion del tornillo
-- **OP 30: CONTROL DIMENSIONAL / DESMOLDEO / CORTE DE COLADA** — retiro manual de colada, control visual de operador, calibre
-- **OP 40: MANTENIMIENTO PREVENTIVO DE MOLDE (condicional)** — por golpes u horas de trabajo, limpieza interna/externa, lubricacion, revision de bujes/expulsores/columnas
+- **OP 20: INYECCION DE TERMOPLASTICO** — ciclo de inyeccion, zonas de temperatura, refrigeracion del tornillo
+- **OP 30: CONTROL DIMENSIONAL POST-INYECCION Y CORTE DE COLADA** — retiro manual de colada, control visual de operador, calibre
+
+**NOTA:** La recepcion de materia prima esta en el Maestro de Logistica (family 16). El mantenimiento de molde es condicional y se documenta por producto.
 
 ## Materiales higroscopicos (requieren presecado)
 
