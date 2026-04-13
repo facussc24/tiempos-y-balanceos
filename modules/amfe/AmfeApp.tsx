@@ -94,7 +94,7 @@ const APQP_TAB_LABELS: Record<string, string> = {
     hojaOperaciones: 'Hojas de Operaciones',
 };
 
-type ActivePanel = 'none' | 'projects' | 'summary' | 'library' | 'registry' | 'templates';
+type ActivePanel = 'none' | 'projects' | 'summary' | 'library' | 'registry' | 'templates' | 'masters';
 
 const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab, initialFamilyId, onFamilyIdConsumed }) => {
     const [activePanel, setActivePanel] = useState<ActivePanel>('none');
@@ -120,6 +120,8 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab, initialF
     const setShowLibrary = (v: boolean) => setActivePanel(v ? 'library' : 'none');
     const setShowRegistry = (v: boolean) => setActivePanel(v ? 'registry' : 'none');
     const setShowTemplates = (v: boolean) => setActivePanel(v ? 'templates' : 'none');
+    const showMasters = activePanel === 'masters';
+    const setShowMasters = (v: boolean) => setActivePanel(v ? 'masters' : 'none');
 
     // 1. Initialize AMFE Logic
     const amfe = useAmfe();
@@ -159,6 +161,29 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab, initialF
         confirm.requestConfirm,
         !!initialFamilyId  // skip localStorage auto-load when navigating from landing page with a specific family
     );
+
+    // Load master AMFE from family library panel
+    const handleLoadMasterDocument = useCallback(async (documentId: string) => {
+        try {
+            const { loadAmfeDocument } = await import('../../utils/repositories/amfeRepository');
+            const result = await loadAmfeDocument(documentId);
+            if (!result) {
+                toast.error('Error', 'No se pudo cargar el documento maestro');
+                return;
+            }
+            const parts = result.meta.projectName.split('/');
+            if (parts.length === 3) {
+                const [client, project, name] = parts;
+                projects.loadHierarchicalProject(client, project, name);
+            } else {
+                projects.loadSelectedProject(result.meta.projectName);
+            }
+            setActivePanel('none');
+        } catch (err) {
+            logger.error('AmfeApp', 'Error al cargar maestro', {}, err instanceof Error ? err : undefined);
+            toast.error('Error', 'Error al cargar el documento maestro');
+        }
+    }, [projects, setActivePanel]);
 
     // Cross-user edit lock
     const documentLock = useDocumentLock(projects.currentProject, 'amfe');
@@ -919,6 +944,8 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab, initialF
                 setShowSummary={setShowSummary}
                 showLibrary={showLibrary}
                 setShowLibrary={setShowLibrary}
+                showMasters={showMasters}
+                setShowMasters={setShowMasters}
                 showProjectPanel={showProjectPanel}
                 setShowProjectPanel={setShowProjectPanel}
                 setShowRegistry={setShowRegistry}
@@ -994,6 +1021,8 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab, initialF
                 setActivePanel={setActivePanel}
                 projects={projects}
                 data={amfe.data}
+                onLoadMasterDocument={handleLoadMasterDocument}
+                currentDocumentId={projects.currentDocumentId}
             />
 
             {/* Draft Recovery Banner */}

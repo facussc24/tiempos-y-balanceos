@@ -247,3 +247,27 @@ Esto afectaba a los 6 AMFEs VWA (HEADREST_FRONT, HEADREST_REAR_CEN, HEADREST_REA
 - SVGs inline mini (24x16 viewBox) para leyenda compacta perfectamente alineada
 - Script genTestPfd.ts para regenerar HTML sin depender del dev server
 - flowStyles.ts con CSS utilities embebidas para export standalone
+
+---
+
+## 2026-04-12 — Auditoria Maestro de Inyeccion (AMFE + CP)
+
+### Hallazgos y correcciones
+
+1. **cause_count desincronizado**: metadata decia 28, real era 65. Fix: re-sync a 65.
+2. **CP items incompletos**: items [5],[14],[15],[16] tenian controlMethod y processCharacteristic vacios. Llenados con metodos correctos de otros CPs.
+3. **operationFunction no propagado**: HF/HRC/HRO OP40 tenian operationFunction vacio a pesar de que el maestro lo tenia. Propagado a los 3 AMFEs.
+4. **approvedBy vacio en header AMFE maestro**: seteado a "Carlos Baptista".
+
+### Causas raiz criticas
+
+1. **Nombre de campo incorrecto para failure modes**: Los modos de falla estan en `fn.failures`, NO en `fn.failureModes`. Tres agentes auditores contaron 0 causas porque usaban el campo equivocado. REGLA: SIEMPRE usar `fn.failures` al recorrer funciones del AMFE.
+2. **RLS bloquea queries sin autenticacion**: La anon key de Supabase devuelve 0 filas. TODOS los scripts DEBEN llamar `sb.auth.signInWithPassword()` antes de cualquier query. Un agente reporto "tablas vacias" por no autenticarse.
+3. **Metadata nunca re-sincronizada**: cause_count no se actualizo despues de agregar causas al maestro. Todo script que agregue/elimine causas debe re-sincronizar metadata.
+4. **Generador de CP incompleto**: El script de generacion no llenaba controlMethod para todos los items. Verificar campos requeridos post-generacion.
+5. **Propagacion incompleta**: operationFunction no estaba incluido en la propagacion cross-family. El codigo de propagacion debe incluir este campo.
+
+### Reglas nuevas
+
+- **AUTENTICACION OBLIGATORIA**: Todo script .mjs que consulte Supabase DEBE autenticarse con `signInWithPassword()` ANTES de hacer queries. Sin esto, RLS devuelve 0 filas y el script reporta falsos resultados.
+- **Campo de failure modes**: Es `fn.failures`, NO `fn.failureModes`. Verificar en cualquier script o agente que recorra la estructura del AMFE.

@@ -4,10 +4,10 @@ import {
     FolderOpen, Check, Clock, WifiOff, HardDrive,
     BarChart3, FileSpreadsheet, Library, Loader2,
     Hash, MoreHorizontal, Undo2, Redo2, FileText,
-    Eye, Pencil, HelpCircle, Copy, BookOpen, GitBranch, Download, Upload,
+    Eye, Pencil, HelpCircle, Copy, BookOpen, GitBranch, Download, Upload, Crown,
 } from 'lucide-react';
 
-type ActivePanel = 'none' | 'projects' | 'summary' | 'library' | 'registry' | 'templates';
+type ActivePanel = 'none' | 'projects' | 'summary' | 'library' | 'registry' | 'templates' | 'masters';
 
 interface AmfeToolbarProps {
     // Project info
@@ -32,6 +32,8 @@ interface AmfeToolbarProps {
     setShowSummary: (v: boolean) => void;
     showLibrary: boolean;
     setShowLibrary: (v: boolean) => void;
+    showMasters: boolean;
+    setShowMasters: (v: boolean) => void;
     showProjectPanel: boolean;
     setShowProjectPanel: (v: boolean) => void;
     setShowRegistry: (v: boolean) => void;
@@ -84,6 +86,8 @@ const AmfeToolbar: React.FC<AmfeToolbarProps> = ({
     setShowSummary,
     showLibrary,
     setShowLibrary,
+    showMasters,
+    setShowMasters,
     showProjectPanel,
     setShowProjectPanel,
     setShowRegistry,
@@ -197,6 +201,14 @@ const AmfeToolbar: React.FC<AmfeToolbarProps> = ({
                         title="Biblioteca de operaciones">
                         <Library size={15} />
                         <span className="hidden sm:inline">Biblioteca</span>
+                    </button>
+
+                    {/* Masters Library Toggle */}
+                    <button onClick={() => setShowMasters(!showMasters)}
+                        className={`flex items-center gap-1.5 border px-3 py-2 rounded transition font-medium text-xs ${showMasters ? 'bg-amber-50 border-amber-300 text-amber-700' : 'bg-gray-100 hover:bg-gray-200 border-gray-300 text-slate-700'}`}
+                        title="Biblioteca de AMFEs Maestros">
+                        <Crown size={15} />
+                        <span className="hidden sm:inline">Maestros</span>
                     </button>
 
                     {/* Undo / Redo */}

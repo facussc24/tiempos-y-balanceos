@@ -28,7 +28,7 @@ export interface DbAdapter {
 // Schema DDL
 // ---------------------------------------------------------------------------
 
-const SCHEMA_VERSION = 16;
+const SCHEMA_VERSION = 17;
 
 const SCHEMA_DDL = `
 -- Version tracking
@@ -191,7 +191,7 @@ CREATE INDEX IF NOT EXISTS idx_pfd_linked_amfe_project ON pfd_documents(linked_a
 -- Unified drafts (replaces 4 IndexedDB databases)
 CREATE TABLE IF NOT EXISTS drafts (
     id              INTEGER PRIMARY KEY AUTOINCREMENT,
-    module          TEXT NOT NULL CHECK(module IN ('project','amfe','cp','ho','pfd')),
+    module          TEXT NOT NULL CHECK(module IN ('project','amfe','cp','ho','pfd','8d')),
     document_key    TEXT NOT NULL,
     data            TEXT NOT NULL,
     created_at      TEXT NOT NULL DEFAULT (datetime('now')),
@@ -280,6 +280,32 @@ CREATE INDEX IF NOT EXISTS idx_solicitud_tipo ON solicitud_documents(tipo);
 CREATE INDEX IF NOT EXISTS idx_solicitud_status ON solicitud_documents(status);
 CREATE INDEX IF NOT EXISTS idx_solicitud_updated ON solicitud_documents(updated_at DESC);
 CREATE INDEX IF NOT EXISTS idx_solicitud_solicitante ON solicitud_documents(solicitante);
+
+-- 8D Reports (G8D problem solving)
+CREATE TABLE IF NOT EXISTS eight_d_documents (
+    id                  TEXT PRIMARY KEY,
+    report_number       TEXT NOT NULL UNIQUE,
+    title               TEXT NOT NULL DEFAULT '',
+    status              TEXT NOT NULL DEFAULT 'abierto'
+                        CHECK(status IN ('abierto','en_proceso','cerrado')),
+    urgency             TEXT NOT NULL DEFAULT 'media'
+                        CHECK(urgency IN ('baja','media','alta','critica')),
+    client              TEXT NOT NULL DEFAULT '',
+    part_number         TEXT NOT NULL DEFAULT '',
+    leader              TEXT NOT NULL DEFAULT '',
+    root_cause          TEXT NOT NULL DEFAULT '',
+    created_at          TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at          TEXT NOT NULL DEFAULT (datetime('now')),
+    created_by          TEXT NOT NULL DEFAULT '',
+    updated_by          TEXT NOT NULL DEFAULT '',
+    data                TEXT NOT NULL,
+    checksum            TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_8d_status ON eight_d_documents(status);
+CREATE INDEX IF NOT EXISTS idx_8d_urgency ON eight_d_documents(urgency);
+CREATE INDEX IF NOT EXISTS idx_8d_updated ON eight_d_documents(updated_at DESC);
+CREATE INDEX IF NOT EXISTS idx_8d_report_number ON eight_d_documents(report_number);
 
 -- Product catalog (articles / customer product codes)
 CREATE TABLE IF NOT EXISTS products (
@@ -814,6 +840,43 @@ async function runMigrations(adapter: DbAdapter): Promise<void> {
             [16, 'Add deleted_documents trash table for soft-delete recovery']
         );
         logger.info('Database', 'Migration 16: deleted_documents trash table created');
+    }
+
+    // Migration 16 → 17: Add eight_d_documents table for G8D problem solving
+    if (currentVersion < 17) {
+        try {
+            await adapter.execute(`CREATE TABLE IF NOT EXISTS eight_d_documents (
+                id                  TEXT PRIMARY KEY,
+                report_number       TEXT NOT NULL UNIQUE,
+                title               TEXT NOT NULL DEFAULT '',
+                status              TEXT NOT NULL DEFAULT 'abierto'
+                                    CHECK(status IN ('abierto','en_proceso','cerrado')),
+                urgency             TEXT NOT NULL DEFAULT 'media'
+                                    CHECK(urgency IN ('baja','media','alta','critica')),
+                client              TEXT NOT NULL DEFAULT '',
+                part_number         TEXT NOT NULL DEFAULT '',
+                leader              TEXT NOT NULL DEFAULT '',
+                root_cause          TEXT NOT NULL DEFAULT '',
+                created_at          TEXT NOT NULL DEFAULT (datetime('now')),
+                updated_at          TEXT NOT NULL DEFAULT (datetime('now')),
+                created_by          TEXT NOT NULL DEFAULT '',
+                updated_by          TEXT NOT NULL DEFAULT '',
+                data                TEXT NOT NULL,
+                checksum            TEXT
+            )`);
+            await adapter.execute(`CREATE INDEX IF NOT EXISTS idx_8d_status ON eight_d_documents(status)`);
+            await adapter.execute(`CREATE INDEX IF NOT EXISTS idx_8d_urgency ON eight_d_documents(urgency)`);
+            await adapter.execute(`CREATE INDEX IF NOT EXISTS idx_8d_updated ON eight_d_documents(updated_at DESC)`);
+            await adapter.execute(`CREATE INDEX IF NOT EXISTS idx_8d_report_number ON eight_d_documents(report_number)`);
+        } catch (e) {
+            logger.warn('Database', 'Migration 17: eight_d_documents table creation skipped', {}, e instanceof Error ? e : undefined);
+        }
+
+        await adapter.execute(
+            `INSERT OR REPLACE INTO schema_version (version, description) VALUES (?, ?)`,
+            [17, 'Add eight_d_documents table for G8D problem solving']
+        );
+        logger.info('Database', 'Migration 17: eight_d_documents table created');
     }
 }
 

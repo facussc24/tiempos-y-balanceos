@@ -5,9 +5,10 @@ import {
 } from 'lucide-react';
 import AmfeRegistryView from './AmfeRegistryView';
 import AmfeSummary from './AmfeSummary';
+import AmfeMasterLibraryPanel from './AmfeMasterLibraryPanel';
 import type { AmfeDocument } from './amfeTypes';
 
-type ActivePanel = 'none' | 'projects' | 'summary' | 'library' | 'registry' | 'templates';
+type ActivePanel = 'none' | 'projects' | 'summary' | 'library' | 'registry' | 'templates' | 'masters';
 
 interface AmfeSideDrawerProps {
     activePanel: ActivePanel;
@@ -38,13 +39,16 @@ interface AmfeSideDrawerProps {
         deleteSelectedProject: (name: string) => void;
     };
     data: AmfeDocument;
+    onLoadMasterDocument?: (docId: string) => void;
+    currentDocumentId?: string | null;
 }
 
-const AmfeSideDrawer: React.FC<AmfeSideDrawerProps> = ({ activePanel, setActivePanel, projects, data }) => {
+const AmfeSideDrawer: React.FC<AmfeSideDrawerProps> = ({ activePanel, setActivePanel, projects, data, onLoadMasterDocument, currentDocumentId }) => {
     const showProjectPanel = activePanel === 'projects';
     const showRegistry = activePanel === 'registry';
     const showSummary = activePanel === 'summary';
-    const isOpen = showProjectPanel || showRegistry || showSummary;
+    const showMasters = activePanel === 'masters';
+    const isOpen = showProjectPanel || showRegistry || showSummary || showMasters;
 
     // Track when the drawer opens to ignore the opening click event
     const openedAtRef = useRef(0);
@@ -343,6 +347,15 @@ const AmfeSideDrawer: React.FC<AmfeSideDrawerProps> = ({ activePanel, setActiveP
                     <div className="p-5 overflow-y-auto max-h-[calc(100vh-2rem)]">
                         <AmfeSummary data={data} />
                     </div>
+                )}
+
+                {/* Masters Library Panel */}
+                {showMasters && (
+                    <AmfeMasterLibraryPanel
+                        onLoadDocument={(docId) => onLoadMasterDocument?.(docId)}
+                        onClose={() => setActivePanel('none')}
+                        currentDocumentId={currentDocumentId}
+                    />
                 )}
             </div>
         </div>

@@ -34,10 +34,12 @@ const PfdTestRoute = lazy(() => import('./modules/pfd/PfdTestRoute'));
 const PfdSvgAudit = lazy(() => import('./modules/pfd/PfdSvgAudit'));
 const AdminPanel = lazy(() => import('./modules/admin/AdminPanel'));
 const ApqpDashboard = lazy(() => import('./modules/dashboard/ApqpDashboard'));
+const FlowchartApp = lazy(() => import('./modules/flowchart/FlowchartApp'));
+const EightDApp = lazy(() => import('./modules/eightD/EightDApp'));
 
-type AppMode = 'landing' | 'dashboard' | 'pfd' | 'pfdTest' | 'pfdSvgAudit' | 'tiempos' | 'amfe' | 'controlPlan' | 'hojaOperaciones' | 'registry' | 'solicitud' | 'manuales' | 'formatos' | 'dataManager' | 'admin';
+type AppMode = 'landing' | 'dashboard' | 'pfd' | 'pfdTest' | 'pfdSvgAudit' | 'tiempos' | 'amfe' | 'controlPlan' | 'hojaOperaciones' | 'registry' | 'solicitud' | 'manuales' | 'formatos' | 'dataManager' | 'admin' | 'flowchart' | '8dReports';
 
-const VALID_MODES = new Set<AppMode>(['landing', 'dashboard', 'pfd', 'pfdTest', 'pfdSvgAudit', 'tiempos', 'amfe', 'controlPlan', 'hojaOperaciones', 'registry', 'solicitud', 'manuales', 'formatos', 'dataManager', 'admin']);
+const VALID_MODES = new Set<AppMode>(['landing', 'dashboard', 'pfd', 'pfdTest', 'pfdSvgAudit', 'tiempos', 'amfe', 'controlPlan', 'hojaOperaciones', 'registry', 'solicitud', 'manuales', 'formatos', 'dataManager', 'admin', 'flowchart', '8dReports']);
 const LS_KEY_MODE = 'barack_lastModule';
 
 const LoadingFallback: React.FC = () => (
@@ -85,7 +87,7 @@ const AppRouterInner: React.FC = () => {
         return () => { cancelled = true; };
     }, []);
 
-    const handleSelectModule = useCallback((module: 'dashboard' | 'pfd' | 'pfdTest' | 'pfdSvgAudit' | 'tiempos' | 'amfe' | 'controlPlan' | 'hojaOperaciones' | 'registry' | 'solicitud' | 'manuales' | 'formatos' | 'dataManager' | 'admin') => {
+    const handleSelectModule = useCallback((module: 'dashboard' | 'pfd' | 'pfdTest' | 'pfdSvgAudit' | 'tiempos' | 'amfe' | 'controlPlan' | 'hojaOperaciones' | 'registry' | 'solicitud' | 'manuales' | 'formatos' | 'dataManager' | 'admin' | 'flowchart' | '8dReports') => {
         setCurrentMode(module);
         try { localStorage.setItem(LS_KEY_MODE, module); } catch { /* ignore */ }
     }, []);
@@ -208,6 +210,16 @@ const AppRouterInner: React.FC = () => {
                         {currentMode === 'admin' && (
                             <ModuleErrorBoundary moduleName="Administración" onNavigateHome={handleBackToLanding}>
                                 <AdminPanel onBackToLanding={handleBackToLanding} />
+                            </ModuleErrorBoundary>
+                        )}
+                        {currentMode === 'flowchart' && (
+                            <ModuleErrorBoundary moduleName="Flujograma Estático" onNavigateHome={handleBackToLanding}>
+                                <FlowchartApp />
+                            </ModuleErrorBoundary>
+                        )}
+                        {currentMode === '8dReports' && (
+                            <ModuleErrorBoundary moduleName="Reportes 8D" onNavigateHome={handleBackToLanding}>
+                                <EightDApp onBackToLanding={handleBackToLanding} />
                             </ModuleErrorBoundary>
                         )}
                     </Suspense>

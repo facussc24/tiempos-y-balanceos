@@ -17,7 +17,7 @@ import {
     WifiOff, HardDrive, LayoutList, ShieldCheck,
     Eye, Pencil, ChevronUp, ChevronDown,
     Search, Filter, Undo2, Redo2, MoreHorizontal, BarChart3, HelpCircle, LayoutTemplate,
-    Link2, ExternalLink, GitBranch, Download, Upload,
+    Link2, ExternalLink, GitBranch, Download, Upload, Crown,
 } from 'lucide-react';
 import { logger } from '../../utils/logger';
 import ProductSelector from '../../components/ui/ProductSelector';
@@ -55,6 +55,8 @@ interface CpToolbarProps {
     setShowProjectPanel: (v: boolean) => void;
     showSummary: boolean;
     setShowSummary: (v: boolean) => void;
+    showMasters?: boolean;
+    setShowMasters?: (v: boolean) => void;
     showOverflowMenu: boolean;
     setShowOverflowMenu: (v: boolean) => void;
     setShowHelp: (v: boolean) => void;
@@ -126,6 +128,7 @@ const CpToolbar: React.FC<CpToolbarProps> = (props) => {
         currentProject, saveStatus, hasUnsavedChanges, networkAvailable, lastAutoSave,
         projects, saveCurrentProject, refreshProjects, loadSelectedProject, deleteSelectedProject, createNewProject,
         showProjectPanel, setShowProjectPanel, showSummary, setShowSummary,
+        showMasters, setShowMasters,
         showOverflowMenu, setShowOverflowMenu, setShowHelp, setShowTemplates,
         canUndo, canRedo, onUndo, onRedo,
         headerCollapsed, setHeaderCollapsed, headerSummary, header, onHeaderChange, inputClass,
@@ -300,6 +303,17 @@ const CpToolbar: React.FC<CpToolbarProps> = (props) => {
                                 <BarChart3 size={15} />
                                 <span className="hidden sm:inline">Resumen</span>
                             </button>
+                            {/* Masters Library Toggle */}
+                            {setShowMasters && (
+                                <button onClick={() => setShowMasters(!showMasters)}
+                                    className={`flex items-center gap-1.5 border px-3 py-2 rounded transition font-medium text-xs ${
+                                        showMasters ? 'bg-amber-50 border-amber-300 text-amber-700' : 'bg-gray-100 hover:bg-gray-200 border-gray-300 text-slate-700'
+                                    }`}
+                                    title="Biblioteca de CPs Maestros">
+                                    <Crown size={15} />
+                                    <span className="hidden sm:inline">Maestros</span>
+                                </button>
+                            )}
                             <div className="w-px h-6 bg-gray-300 mx-0.5" />
                             {/* Undo/Redo */}
                             <div className="flex border border-gray-300 rounded overflow-hidden">

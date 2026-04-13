@@ -29,7 +29,7 @@ import { deleteDraft } from './useAmfePersistence';
 import { logger } from '../../utils/logger';
 import { loadAmfeByProjectName } from '../../utils/repositories/amfeRepository';
 import { triggerOverrideTracking } from '../../core/inheritance/triggerOverrideTracking';
-import { triggerChangePropagation } from '../../core/inheritance/changePropagation';
+import { triggerChangePropagation, triggerCrossFamilyPropagation } from '../../core/inheritance/changePropagation';
 import { toast } from '../../components/ui/Toast';
 
 /** Identifies the current open project in the hierarchy */
@@ -413,6 +413,11 @@ export const useAmfeProjects = (
                         // Fire-and-forget: propagate master changes to variants
                         if (oldAmfeDoc) {
                             triggerChangePropagation(loaded.meta.id, oldAmfeDoc, currentData, 'amfe');
+                            // Fire-and-forget: cross-family propagation for
+                            // process-masters (families whose name starts with
+                            // "Proceso de"). Wrapper is a no-op for everything
+                            // else and never throws.
+                            triggerCrossFamilyPropagation(loaded.meta.id, oldAmfeDoc, currentData, 'amfe');
                         }
                     }
                 } catch { /* override tracking is non-critical */ }

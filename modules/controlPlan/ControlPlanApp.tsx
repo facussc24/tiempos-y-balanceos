@@ -37,7 +37,8 @@ import { useDocumentLock } from '../../hooks/useDocumentLock';
 import DocumentLockBanner from '../../components/ui/DocumentLockBanner';
 import { useCrossDocAlerts } from '../../hooks/useCrossDocAlerts';
 import { getNextRevisionLevel } from '../../utils/revisionUtils';
-import { Plus, XCircle, Eye } from 'lucide-react';
+import { Plus, XCircle, Eye, X } from 'lucide-react';
+import AmfeMasterLibraryPanel from '../amfe/AmfeMasterLibraryPanel';
 import { useShortcutHints } from '../../hooks/useShortcutHints';
 import { toast } from '../../components/ui/Toast';
 import { ShortcutHintsOverlay } from '../../components/ui/ShortcutHintsOverlay';
@@ -72,6 +73,7 @@ const ControlPlanApp: React.FC<Props> = ({ onBackToLanding, embedded, initialDat
     const [showOverflowMenu, setShowOverflowMenu] = useState(false);
     const [showHelp, setShowHelp] = useState(false);
     const [showTemplates, setShowTemplates] = useState(false);
+    const [showMasters, setShowMasters] = useState(false);
     const [validationIssues, setValidationIssues] = useState<CpValidationIssue[] | null>(null);
     const [autoValidationCount, setAutoValidationCount] = useState(0);
     const [autoValidationHasErrors, setAutoValidationHasErrors] = useState(false);
@@ -132,6 +134,23 @@ const ControlPlanApp: React.FC<Props> = ({ onBackToLanding, embedded, initialDat
         handleResetProject,
         confirm.requestConfirm
     );
+
+    // Load master CP from family library panel
+    const handleLoadMasterCp = useCallback(async (documentId: string) => {
+        try {
+            const { loadCpDocument } = await import('../../utils/repositories/cpRepository');
+            const result = await loadCpDocument(documentId);
+            if (!result) {
+                toast.error('Error', 'No se pudo cargar el CP maestro');
+                return;
+            }
+            handleLoadProject(result);
+            setShowMasters(false);
+        } catch (err) {
+            logger.error('ControlPlanApp', 'Error al cargar CP maestro', {}, err instanceof Error ? err : undefined);
+            toast.error('Error', 'Error al cargar el CP maestro');
+        }
+    }, [handleLoadProject]);
 
     // Pre-save validation wrapper
     const saveWithValidation = useCallback(async () => {
@@ -475,6 +494,8 @@ const ControlPlanApp: React.FC<Props> = ({ onBackToLanding, embedded, initialDat
                 setShowProjectPanel={setShowProjectPanel}
                 showSummary={showSummary}
                 setShowSummary={setShowSummary}
+                showMasters={showMasters}
+                setShowMasters={setShowMasters}
                 showOverflowMenu={showOverflowMenu}
                 setShowOverflowMenu={setShowOverflowMenu}
                 setShowHelp={setShowHelp}
@@ -631,6 +652,24 @@ const ControlPlanApp: React.FC<Props> = ({ onBackToLanding, embedded, initialDat
                     {projects.currentProject && <span className="ml-4 text-gray-400">Proyecto: <strong className="text-teal-600">{projects.currentProject}</strong></span>}
                 </div>
             </div>
+
+            {/* Masters Library Overlay */}
+            {showMasters && (
+                <div className="fixed inset-0 z-50 flex justify-end" role="presentation">
+                    <div className="absolute inset-0 bg-black/20 animate-in fade-in duration-150" onClick={() => setShowMasters(false)} />
+                    <div className="relative w-[480px] max-w-full bg-white shadow-2xl overflow-y-auto animate-in slide-in-from-right" onClick={e => e.stopPropagation()}>
+                        <button onClick={() => setShowMasters(false)} className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 z-10" aria-label="Cerrar panel">
+                            <X size={18} />
+                        </button>
+                        <AmfeMasterLibraryPanel
+                            module="cp"
+                            onLoadDocument={handleLoadMasterCp}
+                            onClose={() => setShowMasters(false)}
+                            currentDocumentId={projects.currentDocumentId}
+                        />
+                    </div>
+                </div>
+            )}
 
             {/* Confirm Modal */}
             <ConfirmModal

@@ -61,6 +61,12 @@ const SECTIONS: SidebarSection[] = [
         ],
     },
     {
+        title: 'Calidad',
+        items: [
+            { label: 'Reportes 8D', mode: '8dReports', icon: <ClipboardCheck size={18} /> },
+        ],
+    },
+    {
         title: 'Gestion',
         items: [
             { label: 'Solicitudes', mode: 'solicitud', icon: <FileEdit size={18} /> },

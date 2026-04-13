@@ -20,11 +20,13 @@ import {
     createProposal,
     type FamilyDocument,
 } from '../../utils/repositories/familyDocumentRepository';
+import { getFamilyById } from '../../utils/repositories/familyRepository';
+import { createCrossFamilyAlert } from '../../utils/crossDocumentAlerts';
 
 import type { DocumentModule } from './documentInheritance';
 
 // Module document types
-import type { AmfeDocument } from '../../modules/amfe/amfeTypes';
+import type { AmfeDocument, AmfeOperation } from '../../modules/amfe/amfeTypes';
 import type { PfdDocument } from '../../modules/pfd/pfdTypes';
 import type { ControlPlanDocument } from '../../modules/controlPlan/controlPlanTypes';
 import type { HoDocument } from '../../modules/hojaOperaciones/hojaOperacionesTypes';
@@ -289,6 +291,325 @@ export function triggerChangePropagation(
         } catch (err) {
             const message = err instanceof Error ? err.message : String(err);
             logger.error(LOG_TAG, `Change propagation failed for document ${documentId}`, { error: message }, err instanceof Error ? err : undefined);
+            // Never throw — fire and forget
+        }
+    })();
+}
+
+// =============================================================================
+// CROSS-FAMILY PROPAGATION (process-master → product AMFEs)
+// =============================================================================
+
+const CROSS_FAMILY_LOG_TAG = 'CrossFamilyPropagation';
+
+/**
+ * Result summary for a cross-family propagation run.
+ */
+export interface CrossFamilyPropagationResult {
+    scannedDocs: number;
+    affectedDocs: number;
+    alertsCreated: number;
+    /** Per-doc details of matches, useful for reports. */
+    matches: Array<{
+        targetDocId: string;
+        targetSubject: string;
+        matchedOperationNames: string[];
+    }>;
+}
+
+/**
+ * Normalize an operation name for tolerant matching:
+ * - Uppercase
+ * - Trim
+ * - Strip diacritics (NFD + \p{Diacritic})
+ */
+export function normalizeOperationName(raw: unknown): string {
+    if (typeof raw !== 'string') return '';
+    return raw
+        .toUpperCase()
+        .trim()
+        .normalize('NFD')
+        .replace(/\p{Diacritic}/gu, '');
+}
+
+/** Stopwords excluded from substring matching to avoid spurious hits. */
+const SUBSTRING_STOPWORDS = new Set(['DE', 'Y', 'DEL', 'LA', 'EL', 'EN', 'A', 'O']);
+
+/**
+ * Tokens that, when present in a target op name alongside a match, indicate
+ * the target is a different physical process even if the master token matches.
+ * Example: the plastic injection master matches "INYECCION PU" via rule 2, but
+ * PU (polyurethane) is chemically and mechanically different — no tornillo, no
+ * drying, no mold temperature profile. Exclude it.
+ */
+const INCOMPATIBLE_PROCESS_MARKERS = ['PU', 'POLIURETANO', 'POLYURETHANE', 'PUR', 'ESPUMADO'];
+
+/**
+ * Extract normalized operation names from an AMFE document, tolerating both
+ * `name`/`operationName` aliases and filtering out empty strings.
+ */
+function extractMasterOperationNames(doc: AmfeDocument | null | undefined): string[] {
+    if (!doc || !Array.isArray(doc.operations)) return [];
+    const names = new Set<string>();
+    for (const op of doc.operations) {
+        const raw = (op as AmfeOperation & { operationName?: string }).name
+            ?? (op as AmfeOperation & { operationName?: string }).operationName
+            ?? '';
+        const norm = normalizeOperationName(raw);
+        if (norm) names.add(norm);
+    }
+    return [...names];
+}
+
+/**
+ * Check whether a normalized target op name matches any of the normalized
+ * master op names. Matching is ASYMMETRIC on purpose:
+ *
+ *  1. Exact normalized equality → match, OR
+ *  2. Master op name appears as a full-token substring inside the target op
+ *     (e.g. master "INYECCION" matches target "INYECCION DE SUSTRATO",
+ *     "INYECCION DE PIEZA PLASTICA", etc.).
+ *
+ * We deliberately do NOT match in the other direction (target tokens inside
+ * master) because a master's incidental token does not imply the target is
+ * semantically related. A master like "CONTROL DIMENSIONAL POST-INYECCION Y
+ * CORTE DE COLADA" should NOT pull every AMFE that happens to have a
+ * "CONTROL FINAL" or "CORTE" operation into its alert list.
+ *
+ * Process-master AMFEs should keep operation names succinct (e.g. the single
+ * word "INYECCION") so Rule 2 does the right thing on all product AMFEs that
+ * derive from that process.
+ *
+ * Returns the matched master op name, or null if no match.
+ */
+export function matchOperationName(
+    targetNormName: string,
+    masterNormNames: readonly string[],
+): string | null {
+    if (!targetNormName) return null;
+    // Rule 1: exact match
+    for (const master of masterNormNames) {
+        if (master === targetNormName) return master;
+    }
+    // Rule 2: master op is a full-token substring of the target.
+    // Rejected if the target carries an incompatible-process marker (e.g.
+    // "INYECCION PU" for a plastic injection master).
+    for (const master of masterNormNames) {
+        if (!master || master.length < 6) continue;
+        if (SUBSTRING_STOPWORDS.has(master)) continue;
+        if (!containsWholeWord(targetNormName, master)) continue;
+        const hasIncompatibleMarker = INCOMPATIBLE_PROCESS_MARKERS.some(marker =>
+            containsWholeWord(targetNormName, marker),
+        );
+        if (hasIncompatibleMarker) continue;
+        return master;
+    }
+    return null;
+}
+
+/** True when `needle` appears as a full word token inside `haystack`. */
+function containsWholeWord(haystack: string, needle: string): boolean {
+    if (!haystack || !needle) return false;
+    if (haystack === needle) return true;
+    const escaped = needle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const re = new RegExp(`(^|[^A-Z0-9])${escaped}([^A-Z0-9]|$)`);
+    return re.test(haystack);
+}
+
+/**
+ * Row shape returned by the minimal amfe_documents select below.
+ */
+interface AmfeCrossFamilyRow {
+    id: string;
+    subject: string;
+    project_name: string;
+    data: string | AmfeDocument;
+}
+
+/**
+ * Safe-parse the AMFE `data` column which Supabase stores as TEXT. When a
+ * scripts-based caller already hands us an object, we just return it.
+ */
+function parseAmfeData(raw: string | AmfeDocument | null | undefined): AmfeDocument | null {
+    if (raw == null) return null;
+    if (typeof raw === 'string') {
+        try {
+            return JSON.parse(raw) as AmfeDocument;
+        } catch {
+            return null;
+        }
+    }
+    if (typeof raw === 'object') return raw as AmfeDocument;
+    return null;
+}
+
+/**
+ * Propagate changes from a process-master AMFE (family name starts with
+ * "Proceso de") across every other AMFE document in the database, creating
+ * cross_doc_checks alerts on any AMFE whose operations match one of the
+ * master's operation names.
+ *
+ * Behavioral contract:
+ * - Only runs when the family name starts with "Proceso de".
+ * - Only runs for module === 'amfe' (initial feature scope).
+ * - Never throws — callers swallow errors via the trigger wrapper.
+ * - Never touches the family_change_proposals table (that belongs to
+ *   intra-family propagation, unaffected by this feature).
+ */
+export async function propagateMasterAcrossFamilies(params: {
+    familyId: number;
+    familyName: string;
+    module: string;
+    masterDocId: string;
+    // Kept for symmetry with intra-family propagation even though cross-family
+    // scan is content-agnostic (only looks at operation names of the new doc).
+    oldDoc: AnyDocument;
+    newDoc: AnyDocument;
+}): Promise<CrossFamilyPropagationResult> {
+    const empty: CrossFamilyPropagationResult = {
+        scannedDocs: 0,
+        affectedDocs: 0,
+        alertsCreated: 0,
+        matches: [],
+    };
+    const { familyId, familyName, module, masterDocId, oldDoc, newDoc } = params;
+
+    // Gate 1: only process-family masters trigger a cross-family scan.
+    if (!familyName || !familyName.trim().toLowerCase().startsWith('proceso de')) {
+        logger.debug(CROSS_FAMILY_LOG_TAG, 'Not a process-family master, skipping', { familyId, familyName });
+        return empty;
+    }
+    // Gate 2: only AMFE in this initial version.
+    if (module !== 'amfe') {
+        logger.debug(CROSS_FAMILY_LOG_TAG, 'Module is not AMFE, skipping', { module });
+        return empty;
+    }
+
+    // Extract normalized master operation names
+    const masterOpNames = extractMasterOperationNames(newDoc as AmfeDocument);
+    if (masterOpNames.length === 0) {
+        logger.debug(CROSS_FAMILY_LOG_TAG, 'Master has no operations, skipping', { masterDocId });
+        return empty;
+    }
+
+    // Gate 3: if the set of operation names is identical between oldDoc and
+    // newDoc (cosmetic-only change in header, or save-without-change), skip
+    // the scan. This prevents generating noise alerts and resetting
+    // acknowledged_at=NULL on already-dismissed alerts every time a user
+    // touches the header.
+    const oldOpNames = extractMasterOperationNames(oldDoc as AmfeDocument);
+    if (oldOpNames.length === masterOpNames.length) {
+        const oldSet = new Set(oldOpNames);
+        const unchanged = masterOpNames.every(n => oldSet.has(n));
+        if (unchanged) {
+            logger.debug(CROSS_FAMILY_LOG_TAG, 'Master operation set unchanged, skipping cross-family scan', { masterDocId });
+            return empty;
+        }
+    }
+
+    // Load all other amfe_documents
+    const db = await getDatabase();
+    const rows = await db.select<AmfeCrossFamilyRow>(
+        `SELECT id, subject, project_name, data FROM amfe_documents WHERE id != ?`,
+        [masterDocId],
+    );
+
+    const result: CrossFamilyPropagationResult = {
+        scannedDocs: rows.length,
+        affectedDocs: 0,
+        alertsCreated: 0,
+        matches: [],
+    };
+
+    const sourceRevision = (newDoc as AmfeDocument | undefined)?.header?.revision ?? '';
+    const sourceUpdated = new Date().toISOString();
+
+    for (const row of rows) {
+        const targetDoc = parseAmfeData(row.data);
+        if (!targetDoc || !Array.isArray(targetDoc.operations)) continue;
+
+        const matchedNames = new Set<string>();
+        for (const op of targetDoc.operations) {
+            const rawName = (op as AmfeOperation & { operationName?: string }).name
+                ?? (op as AmfeOperation & { operationName?: string }).operationName
+                ?? '';
+            const targetNorm = normalizeOperationName(rawName);
+            const matched = matchOperationName(targetNorm, masterOpNames);
+            if (matched) matchedNames.add(rawName.toString().trim());
+        }
+        if (matchedNames.size === 0) continue;
+
+        result.affectedDocs++;
+        const matchedList = [...matchedNames];
+        result.matches.push({
+            targetDocId: row.id,
+            targetSubject: row.subject || row.project_name || row.id,
+            matchedOperationNames: matchedList,
+        });
+
+        // Fire alert (one per affected doc)
+        const alertOk = await createCrossFamilyAlert({
+            sourceMasterId: masterDocId,
+            targetDocId: row.id,
+            matchedOperationNames: matchedList,
+            familyName,
+            sourceRevision,
+            sourceUpdated,
+        });
+        if (alertOk) result.alertsCreated++;
+    }
+
+    logger.info(CROSS_FAMILY_LOG_TAG, 'Cross-family propagation complete', {
+        masterDocId,
+        familyId,
+        familyName,
+        scannedDocs: result.scannedDocs,
+        affectedDocs: result.affectedDocs,
+        alertsCreated: result.alertsCreated,
+    });
+
+    return result;
+}
+
+/**
+ * Fire-and-forget wrapper for cross-family propagation. Mirrors the contract
+ * of `triggerChangePropagation`: never throws, runs async, logs its own
+ * errors.
+ */
+export function triggerCrossFamilyPropagation(
+    documentId: string,
+    oldDoc: AnyDocument,
+    newDoc: AnyDocument,
+    moduleType: DocumentModule,
+): void {
+    if (moduleType !== 'amfe') return;
+    void (async () => {
+        try {
+            const familyInfo = await getDocumentFamilyInfo(documentId);
+            if (!familyInfo || !familyInfo.isMaster) {
+                logger.debug(CROSS_FAMILY_LOG_TAG, `Document ${documentId} not a master in any family, skipping cross-family`);
+                return;
+            }
+            const family = await getFamilyById(familyInfo.familyId);
+            if (!family) {
+                logger.debug(CROSS_FAMILY_LOG_TAG, `Family ${familyInfo.familyId} not found, skipping`);
+                return;
+            }
+            if (!family.name.trim().toLowerCase().startsWith('proceso de')) {
+                logger.debug(CROSS_FAMILY_LOG_TAG, `Family "${family.name}" is not a process family, skipping cross-family`);
+                return;
+            }
+            await propagateMasterAcrossFamilies({
+                familyId: family.id,
+                familyName: family.name,
+                module: familyInfo.module,
+                masterDocId: documentId,
+                oldDoc,
+                newDoc,
+            });
+        } catch (err) {
+            const message = err instanceof Error ? err.message : String(err);
+            logger.error(CROSS_FAMILY_LOG_TAG, `Cross-family propagation failed for ${documentId}`, { error: message }, err instanceof Error ? err : undefined);
             // Never throw — fire and forget
         }
     })();

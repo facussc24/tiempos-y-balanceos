@@ -16,7 +16,7 @@ import { ProjectTable } from '../components/landing/ProjectTable';
 const ApqpExportDialog = lazy(() => import('./family/ApqpExportDialog'));
 
 interface LandingPageProps {
-    onSelectModule: (module: 'pfd' | 'pfdTest' | 'tiempos' | 'amfe' | 'controlPlan' | 'hojaOperaciones' | 'registry' | 'solicitud' | 'manuales' | 'formatos' | 'dataManager' | 'admin') => void;
+    onSelectModule: (module: 'pfd' | 'pfdTest' | 'tiempos' | 'amfe' | 'controlPlan' | 'hojaOperaciones' | 'registry' | 'solicitud' | 'manuales' | 'formatos' | 'dataManager' | 'admin' | '8dReports') => void;
     /** Navigate to AMFE module and auto-load the project for this family */
     onOpenProjectFamily?: (familyId: number) => void;
     /** Document counts per type from the registry */
@@ -326,6 +326,25 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSelectModule, onOpenProject
                                         <p className="text-xs text-slate-500 mt-0.5">Backups, exportar, importar y sincronizar datos</p>
                                     </div>
                                     <ArrowRight size={14} className="text-rose-600 opacity-0 group-hover:opacity-100 transition-opacity ml-auto flex-shrink-0" />
+                                </div>
+                            </button>
+                            <button
+                                onClick={() => onSelectModule('8dReports')}
+                                aria-label="Abrir Reportes 8D"
+                                className="group w-full text-left bg-white shadow-sm border border-indigo-200 rounded-xl p-4
+                                           hover:bg-indigo-50 hover:border-indigo-300 hover:shadow-md hover:-translate-y-0.5
+                                           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-white focus-visible:ring-blue-500/50
+                                           transition-all duration-200 cursor-pointer"
+                            >
+                                <div className="flex items-center gap-3">
+                                    <div className="bg-indigo-50 w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0">
+                                        <ClipboardCheck size={20} className="text-indigo-600" />
+                                    </div>
+                                    <div className="min-w-0">
+                                        <h3 className="text-sm font-bold text-slate-800">Reportes 8D</h3>
+                                        <p className="text-xs text-slate-500 mt-0.5">Analisis 8D (G8D) con Ishikawa, 5 Por Que y Punto de Escape</p>
+                                    </div>
+                                    <ArrowRight size={14} className="text-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity ml-auto flex-shrink-0" />
                                 </div>
                             </button>
                             {isAdmin && (
