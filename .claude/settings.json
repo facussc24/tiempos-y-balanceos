@@ -1,0 +1,26 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'INPUT=$(cat); FILE=$(echo \"$INPUT\" | jq -r \".tool_input.file_path // empty\"); if [ -z \"$FILE\" ]; then exit 0; fi; case \"$FILE\" in *package-lock.json|*.env|*.env.*|*/.git/*) echo \"BLOCKED: $FILE is protected\" >&2; exit 2;; *) exit 0;; esac'"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'cd \"$(git rev-parse --show-toplevel 2>/dev/null || echo .)\" && EDITED=$(git diff --name-only HEAD 2>/dev/null | grep -E \"\\.(ts|tsx|js|jsx|css|json)$\" | head -5); if [ -n \"$EDITED\" ]; then echo \"Code was edited but no dev server is running. If the change is observable in a browser preview (per <when_to_verify>), call preview_start and follow <verification_workflow>. If not, end your turn without mentioning this check — do not announce that you are skipping.\" >&2; exit 2; fi; exit 0'"
+          }
+        ]
+      }
+    ]
+  }
+}
