@@ -63,9 +63,9 @@ NUNCA "Capacitacion" como unico prevention control. PROHIBIDO "Falta de capacita
 
 | Tipo de defecto | Metodo de deteccion correcto |
 |---|---|
-| Dimensional | Calibre/gauge, medicion con instrumento calibrado |
+| Dimensional | Calibre, medicion con instrumento calibrado |
 | Rebabas/flashes | Inspeccion visual 100% + calibre de referencia |
-| Quemaduras | Inspeccion visual con pattern board |
+| Quemaduras | Inspeccion visual con muestra patron de defectos |
 | Color/apariencia | Comparacion con muestra maestra bajo luz controlada |
 | Humedad (secado insuficiente) | Control de temperatura/tiempo de tolva secadora en arranque |
 | Flamabilidad | Certificado de laboratorio por lote (TL 1010 VW u otras) |

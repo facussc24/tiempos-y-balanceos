@@ -158,10 +158,10 @@ Cada vez que se baja un molde despues de una produccion (por cambio de molde, po
 | **Quemada / flash** | Marca visible que se percibe a simple vista | Inspeccion visual |
 | **Chupados (sink marks)** | Hundimientos superficiales por contraccion | Inspeccion visual + muestra referencia |
 | **Pieza deformada** | Alabeo, distorsion geometrica | Comparacion con muestra maestra |
-| **Dimensional NOK** | Fuera de tolerancia en medida critica | **Calibre** / gauge de control |
+| **Dimensional NOK** | Fuera de tolerancia en medida critica | **Calibre** de control dimensional |
 
 ### 7.2 Instrumental
-- Debe haber un **calibre** (gauge) para control dimensional de la pieza.
+- Debe haber un **calibre** para control dimensional de la pieza.
 - Inspeccion visual 100% del operador en el puesto.
 
 ### 7.3 Retiro de colada (runner)
@@ -201,7 +201,7 @@ Cuando se construye el AMFE de operacion de inyeccion (OP 20 o equivalente), los
 - **Inspeccion visual 100% del operador** en el puesto
 
 ### Measurement (Medicion)
-- **Calibre / gauge** para dimensional
+- **Calibre** para dimensional
 - **Termometros / pirometros** para zonas de temperatura
 - **Manometros** para presion de inyeccion
 
@@ -224,7 +224,7 @@ El CP Maestro de Inyeccion debe tener al menos estos controles:
 | 5 | Parametros de proceso vs dossier | Comparacion con dossier | Al arranque + cambio de lote | Operador / Lider de Produccion |
 | 6 | Fuerza de cierre de la inyectora | Lectura de panel | Al arranque | Operador |
 | 7 | Inspeccion visual de pieza (defectos tipicos) | Autocontrol 100% | Cada pieza | Operador |
-| 8 | Dimensional de pieza | Calibre / gauge | TBD (muestreo por lote) | Operador / Metrologia |
+| 8 | Dimensional de pieza | Calibre dimensional | TBD (muestreo por lote) | Operador / Metrologia |
 | 9 | Flamabilidad del material (si cliente lo requiere) | Certificado de laboratorio | Por lote | Laboratorio |
 | 10 | Limpieza de molde antes de bajarlo | Inspeccion visual + check list | Al bajar molde | Operador / Lider |
 | 11 | Lubricacion de molde antes de bajarlo | Inspeccion visual | Al bajar molde | Operador |
