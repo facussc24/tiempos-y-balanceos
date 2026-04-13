@@ -1,0 +1,58 @@
+{
+  "timestamp": "2026-04-13T17-38-34",
+  "cpDocsFixed": [
+    {
+      "id": "332bcdda-a7d8-4d28-a41d-3961472ccb0e",
+      "name": "",
+      "changes": 2
+    },
+    {
+      "id": "85fd046d-a3bd-4de1-a9f9-d2fd51466999",
+      "name": "",
+      "changes": 3
+    }
+  ],
+  "amfeDocsFixed": [
+    {
+      "id": "c9b93b84-f804-4cd0-91c1-c4878db41b97",
+      "name": "VWA-PAT-IPPADS-001",
+      "changes": 12
+    },
+    {
+      "id": "7cfe2db7-9e5a-4b46-804d-76194557c581",
+      "name": "AMFE-INS-PAT",
+      "changes": 12
+    },
+    {
+      "id": "10eaebce-ad87-4035-9343-3e20e4ee0fc9",
+      "name": "AMFE-HF-PAT",
+      "changes": 12
+    },
+    {
+      "id": "5268704d-30ae-48f3-ad05-8402a6ded7fe",
+      "name": "AMFE-ARM-PAT",
+      "changes": 8
+    },
+    {
+      "id": "e9320798-ceaa-4623-97e9-92200b5234b6",
+      "name": "AMFE-HRC-PAT",
+      "changes": 12
+    },
+    {
+      "id": "78eaa89b-ad0b-4342-9046-ab2e9b14d3b3",
+      "name": "AMFE-TR-PAT",
+      "changes": 12
+    },
+    {
+      "id": "beda6d47-30ae-4d5f-81e0-468be8950014",
+      "name": "AMFE-HRO-PAT",
+      "changes": 12
+    },
+    {
+      "id": "57011560-d4c1-4a8a-83f0-ed37a2bab1d5",
+      "name": "AMFE-1",
+      "changes": 1
+    }
+  ],
+  "remainingTerms": 2
+}

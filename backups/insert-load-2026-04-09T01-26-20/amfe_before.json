@@ -1,0 +1,458 @@
+{
+  "header": {
+    "companyName": "BARACK MERCOSUL",
+    "scope": "INSERT PATAGONIA",
+    "partNumber": "N 227 / N 403",
+    "applicableParts": "N 227, N 403",
+    "responsibleEngineer": "Carlos Baptista (Ingeniería)",
+    "coreTeam": "Carlos Baptista (Ingeniería), Manuel Meszaros (Calidad), Facundo Santoro, Marianna Vera (Producción), Cristina Rabago (Seguridad e Higiene)",
+    "preparedBy": "Facundo Santoro",
+    "approvedBy": "Gonzalo Cal",
+    "amfeDate": "12/02/2026",
+    "revisionLevel": "01",
+    "revisionDate": "2026-02-13",
+    "subject": "INSERT",
+    "client": "VWA",
+    "location": "PLANTA HURLINGHAM"
+  },
+  "operations": [
+    {
+      "id": "74a733f1-f114-4a81-8b34-8b48f10858ba",
+      "operationNumber": "5",
+      "operationName": "RECEPCION DE MATERIA PRIMA",
+      "workElements": [
+        {
+          "id": "04317d8f-614c-4fe4-88d5-627ff856de2f",
+          "name": "Autoelevador",
+          "type": "Maquina",
+          "functions": [
+            {
+              "id": "b3a5edd3-3b93-4c8c-b94e-27ef44684d6a",
+              "functionDescription": "Garantizar la estabilidad y la integridad física del material durante el transporte interno",
+              "failures": [
+                {
+                  "id": "0c8b4583-3906-42f9-9bf9-30139d094321",
+                  "description": "Material / pieza golpeada o dañada durante transporte",
+                  "effectLocal": "Retrabajo",
+                  "effectNextLevel": "Problemas en el ensamble final",
+                  "effectEndUser": "Potencial reclamo de aspecto/comfort",
+                  "causes": [
+                    {
+                      "id": "5d49b959-5d25-4def-a54f-13ab49e6a4be",
+                      "description": "Mala estiba y embalaje inadecuado",
+                      "severity": 5,
+                      "occurrence": 6,
+                      "detection": 6,
+                      "actionPriority": "M",
+                      "preventionControl": "Medios de embalaje validados",
+                      "detectionControl": "Inspección Visual de daños/suciedad en el empaque al recibir",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "ap": "M",
+                      "cause": "Mala estiba y embalaje inadecuado"
+                    },
+                    {
+                      "id": "e460a77e-0f92-481d-aca3-3fff7d3c3e64",
+                      "description": "Manipulación incorrecta en tránsito",
+                      "severity": 5,
+                      "occurrence": 6,
+                      "detection": 6,
+                      "actionPriority": "M",
+                      "preventionControl": "Existencia de instrucciones de trabajo que definen cómo debe estibarse y manipularse el material",
+                      "detectionControl": "Inspección Visual del estado de la pieza/empaque",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "ap": "M",
+                      "cause": "Manipulación incorrecta en tránsito"
+                    },
+                    {
+                      "id": "d22fab06-8e11-494d-a2ce-04a5c49f0ddf",
+                      "description": "Almacenaje inadecuado en transporte (sin protecciones)",
+                      "severity": 5,
+                      "occurrence": 5,
+                      "detection": 6,
+                      "actionPriority": "L",
+                      "preventionControl": "Procedimientos de Logística sobre estiba segura y uso de Embalajes Cubiertos o cerrados",
+                      "detectionControl": "Inspección Visual de daños/suciedad en el empaque al recibir",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "ap": "L",
+                      "cause": "Almacenaje inadecuado en transporte (sin protecciones)"
+                    }
+                  ],
+                  "severity": 5
+                },
+                {
+                  "id": "5b271742-6fc1-40e8-8d5c-9089439b5c6c",
+                  "description": "Material no cumple requisito de flamabilidad TL 1010 VW",
+                  "effectLocal": "Material no apto para uso",
+                  "effectNextLevel": "Paro de linea VW por incumplimiento normativo",
+                  "effectEndUser": "Riesgo de propagacion de fuego en habitaculo",
+                  "causes": [
+                    {
+                      "id": "97bc6ecf-bcc5-4998-8833-4173e54b18c6",
+                      "description": "Material fuera de especificacion requerida",
+                      "severity": 9,
+                      "occurrence": 2,
+                      "detection": 3,
+                      "actionPriority": "L",
+                      "preventionControl": "Certificado de flamabilidad del proveedor segun TL 1010",
+                      "detectionControl": "Verificacion documental en recepcion",
+                      "specialChar": "CC",
+                      "characteristicNumber": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "ap": "L",
+                      "cause": "Material fuera de especificacion requerida"
+                    }
+                  ],
+                  "severity": 9
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "e73d3a2b-a9f8-4ebe-9c27-cbc4a0e40a53",
+          "name": "Operador de producción / Operador de calidad",
+          "type": "Mano de Obra",
+          "functions": [
+            {
+              "id": "e8b79cf2-f508-42e7-925d-2f49e53e7093",
+              "functionDescription": "Verificar el cumplimiento y la trazabilidad de la materia prima recibida",
+              "failures": [
+                {
+                  "id": "6725a4db-b150-44c6-8536-536e51f48c81",
+                  "description": "Falta de documentación o trazabilidad",
+                  "effectLocal": "Riesgo de mezclar lotes no conformes",
+                  "effectNextLevel": "Dificultades en trazabilidad si surge un reclamo",
+                  "effectEndUser": "Potencial reclamo",
+                  "causes": [
+                    {
+                      "id": "4485afa3-9555-4acc-93c7-64c8bcf9e5d2",
+                      "description": "Procesos administrativos deficientes",
+                      "severity": 4,
+                      "occurrence": 3,
+                      "detection": 4,
+                      "actionPriority": "L",
+                      "preventionControl": "El sistema ARB obliga a registrar lote y código en recepción y verifica contra base de datos",
+                      "detectionControl": "Verificación automática del lote/código registrado contra la base de datos",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "ap": "L",
+                      "cause": "Procesos administrativos deficientes"
+                    },
+                    {
+                      "id": "f218d852-e5ec-44f8-ad97-81f33375b61d",
+                      "description": "Proveedor sin sistema robusto de trazabilidad",
+                      "severity": 4,
+                      "occurrence": 5,
+                      "detection": 6,
+                      "actionPriority": "L",
+                      "preventionControl": "Auditorías de Sistema y Requisitos que validan la capacidad de trazabilidad del proveedor",
+                      "detectionControl": "Verificación del Certificado de Conformidad y registro obligatorio de lote",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "ap": "L",
+                      "cause": "Proveedor sin sistema robusto de trazabilidad"
+                    },
+                    {
+                      "id": "c5cbdd43-29be-4f17-97e2-8c19fae9063e",
+                      "description": "No se utiliza el sistema ARB",
+                      "severity": 4,
+                      "occurrence": 6,
+                      "detection": 4,
+                      "actionPriority": "M",
+                      "preventionControl": "Estándar Operacional que exige el uso del sistema ARB",
+                      "detectionControl": "El sistema impide la emisión de ubicaciones hasta que todos los campos del ARB sean completados",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "ap": "M",
+                      "cause": "No se utiliza el sistema ARB"
+                    }
+                  ],
+                  "severity": 4
+                },
+                {
+                  "id": "010e8d9e-b6f1-456b-85d6-6198e534eecf",
+                  "description": "Material con especificación errónea (dimensiones, color, dureza, etc.)",
+                  "effectLocal": "Potencial Descarte",
+                  "effectNextLevel": "Potencial parada de línea",
+                  "effectEndUser": "Potencial reclamo de aspecto",
+                  "causes": [
+                    {
+                      "id": "3d06e523-83d2-4b30-8c8a-31f48a1b4316",
+                      "description": "Error en la orden de compra o ficha técnica",
+                      "severity": 5,
+                      "occurrence": 5,
+                      "detection": 6,
+                      "actionPriority": "L",
+                      "preventionControl": "Revisión de Ingeniería de la Ficha Técnica/OC antes de la emisión al proveedor",
+                      "detectionControl": "Control dimensional por muestreo en recepción",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "ap": "L",
+                      "cause": "Error en la orden de compra o ficha técnica"
+                    },
+                    {
+                      "id": "2fdd9ecc-47c8-4a71-87ff-455a82cc584f",
+                      "description": "Proveedor no respeta tolerancias",
+                      "severity": 6,
+                      "occurrence": 7,
+                      "detection": 6,
+                      "actionPriority": "M",
+                      "preventionControl": "Requisitos Contractuales de Calidad y Auditorías al Proveedor",
+                      "detectionControl": "Control Dimensional por muestreo (Certificado de Calidad) y Revisión obligatoria",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "ap": "M",
+                      "cause": "Proveedor no respeta tolerancias"
+                    }
+                  ],
+                  "severity": 6
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "318329b8-a489-49c5-86ae-ab62507a8bc4",
+          "name": "Calibres, Micrómetro, Probeta de flamabilidad, Probeta de peeling",
+          "type": "Material",
+          "functions": [
+            {
+              "id": "addc1338-6ffb-4c12-8183-2a10bd94d498",
+              "functionDescription": "Disponer y utilizar instrumentos de medición y ensayo",
+              "failures": [
+                {
+                  "id": "23507b9b-151e-40c3-950a-9c680cc538c0",
+                  "description": "Contaminación / suciedad en la materia prima",
+                  "effectLocal": "Potencial Descarte",
+                  "effectNextLevel": "Reclamo de aspecto",
+                  "effectEndUser": "Problemas de calidad durante el ensamble",
+                  "causes": [
+                    {
+                      "id": "5bd4ec39-4c44-41c0-919e-405c1684a5fa",
+                      "description": "Ambiente sucio en planta del proveedor",
+                      "severity": 5,
+                      "occurrence": 6,
+                      "detection": 6,
+                      "actionPriority": "M",
+                      "preventionControl": "Auditorías de Calidad",
+                      "detectionControl": "Inspección Visual de la pieza y Revisión del Certificado de Calidad del proveedor",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "ap": "M",
+                      "cause": "Ambiente sucio en planta del proveedor"
+                    },
+                    {
+                      "id": "722c3e49-5bc6-474e-9471-31bb2472a339",
+                      "description": "Falta de inspección visual al recibir",
+                      "severity": 5,
+                      "occurrence": 5,
+                      "detection": 5,
+                      "actionPriority": "L",
+                      "preventionControl": "Instrucción de Trabajo de Recepción que exige la verificación física y visual",
+                      "detectionControl": "Inspección visual en recepción",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "ap": "L",
+                      "cause": "Falta de inspección visual al recibir"
+                    }
+                  ],
+                  "severity": 5
+                },
+                {
+                  "id": "bfb049fd-2973-4360-b2c7-b0535501e9f8",
+                  "description": "Omisión de verificación de insumos en recepción",
+                  "effectLocal": "TBD",
+                  "effectNextLevel": "TBD",
+                  "effectEndUser": "TBD",
+                  "causes": [
+                    {
+                      "id": "fd58b4f2-65cb-4057-8021-920ef6074046",
+                      "description": "No se verifica la fecha de vencimiento del adhesivo (Sika Melt-171 IMG)",
+                      "severity": 5,
+                      "occurrence": 4,
+                      "detection": 6,
+                      "actionPriority": "L",
+                      "preventionControl": "Checklists obligatorias por recepción",
+                      "detectionControl": "Auditorías de recepción de insumos críticos",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "ap": "L",
+                      "cause": "No se verifica la fecha de vencimiento del adhesivo (Sika Melt-171 IMG)"
+                    },
+                    {
+                      "id": "b0814b21-83dd-4833-bfff-56f460ad5989",
+                      "description": "No se verifica la fecha de vencimiento del adhesivo (Sika MG®171 IMG)",
+                      "severity": 5,
+                      "occurrence": 4,
+                      "detection": 6,
+                      "actionPriority": "L",
+                      "preventionControl": "Checklists obligatorias por recepción",
+                      "detectionControl": "Auditorías de recepción de insumos críticos",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "ap": "L",
+                      "cause": "No se verifica la fecha de vencimiento del adhesivo (Sika MG®171 IMG)"
+                    }
+                  ],
+                  "severity": 5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "49048eba-39c7-4087-b70a-bbd41b2aee31",
+          "name": "Hojas de operaciones / Ayudas visuales",
+          "type": "Metodo",
+          "functions": [
+            {
+              "id": "f2ca17f0-4648-44f7-bf93-80bddb7a9623",
+              "functionDescription": "Asegurar la cantidad y calidad de material recibido",
+              "failures": [
+                {
+                  "id": "f5f6ee5a-8c01-4c0f-9201-3bab5d7bdc9a",
+                  "description": "Sustrato (PS/ABS CYCOLOY LG9000) fuera de especificación",
+                  "effectLocal": "TBD",
+                  "effectNextLevel": "TBD",
+                  "effectEndUser": "TBD",
+                  "causes": [
+                    {
+                      "id": "b5a68764-4259-4937-be19-768acba1a2bf",
+                      "description": "Proveedor entrega sustrato fuera de especificación (PS/ABS)",
+                      "severity": 6,
+                      "occurrence": 3,
+                      "detection": 5,
+                      "actionPriority": "L",
+                      "preventionControl": "Certificado de calidad del proveedor y auditorías periódicas",
+                      "detectionControl": "Inspección visual y dimensional en recepción",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "ap": "L",
+                      "cause": "Proveedor entrega sustrato fuera de especificación (PS/ABS)"
+                    }
+                  ],
+                  "severity": 6
+                },
+                {
+                  "id": "c7964394-3d25-4e9a-acfe-ea75c4dcc471",
+                  "description": "Adhesivo Sika Melt-171 fuera de especificación",
+                  "effectLocal": "TBD",
+                  "effectNextLevel": "TBD",
+                  "effectEndUser": "TBD",
+                  "causes": [
+                    {
+                      "id": "171ddc88-6dc8-4d17-ba7d-c9fa18f35b1d",
+                      "description": "Proveedor entrega Adhesivo Sika Melt-171 fuera de especificación",
+                      "severity": 6,
+                      "occurrence": 3,
+                      "detection": 5,
+                      "actionPriority": "L",
+                      "preventionControl": "Certificado de calidad del proveedor y auditorías periódicas",
+                      "detectionControl": "Inspección visual y dimensional en recepción",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "ap": "L",
+                      "cause": "Proveedor entrega Adhesivo Sika Melt-171 fuera de especificación"
+                    }
+                  ],
+                  "severity": 6
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "2d9d29b1-7f01-4c5e-aa2b-51c79371a79b",
+          "name": "Iluminación/Ruido, Ley 19587",
+          "type": "Medio Ambiente",
+          "functions": [
+            {
+              "id": "c16e9042-9312-4ff6-9454-60e52f549065",
+              "functionDescription": "Mantener las condiciones de seguridad ocupacional según la Ley 19587",
+              "failures": []
+            }
+          ]
+        }
+      ],
+      "opNumber": "5",
+      "name": "RECEPCION DE MATERIA PRIMA"
+    }
+  ]
+}

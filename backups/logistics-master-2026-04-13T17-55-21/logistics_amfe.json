@@ -1,0 +1,621 @@
+{
+  "header": {
+    "companyName": "BARACK MERCOSUL",
+    "scope": "Proceso de Logistica y Recepcion de Materia Prima",
+    "partNumber": "",
+    "applicableParts": "",
+    "responsibleEngineer": "Carlos Baptista",
+    "coreTeam": "Carlos Baptista (Ingenieria), Manuel Meszaros (Calidad), Marianna Vera (Produccion)",
+    "preparedBy": "Facundo Santoro",
+    "approvedBy": "Carlos Baptista",
+    "amfeDate": "2026-04-13",
+    "revisionLevel": "A",
+    "revisionDate": "2026-04-13"
+  },
+  "operations": [
+    {
+      "id": "a2aa4f8d-aa10-490a-838b-82bdb152ccdd",
+      "opNumber": "10",
+      "operationNumber": "10",
+      "name": "RECEPCION Y PREPARACION DE MATERIA PRIMA",
+      "operationName": "RECEPCION Y PREPARACION DE MATERIA PRIMA",
+      "focusElementFunction": "Interno: Conformar la pieza plastica segun especificaciones dimensionales, funcionales y de apariencia / Cliente: Montar el componente en el modulo del vehiculo sin interferencias / Usuario final: Funcionalidad, apariencia, seguridad y durabilidad en el habitaculo",
+      "operationFunction": "Recepcionar pellet virgen con certificado, secar material higroscopico a temperatura y tiempo segun especificacion, y alimentar la tolva de la inyectora",
+      "workElements": [
+        {
+          "id": "5e62761b-c3c0-41ba-b8f5-8225980b871c",
+          "name": "Tolva secadora / Deshumidificador",
+          "type": "Machine",
+          "functions": [
+            {
+              "id": "4664ee32-4b6c-4267-84e2-c3346f561033",
+              "description": "Secar pellet higroscopico (ABS/PC/PA/PET) a temperatura y tiempo validados para eliminar humedad residual",
+              "functionDescription": "Secar pellet higroscopico (ABS/PC/PA/PET) a temperatura y tiempo validados para eliminar humedad residual",
+              "requirements": "Temperatura segun especificacion de material (ABS 80C, PC 120C, PET 120-150C). Tiempo 2-6 horas.",
+              "failures": [
+                {
+                  "id": "58accf4c-975d-4738-bcc1-8eb79e601b36",
+                  "description": "Temperatura de tolva secadora fuera de rango especificado",
+                  "effectLocal": "Pellet mal secado, humedad residual en material cargado a maquina",
+                  "effectNextLevel": "En OP 20 aparecen defectos: ampollas, rafagas plateadas, quemado interno en la pieza",
+                  "effectEndUser": "Apariencia superficial NOK, posible delaminacion o degradacion estructural en servicio",
+                  "causes": [
+                    {
+                      "id": "467b8246-36eb-4f8f-b346-b927095394d8",
+                      "description": "Resistencia electrica degradada / sensor de temperatura descalibrado en la tolva secadora",
+                      "cause": "Resistencia electrica degradada / sensor de temperatura descalibrado en la tolva secadora",
+                      "severity": 6,
+                      "occurrence": 2,
+                      "detection": 6,
+                      "actionPriority": "L",
+                      "ap": "L",
+                      "preventionControl": "Plan de mantenimiento preventivo de tolva secadora (calibracion sensor y verificacion resistencia)",
+                      "detectionControl": "Verificacion de temperatura en panel de la tolva al arranque de turno y registro en ficha de proceso",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "filterCode": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "actionTaken": "",
+                      "completionDate": "",
+                      "severityNew": "",
+                      "occurrenceNew": "",
+                      "detectionNew": "",
+                      "apNew": "",
+                      "observations": ""
+                    },
+                    {
+                      "id": "9624a740-4228-4dd7-981d-b88ce3d3b680",
+                      "description": "Setpoint de temperatura cargado incorrectamente para el material a secar",
+                      "cause": "Setpoint de temperatura cargado incorrectamente para el material a secar",
+                      "severity": 6,
+                      "occurrence": 2,
+                      "detection": 6,
+                      "actionPriority": "L",
+                      "ap": "L",
+                      "preventionControl": "Tabla de parametros de secado por material visible en el puesto + verificacion por el operador al arranque",
+                      "detectionControl": "Verificacion cruzada con lider de produccion al cambio de material",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "filterCode": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "actionTaken": "",
+                      "completionDate": "",
+                      "severityNew": "",
+                      "occurrenceNew": "",
+                      "detectionNew": "",
+                      "apNew": "",
+                      "observations": ""
+                    }
+                  ],
+                  "severity": 6
+                },
+                {
+                  "id": "20d2f2e9-008b-47ce-a502-cdeadf8035f9",
+                  "description": "Tiempo de secado insuficiente (material cargado a maquina antes de completar ciclo)",
+                  "effectLocal": "Humedad residual en pellet al ingreso del tornillo",
+                  "effectNextLevel": "Defectos de humedad en pieza inyectada (rafagas, burbujas, quemado interno)",
+                  "effectEndUser": "Apariencia NOK, riesgo de degradacion del material a largo plazo",
+                  "causes": [
+                    {
+                      "id": "ab14646b-c167-4765-a2a4-5eae19af6808",
+                      "description": "Carga anticipada de material a la tolba de maquina sin respetar tiempo minimo de secado",
+                      "cause": "Carga anticipada de material a la tolba de maquina sin respetar tiempo minimo de secado",
+                      "severity": 6,
+                      "occurrence": 3,
+                      "detection": 6,
+                      "actionPriority": "L",
+                      "ap": "L",
+                      "preventionControl": "Procedimiento de arranque con cronometraje del ciclo de secado + etiqueta de inicio de secado visible en la tolva",
+                      "detectionControl": "Registro de hora de inicio/fin de secado por lote en ficha de proceso",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "filterCode": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "actionTaken": "",
+                      "completionDate": "",
+                      "severityNew": "",
+                      "occurrenceNew": "",
+                      "detectionNew": "",
+                      "apNew": "",
+                      "observations": ""
+                    }
+                  ],
+                  "severity": 6
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "a45944de-3162-41a2-8293-1330b4f9c9b8",
+          "name": "Aspirador / Sistema de alimentacion de pellet",
+          "type": "Machine",
+          "functions": [
+            {
+              "id": "9c075517-58be-444f-a899-589eca7cad96",
+              "description": "Transportar pellet desde el bolson al pie de maquina hacia la tolva de la inyectora sin contaminar ni interrumpir flujo",
+              "functionDescription": "Transportar pellet desde el bolson al pie de maquina hacia la tolva de la inyectora sin contaminar ni interrumpir flujo",
+              "requirements": "",
+              "failures": [
+                {
+                  "id": "90059c5d-00e5-4d12-896e-a7b05a6579b7",
+                  "description": "Alimentacion intermitente o interrumpida del aspirador",
+                  "effectLocal": "Tolva de maquina queda parcialmente vacia, riesgo de pieza incompleta",
+                  "effectNextLevel": "OP 20 produce piezas con llenado insuficiente (scrap)",
+                  "effectEndUser": "Pieza no montable en el modulo del vehiculo",
+                  "causes": [
+                    {
+                      "id": "de0fb7e4-a56f-4174-8fbd-a489262efef7",
+                      "description": "Filtro del aspirador tapado por polvo o particulas acumuladas",
+                      "cause": "Filtro del aspirador tapado por polvo o particulas acumuladas",
+                      "severity": 5,
+                      "occurrence": 3,
+                      "detection": 4,
+                      "actionPriority": "L",
+                      "ap": "L",
+                      "preventionControl": "Plan de limpieza/soplado de filtro de aspirador al arranque de turno",
+                      "detectionControl": "Verificacion visual del filtro al arranque y alarma de nivel bajo en tolva",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "filterCode": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "actionTaken": "",
+                      "completionDate": "",
+                      "severityNew": "",
+                      "occurrenceNew": "",
+                      "detectionNew": "",
+                      "apNew": "",
+                      "observations": ""
+                    },
+                    {
+                      "id": "bac90a0e-b878-46cf-a697-28ad97e47b68",
+                      "description": "Presion de aire comprimido baja o inestable en el circuito de aspiracion",
+                      "cause": "Presion de aire comprimido baja o inestable en el circuito de aspiracion",
+                      "severity": 5,
+                      "occurrence": 2,
+                      "detection": 4,
+                      "actionPriority": "L",
+                      "ap": "L",
+                      "preventionControl": "Verificacion de presion de red de aire comprimido al arranque",
+                      "detectionControl": "Manometro de referencia en el circuito del aspirador",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "filterCode": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "actionTaken": "",
+                      "completionDate": "",
+                      "severityNew": "",
+                      "occurrenceNew": "",
+                      "detectionNew": "",
+                      "apNew": "",
+                      "observations": ""
+                    }
+                  ],
+                  "severity": 5
+                },
+                {
+                  "id": "f88c6ed4-1145-4dc5-b6d4-6940b6062b1e",
+                  "description": "Contaminacion del pellet por particulas externas (polvo, residuos)",
+                  "effectLocal": "Pellet contaminado cargado en tolva",
+                  "effectNextLevel": "Puntos negros / inclusiones visibles en la pieza inyectada (scrap)",
+                  "effectEndUser": "Apariencia superficial NOK, rechazo cliente",
+                  "causes": [
+                    {
+                      "id": "5a4389b0-fb1e-43c2-8254-b8f30975ae25",
+                      "description": "Filtro del aspirador roto o mal instalado permitiendo paso de particulas",
+                      "cause": "Filtro del aspirador roto o mal instalado permitiendo paso de particulas",
+                      "severity": 6,
+                      "occurrence": 2,
+                      "detection": 6,
+                      "actionPriority": "L",
+                      "ap": "L",
+                      "preventionControl": "Inspeccion del filtro al arranque, reemplazo segun plan de mantenimiento",
+                      "detectionControl": "Inspeccion visual del pellet en tolva al recargar",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "filterCode": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "actionTaken": "",
+                      "completionDate": "",
+                      "severityNew": "",
+                      "occurrenceNew": "",
+                      "detectionNew": "",
+                      "apNew": "",
+                      "observations": ""
+                    }
+                  ],
+                  "severity": 6
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "4702b8d5-4690-4005-b8a4-9e9a916e8a48",
+          "name": "Pellet virgen (materia prima directa)",
+          "type": "Material",
+          "functions": [
+            {
+              "id": "a80c1a1e-0101-41b3-aac2-4ad48dc5545a",
+              "description": "Proveer materia prima conforme a especificacion del cliente (tipo de polimero, lote certificado, sin reciclado)",
+              "functionDescription": "Proveer materia prima conforme a especificacion del cliente (tipo de polimero, lote certificado, sin reciclado)",
+              "requirements": "",
+              "failures": [
+                {
+                  "id": "aea19e25-5bf7-4c64-8dd7-1a8f76893346",
+                  "description": "Material entregado no corresponde al especificado en la orden de compra",
+                  "effectLocal": "Lote incorrecto almacenado como si fuera el correcto",
+                  "effectNextLevel": "Al usarlo en OP 20, defectos masivos por parametros incompatibles (rebabas, mal flujo, mala adhesion)",
+                  "effectEndUser": "Propiedades mecanicas NOK, posible falla estructural del componente en servicio",
+                  "causes": [
+                    {
+                      "id": "adecce49-1828-4584-8afa-716b183788cd",
+                      "description": "Error de proveedor en la identificacion del lote o del material",
+                      "cause": "Error de proveedor en la identificacion del lote o del material",
+                      "severity": 7,
+                      "occurrence": 2,
+                      "detection": 5,
+                      "actionPriority": "M",
+                      "ap": "M",
+                      "preventionControl": "Inspeccion documental del certificado del proveedor segun procedimiento P-14 antes de aceptar el lote",
+                      "detectionControl": "Verificacion cruzada de etiqueta del bolson vs certificado vs orden de compra",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "filterCode": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "actionTaken": "",
+                      "completionDate": "",
+                      "severityNew": "",
+                      "occurrenceNew": "",
+                      "detectionNew": "",
+                      "apNew": "",
+                      "observations": ""
+                    }
+                  ],
+                  "severity": 7
+                },
+                {
+                  "id": "598563f4-53d4-49b5-af9a-c0abde3650f4",
+                  "description": "Certificado del proveedor faltante, ilegible o no conforme",
+                  "effectLocal": "Lote sin trazabilidad documental",
+                  "effectNextLevel": "Material no liberado para produccion, segregado",
+                  "effectEndUser": "Sin impacto directo si se detecta en recepcion; si no se detecta, riesgo de no conformidad con el cliente",
+                  "causes": [
+                    {
+                      "id": "f75ff4c7-cb85-4290-b07b-0316ee0381cf",
+                      "description": "Proveedor omitio envio de certificado o certificado no coincide con el lote fisico",
+                      "cause": "Proveedor omitio envio de certificado o certificado no coincide con el lote fisico",
+                      "severity": 7,
+                      "occurrence": 2,
+                      "detection": 4,
+                      "actionPriority": "L",
+                      "ap": "L",
+                      "preventionControl": "Procedimiento P-14: no aceptar lote sin certificado valido. Segregar s/ P-09/I si falta",
+                      "detectionControl": "Checklist de recepcion verificado por recepcionista de materiales",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "filterCode": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "actionTaken": "",
+                      "completionDate": "",
+                      "severityNew": "",
+                      "occurrenceNew": "",
+                      "detectionNew": "",
+                      "apNew": "",
+                      "observations": ""
+                    }
+                  ],
+                  "severity": 7
+                },
+                {
+                  "id": "0e73faba-3017-40d8-a4f7-9bad6310baa5",
+                  "description": "Lote contaminado con material ajeno o humedad ambiente excesiva antes de entrar a la tolva secadora",
+                  "effectLocal": "Pellet con contaminantes o humedad elevada",
+                  "effectNextLevel": "Defectos de apariencia o dimensional en OP 20",
+                  "effectEndUser": "Apariencia NOK, posible degradacion en servicio",
+                  "causes": [
+                    {
+                      "id": "399d05d0-9cce-4876-8c3f-5bddbf3d02a7",
+                      "description": "Bolson/octabin danado durante transporte o almacenado en ambiente humedo",
+                      "cause": "Bolson/octabin danado durante transporte o almacenado en ambiente humedo",
+                      "severity": 7,
+                      "occurrence": 3,
+                      "detection": 5,
+                      "actionPriority": "M",
+                      "ap": "M",
+                      "preventionControl": "Inspeccion visual del bolson al recibir (integridad, sellado) + almacenamiento en zona seca",
+                      "detectionControl": "Inspeccion visual del pellet antes de cargarlo al secador",
+                      "preventionAction": "Pendiente definicion equipo APQP",
+                      "detectionAction": "",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "filterCode": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "actionTaken": "",
+                      "completionDate": "",
+                      "severityNew": "",
+                      "occurrenceNew": "",
+                      "detectionNew": "",
+                      "apNew": "",
+                      "observations": ""
+                    }
+                  ],
+                  "severity": 7
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "e87aef48-ea7e-4f2e-b438-2beecf1e4cc4",
+          "name": "Procedimiento de recepcion y registro de lote (P-14)",
+          "type": "Method",
+          "functions": [
+            {
+              "id": "75c26a9b-014f-496c-b20e-10be59677cbf",
+              "description": "Asegurar trazabilidad del lote entrante y verificacion del certificado del proveedor antes de liberar material a produccion",
+              "functionDescription": "Asegurar trazabilidad del lote entrante y verificacion del certificado del proveedor antes de liberar material a produccion",
+              "requirements": "",
+              "failures": [
+                {
+                  "id": "d70c374c-38e3-4cc5-a045-0738ebd6c51e",
+                  "description": "Lote ingresado a produccion sin registrar trazabilidad",
+                  "effectLocal": "Imposibilidad de rastrear el lote ante una no conformidad posterior",
+                  "effectNextLevel": "Si hay un defecto en produccion, no se puede segregar por lote",
+                  "effectEndUser": "Campana de retorno amplia por falta de trazabilidad",
+                  "causes": [
+                    {
+                      "id": "00ec40ca-d5aa-4372-8966-0ab5a246a2f2",
+                      "description": "Paso de registro omitido en el procedimiento de recepcion",
+                      "cause": "Paso de registro omitido en el procedimiento de recepcion",
+                      "severity": 6,
+                      "occurrence": 2,
+                      "detection": 4,
+                      "actionPriority": "L",
+                      "ap": "L",
+                      "preventionControl": "Checklist de recepcion P-14 con firma obligatoria del recepcionista",
+                      "detectionControl": "Auditoria periodica de trazabilidad por Calidad",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "filterCode": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "actionTaken": "",
+                      "completionDate": "",
+                      "severityNew": "",
+                      "occurrenceNew": "",
+                      "detectionNew": "",
+                      "apNew": "",
+                      "observations": ""
+                    }
+                  ],
+                  "severity": 6
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "999432d7-02cd-4fe8-a644-e1969a7b88dc",
+          "name": "Operador/Recepcionista de materiales",
+          "type": "Man",
+          "functions": [
+            {
+              "id": "d2c7e9d3-4f8b-48f9-9cc7-978429f2b512",
+              "description": "Verificar el lote entrante contra orden de compra y certificado, y registrar en el sistema de trazabilidad",
+              "functionDescription": "Verificar el lote entrante contra orden de compra y certificado, y registrar en el sistema de trazabilidad",
+              "requirements": "",
+              "failures": [
+                {
+                  "id": "4692ffc2-5758-4a52-baa4-ea7b41bc1a62",
+                  "description": "Error humano al registrar datos del lote (lote, fecha, material)",
+                  "effectLocal": "Trazabilidad incorrecta en el sistema",
+                  "effectNextLevel": "Ante no conformidad, se segrega el lote equivocado",
+                  "effectEndUser": "Posible entrega de producto con material no conforme al cliente",
+                  "causes": [
+                    {
+                      "id": "cd809e89-ff6d-4132-b231-b36ce7ebe562",
+                      "description": "Ingreso manual de datos sin verificacion cruzada",
+                      "cause": "Ingreso manual de datos sin verificacion cruzada",
+                      "severity": 6,
+                      "occurrence": 3,
+                      "detection": 5,
+                      "actionPriority": "L",
+                      "ap": "L",
+                      "preventionControl": "Doble verificacion con lider de recepcion en el registro de lote",
+                      "detectionControl": "Auditoria periodica de trazabilidad",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "filterCode": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "actionTaken": "",
+                      "completionDate": "",
+                      "severityNew": "",
+                      "occurrenceNew": "",
+                      "detectionNew": "",
+                      "apNew": "",
+                      "observations": ""
+                    }
+                  ],
+                  "severity": 6
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "d42a6467-86e1-495b-ab33-c296f9264478",
+          "name": "Instrumentos de medicion de temperatura y tiempo de secado",
+          "type": "Measurement",
+          "functions": [
+            {
+              "id": "ef9c6e16-03ef-424b-b780-f53f466f8617",
+              "description": "Asegurar que la medicion de temperatura y tiempo de secado sea precisa antes de liberar pellet a la tolva de maquina",
+              "functionDescription": "Asegurar que la medicion de temperatura y tiempo de secado sea precisa antes de liberar pellet a la tolva de maquina",
+              "requirements": "",
+              "failures": [
+                {
+                  "id": "f894199f-de28-4da7-8c5f-147d2b3aabde",
+                  "description": "Lectura de temperatura de secado incorrecta por sensor descalibrado",
+                  "effectLocal": "Ciclo de secado ejecutado con temperatura falsa",
+                  "effectNextLevel": "Humedad residual no detectada -> defectos en pieza inyectada",
+                  "effectEndUser": "Apariencia o resistencia NOK",
+                  "causes": [
+                    {
+                      "id": "10ca07db-0e01-4c48-aacf-42dbee1540b1",
+                      "description": "Sensor de temperatura de tolva secadora fuera de plan de calibracion",
+                      "cause": "Sensor de temperatura de tolva secadora fuera de plan de calibracion",
+                      "severity": 6,
+                      "occurrence": 2,
+                      "detection": 6,
+                      "actionPriority": "L",
+                      "ap": "L",
+                      "preventionControl": "Plan de calibracion periodica del sensor de temperatura de la tolva secadora",
+                      "detectionControl": "Verificacion cruzada con termometro patron en calibracion programada",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "filterCode": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "actionTaken": "",
+                      "completionDate": "",
+                      "severityNew": "",
+                      "occurrenceNew": "",
+                      "detectionNew": "",
+                      "apNew": "",
+                      "observations": ""
+                    }
+                  ],
+                  "severity": 6
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "e514845d-fdf8-4728-9f00-c568df0a269f",
+          "name": "Area de recepcion y pulmon de materia prima",
+          "type": "Environment",
+          "functions": [
+            {
+              "id": "5533e38e-d44b-4331-b5db-1e20f0554137",
+              "description": "Mantener condiciones ambientales adecuadas para almacenaje de pellet (humedad controlada, sin contaminacion)",
+              "functionDescription": "Mantener condiciones ambientales adecuadas para almacenaje de pellet (humedad controlada, sin contaminacion)",
+              "requirements": "",
+              "failures": [
+                {
+                  "id": "c68a4aa0-2c64-4527-9584-9d6276237216",
+                  "description": "Contaminacion cruzada o absorcion de humedad en el area de recepcion",
+                  "effectLocal": "Pellet expuesto a humedad ambiente absorbe agua (materiales higroscopicos) o contaminantes",
+                  "effectNextLevel": "En OP 20 inyeccion aparecen defectos de humedad (ampollas, rafagas plateadas) o particulas extranas",
+                  "effectEndUser": "Apariencia superficial NOK, riesgo de degradacion del material",
+                  "severity": 6,
+                  "causes": [
+                    {
+                      "id": "b5367d8b-0989-476c-a88f-c7fa8d76732d",
+                      "description": "Area de almacenaje sin control de humedad relativa ni segregacion por tipo de material",
+                      "cause": "Area de almacenaje sin control de humedad relativa ni segregacion por tipo de material",
+                      "severity": 6,
+                      "occurrence": 3,
+                      "detection": 6,
+                      "ap": "L",
+                      "actionPriority": "L",
+                      "preventionControl": "Layout del area con segregacion por material + control de humedad relativa del ambiente",
+                      "detectionControl": "Inspeccion visual del area al recibir lote y verificacion de integridad del bolson (cierre hermetico)",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "actionTaken": "",
+                      "completionDate": "",
+                      "severityNew": "",
+                      "occurrenceNew": "",
+                      "detectionNew": "",
+                      "apNew": "",
+                      "observations": "",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "filterCode": ""
+                    },
+                    {
+                      "id": "0974647b-1559-4afd-b871-9e3cbecab60c",
+                      "description": "Bolson de pellet danado, abierto o con contaminacion visible al momento de recepcion",
+                      "cause": "Bolson de pellet danado, abierto o con contaminacion visible al momento de recepcion",
+                      "severity": 6,
+                      "occurrence": 3,
+                      "detection": 4,
+                      "ap": "L",
+                      "actionPriority": "L",
+                      "preventionControl": "Procedimiento de inspeccion fisica del bolson al ingreso (integridad, etiquetado, ausencia de particulas)",
+                      "detectionControl": "Checklist de recepcion con verificacion de bolson intacto y certificado de proveedor",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "actionTaken": "",
+                      "completionDate": "",
+                      "severityNew": "",
+                      "occurrenceNew": "",
+                      "detectionNew": "",
+                      "apNew": "",
+                      "observations": "",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "filterCode": ""
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

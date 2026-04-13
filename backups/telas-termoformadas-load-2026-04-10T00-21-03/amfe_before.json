@@ -1,0 +1,2102 @@
+{
+  "header": {
+    "organization": "Barack Mercosul",
+    "location": "Hurlingham, Buenos Aires",
+    "client": "PWA",
+    "modelYear": "2026",
+    "subject": "Proceso de fabricación - Telas Termoformadas",
+    "startDate": "13/03/2026",
+    "revDate": "13/03/2026",
+    "team": "Carlos Baptista (Ingeniería), Manuel Meszaros (Calidad), Marianna Vera (Producción)",
+    "amfeNumber": "AMFE-2",
+    "responsible": "F. Santoro",
+    "confidentiality": "Confidencial",
+    "partNumber": "TBD-TT-PWA",
+    "processResponsible": "F. Santoro",
+    "revision": "A",
+    "approvedBy": "Gonzalo Cal",
+    "scope": "Proceso de producción completo",
+    "applicableParts": ""
+  },
+  "operations": [
+    {
+      "id": "f3f7bd3c-0e76-4c4b-8637-9be26ca9f45d",
+      "opNumber": "OP 10",
+      "name": "RECEPCION DE MATERIA PRIMA",
+      "workElements": [
+        {
+          "id": "b3c6d0dd-3864-4c5e-be05-9a8a5bed5b9d",
+          "type": "Material",
+          "name": "Tela termoformable",
+          "functions": [
+            {
+              "id": "f71bfb6c-1941-4c64-8122-7aa1d25c07ac",
+              "description": "Recibir e identificar materiales conforme a plan de control",
+              "requirements": "",
+              "failures": [
+                {
+                  "id": "1e2a19fd-421c-46bb-83b8-e7dd5f6cfa90",
+                  "description": "Identificación incorrecta del material",
+                  "effectLocal": "Material incorrecto ingresa al proceso",
+                  "effectNextLevel": "Producto con material equivocado",
+                  "effectEndUser": "Reclamo de cliente",
+                  "severity": "",
+                  "causes": [
+                    {
+                      "id": "5c370014-4c46-43e0-aedc-5f8bc93d9f6e",
+                      "cause": "Etiqueta del proveedor no coincide con OC",
+                      "preventionControl": "Verificación de remito vs orden de compra",
+                      "detectionControl": "Inspección visual de identificación",
+                      "occurrence": "",
+                      "detection": "",
+                      "ap": "",
+                      "characteristicNumber": "",
+                      "specialChar": "",
+                      "filterCode": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "actionTaken": "",
+                      "completionDate": "",
+                      "severityNew": "",
+                      "occurrenceNew": "",
+                      "detectionNew": "",
+                      "apNew": "",
+                      "observations": "",
+                      "actionPriority": ""
+                    }
+                  ]
+                },
+                {
+                  "id": "c16b2e28-0845-4d98-8a99-9b81337c0d31",
+                  "description": "Material distinto según plan de control",
+                  "effectLocal": "Producción con material no aprobado",
+                  "effectNextLevel": "Producto fuera de especificación",
+                  "effectEndUser": "Rechazo del cliente",
+                  "severity": "",
+                  "causes": [
+                    {
+                      "id": "c4c7f9f8-4ced-425d-858f-eefed131b924",
+                      "cause": "Error de despacho del proveedor",
+                      "preventionControl": "Auditoría a proveedor, acuerdo de calidad",
+                      "detectionControl": "Inspección de recepción contra ficha técnica",
+                      "occurrence": "",
+                      "detection": "",
+                      "ap": "",
+                      "characteristicNumber": "",
+                      "specialChar": "",
+                      "filterCode": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "actionTaken": "",
+                      "completionDate": "",
+                      "severityNew": "",
+                      "occurrenceNew": "",
+                      "detectionNew": "",
+                      "apNew": "",
+                      "observations": "",
+                      "actionPriority": ""
+                    }
+                  ]
+                },
+                {
+                  "id": "605c92b5-50be-4606-b940-349b8275fdd4",
+                  "description": "Omisión de la recepción",
+                  "effectLocal": "Material ingresa sin control",
+                  "effectNextLevel": "Producto con material no verificado",
+                  "effectEndUser": "Riesgo de calidad en campo",
+                  "severity": "",
+                  "causes": [
+                    {
+                      "id": "35958bba-db5a-4659-b17e-3d1d29d20387",
+                      "cause": "Falta de procedimiento o no se cumple",
+                      "preventionControl": "Procedimiento de recepción documentado",
+                      "detectionControl": "Registro de recepción obligatorio",
+                      "occurrence": "",
+                      "detection": "",
+                      "ap": "",
+                      "characteristicNumber": "",
+                      "specialChar": "",
+                      "filterCode": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "actionTaken": "",
+                      "completionDate": "",
+                      "severityNew": "",
+                      "occurrenceNew": "",
+                      "detectionNew": "",
+                      "apNew": "",
+                      "observations": "",
+                      "actionPriority": ""
+                    }
+                  ]
+                },
+                {
+                  "id": "40b3cacd-7c0b-4f16-94a4-2c0210d223c8",
+                  "description": "Material no cumple flamabilidad",
+                  "effectLocal": "Material no conforme segregado",
+                  "effectNextLevel": "Producto con riesgo de inflamabilidad",
+                  "effectEndUser": "Riesgo de seguridad al usuario",
+                  "severity": 10,
+                  "causes": [
+                    {
+                      "id": "86b147a0-90e9-420d-9a96-55297adaa3bc",
+                      "cause": "Material no cumple ensayo de flamabilidad",
+                      "preventionControl": "Certificado de flamabilidad del proveedor",
+                      "detectionControl": "Ensayo de flamabilidad por lote",
+                      "occurrence": "",
+                      "detection": "",
+                      "ap": "",
+                      "characteristicNumber": "",
+                      "specialChar": "CC",
+                      "filterCode": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "actionTaken": "",
+                      "completionDate": "",
+                      "severityNew": "",
+                      "occurrenceNew": "",
+                      "detectionNew": "",
+                      "apNew": "",
+                      "observations": "",
+                      "actionPriority": ""
+                    }
+                  ]
+                },
+                {
+                  "id": "a71c6279-926e-47b2-a947-980c61ec334a",
+                  "description": "Refuerzo 600 g/m2 fuera de especificación",
+                  "effectLocal": "Refuerzo no conforme",
+                  "effectNextLevel": "Producto con rigidez incorrecta",
+                  "effectEndUser": "Falla funcional del producto",
+                  "severity": "",
+                  "causes": [
+                    {
+                      "id": "5be2547e-e851-456d-9df6-1c0d88cf869e",
+                      "cause": "Lote de refuerzo fuera de tolerancia de gramaje",
+                      "preventionControl": "Certificado de gramaje del proveedor",
+                      "detectionControl": "Verificación de gramaje en recepción",
+                      "occurrence": "",
+                      "detection": "",
+                      "ap": "",
+                      "characteristicNumber": "",
+                      "specialChar": "",
+                      "filterCode": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "actionTaken": "",
+                      "completionDate": "",
+                      "severityNew": "",
+                      "occurrenceNew": "",
+                      "detectionNew": "",
+                      "apNew": "",
+                      "observations": "",
+                      "actionPriority": ""
+                    }
+                  ]
+                },
+                {
+                  "id": "e7794550-2775-49de-b14d-6a358a9266e9",
+                  "description": "Refuerzo 1500 g/m2 fuera de especificación",
+                  "effectLocal": "Refuerzo no conforme",
+                  "effectNextLevel": "Producto con rigidez incorrecta",
+                  "effectEndUser": "Falla funcional del producto",
+                  "severity": "",
+                  "causes": [
+                    {
+                      "id": "ad32e5dd-7acd-4502-b229-21fde5164ca9",
+                      "cause": "Lote de refuerzo fuera de tolerancia de gramaje",
+                      "preventionControl": "Certificado de gramaje del proveedor",
+                      "detectionControl": "Verificación de gramaje en recepción",
+                      "occurrence": "",
+                      "detection": "",
+                      "ap": "",
+                      "characteristicNumber": "",
+                      "specialChar": "",
+                      "filterCode": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "actionTaken": "",
+                      "completionDate": "",
+                      "severityNew": "",
+                      "occurrenceNew": "",
+                      "detectionNew": "",
+                      "apNew": "",
+                      "observations": "",
+                      "actionPriority": ""
+                    }
+                  ]
+                },
+                {
+                  "id": "6140c339-f78d-4cf7-9a33-c36dbf1ed5e4",
+                  "description": "Hilo Caimán Polyester 120 fuera de especificación",
+                  "effectLocal": "Hilo no conforme",
+                  "effectNextLevel": "Costura con resistencia incorrecta",
+                  "effectEndUser": "Falla de costura en campo",
+                  "severity": "",
+                  "causes": [
+                    {
+                      "id": "0639f704-2ce4-41ba-b705-272968be4c4e",
+                      "cause": "Proveedor entrega hilo fuera de tolerancia",
+                      "preventionControl": "Certificado de calidad del proveedor",
+                      "detectionControl": "Verificación visual y dimensional en recepción",
+                      "occurrence": "",
+                      "detection": "",
+                      "ap": "",
+                      "characteristicNumber": "",
+                      "specialChar": "",
+                      "filterCode": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "actionTaken": "",
+                      "completionDate": "",
+                      "severityNew": "",
+                      "occurrenceNew": "",
+                      "detectionNew": "",
+                      "apNew": "",
+                      "observations": "",
+                      "actionPriority": ""
+                    }
+                  ]
+                },
+                {
+                  "id": "41bd1c5c-e410-4e56-8b0f-960e234f47ea",
+                  "description": "Hilo Polyester texturizado fuera de especificación",
+                  "effectLocal": "Hilo no conforme",
+                  "effectNextLevel": "Costura con resistencia incorrecta",
+                  "effectEndUser": "Falla de costura en campo",
+                  "severity": "",
+                  "causes": [
+                    {
+                      "id": "e8c682fd-9eae-4870-bc57-37fffbd0167a",
+                      "cause": "Proveedor entrega hilo fuera de tolerancia",
+                      "preventionControl": "Certificado de calidad del proveedor",
+                      "detectionControl": "Verificación visual y dimensional en recepción",
+                      "occurrence": "",
+                      "detection": "",
+                      "ap": "",
+                      "characteristicNumber": "",
+                      "specialChar": "",
+                      "filterCode": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "actionTaken": "",
+                      "completionDate": "",
+                      "severityNew": "",
+                      "occurrenceNew": "",
+                      "detectionNew": "",
+                      "apNew": "",
+                      "observations": "",
+                      "actionPriority": ""
+                    }
+                  ]
+                },
+                {
+                  "id": "9b13d1bd-f2c1-4c1e-9261-b8fedc706c69",
+                  "description": "Aplix fuera de especificación",
+                  "effectLocal": "Aplix no conforme",
+                  "effectNextLevel": "Fijación deficiente del producto",
+                  "effectEndUser": "Desprendimiento en uso",
+                  "severity": "",
+                  "causes": [
+                    {
+                      "id": "d6e4af64-bda0-46dd-88ce-05446d074b6f",
+                      "cause": "Lote de Aplix fuera de tolerancia",
+                      "preventionControl": "Certificado de calidad del proveedor",
+                      "detectionControl": "Verificación visual y dimensional en recepción",
+                      "occurrence": "",
+                      "detection": "",
+                      "ap": "",
+                      "characteristicNumber": "",
+                      "specialChar": "",
+                      "filterCode": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "actionTaken": "",
+                      "completionDate": "",
+                      "severityNew": "",
+                      "occurrenceNew": "",
+                      "detectionNew": "",
+                      "apNew": "",
+                      "observations": "",
+                      "actionPriority": ""
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "802171bb-f675-430c-9ebe-8a545e836cc1",
+          "type": "Material",
+          "name": "Refuerzos",
+          "functions": [
+            {
+              "id": "4cc387db-1546-4308-b1ce-dc251e2bdf20",
+              "description": "TBD — Funcion de Refuerzos",
+              "requirements": "",
+              "failures": [
+                {
+                  "id": "ccf10a39-7b3b-46e3-ab9d-6f7909befa1c",
+                  "description": "TBD — Pendiente definicion con equipo APQP",
+                  "effectLocal": "TBD",
+                  "effectNextLevel": "TBD",
+                  "effectEndUser": "TBD",
+                  "severity": "",
+                  "causes": [
+                    {
+                      "id": "78f40095-270d-40d5-a2a2-ed491daaf1aa",
+                      "cause": "TBD",
+                      "preventionControl": "",
+                      "detectionControl": "",
+                      "occurrence": "",
+                      "detection": "",
+                      "ap": "",
+                      "characteristicNumber": "",
+                      "specialChar": "",
+                      "filterCode": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "actionTaken": "",
+                      "completionDate": "",
+                      "severityNew": "",
+                      "occurrenceNew": "",
+                      "detectionNew": "",
+                      "apNew": "",
+                      "observations": "",
+                      "actionPriority": ""
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "e67f9dca-aeda-44bb-b20b-6c8a82a07042",
+          "type": "Material",
+          "name": "Hilos",
+          "functions": [
+            {
+              "id": "839a10b5-db66-427b-8d48-36040e00e78d",
+              "description": "TBD — Funcion de Hilos",
+              "requirements": "",
+              "failures": [
+                {
+                  "id": "f4278581-2fb3-41f2-9540-9b060cdb9231",
+                  "description": "TBD — Pendiente definicion con equipo APQP",
+                  "effectLocal": "TBD",
+                  "effectNextLevel": "TBD",
+                  "effectEndUser": "TBD",
+                  "severity": "",
+                  "causes": [
+                    {
+                      "id": "933a5a1b-e808-48cf-a94c-97c517311355",
+                      "cause": "TBD",
+                      "preventionControl": "",
+                      "detectionControl": "",
+                      "occurrence": "",
+                      "detection": "",
+                      "ap": "",
+                      "characteristicNumber": "",
+                      "specialChar": "",
+                      "filterCode": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "actionTaken": "",
+                      "completionDate": "",
+                      "severityNew": "",
+                      "occurrenceNew": "",
+                      "detectionNew": "",
+                      "apNew": "",
+                      "observations": "",
+                      "actionPriority": ""
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "c2bd4fce-324b-429f-980d-dd735ecb4479",
+          "type": "Material",
+          "name": "Aplix",
+          "functions": [
+            {
+              "id": "36fb7c15-6416-42a6-990b-319b3a22d31e",
+              "description": "TBD — Funcion de Aplix",
+              "requirements": "",
+              "failures": [
+                {
+                  "id": "1c4e8bb3-f503-430d-a93d-6cb0b8d0ee11",
+                  "description": "TBD — Pendiente definicion con equipo APQP",
+                  "effectLocal": "TBD",
+                  "effectNextLevel": "TBD",
+                  "effectEndUser": "TBD",
+                  "severity": "",
+                  "causes": [
+                    {
+                      "id": "4b5c6324-1678-453e-ab0e-217d24aa59f0",
+                      "cause": "TBD",
+                      "preventionControl": "",
+                      "detectionControl": "",
+                      "occurrence": "",
+                      "detection": "",
+                      "ap": "",
+                      "characteristicNumber": "",
+                      "specialChar": "",
+                      "filterCode": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "actionTaken": "",
+                      "completionDate": "",
+                      "severityNew": "",
+                      "occurrenceNew": "",
+                      "detectionNew": "",
+                      "apNew": "",
+                      "observations": "",
+                      "actionPriority": ""
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "focusElementFunction": "Asegurar la conformidad de materiales recibidos",
+      "operationFunction": "Verificar e identificar materiales según plan de control"
+    },
+    {
+      "id": "88f47bcc-e35e-4d5e-823b-0ff66e89f67e",
+      "opNumber": "OP 11",
+      "name": "RETRABAJO DE PIEZA (APLIX)",
+      "focusElementFunction": "",
+      "operationFunction": "",
+      "workElements": [
+        {
+          "id": "ff33ca96-e700-4e2f-a1be-eb5ac9fc2250",
+          "type": "Man",
+          "name": "Operador de retrabajo",
+          "functions": [
+            {
+              "id": "ff4218af-f9bf-4747-bac0-2c6daca1af1f",
+              "description": "Retrabajar pieza con aplix defectuoso",
+              "requirements": "",
+              "failures": [
+                {
+                  "id": "1ed33964-90f3-4b22-9c95-a2807d7119c3",
+                  "description": "TBD — Pendiente definicion con equipo APQP",
+                  "effectLocal": "TBD",
+                  "effectNextLevel": "TBD",
+                  "effectEndUser": "TBD",
+                  "severity": "",
+                  "causes": [
+                    {
+                      "id": "1a40c81c-9b81-4f6c-877d-c45bbb2da0e1",
+                      "cause": "TBD",
+                      "preventionControl": "",
+                      "detectionControl": "",
+                      "occurrence": "",
+                      "detection": "",
+                      "ap": "",
+                      "characteristicNumber": "",
+                      "specialChar": "",
+                      "filterCode": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "actionTaken": "",
+                      "completionDate": "",
+                      "severityNew": "",
+                      "occurrenceNew": "",
+                      "detectionNew": "",
+                      "apNew": "",
+                      "observations": "",
+                      "actionPriority": ""
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ac3ac54c-71fb-4a94-a307-088f203aab73",
+      "opNumber": "OP 15",
+      "name": "PREPARACION DE CORTE",
+      "workElements": [
+        {
+          "id": "d34de090-819d-4438-b43d-a0110a6a3049",
+          "type": "Method",
+          "name": "Procedimiento de tendido y ploteo",
+          "functions": [
+            {
+              "id": "57768104-eb7e-41bf-9850-c7d1df0a958e",
+              "description": "Tender tela sobre mesa de corte y plotear patrón",
+              "requirements": "",
+              "failures": [
+                {
+                  "id": "9ea4b339-31ab-4d6c-b0c5-ee3173587d21",
+                  "description": "Tela mal tendida (arrugas, tensión desigual)",
+                  "effectLocal": "Corte impreciso",
+                  "effectNextLevel": "Piezas fuera de dimensión",
+                  "effectEndUser": "Producto defectuoso",
+                  "severity": "",
+                  "causes": [
+                    {
+                      "id": "6fe64828-01fc-4ed3-a018-d789bda76481",
+                      "cause": "Operador no sigue procedimiento de tendido",
+                      "preventionControl": "Instrucción de trabajo de tendido documentada",
+                      "detectionControl": "Verificación visual antes de corte",
+                      "occurrence": "",
+                      "detection": "",
+                      "ap": "",
+                      "characteristicNumber": "",
+                      "specialChar": "",
+                      "filterCode": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "actionTaken": "",
+                      "completionDate": "",
+                      "severityNew": "",
+                      "occurrenceNew": "",
+                      "detectionNew": "",
+                      "apNew": "",
+                      "observations": "",
+                      "actionPriority": ""
+                    }
+                  ]
+                },
+                {
+                  "id": "10e71945-08b1-41f4-a3a5-a32b63c97168",
+                  "description": "Ploteo de patrón incorrecto",
+                  "effectLocal": "Desperdicio de material",
+                  "effectNextLevel": "Piezas con forma incorrecta",
+                  "effectEndUser": "Retrabajo o scrap",
+                  "severity": "",
+                  "causes": [
+                    {
+                      "id": "4b5c968e-eac6-4020-a024-bddbf5e19128",
+                      "cause": "Programa de ploteo erróneo o desactualizado",
+                      "preventionControl": "Verificación de programa vs plano vigente",
+                      "detectionControl": "Control de primera pieza cortada",
+                      "occurrence": "",
+                      "detection": "",
+                      "ap": "",
+                      "characteristicNumber": "",
+                      "specialChar": "",
+                      "filterCode": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "actionTaken": "",
+                      "completionDate": "",
+                      "severityNew": "",
+                      "occurrenceNew": "",
+                      "detectionNew": "",
+                      "apNew": "",
+                      "observations": "",
+                      "actionPriority": ""
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "focusElementFunction": "Preparar material para corte conforme",
+      "operationFunction": "Tender tela y plotear patrón correctamente"
+    },
+    {
+      "id": "f4bd7116-e4cd-49fc-9f7a-b5de151117bb",
+      "opNumber": "OP 20",
+      "name": "CORTE",
+      "workElements": [
+        {
+          "id": "564a2df8-33c9-4cfa-b844-5d60fc42a924",
+          "type": "Machine",
+          "name": "Cortadora",
+          "functions": [
+            {
+              "id": "5d64f8be-1ae7-4e2e-932b-f62b6fc7fb08",
+              "description": "Cortar tela a dimensiones especificadas según plano",
+              "requirements": "",
+              "failures": [
+                {
+                  "id": "609461cd-d6bb-484f-b5b9-eff781b0d054",
+                  "description": "Dimensiones fuera de tolerancia",
+                  "effectLocal": "Pieza no conforme",
+                  "effectNextLevel": "Retrabajo en cliente",
+                  "effectEndUser": "Producto defectuoso",
+                  "severity": "",
+                  "causes": [
+                    {
+                      "id": "08d9faf9-c47b-4c33-932b-73ee1a1a8a1b",
+                      "cause": "Calibración incorrecta de cortadora",
+                      "preventionControl": "Plan de calibración periódico",
+                      "detectionControl": "Control dimensional con plantilla",
+                      "occurrence": "",
+                      "detection": "",
+                      "ap": "",
+                      "characteristicNumber": "",
+                      "specialChar": "",
+                      "filterCode": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "actionTaken": "",
+                      "completionDate": "",
+                      "severityNew": "",
+                      "occurrenceNew": "",
+                      "detectionNew": "",
+                      "apNew": "",
+                      "observations": "",
+                      "actionPriority": ""
+                    }
+                  ]
+                },
+                {
+                  "id": "02f09ed4-b063-428d-b235-5f32b526910a",
+                  "description": "Corte irregular con rebabas",
+                  "effectLocal": "Aspecto visual deficiente",
+                  "effectNextLevel": "Rechazo en inspección",
+                  "effectEndUser": "Insatisfacción visual",
+                  "severity": "",
+                  "causes": [
+                    {
+                      "id": "f204c1a4-221d-4bc3-9db8-7bff68ebe39f",
+                      "cause": "Desgaste de cuchilla",
+                      "preventionControl": "Mantenimiento preventivo de cuchillas",
+                      "detectionControl": "Inspección visual 100%",
+                      "occurrence": "",
+                      "detection": "",
+                      "ap": "",
+                      "characteristicNumber": "",
+                      "specialChar": "",
+                      "filterCode": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "actionTaken": "",
+                      "completionDate": "",
+                      "severityNew": "",
+                      "occurrenceNew": "",
+                      "detectionNew": "",
+                      "apNew": "",
+                      "observations": "",
+                      "actionPriority": ""
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "1dce443e-ee9e-49f0-a4ec-c843466996af",
+          "type": "Machine",
+          "name": "Mesa de corte",
+          "functions": [
+            {
+              "id": "9dcd3f65-b49a-4f39-aa26-77e4842c048d",
+              "description": "TBD — Funcion de Mesa de corte",
+              "requirements": "",
+              "failures": [
+                {
+                  "id": "6774ed9e-2520-4e7f-8bab-8bcce77fa76b",
+                  "description": "TBD — Pendiente definicion con equipo APQP",
+                  "effectLocal": "TBD",
+                  "effectNextLevel": "TBD",
+                  "effectEndUser": "TBD",
+                  "severity": "",
+                  "causes": [
+                    {
+                      "id": "3b81c261-5af7-4ec7-b2c5-0ee89176f0f7",
+                      "cause": "TBD",
+                      "preventionControl": "",
+                      "detectionControl": "",
+                      "occurrence": "",
+                      "detection": "",
+                      "ap": "",
+                      "characteristicNumber": "",
+                      "specialChar": "",
+                      "filterCode": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "actionTaken": "",
+                      "completionDate": "",
+                      "severityNew": "",
+                      "occurrenceNew": "",
+                      "detectionNew": "",
+                      "apNew": "",
+                      "observations": "",
+                      "actionPriority": ""
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "focusElementFunction": "Obtener componentes cortados conformes a plano",
+      "operationFunction": "Cortar material según dimensiones especificadas"
+    },
+    {
+      "id": "e93979ca-40b0-46fc-b771-faec03e96e3e",
+      "opNumber": "OP 30",
+      "name": "PREPARACION DE KITS",
+      "workElements": [
+        {
+          "id": "5b1a3710-d82a-43f1-9536-b5af0f1a9f18",
+          "type": "Man",
+          "name": "Operador de preparación",
+          "functions": [
+            {
+              "id": "8f439ce4-22c0-4541-a261-4a0283c58783",
+              "description": "Armar kits con todos los componentes necesarios por pieza",
+              "requirements": "",
+              "failures": [
+                {
+                  "id": "e1dc6a8a-9878-4ac4-8784-b818b8d78a0c",
+                  "description": "Kit incompleto (falta componente)",
+                  "effectLocal": "Parada en operación siguiente",
+                  "effectNextLevel": "Producto incompleto",
+                  "effectEndUser": "Retrabajo o scrap",
+                  "severity": "",
+                  "causes": [
+                    {
+                      "id": "664cb111-a1a0-463e-95eb-76808ffdda8a",
+                      "cause": "Error del operador en armado de kit",
+                      "preventionControl": "Lista de componentes por producto, instrucción de trabajo",
+                      "detectionControl": "Verificación visual del kit armado",
+                      "occurrence": "",
+                      "detection": "",
+                      "ap": "",
+                      "characteristicNumber": "",
+                      "specialChar": "",
+                      "filterCode": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "actionTaken": "",
+                      "completionDate": "",
+                      "severityNew": "",
+                      "occurrenceNew": "",
+                      "detectionNew": "",
+                      "apNew": "",
+                      "observations": "",
+                      "actionPriority": ""
+                    }
+                  ]
+                },
+                {
+                  "id": "26fd40de-61b5-42eb-a146-0ffc8b9250d2",
+                  "description": "Componente equivocado en el kit",
+                  "effectLocal": "Producto con componente incorrecto",
+                  "effectNextLevel": "Producto fuera de especificación",
+                  "effectEndUser": "Reclamo de cliente",
+                  "severity": "",
+                  "causes": [
+                    {
+                      "id": "7783ca77-5942-4611-9d28-8d235847247e",
+                      "cause": "Confusión de componentes similares",
+                      "preventionControl": "Identificación clara por componente, ayuda visual",
+                      "detectionControl": "Control visual vs lista de kit",
+                      "occurrence": "",
+                      "detection": "",
+                      "ap": "",
+                      "characteristicNumber": "",
+                      "specialChar": "",
+                      "filterCode": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "actionTaken": "",
+                      "completionDate": "",
+                      "severityNew": "",
+                      "occurrenceNew": "",
+                      "detectionNew": "",
+                      "apNew": "",
+                      "observations": "",
+                      "actionPriority": ""
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "focusElementFunction": "Proveer kits completos y correctos para producción",
+      "operationFunction": "Armar y verificar kits de componentes"
+    },
+    {
+      "id": "d41cb72a-909c-4b2e-a43a-a695c7d1377f",
+      "opNumber": "OP 40",
+      "name": "TERMOFORMADO",
+      "workElements": [
+        {
+          "id": "ad850bc1-da61-4266-b58a-8f61c36b17ea",
+          "type": "Machine",
+          "name": "Termoformadora",
+          "functions": [
+            {
+              "id": "5eae2cf1-ac69-47fd-b56a-6385467b49a0",
+              "description": "Conformar pieza a geometría 3D mediante calor y presión",
+              "requirements": "",
+              "failures": [
+                {
+                  "id": "4f588969-7ce2-4b23-8b93-3d3ffa3f41e6",
+                  "description": "Deformación dimensional",
+                  "effectLocal": "Pieza fuera de tolerancia",
+                  "effectNextLevel": "No ensambla en cliente",
+                  "effectEndUser": "Producto no funcional",
+                  "severity": "",
+                  "causes": [
+                    {
+                      "id": "62e303b3-2186-4e59-8c43-c5dedbcff4c4",
+                      "cause": "Temperatura de proceso incorrecta",
+                      "preventionControl": "Parámetros documentados, control automático",
+                      "detectionControl": "Control dimensional post-formado",
+                      "occurrence": "",
+                      "detection": "",
+                      "ap": "",
+                      "characteristicNumber": "",
+                      "specialChar": "",
+                      "filterCode": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "actionTaken": "",
+                      "completionDate": "",
+                      "severityNew": "",
+                      "occurrenceNew": "",
+                      "detectionNew": "",
+                      "apNew": "",
+                      "observations": "",
+                      "actionPriority": ""
+                    }
+                  ]
+                },
+                {
+                  "id": "8b13987c-4973-460a-a0ff-de64e03f4344",
+                  "description": "Arrugas o burbujas en superficie",
+                  "effectLocal": "Defecto visual",
+                  "effectNextLevel": "Rechazo visual",
+                  "effectEndUser": "Aspecto no aceptable",
+                  "severity": "",
+                  "causes": [
+                    {
+                      "id": "5bc4b365-cefb-40b7-a88d-d8b1028da97b",
+                      "cause": "Distribución desigual del material",
+                      "preventionControl": "Pre-calentamiento uniforme, procedimiento de carga",
+                      "detectionControl": "Inspección visual 100%",
+                      "occurrence": "",
+                      "detection": "",
+                      "ap": "",
+                      "characteristicNumber": "",
+                      "specialChar": "",
+                      "filterCode": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "actionTaken": "",
+                      "completionDate": "",
+                      "severityNew": "",
+                      "occurrenceNew": "",
+                      "detectionNew": "",
+                      "apNew": "",
+                      "observations": "",
+                      "actionPriority": ""
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "11a3cb58-4e79-4810-8925-49591d931475",
+          "type": "Method",
+          "name": "Parámetros de termoformado",
+          "functions": [
+            {
+              "id": "12c32f04-c543-421d-be69-513406c69caf",
+              "description": "Mantener parámetros de proceso dentro de rango",
+              "requirements": "",
+              "failures": [
+                {
+                  "id": "56966235-6a29-4eb7-9c16-ff1d74163599",
+                  "description": "Espesor desigual en pieza formada",
+                  "effectLocal": "Zona débil en producto",
+                  "effectNextLevel": "Falla en uso",
+                  "effectEndUser": "Riesgo de rotura",
+                  "severity": "",
+                  "causes": [
+                    {
+                      "id": "2512bd28-0fef-4189-8dc6-b930904419a9",
+                      "cause": "Tiempo de calentamiento insuficiente",
+                      "preventionControl": "Receta de proceso documentada",
+                      "detectionControl": "Medición de espesor con micrómetro",
+                      "occurrence": "",
+                      "detection": "",
+                      "ap": "",
+                      "characteristicNumber": "",
+                      "specialChar": "",
+                      "filterCode": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "actionTaken": "",
+                      "completionDate": "",
+                      "severityNew": "",
+                      "occurrenceNew": "",
+                      "detectionNew": "",
+                      "apNew": "",
+                      "observations": "",
+                      "actionPriority": ""
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "focusElementFunction": "Obtener pieza termoformada conforme a geometría",
+      "operationFunction": "Conformar tela mediante calor y presión"
+    },
+    {
+      "id": "995cbcaa-4344-47dc-8513-b8012113040c",
+      "opNumber": "OP 50",
+      "name": "CORTE LASER",
+      "workElements": [
+        {
+          "id": "9fe72e8f-2d49-4340-b925-0146f9c05c4d",
+          "type": "Machine",
+          "name": "Cortadora láser",
+          "functions": [
+            {
+              "id": "965dda7b-b00f-49e9-867a-3b050a293696",
+              "description": "Cortar contorno de pieza termoformada con láser",
+              "requirements": "",
+              "failures": [
+                {
+                  "id": "c03c004e-997c-42bd-a50b-5bbdedfe19f8",
+                  "description": "Contorno fuera de dimensión",
+                  "effectLocal": "Pieza requiere retrabajo",
+                  "effectNextLevel": "No ensambla en cliente",
+                  "effectEndUser": "Producto defectuoso",
+                  "severity": "",
+                  "causes": [
+                    {
+                      "id": "f0c9473a-b896-4873-bd60-06f68b357317",
+                      "cause": "Programa de corte láser desactualizado o error de setup",
+                      "preventionControl": "Verificación de programa antes de inicio",
+                      "detectionControl": "Control dimensional con plantilla",
+                      "occurrence": "",
+                      "detection": "",
+                      "ap": "",
+                      "characteristicNumber": "",
+                      "specialChar": "",
+                      "filterCode": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "actionTaken": "",
+                      "completionDate": "",
+                      "severityNew": "",
+                      "occurrenceNew": "",
+                      "detectionNew": "",
+                      "apNew": "",
+                      "observations": "",
+                      "actionPriority": ""
+                    }
+                  ]
+                },
+                {
+                  "id": "a39d9098-f62f-402d-a402-812b072d9d11",
+                  "description": "Quemaduras o marcas de láser",
+                  "effectLocal": "Defecto visual",
+                  "effectNextLevel": "Rechazo por apariencia",
+                  "effectEndUser": "Aspecto no aceptable",
+                  "severity": "",
+                  "causes": [
+                    {
+                      "id": "6651aab1-9772-47ad-b55e-4e8f7dd09e02",
+                      "cause": "Potencia de láser excesiva o velocidad incorrecta",
+                      "preventionControl": "Parámetros documentados en receta",
+                      "detectionControl": "Inspección visual 100%",
+                      "occurrence": "",
+                      "detection": "",
+                      "ap": "",
+                      "characteristicNumber": "",
+                      "specialChar": "",
+                      "filterCode": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "actionTaken": "",
+                      "completionDate": "",
+                      "severityNew": "",
+                      "occurrenceNew": "",
+                      "detectionNew": "",
+                      "apNew": "",
+                      "observations": "",
+                      "actionPriority": ""
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "focusElementFunction": "Obtener pieza con contorno conforme a plano",
+      "operationFunction": "Cortar contorno de pieza termoformada con láser"
+    },
+    {
+      "id": "2560e7c1-c7a4-49e0-b418-78c67133f0fa",
+      "opNumber": "OP 60",
+      "name": "TROQUELADO DE REFUERZOS",
+      "workElements": [
+        {
+          "id": "af318467-1f2a-4616-99ea-271d73cb8c42",
+          "type": "Machine",
+          "name": "Troquel",
+          "functions": [
+            {
+              "id": "fd52909c-bc6c-48f9-af3a-e026e22862f3",
+              "description": "Troquelar refuerzos a forma según plano",
+              "requirements": "",
+              "failures": [
+                {
+                  "id": "0a56e018-1e5e-40cb-98f6-02ff3e8c8b8e",
+                  "description": "Forma fuera de especificación",
+                  "effectLocal": "Refuerzo no conforme",
+                  "effectNextLevel": "Refuerzo no ensambla correctamente",
+                  "effectEndUser": "Producto con rigidez deficiente",
+                  "severity": "",
+                  "causes": [
+                    {
+                      "id": "8a3b7ea0-f2f7-40b2-ae25-6c2535209df1",
+                      "cause": "Troquel desgastado o dañado",
+                      "preventionControl": "Mantenimiento preventivo de troquel",
+                      "detectionControl": "Control dimensional con gauge",
+                      "occurrence": "",
+                      "detection": "",
+                      "ap": "",
+                      "characteristicNumber": "",
+                      "specialChar": "",
+                      "filterCode": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "actionTaken": "",
+                      "completionDate": "",
+                      "severityNew": "",
+                      "occurrenceNew": "",
+                      "detectionNew": "",
+                      "apNew": "",
+                      "observations": "",
+                      "actionPriority": ""
+                    }
+                  ]
+                },
+                {
+                  "id": "62a7ce45-5ec5-4f51-a14f-21f3edb022f4",
+                  "description": "Rebabas en bordes de corte",
+                  "effectLocal": "Retrabajo manual necesario",
+                  "effectNextLevel": "Posible daño al operador o material",
+                  "effectEndUser": "Riesgo de calidad",
+                  "severity": "",
+                  "causes": [
+                    {
+                      "id": "c1d568ce-cc74-4a96-80f7-ca918c9a3dd0",
+                      "cause": "Holgura excesiva en troquel",
+                      "preventionControl": "Control de gap de troquel en setup",
+                      "detectionControl": "Inspección visual y táctil 100%",
+                      "occurrence": "",
+                      "detection": "",
+                      "ap": "",
+                      "characteristicNumber": "",
+                      "specialChar": "",
+                      "filterCode": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "actionTaken": "",
+                      "completionDate": "",
+                      "severityNew": "",
+                      "occurrenceNew": "",
+                      "detectionNew": "",
+                      "apNew": "",
+                      "observations": "",
+                      "actionPriority": ""
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "1ac73f15-4901-4406-a20a-59286f015065",
+          "type": "Machine",
+          "name": "Prensa hidráulica",
+          "functions": [
+            {
+              "id": "31e7e553-86ac-4f1f-b141-7f283b69c745",
+              "description": "TBD — Funcion de Prensa hidráulica",
+              "requirements": "",
+              "failures": [
+                {
+                  "id": "c9553400-2fb8-479f-8d7e-83ed1877b75f",
+                  "description": "TBD — Pendiente definicion con equipo APQP",
+                  "effectLocal": "TBD",
+                  "effectNextLevel": "TBD",
+                  "effectEndUser": "TBD",
+                  "severity": "",
+                  "causes": [
+                    {
+                      "id": "ace8b861-753b-4a8a-9a4a-f473c084a59d",
+                      "cause": "TBD",
+                      "preventionControl": "",
+                      "detectionControl": "",
+                      "occurrence": "",
+                      "detection": "",
+                      "ap": "",
+                      "characteristicNumber": "",
+                      "specialChar": "",
+                      "filterCode": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "actionTaken": "",
+                      "completionDate": "",
+                      "severityNew": "",
+                      "occurrenceNew": "",
+                      "detectionNew": "",
+                      "apNew": "",
+                      "observations": "",
+                      "actionPriority": ""
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "focusElementFunction": "Obtener refuerzos troquelados conformes a plano",
+      "operationFunction": "Troquelar refuerzos según especificación"
+    },
+    {
+      "id": "cba9512c-2b40-48a9-8785-592759c7ad36",
+      "opNumber": "OP 61",
+      "name": "RETRABAJO SOLDADURA",
+      "focusElementFunction": "",
+      "operationFunction": "",
+      "workElements": [
+        {
+          "id": "004c1fe6-79b4-45c3-9412-16eeb35447e3",
+          "type": "Man",
+          "name": "Operador de retrabajo",
+          "functions": [
+            {
+              "id": "70f5ed7d-264e-4dce-945b-90858c6d2e93",
+              "description": "Retrabajar pieza con soldadura defectuosa",
+              "requirements": "",
+              "failures": [
+                {
+                  "id": "107137d5-aad5-486d-ae20-149513266314",
+                  "description": "TBD — Pendiente definicion con equipo APQP",
+                  "effectLocal": "TBD",
+                  "effectNextLevel": "TBD",
+                  "effectEndUser": "TBD",
+                  "severity": "",
+                  "causes": [
+                    {
+                      "id": "904412e2-d878-4524-9d2b-c1d177eea72e",
+                      "cause": "TBD",
+                      "preventionControl": "",
+                      "detectionControl": "",
+                      "occurrence": "",
+                      "detection": "",
+                      "ap": "",
+                      "characteristicNumber": "",
+                      "specialChar": "",
+                      "filterCode": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "actionTaken": "",
+                      "completionDate": "",
+                      "severityNew": "",
+                      "occurrenceNew": "",
+                      "detectionNew": "",
+                      "apNew": "",
+                      "observations": "",
+                      "actionPriority": ""
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "b35e894b-d625-498a-95bd-b8471fedd24f",
+      "opNumber": "OP 70",
+      "name": "TROQUELADO DE APLIX",
+      "workElements": [
+        {
+          "id": "2811d317-4ab0-49f2-a3e5-c3b01eec5d35",
+          "type": "Machine",
+          "name": "Troquel",
+          "functions": [
+            {
+              "id": "e0f2d156-36d5-4915-bf9b-2c1c27d3f251",
+              "description": "Troquelar Aplix a dimensiones según plano",
+              "requirements": "",
+              "failures": [
+                {
+                  "id": "203ac6b7-21b4-4633-bc93-264bb7e00278",
+                  "description": "Dimensión incorrecta del Aplix troquelado",
+                  "effectLocal": "Aplix no conforme",
+                  "effectNextLevel": "Fijación deficiente",
+                  "effectEndUser": "Desprendimiento en uso",
+                  "severity": "",
+                  "causes": [
+                    {
+                      "id": "b996ccf3-574a-4a65-9813-1411ad618669",
+                      "cause": "Troquel de Aplix desgastado",
+                      "preventionControl": "Mantenimiento preventivo de troquel",
+                      "detectionControl": "Control dimensional del Aplix troquelado",
+                      "occurrence": "",
+                      "detection": "",
+                      "ap": "",
+                      "characteristicNumber": "",
+                      "specialChar": "",
+                      "filterCode": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "actionTaken": "",
+                      "completionDate": "",
+                      "severityNew": "",
+                      "occurrenceNew": "",
+                      "detectionNew": "",
+                      "apNew": "",
+                      "observations": "",
+                      "actionPriority": ""
+                    }
+                  ]
+                },
+                {
+                  "id": "91b09cb3-4623-439c-b4e1-4fb64ff6ea26",
+                  "description": "Rebabas en Aplix troquelado",
+                  "effectLocal": "Retrabajo manual",
+                  "effectNextLevel": "Dificultad de aplicación",
+                  "effectEndUser": "Aspecto deficiente",
+                  "severity": "",
+                  "causes": [
+                    {
+                      "id": "72904383-0de2-46dc-adf2-2c8b1471c268",
+                      "cause": "Holgura en troquel de Aplix",
+                      "preventionControl": "Control de gap en setup",
+                      "detectionControl": "Inspección visual y táctil",
+                      "occurrence": "",
+                      "detection": "",
+                      "ap": "",
+                      "characteristicNumber": "",
+                      "specialChar": "",
+                      "filterCode": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "actionTaken": "",
+                      "completionDate": "",
+                      "severityNew": "",
+                      "occurrenceNew": "",
+                      "detectionNew": "",
+                      "apNew": "",
+                      "observations": "",
+                      "actionPriority": ""
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "9e580772-0508-49c3-b7fd-de1bb17ab229",
+          "type": "Machine",
+          "name": "Prensa",
+          "functions": [
+            {
+              "id": "10a2ce90-ca03-414b-b418-6723967e6f5d",
+              "description": "TBD — Funcion de Prensa",
+              "requirements": "",
+              "failures": [
+                {
+                  "id": "b7c22547-d8e0-4146-b065-8feaa22acc7e",
+                  "description": "TBD — Pendiente definicion con equipo APQP",
+                  "effectLocal": "TBD",
+                  "effectNextLevel": "TBD",
+                  "effectEndUser": "TBD",
+                  "severity": "",
+                  "causes": [
+                    {
+                      "id": "c79e40c8-21df-4aea-81c5-b52773cd2b13",
+                      "cause": "TBD",
+                      "preventionControl": "",
+                      "detectionControl": "",
+                      "occurrence": "",
+                      "detection": "",
+                      "ap": "",
+                      "characteristicNumber": "",
+                      "specialChar": "",
+                      "filterCode": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "actionTaken": "",
+                      "completionDate": "",
+                      "severityNew": "",
+                      "occurrenceNew": "",
+                      "detectionNew": "",
+                      "apNew": "",
+                      "observations": "",
+                      "actionPriority": ""
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "focusElementFunction": "Obtener Aplix troquelado conforme a plano",
+      "operationFunction": "Troquelar Aplix a dimensión especificada"
+    },
+    {
+      "id": "4837ff4a-d713-4afe-9b49-1eacb5cfad39",
+      "opNumber": "OP 80",
+      "name": "COSTURA DE REFUERZOS",
+      "workElements": [
+        {
+          "id": "d06fffa4-c6ed-464f-9799-b222009aebef",
+          "type": "Machine",
+          "name": "Máquina de coser industrial",
+          "functions": [
+            {
+              "id": "f944ec56-0572-48e1-9d33-ed35a893778e",
+              "description": "Coser refuerzos a la pieza termoformada",
+              "requirements": "",
+              "failures": [
+                {
+                  "id": "71501690-e2ba-4d91-ae28-330e25a8ba30",
+                  "description": "Costura salteada",
+                  "effectLocal": "Refuerzo mal fijado",
+                  "effectNextLevel": "Desprendimiento en ensamble",
+                  "effectEndUser": "Falla funcional del producto",
+                  "severity": "",
+                  "causes": [
+                    {
+                      "id": "36c98eef-7428-4546-a04d-44abbf38a197",
+                      "cause": "Aguja desgastada o tensión incorrecta",
+                      "preventionControl": "Cambio de aguja programado, control de tensión",
+                      "detectionControl": "Inspección visual en proceso",
+                      "occurrence": "",
+                      "detection": "",
+                      "ap": "",
+                      "characteristicNumber": "",
+                      "specialChar": "",
+                      "filterCode": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "actionTaken": "",
+                      "completionDate": "",
+                      "severityNew": "",
+                      "occurrenceNew": "",
+                      "detectionNew": "",
+                      "apNew": "",
+                      "observations": "",
+                      "actionPriority": ""
+                    }
+                  ]
+                },
+                {
+                  "id": "ca7891f2-8aa5-47b4-9310-60913cd9188b",
+                  "description": "Costura floja",
+                  "effectLocal": "Refuerzo con fijación débil",
+                  "effectNextLevel": "Desprendimiento en uso",
+                  "effectEndUser": "Falla funcional del producto",
+                  "severity": "",
+                  "causes": [
+                    {
+                      "id": "3c002d85-a781-440c-b56e-dd7a835e077e",
+                      "cause": "Ajuste incorrecto del tensor de hilo",
+                      "preventionControl": "Parámetros documentados en instrucción de trabajo",
+                      "detectionControl": "Inspección visual y ensayo manual",
+                      "occurrence": "",
+                      "detection": "",
+                      "ap": "",
+                      "characteristicNumber": "",
+                      "specialChar": "",
+                      "filterCode": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "actionTaken": "",
+                      "completionDate": "",
+                      "severityNew": "",
+                      "occurrenceNew": "",
+                      "detectionNew": "",
+                      "apNew": "",
+                      "observations": "",
+                      "actionPriority": ""
+                    }
+                  ]
+                },
+                {
+                  "id": "4a01a604-84c7-4342-8e47-c4c3e406cf12",
+                  "description": "Hilo incorrecto",
+                  "effectLocal": "Costura con material inadecuado",
+                  "effectNextLevel": "Resistencia de costura incorrecta",
+                  "effectEndUser": "Falla de costura en campo",
+                  "severity": "",
+                  "causes": [
+                    {
+                      "id": "9f0c4fa5-d5a0-4b89-8c67-59a795e1b600",
+                      "cause": "Error en selección de hilo",
+                      "preventionControl": "Instrucción de trabajo con especificación de hilo",
+                      "detectionControl": "Verificación de hilo antes de inicio",
+                      "occurrence": "",
+                      "detection": "",
+                      "ap": "",
+                      "characteristicNumber": "",
+                      "specialChar": "",
+                      "filterCode": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "actionTaken": "",
+                      "completionDate": "",
+                      "severityNew": "",
+                      "occurrenceNew": "",
+                      "detectionNew": "",
+                      "apNew": "",
+                      "observations": "",
+                      "actionPriority": ""
+                    }
+                  ]
+                },
+                {
+                  "id": "5dd69301-aa96-445a-8e51-d4cc2fc66219",
+                  "description": "Posición del refuerzo incorrecta",
+                  "effectLocal": "Refuerzo descentrado",
+                  "effectNextLevel": "Producto fuera de especificación",
+                  "effectEndUser": "Falla funcional",
+                  "severity": "",
+                  "causes": [
+                    {
+                      "id": "9a04a194-188f-4b07-90a1-1d5e1f9d0709",
+                      "cause": "Falta de plantilla o error de posicionamiento",
+                      "preventionControl": "Plantilla de posición, instrucción de trabajo",
+                      "detectionControl": "Inspección visual vs plano",
+                      "occurrence": "",
+                      "detection": "",
+                      "ap": "",
+                      "characteristicNumber": "",
+                      "specialChar": "",
+                      "filterCode": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "actionTaken": "",
+                      "completionDate": "",
+                      "severityNew": "",
+                      "occurrenceNew": "",
+                      "detectionNew": "",
+                      "apNew": "",
+                      "observations": "",
+                      "actionPriority": ""
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "focusElementFunction": "Fijar refuerzos mediante costura conforme a especificación",
+      "operationFunction": "Coser refuerzos en posición correcta"
+    },
+    {
+      "id": "1a1207dc-c9f3-4e67-ad3f-2864d7e90c16",
+      "opNumber": "OP 90",
+      "name": "APLICACION DE APLIX",
+      "workElements": [
+        {
+          "id": "5555a36e-542a-4931-ba61-94631d5052a4",
+          "type": "Man",
+          "name": "Operador de aplicación",
+          "functions": [
+            {
+              "id": "7cbffb1d-3b60-4995-b9f5-13204170bb1b",
+              "description": "Aplicar Aplix en posiciones según plano",
+              "requirements": "",
+              "failures": [
+                {
+                  "id": "432e47b7-a94b-46c2-b810-46a99953636d",
+                  "description": "Cantidad incorrecta de Aplix",
+                  "effectLocal": "Producto con fijación incompleta",
+                  "effectNextLevel": "Fijación deficiente en ensamble",
+                  "effectEndUser": "Desprendimiento en uso",
+                  "severity": "",
+                  "causes": [
+                    {
+                      "id": "2633b4e3-fd90-46ae-9490-c3ecfe806708",
+                      "cause": "Error del operador en conteo",
+                      "preventionControl": "Instrucción de trabajo con cantidad especificada",
+                      "detectionControl": "Verificación de cantidad por pieza",
+                      "occurrence": "",
+                      "detection": "",
+                      "ap": "",
+                      "characteristicNumber": "",
+                      "specialChar": "",
+                      "filterCode": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "actionTaken": "",
+                      "completionDate": "",
+                      "severityNew": "",
+                      "occurrenceNew": "",
+                      "detectionNew": "",
+                      "apNew": "",
+                      "observations": "",
+                      "actionPriority": ""
+                    }
+                  ]
+                },
+                {
+                  "id": "1a991647-2621-430b-9b36-ebd01fc155e6",
+                  "description": "Posición incorrecta del Aplix",
+                  "effectLocal": "Aplix fuera de zona especificada",
+                  "effectNextLevel": "Interferencia en ensamble",
+                  "effectEndUser": "Fijación deficiente",
+                  "severity": "",
+                  "causes": [
+                    {
+                      "id": "660e86b7-0965-43ab-941d-c5c56620c898",
+                      "cause": "Falta de plantilla o error de posicionamiento",
+                      "preventionControl": "Plantilla de posición, instrucción de trabajo",
+                      "detectionControl": "Inspección visual vs plano",
+                      "occurrence": "",
+                      "detection": "",
+                      "ap": "",
+                      "characteristicNumber": "",
+                      "specialChar": "",
+                      "filterCode": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "actionTaken": "",
+                      "completionDate": "",
+                      "severityNew": "",
+                      "occurrenceNew": "",
+                      "detectionNew": "",
+                      "apNew": "",
+                      "observations": "",
+                      "actionPriority": ""
+                    }
+                  ]
+                },
+                {
+                  "id": "5c7c411c-e1e6-4946-ada4-26eee1b097d2",
+                  "description": "Aplix no adherido correctamente",
+                  "effectLocal": "Aplix se despega en manipulación",
+                  "effectNextLevel": "Falla de fijación",
+                  "effectEndUser": "Desprendimiento en uso",
+                  "severity": "",
+                  "causes": [
+                    {
+                      "id": "4f35e4eb-6dfa-4161-a60d-695c87d72fa3",
+                      "cause": "Superficie contaminada o presión insuficiente",
+                      "preventionControl": "Limpieza de superficie, presión documentada",
+                      "detectionControl": "Verificación de adherencia manual",
+                      "occurrence": "",
+                      "detection": "",
+                      "ap": "",
+                      "characteristicNumber": "",
+                      "specialChar": "",
+                      "filterCode": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "actionTaken": "",
+                      "completionDate": "",
+                      "severityNew": "",
+                      "occurrenceNew": "",
+                      "detectionNew": "",
+                      "apNew": "",
+                      "observations": "",
+                      "actionPriority": ""
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "focusElementFunction": "Aplicar Aplix en cantidad y posición correcta",
+      "operationFunction": "Posicionar y adherir Aplix según plano"
+    },
+    {
+      "id": "1d065983-f918-47e9-b462-97d98470d860",
+      "opNumber": "OP 100",
+      "name": "CONTROL FINAL DE CALIDAD",
+      "workElements": [
+        {
+          "id": "678c216c-8289-41ca-af6c-11a4c0613814",
+          "type": "Measurement",
+          "name": "Instrumentos de inspección",
+          "functions": [
+            {
+              "id": "1a96a97f-bc8b-4f37-b597-bfaa9ce7d685",
+              "description": "Verificar conformidad total del producto terminado",
+              "requirements": "",
+              "failures": [
+                {
+                  "id": "31bbc71e-7e23-40a9-b1b2-782a8700afad",
+                  "description": "Defecto de apariencia no detectado",
+                  "effectLocal": "Producto no conforme liberado",
+                  "effectNextLevel": "Rechazo visual en cliente",
+                  "effectEndUser": "Insatisfacción del cliente",
+                  "severity": "",
+                  "causes": [
+                    {
+                      "id": "8a649260-ffce-4d51-9247-a5c9bf6bc883",
+                      "cause": "Error del inspector o criterio insuficiente",
+                      "preventionControl": "Capacitación en criterios de aceptación, patrón visual actualizado",
+                      "detectionControl": "Auditoría de producto terminado",
+                      "occurrence": "",
+                      "detection": "",
+                      "ap": "",
+                      "characteristicNumber": "",
+                      "specialChar": "",
+                      "filterCode": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "actionTaken": "",
+                      "completionDate": "",
+                      "severityNew": "",
+                      "occurrenceNew": "",
+                      "detectionNew": "",
+                      "apNew": "",
+                      "observations": "",
+                      "actionPriority": ""
+                    }
+                  ]
+                },
+                {
+                  "id": "eabe94f3-d2b7-4743-865e-1e1200e84699",
+                  "description": "Defecto dimensional no detectado",
+                  "effectLocal": "Producto fuera de tolerancia liberado",
+                  "effectNextLevel": "No ensambla en cliente",
+                  "effectEndUser": "Producto defectuoso",
+                  "severity": "",
+                  "causes": [
+                    {
+                      "id": "b38b590b-1509-4cbd-9d94-63ab494cca8d",
+                      "cause": "Falta de control dimensional o instrumento inadecuado",
+                      "preventionControl": "Instrucción de control con instrumentos especificados",
+                      "detectionControl": "Control dimensional con gauge",
+                      "occurrence": "",
+                      "detection": "",
+                      "ap": "",
+                      "characteristicNumber": "",
+                      "specialChar": "",
+                      "filterCode": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "actionTaken": "",
+                      "completionDate": "",
+                      "severityNew": "",
+                      "occurrenceNew": "",
+                      "detectionNew": "",
+                      "apNew": "",
+                      "observations": "",
+                      "actionPriority": ""
+                    }
+                  ]
+                },
+                {
+                  "id": "d6f769ae-3abb-4562-b117-798410eedf12",
+                  "description": "Falta de componentes no detectada",
+                  "effectLocal": "Producto incompleto liberado",
+                  "effectNextLevel": "Producto no funcional en cliente",
+                  "effectEndUser": "Reclamo de cliente",
+                  "severity": "",
+                  "causes": [
+                    {
+                      "id": "73a3cc4e-c4af-4937-8ce2-23a52ba1bbdd",
+                      "cause": "Inspector no verifica lista de componentes",
+                      "preventionControl": "Lista de verificación obligatoria",
+                      "detectionControl": "Control visual vs lista de componentes",
+                      "occurrence": "",
+                      "detection": "",
+                      "ap": "",
+                      "characteristicNumber": "",
+                      "specialChar": "",
+                      "filterCode": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "actionTaken": "",
+                      "completionDate": "",
+                      "severityNew": "",
+                      "occurrenceNew": "",
+                      "detectionNew": "",
+                      "apNew": "",
+                      "observations": "",
+                      "actionPriority": ""
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "2b80a258-a971-43a6-9c4c-8a9e45d21e09",
+          "type": "Measurement",
+          "name": "Patrón visual",
+          "functions": [
+            {
+              "id": "51165a02-6efe-45a7-b545-ca904bc4c34d",
+              "description": "TBD — Funcion de Patrón visual",
+              "requirements": "",
+              "failures": [
+                {
+                  "id": "4d052c77-29f0-4c74-bfa9-c40497688685",
+                  "description": "TBD — Pendiente definicion con equipo APQP",
+                  "effectLocal": "TBD",
+                  "effectNextLevel": "TBD",
+                  "effectEndUser": "TBD",
+                  "severity": "",
+                  "causes": [
+                    {
+                      "id": "66e59a9e-0086-4442-8cef-5aa22614c451",
+                      "cause": "TBD",
+                      "preventionControl": "",
+                      "detectionControl": "",
+                      "occurrence": "",
+                      "detection": "",
+                      "ap": "",
+                      "characteristicNumber": "",
+                      "specialChar": "",
+                      "filterCode": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "actionTaken": "",
+                      "completionDate": "",
+                      "severityNew": "",
+                      "occurrenceNew": "",
+                      "detectionNew": "",
+                      "apNew": "",
+                      "observations": "",
+                      "actionPriority": ""
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "focusElementFunction": "Asegurar que solo producto conforme sea liberado",
+      "operationFunction": "Verificar conformidad visual, dimensional y de componentes"
+    },
+    {
+      "id": "08a3b9b0-6c59-4915-bfa2-cf5a849243ba",
+      "opNumber": "OP 120",
+      "name": "EMBALAJE",
+      "workElements": [
+        {
+          "id": "26c8fa7a-bb0e-41a6-a42e-065f466126a1",
+          "type": "Method",
+          "name": "Procedimiento de embalaje",
+          "functions": [
+            {
+              "id": "2e80fa37-0712-427a-bd54-2f0307af6eb1",
+              "description": "Embalar, identificar y proteger producto para despacho",
+              "requirements": "",
+              "failures": [
+                {
+                  "id": "c1d87c63-6172-4bc2-b2d2-389e6996a206",
+                  "description": "Mayor cantidad embalada",
+                  "effectLocal": "Diferencia de inventario",
+                  "effectNextLevel": "Cliente recibe cantidad incorrecta",
+                  "effectEndUser": "Reclamo de cliente por exceso",
+                  "severity": "",
+                  "causes": [
+                    {
+                      "id": "5310c534-d21c-4a21-b263-2122dd8a2b83",
+                      "cause": "Error de conteo del operador",
+                      "preventionControl": "Instrucción de embalaje con cantidad especificada",
+                      "detectionControl": "Verificación de cantidad antes de cerrar",
+                      "occurrence": "",
+                      "detection": "",
+                      "ap": "",
+                      "characteristicNumber": "",
+                      "specialChar": "",
+                      "filterCode": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "actionTaken": "",
+                      "completionDate": "",
+                      "severityNew": "",
+                      "occurrenceNew": "",
+                      "detectionNew": "",
+                      "apNew": "",
+                      "observations": "",
+                      "actionPriority": ""
+                    }
+                  ]
+                },
+                {
+                  "id": "ee72efe0-9ec3-469a-9396-03721122cab1",
+                  "description": "Menor cantidad embalada",
+                  "effectLocal": "Diferencia de inventario",
+                  "effectNextLevel": "Cliente recibe cantidad insuficiente",
+                  "effectEndUser": "Parada de línea en cliente",
+                  "severity": "",
+                  "causes": [
+                    {
+                      "id": "d35ce48c-f11a-496e-a8bb-ab6eb908e74d",
+                      "cause": "Error de conteo del operador",
+                      "preventionControl": "Instrucción de embalaje con cantidad especificada",
+                      "detectionControl": "Verificación de cantidad antes de cerrar",
+                      "occurrence": "",
+                      "detection": "",
+                      "ap": "",
+                      "characteristicNumber": "",
+                      "specialChar": "",
+                      "filterCode": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "actionTaken": "",
+                      "completionDate": "",
+                      "severityNew": "",
+                      "occurrenceNew": "",
+                      "detectionNew": "",
+                      "apNew": "",
+                      "observations": "",
+                      "actionPriority": ""
+                    }
+                  ]
+                },
+                {
+                  "id": "16fd7634-7104-4509-a378-d1123180d866",
+                  "description": "Error de identificación en etiqueta",
+                  "effectLocal": "Confusión de producto",
+                  "effectNextLevel": "Cliente recibe producto equivocado",
+                  "effectEndUser": "Reclamo de cliente",
+                  "severity": "",
+                  "causes": [
+                    {
+                      "id": "bfb29ad4-8fcd-49ba-901d-0771765d8c18",
+                      "cause": "Error en carga de datos de etiqueta",
+                      "preventionControl": "Procedimiento de etiquetado con verificación cruzada",
+                      "detectionControl": "Verificación de etiqueta vs producto",
+                      "occurrence": "",
+                      "detection": "",
+                      "ap": "",
+                      "characteristicNumber": "",
+                      "specialChar": "",
+                      "filterCode": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "actionTaken": "",
+                      "completionDate": "",
+                      "severityNew": "",
+                      "occurrenceNew": "",
+                      "detectionNew": "",
+                      "apNew": "",
+                      "observations": "",
+                      "actionPriority": ""
+                    }
+                  ]
+                },
+                {
+                  "id": "48705869-8761-4ce7-ab9e-507708d2cc2a",
+                  "description": "Falta de identificación",
+                  "effectLocal": "Producto sin trazabilidad",
+                  "effectNextLevel": "Cliente no puede identificar producto",
+                  "effectEndUser": "Rechazo de cliente",
+                  "severity": "",
+                  "causes": [
+                    {
+                      "id": "4a3fbc29-be73-4d06-bdf4-5a4388fdda89",
+                      "cause": "Omisión del etiquetado",
+                      "preventionControl": "Procedimiento de etiquetado obligatorio",
+                      "detectionControl": "Verificación de etiqueta antes de despacho",
+                      "occurrence": "",
+                      "detection": "",
+                      "ap": "",
+                      "characteristicNumber": "",
+                      "specialChar": "",
+                      "filterCode": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "actionTaken": "",
+                      "completionDate": "",
+                      "severityNew": "",
+                      "occurrenceNew": "",
+                      "detectionNew": "",
+                      "apNew": "",
+                      "observations": "",
+                      "actionPriority": ""
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "focusElementFunction": "Embalar y etiquetar producto conforme para despacho",
+      "operationFunction": "Proteger e identificar producto terminado"
+    }
+  ]
+}

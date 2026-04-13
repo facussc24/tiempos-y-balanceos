@@ -1,0 +1,102 @@
+[
+  {
+    "id": 6,
+    "name": "Telas Planas PWA",
+    "description": "Familia de telas planas para cliente PWA",
+    "linea_code": "PWA",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-17T23:20:33.036888+00:00",
+    "updated_at": "2026-03-17T23:20:33.036888+00:00"
+  },
+  {
+    "id": 7,
+    "name": "Telas Termoformadas PWA",
+    "description": "Familia de telas termoformadas para cliente PWA",
+    "linea_code": "PWA",
+    "linea_name": "PWA",
+    "active": 1,
+    "created_at": "2026-03-17T23:20:49.503662+00:00",
+    "updated_at": "2026-03-17T23:20:49.503662+00:00"
+  },
+  {
+    "id": 5,
+    "name": "Top Roll Patagonia",
+    "description": "Top Roll Front para plataforma Patagonia VW",
+    "linea_code": "VWA",
+    "linea_name": "VWA",
+    "active": 1,
+    "created_at": "2026-03-17T23:17:29.866226+00:00",
+    "updated_at": "2026-03-17T23:17:29.866226+00:00"
+  },
+  {
+    "id": 9,
+    "name": "Headrest Front Patagonia",
+    "description": "Cabezal delantero (Passenger / Driver) para plataforma Patagonia VW",
+    "linea_code": "VWA",
+    "linea_name": "VWA",
+    "active": 1,
+    "created_at": "2026-03-17T23:38:00.657773+00:00",
+    "updated_at": "2026-03-17T23:38:00.657773+00:00"
+  },
+  {
+    "id": 10,
+    "name": "Headrest Rear Center Patagonia",
+    "description": "Cabezal trasero central para plataforma Patagonia VW",
+    "linea_code": "VWA",
+    "linea_name": "VWA",
+    "active": 1,
+    "created_at": "2026-03-17T23:38:19.225526+00:00",
+    "updated_at": "2026-03-17T23:38:19.225526+00:00"
+  },
+  {
+    "id": 11,
+    "name": "Headrest Rear Outer Patagonia",
+    "description": "Cabezal trasero exterior para plataforma Patagonia VW",
+    "linea_code": "VWA",
+    "linea_name": "VWA",
+    "active": 1,
+    "created_at": "2026-03-17T23:38:36.682314+00:00",
+    "updated_at": "2026-03-17T23:38:36.682314+00:00"
+  },
+  {
+    "id": 2,
+    "name": "Insert Patagonia",
+    "description": "Familia de insertos (insert tapizado) para plataforma Patagonia VW",
+    "linea_code": "VWA",
+    "linea_name": "VWA",
+    "active": 1,
+    "created_at": "2026-03-17T21:58:08.234666+00:00",
+    "updated_at": "2026-03-17T21:58:08.234666+00:00"
+  },
+  {
+    "id": 8,
+    "name": "Armrest Door Panel Patagonia",
+    "description": "Familia Armrest Door Panel para plataforma Patagonia VW",
+    "linea_code": "VWA",
+    "linea_name": "VWA",
+    "active": 1,
+    "created_at": "2026-03-17T23:21:53.259269+00:00",
+    "updated_at": "2026-03-17T23:21:53.259269+00:00"
+  },
+  {
+    "id": 15,
+    "name": "Proceso de Inyeccion Plastica",
+    "description": "AMFE de Fundacion: conocimiento base del proceso de inyeccion plastica de la organizacion (AIAG-VDA 2019)",
+    "linea_code": "",
+    "linea_name": "",
+    "active": 1,
+    "created_at": "2026-04-09T13:10:17.27385+00:00",
+    "updated_at": "2026-04-09T13:10:17.27385+00:00"
+  },
+  {
+    "id": 16,
+    "name": "Proceso de Logistica y Recepcion",
+    "description": "AMFE de Fundacion: proceso interdependiente de recepcion, inspeccion y almacenamiento de materia prima (AIAG CP 2024)",
+    "linea_code": "",
+    "linea_name": "",
+    "active": 1,
+    "created_at": "2026-04-13T17:55:22.074402+00:00",
+    "updated_at": "2026-04-13T17:55:22.074402+00:00"
+  }
+]

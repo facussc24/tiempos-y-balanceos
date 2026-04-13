@@ -1,0 +1,3134 @@
+{
+  "header": {
+    "companyName": "BARACK MERCOSUL",
+    "scope": "ARMREST DOOR PANEL PATAGONIA",
+    "partNumber": "N 231",
+    "applicableParts": "N 231",
+    "responsibleEngineer": "Carlos Baptista (Ingeniería)",
+    "coreTeam": "Carlos Baptista (Ingeniería), Manuel Meszaros (Calidad), Facundo Santoro, Marianna Vera (Producción), Cristina Rabago (Seguridad e Higiene)",
+    "preparedBy": "Facundo Santoro",
+    "approvedBy": "Gonzalo Cal",
+    "amfeDate": "12/02/2026",
+    "revisionLevel": "01",
+    "revisionDate": "2026-02-13",
+    "subject": "ARMREST DOOR PANEL",
+    "client": "VWA",
+    "location": "PLANTA HURLINGHAM"
+  },
+  "operations": [
+    {
+      "id": "b164a1c9-62c6-4c79-93aa-f702c8d748e7",
+      "operationNumber": "10",
+      "operationName": "RECEPCION DE MATERIA PRIMA",
+      "workElements": [
+        {
+          "id": "e0a7597a-ca6e-4271-ab27-672d392b5bc4",
+          "name": "Autoelevador",
+          "type": "Maquina",
+          "functions": [
+            {
+              "id": "0039a47a-160a-4d22-ac6d-bf9f8e696846",
+              "functionDescription": "Garantizar la estabilidad y la integridad física del material durante el transporte interno",
+              "failures": [
+                {
+                  "id": "5457d511-01e7-43df-b973-f896c5b2141d",
+                  "description": "Material / pieza golpeada o dañada durante transporte",
+                  "effectLocal": "Retrabajo",
+                  "effectNextLevel": "Problemas en el ensamble final",
+                  "effectEndUser": "Potencial reclamo de aspecto/comfort",
+                  "causes": [
+                    {
+                      "id": "c00851cc-6f05-4857-a1f9-712ee95b700c",
+                      "description": "Mala estiba y embalaje inadecuado",
+                      "severity": 5,
+                      "occurrence": 6,
+                      "detection": 6,
+                      "actionPriority": "M",
+                      "preventionControl": "Medios de embalaje validados",
+                      "detectionControl": "Inspección Visual de daños/suciedad en el empaque al recibir",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "ap": "M",
+                      "cause": "Mala estiba y embalaje inadecuado"
+                    },
+                    {
+                      "id": "4d1180e8-7532-4ecd-b1b3-4fdc0ba96829",
+                      "description": "Manipulación incorrecta en tránsito",
+                      "severity": 5,
+                      "occurrence": 6,
+                      "detection": 6,
+                      "actionPriority": "M",
+                      "preventionControl": "Existencia de instrucciones de trabajo que definen cómo debe estibarse y manipularse el material",
+                      "detectionControl": "Inspección Visual del estado de la pieza/empaque",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "ap": "M",
+                      "cause": "Manipulación incorrecta en tránsito"
+                    },
+                    {
+                      "id": "da9b6b66-4973-4345-b6dd-58122b4a7ad3",
+                      "description": "Almacenaje inadecuado en transporte (sin protecciones)",
+                      "severity": 5,
+                      "occurrence": 5,
+                      "detection": 6,
+                      "actionPriority": "L",
+                      "preventionControl": "Procedimientos de Logística sobre estiba segura y uso de Embalajes Cubiertos o cerrados",
+                      "detectionControl": "Inspección Visual de daños/suciedad en el empaque al recibir",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "ap": "L",
+                      "cause": "Almacenaje inadecuado en transporte (sin protecciones)"
+                    }
+                  ],
+                  "severity": 5
+                },
+                {
+                  "id": "cf5c1937-4b22-424d-a3c2-1bcdd69b44d4",
+                  "description": "Material no cumple requisito de flamabilidad TL 1010 VW",
+                  "effectLocal": "Material no apto para uso",
+                  "effectNextLevel": "Paro de linea VW por incumplimiento normativo",
+                  "effectEndUser": "Riesgo de propagacion de fuego en habitaculo",
+                  "causes": [
+                    {
+                      "id": "bed7e8ab-7ac2-4b41-8a8e-7486ed15a2ee",
+                      "description": "Material fuera de especificacion requerida",
+                      "severity": 9,
+                      "occurrence": 2,
+                      "detection": 3,
+                      "actionPriority": "L",
+                      "preventionControl": "Certificado de flamabilidad del proveedor segun TL 1010",
+                      "detectionControl": "Verificacion documental en recepcion",
+                      "specialChar": "CC",
+                      "characteristicNumber": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "ap": "L",
+                      "cause": "Material fuera de especificacion requerida"
+                    }
+                  ],
+                  "severity": 9
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "716d8a3d-12bc-4028-b20e-8d166b4150d7",
+          "name": "Operador de producción / Operador de calidad",
+          "type": "Mano de Obra",
+          "functions": [
+            {
+              "id": "a737d8de-6b32-4dd9-8d87-8ac519d7ef24",
+              "functionDescription": "Verificar el cumplimiento y la trazabilidad de la materia prima recibida",
+              "failures": [
+                {
+                  "id": "32fc55af-5a5b-4313-9963-75df89404a3a",
+                  "description": "Falta de documentación o trazabilidad",
+                  "effectLocal": "Riesgo de mezclar lotes no conformes",
+                  "effectNextLevel": "Dificultades en trazabilidad si surge un reclamo",
+                  "effectEndUser": "Potencial reclamo",
+                  "causes": [
+                    {
+                      "id": "5a199b2c-e05d-43c1-aad0-7a305b4f1d89",
+                      "description": "Procesos administrativos deficientes",
+                      "severity": 4,
+                      "occurrence": 4,
+                      "detection": 4,
+                      "actionPriority": "L",
+                      "preventionControl": "El sistema ARB obliga a registrar lote y código en recepción y verifica contra base de datos",
+                      "detectionControl": "Verificación automática del lote/código registrado contra la base de datos",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "ap": "L",
+                      "cause": "Procesos administrativos deficientes"
+                    },
+                    {
+                      "id": "d261ddf6-59c2-4c8c-96c7-c763ff88e438",
+                      "description": "Proveedor sin sistema robusto de trazabilidad",
+                      "severity": 4,
+                      "occurrence": 6,
+                      "detection": 6,
+                      "actionPriority": "M",
+                      "preventionControl": "Auditorías de Sistema y Requisitos que validan la capacidad de trazabilidad del proveedor",
+                      "detectionControl": "Verificación del Certificado de Conformidad y registro obligatorio de lote",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "ap": "M",
+                      "cause": "Proveedor sin sistema robusto de trazabilidad"
+                    },
+                    {
+                      "id": "0a04b1fb-5a74-42e7-9a10-565215997494",
+                      "description": "No se utiliza el sistema ARB",
+                      "severity": 4,
+                      "occurrence": 3,
+                      "detection": 7,
+                      "actionPriority": "L",
+                      "preventionControl": "Estándar Operacional que exige el uso del sistema ARB",
+                      "detectionControl": "El sistema impide la emisión de ubicaciones hasta que todos los campos del ARB sean completados",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "ap": "L",
+                      "cause": "No se utiliza el sistema ARB"
+                    }
+                  ],
+                  "severity": 4
+                },
+                {
+                  "id": "ba4b7840-0b86-4080-a556-2b3686933a53",
+                  "description": "Material con especificación errónea (dimensiones, color, dureza, etc.)",
+                  "effectLocal": "Potencial Descarte",
+                  "effectNextLevel": "Potencial parada de línea",
+                  "effectEndUser": "Potencial reclamo de aspecto",
+                  "causes": [
+                    {
+                      "id": "9b950f24-1d91-457f-8587-e32c5af68f60",
+                      "description": "Proveedor no respeta tolerancias",
+                      "severity": 6,
+                      "occurrence": 6,
+                      "detection": 6,
+                      "actionPriority": "M",
+                      "preventionControl": "Requisitos Contractuales de Calidad y Auditorías al Proveedor",
+                      "detectionControl": "Control Dimensional por muestreo (Certificado de Calidad) y Revisión obligatoria",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "ap": "M",
+                      "cause": "Proveedor no respeta tolerancias"
+                    },
+                    {
+                      "id": "b0b9c1f6-110a-4915-b024-572449c39dbf",
+                      "description": "Error en la orden de compra o ficha técnica",
+                      "severity": 6,
+                      "occurrence": 5,
+                      "detection": 6,
+                      "actionPriority": "L",
+                      "preventionControl": "Revisión de Ingeniería de la Ficha Técnica/OC antes de la emisión al proveedor",
+                      "detectionControl": "Control dimensional por muestreo en recepción y Revisión obligatoria del Certificado de Calidad",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "ap": "L",
+                      "cause": "Error en la orden de compra o ficha técnica"
+                    }
+                  ],
+                  "severity": 6
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "32692770-2c92-46f0-befc-74c71982b9f8",
+          "name": "Calibres, Micrómetro, Probeta de flamabilidad, Probeta de peeling",
+          "type": "Material",
+          "functions": [
+            {
+              "id": "e44e2081-7a51-4b4b-8e3d-8db202115e52",
+              "functionDescription": "Disponer y utilizar instrumentos de medición y ensayo",
+              "failures": [
+                {
+                  "id": "4b4a4593-3ae6-49cb-90bd-9fe535061602",
+                  "description": "Contaminación / suciedad en la materia prima",
+                  "effectLocal": "Potencial Descarte",
+                  "effectNextLevel": "Reclamo de aspecto",
+                  "effectEndUser": "Problemas de calidad durante el ensamble",
+                  "causes": [
+                    {
+                      "id": "0ae6195a-bf5c-48a9-9763-8f5c4f81d5a4",
+                      "description": "Ambiente sucio en planta del proveedor",
+                      "severity": 5,
+                      "occurrence": 6,
+                      "detection": 6,
+                      "actionPriority": "M",
+                      "preventionControl": "Auditorías de Calidad",
+                      "detectionControl": "Inspección Visual de la pieza y Revisión del Certificado de Calidad del proveedor",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "ap": "M",
+                      "cause": "Ambiente sucio en planta del proveedor"
+                    },
+                    {
+                      "id": "a8af6271-3406-415f-9544-b9a4338472e4",
+                      "description": "Falta de inspección visual al recibir",
+                      "severity": 5,
+                      "occurrence": 5,
+                      "detection": 5,
+                      "actionPriority": "L",
+                      "preventionControl": "Instrucción de Trabajo de Recepción que exige la verificación física y visual",
+                      "detectionControl": "Inspección visual en recepción",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "ap": "L",
+                      "cause": "Falta de inspección visual al recibir"
+                    }
+                  ],
+                  "severity": 5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "dac8b4df-c73a-4839-9619-fb03c8a04705",
+          "name": "Etiquetas Blancas / Etiquetas de rechazo",
+          "type": "Material",
+          "functions": [
+            {
+              "id": "29c92b4e-2cca-4a5a-9cf6-1c4219f81d69",
+              "functionDescription": "Identificar y etiquetar material recibido",
+              "failures": []
+            }
+          ]
+        },
+        {
+          "id": "4f7d13e0-4a04-4fbf-af59-19cfeffe46a9",
+          "name": "Hojas de operaciones / Ayudas visuales",
+          "type": "Metodo",
+          "functions": [
+            {
+              "id": "f67946b1-98cc-4765-ab0c-c8eaa696d775",
+              "functionDescription": "Comprobar que el embalaje no esté dañado. Corroborar que la orden sea la correcta. Cargar la materia prima en ARB.",
+              "failures": []
+            }
+          ]
+        },
+        {
+          "id": "f87a1b63-8b9c-4f46-8c0f-5594d82f7c33",
+          "name": "Iluminación/Ruido, Ley 19587",
+          "type": "Medio Ambiente",
+          "functions": [
+            {
+              "id": "8a1ea275-c38d-423c-82e3-2477546be1db",
+              "functionDescription": "Mantener las condiciones de seguridad ocupacional según la Ley 19587",
+              "failures": []
+            }
+          ]
+        }
+      ],
+      "opNumber": "10",
+      "name": "RECEPCION DE MATERIA PRIMA",
+      "focusElementFunction": "Interno: Proveer pieza tapizada y ensamblada conforme a especificaciones dimensionales y de apariencia / Cliente: Permitir ensamble del apoyabrazos de puerta sin interferencias en linea VW / Usr. Final: Confort ergonomico y apariencia estetica del apoyabrazos de puerta del vehiculo",
+      "operationFunction": ""
+    },
+    {
+      "id": "fcbfe4fd-b361-442e-b62d-6169d3072969",
+      "opNumber": "15",
+      "operationNumber": "15",
+      "name": "PREPARACION DE CORTE",
+      "operationName": "PREPARACION DE CORTE",
+      "focusElementFunction": "Interno: Proveer pieza tapizada y ensamblada conforme a especificaciones dimensionales y de apariencia / Cliente: Permitir ensamble del apoyabrazos de puerta sin interferencias en linea VW / Usr. Final: Confort ergonomico y apariencia estetica del apoyabrazos de puerta del vehiculo",
+      "operationFunction": "Proveer material cortado conforme a requerimientos dimensionales y de trazabilidad, con cero scrap y dentro del ciclo de tiempo",
+      "workElements": [
+        {
+          "id": "f7269705-1e9b-40bf-a1bb-f8ed81103075",
+          "name": "Cortadora de panos",
+          "type": "Machine",
+          "functions": [
+            {
+              "id": "96de4356-bea1-4714-8ffe-aba23c0bf8dc",
+              "description": "Ejecutar el corte del material de forma constante, pareja y conforme a la longitud requerida",
+              "functionDescription": "Ejecutar el corte del material de forma constante, pareja y conforme a la longitud requerida",
+              "requirements": "",
+              "failures": [
+                {
+                  "id": "e24e51e5-66c0-414c-afd7-3a52fc40fb22",
+                  "description": "Corte fuera de medida (pano mas corto o mas largo que la especificacion)",
+                  "severity": 5,
+                  "effectLocal": "Perdida de material (scrap)",
+                  "effectNextLevel": "Imposibilidad de ensamblar la pieza correctamente",
+                  "effectEndUser": "Retrabajo o falla estetica",
+                  "causes": [
+                    {
+                      "id": "cfad6882-c1d1-4489-9db2-87a309cb0d9e",
+                      "description": "Error del operario al regular la medida con la regla metalica fija",
+                      "cause": "Error del operario al regular la medida con la regla metalica fija",
+                      "severity": 5,
+                      "occurrence": 5,
+                      "detection": 6,
+                      "preventionControl": "Medicion de la primera capa usando la regla metalica fija como referencia",
+                      "detectionControl": "Inspeccion visual del primer corte",
+                      "ap": "L",
+                      "actionPriority": "L",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "filterCode": "",
+                      "recommendedAction": ""
+                    }
+                  ]
+                },
+                {
+                  "id": "6c981482-5d30-448b-9f09-844422d01486",
+                  "description": "Contaminacion del material durante la preparacion de corte",
+                  "severity": 6,
+                  "effectLocal": "Retrabajo de una porcion de la produccion",
+                  "effectNextLevel": "Clasificacion adicional de productos",
+                  "effectEndUser": "Defecto visual moderado en apariencia",
+                  "causes": [
+                    {
+                      "id": "2c4dfbb0-035c-4b6b-977a-c1ac447fdd5d",
+                      "description": "Ambiente sucio en planta del proveedor o en zona de preparacion",
+                      "cause": "Ambiente sucio en planta del proveedor o en zona de preparacion",
+                      "severity": 6,
+                      "occurrence": 6,
+                      "detection": 6,
+                      "preventionControl": "Instruccion de Trabajo y Auditorias de Calidad",
+                      "detectionControl": "Inspeccion Visual de la pieza y del empaque",
+                      "ap": "M",
+                      "actionPriority": "M",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "filterCode": "",
+                      "recommendedAction": ""
+                    },
+                    {
+                      "id": "4e8c6d47-3b06-4b18-b441-e3b708c48390",
+                      "description": "Falta de inspeccion al llegar la materia prima",
+                      "cause": "Falta de inspeccion al llegar la materia prima",
+                      "severity": 6,
+                      "occurrence": 6,
+                      "detection": 6,
+                      "preventionControl": "Instruccion de Trabajo y Auditorias de Calidad",
+                      "detectionControl": "Inspeccion Visual de la pieza y del empaque",
+                      "ap": "M",
+                      "actionPriority": "M",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "filterCode": "",
+                      "recommendedAction": ""
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "7e3fcd2c-f0a1-44fc-a5f8-a57dde167c48",
+          "name": "Operador de produccion",
+          "type": "Man",
+          "functions": [
+            {
+              "id": "f9bdefed-c8d9-4dc8-b255-6ff5ef9ed1a9",
+              "description": "Ajustar el rollo de material con firmeza y estabilidad, configurar parametros de corte en maquina, medir los panos y trasladarlos a mesa de corte",
+              "functionDescription": "Ajustar el rollo de material con firmeza y estabilidad, configurar parametros de corte en maquina, medir los panos y trasladarlos a mesa de corte",
+              "requirements": "",
+              "failures": []
+            }
+          ]
+        },
+        {
+          "id": "c6087e7a-7e5c-4df5-a68f-3cb25fef0d4e",
+          "name": "Hoja de operaciones",
+          "type": "Method",
+          "functions": [
+            {
+              "id": "cd18220d-8fde-4348-8c9f-b16f93795416",
+              "description": "Utilizar la Hoja de Operaciones vigente. Definir el plan de reaccion ante un No conforme",
+              "functionDescription": "Utilizar la Hoja de Operaciones vigente. Definir el plan de reaccion ante un No conforme",
+              "requirements": "",
+              "failures": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "e7d23f85-67a3-4432-9851-2d83542a9c11",
+      "operationNumber": "20",
+      "operationName": "CORTE DE COMPONENTES",
+      "workElements": [
+        {
+          "id": "673a7289-3f2b-4713-b821-91f00c275eb3",
+          "name": "Cortadora automatica BMA090/BMA089",
+          "type": "Maquina",
+          "functions": [
+            {
+              "id": "4e75cdc4-ba49-40ab-8142-aafaa585ab6d",
+              "functionDescription": "Cortar los paneles de vinilo segun programa Cutter Control",
+              "failures": [
+                {
+                  "id": "6360a183-1008-4d26-bb6b-8858111871a1",
+                  "description": "Desviación en el corte de los pliegos",
+                  "effectLocal": "Retrabajo",
+                  "effectNextLevel": "Parada de línea entre una hora y un turno de producción completo.",
+                  "effectEndUser": "Degradación de la función secundaria del vehículo.",
+                  "causes": [
+                    {
+                      "id": "fad4bc09-7014-4421-a36e-5cdac0d31fee",
+                      "description": "Parámetros de corte mal ingresados",
+                      "severity": 7,
+                      "occurrence": 2,
+                      "detection": 6,
+                      "actionPriority": "M",
+                      "preventionControl": "La maquina alinea y corta automáticamente el vinilo / tela",
+                      "detectionControl": "Set up de lanzamiento / Regla / Inspección visual",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "ap": "M",
+                      "cause": "Parámetros de corte mal ingresados"
+                    },
+                    {
+                      "id": "6534e9d8-8081-4753-82e1-94f9904d268e",
+                      "description": "Falla en la maquina",
+                      "severity": 6,
+                      "occurrence": 2,
+                      "detection": 6,
+                      "actionPriority": "M",
+                      "preventionControl": "La maquina alinea y corta automáticamente el vinilo / tela / Instructivo para colocar correctamente tensión y velocidad de rollo",
+                      "detectionControl": "Set up de lanzamiento / Regla / Inspección visual",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "ap": "M",
+                      "cause": "Falla en la maquina"
+                    }
+                  ],
+                  "severity": 7
+                }
+              ]
+            },
+            {
+              "id": "87150625-a2f9-4d96-86af-f2022b71a953",
+              "functionDescription": "Cortar los paneles de vinilo segun programa Cutter Control",
+              "failures": [
+                {
+                  "id": "e1f7080e-79c9-4ba1-9cf5-e7e8ee5aecd1",
+                  "description": "Corte incompleto o irregular",
+                  "effectLocal": "Una porción de la producción tiene que ser descartada (scrap)",
+                  "effectNextLevel": "Parada de línea entre una hora y un turno de producción completo.",
+                  "effectEndUser": "Degradación de la función secundaria del vehículo.",
+                  "causes": [
+                    {
+                      "id": "3aaf22b6-ea1a-46de-a9cc-7d6cd9a70294",
+                      "description": "Desgaste de la cuchilla de corte.",
+                      "severity": 7,
+                      "occurrence": 5,
+                      "detection": 5,
+                      "actionPriority": "M",
+                      "preventionControl": "Mantenimiento preventivo de la máquina. / Verificación de cuchillas antes del inicio del lote.",
+                      "detectionControl": "Verificación de las piezas cortadas mediante un mylar de control físico, utilizado por el operario en la estación de corte.",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "ap": "M",
+                      "cause": "Desgaste de la cuchilla de corte."
+                    }
+                  ],
+                  "severity": 7
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "3c8027e7-a954-4c43-8c59-f07777b6009e",
+          "name": "Operador de corte",
+          "type": "Mano de Obra",
+          "functions": [
+            {
+              "id": "34cbdf38-bf0f-434d-9761-80d8bee34516",
+              "functionDescription": "Seleccionar y verificar el material correcto antes del corte",
+              "failures": [
+                {
+                  "id": "b63f0e72-d08f-438d-98c7-913bc5f8d892",
+                  "description": "Selección incorrecta del material (vinilo equivocado)",
+                  "effectLocal": "100% del material cortado es scrap por material incorrecto.",
+                  "effectNextLevel": "Parada de línea mayor a un turno de producción completo. Paro de envíos.",
+                  "effectEndUser": "Degradación de la función primaria del vehículo.",
+                  "causes": [
+                    {
+                      "id": "7fccbe5c-5856-4b79-9a2c-2c1deba2da7e",
+                      "description": "Falta de verificación del código de material antes del corte.",
+                      "severity": 8,
+                      "occurrence": 5,
+                      "detection": 6,
+                      "actionPriority": "M",
+                      "preventionControl": "El sistema genera automáticamente una orden de producción con código y descripción del vinilo. / El operario verifica esa orden contra una planilla de mesa de corte.",
+                      "detectionControl": "Inspección visual",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "ap": "M",
+                      "cause": "Falta de verificación del código de material antes del corte."
+                    },
+                    {
+                      "id": "520bd45f-ff97-4c32-af2b-38a125c37b07",
+                      "description": "Vinilo mal identificado",
+                      "severity": 7,
+                      "occurrence": 5,
+                      "detection": 6,
+                      "actionPriority": "M",
+                      "preventionControl": "El sistema genera automáticamente una orden de producción con código y descripción del vinilo. / Etiquetado de vinilo por logística",
+                      "detectionControl": "Inspección visual",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "ap": "M",
+                      "cause": "Vinilo mal identificado"
+                    }
+                  ],
+                  "severity": 8
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "868f9869-e1ed-49fe-89d1-9b3a9b53bf72",
+          "name": "Ambiente del area de corte",
+          "type": "Medio Ambiente",
+          "functions": [
+            {
+              "id": "71fc66ab-968a-4206-8624-9c967bf399a5",
+              "functionDescription": "Mantener condiciones de limpieza en el area de corte",
+              "failures": [
+                {
+                  "id": "96ff750a-fb95-4a7a-a92f-3f93626b76b1",
+                  "description": "Contaminación del material durante el corte o almacenamiento en el área",
+                  "effectLocal": "Retrabajo de una porción de la producción.",
+                  "effectNextLevel": "Menos del 10% de los productos afectados, requiere clasificación adicional.",
+                  "effectEndUser": "Defecto visual moderado en apariencia o vibración.",
+                  "causes": [
+                    {
+                      "id": "25d17c57-7ac8-46f1-9b50-1872c9785b1d",
+                      "description": "Ambiente de trabajo con polvo o partículas.",
+                      "severity": 5,
+                      "occurrence": 3,
+                      "detection": 6,
+                      "actionPriority": "L",
+                      "preventionControl": "Procedimientos de limpieza periódica en el área de corte.",
+                      "detectionControl": "Inspección visual",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "ap": "L",
+                      "cause": "Ambiente de trabajo con polvo o partículas."
+                    }
+                  ],
+                  "severity": 5
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "opNumber": "20",
+      "name": "CORTE DE COMPONENTES",
+      "focusElementFunction": "Interno: Proveer pieza tapizada y ensamblada conforme a especificaciones dimensionales y de apariencia / Cliente: Permitir ensamble del apoyabrazos de puerta sin interferencias en linea VW / Usr. Final: Confort ergonomico y apariencia estetica del apoyabrazos de puerta del vehiculo",
+      "operationFunction": ""
+    },
+    {
+      "id": "576de770-74e9-46b0-a0f1-7e7fdfb27c7f",
+      "opNumber": "25",
+      "operationNumber": "25",
+      "name": "CONTROL CON MYLAR",
+      "operationName": "CONTROL CON MYLAR",
+      "focusElementFunction": "Interno: Proveer pieza tapizada y ensamblada conforme a especificaciones dimensionales y de apariencia / Cliente: Permitir ensamble del apoyabrazos de puerta sin interferencias en linea VW / Usr. Final: Confort ergonomico y apariencia estetica del apoyabrazos de puerta del vehiculo",
+      "operationFunction": "Verificar la conformidad dimensional del contorno cortado",
+      "workElements": [
+        {
+          "id": "d64d7c46-cf99-435f-ba6a-ad42a227adb4",
+          "name": "Mylar de control",
+          "type": "Measurement",
+          "functions": [
+            {
+              "id": "9b2a9c41-5331-45f8-97ce-73827b7c0942",
+              "description": "Asegurar la verificacion rapida y precisa de la geometria y el contorno del corte conforme a las tolerancias especificas",
+              "functionDescription": "Asegurar la verificacion rapida y precisa de la geometria y el contorno del corte conforme a las tolerancias especificas",
+              "requirements": "",
+              "failures": [
+                {
+                  "id": "3d5b80a5-0c52-4244-872e-744b5e4358e7",
+                  "description": "Omitir la operacion de inspeccion",
+                  "severity": 5,
+                  "effectLocal": "Generacion de scrap",
+                  "effectNextLevel": "Parada de linea de produccion (menor a una hora) o necesidad de incorporar procesos adicionales de clasificacion de productos defectuosos",
+                  "effectEndUser": "Perdida de la funcion secundaria del vehiculo",
+                  "causes": [
+                    {
+                      "id": "f9ac5d57-f362-458c-a660-3e434de84bb6",
+                      "description": "Operador de produccion omite la tarea de verificacion visual",
+                      "cause": "Operador de produccion omite la tarea de verificacion visual",
+                      "severity": 5,
+                      "occurrence": 3,
+                      "detection": 9,
+                      "preventionControl": "Instruccion/checklist de set up de verificacion",
+                      "detectionControl": "Auditorias internas",
+                      "ap": "L",
+                      "actionPriority": "L",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "filterCode": "",
+                      "recommendedAction": ""
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "612e0916-84b9-48cd-ac18-ac9ab091707c",
+          "name": "Operador de produccion",
+          "type": "Man",
+          "functions": [
+            {
+              "id": "a459c9ce-563d-468b-aa89-a912e0edd3d5",
+              "description": "Colocar la pieza cortada sobre el mylar para la inspeccion dimensional",
+              "functionDescription": "Colocar la pieza cortada sobre el mylar para la inspeccion dimensional",
+              "requirements": "",
+              "failures": []
+            }
+          ]
+        },
+        {
+          "id": "ab484239-73b5-4ead-9eb3-d6f5417cb1d2",
+          "name": "Hoja de operaciones",
+          "type": "Method",
+          "functions": [
+            {
+              "id": "4418cadf-f977-4e00-b930-f6045e10fb20",
+              "description": "Utilizar la Hoja de Operaciones vigente. Definir el plan de reaccion ante un No conforme",
+              "functionDescription": "Utilizar la Hoja de Operaciones vigente. Definir el plan de reaccion ante un No conforme",
+              "requirements": "",
+              "failures": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "bcafa534-f52d-4110-a1b3-e4f6e142aa7e",
+      "opNumber": "40",
+      "operationNumber": "40",
+      "name": "REFILADO",
+      "operationName": "REFILADO",
+      "focusElementFunction": "Interno: Proveer pieza tapizada y ensamblada conforme a especificaciones dimensionales y de apariencia / Cliente: Permitir ensamble del apoyabrazos de puerta sin interferencias en linea VW / Usr. Final: Confort ergonomico y apariencia estetica del apoyabrazos de puerta del vehiculo",
+      "operationFunction": "Asegurar un refilado conforme a especificacion de corte, sin generar scrap ni retrabajos",
+      "workElements": [
+        {
+          "id": "4079a016-9283-4616-9d48-3234fdd507fd",
+          "name": "Maquina refiladora",
+          "type": "Machine",
+          "functions": [
+            {
+              "id": "99376a9f-42a8-4514-adb6-e3feb80fdba7",
+              "description": "Generar el contorno refilado con precision segun especificacion",
+              "functionDescription": "Generar el contorno refilado con precision segun especificacion",
+              "requirements": "",
+              "failures": [
+                {
+                  "id": "3dcad9a9-0da9-4221-8ed3-8bddde14265a",
+                  "description": "Posicionado de cortes NOK",
+                  "severity": 5,
+                  "effectLocal": "Retrabajo en linea",
+                  "effectNextLevel": "Clasificacion adicional de productos defectuosos",
+                  "effectEndUser": "Degradacion de la funcion secundaria del vehiculo",
+                  "causes": [
+                    {
+                      "id": "4a3afaf8-bff5-459f-bcfc-8f0c21eaf467",
+                      "description": "Operario coloca pieza fuera de posicion en la instruccion de refilado y en la guia del equipo",
+                      "cause": "Operario coloca pieza fuera de posicion en la instruccion de refilado y en la guia del equipo",
+                      "severity": 5,
+                      "occurrence": 7,
+                      "detection": 6,
+                      "preventionControl": "Ayudas Visuales y (HO) Instruccion de Proceso",
+                      "detectionControl": "Verificacion de Primera Pieza (Puesta a Punto)",
+                      "ap": "M",
+                      "actionPriority": "M",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "filterCode": "",
+                      "recommendedAction": ""
+                    }
+                  ]
+                },
+                {
+                  "id": "d662c0f9-d17a-4848-b316-a5977b82fb37",
+                  "description": "Refilado fuera de especificaciones",
+                  "severity": 5,
+                  "effectLocal": "Retrabajo en linea",
+                  "effectNextLevel": "Clasificacion adicional de productos defectuosos",
+                  "effectEndUser": "Degradacion de la funcion secundaria del vehiculo",
+                  "causes": [
+                    {
+                      "id": "c76ab1cb-beac-413e-b45f-41ca55084076",
+                      "description": "Cuchilla desafilada o desgastada",
+                      "cause": "Cuchilla desafilada o desgastada",
+                      "severity": 5,
+                      "occurrence": 6,
+                      "detection": 6,
+                      "preventionControl": "Mantenimiento Preventivo",
+                      "detectionControl": "Verificacion de Primera Pieza (Puesta a Punto)",
+                      "ap": "M",
+                      "actionPriority": "M",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "filterCode": "",
+                      "recommendedAction": ""
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "240a1000-0143-4371-baa8-d030b48e2010",
+          "name": "Operador de produccion",
+          "type": "Man",
+          "functions": [
+            {
+              "id": "33dadf46-b35d-4ce9-af1b-d922037facfb",
+              "description": "Posicionar el componente y accionar el ciclo de la maquina refiladora conforme a la instruccion",
+              "functionDescription": "Posicionar el componente y accionar el ciclo de la maquina refiladora conforme a la instruccion",
+              "requirements": "",
+              "failures": []
+            }
+          ]
+        },
+        {
+          "id": "b4035b86-eeb9-420a-b3a5-943a3f81f486",
+          "name": "Hoja de operaciones",
+          "type": "Method",
+          "functions": [
+            {
+              "id": "cc799517-ccb7-4552-92a1-dcce0b823bc4",
+              "description": "Utilizar la Hoja de Operaciones vigente. Definir el plan de reaccion ante un No conforme",
+              "functionDescription": "Utilizar la Hoja de Operaciones vigente. Definir el plan de reaccion ante un No conforme",
+              "requirements": "",
+              "failures": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "37c42c53-8738-4e35-97cf-390cf283c35a",
+      "operationNumber": "50",
+      "operationName": "COSTURA UNION",
+      "workElements": [
+        {
+          "id": "536089f9-e31e-496d-aaf4-202ea07328cc",
+          "name": "Maquina de coser",
+          "type": "Maquina",
+          "functions": [
+            {
+              "id": "9547b99f-bd74-4d4f-8874-f918f33036fa",
+              "functionDescription": "Realizar la union de paneles de vinilo mediante costura",
+              "failures": [
+                {
+                  "id": "a57df89c-5de6-4b56-8a8d-1dc10f70a19c",
+                  "description": "Costura descosida o débil",
+                  "effectLocal": "Impacta en producción, genera scrap o retrabajos",
+                  "effectNextLevel": "Puede causar fallas en ensamble y rechazo del lote",
+                  "effectEndUser": "Defecto estético sin impacto funcional ni de seguridad.",
+                  "causes": [
+                    {
+                      "id": "81fbc92b-5e0f-449a-a185-21982c88c1cd",
+                      "description": "Tensión de hilo incorrecta",
+                      "severity": 5,
+                      "occurrence": 4,
+                      "detection": 4,
+                      "actionPriority": "M",
+                      "preventionControl": "Las costureras configuran la máquina según hojas de operaciones.",
+                      "detectionControl": "Calibre para verificar puntadas",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "ap": "M",
+                      "cause": "Tensión de hilo incorrecta"
+                    },
+                    {
+                      "id": "d9b1ea67-c5ca-450b-b787-cd54c3514f49",
+                      "description": "Puntadas demasiado largas",
+                      "severity": 8,
+                      "occurrence": 4,
+                      "detection": 4,
+                      "actionPriority": "M",
+                      "preventionControl": "Las costureras configuran la máquina según hojas de operaciones. / Checklist diaria de configuración de máquina, mediante un set-up de control de lanzamiento.",
+                      "detectionControl": "Calibre para verificar puntadas / Inspección visual",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "ap": "M",
+                      "cause": "Puntadas demasiado largas"
+                    },
+                    {
+                      "id": "a742fa5e-2a73-4d7c-aaf5-6a02b2701c2f",
+                      "description": "Hilo inadecuado",
+                      "severity": 4,
+                      "occurrence": 4,
+                      "detection": 4,
+                      "actionPriority": "M",
+                      "preventionControl": "Las costureras configuran la máquina según hojas de operaciones.",
+                      "detectionControl": "Calibre para verificar puntadas",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "ap": "M",
+                      "cause": "Hilo inadecuado"
+                    }
+                  ],
+                  "severity": 8
+                }
+              ]
+            },
+            {
+              "id": "79b7599d-01da-4287-b86d-855aa6a0d0cc",
+              "functionDescription": "Realizar la union de paneles de vinilo mediante costura",
+              "failures": [
+                {
+                  "id": "88a6c08e-65be-45b8-9c45-12bb638370c1",
+                  "description": "Puntadas irregulares o arrugas",
+                  "effectLocal": "Puede corregirse en producción",
+                  "effectNextLevel": "Puede provocar rechazo por calidad visual",
+                  "effectEndUser": "No afecta funcionalidad, solo estética",
+                  "causes": [
+                    {
+                      "id": "8db0818e-129f-401e-980a-621d98bac73a",
+                      "description": "Mala configuración de la máquina",
+                      "severity": 6,
+                      "occurrence": 4,
+                      "detection": 6,
+                      "actionPriority": "L",
+                      "preventionControl": "Mantenimiento preventivo",
+                      "detectionControl": "Visual",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "ap": "L",
+                      "cause": "Mala configuración de la máquina"
+                    },
+                    {
+                      "id": "5e7bd112-1c10-4ca6-aee8-6bc862e4d8c9",
+                      "description": "Falta de mantenimiento",
+                      "severity": 3,
+                      "occurrence": 4,
+                      "detection": 6,
+                      "actionPriority": "L",
+                      "preventionControl": "Mantenimiento preventivo",
+                      "detectionControl": "Visual",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "ap": "L",
+                      "cause": "Falta de mantenimiento"
+                    }
+                  ],
+                  "severity": 6
+                }
+              ]
+            },
+            {
+              "id": "a2566bcf-874e-49f1-b79e-3c3195f40bd3",
+              "functionDescription": "Realizar la union de paneles de vinilo mediante costura",
+              "failures": [
+                {
+                  "id": "5abfbf3b-e301-4478-b126-4918ae09d384",
+                  "description": "Rotura del vinilo en la zona de la costura",
+                  "effectLocal": "Scrap o retrabajo",
+                  "effectNextLevel": "Pieza no conforme, posible rechazo total",
+                  "effectEndUser": "Puede causar falla en el uso, riesgo de seguridad",
+                  "causes": [
+                    {
+                      "id": "4b993165-eb21-470a-97c6-5f8b05511780",
+                      "description": "Agujas inadecuadas",
+                      "severity": 10,
+                      "occurrence": 3,
+                      "detection": 6,
+                      "actionPriority": "M",
+                      "preventionControl": "Se utilizan agujas especificas para vinilos",
+                      "detectionControl": "Inspección visual",
+                      "specialChar": "CC",
+                      "characteristicNumber": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "ap": "M",
+                      "cause": "Agujas inadecuadas"
+                    },
+                    {
+                      "id": "9b37bf19-75e6-40fc-bb7b-9d0733b6bb86",
+                      "description": "Puntada demasiado apretada.",
+                      "severity": 10,
+                      "occurrence": 3,
+                      "detection": 6,
+                      "actionPriority": "M",
+                      "preventionControl": "Se configura la longitud de la puntada en la maquina",
+                      "detectionControl": "Inspección visual",
+                      "specialChar": "CC",
+                      "characteristicNumber": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "ap": "M",
+                      "cause": "Puntada demasiado apretada."
+                    }
+                  ],
+                  "severity": 10
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "539f4f76-3967-43d7-9077-2fa28a18b82d",
+          "name": "Costurera",
+          "type": "Mano de Obra",
+          "functions": [
+            {
+              "id": "381a935c-ba7e-4fe2-b780-88ca81d9c00d",
+              "functionDescription": "Operar la maquina de coser siguiendo hojas de operaciones",
+              "failures": [
+                {
+                  "id": "8cfcf2b1-6401-466f-8395-6338fbe7226a",
+                  "description": "Costura desviada o fuera de especificación",
+                  "effectLocal": "Scrap",
+                  "effectNextLevel": "Defecto estético, posible rechazo del lote",
+                  "effectEndUser": "No afecta funcionalidad, pero impacta percepción de calidad",
+                  "causes": [
+                    {
+                      "id": "36df7d27-2f00-4992-8416-41f9af65045f",
+                      "description": "Falta de guía en costura",
+                      "severity": 8,
+                      "occurrence": 4,
+                      "detection": 5,
+                      "actionPriority": "M",
+                      "preventionControl": "Las máquinas poseen una guía",
+                      "detectionControl": "Inspección visual en línea",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "ap": "M",
+                      "cause": "Falta de guía en costura"
+                    },
+                    {
+                      "id": "2a00ad1e-5d0b-471a-82fe-efea34d21ec4",
+                      "description": "Error del operario",
+                      "severity": 8,
+                      "occurrence": 4,
+                      "detection": 5,
+                      "actionPriority": "M",
+                      "preventionControl": "Las máquinas poseen una guía / Verificación de piquetes en piezas antes de coser para asegurar alineación correcta.",
+                      "detectionControl": "Inspección visual en línea / Uso de plantillas de referencia",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "ap": "M",
+                      "cause": "Error del operario"
+                    }
+                  ],
+                  "severity": 8
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "7ec32a52-cf4b-412c-a4cb-923c5251fa2b",
+          "name": "Hilo de costura",
+          "type": "Material",
+          "functions": [
+            {
+              "id": "99d38fa7-f82a-4578-abd9-11b2c4852e83",
+              "functionDescription": "Proveer union resistente y estetica entre paneles",
+              "failures": [
+                {
+                  "id": "c8aa4dc1-0010-4645-b1cb-fe41bdafea7e",
+                  "description": "Selección incorrecta del hilo",
+                  "effectLocal": "Detectable en línea de producción",
+                  "effectNextLevel": "Puede generar rechazo por incumplimiento de especificaciones",
+                  "effectEndUser": "No afecta funcionalidad, solo percepción de calidad",
+                  "causes": [
+                    {
+                      "id": "06872ebd-d77c-4e8a-b77e-60efcb76e5a2",
+                      "description": "Error en la carga de hilo en máquina.",
+                      "severity": 8,
+                      "occurrence": 2,
+                      "detection": 6,
+                      "actionPriority": "M",
+                      "preventionControl": "Las hojas de operaciones indican que hilo utilizar / Checklist diaria de configuración de máquina, mediante un set-up de control de lanzamiento.",
+                      "detectionControl": "Visual",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "ap": "M",
+                      "cause": "Error en la carga de hilo en máquina."
+                    }
+                  ],
+                  "severity": 8
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "eae3b530-1314-4652-a71a-94ca8a301c9a",
+          "name": "Configuracion de puntada",
+          "type": "Metodo",
+          "functions": [
+            {
+              "id": "f082bd24-370f-449a-b22b-8567801ba032",
+              "functionDescription": "Configurar largo y toma de puntada segun especificaciones",
+              "failures": [
+                {
+                  "id": "922871f6-d270-4901-ac07-f997a880ea43",
+                  "description": "Largo de puntada fuera de especificación",
+                  "effectLocal": "Scrap",
+                  "effectNextLevel": "Puede generar rechazo por incumplimiento de especificaciones",
+                  "effectEndUser": "Potencial reclamo de aspecto",
+                  "causes": [
+                    {
+                      "id": "e63cd08c-26c7-4c94-bbaf-fa0a59c8da28",
+                      "description": "Error en la configuración de la máquina",
+                      "severity": 6,
+                      "occurrence": 5,
+                      "detection": 6,
+                      "actionPriority": "L",
+                      "preventionControl": "Configuración de la máquina según especificaciones / Checklist diaria de configuración de máquina, mediante un set-up de control de lanzamiento.",
+                      "detectionControl": "Calibre",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "ap": "L",
+                      "cause": "Error en la configuración de la máquina"
+                    }
+                  ],
+                  "severity": 6
+                }
+              ]
+            },
+            {
+              "id": "3e94f8b2-a3a8-4576-a19b-b41ba40db93c",
+              "functionDescription": "Configurar largo y toma de puntada segun especificaciones",
+              "failures": [
+                {
+                  "id": "7da76a2c-e5ec-4424-8d74-d806edd8ecbd",
+                  "description": "Toma de costura fuera de especificación",
+                  "effectLocal": "Scrap",
+                  "effectNextLevel": "Puede generar rechazo por incumplimiento de especificaciones",
+                  "effectEndUser": "Potencial reclamo de aspecto",
+                  "causes": [
+                    {
+                      "id": "82aabe3f-614d-4804-bf4c-ff61ebcc6b4a",
+                      "description": "Error en la configuración de la máquina",
+                      "severity": 6,
+                      "occurrence": 5,
+                      "detection": 6,
+                      "actionPriority": "L",
+                      "preventionControl": "Configuración de la máquina según especificaciones / Checklist diaria de configuración de máquina, mediante un set-up de control de lanzamiento.",
+                      "detectionControl": "Calibre",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "ap": "L",
+                      "cause": "Error en la configuración de la máquina"
+                    }
+                  ],
+                  "severity": 6
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "opNumber": "50",
+      "name": "COSTURA UNION",
+      "focusElementFunction": "Interno: Proveer pieza tapizada y ensamblada conforme a especificaciones dimensionales y de apariencia / Cliente: Permitir ensamble del apoyabrazos de puerta sin interferencias en linea VW / Usr. Final: Confort ergonomico y apariencia estetica del apoyabrazos de puerta del vehiculo",
+      "operationFunction": ""
+    },
+    {
+      "id": "6f8b1a0f-381e-48c5-8b5e-01f54b0795e5",
+      "opNumber": "51",
+      "operationNumber": "51",
+      "name": "COSTURA DOBLE",
+      "operationName": "COSTURA DOBLE",
+      "focusElementFunction": "Interno: Proveer pieza tapizada y ensamblada conforme a especificaciones dimensionales y de apariencia / Cliente: Permitir ensamble del apoyabrazos de puerta sin interferencias en linea VW / Usr. Final: Confort ergonomico y apariencia estetica del apoyabrazos de puerta del vehiculo",
+      "operationFunction": "Realizar la costura decorativa. Premiar la costura decorativa",
+      "workElements": [
+        {
+          "id": "0cdfa3e1-1b5b-43ef-bd6a-a6d2230c0d65",
+          "name": "Maquina de coser",
+          "type": "Machine",
+          "functions": [
+            {
+              "id": "ce4bfe3f-1318-4d60-a284-f95c72b89dcd",
+              "description": "Ejecutar costura decorativa doble conforme a especificacion",
+              "functionDescription": "Ejecutar costura decorativa doble conforme a especificacion",
+              "requirements": "",
+              "failures": [
+                {
+                  "id": "6c3d718a-43dd-46fd-8fbd-f56f35839776",
+                  "description": "Costura descosida o debil",
+                  "severity": 5,
+                  "effectLocal": "Retrabajo fuera de linea",
+                  "effectNextLevel": "Parada de linea de produccion menor a una hora",
+                  "effectEndUser": "Degradacion de la funcion secundaria del vehiculo",
+                  "causes": [
+                    {
+                      "id": "53c9310d-217a-42a4-ac9d-caa94209f1c0",
+                      "description": "Tension de hilo incorrecta",
+                      "cause": "Tension de hilo incorrecta",
+                      "severity": 5,
+                      "occurrence": 4,
+                      "detection": 4,
+                      "preventionControl": "Las maquinas poseen regulacion de tension con fijacion de hilo",
+                      "detectionControl": "Inspeccion visual",
+                      "ap": "L",
+                      "actionPriority": "L",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "filterCode": "",
+                      "recommendedAction": ""
+                    },
+                    {
+                      "id": "a884a85a-95c4-4ca9-94f2-3b75ddc83e0c",
+                      "description": "Puntadas demasiado largas",
+                      "cause": "Puntadas demasiado largas",
+                      "severity": 5,
+                      "occurrence": 4,
+                      "detection": 6,
+                      "preventionControl": "Las maquinas poseen regulacion de largo de puntada",
+                      "detectionControl": "Visual",
+                      "ap": "L",
+                      "actionPriority": "L",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "filterCode": "",
+                      "recommendedAction": ""
+                    },
+                    {
+                      "id": "0a2c5bf9-bfe7-49ed-8c89-08d50a015174",
+                      "description": "Hilo inadecuado",
+                      "cause": "Hilo inadecuado",
+                      "severity": 5,
+                      "occurrence": 5,
+                      "detection": 6,
+                      "preventionControl": "Las maquinas poseen regulacion de tension con fijacion de hilo",
+                      "detectionControl": "Visual",
+                      "ap": "L",
+                      "actionPriority": "L",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "filterCode": "",
+                      "recommendedAction": ""
+                    }
+                  ]
+                },
+                {
+                  "id": "cd99d862-3b4b-4f2b-ad3d-6bd363940e80",
+                  "description": "Costura desviada o fuera de especificacion",
+                  "severity": 5,
+                  "effectLocal": "Retrabajo fuera de linea",
+                  "effectNextLevel": "Parada de linea de produccion menor a una hora",
+                  "effectEndUser": "Degradacion de la funcion secundaria del vehiculo",
+                  "causes": [
+                    {
+                      "id": "92a6e365-4bf8-43bd-8400-e1fb1ba1675d",
+                      "description": "Falta de guia en costura",
+                      "cause": "Falta de guia en costura",
+                      "severity": 5,
+                      "occurrence": 4,
+                      "detection": 4,
+                      "preventionControl": "Las maquinas poseen una guia",
+                      "detectionControl": "Inspeccion visual en linea",
+                      "ap": "L",
+                      "actionPriority": "L",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "filterCode": "",
+                      "recommendedAction": ""
+                    },
+                    {
+                      "id": "e28aaebf-b6bc-4ffe-b98a-fa5027ed9042",
+                      "description": "Error del operario",
+                      "cause": "Error del operario",
+                      "severity": 5,
+                      "occurrence": 5,
+                      "detection": 5,
+                      "preventionControl": "Verificacion visual de la pieza",
+                      "detectionControl": "Uso de plantillas de referencia",
+                      "ap": "L",
+                      "actionPriority": "L",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "filterCode": "",
+                      "recommendedAction": ""
+                    }
+                  ]
+                },
+                {
+                  "id": "712ccbe8-3078-4feb-83f2-e5b7cebf6bc4",
+                  "description": "Puntadas irregulares o arrugas",
+                  "severity": 4,
+                  "effectLocal": "Retrabajo en linea",
+                  "effectNextLevel": "Clasificacion adicional",
+                  "effectEndUser": "Defecto cosmetico menor",
+                  "causes": [
+                    {
+                      "id": "463cca85-307f-4743-8dc5-ad10ee4bd2af",
+                      "description": "Mala configuracion de la maquina",
+                      "cause": "Mala configuracion de la maquina",
+                      "severity": 4,
+                      "occurrence": 6,
+                      "detection": 6,
+                      "preventionControl": "Mantenimiento preventivo",
+                      "detectionControl": "Visual",
+                      "ap": "M",
+                      "actionPriority": "M",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "filterCode": "",
+                      "recommendedAction": ""
+                    },
+                    {
+                      "id": "ffc94e43-1250-4e79-8f0f-bf9b7ec4892d",
+                      "description": "Falta de mantenimiento",
+                      "cause": "Falta de mantenimiento",
+                      "severity": 5,
+                      "occurrence": 4,
+                      "detection": 4,
+                      "preventionControl": "Mantenimiento preventivo",
+                      "detectionControl": "Visual",
+                      "ap": "L",
+                      "actionPriority": "L",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "filterCode": "",
+                      "recommendedAction": ""
+                    },
+                    {
+                      "id": "87cc53de-606b-4709-bc59-ec00c8bb5591",
+                      "description": "Agujas inadecuadas",
+                      "cause": "Agujas inadecuadas",
+                      "severity": 5,
+                      "occurrence": 3,
+                      "detection": 6,
+                      "preventionControl": "Mantenimiento preventivo",
+                      "detectionControl": "Inspeccion visual",
+                      "ap": "L",
+                      "actionPriority": "L",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "filterCode": "",
+                      "recommendedAction": ""
+                    }
+                  ]
+                },
+                {
+                  "id": "7cfbd377-e1f5-4eee-8858-e0066a87cdf2",
+                  "description": "Rotura del vinilo en la zona de la costura",
+                  "severity": 5,
+                  "effectLocal": "Scrap de la pieza",
+                  "effectNextLevel": "Parada de linea de produccion menor a una hora",
+                  "effectEndUser": "Degradacion de la funcion secundaria del vehiculo",
+                  "causes": [
+                    {
+                      "id": "5551f022-dd36-42e6-a9ff-d1d802fab84e",
+                      "description": "Puntada demasiado apretada",
+                      "cause": "Puntada demasiado apretada",
+                      "severity": 5,
+                      "occurrence": 2,
+                      "detection": 6,
+                      "preventionControl": "Regulacion de tension de maquina",
+                      "detectionControl": "Visual",
+                      "ap": "L",
+                      "actionPriority": "L",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "filterCode": "",
+                      "recommendedAction": ""
+                    }
+                  ]
+                },
+                {
+                  "id": "26bc08ca-8132-4490-9793-b0b023116051",
+                  "description": "Seleccion incorrecta del hilo",
+                  "severity": 5,
+                  "effectLocal": "Scrap de la pieza o retrabajo",
+                  "effectNextLevel": "Clasificacion adicional de productos",
+                  "effectEndUser": "Defecto cosmetico",
+                  "causes": [
+                    {
+                      "id": "055ce69e-cfeb-4eae-8ab4-5ab0269c367c",
+                      "description": "Operario selecciona hilo de color o tipo incorrecto",
+                      "cause": "Operario selecciona hilo de color o tipo incorrecto",
+                      "severity": 5,
+                      "occurrence": 3,
+                      "detection": 6,
+                      "preventionControl": "Instruccion de proceso con especificacion de hilo",
+                      "detectionControl": "Inspeccion visual",
+                      "ap": "L",
+                      "actionPriority": "L",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "filterCode": "",
+                      "recommendedAction": ""
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "2901a04e-6ed4-4114-876e-4b253ac9b608",
+          "name": "Operador de produccion",
+          "type": "Man",
+          "functions": [
+            {
+              "id": "2fcac025-2aa2-4f66-8f59-77de6314e96f",
+              "description": "Posicionar la pieza y operar la maquina de costura conforme a instruccion",
+              "functionDescription": "Posicionar la pieza y operar la maquina de costura conforme a instruccion",
+              "requirements": "",
+              "failures": []
+            }
+          ]
+        },
+        {
+          "id": "7e3cd3dd-c220-4bed-ad81-d5a086c25a09",
+          "name": "Hoja de operaciones",
+          "type": "Method",
+          "functions": [
+            {
+              "id": "82735423-bade-4baf-87f9-2847bc7d6dfb",
+              "description": "Utilizar la Hoja de Operaciones vigente. Definir el plan de reaccion ante un No conforme",
+              "functionDescription": "Utilizar la Hoja de Operaciones vigente. Definir el plan de reaccion ante un No conforme",
+              "requirements": "",
+              "failures": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "87e168e5-fcf4-4b2e-885b-567a9e2c8089",
+      "opNumber": "60",
+      "operationNumber": "60",
+      "name": "INYECCION DE PIEZAS PLASTICAS",
+      "operationName": "INYECCION DE PIEZAS PLASTICAS",
+      "focusElementFunction": "Interno: Proveer pieza tapizada y ensamblada conforme a especificaciones dimensionales y de apariencia / Cliente: Permitir ensamble del apoyabrazos de puerta sin interferencias en linea VW / Usr. Final: Confort ergonomico y apariencia estetica del apoyabrazos de puerta del vehiculo",
+      "operationFunction": "Fabricar la pieza plastica (sustrato) cumpliendo con las especificaciones dimensionales y de apariencia, dentro del tiempo de ciclo establecido, sin generar scrap ni necesidad de retrabajos posteriores",
+      "workElements": [
+        {
+          "id": "0ac7dfb5-bb28-47f9-b965-2b616f2d2bfd",
+          "name": "Maquina inyectora de plastico",
+          "type": "Machine",
+          "functions": [
+            {
+              "id": "6a97c3ac-22de-4d7b-b002-1a6ea1b34d03",
+              "description": "Inyectar el material en el molde controlando los parametros de proceso (presion, temperatura, tiempo)",
+              "functionDescription": "Inyectar el material en el molde controlando los parametros de proceso (presion, temperatura, tiempo)",
+              "requirements": "",
+              "failures": [
+                {
+                  "id": "02eef50f-5140-4b8c-bf52-a57387748571",
+                  "description": "Llenado incompleto de pieza",
+                  "severity": 8,
+                  "effectLocal": "100% de la produccion en ese ciclo tiene que ser scrapeada",
+                  "effectNextLevel": "Parada de linea mayor a un turno de produccion completo o paro de envios",
+                  "effectEndUser": "Perdida de la funcion primaria del vehiculo",
+                  "causes": [
+                    {
+                      "id": "8273dd1e-9dbf-4bba-804d-42f90cbd19d3",
+                      "description": "Presion de inyeccion configurada fuera de especificacion",
+                      "cause": "Presion de inyeccion configurada fuera de especificacion",
+                      "severity": 8,
+                      "occurrence": 5,
+                      "detection": 5,
+                      "preventionControl": "Monitoreo automatico de presion y mantenimiento preventivo con calibracion periodica de sensores",
+                      "detectionControl": "Deteccion automatica de llenado incompleto",
+                      "ap": "M",
+                      "actionPriority": "M",
+                      "specialChar": "SC",
+                      "characteristicNumber": "",
+                      "filterCode": "",
+                      "recommendedAction": ""
+                    },
+                    {
+                      "id": "882265c3-01ef-4e60-9c32-14a11d934b42",
+                      "description": "Temperatura de fusion del material demasiado baja",
+                      "cause": "Temperatura de fusion del material demasiado baja",
+                      "severity": 8,
+                      "occurrence": 4,
+                      "detection": 8,
+                      "preventionControl": "Mantenimiento y calibracion del sistema termico. Verificacion estandar de la configuracion de potencia",
+                      "detectionControl": "Verificacion visual y dimensional de aprobacion de la primera pieza tras el set-up o cambio de turno",
+                      "ap": "H",
+                      "actionPriority": "H",
+                      "specialChar": "SC",
+                      "characteristicNumber": "",
+                      "filterCode": "",
+                      "recommendedAction": ""
+                    }
+                  ]
+                },
+                {
+                  "id": "562e20fd-d346-487c-874d-dccf10d93a02",
+                  "description": "Rebaba excesiva o exceso de material",
+                  "severity": 7,
+                  "effectLocal": "Una porcion de la produccion requiere retrabajo fuera de linea y aceptada",
+                  "effectNextLevel": "Parada de linea de produccion menor a una hora",
+                  "effectEndUser": "Perdida de la funcion secundaria del vehiculo",
+                  "causes": [
+                    {
+                      "id": "6c9bdf5d-03a0-4d36-8d06-99e27700c651",
+                      "description": "Fuerza de cierre insuficiente",
+                      "cause": "Fuerza de cierre insuficiente",
+                      "severity": 7,
+                      "occurrence": 5,
+                      "detection": 5,
+                      "preventionControl": "Mantenimiento preventivo (MP) programado de la unidad de cierre / instruccion de set-up detallada",
+                      "detectionControl": "Monitoreo automatico de presion de cierre / inspeccion dimensional manual por muestreo",
+                      "ap": "M",
+                      "actionPriority": "M",
+                      "specialChar": "SC",
+                      "characteristicNumber": "",
+                      "filterCode": "",
+                      "recommendedAction": ""
+                    },
+                    {
+                      "id": "468c185c-5ecb-4f9d-a4d2-5cb81b2afbfc",
+                      "description": "Molde o cavidad contaminada con material residual",
+                      "cause": "Molde o cavidad contaminada con material residual",
+                      "severity": 7,
+                      "occurrence": 4,
+                      "detection": 5,
+                      "preventionControl": "Procedimiento de limpieza y purga estandarizado para la cavidad y linea de particion del molde",
+                      "detectionControl": "Inspeccion visual por parte del operador de la cavidad",
+                      "ap": "M",
+                      "actionPriority": "M",
+                      "specialChar": "SC",
+                      "characteristicNumber": "",
+                      "filterCode": "",
+                      "recommendedAction": ""
+                    }
+                  ]
+                },
+                {
+                  "id": "260803c0-3636-42a8-a9fd-1c6a706becd4",
+                  "description": "Pieza con deformacion o alabeo",
+                  "severity": 7,
+                  "effectLocal": "Una porcion de la produccion tiene que ser scrapeada",
+                  "effectNextLevel": "Parada de linea entre una hora y un turno de produccion completo",
+                  "effectEndUser": "Degradacion de la funcion primaria del vehiculo",
+                  "causes": [
+                    {
+                      "id": "48e4bc61-6c5c-4892-b8f3-c582b943bd26",
+                      "description": "Parametros de inyeccion configurados incorrectamente",
+                      "cause": "Parametros de inyeccion configurados incorrectamente",
+                      "severity": 7,
+                      "occurrence": 5,
+                      "detection": 3,
+                      "preventionControl": "Instruccion de set-up estandarizada que detalla los valores nominales y rangos de tolerancia",
+                      "detectionControl": "Aprobacion de la primera pieza: inspeccion de los parametros de la maquina y verificacion dimensional",
+                      "ap": "M",
+                      "actionPriority": "M",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "filterCode": "",
+                      "recommendedAction": ""
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "d64c11a4-ee66-4704-b493-4b78136b96bd",
+          "name": "Operador de produccion",
+          "type": "Man",
+          "functions": [
+            {
+              "id": "f7036c04-cd4d-4cd0-8f07-ee100c9408ec",
+              "description": "Descargar la pieza y realizar la inspeccion visual al 100% (segun pauta) para segregar defectos como rebabas y/o quemaduras antes del embalaje intermedio",
+              "functionDescription": "Descargar la pieza y realizar la inspeccion visual al 100% (segun pauta) para segregar defectos como rebabas y/o quemaduras antes del embalaje intermedio",
+              "requirements": "",
+              "failures": []
+            }
+          ]
+        },
+        {
+          "id": "4c2533e7-576f-4561-84d5-207ccf46ccf5",
+          "name": "Hoja de operaciones",
+          "type": "Method",
+          "functions": [
+            {
+              "id": "543fe697-35b3-49ec-a629-03c4945d4e96",
+              "description": "Utilizar la Hoja de Operaciones vigente. Definir el plan de reaccion ante un No conforme. Ayudas visuales: mostrar como debe quedar el producto para evitar ciertos defectos",
+              "functionDescription": "Utilizar la Hoja de Operaciones vigente. Definir el plan de reaccion ante un No conforme. Ayudas visuales: mostrar como debe quedar el producto para evitar ciertos defectos",
+              "requirements": "",
+              "failures": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "f82f52be-70b6-47bc-8a3d-a09603e51feb",
+      "opNumber": "70",
+      "operationNumber": "70",
+      "name": "INYECCION PU",
+      "operationName": "INYECCION PU",
+      "focusElementFunction": "Interno: Proveer pieza tapizada y ensamblada conforme a especificaciones dimensionales y de apariencia / Cliente: Permitir ensamble del apoyabrazos de puerta sin interferencias en linea VW / Usr. Final: Confort ergonomico y apariencia estetica del apoyabrazos de puerta del vehiculo",
+      "operationFunction": "Sobreinyectar la capa de espuma PU sobre la pieza plastica de forma correcta y uniforme",
+      "workElements": [
+        {
+          "id": "95e027a5-8824-4543-b192-2084441f44b4",
+          "name": "Inyectora de PUR",
+          "type": "Machine",
+          "functions": [
+            {
+              "id": "640c120b-9fd9-4262-8841-b71ec64d352d",
+              "description": "Inyectar poliuretano sobre el sustrato plastico asegurando cobertura y espesor uniforme",
+              "functionDescription": "Inyectar poliuretano sobre el sustrato plastico asegurando cobertura y espesor uniforme",
+              "requirements": "",
+              "failures": [
+                {
+                  "id": "34c01f20-3e10-4c14-bcb7-df3faeca42d2",
+                  "description": "Vertido incorrecto de mezcla sobre molde",
+                  "severity": 5,
+                  "effectLocal": "Scrap de pieza",
+                  "effectNextLevel": "Retrabajo o clasificacion adicional",
+                  "effectEndUser": "Defecto visual o funcional",
+                  "causes": [
+                    {
+                      "id": "d20f6f8c-977f-48bc-a2ad-5d61116eee1d",
+                      "description": "Error de operario",
+                      "cause": "Error de operario",
+                      "severity": 5,
+                      "occurrence": 3,
+                      "detection": 7,
+                      "preventionControl": "Uso de ayudas visuales / hoja de operaciones",
+                      "detectionControl": "Control visual del operario",
+                      "ap": "L",
+                      "actionPriority": "L",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "filterCode": "",
+                      "recommendedAction": ""
+                    }
+                  ]
+                },
+                {
+                  "id": "f644cebc-fd66-4e0b-befe-552e3a3de616",
+                  "description": "Inyeccion incompleta o exceso de material en el molde",
+                  "severity": 5,
+                  "effectLocal": "Scrap de pieza o retrabajo",
+                  "effectNextLevel": "Clasificacion adicional",
+                  "effectEndUser": "Defecto dimensional o de apariencia",
+                  "causes": [
+                    {
+                      "id": "ccd52651-c99a-4848-b7bb-fc95ac0be52f",
+                      "description": "Falla de dispositivo",
+                      "cause": "Falla de dispositivo",
+                      "severity": 5,
+                      "occurrence": 2,
+                      "detection": 7,
+                      "preventionControl": "Plan de mantenimiento segun cronograma",
+                      "detectionControl": "Control visual del operario",
+                      "ap": "L",
+                      "actionPriority": "L",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "filterCode": "",
+                      "recommendedAction": ""
+                    }
+                  ]
+                },
+                {
+                  "id": "a0266e6d-8ae9-4799-a509-01a48ac8a59a",
+                  "description": "Aplicacion de desmoldante no uniforme o fuera de especificacion",
+                  "severity": 5,
+                  "effectLocal": "Scrap de pieza",
+                  "effectNextLevel": "Retrabajo fuera de linea",
+                  "effectEndUser": "Degradacion de apariencia",
+                  "causes": [
+                    {
+                      "id": "dba35ae4-d040-4520-b285-69419021a65f",
+                      "description": "Error de operario en la aplicacion del desmoldante",
+                      "cause": "Error de operario en la aplicacion del desmoldante",
+                      "severity": 5,
+                      "occurrence": 3,
+                      "detection": 7,
+                      "preventionControl": "Uso de ayudas visuales / hoja de operaciones",
+                      "detectionControl": "Control visual del operario",
+                      "ap": "L",
+                      "actionPriority": "L",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "filterCode": "",
+                      "recommendedAction": ""
+                    }
+                  ]
+                },
+                {
+                  "id": "6a243d6c-d887-4dc1-ade4-80bfe98d3353",
+                  "description": "Colocar cabeza de referencia fuera de la posicion correcta",
+                  "severity": 5,
+                  "effectLocal": "Scrap de pieza",
+                  "effectNextLevel": "Retrabajo fuera de linea",
+                  "effectEndUser": "Degradacion funcional",
+                  "causes": [
+                    {
+                      "id": "a6bce3f2-a01b-4ccd-813b-95dd2c4d2839",
+                      "description": "Error de operario en la colocacion de la cabeza",
+                      "cause": "Error de operario en la colocacion de la cabeza",
+                      "severity": 5,
+                      "occurrence": 3,
+                      "detection": 7,
+                      "preventionControl": "Uso de ayudas visuales / hoja de operaciones",
+                      "detectionControl": "Control visual del operario",
+                      "ap": "L",
+                      "actionPriority": "L",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "filterCode": "",
+                      "recommendedAction": ""
+                    }
+                  ]
+                },
+                {
+                  "id": "47a01d48-971e-4223-b1a5-a975c9521d16",
+                  "description": "Colocacion incorrecta de Material en tanque",
+                  "severity": 5,
+                  "effectLocal": "Scrap de pieza",
+                  "effectNextLevel": "Retrabajo fuera de linea",
+                  "effectEndUser": "Degradacion funcional",
+                  "causes": [
+                    {
+                      "id": "9494d44e-1f80-4aa7-8809-1a31d1bde9e4",
+                      "description": "Error de operario en la carga de material",
+                      "cause": "Error de operario en la carga de material",
+                      "severity": 5,
+                      "occurrence": 3,
+                      "detection": 7,
+                      "preventionControl": "Uso de ayudas visuales / hoja de operaciones",
+                      "detectionControl": "Control visual del operario",
+                      "ap": "L",
+                      "actionPriority": "L",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "filterCode": "",
+                      "recommendedAction": ""
+                    }
+                  ]
+                },
+                {
+                  "id": "5b72344f-7468-44dc-a8d4-7cadf45612b2",
+                  "description": "Colocar el cabezal fuera de inyeccion y el cache del limpiezas de inyeccion",
+                  "severity": 5,
+                  "effectLocal": "Scrap de pieza",
+                  "effectNextLevel": "Retrabajo fuera de linea",
+                  "effectEndUser": "No afecta al trabajo",
+                  "causes": [
+                    {
+                      "id": "271b8bbe-e592-4767-98ca-92bccea54324",
+                      "description": "Error de operario",
+                      "cause": "Error de operario",
+                      "severity": 5,
+                      "occurrence": 2,
+                      "detection": 5,
+                      "preventionControl": "Uso de ayudas visuales / hoja de operaciones",
+                      "detectionControl": "Control visual del operario",
+                      "ap": "L",
+                      "actionPriority": "L",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "filterCode": "",
+                      "recommendedAction": ""
+                    }
+                  ]
+                },
+                {
+                  "id": "cc512ae1-59e8-4375-9d75-507206d7aac8",
+                  "description": "Retirar de forma incorrecta la pieza del molde",
+                  "severity": 5,
+                  "effectLocal": "Dano en la pieza",
+                  "effectNextLevel": "Retrabajo fuera de linea",
+                  "effectEndUser": "Degradacion de apariencia",
+                  "causes": [
+                    {
+                      "id": "02b8bba5-c79f-42e3-951b-336823e94230",
+                      "description": "Error de operario al desmoldar",
+                      "cause": "Error de operario al desmoldar",
+                      "severity": 5,
+                      "occurrence": 3,
+                      "detection": 7,
+                      "preventionControl": "Uso de ayudas visuales / hoja de operaciones",
+                      "detectionControl": "Control visual del operario",
+                      "ap": "L",
+                      "actionPriority": "L",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "filterCode": "",
+                      "recommendedAction": ""
+                    }
+                  ]
+                },
+                {
+                  "id": "6ac866d1-57a8-4238-9e49-18432b2e250e",
+                  "description": "Retirar la pieza antes de los 4 min de curado",
+                  "severity": 5,
+                  "effectLocal": "Deformacion de la pieza",
+                  "effectNextLevel": "Retrabajo fuera de linea",
+                  "effectEndUser": "Degradacion de apariencia",
+                  "causes": [
+                    {
+                      "id": "3f74e38a-e993-4d83-b4fc-f3f39ac59e15",
+                      "description": "Error de operario en el tiempo de curado",
+                      "cause": "Error de operario en el tiempo de curado",
+                      "severity": 5,
+                      "occurrence": 3,
+                      "detection": 7,
+                      "preventionControl": "Hojas de operaciones",
+                      "detectionControl": "Control visual del operario",
+                      "ap": "L",
+                      "actionPriority": "L",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "filterCode": "",
+                      "recommendedAction": ""
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "d354d5b6-8dbd-4464-ab6e-aa2d912c5e20",
+          "name": "Operador de produccion",
+          "type": "Man",
+          "functions": [
+            {
+              "id": "2e70cc7b-bd01-41a9-8b1b-476d26bf3f90",
+              "description": "Preparar molde, inyectar PU, desmoldar y verificar la pieza conforme a instruccion",
+              "functionDescription": "Preparar molde, inyectar PU, desmoldar y verificar la pieza conforme a instruccion",
+              "requirements": "",
+              "failures": []
+            }
+          ]
+        },
+        {
+          "id": "11eafe26-1c40-402f-a641-77b8265c20e1",
+          "name": "Hoja de operaciones",
+          "type": "Method",
+          "functions": [
+            {
+              "id": "457de85f-4732-4571-a9c9-28ac05af63bc",
+              "description": "Utilizar la Hoja de Operaciones vigente. Definir el plan de reaccion ante un No conforme",
+              "functionDescription": "Utilizar la Hoja de Operaciones vigente. Definir el plan de reaccion ante un No conforme",
+              "requirements": "",
+              "failures": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "223bf8e6-109a-4df0-9dda-493e442777be",
+      "opNumber": "72",
+      "operationNumber": "72",
+      "name": "ENSAMBLE CON SUSTRATO",
+      "operationName": "ENSAMBLE CON SUSTRATO",
+      "focusElementFunction": "Interno: Proveer pieza tapizada y ensamblada conforme a especificaciones dimensionales y de apariencia / Cliente: Permitir ensamble del apoyabrazos de puerta sin interferencias en linea VW / Usr. Final: Confort ergonomico y apariencia estetica del apoyabrazos de puerta del vehiculo",
+      "operationFunction": "Ensamblar la pieza interior correctamente en el medio de transporte",
+      "workElements": [
+        {
+          "id": "44c0a4a0-fac8-45f6-aac0-aeaf9d099a74",
+          "name": "Operador de produccion",
+          "type": "Man",
+          "functions": [
+            {
+              "id": "31e804a6-78a5-42af-8018-ac263275087f",
+              "description": "Ensamblar la pieza en el medio de transporte correctamente conforme a disposicion",
+              "functionDescription": "Ensamblar la pieza en el medio de transporte correctamente conforme a disposicion",
+              "requirements": "",
+              "failures": [
+                {
+                  "id": "09b450a8-60f8-438d-b37c-815bbce645f7",
+                  "description": "Cantidad de piezas incorrecta en medio definida",
+                  "severity": 5,
+                  "effectLocal": "Retrabajo en linea",
+                  "effectNextLevel": "Clasificacion adicional",
+                  "effectEndUser": "Defecto corregido antes de llegar al usuario",
+                  "causes": [
+                    {
+                      "id": "7d0a05e4-fe96-4b25-9a09-c8f26544773f",
+                      "description": "Error de operario en la cantidad de piezas por medio",
+                      "cause": "Error de operario en la cantidad de piezas por medio",
+                      "severity": 5,
+                      "occurrence": 3,
+                      "detection": 7,
+                      "preventionControl": "Uso de ayudas visuales / hoja de operaciones",
+                      "detectionControl": "Control visual del operario",
+                      "ap": "L",
+                      "actionPriority": "L",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "filterCode": "",
+                      "recommendedAction": ""
+                    }
+                  ]
+                },
+                {
+                  "id": "f0eb9996-999d-487f-99a3-200ffa96b6e2",
+                  "description": "Piezas danadas por no respetar disposicion",
+                  "severity": 5,
+                  "effectLocal": "Retrabajo en linea",
+                  "effectNextLevel": "Clasificacion adicional",
+                  "effectEndUser": "Defecto de apariencia",
+                  "causes": [
+                    {
+                      "id": "368d8a86-0ca6-4304-aaf8-59e804f86752",
+                      "description": "Error de operario en la disposicion de las piezas",
+                      "cause": "Error de operario en la disposicion de las piezas",
+                      "severity": 5,
+                      "occurrence": 3,
+                      "detection": 7,
+                      "preventionControl": "Uso de ayudas visuales / hoja de operaciones",
+                      "detectionControl": "Control visual del operario",
+                      "ap": "L",
+                      "actionPriority": "L",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "filterCode": "",
+                      "recommendedAction": ""
+                    }
+                  ]
+                },
+                {
+                  "id": "700c98a3-e315-4a4c-9a00-cb9bf206d6a9",
+                  "description": "Medio equivocado",
+                  "severity": 5,
+                  "effectLocal": "Retrabajo en linea",
+                  "effectNextLevel": "Clasificacion adicional",
+                  "effectEndUser": "Defecto de apariencia",
+                  "causes": [
+                    {
+                      "id": "df442b35-927d-4556-83eb-b1f24ca1a9c8",
+                      "description": "Error de operario en la seleccion de medio",
+                      "cause": "Error de operario en la seleccion de medio",
+                      "severity": 5,
+                      "occurrence": 2,
+                      "detection": 7,
+                      "preventionControl": "Uso de ayudas visuales / hoja de operaciones",
+                      "detectionControl": "Control visual del operario",
+                      "ap": "L",
+                      "actionPriority": "L",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "filterCode": "",
+                      "recommendedAction": ""
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "86f77dd4-be14-4adf-9bf1-20408f7573f5",
+          "name": "Hoja de operaciones",
+          "type": "Method",
+          "functions": [
+            {
+              "id": "eb4a56a7-e8b7-4a4f-86c1-1aab7a028c90",
+              "description": "Utilizar la Hoja de Operaciones vigente. Definir el plan de reaccion ante un No conforme",
+              "functionDescription": "Utilizar la Hoja de Operaciones vigente. Definir el plan de reaccion ante un No conforme",
+              "requirements": "",
+              "failures": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "6c1ae2af-e16d-4a99-88d7-d399f5a15500",
+      "opNumber": "80",
+      "operationNumber": "80",
+      "name": "ADHESIVADO",
+      "operationName": "ADHESIVADO",
+      "focusElementFunction": "Interno: Proveer pieza tapizada y ensamblada conforme a especificaciones dimensionales y de apariencia / Cliente: Permitir ensamble del apoyabrazos de puerta sin interferencias en linea VW / Usr. Final: Confort ergonomico y apariencia estetica del apoyabrazos de puerta del vehiculo",
+      "operationFunction": "Aplicar una adhesion uniforme y completa, logrando una pieza adhesivada sin defectos, sin necesidad de reprocesos o scrap, dentro del tiempo de ciclo",
+      "workElements": [
+        {
+          "id": "f9fa8f90-2a9f-4f89-8853-0ed7bd552bd5",
+          "name": "Pistola de adhesivado",
+          "type": "Machine",
+          "functions": [
+            {
+              "id": "38768d50-1ff9-4723-b350-f6e581f0d888",
+              "description": "Aplicar adhesivo de forma uniforme y controlada",
+              "functionDescription": "Aplicar adhesivo de forma uniforme y controlada",
+              "requirements": "",
+              "failures": [
+                {
+                  "id": "4b8f7bc3-a5f5-4710-bb4d-70f443274b6a",
+                  "description": "Adhesion insuficiente o fuera de especificacion",
+                  "severity": 6,
+                  "effectLocal": "Scrap (100% de la produccion debe ser descartada)",
+                  "effectNextLevel": "Parada de linea de ensamblaje en el cliente",
+                  "effectEndUser": "Degradacion de la funcion primaria del vehiculo / reclamo de aspecto",
+                  "causes": [
+                    {
+                      "id": "c2239669-05e5-4f6d-b249-d7c14347aa3d",
+                      "description": "Uso de adhesivo o reticulante vencido/degradado (mala gestion de materiales)",
+                      "cause": "Uso de adhesivo o reticulante vencido/degradado (mala gestion de materiales)",
+                      "severity": 6,
+                      "occurrence": 4,
+                      "detection": 5,
+                      "preventionControl": "Puesta a punto y verificacion manual de fechas de caducidad",
+                      "detectionControl": "Gestion de stock (FIFO)",
+                      "ap": "L",
+                      "actionPriority": "L",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "filterCode": "",
+                      "recommendedAction": ""
+                    },
+                    {
+                      "id": "39a8b74e-9498-40e0-811b-aa1b81a7a448",
+                      "description": "Proporcion de mezcla incorrecta",
+                      "cause": "Proporcion de mezcla incorrecta",
+                      "severity": 6,
+                      "occurrence": 7,
+                      "detection": 8,
+                      "preventionControl": "Hoja de proceso detalla como realizar la mezcla correctamente",
+                      "detectionControl": "Inspeccion visual: el operador mira la mezcla",
+                      "ap": "M",
+                      "actionPriority": "M",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "filterCode": "",
+                      "recommendedAction": ""
+                    },
+                    {
+                      "id": "8222a2e4-20b5-4bba-a883-850281899705",
+                      "description": "Exceso o falta de adhesivo",
+                      "cause": "Exceso o falta de adhesivo",
+                      "severity": 6,
+                      "occurrence": 6,
+                      "detection": 8,
+                      "preventionControl": "Instrucciones de proceso: Documento estandar",
+                      "detectionControl": "Pieza patron e Inspeccion visual: comparacion visual contra muestra limite",
+                      "ap": "M",
+                      "actionPriority": "M",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "filterCode": "",
+                      "recommendedAction": ""
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "a86a7a61-d709-4803-9a7d-a36db961b4aa",
+          "name": "Operador de produccion",
+          "type": "Man",
+          "functions": [
+            {
+              "id": "142f6a94-56ef-43f0-a9eb-448e24fce6a0",
+              "description": "Posicionar el componente y accionar el ciclo de adhesivado conforme a la instruccion",
+              "functionDescription": "Posicionar el componente y accionar el ciclo de adhesivado conforme a la instruccion",
+              "requirements": "",
+              "failures": []
+            }
+          ]
+        },
+        {
+          "id": "09540822-9d2a-4a32-b0b4-0381a57e14a5",
+          "name": "Hoja de operaciones",
+          "type": "Method",
+          "functions": [
+            {
+              "id": "20bb3dec-200f-48d8-baba-5b9d3b92f520",
+              "description": "Utilizar la Hoja de Operaciones vigente. Definir el plan de reaccion ante un No conforme. Ayudas visuales: mostrar como debe quedar el producto para evitar ciertos defectos",
+              "functionDescription": "Utilizar la Hoja de Operaciones vigente. Definir el plan de reaccion ante un No conforme. Ayudas visuales: mostrar como debe quedar el producto para evitar ciertos defectos",
+              "requirements": "",
+              "failures": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cb96ea3d-9e1b-4e68-9f6f-9b2eaf98382e",
+      "opNumber": "81",
+      "operationNumber": "81",
+      "name": "INSPECCION DE PIEZA ADHESIVADA",
+      "operationName": "INSPECCION DE PIEZA ADHESIVADA",
+      "focusElementFunction": "Interno: Proveer pieza tapizada y ensamblada conforme a especificaciones dimensionales y de apariencia / Cliente: Permitir ensamble del apoyabrazos de puerta sin interferencias en linea VW / Usr. Final: Confort ergonomico y apariencia estetica del apoyabrazos de puerta del vehiculo",
+      "operationFunction": "Verificar la conformidad de la adhesion y la caracteristica visual del producto, segun requisitos/especificacion",
+      "workElements": [
+        {
+          "id": "01091ce5-cab6-43a9-98bb-edb2ce26891d",
+          "name": "Operador de produccion",
+          "type": "Man",
+          "functions": [
+            {
+              "id": "dd43a656-7b9b-4974-bdc8-cc3abe24e820",
+              "description": "Tomar pieza adhesivada, inspeccionar criterios visuales y colocar en scrap o medio OK",
+              "functionDescription": "Tomar pieza adhesivada, inspeccionar criterios visuales y colocar en scrap o medio OK",
+              "requirements": "",
+              "failures": [
+                {
+                  "id": "1af270ac-ca2f-4680-a60a-50577dfeb13b",
+                  "description": "Pieza danada (rasgadura en el kit, mancha)",
+                  "severity": 5,
+                  "effectLocal": "Retrabajo fuera de linea",
+                  "effectNextLevel": "Producto defectuoso desencadena un plan de reaccion importante",
+                  "effectEndUser": "Degradacion de la funcion secundaria del vehiculo",
+                  "causes": [
+                    {
+                      "id": "a53bfa03-1e42-4400-87fb-5ceb7c3dcf8e",
+                      "description": "El operador no sigue el procedimiento de revision visual establecido en el kit",
+                      "cause": "El operador no sigue el procedimiento de revision visual establecido en el kit",
+                      "severity": 5,
+                      "occurrence": 5,
+                      "detection": 8,
+                      "preventionControl": "Instruccion de revision visual de pieza en el kit",
+                      "detectionControl": "Inspeccion visual de la pieza y del empaque",
+                      "ap": "M",
+                      "actionPriority": "M",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "filterCode": "",
+                      "recommendedAction": ""
+                    }
+                  ]
+                },
+                {
+                  "id": "81d0891b-c40d-4a5a-82c7-5fd62e339707",
+                  "description": "Adhesion insuficiente o fuera de especificacion no detectada",
+                  "severity": 5,
+                  "effectLocal": "Scrap",
+                  "effectNextLevel": "Parada de linea de ensamblaje en el cliente",
+                  "effectEndUser": "Degradacion de la funcion primaria del vehiculo / reclamo de aspecto",
+                  "causes": [
+                    {
+                      "id": "5c395da7-df07-40f6-b6b5-a28c239e4187",
+                      "description": "Proporcion de mezcla incorrecta no detectada en esta etapa",
+                      "cause": "Proporcion de mezcla incorrecta no detectada en esta etapa",
+                      "severity": 5,
+                      "occurrence": 5,
+                      "detection": 7,
+                      "preventionControl": "Hoja de proceso detalla como realizar la mezcla correctamente",
+                      "detectionControl": "Inspeccion visual: el operador mira la mezcla",
+                      "ap": "M",
+                      "actionPriority": "M",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "filterCode": "",
+                      "recommendedAction": ""
+                    },
+                    {
+                      "id": "fae1bb8b-3c4d-45e6-9ae3-034512f962a0",
+                      "description": "Exceso o falta de adhesivo no detectado en esta etapa",
+                      "cause": "Exceso o falta de adhesivo no detectado en esta etapa",
+                      "severity": 5,
+                      "occurrence": 5,
+                      "detection": 8,
+                      "preventionControl": "Instrucciones de proceso: Documento estandar",
+                      "detectionControl": "Pieza patron e Inspeccion visual",
+                      "ap": "M",
+                      "actionPriority": "M",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "filterCode": "",
+                      "recommendedAction": ""
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "a4d746a0-5edf-450a-9d3a-204f7f9cc362",
+          "name": "Hoja de operaciones",
+          "type": "Method",
+          "functions": [
+            {
+              "id": "ec23f385-6fc5-41b6-977b-ce7444e7f22e",
+              "description": "Utilizar la Hoja de Operaciones vigente. Definir el plan de reaccion ante un No conforme. Ayudas visuales: mostrar como debe quedar el producto para evitar ciertos defectos",
+              "functionDescription": "Utilizar la Hoja de Operaciones vigente. Definir el plan de reaccion ante un No conforme. Ayudas visuales: mostrar como debe quedar el producto para evitar ciertos defectos",
+              "requirements": "",
+              "failures": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "656f2a36-97f1-4d7a-9ec6-2e56258c6e08",
+      "operationNumber": "90",
+      "operationName": "TAPIZADO SEMIAUTOMATICO",
+      "workElements": [
+        {
+          "id": "c4b91d99-28c8-46f8-bb8a-f5d6aedfa6bf",
+          "name": "Proceso de enfundado",
+          "type": "Metodo",
+          "functions": [
+            {
+              "id": "62aca6b3-4932-44a3-8131-0acf2afbd106",
+              "functionDescription": "Posicionar estructura, colocar funda, clipar portavasos y cerrar conjunto",
+              "failures": [
+                {
+                  "id": "913a9e3c-836a-4368-a55b-b28e42666344",
+                  "description": "Arrugas o pliegues en funda",
+                  "effectLocal": "Retrabajo parcial o en estación",
+                  "effectNextLevel": "Plan de reacción menor",
+                  "effectEndUser": "Defecto visual notorio",
+                  "causes": [
+                    {
+                      "id": "0bf077a1-f645-473c-886f-f6e302a2e939",
+                      "description": "Tensión inadecuada al enfundar",
+                      "severity": 3,
+                      "occurrence": 5,
+                      "detection": 6,
+                      "actionPriority": "L",
+                      "preventionControl": "Instrucción estandar de enfundado",
+                      "detectionControl": "Inspeccion visual",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "ap": "L",
+                      "cause": "Tensión inadecuada al enfundar"
+                    },
+                    {
+                      "id": "a1c57790-4ba0-4903-9bb0-59e0fd04c67c",
+                      "description": "Mal posicionamiento de espuma",
+                      "severity": 4,
+                      "occurrence": 5,
+                      "detection": 6,
+                      "actionPriority": "L",
+                      "preventionControl": "Instrucción estandar de enfundado",
+                      "detectionControl": "Inspeccion visual",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "ap": "L",
+                      "cause": "Mal posicionamiento de espuma"
+                    }
+                  ],
+                  "severity": 4
+                }
+              ]
+            },
+            {
+              "id": "8fd3de01-a32f-4151-bc7c-6ebbfdb6be86",
+              "functionDescription": "Posicionar estructura, colocar funda, clipar portavasos y cerrar conjunto",
+              "failures": [
+                {
+                  "id": "04e74cd9-e9d5-4585-8064-8dbaf19c2ece",
+                  "description": "Desgarro de la funda al enfundar (rotura o perforación)",
+                  "effectLocal": "Se genera scrap (la pieza rota no puede usarse).",
+                  "effectNextLevel": "Recepción de piezas inservibles; posible paro de línea por falta de stock de reposición.",
+                  "effectEndUser": "Afecta la apariencia y percepción de calidad.",
+                  "causes": [
+                    {
+                      "id": "81054f06-b307-4086-a931-c68841018ccb",
+                      "description": "Estirado o tensión excesiva al colocar la funda.",
+                      "severity": 8,
+                      "occurrence": 3,
+                      "detection": 6,
+                      "actionPriority": "M",
+                      "preventionControl": "Instrucción de trabajo",
+                      "detectionControl": "Inspección visual 100% tras enfundar.",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "ap": "M",
+                      "cause": "Estirado o tensión excesiva al colocar la funda."
+                    },
+                    {
+                      "id": "a7002336-ce08-4658-8dc5-76947a39e0b2",
+                      "description": "Defecto de material (corte, pinchazo) previo.",
+                      "severity": 7,
+                      "occurrence": 3,
+                      "detection": 6,
+                      "actionPriority": "M",
+                      "preventionControl": "Instrucción de trabajo / Herramientas o utillajes diseñados para no dañar el vinilo.",
+                      "detectionControl": "Inspección visual 100% tras enfundar.",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "ap": "M",
+                      "cause": "Defecto de material (corte, pinchazo) previo."
+                    },
+                    {
+                      "id": "e02162c1-00fd-4e29-9a7f-a2d871ee1e37",
+                      "description": "Falta de control de fuerza/herramientas al enfundar.",
+                      "severity": 8,
+                      "occurrence": 3,
+                      "detection": 6,
+                      "actionPriority": "M",
+                      "preventionControl": "Instrucción de trabajo",
+                      "detectionControl": "Inspección visual 100% tras enfundar.",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "ap": "M",
+                      "cause": "Falta de control de fuerza/herramientas al enfundar."
+                    }
+                  ],
+                  "severity": 8
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "755f000e-8fd7-4862-a126-e689ebc9fccb",
+          "name": "Portavasos y componentes plasticos",
+          "type": "Maquina",
+          "functions": [
+            {
+              "id": "5ba73de0-4257-420b-88fb-43456594edc8",
+              "functionDescription": "Encastrar correctamente el portavasos en la estructura",
+              "failures": [
+                {
+                  "id": "93d41aa9-1e5b-4b85-8c64-cf5f4d075b06",
+                  "description": "Cup holder no encastra o no traba",
+                  "effectLocal": "Retrabajo y/o scrap",
+                  "effectNextLevel": "Posible reclamo",
+                  "effectEndUser": "Función secundaria fallida (usuario no puede usarlo)",
+                  "causes": [
+                    {
+                      "id": "48e31feb-0536-40db-8cfc-6417def8f355",
+                      "description": "Falta de verificación dimensional",
+                      "severity": 6,
+                      "occurrence": 5,
+                      "detection": 6,
+                      "actionPriority": "L",
+                      "preventionControl": "Tolerancias del portavasos definidas",
+                      "detectionControl": "Prueba funcional rápida (operario abre/cierra cup holder) - Detección visual 100%",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "ap": "L",
+                      "cause": "Falta de verificación dimensional"
+                    },
+                    {
+                      "id": "e8aa7f9c-99b5-4c78-8f40-4b61ee5c4096",
+                      "description": "Dimensiones de la pieza plástica fuera de tolerancia",
+                      "severity": 6,
+                      "occurrence": 5,
+                      "detection": 6,
+                      "actionPriority": "L",
+                      "preventionControl": "Tolerancias del portavasos definidas / Revisión dimensional esporádica",
+                      "detectionControl": "Prueba funcional rápida (operario abre/cierra cup holder) - Detección visual 100%",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "ap": "L",
+                      "cause": "Dimensiones de la pieza plástica fuera de tolerancia"
+                    },
+                    {
+                      "id": "0a04677a-bbf8-46b8-8b96-9ddc7f7049e2",
+                      "description": "Fuerza excesiva o mal clipado",
+                      "severity": 6,
+                      "occurrence": 5,
+                      "detection": 6,
+                      "actionPriority": "L",
+                      "preventionControl": "Tolerancias del portavasos definidas",
+                      "detectionControl": "Prueba funcional rápida (operario abre/cierra cup holder) - Detección visual 100%",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "ap": "L",
+                      "cause": "Fuerza excesiva o mal clipado"
+                    }
+                  ],
+                  "severity": 6
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "b0ff7128-aac0-4a4c-9e98-a7a4e36ee44e",
+          "name": "Operador de tapizado",
+          "type": "Mano de Obra",
+          "functions": [
+            {
+              "id": "fdaf5f48-5e1d-4029-bdb1-9b37de486850",
+              "functionDescription": "Realizar el cierre final del conjunto",
+              "failures": [
+                {
+                  "id": "06dc1d07-c5c0-4821-a9b6-05f7cbf4f3d9",
+                  "description": "Pieza mal cerrada (cierre final suelto o con luz excesiva)",
+                  "effectLocal": "Retrabajo en estación o fuera de línea",
+                  "effectNextLevel": "Reclamo cliente (plan de reacción)",
+                  "effectEndUser": "Apariencia deficiente",
+                  "causes": [
+                    {
+                      "id": "efef60fa-c7b3-4abf-a38c-5b609cee91b9",
+                      "description": "Error del operario",
+                      "severity": 5,
+                      "occurrence": 5,
+                      "detection": 6,
+                      "actionPriority": "L",
+                      "preventionControl": "Definiciones claras de torque/clipado",
+                      "detectionControl": "Revisión visual y táctil",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "ap": "L",
+                      "cause": "Error del operario"
+                    },
+                    {
+                      "id": "ebe3b966-89ab-44d8-be23-0228c64e8d66",
+                      "description": "Herramienta de cierre descalibrada",
+                      "severity": 4,
+                      "occurrence": 5,
+                      "detection": 6,
+                      "actionPriority": "L",
+                      "preventionControl": "Instrucciones de cierre",
+                      "detectionControl": "Revisión visual y táctil",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "ap": "L",
+                      "cause": "Herramienta de cierre descalibrada"
+                    }
+                  ],
+                  "severity": 5
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "opNumber": "90",
+      "name": "TAPIZADO SEMIAUTOMATICO",
+      "focusElementFunction": "Interno: Proveer pieza tapizada y ensamblada conforme a especificaciones dimensionales y de apariencia / Cliente: Permitir ensamble del apoyabrazos de puerta sin interferencias en linea VW / Usr. Final: Confort ergonomico y apariencia estetica del apoyabrazos de puerta del vehiculo",
+      "operationFunction": ""
+    },
+    {
+      "id": "06834c1e-6ca2-49bf-80c7-21d0feceb222",
+      "operationNumber": "100",
+      "operationName": "CONTROL FINAL DE CALIDAD",
+      "workElements": [
+        {
+          "id": "78862d0a-afb9-45c1-9ca5-f5bc2eb47674",
+          "name": "Proceso de inyeccion PUR",
+          "type": "Metodo",
+          "functions": [
+            {
+              "id": "c16d3fe5-555a-4cd9-9943-f702baad63e3",
+              "functionDescription": "Controlar volumen y presion de PUR para evitar rebabas",
+              "failures": [
+                {
+                  "id": "22715dfc-748f-4c7c-a69b-6c15e1c0323a",
+                  "description": "Pieza con rebaba visible",
+                  "effectLocal": "Separamos la pieza, requiere retrabajo parcial en estación (corte o recorte).",
+                  "effectNextLevel": "Plan de reacción menor.",
+                  "effectEndUser": "Defecto moderado perceptible",
+                  "causes": [
+                    {
+                      "id": "981c2d81-1274-4066-a5d8-f3d626e3ae42",
+                      "description": "Fuga leve de PUR durante inyección (por mala posición o presión)",
+                      "severity": 3,
+                      "occurrence": 4,
+                      "detection": 6,
+                      "actionPriority": "L",
+                      "preventionControl": "Control del volumen y presión del PUR para evitar que se genere rebaba.",
+                      "detectionControl": "Inspección visual con iluminación dirigida y estándar visual con muestra límite.",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "ap": "L",
+                      "cause": "Fuga leve de PUR durante inyección (por mala posición o presión)"
+                    }
+                  ],
+                  "severity": 3
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "115fb05d-e28e-4ca2-b353-c3d71f220aad",
+          "name": "Maquina de coser (costura vista)",
+          "type": "Maquina",
+          "functions": [
+            {
+              "id": "6688f530-d766-4a7f-8980-4ac029b7e54e",
+              "functionDescription": "Verificar alineacion y estetica de costura decorativa",
+              "failures": [
+                {
+                  "id": "885c53ca-162a-48ef-b601-93f37ea703e7",
+                  "description": "Costura vista con desviación o imperfección estética",
+                  "effectLocal": "pieza es rechazada y se descarta (scrap)",
+                  "effectNextLevel": "Paro de línea >1 turno y reclamo severo",
+                  "effectEndUser": "Defecto notorio visual.",
+                  "causes": [
+                    {
+                      "id": "2ffe4c15-bb03-4ecd-9067-f670d34b316f",
+                      "description": "Desajuste en guía",
+                      "severity": 8,
+                      "occurrence": 3,
+                      "detection": 5,
+                      "actionPriority": "M",
+                      "preventionControl": "Guía física en la máquina de coser y ajuste validado del pie y avance, junto con setup estandarizado para asegurar alineación de la costura decorativa.",
+                      "detectionControl": "Inspección visual con plantilla de referencia",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "ap": "M",
+                      "cause": "Desajuste en guía"
+                    },
+                    {
+                      "id": "3ded54f6-3e21-4361-a5c7-b3c7b301a48f",
+                      "description": "Mal centrado del operador",
+                      "severity": 8,
+                      "occurrence": 3,
+                      "detection": 5,
+                      "actionPriority": "M",
+                      "preventionControl": "Guía física en la máquina de coser y ajuste validado del pie y avance, junto con setup estandarizado para asegurar alineación de la costura decorativa.",
+                      "detectionControl": "Inspección visual con plantilla de referencia",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "ap": "M",
+                      "cause": "Mal centrado del operador"
+                    },
+                    {
+                      "id": "9e569390-ee52-429a-9c5b-29a1fccaf6d2",
+                      "description": "Variación en tensiones o avance del material",
+                      "severity": 4,
+                      "occurrence": 3,
+                      "detection": 5,
+                      "actionPriority": "M",
+                      "preventionControl": "Guía física en la máquina de coser y ajuste validado del pie y avance, junto con setup estandarizado para asegurar alineación de la costura decorativa.",
+                      "detectionControl": "Inspección visual con plantilla de referencia",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "ap": "M",
+                      "cause": "Variación en tensiones o avance del material"
+                    }
+                  ],
+                  "severity": 8
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "opNumber": "100",
+      "name": "CONTROL FINAL DE CALIDAD",
+      "focusElementFunction": "Interno: Proveer pieza tapizada y ensamblada conforme a especificaciones dimensionales y de apariencia / Cliente: Permitir ensamble del apoyabrazos de puerta sin interferencias en linea VW / Usr. Final: Confort ergonomico y apariencia estetica del apoyabrazos de puerta del vehiculo",
+      "operationFunction": ""
+    },
+    {
+      "id": "a0a27a88-cf05-4938-9a28-a4d71f63beab",
+      "opNumber": "101",
+      "operationNumber": "101",
+      "name": "CLASIFICACION Y SEGREGACION DE PRODUCTO NO CONFORME",
+      "operationName": "CLASIFICACION Y SEGREGACION DE PRODUCTO NO CONFORME",
+      "focusElementFunction": "Interno: Proveer pieza tapizada y ensamblada conforme a especificaciones dimensionales y de apariencia / Cliente: Permitir ensamble del apoyabrazos de puerta sin interferencias en linea VW / Usr. Final: Confort ergonomico y apariencia estetica del apoyabrazos de puerta del vehiculo",
+      "operationFunction": "Segregar producto (conforme y no conforme) segun plan de control; y prevenir el escape (y la mezcla) de piezas no conformes. Clasificar producto (conforme / no conforme) y segregar producto (al contenedor/ubicacion correspondiente)",
+      "workElements": [
+        {
+          "id": "0b4708eb-b484-4e98-b17f-25679a26b863",
+          "name": "Operador de calidad",
+          "type": "Man",
+          "functions": [
+            {
+              "id": "63865877-22f2-4fc2-a759-f06bec523936",
+              "description": "Identificar/clasificar producto (conforme y no conforme) y segregar producto (al contenedor de destino)",
+              "functionDescription": "Identificar/clasificar producto (conforme y no conforme) y segregar producto (al contenedor de destino)",
+              "requirements": "",
+              "failures": [
+                {
+                  "id": "c415efa9-8a31-44ae-b687-b24fe300d6b8",
+                  "description": "Pieza no conforme (NC) es clasificada como conforme (OK) (aprobar una parte mala)",
+                  "severity": 7,
+                  "effectLocal": "Fuerte posibilidad de incorporar procesos adicionales de clasificacion de productos defectuosos",
+                  "effectNextLevel": "Parada de linea mayor a un turno de produccion completo o resulta en la suspension de envios",
+                  "effectEndUser": "Perdida de la funcion primaria del vehiculo necesaria para la conduccion normal",
+                  "causes": [
+                    {
+                      "id": "3fb21d49-3ee2-4362-822b-dca4d4d94b6f",
+                      "description": "Operador coloca pieza no conforme (NC) en el contenedor de embalaje/OK por error",
+                      "cause": "Operador coloca pieza no conforme (NC) en el contenedor de embalaje/OK por error",
+                      "severity": 7,
+                      "occurrence": 5,
+                      "detection": 8,
+                      "preventionControl": "Instruccion visual",
+                      "detectionControl": "Inspeccion visual",
+                      "ap": "H",
+                      "actionPriority": "H",
+                      "specialChar": "SC",
+                      "characteristicNumber": "",
+                      "filterCode": "",
+                      "recommendedAction": ""
+                    },
+                    {
+                      "id": "f4fd8e73-b427-4f02-89ff-e49fbd2081b5",
+                      "description": "Contenedores de producto conforme (OK) y no conforme (NC) no estan claramente diferenciados o rotulados, provocando que el operador mezcle los destinos",
+                      "cause": "Contenedores de producto conforme (OK) y no conforme (NC) no estan claramente diferenciados o rotulados, provocando que el operador mezcle los destinos",
+                      "severity": 7,
+                      "occurrence": 4,
+                      "detection": 8,
+                      "preventionControl": "Instruccion visual",
+                      "detectionControl": "Inspeccion visual",
+                      "ap": "H",
+                      "actionPriority": "H",
+                      "specialChar": "SC",
+                      "characteristicNumber": "",
+                      "filterCode": "",
+                      "recommendedAction": ""
+                    }
+                  ]
+                },
+                {
+                  "id": "d792a6f9-54ce-4bff-aab2-4fee71bcbf66",
+                  "description": "Mezcla de producto no conforme (NC) con producto conforme (OK) en el contenedor de embalaje (contaminacion)",
+                  "severity": 7,
+                  "effectLocal": "Fuerte posibilidad de incorporar procesos adicionales de clasificacion de productos defectuosos",
+                  "effectNextLevel": "Parada de linea entre una hora y un turno de produccion completo. Tambien podria requerir reparacion o reemplazo en el campo",
+                  "effectEndUser": "Perdida de la funcion primaria del vehiculo",
+                  "causes": [
+                    {
+                      "id": "6265b3de-4130-44b0-9b83-fff6531f3a6a",
+                      "description": "Operador coloca piezas NC en el contenedor de OK por error de distraccion. Contenedores no estan fisicamente separados o claramente identificados",
+                      "cause": "Operador coloca piezas NC en el contenedor de OK por error de distraccion. Contenedores no estan fisicamente separados o claramente identificados",
+                      "severity": 7,
+                      "occurrence": 5,
+                      "detection": 8,
+                      "preventionControl": "Instruccion visual",
+                      "detectionControl": "Inspeccion visual",
+                      "ap": "H",
+                      "actionPriority": "H",
+                      "specialChar": "SC",
+                      "characteristicNumber": "",
+                      "filterCode": "",
+                      "recommendedAction": ""
+                    }
+                  ]
+                },
+                {
+                  "id": "93e2f288-8289-4f55-aa1e-c37c17d8344e",
+                  "description": "Etiqueta o tarjeta de identificacion de scrap/retrabajo omitida",
+                  "severity": 4,
+                  "effectLocal": "Fuerte posibilidad de incorporar procesos adicionales de clasificacion de productos defectuosos",
+                  "effectNextLevel": "Parada de linea (potencial)",
+                  "effectEndUser": "Perdida de la funcion primaria del vehiculo (potencial)",
+                  "causes": [
+                    {
+                      "id": "4f5d27fd-e706-45fd-8b90-4b4ebacca4a4",
+                      "description": "Operador omite el paso de identificacion. Insumos de identificacion no disponibles en el puesto",
+                      "cause": "Operador omite el paso de identificacion. Insumos de identificacion no disponibles en el puesto",
+                      "severity": 4,
+                      "occurrence": 4,
+                      "detection": 8,
+                      "preventionControl": "En el puesto requiere la colocacion de la etiqueta en el contenedor",
+                      "detectionControl": "Inspeccion Visual",
+                      "ap": "M",
+                      "actionPriority": "M",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "filterCode": "",
+                      "recommendedAction": ""
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "9594dfa9-b732-488b-a4f5-1e93d73d4300",
+          "name": "Hoja de operaciones",
+          "type": "Method",
+          "functions": [
+            {
+              "id": "a17f6c4d-b042-4ae8-a748-88d973f5e419",
+              "description": "Utilizar la Hoja de Operaciones vigente. Definir el plan de reaccion ante un No conforme",
+              "functionDescription": "Utilizar la Hoja de Operaciones vigente. Definir el plan de reaccion ante un No conforme",
+              "requirements": "",
+              "failures": []
+            }
+          ]
+        },
+        {
+          "id": "0a8e73a9-c1e4-4fbe-86c2-076b979871df",
+          "name": "Etiquetas de rechazo 100x60mm",
+          "type": "Material",
+          "functions": [
+            {
+              "id": "f54402c4-a316-408f-8a10-ce63121bc16f",
+              "description": "Identificar producto no conforme para segregacion",
+              "functionDescription": "Identificar producto no conforme para segregacion",
+              "requirements": "",
+              "failures": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "e0ac96dc-ac4c-42fe-b708-d4046e56ba9e",
+      "opNumber": "103",
+      "operationNumber": "103",
+      "name": "REPROCESO: FALTA DE ADHESIVO",
+      "operationName": "REPROCESO: FALTA DE ADHESIVO",
+      "focusElementFunction": "Interno: Proveer pieza tapizada y ensamblada conforme a especificaciones dimensionales y de apariencia / Cliente: Permitir ensamble del apoyabrazos de puerta sin interferencias en linea VW / Usr. Final: Confort ergonomico y apariencia estetica del apoyabrazos de puerta del vehiculo",
+      "operationFunction": "Restituir la capa de adhesivo en las areas del sustrato donde estaba ausente, asegurando la cobertura y el gramaje segun la especificacion original. Restaurar la conformidad del componente eliminando el defecto detectado",
+      "workElements": [
+        {
+          "id": "2b253da6-5530-478f-9aaa-9481fa730ba2",
+          "name": "Operador de calidad",
+          "type": "Man",
+          "functions": [
+            {
+              "id": "592ea377-5789-4471-9f49-8a7239e8f499",
+              "description": "Aplicar adhesivo en las areas omitidas utilizando la herramienta asignada (brocha/pistola), garantizando la continuidad de la capa adhesiva y la limpieza de la pieza",
+              "functionDescription": "Aplicar adhesivo en las areas omitidas utilizando la herramienta asignada (brocha/pistola), garantizando la continuidad de la capa adhesiva y la limpieza de la pieza",
+              "requirements": "",
+              "failures": [
+                {
+                  "id": "3bd8855a-b55a-4695-adb1-a636f5823d51",
+                  "description": "Falta de adhesivo / cobertura incompleta",
+                  "severity": 5,
+                  "effectLocal": "Scrap del 100%",
+                  "effectNextLevel": "Paro de linea / problemas de ensamble",
+                  "effectEndUser": "Apariencia / ruido",
+                  "causes": [
+                    {
+                      "id": "ecbda55d-7c78-4114-aa43-52417d75c41f",
+                      "description": "Omision por fatiga o distraccion: el operador olvida aplicar adhesivo en una seccion especifica por falta de ayudas visuales",
+                      "cause": "Omision por fatiga o distraccion: el operador olvida aplicar adhesivo en una seccion especifica por falta de ayudas visuales",
+                      "severity": 5,
+                      "occurrence": 5,
+                      "detection": 8,
+                      "preventionControl": "Instrucciones de proceso y ayudas visuales disponibles en el puesto",
+                      "detectionControl": "Inspeccion de calidad",
+                      "ap": "M",
+                      "actionPriority": "M",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "filterCode": "",
+                      "recommendedAction": ""
+                    },
+                    {
+                      "id": "b2c6cd6d-76bc-4af8-a310-16b2ff8fcaeb",
+                      "description": "Instruccion deficiente: la hoja de operacion estandar de reproceso no especifica el patron de recorrido",
+                      "cause": "Instruccion deficiente: la hoja de operacion estandar de reproceso no especifica el patron de recorrido",
+                      "severity": 5,
+                      "occurrence": 4,
+                      "detection": 3,
+                      "preventionControl": "La hoja de instruccion detalla el metodo de aplicacion y el patron de recorrido",
+                      "detectionControl": "Inspeccion de calidad",
+                      "ap": "L",
+                      "actionPriority": "L",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "filterCode": "",
+                      "recommendedAction": ""
+                    },
+                    {
+                      "id": "e3a70ae6-266f-4488-8536-705390ea744e",
+                      "description": "La herramienta manual no carga suficiente adhesivo o el adhesivo en el recipiente se seco parcialmente",
+                      "cause": "La herramienta manual no carga suficiente adhesivo o el adhesivo en el recipiente se seco parcialmente",
+                      "severity": 5,
+                      "occurrence": 7,
+                      "detection": 5,
+                      "preventionControl": "La pistola de adhesivado evita que se seque el adhesivo y carga una cantidad suficiente",
+                      "detectionControl": "Inspeccion de calidad",
+                      "ap": "M",
+                      "actionPriority": "M",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "filterCode": "",
+                      "recommendedAction": ""
+                    }
+                  ]
+                },
+                {
+                  "id": "3dd3ab7a-16e8-4c77-96b2-1a22367a4a7a",
+                  "description": "Exceso de adhesivo / se aplica adhesivo donde no corresponde",
+                  "severity": 5,
+                  "effectLocal": "Retrabajo en linea",
+                  "effectNextLevel": "El exceso de pegamento interfiere con los clips o puntos de fijacion",
+                  "effectEndUser": "Vibracion, ruidos o aspecto",
+                  "causes": [
+                    {
+                      "id": "cbb40b13-8f11-4c63-a2c5-7e839549b34f",
+                      "description": "Sobre-procesamiento: el operador aplica doble capa creyendo erroneamente que mas es mejor para asegurar el pegado",
+                      "cause": "Sobre-procesamiento: el operador aplica doble capa creyendo erroneamente que mas es mejor para asegurar el pegado",
+                      "severity": 5,
+                      "occurrence": 3,
+                      "detection": 8,
+                      "preventionControl": "La instruccion detalla que no se debe aplicar mas de 1 vez el adhesivo",
+                      "detectionControl": "Inspeccion de calidad",
+                      "ap": "L",
+                      "actionPriority": "L",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "filterCode": "",
+                      "recommendedAction": ""
+                    },
+                    {
+                      "id": "7389ee8c-c15c-4f2e-be45-8c00a12b1dc1",
+                      "description": "No existe una plantilla o mascara de proteccion para tapar zonas donde no lleva adhesivo durante el reproceso manual",
+                      "cause": "No existe una plantilla o mascara de proteccion para tapar zonas donde no lleva adhesivo durante el reproceso manual",
+                      "severity": 5,
+                      "occurrence": 5,
+                      "detection": 8,
+                      "preventionControl": "Instrucciones de proceso detallan donde aplicar el adhesivo",
+                      "detectionControl": "Inspeccion de calidad",
+                      "ap": "M",
+                      "actionPriority": "M",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "filterCode": "",
+                      "recommendedAction": ""
+                    }
+                  ]
+                },
+                {
+                  "id": "7c29c911-eb68-4903-a068-03bd0c5d289e",
+                  "description": "Mezcla de producto NC con Conforme (OK)",
+                  "severity": 6,
+                  "effectLocal": "Fuerte posibilidad de incorporar procesos adicionales de clasificacion",
+                  "effectNextLevel": "Parada de linea o paro de envios",
+                  "effectEndUser": "Perdida de la funcion primaria del vehiculo",
+                  "causes": [
+                    {
+                      "id": "6a24d0ee-4f72-49f5-aa14-04247aa3acaf",
+                      "description": "Clasificacion y segregacion incorrecta de producto conforme y no conforme",
+                      "cause": "Clasificacion y segregacion incorrecta de producto conforme y no conforme",
+                      "severity": 6,
+                      "occurrence": 5,
+                      "detection": 8,
+                      "preventionControl": "Hojas de operaciones / ayudas visuales",
+                      "detectionControl": "Visual",
+                      "ap": "M",
+                      "actionPriority": "M",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "filterCode": "",
+                      "recommendedAction": ""
+                    },
+                    {
+                      "id": "74d5fb35-f12d-4e3d-851a-1411c72507df",
+                      "description": "Operador coloca piezas NC en el contenedor de OK",
+                      "cause": "Operador coloca piezas NC en el contenedor de OK",
+                      "severity": 6,
+                      "occurrence": 5,
+                      "detection": 8,
+                      "preventionControl": "Instruccion Visual",
+                      "detectionControl": "Inspeccion Visual",
+                      "ap": "M",
+                      "actionPriority": "M",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "filterCode": "",
+                      "recommendedAction": ""
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "41cd41f1-37c3-4320-8e7f-245c6f3aafd9",
+          "name": "Hoja de operaciones",
+          "type": "Method",
+          "functions": [
+            {
+              "id": "92bb1136-cbb5-45bc-a186-4df284e80e5d",
+              "description": "Utilizar la Hoja de Operaciones vigente. Definir el plan de reaccion ante un No conforme. Ayudas visuales: mostrar como debe quedar el producto para evitar ciertos defectos",
+              "functionDescription": "Utilizar la Hoja de Operaciones vigente. Definir el plan de reaccion ante un No conforme. Ayudas visuales: mostrar como debe quedar el producto para evitar ciertos defectos",
+              "requirements": "",
+              "failures": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "e46f879c-9992-4e51-8715-e06ad52eada2",
+      "operationNumber": "110",
+      "operationName": "EMBALAJE",
+      "workElements": [
+        {
+          "id": "bf88ea3b-b620-4163-92cf-78d91d0b12e4",
+          "name": "Proceso de embalaje",
+          "type": "Metodo",
+          "functions": [
+            {
+              "id": "b32b3886-e8e5-4a9e-b82a-615e04f241b4",
+              "functionDescription": "Embalar piezas terminadas con separadores adecuados",
+              "failures": [
+                {
+                  "id": "a0acc141-eb25-4b8e-a5df-f41c6a8e9959",
+                  "description": "Pieza deformada por mal posicionamiento en el embalaje",
+                  "effectLocal": "Daño permanente en la espuma o en la costura.",
+                  "effectNextLevel": "Paro de línea temporal o devolución del lote",
+                  "effectEndUser": "Defecto notorio y disconformidad inmediata",
+                  "causes": [
+                    {
+                      "id": "bdec641a-2d6f-46cf-8eb5-0bdd0727b264",
+                      "description": "Las piezas se colocan sin separadores adecuados, con contacto directo o presión entre ellas, lo que genera deformación durante el almacenamiento o traslado.",
+                      "severity": 8,
+                      "occurrence": 3,
+                      "detection": 5,
+                      "actionPriority": "M",
+                      "preventionControl": "Uso de separadores, bandejas o estructuras que mantienen la forma del apoyacabezas durante el embalaje y almacenaje.",
+                      "detectionControl": "Inspección visual del operador al momento de ubicar las piezas en el embalaje, verificando que no haya contacto directo, presión excesiva o mala colocación.",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "ap": "M",
+                      "cause": "Las piezas se colocan sin separadores adecuados, con contacto directo o presión entre ellas, lo que genera deformación durante el almacenamiento o traslado."
+                    }
+                  ],
+                  "severity": 8
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "8e4a54fb-09cf-47a6-bdd7-8d84f1b57013",
+          "name": "Operador de embalaje",
+          "type": "Mano de Obra",
+          "functions": [
+            {
+              "id": "536b0c14-663d-4810-893e-d0f1a4b19b2b",
+              "functionDescription": "Controlar cantidad de piezas por medio de embalaje",
+              "failures": [
+                {
+                  "id": "f9252c4d-d2ed-4bee-852c-6683e9698798",
+                  "description": "Colocación de mayor o menor cantidad de piezas por medio",
+                  "effectLocal": "100% producción requiere retrabajo en estación",
+                  "effectNextLevel": "Plan de reacción importante por desvío de cantidad (stock incorrecto, paro leve)",
+                  "effectEndUser": "El error se corrige antes de llegar al usuario.",
+                  "causes": [
+                    {
+                      "id": "19837c9b-c308-49e6-9443-38bc07a1e559",
+                      "description": "Falta de control en la cantidad cargada por medio debido a ausencia de guía visual o desatención del operador",
+                      "severity": 4,
+                      "occurrence": 3,
+                      "detection": 6,
+                      "actionPriority": "L",
+                      "preventionControl": "Estándar visual con foto de referencia indicando la cantidad por medio, visible en el puesto de trabajo.",
+                      "detectionControl": "Verificación visual del medio completo antes del cierre",
+                      "specialChar": "",
+                      "characteristicNumber": "",
+                      "preventionAction": "",
+                      "detectionAction": "",
+                      "responsible": "",
+                      "targetDate": "",
+                      "status": "",
+                      "ap": "L",
+                      "cause": "Falta de control en la cantidad cargada por medio debido a ausencia de guía visual o desatención del operador"
+                    }
+                  ],
+                  "severity": 4
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "opNumber": "110",
+      "name": "EMBALAJE",
+      "focusElementFunction": "Interno: Proveer pieza tapizada y ensamblada conforme a especificaciones dimensionales y de apariencia / Cliente: Permitir ensamble del apoyabrazos de puerta sin interferencias en linea VW / Usr. Final: Confort ergonomico y apariencia estetica del apoyabrazos de puerta del vehiculo",
+      "operationFunction": ""
+    }
+  ]
+}

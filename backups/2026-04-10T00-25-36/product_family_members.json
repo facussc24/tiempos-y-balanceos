@@ -1,0 +1,266 @@
+[
+  {
+    "id": 137,
+    "family_id": 9,
+    "product_id": 560,
+    "is_primary": 1,
+    "added_at": "2026-03-19T12:13:07.564614+00:00",
+    "variant_label": ""
+  },
+  {
+    "id": 138,
+    "family_id": 9,
+    "product_id": 561,
+    "is_primary": 0,
+    "added_at": "2026-03-19T12:13:08.595581+00:00",
+    "variant_label": ""
+  },
+  {
+    "id": 139,
+    "family_id": 9,
+    "product_id": 562,
+    "is_primary": 0,
+    "added_at": "2026-03-19T12:13:09.54689+00:00",
+    "variant_label": ""
+  },
+  {
+    "id": 140,
+    "family_id": 9,
+    "product_id": 563,
+    "is_primary": 0,
+    "added_at": "2026-03-19T12:13:10.621849+00:00",
+    "variant_label": ""
+  },
+  {
+    "id": 141,
+    "family_id": 10,
+    "product_id": 564,
+    "is_primary": 1,
+    "added_at": "2026-03-19T12:13:11.470081+00:00",
+    "variant_label": ""
+  },
+  {
+    "id": 142,
+    "family_id": 10,
+    "product_id": 565,
+    "is_primary": 0,
+    "added_at": "2026-03-19T12:13:12.370586+00:00",
+    "variant_label": ""
+  },
+  {
+    "id": 143,
+    "family_id": 10,
+    "product_id": 566,
+    "is_primary": 0,
+    "added_at": "2026-03-19T12:13:13.194523+00:00",
+    "variant_label": ""
+  },
+  {
+    "id": 144,
+    "family_id": 10,
+    "product_id": 567,
+    "is_primary": 0,
+    "added_at": "2026-03-19T12:13:14.097154+00:00",
+    "variant_label": ""
+  },
+  {
+    "id": 145,
+    "family_id": 11,
+    "product_id": 568,
+    "is_primary": 1,
+    "added_at": "2026-03-19T12:13:15.515216+00:00",
+    "variant_label": ""
+  },
+  {
+    "id": 146,
+    "family_id": 11,
+    "product_id": 569,
+    "is_primary": 0,
+    "added_at": "2026-03-19T12:13:16.924984+00:00",
+    "variant_label": ""
+  },
+  {
+    "id": 147,
+    "family_id": 11,
+    "product_id": 570,
+    "is_primary": 0,
+    "added_at": "2026-03-19T12:13:17.839653+00:00",
+    "variant_label": ""
+  },
+  {
+    "id": 148,
+    "family_id": 11,
+    "product_id": 571,
+    "is_primary": 0,
+    "added_at": "2026-03-19T12:13:19.064991+00:00",
+    "variant_label": ""
+  },
+  {
+    "id": 149,
+    "family_id": 8,
+    "product_id": 572,
+    "is_primary": 0,
+    "added_at": "2026-03-19T12:13:20.061071+00:00",
+    "variant_label": ""
+  },
+  {
+    "id": 150,
+    "family_id": 8,
+    "product_id": 573,
+    "is_primary": 1,
+    "added_at": "2026-03-19T12:16:27.143522+00:00",
+    "variant_label": ""
+  },
+  {
+    "id": 151,
+    "family_id": 2,
+    "product_id": 574,
+    "is_primary": 1,
+    "added_at": "2026-03-19T12:16:28.374148+00:00",
+    "variant_label": ""
+  },
+  {
+    "id": 49,
+    "family_id": 5,
+    "product_id": 472,
+    "is_primary": 1,
+    "added_at": "2026-03-17T23:17:30.947278+00:00",
+    "variant_label": ""
+  },
+  {
+    "id": 50,
+    "family_id": 5,
+    "product_id": 473,
+    "is_primary": 0,
+    "added_at": "2026-03-17T23:17:31.767839+00:00",
+    "variant_label": ""
+  },
+  {
+    "id": 121,
+    "family_id": 6,
+    "product_id": 544,
+    "is_primary": 1,
+    "added_at": "2026-03-19T12:08:16.714312+00:00",
+    "variant_label": ""
+  },
+  {
+    "id": 122,
+    "family_id": 6,
+    "product_id": 545,
+    "is_primary": 0,
+    "added_at": "2026-03-19T12:08:17.034769+00:00",
+    "variant_label": ""
+  },
+  {
+    "id": 123,
+    "family_id": 6,
+    "product_id": 546,
+    "is_primary": 0,
+    "added_at": "2026-03-19T12:08:17.317394+00:00",
+    "variant_label": ""
+  },
+  {
+    "id": 124,
+    "family_id": 6,
+    "product_id": 547,
+    "is_primary": 0,
+    "added_at": "2026-03-19T12:08:17.653199+00:00",
+    "variant_label": ""
+  },
+  {
+    "id": 125,
+    "family_id": 6,
+    "product_id": 548,
+    "is_primary": 0,
+    "added_at": "2026-03-19T12:08:17.986693+00:00",
+    "variant_label": ""
+  },
+  {
+    "id": 126,
+    "family_id": 6,
+    "product_id": 549,
+    "is_primary": 0,
+    "added_at": "2026-03-19T12:08:18.306403+00:00",
+    "variant_label": ""
+  },
+  {
+    "id": 127,
+    "family_id": 6,
+    "product_id": 550,
+    "is_primary": 0,
+    "added_at": "2026-03-19T12:08:18.629002+00:00",
+    "variant_label": ""
+  },
+  {
+    "id": 128,
+    "family_id": 6,
+    "product_id": 551,
+    "is_primary": 0,
+    "added_at": "2026-03-19T12:08:19.080463+00:00",
+    "variant_label": ""
+  },
+  {
+    "id": 129,
+    "family_id": 6,
+    "product_id": 552,
+    "is_primary": 0,
+    "added_at": "2026-03-19T12:08:19.497875+00:00",
+    "variant_label": ""
+  },
+  {
+    "id": 130,
+    "family_id": 6,
+    "product_id": 553,
+    "is_primary": 0,
+    "added_at": "2026-03-19T12:08:19.788767+00:00",
+    "variant_label": ""
+  },
+  {
+    "id": 131,
+    "family_id": 6,
+    "product_id": 554,
+    "is_primary": 0,
+    "added_at": "2026-03-19T12:08:20.070561+00:00",
+    "variant_label": ""
+  },
+  {
+    "id": 132,
+    "family_id": 6,
+    "product_id": 555,
+    "is_primary": 0,
+    "added_at": "2026-03-19T12:08:20.337655+00:00",
+    "variant_label": ""
+  },
+  {
+    "id": 133,
+    "family_id": 7,
+    "product_id": 556,
+    "is_primary": 1,
+    "added_at": "2026-03-19T12:08:20.633312+00:00",
+    "variant_label": ""
+  },
+  {
+    "id": 134,
+    "family_id": 7,
+    "product_id": 557,
+    "is_primary": 0,
+    "added_at": "2026-03-19T12:08:20.917017+00:00",
+    "variant_label": ""
+  },
+  {
+    "id": 135,
+    "family_id": 7,
+    "product_id": 558,
+    "is_primary": 0,
+    "added_at": "2026-03-19T12:08:21.202138+00:00",
+    "variant_label": ""
+  },
+  {
+    "id": 136,
+    "family_id": 7,
+    "product_id": 559,
+    "is_primary": 0,
+    "added_at": "2026-03-19T12:08:21.477353+00:00",
+    "variant_label": ""
+  }
+]
