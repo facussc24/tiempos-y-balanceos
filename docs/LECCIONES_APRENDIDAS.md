@@ -271,3 +271,28 @@ Esto afectaba a los 6 AMFEs VWA (HEADREST_FRONT, HEADREST_REAR_CEN, HEADREST_REA
 
 - **AUTENTICACION OBLIGATORIA**: Todo script .mjs que consulte Supabase DEBE autenticarse con `signInWithPassword()` ANTES de hacer queries. Sin esto, RLS devuelve 0 filas y el script reporta falsos resultados.
 - **Campo de failure modes**: Es `fn.failures`, NO `fn.failureModes`. Verificar en cualquier script o agente que recorra la estructura del AMFE.
+
+---
+
+## 2026-04-13 — Inglés y vocabulario rebuscado en documentos APQP — ERROR GRAVE
+
+**Problema**: Claude inventó textos técnicos complejos con términos en inglés (gauge, pattern board, runner, gate, setup, flashes, sink marks) y vocabulario rebuscado que Fak no entiende (husillo, dossier, "rebaba residual ni bebedero visible en el punto de inyección").
+
+**Alcance**: 120+ términos en inglés en 11 documentos + 1756 textos simplificados + 286 "dossier" + 48 "husillo" + 54 "chupados". Total: ~2000+ correcciones.
+
+**Causa raíz**: Claude completaba campos con texto inventado y vocabulario técnico que nadie pidió. Los documentos son preliminares y no necesitan ese nivel de detalle.
+
+**Prevención OBLIGATORIA**:
+- CERO inglés en documentos APQP. Ni parentéticos "(runner)" ni standalone.
+- Textos CORTOS: máximo 8-10 palabras por campo.
+- NO inventar contenido técnico. Si falta info → TBD.
+- Usar las MISMAS palabras que usa Fak. Si Fak dice "tornillo", NO poner "husillo".
+- Pieza inyectada con defecto = scrap. NO "retrabajo según gravedad" (no se retrabaja plástico inyectado excepto cortar rebabas).
+
+---
+
+## 2026-04-13 — Maestro de Logística y Recepción creado (family 16)
+
+**Cambio**: OP 10 (Recepción de Materia Prima) sacada del Maestro de Inyección (family 15) y movida a nuevo Maestro de Logística y Recepción (family 16). Per AIAG CP 2024 "Procesos Interdependientes".
+
+**Pellets consolidados**: 4 entradas redundantes → 2 categorías: "Pellet higroscópico (ABS/PC/PA/PET)" + "Pellet termoplástico estándar (PP/PE)". Per AIAG CP 2024 reducción de complejidad.
