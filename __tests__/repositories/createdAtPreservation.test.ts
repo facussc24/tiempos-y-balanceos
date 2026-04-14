@@ -23,11 +23,7 @@ vi.mock('../../utils/crypto', () => ({
     generateChecksum: vi.fn().mockResolvedValue('checksum-abc'),
 }));
 
-vi.mock('../../modules/amfe/amfeLibraryTypes', () => ({
-    buildSearchableText: vi.fn().mockReturnValue('search text'),
-}));
-
-import { saveAmfeDocument, saveLibrary, saveLibraryOperation } from '../../utils/repositories/amfeRepository';
+import { saveAmfeDocument } from '../../utils/repositories/amfeRepository';
 import { saveCpDocument } from '../../utils/repositories/cpRepository';
 import { saveHoDocument } from '../../utils/repositories/hoRepository';
 import { getDatabase } from '../../utils/database';
@@ -35,7 +31,6 @@ import type { DbAdapter } from '../../utils/database';
 import type { AmfeDocument } from '../../modules/amfe/amfeTypes';
 import type { ControlPlanDocument } from '../../modules/controlPlan/controlPlanTypes';
 import type { HoDocument } from '../../modules/hojaOperaciones/hojaOperacionesTypes';
-import type { AmfeLibrary, AmfeLibraryOperation } from '../../modules/amfe/amfeLibraryTypes';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -106,17 +101,6 @@ function createMinimalHoDoc(): HoDocument {
             linkedCpProject: '',
         },
         sheets: [],
-    };
-}
-
-function createMinimalLibraryOp(id: string, name: string): AmfeLibraryOperation {
-    return {
-        id,
-        opNumber: `OP-${id}`,
-        name,
-        workElements: [],
-        lastModified: '2026-01-01T00:00:00.000Z',
-        version: 1,
     };
 }
 
@@ -252,84 +236,3 @@ describe('created_at preservation in INSERT OR REPLACE', () => {
     });
 });
 
-describe('saveLibrary atomicity', () => {
-    let mockDb: { execute: ReturnType<typeof vi.fn>; select: ReturnType<typeof vi.fn> };
-
-    beforeEach(async () => {
-        vi.clearAllMocks();
-        mockDb = await getDatabase() as unknown as typeof mockDb;
-        mockDb.execute.mockResolvedValue({ rowsAffected: 1, lastInsertId: 0 });
-        mockDb.select.mockResolvedValue([]);
-    });
-
-    it('should wrap DELETE + INSERTs in a transaction', async () => {
-        const library: AmfeLibrary = {
-            operations: [
-                createMinimalLibraryOp('lib-1', 'Corte'),
-                createMinimalLibraryOp('lib-2', 'Soldadura'),
-            ],
-            lastModified: '2026-01-01T00:00:00.000Z',
-        };
-
-        await saveLibrary(library);
-
-        const calls = mockDb.execute.mock.calls.map((c: unknown[]) => (c[0] as string).trim());
-
-        // First call: BEGIN TRANSACTION
-        expect(calls[0]).toMatch(/^BEGIN\s+TRANSACTION$/i);
-        // Second call: DELETE FROM amfe_library_operations
-        expect(calls[1]).toMatch(/DELETE\s+FROM\s+amfe_library_operations/i);
-        // Next calls: INSERT OR REPLACE for each operation
-        expect(calls[2]).toMatch(/INSERT\s+OR\s+REPLACE\s+INTO\s+amfe_library_operations/i);
-        expect(calls[3]).toMatch(/INSERT\s+OR\s+REPLACE\s+INTO\s+amfe_library_operations/i);
-        // Last call: COMMIT
-        expect(calls[4]).toMatch(/^COMMIT$/i);
-    });
-
-    it('should ROLLBACK if an INSERT fails mid-batch', async () => {
-        const library: AmfeLibrary = {
-            operations: [
-                createMinimalLibraryOp('lib-1', 'Corte'),
-                createMinimalLibraryOp('lib-2', 'Soldadura'),
-                createMinimalLibraryOp('lib-3', 'Ensamble'),
-            ],
-            lastModified: '2026-01-01T00:00:00.000Z',
-        };
-
-        let insertCount = 0;
-        mockDb.execute.mockImplementation(async (sql: string) => {
-            const upper = sql.trim().toUpperCase();
-            if (upper.startsWith('INSERT OR REPLACE INTO AMFE_LIBRARY')) {
-                insertCount++;
-                if (insertCount === 2) {
-                    throw new Error('Simulated DB write failure');
-                }
-            }
-            return { rowsAffected: 1, lastInsertId: 0 };
-        });
-
-        const result = await saveLibrary(library);
-        expect(result).toBe(false);
-
-        // Verify ROLLBACK was called
-        const calls = mockDb.execute.mock.calls.map((c: unknown[]) => (c[0] as string).trim());
-        expect(calls.some((s: string) => s.toUpperCase() === 'ROLLBACK')).toBe(true);
-        // Verify COMMIT was NOT called
-        expect(calls.some((s: string) => s.toUpperCase() === 'COMMIT')).toBe(false);
-    });
-
-    it('should return true on successful save with empty library', async () => {
-        const library: AmfeLibrary = {
-            operations: [],
-            lastModified: '2026-01-01T00:00:00.000Z',
-        };
-
-        const result = await saveLibrary(library);
-        expect(result).toBe(true);
-
-        const calls = mockDb.execute.mock.calls.map((c: unknown[]) => (c[0] as string).trim());
-        expect(calls[0]).toMatch(/^BEGIN\s+TRANSACTION$/i);
-        expect(calls[1]).toMatch(/DELETE\s+FROM\s+amfe_library_operations/i);
-        expect(calls[2]).toMatch(/^COMMIT$/i);
-    });
-});

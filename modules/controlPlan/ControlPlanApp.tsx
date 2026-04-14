@@ -229,11 +229,10 @@ const ControlPlanApp: React.FC<Props> = ({ onBackToLanding, embedded, initialDat
     }, []);
 
     // Draft recovery on mount (extracted hook)
-    useCpDraftRecovery({
+    const { draftRecovery: cpDraftRecovery, handleRecoverDraft: handleRecoverCpDraft, handleDiscardDraft: handleDiscardCpDraft, handleDismissDraft: handleDismissCpDraft } = useCpDraftRecovery({
         embedded,
         currentProject: projects.currentProject,
         loadData: cp.loadData,
-        requestConfirm: confirm.requestConfirm,
     });
 
     // Notify parent of changes when embedded
@@ -543,6 +542,30 @@ const ControlPlanApp: React.FC<Props> = ({ onBackToLanding, embedded, initialDat
                 selectedClient={projects.selectedClient}
                 onClientChange={projects.setSelectedClient}
             />
+
+            {/* Draft Recovery Banner */}
+            {cpDraftRecovery && (
+                <div className="bg-blue-50 border border-blue-200 px-4 py-2.5 flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-xs text-blue-800">
+                        <span>Borrador CP: <strong>{cpDraftRecovery.name}</strong></span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <button onClick={handleRecoverCpDraft}
+                            className="text-xs bg-blue-600 hover:bg-blue-500 text-white px-3 py-1 rounded font-medium transition">
+                            Recuperar
+                        </button>
+                        <button onClick={handleDiscardCpDraft}
+                            className="text-xs bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1 rounded font-medium transition">
+                            Descartar
+                        </button>
+                        <button onClick={handleDismissCpDraft}
+                            className="text-gray-400 hover:text-gray-600 ml-1 transition"
+                            title="Cerrar (no volver a mostrar)">
+                            <X size={14} />
+                        </button>
+                    </div>
+                </div>
+            )}
 
             {/* Cross-document alert banner */}
             <CrossDocAlertBanner

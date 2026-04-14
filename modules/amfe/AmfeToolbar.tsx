@@ -2,12 +2,12 @@ import React, { startTransition } from 'react';
 import {
     FileJson, Save,
     FolderOpen, Check, Clock, WifiOff, HardDrive,
-    BarChart3, FileSpreadsheet, Library, Loader2,
+    BarChart3, FileSpreadsheet, Loader2,
     MoreHorizontal, Undo2, Redo2, FileText,
     Eye, Pencil, HelpCircle, Copy, GitBranch, Download, Upload, Crown,
 } from 'lucide-react';
 
-type ActivePanel = 'none' | 'projects' | 'summary' | 'library' | 'registry' | 'templates' | 'masters';
+type ActivePanel = 'none' | 'projects' | 'summary' | 'masters';
 
 interface AmfeToolbarProps {
     // Project info
@@ -30,13 +30,10 @@ interface AmfeToolbarProps {
     activePanel: ActivePanel;
     showSummary: boolean;
     setShowSummary: (v: boolean) => void;
-    showLibrary: boolean;
-    setShowLibrary: (v: boolean) => void;
     showMasters: boolean;
     setShowMasters: (v: boolean) => void;
     showProjectPanel: boolean;
     setShowProjectPanel: (v: boolean) => void;
-    setShowTemplates: (v: boolean) => void;
     showHelp: boolean;
     setShowHelp: (v: boolean) => void;
     // History
@@ -57,8 +54,6 @@ interface AmfeToolbarProps {
         handleExportJson: () => void;
         handleImportJson: () => void;
     };
-    // Library refresh
-    libraryRefresh: () => void;
     // Soft limit warnings count
     softLimitWarningCount: number;
     // Overflow menu
@@ -80,8 +75,6 @@ const AmfeToolbar: React.FC<AmfeToolbarProps> = ({
     setViewMode,
     showSummary,
     setShowSummary,
-    showLibrary,
-    setShowLibrary,
     showMasters,
     setShowMasters,
     showProjectPanel,
@@ -94,7 +87,6 @@ const AmfeToolbar: React.FC<AmfeToolbarProps> = ({
     onRedo,
     onSave,
     amfeExport,
-    libraryRefresh,
     softLimitWarningCount,
     showOverflowMenu,
     setShowOverflowMenu,
@@ -186,14 +178,6 @@ const AmfeToolbar: React.FC<AmfeToolbarProps> = ({
                                 {softLimitWarningCount}
                             </span>
                         )}
-                    </button>
-
-                    {/* Library Toggle */}
-                    <button onClick={() => { setShowLibrary(!showLibrary); libraryRefresh(); }}
-                        className={`flex items-center gap-1.5 border px-3 py-2 rounded transition font-medium text-xs ${showLibrary ? 'bg-purple-50 border-purple-300 text-purple-700' : 'bg-gray-100 hover:bg-gray-200 border-gray-300 text-slate-700'}`}
-                        title="Biblioteca de operaciones">
-                        <Library size={15} />
-                        <span className="hidden sm:inline">Biblioteca</span>
                     </button>
 
                     {/* Masters Library Toggle */}

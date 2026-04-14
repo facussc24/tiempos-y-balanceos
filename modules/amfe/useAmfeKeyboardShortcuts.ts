@@ -8,8 +8,6 @@ interface UseAmfeKeyboardShortcutsParams {
     onAddOperation: () => void;
     filters: AmfeFilterState;
     setFilters: (f: AmfeFilterState) => void;
-    showTemplates: boolean;
-    setShowTemplates: (v: boolean) => void;
     showHelp: boolean;
     setShowHelp: (fn: (prev: boolean) => boolean) => void;
     showSummary: boolean;
@@ -23,7 +21,6 @@ export function useAmfeKeyboardShortcuts(params: UseAmfeKeyboardShortcutsParams)
     const {
         onUndo, onRedo, onSave, onAddOperation,
         filters, setFilters,
-        showTemplates, setShowTemplates,
         showHelp, setShowHelp,
         showSummary, setShowSummary,
         setViewMode,
@@ -97,16 +94,6 @@ export function useAmfeKeyboardShortcuts(params: UseAmfeKeyboardShortcutsParams)
                 return;
             }
 
-            // Ctrl+T: Open templates (only when not in an input/textarea)
-            if (mod && e.key === 't') {
-                const tag = (e.target as HTMLElement)?.tagName;
-                if (tag !== 'INPUT' && tag !== 'TEXTAREA') {
-                    e.preventDefault();
-                    setShowTemplates(!showTemplates);
-                    return;
-                }
-            }
-
             // Ctrl+H: Toggle Help Panel
             if (mod && e.key === 'h') {
                 e.preventDefault();
@@ -120,10 +107,6 @@ export function useAmfeKeyboardShortcuts(params: UseAmfeKeyboardShortcutsParams)
                     setShowHelp(() => false);
                     return;
                 }
-                if (showTemplates) {
-                    setShowTemplates(false);
-                    return;
-                }
                 if (hasActiveFilters(filters)) {
                     setFilters(EMPTY_FILTERS);
                 }
@@ -131,7 +114,7 @@ export function useAmfeKeyboardShortcuts(params: UseAmfeKeyboardShortcutsParams)
         };
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [onSave, onAddOperation, filters, showTemplates, showHelp, onUndo, onRedo, showSummary, setShowSummary, setFilters, setShowTemplates, setShowHelp, setViewMode, disabled]);
+    }, [onSave, onAddOperation, filters, showHelp, onUndo, onRedo, showSummary, setShowSummary, setFilters, setShowHelp, setViewMode, disabled]);
 
     // Beforeunload warning — uses same hook file since it's a global listener
     // (moved to separate hook below)

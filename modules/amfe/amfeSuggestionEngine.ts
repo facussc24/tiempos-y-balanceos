@@ -10,7 +10,6 @@
  */
 
 import { AmfeOperation } from './amfeTypes';
-import { AmfeLibraryOperation } from './amfeLibraryTypes';
 
 /** A single suggestion with source attribution */
 export interface Suggestion {
@@ -62,7 +61,6 @@ interface IndexEntry {
  * The index is a flat array per field, designed for fast in-memory filtering.
  */
 export function buildSuggestionIndex(
-    libraryOps: AmfeLibraryOperation[],
     amfeOps: { ops: AmfeOperation[]; sourceName: string }[] = [],
 ): SuggestionIndex {
     const index: SuggestionIndex = {
@@ -74,12 +72,6 @@ export function buildSuggestionIndex(
         effectNextLevel: [],
         effectEndUser: [],
     };
-
-    // Index library operations
-    for (const libOp of libraryOps) {
-        const source = `Biblioteca: ${libOp.name}`;
-        indexOperation(index, libOp, source);
-    }
 
     // Index AMFE operations
     for (const { ops, sourceName } of amfeOps) {

@@ -179,9 +179,6 @@ export interface AmfeOperation {
     /** Función del Paso del Proceso y Característica del Producto (Step 3, col 2) */
     operationFunction?: string;
 
-    // Library inheritance (optional - set when imported from global library)
-    linkedLibraryOpId?: string;
-
     // PFD linkage (set when imported from PFD via "Importar desde PFD")
     linkedPfdStepId?: string;
 }

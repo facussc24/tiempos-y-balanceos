@@ -3,12 +3,11 @@ import {
     FolderOpen, FilePlus, Trash2, FileJson, ChevronDown,
     AlertTriangle, X, Loader2, Search, Filter,
 } from 'lucide-react';
-import AmfeRegistryView from './AmfeRegistryView';
 import AmfeSummary from './AmfeSummary';
 import AmfeMasterLibraryPanel from './AmfeMasterLibraryPanel';
 import type { AmfeDocument } from './amfeTypes';
 
-type ActivePanel = 'none' | 'projects' | 'summary' | 'library' | 'registry' | 'templates' | 'masters';
+type ActivePanel = 'none' | 'projects' | 'summary' | 'masters';
 
 interface AmfeSideDrawerProps {
     activePanel: ActivePanel;
@@ -45,10 +44,9 @@ interface AmfeSideDrawerProps {
 
 const AmfeSideDrawer: React.FC<AmfeSideDrawerProps> = ({ activePanel, setActivePanel, projects, data, onLoadMasterDocument, currentDocumentId }) => {
     const showProjectPanel = activePanel === 'projects';
-    const showRegistry = activePanel === 'registry';
     const showSummary = activePanel === 'summary';
     const showMasters = activePanel === 'masters';
-    const isOpen = showProjectPanel || showRegistry || showSummary || showMasters;
+    const isOpen = showProjectPanel || showSummary || showMasters;
 
     // Track when the drawer opens to ignore the opening click event
     const openedAtRef = useRef(0);
@@ -329,17 +327,6 @@ const AmfeSideDrawer: React.FC<AmfeSideDrawerProps> = ({ activePanel, setActiveP
                             </div>
                         )}
                     </div>
-                )}
-
-                {/* Registry Panel */}
-                {showRegistry && (
-                    <AmfeRegistryView
-                        onOpenProject={(projectName) => {
-                            projects.loadSelectedProject(projectName);
-                            setActivePanel('none');
-                        }}
-                        onClose={() => setActivePanel('none')}
-                    />
                 )}
 
                 {/* Summary Panel */}

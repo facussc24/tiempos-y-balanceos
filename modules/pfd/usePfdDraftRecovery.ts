@@ -1,18 +1,18 @@
 /**
- * useCpDraftRecovery - Smart draft recovery for Control Plan
+ * usePfdDraftRecovery - Smart draft recovery for PFD
  *
  * Features:
  * - Auto-cleans previously dismissed drafts
- * - Auto-discards empty drafts (no items)
+ * - Auto-discards empty drafts (no steps)
  * - Dismiss button persists to localStorage (won't show again)
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { loadCpDraft, listCpDraftKeys, deleteCpDraft } from './useControlPlanPersistence';
-import type { ControlPlanDocument } from './controlPlanTypes';
+import { loadPfdDraft, listPfdDraftKeys, deletePfdDraft } from './usePfdPersistence';
+import type { PfdDocument } from './pfdTypes';
 import { logger } from '../../utils/logger';
 
-const DISMISSED_DRAFTS_KEY = 'cp_dismissed_drafts';
+const DISMISSED_DRAFTS_KEY = 'pfd_dismissed_drafts';
 
 function getDismissedDrafts(): string[] {
     try {
@@ -33,24 +33,23 @@ function addDismissedDraft(key: string): void {
     } catch { /* ignore */ }
 }
 
-interface UseCpDraftRecoveryParams {
+interface UsePfdDraftRecoveryParams {
     embedded?: boolean;
-    currentProject: string | null;
-    loadData: (data: ControlPlanDocument) => void;
+    loadData: (data: PfdDocument) => void;
 }
 
-interface UseCpDraftRecoveryReturn {
+interface UsePfdDraftRecoveryReturn {
     draftRecovery: { key: string; name: string } | null;
     handleRecoverDraft: () => Promise<void>;
     handleDiscardDraft: () => Promise<void>;
     handleDismissDraft: () => void;
 }
 
-export function useCpDraftRecovery({ embedded, currentProject, loadData }: UseCpDraftRecoveryParams): UseCpDraftRecoveryReturn {
+export function usePfdDraftRecovery({ embedded, loadData }: UsePfdDraftRecoveryParams): UsePfdDraftRecoveryReturn {
     const [draftRecovery, setDraftRecovery] = useState<{ key: string; name: string } | null>(null);
 
     useEffect(() => {
-        if (embedded || currentProject) {
+        if (embedded) {
             setDraftRecovery(null);
             return;
         }
@@ -58,7 +57,7 @@ export function useCpDraftRecovery({ embedded, currentProject, loadData }: UseCp
         let cancelled = false;
         (async () => {
             try {
-                const keys = await listCpDraftKeys();
+                const keys = await listPfdDraftKeys();
                 if (cancelled || keys.length === 0) return;
 
                 const dismissed = getDismissedDrafts();
@@ -66,7 +65,7 @@ export function useCpDraftRecovery({ embedded, currentProject, loadData }: UseCp
                 // Auto-clean dismissed drafts
                 for (const key of keys) {
                     if (dismissed.includes(key)) {
-                        try { await deleteCpDraft(key); } catch { /* ignore */ }
+                        try { await deletePfdDraft(key); } catch { /* ignore */ }
                     }
                 }
 
@@ -74,19 +73,19 @@ export function useCpDraftRecovery({ embedded, currentProject, loadData }: UseCp
                 const validKey = keys.find(k => !dismissed.includes(k));
                 if (cancelled || !validKey) return;
 
-                const draft = await loadCpDraft(validKey);
-                if (cancelled || !draft) return;
+                const draft = await loadPfdDraft(validKey);
+                if (cancelled || !draft || !draft.header) return;
 
                 // Auto-discard empty drafts
-                if (!draft.items || draft.items.length === 0) {
-                    try { await deleteCpDraft(validKey); } catch { /* ignore */ }
+                if (!draft.steps || draft.steps.length === 0) {
+                    try { await deletePfdDraft(validKey); } catch { /* ignore */ }
                     return;
                 }
 
-                const projectName = validKey.replace('cp_draft_', '');
+                const projectName = draft.header.partName || validKey.replace('pfd_draft_', '');
                 setDraftRecovery({ key: validKey, name: projectName });
             } catch (err) {
-                logger.warn('ControlPlan', 'Draft recovery failed', { error: err instanceof Error ? err.message : String(err) });
+                logger.warn('PfdApp', 'Draft recovery failed', { error: err instanceof Error ? err.message : String(err) });
             }
         })();
         return () => { cancelled = true; };
@@ -95,7 +94,7 @@ export function useCpDraftRecovery({ embedded, currentProject, loadData }: UseCp
     const handleRecoverDraft = useCallback(async () => {
         if (!draftRecovery) return;
         try {
-            const draft = await loadCpDraft(draftRecovery.key);
+            const draft = await loadPfdDraft(draftRecovery.key);
             if (draft) {
                 loadData(draft);
             }
@@ -105,7 +104,7 @@ export function useCpDraftRecovery({ embedded, currentProject, loadData }: UseCp
 
     const handleDiscardDraft = useCallback(async () => {
         if (!draftRecovery) return;
-        try { await deleteCpDraft(draftRecovery.key); } catch { /* ignore */ }
+        try { await deletePfdDraft(draftRecovery.key); } catch { /* ignore */ }
         setDraftRecovery(null);
     }, [draftRecovery]);
 

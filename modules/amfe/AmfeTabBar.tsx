@@ -1,5 +1,5 @@
 import React from 'react';
-import { GitBranch, ClipboardCheck, FileText, FileJson, Home, Check, Package, Layers } from 'lucide-react';
+import { GitBranch, ClipboardCheck, FileText, FileJson, Home, Check, Package } from 'lucide-react';
 import type { ActiveTab } from './useAmfeTabNavigation';
 import type { PfdDocument } from '../pfd/pfdTypes';
 import type { ControlPlanDocument } from '../controlPlan/controlPlanTypes';
@@ -31,8 +31,6 @@ interface AmfeTabBarProps {
     }) => Promise<boolean>;
     /** Project context: client, part name, etc. to show across all tabs */
     projectContext?: ProjectContext;
-    /** Open the templates modal (accessible from any tab) */
-    onOpenTemplates?: () => void;
 }
 
 const TAB_CLASSES = {
@@ -56,7 +54,6 @@ const AmfeTabBar: React.FC<AmfeTabBarProps> = ({
     hasUnsavedChanges,
     requestConfirm,
     projectContext,
-    onOpenTemplates,
 }) => {
     /** Prompt for unsaved changes before navigating away from the AMFE tab. */
     const confirmIfDirty = async (): Promise<boolean> => {
@@ -150,16 +147,6 @@ const AmfeTabBar: React.FC<AmfeTabBarProps> = ({
 
                 <div className="flex-1" />
                 <div className="border-l border-gray-300 ml-2 pl-2 flex items-center gap-1">
-                    {onOpenTemplates && (
-                        <button
-                            onClick={onOpenTemplates}
-                            title="Cargar template completo (Ctrl+T)"
-                            className="flex items-center gap-1.5 text-slate-600 hover:text-purple-700 px-3 py-1.5 rounded hover:bg-purple-50 transition text-xs font-medium"
-                        >
-                            <Layers size={14} />
-                            Templates
-                        </button>
-                    )}
                     <button
                         onClick={handleBack}
                         title="Volver al menú principal"

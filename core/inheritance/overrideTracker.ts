@@ -138,7 +138,7 @@ function serializeAmfeOperation(op: AmfeOperation): string {
     // Deep clone and remove all `id` fields for content-only comparison
     const cleaned = stripIds(op);
     // Remove linkage fields that are variant-specific via destructuring
-    const { linkedLibraryOpId: _llo, linkedPfdStepId: _lps, ...comparable } = cleaned as Record<string, unknown>;
+    const { linkedPfdStepId: _lps, ...comparable } = cleaned as Record<string, unknown>;
     return JSON.stringify(comparable);
 }
 

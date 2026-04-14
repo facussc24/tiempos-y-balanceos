@@ -10,7 +10,9 @@
 
 import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { usePfdDocument } from './usePfdDocument';
-import { usePfdPersistence, listPfdDraftKeys, loadPfdDraft, deletePfdDraft, deleteUnsavedDraft } from './usePfdPersistence';
+import { X } from 'lucide-react';
+import { usePfdPersistence, deleteUnsavedDraft } from './usePfdPersistence';
+import { usePfdDraftRecovery } from './usePfdDraftRecovery';
 import { usePfdSelection } from './usePfdSelection';
 import { validatePfdDocument, ValidationIssue } from './pfdValidation';
 import { exportPfdSvg } from './pfdSvgExport';
@@ -268,50 +270,11 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding, embedded, initialData }) => 
 
     useEffect(() => { refreshProjects(); }, [refreshProjects]);
 
-    // Draft recovery on mount (skip in embedded mode)
-    // FIX: Added cancelled flag to prevent state updates after unmount
-    // (matching useCpDraftRecovery / useAmfeDraftRecovery pattern)
-    useEffect(() => {
-        if (embedded) return;
-        let cancelled = false;
-        (async () => {
-            try {
-                const keys = await listPfdDraftKeys();
-                if (cancelled || keys.length === 0) return;
-                const draft = await loadPfdDraft(keys[0]);
-                if (cancelled || !draft || !draft.steps || !draft.header) return;
-                const draftKey = keys[0];
-                setConfirmState({
-                    isOpen: true,
-                    title: 'Borrador encontrado',
-                    message: `Se encontró un borrador sin guardar (${draft.header.partName || 'sin nombre'}, ${draft.steps.length} pasos). ¿Desea recuperarlo o descartarlo?`,
-                    variant: 'info',
-                    confirmText: 'Recuperar',
-                    onConfirm: () => {
-                        setConfirmState(prev => ({ ...prev, isOpen: false }));
-                        pfd.loadData(draft);
-                        isFirstRenderRef.current = true;
-                        setTimeout(() => { isFirstRenderRef.current = false; }, 0);
-                        logger.info('PfdApp', 'Draft recovered', { steps: draft.steps.length });
-                    },
-                    // C6-B3: Explicit discard — deletes draft and shows toast
-                    onCancel: async () => {
-                        try {
-                            await deletePfdDraft(draftKey);
-                            setToastMessage('Borrador descartado');
-                            logger.info('PfdApp', 'Draft discarded by user', { key: draftKey });
-                        } catch (err) {
-                            logger.warn('PfdApp', 'Failed to delete draft', { error: String(err) });
-                        }
-                    },
-                });
-            } catch (err) {
-                logger.warn('PfdApp', 'Draft recovery failed', { error: String(err) });
-            }
-        })();
-        return () => { cancelled = true; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    // Draft recovery on mount (extracted hook with smart dismissal)
+    const { draftRecovery: pfdDraftRecovery, handleRecoverDraft: handleRecoverPfdDraft, handleDiscardDraft: handleDiscardPfdDraft, handleDismissDraft: handleDismissPfdDraft } = usePfdDraftRecovery({
+        embedded,
+        loadData: pfd.loadData,
+    });
 
     // Auto-load last project on mount (matching AMFE useAmfeProjects pattern)
     useEffect(() => {
@@ -973,6 +936,30 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding, embedded, initialData }) => 
                             className="text-orange-600 hover:text-orange-800 font-medium underline"
                         >
                             Ver detalle
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Draft Recovery Banner */}
+            {pfdDraftRecovery && (
+                <div className="bg-blue-50 border border-blue-200 px-4 py-2.5 flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-xs text-blue-800">
+                        <span>Borrador PFD: <strong>{pfdDraftRecovery.name}</strong></span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <button onClick={handleRecoverPfdDraft}
+                            className="text-xs bg-blue-600 hover:bg-blue-500 text-white px-3 py-1 rounded font-medium transition">
+                            Recuperar
+                        </button>
+                        <button onClick={handleDiscardPfdDraft}
+                            className="text-xs bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1 rounded font-medium transition">
+                            Descartar
+                        </button>
+                        <button onClick={handleDismissPfdDraft}
+                            className="text-gray-400 hover:text-gray-600 ml-1 transition"
+                            title="Cerrar (no volver a mostrar)">
+                            <X size={14} />
                         </button>
                     </div>
                 </div>
