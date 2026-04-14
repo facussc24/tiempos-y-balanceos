@@ -294,7 +294,7 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab, initialF
     const colVis = useAmfeColumnVisibility();
 
     // 7. Draft recovery
-    const { draftRecovery, handleRecoverDraft, handleDiscardDraft } = useAmfeDraftRecovery({
+    const { draftRecovery, handleRecoverDraft, handleDiscardDraft, handleDismissDraft } = useAmfeDraftRecovery({
         currentProject: projects.currentProject,
         loadData: amfe.loadData,
         resetHistory: history.resetHistory,
@@ -948,9 +948,7 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab, initialF
                 setShowMasters={setShowMasters}
                 showProjectPanel={showProjectPanel}
                 setShowProjectPanel={setShowProjectPanel}
-                setShowRegistry={setShowRegistry}
                 setShowTemplates={setShowTemplates}
-                showRegistry={showRegistry}
                 showHelp={showHelp}
                 setShowHelp={setShowHelp}
                 canUndo={history.canUndo}
@@ -963,7 +961,6 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab, initialF
                 softLimitWarningCount={softLimitWarnings.length}
                 showOverflowMenu={showOverflowMenu}
                 setShowOverflowMenu={setShowOverflowMenu}
-                onLoadExample={handleLoadFullExample}
                 onNewRevision={revisionControl.handleNewRevision}
                 currentRevisionLevel={amfe.data.header.revision || 'A'}
                 onOpenExportFolder={exportFolder.openFolder}
@@ -1027,12 +1024,12 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab, initialF
 
             {/* Draft Recovery Banner */}
             {draftRecovery && (
-                <div className="bg-blue-50 border border-blue-200 px-4 py-3 flex items-center justify-between">
+                <div className="bg-blue-50 border border-blue-200 px-4 py-2.5 flex items-center justify-between">
                     <div className="flex items-center gap-2 text-xs text-blue-800">
-                        <HardDrive size={14} className="text-blue-500" />
-                        <span>Se encontro un borrador de <strong>&ldquo;{draftRecovery.name}&rdquo;</strong></span>
+                        <HardDrive size={14} className="text-blue-500 flex-shrink-0" />
+                        <span>Borrador: <strong>{draftRecovery.name}</strong></span>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex items-center gap-2">
                         <button onClick={handleRecoverDraft}
                             className="text-xs bg-blue-600 hover:bg-blue-500 text-white px-3 py-1 rounded font-medium transition">
                             Recuperar
@@ -1040,6 +1037,11 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab, initialF
                         <button onClick={handleDiscardDraft}
                             className="text-xs bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1 rounded font-medium transition">
                             Descartar
+                        </button>
+                        <button onClick={handleDismissDraft}
+                            className="text-gray-400 hover:text-gray-600 ml-1 transition"
+                            title="Cerrar (no volver a mostrar)">
+                            <X size={14} />
                         </button>
                     </div>
                 </div>

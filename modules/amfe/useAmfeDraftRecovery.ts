@@ -3,6 +3,27 @@ import { AmfeDocument } from './amfeTypes';
 import { validateAmfeDocument, migrateAmfeDocument } from './amfeValidation';
 import { logger } from '../../utils/logger';
 
+const DISMISSED_DRAFTS_KEY = 'amfe_dismissed_drafts';
+
+function getDismissedDrafts(): string[] {
+    try {
+        const raw = localStorage.getItem(DISMISSED_DRAFTS_KEY);
+        return raw ? JSON.parse(raw) : [];
+    } catch {
+        return [];
+    }
+}
+
+function addDismissedDraft(key: string): void {
+    try {
+        const dismissed = getDismissedDrafts();
+        if (!dismissed.includes(key)) {
+            dismissed.push(key);
+            localStorage.setItem(DISMISSED_DRAFTS_KEY, JSON.stringify(dismissed));
+        }
+    } catch { /* ignore */ }
+}
+
 interface UseAmfeDraftRecoveryParams {
     currentProject: string | null;
     loadData: (doc: AmfeDocument) => void;
@@ -19,6 +40,7 @@ interface UseAmfeDraftRecoveryReturn {
     draftRecovery: { key: string; name: string } | null;
     handleRecoverDraft: () => Promise<void>;
     handleDiscardDraft: () => Promise<void>;
+    handleDismissDraft: () => void;
 }
 
 export function useAmfeDraftRecovery(params: UseAmfeDraftRecoveryParams): UseAmfeDraftRecoveryReturn {
@@ -28,33 +50,42 @@ export function useAmfeDraftRecovery(params: UseAmfeDraftRecoveryParams): UseAmf
 
     useEffect(() => {
         // When a project is loaded, clear any stale draft recovery banner
-        // that belongs to a different project (or suppress it entirely).
         if (currentProject) {
-            setDraftRecovery(prev => {
-                if (!prev) return prev;
-                // If the draft belongs to the currently loaded project, suppress
-                // it — the project is already open, so no recovery is needed.
-                // If it belongs to a different project, also suppress — showing
-                // a banner for a different project is confusing.
-                return null;
-            });
+            setDraftRecovery(null);
             return;
         }
 
         let cancelled = false;
         const checkDrafts = async () => {
             try {
-                const { listDraftKeys, loadDraft: loadDraftFn } = await import('./useAmfePersistence');
+                const { listDraftKeys, loadDraft: loadDraftFn, deleteDraft: deleteDraftFn } = await import('./useAmfePersistence');
                 const keys = await listDraftKeys();
                 if (cancelled || keys.length === 0) return;
 
-                // Pick the first draft found
-                const key = keys[0];
-                const draft = await loadDraftFn(key);
+                const dismissed = getDismissedDrafts();
+
+                // Auto-clean dismissed drafts
+                for (const key of keys) {
+                    if (dismissed.includes(key)) {
+                        try { await deleteDraftFn(key); } catch { /* ignore */ }
+                    }
+                }
+
+                // Find first non-dismissed draft
+                const validKey = keys.find(k => !dismissed.includes(k));
+                if (cancelled || !validKey) return;
+
+                const draft = await loadDraftFn(validKey);
                 if (cancelled || !draft) return;
 
-                const projectName = key.replace('amfe_draft_', '');
-                setDraftRecovery({ key, name: projectName });
+                // If the draft is empty (no operations), silently discard it
+                if (!draft.operations || draft.operations.length === 0) {
+                    try { await deleteDraftFn(validKey); } catch { /* ignore */ }
+                    return;
+                }
+
+                const projectName = validKey.replace('amfe_draft_', '');
+                setDraftRecovery({ key: validKey, name: projectName });
             } catch {
                 // Non-critical — ignore
             }
@@ -69,7 +100,6 @@ export function useAmfeDraftRecovery(params: UseAmfeDraftRecoveryParams): UseAmf
             const { loadDraft: loadDraftFn, deleteDraft: deleteDraftFn } = await import('./useAmfePersistence');
             const draft = await loadDraftFn(draftRecovery.key);
             if (draft) {
-                // Validate draft before loading (could be corrupted or outdated)
                 const validation = validateAmfeDocument(draft);
                 if (!validation.valid) {
                     logger.warn('AMFE', 'Draft failed validation, discarding', { errors: validation.errors });
@@ -104,5 +134,12 @@ export function useAmfeDraftRecovery(params: UseAmfeDraftRecoveryParams): UseAmf
         setDraftRecovery(null);
     }, [draftRecovery]);
 
-    return { draftRecovery, handleRecoverDraft, handleDiscardDraft };
+    /** Dismiss the banner without deleting the draft. It won't appear again for this key. */
+    const handleDismissDraft = useCallback(() => {
+        if (!draftRecovery) return;
+        addDismissedDraft(draftRecovery.key);
+        setDraftRecovery(null);
+    }, [draftRecovery]);
+
+    return { draftRecovery, handleRecoverDraft, handleDiscardDraft, handleDismissDraft };
 }

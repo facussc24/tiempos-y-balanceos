@@ -10,8 +10,8 @@
  * Allows quick loading of a family's master AMFE document.
  */
 
-import React, { useState, useEffect } from 'react';
-import { ShieldCheck, FolderOpen, Loader2, FileText, Crown, Layers, Wrench } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { ShieldCheck, FolderOpen, Loader2, FileText, Crown, Layers, Wrench, Search, X } from 'lucide-react';
 import { listFamilies } from '../../utils/repositories/familyRepository';
 import type { ProductFamily } from '../../utils/repositories/familyRepository';
 import { getFamilyMasterDocument } from '../../utils/repositories/familyDocumentRepository';
@@ -59,6 +59,8 @@ const AmfeMasterLibraryPanel: React.FC<AmfeMasterLibraryPanelProps> = ({
 }) => {
     const [familyInfos, setFamilyInfos] = useState<FamilyMasterInfo[]>([]);
     const [loading, setLoading] = useState(true);
+    const [searchText, setSearchText] = useState('');
+    const [lineaFilter, setLineaFilter] = useState<'all' | 'VWA' | 'PWA'>('all');
 
     useEffect(() => {
         let cancelled = false;
@@ -128,16 +130,40 @@ const AmfeMasterLibraryPanel: React.FC<AmfeMasterLibraryPanelProps> = ({
     };
 
     // -----------------------------------------------------------------------
-    // Split: Foundation (no products) vs Family (has products)
+    // Filter + Split: Foundation (no products) vs Family (has products)
     // -----------------------------------------------------------------------
 
-    const foundationMasters = familyInfos.filter(
-        (i) => i.hasAnyMaster && (i.family.memberCount === undefined || i.family.memberCount === 0)
+    const filteredInfos = useMemo(() => {
+        let items = familyInfos.filter((i) => i.hasAnyMaster);
+
+        if (searchText.trim()) {
+            const q = searchText.trim().toLowerCase();
+            items = items.filter(
+                (i) =>
+                    i.family.name.toLowerCase().includes(q) ||
+                    (i.family.description && i.family.description.toLowerCase().includes(q))
+            );
+        }
+
+        if (lineaFilter !== 'all') {
+            items = items.filter((i) => i.family.lineaCode === lineaFilter);
+        }
+
+        return items;
+    }, [familyInfos, searchText, lineaFilter]);
+
+    const foundationMasters = filteredInfos.filter(
+        (i) => i.family.memberCount === undefined || i.family.memberCount === 0
     );
 
-    const familyMasters = familyInfos.filter(
-        (i) => i.hasAnyMaster && i.family.memberCount !== undefined && i.family.memberCount > 0
+    const familyMasters = filteredInfos.filter(
+        (i) => i.family.memberCount !== undefined && i.family.memberCount > 0
     );
+
+    const availableLineas = useMemo(() => {
+        const codes = new Set(familyInfos.filter((i) => i.hasAnyMaster && i.family.lineaCode).map((i) => i.family.lineaCode));
+        return codes;
+    }, [familyInfos]);
 
     // -----------------------------------------------------------------------
     // Render card
@@ -268,6 +294,49 @@ const AmfeMasterLibraryPanel: React.FC<AmfeMasterLibraryPanelProps> = ({
                 </h2>
             </div>
 
+            {/* Search & Filter */}
+            {!loading && familyInfos.some((i) => i.hasAnyMaster) && (
+                <div className="flex items-center gap-2 mb-3">
+                    <div className="relative flex-1">
+                        <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                        <input
+                            type="text"
+                            value={searchText}
+                            onChange={(e) => setSearchText(e.target.value)}
+                            placeholder="Buscar familia..."
+                            className="w-full pl-8 pr-7 py-1.5 text-xs border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-emerald-400 focus:border-emerald-400"
+                        />
+                        {searchText && (
+                            <button
+                                onClick={() => setSearchText('')}
+                                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                            >
+                                <X size={12} />
+                            </button>
+                        )}
+                    </div>
+                    {availableLineas.size > 1 && (
+                        <select
+                            value={lineaFilter}
+                            onChange={(e) => setLineaFilter(e.target.value as 'all' | 'VWA' | 'PWA')}
+                            className="text-xs border border-gray-200 rounded-md px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-emerald-400 bg-white"
+                        >
+                            <option value="all">Todas</option>
+                            {availableLineas.has('VWA') && <option value="VWA">VWA</option>}
+                            {availableLineas.has('PWA') && <option value="PWA">PWA</option>}
+                        </select>
+                    )}
+                </div>
+            )}
+
+            {/* No results from filter */}
+            {!loading && familyInfos.some((i) => i.hasAnyMaster) && foundationMasters.length === 0 && familyMasters.length === 0 && (searchText || lineaFilter !== 'all') && (
+                <div className="text-center py-6 text-gray-400">
+                    <Search size={24} className="mx-auto mb-2 opacity-40" />
+                    <p className="text-xs">Sin resultados para esta busqueda</p>
+                </div>
+            )}
+
             {/* Loading */}
             {loading && (
                 <div className="flex items-center justify-center py-6 text-gray-400">
@@ -276,8 +345,8 @@ const AmfeMasterLibraryPanel: React.FC<AmfeMasterLibraryPanelProps> = ({
                 </div>
             )}
 
-            {/* Global empty state */}
-            {!loading && foundationMasters.length === 0 && familyMasters.length === 0 && (
+            {/* Global empty state (only when truly no masters exist) */}
+            {!loading && !familyInfos.some((i) => i.hasAnyMaster) && (
                 <div className="text-center py-8 text-gray-400">
                     <FolderOpen size={32} className="mx-auto mb-2 opacity-50" />
                     <p className="text-sm">Sin {MODULE_LABELS[module]}s maestros registrados</p>

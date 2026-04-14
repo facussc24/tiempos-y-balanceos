@@ -3,8 +3,8 @@ import {
     FileJson, Save,
     FolderOpen, Check, Clock, WifiOff, HardDrive,
     BarChart3, FileSpreadsheet, Library, Loader2,
-    Hash, MoreHorizontal, Undo2, Redo2, FileText,
-    Eye, Pencil, HelpCircle, Copy, BookOpen, GitBranch, Download, Upload, Crown,
+    MoreHorizontal, Undo2, Redo2, FileText,
+    Eye, Pencil, HelpCircle, Copy, GitBranch, Download, Upload, Crown,
 } from 'lucide-react';
 
 type ActivePanel = 'none' | 'projects' | 'summary' | 'library' | 'registry' | 'templates' | 'masters';
@@ -36,9 +36,7 @@ interface AmfeToolbarProps {
     setShowMasters: (v: boolean) => void;
     showProjectPanel: boolean;
     setShowProjectPanel: (v: boolean) => void;
-    setShowRegistry: (v: boolean) => void;
     setShowTemplates: (v: boolean) => void;
-    showRegistry: boolean;
     showHelp: boolean;
     setShowHelp: (v: boolean) => void;
     // History
@@ -66,8 +64,6 @@ interface AmfeToolbarProps {
     // Overflow menu
     showOverflowMenu: boolean;
     setShowOverflowMenu: (v: boolean) => void;
-    // Load example
-    onLoadExample?: () => void;
     // Revision control
     onNewRevision?: () => void;
     currentRevisionLevel?: string;
@@ -90,8 +86,6 @@ const AmfeToolbar: React.FC<AmfeToolbarProps> = ({
     setShowMasters,
     showProjectPanel,
     setShowProjectPanel,
-    setShowRegistry,
-    showRegistry,
     showHelp,
     setShowHelp,
     canUndo,
@@ -104,7 +98,6 @@ const AmfeToolbar: React.FC<AmfeToolbarProps> = ({
     softLimitWarningCount,
     showOverflowMenu,
     setShowOverflowMenu,
-    onLoadExample,
     onNewRevision,
     currentRevisionLevel,
     onOpenExportFolder,
@@ -297,28 +290,6 @@ const AmfeToolbar: React.FC<AmfeToolbarProps> = ({
                                 <div className="px-4 py-1.5 text-[9px] font-bold text-gray-400 uppercase tracking-wider bg-gray-50 border-b border-gray-100 rounded-t-lg">
                                     Herramientas
                                 </div>
-                                {onLoadExample && (
-                                    <button
-                                        onClick={() => { setShowOverflowMenu(false); onLoadExample(); }}
-                                        className="w-full text-left px-4 py-2.5 text-xs hover:bg-emerald-50 border-b border-gray-100 flex items-center gap-2"
-                                    >
-                                        <BookOpen size={14} className="text-emerald-500" />
-                                        <div>
-                                            <span className="font-bold text-emerald-700">Ejemplo Completo</span>
-                                            <p className="text-[10px] text-gray-400 mt-0.5">AMFE modelo con 3 operaciones</p>
-                                        </div>
-                                    </button>
-                                )}
-                                <button
-                                    onClick={() => { setShowOverflowMenu(false); setShowRegistry(!showRegistry); }}
-                                    className="w-full text-left px-4 py-2.5 text-xs hover:bg-gray-50 border-b border-gray-100 flex items-center gap-2"
-                                >
-                                    <Hash size={14} className="text-indigo-500" />
-                                    <div>
-                                        <span className="font-bold text-gray-800">Registro IATF</span>
-                                        <p className="text-[10px] text-gray-400 mt-0.5">Índice centralizado 16949</p>
-                                    </div>
-                                </button>
                                 <button
                                     onClick={() => { setShowOverflowMenu(false); setShowHelp(!showHelp); }}
                                     className="w-full text-left px-4 py-2.5 text-xs hover:bg-gray-50 border-b border-gray-100 flex items-center gap-2"
