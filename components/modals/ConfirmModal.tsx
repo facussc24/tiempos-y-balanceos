@@ -103,7 +103,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
     const { iconBg, iconColor, buttonBg, Icon } = variantStyles[variant];
 
     return (
-        <div className={`fixed inset-0 z-50 flex items-center justify-center ${isClosing ? 'pointer-events-none' : ''}`}>
+        <div className={`fixed inset-0 z-modal-backdrop flex items-center justify-center ${isClosing ? 'pointer-events-none' : ''}`}>
             {/* Backdrop */}
             <div
                 className={`absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-200 ${isClosing ? 'opacity-0' : 'opacity-100 animate-in fade-in duration-200'}`}

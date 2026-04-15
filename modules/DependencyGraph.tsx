@@ -359,7 +359,7 @@ export const DependencyGraph: React.FC<Props> = ({ data, initialState, onStateCh
                         <p><strong>Diagrama de Red (PDM):</strong> Representación gráfica de la secuencia lógica. <span className="underline decoration-dotted font-medium">¿Qué es esto?</span></p>
                     </div>
 
-                    <div className="absolute top-full left-0 mt-2 w-96 p-4 bg-slate-900 text-white text-xs rounded-xl shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-[100] font-normal text-left border border-slate-700">
+                    <div className="absolute top-full left-0 mt-2 w-96 p-4 bg-slate-900 text-white text-xs rounded-xl shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-tooltip font-normal text-left border border-slate-700">
                         <strong className="text-blue-300 block mb-2 text-sm flex items-center gap-2"><Network size={14} /> Precedencia (PDM)</strong>
                         <p className="mb-2 leading-relaxed">Mapa visual que define el orden riguroso de ensamblaje.</p>
                         <div className="grid grid-cols-2 gap-3 mb-3">

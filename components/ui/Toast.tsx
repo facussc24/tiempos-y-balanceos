@@ -23,6 +23,7 @@ export interface Toast {
     message?: string;
     duration?: number; // ms, 0 = manual dismiss
     actions?: ToastAction[];
+    exiting?: boolean;
 }
 
 export interface ToastAction {
@@ -81,8 +82,14 @@ class ToastStore {
     remove(id: string): void {
         const timer = this.timers.get(id);
         if (timer != null) { clearTimeout(timer); this.timers.delete(id); }
-        this.toasts = this.toasts.filter(t => t.id !== id);
+        const toast = this.toasts.find(t => t.id === id);
+        if (!toast || toast.exiting) return;
+        toast.exiting = true;
         this.notify();
+        setTimeout(() => {
+            this.toasts = this.toasts.filter(t => t.id !== id);
+            this.notify();
+        }, 150);
     }
 
     clear(): void {
@@ -179,8 +186,8 @@ function ToastItem({ toast: t, onDismiss }: ToastItemProps) {
         <div
             className={`
                 flex items-start gap-3 p-4 rounded-lg border shadow-lg
-                animate-in slide-in-from-right duration-200
-                hover:shadow-xl hover:-translate-y-0.5 transition-all cursor-default
+                ${t.exiting ? 'animate-toast-exit' : 'animate-toast-enter'}
+                hover:shadow-xl transition-shadow cursor-default
                 ${color.bg}
             `}
         >
@@ -235,7 +242,7 @@ export function ToastContainer() {
 
     return (
         <div
-            className="fixed bottom-4 right-4 z-[1000] flex flex-col gap-2 max-w-sm w-full pointer-events-none"
+            className="fixed bottom-4 right-4 z-toast flex flex-col gap-2 max-w-sm w-full pointer-events-none"
             role="alert"
             aria-live="polite"
             aria-atomic="true"

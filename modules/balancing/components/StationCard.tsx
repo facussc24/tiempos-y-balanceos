@@ -56,11 +56,11 @@ const DraggableStationTask: React.FC<{
     const isConcurrent = !!t.concurrentWith;
     const isAbsorbed = t.isMachineInternal; // RC1: Internal tasks absorbed during curing
 
-    let bgClass = "bg-slate-50 border-slate-200 text-slate-700";
-    if (isMachine) bgClass = "bg-purple-50 border-purple-200 text-purple-700";
-    if (isConcurrent) bgClass = "bg-emerald-50 border-emerald-200 text-emerald-700 border-dashed";
+    let bgClass = "bg-white border-industrial-200 text-industrial-500";
+    if (isMachine) bgClass = "bg-accent-light border-blue-300 text-accent";
+    if (isConcurrent) bgClass = "bg-status-ok-bg border-status-ok text-status-ok border-dashed";
     // RC1: Absorbed tasks get special styling
-    if (isAbsorbed) bgClass = "bg-cyan-50 border-cyan-300 text-cyan-700 border-dotted";
+    if (isAbsorbed) bgClass = "bg-industrial-50 border-industrial-300 text-industrial-400 border-dotted";
 
     return (
         <div
@@ -68,14 +68,14 @@ const DraggableStationTask: React.FC<{
             style={style}
             {...listeners}
             {...attributes}
-            className={`group relative border px-3 py-1.5 rounded text-xs font-medium cursor-grab active:cursor-grabbing hover:shadow-sm flex items-center gap-2 ${bgClass} ${isDragging ? 'opacity-50' : ''}`}
+            className={`group relative border px-3 py-2 rounded-sm text-sm font-medium cursor-grab active:cursor-grabbing hover:shadow-sm flex items-center gap-2 ${bgClass} ${isDragging ? 'opacity-50' : ''}`}
             title={isAbsorbed ? `↺ ${formatNumber(t.standardTime || t.averageTime)}s absorbido durante ciclo máquina` : undefined}
             aria-label={`Tarea ${t.id}, ${formatNumber(t.standardTime || t.averageTime)} segundos. Arrastrar para reasignar.`}
             aria-roledescription="elemento arrastrable"
         >
             <div className="flex flex-col">
                 <span className="font-bold font-mono">{t.id}</span>
-                <span className="text-[9px] opacity-70">
+                <span className="text-xs opacity-70">
                     {/* RC1: Show absorption indicator for internal tasks */}
                     {isAbsorbed && <span className="text-cyan-600">↺ </span>}
                     {formatNumber(t.standardTime || t.averageTime)}s
@@ -91,7 +91,7 @@ const DraggableStationTask: React.FC<{
                     onUnassignTask(t.id);
                 }}
                 aria-label={`Desasignar tarea ${t.id}`}
-                className="opacity-0 group-hover:opacity-100 focus:opacity-100 absolute -top-2 -right-2 bg-white rounded-full p-0.5 border border-slate-200 text-slate-400 hover:text-red-500 shadow-sm transition-opacity"
+                className="opacity-60 group-hover:opacity-100 focus:opacity-100 absolute -top-2 -right-2 bg-white rounded-full p-0.5 border border-slate-200 text-slate-400 hover:text-red-500 shadow-sm transition-opacity"
             >
                 <X size={12} />
             </button>
@@ -136,7 +136,7 @@ export const StationCard: React.FC<StationCardProps> = React.memo(({
 
     // V4.1: Determine card styling based on deficit status
     const deficitStyles = hasResourceDeficit
-        ? 'border-red-400 bg-red-50/30 shadow-red-100'
+        ? 'border-status-crit bg-status-crit-bg'
         : '';
 
     // Phase 28: Orange styling for parallel stations
@@ -149,14 +149,14 @@ export const StationCard: React.FC<StationCardProps> = React.memo(({
             ref={setNodeRef}
             aria-label={`Estación ${st.id}, ${formatNumber(st.time)} segundos, ${st.tasks.length} tareas asignadas${isOverload ? ', sobrecargada' : ''}`}
             aria-roledescription="zona de destino"
-            className={`border rounded-xl p-4 transition-all relative ${isOver ? 'border-blue-400 bg-blue-50 ring-2 ring-blue-200' : (draggedTask ? 'border-slate-300 bg-slate-50/50' : 'border-slate-200 bg-white')} ${isOverload ? 'shadow-red-100 border-red-200' : 'shadow-sm'} ${deficitStyles} ${parallelStyles}`}
+            className={`border rounded-md p-4 transition-all relative ${isOver ? 'border-accent bg-accent-light ring-2 ring-blue-200' : (draggedTask ? 'border-industrial-300 bg-industrial-50/50' : 'border-industrial-200 bg-white')} ${isOverload ? 'border-status-crit bg-status-crit-bg' : 'shadow-sm'} ${deficitStyles} ${parallelStyles}`}
             style={{ borderLeftColor: stationSector?.color || undefined, borderLeftWidth: stationSector ? 4 : 1 }}
             title={parallelTooltip}
         >
             {/* Phase 28: Parallel Station Badge */}
             {isParallel && (
                 <div
-                    className="absolute -top-2 left-2 flex items-center gap-1 bg-amber-500 text-white text-[9px] font-bold px-2 py-0.5 rounded shadow-sm cursor-help"
+                    className="absolute -top-2 left-2 flex items-center gap-1 bg-amber-500 text-white text-xs font-bold px-2 py-0.5 rounded shadow-sm cursor-help"
                     title={parallelTooltip}
                 >
                     <Users size={10} />
@@ -166,7 +166,7 @@ export const StationCard: React.FC<StationCardProps> = React.memo(({
 
             {/* V4.1: Resource Deficit Warning Banner */}
             {hasResourceDeficit && (
-                <div className="absolute -top-2 right-2 flex items-center gap-1 bg-red-500 text-white text-[9px] font-bold px-2 py-0.5 rounded shadow-sm">
+                <div className="absolute -top-2 right-2 flex items-center gap-1 bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded shadow-sm">
                     <AlertTriangle size={10} />
                     DÉFICIT
                 </div>
@@ -175,19 +175,19 @@ export const StationCard: React.FC<StationCardProps> = React.memo(({
             {/* Header */}
             <div className="flex justify-between items-start mb-4">
                 <div className="flex items-center gap-3">
-                    <div className="bg-slate-800 text-white w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm shadow-sm">{st.id}</div>
+                    <div className="bg-slate-800 text-white w-10 h-10 rounded-sm flex items-center justify-center font-bold text-base shadow-sm">{st.id}</div>
                     <div>
                         <div className="flex items-center gap-2 flex-wrap">
                             <h4 className="font-bold text-slate-800 text-sm">Estación {st.id}</h4>
                             {stationSector && (
-                                <span className="text-[10px] font-bold text-white px-2 py-0.5 rounded-full" style={{ backgroundColor: stationSector.color }}>
+                                <span className="text-xs font-bold text-white px-2 py-0.5 rounded-full" style={{ backgroundColor: stationSector.color }}>
                                     {stationSector.name}
                                 </span>
                             )}
                             {/* V4.1: ResourceBadge - Machine Type */}
                             {machineType && (
                                 <span
-                                    className={`text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1 ${hasResourceDeficit ? 'bg-red-100 text-red-700 border border-red-300' : 'bg-amber-100 text-amber-700 border border-amber-300'}`}
+                                    className={`text-xs font-bold px-2 py-0.5 rounded flex items-center gap-1 ${hasResourceDeficit ? 'bg-red-100 text-red-700 border border-red-300' : 'bg-amber-100 text-amber-700 border border-amber-300'}`}
                                     title={`Requiere: ${machineType.name} (${machineType.availableUnits ?? machineType.quantity ?? 0} disponibles)`}
                                 >
                                     <Cpu size={10} />
@@ -199,7 +199,7 @@ export const StationCard: React.FC<StationCardProps> = React.memo(({
                                 const t = data.tasks.find(x => x.id === tid);
                                 return t?.executionMode === 'injection';
                             }) && (
-                                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-purple-100 text-purple-700 border border-purple-300" title="Estación con tarea de inyección">
+                                <span className="text-xs font-bold px-2 py-0.5 rounded bg-purple-100 text-purple-700 border border-purple-300" title="Estación con tarea de inyección">
                                     Inj
                                 </span>
                             )}
@@ -221,11 +221,11 @@ export const StationCard: React.FC<StationCardProps> = React.memo(({
                 </div>
                 <div className={`text-right ${isOverload ? 'text-red-600' : 'text-slate-700'}`}>
                     <div className="text-2xl font-mono font-bold leading-none">{formatNumber(st.time)}s</div>
-                    <div className="text-[10px] text-slate-400 mt-1">
+                    <div className="text-xs text-slate-400 mt-1">
                         Límite: <span className="font-medium">{formatNumber(st.limit)}s</span>
                     </div>
                     {/* FIX 9: Show saturation percentage */}
-                    <div className={`text-[10px] font-bold mt-0.5 ${isOverload ? 'text-red-500' : isInOeeRiskZone ? 'text-amber-600' : saturationPercent > 90 ? 'text-amber-500' : 'text-emerald-500'}`}>
+                    <div className={`text-xs font-bold mt-0.5 ${isOverload ? 'text-red-500' : isInOeeRiskZone ? 'text-amber-600' : saturationPercent > 90 ? 'text-amber-500' : 'text-emerald-500'}`}>
                         {formatNumber(saturationPercent)}% saturación
                         {isInOeeRiskZone && <span className="ml-1 inline-flex items-center gap-0.5"><AlertTriangle size={10} /> OEE</span>}
                     </div>
@@ -233,9 +233,9 @@ export const StationCard: React.FC<StationCardProps> = React.memo(({
             </div>
 
             {/* Micro-Gantt Visual - FIX 9: Color based on saturation, not just overload */}
-            <div className="flex h-2 w-full bg-slate-100 rounded-full overflow-hidden mb-4 relative">
+            <div className="flex h-3 w-full bg-slate-100 rounded-sm overflow-hidden mb-4 relative">
                 <div
-                    className={`h-full transition-all ${isOverload ? 'bg-red-500' : isInOeeRiskZone ? 'bg-amber-500' : saturationPercent > 90 ? 'bg-amber-400' : 'bg-blue-500'}`}
+                    className={`h-full transition-all ${isOverload ? 'bg-status-crit' : isInOeeRiskZone ? 'bg-status-warn' : saturationPercent > 90 ? 'bg-status-warn' : 'bg-accent'}`}
                     style={{ width: `${Math.min(100, saturationPercent)}%` }}
                     title={`Saturación: ${formatNumber(saturationPercent)}%${isInOeeRiskZone ? ' (Excede límite OEE)' : ''}`}
                 ></div>
@@ -279,7 +279,7 @@ export const StationCard: React.FC<StationCardProps> = React.memo(({
                     );
                 })}
                 {st.tasks.length === 0 && (
-                    <div className="w-full text-center text-xs text-slate-300 border-2 border-dashed border-slate-100 rounded py-2">
+                    <div className="w-full text-center text-xs text-industrial-300 border-2 border-dashed border-industrial-200 rounded py-4">
                         Arrastrá tareas acá
                     </div>
                 )}

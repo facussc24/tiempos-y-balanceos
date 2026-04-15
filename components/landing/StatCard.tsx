@@ -9,6 +9,7 @@ interface StatCardProps {
     label: string;
     value: number;
     gradient: 'blue' | 'purple' | 'emerald' | 'amber';
+    style?: React.CSSProperties;
 }
 
 const gradientMap = {
@@ -18,14 +19,14 @@ const gradientMap = {
     amber: 'from-amber-500 to-orange-500'
 };
 
-export const StatCard: React.FC<StatCardProps> = ({ icon: Icon, label, value, gradient }) => {
+export const StatCard: React.FC<StatCardProps> = ({ icon: Icon, label, value, gradient, style }) => {
     return (
-        <div className="stat-card group">
+        <div className="stat-card group" style={style}>
             <div className={`stat-card-icon bg-gradient-to-br ${gradientMap[gradient]}`}>
                 <Icon size={24} className="text-white" />
             </div>
             <div className="mt-3">
-                <p className="text-3xl font-bold text-slate-800">{value}</p>
+                <p className="text-3xl font-bold text-slate-800 tabular-nums">{value}</p>
                 <p className="text-sm text-slate-500 font-medium">{label}</p>
             </div>
         </div>

@@ -360,7 +360,7 @@ const CpToolbar: React.FC<CpToolbarProps> = (props) => {
                                     <span className="hidden sm:inline">Mas</span>
                                 </button>
                                 {showOverflowMenu && (
-                                    <div className="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-[60] min-w-[220px] pb-2"
+                                    <div className="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-dropdown min-w-[220px] pb-2"
                                         onClick={(e) => e.stopPropagation()}>
                                         <div className="px-4 py-1.5 text-[9px] font-bold text-gray-400 uppercase tracking-wider bg-gray-50 border-b border-gray-100 rounded-t-lg">
                                             Exportar

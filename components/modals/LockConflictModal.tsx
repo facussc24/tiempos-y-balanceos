@@ -28,7 +28,7 @@ export function LockConflictModal({ onCancel, onForceLock }: LockConflictModalPr
     }, [onCancel]);
 
     return (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" role="presentation" onClick={onCancel}>
+        <div className="fixed inset-0 bg-black/50 z-modal-backdrop flex items-center justify-center p-4" role="presentation" onClick={onCancel}>
             <div
                 ref={modalRef}
                 role="dialog"

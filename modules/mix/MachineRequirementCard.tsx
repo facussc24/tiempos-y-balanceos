@@ -20,13 +20,13 @@ export const MachineRequirementCard: React.FC<MachineRequirementCardProps> = ({
 
     const hasDeficit = machine.hasDeficit;
     const saturationColor = machine.saturationPerUnit < 85
-        ? 'text-green-600'
+        ? 'text-status-ok'
         : machine.saturationPerUnit < 95
-            ? 'text-amber-600'
-            : 'text-red-600';
+            ? 'text-status-warn'
+            : 'text-status-crit';
 
     return (
-        <div className={`border rounded-lg overflow-hidden transition-all ${hasDeficit ? 'border-red-300 bg-red-50' : 'border-slate-200 bg-white'
+        <div className={`border rounded-md overflow-hidden transition-all ${hasDeficit ? 'border-red-300 bg-red-50' : 'border-slate-200 bg-white'
             }`}>
             {/* Header - Always visible */}
             <button

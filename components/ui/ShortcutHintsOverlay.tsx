@@ -99,7 +99,7 @@ export const ShortcutHintsOverlay: React.FC<ShortcutHintsOverlayProps> = ({ isVi
         <>
             {/* Subtle overlay to draw attention */}
             <div
-                className="fixed inset-0 bg-black/5 backdrop-blur-[1px] pointer-events-none z-[9998] animate-in fade-in duration-150"
+                className="fixed inset-0 bg-black/5 backdrop-blur-[1px] pointer-events-none z-overlay animate-in fade-in duration-150"
                 aria-hidden="true"
             />
 
@@ -107,7 +107,7 @@ export const ShortcutHintsOverlay: React.FC<ShortcutHintsOverlayProps> = ({ isVi
             {hints.map((hint) => (
                 <div
                     key={hint.id}
-                    className="fixed z-[9995] pointer-events-none animate-in zoom-in-95 fade-in duration-200"
+                    className="fixed z-overlay pointer-events-none animate-in zoom-in-95 fade-in duration-200"
                     style={{
                         left: hint.x,
                         top: hint.y,
@@ -131,7 +131,7 @@ export const ShortcutHintsOverlay: React.FC<ShortcutHintsOverlayProps> = ({ isVi
             ))}
 
             {/* Helper text at bottom */}
-            <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[9999] pointer-events-none animate-in slide-in-from-bottom-4 fade-in duration-300">
+            <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-tooltip pointer-events-none animate-in slide-in-from-bottom-4 fade-in duration-300">
                 <div className="flex items-center gap-2 px-4 py-2 bg-slate-900/90 text-white text-sm rounded-full shadow-xl backdrop-blur-sm border border-slate-700">
                     <Keyboard size={16} className="text-blue-400" />
                     <span>Suelta <kbd className="px-1.5 py-0.5 bg-slate-700 rounded text-xs font-mono">Alt</kbd> para cerrar</span>

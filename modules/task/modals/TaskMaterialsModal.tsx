@@ -88,7 +88,7 @@ const TaskMaterialsModal: React.FC<TaskMaterialsModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
+    <div className="fixed inset-0 bg-black/50 z-modal-backdrop flex items-center justify-center p-4 overflow-y-auto">
       <div className="bg-white rounded-xl shadow-xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
         <div className="bg-blue-600 text-white p-5 flex-shrink-0">

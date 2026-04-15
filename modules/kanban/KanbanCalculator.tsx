@@ -145,7 +145,7 @@ export const KanbanCalculator: React.FC<KanbanCalculatorProps> = ({
     };
 
     return (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 animate-in fade-in duration-200">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-modal-backdrop animate-in fade-in duration-200">
             <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden animate-in slide-in-from-bottom-4 duration-300">
                 {/* Header */}
                 <div className="bg-gradient-to-r from-emerald-600 to-teal-600 px-6 py-4 flex items-center justify-between">

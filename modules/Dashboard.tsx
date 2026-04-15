@@ -578,18 +578,10 @@ export const Dashboard: React.FC<DashboardProps> = ({
             {/* Stats Row - Solo visible cuando hay cliente seleccionado (evita "0" ruidosos en onboarding) */}
             {selectedClient && (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="animate-fade-in-up" style={{ animationDelay: '0ms' }}>
-                        <StatCard icon={Users} label="Clientes" value={stats.clients} gradient="blue" />
-                    </div>
-                    <div className="animate-fade-in-up" style={{ animationDelay: '50ms' }}>
-                        <StatCard icon={FolderOpen} label="Proyectos" value={stats.projects} gradient="purple" />
-                    </div>
-                    <div className="animate-fade-in-up" style={{ animationDelay: '100ms' }}>
-                        <StatCard icon={FileText} label="Piezas" value={stats.parts} gradient="emerald" />
-                    </div>
-                    <div className="animate-fade-in-up" style={{ animationDelay: '150ms' }}>
-                        <StatCard icon={TrendingUp} label="En Vista" value={filteredStudies.length} gradient="amber" />
-                    </div>
+                    <StatCard icon={Users} label="Clientes" value={stats.clients} gradient="blue" style={{ animationDelay: '0ms' }} />
+                    <StatCard icon={FolderOpen} label="Proyectos" value={stats.projects} gradient="purple" style={{ animationDelay: '60ms' }} />
+                    <StatCard icon={FileText} label="Piezas" value={stats.parts} gradient="emerald" style={{ animationDelay: '120ms' }} />
+                    <StatCard icon={TrendingUp} label="En Vista" value={filteredStudies.length} gradient="amber" style={{ animationDelay: '180ms' }} />
                 </div>
             )}
 

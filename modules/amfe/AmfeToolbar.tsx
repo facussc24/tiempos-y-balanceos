@@ -269,7 +269,7 @@ const AmfeToolbar: React.FC<AmfeToolbarProps> = ({
                             <span className="hidden sm:inline">Más</span>
                         </button>
                         {showOverflowMenu && (
-                            <div className="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-[60] min-w-[220px] max-h-[calc(100vh-200px)] overflow-y-auto pb-4">
+                            <div className="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-dropdown min-w-[220px] max-h-[calc(100vh-200px)] overflow-y-auto pb-4">
                                 {/* HERRAMIENTAS Section */}
                                 <div className="px-4 py-1.5 text-[9px] font-bold text-gray-400 uppercase tracking-wider bg-gray-50 border-b border-gray-100 rounded-t-lg">
                                     Herramientas

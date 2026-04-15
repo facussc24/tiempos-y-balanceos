@@ -162,7 +162,7 @@ const ControlPlanTable: React.FC<Props> = ({ items, onUpdateItem, onRemoveItem, 
                 <tr style={{ position: 'absolute', top: 0, left: 0, height: 0, overflow: 'visible' }}>
                     <td colSpan={999} style={{ padding: 0, border: 'none', position: 'relative' }}>
                         <div
-                            className="fixed z-[100] bg-white border border-gray-200 rounded-lg shadow-xl py-1 min-w-[200px]"
+                            className="fixed z-overlay bg-white border border-gray-200 rounded-lg shadow-xl py-1 min-w-[200px]"
                             style={{ top: bulkMenu.y, left: bulkMenu.x }}
                             onClick={(e) => e.stopPropagation()}
                         >
@@ -176,7 +176,7 @@ const ControlPlanTable: React.FC<Props> = ({ items, onUpdateItem, onRemoveItem, 
                                 Aplicar &lsquo;{bulkMenu.value.length > 30 ? bulkMenu.value.slice(0, 30) + '...' : bulkMenu.value}&rsquo; a OP {bulkMenu.stepNumber}
                             </button>
                         </div>
-                        <div className="fixed inset-0 z-[99]" onClick={() => setBulkMenu(null)} onKeyDown={(e) => { if (e.key === 'Escape') setBulkMenu(null); }} />
+                        <div className="fixed inset-0 z-overlay" onClick={() => setBulkMenu(null)} onKeyDown={(e) => { if (e.key === 'Escape') setBulkMenu(null); }} />
                     </td>
                 </tr>
             )}

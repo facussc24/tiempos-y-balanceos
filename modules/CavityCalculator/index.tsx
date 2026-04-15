@@ -77,10 +77,10 @@ export const CavityCalculator: React.FC<Props> = ({
     };
 
     return (
-        <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[100] flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-modal-backdrop flex items-center justify-center p-4">
             {/* HELP MODAL */}
             {showHelp && (
-                <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in zoom-in duration-200">
+                <div className="fixed inset-0 z-modal flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in zoom-in duration-200">
                     <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full border border-slate-200 overflow-hidden relative">
                         <div className="bg-slate-50 px-6 py-4 border-b border-slate-200 flex justify-between items-center">
                             <h3 className="font-bold text-slate-800 text-lg flex items-center gap-2"><HelpCircle size={20} /> Guía de Interpretación</h3>
@@ -127,7 +127,7 @@ export const CavityCalculator: React.FC<Props> = ({
 
             {/* GUIDE MODAL */}
             {showGuideModal && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] animate-in fade-in p-4">
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-modal animate-in fade-in p-4">
                     <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
                         <div className="p-4 border-b border-slate-100 flex justify-between items-center sticky top-0 bg-white z-10">
                             <h3 className="font-bold text-lg text-slate-800 flex items-center gap-2">
@@ -191,7 +191,7 @@ export const CavityCalculator: React.FC<Props> = ({
             )}
 
             {/* MAIN CARD */}
-            <div className="bg-white w-full max-w-[95vw] lg:max-w-[90vw] xl:max-w-7xl rounded-xl shadow-xl overflow-hidden flex flex-col md:flex-row h-[90vh] border border-slate-200 animate-in fade-in zoom-in duration-300 relative z-[100]">
+            <div className="bg-white w-full max-w-[95vw] lg:max-w-[90vw] xl:max-w-7xl rounded-xl shadow-xl overflow-hidden flex flex-col md:flex-row h-[90vh] border border-slate-200 animate-in fade-in zoom-in duration-300 relative z-modal">
 
                 <CalculationErrorBoundary>
 

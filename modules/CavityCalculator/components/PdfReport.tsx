@@ -28,8 +28,8 @@ const PdfReport: React.FC<Props> = ({
     isCurrentFeasible, injectionMode = 'batch'
 }) => {
     return (
-        <div className="fixed inset-0 z-[10000] bg-slate-900/90 overflow-auto flex justify-center items-start pt-10">
-            <div className="text-white font-bold text-xl mb-4 fixed top-4 left-1/2 -translate-x-1/2 animate-pulse z-[10002]">Generando Reporte PDF...</div>
+        <div className="fixed inset-0 z-overlay bg-slate-900/90 overflow-auto flex justify-center items-start pt-10">
+            <div className="text-white font-bold text-xl mb-4 fixed top-4 left-1/2 -translate-x-1/2 animate-pulse z-tooltip">Generando Reporte PDF...</div>
             <div id="pdf-report-content" className="bg-white text-slate-900 shadow-2xl relative flex flex-col" style={{ width: '297mm', height: '210mm', padding: '12mm', margin: '0 auto' }}>
                 {/* HEADER */}
                 <div className="flex justify-between items-center border-b-4 border-slate-800 pb-3 mb-4">

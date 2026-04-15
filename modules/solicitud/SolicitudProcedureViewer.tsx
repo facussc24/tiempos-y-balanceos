@@ -156,7 +156,7 @@ const SolicitudProcedureViewer: React.FC<SolicitudProcedureViewerProps> = ({
 
     return (
         <div
-            className="fixed inset-0 z-50 flex items-center justify-center animate-fadeIn"
+            className="fixed inset-0 z-modal-backdrop flex items-center justify-center animate-fadeIn"
             role="dialog"
             aria-modal="true"
             aria-label="Procedimiento SGC"

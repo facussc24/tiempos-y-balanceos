@@ -137,7 +137,7 @@ export const EducationalTooltip: React.FC<EducationalTooltipProps> = ({
             {isVisible && createPortal(
                 <div
                     ref={tooltipRef}
-                    className="fixed z-[9999] w-80 max-w-[90vw] bg-slate-900 text-white rounded-xl shadow-2xl pointer-events-none animate-in fade-in zoom-in-95 duration-150 border border-slate-700 overflow-hidden"
+                    className="fixed z-tooltip w-80 max-w-[90vw] bg-slate-900 text-white rounded-xl shadow-2xl pointer-events-none animate-in fade-in zoom-in-95 duration-150 border border-slate-700 overflow-hidden"
                     style={{
                         top: coords ? coords.top : -9999,
                         left: coords ? coords.left : -9999,

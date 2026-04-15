@@ -53,7 +53,7 @@ export const PasteModal: React.FC<Props> = ({ isOpen, onClose, targetTaskId, dat
     };
 
     return (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+        <div className="fixed inset-0 bg-black/50 z-modal-backdrop flex items-center justify-center p-4 backdrop-blur-sm">
             <div className="bg-white rounded-lg shadow-xl w-full max-w-lg overflow-hidden border border-slate-200 flex flex-col max-h-[80vh]">
                 <div className="bg-slate-50 px-6 py-4 border-b border-slate-200 flex justify-between items-center">
                     <div className="flex items-center gap-2">

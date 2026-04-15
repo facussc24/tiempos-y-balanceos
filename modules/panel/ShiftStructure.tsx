@@ -48,8 +48,8 @@ export const ShiftStructure: React.FC<Props> = ({
         <div className="relative">
             {/* Break Editor Modal */}
             {editingBreaksShiftId !== null && activeShiftToEdit && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm animate-in fade-in duration-150">
-                    <div className="bg-white rounded-lg shadow-xl w-full max-w-md overflow-hidden border border-slate-200 animate-in zoom-in-95 duration-200">
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 animate-in fade-in duration-150">
+                    <div className="bg-white rounded-md shadow-xl w-full max-w-md overflow-hidden border border-slate-200 animate-in zoom-in-95 duration-200">
                         <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
                             <h3 className="font-bold text-slate-800">Descansos - {activeShiftToEdit.name}</h3>
                             <button onClick={() => setEditingBreaksShiftId(null)} className="text-slate-400 hover:text-slate-700" title="Cancelar edición">
@@ -120,7 +120,7 @@ export const ShiftStructure: React.FC<Props> = ({
                                     <tr key={shift.id} className={!isActive ? "opacity-40 bg-slate-50" : "bg-white"}>
                                         <td className="px-4 py-2 font-medium">
                                             <span className="block">{shift.name}</span>
-                                            {!isActive && <span className="text-[10px] text-slate-400">(Inactivo)</span>}
+                                            {!isActive && <span className="text-xs text-slate-400">(Inactivo)</span>}
                                         </td>
                                         <td className="px-4 py-2">
                                             <div className="flex items-center gap-2 justify-center">

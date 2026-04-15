@@ -29,7 +29,7 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 const VARIANTS: Record<ButtonVariant, string> = {
     primary: `
         bg-blue-600 text-white shadow-sm
-        hover:bg-blue-700 hover:shadow-md
+        hover:bg-blue-700 hover:shadow-md hover:shadow-blue-500/20
         active:bg-blue-800
         focus:ring-blue-500/30
         disabled:bg-blue-300 disabled:shadow-none
@@ -107,7 +107,7 @@ export const Button: React.FC<ButtonProps> = ({
                 inline-flex items-center justify-center
                 ${sizeConfig.padding} ${sizeConfig.text} ${sizeConfig.gap}
                 font-medium rounded-lg
-                transition-all duration-150
+                transition-[color,background-color,box-shadow,transform] duration-fast
                 focus:outline-none focus:ring-2 focus:ring-offset-1
                 active:scale-[0.98]
                 disabled:cursor-not-allowed disabled:opacity-70
@@ -155,7 +155,7 @@ const IconButton: React.FC<Omit<ButtonProps, 'children'> & {
                 inline-flex items-center justify-center
                 ${iconSizes[size]}
                 rounded-lg
-                transition-all duration-150
+                transition-[color,background-color,box-shadow,transform] duration-fast
                 focus:outline-none focus:ring-2 focus:ring-offset-1
                 active:scale-95
                 disabled:cursor-not-allowed disabled:opacity-70

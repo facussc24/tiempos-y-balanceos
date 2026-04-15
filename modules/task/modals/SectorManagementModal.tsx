@@ -84,7 +84,7 @@ export const SectorManagementModal: React.FC<Props> = ({ isOpen, onClose, data, 
     const sortedSectors = [...sectorsList].sort((a, b) => (a.sequence || 99) - (b.sequence || 99));
 
     return (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+        <div className="fixed inset-0 bg-black/60 z-modal-backdrop flex items-center justify-center p-4 backdrop-blur-sm">
             <div className="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden">
 
                 {/* HEADER - Diseño moderno con gradiente */}

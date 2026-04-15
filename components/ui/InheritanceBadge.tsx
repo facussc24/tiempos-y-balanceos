@@ -132,7 +132,7 @@ export const InheritanceBadge: React.FC<InheritanceBadgeProps> = ({
                 <div
                     ref={tooltipRef}
                     role="tooltip"
-                    className="fixed z-[9999] w-max max-w-[280px] px-2.5 py-1.5 bg-slate-900 text-white text-xs rounded-lg shadow-2xl pointer-events-none animate-in fade-in zoom-in-95 duration-150 border border-slate-700 border-l-2 border-l-blue-500 font-medium leading-relaxed"
+                    className="fixed z-tooltip w-max max-w-[280px] px-2.5 py-1.5 bg-slate-900 text-white text-xs rounded-lg shadow-2xl pointer-events-none animate-in fade-in zoom-in-95 duration-150 border border-slate-700 border-l-2 border-l-blue-500 font-medium leading-relaxed"
                     style={{
                         top: coords ? coords.top : -9999,
                         left: coords ? coords.left : -9999,

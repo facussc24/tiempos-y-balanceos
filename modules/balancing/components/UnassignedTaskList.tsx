@@ -31,7 +31,7 @@ const DraggableUnassignedTask: React.FC<{
             ref={setNodeRef}
             {...listeners}
             {...attributes}
-            className={`bg-white border border-slate-200 p-3 rounded-lg shadow-sm cursor-grab hover:shadow-md hover:border-blue-300 group active:cursor-grabbing transition-all ${isDragging ? 'opacity-50' : ''}`}
+            className={`bg-white border border-slate-200 p-3 rounded-md shadow-sm cursor-grab hover:shadow-md hover:border-accent group active:cursor-grabbing transition-all ${isDragging ? 'opacity-50' : ''}`}
             style={{ ...style, borderLeftColor: sectorsList.find(s => s.id === task.sectorId)?.color || undefined, borderLeftWidth: task.sectorId ? 4 : 1 }}
             aria-label={`Tarea ${task.id}, ${formatNumber(task.standardTime || task.averageTime)} segundos. Arrastrar a una estación para asignar.`}
             aria-roledescription="elemento arrastrable"
@@ -45,7 +45,7 @@ const DraggableUnassignedTask: React.FC<{
             <p className="text-xs text-slate-500 line-clamp-2 leading-snug">{task.description}</p>
             {task.sectorId && (
                 <div
-                    className="mt-1.5 text-[10px] px-1.5 py-0.5 rounded inline-flex items-center gap-1 font-medium"
+                    className="mt-1.5 text-xs px-1.5 py-0.5 rounded inline-flex items-center gap-1 font-medium"
                     style={{
                         backgroundColor: (sectorsList.find(s => s.id === task.sectorId)?.color || '#64748b') + '15',
                         color: sectorsList.find(s => s.id === task.sectorId)?.color || '#64748b'
@@ -56,7 +56,7 @@ const DraggableUnassignedTask: React.FC<{
                 </div>
             )}
             {task.concurrentWith && (
-                <div className="mt-2 text-[9px] bg-purple-50 text-purple-700 px-2 py-1 rounded flex items-center gap-1 border border-purple-100">
+                <div className="mt-2 text-xs bg-purple-50 text-purple-700 px-2 py-1 rounded flex items-center gap-1 border border-purple-100">
                     <Split size={10} /> Durante {task.concurrentWith}
                 </div>
             )}
@@ -92,7 +92,7 @@ export const UnassignedTaskList: React.FC<UnassignedTaskListProps> = ({
     }, []);
 
     return (
-        <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm sticky top-24 max-h-[calc(100vh-150px)] flex flex-col">
+        <div className="bg-white border border-slate-200 rounded-md p-4 shadow-sm sticky top-24 max-h-[calc(100vh-150px)] flex flex-col">
             <div className="flex justify-between items-center mb-4">
                 <h3 className="font-bold text-slate-700">Tareas Sin Asignar ({unassignedTasks.length})</h3>
             </div>
@@ -116,24 +116,24 @@ export const UnassignedTaskList: React.FC<UnassignedTaskListProps> = ({
                 <div className="mt-4 pt-3 border-t border-slate-100 text-center">
                     {showAssignAllConfirm ? (
                         <div className="flex flex-col items-center gap-2">
-                            <p className="text-[10px] text-gray-500">
+                            <p className="text-xs text-gray-500">
                                 Asignar {unassignedTasks.length} tarea(s) a Estación 1?
                             </p>
-                            <p className="text-[9px] text-amber-600">
+                            <p className="text-xs text-amber-600">
                                 No valida restricciones de sector, máquina ni zona.
                             </p>
                             <div className="flex items-center gap-2">
                                 <button
                                     type="button"
                                     onClick={confirmAssignAll}
-                                    className="px-3 py-1 text-[10px] bg-blue-500 text-white rounded hover:bg-blue-600 transition font-medium"
+                                    className="px-3 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 transition font-medium"
                                 >
                                     Sí, asignar
                                 </button>
                                 <button
                                     type="button"
                                     onClick={cancelAssignAll}
-                                    className="px-3 py-1 text-[10px] bg-gray-100 text-gray-600 rounded hover:bg-gray-200 transition font-medium"
+                                    className="px-3 py-1 text-xs bg-gray-100 text-gray-600 rounded hover:bg-gray-200 transition font-medium"
                                 >
                                     Cancelar
                                 </button>

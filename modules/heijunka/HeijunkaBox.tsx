@@ -300,7 +300,7 @@ export const HeijunkaBox: React.FC<HeijunkaBoxProps> = ({
 
             {/* Slot Detail Modal */}
             {selectedSlot && (
-                <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 print:hidden">
+                <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-modal-backdrop print:hidden">
                     <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 animate-in zoom-in-95 duration-200">
                         <div className="bg-blue-600 px-4 py-3 flex items-center justify-between rounded-t-xl">
                             <div className="flex items-center gap-2 text-white">
@@ -355,7 +355,7 @@ export const HeijunkaBox: React.FC<HeijunkaBoxProps> = ({
     // Render as modal or inline
     if (isModal) {
         return (
-            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 animate-in fade-in duration-200 p-4">
+            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-modal-backdrop animate-in fade-in duration-200 p-4">
                 <div className="max-w-6xl w-full max-h-[90vh] overflow-auto animate-in slide-in-from-bottom-4 duration-300">
                     {content}
                 </div>

@@ -157,7 +157,7 @@ export const DropdownNav: React.FC<DropdownNavProps> = ({
                 <div
                     ref={menuRef}
                     id="dropdown-menu"
-                    className="absolute top-full left-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg py-1 min-w-[180px] z-50 animate-fade-in"
+                    className="absolute top-full left-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg py-1 min-w-[180px] z-dropdown animate-fade-in"
                     role="menu"
                     aria-activedescendant={focusedIndex >= 0 ? `menu-item-${items[focusedIndex].id}` : undefined}
                 >

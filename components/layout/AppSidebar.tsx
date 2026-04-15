@@ -109,7 +109,7 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ currentMode, onSelectModule, on
 
     return (
         <aside
-            className={`no-print flex-shrink-0 bg-slate-900 flex flex-col h-full transition-all duration-200 ${
+            className={`no-print flex-shrink-0 bg-slate-900 flex flex-col h-full transition-[width] duration-200 ${
                 expanded ? 'w-60' : 'w-12'
             }`}
             aria-label="Navegacion principal"
@@ -126,46 +126,58 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ currentMode, onSelectModule, on
 
             {/* Sections */}
             <nav className="flex-1 overflow-y-auto overflow-x-hidden py-1">
-                {SECTIONS.map((section, sIdx) => (
-                    <div key={section.title}>
-                        {/* Divider (not before first section) */}
-                        {sIdx > 0 && (
-                            <div className="border-t border-slate-700/50 my-1" />
-                        )}
+                {(() => {
+                    let globalItemIndex = 0;
+                    return SECTIONS.map((section, sIdx) => (
+                        <div key={section.title}>
+                            {/* Divider (not before first section) */}
+                            {sIdx > 0 && (
+                                <div className="border-t border-slate-700/50 my-1" />
+                            )}
 
-                        {/* Section label (only when expanded) */}
-                        {expanded && (
-                            <div className="text-[9px] font-bold text-slate-500 uppercase tracking-wider px-4 pt-3 pb-1 select-none">
-                                {section.title}
-                            </div>
-                        )}
-
-                        {/* Items */}
-                        {section.items.map(item => {
-                            const isActive = currentMode === item.mode;
-                            return (
-                                <button
-                                    key={item.mode}
-                                    onClick={() => handleItemClick(item.mode)}
-                                    title={expanded ? undefined : item.label}
-                                    className={`w-full flex items-center gap-3 transition-colors duration-200 ${
-                                        expanded ? 'px-4 py-2' : 'px-0 py-2 justify-center'
-                                    } ${
-                                        isActive
-                                            ? 'bg-blue-500/10 text-blue-400 border-l-2 border-blue-500'
-                                            : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800 border-l-2 border-transparent'
-                                    }`}
-                                    aria-current={isActive ? 'page' : undefined}
+                            {/* Section label (only when expanded) */}
+                            {expanded && (
+                                <div
+                                    className="text-[9px] font-bold text-slate-500 uppercase tracking-wider px-4 pt-3 pb-1 select-none opacity-0 animate-fade-in"
+                                    style={{ animationDelay: `${sIdx * 40}ms` }}
                                 >
-                                    <span className="flex-shrink-0">{item.icon}</span>
-                                    {expanded && (
-                                        <span className="text-sm font-medium truncate">{item.label}</span>
-                                    )}
-                                </button>
-                            );
-                        })}
-                    </div>
-                ))}
+                                    {section.title}
+                                </div>
+                            )}
+
+                            {/* Items */}
+                            {section.items.map(item => {
+                                const isActive = currentMode === item.mode;
+                                const itemIdx = globalItemIndex++;
+                                return (
+                                    <button
+                                        key={item.mode}
+                                        onClick={() => handleItemClick(item.mode)}
+                                        title={expanded ? undefined : item.label}
+                                        className={`w-full flex items-center gap-3 transition-colors duration-200 ${
+                                            expanded ? 'px-4 py-2' : 'px-0 py-2 justify-center'
+                                        } ${
+                                            isActive
+                                                ? 'bg-blue-500/10 text-blue-400 sidebar-active-indicator'
+                                                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800 hover:translate-x-0.5 transition-transform'
+                                        }`}
+                                        aria-current={isActive ? 'page' : undefined}
+                                    >
+                                        <span className="flex-shrink-0">{item.icon}</span>
+                                        {expanded && (
+                                            <span
+                                                className="text-sm font-medium truncate opacity-0 animate-sidebar-item-enter"
+                                                style={{ animationDelay: `${itemIdx * 30}ms` }}
+                                            >
+                                                {item.label}
+                                            </span>
+                                        )}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    ));
+                })()}
             </nav>
         </aside>
     );

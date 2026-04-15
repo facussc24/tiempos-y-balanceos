@@ -84,7 +84,7 @@ export const Tooltip: React.FC<Props> = ({ content, children, className = "", sh
                     ref={tooltipRef}
                     id="tooltip-content"
                     role="tooltip"
-                    className="fixed z-[9999] w-max max-w-[320px] p-2.5 bg-slate-900 text-white text-xs rounded-lg shadow-2xl pointer-events-none animate-in fade-in zoom-in-95 duration-150 border border-slate-700 border-l-2 border-l-blue-500 font-medium flex items-center gap-2"
+                    className="fixed z-tooltip w-max max-w-[320px] p-2.5 bg-slate-900 text-white text-xs rounded-lg shadow-2xl pointer-events-none animate-in fade-in zoom-in-95 duration-150 border border-slate-700 border-l-2 border-l-blue-500 font-medium flex items-center gap-2"
                     style={{
                         top: coords ? coords.top : -9999, // Hide until calculated
                         left: coords ? coords.left : -9999,

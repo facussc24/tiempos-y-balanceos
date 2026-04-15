@@ -321,10 +321,10 @@ export const LineBalancing: React.FC<Props> = ({ data, updateData }) => {
                 {/* ERROR / WARNING MODAL (Concurrency) */}
 
                 {warningState && (
-                    <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in zoom-in duration-200">
-                        <div className="bg-white rounded-xl shadow-2xl max-w-md w-full overflow-hidden border-2 border-amber-100">
-                            <div className="bg-amber-50 px-6 py-4 border-b border-amber-100 flex items-center gap-3">
-                                <div className="bg-amber-100 p-2 rounded-full">
+                    <div className="fixed inset-0 bg-black/50 z-modal-backdrop flex items-center justify-center p-4 animate-in fade-in zoom-in duration-200">
+                        <div className="bg-white rounded-md shadow-xl max-w-md w-full overflow-hidden border border-industrial-200">
+                            <div className="bg-industrial-50 border-l-4 border-l-status-warn px-6 py-4 border-b border-industrial-200 flex items-center gap-3">
+                                <div className="bg-amber-100 p-2 rounded-sm">
                                     <Unlink size={24} className="text-amber-600" />
                                 </div>
                                 <h3 className="font-bold text-amber-900 text-lg">Vínculo de Concurrencia Roto</h3>
@@ -333,13 +333,13 @@ export const LineBalancing: React.FC<Props> = ({ data, updateData }) => {
                                 <p className="text-slate-600 text-sm mb-4 leading-relaxed">
                                     Estás separando la tarea <strong>{warningState.taskDesc}</strong> de su par <strong>{warningState.linkedTaskDesc}</strong>.
                                 </p>
-                                <div className="bg-red-50 border border-red-100 rounded-lg p-3 flex items-center gap-3 mb-6">
-                                    <div className="bg-white p-1.5 rounded-md shadow-sm border border-red-100">
+                                <div className="bg-red-50 border border-red-100 rounded-md p-3 flex items-center gap-3 mb-6">
+                                    <div className="bg-white p-1.5 rounded-sm shadow-sm border border-red-100">
                                         <TrendingUp size={20} className="text-red-500" />
                                     </div>
                                     <div>
                                         <span className="block text-xs font-bold text-red-800 uppercase tracking-wide">Impacto en Ciclo</span>
-                                        <span className="text-lg font-black text-red-600">+{formatNumber(warningState.timePenalty)} seg</span>
+                                        <span className="text-lg font-bold text-red-600">+{formatNumber(warningState.timePenalty)} seg</span>
                                     </div>
                                 </div>
                                 <p className="text-xs text-slate-500 italic text-center">
@@ -347,10 +347,10 @@ export const LineBalancing: React.FC<Props> = ({ data, updateData }) => {
                                 </p>
                             </div>
                             <div className="bg-slate-50 px-6 py-4 border-t border-slate-100 flex gap-3 justify-end">
-                                <button onClick={warningState.onCancel} className="px-4 py-2 text-slate-600 hover:bg-white hover:shadow-sm rounded-lg font-medium text-sm transition-all border border-transparent hover:border-slate-200">
+                                <button onClick={warningState.onCancel} className="px-4 py-2 text-slate-600 hover:bg-white hover:shadow-sm rounded-md font-medium text-sm transition-all border border-transparent hover:border-slate-200">
                                     Cancelar
                                 </button>
-                                <button onClick={warningState.onConfirm} className="px-6 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg shadow-md hover:shadow-lg font-bold text-sm transition-all transform active:scale-95">
+                                <button onClick={warningState.onConfirm} className="px-6 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-md shadow-md hover:shadow-lg font-bold text-sm transition-all transform active:scale-95">
                                     Confirmar Movimiento
                                 </button>
                             </div>
@@ -375,10 +375,10 @@ export const LineBalancing: React.FC<Props> = ({ data, updateData }) => {
 
                 {/* CLEAR BALANCE CONFIRMATION MODAL */}
                 {showClearBalanceConfirm && (
-                    <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in zoom-in duration-200" onClick={cancelClearBalance}>
-                        <div className="bg-white rounded-xl shadow-2xl max-w-md w-full overflow-hidden border-2 border-red-100" onClick={e => e.stopPropagation()}>
-                            <div className="bg-red-50 px-6 py-4 border-b border-red-100 flex items-center gap-3">
-                                <div className="bg-red-100 p-2 rounded-full">
+                    <div className="fixed inset-0 bg-black/50 z-modal-backdrop flex items-center justify-center p-4 animate-in fade-in zoom-in duration-200" onClick={cancelClearBalance}>
+                        <div className="bg-white rounded-md shadow-xl max-w-md w-full overflow-hidden border border-industrial-200" onClick={e => e.stopPropagation()}>
+                            <div className="bg-industrial-50 border-l-4 border-l-status-crit px-6 py-4 border-b border-industrial-200 flex items-center gap-3">
+                                <div className="bg-red-100 p-2 rounded-sm">
                                     <AlertTriangle size={24} className="text-red-600" />
                                 </div>
                                 <h3 className="font-bold text-red-900 text-lg">¿Limpiar Todo el Balance?</h3>
@@ -387,8 +387,8 @@ export const LineBalancing: React.FC<Props> = ({ data, updateData }) => {
                                 <p className="text-slate-600 text-sm mb-4 leading-relaxed">
                                     Esta acción eliminará <strong>todas las asignaciones</strong> de tareas a estaciones y reseteará el conteo de estaciones a 0.
                                 </p>
-                                <div className="bg-amber-50 border border-amber-100 rounded-lg p-3 flex items-center gap-3">
-                                    <div className="bg-white p-1.5 rounded-md shadow-sm border border-amber-100">
+                                <div className="bg-amber-50 border border-amber-100 rounded-md p-3 flex items-center gap-3">
+                                    <div className="bg-white p-1.5 rounded-sm shadow-sm border border-amber-100">
                                         <Info size={20} className="text-amber-500" />
                                     </div>
                                     <div className="text-xs text-amber-800">
@@ -397,10 +397,10 @@ export const LineBalancing: React.FC<Props> = ({ data, updateData }) => {
                                 </div>
                             </div>
                             <div className="bg-slate-50 px-6 py-4 border-t border-slate-100 flex gap-3 justify-end">
-                                <button onClick={cancelClearBalance} className="px-4 py-2 text-slate-600 hover:bg-white hover:shadow-sm rounded-lg font-medium text-sm transition-all border border-transparent hover:border-slate-200">
+                                <button onClick={cancelClearBalance} className="px-4 py-2 text-slate-600 hover:bg-white hover:shadow-sm rounded-md font-medium text-sm transition-all border border-transparent hover:border-slate-200">
                                     Cancelar
                                 </button>
-                                <button onClick={confirmClearBalance} className="px-6 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg shadow-md hover:shadow-lg font-bold text-sm transition-all transform active:scale-95">
+                                <button onClick={confirmClearBalance} className="px-6 py-2 bg-red-500 hover:bg-red-600 text-white rounded-md shadow-md hover:shadow-lg font-bold text-sm transition-all transform active:scale-95">
                                     Sí, Limpiar Todo
                                 </button>
                             </div>
@@ -412,9 +412,9 @@ export const LineBalancing: React.FC<Props> = ({ data, updateData }) => {
                 {/* CONFIG MODAL */}
                 {
                     configStationId !== null && (
-                        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in zoom-in duration-200" onClick={() => setConfigStationId(null)}>
-                            <div className="bg-white rounded-xl shadow-2xl max-w-sm w-full overflow-hidden" onClick={e => e.stopPropagation()}>
-                                <div className="bg-slate-50 px-6 py-4 border-b border-slate-100 flex justify-between items-center">
+                        <div className="fixed inset-0 bg-black/50 z-modal-backdrop flex items-center justify-center p-4 animate-in fade-in zoom-in duration-200" onClick={() => setConfigStationId(null)}>
+                            <div className="bg-white rounded-md shadow-xl max-w-sm w-full overflow-hidden border border-industrial-200" onClick={e => e.stopPropagation()}>
+                                <div className="bg-industrial-50 border-l-4 border-l-accent px-6 py-4 border-b border-industrial-200 flex justify-between items-center">
                                     <h3 className="font-bold text-slate-800">Configurar Estación {configStationId}</h3>
                                     <button onClick={() => setConfigStationId(null)} className="text-slate-400 hover:text-red-500 transition-colors" aria-label="Cerrar">
                                         <X size={20} />
@@ -430,7 +430,7 @@ export const LineBalancing: React.FC<Props> = ({ data, updateData }) => {
                                             max="1"
                                             value={stationOeeInput}
                                             onChange={(e) => setStationOeeInput(e.target.value)}
-                                            className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-center text-lg"
+                                            className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-center text-lg"
                                             autoFocus
                                         />
                                         <p className="text-xs text-slate-400 mt-2">
@@ -475,7 +475,7 @@ export const LineBalancing: React.FC<Props> = ({ data, updateData }) => {
                                     <button onClick={() => setConfigStationId(null)} className="text-slate-500 hover:bg-slate-100 px-4 py-2 rounded">Cancelar</button>
                                     <button
                                         onClick={saveStationConfig}
-                                        className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-2 font-bold shadow-md hover:shadow-lg transition-all"
+                                        className="bg-accent hover:bg-blue-800 text-white rounded-md px-4 py-2 font-bold shadow-md hover:shadow-lg transition-all"
                                     >
                                         Guardar
                                     </button>
@@ -564,7 +564,7 @@ export const LineBalancing: React.FC<Props> = ({ data, updateData }) => {
                             return (
                                 <div
                                     key={sector.id}
-                                    className={`mb-6 rounded-xl border-2 p-4 transition-all ${hasOverload
+                                    className={`mb-6 rounded-md border p-4 transition-all ${hasOverload
                                         ? 'border-red-300 bg-red-50/30'
                                         : hasHighSaturation
                                             ? 'border-amber-300 bg-amber-50/30'
@@ -574,27 +574,27 @@ export const LineBalancing: React.FC<Props> = ({ data, updateData }) => {
                                 >
                                     {/* Sector Header con Alerta Visual */}
                                     <div
-                                        className="flex items-center gap-3 mb-3 pb-2 border-b border-slate-200 cursor-pointer hover:bg-white/50 p-2 rounded-lg transition-all"
+                                        className="flex items-center gap-3 mb-3 pb-2 border-b border-slate-200 cursor-pointer hover:bg-white/50 p-2 rounded-md transition-all"
                                         onClick={() => toggleBoardSectorCollapse(sector.id)}
                                     >
                                         <button className="text-slate-400 hover:text-slate-600" title="Alternar sección">
                                             {isCollapsed ? <ChevronRight size={16} /> : <ChevronDown size={16} />}
                                         </button>
                                         <div
-                                            className="w-4 h-4 rounded-full shadow-md ring-2 ring-white"
+                                            className="w-4 h-4 rounded-sm shadow-md ring-2 ring-white"
                                             style={{ backgroundColor: sector.color }}
                                         />
-                                        <h3 className="font-black text-slate-700 text-base uppercase tracking-wide">{sector.name}</h3>
+                                        <h3 className="font-bold text-slate-700 text-base uppercase tracking-wide">{sector.name}</h3>
 
                                         {/* Badge de cantidad de estaciones */}
-                                        <span className="text-xs font-bold bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full">
+                                        <span className="text-xs font-bold bg-slate-200 text-slate-600 px-2 py-0.5 rounded-md">
                                             {stationsInSector.length} {stationsInSector.length === 1 ? 'estación' : 'estaciones'}
                                         </span>
 
                                         {/* Alerta de Saturación Alta */}
                                         {hasHighSaturation && !hasOverload && (
                                             <span
-                                                className="flex items-center gap-1 text-xs font-bold bg-amber-100 text-amber-700 px-2 py-1 rounded-lg border border-amber-300"
+                                                className="flex items-center gap-1 text-xs font-bold bg-amber-100 text-amber-700 px-2 py-1 rounded-md border border-amber-300"
                                                 title="⚠️ Riesgo por Variabilidad: Saturación promedio >90%. Se recomienda buffer intermedio o reducir carga."
                                             >
                                                 <AlertTriangle size={12} />
@@ -605,7 +605,7 @@ export const LineBalancing: React.FC<Props> = ({ data, updateData }) => {
                                         {/* Alerta de Sobrecarga */}
                                         {hasOverload && (
                                             <span
-                                                className="flex items-center gap-1 text-xs font-bold bg-red-100 text-red-700 px-2 py-1 rounded-lg border border-red-300 animate-pulse"
+                                                className="flex items-center gap-1 text-xs font-bold bg-red-100 text-red-700 px-2 py-1 rounded-md border border-red-300"
                                                 title="❌ SOBRECARGA: Una o más estaciones exceden el Takt Time. El balanceo NO es factible."
                                             >
                                                 <AlertTriangle size={12} />
@@ -614,7 +614,7 @@ export const LineBalancing: React.FC<Props> = ({ data, updateData }) => {
                                         )}
 
                                         {data.meta.useSectorOEE && sector.id !== 'general' && (
-                                            <span className="ml-auto text-[10px] bg-purple-50 text-purple-700 px-1.5 py-0.5 rounded border border-purple-100 font-mono">
+                                            <span className="ml-auto text-xs bg-industrial-50 text-industrial-500 px-1.5 py-0.5 rounded border border-industrial-200 font-mono">
                                                 OEE: {formatNumber((sector.targetOee || data.meta.manualOEE) * 100)}%
                                             </span>
                                         )}
@@ -649,7 +649,7 @@ export const LineBalancing: React.FC<Props> = ({ data, updateData }) => {
 
                         <button
                             onClick={addStation}
-                            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow transition-colors font-bold mt-4"
+                            className="flex items-center gap-2 bg-accent hover:bg-blue-800 text-white rounded-md px-4 py-2 text-sm font-medium shadow transition-colors mt-4"
                         >
                             <Plus size={20} /> Agregar Nueva Estación
                         </button>

@@ -368,7 +368,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
 
     return createPortal(
         <div
-            className="fixed inset-0 z-[100] flex items-start justify-center pt-[15vh] bg-black/50 backdrop-blur-sm animate-in fade-in duration-150"
+            className="fixed inset-0 z-overlay flex items-start justify-center pt-[15vh] bg-black/50 backdrop-blur-sm animate-in fade-in duration-150"
             onClick={handleBackdropClick}
         >
             <div

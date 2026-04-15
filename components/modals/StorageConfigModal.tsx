@@ -215,7 +215,7 @@ export function StorageConfigModal({
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" role="presentation" onClick={!isInitialSetup ? onClose : undefined}>
+        <div className="fixed inset-0 z-modal-backdrop flex items-center justify-center bg-black/60 backdrop-blur-sm" role="presentation" onClick={!isInitialSetup ? onClose : undefined}>
             <div
                 ref={modalRef}
                 role="dialog"

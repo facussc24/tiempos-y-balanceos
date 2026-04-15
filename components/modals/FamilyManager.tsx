@@ -448,7 +448,7 @@ const FamilyManager: React.FC<FamilyManagerProps> = ({ onClose }) => {
     // ---------------------------------------------------------------------------
 
     return (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-sm">
+        <div className="fixed inset-0 z-modal-backdrop flex items-center justify-center bg-black/40 backdrop-blur-sm">
             <div className="bg-white rounded-xl shadow-2xl w-[600px] max-h-[80vh] flex flex-col overflow-hidden">
                 {/* Header */}
                 <div className="px-4 py-3 bg-purple-50 border-b border-purple-100 flex items-center justify-between">

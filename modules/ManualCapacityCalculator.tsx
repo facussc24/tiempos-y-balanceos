@@ -95,8 +95,8 @@ export const ManualCapacityCalculator: React.FC<Props> = ({ task, shifts, dailyD
     };
 
     return (
-        <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[100] flex items-center justify-center p-4">
-            <div className="bg-white w-full max-w-4xl rounded-xl shadow-xl overflow-hidden flex flex-col md:flex-row h-[80vh] border border-slate-200 animate-in fade-in zoom-in duration-300 relative z-[100]">
+        <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-modal-backdrop flex items-center justify-center p-4">
+            <div className="bg-white w-full max-w-4xl rounded-xl shadow-xl overflow-hidden flex flex-col md:flex-row h-[80vh] border border-slate-200 animate-in fade-in zoom-in duration-300 relative z-modal">
 
                 {/* LEFT: INPUTS & FACTORS */}
                 <div className="w-full md:w-4/12 bg-slate-50 p-6 border-r border-slate-200 flex flex-col gap-6 overflow-y-auto">

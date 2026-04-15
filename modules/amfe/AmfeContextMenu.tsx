@@ -73,7 +73,7 @@ const AmfeContextMenu: React.FC<Props> = ({ ctxMenu, onClose, amfe, confirmDelet
     return (
         <tr style={{ display: 'contents' }}>
             <td colSpan={restColSpan} style={{ padding: 0, border: 'none' }}>
-                <div ref={ctxRef} className="fixed z-[100] bg-white border border-gray-200 rounded-lg shadow-xl py-1 min-w-[180px] text-xs" style={{ left: ctxMenu.x, top: ctxMenu.y }}>
+                <div ref={ctxRef} className="fixed z-overlay bg-white border border-gray-200 rounded-lg shadow-xl py-1 min-w-[180px] text-xs" style={{ left: ctxMenu.x, top: ctxMenu.y }}>
                     {items.map((item, i) => (
                         <React.Fragment key={i}>
                             {i > 0 && items[i - 1].label.startsWith('+') && <div className="border-t border-gray-100 my-0.5" />}

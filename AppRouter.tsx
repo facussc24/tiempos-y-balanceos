@@ -43,10 +43,21 @@ const VALID_MODES = new Set<AppMode>(['landing', 'dashboard', 'pfd', 'pfdTest', 
 const LS_KEY_MODE = 'barack_lastModule';
 
 const LoadingFallback: React.FC = () => (
-    <div className="min-h-full bg-slate-900 flex items-center justify-center">
-        <div className="text-center">
-            <div className="w-12 h-12 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin mx-auto mb-4" />
-            <p className="text-slate-400 text-sm">Cargando módulo...</p>
+    <div className="min-h-full bg-slate-50 p-8">
+        {/* Skeleton header bar */}
+        <div className="h-10 w-64 rounded-lg bg-slate-200 animate-shimmer mb-8" />
+        {/* Skeleton 3-column card grid */}
+        <div className="grid grid-cols-3 gap-6 mb-8">
+            <div className="h-24 rounded-xl bg-slate-200 animate-shimmer" />
+            <div className="h-24 rounded-xl bg-slate-200 animate-shimmer [animation-delay:75ms]" />
+            <div className="h-24 rounded-xl bg-slate-200 animate-shimmer [animation-delay:150ms]" />
+        </div>
+        {/* Skeleton main content block */}
+        <div className="h-48 rounded-xl bg-slate-200 animate-shimmer [animation-delay:200ms] mb-8" />
+        {/* Small spinner + text */}
+        <div className="flex items-center justify-center gap-3">
+            <div className="w-5 h-5 border-2 border-slate-300 border-t-slate-500 rounded-full animate-spin" />
+            <p className="text-slate-500 text-sm">Cargando módulo...</p>
         </div>
     </div>
 );
@@ -134,13 +145,16 @@ const AppRouterInner: React.FC = () => {
             />
             <main className="flex-1 overflow-auto">
                 {currentMode === 'landing' ? (
-                    <LandingPage
-                        onSelectModule={handleSelectModule}
-                        onOpenProjectFamily={handleOpenProjectFamily}
-                        documentCounts={documentCounts}
-                        recentDocuments={recentDocuments}
-                    />
+                    <div className="page-transition-enter">
+                        <LandingPage
+                            onSelectModule={handleSelectModule}
+                            onOpenProjectFamily={handleOpenProjectFamily}
+                            documentCounts={documentCounts}
+                            recentDocuments={recentDocuments}
+                        />
+                    </div>
                 ) : (
+                    <div key={currentMode} className="page-transition-enter">
                     <Suspense fallback={<LoadingFallback />}>
                         {currentMode === 'dashboard' && (
                             <ModuleErrorBoundary moduleName="Dashboard APQP" onNavigateHome={handleBackToLanding}>
@@ -223,6 +237,7 @@ const AppRouterInner: React.FC = () => {
                             </ModuleErrorBoundary>
                         )}
                     </Suspense>
+                    </div>
                 )}
             </main>
         </div>

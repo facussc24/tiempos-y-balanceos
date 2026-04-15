@@ -130,7 +130,7 @@ const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({
 
     return (
         <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+            className="fixed inset-0 z-modal-backdrop flex items-center justify-center bg-black/40 backdrop-blur-sm"
             onClick={onClose}
         >
             <div

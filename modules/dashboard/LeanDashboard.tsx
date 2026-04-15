@@ -195,7 +195,8 @@ const TrafficLight: React.FC<{
     title: string;
     icon: React.ReactNode;
     status: TrafficLightStatus;
-}> = ({ title, icon, status }) => {
+    style?: React.CSSProperties;
+}> = ({ title, icon, status, style }) => {
     const colorClasses = {
         green: 'bg-green-500 shadow-green-300',
         yellow: 'bg-amber-400 shadow-amber-200',
@@ -218,7 +219,7 @@ const TrafficLight: React.FC<{
     };
 
     return (
-        <div className={`rounded-xl border-2 p-5 transition-all hover:shadow-lg ${bgClasses[status.color]}`}>
+        <div className={`rounded-xl border-2 p-5 transition-all hover:shadow-lg opacity-0 animate-card-enter ${bgClasses[status.color]}`} style={style}>
             <div className="flex items-start gap-4">
                 {/* Traffic Light Indicator */}
                 <div className={`w-12 h-12 rounded-full flex items-center justify-center shadow-lg ${colorClasses[status.color]}`}>
@@ -233,10 +234,10 @@ const TrafficLight: React.FC<{
                         <span className={`${iconClasses[status.color]}`}>{icon}</span>
                         <h3 className="font-bold text-gray-800">{title}</h3>
                     </div>
-                    <div className={`text-lg font-semibold ${iconClasses[status.color]}`}>
+                    <div className={`text-lg font-semibold tabular-nums ${iconClasses[status.color]}`}>
                         {status.label}
                     </div>
-                    <p className="text-sm text-gray-600 mt-1">
+                    <p className="text-sm text-gray-600 mt-1 tabular-nums">
                         {status.message}
                     </p>
                 </div>
@@ -317,16 +318,19 @@ export const LeanDashboard: React.FC<LeanDashboardProps> = ({
                         title="Flujo (VSM)"
                         icon={<Activity size={20} />}
                         status={vsmStatus}
+                        style={{ animationDelay: '0ms' }}
                     />
                     <TrafficLight
                         title="Inventario (Kanban)"
                         icon={<Package size={20} />}
                         status={kanbanStatus}
+                        style={{ animationDelay: '80ms' }}
                     />
                     <TrafficLight
                         title="Capacidad (Heijunka)"
                         icon={<Grid3X3 size={20} />}
                         status={heijunkaStatus}
+                        style={{ animationDelay: '160ms' }}
                     />
                 </div>
 
@@ -355,7 +359,7 @@ export const LeanDashboard: React.FC<LeanDashboardProps> = ({
 
     if (isModal) {
         return (
-            <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+            <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-modal-backdrop p-4 animate-in fade-in duration-200">
                 <div className="max-w-4xl w-full animate-in slide-in-from-bottom-4 duration-300">
                     {content}
                 </div>

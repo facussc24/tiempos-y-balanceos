@@ -19,7 +19,7 @@ interface Props {
 const CustomChartTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
         return (
-            <div className="bg-white p-3 border border-slate-200 shadow-lg rounded-lg text-xs z-50">
+            <div className="bg-white p-3 border border-slate-200 shadow-md rounded-md text-xs z-50">
                 <p className="font-bold text-slate-800 mb-2 border-b border-slate-100 pb-1">{label}</p>
                 <div className="space-y-1.5">
                     {payload.map((entry: any, index: number) => {
@@ -64,10 +64,10 @@ const CustomChartTooltip = ({ active, payload, label }: any) => {
                                         <div className="w-2.5 h-2.5 rounded-full shadow-sm" style={{ backgroundColor: color }}></div>
                                         <span className="text-slate-600 font-medium">{labelText}:</span>
                                     </div>
-                                    <span className="font-bold text-slate-800">{valueText}</span>
+                                    <span className="font-bold text-slate-800 tabular-nums">{valueText}</span>
                                 </div>
                                 {extraInfo && (
-                                    <div className="pl-4 text-[10px] text-slate-400 font-mono text-right">
+                                    <div className="pl-4 text-xs text-slate-400 font-mono text-right">
                                         {extraInfo}
                                     </div>
                                 )}
@@ -85,23 +85,23 @@ export const BalancingChart: React.FC<Props> = ({ saturationData, nominalSeconds
     return (
         <Card
             title="Saturación y Balanceo"
-            className="border-indigo-100 shadow-md"
+            className="border-industrial-200 shadow-sm"
             actions={
                 <div className="flex items-center gap-2">
                     {onShowCapacityPreview && (
                         <button
                             onClick={onShowCapacityPreview}
-                            className="flex items-center gap-1.5 bg-indigo-600 text-white px-3 py-1.5 rounded-lg hover:bg-indigo-700 text-xs font-bold transition-all shadow-sm"
+                            className="flex items-center gap-1.5 bg-accent text-white px-3 py-1.5 rounded-md hover:bg-blue-800 text-xs font-bold transition-all shadow-sm"
                         >
                             <Eye size={14} />
                             Vista Previa Capacidad
                         </button>
                     )}
-                    <div className="bg-slate-50 px-2 py-1 rounded-full border border-slate-100 flex items-center gap-2">
-                        <span className="text-[10px] text-slate-500 font-bold uppercase">Takt Time</span>
+                    <div className="bg-slate-50 px-2 py-1 rounded-md border border-slate-100 flex items-center gap-2">
+                        <span className="text-xs text-slate-500 font-bold uppercase">Takt Time</span>
                         <EducationalTooltip termKey="TAKT_TIME" iconSize={14} />
                         <span className="text-slate-300">|</span>
-                        <span className="text-[10px] text-slate-500 font-bold uppercase">Saturación</span>
+                        <span className="text-xs text-slate-500 font-bold uppercase">Saturación</span>
                         <EducationalTooltip termKey="SATURATION" iconSize={14} />
                     </div>
                 </div>

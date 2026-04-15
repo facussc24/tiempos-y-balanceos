@@ -40,22 +40,22 @@ export const KPIView: React.FC<Props> = ({
     return (
         <Card title="KPIs de Planta" className="lg:col-span-1">
             <div className="grid grid-cols-2 gap-4 text-sm">
-                <div className="p-3 bg-slate-50 rounded border border-slate-100">
+                <div className="p-3 bg-industrial-50 rounded-sm border border-industrial-200">
                     <div className="text-slate-500 text-xs flex items-center gap-1">
                         Ritmo Cliente (Takt Time Objetivo)
                         <Tooltip content="El ritmo (en segundos) que la línea debe seguir exactamente para cumplir la demanda del cliente." />
                     </div>
-                    <p className="text-2xl font-bold text-blue-600">{formatNumber(nominalSeconds)}s</p>
+                    <p className="text-2xl font-semibold text-accent tabular-nums">{formatNumber(nominalSeconds)}s</p>
                 </div>
-                <div className="p-3 bg-slate-50 rounded border border-slate-100">
+                <div className="p-3 bg-industrial-50 rounded-sm border border-industrial-200">
                     <div className="text-slate-500 text-xs flex items-center gap-1">
                         Ritmo Objetivo
                         <Tooltip content="Es el Takt Time ajustado por el % de OEE. Meta real que la operación debe alcanzar para compensar pérdidas por paradas." />
                     </div>
-                    <p className="text-2xl font-bold text-indigo-600">{formatNumber(effectiveSeconds)}s</p>
-                    <p className="text-[10px] text-indigo-400">c/ OEE {formatNumber(activeOEE * 100)}%</p>
+                    <p className="text-2xl font-semibold text-accent tabular-nums">{formatNumber(effectiveSeconds)}s</p>
+                    <p className="text-xs text-industrial-300">c/ OEE {formatNumber(activeOEE * 100)}%</p>
                 </div>
-                <div className="p-3 bg-slate-50 rounded border border-slate-100">
+                <div className="p-3 bg-industrial-50 rounded-sm border border-industrial-200">
                     {/* FIX-6: Renamed from "Saturación vs Demanda" */}
                     <div className="text-slate-500 text-xs flex items-center gap-1">
                         Uso de Capacidad
@@ -64,7 +64,7 @@ export const KPIView: React.FC<Props> = ({
                     <p className={`text-xl font-bold ${effStatus === 'error' ? 'text-red-600' : efficiency < 70 ? 'text-amber-600' : 'text-slate-800'}`}>{formatNumber(efficiency)}%</p>
                 </div>
             </div>
-            <div className={`mt-4 text-xs p-3 rounded border flex items-center gap-2 ${effStatus === 'error' ? 'bg-red-50 border-red-200 text-red-700' : effStatus === 'crit' ? 'bg-amber-50 border-amber-200 text-amber-700' : effStatus === 'warn' ? 'bg-amber-50 border-amber-200 text-amber-700' : 'bg-emerald-50 border-emerald-200 text-emerald-700'}`}>
+            <div className={`mt-4 text-xs p-3 rounded border flex items-center gap-2 ${effStatus === 'error' ? 'bg-status-crit-bg border-status-crit text-status-crit' : effStatus === 'crit' ? 'bg-status-warn-bg border-status-warn text-status-warn' : effStatus === 'warn' ? 'bg-status-warn-bg border-status-warn text-status-warn' : 'bg-status-ok-bg border-status-ok text-status-ok'}`}>
                 {effStatus === 'error' && <AlertOctagon size={16} />}
                 {effStatus === 'crit' && <AlertTriangle size={16} />}
                 {effStatus === 'warn' && <AlertTriangle size={16} />}

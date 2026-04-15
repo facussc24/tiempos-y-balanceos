@@ -51,7 +51,7 @@ export function ConflictModal({ conflict, onReload, onSaveAsNew, onCancel }: Con
     };
 
     return (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" role="presentation" onClick={onCancel}>
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-modal-backdrop flex items-center justify-center p-4" role="presentation" onClick={onCancel}>
             <div
                 ref={modalRef}
                 role="dialog"

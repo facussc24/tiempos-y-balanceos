@@ -159,7 +159,7 @@ export const ProjectSwitcher: React.FC<ProjectSwitcherProps> = ({
 
             {/* Dropdown Menu */}
             {isOpen && (
-                <div className="absolute right-0 top-full mt-1 w-72 bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden z-[200] animate-in fade-in slide-in-from-top-2 duration-150">
+                <div className="absolute right-0 top-full mt-1 w-72 bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden z-dropdown animate-in fade-in slide-in-from-top-2 duration-150">
                     {/* Current Project Header */}
                     {currentProjectName && (
                         <div className="px-4 py-3 bg-blue-50 border-b border-blue-100">

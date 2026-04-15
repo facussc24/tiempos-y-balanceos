@@ -109,7 +109,7 @@ export const ModelManagerModal: React.FC<Props> = ({ isOpen, onClose, data, upda
     };
 
     return (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-200">
+        <div className="fixed inset-0 bg-black/60 z-modal-backdrop flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-200">
             <div className="bg-white rounded-xl shadow-2xl w-full max-w-5xl overflow-hidden border border-slate-200 flex flex-col max-h-[90vh]">
 
                 {/* Header */}

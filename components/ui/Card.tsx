@@ -10,10 +10,10 @@ interface CardProps {
 
 export const Card: React.FC<CardProps> = ({ title, children, className = "", actions }) => {
   return (
-    <div className={`bg-white rounded-xl shadow-sm border border-slate-200/60 overflow-hidden transition-all duration-200 hover:shadow-md ${className}`}>
+    <div className={`card-industrial overflow-hidden opacity-0 animate-card-enter transition-shadow duration-fast hover:shadow-md ${className}`}>
       {(title || actions) && (
-        <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-white/50 backdrop-blur-sm">
-          {title && <h3 className="text-base font-bold text-slate-800 tracking-tight">{title}</h3>}
+        <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-industrial-50">
+          {title && <h3 className="text-base font-bold text-slate-800 tracking-tight text-balance">{title}</h3>}
           {actions && <div className="flex items-center gap-2">{actions}</div>}
         </div>
       )}
@@ -32,7 +32,7 @@ export const Badge: React.FC<{ children: React.ReactNode; color?: 'green' | 'red
     slate: 'bg-slate-100 text-slate-600 border border-slate-200',
   };
   return (
-    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide ${colors[color]}`}>
+    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-bold uppercase tracking-wide ${colors[color]}`}>
       {children}
     </span>
   );

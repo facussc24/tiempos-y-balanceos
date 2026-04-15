@@ -578,7 +578,7 @@ export default function FlowchartApp({ amfeData, flowchartData, onSaveFlowchart,
       
       {/* MODAL EDITOR JSON */}
       {showJsonEditor && (
-         <div className="fixed inset-0 z-[100] bg-gray-900/50 flex justify-end">
+         <div className="fixed inset-0 z-modal-backdrop bg-gray-900/50 flex justify-end">
             <div className="w-[800px] h-full bg-white shadow-2xl flex flex-col font-mono text-xs animate-in slide-in-from-right-full">
                <div className="p-4 bg-[#1E3A8A] text-white flex items-center justify-between">
                   <div className="flex items-center gap-2 text-sm font-bold">

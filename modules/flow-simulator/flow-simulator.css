@@ -14,7 +14,7 @@
     gap: 1.5rem;
     padding: 1.5rem;
     min-height: 100%;
-    background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);
+    background: #f7f8f9;
     color: #1e293b;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }
@@ -40,10 +40,7 @@
 .flow-header__title h1 {
     font-size: 1.5rem;
     font-weight: 700;
-    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    color: #1d4ed8;
     margin: 0;
 }
 
@@ -56,7 +53,7 @@
     text-align: center;
     padding: 80px 40px;
     background: white;
-    border-radius: 16px;
+    border-radius: 6px;
     border: 2px dashed #cbd5e1;
 }
 
@@ -101,9 +98,9 @@
     align-items: center;
     padding: 1rem 1.5rem;
     background: white;
-    border-radius: 16px;
+    border-radius: 6px;
     border: 1px solid #e2e8f0;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .flow-controls__buttons {
@@ -118,27 +115,26 @@
     padding: 0.625rem 1.25rem;
     font-size: 0.875rem;
     font-weight: 600;
-    border-radius: 10px;
+    border-radius: 4px;
     border: none;
     cursor: pointer;
     transition: all 0.2s ease;
 }
 
 .flow-btn--primary {
-    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    background: #1d4ed8;
     color: white;
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.35);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
 .flow-btn--primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(59, 130, 246, 0.45);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
 }
 
 .flow-btn--warning {
-    background: linear-gradient(135deg, #f59e0b, #d97706);
+    background: #b45309;
     color: white;
-    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.35);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
 .flow-btn--secondary {
@@ -156,14 +152,13 @@
    ============================================================================= */
 
 .flow-btn--instant {
-    background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+    background: #1d4ed8;
     color: white;
-    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.35);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
 .flow-btn--instant:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(139, 92, 246, 0.45);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
 }
 
 .flow-btn--instant:disabled {
@@ -210,10 +205,10 @@
 }
 
 .flow-speed-preset--active {
-    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    background: #1d4ed8;
     color: white;
-    border-color: #2563eb;
-    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+    border-color: #1d4ed8;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
 /* =============================================================================
@@ -233,16 +228,16 @@
 }
 
 .flow-station__semaphore--ok {
-    background: linear-gradient(135deg, #22c55e, #16a34a);
+    background: #16a34a;
 }
 
 .flow-station__semaphore--warning {
-    background: linear-gradient(135deg, #f59e0b, #d97706);
+    background: #d97706;
     animation: semaphore-pulse 1.5s infinite;
 }
 
 .flow-station__semaphore--critical {
-    background: linear-gradient(135deg, #ef4444, #dc2626);
+    background: #dc2626;
     animation: semaphore-pulse 0.75s infinite;
 }
 
@@ -279,7 +274,7 @@
     background: rgba(30, 41, 59, 0.95);
     color: white;
     padding: 0.75rem 1rem;
-    border-radius: 10px;
+    border-radius: 6px;
     font-size: 0.75rem;
     min-width: 180px;
     max-width: 280px;
@@ -362,7 +357,7 @@
     flex-direction: column;
     transform: translateX(100%);
     transition: transform 0.3s ease;
-    border-radius: 16px 0 0 0;
+    border-radius: 6px 0 0 0;
 }
 
 .flow-diagnostic-panel--open {
@@ -374,7 +369,7 @@
     align-items: center;
     gap: 0.75rem;
     padding: 1.25rem 1.5rem;
-    background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+    background: #f8fafc;
     border-bottom: 1px solid #e2e8f0;
 }
 
@@ -434,7 +429,7 @@
 
 .flow-diagnostic-card {
     background: #f8fafc;
-    border-radius: 10px;
+    border-radius: 6px;
     padding: 1rem;
     border: 1px solid #e2e8f0;
 }
@@ -509,11 +504,11 @@
 
 .flow-complete-badge {
     padding: 0.5rem 1rem;
-    background: linear-gradient(135deg, #22c55e, #16a34a);
+    background: #16a34a;
     color: white;
     font-weight: 600;
     font-size: 0.875rem;
-    border-radius: 8px;
+    border-radius: 4px;
     animation: pulse-glow 1.5s ease-in-out infinite;
 }
 
@@ -546,19 +541,18 @@
     gap: 0.25rem;
     padding: 1rem;
     background: white;
-    border-radius: 12px;
+    border-radius: 6px;
     border: 1px solid #e2e8f0;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    transition: box-shadow 0.2s ease;
 }
 
 .flow-metric:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
 }
 
 .flow-metric--primary {
-    background: linear-gradient(135deg, #eff6ff, #dbeafe);
+    background: #eff6ff;
     border-color: #93c5fd;
 }
 
@@ -597,12 +591,12 @@
 }
 
 .flow-production-line-wrapper::-webkit-scrollbar-thumb {
-    background: linear-gradient(135deg, #3b82f6, #60a5fa);
+    background: #94a3b8;
     border-radius: 4px;
 }
 
 .flow-production-line-wrapper::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(135deg, #2563eb, #3b82f6);
+    background: #64748b;
 }
 
 .flow-production-line {
@@ -612,9 +606,9 @@
     gap: 0;
     padding: 2rem 2rem;
     background: white;
-    border-radius: 20px;
+    border-radius: 6px;
     border: 1px solid #e2e8f0;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
     overflow: visible;
     min-height: 280px;
     padding-top: 80px;
@@ -633,7 +627,7 @@
     padding: 1rem;
     min-width: 80px;
     background: #f8fafc;
-    border-radius: 12px;
+    border-radius: 6px;
     border: 2px dashed #cbd5e1;
 }
 
@@ -654,7 +648,7 @@
 }
 
 .flow-output {
-    background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+    background: #ecfdf5;
     border-color: #86efac;
 }
 
@@ -680,7 +674,7 @@
     position: absolute;
     width: 100%;
     height: 2px;
-    background: linear-gradient(90deg, transparent, #cbd5e1, transparent);
+    background: #cbd5e1;
 }
 
 .flow-connector__arrow {
@@ -718,19 +712,19 @@
 
 /* Buffer reason colors */
 .flow-connector__buffer--bottleneck {
-    background: linear-gradient(135deg, #fef2f2, #fecaca);
+    background: #fef2f2;
     border: 1px solid #f87171;
     color: #dc2626;
 }
 
 .flow-connector__buffer--high_saturation {
-    background: linear-gradient(135deg, #fffbeb, #fef3c7);
+    background: #fffbeb;
     border: 1px solid #fbbf24;
     color: #d97706;
 }
 
 .flow-connector__buffer--man_machine_interface {
-    background: linear-gradient(135deg, #eff6ff, #dbeafe);
+    background: #eff6ff;
     border: 1px solid #3b82f6;
     color: #1d4ed8;
 }
@@ -755,9 +749,9 @@
     align-items: center;
     gap: 0.75rem;
     padding: 0.75rem 1rem;
-    background: linear-gradient(135deg, #fffbeb, #fef3c7);
+    background: #fffbeb;
     border: 1px solid #f59e0b;
-    border-radius: 10px;
+    border-radius: 6px;
     margin-bottom: 1rem;
     animation: warning-attention 3s ease-in-out infinite;
 }
@@ -802,10 +796,10 @@
     align-items: center;
     gap: 0.75rem;
     padding: 0.875rem 1.25rem;
-    background: linear-gradient(135deg, #fffbeb, #fef3c7);
+    background: #fffbeb;
     border: 1px solid #f59e0b;
     border-left: 4px solid #f59e0b;
-    border-radius: 10px;
+    border-radius: 6px;
     animation: warning-attention 3s ease-in-out infinite;
 }
 
@@ -826,9 +820,9 @@
     min-width: 140px;
     max-width: 160px;
     background: white;
-    border-radius: 16px;
+    border-radius: 6px;
     border: 1px solid #e2e8f0;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
     /* FIX: Changed from hidden to visible to allow tooltips to show */
     overflow: visible;
     transition: all 0.3s ease;
@@ -936,7 +930,7 @@
 }
 
 .flow-station__worker--active {
-    background: linear-gradient(135deg, #22c55e, #16a34a);
+    background: #16a34a;
     color: white;
     animation: worker-pulse 0.8s ease-in-out infinite alternate;
 }
@@ -983,7 +977,7 @@
 
 .flow-station__progress-fill {
     height: 100%;
-    background: linear-gradient(90deg, #3b82f6, #60a5fa);
+    background: #1d4ed8;
     transition: width 0.1s linear;
 }
 
@@ -1124,15 +1118,15 @@
     align-items: center;
     gap: 1rem;
     padding: 0.75rem 1.5rem;
-    background: linear-gradient(135deg, #fef2f2, #fee2e2);
-    border-radius: 8px;
+    background: #fef2f2;
+    border-radius: 6px;
     border: 1px solid #fecaca;
 }
 
 .flow-takt-line {
     flex: 1;
     height: 2px;
-    background: linear-gradient(90deg, transparent, #ef4444, transparent);
+    background: #ef4444;
 }
 
 .flow-takt-reference span {
@@ -1153,7 +1147,7 @@
     gap: 1rem;
     padding: 0.75rem 1rem;
     background: white;
-    border-radius: 10px;
+    border-radius: 6px;
     border: 1px solid #e2e8f0;
 }
 
@@ -1199,8 +1193,8 @@
 
 .flow-kpi-panel {
     margin-top: 1.5rem;
-    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-    border-radius: 12px;
+    background: #f8fafc;
+    border-radius: 6px;
     padding: 1.25rem;
     border: 1px solid #e2e8f0;
 }
@@ -1244,7 +1238,7 @@
 }
 
 .flow-kpi-card--highlight {
-    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    background: #fef3c7;
     border-color: #f59e0b;
 }
 
@@ -1315,13 +1309,13 @@
 
 .flow-kpi-bar__fill {
     height: 100%;
-    background: linear-gradient(90deg, #3b82f6 0%, #60a5fa 100%);
+    background: #1d4ed8;
     border-radius: 6px;
     transition: width 0.3s ease;
 }
 
 .flow-kpi-bar__fill--bottleneck {
-    background: linear-gradient(90deg, #ef4444 0%, #f87171 100%);
+    background: #ef4444;
 }
 
 .flow-kpi-bar__value {
@@ -1369,9 +1363,9 @@
     gap: 1rem;
     padding: 1.25rem;
     background: white;
-    border-radius: 16px;
+    border-radius: 6px;
     border: 1px solid #e2e8f0;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .bs-dashboard__header {
@@ -1396,7 +1390,7 @@
     font-size: 0.65rem;
     font-weight: 600;
     padding: 0.25rem 0.5rem;
-    background: linear-gradient(135deg, #22c55e, #16a34a);
+    background: #16a34a;
     color: white;
     border-radius: 4px;
 }
@@ -1462,11 +1456,11 @@
 }
 
 .bs-bar--blocked .bs-bar__fill {
-    background: linear-gradient(90deg, #fecaca, #f87171);
+    background: #f87171;
 }
 
 .bs-bar--starved .bs-bar__fill {
-    background: linear-gradient(90deg, #fef3c7, #fbbf24);
+    background: #fbbf24;
 }
 
 .bs-bar__label {
@@ -1520,11 +1514,11 @@
 }
 
 .bs-legend-dot--blocked {
-    background: linear-gradient(135deg, #f87171, #dc2626);
+    background: #dc2626;
 }
 
 .bs-legend-dot--starved {
-    background: linear-gradient(135deg, #fbbf24, #d97706);
+    background: #d97706;
 }
 
 .bs-dashboard__totals {
@@ -1574,20 +1568,19 @@
     min-width: 90px;
     background: white;
     border: 2px solid #e2e8f0;
-    border-radius: 12px;
+    border-radius: 6px;
     cursor: pointer;
     transition: all 0.2s ease;
 }
 
 .flow-scenario-card:hover:not(:disabled) {
-    transform: translateY(-2px);
     border-color: #94a3b8;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
 }
 
 .flow-scenario-card--active {
     border-color: #3b82f6;
-    background: linear-gradient(135deg, #eff6ff, #dbeafe);
+    background: #eff6ff;
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
 }
 
@@ -1598,7 +1591,7 @@
 
 .flow-scenario-card--advanced.flow-scenario-card--active {
     border-style: solid;
-    background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+    background: #f1f5f9;
     border-color: #64748b;
 }
 
@@ -1756,9 +1749,9 @@
     align-items: flex-start;
     gap: 0.75rem;
     padding: 1rem 1.25rem;
-    background: linear-gradient(135deg, #eff6ff, #dbeafe);
+    background: #eff6ff;
     border: 1px solid #93c5fd;
-    border-radius: 12px;
+    border-radius: 6px;
     margin-bottom: 1rem;
     animation: hint-fade-in 0.5s ease;
 }
@@ -1784,7 +1777,7 @@
     display: inline-flex;
     align-items: center;
     padding: 0.125rem 0.5rem;
-    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    background: #1d4ed8;
     color: white;
     border-radius: 4px;
     font-size: 0.75rem;
@@ -1812,8 +1805,8 @@
     align-items: center;
     gap: 12px;
     padding: 12px 16px;
-    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-    border-radius: 12px;
+    background: #f0f9ff;
+    border-radius: 6px;
     border: 1px solid #bae6fd;
     margin-top: 8px;
 }
@@ -1850,10 +1843,10 @@
 }
 
 .flow-mix-mode-btn--active {
-    border-color: #3b82f6;
-    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    border-color: #1d4ed8;
+    background: #1d4ed8;
     color: white;
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.35);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
 .flow-mix-mode-btn:disabled {
@@ -1881,14 +1874,14 @@
     left: 0;
     right: 0;
     height: 2px;
-    background: linear-gradient(90deg, transparent, currentColor, transparent);
-    opacity: 0.3;
+    background: currentColor;
+    opacity: 0.15;
 }
 
 .flow-sector-header__badge {
     position: relative;
     padding: 8px 16px;
-    border-radius: 20px;
+    border-radius: 6px;
     font-size: 0.7rem;
     font-weight: 700;
     letter-spacing: 0.08em;
@@ -1908,9 +1901,9 @@
     gap: 1.25rem;
     padding: 1.5rem;
     background: white;
-    border-radius: 16px;
+    border-radius: 6px;
     border: 1px solid #e2e8f0;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .flow-kpi-dashboard__title {
@@ -1948,7 +1941,7 @@
 }
 
 .flow-kpi-station-bar--bottleneck {
-    background: linear-gradient(90deg, #fef2f2, transparent);
+    background: #fef2f2;
     border-radius: 6px;
     padding: 0.5rem 0.75rem;
     margin: 0 -0.75rem;
@@ -1981,17 +1974,17 @@
 }
 
 .flow-kpi-station-bar__active {
-    background: linear-gradient(90deg, #22c55e, #4ade80);
+    background: #22c55e;
     transition: width 0.3s ease;
 }
 
 .flow-kpi-station-bar__blocked {
-    background: linear-gradient(90deg, #f87171, #fca5a5);
+    background: #f87171;
     transition: width 0.3s ease;
 }
 
 .flow-kpi-station-bar__starved {
-    background: linear-gradient(90deg, #fbbf24, #fde68a);
+    background: #fbbf24;
     transition: width 0.3s ease;
 }
 
@@ -2018,20 +2011,20 @@
 }
 
 .flow-kpi-legend-color--active {
-    background: linear-gradient(135deg, #22c55e, #4ade80);
+    background: #22c55e;
 }
 
 .flow-kpi-legend-color--blocked {
-    background: linear-gradient(135deg, #f87171, #fca5a5);
+    background: #f87171;
 }
 
 .flow-kpi-legend-color--starved {
-    background: linear-gradient(135deg, #fbbf24, #fde68a);
+    background: #fbbf24;
 }
 
 .flow-kpi-leadtime {
     background: #f8fafc;
-    border-radius: 10px;
+    border-radius: 6px;
     padding: 0.75rem 1rem;
     border: 1px solid #e2e8f0;
 }
@@ -2116,10 +2109,10 @@
 }
 
 .flow-speed-btn--active {
-    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    background: #1d4ed8;
     color: white;
-    border-color: #2563eb;
-    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+    border-color: #1d4ed8;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
 /* =============================================================================
@@ -2131,19 +2124,19 @@
     align-items: center;
     gap: 1.25rem;
     padding: 0.75rem 1.25rem;
-    background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+    background: #f0fdf4;
     border: 1px solid #86efac;
-    border-radius: 12px;
+    border-radius: 6px;
     flex-wrap: wrap;
 }
 
 .flow-status-bar--paused {
-    background: linear-gradient(135deg, #fffbeb, #fef3c7);
+    background: #fffbeb;
     border-color: #fde68a;
 }
 
 .flow-status-bar--completed {
-    background: linear-gradient(135deg, #eff6ff, #dbeafe);
+    background: #eff6ff;
     border-color: #93c5fd;
 }
 
@@ -2179,13 +2172,13 @@
 
 .flow-status-bar__progress-fill {
     height: 100%;
-    background: linear-gradient(90deg, #22c55e, #4ade80);
+    background: #22c55e;
     border-radius: 4px;
     transition: width 0.3s ease;
 }
 
 .flow-status-bar--completed .flow-status-bar__progress-fill {
-    background: linear-gradient(90deg, #3b82f6, #60a5fa);
+    background: #1d4ed8;
 }
 
 /* Station queue indicator */
@@ -2197,7 +2190,7 @@
     font-weight: 600;
     color: #64748b;
     border-top: 1px solid #f1f5f9;
-    border-radius: 0 0 16px 16px;
+    border-radius: 0 0 6px 6px;
 }
 
 /* Selected station */
@@ -2257,7 +2250,7 @@
 }
 
 .flow-diagnostic-panel__badge--bottleneck {
-    background: linear-gradient(135deg, #fef2f2, #fecaca);
+    background: #fef2f2;
     color: #dc2626;
     border: 1px solid #f87171;
 }
@@ -2272,7 +2265,7 @@
 
 .flow-diagnostic-panel__bar-fill {
     height: 100%;
-    background: linear-gradient(90deg, #3b82f6, #60a5fa);
+    background: #1d4ed8;
     border-radius: 6px;
     transition: width 0.3s ease;
 }

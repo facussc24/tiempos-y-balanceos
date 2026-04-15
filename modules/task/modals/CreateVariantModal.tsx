@@ -70,7 +70,7 @@ export const CreateVariantModal: React.FC<CreateVariantModalProps> = ({
     };
 
     return (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/50 z-modal-backdrop flex items-center justify-center p-4">
             <div className="bg-white rounded-xl shadow-xl max-w-md w-full overflow-hidden">
                 {/* Header */}
                 <div className="bg-blue-600 text-white p-6">

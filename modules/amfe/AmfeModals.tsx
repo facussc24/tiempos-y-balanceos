@@ -123,7 +123,7 @@ const AmfeModals: React.FC<AmfeModalsProps> = ({
 
         {/* SaveAs Modal */}
         {saveAsState.isOpen && (
-            <div className="fixed inset-0 z-[70] flex items-center justify-center" role="presentation" onClick={saveAsState.onClose}>
+            <div className="fixed inset-0 z-modal flex items-center justify-center" role="presentation" onClick={saveAsState.onClose}>
                 <div className="absolute inset-0 bg-black/30" />
                 <div
                     ref={saveAsRef}
