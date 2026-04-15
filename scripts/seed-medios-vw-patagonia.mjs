@@ -7,17 +7,21 @@
  * IMPORTANT: Run migrate-medios-tables.mjs FIRST to create the tables.
  */
 import { createClient } from '@supabase/supabase-js';
-import { config } from 'dotenv';
-config();
+import { readFileSync } from 'fs';
 
-const url = process.env.VITE_SUPABASE_URL;
-const key = process.env.VITE_SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+const envPath = new URL('../.env.local', import.meta.url).pathname.replace(/^\/([A-Z]:)/, '$1');
+const envText = readFileSync(envPath, 'utf8');
+const env = Object.fromEntries(envText.split('\n').filter(l => l.includes('=') && !l.startsWith('#')).map(l => { const i = l.indexOf('='); return [l.slice(0, i).trim(), l.slice(i + 1).trim()]; }));
+
+const url = env.VITE_SUPABASE_URL;
+const key = env.VITE_SUPABASE_ANON_KEY;
 if (!url || !key) {
-  console.error('Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY in .env');
+  console.error('Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY in .env.local');
   process.exit(1);
 }
 
 const supabase = createClient(url, key);
+await supabase.auth.signInWithPassword({ email: env.VITE_AUTO_LOGIN_EMAIL, password: env.VITE_AUTO_LOGIN_PASSWORD });
 
 // ─── Container Types ──────────────────────────────────────────────────────────
 

@@ -30,7 +30,7 @@ export interface MediosPiece {
   safetyPct: number;
   containerTypeId: string;
   pcsPerContainer: number;
-  productId: string | null;   // optional link to APQP product
+  productId: number | null;   // optional link to APQP product (BIGINT in Supabase)
   sortOrder: number;
   createdAt?: string;
 }
