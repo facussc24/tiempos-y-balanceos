@@ -58,6 +58,7 @@ const SECTIONS: SidebarSection[] = [
         title: 'Lean',
         items: [
             { label: 'Tiempos y Balanceos', mode: 'tiempos', icon: <Clock size={18} /> },
+            { label: 'Medios Logisticos', mode: 'mediosCalculator', icon: <Layers size={18} /> },
         ],
     },
     {
