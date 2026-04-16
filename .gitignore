@@ -33,6 +33,9 @@ dist-ssr
 .claude/*
 !.claude/rules/
 !.claude/commands/
+!.claude/skills/
+!.claude/memory/
+!.claude/agents/
 
 # Project secrets
 SUPABASE_INFO.md
