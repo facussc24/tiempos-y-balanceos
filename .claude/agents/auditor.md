@@ -7,6 +7,7 @@ tools:
   - Read
   - Grep
   - Glob
+  - mcp__notebooklm__ask_question
 ---
 
 # Auditor de Calidad — Barack Mercosul
@@ -88,6 +89,15 @@ Reportar dependencias faltantes o conflictos.
 ### Acciones requeridas
 - ...
 ```
+
+### 8. Verificacion APQP contra NotebookLM (solo si el modulo es AMFE/CP/HO/PFD)
+
+Si el modulo auditado pertenece a APQP:
+- Consultar notebook `apqp-guias-y-conocimiento` con: "Cuales son las reglas criticas para [tipo de modulo]?"
+- Comparar respuesta contra los datos actuales
+- Reportar discrepancias entre el notebook y la realidad del codigo
+
+**NOTA:** Este paso requiere MCP notebooklm activo. Si no esta disponible o falla, OMITIR y reportar "NotebookLM no disponible para verificacion APQP" como WARNING (no como error).
 
 ## Reglas del auditor
 - NUNCA editar archivos. Solo leer y reportar.

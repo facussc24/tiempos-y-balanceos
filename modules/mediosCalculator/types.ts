@@ -94,7 +94,7 @@ export interface SpaceResult {
 }
 
 /** Tab identifiers for the module */
-export type MediosTab = 'pieces' | 'results' | 'scenarios' | 'config';
+export type MediosTab = 'pieces' | 'results' | 'scenarios' | 'dashboard' | 'config';
 
 /** New piece form data (before ID assignment) */
 export type NewPieceData = Omit<MediosPiece, 'id' | 'projectId' | 'createdAt'>;

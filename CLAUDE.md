@@ -8,6 +8,15 @@ Multi-usuario con auth Supabase (email/password). Sin Tauri, sin Gemini.
 ## Protocolo de inicio de sesion
 
 Al arrancar CADA sesion:
+0. **SINCRONIZAR GIT (OBLIGATORIO — 2 PCs en uso):**
+   ```bash
+   cd C:/Users/FacundoS-PC/dev/BarackMercosul && git fetch origin && git status
+   ```
+   - Si hay cambios remotos: `git pull origin main` ANTES de tocar cualquier archivo
+   - Si hay conflictos: REPORTAR a Fak inmediatamente, NO resolver solo
+   - Si hay cambios locales sin commitear: `git stash`, pull, `git stash pop`
+   - **NUNCA empezar a trabajar sin verificar que el repo local esta actualizado**
+   - Fak trabaja desde 2 PCs simultaneamente — la desincronizacion rompe todo
 1. Leer `docs/LECCIONES_APRENDIDAS.md` — para no repetir errores
 2. Leer `.claude/rules/` relevantes al modulo que se va a tocar
 3. Si Fak menciona un producto, leer el AMFE/CP/HO/PFD de ese producto ANTES de hacer cambios
@@ -275,6 +284,25 @@ npx tsc --noEmit     # Chequeo de tipos
 2. Override: Al guardar variante, `triggerOverrideTracking` diffs vs maestro.
 3. Propagación: Al guardar maestro, `triggerChangePropagation` genera proposals.
 4. UI: `ChangeProposalPanel` muestra proposals pendientes.
+
+## NotebookLM — Base de Conocimiento con Memoria Infinita
+
+Claude Code esta integrado con Google NotebookLM via MCP server + Skill.
+Esto permite consultar documentacion del proyecto directamente desde Claude Code.
+
+### Configuracion instalada
+- **MCP Server**: `notebooklm-mcp@latest` (en `.claude.json` del proyecto)
+- **Skill**: `~/.claude/skills/notebooklm/` (acceso directo a notebooks)
+- **Cuenta Google**: facundowadee@gmail.com
+
+### Uso
+- Para consultar docs: "Preguntale a NotebookLM sobre [tema]"
+- Para agregar fuentes: "Agrega [link/doc] al notebook"
+- Para listar notebooks: "Mostra los notebooks"
+
+### Notebooks del proyecto
+- Los notebooks deben contener: GUIA_AMFE.md, GUIA_PLAN_DE_CONTROL.md, GUIA_INYECCION.md,
+  ERRORES_CONCEPTUALES_APQP.md, LECCIONES_APRENDIDAS.md, y demas docs relevantes
 
 ## Produccion (GitHub Pages)
 

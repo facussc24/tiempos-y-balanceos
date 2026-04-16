@@ -35,7 +35,7 @@ function mapPiece(row: Record<string, unknown>): MediosPiece {
     safetyPct: (row.safety_pct as number) ?? 0.15,
     containerTypeId: row.container_type_id as string,
     pcsPerContainer: (row.pcs_per_container as number) ?? 1,
-    productId: (row.product_id as string) ?? null,
+    productId: (row.product_id as number) ?? null,
     sortOrder: (row.sort_order as number) ?? 0,
     createdAt: row.created_at as string | undefined,
   };
@@ -200,6 +200,15 @@ export async function bulkCreatePieces(
   }));
   const { data, error } = await supabase.from('medios_pieces').insert(rows).select();
   if (error) { logger.error('mediosRepo', 'bulkCreatePieces failed', error); return []; }
+  return (data ?? []).map(mapPiece);
+}
+
+export async function listAllPieces(): Promise<MediosPiece[]> {
+  const { data, error } = await supabase
+    .from('medios_pieces')
+    .select('*')
+    .order('sort_order', { ascending: true });
+  if (error) { logger.error('mediosRepo', 'listAllPieces failed', error); return []; }
   return (data ?? []).map(mapPiece);
 }
 

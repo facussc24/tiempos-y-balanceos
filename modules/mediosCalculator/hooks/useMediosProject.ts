@@ -13,9 +13,11 @@ interface UseMediosProjectReturn {
   pieces: MediosPiece[];
   containerTypes: ContainerType[];
   loading: boolean;
+  isGlobalView: boolean;
 
   // Project actions
   selectProject: (id: string) => Promise<void>;
+  selectGlobalView: () => Promise<void>;
   createProject: (name: string, description?: string) => Promise<MediosProject | null>;
   updateProject: (updates: Partial<{ name: string; description: string; utilizationRate: number; availableM2: number | null }>) => Promise<void>;
   deleteProject: (id: string) => Promise<void>;
@@ -36,12 +38,22 @@ interface UseMediosProjectReturn {
 
 const LS_KEY = 'medios_active_project';
 
+/** Synthetic project for global view */
+const GLOBAL_PROJECT: MediosProject = {
+  id: '__global__',
+  name: 'Vista Global',
+  description: 'Todos los proyectos combinados',
+  utilizationRate: 0.70,
+  availableM2: null,
+};
+
 export function useMediosProject(): UseMediosProjectReturn {
   const [projects, setProjects] = useState<MediosProject[]>([]);
   const [activeProject, setActiveProject] = useState<MediosProject | null>(null);
   const [pieces, setPieces] = useState<MediosPiece[]>([]);
   const [containerTypes, setContainerTypes] = useState<ContainerType[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isGlobalView, setIsGlobalView] = useState(false);
 
   // Load projects and container types on mount
   useEffect(() => {
@@ -56,9 +68,14 @@ export function useMediosProject(): UseMediosProjectReturn {
         setProjects(projs);
         setContainerTypes(cts);
 
-        // Restore last active project
+        // Restore last active project (or global view)
         const savedId = localStorage.getItem(LS_KEY);
-        if (savedId) {
+        if (savedId === '__global__') {
+          setActiveProject(GLOBAL_PROJECT);
+          setIsGlobalView(true);
+          const allPcs = await repo.listAllPieces();
+          if (!cancelled) setPieces(allPcs);
+        } else if (savedId) {
           const proj = projs.find(p => p.id === savedId);
           if (proj) {
             setActiveProject(proj);
@@ -77,6 +94,7 @@ export function useMediosProject(): UseMediosProjectReturn {
 
   const selectProject = useCallback(async (id: string) => {
     setLoading(true);
+    setIsGlobalView(false);
     try {
       const proj = await repo.getProject(id);
       setActiveProject(proj);
@@ -88,6 +106,19 @@ export function useMediosProject(): UseMediosProjectReturn {
         localStorage.removeItem(LS_KEY);
         setPieces([]);
       }
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const selectGlobalView = useCallback(async () => {
+    setLoading(true);
+    setIsGlobalView(true);
+    try {
+      setActiveProject(GLOBAL_PROJECT);
+      localStorage.setItem(LS_KEY, '__global__');
+      const allPcs = await repo.listAllPieces();
+      setPieces(allPcs);
     } finally {
       setLoading(false);
     }
@@ -195,7 +226,9 @@ export function useMediosProject(): UseMediosProjectReturn {
     pieces,
     containerTypes,
     loading,
+    isGlobalView,
     selectProject,
+    selectGlobalView,
     createProject,
     updateProject,
     deleteProject: deleteProjectFn,
