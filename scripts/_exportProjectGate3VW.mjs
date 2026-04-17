@@ -273,18 +273,19 @@ function buildGate3FromProjectData(data, row) {
         if (stationTasks.length === 0) continue;
         const cfg = cfgMap.get(i);
         const replicas = cfg?.replicas && cfg.replicas > 0 ? cfg.replicas : 1;
-        // Fix Gate3 2026-04-17: para procesos de inyeccion batch el ciclo del
-        // Gate 3 es el ciclo de MAQUINA (injectionParams.realCycle), no la suma
-        // de tiempos de todas las tasks de la estacion. Las tareas manuales
-        // (desmoldante, retirar, traslado, etc.) se solapan con el curado del
-        // molde (pCuringTime) y NO cuentan en el ciclo efectivo de maquina.
-        // Si la estacion no tiene task de inyeccion, usamos suma de standardTime
-        // como antes (comportamiento legacy).
+        // Fix Gate3 2026-04-17 (corregido): la formula Gate 3 VW asume
+        // cycleTime = tiempo de UN ciclo COMPLETO del molde (cuando salen
+        // todas las cavidades juntas), NO el tiempo por pieza individual.
+        //   pzs/hora = 3600/cycleTime × cavidades × OEE × ...
+        // realCycle ya esta dividido por cavidades (=tiempo por pieza), asi
+        // que multiplicamos por cavidades para obtener el tiempo de molde.
+        // Para estaciones no-inyeccion: suma de standardTime (comportamiento legacy).
         const injTask = stationTasks.find(
             (t) => t.executionMode === 'injection' && t.injectionParams?.realCycle,
         );
         const effective = injTask
-            ? safeNum(injTask.injectionParams.realCycle)
+            ? safeNum(injTask.injectionParams.realCycle) *
+                Math.max(1, safeNum(injTask.injectionParams.optimalCavities, 1))
             : stationTasks.reduce(
                 (acc, t) => acc + safeNum(t.standardTime || t.averageTime),
                 0,

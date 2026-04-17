@@ -6,6 +6,18 @@ Detectado durante export del proyecto 16 (VWA PATAGONIA, Inyeccion PU Armrest+AP
 
 Vive en `modules/gate3/gate3FromBalancing.ts` (funcion `buildGate3FromProjectData`).
 
+### Historia del bug (3 versiones antes de dar con el correcto)
+
+| Version | cycleTime exportado | Pzs/sem (OEE 45%) | Correcto? |
+|---|---|---|---|
+| v1 (original) | 60.08 s (suma de tasks) | 26.100 | NO, infla capacidad |
+| v2 (primer fix) | 31.44 s (realCycle = por pieza) | 49.875 | NO, doble infla (doble conteo cavidades) |
+| v3 (fix correcto) | 283 s (realCycle × cavidades = ciclo molde) | **5.541** | **SI, coincide con sobrecarga del modulo balanceo** |
+
+La clave era entender que la formula Gate 3 VW `3600/cycleTime × cavidades`
+asume cycleTime = tiempo del ciclo COMPLETO del molde (cuando salen las
+cavidades juntas), NO el tiempo por pieza individual.
+
 ### Bug 1 — Ciclo incluye tareas manuales en estaciones de inyeccion
 
 **Codigo actual** (simplificado):
