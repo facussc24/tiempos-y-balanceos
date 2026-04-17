@@ -454,10 +454,23 @@ async function finalizeXlsx(xlsxPath, jpegBuffer) {
         if (cleaned !== xml) zip.file(f, cleaned);
     }
 
-    // 3b. NO modificar <a:ext> del pic — si agrandamos, el logo colisiona con el
-    //     texto "Barack Mercosul — Verificacion..." que esta en el mismo grupo.
-    //     En cambio, el JPEG del Barack ya viene con padding blanco para
-    //     respetar el aspect ratio del anchor (casi cuadrado vertical).
+    // 3b. Ajustar ext del pic al aspect ratio real del logo Barack (2:1 ancho).
+    //     El canvas del JPEG se genera con el mismo aspect (y sin padding arriba/abajo),
+    //     asi el logo llena el espacio sin deformarse ni quedar flotando en blanco.
+    //     cx=380000 cy=190000 (aspect 2:1) = ~1.05cm × 0.53cm, logo visible sin
+    //     invadir el texto al lado.
+    for (const f of drawingFiles) {
+        let xml = await zip.file(f).async('string');
+        let changed = false;
+        xml = xml.replace(
+            /(<xdr:pic>[\s\S]*?<a:xfrm>[\s\S]*?<a:ext\s+cx=")(\d+)("\s+cy=")(\d+)("\s*\/>)/g,
+            (match, p1, cx, p3, cy, p5) => {
+                changed = true;
+                return `${p1}380000${p3}190000${p5}`;
+            }
+        );
+        if (changed) zip.file(f, xml);
+    }
 
     // 4. Traducir textos del chart (DiagramSFN): titulo + ejes
     //    Los textos viven en xl/charts/chart1.xml dentro de <a:t>...</a:t>.
@@ -499,25 +512,20 @@ async function finalizeXlsx(xlsxPath, jpegBuffer) {
 // (casi cuadrado, cx/cy ~= 0.73), centrado horizontal y verticalmente, con
 // fondo blanco. Asi Excel NO estira el logo al encajarlo en el anchor.
 function convertPngToJpegWhiteBg(pngPath, jpegPath) {
-    // Canvas objetivo: aspect ratio 0.73 (alto de 1.37 por cada 1 de ancho)
-    // Dimensiones grandes para buena resolucion al escalar: 400x547.
-    // Logo Barack (151x75) se escala proporcionalmente para ocupar ~85% del ancho
-    // y centra verticalmente -> queda con padding blanco arriba/abajo.
+    // Canvas con MISMO aspect ratio que el logo Barack (151/75 ~= 2:1).
+    // El logo ocupa TODO el canvas (sin padding blanco arriba/abajo).
+    // El ext del drawing tambien se configura a 2:1 -> no hay deformacion.
+    // Canvas 600x298 ~= 2.013 aspect (mismo que el PNG original).
     const ps = `
 Add-Type -AssemblyName System.Drawing
 $img = [System.Drawing.Image]::FromFile('${pngPath.replace(/'/g, "''")}')
-$canvasW = 400
-$canvasH = 547
-$targetW = [int]($canvasW * 0.85)
-$ratio = $img.Height / $img.Width
-$targetH = [int]($targetW * $ratio)
-$offsetX = [int](($canvasW - $targetW) / 2)
-$offsetY = [int](($canvasH - $targetH) / 2)
+$canvasW = 600
+$canvasH = [int](600 * $img.Height / $img.Width)
 $bmp = New-Object System.Drawing.Bitmap $canvasW, $canvasH
 $g = [System.Drawing.Graphics]::FromImage($bmp)
 $g.Clear([System.Drawing.Color]::White)
 $g.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
-$g.DrawImage($img, $offsetX, $offsetY, $targetW, $targetH)
+$g.DrawImage($img, 0, 0, $canvasW, $canvasH)
 $bmp.Save('${jpegPath.replace(/'/g, "''")}', [System.Drawing.Imaging.ImageFormat]::Jpeg)
 $img.Dispose()
 $bmp.Dispose()
@@ -562,65 +570,21 @@ for (let n = stationsToUse.length + 1; n <= GATE3_MAX_STATIONS; n++) {
     clearStation(oee, cap, n);
 }
 
-// 5. Ocultar las estaciones no usadas para evitar los feos "#¡DIV/0!"
-//    CapacitySFN: 12 estaciones organizadas en 3 bloques horizontales
-//    (cols B-G, I-N, P-U) x 4 bloques verticales (filas 10-18, 19-27, 28-36, 37-45).
-//    Estacion N:
-//      n=1..4  -> cols B-G, filas 10+9*(n-1) .. 18+9*(n-1)
-//      n=5..8  -> cols I-N
-//      n=9..12 -> cols P-U
-//    Si solo se usan las estaciones 1..K, ocultamos filas/columnas para los bloques
-//    vacios enteros.
+// 5. Las 12 estaciones SIEMPRE se muestran (aunque esten vacias). Para evitar
+//    los feos "#¡DIV/0!" envolvemos las formulas de cada estacion con
+//    IFERROR(formula, 0). Usamos 0 (no "") porque las celdas de CapacitySFN
+//    multiplican outputs del OEE Calc — con "" darian #¡VALUE!.
 const usedStations = stationsToUse.length;
 
-// Bloques verticales (filas): cada uno tiene 4 estaciones
-// Bloque fila 1 (filas 10-18): estaciones 1, 5, 9
-// Bloque fila 2 (filas 19-27): estaciones 2, 6, 10
-// Bloque fila 3 (filas 28-36): estaciones 3, 7, 11
-// Bloque fila 4 (filas 37-45): estaciones 4, 8, 12
-const rowBlockFirstStation = (blockIdx) => blockIdx + 1; // estacion mas temprana del bloque
-const maxRowBlockNeeded = Math.min(4, ((usedStations - 1) % 4) + 1);
-
-// Bloques horizontales (columnas): cada uno tiene 4 estaciones
-// Bloque col 1 (B-G): estaciones 1-4
-// Bloque col 2 (I-N): estaciones 5-8
-// Bloque col 3 (P-U): estaciones 9-12
-const maxColBlockNeeded = Math.ceil(usedStations / 4); // 1..3
-
-// Ocultar bloques de FILAS no usados (4-maxRowBlock)
-for (let bloque = maxRowBlockNeeded + 1; bloque <= 4; bloque++) {
-    const firstRow = 10 + (bloque - 1) * 9;
-    const lastRow = firstRow + 8;
-    for (let r = firstRow; r <= lastRow; r++) {
-        try { cap.row(r).hidden(true); } catch (e) { /* skip */ }
-    }
-}
-// Ocultar bloques de COLUMNAS no usados
-if (maxColBlockNeeded < 2) {
-    // Ocultar bloque 2 (cols I-N)
-    for (const c of ['I', 'J', 'K', 'L', 'M', 'N']) {
-        try { cap.column(c).hidden(true); } catch (e) { /* skip */ }
-    }
-}
-if (maxColBlockNeeded < 3) {
-    // Ocultar bloque 3 (cols P-U)
-    for (const c of ['O', 'P', 'Q', 'R', 'S', 'T', 'U']) {
-        try { cap.column(c).hidden(true); } catch (e) { /* skip */ }
-    }
-}
-
-// OEE CalculatorSFN: NO ocultamos columnas — el header (merge D5:K5) se
-// rompe si ocultamos F..P. En cambio, envolvemos las formulas output (filas
-// 20-23: Disponibilidad, Rendimiento, Calidad, OEE) con IFERROR(...,"") para
-// que las estaciones sin datos muestren vacio en vez de "#¡DIV/0!".
-// Filas 16 (Meta a 100% OEE) + 20-23 (Disponibilidad, Rendimiento, Calidad, OEE)
+// OEE CalculatorSFN: Meta a 100% OEE (fila 16) + Disponibilidad/Rendimiento/
+// Calidad/OEE (filas 20-23), columnas E..P (12 estaciones)
 for (let n = 1; n <= GATE3_MAX_STATIONS; n++) {
     const col = oeeStationCol(n);
     for (const row of [16, 20, 21, 22, 23]) {
         const cell = oee.cell(`${col}${row}`);
         const f = cell.formula();
         if (typeof f === 'string' && f.length > 0 && !f.startsWith('IFERROR(')) {
-            cell.formula(`IFERROR(${f},"")`);
+            cell.formula(`IFERROR(${f},0)`);
         }
     }
 }
