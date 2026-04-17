@@ -106,7 +106,7 @@ const TRANSLATIONS = {
         K8: 'N° de documento',
         D9: 'Ubicacion',
         B12: 'Variable',
-        C12: 'Formula',
+        C12: 'Formula de calculo',
         D13: 'Tiempo de observacion (min)',
         D14: 'Tiempo de ciclo (seg)',
         D15: 'Cavidades (cantidad)',
@@ -142,7 +142,8 @@ function stationLabels(n) {
     const labelCol = String.fromCharCode(m.valueCol.charCodeAt(0) - 1); // F / M / T
     const t = m.topRow;
     return {
-        [`${m.nameCol}${t - 1}`]: `Estacion ${n}`,
+        // Titulo de la estacion — "Station N" del template pasa a "Estacion N"
+        [`${m.nameCol}${t}`]: `Estacion ${n}`,
         [`${m.nameCol}${t + CAP_ROW_OFFSETS.processName - 1}`]: 'Proceso:',
         [`${labelCol}${t + CAP_ROW_OFFSETS.shiftsPerWeek}`]: 'Turnos/semana',
         [`${labelCol}${t + CAP_ROW_OFFSETS.pcsWeek}`]: 'Pzs/semana',
@@ -156,6 +157,15 @@ function stationLabels(n) {
         [`${labelCol}${t + CAP_ROW_OFFSETS.machines}`]: 'Maquinas paralelas',
         [`${String.fromCharCode(labelCol.charCodeAt(0) - 1)}${t + CAP_ROW_OFFSETS.reservation}`]: 'Reserva para proyecto',
     };
+}
+
+// Labels de estacion en OEE CalculatorSFN — fila 11, columnas E..P
+function oeeCalcStationLabels() {
+    const labels = {};
+    for (let n = 1; n <= GATE3_MAX_STATIONS; n++) {
+        labels[`${oeeStationCol(n)}11`] = `Estacion ${n}`;
+    }
+    return labels;
 }
 
 // ==============================
@@ -333,6 +343,12 @@ function applyStationLabels(wb) {
             try { cap.cell(addr).value(val); } catch (e) { /* skip */ }
         }
     }
+    // OEE CalculatorSFN tambien tiene "Station N" en fila 11
+    const oee = wb.sheet('OEE CalculatorSFN');
+    const oeeLabels = oeeCalcStationLabels();
+    for (const [addr, val] of Object.entries(oeeLabels)) {
+        try { oee.cell(addr).value(val); } catch (e) { /* skip */ }
+    }
 }
 
 function applyHeader(wb, p) {
@@ -401,43 +417,70 @@ function clearStation(oee, cap, n) {
 }
 
 // ==============================
-// POSTPROCESS via JSZip: swap logo + proteger hojas via XML
+// POSTPROCESS via JSZip: SOLO swap del logo
+// (la proteccion se maneja antes con xlsx-populate para no tocar el XML)
 // ==============================
-async function postprocessXlsx(xlsxPath, jpegBuffer, sheetsToProtect) {
+async function finalizeXlsx(xlsxPath, jpegBuffer) {
     const buf = readFileSync(xlsxPath);
     const zip = await JSZip.loadAsync(buf);
 
     // 1. Swap logo Barack (los 3 drawings comparten xl/media/image1.jpeg)
     zip.file('xl/media/image1.jpeg', jpegBuffer);
 
-    // 2. Proteger hojas visibles insertando <sheetProtection/> en el XML.
-    //    xlsx-populate no persiste proteccion sin password — lo hacemos nosotros.
-    //    workbook.xml tiene el mapeo sheet name -> sheetId. Los sheetN.xml no tienen
-    //    nombre asociado, asi que buscamos por match del contenido.
-    const workbookXml = await zip.file('xl/workbook.xml').async('string');
-    const sheetMap = new Map(); // sheet name -> sheet number (sheetN.xml)
-    const sheetRels = await zip.file('xl/_rels/workbook.xml.rels').async('string');
-    // relId -> target
-    const relsById = new Map();
-    for (const m of sheetRels.matchAll(/<Relationship\s+Id="(rId\d+)"[^>]*Target="(worksheets\/sheet\d+\.xml)"/g)) {
-        relsById.set(m[1], m[2]);
-    }
-    // name -> target
-    for (const m of workbookXml.matchAll(/<sheet\s+name="([^"]+)"[^>]*r:id="(rId\d+)"/g)) {
-        const target = relsById.get(m[2]);
-        if (target) sheetMap.set(m[1], 'xl/' + target);
+    // 2. Borrar <sheetProtection> de todas las hojas — Fak quiere poder editar
+    //    sin password. Solo borramos el tag, NO insertamos nada nuevo (evitamos
+    //    alterar el orden OOXML que causaba "Archivo reparado").
+    //    Nota: el hashValue base64 del template VW contiene '/', asi que el regex
+    //    excluye solo '>' (no '/').
+    const sheetFiles = Object.keys(zip.files).filter(f => /^xl\/worksheets\/sheet\d+\.xml$/.test(f));
+    for (const f of sheetFiles) {
+        const xml = await zip.file(f).async('string');
+        const cleaned = xml.replace(/<sheetProtection\s[^>]*?\/>/g, '')
+                           .replace(/<sheetProtection\s[^>]*>[\s\S]*?<\/sheetProtection>/g, '');
+        if (cleaned !== xml) zip.file(f, cleaned);
     }
 
-    const PROTECTION_TAG = '<sheetProtection sheet="1" objects="1" scenarios="1" formatCells="0" selectLockedCells="0" selectUnlockedCells="0"/>';
-    for (const name of sheetsToProtect) {
-        const path = sheetMap.get(name);
-        if (!path || !zip.file(path)) { console.log(`  (proteccion: no se encontro hoja ${name})`); continue; }
-        let xml = await zip.file(path).async('string');
-        // Quitar cualquier proteccion pre-existente
-        xml = xml.replace(/<sheetProtection\s[^/]*\/>/g, '');
-        // Insertar despues del cierre de </sheetData>
-        xml = xml.replace('</sheetData>', '</sheetData>' + PROTECTION_TAG);
-        zip.file(path, xml);
+    // 3. Reemplazar el corporate header VW en aleman en los drawings
+    //    "M-BN-L Beschaffung Neue Produktanläufe Lieferantenmanagement" -> Barack
+    //    Los drawings son xl/drawings/drawing1.xml (Tabelle1),
+    //    drawing2.xml (CapacitySFN) y drawing3.xml (DiagramSFN).
+    const drawingFiles = Object.keys(zip.files).filter(f => /^xl\/drawings\/drawing\d+\.xml$/.test(f));
+    const BARACK_HEADER = 'Barack Mercosul     Verificacion de Capacidad Gate 3';
+    for (const f of drawingFiles) {
+        const xml = await zip.file(f).async('string');
+        const cleaned = xml.replace(/M-BN-L\s*Beschaffung Neue Produktanläufe Lieferantenmanagement\s*/g, BARACK_HEADER);
+        if (cleaned !== xml) zip.file(f, cleaned);
+    }
+
+    // 4. Traducir textos del chart (DiagramSFN): titulo + ejes
+    //    Los textos viven en xl/charts/chart1.xml dentro de <a:t>...</a:t>.
+    //    El titulo viene partido: "Overview capacity individual" + " stations".
+    //    Lo unificamos en un solo chunk en espanol.
+    const chartReplacements = [
+        // Titulo del chart (viene en 2 segments contiguos)
+        { from: /<a:t>Overview capacity individual<\/a:t>([\s\S]*?)<a:t>\s*stations<\/a:t>/g,
+          to: '<a:t>Capacidad total por estacion</a:t>$1<a:t></a:t>' },
+        // Label del eje Y
+        { from: /<a:t>Capacity psc\/week<\/a:t>/g,
+          to: '<a:t>Capacidad pzs/semana</a:t>' },
+        // Label eje categoria (por si acaso aparece)
+        { from: /<a:t>individual stations<\/a:t>/g,
+          to: '<a:t>Estaciones individuales</a:t>' },
+        // Labels de ejes numericos (el "Capacity psc/week" del eje vertical)
+        { from: /<c:v>Capacity psc\/week<\/c:v>/g,
+          to: '<c:v>Capacidad pzs/semana</c:v>' },
+        { from: /<c:v>individual stations<\/c:v>/g,
+          to: '<c:v>Estaciones individuales</c:v>' },
+    ];
+    const chartFiles = Object.keys(zip.files).filter(f => /^xl\/charts\/chart\d+\.xml$/.test(f));
+    for (const f of chartFiles) {
+        let xml = await zip.file(f).async('string');
+        let changed = false;
+        for (const r of chartReplacements) {
+            const next = xml.replace(r.from, r.to);
+            if (next !== xml) { xml = next; changed = true; }
+        }
+        if (changed) zip.file(f, xml);
     }
 
     const out = await zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' });
@@ -480,15 +523,8 @@ const project = buildGate3FromProjectData(pdata, row);
 const templatePath = new URL('../src/assets/templates/gate3_template.xlsx', import.meta.url).pathname.replace(/^\/([A-Z]:)/, '$1');
 const wb = await XlsxPopulate.fromFileAsync(templatePath);
 
-// 1. Desproteger las hojas del template VW (para poder escribir)
-['CapacitySFN', 'OEE CalculatorSFN', 'DiagramSFN', 'Protocolo_SFN1'].forEach(name => {
-    const sheet = wb.sheet(name);
-    if (sheet && typeof sheet.protected === 'function') {
-        try { sheet.protected(false); } catch (e) { /* ok */ }
-    }
-});
-
-// 2. Aplicar traducciones
+// 1. Aplicar traducciones (xlsx-populate puede escribir sobre hojas protegidas —
+//    la proteccion es un flag que Excel enforza al abrir, no xlsx-populate internamente)
 applyTranslations(wb);
 applyStationLabels(wb);
 
@@ -504,7 +540,15 @@ for (let n = stationsToUse.length + 1; n <= GATE3_MAX_STATIONS; n++) {
     clearStation(oee, cap, n);
 }
 
-// 5. Guardar xlsx intermedio (la proteccion se aplica post-procesado con JSZip)
+// 5. El template original venia protegido con password SHA-512. xlsx-populate
+//    al escribir en las celdas NO modifica el flag de proteccion — las hojas
+//    siguen protegidas con el password original del template (de VW).
+//    Para que Fak pueda editar libremente al recibir, DESPROTEJEMOS las hojas
+//    visibles. El archivo queda sin proteccion, 100% editable.
+//    (xlsx-populate.sheet.protected(false) no funciona — hay que hacerlo a mano
+//     borrando sheetProtection en el XML via JSZip, pero NO reinyectar nada).
+//
+// Guardar xlsx intermedio (xlsx-populate preserva las formulas y el formato)
 const defaultOutDir = process.argv[3] || join(homedir(), 'Documents');
 mkdirSync(defaultOutDir, { recursive: true });
 const oeePct = Math.round((pdata.meta?.manualOEE || 0.85) * 100);
@@ -513,14 +557,18 @@ const fileName = `CapacityCheck_${sanitize(project.partDesignation)}_${versionSl
 const outputPath = join(defaultOutDir, fileName);
 await wb.toFileAsync(outputPath);
 
-// 6. Postprocess con JSZip: swap logo + proteger hojas visibles
+// 6. Postprocess con JSZip:
+//    a) Remover password-protection del template VW (borrar <sheetProtection.../> de las hojas visibles)
+//    b) Swap logo VW -> Barack (reemplaza xl/media/image1.jpeg)
+//    NO inyectamos tags nuevos para no romper el orden OOXML.
 const logoPngPath = new URL('../src/assets/barack_logo.png', import.meta.url).pathname.replace(/^\/([A-Z]:)/, '$1');
 const tempJpegPath = join(tmpdir(), `barack_logo_${Date.now()}.jpg`);
 try {
     convertPngToJpegWhiteBg(logoPngPath, tempJpegPath);
     const jpegBuf = readFileSync(tempJpegPath);
-    await postprocessXlsx(outputPath, jpegBuf, ['CapacitySFN', 'OEE CalculatorSFN', 'DiagramSFN']);
-    console.log(`  Logo Barack aplicado (${jpegBuf.length} bytes) + proteccion de hojas visibles`);
+    await finalizeXlsx(outputPath, jpegBuf);
+    console.log(`  Logo Barack aplicado (${jpegBuf.length} bytes)`);
+    console.log(`  Proteccion VW removida (hojas editables sin password)`);
 } finally {
     if (existsSync(tempJpegPath)) unlinkSync(tempJpegPath);
 }
@@ -542,5 +590,5 @@ for (const [i, s] of stationsToUse.entries()) {
 }
 console.log(`\nTraducciones EN->ES aplicadas en: CapacitySFN, OEE CalculatorSFN, DiagramSFN`);
 console.log(`Logo VW reemplazado por logo Barack en las 3 hojas visibles`);
-console.log(`Hojas protegidas (sin password, solo formulas locked)`);
+console.log(`Hojas editables sin password (proteccion VW removida)`);
 process.exit(0);
