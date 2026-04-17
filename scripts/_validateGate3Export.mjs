@@ -47,7 +47,7 @@ check('Label B9 = Ubicacion', cap.cell('B9').value() === 'Ubicacion', `"${cap.ce
 check('Valor C5 numero de parte', typeof cap.cell('C5').value() === 'string' && cap.cell('C5').value().length > 0, `"${cap.cell('C5').value()}"`);
 check('Valor C7 = codigo proyecto', cap.cell('C7').value() === 'PATAGONIA', `"${cap.cell('C7').value()}"`);
 check('Valor C8 = Barack Mercosul', cap.cell('C8').value() === 'Barack Mercosul', `"${cap.cell('C8').value()}"`);
-check('Valor C9 = Zarate, Argentina', cap.cell('C9').value() === 'Zarate, Argentina', `"${cap.cell('C9').value()}"`);
+check('Valor C9 = Hurlingham, Buenos Aires, Argentina', cap.cell('C9').value() === 'Hurlingham, Buenos Aires, Argentina', `"${cap.cell('C9').value()}"`);
 check('Valor J5 creador VACIO', !cap.cell('J5').value(), `"${cap.cell('J5').value() ?? ''}"`);
 const fecha = cap.cell('J6').value();
 check('Valor J6 fecha formato DD/MM/YYYY', typeof fecha === 'string' && /^\d{2}\/\d{2}\/\d{4}$/.test(fecha), `"${fecha}"`);
