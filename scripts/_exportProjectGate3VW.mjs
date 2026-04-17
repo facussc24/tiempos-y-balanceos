@@ -220,9 +220,14 @@ function setIfDefined(sheet, address, value) {
     sheet.cell(address).value(value);
 }
 
-// Formatea fecha ISO -> DD/MM/YYYY (formato estandar Barack)
+// Formatea fecha ISO -> DD/MM/YYYY (formato estandar Barack).
+// Fix 2026-04-17: "2026-03-20" construido con new Date() se parsea como UTC
+// medianoche y al formatear en local (UTC-3) queda 2026-03-19. Parseamos
+// el patron YYYY-MM-DD directamente sin pasar por Date para evitar el offset.
 function formatDate(iso) {
     if (!iso) return '';
+    const ymd = String(iso).match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (ymd) return `${ymd[3]}/${ymd[2]}/${ymd[1]}`;
     const d = new Date(iso);
     if (isNaN(d.getTime())) return '';
     return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
@@ -268,12 +273,22 @@ function buildGate3FromProjectData(data, row) {
         if (stationTasks.length === 0) continue;
         const cfg = cfgMap.get(i);
         const replicas = cfg?.replicas && cfg.replicas > 0 ? cfg.replicas : 1;
-        const effective = stationTasks.reduce((acc, t) => {
-            if (t.executionMode === 'injection' && t.injectionParams?.realCycle) {
-                return acc + safeNum(t.injectionParams.realCycle);
-            }
-            return acc + safeNum(t.standardTime || t.averageTime);
-        }, 0);
+        // Fix Gate3 2026-04-17: para procesos de inyeccion batch el ciclo del
+        // Gate 3 es el ciclo de MAQUINA (injectionParams.realCycle), no la suma
+        // de tiempos de todas las tasks de la estacion. Las tareas manuales
+        // (desmoldante, retirar, traslado, etc.) se solapan con el curado del
+        // molde (pCuringTime) y NO cuentan en el ciclo efectivo de maquina.
+        // Si la estacion no tiene task de inyeccion, usamos suma de standardTime
+        // como antes (comportamiento legacy).
+        const injTask = stationTasks.find(
+            (t) => t.executionMode === 'injection' && t.injectionParams?.realCycle,
+        );
+        const effective = injTask
+            ? safeNum(injTask.injectionParams.realCycle)
+            : stationTasks.reduce(
+                (acc, t) => acc + safeNum(t.standardTime || t.averageTime),
+                0,
+            );
         const cycleTime = replicas > 0 ? effective / replicas : 0;
         const description = (stationTasks[0]?.description || `Estacion ${i}`).slice(0, 50);
         const processType = inferProcessType(description);
