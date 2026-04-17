@@ -108,7 +108,7 @@ const TRANSLATIONS = {
         B12: 'Variable',
         C12: 'Formula de calculo',
         // Atribucion original VW: "created: R. Hartel K-BN-KA/1 Tel. Nr.: 05361-9-45487"
-        B26: '',
+        B26: 'Nota: OEE manual aplicado en CapacitySFN. Sin estudio de observacion de campo — los inputs (A, B, C, E, F, G) quedan vacios intencionalmente.',
         D13: 'Tiempo de observacion (min)',
         D14: 'Tiempo de ciclo (seg)',
         D15: 'Cavidades (cantidad)',
