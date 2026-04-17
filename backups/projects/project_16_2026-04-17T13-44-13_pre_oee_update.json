@@ -1,0 +1,353 @@
+{
+  "row": {
+    "id": 16,
+    "name": "Inyeccion PU Armrest Rear y APB Puerta",
+    "client": "VWA",
+    "project_code": "PATAGONIA",
+    "engineer": "",
+    "version": "Rev A",
+    "daily_demand": 1770,
+    "created_at": "2026-03-20T12:22:13.06075+00:00",
+    "updated_at": "2026-04-14T12:30:58.012628+00:00",
+    "data": "{\"meta\":{\"name\":\"Inyeccion PU Armrest Rear y APB Puerta\",\"date\":\"2026-03-20\",\"client\":\"VWA\",\"version\":\"Rev A\",\"engineer\":\"\",\"project\":\"PATAGONIA\",\"activeShifts\":3,\"manualOEE\":0.9,\"useManualOEE\":true,\"useSectorOEE\":false,\"dailyDemand\":1770,\"piecesPerVehicle\":1,\"configuredStations\":1,\"activeModels\":[{\"id\":\"default\",\"name\":\"Modelo Estándar\",\"percentage\":1,\"color\":\"#3b82f6\"}],\"createdAt\":\"2026-03-20T12:22:10.651Z\",\"modifiedBy\":\"Script: capacidad moldes APB\"},\"shifts\":[{\"id\":1,\"name\":\"Turno 1\",\"startTime\":\"06:00\",\"endTime\":\"15:00\",\"breaks\":[{\"id\":\"b1\",\"name\":\"Descanso\",\"startTime\":\"11:00\",\"duration\":60}]},{\"id\":2,\"name\":\"Turno 2\",\"startTime\":\"15:00\",\"endTime\":\"23:00\",\"breaks\":[{\"id\":\"b2\",\"name\":\"Descanso\",\"startTime\":\"19:00\",\"duration\":45}]},{\"id\":3,\"name\":\"Turno 3\",\"startTime\":\"23:00\",\"endTime\":\"06:00\",\"breaks\":[{\"id\":\"b3\",\"name\":\"Descanso\",\"startTime\":\"03:00\",\"duration\":45}]}],\"sectors\":[{\"id\":\"INYECCION\",\"name\":\"Inyección\",\"color\":\"#F59E0B\",\"targetOee\":0.89,\"sequence\":2}],\"tasks\":[{\"id\":\"10\",\"description\":\"Aplicar desmoldante\",\"times\":[7.79,null,null,null,null],\"averageTime\":7.79,\"standardTime\":7.79,\"ratingFactor\":100,\"fatigueCategory\":\"none\",\"predecessors\":[],\"successors\":[\"20\"],\"positionalWeight\":67.87444444444445,\"calculatedSuccessorSum\":60.08444444444445,\"stdDev\":0,\"executionMode\":\"manual\",\"sectorId\":\"INYECCION\",\"cycleQuantity\":1,\"requiredSamples\":0,\"concurrentWith\":null},{\"id\":\"20\",\"description\":\"Inyección de pu\",\"times\":[283,283,283,283,283],\"averageTime\":31.444444444444446,\"standardTime\":31.444444444444446,\"ratingFactor\":100,\"fatigueCategory\":\"low\",\"predecessors\":[\"10\"],\"successors\":[\"30\"],\"positionalWeight\":60.08444444444444,\"calculatedSuccessorSum\":28.64,\"stdDev\":3.972054645195637e-15,\"executionMode\":\"injection\",\"sectorId\":\"INYECCION\",\"cycleQuantity\":9,\"requiredSamples\":1,\"concurrentWith\":null,\"injectionParams\":{\"productionVolume\":1555,\"investmentRatio\":0,\"optimalCavities\":9,\"pInyectionTime\":10,\"pCuringTime\":193,\"manualInteractionTime\":25.06,\"manualOperations\":[],\"cavityMode\":\"manual\",\"userSelectedN\":9,\"headcountMode\":\"auto\",\"injectionMode\":\"batch\",\"realCycle\":31.444444444444443},\"ignoredTimeIndices\":[]},{\"id\":\"30\",\"description\":\"Retirar piezas\",\"times\":[3.58,null,null,null,null],\"averageTime\":3.58,\"standardTime\":3.58,\"ratingFactor\":100,\"fatigueCategory\":\"none\",\"predecessors\":[\"20\"],\"successors\":[\"40\"],\"positionalWeight\":28.64,\"calculatedSuccessorSum\":25.06,\"stdDev\":0,\"executionMode\":\"manual\",\"sectorId\":\"INYECCION\",\"cycleQuantity\":1,\"requiredSamples\":0,\"concurrentWith\":null},{\"id\":\"40\",\"description\":\"Traslado de piezas\",\"times\":[1.33,null,null,null,null],\"averageTime\":1.33,\"standardTime\":1.33,\"ratingFactor\":100,\"fatigueCategory\":\"none\",\"predecessors\":[\"30\"],\"successors\":[\"50\",\"60\"],\"positionalWeight\":25.060000000000002,\"calculatedSuccessorSum\":23.73,\"stdDev\":0,\"executionMode\":\"manual\",\"sectorId\":\"INYECCION\",\"cycleQuantity\":1,\"requiredSamples\":0,\"concurrentWith\":\"20\",\"isMachineInternal\":true},{\"id\":\"50\",\"description\":\"Refilado\",\"times\":[18.92,null,null,null,null],\"averageTime\":18.92,\"standardTime\":18.92,\"ratingFactor\":100,\"fatigueCategory\":\"none\",\"predecessors\":[\"40\"],\"successors\":[\"70\"],\"positionalWeight\":21.42,\"calculatedSuccessorSum\":2.5,\"stdDev\":0,\"executionMode\":\"manual\",\"sectorId\":\"INYECCION\",\"cycleQuantity\":1,\"requiredSamples\":0,\"concurrentWith\":\"20\",\"isMachineInternal\":true},{\"id\":\"60\",\"description\":\"Sellado de piezas\",\"times\":[2.31,null,null,null,null],\"averageTime\":2.31,\"standardTime\":2.31,\"ratingFactor\":100,\"fatigueCategory\":\"none\",\"predecessors\":[\"40\"],\"successors\":[\"70\"],\"positionalWeight\":4.8100000000000005,\"calculatedSuccessorSum\":2.5,\"stdDev\":0,\"executionMode\":\"manual\",\"sectorId\":\"INYECCION\",\"cycleQuantity\":1,\"requiredSamples\":0,\"concurrentWith\":\"20\",\"isMachineInternal\":true},{\"id\":\"70\",\"description\":\"Embalaje\",\"times\":[2.5,null,null,null,null],\"averageTime\":2.5,\"standardTime\":2.5,\"ratingFactor\":100,\"fatigueCategory\":\"none\",\"predecessors\":[\"50\",\"60\"],\"successors\":[],\"positionalWeight\":2.5,\"calculatedSuccessorSum\":0,\"stdDev\":0,\"executionMode\":\"manual\",\"sectorId\":\"INYECCION\",\"cycleQuantity\":1,\"requiredSamples\":0,\"concurrentWith\":\"20\",\"isMachineInternal\":true}],\"assignments\":[{\"taskId\":\"20\",\"stationId\":1},{\"taskId\":\"30\",\"stationId\":1},{\"taskId\":\"40\",\"stationId\":1},{\"taskId\":\"50\",\"stationId\":1},{\"taskId\":\"60\",\"stationId\":1},{\"taskId\":\"70\",\"stationId\":1}],\"stationConfigs\":[{\"id\":1,\"replicas\":1,\"oeeTarget\":0.9}],\"zoningConstraints\":[],\"vsmExternalNodes\":[],\"vsmInfoFlows\":[]}",
+    "checksum": "614dcc884951dd8d72b2482279eaa7a068c31f7d8accc9f5d802b338cf604eb4"
+  },
+  "data": {
+    "meta": {
+      "name": "Inyeccion PU Armrest Rear y APB Puerta",
+      "date": "2026-03-20",
+      "client": "VWA",
+      "version": "Rev A",
+      "engineer": "",
+      "project": "PATAGONIA",
+      "activeShifts": 3,
+      "manualOEE": 0.9,
+      "useManualOEE": true,
+      "useSectorOEE": false,
+      "dailyDemand": 1770,
+      "piecesPerVehicle": 1,
+      "configuredStations": 1,
+      "activeModels": [
+        {
+          "id": "default",
+          "name": "Modelo Estándar",
+          "percentage": 1,
+          "color": "#3b82f6"
+        }
+      ],
+      "createdAt": "2026-03-20T12:22:10.651Z",
+      "modifiedBy": "Script: capacidad moldes APB"
+    },
+    "shifts": [
+      {
+        "id": 1,
+        "name": "Turno 1",
+        "startTime": "06:00",
+        "endTime": "15:00",
+        "breaks": [
+          {
+            "id": "b1",
+            "name": "Descanso",
+            "startTime": "11:00",
+            "duration": 60
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "name": "Turno 2",
+        "startTime": "15:00",
+        "endTime": "23:00",
+        "breaks": [
+          {
+            "id": "b2",
+            "name": "Descanso",
+            "startTime": "19:00",
+            "duration": 45
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "name": "Turno 3",
+        "startTime": "23:00",
+        "endTime": "06:00",
+        "breaks": [
+          {
+            "id": "b3",
+            "name": "Descanso",
+            "startTime": "03:00",
+            "duration": 45
+          }
+        ]
+      }
+    ],
+    "sectors": [
+      {
+        "id": "INYECCION",
+        "name": "Inyección",
+        "color": "#F59E0B",
+        "targetOee": 0.89,
+        "sequence": 2
+      }
+    ],
+    "tasks": [
+      {
+        "id": "10",
+        "description": "Aplicar desmoldante",
+        "times": [
+          7.79,
+          null,
+          null,
+          null,
+          null
+        ],
+        "averageTime": 7.79,
+        "standardTime": 7.79,
+        "ratingFactor": 100,
+        "fatigueCategory": "none",
+        "predecessors": [],
+        "successors": [
+          "20"
+        ],
+        "positionalWeight": 67.87444444444445,
+        "calculatedSuccessorSum": 60.08444444444445,
+        "stdDev": 0,
+        "executionMode": "manual",
+        "sectorId": "INYECCION",
+        "cycleQuantity": 1,
+        "requiredSamples": 0,
+        "concurrentWith": null
+      },
+      {
+        "id": "20",
+        "description": "Inyección de pu",
+        "times": [
+          283,
+          283,
+          283,
+          283,
+          283
+        ],
+        "averageTime": 31.444444444444446,
+        "standardTime": 31.444444444444446,
+        "ratingFactor": 100,
+        "fatigueCategory": "low",
+        "predecessors": [
+          "10"
+        ],
+        "successors": [
+          "30"
+        ],
+        "positionalWeight": 60.08444444444444,
+        "calculatedSuccessorSum": 28.64,
+        "stdDev": 3.972054645195637e-15,
+        "executionMode": "injection",
+        "sectorId": "INYECCION",
+        "cycleQuantity": 9,
+        "requiredSamples": 1,
+        "concurrentWith": null,
+        "injectionParams": {
+          "productionVolume": 1555,
+          "investmentRatio": 0,
+          "optimalCavities": 9,
+          "pInyectionTime": 10,
+          "pCuringTime": 193,
+          "manualInteractionTime": 25.06,
+          "manualOperations": [],
+          "cavityMode": "manual",
+          "userSelectedN": 9,
+          "headcountMode": "auto",
+          "injectionMode": "batch",
+          "realCycle": 31.444444444444443
+        },
+        "ignoredTimeIndices": []
+      },
+      {
+        "id": "30",
+        "description": "Retirar piezas",
+        "times": [
+          3.58,
+          null,
+          null,
+          null,
+          null
+        ],
+        "averageTime": 3.58,
+        "standardTime": 3.58,
+        "ratingFactor": 100,
+        "fatigueCategory": "none",
+        "predecessors": [
+          "20"
+        ],
+        "successors": [
+          "40"
+        ],
+        "positionalWeight": 28.64,
+        "calculatedSuccessorSum": 25.06,
+        "stdDev": 0,
+        "executionMode": "manual",
+        "sectorId": "INYECCION",
+        "cycleQuantity": 1,
+        "requiredSamples": 0,
+        "concurrentWith": null
+      },
+      {
+        "id": "40",
+        "description": "Traslado de piezas",
+        "times": [
+          1.33,
+          null,
+          null,
+          null,
+          null
+        ],
+        "averageTime": 1.33,
+        "standardTime": 1.33,
+        "ratingFactor": 100,
+        "fatigueCategory": "none",
+        "predecessors": [
+          "30"
+        ],
+        "successors": [
+          "50",
+          "60"
+        ],
+        "positionalWeight": 25.060000000000002,
+        "calculatedSuccessorSum": 23.73,
+        "stdDev": 0,
+        "executionMode": "manual",
+        "sectorId": "INYECCION",
+        "cycleQuantity": 1,
+        "requiredSamples": 0,
+        "concurrentWith": "20",
+        "isMachineInternal": true
+      },
+      {
+        "id": "50",
+        "description": "Refilado",
+        "times": [
+          18.92,
+          null,
+          null,
+          null,
+          null
+        ],
+        "averageTime": 18.92,
+        "standardTime": 18.92,
+        "ratingFactor": 100,
+        "fatigueCategory": "none",
+        "predecessors": [
+          "40"
+        ],
+        "successors": [
+          "70"
+        ],
+        "positionalWeight": 21.42,
+        "calculatedSuccessorSum": 2.5,
+        "stdDev": 0,
+        "executionMode": "manual",
+        "sectorId": "INYECCION",
+        "cycleQuantity": 1,
+        "requiredSamples": 0,
+        "concurrentWith": "20",
+        "isMachineInternal": true
+      },
+      {
+        "id": "60",
+        "description": "Sellado de piezas",
+        "times": [
+          2.31,
+          null,
+          null,
+          null,
+          null
+        ],
+        "averageTime": 2.31,
+        "standardTime": 2.31,
+        "ratingFactor": 100,
+        "fatigueCategory": "none",
+        "predecessors": [
+          "40"
+        ],
+        "successors": [
+          "70"
+        ],
+        "positionalWeight": 4.8100000000000005,
+        "calculatedSuccessorSum": 2.5,
+        "stdDev": 0,
+        "executionMode": "manual",
+        "sectorId": "INYECCION",
+        "cycleQuantity": 1,
+        "requiredSamples": 0,
+        "concurrentWith": "20",
+        "isMachineInternal": true
+      },
+      {
+        "id": "70",
+        "description": "Embalaje",
+        "times": [
+          2.5,
+          null,
+          null,
+          null,
+          null
+        ],
+        "averageTime": 2.5,
+        "standardTime": 2.5,
+        "ratingFactor": 100,
+        "fatigueCategory": "none",
+        "predecessors": [
+          "50",
+          "60"
+        ],
+        "successors": [],
+        "positionalWeight": 2.5,
+        "calculatedSuccessorSum": 0,
+        "stdDev": 0,
+        "executionMode": "manual",
+        "sectorId": "INYECCION",
+        "cycleQuantity": 1,
+        "requiredSamples": 0,
+        "concurrentWith": "20",
+        "isMachineInternal": true
+      }
+    ],
+    "assignments": [
+      {
+        "taskId": "20",
+        "stationId": 1
+      },
+      {
+        "taskId": "30",
+        "stationId": 1
+      },
+      {
+        "taskId": "40",
+        "stationId": 1
+      },
+      {
+        "taskId": "50",
+        "stationId": 1
+      },
+      {
+        "taskId": "60",
+        "stationId": 1
+      },
+      {
+        "taskId": "70",
+        "stationId": 1
+      }
+    ],
+    "stationConfigs": [
+      {
+        "id": 1,
+        "replicas": 1,
+        "oeeTarget": 0.9
+      }
+    ],
+    "zoningConstraints": [],
+    "vsmExternalNodes": [],
+    "vsmInfoFlows": []
+  }
+}
