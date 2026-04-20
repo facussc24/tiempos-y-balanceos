@@ -12,10 +12,27 @@ export interface FlowHeaderProps {
   logoBase64: string;
 }
 
+// Inline styles para line-height / padding-bottom: flowStyles.ts no contiene
+// clases Tailwind arbitrary como leading-[13px], por eso inline styles (siempre
+// funcionan en renderToStaticMarkup → html2pdf). Mantenemos las clases que SI
+// existen en flowStyles.ts (text-[6px], text-[9px], truncate, font-bold, etc.).
 const HeaderCell = ({ label, value }: { label: string; value: string }) => (
-  <div className="border border-[#60A5FA] px-1.5 py-[3px] flex flex-col justify-center">
-    <span className="text-[6px] text-[#1E40AF] font-bold uppercase leading-none">{label}</span>
-    <span className="text-[9px] text-gray-900 font-bold uppercase truncate leading-tight">{value}</span>
+  <div
+    className="border border-[#60A5FA] px-1.5 py-[3px] flex flex-col justify-center"
+    style={{ minHeight: '22px' }}
+  >
+    <span
+      className="text-[6px] text-[#1E40AF] font-bold uppercase"
+      style={{ lineHeight: '8px' }}
+    >
+      {label}
+    </span>
+    <span
+      className="text-[9px] text-gray-900 font-bold uppercase truncate"
+      style={{ lineHeight: '13px', paddingBottom: '1px', marginTop: '1px' }}
+    >
+      {value}
+    </span>
   </div>
 );
 

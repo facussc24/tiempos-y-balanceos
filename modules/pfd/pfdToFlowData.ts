@@ -94,8 +94,16 @@ function convertStep(step: PfdStep): FlowNodeData {
     node.labelCondition = step.description || '¿PRODUCTO CONFORME?';
 
     // Reject disposition → branchSide
+    // Fak 2026-04-20: SCRAP se mantiene en OP manufactura (terminologia planta).
+    // Solo cambia en OP 10 Recepcion cuando la pregunta es "MATERIAL CONFORME?"
+    // (defecto de MP = responsabilidad proveedor → RECLAMO PROVEEDOR).
     if (step.rejectDisposition === 'scrap' || step.rejectDisposition === 'sort') {
-      const terminalText = step.rejectDisposition === 'scrap' ? 'SCRAP' : 'SEGREGAR';
+      const isMaterialCheck = /material\s+conforme/i.test(step.description || '');
+      const terminalText = step.rejectDisposition === 'sort'
+        ? 'SEGREGAR'
+        : isMaterialCheck
+          ? 'RECLAMO PROVEEDOR'
+          : 'SCRAP';
       const branchSide: FlowBranchSide = {
         type: 'terminal',
         text: terminalText,
