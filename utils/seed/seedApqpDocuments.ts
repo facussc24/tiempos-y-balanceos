@@ -139,9 +139,9 @@ function mkAmfeHeader(partName: string, client: string, pn: string, amfeNum: str
         subject: `Proceso de fabricación - ${partName}`,
         startDate: '2026-03-14', revDate: '2026-03-14',
         team: TEAM, amfeNumber: amfeNum,
-        responsible: 'F. Santoro', confidentiality: 'Confidencial',
-        partNumber: pn, processResponsible: 'F. Santoro',
-        revision: 'A', approvedBy: '',
+        responsible: 'Carlos Baptista', confidentiality: 'Confidencial',
+        partNumber: pn, processResponsible: 'Carlos Baptista',
+        revision: 'A', approvedBy: 'Gonzalo Cal',
         scope: 'Proceso de producción completo', applicableParts: '',
     };
 }
@@ -153,9 +153,9 @@ function mkPfdHeader(partName: string, pn: string, customer: string, docNum: str
         processPhase: 'pre-launch',
         companyName: 'Barack Mercosul', plantLocation: 'Hurlingham, Buenos Aires',
         supplierCode: '', customerName: customer,
-        coreTeam: TEAM, keyContact: 'F. Santoro',
-        preparedBy: 'F. Santoro', preparedDate: '2026-03-14',
-        approvedBy: '', approvedDate: '',
+        coreTeam: TEAM, keyContact: 'Carlos Baptista',
+        preparedBy: 'Carlos Baptista', preparedDate: '2026-03-14',
+        approvedBy: 'Gonzalo Cal', approvedDate: '',
         linkedAmfeProject: amfePrj,
     };
 }

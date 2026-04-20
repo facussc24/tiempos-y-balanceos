@@ -7,10 +7,10 @@
  *   - revision: si viene "01"/"02"/"0" -> "A" (formato letra AIAG)
  *   - coreTeam: array con 3 roles estandar Barack (si existe pero como string, reemplazar)
  *   - client: "VWA" o "PWA" segun el amfe_number
- *   - approvedBy: "Carlos Baptista (Ingenieria)" si no esta definido
+ *   - approvedBy: "Gonzalo Cal" si no esta definido (2026-04-20: antes era Baptista)
  *   - plantApproval: "Gonzalo Cal" si no esta definido
- *   - reviewedBy: "Facundo Santoro (Calidad)" si no esta definido (distinto de approvedBy)
- *   - elaboratedBy: "Facundo Santoro (Calidad)" si no esta definido
+ *   - reviewedBy: "Carlos Baptista" si no esta definido (distinto de approvedBy)
+ *   - elaboratedBy: "Carlos Baptista" si no esta definido
  *
  * PRESERVA (NO toca):
  *   - amfeNumber / amfe_number (codigo unico)
@@ -47,10 +47,10 @@ const CANON = {
     'Manuel Meszaros (Calidad)',
     'Marianna Vera (Produccion)',
   ],
-  approvedBy: 'Carlos Baptista (Ingenieria)',
+  approvedBy: 'Gonzalo Cal',
   plantApproval: 'Gonzalo Cal',
-  reviewedBy: 'Facundo Santoro (Calidad)',
-  elaboratedBy: 'Facundo Santoro (Calidad)',
+  reviewedBy: 'Carlos Baptista',
+  elaboratedBy: 'Carlos Baptista',
 }
 
 function inferClient(amfeNumber) {
