@@ -47,3 +47,18 @@ exports/test-*
 *.bak
 /*.mjs
 !eslint.config.mjs
+
+# Supabase backups (local snapshots from scripts/_backup.mjs)
+backups/
+
+# Archived legacy modules (kept on disk, not in git)
+archive/
+
+# One-shot audit reports
+AUDIT_*.json
+AUDIT_*.txt
+audit_summary.csv
+type_errors.txt
+phantom_x_report.txt
+stress_report.txt
+REPORTE_NOCHE.md
