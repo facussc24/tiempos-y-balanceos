@@ -13,21 +13,11 @@ import { incrementVersion } from '../utils';
 import { logger } from './logger';
 
 // ---------------------------------------------------------------------------
-// Environment detection — always web in this build
+// Environment helpers
 // ---------------------------------------------------------------------------
 
-export const isTauri = (): boolean => false;
 const hasFileSystemAccess = (): boolean =>
     typeof window !== 'undefined' && 'showOpenFilePicker' in window;
-
-// ---------------------------------------------------------------------------
-// Module init (no-ops in web)
-// ---------------------------------------------------------------------------
-
-const initTauriModules = async (): Promise<boolean> => false;
-const ensureTauriFs = async (): Promise<boolean> => false;
-const ensureTauriDialog = async (): Promise<boolean> => false;
-const ensureTauriPath = async (): Promise<boolean> => false;
 
 // ---------------------------------------------------------------------------
 // Path utilities

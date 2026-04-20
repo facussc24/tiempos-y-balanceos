@@ -148,7 +148,7 @@ Se desplegaron 3 agentes especializados para evaluar si el software esta listo p
 - `changePropagation.ts`: variable `status` computada pero no pasada a createProposal()
 
 ### Otros
-- Tauri references (~30 archivos con `isTauri()` checks) — feature gates intencionales
+- Tauri references — ELIMINADAS 2026-04-20. Todos los `isTauri()` checks fueron removidos (57 ocurrencias en 23 archivos). La app es 100% web/Supabase.
 - `as any` restantes (2 en xlsx-js-style) — types de libreria incompletas
 - JSON.parse(JSON.stringify()) deep clone (12 usos) — riesgo de cambio sutil con structuredClone
 - Credenciales de dev en git history — rotar password de Supabase
