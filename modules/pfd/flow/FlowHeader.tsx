@@ -12,24 +12,30 @@ export interface FlowHeaderProps {
   logoBase64: string;
 }
 
-// Inline styles para line-height / padding-bottom: flowStyles.ts no contiene
-// clases Tailwind arbitrary como leading-[13px], por eso inline styles (siempre
-// funcionan en renderToStaticMarkup → html2pdf). Mantenemos las clases que SI
-// existen en flowStyles.ts (text-[6px], text-[9px], truncate, font-bold, etc.).
+// Causa root del texto cortado en export PDF:
+//   - La clase "truncate" de Tailwind incluye `overflow: hidden`, que recorta
+//     los descenders (letras p, g, y, j, q) que sobresalen del box del span.
+//   - Ni scale:3 ni fonts.ready arreglan eso porque el corte pasa al rasterizar
+//     el span en el canvas.
+// Fix: reemplazar "truncate" por inline `style={{whiteSpace:'nowrap',overflow:'visible'}}`
+// — mantiene el no-wrap pero permite que los glyphs completos se vean.
+// Trade-off: si un value es muy largo, puede desbordar horizontalmente el cell
+// en lugar de mostrar "...". Aceptable porque los values del header son cortos
+// (codigos de documento, fechas, nombres de 2-3 palabras).
 const HeaderCell = ({ label, value }: { label: string; value: string }) => (
   <div
     className="border border-[#60A5FA] px-1.5 py-[3px] flex flex-col justify-center"
-    style={{ minHeight: '22px' }}
+    style={{ minHeight: '24px' }}
   >
     <span
       className="text-[6px] text-[#1E40AF] font-bold uppercase"
-      style={{ lineHeight: '8px' }}
+      style={{ lineHeight: '9px', overflow: 'visible', whiteSpace: 'nowrap' }}
     >
       {label}
     </span>
     <span
-      className="text-[9px] text-gray-900 font-bold uppercase truncate"
-      style={{ lineHeight: '13px', paddingBottom: '1px', marginTop: '1px' }}
+      className="text-[9px] text-gray-900 font-bold uppercase"
+      style={{ lineHeight: '14px', overflow: 'visible', whiteSpace: 'nowrap', paddingBottom: '2px', marginTop: '1px' }}
     >
       {value}
     </span>
