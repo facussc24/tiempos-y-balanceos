@@ -1,16 +1,13 @@
 /**
  * Barack Mercosul v1-beta - Tiempos y Balanceos
  *
- * NOTA: Esta aplicación es EXCLUSIVAMENTE para escritorio (Desktop/Tauri).
- * No está diseñada ni optimizada para dispositivos móviles.
+ * Web app (React + Supabase). No Tauri desktop runtime.
  *
  * @module App
  * @version 1.0.0-beta
  */
-import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { initializeStorageManager } from './utils/storageManager';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { ProjectData } from './types';
-import { isTauri } from './utils/unified_fs';
 import { FABConfig } from './components/ui/FloatingActionButton';
 
 // Custom Hooks
@@ -39,10 +36,6 @@ import { AppModals } from './AppModals';
 import { AppTabContent } from './AppTabContent';
 
 import { PrintView } from './modules/PrintView';
-import { logger } from './utils/logger';
-import { toast } from './components/ui/Toast';
-import { startExportSyncWorker, stopExportSyncWorker } from './utils/exportSyncWorker';
-import { setExportNotifier, type ExportNotifyEvent } from './utils/autoExportService';
 import { useOpenExportFolder } from './hooks/useOpenExportFolder';
 
 interface AppProps {
@@ -91,10 +84,10 @@ const AppMain: React.FC<AppProps> = ({ onBackToLanding }) => {
         }
     );
 
-    // Storage initialization state
-    const [storageReady, setStorageReady] = useState(!isTauri());
+    // Web build: storage is always ready (Supabase). No Tauri initialization.
+    const storageReady = true;
     const [storageVersion, setStorageVersion] = useState(0);
-    const [localMediaCount, setLocalMediaCount] = useState(0);
+    const localMediaCount = 0;
 
     // Set initial tab to 'panel' if project was loaded from DB
     useEffect(() => {
@@ -124,163 +117,8 @@ const AppMain: React.FC<AppProps> = ({ onBackToLanding }) => {
         return () => window.removeEventListener('beforeunload', handleBeforeUnload);
     }, [persistence.data.fileHandle]);
 
-    // Initialize Storage Manager
-    useEffect(() => {
-        let cancelled = false;
-        if (isTauri()) {
-            initializeStorageManager().then((mode) => {
-                if (cancelled) return;
-                logger.info('App', 'Storage initialized', { mode });
-                setStorageReady(true);
-            }).catch((err) => {
-                if (cancelled) return;
-                logger.error('App', 'Storage initialization failed', {}, err instanceof Error ? err : undefined);
-                setStorageReady(true);
-            });
-        }
-        return () => { cancelled = true; };
-    }, []);
-
-    // Start export sync worker (flushes pending exports to Y: when available)
-    useEffect(() => {
-        if (!storageReady || !isTauri()) return;
-        startExportSyncWorker(60_000, (event) => {
-            if (event.type === 'flushed' && event.count > 0) {
-                toast.success('Exportación sincronizada', `${event.count} archivo(s) exportados a Y:`);
-            }
-        });
-        return () => stopExportSyncWorker();
-    }, [storageReady]);
-
-    // Export health check — verify Y: folder structure on startup
-    useEffect(() => {
-        if (!storageReady || !isTauri()) return;
-        let cancelled = false;
-
-        (async () => {
-            try {
-                const { runExportHealthCheck, validateAndRepair } = await import('./utils/exportHealthCheck');
-                const check = await runExportHealthCheck();
-                if (cancelled) return;
-
-                if (!check.accessible) {
-                    // Y: not available — silently skip, sync worker handles offline
-                    logger.info('App', 'Export health check: Y: not accessible (offline mode)');
-                    return;
-                }
-
-                if (!check.healthy) {
-                    const names = check.missing.map(m => m.folderName).join(', ');
-                    toast.warning(
-                        'Estructura de exportación incompleta',
-                        `Faltan carpetas: ${names}`,
-                        [{
-                            label: 'Crear carpetas',
-                            onClick: async () => {
-                                const repair = await validateAndRepair();
-                                if (repair.created.length > 0) {
-                                    toast.success(
-                                        'Carpetas creadas',
-                                        `${repair.created.length} carpeta(s) creada(s) en Y:\\INGENIERIA`,
-                                    );
-                                }
-                                if (repair.errors.length > 0) {
-                                    toast.error(
-                                        'Error al crear carpetas',
-                                        repair.errors.map(e => e.error).join(', '),
-                                    );
-                                }
-                            },
-                            primary: true,
-                        }],
-                    );
-                }
-            } catch (e) {
-                logger.debug('App', 'Export health check failed', { error: String(e) });
-            }
-        })();
-
-        return () => { cancelled = true; };
-    }, [storageReady]);
-
-    // Export notifier — toasts for export events (written, queued, duplicate, error)
-    useEffect(() => {
-        if (!storageReady || !isTauri()) return;
-
-        const MODULE_LABELS: Record<string, string> = {
-            amfe: 'AMFE', cp: 'Plan de Control', ho: 'Hoja de Operaciones',
-            pfd: 'Diagrama de Flujo', tiempos: 'Tiempos y Balanceo',
-        };
-
-        setExportNotifier((event: ExportNotifyEvent) => {
-            const label = MODULE_LABELS[event.module] || event.module;
-            switch (event.type) {
-                case 'written':
-                    toast.success(
-                        `${label} exportado`,
-                        `${event.filenames.length} archivo(s) escritos en Y:`,
-                    );
-                    break;
-                case 'queued':
-                    toast.info(
-                        `${label} encolado`,
-                        `${event.count} archivo(s) en cola (Y: no disponible). Se sincronizarán automáticamente.`,
-                    );
-                    break;
-                case 'error':
-                    toast.error(
-                        `Error exportando ${label}`,
-                        event.errors.join(', '),
-                    );
-                    break;
-                // 'duplicate' — silently skip (no toast needed)
-            }
-        });
-
-        return () => setExportNotifier(null);
-    }, [storageReady]);
-
-    // Detect local media files on startup
-    useEffect(() => {
-        if (!storageReady || !isTauri()) return;
-        let cancelled = false;
-
-        (async () => {
-            try {
-                const { countLocalMediaFiles } = await import('./utils/mediaManager');
-                const count = await countLocalMediaFiles();
-                if (cancelled || count === 0) return;
-                setLocalMediaCount(count);
-
-                const { isServerAvailable } = await import('./utils/storageManager');
-                const serverUp = await isServerAvailable();
-                if (cancelled || !serverUp) return;
-
-                toast.warning(
-                    'Multimedia en almacenamiento local',
-                    `${count} archivo(s) de media detectados. El servidor está disponible para migrar.`,
-                    [{
-                        label: 'Migrar al Servidor',
-                        onClick: () => modals.setShowMediaMigration(true),
-                        primary: true,
-                    }]
-                );
-            } catch (e) {
-                logger.debug('App', 'Media check failed', { error: String(e) });
-            }
-        })();
-
-        return () => { cancelled = true; };
-    }, [storageReady]);
-
-    // Refresh media count after migration
-    const handleMediaMigrationComplete = useCallback(async () => {
-        try {
-            const { countLocalMediaFiles } = await import('./utils/mediaManager');
-            const count = await countLocalMediaFiles();
-            setLocalMediaCount(count);
-        } catch { /* ignore */ }
-    }, []);
+    // Media migration is a no-op in the web build (Tauri-only feature).
+    const handleMediaMigrationComplete = async () => { /* no-op */ };
 
     // =========================================================================
     // LIFTED STATE
@@ -328,9 +166,6 @@ const AppMain: React.FC<AppProps> = ({ onBackToLanding }) => {
     // A11y: Modal Focus Management
     useModalEscape(modals.showCloseModal, () => modals.setShowCloseModal(false));
     const closeModalRef = useFocusTrap(modals.showCloseModal);
-
-    // Smooth Entry: Wait for storage to be ready
-    if (!storageReady) return null;
 
     // =========================================================================
     // RENDER

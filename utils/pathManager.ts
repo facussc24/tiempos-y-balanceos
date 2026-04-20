@@ -10,8 +10,6 @@
  * @module pathManager
  * @version 4.1.0
  */
-import { isTauri } from './unified_fs';
-import { logger } from './logger';
 
 // ============================================================================
 // Configuration
@@ -30,9 +28,9 @@ export interface PathConfig {
 }
 
 /**
- * Default configuration using the user's specified network paths.
- * The mapped drive letter (Y:) can break when Windows loses the network mapping
- * (sleep, reboot, VPN reconnect). The UNC fallback ensures the app always connects.
+ * Default configuration using the legacy Y: share labels.
+ * Web build does no filesystem probing; this is mostly metadata for exported file
+ * paths / display strings.
  */
 const DEFAULT_PATH_CONFIG: PathConfig = {
     basePath: 'Y:\\INGENIERIA\\Datos Software',
@@ -42,19 +40,6 @@ const DEFAULT_PATH_CONFIG: PathConfig = {
     reportsFolder: '04_REPORTES',
 };
 
-/**
- * UNC fallback path — same folder as basePath but via direct network name.
- * Used when the mapped drive letter (Y:) is unavailable.
- */
-const UNC_FALLBACK_BASE_PATH = '\\\\server\\compartido\\INGENIERIA\\Datos Software';
-
-/**
- * Legacy paths — for backward compatibility with data saved before the reorganization.
- * resolveBasePath() will try these if the new path doesn't exist yet.
- */
-const LEGACY_BASE_PATH = 'Y:\\Ingenieria\\Documentacion Gestion Ingenieria\\15. Tiempos\\Software';
-const LEGACY_UNC_FALLBACK = '\\\\server\\compartido\\Ingenieria\\Documentacion Gestion Ingenieria\\15. Tiempos\\Software';
-
 // In-memory config (can be updated at runtime)
 let currentConfig: PathConfig = { ...DEFAULT_PATH_CONFIG };
 
@@ -63,8 +48,7 @@ let currentConfig: PathConfig = { ...DEFAULT_PATH_CONFIG };
  */
 export function setPathConfig(config: Partial<PathConfig>): void {
     currentConfig = { ...currentConfig, ...config };
-    // Persist to localStorage for web mode
-    if (!isTauri() && typeof localStorage !== 'undefined') {
+    if (typeof localStorage !== 'undefined') {
         localStorage.setItem('path_config', JSON.stringify(currentConfig));
     }
 }
@@ -80,7 +64,7 @@ export function getPathConfig(): PathConfig {
  * Load config from localStorage if available
  */
 function loadPathConfig(): void {
-    if (!isTauri() && typeof localStorage !== 'undefined') {
+    if (typeof localStorage !== 'undefined') {
         const stored = localStorage.getItem('path_config');
         if (stored) {
             try {
@@ -172,38 +156,12 @@ export function sanitizeName(name: string): string {
  * Creates the complete hierarchy for data, media, and reports
  */
 export async function ensureStudyStructure(
-    client: string,
-    project: string,
-    part: string
+    _client: string,
+    _project: string,
+    _part: string
 ): Promise<{ success: boolean; createdPaths: string[]; error?: string }> {
-    const createdPaths: string[] = [];
-
-    if (!isTauri()) {
-        // Web mode - just return success (no real FS)
-        return { success: true, createdPaths: [] };
-    }
-
-    try {
-        const fs = await import('./unified_fs');
-
-        // Create folders for each content type
-        const contentTypes: ContentType[] = ['data', 'media'];
-
-        for (const type of contentTypes) {
-            const path = buildPath(type, client, project, part);
-            await fs.ensureDir(path);
-            createdPaths.push(path);
-        }
-
-        return { success: true, createdPaths };
-    } catch (e) {
-        logger.error('PathManager', 'Error creating structure', {}, e instanceof Error ? e : undefined);
-        return {
-            success: false,
-            createdPaths,
-            error: e instanceof Error ? e.message : 'Unknown error'
-        };
-    }
+    // Web mode: no real filesystem — Supabase handles persistence.
+    return { success: true, createdPaths: [] };
 }
 
 // ============================================================================
@@ -214,286 +172,65 @@ export async function ensureStudyStructure(
  * List all clients (top-level folders in data directory)
  */
 export async function listClients(): Promise<string[]> {
-    if (!isTauri()) {
-        // Web mode - query Supabase projects table
-        const { listProjects: listAllProjects } = await import('./repositories/projectRepository');
-        const projects = await listAllProjects();
-        const clients = [...new Set(projects.map(p => p.client).filter(Boolean))];
-        return clients.sort();
-    }
-
-    try {
-        const fs = await import('./unified_fs');
-        const dataPath = `${currentConfig.basePath}\\${currentConfig.dataFolder}`;
-
-        const exists = await fs.exists(dataPath);
-        if (!exists) {
-            return [];
-        }
-
-        const entries = await fs.readDir(dataPath);
-        return entries
-            .filter(e => e.isDirectory)
-            .map(e => e.name)
-            .sort();
-    } catch (e) {
-        logger.error('PathManager', 'Error listing clients', {}, e instanceof Error ? e : undefined);
-        return [];
-    }
+    const { listProjects: listAllProjects } = await import('./repositories/projectRepository');
+    const projects = await listAllProjects();
+    const clients = [...new Set(projects.map(p => p.client).filter(Boolean))];
+    return clients.sort();
 }
 
 /**
  * List all projects for a given client
  */
 export async function listProjects(client: string): Promise<string[]> {
-    if (!isTauri()) {
-        // Web mode - query Supabase projects table
-        const { getProjectsByClient } = await import('./repositories/projectRepository');
-        const projects = await getProjectsByClient(client);
-        const projectCodes = [...new Set(projects.map(p => p.project_code).filter(Boolean))];
-        return projectCodes.sort();
-    }
-
-    try {
-        const fs = await import('./unified_fs');
-        const clientPath = `${currentConfig.basePath}\\${currentConfig.dataFolder}\\${sanitizeName(client)}`;
-
-        const exists = await fs.exists(clientPath);
-        if (!exists) {
-            return [];
-        }
-
-        const entries = await fs.readDir(clientPath);
-        return entries
-            .filter(e => e.isDirectory)
-            .map(e => e.name)
-            .sort();
-    } catch (e) {
-        logger.error('PathManager', 'Error listing projects', {}, e instanceof Error ? e : undefined);
-        return [];
-    }
+    const { getProjectsByClient } = await import('./repositories/projectRepository');
+    const projects = await getProjectsByClient(client);
+    const projectCodes = [...new Set(projects.map(p => p.project_code).filter(Boolean))];
+    return projectCodes.sort();
 }
 
 /**
  * List all parts for a given client/project
  */
 export async function listParts(client: string, project: string): Promise<string[]> {
-    if (!isTauri()) {
-        // Web mode - query Supabase projects table
-        const { getProjectsByClient } = await import('./repositories/projectRepository');
-        const projects = await getProjectsByClient(client);
-        return projects
-            .filter(p => p.project_code === project)
-            .map(p => p.name)
-            .sort();
-    }
-
-    try {
-        const fs = await import('./unified_fs');
-        const projectPath = `${currentConfig.basePath}\\${currentConfig.dataFolder}\\${sanitizeName(client)}\\${sanitizeName(project)}`;
-
-        const exists = await fs.exists(projectPath);
-        if (!exists) {
-            return [];
-        }
-
-        const entries = await fs.readDir(projectPath);
-        return entries
-            .filter(e => e.isDirectory)
-            .map(e => e.name)
-            .sort();
-    } catch (e) {
-        logger.error('PathManager', 'Error listing parts', {}, e instanceof Error ? e : undefined);
-        return [];
-    }
-}
-
-/**
- * Check if a study already exists
- */
-async function studyExists(client: string, project: string, part: string): Promise<boolean> {
-    if (!isTauri()) {
-        return false;
-    }
-
-    try {
-        const fs = await import('./unified_fs');
-        const masterPath = buildMasterJsonPath(client, project, part);
-        return await fs.exists(masterPath);
-    } catch {
-        return false;
-    }
+    const { getProjectsByClient } = await import('./repositories/projectRepository');
+    const projects = await getProjectsByClient(client);
+    return projects
+        .filter(p => p.project_code === project)
+        .map(p => p.name)
+        .sort();
 }
 
 /**
  * V5: Delete a study folder (the part folder)
- * @param studyPath - Full path to the study folder (e.g., "Y:\...\01_DATA\CLIENT\PROJECT\PART")
+ * Web mode: no filesystem operations — Supabase handles deletion via repositories.
  */
-export async function deleteStudy(studyPath: string): Promise<{ success: boolean; error?: string }> {
-    if (!isTauri()) {
-        return { success: false, error: 'Delete not available in web mode' };
-    }
-
-    try {
-        const fs = await import('./unified_fs');
-
-        // Verify path exists
-        const exists = await fs.exists(studyPath);
-        if (!exists) {
-            return { success: false, error: 'Study folder not found' };
-        }
-
-        // Remove the folder recursively
-        await fs.remove(studyPath, { recursive: true });
-
-        return { success: true };
-    } catch (e) {
-        logger.error('PathManager', 'Error deleting study', {}, e instanceof Error ? e : undefined);
-        return {
-            success: false,
-            error: e instanceof Error ? e.message : 'Unknown error'
-        };
-    }
+export async function deleteStudy(_studyPath: string): Promise<{ success: boolean; error?: string }> {
+    return { success: false, error: 'Delete not available in web mode' };
 }
 
 /**
  * V5: Delete a Project folder (recursively)
- * @param client - Client name
- * @param project - Project name
+ * Web mode: no filesystem operations — Supabase handles deletion via repositories.
  */
-export async function deleteProject(client: string, project: string): Promise<{ success: boolean; error?: string }> {
-    if (!isTauri()) {
-        return { success: false, error: 'Delete not available in web mode' };
-    }
-
-    try {
-        const fs = await import('./unified_fs');
-        const projectPath = `${currentConfig.basePath}\\${currentConfig.dataFolder}\\${sanitizeName(client)}\\${sanitizeName(project)}`;
-
-        // Verify path exists
-        const exists = await fs.exists(projectPath);
-        if (!exists) {
-            return { success: false, error: 'Project folder not found' };
-        }
-
-        // Remove the folder recursively
-        await fs.remove(projectPath, { recursive: true });
-
-        return { success: true };
-    } catch (e) {
-        logger.error('PathManager', 'Error deleting project', {}, e instanceof Error ? e : undefined);
-        return {
-            success: false,
-            error: e instanceof Error ? e.message : 'Unknown error'
-        };
-    }
+export async function deleteProject(_client: string, _project: string): Promise<{ success: boolean; error?: string }> {
+    return { success: false, error: 'Delete not available in web mode' };
 }
 
 /**
  * V5: Delete a Client folder (recursively)
- * @param client - Client name
+ * Web mode: no filesystem operations — Supabase handles deletion via repositories.
  */
-export async function deleteClient(client: string): Promise<{ success: boolean; error?: string }> {
-    if (!isTauri()) {
-        return { success: false, error: 'Delete not available in web mode' };
-    }
-
-    try {
-        const fs = await import('./unified_fs');
-        const clientPath = `${currentConfig.basePath}\\${currentConfig.dataFolder}\\${sanitizeName(client)}`;
-
-        // Verify path exists
-        const exists = await fs.exists(clientPath);
-        if (!exists) {
-            return { success: false, error: 'Client folder not found' };
-        }
-
-        // Remove the folder recursively
-        await fs.remove(clientPath, { recursive: true });
-
-        return { success: true };
-    } catch (e) {
-        logger.error('PathManager', 'Error deleting client', {}, e instanceof Error ? e : undefined);
-        return {
-            success: false,
-            error: e instanceof Error ? e.message : 'Unknown error'
-        };
-    }
+export async function deleteClient(_client: string): Promise<{ success: boolean; error?: string }> {
+    return { success: false, error: 'Delete not available in web mode' };
 }
 
 /**
- * Resolve the best available base path at runtime.
- * Tries the mapped drive (Y:\...) first, then falls back to UNC (\\server\...).
- * Updates currentConfig.basePath in-place so all subsequent path operations use it.
- *
- * Why: Windows frequently loses mapped drive letters after sleep, reboot, or VPN
- * reconnect. The UNC path works as long as the network is reachable. This makes
- * the app resilient to drive mapping issues on any PC.
+ * Resolve the best available base path.
+ * Web mode: returns the configured basePath (no filesystem probing).
+ * The UNC/legacy fallback logic only applied to the Tauri desktop build.
  */
-// Cache for resolved base path (avoids repeated network checks)
-let resolvedBasePathCache: { path: string; resolvedAt: number } | null = null;
-const RESOLVE_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
-
 export async function resolveBasePath(): Promise<string> {
-    if (!isTauri()) return currentConfig.basePath;
-
-    // Return cached result if still valid
-    if (resolvedBasePathCache && (Date.now() - resolvedBasePathCache.resolvedAt) < RESOLVE_CACHE_TTL_MS) {
-        return resolvedBasePathCache.path;
-    }
-
-    try {
-        const fs = await import('./unified_fs');
-
-        const checkPath = async (path: string, timeout: number): Promise<boolean> => {
-            return Promise.race([
-                fs.exists(path),
-                new Promise<boolean>((_, reject) => setTimeout(() => reject(false), timeout))
-            ]).catch(() => false);
-        };
-
-        // Priority order (highest to lowest)
-        const candidates = [
-            { path: currentConfig.basePath, label: 'primary' },
-            { path: UNC_FALLBACK_BASE_PATH, label: 'UNC' },
-            { path: LEGACY_BASE_PATH, label: 'legacy' },
-            { path: LEGACY_UNC_FALLBACK, label: 'legacy UNC' },
-        ];
-
-        // Check ALL paths in parallel with a global 5s timeout
-        const results = await Promise.race([
-            Promise.allSettled(
-                candidates.map(c => checkPath(c.path, 3000).then(ok => ({ ...c, ok })))
-            ),
-            new Promise<PromiseSettledResult<{ path: string; label: string; ok: boolean }>[]>(
-                resolve => setTimeout(() => resolve(candidates.map(c => ({
-                    status: 'fulfilled' as const,
-                    value: { ...c, ok: false },
-                }))), 5000)
-            ),
-        ]);
-
-        // Pick the first accessible path in priority order
-        for (const result of results) {
-            if (result.status === 'fulfilled' && result.value.ok) {
-                const chosen = result.value;
-                if (chosen.path !== currentConfig.basePath) {
-                    logger.info('PathManager', `Using ${chosen.label} path`, { path: chosen.path });
-                    currentConfig.basePath = chosen.path;
-                }
-                resolvedBasePathCache = { path: chosen.path, resolvedAt: Date.now() };
-                return chosen.path;
-            }
-        }
-
-        // None accessible — keep current and let caller handle
-        logger.warn('PathManager', 'No path accessible');
-        resolvedBasePathCache = { path: currentConfig.basePath, resolvedAt: Date.now() };
-        return currentConfig.basePath;
-    } catch (e) {
-        logger.error('PathManager', 'Error resolving base path', {}, e instanceof Error ? e : undefined);
-        return currentConfig.basePath;
-    }
+    return currentConfig.basePath;
 }
 
 // Initialize config on module load
