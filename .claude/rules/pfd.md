@@ -10,10 +10,36 @@
 - Embalaje: "EMBALAJE Y ETIQUETADO DE PRODUCTO TERMINADO"
 
 ## Numeracion de operaciones
-- Las OP van de 10 en 10: 10, 20, 30, 40...
+
+### Operaciones principales
+- Las OP principales van de 10 en 10: 10, 20, 30, 40, 50...
 - Cada AMFE puede tener su propia secuencia (en uno costura puede ser OP 20, en otro OP 30)
-- Sub-operaciones (21, 31, etc.) son para pasos relacionados al proceso padre o cuando el proceso tiene varios pasos
 - Los transportes, almacenamientos e inspecciones intermedias NO llevan numero de OP (son conectores)
+
+### Sub-operaciones y operaciones del mismo sector (IMPORTANTE)
+- Cuando dos operaciones estan RELACIONADAS entre si o pertenecen al MISMO SECTOR de planta, pueden compartir decena y diferenciarse por el digito de unidad.
+  - Ej: OP 50 "ENSAMBLE CARRIER" + OP 51 "COSTURA DOBLE" (ambas en el sector de ensamble, la 51 es un paso adicional relacionado a la 50).
+  - Ej: OP 70 "INYECCION PU" + OP 72 "ENSAMBLE CON SUSTRATO" (72 es la continuacion logica de 70 en el mismo sector).
+- **Reprocesos** se numeran en serie 100+ manteniendo la unidad por tipo de reproceso:
+  - OP 100 "CLASIFICACION Y SEGREGACION DE PRODUCTO NO CONFORME"
+  - OP 101 "REPROCESO: ELIMINACION DE HILO SOBRANTE"
+  - OP 102 "REPROCESO: REUBICACION DE APLIX"
+  - OP 103 "REPROCESO: CORRECCION DE COSTURA DESVIADA/FLOJA"
+  - OP 110 "EMBALAJE"
+  - OP 111 "REPROCESO: PUNTADA FLOJA"
+  - OP 112 "REPROCESO: ELIMINACION DE ARRUGAS EN HORNO"
+  - Esta numeracion NO es error — es el estandar Barack para diferenciar reprocesos por tipo.
+- **Preparaciones** al arranque pueden numerarse 15, 25, 35 (decena anterior + 5) cuando son setups del sector:
+  - OP 15 "PREPARACION DE CORTE" (preparacion de OP 20 CORTE)
+  - OP 35 "COSTURA VISTA" (sub-operacion de OP 30 COSTURA UNION, condicional por variante)
+- NO marcar como error de auditoria una numeracion no-multiplo-de-10 sin antes verificar si es sub-operacion de sector o reproceso autorizado.
+
+### Resumen para auditores automaticos
+Antes de flaggear OP N como "numeracion invalida", verificar:
+1. Es reproceso (101, 102, 103, 111, 112, etc.)? -> OK
+2. Es preparacion de sector (15, 25, 35)? -> OK
+3. Es sub-operacion relacionada a decena anterior (51 junto a 50, 72 junto a 70)? -> OK
+4. Solo marcar error si la OP no encaja en ninguno de esos patrones y esta aislada sin relacion.
 
 ## Niveles de detalle del flujograma
 ### PRELIMINAR
