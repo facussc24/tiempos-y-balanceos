@@ -94,6 +94,8 @@ Si algo esta mal, corregir el AMFE fuente y regenerar.
 
 ## Limitaciones conocidas
 
+0. **IMPORTANTE - Columnas metadata deben sincronizarse** con data.header al hacer INSERT. La tabla pfd_documents tiene columnas separadas (part_number, part_name, customer_name, step_count, document_number, revision_level, revision_date) que el UI usa para listar documentos. Si solo se guarda en data, el listado muestra "Sin nombre, 0 pasos". El script generatePfdForAllFamilies.ts ya sincroniza estas columnas. Si agregas PFDs con otro script, incluir explicitamente. Fix retroactivo: scripts/_fixPfdColumns.mjs.
+
 1. **REC bookend duplicado con OP 5 storage**: si el AMFE tiene una OP 5 de Recepcion, queda duplicada con el bookend REC. Borrar manualmente el duplicado o saltar la OP de recepcion al generar.
 2. **Transportes cross-sector**: si el AMFE no tiene departamentos claros, no se insertan transportes. Usar `--transportMode all` (via script modificado) o agregar manualmente.
 3. **CC/SC inferido**: el generador calcula CC/SC desde severidad. Si el equipo APQP definio valores distintos manualmente, regenerar los sobrescribe.

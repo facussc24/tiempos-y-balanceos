@@ -67,9 +67,18 @@ for (const a of amfes || []) {
   result.document.header.linkedAmfeId = a.amfe_number;
   result.document.header.linkedAmfeProject = a.amfe_number;
 
+  // IMPORTANTE: sincronizar columnas metadata (UI listing las usa, no data.header)
+  const h = result.document.header;
   const { error: insErr } = await sb.from('pfd_documents').insert({
     id: result.document.id,
     data: result.document,
+    part_number: h.partNumber || '',
+    part_name: h.partName || '',
+    document_number: h.documentNumber || '',
+    revision_level: h.revisionLevel || 'A',
+    revision_date: h.revisionDate || '',
+    customer_name: h.customerName || '',
+    step_count: result.document.steps.length,
   });
   if (insErr) { console.error(`  INSERT ERROR: ${insErr.message}`); continue; }
   console.log(`  SAVED id=${result.document.id}`);
