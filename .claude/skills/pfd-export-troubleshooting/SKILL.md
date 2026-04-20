@@ -62,56 +62,90 @@ descender (p, g, y, j, q) al rasterizar en canvas. En fuentes <10px se nota.
 style={{ whiteSpace: 'nowrap', overflow: 'visible' }}
 ```
 
-### 3. Textos dentro de shapes quedan descentrados
-`flex items-center` centra la line-box del texto (font-size + ascender +
-descender), NO el glyph optico. En la fuente Inter el cap-height esta
-desplazado ~1px arriba del centro visual de la line-box. html2canvas respeta
-eso literalmente → texto queda ligeramente arriba o abajo segun el cap-height.
+### 3. Textos dentro de shapes quedan descentrados — SOLUCION DEFINITIVA: SVG
 
-**Fix A (ideal para texto 1-linea en shapes fijos)**: position absolute +
-translate(-50%, -50%). Centra el bounding-box real del span, NO depende de
-metrics de fuente. Usado en ShapeOperation, ShapeInspection, ShapeOpIns.
+**LA UNICA SOLUCION QUE FUNCIONA: SVG puro con `textAnchor="middle"` +
+`dominantBaseline="central"`.**
+
+2026-04-20: probamos 4 approaches de html/css en orden, TODOS fallaron:
+1. `transform: translateY(-0.5px)` compensatorio → empujo arriba, empeoro
+2. `position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%)` → se aplico pero html2canvas lo ignoro visualmente
+3. `display: table; display: table-cell; vertical-align: middle` → CSS1 supuestamente soportado, pero html2canvas no movio nada
+4. Paddings asimetricos (`paddingTop: 4px; paddingBottom: 1px`) → se aplicaron pero el glyph no se movio
+
+**Causa raiz**: html2canvas calcula el baseline del texto en funcion de las
+metrics de la fuente (Inter) y las ignora al escalar con `scale: 3`. El texto
+siempre termina pegado al borde inferior del container, sin importar
+verticalAlign, transforms ni paddings.
+
+**Solucion final (commit dd0a475)**: reemplazar html/css con SVG para cualquier
+shape que contenga texto centrado:
 ```tsx
-<div style={{ position: 'relative' }}>
-  <span style={{
-    position: 'absolute',
-    top: '50%', left: '50%',
-    transform: 'translate(-50%, -50%)',
-    lineHeight: 1,
-    whiteSpace: 'nowrap',
-  }}>{id}</span>
+// ShapeOperation: circulo con "10" adentro
+<div style={{ width: 64, height: 40 }}>
+  <svg width="64" height="40" viewBox="0 0 64 40" style={{ overflow: 'visible' }}>
+    <ellipse cx="32" cy="20" rx="31" ry="19" fill="white" stroke="#60A5FA" strokeWidth="1.5" />
+    <text x="32" y="20"
+      textAnchor="middle"
+      dominantBaseline="central"
+      fill="#1E40AF" fontSize="11" fontWeight="bold"
+      fontFamily="Inter, Arial, sans-serif">
+      {id}
+    </text>
+  </svg>
 </div>
 ```
 
-**Fix B (para texto multi-linea o containers flexibles)**: paddingTop asimetrico.
-Empuja el texto hacia abajo para compensar el cap-height de Inter arriba.
+**Por que SVG funciona donde html no**:
+- Las coordenadas `x="32" y="20"` son absolutas, no dependen de metrics.
+- `textAnchor="middle"` centra horizontalmente el texto en el punto x.
+- `dominantBaseline="central"` centra verticalmente el CENTRO OPTICO del glyph
+  en el punto y (no el baseline).
+- html2canvas rendera SVG native sin calcular metrics propios.
+
+**Pattern para cualquier shape con texto centrado en PFD export**:
 ```tsx
-<span style={{
-  lineHeight: 1.15,
-  paddingTop: '3px',
-  paddingBottom: '2px',
-  display: 'inline-block',
-}}>{text}</span>
+<div style={{ width: W, height: H }}>
+  <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} style={{ overflow: 'visible' }}>
+    {/* Shape: ellipse, rect, circle, etc. */}
+    <text
+      x={W / 2}
+      y={H / 2}
+      textAnchor="middle"
+      dominantBaseline="central"
+      fontFamily="Inter, Arial, sans-serif"
+    >
+      {text}
+    </text>
+  </svg>
+</div>
 ```
 
-**ANTI-PATTERN** (NO usar):
-- `transform: translateY(-0.5px)` — empuja arriba sin razon, empeora el bug
-- Solo `lineHeight: 1` sin paddingTop — en Inter queda ligeramente arriba
-- `flex items-center` para textos chicos con precision critica
+**Para texto multi-linea** (ej. "RECLAMO PROVEEDOR" en 2 lineas): usar 2
+elementos `<text>` con `y` offset desde el centro (`y={H/2 - 4.5}` primera
+linea, `y={H/2 + 4.5}` segunda).
+
+**ANTI-PATTERN** (NO usar en export PDF):
+- `flex items-center` con texto chico
+- `transform: translateY(...)` compensatorio
+- `display: table-cell; verticalAlign: middle`
+- Paddings asimetricos para "empujar" el texto
+- Cualquier html/css con expectativa de centrado vertical preciso de glyph
 
 ## Workflow de fix de bugs del export PDF
 
 ### Paso 1: Identificar causa root ANTES de editar
 Patrones comunes y causa:
 
-| Sintoma | Causa probable |
-|---|---|
-| Texto cortado en parte inferior (descenders) | `truncate` / `overflow: hidden` |
-| Texto cortado en mitad | html2canvas metrics fallback font → usar `fonts.ready` |
-| Layout entero colapsa (texto sin CSS) | Clase Tailwind arbitrary no existe en flowStyles.ts |
-| Texto desalineado hacia abajo del shape | `lineHeight > 1` centra caja, no glyph |
-| Header se va a 2 paginas | Celdas demasiado altas (padding o min-height excesivo) |
-| SCRAP en ingles cuando Fak quiere RECLAMO | Terminal rotulado segun `step.description` en pfdToFlowData.ts |
+| Sintoma | Causa probable | Fix |
+|---|---|---|
+| Texto cortado en parte inferior (descenders) | `truncate` / `overflow: hidden` | Quitar `truncate`, inline `overflow: visible` |
+| Texto cortado en mitad | html2canvas metrics fallback font | `document.fonts.ready` antes del capture |
+| Layout entero colapsa (texto sin CSS) | Clase Tailwind arbitrary no en flowStyles.ts | Inline `style={{}}` en lugar de arbitrary |
+| **Texto desalineado dentro de shape (arriba/abajo)** | **html2canvas ignora verticalAlign** | **SVG puro con textAnchor+dominantBaseline (OBLIGATORIO)** |
+| Cuadrito CC/SC descentrado del shape | Row sin altura explicita, `items-center` inconsistente | `minHeight: '48px'` inline en el row |
+| Header se va a 2 paginas | Celdas demasiado altas | No usar `min-height` excesivo; line-height con padding moderado |
+| SCRAP cuando Fak quiere RECLAMO | Terminal rotulado segun `step.description` | Regex match en `pfdToFlowData.ts` |
 
 ### Paso 2: Test LOCAL antes de pushear a produccion
 SIEMPRE antes de commitear cambios en `modules/pfd/flow/*` o
@@ -164,7 +198,10 @@ causa root de nuevo.
 | d31225c | scale:3 + fonts.ready en html2canvas | No resolvio (no era metrics) |
 | e760335 | Quitar `truncate` de HeaderCell | RESOLVIO corte descenders |
 | f51286f | Intento lineHeight:1 + translateY(-0.5px) | EMPUJO textos arriba del centro, Fak confirmo mal |
-| 8164cf1 | Fix v2: position:absolute+translate(-50%,-50%) | Approach robusto independiente de metrics fuente |
+| 8164cf1 | Fix v2: position:absolute+translate(-50%,-50%) | Se aplico pero html2canvas lo ignoro visualmente |
+| 6baefa6 | Fix v3: minHeight:48px explicito en row | Alineo cuadritos CC/SC con shapes OK (eso SI funciono) |
+| 5cabab1 | Fix v4: table-cell + verticalAlign + paddings asimetricos | Se aplico pero html2canvas NO movio textos |
+| dd0a475 | Fix v5 FINAL: SVG puro con textAnchor+dominantBaseline | FUNCIONO — Fak confirmo "al fin" |
 
 ## Config html2canvas recomendada
 
