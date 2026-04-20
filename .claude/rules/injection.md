@@ -114,15 +114,48 @@ Modo de falla tipico: "Boca de alimentacion atascada por pasta de material" — 
 - **Limpieza al bajar molde**: interna (soplete a canales de refrigeracion para sacar agua) + externa (superficies) + lubricacion ambas caras
 - **Superficie magnetica de la inyectora**: el molde debe bajar con superficies libres de suciedad, golpes y rebabas
 
-## Familias con operacion de inyeccion (productos Patagonia)
+## Familias con operacion de inyeccion - CORREGIDO 2026-04-20
+
+**IMPORTANTE**: Hay 2 tipos de inyeccion distintos. NO confundir. NO sincronizar entre si.
+
+### Familias con INYECCION PLASTICA (termoplastico) - maestro family 15
+Materiales: PP, ABS, PC, PA, EPDM, PET. Inyectora de plastico, molde metalico, ciclo corto.
 
 - **IP PAD** (familia IP PAD) — OP 20 INYECCION (PP+EPDM para PL0, luego tapizado PVC para PL1-PL3)
-- **Top Roll** (familia Top Roll Patagonia) — OP con inyeccion (verificar numero exacto por variante)
-- **Insert Patagonia** (familia Insert) — OP con inyeccion plastica
-- **Armrest Door Panel** (familia Armrest) — verificar si tiene inyeccion propia o usa componente inyectado externo
-- **Headrest Front/Rear Center/Rear Outer** — verificar si tienen componente plastico inyectado propio
+- **Top Roll Patagonia** (familia Top Roll) — OP 10 INYECCION DE PIEZA PLASTICA
+- **Insert Patagonia** (familia Insert) — OP 70 INYECCION DE PIEZAS PLASTICAS
+- **Armrest Door Panel** (familia Armrest) — OP 60 INYECCION DE PIEZAS PLASTICAS (carrier plastico)
 
-Cuando se modifica el AMFE Maestro de Inyeccion, estos 5 AMFEs DEBEN recibir alertas cross-family via `cross_doc_checks`.
+### Familias con INYECCION PU (espuma poliuretano) - maestro pendiente crear
+Proceso distinto: mezcla quimica Poliol+Isocianato, reaccion en molde, tiempo de curado 180+ seg, EPP completo (respirador, delantal, guantes termicos).
+
+- **Armrest Door Panel** — OP 70 INYECCION PU (respaldo de armrest sobre carrier)
+- **Headrest Front/Rear Center/Rear Outer** — OP ESPUMADO (PU foam en molde con sustrato)
+
+### Familias SIN inyeccion
+- Telas Planas PWA
+- Telas Termoformadas PWA
+
+## Incidente 2026-04-20
+
+El script `syncArmrestHeadrestFromInjectionMaster.mjs` propago indebidamente el maestro de INYECCION PLASTICA (family 15) a los 3 Headrest. Los Headrest NO tienen inyeccion plastica, solo PU. La operacion OP 40 de los 3 Headrest quedo rotulada como "INYECCION DE SUSTRATO" con 11 WEs de termoplastico. Fue corregida manualmente 2026-04-20:
+- Rename OP 40 -> "COSTURA 2DA ETAPA"
+- Reset workElements a []
+- Equipo APQP debe completar segun PPAP oficial Rev.1 (AMFE - Apoyacabezas*.xlsx)
+
+## Proxima accion pendiente
+
+Crear maestro INYECCION PU separado para propagar a Armrest OP 70 + Headrest OP ESPUMADO. Estructura base:
+- Material: Poliol (componente A), Isocianato (componente B)
+- Machine: Inyectora PU con controlador de dosificacion
+- Method: relacion Poliol/Iso, tiempo de crema, tiempo de colada, temperatura de molde, presion
+- Man: verificacion de parametros arranque + cada N piezas
+- Measurement: balanza de dosificacion, cronometro curado, termometro molde
+- Environment: ventilacion adecuada (gases), temperatura ambiente controlada
+
+## Cuando un AMFE se sincroniza con el maestro de inyeccion plastica
+
+Antes de correr cualquier sync script hacia una familia, VERIFICAR que el proceso real del producto sea termoplastico leyendo las fallas/causas de la operacion correspondiente. Si dice "costura", "espumado", "PU", "poliol" -> NO es inyeccion plastica.
 
 ## Valores numericos
 NUNCA inventar temperaturas exactas, presiones, tiempos de ciclo. Usar rangos del gerente (80-120 C, 2-4 h). Si falta un dato: **TBD** y preguntar a Fak.
