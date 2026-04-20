@@ -92,11 +92,17 @@ export const FlowNode: React.FC<FlowNodeProps> = ({ node, isLast, hasBranches })
 
       {/* Main row: CC/SC label | Shape | Description */}
       <div className="flex items-center w-full max-w-4xl relative z-10">
-        {/* Left column: CC/SC label */}
+        {/* Left column: CC/SC label
+            inline lineHeight:1 para que el texto se centre verticalmente en html2canvas
+            (items-center centra la caja incluyendo line-height extra; sin esto el
+            texto SC queda descentrado hacia abajo del cuadrito). */}
         <div className="flex-1 flex justify-end items-center pr-6 space-x-2 relative z-10">
           {node.critical && node.criticalType && (
-            <span className="text-[9px] font-bold text-red-600 bg-red-50 border border-red-200 rounded-sm px-1.5 py-0.5 whitespace-nowrap">
-              {node.criticalType}
+            <span
+              className="text-[9px] font-bold text-red-600 bg-red-50 border border-red-200 rounded-sm px-1.5 py-0.5 whitespace-nowrap inline-flex items-center justify-center"
+              style={{ lineHeight: 1, minHeight: '14px' }}
+            >
+              <span style={{ lineHeight: 1, transform: 'translateY(-0.5px)' }}>{node.criticalType}</span>
             </span>
           )}
         </div>

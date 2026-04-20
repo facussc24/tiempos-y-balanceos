@@ -5,18 +5,28 @@
 
 import React from 'react';
 
-/** Operation — Ellipse with step ID inside */
+/** Operation — Ellipse with step ID inside
+ *  style inline lineHeight:1 — en html2canvas, items-center centra la caja del texto
+ *  (que incluye ascender/descender), pero el glyph visual queda bajo.
+ *  line-height 1 hace que la caja = font-size, y el glyph se centra opticamente.
+ */
 export const ShapeOperation = ({ id }: { id?: string }) => (
-  <div className="w-16 h-10 rounded-[50%] border-[1.5px] border-[#60A5FA] bg-white flex items-center justify-center text-[#1E40AF] text-[11px] font-bold z-10 relative shadow-sm shrink-0">
-    {id}
+  <div
+    className="w-16 h-10 rounded-[50%] border-[1.5px] border-[#60A5FA] bg-white flex items-center justify-center text-[#1E40AF] text-[11px] font-bold z-10 relative shadow-sm shrink-0"
+    style={{ lineHeight: 1 }}
+  >
+    <span style={{ lineHeight: 1, display: 'inline-block', transform: 'translateY(-0.5px)' }}>{id}</span>
   </div>
 );
 
 /** Op+Inspection — Rectangle with ellipse inside (combined operation + inspection) */
 export const ShapeOpIns = ({ id }: { id?: string }) => (
   <div className="w-16 h-12 border-[1.5px] border-[#60A5FA] bg-white flex items-center justify-center z-10 relative shadow-sm shrink-0">
-    <div className="w-12 h-8 rounded-[50%] border-[1.5px] border-[#60A5FA] flex items-center justify-center text-[#1E40AF] text-[11px] font-bold">
-      {id}
+    <div
+      className="w-12 h-8 rounded-[50%] border-[1.5px] border-[#60A5FA] flex items-center justify-center text-[#1E40AF] text-[11px] font-bold"
+      style={{ lineHeight: 1 }}
+    >
+      <span style={{ lineHeight: 1, display: 'inline-block', transform: 'translateY(-0.5px)' }}>{id}</span>
     </div>
   </div>
 );
@@ -37,8 +47,11 @@ export const ShapeStorage = () => (
 
 /** Inspection — Rectangle with step ID */
 export const ShapeInspection = ({ id }: { id?: string }) => (
-  <div className="w-14 h-10 border-[1.5px] border-[#60A5FA] bg-white flex items-center justify-center text-[#1E40AF] text-[11px] font-bold z-10 relative shadow-sm shrink-0">
-    {id}
+  <div
+    className="w-14 h-10 border-[1.5px] border-[#60A5FA] bg-white flex items-center justify-center text-[#1E40AF] text-[11px] font-bold z-10 relative shadow-sm shrink-0"
+    style={{ lineHeight: 1 }}
+  >
+    <span style={{ lineHeight: 1, display: 'inline-block', transform: 'translateY(-0.5px)' }}>{id}</span>
   </div>
 );
 
@@ -51,7 +64,10 @@ export const ShapeCondition = () => (
 
 /** Terminal side — Small rounded rectangle with text (SCRAP, reclamo, etc.) */
 export const ShapeTerminalSide = ({ text }: { text?: string }) => (
-  <div className="px-3 py-1.5 border-[1.5px] border-red-400 bg-white flex items-center justify-center text-red-600 text-[8.5px] font-bold z-10 relative uppercase shadow-sm rounded-sm max-w-[120px] text-center leading-tight shrink-0">
-    {text}
+  <div
+    className="px-3 py-1.5 border-[1.5px] border-red-400 bg-white flex items-center justify-center text-red-600 text-[8.5px] font-bold z-10 relative uppercase shadow-sm rounded-sm max-w-[120px] text-center shrink-0"
+    style={{ lineHeight: 1.15 }}
+  >
+    <span style={{ lineHeight: 1.15, display: 'inline-block', transform: 'translateY(-0.5px)' }}>{text}</span>
   </div>
 );
