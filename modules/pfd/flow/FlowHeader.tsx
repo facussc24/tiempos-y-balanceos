@@ -13,9 +13,9 @@ export interface FlowHeaderProps {
 }
 
 const HeaderCell = ({ label, value }: { label: string; value: string }) => (
-  <div className="border border-[#60A5FA] px-1.5 py-[2px] flex flex-col justify-center overflow-visible">
-    <span className="text-[6px] text-[#1E40AF] font-bold uppercase leading-[8px] pb-px">{label}</span>
-    <span className="text-[9px] text-gray-900 font-bold uppercase leading-[13px] whitespace-nowrap overflow-hidden" style={{ textOverflow: 'ellipsis', paddingBottom: '1px' }}>{value}</span>
+  <div className="border border-[#60A5FA] px-1.5 py-[3px] flex flex-col justify-center">
+    <span className="text-[6px] text-[#1E40AF] font-bold uppercase leading-none">{label}</span>
+    <span className="text-[9px] text-gray-900 font-bold uppercase truncate leading-tight">{value}</span>
   </div>
 );
 
