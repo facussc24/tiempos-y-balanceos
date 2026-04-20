@@ -4,7 +4,7 @@
  */
 import React from 'react';
 import barackLogo from './src/assets/barack_logo.png';
-import { Save, LayoutDashboard, ListTodo, BarChart2, FileText, Network, HardDrive, CircleHelp, Gauge, GitBranch, AlertTriangle, History, RefreshCw, ArrowLeft, Film, Factory, Layers, FolderOutput } from 'lucide-react';
+import { Save, LayoutDashboard, ListTodo, BarChart2, FileText, Network, HardDrive, CircleHelp, Gauge, GitBranch, AlertTriangle, History, RefreshCw, ArrowLeft, Factory, Layers, FolderOutput } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { DropdownNav } from './components/navigation/DropdownNav';
 import { UndoRedoControls } from './components/ui/UndoRedoControls';
@@ -20,8 +20,6 @@ import type { NetworkHealth } from './hooks/useNetworkHealth';
 
 interface AppHeaderProps {
     onBackToLanding?: () => void;
-    localMediaCount?: number;
-    onMediaMigrationClick?: () => void;
     navigation: {
         activeTab: Tab;
         setActiveTab: (tab: Tab) => void;
@@ -61,8 +59,6 @@ const NavItem = ({ id, icon: Icon, label, disabled = false, shortcut, activeTab,
 
 export const AppHeader: React.FC<AppHeaderProps> = ({
     onBackToLanding,
-    localMediaCount,
-    onMediaMigrationClick,
     navigation,
     persistence,
     sessionLock,
@@ -134,15 +130,6 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
                             </span>
                         )}
 
-                        {localMediaCount != null && localMediaCount > 0 && (
-                            <button
-                                onClick={onMediaMigrationClick}
-                                className="ml-2 text-[10px] font-bold bg-orange-100 text-orange-700 px-1.5 sm:px-2 py-1 rounded-full border border-orange-200 flex items-center gap-1 shadow-sm hover:bg-orange-200 transition-colors cursor-pointer"
-                                title={`${localMediaCount} archivo(s) multimedia en almacenamiento local. Click para migrar al servidor.`}
-                            >
-                                <Film size={10} /><span className="hidden sm:inline">{localMediaCount} MEDIA LOCAL</span>
-                            </button>
-                        )}
                     </div>
                     <div className="flex items-center gap-2">
 

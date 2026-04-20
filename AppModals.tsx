@@ -5,8 +5,6 @@
  * CommandPalette, FloatingActionButton, ShortcutHintsOverlay, ToastContainer.
  */
 import React from 'react';
-import { SyncPanel } from './modules/SyncPanel';
-import { MediaMigrationPanel } from './modules/MediaMigrationPanel';
 import { StorageConfigModal } from './components/modals/StorageConfigModal';
 import { ProjectWizard } from './modules/ProjectWizard';
 import { listProjects, listParts, ensureStudyStructure, buildMasterJsonPath, buildPath } from './utils/pathManager';
@@ -42,7 +40,6 @@ interface AppModalsProps {
     closeModalRef: React.RefObject<HTMLDivElement | null>;
     setStorageVersion: React.Dispatch<React.SetStateAction<number>>;
     confirmCloseProject: () => void;
-    onMediaMigrationComplete?: () => void;
 }
 
 export const AppModals: React.FC<AppModalsProps> = ({
@@ -56,7 +53,6 @@ export const AppModals: React.FC<AppModalsProps> = ({
     closeModalRef,
     setStorageVersion,
     confirmCloseProject,
-    onMediaMigrationComplete,
 }) => {
     return (
         <>
@@ -221,37 +217,6 @@ export const AppModals: React.FC<AppModalsProps> = ({
                     }
                 }}
             />
-
-            {/* Sync Panel Modal */}
-            {modals.showSyncPanel && (
-                <div className="fixed inset-0 bg-black/50 z-modal-backdrop flex items-end justify-end">
-                    <div className="bg-slate-900 w-full max-w-md h-full shadow-2xl animate-in slide-in-from-right duration-300">
-                        <div className="absolute top-4 right-4">
-                            <button
-                                onClick={() => modals.setShowSyncPanel(false)}
-                                className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700"
-                            >
-                                <XCircle size={20} />
-                            </button>
-                        </div>
-                        <SyncPanel
-                            onClose={() => modals.setShowSyncPanel(false)}
-                            onOpenConfig={() => {
-                                modals.setShowSyncPanel(false);
-                                modals.setShowStorageConfig(true);
-                            }}
-                        />
-                    </div>
-                </div>
-            )}
-
-            {/* Media Migration Panel */}
-            {modals.showMediaMigration && (
-                <MediaMigrationPanel
-                    onClose={() => modals.setShowMediaMigration(false)}
-                    onMigrationComplete={onMediaMigrationComplete}
-                />
-            )}
 
             {/* Storage Config Modal */}
             <StorageConfigModal

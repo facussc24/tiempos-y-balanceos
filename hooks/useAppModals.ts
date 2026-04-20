@@ -18,16 +18,12 @@ interface UseAppModalsResult {
     setWizardClients: React.Dispatch<React.SetStateAction<string[]>>;
     showCloseModal: boolean;
     setShowCloseModal: React.Dispatch<React.SetStateAction<boolean>>;
-    showSyncPanel: boolean;
-    setShowSyncPanel: React.Dispatch<React.SetStateAction<boolean>>;
     showStorageConfig: boolean;
     setShowStorageConfig: React.Dispatch<React.SetStateAction<boolean>>;
     showShortcutsHelp: boolean;
     setShowShortcutsHelp: React.Dispatch<React.SetStateAction<boolean>>;
     showCommandPalette: boolean;
     setShowCommandPalette: React.Dispatch<React.SetStateAction<boolean>>;
-    showMediaMigration: boolean;
-    setShowMediaMigration: React.Dispatch<React.SetStateAction<boolean>>;
 
     /** Opens the project wizard after loading clients list */
     openProjectWizard: () => Promise<void>;
@@ -46,11 +42,9 @@ export function useAppModals(): UseAppModalsResult {
     const [showProjectWizard, setShowProjectWizard] = useState(false);
     const [wizardClients, setWizardClients] = useState<string[]>([]);
     const [showCloseModal, setShowCloseModal] = useState(false);
-    const [showSyncPanel, setShowSyncPanel] = useState(false);
     const [showStorageConfig, setShowStorageConfig] = useState(false);
     const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
     const [showCommandPalette, setShowCommandPalette] = useState(false);
-    const [showMediaMigration, setShowMediaMigration] = useState(false);
 
     const openProjectWizard = useCallback(async () => {
         const clients = await listClients();
@@ -82,16 +76,12 @@ export function useAppModals(): UseAppModalsResult {
         setWizardClients,
         showCloseModal,
         setShowCloseModal,
-        showSyncPanel,
-        setShowSyncPanel,
         showStorageConfig,
         setShowStorageConfig,
         showShortcutsHelp,
         setShowShortcutsHelp,
         showCommandPalette,
         setShowCommandPalette,
-        showMediaMigration,
-        setShowMediaMigration,
         openProjectWizard,
         handleCloseProject,
         confirmCloseProject,

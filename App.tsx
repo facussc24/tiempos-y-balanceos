@@ -87,7 +87,6 @@ const AppMain: React.FC<AppProps> = ({ onBackToLanding }) => {
     // Web build: storage is always ready (Supabase). No Tauri initialization.
     const storageReady = true;
     const [storageVersion, setStorageVersion] = useState(0);
-    const localMediaCount = 0;
 
     // Set initial tab to 'panel' if project was loaded from DB
     useEffect(() => {
@@ -116,9 +115,6 @@ const AppMain: React.FC<AppProps> = ({ onBackToLanding }) => {
         window.addEventListener('beforeunload', handleBeforeUnload);
         return () => window.removeEventListener('beforeunload', handleBeforeUnload);
     }, [persistence.data.fileHandle]);
-
-    // Media migration is a no-op in the web build (Tauri-only feature).
-    const handleMediaMigrationComplete = async () => { /* no-op */ };
 
     // =========================================================================
     // LIFTED STATE
@@ -184,14 +180,11 @@ const AppMain: React.FC<AppProps> = ({ onBackToLanding }) => {
                 closeModalRef={closeModalRef}
                 setStorageVersion={setStorageVersion}
                 confirmCloseProject={confirmCloseProject}
-                onMediaMigrationComplete={handleMediaMigrationComplete}
             />
 
             <div className="min-h-full bg-slate-50 print:bg-white text-slate-900 selection:bg-blue-100 animate-fade-in-up">
                 <AppHeader
                     onBackToLanding={onBackToLanding}
-                    localMediaCount={localMediaCount}
-                    onMediaMigrationClick={() => modals.setShowMediaMigration(true)}
                     navigation={navigation}
                     persistence={persistence}
                     sessionLock={sessionLock}
