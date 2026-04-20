@@ -13,9 +13,7 @@
  * @module exportPathManager
  */
 
-import { isTauri } from './unified_fs';
 import { getSetting } from './repositories/settingsRepository';
-import { logger } from './logger';
 import type { AmfeDocument } from '../modules/amfe/amfeTypes';
 import type { ControlPlanDocument } from '../modules/controlPlan/controlPlanTypes';
 import type { HoDocument } from '../modules/hojaOperaciones/hojaOperacionesTypes';
@@ -283,21 +281,12 @@ export function getDocDisplayName(module: ExportDocModule, doc: unknown): string
  * Ensure the complete export folder hierarchy exists for a document.
  */
 export async function ensureExportDirs(
-    module: ExportDocModule,
-    metadata: ExportMetadata,
-    basePath: string,
+    _module: ExportDocModule,
+    _metadata: ExportMetadata,
+    _basePath: string,
 ): Promise<boolean> {
-    if (!isTauri()) return false;
-
-    try {
-        const fs = await import('./unified_fs');
-        const dir = buildExportDir(module, metadata.client, metadata.piece, basePath);
-        await fs.ensureDir(dir);
-        return true;
-    } catch (e) {
-        logger.error('ExportPathManager', 'Failed to create export dirs', {}, e instanceof Error ? e : undefined);
-        return false;
-    }
+    // Web build: no local filesystem to create directories in.
+    return false;
 }
 
 // ============================================================================
@@ -310,21 +299,7 @@ export async function ensureExportDirs(
  * Returns null if no path is accessible.
  */
 export async function resolveExportBasePath(): Promise<string | null> {
-    if (!isTauri()) return null;
-
-    const { isPathAccessible } = await import('./storageManager');
-    const configured = await getExportBasePath();
-
-    // Try configured/default path
-    if (await isPathAccessible(configured, 2000)) {
-        return configured;
-    }
-
-    // Try UNC fallback
-    if (await isPathAccessible(UNC_EXPORT_FALLBACK, 3000)) {
-        return UNC_EXPORT_FALLBACK;
-    }
-
+    // Web build: no network drive fallback to resolve.
     return null;
 }
 

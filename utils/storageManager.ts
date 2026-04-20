@@ -8,7 +8,6 @@
  * @module storageManager
  */
 
-import { isTauri } from './unified_fs';
 import { getSetting, setSetting } from './repositories/settingsRepository';
 import { getPathConfig, setPathConfig, resolveBasePath } from './pathManager';
 import { logger } from './logger';
@@ -92,18 +91,9 @@ export async function saveStorageSettings(settings: StorageSettings): Promise<bo
 // MODE DETECTION
 // ============================================================================
 
-export async function isPathAccessible(path: string, timeoutMs: number = SERVER_CHECK_TIMEOUT_MS): Promise<boolean> {
-    if (!isTauri()) return false;
-    try {
-        const fs = await import('./unified_fs');
-        const checkPromise = fs.exists(path);
-        const timeoutPromise = new Promise<boolean>((_, reject) =>
-            setTimeout(() => reject(new Error('Timeout')), timeoutMs)
-        );
-        return await Promise.race([checkPromise, timeoutPromise]);
-    } catch {
-        return false;
-    }
+export async function isPathAccessible(_path: string, _timeoutMs: number = SERVER_CHECK_TIMEOUT_MS): Promise<boolean> {
+    // Web build: no local filesystem to probe.
+    return false;
 }
 
 export async function isServerAvailable(): Promise<boolean> {
@@ -225,15 +215,8 @@ export async function isStorageConfigured(): Promise<boolean> {
 // ============================================================================
 
 async function ensureLocalStorageDir(): Promise<boolean> {
-    if (!isTauri()) return false;
-    try {
-        const fs = await import('./unified_fs');
-        const localPath = await getActiveBasePath();
-        return await fs.ensureDir(localPath);
-    } catch (error) {
-        logger.error('StorageManager', 'Failed to create local storage directory', {}, error instanceof Error ? error : undefined);
-        return false;
-    }
+    // Web build: no local filesystem directory to create.
+    return false;
 }
 
 // ============================================================================
