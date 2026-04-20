@@ -90,17 +90,19 @@ export const FlowNode: React.FC<FlowNodeProps> = ({ node, isLast, hasBranches })
         <div className="absolute top-1/2 -bottom-10 left-1/2 w-[1.5px] bg-[#93C5FD] -translate-x-1/2 z-0" />
       )}
 
-      {/* Main row: CC/SC label | Shape | Description */}
-      <div className="flex items-center w-full max-w-4xl relative z-10">
-        {/* Left column: CC/SC label
-            Centrado vertical ajustado con paddingTop compensatorio (en html2canvas
-            el cap-height de Inter deja el glyph desplazado hacia arriba del centro
-            optico de la caja). */}
+      {/* Main row: CC/SC label | Shape | Description
+          minHeight explicito = 48px (altura del shape mas alto: ShapeOpIns h-12).
+          Sin minHeight, html2canvas calcula alto del row segun contenido de cada
+          columna y items-center puede rendererear desfasado. */}
+      <div
+        className="flex items-center w-full max-w-4xl relative z-10"
+        style={{ minHeight: '48px' }}
+      >
+        {/* Left column: CC/SC label */}
         <div className="flex-1 flex justify-end items-center pr-6 space-x-2 relative z-10">
           {node.critical && node.criticalType && (
             <span
-              className="text-[9px] font-bold text-red-600 bg-red-50 border border-red-200 rounded-sm px-1.5 whitespace-nowrap"
-              style={{ lineHeight: 1.15, paddingTop: '3px', paddingBottom: '2px', display: 'inline-block' }}
+              className="text-[9px] font-bold text-red-600 bg-red-50 border border-red-200 rounded-sm px-1.5 py-0.5 whitespace-nowrap"
             >
               {node.criticalType}
             </span>

@@ -64,15 +64,12 @@ export const ShapeCondition = () => (
   </div>
 );
 
-/** Terminal side — Small rounded rectangle with text (SCRAP, reclamo, etc.)
- *  Nota: no uso position:absolute aca porque el texto puede ser multi-linea
- *  (ej. "RECLAMO PROVEEDOR"). Uso flex + alineacion con paddingTop compensatorio.
- */
+/** Terminal side — Small rounded rectangle with text (SCRAP, reclamo, etc.) */
 export const ShapeTerminalSide = ({ text }: { text?: string }) => (
   <div
-    className="px-3 border-[1.5px] border-red-400 bg-white flex items-center justify-center text-red-600 text-[8.5px] font-bold z-10 relative uppercase shadow-sm rounded-sm max-w-[120px] text-center shrink-0"
-    style={{ lineHeight: 1.15, paddingTop: '5px', paddingBottom: '3px', minHeight: '20px' }}
+    className="px-3 py-1.5 border-[1.5px] border-red-400 bg-white flex items-center justify-center text-red-600 text-[8.5px] font-bold z-10 relative uppercase shadow-sm rounded-sm max-w-[120px] text-center shrink-0"
+    style={{ lineHeight: 1.2 }}
   >
-    <span style={{ lineHeight: 1.15, display: 'inline-block' }}>{text}</span>
+    {text}
   </div>
 );
