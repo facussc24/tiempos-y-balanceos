@@ -5,38 +5,28 @@
 
 import React from 'react';
 
-/** Operation — Ellipse with step ID inside
- *  Diagnostico 2026-04-20 confirmado por Fak: textos quedaban pegados al
- *  borde INFERIOR del shape. html2canvas renderiza el baseline del texto
- *  cerca del bottom del line-box (no simetrico como en browser).
- *  Fix: table + table-cell con vertical-align:middle — approach CSS1 que
- *  html2canvas respeta literalmente sin metrics magicos. */
+/** Operation — Ellipse with step ID inside.
+ *  v5 (2026-04-20): ABANDONO html/css para shapes con texto centrado. Uso SVG
+ *  directo con textAnchor="middle" + dominantBaseline="central" — centrado
+ *  matematicamente exacto en coordenadas absolutas. html2canvas renderiza SVG
+ *  native y respeta las coords literales, NO los calcula de metrics de fuente. */
 export const ShapeOperation = ({ id }: { id?: string }) => (
-  <div
-    className="w-16 h-10 rounded-[50%] border-[1.5px] border-[#60A5FA] bg-white text-[#1E40AF] text-[11px] font-bold z-10 shadow-sm shrink-0"
-    style={{ display: 'table' }}
-  >
-    <span
-      style={{ display: 'table-cell', verticalAlign: 'middle', textAlign: 'center', lineHeight: 1, paddingBottom: '2px' }}
-    >
-      {id}
-    </span>
+  <div className="z-10 relative shrink-0" style={{ width: 64, height: 40 }}>
+    <svg width="64" height="40" viewBox="0 0 64 40" style={{ display: 'block', overflow: 'visible' }}>
+      <ellipse cx="32" cy="20" rx="31" ry="19" fill="white" stroke="#60A5FA" strokeWidth="1.5" />
+      <text x="32" y="20" textAnchor="middle" dominantBaseline="central" fill="#1E40AF" fontSize="11" fontWeight="bold" fontFamily="Inter, Arial, sans-serif">{id}</text>
+    </svg>
   </div>
 );
 
 /** Op+Inspection — Rectangle with ellipse inside (combined operation + inspection) */
 export const ShapeOpIns = ({ id }: { id?: string }) => (
-  <div className="w-16 h-12 border-[1.5px] border-[#60A5FA] bg-white flex items-center justify-center z-10 relative shadow-sm shrink-0">
-    <div
-      className="w-12 h-8 rounded-[50%] border-[1.5px] border-[#60A5FA] text-[#1E40AF] text-[11px] font-bold"
-      style={{ display: 'table' }}
-    >
-      <span
-        style={{ display: 'table-cell', verticalAlign: 'middle', textAlign: 'center', lineHeight: 1, paddingBottom: '2px' }}
-      >
-        {id}
-      </span>
-    </div>
+  <div className="z-10 relative shrink-0" style={{ width: 64, height: 48 }}>
+    <svg width="64" height="48" viewBox="0 0 64 48" style={{ display: 'block', overflow: 'visible' }}>
+      <rect x="1" y="1" width="62" height="46" fill="white" stroke="#60A5FA" strokeWidth="1.5" />
+      <ellipse cx="32" cy="24" rx="23" ry="15" fill="white" stroke="#60A5FA" strokeWidth="1.5" />
+      <text x="32" y="24" textAnchor="middle" dominantBaseline="central" fill="#1E40AF" fontSize="11" fontWeight="bold" fontFamily="Inter, Arial, sans-serif">{id}</text>
+    </svg>
   </div>
 );
 
@@ -54,17 +44,13 @@ export const ShapeStorage = () => (
   </div>
 );
 
-/** Inspection — Rectangle with step ID */
+/** Inspection — Rectangle with step ID (SVG puro para centrado exacto) */
 export const ShapeInspection = ({ id }: { id?: string }) => (
-  <div
-    className="w-14 h-10 border-[1.5px] border-[#60A5FA] bg-white text-[#1E40AF] text-[11px] font-bold z-10 shadow-sm shrink-0"
-    style={{ display: 'table' }}
-  >
-    <span
-      style={{ display: 'table-cell', verticalAlign: 'middle', textAlign: 'center', lineHeight: 1, paddingBottom: '2px' }}
-    >
-      {id}
-    </span>
+  <div className="z-10 relative shrink-0" style={{ width: 56, height: 40 }}>
+    <svg width="56" height="40" viewBox="0 0 56 40" style={{ display: 'block', overflow: 'visible' }}>
+      <rect x="1" y="1" width="54" height="38" fill="white" stroke="#60A5FA" strokeWidth="1.5" />
+      <text x="28" y="20" textAnchor="middle" dominantBaseline="central" fill="#1E40AF" fontSize="11" fontWeight="bold" fontFamily="Inter, Arial, sans-serif">{id}</text>
+    </svg>
   </div>
 );
 
@@ -75,14 +61,41 @@ export const ShapeCondition = () => (
   </div>
 );
 
-/** Terminal side — Small rounded rectangle with text (SCRAP, reclamo, etc.)
- *  Paddings asimetricos: top mayor que bottom para empujar el texto HACIA ARRIBA
- *  (sin esto queda pegado al borde inferior en html2canvas). */
-export const ShapeTerminalSide = ({ text }: { text?: string }) => (
-  <div
-    className="px-3 border-[1.5px] border-red-400 bg-white flex items-center justify-center text-red-600 text-[8.5px] font-bold z-10 relative uppercase shadow-sm rounded-sm max-w-[120px] text-center shrink-0"
-    style={{ lineHeight: 1.2, paddingTop: '6px', paddingBottom: '2px', minHeight: '20px' }}
-  >
-    {text}
-  </div>
-);
+/** Terminal side — Small rounded rectangle with text (SCRAP, RECLAMO PROVEEDOR, etc.)
+ *  v5: SVG puro con textAnchor="middle" + dominantBaseline="central".
+ *  Ancho dinamico segun longitud del texto (RECLAMO PROVEEDOR necesita mas espacio). */
+export const ShapeTerminalSide = ({ text }: { text?: string }) => {
+  const label = (text || '').toUpperCase();
+  // Ancho estimado: 6px por char + 16px de padding horizontal. Max 120 px.
+  const estimatedWidth = Math.min(120, Math.max(50, label.length * 6 + 16));
+  const isMultiWord = label.split(' ').length > 1 && estimatedWidth >= 80;
+  const height = isMultiWord ? 30 : 20;
+  const w = estimatedWidth;
+  const h = height;
+
+  if (isMultiWord) {
+    // Multi-linea: dividir en 2 lineas
+    const words = label.split(' ');
+    const mid = Math.ceil(words.length / 2);
+    const line1 = words.slice(0, mid).join(' ');
+    const line2 = words.slice(mid).join(' ');
+    return (
+      <div className="z-10 relative shrink-0" style={{ width: w, height: h }}>
+        <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} style={{ display: 'block', overflow: 'visible' }}>
+          <rect x="1" y="1" width={w - 2} height={h - 2} fill="white" stroke="#F87171" strokeWidth="1.5" rx="2" />
+          <text x={w / 2} y={h / 2 - 4.5} textAnchor="middle" dominantBaseline="central" fill="#DC2626" fontSize="8.5" fontWeight="bold" fontFamily="Inter, Arial, sans-serif">{line1}</text>
+          <text x={w / 2} y={h / 2 + 4.5} textAnchor="middle" dominantBaseline="central" fill="#DC2626" fontSize="8.5" fontWeight="bold" fontFamily="Inter, Arial, sans-serif">{line2}</text>
+        </svg>
+      </div>
+    );
+  }
+
+  return (
+    <div className="z-10 relative shrink-0" style={{ width: w, height: h }}>
+      <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} style={{ display: 'block', overflow: 'visible' }}>
+        <rect x="1" y="1" width={w - 2} height={h - 2} fill="white" stroke="#F87171" strokeWidth="1.5" rx="2" />
+        <text x={w / 2} y={h / 2} textAnchor="middle" dominantBaseline="central" fill="#DC2626" fontSize="8.5" fontWeight="bold" fontFamily="Inter, Arial, sans-serif">{label}</text>
+      </svg>
+    </div>
+  );
+};

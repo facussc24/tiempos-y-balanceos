@@ -98,18 +98,15 @@ export const FlowNode: React.FC<FlowNodeProps> = ({ node, isLast, hasBranches })
         className="flex items-center w-full max-w-4xl relative z-10"
         style={{ minHeight: '48px' }}
       >
-        {/* Left column: CC/SC label
-            Paddings asimetricos: top mayor que bottom. html2canvas renderiza el
-            baseline cerca del bottom del line-box → texto pegado abajo del cuadrito
-            sin esto. Compensamos empujando hacia arriba con paddingTop mayor. */}
+        {/* Left column: CC/SC label.
+            v5: SVG con centrado matematico exacto en lugar de html/css (html2canvas
+            no respetaba verticalAlign:middle ni transforms ni paddings asimetricos). */}
         <div className="flex-1 flex justify-end items-center pr-6 space-x-2 relative z-10">
           {node.critical && node.criticalType && (
-            <span
-              className="text-[9px] font-bold text-red-600 bg-red-50 border border-red-200 rounded-sm px-1.5 whitespace-nowrap"
-              style={{ lineHeight: 1, paddingTop: '4px', paddingBottom: '1px', display: 'inline-block' }}
-            >
-              {node.criticalType}
-            </span>
+            <svg width="22" height="15" viewBox="0 0 22 15" style={{ overflow: 'visible' }}>
+              <rect x="0.5" y="0.5" width="21" height="14" fill="#FEF2F2" stroke="#FECACA" strokeWidth="1" rx="2" />
+              <text x="11" y="7.5" textAnchor="middle" dominantBaseline="central" fill="#DC2626" fontSize="9" fontWeight="bold" fontFamily="Inter, Arial, sans-serif">{node.criticalType}</text>
+            </svg>
           )}
         </div>
 
