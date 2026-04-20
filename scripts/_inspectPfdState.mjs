@@ -11,13 +11,14 @@ const { data: pfds } = await sb.from('pfd_documents').select('id, data');
 console.log(`Total PFDs guardados: ${pfds?.length || 0}\n`);
 for (const p of pfds || []) {
   const data = typeof p.data === 'string' ? JSON.parse(p.data) : p.data;
-  const title = data.header?.title || data.title || data.name || '(sin titulo)';
+  const pn = data.header?.partName || '(sin partName)';
+  const pnum = data.header?.partNumber || '(sin PN)';
+  const link = data.header?.linkedAmfeId || data.header?.linkedAmfeProject || '(sin link)';
+  const cust = data.header?.customerName || '-';
   const steps = (data.steps || []).length;
-  const prods = data.header?.partNumbers || data.partNumbers || '(sin PN)';
   console.log(`  ID: ${p.id}`);
-  console.log(`  Titulo: ${title}`);
-  console.log(`  Part numbers: ${prods}`);
-  console.log(`  Steps: ${steps}`);
+  console.log(`  PartName: ${pn}  |  PN: ${pnum}  |  Cliente: ${cust}`);
+  console.log(`  LinkedAmfe: ${link}  |  Steps: ${steps}`);
   console.log();
 }
 
