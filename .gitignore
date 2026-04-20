@@ -47,6 +47,7 @@ exports/test-*
 *.bak
 /*.mjs
 !eslint.config.mjs
+scripts/one-shot/
 
 # Supabase backups (local snapshots from scripts/_backup.mjs)
 backups/
