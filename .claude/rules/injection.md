@@ -32,7 +32,7 @@ Cada operacion de inyeccion DEBE tener los 6 Work Elements (1M por linea — NO 
 | M | Work Element tipico | Ejemplo de function |
 |---|---|---|
 | **Machine** | Inyectora (zonas temperatura, tornillo, fuerza cierre, refrigeracion) | Conformar pieza plastica segun especs |
-| **Material** | Indirectos: colorante masterbatch, desmoldante (si aplica). NO pellet directo (va en recepcion OP 10) | Teñir pieza segun color especificado |
+| **Material** | Indirectos: colorante concentrado, desmoldante (si aplica). NO pellet directo (va en recepcion OP 10) | Tenir pieza segun color especificado |
 | **Method** | Dossier de parametros, procedimiento de arranque, procedimiento de cambio de molde | Aplicar parametros validados al ciclo |
 | **Man** | Verificacion de parametros al arranque, verificacion visual 100% | Validar conformidad pieza antes de liberar |
 | **Measurement** | Termometros/pirometros, calibre, balanza para dosificacion | Medir cumplimiento vs especificacion |
