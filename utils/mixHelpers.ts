@@ -8,10 +8,8 @@
  * @version 4.1.0
  */
 import { MixScenario, MixProductReference, ProjectData, MixEnrichedProduct } from '../types';
-import { isTauri } from './unified_fs';
 import { logger } from './logger';
 import { generateChecksum } from './crypto';
-import { resolveProductProcess, ParentLoaderFn } from '../core/inheritance/resolver';
 
 // =============================================================================
 // V8.3: INTEGRITY VALIDATION
@@ -137,303 +135,37 @@ export async function verifyMixIntegrity(
 }
 
 /**
- * Load a mix scenario from a JSON file
- */
-async function loadMixScenario(path: string): Promise<MixScenario | null> {
-    try {
-        if (isTauri()) {
-            const fs = await import('./unified_fs');
-            const exists = await fs.exists(path);
-            if (!exists) {
-                logger.warn('mixHelpers', 'Scenario file not found', { path });
-                return null;
-            }
-            const content = await fs.readTextFile(path);
-            if (content) {
-                const scenario = JSON.parse(content) as MixScenario;
-                if (scenario.type !== 'mix_scenario') {
-                    logger.error('mixHelpers', 'Invalid scenario type', { type: scenario.type });
-                    return null;
-                }
-                return scenario;
-            }
-        }
-        return null;
-    } catch (e) {
-        logger.error('mixHelpers', 'Failed to load scenario', { error: String(e) });
-        return null;
-    }
-}
-
-/**
- * Save a mix scenario to a JSON file
- * 
- * V8.3: Now calculates and stores checksums when loadedProducts are provided
- * 
- * @param scenario - Scenario to save
- * @param path - File path to save to
- * @param loadedProducts - Optional: products loaded in memory to calculate checksums
+ * Save a mix scenario to a JSON file.
+ * Web mode: no filesystem — callers should use Supabase repositories instead.
+ * Kept as a no-op stub so the Mix module UI renders without errors.
  */
 export async function saveMixScenario(
-    scenario: MixScenario,
-    path: string,
-    loadedProducts?: ProjectData[]
+    _scenario: MixScenario,
+    _path: string,
+    _loadedProducts?: ProjectData[],
 ): Promise<boolean> {
-    try {
-        if (isTauri()) {
-            const fs = await import('./unified_fs');
-
-            // V8.3: Calculate checksums if products are provided
-            let productsWithChecksum = scenario.products;
-            if (loadedProducts && loadedProducts.length > 0) {
-                productsWithChecksum = await Promise.all(
-                    scenario.products.map(async (ref) => {
-                        const product = loadedProducts.find(p =>
-                            (p as MixEnrichedProduct)._mixPath === ref.path
-                        );
-                        if (product) {
-                            const checksum = await generateProductChecksum(product);
-                            return {
-                                ...ref,
-                                sourceChecksum: checksum,
-                                lastVerifiedAt: new Date().toISOString()
-                            };
-                        }
-                        return ref;
-                    })
-                );
-            }
-
-            // Ensure the scenario has proper metadata
-            const toSave: MixScenario = {
-                ...scenario,
-                products: productsWithChecksum,
-                type: 'mix_scenario',
-                version: 1,
-                integrityVersion: loadedProducts ? 1 : scenario.integrityVersion,
-                lastIntegrityCheck: loadedProducts ? new Date().toISOString() : scenario.lastIntegrityCheck
-            };
-
-            const json = JSON.stringify(toSave, null, 2);
-            return await fs.writeTextFile(path, json);
-        }
-        return false;
-    } catch (e) {
-        logger.error('mixHelpers', 'Failed to save scenario', { error: String(e) });
-        return false;
-    }
+    logger.debug('mixHelpers', 'saveMixScenario is a no-op in web mode');
+    return false;
 }
 
-
 /**
- * Load multiple product files referenced by a mix scenario
- * Returns products with _mixDemand attached for weighted calculations
+ * Load multiple product files referenced by a mix scenario.
+ * Web mode: no filesystem — returns empty with a single informational error.
  */
 export async function loadMixProducts(
-    basePath: string,
-    references: MixProductReference[]
+    _basePath: string,
+    _references: MixProductReference[],
 ): Promise<{
     products: ProjectData[];
     errors: string[];
     totalDemand: number;
-    isPartial: boolean; // H-03 FIX: Flag for partial loading
+    isPartial: boolean;
 }> {
-    const products: ProjectData[] = [];
-    const errors: string[] = [];
-    let totalDemand = 0;
-
-    if (!isTauri()) {
-        return { products: [], errors: ['Mix loading requires Tauri mode'], totalDemand: 0, isPartial: false };
-    }
-
-    const fs = await import('./unified_fs');
-
-    for (const ref of references) {
-        try {
-            // Handle both absolute and relative paths
-            const fullPath = ref.path.includes(':')
-                ? ref.path  // Absolute path
-                : `${basePath}\\${ref.path}`; // Relative path
-
-            const exists = await fs.exists(fullPath);
-
-            if (!exists) {
-                errors.push(`Archivo no encontrado: ${ref.path}`);
-                continue;
-            }
-
-            const content = await fs.readTextFile(fullPath);
-            if (content) {
-                // H-04 FIX: Validate JSON structure before casting
-                let project: ProjectData;
-                try {
-                    const parsed = JSON.parse(content);
-
-                    // Validate minimum required structure
-                    if (!parsed.tasks || !Array.isArray(parsed.tasks)) {
-                        errors.push(`Archivo inválido: ${ref.path} - No contiene tareas válidas`);
-                        continue;
-                    }
-
-                    // Create default meta if missing
-                    if (!parsed.meta) {
-                        parsed.meta = {
-                            name: ref.path.split(/[\\/]/).pop()?.replace('.json', '') || 'Sin nombre',
-                            date: new Date().toISOString(),
-                            client: '',
-                            version: '1',
-                            engineer: '',
-                            activeShifts: 1,
-                            dailyDemand: ref.demand,
-                            configuredStations: 0
-                        };
-                        logger.warn('mixHelpers', 'Archivo sin metadata, usando valores default', { path: ref.path });
-                    }
-
-                    project = parsed as ProjectData;
-                } catch (parseError) {
-                    errors.push(`Error de formato JSON: ${ref.path} - ${(parseError as Error).message}`);
-                    continue;
-                }
-
-                // V9.0: Resolve inheritance if product has parentPath
-                if (project.meta?.parentPath) {
-                    try {
-                        // Create loader function that uses same logic to load parent
-                        const parentLoader: ParentLoaderFn = async (parentRelPath: string) => {
-                            // Resolve parent path relative to child location
-                            const childDir = fullPath.substring(0, fullPath.lastIndexOf('\\'));
-                            const parentFullPath = parentRelPath.includes(':')
-                                ? parentRelPath
-                                : `${childDir}\\${parentRelPath}`;
-
-                            const parentExists = await fs.exists(parentFullPath);
-                            if (!parentExists) {
-                                throw new Error(`Parent file not found: ${parentFullPath}`);
-                            }
-
-                            const parentContent = await fs.readTextFile(parentFullPath);
-                            if (!parentContent) {
-                                throw new Error(`Failed to read parent file: ${parentFullPath}`);
-                            }
-
-                            return JSON.parse(parentContent) as ProjectData;
-                        };
-
-                        const resolved = await resolveProductProcess(project, parentLoader);
-                        project = resolved.project;
-
-                        if (resolved.warnings.length > 0) {
-                            logger.warn('mixHelpers', 'Inheritance warnings', {
-                                path: ref.path,
-                                warnings: resolved.warnings
-                            });
-                        }
-
-                        logger.info('mixHelpers', 'Inheritance resolved', {
-                            path: ref.path,
-                            parentPath: project.meta.parentPath,
-                            overridesApplied: resolved.overridesApplied
-                        });
-                    } catch (inheritError) {
-                        errors.push(`Error de herencia: ${ref.path} - ${(inheritError as Error).message}`);
-                        continue;
-                    }
-                }
-
-                // Attach mix demand for weighted calculations (type-safe)
-                const enriched = project as MixEnrichedProduct;
-                enriched._mixDemand = ref.demand;
-                enriched._mixPath = ref.path;
-
-                products.push(enriched);
-                totalDemand += ref.demand;
-            }
-        } catch (e) {
-            errors.push(`Error cargando ${ref.path}: ${(e as Error).message}`);
-        }
-    }
-
-    // Calculate percentages
-    if (totalDemand > 0) {
-        for (const product of products) {
-            const demand = (product as MixEnrichedProduct)._mixDemand || 0;
-            (product as MixEnrichedProduct)._mixPercentage = demand / totalDemand;
-        }
-    }
-
-    // H-03 FIX: Detect and log partial loading
-    const isPartial = products.length !== references.length;
-    if (isPartial) {
-        logger.warn('mixHelpers', 'Carga parcial de productos', {
-            expected: references.length,
-            loaded: products.length,
-            missing: references.length - products.length
-        });
-    }
-
-    return { products, errors, totalDemand, isPartial };
-}
-
-/**
- * Validate that all referenced products in a mix scenario still exist
- * and haven't been modified since last calculation
- * 
- * V8.3: Now includes checksum validation for integrity checking
- */
-async function validateMixIntegrity(
-    scenario: MixScenario,
-    basePath: string
-): Promise<{
-    valid: boolean;
-    warnings: string[];
-    needsRecalculation: boolean;
-    integrityResult?: IntegrityVerificationResult;
-}> {
-    const warnings: string[] = [];
-    let needsRecalculation = false;
-
-    // Check if product files still exist
-    const { products, errors } = await loadMixProducts(basePath, scenario.products);
-
-    if (errors.length > 0) {
-        return { valid: false, warnings: errors, needsRecalculation: true };
-    }
-
-    // Check if the number of loaded products matches references
-    if (products.length !== scenario.products.length) {
-        warnings.push('Algunos productos no pudieron ser cargados');
-        needsRecalculation = true;
-    }
-
-    // V8.3: Checksum validation (if integrity version exists)
-    if (scenario.integrityVersion && scenario.integrityVersion >= 1) {
-        const integrityResult = await verifyMixIntegrity(scenario, products);
-
-        if (integrityResult.hasWarnings) {
-            const modifiedProducts = integrityResult.changes
-                .filter(c => c.status === 'modified')
-                .map(c => c.productName);
-
-            warnings.push(
-                `Productos modificados: ${modifiedProducts.join(', ')}. ` +
-                `Se recomienda recalcular el balanceo.`
-            );
-            needsRecalculation = true;
-        }
-
-        return {
-            valid: errors.length === 0 && integrityResult.isValid,
-            warnings,
-            needsRecalculation,
-            integrityResult
-        };
-    }
-
     return {
-        valid: errors.length === 0,
-        warnings,
-        needsRecalculation
+        products: [],
+        errors: ['Mix loading no disponible en modo web'],
+        totalDemand: 0,
+        isPartial: false,
     };
 }
 
