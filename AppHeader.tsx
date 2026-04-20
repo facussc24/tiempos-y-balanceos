@@ -6,12 +6,9 @@ import React from 'react';
 import barackLogo from './src/assets/barack_logo.png';
 import { Save, LayoutDashboard, ListTodo, BarChart2, FileText, Network, HardDrive, CircleHelp, Gauge, GitBranch, AlertTriangle, History, RefreshCw, ArrowLeft, Film, Factory, Layers, FolderOutput } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import { isTauri } from './utils/unified_fs';
-import { buildMasterJsonPath, buildPath } from './utils/pathManager';
 import { DropdownNav } from './components/navigation/DropdownNav';
 import { UndoRedoControls } from './components/ui/UndoRedoControls';
 import { ProjectSwitcher } from './components/navigation/ProjectSwitcher';
-import { logger } from './utils/logger';
 import { toast } from './components/ui/Toast';
 import type { Tab } from './hooks/useAppNavigation';
 import type { useProjectPersistence } from './hooks/useProjectPersistence';
@@ -161,34 +158,10 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
                                 currentProjectName={persistence.data.meta?.name || null}
                                 currentClient={persistence.data.meta?.client}
                                 currentProject={persistence.data.meta?.project}
-                                onSwitch={async (studyPath) => {
-                                    // studyPath format: "CLIENT/PROJECT/PART"
-                                    const [client, project, part] = studyPath.split('/');
-                                    const masterPath = buildMasterJsonPath(client, project, part);
-                                    const dataPath = buildPath('data', client, project, part);
-
-                                    try {
-                                        if (isTauri()) {
-                                            const fs = await import('./utils/unified_fs');
-                                            const content = await fs.readTextFile(masterPath);
-
-                                            if (content) {
-                                                const projectData = JSON.parse(content);
-                                                const fullData = {
-                                                    ...projectData,
-                                                    fileHandle: masterPath,
-                                                    directoryHandle: dataPath
-                                                };
-                                                persistence.setData(fullData);
-                                                undoRedo.resetHistory(fullData);
-                                                navigation.setActiveTab('panel');
-                                                toast.success('Proyecto Cargado', projectData.meta?.name || part);
-                                            }
-                                        }
-                                    } catch (e) {
-                                        logger.error('App', 'Error switching project', {}, e instanceof Error ? e : undefined);
-                                        toast.error('Error', 'No se pudo cambiar al proyecto');
-                                    }
+                                onSwitch={async (_studyPath) => {
+                                    // Project switching by filesystem path was Tauri-only.
+                                    // Web build uses Supabase project loading via the Dashboard.
+                                    toast.info('Cambio de proyecto', 'Usa el Dashboard para abrir otro estudio');
                                 }}
                                 onClose={handleCloseProject}
                                 onNavigateToDashboard={() => navigation.setActiveTab('dashboard')}

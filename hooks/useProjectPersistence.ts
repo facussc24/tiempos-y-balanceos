@@ -6,7 +6,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { ProjectData, INITIAL_PROJECT } from '../types';
 import { saveProject, loadProject, listProjects } from '../utils/repositories/projectRepository';
-import { initFileSystem, isTauri, getAppInfo, readTextFile } from '../utils/unified_fs';
+import { initFileSystem, getAppInfo } from '../utils/unified_fs';
 import { SaveConflict, ConflictError } from '../utils/concurrency';
 import { classifyError } from '../utils/networkUtils';
 import { toast } from '../components/ui/Toast';
@@ -317,26 +317,14 @@ export function useProjectPersistence(): UsePersistenceResult {
         if (!data.fileHandle) return;
 
         try {
-            if (isTauri() && typeof data.fileHandle === 'string') {
-                const content = await readTextFile(data.fileHandle as string);
-                if (content) {
-                    const reloaded = JSON.parse(content) as ProjectData;
-                    reloaded.fileHandle = data.fileHandle;
-                    reloaded.directoryHandle = data.directoryHandle;
-                    setData(reloaded);
-                    await saveProject(reloaded);
-                    toast.success('Proyecto Recargado', 'Se cargó la versión del disco');
-                }
-            } else {
-                const { readProjectFile } = await import('../utils/webFsHelpers');
-                // Type assertion: Web FileSystem API
-                const reloaded = await readProjectFile(data.fileHandle as FileSystemFileHandle);
-                if (reloaded) {
-                    reloaded.directoryHandle = data.directoryHandle;
-                    setData(reloaded);
-                    await saveProject(reloaded);
-                    toast.success('Proyecto Recargado', 'Se cargó la versión del disco');
-                }
+            const { readProjectFile } = await import('../utils/webFsHelpers');
+            // Type assertion: Web FileSystem API
+            const reloaded = await readProjectFile(data.fileHandle as FileSystemFileHandle);
+            if (reloaded) {
+                reloaded.directoryHandle = data.directoryHandle;
+                setData(reloaded);
+                await saveProject(reloaded);
+                toast.success('Proyecto Recargado', 'Se cargó la versión del disco');
             }
         } catch (err) {
             toast.error('Error al Recargar', String(err));

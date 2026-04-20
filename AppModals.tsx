@@ -21,7 +21,6 @@ import { DiagnosticQA } from './components/modals/DiagnosticQA';
 import { ToastContainer, toast } from './components/ui/Toast';
 import { XCircle, History } from 'lucide-react';
 import { INITIAL_PROJECT } from './types';
-import { isTauri } from './utils/unified_fs';
 import type { Tab } from './hooks/useAppNavigation';
 import type { useProjectPersistence } from './hooks/useProjectPersistence';
 import type { useSessionLock } from './hooks/useSessionLock';
@@ -205,11 +204,8 @@ export const AppModals: React.FC<AppModalsProps> = ({
                             directoryHandle: dataPath
                         };
 
-                        // Try to write master.json
-                        if (isTauri()) {
-                            const fs = await import('./utils/unified_fs');
-                            await fs.writeTextFile(masterPath, JSON.stringify(initialData, null, 2));
-                        }
+                        // Web build: master.json is persisted via Supabase repositories
+                        // when the user saves; no filesystem write here.
 
                         // Load project and navigate
                         persistence.setData(initialData);

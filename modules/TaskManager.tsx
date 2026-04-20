@@ -17,7 +17,6 @@ import { DocumentationModal } from './task/modals/DocumentationModal';
 import { CreateVariantModal } from './task/modals/CreateVariantModal'; // V9.0: Product Inheritance
 import { ZoningConstraintsModal } from './balancing/components/ZoningConstraintsModal'; // FIX 3
 import { usePlantAssets } from '../hooks/usePlantAssets'; // V4.0 Asset Registry
-import { isTauri } from '../utils/unified_fs'; // V9.0: For variant creation
 import { logger } from '../utils/logger';
 
 interface Props {
@@ -89,54 +88,13 @@ export const TaskManager: React.FC<Props> = ({ data, updateData, rootHandle }) =
 
 
     // V9.0: Handler for creating a variant
+    // Web build: variant creation via filesystem write is disabled. The Mix /
+    // Family module handles variant creation via Supabase repositories.
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const handleCreateVariant = async (variantName: string, parentRelPath: string): Promise<boolean> => {
-        // Mejora 1: Prevenir doble-click
+    const handleCreateVariant = async (_variantName: string, _parentRelPath: string): Promise<boolean> => {
         if (isCreatingVariant) return false;
-        setIsCreatingVariant(true);
-
-        if (!isTauri()) {
-            logger.error('TaskManager', 'Variant creation requires Tauri mode');
-            setIsCreatingVariant(false);
-            return false;
-        }
-
-        try {
-            const fs = await import('../utils/unified_fs');
-
-            // Create child project structure with minimal data
-            const childProject: Partial<typeof data> = {
-                meta: {
-                    ...data.meta,
-                    name: variantName,
-                    date: new Date().toISOString(),
-                    parentPath: './master.json', // Relative to child location
-                },
-                tasks: [], // No tasks - inherits from parent
-                taskOverrides: [], // Start with empty overrides
-                assignments: [],
-                stationConfigs: [],
-                shifts: [], // Inherit from parent at runtime
-                sectors: [], // Inherit from parent at runtime
-            };
-
-            // Save to same directory as current file
-            // This is a simplified version - in production would use rootHandle
-            const sanitizedName = variantName.replace(/[^a-zA-Z0-9_-]/g, '_');
-            const variantPath = `${sanitizedName}.json`;
-
-            const success = await fs.writeTextFile(
-                variantPath,
-                JSON.stringify(childProject, null, 2)
-            );
-
-            return success;
-        } catch (err) {
-            logger.error('TaskManager', 'Failed to create variant', {}, err instanceof Error ? err : undefined);
-            return false;
-        } finally {
-            setIsCreatingVariant(false);
-        }
+        logger.warn('TaskManager', 'Variant creation via filesystem is disabled in web mode');
+        return false;
     };
 
 

@@ -160,17 +160,9 @@ export function useDocumentRegistry(): UseDocumentRegistryResult {
                 }
             }
 
-            // In browser mode (non-Tauri), inject demo data when no real data exists
+            // Web build: inject demo data when no real data exists.
             if (all.length === 0) {
-                try {
-                    const fsMod = await import('../../utils/unified_fs');
-                    if (!fsMod.isTauri()) {
-                        all.push(...DEMO_REGISTRY_ENTRIES);
-                    }
-                } catch {
-                    // If unified_fs import fails, still inject demo data (we're in browser)
-                    all.push(...DEMO_REGISTRY_ENTRIES);
-                }
+                all.push(...DEMO_REGISTRY_ENTRIES);
             }
 
             // Sort by updatedAt descending (most recent first)

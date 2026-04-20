@@ -2,8 +2,6 @@ import React, { useRef, useState, useEffect } from 'react';
 import { BookOpen, X, Video, FileVideo, Upload, Save } from 'lucide-react';
 import { ProjectData, Task } from '../../../types';
 import { saveTaskMediaWeb, loadTaskMediaWeb } from '../../../utils/webFsHelpers';
-import { isTauri } from '../../../utils/unified_fs';
-import { saveMedia, loadMedia } from '../../../utils/mediaManager';
 import { toast } from '../../../components/ui/Toast';
 import { logger } from '../../../utils/logger';
 
@@ -51,10 +49,7 @@ export const DocumentationModal: React.FC<Props> = ({ task, onClose, data, updat
             setMediaPreviewUrl(null);
             if (task && task.mediaRef) {
                 try {
-                    if (isTauri() && data.id) {
-                        const url = await loadMedia(String(data.id), task.mediaRef);
-                        setMediaPreviewUrl(url);
-                    } else if (rootHandle && typeof rootHandle !== 'string') {
+                    if (rootHandle && typeof rootHandle !== 'string') {
                         const url = await loadTaskMediaWeb(rootHandle, task.mediaRef);
                         setMediaPreviewUrl(url);
                     }
@@ -91,13 +86,7 @@ export const DocumentationModal: React.FC<Props> = ({ task, onClose, data, updat
         let newMediaRef = docTask.mediaRef;
         if (pendingFileRef.current) {
             try {
-                if (isTauri() && data.id) {
-                    const result = await saveMedia(
-                        String(data.id), docTask.id, pendingFileRef.current,
-                        { client: data.meta.client, project: data.meta.project, name: data.meta.name }
-                    );
-                    if (result) newMediaRef = result.localRef;
-                } else if (rootHandle && typeof rootHandle !== 'string') {
+                if (rootHandle && typeof rootHandle !== 'string') {
                     newMediaRef = await saveTaskMediaWeb(rootHandle, pendingFileRef.current, docTask.id);
                 }
             } catch (e) {

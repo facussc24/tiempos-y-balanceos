@@ -21,7 +21,6 @@ import { StatCard } from '../components/landing/StatCard';
 import { logger } from '../utils/logger';
 import { toast } from '../components/ui/Toast';
 import { ConfirmModal } from '../components/modals/ConfirmModal';
-import { isTauri } from '../utils/unified_fs';
 
 interface Study {
     name: string;
@@ -786,19 +785,9 @@ export const Dashboard: React.FC<DashboardProps> = ({
                                 const currentSelection = Array.from(selectedForMix);
 
                                 try {
-                                    // Leer demanda real de cada master.json
-                                    // isTauri() is false in web mode so demand always falls back to 100.
-                                    const products = await Promise.all(
-                                        currentSelection.map(async (studyPath) => {
-                                            const demand = 100; // Fallback default (filesystem not available in web)
-                                            if (isTauri()) {
-                                                // This branch is never reached in web mode.
-                                                // In Tauri mode, demand would be read from master.json via the
-                                                // filesystem. TODO: Implement via backend API.
-                                            }
-                                            return { path: studyPath, demand };
-                                        })
-                                    );
+                                    // Demanda por estudio: el backend web no lee master.json desde FS,
+                                    // asi que usamos un default. TODO: leer demand real via Supabase.
+                                    const products = currentSelection.map(studyPath => ({ path: studyPath, demand: 100 }));
                                     onNavigateToMix?.(products);
                                 } catch (e) {
                                     toast.error('Error al crear Mix', 'No se pudieron cargar todos los estudios.');

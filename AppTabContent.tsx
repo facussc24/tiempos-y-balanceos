@@ -3,7 +3,6 @@
  * Renders the active tab's module/component.
  */
 import React from 'react';
-import { INITIAL_PROJECT } from './types';
 import { PanelControl } from './modules/PanelControl';
 import { TaskManager } from './modules/TaskManager';
 import { LineBalancing } from './modules/LineBalancing';
@@ -15,8 +14,7 @@ import { MixModeView } from './modules/mix';
 import { FlowSimulatorModule } from './modules/flow-simulator/FlowSimulatorModule';
 import { ExecutiveSummary } from './modules/ExecutiveSummary';
 import { Dashboard } from './modules/Dashboard';
-import { isTauri } from './utils/unified_fs';
-import { listClients, listProjects, listParts, buildMasterJsonPath, buildPath } from './utils/pathManager';
+import { listClients, listProjects, listParts, buildPath } from './utils/pathManager';
 import { addToRecentProjects } from './components/navigation/ProjectSwitcher';
 import { logger } from './utils/logger';
 import { toast } from './components/ui/Toast';
@@ -66,63 +64,30 @@ export const AppTabContent: React.FC<AppTabContentProps> = ({
                     onOpenProject={async (studyInfo) => {
                         // studyInfo format: "CLIENT/PROJECT/PART"
                         const [client, project, part] = studyInfo.split('/');
-                        const masterPath = buildMasterJsonPath(client, project, part);
-                        const dataPath = buildPath('data', client, project, part);
 
                         try {
-                            if (isTauri()) {
-                                const fs = await import('./utils/unified_fs');
-                                const content = await fs.readTextFile(masterPath);
-
-                                if (content) {
-                                    const projectData = JSON.parse(content);
-                                    const fullData = {
-                                        ...projectData,
-                                        fileHandle: masterPath,
-                                        directoryHandle: dataPath
-                                    };
-                                    persistence.setData(fullData);
-                                    undoRedo.resetHistory(fullData);
-                                    // Add to recent projects for Quick Switch
+                            // Web mode: buscar proyecto por metadata y cargarlo desde Supabase
+                            const { getProjectsByClient, loadProject: loadProjectFromDb } = await import('./utils/repositories/projectRepository');
+                            const dbProjects = await getProjectsByClient(client);
+                            const match = dbProjects.find(p => p.project_code === project && p.name === part);
+                            if (match) {
+                                const loadedData = await loadProjectFromDb(match.id);
+                                if (loadedData) {
+                                    persistence.setData(loadedData);
+                                    undoRedo.resetHistory(loadedData);
                                     addToRecentProjects({
                                         path: studyInfo,
-                                        name: projectData.meta?.name || part,
+                                        name: loadedData.meta?.name || part,
                                         client,
-                                        project
+                                        project,
                                     });
                                     navigation.setActiveTab('panel');
-                                    toast.success('Proyecto Cargado', projectData.meta?.name || part);
+                                    toast.success('Proyecto Cargado', loadedData.meta?.name || part);
                                 } else {
-                                    // Create empty structure if no master.json exists
-                                    const initialData = {
-                                        ...INITIAL_PROJECT,
-                                        meta: { ...INITIAL_PROJECT.meta, name: part, client, project },
-                                        fileHandle: masterPath,
-                                        directoryHandle: dataPath
-                                    };
-                                    persistence.setData(initialData);
-                                    undoRedo.resetHistory(initialData);
-                                    navigation.setActiveTab('panel');
-                                    toast.info('Nuevo Proyecto', 'Creando estructura inicial...');
+                                    toast.error('Error', 'No se pudo cargar el proyecto');
                                 }
                             } else {
-                                // Web mode: buscar proyecto por metadata y cargarlo
-                                const { getProjectsByClient, loadProject: loadProjectFromDb } = await import('./utils/repositories/projectRepository');
-                                const dbProjects = await getProjectsByClient(client);
-                                const match = dbProjects.find(p => p.project_code === project && p.name === part);
-                                if (match) {
-                                    const loadedData = await loadProjectFromDb(match.id);
-                                    if (loadedData) {
-                                        persistence.setData(loadedData);
-                                        undoRedo.resetHistory(loadedData);
-                                        navigation.setActiveTab('panel');
-                                        toast.success('Proyecto Cargado', loadedData.meta?.name || part);
-                                    } else {
-                                        toast.error('Error', 'No se pudo cargar el proyecto');
-                                    }
-                                } else {
-                                    toast.error('Proyecto no encontrado', `${client}/${project}/${part}`);
-                                }
+                                toast.error('Proyecto no encontrado', `${client}/${project}/${part}`);
                             }
                         } catch (e) {
                             logger.error('App', 'Error opening project', {}, e instanceof Error ? e : undefined);
