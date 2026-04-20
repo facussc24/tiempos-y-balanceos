@@ -62,19 +62,42 @@ descender (p, g, y, j, q) al rasterizar en canvas. En fuentes <10px se nota.
 style={{ whiteSpace: 'nowrap', overflow: 'visible' }}
 ```
 
-### 3. Textos dentro de shapes quedan descentrados hacia abajo
-`flex items-center` centra la caja del texto (font-size + ascender +
-line-height extra), NO el glyph optico. Por eso "10" dentro de un circulo, "SC"
-en un cuadrito, "SCRAP" en terminal, se ven desplazados abajo.
+### 3. Textos dentro de shapes quedan descentrados
+`flex items-center` centra la line-box del texto (font-size + ascender +
+descender), NO el glyph optico. En la fuente Inter el cap-height esta
+desplazado ~1px arriba del centro visual de la line-box. html2canvas respeta
+eso literalmente → texto queda ligeramente arriba o abajo segun el cap-height.
 
-**Fix**: forzar lineHeight:1 + translateY compensatorio:
+**Fix A (ideal para texto 1-linea en shapes fijos)**: position absolute +
+translate(-50%, -50%). Centra el bounding-box real del span, NO depende de
+metrics de fuente. Usado en ShapeOperation, ShapeInspection, ShapeOpIns.
 ```tsx
-<div style={{ lineHeight: 1 }}>
-  <span style={{ lineHeight: 1, display: 'inline-block', transform: 'translateY(-0.5px)' }}>
-    {text}
-  </span>
+<div style={{ position: 'relative' }}>
+  <span style={{
+    position: 'absolute',
+    top: '50%', left: '50%',
+    transform: 'translate(-50%, -50%)',
+    lineHeight: 1,
+    whiteSpace: 'nowrap',
+  }}>{id}</span>
 </div>
 ```
+
+**Fix B (para texto multi-linea o containers flexibles)**: paddingTop asimetrico.
+Empuja el texto hacia abajo para compensar el cap-height de Inter arriba.
+```tsx
+<span style={{
+  lineHeight: 1.15,
+  paddingTop: '3px',
+  paddingBottom: '2px',
+  display: 'inline-block',
+}}>{text}</span>
+```
+
+**ANTI-PATTERN** (NO usar):
+- `transform: translateY(-0.5px)` — empuja arriba sin razon, empeora el bug
+- Solo `lineHeight: 1` sin paddingTop — en Inter queda ligeramente arriba
+- `flex items-center` para textos chicos con precision critica
 
 ## Workflow de fix de bugs del export PDF
 
@@ -140,7 +163,8 @@ causa root de nuevo.
 | ef57df7 | Header con inline styles + SCRAP→RECLAMO PROVEEDOR | Funciono parcial, seguian cortadas letras |
 | d31225c | scale:3 + fonts.ready en html2canvas | No resolvio (no era metrics) |
 | e760335 | Quitar `truncate` de HeaderCell | RESOLVIO corte descenders |
-| f51286f | lineHeight:1 + translateY en shapes | RESOLVIO textos descentrados |
+| f51286f | Intento lineHeight:1 + translateY(-0.5px) | EMPUJO textos arriba del centro, Fak confirmo mal |
+| 8164cf1 | Fix v2: position:absolute+translate(-50%,-50%) | Approach robusto independiente de metrics fuente |
 
 ## Config html2canvas recomendada
 
