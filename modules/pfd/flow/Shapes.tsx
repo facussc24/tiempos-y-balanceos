@@ -6,18 +6,21 @@
 import React from 'react';
 
 /** Operation — Ellipse with step ID inside
- *  Usamos position:absolute + translate(-50%,-50%) para centrar el texto:
- *  es el approach mas robusto en html2canvas porque NO depende de las metrics
- *  de la fuente (que en canvas se calculan diferente que en browser). El flex
- *  items-center centraba la line-box, pero el glyph visual quedaba descentrado
- *  por la asimetria cap-height vs descender.
- */
+ *  Diagnostico 2026-04-20 confirmado por Fak: textos quedaban pegados al
+ *  borde INFERIOR del shape. html2canvas renderiza el baseline del texto
+ *  cerca del bottom del line-box (no simetrico como en browser).
+ *  Fix: table + table-cell con vertical-align:middle — approach CSS1 que
+ *  html2canvas respeta literalmente sin metrics magicos. */
 export const ShapeOperation = ({ id }: { id?: string }) => (
   <div
     className="w-16 h-10 rounded-[50%] border-[1.5px] border-[#60A5FA] bg-white text-[#1E40AF] text-[11px] font-bold z-10 shadow-sm shrink-0"
-    style={{ position: 'relative' }}
+    style={{ display: 'table' }}
   >
-    <span style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', lineHeight: 1, whiteSpace: 'nowrap' }}>{id}</span>
+    <span
+      style={{ display: 'table-cell', verticalAlign: 'middle', textAlign: 'center', lineHeight: 1, paddingBottom: '2px' }}
+    >
+      {id}
+    </span>
   </div>
 );
 
@@ -26,9 +29,13 @@ export const ShapeOpIns = ({ id }: { id?: string }) => (
   <div className="w-16 h-12 border-[1.5px] border-[#60A5FA] bg-white flex items-center justify-center z-10 relative shadow-sm shrink-0">
     <div
       className="w-12 h-8 rounded-[50%] border-[1.5px] border-[#60A5FA] text-[#1E40AF] text-[11px] font-bold"
-      style={{ position: 'relative' }}
+      style={{ display: 'table' }}
     >
-      <span style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', lineHeight: 1, whiteSpace: 'nowrap' }}>{id}</span>
+      <span
+        style={{ display: 'table-cell', verticalAlign: 'middle', textAlign: 'center', lineHeight: 1, paddingBottom: '2px' }}
+      >
+        {id}
+      </span>
     </div>
   </div>
 );
@@ -51,9 +58,13 @@ export const ShapeStorage = () => (
 export const ShapeInspection = ({ id }: { id?: string }) => (
   <div
     className="w-14 h-10 border-[1.5px] border-[#60A5FA] bg-white text-[#1E40AF] text-[11px] font-bold z-10 shadow-sm shrink-0"
-    style={{ position: 'relative' }}
+    style={{ display: 'table' }}
   >
-    <span style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', lineHeight: 1, whiteSpace: 'nowrap' }}>{id}</span>
+    <span
+      style={{ display: 'table-cell', verticalAlign: 'middle', textAlign: 'center', lineHeight: 1, paddingBottom: '2px' }}
+    >
+      {id}
+    </span>
   </div>
 );
 
@@ -64,11 +75,13 @@ export const ShapeCondition = () => (
   </div>
 );
 
-/** Terminal side — Small rounded rectangle with text (SCRAP, reclamo, etc.) */
+/** Terminal side — Small rounded rectangle with text (SCRAP, reclamo, etc.)
+ *  Paddings asimetricos: top mayor que bottom para empujar el texto HACIA ARRIBA
+ *  (sin esto queda pegado al borde inferior en html2canvas). */
 export const ShapeTerminalSide = ({ text }: { text?: string }) => (
   <div
-    className="px-3 py-1.5 border-[1.5px] border-red-400 bg-white flex items-center justify-center text-red-600 text-[8.5px] font-bold z-10 relative uppercase shadow-sm rounded-sm max-w-[120px] text-center shrink-0"
-    style={{ lineHeight: 1.2 }}
+    className="px-3 border-[1.5px] border-red-400 bg-white flex items-center justify-center text-red-600 text-[8.5px] font-bold z-10 relative uppercase shadow-sm rounded-sm max-w-[120px] text-center shrink-0"
+    style={{ lineHeight: 1.2, paddingTop: '6px', paddingBottom: '2px', minHeight: '20px' }}
   >
     {text}
   </div>

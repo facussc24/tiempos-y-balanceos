@@ -98,11 +98,15 @@ export const FlowNode: React.FC<FlowNodeProps> = ({ node, isLast, hasBranches })
         className="flex items-center w-full max-w-4xl relative z-10"
         style={{ minHeight: '48px' }}
       >
-        {/* Left column: CC/SC label */}
+        {/* Left column: CC/SC label
+            Paddings asimetricos: top mayor que bottom. html2canvas renderiza el
+            baseline cerca del bottom del line-box → texto pegado abajo del cuadrito
+            sin esto. Compensamos empujando hacia arriba con paddingTop mayor. */}
         <div className="flex-1 flex justify-end items-center pr-6 space-x-2 relative z-10">
           {node.critical && node.criticalType && (
             <span
-              className="text-[9px] font-bold text-red-600 bg-red-50 border border-red-200 rounded-sm px-1.5 py-0.5 whitespace-nowrap"
+              className="text-[9px] font-bold text-red-600 bg-red-50 border border-red-200 rounded-sm px-1.5 whitespace-nowrap"
+              style={{ lineHeight: 1, paddingTop: '4px', paddingBottom: '1px', display: 'inline-block' }}
             >
               {node.criticalType}
             </span>
