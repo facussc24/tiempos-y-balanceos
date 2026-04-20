@@ -84,6 +84,14 @@ async function renderPfdPdf(
             });
         });
 
+        // Wait for fonts to be fully loaded in the iframe — critical for html2canvas
+        // to render glyphs with correct metrics. Sin esto, html2canvas usa fallback font
+        // y los baselines quedan mal calculados → letras cortadas (issue conocido de la lib).
+        const iframeWin = iframe.contentWindow;
+        if (iframeWin && 'fonts' in iframeWin.document) {
+            try { await (iframeWin.document as any).fonts.ready; } catch { /* noop */ }
+        }
+
         // Resize iframe to actual content height
         iframe.style.height = `${iframeDoc.body.scrollHeight + 20}px`;
         await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
@@ -99,7 +107,10 @@ async function renderPfdPdf(
             margin: MARGIN,
             image: { type: 'jpeg' as const, quality: 0.98 },
             html2canvas: {
-                scale: 2,
+                // scale: 3 — mejor resolucion subpixel para fuentes chicas (6-9px)
+                // evita que el baseline mal calculado de html2canvas recorte glyphs
+                // (issue documentado en eKoopmans/html2pdf.js#83, #13).
+                scale: 3,
                 useCORS: true,
                 letterRendering: true,
                 backgroundColor: '#ffffff',
