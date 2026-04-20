@@ -124,10 +124,12 @@ async function getExportItems(module: ExportDocModule, doc: unknown): Promise<Ex
             break;
         }
         case 'tiempos': {
-            const { generateBalancingBuffer } = await import('../modules/balancing/balancingCapacityExcelExport');
+            // Auto-export en formato VW Gate 3 (reemplazo del balancingCapacityExcelExport viejo).
+            const { generateGate3Buffer } = await import('../modules/gate3/gate3ExcelExport');
+            const { buildGate3FromProjectData } = await import('../modules/gate3/gate3FromBalancing');
             const typedDoc = doc as import('../types').ProjectData;
             items.push(
-                { module, format: 'xlsx', generate: () => generateBalancingBuffer(typedDoc) },
+                { module, format: 'xlsx', generate: () => generateGate3Buffer(buildGate3FromProjectData(typedDoc)) },
             );
             break;
         }

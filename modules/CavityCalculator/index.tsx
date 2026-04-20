@@ -8,7 +8,9 @@ import { SimulationResults } from './components/SimulationResults';
 import { CalculationErrorBoundary } from './components/CalculationErrorBoundary';
 import { Task, InjectionParams, Shift } from '../../types';
 import { calculateTaktTime } from '../../utils';
-import { Calculator, X, HelpCircle, ArrowRight, BookOpen, MousePointer2 } from 'lucide-react';
+import { Calculator, X, HelpCircle, ArrowRight, BookOpen, MousePointer2, FileSpreadsheet } from 'lucide-react';
+import { v4 as uuidv4 } from 'uuid';
+import type { Gate3Project } from '../../core/gate3/types';
 
 interface Props {
     task: Task;
@@ -45,6 +47,53 @@ export const CavityCalculator: React.FC<Props> = ({
     const [sections, setSections] = useState({ machine: true, manual: true });
     const [showHelp, setShowHelp] = useState(false);
     const [showGuideModal, setShowGuideModal] = useState(false);
+    const [isExportingGate3, setIsExportingGate3] = useState(false);
+
+    const handleExportGate3 = async () => {
+        if (isExportingGate3) return;
+        setIsExportingGate3(true);
+        try {
+            // Construye Gate3Project con UNA estacion (la inyeccion del Cavity Calc).
+            // Sin OK/NOK estimados — el OEE viene del proyecto (oee prop) como override.
+            const cycleSec = Math.max(0, Number(calculator.metrics.realCycleTime.toFixed(2)));
+            const project: Gate3Project = {
+                partNumber: task.id || '',
+                partDesignation: task.description || 'Pieza inyectada',
+                project: '',
+                supplier: 'Barack Mercosul',
+                location: 'Zarate, Argentina',
+                creator: '',
+                date: `${String(new Date().getDate()).padStart(2, '0')}/${String(new Date().getMonth() + 1).padStart(2, '0')}/${new Date().getFullYear()}`,
+                department: 'Inyeccion',
+                gsisNr: '',
+                normalDemandWeek: dailyDemand * 5,
+                stations: [{
+                    id: uuidv4(),
+                    name: task.description || 'Inyeccion',
+                    processType: 'inyeccion',
+                    observationTimeMin: 0,
+                    cycleTimeSec: cycleSec,
+                    cavities: calculator.activeN,
+                    downtimeMin: 0,
+                    okParts: 0,
+                    nokParts: 0,
+                    shiftsPerWeek: activeShifts * 5,
+                    hoursPerShift: 8,
+                    reservationPct: 1,
+                    machines: 1,
+                    oeeOverride: oee,
+                }],
+            };
+            const { exportGate3Excel } = await import('../gate3/gate3ExcelExport');
+            await exportGate3Excel(project);
+        } catch (err) {
+            // eslint-disable-next-line no-alert
+            window.alert('No se pudo exportar el Excel VW: ' + (err instanceof Error ? err.message : String(err)));
+            console.error('Error exporting Gate 3 from Cavity Calculator:', err);
+        } finally {
+            setIsExportingGate3(false);
+        }
+    };
 
     const toggleSection = (key: 'machine' | 'manual') => {
         setSections(prev => ({ ...prev, [key]: !prev[key] }));
@@ -70,8 +119,9 @@ export const CavityCalculator: React.FC<Props> = ({
             userSelectedN: state.cavityMode === 'manual' ? calculator.activeN : undefined,
             headcountMode: state.headcountMode,
             userHeadcount: state.headcountMode === 'manual' ? calculator.userHeadcountOverride : undefined,
-            injectionMode: state.injectionMode,
-            indexTime: state.injectionMode === 'carousel' ? (parseFloat(state.indexTimeStr.replace(',', '.')) || 0) : undefined
+            // injectionMode/indexTime preservados desde injectionParams existentes (UI no los expone aun)
+            injectionMode: task.injectionParams?.injectionMode,
+            indexTime: task.injectionParams?.indexTime,
         }, totalShotTime);
         onClose();
     };
@@ -214,12 +264,6 @@ export const CavityCalculator: React.FC<Props> = ({
                                 setPuCurTimeStr={state.setPuCurTimeStr}
                                 nStar={calculator.metrics.nStar}
                                 errors={calculator.validation.errors}
-                                injectionMode={state.injectionMode}
-                                setInjectionMode={state.setInjectionMode}
-                                indexTimeStr={state.indexTimeStr}
-                                setIndexTimeStr={state.setIndexTimeStr}
-                                setupLossPercent={localSetupLoss}
-                                setSetupLossPercent={setLocalSetupLoss}
                             />
 
                             <ManualOperations
@@ -279,9 +323,6 @@ export const CavityCalculator: React.FC<Props> = ({
                             activeHeadcount={calculator.metrics.activeHeadcount}
                             currentEffectiveManualTime={calculator.metrics.currentEffectiveManualTime}
                             nStar={calculator.metrics.nStar}
-                            dailyDemand={dailyDemand}
-                            availableSeconds={availableSeconds}
-                            oee={oee}
                         />
 
                         <div className="mt-4 flex justify-between items-center">
@@ -298,6 +339,14 @@ export const CavityCalculator: React.FC<Props> = ({
                             </div>
 
                             <div className="flex gap-2">
+                                <button
+                                    onClick={handleExportGate3}
+                                    disabled={!calculator.metrics.isCurrentFeasible || isExportingGate3}
+                                    className="px-4 py-2 rounded-lg font-bold shadow-sm border border-blue-600 text-blue-700 bg-white hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm"
+                                    title="Descargar Excel en formato VW (Capacidad Gate 3)"
+                                >
+                                    <FileSpreadsheet size={16} /> {isExportingGate3 ? 'Generando...' : 'Excel VW Capacidad'}
+                                </button>
                                 <button
                                     onClick={handleApply}
                                     disabled={!calculator.metrics.isCurrentFeasible}

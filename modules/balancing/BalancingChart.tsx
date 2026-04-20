@@ -12,7 +12,8 @@ interface Props {
     effectiveSeconds: number;
     yAxisDomainMax: number;
     data: ProjectData;
-    onShowCapacityPreview?: () => void;
+    onExportCapacityExcel?: () => void;
+    isExportingExcel?: boolean;
 }
 
 // Custom Tooltip for better visibility and formatting
@@ -81,20 +82,22 @@ const CustomChartTooltip = ({ active, payload, label }: any) => {
     return null;
 };
 
-export const BalancingChart: React.FC<Props> = ({ saturationData, nominalSeconds, effectiveSeconds, yAxisDomainMax, data, onShowCapacityPreview }) => {
+export const BalancingChart: React.FC<Props> = ({ saturationData, nominalSeconds, effectiveSeconds, yAxisDomainMax, data, onExportCapacityExcel, isExportingExcel }) => {
     return (
         <Card
             title="Saturación y Balanceo"
             className="border-industrial-200 shadow-sm"
             actions={
                 <div className="flex items-center gap-2">
-                    {onShowCapacityPreview && (
+                    {onExportCapacityExcel && (
                         <button
-                            onClick={onShowCapacityPreview}
-                            className="flex items-center gap-1.5 bg-accent text-white px-3 py-1.5 rounded-md hover:bg-blue-800 text-xs font-bold transition-all shadow-sm"
+                            onClick={onExportCapacityExcel}
+                            disabled={isExportingExcel}
+                            className="flex items-center gap-1.5 bg-accent text-white px-3 py-1.5 rounded-md hover:bg-blue-800 text-xs font-bold transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                            title="Descarga el Excel en el formato oficial VW (Gate 3)"
                         >
                             <Eye size={14} />
-                            Vista Previa Capacidad
+                            {isExportingExcel ? 'Generando...' : 'Exportar Capacidad VW'}
                         </button>
                     )}
                     <div className="bg-slate-50 px-2 py-1 rounded-md border border-slate-100 flex items-center gap-2">

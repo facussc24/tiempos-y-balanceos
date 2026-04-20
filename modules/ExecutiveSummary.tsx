@@ -9,10 +9,10 @@
  * @version 3.0.0
  */
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { ProjectData, Task } from '../types';
 import { Download, BarChart3, AlertTriangle, CheckCircle2 } from 'lucide-react';
-import { exportBalancingCapacityExcel } from './balancing/balancingCapacityExcelExport';
+import { buildGate3FromProjectData } from './gate3/gate3FromBalancing';
 import {
     calculateTaktTime,
     calculateShiftNetMinutes,
@@ -166,11 +166,20 @@ export const ExecutiveSummary: React.FC<Props> = ({ data }) => {
         );
     }
 
+    const [isExporting, setIsExporting] = useState(false);
     const handleExport = async () => {
+        if (isExporting) return;
+        setIsExporting(true);
         try {
-            await exportBalancingCapacityExcel(data);
+            const { exportGate3Excel } = await import('./gate3/gate3ExcelExport');
+            const project = buildGate3FromProjectData(data);
+            await exportGate3Excel(project);
         } catch (err) {
-            console.error('Error exporting Excel:', err);
+            // eslint-disable-next-line no-alert
+            window.alert('No se pudo exportar el Excel VW: ' + (err instanceof Error ? err.message : String(err)));
+            console.error('Error exporting Gate 3 Excel:', err);
+        } finally {
+            setIsExporting(false);
         }
     };
 
@@ -189,10 +198,11 @@ export const ExecutiveSummary: React.FC<Props> = ({ data }) => {
                 </div>
                 <button
                     onClick={handleExport}
-                    className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-sm font-medium shadow-sm"
+                    disabled={isExporting}
+                    className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium shadow-sm"
                 >
                     <Download size={16} />
-                    Exportar Excel
+                    {isExporting ? 'Generando...' : 'Exportar Excel VW'}
                 </button>
             </div>
 
@@ -320,6 +330,7 @@ export const ExecutiveSummary: React.FC<Props> = ({ data }) => {
                     </div>
                 </div>
             </div>
+
         </div>
     );
 };

@@ -13,15 +13,9 @@ import { Unlink, TrendingUp, X, ChevronDown, ChevronRight, Info, Plus, AlertTria
 import { Tooltip } from '../components/ui/Tooltip';
 import { AlertCenter, Alert } from '../components/ui/AlertCenter';
 import { detectOverloadAndRecommend } from '../core/balancing/simulation';
-import { buildCapacityPreviewHtml } from './balancing/balancingCapacityPreviewHtml';
-import { exportBalancingCapacityExcel } from './balancing/balancingCapacityExcelExport';
-import { renderHtmlToPdf } from '../utils/pdfRenderer';
-import { getLogoBase64 } from '../src/assets/ppe/ppeBase64';
-import { sanitizeFilename } from '../utils/filenameSanitization';
+import { buildGate3FromProjectData } from './gate3/gate3FromBalancing';
 import { toast } from '../components/ui/Toast';
 import { logger } from '../utils/logger';
-
-const PdfPreviewModal = React.lazy(() => import('../components/modals/PdfPreviewModal'));
 
 interface Props {
     data: ProjectData;
@@ -112,62 +106,28 @@ export const LineBalancing: React.FC<Props> = ({ data, updateData }) => {
         })
     );
 
-    // Capacity Preview state
-    const [showCapacityPreview, setShowCapacityPreview] = useState(false);
-    const [capacityPreviewHtml, setCapacityPreviewHtml] = useState('');
-    const [isExportingPdf, setIsExportingPdf] = useState(false);
     const [isExportingExcel, setIsExportingExcel] = useState(false);
 
     // Zoning Constraints Modal State
     const [showZoningModal, setShowZoningModal] = useState(false);
 
-    const handleShowCapacityPreview = useCallback(async () => {
-        try {
-            const logo = await getLogoBase64();
-            const html = buildCapacityPreviewHtml(data, logo);
-            setCapacityPreviewHtml(html);
-            setShowCapacityPreview(true);
-        } catch (err) {
-            logger.error('LineBalancing', 'Capacity preview failed', { error: err instanceof Error ? err.message : String(err) });
-            toast.error('Error de vista previa', err instanceof Error ? err.message : 'No se pudo generar la vista previa.');
-        }
-    }, [data]);
-
-    const handleExportCapacityPdf = useCallback(async () => {
-        // B8: Export mutex — prevent concurrent PDF + Excel export
-        if (isExportingPdf || isExportingExcel) return;
-        setIsExportingPdf(true);
-        try {
-            // B5: Sanitize filename
-            const safeName = sanitizeFilename(data.meta.name || 'Capacidad');
-            await renderHtmlToPdf(capacityPreviewHtml, {
-                filename: `${safeName}_Capacidad_Proceso.pdf`,
-                paperSize: 'a3',
-                orientation: 'landscape',
-            });
-            toast.success('PDF exportado', 'Capacidad de proceso descargada correctamente.');
-        } catch (err) {
-            logger.error('LineBalancing', 'Capacity PDF export failed', { error: err instanceof Error ? err.message : String(err) });
-            toast.error('Error de exportación', err instanceof Error ? err.message : 'No se pudo exportar el PDF.');
-        } finally {
-            setIsExportingPdf(false);
-        }
-    }, [capacityPreviewHtml, data.meta.name, isExportingPdf, isExportingExcel]);
-
     const handleExportCapacityExcel = useCallback(async () => {
-        // B8: Export mutex — prevent concurrent PDF + Excel export
-        if (isExportingPdf || isExportingExcel) return;
+        if (isExportingExcel) return;
         setIsExportingExcel(true);
         try {
-            await exportBalancingCapacityExcel(data);
-            toast.success('Excel exportado', 'Capacidad de proceso descargada correctamente.');
+            // Descarga directo el Excel en formato VW (template oficial Gate 3 clonado)
+            // Lazy-load xlsx-populate para no inflar el chunk principal
+            const { exportGate3Excel } = await import('./gate3/gate3ExcelExport');
+            const project = buildGate3FromProjectData(data);
+            await exportGate3Excel(project);
+            toast.success('Excel exportado', 'Capacidad VW (Gate 3) descargada correctamente.');
         } catch (err) {
             logger.error('LineBalancing', 'Capacity Excel export failed', { error: err instanceof Error ? err.message : String(err) });
             toast.error('Error de exportación', err instanceof Error ? err.message : 'No se pudo exportar Excel.');
         } finally {
             setIsExportingExcel(false);
         }
-    }, [data, isExportingPdf, isExportingExcel]);
+    }, [data, isExportingExcel]);
 
     // Mejora 2: Memoize config station lookup to avoid repeated .find() in modal
     const configStation = useMemo(
@@ -534,7 +494,8 @@ export const LineBalancing: React.FC<Props> = ({ data, updateData }) => {
                     effectiveSeconds={effectiveSeconds}
                     yAxisDomainMax={yAxisDomainMax}
                     data={data}
-                    onShowCapacityPreview={handleShowCapacityPreview}
+                    onExportCapacityExcel={handleExportCapacityExcel}
+                    isExportingExcel={isExportingExcel}
                 />
 
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -656,24 +617,6 @@ export const LineBalancing: React.FC<Props> = ({ data, updateData }) => {
                     </div>
                 </div>
             </div >
-
-            {/* Capacity Preview Modal */}
-            {showCapacityPreview && (
-                <React.Suspense fallback={null}>
-                    <PdfPreviewModal
-                        html={capacityPreviewHtml}
-                        onExport={handleExportCapacityPdf}
-                        onClose={() => { if (!isExportingPdf && !isExportingExcel) setShowCapacityPreview(false); }}
-                        isExporting={isExportingPdf}
-                        onExportExcel={handleExportCapacityExcel}
-                        isExportingExcel={isExportingExcel}
-                        title="Capacidad de Producción por Proceso"
-                        subtitle={data.meta.name}
-                        maxWidth="420mm"
-                        themeColor="navy"
-                    />
-                </React.Suspense>
-            )}
 
         </DndContext >
     );
