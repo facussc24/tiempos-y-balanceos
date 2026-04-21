@@ -163,7 +163,7 @@ Reglas que se cargan automaticamente al tocar archivos del modulo correspondient
 | Capa         | Tecnologia                                          |
 |--------------|-----------------------------------------------------|
 | Runtime      | React 19.2, TypeScript 5.8, Vite 6                  |
-| Auth + DB    | Supabase (@supabase/supabase-js) + SQLite (sql.js)  |
+| Auth + DB    | Supabase (@supabase/supabase-js)                    |
 | Testing      | Vitest 4.x + @testing-library/react + jsdom         |
 | Styling      | TailwindCSS 3.4                                     |
 | Export       | xlsx-js-style (AMFE/CP), ExcelJS (HO), html2pdf.js  |
