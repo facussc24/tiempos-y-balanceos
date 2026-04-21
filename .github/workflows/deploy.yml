@@ -26,6 +26,12 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run typecheck
+      # Strict typecheck baseline for core/ and utils/repositories/.
+      # Non-blocking for visibility while legacy `any`/unused code is cleaned up.
+      # TODO: enforce blocking when strict errors reach 0
+      - name: Run strict typecheck (non-blocking baseline)
+        run: npm run typecheck:strict
+        continue-on-error: true
 
   # Gate 2: Vitest suite. Runs in parallel with typecheck.
   # TODO: remove `continue-on-error` once the 4 failing tests are green.

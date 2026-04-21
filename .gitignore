@@ -64,3 +64,7 @@ type_errors.txt
 phantom_x_report.txt
 stress_report.txt
 REPORTE_NOCHE.md
+
+# Test coverage & results
+coverage/
+test-results/

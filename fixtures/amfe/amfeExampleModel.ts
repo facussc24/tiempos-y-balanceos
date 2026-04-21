@@ -16,8 +16,8 @@
  */
 
 import { v4 as uuidv4 } from 'uuid';
-import { AmfeDocument, AmfeCause, AmfeFailure, AmfeFunction, AmfeWorkElement, AmfeOperation, WorkElementType } from './amfeTypes';
-import { calculateAP } from './apTable';
+import { AmfeDocument, AmfeCause, AmfeFailure, AmfeFunction, AmfeWorkElement, AmfeOperation, WorkElementType } from '../../modules/amfe/amfeTypes';
+import { calculateAP } from '../../modules/amfe/apTable';
 
 // --- Helpers (same pattern as amfeTemplates.ts) ---
 
