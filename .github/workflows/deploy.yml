@@ -15,7 +15,39 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Gate 1: TypeScript typecheck. Blocking — if types break, we do not deploy.
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+
+  # Gate 2: Vitest suite. Runs in parallel with typecheck.
+  # TODO: remove `continue-on-error` once the 4 failing tests are green.
+  # Snapshot 2026-04-20 local run: 4 failed / 3834 passed / 8 skipped.
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Run vitest
+        run: npx vitest run
+        continue-on-error: true
+
+  # Build + deploy only runs if typecheck passed. `test` is not a hard gate
+  # yet (continue-on-error) but appears in the dependency chain so its status
+  # is visible on every deploy.
   build-and-deploy:
+    needs: [typecheck, test]
     runs-on: ubuntu-latest
     environment:
       name: github-pages

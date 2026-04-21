@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { createExampleAmfeDocument } from '../../../modules/amfe/amfeExampleModel';
+import { createExampleAmfeDocument } from '../../../fixtures/amfe/amfeExampleModel';
 import { calculateAP } from '../../../modules/amfe/apTable';
 
 describe('amfeExampleModel', () => {
