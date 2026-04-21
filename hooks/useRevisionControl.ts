@@ -20,9 +20,6 @@ import { upsertCrossDocCheck } from '../utils/repositories/crossDocRepository';
 import { getDownstreamTargets } from '../utils/crossDocumentAlerts';
 import { generateChecksum } from '../utils/crypto';
 import { logger } from '../utils/logger';
-import { autoExportOnRevision } from '../utils/autoExportService';
-import { getSetting } from '../utils/repositories/settingsRepository';
-import type { ExportDocModule } from '../utils/exportPathManager';
 import { createServerBackup } from '../utils/backupService';
 
 interface UseRevisionControlParams {
@@ -150,26 +147,6 @@ export function useRevisionControl(params: UseRevisionControlParams): UseRevisio
             // 7. Refresh revisions list
             const updated = await listRevisions(module, documentId);
             setRevisions(updated);
-
-            // 7b. Auto-export to Y: drive (fire-and-forget, never blocks revision)
-            // FIX: Use parsed snapshot (frozen copy) instead of live currentData reference
-            const autoExportEnabled = await getSetting<boolean>('auto_export_on_revision');
-            if (autoExportEnabled !== false) { // default true if setting not found
-                const frozenData = JSON.parse(snapshotData);
-                autoExportOnRevision(module as ExportDocModule, frozenData, currentRevisionLevel, documentId)
-                    .then(result => {
-                        if (result.written > 0) {
-                            logger.info('useRevisionControl', `Auto-exported ${result.written} files to Y:`);
-                        }
-                        if (result.queued > 0) {
-                            logger.info('useRevisionControl', `Queued ${result.queued} exports (Y: unavailable)`);
-                        }
-                        if (result.errors.length > 0) {
-                            logger.warn('useRevisionControl', 'Auto-export errors', { errors: result.errors });
-                        }
-                    })
-                    .catch(() => { /* silencioso — la revisión ya se guardó */ });
-            }
 
             // 7c. Server backup (fire-and-forget, never blocks revision)
             // This is the ONLY moment we write to the server — formal milestone.

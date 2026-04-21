@@ -11,8 +11,6 @@ import { SaveConflict, ConflictError } from '../utils/concurrency';
 import { classifyError } from '../utils/networkUtils';
 import { toast } from '../components/ui/Toast';
 import { logger } from '../utils/logger';
-import { autoExportOnRevision } from '../utils/autoExportService';
-import { getSetting } from '../utils/repositories/settingsRepository';
 
 interface UsePersistenceResult {
     data: ProjectData;
@@ -240,13 +238,6 @@ export function useProjectPersistence(): UsePersistenceResult {
                 await saveProject(newData);
                 markClean(newData);
                 toast.success('Proyecto Guardado', `Nueva Version: ${newData.meta.version}`);
-
-                // Auto-export tiempos y balanceos to Y:\INGENIERIA (fire-and-forget)
-                const autoExportEnabled = await getSetting<boolean>('auto_export_on_revision');
-                if (autoExportEnabled !== false) {
-                    autoExportOnRevision('tiempos', newData, newData.meta.version, String(newData.id || ''))
-                        .catch(() => { /* silencioso — el guardado ya se completó */ });
-                }
             }
         } catch (err) {
             if (err instanceof ConflictError) {
