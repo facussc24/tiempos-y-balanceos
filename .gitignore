@@ -68,3 +68,7 @@ REPORTE_NOCHE.md
 # Test coverage & results
 coverage/
 test-results/
+
+
+# Auto-generated plans and audit reports from scripts
+tmp/
