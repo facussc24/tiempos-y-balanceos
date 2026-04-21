@@ -10,7 +10,7 @@ import {
     QUICK_START,
     FAQ_ITEMS,
     FORMULAS
-} from './help/helpContent';
+} from './helpContent';
 
 // TabButton extracted outside component for performance
 interface TabButtonProps {

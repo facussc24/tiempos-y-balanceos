@@ -1,23 +1,23 @@
 import React from 'react';
 import { Layers, Plus, AlertTriangle, ListTodo, Link2, ChevronDown, GitBranch } from 'lucide-react';
-import { ProjectData } from '../types';
-import { Card } from '../components/ui/Card';
-import { Button } from '../components/ui/Button';
-import { EmptyState, EMPTY_STATE_PRESETS } from '../components/ui/EmptyState';
-import { ConfirmModal } from '../components/modals/ConfirmModal';
-import { CavityCalculator } from './CavityCalculator';
-import { ManualCapacityCalculator } from './ManualCapacityCalculator';
+import { ProjectData } from '../../types';
+import { Card } from '../../components/ui/Card';
+import { Button } from '../../components/ui/Button';
+import { EmptyState, EMPTY_STATE_PRESETS } from '../../components/ui/EmptyState';
+import { ConfirmModal } from '../../components/modals/ConfirmModal';
+import { CavityCalculator } from '../CavityCalculator';
+import { ManualCapacityCalculator } from '../ManualCapacityCalculator';
 
 // New Modular Imports
-import { useTaskManager } from '../hooks/useTaskManager';
-import { TaskTable } from './task/TaskTable';
-import { SectorManagementModal } from './task/modals/SectorManagementModal';
-import { PasteModal } from './task/modals/PasteModal';
-import { DocumentationModal } from './task/modals/DocumentationModal';
-import { CreateVariantModal } from './task/modals/CreateVariantModal'; // V9.0: Product Inheritance
-import { ZoningConstraintsModal } from './balancing/components/ZoningConstraintsModal'; // FIX 3
-import { usePlantAssets } from '../hooks/usePlantAssets'; // V4.0 Asset Registry
-import { logger } from '../utils/logger';
+import { useTaskManager } from '../../hooks/useTaskManager';
+import { TaskTable } from './TaskTable';
+import { SectorManagementModal } from './modals/SectorManagementModal';
+import { PasteModal } from './modals/PasteModal';
+import { DocumentationModal } from './modals/DocumentationModal';
+import { CreateVariantModal } from './modals/CreateVariantModal'; // V9.0: Product Inheritance
+import { ZoningConstraintsModal } from '../balancing/components/ZoningConstraintsModal'; // FIX 3
+import { usePlantAssets } from '../../hooks/usePlantAssets'; // V4.0 Asset Registry
+import { logger } from '../../utils/logger';
 
 interface Props {
     data: ProjectData;

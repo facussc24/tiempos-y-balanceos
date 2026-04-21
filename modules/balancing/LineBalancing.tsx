@@ -1,21 +1,21 @@
 ﻿import React, { useMemo, useState, useCallback, useEffect } from 'react';
 import { DndContext, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
-import { ProjectData, Task } from '../types';
-import { useLineBalancing } from '../hooks/useLineBalancing';
-import { formatNumber } from '../utils';
-import { BalancingChart } from './balancing/BalancingChart';
-import { StationCard } from './balancing/components/StationCard';
-import { UnassignedTaskList } from './balancing/components/UnassignedTaskList';
-import { OptimizationResultsModal } from './balancing/components/OptimizationResultsModal';
-import { BalancingMetrics } from './balancing/components/BalancingMetrics';
-import { ZoningConstraintsModal } from './balancing/components/ZoningConstraintsModal';
+import { ProjectData, Task } from '../../types';
+import { useLineBalancing } from '../../hooks/useLineBalancing';
+import { formatNumber } from '../../utils';
+import { BalancingChart } from './BalancingChart';
+import { StationCard } from './components/StationCard';
+import { UnassignedTaskList } from './components/UnassignedTaskList';
+import { OptimizationResultsModal } from './components/OptimizationResultsModal';
+import { BalancingMetrics } from './components/BalancingMetrics';
+import { ZoningConstraintsModal } from './components/ZoningConstraintsModal';
 import { Unlink, TrendingUp, X, ChevronDown, ChevronRight, Info, Plus, AlertTriangle, Minus } from 'lucide-react';
-import { Tooltip } from '../components/ui/Tooltip';
-import { AlertCenter, Alert } from '../components/ui/AlertCenter';
-import { detectOverloadAndRecommend } from '../core/balancing/simulation';
-import { buildGate3FromProjectData } from './gate3/gate3FromBalancing';
-import { toast } from '../components/ui/Toast';
-import { logger } from '../utils/logger';
+import { Tooltip } from '../../components/ui/Tooltip';
+import { AlertCenter, Alert } from '../../components/ui/AlertCenter';
+import { detectOverloadAndRecommend } from '../../core/balancing/simulation';
+import { buildGate3FromProjectData } from '../gate3/gate3FromBalancing';
+import { toast } from '../../components/ui/Toast';
+import { logger } from '../../utils/logger';
 
 interface Props {
     data: ProjectData;
@@ -117,7 +117,7 @@ export const LineBalancing: React.FC<Props> = ({ data, updateData }) => {
         try {
             // Descarga directo el Excel en formato VW (template oficial Gate 3 clonado)
             // Lazy-load xlsx-populate para no inflar el chunk principal
-            const { exportGate3Excel } = await import('./gate3/gate3ExcelExport');
+            const { exportGate3Excel } = await import('../gate3/gate3ExcelExport');
             const project = buildGate3FromProjectData(data);
             await exportGate3Excel(project);
             toast.success('Excel exportado', 'Capacidad VW (Gate 3) descargada correctamente.');

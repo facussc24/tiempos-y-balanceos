@@ -3,17 +3,17 @@
  * Renders the active tab's module/component.
  */
 import React from 'react';
-import { PanelControl } from './modules/PanelControl';
-import { TaskManager } from './modules/TaskManager';
-import { LineBalancing } from './modules/LineBalancing';
+import { PanelControl } from './modules/panel/PanelControl';
+import { TaskManager } from './modules/task/TaskManager';
+import { LineBalancing } from './modules/balancing/LineBalancing';
 import { DependencyGraph } from './modules/DependencyGraph';
-import { HelpCenter } from './modules/HelpCenter';
+import { HelpCenter } from './modules/help/HelpCenter';
 import { OeeDetail } from './modules/OeeDetail';
 import { PlantConfigPanel } from './modules/PlantConfigPanel';
 import { MixModeView } from './modules/mix';
 import { FlowSimulatorModule } from './modules/flow-simulator/FlowSimulatorModule';
 import { ExecutiveSummary } from './modules/ExecutiveSummary';
-import { Dashboard } from './modules/Dashboard';
+import { Dashboard } from './modules/dashboard/Dashboard';
 import { listClients, listProjects, listParts, buildPath } from './utils/pathManager';
 import { addToRecentProjects } from './components/navigation/ProjectSwitcher';
 import { logger } from './utils/logger';

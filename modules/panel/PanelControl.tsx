@@ -1,27 +1,27 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { ProjectData, INITIAL_PROJECT, Task } from '../types';
-import { Card, Badge } from '../components/ui/Card';
-import { calculateTaktTime, formatNumber, calculateTotalEffectiveWorkContent, calculateTotalHeadcount, calculateEffectiveStationTime } from '../utils';
-import { parseDemand } from '../utils/validation';
+import { ProjectData, INITIAL_PROJECT, Task } from '../../types';
+import { Card, Badge } from '../../components/ui/Card';
+import { calculateTaktTime, formatNumber, calculateTotalEffectiveWorkContent, calculateTotalHeadcount, calculateEffectiveStationTime } from '../../utils';
+import { parseDemand } from '../../utils/validation';
 import { AlertTriangle, CheckCircle2, Trash2, Layers, PieChart } from 'lucide-react';
-import ProductSelector from '../components/ui/ProductSelector';
-import type { ProductSelection } from '../components/ui/ProductSelector';
-import { Tooltip } from '../components/ui/Tooltip';
-import { toast } from '../components/ui/Toast';
+import ProductSelector from '../../components/ui/ProductSelector';
+import type { ProductSelection } from '../../components/ui/ProductSelector';
+import { Tooltip } from '../../components/ui/Tooltip';
+import { toast } from '../../components/ui/Toast';
 
 // Hooks
-import { useOEELogic } from '../hooks/useOEELogic';
-import { useShiftManager } from '../hooks/useShiftManager';
+import { useOEELogic } from '../../hooks/useOEELogic';
+import { useShiftManager } from '../../hooks/useShiftManager';
 
 // Sub-components
-import { KPIView } from './panel/KPIView';
-import { CapacityAnalysis } from './panel/CapacityAnalysis';
-import { ShiftStructure } from './panel/ShiftStructure';
-import { ModelManagerModal } from './task/modals/ModelManagerModal';
+import { KPIView } from './KPIView';
+import { CapacityAnalysis } from './CapacityAnalysis';
+import { ShiftStructure } from './ShiftStructure';
+import { ModelManagerModal } from '../task/modals/ModelManagerModal';
 
 // Phase 1 Completion: New UI Components
-import { TaktSemaphore } from '../components/ui/TaktSemaphore';
-import TaktPreview from '../components/ui/TaktPreview';
+import { TaktSemaphore } from '../../components/ui/TaktSemaphore';
+import TaktPreview from '../../components/ui/TaktPreview';
 
 interface Props {
     data: ProjectData;

@@ -16,11 +16,11 @@ import {
     TrendingUp, Sparkles, Filter, ChevronDown,
     RefreshCw, Loader2, ExternalLink, Layers, Settings, Trash2
 } from 'lucide-react';
-import { HeroSection } from '../components/landing/HeroSection';
-import { StatCard } from '../components/landing/StatCard';
-import { logger } from '../utils/logger';
-import { toast } from '../components/ui/Toast';
-import { ConfirmModal } from '../components/modals/ConfirmModal';
+import { HeroSection } from '../../components/landing/HeroSection';
+import { StatCard } from '../../components/landing/StatCard';
+import { logger } from '../../utils/logger';
+import { toast } from '../../components/ui/Toast';
+import { ConfirmModal } from '../../components/modals/ConfirmModal';
 
 interface Study {
     name: string;
