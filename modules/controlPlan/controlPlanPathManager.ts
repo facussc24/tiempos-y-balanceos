@@ -50,8 +50,8 @@ export function setCpBasePath(path: string): void {
  */
 export async function initCpBasePath(): Promise<void> {
     try {
-        const { loadSettings } = await import('../../utils/settingsStore');
-        const settings = await loadSettings();
+        const { loadAppSettings } = await import('../../utils/repositories/settingsRepository');
+        const settings = await loadAppSettings();
         if (settings.cpBasePath) {
             _cpBasePath = settings.cpBasePath;
         }
