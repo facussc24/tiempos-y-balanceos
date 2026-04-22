@@ -180,6 +180,13 @@ export async function saveAmfe(sb, id, doc, opts = {}) {
         syncLegacyFmFields(doc);
     }
 
+    // AUTO-SYNC: pares de aliases (fn.description/functionDescription, etc).
+    // Ver incidente 2026-04-22 (Top Roll, 44 fn.description vacias). Opt-out con
+    // { skipAliasSync: true }.
+    if (!opts.skipAliasSync) {
+        syncFieldAliases(doc);
+    }
+
     const payload = { data: JSON.stringify(doc), ...(opts.extraFields || {}) };
     // Extra guard: nunca permitir pasar objeto directo en data
     if (typeof payload.data !== 'string') {
@@ -309,6 +316,73 @@ export function syncLegacyFmFields(doc) {
     }
 
     return { synced };
+}
+
+// ─── Field alias sync ───────────────────────────────────────────────────────
+
+/**
+ * Sincroniza pares de aliases entre entidades AMFE.
+ *
+ * El schema usa ambos nombres (historico). Si uno esta lleno y el otro vacio,
+ * el export/UI que lee "el otro" muestra celdas en blanco aunque el dato exista.
+ *
+ * Pares sincronizados:
+ *   - op.opNumber     <-> op.operationNumber
+ *   - op.name         <-> op.operationName
+ *   - fn.description  <-> fn.functionDescription
+ *   - cause.cause     <-> cause.description
+ *   - cause.ap        <-> cause.actionPriority
+ *
+ * Idempotente: si ambos estan llenos con distintos valores, NO los pisa
+ * (asume que fue intencional).
+ *
+ * @param {object} doc — Documento AMFE parseado. Se muta in-place.
+ * @returns {{synced: number, byField: object}} cantidad sincronizada.
+ */
+export function syncFieldAliases(doc) {
+    let synced = 0;
+    const byField = {};
+
+    function isEmpty(v) {
+        return v === null || v === undefined || (typeof v === 'string' && v.trim() === '');
+    }
+
+    function sync(entity, a, b, entityLabel) {
+        const vA = entity[a], vB = entity[b];
+        if (isEmpty(vA) && !isEmpty(vB)) {
+            entity[a] = vB;
+            const key = `${entityLabel}.${a}`;
+            byField[key] = (byField[key] || 0) + 1;
+            synced++;
+        } else if (!isEmpty(vA) && isEmpty(vB)) {
+            entity[b] = vA;
+            const key = `${entityLabel}.${b}`;
+            byField[key] = (byField[key] || 0) + 1;
+            synced++;
+        }
+    }
+
+    if (!doc?.operations) return { synced, byField };
+
+    for (const op of doc.operations) {
+        sync(op, 'opNumber', 'operationNumber', 'op');
+        sync(op, 'name', 'operationName', 'op');
+
+        for (const we of (op.workElements || [])) {
+            for (const fn of (we.functions || [])) {
+                sync(fn, 'description', 'functionDescription', 'fn');
+
+                for (const fm of (fn.failures || [])) {
+                    for (const c of (fm.causes || [])) {
+                        sync(c, 'cause', 'description', 'cause');
+                        sync(c, 'ap', 'actionPriority', 'cause');
+                    }
+                }
+            }
+        }
+    }
+
+    return { synced, byField };
 }
 
 // ─── Guards ─────────────────────────────────────────────────────────────────

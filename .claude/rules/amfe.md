@@ -203,6 +203,19 @@ AmfeFailure tiene campos @deprecated segun VDA 2019 (severity, occurrence, detec
 
 Los scripts .mjs DEBEN usar AMBOS nombres de campo (alias). El TypeScript usa unos, el export Excel usa otros. Si falta uno, el export se rompe.
 
+**Automatizacion (2026-04-22):** `saveAmfe()` llama a `syncFieldAliases()` antes de escribir. Propaga A->B y B->A si uno esta lleno y el otro vacio. No hace falta hacerlo a mano. Si escribis por fuera (`.update()` crudo), correrlo manualmente.
+
+**Gate:** el validator tiene check critical `FIELD_ALIAS_DESYNC`. `runWithValidation` bloquea `--apply` si algun script deja aliases desincronizados.
+
+**Pares sincronizados automaticamente:**
+- `op.opNumber` <-> `op.operationNumber`
+- `op.name` <-> `op.operationName`
+- `fn.description` <-> `fn.functionDescription`
+- `cause.cause` <-> `cause.description`
+- `cause.ap` <-> `cause.actionPriority`
+
+**Incidente 2026-04-22**: Fak detecto columna "Funcion del Elemento" vacia en export de Top Roll. 44 de 55 funciones tenian `fn.description=""` pero `fn.functionDescription` con valor (el export lee `description` estrictamente). Afecto 7 de 11 AMFEs (148 gaps totales). Resuelto con syncFieldAliases + check validator. Script: `_syncFieldAliases.mjs`.
+
 ### AmfeOperation (los 2 aliases son OBLIGATORIOS)
 - `opNumber` + `operationNumber` (AMBOS, identicos)
 - `name` + `operationName` (AMBOS, identicos)

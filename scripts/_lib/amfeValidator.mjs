@@ -52,6 +52,22 @@ function isFmEmpty(v) {
 }
 
 /**
+ * Pares de aliases del schema AMFE. Si uno tiene valor y el otro esta vacio,
+ * el export/UI que lee "el otro" muestra celda vacia. Ver rules/amfe.md.
+ */
+const FIELD_ALIAS_PAIRS = [
+    { entity: 'op',    a: 'opNumber',    b: 'operationNumber' },
+    { entity: 'op',    a: 'name',        b: 'operationName' },
+    { entity: 'fn',    a: 'description', b: 'functionDescription' },
+    { entity: 'cause', a: 'cause',       b: 'description' },
+    { entity: 'cause', a: 'ap',          b: 'actionPriority' },
+];
+
+function isEmptyStr(v) {
+    return v === null || v === undefined || (typeof v === 'string' && v.trim() === '');
+}
+
+/**
  * Retorna true si al menos una causa tiene valor para ese campo (o su alias).
  */
 function hasCauseValue(causes, field) {
@@ -77,6 +93,7 @@ const CRITICAL_TYPES = new Set([
     'DATA_NOT_OBJECT',
     'OPERATIONS_NOT_ARRAY',
     'FM_LEGACY_EMPTY_BUT_CAUSE_HAS_VALUE',
+    'FIELD_ALIAS_DESYNC',
 ]);
 
 /**
@@ -108,6 +125,18 @@ export function validateAmfeDoc(doc, productName = '', amfeNumber = '') {
         const opName = op.name || op.operationName || '';
         const opNameUp = opName.toUpperCase();
         const ctx = { amfe: amfeNumber, product: productName, opNum, opName };
+
+        // ALIAS DESYNC — op-level
+        for (const pair of FIELD_ALIAS_PAIRS.filter(p => p.entity === 'op')) {
+            const vA = op[pair.a], vB = op[pair.b];
+            if (isEmptyStr(vA) && !isEmptyStr(vB)) {
+                issues.push({ ...ctx, type: 'FIELD_ALIAS_DESYNC',
+                    detail: `op.${pair.a}="" pero op.${pair.b} tiene valor (export leera el alias vacio)` });
+            } else if (!isEmptyStr(vA) && isEmptyStr(vB)) {
+                issues.push({ ...ctx, type: 'FIELD_ALIAS_DESYNC',
+                    detail: `op.${pair.b}="" pero op.${pair.a} tiene valor (export leera el alias vacio)` });
+            }
+        }
 
         // Operacion sospechosa: Clasif/Segreg (ver .claude/rules/pfd.md)
         if (SUSPICIOUS_OP_PATTERNS.some(p => opNameUp.includes(p))) {
@@ -170,6 +199,18 @@ export function validateAmfeDoc(doc, productName = '', amfeNumber = '') {
                         detail: 'Function description vacia o TBD' });
                 }
 
+                // ALIAS DESYNC — fn-level
+                for (const pair of FIELD_ALIAS_PAIRS.filter(p => p.entity === 'fn')) {
+                    const vA = fn[pair.a], vB = fn[pair.b];
+                    if (isEmptyStr(vA) && !isEmptyStr(vB)) {
+                        issues.push({ ...fnCtx, type: 'FIELD_ALIAS_DESYNC',
+                            detail: `fn.${pair.a}="" pero fn.${pair.b} tiene valor (export leera alias vacio)` });
+                    } else if (!isEmptyStr(vA) && isEmptyStr(vB)) {
+                        issues.push({ ...fnCtx, type: 'FIELD_ALIAS_DESYNC',
+                            detail: `fn.${pair.b}="" pero fn.${pair.a} tiene valor (export leera alias vacio)` });
+                    }
+                }
+
                 const failures = fn.failures || [];
                 if (failures.length === 0) {
                     issues.push({ ...fnCtx, type: 'FN_NO_FAILURES', detail: 'Function sin failures' });
@@ -214,6 +255,18 @@ export function validateAmfeDoc(doc, productName = '', amfeNumber = '') {
                     for (const c of causes) {
                         const causeDesc = c.description || c.cause || '';
                         const cCtx = { ...fmCtx, causeDesc };
+
+                        // ALIAS DESYNC — cause-level
+                        for (const pair of FIELD_ALIAS_PAIRS.filter(p => p.entity === 'cause')) {
+                            const vA = c[pair.a], vB = c[pair.b];
+                            if (isEmptyStr(vA) && !isEmptyStr(vB)) {
+                                issues.push({ ...cCtx, type: 'FIELD_ALIAS_DESYNC',
+                                    detail: `cause.${pair.a}="" pero cause.${pair.b} tiene valor` });
+                            } else if (!isEmptyStr(vA) && isEmptyStr(vB)) {
+                                issues.push({ ...cCtx, type: 'FIELD_ALIAS_DESYNC',
+                                    detail: `cause.${pair.b}="" pero cause.${pair.a} tiene valor` });
+                            }
+                        }
 
                         // C-SOD
                         const missS = c.severity == null || c.severity === '' || c.severity === 0;
