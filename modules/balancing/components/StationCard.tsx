@@ -4,7 +4,7 @@ import { useDraggable, useDroppable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import { ProjectData, MachineType, Task, Sector } from '../../../types';
 import { formatNumber } from '../../../utils';
-import { getSaturationZone, SaturationZone } from '../balancingHelpers';
+import { getSaturationZone, SaturationZone, SATURATION_HIGH_PCT } from '../balancingHelpers';
 
 // Mapa zona -> clase de texto para el % de saturacion.
 const SATURATION_TEXT_CLASS: Record<SaturationZone, string> = {
@@ -262,7 +262,7 @@ export const StationCard: React.FC<StationCardProps> = React.memo(({
                 {/* Drag Preview: ghost bar showing projected fill */}
                 {dragPreview && dragPreview.delta > 0 && (
                     <div
-                        className={`h-full opacity-50 ${dragPreview.wouldOverload ? 'bg-red-400' : dragPreview.previewSaturation > 90 ? 'bg-amber-300' : 'bg-blue-300'}`}
+                        className={`h-full opacity-50 ${dragPreview.wouldOverload ? 'bg-red-400' : dragPreview.previewSaturation > SATURATION_HIGH_PCT ? 'bg-amber-300' : 'bg-blue-300'}`}
                         style={{ width: `${Math.min(100 - Math.min(100, saturationPercent), (dragPreview.delta / (st.limit || 1)) * 100)}%` }}
                     ></div>
                 )}
@@ -273,13 +273,13 @@ export const StationCard: React.FC<StationCardProps> = React.memo(({
                 <div className={`mb-3 px-3 py-2 rounded-lg border-2 text-xs font-bold flex items-center justify-between animate-in fade-in duration-150 ${
                     dragPreview.wouldOverload
                         ? 'bg-red-50 border-red-300 text-red-700'
-                        : dragPreview.previewSaturation > 90
+                        : dragPreview.previewSaturation > SATURATION_HIGH_PCT
                             ? 'bg-amber-50 border-amber-300 text-amber-700'
                             : 'bg-emerald-50 border-emerald-300 text-emerald-700'
                 }`}>
                     <span>+{formatNumber(dragPreview.delta)}s</span>
                     <span>{formatNumber(dragPreview.previewSaturation)}% saturación</span>
-                    <span className="inline-flex items-center gap-1">{dragPreview.wouldOverload ? <><XCircle size={12} /> Excede Takt</> : dragPreview.previewSaturation > 90 ? <><AlertTriangle size={12} /> Alta carga</> : <><CheckCircle2 size={12} /> OK</>}</span>
+                    <span className="inline-flex items-center gap-1">{dragPreview.wouldOverload ? <><XCircle size={12} /> Excede Takt</> : dragPreview.previewSaturation > SATURATION_HIGH_PCT ? <><AlertTriangle size={12} /> Alta carga</> : <><CheckCircle2 size={12} /> OK</>}</span>
                 </div>
             )}
 
