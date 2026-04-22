@@ -29,19 +29,18 @@ const SUSPICIOUS_OP_PATTERNS = [
 ];
 
 /**
- * Campos "legacy" a nivel failure que el schema VDA 2019 migro a cause[].
- * Si estan vacios en fm pero las causas tienen valor, exports/UIs legacy
- * pueden mostrarlos como celdas vacias aunque el dato real exista en cause[].
- * Ver: incidente 2026-04-22 OP80 Telas Planas — fm.severity vacio.
+ * Campos "legacy" a nivel failure que el EXPORT REAL lee.
+ *
+ * Segun `modules/amfe/amfeExcelExport.ts`, solo `fm.severity` se lee a nivel
+ * failure. Los demas (ocurrencia, deteccion, AP, controles) se leen de cause[].
+ *
+ * Por eso este array incluye SOLO los campos que el export usa a nivel fm.
+ * Si manana el export cambia y lee mas campos fm-level, agregarlos aca.
+ *
+ * Ver incidente 2026-04-22 OP80 Telas Planas — fm.severity vacio.
  */
 const LEGACY_FM_FIELDS = [
-    'severity', 'occurrence', 'detection',
-    'ap', 'actionPriority',
-    'preventionControl', 'detectionControl',
-    'specialChar', 'classification',
-    'cause',
-    'effect',
-    'recommendedActions',
+    'severity',
 ];
 
 /**
@@ -173,15 +172,13 @@ export function validateAmfeDoc(doc, productName = '', amfeNumber = '') {
             const weType = we.type || '';
             const weCtx = { ...ctx, weName, weType };
 
-            // C-1M: detectar WE con multiples items agrupados (contiene "/")
-            if (weName.includes(' / ') || weName.includes('/')) {
-                // Solo alertar si parece agrupar (ej: "Tela / Hilo / Refuerzos")
-                // Heuristica: >= 2 "/" o >= 1 "/" con espacios a ambos lados
-                const slashCount = (weName.match(/\//g) || []).length;
-                if (slashCount >= 2 || weName.includes(' / ')) {
-                    issues.push({ ...weCtx, type: 'WE_GROUPED_ITEMS',
-                        detail: `WE agrupa multiples items: "${weName}" (usar 1 WE por item)` });
-                }
+            // C-1M: detectar WE con multiples items agrupados (contiene " / ")
+            // Evitar falsos positivos: especificaciones tecnicas con "/" dentro
+            // de parentesis (ej: "Refuerzo (600+/-60 kg/m3)") no son agrupaciones.
+            const nameOutsideParens = weName.replace(/\([^)]*\)/g, '');
+            if (nameOutsideParens.includes(' / ')) {
+                issues.push({ ...weCtx, type: 'WE_GROUPED_ITEMS',
+                    detail: `WE agrupa multiples items: "${weName}" (usar 1 WE por item)` });
             }
 
             const fns = we.functions || [];
@@ -238,16 +235,18 @@ export function validateAmfeDoc(doc, productName = '', amfeNumber = '') {
                         continue;
                     }
 
-                    // LEGACY FIELDS — fm-level vacio pero cause tiene valor.
-                    // Exports/UIs legacy pueden leer fm.X y mostrar celdas vacias.
+                    // LEGACY FIELDS — fm-level vacio o key missing, pero cause
+                    // tiene valor. Export lee fm.X y muestra celda vacia.
+                    // IMPORTANTE: reportamos aunque la key NO exista en fm — el
+                    // export igual la lee como undefined y sale en blanco.
                     for (const legacyField of LEGACY_FM_FIELDS) {
-                        if (!(legacyField in fm)) continue;
                         if (!isFmEmpty(fm[legacyField])) continue;
                         if (hasCauseValue(causes, legacyField)) {
+                            const fmStatus = legacyField in fm ? JSON.stringify(fm[legacyField]) : '[key missing]';
                             issues.push({
                                 ...fmCtx,
                                 type: 'FM_LEGACY_EMPTY_BUT_CAUSE_HAS_VALUE',
-                                detail: `fm.${legacyField}=${JSON.stringify(fm[legacyField])} pero cause[].${legacyField} tiene valor (export legacy mostrara celda vacia)`,
+                                detail: `fm.${legacyField}=${fmStatus} pero cause[].${legacyField} tiene valor (export mostrara celda vacia)`,
                             });
                         }
                     }

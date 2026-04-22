@@ -187,6 +187,36 @@ RESUMEN: NUNCA inventar acciones. Solo el equipo humano las define.
 NUNCA confirmar ni conservar valores numericos sin confirmacion explicita de Fak.
 En caso de duda: TBD. Solo Fak valida datos de ingenieria.
 
+## Auditor proactivo — OBLIGATORIO correr antes de entregar
+
+Script unificado que corre TODOS los chequeos estructurales sobre los 11 AMFEs en un solo comando:
+
+```bash
+node scripts/_auditAll.mjs              # reporte completo con detalle
+node scripts/_auditAll.mjs --summary    # solo totales por categoria
+```
+
+Chequea:
+1. **Estructural critico** (VDA 2019): WE sin funciones, failures sin causas, S/O/D incompletos, efectos VDA faltantes, ops vacias/sospechosas
+2. **Alias desync**: pares de campos con alias (`fn.description`/`functionDescription`, etc) donde uno esta lleno y el otro vacio
+3. **fm S/O/D missing**: `fm.severity` vacio cuando las causas tienen valor (export lee fm-level)
+4. **Export-critical empty**: campos que el export Excel lee estrictamente y estan vacios
+5. **Header missing**: campos de header del AMFE (organizacion, cliente, aprobadores) requeridos
+6. **Metadata desync**: `operation_count` / `cause_count` de Supabase vs contenido real
+
+**Cuando correrlo:**
+- Antes de cada entrega PPAP al cliente
+- Despues de cargar/importar un AMFE nuevo
+- Periodicamente (semanal) como health-check
+- Al arrancar cada sesion Claude Code en el proyecto
+
+**Que NO chequea (y por que):**
+- CC/SC — solo Fak asigna, ver regla amfe-actions
+- Acciones de optimizacion — solo equipo APQP humano las define
+- Valores tecnicos (tolerancias, temperaturas) — nunca inventar, requieren Fak
+
+Si el auditor sale limpio (0 criticos, 0 export issues), el dataset esta en estado publicable. Warnings pueden requerir revision manual por el equipo.
+
 ## Campos legacy a nivel failure — MANTENER SINCRONIZADOS con cause[]
 
 AmfeFailure tiene campos @deprecated segun VDA 2019 (severity, occurrence, detection, ap, preventionControl, detectionControl, specialChar, classification, effect, etc.) que fueron migrados a `AmfeCause[]`. El modulo AMFE moderno lee de `cause[]`, pero **exports legacy, UIs antiguas y reportes pueden todavia leer `fm.X`**. Si ese campo esta vacio mientras `cause[].X` tiene valor, aparecen celdas en blanco en Excel/PDF.

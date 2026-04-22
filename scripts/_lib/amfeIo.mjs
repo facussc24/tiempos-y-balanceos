@@ -258,15 +258,22 @@ export function syncLegacyFmFields(doc) {
     let synced = 0;
     if (!doc?.operations) return { synced };
 
+    // Campos SIEMPRE requeridos a nivel fm cuando hay causas (aunque la key no
+    // exista en el objeto). El export los lee y sale vacio si no estan.
     const numericFields = ['severity', 'occurrence', 'detection'];
     const aliasFields = [
         { fm: 'ap', alt: 'actionPriority' },
-        { fm: 'actionPriority', alt: 'ap' },
     ];
-    const textFields = [
+    // Campos opcionales: solo sincronizar si la key ya existe en fm.
+    // (No los creamos para no inflar el schema con cada save.)
+    const optionalTextFields = [
         'preventionControl', 'detectionControl',
         'specialChar', 'classification',
     ];
+
+    function fmIsEmpty(v) {
+        return v === '' || v === null || v === undefined || (typeof v === 'number' && v === 0);
+    }
 
     for (const op of doc.operations) {
         for (const we of (op.workElements || [])) {
@@ -275,12 +282,9 @@ export function syncLegacyFmFields(doc) {
                     const causes = fm.causes || [];
                     if (causes.length === 0) continue;
 
-                    // Numericos: max
+                    // NUMERICOS S/O/D: crear o llenar si vacio. Max de causas.
                     for (const f of numericFields) {
-                        if (!(f in fm)) continue;
-                        const fmVal = fm[f];
-                        const fmEmpty = fmVal === '' || fmVal === null || fmVal === undefined || fmVal === 0;
-                        if (!fmEmpty) continue;
+                        if (!fmIsEmpty(fm[f])) continue;  // ya tiene valor, skip
                         const vals = causes.map(c => Number(c[f])).filter(n => !isNaN(n) && n > 0);
                         if (vals.length > 0) {
                             fm[f] = Math.max(...vals);
@@ -288,23 +292,23 @@ export function syncLegacyFmFields(doc) {
                         }
                     }
 
-                    // Aliases (ap / actionPriority)
+                    // AP: crear o llenar si vacio. Max AP (H > M > L).
                     for (const { fm: f, alt } of aliasFields) {
-                        if (!(f in fm)) continue;
-                        const fmVal = fm[f];
-                        if (fmVal !== '' && fmVal !== null && fmVal !== undefined) continue;
+                        if (!fmIsEmpty(fm[f])) continue;
+                        const order = { H: 3, M: 2, L: 1 };
+                        let maxAp = null, maxScore = 0;
                         for (const c of causes) {
                             const v = c[f] || c[alt];
-                            if (v) { fm[f] = v; synced++; break; }
+                            const score = order[String(v).toUpperCase()] || 0;
+                            if (score > maxScore) { maxAp = v; maxScore = score; }
                         }
+                        if (maxAp) { fm[f] = maxAp; synced++; }
                     }
 
-                    // Textos: copiar del primero con valor
-                    for (const f of textFields) {
+                    // Textos opcionales: solo si la key ya existe y esta vacia.
+                    for (const f of optionalTextFields) {
                         if (!(f in fm)) continue;
-                        const fmVal = fm[f];
-                        const fmEmpty = fmVal === '' || fmVal === null || fmVal === undefined;
-                        if (!fmEmpty) continue;
+                        if (!fmIsEmpty(fm[f])) continue;
                         for (const c of causes) {
                             const v = c[f];
                             if (v && String(v).trim() !== '') { fm[f] = v; synced++; break; }
