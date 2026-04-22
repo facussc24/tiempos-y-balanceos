@@ -235,6 +235,32 @@ export const calculateSectorTaktTime = (
     return calculateTaktTime(shifts, activeShifts, dailyDemand, oee, setupLossPercent);
 };
 
+/**
+ * Tiempo de ciclo efectivo (TCR) de una estacion, aplicando la regla del
+ * Dominant Element para tareas concurrentes maquina+manual.
+ *
+ * Formula por grupo maquina:
+ *   grupoTime = max( t_maquina, sum( t_manual_concurrente ) )
+ *
+ * Intuicion: mientras la inyectora esta ciclando, el operario puede hacer
+ * tareas manuales EN PARALELO. El tiempo efectivo del grupo es el mayor de
+ * los dos — quien termine ultimo dicta el ciclo. Tareas concurrentes se
+ * linkean a su maquina via `task.concurrentWith = machineTaskId`.
+ *
+ * Casos especiales:
+ *   - `isMachineInternal`: tarea ghost que corre DENTRO del ciclo de la
+ *     maquina (ej: cooling, curing). Contribuye 0s porque ya esta absorbida
+ *     en el tiempo de la maquina.
+ *   - Tareas manuales sin `concurrentWith` valido: se suman raw (fallback
+ *     "broken link" — util al romperse el vinculo al mover tarea entre
+ *     estaciones).
+ *   - Multiples maquinas en la misma estacion: cada grupo se calcula
+ *     independiente y se suman (no hay concurrencia entre maquinas).
+ *
+ * Se asume que todas las tasks pasadas YA estan en la misma estacion.
+ * Esta funcion es la fuente unica de verdad para TCR — la usan tanto el
+ * hook de UI como el export Excel, debe quedar consistente.
+ */
 export const calculateEffectiveStationTime = (tasks: Task[]): number => {
     const processedIds = new Set<string>();
     let totalTime = 0;
