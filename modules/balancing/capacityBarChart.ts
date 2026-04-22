@@ -6,6 +6,8 @@
  * and embed it with workbook.addImage() — same pattern used for the Barack logo.
  */
 
+import { CAPACITY_CANVAS_WIDTH, CAPACITY_MAX_STATIONS } from './balancingConstants';
+
 // ============================================================================
 // TYPES
 // ============================================================================
@@ -137,7 +139,7 @@ export async function renderCapacityBarChart(
     // Edge case: no data
     if (!data || data.length === 0) return '';
 
-    const W = options?.width ?? 900;
+    const W = options?.width ?? CAPACITY_CANVAS_WIDTH;
     const H = options?.height ?? 320;
 
     // Layout constants
@@ -149,8 +151,7 @@ export async function renderCapacityBarChart(
     const CHART_H = H - PADDING_TOP - PADDING_BOTTOM;
 
     // Limit stations for readability (>30 gets unreadable)
-    const MAX_STATIONS = 30;
-    const chartData = data.length > MAX_STATIONS ? data.slice(0, MAX_STATIONS) : data;
+    const chartData = data.length > CAPACITY_MAX_STATIONS ? data.slice(0, CAPACITY_MAX_STATIONS) : data;
 
     // Calculate max value for Y axis
     let maxValue = 0;

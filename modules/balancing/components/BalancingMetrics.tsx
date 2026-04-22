@@ -3,6 +3,13 @@ import { Users, TrendingUp, HelpCircle, Timer, Plus, Minus, Trash2, Sparkles, Sc
 import { formatNumber } from '../../../utils';
 import { SimStation } from '../../../core/balancing/engine';
 import { Tooltip } from '../../../components/ui/Tooltip';
+import {
+    SATURATION_MIN_PCT,
+    SATURATION_OVERLOAD_PCT,
+    SMOOTHNESS_OK,
+    SMOOTHNESS_WARN,
+    CYCLE_RISK_THRESHOLD,
+} from '../balancingConstants';
 
 
 interface BalancingMetricsProps {
@@ -85,7 +92,7 @@ export const BalancingMetrics: React.FC<BalancingMetricsProps> = ({
         return Math.sqrt(sumSquares);
     }, [stationData]);
 
-    const siColor = smoothnessIndex <= 10 ? 'text-status-ok' : smoothnessIndex <= 30 ? 'text-status-warn' : 'text-status-crit';
+    const siColor = smoothnessIndex <= SMOOTHNESS_OK ? 'text-status-ok' : smoothnessIndex <= SMOOTHNESS_WARN ? 'text-status-warn' : 'text-status-crit';
 
     // Min/max station times for Crystal Box
     const stationTimes = stationData.map(st => st.effectiveTime).filter(t => typeof t === 'number' && isFinite(t));
@@ -93,7 +100,7 @@ export const BalancingMetrics: React.FC<BalancingMetricsProps> = ({
     const minStationTime = stationTimes.length > 0 ? Math.min(...stationTimes) : 0;
 
     // Utilización color
-    const utilizationColor = saturationVsTakt > 100 ? 'text-status-crit' : saturationVsTakt < 85 ? 'text-status-warn' : 'text-status-ok';
+    const utilizationColor = saturationVsTakt > SATURATION_OVERLOAD_PCT ? 'text-status-crit' : saturationVsTakt < SATURATION_MIN_PCT ? 'text-status-warn' : 'text-status-ok';
 
     // Theoretical minimum headcount
     const theoreticalHC = nominalTaktTime > 0 ? Math.ceil(totalWorkContent / nominalTaktTime) : 0;
@@ -105,7 +112,7 @@ export const BalancingMetrics: React.FC<BalancingMetricsProps> = ({
     let StatusIcon = CheckCircle2;
     let statusColor = 'bg-status-ok-bg text-emerald-700 border-emerald-200';
 
-    if (cycleRatio > 1.05) {
+    if (cycleRatio > CYCLE_RISK_THRESHOLD) {
         StatusIcon = XCircle;
         statusLabel = 'No Factible';
         statusColor = 'bg-status-crit-bg text-red-700 border-red-200';
@@ -205,9 +212,9 @@ export const BalancingMetrics: React.FC<BalancingMetricsProps> = ({
                                     <span className="text-status-warn">({totalHeadcount} ops × {formatNumber(nominalTaktTime)}s)</span>
                                 </div>
                                 <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">
-                                    {saturationVsTakt >= 85 && saturationVsTakt <= 100
+                                    {saturationVsTakt >= SATURATION_MIN_PCT && saturationVsTakt <= SATURATION_OVERLOAD_PCT
                                         ? 'Tus operarios están bien aprovechados.'
-                                        : saturationVsTakt > 100
+                                        : saturationVsTakt > SATURATION_OVERLOAD_PCT
                                             ? 'No alcanzan las manos. Necesitás más operarios.'
                                             : 'Hay capacidad ociosa. Podrías reducir operarios.'}
                                     <span className="text-slate-400"> Solo trabajo manual (excl. máquinas).</span>
@@ -236,7 +243,7 @@ export const BalancingMetrics: React.FC<BalancingMetricsProps> = ({
                                 </div>
                                 <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">
                                     {stationTimes.length > 1
-                                        ? `${smoothnessIndex <= 10 ? 'Carga pareja.' : smoothnessIndex <= 30 ? 'Algo despareja.' : 'Muy despareja.'} La más cargada: ${formatNumber(maxStationTime)}s, la menos: ${formatNumber(minStationTime)}s.`
+                                        ? `${smoothnessIndex <= SMOOTHNESS_OK ? 'Carga pareja.' : smoothnessIndex <= SMOOTHNESS_WARN ? 'Algo despareja.' : 'Muy despareja.'} La más cargada: ${formatNumber(maxStationTime)}s, la menos: ${formatNumber(minStationTime)}s.`
                                         : 'Se necesitan 2+ estaciones para medir equilibrio.'}
                                 </p>
                             </div>
@@ -244,8 +251,8 @@ export const BalancingMetrics: React.FC<BalancingMetricsProps> = ({
                                 <div className="flex-1 mr-2">
                                     <div className="h-1.5 w-full bg-slate-200 rounded-sm overflow-hidden">
                                         <div
-                                            className={`h-full ${smoothnessIndex <= 10 ? 'bg-status-ok' : smoothnessIndex <= 30 ? 'bg-status-warn' : 'bg-status-crit'}`}
-                                            style={{ width: `${Math.min(100, (30 - Math.min(30, smoothnessIndex)) / 30 * 100)}%` }}
+                                            className={`h-full ${smoothnessIndex <= SMOOTHNESS_OK ? 'bg-status-ok' : smoothnessIndex <= SMOOTHNESS_WARN ? 'bg-status-warn' : 'bg-status-crit'}`}
+                                            style={{ width: `${Math.min(100, (SMOOTHNESS_WARN - Math.min(SMOOTHNESS_WARN, smoothnessIndex)) / SMOOTHNESS_WARN * 100)}%` }}
                                         ></div>
                                     </div>
                                     <div className="text-xs text-slate-400 mt-0.5">0 (parejo) --- 30+ (desparejo)</div>
@@ -318,19 +325,19 @@ export const BalancingMetrics: React.FC<BalancingMetricsProps> = ({
                             )}
 
                             {/* Utilization assessment */}
-                            <div className={`flex items-start gap-2.5 px-3 py-2.5 rounded-md border ${saturationVsTakt >= 85 && saturationVsTakt <= 100 ? 'bg-status-ok-bg border-emerald-200' : saturationVsTakt > 100 ? 'bg-status-crit-bg border-red-200' : 'bg-status-warn-bg border-amber-200'}`}>
-                                {saturationVsTakt >= 85 && saturationVsTakt <= 100
+                            <div className={`flex items-start gap-2.5 px-3 py-2.5 rounded-md border ${saturationVsTakt >= SATURATION_MIN_PCT && saturationVsTakt <= SATURATION_OVERLOAD_PCT ? 'bg-status-ok-bg border-emerald-200' : saturationVsTakt > SATURATION_OVERLOAD_PCT ? 'bg-status-crit-bg border-red-200' : 'bg-status-warn-bg border-amber-200'}`}>
+                                {saturationVsTakt >= SATURATION_MIN_PCT && saturationVsTakt <= SATURATION_OVERLOAD_PCT
                                     ? <CheckCircle2 size={16} className="text-status-ok mt-0.5 shrink-0" />
-                                    : saturationVsTakt > 100
+                                    : saturationVsTakt > SATURATION_OVERLOAD_PCT
                                         ? <XCircle size={16} className="text-status-crit mt-0.5 shrink-0" />
                                         : <AlertTriangle size={16} className="text-status-warn mt-0.5 shrink-0" />}
                                 <div className="text-xs">
-                                    <span className={`font-bold ${saturationVsTakt >= 85 && saturationVsTakt <= 100 ? 'text-emerald-700' : saturationVsTakt > 100 ? 'text-red-700' : 'text-amber-700'}`}>
-                                        Utilización {saturationVsTakt >= 85 && saturationVsTakt <= 100 ? 'saludable' : saturationVsTakt > 100 ? 'sobrecargada' : 'baja'}: {formatNumber(saturationVsTakt)}%
+                                    <span className={`font-bold ${saturationVsTakt >= SATURATION_MIN_PCT && saturationVsTakt <= SATURATION_OVERLOAD_PCT ? 'text-emerald-700' : saturationVsTakt > SATURATION_OVERLOAD_PCT ? 'text-red-700' : 'text-amber-700'}`}>
+                                        Utilización {saturationVsTakt >= SATURATION_MIN_PCT && saturationVsTakt <= SATURATION_OVERLOAD_PCT ? 'saludable' : saturationVsTakt > SATURATION_OVERLOAD_PCT ? 'sobrecargada' : 'baja'}: {formatNumber(saturationVsTakt)}%
                                     </span>
                                     <p className="text-slate-600 mt-0.5">
                                         Rango ideal: 85-100%.
-                                        {saturationVsTakt < 85 ? ' Podrías reducir operarios.' : saturationVsTakt > 100 ? ' Necesitás más operarios.' : ''}
+                                        {saturationVsTakt < SATURATION_MIN_PCT ? ' Podrías reducir operarios.' : saturationVsTakt > SATURATION_OVERLOAD_PCT ? ' Necesitás más operarios.' : ''}
                                     </p>
                                 </div>
                             </div>
@@ -412,7 +419,7 @@ export const BalancingMetrics: React.FC<BalancingMetricsProps> = ({
                         <span className={`text-xl font-bold tabular-nums ${utilizationColor}`}>
                             {formatNumber(saturationVsTakt)}%
                         </span>
-                        {saturationVsTakt > 100 && (
+                        {saturationVsTakt > SATURATION_OVERLOAD_PCT && (
                             <div className="text-xs text-status-crit mt-1 max-w-[160px] leading-tight bg-status-crit-bg px-1.5 py-1 rounded-md border border-red-200">
                                 Sobrecarga. Se necesitan <strong>{Math.max(totalHeadcount, Math.ceil(totalHeadcount * saturationVsTakt / 100))}</strong> operarios.
                             </div>

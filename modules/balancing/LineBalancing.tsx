@@ -16,6 +16,7 @@ import { detectOverloadAndRecommend } from '../../core/balancing/simulation';
 import { buildGate3FromProjectData } from '../gate3/gate3FromBalancing';
 import { toast } from '../../components/ui/Toast';
 import { logger } from '../../utils/logger';
+import { SATURATION_WARN } from './balancingConstants';
 
 interface Props {
     data: ProjectData;
@@ -519,7 +520,7 @@ export const LineBalancing: React.FC<Props> = ({ data, updateData }) => {
 
                             // Calcular saturación promedio del sector para mostrar alerta
                             const avgSaturation = stationsInSector.reduce((sum, st) => sum + (st.time / st.limit), 0) / stationsInSector.length;
-                            const hasHighSaturation = avgSaturation > 0.90;
+                            const hasHighSaturation = avgSaturation > SATURATION_WARN;
                             const hasOverload = stationsInSector.some(st => st.time > st.limit);
 
                             return (
