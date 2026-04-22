@@ -2,6 +2,7 @@
 import { DndContext, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { ProjectData, Task } from '../../types';
 import { useLineBalancing } from '../../hooks/useLineBalancing';
+import { useBalancingAlerts } from '../../hooks/useBalancingAlerts';
 import { formatNumber } from '../../utils';
 import { BalancingChart } from './BalancingChart';
 import { StationCard } from './components/StationCard';
@@ -11,8 +12,7 @@ import { BalancingMetrics } from './components/BalancingMetrics';
 import { ZoningConstraintsModal } from './components/ZoningConstraintsModal';
 import { Unlink, TrendingUp, X, ChevronDown, ChevronRight, Info, Plus, AlertTriangle, Minus } from 'lucide-react';
 import { Tooltip } from '../../components/ui/Tooltip';
-import { AlertCenter, Alert } from '../../components/ui/AlertCenter';
-import { detectOverloadAndRecommend } from '../../core/balancing/simulation';
+import { AlertCenter } from '../../components/ui/AlertCenter';
 import { buildGate3FromProjectData } from '../gate3/gate3FromBalancing';
 import { toast } from '../../components/ui/Toast';
 import { logger } from '../../utils/logger';
@@ -148,112 +148,17 @@ export const LineBalancing: React.FC<Props> = ({ data, updateData }) => {
         return grouped;
     }, [stationData, sectorsList]);
 
-    // Build alerts array for AlertCenter
-    const balancingAlerts = useMemo<Alert[]>(() => {
-        const alerts: Alert[] = [];
-
-        // Alert 1: Overload (Critical)
-        const overloadedStations = stationData.filter(st => st.time > st.limit);
-        if (overloadedStations.length > 0) {
-            alerts.push({
-                id: 'overload',
-                severity: 'critical',
-                title: 'Sobrecarga Detectada',
-                message: `${overloadedStations.length} ${overloadedStations.length === 1 ? 'estación excede' : 'estaciones exceden'} el Takt Time (${formatNumber(nominalSeconds)}s).`,
-                details: (
-                    <ul className="list-disc pl-4 space-y-1 font-medium">
-                        {overloadedStations.map(st => {
-                            const stationTasks = st.tasks
-                                .map(tid => data.tasks.find(t => t.id === tid))
-                                .filter(Boolean) as Task[];
-                            const info = detectOverloadAndRecommend(
-                                { effectiveTime: st.time, limit: st.limit, replicas: st.replicas, tasks: stationTasks },
-                                nominalSeconds
-                            );
-                            const isMachine = info?.bottleneckType === 'machine';
-                            return (
-                                <li key={st.id}>
-                                    Est. {st.id}: <strong>{formatNumber(st.time)}s</strong> vs <strong>{formatNumber(st.limit)}s</strong>
-                                    <span className={`ml-2 px-2 py-0.5 rounded text-xs font-bold ${isMachine ? 'bg-purple-100 text-purple-900' : 'bg-red-100 text-red-900'}`}>
-                                        {isMachine ? '🔧' : '👥'} {info?.recommendation}
-                                    </span>
-                                </li>
-                            );
-                        })}
-                    </ul>
-                )
-            });
-        }
-
-        // Alert 2: Machine Deficit (Warning)
-        if (machineValidation.hasDeficit) {
-            const deficitMachines = machineValidation.machineBalance.filter(b => b.isDeficit);
-            alerts.push({
-                id: 'machine-deficit',
-                severity: 'warning',
-                title: '⚙️ Déficit de Máquinas',
-                message: `No hay suficientes máquinas para ${deficitMachines.length} ${deficitMachines.length === 1 ? 'tipo de equipo' : 'tipos de equipos'}.`,
-                details: (
-                    <ul className="list-disc pl-4 space-y-1 font-medium">
-                        {deficitMachines.map(b => (
-                            <li key={b.machineId}>
-                                <strong>{b.machineName}:</strong> Necesitas {b.consumed}, tienes {b.available}
-                                <span className="ml-2 px-2 py-0.5 rounded text-xs font-bold bg-purple-200 text-purple-900">
-                                    Faltan {Math.abs(b.balance)}
-                                </span>
-                            </li>
-                        ))}
-                    </ul>
-                )
-            });
-        }
-
-        // Alert 3: Machine Conflicts (Warning)
-        if (machineValidation.hasConflicts) {
-            const conflictStations = machineValidation.stationRequirements.filter(r => r.hasConflict);
-            alerts.push({
-                id: 'machine-conflict',
-                severity: 'warning',
-                title: '⚠️ Conflicto de Máquinas',
-                message: `${conflictStations.length} ${conflictStations.length === 1 ? 'estación tiene' : 'estaciones tienen'} tareas con máquinas incompatibles.`,
-                details: (
-                    <ul className="list-disc pl-4 space-y-1 font-medium">
-                        {conflictStations.map(r => (
-                            <li key={r.stationId}>
-                                Estación {r.stationId}: {r.conflictMessage}
-                            </li>
-                        ))}
-                    </ul>
-                )
-            });
-        }
-
-        // Alert 4: OEE Zone Warning (Nominal Mode)
-        if (data.meta.capacityLimitMode === 'nominal' && stationData.length > 0) {
-            const oeeLimit = effectiveSeconds;
-            const oeeRiskStations = stationData.filter(st => st.time > oeeLimit && st.time <= st.limit);
-            if (oeeRiskStations.length > 0) {
-                alerts.push({
-                    id: 'oee-zone-warning',
-                    severity: 'warning',
-                    title: '⚡ Modo Permisivo — Zona OEE',
-                    message: `${oeeRiskStations.length} ${oeeRiskStations.length === 1 ? 'estación supera' : 'estaciones superan'} el límite OEE (${formatNumber(oeeLimit)}s) pero están dentro del Takt (${formatNumber(nominalSeconds)}s).`,
-                    details: (
-                        <div className="text-xs text-amber-800">
-                            <p className="mb-1 font-medium">La producción depende de mantener un OEE real ≥ {(data.meta.manualOEE * 100).toFixed(0)}%.</p>
-                            <ul className="list-disc pl-4 space-y-0.5">
-                                {oeeRiskStations.map(st => (
-                                    <li key={st.id}>Est. {st.id}: <strong>{formatNumber(st.time)}s</strong> (Límite OEE: {formatNumber(oeeLimit)}s)</li>
-                                ))}
-                            </ul>
-                        </div>
-                    )
-                });
-            }
-        }
-
-        return alerts;
-    }, [stationData, nominalSeconds, effectiveSeconds, machineValidation, data.tasks, data.meta.capacityLimitMode, data.meta.manualOEE]);
+    // Alerts derived from balancing state (overload / machine deficit / OEE zone).
+    // Logic lives in useBalancingAlerts to keep this container slim.
+    const balancingAlerts = useBalancingAlerts({
+        stationData,
+        machineValidation,
+        nominalSeconds,
+        effectiveSeconds,
+        tasks: data.tasks,
+        capacityLimitMode: data.meta.capacityLimitMode,
+        manualOEE: data.meta.manualOEE,
+    });
 
     const metricsStationData = useMemo(() => {
         const tMap = new Map(data.tasks.map(t => [t.id, t]));
