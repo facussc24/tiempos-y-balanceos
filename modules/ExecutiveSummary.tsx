@@ -151,6 +151,8 @@ export const ExecutiveSummary: React.FC<Props> = ({ data }) => {
     const operatorsPerShift = Math.ceil(totalOperators / Math.max(1, activeShifts));
     const bottleneck = rows.length > 0 ? rows.reduce((max, r) => r.cycleTimeSeconds > max.cycleTimeSeconds ? r : max, rows[0]) : null;
 
+    const [isExporting, setIsExporting] = useState(false);
+
     // No assignments state
     if (!hasAssignments || rows.length === 0) {
         return (
@@ -166,7 +168,6 @@ export const ExecutiveSummary: React.FC<Props> = ({ data }) => {
         );
     }
 
-    const [isExporting, setIsExporting] = useState(false);
     const handleExport = async () => {
         if (isExporting) return;
         setIsExporting(true);

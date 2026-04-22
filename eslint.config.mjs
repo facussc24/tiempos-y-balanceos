@@ -30,6 +30,14 @@ export default tseslint.config(
             'react/react-in-jsx-scope': 'off',
             'react/prop-types': 'off',
             '@typescript-eslint/no-explicit-any': 'warn',
+            // Respect _-prefix convention for intentionally unused variables
+            '@typescript-eslint/no-unused-vars': ['error', {
+                argsIgnorePattern: '^_',
+                varsIgnorePattern: '^_',
+                caughtErrorsIgnorePattern: '^_',
+                destructuredArrayIgnorePattern: '^_',
+                ignoreRestSiblings: true,
+            }],
             // Prevent console.log in production code (allow warn/error/info)
             'no-console': ['warn', {
                 allow: ['warn', 'error', 'info']

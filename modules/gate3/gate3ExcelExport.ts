@@ -16,8 +16,8 @@
  *   - CACHE: el template (130 KB) se baja UNA sola vez por sesion.
  */
 
-// xlsx-populate no trae types — declaracion minima abajo
-// @ts-ignore - sin types oficiales
+// xlsx-populate trae types via package — el subpath /browser/xlsx-populate
+// reusa la misma definicion exportada por defecto.
 import XlsxPopulate from 'xlsx-populate/browser/xlsx-populate';
 import templateUrl from '../../src/assets/templates/gate3_template.xlsx?url';
 import { GATE3_MAX_STATIONS } from '../../core/gate3/constants';

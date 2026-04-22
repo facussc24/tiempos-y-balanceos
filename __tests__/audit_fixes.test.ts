@@ -8,21 +8,20 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { TextEncoder as NodeTextEncoder } from 'node:util';
+import { webcrypto } from 'node:crypto';
 import { generateChecksum } from '../utils/crypto';
 import { smartSaveProject } from '../utils/webFsHelpers';
-import { ProjectData, INITIAL_PROJECT, Task } from '../types';
+import { ProjectData, INITIAL_PROJECT } from '../types';
 
-// Mock TextEncoder if missing (Node env)
+// Polyfill TextEncoder if missing (older Node envs)
 if (typeof TextEncoder === 'undefined') {
-    const { TextEncoder } = require('util');
-    // @ts-ignore
-    global.TextEncoder = TextEncoder;
+    (globalThis as unknown as { TextEncoder: typeof NodeTextEncoder }).TextEncoder = NodeTextEncoder;
 }
 
-// Mock Crypto
-if (!global.crypto) {
-    const { webcrypto } = require('crypto');
-    global.crypto = webcrypto as Crypto;
+// Polyfill Crypto if missing
+if (!globalThis.crypto) {
+    (globalThis as unknown as { crypto: Crypto }).crypto = webcrypto as unknown as Crypto;
 }
 
 describe('Audit Fixes: Concurrency & Checksum', () => {

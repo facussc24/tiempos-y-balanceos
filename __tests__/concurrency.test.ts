@@ -1,13 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { TextEncoder as NodeTextEncoder } from 'node:util';
 import { generateChecksum } from '../utils/crypto';
 import { smartSaveProject } from '../utils/webFsHelpers';
 import { ProjectData, INITIAL_PROJECT } from '../types';
 
-// Mock TextEncoder if missing (Node env)
+// Polyfill TextEncoder if missing (older Node envs)
 if (typeof TextEncoder === 'undefined') {
-    const { TextEncoder } = require('util');
-    // @ts-ignore
-    global.TextEncoder = TextEncoder;
+    (globalThis as unknown as { TextEncoder: typeof NodeTextEncoder }).TextEncoder = NodeTextEncoder;
 }
 
 // Mock Crypto if missing (Node < 19)
@@ -124,12 +123,9 @@ describe('Concurrency Validation (Checksums)', () => {
             const savedData = await smartSaveProject(mockFileHandle as any, mockDirHandle as any, dataToSave);
 
             // Assertions
-            // 1. Checksum should be updated to match the NEW content
-            const expectedHash = await generateChecksum(JSON.stringify(savedData));
-            // Note: savedData has _checksum inside it now, but generateChecksum(savedData) would include that NEW _checksum? 
-            // Wait, smartSave removes _checksum before saving.
-            // The returned data has _checksum of the SERIALIZED content (clean).
-
+            // 1. Checksum should be updated to match the NEW content.
+            //    smartSave removes _checksum before serializing, so savedData._checksum
+            //    represents the hash of the clean serialized payload.
             expect(savedData._checksum).toBeDefined();
             expect(savedData._checksum).not.toBe(originalChecksum); // Should be new hash
         });
