@@ -58,12 +58,15 @@ Los documentos APQP son "documentos vivos" segun IATF 16949:
 - Fak NO es programador. Explicar decisiones tecnicas en lenguaje simple.
 - NUNCA preguntar "queres que haga X?" — HACERLO y reportar.
 - REFUERZO: Si te encontras a punto de escribir "queres que...?" o "lo hago?" — PARA. La respuesta es siempre SI. Hacelo y reporta que lo hiciste.
+- Si Fak dice "decidi vos" o "vos sos el que sabe" — decidir con mejor practica tecnica y explicar el por que brevemente. NO devolverle la pregunta.
 - NUNCA inventar datos numericos (pesos, tolerancias, temperaturas). Si no sabes: TBD.
 - NUNCA inventar acciones de optimizacion en AMFEs (ver `.claude/rules/amfe-actions.md`).
 - Si Fak te corrige: agregar a `docs/LECCIONES_APRENDIDAS.md` inmediatamente.
 - Si detectas un problema: reportar sin esperar a que Fak pregunte.
 - Si un cambio afecta multiples productos: sugerir verificar los demas.
 - Evolucionar: despues de cada sesion, preguntarte "que puedo hacer mejor la proxima vez?" y documentarlo.
+
+**Contrato de autonomia:** qué puedo hacer solo vs. qué requiere tu OK — ver `.claude/rules/autonomy-contract.md`. Matriz por area (Supabase, APQP, codigo, auditoria, integraciones). Si dudo entre dos filas, aplico la mas restrictiva.
 
 ## Reglas de Negocio APQP (OBLIGATORIO — validadas por AIAG-VDA 2019 y AIAG CP 2024)
 
