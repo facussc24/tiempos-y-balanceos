@@ -165,6 +165,18 @@ export function validateAmfeDoc(doc, productName = '', amfeNumber = '') {
                 issues.push({ ...ctx, type: 'OP_NO_OPFUNC',
                     detail: 'operationFunction vacio (OP con WEs)' });
             }
+
+            // Placeholder "Pendiente" en campos de funcion — CRITICAL
+            // (no es valor valido, solo marca que falta contenido real)
+            const PLACEHOLDER_RE = /pendiente\s+funcion|^pendiente$|^TBD$|\bpendiente\s+definicion\b/i;
+            if (op.operationFunction && PLACEHOLDER_RE.test(String(op.operationFunction))) {
+                issues.push({ ...ctx, type: 'OP_PLACEHOLDER_FUNCION',
+                    detail: `operationFunction con placeholder ("${String(op.operationFunction).slice(0, 60)}") — requiere contenido real` });
+            }
+            if (op.focusElementFunction && PLACEHOLDER_RE.test(String(op.focusElementFunction))) {
+                issues.push({ ...ctx, type: 'OP_PLACEHOLDER_FUNCION',
+                    detail: `focusElementFunction con placeholder ("${String(op.focusElementFunction).slice(0, 60)}")` });
+            }
         }
 
         for (const we of wes) {
