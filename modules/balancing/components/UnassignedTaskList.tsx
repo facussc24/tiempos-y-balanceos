@@ -3,18 +3,18 @@ import { CheckCircle2, Split } from 'lucide-react';
 import { useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import { formatNumber } from '../../../utils';
-import { Task } from '../../../types';
+import { Task, Sector } from '../../../types';
 
 interface UnassignedTaskListProps {
     unassignedTasks: Task[];
-    sectorsList: any[];
+    sectorsList: Sector[];
     performAssignment: (taskId: string, stationId: number) => void;
     performBulkAssignment?: (taskIds: string[], stationId: number) => void;
 }
 
 const DraggableUnassignedTask: React.FC<{
     task: Task;
-    sectorsList: any[];
+    sectorsList: Sector[];
     formatNumber: (n: number) => string;
 }> = ({ task, sectorsList, formatNumber }) => {
     const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({

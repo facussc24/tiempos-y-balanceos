@@ -5,9 +5,10 @@ import { formatNumber } from '../../utils';
 import { ProjectData } from '../../types';
 import { EducationalTooltip } from '../../components/ui/EducationalTooltip';
 import { Eye } from 'lucide-react';
+import type { SaturationDataPoint } from './balancingTypes';
 
 interface Props {
-    saturationData: any[];
+    saturationData: SaturationDataPoint[];
     nominalSeconds: number;
     effectiveSeconds: number;
     yAxisDomainMax: number;
@@ -16,14 +17,31 @@ interface Props {
     isExportingExcel?: boolean;
 }
 
+// Shape of each entry in the Recharts tooltip payload. Recharts doesn't export
+// a strict generic for stacked bars with mixed dataKeys, so we model the subset
+// we actually consume.
+interface TooltipEntry {
+    dataKey: keyof SaturationDataPoint | string;
+    name: string;
+    value: number;
+    color: string;
+    payload: SaturationDataPoint;
+}
+
+interface CustomChartTooltipProps {
+    active?: boolean;
+    payload?: TooltipEntry[];
+    label?: string;
+}
+
 // Custom Tooltip for better visibility and formatting
-const CustomChartTooltip = ({ active, payload, label }: any) => {
+const CustomChartTooltip: React.FC<CustomChartTooltipProps> = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
         return (
             <div className="bg-white p-3 border border-slate-200 shadow-md rounded-md text-xs z-50">
                 <p className="font-bold text-slate-800 mb-2 border-b border-slate-100 pb-1">{label}</p>
                 <div className="space-y-1.5">
-                    {payload.map((entry: any, index: number) => {
+                    {payload.map((entry, index) => {
                         let labelText = entry.name;
                         let valueText = `${formatNumber(entry.value)}s`;
                         let color = entry.color;
