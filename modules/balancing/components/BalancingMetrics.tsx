@@ -8,8 +8,13 @@ import {
     SATURATION_OVERLOAD_PCT,
     SMOOTHNESS_OK,
     SMOOTHNESS_WARN,
-    CYCLE_RISK_THRESHOLD,
 } from '../balancingConstants';
+import {
+    calculateSmoothnessIndex,
+    calculateFeasibilityStatus,
+    calculateTheoreticalMinHeadcount,
+    getStationTimeStats,
+} from '../balancingMetricsCalc';
 
 
 interface BalancingMetricsProps {
@@ -75,50 +80,35 @@ export const BalancingMetrics: React.FC<BalancingMetricsProps> = ({
     const [showFormulas, setShowFormulas] = useState(false);
     const [showSummary, setShowSummary] = useState(false);
 
-    // Smoothness Index
-    const smoothnessIndex = React.useMemo(() => {
-        if (!stationData || stationData.length === 0) return 0;
-        const validTimes = stationData
-            .map(st => st.effectiveTime)
-            .filter(t => typeof t === 'number' && !isNaN(t) && isFinite(t));
-        if (validTimes.length === 0) return 0;
-        const maxCycle = Math.max(...validTimes);
-        const sumSquares = stationData.reduce((sum, st) => {
-            const time = st.effectiveTime;
-            if (typeof time !== 'number' || isNaN(time) || !isFinite(time)) return sum;
-            const diff = maxCycle - time;
-            return sum + (diff * diff);
-        }, 0);
-        return Math.sqrt(sumSquares);
-    }, [stationData]);
+    // Smoothness Index (pure calc — see balancingMetricsCalc.ts)
+    const smoothnessIndex = React.useMemo(
+        () => calculateSmoothnessIndex(stationData),
+        [stationData],
+    );
 
     const siColor = smoothnessIndex <= SMOOTHNESS_OK ? 'text-status-ok' : smoothnessIndex <= SMOOTHNESS_WARN ? 'text-status-warn' : 'text-status-crit';
 
     // Min/max station times for Crystal Box
-    const stationTimes = stationData.map(st => st.effectiveTime).filter(t => typeof t === 'number' && isFinite(t));
-    const maxStationTime = stationTimes.length > 0 ? Math.max(...stationTimes) : 0;
-    const minStationTime = stationTimes.length > 0 ? Math.min(...stationTimes) : 0;
+    const { min: minStationTime, max: maxStationTime, validCount: stationTimesCount } = getStationTimeStats(stationData);
 
     // Utilización color
     const utilizationColor = saturationVsTakt > SATURATION_OVERLOAD_PCT ? 'text-status-crit' : saturationVsTakt < SATURATION_MIN_PCT ? 'text-status-warn' : 'text-status-ok';
 
     // Theoretical minimum headcount
-    const theoreticalHC = nominalTaktTime > 0 ? Math.ceil(totalWorkContent / nominalTaktTime) : 0;
+    const theoreticalHC = calculateTheoreticalMinHeadcount(totalWorkContent, nominalTaktTime);
     const hcDelta = totalHeadcount - theoreticalHC;
 
-    // Feasibility
+    // Feasibility (pure calc)
     const cycleRatio = nominalTaktTime > 0 ? realCycleTime / nominalTaktTime : 0;
-    let statusLabel = 'Factible';
+    const statusLabel = calculateFeasibilityStatus(realCycleTime, nominalTaktTime);
+
     let StatusIcon = CheckCircle2;
     let statusColor = 'bg-status-ok-bg text-emerald-700 border-emerald-200';
-
-    if (cycleRatio > CYCLE_RISK_THRESHOLD) {
+    if (statusLabel === 'No Factible') {
         StatusIcon = XCircle;
-        statusLabel = 'No Factible';
         statusColor = 'bg-status-crit-bg text-red-700 border-red-200';
-    } else if (cycleRatio > 1) {
+    } else if (statusLabel === 'Riesgo') {
         StatusIcon = AlertTriangle;
-        statusLabel = 'Riesgo';
         statusColor = 'bg-status-warn-bg text-amber-700 border-amber-200';
     }
 
@@ -242,7 +232,7 @@ export const BalancingMetrics: React.FC<BalancingMetricsProps> = ({
                                     <span className="text-status-warn">{formatNumber(smoothnessIndex)}</span>
                                 </div>
                                 <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">
-                                    {stationTimes.length > 1
+                                    {stationTimesCount > 1
                                         ? `${smoothnessIndex <= SMOOTHNESS_OK ? 'Carga pareja.' : smoothnessIndex <= SMOOTHNESS_WARN ? 'Algo despareja.' : 'Muy despareja.'} La más cargada: ${formatNumber(maxStationTime)}s, la menos: ${formatNumber(minStationTime)}s.`
                                         : 'Se necesitan 2+ estaciones para medir equilibrio.'}
                                 </p>
