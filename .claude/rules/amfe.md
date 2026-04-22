@@ -221,3 +221,50 @@ Los scripts .mjs DEBEN usar AMBOS nombres de campo (alias). El TypeScript usa un
 Leer ANTES de modificar datos AMFE:
 - `docs/GUIA_AMFE.md` — guia de autoria completa
 - `docs/ERRORES_CONCEPTUALES_APQP.md` — errores graves ya detectados, NO repetirlos
+
+## Maestros vs Familias (Library de AMFEs Maestros)
+
+El panel "Maestros" distingue 2 conceptos AIAG-VDA 2019. NO mezclar:
+
+1. **AMFEs de Fundacion (Procesos Base):** procesos genericos NO vinculados a producto especifico (Inyeccion Plastica, Costura, Tapizado, Ultrasonido). Son familias **SIN** productos vinculados (`memberCount=0`). Capturan conocimiento base de la organizacion sobre una tecnologia.
+2. **AMFEs de Familia (Productos):** familias de producto que comparten proceso (Insert, Armrest, Top Roll, etc.). Son familias **CON** productos vinculados (`memberCount>0`). Especializados.
+
+Titulo correcto del panel: "Libreria de AMFEs Maestros" (no "Procesos Maestros"). La distincion en la DB es `memberCount`.
+
+## Terminologia Barack — SCRAP se queda
+
+La palabra **"SCRAP"** se mantiene en PFDs y documentacion Barack. NO traducir a "DESCARTE", aunque otras reglas pidan "cero ingles".
+
+- "SCRAP" en disposicion de rechazos (OP manufactura): NUNCA cambiar.
+- La regla "cero ingles" aplica a descripciones de operaciones, NO a disposiciones tecnicas estandar de planta.
+- Excepciones similares probables: palabras tecnicas especificas de industria (KLT, PPAP, Rework si se usa).
+- Antes de "traducir" o "corregir" terminologia aparentemente inglesa: confirmar con Fak.
+- **Principio meta:** NotebookLM y reglas externas son referencia. Fak es autoridad final en contexto Barack. Si conflicto referencia vs Fak, priorizar Fak.
+
+## Lenguaje simple en AMFE/CP/HO — OBLIGATORIO
+
+Textos en AMFE, CP y HO deben ser **CORTOS y SIMPLES**. Fak encontro descripciones como "Retirar el sistema de alimentacion sin dejar rebaba residual ni bebedero visible en el punto de inyeccion de la pieza" cuando debia decir "Cortar la colada sin dejar marca en la pieza".
+
+Reglas de redaccion:
+- **Maximo 8-10 palabras** por campo cuando sea posible.
+- NO explicar lo obvio (si dice "Calibre", NO agregar "para verificar cumplimiento de tolerancias criticas segun plano").
+- NO sinonimos rebuscados: "residual", "insuficiencia", "inadecuada", "desalineada" — sacar.
+- Causa = que salio mal, 3-5 palabras: "Dosificacion corta" NO "Volumen de inyeccion demasiado bajo (dosificacion corta) respecto al tamano de pieza".
+- Control = que se hace, 3-5 palabras: "Dossier + alarmas en panel" NO "Dossier de parametros validado + panel de la inyectora con alarmas configuradas por zona".
+- Funcion = para que sirve, 5 palabras: "Mesa de control con buena luz" NO "Proveer superficie estable y bien iluminada para el control visual y dimensional".
+- NO parentesis con aclaraciones obvias.
+- Si dudas entre larga y corta, elegi la corta.
+- NO palabras tecnicas rebuscadas que Fak no use: "husillo" -> "tornillo".
+- **Regla:** si Fak no la dijo, NO la uses. Usar las mismas palabras que usa Fak.
+
+## Verificar contenido antes de clasificar o propagar
+
+NO confiar en el nombre de la operacion para clasificar su tipo. SIEMPRE leer las primeras fallas/causas del WorkElement para verificar el proceso real.
+
+**Incidente 2026-04-20:** Headrest AMFE tiene OP 40 rotulada "INYECCION DE SUSTRATO" pero las fallas son todas de costura ("Costura desviada", "Falta de guia en costura"). Si hubiera leido esto antes, no habria propagado el maestro de inyeccion plastica a Headrest ni reportado falsamente que tiene inyeccion.
+
+**How to apply:**
+- Antes de correr sync scripts entre documentos: leer 1-2 fallas del origen/destino para confirmar tipo de proceso.
+- Antes de reportar un hallazgo basado en el nombre de una OP: leer al menos la primera falla.
+- Antes de cambiar nombre/clasificacion: leer contenido completo y verificar con Fak.
+- "INYECCION" en el nombre puede significar: plastica (termoplasticos), PU (espuma), de sustrato (ambiguo), o estar mal rotulado.

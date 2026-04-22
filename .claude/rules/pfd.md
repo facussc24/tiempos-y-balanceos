@@ -103,3 +103,16 @@ Antes de flaggear OP N como "numeracion invalida", verificar:
 - Usar "pistola de ultrasonido" (es "dispositivo de ultrasonido")
 - Poner PRIMER en el proceso del IP PAD
 - Cortar espumas en "mesa de corte" para IP PAD (se troquelan)
+
+## Estructura AMFE/PFD — Clasif/Segreg y Clips (confirmadas 2026-04-21)
+
+1. **"CLASIFICACION Y SEGREGACION DE PRODUCTO NO CONFORME" NO va como operacion separada** ni en AMFE ni en PFD. Si existe "CONTROL FINAL DE CALIDAD" / "INSPECCION FINAL", la segregacion de NC esta implicita. Estructura valida: `RECEPCION -> procesos productivos -> CONTROL FINAL (incluye segregacion implicita) -> EMBALAJE`.
+   - Eliminadas de: AMFE-1 (Telas Planas OP 90), AMFE-2 (Termoformadas OP 105), AMFE-INS-PAT (Insert OP 111), AMFE-ARM-PAT (Armrest OP 101), y sus 7 PFDs correspondientes.
+
+2. **"COLOCADO DE CLIPS" NO va en TELAS_PLANAS.** El producto "Telas Planas" NO lleva clips — se refuerza con APLIX y ganchos. La OP 45 "Colocado de Clips" fue importada por error y eliminada 2026-04-21.
+
+**Auditoria:** Al importar PPAP o crear AMFE nuevo, verificar:
+- No incluir "Clasificacion y Segregacion" como op separada.
+- En Telas Planas, alertar si aparece "Clip" en cualquier workElement, failure mode, o characteristic.
+
+**Referencia:** `scripts/_structuralFixes.mjs` aplica este patron. `scripts/_auditIntegral.mjs` detecta reincidencias en tipos `SUSPICIOUS_OP` y `INVALID_OP_CLIPS`.

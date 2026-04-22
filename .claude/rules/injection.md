@@ -165,3 +165,13 @@ Ver `.claude/rules/amfe-actions.md`. NUNCA inventar acciones. Solo Fak y el equi
 
 ## Clasificacion CC/SC
 Ver `.claude/rules/amfe.md`. NO asignar CC ni SC sin autorizacion explicita de Fak (feedback memory).
+
+## 6M — no siempre son 6 WEs completos
+
+La regla "6M completo obligatorio (todos los M con al menos 1 WE)" aplica **SOLO a inyeccion plastica** (por dossier tecnico del gerente). Extrapolarla a otras operaciones es incorrecto.
+
+- **Regla universal (todas las operaciones):** 1M por linea. NO agrupar materiales/maquinas ("Material: Tela / Hilos" es incorrecto).
+- **Regla especifica inyeccion plastica:** requiere los 6 M completos.
+- **Otras operaciones** (costura, ensamble, troquelado, espumado PU, embalaje, recepcion): tienen los WEs que el proceso real requiere. Si faltan, verificar con Fak/equipo si corresponde agregar, NO asumir.
+
+**Incidente 2026-04-20:** flaggeé "OP 50 Headrest tiene 1 WE - 6M incompleto" como bug. No era bug — esa operacion es costura, no inyeccion. Antes de reportar "6M incompleto" como hallazgo, confirmar que la operacion es de inyeccion plastica leyendo el contenido real del WE y las fallas.
