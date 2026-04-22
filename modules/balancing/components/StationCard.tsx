@@ -4,6 +4,23 @@ import { useDraggable, useDroppable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import { ProjectData, MachineType, Task, Sector } from '../../../types';
 import { formatNumber } from '../../../utils';
+import { getSaturationZone, SaturationZone } from '../balancingHelpers';
+
+// Mapa zona -> clase de texto para el % de saturacion.
+const SATURATION_TEXT_CLASS: Record<SaturationZone, string> = {
+    overload: 'text-red-500',
+    'oee-risk': 'text-amber-600',
+    high: 'text-amber-500',
+    normal: 'text-emerald-500',
+};
+
+// Mapa zona -> clase de fondo para la barra micro-gantt.
+const SATURATION_BAR_CLASS: Record<SaturationZone, string> = {
+    overload: 'bg-status-crit',
+    'oee-risk': 'bg-status-warn',
+    high: 'bg-status-warn',
+    normal: 'bg-accent',
+};
 
 interface StationCardProps {
     st: {
@@ -121,7 +138,10 @@ export const StationCard: React.FC<StationCardProps> = React.memo(({
 
     // OEE Risk Zone: In nominal mode, station exceeds OEE limit but stays within Takt
     const isNominalMode = data.meta.capacityLimitMode === 'nominal';
-    const isInOeeRiskZone = isNominalMode && effectiveSeconds && st.time > effectiveSeconds && !isOverload;
+    const isInOeeRiskZone = Boolean(isNominalMode && effectiveSeconds && st.time > effectiveSeconds && !isOverload);
+
+    // Zona de saturacion — determina color de % y de barra micro-gantt
+    const saturationZone = getSaturationZone({ isOverload, isInOeeRiskZone, saturationPercent });
 
     // Build tooltip parts, join with ' | ' since \n doesn't render in HTML title
     const parallelTooltipParts = isParallel
@@ -225,7 +245,7 @@ export const StationCard: React.FC<StationCardProps> = React.memo(({
                         Límite: <span className="font-medium">{formatNumber(st.limit)}s</span>
                     </div>
                     {/* FIX 9: Show saturation percentage */}
-                    <div className={`text-xs font-bold mt-0.5 ${isOverload ? 'text-red-500' : isInOeeRiskZone ? 'text-amber-600' : saturationPercent > 90 ? 'text-amber-500' : 'text-emerald-500'}`}>
+                    <div className={`text-xs font-bold mt-0.5 ${SATURATION_TEXT_CLASS[saturationZone]}`}>
                         {formatNumber(saturationPercent)}% saturación
                         {isInOeeRiskZone && <span className="ml-1 inline-flex items-center gap-0.5"><AlertTriangle size={10} /> OEE</span>}
                     </div>
@@ -235,7 +255,7 @@ export const StationCard: React.FC<StationCardProps> = React.memo(({
             {/* Micro-Gantt Visual - FIX 9: Color based on saturation, not just overload */}
             <div className="flex h-3 w-full bg-slate-100 rounded-sm overflow-hidden mb-4 relative">
                 <div
-                    className={`h-full transition-all ${isOverload ? 'bg-status-crit' : isInOeeRiskZone ? 'bg-status-warn' : saturationPercent > 90 ? 'bg-status-warn' : 'bg-accent'}`}
+                    className={`h-full transition-all ${SATURATION_BAR_CLASS[saturationZone]}`}
                     style={{ width: `${Math.min(100, saturationPercent)}%` }}
                     title={`Saturación: ${formatNumber(saturationPercent)}%${isInOeeRiskZone ? ' (Excede límite OEE)' : ''}`}
                 ></div>

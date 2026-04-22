@@ -24,6 +24,7 @@ import { Task, ProjectData } from '../types';
 import { Alert } from '../components/ui/AlertCenter';
 import { detectOverloadAndRecommend } from '../core/balancing/simulation';
 import { MachineValidationResult } from '../core/balancing/machineValidation';
+import { isStationOverloaded } from '../modules/balancing/balancingHelpers';
 
 /** Subset minimo de station state que las alertas necesitan. */
 export interface AlertStationLike {
@@ -63,7 +64,7 @@ export function useBalancingAlerts({
         // ---------------------------------------------------------------------
         // 1. Overload (critical) — estaciones que exceden Takt
         // ---------------------------------------------------------------------
-        const overloadedStations = stationData.filter(st => st.time > st.limit);
+        const overloadedStations = stationData.filter(isStationOverloaded);
         if (overloadedStations.length > 0) {
             alerts.push({
                 id: 'overload',

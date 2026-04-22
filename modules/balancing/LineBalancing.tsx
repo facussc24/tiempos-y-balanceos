@@ -17,6 +17,7 @@ import { buildGate3FromProjectData } from '../gate3/gate3FromBalancing';
 import { toast } from '../../components/ui/Toast';
 import { logger } from '../../utils/logger';
 import { SATURATION_WARN } from './balancingConstants';
+import { isStationOverloaded } from './balancingHelpers';
 
 interface Props {
     data: ProjectData;
@@ -426,7 +427,7 @@ export const LineBalancing: React.FC<Props> = ({ data, updateData }) => {
                             // Calcular saturación promedio del sector para mostrar alerta
                             const avgSaturation = stationsInSector.reduce((sum, st) => sum + (st.time / st.limit), 0) / stationsInSector.length;
                             const hasHighSaturation = avgSaturation > SATURATION_WARN;
-                            const hasOverload = stationsInSector.some(st => st.time > st.limit);
+                            const hasOverload = stationsInSector.some(isStationOverloaded);
 
                             return (
                                 <div
@@ -491,7 +492,7 @@ export const LineBalancing: React.FC<Props> = ({ data, updateData }) => {
                                     {!isCollapsed && (
                                         <div className="space-y-4 pl-2">
                                             {stationsInSector.map(st => {
-                                                const isOverload = st.time > st.limit;
+                                                const isOverload = isStationOverloaded(st);
                                                 return (
                                                     <StationCard
                                                         key={st.id}

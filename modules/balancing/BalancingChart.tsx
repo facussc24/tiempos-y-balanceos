@@ -6,6 +6,7 @@ import { ProjectData } from '../../types';
 import { EducationalTooltip } from '../../components/ui/EducationalTooltip';
 import { Eye } from 'lucide-react';
 import type { SaturationDataPoint } from './balancingTypes';
+import { formatReplicasInfo } from './balancingHelpers';
 
 interface Props {
     saturationData: SaturationDataPoint[];
@@ -54,9 +55,10 @@ const CustomChartTooltip: React.FC<CustomChartTooltipProps> = ({ active, payload
                             const sector = entry.payload.sectorName;
 
                             labelText = `Tiempo de Ciclo [${sector}]`;
-                            if (replicas > 1) {
+                            const replicasInfo = formatReplicasInfo(raw, replicas);
+                            if (replicasInfo) {
                                 valueText = `${formatNumber(entry.value)}s`;
-                                extraInfo = `(Total: ${formatNumber(raw)}s ÷ ${replicas} ops)`;
+                                extraInfo = replicasInfo;
                             }
                         } else if (entry.dataKey === 'idle') {
                             labelText = 'Tiempo Disponible';
