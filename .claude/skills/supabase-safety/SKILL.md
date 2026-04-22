@@ -82,6 +82,48 @@ node scripts/_restore.mjs 2026-04-20T19-42-58 amfe_documents --apply
 import { parseSafeArgs, logChange, finish } from './_lib/dryRunGuard.mjs';
 ```
 
+### Gate pre-commit OBLIGATORIO (scripts que modifican `data` de amfe_documents)
+
+Todo script `.mjs` que escriba a `amfe_documents.data` DEBE pasar por `runWithValidation()`. El gate valida el estado before/after y **bloquea el --apply si introduce issues criticos nuevos** (failures sin causas, causas sin S/O/D, operaciones vacias, etc.).
+
+```js
+import { connectSupabase, readAmfe, parseData } from './_lib/amfeIo.mjs';
+import { parseSafeArgs, runWithValidation, finish } from './_lib/dryRunGuard.mjs';
+
+const { apply } = parseSafeArgs();
+const sb = await connectSupabase();
+
+// 1) Leer docs y preparar cambios SIN escribirlos
+const plan = [];
+for (const targetId of myTargets) {
+    const { doc: before, amfe_number } = await readAmfe(sb, targetId);
+    const after = applyChanges(before);  // tu logica
+    plan.push({
+        id: targetId,
+        amfeNumber: amfe_number,
+        productName,
+        before,
+        after,
+    });
+}
+
+// 2) Pasar por el gate. Si --apply y hay criticos nuevos → bloquea con exit 1
+await runWithValidation(plan, apply, async () => {
+    // commitFn: SOLO se llama si apply=true y el gate aprueba
+    for (const change of plan) {
+        await saveAmfe(sb, change.id, change.after);
+    }
+});
+
+finish(apply);
+```
+
+**Override:** si el script intencionalmente deja algunos issues (ej: placeholder para que el equipo APQP complete), usar `{ allowNewCritical: true }` como cuarto argumento y documentar por que.
+
+**Demo ejecutable:** `scripts/_demoValidator.mjs` (read-only, no escribe nada) muestra el flujo con cambios inocuo/warning/critico contra un AMFE real.
+
+**Detalle de los checks:** `scripts/_lib/amfeValidator.mjs` — replica la logica de `_auditIntegral.mjs` (single source of truth: si se agrega un check alla, actualizar aca).
+
 ## Flujo recomendado para cambios riesgosos
 
 1. **Backup manual primero** (aunque el hook lo hace, doble seguro no duele):

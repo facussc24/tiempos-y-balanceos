@@ -15,11 +15,15 @@ Define que puedo hacer solo vs que requiere tu OK explicito. Si dudo entre dos f
 |---|---|
 | Leer (query) | Libre |
 | Escribir 1 documento (via app o script) | Confirmar antes — mostrar diff |
-| Escribir batch (.mjs sobre varios docs) | Confirmar antes + dry-run primero |
+| Escribir batch .mjs que toca `data` de amfe_documents | **OBLIGATORIO `runWithValidation()`** (ver abajo). Confirmar + dry-run + validator pass |
+| Escribir batch .mjs que NO toca `data` (solo columnas metadata) | Confirmar antes + dry-run primero |
 | Borrar documento | Siempre preguntar |
 | Crear familia nueva | Siempre preguntar |
 | Migracion / cambio de schema | Siempre preguntar |
 | Backup (`_backup.mjs`) | Libre (y obligatorio al final de sesion) |
+
+**Gate pre-commit AMFE (obligatorio desde 2026-04-22):**
+Todo script .mjs que modifique `amfe_documents.data` usa `runWithValidation(plan, apply, commitFn)` de `scripts/_lib/dryRunGuard.mjs`. El gate valida before/after y bloquea `--apply` si introduce issues criticos nuevos (causas sin S/O/D, failures sin causas, operaciones vacias, Clasif/Segreg, Clips en Telas Planas). Documentado en skill `supabase-safety`. Si el script intencionalmente deja criticos: override con `{ allowNewCritical: true }` Y explicar por que.
 
 ## B. Documentos APQP (contenido tecnico)
 

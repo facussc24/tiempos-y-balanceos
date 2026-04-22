@@ -53,3 +53,76 @@ export function finish(apply) {
         console.log('Si se ve bien, volve a correr con --apply.');
     }
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Gate de validacion pre-commit para AMFE documents
+// ─────────────────────────────────────────────────────────────────────────────
+
+import { validateAmfeDoc, diffIssues, printIssues } from './amfeValidator.mjs';
+
+/**
+ * Gate obligatorio ANTES de escribir cambios a amfe_documents.
+ * Valida estado before vs after y bloquea el apply si introduce issues criticos.
+ *
+ * @param {Array<{id, amfeNumber, productName, before, after}>} plan
+ *        Cambios propuestos. `before` y `after` son objetos AMFE parseados.
+ * @param {boolean} apply - Si true y hay criticos nuevos, aborta con exit 1.
+ * @param {Function} commitFn - async function que ejecuta el write real
+ *        (solo se llama si apply=true Y no hay criticos nuevos bloqueantes).
+ * @param {{allowNewCritical?: boolean}} [opts] - allowNewCritical=true permite
+ *        pasar con override explicito (caso: script que arregla criticos existentes
+ *        y puede dejar otros — requiere revision manual).
+ * @returns {Promise<{blocked: boolean, introducedCritical: number, introducedWarning: number}>}
+ */
+export async function runWithValidation(plan, apply, commitFn, opts = {}) {
+    let totalIntroducedCritical = 0;
+    let totalIntroducedWarning = 0;
+    const blockers = [];
+
+    console.log(`\n=== VALIDACION PRE-COMMIT (${plan.length} doc${plan.length === 1 ? '' : 's'}) ===`);
+
+    for (const change of plan) {
+        const { id, amfeNumber, productName = '', before, after } = change;
+        const label = amfeNumber || id || '(sin id)';
+
+        const beforeIssues = validateAmfeDoc(before, productName, label);
+        const afterIssues = validateAmfeDoc(after, productName, label);
+        const introduced = diffIssues(beforeIssues, afterIssues);
+
+        const newCrit = introduced.critical.length;
+        const newWarn = introduced.warning.length;
+        totalIntroducedCritical += newCrit;
+        totalIntroducedWarning += newWarn;
+
+        if (newCrit > 0 || newWarn > 0) {
+            console.log(`\n[${label}] introduce ${newCrit} crit + ${newWarn} warn`);
+            printIssues('NUEVOS', introduced);
+            if (newCrit > 0) blockers.push({ id, amfeNumber, newCrit });
+        } else {
+            console.log(`[${label}] OK — no introduce nuevos issues`);
+        }
+    }
+
+    console.log(`\n=== TOTAL: ${totalIntroducedCritical} crit + ${totalIntroducedWarning} warn introducidos ===`);
+
+    const shouldBlock = totalIntroducedCritical > 0 && apply && !opts.allowNewCritical;
+
+    if (shouldBlock) {
+        console.error('\n❌ BLOQUEADO: el cambio introduce issues criticos nuevos.');
+        console.error('   Revisar el script o correr con --allow-new-critical si se justifica.');
+        process.exit(1);
+    }
+
+    if (apply) {
+        console.log('\n→ Validacion OK, ejecutando commit...');
+        await commitFn();
+    } else {
+        console.log('\n→ Dry-run: no se escribio a Supabase. Agrega --apply cuando este OK.');
+    }
+
+    return {
+        blocked: shouldBlock,
+        introducedCritical: totalIntroducedCritical,
+        introducedWarning: totalIntroducedWarning,
+    };
+}
