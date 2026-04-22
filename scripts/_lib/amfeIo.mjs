@@ -173,6 +173,13 @@ export async function saveAmfe(sb, id, doc, opts = {}) {
         guardAmfeNumber(current.amfe_number, opts.expectedAmfeNumber, id);
     }
 
+    // AUTO-SYNC: campos legacy fm-level que se dejaron vacios pero las causas
+    // tienen valor. Exports/UIs legacy leen fm.X — mantenerlo sincronizado con
+    // cause[] evita que aparezcan celdas vacias. Opt-out con { skipLegacySync: true }.
+    if (!opts.skipLegacySync) {
+        syncLegacyFmFields(doc);
+    }
+
     const payload = { data: JSON.stringify(doc), ...(opts.extraFields || {}) };
     // Extra guard: nunca permitir pasar objeto directo en data
     if (typeof payload.data !== 'string') {
@@ -217,6 +224,91 @@ export async function savePfd(sb, id, doc, opts = {}) {
     if (typeof payload.data !== 'string') throw new Error('savePfd: data must be string');
     const { error } = await sb.from('pfd_documents').update(payload).eq('id', id);
     if (error) throw new Error(`SAVE pfd/${id}: ${error.message}`);
+}
+
+// ─── Legacy fm-level sync (VDA 2019 migracion) ──────────────────────────────
+
+/**
+ * Sincroniza campos legacy a nivel failure desde las causas.
+ *
+ * El schema AmfeFailure tiene 13 campos @deprecated que fueron migrados a
+ * AmfeCause[]. Exports y UIs legacy pueden leer fm.X — si queda vacio mientras
+ * cause[] tiene valor, aparecen celdas en blanco en el Excel/PDF export.
+ * Este sync mantiene fm.X coherente con cause[] como fallback visual.
+ *
+ * Estrategia:
+ *  - Numericos (severity/occurrence/detection): max entre causas.
+ *  - Strings (cause/effect/preventionControl/etc): si fm esta vacio, copia de
+ *    la primera causa con valor; si tiene contenido distinto al de causes, lo
+ *    preserva tal como esta.
+ *
+ * Idempotente: correr 2 veces da el mismo resultado.
+ *
+ * @param {object} doc — Documento AMFE parseado. Se muta in-place.
+ * @returns {{synced: number}} cantidad de fields fm-level sincronizados.
+ */
+export function syncLegacyFmFields(doc) {
+    let synced = 0;
+    if (!doc?.operations) return { synced };
+
+    const numericFields = ['severity', 'occurrence', 'detection'];
+    const aliasFields = [
+        { fm: 'ap', alt: 'actionPriority' },
+        { fm: 'actionPriority', alt: 'ap' },
+    ];
+    const textFields = [
+        'preventionControl', 'detectionControl',
+        'specialChar', 'classification',
+    ];
+
+    for (const op of doc.operations) {
+        for (const we of (op.workElements || [])) {
+            for (const fn of (we.functions || [])) {
+                for (const fm of (fn.failures || [])) {
+                    const causes = fm.causes || [];
+                    if (causes.length === 0) continue;
+
+                    // Numericos: max
+                    for (const f of numericFields) {
+                        if (!(f in fm)) continue;
+                        const fmVal = fm[f];
+                        const fmEmpty = fmVal === '' || fmVal === null || fmVal === undefined || fmVal === 0;
+                        if (!fmEmpty) continue;
+                        const vals = causes.map(c => Number(c[f])).filter(n => !isNaN(n) && n > 0);
+                        if (vals.length > 0) {
+                            fm[f] = Math.max(...vals);
+                            synced++;
+                        }
+                    }
+
+                    // Aliases (ap / actionPriority)
+                    for (const { fm: f, alt } of aliasFields) {
+                        if (!(f in fm)) continue;
+                        const fmVal = fm[f];
+                        if (fmVal !== '' && fmVal !== null && fmVal !== undefined) continue;
+                        for (const c of causes) {
+                            const v = c[f] || c[alt];
+                            if (v) { fm[f] = v; synced++; break; }
+                        }
+                    }
+
+                    // Textos: copiar del primero con valor
+                    for (const f of textFields) {
+                        if (!(f in fm)) continue;
+                        const fmVal = fm[f];
+                        const fmEmpty = fmVal === '' || fmVal === null || fmVal === undefined;
+                        if (!fmEmpty) continue;
+                        for (const c of causes) {
+                            const v = c[f];
+                            if (v && String(v).trim() !== '') { fm[f] = v; synced++; break; }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    return { synced };
 }
 
 // ─── Guards ─────────────────────────────────────────────────────────────────

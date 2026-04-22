@@ -187,6 +187,18 @@ RESUMEN: NUNCA inventar acciones. Solo el equipo humano las define.
 NUNCA confirmar ni conservar valores numericos sin confirmacion explicita de Fak.
 En caso de duda: TBD. Solo Fak valida datos de ingenieria.
 
+## Campos legacy a nivel failure — MANTENER SINCRONIZADOS con cause[]
+
+AmfeFailure tiene campos @deprecated segun VDA 2019 (severity, occurrence, detection, ap, preventionControl, detectionControl, specialChar, classification, effect, etc.) que fueron migrados a `AmfeCause[]`. El modulo AMFE moderno lee de `cause[]`, pero **exports legacy, UIs antiguas y reportes pueden todavia leer `fm.X`**. Si ese campo esta vacio mientras `cause[].X` tiene valor, aparecen celdas en blanco en Excel/PDF.
+
+**Reglas obligatorias:**
+- Si una failure tiene al menos 1 causa con severity/occurrence/detection, `fm.severity/occurrence/detection` **NO pueden quedar vacios**. Deben contener el max de las causas.
+- Lo mismo aplica a `fm.preventionControl`, `fm.detectionControl`, `fm.specialChar`, `fm.ap`, etc.
+- **Automatizacion**: `saveAmfe()` en `scripts/_lib/amfeIo.mjs` llama a `syncLegacyFmFields(doc)` ANTES de escribir. No hace falta hacerlo a mano — pero SI escribis por fuera de saveAmfe (raw `.update()`), correrlo manualmente.
+- **Gate**: `amfeValidator.mjs` tiene check `FM_LEGACY_EMPTY_BUT_CAUSE_HAS_VALUE` (critical). `runWithValidation` bloquea `--apply` si algun script introduce este gap.
+
+**Incidente 2026-04-22**: Fak detecto en export de OP80 Telas Planas (AMFE-1) celdas vacias en columna severidad. 35 failures con fm.severity="" mientras cause[].severity tenia valor. Resuelto con syncLegacyFmFields + check validator. Script one-shot: `_syncLegacyFmFields.mjs`.
+
 ## Schema de campos AMFE — OBLIGATORIO para scripts .mjs
 
 Los scripts .mjs DEBEN usar AMBOS nombres de campo (alias). El TypeScript usa unos, el export Excel usa otros. Si falta uno, el export se rompe.

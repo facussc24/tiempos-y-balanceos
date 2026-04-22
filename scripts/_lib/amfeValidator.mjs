@@ -28,6 +28,44 @@ const SUSPICIOUS_OP_PATTERNS = [
     'CLASIFICACION DE NO CONFORMES',
 ];
 
+/**
+ * Campos "legacy" a nivel failure que el schema VDA 2019 migro a cause[].
+ * Si estan vacios en fm pero las causas tienen valor, exports/UIs legacy
+ * pueden mostrarlos como celdas vacias aunque el dato real exista en cause[].
+ * Ver: incidente 2026-04-22 OP80 Telas Planas — fm.severity vacio.
+ */
+const LEGACY_FM_FIELDS = [
+    'severity', 'occurrence', 'detection',
+    'ap', 'actionPriority',
+    'preventionControl', 'detectionControl',
+    'specialChar', 'classification',
+    'cause',
+    'effect',
+    'recommendedActions',
+];
+
+/**
+ * Retorna true si el valor fm-level esta "vacio" desde la perspectiva del export.
+ */
+function isFmEmpty(v) {
+    return v === '' || v === null || v === undefined || (typeof v === 'number' && v === 0);
+}
+
+/**
+ * Retorna true si al menos una causa tiene valor para ese campo (o su alias).
+ */
+function hasCauseValue(causes, field) {
+    for (const c of (causes || [])) {
+        let v = c[field];
+        if (field === 'ap' && (v == null || v === '')) v = c.actionPriority;
+        if (field === 'actionPriority' && (v == null || v === '')) v = c.ap;
+        if (field === 'cause' && (v == null || v === '')) v = c.description;
+        if (field === 'effect' && (v == null || v === '')) v = c.effectLocal;  // best-effort
+        if (v !== undefined && v !== null && v !== '' && v !== 0) return true;
+    }
+    return false;
+}
+
 /** Tipos de issue que son BLOQUEANTES (bloquean apply) */
 const CRITICAL_TYPES = new Set([
     'EMPTY_OP',
@@ -38,6 +76,7 @@ const CRITICAL_TYPES = new Set([
     'CAUSE_MISSING_SOD',
     'DATA_NOT_OBJECT',
     'OPERATIONS_NOT_ARRAY',
+    'FM_LEGACY_EMPTY_BUT_CAUSE_HAS_VALUE',
 ]);
 
 /**
@@ -156,6 +195,20 @@ export function validateAmfeDoc(doc, productName = '', amfeNumber = '') {
                     if (causes.length === 0) {
                         issues.push({ ...fmCtx, type: 'FM_NO_CAUSES', detail: 'Failure sin causas' });
                         continue;
+                    }
+
+                    // LEGACY FIELDS — fm-level vacio pero cause tiene valor.
+                    // Exports/UIs legacy pueden leer fm.X y mostrar celdas vacias.
+                    for (const legacyField of LEGACY_FM_FIELDS) {
+                        if (!(legacyField in fm)) continue;
+                        if (!isFmEmpty(fm[legacyField])) continue;
+                        if (hasCauseValue(causes, legacyField)) {
+                            issues.push({
+                                ...fmCtx,
+                                type: 'FM_LEGACY_EMPTY_BUT_CAUSE_HAS_VALUE',
+                                detail: `fm.${legacyField}=${JSON.stringify(fm[legacyField])} pero cause[].${legacyField} tiene valor (export legacy mostrara celda vacia)`,
+                            });
+                        }
                     }
 
                     for (const c of causes) {
