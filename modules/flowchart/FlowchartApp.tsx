@@ -428,12 +428,16 @@ export default function FlowchartApp({ amfeData, flowchartData, onSaveFlowchart,
         {/* ENCABEZADO TÉCNICO */}
       <div className={`w-full mx-auto bg-white border-[1.5px] border-[#60A5FA] mb-8 shadow-sm print:max-w-none ${isExporting ? 'max-w-none' : 'max-w-[1400px]'}`}>
         <div className="grid grid-cols-4">
-          <div 
-            className="col-span-1 border-r-[1.5px] border-[#60A5FA] p-3 flex flex-col items-center justify-center bg-[#f9fafb] cursor-pointer relative group"
+          <div
+            className="col-span-1 border-r-[1.5px] border-[#60A5FA] p-3 flex flex-col items-center justify-center bg-[#f9fafb] cursor-pointer relative group focus:ring-2 focus:ring-[#60A5FA] focus:outline-none"
             onClick={() => fileInputRef.current?.click()}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInputRef.current?.click(); } }}
+            role="button"
+            tabIndex={0}
+            aria-label="Cambiar logo del flujograma"
             title="Clic para cambiar logo"
           >
-             <input type="file" ref={fileInputRef} onChange={handleLogoUpload} accept="image/*" className="hidden" />
+             <input type="file" ref={fileInputRef} onChange={handleLogoUpload} accept="image/*" className="hidden" aria-hidden="true" tabIndex={-1} />
              {logoUrl ? (
                <img src={logoUrl} alt="Logo" className="max-h-16 object-contain" />
              ) : (
