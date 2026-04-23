@@ -66,7 +66,8 @@ function renderBranchSide(branch: FlowNodeData['branchSide']) {
   if (!branch) return null;
 
   const hasSequence = Array.isArray(branch.sequence) && branch.sequence.length > 0;
-  const armWidth = hasSequence ? 500 : 320;
+  // Fak 2026-04-23: brazo y sub-flow reducidos para evitar overflow en A3 landscape.
+  const armWidth = hasSequence ? 280 : 200;
 
   return (
     <div
@@ -87,7 +88,7 @@ function renderBranchSide(branch: FlowNodeData['branchSide']) {
         }`}
       >
         {hasSequence ? (
-          <div className="relative -mt-5 w-[600px]">
+          <div className="relative -mt-5 w-[420px]">
             <FlowSequence sequence={branch.sequence!} />
           </div>
         ) : (

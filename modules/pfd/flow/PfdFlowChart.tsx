@@ -32,8 +32,10 @@ export const PfdFlowChart: React.FC<PfdFlowChartProps> = ({ data }) => {
             </div>
           )}
 
-          {/* Flow sequence */}
-          <div className="min-w-fit px-12 mx-auto">
+          {/* Flow sequence — padding-right 320px reserva espacio para el
+              FlowReferenceBox absolute (top-4 right-4) y evita colision con
+              terminales laterales tipo RECLAMO PROVEEDOR (Fak 2026-04-23 fix). */}
+          <div className="min-w-fit px-12 mx-auto" style={{ paddingRight: '320px' }}>
             <FlowSequence sequence={data.flowData} />
           </div>
 

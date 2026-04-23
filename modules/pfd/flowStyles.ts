@@ -116,7 +116,10 @@ body { font-family: Inter, Arial, Helvetica, sans-serif; background: white; }
 .w-\\[60px\\] { width: 60px; }
 .w-\\[90px\\] { width: 90px; }
 .w-\\[100px\\] { width: 100px; }
+.w-\\[200px\\] { width: 200px; }
+.w-\\[280px\\] { width: 280px; }
 .w-\\[320px\\] { width: 320px; }
+.w-\\[420px\\] { width: 420px; }
 .w-\\[500px\\] { width: 500px; }
 .w-\\[600px\\] { width: 600px; }
 .w-\\[1\\.5px\\] { width: 1.5px; }
@@ -131,6 +134,7 @@ body { font-family: Inter, Arial, Helvetica, sans-serif; background: white; }
 .h-10 { height: 2.5rem; }
 .h-12 { height: 3rem; }
 .h-\\[1\\.5px\\] { height: 1.5px; }
+.h-\\[2px\\] { height: 2px; }
 .h-1\\.5 { height: 0.375rem; }
 .h-2 { height: 0.5rem; }
 .h-\\[100px\\] { height: 100px; }

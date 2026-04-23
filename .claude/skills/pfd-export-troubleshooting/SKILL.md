@@ -13,6 +13,82 @@ auto_load_globs:
 
 Skill consolidando todos los fixes y lecciones del export PDF del modulo PFD en Barack Mercosul. Creada 2026-04-20 despues de 5 iteraciones para arreglar textos cortados y desalineados en el PDF.
 
+## DEBUG FLOW (obligatorio antes de tocar el renderer)
+
+Cuando Fak reporta un bug visual en el PDF, el flujo correcto es:
+
+1. **Navegar a `/?module=pfd-debug&id=<docId>`** en preview_start o GitHub Pages. Esta ruta renderiza el PFD sin UI de chrome, ancho completo, igual al export PDF pero visible en browser.
+2. **preview_screenshot** de la seccion relevante (tramo adhesivado, header, merge, etc).
+3. **Comparar contra el PDF exportado** (si Fak lo mando como screenshot).
+4. **Diferenciar**: si el bug aparece en preview_debug Y en PDF -> bug del renderer (JSX / flowStyles). Si solo en PDF -> bug de html2canvas/html2pdf (ver seccion html2canvas issues).
+5. **NUNCA** pushear sin haber confirmado el fix en preview_debug.
+
+## Issues conocidos de html2pdf.js / html2canvas (GitHub validados 2026-04-23)
+
+Referencia: multiples iteraciones de Fak con PDF del IP PAD que cortaban contenido, tenian colisiones, o perdian lineas finas.
+
+### Issue #1 — `position: absolute` cortado a la derecha
+- **Fingerprint**: un nodo tiene `branchSide` con brazo horizontal (`absolute left-full` o `left-[50%]`) + sub-flow anidado (`w-[600px]`). En el PDF se corta a la derecha del area imprimible.
+- **GitHub ref**: [eKoopmans/html2pdf.js#277](https://github.com/eKoopmans/html2pdf.js/issues/277), [#409](https://github.com/eKoopmans/html2pdf.js/issues/409)
+- **Workaround validado** (html2canvas config en pfdPdfExport.ts):
+  ```js
+  html2canvas: {
+    scale: 3,
+    width: realWidth,          // scrollWidth real del body
+    windowWidth: realWidth,    // fuerza viewport interno
+    scrollX: 0, scrollY: 0,
+    onclone: (doc) => {
+      doc.body.style.width = realWidth + 'px';
+      doc.body.style.overflow = 'visible';
+    }
+  }
+  ```
+- **Fix estructural preferido**: achicar el sub-flow (`w-[600px]` -> `w-[480px]`) o usar **CSS Grid 3-col** en PfdFlowChart separando main-flow / side-branches / reference-panel.
+
+### Issue #2 — Absolute colisiona con sibling estatico
+- **Fingerprint**: un `branchSide` terminal (RECLAMO PROVEEDOR, SEGREGAR) se superpone con un panel lateral estatico (FlowReferenceBox con part numbers). `z-index` NO resuelve porque son colisiones FISICAS (ambos ocupan pixeles), no de stacking.
+- **Fix estructural**: reservar espacio para absolutes con **CSS Grid explicita**:
+  ```tsx
+  <div className="grid grid-cols-[1fr_320px_280px] gap-6">
+    <div>{/* main flow vertical */}</div>
+    <div>{/* side branches terminals */}</div>
+    <div>{/* part numbers panel */}</div>
+  </div>
+  ```
+  O alternativamente `padding-right: <armWidth + terminalWidth>` en el wrapper del main flow.
+
+### Issue #3 — Lineas finas (1-1.5px) desaparecen con scale alto
+- **Fingerprint**: lineas horizontales de merge en ramas paralelas, spines verticales, brazos de branchSide se ven cortados o pixelados en el PDF. Preview web OK, PDF roto.
+- **GitHub ref**: [niklasvh/html2canvas#1524](https://github.com/niklasvh/html2canvas/issues/1524), [Firefox bug 1490361](https://bugzilla.mozilla.org/show_bug.cgi?id=1490361)
+- **Causa**: html2canvas a `scale: 3` rasteriza subpixel positions con rounding; bordes de 1-1.5px caen en el hueco entre pixels.
+- **Fix CSS minimo**:
+  - Borders y lineas: `2px` minimo (no `1.5px` ni `1px`)
+  - Alternativa fallback: `box-shadow: 0 0 0 2px <color>` en lugar de `border`
+  - Agregar `shape-rendering: crispEdges` a elementos SVG
+  - Declarar en flowStyles.ts: `.h-\[2px\] { height: 2px; }`, `.w-\[2px\] { width: 2px; }`
+- **Fix SVG (mas robusto)**: reemplazar `<div className="border-t-2">` por SVG overlay con `<line strokeWidth="3" shapeRendering="crispEdges">`.
+
+### Issue #4 — Text cut at edges (ya resuelto historicamente con padding-bottom + escala)
+Ver seccion abajo "Text glyph cut" (descenders de p/g/y/j/q).
+
+## Migracion a html2canvas-pro (opcion low-risk 1-2h)
+
+Si los workarounds CSS no alcanzan, `html2canvas-pro` es drop-in replacement:
+- Mantiene mismo API que `html2canvas`
+- Fixes de `color()`, `transform scale`, `fractional pixels`
+- Mejor handling de `position:absolute` fuera del viewport
+- Repo: https://github.com/yorickshan/html2canvas-pro
+
+Migracion: `npm uninstall html2canvas && npm install html2canvas-pro`; cambiar imports en `pfdPdfExport.ts`. Testear con preview_debug y PDF real.
+
+## Mitigacion estructural (mayor esfuerzo, mayor fidelidad)
+
+Si html2canvas-pro + workarounds no resuelve, migrar a **modern-screenshot** (DOM -> SVG, no raster intermedio) o **Puppeteer-core + Chromium wasm** (fidelidad total, pero requiere backend).
+
+Repos:
+- https://github.com/qq15725/modern-screenshot (client-side, esfuerzo medio)
+- Puppeteer-core + @sparticuz/chromium (server-side, esfuerzo alto pero gold standard)
+
 ## Stack del export PDF
 
 ```

@@ -23,13 +23,13 @@ export const BranchSplit: React.FC<BranchSplitProps> = ({ branches }) => {
           <div key={idx} className="flex-1 flex flex-col items-center relative min-w-[400px] px-4">
             {/* Horizontal connecting lines at top */}
             {idx === 0 && branches.length > 1 && (
-              <div className="absolute top-0 left-1/2 right-0 h-[1.5px] bg-[#93C5FD] z-0" />
+              <div className="absolute top-0 left-1/2 right-0 h-[2px] bg-[#93C5FD] z-0" />
             )}
             {idx === branches.length - 1 && branches.length > 1 && (
-              <div className="absolute top-0 left-0 right-1/2 h-[1.5px] bg-[#93C5FD] z-0" />
+              <div className="absolute top-0 left-0 right-1/2 h-[2px] bg-[#93C5FD] z-0" />
             )}
             {idx > 0 && idx < branches.length - 1 && (
-              <div className="absolute top-0 left-0 right-0 h-[1.5px] bg-[#93C5FD] z-0" />
+              <div className="absolute top-0 left-0 right-0 h-[2px] bg-[#93C5FD] z-0" />
             )}
 
             {/* Vertical connector down into lane */}
@@ -43,13 +43,13 @@ export const BranchSplit: React.FC<BranchSplitProps> = ({ branches }) => {
 
             {/* Horizontal connecting lines at bottom */}
             {idx === 0 && branches.length > 1 && (
-              <div className="absolute bottom-0 left-1/2 right-0 h-[1.5px] bg-[#93C5FD] z-0" />
+              <div className="absolute bottom-0 left-1/2 right-0 h-[2px] bg-[#93C5FD] z-0" />
             )}
             {idx === branches.length - 1 && branches.length > 1 && (
-              <div className="absolute bottom-0 left-0 right-1/2 h-[1.5px] bg-[#93C5FD] z-0" />
+              <div className="absolute bottom-0 left-0 right-1/2 h-[2px] bg-[#93C5FD] z-0" />
             )}
             {idx > 0 && idx < branches.length - 1 && (
-              <div className="absolute bottom-0 left-0 right-0 h-[1.5px] bg-[#93C5FD] z-0" />
+              <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#93C5FD] z-0" />
             )}
           </div>
         ))}

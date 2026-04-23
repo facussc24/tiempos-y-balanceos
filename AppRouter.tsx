@@ -32,15 +32,16 @@ const FormatosApp = lazy(() => import('./modules/engineering/FormatosApp'));
 const DataManager = lazy(() => import('./modules/DataManager'));
 const PfdTestRoute = lazy(() => import('./modules/pfd/PfdTestRoute'));
 const PfdSvgAudit = lazy(() => import('./modules/pfd/PfdSvgAudit'));
+const PfdDebugRoute = lazy(() => import('./modules/pfd/PfdDebugRoute'));
 const AdminPanel = lazy(() => import('./modules/admin/AdminPanel'));
 const ApqpDashboard = lazy(() => import('./modules/dashboard/ApqpDashboard'));
 const FlowchartApp = lazy(() => import('./modules/flowchart/FlowchartApp'));
 const EightDApp = lazy(() => import('./modules/eightD/EightDApp'));
 const MediosApp = lazy(() => import('./modules/mediosCalculator/MediosApp'));
 
-type AppMode = 'landing' | 'dashboard' | 'pfd' | 'pfdTest' | 'pfdSvgAudit' | 'tiempos' | 'amfe' | 'controlPlan' | 'hojaOperaciones' | 'registry' | 'solicitud' | 'manuales' | 'formatos' | 'dataManager' | 'admin' | 'flowchart' | '8dReports' | 'mediosCalculator';
+type AppMode = 'landing' | 'dashboard' | 'pfd' | 'pfdTest' | 'pfdSvgAudit' | 'pfdDebug' | 'tiempos' | 'amfe' | 'controlPlan' | 'hojaOperaciones' | 'registry' | 'solicitud' | 'manuales' | 'formatos' | 'dataManager' | 'admin' | 'flowchart' | '8dReports' | 'mediosCalculator';
 
-const VALID_MODES = new Set<AppMode>(['landing', 'dashboard', 'pfd', 'pfdTest', 'pfdSvgAudit', 'tiempos', 'amfe', 'controlPlan', 'hojaOperaciones', 'registry', 'solicitud', 'manuales', 'formatos', 'dataManager', 'admin', 'flowchart', '8dReports', 'mediosCalculator']);
+const VALID_MODES = new Set<AppMode>(['landing', 'dashboard', 'pfd', 'pfdTest', 'pfdSvgAudit', 'pfdDebug', 'tiempos', 'amfe', 'controlPlan', 'hojaOperaciones', 'registry', 'solicitud', 'manuales', 'formatos', 'dataManager', 'admin', 'flowchart', '8dReports', 'mediosCalculator']);
 const LS_KEY_MODE = 'barack_lastModule';
 
 const LoadingFallback: React.FC = () => (
@@ -73,6 +74,15 @@ const DOC_TYPE_TO_MODE: Record<DocumentType, AppMode> = {
 
 const AppRouterInner: React.FC = () => {
     const [currentMode, setCurrentMode] = useState<AppMode>(() => {
+        // Query param ?module=<name> tiene prioridad sobre localStorage.
+        // Permite acceso directo a rutas de debug (pfdDebug, pfdSvgAudit)
+        // sin pasar por landing. Creado 2026-04-23 para preview_screenshot
+        // de PFDs desde Claude MCP sin navegacion clickable.
+        try {
+            const params = new URLSearchParams(window.location.search);
+            const fromQs = params.get('module') as AppMode | null;
+            if (fromQs && VALID_MODES.has(fromQs) && fromQs !== 'landing') return fromQs;
+        } catch { /* ignore */ }
         try {
             const saved = localStorage.getItem(LS_KEY_MODE) as AppMode | null;
             if (saved && VALID_MODES.has(saved) && saved !== 'landing') return saved;
@@ -99,7 +109,7 @@ const AppRouterInner: React.FC = () => {
         return () => { cancelled = true; };
     }, []);
 
-    const handleSelectModule = useCallback((module: 'dashboard' | 'pfd' | 'pfdTest' | 'pfdSvgAudit' | 'tiempos' | 'amfe' | 'controlPlan' | 'hojaOperaciones' | 'registry' | 'solicitud' | 'manuales' | 'formatos' | 'dataManager' | 'admin' | 'flowchart' | '8dReports' | 'mediosCalculator') => {
+    const handleSelectModule = useCallback((module: 'dashboard' | 'pfd' | 'pfdTest' | 'pfdSvgAudit' | 'pfdDebug' | 'tiempos' | 'amfe' | 'controlPlan' | 'hojaOperaciones' | 'registry' | 'solicitud' | 'manuales' | 'formatos' | 'dataManager' | 'admin' | 'flowchart' | '8dReports' | 'mediosCalculator') => {
         setCurrentMode(module);
         try { localStorage.setItem(LS_KEY_MODE, module); } catch { /* ignore */ }
     }, []);
@@ -175,6 +185,11 @@ const AppRouterInner: React.FC = () => {
                         {currentMode === 'pfdSvgAudit' && (
                             <ModuleErrorBoundary moduleName="PFD SVG Audit" onNavigateHome={handleBackToLanding}>
                                 <PfdSvgAudit />
+                            </ModuleErrorBoundary>
+                        )}
+                        {currentMode === 'pfdDebug' && (
+                            <ModuleErrorBoundary moduleName="PFD Debug" onNavigateHome={handleBackToLanding}>
+                                <PfdDebugRoute />
                             </ModuleErrorBoundary>
                         )}
                         {currentMode === 'tiempos' && (
