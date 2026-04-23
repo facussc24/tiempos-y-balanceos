@@ -73,7 +73,7 @@ function deriveCriticalType(step: PfdStep): { critical: boolean; criticalType: s
 // Convert a single PfdStep → FlowNodeData
 // ────────────────────────────────────────────────────────────────────────────
 
-function convertStep(step: PfdStep): FlowNodeData {
+function convertStep(step: PfdStep, allSteps: PfdStep[] = []): FlowNodeData {
   const nodeType = mapStepType(step.stepType);
   const { critical, criticalType } = deriveCriticalType(step);
   const stepId = extractStepId(step.stepNumber);
@@ -116,10 +116,14 @@ function convertStep(step: PfdStep): FlowNodeData {
       const returnId = extractStepId(step.reworkReturnStep);
       // Patron Google: stepId del retrabajo = returnId + 1 (ej OP 80 -> 81, OP 130 -> 131).
       const retrabajoId = `${parseInt(returnId, 10) + 1}`;
-      // labelCondition del primer rombo sigue patron Google: "¿[TAREA] OK?"
-      // ej: "¿ADHESIVADO OK?", "¿PRODUCTO OK?"
-      const parentLabel = (step.description || '¿PRODUCTO OK?').replace(/^¿|\?$/g, '').trim();
-      const retrabajoDesc = `RETRABAJO DE ${parentLabel}`;
+      // El "nombre" del retrabajo se saca de la OP a la que vuelve (reworkReturnStep),
+      // NO de la descripcion del rombo decision (que es "PRODUCTO CONFORME?").
+      // Fak 2026-04-23: si volvemos a OP 70 ADHESIVADO, el retrabajo es
+      // "RETRABAJO DE ADHESIVADO" (no "RETRABAJO DE PRODUCTO CONFORME").
+      // Buscamos la descripcion real de la OP destino en el doc.
+      const targetStep = allSteps.find(s => extractStepId(s.stepNumber) === returnId);
+      const targetLabel = (targetStep?.description || `OP ${returnId}`).trim();
+      const retrabajoDesc = `RETRABAJO DE ${targetLabel}`;
       node.branchSide = {
         type: 'condition',
         labelNode: 'NO',
@@ -284,16 +288,17 @@ export function convertPfdToFlowData(doc: PfdDocument, logoBase64 = ''): FlowDoc
   const groups = groupStepsByFlow(doc.steps);
   const flowData: FlowNodeData[] = [];
 
+  const allSteps = doc.steps;
   for (const group of groups) {
     if (group.type === 'main') {
       // Main flow: each step becomes a FlowNodeData directly
       for (const step of group.steps) {
-        flowData.push(convertStep(step));
+        flowData.push(convertStep(step, allSteps));
       }
     } else if (group.type === 'parallel' && group.branches) {
       // Parallel branches: create a virtual node with branches[][] property
       const branchArrays: FlowNodeData[][] = group.branches.map(branch =>
-        branch.steps.map(step => convertStep(step)),
+        branch.steps.map(step => convertStep(step, allSteps)),
       );
 
       // Virtual split node — no stepId, no description. The renderer

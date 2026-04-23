@@ -69,9 +69,12 @@ function renderBranchSide(branch: FlowNodeData['branchSide']) {
   // Fak 2026-04-23: brazo y sub-flow reducidos para evitar overflow en A3 landscape.
   const armWidth = hasSequence ? 280 : 200;
 
+  // hasSequence requiere mas separacion del main flow para que el arco rework
+  // del sub-flow anidado no pise las ops del main (Fak 2026-04-23).
+  const marginLeftClass = hasSequence ? 'ml-20' : 'ml-10';
   return (
     <div
-      className="absolute left-[50%] ml-10 top-1/2 h-[1.5px] bg-[#93C5FD] -translate-y-1/2 -z-10 flex items-center"
+      className={`absolute left-[50%] ${marginLeftClass} top-1/2 h-[2px] bg-[#93C5FD] -translate-y-1/2 -z-10 flex items-center`}
       style={{ width: armWidth }}
     >
       {/* Flechita triangular al final del brazo (solo en caso simple, no sequence) */}
@@ -124,9 +127,9 @@ function renderBranchSide(branch: FlowNodeData['branchSide']) {
  */
 function renderReworkArc(rework: { targetId: string }) {
   return (
-    <div className="absolute right-1/2 mr-10 top-1/2 -translate-y-1/2 w-[90px] h-[100px] -mt-[50px] -z-10 border-l-[1.5px] border-b-[1.5px] border-[#93C5FD] rounded-bl-xl">
-      <div className="absolute top-0 left-[-4.5px] w-2 h-2 border-t-[1.5px] border-r-[1.5px] border-[#60A5FA] transform -rotate-45" />
-      <div className="absolute -top-3 left-2 text-[8.5px] font-bold text-[#60A5FA] whitespace-nowrap bg-white/90 px-1 border border-[#93C5FD] rounded-md shadow-sm z-10">
+    <div className="absolute right-1/2 mr-8 top-1/2 -translate-y-1/2 w-[70px] h-[140px] -mt-[70px] -z-10 border-l-[2px] border-b-[2px] border-[#93C5FD] rounded-bl-xl">
+      <div className="absolute top-0 left-[-5px] w-2 h-2 border-t-[2px] border-r-[2px] border-[#60A5FA] transform -rotate-45" />
+      <div className="absolute -top-3 left-1 text-[8.5px] font-bold text-[#60A5FA] whitespace-nowrap bg-white/90 px-1 border border-[#93C5FD] rounded-md shadow-sm z-10">
         RETRABAJO (A OP. {rework.targetId})
       </div>
     </div>
