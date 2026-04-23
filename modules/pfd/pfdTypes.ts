@@ -27,7 +27,7 @@ export type SpecialCharClass = 'CC' | 'SC' | 'none';
 export type TransportMode = 'cross-sector' | 'all' | 'none';
 
 /** C3-N1: Reject disposition per AIAG (rework/scrap/sort) */
-export type RejectDisposition = 'none' | 'rework' | 'scrap' | 'sort';
+export type RejectDisposition = 'none' | 'rework' | 'scrap' | 'sort' | 'rework_or_scrap';
 
 /** Document header / metadata */
 export interface PfdHeader {

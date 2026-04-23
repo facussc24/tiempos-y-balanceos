@@ -97,7 +97,34 @@ function convertStep(step: PfdStep): FlowNodeData {
     // Fak 2026-04-20: SCRAP se mantiene en OP manufactura (terminologia planta).
     // Solo cambia en OP 10 Recepcion cuando la pregunta es "MATERIAL CONFORME?"
     // (defecto de MP = responsabilidad proveedor → RECLAMO PROVEEDOR).
-    if (step.rejectDisposition === 'scrap' || step.rejectDisposition === 'sort') {
+
+    // Caso complejo: retrabajo condicional con scrap alternativo.
+    // NO → segundo rombo "¿SE PUEDE RETRABAJAR?"
+    //         SI → retrabajo (flecha curva retorno a reworkReturnStep)
+    //         NO → SCRAP terminal
+    // Fak 2026-04-23: patron estandar automotriz tras inspeccion.
+    if (step.rejectDisposition === 'rework_or_scrap' && step.reworkReturnStep) {
+      const returnId = extractStepId(step.reworkReturnStep);
+      node.branchSide = {
+        type: 'condition',
+        labelNode: 'NO',
+        sequence: [
+          {
+            type: 'condition',
+            labelCondition: '¿SE PUEDE RETRABAJAR?',
+            labelDown: 'SI',
+            rework: { targetId: returnId },
+            branchSide: {
+              type: 'terminal',
+              text: 'SCRAP',
+              labelNode: 'NO',
+              description: step.scrapDescription || undefined,
+            },
+          },
+        ],
+      };
+      node.labelDown = 'SI';
+    } else if (step.rejectDisposition === 'scrap' || step.rejectDisposition === 'sort') {
       const isMaterialCheck = /material\s+conforme/i.test(step.description || '');
       const terminalText = step.rejectDisposition === 'sort'
         ? 'SEGREGAR'
@@ -112,10 +139,7 @@ function convertStep(step: PfdStep): FlowNodeData {
       };
       node.branchSide = branchSide;
       node.labelDown = 'SI';
-    }
-
-    // Rework disposition on decision
-    if (step.rejectDisposition === 'rework' && step.reworkReturnStep) {
+    } else if (step.rejectDisposition === 'rework' && step.reworkReturnStep) {
       node.rework = { targetId: extractStepId(step.reworkReturnStep) };
       node.labelDown = 'SI';
     }

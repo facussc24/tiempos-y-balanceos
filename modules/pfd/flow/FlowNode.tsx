@@ -44,9 +44,48 @@ function renderShape(node: FlowNodeData): React.ReactElement {
   }
 }
 
-/** Render the lateral branch (e.g., NO path -> SCRAP) */
+/** Render a nested sequence node inside a branchSide (used for rework_or_scrap
+ * patterns where the NO branch is itself a mini-flow with another decision).
+ * Keeps layout minimal: diamond with labelCondition to the left, labelDown below,
+ * and its own branchSide lateral to the right. */
+function renderNestedSequenceNode(node: FlowNodeData) {
+  const isCondition = node.type === 'condition';
+  return (
+    <div className="relative flex flex-col items-center mb-6">
+      <div className="relative flex items-center">
+        {/* Condition label to the LEFT of the diamond */}
+        {isCondition && node.labelCondition && (
+          <span className="absolute right-full mr-2 text-[9px] italic text-[#1E40AF] whitespace-nowrap max-w-[160px]">
+            {node.labelCondition}
+          </span>
+        )}
+        {renderShape(node)}
+        {/* SI label below for conditions */}
+        {isCondition && node.labelDown && (
+          <span className="absolute top-full mt-0.5 text-[9px] font-bold text-[#1E40AF]">
+            {node.labelDown}
+          </span>
+        )}
+        {/* Rework marker (text label — flecha curva SVG pendiente) */}
+        {node.rework && (
+          <span className="absolute -left-2 -bottom-5 text-[9px] font-semibold text-[#1E40AF] whitespace-nowrap">
+            RETRABAJO → OP {node.rework.targetId}
+          </span>
+        )}
+        {/* Nested branchSide (terminal SCRAP) */}
+        {node.branchSide && renderBranchSide(node.branchSide)}
+      </div>
+    </div>
+  );
+}
+
+/** Render the lateral branch (e.g., NO path -> SCRAP or nested rework_or_scrap flow) */
 function renderBranchSide(branch: FlowNodeData['branchSide']) {
   if (!branch) return null;
+
+  // Extended horizontal arm for nested sequences (Fak 2026-04-23 rework_or_scrap pattern).
+  const hasSequence = Array.isArray(branch.sequence) && branch.sequence.length > 0;
+  const armWidth = hasSequence ? 120 : 60;
 
   return (
     <div className="flex items-center absolute left-full top-1/2 -translate-y-1/2">
@@ -58,24 +97,34 @@ function renderBranchSide(branch: FlowNodeData['branchSide']) {
             {branch.labelNode}
           </span>
         )}
-        <div className="w-[60px] h-[1.5px] bg-[#60A5FA]" />
+        <div style={{ width: armWidth }} className="h-[1.5px] bg-[#60A5FA]" />
       </div>
 
-      {/* Branch target shape */}
-      <div className="flex flex-col items-center gap-0.5">
-        {branch.type === 'terminal' ? (
-          <ShapeTerminalSide text={branch.text} />
-        ) : branch.type === 'operation' ? (
-          <ShapeOperation id={branch.stepId} />
-        ) : (
-          <ShapeTerminalSide text={branch.text || branch.description} />
-        )}
-        {branch.description && branch.type !== 'terminal' && (
-          <span className="text-[8px] text-gray-500 max-w-[100px] text-center">
-            {branch.description}
-          </span>
-        )}
-      </div>
+      {/* Branch target: either a simple shape OR a nested mini-flow */}
+      {hasSequence ? (
+        <div className="flex flex-col items-center gap-0">
+          {branch.sequence!.map((subNode, i) => (
+            <React.Fragment key={i}>
+              {renderNestedSequenceNode(subNode)}
+            </React.Fragment>
+          ))}
+        </div>
+      ) : (
+        <div className="flex flex-col items-center gap-0.5">
+          {branch.type === 'terminal' ? (
+            <ShapeTerminalSide text={branch.text} />
+          ) : branch.type === 'operation' ? (
+            <ShapeOperation id={branch.stepId} />
+          ) : (
+            <ShapeTerminalSide text={branch.text || branch.description} />
+          )}
+          {branch.description && branch.type !== 'terminal' && (
+            <span className="text-[8px] text-gray-500 max-w-[100px] text-center">
+              {branch.description}
+            </span>
+          )}
+        </div>
+      )}
     </div>
   );
 }

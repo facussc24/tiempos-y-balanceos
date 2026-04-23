@@ -52,6 +52,7 @@ const DISPOSITION_LABELS: Record<Exclude<RejectDisposition, 'none'>, { text: str
     rework: { text: 'RETRABAJO', bg: 'bg-red-100', border: 'border-red-300', textColor: 'text-red-700' },
     scrap: { text: 'DESCARTE', bg: 'bg-orange-100', border: 'border-orange-300', textColor: 'text-orange-700' },
     sort: { text: 'SELECCIÓN', bg: 'bg-yellow-100', border: 'border-yellow-400', textColor: 'text-yellow-700' },
+    rework_or_scrap: { text: 'RETRABAJO / DESCARTE', bg: 'bg-red-100', border: 'border-red-300', textColor: 'text-red-700' },
 };
 
 /** Row background for disposition */

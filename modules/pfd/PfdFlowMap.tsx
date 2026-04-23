@@ -75,11 +75,13 @@ const DISP_ICONS: Record<Exclude<RejectDisposition, 'none'>, typeof XOctagon> = 
     rework: CornerDownLeft,
     scrap: XOctagon,
     sort: Filter,
+    rework_or_scrap: CornerDownLeft,
 };
 const DISP_LABELS: Record<Exclude<RejectDisposition, 'none'>, string> = {
     rework: 'Retrabajo',
     scrap: 'Descarte',
     sort: 'Selección',
+    rework_or_scrap: 'Retrabajo / Descarte',
 };
 
 /** Single step card in the flow map */
