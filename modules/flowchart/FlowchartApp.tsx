@@ -5,6 +5,7 @@ import { flowchartHeaderData as defaultHeader, flowchartProductCodes as defaultP
 import type { AmfeDocument } from '../amfe/amfeTypes';
 import type { FlowchartDocument } from './flowchartTypes';
 import barackLogo from '../../src/assets/barack_logo.png';
+import { toast } from '../../components/ui/Toast';
 
 // ==========================================
 // 1. COMPONENTES DE SIMBOLOGÍA 
@@ -304,12 +305,12 @@ export default function FlowchartApp({ amfeData, flowchartData, onSaveFlowchart,
       try {
         const dataUrl = await toPng(element, { backgroundColor: '#F3F4F6', pixelRatio: 2 });
         const link = document.createElement('a');
-        link.download = `Flujograma_${(projectPath || amfeData?.header.subject || 'Flujo').replace(/[\/\s]+/g, '_')}.png`;
+        link.download = `Flujograma_${(projectPath || amfeData?.header.subject || 'Flujo').replace(/[/\s]+/g, '_')}.png`;
         link.href = dataUrl;
         link.click();
       } catch (error) {
         console.error('Error exporting PNG:', error);
-        alert('Hubo un error al generar la imagen PNG.');
+        toast.error('No se pudo generar el PNG', error instanceof Error ? error.message : 'Error desconocido al exportar la imagen.');
       } finally {
         setIsExporting(false);
       }
@@ -327,12 +328,12 @@ export default function FlowchartApp({ amfeData, flowchartData, onSaveFlowchart,
       try {
         const dataUrl = await toSvg(element, { backgroundColor: '#F3F4F6' });
         const link = document.createElement('a');
-        link.download = `Flujograma_${(projectPath || amfeData?.header.subject || 'Flujo').replace(/[\/\s]+/g, '_')}.svg`;
+        link.download = `Flujograma_${(projectPath || amfeData?.header.subject || 'Flujo').replace(/[/\s]+/g, '_')}.svg`;
         link.href = dataUrl;
         link.click();
       } catch (error) {
         console.error('Error exporting SVG:', error);
-        alert('Hubo un error al generar el archivo SVG.');
+        toast.error('No se pudo generar el SVG', error instanceof Error ? error.message : 'Error desconocido al exportar el archivo.');
       } finally {
         setIsExporting(false);
       }
@@ -366,7 +367,7 @@ export default function FlowchartApp({ amfeData, flowchartData, onSaveFlowchart,
         onSaveFlowchart?.(docToSave);
         setShowJsonEditor(false);
         setJsonError(null);
-     } catch(err) {
+     } catch (_err) {
         setJsonError('Formato JSON inválido. Revisa la sintaxis.');
      }
   };
@@ -590,7 +591,7 @@ export default function FlowchartApp({ amfeData, flowchartData, onSaveFlowchart,
                </div>
                
                <div className="p-3 bg-blue-50 border-b border-blue-100 text-[#1e40af] text-xs">
-                  Pega aquí el código que te arme Claude y luego pulsa "Guardar". Modificará automáticamente toda la lógica UI visual y la anexará al proyecto <b>{projectPath || amfeData?.header.subject || 'actual'}</b>.
+                  Pega aquí el código que te arme Claude y luego pulsa &ldquo;Guardar&rdquo;. Modificará automáticamente toda la lógica UI visual y la anexará al proyecto <b>{projectPath || amfeData?.header.subject || 'actual'}</b>.
                </div>
                
                <div className="flex-1 p-0 relative">

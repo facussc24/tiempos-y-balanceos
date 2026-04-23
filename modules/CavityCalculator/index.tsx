@@ -11,6 +11,7 @@ import { calculateTaktTime } from '../../utils';
 import { Calculator, X, HelpCircle, ArrowRight, BookOpen, MousePointer2, FileSpreadsheet } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import type { Gate3Project } from '../../core/gate3/types';
+import { toast } from '../../components/ui/Toast';
 
 interface Props {
     task: Task;
@@ -28,7 +29,7 @@ export const CavityCalculator: React.FC<Props> = ({
     task, projectTasks = [], shifts = [], dailyDemand, activeShifts = 1, oee = 0.85, setupLossPercent = 0, onClose, onApply
 }) => {
     // Local editable setup loss (initialized from prop)
-    const [localSetupLoss, setLocalSetupLoss] = useState(setupLossPercent);
+    const [localSetupLoss] = useState(setupLossPercent);
 
     // FIX Bug #3: Calculate real available seconds from shift configuration
     const availableSeconds = useMemo(() => {
@@ -87,8 +88,8 @@ export const CavityCalculator: React.FC<Props> = ({
             const { exportGate3Excel } = await import('../gate3/gate3ExcelExport');
             await exportGate3Excel(project);
         } catch (err) {
-            // eslint-disable-next-line no-alert
-            window.alert('No se pudo exportar el Excel VW: ' + (err instanceof Error ? err.message : String(err)));
+            const msg = err instanceof Error ? err.message : String(err);
+            toast.error('No se pudo exportar el Excel VW', msg);
             console.error('Error exporting Gate 3 from Cavity Calculator:', err);
         } finally {
             setIsExportingGate3(false);
