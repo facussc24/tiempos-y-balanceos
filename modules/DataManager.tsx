@@ -321,7 +321,7 @@ const DataManager: React.FC<DataManagerProps> = ({ onBackToLanding }) => {
             // Refresh status
             const status = await getSyncFolderStatus();
             setSyncStatus(status);
-        } catch (err) {
+        } catch (_err) {
             showToast('Error en la sincronizacion', 'error');
         } finally {
             setIsSyncing(false);
@@ -417,8 +417,8 @@ const DataManager: React.FC<DataManagerProps> = ({ onBackToLanding }) => {
                                     className="bg-slate-700 text-white text-sm px-2 py-1 rounded border border-slate-600 w-32"
                                     autoFocus
                                 />
-                                <button onClick={handleSaveDeviceName} className="text-emerald-400 text-xs hover:underline">OK</button>
-                                <button onClick={() => setEditingName(false)} className="text-slate-400 text-xs hover:underline">X</button>
+                                <button onClick={handleSaveDeviceName} className="text-emerald-400 text-xs hover:underline" aria-label="Guardar nombre del dispositivo">Guardar</button>
+                                <button onClick={() => setEditingName(false)} className="text-slate-400 text-xs hover:underline" aria-label="Cancelar edicion del nombre">Cancelar</button>
                             </div>
                         ) : (
                             <button onClick={() => setEditingName(true)} className="text-slate-300 hover:text-white transition-colors" title="Cambiar nombre del dispositivo">
