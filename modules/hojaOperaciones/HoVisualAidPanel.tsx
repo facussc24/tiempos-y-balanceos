@@ -232,8 +232,8 @@ const HoVisualAidPanel: React.FC<Props> = ({ aids, onAdd, onRemove, onUpdateCapt
                                 className="w-full h-32 object-contain bg-gray-50"
                             />
                         ) : (
-                            <div className="w-full h-32 flex items-center justify-center bg-gray-50 text-gray-300">
-                                <ImageIcon size={32} />
+                            <div className="w-full h-32 flex items-center justify-center bg-gray-50 text-gray-300" aria-label="Sin imagen cargada">
+                                <ImageIcon size={32} aria-hidden="true" />
                             </div>
                         )}
                         <div className="p-1.5">
