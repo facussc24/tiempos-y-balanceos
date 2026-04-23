@@ -104,7 +104,20 @@ function convertStep(step: PfdStep): FlowNodeData {
     //         NO → SCRAP terminal
     // Fak 2026-04-23: patron estandar automotriz tras inspeccion.
     if (step.rejectDisposition === 'rework_or_scrap' && step.reworkReturnStep) {
+      // Patron canonico validado (Fak 2026-04-23):
+      //   PRODUCTO CONFORME?  ->  SI abajo sigue flujo
+      //                           NO lateral -> mini-flow anidado:
+      //     ¿SE PUEDE RETRABAJAR?
+      //         SI abajo   -> OP retrabajo -> traslado a OP anterior (rework target)
+      //         NO lateral -> SCRAP terminal
+      //
+      // Array sequence de 3 items obligatorio para que el renderer NO colapse
+      // los rombos superpuestos (ver CLAUDE.md + project_pfd_rework_pattern.md).
       const returnId = extractStepId(step.reworkReturnStep);
+      const retrabajoId = step.stepNumber
+        ? `${extractStepId(step.stepNumber)}-R`
+        : 'R';
+      const parentLabel = (step.description || 'PRODUCTO').trim();
       node.branchSide = {
         type: 'condition',
         labelNode: 'NO',
@@ -113,13 +126,22 @@ function convertStep(step: PfdStep): FlowNodeData {
             type: 'condition',
             labelCondition: '¿SE PUEDE RETRABAJAR?',
             labelDown: 'SI',
-            rework: { targetId: returnId },
             branchSide: {
               type: 'terminal',
               text: 'SCRAP',
               labelNode: 'NO',
               description: step.scrapDescription || undefined,
             },
+          },
+          {
+            type: 'op-ins',
+            stepId: retrabajoId,
+            description: `RETRABAJO DE ${parentLabel}`,
+          },
+          {
+            type: 'transfer',
+            description: `TRASLADO A OP ${returnId}`,
+            rework: { targetId: returnId },
           },
         ],
       };

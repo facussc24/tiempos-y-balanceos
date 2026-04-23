@@ -15,6 +15,7 @@ import {
   ShapeCondition,
   ShapeTerminalSide,
 } from './Shapes';
+import { FlowSequence } from './FlowSequence';
 
 export interface FlowNodeProps {
   node: FlowNodeData;
@@ -44,87 +45,71 @@ function renderShape(node: FlowNodeData): React.ReactElement {
   }
 }
 
-/** Render a nested sequence node inside a branchSide (used for rework_or_scrap
- * patterns where the NO branch is itself a mini-flow with another decision).
- * Keeps layout minimal: diamond with labelCondition to the left, labelDown below,
- * and its own branchSide lateral to the right. */
-function renderNestedSequenceNode(node: FlowNodeData) {
-  const isCondition = node.type === 'condition';
-  return (
-    <div className="relative flex flex-col items-center mb-6">
-      <div className="relative flex items-center">
-        {/* Condition label to the LEFT of the diamond */}
-        {isCondition && node.labelCondition && (
-          <span className="absolute right-full mr-2 text-[9px] italic text-[#1E40AF] whitespace-nowrap max-w-[160px]">
-            {node.labelCondition}
-          </span>
-        )}
-        {renderShape(node)}
-        {/* SI label below for conditions */}
-        {isCondition && node.labelDown && (
-          <span className="absolute top-full mt-0.5 text-[9px] font-bold text-[#1E40AF]">
-            {node.labelDown}
-          </span>
-        )}
-        {/* Rework marker (text label — flecha curva SVG pendiente) */}
-        {node.rework && (
-          <span className="absolute -left-2 -bottom-5 text-[9px] font-semibold text-[#1E40AF] whitespace-nowrap">
-            RETRABAJO → OP {node.rework.targetId}
-          </span>
-        )}
-        {/* Nested branchSide (terminal SCRAP) */}
-        {node.branchSide && renderBranchSide(node.branchSide)}
-      </div>
-    </div>
-  );
-}
-
-/** Render the lateral branch (e.g., NO path -> SCRAP or nested rework_or_scrap flow) */
+/** Render the lateral branch (e.g., NO path -> SCRAP or nested rework_or_scrap flow).
+ *
+ * Fak 2026-04-23 (rework_or_scrap pattern): cuando branch.sequence tiene mas de
+ * un item, renderizamos una mini-FlowSequence anidada a la derecha (en vez de
+ * un solo shape terminal). Para evitar colapso del layout cuando la secuencia
+ * es alta:
+ *   - anchor del absolute: top-0 (no top-1/2 -translate-y-1/2 que centraria
+ *     una columna alta y la sacaria fuera del viewport del parent)
+ *   - el brazo horizontal sale aligneado al PRIMER nodo del sub-flow
+ *     (alineacion `items-start` con padding-top igual a la mitad del shape)
+ *   - usa <FlowSequence> recursivo para obtener spine vertical automatico
+ *     entre los sub-nodos y el manejo correcto de shapes/labels de cada tipo
+ */
 function renderBranchSide(branch: FlowNodeData['branchSide']) {
   if (!branch) return null;
 
-  // Extended horizontal arm for nested sequences (Fak 2026-04-23 rework_or_scrap pattern).
   const hasSequence = Array.isArray(branch.sequence) && branch.sequence.length > 0;
-  const armWidth = hasSequence ? 120 : 60;
 
+  if (hasSequence) {
+    // Mini-FlowSequence anidada (patron rework_or_scrap).
+    const armWidth = 80;
+    return (
+      <div className="absolute left-full top-0 flex items-start">
+        {/* Brazo horizontal nace a la altura del primer rombo (~24px = mitad del shape) */}
+        <div className="relative flex items-center" style={{ paddingTop: 20 }}>
+          {branch.labelNode && (
+            <span className="absolute top-0 left-1 text-[9px] font-bold text-[#1E40AF]">
+              {branch.labelNode}
+            </span>
+          )}
+          <div style={{ width: armWidth }} className="h-[1.5px] bg-[#60A5FA]" />
+        </div>
+        {/* Sub-flow vertical recursivo — cada nodo dibuja su propio shape + labels + branchSide */}
+        <div className="min-w-[240px]">
+          <FlowSequence sequence={branch.sequence!} />
+        </div>
+      </div>
+    );
+  }
+
+  // Camino simple: terminal lateral (SCRAP, RECLAMO PROVEEDOR, SEGREGAR).
   return (
     <div className="flex items-center absolute left-full top-1/2 -translate-y-1/2">
-      {/* Horizontal connector line */}
       <div className="relative flex items-center">
-        {/* "NO" label above the line */}
         {branch.labelNode && (
           <span className="absolute -top-4 left-1 text-[9px] font-bold text-[#1E40AF]">
             {branch.labelNode}
           </span>
         )}
-        <div style={{ width: armWidth }} className="h-[1.5px] bg-[#60A5FA]" />
+        <div className="w-[60px] h-[1.5px] bg-[#60A5FA]" />
       </div>
-
-      {/* Branch target: either a simple shape OR a nested mini-flow */}
-      {hasSequence ? (
-        <div className="flex flex-col items-center gap-0">
-          {branch.sequence!.map((subNode, i) => (
-            <React.Fragment key={i}>
-              {renderNestedSequenceNode(subNode)}
-            </React.Fragment>
-          ))}
-        </div>
-      ) : (
-        <div className="flex flex-col items-center gap-0.5">
-          {branch.type === 'terminal' ? (
-            <ShapeTerminalSide text={branch.text} />
-          ) : branch.type === 'operation' ? (
-            <ShapeOperation id={branch.stepId} />
-          ) : (
-            <ShapeTerminalSide text={branch.text || branch.description} />
-          )}
-          {branch.description && branch.type !== 'terminal' && (
-            <span className="text-[8px] text-gray-500 max-w-[100px] text-center">
-              {branch.description}
-            </span>
-          )}
-        </div>
-      )}
+      <div className="flex flex-col items-center gap-0.5">
+        {branch.type === 'terminal' ? (
+          <ShapeTerminalSide text={branch.text} />
+        ) : branch.type === 'operation' ? (
+          <ShapeOperation id={branch.stepId} />
+        ) : (
+          <ShapeTerminalSide text={branch.text || branch.description} />
+        )}
+        {branch.description && branch.type !== 'terminal' && (
+          <span className="text-[8px] text-gray-500 max-w-[100px] text-center">
+            {branch.description}
+          </span>
+        )}
+      </div>
     </div>
   );
 }
@@ -181,7 +166,7 @@ export const FlowNode: React.FC<FlowNodeProps> = ({ node, isLast, hasBranches })
           {node.branchSide && renderBranchSide(node.branchSide)}
         </div>
 
-        {/* Right column: Description + equipment */}
+        {/* Right column: Description + equipment + rework label */}
         <div className="flex-1 pl-6 flex flex-col justify-center min-w-0 relative z-10">
           {node.description && !isCondition && (
             <span className="text-[11px] font-bold text-gray-900 uppercase leading-snug">
@@ -191,6 +176,12 @@ export const FlowNode: React.FC<FlowNodeProps> = ({ node, isLast, hasBranches })
           {(node.equipment || node.department) && (
             <span className="text-[9px] text-gray-500 leading-snug mt-px">
               {[node.equipment, node.department].filter(Boolean).join(' — ')}
+            </span>
+          )}
+          {/* Rework marker (text — flecha curva SVG pendiente) */}
+          {node.rework && !isCondition && (
+            <span className="text-[9px] font-semibold text-[#1E40AF] leading-snug mt-px">
+              RETRABAJO → OP {node.rework.targetId}
             </span>
           )}
         </div>
