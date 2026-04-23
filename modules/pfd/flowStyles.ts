@@ -128,6 +128,7 @@ body { font-family: Inter, Arial, Helvetica, sans-serif; background: white; }
 .w-\\[320px\\] { width: 320px; }
 .w-\\[420px\\] { width: 420px; }
 .w-\\[500px\\] { width: 500px; }
+.w-\\[520px\\] { width: 520px; }
 .w-\\[600px\\] { width: 600px; }
 .w-\\[640px\\] { width: 640px; }
 .w-\\[820px\\] { width: 820px; }

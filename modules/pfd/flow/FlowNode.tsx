@@ -66,10 +66,12 @@ function renderBranchSide(branch: FlowNodeData['branchSide']) {
   if (!branch) return null;
 
   const hasSequence = Array.isArray(branch.sequence) && branch.sequence.length > 0;
-  // Fak 2026-04-23: brazo mas largo para separar el sub-flow del main flow y
-  // evitar colision con las OPs del main (ALINEACION vs RETRABAJO).
-  // Brazo reducido porque ya no centramos el sub-flow (items-start).
-  const armWidth = hasSequence ? 200 : 200;
+  // Fak 2026-04-23:
+  // - Brazo del sub-flow (hasSequence): 200px — separa del main flow.
+  // - Brazo de terminal simple (SCRAP, RECLAMO PROVEEDOR): 80px — corto para
+  //   que el terminal lateral quepa dentro del contenedor padre del sub-flow,
+  //   sin ser cortado por max-w-[1400px] del main o por w-[520px] del sub-flow.
+  const armWidth = hasSequence ? 200 : 80;
 
   // hasSequence requiere separacion adicional del main flow.
   const marginLeftClass = hasSequence ? 'ml-20' : 'ml-10';
@@ -95,7 +97,7 @@ function renderBranchSide(branch: FlowNodeData['branchSide']) {
         }`}
       >
         {hasSequence ? (
-          <div className="relative -mt-5 w-[820px]">
+          <div className="relative -mt-5 w-[520px]">
             <FlowSequence sequence={branch.sequence!} />
           </div>
         ) : (
