@@ -155,6 +155,7 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ currentMode, onSelectModule, on
                                         key={item.mode}
                                         onClick={() => handleItemClick(item.mode)}
                                         title={expanded ? undefined : item.label}
+                                        aria-label={expanded ? undefined : item.label}
                                         className={`w-full flex items-center gap-3 transition-colors duration-200 ${
                                             expanded ? 'px-4 py-2' : 'px-0 py-2 justify-center'
                                         } ${
@@ -164,7 +165,7 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ currentMode, onSelectModule, on
                                         }`}
                                         aria-current={isActive ? 'page' : undefined}
                                     >
-                                        <span className="flex-shrink-0">{item.icon}</span>
+                                        <span className="flex-shrink-0" aria-hidden="true">{item.icon}</span>
                                         {expanded && (
                                             <span
                                                 className="text-sm font-medium truncate opacity-0 animate-sidebar-item-enter"
