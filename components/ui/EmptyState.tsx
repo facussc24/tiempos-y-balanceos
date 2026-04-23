@@ -66,6 +66,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
                     size={isCompact ? 28 : 40}
                     className="text-blue-500/70"
                     strokeWidth={1.5}
+                    aria-hidden="true"
                 />
             </div>
 
@@ -112,9 +113,9 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
                                     }
                                 `}
                             >
-                                {ActionIcon && <ActionIcon size={16} />}
+                                {ActionIcon && <ActionIcon size={16} aria-hidden="true" />}
                                 {action.label}
-                                {isPrimary && <ArrowRight size={14} className="opacity-70" />}
+                                {isPrimary && <ArrowRight size={14} className="opacity-70" aria-hidden="true" />}
                             </button>
                         );
                     })}
@@ -131,6 +132,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
                     <Lightbulb
                         size={isCompact ? 14 : 16}
                         className="text-amber-500 flex-shrink-0 mt-0.5"
+                        aria-hidden="true"
                     />
                     <span className="text-amber-700 text-left">{tip}</span>
                 </div>

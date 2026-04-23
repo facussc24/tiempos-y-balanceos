@@ -157,7 +157,7 @@ export function DiagnosticQA({ isOpen, onClose, directoryPath }: DiagnosticQAPro
                 {/* Header */}
                 <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
                     <div className="flex items-center gap-3">
-                        <div className="bg-purple-100 text-purple-600 p-2 rounded-lg">
+                        <div className="bg-purple-100 text-purple-600 p-2 rounded-lg" aria-hidden="true">
                             <FlaskConical size={20} />
                         </div>
                         <div>
