@@ -83,7 +83,22 @@ Para patrones "¿PRODUCTO OK?" -> NO -> "¿SE PUEDE RETRABAJAR?" -> [SCRAP|RETRA
 }
 ```
 
-## Claves visuales del patron (actualizado 2026-04-23 v2)
+## Claves visuales del patron (actualizado 2026-04-23 v3 - FUNCIONAL VERIFICADO)
+
+### Formula DEFINITIVA (verificada visualmente en navegador real)
+
+```ts
+// FlowNode.tsx renderBranchSide:
+const armWidth = hasSequence ? 200 : 80;  // 80 para terminales simples CRITICO
+const marginLeftClass = hasSequence ? 'ml-20' : 'ml-10';
+// Sub-flow: w-[520px] + items-start (NO items-center -translate-x-1/2)
+```
+
+**Por que estos valores exactos:**
+- Main flow FlowNode con w-[520px]: rombo en x=260. SCRAP con arm 80 + shape 80 = termina en x=260+40+80+80=460. Cabe en 520.
+- Sub-flow 520px mas el brazo padre (ml-20=80 + width 200 = 280) = rombo sub-rombo en x=1280+260=1540 del main. SCRAP termina en x=1540+40+80+80=1740. Fits en max-w-[1400px] del main SOLO con scroll horizontal porque el scroll-container expande.
+
+### Claves historicas (mantenidas)
 
 - `branch.sequence` con >1 items: renderer usa `<FlowSequence>` recursivo anidado en un `w-[640px]` con `-mt-5` y **`items-start`** (NO `items-center -translate-x-1/2` — ese centrado OCULTA el SCRAP terminal lateral del sub-rombo).
 - Brazo horizontal de `200px` cuando hasSequence (brazo corto + sub-flow alineado left permite que el SCRAP quepa dentro de los 640px sin ser cortado).
@@ -143,6 +158,7 @@ URL produccion: `https://facussc24.github.io/tiempos-y-balanceos/?module=pfdDebu
 
 | Fecha | Bug visual | Causa root | Fix aplicado |
 |---|---|---|---|
+| 2026-04-23 v3 FINAL | SCRAP seguia oculto con w-[640px]/w-[820px] | Sub-flow muy ancho empujaba sub-rombo fuera del scroll area. Arm=200px del terminal simple lo alejaba aun mas | w-[520px] sub-flow + armWidth=80 solo para terminales simples. Verificado visualmente OK |
 | 2026-04-23 v1 | SCRAP terminal invisible en rework_or_scrap | Sub-flow `w-[420px]` + `items-center -translate-x-1/2` cortaba el SCRAP que sale lateral del sub-rombo | w-[640px] + items-start + armWidth reducido a 200px |
 | 2026-04-23 v1 | "RETRABAJO DE PRODUCTO CONFORME" en op-ins | Descripcion del retrabajo usaba labelCondition del rombo decision | Ahora usa description de la OP destino (reworkReturnStep → allSteps.find) |
 | 2026-04-23 v1 | OP 70 ADHESIVADO tenia label "RETRABAJO (A OP 70)" arriba | OP 70 tenia `rejectDisposition: rework` + `reworkReturnStep: OP 70` (rework a si misma) | Script `fixIpPadPfdOp70Rework.mjs` — cleared a rejectDisposition='none' |
