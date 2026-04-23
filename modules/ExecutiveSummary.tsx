@@ -12,6 +12,7 @@
 import React, { useMemo, useState } from 'react';
 import { ProjectData, Task } from '../types';
 import { Download, BarChart3, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { toast } from '../components/ui/Toast';
 import { buildGate3FromProjectData } from './gate3/gate3FromBalancing';
 import {
     calculateTaktTime,
@@ -176,8 +177,8 @@ export const ExecutiveSummary: React.FC<Props> = ({ data }) => {
             const project = buildGate3FromProjectData(data);
             await exportGate3Excel(project);
         } catch (err) {
-            // eslint-disable-next-line no-alert
-            window.alert('No se pudo exportar el Excel VW: ' + (err instanceof Error ? err.message : String(err)));
+            const msg = err instanceof Error ? err.message : String(err);
+            toast.error('No se pudo exportar el Excel VW', msg);
             console.error('Error exporting Gate 3 Excel:', err);
         } finally {
             setIsExporting(false);
