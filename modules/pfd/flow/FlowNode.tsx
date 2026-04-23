@@ -95,7 +95,7 @@ function renderBranchSide(branch: FlowNodeData['branchSide']) {
         }`}
       >
         {hasSequence ? (
-          <div className="relative -mt-5 w-[640px]">
+          <div className="relative -mt-5 w-[820px]">
             <FlowSequence sequence={branch.sequence!} />
           </div>
         ) : (
