@@ -114,10 +114,12 @@ function convertStep(step: PfdStep): FlowNodeData {
       // Array sequence de 3 items obligatorio para que el renderer NO colapse
       // los rombos superpuestos (ver CLAUDE.md + project_pfd_rework_pattern.md).
       const returnId = extractStepId(step.reworkReturnStep);
-      const retrabajoId = step.stepNumber
-        ? `${extractStepId(step.stepNumber)}-R`
-        : 'R';
-      const parentLabel = (step.description || 'PRODUCTO').trim();
+      // Patron Google: stepId del retrabajo = returnId + 1 (ej OP 80 -> 81, OP 130 -> 131).
+      const retrabajoId = `${parseInt(returnId, 10) + 1}`;
+      // labelCondition del primer rombo sigue patron Google: "¿[TAREA] OK?"
+      // ej: "¿ADHESIVADO OK?", "¿PRODUCTO OK?"
+      const parentLabel = (step.description || '¿PRODUCTO OK?').replace(/^¿|\?$/g, '').trim();
+      const retrabajoDesc = `RETRABAJO DE ${parentLabel}`;
       node.branchSide = {
         type: 'condition',
         labelNode: 'NO',
@@ -136,7 +138,7 @@ function convertStep(step: PfdStep): FlowNodeData {
           {
             type: 'op-ins',
             stepId: retrabajoId,
-            description: `RETRABAJO DE ${parentLabel}`,
+            description: retrabajoDesc,
           },
           {
             type: 'transfer',

@@ -45,70 +45,88 @@ function renderShape(node: FlowNodeData): React.ReactElement {
   }
 }
 
-/** Render the lateral branch (e.g., NO path -> SCRAP or nested rework_or_scrap flow).
+/** Render the lateral branch (rama NO de una decision).
  *
- * Fak 2026-04-23 (rework_or_scrap pattern): cuando branch.sequence tiene mas de
- * un item, renderizamos una mini-FlowSequence anidada a la derecha (en vez de
- * un solo shape terminal). Para evitar colapso del layout cuando la secuencia
- * es alta:
- *   - anchor del absolute: top-0 (no top-1/2 -translate-y-1/2 que centraria
- *     una columna alta y la sacaria fuera del viewport del parent)
- *   - el brazo horizontal sale aligneado al PRIMER nodo del sub-flow
- *     (alineacion `items-start` con padding-top igual a la mitad del shape)
- *   - usa <FlowSequence> recursivo para obtener spine vertical automatico
- *     entre los sub-nodos y el manejo correcto de shapes/labels de cada tipo
+ * Patron canonico portado del generator de Google (2026-04-23):
+ * https://.../industrial-flowchart-generator src/App.tsx líneas 137-170.
+ *
+ * 2 modos:
+ *   (a) Simple: branchSide.type terminal/operation/connector/inspection ->
+ *       dibuja 1 shape al final del brazo horizontal (320px).
+ *   (b) Sequence (rework_or_scrap): branchSide.sequence tiene array de FlowNodeData
+ *       -> brazo horizontal extendido (500px) + sub-FlowSequence anidado
+ *       recursivamente, posicionado top-0 items-center -translate-x-1/2
+ *       con -mt-5 compensando el inicio del primer nodo.
+ *
+ * La linea horizontal nace desde el centro del rombo (left-[50%] ml-10) y
+ * se extiende hacia afuera. Flechita triangular al final. Label "NO" sobre
+ * la linea con bg-white para no superponerse con ella.
  */
 function renderBranchSide(branch: FlowNodeData['branchSide']) {
   if (!branch) return null;
 
   const hasSequence = Array.isArray(branch.sequence) && branch.sequence.length > 0;
+  const armWidth = hasSequence ? 500 : 320;
 
-  if (hasSequence) {
-    // Mini-FlowSequence anidada (patron rework_or_scrap).
-    const armWidth = 80;
-    return (
-      <div className="absolute left-full top-0 flex items-start">
-        {/* Brazo horizontal nace a la altura del primer rombo (~24px = mitad del shape) */}
-        <div className="relative flex items-center" style={{ paddingTop: 20 }}>
-          {branch.labelNode && (
-            <span className="absolute top-0 left-1 text-[9px] font-bold text-[#1E40AF]">
-              {branch.labelNode}
-            </span>
-          )}
-          <div style={{ width: armWidth }} className="h-[1.5px] bg-[#60A5FA]" />
-        </div>
-        {/* Sub-flow vertical recursivo — cada nodo dibuja su propio shape + labels + branchSide */}
-        <div className="min-w-[240px]">
-          <FlowSequence sequence={branch.sequence!} />
-        </div>
-      </div>
-    );
-  }
-
-  // Camino simple: terminal lateral (SCRAP, RECLAMO PROVEEDOR, SEGREGAR).
   return (
-    <div className="flex items-center absolute left-full top-1/2 -translate-y-1/2">
-      <div className="relative flex items-center">
-        {branch.labelNode && (
-          <span className="absolute -top-4 left-1 text-[9px] font-bold text-[#1E40AF]">
-            {branch.labelNode}
-          </span>
-        )}
-        <div className="w-[60px] h-[1.5px] bg-[#60A5FA]" />
-      </div>
-      <div className="flex flex-col items-center gap-0.5">
-        {branch.type === 'terminal' ? (
-          <ShapeTerminalSide text={branch.text} />
-        ) : branch.type === 'operation' ? (
-          <ShapeOperation id={branch.stepId} />
+    <div
+      className="absolute left-[50%] ml-10 top-1/2 h-[1.5px] bg-[#93C5FD] -translate-y-1/2 -z-10 flex items-center"
+      style={{ width: armWidth }}
+    >
+      {/* Flechita triangular al final del brazo (solo en caso simple, no sequence) */}
+      {!hasSequence && (
+        <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1.5 h-1.5 border-t-[1.5px] border-r-[1.5px] border-[#60A5FA] transform rotate-45 translate-x-[1px]" />
+      )}
+
+      {/* Destino de la rama lateral */}
+      <div
+        className={`absolute left-full flex flex-col ${
+          hasSequence
+            ? 'top-0 items-center -translate-x-1/2'
+            : 'top-1/2 -translate-y-1/2 items-start ml-2'
+        }`}
+      >
+        {hasSequence ? (
+          <div className="relative -mt-5 w-[600px]">
+            <FlowSequence sequence={branch.sequence!} />
+          </div>
         ) : (
-          <ShapeTerminalSide text={branch.text || branch.description} />
+          <>
+            {branch.type === 'terminal' && <ShapeTerminalSide text={branch.text} />}
+            {branch.type === 'operation' && <ShapeOperation id={branch.stepId} />}
+            {branch.type === 'inspection' && <ShapeInspection id={branch.stepId} />}
+            {branch.type !== 'terminal' && branch.type !== 'operation' && branch.type !== 'inspection' && (
+              <ShapeTerminalSide text={branch.text || branch.description} />
+            )}
+            {branch.description && (
+              <div className="absolute top-full mt-2 w-32 text-left text-[8px] font-bold text-[#4b5563] uppercase leading-snug bg-white/90 p-1 rounded z-10">
+                {branch.description}
+              </div>
+            )}
+          </>
         )}
-        {branch.description && branch.type !== 'terminal' && (
-          <span className="text-[8px] text-gray-500 max-w-[100px] text-center">
-            {branch.description}
-          </span>
-        )}
+      </div>
+
+      {/* Etiqueta "NO" sobre la linea */}
+      {branch.labelNode && (
+        <span className="absolute left-6 -top-3.5 text-[9px] font-bold text-[#60A5FA] bg-white px-1 rounded">
+          {branch.labelNode}
+        </span>
+      )}
+    </div>
+  );
+}
+
+/** Render rework arc: arco CSS (sin SVG) que va del lado izquierdo del nodo
+ * hacia arriba, simulando flecha curva de retorno a OP anterior.
+ * Copiado del generator Google (App.tsx:84-91).
+ */
+function renderReworkArc(rework: { targetId: string }) {
+  return (
+    <div className="absolute right-1/2 mr-10 top-1/2 -translate-y-1/2 w-[90px] h-[100px] -mt-[50px] -z-10 border-l-[1.5px] border-b-[1.5px] border-[#93C5FD] rounded-bl-xl">
+      <div className="absolute top-0 left-[-4.5px] w-2 h-2 border-t-[1.5px] border-r-[1.5px] border-[#60A5FA] transform -rotate-45" />
+      <div className="absolute -top-3 left-2 text-[8.5px] font-bold text-[#60A5FA] whitespace-nowrap bg-white/90 px-1 border border-[#93C5FD] rounded-md shadow-sm z-10">
+        RETRABAJO (A OP. {rework.targetId})
       </div>
     </div>
   );
@@ -119,22 +137,27 @@ export const FlowNode: React.FC<FlowNodeProps> = ({ node, isLast, hasBranches })
 
   return (
     <div className="relative flex flex-col items-center w-full mb-10 z-10">
-      {/* Spine line below the node (to next node) */}
+      {/* Spine line below the node (to next node).
+          Patron Google: "absolute top-1/2 -bottom-10 left-1/2" — arranca desde
+          el centro vertical del nodo y baja 40px (mb-10 del contenedor).
+          z-0 asegura que quede detras del shape (z-10). */}
       {!isLast && !hasBranches && (
-        <div className="absolute top-1/2 -bottom-10 left-1/2 w-[1.5px] bg-[#93C5FD] -translate-x-1/2 z-0" />
+        <div className="absolute top-1/2 -bottom-10 left-1/2 w-[1.5px] bg-[#93C5FD] -translate-x-1/2 z-0">
+          {/* labelDown "SI" sobre la spine con bg-white para no superponerse con la linea */}
+          {isCondition && node.labelDown && (
+            <div className="absolute top-[60%] -translate-y-1/2 left-2 text-[9px] font-bold text-[#60A5FA] bg-white px-1 z-10 rounded">
+              {node.labelDown}
+            </div>
+          )}
+        </div>
       )}
 
-      {/* Main row: CC/SC label | Shape | Description
-          minHeight explicito = 48px (altura del shape mas alto: ShapeOpIns h-12).
-          Sin minHeight, html2canvas calcula alto del row segun contenido de cada
-          columna y items-center puede rendererear desfasado. */}
+      {/* Main row */}
       <div
         className="flex items-center w-full max-w-4xl relative z-10"
         style={{ minHeight: '48px' }}
       >
-        {/* Left column: CC/SC label.
-            v5: SVG con centrado matematico exacto en lugar de html/css (html2canvas
-            no respetaba verticalAlign:middle ni transforms ni paddings asimetricos). */}
+        {/* Left column: CC/SC label + condition label */}
         <div className="flex-1 flex justify-end items-center pr-6 space-x-2 relative z-10">
           {node.critical && node.criticalType && (
             <svg width="22" height="15" viewBox="0 0 22 15" style={{ overflow: 'visible' }}>
@@ -142,31 +165,25 @@ export const FlowNode: React.FC<FlowNodeProps> = ({ node, isLast, hasBranches })
               <text x="11" y="7.5" textAnchor="middle" dominantBaseline="central" fill="#DC2626" fontSize="9" fontWeight="bold" fontFamily="Inter, Arial, sans-serif">{node.criticalType}</text>
             </svg>
           )}
-        </div>
-
-        {/* Center column: Shape + condition labels */}
-        <div className="flex flex-col items-center justify-center relative w-20 shrink-0">
-          {/* Condition label to the LEFT of the diamond */}
           {isCondition && node.labelCondition && (
-            <span className="absolute right-full mr-2 text-[9px] italic text-[#1E40AF] whitespace-nowrap max-w-[180px]">
+            <span className="text-[9px] font-bold text-[#60A5FA] italic uppercase text-right leading-tight max-w-[140px] bg-white/80 px-1 rounded">
               {node.labelCondition}
             </span>
           )}
-
-          {renderShape(node)}
-
-          {/* "SI" label below on the downward path for conditions */}
-          {isCondition && node.labelDown && (
-            <span className="absolute top-full mt-0.5 text-[9px] font-bold text-[#1E40AF]">
-              {node.labelDown}
-            </span>
-          )}
-
-          {/* Lateral branch if present */}
-          {node.branchSide && renderBranchSide(node.branchSide)}
         </div>
 
-        {/* Right column: Description + equipment + rework label */}
+        {/* Center column: Shape + branchSide + rework arc */}
+        <div className="flex flex-col items-center justify-center relative w-20 shrink-0">
+          {renderShape(node)}
+
+          {/* Lateral branch (rama NO para condition, o branchSide en cualquier step) */}
+          {node.branchSide && renderBranchSide(node.branchSide)}
+
+          {/* Rework arc (flecha curva de retorno a OP anterior) */}
+          {node.rework && renderReworkArc(node.rework)}
+        </div>
+
+        {/* Right column: Description + equipment */}
         <div className="flex-1 pl-6 flex flex-col justify-center min-w-0 relative z-10">
           {node.description && !isCondition && (
             <span className="text-[11px] font-bold text-gray-900 uppercase leading-snug">
@@ -176,12 +193,6 @@ export const FlowNode: React.FC<FlowNodeProps> = ({ node, isLast, hasBranches })
           {(node.equipment || node.department) && (
             <span className="text-[9px] text-gray-500 leading-snug mt-px">
               {[node.equipment, node.department].filter(Boolean).join(' — ')}
-            </span>
-          )}
-          {/* Rework marker (text — flecha curva SVG pendiente) */}
-          {node.rework && !isCondition && (
-            <span className="text-[9px] font-semibold text-[#1E40AF] leading-snug mt-px">
-              RETRABAJO → OP {node.rework.targetId}
             </span>
           )}
         </div>

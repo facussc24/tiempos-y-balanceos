@@ -66,15 +66,34 @@ body { font-family: Inter, Arial, Helvetica, sans-serif; background: white; }
 .mb-8 { margin-bottom: 2rem; }
 .mb-10 { margin-bottom: 2.5rem; }
 .mr-2 { margin-right: 0.5rem; }
+.mr-10 { margin-right: 2.5rem; }
+.ml-2 { margin-left: 0.5rem; }
+.ml-10 { margin-left: 2.5rem; }
 .mt-0\\.5 { margin-top: 0.125rem; }
+.mt-2 { margin-top: 0.5rem; }
 .mt-6 { margin-top: 1.5rem; }
 .mt-8 { margin-top: 2rem; }
 .mt-px { margin-top: 1px; }
 .mt-\\[-2px\\] { margin-top: -2px; }
 .-mb-6 { margin-bottom: -1.5rem; }
+.-mt-5 { margin-top: -1.25rem; }
 .-mt-6 { margin-top: -1.5rem; }
+.-mt-\\[50px\\] { margin-top: -50px; }
 .-top-4 { top: -1rem; }
+.-top-3\\.5 { top: -0.875rem; }
+.-top-3 { top: -0.75rem; }
 .-bottom-10 { bottom: -2.5rem; }
+.p-1 { padding: 0.25rem; }
+.px-1 { padding-left: 0.25rem; padding-right: 0.25rem; }
+.left-2 { left: 0.5rem; }
+.left-6 { left: 1.5rem; }
+.left-\\[-4\\.5px\\] { left: -4.5px; }
+.left-\\[50\\%\\] { left: 50%; }
+.translate-x-\\[1px\\] { --tw-translate-x: 1px; transform: translateX(1px); }
+.top-\\[60\\%\\] { top: 60%; }
+.-translate-x-1\\/2 { --tw-translate-x: -50%; transform: translateX(-50%); }
+.-rotate-45 { --tw-rotate: -45deg; transform: rotate(-45deg); }
+.-z-10 { z-index: -10; }
 
 /* ─── Spacing: Gap ─── */
 .gap-0\\.5 { gap: 0.125rem; }
@@ -95,7 +114,15 @@ body { font-family: Inter, Arial, Helvetica, sans-serif; background: white; }
 .w-full { width: 100%; }
 .w-\\[50px\\] { width: 50px; }
 .w-\\[60px\\] { width: 60px; }
+.w-\\[90px\\] { width: 90px; }
+.w-\\[100px\\] { width: 100px; }
+.w-\\[320px\\] { width: 320px; }
+.w-\\[500px\\] { width: 500px; }
+.w-\\[600px\\] { width: 600px; }
 .w-\\[1\\.5px\\] { width: 1.5px; }
+.w-1\\.5 { width: 0.375rem; }
+.w-2 { width: 0.5rem; }
+.w-32 { width: 8rem; }
 
 /* ─── Sizing: Height ─── */
 .h-4 { height: 1rem; }
@@ -104,6 +131,10 @@ body { font-family: Inter, Arial, Helvetica, sans-serif; background: white; }
 .h-10 { height: 2.5rem; }
 .h-12 { height: 3rem; }
 .h-\\[1\\.5px\\] { height: 1.5px; }
+.h-1\\.5 { height: 0.375rem; }
+.h-2 { height: 0.5rem; }
+.h-\\[100px\\] { height: 100px; }
+.h-full { height: 100%; }
 
 /* ─── Sizing: Min/Max ─── */
 .min-h-screen { min-height: 100vh; }
@@ -127,20 +158,30 @@ body { font-family: Inter, Arial, Helvetica, sans-serif; background: white; }
 .border { border-width: 1px; border-style: solid; }
 .border-b { border-bottom-width: 1px; border-bottom-style: solid; }
 .border-r-\\[1\\.5px\\] { border-right-width: 1.5px; border-right-style: solid; }
+.border-t-\\[1\\.5px\\] { border-top-width: 1.5px; border-top-style: solid; }
+.border-l-\\[1\\.5px\\] { border-left-width: 1.5px; border-left-style: solid; }
+.border-b-\\[1\\.5px\\] { border-bottom-width: 1.5px; border-bottom-style: solid; }
 .border-\\[1\\.5px\\] { border-width: 1.5px; border-style: solid; }
 .border-\\[\\#60A5FA\\] { border-color: #60A5FA; }
+.border-\\[\\#93C5FD\\] { border-color: #93C5FD; }
 .border-red-200 { border-color: #FECACA; }
 .border-red-400 { border-color: #F87171; }
 .border-gray-200 { border-color: #E5E7EB; }
 
 /* ─── Border Radius ─── */
+.rounded { border-radius: 0.25rem; }
 .rounded-sm { border-radius: 0.125rem; }
+.rounded-md { border-radius: 0.375rem; }
 .rounded-lg { border-radius: 0.5rem; }
+.rounded-xl { border-radius: 0.75rem; }
 .rounded-full { border-radius: 9999px; }
 .rounded-\\[50\\%\\] { border-radius: 50%; }
+.rounded-bl-xl { border-bottom-left-radius: 0.75rem; }
 
 /* ─── Background ─── */
 .bg-white { background-color: white; }
+.bg-white\\/80 { background-color: rgba(255, 255, 255, 0.8); }
+.bg-white\\/90 { background-color: rgba(255, 255, 255, 0.9); }
 .bg-gray-50 { background-color: #F9FAFB; }
 .bg-red-50 { background-color: #FEF2F2; }
 .bg-\\[\\#F3F4F6\\] { background-color: #F3F4F6; }
@@ -150,10 +191,13 @@ body { font-family: Inter, Arial, Helvetica, sans-serif; background: white; }
 /* ─── Text Color ─── */
 .text-gray-400 { color: #9CA3AF; }
 .text-gray-500 { color: #6B7280; }
+.text-gray-600 { color: #4B5563; }
 .text-gray-900 { color: #111827; }
 .text-red-600 { color: #DC2626; }
 .text-\\[\\#1E3A8A\\] { color: #1E3A8A; }
 .text-\\[\\#1E40AF\\] { color: #1E40AF; }
+.text-\\[\\#60A5FA\\] { color: #60A5FA; }
+.text-\\[\\#4b5563\\] { color: #4b5563; }
 
 /* ─── Typography: Font Size ─── */
 .text-xs { font-size: 0.75rem; line-height: 1rem; }
