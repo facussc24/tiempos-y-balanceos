@@ -68,11 +68,11 @@ function renderBranchSide(branch: FlowNodeData['branchSide']) {
   const hasSequence = Array.isArray(branch.sequence) && branch.sequence.length > 0;
   // Fak 2026-04-23: brazo mas largo para separar el sub-flow del main flow y
   // evitar colision con las OPs del main (ALINEACION vs RETRABAJO).
-  const armWidth = hasSequence ? 420 : 200;
+  // Brazo reducido porque ya no centramos el sub-flow (items-start).
+  const armWidth = hasSequence ? 200 : 200;
 
-  // hasSequence requiere mas separacion del main flow para que el arco rework
-  // del sub-flow anidado no pise las ops del main (Fak 2026-04-23).
-  const marginLeftClass = hasSequence ? 'ml-28' : 'ml-10';
+  // hasSequence requiere separacion adicional del main flow.
+  const marginLeftClass = hasSequence ? 'ml-20' : 'ml-10';
   return (
     <div
       className={`absolute left-[50%] ${marginLeftClass} top-1/2 h-[2px] bg-[#93C5FD] -translate-y-1/2 -z-10 flex items-center`}
@@ -83,16 +83,19 @@ function renderBranchSide(branch: FlowNodeData['branchSide']) {
         <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1.5 h-1.5 border-t-[1.5px] border-r-[1.5px] border-[#60A5FA] transform rotate-45 translate-x-[1px]" />
       )}
 
-      {/* Destino de la rama lateral */}
+      {/* Destino de la rama lateral.
+          hasSequence: items-start (NO centrado) para que el SCRAP lateral del
+          sub-rombo interno pueda expandirse a la derecha sin quedar cortado por
+          el w-[Xpx] del contenedor (Fak 2026-04-23). */}
       <div
         className={`absolute left-full flex flex-col ${
           hasSequence
-            ? 'top-0 items-center -translate-x-1/2'
+            ? 'top-0 items-start'
             : 'top-1/2 -translate-y-1/2 items-start ml-2'
         }`}
       >
         {hasSequence ? (
-          <div className="relative -mt-5 w-[420px]">
+          <div className="relative -mt-5 w-[640px]">
             <FlowSequence sequence={branch.sequence!} />
           </div>
         ) : (

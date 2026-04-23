@@ -129,6 +129,7 @@ body { font-family: Inter, Arial, Helvetica, sans-serif; background: white; }
 .w-\\[420px\\] { width: 420px; }
 .w-\\[500px\\] { width: 500px; }
 .w-\\[600px\\] { width: 600px; }
+.w-\\[640px\\] { width: 640px; }
 .w-\\[1\\.5px\\] { width: 1.5px; }
 .w-\\[2px\\] { width: 2px; }
 .w-1\\.5 { width: 0.375rem; }
