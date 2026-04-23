@@ -160,9 +160,10 @@ const AmfeToolbar: React.FC<AmfeToolbarProps> = ({
                     <button onClick={() => startTransition(() => setViewMode(prev => prev === 'view' ? 'edit' : 'view'))}
                         className={`flex items-center gap-1.5 border px-3 py-2 rounded transition font-medium text-xs ${isReadOnly ? 'bg-indigo-50 border-indigo-300 text-indigo-700' : 'bg-emerald-50 border-emerald-300 text-emerald-700'}`}
                         title={isReadOnly ? 'Cambiar a modo Edición (Ctrl+D)' : 'Cambiar a modo Vista (Ctrl+D)'}
+                        aria-label={isReadOnly ? 'Cambiar a modo Edición' : 'Cambiar a modo Vista'}
                         data-shortcut="Ctrl+D"
                         data-testid="toggle-edit-mode">
-                        {isReadOnly ? <Eye size={15} /> : <Pencil size={15} />}
+                        {isReadOnly ? <Eye size={15} aria-hidden="true" /> : <Pencil size={15} aria-hidden="true" />}
                         <span className="hidden sm:inline">{isReadOnly ? 'Modo Vista' : 'Modo Edición'}</span>
                     </button>
 
@@ -170,8 +171,9 @@ const AmfeToolbar: React.FC<AmfeToolbarProps> = ({
                     <button onClick={() => setShowSummary(!showSummary)}
                         className={`relative flex items-center gap-1.5 border px-3 py-2 rounded transition font-medium text-xs ${showSummary ? 'bg-blue-50 border-blue-300 text-blue-700' : 'bg-gray-100 hover:bg-gray-200 border-gray-300 text-slate-700'}`}
                         title="Resumen del AMFE (Ctrl+E)"
+                        aria-label="Resumen del AMFE"
                         data-shortcut="Ctrl+E">
-                        <BarChart3 size={15} />
+                        <BarChart3 size={15} aria-hidden="true" />
                         <span className="hidden sm:inline">Resumen</span>
                         {softLimitWarningCount > 0 && (
                             <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-amber-500 rounded-full text-[9px] text-white flex items-center justify-center font-bold">
@@ -183,8 +185,9 @@ const AmfeToolbar: React.FC<AmfeToolbarProps> = ({
                     {/* Masters Library Toggle */}
                     <button onClick={() => setShowMasters(!showMasters)}
                         className={`flex items-center gap-1.5 border px-3 py-2 rounded transition font-medium text-xs ${showMasters ? 'bg-amber-50 border-amber-300 text-amber-700' : 'bg-gray-100 hover:bg-gray-200 border-gray-300 text-slate-700'}`}
-                        title="Biblioteca de AMFEs Maestros">
-                        <Crown size={15} />
+                        title="Biblioteca de AMFEs Maestros"
+                        aria-label="Biblioteca de AMFEs Maestros">
+                        <Crown size={15} aria-hidden="true" />
                         <span className="hidden sm:inline">Maestros</span>
                     </button>
 
@@ -194,24 +197,27 @@ const AmfeToolbar: React.FC<AmfeToolbarProps> = ({
                             onClick={onUndo}
                             disabled={!canUndo}
                             className="flex items-center gap-1 bg-gray-100 hover:bg-gray-200 px-2.5 py-2 transition text-slate-700 text-xs disabled:opacity-50 disabled:cursor-not-allowed border-r border-gray-300"
-                            title="Deshacer (Ctrl+Z)"
+                            title={canUndo ? 'Deshacer (Ctrl+Z)' : 'Nada para deshacer'}
+                            aria-label={canUndo ? 'Deshacer' : 'Deshacer (nada para deshacer)'}
                         >
-                            <Undo2 size={15} />
+                            <Undo2 size={15} aria-hidden="true" />
                         </button>
                         <button
                             onClick={onRedo}
                             disabled={!canRedo}
                             className="flex items-center gap-1 bg-gray-100 hover:bg-gray-200 px-2.5 py-2 transition text-slate-700 text-xs disabled:opacity-50 disabled:cursor-not-allowed"
-                            title="Rehacer (Ctrl+Y)"
+                            title={canRedo ? 'Rehacer (Ctrl+Y)' : 'Nada para rehacer'}
+                            aria-label={canRedo ? 'Rehacer' : 'Rehacer (nada para rehacer)'}
                         >
-                            <Redo2 size={15} />
+                            <Redo2 size={15} aria-hidden="true" />
                         </button>
                     </div>
 
                     {/* Projects Panel Toggle */}
                     <button onClick={(e) => { e.stopPropagation(); setShowProjectPanel(!showProjectPanel); projects.refreshProjects(); }}
-                        className="flex items-center gap-1.5 bg-gray-100 hover:bg-gray-200 border border-gray-300 px-3 py-2 rounded transition text-slate-700 font-medium text-xs">
-                        <FolderOpen size={15} />
+                        className="flex items-center gap-1.5 bg-gray-100 hover:bg-gray-200 border border-gray-300 px-3 py-2 rounded transition text-slate-700 font-medium text-xs"
+                        aria-label="Panel de proyectos">
+                        <FolderOpen size={15} aria-hidden="true" />
                         <span className="hidden sm:inline">Proyectos</span>
                     </button>
 
@@ -236,8 +242,9 @@ const AmfeToolbar: React.FC<AmfeToolbarProps> = ({
                         <button onClick={projects.saveAsProject}
                             className="flex items-center gap-1.5 bg-gray-100 hover:bg-gray-200 border border-gray-300 px-2 py-2 rounded transition text-slate-700 text-xs"
                             title="Guardar Como..."
+                            aria-label="Guardar como nuevo proyecto"
                             disabled={!projects.networkAvailable}>
-                            <Copy size={14} />
+                            <Copy size={14} aria-hidden="true" />
                         </button>
                     )}
 
