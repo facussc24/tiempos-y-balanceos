@@ -595,21 +595,22 @@ export default function FlowchartApp({ amfeData, flowchartData, onSaveFlowchart,
                </div>
                
                <div className="flex-1 p-0 relative">
-                  <textarea 
+                  <textarea
                      value={draftJson}
                      onChange={(e) => setDraftJson(e.target.value)}
                      className="absolute inset-0 w-full h-full p-4 bg-[#1e1e1e] text-[#d4d4d4] resize-none outline-none whitespace-pre"
                      spellCheck="false"
+                     aria-label="Editor JSON del flujograma"
                   ></textarea>
                </div>
-               
+
                <div className="p-4 bg-gray-100 border-t border-gray-200 flex items-center justify-between">
-                  {jsonError ? <p className="text-red-500 font-bold text-xs">{jsonError}</p> : <div></div>}
-                  <button 
+                  {jsonError ? <p className="text-red-500 font-bold text-xs" role="alert">{jsonError}</p> : <div></div>}
+                  <button
                      onClick={handleSaveJson}
                      className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-sans font-bold rounded flex items-center gap-2 focus:ring-4 focus:ring-blue-300"
                   >
-                     <Save size={16} /> GUARDAR FLujo EN PROYECTO
+                     <Save size={16} aria-hidden="true" /> GUARDAR FLUJO EN PROYECTO
                   </button>
                </div>
             </div>
