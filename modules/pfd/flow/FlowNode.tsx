@@ -66,12 +66,13 @@ function renderBranchSide(branch: FlowNodeData['branchSide']) {
   if (!branch) return null;
 
   const hasSequence = Array.isArray(branch.sequence) && branch.sequence.length > 0;
-  // Fak 2026-04-23: brazo y sub-flow reducidos para evitar overflow en A3 landscape.
-  const armWidth = hasSequence ? 280 : 200;
+  // Fak 2026-04-23: brazo mas largo para separar el sub-flow del main flow y
+  // evitar colision con las OPs del main (ALINEACION vs RETRABAJO).
+  const armWidth = hasSequence ? 420 : 200;
 
   // hasSequence requiere mas separacion del main flow para que el arco rework
   // del sub-flow anidado no pise las ops del main (Fak 2026-04-23).
-  const marginLeftClass = hasSequence ? 'ml-20' : 'ml-10';
+  const marginLeftClass = hasSequence ? 'ml-28' : 'ml-10';
   return (
     <div
       className={`absolute left-[50%] ${marginLeftClass} top-1/2 h-[2px] bg-[#93C5FD] -translate-y-1/2 -z-10 flex items-center`}
@@ -146,7 +147,7 @@ export const FlowNode: React.FC<FlowNodeProps> = ({ node, isLast, hasBranches })
           el centro vertical del nodo y baja 40px (mb-10 del contenedor).
           z-0 asegura que quede detras del shape (z-10). */}
       {!isLast && !hasBranches && (
-        <div className="absolute top-1/2 -bottom-10 left-1/2 w-[1.5px] bg-[#93C5FD] -translate-x-1/2 z-0">
+        <div className="absolute top-1/2 -bottom-10 left-1/2 w-[2px] bg-[#93C5FD] -translate-x-1/2 z-0">
           {/* labelDown "SI" sobre la spine con bg-white para no superponerse con la linea */}
           {isCondition && node.labelDown && (
             <div className="absolute top-[60%] -translate-y-1/2 left-2 text-[9px] font-bold text-[#60A5FA] bg-white px-1 z-10 rounded">

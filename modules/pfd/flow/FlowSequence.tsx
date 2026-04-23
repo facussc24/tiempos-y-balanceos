@@ -36,7 +36,7 @@ export const FlowSequence: React.FC<FlowSequenceProps> = ({ sequence }) => {
                 <BranchSplit branches={node.branches} />
                 {/* Connector from join to next node */}
                 {!isLast && (
-                  <div className="w-[1.5px] h-4 bg-[#60A5FA]" />
+                  <div className="w-[2px] h-4 bg-[#60A5FA]" />
                 )}
               </>
             )}

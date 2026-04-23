@@ -72,6 +72,7 @@ body { font-family: Inter, Arial, Helvetica, sans-serif; background: white; }
 .ml-2 { margin-left: 0.5rem; }
 .ml-10 { margin-left: 2.5rem; }
 .ml-20 { margin-left: 5rem; }
+.ml-28 { margin-left: 7rem; }
 .mt-0\\.5 { margin-top: 0.125rem; }
 .mt-2 { margin-top: 0.5rem; }
 .mt-6 { margin-top: 1.5rem; }
@@ -129,6 +130,7 @@ body { font-family: Inter, Arial, Helvetica, sans-serif; background: white; }
 .w-\\[500px\\] { width: 500px; }
 .w-\\[600px\\] { width: 600px; }
 .w-\\[1\\.5px\\] { width: 1.5px; }
+.w-\\[2px\\] { width: 2px; }
 .w-1\\.5 { width: 0.375rem; }
 .w-2 { width: 0.5rem; }
 .w-32 { width: 8rem; }

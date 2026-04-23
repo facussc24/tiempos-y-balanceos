@@ -136,7 +136,9 @@ function convertStep(step: PfdStep, allSteps: PfdStep[] = []): FlowNodeData {
               type: 'terminal',
               text: 'SCRAP',
               labelNode: 'NO',
-              description: step.scrapDescription || undefined,
+              // Fak 2026-04-23: NO mostrar description bajo SCRAP en el
+              // patron rework_or_scrap (el "¿SE PUEDE RETRABAJAR?" ya implica
+              // que no se puede y va a scrap — texto redundante).
             },
           },
           {

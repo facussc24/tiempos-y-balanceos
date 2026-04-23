@@ -23,6 +23,9 @@ import { createBasicProcessTemplate, createManufacturingProcessTemplate, createP
 import PfdToolbar from './PfdToolbar';
 import PfdHeaderComponent from './PfdHeader';
 import PfdFlowEditor from './PfdFlowEditor';
+import { PfdFlowChart } from './flow/PfdFlowChart';
+import { convertPfdToFlowData } from './pfdToFlowData';
+import { FLOW_CSS } from './flowStyles';
 import PfdStepDetailPanel from './PfdStepDetailPanel';
 import PfdSymbolLegend from './PfdSymbolLegend';
 import PfdHelpPanel from './PfdHelpPanel';
@@ -72,6 +75,44 @@ interface Props {
 
 const LS_LAST_PROJECT = 'pfd_lastProjectId';
 const LS_LAST_PROJECT_NAME = 'pfd_lastProjectName';
+
+// ──────────────────────────────────────────────────────────────────────────
+// PdfLikePreview — render idéntico al export PDF, visible en la página
+// del editor. Fak 2026-04-23: necesita ver el mismo output que el PDF en
+// la pantalla de edición, sin tener que exportar cada vez.
+// ──────────────────────────────────────────────────────────────────────────
+const PdfLikePreview: React.FC<{ doc: any }> = ({ doc }) => {
+    const [logoBase64, setLogoBase64] = React.useState<string>('');
+    React.useEffect(() => {
+        import('../../src/assets/ppe/ppeBase64').then(m => m.getLogoBase64()).then(setLogoBase64).catch(() => {});
+    }, []);
+
+    React.useEffect(() => {
+        const id = 'pfd-preview-styles';
+        if (document.getElementById(id)) return;
+        const style = document.createElement('style');
+        style.id = id;
+        style.textContent = FLOW_CSS;
+        document.head.appendChild(style);
+    }, []);
+
+    const flowData = React.useMemo(() => {
+        try { return convertPfdToFlowData(doc, logoBase64); }
+        catch { return null; }
+    }, [doc, logoBase64]);
+
+    if (!flowData) return null;
+    return (
+        <div className="mt-8 border-2 border-dashed border-cyan-300 rounded-lg p-4 bg-white no-print">
+            <h3 className="text-sm font-bold text-cyan-700 mb-2 uppercase tracking-wide">
+                Preview (idéntico al PDF export)
+            </h3>
+            <div style={{ width: '100%', overflowX: 'auto' }}>
+                <PfdFlowChart data={flowData} />
+            </div>
+        </div>
+    );
+};
 
 const PfdApp: React.FC<Props> = ({ onBackToLanding, embedded, initialData }) => {
     // Document state
@@ -1086,6 +1127,14 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding, embedded, initialData }) => 
                         />
                     )}
                 </div>
+
+                {/* Preview IGUAL que PDF export — Fak 2026-04-23.
+                    Asi el usuario ve el mismo renderer que el PDF final mientras
+                    edita, sin tener que exportar cada vez. Misma fuente: convertPfdToFlowData
+                    -> PfdFlowChart -> flowStyles.ts. */}
+                {pfd.data.steps.length > 0 && (
+                    <PdfLikePreview doc={pfd.data} />
+                )}
 
                 {/* Symbol Legend */}
                 <PfdSymbolLegend />

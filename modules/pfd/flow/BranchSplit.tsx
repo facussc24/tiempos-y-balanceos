@@ -33,13 +33,13 @@ export const BranchSplit: React.FC<BranchSplitProps> = ({ branches }) => {
             )}
 
             {/* Vertical connector down into lane */}
-            <div className="w-[1.5px] h-12 bg-[#93C5FD] relative z-0 -mb-6 shrink-0" />
+            <div className="w-[2px] h-12 bg-[#93C5FD] relative z-0 -mb-6 shrink-0" />
 
             {/* Inner sequence */}
             <FlowSequence sequence={branch} />
 
             {/* Vertical connector up from lane */}
-            <div className="w-[1.5px] h-12 bg-[#93C5FD] relative z-0 -mt-6 shrink-0" />
+            <div className="w-[2px] h-12 bg-[#93C5FD] relative z-0 -mt-6 shrink-0" />
 
             {/* Horizontal connecting lines at bottom */}
             {idx === 0 && branches.length > 1 && (
