@@ -75,13 +75,18 @@ export const ProjectSwitcher: React.FC<ProjectSwitcherProps> = ({
     onNavigateToDashboard
 }) => {
     const [isOpen, setIsOpen] = useState(false);
-    const [recentProjects, setRecentProjects] = useState<RecentProject[]>([]);
+    const [recentProjects, setRecentProjects] = useState<RecentProject[]>(() => getRecentProjects());
     const dropdownRef = useRef<HTMLDivElement>(null);
 
-    // Load recent projects on mount
-    useEffect(() => {
-        setRecentProjects(getRecentProjects());
-    }, [isOpen]);
+    // Reload recent projects when user opens the dropdown (event-driven, not effect-driven).
+    // Avoids react-hooks/set-state-in-effect: user actions belong in handlers, not effects.
+    const handleToggle = () => {
+        setIsOpen(prev => {
+            const next = !prev;
+            if (next) setRecentProjects(getRecentProjects());
+            return next;
+        });
+    };
 
     // Close dropdown when clicking outside
     useEffect(() => {
@@ -143,17 +148,21 @@ export const ProjectSwitcher: React.FC<ProjectSwitcherProps> = ({
         <div className="relative" ref={dropdownRef}>
             {/* Trigger Button */}
             <button
-                onClick={() => setIsOpen(!isOpen)}
+                onClick={handleToggle}
                 className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-slate-700 hover:text-slate-900 bg-white hover:bg-slate-50 rounded-lg border border-slate-200 hover:border-slate-300 hover:shadow-sm transition-all"
                 title="Cambiar Proyecto"
+                aria-label={`Proyecto actual: ${currentProjectName || 'Sin proyecto'}. Click para cambiar.`}
+                aria-haspopup="menu"
+                aria-expanded={isOpen}
             >
-                <FolderOpen size={14} className="text-blue-500" />
+                <FolderOpen size={14} className="text-blue-500" aria-hidden="true" />
                 <span className="max-w-[180px] truncate" title={currentProjectName || 'Sin Proyecto'}>
                     {currentProjectName || 'Sin Proyecto'}
                 </span>
                 <ChevronDown
                     size={14}
                     className={`text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+                    aria-hidden="true"
                 />
             </button>
 
