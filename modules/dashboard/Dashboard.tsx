@@ -412,7 +412,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
             }
         } catch (e: unknown) {
             logger.error('Dashboard', `Error deleting ${pendingDelete.type}`, { error: String(e) });
-            toast.error(`Error al Eliminar`, e instanceof Error ? e.message : String(e));
+            toast.error('Error al eliminar', e instanceof Error ? e.message : String(e));
         } finally {
             setIsDeleting(false);
             setShowConfirmModal(false);
