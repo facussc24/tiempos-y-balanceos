@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { ProjectData } from '../types';
 import { parseNumberInput, calculateWeightedLineOEE } from '../utils';
 import { toast } from '../components/ui/Toast';
@@ -6,6 +6,15 @@ import { toast } from '../components/ui/Toast';
 export const useOEELogic = (data: ProjectData, updateData: (data: ProjectData) => void) => {
     // OEE Input State: Always show 0-100 value (e.g. "85.5")
     const [oeeInput, setOeeInput] = useState((data.meta.manualOEE * 100).toString());
+
+    // Track the last externally-synced value so we can reset oeeInput when it
+    // changes from outside (e.g. project loaded). Using "adjust state during
+    // render" pattern instead of setState-in-effect (React 19 rule).
+    const [lastSyncedOEE, setLastSyncedOEE] = useState(data.meta.manualOEE);
+    if (lastSyncedOEE !== data.meta.manualOEE) {
+        setLastSyncedOEE(data.meta.manualOEE);
+        setOeeInput(parseFloat((data.meta.manualOEE * 100).toFixed(2)).toString());
+    }
 
     // Calculate Weighted OEE from Sectors
     const weightedOEE = calculateWeightedLineOEE(data);
@@ -15,12 +24,6 @@ export const useOEELogic = (data: ProjectData, updateData: (data: ProjectData) =
 
     // V8.2: Setup Loss Percent (exposed for UI)
     const setupLossPercent = data.meta.setupLossPercent || 0;
-
-    // Sync inputs if data changes externally
-    useEffect(() => {
-        const displayVal = parseFloat((data.meta.manualOEE * 100).toFixed(2));
-        setOeeInput(displayVal.toString());
-    }, [data.meta.manualOEE]);
 
     const handleMetaChange = (field: keyof typeof data.meta, value: ProjectData['meta'][keyof ProjectData['meta']]) => {
         updateData({

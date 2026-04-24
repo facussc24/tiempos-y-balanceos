@@ -27,13 +27,23 @@ export function useCrossDocAlerts(
     const [alerts, setAlerts] = useState<CrossDocAlert[]>([]);
     const [isLoading, setIsLoading] = useState(false);
 
+    // Reset alerts immediately when module/documentId change (adjust state during render).
+    // Avoids setState-in-effect which causes cascading renders (React 19 rule).
+    const [lastKey, setLastKey] = useState<string | null>(null);
+    const currentKey = module && documentId ? `${module}:${documentId}` : null;
+    if (lastKey !== currentKey) {
+        setLastKey(currentKey);
+        setAlerts([]);
+    }
+
     useEffect(() => {
-        if (!module || !documentId) {
-            setAlerts([]);
-            return;
-        }
+        if (!module || !documentId) return;
 
         let cancelled = false;
+        // Loading flag toggled at effect start for the spinner; cleared in
+        // .finally(). Standard async-fetch pattern — migrating to Suspense is
+        // out of scope. Lint rule would prefer Suspense/useActionState.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setIsLoading(true);
         detectCrossDocAlerts(module, documentId)
             .then(detected => {

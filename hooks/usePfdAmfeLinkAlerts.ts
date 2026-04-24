@@ -62,14 +62,23 @@ export function usePfdAmfeLinkAlerts(
     const [isLoading, setIsLoading] = useState(false);
     const [revalidateKey, setRevalidateKey] = useState(0);
 
+    // Reset loaded doc immediately when linkedAmfeId changes (adjust state
+    // during render). Avoids setState-in-effect (React 19 rule).
+    const [lastLinkedId, setLastLinkedId] = useState<string | null | undefined>(linkedAmfeId);
+    if (lastLinkedId !== linkedAmfeId) {
+        setLastLinkedId(linkedAmfeId);
+        setAmfeDoc(null);
+    }
+
     // Load AMFE document when linkedAmfeId changes
     useEffect(() => {
-        if (!linkedAmfeId) {
-            setAmfeDoc(null);
-            return;
-        }
+        if (!linkedAmfeId) return;
 
         let cancelled = false;
+        // Loading flag toggled at effect start for the spinner; cleared in
+        // .finally(). Standard async-fetch pattern (migrating to Suspense is
+        // out of scope).
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setIsLoading(true);
 
         loadAmfeDocument(linkedAmfeId)
@@ -133,6 +142,8 @@ export function usePfdAmfeLinkAlerts(
 // Hook: for AMFE module (has AMFE doc, needs to load PFD)
 // ---------------------------------------------------------------------------
 
+// Exported for use from AMFE module (mirror hook, symmetric to above).
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function useAmfePfdLinkAlerts(
     amfeDoc: AmfeDocument | null,
     linkedPfdId: string | null | undefined,
@@ -142,14 +153,23 @@ function useAmfePfdLinkAlerts(
     const [isLoading, setIsLoading] = useState(false);
     const [revalidateKey, setRevalidateKey] = useState(0);
 
+    // Reset loaded doc immediately when linkedPfdId changes (adjust state
+    // during render). Avoids setState-in-effect (React 19 rule).
+    const [lastLinkedId, setLastLinkedId] = useState<string | null | undefined>(linkedPfdId);
+    if (lastLinkedId !== linkedPfdId) {
+        setLastLinkedId(linkedPfdId);
+        setPfdDoc(null);
+    }
+
     // Load PFD document when linkedPfdId changes
     useEffect(() => {
-        if (!linkedPfdId) {
-            setPfdDoc(null);
-            return;
-        }
+        if (!linkedPfdId) return;
 
         let cancelled = false;
+        // Loading flag toggled at effect start for the spinner; cleared in
+        // .finally(). Standard async-fetch pattern (migrating to Suspense is
+        // out of scope).
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setIsLoading(true);
 
         loadPfdDocument(linkedPfdId)

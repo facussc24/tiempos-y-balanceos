@@ -72,9 +72,24 @@ export function useDocumentHistory<T>(
     // Snapshot captured at debounce start (the state BEFORE the rapid edits began)
     const pendingSnapshotRef = useRef<T | null>(null);
 
-    // Force re-render when canUndo/canRedo change
-    const [, forceUpdate] = useState(0);
-    const triggerUpdate = useCallback(() => forceUpdate(n => n + 1), []);
+    // Stats mirror of the ref state. Reading refs during render is flagged by
+    // React 19 (react-hooks/refs) because refs are a render-side-effect escape
+    // hatch. We keep the refs for mutability, and snapshot their derived
+    // values into state whenever they change via `triggerUpdate`.
+    const [stats, setStats] = useState({
+        canUndo: false,
+        canRedo: false,
+        undoCount: 0,
+        redoCount: 0,
+    });
+    const triggerUpdate = useCallback(() => {
+        setStats({
+            canUndo: pastRef.current.length > 0 || pendingSnapshotRef.current !== null,
+            canRedo: futureRef.current.length > 0,
+            undoCount: pastRef.current.length + (pendingSnapshotRef.current ? 1 : 0),
+            redoCount: futureRef.current.length,
+        });
+    }, []);
 
     // Observe changes to currentData
     useEffect(() => {
@@ -190,10 +205,10 @@ export function useDocumentHistory<T>(
     return {
         undo,
         redo,
-        canUndo: pastRef.current.length > 0 || pendingSnapshotRef.current !== null,
-        canRedo: futureRef.current.length > 0,
-        undoCount: pastRef.current.length + (pendingSnapshotRef.current ? 1 : 0),
-        redoCount: futureRef.current.length,
+        canUndo: stats.canUndo,
+        canRedo: stats.canRedo,
+        undoCount: stats.undoCount,
+        redoCount: stats.redoCount,
         resetHistory,
         flushPending,
     };

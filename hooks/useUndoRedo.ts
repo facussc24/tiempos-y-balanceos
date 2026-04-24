@@ -8,7 +8,7 @@
  * @version 2.0.0 - Added Context Awareness
  */
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback } from 'react';
 import { ProjectData } from '../types';
 
 export interface UndoContext {
@@ -101,16 +101,19 @@ export function useUndoRedo(
     initialState: ProjectData,
     maxHistory: number = 50
 ): UndoRedoResult<Partial<ProjectData>> {
-    const [state, setState] = useState<UndoRedoState<Partial<ProjectData>>>({
+    const [state, setState] = useState<UndoRedoState<Partial<ProjectData>>>(() => ({
         past: [],
         present: {
             data: createSnapshot(initialState),
             timestamp: Date.now()
         },
         future: []
-    });
+    }));
 
-    const lastChangeRef = useRef<string | null>(null);
+    // lastChangeDescription used by consumers for UI labels ("Deshacer/Rehacer
+     // toasts etc.). Must be reactive state — reading a ref during render is
+     // flagged by React 19 (react-hooks/refs).
+    const [lastChangeDescription, setLastChangeDescription] = useState<string | null>(null);
 
     const canUndo = state.past.length > 0;
     const canRedo = state.future.length > 0;
@@ -127,7 +130,7 @@ export function useUndoRedo(
             future: [state.present, ...state.future]
         });
 
-        lastChangeRef.current = 'Deshacer';
+        setLastChangeDescription('Deshacer');
 
         // Return previous state AND the context associated with the *restored* state (or the undone action)
         // Ideally we want the context of where the "undone" change happened to navigate there.
@@ -153,7 +156,7 @@ export function useUndoRedo(
             future: newFuture
         });
 
-        lastChangeRef.current = 'Rehacer';
+        setLastChangeDescription('Rehacer');
 
         // FIX: Deep-clone before returning to prevent shared references from corrupting history
         return {
@@ -192,7 +195,7 @@ export function useUndoRedo(
             };
         });
 
-        lastChangeRef.current = null;
+        setLastChangeDescription(null);
     }, [maxHistory]);
 
     const resetHistory = useCallback((initialState: ProjectData) => {
@@ -204,7 +207,7 @@ export function useUndoRedo(
             },
             future: []
         });
-        lastChangeRef.current = null;
+        setLastChangeDescription(null);
     }, []);
 
     return {
@@ -216,7 +219,7 @@ export function useUndoRedo(
         redo,
         pushState,
         resetHistory,
-        lastChangeDescription: lastChangeRef.current
+        lastChangeDescription
     };
 }
 
