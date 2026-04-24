@@ -33,13 +33,16 @@ export const RevisionPromptModal: React.FC<RevisionPromptModalProps> = ({
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const modalRef = useFocusTrap(isOpen);
 
+    // Auto-focus el textarea al abrir. Los setState de reset no hacen falta
+    // porque el componente retorna null cuando !isOpen (linea 53) — se desmonta
+    // y al reabrir useState reinicializa con los defaults. Evita el
+    // anti-pattern react-hooks/set-state-in-effect.
     useEffect(() => {
         if (isOpen) {
-            setDescription('');
-            setRevisedBy(defaultRevisedBy);
-            setTimeout(() => textareaRef.current?.focus(), 100);
+            const timer = setTimeout(() => textareaRef.current?.focus(), 100);
+            return () => clearTimeout(timer);
         }
-    }, [isOpen, defaultRevisedBy]);
+    }, [isOpen]);
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -108,10 +111,11 @@ export const RevisionPromptModal: React.FC<RevisionPromptModalProps> = ({
 
                     {/* Description */}
                     <div className="mb-4">
-                        <label className="block text-xs font-bold text-gray-500 mb-1">
+                        <label htmlFor="revision-description" className="block text-xs font-bold text-gray-500 mb-1">
                             Descripción del cambio <span className="text-red-400">*</span>
                         </label>
                         <textarea
+                            id="revision-description"
                             ref={textareaRef}
                             value={description}
                             onChange={e => setDescription(e.target.value)}
@@ -128,10 +132,11 @@ export const RevisionPromptModal: React.FC<RevisionPromptModalProps> = ({
 
                     {/* Revised By */}
                     <div className="mb-6">
-                        <label className="block text-xs font-bold text-gray-500 mb-1">
+                        <label htmlFor="revision-revised-by" className="block text-xs font-bold text-gray-500 mb-1">
                             Revisado por <span className="text-red-400">*</span>
                         </label>
                         <input
+                            id="revision-revised-by"
                             type="text"
                             value={revisedBy}
                             onChange={e => setRevisedBy(e.target.value)}
