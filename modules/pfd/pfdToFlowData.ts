@@ -115,7 +115,11 @@ function convertStep(step: PfdStep, allSteps: PfdStep[] = []): FlowNodeData {
       // los rombos superpuestos (ver CLAUDE.md + project_pfd_rework_pattern.md).
       const returnId = extractStepId(step.reworkReturnStep);
       // Patron Google: stepId del retrabajo = returnId + 1 (ej OP 80 -> 81, OP 130 -> 131).
-      const retrabajoId = `${parseInt(returnId, 10) + 1}`;
+      // Si returnId no es numerico (ej "REC"), sufijar letra "A" en lugar de generar "NaN1".
+      const returnIdNum = parseInt(returnId, 10);
+      const retrabajoId = Number.isFinite(returnIdNum)
+        ? `${returnIdNum + 1}`
+        : `${returnId}A`;
       // El "nombre" del retrabajo se saca de la OP a la que vuelve (reworkReturnStep),
       // NO de la descripcion del rombo decision (que es "PRODUCTO CONFORME?").
       // Fak 2026-04-23: si volvemos a OP 70 ADHESIVADO, el retrabajo es
