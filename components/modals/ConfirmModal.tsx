@@ -49,10 +49,12 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
     const [typedConfirm, setTypedConfirm] = useState('');
     const textConfirmMatches = !requireTextConfirm || typedConfirm === requireTextConfirm;
 
-    // Reset typed text when modal opens/closes
-    useEffect(() => {
-        if (!isOpen) setTypedConfirm('');
-    }, [isOpen]);
+    // Reset typed text whenever the modal closes. Wrapping onClose avoids
+    // the setState-in-effect anti-pattern (react-hooks/set-state-in-effect).
+    const handleClose = React.useCallback(() => {
+        setTypedConfirm('');
+        onClose();
+    }, [onClose]);
 
     // A11y: Auto-focus cancel button when modal opens
     useEffect(() => {
@@ -69,12 +71,12 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
     useEffect(() => {
         const handleEscape = (e: KeyboardEvent) => {
             if (e.key === 'Escape' && isOpen && !isLoading) {
-                onClose();
+                handleClose();
             }
         };
         document.addEventListener('keydown', handleEscape);
         return () => document.removeEventListener('keydown', handleEscape);
-    }, [isOpen, isLoading, onClose]);
+    }, [isOpen, isLoading, handleClose]);
 
     if (!shouldRender) return null;
 
@@ -107,7 +109,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
             {/* Backdrop */}
             <div
                 className={`absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-200 ${isClosing ? 'opacity-0' : 'opacity-100 animate-in fade-in duration-200'}`}
-                onClick={!isLoading ? onClose : undefined}
+                onClick={!isLoading ? handleClose : undefined}
             />
 
             {/* Modal */}
@@ -121,7 +123,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
             >
                 {/* Close button */}
                 <button
-                    onClick={onClose}
+                    onClick={handleClose}
                     disabled={isLoading}
                     className="absolute top-4 right-4 p-1 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     title="Cerrar" aria-label="Cerrar"
@@ -148,10 +150,11 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
                     {/* Type-to-confirm input for high-risk actions */}
                     {requireTextConfirm && (
                         <div className="mb-4">
-                            <label className="block text-sm text-slate-500 mb-1.5">
+                            <label htmlFor="confirm-modal-text-input" className="block text-sm text-slate-500 mb-1.5">
                                 Escribi <span className="font-mono font-bold text-red-600">{requireTextConfirm}</span> para confirmar:
                             </label>
                             <input
+                                id="confirm-modal-text-input"
                                 type="text"
                                 value={typedConfirm}
                                 onChange={e => setTypedConfirm(e.target.value)}
@@ -167,7 +170,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
                     <div className="flex gap-3">
                         <button
                             ref={cancelButtonRef}
-                            onClick={onClose}
+                            onClick={handleClose}
                             disabled={isLoading}
                             className="flex-1 px-4 py-2.5 bg-slate-100 text-slate-700 font-medium rounded-lg hover:bg-slate-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed focus:ring-2 focus:ring-offset-2 focus:ring-slate-400 outline-none"
                         >
@@ -175,7 +178,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
                         </button>
                         <button
                             onClick={onConfirm}
-                            disabled={isLoading}
+                            disabled={isLoading || !textConfirmMatches}
                             className={`flex-1 px-4 py-2.5 ${buttonBg} text-white font-medium rounded-lg transition-colors disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 focus:ring-2 focus:ring-offset-2 focus:ring-red-400 outline-none`}
                         >
                             {isLoading ? (
