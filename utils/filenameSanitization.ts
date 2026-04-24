@@ -42,7 +42,8 @@ export const sanitizeFilename = (
 
     // Remove or replace forbidden characters
     // Windows: < > : " / \ | ? *
-    // Also remove control characters (0x00-0x1F)
+    // Also remove control characters (0x00-0x1F) — intencional en sanitizacion.
+    // eslint-disable-next-line no-control-regex
     clean = clean.replace(/[<>:"|?*\x00-\x1f]/g, replacement);
 
     // Optionally replace spaces
@@ -96,7 +97,8 @@ export const isValidFilename = (filename: string): boolean => {
     // Check for path separators
     if (/[/\\]/.test(filename)) return false;
 
-    // Check for forbidden characters
+    // Check for forbidden characters (control chars intencional en sanitizacion)
+    // eslint-disable-next-line no-control-regex
     if (/[<>:"|?*\x00-\x1f]/.test(filename)) return false;
 
     // Check for reserved names
