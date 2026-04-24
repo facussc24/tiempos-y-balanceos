@@ -556,8 +556,9 @@ const FamilyManager: React.FC<FamilyManagerProps> = ({ onClose }) => {
                         <div className="p-4 space-y-3">
                             <h3 className="text-[12px] font-semibold text-gray-700">Nueva Familia</h3>
                             <div>
-                                <label className="block text-[10px] font-medium text-gray-500 mb-1">Nombre *</label>
+                                <label htmlFor="family-create-name" className="block text-[10px] font-medium text-gray-500 mb-1">Nombre *</label>
                                 <input
+                                    id="family-create-name"
                                     type="text"
                                     value={formName}
                                     onChange={e => setFormName(e.target.value)}
@@ -568,8 +569,9 @@ const FamilyManager: React.FC<FamilyManagerProps> = ({ onClose }) => {
                                 />
                             </div>
                             <div>
-                                <label className="block text-[10px] font-medium text-gray-500 mb-1">Descripción</label>
+                                <label htmlFor="family-create-description" className="block text-[10px] font-medium text-gray-500 mb-1">Descripción</label>
                                 <textarea
+                                    id="family-create-description"
                                     value={formDescription}
                                     onChange={e => setFormDescription(e.target.value)}
                                     placeholder="Descripción opcional del proceso compartido..."
@@ -603,8 +605,9 @@ const FamilyManager: React.FC<FamilyManagerProps> = ({ onClose }) => {
                                 <div className="flex items-start gap-3">
                                     <div className="flex-1 space-y-2">
                                         <div>
-                                            <label className="block text-[10px] font-medium text-gray-500 mb-1">Nombre</label>
+                                            <label htmlFor="family-edit-name" className="block text-[10px] font-medium text-gray-500 mb-1">Nombre</label>
                                             <input
+                                                id="family-edit-name"
                                                 type="text"
                                                 value={formName}
                                                 onChange={e => setFormName(e.target.value)}
@@ -614,8 +617,9 @@ const FamilyManager: React.FC<FamilyManagerProps> = ({ onClose }) => {
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-[10px] font-medium text-gray-500 mb-1">Descripción</label>
+                                            <label htmlFor="family-edit-description" className="block text-[10px] font-medium text-gray-500 mb-1">Descripción</label>
                                             <input
+                                                id="family-edit-description"
                                                 type="text"
                                                 value={formDescription}
                                                 onChange={e => setFormDescription(e.target.value)}
@@ -730,10 +734,11 @@ const FamilyManager: React.FC<FamilyManagerProps> = ({ onClose }) => {
 
                                         {/* Add product search */}
                                         <div>
-                                            <label className="block text-[10px] font-medium text-gray-500 mb-1">Agregar producto</label>
+                                            <label htmlFor="family-product-search" className="block text-[10px] font-medium text-gray-500 mb-1">Agregar producto</label>
                                             <div className="relative">
                                                 <Search size={12} className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400" />
                                                 <input
+                                                    id="family-product-search"
                                                     type="text"
                                                     value={productSearch}
                                                     onChange={e => setProductSearch(e.target.value)}
@@ -938,8 +943,9 @@ const FamilyManager: React.FC<FamilyManagerProps> = ({ onClose }) => {
                                             </div>
                                             <div className="p-3 space-y-3">
                                                 <div>
-                                                    <label className="block text-[10px] font-medium text-gray-500 mb-1">Label de variante</label>
+                                                    <label htmlFor="family-variant-label" className="block text-[10px] font-medium text-gray-500 mb-1">Label de variante</label>
                                                     <input
+                                                        id="family-variant-label"
                                                         type="text"
                                                         value={variantLabel}
                                                         onChange={e => setVariantLabel(e.target.value)}

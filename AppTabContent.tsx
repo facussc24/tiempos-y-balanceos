@@ -14,7 +14,7 @@ import { MixModeView } from './modules/mix';
 import { FlowSimulatorModule } from './modules/flow-simulator/FlowSimulatorModule';
 import { ExecutiveSummary } from './modules/ExecutiveSummary';
 import { Dashboard } from './modules/dashboard/Dashboard';
-import { listClients, listProjects, listParts, buildPath } from './utils/pathManager';
+import { listClients, listProjects, listParts } from './utils/pathManager';
 import { addToRecentProjects } from './components/navigation/ProjectSwitcher';
 import { logger } from './utils/logger';
 import { toast } from './components/ui/Toast';
