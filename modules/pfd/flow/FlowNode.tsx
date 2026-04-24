@@ -108,7 +108,11 @@ function renderBranchSide(branch: FlowNodeData['branchSide']) {
             {branch.type !== 'terminal' && branch.type !== 'operation' && branch.type !== 'inspection' && (
               <ShapeTerminalSide text={branch.text || branch.description} />
             )}
-            {branch.description && (
+            {/* Fak 2026-04-23: NUNCA mostrar description debajo de terminales
+                SCRAP/RECLAMO PROVEEDOR/SEGREGAR. El texto del shape ya es
+                suficiente. Se mantiene description solo para NO-terminales
+                (casos raros: branchSide type=operation con descripcion). */}
+            {branch.description && branch.type !== 'terminal' && (
               <div className="absolute top-full mt-2 w-32 text-left text-[8px] font-bold text-[#4b5563] uppercase leading-snug bg-white/90 p-1 rounded z-10">
                 {branch.description}
               </div>
