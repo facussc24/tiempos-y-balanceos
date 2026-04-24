@@ -23,6 +23,41 @@ globs:
 6. **git commit + push** (esto dispara deploy GitHub Pages automatico)
 7. **Actualizar esta skill** con lo aprendido
 
+## 🚨 REGLA ABSOLUTA: NADA DEBAJO DE TERMINALES (Fak 2026-04-23) 🚨
+
+**NUNCA** mostrar texto descriptivo debajo de shapes `type: 'terminal'` en el renderer.
+
+Se aplica a TODOS los terminales laterales del PFD:
+- SCRAP (rojo) — en control final, rework_or_scrap, cualquier rechazo
+- RECLAMO PROVEEDOR — en OP 10 recepcion
+- SEGREGAR — en disposicion sort
+
+El texto del shape (SCRAP/RECLAMO PROVEEDOR/SEGREGAR rojo dentro de la caja)
+es la UNICA etiqueta visible. La `branch.description` / `scrapDescription`
+NO se renderiza visualmente.
+
+### Implementacion en FlowNode.tsx renderBranchSide
+
+```tsx
+{branch.description && branch.type !== 'terminal' && (
+  <div className="absolute top-full mt-2 ...">
+    {branch.description}
+  </div>
+)}
+```
+
+La condicion `branch.type !== 'terminal'` es CRITICA. NO removerla.
+
+### Historial del bug
+
+- v1: Mapper rework_or_scrap no mandaba description (parcial fix)
+- v2 (Fak reporto): SCRAP del control final OP 130 seguia mostrando
+  "NO - CLASIFICACION Y SEGREGACION DE PNC" porque ese venia de scrap directo
+  con scrapDescription
+- v3 FINAL: fix en el RENDERER con `type !== 'terminal'` cubre TODOS los casos.
+
+Ver memoria `project_pfd_no_text_under_terminals.md` para regla general del usuario.
+
 ## RENDERER NO es Tailwind JIT
 
 `flowStyles.ts` tiene CSS **pre-compilado hardcoded**. Si agregas una clase Tailwind arbitrary (`w-[640px]`, `border-l-[2px]`, etc.) al JSX:
@@ -158,6 +193,7 @@ URL produccion: `https://facussc24.github.io/tiempos-y-balanceos/?module=pfdDebu
 
 | Fecha | Bug visual | Causa root | Fix aplicado |
 |---|---|---|---|
+| 2026-04-23 v4 | Texto "CLASIFICACION Y SEGREGACION DE PNC" aparecia debajo del SCRAP del control final | Renderer mostraba branch.description bajo cualquier shape. scrapDescription del caso scrap directo no se silenciaba | Renderer: condicion `branch.description && branch.type !== 'terminal'`. Regla absoluta nueva. |
 | 2026-04-23 v3 FINAL | SCRAP seguia oculto con w-[640px]/w-[820px] | Sub-flow muy ancho empujaba sub-rombo fuera del scroll area. Arm=200px del terminal simple lo alejaba aun mas | w-[520px] sub-flow + armWidth=80 solo para terminales simples. Verificado visualmente OK |
 | 2026-04-23 v1 | SCRAP terminal invisible en rework_or_scrap | Sub-flow `w-[420px]` + `items-center -translate-x-1/2` cortaba el SCRAP que sale lateral del sub-rombo | w-[640px] + items-start + armWidth reducido a 200px |
 | 2026-04-23 v1 | "RETRABAJO DE PRODUCTO CONFORME" en op-ins | Descripcion del retrabajo usaba labelCondition del rombo decision | Ahora usa description de la OP destino (reworkReturnStep → allSteps.find) |
