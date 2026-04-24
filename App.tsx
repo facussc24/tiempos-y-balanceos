@@ -66,14 +66,20 @@ const AppMain: React.FC<AppProps> = ({ onBackToLanding }) => {
         isReady: persistence.isDbLoaded
     });
 
+    // Destructured stable refs (useCallback'd upstream) so we can satisfy
+    // exhaustive-deps without pulling in the full hook objects (whose
+    // identity changes every render).
+    const undoPush = undoRedo.pushState;
+    const activeTab = navigation.activeTab;
+
     // Auto-record history when data changes (skip if triggered by undo/redo)
     useEffect(() => {
         if (persistence.data !== lastDataRef.current && persistence.data.fileHandle && !isUndoingRef.current) {
-            undoRedo.pushState(persistence.data, { tab: navigation.activeTab });
+            undoPush(persistence.data, { tab: activeTab });
             lastDataRef.current = persistence.data;
         }
         isUndoingRef.current = false;
-    }, [persistence.data, navigation.activeTab]);
+    }, [persistence.data, activeTab, undoPush]);
 
     const sessionLock = useSessionLock(
         persistence.data.id,
@@ -89,11 +95,12 @@ const AppMain: React.FC<AppProps> = ({ onBackToLanding }) => {
     const [storageVersion, setStorageVersion] = useState(0);
 
     // Set initial tab to 'panel' if project was loaded from DB
+    const navSetActiveTab = navigation.setActiveTab;
     useEffect(() => {
         if (persistence.isDbLoaded && persistence.data.fileHandle && !window.location.hash) {
-            navigation.setActiveTab('panel');
+            navSetActiveTab('panel');
         }
-    }, [persistence.isDbLoaded, persistence.data.fileHandle]);
+    }, [persistence.isDbLoaded, persistence.data.fileHandle, navSetActiveTab]);
 
     const workflowProgress = useWorkflowProgress(persistence.data, navigation.activeTab);
     const shortcutHints = useShortcutHints(800);

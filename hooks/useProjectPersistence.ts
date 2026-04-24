@@ -143,7 +143,11 @@ export function useProjectPersistence(): UsePersistenceResult {
         return () => {
             isMounted = false;
         };
-    }, []); // H-03 Fix: Empty deps - run once on mount
+        // H-03 Fix: Empty deps - run once on mount. loadLatestProject
+        // intentionally omitted; re-running the bootstrap on any function
+        // identity change would re-fetch the project and stomp user edits.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     // H-01 Fix: Auto-Save (debounced 2 seconds) - BLOCKED during manual save
     // P0-3 Fix: Also blocked until real data is loaded or user takes explicit action
