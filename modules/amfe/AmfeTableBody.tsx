@@ -9,7 +9,7 @@ import SuggestableTextarea from './SuggestableTextarea';
 import { SuggestionIndex, SuggestionContext } from './amfeSuggestionEngine';
 import { ColumnGroupVisibility, COLUMN_COUNTS } from './useAmfeColumnVisibility';
 import { inferOperationCategory } from '../../utils/processCategory';
-import { WE_ICONS, getApColor, getSODColor, getCauseRowBorderClass, computeOpSummary, hasSubSeverities, CauseValidationIcon, TAB_ACTIVE_CLASSES, TAB_DOT_CLASSES, TAB_BORDER_CLASSES, TAB_LABEL_CLASSES, TAB_SEV_HIGH_CLASSES } from './amfeTableHelpers';
+import { WE_ICONS, getApColor, getApBarColor, getApLabel, getSODColor, getCauseRowBorderClass, computeOpSummary, hasSubSeverities, CauseValidationIcon, TAB_ACTIVE_CLASSES, TAB_DOT_CLASSES, TAB_BORDER_CLASSES, TAB_LABEL_CLASSES, TAB_SEV_HIGH_CLASSES } from './amfeTableHelpers';
 import AmfeContextMenu, { CtxTarget } from './AmfeContextMenu';
 import { InheritanceBadge } from '../../components/ui/InheritanceBadge';
 import type { InheritanceStatusMap } from '../../hooks/useInheritanceStatus';
@@ -46,14 +46,20 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
         || 1;
 
     // Memoize all class strings — only recompute when readOnly changes
+    //
+    // Rediseno UI 2026-04-26 (Etapa 3a):
+    // - Tipografia base text-xs (12px) -> text-[13px] en celdas con texto largo.
+    // - Metadata sigue 11px (responsable, plazo). Numeros S/O/D usan font mono.
+    // - Modo lectura: padding mas generoso, font igual de grande.
+    // - Modo edicion: padding compacto, font igual.
     const cls = useMemo(() => {
         const cell = readOnly
-            ? "px-2 py-2 border-r border-b border-gray-200 align-top text-xs min-h-[32px]"
-            : "p-1 border-r border-b border-gray-200 align-top text-xs";
+            ? "px-2 py-2 border-r border-b border-gray-200 align-top text-[13px] min-h-[32px]"
+            : "p-1 border-r border-b border-gray-200 align-top text-[13px]";
         return {
             cell,
-            textArea: "w-full min-h-[40px] bg-transparent outline-none text-xs font-medium text-slate-700 placeholder-slate-300 focus:bg-white focus:ring-1 focus:ring-blue-200 rounded px-1 transition-colors",
-            textSpan: "text-xs font-medium text-slate-700 leading-relaxed whitespace-pre-wrap break-words",
+            textArea: "w-full min-h-[40px] bg-transparent outline-none text-[13px] font-medium text-slate-700 placeholder-slate-300 focus:bg-white focus:ring-1 focus:ring-blue-200 rounded px-1 transition-colors leading-relaxed",
+            textSpan: "text-[13px] font-normal text-slate-800 leading-relaxed whitespace-pre-wrap break-words",
             opNum: `${cell} ${readOnly ? 'bg-slate-100' : 'bg-slate-50'} sticky left-0 z-[5] w-24 min-w-[96px]`,
             opName: `${cell} ${readOnly ? 'bg-slate-100' : 'bg-slate-50'} sticky left-[96px] z-[5] w-48 min-w-[192px] border-r-2 border-r-slate-300`,
             ghostCell: "p-0.5 border-r border-b border-dashed border-gray-200 bg-gray-50/30 align-middle",
@@ -242,10 +248,22 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
         />
     );
 
-    /** Render AP badge */
+    /**
+     * Render AP cell — barra lateral 1px de color + texto humano (Alta/Media/Baja).
+     *
+     * Rediseno UI 2026-04-26: AP deja de ser pill agresivo. Ahora es ancla de
+     * prioridad — debe leerse rapido sin gritar. La barra se rendera en la celda
+     * padre con position: relative (renderAPBadge se llama dentro de un <td>).
+     */
     const renderAPBadge = (ap: string) => (
-        <div className={`text-[10px] px-1.5 py-0.5 rounded text-center ${getApColor(ap)}`}>
-            {ap || "-"}
+        <div className="relative pl-2 py-0.5">
+            <span
+                className={`absolute left-0 top-0 bottom-0 w-1 rounded-sm ${getApBarColor(ap)}`}
+                aria-hidden="true"
+            />
+            <span className={`text-[11px] ${getApColor(ap)}`} title={`AP=${ap || '?'}`}>
+                {ap ? getApLabel(ap) : '—'}
+            </span>
         </div>
     );
 

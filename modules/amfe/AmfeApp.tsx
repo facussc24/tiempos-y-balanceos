@@ -975,7 +975,35 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab, initialF
                     </div>
                 ) : (
                     <div className="bg-white shadow-lg rounded border border-gray-300">
-                        <div className={`overflow-x-auto overflow-y-auto ${isReadOnly ? 'max-h-[calc(100vh-200px)]' : 'max-h-[calc(100vh-220px)]'}`} style={{ scrollbarGutter: 'stable' }}>
+                        {/* Modo lectura/edicion — banda visible (rediseno UI 2026-04-26 Etapa 3a) */}
+                        <div className="flex items-center justify-between px-4 py-2 border-b border-slate-200 bg-slate-50/60">
+                            <div className="flex items-center gap-2 text-[11px] font-medium">
+                                {isReadOnly ? (
+                                    <span className="inline-flex items-center gap-1.5 text-amber-700">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                                        Solo lectura
+                                    </span>
+                                ) : (
+                                    <span className="inline-flex items-center gap-1.5 text-slate-700">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-slate-900" />
+                                        Editando
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+                        {/* Banda 6 pasos VDA — orientacion visual fuera del scroll horizontal */}
+                        <div className="grid border-b border-slate-200 text-[10px] font-semibold uppercase tracking-wider">
+                            <div className="grid" style={{ gridTemplateColumns: '96px 192px 1fr 1fr 1fr 1fr 1fr' }}>
+                                <div className="px-3 py-1.5 bg-slate-50 text-slate-500 border-r border-slate-200">Op</div>
+                                <div className="px-3 py-1.5 bg-slate-50 text-slate-500 border-r border-slate-200">Operacion</div>
+                                <div className="px-3 py-1.5 bg-slate-50 text-slate-500 border-r border-slate-200" title="Paso 2 VDA: estructura y funcion">2 · Estructura / funcion</div>
+                                <div className="px-3 py-1.5 bg-rose-50/60 text-rose-700 border-r border-slate-200" title="Paso 3 VDA: modo de falla y efecto">3 · Falla / Efecto</div>
+                                <div className="px-3 py-1.5 bg-amber-50/60 text-amber-700 border-r border-slate-200" title="Paso 4 VDA: causa y S/O/D">4 · Causa · S/O/D</div>
+                                <div className="px-3 py-1.5 bg-emerald-50/60 text-emerald-700 border-r border-slate-200" title="Paso 5 VDA: analisis de acciones">5 · Acciones</div>
+                                <div className="px-3 py-1.5 bg-indigo-50/60 text-indigo-700" title="Paso 6 VDA: optimizacion">6 · Optimizacion</div>
+                            </div>
+                        </div>
+                        <div className={`overflow-x-auto overflow-y-auto ${isReadOnly ? 'max-h-[calc(100vh-260px)]' : 'max-h-[calc(100vh-280px)]'}`} style={{ scrollbarGutter: 'stable' }}>
                             <table className="border-collapse" style={{ minWidth: isReadOnly ? '2600px' : '2800px' }}>
                                 <StickyColumnHeader visibility={colVis.visibility} />
                                 <AmfeTableBody

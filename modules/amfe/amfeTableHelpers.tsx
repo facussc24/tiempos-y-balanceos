@@ -24,32 +24,71 @@ export const WE_ICONS: Record<WorkElementType, React.ReactNode> = {
 // Color helpers
 // ---------------------------------------------------------------------------
 
-/** Color badge for Action Priority (H/M/L) */
+/**
+ * Color badge for Action Priority (H/M/L) — paleta sutil.
+ *
+ * Rediseno UI 2026-04-26: AP deja de ser pill agresivo y pasa a barra lateral.
+ * Esta funcion sigue exportada para compatibilidad pero ahora retorna texto + barra,
+ * no fondo solido. Para barra lateral usar getApBarColor / getApTextColor / getApLabel.
+ */
 export const getApColor = (ap: string) => {
     switch (ap) {
-        case ActionPriority.HIGH: return 'bg-red-500 text-white font-bold';
-        case ActionPriority.MEDIUM: return 'bg-yellow-400 text-black font-bold';
-        case ActionPriority.LOW: return 'bg-green-500 text-white font-bold';
-        default: return 'bg-gray-100 text-gray-400';
+        case ActionPriority.HIGH: return 'text-rose-700 font-semibold';
+        case ActionPriority.MEDIUM: return 'text-amber-700 font-medium';
+        case ActionPriority.LOW: return 'text-emerald-700';
+        default: return 'text-slate-400';
     }
 };
 
-/** Color coding for S/O/D values based on risk level */
-export const getSODColor = (value: number | string): string => {
-    const num = Number(value);
-    if (isNaN(num) || num === 0) return '';
-    if (num >= 9) return 'bg-red-100 text-red-900 font-bold';
-    if (num >= 7) return 'bg-orange-100 text-orange-900 font-semibold';
-    if (num >= 4) return 'bg-yellow-50 text-yellow-900';
-    return 'bg-green-50 text-green-800';
+/** Barra lateral 1px de color para celda AP (rediseno UI 2026-04-26) */
+export const getApBarColor = (ap: string): string => {
+    switch (ap) {
+        case ActionPriority.HIGH: return 'bg-rose-500';
+        case ActionPriority.MEDIUM: return 'bg-amber-400';
+        case ActionPriority.LOW: return 'bg-emerald-400';
+        default: return 'bg-slate-200';
+    }
 };
 
-/** Left-border color based on AP level for cause rows */
+/** Texto humano para AP (Alta/Media/Baja) — propuesta UI 2026-04-26 */
+export const getApLabel = (ap: string): string => {
+    switch (ap) {
+        case ActionPriority.HIGH: return 'Alta';
+        case ActionPriority.MEDIUM: return 'Media';
+        case ActionPriority.LOW: return 'Baja';
+        default: return '—';
+    }
+};
+
+/**
+ * Color coding for S/O/D values — paleta calibrada (rediseno UI 2026-04-26).
+ *
+ * Regla: slate-700 base. Color SOLO cuando hay riesgo significativo:
+ *  - S/O/D >= 7  -> rojo (alto riesgo, action priority candidato a H)
+ *  - S/O/D >= 4  -> ambar (riesgo moderado)
+ *  - S/O/D < 4   -> slate (sin destacar visualmente)
+ *
+ * Antes: 4 niveles con fondos solidos compitiendo con AP. Ahora: solo texto, sin fondo.
+ */
+export const getSODColor = (value: number | string): string => {
+    const num = Number(value);
+    if (isNaN(num) || num === 0) return 'text-slate-400';
+    if (num >= 7) return 'text-rose-600 font-semibold';
+    if (num >= 4) return 'text-amber-700 font-medium';
+    return 'text-slate-700';
+};
+
+/**
+ * Left-border color based on AP level for cause rows — paleta sutil.
+ *
+ * Antes: borde 4px + bg-color/15-20%. Ahora: borde 2px + sin fondo. AP=L sin borde
+ * (no compite visualmente — el ojo va a las altas y medias).
+ */
 export const getCauseRowBorderClass = (ap: string): string => {
     switch (ap) {
-        case 'H': return 'border-l-4 border-l-red-500 bg-red-50/20';
-        case 'M': return 'border-l-4 border-l-yellow-400 bg-yellow-50/15';
-        case 'L': return 'border-l-4 border-l-green-400 bg-green-50/10';
+        case 'H': return 'border-l-2 border-l-rose-500';
+        case 'M': return 'border-l-2 border-l-amber-400';
+        case 'L': return '';
         default: return '';
     }
 };
