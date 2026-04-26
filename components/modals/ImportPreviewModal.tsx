@@ -60,16 +60,17 @@ export const ImportPreviewModal: React.FC<ImportPreviewModalProps> = ({
                 ref={modalRef}
                 role="dialog"
                 aria-modal="true"
+                aria-labelledby="import-preview-title"
                 className={`relative bg-slate-800 text-white rounded-xl shadow-xl w-full max-w-lg mx-4 overflow-hidden transition-all duration-200 ${isClosing ? 'scale-95 opacity-0' : 'animate-scale-in'}`}
             >
                 {/* Header */}
                 <div className="flex items-center justify-between p-5 border-b border-slate-700">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
-                            <Download size={20} className="text-blue-400" />
+                            <Download size={20} className="text-blue-400" aria-hidden="true" />
                         </div>
                         <div>
-                            <h2 className="text-lg font-semibold">Importar Datos</h2>
+                            <h2 id="import-preview-title" className="text-lg font-semibold">Importar Datos</h2>
                             {sourceDevice && (
                                 <p className="text-sm text-slate-400">Desde: {sourceDevice}</p>
                             )}
@@ -78,9 +79,10 @@ export const ImportPreviewModal: React.FC<ImportPreviewModalProps> = ({
                     <button
                         onClick={onClose}
                         disabled={isImporting}
-                        className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-700 transition-colors"
+                        aria-label="Cerrar"
+                        className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 transition-colors"
                     >
-                        <X size={20} />
+                        <X size={20} aria-hidden="true" />
                     </button>
                 </div>
 

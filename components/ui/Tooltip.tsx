@@ -74,6 +74,7 @@ export const Tooltip: React.FC<Props> = ({ content, children, className = "", sh
                 }}
                 tabIndex={0}
                 role="button"
+                aria-label={children ? undefined : 'Mas informacion'}
                 aria-describedby={isVisible ? 'tooltip-content' : undefined}
             >
                 {children || <HelpCircle size={14} className="text-slate-400 cursor-help hover:text-blue-500 transition-colors" />}

@@ -389,6 +389,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
                         placeholder="Buscar acciones, módulos o ayuda..."
+                        aria-label="Buscar acciones, módulos o ayuda"
                         className="flex-1 bg-transparent border-none outline-none text-slate-800 placeholder:text-slate-400 text-base"
                         autoComplete="off"
                         spellCheck={false}

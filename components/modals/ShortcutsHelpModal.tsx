@@ -260,9 +260,9 @@ export const ShortcutsHelpModal: React.FC<ShortcutsHelpModalProps> = ({
                     <button
                         onClick={onClose}
                         aria-label="Cerrar"
-                        className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+                        className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 transition-colors"
                     >
-                        <X size={20} />
+                        <X size={20} aria-hidden="true" />
                     </button>
                 </div>
 
