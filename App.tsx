@@ -74,11 +74,15 @@ const AppMain: React.FC<AppProps> = ({ onBackToLanding }) => {
 
     // Auto-record history when data changes (skip if triggered by undo/redo)
     useEffect(() => {
-        if (persistence.data !== lastDataRef.current && persistence.data.fileHandle && !isUndoingRef.current) {
-            undoPush(persistence.data, { tab: activeTab });
+        if (persistence.data !== lastDataRef.current && persistence.data.fileHandle) {
+            if (!isUndoingRef.current) {
+                undoPush(persistence.data, { tab: activeTab });
+            }
             lastDataRef.current = persistence.data;
+            // Clear flag only after data actually changed so re-runs caused by
+            // activeTab / undoPush identity changes do not consume the flag prematurely.
+            isUndoingRef.current = false;
         }
-        isUndoingRef.current = false;
     }, [persistence.data, activeTab, undoPush]);
 
     const sessionLock = useSessionLock(
