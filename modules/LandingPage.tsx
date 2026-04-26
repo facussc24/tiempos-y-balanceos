@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState, useCallback, lazy, Suspense } from 'react';
 import {
     Clock, ShieldAlert, ClipboardCheck, GitBranch, ArrowRight,
-    FolderOpen, FileText, Sparkles, AlertTriangle, GitMerge,
+    FolderOpen, FileText, AlertTriangle, GitMerge,
     ExternalLink, FilePlus2, Wrench,
     BookOpen, Shield, LogOut, Users, Package, Loader2,
 } from 'lucide-react';
@@ -26,10 +26,10 @@ interface LandingPageProps {
 }
 
 const TYPE_ICONS: Record<DocumentType, React.ReactNode> = {
-    pfd: <GitBranch size={14} className="text-cyan-600" />,
-    amfe: <ShieldAlert size={14} className="text-orange-500" />,
-    controlPlan: <ClipboardCheck size={14} className="text-green-600" />,
-    hojaOperaciones: <FileText size={14} className="text-indigo-500" />,
+    pfd: <GitBranch size={14} className="text-slate-500" />,
+    amfe: <ShieldAlert size={14} className="text-slate-500" />,
+    controlPlan: <ClipboardCheck size={14} className="text-slate-500" />,
+    hojaOperaciones: <FileText size={14} className="text-slate-500" />,
 };
 
 const TYPE_LABELS: Record<DocumentType, string> = {
@@ -57,6 +57,20 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSelectModule, onOpenProject
         [documentCounts]
     );
 
+    // "Now" frozen at first render — useState initializer es React-pure. La diferencia
+    // de pocos minutos entre renders no impacta el formato "hace X min".
+    const [renderNow] = useState(() => Date.now());
+
+    // AMFE alert: AP=H sin acción mitigada (pendingItems.type === 'ap_h_unmitigated')
+    const hasAmfeAlerts = useMemo(
+        () => pendingItems.some(p => p.type === 'ap_h_unmitigated'),
+        [pendingItems]
+    );
+    const amfeAlertCount = useMemo(
+        () => pendingItems.filter(p => p.type === 'ap_h_unmitigated').reduce((s, p) => s + p.count, 0),
+        [pendingItems]
+    );
+
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
@@ -75,11 +89,29 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSelectModule, onOpenProject
         return () => document.removeEventListener('keydown', handleKeyDown);
     }, [onSelectModule]);
 
+    const formatRelative = (iso: string) => {
+        if (!iso) return '';
+        try {
+            const d = new Date(iso);
+            if (isNaN(d.getTime())) return '';
+            const diffMs = renderNow - d.getTime();
+            const min = Math.round(diffMs / 60000);
+            if (min < 1) return 'hace un momento';
+            if (min < 60) return `hace ${min} min`;
+            const h = Math.round(min / 60);
+            if (h < 24) return `hace ${h} h`;
+            const days = Math.round(h / 24);
+            if (days < 7) return `hace ${days} d`;
+            return d.toLocaleDateString('es-AR', { day: '2-digit', month: 'short' });
+        } catch {
+            return '';
+        }
+    };
+
     const formatDate = (iso: string) => {
         if (!iso) return '';
         try {
             const d = new Date(iso);
-            // FIX: Invalid Date produces "Invalid Date" string from toLocaleDateString()
             if (isNaN(d.getTime())) return '';
             return d.toLocaleDateString('es-AR', { day: '2-digit', month: 'short' });
         } catch {
@@ -87,42 +119,40 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSelectModule, onOpenProject
         }
     };
 
-    /** Normalize document names to Title Case.
-     *  - Strips hierarchy path (e.g. "VWA/PATAGONIA/TOP_ROLL" -> "Top Roll")
-     *  - Converts ALL_CAPS or ALL CAPS names to Title Case
-     */
+    /** Normalize document names to Title Case. */
     const cleanDocumentName = (name: string): string => {
         if (!name) return name;
-        // For hierarchical paths, take the last segment
         const segment = name.includes('/') ? (name.split('/').pop() || name) : name;
-        // Replace underscores with spaces and normalize to Title Case
         const words = segment.replace(/_/g, ' ').trim().split(/\s+/);
-        // Only transform if the name looks ALL CAPS (every word is uppercase)
         const isAllCaps = words.every(w => w === w.toUpperCase() && /[A-Z]/.test(w));
         if (!isAllCaps) return segment;
-        return words
-            .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
-            .join(' ');
+        return words.map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
     };
+
+    const heroDoc = recentDocuments[0];
+    const moduleForType = (t: DocumentType) =>
+        t === 'controlPlan' ? 'controlPlan'
+        : t === 'hojaOperaciones' ? 'hojaOperaciones'
+        : t === 'pfd' ? 'pfd'
+        : 'amfe';
 
     return (
         <div className="min-h-full bg-slate-50 font-sans">
-
             <div className="relative z-10 max-w-7xl mx-auto px-3 sm:px-6 py-10">
 
-                {/* ===== HEADER ===== */}
+                {/* ===== HEADER (sutil) ===== */}
                 <header className="flex flex-wrap items-center gap-4 mb-10 opacity-0 animate-fade-in-up">
                     <img
                         src={barackLogo}
                         alt="Barack Mercosul"
-                        className="h-12"
-                        style={{ filter: 'drop-shadow(0 2px 6px rgba(0, 0, 0, 0.1))' }}
+                        className="h-10"
+                        style={{ filter: 'drop-shadow(0 2px 6px rgba(0, 0, 0, 0.08))' }}
                     />
                     <div>
-                        <h1 className="text-2xl font-bold text-slate-800 tracking-tight leading-tight">
+                        <h1 className="text-base font-semibold text-slate-900 tracking-tight leading-tight">
                             Barack Mercosul
                         </h1>
-                        <p className="text-sm text-blue-600 font-medium">
+                        <p className="text-xs text-slate-500">
                             Ingeniería de Calidad Automotriz
                         </p>
                     </div>
@@ -131,7 +161,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSelectModule, onOpenProject
                         <button
                             onClick={() => onSelectModule('registry')}
                             title="Abrir Hub de Documentos"
-                            className="text-xs text-slate-500 hover:text-blue-600 transition-colors flex items-center gap-1.5 bg-white shadow-sm border border-slate-200/60 rounded-lg px-3 py-1.5 hover:border-blue-300"
+                            className="text-xs text-slate-500 hover:text-slate-900 transition-colors flex items-center gap-1.5 bg-white border border-slate-200 rounded-md px-3 py-1.5 hover:border-slate-300"
                         >
                             <FolderOpen size={13} />
                             <span>{totalDocs} documentos</span>
@@ -145,7 +175,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSelectModule, onOpenProject
                             <button
                                 onClick={() => signOut()}
                                 title={`Cerrar sesión (${user.email ?? user.id})`}
-                                className="text-xs text-slate-400 hover:text-slate-600 transition-colors flex items-center gap-1.5 bg-white shadow-sm border border-slate-200/60 rounded-lg px-3 py-1.5 hover:border-slate-300"
+                                className="text-xs text-slate-500 hover:text-slate-900 transition-colors flex items-center gap-1.5 bg-white border border-slate-200 rounded-md px-3 py-1.5 hover:border-slate-300"
                             >
                                 <LogOut size={13} />
                                 <span>Salir</span>
@@ -154,32 +184,32 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSelectModule, onOpenProject
                     )}
                 </header>
 
-                {/* ===== LOADING INDICATOR ===== */}
+                {/* ===== LOADING ===== */}
                 {projectsLoading && (
                     <div className="flex items-center justify-center py-16 opacity-0 animate-fade-in-up">
                         <div className="text-center">
-                            <Loader2 size={32} className="text-blue-500 animate-spin mx-auto mb-3" />
+                            <Loader2 size={32} className="text-slate-400 animate-spin mx-auto mb-3" />
                             <p className="text-sm text-slate-400">Cargando proyectos...</p>
                         </div>
                     </div>
                 )}
 
-                {/* ===== PENDIENTES (only if items exist) ===== */}
+                {/* ===== PENDIENTES (si hay) ===== */}
                 {!projectsLoading && pendingItems.length > 0 && (
                     <section className="mb-8 opacity-0 animate-fade-in-up stagger-1" aria-label="Pendientes">
-                        <h2 className="text-xs font-bold text-red-400 uppercase tracking-wider flex items-center gap-2 mb-3">
+                        <h2 className="text-[11px] font-semibold text-rose-700 uppercase tracking-wider flex items-center gap-2 mb-3">
                             <AlertTriangle size={14} />
                             Requiere atención
                         </h2>
-                        <div className="bg-red-50 border border-red-200 rounded-xl divide-y divide-red-100 overflow-hidden">
+                        <div className="bg-rose-50 border border-rose-200 rounded-xl divide-y divide-rose-100 overflow-hidden">
                             {pendingItems.map((item: PendingItem) => (
                                 <div key={`${item.type}-${item.familyId}`} className="flex items-center gap-3 px-4 py-3">
                                     <div className={`w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0 ${
-                                        item.type === 'ap_h_unmitigated' ? 'bg-red-100' : 'bg-amber-100'
+                                        item.type === 'ap_h_unmitigated' ? 'bg-rose-100' : 'bg-amber-100'
                                     }`}>
                                         {item.type === 'ap_h_unmitigated'
-                                            ? <AlertTriangle size={14} className="text-red-400" />
-                                            : <GitMerge size={14} className="text-amber-400" />
+                                            ? <AlertTriangle size={14} className="text-rose-600" />
+                                            : <GitMerge size={14} className="text-amber-600" />
                                         }
                                     </div>
                                     <div className="flex-grow min-w-0">
@@ -197,16 +227,110 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSelectModule, onOpenProject
                     </section>
                 )}
 
-                {/* ===== MIS PROYECTOS ===== */}
+                {/* ===== HERO: Continuar trabajo ===== */}
+                {!projectsLoading && heroDoc && (
+                    <section className="mb-12 opacity-0 animate-fade-in-up stagger-1" aria-label="Continuar trabajo">
+                        <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-3">
+                            Continuar trabajo
+                        </div>
+                        <button
+                            onClick={() => onSelectModule(moduleForType(heroDoc.type))}
+                            className="w-full text-left bg-white rounded-2xl border border-slate-200 p-6 flex flex-wrap items-center gap-6 shadow-sm hover:border-slate-400 hover:shadow-md transition-all cursor-pointer group"
+                        >
+                            <div className="flex-1 min-w-0">
+                                <div className="flex items-baseline gap-2 mb-1 flex-wrap">
+                                    {heroDoc.client && (
+                                        <span className="text-[10px] text-slate-400 uppercase tracking-wider">{heroDoc.client}</span>
+                                    )}
+                                    {heroDoc.client && <span className="text-slate-300">·</span>}
+                                    <span className="text-[10px] text-amber-600 font-medium">
+                                        Editado {formatRelative(heroDoc.updatedAt)}
+                                    </span>
+                                </div>
+                                <h3 className="text-2xl font-semibold text-slate-900 tracking-tight">
+                                    {cleanDocumentName(heroDoc.name)}
+                                </h3>
+                                <div className="flex flex-wrap items-center gap-2 mt-3 text-xs text-slate-500">
+                                    <span className="font-semibold text-slate-700">{TYPE_LABELS[heroDoc.type]}</span>
+                                    {heroDoc.partNumber && (<><span className="text-slate-300">·</span><span className="font-mono text-slate-600">{heroDoc.partNumber}</span></>)}
+                                    {hasAmfeAlerts && (
+                                        <>
+                                            <span className="text-slate-300">·</span>
+                                            <span className="inline-flex items-center gap-1.5">
+                                                <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+                                                <span className="text-rose-700 font-medium">{amfeAlertCount} AP=H sin acción</span>
+                                            </span>
+                                        </>
+                                    )}
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2 ml-auto">
+                                <span className="px-4 py-2 text-xs font-medium bg-slate-900 text-white rounded-md group-hover:bg-slate-800 inline-flex items-center gap-2">
+                                    Continuar
+                                    <ArrowRight size={14} />
+                                </span>
+                            </div>
+                        </button>
+                    </section>
+                )}
+
+                {/* ===== DOCUMENTOS APQP (4 cards) ===== */}
+                <section className="mb-12 opacity-0 animate-fade-in-up stagger-2" aria-label="Documentos APQP">
+                    <div className="flex items-baseline justify-between mb-4">
+                        <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+                            Documentos APQP
+                        </div>
+                        <button
+                            onClick={() => onSelectModule('registry')}
+                            className="text-xs text-slate-500 hover:text-slate-900 transition-colors"
+                        >
+                            Ver Hub completo →
+                        </button>
+                    </div>
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                        <ApqpDocCard
+                            initial="P"
+                            label="Diagrama de Flujo"
+                            shortLabel="PFD"
+                            count={documentCounts.pfd ?? 0}
+                            onClick={() => onSelectModule('pfd')}
+                        />
+                        <ApqpDocCard
+                            initial="A"
+                            label="AMFE VDA"
+                            shortLabel="AMFE"
+                            count={documentCounts.amfe ?? 0}
+                            alert={hasAmfeAlerts}
+                            alertText={hasAmfeAlerts ? `${amfeAlertCount} AP=H` : undefined}
+                            onClick={() => onSelectModule('amfe')}
+                        />
+                        <ApqpDocCard
+                            initial="C"
+                            label="Plan de Control"
+                            shortLabel="CP"
+                            count={documentCounts.controlPlan ?? 0}
+                            onClick={() => onSelectModule('controlPlan')}
+                        />
+                        <ApqpDocCard
+                            initial="H"
+                            label="Hojas de Operaciones"
+                            shortLabel="HO"
+                            count={documentCounts.hojaOperaciones ?? 0}
+                            onClick={() => onSelectModule('hojaOperaciones')}
+                        />
+                    </div>
+                </section>
+
+                {/* ===== MIS PROYECTOS (compacto, link al hub) ===== */}
                 {!projectsLoading && projects.length > 0 && (
-                    <section className="mb-10 opacity-0 animate-fade-in-up stagger-1" aria-label="Mis Proyectos">
-                        <div className="flex items-center gap-3 mb-5">
-                            <h2 className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2">
-                                <Package size={14} />
+                    <section className="mb-12 opacity-0 animate-fade-in-up stagger-2" aria-label="Mis Proyectos">
+                        <div className="flex items-center gap-3 mb-4">
+                            <h2 className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-2">
+                                <Package size={13} />
                                 Mis Proyectos
                             </h2>
                             <p className="text-xs text-slate-400">
-                                Familias de producto con documentación APQP vinculada
+                                {projects.length} familias con APQP vinculado
                             </p>
                         </div>
                         <ProjectTable
@@ -223,167 +347,83 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSelectModule, onOpenProject
                     </section>
                 )}
 
-                {/* ===== TWO-COLUMN: Gestion de Ingenieria + Recientes ===== */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10 opacity-0 animate-fade-in-up stagger-2">
+                {/* ===== TWO-COLUMN: Herramientas (lista compacta) + Recientes ===== */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10 opacity-0 animate-fade-in-up stagger-3">
 
-                    {/* Gestión de Ingeniería - standalone tools */}
+                    {/* Herramientas (lista vertical, sin colores únicos) */}
                     <div>
-                        <h2 className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2 mb-4">
-                            <Wrench size={14} />
+                        <h2 className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-2 mb-3">
+                            <Wrench size={13} />
                             Herramientas
                         </h2>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <button
+                        <div className="bg-white rounded-xl border border-slate-200 divide-y divide-slate-100 overflow-hidden">
+                            <ToolRow
+                                label="Tiempos y Balanceos"
+                                desc="Cronometraje y balanceo de línea"
+                                icon={<Clock size={16} className="text-slate-500" />}
                                 onClick={() => onSelectModule('tiempos')}
-                                aria-label="Abrir Tiempos y Balanceos"
-                                className="group w-full text-left bg-white shadow-sm border border-blue-200 rounded-xl p-4
-                                           hover:bg-blue-50 hover:border-blue-300 hover:shadow-md hover:-translate-y-0.5
-                                           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-white focus-visible:ring-blue-500/50
-                                           transition-all duration-200 cursor-pointer"
-                            >
-                                <div className="flex items-center gap-3">
-                                    <div className="bg-blue-50 w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0">
-                                        <Clock size={20} className="text-blue-600" />
-                                    </div>
-                                    <div className="min-w-0">
-                                        <h3 className="text-sm font-bold text-slate-800">Tiempos y Balanceos</h3>
-                                        <p className="text-xs text-slate-500 mt-0.5">Cronometraje y balanceo de línea</p>
-                                    </div>
-                                    <ArrowRight size={14} className="text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity ml-auto flex-shrink-0" />
-                                </div>
-                            </button>
-                            <button
-                                onClick={() => onSelectModule('solicitud')}
-                                aria-label="Abrir Solicitudes de Código"
-                                className="group w-full text-left bg-white shadow-sm border border-amber-200 rounded-xl p-4
-                                           hover:bg-amber-50 hover:border-amber-300 hover:shadow-md hover:-translate-y-0.5
-                                           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-white focus-visible:ring-blue-500/50
-                                           transition-all duration-200 cursor-pointer"
-                            >
-                                <div className="flex items-center gap-3">
-                                    <div className="bg-amber-50 w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0">
-                                        <FilePlus2 size={20} className="text-amber-600" />
-                                    </div>
-                                    <div className="min-w-0">
-                                        <h3 className="text-sm font-bold text-slate-800">Solicitudes de Código</h3>
-                                        <p className="text-xs text-slate-500 mt-0.5">Solicitar generación de códigos ARB</p>
-                                    </div>
-                                    <ArrowRight size={14} className="text-amber-600 opacity-0 group-hover:opacity-100 transition-opacity ml-auto flex-shrink-0" />
-                                </div>
-                            </button>
-                            <button
-                                onClick={() => onSelectModule('manuales')}
-                                aria-label="Abrir Manuales de Ingeniería"
-                                className="group w-full text-left bg-white shadow-sm border border-teal-200 rounded-xl p-4
-                                           hover:bg-teal-50 hover:border-teal-300 hover:shadow-md hover:-translate-y-0.5
-                                           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-white focus-visible:ring-blue-500/50
-                                           transition-all duration-200 cursor-pointer"
-                            >
-                                <div className="flex items-center gap-3">
-                                    <div className="bg-teal-50 w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0">
-                                        <BookOpen size={20} className="text-teal-600" />
-                                    </div>
-                                    <div className="min-w-0">
-                                        <h3 className="text-sm font-bold text-slate-800">Manuales</h3>
-                                        <p className="text-xs text-slate-500 mt-0.5">Procedimientos y documentos HTML</p>
-                                    </div>
-                                    <ArrowRight size={14} className="text-teal-600 opacity-0 group-hover:opacity-100 transition-opacity ml-auto flex-shrink-0" />
-                                </div>
-                            </button>
-                            <button
-                                onClick={() => onSelectModule('formatos')}
-                                aria-label="Abrir Formatos Estándar"
-                                className="group w-full text-left bg-white shadow-sm border border-purple-200 rounded-xl p-4
-                                           hover:bg-purple-50 hover:border-purple-300 hover:shadow-md hover:-translate-y-0.5
-                                           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-white focus-visible:ring-blue-500/50
-                                           transition-all duration-200 cursor-pointer"
-                            >
-                                <div className="flex items-center gap-3">
-                                    <div className="bg-purple-50 w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0">
-                                        <FolderOpen size={20} className="text-purple-600" />
-                                    </div>
-                                    <div className="min-w-0">
-                                        <h3 className="text-sm font-bold text-slate-800">Formatos Estándar</h3>
-                                        <p className="text-xs text-slate-500 mt-0.5">Plantillas Excel, PDF y Word</p>
-                                    </div>
-                                    <ArrowRight size={14} className="text-purple-600 opacity-0 group-hover:opacity-100 transition-opacity ml-auto flex-shrink-0" />
-                                </div>
-                            </button>
-                            <button
-                                onClick={() => onSelectModule('dataManager')}
-                                aria-label="Abrir Datos y Seguridad"
-                                className="group w-full text-left bg-white shadow-sm border border-rose-200 rounded-xl p-4
-                                           hover:bg-rose-50 hover:border-rose-300 hover:shadow-md hover:-translate-y-0.5
-                                           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-white focus-visible:ring-blue-500/50
-                                           transition-all duration-200 cursor-pointer"
-                            >
-                                <div className="flex items-center gap-3">
-                                    <div className="bg-rose-50 w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0">
-                                        <Shield size={20} className="text-rose-600" />
-                                    </div>
-                                    <div className="min-w-0">
-                                        <h3 className="text-sm font-bold text-slate-800">Datos y Seguridad</h3>
-                                        <p className="text-xs text-slate-500 mt-0.5">Backups, exportar, importar y sincronizar datos</p>
-                                    </div>
-                                    <ArrowRight size={14} className="text-rose-600 opacity-0 group-hover:opacity-100 transition-opacity ml-auto flex-shrink-0" />
-                                </div>
-                            </button>
-                            <button
+                                ariaLabel="Abrir Tiempos y Balanceos"
+                            />
+                            <ToolRow
+                                label="Reportes 8D"
+                                desc="Análisis 8D con Ishikawa, 5 Por Qué y Punto de Escape"
+                                icon={<ClipboardCheck size={16} className="text-slate-500" />}
                                 onClick={() => onSelectModule('8dReports')}
-                                aria-label="Abrir Reportes 8D"
-                                className="group w-full text-left bg-white shadow-sm border border-indigo-200 rounded-xl p-4
-                                           hover:bg-indigo-50 hover:border-indigo-300 hover:shadow-md hover:-translate-y-0.5
-                                           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-white focus-visible:ring-blue-500/50
-                                           transition-all duration-200 cursor-pointer"
-                            >
-                                <div className="flex items-center gap-3">
-                                    <div className="bg-indigo-50 w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0">
-                                        <ClipboardCheck size={20} className="text-indigo-600" />
-                                    </div>
-                                    <div className="min-w-0">
-                                        <h3 className="text-sm font-bold text-slate-800">Reportes 8D</h3>
-                                        <p className="text-xs text-slate-500 mt-0.5">Analisis 8D (G8D) con Ishikawa, 5 Por Que y Punto de Escape</p>
-                                    </div>
-                                    <ArrowRight size={14} className="text-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity ml-auto flex-shrink-0" />
-                                </div>
-                            </button>
+                                ariaLabel="Abrir Reportes 8D"
+                            />
+                            <ToolRow
+                                label="Solicitudes de Código"
+                                desc="Solicitar generación de códigos ARB"
+                                icon={<FilePlus2 size={16} className="text-slate-500" />}
+                                onClick={() => onSelectModule('solicitud')}
+                                ariaLabel="Abrir Solicitudes de Código"
+                            />
+                            <ToolRow
+                                label="Manuales"
+                                desc="Procedimientos y documentos HTML"
+                                icon={<BookOpen size={16} className="text-slate-500" />}
+                                onClick={() => onSelectModule('manuales')}
+                                ariaLabel="Abrir Manuales de Ingeniería"
+                            />
+                            <ToolRow
+                                label="Formatos Estándar"
+                                desc="Plantillas Excel, PDF y Word"
+                                icon={<FolderOpen size={16} className="text-slate-500" />}
+                                onClick={() => onSelectModule('formatos')}
+                                ariaLabel="Abrir Formatos Estándar"
+                            />
+                            <ToolRow
+                                label="Datos y Seguridad"
+                                desc="Backups, exportar, importar y sincronizar datos"
+                                icon={<Shield size={16} className="text-slate-500" />}
+                                onClick={() => onSelectModule('dataManager')}
+                                ariaLabel="Abrir Datos y Seguridad"
+                            />
                             {isAdmin && (
-                                <button
+                                <ToolRow
+                                    label="Administración"
+                                    desc="Gestionar usuarios y permisos"
+                                    icon={<Users size={16} className="text-slate-500" />}
                                     onClick={() => onSelectModule('admin')}
-                                    aria-label="Abrir Administración de Usuarios"
-                                    className="group w-full text-left bg-white shadow-sm border border-violet-200 rounded-xl p-4
-                                               hover:bg-violet-50 hover:border-violet-300 hover:shadow-md hover:-translate-y-0.5
-                                               focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-white focus-visible:ring-blue-500/50
-                                               transition-all duration-200 cursor-pointer"
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <div className="bg-violet-50 w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0">
-                                            <Users size={20} className="text-violet-600" />
-                                        </div>
-                                        <div className="min-w-0">
-                                            <h3 className="text-sm font-bold text-slate-800">Administración</h3>
-                                            <p className="text-xs text-slate-500 mt-0.5">Gestionar usuarios y permisos</p>
-                                        </div>
-                                        <ArrowRight size={14} className="text-violet-600 opacity-0 group-hover:opacity-100 transition-opacity ml-auto flex-shrink-0" />
-                                    </div>
-                                </button>
+                                    ariaLabel="Abrir Administración de Usuarios"
+                                />
                             )}
                         </div>
                     </div>
 
-                    {/* Recent documents */}
+                    {/* Documentos Recientes */}
                     <div>
-                        <h2 className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2 mb-4">
-                            <Sparkles size={14} />
+                        <h2 className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-2 mb-3">
+                            <FileText size={13} />
                             Documentos Recientes
                         </h2>
 
                         {recentDocuments.length > 0 ? (
-                            <div className="bg-white shadow-sm border border-slate-200/60 rounded-xl overflow-hidden divide-y divide-slate-100">
+                            <div className="bg-white border border-slate-200 rounded-xl overflow-hidden divide-y divide-slate-100">
                                 {recentDocuments.slice(0, 5).map(doc => (
                                     <button
                                         key={`${doc.type}-${doc.id}`}
-                                        onClick={() => onSelectModule(doc.type === 'controlPlan' ? 'controlPlan' : doc.type === 'hojaOperaciones' ? 'hojaOperaciones' : doc.type === 'pfd' ? 'pfd' : doc.type === 'amfe' ? 'amfe' : 'registry')}
+                                        onClick={() => onSelectModule(moduleForType(doc.type))}
                                         className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 transition-colors text-left group"
                                     >
                                         <div className="flex-shrink-0 w-7 h-7 rounded-md bg-slate-100 flex items-center justify-center">
@@ -392,21 +432,20 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSelectModule, onOpenProject
                                         <div className="flex-grow min-w-0">
                                             <div className="text-sm text-slate-800 font-medium truncate" title={doc.name}>{cleanDocumentName(doc.name)}</div>
                                             <div className="text-xs text-slate-500 flex items-center gap-2">
-                                                <span className="font-bold">{TYPE_LABELS[doc.type]}</span>
+                                                <span className="font-semibold">{TYPE_LABELS[doc.type]}</span>
                                                 {doc.client && <span>{doc.client}</span>}
-                                                {doc.partNumber && <span className="text-slate-600">{doc.partNumber}</span>}
+                                                {doc.partNumber && <span className="text-slate-600 font-mono">{doc.partNumber}</span>}
                                             </div>
                                         </div>
                                         <span className="text-xs text-slate-500 flex-shrink-0">
                                             {formatDate(doc.updatedAt)}
                                         </span>
-                                        <ExternalLink size={12} className="text-slate-600 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
+                                        <ExternalLink size={12} className="text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
                                     </button>
                                 ))}
-                                {/* Ver todos link */}
                                 <button
                                     onClick={() => onSelectModule('registry')}
-                                    className="w-full flex items-center justify-center gap-1.5 px-4 py-2.5 text-xs text-blue-600 hover:text-blue-700 hover:bg-slate-50 transition-colors font-medium"
+                                    className="w-full flex items-center justify-center gap-1.5 px-4 py-2.5 text-xs text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors font-medium"
                                     title="Abrir Hub de Documentos APQP"
                                 >
                                     <FolderOpen size={12} />
@@ -415,7 +454,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSelectModule, onOpenProject
                                 </button>
                             </div>
                         ) : (
-                            <div className="bg-white shadow-sm border border-slate-200/60 rounded-xl p-6 text-center">
+                            <div className="bg-white border border-slate-200 rounded-xl p-6 text-center">
                                 <FolderOpen size={28} className="mx-auto mb-2 text-slate-400" />
                                 <p className="text-sm text-slate-500">No hay documentos aún</p>
                                 <p className="text-xs text-slate-400 mt-1">
@@ -423,7 +462,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSelectModule, onOpenProject
                                 </p>
                                 <button
                                     onClick={() => onSelectModule('pfd')}
-                                    className="mt-3 text-xs text-cyan-600 hover:text-cyan-700 font-medium transition-colors"
+                                    className="mt-3 text-xs text-slate-700 hover:text-slate-900 font-medium transition-colors"
                                 >
                                     Crear Diagrama de Flujo →
                                 </button>
@@ -432,16 +471,10 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSelectModule, onOpenProject
                     </div>
                 </div>
 
-                {/* ===== FOOTER ===== */}
+                {/* ===== FOOTER (sin atajos visibles, atajos activos en handler) ===== */}
                 <footer className="text-center text-xs opacity-0 animate-fade-in-up stagger-3 pb-4" role="contentinfo">
                     <p className="text-slate-400">
-                        Atajos: <kbd className="bg-slate-100 px-1.5 py-0.5 rounded font-mono text-slate-600 border border-slate-300">1</kbd>-<kbd className="bg-slate-100 px-1.5 py-0.5 rounded font-mono text-slate-600 border border-slate-300">4</kbd> APQP
-                        <span className="mx-1.5 text-slate-400">·</span>
-                        <kbd className="bg-slate-100 px-1.5 py-0.5 rounded font-mono text-slate-600 border border-slate-300">5</kbd> Tiempos
-                        <span className="mx-1.5 text-slate-400">·</span>
-                        <kbd className="bg-slate-100 px-1.5 py-0.5 rounded font-mono text-slate-600 border border-slate-300">6</kbd> Hub
-                        <span className="mx-1.5 text-slate-400">·</span>
-                        <kbd className="bg-slate-100 px-1.5 py-0.5 rounded font-mono text-slate-600 border border-slate-300">7</kbd>-<kbd className="bg-slate-100 px-1.5 py-0.5 rounded font-mono text-slate-600 border border-slate-300">9</kbd> Herramientas
+                        Barack Mercosul · Ingeniería de Calidad Automotriz
                     </p>
                 </footer>
             </div>
@@ -459,5 +492,65 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSelectModule, onOpenProject
         </div>
     );
 };
+
+// ===== Sub-componentes locales =====
+
+interface ApqpDocCardProps {
+    initial: string;
+    label: string;
+    shortLabel: string;
+    count: number;
+    alert?: boolean;
+    alertText?: string;
+    onClick: () => void;
+}
+
+const ApqpDocCard: React.FC<ApqpDocCardProps> = ({ initial, label, count, alert, alertText, onClick }) => (
+    <button
+        onClick={onClick}
+        className="bg-white rounded-xl border border-slate-200 p-4 text-left hover:border-slate-400 hover:shadow-sm transition-all group"
+    >
+        <div className="flex items-start justify-between mb-3">
+            <div className="w-9 h-9 rounded-md font-mono text-sm font-semibold flex items-center justify-center bg-slate-100 text-slate-700">
+                {initial}
+            </div>
+            {alert && (
+                <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-rose-700">
+                    <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+                    {alertText}
+                </span>
+            )}
+        </div>
+        <div className="text-sm font-medium text-slate-900">{label}</div>
+        <div className="text-[11px] text-slate-500 mt-0.5">
+            {count} doc{count !== 1 ? 's' : ''}
+        </div>
+    </button>
+);
+
+interface ToolRowProps {
+    label: string;
+    desc: string;
+    icon: React.ReactNode;
+    onClick: () => void;
+    ariaLabel: string;
+}
+
+const ToolRow: React.FC<ToolRowProps> = ({ label, desc, icon, onClick, ariaLabel }) => (
+    <button
+        onClick={onClick}
+        aria-label={ariaLabel}
+        className="group w-full text-left px-4 py-3 hover:bg-slate-50 flex items-center gap-3 transition-colors"
+    >
+        <div className="w-8 h-8 rounded-md bg-slate-100 flex items-center justify-center flex-shrink-0">
+            {icon}
+        </div>
+        <div className="flex-1 min-w-0">
+            <div className="text-sm text-slate-900 font-medium">{label}</div>
+            <div className="text-xs text-slate-500 mt-0.5 truncate">{desc}</div>
+        </div>
+        <ArrowRight size={14} className="text-slate-300 group-hover:text-slate-600 transition-colors flex-shrink-0" />
+    </button>
+);
 
 export default LandingPage;

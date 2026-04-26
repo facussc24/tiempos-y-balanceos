@@ -43,9 +43,11 @@ describe('LandingPage', () => {
             expect(screen.getAllByText(/Herramientas/).length).toBeGreaterThanOrEqual(1);
         });
 
-        it('should render keyboard shortcuts footer', () => {
+        it('should render contentinfo footer with branding', () => {
             render(<LandingPage onSelectModule={onSelectModule} />);
-            expect(screen.getByText(/Atajos/)).toBeDefined();
+            // Atajos numericos siguen activos en el handler, pero la leyenda visual fue removida
+            // por simplificacion UI. Verificamos que el footer sigue presente con branding.
+            expect(screen.getByText(/Barack Mercosul · Ingeniería de Calidad/)).toBeDefined();
         });
 
         it('should render document counts when provided', () => {
