@@ -459,8 +459,8 @@ const FamilyManager: React.FC<FamilyManagerProps> = ({ onClose }) => {
                             {stats.familyCount} familia{stats.familyCount !== 1 ? 's' : ''}
                         </span>
                     </div>
-                    <button onClick={onClose} className="p-1 text-gray-400 hover:text-gray-600 transition-colors" title="Cerrar">
-                        <X size={16} />
+                    <button onClick={onClose} aria-label="Cerrar" className="p-1 text-gray-400 hover:text-gray-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-400 rounded transition-colors" title="Cerrar">
+                        <X size={16} aria-hidden="true" />
                     </button>
                 </div>
 

@@ -36,16 +36,13 @@ const levelColors: Record<LogLevel, string> = {
 };
 
 function DiagnosticPanel({ isOpen, onClose, projectPath }: DiagnosticPanelProps) {
-    const [logs, setLogs] = useState<LogEntry[]>([]);
+    const [logs, setLogs] = useState<LogEntry[]>(() => logger.getAll());
     const [filter, setFilter] = useState<LogLevel | 'all'>('all');
 
     // Subscribe to new logs
-    useEffect(() => {
-        setLogs(logger.getAll());
-        return logger.subscribe((entry) => {
-            setLogs(prev => [...prev.slice(-499), entry]);
-        });
-    }, []);
+    useEffect(() => logger.subscribe((entry) => {
+        setLogs(prev => [...prev.slice(-499), entry]);
+    }), []);
 
     // Filter logs by level
     const filteredLogs = filter === 'all'
@@ -117,9 +114,10 @@ function DiagnosticPanel({ isOpen, onClose, projectPath }: DiagnosticPanelProps)
                         </button>
                         <button
                             onClick={onClose}
-                            className="p-2 text-slate-400 hover:text-white transition-colors"
+                            aria-label="Cerrar"
+                            className="p-2 text-slate-400 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 rounded-lg transition-colors"
                         >
-                            <X size={20} />
+                            <X size={20} aria-hidden="true" />
                         </button>
                     </div>
                 </div>

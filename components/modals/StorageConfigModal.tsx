@@ -205,7 +205,7 @@ export function StorageConfigModal({
             } else {
                 toast.error('Error', 'No se pudo guardar la configuración');
             }
-        } catch (error) {
+        } catch (_error) {
             toast.error('Error', 'Error al guardar configuración');
         } finally {
             setIsSaving(false);
@@ -255,8 +255,8 @@ export function StorageConfigModal({
 
                     {/* Local Path */}
                     <div className="space-y-2">
-                        <label className="flex items-center gap-2 text-sm font-medium text-slate-300">
-                            <Monitor size={16} className="text-blue-400" />
+                        <label htmlFor="storage-local-path" className="flex items-center gap-2 text-sm font-medium text-slate-300">
+                            <Monitor size={16} className="text-blue-400" aria-hidden="true" />
                             Ruta de Almacenamiento Local
                         </label>
                         <p className="text-xs text-slate-500">
@@ -265,6 +265,7 @@ export function StorageConfigModal({
                         <div className="flex gap-2">
                             <div className="relative flex-1">
                                 <input
+                                    id="storage-local-path"
                                     type="text"
                                     value={localPath}
                                     onChange={(e) => {
@@ -311,8 +312,8 @@ export function StorageConfigModal({
 
                     {/* Shared Path */}
                     <div className="space-y-2">
-                        <label className="flex items-center gap-2 text-sm font-medium text-slate-300">
-                            <Wifi size={16} className="text-emerald-400" />
+                        <label htmlFor="storage-shared-path" className="flex items-center gap-2 text-sm font-medium text-slate-300">
+                            <Wifi size={16} className="text-emerald-400" aria-hidden="true" />
                             Ruta del Servidor Compartido
                         </label>
                         <p className="text-xs text-slate-500">
@@ -321,6 +322,7 @@ export function StorageConfigModal({
                         <div className="flex gap-2">
                             <div className="relative flex-1">
                                 <input
+                                    id="storage-shared-path"
                                     type="text"
                                     value={sharedPath}
                                     onChange={(e) => {
@@ -367,8 +369,8 @@ export function StorageConfigModal({
 
                     {/* Export Path */}
                     <div className="space-y-2">
-                        <label className="flex items-center gap-2 text-sm font-medium text-slate-300">
-                            <Upload size={16} className="text-violet-400" />
+                        <label htmlFor="storage-export-path" className="flex items-center gap-2 text-sm font-medium text-slate-300">
+                            <Upload size={16} className="text-violet-400" aria-hidden="true" />
                             Ruta de Exportación (Red)
                         </label>
                         <p className="text-xs text-slate-500">
@@ -377,6 +379,7 @@ export function StorageConfigModal({
                         <div className="flex gap-2">
                             <div className="relative flex-1">
                                 <input
+                                    id="storage-export-path"
                                     type="text"
                                     value={exportPath}
                                     onChange={(e) => {
