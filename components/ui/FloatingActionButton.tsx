@@ -137,7 +137,7 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
 /**
  * Preset FAB configurations for different modules
  */
-const FAB_PRESETS = {
+const _FAB_PRESETS = {
     dashboard: (onNewStudy: () => void): FABConfig => ({
         primary: {
             label: 'Nuevo Estudio',

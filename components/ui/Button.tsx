@@ -127,7 +127,7 @@ export const Button: React.FC<ButtonProps> = ({
 /**
  * Icon-only Button
  */
-const IconButton: React.FC<Omit<ButtonProps, 'children'> & {
+const _IconButton: React.FC<Omit<ButtonProps, 'children'> & {
     'aria-label': string;
 }> = ({
     variant = 'ghost',

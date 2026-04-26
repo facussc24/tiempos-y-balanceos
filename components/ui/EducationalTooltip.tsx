@@ -17,7 +17,6 @@ import React, { useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { HelpCircle, BookOpen, Calculator, Lightbulb } from 'lucide-react';
 import { getTerm } from '../../utils/leanTerms';
-import { logger } from '../../utils/logger';
 
 interface EducationalTooltipProps {
     /** Key of the term in LEAN_TERMS dictionary (e.g., 'OEE', 'TAKT_TIME') */
@@ -222,7 +221,7 @@ interface InlineTermTooltipProps {
     children: React.ReactNode;
 }
 
-const InlineTermTooltip: React.FC<InlineTermTooltipProps> = ({ termKey, children }) => {
+const _InlineTermTooltip: React.FC<InlineTermTooltipProps> = ({ termKey, children }) => {
     return (
         <EducationalTooltip termKey={termKey} className="inline">
             <span className="border-b border-dotted border-slate-400 hover:border-blue-500 hover:text-blue-600 transition-colors cursor-help">

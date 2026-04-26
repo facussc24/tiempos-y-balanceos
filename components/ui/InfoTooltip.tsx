@@ -136,6 +136,7 @@ export const InfoTooltip: React.FC<InfoTooltipProps> = ({
 /**
  * Compact version for table headers - keyboard accessible
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const InfoTooltipCompact: React.FC<{
     term: string;
     simple: string;

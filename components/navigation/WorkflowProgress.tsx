@@ -141,7 +141,7 @@ export const WorkflowProgress: React.FC<WorkflowProgressProps> = ({
 /**
  * Compact version for mobile or narrow screens
  */
-const WorkflowProgressCompact: React.FC<WorkflowProgressProps> = (props) => {
+const _WorkflowProgressCompact: React.FC<WorkflowProgressProps> = (props) => {
     return <WorkflowProgress {...props} compact />;
 };
 

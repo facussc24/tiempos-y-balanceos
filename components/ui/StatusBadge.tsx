@@ -141,7 +141,7 @@ const STATUS_LABELS: Record<BadgeStatus, string> = {
     neutral: 'Neutro'
 };
 
-const StatusDot: React.FC<{
+const _StatusDot: React.FC<{
     status: BadgeStatus;
     size?: 'sm' | 'md' | 'lg';
     pulse?: boolean;
@@ -179,7 +179,7 @@ const StatusDot: React.FC<{
 /**
  * Metric badge for displaying KPIs
  */
-const MetricBadge: React.FC<{
+const _MetricBadge: React.FC<{
     value: string | number;
     label?: string;
     trend?: 'up' | 'down' | 'neutral';
