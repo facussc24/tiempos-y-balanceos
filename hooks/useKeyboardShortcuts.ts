@@ -392,10 +392,15 @@ export function useKeyboardShortcuts(
     handlers: ShortcutHandlers
 ): void {
     const handlersRef = useRef(handlers);
-    handlersRef.current = handlers;
-
     const activeTabRef = useRef(activeTab);
-    activeTabRef.current = activeTab;
+
+    // React 19: refs must not be mutated during render. Sync via effect.
+    // useEffect runs after paint; the keyboard listener fires async, so the
+    // refs are guaranteed to have the latest value when handleKeyDown reads them.
+    useEffect(() => {
+        handlersRef.current = handlers;
+        activeTabRef.current = activeTab;
+    });
 
     const handleKeyDown = useCallback((event: KeyboardEvent) => {
         const currentHandlers = handlersRef.current;

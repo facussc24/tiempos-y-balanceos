@@ -238,8 +238,11 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab, initialF
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     // 4b. Suggestion index
-    const [suggestionIndex, setSuggestionIndex] = useState<ReturnType<typeof buildSuggestionIndex> | null>(null);
-    const suggestionIndexTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    // NOTE: setter and timer ref are currently unused — the index stays null
+    // until the suggestion-build pipeline is reconnected. Prefixed with _ so
+    // lint does not flag dead code while we keep the prop wiring intact.
+    const [suggestionIndex, _setSuggestionIndex] = useState<ReturnType<typeof buildSuggestionIndex> | null>(null);
+    const _suggestionIndexTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     // 4c. Soft limit warnings (for badge on summary button)
     const softLimitWarnings = useMemo(() => getSoftLimitWarnings(amfe.data), [amfe.data]);

@@ -22,7 +22,7 @@ export class GlobalErrorBoundary extends Component<Props, State> {
         };
     }
 
-    static getDerivedStateFromError(error: Error): Partial<State> {
+    static getDerivedStateFromError(_error: Error): Partial<State> {
         return { hasError: true };
     }
 
