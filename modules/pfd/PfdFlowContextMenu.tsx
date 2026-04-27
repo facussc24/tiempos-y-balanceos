@@ -28,8 +28,18 @@ export interface PfdFlowContextMenuProps {
     onChangeType: (type: PfdStepType) => void;
 }
 
-const PfdFlowContextMenu: React.FC<PfdFlowContextMenuProps> = ({
-    isOpen,
+const PfdFlowContextMenu: React.FC<PfdFlowContextMenuProps> = (props) => {
+    // Gate the inner component on isOpen+step so its state (showTypeSubmenu) and
+    // listeners reset on close via unmount, instead of setState-in-effect.
+    if (!props.isOpen || !props.step) return null;
+    return <PfdFlowContextMenuInner {...props} step={props.step} />;
+};
+
+type PfdFlowContextMenuInnerProps = Omit<PfdFlowContextMenuProps, 'isOpen' | 'step'> & {
+    step: PfdStep;
+};
+
+const PfdFlowContextMenuInner: React.FC<PfdFlowContextMenuInnerProps> = ({
     position,
     step,
     stepIndex,
@@ -48,8 +58,6 @@ const PfdFlowContextMenu: React.FC<PfdFlowContextMenuProps> = ({
 
     // Close on click outside
     useEffect(() => {
-        if (!isOpen) return;
-
         const handleClickOutside = (e: MouseEvent) => {
             if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
                 onClose();
@@ -65,12 +73,10 @@ const PfdFlowContextMenu: React.FC<PfdFlowContextMenuProps> = ({
             clearTimeout(timer);
             document.removeEventListener('mousedown', handleClickOutside);
         };
-    }, [isOpen, onClose]);
+    }, [onClose]);
 
     // Close on Escape
     useEffect(() => {
-        if (!isOpen) return;
-
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === 'Escape') {
                 onClose();
@@ -79,16 +85,7 @@ const PfdFlowContextMenu: React.FC<PfdFlowContextMenuProps> = ({
 
         document.addEventListener('keydown', handleKeyDown);
         return () => document.removeEventListener('keydown', handleKeyDown);
-    }, [isOpen, onClose]);
-
-    // Reset submenu state when menu closes
-    useEffect(() => {
-        if (!isOpen) {
-            setShowTypeSubmenu(false);
-        }
-    }, [isOpen]);
-
-    if (!isOpen || !step) return null;
+    }, [onClose]);
 
     const isFirst = stepIndex === 0;
     const isLast = stepIndex === totalSteps - 1;

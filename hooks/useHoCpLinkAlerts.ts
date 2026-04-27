@@ -52,27 +52,29 @@ export function useHoCpLinkAlerts(
     linkedCpProject: string | null | undefined,
     onUpdateQualityCheckCpItemId: ((sheetId: string, checkId: string, cpItemId: string | undefined) => void) | null,
 ): UseHoCpLinkAlertsReturn {
-    const [cpDoc, setCpDoc] = useState<ControlPlanDocument | null>(null);
+    // Cache the loaded CP keyed by project name so cpDoc is derived from the
+    // current linkedCpProject without setState-in-effect for the "no project" case.
+    const [cpCache, setCpCache] = useState<{ project: string; doc: ControlPlanDocument | null } | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [revalidateKey, setRevalidateKey] = useState(0);
 
+    const cpDoc = linkedCpProject && cpCache?.project === linkedCpProject ? cpCache.doc : null;
+
     // Load CP document when linkedCpProject changes
     useEffect(() => {
-        if (!linkedCpProject) {
-            setCpDoc(null);
-            return;
-        }
+        if (!linkedCpProject) return;
 
         let cancelled = false;
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- standard async-fetch loading pattern
         setIsLoading(true);
 
         loadCpByProjectName(linkedCpProject)
             .then(result => {
-                if (!cancelled) setCpDoc(result?.doc ?? null);
+                if (!cancelled) setCpCache({ project: linkedCpProject, doc: result?.doc ?? null });
             })
             .catch(err => {
                 logger.error('useHoCpLinkAlerts', 'Failed to load linked CP', {}, err instanceof Error ? err : undefined);
-                if (!cancelled) setCpDoc(null);
+                if (!cancelled) setCpCache({ project: linkedCpProject, doc: null });
             })
             .finally(() => {
                 if (!cancelled) setIsLoading(false);

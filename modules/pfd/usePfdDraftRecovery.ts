@@ -49,10 +49,9 @@ export function usePfdDraftRecovery({ embedded, loadData }: UsePfdDraftRecoveryP
     const [draftRecovery, setDraftRecovery] = useState<{ key: string; name: string } | null>(null);
 
     useEffect(() => {
-        if (embedded) {
-            setDraftRecovery(null);
-            return;
-        }
+        // Effect runs once on mount; initial state is already null, so no setState
+        // needed in the embedded short-circuit (avoids react-hooks/set-state-in-effect).
+        if (embedded) return;
 
         let cancelled = false;
         (async () => {
