@@ -7,7 +7,7 @@
  * Required by IATF 16949 for traceability and audit compliance.
  */
 
-import React, { useMemo } from 'react';
+import React from 'react';
 import {
     AmfeRegistryEntry,
     AmfeLifecycleStatus,
@@ -17,6 +17,7 @@ import {
 import {
     useAmfeRegistry,
     RegistrySortField,
+    RegistrySortDir,
     EMPTY_REGISTRY_FILTERS,
 } from './useAmfeRegistry';
 import {
@@ -32,11 +33,82 @@ interface Props {
 
 const STATUS_ORDER: AmfeLifecycleStatus[] = ['draft', 'inReview', 'approved', 'archived'];
 
+interface SortHeaderProps {
+    field: RegistrySortField;
+    label: string;
+    className?: string;
+    sortField: RegistrySortField;
+    sortDir: RegistrySortDir;
+    onToggle: (field: RegistrySortField) => void;
+}
+
+const SortHeader: React.FC<SortHeaderProps> = ({ field, label, className = '', sortField, sortDir, onToggle }) => (
+    <th
+        className={`px-3 py-2 text-left cursor-pointer hover:bg-gray-100 transition select-none ${className}`}
+        onClick={() => onToggle(field)}
+    >
+        <div className="flex items-center gap-1">
+            <span>{label}</span>
+            {sortField === field ? (
+                sortDir === 'asc' ? <ChevronUp size={12} /> : <ChevronDown size={12} />
+            ) : (
+                <ArrowUpDown size={10} className="text-gray-300" />
+            )}
+        </div>
+    </th>
+);
+
+const StatusBadge: React.FC<{ status: AmfeLifecycleStatus }> = ({ status }) => (
+    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${LIFECYCLE_STATUS_COLORS[status]}`}>
+        {LIFECYCLE_STATUS_LABELS[status]}
+    </span>
+);
+
+const ApBar: React.FC<{ entry: AmfeRegistryEntry }> = ({ entry }) => {
+    const total = entry.apHCount + entry.apMCount;
+    if (total === 0 && entry.causeCount === 0) return <span className="text-gray-300 text-[10px]">-</span>;
+
+    const hPct = total > 0 ? (entry.apHCount / total) * 100 : 0;
+    const mPct = total > 0 ? (entry.apMCount / total) * 100 : 0;
+
+    return (
+        <div className="flex items-center gap-1.5">
+            <div className="flex-1 h-3 bg-gray-100 rounded-full overflow-hidden flex" style={{ minWidth: 60 }}>
+                {hPct > 0 && <div className="bg-red-500 h-full" style={{ width: `${hPct}%` }} />}
+                {mPct > 0 && <div className="bg-yellow-400 h-full" style={{ width: `${mPct}%` }} />}
+                {(100 - hPct - mPct) > 0 && <div className="bg-green-400 h-full" style={{ width: `${100 - hPct - mPct}%` }} />}
+            </div>
+            <span className="text-[10px] text-gray-500 w-12 text-right">
+                {entry.apHCount > 0 && <span className="text-red-600 font-bold">{entry.apHCount}H</span>}
+                {entry.apHCount > 0 && entry.apMCount > 0 && ' '}
+                {entry.apMCount > 0 && <span className="text-yellow-600">{entry.apMCount}M</span>}
+                {entry.apHCount === 0 && entry.apMCount === 0 && <span className="text-green-600">OK</span>}
+            </span>
+        </div>
+    );
+};
+
+const CoverageBar: React.FC<{ percent: number }> = ({ percent }) => (
+    <div className="flex items-center gap-1.5">
+        <div className="flex-1 h-3 bg-gray-100 rounded-full overflow-hidden" style={{ minWidth: 40 }}>
+            <div
+                className={`h-full rounded-full transition-all ${percent === 100 ? 'bg-green-500' : percent >= 70 ? 'bg-blue-500' : 'bg-orange-400'}`}
+                style={{ width: `${percent}%` }}
+            />
+        </div>
+        <span className={`text-[10px] font-bold w-8 text-right ${percent === 100 ? 'text-green-600' : 'text-gray-500'}`}>
+            {percent}%
+        </span>
+    </div>
+);
+
 const AmfeRegistryView: React.FC<Props> = ({ onOpenProject, onClose }) => {
     const reg = useAmfeRegistry();
     const entries = reg.filteredEntries();
-    const clients = useMemo(() => reg.uniqueClients(), [reg.uniqueClients]);
-    const responsibles = useMemo(() => reg.uniqueResponsibles(), [reg.uniqueResponsibles]);
+    // React Compiler auto-memoizes these. Manual useMemo with [reg.method] deps
+    // confuses the compiler (infers `reg`, not the method) and skips optimization.
+    const clients = reg.uniqueClients();
+    const responsibles = reg.uniqueResponsibles();
 
     const hasFilters = reg.filters.search !== '' || reg.filters.status !== 'all' || reg.filters.client !== '' || reg.filters.responsible !== '';
 
@@ -46,66 +118,6 @@ const AmfeRegistryView: React.FC<Props> = ({ onOpenProject, onClose }) => {
     const totalReview = reg.registry.entries.filter(e => e.status === 'inReview').length;
     const totalApproved = reg.registry.entries.filter(e => e.status === 'approved').length;
     const totalApH = reg.registry.entries.reduce((sum, e) => sum + e.apHCount, 0);
-
-    const SortHeader: React.FC<{ field: RegistrySortField; label: string; className?: string }> = ({ field, label, className = '' }) => (
-        <th
-            className={`px-3 py-2 text-left cursor-pointer hover:bg-gray-100 transition select-none ${className}`}
-            onClick={() => reg.toggleSort(field)}
-        >
-            <div className="flex items-center gap-1">
-                <span>{label}</span>
-                {reg.sortField === field ? (
-                    reg.sortDir === 'asc' ? <ChevronUp size={12} /> : <ChevronDown size={12} />
-                ) : (
-                    <ArrowUpDown size={10} className="text-gray-300" />
-                )}
-            </div>
-        </th>
-    );
-
-    const StatusBadge: React.FC<{ status: AmfeLifecycleStatus }> = ({ status }) => (
-        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${LIFECYCLE_STATUS_COLORS[status]}`}>
-            {LIFECYCLE_STATUS_LABELS[status]}
-        </span>
-    );
-
-    const ApBar: React.FC<{ entry: AmfeRegistryEntry }> = ({ entry }) => {
-        const total = entry.apHCount + entry.apMCount;
-        if (total === 0 && entry.causeCount === 0) return <span className="text-gray-300 text-[10px]">-</span>;
-
-        const hPct = total > 0 ? (entry.apHCount / total) * 100 : 0;
-        const mPct = total > 0 ? (entry.apMCount / total) * 100 : 0;
-
-        return (
-            <div className="flex items-center gap-1.5">
-                <div className="flex-1 h-3 bg-gray-100 rounded-full overflow-hidden flex" style={{ minWidth: 60 }}>
-                    {hPct > 0 && <div className="bg-red-500 h-full" style={{ width: `${hPct}%` }} />}
-                    {mPct > 0 && <div className="bg-yellow-400 h-full" style={{ width: `${mPct}%` }} />}
-                    {(100 - hPct - mPct) > 0 && <div className="bg-green-400 h-full" style={{ width: `${100 - hPct - mPct}%` }} />}
-                </div>
-                <span className="text-[10px] text-gray-500 w-12 text-right">
-                    {entry.apHCount > 0 && <span className="text-red-600 font-bold">{entry.apHCount}H</span>}
-                    {entry.apHCount > 0 && entry.apMCount > 0 && ' '}
-                    {entry.apMCount > 0 && <span className="text-yellow-600">{entry.apMCount}M</span>}
-                    {entry.apHCount === 0 && entry.apMCount === 0 && <span className="text-green-600">OK</span>}
-                </span>
-            </div>
-        );
-    };
-
-    const CoverageBar: React.FC<{ percent: number }> = ({ percent }) => (
-        <div className="flex items-center gap-1.5">
-            <div className="flex-1 h-3 bg-gray-100 rounded-full overflow-hidden" style={{ minWidth: 40 }}>
-                <div
-                    className={`h-full rounded-full transition-all ${percent === 100 ? 'bg-green-500' : percent >= 70 ? 'bg-blue-500' : 'bg-orange-400'}`}
-                    style={{ width: `${percent}%` }}
-                />
-            </div>
-            <span className={`text-[10px] font-bold w-8 text-right ${percent === 100 ? 'text-green-600' : 'text-gray-500'}`}>
-                {percent}%
-            </span>
-        </div>
-    );
 
     return (
         <div className="bg-white border-b border-gray-300 shadow-lg animate-in">
@@ -235,17 +247,17 @@ const AmfeRegistryView: React.FC<Props> = ({ onOpenProject, onClose }) => {
                             <table className="w-full text-xs">
                                 <thead className="bg-gray-50 sticky top-0 z-10">
                                     <tr className="border-b border-gray-200 text-gray-600">
-                                        <SortHeader field="amfeNumber" label="AMFE #" className="w-24" />
-                                        <SortHeader field="subject" label="Tema / Proyecto" className="min-w-[200px]" />
-                                        <SortHeader field="client" label="Cliente" className="w-32" />
-                                        <SortHeader field="status" label="Estado" className="w-28" />
+                                        <SortHeader field="amfeNumber" label="AMFE #" className="w-24" sortField={reg.sortField} sortDir={reg.sortDir} onToggle={reg.toggleSort} />
+                                        <SortHeader field="subject" label="Tema / Proyecto" className="min-w-[200px]" sortField={reg.sortField} sortDir={reg.sortDir} onToggle={reg.toggleSort} />
+                                        <SortHeader field="client" label="Cliente" className="w-32" sortField={reg.sortField} sortDir={reg.sortDir} onToggle={reg.toggleSort} />
+                                        <SortHeader field="status" label="Estado" className="w-28" sortField={reg.sortField} sortDir={reg.sortDir} onToggle={reg.toggleSort} />
                                         <th className="px-3 py-2 text-left w-20">Resp.</th>
                                         <th className="px-3 py-2 text-left w-16">Ops</th>
                                         <th className="px-3 py-2 text-left w-16">Causas</th>
-                                        <SortHeader field="apHCount" label="AP" className="w-36" />
-                                        <SortHeader field="coveragePercent" label="Cobertura" className="w-28" />
+                                        <SortHeader field="apHCount" label="AP" className="w-36" sortField={reg.sortField} sortDir={reg.sortDir} onToggle={reg.toggleSort} />
+                                        <SortHeader field="coveragePercent" label="Cobertura" className="w-28" sortField={reg.sortField} sortDir={reg.sortDir} onToggle={reg.toggleSort} />
                                         <th className="px-3 py-2 text-left w-20">Rev.</th>
-                                        <SortHeader field="updatedAt" label="Actualizado" className="w-24" />
+                                        <SortHeader field="updatedAt" label="Actualizado" className="w-24" sortField={reg.sortField} sortDir={reg.sortDir} onToggle={reg.toggleSort} />
                                         <th className="px-3 py-2 w-16"></th>
                                     </tr>
                                 </thead>
