@@ -127,7 +127,7 @@ const AmfeSideDrawer: React.FC<AmfeSideDrawerProps> = ({ activePanel, setActiveP
                                     Cliente
                                     {!projects.selectedClient && (
                                         <span className="px-1.5 py-0.5 text-[9px] font-bold bg-blue-100 text-blue-600 rounded animate-pulse">
-                                            Comienza aqui
+                                            ← Comienza aquí
                                         </span>
                                     )}
                                 </label>
