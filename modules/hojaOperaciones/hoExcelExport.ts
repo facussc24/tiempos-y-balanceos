@@ -305,7 +305,7 @@ async function buildHoSheet(
                 centerVertEmu(24 + 28, 42),    // center 42px across 52pt
                 140, 42,
             ));
-        } catch (err) {
+        } catch {
             // Fallback: text
             setVal(ws, r, FIRST_COL, doc.header.organization || 'BARACK MERCOSUL', {
                 font: { bold: true, size: 11, color: { argb: `FF${NAVY}` } },

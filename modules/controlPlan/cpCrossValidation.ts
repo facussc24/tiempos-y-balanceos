@@ -97,7 +97,6 @@ export function validateSpecialCharConsistency(
                     if (!fail?.causes) continue;
                     for (const cause of fail.causes) {
                         const sev = typeof fail.severity === 'number' ? fail.severity : Number(fail.severity) || 0;
-                        const occ = typeof cause.occurrence === 'number' ? cause.occurrence : Number(cause.occurrence) || 0;
                         // CC=S≥9 (auto). SC=solo si cause.specialChar explícito del AMFE.
                         const hasSpecialChar = !!(cause.specialChar?.trim()) || sev >= 9;
                         // Include AP=H, AP=M, and SC/CC with AP=L (IATF 16949 §8.3.3.3)
@@ -181,7 +180,6 @@ export function validateOrphanFailures(
                     if (!fail?.causes) continue;
                     for (const cause of fail.causes) {
                         const sev = typeof fail.severity === 'number' ? fail.severity : Number(fail.severity) || 0;
-                        const occ2 = typeof cause.occurrence === 'number' ? cause.occurrence : Number(cause.occurrence) || 0;
                         // CC=S≥9 (auto). SC=solo si cause.specialChar explícito del AMFE.
                         const hasSpecialChar = !!(cause.specialChar?.trim()) || sev >= 9;
 

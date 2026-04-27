@@ -180,7 +180,7 @@ export const useAmfeRegistry = () => {
         try {
             const synced = await syncRegistryFromProjects(registryRef.current);
             await persistRegistry(synced);
-        } catch (err) {
+        } catch {
             setError('Error al sincronizar con disco');
         } finally {
             setLoading(false);

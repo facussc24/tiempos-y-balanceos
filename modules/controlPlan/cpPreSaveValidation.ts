@@ -5,7 +5,7 @@
  * warnings allow save but inform the user of potential issues.
  */
 
-import type { ControlPlanDocument, ControlPlanItem } from './controlPlanTypes';
+import type { ControlPlanDocument } from './controlPlanTypes';
 import type { AmfeDocument } from '../amfe/amfeTypes';
 import type { SaveValidationResult } from '../../utils/repositories/validationTypes';
 

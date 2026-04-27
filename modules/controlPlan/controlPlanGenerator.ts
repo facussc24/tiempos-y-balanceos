@@ -128,7 +128,6 @@ export function generateItemsFromAmfe(
                         totalCauses++;
 
                         const severity = Number(fail.severity) || 0;
-                        const occurrence = Number(cause.occurrence) || 0;
                         // CC=S≥9 (auto). SC=solo si cause.specialChar explícito del AMFE.
                         const autoSpecialChar = cause.specialChar
                             || (severity >= 9 ? 'CC' : '');
