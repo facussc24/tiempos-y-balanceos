@@ -49,8 +49,10 @@ export function usePfdDocument(): UsePfdDocumentResult {
     const [data, setData] = useState<PfdDocument>(createEmptyPfdDocument());
     const undoStackRef = useRef<PfdDocument[]>([]);
     const redoStackRef = useRef<PfdDocument[]>([]);
-    // Force re-render when undo/redo stacks change
-    const [, setHistoryVersion] = useState(0);
+    // Track stack availability as state so React re-renders and lint doesn't
+    // complain about reading refs during render (react-hooks/refs).
+    const [canUndo, setCanUndo] = useState(false);
+    const [canRedo, setCanRedo] = useState(false);
 
     /** Set data with history tracking (pushes deep clone of current state to undo stack) */
     const setDataWithHistory = useCallback((updater: (prev: PfdDocument) => PfdDocument) => {
@@ -63,7 +65,8 @@ export function usePfdDocument(): UsePfdDocumentResult {
                 undoStackRef.current.shift();
             }
             redoStackRef.current = [];
-            setHistoryVersion(v => v + 1);
+            setCanUndo(true);
+            setCanRedo(false);
             return next;
         });
     }, []);
@@ -71,7 +74,8 @@ export function usePfdDocument(): UsePfdDocumentResult {
     const loadData = useCallback((doc: PfdDocument) => {
         undoStackRef.current = [];
         redoStackRef.current = [];
-        setHistoryVersion(v => v + 1);
+        setCanUndo(false);
+        setCanRedo(false);
         // C3-N1: Normalize steps for backward compat (old docs without rejectDisposition)
         const normalizedSteps = doc.steps.map(s => normalizePfdStep(s as unknown as Record<string, unknown> & { id: string }));
         setData({ ...doc, steps: normalizedSteps });
@@ -80,7 +84,8 @@ export function usePfdDocument(): UsePfdDocumentResult {
     const resetData = useCallback(() => {
         undoStackRef.current = [];
         redoStackRef.current = [];
-        setHistoryVersion(v => v + 1);
+        setCanUndo(false);
+        setCanRedo(false);
         setData(createEmptyPfdDocument());
     }, []);
 
@@ -206,7 +211,8 @@ export function usePfdDocument(): UsePfdDocumentResult {
             const previous = stack.pop()!;
             // Deep clone current state before pushing to redo stack
             redoStackRef.current.push(JSON.parse(JSON.stringify(prev)));
-            setHistoryVersion(v => v + 1);
+            setCanUndo(stack.length > 0);
+            setCanRedo(true);
             return previous;
         });
     }, []);
@@ -218,7 +224,8 @@ export function usePfdDocument(): UsePfdDocumentResult {
             const next = stack.pop()!;
             // Deep clone current state before pushing to undo stack
             undoStackRef.current.push(JSON.parse(JSON.stringify(prev)));
-            setHistoryVersion(v => v + 1);
+            setCanUndo(true);
+            setCanRedo(stack.length > 0);
             return next;
         });
     }, []);
@@ -240,7 +247,7 @@ export function usePfdDocument(): UsePfdDocumentResult {
         renumber,
         undo,
         redo,
-        canUndo: undoStackRef.current.length > 0,
-        canRedo: redoStackRef.current.length > 0,
+        canUndo,
+        canRedo,
     };
 }
