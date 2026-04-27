@@ -103,7 +103,7 @@ export const SuggestToMasterModal: React.FC<SuggestToMasterModalProps> = ({
                 <button
                     onClick={onClose}
                     disabled={submitting}
-                    className="absolute top-4 right-4 p-1 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     title="Cerrar"
                     aria-label="Cerrar"
                 >
