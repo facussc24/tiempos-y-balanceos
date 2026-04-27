@@ -30,6 +30,32 @@ Leer al inicio de cada sesion para no repetir errores.
 
 **Total: 22 ocurrencias en 6 documentos (3 productos)**.
 
+### Segundo barrido (mismo dia, despues del primer fix)
+
+Auditor amplio detecto mas patrones invento:
+
+| Tipo | Texto | Productos | # |
+|------|-------|-----------|---|
+| Equipo inexistente | "**CMM 3D**" (Maquina de Medicion por Coordenadas) | Telas Termo OP 80 + Telas Planas OP 80 | 8 |
+| Lenguaje rebuscado | "Guía física en la máquina de coser y ajuste validado del pie y avance, junto con puesta a punto estandarizada / setup estandarizado para asegurar..." | Headrest F/RC/RO, Armrest, AMFE-150 | 19 |
+| Lenguaje rebuscado | "Procedimiento de limpieza y purga estandarizado para la cavidad y línea de partición del molde" | Armrest, Insert, Top Roll | 7 |
+| Lenguaje rebuscado | "Instrucción de Puesta a punto Estandarizada (Plan de Control / Hoja de Proceso) que detalla valores nominales y rangos de tolerancia" | Armrest, Top Roll, Insert | 7 |
+| Lenguaje rebuscado | "Monitoreo automatico de presion y mantenimiento preventivo con calibracion periodica de sensores" | Armrest | 6 |
+| Lenguaje rebuscado | "Estandarización y diferenciación física de contenedores OK/NC" | AMFE-150 | 1 |
+
+**Total segundo barrido: 48 reemplazos (8 CMM + 40 frases rebuscadas)**.
+
+**Total combinado del incidente 2026-04-27: 70 correcciones en 14+ documentos**.
+
+Reemplazos validos cargados (calcados de patrones reales de Barack):
+- CMM 3D PREV → "Plantilla dimensional validada al setup + plan de calibracion de calibre"
+- CMM 3D DET → "Verificacion dimensional con calibre + plantilla, inicio y fin de turno"
+- "guia coser..." → "Guía física en máquina + setup validado del pie y avance"
+- "limpieza y purga..." → "Limpieza y purga del molde según instructivo"
+- "puesta a punto estandarizada..." → "Setup según Plan de Control + Hoja de Proceso" / "Setup con valores nominales + rangos de tolerancia"
+- "monitoreo presion + calibracion periodica..." → "Sensor de presión con alarma + plan de calibración"
+- "estandarizacion contenedores..." → "Contenedores OK/NC identificados con cartelería"
+
 **Causa raiz**: Claude (sesion anterior) generaba contenido para llenar campos `preventionControl`/`detectionControl`/`controlMethod` cuando faltaban. En lugar de usar **TBD** o "Pendiente definicion equipo APQP", invento:
 - Equipos que Barack no tiene (hielo seco, ultrasonido con frecuencia)
 - Frecuencias sin respaldo (cada 2h, cada 4h)
