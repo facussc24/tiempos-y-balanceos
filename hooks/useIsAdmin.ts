@@ -11,28 +11,20 @@ import { checkIsAdmin } from '../utils/repositories/adminRepository';
 
 export function useIsAdmin(): { isAdmin: boolean; loading: boolean } {
     const { user } = useAuth();
-    const [isAdmin, setIsAdmin] = useState(false);
-    const [loading, setLoading] = useState(true);
+    // Cache the admin check keyed by userId so we can derive isAdmin/loading
+    // from the current user without setState-in-effect for the "no user" case.
+    const [check, setCheck] = useState<{ userId: string; isAdmin: boolean } | null>(null);
 
     useEffect(() => {
-        if (!user) {
-            setIsAdmin(false);
-            setLoading(false);
-            return;
-        }
-
+        if (!user) return;
         let cancelled = false;
-        setLoading(true);
-
         checkIsAdmin().then((result) => {
-            if (!cancelled) {
-                setIsAdmin(result);
-                setLoading(false);
-            }
+            if (!cancelled) setCheck({ userId: user.id, isAdmin: result });
         });
-
         return () => { cancelled = true; };
     }, [user?.id]); // re-check when user changes
 
-    return { isAdmin, loading };
+    if (!user) return { isAdmin: false, loading: false };
+    if (check?.userId !== user.id) return { isAdmin: false, loading: true };
+    return { isAdmin: check.isAdmin, loading: false };
 }
