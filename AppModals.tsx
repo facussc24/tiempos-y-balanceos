@@ -84,7 +84,9 @@ export const AppModals: React.FC<AppModalsProps> = ({
                             </h2>
                             <button
                                 onClick={() => modals.setShowRevisionHistory(false)}
-                                className="text-slate-400 hover:text-slate-600 p-1"
+                                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition-colors"
+                                title="Cerrar"
+                                aria-label="Cerrar historial de revisiones"
                             >
                                 <XCircle size={20} />
                             </button>

@@ -28,7 +28,7 @@ const CpValidationPanel: React.FC<CpValidationPanelProps> = ({ issues, onClose, 
                     Validación del Plan de Control
                     {issues.length === 0 && <span className="text-teal-600 text-xs font-normal ml-2">Sin problemas detectados</span>}
                 </h3>
-                <button onClick={onClose} className="text-gray-400 hover:text-gray-600 p-1" title="Cerrar validación" aria-label="Cerrar validación">
+                <button onClick={onClose} className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100 transition-colors" title="Cerrar validación" aria-label="Cerrar validación">
                     <XIcon size={14} />
                 </button>
             </div>

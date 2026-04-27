@@ -58,7 +58,7 @@ export const LinkValidationPanel: React.FC<LinkValidationPanelProps> = ({
                         ({validation.totalBroken} inconsistencia{validation.totalBroken !== 1 ? 's' : ''})
                     </span>
                 </h3>
-                <button onClick={onClose} className="text-gray-400 hover:text-gray-600 p-1" title="Cerrar" aria-label="Cerrar panel de vínculos">
+                <button onClick={onClose} className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100 transition-colors" title="Cerrar" aria-label="Cerrar panel de vínculos">
                     <X size={14} />
                 </button>
             </div>

@@ -165,7 +165,7 @@ export function DiagnosticQA({ isOpen, onClose, directoryPath }: DiagnosticQAPro
                             <p className="text-xs text-slate-500">Pruebas de integridad del sistema</p>
                         </div>
                     </div>
-                    <button onClick={onClose} className="text-slate-400 hover:text-slate-600 p-1" title="Cerrar" aria-label="Cerrar diagnóstico">
+                    <button onClick={onClose} className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition-colors" title="Cerrar" aria-label="Cerrar diagnóstico">
                         <X size={20} />
                     </button>
                 </div>
