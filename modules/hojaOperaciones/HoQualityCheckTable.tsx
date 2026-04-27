@@ -6,7 +6,6 @@
 
 import React from 'react';
 import { HoQualityCheck } from './hojaOperacionesTypes';
-import { HO_QC_INHERITED_SET } from '../controlPlan/fieldClassification';
 import { ExternalLink, AlertTriangle } from 'lucide-react';
 
 interface Props {
