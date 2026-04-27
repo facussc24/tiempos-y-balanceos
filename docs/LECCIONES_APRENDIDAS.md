@@ -4,6 +4,65 @@ Archivo mantenido por Claude Code. Se actualiza despues de cada sesion donde alg
 Leer al inicio de cada sesion para no repetir errores.
 
 
+## 2026-04-27 — INVENTO de controles tecnicos (hielo seco, ultrasonido, flexometro, rotacion inspectores) — ERROR GRAVISIMO
+
+**Problema**: Fak detecto en Top Roll AMFE/CP/HO controles tecnicos completamente inventados:
+- "Limpieza de molde programada cada 4 hs con hielo seco" — Barack NO usa hielo seco. El equipo no lo tiene, no lo compra, no lo usa.
+- "Medicion por Ultrasonido cada 2 horas" — frecuencia inventada, sin justificacion tecnica ni respaldo del equipo APQP.
+- "Medicion de ancho con flexometro al inicio de cada bobina" — "flexometro" es termino espanol peninsular. En Argentina se dice "cinta metrica".
+- "Rotacion de inspectores cada 2 horas" — control conductual con frecuencia inventada.
+
+**Alcance confirmado en Supabase live (2026-04-27)**:
+
+| Producto | Doc | OP | Campo | Texto inventado | # |
+|----------|-----|----|----|------------------|---|
+| Top Roll Patagonia | AMFE 78eaa89b | OP 40 TERMOFORMADO | preventionControl (5 WEs) | "Limpieza de molde programada cada 4 hs con hielo seco" | 5 |
+| Top Roll Patagonia | AMFE 78eaa89b | OP 40 TERMOFORMADO | detectionControl (5 WEs) | "Medicion por Ultrasonido cada 2 horas" | 5 |
+| Top Roll Patagonia | AMFE 78eaa89b | OP 40 TERMOFORMADO | detectionControl (2 WEs) | "Medicion de ancho con flexometro al inicio de cada bobina" | 2 |
+| Top Roll Patagonia | CP 69f6daf9 | OP 30 | controlMethod | "Limpieza de molde programada cada 4 hs con hielo seco" | 1 |
+| Top Roll Patagonia | CP 69f6daf9 | OP 30 | evaluationTechnique | "Medicion por Ultrasonido cada 2 horas" | 1 |
+| Top Roll Patagonia | CP 69f6daf9 | OP 30 | controlMethod | "Medicion de ancho con flexometro al inicio de cada bobina" | 1 |
+| Top Roll Patagonia | HO a7201817 | (qcItem) | controlMethod | "Limpieza de molde programada cada 4 hs con hielo seco" | 1 |
+| Top Roll Patagonia | HO a7201817 | (qcItem) | controlMethod | "Medicion por Ultrasonido cada 2 horas" | 1 |
+| Top Roll Patagonia | HO a7201817 | (qcItem) | controlMethod | "Medicion de ancho con flexometro al inicio de cada bobina" | 1 |
+| IP PAD | AMFE c9b93b84 | OP 80 / OP 100 / OP 130 | preventionControl | "Rotacion de inspectores cada 2 horas" | 3 |
+| Telas Termoformadas PWA | AMFE c5201ba9 | OP 100 CONTROL FINAL | preventionControl | "Rotacion de inspectores cada 2 horas" | 1 |
+
+**Total: 22 ocurrencias en 6 documentos (3 productos)**.
+
+**Causa raiz**: Claude (sesion anterior) generaba contenido para llenar campos `preventionControl`/`detectionControl`/`controlMethod` cuando faltaban. En lugar de usar **TBD** o "Pendiente definicion equipo APQP", invento:
+- Equipos que Barack no tiene (hielo seco, ultrasonido con frecuencia)
+- Frecuencias sin respaldo (cada 2h, cada 4h)
+- Terminos en espanol peninsular (flexometro)
+
+Esto es identico al incidente de 2026-03-30 donde se inventaron 408 acciones de optimizacion. La regla `.claude/rules/amfe-actions.md` cubria acciones, pero NO controles. **Gap de regla**.
+
+**Fix aplicado**:
+1. Nueva regla `.claude/rules/amfe-no-inventar-controles.md` — extiende prohibicion de inventar a TODO control (prevention/detection/sampling/frequency).
+2. Memoria cross-proyecto `feedback_no_inventar_controles.md` (auto-load global).
+3. Diccionario de espanolismos a evitar (criterio argentino).
+4. Auditor `_auditInventos.mjs` script read-only que detecta patrones sospechosos.
+
+**Correccion de datos**: PENDIENTE confirmacion Fak. Opciones:
+- A) Reemplazar todo por placeholder "Pendiente definicion equipo APQP" (preserva auditabilidad)
+- B) Vaciar y dejar TBD
+- C) Fak dicta los controles reales y Claude copia textualmente
+
+**Prevencion para sesiones futuras**:
+- NUNCA inventar nombres de equipos. Si no se que equipo se usa: TBD + preguntar.
+- NUNCA inventar frecuencias ("cada N horas", "cada N piezas"). Si no se sabe: TBD.
+- NUNCA usar terminos espanoles peninsulares. Diccionario:
+  - flexometro -> cinta metrica
+  - ordenador -> computadora / PC
+  - movil -> celular
+  - fichero -> archivo
+  - raton -> mouse
+  - grifo -> canilla
+  - coger -> agarrar / tomar
+- Si Fak no menciono el equipo o tecnica, NO usarlo. Usar las palabras de Fak.
+
+---
+
 ## 2026-04-08 — Agentes NO leen documentacion automaticamente — ERROR GRAVE
 
 **Problema**: Los agentes auditor y de modificacion AMFE NO leian los archivos de referencia (feedback_auditor_role.md, GUIA_AMFE.md, .claude/rules/amfe.md). Claude les pasaba instrucciones en el prompt pero no les decia que leyeran los protocolos. Resultado: errores obvios no detectados.
