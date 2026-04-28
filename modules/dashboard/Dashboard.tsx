@@ -578,9 +578,9 @@ export const Dashboard: React.FC<DashboardProps> = ({
             {selectedClient && (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <StatCard icon={Users} label="Clientes" value={stats.clients} gradient="blue" style={{ animationDelay: '0ms' }} />
-                    <StatCard icon={FolderOpen} label="Proyectos" value={stats.projects} gradient="purple" style={{ animationDelay: '60ms' }} />
-                    <StatCard icon={FileText} label="Piezas" value={stats.parts} gradient="emerald" style={{ animationDelay: '120ms' }} />
-                    <StatCard icon={TrendingUp} label="En Vista" value={filteredStudies.length} gradient="amber" style={{ animationDelay: '180ms' }} />
+                    <StatCard icon={FolderOpen} label="Proyectos" value={stats.projects} gradient="purple" style={{ animationDelay: '90ms' }} />
+                    <StatCard icon={FileText} label="Piezas" value={stats.parts} gradient="emerald" style={{ animationDelay: '180ms' }} />
+                    <StatCard icon={TrendingUp} label="En Vista" value={filteredStudies.length} gradient="amber" style={{ animationDelay: '270ms' }} />
                 </div>
             )}
 
