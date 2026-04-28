@@ -42,6 +42,14 @@ export const PromptModal: React.FC<PromptModalProps> = ({
     const inputRef = useRef<HTMLInputElement>(null);
     const modalRef = useFocusTrap(isOpen);
 
+    const handleSubmit = () => {
+        if (required && !inputValue.trim()) {
+            inputRef.current?.focus();
+            return;
+        }
+        onSubmit(inputValue);
+    };
+
     // Reset input value when modal opens
     useEffect(() => {
         if (isOpen) {
@@ -64,15 +72,8 @@ export const PromptModal: React.FC<PromptModalProps> = ({
         };
         document.addEventListener('keydown', handleKeyDown);
         return () => document.removeEventListener('keydown', handleKeyDown);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isOpen, isLoading, inputValue, required, onClose, onSubmit]);
-
-    const handleSubmit = () => {
-        if (required && !inputValue.trim()) {
-            inputRef.current?.focus();
-            return;
-        }
-        onSubmit(inputValue);
-    };
 
     if (!isOpen) return null;
 

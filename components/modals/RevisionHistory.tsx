@@ -35,11 +35,6 @@ export function RevisionHistory({ directoryPath, currentFilePath, onRestore }: R
     // Estado para modal de confirmación de restauración
     const [restoreConfirm, setRestoreConfirm] = useState<RevisionInfo | null>(null);
 
-    // Load revisions on mount
-    useEffect(() => {
-        loadRevisions();
-    }, [directoryPath]);
-
     const loadRevisions = async () => {
         setIsLoading(true);
         const obsoletosPath = getObsoletosPath(directoryPath);
@@ -48,6 +43,12 @@ export function RevisionHistory({ directoryPath, currentFilePath, onRestore }: R
         setErrors(result.errors);
         setIsLoading(false);
     };
+
+    // Load revisions on mount
+    useEffect(() => {
+        loadRevisions();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [directoryPath]);
 
     const handlePreview = async (revision: RevisionInfo) => {
         setSelectedRevision(revision.path);
