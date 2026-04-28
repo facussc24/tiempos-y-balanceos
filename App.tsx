@@ -114,6 +114,15 @@ const AppMain: React.FC<AppProps> = ({ onBackToLanding }) => {
     // Export folder (Tiempos y Balanceos module)
     const exportFolder = useOpenExportFolder('tiempos', persistence.data);
 
+    // Sidebar 'Buscar' trigger — listens for CustomEvent dispatched by AppSidebar.
+    // Decouples sidebar (which doesn't have access to modals) from the palette modal.
+    const setShowCommandPalette = modals.setShowCommandPalette;
+    useEffect(() => {
+        const handler = () => setShowCommandPalette(true);
+        window.addEventListener('barack:open-command-palette', handler);
+        return () => window.removeEventListener('barack:open-command-palette', handler);
+    }, [setShowCommandPalette]);
+
     // RC1 HOTFIX: Navigation Guard - Prevent accidental data loss
     useEffect(() => {
         const handleBeforeUnload = (e: BeforeUnloadEvent) => {
