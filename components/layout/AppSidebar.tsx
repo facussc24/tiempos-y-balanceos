@@ -9,7 +9,6 @@
 import React, { useState, useCallback } from 'react';
 import {
     ChevronRight,
-    LayoutDashboard,
     GitBranch,
     FileJson,
     ClipboardCheck,
@@ -19,6 +18,7 @@ import {
     Layers,
     Settings,
     Home,
+    Search,
 } from 'lucide-react';
 
 interface AppSidebarProps {
@@ -31,10 +31,13 @@ const LS_KEY_SIDEBAR = 'barack_sidebar_expanded';
 
 interface SidebarItem {
     label: string;
+    /** Mode key for module navigation. Special: 'landing' returns to landing, 'search' opens command palette. */
     mode: string;
     icon: React.ReactNode;
     /** Optional alert count — shows red pill when expanded, red dot on icon when collapsed. */
     alertCount?: number;
+    /** Optional override action — if defined, runs instead of navigation. Used for search trigger. */
+    onClick?: () => void;
 }
 
 interface SidebarSection {
@@ -42,11 +45,19 @@ interface SidebarSection {
     items: SidebarItem[];
 }
 
+/** Dispatched globally — handled by CommandPaletteProvider listener. */
+const openCommandPalette = () => {
+    if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('barack:open-command-palette'));
+    }
+};
+
 const SECTIONS: SidebarSection[] = [
     {
         title: 'General',
         items: [
-            { label: 'Dashboard', mode: 'dashboard', icon: <LayoutDashboard size={16} /> },
+            { label: 'Inicio', mode: 'landing', icon: <Home size={16} /> },
+            { label: 'Buscar (Ctrl+K)', mode: 'search', icon: <Search size={16} />, onClick: openCommandPalette },
         ],
     },
     {
@@ -82,7 +93,6 @@ const SECTIONS: SidebarSection[] = [
         title: 'Sistema',
         items: [
             { label: 'Administracion', mode: 'admin', icon: <Settings size={16} /> },
-            { label: 'Inicio', mode: 'landing', icon: <Home size={16} /> },
         ],
     },
 ];
@@ -104,11 +114,15 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ currentMode, onSelectModule, on
         });
     }, []);
 
-    const handleItemClick = useCallback((mode: string) => {
-        if (mode === 'landing') {
+    const handleItemClick = useCallback((item: SidebarItem) => {
+        if (item.onClick) {
+            item.onClick();
+            return;
+        }
+        if (item.mode === 'landing') {
             onBackToLanding();
         } else {
-            onSelectModule(mode);
+            onSelectModule(item.mode);
         }
     }, [onSelectModule, onBackToLanding]);
 
@@ -214,7 +228,7 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ currentMode, onSelectModule, on
                                 <button
                                     key={item.mode}
                                     type="button"
-                                    onClick={() => handleItemClick(item.mode)}
+                                    onClick={() => handleItemClick(item)}
                                     title={!expanded ? item.label : undefined}
                                     aria-label={!expanded ? item.label : undefined}
                                     aria-current={isActive ? 'page' : undefined}
