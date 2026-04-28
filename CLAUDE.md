@@ -186,10 +186,11 @@ npx tsc --noEmit     # Chequeo de tipos
 ## Estructura del proyecto
 
 ```
-/                       Raiz del proyecto (NO hay carpeta src/ principal)
+/                       Raiz del proyecto (codigo en raiz, NO en src/)
+  src/                  Solo assets/ + data/ (NO codigo fuente)
   App.tsx               Entry point
   AppRouter.tsx         Routing con lazy loading
-  types.ts              Tipos compartidos (~1500 lineas)
+  types.ts              Barrel export (re-exporta desde types/, ~1500 lineas totales en types/)
   config.ts             Configuracion global
   index.tsx             React root
 
@@ -222,7 +223,7 @@ npx tsc --noEmit     # Chequeo de tipos
     (mix, flow-simulator, heijunka, kanban, logistics-backlog)
 
   utils/
-    repositories/       9 repositorios tipados (CRUD)
+    repositories/       17 repositorios tipados (13 exportados via index.ts + 4 internos: admin, documentLock, eightD, flowchart, pendingExport)
     supabaseClient.ts   Singleton Supabase client
     pfdAmfeLinkValidation.ts   Validacion cruzada PFD ↔ AMFE
     hoCpLinkValidation.ts      Validacion cruzada HO ↔ CP
