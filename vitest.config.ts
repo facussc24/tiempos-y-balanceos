@@ -7,7 +7,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'jsdom', // Simulates browser environment for React/DOM related logic if needed
-    exclude: ['node_modules', 'dist', 'e2e'],
+    exclude: ['node_modules', 'dist', 'e2e', '.claude/worktrees/**'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html', 'json-summary'],

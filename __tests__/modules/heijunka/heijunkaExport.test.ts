@@ -42,6 +42,7 @@ function realSanitizeFilename(filename: string): string {
     if (!filename || filename.trim() === '') return 'unnamed_file';
     let clean = filename.trim();
     clean = clean.replace(/[/\\]/g, '_');
+    // eslint-disable-next-line no-control-regex
     clean = clean.replace(/[<>:"|?*\x00-\x1f]/g, '_');
     clean = clean.replace(/^[\s.]+|[\s.]+$/g, '');
     if (!clean) clean = 'unnamed_file';
