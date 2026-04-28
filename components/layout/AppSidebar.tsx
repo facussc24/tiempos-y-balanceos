@@ -19,6 +19,7 @@ import {
     Settings,
     Home,
     Search,
+    Box,
 } from 'lucide-react';
 
 interface AppSidebarProps {
@@ -80,6 +81,12 @@ const SECTIONS: SidebarSection[] = [
         title: 'Calidad',
         items: [
             { label: 'Reportes 8D', mode: '8dReports', icon: <ClipboardCheck size={16} /> },
+        ],
+    },
+    {
+        title: 'Diseno',
+        items: [
+            { label: 'Impresion 3D', mode: 'threeD', icon: <Box size={16} /> },
         ],
     },
     {

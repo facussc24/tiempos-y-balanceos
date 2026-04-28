@@ -1,0 +1,718 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Tornillo + Tuerca paramétricos — STL para impresión 3D</title>
+<style>
+  :root{
+    --bg: oklch(0.98 0.003 90);
+    --panel: oklch(0.995 0.002 90);
+    --ink: oklch(0.20 0.01 250);
+    --muted: oklch(0.50 0.01 250);
+    --line: oklch(0.88 0.005 250);
+    --line-strong: oklch(0.78 0.008 250);
+    --accent: oklch(0.55 0.16 30);
+    --accent-soft: oklch(0.95 0.04 30);
+    --stage: oklch(0.94 0.005 250);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;height:100%;overflow:hidden}
+  .app{display:grid;grid-template-columns:360px 1fr;height:100vh}
+  aside{background:var(--panel);border-right:1px solid var(--line);padding:24px 22px 20px;overflow-y:auto}
+  aside h1{font-size:18px;font-weight:600;letter-spacing:-0.01em;margin:0 0 2px}
+  aside .sub{font-size:11.5px;color:var(--muted);margin:0 0 22px;font-family:ui-monospace,Menlo,monospace}
+
+  .group{margin-bottom:20px}
+  .group h2{font-size:10.5px;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);margin:0 0 10px;font-weight:600}
+
+  .row{display:grid;grid-template-columns:1fr auto;align-items:center;gap:8px;margin:8px 0}
+  .row label{font-size:12.5px;color:var(--ink)}
+  .row .val{font-family:ui-monospace,Menlo,monospace;font-size:11.5px;color:var(--accent);min-width:54px;text-align:right;background:var(--accent-soft);padding:2px 7px;border-radius:3px}
+  .row input[type=range]{grid-column:1 / -1;width:100%;accent-color:var(--accent);margin:2px 0 4px}
+
+  select, .select{
+    width:100%;padding:8px 10px;border:1px solid var(--line);background:#fff;color:var(--ink);
+    border-radius:4px;font:inherit;font-size:12.5px;cursor:pointer
+  }
+
+  .controls{display:flex;gap:6px;flex-wrap:wrap}
+  .controls button{background:#fff;border:1px solid var(--line);color:var(--ink);padding:7px 11px;border-radius:4px;cursor:pointer;font:inherit;font-size:11.5px;font-family:ui-monospace,Menlo,monospace;transition:all .15s}
+  .controls button:hover{border-color:var(--line-strong)}
+  .controls button.on{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+
+  .downloads{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+  .dl{display:flex;align-items:center;justify-content:space-between;background:var(--ink);border:1px solid var(--ink);color:#fff;padding:11px 13px;border-radius:4px;cursor:pointer;font:inherit;font-size:12.5px;text-decoration:none;transition:opacity .15s}
+  .dl:hover{opacity:0.85}
+  .dl.secondary{background:#fff;color:var(--ink)}
+  .dl .arrow{font-family:ui-monospace,Menlo,monospace;color:var(--accent)}
+
+  .specs{font-size:12px;line-height:1.65;font-family:ui-monospace,Menlo,monospace;background:var(--stage);border:1px solid var(--line);border-radius:4px;padding:10px 12px;margin-top:10px}
+  .specs div{display:flex;justify-content:space-between}
+  .specs span:first-child{color:var(--muted)}
+
+  .note{padding:11px 13px;border-left:2px solid var(--accent);background:var(--accent-soft);font-size:12px;line-height:1.5;color:var(--ink);border-radius:0 3px 3px 0}
+  .note strong{font-weight:600}
+
+  main{position:relative;background:var(--stage)}
+  canvas{display:block;width:100%;height:100%}
+  .hud{position:absolute;left:18px;bottom:14px;font-family:ui-monospace,Menlo,monospace;font-size:11px;color:var(--muted);pointer-events:none;background:rgba(255,255,255,0.7);padding:5px 9px;border-radius:3px}
+  .hud kbd{background:#fff;padding:1px 5px;border-radius:3px;border:1px solid var(--line);color:var(--ink);font-size:10px}
+
+  .badge{position:absolute;top:18px;right:18px;font-family:ui-monospace,Menlo,monospace;font-size:11px;color:var(--muted);background:rgba(255,255,255,0.85);padding:6px 10px;border-radius:3px;border:1px solid var(--line)}
+  .badge b{color:var(--ink);font-weight:500}
+
+  .topbar{position:absolute;top:18px;left:18px;display:flex;gap:6px}
+  .topbar button{background:rgba(255,255,255,0.92);border:1px solid var(--line);color:var(--ink);padding:7px 11px;border-radius:4px;cursor:pointer;font:inherit;font-size:11.5px;font-family:ui-monospace,Menlo,monospace}
+  .topbar button.on{border-color:var(--accent);color:var(--accent)}
+
+  /* scrollbar minimal */
+  aside::-webkit-scrollbar{width:8px}
+  aside::-webkit-scrollbar-track{background:transparent}
+  aside::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside>
+    <h1>Tornillo &amp; Tuerca</h1>
+    <p class="sub">paramétrico · ISO métrica · STL</p>
+
+    <div class="group">
+      <h2>Preset</h2>
+      <select id="preset">
+        <option value="custom">Personalizado</option>
+        <option value="M3">M3 — pequeño</option>
+        <option value="M4">M4</option>
+        <option value="M5">M5</option>
+        <option value="M6">M6</option>
+        <option value="M8" selected>M8 — estándar</option>
+        <option value="M10">M10</option>
+        <option value="M12">M12 — grande</option>
+      </select>
+    </div>
+
+    <div class="group">
+      <h2>Tornillo</h2>
+      <div class="row">
+        <label>Diámetro (Ø mayor)</label>
+        <span class="val" id="v-dia">8.0 mm</span>
+        <input type="range" id="dia" min="3" max="20" step="0.5" value="8" />
+      </div>
+      <div class="row">
+        <label>Largo del vástago</label>
+        <span class="val" id="v-len">20 mm</span>
+        <input type="range" id="len" min="5" max="60" step="1" value="20" />
+      </div>
+      <div class="row">
+        <label>Paso de rosca</label>
+        <span class="val" id="v-pitch">1.25 mm</span>
+        <input type="range" id="pitch" min="0.5" max="2.5" step="0.05" value="1.25" />
+      </div>
+      <div class="row">
+        <label>Alto cabeza</label>
+        <span class="val" id="v-headh">5.0 mm</span>
+        <input type="range" id="headh" min="2" max="12" step="0.5" value="5" />
+      </div>
+      <div class="row">
+        <label>Cabeza (entre caras)</label>
+        <span class="val" id="v-flats">13 mm</span>
+        <input type="range" id="flats" min="5" max="24" step="0.5" value="13" />
+      </div>
+    </div>
+
+    <div class="group">
+      <h2>Tuerca</h2>
+      <div class="row">
+        <label>Alto tuerca</label>
+        <span class="val" id="v-nuth">6.5 mm</span>
+        <input type="range" id="nuth" min="2" max="14" step="0.5" value="6.5" />
+      </div>
+      <div class="row">
+        <label>Holgura impresión 3D</label>
+        <span class="val" id="v-clr">0.40 mm</span>
+        <input type="range" id="clr" min="0.0" max="0.8" step="0.05" value="0.4" />
+      </div>
+    </div>
+
+    <div class="group">
+      <h2>Vista</h2>
+      <div class="controls">
+        <button id="btn-both" class="on">Ambos</button>
+        <button id="btn-screw">Tornillo</button>
+        <button id="btn-nut">Tuerca</button>
+        <button id="btn-explode">Separar</button>
+        <button id="btn-section">Cortar tuerca</button>
+        <button id="btn-spin" class="on">Rotar</button>
+      </div>
+    </div>
+
+    <div class="group">
+      <h2>Material visual</h2>
+      <div class="controls">
+        <button data-mat="steel" class="on mat-btn">Acero</button>
+        <button data-mat="brass" class="mat-btn">Latón</button>
+        <button data-mat="plastic" class="mat-btn">Plástico</button>
+        <button data-mat="black" class="mat-btn">Negro</button>
+      </div>
+    </div>
+
+    <div class="group">
+      <h2>Especificaciones actuales</h2>
+      <div class="specs" id="specs"></div>
+    </div>
+
+    <div class="group">
+      <h2>Descargar STL</h2>
+      <div class="downloads">
+        <a class="dl" id="dl-screw" href="#" download>
+          <span>Tornillo</span><span class="arrow" id="dl-screw-name">↓</span>
+        </a>
+        <a class="dl secondary" id="dl-nut" href="#" download>
+          <span>Tuerca</span><span class="arrow" id="dl-nut-name">↓</span>
+        </a>
+      </div>
+    </div>
+
+    <div class="note">
+      <strong>Tips de impresión:</strong> rosca paralela a Z, capa 0.12–0.16 mm, 4 perímetros, 30–40% giroide. PETG o PLA+. Si la tuerca queda dura, sube la holgura a 0.5 mm.
+    </div>
+  </aside>
+
+  <main>
+    <canvas id="c"></canvas>
+    <div class="topbar">
+      <button id="btn-iso" class="on">ISO</button>
+      <button id="btn-front">Frente</button>
+      <button id="btn-top">Arriba</button>
+    </div>
+    <div class="badge" id="badge"></div>
+    <div class="hud">arrastrar · rueda · <kbd>R</kbd> reset</div>
+  </main>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+// ============================================================
+// PARÁMETROS
+// ============================================================
+const params = {
+  dia: 8.0, len: 20, pitch: 1.25,
+  headh: 5.0, flats: 13.0,
+  nuth: 6.5, clr: 0.4,
+};
+
+const PRESETS = {
+  M3: {dia:3,  pitch:0.5,  flats:5.5,  headh:2,   len:15, nuth:2.4},
+  M4: {dia:4,  pitch:0.7,  flats:7,    headh:2.8, len:15, nuth:3.2},
+  M5: {dia:5,  pitch:0.8,  flats:8,    headh:3.5, len:18, nuth:4},
+  M6: {dia:6,  pitch:1.0,  flats:10,   headh:4,   len:20, nuth:5},
+  M8: {dia:8,  pitch:1.25, flats:13,   headh:5,   len:20, nuth:6.5},
+  M10:{dia:10, pitch:1.5,  flats:16,   headh:6.4, len:25, nuth:8},
+  M12:{dia:12, pitch:1.75, flats:18,   headh:7.5, len:30, nuth:10},
+};
+
+// ============================================================
+// GENERADOR DE GEOMETRÍA (devuelve THREE.BufferGeometry)
+// ============================================================
+const SEG = 56; // segmentos circulares (resolución radial)
+
+function threadProfile(zMod, pitch, rMajor, rMinor){
+  const half = pitch/2;
+  const flat = pitch * 0.125;
+  if (zMod < flat) return rMinor;
+  if (zMod < half) return rMinor + (rMajor - rMinor)*((zMod - flat)/(half - flat));
+  if (zMod < half + flat) return rMajor;
+  return rMajor - (rMajor - rMinor)*((zMod - half - flat)/(half - flat));
+}
+
+class Mesh {
+  constructor(){this.pos=[]; this.nrm=[];}
+  tri(a,b,c){
+    const ux=b[0]-a[0], uy=b[1]-a[1], uz=b[2]-a[2];
+    const vx=c[0]-a[0], vy=c[1]-a[1], vz=c[2]-a[2];
+    let nx=uy*vz-uz*vy, ny=uz*vx-ux*vz, nz=ux*vy-uy*vx;
+    const l=Math.hypot(nx,ny,nz)||1; nx/=l;ny/=l;nz/=l;
+    this.pos.push(a[0],a[1],a[2], b[0],b[1],b[2], c[0],c[1],c[2]);
+    this.nrm.push(nx,ny,nz, nx,ny,nz, nx,ny,nz);
+  }
+  quad(a,b,c,d){this.tri(a,b,c); this.tri(a,c,d);}
+  toGeometry(){
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(this.pos, 3));
+    g.setAttribute('normal', new THREE.Float32BufferAttribute(this.nrm, 3));
+    g.computeVertexNormals(); // smooth
+    return g;
+  }
+  toSTLBytes(){
+    const n = this.pos.length / 9;
+    const buf = new ArrayBuffer(84 + n*50);
+    const dv = new DataView(buf);
+    dv.setUint32(80, n, true);
+    let off = 84;
+    for(let i=0;i<n;i++){
+      const a = [this.pos[i*9], this.pos[i*9+1], this.pos[i*9+2]];
+      const b = [this.pos[i*9+3], this.pos[i*9+4], this.pos[i*9+5]];
+      const c = [this.pos[i*9+6], this.pos[i*9+7], this.pos[i*9+8]];
+      const ux=b[0]-a[0], uy=b[1]-a[1], uz=b[2]-a[2];
+      const vx=c[0]-a[0], vy=c[1]-a[1], vz=c[2]-a[2];
+      let nx=uy*vz-uz*vy, ny=uz*vx-ux*vz, nz=ux*vy-uy*vx;
+      const l=Math.hypot(nx,ny,nz)||1; nx/=l;ny/=l;nz/=l;
+      dv.setFloat32(off, nx, true); off+=4;
+      dv.setFloat32(off, ny, true); off+=4;
+      dv.setFloat32(off, nz, true); off+=4;
+      for(const v of [a,b,c]){
+        dv.setFloat32(off, v[0], true); off+=4;
+        dv.setFloat32(off, v[1], true); off+=4;
+        dv.setFloat32(off, v[2], true); off+=4;
+      }
+      dv.setUint16(off, 0, true); off+=2;
+    }
+    return new Uint8Array(buf);
+  }
+}
+
+function buildThreaded(mesh, zBottom, zTop, pitch, rMajor, rMinor, external){
+  const zSegPerPitch = 22;
+  const totalLen = zTop - zBottom;
+  const zSegs = Math.max(2, Math.ceil(totalLen / pitch * zSegPerPitch));
+  const dz = totalLen / zSegs;
+  function R(theta, z){
+    let zMod = ((z - theta * pitch/(2*Math.PI)) % pitch + pitch) % pitch;
+    return threadProfile(zMod, pitch, rMajor, rMinor);
+  }
+  const grid = [];
+  for(let j=0; j<=zSegs; j++){
+    const z = zBottom + j*dz;
+    const row = [];
+    for(let i=0; i<=SEG; i++){
+      const theta = 2*Math.PI*i/SEG;
+      const r = R(theta, z);
+      row.push([r*Math.cos(theta), r*Math.sin(theta), z]);
+    }
+    grid.push(row);
+  }
+  for(let j=0; j<zSegs; j++){
+    for(let i=0; i<SEG; i++){
+      const a = grid[j][i], b = grid[j][i+1], c = grid[j+1][i+1], d = grid[j+1][i];
+      if (external) mesh.quad(a,b,c,d); else mesh.quad(a,d,c,b);
+    }
+  }
+  return {bottomRing: grid[0], topRing: grid[zSegs]};
+}
+
+function buildHexPrism(mesh, zBottom, zTop, flats){
+  const R = flats / Math.sqrt(3);
+  const verts = [];
+  for(let i=0;i<6;i++){
+    const a = Math.PI/6 + i*Math.PI/3;
+    verts.push([R*Math.cos(a), R*Math.sin(a)]);
+  }
+  for(let i=0;i<6;i++){
+    const v1 = verts[i], v2 = verts[(i+1)%6];
+    mesh.quad([v1[0],v1[1],zBottom],[v2[0],v2[1],zBottom],[v2[0],v2[1],zTop],[v1[0],v1[1],zTop]);
+  }
+  return verts;
+}
+
+function capHexHole(mesh, hexVerts, ringVerts, z, topSide){
+  const n = ringVerts.length - 1;
+  const hexRes = [];
+  for(let i=0;i<n;i++){
+    const t = i/n * 6;
+    const seg = Math.floor(t) % 6;
+    const localT = t - Math.floor(t);
+    const a = hexVerts[seg], b = hexVerts[(seg+1)%6];
+    hexRes.push([a[0]+(b[0]-a[0])*localT, a[1]+(b[1]-a[1])*localT, z]);
+  }
+  for(let i=0;i<n;i++){
+    const i2 = (i+1)%n;
+    const a = hexRes[i], b = hexRes[i2], c = ringVerts[i2], d = ringVerts[i];
+    if (topSide) mesh.quad(a,b,c,d); else mesh.quad(a,d,c,b);
+  }
+}
+
+function capDisk(mesh, ringVerts, z, topSide){
+  const n = ringVerts.length - 1;
+  const center = [0,0,z];
+  for(let i=0;i<n;i++){
+    const a = ringVerts[i], b = ringVerts[(i+1)%n];
+    if (topSide) mesh.tri(center, a, b); else mesh.tri(center, b, a);
+  }
+}
+
+function buildScrew(p){
+  const m = new Mesh();
+  const H_thread = p.pitch * Math.sqrt(3)/2;
+  const rMajor = p.dia/2;
+  const rMinor = (p.dia - 2*(5/8)*H_thread)/2;
+  const headBottom = 0, headTop = p.headh;
+  const neckLen = Math.min(0.6, p.pitch*0.5);
+  const threadStart = headTop + neckLen;
+  const threadEnd = headTop + p.len;
+  const hex = buildHexPrism(m, headBottom, headTop, p.flats);
+  // cuello cilíndrico
+  const ringB = [], ringT = [];
+  for(let i=0;i<=SEG;i++){
+    const a = 2*Math.PI*i/SEG;
+    ringB.push([rMajor*Math.cos(a), rMajor*Math.sin(a), headTop]);
+    ringT.push([rMajor*Math.cos(a), rMajor*Math.sin(a), threadStart]);
+  }
+  for(let i=0;i<SEG;i++) m.quad(ringB[i], ringB[i+1], ringT[i+1], ringT[i]);
+  const thread = buildThreaded(m, threadStart, threadEnd, p.pitch, rMajor, rMinor, true);
+  // tapa inferior cabeza
+  for(let i=0;i<6;i++){
+    const v1 = hex[i], v2 = hex[(i+1)%6];
+    m.tri([0,0,headBottom],[v2[0],v2[1],headBottom],[v1[0],v1[1],headBottom]);
+  }
+  capHexHole(m, hex, ringB, headTop, true);
+  capDisk(m, thread.topRing, threadEnd, true);
+  return m;
+}
+
+function buildNut(p){
+  const m = new Mesh();
+  const H_thread = p.pitch * Math.sqrt(3)/2;
+  const rMajor = (p.dia + p.clr)/2;
+  const rMinor = (p.dia + p.clr - 2*(5/8)*H_thread)/2;
+  const z0 = 0, z1 = p.nuth;
+  const hex = buildHexPrism(m, z0, z1, p.flats);
+  const thread = buildThreaded(m, z0, z1, p.pitch, rMajor, rMinor, false);
+  capHexHole(m, hex, thread.bottomRing, z0, false);
+  capHexHole(m, hex, thread.topRing, z1, true);
+  return m;
+}
+
+// ============================================================
+// THREE.js setup
+// ============================================================
+const canvas = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({canvas, antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.localClippingEnabled = true;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xeeefef);
+
+const camera = new THREE.PerspectiveCamera(32, 1, 0.1, 500);
+camera.position.set(50, 35, 60);
+
+const controls = new OrbitControls(camera, canvas);
+controls.enableDamping = true;
+controls.target.set(0, 12, 0);
+
+// Luz ambiente suave
+scene.add(new THREE.HemisphereLight(0xffffff, 0xc8ccd0, 0.7));
+const key = new THREE.DirectionalLight(0xffffff, 1.5);
+key.position.set(25, 40, 30); key.castShadow = true;
+key.shadow.mapSize.set(2048,2048);
+key.shadow.camera.left=-40; key.shadow.camera.right=40;
+key.shadow.camera.top=40; key.shadow.camera.bottom=-40;
+key.shadow.bias=-0.0005;
+scene.add(key);
+const fill = new THREE.DirectionalLight(0xdde7ff, 0.5);
+fill.position.set(-30, 15, -10);
+scene.add(fill);
+const rim = new THREE.DirectionalLight(0xffe6c4, 0.6);
+rim.position.set(-10, 25, -30);
+scene.add(rim);
+
+// suelo
+const ground = new THREE.Mesh(
+  new THREE.CircleGeometry(80, 64),
+  new THREE.ShadowMaterial({opacity:0.15})
+);
+ground.rotation.x = -Math.PI/2;
+ground.position.y = -0.01;
+ground.receiveShadow = true;
+scene.add(ground);
+
+// piso visible muy sutil
+const floor = new THREE.Mesh(
+  new THREE.CircleGeometry(80, 64),
+  new THREE.MeshStandardMaterial({color:0xe4e6e8, roughness:0.95, metalness:0})
+);
+floor.rotation.x = -Math.PI/2;
+floor.position.y = -0.02;
+scene.add(floor);
+
+// Materiales
+const MATERIALS = {
+  steel: new THREE.MeshStandardMaterial({color:0xc4c8cc, metalness:0.85, roughness:0.32}),
+  brass: new THREE.MeshStandardMaterial({color:0xd4a23a, metalness:0.85, roughness:0.30}),
+  plastic: new THREE.MeshStandardMaterial({color:0xeeae3a, metalness:0.05, roughness:0.55}),
+  black: new THREE.MeshStandardMaterial({color:0x202428, metalness:0.6, roughness:0.45}),
+};
+let currentMat = MATERIALS.steel;
+
+// Plano de corte para "section view" de la tuerca
+const clipPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
+let sectionOn = false;
+
+function applyClip(mat, on){
+  mat.clippingPlanes = on ? [clipPlane] : [];
+  mat.side = on ? THREE.DoubleSide : THREE.FrontSide;
+  mat.needsUpdate = true;
+}
+
+// Meshes
+let screwMesh, nutMesh;
+let screwMeshObj, nutMeshObj; // wrappers para modificar geometría
+
+function rebuild(){
+  const screwData = buildScrew(params);
+  const nutData = buildNut(params);
+
+  const sg = screwData.toGeometry();
+  const ng = nutData.toGeometry();
+
+  // STL ejes Z=arriba; rotamos a Y=arriba
+  sg.rotateX(-Math.PI/2);
+  ng.rotateX(-Math.PI/2);
+  sg.computeBoundingBox();
+  ng.computeBoundingBox();
+  sg.translate(0, -sg.boundingBox.min.y, 0);
+  ng.translate(0, -ng.boundingBox.min.y, 0);
+  sg.computeVertexNormals();
+  ng.computeVertexNormals();
+
+  if (!screwMesh){
+    screwMesh = new THREE.Mesh(sg, currentMat);
+    screwMesh.castShadow = true; screwMesh.receiveShadow = true;
+    scene.add(screwMesh);
+    nutMesh = new THREE.Mesh(ng, currentMat);
+    nutMesh.castShadow = true; nutMesh.receiveShadow = true;
+    scene.add(nutMesh);
+  } else {
+    screwMesh.geometry.dispose();
+    nutMesh.geometry.dispose();
+    screwMesh.geometry = sg;
+    nutMesh.geometry = ng;
+  }
+
+  layout();
+
+  // Guardar bytes para descarga
+  const screwBytes = screwData.toSTLBytes();
+  const nutBytes = nutData.toSTLBytes();
+  const sBlob = new Blob([screwBytes], {type:'application/octet-stream'});
+  const nBlob = new Blob([nutBytes], {type:'application/octet-stream'});
+  if (lastScrewURL) URL.revokeObjectURL(lastScrewURL);
+  if (lastNutURL) URL.revokeObjectURL(lastNutURL);
+  lastScrewURL = URL.createObjectURL(sBlob);
+  lastNutURL = URL.createObjectURL(nBlob);
+
+  const tag = `M${params.dia.toFixed(0)}x${params.len}_p${params.pitch.toFixed(2)}`;
+  const sName = `tornillo_${tag}.stl`;
+  const nName = `tuerca_M${params.dia.toFixed(0)}_p${params.pitch.toFixed(2)}.stl`;
+  const sLink = document.getElementById('dl-screw');
+  const nLink = document.getElementById('dl-nut');
+  sLink.href = lastScrewURL; sLink.download = sName;
+  nLink.href = lastNutURL; nLink.download = nName;
+  document.getElementById('dl-screw-name').textContent = sName + '  ↓';
+  document.getElementById('dl-nut-name').textContent = nName + '  ↓';
+
+  updateSpecs();
+  updateBadge();
+}
+let lastScrewURL = null, lastNutURL = null;
+
+let exploded = false;
+function layout(){
+  if(!screwMesh || !nutMesh) return;
+  const offsetX = Math.max(8, params.dia + params.flats*0.6);
+  if(!exploded){
+    screwMesh.position.set(-offsetX/2, 0, 0);
+    nutMesh.position.set(offsetX/2, 0, 0);
+  } else {
+    screwMesh.position.set(-offsetX/2, 0, 0);
+    nutMesh.position.set(-offsetX/2, params.headh + params.len + 4, 0);
+  }
+}
+
+// HUD de specs
+function updateSpecs(){
+  const H = params.pitch * Math.sqrt(3)/2;
+  const rMinor = params.dia - 2*(5/8)*H;
+  const html = `
+    <div><span>rosca</span><span>M${params.dia.toFixed(1)} × ${params.pitch.toFixed(2)}</span></div>
+    <div><span>vástago</span><span>${params.len.toFixed(0)} mm</span></div>
+    <div><span>Ø menor</span><span>${rMinor.toFixed(2)} mm</span></div>
+    <div><span>cabeza hex</span><span>${params.flats.toFixed(1)} mm</span></div>
+    <div><span>alto cabeza</span><span>${params.headh.toFixed(1)} mm</span></div>
+    <div><span>alto tuerca</span><span>${params.nuth.toFixed(1)} mm</span></div>
+    <div><span>holgura</span><span>+${params.clr.toFixed(2)} mm</span></div>
+  `;
+  document.getElementById('specs').innerHTML = html;
+}
+function updateBadge(){
+  document.getElementById('badge').innerHTML =
+    `<b>M${params.dia.toFixed(1)} × ${params.len}mm</b> · paso ${params.pitch.toFixed(2)}`;
+}
+
+// ============================================================
+// UI Wiring
+// ============================================================
+function bindSlider(id, key, fmt){
+  const el = document.getElementById(id);
+  const v = document.getElementById('v-'+id);
+  el.value = params[key];
+  v.textContent = fmt(params[key]);
+  el.addEventListener('input', ()=>{
+    params[key] = parseFloat(el.value);
+    v.textContent = fmt(params[key]);
+    document.getElementById('preset').value = 'custom';
+    scheduleRebuild();
+  });
+}
+const fmtMM1 = v => v.toFixed(1)+' mm';
+const fmtMM0 = v => v.toFixed(0)+' mm';
+const fmtMM2 = v => v.toFixed(2)+' mm';
+
+bindSlider('dia','dia',fmtMM1);
+bindSlider('len','len',fmtMM0);
+bindSlider('pitch','pitch',fmtMM2);
+bindSlider('headh','headh',fmtMM1);
+bindSlider('flats','flats',fmtMM1);
+bindSlider('nuth','nuth',fmtMM1);
+bindSlider('clr','clr',fmtMM2);
+
+document.getElementById('preset').addEventListener('change', e=>{
+  const p = PRESETS[e.target.value];
+  if(!p) return;
+  Object.assign(params, p);
+  // Actualizar UI
+  for(const id of ['dia','len','pitch','headh','flats','nuth']){
+    const el = document.getElementById(id);
+    el.value = params[id];
+    const fmts = {dia:fmtMM1, len:fmtMM0, pitch:fmtMM2, headh:fmtMM1, flats:fmtMM1, nuth:fmtMM1};
+    document.getElementById('v-'+id).textContent = fmts[id](params[id]);
+  }
+  scheduleRebuild();
+});
+
+let rebuildTimer = null;
+function scheduleRebuild(){
+  if (rebuildTimer) clearTimeout(rebuildTimer);
+  rebuildTimer = setTimeout(()=>{rebuild(); rebuildTimer=null;}, 60);
+}
+
+// View buttons
+let showScrew = true, showNut = true, autoSpin = true;
+function syncView(){
+  document.getElementById('btn-both').classList.toggle('on', showScrew && showNut);
+  document.getElementById('btn-screw').classList.toggle('on', showScrew && !showNut);
+  document.getElementById('btn-nut').classList.toggle('on', !showScrew && showNut);
+  if(screwMesh) screwMesh.visible = showScrew;
+  if(nutMesh) nutMesh.visible = showNut;
+}
+document.getElementById('btn-both').onclick=()=>{showScrew=true;showNut=true;syncView();};
+document.getElementById('btn-screw').onclick=()=>{showScrew=true;showNut=false;syncView();};
+document.getElementById('btn-nut').onclick=()=>{showScrew=false;showNut=true;syncView();};
+document.getElementById('btn-explode').onclick=(e)=>{exploded=!exploded;e.target.classList.toggle('on',exploded);layout();};
+document.getElementById('btn-section').onclick=(e)=>{
+  sectionOn=!sectionOn;
+  e.target.classList.toggle('on',sectionOn);
+  // aplicar solo a la tuerca (clonando material)
+  if (sectionOn){
+    const m = currentMat.clone();
+    applyClip(m, true);
+    nutMesh.material = m;
+  } else {
+    nutMesh.material = currentMat;
+  }
+};
+document.getElementById('btn-spin').onclick=(e)=>{autoSpin=!autoSpin;e.target.classList.toggle('on',autoSpin);};
+
+// Material buttons
+document.querySelectorAll('.mat-btn').forEach(b=>{
+  b.onclick=()=>{
+    document.querySelectorAll('.mat-btn').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on');
+    currentMat = MATERIALS[b.dataset.mat];
+    if(screwMesh) screwMesh.material = currentMat;
+    if(nutMesh){
+      if (sectionOn){
+        const m = currentMat.clone();
+        applyClip(m, true);
+        nutMesh.material = m;
+      } else {
+        nutMesh.material = currentMat;
+      }
+    }
+  };
+});
+
+// Camera presets
+function setView(name){
+  document.querySelectorAll('.topbar button').forEach(x=>x.classList.remove('on'));
+  document.getElementById('btn-'+name).classList.add('on');
+  const t = controls.target;
+  if (name==='iso'){ camera.position.set(t.x+50, t.y+25, t.z+50); }
+  if (name==='front'){ camera.position.set(t.x, t.y, t.z+70); }
+  if (name==='top'){ camera.position.set(t.x, t.y+70, t.z+0.001); }
+}
+document.getElementById('btn-iso').onclick=()=>setView('iso');
+document.getElementById('btn-front').onclick=()=>setView('front');
+document.getElementById('btn-top').onclick=()=>setView('top');
+
+window.addEventListener('keydown',e=>{
+  if(e.key==='r'||e.key==='R'){
+    setView('iso');
+    controls.target.set(0,12,0);
+  }
+});
+
+function resize(){
+  const r = canvas.getBoundingClientRect();
+  renderer.setSize(r.width, r.height, false);
+  camera.aspect = r.width/r.height;
+  camera.updateProjectionMatrix();
+}
+new ResizeObserver(resize).observe(canvas);
+resize();
+
+// Pivote para autorotación
+const pivot = new THREE.Group();
+scene.add(pivot);
+
+let t0 = performance.now();
+function tick(){
+  const t = performance.now();
+  const dt = (t-t0)/1000; t0 = t;
+  if(autoSpin){
+    // rotar la cámara alrededor del target
+    const r = camera.position.clone().sub(controls.target);
+    const ang = dt * 0.25;
+    const cos = Math.cos(ang), sin = Math.sin(ang);
+    const x = r.x*cos - r.z*sin;
+    const z = r.x*sin + r.z*cos;
+    camera.position.set(x + controls.target.x, camera.position.y, z + controls.target.z);
+    camera.lookAt(controls.target);
+  }
+  controls.update();
+  renderer.render(scene, camera);
+  requestAnimationFrame(tick);
+}
+
+// Build inicial
+rebuild();
+tick();
+</script>
+</body>
+</html>
