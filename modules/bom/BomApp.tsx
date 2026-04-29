@@ -58,6 +58,7 @@ const BomApp: React.FC<BomAppProps> = ({ onBackToLanding }) => {
     const [search, setSearch] = useState('');
     const [filterCliente, setFilterCliente] = useState<string>('');
     const [showCategoryPicker, setShowCategoryPicker] = useState(false);
+    const [renamingVariantId, setRenamingVariantId] = useState<string | null>(null);
     const pickerRef = useRef<HTMLDivElement>(null);
 
     const reloadList = useCallback(async () => {
@@ -444,45 +445,64 @@ const BomApp: React.FC<BomAppProps> = ({ onBackToLanding }) => {
                     ))}
                 </div>
 
-                {/* Tabs de variantes (si aplica) */}
+                {/* Tabs de variantes (si aplica). Cuando hay >6, se vuelve scrollable horizontal. */}
                 {(hasMultipleVariants || doc.variants.length > 1) && (
-                    <div className="flex items-center gap-1 mb-3 border-b border-slate-200">
-                        {doc.variants.map(v => (
-                            <button
-                                key={v.id}
-                                onClick={() => setActiveVariantId(v.id)}
-                                className={`group inline-flex items-center gap-2 px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
-                                    v.id === activeVariantId
-                                        ? 'border-[#1e3a5f] text-[#1e3a5f]'
-                                        : 'border-transparent text-slate-500 hover:text-slate-800'
-                                }`}
-                            >
-                                <input
-                                    value={v.name}
-                                    onChange={e => renameVariant(v.id, e.target.value)}
-                                    placeholder="Sin nombre"
-                                    className="bg-transparent border-none outline-none w-auto min-w-[80px]"
-                                    style={{ width: `${Math.max(8, (v.name?.length || 10) + 2)}ch` }}
-                                />
-                                {doc.variants.length > 1 && (
-                                    <span
-                                        role="button"
-                                        tabIndex={0}
-                                        onClick={(e) => { e.stopPropagation(); removeVariant(v.id); }}
-                                        className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-red-500 cursor-pointer"
-                                        aria-label="Eliminar variante"
-                                    >
-                                        <X size={12} />
-                                    </span>
-                                )}
-                            </button>
-                        ))}
+                    <div className={`flex items-center gap-1 mb-3 border-b border-slate-200 ${doc.variants.length > 6 ? 'overflow-x-auto pb-px scrollbar-thin' : 'flex-wrap'}`}>
+                        {doc.variants.map(v => {
+                            const isActive = v.id === activeVariantId;
+                            const isRenaming = renamingVariantId === v.id;
+                            return (
+                                <div
+                                    key={v.id}
+                                    onClick={() => { if (!isRenaming) setActiveVariantId(v.id); }}
+                                    className={`group inline-flex items-center gap-2 px-4 py-2 text-sm font-medium border-b-2 -mb-px cursor-pointer select-none transition-all whitespace-nowrap shrink-0 ${
+                                        isActive
+                                            ? 'border-[#1e3a5f] text-[#1e3a5f] bg-blue-50/60 shadow-sm'
+                                            : 'border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-50'
+                                    }`}
+                                    onDoubleClick={(e) => { e.stopPropagation(); setRenamingVariantId(v.id); setActiveVariantId(v.id); }}
+                                    title={isActive ? 'Doble-click para renombrar' : 'Click para abrir'}
+                                >
+                                    {isRenaming ? (
+                                        <input
+                                            autoFocus
+                                            value={v.name}
+                                            onChange={e => renameVariant(v.id, e.target.value)}
+                                            onBlur={() => setRenamingVariantId(null)}
+                                            onKeyDown={e => { if (e.key === 'Enter' || e.key === 'Escape') setRenamingVariantId(null); }}
+                                            onClick={e => e.stopPropagation()}
+                                            placeholder="Sin nombre"
+                                            className="bg-white border border-[#1e3a5f] rounded px-1 outline-none min-w-[80px]"
+                                            style={{ width: `${Math.max(10, (v.name?.length || 10) + 2)}ch` }}
+                                        />
+                                    ) : (
+                                        <span className="truncate max-w-[200px]">{v.name || <em className="text-slate-400">Sin nombre</em>}</span>
+                                    )}
+                                    {doc.variants.length > 1 && !isRenaming && (
+                                        <span
+                                            role="button"
+                                            tabIndex={0}
+                                            onClick={(e) => { e.stopPropagation(); removeVariant(v.id); }}
+                                            className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-red-500 cursor-pointer"
+                                            aria-label="Eliminar variante"
+                                        >
+                                            <X size={12} />
+                                        </span>
+                                    )}
+                                </div>
+                            );
+                        })}
                         <button
                             onClick={addVariant}
-                            className="inline-flex items-center gap-1 px-3 py-2 text-xs font-medium text-slate-500 hover:text-[#1e3a5f] hover:bg-slate-50 rounded-t-lg transition-colors"
+                            className="inline-flex items-center gap-1 px-3 py-2 text-xs font-medium text-slate-500 hover:text-[#1e3a5f] hover:bg-slate-50 rounded-t-lg transition-colors whitespace-nowrap shrink-0"
                         >
                             <Plus size={13} /> Variante
                         </button>
+                        {doc.variants.length > 6 && (
+                            <span className="ml-auto pl-3 text-[11px] text-slate-400 italic shrink-0">
+                                {doc.variants.length} variantes — desliza para ver mas
+                            </span>
+                        )}
                     </div>
                 )}
 
@@ -523,22 +543,22 @@ const BomApp: React.FC<BomAppProps> = ({ onBackToLanding }) => {
                                 </div>
                             ) : (
                                 <>
-                                    <div className="grid grid-cols-[120px_55px_110px_110px_1fr_90px_70px_140px_60px_36px] bg-slate-50 text-slate-500 text-[10px] font-semibold uppercase tracking-wider border-b border-slate-200">
-                                        <div className="px-3 py-2.5">Categoria</div>
-                                        <div className="px-2 py-2.5 text-center">N°</div>
-                                        <div className="px-3 py-2.5">Cod. Int.</div>
-                                        <div className="px-3 py-2.5">Cod. Prov</div>
-                                        <div className="px-3 py-2.5">Descripcion / Plano</div>
-                                        <div className="px-3 py-2.5 text-center">Consumo</div>
-                                        <div className="px-3 py-2.5 text-center">Unidad</div>
-                                        <div className="px-3 py-2.5">Proveedor</div>
-                                        <div className="px-3 py-2.5 text-center">Img</div>
+                                    <div className="grid grid-cols-[140px_60px_120px_120px_1fr_100px_80px_150px_60px_40px] bg-slate-50 text-slate-500 text-[10px] font-semibold uppercase tracking-wider border-b border-slate-200 sticky top-16 z-10">
+                                        <div className="px-3 py-3">Categoria</div>
+                                        <div className="px-2 py-3 text-center">N°</div>
+                                        <div className="px-3 py-3">Cod. Int.</div>
+                                        <div className="px-3 py-3">Cod. Prov</div>
+                                        <div className="px-3 py-3">Descripcion / Plano</div>
+                                        <div className="px-3 py-3 text-center">Consumo</div>
+                                        <div className="px-3 py-3 text-center">Unidad</div>
+                                        <div className="px-3 py-3">Proveedor</div>
+                                        <div className="px-3 py-3 text-center">Img</div>
                                         <div></div>
                                     </div>
                                     {flatRows.map(({ item, categoria, isFirstOfCategory }) => (
                                         <div
                                             key={item.id}
-                                            className={`grid grid-cols-[120px_55px_110px_110px_1fr_90px_70px_140px_60px_36px] items-stretch border-b border-slate-100 hover:bg-blue-50/20 text-sm group ${isFirstOfCategory ? 'border-t border-t-slate-200' : ''}`}
+                                            className={`grid grid-cols-[140px_60px_120px_120px_1fr_100px_80px_150px_60px_40px] items-stretch border-b border-slate-100 hover:bg-blue-50/30 focus-within:bg-blue-50/40 text-sm group transition-colors ${isFirstOfCategory ? 'border-t-2 border-t-slate-200/80' : ''}`}
                                         >
                                             <div className="px-3 py-2 flex items-center">
                                                 {isFirstOfCategory && (
@@ -552,15 +572,15 @@ const BomApp: React.FC<BomAppProps> = ({ onBackToLanding }) => {
                                                     {item.numero || '—'}
                                                 </span>
                                             </div>
-                                            <input value={item.codigoInterno} onChange={e => updateItem(categoria, item.id, 'codigoInterno', e.target.value)} className="px-2 py-2 font-mono text-xs focus:outline-none focus:bg-blue-50/40 bg-transparent" placeholder="—" />
-                                            <input value={item.codigoProveedor} onChange={e => updateItem(categoria, item.id, 'codigoProveedor', e.target.value)} className="px-2 py-2 font-mono text-xs focus:outline-none focus:bg-blue-50/40 bg-transparent" placeholder="—" />
-                                            <input value={item.descripcion} onChange={e => updateItem(categoria, item.id, 'descripcion', e.target.value)} className="px-2 py-2 focus:outline-none focus:bg-blue-50/40 bg-transparent" placeholder="Descripcion del componente" />
-                                            <input value={item.consumo} onChange={e => updateItem(categoria, item.id, 'consumo', e.target.value)} className="px-2 py-2 text-center font-mono text-xs focus:outline-none focus:bg-blue-50/40 bg-transparent tabular-nums" placeholder="0,000" />
-                                            <select value={item.unidad} onChange={e => updateItem(categoria, item.id, 'unidad', e.target.value)} className="px-2 py-2 bg-transparent focus:outline-none focus:bg-blue-50/40 text-center text-xs">
+                                            <input value={item.codigoInterno} onChange={e => updateItem(categoria, item.id, 'codigoInterno', e.target.value)} className="px-2 py-2.5 font-mono text-xs focus:outline-none focus:bg-white focus:ring-1 focus:ring-[#1e3a5f]/20 focus:rounded bg-transparent" placeholder="—" />
+                                            <input value={item.codigoProveedor} onChange={e => updateItem(categoria, item.id, 'codigoProveedor', e.target.value)} className="px-2 py-2.5 font-mono text-xs focus:outline-none focus:bg-white focus:ring-1 focus:ring-[#1e3a5f]/20 focus:rounded bg-transparent" placeholder="—" />
+                                            <input value={item.descripcion} onChange={e => updateItem(categoria, item.id, 'descripcion', e.target.value)} className="px-2 py-2.5 focus:outline-none focus:bg-white focus:ring-1 focus:ring-[#1e3a5f]/20 focus:rounded bg-transparent" placeholder="Descripcion del componente" />
+                                            <input value={item.consumo} onChange={e => updateItem(categoria, item.id, 'consumo', e.target.value)} className="px-2 py-2.5 text-center font-mono text-xs focus:outline-none focus:bg-white focus:ring-1 focus:ring-[#1e3a5f]/20 focus:rounded bg-transparent tabular-nums" placeholder="0,000" />
+                                            <select value={item.unidad} onChange={e => updateItem(categoria, item.id, 'unidad', e.target.value)} className="px-2 py-2.5 bg-transparent focus:outline-none focus:bg-white focus:ring-1 focus:ring-[#1e3a5f]/20 focus:rounded text-center text-xs">
                                                 <option value=""></option>
                                                 {BOM_UNITS.map(u => <option key={u} value={u}>{u}</option>)}
                                             </select>
-                                            <input value={item.proveedor} onChange={e => updateItem(categoria, item.id, 'proveedor', e.target.value)} className="px-2 py-2 font-medium text-xs focus:outline-none focus:bg-blue-50/40 bg-transparent" placeholder="—" />
+                                            <input value={item.proveedor} onChange={e => updateItem(categoria, item.id, 'proveedor', e.target.value)} className="px-2 py-2.5 font-medium text-xs focus:outline-none focus:bg-white focus:ring-1 focus:ring-[#1e3a5f]/20 focus:rounded bg-transparent" placeholder="—" />
                                             <div className="flex items-center justify-center">
                                                 {item.imagen ? <img src={item.imagen} alt="" className="w-9 h-9 object-contain rounded" /> : <ImageIcon size={13} className="text-slate-300" />}
                                             </div>

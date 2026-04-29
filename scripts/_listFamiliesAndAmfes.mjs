@@ -1,0 +1,12 @@
+import { createClient } from '@supabase/supabase-js';
+import { readFileSync } from 'fs';
+import path from 'path';
+const env = Object.fromEntries(readFileSync(path.resolve(process.cwd(), '.env.local'), 'utf8').split('\n').filter(l => l.includes('=') && !l.startsWith('#')).map(l => { const i = l.indexOf('='); return [l.slice(0,i).trim(), l.slice(i+1).trim()]; }));
+const sb = createClient(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_ANON_KEY);
+await sb.auth.signInWithPassword({ email: env.VITE_AUTO_LOGIN_EMAIL, password: env.VITE_AUTO_LOGIN_PASSWORD });
+const { data: families } = await sb.from('product_families').select('id, name').order('id');
+const { data: amfes } = await sb.from('amfe_documents').select('id, project_name, part_number');
+console.log('=== FAMILIAS ==='); for (const f of families) console.log(`  ${f.id}: ${f.name}`);
+console.log('\n=== AMFEs ==='); for (const a of amfes) console.log(`  ${a.project_name} | ${a.part_number}`);
+console.log('\n=== BOMs actuales en bom_documents ==='); const { data: boms } = await sb.from('bom_documents').select('bom_number, familia, cliente, item_count').order('bom_number');
+for (const b of boms || []) console.log(`  ${b.bom_number} | ${b.familia} | ${b.cliente} | ${b.item_count} items`);
