@@ -5,11 +5,11 @@
  * para evitar referencias compartidas entre instancias.
  */
 
-import { BomDocument } from './bomTypes';
+import { BomDocument, createEmptyBomVariant } from './bomTypes';
 
 /**
- * Crea un BOM vacio sin categorias predeterminadas.
- * Cada producto lleva materiales distintos — el usuario agrega solo lo que corresponde.
+ * Crea un BOM vacio con UNA variante invisible (name="").
+ * Si el producto tiene variantes (ej: Top Roll FR/RR), el usuario agrega mas.
  */
 export function createEmptyBomDoc(): BomDocument {
     return {
@@ -27,6 +27,6 @@ export function createEmptyBomDoc(): BomDocument {
             aprobadoPor: '',
         },
         imagenProducto: '',
-        groups: [],
+        variants: [createEmptyBomVariant('')],
     };
 }

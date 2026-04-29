@@ -7,7 +7,7 @@
  * - INSERT OR REPLACE para upsert
  */
 
-import type { BomDocument, BomRegistryEntry, BomLifecycleStatus } from '../../modules/bom/bomTypes';
+import type { BomDocument, BomGroup, BomRegistryEntry, BomLifecycleStatus } from '../../modules/bom/bomTypes';
 import { createEmptyBomDoc } from '../../modules/bom/bomInitialData';
 import { getDatabase } from '../database';
 import { logger } from '../logger';
@@ -28,21 +28,36 @@ function normalizeBomDoc(doc: BomDocument): void {
         }
     }
     if (typeof doc.imagenProducto !== 'string') doc.imagenProducto = '';
-    if (!Array.isArray(doc.groups)) doc.groups = [];
-    for (const g of doc.groups) {
-        if (!Array.isArray(g.items)) g.items = [];
-        for (const item of g.items) {
-            item.numero = item.numero ?? '';
-            item.codigoInterno = item.codigoInterno ?? '';
-            item.codigoProveedor = item.codigoProveedor ?? '';
-            item.descripcion = item.descripcion ?? '';
-            item.consumo = item.consumo ?? '';
-            item.unidad = item.unidad ?? '';
-            item.proveedor = item.proveedor ?? '';
-            item.imagen = item.imagen ?? '';
-            item.leaderX = typeof item.leaderX === 'number' ? item.leaderX : 0;
-            item.leaderY = typeof item.leaderY === 'number' ? item.leaderY : 0;
-            item.observaciones = item.observaciones ?? '';
+    // Backward compat: si el doc viejo tiene `groups[]` directo, lo movemos a una variante.
+    const legacyDoc = doc as unknown as { groups?: BomGroup[] };
+    if (!Array.isArray(doc.variants) || doc.variants.length === 0) {
+        doc.variants = [{
+            id: 'legacy-default',
+            name: '',
+            partNumber: '',
+            groups: Array.isArray(legacyDoc.groups) ? legacyDoc.groups : [],
+        }];
+    }
+    delete legacyDoc.groups;
+    for (const v of doc.variants) {
+        v.name = v.name ?? '';
+        v.partNumber = v.partNumber ?? '';
+        if (!Array.isArray(v.groups)) v.groups = [];
+        for (const g of v.groups) {
+            if (!Array.isArray(g.items)) g.items = [];
+            for (const item of g.items) {
+                item.numero = item.numero ?? '';
+                item.codigoInterno = item.codigoInterno ?? '';
+                item.codigoProveedor = item.codigoProveedor ?? '';
+                item.descripcion = item.descripcion ?? '';
+                item.consumo = item.consumo ?? '';
+                item.unidad = item.unidad ?? '';
+                item.proveedor = item.proveedor ?? '';
+                item.imagen = item.imagen ?? '';
+                item.leaderX = typeof item.leaderX === 'number' ? item.leaderX : 0;
+                item.leaderY = typeof item.leaderY === 'number' ? item.leaderY : 0;
+                item.observaciones = item.observaciones ?? '';
+            }
         }
     }
 }
@@ -53,14 +68,16 @@ function normalizeBomDoc(doc: BomDocument): void {
 
 export function computeBomStats(doc: BomDocument): { itemCount: number; groupCount: number } {
     let itemCount = 0;
-    let groupCount = 0;
-    for (const g of doc.groups) {
-        if (g.items.length > 0) {
-            groupCount++;
-            itemCount += g.items.length;
+    const seenCategories = new Set<string>();
+    for (const v of doc.variants) {
+        for (const g of v.groups) {
+            if (g.items.length > 0) {
+                seenCategories.add(g.categoria);
+                itemCount += g.items.length;
+            }
         }
     }
-    return { itemCount, groupCount };
+    return { itemCount, groupCount: seenCategories.size };
 }
 
 // ---------------------------------------------------------------------------

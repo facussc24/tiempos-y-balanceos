@@ -1,12 +1,13 @@
 /**
  * BomApp — Modulo de Lista de Materiales (BOM)
  *
- * Arranca vacio. Cada producto lleva materiales distintos — el usuario agrega
- * solo las categorias que corresponden a SU producto.
+ * Soporta variantes (ej: Top Roll Front / Rear). Si hay 1 sola variante con
+ * name="" no se muestran tabs. Si hay >1, aparecen tabs arriba de la tabla.
  *
  * Layout:
  * - Header tipo "ficha Barack" (franja navy con PART NUMBER / DESCRIPCION / IMAGEN)
- * - Tabla unificada con headers de columna una sola vez
+ * - Tabs de variante (si aplica)
+ * - Tabla unificada de la variante activa con headers de columna una sola vez
  * - Badge sutil de categoria a la izquierda de cada fila
  * - Boton "+ Agregar material" con popup de categoria
  * - Panel imagen producto a la derecha con leaders numerados
@@ -16,12 +17,12 @@ import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react'
 import { v4 as uuidv4 } from 'uuid';
 import {
     ArrowLeft, Plus, Save, Trash2, Image as ImageIcon, Search,
-    Package, ChevronDown,
+    Package, ChevronDown, X,
 } from 'lucide-react';
 import {
     BomDocument, BomCategory, BomItem,
     BOM_CATEGORIES, BOM_CATEGORY_LABEL, BOM_UNITS,
-    createEmptyBomItem, createEmptyBomGroup,
+    createEmptyBomItem, createEmptyBomGroup, createEmptyBomVariant,
 } from './bomTypes';
 import { createEmptyBomDoc } from './bomInitialData';
 import {
@@ -34,7 +35,6 @@ interface BomAppProps {
     onBackToLanding: () => void;
 }
 
-/** Color tag por categoria — sutil, no agresivo. */
 const CATEGORY_TAG_COLOR: Record<BomCategory, string> = {
     PLASTICO: 'bg-amber-100 text-amber-800',
     FUNDA: 'bg-violet-100 text-violet-800',
@@ -53,6 +53,7 @@ const BomApp: React.FC<BomAppProps> = ({ onBackToLanding }) => {
     const [currentId, setCurrentId] = useState<string | null>(null);
     const [doc, setDoc] = useState<BomDocument>(createEmptyBomDoc());
     const [bomNumber, setBomNumber] = useState<string>('');
+    const [activeVariantId, setActiveVariantId] = useState<string>('');
     const [loading, setLoading] = useState(false);
     const [search, setSearch] = useState('');
     const [filterCliente, setFilterCliente] = useState<string>('');
@@ -66,7 +67,6 @@ const BomApp: React.FC<BomAppProps> = ({ onBackToLanding }) => {
         setLoading(false);
     }, []);
 
-    // Carga inicial — patron mounted-flag para evitar setState post-unmount.
     useEffect(() => {
         let mounted = true;
         (async () => {
@@ -79,7 +79,6 @@ const BomApp: React.FC<BomAppProps> = ({ onBackToLanding }) => {
         return () => { mounted = false; };
     }, []);
 
-    // Cerrar picker al click afuera
     useEffect(() => {
         if (!showCategoryPicker) return;
         const handler = (e: MouseEvent) => {
@@ -119,6 +118,7 @@ const BomApp: React.FC<BomAppProps> = ({ onBackToLanding }) => {
         setCurrentId(id);
         setBomNumber(num);
         setDoc(empty);
+        setActiveVariantId(empty.variants[0]?.id || '');
         setView('editor');
     }, [docs.length]);
 
@@ -131,6 +131,7 @@ const BomApp: React.FC<BomAppProps> = ({ onBackToLanding }) => {
         setCurrentId(id);
         setBomNumber(loaded.meta.bomNumber);
         setDoc(loaded.doc);
+        setActiveVariantId(loaded.doc.variants[0]?.id || '');
         setView('editor');
     }, []);
 
@@ -155,65 +156,96 @@ const BomApp: React.FC<BomAppProps> = ({ onBackToLanding }) => {
         setDoc(prev => ({ ...prev, header: { ...prev.header, [key]: value } }));
     }, []);
 
-    /** Agrega un material a la categoria; crea el grupo si no existe. */
-    const addMaterial = useCallback((cat: BomCategory) => {
-        setDoc(prev => {
-            const totalItems = prev.groups.reduce((n, g) => n + g.items.length, 0);
-            const numero = String(totalItems + 1);
-            const newItem = createEmptyBomItem(numero);
-            const existing = prev.groups.find(g => g.categoria === cat);
-            if (existing) {
-                return {
-                    ...prev,
-                    groups: prev.groups.map(g => g.categoria !== cat ? g : { ...g, items: [...g.items, newItem] }),
-                };
-            }
-            // Crear grupo nuevo, manteniendo orden canonico
-            const newGroup = { ...createEmptyBomGroup(cat), items: [newItem] };
-            const all = [...prev.groups, newGroup];
-            all.sort((a, b) => BOM_CATEGORIES.indexOf(a.categoria) - BOM_CATEGORIES.indexOf(b.categoria));
-            return { ...prev, groups: all };
-        });
-        setShowCategoryPicker(false);
-    }, []);
+    const activeVariant = useMemo(() => doc.variants.find(v => v.id === activeVariantId) || doc.variants[0], [doc.variants, activeVariantId]);
 
-    const updateItem = useCallback((cat: BomCategory, itemId: string, field: keyof BomItem, value: string | number) => {
+    const addVariant = useCallback(() => {
+        const nv = createEmptyBomVariant(`Variante ${doc.variants.length + 1}`);
+        setDoc(prev => ({ ...prev, variants: [...prev.variants, nv] }));
+        setActiveVariantId(nv.id);
+    }, [doc.variants.length]);
+
+    const renameVariant = useCallback((variantId: string, name: string) => {
         setDoc(prev => ({
             ...prev,
-            groups: prev.groups.map(g => g.categoria !== cat ? g : {
-                ...g,
-                items: g.items.map(it => it.id !== itemId ? it : { ...it, [field]: value }),
-            }),
+            variants: prev.variants.map(v => v.id !== variantId ? v : { ...v, name }),
         }));
     }, []);
 
-    const removeItem = useCallback((cat: BomCategory, itemId: string) => {
+    const removeVariant = useCallback((variantId: string) => {
         setDoc(prev => {
-            const groups = prev.groups
-                .map(g => g.categoria !== cat ? g : { ...g, items: g.items.filter(it => it.id !== itemId) })
-                .filter(g => g.items.length > 0); // colapsar grupos vacios
-            return { ...prev, groups };
+            if (prev.variants.length <= 1) return prev; // siempre mantener al menos 1
+            const variants = prev.variants.filter(v => v.id !== variantId);
+            return { ...prev, variants };
         });
     }, []);
 
-    /** Lista plana ordenada para render unificado. */
+    const addMaterial = useCallback((cat: BomCategory) => {
+        if (!activeVariant) return;
+        setDoc(prev => ({
+            ...prev,
+            variants: prev.variants.map(v => {
+                if (v.id !== activeVariant.id) return v;
+                const total = v.groups.reduce((n, g) => n + g.items.length, 0);
+                const numero = String(total + 1);
+                const newItem = createEmptyBomItem(numero);
+                const existing = v.groups.find(g => g.categoria === cat);
+                let groups;
+                if (existing) {
+                    groups = v.groups.map(g => g.categoria !== cat ? g : { ...g, items: [...g.items, newItem] });
+                } else {
+                    groups = [...v.groups, { ...createEmptyBomGroup(cat), items: [newItem] }];
+                    groups.sort((a, b) => BOM_CATEGORIES.indexOf(a.categoria) - BOM_CATEGORIES.indexOf(b.categoria));
+                }
+                return { ...v, groups };
+            }),
+        }));
+        setShowCategoryPicker(false);
+    }, [activeVariant]);
+
+    const updateItem = useCallback((cat: BomCategory, itemId: string, field: keyof BomItem, value: string | number) => {
+        if (!activeVariant) return;
+        setDoc(prev => ({
+            ...prev,
+            variants: prev.variants.map(v => v.id !== activeVariant.id ? v : {
+                ...v,
+                groups: v.groups.map(g => g.categoria !== cat ? g : {
+                    ...g,
+                    items: g.items.map(it => it.id !== itemId ? it : { ...it, [field]: value }),
+                }),
+            }),
+        }));
+    }, [activeVariant]);
+
+    const removeItem = useCallback((cat: BomCategory, itemId: string) => {
+        if (!activeVariant) return;
+        setDoc(prev => ({
+            ...prev,
+            variants: prev.variants.map(v => v.id !== activeVariant.id ? v : {
+                ...v,
+                groups: v.groups
+                    .map(g => g.categoria !== cat ? g : { ...g, items: g.items.filter(it => it.id !== itemId) })
+                    .filter(g => g.items.length > 0),
+            }),
+        }));
+    }, [activeVariant]);
+
     const flatRows = useMemo(() => {
+        if (!activeVariant) return [];
         const rows: { item: BomItem; categoria: BomCategory; isFirstOfCategory: boolean }[] = [];
-        for (const g of doc.groups) {
-            g.items.forEach((it, i) => {
-                rows.push({ item: it, categoria: g.categoria, isFirstOfCategory: i === 0 });
-            });
+        for (const g of activeVariant.groups) {
+            g.items.forEach((it, i) => rows.push({ item: it, categoria: g.categoria, isFirstOfCategory: i === 0 }));
         }
         return rows;
-    }, [doc.groups]);
+    }, [activeVariant]);
+
+    const hasMultipleVariants = doc.variants.length > 1 || (doc.variants[0]?.name || '') !== '';
 
     // ============================================================
-    // VIEW: Registry (lista de BOMs)
+    // VIEW: Registry
     // ============================================================
     if (view === 'registry') {
         return (
             <div className="min-h-full bg-slate-50">
-                {/* Header */}
                 <div className="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between sticky top-0 z-10">
                     <div className="flex items-center gap-3">
                         <button
@@ -236,7 +268,6 @@ const BomApp: React.FC<BomAppProps> = ({ onBackToLanding }) => {
                     </button>
                 </div>
 
-                {/* Toolbar */}
                 <div className="px-6 py-3 bg-white border-b border-slate-100 flex flex-wrap items-center gap-3">
                     <div className="relative flex-1 min-w-[260px] max-w-md">
                         <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -260,7 +291,6 @@ const BomApp: React.FC<BomAppProps> = ({ onBackToLanding }) => {
                     <span className="text-xs text-slate-400 ml-auto">{filteredDocs.length} {filteredDocs.length === 1 ? 'ficha' : 'fichas'}</span>
                 </div>
 
-                {/* Body */}
                 <div className="px-6 py-6">
                     {loading ? (
                         <div className="text-center py-16 text-slate-400 text-sm">Cargando...</div>
@@ -338,11 +368,10 @@ const BomApp: React.FC<BomAppProps> = ({ onBackToLanding }) => {
     }
 
     // ============================================================
-    // VIEW: Editor (ficha BOM)
+    // VIEW: Editor
     // ============================================================
     return (
         <div className="min-h-full bg-slate-50">
-            {/* Toolbar */}
             <div className="bg-white border-b border-slate-200 px-6 py-3 flex items-center justify-between sticky top-0 z-20">
                 <div className="flex items-center gap-3">
                     <button
@@ -369,7 +398,7 @@ const BomApp: React.FC<BomAppProps> = ({ onBackToLanding }) => {
             </div>
 
             <div className="p-6 max-w-[1600px] mx-auto">
-                {/* Header tipo "ficha Barack" */}
+                {/* Header ficha Barack */}
                 <div className="bg-white rounded-xl border border-slate-200 overflow-hidden mb-4 shadow-sm">
                     <div className="grid grid-cols-12 bg-[#1e3a5f] text-white text-[11px] font-semibold uppercase tracking-wider">
                         <div className="col-span-3 px-4 py-2.5 border-r border-white/10">Part Number</div>
@@ -400,7 +429,7 @@ const BomApp: React.FC<BomAppProps> = ({ onBackToLanding }) => {
                     {([
                         ['cliente', 'Cliente', 'VW / PWA / NOVAX'],
                         ['proyecto', 'Proyecto', 'VW427-1LA_K-PATAGONIA'],
-                        ['familia', 'Familia', 'IP PAD / Insert / Armrest'],
+                        ['familia', 'Familia', 'IP PAD / Insert / Top Roll'],
                         ['revision', 'Revision', 'A'],
                     ] as const).map(([key, label, ph]) => (
                         <div key={key}>
@@ -415,13 +444,68 @@ const BomApp: React.FC<BomAppProps> = ({ onBackToLanding }) => {
                     ))}
                 </div>
 
+                {/* Tabs de variantes (si aplica) */}
+                {(hasMultipleVariants || doc.variants.length > 1) && (
+                    <div className="flex items-center gap-1 mb-3 border-b border-slate-200">
+                        {doc.variants.map(v => (
+                            <button
+                                key={v.id}
+                                onClick={() => setActiveVariantId(v.id)}
+                                className={`group inline-flex items-center gap-2 px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
+                                    v.id === activeVariantId
+                                        ? 'border-[#1e3a5f] text-[#1e3a5f]'
+                                        : 'border-transparent text-slate-500 hover:text-slate-800'
+                                }`}
+                            >
+                                <input
+                                    value={v.name}
+                                    onChange={e => renameVariant(v.id, e.target.value)}
+                                    placeholder="Sin nombre"
+                                    className="bg-transparent border-none outline-none w-auto min-w-[80px]"
+                                    style={{ width: `${Math.max(8, (v.name?.length || 10) + 2)}ch` }}
+                                />
+                                {doc.variants.length > 1 && (
+                                    <span
+                                        role="button"
+                                        tabIndex={0}
+                                        onClick={(e) => { e.stopPropagation(); removeVariant(v.id); }}
+                                        className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-red-500 cursor-pointer"
+                                        aria-label="Eliminar variante"
+                                    >
+                                        <X size={12} />
+                                    </span>
+                                )}
+                            </button>
+                        ))}
+                        <button
+                            onClick={addVariant}
+                            className="inline-flex items-center gap-1 px-3 py-2 text-xs font-medium text-slate-500 hover:text-[#1e3a5f] hover:bg-slate-50 rounded-t-lg transition-colors"
+                        >
+                            <Plus size={13} /> Variante
+                        </button>
+                    </div>
+                )}
+
+                {/* Si hay 1 variante con name vacio, ofrecer convertirla en multi-variante */}
+                {!hasMultipleVariants && doc.variants.length === 1 && (
+                    <div className="mb-3 flex items-center gap-2">
+                        <button
+                            onClick={() => {
+                                renameVariant(doc.variants[0].id, 'Variante 1');
+                                addVariant();
+                            }}
+                            className="text-xs text-slate-400 hover:text-[#1e3a5f] hover:underline"
+                        >
+                            + Agregar variante (ej: Front / Rear)
+                        </button>
+                    </div>
+                )}
+
                 {/* Layout: tabla + imagen */}
                 <div className="grid grid-cols-12 gap-4">
-                    {/* Tabla unificada */}
                     <div className="col-span-12 lg:col-span-8">
                         <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
                             {flatRows.length === 0 ? (
-                                /* Empty state — sin materiales */
                                 <div className="px-6 py-16 text-center">
                                     <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-slate-100 flex items-center justify-center">
                                         <Package size={24} className="text-slate-400" />
@@ -439,7 +523,6 @@ const BomApp: React.FC<BomAppProps> = ({ onBackToLanding }) => {
                                 </div>
                             ) : (
                                 <>
-                                    {/* Header columnas — UNA sola vez */}
                                     <div className="grid grid-cols-[120px_55px_110px_110px_1fr_90px_70px_140px_60px_36px] bg-slate-50 text-slate-500 text-[10px] font-semibold uppercase tracking-wider border-b border-slate-200">
                                         <div className="px-3 py-2.5">Categoria</div>
                                         <div className="px-2 py-2.5 text-center">N°</div>
@@ -452,13 +535,11 @@ const BomApp: React.FC<BomAppProps> = ({ onBackToLanding }) => {
                                         <div className="px-3 py-2.5 text-center">Img</div>
                                         <div></div>
                                     </div>
-                                    {/* Filas */}
                                     {flatRows.map(({ item, categoria, isFirstOfCategory }) => (
                                         <div
                                             key={item.id}
                                             className={`grid grid-cols-[120px_55px_110px_110px_1fr_90px_70px_140px_60px_36px] items-stretch border-b border-slate-100 hover:bg-blue-50/20 text-sm group ${isFirstOfCategory ? 'border-t border-t-slate-200' : ''}`}
                                         >
-                                            {/* Badge categoria — solo en la primera fila del grupo */}
                                             <div className="px-3 py-2 flex items-center">
                                                 {isFirstOfCategory && (
                                                     <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold uppercase tracking-wide ${CATEGORY_TAG_COLOR[categoria]}`}>
@@ -466,67 +547,28 @@ const BomApp: React.FC<BomAppProps> = ({ onBackToLanding }) => {
                                                     </span>
                                                 )}
                                             </div>
-                                            {/* N° en circulo */}
                                             <div className="flex items-center justify-center py-2">
                                                 <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-[#1e3a5f] text-white font-semibold text-[11px] tabular-nums">
                                                     {item.numero || '—'}
                                                 </span>
                                             </div>
-                                            <input
-                                                value={item.codigoInterno}
-                                                onChange={e => updateItem(categoria, item.id, 'codigoInterno', e.target.value)}
-                                                className="px-2 py-2 font-mono text-xs focus:outline-none focus:bg-blue-50/40 bg-transparent"
-                                                placeholder="—"
-                                            />
-                                            <input
-                                                value={item.codigoProveedor}
-                                                onChange={e => updateItem(categoria, item.id, 'codigoProveedor', e.target.value)}
-                                                className="px-2 py-2 font-mono text-xs focus:outline-none focus:bg-blue-50/40 bg-transparent"
-                                                placeholder="—"
-                                            />
-                                            <input
-                                                value={item.descripcion}
-                                                onChange={e => updateItem(categoria, item.id, 'descripcion', e.target.value)}
-                                                className="px-2 py-2 focus:outline-none focus:bg-blue-50/40 bg-transparent"
-                                                placeholder="Descripcion del componente"
-                                            />
-                                            <input
-                                                value={item.consumo}
-                                                onChange={e => updateItem(categoria, item.id, 'consumo', e.target.value)}
-                                                className="px-2 py-2 text-center font-mono text-xs focus:outline-none focus:bg-blue-50/40 bg-transparent tabular-nums"
-                                                placeholder="0,000"
-                                            />
-                                            <select
-                                                value={item.unidad}
-                                                onChange={e => updateItem(categoria, item.id, 'unidad', e.target.value)}
-                                                className="px-2 py-2 bg-transparent focus:outline-none focus:bg-blue-50/40 text-center text-xs"
-                                            >
+                                            <input value={item.codigoInterno} onChange={e => updateItem(categoria, item.id, 'codigoInterno', e.target.value)} className="px-2 py-2 font-mono text-xs focus:outline-none focus:bg-blue-50/40 bg-transparent" placeholder="—" />
+                                            <input value={item.codigoProveedor} onChange={e => updateItem(categoria, item.id, 'codigoProveedor', e.target.value)} className="px-2 py-2 font-mono text-xs focus:outline-none focus:bg-blue-50/40 bg-transparent" placeholder="—" />
+                                            <input value={item.descripcion} onChange={e => updateItem(categoria, item.id, 'descripcion', e.target.value)} className="px-2 py-2 focus:outline-none focus:bg-blue-50/40 bg-transparent" placeholder="Descripcion del componente" />
+                                            <input value={item.consumo} onChange={e => updateItem(categoria, item.id, 'consumo', e.target.value)} className="px-2 py-2 text-center font-mono text-xs focus:outline-none focus:bg-blue-50/40 bg-transparent tabular-nums" placeholder="0,000" />
+                                            <select value={item.unidad} onChange={e => updateItem(categoria, item.id, 'unidad', e.target.value)} className="px-2 py-2 bg-transparent focus:outline-none focus:bg-blue-50/40 text-center text-xs">
                                                 <option value=""></option>
                                                 {BOM_UNITS.map(u => <option key={u} value={u}>{u}</option>)}
                                             </select>
-                                            <input
-                                                value={item.proveedor}
-                                                onChange={e => updateItem(categoria, item.id, 'proveedor', e.target.value)}
-                                                className="px-2 py-2 font-medium text-xs focus:outline-none focus:bg-blue-50/40 bg-transparent"
-                                                placeholder="—"
-                                            />
+                                            <input value={item.proveedor} onChange={e => updateItem(categoria, item.id, 'proveedor', e.target.value)} className="px-2 py-2 font-medium text-xs focus:outline-none focus:bg-blue-50/40 bg-transparent" placeholder="—" />
                                             <div className="flex items-center justify-center">
-                                                {item.imagen ? (
-                                                    <img src={item.imagen} alt="" className="w-9 h-9 object-contain rounded" />
-                                                ) : (
-                                                    <ImageIcon size={13} className="text-slate-300" />
-                                                )}
+                                                {item.imagen ? <img src={item.imagen} alt="" className="w-9 h-9 object-contain rounded" /> : <ImageIcon size={13} className="text-slate-300" />}
                                             </div>
-                                            <button
-                                                onClick={() => removeItem(categoria, item.id)}
-                                                className="flex items-center justify-center text-slate-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
-                                                aria-label="Eliminar item"
-                                            >
+                                            <button onClick={() => removeItem(categoria, item.id)} className="flex items-center justify-center text-slate-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100" aria-label="Eliminar item">
                                                 <Trash2 size={13} />
                                             </button>
                                         </div>
                                     ))}
-                                    {/* Footer con boton agregar */}
                                     <div className="px-4 py-3 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between">
                                         <span className="text-xs text-slate-400">{flatRows.length} {flatRows.length === 1 ? 'material' : 'materiales'}</span>
                                         <CategoryPicker
@@ -542,7 +584,6 @@ const BomApp: React.FC<BomAppProps> = ({ onBackToLanding }) => {
                         </div>
                     </div>
 
-                    {/* Panel imagen producto */}
                     <div className="col-span-12 lg:col-span-4">
                         <div className="bg-white rounded-xl border border-slate-200 overflow-hidden sticky top-20 shadow-sm">
                             <div className="bg-[#1e3a5f] text-white px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-center">
@@ -558,7 +599,7 @@ const BomApp: React.FC<BomAppProps> = ({ onBackToLanding }) => {
                                         <p className="text-[10px] mt-1 text-slate-400">Despues vas a poder marcar la posicion de cada componente</p>
                                     </div>
                                 )}
-                                {doc.imagenProducto && doc.groups.flatMap(g => g.items).map(it => (
+                                {doc.imagenProducto && activeVariant?.groups.flatMap(g => g.items).map(it => (
                                     (it.leaderX > 0 || it.leaderY > 0) ? (
                                         <span
                                             key={it.id}
@@ -578,9 +619,6 @@ const BomApp: React.FC<BomAppProps> = ({ onBackToLanding }) => {
     );
 };
 
-// ============================================================
-// CategoryPicker — popup para elegir categoria al agregar material
-// ============================================================
 interface CategoryPickerProps {
     show: boolean;
     onShow: () => void;

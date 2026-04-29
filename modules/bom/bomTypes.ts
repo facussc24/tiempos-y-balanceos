@@ -152,6 +152,25 @@ export interface BomHeader {
 }
 
 // ---------------------------------------------------------------------------
+// Variant — agrupacion de groups por variante del producto
+// (ej: Top Roll Delantero Derecho vs Top Roll Trasero Derecho).
+// Si el producto no tiene variantes, hay UNA sola variant con name="".
+// ---------------------------------------------------------------------------
+
+export interface BomVariant {
+    id: string;
+    /** Nombre de la variante (ej: "Delantero Derecho"). Vacio si el producto no tiene variantes. */
+    name: string;
+    /** Part number especifico de esta variante (opcional, hereda de header si vacio). */
+    partNumber: string;
+    groups: BomGroup[];
+}
+
+export function createEmptyBomVariant(name: string = ''): BomVariant {
+    return { id: uuidv4(), name, partNumber: '', groups: [] };
+}
+
+// ---------------------------------------------------------------------------
 // Document
 // ---------------------------------------------------------------------------
 
@@ -161,7 +180,8 @@ export interface BomDocument {
     header: BomHeader;
     /** Imagen grande del producto (base64). Sobre ella se dibujan los leaders numerados. */
     imagenProducto: string;
-    groups: BomGroup[];
+    /** Variantes del producto. Siempre tiene al menos 1 (con name="" si no hay variantes). */
+    variants: BomVariant[];
 }
 
 // ---------------------------------------------------------------------------
