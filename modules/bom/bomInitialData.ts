@@ -5,11 +5,11 @@
  * para evitar referencias compartidas entre instancias.
  */
 
-import { BomDocument, BOM_CATEGORIES, createEmptyBomGroup } from './bomTypes';
+import { BomDocument } from './bomTypes';
 
 /**
- * Crea un BOM vacio con todos los grupos de categoria pre-creados pero sin items.
- * Asi el usuario ve la estructura completa y solo agrega items donde corresponde.
+ * Crea un BOM vacio sin categorias predeterminadas.
+ * Cada producto lleva materiales distintos — el usuario agrega solo lo que corresponde.
  */
 export function createEmptyBomDoc(): BomDocument {
     return {
@@ -27,6 +27,6 @@ export function createEmptyBomDoc(): BomDocument {
             aprobadoPor: '',
         },
         imagenProducto: '',
-        groups: BOM_CATEGORIES.map(cat => createEmptyBomGroup(cat)),
+        groups: [],
     };
 }
