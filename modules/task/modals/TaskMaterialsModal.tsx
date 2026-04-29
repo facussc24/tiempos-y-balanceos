@@ -32,15 +32,13 @@ const TaskMaterialsModal: React.FC<TaskMaterialsModalProps> = ({
   const [materials, setMaterials] = useState<TaskMaterial[]>([]);
   const [hasChanges, setHasChanges] = useState(false);
 
-  // Initialize from task
-  useEffect(() => {
-    if (task?.materials) {
-      setMaterials([...task.materials]);
-    } else {
-      setMaterials([]);
-    }
+  // Re-initialize when task changes (set-state-during-render pattern).
+  const [prevTask, setPrevTask] = useState(task);
+  if (task !== prevTask) {
+    setPrevTask(task);
+    setMaterials(task?.materials ? [...task.materials] : []);
     setHasChanges(false);
-  }, [task]);
+  }
 
   // Close on Escape key
   useEffect(() => {

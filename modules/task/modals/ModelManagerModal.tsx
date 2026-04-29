@@ -16,20 +16,23 @@ export const ModelManagerModal: React.FC<Props> = ({ isOpen, onClose, data, upda
     // MIGRATION V2.1: If 'units' is not defined, reverse engineer it from DailyDemand * Percentage
     const [models, setModels] = useState<ProductModel[]>([]);
 
-    useEffect(() => {
-        if (isOpen) {
-            const currentModels = (data.meta.activeModels || []).length > 0
-                ? JSON.parse(JSON.stringify(data.meta.activeModels))
-                : [{ id: 'default', name: 'Modelo Estándar', percentage: 1.0, color: '#3b82f6', units: data.meta.dailyDemand }];
+    // Re-initialize models when modal opens (set-state-during-render pattern to
+    // avoid setState-in-effect cascading renders).
+    const [prevOpen, setPrevOpen] = useState(false);
+    if (isOpen && !prevOpen) {
+        setPrevOpen(true);
+        const currentModels = (data.meta.activeModels || []).length > 0
+            ? JSON.parse(JSON.stringify(data.meta.activeModels))
+            : [{ id: 'default', name: 'Modelo Estándar', percentage: 1.0, color: '#3b82f6', units: data.meta.dailyDemand }];
 
-            // Ensure 'units' are set
-            const initializedModels = currentModels.map((m: ProductModel) => ({
-                ...m,
-                units: m.units ?? Math.round(data.meta.dailyDemand * m.percentage)
-            }));
-            setModels(initializedModels);
-        }
-    }, [isOpen, data]);
+        const initializedModels = currentModels.map((m: ProductModel) => ({
+            ...m,
+            units: m.units ?? Math.round(data.meta.dailyDemand * m.percentage)
+        }));
+        setModels(initializedModels);
+    } else if (!isOpen && prevOpen) {
+        setPrevOpen(false);
+    }
 
     const [error, setError] = useState<string | null>(null);
 

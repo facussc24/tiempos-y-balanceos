@@ -35,6 +35,15 @@ const TYPE_ICONS: Record<DocumentType, React.ReactNode> = {
     hojaOperaciones: <FileText size={14} className="text-indigo-500" />,
 };
 
+// Defined outside DocumentHub so it has stable identity across renders (avoids
+// react-hooks/static-components: "Cannot create components during render").
+const SortIcon: React.FC<{ field: SortField; activeField: SortField; dir: SortDir }> = ({ field, activeField, dir }) => {
+    if (activeField !== field) return <span className="text-gray-300 ml-1">⇅</span>;
+    return dir === 'asc'
+        ? <ChevronUp size={12} className="text-blue-500 ml-0.5 inline" />
+        : <ChevronDown size={12} className="text-blue-500 ml-0.5 inline" />;
+};
+
 const DocumentHub: React.FC<DocumentHubProps> = ({ onBackToLanding, onOpenDocument }) => {
     const { entries, loading, error, refresh } = useDocumentRegistry();
     const [filterType, setFilterType] = useState<DocumentType | ''>('');
@@ -76,13 +85,6 @@ const DocumentHub: React.FC<DocumentHubProps> = ({ onBackToLanding, onOpenDocume
             setSortField(field);
             setSortDir(field === 'updatedAt' ? 'desc' : 'asc');
         }
-    };
-
-    const SortIcon = ({ field }: { field: SortField }) => {
-        if (sortField !== field) return <span className="text-gray-300 ml-1">⇅</span>;
-        return sortDir === 'asc'
-            ? <ChevronUp size={12} className="text-blue-500 ml-0.5 inline" />
-            : <ChevronDown size={12} className="text-blue-500 ml-0.5 inline" />;
     };
 
     // Counts per type
@@ -221,33 +223,33 @@ const DocumentHub: React.FC<DocumentHubProps> = ({ onBackToLanding, onOpenDocume
                                     <tr className="bg-gray-50 border-b border-gray-200">
                                         <th className="text-left px-3 py-2 text-[10px] font-bold text-gray-500 uppercase tracking-wider w-[80px]">
                                             <button onClick={() => handleSort('type')} className="hover:text-gray-800 transition">
-                                                Tipo <SortIcon field="type" />
+                                                Tipo <SortIcon field="type" activeField={sortField} dir={sortDir} />
                                             </button>
                                         </th>
                                         <th className="text-left px-3 py-2 text-[10px] font-bold text-gray-500 uppercase tracking-wider">
                                             <button onClick={() => handleSort('name')} className="hover:text-gray-800 transition">
-                                                Nombre <SortIcon field="name" />
+                                                Nombre <SortIcon field="name" activeField={sortField} dir={sortDir} />
                                             </button>
                                         </th>
                                         <th className="text-left px-3 py-2 text-[10px] font-bold text-gray-500 uppercase tracking-wider w-[120px]">
                                             <button onClick={() => handleSort('partNumber')} className="hover:text-gray-800 transition">
-                                                Nro. Pieza <SortIcon field="partNumber" />
+                                                Nro. Pieza <SortIcon field="partNumber" activeField={sortField} dir={sortDir} />
                                             </button>
                                         </th>
                                         <th className="text-left px-3 py-2 text-[10px] font-bold text-gray-500 uppercase tracking-wider w-[150px]">
                                             <button onClick={() => handleSort('client')} className="hover:text-gray-800 transition">
-                                                Cliente <SortIcon field="client" />
+                                                Cliente <SortIcon field="client" activeField={sortField} dir={sortDir} />
                                             </button>
                                         </th>
                                         <th className="text-center px-3 py-2 text-[10px] font-bold text-gray-500 uppercase tracking-wider w-[80px]">
                                             <button onClick={() => handleSort('itemCount')} className="hover:text-gray-800 transition">
-                                                Items <SortIcon field="itemCount" />
+                                                Items <SortIcon field="itemCount" activeField={sortField} dir={sortDir} />
                                             </button>
                                         </th>
                                         <th className="text-left px-3 py-2 text-[10px] font-bold text-gray-500 uppercase tracking-wider w-[100px]">Vinculado</th>
                                         <th className="text-left px-3 py-2 text-[10px] font-bold text-gray-500 uppercase tracking-wider w-[100px]">
                                             <button onClick={() => handleSort('updatedAt')} className="hover:text-gray-800 transition">
-                                                Fecha <SortIcon field="updatedAt" />
+                                                Fecha <SortIcon field="updatedAt" activeField={sortField} dir={sortDir} />
                                             </button>
                                         </th>
                                         <th className="text-left px-3 py-2 text-[10px] font-bold text-gray-500 uppercase tracking-wider w-[140px]">Autor</th>

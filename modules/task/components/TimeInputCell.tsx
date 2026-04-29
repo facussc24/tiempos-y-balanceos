@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { RotateCcw, X } from 'lucide-react';
 import { parseTaskTime } from '../../../utils/validation';
 
@@ -15,15 +15,16 @@ export const TimeInputCell: React.FC<Props> = ({ value, onChange, isIgnored, isO
     // Initialize local state directly from props
     const [localValue, setLocalValue] = useState(value === null ? "" : value.toString().replace('.', ','));
 
-    // Sync local state when prop changes (external update)
-    useEffect(() => {
+    // Sync local state when prop changes (external update) — using "set state during render"
+    // pattern to avoid setState-in-effect cascading renders.
+    const [prevValue, setPrevValue] = useState(value);
+    if (value !== prevValue) {
+        setPrevValue(value);
         const currentParsed = parseTaskTime(localValue, 0);
-        // Only update local if the prop value is significantly different (to avoid cursor jumping on minor formatting)
-        // or if it's a null/empty transition
         if (value !== currentParsed && !(value === null && localValue === "")) {
             setLocalValue(value === null ? "" : value.toString().replace('.', ','));
         }
-    }, [value]); // Removed localValue from dependency to avoid loops
+    }
 
     const handleBlur = () => {
         // Only trigger change if value actually changed

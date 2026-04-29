@@ -5,7 +5,6 @@
 import React, { useState, useCallback } from 'react';
 import { Plus, Trash2, Copy } from 'lucide-react';
 import type { MediosPiece, ContainerType } from '../types';
-import { v4 as uuid } from 'uuid';
 
 interface Props {
   pieces: readonly MediosPiece[];
@@ -162,7 +161,7 @@ export const PieceListTable: React.FC<Props> = ({
             {pieces.length === 0 ? (
               <tr>
                 <td colSpan={14} className="text-center py-8 text-slate-400">
-                  Sin piezas. Haz click en "Agregar pieza" para comenzar.
+                  Sin piezas. Haz click en &quot;Agregar pieza&quot; para comenzar.
                 </td>
               </tr>
             ) : (

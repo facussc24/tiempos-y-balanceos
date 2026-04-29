@@ -38,32 +38,30 @@ export const DropdownNav: React.FC<DropdownNavProps> = ({
     const menuRef = useRef<HTMLDivElement>(null);
     const buttonRef = useRef<HTMLButtonElement>(null);
 
+    // Helper: close menu and reset focus together to avoid setState-in-effect.
+    const closeMenu = useCallback(() => {
+        setIsOpen(false);
+        setFocusedIndex(-1);
+    }, []);
+
     // Cerrar al hacer click fuera
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-                setIsOpen(false);
-                setFocusedIndex(-1);
+                closeMenu();
             }
         };
 
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
-
-    // Reset focus index when menu closes
-    useEffect(() => {
-        if (!isOpen) {
-            setFocusedIndex(-1);
-        }
-    }, [isOpen]);
+    }, [closeMenu]);
 
     // Handle keyboard navigation
     const handleKeyDown = useCallback((event: React.KeyboardEvent) => {
         switch (event.key) {
             case 'Escape':
                 event.preventDefault();
-                setIsOpen(false);
+                closeMenu();
                 buttonRef.current?.focus();
                 break;
 
@@ -93,7 +91,7 @@ export const DropdownNav: React.FC<DropdownNavProps> = ({
                 event.preventDefault();
                 if (isOpen && focusedIndex >= 0) {
                     onNavigate(items[focusedIndex].id);
-                    setIsOpen(false);
+                    closeMenu();
                     buttonRef.current?.focus();
                 } else if (!isOpen) {
                     setIsOpen(true);
@@ -104,7 +102,7 @@ export const DropdownNav: React.FC<DropdownNavProps> = ({
             case 'Tab':
                 // Allow Tab to close menu and move focus naturally
                 if (isOpen) {
-                    setIsOpen(false);
+                    closeMenu();
                 }
                 break;
 
@@ -122,7 +120,7 @@ export const DropdownNav: React.FC<DropdownNavProps> = ({
                 }
                 break;
         }
-    }, [isOpen, focusedIndex, items, onNavigate]);
+    }, [isOpen, focusedIndex, items, onNavigate, closeMenu]);
 
     // Determinar si algún item está activo
     const hasActiveChild = items.some(item => item.id === activeTab);

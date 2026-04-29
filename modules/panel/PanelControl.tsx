@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { ProjectData, INITIAL_PROJECT, Task } from '../../types';
 import { Card, Badge } from '../../components/ui/Card';
 import { calculateTaktTime, formatNumber, calculateTotalEffectiveWorkContent, calculateTotalHeadcount, calculateEffectiveStationTime } from '../../utils';
@@ -57,18 +57,25 @@ export const PanelControl: React.FC<Props> = ({ data, updateData }) => {
 
     const ppv = data.meta.piecesPerVehicle ?? 1;
 
-    // Sync local state when external data changes
-    useEffect(() => {
+    // Sync local state when external data changes (set-state-during-render pattern
+    // to avoid setState-in-effect cascading renders).
+    const [prevDemand, setPrevDemand] = useState(data.meta.dailyDemand);
+    const [prevPpv, setPrevPpv] = useState(ppv);
+    if (prevDemand !== data.meta.dailyDemand || prevPpv !== ppv) {
+        setPrevDemand(data.meta.dailyDemand);
+        setPrevPpv(ppv);
         setDailyDemandInput(data.meta.dailyDemand.toString());
-        // Auto-calculate vehicle demand from pieces demand
         if (ppv > 0) {
             setVehicleDemandInput(Math.round(data.meta.dailyDemand / ppv).toString());
         }
-    }, [data.meta.dailyDemand, ppv]);
+    }
 
-    useEffect(() => {
-        setPiecesPerVehicleInput((data.meta.piecesPerVehicle ?? 1).toString());
-    }, [data.meta.piecesPerVehicle]);
+    const piecesPerVehicleProp = data.meta.piecesPerVehicle ?? 1;
+    const [prevPiecesPerVehicleProp, setPrevPiecesPerVehicleProp] = useState(piecesPerVehicleProp);
+    if (prevPiecesPerVehicleProp !== piecesPerVehicleProp) {
+        setPrevPiecesPerVehicleProp(piecesPerVehicleProp);
+        setPiecesPerVehicleInput(piecesPerVehicleProp.toString());
+    }
 
     const handleDemandChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const val = e.target.value;
