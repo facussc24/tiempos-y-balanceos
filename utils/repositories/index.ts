@@ -16,3 +16,4 @@ export * from './revisionRepository';
 export * from './productRepository';
 export * from './familyRepository';
 export * from './familyDocumentRepository';
+export * from './bomRepository';

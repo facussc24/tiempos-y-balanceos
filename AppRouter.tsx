@@ -39,10 +39,11 @@ const FlowchartApp = lazy(() => import('./modules/flowchart/FlowchartApp'));
 const EightDApp = lazy(() => import('./modules/eightD/EightDApp'));
 const MediosApp = lazy(() => import('./modules/mediosCalculator/MediosApp'));
 const ThreeDApp = lazy(() => import('./modules/threeDPrint/ThreeDApp'));
+const BomApp = lazy(() => import('./modules/bom/BomApp'));
 
-type AppMode = 'landing' | 'dashboard' | 'pfd' | 'pfdTest' | 'pfdSvgAudit' | 'pfdDebug' | 'tiempos' | 'amfe' | 'controlPlan' | 'hojaOperaciones' | 'registry' | 'solicitud' | 'manuales' | 'formatos' | 'dataManager' | 'admin' | 'flowchart' | '8dReports' | 'mediosCalculator' | 'threeD';
+type AppMode = 'landing' | 'dashboard' | 'pfd' | 'pfdTest' | 'pfdSvgAudit' | 'pfdDebug' | 'tiempos' | 'amfe' | 'controlPlan' | 'hojaOperaciones' | 'registry' | 'solicitud' | 'manuales' | 'formatos' | 'dataManager' | 'admin' | 'flowchart' | '8dReports' | 'mediosCalculator' | 'threeD' | 'bom';
 
-const VALID_MODES = new Set<AppMode>(['landing', 'dashboard', 'pfd', 'pfdTest', 'pfdSvgAudit', 'pfdDebug', 'tiempos', 'amfe', 'controlPlan', 'hojaOperaciones', 'registry', 'solicitud', 'manuales', 'formatos', 'dataManager', 'admin', 'flowchart', '8dReports', 'mediosCalculator', 'threeD']);
+const VALID_MODES = new Set<AppMode>(['landing', 'dashboard', 'pfd', 'pfdTest', 'pfdSvgAudit', 'pfdDebug', 'tiempos', 'amfe', 'controlPlan', 'hojaOperaciones', 'registry', 'solicitud', 'manuales', 'formatos', 'dataManager', 'admin', 'flowchart', '8dReports', 'mediosCalculator', 'threeD', 'bom']);
 const LS_KEY_MODE = 'barack_lastModule';
 
 const LoadingFallback: React.FC = () => (
@@ -110,7 +111,7 @@ const AppRouterInner: React.FC = () => {
         return () => { cancelled = true; };
     }, []);
 
-    const handleSelectModule = useCallback((module: 'dashboard' | 'pfd' | 'pfdTest' | 'pfdSvgAudit' | 'pfdDebug' | 'tiempos' | 'amfe' | 'controlPlan' | 'hojaOperaciones' | 'registry' | 'solicitud' | 'manuales' | 'formatos' | 'dataManager' | 'admin' | 'flowchart' | '8dReports' | 'mediosCalculator' | 'threeD') => {
+    const handleSelectModule = useCallback((module: 'dashboard' | 'pfd' | 'pfdTest' | 'pfdSvgAudit' | 'pfdDebug' | 'tiempos' | 'amfe' | 'controlPlan' | 'hojaOperaciones' | 'registry' | 'solicitud' | 'manuales' | 'formatos' | 'dataManager' | 'admin' | 'flowchart' | '8dReports' | 'mediosCalculator' | 'threeD' | 'bom') => {
         setCurrentMode(module);
         try { localStorage.setItem(LS_KEY_MODE, module); } catch { /* ignore */ }
     }, []);
@@ -261,6 +262,11 @@ const AppRouterInner: React.FC = () => {
                         {currentMode === 'threeD' && (
                             <ModuleErrorBoundary moduleName="Impresion 3D" onNavigateHome={handleBackToLanding}>
                                 <ThreeDApp onBackToLanding={handleBackToLanding} />
+                            </ModuleErrorBoundary>
+                        )}
+                        {currentMode === 'bom' && (
+                            <ModuleErrorBoundary moduleName="Lista de Materiales (BOM)" onNavigateHome={handleBackToLanding}>
+                                <BomApp onBackToLanding={handleBackToLanding} />
                             </ModuleErrorBoundary>
                         )}
                     </Suspense>
