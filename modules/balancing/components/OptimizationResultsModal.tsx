@@ -130,7 +130,6 @@ export const OptimizationResultsModal: React.FC<OptimizationResultsModalProps> =
             ></div>
 
             {/* Modal */}
-            {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions */}
             <div
                 role="dialog"
                 aria-modal="true"
