@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 
 type NetworkToastState = 'lost' | 'recovered' | null;
 
@@ -9,26 +9,27 @@ interface UseAmfeNetworkToastReturn {
 
 export function useAmfeNetworkToast(networkAvailable: boolean): UseAmfeNetworkToastReturn {
     const [networkToast, setNetworkToast] = useState<NetworkToastState>(null);
-    const prevNetworkRef = useRef<boolean | null>(null);
+    const [prevNetwork, setPrevNetwork] = useState<boolean | null>(null);
 
-    useEffect(() => {
-        // Skip the initial render (don't show toast when first mounting)
-        if (prevNetworkRef.current === null) {
-            prevNetworkRef.current = networkAvailable;
-            return;
-        }
-        const prev = prevNetworkRef.current;
-        prevNetworkRef.current = networkAvailable;
-
-        if (prev && !networkAvailable) {
-            // Network lost
+    // "Set state during render" pattern (React 19) — detect transicion sin
+    // cascada de renders ni setState dentro de effect.
+    if (prevNetwork !== networkAvailable) {
+        setPrevNetwork(networkAvailable);
+        if (prevNetwork === true && !networkAvailable) {
             setNetworkToast('lost');
-        } else if (!prev && networkAvailable) {
-            // Network recovered
+        } else if (prevNetwork === false && networkAvailable) {
             setNetworkToast('recovered');
-            setTimeout(() => setNetworkToast(null), 3000);
         }
-    }, [networkAvailable]);
+        // prevNetwork === null: primer render, sin toast (skip).
+    }
+
+    // Auto-dismiss del toast 'recovered' tras 3s. Effect aislado al timer
+    // (con cleanup para evitar memory leak si se desmonta).
+    useEffect(() => {
+        if (networkToast !== 'recovered') return;
+        const t = setTimeout(() => setNetworkToast(null), 3000);
+        return () => clearTimeout(t);
+    }, [networkToast]);
 
     const clearNetworkToast = () => setNetworkToast(null);
 
