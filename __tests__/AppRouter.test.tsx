@@ -57,7 +57,8 @@ describe('AppRouter', () => {
 
     it('should render LandingPage by default', () => {
         render(<AppRouter />);
-        expect(screen.getByText('Barack Mercosul')).toBeDefined();
+        // "Barack Mercosul" appears in both sidebar and landing header — landing header is an h1
+        expect(screen.getByRole('heading', { level: 1, name: 'Barack Mercosul' })).toBeDefined();
     });
 
     it('should navigate to Tiempos module on card click', async () => {
@@ -116,7 +117,7 @@ describe('AppRouter', () => {
         });
         fireEvent.click(screen.getByText('Volver'));
         await waitFor(() => {
-            expect(screen.getByText('Barack Mercosul')).toBeDefined();
+            expect(screen.getByRole('heading', { level: 1, name: 'Barack Mercosul' })).toBeDefined();
         });
     });
 
@@ -128,7 +129,7 @@ describe('AppRouter', () => {
         });
         fireEvent.click(screen.getByText('Volver'));
         await waitFor(() => {
-            expect(screen.getByText('Barack Mercosul')).toBeDefined();
+            expect(screen.getByRole('heading', { level: 1, name: 'Barack Mercosul' })).toBeDefined();
         });
     });
 });

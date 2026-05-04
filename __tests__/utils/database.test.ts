@@ -113,7 +113,7 @@ describe('database', () => {
             expect(SCHEMA_DDL.length).toBeGreaterThan(100);
         });
 
-        it('should preserve all 10 CREATE TABLE statements after comment stripping', () => {
+        it('should preserve all CREATE TABLE statements after comment stripping', () => {
             const createTables = statements.filter(s => s.toUpperCase().startsWith('CREATE TABLE'));
             const tableNames = createTables.map(s => {
                 const m = s.match(/CREATE TABLE IF NOT EXISTS (\w+)/i);
@@ -142,7 +142,9 @@ describe('database', () => {
             expect(tableNames).toContain('family_documents');
             expect(tableNames).toContain('family_document_overrides');
             expect(tableNames).toContain('family_change_proposals');
-            expect(createTables).toHaveLength(22);
+            expect(tableNames).toContain('deleted_documents');
+            expect(tableNames).toContain('eight_d_documents');
+            expect(createTables).toHaveLength(24);
         });
 
         it('should preserve all CREATE INDEX statements', () => {

@@ -73,7 +73,7 @@ describe('AmfeTabBar', () => {
         expect(amfeButton.className).toContain('text-blue-700');
     });
 
-    it('clicking Plan de Control calls onGenerateControlPlan when cpInitialData is null', async () => {
+    it('clicking Plan de Control calls onTabChange when cpInitialData is null (CP module handles draft recovery)', async () => {
         const props = defaultProps();
         props.cpInitialData = null;
         render(<AmfeTabBar {...props} />);
@@ -81,9 +81,9 @@ describe('AmfeTabBar', () => {
         fireEvent.click(screen.getByText('Plan de Control'));
 
         await waitFor(() => {
-            expect(props.onGenerateControlPlan).toHaveBeenCalledTimes(1);
+            expect(props.onTabChange).toHaveBeenCalledWith('controlPlan');
         });
-        expect(props.onTabChange).not.toHaveBeenCalled();
+        expect(props.onGenerateControlPlan).not.toHaveBeenCalled();
     });
 
     it('clicking Plan de Control calls onTabChange when cpInitialData is not null', async () => {
