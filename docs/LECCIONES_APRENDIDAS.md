@@ -4,6 +4,45 @@ Archivo mantenido por Claude Code. Se actualiza despues de cada sesion donde alg
 Leer al inicio de cada sesion para no repetir errores.
 
 
+## 2026-05-04 — FALSO POSITIVO en auditoria PFD por leer dump tmp/ stale (incidente "OP 72 Armrest")
+
+**Problema:** Fak hizo el PFD del Armrest Door Panel (P-ARM-001/PRE) y pidio auditoria antes de subirlo al SGC. Reporte como "error critico" que faltaba **OP 72 ENSAMBLE CON SUSTRATO** entre OP 70 (INYECCION PU) y OP 80 (ADHESIVADO).
+
+**Realidad:** la OP 72 NO debia estar. Fue eliminada el mismo dia 2026-05-04 por el script `scripts/_applyAudit2026May04.mjs` PATCH 1, motivo: **"copy-paste roto: nombre vs contenido"** — el nombre era "ENSAMBLE CON SUSTRATO" pero los workElements/failures eran de otra operacion (probable copy-paste mal hecho del Insert o similar). En vez de reparar el contenido roto, se decidio eliminar la OP porque no aplicaba al proceso real del Armrest.
+
+**Causa raiz del error de Claude:** lei `tmp/amfe_audit/AMFE-ARM-PAT.json` (snapshot pre-patch) y lo trate como fuente de verdad. NO query Supabase live para verificar el estado actual. Los skills `verify-before-claim` + `cross-check` me forzaron a citar fuente — cite el dump y "cumpli formalmente" la regla, pero el dump era stale.
+
+**Otro hueco:** este patch del 2026-05-04 (que tocaba 6 AMFEs: Armrest, APB-150, 3 Headrests, IP PAD) NO se documento en este archivo cuando se aplico. Por eso no me protegio el "leer LECCIONES_APRENDIDAS al inicio de sesion".
+
+**Patches aplicados el 2026-05-04 (6 documentos APQP):**
+
+| Patch | AMFE | id | Cambio | Motivo |
+|---|---|---|---|---|
+| 1 | AMFE-ARM-PAT (Armrest) | 5268704d-30ae-48f3-ad05-8402a6ded7fe | Eliminar OP 72 | Copy-paste roto: nombre vs contenido |
+| 2 | 150 (APB_TRA_CEN) | 37cab669-0543-43c0-bb78-d00638114530 | (ver script) | (ver script) |
+| 3 | AMFE-HF-PAT (Headrest Front) | 10eaebce-ad87-4035-9343-3e20e4ee0fc9 | (ver script) | (ver script) |
+| 4 | AMFE-HRC-PAT (HR Rear Cen) | e9320798-ceaa-4623-97e9-92200b5234b6 | (ver script) | (ver script) |
+| 5 | AMFE-HRO-PAT (HR Rear Out) | beda6d47-30ae-4d5f-81e0-468be8950014 | (ver script) | (ver script) |
+| 6 | VWA-PAT-IPPADS-001 (IP PAD) | c9b93b84-f804-4cd0-91c1-c4878db41b97 | (ver script) | (ver script) |
+
+Detalle completo en `scripts/_applyAudit2026May04.mjs` y `scripts/_verifyAudit2026May04.mjs`.
+
+**Correcciones implementadas este dia (para que no se repita):**
+
+1. **Nueva regla auto-load** `BarackMercosul/.claude/rules/verify-supabase-live.md` — auto-carga en cualquier interaccion sobre AMFE/CP/HO/PFD. Define que Supabase live es la unica fuente de verdad y `tmp/`, `backups/`, `_all_amfes_dump.json` son fotografias historicas que NO sirven para reportar estado.
+
+2. **Skill mejorado** `~/.claude/skills/verify-before-claim/SKILL.md` — fila nueva en tabla de verificacion + caso especial Barack: "estado actual AMFE/CP/HO/PFD/family/product → Query Supabase live, NO leer dumps tmp/backups".
+
+3. **Memoria cross-project** `feedback_supabase_is_truth.md` indexada en MEMORY.md.
+
+4. **Esta entrada** documentando los 6 patches y la regla nueva.
+
+**Aplicacion futura:**
+- Antes de afirmar el estado de un AMFE/CP/HO/PFD: query Supabase con .mjs (snippet en regla `verify-supabase-live.md`).
+- Si voy a citar `tmp/amfe_audit/X.json` o similar: PARAR. Solo es valido si la pregunta es explicitamente historica.
+- Cualquier patch que toque Supabase debe documentarse aqui el mismo dia (regla CLAUDE.md: "Protocolo de fin de sesion").
+
+
 ## 2026-04-27 — INVENTO de controles tecnicos (hielo seco, ultrasonido, flexometro, rotacion inspectores) — ERROR GRAVISIMO
 
 **Problema**: Fak detecto en Top Roll AMFE/CP/HO controles tecnicos completamente inventados:
