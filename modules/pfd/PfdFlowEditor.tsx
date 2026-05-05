@@ -32,8 +32,8 @@ import {
     Search,
     X,
 } from 'lucide-react';
-import type { PfdStep } from './pfdTypes';
-import { getBranchColor } from './pfdTypes';
+import type { PfdStep, PfdStepType } from './pfdTypes';
+import { getBranchColor, PFD_STEP_TYPES } from './pfdTypes';
 import { PfdSymbol } from './PfdSymbols';
 import { InheritanceBadge } from '../../components/ui/InheritanceBadge';
 import type { InheritanceStatus } from '../../components/ui/InheritanceBadge';
@@ -50,6 +50,8 @@ interface PfdFlowEditorProps {
     onMoveStep: (stepId: string, direction: 'up' | 'down') => void;
     onUpdateStep: (stepId: string, field: keyof PfdStep, value: string | boolean) => void;
     onDuplicateStep?: (stepId: string) => void;
+    /** Insert a new step of a specific type. afterStepId=null inserts at end. */
+    onInsertStepWithType?: (afterStepId: string | null, stepType: PfdStepType) => void;
     readOnly?: boolean;
     isOpen?: boolean;
     onToggle?: () => void;
@@ -262,6 +264,8 @@ interface StepCardProps {
     onSelect: (stepId: string) => void;
     onContextMenu: (stepId: string, stepIndex: number, e: React.MouseEvent) => void;
     onMoveStep: (stepId: string, direction: 'up' | 'down') => void;
+    /** Update a single field of the step (used for inline edit of description) */
+    onUpdateStep?: (stepId: string, field: keyof PfdStep, value: string | boolean) => void;
     readOnly?: boolean;
     compact?: boolean;
     branchColor?: string;
@@ -270,7 +274,7 @@ interface StepCardProps {
     inheritanceStatus?: InheritanceStatus | null;
 }
 
-function StepCard({ step, stepIndex, totalSteps, isSelected, onSelect, onContextMenu, onMoveStep, readOnly, compact, branchColor, dimmed, hasBrokenLink, inheritanceStatus }: StepCardProps) {
+function StepCard({ step, stepIndex, totalSteps, isSelected, onSelect, onContextMenu, onMoveStep, onUpdateStep, readOnly, compact, branchColor, dimmed, hasBrokenLink, inheritanceStatus }: StepCardProps) {
     const hasCC = step.productSpecialChar === 'CC' || step.processSpecialChar === 'CC';
     const hasSC = !hasCC && (step.productSpecialChar === 'SC' || step.processSpecialChar === 'SC');
     const hasDisp = step.rejectDisposition !== 'none' && (step.stepType === 'inspection' || step.stepType === 'combined');
@@ -281,9 +285,39 @@ function StepCard({ step, stepIndex, totalSteps, isSelected, onSelect, onContext
 
     const ccBorder = hasCC ? 'ring-2 ring-red-400' : hasSC ? 'ring-2 ring-amber-400' : '';
 
+    // Inline edit state for description (double-click to edit).
+    // draftDesc is only meaningful while editing=true; we initialize it on entry
+    // so we never need to sync from props in an effect.
+    const canInlineEdit = !readOnly && !!onUpdateStep;
+    const [editing, setEditing] = useState(false);
+    const [draftDesc, setDraftDesc] = useState('');
+
+    const beginEdit = () => {
+        setDraftDesc(step.description);
+        setEditing(true);
+    };
+    const commitEdit = () => {
+        if (draftDesc !== step.description && onUpdateStep) {
+            onUpdateStep(step.id, 'description', draftDesc);
+        }
+        setEditing(false);
+    };
+    const cancelEdit = () => {
+        setEditing(false);
+    };
+
     const handleClick = (e: React.MouseEvent) => {
+        if (editing) return; // do not steal focus
         e.stopPropagation();
         onSelect(step.id);
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (editing) return;
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onSelect(step.id);
+        }
     };
 
     const handleContextMenu = (e: React.MouseEvent) => {
@@ -292,10 +326,19 @@ function StepCard({ step, stepIndex, totalSteps, isSelected, onSelect, onContext
         onContextMenu(step.id, stepIndex, e);
     };
 
+    const handleDescDoubleClick = (e: React.MouseEvent) => {
+        if (!canInlineEdit) return;
+        e.stopPropagation();
+        beginEdit();
+    };
+
     return (
         <div className="relative group flex flex-col items-center w-full max-w-md">
-            <button
+            <div
+                role="button"
+                tabIndex={readOnly ? -1 : 0}
                 onClick={handleClick}
+                onKeyDown={handleKeyDown}
                 onContextMenu={handleContextMenu}
                 data-testid={`flow-step-${step.id}`}
                 data-selected={isSelected ? 'true' : undefined}
@@ -303,7 +346,10 @@ function StepCard({ step, stepIndex, totalSteps, isSelected, onSelect, onContext
                     ${selectedClass} ${!isSelected ? ccBorder : ''} ${compact ? 'py-1' : ''}
                     ${branchColor ? branchColor : ''} ${dimmed ? 'opacity-30' : ''}
                 `}
-                title={`${step.stepNumber} — ${step.description}\nClic para seleccionar · Clic derecho para opciones`}
+                title={canInlineEdit
+                    ? `${step.stepNumber} — ${step.description}\nClic para seleccionar · Doble-clic para editar · Clic derecho para opciones`
+                    : `${step.stepNumber} — ${step.description}\nClic para seleccionar · Clic derecho para opciones`
+                }
             >
                 <PfdSymbol type={step.stepType} size={compact ? 16 : 20} />
                 <div className="min-w-0 flex-1">
@@ -311,9 +357,31 @@ function StepCard({ step, stepIndex, totalSteps, isSelected, onSelect, onContext
                         <span className={`font-mono font-bold text-gray-700 ${compact ? 'text-[10px]' : 'text-xs'}`}>
                             {step.stepNumber}
                         </span>
-                        <span className={`text-gray-600 whitespace-normal break-words block ${compact ? 'text-[10px] max-w-[200px]' : 'text-xs max-w-xs'}`}>
-                            {step.description}
-                        </span>
+                        {editing ? (
+                            <input
+                                data-testid={`edit-desc-${step.id}`}
+                                autoFocus
+                                value={draftDesc}
+                                onChange={e => setDraftDesc(e.target.value)}
+                                onClick={e => e.stopPropagation()}
+                                onMouseDown={e => e.stopPropagation()}
+                                onBlur={commitEdit}
+                                onKeyDown={e => {
+                                    e.stopPropagation();
+                                    if (e.key === 'Enter') { e.preventDefault(); commitEdit(); }
+                                    else if (e.key === 'Escape') { e.preventDefault(); cancelEdit(); }
+                                }}
+                                className={`flex-1 min-w-0 border border-cyan-400 rounded px-1 bg-white text-gray-700 outline-none focus:ring-2 focus:ring-cyan-300 ${compact ? 'text-[10px]' : 'text-xs'}`}
+                            />
+                        ) : (
+                            <span
+                                onDoubleClick={handleDescDoubleClick}
+                                data-testid={`desc-${step.id}`}
+                                className={`text-gray-600 whitespace-normal break-words block ${compact ? 'text-[10px] max-w-[200px]' : 'text-xs max-w-xs'}`}
+                            >
+                                {step.description}
+                            </span>
+                        )}
                     </div>
                 </div>
                 <div className="flex items-center gap-0.5 shrink-0">
@@ -358,7 +426,7 @@ function StepCard({ step, stepIndex, totalSteps, isSelected, onSelect, onContext
                         <InheritanceBadge status={inheritanceStatus} compact />
                     )}
                 </div>
-            </button>
+            </div>
             {!readOnly && (
                 <div className="absolute -right-1 top-1/2 -translate-y-1/2 flex flex-col gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
                      data-testid={`step-actions-${step.id}`}>
@@ -420,7 +488,9 @@ const PfdFlowEditor: React.FC<PfdFlowEditorProps> = ({
     onInsertAfter,
     onRemoveStep,
     onMoveStep,
+    onUpdateStep,
     onDuplicateStep,
+    onInsertStepWithType,
     readOnly = false,
     isOpen = true,
     onToggle,
@@ -532,6 +602,7 @@ const PfdFlowEditor: React.FC<PfdFlowEditorProps> = ({
                             onSelect={onSelectStep}
                             onContextMenu={handleContextMenu}
                             onMoveStep={onMoveStep}
+                            onUpdateStep={onUpdateStep}
                             readOnly={readOnly}
                             dimmed={matchingStepIds !== null && !matchingStepIds.has(step.id)}
                             hasBrokenLink={brokenLinkStepIds?.has(step.id)}
@@ -617,6 +688,7 @@ const PfdFlowEditor: React.FC<PfdFlowEditorProps> = ({
                                             onSelect={onSelectStep}
                                             onContextMenu={handleContextMenu}
                                             onMoveStep={onMoveStep}
+                                            onUpdateStep={onUpdateStep}
                                             readOnly={readOnly}
                                             compact
                                             dimmed={matchingStepIds !== null && !matchingStepIds.has(step.id)}
@@ -740,6 +812,40 @@ const PfdFlowEditor: React.FC<PfdFlowEditorProps> = ({
                             {matchingStepIds.size}/{steps.length}
                         </span>
                     )}
+                </div>
+            )}
+
+            {/* Type toolbox — quick insert with type-aware buttons */}
+            {isOpen && !readOnly && (
+                <div className="flex items-center gap-2 px-4 py-1.5 border-b border-gray-100 bg-gray-50/40 flex-wrap" data-testid="type-toolbox">
+                    <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Insertar tipo:</span>
+                    {PFD_STEP_TYPES.map(t => {
+                        const handleInsert = () => {
+                            if (onInsertStepWithType) {
+                                onInsertStepWithType(selectedStepId, t.value);
+                            } else if (selectedStepId) {
+                                // Fallback: untyped insert after selected step
+                                onInsertAfter(selectedStepId);
+                            }
+                        };
+                        const tooltip = selectedStepId
+                            ? `Agregar ${t.label} despues del paso seleccionado`
+                            : `Agregar ${t.label} al final del flujo`;
+                        return (
+                            <button
+                                key={t.value}
+                                type="button"
+                                onClick={handleInsert}
+                                title={tooltip}
+                                aria-label={`Agregar ${t.label}`}
+                                data-testid={`type-toolbox-${t.value}`}
+                                className="flex items-center gap-1 px-2 py-1 rounded border border-gray-200 bg-white text-xs text-gray-700 hover:bg-cyan-50 hover:border-cyan-300 hover:text-cyan-700 transition-colors"
+                            >
+                                <PfdSymbol type={t.value} size={16} />
+                                <span className="hidden md:inline">{t.label}</span>
+                            </button>
+                        );
+                    })}
                 </div>
             )}
 

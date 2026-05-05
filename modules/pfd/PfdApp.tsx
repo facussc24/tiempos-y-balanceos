@@ -20,6 +20,8 @@ import { exportPfdPdf } from './pfdPdfExport';
 import type { PfdDocument, PfdStep, PfdHeader } from './pfdTypes';
 import { PfdDocumentListItem } from './pfdTypes';
 import { createBasicProcessTemplate, createManufacturingProcessTemplate, createPatagoniaTapizadoTemplate, type PfdTemplateResult } from './pfdTemplates';
+import { loadZipTemplate, ZIP_TEMPLATES_META, type ZipTemplateId } from './templates';
+import PfdSyntaxHelpDrawer from './PfdSyntaxHelpDrawer';
 import PfdToolbar from './PfdToolbar';
 import PfdHeaderComponent from './PfdHeader';
 import PfdFlowEditor from './PfdFlowEditor';
@@ -140,6 +142,7 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding, embedded, initialData }) => 
         } catch { return false; }
     });
     const [showProjectPanel, setShowProjectPanel] = useState(false);
+    const [helpDrawerOpen, setHelpDrawerOpen] = useState(false);
     const [embeddedNewMenuOpen, setEmbeddedNewMenuOpen] = useState(false);
     const embeddedNewMenuRef = useRef<HTMLDivElement>(null);
     const [validationIssues, setValidationIssues] = useState<ValidationIssue[] | null>(null);
@@ -825,6 +828,9 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding, embedded, initialData }) => 
                     onLoadBasicTemplate={() => handleLoadTemplate()}
                     onLoadManufacturingTemplate={() => handleLoadTemplate(createManufacturingProcessTemplate)}
                     onLoadTapizadoTemplate={() => handleLoadTemplate(createPatagoniaTapizadoTemplate)}
+                    zipTemplatesMeta={ZIP_TEMPLATES_META}
+                    onLoadZipTemplate={(id: ZipTemplateId) => handleLoadTemplate(() => loadZipTemplate(id))}
+                    onOpenHelp={() => setHelpDrawerOpen(true)}
                     onRenumber={pfd.renumber}
                     onNewRevision={revisionControl.handleNewRevision}
                     currentRevisionLevel={pfd.data.header.revisionLevel || 'A'}
@@ -871,6 +877,20 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding, embedded, initialData }) => 
                                 <button onClick={() => { handleLoadTemplate(createManufacturingProcessTemplate); setEmbeddedNewMenuOpen(false); }} className="w-full text-left px-3 py-2 text-xs text-gray-700 hover:bg-cyan-50 hover:text-cyan-700 transition">Plantilla manufactura (12 pasos)</button>
                                 <div className="border-t border-gray-100 my-1" />
                                 <button onClick={() => { handleLoadTemplate(createPatagoniaTapizadoTemplate); setEmbeddedNewMenuOpen(false); }} className="w-full text-left px-3 py-2 text-xs text-cyan-700 hover:bg-cyan-50 font-semibold transition">INSERTO PATAGONIA — VWA (35 pasos)</button>
+                                <div className="border-t border-gray-100 my-1" />
+                                <div className="px-3 py-1 text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Plantillas de productos</div>
+                                {ZIP_TEMPLATES_META.map(t => (
+                                    <button
+                                        key={t.id}
+                                        onClick={() => { handleLoadTemplate(() => loadZipTemplate(t.id)); setEmbeddedNewMenuOpen(false); }}
+                                        className="w-full text-left px-3 py-2 text-xs text-gray-700 hover:bg-cyan-50 hover:text-cyan-700 transition"
+                                        title={t.description}
+                                        data-testid={`load-zip-template-${t.id}`}
+                                    >
+                                        <span className="font-semibold">{t.label}</span>
+                                        <span className="ml-1 text-[10px] text-gray-400">({t.stepCount} pasos)</span>
+                                    </button>
+                                ))}
                             </div>
                         )}
                     </div>
@@ -888,6 +908,15 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding, embedded, initialData }) => 
                             <Hash size={14} />
                         </button>
                     )}
+                    <button
+                        onClick={() => setHelpDrawerOpen(true)}
+                        className="flex items-center gap-1 px-2.5 py-1 rounded text-xs text-gray-600 hover:bg-cyan-50 hover:text-cyan-700 transition"
+                        title="Ayuda — símbolos, reglas y prompt IA"
+                        data-testid="open-syntax-help"
+                    >
+                        <HelpCircle size={14} />
+                        <span className="hidden md:inline">Ayuda</span>
+                    </button>
                     <div className="w-px h-5 bg-gray-200" />
                     <button
                         onClick={handleSave}
@@ -1106,6 +1135,7 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding, embedded, initialData }) => 
                             onMoveStep={pfd.moveStep}
                             onUpdateStep={handleUpdateStep}
                             onDuplicateStep={pfd.duplicateStep}
+                            onInsertStepWithType={pfd.insertStepWithType}
                             readOnly={isReadOnly}
                             isOpen={flowEditorOpen}
                             onToggle={() => setFlowEditorOpen(prev => !prev)}
@@ -1268,6 +1298,17 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding, embedded, initialData }) => 
                 onConfirm={(desc, by) => revisionControl.confirmRevision(desc, by)}
                 currentRevisionLevel={pfd.data.header.revisionLevel || 'A'}
                 nextRevisionLevel={getNextRevisionLevel(pfd.data.header.revisionLevel || 'A')}
+            />
+
+            {/* Syntax Help Drawer (tutorial + AI prompt) */}
+            <PfdSyntaxHelpDrawer
+                isOpen={helpDrawerOpen}
+                onClose={() => setHelpDrawerOpen(false)}
+                header={{
+                    partName: pfd.data.header.partName,
+                    customerName: pfd.data.header.customerName,
+                    applicableParts: pfd.data.header.applicableParts,
+                }}
             />
 
             {/* Toast notification */}

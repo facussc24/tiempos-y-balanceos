@@ -9,8 +9,10 @@ import React, { useState, useRef, useEffect } from 'react';
 import {
     ArrowLeft, Save, FolderOpen, FilePlus,
     Eye, Edit3, AlertTriangle, Undo2, Redo2, Copy, ChevronDown, Hash, GitBranch, Image, FolderOutput,
+    HelpCircle,
 } from 'lucide-react';
 import SyncStatusIndicator from '../../components/ui/SyncStatusIndicator';
+import type { ZipTemplateId, ZipTemplateMeta } from './templates';
 
 interface Props {
     onBackToLanding?: () => void;
@@ -36,6 +38,11 @@ interface Props {
     onLoadBasicTemplate?: () => void;
     onLoadManufacturingTemplate?: () => void;
     onLoadTapizadoTemplate?: () => void;
+    /** Zip-derived templates ported from the standalone AI Studio app */
+    zipTemplatesMeta?: ZipTemplateMeta[];
+    onLoadZipTemplate?: (id: ZipTemplateId) => void;
+    /** Open the syntax help drawer (tutorial + IA prompt) */
+    onOpenHelp?: () => void;
     onRenumber?: () => void;
     onNewRevision?: () => void;
     currentRevisionLevel?: string;
@@ -56,6 +63,8 @@ const PfdToolbar: React.FC<Props> = ({
     onUndo, onRedo, canUndo, canRedo,
     stepCount,
     onLoadBasicTemplate, onLoadManufacturingTemplate, onLoadTapizadoTemplate,
+    zipTemplatesMeta, onLoadZipTemplate,
+    onOpenHelp,
     onRenumber,
     onNewRevision, currentRevisionLevel,
     syncAlertCount, onSyncClick,
@@ -100,7 +109,7 @@ const PfdToolbar: React.FC<Props> = ({
                         <FilePlus size={16} />
                         <span className="hidden sm:inline">Nuevo</span>
                     </button>
-                    {(onLoadBasicTemplate || onLoadManufacturingTemplate || onLoadTapizadoTemplate) && (
+                    {(onLoadBasicTemplate || onLoadManufacturingTemplate || onLoadTapizadoTemplate || (zipTemplatesMeta && onLoadZipTemplate)) && (
                         <button
                             onClick={() => setNewMenuOpen(prev => !prev)}
                             className={`${btnClass} text-cyan-700 hover:bg-cyan-50 rounded-l-none px-1 border-l border-cyan-200`}
@@ -145,6 +154,26 @@ const PfdToolbar: React.FC<Props> = ({
                                 >
                                     INSERTO PATAGONIA — VWA (35 pasos)
                                 </button>
+                            </>
+                        )}
+                        {zipTemplatesMeta && zipTemplatesMeta.length > 0 && onLoadZipTemplate && (
+                            <>
+                                <div className="border-t border-gray-100 my-1" />
+                                <div className="px-3 py-1 text-[10px] font-semibold text-gray-400 uppercase tracking-wide">
+                                    Plantillas de productos
+                                </div>
+                                {zipTemplatesMeta.map(t => (
+                                    <button
+                                        key={t.id}
+                                        onClick={() => { onLoadZipTemplate(t.id); setNewMenuOpen(false); }}
+                                        className="w-full text-left px-3 py-2 text-xs text-gray-700 hover:bg-cyan-50 hover:text-cyan-700 transition"
+                                        title={t.description}
+                                        data-testid={`load-zip-template-${t.id}`}
+                                    >
+                                        <span className="font-semibold">{t.label}</span>
+                                        <span className="ml-1 text-[10px] text-gray-400">({t.stepCount} pasos)</span>
+                                    </button>
+                                ))}
                             </>
                         )}
                     </div>
@@ -281,6 +310,18 @@ const PfdToolbar: React.FC<Props> = ({
                 >
                     <FolderOutput size={16} />
                     <span className="hidden sm:inline">Carpeta</span>
+                </button>
+            )}
+
+            {onOpenHelp && (
+                <button
+                    onClick={onOpenHelp}
+                    className={`${btnClass} text-gray-600 hover:bg-cyan-50 hover:text-cyan-700`}
+                    title="Ayuda — símbolos, reglas y prompt IA"
+                    data-testid="open-syntax-help"
+                >
+                    <HelpCircle size={16} />
+                    <span className="hidden md:inline">Ayuda</span>
                 </button>
             )}
 

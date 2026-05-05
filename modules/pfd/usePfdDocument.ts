@@ -11,6 +11,7 @@ import {
     PfdDocument,
     PfdStep,
     PfdHeader,
+    PfdStepType,
     createEmptyStep,
     createEmptyPfdDocument,
     getNextStepNumber,
@@ -28,6 +29,8 @@ export interface UsePfdDocumentResult {
     updateHeader: (field: keyof PfdHeader, value: string) => void;
     addStep: () => void;
     insertStepAfter: (stepId: string) => void;
+    /** Insert a typed step after the given id; if id is null, append at end */
+    insertStepWithType: (afterStepId: string | null, stepType: PfdStepType) => void;
     duplicateStep: (stepId: string) => void;
     removeStep: (stepId: string) => void;
     updateStep: (stepId: string, field: keyof PfdStep, value: string | boolean) => void;
@@ -115,6 +118,34 @@ export function usePfdDocument(): UsePfdDocumentResult {
             if (index === -1) return prev;
             const nextNumber = getIntermediateStepNumber(prev.steps, index);
             const newStep = createEmptyStep(nextNumber);
+            const steps = [...prev.steps];
+            steps.splice(index + 1, 0, newStep);
+            return { ...prev, steps, updatedAt: new Date().toISOString() };
+        });
+    }, [setDataWithHistory]);
+
+    // Insert a typed step (used by the type toolbox in PfdFlowEditor)
+    const insertStepWithType = useCallback((afterStepId: string | null, stepType: PfdStepType) => {
+        setDataWithHistory(prev => {
+            if (!afterStepId) {
+                const nextNumber = getNextStepNumber(prev.steps);
+                const newStep: PfdStep = { ...createEmptyStep(nextNumber), stepType };
+                return {
+                    ...prev,
+                    steps: [...prev.steps, newStep],
+                    updatedAt: new Date().toISOString(),
+                };
+            }
+            const index = prev.steps.findIndex(s => s.id === afterStepId);
+            if (index === -1) return prev;
+            const nextNumber = getIntermediateStepNumber(prev.steps, index);
+            const newStep: PfdStep = { ...createEmptyStep(nextNumber), stepType };
+            // Inherit branch context from the predecessor so toolbox inserts inside parallel lanes naturally
+            const predecessor = prev.steps[index];
+            if (predecessor.branchId) {
+                newStep.branchId = predecessor.branchId;
+                newStep.branchLabel = predecessor.branchLabel;
+            }
             const steps = [...prev.steps];
             steps.splice(index + 1, 0, newStep);
             return { ...prev, steps, updatedAt: new Date().toISOString() };
@@ -237,6 +268,7 @@ export function usePfdDocument(): UsePfdDocumentResult {
         updateHeader,
         addStep,
         insertStepAfter,
+        insertStepWithType,
         duplicateStep,
         removeStep,
         updateStep,

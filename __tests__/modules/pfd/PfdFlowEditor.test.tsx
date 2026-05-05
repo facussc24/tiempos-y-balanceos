@@ -189,4 +189,59 @@ describe('PfdFlowEditor', () => {
         fireEvent.contextMenu(card);
         expect(screen.queryByTestId('flow-context-menu')).toBeNull();
     });
+
+    // ──────────────────────────── Type toolbox ────────────────────────────────
+
+    it('should render the type toolbox when not readOnly', () => {
+        render(<PfdFlowEditor {...defaultProps} />);
+        expect(screen.getByTestId('type-toolbox')).toBeTruthy();
+        expect(screen.getByTestId('type-toolbox-operation')).toBeTruthy();
+        expect(screen.getByTestId('type-toolbox-decision')).toBeTruthy();
+    });
+
+    it('should hide the type toolbox in readOnly mode', () => {
+        render(<PfdFlowEditor {...defaultProps} readOnly />);
+        expect(screen.queryByTestId('type-toolbox')).toBeNull();
+    });
+
+    it('should call onInsertStepWithType(null, type) when no selection and toolbox button clicked', () => {
+        const onInsertStepWithType = vi.fn();
+        render(<PfdFlowEditor {...defaultProps} onInsertStepWithType={onInsertStepWithType} selectedStepId={null} />);
+        fireEvent.click(screen.getByTestId('type-toolbox-operation'));
+        expect(onInsertStepWithType).toHaveBeenCalledWith(null, 'operation');
+    });
+
+    it('should call onInsertStepWithType(selectedId, type) when toolbox button clicked with selection', () => {
+        const onInsertStepWithType = vi.fn();
+        render(<PfdFlowEditor {...defaultProps} onInsertStepWithType={onInsertStepWithType} selectedStepId="step-2" />);
+        fireEvent.click(screen.getByTestId('type-toolbox-inspection'));
+        expect(onInsertStepWithType).toHaveBeenCalledWith('step-2', 'inspection');
+    });
+
+    // ──────────────────────────── Inline edit ─────────────────────────────────
+
+    it('should commit inline edit on Enter and call onUpdateStep', () => {
+        const onUpdateStep = vi.fn();
+        render(<PfdFlowEditor {...defaultProps} onUpdateStep={onUpdateStep} />);
+        const desc = screen.getByTestId('desc-step-2');
+        fireEvent.doubleClick(desc);
+        const input = screen.getByTestId('edit-desc-step-2') as HTMLInputElement;
+        expect(input).toBeTruthy();
+        fireEvent.change(input, { target: { value: 'NUEVO TEXTO' } });
+        fireEvent.keyDown(input, { key: 'Enter' });
+        expect(onUpdateStep).toHaveBeenCalledWith('step-2', 'description', 'NUEVO TEXTO');
+    });
+
+    it('should cancel inline edit on Escape without calling onUpdateStep', () => {
+        const onUpdateStep = vi.fn();
+        render(<PfdFlowEditor {...defaultProps} onUpdateStep={onUpdateStep} />);
+        const desc = screen.getByTestId('desc-step-2');
+        fireEvent.doubleClick(desc);
+        const input = screen.getByTestId('edit-desc-step-2') as HTMLInputElement;
+        fireEvent.change(input, { target: { value: 'X' } });
+        fireEvent.keyDown(input, { key: 'Escape' });
+        expect(onUpdateStep).not.toHaveBeenCalled();
+        // Description back to original
+        expect(screen.getByTestId('desc-step-2').textContent).toBe('Soldadura por puntos');
+    });
 });
