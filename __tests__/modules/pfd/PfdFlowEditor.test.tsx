@@ -244,4 +244,96 @@ describe('PfdFlowEditor', () => {
         // Description back to original
         expect(screen.getByTestId('desc-step-2').textContent).toBe('Soldadura por puntos');
     });
+
+    // ─────────────────────── Edge cases for inline edit ────────────────────────
+
+    it('should NOT erase description when committing empty over a non-empty value', () => {
+        const onUpdateStep = vi.fn();
+        render(<PfdFlowEditor {...defaultProps} onUpdateStep={onUpdateStep} />);
+        fireEvent.doubleClick(screen.getByTestId('desc-step-2'));
+        const input = screen.getByTestId('edit-desc-step-2') as HTMLInputElement;
+        fireEvent.change(input, { target: { value: '   ' } });
+        fireEvent.keyDown(input, { key: 'Enter' });
+        expect(onUpdateStep).not.toHaveBeenCalled();
+        expect(screen.getByTestId('desc-step-2').textContent).toBe('Soldadura por puntos');
+    });
+
+    it('should support inline edit of stepNumber via double-click', () => {
+        const onUpdateStep = vi.fn();
+        render(<PfdFlowEditor {...defaultProps} onUpdateStep={onUpdateStep} />);
+        fireEvent.doubleClick(screen.getByTestId('num-step-2'));
+        const input = screen.getByTestId('edit-num-step-2') as HTMLInputElement;
+        fireEvent.change(input, { target: { value: 'OP 25' } });
+        fireEvent.keyDown(input, { key: 'Enter' });
+        expect(onUpdateStep).toHaveBeenCalledWith('step-2', 'stepNumber', 'OP 25');
+    });
+
+    // ──────────────────── Selection action bar (branch + disposition) ───────────
+
+    it('should hide the selection action bar when no step is selected', () => {
+        render(<PfdFlowEditor {...defaultProps} selectedStepId={null} />);
+        expect(screen.queryByTestId('selection-action-bar')).toBeNull();
+    });
+
+    it('should show the selection action bar when a step is selected', () => {
+        render(<PfdFlowEditor {...defaultProps} selectedStepId="step-2" />);
+        expect(screen.getByTestId('selection-action-bar')).toBeTruthy();
+        expect(screen.getByTestId('branch-pick-main')).toBeTruthy();
+        expect(screen.getByTestId('branch-pick-A')).toBeTruthy();
+        expect(screen.getByTestId('branch-pick-D')).toBeTruthy();
+    });
+
+    it('should call onUpdateStepFields with branchId+branchLabel when branch button clicked', () => {
+        const onUpdateStepFields = vi.fn();
+        render(<PfdFlowEditor {...defaultProps} selectedStepId="step-2" onUpdateStepFields={onUpdateStepFields} />);
+        fireEvent.click(screen.getByTestId('branch-pick-A'));
+        expect(onUpdateStepFields).toHaveBeenCalledWith('step-2', { branchId: 'A', branchLabel: 'Línea A' });
+    });
+
+    it('should mark "Principal" as active for steps without branch', () => {
+        render(<PfdFlowEditor {...defaultProps} selectedStepId="step-2" />);
+        expect(screen.getByTestId('branch-pick-main').getAttribute('aria-pressed')).toBe('true');
+        expect(screen.getByTestId('branch-pick-A').getAttribute('aria-pressed')).toBe('false');
+    });
+
+    it('should hide disposition picker for non-decision/non-inspection steps', () => {
+        // step-2 is operation → no disposition picker
+        render(<PfdFlowEditor {...defaultProps} selectedStepId="step-2" />);
+        expect(screen.queryByTestId('disposition-pick-scrap')).toBeNull();
+    });
+
+    it('should show disposition picker for decision steps', () => {
+        const steps = [
+            makeStep({ id: 'dec-1', stepNumber: 'OP 10', stepType: 'decision', description: '¿OK?' }),
+        ];
+        render(<PfdFlowEditor {...defaultProps} steps={steps} selectedStepId="dec-1" />);
+        expect(screen.getByTestId('disposition-pick-scrap')).toBeTruthy();
+        expect(screen.getByTestId('disposition-pick-rework')).toBeTruthy();
+        expect(screen.getByTestId('disposition-pick-rework_or_scrap')).toBeTruthy();
+        expect(screen.getByTestId('disposition-pick-sort')).toBeTruthy();
+    });
+
+    it('should call onUpdateStep when disposition button is clicked', () => {
+        const onUpdateStep = vi.fn();
+        const steps = [
+            makeStep({ id: 'dec-1', stepNumber: 'OP 10', stepType: 'decision', description: '¿OK?' }),
+        ];
+        render(<PfdFlowEditor {...defaultProps} steps={steps} selectedStepId="dec-1" onUpdateStep={onUpdateStep} />);
+        fireEvent.click(screen.getByTestId('disposition-pick-scrap'));
+        expect(onUpdateStep).toHaveBeenCalledWith('dec-1', 'rejectDisposition', 'scrap');
+    });
+
+    it('should call onSelectStep(null) when "Deseleccionar" button is clicked', () => {
+        const onSelectStep = vi.fn();
+        render(<PfdFlowEditor {...defaultProps} selectedStepId="step-2" onSelectStep={onSelectStep} />);
+        fireEvent.click(screen.getByTestId('deselect-step'));
+        expect(onSelectStep).toHaveBeenCalledWith(null);
+    });
+
+    it('should deselect when Escape is pressed and no input has focus', () => {
+        const onSelectStep = vi.fn();
+        render(<PfdFlowEditor {...defaultProps} selectedStepId="step-2" onSelectStep={onSelectStep} />);
+        fireEvent.keyDown(document, { key: 'Escape' });
+        expect(onSelectStep).toHaveBeenCalledWith(null);
+    });
 });

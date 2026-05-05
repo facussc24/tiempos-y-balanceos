@@ -1136,6 +1136,7 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding, embedded, initialData }) => 
                             onUpdateStep={handleUpdateStep}
                             onDuplicateStep={pfd.duplicateStep}
                             onInsertStepWithType={pfd.insertStepWithType}
+                            onUpdateStepFields={pfd.updateStepFields}
                             readOnly={isReadOnly}
                             isOpen={flowEditorOpen}
                             onToggle={() => setFlowEditorOpen(prev => !prev)}

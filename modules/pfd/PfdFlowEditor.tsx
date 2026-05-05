@@ -49,6 +49,8 @@ interface PfdFlowEditorProps {
     onRemoveStep: (stepId: string) => void;
     onMoveStep: (stepId: string, direction: 'up' | 'down') => void;
     onUpdateStep: (stepId: string, field: keyof PfdStep, value: string | boolean) => void;
+    /** Atomic update of multiple fields (single undo entry). Used by selection action bar. */
+    onUpdateStepFields?: (stepId: string, updates: Partial<PfdStep>) => void;
     onDuplicateStep?: (stepId: string) => void;
     /** Insert a new step of a specific type. afterStepId=null inserts at end. */
     onInsertStepWithType?: (afterStepId: string | null, stepType: PfdStepType) => void;
@@ -297,6 +299,12 @@ function StepCard({ step, stepIndex, totalSteps, isSelected, onSelect, onContext
         setEditing(true);
     };
     const commitEdit = () => {
+        const trimmed = draftDesc.trim();
+        // Edge case: don't accidentally erase a non-empty description by saving empty
+        if (trimmed === '' && step.description.trim() !== '') {
+            setEditing(false);
+            return;
+        }
         if (draftDesc !== step.description && onUpdateStep) {
             onUpdateStep(step.id, 'description', draftDesc);
         }
@@ -304,6 +312,23 @@ function StepCard({ step, stepIndex, totalSteps, isSelected, onSelect, onContext
     };
     const cancelEdit = () => {
         setEditing(false);
+    };
+
+    // Inline edit state for step number (double-click number to edit).
+    const [editingNum, setEditingNum] = useState(false);
+    const [draftNum, setDraftNum] = useState('');
+    const beginEditNum = () => {
+        setDraftNum(step.stepNumber);
+        setEditingNum(true);
+    };
+    const commitEditNum = () => {
+        if (draftNum !== step.stepNumber && onUpdateStep) {
+            onUpdateStep(step.id, 'stepNumber', draftNum.trim());
+        }
+        setEditingNum(false);
+    };
+    const cancelEditNum = () => {
+        setEditingNum(false);
     };
 
     const handleClick = (e: React.MouseEvent) => {
@@ -354,9 +379,32 @@ function StepCard({ step, stepIndex, totalSteps, isSelected, onSelect, onContext
                 <PfdSymbol type={step.stepType} size={compact ? 16 : 20} />
                 <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1">
-                        <span className={`font-mono font-bold text-gray-700 ${compact ? 'text-[10px]' : 'text-xs'}`}>
-                            {step.stepNumber}
-                        </span>
+                        {editingNum ? (
+                            <input
+                                data-testid={`edit-num-${step.id}`}
+                                autoFocus
+                                value={draftNum}
+                                onChange={e => setDraftNum(e.target.value)}
+                                onClick={e => e.stopPropagation()}
+                                onMouseDown={e => e.stopPropagation()}
+                                onBlur={commitEditNum}
+                                onKeyDown={e => {
+                                    e.stopPropagation();
+                                    if (e.key === 'Enter') { e.preventDefault(); commitEditNum(); }
+                                    else if (e.key === 'Escape') { e.preventDefault(); cancelEditNum(); }
+                                }}
+                                className={`font-mono font-bold border border-cyan-400 rounded px-1 bg-white text-gray-700 outline-none focus:ring-2 focus:ring-cyan-300 w-20 ${compact ? 'text-[10px]' : 'text-xs'}`}
+                            />
+                        ) : (
+                            <span
+                                onDoubleClick={(e) => { if (!canInlineEdit) return; e.stopPropagation(); beginEditNum(); }}
+                                data-testid={`num-${step.id}`}
+                                title={canInlineEdit ? 'Doble-clic para editar número' : undefined}
+                                className={`font-mono font-bold text-gray-700 ${compact ? 'text-[10px]' : 'text-xs'} ${canInlineEdit ? 'hover:bg-cyan-50 hover:rounded px-0.5' : ''}`}
+                            >
+                                {step.stepNumber || '—'}
+                            </span>
+                        )}
                         {editing ? (
                             <input
                                 data-testid={`edit-desc-${step.id}`}
@@ -489,6 +537,7 @@ const PfdFlowEditor: React.FC<PfdFlowEditorProps> = ({
     onRemoveStep,
     onMoveStep,
     onUpdateStep,
+    onUpdateStepFields,
     onDuplicateStep,
     onInsertStepWithType,
     readOnly = false,
@@ -499,6 +548,10 @@ const PfdFlowEditor: React.FC<PfdFlowEditorProps> = ({
     brokenLinkStepIds,
     inheritanceStatusMap,
 }) => {
+    const selectedStep = useMemo(
+        () => steps.find(s => s.id === selectedStepId) || null,
+        [steps, selectedStepId],
+    );
     const groups = useMemo(() => groupStepsByFlow(steps), [steps]);
 
     // Zoom & Pan state
@@ -538,6 +591,19 @@ const PfdFlowEditor: React.FC<PfdFlowEditorProps> = ({
         setZoom(100);
         setPan({ x: 0, y: 0 });
     }, []);
+
+    // Escape deselects the currently selected step (unless an input has focus — then the input handles its own Escape).
+    useEffect(() => {
+        if (readOnly || !selectedStepId) return;
+        const handler = (e: KeyboardEvent) => {
+            if (e.key !== 'Escape') return;
+            const ae = document.activeElement;
+            if (ae && (ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA' || (ae as HTMLElement).isContentEditable)) return;
+            onSelectStep(null);
+        };
+        document.addEventListener('keydown', handler);
+        return () => document.removeEventListener('keydown', handler);
+    }, [selectedStepId, readOnly, onSelectStep]);
 
     // Search — determine which steps match
     const matchingStepIds = useMemo(() => {
@@ -846,6 +912,94 @@ const PfdFlowEditor: React.FC<PfdFlowEditorProps> = ({
                             </button>
                         );
                     })}
+                </div>
+            )}
+
+            {/* Selection action bar — branch + disposition quick actions for the selected step */}
+            {isOpen && !readOnly && selectedStep && (
+                <div className="flex items-center gap-3 px-4 py-1.5 border-b border-gray-100 bg-cyan-50/30 flex-wrap" data-testid="selection-action-bar">
+                    <span className="text-[10px] font-semibold text-cyan-700 uppercase tracking-wide" data-testid="selection-info">
+                        {selectedStep.stepNumber || '(sin nº)'} · {PFD_STEP_TYPES.find(t => t.value === selectedStep.stepType)?.label || selectedStep.stepType}
+                    </span>
+
+                    {/* Branch picker */}
+                    <div className="flex items-center gap-1">
+                        <span className="text-[10px] font-medium text-gray-500">Línea:</span>
+                        {[
+                            { id: '', label: 'Principal', cls: 'border-gray-300 text-gray-700 hover:bg-gray-100' },
+                            { id: 'A', label: 'A', cls: 'border-violet-300 text-violet-700 hover:bg-violet-50' },
+                            { id: 'B', label: 'B', cls: 'border-sky-300 text-sky-700 hover:bg-sky-50' },
+                            { id: 'C', label: 'C', cls: 'border-rose-300 text-rose-700 hover:bg-rose-50' },
+                            { id: 'D', label: 'D', cls: 'border-lime-300 text-lime-700 hover:bg-lime-50' },
+                        ].map(b => {
+                            const active = (selectedStep.branchId || '') === b.id;
+                            const handleSetBranch = () => {
+                                if (active) return;
+                                if (onUpdateStepFields) {
+                                    onUpdateStepFields(selectedStep.id, {
+                                        branchId: b.id,
+                                        branchLabel: b.id ? `Línea ${b.id}` : '',
+                                    });
+                                } else {
+                                    onUpdateStep(selectedStep.id, 'branchId', b.id);
+                                    onUpdateStep(selectedStep.id, 'branchLabel', b.id ? `Línea ${b.id}` : '');
+                                }
+                            };
+                            return (
+                                <button
+                                    key={b.id || 'main'}
+                                    type="button"
+                                    onClick={handleSetBranch}
+                                    title={b.id ? `Marcar como Línea ${b.id} (paralela)` : 'Mover al flujo principal'}
+                                    data-testid={`branch-pick-${b.id || 'main'}`}
+                                    aria-pressed={active}
+                                    className={`text-[10px] font-bold px-2 py-0.5 rounded border transition-colors ${active ? 'bg-cyan-600 text-white border-cyan-600' : `bg-white ${b.cls}`}`}
+                                >
+                                    {b.label}
+                                </button>
+                            );
+                        })}
+                    </div>
+
+                    {/* Disposition picker — only for decision/inspection/combined */}
+                    {(selectedStep.stepType === 'decision' || selectedStep.stepType === 'inspection' || selectedStep.stepType === 'combined') && (
+                        <div className="flex items-center gap-1">
+                            <span className="text-[10px] font-medium text-gray-500">Si NO:</span>
+                            {[
+                                { v: 'none' as const, label: 'Sin disp.', cls: 'border-gray-300 text-gray-600 hover:bg-gray-100' },
+                                { v: 'scrap' as const, label: 'Scrap', cls: 'border-red-300 text-red-700 hover:bg-red-50' },
+                                { v: 'rework' as const, label: 'Retrabajo', cls: 'border-orange-300 text-orange-700 hover:bg-orange-50' },
+                                { v: 'rework_or_scrap' as const, label: 'Retrabajo o scrap', cls: 'border-amber-300 text-amber-700 hover:bg-amber-50' },
+                                { v: 'sort' as const, label: 'Selección', cls: 'border-purple-300 text-purple-700 hover:bg-purple-50' },
+                            ].map(d => {
+                                const active = selectedStep.rejectDisposition === d.v;
+                                return (
+                                    <button
+                                        key={d.v}
+                                        type="button"
+                                        onClick={() => onUpdateStep(selectedStep.id, 'rejectDisposition', d.v)}
+                                        title={d.v === 'none' ? 'Quitar disposición' : `Marcar disposición: ${d.label}`}
+                                        data-testid={`disposition-pick-${d.v}`}
+                                        aria-pressed={active}
+                                        className={`text-[10px] font-bold px-2 py-0.5 rounded border transition-colors ${active ? 'bg-cyan-600 text-white border-cyan-600' : `bg-white ${d.cls}`}`}
+                                    >
+                                        {d.label}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    )}
+
+                    {/* Deselect */}
+                    <button
+                        type="button"
+                        onClick={() => onSelectStep(null)}
+                        title="Deseleccionar (Escape)"
+                        data-testid="deselect-step"
+                        className="ml-auto text-[10px] text-gray-500 hover:text-gray-800 hover:underline"
+                    >
+                        Deseleccionar
+                    </button>
                 </div>
             )}
 
