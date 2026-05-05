@@ -26,6 +26,10 @@ const { createEmptyPfdDocument } = await import('../../../modules/pfd/pfdTypes')
 describe('PfdApp', () => {
     beforeEach(() => {
         localStorage.clear();
+        // Default flow view is the new zip-style renderer; tests in this file
+        // assert testids from the legacy "lanes" PfdFlowEditor, so force lanes
+        // mode via localStorage. Each test reads it on first render.
+        localStorage.setItem('pfd_flow_view_mode', 'lanes');
     });
 
     it('should render the toolbar', () => {

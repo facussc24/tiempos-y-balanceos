@@ -25,6 +25,7 @@ import PfdSyntaxHelpDrawer from './PfdSyntaxHelpDrawer';
 import PfdToolbar from './PfdToolbar';
 import PfdHeaderComponent from './PfdHeader';
 import PfdFlowEditor from './PfdFlowEditor';
+import PfdZipFlowEditor from './zip-renderer/PfdZipFlowEditor';
 import { PfdFlowChart } from './flow/PfdFlowChart';
 import { convertPfdToFlowData } from './pfdToFlowData';
 import { FLOW_CSS } from './flowStyles';
@@ -143,6 +144,13 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding, embedded, initialData }) => 
     });
     const [showProjectPanel, setShowProjectPanel] = useState(false);
     const [helpDrawerOpen, setHelpDrawerOpen] = useState(false);
+    const [flowViewMode, setFlowViewMode] = useState<'zip' | 'lanes'>(() => {
+        try { return (localStorage.getItem('pfd_flow_view_mode') as 'zip' | 'lanes') || 'zip'; }
+        catch { return 'zip'; }
+    });
+    useEffect(() => {
+        try { localStorage.setItem('pfd_flow_view_mode', flowViewMode); } catch { /* localStorage unavailable */ }
+    }, [flowViewMode]);
     const [embeddedNewMenuOpen, setEmbeddedNewMenuOpen] = useState(false);
     const embeddedNewMenuRef = useRef<HTMLDivElement>(null);
     const [validationIssues, setValidationIssues] = useState<ValidationIssue[] | null>(null);
@@ -1126,25 +1134,64 @@ const PfdApp: React.FC<Props> = ({ onBackToLanding, embedded, initialData }) => 
                 }}>
                     {/* Flow Editor — takes remaining width */}
                     <div className={`${selectedStep ? 'flex-1 min-w-0' : 'w-full'} transition-all`}>
-                        <PfdFlowEditor
-                            steps={pfd.data.steps}
-                            selectedStepId={selection.selectedStepId}
-                            onSelectStep={selection.selectStep}
-                            onInsertAfter={pfd.insertStepAfter}
-                            onRemoveStep={handleRemoveStep}
-                            onMoveStep={pfd.moveStep}
-                            onUpdateStep={handleUpdateStep}
-                            onDuplicateStep={pfd.duplicateStep}
-                            onInsertStepWithType={pfd.insertStepWithType}
-                            onUpdateStepFields={pfd.updateStepFields}
-                            readOnly={isReadOnly}
-                            isOpen={flowEditorOpen}
-                            onToggle={() => setFlowEditorOpen(prev => !prev)}
-                            searchQuery={pfdSearch}
-                            onSearchChange={setPfdSearch}
-                            brokenLinkStepIds={linkAlerts.brokenPfdStepIds}
-                            inheritanceStatusMap={inheritanceStatus.statusMap}
-                        />
+                        {/* View mode toggle: 'zip' = renderer estilo Fak (default), 'lanes' = vista anterior con carriles paralelos */}
+                        <div className="flex items-center justify-end gap-2 mb-2 no-print">
+                            <span className="text-[10px] text-gray-500 uppercase tracking-wide font-semibold">Vista:</span>
+                            <div className="inline-flex rounded-lg border border-gray-300 overflow-hidden text-xs" data-testid="flow-view-toggle">
+                                <button
+                                    type="button"
+                                    onClick={() => setFlowViewMode('zip')}
+                                    className={`px-3 py-1 transition-colors ${flowViewMode === 'zip' ? 'bg-cyan-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+                                    data-testid="flow-view-zip"
+                                >
+                                    Mejorada
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setFlowViewMode('lanes')}
+                                    className={`px-3 py-1 transition-colors border-l border-gray-300 ${flowViewMode === 'lanes' ? 'bg-cyan-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+                                    data-testid="flow-view-lanes"
+                                >
+                                    Carriles
+                                </button>
+                            </div>
+                        </div>
+                        {flowViewMode === 'zip' ? (
+                            <PfdZipFlowEditor
+                                steps={pfd.data.steps}
+                                selectedStepId={selection.selectedStepId}
+                                onSelectStep={selection.selectStep}
+                                onInsertAfter={pfd.insertStepAfter}
+                                onRemoveStep={handleRemoveStep}
+                                onMoveStep={pfd.moveStep}
+                                onUpdateStep={handleUpdateStep}
+                                onInsertStepWithType={pfd.insertStepWithType}
+                                onUpdateStepFields={pfd.updateStepFields}
+                                readOnly={isReadOnly}
+                                isOpen={flowEditorOpen}
+                                onToggle={() => setFlowEditorOpen(prev => !prev)}
+                            />
+                        ) : (
+                            <PfdFlowEditor
+                                steps={pfd.data.steps}
+                                selectedStepId={selection.selectedStepId}
+                                onSelectStep={selection.selectStep}
+                                onInsertAfter={pfd.insertStepAfter}
+                                onRemoveStep={handleRemoveStep}
+                                onMoveStep={pfd.moveStep}
+                                onUpdateStep={handleUpdateStep}
+                                onDuplicateStep={pfd.duplicateStep}
+                                onInsertStepWithType={pfd.insertStepWithType}
+                                onUpdateStepFields={pfd.updateStepFields}
+                                readOnly={isReadOnly}
+                                isOpen={flowEditorOpen}
+                                onToggle={() => setFlowEditorOpen(prev => !prev)}
+                                searchQuery={pfdSearch}
+                                onSearchChange={setPfdSearch}
+                                brokenLinkStepIds={linkAlerts.brokenPfdStepIds}
+                                inheritanceStatusMap={inheritanceStatus.statusMap}
+                            />
+                        )}
                     </div>
 
                     {/* Detail Panel — fixed 320px right side, shown when a step is selected */}
