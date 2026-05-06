@@ -72,7 +72,7 @@ const st = {
     },
     cell: {
         font: { sz: 8, name: 'Arial' },
-        alignment: { vertical: 'top' as const, wrapText: true },
+        alignment: { vertical: 'center' as const, wrapText: true },
         border: BORDER,
     },
     cellCenter: {
