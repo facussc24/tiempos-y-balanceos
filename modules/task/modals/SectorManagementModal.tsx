@@ -49,7 +49,7 @@ export const SectorManagementModal: React.FC<Props> = ({ isOpen, onClose, data, 
     const addSector = () => {
         if (!newSectorName.trim()) return;
         const newSector: Sector = {
-            id: Math.random().toString(36).substr(2, 5).toUpperCase(),
+            id: crypto.randomUUID().replace(/-/g, '').slice(0, 5).toUpperCase(),
             name: newSectorName,
             color: newSectorColor,
             // FIX: NaN || default returns NaN (not default), use isNaN guard
