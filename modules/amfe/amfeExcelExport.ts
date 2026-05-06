@@ -388,7 +388,8 @@ export function buildAmfeCompletoWorkbook(doc: AmfeDocument): XLSX.WorkBook {
     //   Cols 0,1 (Op#, Paso) + 3,4 (Func.Item, Func.Paso): merge per operation
     //   Col 2 (Elem 6M): merge per work element
     //   Col 5 (Func.Elem.Trabajo): merge per function
-    //   Cols 6,7 (FE, FM) + 9 (S): merge per failure
+    //   Cols 6,7 (FE, FM): merge per failure
+    //   Col 9 (S): NO merge — repetir valor en cada fila para que filtros Excel funcionen
     //   Cols 8, 10-27: one per cause row (no merge)
     const dataRows: any[][] = [];
     const dataMerges: { col: number; startRow: number; rowSpan: number }[] = [];
@@ -459,9 +460,9 @@ export function buildAmfeCompletoWorkbook(doc: AmfeDocument): XLSX.WorkBook {
                         opRowCount++;
                     }
 
-                    // Failure merge: cols 6,7 (FE, FM), 9 (S)
+                    // Failure merge: cols 6,7 (FE, FM) — col 9 (S) NO se mergea para preservar filtros Excel
                     if (failRowCount > 1) {
-                        for (const col of [6, 7, 9]) {
+                        for (const col of [6, 7]) {
                             dataMerges.push({ col, startRow: failStartRow, rowSpan: failRowCount });
                         }
                     }
