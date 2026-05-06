@@ -67,30 +67,35 @@ export const ShortcutHintsOverlay: React.FC<ShortcutHintsOverlayProps> = ({ isVi
     const rafRef = useRef<number | null>(null);
 
     useEffect(() => {
-        if (isVisible) {
-            // Get initial positions
-            setHints(getHintPositions());
-
-            // Update positions on scroll/resize
-            const updatePositions = () => {
-                rafRef.current = requestAnimationFrame(() => {
-                    setHints(getHintPositions());
-                });
-            };
-
-            window.addEventListener('scroll', updatePositions, true);
-            window.addEventListener('resize', updatePositions);
-
-            return () => {
-                window.removeEventListener('scroll', updatePositions, true);
-                window.removeEventListener('resize', updatePositions);
-                if (rafRef.current) {
-                    cancelAnimationFrame(rafRef.current);
-                }
-            };
-        } else {
-            setHints([]);
+        if (!isVisible) {
+            // When isVisible flips to false the component early-returns null
+            // below, so no need to clear hints here.
+            return;
         }
+
+        let cancelled = false;
+        const updatePositions = () => {
+            if (rafRef.current) cancelAnimationFrame(rafRef.current);
+            rafRef.current = requestAnimationFrame(() => {
+                if (!cancelled) setHints(getHintPositions());
+            });
+        };
+
+        // Initial positions via rAF (avoids synchronous setState in effect).
+        updatePositions();
+
+        window.addEventListener('scroll', updatePositions, true);
+        window.addEventListener('resize', updatePositions);
+
+        return () => {
+            cancelled = true;
+            window.removeEventListener('scroll', updatePositions, true);
+            window.removeEventListener('resize', updatePositions);
+            if (rafRef.current) {
+                cancelAnimationFrame(rafRef.current);
+                rafRef.current = null;
+            }
+        };
     }, [isVisible]);
 
     if (!isVisible || hints.length === 0) return null;

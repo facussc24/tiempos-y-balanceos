@@ -50,8 +50,9 @@ export function useCpDraftRecovery({ embedded, currentProject, loadData }: UseCp
     const [draftRecovery, setDraftRecovery] = useState<{ key: string; name: string } | null>(null);
 
     useEffect(() => {
+        // useState initial value is null, so no setDraftRecovery(null) needed here
+        // (avoids react-hooks/set-state-in-effect lint and saves a render cycle).
         if (embedded || currentProject) {
-            setDraftRecovery(null);
             return;
         }
 
