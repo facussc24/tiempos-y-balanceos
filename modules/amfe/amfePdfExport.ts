@@ -64,13 +64,23 @@ interface FlatRow {
     cause: AmfeCause;
 }
 
-/** Sort operations numerically by opNumber */
+/**
+ * Sort operations by opNumber numérico.
+ * Las OPs sin opNumber válido (vacío o no parseable) conservan su posición
+ * relativa del array original (sort estable). Esto permite documentar OPs
+ * "fuera del PFD" en el lugar lógico del flujo sin afectar la numeración.
+ */
 function sortOperations(operations: AmfeOperation[]): AmfeOperation[] {
-    return [...operations].sort((a, b) => {
-        const numA = parseInt(a.opNumber) || 0;
-        const numB = parseInt(b.opNumber) || 0;
-        return numA - numB;
+    const indexed = operations.map((op, idx) => ({ op, idx }));
+    indexed.sort((a, b) => {
+        const numA = parseInt(a.op.opNumber);
+        const numB = parseInt(b.op.opNumber);
+        const validA = !isNaN(numA);
+        const validB = !isNaN(numB);
+        if (validA && validB) return numA - numB;
+        return a.idx - b.idx;
     });
+    return indexed.map(x => x.op);
 }
 
 function flattenCauseRows(doc: AmfeDocument): FlatRow[] {
