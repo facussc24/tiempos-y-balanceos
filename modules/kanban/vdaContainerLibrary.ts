@@ -194,22 +194,6 @@ export function calculateContainersPerPallet(container: VDAContainer): number {
 }
 
 /**
- * Calculate total pieces capacity for a full pallet.
- * 
- * @param container - VDA container specification
- * @param piecesPerContainer - Pieces per container (user-defined or default)
- * @returns Total pieces that fit on one pallet
- */
-function calculatePiecesPerPallet(
-    container: VDAContainer,
-    piecesPerContainer?: number
-): number {
-    const capacity = piecesPerContainer ?? container.defaultCapacity;
-    const containersPerPallet = calculateContainersPerPallet(container);
-    return containersPerPallet * capacity;
-}
-
-/**
  * Get container category color for UI display.
  */
 export function getCategoryColor(category: ContainerCategory): string {
@@ -235,57 +219,3 @@ export function formatDimensions(container: VDAContainer): string {
     return `${container.lengthMm}×${container.widthMm}×${container.heightMm} mm`;
 }
 
-// ============================================================================
-// v2.0: VOLUME-BASED PIECE SUGGESTION (FacuV4 Enhancement)
-// ============================================================================
-
-/**
- * Calculate container internal volume in liters.
- * 
- * Note: This is a gross approximation. Real internal volume is ~85-90%
- * of external dimensions due to wall thickness.
- * 
- * @param container - VDA container specification
- * @returns Volume in liters (1L = 1,000,000 mm³)
- */
-function calculateVolumeL(container: VDAContainer): number {
-    if (container.category === 'custom' && (container.lengthMm === 0 || container.widthMm === 0 || container.heightMm === 0)) {
-        return 0;
-    }
-    // Convert mm³ to liters (÷ 1,000,000) and apply ~90% internal factor
-    return (container.lengthMm * container.widthMm * container.heightMm) / 1_000_000 * 0.9;
-}
-
-/**
- * Suggest number of pieces that fit in a container based on piece dimensions.
- * 
- * Uses a 65% fill factor to account for:
- * - Irregular piece shapes
- * - Padding/protection material
- * - Easy access for picking
- * 
- * @param containerVolumeL - Container volume in liters
- * @param pieceLengthMm - Piece length in mm
- * @param pieceWidthMm - Piece width in mm  
- * @param pieceHeightMm - Piece height in mm
- * @returns Suggested piece count (0 if invalid inputs)
- */
-function suggestPiecesFromVolume(
-    containerVolumeL: number,
-    pieceLengthMm: number,
-    pieceWidthMm: number,
-    pieceHeightMm: number
-): number {
-    if (containerVolumeL <= 0 || pieceLengthMm <= 0 || pieceWidthMm <= 0 || pieceHeightMm <= 0) {
-        return 0;
-    }
-
-    // Piece volume in liters
-    const pieceVolumeL = (pieceLengthMm * pieceWidthMm * pieceHeightMm) / 1_000_000;
-
-    if (pieceVolumeL <= 0) return 0;
-
-    // Apply 65% fill factor for realistic packing
-    const fillFactor = 0.65;
-    return Math.floor((containerVolumeL / pieceVolumeL) * fillFactor);
-}
