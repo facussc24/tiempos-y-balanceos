@@ -24,6 +24,17 @@ import { scheduleBackup } from '../backupService';
 /** Ensure all string fields exist after JSON.parse to prevent runtime crashes. */
 function normalizeAmfeDoc(doc: AmfeDocument): void {
     const defaults = createEmptyAmfeDoc();
+    // Coerce legacy array-shaped applicableParts into a newline-joined string.
+    // Some AMFEs imported via family inheritance saved this field as string[] while
+    // the type contracts (and 11+ render/export call sites) assume `string`. Without this
+    // normalization, every `header.applicableParts?.trim()` call throws at runtime.
+    const headerLoose = doc.header as unknown as Record<string, unknown>;
+    if (Array.isArray(headerLoose.applicableParts)) {
+        headerLoose.applicableParts = (headerLoose.applicableParts as unknown[])
+            .map(v => (v == null ? '' : String(v)))
+            .filter(Boolean)
+            .join('\n');
+    }
     for (const key of Object.keys(defaults.header) as (keyof typeof defaults.header)[]) {
         if (doc.header[key] == null) {
             (doc.header as unknown as Record<string, string>)[key] = defaults.header[key];
