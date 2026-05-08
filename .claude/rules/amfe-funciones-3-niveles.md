@@ -151,4 +151,73 @@ Agregar checks 3.A1, 3.A2, 3.A3 que ejecuten lo de arriba sobre todos los AMFEs.
 ## Incidentes asociados
 
 - **2026-05-08 (AMFE 150)**: 10/10 OPs con `operationFunction` = `focusElementFunction` literal. Causa: imports/clones que duplicaron el campo. Fix: vaciar `operationFunction` para que el equipo APQP lo defina específicamente.
+- **2026-05-08 PARTE 2 (AMFE 150)**: WEs con `function.description` = etiqueta de tipo 6M textual (ej: type=Measurement con fn.description="Método de Fabricación"). El campo arrastraba un placeholder genérico del data crudo del PPAP original. Una heurística parcial (solo regex sobre algunas variantes) no lo detectó. Fix sistémico abajo.
 - **2026-04-12 (LECCIONES_APRENDIDAS)**: `operationFunction` no se propagaba de maestro a variantes en 3 Headrest. Quedó vacío.
+
+## Heurística anti-recaída — detección de strings 6M genéricos
+
+Cualquier `we.name` o `fn.description` que coincida (case+tildes insensitive, trim) con la lista canónica de etiquetas 6M es un PLACEHOLDER que debe reemplazarse:
+
+```javascript
+const GENERIC_LABELS = [
+  'machine', 'maquina', 'máquina',
+  'man', 'mano de obra',
+  'material', 'material (indirectos)', 'materiales',
+  'method', 'metodo', 'método', 'metodo de fabricacion', 'método de fabricación',
+  'measurement', 'medicion', 'medición',
+  'environment', 'medio ambiente', 'ambiente',
+];
+
+function normalize(s) {
+  return (s || '').toString().trim().toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, ''); // saca tildes
+}
+
+function isGeneric6MLabel(s) {
+  return GENERIC_LABELS.map(normalize).includes(normalize(s));
+}
+```
+
+### Reglas de validación
+
+Un AMFE NO puede tener:
+1. WE con `name` que matchee `isGeneric6MLabel()` → debe ser específico (ej: "Operador de Costura", "Inyectora PU + Dosificadora A:B").
+2. `function.description` que matchee `isGeneric6MLabel()` → debe describir la contribución del recurso ("Coser uniones controlando tensión de hilo y longitud de puntada").
+3. `function.description` igual al `we.name` o al `we.type` traducido → significa que es placeholder copiado.
+
+### Query SQL de auditoría — correr antes de cada entrega PPAP
+
+```sql
+WITH amfe AS (SELECT amfe_number, data::jsonb as d FROM amfe_documents)
+SELECT amfe_number,
+       op->>'operationNumber' as op_num,
+       we->>'type' as type,
+       we->>'name' as we_name,
+       fn->>'functionDescription' as fn_desc
+FROM amfe,
+     jsonb_array_elements(d->'operations') op,
+     jsonb_array_elements(op->'workElements') we,
+     jsonb_array_elements(we->'functions') fn
+WHERE LOWER(TRIM(unaccent(COALESCE(we->>'name','')))) IN
+        ('machine','maquina','man','mano de obra','material','material (indirectos)',
+         'method','metodo','metodo de fabricacion','measurement','medicion',
+         'environment','medio ambiente')
+   OR LOWER(TRIM(unaccent(COALESCE(fn->>'functionDescription','')))) IN
+        ('machine','maquina','man','mano de obra','material','material (indirectos)',
+         'method','metodo','metodo de fabricacion','measurement','medicion',
+         'environment','medio ambiente');
+```
+
+(`unaccent()` requiere extensión postgres; alternativa: hacer en JS post-query.)
+
+### Acción correctiva
+
+Si la query devuelve resultados:
+1. Para `we.name` genérico → renombrar con el recurso real (ej: "Operador", "Inyectora PU", "Hilo VW 50106"). Si no se sabe el específico, usar `OP_TYPE_FN[`${opNum}__${type}`]` como mejor aproximación o consultar al equipo APQP.
+2. Para `fn.description` genérico → describir la CONTRIBUCIÓN del recurso al paso ("Coser uniones...", "Inyectar mezcla...").
+
+### Lección aprendida
+
+**No alcanza con una regex parcial** que cubra "algunos" placeholders. La detección debe ser por LISTA CANÓNICA + NORMALIZACIÓN (lowercase + sin tildes + trim). Si se agrega un nuevo término genérico al diccionario de tipos 6M (ej: `WORK_ELEMENT_LABELS`), también hay que agregarlo a `GENERIC_LABELS`.
+
+**Auditor `_auditAll.mjs` debe incluir esta validación** (TODO: agregar check `WE_GENERIC_PLACEHOLDER` y `FN_GENERIC_PLACEHOLDER`).
