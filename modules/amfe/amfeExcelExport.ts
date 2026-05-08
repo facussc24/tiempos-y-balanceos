@@ -240,12 +240,11 @@ function buildFEText(fail: AmfeFailure | null): string {
     return parts.join('\n');
 }
 
-/** Build combined Car. Especiales text from specialChar + characteristicNumber */
+/** Build Car. Especiales text. Solo specialChar (CC/SC/vacio). characteristicNumber NO va aca —
+ * es un identificador secuencial interno, no una clasificacion AIAG-VDA. Mostrarlo en esta
+ * columna confunde al lector (auditor IATF lee CC/SC, no #N). */
 function buildCarEspText(c: Partial<AmfeCause>): string {
-    const parts: string[] = [];
-    if (c.specialChar) parts.push(c.specialChar);
-    if (c.characteristicNumber) parts.push(`#${c.characteristicNumber}`);
-    return parts.join(' ');
+    return (c.specialChar || '').trim();
 }
 
 /**
