@@ -11,35 +11,71 @@
 
 ## Numeracion de operaciones
 
-### Operaciones principales
-- Las OP principales van de 10 en 10: 10, 20, 30, 40, 50...
-- Cada AMFE puede tener su propia secuencia (en uno costura puede ser OP 20, en otro OP 30)
-- Los transportes, almacenamientos e inspecciones intermedias NO llevan numero de OP (son conectores)
+### Regla maestra (criterio Fak — confirmado 2026-05-08)
 
-### Sub-operaciones y operaciones del mismo sector (IMPORTANTE)
-- Cuando dos operaciones estan RELACIONADAS entre si o pertenecen al MISMO SECTOR de planta, pueden compartir decena y diferenciarse por el digito de unidad.
-  - Ej: OP 50 "ENSAMBLE CARRIER" + OP 51 "COSTURA DOBLE" (ambas en el sector de ensamble, la 51 es un paso adicional relacionado a la 50).
-  - Ej: OP 70 "INYECCION PU" + OP 72 "ENSAMBLE CON SUSTRATO" (72 es la continuacion logica de 70 en el mismo sector).
-- **Reprocesos** se numeran en serie 100+ manteniendo la unidad por tipo de reproceso:
-  - OP 100 "CLASIFICACION Y SEGREGACION DE PRODUCTO NO CONFORME"
-  - OP 101 "REPROCESO: ELIMINACION DE HILO SOBRANTE"
-  - OP 102 "REPROCESO: REUBICACION DE APLIX"
-  - OP 103 "REPROCESO: CORRECCION DE COSTURA DESVIADA/FLOJA"
-  - OP 110 "EMBALAJE"
-  - OP 111 "REPROCESO: PUNTADA FLOJA"
-  - OP 112 "REPROCESO: ELIMINACION DE ARRUGAS EN HORNO"
-  - Esta numeracion NO es error — es el estandar Barack para diferenciar reprocesos por tipo.
-- **Preparaciones** al arranque pueden numerarse 15, 25, 35 (decena anterior + 5) cuando son setups del sector:
-  - OP 15 "PREPARACION DE CORTE" (preparacion de OP 20 CORTE)
-  - OP 35 "COSTURA VISTA" (sub-operacion de OP 30 COSTURA UNION, condicional por variante)
-- NO marcar como error de auditoria una numeracion no-multiplo-de-10 sin antes verificar si es sub-operacion de sector o reproceso autorizado.
+El AMFE/PFD se numera LINEALMENTE de 10 en 10, **sin saltos**, en este orden funcional:
+
+```
+10 ... 60 (operaciones productivas)
+70 (INSPECCION FINAL — anterior a reprocesos)
+80 (REPROCESOS — anterior a embalaje)
+90 (EMBALAJE — SIEMPRE la ULTIMA, numero mas alto)
+```
+
+**EMBALAJE Y ETIQUETADO DE PRODUCTO TERMINADO es siempre la ULTIMA OP** (mayor numero del AMFE). Reprocesos vienen JUSTO ANTES. Inspeccion final viene ANTES de los reprocesos.
+
+NO hay reprocesos despues del embalaje. NO hay saltos del estilo `70 -> 90` cuando OP 80 esta libre.
+
+### Operaciones principales
+- Las OP principales van de 10 en 10 sin saltos: 10, 20, 30, 40, 50, 60, 70, 80, 90.
+- Si el producto requiere mas etapas productivas, se extiende: 10..100 (con embalaje en 100), 10..110 (con embalaje en 110), etc.
+- Cada AMFE puede empezar con OP distinta segun su proceso (uno arranca en costura OP 20, otro en inyeccion OP 10).
+- Los transportes, almacenamientos e inspecciones intermedias NO llevan numero de OP (son conectores en el PFD).
+
+### Sub-operaciones del mismo sector
+Cuando dos operaciones pertenecen al MISMO SECTOR de planta y se quiere desglosar como pasos secuenciales del mismo equipo/area, se usa la **misma decena con digito de unidad** (no consume "espacio" de la numeracion principal):
+
+- OP 10 "RECEPCION DE MATERIA PRIMA" + OP 11 "CONTROL DE MATERIA PRIMA" (sub-op del sector recepcion)
+- OP 80 "REPROCESO: CORRECCION DE DEFECTOS" + OP 82 "REPROCESO: RE-TAPIZADO" (sub-op del sector reprocesos, distinto tipo)
+- OP 50 "INYECCION PU" + OP 51 "ENSAMBLE POST-INYECCION" (mismo sector ensamble)
+
+Las sub-ops 11/12, 81/82, 91/92, etc. NO rompen la regla "lineal de 10 en 10" — son pasos del mismo bloque.
+
+### Reprocesos
+- Numerados en la decena ANTERIOR a embalaje (tipicamente 80 si embalaje es 90, 90 si embalaje es 100).
+- Multiples reprocesos se diferencian con sub-ops: 80, 82, 84, etc.
+- NUNCA van despues del embalaje.
+
+### Preparaciones de arranque
+Setups del sector se pueden numerar 15, 25, 35 (decena anterior + 5):
+- OP 15 "PREPARACION DE CORTE" (setup de OP 20 CORTE)
+- OP 35 "COSTURA VISTA" (sub-op de OP 30 COSTURA UNION)
 
 ### Resumen para auditores automaticos
-Antes de flaggear OP N como "numeracion invalida", verificar:
-1. Es reproceso (101, 102, 103, 111, 112, etc.)? -> OK
-2. Es preparacion de sector (15, 25, 35)? -> OK
-3. Es sub-operacion relacionada a decena anterior (51 junto a 50, 72 junto a 70)? -> OK
-4. Solo marcar error si la OP no encaja en ninguno de esos patrones y esta aislada sin relacion.
+Antes de flaggear una numeracion como "invalida", verificar:
+1. La ULTIMA OP es el EMBALAJE? -> debe serlo.
+2. Antes del embalaje hay REPROCESOS (sub-ops 80/82/84 si embalaje=90)? -> OK.
+3. Antes de los reprocesos hay INSPECCION FINAL (OP 70 si reprocesos=80)? -> OK.
+4. Hay saltos en la numeracion principal (ej: 70 -> 90 sin que exista 80)? -> ERROR. Renumerar.
+5. Hay sub-ops 11, 35, 51, 82 etc.? -> OK si son del mismo sector que su decena.
+
+### Ejemplo canonico (APB Trasero Central / AMFE 150)
+```
+10 RECEPCION DE MATERIA PRIMA
+11 CONTROL DE MATERIA PRIMA
+20 CORTE DE COMPONENTES
+30 PREPARACION DE KITS
+40 COSTURA UNION
+50 INYECCION DE PUR IN SITU
+60 TAPIZADO
+70 CONTROL FINAL DE CALIDAD Y PRUEBAS FUNCIONALES
+80 REPROCESO: CORRECCION DE DEFECTOS GENERALES
+82 REPROCESO: RE-TAPIZADO DE FUNDA
+90 EMBALAJE Y ETIQUETADO DE PRODUCTO TERMINADO
+```
+
+### Patrones legacy a corregir
+Los AMFEs Headrest (HF/HRC/HRO) hoy tienen reprocesos en 90/92 y embalaje en 100. Eso es legacy del esquema anterior. Cuando se revisen, renumerar a 80/82 reprocesos + 90 embalaje para alinear con esta regla.
 
 ## Niveles de detalle del flujograma
 ### PRELIMINAR
