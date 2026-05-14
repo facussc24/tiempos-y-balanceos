@@ -4,6 +4,33 @@ Archivo mantenido por Claude Code. Se actualiza despues de cada sesion donde alg
 Leer al inicio de cada sesion para no repetir errores.
 
 
+## 2026-05-14 — Renumeracion AMFE puede dejar contenido legacy mal alocado conceptualmente
+
+**Contexto:** Fak armo PFD preliminar nuevo del Front Headrest Patagonia (P-APO-001/PRE rev 04/05/2026) cambiando completamente el orden de las OPs respecto al AMFE legacy. Aplique renumeracion masiva (scripts/_renumberHfPatToNewPfd.mjs): 14 OPs cambiaron de numero y orden.
+
+**Problema:** despues de renumerar `op.opNumber`, el CONTENIDO de causas/modos de falla quedo pegado a la fila original. Resultado:
+- OP 50 ENFUNDADO (era OP 60): contenido legacy de inyeccion PU (fuga, peso, rebaba) — NO pertenece a enfundado
+- OP 51 INSERCION VARILLA (era OP 70): contenido legacy de costura vista (desviacion, tensiones de hilo) — NO pertenece a varilla
+- OP 63 INYECCION PU (era OP 50): contenido legacy mezclado (varilla desalineada, tiempo presion, sellado orificio)
+
+**Causa raiz del problema legacy:** el AMFE original ya tenia causas mal alocadas (probablemente copy-paste de otros AMFEs). La renumeracion *expuso* el problema porque al renombrar, el desajuste se hizo visible.
+
+**Lo que SI hice (sin tocar contenido):** renumeracion + reordenamiento + creacion OPs placeholder + fill operationFunctions + fix focusElementFunction (incidente 2026-04-20 reincidente: 5 OPs con texto generico de inyeccion plastica) + sync metadata cache.
+
+**Lo que NO hice (correctamente):** reasignar causas a las OPs que conceptualmente corresponden. Eso es DECISION DEL EQUIPO APQP — implica decidir si una causa "puntada floja" se queda donde esta legacy o se mueve a OP 40 costura vista; si "fuga PU" se mueve a OP 63 o se queda en OP 50.
+
+**How to apply en proximas sesiones:**
+1. ANTES de renumerar un AMFE, leer el contenido (causas, modos) de cada OP y verificar que conceptualmente pertenece a esa OP.
+2. Si el contenido esta mal alocado, REPORTAR a Fak ANTES de renumerar — no asumir que el mapeo `opNumber` es suficiente.
+3. Renumeracion mecanica = OK autonomo. Reasignacion semantica de contenido = requiere equipo APQP.
+
+**Estado tras esta sesion (AMFE-HF-PAT 10eaebce):**
+- Renumeracion estructural completa ✓
+- focusElementFunction Headrest correcto en 16 OPs ✓
+- 7 OPs vacias placeholder (28 mylar, 60-62 pre-PU, 80-82 reprocesos) — equipo APQP debe completar
+- Contenido legacy mal alocado en OPs 50/51/63 — pendiente decision Fak/equipo APQP
+
+
 ## 2026-05-04 — FALSO POSITIVO en auditoria PFD por leer dump tmp/ stale (incidente "OP 72 Armrest")
 
 **Problema:** Fak hizo el PFD del Armrest Door Panel (P-ARM-001/PRE) y pidio auditoria antes de subirlo al SGC. Reporte como "error critico" que faltaba **OP 72 ENSAMBLE CON SUSTRATO** entre OP 70 (INYECCION PU) y OP 80 (ADHESIVADO).
