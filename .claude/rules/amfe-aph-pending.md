@@ -1,5 +1,20 @@
 # Regla: AP=H sin accion => auto "Pendiente definicion equipo APQP"
 
+## Alcance (IMPORTANTE — acotado tras incidente 2026-05-14)
+
+Esta regla aplica **SOLO** al campo `optimizationAction` (o `preventionAction` / `detectionAction`) de causas con `ap=H`.
+
+**NO aplica a:**
+- `WE.name` — usar regla `amfe-placeholder-last-resort.md` (jerarquia: cross-reference Supabase → AMFEs canonicos → NotebookLM → HOs preliminares → Fak → TBD → omitir)
+- `function.description` — debe describir contribucion REAL del recurso al paso (regla `amfe-funciones-3-niveles.md`)
+- `operationFunction` — describe QUE HACE el paso, no es placeholder
+- `focusElementFunction` — 3 perspectivas Interno/Cliente/Usuario (regla `amfe.md`)
+- `preventionControl` / `detectionControl` — placeholder solo si AP=H (`amfe-no-inventar-controles.md`); vacio si AP=M/L
+
+**Incidente que motivo la aclaracion:** 2026-05-14 (parte 3). Claude aplico el placeholder "Pendiente definicion equipo APQP" indiscriminadamente a `WE.name` en 30 WEs de 9 AMFEs Supabase, perdiendo la oportunidad de hacer cross-reference con nombres reales que ya existian en otros AMFEs Barack ("Autoelevador", "Maquina de coser industrial", "Inyectora de poliuretano").
+
+## Contexto original
+
 Cuando una causa del AMFE tiene `ap=H` (Action Priority High) y no tiene accion correctiva/preventiva definida, autocompletar el campo de accion con texto placeholder reconocible.
 
 ## Texto a usar (literal, en espanol)

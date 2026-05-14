@@ -20,6 +20,10 @@
           {
             "type": "command",
             "command": "bash .claude/hooks/validator-check.sh"
+          },
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/renumber-guard.sh"
           }
         ]
       }
