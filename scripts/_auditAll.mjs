@@ -244,3 +244,14 @@ if (Object.values(totals).every(v => v === 0)) {
     console.log('Correr --summary para ver solo totales.');
 }
 console.log('='.repeat(62) + '\n');
+
+// ── Sub-auditor: WE placeholders + failure allocation
+// Regla: amfe-leer-contenido-antes-de-renumerar.md (incidente 2026-05-14 HF-PAT)
+console.log('=== Sub-auditor: WE placeholders + failure allocation ===\n');
+const { spawnSync } = await import('child_process');
+const subResult = spawnSync('node', ['scripts/_auditWePlaceholdersAndAllocation.mjs', '--json'], { stdio: 'inherit' });
+if (subResult.status === 1) {
+    console.log('\n⚠ Sub-auditor detecto CRITICAL en placeholders/allocation.');
+    console.log('  Ver: tmp/we_placeholders_audit.json + docs/auto-mejora/we-placeholders-findings.md');
+    console.log('  Fix:  node scripts/_fixAmfePlaceholdersAndAllocation.mjs --apply --allow-new-critical');
+}

@@ -4,6 +4,39 @@ Archivo mantenido por Claude Code. Se actualiza despues de cada sesion donde alg
 Leer al inicio de cada sesion para no repetir errores.
 
 
+## 2026-05-14 (PARTE 2) — Automejora: nuevo auditor detecta 76 placeholders pobres + failures mal alocados en 9/12 AMFEs
+
+**Contexto:** Tras la PARTE 1 (renumeracion), Fak abrio el AMFE-HF-PAT en la UI y encontro contenido absurdo que _auditAll.mjs NO detectaba:
+- WE.name = "Proceso Op X" (placeholder pobre literal de OPs renumeradas)
+- WE.name = "Maquina"/"Material"/"Metodo" (etiquetas 6M genericas puras — la regla `amfe-funciones-3-niveles.md` linea 223 ya marcaba "TODO: agregar check WE_GENERIC_PLACEHOLDER" pero nunca se implemento)
+- failures con keywords incompatibles con la OP (ej. "Costura descosida" en OP CORTE)
+
+**4 agents Explore en paralelo investigaron**:
+- A1: confirmo 14 issues criticos solo en HF-PAT
+- A2: brecha documentacion <-> implementacion (regla existe, auditor no implementa)
+- A3: tecnicas Anthropic 2026 (hooks PostToolUse, audit-trail JSONL, subagent auditor independiente)
+- A4: criterio AIAG-VDA canonico para WE.name = `[Recurso especifico] (Categoria M)`
+
+**Solucion aplicada (defensa en profundidad)**:
+1. **Regla nueva** `.claude/rules/amfe-leer-contenido-antes-de-renumerar.md`: lectura obligatoria pre-renumeracion, tabla diff, keyword->OP canonica, vectores de test.
+2. **Auditor nuevo** `scripts/_auditWePlaceholdersAndAllocation.mjs`: 6 checks (WE_PROCESS_OP_PLACEHOLDER, WE_GENERIC_LABEL, WE_NAME_EQUALS_TYPE, WE_NAME_FOREIGN_OPNUMBER, FN_GENERIC_LABEL, FAILURE_MISALLOCATED). Heuristica ambiguity-aware: si 2+ keywords incompatibles, NO marcar (review humana).
+3. **Auditor integrado** a `_auditAll.mjs` (sub-auditor invocado al final).
+4. **Fix universal** `scripts/_fixAmfePlaceholdersAndAllocation.mjs`: reemplaza placeholders por "Pendiente definicion equipo APQP" (regla `amfe-aph-pending.md`), elimina WEs sin failures, mueve failures mal alocados a OP destino por keyword canonica.
+5. **Memoria nueva** `~/.claude/projects/.../memory/feedback_renumerar_sin_leer_contenido.md` + index MEMORY.md.
+
+**Resultado audit**:
+- Antes: 76 CRITICAL en 9/12 AMFEs (HF-PAT=22, HRC-PAT=20, HRO-PAT=12, 150=6, IPPADS=5, AMFE-1=4, AMFE-2=3, ARM-PAT=2, TR-PAT=2)
+- Despues: **0 CRITICAL** en 12/12 AMFEs
+- Cambios aplicados: 50+ WEs renombrados, 15+ failures movidos, 0 orphans, 9 warnings nuevos (FN_NO_FAILURES en OPs cuyas failures se movieron)
+
+**Lecciones**:
+- **Conteo NO es lectura**: nunca afirmar "OP X tiene N WEs" sin listar `WE.name` y `failure.description`
+- **Renumerar antes de auditar contenido es error sistemico**: el incidente 2026-04-20 (sync injection master a Headrest) introdujo los placeholders; mi renumeracion 2026-05-14 los expuso pero no los corrigio
+- **Heuristicas keyword->OP requieren ambiguity awareness**: si 2 reglas incompatibles matchean (ej. "fuga PUR por costura abierta") no mover automaticamente
+
+**Auditor que ahora atrapa esto**: `scripts/_auditWePlaceholdersAndAllocation.mjs` (integrado a `_auditAll.mjs`).
+
+
 ## 2026-05-14 — Renumeracion AMFE puede dejar contenido legacy mal alocado conceptualmente
 
 **Contexto:** Fak armo PFD preliminar nuevo del Front Headrest Patagonia (P-APO-001/PRE rev 04/05/2026) cambiando completamente el orden de las OPs respecto al AMFE legacy. Aplique renumeracion masiva (scripts/_renumberHfPatToNewPfd.mjs): 14 OPs cambiaron de numero y orden.
