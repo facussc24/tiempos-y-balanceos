@@ -22,6 +22,13 @@
  * of truth: si se agrega un check alli, copiarlo aca tambien).
  */
 
+import {
+    isGeneric6MLabel,
+    classifyWeNameVsType,
+    normalize,
+    TYPE_TRANSLATION,
+} from './genericLabels.mjs';
+
 const SUSPICIOUS_OP_PATTERNS = [
     'CLASIFICACION Y SEGREGACION',
     'SEGREGACION DE PRODUCTO NO CONFORME',
@@ -93,7 +100,89 @@ const CRITICAL_TYPES = new Set([
     'OPERATIONS_NOT_ARRAY',
     'FM_LEGACY_EMPTY_BUT_CAUSE_HAS_VALUE',
     'FIELD_ALIAS_DESYNC',
+    // Calidad textual 6M (agregado 2026-05-15 por plan witty-shimmying-mochi)
+    'WE_GENERIC_PLACEHOLDER',
+    'FN_GENERIC_PLACEHOLDER',
+    'WE_NAME_EQUALS_TYPE',
+    'OP_FUNCTION_DUPLICATE_FOCUS',
 ]);
+
+/**
+ * Valida calidad textual de un documento AMFE segun heuristicas 6M.
+ * Detecta WE.name/fn.description genericos, WE.name = WE.type traducido,
+ * y operationFunction = focusElementFunction literal.
+ *
+ * Usa fuente unica scripts/_lib/genericLabels.mjs (sincronizada con
+ * core/amfe/genericLabels.ts via JSON shared).
+ *
+ * @param {object} doc - AMFE doc parseado
+ * @param {string} amfeNumber
+ * @returns {Array<{type, detail, amfe, opNum?, opName?, weName?, weType?, fnDesc?}>}
+ */
+function validateTextQuality(doc, amfeNumber = '') {
+    const out = [];
+    if (!doc || !Array.isArray(doc.operations)) return out;
+
+    for (const op of doc.operations) {
+        const opNum = op.opNumber || op.operationNumber || '?';
+        const opName = op.name || op.operationName || '';
+        const ctx = { amfe: amfeNumber, opNum, opName };
+
+        // OP_FUNCTION_DUPLICATE_FOCUS: ambos no vacios y literalmente iguales (tras trim)
+        const opFunc = (op.operationFunction || '').toString().trim();
+        const focFunc = (op.focusElementFunction || '').toString().trim();
+        if (opFunc && focFunc && opFunc === focFunc) {
+            out.push({
+                ...ctx,
+                type: 'OP_FUNCTION_DUPLICATE_FOCUS',
+                detail: `operationFunction === focusElementFunction (debe ser distinto VDA 2019): "${opFunc.slice(0, 80)}${opFunc.length > 80 ? '...' : ''}"`,
+            });
+        }
+
+        for (const we of (op.workElements || [])) {
+            const weName = we.name || '';
+            const weType = we.type || '';
+            const weCtx = { ...ctx, weName, weType };
+
+            // WE_GENERIC_PLACEHOLDER: name es etiqueta 6M generica
+            if (weName && isGeneric6MLabel(weName)) {
+                out.push({
+                    ...weCtx,
+                    type: 'WE_GENERIC_PLACEHOLDER',
+                    detail: `WE.name es etiqueta 6M generica (no especifica recurso): "${weName}"`,
+                });
+            }
+
+            // WE_NAME_EQUALS_TYPE: name == type traducido (delegado a classifyWeNameVsType)
+            const classify = classifyWeNameVsType(weName, weType);
+            if (!classify.ok && weName && weType) {
+                // Solo flag si todavia no se reporto como GENERIC (evita duplicado)
+                if (!isGeneric6MLabel(weName)) {
+                    out.push({
+                        ...weCtx,
+                        type: 'WE_NAME_EQUALS_TYPE',
+                        detail: classify.issue,
+                    });
+                }
+            }
+
+            // FN_GENERIC_PLACEHOLDER: function.description matchea etiqueta 6M generica
+            for (const fn of (we.functions || [])) {
+                const fnDesc = fn.description || fn.functionDescription || '';
+                if (fnDesc && isGeneric6MLabel(fnDesc)) {
+                    out.push({
+                        ...weCtx,
+                        type: 'FN_GENERIC_PLACEHOLDER',
+                        detail: `function.description es etiqueta 6M generica: "${fnDesc}"`,
+                        fnDesc,
+                    });
+                }
+            }
+        }
+    }
+
+    return out;
+}
 
 /**
  * Valida un documento AMFE en memoria y retorna issues agrupados por severidad.
@@ -116,6 +205,10 @@ export function validateAmfeDoc(doc, productName = '', amfeNumber = '') {
         issues.push({ type: 'OPERATIONS_NOT_ARRAY', detail: 'data.operations no es array', amfe: amfeNumber });
         return groupIssues(issues);
     }
+
+    // Calidad textual 6M (WE/fn genericos, WE.name == type, opFunc == focusFunc)
+    // Fuente unica: scripts/_lib/genericLabels.mjs
+    issues.push(...validateTextQuality(doc, amfeNumber));
 
     const productUp = String(productName).toUpperCase();
 

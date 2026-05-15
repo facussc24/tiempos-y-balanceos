@@ -27,7 +27,9 @@
     },
     "allowImportingTsExtensions": true,
     "noEmit": true,
-    "strictNullChecks": true
+    "strictNullChecks": true,
+    "resolveJsonModule": true,
+    "esModuleInterop": true
   },
   "include": [
     "**/*.ts",

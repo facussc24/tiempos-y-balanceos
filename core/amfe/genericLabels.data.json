@@ -1,0 +1,50 @@
+{
+  "_meta": {
+    "purpose": "Fuente única de constantes de heurística 6M para AMFE. Consumido por scripts/_lib/genericLabels.mjs y core/amfe/genericLabels.ts.",
+    "rule_source": "BarackMercosul/.claude/rules/amfe-funciones-3-niveles.md + amfe-leer-contenido-antes-de-renumerar.md",
+    "version": "1.0.0",
+    "lastUpdated": "2026-05-15"
+  },
+  "GENERIC_LABELS": [
+    "machine", "maquina", "maquinas",
+    "man", "mano de obra", "mano-de-obra",
+    "material", "materiales", "material indirecto", "material (indirectos)", "material (indirecto)",
+    "method", "metodo", "metodos", "metodo de fabricacion",
+    "measurement", "medicion", "mediciones",
+    "environment", "medio ambiente", "ambiente"
+  ],
+  "TYPE_TRANSLATION": {
+    "Machine": ["machine", "maquina"],
+    "Man": ["man", "mano de obra"],
+    "Material": ["material"],
+    "Method": ["method", "metodo"],
+    "Measurement": ["measurement", "medicion"],
+    "Environment": ["environment", "medio ambiente", "ambiente"]
+  },
+  "MIN_FN_DESCRIPTION_LENGTH": 30,
+  "KEYWORD_OP_TAGS": [
+    { "keywords": ["costura", "costurar", "costurado", "puntada", "atraque"], "validOpTags": ["costura"] },
+    { "keywords": ["corte", "cortar", "cortado", "cuchilla"], "validOpTags": ["corte"] },
+    { "keywords": ["inyeccion", "inyectar", "inyectado", "pur", "isocianato", "poliol", "dosificacion", "ratio"], "validOpTags": ["inyeccion", "pu", "espumado"] },
+    { "keywords": ["embalaje", "embalado", "embalar", "etiqueta producto terminado"], "validOpTags": ["embalaje"] },
+    { "keywords": ["recepcion", "recibir", "recibido", "albaran", "proveedor mp"], "validOpTags": ["recepcion"] },
+    { "keywords": ["varilla", "asta funda", "vinilo reten"], "validOpTags": ["varilla", "insercion"] },
+    { "keywords": ["enfundar", "enfundado", "funda asta", "pliegue funda"], "validOpTags": ["enfundado", "tapizado"] },
+    { "keywords": ["mylar", "plantilla forma", "control forma"], "validOpTags": ["mylar", "control forma", "control mylar"] },
+    { "keywords": ["troquelar", "troquelado", "espuma troquelada"], "validOpTags": ["troquelado"] },
+    { "keywords": ["reproceso", "retrabajo", "re-trabajo"], "validOpTags": ["reproceso"] },
+    { "keywords": ["rebaba pu", "fuga pu", "fuga pur"], "validOpTags": ["inyeccion", "pu", "espumado"] }
+  ],
+  "MATERIAL_NAME_FOREIGN_TYPE_PATTERNS": {
+    "_comment": "Patrones que indican WE.name no corresponde a su WE.type. Confirmado Fak 2026-05-15: herramientas cortantes son Machine, no Material.",
+    "MaterialShouldBeMachine": [
+      "cuchilla", "troquel", "refiladora", "boquilla", "pistola adhesivadora", "mesa de corte"
+    ],
+    "MachineShouldBeMethod": [
+      "procedimiento", "instructivo", "dossier", "hoja de operacion", "hoja parametros"
+    ],
+    "MaterialShouldBeMeasurement": [
+      "plantilla mylar", "mylar de control", "calibre patron", "muestra patron"
+    ]
+  }
+}

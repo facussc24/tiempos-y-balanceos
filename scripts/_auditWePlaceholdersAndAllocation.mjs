@@ -22,58 +22,24 @@
 import { createClient } from '@supabase/supabase-js';
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
+import {
+  GENERIC_LABELS,
+  TYPE_TRANSLATION as _TYPE_TRANSLATION,
+  KEYWORD_OP_TAGS,
+  normalize,
+  isGeneric6MLabel as isGenericLabel,
+  extractForeignOpNumber,
+} from './_lib/genericLabels.mjs';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Constantes (listas canonicas)
+// TYPE_TRANSLATION en este auditor usaba claves lowercase (machine/maquina);
+// el JSON shared las usa con PascalCase WE.type (Machine/Material/etc.).
+// Construir vista compatible que indexe por lowercase para no romper la logica
+// existente de nameEqualsType.
 // ─────────────────────────────────────────────────────────────────────────────
-
-const GENERIC_LABELS = [
-  'machine', 'maquina', 'maquinas',
-  'man', 'mano de obra', 'mano-de-obra',
-  'material', 'materiales', 'material indirecto', 'material (indirectos)', 'material (indirecto)',
-  'method', 'metodo', 'metodos', 'metodo de fabricacion',
-  'measurement', 'medicion', 'mediciones',
-  'environment', 'medio ambiente', 'ambiente',
-];
-
-const TYPE_TRANSLATION = {
-  'machine': ['machine', 'maquina'],
-  'man': ['man', 'mano de obra'],
-  'material': ['material'],
-  'method': ['method', 'metodo'],
-  'measurement': ['measurement', 'medicion'],
-  'environment': ['environment', 'medio ambiente', 'ambiente'],
-};
-
-// keyword en failure.description -> tags de OP donde ES VALIDO ese keyword
-const KEYWORD_OP_TAGS = [
-  { keywords: ['costura', 'costurar', 'costurado', 'puntada', 'atraque'], validOpTags: ['costura'] },
-  { keywords: ['corte', 'cortar', 'cortado', 'cuchilla'], validOpTags: ['corte'] },
-  { keywords: ['inyeccion', 'inyectar', 'inyectado', 'pur', 'isocianato', 'poliol', 'dosificacion', 'ratio'], validOpTags: ['inyeccion', 'pu', 'espumado'] },
-  { keywords: ['embalaje', 'embalado', 'embalar', 'etiqueta producto terminado'], validOpTags: ['embalaje'] },
-  { keywords: ['recepcion', 'recibir', 'recibido', 'albaran', 'proveedor mp'], validOpTags: ['recepcion'] },
-  { keywords: ['varilla', 'asta funda', 'vinilo reten'], validOpTags: ['varilla', 'insercion'] },
-  { keywords: ['enfundar', 'enfundado', 'funda asta', 'pliegue funda'], validOpTags: ['enfundado', 'tapizado'] },
-  { keywords: ['mylar', 'plantilla forma', 'control forma'], validOpTags: ['mylar', 'control forma', 'control mylar'] },
-  { keywords: ['troquelar', 'troquelado', 'espuma troquelada'], validOpTags: ['troquelado'] },
-  { keywords: ['reproceso', 'retrabajo', 're-trabajo'], validOpTags: ['reproceso'] },
-  { keywords: ['rebaba pu', 'fuga pu', 'fuga pur'], validOpTags: ['inyeccion', 'pu', 'espumado'] },
-];
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Helpers
-// ─────────────────────────────────────────────────────────────────────────────
-
-function normalize(s) {
-  return (s || '').toString().trim().toLowerCase()
-    .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-}
-
-function isGenericLabel(s) {
-  const n = normalize(s);
-  if (!n) return false;
-  return GENERIC_LABELS.map(normalize).includes(n);
-}
+const TYPE_TRANSLATION = Object.fromEntries(
+  Object.entries(_TYPE_TRANSLATION).map(([k, v]) => [normalize(k), v.map(normalize)])
+);
 
 function nameEqualsType(weName, weType) {
   if (!weName || !weType) return false;
@@ -84,14 +50,6 @@ function nameEqualsType(weName, weType) {
 
 function isProcessOpPlaceholder(weName) {
   return /^proceso\s+op\s*\d*\s*$/i.test((weName || '').trim());
-}
-
-function extractForeignOpNumber(weName, currentOpNumber) {
-  if (!weName) return null;
-  const m = /\bop\s*(\d{1,3})\b/i.exec(weName);
-  if (!m) return null;
-  const found = parseInt(m[1]);
-  return found !== currentOpNumber ? found : null;
 }
 
 function getOpTags(opName) {
