@@ -52,12 +52,15 @@
   }
   .pane {
     position: relative;
-    min-height: 640px;
+    height: 640px;
     border-right: 1px solid var(--line);
     overflow: hidden;
   }
   .pane:last-child { border-right: none; }
-  .pane canvas { display: block; width: 100%; height: 100%; }
+  /* canvas absoluto dentro del .pane (que es relative) para que NO contribuya al
+   * height del flujo. Antes con height:100% sobre un parent con min-height el canvas
+   * crecia sin tope hasta el max de Chrome (33554430 px) y rompia el render. */
+  .pane canvas { position: absolute; inset: 0; display: block; width: 100%; height: 100%; }
   .pane .label {
     position: absolute;
     top: 14px;

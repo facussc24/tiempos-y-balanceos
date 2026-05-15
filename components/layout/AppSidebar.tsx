@@ -87,7 +87,7 @@ const SECTIONS: SidebarSection[] = [
     {
         title: 'Diseno',
         items: [
-            { label: 'Impresion 3D', mode: 'threeD', icon: <Box size={16} /> },
+            { label: 'Modelos 3D', mode: 'threeD', icon: <Box size={16} /> },
         ],
     },
     {

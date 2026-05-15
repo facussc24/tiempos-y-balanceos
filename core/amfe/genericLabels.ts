@@ -58,7 +58,10 @@ export function classifyWeNameVsType(name: string | null | undefined, type: stri
     if (variants.includes(nName)) {
         return { ok: false, issue: `WE.name "${name}" es copia del WE.type "${type}" traducido` };
     }
-    const patterns = MATERIAL_NAME_FOREIGN_TYPE_PATTERNS as Record<string, string[]>;
+    // Cast via unknown porque el JSON incluye un campo `_comment: string` (doc inline)
+    // junto a las reglas reales (string[]). TS2352 lo flaggeaba como mismatch directo;
+    // unknown lo permite. Acceso por clave concreta sigue typed via fallback `|| []`.
+    const patterns = MATERIAL_NAME_FOREIGN_TYPE_PATTERNS as unknown as Record<string, string[]>;
     const checkPattern = (rule: string, expectedType: string, actualType: string) => {
         if (actualType !== expectedType) return null;
         for (const kw of patterns[rule] || []) {
