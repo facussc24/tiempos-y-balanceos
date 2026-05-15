@@ -436,17 +436,22 @@ function makeScene(canvas, opts = {}) {
   const controls = new OrbitControls(cam, canvas);
   controls.enableDamping = true;
   controls.target.set(0, opts.targetY ?? 700, 0);
-  // Limites de zoom: evita que el usuario entre dentro de la geometria
-  // (clipping/blank) o se aleje hasta perder la escena. Bypass para vista B (cenital despiece).
-  // minDistance bajado de 800 -> 200: el puesto mide 1600mm, 800 era demasiado lejos para
-  // ver detalle de uniones y bordes de tubos. El near plane (50) da margen para 200.
-  // maxDistance subido de 14000 -> 25000: permite zoom out completo en pantallas grandes.
+  // Limites de zoom calibrados por escena:
+  //
+  // Escena A (assembled, target Y=900): cam ISO esta a ~6700mm. minDistance
+  // tiene que ser suficientemente grande para que el usuario NO atraviese los
+  // tubos del puesto (las uniones quedan cerca del target). 400mm permite
+  // acercarse al detalle de un nudo sin entrar adentro de la geometria.
+  // maxDistance 20000 cubre zoom-out hasta perspectiva completa.
+  //
+  // Escena B (exploded, opts.minDist/maxDist custom): la camara cenital esta
+  // a ~maxDim*1.7 (~6800mm). Sin limits el usuario zoomeaba atravesando el
+  // despiece. Ahora se pasan limites custom desde el caller.
   if (opts.zoomLimits !== false) {
-    controls.minDistance = 200;
-    controls.maxDistance = 25000;
-    // Tambien aumentar la sensibilidad del scroll para que rendir todo el rango
-    // sea fluido en pocas vueltas de la rueda (default 1.0).
-    controls.zoomSpeed = 1.4;
+    controls.minDistance = opts.minDist ?? 400;
+    controls.maxDistance = opts.maxDist ?? 20000;
+    // zoomSpeed default 1.0 — anteriormente 1.4 (demasiado rapido, daba
+    // sensacion de "se rompe" porque saltaba mucho por click de rueda).
   }
 
   return { renderer, scene, cam, controls };
@@ -511,6 +516,15 @@ B.cam.position.set(ctr.x, maxDim * 1.7, ctr.z + maxDim * 0.5);
 B.cam.fov = 32;
 B.cam.updateProjectionMatrix();
 B.controls.update();
+
+// Limites de zoom calibrados al tamano REAL del despiece, no hardcoded.
+// Antes la escena B estaba sin limits (zoomLimits:false) y el usuario podia
+// atravesar todas las filas haciendo wheel-zoom in. Ahora:
+//   minDistance = 25% de la distancia inicial cenital (puede acercar 4x)
+//   maxDistance = 3x distancia inicial (puede alejarse 3x sin perder la escena)
+const initialDistB = maxDim * 1.7;
+B.controls.minDistance = initialDistB * 0.25;
+B.controls.maxDistance = initialDistB * 3;
 
 // fit() inmediato para que el primer frame YA tenga el tamaño correcto
 // (antes solo se hacia en tick, podía dejar la pantalla en blanco si el primer
