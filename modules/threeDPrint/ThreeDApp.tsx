@@ -1,27 +1,58 @@
 /**
- * ThreeDApp — Modulo "3D" (impresion 3D parametrica)
+ * ThreeDApp — Modulo "Modelos 3D"
  *
- * Generador de tornillo + tuerca ISO metricos con exportacion STL para
- * impresion 3D. Renderizado con Three.js (carga via importmap CDN).
+ * Selector entre modelos 3D del proyecto:
+ *  - Tornillo + Tuerca paramétricos (impresion 3D, exporta STL)
+ *  - Puesto de Trabajo (reconstruccion 3D del puesto Barack, exporta glTF/STL/OBJ)
  *
- * El generador completo vive en `public/3d-bolt-generator.html` y se carga
- * en un iframe — asi conserva el styling y el comportamiento del prototipo
- * de Claude Design sin tener que portar el codigo Three.js a React.
+ * Cada modelo vive en su propio archivo HTML standalone bajo `public/` y se
+ * carga en un iframe para conservar styling/comportamiento del prototipo
+ * sin tener que portar el codigo Three.js a React.
  */
-import React from 'react';
-import { ArrowLeft } from 'lucide-react';
+import React, { useState } from 'react';
+import { ArrowLeft, Wrench, Box } from 'lucide-react';
 
 interface ThreeDAppProps {
     onBackToLanding?: () => void;
 }
 
+type ModelId = 'bolt' | 'workstation';
+
+interface ModelDef {
+    id: ModelId;
+    label: string;
+    sub: string;
+    file: string;
+    icon: React.ComponentType<{ size?: number }>;
+}
+
+const MODELS: ModelDef[] = [
+    {
+        id: 'bolt',
+        label: 'Tornillo + Tuerca',
+        sub: 'ISO métrica · STL',
+        file: '3d-bolt-generator.html',
+        icon: Wrench,
+    },
+    {
+        id: 'workstation',
+        label: 'Puesto de Trabajo',
+        sub: 'Reconstrucción 3D · glTF/STL/OBJ',
+        file: 'puesto-3d/index.html',
+        icon: Box,
+    },
+];
+
 const ThreeDApp: React.FC<ThreeDAppProps> = ({ onBackToLanding }) => {
+    const [selected, setSelected] = useState<ModelId>('bolt');
+
+    const model = MODELS.find((m) => m.id === selected) ?? MODELS[0];
     // BASE_URL respeta el subpath en GitHub Pages (/tiempos-y-balanceos/)
-    const src = `${import.meta.env.BASE_URL}3d-bolt-generator.html`;
+    const src = `${import.meta.env.BASE_URL}${model.file}`;
 
     return (
         <div className="flex flex-col h-screen bg-slate-50">
-            {/* Mini header con boton de volver */}
+            {/* Header con boton volver + selector de modelo */}
             <div className="flex-shrink-0 flex items-center gap-3 px-4 py-2 bg-white border-b border-slate-200">
                 {onBackToLanding && (
                     <button
@@ -33,18 +64,45 @@ const ThreeDApp: React.FC<ThreeDAppProps> = ({ onBackToLanding }) => {
                         <span>Inicio</span>
                     </button>
                 )}
-                <h1 className="text-sm font-semibold text-slate-900">
-                    Impresion 3D — Tornillo &amp; Tuerca parametricos
+                <h1 className="text-sm font-semibold text-slate-900 mr-2">
+                    Modelos 3D
                 </h1>
-                <span className="text-xs text-slate-500 ml-auto">
-                    ISO metrica · exporta STL
-                </span>
+
+                {/* Selector tipo tabs */}
+                <div className="flex items-center gap-1 bg-slate-100 rounded p-0.5">
+                    {MODELS.map((m) => {
+                        const Icon = m.icon;
+                        const isActive = m.id === selected;
+                        return (
+                            <button
+                                key={m.id}
+                                type="button"
+                                onClick={() => setSelected(m.id)}
+                                className={
+                                    'flex items-center gap-1.5 text-xs px-3 py-1.5 rounded transition-colors ' +
+                                    (isActive
+                                        ? 'bg-white text-slate-900 shadow-sm'
+                                        : 'text-slate-600 hover:text-slate-900')
+                                }
+                                aria-pressed={isActive}
+                                title={m.sub}
+                            >
+                                <Icon size={14} />
+                                <span>{m.label}</span>
+                            </button>
+                        );
+                    })}
+                </div>
+
+                <span className="text-xs text-slate-500 ml-auto">{model.sub}</span>
             </div>
 
-            {/* Iframe ocupa el resto */}
+            {/* Iframe ocupa el resto. `key` fuerza re-mount al cambiar de modelo,
+             *  asi cada visor arranca fresco (Three.js + listeners limpios). */}
             <iframe
+                key={selected}
                 src={src}
-                title="Generador 3D parametrico"
+                title={`Visor 3D — ${model.label}`}
                 className="flex-1 w-full border-0"
                 style={{ minHeight: 0 }}
             />

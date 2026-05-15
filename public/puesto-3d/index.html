@@ -435,9 +435,15 @@ function makeScene(canvas, opts = {}) {
   controls.target.set(0, opts.targetY ?? 700, 0);
   // Limites de zoom: evita que el usuario entre dentro de la geometria
   // (clipping/blank) o se aleje hasta perder la escena. Bypass para vista B (cenital despiece).
+  // minDistance bajado de 800 -> 200: el puesto mide 1600mm, 800 era demasiado lejos para
+  // ver detalle de uniones y bordes de tubos. El near plane (50) da margen para 200.
+  // maxDistance subido de 14000 -> 25000: permite zoom out completo en pantallas grandes.
   if (opts.zoomLimits !== false) {
-    controls.minDistance = 800;
-    controls.maxDistance = 14000;
+    controls.minDistance = 200;
+    controls.maxDistance = 25000;
+    // Tambien aumentar la sensibilidad del scroll para que rendir todo el rango
+    // sea fluido en pocas vueltas de la rueda (default 1.0).
+    controls.zoomSpeed = 1.4;
   }
 
   return { renderer, scene, cam, controls };
