@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<title>Puesto de Trabajo · Reconstrucción 3D</title>
+<style>
+  :root {
+    --bg: #f4f3ef;
+    --ink: #1a1a1a;
+    --muted: #6b6b66;
+    --line: #d8d6d0;
+    --accent: #c64a1f;
+    --panel: #ffffff;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink); font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; }
+  body { padding: 0 0 80px; }
+
+  header {
+    padding: 40px 48px 24px;
+    border-bottom: 1px solid var(--line);
+    background: var(--panel);
+  }
+  header h1 {
+    margin: 0 0 4px;
+    font-size: 28px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  header .sub {
+    color: var(--muted);
+    font-size: 14px;
+    font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  }
+  header .meta {
+    margin-top: 14px;
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+    font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  header .meta strong { color: var(--ink); font-weight: 600; }
+
+  .row {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 0;
+    border-bottom: 1px solid var(--line);
+    background: var(--panel);
+  }
+  .pane {
+    position: relative;
+    min-height: 640px;
+    border-right: 1px solid var(--line);
+    overflow: hidden;
+  }
+  .pane:last-child { border-right: none; }
+  .pane canvas { display: block; width: 100%; height: 100%; }
+  .pane .label {
+    position: absolute;
+    top: 14px;
+    left: 16px;
+    font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    background: rgba(255,255,255,0.85);
+    padding: 6px 10px;
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    z-index: 10;
+    pointer-events: none;
+  }
+  .pane .help {
+    position: absolute;
+    bottom: 14px;
+    left: 16px;
+    font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+    font-size: 10px;
+    color: var(--muted);
+    z-index: 10;
+    pointer-events: none;
+    background: rgba(255,255,255,0.6);
+    padding: 4px 8px;
+  }
+
+  /* anotación cotas en HTML, sobre los caños del despiece */
+  .annot {
+    position: absolute;
+    font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+    font-size: 11px;
+    color: var(--ink);
+    background: rgba(255,255,255,0.92);
+    padding: 3px 6px;
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+    white-space: nowrap;
+  }
+  .annot .ct { color: var(--accent); font-weight: 600; }
+
+  section.txt {
+    padding: 36px 48px;
+    max-width: 1400px;
+  }
+  section.txt h2 {
+    font-size: 20px;
+    margin: 0 0 16px;
+    font-weight: 600;
+  }
+  section.txt p, section.txt li {
+    line-height: 1.55;
+    font-size: 14px;
+  }
+
+  /* BOM table */
+  .bom {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+    font-size: 13px;
+    background: var(--panel);
+  }
+  .bom th, .bom td {
+    text-align: left;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--line);
+  }
+  .bom th {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    font-weight: 600;
+    background: #faf9f6;
+  }
+  .bom td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .bom tr.section-head td {
+    background: #eeece7;
+    color: var(--ink);
+    font-weight: 600;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 8px 14px;
+  }
+  .bom tfoot td {
+    font-weight: 600;
+    background: #faf9f6;
+    border-top: 2px solid var(--ink);
+  }
+
+  /* dudas */
+  .dudas {
+    background: #fff8ed;
+    border: 1px solid #f0d9a8;
+    padding: 20px 24px;
+    border-radius: 4px;
+    margin-top: 8px;
+  }
+  .dudas h3 { margin: 0 0 10px; font-size: 14px; }
+  .dudas ol { margin: 0; padding-left: 20px; }
+  .dudas li { font-size: 13px; line-height: 1.6; margin-bottom: 4px; }
+  .dudas li .ref {
+    font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+    background: rgba(0,0,0,0.06);
+    padding: 1px 5px;
+    border-radius: 2px;
+    font-size: 11px;
+  }
+
+  /* controls */
+  .ctrls {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    z-index: 10;
+    display: flex;
+    gap: 6px;
+    flex-direction: column;
+    align-items: flex-end;
+  }
+  .ctrls button {
+    font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+    font-size: 11px;
+    padding: 6px 10px;
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .ctrls button:hover { background: #f0eee8; }
+  .ctrls button.active { background: var(--ink); color: white; border-color: var(--ink); }
+
+  /* Toolbar global */
+  .toolbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 48px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--line);
+    font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+    font-size: 12px;
+    flex-wrap: wrap;
+  }
+  .toolbar .grp {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+  }
+  .toolbar .sep { width: 1px; height: 22px; background: var(--line); margin: 0 4px; }
+  .toolbar button {
+    font-family: inherit;
+    font-size: 11px;
+    padding: 7px 12px;
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--ink);
+  }
+  .toolbar button:hover { background: #f0eee8; }
+  .toolbar button.active { background: var(--accent); color: white; border-color: var(--accent); }
+  .toolbar .hint { color: var(--muted); font-size: 11px; }
+
+  /* etiqueta de medición */
+  .measure-label {
+    position: absolute;
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+    background: var(--accent);
+    color: white;
+    font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+    font-size: 12px;
+    padding: 4px 8px;
+    border-radius: 3px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    white-space: nowrap;
+    z-index: 20;
+    font-weight: 600;
+  }
+  .measure-tip {
+    position: absolute;
+    pointer-events: none;
+    transform: translate(-50%, calc(-100% - 8px));
+    background: rgba(0,0,0,0.85);
+    color: white;
+    font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+    font-size: 10px;
+    padding: 4px 8px;
+    border-radius: 3px;
+    z-index: 30;
+    white-space: nowrap;
+  }
+
+  body.measuring #paneAssembled canvas { cursor: crosshair; }
+
+  .legend {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+    font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .legend span::before {
+    content: '';
+    display: inline-block;
+    width: 10px; height: 10px;
+    margin-right: 6px;
+    vertical-align: -1px;
+    border-radius: 2px;
+  }
+  .legend .lg-base::before   { background: #b4bac1; }
+  .legend .lg-pancha::before { background: #6e7984; }
+  .legend .lg-visera::before { background: #4a5560; }
+</style>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+</head>
+<body>
+
+<header>
+  <h1>Puesto de Trabajo — Reconstrucción 3D</h1>
+  <div class="sub">Escala 1:1 · caño cuadrado 40×40 · despiece + BOM</div>
+  <div class="meta">
+    <span><strong>L</strong> 1600 mm</span>
+    <span><strong>P</strong> 1000 mm</span>
+    <span><strong>H mesa</strong> 900 mm</span>
+    <span><strong>Postes traseros</strong> 2050 mm</span>
+    <span><strong>H total</strong> ~2155 mm</span>
+    <span><strong>Ruedas</strong> ø75 mm c/freno × 4</span>
+  </div>
+</header>
+
+<div class="toolbar">
+  <div class="grp">
+    <button id="btnMeasure" title="Click en 2 puntos para medir distancia">▦  Medir con metro</button>
+    <button id="btnMeasureClear" title="Borrar todas las mediciones">Limpiar</button>
+  </div>
+  <div class="sep"></div>
+  <div class="grp">
+    <button id="btnExportGLTF" title="Descargar como glTF (importable en Blender, SketchUp, Fusion360)">Exportar .glTF</button>
+    <button id="btnExportSTL" title="Descargar como STL (para corte / impresión 3D)">Exportar .STL</button>
+    <button id="btnExportOBJ" title="Descargar como OBJ">Exportar .OBJ</button>
+  </div>
+  <div class="sep"></div>
+  <span class="hint" id="toolHint">→ Activá «Medir» y hacé click en 2 puntos del puesto para tomar una medida. También podés hacer click en un caño del DESPIECE (panel derecho) para resaltarlo en rojo en el ensamble.</span>
+</div>
+
+<div class="row">
+  <div class="pane" id="paneAssembled">
+    <div class="label">01 · Ensamble completo</div>
+    <div class="ctrls">
+      <button data-view="iso" class="active">ISO</button>
+      <button data-view="front">Frente</button>
+      <button data-view="side">Lateral</button>
+      <button data-view="top">Planta</button>
+      <button id="btnResetView" title="Volver a vista inicial ISO">↻ Reset</button>
+    </div>
+    <div class="help">Click + arrastrar para rotar · rueda para zoom · click derecho para pan</div>
+    <canvas id="sceneA"></canvas>
+  </div>
+  <div class="pane" id="paneExploded">
+    <div class="label">02 · Despiece de caños</div>
+    <canvas id="sceneB"></canvas>
+    <div id="annots"></div>
+    <div class="help">Cada fila = un largo distinto · vertical = unidades requeridas</div>
+  </div>
+</div>
+
+<section class="txt">
+  <h2>Lista de materiales</h2>
+  <table class="bom" id="bom" style="margin-top:18px;">
+    <thead>
+      <tr>
+        <th style="width:60px">#</th>
+        <th class="num">Largo (mm)</th>
+        <th>Características</th>
+        <th>Ángulo</th>
+        <th class="num">Cant.</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+  <p style="margin-top:14px;font-size:12px;color:#6b6b66;">
+    💡 Click en cualquier pieza del despiece (panel derecho) para resaltarla en rojo en el ensamble.
+  </p>
+</section>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { buildWorkstation, buildExploded, buildBOM, D, MAT as MAT_LIB } from './workstation.js?v=21';
+import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
+import { STLExporter }  from 'three/addons/exporters/STLExporter.js';
+import { OBJExporter }  from 'three/addons/exporters/OBJExporter.js';
+
+// ───────── Scene A : ensamblado ─────────
+function makeScene(canvas, opts = {}) {
+  const renderer = new THREE.WebGLRenderer({
+    canvas,
+    antialias: true,
+    alpha: false,
+    powerPreference: 'high-performance',
+    preserveDrawingBuffer: false,
+  });
+  // Cap a 1.5 (en vez de 2) para reducir carga GPU en pantallas 4K / DPR alto.
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+  // Handler de perdida de contexto WebGL: notifica al usuario y reintenta.
+  canvas.addEventListener('webglcontextlost', (e) => {
+    e.preventDefault();
+    console.warn('[3D] WebGL context lost — esperando restauracion');
+  }, false);
+  canvas.addEventListener('webglcontextrestored', () => {
+    console.warn('[3D] WebGL context restaurado');
+  }, false);
+
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0xf4f3ef);
+
+  // near=50 (antes 10): evita clipping cuando se hace zoom in.
+  const cam = new THREE.PerspectiveCamera(35, 1, 50, 30000);
+
+  // luz ambiental + direccional
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x9a9690, 0.55));
+  const sun = new THREE.DirectionalLight(0xffffff, 0.9);
+  sun.position.set(2500, 3000, 2000);
+  sun.castShadow = true;
+  sun.shadow.mapSize.set(2048, 2048);
+  sun.shadow.camera.left = -3000; sun.shadow.camera.right = 3000;
+  sun.shadow.camera.top = 3000;  sun.shadow.camera.bottom = -3000;
+  sun.shadow.camera.near = 100;  sun.shadow.camera.far = 8000;
+  scene.add(sun);
+  const fill = new THREE.DirectionalLight(0xffffff, 0.25);
+  fill.position.set(-2000, 1500, -2000);
+  scene.add(fill);
+
+  // piso
+  const floor = new THREE.Mesh(
+    new THREE.PlaneGeometry(8000, 8000),
+    new THREE.MeshStandardMaterial({ color: 0xe6e2d8, roughness: 0.95 })
+  );
+  floor.rotation.x = -Math.PI/2;
+  floor.receiveShadow = true;
+  scene.add(floor);
+
+  // grilla discreta
+  const grid = new THREE.GridHelper(8000, 32, 0xcdc8bd, 0xdcd8cd);
+  grid.position.y = 0.5;
+  scene.add(grid);
+
+  const controls = new OrbitControls(cam, canvas);
+  controls.enableDamping = true;
+  controls.target.set(0, opts.targetY ?? 700, 0);
+  // Limites de zoom: evita que el usuario entre dentro de la geometria
+  // (clipping/blank) o se aleje hasta perder la escena. Bypass para vista B (cenital despiece).
+  // minDistance bajado de 800 -> 200: el puesto mide 1600mm, 800 era demasiado lejos para
+  // ver detalle de uniones y bordes de tubos. El near plane (50) da margen para 200.
+  // maxDistance subido de 14000 -> 25000: permite zoom out completo en pantallas grandes.
+  if (opts.zoomLimits !== false) {
+    controls.minDistance = 200;
+    controls.maxDistance = 25000;
+    // Tambien aumentar la sensibilidad del scroll para que rendir todo el rango
+    // sea fluido en pocas vueltas de la rueda (default 1.0).
+    controls.zoomSpeed = 1.4;
+  }
+
+  return { renderer, scene, cam, controls };
+}
+
+// resize handlers
+function fit(renderer, cam, canvas) {
+  const r = canvas.getBoundingClientRect();
+  if (r.width === 0 || r.height === 0) return;
+  renderer.setSize(r.width, r.height, false);
+  cam.aspect = r.width / r.height;
+  cam.updateProjectionMatrix();
+}
+
+// ── Scene A
+const A = makeScene(document.getElementById('sceneA'), { targetY: 900 });
+const puesto = buildWorkstation();
+A.scene.add(puesto);
+
+// vistas
+const views = {
+  iso:   { p: [4400, 2900, 4600], t: [0, 1100, 0] },
+  front: { p: [0, 1100, 5800],    t: [0, 1100, 0] },
+  side:  { p: [5800, 1100, 0],    t: [0, 1100, 0] },
+  top:   { p: [0, 6200, 0.01],    t: [0, 0, 0] },
+};
+function setView(name) {
+  const v = views[name];
+  A.cam.position.set(...v.p);
+  A.controls.target.set(...v.t);
+  A.controls.update();
+}
+setView('iso');
+document.querySelectorAll('#paneAssembled .ctrls button[data-view]').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('#paneAssembled .ctrls button[data-view]').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    setView(b.dataset.view);
+  });
+});
+// Reset: vuelve a ISO sin marcar el boton como activo permanente
+document.getElementById('btnResetView')?.addEventListener('click', () => {
+  document.querySelectorAll('#paneAssembled .ctrls button[data-view]').forEach(x => x.classList.remove('active'));
+  document.querySelector('#paneAssembled .ctrls button[data-view="iso"]')?.classList.add('active');
+  setView('iso');
+  // Tambien forzar resize por si el canvas tenia tamano viejo
+  fit(A.renderer, A.cam, document.getElementById('sceneA'));
+});
+
+// ── Scene B : despiece — sin limites de zoom (vista cenital, escala distinta)
+const B = makeScene(document.getElementById('sceneB'), { targetY: 0, zoomLimits: false });
+const expl = buildExploded();
+B.scene.add(expl);
+
+// centrar la cámara sobre el despiece — vista casi cenital
+const bbox = new THREE.Box3().setFromObject(expl);
+const ctr  = bbox.getCenter(new THREE.Vector3());
+const size = bbox.getSize(new THREE.Vector3());
+const maxDim = Math.max(size.x, size.z) * 1.15;
+B.controls.target.set(ctr.x, 0, ctr.z);
+B.cam.position.set(ctr.x, maxDim * 1.7, ctr.z + maxDim * 0.5);
+B.cam.fov = 32;
+B.cam.updateProjectionMatrix();
+B.controls.update();
+
+// fit() inmediato para que el primer frame YA tenga el tamaño correcto
+// (antes solo se hacia en tick, podía dejar la pantalla en blanco si el primer
+// frame se renderizaba antes que la pantalla tuviera tamaño calculado).
+requestAnimationFrame(() => {
+  fit(A.renderer, A.cam, document.getElementById('sceneA'));
+  fit(B.renderer, B.cam, document.getElementById('sceneB'));
+  A.renderer.render(A.scene, A.cam);
+  B.renderer.render(B.scene, B.cam);
+});
+
+// ResizeObserver: dispara fit al cambiar el tamaño de los panes (responsive).
+const ro = new ResizeObserver(() => {
+  fit(A.renderer, A.cam, document.getElementById('sceneA'));
+  fit(B.renderer, B.cam, document.getElementById('sceneB'));
+});
+ro.observe(document.getElementById('paneAssembled'));
+ro.observe(document.getElementById('paneExploded'));
+
+// ── Anotaciones HTML para el despiece (proyección 3D → pantalla)
+const annotsContainer = document.getElementById('annots');
+const annotEls = [];
+expl.userData.rowsMeta.forEach((r, i) => {
+  const el = document.createElement('div');
+  el.className = 'annot';
+  if (r.kind === 'sheet') {
+    el.innerHTML = `<span class="ct">${r.length} × ${r.width} mm</span> chapa`;
+  } else if (r.kind === 'caster') {
+    el.innerHTML = `<span class="ct">ø${r.length} mm</span> × ${r.count}`;
+  } else {
+    el.innerHTML = `<span class="ct">${r.length} mm</span> × ${r.count}`;
+  }
+  annotsContainer.appendChild(el);
+  annotEls.push({ el, length: r.length, z: r.z });
+});
+
+function updateAnnots() {
+  const canvasRect = document.getElementById('sceneB').getBoundingClientRect();
+  const paneRect   = document.getElementById('paneExploded').getBoundingClientRect();
+  const v = new THREE.Vector3();
+  annotEls.forEach(a => {
+    // etiqueta centrada sobre cada fila (todas alineadas en x=0)
+    v.set(0, 120, a.z);
+    v.project(B.cam);
+    const x = (v.x * 0.5 + 0.5) * canvasRect.width + (canvasRect.left - paneRect.left);
+    const y = (-v.y * 0.5 + 0.5) * canvasRect.height + (canvasRect.top - paneRect.top);
+    a.el.style.left = `${x}px`;
+    a.el.style.top  = `${y}px`;
+    a.el.style.display = (v.z > 1) ? 'none' : 'block';
+  });
+}
+
+// ── BOM table — simplificada
+const bom = buildBOM(puesto);
+const tbody = document.querySelector('#bom tbody');
+let idx = 0;
+const sec = `${bom.tubeSection} × ${bom.tubeSection} × ${bom.tubeWall}`;
+const tubeRows = bom.rows.map(r => {
+  idx++;
+  const ang = r.angleDeg ? `${r.angleDeg}° (corte a inglete)` : 'Recto';
+  return `<tr>
+    <td>${String(idx).padStart(2,'0')}</td>
+    <td class="num">${r.length}</td>
+    <td>Caño cuadrado ${sec} mm</td>
+    <td>${ang}</td>
+    <td class="num">${r.count}</td>
+  </tr>`;
+}).join('');
+
+// chapas / mesada
+// FIX: la mesada (sheetKind:'mesada') tenia width=1600, height=20 (espesor), depth=1000.
+// Antes aparecia mal en el BOM como "Chapa 1600 × 20 mm · techo/visera" — una chapa
+// que fisicamente no existe (el 20 era el espesor, no un ancho real). Ahora se
+// muestra explicita con sus 3 dimensiones reales.
+const sheetRows = bom.sheets.map(s => {
+  idx++;
+  const ud = s.userData;
+  if (ud.sheetKind === 'mesada') {
+    const w = Math.round(ud.width);
+    const d = Math.round(ud.depth);
+    const t = Math.round(ud.height); // espesor
+    return `<tr>
+      <td>${String(idx).padStart(2,'0')}</td>
+      <td class="num">${w}</td>
+      <td>Mesada aluminio · ${w} × ${d} × ${t} mm (espesor)</td>
+      <td>—</td>
+      <td class="num">1</td>
+    </tr>`;
+  }
+  const w = Math.round(ud.width);
+  const h = Math.round(ud.height || ud.length);
+  // Espesor: pancha usa userData.depth (3mm), techo usa userData.thickness (3mm).
+  // Confirmado por Fak con calibre 2026-05-15.
+  const t = Math.round(ud.thickness || ud.depth || 0);
+  const tipo = ud.sheetKind === 'pancha' ? 'pancha trasera' : 'techo/visera';
+  const desc = t
+    ? `Chapa ${w} × ${h} × ${t} mm (espesor ${t}) · ${tipo}`
+    : `Chapa ${w} × ${h} mm · ${tipo}`;
+  return `<tr>
+    <td>${String(idx).padStart(2,'0')}</td>
+    <td class="num">${w}</td>
+    <td>${desc}</td>
+    <td>—</td>
+    <td class="num">1</td>
+  </tr>`;
+}).join('');
+
+// ruedas
+idx++;
+const wheelsRow = `<tr>
+  <td>${String(idx).padStart(2,'0')}</td>
+  <td class="num">ø${bom.casterDia}</td>
+  <td>Ruedas giratorias con freno · ø${bom.casterDia} × ${bom.casterThickness} mm</td>
+  <td>—</td>
+  <td class="num">${bom.casters}</td>
+</tr>`;
+
+tbody.innerHTML = tubeRows + sheetRows + wheelsRow;
+
+// ──────────────────────────────────────────────────────────────
+// HERRAMIENTA DE MEDICIÓN — declaramos primero para que tick() pueda usarla
+// ──────────────────────────────────────────────────────────────
+const measureState = {
+  active: false,
+  points: [],
+  group: new THREE.Group(),
+  labels: [],
+  hoverMarker: null,
+  tipEl: null,
+};
+
+// ── loop
+function tick() {
+  requestAnimationFrame(tick);
+  fit(A.renderer, A.cam, document.getElementById('sceneA'));
+  fit(B.renderer, B.cam, document.getElementById('sceneB'));
+  A.controls.update();
+  B.controls.update();
+  A.renderer.render(A.scene, A.cam);
+  B.renderer.render(B.scene, B.cam);
+  updateAnnots();
+  updateMeasureLabels();
+}
+// tick() se llama al final del script
+
+// expose for debugging
+window.__puesto = puesto;
+window.__D = D;
+
+// ──────────────────────────────────────────────────────────────
+// Setup de la herramienta de medición (resto del estado)
+// ──────────────────────────────────────────────────────────────
+A.scene.add(measureState.group);
+const measureContainer = document.createElement('div');
+measureContainer.style.cssText = 'position:absolute;inset:0;pointer-events:none;z-index:15;';
+document.getElementById('paneAssembled').appendChild(measureContainer);
+
+function makeMarker(color = 0xc64a1f) {
+  return new THREE.Mesh(
+    new THREE.SphereGeometry(18, 16, 12),
+    new THREE.MeshBasicMaterial({ color })
+  );
+}
+function clearMeasures() {
+  measureState.group.clear();
+  measureState.points = [];
+  measureState.labels.forEach(l => l.el.remove());
+  measureState.labels = [];
+  updateHint();
+}
+function addMeasurementSegment(a, b) {
+  const ga = new THREE.BufferGeometry().setFromPoints([a, b]);
+  const line = new THREE.Line(ga, new THREE.LineBasicMaterial({ color: 0xc64a1f, linewidth: 3 }));
+  measureState.group.add(line);
+  const m1 = makeMarker(); m1.position.copy(a); measureState.group.add(m1);
+  const m2 = makeMarker(); m2.position.copy(b); measureState.group.add(m2);
+  const dist = a.distanceTo(b);
+  const el = document.createElement('div');
+  el.className = 'measure-label';
+  el.textContent = `${dist.toFixed(0)} mm`;
+  measureContainer.appendChild(el);
+  measureState.labels.push({ a, b, el });
+}
+
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+function pickPoint(e) {
+  const canvas = document.getElementById('sceneA');
+  const r = canvas.getBoundingClientRect();
+  mouse.x = ((e.clientX - r.left) / r.width) * 2 - 1;
+  mouse.y = -((e.clientY - r.top) / r.height) * 2 + 1;
+  raycaster.setFromCamera(mouse, A.cam);
+  // intersección con el puesto (excluyendo piso y grilla)
+  const hits = raycaster.intersectObject(puesto, true);
+  return hits.length ? hits[0].point.clone() : null;
+}
+
+function updateHint() {
+  const h = document.getElementById('toolHint');
+  if (!measureState.active) {
+    h.textContent = '→ Activá «Medir» y hacé click en 2 puntos del puesto para tomar una medida.';
+  } else if (measureState.points.length === 0) {
+    h.textContent = '✓ Modo medir activo · click en el PRIMER punto.';
+  } else if (measureState.points.length === 1) {
+    h.textContent = '✓ Click en el SEGUNDO punto para cerrar la medida.';
+  }
+}
+
+document.getElementById('sceneA').addEventListener('click', e => {
+  if (!measureState.active) return;
+  const p = pickPoint(e);
+  if (!p) return;
+  measureState.points.push(p);
+  if (measureState.points.length === 1) {
+    const m = makeMarker(); m.position.copy(p);
+    m.userData.preview = true;
+    measureState.group.add(m);
+  } else if (measureState.points.length === 2) {
+    // remove preview marker
+    measureState.group.children
+      .filter(c => c.userData.preview)
+      .forEach(c => measureState.group.remove(c));
+    addMeasurementSegment(measureState.points[0], measureState.points[1]);
+    measureState.points = [];
+  }
+  updateHint();
+});
+
+document.getElementById('btnMeasure').addEventListener('click', () => {
+  measureState.active = !measureState.active;
+  document.body.classList.toggle('measuring', measureState.active);
+  document.getElementById('btnMeasure').classList.toggle('active', measureState.active);
+  // mientras medimos, desactivamos rotación con click izq (pero zoom/pan siguen)
+  A.controls.enabled = !measureState.active ? true : true;
+  A.controls.mouseButtons.LEFT = measureState.active ? null : THREE.MOUSE.ROTATE;
+  updateHint();
+});
+document.getElementById('btnMeasureClear').addEventListener('click', clearMeasures);
+
+// posicionar labels de mediciones en cada frame
+function updateMeasureLabels() {
+  const cRect = document.getElementById('sceneA').getBoundingClientRect();
+  const pRect = document.getElementById('paneAssembled').getBoundingClientRect();
+  const tmp = new THREE.Vector3();
+  measureState.labels.forEach(l => {
+    tmp.copy(l.a).add(l.b).multiplyScalar(0.5).project(A.cam);
+    const x = (tmp.x * 0.5 + 0.5) * cRect.width + (cRect.left - pRect.left);
+    const y = (-tmp.y * 0.5 + 0.5) * cRect.height + (cRect.top - pRect.top);
+    l.el.style.left = `${x}px`;
+    l.el.style.top  = `${y}px`;
+    l.el.style.display = (tmp.z > 1) ? 'none' : 'block';
+  });
+}
+
+// ──────────────────────────────────────────────────────────────
+// EXPORTAR — glTF / STL / OBJ
+// ──────────────────────────────────────────────────────────────
+function downloadBlob(filename, blob) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+}
+
+document.getElementById('btnExportGLTF').addEventListener('click', () => {
+  const exp = new GLTFExporter();
+  exp.parse(puesto, (result) => {
+    const blob = result instanceof ArrayBuffer
+      ? new Blob([result], { type: 'model/gltf-binary' })
+      : new Blob([JSON.stringify(result, null, 2)], { type: 'model/gltf+json' });
+    downloadBlob('puesto-de-trabajo.gltf', blob);
+  }, (err) => console.error('GLTF export error', err), { binary: false });
+});
+
+document.getElementById('btnExportSTL').addEventListener('click', () => {
+  const exp = new STLExporter();
+  const stl = exp.parse(puesto, { binary: true });
+  downloadBlob('puesto-de-trabajo.stl', new Blob([stl], { type: 'application/octet-stream' }));
+});
+
+document.getElementById('btnExportOBJ').addEventListener('click', () => {
+  const exp = new OBJExporter();
+  const objText = exp.parse(puesto);
+  downloadBlob('puesto-de-trabajo.obj', new Blob([objText], { type: 'text/plain' }));
+});
+
+// ──────────────────────────────────────────────────────────────
+// CLICK-TO-HIGHLIGHT: click en un caño del despiece → se pinta de rojo
+// el caño correspondiente en el ensamble (encontrado por pieceId)
+// ──────────────────────────────────────────────────────────────
+const highlightState = {
+  selectedPieceId: null,
+  selectedMesh: null,         // mesh en scene A
+  selectedDespieceMesh: null, // mesh en scene B
+  panelEl: null,
+};
+
+function clearHighlight() {
+  if (highlightState.selectedMesh) {
+    highlightState.selectedMesh.material = highlightState.selectedMesh.userData._origMat || MAT_LIB.tube;
+  }
+  if (highlightState.selectedDespieceMesh) {
+    highlightState.selectedDespieceMesh.material = highlightState.selectedDespieceMesh.userData._origMat || MAT_LIB.tube;
+  }
+  highlightState.selectedPieceId = null;
+  highlightState.selectedMesh = null;
+  highlightState.selectedDespieceMesh = null;
+  if (highlightState.panelEl) highlightState.panelEl.style.display = 'none';
+}
+
+// referencia local al material highlight (ya importado arriba como MAT_LIB)
+
+function highlightPieceById(pieceId) {
+  clearHighlight();
+  // Buscar en puesto (scene A) — tubos y chapas
+  puesto.traverse(o => {
+    if (o.userData?.pieceId === pieceId && (o.userData?.kind === 'tube' || o.userData?.kind === 'sheet')) {
+      o.userData._origMat = o.material;
+      o.material = MAT_LIB.highlight;
+      highlightState.selectedMesh = o;
+    }
+  });
+  // Buscar en despiece (scene B) — tubos y chapas
+  expl.traverse(o => {
+    if (o.userData?.pieceId === pieceId && (o.userData?.kind === 'tube' || o.userData?.kind === 'sheet')) {
+      o.userData._origMat = o.material;
+      o.material = MAT_LIB.highlight;
+      highlightState.selectedDespieceMesh = o;
+    }
+  });
+  highlightState.selectedPieceId = pieceId;
+  // mostrar panel info
+  if (highlightState.selectedMesh) {
+    const ud = highlightState.selectedMesh.userData;
+    const panel = highlightState.panelEl;
+    const isSheet = ud.kind === 'sheet';
+    const details = isSheet
+      ? `Chapa <b style="color:#c64a1f;">${Math.round(ud.width || 0)} × ${Math.round(ud.height || ud.length || 0)} mm</b>`
+      : `Sección ${ud.section} mm · Largo <b style="color:#c64a1f;">${Math.round(ud.length)} mm</b>`;
+    panel.innerHTML = `
+      <div style="font-weight:600;font-size:13px;margin-bottom:4px;">${ud.label}</div>
+      <div style="font-size:11px;color:#6b6b66;">${details}</div>
+      <div style="font-size:10px;color:#9a9a96;margin-top:4px;">ID ${ud.pieceId}</div>
+    `;
+    panel.style.display = 'block';
+  }
+}
+
+// raycaster compartido — el del measure tool funciona también para esto
+const _hlRaycaster = new THREE.Raycaster();
+const _hlMouse = new THREE.Vector2();
+
+document.getElementById('sceneB').addEventListener('click', e => {
+  const canvas = document.getElementById('sceneB');
+  const r = canvas.getBoundingClientRect();
+  _hlMouse.x = ((e.clientX - r.left) / r.width) * 2 - 1;
+  _hlMouse.y = -((e.clientY - r.top) / r.height) * 2 + 1;
+  _hlRaycaster.setFromCamera(_hlMouse, B.cam);
+  const hits = _hlRaycaster.intersectObject(expl, true);
+  // buscar el primer hit que sea un tubo o chapa
+  for (const h of hits) {
+    let m = h.object;
+    while (m && !(m.userData?.kind === 'tube' || m.userData?.kind === 'sheet')) m = m.parent;
+    if (m?.userData?.pieceId) {
+      highlightPieceById(m.userData.pieceId);
+      return;
+    }
+  }
+  clearHighlight();
+});
+
+// también permitir click en scene A para limpiar
+document.getElementById('sceneA').addEventListener('contextmenu', e => {
+  e.preventDefault();
+  clearHighlight();
+});
+
+// crear panel de info de pieza seleccionada
+{
+  const panel = document.createElement('div');
+  panel.id = 'piecePanel';
+  panel.style.cssText = `
+    position: absolute; bottom: 14px; right: 14px;
+    background: white; border: 1px solid var(--line);
+    padding: 12px 16px; border-radius: 4px;
+    font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    display: none; z-index: 25; max-width: 320px;
+  `;
+  document.getElementById('paneAssembled').appendChild(panel);
+  highlightState.panelEl = panel;
+}
+
+// arrancar el render loop
+tick();
+</script>
+
+</body>
+</html>
