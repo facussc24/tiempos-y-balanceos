@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { AmfeDocument, AmfeOperation, AmfeWorkElement, AmfeFunction, AmfeFailure, AmfeCause, ActionPriority, AmfeHeaderData } from '../../../modules/amfe/amfeTypes';
+import { AmfeDocument, AmfeFailure, AmfeCause, ActionPriority, AmfeHeaderData } from '../../../modules/amfe/amfeTypes';
 
 // Mock XLSX
 const mockWrite = vi.fn().mockReturnValue(new ArrayBuffer(8));
@@ -572,8 +572,9 @@ describe('Resumen AP - traceability columns', () => {
             row.length >= 14 && row[10]?.v === 'H'
         );
         expect(dataRow).toBeDefined();
-        // Car. Esp. is now a combined column (specialChar + #characteristicNumber)
-        expect(dataRow[11].v).toBe('CC #C-42');
+        // Car. Esp. = solo specialChar (CC/SC/vacio). characteristicNumber NO va aca —
+        // es identificador interno, no clasificacion AIAG-VDA (ver commit abfa832).
+        expect(dataRow[11].v).toBe('CC');
     });
 });
 
