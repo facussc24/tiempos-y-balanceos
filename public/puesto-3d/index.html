@@ -435,6 +435,13 @@ function makeScene(canvas, opts = {}) {
 
   const controls = new OrbitControls(cam, canvas);
   controls.enableDamping = true;
+  // Zoom suave (reportado por Fak: "pega un saltito tremendo"):
+  //   zoomSpeed default 1.0 = 10% de cambio por tick de rueda -> brusco.
+  //   0.4 = 4% por tick, mucho mas progresivo.
+  //   dampingFactor default 0.05 -> 0.12: el rebote del damper es mas largo,
+  //   se siente como inercia/glide.
+  controls.zoomSpeed = 0.4;
+  controls.dampingFactor = 0.12;
   controls.target.set(0, opts.targetY ?? 700, 0);
   // Limites de zoom calibrados por escena:
   //
