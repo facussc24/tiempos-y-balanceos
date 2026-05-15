@@ -333,6 +333,7 @@
       <button data-view="front">Frente</button>
       <button data-view="side">Lateral</button>
       <button data-view="top">Planta</button>
+      <button id="btnResetView" title="Volver a vista inicial ISO">↻ Reset</button>
     </div>
     <div class="help">Click + arrastrar para rotar · rueda para zoom · click derecho para pan</div>
     <canvas id="sceneA"></canvas>
@@ -374,15 +375,32 @@ import { OBJExporter }  from 'three/addons/exporters/OBJExporter.js';
 
 // ───────── Scene A : ensamblado ─────────
 function makeScene(canvas, opts = {}) {
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  const renderer = new THREE.WebGLRenderer({
+    canvas,
+    antialias: true,
+    alpha: false,
+    powerPreference: 'high-performance',
+    preserveDrawingBuffer: false,
+  });
+  // Cap a 1.5 (en vez de 2) para reducir carga GPU en pantallas 4K / DPR alto.
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+  // Handler de perdida de contexto WebGL: notifica al usuario y reintenta.
+  canvas.addEventListener('webglcontextlost', (e) => {
+    e.preventDefault();
+    console.warn('[3D] WebGL context lost — esperando restauracion');
+  }, false);
+  canvas.addEventListener('webglcontextrestored', () => {
+    console.warn('[3D] WebGL context restaurado');
+  }, false);
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0xf4f3ef);
 
-  const cam = new THREE.PerspectiveCamera(35, 1, 10, 20000);
+  // near=50 (antes 10): evita clipping cuando se hace zoom in.
+  const cam = new THREE.PerspectiveCamera(35, 1, 50, 30000);
 
   // luz ambiental + direccional
   scene.add(new THREE.HemisphereLight(0xffffff, 0x9a9690, 0.55));
@@ -415,6 +433,12 @@ function makeScene(canvas, opts = {}) {
   const controls = new OrbitControls(cam, canvas);
   controls.enableDamping = true;
   controls.target.set(0, opts.targetY ?? 700, 0);
+  // Limites de zoom: evita que el usuario entre dentro de la geometria
+  // (clipping/blank) o se aleje hasta perder la escena. Bypass para vista B (cenital despiece).
+  if (opts.zoomLimits !== false) {
+    controls.minDistance = 800;
+    controls.maxDistance = 14000;
+  }
 
   return { renderer, scene, cam, controls };
 }
@@ -447,16 +471,24 @@ function setView(name) {
   A.controls.update();
 }
 setView('iso');
-document.querySelectorAll('#paneAssembled .ctrls button').forEach(b => {
+document.querySelectorAll('#paneAssembled .ctrls button[data-view]').forEach(b => {
   b.addEventListener('click', () => {
-    document.querySelectorAll('#paneAssembled .ctrls button').forEach(x => x.classList.remove('active'));
+    document.querySelectorAll('#paneAssembled .ctrls button[data-view]').forEach(x => x.classList.remove('active'));
     b.classList.add('active');
     setView(b.dataset.view);
   });
 });
+// Reset: vuelve a ISO sin marcar el boton como activo permanente
+document.getElementById('btnResetView')?.addEventListener('click', () => {
+  document.querySelectorAll('#paneAssembled .ctrls button[data-view]').forEach(x => x.classList.remove('active'));
+  document.querySelector('#paneAssembled .ctrls button[data-view="iso"]')?.classList.add('active');
+  setView('iso');
+  // Tambien forzar resize por si el canvas tenia tamano viejo
+  fit(A.renderer, A.cam, document.getElementById('sceneA'));
+});
 
-// ── Scene B : despiece
-const B = makeScene(document.getElementById('sceneB'), { targetY: 0 });
+// ── Scene B : despiece — sin limites de zoom (vista cenital, escala distinta)
+const B = makeScene(document.getElementById('sceneB'), { targetY: 0, zoomLimits: false });
 const expl = buildExploded();
 B.scene.add(expl);
 
@@ -470,6 +502,24 @@ B.cam.position.set(ctr.x, maxDim * 1.7, ctr.z + maxDim * 0.5);
 B.cam.fov = 32;
 B.cam.updateProjectionMatrix();
 B.controls.update();
+
+// fit() inmediato para que el primer frame YA tenga el tamaño correcto
+// (antes solo se hacia en tick, podía dejar la pantalla en blanco si el primer
+// frame se renderizaba antes que la pantalla tuviera tamaño calculado).
+requestAnimationFrame(() => {
+  fit(A.renderer, A.cam, document.getElementById('sceneA'));
+  fit(B.renderer, B.cam, document.getElementById('sceneB'));
+  A.renderer.render(A.scene, A.cam);
+  B.renderer.render(B.scene, B.cam);
+});
+
+// ResizeObserver: dispara fit al cambiar el tamaño de los panes (responsive).
+const ro = new ResizeObserver(() => {
+  fit(A.renderer, A.cam, document.getElementById('sceneA'));
+  fit(B.renderer, B.cam, document.getElementById('sceneB'));
+});
+ro.observe(document.getElementById('paneAssembled'));
+ro.observe(document.getElementById('paneExploded'));
 
 // ── Anotaciones HTML para el despiece (proyección 3D → pantalla)
 const annotsContainer = document.getElementById('annots');

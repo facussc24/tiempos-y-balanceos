@@ -477,7 +477,9 @@ export function buildBOM(workstation) {
   workstation.traverse(o => {
     if (o.userData?.kind === 'tube')   tubes.push(o);
     if (o.userData?.kind === 'caster') casters.push(o);
-    if (o.userData?.kind === 'sheet' && o.userData.sheetKind) sheets.push(o);
+    // Excluimos la mesada de aluminio: la compra el cliente, NO va en el BOM.
+    // Sigue renderizandose en el 3D como referencia visual.
+    if (o.userData?.kind === 'sheet' && o.userData.sheetKind && o.userData.sheetKind !== 'mesada') sheets.push(o);
   });
 
   // agrupar por (largo + ángulo) para distinguir caños rectos vs con inglete
