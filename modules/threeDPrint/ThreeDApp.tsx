@@ -47,12 +47,17 @@ const ThreeDApp: React.FC<ThreeDAppProps> = ({ onBackToLanding }) => {
     const [selected, setSelected] = useState<ModelId>('bolt');
 
     const model = MODELS.find((m) => m.id === selected) ?? MODELS[0];
-    // BASE_URL respeta el subpath en GitHub Pages (/tiempos-y-balanceos/).
-    // __BUILD_TIMESTAMP__ se inyecta en build-time (vite.config define) y
-    // funciona como cache-bust del iframe. Sin esto los browsers cachean el
-    // iframe hasta 10 min (GH Pages max-age=600) y muestran version vieja
-    // aun despues de Ctrl+Shift+R sobre la pagina padre.
-    const src = `${import.meta.env.BASE_URL}${model.file}?v=${__BUILD_TIMESTAMP__}`;
+
+    // Cache-bust dual:
+    //  - __BUILD_TIMESTAMP__ (build time): cambia en cada deploy a GH Pages.
+    //  - mountTs (runtime, useState lazy init): cambia cada vez que se monta
+    //    el componente. useState lazy init es purity-safe (ejecuta una vez al
+    //    primer render). useMemo() con Date.now() falla react-hooks/purity.
+    // El segundo garantiza que aun si el usuario tiene el bundle React viejo
+    // cacheado, el iframe se re-fetcha. Antes solo el primero -> si el bundle
+    // viejo no incluia el ?v=..., el iframe servia cache vieja indefinidamente.
+    const [mountTs] = useState(() => Date.now());
+    const src = `${import.meta.env.BASE_URL}${model.file}?v=${__BUILD_TIMESTAMP__}&t=${mountTs}`;
 
     return (
         <div className="flex flex-col h-screen bg-slate-50">

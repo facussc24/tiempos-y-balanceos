@@ -440,7 +440,11 @@ function makeScene(canvas, opts = {}) {
   //   0.4 = 4% por tick, mucho mas progresivo.
   //   dampingFactor default 0.05 -> 0.12: el rebote del damper es mas largo,
   //   se siente como inercia/glide.
-  controls.zoomSpeed = 0.4;
+  controls.zoomSpeed = 0.3;
+  // dampingFactor en OrbitControls r160 NO afecta zoom — solo rotacion/pan.
+  // Confirmado leyendo source OrbitControls.js: `scale` (dolly) se resetea a 1
+  // cada update() sin inercia. Dejamos en 0.12 para que rotacion se sienta
+  // smooth, pero el zoom suave depende SOLO de zoomSpeed bajo + jitter cero.
   controls.dampingFactor = 0.12;
   controls.target.set(0, opts.targetY ?? 700, 0);
   // Limites de zoom calibrados por escena:
@@ -664,10 +668,13 @@ const measureState = {
 };
 
 // ── loop
+// IMPORTANTE: fit() se removio del tick. Antes corria 60fps llamando setSize +
+// cam.aspect + updateProjectionMatrix cada frame, recalculando la matriz de
+// proyeccion MIENTRAS OrbitControls interpolaba zoom -> micro-jitter durante
+// la rueda. Ahora fit() solo corre desde ResizeObserver (ya configurado) y
+// requestAnimationFrame inicial. Hallazgo de auditoria 2026-05-15 (agent 2).
 function tick() {
   requestAnimationFrame(tick);
-  fit(A.renderer, A.cam, document.getElementById('sceneA'));
-  fit(B.renderer, B.cam, document.getElementById('sceneB'));
   A.controls.update();
   B.controls.update();
   A.renderer.render(A.scene, A.cam);
