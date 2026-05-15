@@ -593,11 +593,17 @@ const sheetRows = bom.sheets.map(s => {
   }
   const w = Math.round(ud.width);
   const h = Math.round(ud.height || ud.length);
+  // Espesor: pancha usa userData.depth (3mm), techo usa userData.thickness (3mm).
+  // Confirmado por Fak con calibre 2026-05-15.
+  const t = Math.round(ud.thickness || ud.depth || 0);
   const tipo = ud.sheetKind === 'pancha' ? 'pancha trasera' : 'techo/visera';
+  const desc = t
+    ? `Chapa ${w} × ${h} × ${t} mm (espesor ${t}) · ${tipo}`
+    : `Chapa ${w} × ${h} mm · ${tipo}`;
   return `<tr>
     <td>${String(idx).padStart(2,'0')}</td>
     <td class="num">${w}</td>
-    <td>Chapa ${w} × ${h} mm · ${tipo}</td>
+    <td>${desc}</td>
     <td>—</td>
     <td class="num">1</td>
   </tr>`;
