@@ -249,9 +249,27 @@ console.log('='.repeat(62) + '\n');
 // Regla: amfe-leer-contenido-antes-de-renumerar.md (incidente 2026-05-14 HF-PAT)
 console.log('=== Sub-auditor: WE placeholders + failure allocation ===\n');
 const { spawnSync } = await import('child_process');
-const subResult = spawnSync('node', ['scripts/_auditWePlaceholdersAndAllocation.mjs', '--json'], { stdio: 'inherit' });
+const filterArg = process.argv.find(a => a.startsWith('--filter='));
+const auditPlaceholdersArgs = ['scripts/_auditWePlaceholdersAndAllocation.mjs', '--json'];
+if (filterArg) auditPlaceholdersArgs.push(filterArg);
+const subResult = spawnSync('node', auditPlaceholdersArgs, { stdio: 'inherit' });
 if (subResult.status === 1) {
     console.log('\n⚠ Sub-auditor detecto CRITICAL en placeholders/allocation.');
     console.log('  Ver: tmp/we_placeholders_audit.json + docs/auto-mejora/we-placeholders-findings.md');
     console.log('  Fix:  node scripts/_fixAmfePlaceholdersAndAllocation.mjs --apply --allow-new-critical');
 }
+
+// ── Sub-auditor: text quality (L2) — Plan warm-plotting-snowflake.md
+console.log('\n=== Sub-auditor: text quality (L2) ===\n');
+const auditTextQualityArgs = ['scripts/_auditTextQuality.mjs', '--json'];
+if (filterArg) auditTextQualityArgs.push(filterArg);
+const subResultTQ = spawnSync('node', auditTextQualityArgs, { stdio: 'inherit' });
+if (subResultTQ.status === 1) {
+    console.log('\n⚠ Sub-auditor _auditTextQuality detectó CRITICAL.');
+    console.log('  Ver: tmp/text_quality_audit.json + docs/auto-mejora/text-quality-findings.md');
+}
+
+// Exit code final: si cualquier sub-auditor devolvio 1, exit 1
+const anyCritical = (subResult.status === 1) || (subResultTQ.status === 1) ||
+    (totals.structural_critical > 0);
+process.exit(anyCritical ? 1 : 0);

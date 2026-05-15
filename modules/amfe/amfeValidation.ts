@@ -9,6 +9,14 @@ import { v4 as uuidv4 } from 'uuid';
 import { AmfeDocument, AmfeFailure, AmfeCause, WorkElementType } from './amfeTypes';
 import type { SaveValidationResult } from '../../utils/repositories/validationTypes';
 import type { AmfeLifecycleStatus } from './amfeRegistryTypes';
+import {
+    isGeneric6MLabel,
+    isTextDescriptive,
+    classifyWeNameVsType,
+    detectOpFunctionSemanticMismatch,
+    getOpTags,
+    detectMisallocatedKeyword,
+} from '../../core/amfe/genericLabels';
 
 /** Maximum recommended field length (warn above this). */
 export const MAX_FIELD_LENGTH = 10_000;
@@ -681,6 +689,110 @@ function validateScNotByFormula(doc: AmfeDocument): string[] {
 }
 
 // ---------------------------------------------------------------------------
+// A8-A12: text quality warnings (always non-blocking)
+// Plan: ~/.claude/plans/warm-plotting-snowflake.md
+// Reglas: amfe-funciones-3-niveles.md, amfe-leer-contenido-antes-de-renumerar.md
+// ---------------------------------------------------------------------------
+
+/** A8 — WE.name es etiqueta 6M genérica (placeholder, no recurso real). */
+function validateA8WeGenericPlaceholder(doc: AmfeDocument): string[] {
+    const issues: string[] = [];
+    for (const op of doc.operations || []) {
+        const opNum = op.opNumber || '?';
+        const opName = op.name || '(sin nombre)';
+        for (const we of op.workElements || []) {
+            if (isGeneric6MLabel(we.name)) {
+                issues.push(`A8 - Op ${opNum} "${opName}": WE "${we.name}" es etiqueta 6M generica (placeholder, no recurso real)`);
+            }
+        }
+    }
+    return issues;
+}
+
+/** A9 — fn.description muy corta o no descriptiva. */
+function validateA9FnDescriptionShort(doc: AmfeDocument): string[] {
+    const issues: string[] = [];
+    for (const op of doc.operations || []) {
+        const opNum = op.opNumber || '?';
+        const opName = op.name || '(sin nombre)';
+        for (const we of op.workElements || []) {
+            for (const fn of we.functions || []) {
+                const desc = fn.description || '';
+                if (!desc) continue; // vacíos los cubre A3 / otros checks
+                const r = isTextDescriptive(desc);
+                if (!r.ok) {
+                    const preview = desc.length > 40 ? `${desc.slice(0, 40)}...` : desc;
+                    issues.push(`A9 - Op ${opNum} "${opName}": WE "${we.name}" fn descripcion muy corta o no descriptiva ("${preview}")`);
+                }
+            }
+        }
+    }
+    return issues;
+}
+
+/** A10 — operationFunction === focusElementFunction literal (VDA 2019 exige niveles distintos) o mismatch semántico. */
+function validateA10OpFunctionDuplicateFocus(doc: AmfeDocument): string[] {
+    const issues: string[] = [];
+    for (const op of doc.operations || []) {
+        const opNum = op.opNumber || '?';
+        const opName = op.name || '(sin nombre)';
+        const opFn = (op.operationFunction || '').trim();
+        const focFn = (op.focusElementFunction || '').trim();
+        if (opFn && focFn && opFn === focFn) {
+            issues.push(`A10 - Op ${opNum} "${opName}": operationFunction duplica focusElementFunction (VDA 2019 exige niveles distintos)`);
+        }
+        if (opFn) {
+            const r = detectOpFunctionSemanticMismatch(opName, opFn);
+            if (!r.ok && r.mismatch) {
+                issues.push(`A10 - Op ${opNum} "${opName}": ${r.mismatch}`);
+            }
+        }
+    }
+    return issues;
+}
+
+/** A11 — WE.name no corresponde a WE.type (Cuchilla en Material, etc). */
+function validateA11WeNameTypeMismatch(doc: AmfeDocument): string[] {
+    const issues: string[] = [];
+    for (const op of doc.operations || []) {
+        const opNum = op.opNumber || '?';
+        const opName = op.name || '(sin nombre)';
+        for (const we of op.workElements || []) {
+            const r = classifyWeNameVsType(we.name, we.type);
+            if (!r.ok) {
+                issues.push(`A11 - Op ${opNum} "${opName}": WE "${we.name}" name no corresponde a type "${we.type}" (${r.issue || 'mismatch'})`);
+            }
+        }
+    }
+    return issues;
+}
+
+/** A12 — failure.description con keyword que no corresponde al tipo de OP. */
+function validateA12FailureMisallocated(doc: AmfeDocument): string[] {
+    const issues: string[] = [];
+    for (const op of doc.operations || []) {
+        const opNum = op.opNumber || '?';
+        const opName = op.name || '(sin nombre)';
+        const opTags = getOpTags(opName);
+        if (opTags.length === 0) continue; // OP sin tags reconocibles → no juzgable
+        for (const we of op.workElements || []) {
+            for (const fn of we.functions || []) {
+                for (const fail of fn.failures || []) {
+                    const desc = fail.description || '';
+                    if (!desc) continue;
+                    const mis = detectMisallocatedKeyword(desc, opTags);
+                    for (const m of mis) {
+                        const preview = desc.length > 40 ? `${desc.slice(0, 40)}...` : desc;
+                        issues.push(`A12 - Op ${opNum} "${opName}": failure "${preview}" misallocated (keyword "${m.keyword}" debe ir a OP tipo ${m.expectedOpTags.join('/')})`);
+                    }
+                }
+            }
+        }
+    }
+    return issues;
+}
+
+// ---------------------------------------------------------------------------
 // Pre-save validation (blocks save on errors, warns on soft limits)
 // ---------------------------------------------------------------------------
 
@@ -735,6 +847,14 @@ export function validateAmfeBeforeSave(doc: AmfeDocument, status?: AmfeLifecycle
 
     // A7: SC by formula guard (always warning, never blocking)
     warnings.push(...validateScNotByFormula(doc));
+
+    // A8-A12: text quality (always warning, never blocking — incluso en approved/archived)
+    // Plan: ~/.claude/plans/warm-plotting-snowflake.md
+    warnings.push(...validateA8WeGenericPlaceholder(doc));
+    warnings.push(...validateA9FnDescriptionShort(doc));
+    warnings.push(...validateA10OpFunctionDuplicateFocus(doc));
+    warnings.push(...validateA11WeNameTypeMismatch(doc));
+    warnings.push(...validateA12FailureMisallocated(doc));
 
     // Soft limits (always non-blocking advisories)
     warnings.push(...getSoftLimitWarnings(doc));

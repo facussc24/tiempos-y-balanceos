@@ -732,3 +732,61 @@ describe('validateAmfeBeforeSave - Status-aware: draft vs approved', () => {
         expect(result.errors.some(e => e.includes('sin valor valido'))).toBe(true);
     });
 });
+
+// ---------------------------------------------------------------------------
+// A8-A12: text quality warnings (always non-blocking)
+// Plan: ~/.claude/plans/warm-plotting-snowflake.md
+// ---------------------------------------------------------------------------
+describe('validateAmfeBeforeSave - A8-A12 text quality warnings', () => {
+    it('A8: WE.name = "Maquina" produce warning (etiqueta 6M generica)', () => {
+        const doc = makeDoc();
+        doc.operations[0].workElements[0].name = 'Maquina';
+        const result = validateAmfeBeforeSave(doc, 'draft');
+        expect(result.warnings.some(w => w.startsWith('A8') && w.includes('etiqueta 6M generica'))).toBe(true);
+        expect(result.valid).toBe(true);
+    });
+
+    it('A9: fn.description corta produce warning', () => {
+        const doc = makeDoc();
+        doc.operations[0].workElements[0].functions[0].description = 'Coser';
+        const result = validateAmfeBeforeSave(doc, 'draft');
+        expect(result.warnings.some(w => w.startsWith('A9') && w.includes('descripcion muy corta'))).toBe(true);
+        expect(result.valid).toBe(true);
+    });
+
+    it('A10: operationFunction === focusElementFunction produce warning', () => {
+        const doc = makeDoc();
+        doc.operations[0].operationFunction = 'Mismo texto exacto entre niveles';
+        doc.operations[0].focusElementFunction = 'Mismo texto exacto entre niveles';
+        const result = validateAmfeBeforeSave(doc, 'draft');
+        expect(result.warnings.some(w => w.startsWith('A10') && w.includes('duplica focusElementFunction'))).toBe(true);
+        expect(result.valid).toBe(true);
+    });
+
+    it('A11: Cuchilla en WE.type=Material produce warning', () => {
+        const doc = makeDoc();
+        doc.operations[0].workElements[0].name = 'Cuchilla de corte';
+        doc.operations[0].workElements[0].type = 'Material';
+        const result = validateAmfeBeforeSave(doc, 'draft');
+        expect(result.warnings.some(w => w.startsWith('A11') && w.includes('name no corresponde a type'))).toBe(true);
+        expect(result.valid).toBe(true);
+    });
+
+    it('A12: failure "Costura desviada" en OP CORTE produce warning misallocated', () => {
+        // ojo: failure.description NO debe contener "corte/cortado/cuchilla" (matchea
+        // la regla de corte y el guard "anyCoherent" cancela el flag).
+        const doc = makeDoc([makeFailure({ description: 'Costura desviada en union de paneles' })]);
+        doc.operations[0].name = 'CORTE DE PANELES';
+        const result = validateAmfeBeforeSave(doc, 'draft');
+        expect(result.warnings.some(w => w.startsWith('A12') && w.includes('misallocated'))).toBe(true);
+        expect(result.valid).toBe(true);
+    });
+
+    it('A8-A12 SIEMPRE warning, nunca error, incluso en status=approved', () => {
+        const doc = makeDoc();
+        doc.operations[0].workElements[0].name = 'Maquina';
+        const result = validateAmfeBeforeSave(doc, 'approved');
+        expect(result.warnings.some(w => w.startsWith('A8'))).toBe(true);
+        expect(result.errors.some(e => e.startsWith('A8'))).toBe(false);
+    });
+});

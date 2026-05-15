@@ -2,7 +2,7 @@
   "_meta": {
     "purpose": "Fuente única de constantes de heurística 6M para AMFE. Consumido por scripts/_lib/genericLabels.mjs y core/amfe/genericLabels.ts.",
     "rule_source": "BarackMercosul/.claude/rules/amfe-funciones-3-niveles.md + amfe-leer-contenido-antes-de-renumerar.md",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "lastUpdated": "2026-05-15"
   },
   "GENERIC_LABELS": [
@@ -46,5 +46,34 @@
     "MaterialShouldBeMeasurement": [
       "plantilla mylar", "mylar de control", "calibre patron", "muestra patron"
     ]
-  }
+  },
+  "VERB_WHITELIST": [
+    "asegurar", "realizar", "verificar", "controlar", "inspeccionar", "medir",
+    "aplicar", "mantener", "unir", "fabricar", "revestir", "proveer", "validar",
+    "registrar", "garantizar", "ejecutar", "cortar", "coser", "tapizar",
+    "enfundar", "inyectar", "espumar", "troquelar", "embalar", "etiquetar",
+    "operar", "manipular", "transportar", "almacenar"
+  ],
+  "OP_NAME_SEMANTIC_DICT": [
+    {
+      "_comment": "OP name contiene 'vista' o 'decorativa' Y operationFunction contiene 'unir/estructural/resistencia' es mismatch (vista no une, decora)",
+      "opNameContains": ["vista", "decorativa"],
+      "opFnMustNotContain": ["unir", "estructural", "resistencia"]
+    },
+    {
+      "_comment": "OP RECEPCION debe verificar conformidad/trazabilidad",
+      "opNameContains": ["recepcion"],
+      "opFnMustContainAny": ["verificar", "conformidad", "trazabilidad"]
+    },
+    {
+      "_comment": "OP INYECCION debe inyectar/conformar (no costura ni embalaje)",
+      "opNameContains": ["inyeccion"],
+      "opFnMustContainAny": ["inyectar", "conformar"]
+    },
+    {
+      "_comment": "OP COSTURA UNION debe unir, no decorar",
+      "opNameContains": ["costura union"],
+      "opFnMustNotContain": ["decorativa", "vista"]
+    }
+  ]
 }

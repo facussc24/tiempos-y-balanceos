@@ -33,6 +33,8 @@ export const TYPE_TRANSLATION = _data.TYPE_TRANSLATION;
 export const KEYWORD_OP_TAGS = _data.KEYWORD_OP_TAGS;
 export const MIN_FN_DESCRIPTION_LENGTH = _data.MIN_FN_DESCRIPTION_LENGTH;
 export const MATERIAL_NAME_FOREIGN_TYPE_PATTERNS = _data.MATERIAL_NAME_FOREIGN_TYPE_PATTERNS;
+export const VERB_WHITELIST = _data.VERB_WHITELIST || [];
+export const OP_NAME_SEMANTIC_DICT = _data.OP_NAME_SEMANTIC_DICT || [];
 
 /**
  * Normaliza un string: trim + lowercase + NFD (saca tildes).
@@ -122,4 +124,142 @@ export function extractForeignOpNumber(weName, currentOpNumber) {
   if (!m) return null;
   const found = parseInt(m[1]);
   return found !== Number(currentOpNumber) ? found : null;
+}
+
+const _NORMALIZED_VERB_WHITELIST = new Set(VERB_WHITELIST.map(normalize));
+
+/**
+ * Detecta si un texto comienza con verbo en infinitivo / gerundio o pertenece a la VERB_WHITELIST.
+ * @param {string} text
+ * @returns {boolean}
+ */
+export function startsWithVerb(text) {
+  const n = normalize(text);
+  if (!n) return false;
+  const first = n.split(/\s+/)[0];
+  if (!first) return false;
+  if (_NORMALIZED_VERB_WHITELIST.has(first)) return true;
+  if (/(?:ar|er|ir)$/.test(first) && first.length >= 4) return true;
+  if (/(?:ando|iendo)$/.test(first) && first.length >= 5) return true;
+  return false;
+}
+
+/**
+ * True si text está en mayúsculas (sin minúsculas, ignorando acentos/spaces) Y tiene <= maxWords palabras.
+ * @param {string} text
+ * @param {number} maxWords
+ * @returns {boolean}
+ */
+export function isAllCapsShort(text, maxWords = 4) {
+  const trimmed = (text || '').trim();
+  if (!trimmed) return false;
+  const noAccent = trimmed.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  if (/[a-z]/.test(noAccent)) return false;
+  if (!/[A-Z]/.test(noAccent)) return false;
+  const words = trimmed.split(/\s+/).filter(Boolean);
+  return words.length <= maxWords;
+}
+
+/**
+ * Detecta mismatch semántico entre OP name y operationFunction según OP_NAME_SEMANTIC_DICT.
+ * @param {string} opName
+ * @param {string} opFunction
+ * @returns {{ ok: boolean, mismatch?: string }}
+ */
+export function detectOpFunctionSemanticMismatch(opName, opFunction) {
+  const nName = normalize(opName);
+  const nFn = normalize(opFunction);
+  if (!nName) return { ok: true };
+
+  for (const rule of OP_NAME_SEMANTIC_DICT) {
+    const opNameMatches = (rule.opNameContains || []).some(kw => {
+      const k = normalize(kw);
+      return k.length > 0 && nName.includes(k);
+    });
+    if (!opNameMatches) continue;
+
+    if (rule.opFnMustNotContain && rule.opFnMustNotContain.length > 0) {
+      const hit = rule.opFnMustNotContain.find(kw => {
+        const k = normalize(kw);
+        return k.length > 0 && nFn.includes(k);
+      });
+      if (hit) {
+        return {
+          ok: false,
+          mismatch: `OP "${opName}" no debería contener "${hit}" en su función (regla: ${(rule.opNameContains || []).join('/')} → no ${(rule.opFnMustNotContain || []).join('/')})`,
+        };
+      }
+    }
+
+    if (rule.opFnMustContainAny && rule.opFnMustContainAny.length > 0) {
+      const anyHit = rule.opFnMustContainAny.some(kw => {
+        const k = normalize(kw);
+        return k.length > 0 && nFn.includes(k);
+      });
+      if (!anyHit) {
+        return {
+          ok: false,
+          mismatch: `OP "${opName}" debería contener alguno de [${(rule.opFnMustContainAny || []).join(', ')}] en su función`,
+        };
+      }
+    }
+  }
+  return { ok: true };
+}
+
+/**
+ * Devuelve los tags válidos asociados a una OP según KEYWORD_OP_TAGS.
+ * @param {string} opName
+ * @returns {string[]}
+ */
+export function getOpTags(opName) {
+  const n = normalize(opName);
+  if (!n) return [];
+  const tagSet = new Set();
+  for (const rule of KEYWORD_OP_TAGS) {
+    for (const kw of rule.keywords || []) {
+      const k = normalize(kw);
+      if (k && n.includes(k)) {
+        for (const t of rule.validOpTags || []) tagSet.add(t);
+        break;
+      }
+    }
+  }
+  return Array.from(tagSet);
+}
+
+/**
+ * Detecta keywords del failure.description que están misallocated en una OP.
+ * Portado literal de scripts/_auditWePlaceholdersAndAllocation.mjs:73-101.
+ * Mantiene la guardia "ambiguo → no marcar".
+ * @param {string} failureDesc
+ * @param {string[]} opTags
+ * @returns {{ keyword: string, expectedOpTags: string[] }[]}
+ */
+export function detectMisallocatedKeyword(failureDesc, opTags) {
+  const n = normalize(failureDesc);
+  if (!n) return [];
+  const matchedRules = [];
+  for (const rule of KEYWORD_OP_TAGS) {
+    for (const kw of rule.keywords || []) {
+      const k = normalize(kw);
+      if (k && n.includes(k)) {
+        matchedRules.push({ keyword: kw, validOpTags: rule.validOpTags });
+        break;
+      }
+    }
+  }
+  if (matchedRules.length === 0) return [];
+
+  const anyCoherent = matchedRules.some(r => r.validOpTags.some(t => opTags.includes(t)));
+  if (anyCoherent) return [];
+
+  if (matchedRules.length >= 2) {
+    const allShare = matchedRules.every(r =>
+      matchedRules[0].validOpTags.some(t => r.validOpTags.includes(t)),
+    );
+    if (!allShare) return [];
+  }
+
+  return [{ keyword: matchedRules[0].keyword, expectedOpTags: matchedRules[0].validOpTags }];
 }
