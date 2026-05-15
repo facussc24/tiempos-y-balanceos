@@ -47,8 +47,12 @@ const ThreeDApp: React.FC<ThreeDAppProps> = ({ onBackToLanding }) => {
     const [selected, setSelected] = useState<ModelId>('bolt');
 
     const model = MODELS.find((m) => m.id === selected) ?? MODELS[0];
-    // BASE_URL respeta el subpath en GitHub Pages (/tiempos-y-balanceos/)
-    const src = `${import.meta.env.BASE_URL}${model.file}`;
+    // BASE_URL respeta el subpath en GitHub Pages (/tiempos-y-balanceos/).
+    // __BUILD_TIMESTAMP__ se inyecta en build-time (vite.config define) y
+    // funciona como cache-bust del iframe. Sin esto los browsers cachean el
+    // iframe hasta 10 min (GH Pages max-age=600) y muestran version vieja
+    // aun despues de Ctrl+Shift+R sobre la pagina padre.
+    const src = `${import.meta.env.BASE_URL}${model.file}?v=${__BUILD_TIMESTAMP__}`;
 
     return (
         <div className="flex flex-col h-screen bg-slate-50">

@@ -9,3 +9,7 @@ interface ImportMetaEnv {
 interface ImportMeta {
     readonly env: ImportMetaEnv;
 }
+
+// Globales inyectados por vite.config define
+declare const __APP_VERSION__: string;
+declare const __BUILD_TIMESTAMP__: number;
