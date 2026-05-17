@@ -57,3 +57,13 @@ Check `CAUSE_APH_EMPTY_NO_PLACEHOLDER` en `scripts/_lib/amfeValidator.mjs` (CRIT
 - Detecta causas con `ap=H` (o `actionPriority=H`) que tengan los 3 campos de accion vacios (`optimizationAction`, `preventionAction`, `detectionAction`) Y ninguno contenga el placeholder autorizado.
 - Bloquea `--apply` de cualquier script `.mjs` que use `runWithValidation()` de `dryRunGuard.mjs` si introduce este gap.
 - Override con `{ allowNewCritical: true }` solo si Fak autoriza explicitamente.
+
+## Aclaracion 2026-05-17: placeholder NO requiere responsable ni dueDate
+
+Decision Fak (sesion soft-snacking-elephant Grupo 4 saltado):
+
+Una causa AP=H con `optimizationAction = "Pendiente definicion equipo APQP"` pero `responsible=""` y `dueDate=""` **es estado VALIDO en Barack**. El placeholder existe precisamente para senalizar al equipo APQP humano que debe completar la accion + el responsable + la fecha. **NO flaggear como issue** la ausencia de responsable/dueDate mientras la accion sea el placeholder.
+
+**Detectores no deben marcar** "placeholder sin responsable/dueDate" como problema. El estado completo (accion + responsable + fecha) se exige solo cuando la accion deja de ser placeholder (cuando el equipo APQP la define textualmente).
+
+Fak: "no no no hay responsable esta bien" (chat 2026-05-17).

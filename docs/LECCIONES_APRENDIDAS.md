@@ -523,3 +523,51 @@ Solo 3 fueron legitimas (las del pais de origen).
 **Backup pre-sesion**: `backups/2026-05-17T18-27-21/` (713 rows / 12 tablas)
 **Findings detallados**: `tmp/team-findings/` (4 detectores + consolidated.md)
 **Plan completo**: `~/.claude/plans/soft-snacking-elephant.md`
+
+### Continuacion sesion (Grupos 3 + decision Fak)
+
+**Grupo 3 — efectos VDA "TBD" reusados de AMFEs hermanos** (commit 1163990):
+4 fallas tenian effectLocal/NextLevel/EndUser = "TBD". Busqueda de similaridad
+cross-AMFE encontro matches en 4/11. Las otras 7 quedan TBD para el equipo APQP.
+- AMFE-1 OP40 "Costura corrida" <- AMFE-2 OP80 (sim 1.0)
+- AMFE-1 OP40 "Hilo roto" <- AMFE-2 OP80 (sim 0.85)
+- AMFE-INS-PAT OP5 "Omision verificacion insumos" <- AMFE-2 OP10 (sim 0.5)
+- AMFE-TR-PAT OP80 "Contaminacion soldadura" <- VWA-PAT-IPPADS OP110 (sim 0.5)
+
+Leccion del Grupo 3: el detector D-EFFECTS clasifico estos como "effects-copia"
+(3 niveles identicos), pero en realidad eran "effects-faltantes-TBD". Detector
+necesita check previo de TBD/vacio antes de marcar copia. Anotado en bug fix
+queue para proxima recalibracion.
+
+### Decisiones Barack confirmadas en esta sesion
+
+**Placeholder AP=H NO requiere responsable ni dueDate** (decision Fak, chat
+2026-05-17): la causa con `optimizationAction = "Pendiente definicion equipo
+APQP"` pero `responsible=""` y `dueDate=""` es estado VALIDO. El placeholder
+existe para señalizar al equipo humano que debe completarlo. Detectores NO
+deben flaggear esto como issue. Documentado en `amfe-aph-pending.md` seccion
+"Aclaracion 2026-05-17".
+
+Esto invalida el Grupo 4 del plan (58 placeholders sin responsable) que NO
+es un problema real.
+
+### Pendientes para proxima sesion
+
+Fak menciono al cerrar: **"lo que me gustaria revisar son las M a veces hay
+cosas raras ahi"** (chat 2026-05-17). Proxima sesion debe revisar los
+Work Elements 6M (Machine, Man, Material, Method, Measurement, Environment)
+en busca de:
+- WE.type asignada incorrectamente (ej. Machine donde deberia ser Material)
+- M faltantes en operaciones que las requieren (caso inyeccion plastica = 6M
+  completo segun injection.md)
+- WE.name no coherente con WE.type
+- Funciones de WE que no describen contribucion real al paso
+
+El detector D-MACHINE original solo encontro 2 findings — muy permisivo.
+Hay que armar detector mas estricto: cross-check WE.type vs WE.name vs
+function.description vs failures cause.category.
+
+Otros pendientes (volumen alto, requieren criterio Fak caso por caso):
+- 59 controles vagos ("Inspeccion visual" sin instrumento)
+- 37 D<=3 sin poka-yoke (verificar FP del detector primero)
+- 7 fallas con effects=TBD restantes (sin match en AMFEs hermanos)
