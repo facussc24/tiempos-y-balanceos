@@ -72,3 +72,12 @@ test-results/
 
 # Auto-generated plans and audit reports from scripts
 tmp/
+
+# OneDrive junction with sensitive Patagonia docs (NEVER commit)
+docs-local/
+
+# ESLint scratch logs
+*eslint*.txt
+
+# Scratch scripts (root-level standalone analysis)
+/analyze.js
