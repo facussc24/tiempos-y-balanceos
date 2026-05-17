@@ -109,7 +109,23 @@ const CRITICAL_TYPES = new Set([
     // Bloquea cualquier script que deje causas AP=H sin accion ni placeholder
     // "Pendiente definicion equipo APQP" (ver rules/amfe-aph-pending.md).
     'CAUSE_APH_EMPTY_NO_PLACEHOLDER',
+    // Severidad subcalibrada para fallas con efecto de incumplimiento legal
+    // (ver rules/amfe-severity-legal-compliance.md). Pais de origen, aduana, etc.
+    'CAUSE_LEGAL_COMPLIANCE_UNDERCALIBRATED',
 ]);
+
+// Patrones que identifican failures con efecto de incumplimiento legal/aduanero.
+// Ver rules/amfe-severity-legal-compliance.md. Match contra los 3 niveles de efecto.
+const LEGAL_COMPLIANCE_PATTERNS = [
+    /incumplimiento\s+legal/i,
+    /retenci[oó]n\s+aduanera/i,
+    /retenci[oó]n\s+en\s+aduana/i,
+    /detenci[oó]n\s+en\s+aduana/i,
+    /multa\s+aduanera/i,
+    /sanci[oó]n\s+legal/i,
+    /no\s+conformidad\s+legal/i,
+    /violaci[oó]n\s+legal/i,
+];
 
 /**
  * Valida calidad textual de un documento AMFE segun heuristicas 6M.
@@ -404,6 +420,23 @@ export function validateAmfeDoc(doc, productName = '', amfeNumber = '') {
                             causeUp.includes('OPERARIO NO CAPACITADO')) {
                             issues.push({ ...cCtx, type: 'CAUSE_CAPACITACION',
                                 detail: '"Falta de capacitacion" prohibido como causa (ver rules/amfe.md)' });
+                        }
+
+                        // CAUSE_LEGAL_COMPLIANCE_UNDERCALIBRATED
+                        // (rules/amfe-severity-legal-compliance.md)
+                        // Si el failure tiene efecto de incumplimiento legal/aduanero,
+                        // todas las causas deben tener S>=7. Pais de origen incorrecto,
+                        // retencion aduanera, multas, etc.
+                        const effectsTexts = [fm.effectLocal, fm.effectNextLevel, fm.effectEndUser]
+                            .map(s => String(s || ''));
+                        const isLegalCompliance = effectsTexts.some(t =>
+                            LEGAL_COMPLIANCE_PATTERNS.some(re => re.test(t)));
+                        if (isLegalCompliance) {
+                            const sevNum = Number(c.severity);
+                            if (Number.isFinite(sevNum) && sevNum > 0 && sevNum < 7) {
+                                issues.push({ ...cCtx, type: 'CAUSE_LEGAL_COMPLIANCE_UNDERCALIBRATED',
+                                    detail: `failure con efecto de incumplimiento legal pero S=${sevNum} (debe ser >=7, ver rules/amfe-severity-legal-compliance.md)` });
+                            }
                         }
 
                         // CAUSE_APH_EMPTY_NO_PLACEHOLDER (rules/amfe-aph-pending.md)

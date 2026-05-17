@@ -480,3 +480,46 @@ Esto afectaba a los 6 AMFEs VWA (HEADREST_FRONT, HEADREST_REAR_CEN, HEADREST_REA
 **Cambio**: OP 10 (Recepción de Materia Prima) sacada del Maestro de Inyección (family 15) y movida a nuevo Maestro de Logística y Recepción (family 16). Per AIAG CP 2024 "Procesos Interdependientes".
 
 **Pellets consolidados**: 4 entradas redundantes → 2 categorías: "Pellet higroscópico (ABS/PC/PA/PET)" + "Pellet termoplástico estándar (PP/PE)". Per AIAG CP 2024 reducción de complejidad.
+
+---
+
+## 2026-05-17 — Plan soft-snacking-elephant: juego multi-agente cazar errores boludos AMFEs
+
+**Contexto**: Sesion interactiva multi-agente para detectar y arreglar errores sistemicos en los 12 AMFEs Supabase. 4 subagents Explore corrieron en paralelo con 7 detectores (D-MACHINE, D-CAUSE, D-CONTROL, D-CAPACITACION, D-SOD, D-EFFECTS, D-APH). Total: 228 findings (48 critical + 180 warning).
+
+**Fixes aplicados (2 commits granulares)**:
+1. `d627596` — AMFE 150 (Armrest Rear Center): 9 causas AP=H sin accion -> placeholder "Pendiente definicion equipo APQP" (autorizado por regla `amfe-aph-pending.md`). 7 en OP10 RECEPCION + 2 en OP20 CORTE.
+2. `58f4d75` — 3 Headrest (HF-PAT, HRC-PAT, HRO-PAT): severidad de "Pais de origen ausente o incorrecto" subio de 5 a 7. effectEndUser dice "Incumplimiento legal declaracion origen" -> retencion aduanera = compliance legal -> S>=7 obligatorio.
+
+**Reglas durables nacidas de esta sesion**:
+- `amfe-aph-pending.md` (existente) — seccion "Enforcement" agregada con check nuevo
+- `amfe-severity-legal-compliance.md` (nuevo) — severidad minima 7 para fallas con efecto legal/aduanero
+
+**Checks enforcement agregados a `scripts/_lib/amfeValidator.mjs` (CRITICAL, bloqueante)**:
+- `CAUSE_APH_EMPTY_NO_PLACEHOLDER` — AP=H sin accion ni placeholder = bloqueo IATF
+- `CAUSE_LEGAL_COMPLIANCE_UNDERCALIBRATED` — failure con efecto legal pero S<7
+
+**Leccion: regex de keywords criticos no alcanza para calibrar severidad**
+
+El detector D-SOD marco 28 causas como "S-subcalibrada" usando regex de keywords ("legal", "seguridad", "trazabilidad", "no conformidad"). De las 28, **25 fueron falsos positivos**: el keyword aparecia pero el contexto NO era critico (ej. "Puntadas irregulares" con S=3-5 esta bien — defecto cosmetico; el regex disparaba por "no conformidad" generica).
+
+Solo 3 fueron legitimas (las del pais de origen).
+
+**Prevencion**:
+- Regex de keyword amplio NO ES SUFICIENTE para flag severidad. Necesita matchear contexto (effect text + failure desc + causa).
+- Cuando un detector marca un patron en muchos AMFEs, **leer el contexto real** antes de proponer fix masivo.
+- El "fix global automatico" prometido para "calibracion AIAG-VDA" requiere reglas mas granulares (por tipo de defecto / por keyword en effectEndUser especificamente, no en cualquier efecto).
+
+**Bug detector D-SOD anotado para proxima recalibracion**:
+- 3 failures con `EndUser: "TBD"` fueron marcados como "S-subcalibrada" cuando deberian haber sido "effects-faltantes" (D-EFFECTS subcheck). El detector C necesita verificar primero que los 3 niveles esten LLENOS antes de evaluar S.
+
+**Estado de hallazgos pendientes (no abordados en esta sesion)**:
+- 59 controles vagos ("Inspeccion visual" sin instrumento) - requieren criterio Fak/equipo APQP, uno por uno
+- 58 placeholders AP=H sin responsable/dueDate - el equipo APQP debe asignar
+- 11 effects-copia (3 niveles VDA identicos) - en AMFE-INS-PAT mayormente, requiere texto distinto por nivel
+- 37 D<=3 sin poka-yoke - revisar caso por caso
+- 25 falsos positivos S-subcalibrada del detector - descartados aca, ignorar en proximas corridas hasta recalibrar
+
+**Backup pre-sesion**: `backups/2026-05-17T18-27-21/` (713 rows / 12 tablas)
+**Findings detallados**: `tmp/team-findings/` (4 detectores + consolidated.md)
+**Plan completo**: `~/.claude/plans/soft-snacking-elephant.md`
