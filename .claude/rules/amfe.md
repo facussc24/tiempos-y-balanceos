@@ -183,6 +183,29 @@ Keywords exentos para A6: flamabilidad, flamable, tl 1010, voc, emisiones, airba
 Ver regla completa en `.claude/rules/amfe-actions.md`.
 RESUMEN: NUNCA inventar acciones. Solo el equipo humano las define.
 
+## Roles canonicos en WE.name type=Man (decision Fak 2026-05-17)
+
+El operario que ejecuta controles rutinarios en su estacion productiva es
+**"Operador de produccion"** (rol estandar Barack). NO usar "Operador de
+control" como WE.name de tipo Man — esa terminologia confunde con personal
+de Calidad.
+
+| Rol | Cuando se usa |
+|---|---|
+| **Operador de produccion** | Controles rutinarios en proceso (mayoria de casos) |
+| **Operador de Calidad** | Liberacion de primera pieza, setup de control inicial |
+| **Inspector de Calidad** | Auditorias formales, ensayos de laboratorio |
+| **Lider de Produccion** | Decisiones de paro de linea, escalamiento |
+
+Si encontras "Operador de control" en un WE existente, renombrar a
+"Operador de produccion" (o al rol especifico que corresponda al paso).
+
+Consistente con `control-plan.md` linea 23-24 (CP usa los mismos roles).
+
+Incidente fuente: sesion soft-snacking-elephant 2026-05-17 reusando AMFE-2
+OP25 (Mylar) a HRC/HRO OP25 vacias — Fak corrigio "Operador de control"
+de AMFE-2 al copiar.
+
 ## Valores numericos (pesos, tolerancias, consumos)
 NUNCA confirmar ni conservar valores numericos sin confirmacion explicita de Fak.
 En caso de duda: TBD. Solo Fak valida datos de ingenieria.
