@@ -127,6 +127,12 @@ const LEGAL_COMPLIANCE_PATTERNS = [
     /violaci[oó]n\s+legal/i,
 ];
 
+// Patrones que identifican OP/failure de corte (decision Fak 2026-05-17:
+// corte mal = SCRAP, no retrabajo). Ver rules/amfe.md "Calibracion de efectos".
+const CUTTING_OP_PATTERNS = [/CORTE/i, /TROQUELADO/i];
+const CUTTING_FAILURE_PATTERNS = [/\bcort[aeoó]/i, /troquelad/i];
+const REWORK_TERM_PATTERN = /retrabajo/i;
+
 /**
  * Valida calidad textual de un documento AMFE segun heuristicas 6M.
  * Detecta WE.name/fn.description genericos, WE.name = WE.type traducido,
@@ -358,6 +364,24 @@ export function validateAmfeDoc(doc, productName = '', amfeNumber = '') {
                     if (causes.length === 0) {
                         issues.push({ ...fmCtx, type: 'FM_NO_CAUSES', detail: 'Failure sin causas' });
                         continue;
+                    }
+
+                    // CUTTING_EFFECT_REWORK_SUSPECT (WARNING)
+                    // rules/amfe.md "Calibracion de efectos: corte = SCRAP".
+                    // Si la OP o failure es de corte y algun effect menciona "retrabajo" -> sospechoso.
+                    const opIsCutting = CUTTING_OP_PATTERNS.some(re => re.test(opName));
+                    const failureIsCutting = CUTTING_FAILURE_PATTERNS.some(re => re.test(fmDesc));
+                    if (opIsCutting || failureIsCutting) {
+                        const effectsTextsCut = [fm.effectLocal, fm.effectNextLevel, fm.effectEndUser]
+                            .map(s => String(s || ''));
+                        const reworkLevels = [];
+                        if (REWORK_TERM_PATTERN.test(effectsTextsCut[0])) reworkLevels.push('effectLocal');
+                        if (REWORK_TERM_PATTERN.test(effectsTextsCut[1])) reworkLevels.push('effectNextLevel');
+                        if (REWORK_TERM_PATTERN.test(effectsTextsCut[2])) reworkLevels.push('effectEndUser');
+                        if (reworkLevels.length > 0) {
+                            issues.push({ ...fmCtx, type: 'CUTTING_EFFECT_REWORK_SUSPECT',
+                                detail: `Falla de corte con "retrabajo" en ${reworkLevels.join(',')} (Barack: corte=SCRAP, ver rules/amfe.md)` });
+                        }
                     }
 
                     // LEGACY FIELDS — fm-level vacio o key missing, pero cause

@@ -210,6 +210,41 @@ de AMFE-2 al copiar.
 NUNCA confirmar ni conservar valores numericos sin confirmacion explicita de Fak.
 En caso de duda: TBD. Solo Fak valida datos de ingenieria.
 
+## Calibracion de efectos: corte = SCRAP, no retrabajo (decision Fak 2026-05-17)
+
+Cuando una falla pertenece a una operacion de **CORTE** (mesa de corte de vinilo,
+troquelado de espuma, corte de tela, etc.) y el material/pieza queda mal cortado,
+el efecto en la estacion (effectLocal) **NO debe decir "retrabajo"**.
+
+Razon (palabras de Fak): *"si se corta mal no hay vuelta atras"* — un material
+cortado mal NO se puede "des-cortar". El destino correcto es **SCRAP**.
+
+| OP type | Termino correcto en effectLocal |
+|---|---|
+| Corte (mesa, troquelado, vinilo, tela) | "Scrap del material mal cortado" / "Material descartado, no recuperable" |
+| Costura | "Retrabajo (descoser y rehacer)" |
+| Inyeccion plastica con rebabas | "Retrabajo (corte de colada/rebabas)" |
+| Inyeccion PU con pieza fuera de spec | "Scrap, no recuperable" |
+| Tapizado con bulto | "Retrabajo (desmontar y reposicionar funda)" |
+
+Si encontras una falla de corte con effectLocal/NextLevel que diga "retrabajo",
+revisar: probablemente esta mal copiado desde una OP de costura/ensamble.
+
+## Enforcement: check CUTTING_EFFECT_REWORK_SUSPECT en amfeValidator.mjs (WARNING)
+
+Detecta failures donde:
+- La operacion contiene "CORTE" / "TROQUELADO" en su nombre (uppercase), O
+- La failure.description menciona "corte", "cortar", "cortado", "troquelado"
+
+Y alguno de los 3 efectos (Local/NextLevel/EndUser) contiene "retrabajo".
+
+NO critical (puede haber casos validos donde "retrabajo" se refiere a otra cosa
+post-corte). Solo WARNING: alerta para revision manual.
+
+Incidente fuente: durante el reuso de efectos en Headrest (sesion soft-snacking-
+elephant 2026-05-17), propuse "Pieza rechazada, retrabajo necesario" como
+effectLocal para "Desviacion en corte de pliegos". Fak corrigio que corte = scrap.
+
 ## Auditor proactivo — OBLIGATORIO correr antes de entregar
 
 Script unificado que corre TODOS los chequeos estructurales sobre los 11 AMFEs en un solo comando:
