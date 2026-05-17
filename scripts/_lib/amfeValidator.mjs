@@ -105,6 +105,10 @@ const CRITICAL_TYPES = new Set([
     'FN_GENERIC_PLACEHOLDER',
     'WE_NAME_EQUALS_TYPE',
     'OP_FUNCTION_DUPLICATE_FOCUS',
+    // AP=H sin accion (agregado 2026-05-17 por plan soft-snacking-elephant)
+    // Bloquea cualquier script que deje causas AP=H sin accion ni placeholder
+    // "Pendiente definicion equipo APQP" (ver rules/amfe-aph-pending.md).
+    'CAUSE_APH_EMPTY_NO_PLACEHOLDER',
 ]);
 
 /**
@@ -400,6 +404,26 @@ export function validateAmfeDoc(doc, productName = '', amfeNumber = '') {
                             causeUp.includes('OPERARIO NO CAPACITADO')) {
                             issues.push({ ...cCtx, type: 'CAUSE_CAPACITACION',
                                 detail: '"Falta de capacitacion" prohibido como causa (ver rules/amfe.md)' });
+                        }
+
+                        // CAUSE_APH_EMPTY_NO_PLACEHOLDER (rules/amfe-aph-pending.md)
+                        // AP=H requiere accion. Si los 3 campos (optimization/prevention/detection)
+                        // estan vacios Y ninguno contiene el placeholder autorizado, es bloqueo IATF.
+                        const apVal = String(c.ap || c.actionPriority || '').trim().toUpperCase();
+                        if (apVal === 'H') {
+                            const optAct = String(c.optimizationAction || '').trim();
+                            const prevAct = String(c.preventionAction || '').trim();
+                            const detAct = String(c.detectionAction || '').trim();
+                            const placeholderRe = /pendiente\s+definici[oó]n\s+equipo\s+apqp/i;
+                            const hasContent = optAct || prevAct || detAct;
+                            const hasPlaceholder =
+                                placeholderRe.test(optAct) ||
+                                placeholderRe.test(prevAct) ||
+                                placeholderRe.test(detAct);
+                            if (!hasContent || (!hasPlaceholder && !optAct && !prevAct && !detAct)) {
+                                issues.push({ ...cCtx, type: 'CAUSE_APH_EMPTY_NO_PLACEHOLDER',
+                                    detail: 'AP=H sin accion ni placeholder "Pendiente definicion equipo APQP" — bloqueante IATF' });
+                            }
                         }
                     }
                 }

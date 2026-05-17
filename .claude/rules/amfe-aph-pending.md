@@ -49,3 +49,11 @@ Pendiente definicion equipo APQP
 
 ## Incidente asociado
 - 2026-04-20: auditoria read-only detecto 49 causas AP=H sin accion en 11 AMFEs (bloqueo IATF). Fak autorizo default placeholder en lugar de preguntar caso por caso.
+- 2026-05-17: detector D-APH (plan soft-snacking-elephant) encontro 9 causas AP=H sin accion ni placeholder en AMFE 150 (Armrest Rear Center). Fix aplicado con `_fix-aph-empty-amfe150.mjs` + check enforcement nuevo abajo.
+
+## Enforcement (gate pre-commit obligatorio)
+
+Check `CAUSE_APH_EMPTY_NO_PLACEHOLDER` en `scripts/_lib/amfeValidator.mjs` (CRITICAL):
+- Detecta causas con `ap=H` (o `actionPriority=H`) que tengan los 3 campos de accion vacios (`optimizationAction`, `preventionAction`, `detectionAction`) Y ninguno contenga el placeholder autorizado.
+- Bloquea `--apply` de cualquier script `.mjs` que use `runWithValidation()` de `dryRunGuard.mjs` si introduce este gap.
+- Override con `{ allowNewCritical: true }` solo si Fak autoriza explicitamente.
