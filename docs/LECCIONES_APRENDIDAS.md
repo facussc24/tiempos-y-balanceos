@@ -571,3 +571,50 @@ Otros pendientes (volumen alto, requieren criterio Fak caso por caso):
 - 59 controles vagos ("Inspeccion visual" sin instrumento)
 - 37 D<=3 sin poka-yoke (verificar FP del detector primero)
 - 7 fallas con effects=TBD restantes (sin match en AMFEs hermanos)
+
+### Sesion M parte 2 — 5 commits adicionales (e24a2b6 ... 6c95dff)
+
+Fak pidio "seguir investigando las M". Detector M raras (subcheck por keywords)
+encontro 5 findings, 4 FP. Recorrido humano con criterio detallado a continuacion:
+
+**Fixes aplicados (acumulado sesion M completa = 96 fixes en Supabase):**
+- Telas Planas OP70: "clips" -> "APLIX" (regla pfd.md violada)
+- HRC + HRO OP25 Mylar: reusar 3 WEs de AMFE-2 OP25 (operador renombrado a "Operador de produccion")
+- 3 agrupaciones "/" violando 1M (Aspirador rename, Pistola sacar /Rodillo, Cinta/Calibre split)
+- HRC/HRO OP70 INSERCION VARILLA: falla "colocacion mayor/menor cantidad piezas" (copia de embalaje) reemplazada con "Varilla desalineada" de HF-PAT OP51
+- 5 funciones tautologicas reescritas (IP-PADS OP10 "Se recepciona...", HF-PAT OP20 "CORTE DE PANELES", AMFE 150 OP10 Operador+Lider mismo texto, IP-PADS OP30 "BMA090/BMA089")
+- 54 effects audiencia ("Cliente Interno/Externo") -> textos descriptivos reusando AMFEs hermanos
+- 11 effects audiencia restantes -> 5 patrones validados con Fak (corte=scrap, varilla=fuga PU, inyeccion=scrap, peso=scrap, etc)
+- 15 causas "estiba/embalaje/manipulacion en transito" en WE Autoelevador -> reescritas para reflejar rol del operador del autoelevador en Barack
+
+**Reglas durables nuevas en `.claude/rules/`:**
+- amfe.md seccion "Roles canonicos en WE.name type=Man" — Operador de produccion estandar
+- amfe.md seccion "Calibracion de efectos: corte = SCRAP, no retrabajo" + tabla por OP type
+- amfe.md seccion "Categorizacion pragmatica Barack: cuando una causa cruza M" (Caso A y B)
+- amfe-severity-legal-compliance.md (nueva) — S>=7 con efecto legal/aduanero
+
+**Checks nuevos en `amfeValidator.mjs`:**
+- CAUSE_APH_EMPTY_NO_PLACEHOLDER (CRITICAL)
+- CAUSE_LEGAL_COMPLIANCE_UNDERCALIBRATED (CRITICAL)
+- CUTTING_EFFECT_REWORK_SUSPECT (WARNING) — detecto 3 fixes auto durante esta sesion
+
+### Hallazgos pendientes en 3 Headrest (comparativo subagent 2026-05-17)
+
+Comparativo HF-PAT / HRC-PAT / HRO-PAT post-fixes encontro 26 inconsistencias:
+
+**Crítico:**
+- **HF-PAT OP50 = ENFUNDADO** (operador manual) vs **HRC-PAT/HRO-PAT OP50 = INYECCION DE PU** (maquina quimica) — son operaciones COMPLETAMENTE DISTINTAS con el mismo numero. Indica merge de maestros distintos. Validar con equipo APQP.
+
+**Severidades inconsistentes entre los 3 (misma falla, valores distintos):**
+- "Puntadas irregulares o arrugas": HF S=6 | HRC S=3 | HRO S=8 (span 2-8 sin justificacion)
+- "Costura descosida o debil": HF S=8 | HRC S=8 | HRO S=4 (HRO claramente subcalibrada)
+- "Pieza con rebaba visible": HF S=3 | HRC S=3 | HRO S=8 (HRO sobrecalibrada)
+
+**Estructurales:**
+- HF tiene 16 OPs (granular con sub-ops 28/51/61-63/81-82) vs HRC/HRO 14 OPs (compacta) — maestros distintos
+- HF OP70 Control: "Mesa de control final" + "Inspector de calidad" | HRC/HRO OP70: solo "Operador de produccion" — sin documentar por que difiere
+- HRO OP40 tiene 2 WEs con placeholders ("Metodo: Configuracion...") cuando HF/HRC tienen 5 WEs especificos
+
+**Detalle completo:** `tmp/team-findings/headrest-comparativo.md` (no commiteado, perderse cuando se limpie tmp).
+
+Si la proxima sesion retoma esto, atacar primero el caso critico (OP50 ENFUNDADO vs INYECCION PU) — eso afecta CP/HO derivados.

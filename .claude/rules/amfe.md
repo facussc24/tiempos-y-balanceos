@@ -241,6 +241,51 @@ Y alguno de los 3 efectos (Local/NextLevel/EndUser) contiene "retrabajo".
 NO critical (puede haber casos validos donde "retrabajo" se refiere a otra cosa
 post-corte). Solo WARNING: alerta para revision manual.
 
+## Categorizacion pragmatica Barack: cuando una causa cruza M (decision Fak 2026-05-17)
+
+VDA 2019 prescribe que cada causa se categorice por su tipo M dominante. En
+practica Barack hay 2 casos donde la causa "cruza" tipos y se acepta una
+categorizacion pragmatica:
+
+### Caso A — Equipo con operador dedicado (Autoelevador, Mesa de corte, etc.)
+
+Causas que hablan de **ACCION DEL OPERADOR sobre el equipo** quedan en el WE
+del **equipo (Machine)**, NO en un WE Man separado.
+
+Ejemplos validos:
+- WE Machine "Autoelevador" puede tener causa "Operador del autoelevador maniobra brusco durante traslado"
+- WE Machine "Mesa de corte" puede tener causa "Operador no centra el material antes de cortar"
+
+Razon: el WE "equipo+operador del equipo" es indivisible operativamente. Separar
+en 2 WEs (Machine + Man) generaria duplicacion y confusion.
+
+NO confundir con: causas que hablan del **MATERIAL recibido** ("embalaje del
+proveedor inadecuado") — esas si deberian ir en un WE Material o reescribir
+para reflejar el rol del operador receptor. Sesion 2026-05-17 reescribio 15
+causas en WE Autoelevador siguiendo este patron.
+
+### Caso B — "Instruccion incompleta" como causa raiz
+
+Causas del tipo "Instruccion de trabajo incompleta para [accion]" quedan en
+WE **Man (Operador)**, NO se mueven a Method.
+
+Razon: aunque la causa raiz ES del procedimiento (Method), la causa se
+manifiesta como **error humano visible** y la documentacion APQP la asocia al
+operador. La accion correctiva igualmente apunta a actualizar el instructivo
+(P-09/I), pero la causa se documenta en Man pragmaticamente.
+
+Aplicable a: 9 causas detectadas en sesion 2026-05-17 (AMFE-2 OP10/15/40/60/90,
+INS-PAT OP15, IP-PADS OP81, ARM-PAT OP15/40). NO se modificaron — decision
+explicita Fak.
+
+### Que NO permitir
+
+NO usar estas excepciones para justificar copy-paste perezoso. Cada categorizacion
+"cruzada" debe estar JUSTIFICADA por la naturaleza del proceso. Si no esta claro,
+preferir la categorizacion VDA pura.
+
+---
+
 Incidente fuente: durante el reuso de efectos en Headrest (sesion soft-snacking-
 elephant 2026-05-17), propuse "Pieza rechazada, retrabajo necesario" como
 effectLocal para "Desviacion en corte de pliegos". Fak corrigio que corte = scrap.
