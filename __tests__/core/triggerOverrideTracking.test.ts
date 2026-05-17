@@ -10,9 +10,9 @@
  */
 
 import type { PfdDocument, PfdStep } from '../../modules/pfd/pfdTypes';
-import type { AmfeDocument, AmfeOperation, AmfeWorkElement, AmfeFunction, AmfeFailure, AmfeCause } from '../../modules/amfe/amfeTypes';
-import type { ControlPlanDocument, ControlPlanItem } from '../../modules/controlPlan/controlPlanTypes';
-import type { HoDocument, HojaOperacion } from '../../modules/hojaOperaciones/hojaOperacionesTypes';
+import type { AmfeDocument } from '../../modules/amfe/amfeTypes';
+import type { ControlPlanDocument } from '../../modules/controlPlan/controlPlanTypes';
+import type { HoDocument } from '../../modules/hojaOperaciones/hojaOperacionesTypes';
 
 // ---------------------------------------------------------------------------
 // Mocks

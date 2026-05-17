@@ -16,9 +16,7 @@ import {
     detectCrossDocAlerts,
     getDownstreamTargets,
     APQP_CASCADE,
-    type CrossDocAlert,
 } from '../../utils/crossDocumentAlerts';
-import type { DocumentModule } from '../../utils/revisionUtils';
 
 describe('crossDocumentAlerts', () => {
     beforeEach(() => {

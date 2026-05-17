@@ -1,6 +1,4 @@
-import React from 'react';
-import { render, fireEvent, screen } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 // import { FlowSimulatorModule } from '../modules/flow-simulator/FlowSimulatorModule';
 
 // Test disabled due to 'Transform failed' errors in current environment for FlowSimulatorModule.tsx

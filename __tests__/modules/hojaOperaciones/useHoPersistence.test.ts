@@ -1,14 +1,9 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import {
     loadHoDraft,
     listHoDraftKeys,
     deleteHoDraft,
 } from '../../../modules/hojaOperaciones/useHoPersistence';
-import {
-    HoDocument,
-    EMPTY_HO_HEADER,
-    createEmptyHoSheet,
-} from '../../../modules/hojaOperaciones/hojaOperacionesTypes';
 
 // ============================================================================
 // MOCK IndexedDB — jsdom doesn't provide a real one

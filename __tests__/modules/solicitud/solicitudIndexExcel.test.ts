@@ -225,16 +225,16 @@ describe('updateSolicitudIndex', () => {
     // Mock browser download APIs
     let mockCreateObjectURL: ReturnType<typeof vi.fn>;
     let mockRevokeObjectURL: ReturnType<typeof vi.fn>;
-    let mockAppendChild: ReturnType<typeof vi.fn>;
-    let mockRemoveChild: ReturnType<typeof vi.fn>;
+    let _mockAppendChild: ReturnType<typeof vi.fn>;
+    let _mockRemoveChild: ReturnType<typeof vi.fn>;
     let mockClick: ReturnType<typeof vi.fn>;
 
     beforeEach(() => {
         mockCreateObjectURL = vi.fn().mockReturnValue('blob:mock-url');
         mockRevokeObjectURL = vi.fn();
         mockClick = vi.fn();
-        mockAppendChild = vi.spyOn(document.body, 'appendChild').mockImplementation((el) => el) as any;
-        mockRemoveChild = vi.spyOn(document.body, 'removeChild').mockImplementation((el) => el) as any;
+        _mockAppendChild = vi.spyOn(document.body, 'appendChild').mockImplementation((el) => el) as any;
+        _mockRemoveChild = vi.spyOn(document.body, 'removeChild').mockImplementation((el) => el) as any;
 
         // Mock URL methods
         vi.stubGlobal('URL', {

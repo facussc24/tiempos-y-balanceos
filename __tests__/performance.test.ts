@@ -9,9 +9,8 @@
  * Run with: npx vitest run __tests__/performance.test.ts
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
-import { DESSimulationEngine, createDESEngine, DESConfig } from '../modules/flow-simulator/desSimulationEngine';
-import { createEmptyKPIs } from '../modules/flow-simulator/flowTypes';
+import { describe, it, expect } from 'vitest';
+import { createDESEngine, DESConfig } from '../modules/flow-simulator/desSimulationEngine';
 
 // =============================================================================
 // TEST UTILITIES
@@ -72,7 +71,7 @@ describe('Performance Benchmarks', () => {
             expect(result.executionTimeMs).toBeLessThan(50);
             expect(result.kpis.bottleneckStationId).toBeDefined();
 
-            console.log(`[BENCH] 50 pcs × 3 stations: ${result.executionTimeMs.toFixed(2)}ms`);
+            console.info(`[BENCH] 50 pcs × 3 stations: ${result.executionTimeMs.toFixed(2)}ms`);
         });
 
         it('should complete 100 pieces through 8 stations in < 50ms', () => {
@@ -99,7 +98,7 @@ describe('Performance Benchmarks', () => {
             // Note: Under full test suite load, DES timing can 3-4x due to CPU contention
             expect(result.executionTimeMs).toBeLessThan(1000);
 
-            console.log(`[BENCH] 100 pcs × 8 stations: ${result.executionTimeMs.toFixed(2)}ms`);
+            console.info(`[BENCH] 100 pcs × 8 stations: ${result.executionTimeMs.toFixed(2)}ms`);
         });
 
         it('should complete 1000 pieces through 10 stations in < 5000ms', () => {
@@ -118,7 +117,7 @@ describe('Performance Benchmarks', () => {
             expect(result.completedCount).toBeGreaterThanOrEqual(998);
             expect(result.executionTimeMs).toBeLessThan(5000);
 
-            console.log(`[BENCH] 1000 pcs × 10 stations: ${result.executionTimeMs.toFixed(2)}ms, ${result.tickCount} events`);
+            console.info(`[BENCH] 1000 pcs × 10 stations: ${result.executionTimeMs.toFixed(2)}ms, ${result.tickCount} events`);
         });
     });
 
@@ -144,7 +143,7 @@ describe('Performance Benchmarks', () => {
                 expect(memDelta).toBeLessThan(50);
             }
 
-            console.log(`[BENCH] 100 pcs × 100 stations: ${result.executionTimeMs.toFixed(2)}ms, ~${memDelta.toFixed(1)}MB`);
+            console.info(`[BENCH] 100 pcs × 100 stations: ${result.executionTimeMs.toFixed(2)}ms, ~${memDelta.toFixed(1)}MB`);
         });
 
         it('should handle 100 stations with 500 pieces in < 2000ms', () => {
@@ -161,7 +160,7 @@ describe('Performance Benchmarks', () => {
             expect(result.completedCount).toBeGreaterThanOrEqual(498);
             expect(result.executionTimeMs).toBeLessThan(2000);
 
-            console.log(`[BENCH] 500 pcs × 100 stations: ${result.executionTimeMs.toFixed(2)}ms, ${result.tickCount} events`);
+            console.info(`[BENCH] 500 pcs × 100 stations: ${result.executionTimeMs.toFixed(2)}ms, ${result.tickCount} events`);
         });
     });
 
@@ -186,7 +185,7 @@ describe('Performance Benchmarks', () => {
                 expect(result.completedCount).toBe(100);
                 expect(result.executionTimeMs).toBeLessThan(expectedMs);
 
-                console.log(`[BENCH] ${stations} stations: ${result.executionTimeMs.toFixed(2)}ms`);
+                console.info(`[BENCH] ${stations} stations: ${result.executionTimeMs.toFixed(2)}ms`);
             });
         });
     });

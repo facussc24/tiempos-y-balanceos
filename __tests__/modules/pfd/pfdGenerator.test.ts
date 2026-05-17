@@ -8,9 +8,8 @@ import { describe, it, expect } from 'vitest';
 import {
     generatePfdFromAmfe,
     inferStepType,
-    PfdGenerationResult,
 } from '../../../modules/pfd/pfdGenerator';
-import type { AmfeDocument, AmfeOperation, AmfeWorkElement, AmfeFunction, AmfeFailure, AmfeCause } from '../../../modules/amfe/amfeTypes';
+import type { AmfeDocument, AmfeOperation, AmfeWorkElement, AmfeFailure, AmfeCause } from '../../../modules/amfe/amfeTypes';
 
 // ============================================================================
 // HELPERS

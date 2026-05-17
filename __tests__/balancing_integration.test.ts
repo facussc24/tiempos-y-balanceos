@@ -5,15 +5,14 @@
  * into simulator configuration and handle delta synchronization.
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import {
     parseShiftsToCalendar,
     parseDemandConfig,
     parseStationsFromBalancing,
     parseProjectToSimulator,
-    SimulatorConfig,
 } from '../modules/flow-simulator/balancingAdapter';
-import { ProjectData, Shift, Task, StationConfig, Sector, Assignment } from '../types';
+import { ProjectData } from '../types';
 
 // Helper to create minimal ProjectData for testing
 function createTestProjectData(overrides: Partial<ProjectData> = {}): ProjectData {
