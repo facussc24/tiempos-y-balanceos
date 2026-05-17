@@ -102,7 +102,7 @@ export function disableFaultSimulation(): void {
 /**
  * Get current fault simulation status
  */
-function getFaultSimulationStatus(): FaultConfig {
+function _getFaultSimulationStatus(): FaultConfig {
     return { ...faultConfig };
 }
 
@@ -110,7 +110,7 @@ function getFaultSimulationStatus(): FaultConfig {
  * Check if should simulate fault (and potentially throw)
  * Call this at the beginning of file operations in DEV mode
  */
-async function maybeSimulateFault(operation: string): Promise<void> {
+async function _maybeSimulateFault(operation: string): Promise<void> {
     if (!isDevMode() || !faultConfig.enabled || !faultConfig.errorType) {
         return;
     }
@@ -361,7 +361,7 @@ export async function testConflictNotRetried(): Promise<QATestResult> {
                 { maxRetries: 3, baseDelayMs: 50 }
             );
             throw new Error('Should have thrown ConflictError');
-        } catch (err) {
+        } catch (_err) {
             // Expected - verify only 1 attempt
             if (attemptCount !== 1) {
                 throw new Error(`ConflictError was retried! Attempts: ${attemptCount}`);

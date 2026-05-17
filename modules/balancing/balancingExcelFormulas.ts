@@ -20,19 +20,19 @@ function cellAddr(col: number, row: number): string {
 }
 
 /** Build Excel range string: (0,0, 2,4) → "A1:C5" */
-function rangeAddr(startCol: number, startRow: number, endCol: number, endRow: number): string {
+function _rangeAddr(startCol: number, startRow: number, endCol: number, endRow: number): string {
     return `${cellAddr(startCol, startRow)}:${cellAddr(endCol, endRow)}`;
 }
 
 /** AVERAGE formula over specific cells (for time measurements, skipping blanks) */
-function averageFormula(cells: string[]): string {
+function _averageFormula(cells: string[]): string {
     if (cells.length === 0) return '0';
     if (cells.length === 1) return cells[0];
     return `AVERAGE(${cells.join(',')})`;
 }
 
 /** Standard time formula: avg * rating * (1 + fatigue) */
-function standardTimeFormula(avgCell: string, ratingCell: string, fatiguePct: number): string {
+function _standardTimeFormula(avgCell: string, ratingCell: string, fatiguePct: number): string {
     if (fatiguePct > 0) {
         return `${avgCell}*${ratingCell}*(1+${fatiguePct / 100})`;
     }
@@ -41,17 +41,17 @@ function standardTimeFormula(avgCell: string, ratingCell: string, fatiguePct: nu
 
 /** Takt time formula: (available_minutes * 60) / demand
  *  FIX: Added IF guard to prevent #DIV/0! when demand cell is 0 */
-function taktFormula(availMinutesCell: string, demandCell: string): string {
+function _taktFormula(availMinutesCell: string, demandCell: string): string {
     return `IF(${demandCell}>0,(${availMinutesCell}*60)/${demandCell},0)`;
 }
 
 /** Pieces per hour: 3600 / cycle_time */
-function piecesPerHourFormula(cycleTimeCell: string): string {
+function _piecesPerHourFormula(cycleTimeCell: string): string {
     return `IF(${cycleTimeCell}>0,3600/${cycleTimeCell},0)`;
 }
 
 /** Station assignment matrix cell: IF matched, return std time, else 0 */
-function assignmentFormula(stationCol: number, headerRow: number, operatorCell: string, stdTimeCell: string): string {
+function _assignmentFormula(stationCol: number, headerRow: number, operatorCell: string, stdTimeCell: string): string {
     const stationHeader = cellAddr(stationCol, headerRow);
     return `IF(${stationHeader}=${operatorCell},${stdTimeCell},0)`;
 }

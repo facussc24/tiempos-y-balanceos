@@ -378,7 +378,7 @@ export function balanceMixedModel(
  * Calculate product breakdown for a station
  * Used for stacked bar visualization
  */
-function calculateStationProductBreakdown(
+function _calculateStationProductBreakdown(
     stationTasks: MixTask[],
     totalDemand: number
 ): Record<string, number> {
@@ -988,4 +988,4 @@ function detectParallelStationNeeds(
 }
 
 // Backward compatibility alias
-const detectTaktViolations = detectParallelStationNeeds;
+const _detectTaktViolations = detectParallelStationNeeds;

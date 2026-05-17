@@ -48,10 +48,10 @@ export const SimulationResults: React.FC<Props> = ({
                 // If BottleneckLabor is true, Manual > Machine, so saturation > 100% implicitly.
                 // We want to warn even if NOT bottleneck but VERY close (90-99%)
 
-                const saturationRatio = (machinePortionPct > 0) ? (currentEffectiveManualTime / (realCycleTime * (machinePortionPct / 100) / (machinePortionPct / 100))) : 0;
-                // Wait, machinePortionPct is (machine/real)*100. 
+                const _saturationRatio = (machinePortionPct > 0) ? (currentEffectiveManualTime / (realCycleTime * (machinePortionPct / 100) / (machinePortionPct / 100))) : 0;
+                // Wait, machinePortionPct is (machine/real)*100.
                 // Simpler: Compare Manual vs Machine Limit.
-                const manualLoad = currentEffectiveManualTime;
+                const _manualLoad = currentEffectiveManualTime;
 
                 // We need the "Pure Machine Time" (approximate from manualLimitCycle vs realCycle logic or just trust the bottleneck flag).
                 // Actually, manualLimitCycle vs machineLimitCycle (hidden props in Logic but calculated in useCavityCalculator).

@@ -436,7 +436,7 @@ const calculateScenario = (
  * @param data - Current ProjectData
  * @returns ExecutiveSummaryResult with scenarios and warnings
  */
-const calculateExecutiveSummary = (data: ProjectData): ExecutiveSummaryResult => {
+const _calculateExecutiveSummary = (data: ProjectData): ExecutiveSummaryResult => {
     const warnings: string[] = [];
 
     // Data quality checks
@@ -487,7 +487,7 @@ const calculateExecutiveSummary = (data: ProjectData): ExecutiveSummaryResult =>
  * Export the executive summary scenario to an Excel file.
  * Reuses xlsx-js-style (same as utils/excel.ts).
  */
-const exportSummaryToExcel = (
+const _exportSummaryToExcel = (
     scenario: ShiftScenarioResult,
     projectName: string
 ): void => {
@@ -706,7 +706,7 @@ const exportSummaryToExcel = (
  *   - Sheet 2+: Detalle per shift
  *   - Last sheet: Detalle de Máquinas consolidado
  */
-const exportFullSummaryToExcel = (
+const _exportFullSummaryToExcel = (
     summary: ExecutiveSummaryResult
 ): void => {
     const styles = {

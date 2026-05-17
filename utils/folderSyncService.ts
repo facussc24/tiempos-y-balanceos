@@ -126,12 +126,12 @@ async function setSyncFolderPath(folder: string): Promise<string> {
     return folder;
 }
 
-async function isSyncFolderConfigured(): Promise<boolean> {
+async function _isSyncFolderConfigured(): Promise<boolean> {
     const settings = await loadSettings();
     return !!settings.syncFolderPath;
 }
 
-async function getSyncFolderPath(): Promise<string | null> {
+async function _getSyncFolderPath(): Promise<string | null> {
     const settings = await loadSettings();
     return settings.syncFolderPath;
 }
@@ -320,7 +320,7 @@ export async function pullApply(
  * Push local changes, then pull remote changes.
  * Returns combined results for the UI.
  */
-async function syncBidirectional(
+async function _syncBidirectional(
     resolutions: ResolvedConflict[] = [],
 ): Promise<SyncResult> {
     // 1. Push first so others can see our latest

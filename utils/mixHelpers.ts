@@ -188,7 +188,7 @@ export function createEmptyMixScenario(name: string, createdBy: string): MixScen
 /**
  * Add a product reference to a mix scenario
  */
-function addProductToMix(
+function _addProductToMix(
     scenario: MixScenario,
     path: string,
     demand: number
@@ -223,7 +223,7 @@ function addProductToMix(
 /**
  * Remove a product from a mix scenario by path
  */
-function removeProductFromMix(
+function _removeProductFromMix(
     scenario: MixScenario,
     path: string
 ): MixScenario {
@@ -250,7 +250,7 @@ function removeProductFromMix(
 /**
  * Update the demand for a product in a mix scenario
  */
-function updateProductDemand(
+function _updateProductDemand(
     scenario: MixScenario,
     path: string,
     demand: number

@@ -34,15 +34,15 @@ const DEFAULT_AMFE_BASE = 'Y:\\Ingenieria\\Documentacion Gestion Ingenieria\\18.
 
 let _amfeBasePath: string = DEFAULT_AMFE_BASE;
 
-function getAmfeBasePath(): string {
+function _getAmfeBasePath(): string {
     return _amfeBasePath;
 }
 
-function setAmfeBasePath(path: string): void {
+function _setAmfeBasePath(path: string): void {
     _amfeBasePath = path;
 }
 
-async function initAmfeBasePath(): Promise<void> {
+async function _initAmfeBasePath(): Promise<void> {
     const settings = await loadAppSettings();
     if (settings.amfeBasePath) {
         _amfeBasePath = settings.amfeBasePath;

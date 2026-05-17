@@ -33,7 +33,7 @@ const renderLabel = (props: { name?: string; percent?: number }) => {
 };
 
 export const DashboardPanel: React.FC<Props> = ({
-  results, pieces, totalContainers, totalPieces, totalM2, avgCoverageDays, loadedPieces,
+  results, pieces: _pieces, totalContainers: _totalContainers, totalPieces: _totalPieces, totalM2: _totalM2, avgCoverageDays, loadedPieces,
 }) => {
   const [clientFilter, setClientFilter] = useState<string>('ALL');
 
