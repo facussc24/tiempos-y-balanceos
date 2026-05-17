@@ -43,10 +43,10 @@ export const pickFolder = async (): Promise<string | null> => {
 };
 
 /** Pick a project file (no-op in web). */
-const pickProjectFile = async (): Promise<string | null> => null;
+const _pickProjectFile = async (): Promise<string | null> => null;
 
 /** Pick a save location (no-op in web). */
-const pickSaveLocation = async (_defaultName?: string, _filters?: unknown[]): Promise<string | null> => null;
+const _pickSaveLocation = async (_defaultName?: string, _filters?: unknown[]): Promise<string | null> => null;
 
 /** List files/dirs (stub for compatibility). */
 export const readDir = async (_path: string): Promise<FSItem[]> => {
@@ -55,7 +55,7 @@ export const readDir = async (_path: string): Promise<FSItem[]> => {
 };
 
 /** Create directory (no-op in web). */
-const createDir = async (_path: string): Promise<boolean> => false;
+const _createDir = async (_path: string): Promise<boolean> => false;
 
 /** Alias for createDir. */
 export const ensureDir = async (_path: string): Promise<boolean> => false;
@@ -111,7 +111,7 @@ export const rename = async (_src: string, _dst: string): Promise<boolean> => fa
 // ---------------------------------------------------------------------------
 
 /** Trigger a browser download for arbitrary data. */
-function triggerDownload(filename: string, content: string | Uint8Array, mimeType = 'application/octet-stream'): void {
+function _triggerDownload(filename: string, content: string | Uint8Array, mimeType = 'application/octet-stream'): void {
     const blob = content instanceof Uint8Array
         ? new Blob([content], { type: mimeType })
         : new Blob([content], { type: mimeType });
@@ -146,7 +146,7 @@ export const initFileSystem = async (): Promise<void> => {
 // Storage mode
 // ---------------------------------------------------------------------------
 
-const getStorageMode = (): 'web' => 'web';
+const _getStorageMode = (): 'web' => 'web';
 
 // ---------------------------------------------------------------------------
 // Project operations (handled by repositories in web mode)
@@ -187,23 +187,23 @@ export const setCurrentProject = (projectId: string | null): void => {
 // Project-specific filesystem operations (no-ops in web)
 // ---------------------------------------------------------------------------
 
-const saveProjectToAppData = async (_id: string, _data: ProjectData): Promise<boolean> => false;
+const _saveProjectToAppData = async (_id: string, _data: ProjectData): Promise<boolean> => false;
 
-const loadProjectFromAppData = async (_id: string): Promise<ProjectData | null> => null;
+const _loadProjectFromAppData = async (_id: string): Promise<ProjectData | null> => null;
 
-const listProjectsInAppData = async (): Promise<Array<{ id: string; name: string; lastModified: number }>> => [];
+const _listProjectsInAppData = async (): Promise<Array<{ id: string; name: string; lastModified: number }>> => [];
 
-const deleteProjectFromAppData = async (_id: string): Promise<boolean> => false;
+const _deleteProjectFromAppData = async (_id: string): Promise<boolean> => false;
 
 // ---------------------------------------------------------------------------
 // Media (no-op stubs — use Supabase Storage)
 // ---------------------------------------------------------------------------
 
 /** @deprecated Use Supabase Storage for media files. */
-const saveTaskMedia = async (_file: File, _taskId: string): Promise<string | null> => null;
+const _saveTaskMedia = async (_file: File, _taskId: string): Promise<string | null> => null;
 
 /** @deprecated Use Supabase Storage for media files. */
-const loadTaskMedia = async (_mediaRef: string): Promise<string | null> => null;
+const _loadTaskMedia = async (_mediaRef: string): Promise<string | null> => null;
 
 export const saveMediaFile = async (_projectId: string, _taskId: string, _file: File): Promise<string | null> => null;
 
@@ -213,33 +213,33 @@ export const loadMediaFile = async (_projectId: string, _mediaRef: string): Prom
 // Export / Import operations (no-ops in web)
 // ---------------------------------------------------------------------------
 
-const exportProject = async (_path: string, _data: ProjectData): Promise<boolean> => false;
+const _exportProject = async (_path: string, _data: ProjectData): Promise<boolean> => false;
 
-const importProject = async (_path: string): Promise<ProjectData | null> => null;
+const _importProject = async (_path: string): Promise<ProjectData | null> => null;
 
 // ---------------------------------------------------------------------------
 // Dialogs (browser-native)
 // ---------------------------------------------------------------------------
 
-const confirm = async (_title: string, message: string): Promise<boolean> =>
+const _confirm = async (_title: string, message: string): Promise<boolean> =>
     window.confirm(message);
 
-const alert = async (_title: string, message: string): Promise<void> =>
+const _alert = async (_title: string, message: string): Promise<void> =>
     window.alert(message);
 
 /** Alias for confirm — uses window.confirm. */
-const confirmDialog = async (_title: string, message: string): Promise<boolean> =>
+const _confirmDialog = async (_title: string, message: string): Promise<boolean> =>
     window.confirm(message);
 
 /** Alias for alert — uses window.alert. */
-const alertDialog = async (_title: string, message: string): Promise<void> =>
+const _alertDialog = async (_title: string, message: string): Promise<void> =>
     window.alert(message);
 
 // ---------------------------------------------------------------------------
 // Security validation
 // ---------------------------------------------------------------------------
 
-const isSecurePath = (_path: string): boolean => false;
+const _isSecurePath = (_path: string): boolean => false;
 
 // ---------------------------------------------------------------------------
 // App info
