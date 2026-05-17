@@ -75,6 +75,31 @@ NUNCA dejar ningun nivel vacio.
   - El material puede danarse/contaminarse durante manipuleo en esa estacion
   - Historial de problemas recurrentes con proveedor en inspeccion de entrada
 
+## Diferencias entre Headrest Front y Rear (decision Fak 2026-05-17)
+
+Los 3 Headrest VW Patagonia (HF-PAT, HRC-PAT, HRO-PAT) son productos hermanos
+PERO **NO tienen el mismo proceso**. Diferencia tecnica clave:
+
+- **HF-PAT (Headrest Front)**: tiene **EPP (espuma rigida) + varilla metalica**.
+  El EPP se inserta durante el enfundado (OP50). Por eso HF tiene mas OPs (16)
+  con sub-pasos de espumado PU desglosado (OP60 PRECINTO, OP61 BOLSA, OP62
+  CIERRE MOLDE).
+- **HRC-PAT y HRO-PAT (Headrest Rear)**: tienen **solo varilla metalica**, sin
+  EPP. Van directamente a inyeccion de PU (OP50 INYECCION DE PU) sin enfundado
+  previo separado. Estructura mas compacta (14 OPs).
+
+**Implicancias para auditoria automatica:**
+- **NO flaggear** "HF OP50 = ENFUNDADO vs HRC/HRO OP50 = INYECCION DE PU" como
+  inconsistencia o desincronizacion de maestros. Es legitimo, refleja realidad.
+- **NO sugerir** alinear estructura de OPs entre HF y Rear. Son procesos
+  distintos.
+- **SI alinear** severidades de fallas COMUNES (costura, rebaba, puntadas) que
+  aparecen en los 3 con calibracion inconsistente — eso si es copy-paste mal.
+  Ver sesion soft-snacking-elephant 2026-05-17 commit que sigue al dba5502.
+
+**Variantes L0/L1/L2/L3**: algunas variantes no tienen costura visible (L0).
+Documentado en `amfe.md` seccion "Operaciones condicionales por variante".
+
 ## Operaciones condicionales por variante
 
 - Operaciones que no aplican a todos los PN de la familia: marcar "(Aplica solo a PN X, Y, Z)" en el nombre de la operacion. NUNCA crear documentos separados por esto.
