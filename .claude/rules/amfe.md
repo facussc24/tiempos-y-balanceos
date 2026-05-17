@@ -179,6 +179,81 @@ Es la MISMA para todas las operaciones del mismo AMFE. Separar con " / ".
 - NO se usa en calculo de AP ni en generacion de CP
 - Uso tipico: codigo de area, codigo de proceso, o referencia interna
 
+## Parametros numericos: van en CP, NO en AMFE (decision Fak 2026-05-17)
+
+Los AMFE describen modos de falla **genericos** ("fuera de tolerancia",
+"dimension incorrecta", "fuera de especificacion"). Los parametros numericos
+especificos (5±1mm, 4 puntadas/16mm, temperaturas, presiones, tiempos, pesos)
+viven en el **Plan de Control (CP)**, NO en `failure.description` del AMFE.
+
+**Anti-patrones a corregir** si aparecen en description:
+- `"Ancho de costura fuera de tolerancia 5 ± 1mm"` -> `"Ancho de costura fuera de tolerancia"`
+- `"Longitud de puntada fuera de especificacion 4 puntadas/16 mm ±1 mm"` -> `"Longitud de puntada fuera de especificacion"`
+- `"Temperatura fuera de rango 80-120°C"` -> `"Temperatura fuera de rango"`
+- `"Presion baja <500 bar"` -> `"Presion baja"`
+
+El parametro numerico EXACTO va al Plan de Control (`cp.specification`,
+`cp.upperLimit`, `cp.lowerLimit`, `cp.target`). El AMFE solo describe el FENOMENO.
+
+Si encontras `X±Y mm` o `N puntadas/M mm` o `N°C` en una `failure.description`
+del AMFE: es signo de copy-paste mal hecho (probablemente del CP al AMFE) y
+hay que limpiar.
+
+Incidente fuente: sesion soft-snacking-elephant 2026-05-17, AMFE 150 OP40
+fallas 6 y 7 limpiadas. Solo 2 fallas en todos los 12 AMFEs Barack tenian este
+problema.
+
+## Frecuencias reales Barack para verificacion con muestra patron (decision Fak 2026-05-17)
+
+En operaciones de costura, la verificacion del operador contra muestra patron
+se hace en estos momentos canonicos:
+- **Inicio de turno** (principalmente)
+- **Tras paradas mayores a 1 hora** (mantenimiento, paro de maquina, etc.)
+
+NO inventar otras frecuencias ("cada N piezas", "cada X minutos") sin que
+esten respaldadas por hoja de operacion oficial Barack. Si una hoja de
+operacion define explicitamente una frecuencia distinta, usar esa.
+
+Anti-patrones a evitar:
+- `"Inspeccion visual cada 50 piezas"` sin documento que lo respalde
+- `"Control cada 2 horas"` sin frecuencia documentada
+
+Aplica especialmente a operaciones de costura. Para otras operaciones (corte,
+inyeccion, troquelado) verificar la hoja de operacion correspondiente — no
+generalizar sin evidencia.
+
+## Vocabulario Claude prohibido (decision Fak 2026-05-17)
+
+Texto auto-generado por Claude que hay que reemplazar con vocabulario Barack
+real cuando se encuentra:
+
+| Anti-patron Claude | Reemplazo Barack |
+|---|---|
+| "Inspeccion Humana (Visual y Medicion Manual)" | "Autocontrol con [instrumento concreto]" |
+| "Inspeccion de proceso (Humana) por operador o supervisor" | "Autocontrol con [instrumento]" |
+| "Instruccion de Trabajo (IT) visual" | "Hoja de operacion" o "Guia fisica en maquina" |
+| "Implementar Mantenimiento Preventivo" | "Mantenimiento preventivo" |
+| "Establecer un procedimiento para..." | "Procedimiento P-09/I" o "Hoja de operacion" |
+| "(IT)", "(P-XX)" entre parentesis con siglas | usar el nombre sin sigla |
+| "(checklist)" entre parentesis | "Set up" o "Verificacion al arranque" |
+| "Implementar checklist para..." | "Set up de lanzamiento" |
+| "por parte del operador o supervisor" | "operador" (sin "o supervisor") |
+| "asegurar que..." / "verificar adecuadamente" / "garantizar el cumplimiento" | reescribir con verbo concreto |
+| "galga" (vocabulario espaniol peninsular) | "calibre" o "regla" |
+
+**Senales que el texto suena Claude:**
+- Mayusculas iniciales en palabras tecnicas que no son nombres propios
+  ("Mantenimiento Preventivo", "Instruccion de Trabajo", "Inspeccion Humana")
+- Parentesis con sigla repitiendo el termino que acaba de aparecer
+- Verbos abstractos como "Implementar", "Establecer", "Definir"
+- Frases largas (>60 caracteres) cuando el vocabulario Barack es corto
+
+Si encontras estos patrones en controles (preventionControl, detectionControl)
+o funciones (function.description), reescribir con vocabulario simple Barack.
+
+Incidente fuente: sesion soft-snacking-elephant 2026-05-17, AMFE 150 OP40
+fallas 5-8 limpiadas (15 controles tocados).
+
 ## Campos deprecados (NO USAR)
 
 AmfeFailure tiene 13 campos @deprecated (effect, cause, preventionControl, etc.)
