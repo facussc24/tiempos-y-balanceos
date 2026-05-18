@@ -704,3 +704,50 @@ la columna que mezcle (probablemente en una sesion anterior al generar la
 HO Excel). Anotado como riesgo para revisar si vuelve a aparecer.
 
 **Backup final:** `backups/2026-05-17T22-35-40` (713 rows / 12 tablas)
+
+---
+
+## 2026-05-17 (parte D) — Codigos canonicos APC + deshabilitar PFD
+
+Fak estaba modificando un flujograma con un colega y noto que los AMFE/tabla
+products tenian codigos viejos sin formato canonico. Pidio actualizar todo +
+deshabilitar el modulo PFD porque no se hacen flujogramas aca.
+
+### Cambios aplicados
+
+**1. AMFEs Headrest — `data.header.applicableParts` (3 docs):**
+   - AMFE-HF-PAT (APC DELANTERO)
+   - AMFE-HRC-PAT (APC TRASERO CENTRAL)
+   - AMFE-HRO-PAT (APC TRASERO LATERAL)
+   Formato canonico con codigos VW con puntos + codigo color + material.
+   Script: `scripts/_fix-apc-applicable-parts-canonico.mjs`.
+
+**2. Tabla `products` — 12 entradas APC Patagonia:**
+   - 3 productos x 4 variantes (L0/L1/L2/L3) = 12 filas actualizadas
+   - `codigo`: de `2HC881901 RL1` -> `2HC.881.901 RL1` (con puntos)
+   - `descripcion`: de "FRONT HEADREST TITAN BLACK" -> "APC DELANTERO L0 - PVC Titan Black" (castellano + variante)
+   Script: `scripts/_fix-apc-products-codigo-canonico.mjs`.
+
+### Reglas durables nuevas
+
+**`.claude/rules/amfe.md`** seccion "Formato canonico de `applicableParts`":
+- Patron: `L<n>  <PN.con.puntos>  <COLOR3letras>  | <Material>`
+- Anti-patrones documentados (texto viejo en una linea sin codigos VW por variante)
+- Ejemplos canonicos de los 3 APC (HF/HRC/HRO) verbatim
+
+**`.claude/rules/no-flujogramas-proceso.md`** (regla nueva):
+- Decision Fak: Barack NO hace PFDs en este proyecto
+- NO crear/regenerar/sugerir/preguntar sobre PFDs
+- Codigo `modules/pfd/**` queda en repo (no se borra) por compat con worktrees
+- UI queda accesible — Fak no pidio sacarla, sacarla rompe tests visuales
+
+**`~/.claude/projects/.../memory/feedback_no_flujogramas_barack.md`** (memoria
+cross-proyecto): misma directiva persistida para sesiones fuera de Barack.
+
+### Pendientes (Fak puede pedir despues)
+
+- Sacar PFD del LandingPage (card + shortcut tecla 1 + botones secundarios)
+- Posiblemente revisar otros productos con codigos sin puntos en `products` table
+  (40+ filas AMAROK/viejas con codigos sin formato canonico)
+
+**Backup final:** `backups/2026-05-18T19-04-32` (713 rows / 12 tablas)

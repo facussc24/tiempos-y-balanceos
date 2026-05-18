@@ -337,6 +337,67 @@ Si encontras "Pistola etiquetadora" en una OP de EMBALAJE: renombrar a
 Incidente fuente: sesion soft-snacking-elephant 2026-05-17. 2 casos detectados
 y arreglados: HF-PAT OP90 + HRC-PAT OP100 EMBALAJE Y ETIQUETADO.
 
+## Formato canonico de `applicableParts` para variantes L0-L3 (decision Fak 2026-05-17)
+
+El campo `data.header.applicableParts` del AMFE (y de cualquier otro doc APQP que
+lo tenga) debe seguir este formato canonico cuando el producto tiene variantes L:
+
+```
+<NOMBRE DEL PRODUCTO EN MAYUSCULAS>
+L0  <PartNumberConPuntos>    <CodigoColor3letras>  | <Material descriptivo>
+L1  <PartNumberConPuntos.A>  <CodigoColor3letras>  | <Material descriptivo>
+L2  <PartNumberConPuntos.B>  <CodigoColor3letras>  | <Material descriptivo>
+L3  <PartNumberConPuntos.C>  <CodigoColor3letras>  | <Material descriptivo>
+```
+
+**Reglas de formato:**
+
+1. **Codigo VW** con puntos cada 3 digitos: `2HC.881.901` (NO `2HC881901`)
+2. **Variantes** se indican con sufijo `.A`, `.B`, `.C` para L1/L2/L3
+3. **Codigo color** del vinilo: 3 letras siempre (`RL1`, `GFV`, `GEV`, `EFG`, `SIY`, etc.)
+4. **Material**: descripcion del vinilo en castellano (`PVC Titan Black`,
+   `FABRIC Jacquard Black`, `PVC Andino Gray`, etc.) — separado del codigo color
+   por ` | `
+5. **Separador** entre lineas: `\n` (newline). NO commas en una sola linea.
+6. **Primera linea**: nombre del producto en MAYUSCULAS (ej. `APC DELANTERO`,
+   `APC TRASERO CENTRAL`, `APC TRASERO LATERAL`)
+
+**Ejemplos canonicos (3 APC Headrest Patagonia VW)**:
+
+```
+APC DELANTERO
+L0  2HC.881.901    RL1  | PVC Titan Black
+L1  2HC.881.901.A  GFV  | FABRIC Jacquard Black
+L2  2HC.881.901.B  GEV  | PVC Andino Gray
+L3  2HC.881.901.C  EFG  | PVC Dark Slate
+```
+
+```
+APC TRASERO CENTRAL
+L0  2HC.885.900    RL1  | PVC Titan Black
+L1  2HC.885.900.A  EIF  | FABRIC Jacquard Black
+L2  2HC.885.900.B  SIY  | PVC Andino Gray
+L3  2HC.885.900.C  SIY  | PVC Dark Slate
+```
+
+```
+APC TRASERO LATERAL
+L0  2HC.885.901    RL1  | PVC Titan Black
+L1  2HC.885.901.A  GFU  | FABRIC Jacquard Black
+L2  2HC.885.901.B  GEQ  | PVC Andino Gray
+L3  2HC.885.901.C  DZS  | PVC Dark Slate
+```
+
+**Anti-patrones a corregir** (formatos viejos detectados pre-2026-05-17):
+
+- ❌ `"Apoyacabezas Delantero L0 (PVC), L1 (Fabric/PVC), L2 (Leather/PVC), L3 (Leather/PVC)"` — todo en una linea, sin codigos VW por variante, sin codigos color
+- ❌ `"Apoyacabezas Trasero Central L0, L1, L2, L3"` — solo letras L sin info
+- ❌ `"2HC881901 RL1"` — sin puntos en codigo VW
+
+**Tabla `products` (modulo balanceo)**: misma logica para columna `codigo`. Cada
+variante L es una fila separada con `codigo` en formato `<PN>.<variante> <COLOR>`
+y `descripcion` en formato `<PRODUCTO> L<N> - <Material>` (ej. `APC DELANTERO L0 - PVC Titan Black`).
+
 ## Mesa / Fixtures = Machine (AIAG-VDA FMEA Handbook 2019)
 
 **NO flaggear** Work Elements tipo "Mesa de [algo]" como mal categorizados
