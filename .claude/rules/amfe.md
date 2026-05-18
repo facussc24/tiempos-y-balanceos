@@ -283,28 +283,85 @@ Keywords exentos para A6: flamabilidad, flamable, tl 1010, voc, emisiones, airba
 Ver regla completa en `.claude/rules/amfe-actions.md`.
 RESUMEN: NUNCA inventar acciones. Solo el equipo humano las define.
 
-## Roles canonicos en WE.name type=Man (decision Fak 2026-05-17)
+## Roles canonicos en WE.name type=Man — EXACTAMENTE 4 (decision Fak 2026-05-17)
 
-El operario que ejecuta controles rutinarios en su estacion productiva es
-**"Operador de produccion"** (rol estandar Barack). NO usar "Operador de
-control" como WE.name de tipo Man — esa terminologia confunde con personal
-de Calidad.
+**Solo 4 roles canonicos permitidos** en cualquier WE.name de tipo Man en
+todos los AMFEs Barack:
 
-| Rol | Cuando se usa |
+| Rol canonico | Cuando se usa |
 |---|---|
-| **Operador de produccion** | Controles rutinarios en proceso (mayoria de casos) |
+| **Operador de Produccion** | Controles rutinarios en proceso (mayoria de casos, ~85%) |
 | **Operador de Calidad** | Liberacion de primera pieza, setup de control inicial |
-| **Inspector de Calidad** | Auditorias formales, ensayos de laboratorio |
+| **Inspector de Calidad** | Auditorias formales, ensayos de laboratorio, control dimensional dedicado |
 | **Lider de Produccion** | Decisiones de paro de linea, escalamiento |
 
-Si encontras "Operador de control" en un WE existente, renombrar a
-"Operador de produccion" (o al rol especifico que corresponda al paso).
+**NUNCA inventar variantes** como:
+- "Operador de [actividad]" (corte/costura/inyectora/soldadura/termoformado/troquelado/aplicacion/embalaje/almacen/etc.)
+- "Costurera"
+- "Embalaje manual"
+- "Operario de retrabajo"
+- "Operador de control" (ambiguo entre producción y calidad)
+- "Operador/Recepcionista de materiales"
+- "Líder de equipo"
+- "Operador de inyectora (autocontrol)" — el autocontrol lo hace el mismo Operador de Produccion
+
+Si encontras un WE Man con cualquier otro nombre: **renombrar al canonico mas cercano**.
+Mapeo aplicado 2026-05-17 (85 WEs renombrados):
+- "Lider de equipo" -> "Lider de Produccion"
+- "Operario de control de calidad" -> "Inspector de Calidad"
+- "Operador de control" en CONTROL DIMENSIONAL/FINAL -> "Inspector de Calidad"
+- "Operador de control" en autocontrol -> "Operador de Produccion"
+- TODO el resto Man no canonico -> "Operador de Produccion"
+
+**Cuidado con duplicados**: si una OP ya tiene un WE "Operador de Produccion" y
+otro WE Man se renombraria al mismo nombre, hay que fusionar las failures/causes
+del segundo en el primero (NO crear duplicado).
 
 Consistente con `control-plan.md` linea 23-24 (CP usa los mismos roles).
 
-Incidente fuente: sesion soft-snacking-elephant 2026-05-17 reusando AMFE-2
-OP25 (Mylar) a HRC/HRO OP25 vacias — Fak corrigio "Operador de control"
-de AMFE-2 al copiar.
+## Pistola etiquetadora vs Etiquetadora impresora (decision Fak 2026-05-17)
+
+Existen **2 dispositivos distintos** que son fáciles de confundir:
+
+| Dispositivo | Donde se usa | Que hace |
+|---|---|---|
+| **Pistola etiquetadora** | OP60 "COLOCACION DE PRECINTO" del proceso PU/espumado | Aplica un precinto físico al molde antes de inyectar PU |
+| **Etiquetadora impresora** | OP de EMBALAJE Y ETIQUETADO | Imprime con tinta etiquetas de identificacion (PN, lote, fecha) sobre el producto terminado |
+
+**Anti-patron**: poner "Pistola etiquetadora" como WE Machine en operaciones de
+EMBALAJE. Eso es invento — en embalaje se usa una etiquetadora impresora.
+
+Si encontras "Pistola etiquetadora" en una OP de EMBALAJE: renombrar a
+"Etiquetadora impresora". Si la encontras en OP60 PRECINTO/Espumado PU: dejar.
+
+Incidente fuente: sesion soft-snacking-elephant 2026-05-17. 2 casos detectados
+y arreglados: HF-PAT OP90 + HRC-PAT OP100 EMBALAJE Y ETIQUETADO.
+
+## Mesa / Fixtures = Machine (AIAG-VDA FMEA Handbook 2019)
+
+**NO flaggear** Work Elements tipo "Mesa de [algo]" como mal categorizados
+cuando estan en `type=Machine`. AIAG-VDA FMEA Handbook 2019 lista explicitamente
+**"inspection devices, fixtures"** como ejemplos validos de Machine/Equipment.
+
+Mesas validamente clasificadas como Machine en Barack:
+- "Mesa de Tapizado Semiautomatica" — semiautomatica, claramente Machine
+- "Mesa de Corte / Troqueladora" — equipamiento de corte
+- "Mesa de corte" — cortadora
+- "Mesa de control final" / "Mesa de control" — inspection device (AIAG-VDA)
+- "Mesa de Armado de Kits" — fixture (AIAG-VDA)
+- "Mesa de tendido" — fixture
+- "Mesa de Re-Tapizado" — fixture/equipo
+
+Anti-patron: sugerir mover estas a Environment ("parte del puesto de trabajo")
+o eliminarlas como WE. **NO hacerlo**. Environment es para condiciones ambientales
+(temperatura, humedad, polvo, iluminacion, ruido), NO para mobiliario/fixtures.
+
+Incidente fuente: sesion soft-snacking-elephant 2026-05-17. Sospeche
+inicialmente que "Mesa de control" no era Machine. Investigacion via WebSearch
+confirmo cita textual de AIAG-VDA: "Machine/Equipment includes Robot, hopper,
+injection molding machine, conveyor, **inspection devices, fixtures**, etc."
+
+Fuente verificada: <https://quality-one.com/aiag-vda-fmea/> + AIAG manual oficial.
 
 ## Valores numericos (pesos, tolerancias, consumos)
 NUNCA confirmar ni conservar valores numericos sin confirmacion explicita de Fak.

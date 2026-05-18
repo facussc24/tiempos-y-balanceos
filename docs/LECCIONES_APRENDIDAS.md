@@ -618,3 +618,89 @@ Comparativo HF-PAT / HRC-PAT / HRO-PAT post-fixes encontro 26 inconsistencias:
 **Detalle completo:** `tmp/team-findings/headrest-comparativo.md` (no commiteado, perderse cuando se limpie tmp).
 
 Si la proxima sesion retoma esto, atacar primero el caso critico (OP50 ENFUNDADO vs INYECCION PU) — eso afecta CP/HO derivados.
+
+---
+
+## 2026-05-17 (parte C) — Observaciones Fak post-HO + investigacion AIAG-VDA
+
+Fak reviso una HO impresa de HF-PAT OP60 (que la HO marcaba OP52, ya corregida)
+y trajo 6 observaciones sobre AMFE/HO de Barack.
+
+### Hallazgos verificados y fixes aplicados (3 commits)
+
+**Commit f16000b — 5 fixes en 3 AMFEs:**
+
+1. "Pistola etiquetadora" en embalaje (invento). Lo correcto en embalaje
+   es "Etiquetadora impresora" (con tinta). La pistola etiquetadora SI
+   existe en OP60 PRECINTO (PU). Renombrados 2 WEs:
+   - AMFE-HF-PAT OP90 EMBALAJE
+   - AMFE-HRC-PAT OP100 EMBALAJE
+
+2. Funciones vacias en HF-PAT WE Operador de produccion:
+   - OP50 ENFUNDADO + OP51 INSERCION DE VARILLA
+
+3. Method en AMFE-INS-PAT OP120 EMBALAJE (solo tenia Man).
+
+**Commit 24bf0f5 — 85 WE Man renombrados a 4 roles canonicos**
+
+Decision Fak: solo 4 roles Man canonicos. Mapeo aplicado en 12 AMFEs:
+- Operador de [actividad] (corte/costura/inyectora/etc.) -> Operador de Produccion
+- Costurera -> Operador de Produccion
+- Embalaje manual -> Operador de Produccion
+- Lider de equipo -> Lider de Produccion
+- Operario de control de calidad -> Inspector de Calidad
+- Operador de control en CONTROL DIMENSIONAL/FINAL -> Inspector de Calidad
+- Operador de control en autocontrol -> Operador de Produccion
+
+85 cambios totales, 0 duplicados generados (algoritmo de skip si conflicto).
+
+### Lecciones nuevas — DEBIA actualizar mi conocimiento
+
+**LECCION 1: AIAG-VDA confirma mesas/fixtures como Machine**
+
+Inicialmente sospeche que "Mesa de control" tipo Machine estaba mal. Fak pidio
+"investiga los manuales, tu base de conocimiento no puede ser...". Investigue
+y encontre cita textual AIAG-VDA FMEA Handbook 2019:
+
+> "Machine/Equipment includes Robot, hopper reservoir tank, injection molding
+> machine, spiral conveyor, **inspection devices, fixtures**, etc."
+
+Las mesas de inspeccion/armado/tendido/control son **fixtures** → Machine correcto.
+Environment es solo condiciones ambientales (temp, humedad, polvo, iluminacion),
+NO mobiliario del puesto.
+
+Persistido como regla en `amfe.md` seccion "Mesa / Fixtures = Machine
+(AIAG-VDA FMEA Handbook 2019)". Anti-patron a evitar: sugerir mover mesas a
+Environment o eliminarlas como WE.
+
+**LECCION 2: 4 roles Man canonicos — refinado**
+
+La regla existente "Roles canonicos" (sesion soft-snacking-elephant) decia
+4 roles pero permitia variantes. Sesion 2026-05-17 parte C la refino:
+**EXACTAMENTE 4 roles, NO inventar variantes**. Tabla de mapping completa
+documentada en `amfe.md`.
+
+**LECCION 3: Pistola etiquetadora SOLO en OP PRECINTO (PU)**
+
+2 dispositivos confundidos:
+- **Pistola etiquetadora**: aplica precinto en molde antes de inyectar PU
+- **Etiquetadora impresora**: imprime con tinta etiquetas para embalaje
+
+NO usar "Pistola etiquetadora" como WE Machine en operaciones de embalaje.
+Anti-patron documentado en `amfe.md`.
+
+### Pendientes para equipo APQP humano (no podemos automatizar)
+
+- 7-9 OPs vacias Headrest (HF OP60/61/62 + HRC/HRO OP11+OP60) — necesitan PPAP
+- WE BMA089 en IP-PADS OP30 — falta separar y definir failures
+- 9 causas "Instruccion incompleta" — decision Method vs Man documentada
+- HF-PAT OP70 Control responsable distinto a HRC/HRO — documentar por que
+
+### Observacion HO sin verificar (mencionada por Fak)
+
+Fak dijo: "no entiendo porque el sector es tapizado pero vos en la columna
+mezclaste las columnas creo y no te diste cuenta". No identifique cual fue
+la columna que mezcle (probablemente en una sesion anterior al generar la
+HO Excel). Anotado como riesgo para revisar si vuelve a aparecer.
+
+**Backup final:** `backups/2026-05-17T22-35-40` (713 rows / 12 tablas)
