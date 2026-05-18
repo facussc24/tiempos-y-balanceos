@@ -764,7 +764,7 @@ function EightDAppInner({ onBackToLanding }: EightDAppProps) {
     const [activeStep, setActiveStep] = useState(0);
     const [searchTerm, setSearchTerm] = useState('');
     const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
-    const [loaded, setLoaded] = useState(false);
+    const [_loaded, setLoaded] = useState(false);
 
     // -----------------------------------------------------------------------
     // Persistence (load on mount)
@@ -823,7 +823,7 @@ function EightDAppInner({ onBackToLanding }: EightDAppProps) {
         } catch (err) {
             logger.error('EightD', 'Failed to delete report', {}, err instanceof Error ? err : undefined);
         }
-    }, [currentReport?.id]);
+    }, [currentReport]);
 
     const handleReportChange = useCallback((patch: Partial<EightDReport>) => {
         setCurrentReport((prev) => {
