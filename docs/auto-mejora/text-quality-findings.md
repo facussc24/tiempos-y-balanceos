@@ -1,43 +1,18 @@
-# Text Quality Audit (L2) — 2026-05-15T15:30:10.591Z
+# Text Quality Audit (L2) — 2026-05-19T06:12:55.351Z
 
-**Resumen global**: 0 CRITICAL, 121 WARNING en 12/12 AMFEs.
+**Resumen global**: 0 CRITICAL, 116 WARNING en 12/12 AMFEs.
 
-**Por tipo**: FN_NO_VERB=95, OP_FUNCTION_SEMANTIC_MISMATCH=11, WE_NAME_FOREIGN_TYPE=5, FN_TOO_SHORT=9, FN_ALL_CAPS_SHORT=1
+**Por tipo**: FN_NO_VERB=92, WE_NAME_FOREIGN_TYPE=5, OP_FUNCTION_SEMANTIC_MISMATCH=11, FN_TOO_SHORT=8
 
 ## Top 5 AMFEs con mas issues
 
-- **AMFE-HF-PAT** (VWA/PATAGONIA/HEADREST_FRONT): 19 issues
 - **AMFE-HRC-PAT** (VWA/PATAGONIA/HEADREST_REAR_CEN): 18 issues
 - **AMFE-HRO-PAT** (VWA/PATAGONIA/HEADREST_REAR_OUT): 18 issues
-- **VWA-PAT-IPPADS-001** (VWA/PATAGONIA/IP_PADS): 16 issues
+- **AMFE-HF-PAT** (VWA/PATAGONIA/HEADREST_FRONT): 16 issues
+- **VWA-PAT-IPPADS-001** (VWA/PATAGONIA/IP_PADS): 14 issues
 - **AMFE-MAESTRO-INY-001** (MAESTRO/INYECCION_PLASTICA): 10 issues
 
 ## Detalle por AMFE
-
-### AMFE-HF-PAT (VWA/PATAGONIA/HEADREST_FRONT)
-0 CRITICAL + 19 WARNING
-
-| Type | OP | Detalle |
-|---|---|---|
-| WARNING FN_NO_VERB | 10 RECEPCION DE MATERIA PRIMA | function.description "Material resiste ciclo termico cabina" no comienza con verbo |
-| WARNING FN_NO_VERB | 10 RECEPCION DE MATERIA PRIMA | function.description "Material supera 50 ciclos ambientales sin alteracion" no comienza con verbo |
-| WARNING FN_TOO_SHORT | 10 RECEPCION DE MATERIA PRIMA | function.description "Material resiste intemperie" muy corta (< 30 chars) |
-| WARNING FN_NO_VERB | 10 RECEPCION DE MATERIA PRIMA | function.description "Material resiste intemperie" no comienza con verbo |
-| WARNING FN_NO_VERB | 10 RECEPCION DE MATERIA PRIMA | function.description "Material mantiene color lote a lote" no comienza con verbo |
-| WARNING FN_NO_VERB | 10 RECEPCION DE MATERIA PRIMA | function.description "Material mantiene color bajo radiacion solar" no comienza con verbo |
-| WARNING FN_NO_VERB | 10 RECEPCION DE MATERIA PRIMA | function.description "Material cumple solidez color escala grises >= 4" no comienza con verbo |
-| WARNING FN_TOO_SHORT | 20 OP 20-26 CORTE DE VINILO | function.description "CORTE DE PANELES" muy corta (< 30 chars) |
-| WARNING FN_NO_VERB | 20 OP 20-26 CORTE DE VINILO | function.description "CORTE DE PANELES" no comienza con verbo |
-| WARNING FN_ALL_CAPS_SHORT | 20 OP 20-26 CORTE DE VINILO | function.description "CORTE DE PANELES" en mayusculas y <=4 palabras (etiqueta?) |
-| WARNING FN_NO_VERB | 40 COSTURA VISTA | function.description "Costura Y cubierta simple con largo puntada especificado" no comienza con verbo |
-| WARNING FN_NO_VERB | 40 COSTURA VISTA | function.description "Ancho cubierta costura Y dentro de tolerancia" no comienza con verbo |
-| WARNING FN_NO_VERB | 90 EMBALAJE Y ETIQUETADO DE PRODU | function.description "Pieza identificada segun VW 10500" no comienza con verbo |
-| WARNING FN_NO_VERB | 90 EMBALAJE Y ETIQUETADO DE PRODU | function.description "Pieza identificada con logotipo segun VW 10514-C10" no comienza con verbo |
-| WARNING FN_NO_VERB | 90 EMBALAJE Y ETIQUETADO DE PRODU | function.description "Pieza identificada con pais de origen segun VW 10550" no comienza con verbo |
-| WARNING FN_NO_VERB | 90 EMBALAJE Y ETIQUETADO DE PRODU | function.description "Pieza identificada con codigo fabricante segun VW 10540" no comienza con verbo |
-| WARNING FN_NO_VERB | 90 EMBALAJE Y ETIQUETADO DE PRODU | function.description "Numero de pieza con tipografia DIN 1451-4-3" no comienza con verbo |
-| WARNING FN_NO_VERB | 90 EMBALAJE Y ETIQUETADO DE PRODU | function.description "Pieza identificada con fecha segun VW 10560" no comienza con verbo |
-| WARNING FN_NO_VERB | 90 EMBALAJE Y ETIQUETADO DE PRODU | function.description "Pieza identificada con material segun VDA 260" no comienza con verbo |
 
 ### AMFE-HRC-PAT (VWA/PATAGONIA/HEADREST_REAR_CEN)
 0 CRITICAL + 18 WARNING
@@ -87,16 +62,36 @@
 | WARNING FN_NO_VERB | 100 EMBALAJE Y ETIQUETADO DE PRODU | function.description "Pieza identificada con fecha segun VW 10560" no comienza con verbo |
 | WARNING FN_NO_VERB | 100 EMBALAJE Y ETIQUETADO DE PRODU | function.description "Pieza identificada con material segun VDA 260" no comienza con verbo |
 
-### VWA-PAT-IPPADS-001 (VWA/PATAGONIA/IP_PADS)
+### AMFE-HF-PAT (VWA/PATAGONIA/HEADREST_FRONT)
 0 CRITICAL + 16 WARNING
 
 | Type | OP | Detalle |
 |---|---|---|
-| WARNING FN_NO_VERB | 10 RECEPCION DE MATERIA PRIMA | function.description "Se recepciona la materia prima" no comienza con verbo |
+| WARNING FN_NO_VERB | 10 RECEPCION DE MATERIA PRIMA | function.description "Material resiste ciclo termico cabina" no comienza con verbo |
+| WARNING FN_NO_VERB | 10 RECEPCION DE MATERIA PRIMA | function.description "Material supera 50 ciclos ambientales sin alteracion" no comienza con verbo |
+| WARNING FN_TOO_SHORT | 10 RECEPCION DE MATERIA PRIMA | function.description "Material resiste intemperie" muy corta (< 30 chars) |
+| WARNING FN_NO_VERB | 10 RECEPCION DE MATERIA PRIMA | function.description "Material resiste intemperie" no comienza con verbo |
+| WARNING FN_NO_VERB | 10 RECEPCION DE MATERIA PRIMA | function.description "Material mantiene color lote a lote" no comienza con verbo |
+| WARNING FN_NO_VERB | 10 RECEPCION DE MATERIA PRIMA | function.description "Material mantiene color bajo radiacion solar" no comienza con verbo |
+| WARNING FN_NO_VERB | 10 RECEPCION DE MATERIA PRIMA | function.description "Material cumple solidez color escala grises >= 4" no comienza con verbo |
+| WARNING FN_NO_VERB | 40 COSTURA VISTA | function.description "Costura Y cubierta simple con largo puntada especificado" no comienza con verbo |
+| WARNING FN_NO_VERB | 40 COSTURA VISTA | function.description "Ancho cubierta costura Y dentro de tolerancia" no comienza con verbo |
+| WARNING FN_NO_VERB | 90 EMBALAJE Y ETIQUETADO DE PRODU | function.description "Pieza identificada segun VW 10500" no comienza con verbo |
+| WARNING FN_NO_VERB | 90 EMBALAJE Y ETIQUETADO DE PRODU | function.description "Pieza identificada con logotipo segun VW 10514-C10" no comienza con verbo |
+| WARNING FN_NO_VERB | 90 EMBALAJE Y ETIQUETADO DE PRODU | function.description "Pieza identificada con pais de origen segun VW 10550" no comienza con verbo |
+| WARNING FN_NO_VERB | 90 EMBALAJE Y ETIQUETADO DE PRODU | function.description "Pieza identificada con codigo fabricante segun VW 10540" no comienza con verbo |
+| WARNING FN_NO_VERB | 90 EMBALAJE Y ETIQUETADO DE PRODU | function.description "Numero de pieza con tipografia DIN 1451-4-3" no comienza con verbo |
+| WARNING FN_NO_VERB | 90 EMBALAJE Y ETIQUETADO DE PRODU | function.description "Pieza identificada con fecha segun VW 10560" no comienza con verbo |
+| WARNING FN_NO_VERB | 90 EMBALAJE Y ETIQUETADO DE PRODU | function.description "Pieza identificada con material segun VDA 260" no comienza con verbo |
+
+### VWA-PAT-IPPADS-001 (VWA/PATAGONIA/IP_PADS)
+0 CRITICAL + 14 WARNING
+
+| Type | OP | Detalle |
+|---|---|---|
 | WARNING FN_NO_VERB | 20 INYECCION DE PIEZAS PLASTICAS | function.description "Parámetros validados por producto" no comienza con verbo |
 | WARNING FN_NO_VERB | 20 INYECCION DE PIEZAS PLASTICAS | function.description "Inspección visual al 100% de cada pieza inyectada con compar" no comienza con verbo |
 | WARNING FN_NO_VERB | 20 INYECCION DE PIEZAS PLASTICAS | function.description "Aire comprimido filtrado y seco" no comienza con verbo |
-| WARNING FN_NO_VERB | 30 CORTE | function.description "Se obtienen los paneles que formarán la pieza. Corte de pane" no comienza con verbo |
 | WARNING WE_NAME_FOREIGN_TYPE | 30 CORTE | WE.name "Cuchilla de corte" no corresponde a WE.type "Material" (patrón: MaterialShouldBeMachine) |
 | WARNING FN_NO_VERB | 41 COSTURA UNION | function.description "Permite la unión de los paneles. Costura unión entre paneles" no comienza con verbo |
 | WARNING FN_NO_VERB | 42 COSTURA VISTA | function.description "Permite la costura decorativa. Realiza costura decorativa" no comienza con verbo |
