@@ -205,7 +205,7 @@ export const useLineBalancing = (data: ProjectData, updateData: (data: ProjectDa
         });
 
         return Object.values(stations).sort((a, b) => a.id - b.id);
-    }, [data.assignments, taskMap, configuredStations, data.meta.manualOEE, data.meta.useManualOEE, data.meta.useSectorOEE, data.meta.setupLossPercent, data.stationConfigs, nominalSeconds, data.sectors]);
+    }, [data.assignments, taskMap, configuredStations, data.meta.manualOEE, data.meta.useManualOEE, data.meta.useSectorOEE, data.meta.setupLossPercent, data.meta.dailyDemand, data.meta.activeShifts, data.shifts, data.stationConfigs, nominalSeconds, data.sectors]);
 
     // Per-sector Takt map for chart/tooltip consumption
     const sectorTaktMap: Record<string, number> = useMemo(() => {
