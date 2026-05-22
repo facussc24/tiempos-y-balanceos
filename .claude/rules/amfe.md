@@ -16,13 +16,45 @@ globs:
 | S=5-6 | Arrugas masivas, delaminacion, costura torcida, Squeak & Rattle, retrabajo offline | Burbuja en termoformado, costura corrida |
 | S=3-4 | Cosmetico menor, hilo suelto, mancha limpiable, retrabajo in-station | Color desparejo visible solo con luz rasante |
 
-## Clasificacion CC/SC
+## Clasificacion de Caracteristicas Especiales (alineado al manual oficial AIAG-VDA 2019)
 
-- **CC (Critica):** S >= 9 O requerimiento legal/seguridad. Benchmark: 1-5% de items.
-- **SC (Significativa):** Cliente designo con simbolo O funcion primaria (S=7-8 encastre). Benchmark: 10-15%.
-- **Estandar:** Todo lo demas. Benchmark: 80-90%.
-- "Quitar pieza durante tapizado" NO es CC — riesgo al operador se gestiona con EPP, no con clasificacion de producto.
-- Flamabilidad es OBLIGATORIA como CC en toda pieza de cabina interior.
+Fuente oficial: **Manual AMFE AIAG-VDA Handbook 1ra Edicion 2019** (traduccion espanol SETEC, pagina 129, Apendice D). Path: `C:\Users\FacundoS-PC\BARACK ARGENTINA SRL\Ingeniería y Proyecto - General\INGENIERIA BARACK (NUNCA BORRAR)\4- MANUALES\AMFE\MANUAL AMFE  R06 Julio 2020 Participante.pdf`.
+
+**Decision Fak 2026-05-22:** *"el manual es la ley en realidad deberiamos basarnos en eso creo"* — alinearse al criterio oficial AIAG-VDA, no a reglas mas estrictas.
+
+### Tabla oficial para AMFE de Proceso (PFMEA)
+
+**Efecto en el CLIENTE (producto que se va al usuario):**
+
+| Simbolo | Codigo | Nombre | Criterio | Accion |
+|---|---|---|---|---|
+| **▽** (triangulo) | **CC** | Caracteristica Critica | **S = 9/10** | Requiere controles especiales + incluir en Plan de Control |
+| **SC** | **SC** | Caracteristica Significativa | **S = 5-8 Y O >= 4** | Requiere controles especiales + incluir en Plan de Control |
+
+**Efecto en el ENSAMBLE / MANUFACTURA (problemas internos de planta):**
+
+| Codigo | Nombre | Criterio | Accion |
+|---|---|---|---|
+| **OS** | Seguridad del Operador | S = 5-8 Y O >= 4 | Acciones de seguridad |
+| **HI** | Alto Impacto | S = 5-8 Y O >= 4 | Enfasis |
+| (blanco) | No es caracteristica especial | Otros casos | No aplica |
+
+### Reglas Barack adicionales (legitimas, no contradicen al manual)
+
+- **Flamabilidad TL 1010 es OBLIGATORIA como CC** en toda pieza de cabina interior (independiente de criterio S/O — es requerimiento legal directo).
+- **VW 50180 (emisiones VOC)** y **EU 2000/53/EG (ELV sustancias prohibidas)** generan CC obligatoria por requerimiento legal del cliente.
+- **NUNCA** asignar CC/SC/OS/HI sin verificar criterio S/O previo. Si falta O, dejar como "Estandar" hasta tener el dato.
+- Riesgo al operario por procesos en planta (ej. atrapamiento, quemadura, exposicion quimica) se clasifica como **OS**, no como CC del producto.
+
+### Cuando el cliente designa simbolos propios
+
+Si el cliente (VW/PWA/etc.) tiene su propia simbologia para Caracteristicas Especiales, traducirlas a la simbologia Barack (▽/SC/OS/HI) mediante tabla de correlacion. Manual pag 128: *"Las Caracteristicas Especiales deben ser designadas por la organizacion o bien designadas por el cliente. La simbologia para las caracteristicas especiales designadas por el cliente pueden ser traducidas en simbolos de la organizacion, mediante tabla de correlacion."*
+
+### Cambio respecto a regla anterior (2026-05-22)
+
+**Regla previa (deprecada):** *"PROHIBIDO: SC = S≥5 AND O≥4 — esa regla infla las clasificaciones y genera no conformidades en auditoria IATF."*
+
+**Justificacion del cambio:** la regla previa era MAS estricta que el manual AIAG-VDA oficial. Fak decidio (2026-05-22) alinearse al manual. Si una auditoria IATF futura objeta el uso del criterio del manual, volver a evaluar — pero el manual oficial es la fuente legitima por defecto.
 
 ## Normas de flamabilidad por cliente
 
