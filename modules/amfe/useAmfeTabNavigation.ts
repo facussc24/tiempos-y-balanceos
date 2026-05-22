@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { AmfeDocument } from './amfeTypes';
 import { ControlPlanDocument } from '../controlPlan/controlPlanTypes';
 import { HoDocument } from '../hojaOperaciones/hojaOperacionesTypes';
@@ -93,12 +93,18 @@ export function useAmfeTabNavigation(params: UseAmfeTabNavigationParams): UseAmf
     }, [pfdInitialData, requestConfirm]);
 
     // Sync initialTab prop changes to activeTab state (e.g. when navigating
-    // back from landing page with a different tab selected)
-    useEffect(() => {
-        if (initialTab && initialTab !== activeTab) {
-            setActiveTab(initialTab);
+    // back from landing page with a different tab selected).
+    // React 19 idiom: derive state during render with a "previous" tracker
+    // instead of useEffect+setState. Avoids cascading renders.
+    // See https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes
+    const [prevInitialTab, setPrevInitialTab] = useState(initialTab);
+    if (initialTab !== prevInitialTab) {
+        setPrevInitialTab(initialTab);
+        if (initialTab && VALID_TABS.has(initialTab)) {
+            setActiveTabRaw(initialTab);
+            try { localStorage.setItem(LS_KEY_TAB, initialTab); } catch { /* ignore */ }
         }
-    }, [initialTab]); // eslint-disable-line react-hooks/exhaustive-deps
+    }
 
     /** Called when the wizard completes — receives the generated PFD document. */
     const handlePfdWizardComplete = useCallback((pfdDoc: PfdDocument) => {

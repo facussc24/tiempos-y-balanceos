@@ -60,19 +60,29 @@ export const ProjectWizard: React.FC<ProjectWizardProps> = ({
     // A11y: Ref for first input to set initial focus
     const firstInputRef = useRef<HTMLSelectElement>(null);
 
-    // Reset when wizard opens
+    // Reset React state when wizard opens (React 19 pattern: derive during
+    // render with a "previous" tracker instead of useEffect+setState).
+    // See https://react.dev/learn/you-might-not-need-an-effect#resetting-all-state-when-a-prop-changes
+    const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
+    if (isOpen && !prevIsOpen) {
+        setPrevIsOpen(true);
+        setStep(1);
+        setClient('');
+        setProject('');
+        setPart('');
+        setIsNewClient(false);
+        setIsNewProject(false);
+        setIsNewPart(false);
+    } else if (!isOpen && prevIsOpen) {
+        setPrevIsOpen(false);
+    }
+
+    // Ref resets + a11y focus on open. Refs and DOM focus are not React state,
+    // so this effect does not trigger the set-state-in-effect anti-pattern.
     useEffect(() => {
         if (isOpen) {
-            setStep(1);
-            setClient('');
-            setProject('');
-            setPart('');
-            setIsNewClient(false);
-            setIsNewProject(false);
-            setIsNewPart(false);
             projectsRequestRef.current = 0;
             partsRequestRef.current = 0;
-            // A11y: Focus first input when opened (better than container)
             setTimeout(() => firstInputRef.current?.focus(), 50);
         }
     }, [isOpen]);
@@ -107,6 +117,7 @@ export const ProjectWizard: React.FC<ProjectWizardProps> = ({
     useEffect(() => {
         if (client && !isNewClient && getProjectsForClient) {
             const requestVersion = ++projectsRequestRef.current;
+            // eslint-disable-next-line react-hooks/set-state-in-effect -- optimistic loading flag for fetch-on-prop-change; the data setState (setProjects) IS in the .then callback per rule guidance
             setIsLoading(true);
             getProjectsForClient(client)
                 .then(data => {
@@ -127,6 +138,7 @@ export const ProjectWizard: React.FC<ProjectWizardProps> = ({
     useEffect(() => {
         if (client && project && !isNewProject && getPartsForProject) {
             const requestVersion = ++partsRequestRef.current;
+            // eslint-disable-next-line react-hooks/set-state-in-effect -- optimistic loading flag for fetch-on-prop-change; the data setState (setParts) IS in the .then callback per rule guidance
             setIsLoading(true);
             getPartsForProject(client, project)
                 .then(data => {
