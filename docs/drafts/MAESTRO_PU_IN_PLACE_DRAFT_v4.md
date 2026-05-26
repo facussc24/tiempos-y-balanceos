@@ -2,7 +2,7 @@
 
 **Estado:** Borrador para revisión Leonardo + validación del Panel de 4 Validators (NO aplicado a Supabase)
 **Fecha:** 2026-05-26 (v4 — hallazgos Liqin TP900 integrados)
-**Family code:** 17 (decidido por Fak)
+**Family code:** ~~17~~ → **19** (decisión Fak 2026-05-22 era 17 pero Validator C confirmó 17 OCUPADO por "IP PAD Patagonia - Tapizado" + 18 OCUPADO por "Armrest Rear Center Patagonia". Siguiente correlativo libre = 19. Requiere OK Fak.)
 **Family name:** Proceso de Inyección PUR in place
 **AMFE master number:** AMFE-MAESTRO-PU-001
 **Replicación:** HF-PAT / HRC-PAT / HRO-PAT (1 OP en cada uno, el maestro NO se alinea con HO)
@@ -47,7 +47,7 @@
 
 | Campo | Valor |
 |---|---|
-| family_id | 17 |
+| family_id | 19 (era 17 en v3, cambiado tras Validator C — 17 ocupado por IP PAD) |
 | family.name | Proceso de Inyección PUR in place |
 | amfe_number | AMFE-MAESTRO-PU-001 |
 | Organización | BARACK MERCOSUL |
@@ -217,7 +217,7 @@
 | Causa 4 🔵 | Boquilla queda fuera de la bolsa |
 | Causa 5 🔵 | Clamps de fijación mal cerrados |
 | Causa 6 🟣 **NUEVA v4** | Sobrepresión en bomba dosificadora POLY o ISO |
-| Causa 7 🟣 **NUEVA v4** | Sistema hidráulico de la inyectora degradado (aceite L-HM 46 fuera de spec, enfriador desconectado) |
+| Causa 7 🟣 **NUEVA v4** | Sistema hidráulico de la inyectora degradado (aceite fuera de spec, enfriador desconectado) |
 | Control preventivo | Verificación posición cilindro mixhead E50/E51 antes del shot + sensor OverPressure bombas E66/E67 (corta ciclo) + nivelación plataforma giratoria con pernos químicos + 15 placas base fijadas 🟣 |
 | Control detectivo | Monitoreo presión mixhead durante shot (AI4/AI5) — caída brusca = fuga + visual del operario al desmoldeo 🟣 |
 
@@ -258,11 +258,11 @@
 | Causa 2 🔵 | Operario interviene durante el curado |
 | Causa 3 🔴 | Falla del PLC o temporizador del ciclo |
 | Causa 4 🔴 | Corte de energía durante el ciclo |
-| Causa 5 🟣 **NUEVA v4** | Aceite hidráulico L-HM 46 degradado o sobre 55 °C (alarma) |
+| Causa 5 🟣 **NUEVA v4** | Aceite hidráulico degradado o fuera de rango térmico |
 | Causa 6 🟣 **NUEVA v4** | Enfriador desconectado o no operativo |
 | Causa 7 🟣 **NUEVA v4** | Una de las 3 preselecciones (auto + wet shot + cabezal mezclador) no activa al disparar |
 | Control preventivo | Doble vía de cierre de ciclo (E0.7 Shot STOP por tiempo + E1.5 Sensor Shot por detección física) + wire-break detection 4-20 mA + módulo seguridad ES-FA-9AA + cambio aceite hidráulico L-HM 46 (frecuencia TBD-Leo) + enfriador verificado al arranque 🟣 |
-| Control detectivo | Alarma temperatura aceite hidráulico 50-55 °C + alarma tiempo máx presurización (150 bar) + pantalla histórica de registros de inyección HMI + zumbador audible + marca parpadeante HMI 🟣 |
+| Control detectivo | Alarma HMI temperatura aceite hidráulico + alarma HMI tiempo máx presurización + pantalla histórica de registros de inyección + zumbador audible + marca parpadeante HMI 🟣 |
 
 ---
 
@@ -293,7 +293,7 @@
 |---|---|
 | Modo de falla | El flujómetro POLY o ISO mide caudal incorrecto y entrega ratio A:B fuera de spec en la mezcla |
 | Efecto local | Pieza con propiedades fuera de norma — SCRAP del lote del shot |
-| Efecto siguiente | Rechazo PPAP si lote afectado llega al cliente, parada de lanzamiento |
+| Efecto siguiente | Si la alarma HMI detecta a tiempo: SCRAP local. Si falla la alarma y el lote llega al cliente: rechazo en ensayo de laboratorio cliente |
 | Efecto usuario final | **Riesgo de incendio o inhalación. Incumplimiento legal TL 1010 / VW 50180.** |
 | **Severidad** | **9** |
 | **Clasificación** | **CC ▽** (S=9, ratio fuera de spec causa incumplimiento legal) 🟣 |
@@ -307,12 +307,12 @@
 
 ---
 
-### FM-11 — Atmósfera explosiva por vapores ISO/POLY (ATEX) **OS TBD-Leo NUEVO v4 `[NEW]`**
+### FM-11 — Vapores POLY/ISO en zona clasificada ATEX **OS TBD-Leo NUEVO v4 `[NEW]`**
 
 | Campo | Valor |
 |---|---|
-| Modo de falla | Concentración de vapores POLY/ISO en zona del operario supera límite de explosividad o de exposición |
-| Efecto local | Riesgo de ignición + inhalación química |
+| Modo de falla | Concentración de vapores POLY/ISO en zona del operario potencialmente inflamable o tóxica por inhalación |
+| Efecto local | Riesgo de inhalación química + ignición si concentración entra rango LEL |
 | Efecto siguiente | N/A (incidente seguridad) |
 | Efecto usuario final | N/A |
 | **Severidad** | **9 TBD-Leo** (puede ser 10 si se confirma riesgo de explosión por concentración alta) |
