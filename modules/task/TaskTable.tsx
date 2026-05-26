@@ -333,7 +333,7 @@ export const TaskTable: React.FC<TaskTableProps> = ({
                                         value={task.ratingFactor}
                                         onChange={(e) => {
                                             const val = e.target.value;
-                                            const num = val === '' ? 0 : parseInt(val);
+                                            const num = val === '' ? 0 : parseInt(val, 10);
                                             onUpdateFairTimeParams(task.id, 'ratingFactor', isNaN(num) ? 0 : num);
                                         }}
                                         title="Factor de ritmo del operario cronometrado (80-120% típico)"
