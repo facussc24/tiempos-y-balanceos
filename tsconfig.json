@@ -41,6 +41,7 @@
     "node_modules",
     "dist",
     "src-tauri",
-    "modules/old"
+    "modules/old",
+    ".claude/worktrees/**"
   ]
 }
