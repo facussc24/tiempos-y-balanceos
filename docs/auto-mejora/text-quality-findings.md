@@ -1,21 +1,21 @@
-# Text Quality Audit (L2) — 2026-05-19T06:12:55.351Z
+# Text Quality Audit (L2) — 2026-05-27T12:11:46.453Z
 
-**Resumen global**: 0 CRITICAL, 116 WARNING en 12/12 AMFEs.
+**Resumen global**: 0 CRITICAL, 122 WARNING en 13/13 AMFEs.
 
-**Por tipo**: FN_NO_VERB=92, WE_NAME_FOREIGN_TYPE=5, OP_FUNCTION_SEMANTIC_MISMATCH=11, FN_TOO_SHORT=8
+**Por tipo**: OP_FUNCTION_SEMANTIC_MISMATCH=13, FN_NO_VERB=96, WE_NAME_FOREIGN_TYPE=5, FN_TOO_SHORT=8
 
 ## Top 5 AMFEs con mas issues
 
-- **AMFE-HRC-PAT** (VWA/PATAGONIA/HEADREST_REAR_CEN): 18 issues
-- **AMFE-HRO-PAT** (VWA/PATAGONIA/HEADREST_REAR_OUT): 18 issues
-- **AMFE-HF-PAT** (VWA/PATAGONIA/HEADREST_FRONT): 16 issues
+- **AMFE-HRC-PAT** (VWA/PATAGONIA/HEADREST_REAR_CEN): 19 issues
+- **AMFE-HRO-PAT** (VWA/PATAGONIA/HEADREST_REAR_OUT): 19 issues
+- **AMFE-HF-PAT** (VWA/PATAGONIA/HEADREST_FRONT): 18 issues
 - **VWA-PAT-IPPADS-001** (VWA/PATAGONIA/IP_PADS): 14 issues
 - **AMFE-MAESTRO-INY-001** (MAESTRO/INYECCION_PLASTICA): 10 issues
 
 ## Detalle por AMFE
 
 ### AMFE-HRC-PAT (VWA/PATAGONIA/HEADREST_REAR_CEN)
-0 CRITICAL + 18 WARNING
+0 CRITICAL + 19 WARNING
 
 | Type | OP | Detalle |
 |---|---|---|
@@ -30,6 +30,7 @@
 | WARNING FN_NO_VERB | 40 COSTURA VISTA | function.description "Costura Y cubierta simple con largo puntada especificado" no comienza con verbo |
 | WARNING FN_NO_VERB | 40 COSTURA VISTA | function.description "Ancho cubierta costura Y dentro de tolerancia" no comienza con verbo |
 | WARNING OP_FUNCTION_SEMANTIC_MISMATCH | 50 INYECCION DE PU | OP "INYECCION DE PU" debería contener alguno de [inyectar, conformar] en su función |
+| WARNING FN_NO_VERB | 50 INYECCION DE PU | function.description "Dar forma a la pieza durante el espumado y curado" no comienza con verbo |
 | WARNING FN_NO_VERB | 100 EMBALAJE Y ETIQUETADO DE PRODU | function.description "Pieza identificada segun VW 10500" no comienza con verbo |
 | WARNING FN_NO_VERB | 100 EMBALAJE Y ETIQUETADO DE PRODU | function.description "Pieza identificada con logotipo segun VW 10514-C10" no comienza con verbo |
 | WARNING FN_NO_VERB | 100 EMBALAJE Y ETIQUETADO DE PRODU | function.description "Pieza identificada con pais de origen segun VW 10550" no comienza con verbo |
@@ -39,7 +40,7 @@
 | WARNING FN_NO_VERB | 100 EMBALAJE Y ETIQUETADO DE PRODU | function.description "Pieza identificada con material segun VDA 260" no comienza con verbo |
 
 ### AMFE-HRO-PAT (VWA/PATAGONIA/HEADREST_REAR_OUT)
-0 CRITICAL + 18 WARNING
+0 CRITICAL + 19 WARNING
 
 | Type | OP | Detalle |
 |---|---|---|
@@ -54,6 +55,7 @@
 | WARNING FN_NO_VERB | 40 COSTURA VISTA | function.description "Costura Y cubierta simple con largo puntada especificado" no comienza con verbo |
 | WARNING FN_NO_VERB | 40 COSTURA VISTA | function.description "Ancho cubierta costura Y dentro de tolerancia" no comienza con verbo |
 | WARNING OP_FUNCTION_SEMANTIC_MISMATCH | 50 INYECCION DE PU | OP "INYECCION DE PU" debería contener alguno de [inyectar, conformar] en su función |
+| WARNING FN_NO_VERB | 50 INYECCION DE PU | function.description "Dar forma a la pieza durante el espumado y curado" no comienza con verbo |
 | WARNING FN_NO_VERB | 100 EMBALAJE Y ETIQUETADO DE PRODU | function.description "Pieza identificada segun VW 10500" no comienza con verbo |
 | WARNING FN_NO_VERB | 100 EMBALAJE Y ETIQUETADO DE PRODU | function.description "Pieza identificada con logotipo segun VW 10514-C10" no comienza con verbo |
 | WARNING FN_NO_VERB | 100 EMBALAJE Y ETIQUETADO DE PRODU | function.description "Pieza identificada con pais de origen segun VW 10550" no comienza con verbo |
@@ -63,7 +65,7 @@
 | WARNING FN_NO_VERB | 100 EMBALAJE Y ETIQUETADO DE PRODU | function.description "Pieza identificada con material segun VDA 260" no comienza con verbo |
 
 ### AMFE-HF-PAT (VWA/PATAGONIA/HEADREST_FRONT)
-0 CRITICAL + 16 WARNING
+0 CRITICAL + 18 WARNING
 
 | Type | OP | Detalle |
 |---|---|---|
@@ -76,6 +78,8 @@
 | WARNING FN_NO_VERB | 10 RECEPCION DE MATERIA PRIMA | function.description "Material cumple solidez color escala grises >= 4" no comienza con verbo |
 | WARNING FN_NO_VERB | 40 COSTURA VISTA | function.description "Costura Y cubierta simple con largo puntada especificado" no comienza con verbo |
 | WARNING FN_NO_VERB | 40 COSTURA VISTA | function.description "Ancho cubierta costura Y dentro de tolerancia" no comienza con verbo |
+| WARNING OP_FUNCTION_SEMANTIC_MISMATCH | 63 INYECCION DE PU | OP "INYECCION DE PU" debería contener alguno de [inyectar, conformar] en su función |
+| WARNING FN_NO_VERB | 63 INYECCION DE PU | function.description "Dar forma a la pieza durante el espumado y curado" no comienza con verbo |
 | WARNING FN_NO_VERB | 90 EMBALAJE Y ETIQUETADO DE PRODU | function.description "Pieza identificada segun VW 10500" no comienza con verbo |
 | WARNING FN_NO_VERB | 90 EMBALAJE Y ETIQUETADO DE PRODU | function.description "Pieza identificada con logotipo segun VW 10514-C10" no comienza con verbo |
 | WARNING FN_NO_VERB | 90 EMBALAJE Y ETIQUETADO DE PRODU | function.description "Pieza identificada con pais de origen segun VW 10550" no comienza con verbo |
@@ -194,6 +198,14 @@
 | WARNING OP_FUNCTION_SEMANTIC_MISMATCH | 60 Inyección DE PIEZAS PLASTICAS | OP "Inyección DE PIEZAS PLASTICAS" debería contener alguno de [inyectar, conformar] en su función |
 | WARNING FN_NO_VERB | 60 Inyección DE PIEZAS PLASTICAS | function.description "Parámetros validados por producto" no comienza con verbo |
 | WARNING FN_NO_VERB | 60 Inyección DE PIEZAS PLASTICAS | function.description "Aire comprimido filtrado y seco" no comienza con verbo |
+
+### AMFE-MAESTRO-PU-001 (MAESTRO/INYECCION_PUR_IN_PLACE)
+0 CRITICAL + 2 WARNING
+
+| Type | OP | Detalle |
+|---|---|---|
+| WARNING OP_FUNCTION_SEMANTIC_MISMATCH | 10 INYECCION PUR IN PLACE | OP "INYECCION PUR IN PLACE" debería contener alguno de [inyectar, conformar] en su función |
+| WARNING FN_NO_VERB | 10 INYECCION PUR IN PLACE | function.description "Dar forma a la pieza durante el espumado y curado" no comienza con verbo |
 
 ### AMFE-MAESTRO-LOG-REC-001 (MAESTRO/LOGISTICA_RECEPCION)
 0 CRITICAL + 1 WARNING
