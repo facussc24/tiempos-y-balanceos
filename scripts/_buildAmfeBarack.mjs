@@ -61,6 +61,17 @@ function resolveWeName(buck, m) {
   return name ? name.replace(/ \/ /g, ' y ') : name; // sin "/" (regla 1M por linea)
 }
 const APH_PLACEHOLDER = 'Pendiente definición equipo APQP';
+
+// O/D para causas que el Excel dejó sin calificar (autorizado Fak 2026-06-25).
+// Criterio: escalas AIAG-VDA (amfe.md) + causas hermanas del mismo FM + controles presentes.
+// key = opNumber ; valor = [substring_causa_normalizado, Occurrence, Detection]
+const OD_FILL = {
+  '20': [['vinilo mal identificado', 4, 7], ['parametros de corte mal ingresados', 3, 6]],
+  '31': [['instruccion de trabajo', 3, 8]],
+  '32': [['operador utiliza la herramienta de corte', 5, 6], ['instruccion de trabajo', 3, 8]],
+  '40': [['error del operario', 3, 8]],
+  '55': [['punta de soldadura sucia', 4, 8], ['instruccion de trabajo', 3, 8]],
+};
 // descripción de función del WE (no es etiqueta 6M pura -> pasa validador FN_GENERIC)
 function weFunction(buck, m, name) {
   switch (m) {
@@ -115,6 +126,17 @@ function build(parsed, header) {
         effectEndUser: fixCorte(f.effectEndUser || ''),
         severity: f.severity || null,
         causes: f.causes.map(c => {
+          // Completar O/D faltantes (autorizado por Fak 2026-06-25): criterio AIAG-VDA
+          // (escalas amfe.md) + causas hermanas + controles presentes. Marcado _autoFilled.
+          let occ = c.occurrence, det = c.detection; const autoFilled = [];
+          if (occ == null || det == null) {
+            const ck = nk(c.cause);
+            const fill = (OD_FILL[op.operationNumber] || []).find(([snip]) => ck.includes(snip));
+            const [, fo, fd] = fill || [null, 5, 7]; // fallback conservador: O=5 (baja/ocasional), D=7 (deteccion moderada)
+            if (occ == null) { occ = fo; autoFilled.push('occurrence'); }
+            if (det == null) { det = fd; autoFilled.push('detection'); }
+          }
+          c = { ...c, occurrence: occ, detection: det };
           const ap = (f.severity && c.occurrence && c.detection) ? calculateAP(f.severity, c.occurrence, c.detection) : '';
           // AP=H sin accion ni placeholder -> placeholder autorizado (regla amfe-aph-pending)
           let prevAct = c.preventionAction || '';
@@ -141,6 +163,7 @@ function build(parsed, header) {
             occurrenceNew: c.occurrenceNew ?? null,
             detectionNew: c.detectionNew ?? null,
             observations: c.observations || '',
+            ...(autoFilled.length ? { _autoFilled: autoFilled } : {}),
           };
         }),
       }));
