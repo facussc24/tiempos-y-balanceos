@@ -1,5 +1,7 @@
 # Regla: Sincronizacion 2 PCs — Protocolo Durable
 
+> **DEPRECADA 2026-06-25 (decision Fak):** "la regla de sync en 2pc ya no hace falta, solo vamos a laburar en esta porque es mas rapida". Ya NO se trabaja desde 2 PCs — solo desde esta (`C:\Dev\BarackMercosul`). NO ejecutar el protocolo de fetch/pull al inicio ni el push de sincronizacion al final. Los commits siguen siendo utiles localmente; el push queda OPCIONAL (solo si se quiere deploy o backup remoto), no obligatorio por sync. El resto queda como referencia historica.
+
 Fak trabaja desde 2 PCs simultaneamente. La desincronizacion rompe todo.
 
 ## Protocolo de inicio de sesion (OBLIGATORIO)

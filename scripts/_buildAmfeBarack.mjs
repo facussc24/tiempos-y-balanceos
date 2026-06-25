@@ -170,6 +170,14 @@ function build(parsed, header) {
       const desc = weFunction(buck, m, name);
       return { id: uid(), name, type: m, functions: [{ id: uid(), description: desc, functionDescription: desc, requirements: '', failures }] };
     });
+    // Renumerar FM SECUENCIAL por operacion (en el orden de aparicion WE->fn->falla),
+    // para que el export muestre 1,2,3,4,5... y no salteado por el agrupamiento 6M.
+    let fmSeq = 0;
+    for (const we of workElements) for (const fn of we.functions) for (const f of fn.failures) {
+      fmSeq++;
+      const base = String(f.description || '').replace(/^\s*\d+\s*[-).]\s*/, '').trim();
+      f.description = `${fmSeq}- ${base}`;
+    }
     return {
       id: uid(),
       opNumber: op.operationNumber, operationNumber: op.operationNumber,
@@ -196,16 +204,27 @@ const HEADERS = {
 for (const k of keys) {
   const parsed = JSON.parse(readFileSync(`tmp/amfe${k}.parsed.json`, 'utf8'));
   const h = HEADERS[k];
+  // Header con los nombres EXACTOS que lee la caratula del export (buildMetadataRows):
+  // amfeNumber, confidentiality, organization, client, location, partNumber, responsible,
+  // processResponsible, team (string), modelYear, startDate, revDate, revision, approvedBy, scope, subject, applicableParts.
+  // Globales (decision Fak 2026-06-25): responsable=Carlos Baptista, aprobo=Gonzalo Cal.
   const header = {
+    amfeNumber: k,
     companyName: 'BARACK MERCOSUL', organization: 'BARACK MERCOSUL',
-    scope: h.subject, subject: h.subject,
-    partNumber: h.partNumber, applicableParts: h.partNumber,
+    location: 'PLANTA HURLINGHAM',
     client: 'VWA', customerName: 'VWA',
-    responsibleEngineer: 'Paulo Centurión', responsible: 'Paulo Centurión',
-    coreTeam: TEAM, preparedBy: 'Facundo Santoro', approvedBy: 'Paulo Centurión',
-    plant: 'Planta Hurlingham', model: 'AMAROK PA2',
-    amfeNumber: k, revisionLevel: 'G',
-    startDate: '', amfeDate: '', revisionDate: '',
+    modelYear: 'AMAROK PA2',
+    confidentiality: 'Confidencial',
+    scope: 'Proceso de produccion completo', subject: h.subject,
+    partNumber: h.partNumber, applicableParts: h.partNumber,
+    startDate: '04/03/2024', revDate: '28/07/2025', revisionDate: '28/07/2025', amfeDate: '04/03/2024',
+    rev: 'G', revision: 'G', revisionLevel: 'G',
+    responsible: 'Carlos Baptista', responsibleEngineer: 'Carlos Baptista',
+    processResponsible: 'Paulo Centurión',
+    reviewedBy: 'Carlos Baptista',
+    approvedBy: 'Gonzalo Cal', plantApproval: 'Gonzalo Cal',
+    preparedBy: 'Facundo Santoro', elaboratedBy: 'Facundo Santoro',
+    team: TEAM, coreTeam: ['Paulo Centurión (Ingeniería)', 'Manuel Meszaros (Calidad)', 'Cristina Rabago (Seguridad e Higiene)', 'Mariana Vera (Producción)'],
   };
   const doc = build(parsed, header);
   syncLegacyFmFields(doc);

@@ -784,3 +784,18 @@ cross-proyecto): misma directiva persistida para sesiones fuera de Barack.
 - Registrar 128/129 en el listado maestro de AMFEs (Excel con Claude propio de Fak) — le pase el prompt.
 
 **Backup:** `backups/2026-06-25_amarok_load/` (amfe_documents 17 filas, cp_documents 10).
+
+---
+
+## Sesion 2026-06-25 (parte 2) — Excel AMFE entregado MAL (carátula vacía, FM salteados, revisiones)
+
+Fak rechazó el primer Excel exportado (AMFE 128/129 Amarok). 3 errores graves:
+1. **Carátula VACÍA**: usé nombres de campo equivocados en `doc.header` (`revisionLevel`/`revisionDate`/`coreTeam`) en vez de los que lee el export (`revision`/`revDate`/`team` + faltaban `location`/`modelYear`/`confidentiality`/`processResponsible`). El export `buildMetadataRows` (amfeExcelExport.ts:291-299) lee nombres EXACTOS — si no matchean, celda vacía. Plantilla correcta: header del AMFE 159.
+2. **Modos de falla fuera de secuencia** (1,3,4,5,2): el agrupamiento por Work Element 6M reordena los FM; el export muestra `failure.description` con el "N-" embebido tal cual. Fix: renumerar FM secuencial 1..N por operación en orden de aparición.
+3. **Revisiones inyectadas en la hoja de datos**: Fak quiere HOJA APARTE "Revisiones" con columna Responsable ("-" si no se sabe).
+
+**Globales (decision Fak):** carátula de TODO AMFE → Responsable = Carlos Baptista, Aprobado por = Gonzalo Cal.
+
+**Automatización (para no repetir):** creada skill `.claude/skills/amfe-export-oficial/SKILL.md` con el estándar completo + checklist. Verificar SIEMPRE abriendo el .xlsx (carátula filas 2-9, FM secuenciales, hoja Revisiones) antes de entregar.
+
+Fak: "no me podés entregar un AMFE [así]... no quiero gastar tantos tokens corrigiendo cosas que deberían estar autooptimizadas".
