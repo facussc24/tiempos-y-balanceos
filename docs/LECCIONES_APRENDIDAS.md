@@ -751,3 +751,36 @@ cross-proyecto): misma directiva persistida para sesiones fuera de Barack.
   (40+ filas AMAROK/viejas con codigos sin formato canonico)
 
 **Backup final:** `backups/2026-05-18T19-04-32` (713 rows / 12 tablas)
+
+---
+
+## Sesion 2026-06-25 — Carga AMFE IP 115/116 (Amarok PA2) desde Excel a Supabase
+
+### Que se hizo
+- Cargados AMFE 128 (IP 115) y 129 (IP 116), proyecto `VWA/AMAROK_PA2`, desde 2 Excel del pendrive (formato AIAG-VDA hecho a mano) a `amfe_documents`. 11/13 ops, 66/73 FM, 78/87 causas, rev G, draft. Verificado por md5 (dato identico) + MCP (data::jsonb objeto, no double-serializado).
+
+### Errores/correcciones de Fak
+1. **NO decir "Barack invierte AIAG-VDA".** Dije eso al describir el anidamiento del app schema; Fak lo cuestiono ("que carajo"). Correcto: el formato Excel de Fak ES el estandar AIAG-VDA 2019 (7 etapas); el software guarda los mismos datos, solo anidados para editar (Op->WE->Funcion->Falla->Causa). Su formato es el correcto.
+2. **Revisiones a letras (G).** Fak pasa todo de revisiones numericas a letras. El AMFE puede tener MAS revisiones que el PC pero NUNCA menos -> rev del AMFE >= rev del PC (ambos PC en G -> AMFE en G).
+3. **Corte = SCRAP, no retrabajo.** Confirmado de nuevo (ya estaba en amfe.md): si se corta mal no hay vuelta atras.
+4. **Alinear numeracion del AMFE al PC** (agrupar 2-en-1 donde el PC agrupa: 50/51, 52/53), SIN borrar modos de falla (AMFE puede tener mas que el PC: OP33 refilado, OP55 reproceso soldadura son detalle extra legitimo).
+
+### Leccion tecnica grande: parsear Excel AIAG-VDA hecho a mano
+- Los **merges del Excel hecho a mano NO son confiables** (celdas con valor real tapadas por merges solapados). Leer celdas crudas, ignorar `!merges`.
+- El **layout suele estar DESCOLOCADO** en las ops del medio (Fak mueve operaciones, las filas no quedan agrupadas). Los marcadores "OPERACION N" NO marcan confiablemente el bloque.
+- **Asignar cada FM a su operacion POR CONTENIDO, no por posicion** (regla `amfe-leer-contenido-antes-de-renumerar`): clase de proceso por funcion adyacente (ambiguos: costura/refilado/tapizado/virolado) + texto del FM (especificos: soldadura/inspeccion/adhesivado/recepcion/corte/embalaje). Cuide falsos positivos (la palabra "embalaje" aparece en CAUSAS de recepcion).
+- Tarde varias iteraciones en la heuristica de asignacion. Leccion: para fuentes descolocadas, la senal confiable es la FUNCION DE OPERACION adyacente al FM, no el marcador ni la posicion.
+
+### Leccion tecnica: cargar JSON grande a Supabase desde clon sin .env.local
+- El hook `file-guard.sh` BLOQUEA escribir `.env*`. RLS = `ALL:authenticated`.
+- **MCP execute_sql NO sirve para JSON grande (>~10KB)**: requeriria reproducir byte-a-byte 80KB en la query (imposible confiable, md5 falla).
+- **Solucion**: SERVICE_ROLE key (`sb_secret_...` del panel Supabase, Fak la copia — el sistema me bloquea sacarla solo) pasada por **variable de entorno** al script node (no se escribe archivo). `scripts/_insertAmfeService.mjs` (createClient con service key, bypassa RLS). Verificar md5 + data::jsonb objeto.
+
+### Scripts reusables creados (importador Excel->AMFE)
+`scripts/_parseAmfeXlsxAmarok.mjs`, `_buildAmfeBarack.mjs`, `_prepareAmfeInsert.mjs`, `_prepareAmfeParts.mjs`, `_insertAmfeService.mjs`.
+
+### Pendientes (Fak / equipo APQP)
+- 4 (IP115) / 6 (IP116) causas sin O/D en el Excel original — quedaron en blanco, completa el equipo.
+- Registrar 128/129 en el listado maestro de AMFEs (Excel con Claude propio de Fak) — le pase el prompt.
+
+**Backup:** `backups/2026-06-25_amarok_load/` (amfe_documents 17 filas, cp_documents 10).
