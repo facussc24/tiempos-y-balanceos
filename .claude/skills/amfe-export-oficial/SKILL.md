@@ -62,6 +62,10 @@ Columnas: **Rev | Fecha | Responsable | Descripción del cambio**. Si no se sabe
 - `scripts/_exportAmfeAmarok.ts` — `buildAmfeCompletoWorkbook` + hoja Revisiones → pendrive. Correr con `SUPABASE_SERVICE_ROLE_KEY=... VITE_SUPABASE_URL=... npx tsx`.
 - Cargar a Supabase sin `.env.local`: service key por env var (ver `reference_amfe_xlsx_importer` en memoria).
 
+## Enforcement (gate, no solo checklist)
+
+`scripts/_exportAmfeAmarok.ts` tiene un **guard que ABORTA el export** si alguna causa tiene `severity`/`occurrence`/`detection` vacío (null o ""). Así es imposible escribir al pendrive/cliente un AMFE incompleto. Incidente fuente: se entregó un primer export PREMATURO (antes de completar O/D) y Fak vio celdas vacías — "jamás algo puede estar vacío... no puede volver a suceder". Todo export nuevo debe replicar este guard.
+
 ## Checklist antes de entregar un Excel de AMFE
 - [ ] Carátula con TODOS los campos llenos (abrir el .xlsx y mirar filas 2-9).
 - [ ] FM numerados 1,2,3,…N sin saltos en cada operación.

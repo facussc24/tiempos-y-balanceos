@@ -28,6 +28,15 @@ for (const k of ['128', '129']) {
   if (error || !row) { console.error(`FETCH ${k} FALLO:`, error?.message); continue; }
   const doc = typeof row.data === 'string' ? JSON.parse(row.data) : row.data;
   const revs = JSON.parse(row.revisions || '[]') as Array<{ rev: string; date: string; description: string; responsible?: string }>;
+
+  // GUARD (no volver a entregar AMFE incompleto): abortar si alguna causa tiene S/O/D vacío.
+  const empty = (v: any) => v == null || String(v).trim() === '';
+  const gaps: string[] = [];
+  for (const op of (doc.operations || [])) for (const we of (op.workElements || [])) for (const fn of (we.functions || [])) for (const f of (fn.failures || [])) for (const c of (f.causes || [])) {
+    if (empty(c.severity) || empty(c.occurrence) || empty(c.detection)) gaps.push(`OP${op.operationNumber} "${String(c.cause).slice(0, 32)}" S=${c.severity} O=${c.occurrence} D=${c.detection}`);
+  }
+  if (gaps.length) { console.error(`ABORTADO AMFE ${k}: ${gaps.length} causa(s) con S/O/D vacío — NO exporto un AMFE incompleto:`); gaps.slice(0, 12).forEach(g => console.error('  ' + g)); continue; }
+
   const wb = buildAmfeCompletoWorkbook(doc);
 
   // --- Hoja aparte "Revisiones" (Rev | Fecha | Responsable | Descripción) ---
