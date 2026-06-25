@@ -30,7 +30,7 @@ const TARGETS = {
     ['reproceso_costura', '32', 'REPROCESO: CORRECCIÓN DE COSTURA DESVIADA / FLOJA'], ['refilado', '33', 'REFILADO DE FUNDA TERMINADA'],
     ['adhesivado', '40', 'ADHESIVADO DE PIEZAS'], ['tapizado', '50/51', 'TAPIZADO SEMIAUTOMÁTICO (PRE-MONTAJE + PEGADO)'],
     ['virolado', '52/53', 'VIROLADO + REFILADO DE PIEZAS'], ['soldadura', '54', 'SOLDADURA'],
-    ['reproceso_soldadura', '55', 'REPROCESO: CORRECCIÓN DE PUNTOS DE SOLDADURA'], ['inspeccion', '60', 'CONTROL FINAL DE CALIDAD'], ['embalaje', '70', 'EMBALAJE'],
+    ['inspeccion', '60', 'CONTROL FINAL DE CALIDAD'], ['embalaje', '70', 'EMBALAJE'], ['reproceso_soldadura', '71', 'REPROCESO: CORRECCIÓN DE PUNTOS DE SOLDADURA'],
   ],
 };
 
