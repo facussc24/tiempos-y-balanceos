@@ -55,7 +55,7 @@ for (const we of op.workElements) for (const fn of we.functions) for (const f of
 
 ## 4. Revisiones = HOJA APARTE "Revisiones" (no inyectar en la hoja de datos)
 
-Columnas: **Rev | Fecha | Responsable | Descripción del cambio**. Si no se sabe el responsable, poner "-". El historial son hitos A→G (no el log diario), alineados al Plan de Control (mismas fechas/nivel; ver `feedback_amfe_revisiones_vs_pc`). El último hito: "Revisión general alineada al Plan de Control rev X".
+Columnas: **Rev | Fecha | Modificó | Descripción del cambio** (decision Fak 2026-06-25: "Modificó", no "Responsable" — coincide con la columna MODIFICO de los Excel originales). Si no se sabe quién modificó, poner "-". El historial son hitos A→G (no el log diario), alineados al Plan de Control (mismas fechas/nivel; ver `feedback_amfe_revisiones_vs_pc`). El último hito: "Revisión general alineada al Plan de Control rev X".
 
 ## 5. Scripts de referencia (Amarok 2026-06-25)
 - `scripts/_buildAmfeBarack.mjs` — construye doc con header canónico + FM secuencial + O/D.
@@ -69,6 +69,6 @@ Columnas: **Rev | Fecha | Responsable | Descripción del cambio**. Si no se sabe
 ## Checklist antes de entregar un Excel de AMFE
 - [ ] Carátula con TODOS los campos llenos (abrir el .xlsx y mirar filas 2-9).
 - [ ] FM numerados 1,2,3,…N sin saltos en cada operación.
-- [ ] Hoja "Revisiones" presente con columna Responsable.
+- [ ] Hoja "Revisiones" presente con columna **Modificó** (no "Responsable").
 - [ ] Responsable = Carlos Baptista, Aprobado por = Gonzalo Cal.
 - [ ] 0 causas sin S/O/D (validar con `amfeValidator`).

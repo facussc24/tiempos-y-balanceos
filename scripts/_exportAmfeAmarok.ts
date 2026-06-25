@@ -43,12 +43,12 @@ for (const k of ['128', '129']) {
   const revWs: any = {};
   const setCell = (r: number, c: number, v: string, s: any) => { revWs[C(r, c)] = { v, t: 's', s }; };
   setCell(0, 0, 'HISTORIAL DE REVISIONES', titleSt);
-  ['Rev', 'Fecha', 'Responsable', 'Descripción del cambio'].forEach((h, i) => setCell(1, i, h, hdrSt));
-  revs.forEach((rv, i) => {
+  ['Rev', 'Fecha', 'Modificó', 'Descripción del cambio'].forEach((h, i) => setCell(1, i, h, hdrSt));
+  revs.forEach((rv: any, i) => {
     const r = i + 2;
     setCell(r, 0, rv.rev, ctrSt);
     setCell(r, 1, rv.date, ctrSt);
-    setCell(r, 2, rv.responsible || '-', ctrSt);
+    setCell(r, 2, rv.modifiedBy || rv.responsible || '-', ctrSt);
     setCell(r, 3, rv.description, bodySt);
   });
   const lastRow = revs.length + 1;
