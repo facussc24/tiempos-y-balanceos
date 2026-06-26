@@ -71,14 +71,16 @@ export function getSaturationZone(args: {
 // -----------------------------------------------------------------------------
 
 /**
- * True when a raw OEE input string is a usable target. saveStationConfig accepts both a
- * 0–1 fraction and a 1–100 percent (auto-divided), so the valid range is (0, 100].
- * Empty / non-numeric / <= 0 / > 100 are rejected so the modal can warn before saving.
+ * True when a raw OEE input string is a usable target fraction in [0, 1] — matching the modal
+ * input (min=0, max=1, step=0.01). 0 is allowed so a station whose OEE is 0 (e.g. a blank
+ * project) can still be opened and edited; empty / non-numeric / negative / > 1 are rejected.
  *
- * @example isValidOeeInput('0.85') -> true; isValidOeeInput('85') -> true;
- *          isValidOeeInput('') -> false; isValidOeeInput('120') -> false
+ * @example isValidOeeInput('0.85') -> true; isValidOeeInput('0') -> true; isValidOeeInput('1') -> true;
+ *          isValidOeeInput('') -> false; isValidOeeInput('1.5') -> false; isValidOeeInput('85') -> false
  */
 export function isValidOeeInput(raw: string): boolean {
-    const n = Number((raw || '').toString().replace(',', '.'));
-    return Number.isFinite(n) && n > 0 && n <= 100;
+    const trimmed = (raw ?? '').toString().trim();
+    if (trimmed === '') return false;
+    const n = Number(trimmed.replace(',', '.'));
+    return Number.isFinite(n) && n >= 0 && n <= 1;
 }

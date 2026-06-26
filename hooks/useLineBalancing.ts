@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useRef } from 'react';
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { DragEndEvent, DragStartEvent, DragOverEvent } from '@dnd-kit/core';
 import { ProjectData, Task, StationConfig } from '../types';
 import { toast } from '../components/ui/Toast';
@@ -21,7 +21,7 @@ import {
 } from '../core/balancing/engine';
 import { runGeneticAlgorithmAsync } from '../core/balancing/geneticAlgorithm';
 import { validateMachineResources, MachineValidationResult } from '../core/balancing/machineValidation';
-import { checkHardAssignmentConstraints } from '../core/balancing/assignmentConstraints';
+import { checkHardAssignmentConstraints, planBulkMove } from '../core/balancing/assignmentConstraints';
 import { usePlantAssets } from './usePlantAssets'; // V4.0: Use Global Assets for Validation
 
 
@@ -71,6 +71,9 @@ export const useLineBalancing = (data: ProjectData, updateData: (data: ProjectDa
 
     // Abort handle for the in-flight async optimization (lets the user cancel a long run).
     const gaAbortRef = useRef<AbortController | null>(null);
+
+    // Abort any in-flight optimization if the component unmounts (frees CPU, avoids setState-after-unmount).
+    useEffect(() => () => { gaAbortRef.current?.abort(); }, []);
 
     // V4.2 FIX: Use Global Plant Assets for Validation (Real-time Availability)
     const { machines: globalMachines } = usePlantAssets();
@@ -516,6 +519,25 @@ export const useLineBalancing = (data: ProjectData, updateData: (data: ProjectDa
         taskIds.forEach(id => newAssignments.push({ taskId: id, stationId }));
         updateData({ ...data, assignments: newAssignments });
     }, [data, updateData]);
+
+    /**
+     * Bulk-move tasks to a station WITH hard-constraint validation (machine / sector / zoning).
+     * Accepts each task incrementally so intra-batch conflicts are caught too; tasks that violate
+     * a hard constraint are skipped and reported via toast. Used by the multi-select action bar.
+     */
+    const moveTasksToStation = useCallback((taskIds: string[], stationId: number) => {
+        const { accepted, blocked, nextData } = planBulkMove(taskIds, stationId, data, machinesList);
+
+        if (accepted.length > 0) {
+            updateData(nextData);
+        }
+        if (blocked.length > 0) {
+            toast.warning(
+                'Restricción de Asignación',
+                `No se ${blocked.length === 1 ? 'movió' : 'movieron'} ${blocked.length} tarea(s) por conflicto de máquina, sector o zona: ${blocked.join(', ')}.`
+            );
+        }
+    }, [data, machinesList, updateData]);
 
     const unassignTask = useCallback((taskId: string) => {
         const newAssignments = data.assignments.filter(a => a.taskId !== taskId);
@@ -982,6 +1004,7 @@ export const useLineBalancing = (data: ProjectData, updateData: (data: ProjectDa
         applySimulation,
         toggleBoardSectorCollapse,
         performAssignment,
-        performBulkAssignment
+        performBulkAssignment,
+        moveTasksToStation
     };
 };

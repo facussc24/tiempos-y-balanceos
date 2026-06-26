@@ -31,14 +31,16 @@ export function checkHardAssignmentConstraints(
     data: ProjectData,
     machinesList: MachineType[]
 ): AssignmentConstraintResult {
-    const movingTask = data.tasks.find(t => t.id === taskId);
+    // O(1) lookup; this runs on every drag-over frame via the live preview, so avoid O(n) finds.
+    const taskById = new Map(data.tasks.map(t => [t.id, t]));
+    const movingTask = taskById.get(taskId);
     if (!movingTask) return ALLOWED;
 
     // 1) Machine type conflict — the station already hosts a different required machine type.
     if (movingTask.requiredMachineId) {
         const stationTasks = data.assignments
             .filter(a => a.stationId === targetStationId)
-            .map(a => data.tasks.find(t => t.id === a.taskId))
+            .map(a => taskById.get(a.taskId))
             .filter(Boolean) as Task[];
 
         const stationMachineType = stationTasks.find(t => t.requiredMachineId)?.requiredMachineId;
@@ -58,7 +60,7 @@ export function checkHardAssignmentConstraints(
     if (!data.meta.disableSectorAffinity && movingTask.sectorId) {
         const stationTasks = data.assignments
             .filter(a => a.stationId === targetStationId && a.taskId !== taskId)
-            .map(a => data.tasks.find(t => t.id === a.taskId))
+            .map(a => taskById.get(a.taskId))
             .filter(Boolean) as Task[];
 
         const stationSector = stationTasks.find(t => t.sectorId)?.sectorId;
@@ -101,4 +103,49 @@ export function checkHardAssignmentConstraints(
     }
 
     return ALLOWED;
+}
+
+export interface BulkMovePlan {
+    /** Task ids that can be moved (passed all hard constraints). */
+    accepted: string[];
+    /** Task ids skipped because they violate a hard constraint. */
+    blocked: string[];
+    /** A copy of `data` with the accepted assignments applied. Commit it only if accepted.length > 0. */
+    nextData: ProjectData;
+}
+
+/**
+ * Plan a bulk move of `taskIds` to `targetStationId`, validating hard constraints INCREMENTALLY
+ * (each accepted task is reflected in the working state before the next is checked) so intra-batch
+ * conflicts are caught — not just conflicts against the pre-existing assignments.
+ *
+ * Pure: returns the accepted/blocked split and the resulting data; the caller decides whether to
+ * commit. Used by the multi-select "move N to station" action so bulk moves respect the same
+ * machine / sector / zoning rules that single drag-and-drop enforces.
+ */
+export function planBulkMove(
+    taskIds: string[],
+    targetStationId: number,
+    data: ProjectData,
+    machinesList: MachineType[]
+): BulkMovePlan {
+    const validIds = taskIds.filter(id => data.tasks.some(t => t.id === id));
+    let working = data;
+    const accepted: string[] = [];
+    const blocked: string[] = [];
+
+    for (const id of validIds) {
+        const res = checkHardAssignmentConstraints(id, targetStationId, working, machinesList);
+        if (res.blocked) {
+            blocked.push(id);
+        } else {
+            accepted.push(id);
+            working = {
+                ...working,
+                assignments: [...working.assignments.filter(a => a.taskId !== id), { taskId: id, stationId: targetStationId }],
+            };
+        }
+    }
+
+    return { accepted, blocked, nextData: working };
 }

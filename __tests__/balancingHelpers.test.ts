@@ -74,25 +74,26 @@ describe('getSaturationZone', () => {
 });
 
 describe('isValidOeeInput', () => {
-    it('acepta fracción 0–1', () => {
+    it('acepta fracción 0–1 (incluido 0, para no bloquear estaciones con OEE 0)', () => {
         expect(isValidOeeInput('0.85')).toBe(true);
+        expect(isValidOeeInput('0')).toBe(true);
         expect(isValidOeeInput('1')).toBe(true);
-    });
-
-    it('acepta porcentaje 1–100 (saveStationConfig lo divide)', () => {
-        expect(isValidOeeInput('85')).toBe(true);
-        expect(isValidOeeInput('100')).toBe(true);
     });
 
     it('acepta coma decimal (locale es)', () => {
         expect(isValidOeeInput('0,9')).toBe(true);
     });
 
-    it('rechaza vacío, no numérico, <= 0 y > 100', () => {
+    it('rechaza vacío y no numérico', () => {
         expect(isValidOeeInput('')).toBe(false);
+        expect(isValidOeeInput('   ')).toBe(false);
         expect(isValidOeeInput('abc')).toBe(false);
-        expect(isValidOeeInput('0')).toBe(false);
+    });
+
+    it('rechaza fuera de rango: negativo y > 1 (el input es fracción, max=1)', () => {
         expect(isValidOeeInput('-0.5')).toBe(false);
+        expect(isValidOeeInput('1.5')).toBe(false);
+        expect(isValidOeeInput('85')).toBe(false);
         expect(isValidOeeInput('120')).toBe(false);
     });
 });

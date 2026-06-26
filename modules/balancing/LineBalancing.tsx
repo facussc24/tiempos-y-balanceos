@@ -86,6 +86,7 @@ export const LineBalancing: React.FC<Props> = ({ data, updateData }) => {
         toggleBoardSectorCollapse,
         performAssignment,
         performBulkAssignment,
+        moveTasksToStation,
         confirmClearBalance,
         cancelClearBalance
     } = useLineBalancing(data, updateData);
@@ -105,10 +106,10 @@ export const LineBalancing: React.FC<Props> = ({ data, updateData }) => {
     const clearSelection = useCallback(() => setSelectedTaskIds(new Set()), []);
 
     const moveSelectedToStation = useCallback((stationId: number) => {
-        const ids = [...selectedTaskIds].filter(id => data.tasks.some(t => t.id === id));
-        if (ids.length > 0) performBulkAssignment(ids, stationId);
+        // moveTasksToStation validates hard constraints (machine / sector / zoning) and skips/reports violators.
+        moveTasksToStation([...selectedTaskIds], stationId);
         setSelectedTaskIds(new Set());
-    }, [selectedTaskIds, data.tasks, performBulkAssignment]);
+    }, [selectedTaskIds, moveTasksToStation]);
 
     // Close modals on Escape
     useEffect(() => {
@@ -316,7 +317,7 @@ export const LineBalancing: React.FC<Props> = ({ data, updateData }) => {
                                 </div>
                                 <div className="p-6 space-y-4">
                                     <div>
-                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">OEE Objetivo (0–1.0 o 0–100%)</label>
+                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">OEE Objetivo (0–1.0)</label>
                                         <input
                                             type="number"
                                             step="0.01"
@@ -334,7 +335,7 @@ export const LineBalancing: React.FC<Props> = ({ data, updateData }) => {
                                             </p>
                                         ) : (
                                             <p className="text-xs text-red-500 mt-2 font-medium">
-                                                Ingresá un valor entre 0 y 1 (o 0–100%).
+                                                Ingresá un valor entre 0 y 1.
                                             </p>
                                         )}
                                     </div>
