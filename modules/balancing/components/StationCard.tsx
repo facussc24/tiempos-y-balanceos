@@ -1,5 +1,5 @@
 import React from 'react';
-import { Settings, Lock, X, Bot, Split, AlertTriangle, Cpu, Users, XCircle, CheckCircle2 } from 'lucide-react';
+import { Settings, Lock, X, Bot, Split, AlertTriangle, Cpu, Users, XCircle, CheckCircle2, Square, CheckSquare, Ban } from 'lucide-react';
 import { useDraggable, useDroppable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import { ProjectData, MachineType, Task, Sector } from '../../../types';
@@ -52,14 +52,21 @@ interface StationCardProps {
         previewSaturation: number;
         delta: number;
         wouldOverload: boolean;
+        constraintBlocked?: boolean;
+        constraintReason?: string;
     } | null;
+    // Multi-select (bulk move)
+    selectedTaskIds?: Set<string>;
+    onToggleTaskSelection?: (taskId: string) => void;
 }
 
 const DraggableStationTask: React.FC<{
     t: Task;
     formatNumber: (n: number) => string;
     onUnassignTask: (id: string) => void;
-}> = React.memo(({ t, formatNumber, onUnassignTask }) => {
+    isSelected: boolean;
+    onToggleSelect: (id: string) => void;
+}> = React.memo(({ t, formatNumber, onUnassignTask, isSelected, onToggleSelect }) => {
     const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
         id: t.id,
     });
@@ -85,11 +92,23 @@ const DraggableStationTask: React.FC<{
             style={style}
             {...listeners}
             {...attributes}
-            className={`group relative border px-3 py-2 rounded-sm text-sm font-medium cursor-grab active:cursor-grabbing hover:shadow-sm flex items-center gap-2 ${bgClass} ${isDragging ? 'opacity-50' : ''}`}
+            className={`group relative border px-3 py-2 rounded-sm text-sm font-medium cursor-grab active:cursor-grabbing hover:shadow-sm flex items-center gap-2 ${bgClass} ${isDragging ? 'opacity-50' : ''} ${isSelected ? 'ring-2 ring-blue-500 ring-offset-1' : ''}`}
             title={isAbsorbed ? `↺ ${formatNumber(t.standardTime || t.averageTime)}s absorbido durante ciclo máquina` : undefined}
-            aria-label={`Tarea ${t.id}, ${formatNumber(t.standardTime || t.averageTime)} segundos. Arrastrar para reasignar.`}
+            aria-label={`Tarea ${t.id}, ${formatNumber(t.standardTime || t.averageTime)} segundos${isSelected ? ', seleccionada' : ''}. Arrastrar para reasignar.`}
             aria-roledescription="elemento arrastrable"
         >
+            {/* Selection checkbox (bulk move) — stops propagation so it never starts a drag */}
+            <button
+                type="button"
+                onPointerDown={(e) => e.stopPropagation()}
+                onClick={(e) => { e.stopPropagation(); onToggleSelect(t.id); }}
+                aria-pressed={isSelected}
+                aria-label={isSelected ? `Quitar selección de tarea ${t.id}` : `Seleccionar tarea ${t.id}`}
+                title={isSelected ? 'Quitar de la selección' : 'Seleccionar para mover en bloque'}
+                className={`absolute -top-2 -left-2 bg-white rounded p-0.5 border border-slate-200 shadow-sm transition-opacity ${isSelected ? 'opacity-100 text-blue-600' : 'opacity-0 group-hover:opacity-100 focus:opacity-100 text-slate-400 hover:text-blue-600'}`}
+            >
+                {isSelected ? <CheckSquare size={12} /> : <Square size={12} />}
+            </button>
             <div className="flex flex-col">
                 <span className="font-bold font-mono">{t.id}</span>
                 <span className="text-xs opacity-70">
@@ -117,10 +136,13 @@ const DraggableStationTask: React.FC<{
 });
 DraggableStationTask.displayName = 'DraggableStationTask';
 
+const NOOP = () => { /* stable no-op default for optional selection handler */ };
+
 export const StationCard: React.FC<StationCardProps> = React.memo(({
     st, sectorsList, draggedTask, isOverload, data, nominalSeconds, effectiveSeconds,
     onUpdateReplicas, onOpenConfig, onUnassignTask,
-    machineType, hasResourceDeficit, dragPreview
+    machineType, hasResourceDeficit, dragPreview,
+    selectedTaskIds, onToggleTaskSelection
 }) => {
     const stationSector = sectorsList.find(s => s.id === st.sectorId);
     const { setNodeRef, isOver } = useDroppable({
@@ -167,7 +189,7 @@ export const StationCard: React.FC<StationCardProps> = React.memo(({
     return (
         <div
             ref={setNodeRef}
-            aria-label={`Estación ${st.id}, ${formatNumber(st.time)} segundos, ${st.tasks.length} tareas asignadas${isOverload ? ', sobrecargada' : ''}`}
+            aria-label={`Estación ${st.id}${stationSector ? `, sector ${stationSector.name}` : ''}, ${formatNumber(st.time)} segundos, ${formatNumber(saturationPercent)}% de saturación, ${st.tasks.length} tareas asignadas${isOverload ? ', sobrecargada' : ''}${machineType ? `, requiere ${machineType.name}` : ''}`}
             aria-roledescription="zona de destino"
             className={`border rounded-md p-4 transition-all relative ${isOver ? 'border-accent bg-accent-light ring-2 ring-blue-200' : (draggedTask ? 'border-industrial-300 bg-industrial-50/50' : 'border-industrial-200 bg-white')} ${isOverload ? 'border-status-crit bg-status-crit-bg' : 'shadow-sm'} ${deficitStyles} ${parallelStyles}`}
             style={{ borderLeftColor: stationSector?.color || undefined, borderLeftWidth: stationSector ? 4 : 1 }}
@@ -270,17 +292,24 @@ export const StationCard: React.FC<StationCardProps> = React.memo(({
 
             {/* Live Drag Preview Overlay */}
             {dragPreview && (
-                <div className={`mb-3 px-3 py-2 rounded-lg border-2 text-xs font-bold flex items-center justify-between animate-in fade-in duration-150 ${
-                    dragPreview.wouldOverload
-                        ? 'bg-red-50 border-red-300 text-red-700'
-                        : dragPreview.previewSaturation > SATURATION_HIGH_PCT
-                            ? 'bg-amber-50 border-amber-300 text-amber-700'
-                            : 'bg-emerald-50 border-emerald-300 text-emerald-700'
-                }`}>
-                    <span>+{formatNumber(dragPreview.delta)}s</span>
-                    <span>{formatNumber(dragPreview.previewSaturation)}% saturación</span>
-                    <span className="inline-flex items-center gap-1">{dragPreview.wouldOverload ? <><XCircle size={12} /> Excede Takt</> : dragPreview.previewSaturation > SATURATION_HIGH_PCT ? <><AlertTriangle size={12} /> Alta carga</> : <><CheckCircle2 size={12} /> OK</>}</span>
-                </div>
+                dragPreview.constraintBlocked ? (
+                    <div className="mb-3 px-3 py-2 rounded-lg border-2 text-xs font-bold flex items-center justify-between animate-in fade-in duration-150 bg-red-50 border-red-400 text-red-700">
+                        <span className="inline-flex items-center gap-1"><Ban size={12} /> No permitido aquí</span>
+                        <span>{dragPreview.constraintReason || 'Restricción de asignación'}</span>
+                    </div>
+                ) : (
+                    <div className={`mb-3 px-3 py-2 rounded-lg border-2 text-xs font-bold flex items-center justify-between animate-in fade-in duration-150 ${
+                        dragPreview.wouldOverload
+                            ? 'bg-red-50 border-red-300 text-red-700'
+                            : dragPreview.previewSaturation > SATURATION_HIGH_PCT
+                                ? 'bg-amber-50 border-amber-300 text-amber-700'
+                                : 'bg-emerald-50 border-emerald-300 text-emerald-700'
+                    }`}>
+                        <span>+{formatNumber(dragPreview.delta)}s</span>
+                        <span>{formatNumber(dragPreview.previewSaturation)}% saturación</span>
+                        <span className="inline-flex items-center gap-1">{dragPreview.wouldOverload ? <><XCircle size={12} /> Excede Takt</> : dragPreview.previewSaturation > SATURATION_HIGH_PCT ? <><AlertTriangle size={12} /> Alta carga</> : <><CheckCircle2 size={12} /> OK</>}</span>
+                    </div>
+                )
             )}
 
             {/* Task List */}
@@ -295,6 +324,8 @@ export const StationCard: React.FC<StationCardProps> = React.memo(({
                             t={t}
                             formatNumber={formatNumber}
                             onUnassignTask={onUnassignTask}
+                            isSelected={selectedTaskIds?.has(t.id) ?? false}
+                            onToggleSelect={onToggleTaskSelection ?? NOOP}
                         />
                     );
                 })}
@@ -324,7 +355,10 @@ export const StationCard: React.FC<StationCardProps> = React.memo(({
         prevProps.data.meta.capacityLimitMode === nextProps.data.meta.capacityLimitMode &&
         prevProps.effectiveSeconds === nextProps.effectiveSeconds &&
         prevProps.dragPreview?.stationId === nextProps.dragPreview?.stationId &&
-        prevProps.dragPreview?.previewTime === nextProps.dragPreview?.previewTime
+        prevProps.dragPreview?.previewTime === nextProps.dragPreview?.previewTime &&
+        prevProps.dragPreview?.constraintBlocked === nextProps.dragPreview?.constraintBlocked &&
+        prevProps.selectedTaskIds === nextProps.selectedTaskIds &&
+        prevProps.onToggleTaskSelection === nextProps.onToggleTaskSelection
     );
 });
 StationCard.displayName = 'StationCard';

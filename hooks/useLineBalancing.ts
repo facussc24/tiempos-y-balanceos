@@ -21,6 +21,7 @@ import {
 } from '../core/balancing/engine';
 import { runGeneticAlgorithmAsync } from '../core/balancing/geneticAlgorithm';
 import { validateMachineResources, MachineValidationResult } from '../core/balancing/machineValidation';
+import { checkHardAssignmentConstraints } from '../core/balancing/assignmentConstraints';
 import { usePlantAssets } from './usePlantAssets'; // V4.0: Use Global Assets for Validation
 
 
@@ -390,14 +391,19 @@ export const useLineBalancing = (data: ProjectData, updateData: (data: ProjectDa
         const previewSaturation = station.limit > 0 ? (previewTime / station.limit) * 100 : 0;
         const wouldOverload = previewTime > station.limit;
 
+        // Proactively flag hard-constraint violations so the user sees them BEFORE dropping.
+        const constraint = checkHardAssignmentConstraints(draggedTask, dragOverStation, data, machinesList);
+
         return {
             stationId: dragOverStation,
             previewTime,
             previewSaturation,
             delta: addedTime,
             wouldOverload,
+            constraintBlocked: constraint.blocked,
+            constraintReason: constraint.shortReason,
         };
-    }, [draggedTask, dragOverStation, stationData, data.tasks]);
+    }, [draggedTask, dragOverStation, stationData, data, machinesList]);
 
     // --- ACTIONS ---
 
@@ -564,88 +570,28 @@ export const useLineBalancing = (data: ProjectData, updateData: (data: ProjectDa
 
         const movingTask = data.tasks.find(t => t.id === taskId);
 
-        // RC1 FIX: Machine Type Conflict Detection
-        // Check if moving task requires a specific machine type
-        if (movingTask?.requiredMachineId) {
-            // Get tasks already assigned to target station
-            const stationTasks = data.assignments
-                .filter(a => a.stationId === targetStationId)
-                .map(a => data.tasks.find(t => t.id === a.taskId))
-                .filter(Boolean) as Task[];
-
-            // Check if station already has a different machine type
-            const stationMachineType = stationTasks.find(t => t.requiredMachineId)?.requiredMachineId;
-
-            if (stationMachineType && stationMachineType !== movingTask.requiredMachineId) {
-                // Machine type conflict! Show toast and reject assignment
-                const movingMachineName = machinesList.find(m => m.id === movingTask.requiredMachineId)?.name || movingTask.requiredMachineId;
-                const stationMachineName = machinesList.find(m => m.id === stationMachineType)?.name || stationMachineType;
-
-                toast.error(
-                    'Conflicto de Máquina',
-                    `No se puede asignar "${movingTask.id}": Requiere ${movingMachineName}, pero la Estación ${targetStationId} ya tiene ${stationMachineName}.`
-                );
-                return; // REJECT assignment
-            }
+        // Hard constraints (machine type / sector affinity / zoning must_exclude) — reject the drop.
+        // Shared with the live drag preview via checkHardAssignmentConstraints (single source of truth).
+        const hardConstraint = checkHardAssignmentConstraints(taskId, targetStationId, data, machinesList);
+        if (hardConstraint.blocked) {
+            toast.error(hardConstraint.title!, hardConstraint.message!);
+            return; // REJECT assignment
         }
 
-        // Warning Logic Case 1
-
-        // FIX: Sector Constraint Validation
-        // Matches engine.ts L871 logic - tasks from different sectors cannot share a station
-        if (!data.meta.disableSectorAffinity && movingTask?.sectorId) {
-            const stationTasks = data.assignments
-                .filter(a => a.stationId === targetStationId && a.taskId !== taskId)
-                .map(a => data.tasks.find(t => t.id === a.taskId))
-                .filter(Boolean) as Task[];
-
-            const stationSector = stationTasks.find(t => t.sectorId)?.sectorId;
-
-            if (stationSector && stationSector !== movingTask.sectorId) {
-                const taskSectorName = data.sectors?.find(s => s.id === movingTask.sectorId)?.name || movingTask.sectorId;
-                const stationSectorName = data.sectors?.find(s => s.id === stationSector)?.name || stationSector;
-
-                toast.error(
-                    'Restricción de Sector',
-                    `No se puede asignar tarea de "${taskSectorName}" a una estación de "${stationSectorName}".`
-                );
-                return; // REJECT assignment
-            }
-        }
-
-        // Zoning Constraint Validation (must_include / must_exclude)
+        // Zoning must_include is a soft warning (the hard must_exclude case is handled above).
         const zoningConstraints = data.zoningConstraints || [];
-        if (zoningConstraints.length > 0) {
-            const stationTaskIds = new Set(
-                data.assignments
-                    .filter(a => a.stationId === targetStationId && a.taskId !== taskId)
-                    .map(a => a.taskId)
-            );
+        for (const constraint of zoningConstraints) {
+            if (constraint.type !== 'must_include') continue;
+            const isInvolved = constraint.taskA === taskId || constraint.taskB === taskId;
+            if (!isInvolved) continue;
 
-            for (const constraint of zoningConstraints) {
-                const isInvolved = constraint.taskA === taskId || constraint.taskB === taskId;
-                if (!isInvolved) continue;
-
-                const partnerId = constraint.taskA === taskId ? constraint.taskB : constraint.taskA;
-                const partnerInTarget = stationTaskIds.has(partnerId);
-
-                if (constraint.type === 'must_exclude' && partnerInTarget) {
-                    toast.error(
-                        'Restricción de Zona',
-                        `"${taskId}" y "${partnerId}" no pueden estar en la misma estación.${constraint.reason ? ` Razón: ${constraint.reason}` : ''}`
-                    );
-                    return;
-                }
-
-                if (constraint.type === 'must_include') {
-                    const partnerAssignment = data.assignments.find(a => a.taskId === partnerId);
-                    if (partnerAssignment && partnerAssignment.stationId !== targetStationId) {
-                        toast.warning(
-                            'Restricción de Zona',
-                            `"${taskId}" y "${partnerId}" deben estar juntas. "${partnerId}" está en Est. ${partnerAssignment.stationId}.`
-                        );
-                    }
-                }
+            const partnerId = constraint.taskA === taskId ? constraint.taskB : constraint.taskA;
+            const partnerAssignment = data.assignments.find(a => a.taskId === partnerId);
+            if (partnerAssignment && partnerAssignment.stationId !== targetStationId) {
+                toast.warning(
+                    'Restricción de Zona',
+                    `"${taskId}" y "${partnerId}" deben estar juntas. "${partnerId}" está en Est. ${partnerAssignment.stationId}.`
+                );
             }
         }
 

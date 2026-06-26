@@ -7,6 +7,7 @@ import { formatNumber } from '../../utils';
 import { BalancingChart } from './BalancingChart';
 import { StationCard } from './components/StationCard';
 import { UnassignedTaskList } from './components/UnassignedTaskList';
+import { SelectionActionBar } from './components/SelectionActionBar';
 import { OptimizationResultsModal } from './components/OptimizationResultsModal';
 import { BalancingMetrics } from './components/BalancingMetrics';
 import { ZoningConstraintsModal } from './components/ZoningConstraintsModal';
@@ -17,7 +18,7 @@ import { buildGate3FromProjectData } from '../gate3/gate3FromBalancing';
 import { toast } from '../../components/ui/Toast';
 import { logger } from '../../utils/logger';
 import { SATURATION_WARN } from './balancingConstants';
-import { isStationOverloaded } from './balancingHelpers';
+import { isStationOverloaded, isValidOeeInput } from './balancingHelpers';
 
 interface Props {
     data: ProjectData;
@@ -89,6 +90,26 @@ export const LineBalancing: React.FC<Props> = ({ data, updateData }) => {
         cancelClearBalance
     } = useLineBalancing(data, updateData);
 
+    // Multi-select state (bulk move of tasks between stations)
+    const [selectedTaskIds, setSelectedTaskIds] = useState<Set<string>>(new Set());
+
+    const toggleTaskSelection = useCallback((taskId: string) => {
+        setSelectedTaskIds(prev => {
+            const next = new Set(prev);
+            if (next.has(taskId)) next.delete(taskId);
+            else next.add(taskId);
+            return next;
+        });
+    }, []);
+
+    const clearSelection = useCallback(() => setSelectedTaskIds(new Set()), []);
+
+    const moveSelectedToStation = useCallback((stationId: number) => {
+        const ids = [...selectedTaskIds].filter(id => data.tasks.some(t => t.id === id));
+        if (ids.length > 0) performBulkAssignment(ids, stationId);
+        setSelectedTaskIds(new Set());
+    }, [selectedTaskIds, data.tasks, performBulkAssignment]);
+
     // Close modals on Escape
     useEffect(() => {
         const handleEscape = (e: KeyboardEvent) => {
@@ -96,12 +117,13 @@ export const LineBalancing: React.FC<Props> = ({ data, updateData }) => {
             e.preventDefault();
             if (showClearBalanceConfirm) cancelClearBalance();
             else if (configStationId !== null) setConfigStationId(null);
+            else if (selectedTaskIds.size > 0) clearSelection();
         };
-        if (showClearBalanceConfirm || configStationId !== null) {
+        if (showClearBalanceConfirm || configStationId !== null || selectedTaskIds.size > 0) {
             document.addEventListener('keydown', handleEscape);
             return () => document.removeEventListener('keydown', handleEscape);
         }
-    }, [showClearBalanceConfirm, cancelClearBalance, configStationId, setConfigStationId]);
+    }, [showClearBalanceConfirm, cancelClearBalance, configStationId, setConfigStationId, selectedTaskIds, clearSelection]);
 
     // Stable sensor config - avoids recreation on each render
     const sensors = useSensors(
@@ -138,6 +160,9 @@ export const LineBalancing: React.FC<Props> = ({ data, updateData }) => {
         () => stationData.find(s => s.id === configStationId),
         [stationData, configStationId]
     );
+
+    // Inline validation for the station OEE input (immediate feedback, not only on save).
+    const isOeeInputValid = isValidOeeInput(stationOeeInput);
 
     // Memoized grouping of stations by sector
     const stationsBySector = useMemo(() => {
@@ -291,7 +316,7 @@ export const LineBalancing: React.FC<Props> = ({ data, updateData }) => {
                                 </div>
                                 <div className="p-6 space-y-4">
                                     <div>
-                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">OEE Objetivo (0-1.0)</label>
+                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">OEE Objetivo (0–1.0 o 0–100%)</label>
                                         <input
                                             type="number"
                                             step="0.01"
@@ -299,12 +324,19 @@ export const LineBalancing: React.FC<Props> = ({ data, updateData }) => {
                                             max="1"
                                             value={stationOeeInput}
                                             onChange={(e) => setStationOeeInput(e.target.value)}
-                                            className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-center text-lg"
+                                            aria-invalid={!isOeeInputValid}
+                                            className={`w-full px-3 py-2 border rounded-md focus:ring-2 font-mono text-center text-lg ${isOeeInputValid ? 'border-slate-300 focus:ring-blue-500 focus:border-blue-500' : 'border-red-400 focus:ring-red-400 focus:border-red-400'}`}
                                             autoFocus
                                         />
-                                        <p className="text-xs text-slate-400 mt-2">
-                                            Define la eficiencia esperada específica para esta estación.
-                                        </p>
+                                        {isOeeInputValid ? (
+                                            <p className="text-xs text-slate-400 mt-2">
+                                                Define la eficiencia esperada específica para esta estación.
+                                            </p>
+                                        ) : (
+                                            <p className="text-xs text-red-500 mt-2 font-medium">
+                                                Ingresá un valor entre 0 y 1 (o 0–100%).
+                                            </p>
+                                        )}
                                     </div>
 
                                     {/* MULTI-MANNING CONTROL (REPLICAS) */}
@@ -344,7 +376,8 @@ export const LineBalancing: React.FC<Props> = ({ data, updateData }) => {
                                     <button onClick={() => setConfigStationId(null)} className="text-slate-500 hover:bg-slate-100 px-4 py-2 rounded">Cancelar</button>
                                     <button
                                         onClick={saveStationConfig}
-                                        className="bg-accent hover:bg-blue-800 text-white rounded-md px-4 py-2 font-bold shadow-md hover:shadow-lg transition-all"
+                                        disabled={!isOeeInputValid}
+                                        className={`text-white rounded-md px-4 py-2 font-bold shadow-md transition-all ${isOeeInputValid ? 'bg-accent hover:bg-blue-800 hover:shadow-lg' : 'bg-slate-300 cursor-not-allowed'}`}
                                     >
                                         Guardar
                                     </button>
@@ -417,6 +450,8 @@ export const LineBalancing: React.FC<Props> = ({ data, updateData }) => {
                             sectorsList={sectorsList}
                             performAssignment={performAssignment}
                             performBulkAssignment={performBulkAssignment}
+                            selectedTaskIds={selectedTaskIds}
+                            onToggleTaskSelection={toggleTaskSelection}
                         />
                     </div>
 
@@ -510,6 +545,8 @@ export const LineBalancing: React.FC<Props> = ({ data, updateData }) => {
                                                         onOpenConfig={openStationConfig}
                                                         onUnassignTask={unassignTask}
                                                         dragPreview={dragPreview?.stationId === st.id ? dragPreview : null}
+                                                        selectedTaskIds={selectedTaskIds}
+                                                        onToggleTaskSelection={toggleTaskSelection}
                                                     />
                                                 );
                                             })}
@@ -527,6 +564,16 @@ export const LineBalancing: React.FC<Props> = ({ data, updateData }) => {
                         </button>
                     </div>
                 </div>
+
+                {/* Floating bulk-move action bar (multi-select) */}
+                {selectedTaskIds.size > 0 && (
+                    <SelectionActionBar
+                        count={selectedTaskIds.size}
+                        stationCount={configuredStations}
+                        onMove={moveSelectedToStation}
+                        onClear={clearSelection}
+                    />
+                )}
             </div >
 
         </DndContext >

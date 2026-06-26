@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { CheckCircle2, Split } from 'lucide-react';
+import { CheckCircle2, Split, Square, CheckSquare } from 'lucide-react';
 import { useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import { formatNumber } from '../../../utils';
@@ -10,13 +10,19 @@ interface UnassignedTaskListProps {
     sectorsList: Sector[];
     performAssignment: (taskId: string, stationId: number) => void;
     performBulkAssignment?: (taskIds: string[], stationId: number) => void;
+    selectedTaskIds?: Set<string>;
+    onToggleTaskSelection?: (taskId: string) => void;
 }
+
+const NOOP = () => { /* stable no-op default for optional selection handler */ };
 
 const DraggableUnassignedTask: React.FC<{
     task: Task;
     sectorsList: Sector[];
     formatNumber: (n: number) => string;
-}> = ({ task, sectorsList, formatNumber }) => {
+    isSelected: boolean;
+    onToggleSelect: (id: string) => void;
+}> = ({ task, sectorsList, formatNumber, isSelected, onToggleSelect }) => {
     const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
         id: task.id,
     });
@@ -31,11 +37,23 @@ const DraggableUnassignedTask: React.FC<{
             ref={setNodeRef}
             {...listeners}
             {...attributes}
-            className={`bg-white border border-slate-200 p-3 rounded-md shadow-sm cursor-grab hover:shadow-md hover:border-accent group active:cursor-grabbing transition-all ${isDragging ? 'opacity-50' : ''}`}
+            className={`relative bg-white border border-slate-200 p-3 rounded-md shadow-sm cursor-grab hover:shadow-md hover:border-accent group active:cursor-grabbing transition-all ${isDragging ? 'opacity-50' : ''} ${isSelected ? 'ring-2 ring-blue-500 ring-offset-1' : ''}`}
             style={{ ...style, borderLeftColor: sectorsList.find(s => s.id === task.sectorId)?.color || undefined, borderLeftWidth: task.sectorId ? 4 : 1 }}
-            aria-label={`Tarea ${task.id}, ${formatNumber(task.standardTime || task.averageTime)} segundos. Arrastrar a una estación para asignar.`}
+            aria-label={`Tarea ${task.id}, ${formatNumber(task.standardTime || task.averageTime)} segundos${isSelected ? ', seleccionada' : ''}. Arrastrar a una estación para asignar.`}
             aria-roledescription="elemento arrastrable"
         >
+            {/* Selection checkbox (bulk move) — stops propagation so it never starts a drag */}
+            <button
+                type="button"
+                onPointerDown={(e) => e.stopPropagation()}
+                onClick={(e) => { e.stopPropagation(); onToggleSelect(task.id); }}
+                aria-pressed={isSelected}
+                aria-label={isSelected ? `Quitar selección de tarea ${task.id}` : `Seleccionar tarea ${task.id}`}
+                title={isSelected ? 'Quitar de la selección' : 'Seleccionar para mover en bloque'}
+                className={`absolute -top-2 -left-2 bg-white rounded p-0.5 border border-slate-200 shadow-sm transition-opacity z-10 ${isSelected ? 'opacity-100 text-blue-600' : 'opacity-0 group-hover:opacity-100 focus:opacity-100 text-slate-400 hover:text-blue-600'}`}
+            >
+                {isSelected ? <CheckSquare size={12} /> : <Square size={12} />}
+            </button>
             <div className="flex justify-between items-start mb-1">
                 <span className="font-bold text-slate-800 text-sm font-mono">{task.id}</span>
                 <span className="text-xs font-mono font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100">
@@ -68,7 +86,9 @@ export const UnassignedTaskList: React.FC<UnassignedTaskListProps> = ({
     unassignedTasks,
     sectorsList,
     performAssignment,
-    performBulkAssignment
+    performBulkAssignment,
+    selectedTaskIds,
+    onToggleTaskSelection
 }) => {
     const [showAssignAllConfirm, setShowAssignAllConfirm] = useState(false);
 
@@ -109,6 +129,8 @@ export const UnassignedTaskList: React.FC<UnassignedTaskListProps> = ({
                         task={task}
                         sectorsList={sectorsList}
                         formatNumber={formatNumber}
+                        isSelected={selectedTaskIds?.has(task.id) ?? false}
+                        onToggleSelect={onToggleTaskSelection ?? NOOP}
                     />
                 ))}
             </div>

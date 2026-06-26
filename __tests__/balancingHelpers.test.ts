@@ -7,6 +7,7 @@ import {
     isStationOverloaded,
     formatReplicasInfo,
     getSaturationZone,
+    isValidOeeInput,
 } from '../modules/balancing/balancingHelpers';
 
 describe('isStationOverloaded', () => {
@@ -69,5 +70,29 @@ describe('getSaturationZone', () => {
         expect(
             getSaturationZone({ isOverload: false, isInOeeRiskZone: false, saturationPercent: 90 }),
         ).toBe('normal');
+    });
+});
+
+describe('isValidOeeInput', () => {
+    it('acepta fracción 0–1', () => {
+        expect(isValidOeeInput('0.85')).toBe(true);
+        expect(isValidOeeInput('1')).toBe(true);
+    });
+
+    it('acepta porcentaje 1–100 (saveStationConfig lo divide)', () => {
+        expect(isValidOeeInput('85')).toBe(true);
+        expect(isValidOeeInput('100')).toBe(true);
+    });
+
+    it('acepta coma decimal (locale es)', () => {
+        expect(isValidOeeInput('0,9')).toBe(true);
+    });
+
+    it('rechaza vacío, no numérico, <= 0 y > 100', () => {
+        expect(isValidOeeInput('')).toBe(false);
+        expect(isValidOeeInput('abc')).toBe(false);
+        expect(isValidOeeInput('0')).toBe(false);
+        expect(isValidOeeInput('-0.5')).toBe(false);
+        expect(isValidOeeInput('120')).toBe(false);
     });
 });

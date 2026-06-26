@@ -65,3 +65,20 @@ export function getSaturationZone(args: {
     if (args.saturationPercent > SATURATION_HIGH_PCT) return 'high';
     return 'normal';
 }
+
+// -----------------------------------------------------------------------------
+// Station OEE input validation (inline feedback in the config modal)
+// -----------------------------------------------------------------------------
+
+/**
+ * True when a raw OEE input string is a usable target. saveStationConfig accepts both a
+ * 0–1 fraction and a 1–100 percent (auto-divided), so the valid range is (0, 100].
+ * Empty / non-numeric / <= 0 / > 100 are rejected so the modal can warn before saving.
+ *
+ * @example isValidOeeInput('0.85') -> true; isValidOeeInput('85') -> true;
+ *          isValidOeeInput('') -> false; isValidOeeInput('120') -> false
+ */
+export function isValidOeeInput(raw: string): boolean {
+    const n = Number((raw || '').toString().replace(',', '.'));
+    return Number.isFinite(n) && n > 0 && n <= 100;
+}
