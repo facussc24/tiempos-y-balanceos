@@ -48,6 +48,33 @@ siguientes (validador unico fuente de verdad / candados para otras reglas-solo-t
   (patron genericLabels) baja el costo y el riesgo a casi cero.
 
 
+## 2026-06-26 (PARTE 3) — Catálogo de planta migrado de localStorage a Supabase
+
+**Contexto:** auditoría del módulo Tiempos/Balanceo (que Fak confirmó que USA) detectó que
+`hooks/usePlantAssets.ts` guardaba el catálogo de planta (máquinas, sectores, escenarios de mix)
+SOLO en `localStorage` → se perdía al cambiar de PC/navegador o limpiar caché.
+
+**Cuasi-error evitado (arquitectura):** asumí que `settingsRepository` era SQLite local (usa SQL
+estilo SQLite: `INSERT OR REPLACE`, `?`). FALSO. `utils/database.ts` `getDatabase()` devuelve un
+`SupabaseAdapter` (línea 1819) que traduce ese SQL a Postgres (`convertInsertOrReplace`, 1706) y lo
+manda a Supabase vía RPC `exec_sql_read`/`exec_sql_write`. O sea: **los repos "estilo SQLite"
+(settings, projects, drafts) ESCRIBEN EN LA NUBE.** Verificarlo en database.ts ANTES de asumir local.
+
+**Solución:** reconecté `usePlantAssets` a Supabase vía `settingsRepository.getSetting/setSettingChecked`
+(tabla `settings`, clave `plant_assets`). Carga: elige la fuente MÁS FRESCA entre nube y localStorage
+(por `lastModified`) → no pisa la config actual de Fak; si local es más nuevo, lo sube (migración
+one-shot). Guardado: Supabase primario + localStorage como cache offline. Agregué `setSettingChecked`
+(devuelve boolean, a diferencia de `setSetting` que traga el error).
+
+**Verificado:** tsc limpio, build OK, 20 tests de plant-config verde, RLS de `settings` permite
+read+write a `authenticated` (policy `authenticated_all_settings`). Interfaz del hook intacta → no
+rompe el módulo de balanceo.
+
+**Pendiente backlog:** los datos viejos de la tabla `settings.plant_assets` estaban congelados en
+2026-03-20 (el hook había dejado de usar Supabase). Ahora vuelve a sincronizar. + 4 módulos lean
+huérfanos (kanban/heijunka/mizusumashi/logistics-backlog) candidatos a podar (con OK de Fak).
+
+
 ## 2026-06-26 (PARTE 2) — Scorecard "AMFE listo para entregar"
 
 **Contexto:** Fak eligio esto como lo siguiente al candado. Idea: el candado garantiza datos VALIDOS

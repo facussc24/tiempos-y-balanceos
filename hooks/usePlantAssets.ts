@@ -1,15 +1,19 @@
 /**
  * Hook para gestionar el catálogo central de activos de planta.
  *
- * Web build: persiste en localStorage bajo la clave `plant_assets`.
- * Historically the Tauri build wrote to `{basePath}/00_CONFIG/plant_assets.json`
- * on the shared drive; that path is no longer used.
+ * Persistencia: Supabase (tabla `settings`, clave `plant_assets`) vía
+ * settingsRepository. Esto evita la pérdida de datos al cambiar de PC/navegador
+ * o limpiar caché (antes se guardaba SOLO en localStorage).
+ *
+ * localStorage se mantiene como cache offline / fuente de migración: si hay datos
+ * locales más nuevos que la copia de la nube, se eligen y se suben (migración one-shot).
  *
  * @module usePlantAssets
  */
 import { useState, useEffect, useCallback } from 'react';
 import { PlantConfig, MachineType, Sector, DEFAULT_PLANT_CONFIG, MixSavedScenario } from '../types';
 import { logger } from '../utils/logger';
+import { getSetting, setSettingChecked } from '../utils/repositories/settingsRepository';
 
 const STORAGE_KEY = 'plant_assets';
 
@@ -59,8 +63,8 @@ export interface UsePlantAssetsResult {
     saveMixScenario: (scenario: MixSavedScenario) => Promise<boolean>;
     deleteMixScenario: (id: string) => Promise<boolean>;
     savedMixScenarios: MixSavedScenario[];
-    /** Always 'none' in the web build (kept for API compatibility). */
-    storageSource: 'local' | 'shared' | 'none';
+    /** De dónde se cargó/guardó: 'supabase' (nube), 'local' (solo localStorage), 'none'. */
+    storageSource: 'supabase' | 'local' | 'shared' | 'none';
     /** Always null in the web build (kept for API compatibility). */
     storagePath: string | null;
 }
@@ -69,34 +73,68 @@ export function usePlantAssets(): UsePlantAssetsResult {
     const [config, setConfig] = useState<PlantConfig>(DEFAULT_PLANT_CONFIG);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [storageSource, setStorageSource] = useState<'supabase' | 'local' | 'shared' | 'none'>('none');
 
     const loadAssets = useCallback(async (isMountedFn: () => boolean = () => true) => {
         setIsLoading(true);
+        const lastMod = (c: unknown): number => {
+            const v = (c as { lastModified?: unknown } | null)?.lastModified;
+            return typeof v === 'number' ? v : 0;
+        };
         try {
-            const stored = localStorage.getItem(STORAGE_KEY);
+            // Fuente 1: Supabase (canónica, sobrevive cambio de PC/navegador/caché).
+            let cloud: PlantConfig | null = null;
+            try {
+                const c = await getSetting<PlantConfig>(STORAGE_KEY);
+                if (c && isValidPlantConfig(c)) cloud = c;
+            } catch (cloudErr) {
+                logger.warn('usePlantAssets', 'No se pudo leer de Supabase; intento localStorage', { error: String(cloudErr) });
+            }
+
+            // Fuente 2: localStorage (cache local / datos legacy aún no migrados).
+            let local: PlantConfig | null = null;
+            try {
+                const stored = localStorage.getItem(STORAGE_KEY);
+                if (stored) {
+                    const parsed = JSON.parse(stored);
+                    if (isValidPlantConfig(parsed)) local = parsed;
+                }
+            } catch (localErr) {
+                logger.warn('usePlantAssets', 'localStorage ilegible', { error: String(localErr) });
+            }
+
             if (!isMountedFn()) return;
 
-            if (stored) {
-                try {
-                    const parsed = JSON.parse(stored);
-                    if (isValidPlantConfig(parsed)) {
-                        setConfig({
-                            ...DEFAULT_PLANT_CONFIG,
-                            ...parsed,
-                            sectors: parsed.sectors?.length > 0 ? parsed.sectors : DEFAULT_PLANT_CONFIG.sectors,
-                        });
-                        logger.info('usePlantAssets', 'Loaded valid assets from localStorage');
-                    } else {
-                        logger.warn('usePlantAssets', 'Invalid localStorage config structure, using defaults');
-                        setConfig(DEFAULT_PLANT_CONFIG);
+            // Elegir la fuente MÁS FRESCA (por lastModified). Protege la config actual
+            // de Fak: si su localStorage es más nuevo que la copia de la nube, gana el
+            // local y se sube a Supabase (migración one-shot). Evita pisar datos buenos.
+            let chosen: PlantConfig | null = null;
+            let source: 'supabase' | 'local' | 'none' = 'none';
+            if (cloud && local) {
+                if (lastMod(local) > lastMod(cloud)) { chosen = local; source = 'local'; }
+                else { chosen = cloud; source = 'supabase'; }
+            } else if (cloud) { chosen = cloud; source = 'supabase'; }
+            else if (local) { chosen = local; source = 'local'; }
+
+            if (chosen) {
+                setConfig({
+                    ...DEFAULT_PLANT_CONFIG,
+                    ...chosen,
+                    sectors: chosen.sectors?.length > 0 ? chosen.sectors : DEFAULT_PLANT_CONFIG.sectors,
+                });
+                // Migración/sync: si lo elegido vino de local, subirlo a la nube.
+                if (source === 'local') {
+                    const ok = await setSettingChecked(STORAGE_KEY, chosen);
+                    if (ok) {
+                        source = 'supabase';
+                        logger.info('usePlantAssets', 'Catálogo de planta migrado/sincronizado a Supabase');
                     }
-                } catch (parseError) {
-                    logger.error('usePlantAssets', 'localStorage JSON parse error', { error: String(parseError) });
-                    setConfig(DEFAULT_PLANT_CONFIG);
                 }
+                logger.info('usePlantAssets', `Catálogo de planta cargado desde ${source}`);
             } else {
                 setConfig(DEFAULT_PLANT_CONFIG);
             }
+            if (isMountedFn()) setStorageSource(source);
             setError(null);
         } catch (e) {
             if (!isMountedFn()) return;
@@ -115,13 +153,24 @@ export function usePlantAssets(): UsePlantAssetsResult {
     }, [loadAssets]);
 
     const saveAssetsInternal = async (newConfig: PlantConfig): Promise<boolean> => {
+        // Primario: Supabase (canónico, sobrevive cambio de PC). Secundario:
+        // localStorage como cache offline (si la nube está caída, no se pierde el dato).
+        let cloudOk = false;
+        try {
+            cloudOk = await setSettingChecked(STORAGE_KEY, newConfig);
+        } catch (e) {
+            logger.error('usePlantAssets', 'Cloud save error', { error: String(e) });
+        }
+        let localOk = false;
         try {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(newConfig));
-            return true;
+            localOk = true;
         } catch (e) {
-            logger.error('usePlantAssets', 'Save error', { error: String(e) });
-            return false;
+            logger.warn('usePlantAssets', 'localStorage mirror failed', { error: String(e) });
         }
+        if (cloudOk) setStorageSource('supabase');
+        // Éxito si quedó guardado en algún lado (la nube es la preferida).
+        return cloudOk || localOk;
     };
 
     const saveAssets = useCallback(async (newConfig: PlantConfig): Promise<boolean> => {
@@ -233,7 +282,7 @@ export function usePlantAssets(): UsePlantAssetsResult {
         saveMixScenario,
         deleteMixScenario,
         savedMixScenarios: config.savedMixScenarios || [],
-        storageSource: 'none',
+        storageSource,
         storagePath: null,
     };
 }

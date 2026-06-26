@@ -68,6 +68,26 @@ export async function setSetting<T>(key: string, value: T): Promise<void> {
 }
 
 /**
+ * Set a setting by key (upsert) y reporta si tuvo exito.
+ * A diferencia de setSetting(), devuelve boolean en vez de tragarse el error,
+ * para que el llamador sepa si el dato realmente llego a Supabase.
+ */
+export async function setSettingChecked<T>(key: string, value: T): Promise<boolean> {
+    try {
+        const db = await getDatabase();
+        const json = JSON.stringify(value);
+        await db.execute(
+            `INSERT OR REPLACE INTO settings (key, value, updated_at) VALUES (?, ?, datetime('now'))`,
+            [key, json]
+        );
+        return true;
+    } catch (err) {
+        logger.error('SettingsRepository', `Failed to set setting (checked): ${key}`, {}, err instanceof Error ? err : undefined);
+        return false;
+    }
+}
+
+/**
  * Load the app settings object.
  */
 export async function loadAppSettings(): Promise<AppSettings> {
