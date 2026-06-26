@@ -71,8 +71,13 @@ read+write a `authenticated` (policy `authenticated_all_settings`). Interfaz del
 rompe el módulo de balanceo.
 
 **Pendiente backlog:** los datos viejos de la tabla `settings.plant_assets` estaban congelados en
-2026-03-20 (el hook había dejado de usar Supabase). Ahora vuelve a sincronizar. + 4 módulos lean
-huérfanos (kanban/heijunka/mizusumashi/logistics-backlog) candidatos a podar (con OK de Fak).
+2026-03-20 (el hook había dejado de usar Supabase). Ahora vuelve a sincronizar.
+
+**Poda de código muerto (hecho 2026-06-26, con OK de Fak):** eliminados 4 módulos lean huérfanos
+(kanban, heijunka, mizusumashi, logistics-backlog) + sus 7 tests = 28 archivos. Verificación previa:
+0 imports de producción (grep `from '...modulo'`), 0 imports dinámicos/lazy. Post-borrado: build OK +
+suite completa 3873 tests verde. Eran la "Lean Logistics Suite" que nunca se integró a la UI. Quedan
+en git history si alguna vez se necesitan.
 
 
 ## 2026-06-26 (PARTE 2) — Scorecard "AMFE listo para entregar"
