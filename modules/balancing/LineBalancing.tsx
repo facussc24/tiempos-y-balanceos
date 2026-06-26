@@ -540,6 +540,7 @@ export const LineBalancing: React.FC<Props> = ({ data, updateData }) => {
                                                         draggedTask={draggedTask}
                                                         isOverload={isOverload}
                                                         data={data}
+                                                        nominalSeconds={nominalSeconds}
                                                         effectiveSeconds={effectiveSeconds}
                                                         onUpdateReplicas={updateStationReplicas}
                                                         onOpenConfig={openStationConfig}

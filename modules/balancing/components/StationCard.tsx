@@ -144,6 +144,9 @@ export const StationCard: React.FC<StationCardProps> = React.memo(({
     machineType, hasResourceDeficit, dragPreview,
     selectedTaskIds, onToggleTaskSelection
 }) => {
+    // O(1) task lookup by id (avoids O(n²) data.tasks.find inside the task map / injection badge).
+    const taskById = React.useMemo(() => new Map(data.tasks.map(t => [t.id, t])), [data.tasks]);
+
     const stationSector = sectorsList.find(s => s.id === st.sectorId);
     const { setNodeRef, isOver } = useDroppable({
         id: `station-${st.id}`, // specific ID to prevent collision with tasks
@@ -237,10 +240,7 @@ export const StationCard: React.FC<StationCardProps> = React.memo(({
                                 </span>
                             )}
                             {/* Injection badge: show if any task is injection mode */}
-                            {st.tasks.some(tid => {
-                                const t = data.tasks.find(x => x.id === tid);
-                                return t?.executionMode === 'injection';
-                            }) && (
+                            {st.tasks.some(tid => taskById.get(tid)?.executionMode === 'injection') && (
                                 <span className="text-xs font-bold px-2 py-0.5 rounded bg-purple-100 text-purple-700 border border-purple-300" title="Estación con tarea de inyección">
                                     Inj
                                 </span>
@@ -315,7 +315,7 @@ export const StationCard: React.FC<StationCardProps> = React.memo(({
             {/* Task List */}
             <div className="flex flex-wrap gap-2 min-h-[40px]">
                 {st.tasks.map(tid => {
-                    const t = data.tasks.find(x => x.id === tid);
+                    const t = taskById.get(tid);
                     if (!t) return null;
 
                     return (
@@ -353,6 +353,7 @@ export const StationCard: React.FC<StationCardProps> = React.memo(({
         prevProps.data.meta.useSectorOEE === nextProps.data.meta.useSectorOEE &&
         prevProps.data.meta.useManualOEE === nextProps.data.meta.useManualOEE &&
         prevProps.data.meta.capacityLimitMode === nextProps.data.meta.capacityLimitMode &&
+        prevProps.nominalSeconds === nextProps.nominalSeconds &&
         prevProps.effectiveSeconds === nextProps.effectiveSeconds &&
         prevProps.dragPreview?.stationId === nextProps.dragPreview?.stationId &&
         prevProps.dragPreview?.previewTime === nextProps.dragPreview?.previewTime &&

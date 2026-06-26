@@ -8,7 +8,7 @@
  * @module MixProductGrid
  * @version 2.0.0
  */
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Package, Loader2, Search, CheckCircle2, Circle } from 'lucide-react';
 import { MixSelectableProduct } from '../../types';
 import { listFamilies, getFamilyMembers } from '../../utils/repositories/familyRepository';
@@ -124,9 +124,9 @@ export const MixProductGrid: React.FC<MixProductGridProps> = ({
     /**
      * Toggle selección de un producto
      */
-    const toggleProduct = (index: number) => {
-        const updated = products.map((p, i) =>
-            i === index ? { ...p, isSelected: !p.isSelected } : p
+    const toggleProduct = (path: string) => {
+        const updated = products.map(p =>
+            p.path === path ? { ...p, isSelected: !p.isSelected } : p
         );
         setProducts(updated);
         onSelectionChange(updated.filter(p => p.isSelected));
@@ -194,6 +194,14 @@ export const MixProductGrid: React.FC<MixProductGridProps> = ({
         p.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
         p.project.toLowerCase().includes(searchTerm.toLowerCase())
     );
+
+    // O(1) path -> index lookup (the demand handlers + editingDemand map are keyed by the
+    // index into the full products array; this avoids an O(n) findIndex per rendered row).
+    const productIndexByPath = useMemo(() => {
+        const map = new Map<string, number>();
+        products.forEach((p, i) => map.set(p.path, i));
+        return map;
+    }, [products]);
 
     const selectedCount = products.filter(p => p.isSelected).length;
     const totalDemand = products
@@ -274,12 +282,11 @@ export const MixProductGrid: React.FC<MixProductGridProps> = ({
                 ) : (
                     <div className="space-y-2">
                         {filteredProducts.map((product) => {
-                            const safeIndex = products.findIndex(p => p.path === product.path);
-
+                            const safeIndex = productIndexByPath.get(product.path) ?? -1;
                             return (
                                 <button
                                     key={product.path}
-                                    onClick={() => toggleProduct(safeIndex)}
+                                    onClick={() => toggleProduct(product.path)}
                                     className={`w-full flex items-center gap-4 p-4 rounded-xl border-2 transition-all duration-200 text-left ${product.isSelected
                                         ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 shadow-sm'
                                         : product.isDefaultDemand

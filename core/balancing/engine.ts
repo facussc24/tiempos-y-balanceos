@@ -1383,7 +1383,7 @@ const simulateBalanceInternal = (
             const distinctSectors = new Set(data.tasks.filter(t => !t.isMachineInternal && t.sectorId).map(t => t.sectorId));
             lowerBoundN = Math.max(lowerBoundN, distinctSectors.size);
         }
-        // Safety: Try up to N+50 or tasks count.
+        // Safety: a line never needs more stations than it has tasks, so cap the search there.
         const maxN = data.tasks.length;
 
         for (let n = lowerBoundN; n <= maxN; n++) {

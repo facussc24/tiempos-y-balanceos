@@ -18,10 +18,10 @@ modules/balancing/
 ├── balancingExcelStyles.ts     Estilos Excel
 ├── capacityBarChart.ts         Canvas renderer (base64 PNG → ExcelJS)
 └── components/
-    ├── BalancingMetrics.tsx    KPI bar + Crystal Box (formulas) + Resumen
-    ├── StationCard.tsx         Tarjeta de estacion (drop zone + replicas + tasks)
-    ├── UnassignedTaskList.tsx  Pool de tareas sin asignar (draggables)
-    ├── OptimizationDrawer.tsx  Drawer de resultados GA
+    ├── BalancingMetrics.tsx    KPI bar + Crystal Box (formulas) + Resumen + boton optimizar/cancelar
+    ├── StationCard.tsx         Tarjeta de estacion (drop zone + replicas + tasks + multi-seleccion)
+    ├── UnassignedTaskList.tsx  Pool de tareas sin asignar (draggables + multi-seleccion)
+    ├── SelectionActionBar.tsx  Barra flotante para mover en bloque la seleccion
     ├── OptimizationResultsModal.tsx
     └── ZoningConstraintsModal.tsx
 ```

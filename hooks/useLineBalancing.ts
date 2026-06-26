@@ -503,19 +503,19 @@ export const useLineBalancing = (data: ProjectData, updateData: (data: ProjectDa
     };
 
 
-    const performAssignment = (taskId: string, stationId: number) => {
+    const performAssignment = useCallback((taskId: string, stationId: number) => {
         const newAssignments = data.assignments.filter(a => a.taskId !== taskId);
         newAssignments.push({ taskId, stationId });
         updateData({ ...data, assignments: newAssignments });
-    };
+    }, [data, updateData]);
 
     /** Assign multiple tasks at once (avoids stale state from forEach + setState) */
-    const performBulkAssignment = (taskIds: string[], stationId: number) => {
+    const performBulkAssignment = useCallback((taskIds: string[], stationId: number) => {
         const taskIdSet = new Set(taskIds);
         const newAssignments = data.assignments.filter(a => !taskIdSet.has(a.taskId));
         taskIds.forEach(id => newAssignments.push({ taskId: id, stationId }));
         updateData({ ...data, assignments: newAssignments });
-    };
+    }, [data, updateData]);
 
     const unassignTask = useCallback((taskId: string) => {
         const newAssignments = data.assignments.filter(a => a.taskId !== taskId);
