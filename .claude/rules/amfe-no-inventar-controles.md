@@ -84,6 +84,44 @@ Script read-only `scripts/_auditInventos.mjs` detecta patrones sospechosos en sn
 
 Version live: `scripts/_auditInventosLive.mjs` corre contra Supabase y reporta IDs afectados.
 
+## Enforcement (gate pre-commit ejecutable — agregado 2026-06-26)
+
+Esta regla dejo de depender solo de disciplina manual. Ahora hay un **candado
+ejecutable** enganchado al gate `runWithValidation()` (dryRunGuard.mjs) por el que
+pasa TODO script `.mjs` que escribe AMFEs:
+
+- **Fuente unica de listas:** `core/amfe/forbiddenContent.data.json` (inventos
+  confirmados + diccionario peninsular + frases-Claude + frecuencias arbitrarias).
+  Derivada VERBATIM de esta regla y de `amfe.md`. NO duplicar: agregar terminos aca.
+- **Detector:** `scripts/_lib/forbiddenContent.mjs` -> `scanForbidden(text)`.
+- **Checks en `scripts/_lib/amfeValidator.mjs`:**
+  - `FORBIDDEN_VOCABULARY` (**CRITICAL**, en `CRITICAL_TYPES`): equipo inexistente
+    en Barack (hielo seco, ultrasonido para medir, etc.) + espanolismo peninsular
+    (flexometro, ordenador, etc.). **Bloquea el `--apply`** de cualquier script que
+    introduzca un invento NUEVO. known-bad, ~0 falsos positivos.
+  - `CLAUDE_PHRASE` (**WARNING**): frase-Claude ("Inspeccion Humana", "asegurar que",
+    galga, husillo, etc.) + frecuencia inventada ("cada N horas/piezas"). Flag para
+    revision, NO bloquea (a veces legitimo).
+- **Campos escaneados:** `preventionControl`, `detectionControl`, `controlMethod`,
+  `optimizationAction`, `preventionAction`, `detectionAction`, `function.description`,
+  `WE.name`, `operationFunction`, `focusElementFunction`.
+- **Reporte de stock legacy:** `scripts/_auditAll.mjs` desglosa "CANDADO ANTI-INVENTO"
+  con conteo por AMFE (requiere `.env.local`; alternativa: scan SQL via MCP).
+- **Tests:** `__tests__/scripts/forbiddenContent.test.mjs` (12 vectores).
+- **Como ampliar las listas:** editar SOLO `core/amfe/forbiddenContent.data.json`.
+  El gate y el reporte lo toman automaticamente. Equipo/peninsular -> CRITICAL;
+  frase-Claude/frecuencia -> WARNING.
+
+**Linea base 2026-06-26 (17 AMFEs, scan field-targeted):** FORBIDDEN_VOCABULARY=0
+(dataset limpio de inventos bloqueantes), CLAUDE_PHRASE=16 warnings legacy
+(AMFE 150 tiene 8x "Inspeccion Humana"; AMFE-2 "cada 50 piezas"; INS-PAT/maestros
+"asegurar que"). Pendiente de limpieza con OK de Fak (son WARNING, no bloquean).
+
+**Deferido a proposito:** un check `CONTROL_NOT_AUTHORIZED` con whitelist de strings
+exactos de control se evaluo y se descarto por ahora — generaria ruido en cada
+control nuevo legitimo (texto libre). Si se hace, debe ser una lista CURADA de
+equipos/instrumentos reales (con input de Fak), no strings exactos.
+
 ## Como aplicar correcciones cuando se detecta un invento
 
 1. **NO corregir solo** — confirmar con Fak primero (regla `autonomy-contract.md` seccion B: contenido tecnico requiere autorizacion).

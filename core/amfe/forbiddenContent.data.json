@@ -1,0 +1,49 @@
+{
+  "_source": "FUENTE UNICA del candado anti-invento. Derivado VERBATIM de .claude/rules/amfe-no-inventar-controles.md (inventos confirmados + diccionario peninsular) y .claude/rules/amfe.md (tabla 'Vocabulario Claude prohibido' + frecuencias inventadas). NO inventar terminos: solo agregar los que Fak/equipo APQP confirmen. Consumido por scripts/_lib/forbiddenContent.mjs (igual patron que genericLabels.data.json).",
+  "_severidades": "FORBIDDEN_EQUIPMENT_PHRASES + PENINSULAR_TERMS => CRITICAL (bloquean apply, known-bad 0 FP). CLAUDE_PHRASES + ARBITRARY_FREQUENCY_PATTERNS => WARNING (flag para revision, casi siempre malo pero a veces legitimo).",
+
+  "FORBIDDEN_EQUIPMENT_PHRASES": [
+    "hielo seco",
+    "pistola de ultrasonido",
+    "medicion por ultrasonido",
+    "medir por ultrasonido",
+    "nitrogeno liquido",
+    "microscopio electronico",
+    "cromatografo",
+    "espectrometro",
+    "laser de medicion 3d"
+  ],
+
+  "PENINSULAR_TERMS": [
+    "flexometro",
+    "ordenador",
+    "fichero",
+    "raton",
+    "grifo",
+    "coger",
+    "zumo",
+    "patata",
+    "coche",
+    "aparcamiento",
+    "vosotros",
+    "vuestro"
+  ],
+
+  "CLAUDE_PHRASES": [
+    "inspeccion humana",
+    "operador o supervisor",
+    "implementar mantenimiento preventivo",
+    "establecer un procedimiento",
+    "implementar checklist",
+    "asegurar que",
+    "verificar adecuadamente",
+    "garantizar el cumplimiento",
+    "galga",
+    "husillo"
+  ],
+
+  "ARBITRARY_FREQUENCY_PATTERNS": [
+    "\\bcada\\s+\\d+\\s*(h|hs|hora|horas|min|minuto|minutos|pieza|piezas|bobina|bobinas)\\b",
+    "\\brotacion\\s+cada\\b"
+  ]
+}

@@ -28,6 +28,7 @@ import {
     normalize,
     TYPE_TRANSLATION,
 } from './genericLabels.mjs';
+import { scanForbidden } from './forbiddenContent.mjs';
 
 const SUSPICIOUS_OP_PATTERNS = [
     'CLASIFICACION Y SEGREGACION',
@@ -112,6 +113,12 @@ const CRITICAL_TYPES = new Set([
     // Severidad subcalibrada para fallas con efecto de incumplimiento legal
     // (ver rules/amfe-severity-legal-compliance.md). Pais de origen, aduana, etc.
     'CAUSE_LEGAL_COMPLIANCE_UNDERCALIBRATED',
+    // Candado anti-invento (agregado 2026-06-26 por plan wise-jumping-island).
+    // Equipos que Barack no tiene (hielo seco, ultrasonido para medir) +
+    // espanolismos peninsulares (flexometro, ordenador). known-bad => bloquea.
+    // Ver rules/amfe-no-inventar-controles.md + scripts/_lib/forbiddenContent.mjs.
+    // CLAUDE_PHRASE (frases-Claude + frecuencias inventadas) es WARNING, NO va aca.
+    'FORBIDDEN_VOCABULARY',
 ]);
 
 // Patrones que identifican failures con efecto de incumplimiento legal/aduanero.
@@ -132,6 +139,36 @@ const LEGAL_COMPLIANCE_PATTERNS = [
 const CUTTING_OP_PATTERNS = [/CORTE/i, /TROQUELADO/i];
 const CUTTING_FAILURE_PATTERNS = [/\bcort[aeoó]/i, /troquelad/i];
 const REWORK_TERM_PATTERN = /retrabajo/i;
+
+/**
+ * Candado anti-invento: escanea un campo de texto del AMFE y empuja issues.
+ * - forbidden (equipo inexistente / espanolismo) -> FORBIDDEN_VOCABULARY (CRITICAL)
+ * - warnings (frase-Claude / frecuencia inventada) -> CLAUDE_PHRASE (WARNING)
+ * Ver scripts/_lib/forbiddenContent.mjs + rules/amfe-no-inventar-controles.md.
+ *
+ * @param {Array} issues - acumulador de issues (se muta)
+ * @param {object} ctx - contexto del nivel actual (amfe, opNum, weName, fmDesc, causeDesc...)
+ * @param {string} fieldLabel - nombre del campo escaneado (para el detalle)
+ * @param {string} value - texto a escanear
+ */
+function pushForbiddenIssues(issues, ctx, fieldLabel, value) {
+    if (value == null || String(value).trim() === '') return;
+    const { forbidden, warnings } = scanForbidden(value);
+    for (const f of forbidden) {
+        issues.push({
+            ...ctx,
+            type: 'FORBIDDEN_VOCABULARY',
+            detail: `${fieldLabel} contiene "${f.term}" (${f.kind}) — Barack no lo usa. Usar TBD o termino Barack (ver rules/amfe-no-inventar-controles.md).`,
+        });
+    }
+    for (const w of warnings) {
+        issues.push({
+            ...ctx,
+            type: 'CLAUDE_PHRASE',
+            detail: `${fieldLabel} contiene "${w.term}" (${w.kind}) — reescribir simple con vocabulario Barack (ver rules/amfe.md "Vocabulario Claude prohibido").`,
+        });
+    }
+}
 
 /**
  * Valida calidad textual de un documento AMFE segun heuristicas 6M.
@@ -296,6 +333,10 @@ export function validateAmfeDoc(doc, productName = '', amfeNumber = '') {
                 issues.push({ ...ctx, type: 'OP_PLACEHOLDER_FUNCION',
                     detail: `focusElementFunction con placeholder ("${String(op.focusElementFunction).slice(0, 60)}")` });
             }
+
+            // Candado anti-invento en las funciones de la OP
+            pushForbiddenIssues(issues, ctx, 'operationFunction', op.operationFunction);
+            pushForbiddenIssues(issues, ctx, 'focusElementFunction', op.focusElementFunction);
         }
 
         for (const we of wes) {
@@ -312,6 +353,9 @@ export function validateAmfeDoc(doc, productName = '', amfeNumber = '') {
                     detail: `WE agrupa multiples items: "${weName}" (usar 1 WE por item)` });
             }
 
+            // Candado anti-invento en el nombre del recurso (WE.name)
+            pushForbiddenIssues(issues, weCtx, 'WE.name', weName);
+
             const fns = we.functions || [];
             if (fns.length === 0) {
                 issues.push({ ...weCtx, type: 'WE_NO_FN', detail: 'WE sin functions' });
@@ -326,6 +370,9 @@ export function validateAmfeDoc(doc, productName = '', amfeNumber = '') {
                     issues.push({ ...fnCtx, type: 'FN_TBD_OR_EMPTY',
                         detail: 'Function description vacia o TBD' });
                 }
+
+                // Candado anti-invento en la descripcion de funcion
+                pushForbiddenIssues(issues, fnCtx, 'function.description', fnDesc);
 
                 // ALIAS DESYNC — fn-level
                 for (const pair of FIELD_ALIAS_PAIRS.filter(p => p.entity === 'fn')) {
@@ -436,6 +483,14 @@ export function validateAmfeDoc(doc, productName = '', amfeNumber = '') {
                         if (!c.detectionControl || String(c.detectionControl).trim() === '') {
                             issues.push({ ...cCtx, type: 'CAUSE_NO_DET_CTRL', detail: 'Sin detectionControl' });
                         }
+
+                        // Candado anti-invento en controles y acciones de la causa
+                        pushForbiddenIssues(issues, cCtx, 'preventionControl', c.preventionControl);
+                        pushForbiddenIssues(issues, cCtx, 'detectionControl', c.detectionControl);
+                        pushForbiddenIssues(issues, cCtx, 'controlMethod', c.controlMethod);
+                        pushForbiddenIssues(issues, cCtx, 'optimizationAction', c.optimizationAction);
+                        pushForbiddenIssues(issues, cCtx, 'preventionAction', c.preventionAction);
+                        pushForbiddenIssues(issues, cCtx, 'detectionAction', c.detectionAction);
 
                         // C-CAPACITACION (prohibido como causa)
                         const causeUp = causeDesc.toUpperCase();

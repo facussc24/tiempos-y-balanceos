@@ -4,6 +4,50 @@ Archivo mantenido por Claude Code. Se actualiza despues de cada sesion donde alg
 Leer al inicio de cada sesion para no repetir errores.
 
 
+## 2026-06-26 — Candado anti-invento: el patron de falla #1 de Claude ahora se bloquea en el gate
+
+**Contexto:** Fak pidio analizar a fondo como mejorar el software/la inteligencia de Claude/la
+realizacion de AMFEs y elegir lo MAS critico primero. Analisis multi-agente (11 agentes: 7 scouts
++ 3 jueces + sintesis) + verificacion manual.
+
+**Diagnostico:** la falla #1 de Claude en este proyecto es **inventar contenido** (2478 inventos
+contados en 10 incidentes: controles, equipos, acciones, vocabulario que Barack no usa). Las 23
+reglas decian "no inventar" pero solo ~4/8 reglas AMFE criticas tenian un candado ejecutable. El
+resto dependia de que Claude se acordara.
+
+**Decision (override del voto de los agentes):** los jueces votaron "bloquear export incompleto en
+la app", pero Fak NO exporta desde la app (exporta por script node, que ya tiene el guard). Lo
+realmente critico: poner el candado anti-invento en el cuello de botella por donde Claude escribe
+datos (`runWithValidation()` en dryRunGuard.mjs, que ya bloquea `--apply` de criticos nuevos).
+
+**Solucion implementada:**
+1. `core/amfe/forbiddenContent.data.json` — fuente unica de listas (mismo patron que
+   genericLabels.data.json), copiadas VERBATIM de amfe-no-inventar-controles.md + amfe.md.
+2. `scripts/_lib/forbiddenContent.mjs` — `scanForbidden(text)`.
+3. Checks nuevos en `scripts/_lib/amfeValidator.mjs`: `FORBIDDEN_VOCABULARY` (CRITICAL, bloquea —
+   equipo inventado + espanolismo peninsular) y `CLAUDE_PHRASE` (WARNING — frase-Claude + frecuencia
+   inventada). Diseno graduado: known-bad bloquea, lo dudoso solo flag (cero falsos positivos).
+4. Desglose dedicado en `scripts/_auditAll.mjs`.
+5. Tests `__tests__/scripts/forbiddenContent.test.mjs` (12, todos verde + 38 de regresion verde).
+
+**Linea base real (scan SQL via MCP, 17 AMFEs):** FORBIDDEN_VOCABULARY=0 (dataset limpio de inventos
+bloqueantes — las limpiezas 2026-03/04 ya los sacaron), CLAUDE_PHRASE=16 legacy warnings (150 tiene
+8x "Inspeccion Humana"; AMFE-2 "cada 50 piezas"). El candado no rompe nada existente y frena los nuevos.
+
+**Deferido a proposito:** `CONTROL_NOT_AUTHORIZED` (whitelist de strings exactos) — daria ruido en
+cada control nuevo legitimo. Mejor como lista curada de equipos con input de Fak. Las 3 mejoras
+siguientes (validador unico fuente de verdad / candados para otras reglas-solo-texto / tablero
+"AMFE listo") quedaron en el plan `~/.claude/plans/wise-jumping-island.md`.
+
+**Lecciones:**
+- **No "esforzarse mas" — poner candados.** "Tu inteligencia" se arregla estructuralmente: convertir
+  reglas-en-prosa en checks ejecutables en el gate que ya existe, no confiar en que Claude se acuerde.
+- **Verificar el workflow real de Fak antes de elegir.** Los agentes votaron arreglar un camino (export
+  desde app) que Fak no usa. La memoria `feedback_app_pwa_cache_stale` lo desmintio.
+- **Reusar el chokepoint existente** (`runWithValidation` + `CRITICAL_TYPES`) y la fuente-unica-JSON
+  (patron genericLabels) baja el costo y el riesgo a casi cero.
+
+
 ## 2026-05-14 (PARTE 2) — Automejora: nuevo auditor detecta 76 placeholders pobres + failures mal alocados en 9/12 AMFEs
 
 **Contexto:** Tras la PARTE 1 (renumeracion), Fak abrio el AMFE-HF-PAT en la UI y encontro contenido absurdo que _auditAll.mjs NO detectaba:

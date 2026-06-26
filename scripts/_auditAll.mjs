@@ -207,6 +207,35 @@ const dirtyAmfes = Object.entries(report).filter(([_, r]) => r.total > 0);
 console.log(`\n  AMFEs limpios: ${cleanAmfes.length} / ${amfes.length}`);
 console.log(`  AMFEs con hallazgos: ${dirtyAmfes.length}`);
 
+// === Desglose dedicado: CANDADO ANTI-INVENTO (plan wise-jumping-island 2026-06-26) ===
+// FORBIDDEN_VOCABULARY (critical) y CLAUDE_PHRASE (warning) ya vienen dentro de
+// structural_*; aca los desglosamos aparte para visibilidad. Es additivo: NO
+// modifica totals ni el exit code (no se doble-cuenta el `total` por AMFE).
+const INVENTO_TYPES = new Set(['FORBIDDEN_VOCABULARY', 'CLAUDE_PHRASE']);
+const inventoByAmfe = [];
+let inventoForbidden = 0, inventoWarning = 0;
+for (const [amfe, r] of Object.entries(report)) {
+    if (!r.findings) continue;
+    const items = [...(r.findings.structural_critical || []), ...(r.findings.structural_warning || [])]
+        .filter(i => INVENTO_TYPES.has(i.type));
+    if (items.length === 0) continue;
+    const fb = items.filter(i => i.type === 'FORBIDDEN_VOCABULARY').length;
+    const wn = items.filter(i => i.type === 'CLAUDE_PHRASE').length;
+    inventoForbidden += fb; inventoWarning += wn;
+    inventoByAmfe.push({ amfe, project: r.project, fb, wn, items });
+}
+console.log('\n  CANDADO ANTI-INVENTO (rules/amfe-no-inventar-controles.md):');
+console.log(`    ${inventoForbidden === 0 ? '✓' : '✗'} FORBIDDEN_VOCABULARY (equipo/espanolismo, BLOQUEA apply nuevo)  ${inventoForbidden}`);
+console.log(`    ${inventoWarning === 0 ? '✓' : '⚠'} CLAUDE_PHRASE (frase-Claude/frecuencia, revisar)              ${inventoWarning}`);
+for (const x of inventoByAmfe.sort((a, b) => (b.fb + b.wn) - (a.fb + a.wn))) {
+    console.log(`        ${x.amfe.padEnd(22)} forbidden=${x.fb} warn=${x.wn}  (${x.project})`);
+    if (!SUMMARY) {
+        for (const it of x.items.filter(i => i.type === 'FORBIDDEN_VOCABULARY').slice(0, 8)) {
+            console.log(`            ✗ OP${it.opNum} ${it.detail || ''}`.slice(0, 110));
+        }
+    }
+}
+
 if (SUMMARY) {
     if (dirtyAmfes.length > 0) {
         console.log('\n--- AMFEs con hallazgos ---');
