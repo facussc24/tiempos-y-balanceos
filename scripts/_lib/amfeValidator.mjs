@@ -140,6 +140,10 @@ const CUTTING_OP_PATTERNS = [/CORTE/i, /TROQUELADO/i];
 const CUTTING_FAILURE_PATTERNS = [/\bcort[aeoó]/i, /troquelad/i];
 const REWORK_TERM_PATTERN = /retrabajo/i;
 
+// Keywords que eximen a una CC de requerir S>=9 (flamabilidad/legal/seguridad).
+// Porta A6 de modules/amfe/amfeValidation.ts:640. Ver rules/amfe.md.
+const FLAMABILITY_LEGAL_KEYWORDS = ['flamabilidad', 'flamable', 'tl 1010', 'voc', 'emisiones', 'airbag', 'legal', 'seguridad'];
+
 /**
  * Candado anti-invento: escanea un campo de texto del AMFE y empuja issues.
  * - forbidden (equipo inexistente / espanolismo) -> FORBIDDEN_VOCABULARY (CRITICAL)
@@ -515,6 +519,27 @@ export function validateAmfeDoc(doc, productName = '', amfeNumber = '') {
                             if (Number.isFinite(sevNum) && sevNum > 0 && sevNum < 7) {
                                 issues.push({ ...cCtx, type: 'CAUSE_LEGAL_COMPLIANCE_UNDERCALIBRATED',
                                     detail: `failure con efecto de incumplimiento legal pero S=${sevNum} (debe ser >=7, ver rules/amfe-severity-legal-compliance.md)` });
+                            }
+                        }
+
+                        // CC/SC sanity (WARNING) — porta A6/A7 de modules/amfe/amfeValidation.ts:643-689.
+                        // SOLO FLAGEA calibracion sospechosa. NUNCA asigna CC/SC (decision de Fak).
+                        const specialCh = String(c.specialChar || '').trim().toUpperCase();
+                        if (specialCh === 'CC' || specialCh === 'SC') {
+                            const sevForCcSc = Number(
+                                (c.severity != null && c.severity !== '') ? c.severity : fm.severity
+                            ) || 0;
+                            if (specialCh === 'CC' && sevForCcSc > 0 && sevForCcSc < 9) {
+                                const haystack = [fmDesc, ...effectsTexts, causeDesc].join(' ').toLowerCase();
+                                const exempt = FLAMABILITY_LEGAL_KEYWORDS.some(kw => haystack.includes(kw));
+                                if (!exempt) {
+                                    issues.push({ ...cCtx, type: 'CAUSE_CC_LOW_SEVERITY',
+                                        detail: `causa marcada CC pero S=${sevForCcSc} (CC requiere S>=9 salvo flamabilidad/legal, ver rules/amfe.md)` });
+                                }
+                            }
+                            if (specialCh === 'SC' && sevForCcSc > 0 && sevForCcSc < 7) {
+                                issues.push({ ...cCtx, type: 'CAUSE_SC_LOW_SEVERITY',
+                                    detail: `causa marcada SC con S=${sevForCcSc} (SC tipicamente S=7-8; sospechoso de formula vieja)` });
                             }
                         }
 

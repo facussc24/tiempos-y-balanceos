@@ -48,6 +48,33 @@ siguientes (validador unico fuente de verdad / candados para otras reglas-solo-t
   (patron genericLabels) baja el costo y el riesgo a casi cero.
 
 
+## 2026-06-26 (PARTE 2) — Scorecard "AMFE listo para entregar"
+
+**Contexto:** Fak eligio esto como lo siguiente al candado. Idea: el candado garantiza datos VALIDOS
+(bloquea inventos); el scorecard responde "el AMFE esta COMPLETO y listo para entregar al cliente?".
+
+**Solucion:**
+1. `scripts/_lib/amfeReadiness.mjs` — funcion PURA `computeReadiness(doc, productName, amfeNumber, header)`
+   que reusa `validateAmfeDoc` + chequea headers. Verdict LISTO (0 bloqueantes) / NO_LISTO + dimensiones.
+2. Checks CC/SC (`CAUSE_CC_LOW_SEVERITY` / `CAUSE_SC_LOW_SEVERITY`, WARNING) portados de
+   `amfeValidation.ts:643-689` al `amfeValidator.mjs` (solo flaggea, nunca asigna — CC/SC lo decide Fak).
+   Primer ladrillo hacia unificar los 3 validadores.
+3. `scripts/_readiness.mjs` — runner Supabase (scorecard + `--summary`, exit 1 si algun AMFE NO LISTO).
+4. Tests `__tests__/scripts/amfeReadiness.test.mjs` (9, verde + 47 de regresion verde).
+
+**Decision de diseno:** los efectos VDA 3 niveles son WARNING en el validador (gate de --apply) pero
+para "entregar al cliente" son OBLIGATORIOS -> readiness los PROMUEVE a bloqueante. "Listo" tiene una
+nocion mas exigente que "datos validos".
+
+**Hallazgo real (scorecard SQL sobre los 17 AMFEs):** 15 LISTOS, 2 NO LISTOS = **AMFE 128 y 129**
+(Amarok IP115/IP116, importados de Excel): 55 y 61 failures con algun nivel de efecto VDA vacio
+(ej. OP10 failure 4: `effectEndUser=""`, `effectNextLevel="-"`). Es contenido que el equipo APQP debe
+completar — NO inventar. El scorecard lo caza ANTES de exportar, no en Control Final.
+
+**Leccion:** "datos validos" (gate) ≠ "AMFE entregable" (readiness). Conviene tener las dos capas:
+una bloquea basura al escribir, la otra mide completitud para entregar.
+
+
 ## 2026-05-14 (PARTE 2) — Automejora: nuevo auditor detecta 76 placeholders pobres + failures mal alocados en 9/12 AMFEs
 
 **Contexto:** Tras la PARTE 1 (renumeracion), Fak abrio el AMFE-HF-PAT en la UI y encontro contenido absurdo que _auditAll.mjs NO detectaba:
