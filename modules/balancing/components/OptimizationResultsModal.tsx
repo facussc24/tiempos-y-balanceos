@@ -315,7 +315,7 @@ export const OptimizationResultsModal: React.FC<OptimizationResultsModalProps> =
                             <div className="mt-2 text-xs text-slate-600 space-y-2 px-2 pb-2 animate-in slide-in-from-top-1 bg-slate-50/50 rounded-lg p-3 border border-slate-100">
                                 <div className="flex justify-between border-b border-slate-100 pb-1.5">
                                     <span>Motor de Cálculo:</span>
-                                    <span className="font-mono text-slate-800">{res.technicalName} (1000 iteraciones)</span>
+                                    <span className="font-mono text-slate-800">{res.technicalName}</span>
                                 </div>
                                 <div className="flex justify-between border-b border-slate-100 pb-1.5">
                                     <span>Estaciones Físicas:</span>

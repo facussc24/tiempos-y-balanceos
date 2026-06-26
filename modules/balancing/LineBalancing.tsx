@@ -28,6 +28,7 @@ export const LineBalancing: React.FC<Props> = ({ data, updateData }) => {
     const {
         // State
         draggedTask,
+        gaProgress,
         configStationId,
         stationOeeInput,
         optimizationResults,
@@ -79,6 +80,7 @@ export const LineBalancing: React.FC<Props> = ({ data, updateData }) => {
         handleDragOver,
         handleDragEnd,
         handleOptimization,
+        cancelOptimization,
         applySimulation,
         toggleBoardSectorCollapse,
         performAssignment,
@@ -368,6 +370,8 @@ export const LineBalancing: React.FC<Props> = ({ data, updateData }) => {
                     emptyStationIds={emptyStationIds}
                     clearBalance={clearBalance}
                     handleOptimization={handleOptimization}
+                    gaProgress={gaProgress}
+                    onCancelOptimization={cancelOptimization}
                     // Phase 5: SALBP mode props
                     balancingMode={data.meta.balancingMode || 'SALBP1'}
                     targetOperators={data.meta.targetOperators || 8}

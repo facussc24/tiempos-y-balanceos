@@ -33,6 +33,7 @@ interface BalancingMetricsProps {
     emptyStationIds: number[];
     clearBalance: () => void;
     handleOptimization: () => void;
+    onCancelOptimization?: () => void;
     balancingMode?: 'SALBP1' | 'SALBP2';
     targetOperators?: number;
     balancingObjective?: 'MAX_THROUGHPUT' | 'SMOOTH_WORKLOAD';
@@ -68,6 +69,7 @@ export const BalancingMetrics: React.FC<BalancingMetricsProps> = ({
     emptyStationIds,
     clearBalance,
     handleOptimization,
+    onCancelOptimization,
     nominalTaktTime = 0,
     totalWorkContent = 0,
     dailyAvailableTime = 0,
@@ -79,6 +81,9 @@ export const BalancingMetrics: React.FC<BalancingMetricsProps> = ({
 }) => {
     const [showFormulas, setShowFormulas] = useState(false);
     const [showSummary, setShowSummary] = useState(false);
+
+    // True while an async optimization is in flight (drives the cancel button + disabled state).
+    const isOptimizing = gaProgress !== null;
 
     // Smoothness Index (pure calc — see balancingMetricsCalc.ts)
     const smoothnessIndex = React.useMemo(
@@ -129,9 +134,21 @@ export const BalancingMetrics: React.FC<BalancingMetricsProps> = ({
                                     `Optimizando ${gaProgress.generation}/${gaProgress.totalGenerations}`}
                             </span>
                         </div>
-                        <span className="text-xs opacity-80 tabular-nums">
-                            Fitness: {gaProgress.bestFitness < Infinity ? gaProgress.bestFitness.toFixed(0) : '...'}
-                        </span>
+                        <div className="flex items-center gap-3">
+                            <span className="text-xs opacity-80 tabular-nums">
+                                Fitness: {gaProgress.bestFitness < Infinity ? gaProgress.bestFitness.toFixed(0) : '...'}
+                            </span>
+                            {onCancelOptimization && (
+                                <button
+                                    onClick={onCancelOptimization}
+                                    className="flex items-center gap-1 text-xs font-bold bg-white/15 hover:bg-white/25 px-2 py-1 rounded transition-colors"
+                                    title="Cancelar optimización"
+                                    aria-label="Cancelar optimización"
+                                >
+                                    <XCircle size={14} /> Cancelar
+                                </button>
+                            )}
+                        </div>
                     </div>
                     <div className="w-full bg-white/20 h-2 rounded-sm overflow-hidden">
                         <div
@@ -513,10 +530,11 @@ export const BalancingMetrics: React.FC<BalancingMetricsProps> = ({
                     {/* Optimize Button */}
                     <button
                         onClick={handleOptimization}
-                        className="px-5 py-2 rounded-md transition-all flex items-center gap-2 font-bold text-sm ml-2 bg-accent hover:bg-blue-800 text-white"
-                        title="Asigna las tareas automáticamente minimizando estaciones y operarios"
+                        disabled={isOptimizing}
+                        className={`px-5 py-2 rounded-md transition-all flex items-center gap-2 font-bold text-sm ml-2 text-white ${isOptimizing ? 'bg-slate-400 cursor-not-allowed' : 'bg-accent hover:bg-blue-800'}`}
+                        title={isOptimizing ? 'Optimización en curso…' : 'Asigna las tareas automáticamente minimizando estaciones y operarios'}
                     >
-                        <Sparkles size={16} /> Balanceo Automático
+                        <Sparkles size={16} className={isOptimizing ? 'animate-pulse' : ''} /> {isOptimizing ? 'Optimizando…' : 'Balanceo Automático'}
                     </button>
                 </div>
             </div>

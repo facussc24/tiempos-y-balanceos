@@ -31,6 +31,7 @@ export interface GAConfig {
     crossoverRate: number;      // Default: 0.8 (80%)
     onProgress?: (generation: number, totalGenerations: number, bestFitness: number) => void;
     machines?: MachineType[];   // Phase 30: Machine inventory for GALBP validation
+    signal?: AbortSignal;       // Optional cancellation signal (used by the async runner)
 }
 
 /** Result from the Genetic Algorithm */
@@ -41,6 +42,7 @@ export interface GAResult {
     alternativeResults: SimulationResult[]; // Top distinct alternatives from final population
     generations: number;
     populationSize: number;
+    cancelled?: boolean; // True if the async runner was aborted before finishing all generations
     improvementVsGreedy?: {
         stationsSaved: number;
         headcountSaved: number;
@@ -588,21 +590,13 @@ const DEFAULT_CONFIG: GAConfig = {
     crossoverRate: 0.8
 };
 
+/** Resolve on the next macrotask, letting the browser render and process input. */
+const yieldToEventLoop = (): Promise<void> => new Promise(resolve => setTimeout(resolve, 0));
+
 /**
- * Run the Genetic Algorithm to find optimal task sequence.
+ * Build the machine-inventory lookup used by the GALBP penalties.
  */
-export const runGeneticAlgorithm = (
-    data: ProjectData,
-    nominalSeconds: number,
-    effectiveSeconds: number,
-    config: Partial<GAConfig> = {}
-): GAResult => {
-    const cfg = { ...DEFAULT_CONFIG, ...config };
-    const { populationSize, generations, mutationRate, eliteCount, crossoverRate, onProgress, machines } = cfg;
-
-    const tasks = data.tasks;
-
-    // Phase 30: Build machine inventory map for validation
+const buildMachineInventory = (machines?: MachineType[]): Map<string, number> => {
     const machineInventory = new Map<string, number>();
     if (machines) {
         for (const m of machines) {
@@ -612,93 +606,99 @@ export const runGeneticAlgorithm = (
             machineInventory.set(m.id, Number.isFinite(rawUnits) ? rawUnits : 0);
         }
     }
+    return machineInventory;
+};
 
-    // === PHASE 1: Generate Initial Population ===
+/**
+ * Generate and evaluate the initial random population, sorted best-first.
+ */
+const seedPopulation = (
+    tasks: Task[],
+    data: ProjectData,
+    nominalSeconds: number,
+    effectiveSeconds: number,
+    machineInventory: Map<string, number>,
+    populationSize: number
+): Individual[] => {
     const population: Individual[] = [];
-
     for (let i = 0; i < populationSize; i++) {
         const chromosome = generateValidSequence(tasks);
-        const { fitness, result } = evaluateFitness(
-            chromosome,
-            data,
-            nominalSeconds,
-            effectiveSeconds,
-            machineInventory
-        );
+        const { fitness, result } = evaluateFitness(chromosome, data, nominalSeconds, effectiveSeconds, machineInventory);
         population.push({ chromosome, fitness, result });
     }
-
     // Sort by fitness (ascending = best first)
     population.sort((a, b) => a.fitness - b.fitness);
+    return population;
+};
 
-    // Track baseline (greedy result from first generation)
-    const greedyResult = population[0].result!;
-    const greedyStations = greedyResult.stationsCount;
-    const greedyHeadcount = greedyResult.totalHeadcount;
+/**
+ * Produce the next generation (elitism + tournament selection + crossover + mutation),
+ * sorted best-first.
+ *
+ * The RNG call order matches the original inline loop exactly, so the synchronous runner
+ * yields results identical to the pre-refactor implementation (the 140 existing tests pin this).
+ */
+const evolveOneGeneration = (
+    population: Individual[],
+    tasks: Task[],
+    data: ProjectData,
+    nominalSeconds: number,
+    effectiveSeconds: number,
+    machineInventory: Map<string, number>,
+    cfg: GAConfig
+): Individual[] => {
+    const { populationSize, mutationRate, eliteCount, crossoverRate } = cfg;
+    const newPopulation: Individual[] = [];
 
-    let bestEver = population[0];
-
-    // === PHASE 2: Evolution Loop ===
-    for (let gen = 0; gen < generations; gen++) {
-        const newPopulation: Individual[] = [];
-
-        // Elitism: carry over best individuals
-        for (let e = 0; e < Math.min(eliteCount, population.length); e++) {
-            newPopulation.push(population[e]);
-        }
-
-        // Generate rest of new population
-        while (newPopulation.length < populationSize) {
-            // Selection
-            const parent1 = tournamentSelect(population);
-            const parent2 = tournamentSelect(population);
-
-            let child: Chromosome;
-
-            // Crossover
-            if (Math.random() < crossoverRate) {
-                child = orderCrossover(parent1.chromosome, parent2.chromosome, tasks);
-            } else {
-                child = [...parent1.chromosome];
-            }
-
-            // Mutation
-            child = mutateSwap(child, tasks, mutationRate);
-
-            // Evaluate
-            const { fitness, result } = evaluateFitness(
-                child,
-                data,
-                nominalSeconds,
-                effectiveSeconds,
-                machineInventory
-            );
-            newPopulation.push({ chromosome: child, fitness, result });
-        }
-
-        // Replace population
-        population.length = 0;
-        population.push(...newPopulation);
-        population.sort((a, b) => a.fitness - b.fitness);
-
-        // Update best ever
-        if (population[0].fitness < bestEver.fitness) {
-            bestEver = population[0];
-        }
-
-        // Report progress
-        if (onProgress) {
-            onProgress(gen + 1, generations, bestEver.fitness);
-        }
+    // Elitism: carry over best individuals
+    for (let e = 0; e < Math.min(eliteCount, population.length); e++) {
+        newPopulation.push(population[e]);
     }
 
-    // === PHASE 3: Build Result ===
+    // Generate rest of new population
+    while (newPopulation.length < populationSize) {
+        // Selection
+        const parent1 = tournamentSelect(population);
+        const parent2 = tournamentSelect(population);
+
+        let child: Chromosome;
+
+        // Crossover
+        if (Math.random() < crossoverRate) {
+            child = orderCrossover(parent1.chromosome, parent2.chromosome, tasks);
+        } else {
+            child = [...parent1.chromosome];
+        }
+
+        // Mutation
+        child = mutateSwap(child, tasks, mutationRate);
+
+        // Evaluate
+        const { fitness, result } = evaluateFitness(child, data, nominalSeconds, effectiveSeconds, machineInventory);
+        newPopulation.push({ chromosome: child, fitness, result });
+    }
+
+    newPopulation.sort((a, b) => a.fitness - b.fitness);
+    return newPopulation;
+};
+
+/**
+ * Assemble the final GAResult from the best individual and the final population.
+ */
+const buildGAResult = (
+    bestEver: Individual,
+    population: Individual[],
+    greedyResult: SimulationResult,
+    generations: number,
+    populationSize: number,
+    cancelled: boolean
+): GAResult => {
     const bestResult = bestEver.result!;
-    const stationsSaved = greedyStations - bestResult.stationsCount;
-    const headcountSaved = greedyHeadcount - bestResult.totalHeadcount;
+    const stationsSaved = greedyResult.stationsCount - bestResult.stationsCount;
+    const headcountSaved = greedyResult.totalHeadcount - bestResult.totalHeadcount;
     const efficiencyGain = (bestResult.lineEfficiency || 0) - (greedyResult.lineEfficiency || 0);
 
-    // === PHASE 3.1: Extract distinct alternative solutions from final population ===
+    // Extract distinct alternative solutions from final population
     const alternativeResults: SimulationResult[] = [];
     for (const ind of population) {
         if (!ind.result || ind === bestEver) continue;
@@ -724,6 +724,7 @@ export const runGeneticAlgorithm = (
         alternativeResults,
         generations,
         populationSize,
+        cancelled,
         improvementVsGreedy: (stationsSaved > 0 || headcountSaved > 0 || efficiencyGain > 0.1) ? {
             stationsSaved,
             headcountSaved,
@@ -733,21 +734,88 @@ export const runGeneticAlgorithm = (
 };
 
 /**
- * Async version of GA that yields to the event loop for UI responsiveness
+ * Run the Genetic Algorithm to find optimal task sequence (synchronous).
+ *
+ * Kept synchronous for tests and headless callers. UI callers that must stay responsive
+ * (and support cancel) should use runGeneticAlgorithmAsync instead.
  */
-const runGeneticAlgorithmAsync = async (
+export const runGeneticAlgorithm = (
+    data: ProjectData,
+    nominalSeconds: number,
+    effectiveSeconds: number,
+    config: Partial<GAConfig> = {}
+): GAResult => {
+    const cfg = { ...DEFAULT_CONFIG, ...config };
+    const { populationSize, generations, onProgress, machines } = cfg;
+    const tasks = data.tasks;
+    const machineInventory = buildMachineInventory(machines);
+
+    // === PHASE 1: Generate Initial Population ===
+    let population = seedPopulation(tasks, data, nominalSeconds, effectiveSeconds, machineInventory, populationSize);
+    const greedyResult = population[0].result!; // Baseline (best of random first generation)
+    let bestEver = population[0];
+
+    // === PHASE 2: Evolution Loop ===
+    for (let gen = 0; gen < generations; gen++) {
+        population = evolveOneGeneration(population, tasks, data, nominalSeconds, effectiveSeconds, machineInventory, cfg);
+        if (population[0].fitness < bestEver.fitness) {
+            bestEver = population[0];
+        }
+        if (onProgress) {
+            onProgress(gen + 1, generations, bestEver.fitness);
+        }
+    }
+
+    // === PHASE 3: Build Result ===
+    return buildGAResult(bestEver, population, greedyResult, generations, populationSize, false);
+};
+
+/**
+ * Async, cancellable version of the GA.
+ *
+ * Yields to the event loop after each generation so the UI can paint progress (onProgress)
+ * and process a cancel request. If the provided AbortSignal fires, it stops after the current
+ * generation and returns the best solution found so far with `cancelled: true`.
+ */
+export const runGeneticAlgorithmAsync = async (
     data: ProjectData,
     nominalSeconds: number,
     effectiveSeconds: number,
     config: Partial<GAConfig> = {}
 ): Promise<GAResult> => {
-    // For now, wrap synchronous version
-    // TODO: Implement chunked execution for better UI responsiveness
-    return new Promise((resolve) => {
-        // Use setTimeout to not block the main thread
-        setTimeout(() => {
-            const result = runGeneticAlgorithm(data, nominalSeconds, effectiveSeconds, config);
-            resolve(result);
-        }, 0);
-    });
+    const cfg = { ...DEFAULT_CONFIG, ...config };
+    const { populationSize, generations, onProgress, machines, signal } = cfg;
+    const tasks = data.tasks;
+    const machineInventory = buildMachineInventory(machines);
+
+    // === PHASE 1: Generate Initial Population ===
+    let population = seedPopulation(tasks, data, nominalSeconds, effectiveSeconds, machineInventory, populationSize);
+    const greedyResult = population[0].result!; // Baseline (best of random first generation)
+    let bestEver = population[0];
+
+    // Yield once after seeding so a large initial population still lets the UI paint.
+    await yieldToEventLoop();
+
+    // === PHASE 2: Evolution Loop (cooperative / cancellable) ===
+    let cancelled = false;
+    for (let gen = 0; gen < generations; gen++) {
+        if (signal?.aborted) {
+            cancelled = true;
+            break;
+        }
+
+        population = evolveOneGeneration(population, tasks, data, nominalSeconds, effectiveSeconds, machineInventory, cfg);
+        if (population[0].fitness < bestEver.fitness) {
+            bestEver = population[0];
+        }
+        if (onProgress) {
+            onProgress(gen + 1, generations, bestEver.fitness);
+        }
+
+        // Hand the thread back to the browser so progress paints and the cancel click is handled.
+        await yieldToEventLoop();
+    }
+
+    // === PHASE 3: Build Result ===
+    return buildGAResult(bestEver, population, greedyResult, generations, populationSize, cancelled);
 };

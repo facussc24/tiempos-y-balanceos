@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useRef } from 'react';
 import { DragEndEvent, DragStartEvent, DragOverEvent } from '@dnd-kit/core';
 import { ProjectData, Task, StationConfig } from '../types';
 import { toast } from '../components/ui/Toast';
@@ -19,7 +19,7 @@ import { detectCycles, calculateTaskWeights } from '../utils/graph';
 import {
     SimulationResult
 } from '../core/balancing/engine';
-import { runGeneticAlgorithm } from '../core/balancing/geneticAlgorithm';
+import { runGeneticAlgorithmAsync } from '../core/balancing/geneticAlgorithm';
 import { validateMachineResources, MachineValidationResult } from '../core/balancing/machineValidation';
 import { usePlantAssets } from './usePlantAssets'; // V4.0: Use Global Assets for Validation
 
@@ -67,6 +67,9 @@ export const useLineBalancing = (data: ProjectData, updateData: (data: ProjectDa
         bestFitness: number;
         phase: 'initializing' | 'evolving' | 'complete';
     } | null>(null);
+
+    // Abort handle for the in-flight async optimization (lets the user cancel a long run).
+    const gaAbortRef = useRef<AbortController | null>(null);
 
     // V4.2 FIX: Use Global Plant Assets for Validation (Real-time Availability)
     const { machines: globalMachines } = usePlantAssets();
@@ -740,7 +743,12 @@ export const useLineBalancing = (data: ProjectData, updateData: (data: ProjectDa
         performAssignment(taskId, targetStationId);
     };
 
-    const handleOptimization = () => {
+    const handleOptimization = async () => {
+        // Guard: ignore re-entry while an optimization is already running.
+        if (gaAbortRef.current) {
+            return;
+        }
+
         // Validación 1: Takt Time definido
         if (nominalSeconds <= 0) {
             logger.warn('useLineBalancing', 'Optimization attempt without Takt Time');
@@ -822,14 +830,18 @@ export const useLineBalancing = (data: ProjectData, updateData: (data: ProjectDa
                 phase: 'initializing'
             });
 
-            // Run Genetic Algorithm
-            const gaResult = runGeneticAlgorithm(
+            // Run Genetic Algorithm (async + cancellable so the UI stays responsive)
+            const controller = new AbortController();
+            gaAbortRef.current = controller;
+
+            const gaResult = await runGeneticAlgorithmAsync(
                 simulationData,
                 nominalSeconds,
                 effectiveSeconds,
                 {
                     ...gaConfig,
                     machines: machinesList, // Phase 30: Pass machine inventory for validation
+                    signal: controller.signal,
                     onProgress: (gen, total, bestFitness) => {
                         setGAProgress({
                             generation: gen,
@@ -840,6 +852,14 @@ export const useLineBalancing = (data: ProjectData, updateData: (data: ProjectDa
                     }
                 }
             );
+
+            // User cancelled mid-run: drop progress and keep the current balance untouched.
+            if (gaResult.cancelled) {
+                setGAProgress(null);
+                setOptimizationProgress(null);
+                toast.info('Optimización Cancelada', 'Se detuvo el algoritmo. No se modificó el balance actual.');
+                return;
+            }
 
             // Get the best result from GA
             const result = gaResult.bestResult;
@@ -875,7 +895,15 @@ export const useLineBalancing = (data: ProjectData, updateData: (data: ProjectDa
             setOptimizationProgress(null);
             logger.error('useLineBalancing', 'Critical optimization error', { error: String(e) });
             toast.error('Error del Optimizador', `Fallo interno: ${e instanceof Error ? e.message : String(e)}`);
+        } finally {
+            // Always release the abort handle so the next optimization can start.
+            gaAbortRef.current = null;
         }
+    };
+
+    // Cancel an in-flight optimization (no-op if nothing is running).
+    const cancelOptimization = () => {
+        gaAbortRef.current?.abort();
     };
 
     const applySimulation = (res: SimulationResult) => {
@@ -1004,6 +1032,7 @@ export const useLineBalancing = (data: ProjectData, updateData: (data: ProjectDa
         handleDragOver,
         handleDragEnd,
         handleOptimization,
+        cancelOptimization,
         applySimulation,
         toggleBoardSectorCollapse,
         performAssignment,
