@@ -11,12 +11,13 @@ import {
     DocumentType,
     DocumentRegistryEntry,
     DOCUMENT_TYPE_CONFIG,
+    ESTADO_SGC_CONFIG,
 } from './documentRegistryTypes';
 import DocumentListFilters from '../../components/ui/DocumentListFilters';
 import {
     ArrowLeft, RefreshCcw, ShieldAlert,
     ClipboardCheck, FolderOpen, Link2, ExternalLink,
-    ChevronUp, ChevronDown, Loader2, User,
+    ChevronUp, ChevronDown, Loader2, User, CloudOff,
 } from 'lucide-react';
 import { Breadcrumb } from '../../components/navigation/Breadcrumb';
 
@@ -32,6 +33,16 @@ const TYPE_ICONS: Record<DocumentType, React.ReactNode> = {
     amfe: <ShieldAlert size={14} className="text-orange-500" />,
     controlPlan: <ClipboardCheck size={14} className="text-green-500" />,
 };
+
+/** true si la fecha ISO (YYYY-MM-DD...) ya pasó comparada con hoy. */
+function isDatePast(iso?: string): boolean {
+    if (!iso) return false;
+    const datePart = iso.slice(0, 10);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(datePart)) return false;
+    const now = new Date();
+    const hoy = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    return datePart < hoy;
+}
 
 // Defined outside DocumentHub so it has stable identity across renders (avoids
 // react-hooks/static-components: "Cannot create components during render").
@@ -96,6 +107,10 @@ const DocumentHub: React.FC<DocumentHubProps> = ({ onBackToLanding, onOpenDocume
 
     const formatDate = (iso: string) => {
         if (!iso) return '—';
+        // Fechas sin hora (YYYY-MM-DD): formatear directo para evitar
+        // corrimiento de día por zona horaria (parse UTC vs display local).
+        const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+        if (m) return `${m[3]}/${m[2]}/${m[1]}`;
         try {
             const d = new Date(iso);
             return d.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
@@ -239,6 +254,9 @@ const DocumentHub: React.FC<DocumentHubProps> = ({ onBackToLanding, onOpenDocume
                                                 Cliente <SortIcon field="client" activeField={sortField} dir={sortDir} />
                                             </button>
                                         </th>
+                                        <th className="text-left px-3 py-2 text-[10px] font-bold text-gray-500 uppercase tracking-wider w-[100px]">Estado</th>
+                                        <th className="text-center px-3 py-2 text-[10px] font-bold text-gray-500 uppercase tracking-wider w-[50px]">Rev</th>
+                                        <th className="text-left px-3 py-2 text-[10px] font-bold text-gray-500 uppercase tracking-wider w-[100px]">Próx. revisión</th>
                                         <th className="text-center px-3 py-2 text-[10px] font-bold text-gray-500 uppercase tracking-wider w-[80px]">
                                             <button onClick={() => handleSort('itemCount')} className="hover:text-gray-800 transition">
                                                 Items <SortIcon field="itemCount" activeField={sortField} dir={sortDir} />
@@ -285,13 +303,20 @@ const DocumentRow: React.FC<{
     formatDate: (iso: string) => string;
 }> = React.memo(({ entry, onOpen, formatDate }) => {
     const cfg = DOCUMENT_TYPE_CONFIG[entry.type];
+    const noCargado = entry.cargado === false;
+    const proxVencida = isDatePast(entry.proximaRevision);
+    const tooltipNoCargado = `Contenido no cargado — solo en servidor${entry.serverPath ? `\n${entry.serverPath}` : ''}`;
 
     return (
-        <tr className="border-b border-gray-100 hover:bg-gray-50/50 transition cursor-pointer group"
-            onClick={onOpen}
-            role="button"
-            tabIndex={0}
-            onKeyDown={e => { if (e.key === 'Enter') onOpen(); }}
+        <tr className={`border-b border-gray-100 transition group ${
+                noCargado ? 'cursor-not-allowed bg-gray-50/30' : 'hover:bg-gray-50/50 cursor-pointer'
+            }`}
+            onClick={noCargado ? undefined : onOpen}
+            role={noCargado ? undefined : 'button'}
+            tabIndex={noCargado ? undefined : 0}
+            aria-disabled={noCargado || undefined}
+            title={noCargado ? tooltipNoCargado : undefined}
+            onKeyDown={e => { if (e.key === 'Enter' && !noCargado) onOpen(); }}
         >
             {/* Type badge */}
             <td className="px-3 py-2.5">
@@ -303,7 +328,16 @@ const DocumentRow: React.FC<{
 
             {/* Name */}
             <td className="px-3 py-2.5">
-                <div className="font-medium text-slate-800 text-xs truncate max-w-[300px]" title={entry.name}>{entry.name}</div>
+                <div className="flex items-center gap-1.5">
+                    <span className={`font-medium text-xs truncate max-w-[300px] ${noCargado ? 'text-slate-500' : 'text-slate-800'}`} title={entry.name}>{entry.name}</span>
+                    {noCargado && (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-medium text-gray-500 bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded-full shrink-0"
+                            title={tooltipNoCargado}>
+                            <CloudOff size={9} />
+                            No cargado
+                        </span>
+                    )}
+                </div>
                 {entry.partName && entry.partName !== entry.name && (
                     <div className="text-[10px] text-gray-400 truncate max-w-[300px]" title={entry.partName}>{entry.partName}</div>
                 )}
@@ -319,9 +353,33 @@ const DocumentRow: React.FC<{
                 {entry.client || <span className="text-gray-300">—</span>}
             </td>
 
+            {/* Estado SGC (catalogo maestro) */}
+            <td className="px-3 py-2.5">
+                {entry.estadoSgc ? (
+                    <span className={`inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full border ${ESTADO_SGC_CONFIG[entry.estadoSgc].className}`}>
+                        {ESTADO_SGC_CONFIG[entry.estadoSgc].label}
+                    </span>
+                ) : (
+                    <span className="text-gray-300 text-xs" title="Sin entrada en el catálogo maestro">—</span>
+                )}
+            </td>
+
+            {/* Rev actual */}
+            <td className="px-3 py-2.5 text-center text-xs text-gray-600">
+                {entry.revActual || <span className="text-gray-300">—</span>}
+            </td>
+
+            {/* Proxima revision */}
+            <td className={`px-3 py-2.5 text-xs ${proxVencida ? 'text-red-600 font-semibold' : 'text-gray-500'}`}
+                title={proxVencida ? 'Revisión vencida' : undefined}>
+                {entry.proximaRevision ? formatDate(entry.proximaRevision) : <span className="text-gray-300">—</span>}
+            </td>
+
             {/* Item count */}
             <td className="px-3 py-2.5 text-center">
-                <span className="text-xs font-medium text-gray-600">{entry.itemCount}</span>
+                {noCargado
+                    ? <span className="text-gray-300 text-xs">—</span>
+                    : <span className="text-xs font-medium text-gray-600">{entry.itemCount}</span>}
             </td>
 
             {/* Linked AMFE */}
@@ -364,14 +422,21 @@ const DocumentRow: React.FC<{
 
             {/* Action */}
             <td className="px-3 py-2.5 text-right">
-                <button
-                    onClick={(e) => { e.stopPropagation(); onOpen(); }}
-                    className="text-[10px] text-blue-600 hover:text-blue-800 font-medium opacity-0 group-hover:opacity-100 transition flex items-center gap-0.5 ml-auto"
-                    title="Abrir documento"
-                    aria-label="Abrir documento"
-                >
-                    Abrir <ExternalLink size={10} />
-                </button>
+                {noCargado ? (
+                    <span className="text-[10px] text-gray-300 opacity-0 group-hover:opacity-100 transition cursor-not-allowed ml-auto"
+                        title={tooltipNoCargado}>
+                        Solo servidor
+                    </span>
+                ) : (
+                    <button
+                        onClick={(e) => { e.stopPropagation(); onOpen(); }}
+                        className="text-[10px] text-blue-600 hover:text-blue-800 font-medium opacity-0 group-hover:opacity-100 transition flex items-center gap-0.5 ml-auto"
+                        title="Abrir documento"
+                        aria-label="Abrir documento"
+                    >
+                        Abrir <ExternalLink size={10} />
+                    </button>
+                )}
             </td>
         </tr>
     );

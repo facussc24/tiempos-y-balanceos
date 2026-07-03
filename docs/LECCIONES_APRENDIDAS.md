@@ -14,6 +14,13 @@ contiene SOLO lo accionable que NO esta ya codificado como regla o gate ejecutab
 
 ## Lecciones operativas vigentes
 
+### 2026-07-03 — Instructivos SGC Barack desactualizados (NPR vs AP)
+- El I-AC-005 interno habla de "NPR > 100" (AIAG 4ta ed, vieja). Fak confirma: hoy es AIAG-VDA
+  con AP — **manual interno vs practica actual de Fak → gana la practica**. Del instructivo solo
+  vale lo procedimental (revision semestral, registro de cambios en caratula, rev en letras/rojo).
+- NotebookLM `sgc-manual-y-procedimientos` tiene esos manuales como fuente: respuestas con NPR
+  o criterios automaticos CC/SC son info vieja — no aplicar (CC/SC sigue siendo solo de Fak).
+
 ### 2026-07-03 — Optimizacion de tokens y poda (sesion Fable 5)
 - **Frontmatter de reglas condicionales = `paths:`, NO `globs:`.** Con la clave errada, Claude Code
   carga TODAS las reglas siempre (153KB/sesion durante meses). Regla nueva con alcance de modulo:

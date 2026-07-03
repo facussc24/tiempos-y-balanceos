@@ -35,10 +35,11 @@ export function useDocumentRegistry(): UseDocumentRegistryResult {
         try {
             const all: DocumentRegistryEntry[] = [];
 
-            // Fetch from both repositories in parallel
-            const [amfeMod, cpMod] = await Promise.all([
+            // Fetch from the repositories in parallel
+            const [amfeMod, cpMod, registryMod] = await Promise.all([
                 import('../../utils/repositories/amfeRepository').catch(() => null),
                 import('../../utils/repositories/cpRepository').catch(() => null),
+                import('../../utils/repositories/amfeRegistryRepository').catch(() => null),
             ]);
 
             // Map AMFE documents
@@ -69,6 +70,52 @@ export function useDocumentRegistry(): UseDocumentRegistryResult {
                     }
                 } catch (err) {
                     logger.warn('Registry', 'Failed to load AMFE docs', { error: String(err) });
+                }
+            }
+
+            // Merge con el catalogo maestro (amfe_registry): las filas de docs
+            // cargados ganan la metadata SGC del catalogo; las entradas sin
+            // documento cargado se agregan como filas sinteticas no navegables.
+            if (registryMod) {
+                try {
+                    const catalog = await registryMod.listRegistry();
+                    const amfeById = new Map(
+                        all.filter(e => e.type === 'amfe').map(e => [e.id, e]),
+                    );
+                    for (const cat of catalog) {
+                        const linked = cat.documentId ? amfeById.get(cat.documentId) : undefined;
+                        if (linked) {
+                            // Doc cargado: la fila existente gana metadata del catalogo
+                            linked.estadoSgc = cat.estado;
+                            linked.revActual = cat.revActual;
+                            linked.proximaRevision = cat.proximaRevision;
+                            linked.serverPath = cat.serverPath;
+                            linked.amfeCode = cat.amfeCode;
+                            linked.cargado = true;
+                        } else {
+                            // Solo en catalogo: fila sintetica, no navegable
+                            all.push({
+                                id: `registry:${cat.amfeCode}`,
+                                type: 'amfe',
+                                name: cat.producto || cat.proyecto || `AMFE ${cat.amfeCode}`,
+                                partNumber: cat.partNumber || '',
+                                partName: cat.proyecto || '',
+                                client: cat.cliente || '',
+                                responsible: cat.propietario || '',
+                                itemCount: 0,
+                                updatedAt: cat.fechaUltimaRev || '',
+                                estadoSgc: cat.estado,
+                                revActual: cat.revActual,
+                                proximaRevision: cat.proximaRevision,
+                                serverPath: cat.serverPath,
+                                amfeCode: cat.amfeCode,
+                                cargado: false,
+                                meta: { amfeNumber: cat.amfeCode, tipo: cat.tipo },
+                            });
+                        }
+                    }
+                } catch (err) {
+                    logger.warn('Registry', 'Failed to merge amfe_registry catalog', { error: String(err) });
                 }
             }
 

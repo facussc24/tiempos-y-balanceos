@@ -144,7 +144,8 @@ describe('database', () => {
             expect(tableNames).toContain('family_change_proposals');
             expect(tableNames).toContain('deleted_documents');
             expect(tableNames).toContain('eight_d_documents');
-            expect(createTables).toHaveLength(24);
+            expect(tableNames).toContain('amfe_registry');
+            expect(createTables).toHaveLength(25);
         });
 
         it('should preserve all CREATE INDEX statements', () => {

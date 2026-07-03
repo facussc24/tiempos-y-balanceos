@@ -463,6 +463,38 @@ CREATE TABLE IF NOT EXISTS deleted_documents (
 
 CREATE INDEX IF NOT EXISTS idx_deleted_doc_type ON deleted_documents(doc_type);
 CREATE INDEX IF NOT EXISTS idx_deleted_at ON deleted_documents(deleted_at DESC);
+
+-- Catalogo maestro de AMFEs (espejo del Listado Maestro del SGC, carpeta 13 en Y:).
+-- Una fila por AMFE, este o no cargado su contenido (document_id NULL = solo metadata).
+CREATE TABLE IF NOT EXISTS amfe_registry (
+    id               TEXT PRIMARY KEY,
+    amfe_code        TEXT NOT NULL UNIQUE,
+    tipo             TEXT NOT NULL DEFAULT 'proceso' CHECK (tipo IN ('proceso','maestro','diseno')),
+    producto         TEXT NOT NULL DEFAULT '',
+    part_number      TEXT NOT NULL DEFAULT '',
+    cliente          TEXT NOT NULL DEFAULT '',
+    proyecto         TEXT NOT NULL DEFAULT '',
+    planta           TEXT NOT NULL DEFAULT '',
+    estado           TEXT NOT NULL DEFAULT 'Borrador'
+                     CHECK (estado IN ('Borrador','En revision','Liberado','Obsoleto')),
+    propietario      TEXT NOT NULL DEFAULT '',
+    equipo           TEXT NOT NULL DEFAULT '',
+    fecha_creacion   TEXT NOT NULL DEFAULT '',
+    rev_actual       TEXT NOT NULL DEFAULT 'A',
+    fecha_ultima_rev TEXT NOT NULL DEFAULT '',
+    proxima_revision TEXT NOT NULL DEFAULT '',
+    server_path      TEXT NOT NULL DEFAULT '',
+    document_id      TEXT REFERENCES amfe_documents(id) ON DELETE SET NULL,
+    historial        TEXT NOT NULL DEFAULT '[]',
+    notas            TEXT NOT NULL DEFAULT '',
+    created_at       TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at       TEXT NOT NULL DEFAULT (datetime('now')),
+    created_by       TEXT NOT NULL DEFAULT '',
+    updated_by       TEXT NOT NULL DEFAULT ''
+);
+
+CREATE INDEX IF NOT EXISTS idx_amfe_registry_estado ON amfe_registry(estado);
+CREATE INDEX IF NOT EXISTS idx_amfe_registry_doc    ON amfe_registry(document_id);
 `;
 
 // ---------------------------------------------------------------------------
@@ -879,6 +911,48 @@ async function runMigrations(adapter: DbAdapter): Promise<void> {
             [17, 'Add eight_d_documents table for G8D problem solving']
         );
         logger.info('Database', 'Migration 17: eight_d_documents table created');
+    }
+
+    // Migration 17 → 18: Add amfe_registry catalog table (Listado Maestro de AMFEs)
+    if (currentVersion < 18) {
+        try {
+            await adapter.execute(`CREATE TABLE IF NOT EXISTS amfe_registry (
+                id               TEXT PRIMARY KEY,
+                amfe_code        TEXT NOT NULL UNIQUE,
+                tipo             TEXT NOT NULL DEFAULT 'proceso' CHECK (tipo IN ('proceso','maestro','diseno')),
+                producto         TEXT NOT NULL DEFAULT '',
+                part_number      TEXT NOT NULL DEFAULT '',
+                cliente          TEXT NOT NULL DEFAULT '',
+                proyecto         TEXT NOT NULL DEFAULT '',
+                planta           TEXT NOT NULL DEFAULT '',
+                estado           TEXT NOT NULL DEFAULT 'Borrador'
+                                 CHECK (estado IN ('Borrador','En revision','Liberado','Obsoleto')),
+                propietario      TEXT NOT NULL DEFAULT '',
+                equipo           TEXT NOT NULL DEFAULT '',
+                fecha_creacion   TEXT NOT NULL DEFAULT '',
+                rev_actual       TEXT NOT NULL DEFAULT 'A',
+                fecha_ultima_rev TEXT NOT NULL DEFAULT '',
+                proxima_revision TEXT NOT NULL DEFAULT '',
+                server_path      TEXT NOT NULL DEFAULT '',
+                document_id      TEXT REFERENCES amfe_documents(id) ON DELETE SET NULL,
+                historial        TEXT NOT NULL DEFAULT '[]',
+                notas            TEXT NOT NULL DEFAULT '',
+                created_at       TEXT NOT NULL DEFAULT (datetime('now')),
+                updated_at       TEXT NOT NULL DEFAULT (datetime('now')),
+                created_by       TEXT NOT NULL DEFAULT '',
+                updated_by       TEXT NOT NULL DEFAULT ''
+            )`);
+            await adapter.execute(`CREATE INDEX IF NOT EXISTS idx_amfe_registry_estado ON amfe_registry(estado)`);
+            await adapter.execute(`CREATE INDEX IF NOT EXISTS idx_amfe_registry_doc ON amfe_registry(document_id)`);
+        } catch (e) {
+            logger.warn('Database', 'Migration 18: amfe_registry table creation skipped', {}, e instanceof Error ? e : undefined);
+        }
+
+        await adapter.execute(
+            `INSERT OR REPLACE INTO schema_version (version, description) VALUES (?, ?)`,
+            [18, 'Add amfe_registry catalog table (Listado Maestro de AMFEs)']
+        );
+        logger.info('Database', 'Migration 18: amfe_registry catalog table created');
     }
 }
 
@@ -1311,6 +1385,41 @@ class InMemoryAdapter implements DbAdapter {
         return parts;
     }
 
+    /**
+     * Divide la clausula SET en asignaciones por comas de nivel superior,
+     * respetando parentesis (p.ej. datetime('now')), literales 'entre comillas'
+     * y bloques CASE ... END.
+     */
+    private splitSetClauses(setRaw: string): string[] {
+        const parts: string[] = [];
+        let parenDepth = 0;
+        let caseDepth = 0;
+        let inQuote = false;
+        let current = '';
+        for (let i = 0; i < setRaw.length; i++) {
+            const ch = setRaw[i];
+            if (ch === "'") inQuote = !inQuote;
+            if (!inQuote) {
+                if (ch === '(') parenDepth++;
+                else if (ch === ')') parenDepth--;
+                else if (/[A-Za-z]/.test(ch) && !/\w/.test(setRaw[i - 1] ?? ' ')) {
+                    // Inicio de palabra: trackear CASE/END para no cortar adentro
+                    const word = setRaw.slice(i).match(/^\w+/)?.[0] ?? '';
+                    if (/^CASE$/i.test(word)) caseDepth++;
+                    else if (/^END$/i.test(word) && caseDepth > 0) caseDepth--;
+                }
+                if (ch === ',' && parenDepth === 0 && caseDepth === 0) {
+                    if (current.trim()) parts.push(current.trim());
+                    current = '';
+                    continue;
+                }
+            }
+            current += ch;
+        }
+        if (current.trim()) parts.push(current.trim());
+        return parts;
+    }
+
     async close(): Promise<void> {
         this.tables.clear();
     }
@@ -1424,21 +1533,11 @@ class InMemoryAdapter implements DbAdapter {
         const setMatch = sql.match(/SET\s+(.+?)\s+WHERE/is);
         if (!setMatch) return { rowsAffected: 0, lastInsertId: 0 };
 
-        // Split on commas that are NOT inside CASE...END blocks
-        const setRaw = setMatch[1];
-        const setParts: string[] = [];
-        let depth = 0;
-        let current = '';
-        for (const token of setRaw.split(/\b/)) {
-            if (/^CASE$/i.test(token)) depth++;
-            if (/^END$/i.test(token)) depth--;
-            current += token;
-            if (depth === 0 && token === ',') {
-                setParts.push(current.slice(0, -1)); // remove trailing comma
-                current = '';
-            }
-        }
-        if (current.trim()) setParts.push(current);
+        // Split en comas de nivel superior. Fix 2026-07-03: el tokenizador viejo
+        // (split(/\b/) + token === ',') nunca aislaba la coma — "?, " es un solo
+        // token — asi que los UPDATE multi-columna colapsaban en un segmento y
+        // solo se pisaba la primera columna (con la fecha, si habia datetime()).
+        const setParts = this.splitSetClauses(setMatch[1]);
 
         const setSegments = setParts.map(s => {
             // Split only on the first `=` to preserve CASE WHEN ... = ? inside
@@ -1590,6 +1689,7 @@ class SupabaseAdapter implements DbAdapter {
         customer_lines: 'code',
         product_family_members: '(family_id, product_id)',
         document_locks: '(document_id, document_type)',
+        amfe_registry: 'amfe_code',
     };
 
     // Tables with BIGSERIAL (auto-increment) primary keys — need RETURNING id

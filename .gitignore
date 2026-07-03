@@ -73,6 +73,10 @@ test-results/
 # Auto-generated plans and audit reports from scripts
 tmp/
 
+# Inventarios/planes de la gestion de AMFEs (datos internos: clientes, rutas de servidor, dumps)
+reports/
+exports/oficializar/
+
 # OneDrive junction with sensitive Patagonia docs (NEVER commit)
 docs-local/
 
