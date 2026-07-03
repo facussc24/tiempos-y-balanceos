@@ -1,8 +1,7 @@
 ---
 description: Reglas de testing - se aplica al editar o crear tests
-globs:
-  - "__tests__/**/*.test.ts"
-  - "__tests__/**/*.test.tsx"
+paths:
+  - "__tests__/**"
 ---
 
 # Testing Standards

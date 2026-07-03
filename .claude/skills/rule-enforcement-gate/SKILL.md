@@ -17,9 +17,9 @@ Patron documentado en `feedback_rule_enforcement_gap.md` (memoria 2026-05-14):
 
 | Incidente | Regla creada | Auditor read-only | Gate pre-commit |
 |---|---|---|---|
-| 2026-04-27 controles inventados | `amfe-no-inventar-controles.md` | `_auditInventos.mjs` | NO |
-| 2026-05-08 funciones 3 niveles | `amfe-funciones-3-niveles.md` ("TODO check") | NO | NO |
-| 2026-05-14 renumeracion ciega | `amfe-leer-contenido-antes-de-renumerar.md` | `_auditWePlaceholdersAndAllocation.mjs` | NO (solo subprocess) |
+| 2026-04-27 controles inventados | regla no-inventar-controles (hoy `amfe.md` §6) | `_auditInventos.mjs` | NO |
+| 2026-05-08 funciones 3 niveles | regla funciones-3-niveles (hoy `amfe.md` §8) — "TODO check" | NO | NO |
+| 2026-05-14 renumeracion ciega | regla leer-contenido (hoy `amfe.md` §10) | `_auditWePlaceholdersAndAllocation.mjs` | NO (solo subprocess) |
 
 3/3 reglas quedaron decorativas. La de "funciones 3 niveles" tuvo TODO desde 2026-05-08 → 76 WEs con etiquetas genericas pasaron 7 dias sin detectarse hasta que Fak los abrio manualmente el 2026-05-14.
 

@@ -81,7 +81,7 @@ Reportar a Fak:
 
 1. **NO inventar S/O/D, causas, failures, efectos** — solo propagar desde hermano con mismo contenido.
 2. **NO asignar CC/SC** — `specialChar: ""` siempre. Si Fak lo pide explicito, OK.
-3. **NO completar acciones** — `preventionAction`, `detectionAction`, `responsible`, `targetDate`, `status` quedan vacios. Regla `.claude/rules/amfe-actions.md`.
+3. **NO completar acciones** — `preventionAction`, `detectionAction`, `responsible`, `targetDate`, `status` quedan vacios. Regla `.claude/rules/amfe.md` §5.
 4. **NO usar S*O*D** — siempre `calculateAP()` oficial.
 5. **NO propagar entre familias con proceso distinto** — inyeccion plastica != inyeccion PU. Verificar leyendo fallas/causas antes de propagar.
 6. **NO borrar OPs completas** via autoHeal — eso lo hace `_structuralFixes.mjs` aparte (para Clasif/Segreg y Clips).

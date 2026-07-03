@@ -30,7 +30,7 @@ Creado 2026-04-13 per AIAG CP 2024 "Procesos Interdependientes".
 
 ## Knowledge base
 
-- `.claude/rules/injection.md` — regla contextual con ambos maestros, 6M, defectos
+- skill `injection-process` — ambos maestros, 6M, defectos (ex regla injection.md)
 - `docs/GUIA_INYECCION.md` — guia con conocimiento del gerente experto
 
 ## 7 AMFEs de producto con inyección sincronizada (solo OP 20 del maestro)

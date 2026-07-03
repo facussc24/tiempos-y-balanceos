@@ -1,5 +1,5 @@
 {
-  "_source": "FUENTE UNICA del candado anti-invento. Derivado VERBATIM de .claude/rules/amfe-no-inventar-controles.md (inventos confirmados + diccionario peninsular) y .claude/rules/amfe.md (tabla 'Vocabulario Claude prohibido' + frecuencias inventadas). NO inventar terminos: solo agregar los que Fak/equipo APQP confirmen. Consumido por scripts/_lib/forbiddenContent.mjs (igual patron que genericLabels.data.json).",
+  "_source": "FUENTE UNICA del candado anti-invento. Derivado VERBATIM de .claude/rules/amfe.md §6 (inventos confirmados + diccionario peninsular) y §11 (vocabulario Claude prohibido + frecuencias inventadas). NO inventar terminos: solo agregar los que Fak/equipo APQP confirmen. Consumido por scripts/_lib/forbiddenContent.mjs (igual patron que genericLabels.data.json).",
   "_severidades": "FORBIDDEN_EQUIPMENT_PHRASES + PENINSULAR_TERMS => CRITICAL (bloquean apply, known-bad 0 FP). CLAUDE_PHRASES + ARBITRARY_FREQUENCY_PATTERNS => WARNING (flag para revision, casi siempre malo pero a veces legitimo).",
 
   "FORBIDDEN_EQUIPMENT_PHRASES": [

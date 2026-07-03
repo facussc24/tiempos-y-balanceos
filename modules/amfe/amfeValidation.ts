@@ -691,7 +691,7 @@ function validateScNotByFormula(doc: AmfeDocument): string[] {
 // ---------------------------------------------------------------------------
 // A8-A12: text quality warnings (always non-blocking)
 // Plan: ~/.claude/plans/warm-plotting-snowflake.md
-// Reglas: amfe-funciones-3-niveles.md, amfe-leer-contenido-antes-de-renumerar.md
+// Reglas: amfe.md §8 (funciones 3 niveles) y §10 (leer contenido antes de renumerar)
 // ---------------------------------------------------------------------------
 
 /** A8 — WE.name es etiqueta 6M genérica (placeholder, no recurso real). */

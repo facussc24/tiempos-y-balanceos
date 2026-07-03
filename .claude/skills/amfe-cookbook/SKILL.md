@@ -92,7 +92,7 @@ Para gaps que son WE real (no placeholder), buscar fuente en estos AMFEs segun e
 
 1. **NO inventar valores S/O/D** — si no hay hermano con SOD completo para la misma causa, reportar SIN_FUENTE.
 2. **NO asignar CC/SC** — siempre `specialChar: ""` en causas nuevas. Autorizacion CC/SC solo por Fak explicitamente.
-3. **NO completar acciones** — `preventionAction`, `detectionAction`, `responsible`, `targetDate`, `status`, `actionTaken`, `completionDate` quedan vacios. Regla `.claude/rules/amfe-actions.md`.
+3. **NO completar acciones** — `preventionAction`, `detectionAction`, `responsible`, `targetDate`, `status`, `actionTaken`, `completionDate` quedan vacios. Regla `.claude/rules/amfe.md` §5.
 4. **NO usar S*O*D** — siempre `calculateAP(s,o,d)` del helper `_lib/amfeIo.mjs`.
 5. **NO propagar entre familias con proceso distinto**: inyeccion plastica != inyeccion PU. Verificar fallas/causas del hermano antes de propagar (regla `feedback_verify_content_not_name`).
 6. **data es TEXT** — siempre `JSON.stringify(doc)` al escribir (helper `saveAmfe` lo hace automatico). Regla `feedback_amfe_data_is_text`.
@@ -183,6 +183,5 @@ Despues de `_autoHeal.mjs --apply`:
 - `scripts/_lib/amfeIo.mjs` — helpers I/O + `calculateAP`
 - `scripts/_autoHeal.mjs` — ejecutor automatico
 - `scripts/_structuralFixes.mjs` — fixes de ops invalidas
-- `.claude/rules/amfe.md` — reglas AMFE generales
-- `.claude/rules/amfe-actions.md` — NUNCA inventar acciones
-- `.claude/rules/amfe-aph-pending.md` — AP=H sin accion placeholder
+- `.claude/rules/amfe.md` — regla AMFE consolidada (§4 placeholder AP=H, §5 acciones)
+- skill `amfe-domain` — detalle profundo (funciones, placeholders, SQL de auditoria)

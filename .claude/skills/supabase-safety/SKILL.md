@@ -155,7 +155,7 @@ finish(apply);
 | 4 | Nombres de campo incorrectos | AMFE: `opNumber` Y `operationNumber`; `ap` Y `actionPriority`; `cause` Y `description` (ambos alias) |
 | 5 | Propagar maestro equivocado | Leer fallas/causas del producto destino antes de propagar. Inyeccion plastica != PU |
 | 6 | Inventar valores numericos | Pesos, temperaturas, tolerancias: TBD si no hay confirmacion de Fak |
-| 7 | Inventar acciones de optimizacion | Solo el equipo APQP humano define acciones. Ver `amfe-actions.md` |
+| 7 | Inventar acciones de optimizacion | Solo el equipo APQP humano define acciones. Ver `amfe.md` §5 |
 | 8 | Clasificar CC/SC sin autorizacion | No asignar sin confirmacion explicita. Ver `amfe.md` |
 
 ## Recuperacion de incidentes ya conocidos

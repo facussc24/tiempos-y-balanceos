@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Fuente única de constantes de heurística 6M para AMFE. Consumido por scripts/_lib/genericLabels.mjs y core/amfe/genericLabels.ts.",
-    "rule_source": "BarackMercosul/.claude/rules/amfe-funciones-3-niveles.md + amfe-leer-contenido-antes-de-renumerar.md",
+    "rule_source": "BarackMercosul/.claude/rules/amfe.md §7-§10 + skill amfe-domain",
     "version": "1.1.0",
     "lastUpdated": "2026-05-15"
   },

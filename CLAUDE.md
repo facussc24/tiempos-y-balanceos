@@ -1,315 +1,128 @@
 # Barack Mercosul - Tiempos y Balanceos
 
-App 100% web React 19 + TypeScript + Supabase para gestion de calidad automotriz
-(AMFE VDA, Plan de Control AIAG, Hojas de Operaciones) y lean manufacturing
-(balanceo de linea, simulador de flujo, kanban, heijunka, mix multi-modelo).
-Multi-usuario con auth Supabase (email/password). Sin Tauri, sin Gemini.
+App web React 19 + TypeScript + Supabase para gestion de calidad automotriz
+(**AMFE VDA + Plan de Control AIAG**) y lean manufacturing (balanceo de linea,
+simulador de flujo, mix multi-modelo, calculadora de medios). Multi-usuario con
+auth Supabase. PFDs y Hojas de Operaciones NO se hacen aca (regla `no-pfd-no-ho.md`);
+sus documentos en Supabase son referencia historica de solo lectura.
 
 ## Protocolo de inicio de sesion
 
-Al arrancar CADA sesion:
-0. **SINCRONIZAR GIT (OBLIGATORIO — 2 PCs en uso):**
-   ```bash
-   cd C:/Users/FacundoS-PC/dev/BarackMercosul && git fetch origin && git status
-   ```
-   - Si hay cambios remotos: `git pull origin main` ANTES de tocar cualquier archivo
-   - Si hay conflictos: REPORTAR a Fak inmediatamente, NO resolver solo
-   - Si hay cambios locales sin commitear: `git stash`, pull, `git stash pop`
-   - **NUNCA empezar a trabajar sin verificar que el repo local esta actualizado**
-   - Fak trabaja desde 2 PCs simultaneamente — la desincronizacion rompe todo
-1. Leer `docs/LECCIONES_APRENDIDAS.md` — para no repetir errores
-2. Leer `.claude/rules/` relevantes al modulo que se va a tocar
-3. Si Fak menciona un producto, leer el AMFE/CP/HO/PFD de ese producto ANTES de hacer cambios
-4. Si hay PDFs de referencia, leerlos con el metodo de `docs/COMO_LEER_PDF.md`
+1. Leer `docs/LECCIONES_APRENDIDAS.md` (destilado corto de lecciones vigentes).
+2. Si Fak menciona un producto: leer su AMFE/CP en Supabase live ANTES de hacer cambios.
+3. PDFs de referencia: leerlos con el metodo de `docs/COMO_LEER_PDF.md`.
 
 ## Protocolo de fin de sesion — OBLIGATORIO, NO OPCIONAL
 
-ANTES de decirle a Fak que terminaste, SIEMPRE:
-1. Actualizar docs/LECCIONES_APRENDIDAS.md con errores cometidos y correcciones de Fak
-2. Si descubriste algo nuevo: actualizar la guia correspondiente
-3. Si creaste reglas nuevas: verificar que esten en `.claude/rules/`
-4. Correr `node scripts/_backup.mjs` para guardar snapshot de Supabase (previene perdida de datos)
+1. Actualizar `docs/LECCIONES_APRENDIDAS.md` con errores cometidos y correcciones de Fak.
+2. Si tocaste datos Supabase: `node scripts/_backup.mjs` (snapshot preventivo).
+3. Lanzar agente `auditor` al cerrar tareas de codigo.
+4. Tareas de codigo: `npm run build` OK → commit → push (regla `git-deploy.md`).
 
-Si no actualizas estos archivos, el proximo Claude va a cometer los mismos errores.
-Esto NO es opcional. NO preguntar si Fak quiere que lo hagas. HACERLO.
-
-## Comportamiento proactivo
-
-Despues de CADA tarea completada:
-- Si modificaste un AMFE: verificar que CP y HO del mismo producto esten alineados. Si no, REPORTAR.
-- Si modificaste un CP: verificar que la HO refleje los cambios. Si no, REPORTAR.
-- Si un cambio afecta a TODOS los productos (ej: formato de fechas, nombres de columnas): SUGERIR aplicarlo a los 8 productos, no esperar a que Fak lo pida.
-- Si detectas inconsistencias entre documentos: reportarlas INMEDIATAMENTE.
-- Si tenes dudas sobre un dato: poner TBD y avisar a Fak. NUNCA inventar.
-
-## Control de revisiones
-
-Los documentos APQP son "documentos vivos" segun IATF 16949:
-- Cambios diarios se registran en audit trail (fecha + que cambio)
-- Las revisiones mayores (A, B, C) solo cambian en hitos oficiales:
-  - Rev A: Prelanzamiento
-  - Rev B: PPAP aprobado / Produccion masiva
-  - Rev C: Cambio de ingenieria mayor (ECN del cliente)
-- Los cambios pequenos NO generan nueva revision — se acumulan en el borrador de trabajo
+NO preguntar si Fak quiere que lo hagas. HACERLO.
 
 ## Como interactuar con Fak
 
 - Fak escribe en espanol informal con typos. Entender sin corregir.
 - Fak NO es programador. Explicar decisiones tecnicas en lenguaje simple.
-- NUNCA preguntar "queres que haga X?" — HACERLO y reportar.
-- REFUERZO: Si te encontras a punto de escribir "queres que...?" o "lo hago?" — PARA. La respuesta es siempre SI. Hacelo y reporta que lo hiciste.
-- Si Fak dice "decidi vos" o "vos sos el que sabe" — decidir con mejor practica tecnica y explicar el por que brevemente. NO devolverle la pregunta.
-- NUNCA inventar datos numericos (pesos, tolerancias, temperaturas). Si no sabes: TBD.
-- NUNCA inventar acciones de optimizacion en AMFEs (ver `.claude/rules/amfe-actions.md`).
-- Si Fak te corrige: agregar a `docs/LECCIONES_APRENDIDAS.md` inmediatamente.
-- Si detectas un problema: reportar sin esperar a que Fak pregunte.
-- Si un cambio afecta multiples productos: sugerir verificar los demas.
-- Evolucionar: despues de cada sesion, preguntarte "que puedo hacer mejor la proxima vez?" y documentarlo.
+- NUNCA preguntar "queres que haga X?" — HACERLO y reportar. Si estas por escribir
+  "queres que...?" o "lo hago?": PARA, la respuesta es siempre SI.
+- Si Fak dice "decidi vos": decidir con mejor practica y explicar brevemente por que.
+  NO devolverle la pregunta.
+- Si Fak te corrige: registrarlo en LECCIONES_APRENDIDAS inmediatamente.
+- Si detectas un problema o inconsistencia: reportar sin esperar a que pregunte.
+- Si un cambio afecta multiples productos: sugerir aplicarlo/verificarlos todos.
+- Ante duda de datos: TBD y avisar. NUNCA inventar (regla `core-prohibiciones.md`).
+- Contrato de autonomia (que hago solo vs que requiere OK): `.claude/rules/autonomy-contract.md`.
 
-**Contrato de autonomia:** qué puedo hacer solo vs. qué requiere tu OK — ver `.claude/rules/autonomy-contract.md`. Matriz por area (Supabase, APQP, codigo, auditoria, integraciones). Si dudo entre dos filas, aplico la mas restrictiva.
+## Reglas criticas — NO ROMPER
 
-## Reglas de Negocio APQP (OBLIGATORIO — validadas por AIAG-VDA 2019 y AIAG CP 2024)
+1. **Nada de datos mock/placeholder**: todo dato mostrado/exportado/testeado viene de
+   Supabase real, via los mismos hooks/repositories que usa la UI.
+2. **Cero duplicados en Supabase**: query antes de insertar. Las familias canonicas de
+   producto son 8; si un seed crea mas, abortar y reportar. Cliente = "VWA"/"PWA".
+3. **Export Excel**: AMFE y CP solo `xlsx-js-style`; HO (legacy) solo `ExcelJS`.
+   Export AMFE oficial via node (skill `amfe-export-oficial`), no desde la app.
+4. **Reusar antes de crear**: los exports individuales, hooks y repositorios ya
+   funcionan — llamarlos, no reimplementar.
+5. **Verificacion obligatoria**: tras seed/migracion contar familias (8) y duplicados (0);
+   tras export abrir el archivo; `npx tsc --noEmit` y tests del modulo afectado.
+6. Documentos APQP son "documentos vivos" (IATF): cambios diarios van al audit trail;
+   revisiones mayores (A/B/C) solo en hitos oficiales (prelanzamiento/PPAP/ECN).
 
-### Clasificación CC/SC (CORREGIDA — la regla anterior era incorrecta)
-- **CC (Crítica):** SOLO Severidad 9-10 O requerimiento legal/seguridad del cliente. Benchmark: 1-5% de items.
-- **SC (Significativa):** SOLO si el cliente la designó con símbolo, O equipo multidisciplinario demuestra impacto en función primaria (típicamente S=7-8 en puntos de fijación, dimensiones de ensamble críticas). Benchmark: 10-15%.
-- **Estándar (sin clasificación):** TODO lo demás. Benchmark: 80-90% de items.
-- **PROHIBIDO:** SC = S≥5 AND O≥4 — esa regla infla las clasificaciones y genera no conformidades en auditoría IATF.
+## Reglas contextuales (.claude/rules/) — carga automatica
 
-### Calibración de Severidad para piezas de cabina interior (Insert, Armrest, Top Roll, Headrest)
-- **S=9-10:** Flamabilidad, emisiones VOC, interferencia airbag, bordes filosos expuestos al habitáculo.
-- **S=7-8:** Falla de encastre severa que para línea VW, desprendimiento en campo (clips rotos).
-- **S=5-6:** Arrugas masivas, delaminación, costura torcida, Squeak & Rattle, retrabajo offline.
-- **S=3-4:** Hilo suelto, mancha limpiable, retrabajo in-station.
+| Siempre cargadas | Contenido |
+|---|---|
+| `core-prohibiciones.md` | No inventar, CC/SC solo Fak, TBD, Supabase live, espanol AR |
+| `no-pfd-no-ho.md` | PFD/HO no se hacen aca |
+| `autonomy-contract.md` | Matriz de autonomia |
+| `git-deploy.md` | Build + commit + push al cerrar tareas |
 
-### Filtrado AMFE→CP→HO
-- **AMFE→CP:** Todo pasa al CP, pero AP=L se agrupa en líneas genéricas por operación. AP=H/M y CC/SC van como línea individual.
-- **CP→HO:** SOLO pasan los controles que el operario ejecuta en su estación. Controles de laboratorio, metrología especializada y auditoría NO van en la HO.
-- **Los responsables en CP y HO deben coincidir para el mismo control.**
+| Con `paths:` (cargan al tocar) | Ambito |
+|---|---|
+| `amfe.md` | modules/amfe, core/amfe, scripts *.mjs, utils/seed — regla APQP consolidada |
+| `control-plan.md` | modules/controlPlan |
+| `database.md` + `verify-supabase-live.md` | repositorios, scripts, persistencia |
+| `exports.md` | archivos *export* |
+| `testing.md` | __tests__ |
+| `dev-login.md` | components/auth — boton dev-login: NO TOCAR NUNCA |
 
-### Idioma y formato
-- TODO en español, CERO textos en inglés entre paréntesis.
-- Plan de reacción: usar referencias SGC (P-09/I, P-10/I, P-14).
+**Skills** (on-demand): `apqp-schema` (schema JSONB Supabase), `product-map` (8 familias,
+part numbers, equipo APQP), `amfe-domain` (conocimiento AMFE profundo), `amfe-cookbook`
+(recetas de gaps), `injection-process` (inyeccion plastica/PU, maestros 15/16/17),
+`supabase-safety` (protocolo backup/dry-run/restore), `amfe-export-oficial`,
+`notebooklm-routing` (que notebook consultar), `notebooklm-manager`, `rule-enforcement-gate`
+(toda regla nueva con check debe nacer con enforcement), `audit-amfe`, `backup`, `fix-amfe-gaps`.
 
-### Guías detalladas (leer antes de modificar módulos APQP)
-- `docs/GUIA_PLAN_DE_CONTROL.md`
-- `docs/GUIA_AMFE.md`
-- `docs/GUIA_HOJA_DE_OPERACIONES.md`
-- `docs/GUIA_PFD.md`
-- `docs/ERRORES_CONCEPTUALES_APQP.md` — errores graves ya detectados, NO repetirlos.
-- `docs/LECCIONES_APRENDIDAS.md` — historial de errores, leer al inicio de cada sesion.
-- `docs/ARQUITECTURA_CAMPOS_HEREDADOS.md` — campos heredados vs locales en CP/HO.
-- `docs/COMO_LEER_PDF.md` — metodos para leer PDFs de referencia.
+## Stack y comandos
 
-## Reglas Críticas — NO ROMPER
-
-### 1. NUNCA usar datos mock/placeholder
-- Todo dato que se muestre, exporte o teste DEBE venir de Supabase real.
-- Si una función de export necesita datos, debe reusar los mismos hooks/repositories que ya funcionan en la UI.
-- Si un seed script carga datos, debe verificar que no existan antes de insertar (upsert o check-then-insert).
-- PROHIBIDO: strings como "datos reales generados", "placeholder", "TODO: cargar datos".
-
-### 2. NUNCA crear duplicados en Supabase
-- Antes de insertar familias, documentos o members: query primero si ya existen.
-- Las 8 familias canónicas son: Insert Patagonia, Armrest Door Panel Patagonia, Top Roll Patagonia, Headrest Front/Rear Center/Rear Outer Patagonia, Telas Planas PWA, Telas Termoformadas PWA.
-- Si un seed/migration crea más de 8 familias, algo está mal — abortar y reportar.
-- Nombres de cliente: "VWA" (no "Volkswagen Argentina", no "095 VOLKSWAGEN").
-
-### 3. Export Excel: xlsx-js-style para AMFE/CP, ExcelJS para HO
-- AMFE y CP: SOLO xlsx-js-style (`XLSX.utils.book_new()`).
-- HO: SOLO ExcelJS (necesita imágenes: logo + pictogramas PPE).
-- PROHIBIDO mezclar librerías en el mismo export.
-- Paquete APQP: Portada + Flujograma + AMFE + CP en xlsx-js-style. HO se exporta individualmente.
-
-### 4. Reusar antes de crear
-- Buscar si ya existe una función que haga lo mismo antes de crear una nueva.
-- Los exports individuales ya funcionan — el paquete APQP debe llamarlos, no reimplementar.
-- Los hooks de Supabase (useAmfe, usePlanControl, etc.) ya funcionan — reusar.
-
-### 5. Verificación obligatoria
-- Después de cualquier seed/migration: contar familias (debe ser 8), contar documentos, verificar 0 duplicados.
-- Después de cualquier export: abrir el archivo y verificar que tiene datos reales.
-- TypeScript: `npx tsc --noEmit` sin errores.
-- Tests: `npx vitest run --testPathPattern="módulo-afectado"`.
-
-## Supabase — Estructura de Datos APQP
-
-> **Detalle completo en skill auto-cargable:** `.claude/skills/apqp-schema/SKILL.md`
-> Se carga automaticamente cuando se trabaja con repositorios, scripts .mjs, o datos Supabase.
-
-Resumen: amfe_documents, cp_documents, ho_documents, pfd_documents guardan datos en columna `data` JSONB.
-Tablas soporte: products, product_families, product_family_members, customer_lines.
-
-## Productos — Mapa Completo
-
-> **Detalle completo en skill auto-cargable:** `.claude/skills/product-map/SKILL.md`
-> Se carga automaticamente cuando se trabaja con familias, part numbers, o headers APQP.
-
-8 familias: Insert, Armrest, Top Roll, Headrest (x3), Telas Planas, Telas Termoformadas.
-62 documentos APQP en total (AMFE+CP+HO+PFD por familia).
-
-## Reglas contextuales (.claude/rules/)
-
-Reglas que se cargan automaticamente al tocar archivos del modulo correspondiente:
-
-| Archivo | Globs | Contenido |
-|---------|-------|-----------|
-| `amfe.md` | `modules/amfe/**` | Severidades calibradas, CC/SC, efectos 3 niveles VDA, familias |
-| `control-plan.md` | `modules/controlPlan/**` | Cross-validation, filtrado AMFE→CP, responsables, familias |
-| `hoja-operaciones.md` | `modules/hojaOperaciones/**` | Filtrado CP→HO, EPP coherente, duplicados, familias |
-| `exports.md` | `modules/**/export*.ts` | Ordenamiento numerico, librerias por modulo, columnas |
-| `testing.md` | `__tests__/**` | React 19 gotchas, mocks, datos de test |
-| `database.md` | `utils/repositories/**` | Repositorios tipados, Supabase, race conditions |
-
-## Stack
-
-| Capa         | Tecnologia                                          |
-|--------------|-----------------------------------------------------|
-| Runtime      | React 19.2, TypeScript 5.8, Vite 6                  |
-| Auth + DB    | Supabase (@supabase/supabase-js)                    |
-| Testing      | Vitest 4.x + @testing-library/react + jsdom         |
-| Styling      | TailwindCSS 3.4                                     |
-| Export       | xlsx-js-style (AMFE/CP), ExcelJS (HO), html2pdf.js  |
-| Charts       | Recharts 3.4                                        |
-| DnD          | @dnd-kit/core                                       |
-
-## Comandos
+React 19.2 + TypeScript 5.8 + Vite 6 · Supabase (auth+DB) · Vitest 4 + testing-library ·
+TailwindCSS 3.4 · xlsx-js-style / ExcelJS / html2pdf.js · Recharts · @dnd-kit.
 
 ```bash
 npm run dev          # Vite dev server (localhost:3000)
-npx vitest run       # Correr todos los tests
-npx vitest run --coverage  # Tests con coverage (v8)
-npm run build        # Build de produccion
-npx tsc --noEmit     # Chequeo de tipos
+npx vitest run       # tests (durante desarrollo: --testPathPattern=<modulo>)
+npm run build        # build de produccion — OBLIGATORIO antes de push
+npx tsc --noEmit     # chequeo de tipos
+node scripts/_auditAll.mjs --summary   # salud de los AMFEs en Supabase
 ```
 
-## Estructura del proyecto
+## Estructura del proyecto (codigo en la RAIZ, no en src/)
 
 ```
-/                       Raiz del proyecto (codigo en raiz, NO en src/)
-  src/                  Solo assets/ + data/ (NO codigo fuente)
-  App.tsx               Entry point
-  AppRouter.tsx         Routing con lazy loading
-  types.ts              Barrel export (re-exporta desde types/, ~1500 lineas totales en types/)
-  config.ts             Configuracion global
-  index.tsx             React root
-
-  components/           UI reutilizable
-    auth/               AuthProvider, LoginPage (Supabase auth)
-    ui/                 Componentes base (Button, Input, Modal, etc.)
-    modals/             ConfirmModal, ExportModal, etc.
-    layout/             AppShell, Sidebar, Header
-    charts/             Wrappers de Recharts
-    navigation/         DropdownNav, Breadcrumbs
-    landing/            Landing page components
-
-  core/                 Motores de calculo
-    balancing/          Algoritmos de balanceo (SALBP-1, SALBP-2, COMSOAL, etc.)
-    inheritance/        Herencia maestro→variante (familias de producto)
-      documentInheritance.ts   Clonado maestro→variante (UUID regen)
-      overrideTracker.ts       Diff variante vs maestro
-      changePropagation.ts     Propagacion cambios maestro→variantes
-
-  hooks/                Custom hooks (useLineBalancing, useProjectPersistence, etc.)
-
-  modules/              Modulos de negocio
-    amfe/               AMFE VDA + validacion cruzada con PFD
-    controlPlan/        Plan de Control AIAG + cross-validation + link HO
-    hojaOperaciones/    Hojas de operaciones (TWI, EPP, navy theme) + link CP
-    pfd/                Diagrama de Flujo (cyan theme, ASME symbols) + link AMFE
-    family/             Familias de producto (herencia, proposals)
-    balancing/          UI de balanceo de línea
-    dashboard/          Dashboard ejecutivo
-    (mix, flow-simulator, heijunka, kanban, logistics-backlog)
-
-  utils/
-    repositories/       17 repositorios tipados (13 exportados via index.ts + 4 internos: admin, documentLock, eightD, flowchart, pendingExport)
-    supabaseClient.ts   Singleton Supabase client
-    pfdAmfeLinkValidation.ts   Validacion cruzada PFD ↔ AMFE
-    hoCpLinkValidation.ts      Validacion cruzada HO ↔ CP
-    crossDocumentAlerts.ts     Alertas cascada APQP
-
-  __tests__/            460+ archivos de test
+App.tsx / AppRouter.tsx     Entry + routing lazy
+types.ts, types/            Barrel de tipos por dominio
+components/                 auth, ui, modals, layout, charts, navigation, landing
+core/                       balancing/ (SALBP, COMSOAL...), inheritance/ (maestro→variante), amfe/
+hooks/                      useLineBalancing, useProjectPersistence, ...
+modules/                    amfe/ (+ controlPlan tab), controlPlan/, family/, balancing/,
+                            dashboard/, registry/, mix/, flow-simulator/, eightD/, flowchart/
+utils/repositories/         17 repositorios tipados — UNICO acceso a datos
+scripts/                    _backup, _restore, _auditAll, _autoHeal, _lib/ (+ archive/ de one-shots)
+__tests__/                  suite Vitest completa
+docs/                       guias APQP + LECCIONES_APRENDIDAS + _archive/
 ```
 
-## Estandares de calidad
+- Path alias `@/*` → raiz. Modulos lazy con `React.lazy()` + `Suspense`.
+- NO hardcodear API keys (`VITE_*`). `logger.ts` en vez de console.log. NO `as any` ni `@ts-ignore`.
+- Familias de producto (herencia maestro→variante): tablas `product_families`,
+  `family_documents`, `family_change_proposals`; motor en `core/inheritance/`.
+  Detalle de schema: skill `apqp-schema`.
 
-### Mentalidad
-- Nivel senior obligatorio. Verificar antes de editar. Leer el codigo completo.
-- Subagentes no son infalibles (~40-50% false positives en audits). Verificar manualmente.
-- Cada fix debe mejorar legibilidad. NO fixes cosméticos.
-- Correr tests después de cada batch de cambios.
+## Calidad
 
-### Modo autónomo (deep audits)
-- Trabajar sin parar hasta agotar el contexto.
-- Usar subagentes para escaneo de archivos.
-- Priorizar: PFD, AMFE, HO, Plan de Control, core/balancing.
-- Clasificar: TRUE BUG > ROBUSTNESS > FALSE POSITIVE.
-- Ante la duda, NO aplicar el fix.
+- Nivel senior: leer el codigo completo antes de editar; verificar antes de afirmar.
+- Subagentes tienen ~40-50% falsos positivos en audits — verificar manualmente antes de aplicar.
+- En deep audits autonomos: clasificar TRUE BUG > ROBUSTNESS > FALSE POSITIVE; ante la duda NO aplicar el fix; correr tests tras cada batch.
 
-### Reglas de codigo
-- Usar repositorios para acceso a datos, nunca SQLite directo.
-- NO hardcodear API keys. Usar `VITE_*`.
-- Usar `logger.ts` en vez de `console.log`.
-- NO usar `as any` ni `@ts-ignore`.
-- Modulos lazy-loaded con `React.lazy()` + `Suspense`.
+## Auth y deploy
 
-### Testing
-- Framework: Vitest con globals habilitados.
-- Durante desarrollo: `npx vitest run --testPathPattern=<módulo>`.
-- Tests generales solo antes del commit final.
+- Dev: boton "Acceso rapido (dev)" (borde naranja) con `VITE_AUTO_LOGIN_EMAIL/PASSWORD` — protegido por regla `dev-login.md`.
+- Produccion: https://facussc24.github.io/tiempos-y-balanceos/ — deploy manual `npm run build && npx gh-pages -d dist` (repo publico facussc24/tiempos-y-balanceos).
 
-### Path aliases
-- `@/*` mapea a la raiz del proyecto.
+## NotebookLM
 
-## Auth & Multi-usuario
-
-- Supabase auth con email/password.
-- Dev mode: botón "Entrar como admin (dev)" con `VITE_AUTO_LOGIN_EMAIL` / `VITE_AUTO_LOGIN_PASSWORD`.
-
-## Validaciones cruzadas APQP
-
-- PFD ↔ AMFE: `pfdAmfeLinkValidation.ts`
-- HO ↔ CP: `hoCpLinkValidation.ts`
-- CP interna: `cpCrossValidation.ts` (V1-V8)
-- Cascada: `crossDocumentAlerts.ts` (PFD→AMFE→CP→HO)
-
-## Familias de Producto (Herencia Maestro→Variante)
-
-### Tablas
-- `product_families` — Familias
-- `product_family_members` — Productos en familia (M:N, uno `is_primary`)
-- `family_documents` — Docs a familias (`is_master`, modulo)
-- `family_document_overrides` — Cambios de variante vs maestro
-- `family_change_proposals` — Propuestas maestro→variante (pending/auto_applied/accepted/rejected)
-
-### Flujo
-1. Clonado: `documentInheritance.ts` clona maestro→variante regenerando UUIDs.
-2. Override: Al guardar variante, `triggerOverrideTracking` diffs vs maestro.
-3. Propagación: Al guardar maestro, `triggerChangePropagation` genera proposals.
-4. UI: `ChangeProposalPanel` muestra proposals pendientes.
-
-## NotebookLM — Base de Conocimiento con Memoria Infinita
-
-Claude Code esta integrado con Google NotebookLM via MCP server + Skill.
-Esto permite consultar documentacion del proyecto directamente desde Claude Code.
-
-### Configuracion instalada
-- **MCP Server**: `notebooklm-mcp@latest` (en `.claude.json` del proyecto)
-- **Skill**: `~/.claude/skills/notebooklm/` (acceso directo a notebooks)
-- **Cuenta Google**: facundowadee@gmail.com
-
-### Uso
-- Para consultar docs: "Preguntale a NotebookLM sobre [tema]"
-- Para agregar fuentes: "Agrega [link/doc] al notebook"
-- Para listar notebooks: "Mostra los notebooks"
-
-### Notebooks del proyecto
-- Los notebooks deben contener: GUIA_AMFE.md, GUIA_PLAN_DE_CONTROL.md, GUIA_INYECCION.md,
-  ERRORES_CONCEPTUALES_APQP.md, LECCIONES_APRENDIDAS.md, y demas docs relevantes
-
-## Produccion (GitHub Pages)
-
-- URL: https://facussc24.github.io/tiempos-y-balanceos/
-- Repo: https://github.com/facussc24/tiempos-y-balanceos (publico)
-- Deploy: `npm run build && npx gh-pages -d dist`
+Base de conocimiento Barack (8 notebooks: APQP, SGC, auditorias, 8D, informes tecnicos,
+specs de cliente, operaciones de planta, Claude Code). Antes de consultar: skill
+`notebooklm-routing` (que notebook, como preguntar, limite 50 queries/dia).

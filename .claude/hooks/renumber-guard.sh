@@ -45,7 +45,7 @@ cat >&2 << 'EOF'
 
 Estas por correr un script que renumera o reasigna OPs/WEs en amfe_documents
 sin haber verificado el contenido previo. La regla
-`amfe-leer-contenido-antes-de-renumerar.md` requiere:
+`amfe.md` §10 (leer contenido antes de renumerar) requiere:
 
   1. Correr ANTES:
      node scripts/_auditWePlaceholdersAndAllocation.mjs

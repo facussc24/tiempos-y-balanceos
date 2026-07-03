@@ -35,12 +35,12 @@ For EACH AMFE, verify all of the following:
 - Each Work Element is ONE single item (no "/" groupings)
 - Direct materials in process ops only if interaction risk exists
 
-### D. Actions (CRITICAL — `.claude/rules/amfe-actions.md`)
+### D. Actions (CRITICAL — `.claude/rules/amfe.md` §5)
 - ALL action fields EMPTY: preventionAction, detectionAction, responsible, targetDate, status
 - Any non-empty action = CRITICAL failure
 
 ### E. Cross-Document Coherence
-- Compare operation names: AMFE vs CP, AMFE vs PFD, AMFE vs HO
+- Compare operation names: AMFE vs CP (PFD/HO son referencia historica, no auditar)
 - Report mismatches
 
 ## Output

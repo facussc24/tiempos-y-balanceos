@@ -90,7 +90,7 @@ Reportar dependencias faltantes o conflictos.
 - ...
 ```
 
-### 8. Verificacion APQP contra NotebookLM (solo si el modulo es AMFE/CP/HO/PFD)
+### 8. Verificacion APQP contra NotebookLM (solo si el modulo es AMFE/CP)
 
 Si el modulo auditado pertenece a APQP:
 - Consultar notebook `apqp-guias-y-conocimiento` con: "Cuales son las reglas criticas para [tipo de modulo]?"
@@ -107,7 +107,7 @@ Si el modulo auditado pertenece a APQP:
 
 ## Checks detallados AMFE (auditoria de datos, no solo codigo)
 
-Cuando Fak pida "auditoria" o "auditar" de un AMFE/CP/HO/PFD, ejecutar este protocolo. Los agentes lanzados en paralelo deben recibir el prompt con la lista EXPLICITA de checks — asumir que el agente "ya sabe" es error recurrente.
+Cuando Fak pida "auditoria" o "auditar" de un AMFE/CP, ejecutar este protocolo. (PFD/HO no se hacen mas aca — regla `no-pfd-no-ho.md`; sus docs en Supabase son referencia historica y NO se auditan proactivamente.) Los agentes lanzados en paralelo deben recibir el prompt con la lista EXPLICITA de checks — asumir que el agente "ya sabe" es error recurrente.
 
 ### Reglas criticas para prompts de co-auditores
 
@@ -152,20 +152,15 @@ Cuando Fak pida "auditoria" o "auditar" de un AMFE/CP/HO/PFD, ejecutar este prot
 
 5. **Acciones de optimizacion — NO auditar**
    - NO reportar AP=H sin acciones como problema (Fak decide).
-   - `.claude/rules/amfe-aph-pending.md` cubre el placeholder.
+   - `.claude/rules/amfe.md` §4 cubre el placeholder.
 
-6. **Coherencia PFD ↔ AMFE**
-   - Toda OP del AMFE tiene step en PFD con nombre EXACTO.
-   - PFD tiene decision steps post-inspecciones.
-   - PFD tiene transport steps entre sectores.
-
-7. **Usabilidad (UX)**
+6. **Usabilidad (UX)**
    - Todo documento visible desde UI sin trucos/filtros especiales.
    - Docs sin familia asignada que queden ocultos por filtros → BLOCKER.
    - Metadata desincronizada (operation_count, cause_count) → re-sincronizar.
    - Documentos recien cargados encontrables buscando por nombre parcial.
 
-8. **Field names consistentes**
+7. **Field names consistentes**
    - Todos los docs usan mismos aliases: `opNumber`/`operationNumber`, `ap`/`actionPriority`, `cause`/`description`.
    - Si hay inconsistencias: CORREGIR agregando ambos aliases. Referencia: `scripts/fixIpPadNormalize.mjs`.
 

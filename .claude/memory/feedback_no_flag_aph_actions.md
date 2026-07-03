@@ -11,5 +11,5 @@ NUNCA reportar "AP=H sin acciones" como problema, blocker, warning ni issue en a
 **How to apply:**
 - En auditorías: NO incluir "AP=H sin acciones" en la lista de problemas
 - Si una causa tiene AP=H y no tiene acción: poner "Pendiente definición equipo APQP" como texto predeterminado y seguir adelante
-- NUNCA inventar acciones (refuerzo de regla existente en amfe-actions.md)
+- NUNCA inventar acciones (refuerzo de regla existente en amfe.md §5)
 - NUNCA preguntar "¿querés que agregue acciones?" — la respuesta es NO hasta que Fak diga lo contrario

@@ -1,8 +1,7 @@
 ---
 description: Protección del botón de dev-login en LoginPage
-globs:
-  - components/auth/LoginPage.tsx
-  - components/auth/**
+paths:
+  - "components/auth/**"
 ---
 
 # Regla: Botón de Dev-Login — NO TOCAR NUNCA

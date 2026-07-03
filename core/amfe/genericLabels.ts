@@ -3,7 +3,7 @@
  *
  * Misma data que el .mjs, tipada para uso en módulo TS (UI runtime amfeValidation.ts, etc.).
  *
- * Reglas fuente: .claude/rules/amfe-funciones-3-niveles.md, amfe-leer-contenido-antes-de-renumerar.md
+ * Reglas fuente: .claude/rules/amfe.md §7-§10 + skill amfe-domain
  * NO duplicar las listas aquí — siempre leer del JSON shared.
  */
 import data from './genericLabels.data.json';
