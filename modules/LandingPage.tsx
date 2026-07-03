@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState, useCallback, lazy, Suspense } from 'react';
 import {
-    Clock, ShieldAlert, ClipboardCheck, GitBranch, ArrowRight,
+    Clock, ShieldAlert, ClipboardCheck, ArrowRight,
     FolderOpen, FileText, AlertTriangle, GitMerge,
     ExternalLink, FilePlus2, Wrench,
     BookOpen, Shield, LogOut, Users, Package, Loader2,
@@ -16,7 +16,7 @@ import { ProjectTable } from '../components/landing/ProjectTable';
 const ApqpExportDialog = lazy(() => import('./family/ApqpExportDialog'));
 
 interface LandingPageProps {
-    onSelectModule: (module: 'pfd' | 'pfdTest' | 'tiempos' | 'amfe' | 'controlPlan' | 'hojaOperaciones' | 'registry' | 'solicitud' | 'manuales' | 'formatos' | 'dataManager' | 'admin' | '8dReports') => void;
+    onSelectModule: (module: 'tiempos' | 'amfe' | 'controlPlan' | 'registry' | 'solicitud' | 'manuales' | 'formatos' | 'dataManager' | 'admin' | '8dReports') => void;
     /** Navigate to AMFE module and auto-load the project for this family */
     onOpenProjectFamily?: (familyId: number) => void;
     /** Document counts per type from the registry */
@@ -26,17 +26,13 @@ interface LandingPageProps {
 }
 
 const TYPE_ICONS: Record<DocumentType, React.ReactNode> = {
-    pfd: <GitBranch size={14} className="text-slate-500" />,
     amfe: <ShieldAlert size={14} className="text-slate-500" />,
     controlPlan: <ClipboardCheck size={14} className="text-slate-500" />,
-    hojaOperaciones: <FileText size={14} className="text-slate-500" />,
 };
 
 const TYPE_LABELS: Record<DocumentType, string> = {
-    pfd: 'PFD',
     amfe: 'AMFE',
     controlPlan: 'CP',
-    hojaOperaciones: 'HO',
 };
 
 const LandingPage: React.FC<LandingPageProps> = ({ onSelectModule, onOpenProjectFamily, documentCounts = {}, recentDocuments = [] }) => {
@@ -74,10 +70,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSelectModule, onOpenProject
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
-            if (e.key === '1') onSelectModule('pfd');
             if (e.key === '2') onSelectModule('amfe');
             if (e.key === '3') onSelectModule('controlPlan');
-            if (e.key === '4') onSelectModule('hojaOperaciones');
             if (e.key === '5') onSelectModule('tiempos');
             if (e.key === '6') onSelectModule('registry');
             if (e.key === '7') onSelectModule('solicitud');
@@ -131,10 +125,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSelectModule, onOpenProject
 
     const heroDoc = recentDocuments[0];
     const moduleForType = (t: DocumentType) =>
-        t === 'controlPlan' ? 'controlPlan'
-        : t === 'hojaOperaciones' ? 'hojaOperaciones'
-        : t === 'pfd' ? 'pfd'
-        : 'amfe';
+        t === 'controlPlan' ? 'controlPlan' : 'amfe';
 
     return (
         <div className="min-h-full bg-slate-50 font-sans">
@@ -287,14 +278,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSelectModule, onOpenProject
                             Ver Hub completo →
                         </button>
                     </div>
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                        <ApqpDocCard
-                            initial="P"
-                            label="Diagrama de Flujo"
-                            shortLabel="PFD"
-                            count={documentCounts.pfd ?? 0}
-                            onClick={() => onSelectModule('pfd')}
-                        />
+                    <div className="grid grid-cols-2 gap-3">
                         <ApqpDocCard
                             initial="A"
                             label="AMFE VDA"
@@ -310,13 +294,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSelectModule, onOpenProject
                             shortLabel="CP"
                             count={documentCounts.controlPlan ?? 0}
                             onClick={() => onSelectModule('controlPlan')}
-                        />
-                        <ApqpDocCard
-                            initial="H"
-                            label="Hojas de Operaciones"
-                            shortLabel="HO"
-                            count={documentCounts.hojaOperaciones ?? 0}
-                            onClick={() => onSelectModule('hojaOperaciones')}
                         />
                     </div>
                 </section>
@@ -458,13 +435,13 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSelectModule, onOpenProject
                                 <FolderOpen size={28} className="mx-auto mb-2 text-slate-400" />
                                 <p className="text-sm text-slate-500">No hay documentos aún</p>
                                 <p className="text-xs text-slate-400 mt-1">
-                                    Empezá creando un Diagrama de Flujo para iniciar tu proyecto APQP
+                                    Empezá creando un AMFE para iniciar tu proyecto APQP
                                 </p>
                                 <button
-                                    onClick={() => onSelectModule('pfd')}
+                                    onClick={() => onSelectModule('amfe')}
                                     className="mt-3 text-xs text-slate-700 hover:text-slate-900 font-medium transition-colors"
                                 >
-                                    Crear Diagrama de Flujo →
+                                    Crear AMFE →
                                 </button>
                             </div>
                         )}

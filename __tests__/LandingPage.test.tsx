@@ -54,11 +54,11 @@ describe('LandingPage', () => {
             render(
                 <LandingPage
                     onSelectModule={onSelectModule}
-                    documentCounts={{ pfd: 3, amfe: 7, controlPlan: 2, hojaOperaciones: 4 }}
+                    documentCounts={{ amfe: 7, controlPlan: 2 }}
                 />
             );
             // Check the total count shows in header button
-            expect(screen.getByText('16 documentos')).toBeDefined();
+            expect(screen.getByText('9 documentos')).toBeDefined();
         });
 
         it('should render recent documents when provided', () => {
@@ -92,21 +92,15 @@ describe('LandingPage', () => {
             render(
                 <LandingPage
                     onSelectModule={onSelectModule}
-                    documentCounts={{ pfd: 3, amfe: 7, controlPlan: 2, hojaOperaciones: 4 }}
+                    documentCounts={{ amfe: 7, controlPlan: 2 }}
                 />
             );
-            fireEvent.click(screen.getByText('16 documentos'));
+            fireEvent.click(screen.getByText('9 documentos'));
             expect(onSelectModule).toHaveBeenCalledWith('registry');
         });
     });
 
     describe('keyboard shortcuts', () => {
-        it('should select pfd when pressing "1"', () => {
-            render(<LandingPage onSelectModule={onSelectModule} />);
-            fireEvent.keyDown(document, { key: '1' });
-            expect(onSelectModule).toHaveBeenCalledWith('pfd');
-        });
-
         it('should select amfe when pressing "2"', () => {
             render(<LandingPage onSelectModule={onSelectModule} />);
             fireEvent.keyDown(document, { key: '2' });
@@ -117,12 +111,6 @@ describe('LandingPage', () => {
             render(<LandingPage onSelectModule={onSelectModule} />);
             fireEvent.keyDown(document, { key: '3' });
             expect(onSelectModule).toHaveBeenCalledWith('controlPlan');
-        });
-
-        it('should select hojaOperaciones when pressing "4"', () => {
-            render(<LandingPage onSelectModule={onSelectModule} />);
-            fireEvent.keyDown(document, { key: '4' });
-            expect(onSelectModule).toHaveBeenCalledWith('hojaOperaciones');
         });
 
         it('should select tiempos when pressing "5"', () => {
@@ -145,7 +133,7 @@ describe('LandingPage', () => {
                 </div>
             );
             const input = screen.getByTestId('test-input');
-            fireEvent.keyDown(input, { key: '1' });
+            fireEvent.keyDown(input, { key: '2' });
             expect(onSelectModule).not.toHaveBeenCalled();
         });
     });
@@ -174,7 +162,7 @@ describe('LandingPage', () => {
 
         it('should display ALL CAPS names without slashes as Title Case', () => {
             const recentDocs = [
-                { id: '1', type: 'pfd' as const, name: 'ARMREST DOOR PANEL', partNumber: '', partName: '', client: '', responsible: '', itemCount: 3, updatedAt: '2026-02-28T10:00:00Z' },
+                { id: '1', type: 'controlPlan' as const, name: 'ARMREST DOOR PANEL', partNumber: '', partName: '', client: '', responsible: '', itemCount: 3, updatedAt: '2026-02-28T10:00:00Z' },
             ];
             render(<LandingPage onSelectModule={onSelectModule} recentDocuments={recentDocs} />);
             expect(screen.getByText('Armrest Door Panel')).toBeDefined();

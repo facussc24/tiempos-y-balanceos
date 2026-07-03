@@ -1,9 +1,7 @@
 import React from 'react';
-import { GitBranch, ClipboardCheck, FileText, FileJson, Home, Check, Package } from 'lucide-react';
+import { ClipboardCheck, FileJson, Home, Check, Package } from 'lucide-react';
 import type { ActiveTab } from './useAmfeTabNavigation';
-import type { PfdDocument } from '../pfd/pfdTypes';
 import type { ControlPlanDocument } from '../controlPlan/controlPlanTypes';
-import type { HoDocument } from '../hojaOperaciones/hojaOperacionesTypes';
 
 /** Project context shown across all APQP tabs to maintain "same family" feeling */
 interface ProjectContext {
@@ -16,11 +14,7 @@ interface ProjectContext {
 interface AmfeTabBarProps {
     activeTab: ActiveTab;
     onTabChange: (tab: ActiveTab) => void;
-    pfdInitialData: PfdDocument | null;
-    onGeneratePfd: () => void;
-    onImportPfdFromAmfe?: () => void;
     cpInitialData: ControlPlanDocument | null;
-    hoInitialData: HoDocument | null;
     onBackToLanding: () => void;
     hasUnsavedChanges: boolean;
     requestConfirm: (options: {
@@ -35,10 +29,8 @@ interface AmfeTabBarProps {
 
 const TAB_CLASSES = {
     active: {
-        pfd: 'text-cyan-700 border-b-2 border-cyan-600 bg-cyan-50/50',
         amfe: 'text-blue-700 border-b-2 border-blue-600 bg-blue-50/50',
         controlPlan: 'text-green-700 border-b-2 border-green-600 bg-green-50/50',
-        hojaOperaciones: 'text-amber-700 border-b-2 border-amber-600 bg-amber-50/50',
     },
     inactive: 'text-gray-500 hover:text-gray-700 hover:bg-gray-50 border-b-2 border-transparent hover:border-gray-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-300',
 } as const;
@@ -46,9 +38,6 @@ const TAB_CLASSES = {
 const AmfeTabBar: React.FC<AmfeTabBarProps> = ({
     activeTab,
     onTabChange,
-    pfdInitialData,
-    onGeneratePfd,
-    onImportPfdFromAmfe,
     cpInitialData,
     onBackToLanding,
     hasUnsavedChanges,
@@ -93,16 +82,6 @@ const AmfeTabBar: React.FC<AmfeTabBarProps> = ({
         <div className="bg-white border-b border-gray-300 sticky top-0 z-50">
             <div className="px-4 flex items-center gap-0 overflow-x-auto">
                 <button
-                    onClick={async () => {
-                        if (!(await confirmIfDirty())) return;
-                        if (pfdInitialData) { onTabChange('pfd'); } else { (onImportPfdFromAmfe || onGeneratePfd)(); }
-                    }}
-                    className={`px-4 py-2.5 text-xs font-medium transition-colors duration-150 flex items-center gap-1.5 ${getTabClass('pfd')}`}
-                >
-                    <GitBranch size={13} />
-                    Diagrama de Flujo
-                </button>
-                <button
                     onClick={() => onTabChange('amfe')}
                     className={`px-4 py-2.5 text-xs font-medium transition-colors duration-150 flex items-center gap-1.5 ${getTabClass('amfe')}`}
                 >
@@ -123,16 +102,6 @@ const AmfeTabBar: React.FC<AmfeTabBarProps> = ({
                             <Check size={9} /> Guardado
                         </span>
                     )}
-                </button>
-                <button
-                    onClick={async () => {
-                        if (!(await confirmIfDirty())) return;
-                        onTabChange('hojaOperaciones');
-                    }}
-                    className={`px-4 py-2.5 text-xs font-medium transition-colors duration-150 flex items-center gap-1.5 ${getTabClass('hojaOperaciones')}`}
-                >
-                    <FileText size={13} />
-                    Hojas de Operaciones
                 </button>
 
                 {/* Project context — shows the family you're working on */}

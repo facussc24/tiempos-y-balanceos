@@ -1,11 +1,10 @@
 /**
  * Document Registry Types
  *
- * Unified type for listing documents across all modules
- * (AMFE, Control Plan, PFD, Hojas de Operaciones).
+ * Unified type for listing documents across all modules (AMFE, Control Plan).
  */
 
-export type DocumentType = 'amfe' | 'controlPlan' | 'pfd' | 'hojaOperaciones';
+export type DocumentType = 'amfe' | 'controlPlan';
 
 export interface DocumentRegistryEntry {
     /** Unique document ID (from the source repository) */
@@ -30,7 +29,7 @@ export interface DocumentRegistryEntry {
     createdBy?: string;
     /** Email of user who last modified the document */
     updatedBy?: string;
-    /** Linked AMFE project name (for CP and HO) */
+    /** Linked AMFE project name (for CP) */
     linkedAmfeProject?: string;
     /** Additional type-specific metadata */
     meta?: Record<string, string | number>;
@@ -45,14 +44,6 @@ export const DOCUMENT_TYPE_CONFIG: Record<DocumentType, {
     borderColor: string;
     icon: string; // lucide icon name
 }> = {
-    pfd: {
-        label: 'Diagrama de Flujo',
-        shortLabel: 'PFD',
-        color: 'text-cyan-700',
-        bgColor: 'bg-cyan-50',
-        borderColor: 'border-cyan-200',
-        icon: 'GitBranch',
-    },
     amfe: {
         label: 'AMFE VDA',
         shortLabel: 'AMFE',
@@ -68,13 +59,5 @@ export const DOCUMENT_TYPE_CONFIG: Record<DocumentType, {
         bgColor: 'bg-green-50',
         borderColor: 'border-green-200',
         icon: 'ClipboardCheck',
-    },
-    hojaOperaciones: {
-        label: 'Hoja de Operaciones',
-        shortLabel: 'HO',
-        color: 'text-indigo-700',
-        bgColor: 'bg-indigo-50',
-        borderColor: 'border-indigo-200',
-        icon: 'FileText',
     },
 };

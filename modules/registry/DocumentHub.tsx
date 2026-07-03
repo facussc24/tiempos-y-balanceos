@@ -2,7 +2,7 @@
  * Document Hub — Unified document listing
  *
  * Filterable, sortable table that lists all documents from
- * AMFE, CP, PFD, and HO repositories.
+ * the AMFE and CP repositories.
  */
 
 import React, { useState, useMemo, useCallback } from 'react';
@@ -14,8 +14,8 @@ import {
 } from './documentRegistryTypes';
 import DocumentListFilters from '../../components/ui/DocumentListFilters';
 import {
-    ArrowLeft, RefreshCcw, GitBranch, ShieldAlert,
-    ClipboardCheck, FileText, FolderOpen, Link2, ExternalLink,
+    ArrowLeft, RefreshCcw, ShieldAlert,
+    ClipboardCheck, FolderOpen, Link2, ExternalLink,
     ChevronUp, ChevronDown, Loader2, User,
 } from 'lucide-react';
 import { Breadcrumb } from '../../components/navigation/Breadcrumb';
@@ -29,10 +29,8 @@ type SortField = 'name' | 'type' | 'partNumber' | 'client' | 'itemCount' | 'upda
 type SortDir = 'asc' | 'desc';
 
 const TYPE_ICONS: Record<DocumentType, React.ReactNode> = {
-    pfd: <GitBranch size={14} className="text-cyan-500" />,
     amfe: <ShieldAlert size={14} className="text-orange-500" />,
     controlPlan: <ClipboardCheck size={14} className="text-green-500" />,
-    hojaOperaciones: <FileText size={14} className="text-indigo-500" />,
 };
 
 // Defined outside DocumentHub so it has stable identity across renders (avoids
@@ -132,7 +130,7 @@ const DocumentHub: React.FC<DocumentHubProps> = ({ onBackToLanding, onOpenDocume
                             <strong className="text-blue-600">{entries.length}</strong> documentos
                             {entries.length > 0 && (
                                 <span className="ml-2 text-gray-300">
-                                    ({typeCounts['pfd'] || 0} PFD · {typeCounts['amfe'] || 0} AMFE · {typeCounts['controlPlan'] || 0} CP · {typeCounts['hojaOperaciones'] || 0} HO)
+                                    ({typeCounts['amfe'] || 0} AMFE · {typeCounts['controlPlan'] || 0} CP)
                                 </span>
                             )}
                         </span>
@@ -165,7 +163,7 @@ const DocumentHub: React.FC<DocumentHubProps> = ({ onBackToLanding, onOpenDocume
                             }`}>
                             Todos ({typeCounts[''] || 0})
                         </button>
-                        {(['pfd', 'amfe', 'controlPlan', 'hojaOperaciones'] as DocumentType[]).map(type => {
+                        {(['amfe', 'controlPlan'] as DocumentType[]).map(type => {
                             const cfg = DOCUMENT_TYPE_CONFIG[type];
                             return (
                                 <button key={type} onClick={() => setFilterType(type)}
@@ -211,7 +209,7 @@ const DocumentHub: React.FC<DocumentHubProps> = ({ onBackToLanding, onOpenDocume
                                 {entries.length === 0 ? 'No hay documentos guardados.' : 'Sin resultados para el filtro actual.'}
                             </p>
                             {entries.length === 0 && (
-                                <p className="text-xs mt-1">Cree un AMFE, Plan de Control, Diagrama de Flujo u Hoja de Operaciones para comenzar.</p>
+                                <p className="text-xs mt-1">Cree un AMFE o Plan de Control para comenzar.</p>
                             )}
                         </div>
                     )}

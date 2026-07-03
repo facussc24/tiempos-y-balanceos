@@ -22,14 +22,11 @@ import { useRevisionControl } from '../../hooks/useRevisionControl';
 import { useDocumentLock } from '../../hooks/useDocumentLock';
 import DocumentLockBanner from '../../components/ui/DocumentLockBanner';
 import { useCrossDocAlerts } from '../../hooks/useCrossDocAlerts';
-import { LinkValidationPanel } from '../../components/ui/LinkValidationPanel';
-import { validatePfdAmfeLinks, getBrokenAmfeOperationIds, getRelinkCandidates } from '../../utils/pfdAmfeLinkValidation';
 import { getNextRevisionLevel } from '../../utils/revisionUtils';
 import ChangeProposalPanel from '../../modules/family/ChangeProposalPanel';
-import { Plus, HardDrive, AlertTriangle, X, FileInput, ShieldCheck } from 'lucide-react';
+import { Plus, HardDrive, AlertTriangle, X, ShieldCheck } from 'lucide-react';
 import { Breadcrumb } from '../../components/navigation/Breadcrumb';
 import { AmfeDocument, AmfeHeaderData } from './amfeTypes';
-import { importAmfeOpsFromPfd } from './amfePfdImport';
 import { useAmfeColumnVisibility } from './useAmfeColumnVisibility';
 import { ModuleErrorBoundary } from '../../components/ui/ModuleErrorBoundary';
 import { LoadingOverlay } from '../../components/ui/LoadingOverlay';
@@ -55,15 +52,12 @@ import { detectSyncAlerts, applySyncAlertToCp, type SyncAlert } from '../control
 import { runCoherenceCheck, type CoherenceResult } from '../../utils/crossDocumentCoherence';
 const CoherencePanel = lazy(() => import('../../components/ui/CoherencePanel'));
 const CpSyncPanel = lazy(() => import('../controlPlan/CpSyncPanel'));
-const PfdApp = lazy(() => import('../pfd/PfdApp'));
-// PfdGenerationWizard removed — PFD generation is now manual only
 const ControlPlanApp = lazy(() => import('../controlPlan/ControlPlanApp'));
-const HojaOperacionesApp = lazy(() => import('../hojaOperaciones/HojaOperacionesApp'));
 
 interface AmfeAppProps {
     onBackToLanding: () => void;
-    /** Initial tab to show (e.g. 'pfd' when entering PFD from landing page) */
-    initialTab?: 'pfd' | 'amfe' | 'controlPlan' | 'hojaOperaciones';
+    /** Initial tab to show (e.g. 'controlPlan' when entering CP from landing page) */
+    initialTab?: 'amfe' | 'controlPlan';
     /** Family ID to auto-load on mount (from landing page "Abrir" button) */
     initialFamilyId?: number | null;
     /** Called after the initialFamilyId has been consumed (prevents re-loading on re-render) */
@@ -77,10 +71,8 @@ interface AmfeAppProps {
  * The 6M Structure (Work Elements) must be integrated into this table view.
  */
 const APQP_TAB_LABELS: Record<string, string> = {
-    pfd: 'Diagrama de Flujo',
     amfe: 'AMFE VDA',
     controlPlan: 'Plan de Control',
-    hojaOperaciones: 'Hojas de Operaciones',
 };
 
 type ActivePanel = 'none' | 'projects' | 'summary' | 'masters';
@@ -279,7 +271,7 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab, initialF
         [amfe.data.operations, filters]
     );
 
-    // 9. Tab navigation (CP + HO generation)
+    // 9. Tab navigation (CP generation)
     const tabNav = useAmfeTabNavigation({
         data: amfe.data,
         currentProject: projects.currentProject,
@@ -287,28 +279,9 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab, initialF
         initialTab,
     });
 
-    // 9a. Linked documents panel (CP, PFD, HO associated with this AMFE project)
+    // 9a. Linked documents panel (CP asociado a este proyecto AMFE)
     // Use full hierarchical path for cross-document lookups (e.g. 'VWA/PATAGONIA/TOP_ROLL')
     const linkedDocs = useLinkedDocuments(projects.currentProjectPath, amfe.data);
-
-    // 9a2. Auto-load linked PFD from database when project changes
-    useEffect(() => {
-        const projectPath = projects.currentProjectPath;
-        if (!projectPath) return;
-        let cancelled = false;
-        import('../../utils/repositories/pfdRepository').then(({ loadPfdByAmfeProject }) =>
-            loadPfdByAmfeProject(projectPath).then(result => {
-                if (cancelled) return;
-                if (result) {
-                    tabNav.setPfdInitialData(result.doc);
-                    logger.info('AmfeApp', `Auto-loaded linked PFD for ${projectPath}`);
-                }
-            })
-        ).catch(err => {
-            logger.warn('AmfeApp', 'Failed to auto-load linked PFD', { error: String(err) });
-        });
-        return () => { cancelled = true; };
-    }, [projects.currentProjectPath]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // 9a3. Auto-load linked CP from database when project changes
     useEffect(() => {
@@ -328,37 +301,6 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab, initialF
         });
         return () => { cancelled = true; };
     }, [projects.currentProjectPath]); // eslint-disable-line react-hooks/exhaustive-deps
-
-    // 9a4. Auto-load linked HO from database when project changes
-    useEffect(() => {
-        const projectPath = projects.currentProjectPath;
-        if (!projectPath) return;
-        let cancelled = false;
-        import('../../utils/repositories/hoRepository').then(({ loadHoByAmfeProject }) =>
-            loadHoByAmfeProject(projectPath).then(result => {
-                if (cancelled) return;
-                if (result) {
-                    tabNav.setHoInitialData(result.doc);
-                    logger.info('AmfeApp', `Auto-loaded linked HO for ${projectPath}`);
-                }
-            })
-        ).catch(err => {
-            logger.warn('AmfeApp', 'Failed to auto-load linked HO', { error: String(err) });
-        });
-        return () => { cancelled = true; };
-    }, [projects.currentProjectPath]); // eslint-disable-line react-hooks/exhaustive-deps
-
-    // 9b. PFD ↔ AMFE link integrity validation (uses in-memory PFD from tab nav)
-    const linkValidation = useMemo(
-        () => validatePfdAmfeLinks(tabNav.pfdInitialData, amfe.data),
-        [tabNav.pfdInitialData, amfe.data],
-    );
-    const brokenAmfeOpIds = useMemo(() => getBrokenAmfeOperationIds(linkValidation), [linkValidation]);
-    const linkCandidates = useMemo(
-        () => tabNav.pfdInitialData && amfe.data ? getRelinkCandidates(tabNav.pfdInitialData, amfe.data) : { amfeCandidates: [], pfdCandidates: [] },
-        [tabNav.pfdInitialData, amfe.data],
-    );
-    const [showLinkPanel, setShowLinkPanel] = useState(false);
 
     // 9c. Inheritance status for variant documents
     const amfeOperationIds = useMemo(() => amfe.data.operations.map(op => op.id), [amfe.data.operations]);
@@ -415,14 +357,9 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab, initialF
     // 14. Cross-document coherence check (on-demand, not on every save)
     const [coherenceResult, setCoherenceResult] = useState<CoherenceResult | null>(null);
     const handleCoherenceCheck = useCallback(() => {
-        const result = runCoherenceCheck(
-            tabNav.pfdInitialData,
-            amfe.data,
-            tabNav.cpInitialData,
-            tabNav.hoInitialData,
-        );
+        const result = runCoherenceCheck(null, amfe.data, tabNav.cpInitialData, null);
         setCoherenceResult(result);
-    }, [tabNav.pfdInitialData, amfe.data, tabNav.cpInitialData, tabNav.hoInitialData]);
+    }, [amfe.data, tabNav.cpInitialData]);
 
     // --- SAVE WITH AP=H COMPLIANCE WARNING ---
     const [apHWarning, setApHWarning] = useState<string | null>(null);
@@ -461,50 +398,7 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab, initialF
         await projects.saveCurrentProject();
     }, [amfe.data, projects.saveCurrentProject, projects.saveStatus]);
 
-    // --- IMPORT FROM PFD ---
-    const handleUnlinkAmfeOp = useCallback((operationId: string) => {
-        amfe.updateOp(operationId, 'linkedPfdStepId', undefined as unknown as string);
-    }, [amfe]);
-
-    const handleRelinkAmfeOp = useCallback((operationId: string, newPfdStepId: string) => {
-        amfe.updateOp(operationId, 'linkedPfdStepId', newPfdStepId);
-    }, [amfe]);
-
-    const handleImportFromPfd = useCallback(async () => {
-        if (!tabNav.pfdInitialData) {
-            toast.info('Sin PFD', 'Primero genera o importa un Diagrama de Flujo.');
-            return;
-        }
-        const result = importAmfeOpsFromPfd(tabNav.pfdInitialData, amfe.data.operations);
-        if (result.operations.length === 0) {
-            toast.info('Nada que importar', result.warnings.join(' '));
-            return;
-        }
-        const msg = result.warnings.join('\n') +
-            '\n\n¿Importar ' + result.operations.length + ' operación(es)?';
-        const ok = await confirm.requestConfirm({
-            title: 'Importar desde Diagrama de Flujo',
-            message: msg,
-            variant: 'info',
-            confirmText: 'Importar',
-        });
-        if (!ok) return;
-        amfe.batchAddOperations(result.operations);
-        // Set back-references on PFD steps
-        const updatedPfd = {
-            ...tabNav.pfdInitialData,
-            steps: tabNav.pfdInitialData.steps.map(step => {
-                const amfeOpId = result.linkMap.get(step.id);
-                if (amfeOpId) return { ...step, linkedAmfeOperationId: amfeOpId };
-                return step;
-            }),
-            updatedAt: new Date().toISOString(),
-        };
-        tabNav.setPfdInitialData(updatedPfd);
-        toast.success('Importación completada', result.warnings.join(' '));
-    }, [tabNav.pfdInitialData, amfe.data.operations, amfe.batchAddOperations, confirm.requestConfirm, tabNav.setPfdInitialData]);
-
-    // Disable AMFE shortcuts when a child module tab is active (PFD, CP, HO)
+    // Disable AMFE shortcuts when the CP tab is active
     // to prevent Ctrl+S/Ctrl+N/Escape conflicts with child module shortcuts
     useAmfeKeyboardShortcuts({
         onUndo: handleUndo,
@@ -621,11 +515,7 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab, initialF
     const tabBarProps = {
         activeTab: tabNav.activeTab,
         onTabChange: tabNav.setActiveTab,
-        pfdInitialData: tabNav.pfdInitialData,
-        onGeneratePfd: tabNav.handleGeneratePfd,
-        onImportPfdFromAmfe: tabNav.handleImportPfdFromAmfe,
         cpInitialData: tabNav.cpInitialData,
-        hoInitialData: tabNav.hoInitialData,
         onBackToLanding,
         hasUnsavedChanges: projects.hasUnsavedChanges,
         requestConfirm: confirm.requestConfirm,
@@ -656,72 +546,6 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab, initialF
 
     return (
         <>
-        {/* --- PFD (DIAGRAMA DE FLUJO) TAB --- mount once, then display:none */}
-        {(tabNav.activeTab === 'pfd' || mountedTabs.has('pfd')) && (
-            <div className="h-full bg-gray-50 flex flex-col font-sans text-sm overflow-hidden"
-                 style={{ display: tabNav.activeTab === 'pfd' ? undefined : 'none' }}>
-                <AmfeTabBar {...tabBarProps} />
-                <Breadcrumb
-                    items={[
-                        { label: 'Inicio', onClick: onBackToLanding },
-                        ...(amfe.data.header.client ? [{ label: amfe.data.header.client }] : []),
-                        ...(amfe.data.header.subject ? [{ label: amfe.data.header.subject }] : []),
-                        { label: APQP_TAB_LABELS['pfd'], isActive: true },
-                    ]}
-                    className="bg-white border-b border-gray-100 px-4 py-1"
-                />
-                <div className="flex-1 overflow-auto">
-                    <ModuleErrorBoundary moduleName="Diagrama de Flujo" onNavigateHome={() => tabNav.setActiveTab('amfe')}>
-                    <Suspense fallback={<LoadingOverlay message="Cargando Diagrama de Flujo..." accentColor="text-cyan-600" showSkeleton={false} />}>
-                        {tabNav.pfdWarnings.length > 0 && (
-                            <div className="bg-amber-50 border-b border-amber-200 px-4 py-3">
-                                <div className="max-w-[1800px] mx-auto flex items-start gap-2">
-                                    <AlertTriangle size={16} className="text-amber-600 flex-shrink-0 mt-0.5" />
-                                    <div>{tabNav.pfdWarnings.map((w, i) => <p key={i} className="text-xs text-amber-800">{w}</p>)}</div>
-                                    <button onClick={() => tabNav.setPfdWarnings([])} className="ml-auto text-amber-400 hover:text-amber-600 transition" aria-label="Cerrar advertencias"><X size={14} /></button>
-                                </div>
-                            </div>
-                        )}
-                        <PfdApp embedded initialData={tabNav.pfdInitialData || undefined} />
-                    </Suspense>
-                    </ModuleErrorBoundary>
-                </div>
-            </div>
-        )}
-
-        {/* --- HOJA DE OPERACIONES TAB --- mount once, then display:none */}
-        {(tabNav.activeTab === 'hojaOperaciones' || mountedTabs.has('hojaOperaciones')) && (
-            <div className="h-full bg-gray-50 flex flex-col font-sans text-sm overflow-hidden"
-                 style={{ display: tabNav.activeTab === 'hojaOperaciones' ? undefined : 'none' }}>
-                <AmfeTabBar {...tabBarProps} />
-                <Breadcrumb
-                    items={[
-                        { label: 'Inicio', onClick: onBackToLanding },
-                        ...(amfe.data.header.client ? [{ label: amfe.data.header.client }] : []),
-                        ...(amfe.data.header.subject ? [{ label: amfe.data.header.subject }] : []),
-                        { label: APQP_TAB_LABELS['hojaOperaciones'], isActive: true },
-                    ]}
-                    className="bg-white border-b border-gray-100 px-4 py-1"
-                />
-                <div className="flex-1 overflow-auto">
-                    <ModuleErrorBoundary moduleName="Hojas de Operaciones" onNavigateHome={() => tabNav.setActiveTab('amfe')}>
-                    <Suspense fallback={<LoadingOverlay message="Cargando Hojas de Operaciones..." accentColor="text-[#1e3a5f]" showSkeleton={false} />}>
-                        {tabNav.hoWarnings.length > 0 && (
-                            <div className="bg-amber-50 border-b border-amber-200 px-4 py-3">
-                                <div className="max-w-[1800px] mx-auto flex items-start gap-2">
-                                    <AlertTriangle size={16} className="text-amber-600 flex-shrink-0 mt-0.5" />
-                                    <div>{tabNav.hoWarnings.map((w, i) => <p key={i} className="text-xs text-amber-800">{w}</p>)}</div>
-                                    <button onClick={() => tabNav.setHoWarnings([])} className="ml-auto text-amber-400 hover:text-amber-600 transition" aria-label="Cerrar advertencias"><X size={14} /></button>
-                                </div>
-                            </div>
-                        )}
-                        <HojaOperacionesApp embedded initialData={tabNav.hoInitialData || undefined} />
-                    </Suspense>
-                    </ModuleErrorBoundary>
-                </div>
-            </div>
-        )}
-
         {/* --- CONTROL PLAN TAB --- mount once, then display:none */}
         {(tabNav.activeTab === 'controlPlan' || mountedTabs.has('controlPlan')) && (
             <div className="h-full bg-gray-50 flex flex-col font-sans text-sm overflow-hidden"
@@ -827,24 +651,6 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab, initialF
                 <ChangeProposalPanel documentId={projects.currentDocumentId} />
             )}
 
-            {/* PFD ↔ AMFE broken link banner */}
-            {linkValidation.totalBroken > 0 && !showLinkPanel && (
-                <div className="bg-orange-50 border-b border-orange-200 px-4 py-2 no-print animate-in fade-in slide-in-from-top-2 duration-300">
-                    <div className="flex items-center gap-2 text-xs text-orange-800">
-                        <AlertTriangle size={14} className="text-orange-500 flex-shrink-0" />
-                        <span className="flex-1">
-                            {linkValidation.totalBroken} vínculo{linkValidation.totalBroken !== 1 ? 's' : ''} PFD ↔ AMFE roto{linkValidation.totalBroken !== 1 ? 's' : ''} detectado{linkValidation.totalBroken !== 1 ? 's' : ''}
-                        </span>
-                        <button
-                            onClick={() => setShowLinkPanel(true)}
-                            className="text-orange-600 hover:text-orange-800 font-medium underline"
-                        >
-                            Ver detalle
-                        </button>
-                    </div>
-                </div>
-            )}
-
             {/* Revision history panel */}
             <RevisionHistoryPanel
                 revisions={revisionControl.revisions}
@@ -910,7 +716,7 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab, initialF
                         <button
                             onClick={handleCoherenceCheck}
                             className="px-3 py-1.5 text-sm bg-indigo-50 text-indigo-700 border border-indigo-200 rounded hover:bg-indigo-100 flex items-center gap-1.5 shrink-0"
-                            title="Verificar coherencia entre PFD, AMFE, CP y HO"
+                            title="Verificar coherencia entre AMFE y CP"
                         >
                             <ShieldCheck className="w-4 h-4" />
                             Verificar coherencia
@@ -960,12 +766,6 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab, initialF
                                     className="flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold shadow-md hover:bg-blue-700 transition text-sm">
                                     <Plus size={18} /> Agregar Primera Operación
                                 </button>
-                                {tabNav.pfdInitialData && (
-                                    <button onClick={handleImportFromPfd}
-                                        className="flex items-center gap-2 text-cyan-600 hover:text-cyan-800 px-4 py-2 rounded font-medium transition text-sm">
-                                        <FileInput size={16} /> Importar desde PFD
-                                    </button>
-                                )}
                             </div>
                         </div>
                     </div>
@@ -1015,7 +815,6 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab, initialF
                                     collapsedOps={collapsedOps}
                                     onToggleCollapse={toggleCollapseOp}
                                     readOnly={isReadOnly}
-                                    brokenLinkOpIds={brokenAmfeOpIds}
                                     inheritanceStatusMap={inheritanceStatus.statusMap}
                                 />
                             </table>
@@ -1033,17 +832,6 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab, initialF
                 )}
 
                 <ShortcutHintsOverlay isVisible={shortcutHints.hintsVisible} />
-
-                {showLinkPanel && linkValidation && !linkValidation.isValid && (
-                    <LinkValidationPanel
-                        validation={linkValidation}
-                        context="amfe"
-                        onUnlinkAmfeOp={handleUnlinkAmfeOp}
-                        onRelinkAmfeOp={handleRelinkAmfeOp}
-                        pfdCandidates={linkCandidates.pfdCandidates}
-                        onClose={() => setShowLinkPanel(false)}
-                    />
-                )}
             </div>
 
             <AmfeModals
@@ -1103,7 +891,7 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab, initialF
                         <CoherencePanel
                             result={coherenceResult}
                             onNavigate={(module, _itemId) => {
-                                const tabMap: Record<string, ActiveTab> = { pfd: 'pfd', amfe: 'amfe', cp: 'controlPlan', ho: 'hojaOperaciones' };
+                                const tabMap: Record<string, ActiveTab> = { amfe: 'amfe', cp: 'controlPlan' };
                                 const tab = tabMap[module];
                                 if (tab) tabNav.setActiveTab(tab);
                                 setCoherenceResult(null);

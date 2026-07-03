@@ -1,7 +1,7 @@
 /**
  * Document Registry Hook
  *
- * Aggregates documents from all 4 repositories (AMFE, CP, PFD, HO)
+ * Aggregates documents from the AMFE and CP repositories
  * into a unified list for the Document Hub.
  */
 
@@ -35,12 +35,10 @@ export function useDocumentRegistry(): UseDocumentRegistryResult {
         try {
             const all: DocumentRegistryEntry[] = [];
 
-            // Fetch from all 4 repositories in parallel
-            const [amfeMod, cpMod, pfdMod, hoMod] = await Promise.all([
+            // Fetch from both repositories in parallel
+            const [amfeMod, cpMod] = await Promise.all([
                 import('../../utils/repositories/amfeRepository').catch(() => null),
                 import('../../utils/repositories/cpRepository').catch(() => null),
-                import('../../utils/repositories/pfdRepository').catch(() => null),
-                import('../../utils/repositories/hoRepository').catch(() => null),
             ]);
 
             // Map AMFE documents
@@ -101,62 +99,6 @@ export function useDocumentRegistry(): UseDocumentRegistryResult {
                     }
                 } catch (err) {
                     logger.warn('Registry', 'Failed to load CP docs', { error: String(err) });
-                }
-            }
-
-            // Map PFD documents
-            if (pfdMod) {
-                try {
-                    const pfdDocs = await pfdMod.listPfdDocuments();
-                    for (const doc of pfdDocs) {
-                        all.push({
-                            id: doc.id,
-                            type: 'pfd',
-                            name: doc.part_name || doc.part_number || '(Sin nombre)',
-                            partNumber: doc.part_number || '',
-                            partName: doc.part_name || '',
-                            client: doc.customer_name || '',
-                            responsible: '',
-                            itemCount: doc.step_count || 0,
-                            updatedAt: doc.updated_at || '',
-                            createdBy: doc.created_by || '',
-                            updatedBy: doc.updated_by || '',
-                            meta: {
-                                documentNumber: doc.document_number || '',
-                                revisionLevel: doc.revision_level || '',
-                            },
-                        });
-                    }
-                } catch (err) {
-                    logger.warn('Registry', 'Failed to load PFD docs', { error: String(err) });
-                }
-            }
-
-            // Map HO documents
-            if (hoMod) {
-                try {
-                    const hoDocs = await hoMod.listHoDocuments();
-                    for (const doc of hoDocs) {
-                        all.push({
-                            id: doc.id,
-                            type: 'hojaOperaciones',
-                            name: doc.part_description || doc.part_number || '(Sin nombre)',
-                            partNumber: doc.part_number || '',
-                            partName: doc.part_description || '',
-                            client: doc.client || '',
-                            responsible: '',
-                            itemCount: doc.sheet_count || 0,
-                            updatedAt: doc.updated_at || '',
-                            createdBy: doc.created_by || '',
-                            updatedBy: doc.updated_by || '',
-                            linkedAmfeProject: doc.linked_amfe_project || undefined,
-                            meta: {
-                                formNumber: doc.form_number || '',
-                            },
-                        });
-                    }
-                } catch (err) {
-                    logger.warn('Registry', 'Failed to load HO docs', { error: String(err) });
                 }
             }
 

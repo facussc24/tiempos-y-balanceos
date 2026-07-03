@@ -9,10 +9,8 @@
 import React, { useState, useCallback } from 'react';
 import {
     ChevronRight,
-    GitBranch,
     FileJson,
     ClipboardCheck,
-    FileText,
     Clock,
     FileEdit,
     Layers,
@@ -64,10 +62,8 @@ const SECTIONS: SidebarSection[] = [
     {
         title: 'APQP',
         items: [
-            { label: 'Diagrama de Flujo', mode: 'pfd', icon: <GitBranch size={16} /> },
             { label: 'AMFE VDA', mode: 'amfe', icon: <FileJson size={16} /> },
             { label: 'Plan de Control', mode: 'controlPlan', icon: <ClipboardCheck size={16} /> },
-            { label: 'Hojas de Operaciones', mode: 'hojaOperaciones', icon: <FileText size={16} /> },
             { label: 'Lista de Materiales (BOM)', mode: 'bom', icon: <Layers size={16} /> },
         ],
     },

@@ -1,11 +1,7 @@
 /**
- * useLinkedDocuments — Queries linked CP, PFD, and HO documents for a given AMFE project.
+ * useLinkedDocuments — Queries the linked CP document for a given AMFE project.
  *
- * Automatically resolves:
- * - CP linked by `linked_amfe_project` column
- * - HO linked by `linked_amfe_project` column
- * - PFD linked via `linkedPfdStepId` on AMFE operations (back-reference)
- *
+ * CP linked by `linked_amfe_project` column.
  * Returns metadata for display in the LinkedDocumentsPanel.
  */
 
@@ -15,14 +11,14 @@ import { logger } from '../../utils/logger';
 
 export interface LinkedDocInfo {
     /** Document type */
-    type: 'cp' | 'pfd' | 'ho';
+    type: 'cp';
     /** Document exists in database */
     exists: boolean;
     /** Database row ID (if exists) */
     id?: string;
     /** Display name / identifier */
     name: string;
-    /** Number of items/steps/sheets */
+    /** Number of items */
     itemCount: number;
     /** Last update timestamp (ISO) */
     updatedAt?: string;
@@ -30,8 +26,6 @@ export interface LinkedDocInfo {
 
 export interface UseLinkedDocumentsReturn {
     linkedCp: LinkedDocInfo;
-    linkedPfd: LinkedDocInfo;
-    linkedHo: LinkedDocInfo;
     isLoading: boolean;
     /** Re-fetch linked documents */
     refresh: () => void;
@@ -39,16 +33,10 @@ export interface UseLinkedDocumentsReturn {
 
 export function useLinkedDocuments(
     amfeProjectName: string | null,
-    amfeDoc: AmfeDocument
+    _amfeDoc: AmfeDocument
 ): UseLinkedDocumentsReturn {
     const [linkedCp, setLinkedCp] = useState<LinkedDocInfo>({
         type: 'cp', exists: false, name: 'Plan de Control', itemCount: 0,
-    });
-    const [linkedPfd, setLinkedPfd] = useState<LinkedDocInfo>({
-        type: 'pfd', exists: false, name: 'Diagrama de Flujo', itemCount: 0,
-    });
-    const [linkedHo, setLinkedHo] = useState<LinkedDocInfo>({
-        type: 'ho', exists: false, name: 'Hojas de Operaciones', itemCount: 0,
     });
     const [isLoading, setIsLoading] = useState(false);
     const versionRef = useRef(0);
@@ -56,8 +44,6 @@ export function useLinkedDocuments(
     const fetchLinkedDocs = useCallback(async () => {
         if (!amfeProjectName) {
             setLinkedCp({ type: 'cp', exists: false, name: 'Plan de Control', itemCount: 0 });
-            setLinkedPfd({ type: 'pfd', exists: false, name: 'Diagrama de Flujo', itemCount: 0 });
-            setLinkedHo({ type: 'ho', exists: false, name: 'Hojas de Operaciones', itemCount: 0 });
             return;
         }
 
@@ -65,66 +51,13 @@ export function useLinkedDocuments(
         setIsLoading(true);
 
         try {
-            // Dynamic imports to keep the module lazy-loadable
-            const [cpRepo, hoRepo, pfdRepo] = await Promise.all([
-                import('../../utils/repositories/cpRepository'),
-                import('../../utils/repositories/hoRepository'),
-                import('../../utils/repositories/pfdRepository'),
-            ]);
+            // Dynamic import to keep the module lazy-loadable
+            const cpRepo = await import('../../utils/repositories/cpRepository');
 
             if (version !== versionRef.current) return; // stale
 
             // CP: lookup by linked_amfe_project
             const cpResult = await cpRepo.loadCpByAmfeProject(amfeProjectName);
-
-            // HO: lookup by linked_amfe_project
-            const hoResult = await hoRepo.loadHoByAmfeProject(amfeProjectName);
-
-            // PFD: primary lookup by linked_amfe_project, fallback to linkedPfdStepId scan
-            let pfdInfo: LinkedDocInfo = {
-                type: 'pfd', exists: false, name: 'Diagrama de Flujo', itemCount: 0,
-            };
-
-            // Primary: lookup by linked_amfe_project column (consistent with CP/HO pattern)
-            const pfdResult = await pfdRepo.loadPfdByAmfeProject(amfeProjectName);
-            if (pfdResult) {
-                pfdInfo = {
-                    type: 'pfd',
-                    exists: true,
-                    id: pfdResult.id,
-                    name: pfdResult.doc.header.partName || pfdResult.doc.header.partNumber || 'Diagrama de Flujo',
-                    itemCount: pfdResult.doc.steps.length,
-                };
-            } else {
-                // Fallback: find PFDs whose steps are referenced by AMFE operations via linkedPfdStepId
-                const pfdStepIds = new Set<string>();
-                for (const op of amfeDoc.operations) {
-                    if (op.linkedPfdStepId) {
-                        pfdStepIds.add(op.linkedPfdStepId);
-                    }
-                }
-
-                if (pfdStepIds.size > 0) {
-                    const allPfds = await pfdRepo.listPfdDocuments();
-                    for (const pfdItem of allPfds) {
-                        const pfdDoc = await pfdRepo.loadPfdDocument(pfdItem.id);
-                        if (pfdDoc) {
-                            const hasMatch = pfdDoc.steps.some(s => pfdStepIds.has(s.id));
-                            if (hasMatch) {
-                                pfdInfo = {
-                                    type: 'pfd',
-                                    exists: true,
-                                    id: pfdItem.id,
-                                    name: pfdItem.part_name || pfdItem.part_number || 'Diagrama de Flujo',
-                                    itemCount: pfdItem.step_count,
-                                    updatedAt: pfdItem.updated_at,
-                                };
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
 
             if (version !== versionRef.current) return; // stale
 
@@ -138,19 +71,6 @@ export function useLinkedDocuments(
             } : {
                 type: 'cp', exists: false, name: 'Plan de Control', itemCount: 0,
             });
-
-            setLinkedHo(hoResult ? {
-                type: 'ho',
-                exists: true,
-                id: hoResult.id,
-                name: hoResult.doc.header.formNumber || 'Hojas de Operaciones',
-                itemCount: hoResult.doc.sheets.length,
-                updatedAt: undefined,
-            } : {
-                type: 'ho', exists: false, name: 'Hojas de Operaciones', itemCount: 0,
-            });
-
-            setLinkedPfd(pfdInfo);
         } catch (err) {
             logger.warn('useLinkedDocuments', 'Failed to fetch linked documents', {
                 error: err instanceof Error ? err.message : String(err),
@@ -160,12 +80,12 @@ export function useLinkedDocuments(
                 setIsLoading(false);
             }
         }
-    }, [amfeProjectName, amfeDoc.operations]);
+    }, [amfeProjectName]);
 
     // Fetch on mount and when project changes
     useEffect(() => {
         fetchLinkedDocs();
     }, [fetchLinkedDocs]);
 
-    return { linkedCp, linkedPfd, linkedHo, isLoading, refresh: fetchLinkedDocs };
+    return { linkedCp, isLoading, refresh: fetchLinkedDocs };
 }

@@ -23,8 +23,6 @@ interface Props {
     collapsedOps?: Set<string>;
     onToggleCollapse?: (opId: string) => void;
     readOnly?: boolean;
-    /** Operation IDs with broken PFD links (for visual warning) */
-    brokenLinkOpIds?: Set<string>;
     /** Inheritance status map for variant documents (null = not a variant) */
     inheritanceStatusMap?: InheritanceStatusMap | null;
 }
@@ -32,7 +30,7 @@ interface Props {
 // inferOperationCategory re-exported from utils/processCategory
 export { inferOperationCategory } from '../../utils/processCategory';
 
-const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, columnVisibility, suggestionIndex, collapsedOps, onToggleCollapse, readOnly = false, brokenLinkOpIds, inheritanceStatusMap }) => {
+const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, columnVisibility, suggestionIndex, collapsedOps, onToggleCollapse, readOnly = false, inheritanceStatusMap }) => {
     const sIdx = suggestionIndex || null;
     const v = columnVisibility || { step2: true, step3: true, step4: true, step5: true, step6: true, obs: true };
 
@@ -77,16 +75,6 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
     const ghostEmptyCell = cls.ghostEmpty;
     // Ghost row offset: 0 in view mode (no ghost rows), 1 in edit mode
     const ghostRowOffset = readOnly ? 0 : 1;
-
-    /** Broken PFD link badge for operation cells */
-    const BrokenPfdBadge = useCallback(({ opId }: { opId: string }) => {
-        if (!brokenLinkOpIds?.has(opId)) return null;
-        return (
-            <span className="inline-flex items-center gap-0.5 bg-orange-100 text-orange-700 border border-orange-300 text-[9px] font-bold px-1 py-0.5 rounded mt-0.5" title="Vínculo PFD roto: el paso vinculado no existe">
-                <AlertTriangle size={9} />PFD
-            </span>
-        );
-    }, [brokenLinkOpIds]);
 
     /** Render text value (view mode) or edit element (edit mode) */
     const renderText = useCallback((value: string | number, editElement: React.ReactNode) => {
@@ -591,7 +579,6 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
                                 <div className="flex items-center gap-1">
                                     <ChevronRight size={14} className="text-gray-400 flex-shrink-0" />
                                     <span className="text-xs font-bold text-slate-700">{op.opNumber || '?'}</span>
-                                    {brokenLinkOpIds?.has(op.id) && <span title="Vínculo PFD roto"><AlertTriangle size={11} className="text-orange-500 flex-shrink-0" /></span>}
                                 </div>
                             </td>
                             <td className={opNameCellClass} style={opNameShadow} data-field="opName">
@@ -621,7 +608,6 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
                                         <button onClick={() => confirmDeleteOp(op.id)} className="text-gray-300 hover:text-red-500 hover:bg-red-50 p-0.5 rounded transition" title="Eliminar" aria-label="Eliminar"><Trash2 size={12} /></button>
                                     </div>}
                                 </div>
-                                <BrokenPfdBadge opId={op.id} />
                                 {inheritanceStatusMap?.items.get(op.id) && (
                                     <InheritanceBadge status={inheritanceStatusMap.items.get(op.id)!} compact className="mt-0.5" />
                                 )}
@@ -664,8 +650,7 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
                                                     <button onClick={() => confirmDeleteOp(op.id)} className="text-gray-300 hover:text-red-500 hover:bg-red-50 p-0.5 rounded transition" title="Eliminar" aria-label="Eliminar"><Trash2 size={12} /></button>
                                                 </div>}
                                             </div>
-                                            <BrokenPfdBadge opId={op.id} />
-                                            {inheritanceStatusMap?.items.get(op.id) && (
+                                                        {inheritanceStatusMap?.items.get(op.id) && (
                                                 <InheritanceBadge status={inheritanceStatusMap.items.get(op.id)!} compact className="mt-0.5" />
                                             )}
                                         </td>
@@ -744,8 +729,7 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
                                                         <button onClick={() => confirmDeleteOp(op.id)} className="text-gray-300 hover:text-red-500 hover:bg-red-50 p-0.5 rounded transition" title="Eliminar" aria-label="Eliminar"><Trash2 size={12} /></button>
                                                     </div>}
                                                 </div>
-                                                <BrokenPfdBadge opId={op.id} />
-                                                {inheritanceStatusMap?.items.get(op.id) && (
+                                                                {inheritanceStatusMap?.items.get(op.id) && (
                                                     <InheritanceBadge status={inheritanceStatusMap.items.get(op.id)!} compact className="mt-0.5" />
                                                 )}
                                             </td>
@@ -847,8 +831,7 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
                                                             <button onClick={() => confirmDeleteOp(op.id)} className="text-gray-300 hover:text-red-500 hover:bg-red-50 p-0.5 rounded transition" title="Eliminar" aria-label="Eliminar"><Trash2 size={12} /></button>
                                                         </div>}
                                                     </div>
-                                                    <BrokenPfdBadge opId={op.id} />
-                                                    {inheritanceStatusMap?.items.get(op.id) && (
+                                                                        {inheritanceStatusMap?.items.get(op.id) && (
                                                         <InheritanceBadge status={inheritanceStatusMap.items.get(op.id)!} compact className="mt-0.5" />
                                                     )}
                                                 </td>

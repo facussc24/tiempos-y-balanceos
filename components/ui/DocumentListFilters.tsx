@@ -128,10 +128,8 @@ const DocumentListFilters: React.FC<DocumentListFiltersProps> = ({
     // Determine accent color based on moduleType
     const accentClass = moduleType
         ? {
-            pfd: 'focus:ring-cyan-200 focus:border-cyan-400',
             amfe: 'focus:ring-blue-200 focus:border-blue-400',
             controlPlan: 'focus:ring-green-200 focus:border-green-400',
-            hojaOperaciones: 'focus:ring-indigo-200 focus:border-indigo-400',
         }[moduleType]
         : 'focus:ring-blue-200 focus:border-blue-400';
 

@@ -5,74 +5,12 @@
  * in browser/dev mode (non-Tauri) with no real data.
  *
  * These represent typical Barack Mercosul production documents
- * for automotive parts across 4 clients.
+ * for automotive parts (AMFE + CP).
  */
 
 import type { DocumentRegistryEntry } from './documentRegistryTypes';
 
 export const DEMO_REGISTRY_ENTRIES: DocumentRegistryEntry[] = [
-    // ===== PFD (Process Flow Diagrams) =====
-    {
-        id: 'demo-pfd-001',
-        type: 'pfd',
-        name: 'Subchasis Soldado - Flujo de Proceso',
-        partNumber: 'BRK-SCH-001',
-        partName: 'Subchasis Soldado Delantero',
-        client: 'Toyota Argentina',
-        responsible: 'Ing. Martínez',
-        itemCount: 12,
-        updatedAt: '2026-02-25T14:30:00Z',
-        meta: { documentNumber: 'DFP-001-A', revisionLevel: 'B' },
-    },
-    {
-        id: 'demo-pfd-002',
-        type: 'pfd',
-        name: 'Panel de Puerta - Flujo de Proceso',
-        partNumber: 'BRK-PPU-015',
-        partName: 'Panel Interior Puerta Delantera LH',
-        client: 'Volkswagen',
-        responsible: 'Ing. López',
-        itemCount: 8,
-        updatedAt: '2026-02-20T10:15:00Z',
-        meta: { documentNumber: 'DFP-015-A', revisionLevel: 'A' },
-    },
-    {
-        id: 'demo-pfd-003',
-        type: 'pfd',
-        name: 'Soporte Motor - Flujo de Proceso',
-        partNumber: 'BRK-SMT-042',
-        partName: 'Soporte Motor Izquierdo',
-        client: 'Ford Pacheco',
-        responsible: 'Ing. García',
-        itemCount: 6,
-        updatedAt: '2026-02-18T09:00:00Z',
-        meta: { documentNumber: 'DFP-042-A', revisionLevel: 'C' },
-    },
-    {
-        id: 'demo-pfd-004',
-        type: 'pfd',
-        name: 'Travesaño Posterior - Flujo de Proceso',
-        partNumber: 'BRK-TVP-008',
-        partName: 'Travesaño Posterior Reforzado',
-        client: 'Stellantis',
-        responsible: 'Ing. Fernández',
-        itemCount: 10,
-        updatedAt: '2026-01-30T16:45:00Z',
-        meta: { documentNumber: 'DFP-008-A', revisionLevel: 'A' },
-    },
-    {
-        id: 'demo-pfd-005',
-        type: 'pfd',
-        name: 'Columna Dirección - Flujo de Proceso',
-        partNumber: 'BRK-CDR-023',
-        partName: 'Columna de Dirección Ajustable',
-        client: 'Toyota Argentina',
-        responsible: 'Ing. Martínez',
-        itemCount: 15,
-        updatedAt: '2026-02-27T11:20:00Z',
-        meta: { documentNumber: 'DFP-023-A', revisionLevel: 'D' },
-    },
-
     // ===== AMFE (Failure Mode Analysis) =====
     {
         id: 'demo-amfe-001',
@@ -202,69 +140,4 @@ export const DEMO_REGISTRY_ENTRIES: DocumentRegistryEntry[] = [
         meta: { phase: 'Producción', revision: 'Rev.01', controlPlanNumber: 'CP-023' },
     },
 
-    // ===== Hojas de Operaciones =====
-    {
-        id: 'demo-ho-001',
-        type: 'hojaOperaciones',
-        name: 'Subchasis - OP10 Soldadura MIG',
-        partNumber: 'BRK-SCH-001',
-        partName: 'Subchasis Soldado Delantero',
-        client: 'Toyota Argentina',
-        responsible: '',
-        itemCount: 3,
-        updatedAt: '2026-02-26T16:30:00Z',
-        linkedAmfeProject: 'Subchasis Soldado',
-        meta: { formNumber: 'I-IN-002.4-R01' },
-    },
-    {
-        id: 'demo-ho-002',
-        type: 'hojaOperaciones',
-        name: 'Panel Puerta - OP20 Ensamble',
-        partNumber: 'BRK-PPU-015',
-        partName: 'Panel Interior Puerta Delantera LH',
-        client: 'Volkswagen',
-        responsible: '',
-        itemCount: 4,
-        updatedAt: '2026-02-24T09:15:00Z',
-        linkedAmfeProject: 'Panel de Puerta Interior',
-        meta: { formNumber: 'I-IN-002.4-R01' },
-    },
-    {
-        id: 'demo-ho-003',
-        type: 'hojaOperaciones',
-        name: 'Soporte Motor - OP10 Corte y Conformado',
-        partNumber: 'BRK-SMT-042',
-        partName: 'Soporte Motor Izquierdo',
-        client: 'Ford Pacheco',
-        responsible: '',
-        itemCount: 2,
-        updatedAt: '2026-02-21T14:00:00Z',
-        meta: { formNumber: 'I-IN-002.4-R01' },
-    },
-    {
-        id: 'demo-ho-004',
-        type: 'hojaOperaciones',
-        name: 'Travesaño - OP30 Inspección Final',
-        partNumber: 'BRK-TVP-008',
-        partName: 'Travesaño Posterior Reforzado',
-        client: 'Stellantis',
-        responsible: '',
-        itemCount: 2,
-        updatedAt: '2026-02-10T12:45:00Z',
-        linkedAmfeProject: 'Travesaño Posterior Reforzado',
-        meta: { formNumber: 'I-IN-002.4-R01' },
-    },
-    {
-        id: 'demo-ho-005',
-        type: 'hojaOperaciones',
-        name: 'Columna Dirección - OP20 Mecanizado CNC',
-        partNumber: 'BRK-CDR-023',
-        partName: 'Columna de Dirección Ajustable',
-        client: 'Toyota Argentina',
-        responsible: '',
-        itemCount: 5,
-        updatedAt: '2026-02-28T11:00:00Z',
-        linkedAmfeProject: 'Columna de Dirección',
-        meta: { formNumber: 'I-IN-002.4-R01' },
-    },
 ];

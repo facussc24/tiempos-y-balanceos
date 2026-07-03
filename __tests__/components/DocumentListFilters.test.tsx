@@ -43,7 +43,7 @@ const SAMPLE_DOCS: DocumentRegistryEntry[] = [
     },
     {
         id: 'doc-3',
-        type: 'pfd',
+        type: 'controlPlan',
         name: 'Telas Planas - PFD',
         partNumber: 'BRK-TP-003',
         partName: 'Telas Planas',
@@ -54,7 +54,7 @@ const SAMPLE_DOCS: DocumentRegistryEntry[] = [
     },
     {
         id: 'doc-4',
-        type: 'hojaOperaciones',
+        type: 'amfe',
         name: 'Insert - OP10',
         partNumber: 'BRK-INS-001',
         partName: 'Insert Headrest',
