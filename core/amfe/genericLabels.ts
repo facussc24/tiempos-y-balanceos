@@ -15,14 +15,14 @@ export const TYPE_TRANSLATION: Record<string, string[]> = data.TYPE_TRANSLATION;
 export const MIN_FN_DESCRIPTION_LENGTH: number = data.MIN_FN_DESCRIPTION_LENGTH;
 export const KEYWORD_OP_TAGS: ReadonlyArray<{ keywords: string[]; validOpTags: string[] }> = data.KEYWORD_OP_TAGS;
 export const MATERIAL_NAME_FOREIGN_TYPE_PATTERNS = data.MATERIAL_NAME_FOREIGN_TYPE_PATTERNS;
-export const VERB_WHITELIST: ReadonlyArray<string> = (data as any).VERB_WHITELIST || [];
+export const VERB_WHITELIST: ReadonlyArray<string> = data.VERB_WHITELIST ?? [];
 export interface OpNameSemanticRule {
     _comment?: string;
     opNameContains: string[];
     opFnMustNotContain?: string[];
     opFnMustContainAny?: string[];
 }
-export const OP_NAME_SEMANTIC_DICT: ReadonlyArray<OpNameSemanticRule> = (data as any).OP_NAME_SEMANTIC_DICT || [];
+export const OP_NAME_SEMANTIC_DICT: ReadonlyArray<OpNameSemanticRule> = (data.OP_NAME_SEMANTIC_DICT ?? []) as ReadonlyArray<OpNameSemanticRule>;
 
 /**
  * Normaliza un string: trim + lowercase + NFD (saca tildes).

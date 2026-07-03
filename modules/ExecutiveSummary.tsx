@@ -10,6 +10,7 @@
  */
 
 import React, { useMemo, useState } from 'react';
+import { logger } from '../utils/logger';
 import { ProjectData, Task } from '../types';
 import { Download, BarChart3, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { toast } from '../components/ui/Toast';
@@ -179,7 +180,7 @@ export const ExecutiveSummary: React.FC<Props> = ({ data }) => {
         } catch (err) {
             const msg = err instanceof Error ? err.message : String(err);
             toast.error('No se pudo exportar el Excel VW', msg);
-            console.error('Error exporting Gate 3 Excel:', err);
+            logger.error('ExecutiveSummary', 'Error exporting Gate 3 Excel', {}, err instanceof Error ? err : undefined);
         } finally {
             setIsExporting(false);
         }

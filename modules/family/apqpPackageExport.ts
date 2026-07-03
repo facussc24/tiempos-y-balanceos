@@ -120,8 +120,8 @@ function shiftWorksheet(ws: XLSX.WorkSheet): XLSX.WorkSheet {
     if (ws['!merges']) n['!merges'] = ws['!merges'].map((m: XLSX.Range) => ({ s: { r: m.s.r + 1, c: m.s.c + 1 }, e: { r: m.e.r + 1, c: m.e.c + 1 } }));
     if (ws['!cols']) n['!cols'] = [{ wch: OFF_C }, ...ws['!cols']];
     if (ws['!rows']) n['!rows'] = [{ hpt: OFF_R }, ...ws['!rows']];
-    if (ws['!freeze']) { const y = (ws['!freeze'] as any).ySplit || 0; n['!freeze'] = { xSplit: 0, ySplit: y + 1, topLeftCell: `A${y + 2}` }; }
-    if (ws['!autofilter']) { const ref = (ws['!autofilter'] as any).ref; if (ref) { const rng = XLSX.utils.decode_range(ref); rng.s.r++; rng.s.c++; rng.e.r++; rng.e.c++; n['!autofilter'] = { ref: XLSX.utils.encode_range(rng) }; } }
+    if (ws['!freeze']) { const y = (ws['!freeze'] as { ySplit?: number }).ySplit || 0; n['!freeze'] = { xSplit: 0, ySplit: y + 1, topLeftCell: `A${y + 2}` }; }
+    if (ws['!autofilter']) { const ref = (ws['!autofilter'] as { ref?: string }).ref; if (ref) { const rng = XLSX.utils.decode_range(ref); rng.s.r++; rng.s.c++; rng.e.r++; rng.e.c++; n['!autofilter'] = { ref: XLSX.utils.encode_range(rng) }; } }
     return n;
 }
 
@@ -317,11 +317,4 @@ export function exportApqpPackage(data: ApqpPackageData, options: ApqpExportOpti
     const wb = buildApqpPackageWorkbook(data, options);
     const safeName = sanitizeFilename(data.familyName || 'Paquete_APQP', { allowSpaces: true });
     downloadWorkbook(wb, `Paquete APQP - ${safeName}.xlsx`);
-}
-
-/** Generate APQP package as Uint8Array buffer (for auto-export / testing). */
-function generateApqpPackageBuffer(data: ApqpPackageData, options: ApqpExportOptions): Uint8Array {
-    const wb = buildApqpPackageWorkbook(data, options);
-    const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' }) as ArrayBuffer;
-    return new Uint8Array(wbout);
 }

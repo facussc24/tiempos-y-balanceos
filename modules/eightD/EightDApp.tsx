@@ -19,6 +19,7 @@ import {
     type PcaAction,
     type ActionStatus,
     type FishCategoryId,
+    type UrgencyLevel,
 } from './eightDTypes';
 import * as eightDRepository from '../../utils/repositories/eightDRepository';
 import { exportEightDToExcel } from './eightDExcelExport';
@@ -239,7 +240,7 @@ function StepD0({ report, onChange }: StepProps) {
             </Field>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Field label="Urgencia">
-                    <select className={selectCls} value={d.urgency} onChange={(e) => up({ urgency: e.target.value as any })}>
+                    <select className={selectCls} value={d.urgency} onChange={(e) => up({ urgency: e.target.value as UrgencyLevel })}>
                         {URGENCY_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                     </select>
                 </Field>

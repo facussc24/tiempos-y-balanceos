@@ -5,17 +5,29 @@ contiene SOLO lo accionable que NO esta ya codificado como regla o gate ejecutab
 
 - **Historico completo** (2026-03-30 a 2026-07-02): `docs/_archive/LECCIONES_APRENDIDAS_2026H1_completo.md`
 - **Tabla incidente → regla**: `docs/_archive/INCIDENTES_REGLAS_AMFE.md`
-- Los incidentes pre-junio ya codificados NO se repiten aca: acciones/controles inventados
-  (`amfe-actions.md`, `amfe-no-inventar-controles.md` + candado FORBIDDEN_VOCABULARY),
-  double-serialization JSONB y tabla AP oficial (`database.md`), renumeracion sin leer contenido
-  (`amfe-leer-contenido-antes-de-renumerar.md`), placeholders (`amfe-aph-pending.md`,
-  `amfe-placeholder-last-resort.md`), aliases de schema y fm legacy (gates FIELD_ALIAS_DESYNC /
-  FM_LEGACY_EMPTY en `amfeValidator.mjs`), CC/SC segun manual oficial, corte=scrap, roles Man
-  canonicos, pistola etiquetadora, 3 niveles de funcion (`amfe.md`, `amfe-funciones-3-niveles.md`),
-  dumps stale (`verify-supabase-live.md`), PFD/HO deshabilitados (`no-flujogramas-proceso.md`,
-  `no-ho-barack.md`).
+- Los incidentes pre-junio ya codificados NO se repiten aca: acciones/controles inventados,
+  placeholders, 3 niveles de funcion, corte=scrap, roles Man canonicos, renumeracion con lectura
+  previa, aliases de schema y fm legacy → todo consolidado en `.claude/rules/amfe.md` (2026-07-03)
+  + gates de `amfeValidator.mjs` (FORBIDDEN_VOCABULARY, FIELD_ALIAS_DESYNC, FM_LEGACY_EMPTY,
+  CAUSE_APH_EMPTY, CAUSE_LEGAL_COMPLIANCE). Double-serialization JSONB y tabla AP oficial:
+  `database.md`. Dumps stale: `verify-supabase-live.md`. PFD/HO deshabilitados: `no-pfd-no-ho.md`.
 
 ## Lecciones operativas vigentes
+
+### 2026-07-03 — Optimizacion de tokens y poda (sesion Fable 5)
+- **Frontmatter de reglas condicionales = `paths:`, NO `globs:`.** Con la clave errada, Claude Code
+  carga TODAS las reglas siempre (153KB/sesion durante meses). Regla nueva con alcance de modulo:
+  siempre `paths:`. Verificado contra doc oficial (memoria `reference_claude_rules_paths_frontmatter`).
+- **Config consolidada**: 8 reglas amfe-* → `amfe.md` unica; injection y notebooklm-routing son
+  SKILLS (`injection-process`, `notebooklm-routing`); conocimiento profundo AMFE en skill `amfe-domain`.
+  Al crear conocimiento nuevo: prohibicion corta → regla; procedimiento/detalle → skill.
+- **modules/pfd y modules/hojaOperaciones podados** (commits 34e3975 + 768cf03): quedan solo los
+  archivos de tipos + repositorios (leen historicos de Supabase). El export Paquete APQP sigue
+  incluyendo la hoja Flujograma historica. NO recrear imports a los modulos borrados.
+- **scripts/ one-shots viven en `scripts/_archive/`** (190 movidos). Antes de crear un script,
+  mirar tambien el archive por si existe uno reutilizable.
+- **backups/ viejos comprimidos en `backups/archive-2026H1.zip`** (los pre-junio estaban ademas
+  trackeados en git por error y se destrackearon).
 
 ### 2026-07-02 — AMFE IP PAD alineado a flujograma/HO/BOM (VWA-PAT-IPPADS-001, id c9b93b84)
 - **Codigo L2 IP PAD = GKX, no GKK.** El BOM006 quedo con GKK — aviso pendiente a Fak.

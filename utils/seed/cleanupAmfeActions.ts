@@ -74,11 +74,11 @@ interface CleanupResult {
 // ---------------------------------------------------------------------------
 export async function cleanupAmfeActions(dryRun = false): Promise<CleanupResult> {
     const label = dryRun ? '[DRY RUN]' : '[CLEANUP]';
-    console.log(`${label} === Inicio de limpieza de acciones AMFE ===`);
+    console.info(`${label} === Inicio de limpieza de acciones AMFE ===`);
 
     // Step 1: Load all AMFE documents
     const registry = await listAmfeDocuments();
-    console.log(`${label} ${registry.length} documentos AMFE encontrados`);
+    console.info(`${label} ${registry.length} documentos AMFE encontrados`);
 
     const allActions: ActionEntry[] = [];
     const docsById = new Map<string, { doc: AmfeDocument; projectName: string; amfeNumber: string; status: string }>();
@@ -135,7 +135,7 @@ export async function cleanupAmfeActions(dryRun = false): Promise<CleanupResult>
         }
     }
 
-    console.log(`${label} ${allActions.length} acciones totales encontradas en ${docsById.size} documentos`);
+    console.info(`${label} ${allActions.length} acciones totales encontradas en ${docsById.size} documentos`);
 
     // Step 2: Count action text occurrences across DIFFERENT documents
     const actionTextToDocIds = new Map<string, Set<string>>();
@@ -150,7 +150,7 @@ export async function cleanupAmfeActions(dryRun = false): Promise<CleanupResult>
     for (const [text, docIds] of actionTextToDocIds) {
         if (docIds.size >= 3) {
             duplicatedTexts.add(text);
-            console.log(`${label} DUPLICADA en ${docIds.size} docs: "${text}"`);
+            console.info(`${label} DUPLICADA en ${docIds.size} docs: "${text}"`);
         }
     }
 
@@ -169,7 +169,7 @@ export async function cleanupAmfeActions(dryRun = false): Promise<CleanupResult>
         }
     }
 
-    console.log(`${label} ${causesToClean.size} acciones marcadas para eliminación`);
+    console.info(`${label} ${causesToClean.size} acciones marcadas para eliminación`);
 
     // Step 4: Apply cleanup
     let duplicatesRemoved = 0;
@@ -210,10 +210,10 @@ export async function cleanupAmfeActions(dryRun = false): Promise<CleanupResult>
                 }
             }
 
-            console.log(`${label} ELIMINAR [${reason}] ${a.projectName} OP${a.opNumber}: ${a.field}="${a.actionText}"`);
+            console.info(`${label} ELIMINAR [${reason}] ${a.projectName} OP${a.opNumber}: ${a.field}="${a.actionText}"`);
         } else {
             conserved++;
-            console.log(`${label} CONSERVAR ${a.projectName} OP${a.opNumber}: ${a.field}="${a.actionText}"`);
+            console.info(`${label} CONSERVAR ${a.projectName} OP${a.opNumber}: ${a.field}="${a.actionText}"`);
         }
     }
 
@@ -230,7 +230,7 @@ export async function cleanupAmfeActions(dryRun = false): Promise<CleanupResult>
                                     cause.preventionAction = 'Pendiente definición equipo APQP';
                                     pendientesSet++;
                                     modifiedDocIds.add(docId);
-                                    console.log(`${label} AP=H PENDIENTE ${entry.projectName} OP${op.opNumber}: causa="${cause.cause}"`);
+                                    console.info(`${label} AP=H PENDIENTE ${entry.projectName} OP${op.opNumber}: causa="${cause.cause}"`);
                                 }
                             }
                         }
@@ -262,7 +262,7 @@ export async function cleanupAmfeActions(dryRun = false): Promise<CleanupResult>
             if (error) {
                 console.error(`${label} ERROR al guardar: ${entry.projectName} (${docId}): ${error.message}`);
             } else {
-                console.log(`${label} Guardado OK: ${entry.projectName} (${docId})`);
+                console.info(`${label} Guardado OK: ${entry.projectName} (${docId})`);
             }
         }
     }
@@ -277,15 +277,15 @@ export async function cleanupAmfeActions(dryRun = false): Promise<CleanupResult>
         docsModified: modifiedDocIds.size,
     };
 
-    console.log(`\n${label} === RESUMEN ===`);
-    console.log(`${label} Acciones totales encontradas: ${result.totalActionsFound}`);
-    console.log(`${label} Duplicadas eliminadas (3+ docs): ${result.duplicatesRemoved}`);
-    console.log(`${label} Genéricas eliminadas: ${result.genericsRemoved}`);
-    console.log(`${label} Conservadas (específicas reales): ${result.conserved}`);
-    console.log(`${label} AP=H → "Pendiente definición equipo APQP": ${result.pendientesSet}`);
-    console.log(`${label} Documentos modificados: ${result.docsModified}`);
+    console.info(`\n${label} === RESUMEN ===`);
+    console.info(`${label} Acciones totales encontradas: ${result.totalActionsFound}`);
+    console.info(`${label} Duplicadas eliminadas (3+ docs): ${result.duplicatesRemoved}`);
+    console.info(`${label} Genéricas eliminadas: ${result.genericsRemoved}`);
+    console.info(`${label} Conservadas (específicas reales): ${result.conserved}`);
+    console.info(`${label} AP=H → "Pendiente definición equipo APQP": ${result.pendientesSet}`);
+    console.info(`${label} Documentos modificados: ${result.docsModified}`);
 
-    logger.info('CleanupAmfe', `Cleanup complete`, result as any);
+    logger.info('CleanupAmfe', `Cleanup complete`, { ...result });
     return result;
 }
 

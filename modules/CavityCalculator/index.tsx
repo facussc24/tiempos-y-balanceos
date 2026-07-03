@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { logger } from '../../utils/logger';
 import { useCavityCalculator } from './hooks/useCavityCalculator';
 import { useInjectionState } from './hooks/useInjectionState';
 import { MachineConfiguration } from './components/MachineConfiguration';
@@ -90,7 +91,7 @@ export const CavityCalculator: React.FC<Props> = ({
         } catch (err) {
             const msg = err instanceof Error ? err.message : String(err);
             toast.error('No se pudo exportar el Excel VW', msg);
-            console.error('Error exporting Gate 3 from Cavity Calculator:', err);
+            logger.error('CavityCalculator', 'Error exporting Gate 3', {}, err instanceof Error ? err : undefined);
         } finally {
             setIsExportingGate3(false);
         }

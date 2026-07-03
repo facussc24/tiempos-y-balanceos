@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { logger } from '../../utils/logger';
 import { toPng, toSvg } from 'html-to-image';
 import { Image as ImageIcon, FileCode2, Printer, Code2, Save, X, FileJson } from 'lucide-react';
 import { flowchartHeaderData as defaultHeader, flowchartProductCodes as defaultProductCodes, flowchartData as defaultFlowData } from '../../src/data/flowchartKnowledge';
@@ -309,7 +310,7 @@ export default function FlowchartApp({ amfeData, flowchartData, onSaveFlowchart,
         link.href = dataUrl;
         link.click();
       } catch (error) {
-        console.error('Error exporting PNG:', error);
+        logger.error('FlowchartApp', 'Error exporting PNG', {}, error instanceof Error ? error : undefined);
         toast.error('No se pudo generar el PNG', error instanceof Error ? error.message : 'Error desconocido al exportar la imagen.');
       } finally {
         setIsExporting(false);
@@ -332,7 +333,7 @@ export default function FlowchartApp({ amfeData, flowchartData, onSaveFlowchart,
         link.href = dataUrl;
         link.click();
       } catch (error) {
-        console.error('Error exporting SVG:', error);
+        logger.error('FlowchartApp', 'Error exporting SVG', {}, error instanceof Error ? error : undefined);
         toast.error('No se pudo generar el SVG', error instanceof Error ? error.message : 'Error desconocido al exportar el archivo.');
       } finally {
         setIsExporting(false);
