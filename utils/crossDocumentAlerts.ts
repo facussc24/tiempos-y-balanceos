@@ -28,11 +28,11 @@ export interface CrossDocAlert {
 // APQP Cascade
 // ---------------------------------------------------------------------------
 
-/** APQP cascade: who needs to be notified when a module changes */
+/** APQP cascade: who needs to be notified when a module changes.
+ * PFD y HO no se generan mas aca (regla no-pfd-no-ho) — la cascada quedo AMFE → CP.
+ * MODULE_NAMES conserva todos los modulos: lee filas historicas de cross_doc_checks. */
 export const APQP_CASCADE: { source: DocumentModule; targets: DocumentModule[] }[] = [
-    { source: 'pfd',  targets: ['amfe'] },
-    { source: 'amfe', targets: ['cp', 'ho', 'pfd'] },
-    { source: 'cp',   targets: ['ho'] },
+    { source: 'amfe', targets: ['cp'] },
 ];
 
 // ---------------------------------------------------------------------------

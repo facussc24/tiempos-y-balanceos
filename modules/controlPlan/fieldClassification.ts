@@ -1,14 +1,14 @@
 /**
  * Field Classification: Inherited vs Local
  *
- * Defines which fields on CP items and HO quality checks come from upstream
- * documents (AMFE → CP, CP → HO) and which are local user-entered data.
+ * Defines which fields on CP items come from upstream documents (AMFE → CP)
+ * and which are local user-entered data.
  *
  * - Inherited fields: updated automatically when regenerating from AMFE/CP.
  * - Local fields: NEVER overwritten on regeneration (user data preserved).
  *
  * This classification is used by the merge functions in controlPlanGenerator.ts
- * and hojaOperacionesGenerator.ts to preserve manual edits during regeneration.
+ * to preserve manual edits during regeneration.
  *
  * Note: `autoFilledFields[]` is orthogonal to this classification. A field can
  * be "local" (not overwritten by inherited data) AND have an auto-suggested value
@@ -18,7 +18,6 @@
  */
 
 import type { ControlPlanItem } from './controlPlanTypes';
-import type { HoQualityCheck, HojaOperacion } from '../hojaOperaciones/hojaOperacionesTypes';
 
 // ============================================================================
 // CP FIELD CLASSIFICATION
@@ -59,62 +58,3 @@ export const CP_INHERITED_SET = new Set<string>(CP_INHERITED_FIELDS);
 
 /** Quick lookup set for local fields. */
 export const CP_LOCAL_SET = new Set<string>(CP_LOCAL_FIELDS);
-
-// ============================================================================
-// HO QUALITY CHECK FIELD CLASSIFICATION
-// ============================================================================
-
-/** HO QC fields updated from CP on HO regeneration. */
-export const HO_QC_INHERITED_FIELDS: readonly (keyof HoQualityCheck)[] = [
-    'characteristic',
-    'specification',
-    'evaluationTechnique',
-    'frequency',
-    'controlMethod',
-    'reactionAction',
-    'reactionContact',
-    'specialCharSymbol',
-    'cpItemId',
-] as const;
-
-/** HO QC fields entered by the user — NEVER overwritten. */
-export const HO_QC_LOCAL_FIELDS: readonly (keyof HoQualityCheck)[] = [
-    'registro',
-] as const;
-
-/** Quick lookup set for HO QC inherited fields. */
-export const HO_QC_INHERITED_SET = new Set<string>(HO_QC_INHERITED_FIELDS);
-
-// ============================================================================
-// HO SHEET FIELD CLASSIFICATION
-// ============================================================================
-
-/** HO sheet fields updated from AMFE/CP on regeneration. */
-export const HO_SHEET_INHERITED_FIELDS: readonly (keyof HojaOperacion)[] = [
-    'amfeOperationId',
-    'operationNumber',
-    'operationName',
-    'hoNumber',
-    'partCodeDescription',
-    'vehicleModel',
-    'reactionContact',
-] as const;
-
-/** HO sheet fields entered by the user — NEVER overwritten. */
-export const HO_SHEET_LOCAL_FIELDS: readonly (keyof HojaOperacion)[] = [
-    'steps',
-    'visualAids',
-    'safetyElements',
-    'hazardWarnings',
-    'sector',
-    'puestoNumber',
-    'preparedBy',
-    'approvedBy',
-    'date',
-    'revision',
-    'status',
-    'reactionPlanText',
-] as const;
-
-/** Quick lookup set for HO sheet inherited fields. */
-export const HO_SHEET_INHERITED_SET = new Set<string>(HO_SHEET_INHERITED_FIELDS);

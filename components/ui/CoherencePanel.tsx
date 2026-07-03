@@ -11,14 +11,12 @@ import type { CoherenceResult, CoherenceIssue, CoherenceSeverity } from '../../u
 
 interface Props {
     result: CoherenceResult;
-    onNavigate?: (module: 'pfd' | 'amfe' | 'cp' | 'ho', itemId?: string) => void;
+    onNavigate?: (module: 'amfe' | 'cp', itemId?: string) => void;
     onClose?: () => void;
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
     'amfe-cp': 'AMFE → Plan de Control',
-    'cp-ho': 'Plan de Control → Hoja de Operaciones',
-    'pfd-amfe': 'PFD ↔ AMFE',
     'op-names': 'Nombres de operaciones',
 };
 

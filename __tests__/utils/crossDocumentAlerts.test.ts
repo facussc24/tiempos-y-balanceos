@@ -28,28 +28,14 @@ describe('crossDocumentAlerts', () => {
     // -----------------------------------------------------------------------
 
     describe('APQP_CASCADE', () => {
-        it('should have 3 cascade entries', () => {
-            expect(APQP_CASCADE).toHaveLength(3);
+        it('should have 1 cascade entry (AMFE → CP; PFD/HO no se generan mas)', () => {
+            expect(APQP_CASCADE).toHaveLength(1);
         });
 
-        it('should define PFD as source for AMFE', () => {
-            const pfdEntry = APQP_CASCADE.find(c => c.source === 'pfd');
-            expect(pfdEntry).toBeDefined();
-            expect(pfdEntry!.targets).toEqual(['amfe']);
-        });
-
-        it('should define AMFE as source for CP, HO, and PFD', () => {
+        it('should define AMFE as source for CP', () => {
             const amfeEntry = APQP_CASCADE.find(c => c.source === 'amfe');
             expect(amfeEntry).toBeDefined();
-            expect(amfeEntry!.targets).toContain('cp');
-            expect(amfeEntry!.targets).toContain('ho');
-            expect(amfeEntry!.targets).toContain('pfd');
-        });
-
-        it('should define CP as source for HO', () => {
-            const cpEntry = APQP_CASCADE.find(c => c.source === 'cp');
-            expect(cpEntry).toBeDefined();
-            expect(cpEntry!.targets).toEqual(['ho']);
+            expect(amfeEntry!.targets).toEqual(['cp']);
         });
     });
 
@@ -58,19 +44,16 @@ describe('crossDocumentAlerts', () => {
     // -----------------------------------------------------------------------
 
     describe('getDownstreamTargets', () => {
-        it('should return [amfe] for pfd', () => {
-            expect(getDownstreamTargets('pfd')).toEqual(['amfe']);
+        it('should return [cp] for amfe', () => {
+            expect(getDownstreamTargets('amfe')).toEqual(['cp']);
         });
 
-        it('should return [cp, ho, pfd] for amfe', () => {
-            expect(getDownstreamTargets('amfe')).toEqual(['cp', 'ho', 'pfd']);
+        it('should return empty array for cp (no downstream)', () => {
+            expect(getDownstreamTargets('cp')).toEqual([]);
         });
 
-        it('should return [ho] for cp', () => {
-            expect(getDownstreamTargets('cp')).toEqual(['ho']);
-        });
-
-        it('should return empty array for ho (no downstream)', () => {
+        it('should return empty array for pfd/ho (historicos)', () => {
+            expect(getDownstreamTargets('pfd')).toEqual([]);
             expect(getDownstreamTargets('ho')).toEqual([]);
         });
     });

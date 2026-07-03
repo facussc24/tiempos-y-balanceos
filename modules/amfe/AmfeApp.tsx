@@ -357,7 +357,7 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab, initialF
     // 14. Cross-document coherence check (on-demand, not on every save)
     const [coherenceResult, setCoherenceResult] = useState<CoherenceResult | null>(null);
     const handleCoherenceCheck = useCallback(() => {
-        const result = runCoherenceCheck(null, amfe.data, tabNav.cpInitialData, null);
+        const result = runCoherenceCheck(amfe.data, tabNav.cpInitialData);
         setCoherenceResult(result);
     }, [amfe.data, tabNav.cpInitialData]);
 

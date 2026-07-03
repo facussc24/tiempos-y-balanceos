@@ -27,42 +27,25 @@ import { getPendingAlerts } from '../utils/repositories/crossDocRepository';
 const mockGetPendingAlerts = vi.mocked(getPendingAlerts);
 
 describe('APQP_CASCADE', () => {
-    it('defines PFD as source with AMFE as target', () => {
-        const pfdEntry = APQP_CASCADE.find(c => c.source === 'pfd');
-        expect(pfdEntry).toBeDefined();
-        expect(pfdEntry!.targets).toContain('amfe');
-    });
-
-    it('defines AMFE as source with CP, HO, and PFD as targets', () => {
+    it('defines AMFE as the only source, with CP as target (PFD/HO no se generan mas)', () => {
+        expect(APQP_CASCADE).toHaveLength(1);
         const amfeEntry = APQP_CASCADE.find(c => c.source === 'amfe');
         expect(amfeEntry).toBeDefined();
-        expect(amfeEntry!.targets).toEqual(expect.arrayContaining(['cp', 'ho', 'pfd']));
-    });
-
-    it('defines CP as source with HO as target', () => {
-        const cpEntry = APQP_CASCADE.find(c => c.source === 'cp');
-        expect(cpEntry).toBeDefined();
-        expect(cpEntry!.targets).toContain('ho');
+        expect(amfeEntry!.targets).toEqual(['cp']);
     });
 });
 
 describe('getDownstreamTargets', () => {
-    it('returns AMFE for PFD source', () => {
-        expect(getDownstreamTargets('pfd')).toContain('amfe');
+    it('returns CP for AMFE source', () => {
+        expect(getDownstreamTargets('amfe')).toEqual(['cp']);
     });
 
-    it('returns CP, HO, PFD for AMFE source', () => {
-        const targets = getDownstreamTargets('amfe');
-        expect(targets).toContain('cp');
-        expect(targets).toContain('ho');
-        expect(targets).toContain('pfd');
+    it('returns empty array for CP (no downstream targets)', () => {
+        expect(getDownstreamTargets('cp')).toEqual([]);
     });
 
-    it('returns HO for CP source', () => {
-        expect(getDownstreamTargets('cp')).toContain('ho');
-    });
-
-    it('returns empty array for HO (no downstream targets)', () => {
+    it('returns empty array for pfd/ho (historicos, sin cascada)', () => {
+        expect(getDownstreamTargets('pfd')).toEqual([]);
         expect(getDownstreamTargets('ho')).toEqual([]);
     });
 
