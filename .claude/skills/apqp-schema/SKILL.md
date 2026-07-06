@@ -174,6 +174,40 @@ pfd_documents     → data: { header: {...}, steps: [...] }
 }
 ```
 
+## Tabla `projects` (Tiempos y Balanceos — OJO: NO es JSONB)
+
+`projects.data` es **TEXT** (JSON stringificado), NO jsonb. La app hace `JSON.stringify(data)`
+al guardar y `JSON.parse` al leer — OPUESTO a `amfe_documents` (jsonb directo). En scripts .mjs:
+si escribís `.update({ data: objeto })` con el objeto crudo, la app leería mal. Guardar
+`data: JSON.stringify(objeto)` y verificar `typeof JSON.parse(row.data) === 'object'`.
+RLS = authenticated (anon → `[]`). Acceso sin `.env.local`: MCP Supabase, o token de la app
+(el navegador logueado descarga un archivo con `SB_ACCESS_TOKEN`; supabase-js maneja mal el
+JWT ES256 desde Node → usar fetch REST directo). Detalle: memoria `project-registro-tiempos-inyeccion`.
+
+Estructura de `data` (ProjectData, ver `types/project.ts`):
+- `meta`: { name, date, client, project, version, engineer, dailyDemand, activeShifts,
+  manualOEE (0..1), useManualOEE, useSectorOEE, configuredStations, `reservationPct?` (0..1), ... }
+- `shifts[]`: { id, name, startTime, endTime, `length` (min BRUTOS), breaks[]{duration} } — el
+  adapter Gate 3 lee `s.length` menos breaks. Turnos estándar Barack = 21,5 h netas/día
+  (T1 540-60=480 · T2 480-45=435 · T3 420-45=375 min).
+- `sectors[]`, `tasks[]`, `assignments[]{taskId,stationId}`, `stationConfigs[]{id,replicas,oeeTarget}`.
+
+### Task de inyección (para Gate 3 VW / capacidad)
+Un molde = 1 task `executionMode:'injection'`:
+- `times: [ciclo_molde × 5]` ← el CICLO COMPLETO del molde (todas las cavidades salen en 1 golpe).
+- `cycleQuantity: cavidades` ← `utils/graph.ts:142` normaliza `times[]` dividiendo por esto → por-pieza.
+- `averageTime = standardTime = ciclo/cavidades` (por pieza).
+- `injectionParams: { optimalCavities, realCycle: ciclo/cav, pInyectionTime: 0, pCuringTime: ciclo,
+  injectionMode:'batch', cavityMode:'manual', productionVolume: golpes }`.
+
+**INVARIANTE Gate 3**: `cycleTimeSec = ciclo de molde = realCycle × cavidades` (NO por-pieza; si no,
+capacidad inflada ×cavidades — bug 0aaf86e, test `gate3_cavity_export.test.ts`). Horas-máquina =
+`golpes × ciclo / 3600` (independiente de cavidades). Piezas/día = `golpes × cavidades`.
+**Prensa COMPARTIDA**: `meta.reservationPct` = parte del tiempo de máquina que usa el molde
+(reservas de una prensa suman ≤1; si suman >1 la prensa no alcanza). Export VW por-pieza:
+`scripts/_lib/patagoniaInjectionProjects.mjs` + `scripts/_exportPatagoniaGate3All.mjs`
+(`--vw-original` = formato alemán/inglés + logo VW; `--data-file` = genera offline).
+
 ## Tablas de soporte
 
 ```

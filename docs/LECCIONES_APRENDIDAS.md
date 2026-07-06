@@ -33,6 +33,16 @@ contiene SOLO lo accionable que NO esta ya codificado como regla o gate ejecutab
   el resultado. Preguntar de más lo agota/frustra (lección fuerte de esta sesión).
 - **Bug arreglado (commit 0aaf86e)**: export VW Gate3 contaba cavidades ×2 en los 3 caminos
   (per-pieza × cavidades). Fix: `cycleTimeSec` = ciclo de molde. Detalle: `docs/TODO_GATE3_INVESTIGAR.md`.
+- **Gate3 VW por-pieza con prensa COMPARTIDA (commit ed7d1ed)**: N moldes en M prensas → 1 Gate3
+  consolidado ENGAÑA (cada molde como si tuviera prensa propia vs demanda única). Solución: **1 Gate3
+  POR PIEZA** con `meta.reservationPct` = parte del tiempo de máquina de la prensa (`golpes×ciclo`,
+  suman 100 %/prensa) → **todo ROJO honesto** si la prensa está sobre-100 %. Flags nuevos en
+  `_exportProjectGate3VW.mjs`: `--vw-original` (formato alemán/inglés + logo VW, sin traducir) y
+  `--data-file` (genera OFFLINE sin Supabase). Fuente única: `_lib/patagoniaInjectionProjects.mjs`.
+  Detalle: skill `apqp-schema` (tabla `projects`) + memoria `reference-gate3-shared-machines`.
+- **Ciclos corregidos (leí mal la foto — Fak lo cazó)**: IP=90 (no 70), Top Roll=70 (no 60);
+  Inserto=60, APB=42, Bracket=45; cavidades IP=2, resto (izq+der)=4. Con esto las 2 prensas quedan
+  sobrecargadas en cualquier modelo (Gate3 c/OEE: 1200T 116 %, 750T 156 %). Leer manuscritos con lupa.
 
 ### 2026-07-03 — Instructivos SGC Barack desactualizados (NPR vs AP)
 - El I-AC-005 interno habla de "NPR > 100" (AIAG 4ta ed, vieja). Fak confirma: hoy es AIAG-VDA

@@ -48,6 +48,17 @@ export function calcOEE(s: Pick<
  *
  *   weekly = shifts * hours * 3600 / cycle_sec * OEE * cavities * machines * reservation
  *
+ * INVARIANTE (inyeccion) — cycleTimeSec es el CICLO COMPLETO DEL MOLDE (todas las
+ * cavidades salen juntas en un golpe), NO el tiempo por pieza. Las cavidades entran
+ * como factor APARTE (× cavities). Si se pasa el tiempo por-pieza (= molde/cavidades)
+ * la capacidad sale inflada × cavidades. Los adapters (gate3FromBalancing.ts,
+ * _exportProjectGate3VW.mjs) convierten realCycle→molde multiplicando por cavidades.
+ * Regresion cubierta por __tests__/gate3_cavity_export.test.ts (bug 2026-07, commit 0aaf86e).
+ *
+ * reservationPct (0..1): fraccion de una maquina COMPARTIDA reservada para esta pieza.
+ * Multiplica la capacidad final. N moldes en una prensa → cada uno reserva su parte
+ * del tiempo de maquina; si las reservas de una prensa suman >1, la prensa no alcanza.
+ *
  * Devuelve 0 si cualquier denominador o factor critico es 0.
  */
 export function calcWeeklyCapacity(s: Gate3Station, oee: number): number {
