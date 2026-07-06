@@ -1,15 +1,25 @@
 ---
 name: amfe-export-oficial
-description: Exportar un AMFE Barack a Excel oficial CORRECTO (carátula completa, modos de falla secuenciales, hoja Revisiones aparte, aprobadores globales). Usar SIEMPRE al exportar/generar un AMFE a Excel para el pendrive o el cliente, o al construir el header de un AMFE nuevo. Evita los 3 errores recurrentes: carátula vacía, FM fuera de secuencia, revisiones mal formateadas.
+description: Exportar un AMFE Barack a Excel oficial CORRECTO (hoja Caratula formato I-AC-005.3, modos de falla secuenciales, rev vigente en rojo, aprobadores globales). Usar SIEMPRE al exportar/generar un AMFE a Excel para el pendrive o el cliente, o al construir el header de un AMFE nuevo. Evita los 3 errores recurrentes: carátula vacía, FM fuera de secuencia, revisiones mal formateadas.
 ---
 
 # Export AMFE → Excel oficial (formulario I-AC-005.3)
 
 Incidente fuente 2026-06-25 (AMFE 128/129 Amarok): entregué Excel con carátula VACÍA, modos de falla salteados (1,3,4,5,2) y revisiones inyectadas en la hoja de datos. Fak: "así no me podés entregar un AMFE". Esta skill codifica el estándar para que no se repita.
 
-## 1. Carátula — nombres de campo EXACTOS que lee el export
+## 0. Usar `buildAmfeOficialWorkbook` — NO armar la carátula a mano (2026-07-03)
 
-`buildAmfeCompletoWorkbook` (`modules/amfe/amfeExcelExport.ts`, fn `buildMetadataRows`) lee estos campos del `doc.header`. **Si usás otro nombre, la celda sale VACÍA.** Lista canónica (verificada líneas 291-299):
+El export oficial se genera con **`buildAmfeOficialWorkbook(doc, { revisions, status })`** (`modules/amfe/amfeExcelExport.ts`). Produce un workbook de 2 hojas — **`Caratula` + `AMFE`** — igual que los AMFEs oficiales reales de Barack (ej. AMFE 150 Patagonia). Incluye:
+- Hoja **Caratula** (`buildCaratulaSheet`, `modules/amfe/amfeCaratulaSheet.ts`): bloque de identificación, EQUIPO MULTIFUNCIONAL, tabla **REVISIONES** y FIRMAS DE APROBACIÓN. El **nivel de revisión vigente va EN ROJO** (I-IN-002). El título lleva sufijo **" PRELIMINAR"** cuando `status !== 'approved'`.
+- Guard `assertAmfeExportable(doc)` (llamado adentro): **ABORTA (throw)** si alguna causa tiene S (del failure) / O / D vacío. Envolver la llamada en try/catch.
+- `revisions` acepta cualquiera de los shapes históricos (`normalizeRevisions` lo tolera): `{rev,date,description,modifiedBy}`, legacy `{date,reason,revisedBy,description}`, o el `historial` del registry. Pasar el string/array crudo, no hace falta parsear.
+- La carátula lee el header con **aliases tolerados** (`team` **o** `coreTeam`, `client` **o** `customerName`, `organization` **o** `companyName`, `revision`/`revisionLevel`/`rev`), así que la data live vieja también renderiza.
+
+Los scripts `scripts/_exportOficial.ts` (159/160) y `scripts/_exportAmfeAmarok.ts` (128/129) ya usan esta función. NO reintroducir la inyección manual de revisiones en la hoja de datos.
+
+## 1. Header — nombres de campo canónicos (al CONSTRUIR un AMFE)
+
+Al construir el header de un AMFE nuevo, usar estos nombres canónicos. La carátula tolera aliases al LEER, pero conviene escribir los canónicos:
 
 | Celda carátula | Campo header |
 |---|---|
@@ -31,7 +41,7 @@ Incidente fuente 2026-06-25 (AMFE 128/129 Amarok): entregué Excel con carátula
 | Asunto | `subject` |
 | Piezas Aplicables | `applicableParts` |
 
-**Errores típicos:** usar `revisionLevel` en vez de `revision`, `revisionDate` en vez de `revDate`, `coreTeam` (array) en vez de `team` (string), y omitir `location`/`modelYear`/`confidentiality`/`processResponsible`. Header de referencia que SÍ funciona: AMFE 159 en Supabase (`data->header`).
+**Nota:** la hoja Caratula (`buildCaratulaSheet`) ya tolera `coreTeam` (array) además de `team`, y `client`/`customerName`, `organization`/`companyName`, `revision`/`revisionLevel`. El export compacto viejo de la hoja AMFE (`buildMetadataRows`) sí lee solo el nombre canónico. Header de referencia que SÍ funciona: AMFE 159 en Supabase (`data->header`).
 
 ## 2. Aprobadores GLOBALES (decision Fak 2026-06-25)
 
@@ -53,22 +63,25 @@ for (const we of op.workElements) for (const fn of we.functions) for (const f of
 }
 ```
 
-## 4. Revisiones = HOJA APARTE "Revisiones" (no inyectar en la hoja de datos)
+## 4. Revisiones = tabla REVISIONES dentro de la hoja Caratula
 
-Columnas: **Rev | Fecha | Modificó | Descripción del cambio** (decision Fak 2026-06-25: "Modificó", no "Responsable" — coincide con la columna MODIFICO de los Excel originales). Si no se sabe quién modificó, poner "-". El historial son hitos A→G (no el log diario), alineados al Plan de Control (mismas fechas/nivel; ver `feedback_amfe_revisiones_vs_pc`). El último hito: "Revisión general alineada al Plan de Control rev X".
+Desde 2026-07-03 las revisiones van en la **tabla REVISIONES de la Caratula** (formato AMFE 150 real: la carátula ES la primera hoja del formato, con el log de cambios — cumple el I-AC-005 "toda modificación se registra en la primera hoja"). Columnas: **REV | FECHA | ITEM CAMBIADO | DETALLES | FECHA PSW | MODIFICO**. La fila cuya REV coincide con la revisión vigente sale en rojo. NO se genera una hoja "Revisiones" aparte (el AMFE 150 real tiene solo `Caratula` + `P-FMEA`). El historial son hitos A→G (no el log diario), alineados al Plan de Control (ver `feedback_amfe_revisiones_vs_pc`).
 
-## 5. Scripts de referencia (Amarok 2026-06-25)
+## 5. Scripts de referencia
 - `scripts/_buildAmfeBarack.mjs` — construye doc con header canónico + FM secuencial + O/D.
-- `scripts/_exportAmfeAmarok.ts` — `buildAmfeCompletoWorkbook` + hoja Revisiones → pendrive. Correr con `SUPABASE_SERVICE_ROLE_KEY=... VITE_SUPABASE_URL=... npx tsx`.
+- `scripts/_exportOficial.ts` (159/160) y `scripts/_exportAmfeAmarok.ts` (128/129) — usan `buildAmfeOficialWorkbook`. Amarok corre con `SUPABASE_SERVICE_ROLE_KEY=... VITE_SUPABASE_URL=... npx tsx`.
+- Oficializar una revisión (bump + snapshot + export + copia a Y: + listado): `scripts/_oficializarRevision.ts`.
 - Cargar a Supabase sin `.env.local`: service key por env var (ver `reference_amfe_xlsx_importer` en memoria).
 
 ## Enforcement (gate, no solo checklist)
 
-`scripts/_exportAmfeAmarok.ts` tiene un **guard que ABORTA el export** si alguna causa tiene `severity`/`occurrence`/`detection` vacío (null o ""). Así es imposible escribir al pendrive/cliente un AMFE incompleto. Incidente fuente: se entregó un primer export PREMATURO (antes de completar O/D) y Fak vio celdas vacías — "jamás algo puede estar vacío... no puede volver a suceder". Todo export nuevo debe replicar este guard.
+`assertAmfeExportable(doc)` (en `amfeExcelExport.ts`, llamado dentro de `buildAmfeOficialWorkbook`) **ABORTA (throw)** si alguna causa tiene S (del failure) / O / D vacío. Así es imposible escribir al pendrive/cliente un AMFE incompleto. Incidente fuente: se entregó un export PREMATURO (antes de completar O/D) y Fak vio celdas vacías — "jamás algo puede estar vacío... no puede volver a suceder".
 
 ## Checklist antes de entregar un Excel de AMFE
-- [ ] Carátula con TODOS los campos llenos (abrir el .xlsx y mirar filas 2-9).
+- [ ] Hoja **Caratula** presente y **primera** (workbook = `Caratula`, `AMFE`).
+- [ ] Carátula con TODOS los campos llenos (abrir el .xlsx y mirar el bloque de identificación).
+- [ ] Nivel de revisión vigente en ROJO; título con " PRELIMINAR" solo si el doc no está approved.
 - [ ] FM numerados 1,2,3,…N sin saltos en cada operación.
-- [ ] Hoja "Revisiones" presente con columna **Modificó** (no "Responsable").
+- [ ] Tabla REVISIONES con hitos A→N y columna MODIFICO.
 - [ ] Responsable = Carlos Baptista, Aprobado por = Gonzalo Cal.
 - [ ] 0 causas sin S/O/D (validar con `amfeValidator`).

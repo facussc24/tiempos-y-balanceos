@@ -17,6 +17,7 @@ import {
 } from './amfeTypes';
 import { sanitizeFilename } from '../../utils/filenameSanitization';
 import { sanitizeCellValue } from '../../utils/sanitizeCellValue';
+import { buildCaratulaSheet, normalizeRevisions, type AmfeLifecycleStatus } from './amfeCaratulaSheet';
 import { downloadWorkbook, generateWorkbookBuffer } from '../../utils/excel';
 import { truncateApplicableParts as truncateParts } from '../../utils/productFamilyAutoFill';
 import { formatDateAR } from '../../utils/formatting';
@@ -537,6 +538,73 @@ export function exportAmfeCompleto(doc: AmfeDocument): void {
     const wb = buildAmfeCompletoWorkbook(doc);
     const safeName = sanitizeFilename(doc.header.subject || doc.header.partNumber || 'Documento', { allowSpaces: true });
     downloadWorkbook(wb, `AMFE de Proceso - ${safeName}.xlsx`);
+}
+
+// ============================================================================
+// EXPORT OFICIAL — Caratula (formulario I-AC-005.3) + AMFE
+// ============================================================================
+
+/**
+ * Verifica que el AMFE sea exportable como documento oficial: aborta si alguna
+ * causa tiene S, O o D vacio (no se entrega un AMFE incompleto). Lee ambos
+ * aliases de numero de operacion (opNumber | operationNumber).
+ * @throws Error con la lista de gaps si hay causas incompletas.
+ */
+export function assertAmfeExportable(doc: AmfeDocument): void {
+    const empty = (v: unknown) => v == null || String(v).trim() === '';
+    const gaps: string[] = [];
+    for (const op of (doc.operations ?? [])) {
+        const opNum = (op as { opNumber?: string; operationNumber?: string }).opNumber
+            ?? (op as { operationNumber?: string }).operationNumber ?? '';
+        for (const we of (op.workElements ?? [])) {
+            for (const fn of (we.functions ?? [])) {
+                for (const f of (fn.failures ?? [])) {
+                    // S (severity) vive en el failure; O y D en cada causa.
+                    for (const c of (f.causes ?? [])) {
+                        if (empty(f.severity) || empty(c.occurrence) || empty(c.detection)) {
+                            gaps.push(`OP${opNum} "${String(c.cause ?? '').slice(0, 32)}" S=${f.severity ?? ''} O=${c.occurrence ?? ''} D=${c.detection ?? ''}`);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    if (gaps.length) {
+        throw new Error(
+            `AMFE incompleto: ${gaps.length} causa(s) con S/O/D vacio — no se exporta un AMFE oficial incompleto:\n  ` +
+            gaps.slice(0, 15).join('\n  '),
+        );
+    }
+}
+
+/**
+ * Construye el workbook oficial del AMFE: hoja "Caratula" (formulario I-AC-005.3,
+ * formato AMFE 150 Patagonia) seguida de la hoja "AMFE" (formulario completo).
+ * Coincide con la estructura de los AMFEs oficiales reales de Barack (Caratula + datos).
+ *
+ * @param doc documento AMFE
+ * @param opts revisiones (crudas o normalizadas) + estado de ciclo de vida
+ * @throws si el AMFE tiene causas con S/O/D vacio (assertAmfeExportable)
+ */
+export function buildAmfeOficialWorkbook(
+    doc: AmfeDocument,
+    opts: { revisions?: unknown; status?: AmfeLifecycleStatus } = {},
+): XLSX.WorkBook {
+    assertAmfeExportable(doc);
+
+    const wb = buildAmfeCompletoWorkbook(doc);
+
+    // Anteponer la Caratula (book_append_sheet solo appendea; para prepend
+    // insertamos la hoja y movemos su nombre al frente de SheetNames).
+    const caratula = buildCaratulaSheet(doc, {
+        revisions: normalizeRevisions(opts.revisions),
+        status: opts.status ?? 'draft',
+    });
+    wb.Sheets['Caratula'] = caratula;
+    wb.SheetNames = wb.SheetNames.filter(n => n !== 'Caratula');
+    wb.SheetNames.unshift('Caratula');
+
+    return wb;
 }
 
 /**

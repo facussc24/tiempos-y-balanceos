@@ -1,13 +1,14 @@
 /**
  * _exportAmfeAmarok.ts — Excel oficial de AMFE 128/129 (IP Decorative Amarok PA2) al pendrive D:\.
- * Lee data + revisions desde Supabase (service key). Reusa buildAmfeCompletoWorkbook (carátula + AMFE)
- * y AGREGA una hoja aparte "Revisiones" (Rev | Fecha | Responsable | Descripción).
+ * Lee data + revisions + status desde Supabase (service key) y usa buildAmfeOficialWorkbook,
+ * que genera Caratula (formulario I-AC-005.3) + AMFE. El guard de S/O/D vive dentro.
  * Correr: SUPABASE_SERVICE_ROLE_KEY=... VITE_SUPABASE_URL=... npx tsx scripts/_exportAmfeAmarok.ts
  */
 import { writeFileSync } from 'node:fs';
 import XLSX from 'xlsx-js-style';
 import { createClient } from '@supabase/supabase-js';
-import { buildAmfeCompletoWorkbook } from '../modules/amfe/amfeExcelExport';
+import { buildAmfeOficialWorkbook } from '../modules/amfe/amfeExcelExport';
+import type { AmfeLifecycleStatus } from '../modules/amfe/amfeCaratulaSheet';
 
 const sb = createClient(process.env.VITE_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false } });
 
@@ -16,50 +17,23 @@ const DEST: Record<string, string> = {
   '129': 'D:/AMFE 129 - IP DECORATIVE 116 AMAROK PA2 - REV G.xlsx',
 };
 
-const thin = () => { const s = { style: 'thin', color: { rgb: 'BFBFBF' } }; return { top: s, bottom: s, left: s, right: s }; };
-const titleSt = { font: { bold: true, sz: 12, color: { rgb: 'FFFFFF' } }, fill: { fgColor: { rgb: '1F3864' } }, alignment: { horizontal: 'center', vertical: 'center' }, border: thin() };
-const hdrSt = { font: { bold: true, color: { rgb: 'FFFFFF' } }, fill: { fgColor: { rgb: '4472C4' } }, alignment: { horizontal: 'center', vertical: 'center', wrapText: true }, border: thin() };
-const bodySt = { alignment: { vertical: 'top', wrapText: true }, border: thin() };
-const ctrSt = { alignment: { horizontal: 'center', vertical: 'center' }, border: thin() };
-const C = (r: number, c: number) => XLSX.utils.encode_cell({ r, c });
-
 for (const k of ['128', '129']) {
-  const { data: row, error } = await sb.from('amfe_documents').select('amfe_number,data,revisions').eq('amfe_number', k).single();
+  const { data: row, error } = await sb.from('amfe_documents').select('amfe_number,data,revisions,status').eq('amfe_number', k).single();
   if (error || !row) { console.error(`FETCH ${k} FALLO:`, error?.message); continue; }
   const doc = typeof row.data === 'string' ? JSON.parse(row.data) : row.data;
-  const revs = JSON.parse(row.revisions || '[]') as Array<{ rev: string; date: string; description: string; responsible?: string }>;
 
-  // GUARD (no volver a entregar AMFE incompleto): abortar si alguna causa tiene S/O/D vacío.
-  const empty = (v: any) => v == null || String(v).trim() === '';
-  const gaps: string[] = [];
-  for (const op of (doc.operations || [])) for (const we of (op.workElements || [])) for (const fn of (we.functions || [])) for (const f of (fn.failures || [])) for (const c of (f.causes || [])) {
-    if (empty(c.severity) || empty(c.occurrence) || empty(c.detection)) gaps.push(`OP${op.operationNumber} "${String(c.cause).slice(0, 32)}" S=${c.severity} O=${c.occurrence} D=${c.detection}`);
+  let wb: XLSX.WorkBook;
+  try {
+    // buildAmfeOficialWorkbook aborta (throw) si alguna causa tiene S/O/D vacío.
+    wb = buildAmfeOficialWorkbook(doc, { revisions: row.revisions, status: row.status as AmfeLifecycleStatus });
+  } catch (e) {
+    console.error(`ABORTADO AMFE ${k}: ${e instanceof Error ? e.message : String(e)}`);
+    continue;
   }
-  if (gaps.length) { console.error(`ABORTADO AMFE ${k}: ${gaps.length} causa(s) con S/O/D vacío — NO exporto un AMFE incompleto:`); gaps.slice(0, 12).forEach(g => console.error('  ' + g)); continue; }
-
-  const wb = buildAmfeCompletoWorkbook(doc);
-
-  // --- Hoja aparte "Revisiones" (Rev | Fecha | Responsable | Descripción) ---
-  const revWs: any = {};
-  const setCell = (r: number, c: number, v: string, s: any) => { revWs[C(r, c)] = { v, t: 's', s }; };
-  setCell(0, 0, 'HISTORIAL DE REVISIONES', titleSt);
-  ['Rev', 'Fecha', 'Modificó', 'Descripción del cambio'].forEach((h, i) => setCell(1, i, h, hdrSt));
-  revs.forEach((rv: any, i) => {
-    const r = i + 2;
-    setCell(r, 0, rv.rev, ctrSt);
-    setCell(r, 1, rv.date, ctrSt);
-    setCell(r, 2, rv.modifiedBy || rv.responsible || '-', ctrSt);
-    setCell(r, 3, rv.description, bodySt);
-  });
-  const lastRow = revs.length + 1;
-  revWs['!ref'] = `A1:D${lastRow + 1}`;
-  revWs['!cols'] = [{ wch: 6 }, { wch: 14 }, { wch: 20 }, { wch: 80 }];
-  revWs['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 3 } }];
-  XLSX.utils.book_append_sheet(wb, revWs, 'Revisiones');
 
   const buf = XLSX.write(wb, { bookType: 'xlsx', type: 'array' }) as ArrayBuffer;
   writeFileSync(DEST[k], Buffer.from(buf));
   const ops = doc?.operations?.length ?? 0;
-  console.info(`OK AMFE ${k} | ops=${ops} | revs=${revs.length} | sheets=${wb.SheetNames.join(',')} -> ${DEST[k]}`);
+  console.info(`OK AMFE ${k} | ops=${ops} | sheets=${wb.SheetNames.join(',')} -> ${DEST[k]}`);
 }
 console.info('DONE');
