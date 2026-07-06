@@ -99,7 +99,8 @@ export function buildGate3FromProjectData(data: ProjectData): Gate3Project {
             nokParts: 0,
             shiftsPerWeek: activeShifts * 5, // 5 dias laborales — VW estandar
             hoursPerShift: Number(hoursPerShift.toFixed(2)) || 8,
-            reservationPct: 1,
+            // Reserva de maquina compartida (0..1). Modela N moldes en una misma prensa.
+            reservationPct: Math.min(1, Math.max(0, data.meta?.reservationPct ?? 1)),
             machines: replicas,
             oeeOverride: stationOee,
         });

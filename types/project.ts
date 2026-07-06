@@ -69,6 +69,16 @@ export interface ProjectData {
      */
     setupLossPercent?: number;
 
+    /**
+     * V11: Fracción de una máquina COMPARTIDA reservada para este proyecto/pieza (0..1).
+     * Multiplica la capacidad final en el export VW Gate 3 (campo "Reserva para proyecto").
+     * Sirve para modelar N moldes en una misma prensa: cada uno reserva su parte del
+     * tiempo de máquina; las reservas de una prensa suman ≤ 1. Si suman > 1, la prensa
+     * está sobre-comprometida (no alcanza).
+     * @default 1 (máquina dedicada)
+     */
+    reservationPct?: number;
+
     configuredStations: number; // Manual override for number of stations displayed
 
     // --- GLOBAL CALCULATOR STATE [FIX #11] ---

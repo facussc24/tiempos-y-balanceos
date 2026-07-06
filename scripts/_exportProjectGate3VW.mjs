@@ -27,9 +27,21 @@ import { execSync } from 'child_process';
 import XlsxPopulate from 'xlsx-populate';
 import JSZip from 'jszip';
 
-const projectId = process.argv[2];
-if (!projectId) {
-    console.error('Uso: node scripts/_exportProjectGate3VW.mjs <projectId> [outputDir]');
+// Parseo de argumentos: <projectId> [outputDir] [--vw-original] [--data-file <path>]
+//   --vw-original : formato VW ORIGINAL (sin traducir, logo VW, header aleman) — no aplica
+//                   la localizacion Barack. Solo desprotege las hojas (Fak edita sin password).
+//   --data-file <path> : lee el ProjectData de un JSON local en vez de Supabase (modo offline).
+const rawArgs = process.argv.slice(2);
+const vwOriginal = rawArgs.includes('--vw-original');
+const dfIdx = rawArgs.indexOf('--data-file');
+const dataFile = dfIdx !== -1 ? rawArgs[dfIdx + 1] : null;
+const positional = rawArgs.filter((a, i) => !a.startsWith('--') && !(dfIdx !== -1 && i === dfIdx + 1));
+// Con --data-file NO hay projectId → el primer positional es el outputDir.
+// Sin --data-file el primero es projectId y el segundo el outputDir.
+const projectId = dataFile ? null : positional[0];
+const outDirArg = dataFile ? positional[0] : positional[1];
+if (!projectId && !dataFile) {
+    console.error('Uso: node scripts/_exportProjectGate3VW.mjs <projectId> [outputDir] [--vw-original] [--data-file <path>]');
     process.exit(1);
 }
 
@@ -307,7 +319,9 @@ function buildGate3FromProjectData(data, row) {
             nokParts: 0,
             shiftsPerWeek: activeShifts * 5,
             hoursPerShift: Number(hoursPerShift.toFixed(2)) || 8,
-            reservationPct: 1,
+            // Reserva de maquina compartida (0..1). Modela N moldes en una misma prensa:
+            // cada proyecto reserva su parte del tiempo de maquina. Default 1 = dedicada.
+            reservationPct: Math.min(1, Math.max(0, safeNum(data.meta?.reservationPct, 1))),
             machines: replicas,
             oeeOverride: Math.min(1, Math.max(0, globalOee)),
         });
@@ -383,7 +397,7 @@ function applyHeader(wb, p) {
     wb.sheet('DiagramSFN').cell(DIAGRAM_NORMAL_DEMAND_CELL).value(safeNum(p.normalDemandWeek));
 }
 
-function applyStation(oee, cap, n, s) {
+function applyStation(oee, cap, n, s, vwOriginal = false) {
     const col = oeeStationCol(n);
     const m = capStationMap(n);
     const labels = stationLabelCells(n);
@@ -411,13 +425,16 @@ function applyStation(oee, cap, n, s) {
         cap.cell(`${m.valueCol}${m.topRow + CAP_ROW_OFFSETS.cavities}`).value(1);
     }
 
-    // Labels adaptativos por tipo de proceso (cavidades y maquinas)
-    if (ptKey !== 'inyeccion') {
-        cap.cell(labels.cavitiesLabel).value(pt.multiplierLabel);
-    } else {
-        cap.cell(labels.cavitiesLabel).value('Cavidades');
+    // Labels adaptativos por tipo de proceso (cavidades y maquinas).
+    // En modo VW ORIGINAL NO se tocan: se dejan las etiquetas en ingles del template.
+    if (!vwOriginal) {
+        if (ptKey !== 'inyeccion') {
+            cap.cell(labels.cavitiesLabel).value(pt.multiplierLabel);
+        } else {
+            cap.cell(labels.cavitiesLabel).value('Cavidades');
+        }
+        cap.cell(labels.machinesLabel).value(pt.machinesLabel);
     }
-    cap.cell(labels.machinesLabel).value(pt.machinesLabel);
 }
 
 function clearStation(oee, cap, n) {
@@ -438,12 +455,15 @@ function clearStation(oee, cap, n) {
 // POSTPROCESS via JSZip: SOLO swap del logo
 // (la proteccion se maneja antes con xlsx-populate para no tocar el XML)
 // ==============================
-async function finalizeXlsx(xlsxPath, jpegBuffer) {
+async function finalizeXlsx(xlsxPath, jpegBuffer, vwOriginal = false) {
     const buf = readFileSync(xlsxPath);
     const zip = await JSZip.loadAsync(buf);
 
-    // 1. Swap logo Barack (los 3 drawings comparten xl/media/image1.jpeg)
-    zip.file('xl/media/image1.jpeg', jpegBuffer);
+    // 1. Swap logo Barack (los 3 drawings comparten xl/media/image1.jpeg).
+    //    En modo VW ORIGINAL se conserva el logo VW del template (no hay swap).
+    if (!vwOriginal && jpegBuffer) {
+        zip.file('xl/media/image1.jpeg', jpegBuffer);
+    }
 
     // 2. Borrar <sheetProtection> de todas las hojas — Fak quiere poder editar
     //    sin password. Solo borramos el tag, NO insertamos nada nuevo (evitamos
@@ -458,6 +478,10 @@ async function finalizeXlsx(xlsxPath, jpegBuffer) {
         if (cleaned !== xml) zip.file(f, cleaned);
     }
 
+    // Los pasos 3, 3b y 4 son localizacion Barack (header, logo ratio, chart en
+    // espanol). En modo VW ORIGINAL se saltan por completo: el archivo queda en el
+    // formato aleman/ingles original de VW.
+    if (!vwOriginal) {
     // 3. Reemplazar el corporate header VW en aleman en los drawings
     //    "M-BN-L Beschaffung Neue Produktanläufe Lieferantenmanagement" -> Barack
     //    Los drawings son xl/drawings/drawing1.xml (Tabelle1),
@@ -518,6 +542,7 @@ async function finalizeXlsx(xlsxPath, jpegBuffer) {
         }
         if (changed) zip.file(f, xml);
     }
+    } // fin if (!vwOriginal)
 
     const out = await zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' });
     writeFileSync(xlsxPath, out);
@@ -552,10 +577,20 @@ $bmp.Dispose()
 // ==============================
 // MAIN
 // ==============================
+let row;
+if (dataFile) {
+    // Modo offline: ProjectData desde un JSON local (no toca Supabase).
+    const pdataLocal = JSON.parse(readFileSync(dataFile, 'utf8'));
+    row = {
+        id: pdataLocal.meta?.docId ?? sanitize(pdataLocal.meta?.name || projectId || 'local'),
+        data: pdataLocal,
+        updated_at: pdataLocal.meta?.date || new Date().toISOString(),
+        project_code: pdataLocal.meta?.project || '',
+    };
+} else {
 const envPath = new URL('../.env.local', import.meta.url).pathname.replace(/^\/([A-Z]:)/, '$1');
 const envText = readFileSync(envPath, 'utf8');
 const env = Object.fromEntries(envText.split('\n').filter(l => l.includes('=') && !l.startsWith('#')).map(l => { const i = l.indexOf('='); return [l.slice(0, i).trim(), l.slice(i + 1).trim()]; }));
-let row;
 if (env.SB_ACCESS_TOKEN) {
     // Auth por token de sesion (navegador) via REST directo — evita el manejo de JWT ES256 de supabase-js
     const resp = await fetch(`${env.VITE_SUPABASE_URL}/rest/v1/projects?id=eq.${projectId}&select=*`, {
@@ -571,6 +606,7 @@ if (env.SB_ACCESS_TOKEN) {
     if (error) { console.error('Error:', error.message); process.exit(1); }
     row = data;
 }
+}
 let pdata = row.data;
 if (typeof pdata === 'string') pdata = JSON.parse(pdata);
 
@@ -581,9 +617,12 @@ const templatePath = new URL('../src/assets/templates/gate3_template.xlsx', impo
 const wb = await XlsxPopulate.fromFileAsync(templatePath);
 
 // 1. Aplicar traducciones (xlsx-populate puede escribir sobre hojas protegidas —
-//    la proteccion es un flag que Excel enforza al abrir, no xlsx-populate internamente)
-applyTranslations(wb);
-applyStationLabels(wb);
+//    la proteccion es un flag que Excel enforza al abrir, no xlsx-populate internamente).
+//    En modo VW ORIGINAL se saltan: el template queda en aleman/ingles.
+if (!vwOriginal) {
+    applyTranslations(wb);
+    applyStationLabels(wb);
+}
 
 // 3. Aplicar header con datos del proyecto
 applyHeader(wb, project);
@@ -592,7 +631,7 @@ applyHeader(wb, project);
 const oee = wb.sheet('OEE CalculatorSFN');
 const cap = wb.sheet('CapacitySFN');
 const stationsToUse = project.stations.slice(0, GATE3_MAX_STATIONS);
-stationsToUse.forEach((s, idx) => applyStation(oee, cap, idx + 1, s));
+stationsToUse.forEach((s, idx) => applyStation(oee, cap, idx + 1, s, vwOriginal));
 for (let n = stationsToUse.length + 1; n <= GATE3_MAX_STATIONS; n++) {
     clearStation(oee, cap, n);
 }
@@ -625,7 +664,7 @@ for (let n = 1; n <= GATE3_MAX_STATIONS; n++) {
 //     borrando sheetProtection en el XML via JSZip, pero NO reinyectar nada).
 //
 // Guardar xlsx intermedio (xlsx-populate preserva las formulas y el formato)
-const defaultOutDir = process.argv[3] || join(homedir(), 'Documents');
+const defaultOutDir = outDirArg || join(homedir(), 'Documents');
 mkdirSync(defaultOutDir, { recursive: true });
 const oeePct = Math.round((pdata.meta?.manualOEE || 0.85) * 100);
 const versionSlug = sanitize(pdata.meta?.version || 'RevA');
@@ -637,16 +676,24 @@ await wb.toFileAsync(outputPath);
 //    a) Remover password-protection del template VW (borrar <sheetProtection.../> de las hojas visibles)
 //    b) Swap logo VW -> Barack (reemplaza xl/media/image1.jpeg)
 //    NO inyectamos tags nuevos para no romper el orden OOXML.
-const logoPngPath = new URL('../src/assets/barack_logo.png', import.meta.url).pathname.replace(/^\/([A-Z]:)/, '$1');
-const tempJpegPath = join(tmpdir(), `barack_logo_${Date.now()}.jpg`);
-try {
-    convertPngToJpegWhiteBg(logoPngPath, tempJpegPath);
-    const jpegBuf = readFileSync(tempJpegPath);
-    await finalizeXlsx(outputPath, jpegBuf);
-    console.log(`  Logo Barack aplicado (${jpegBuf.length} bytes)`);
+if (vwOriginal) {
+    // Formato VW ORIGINAL: no se swapea el logo ni se traduce nada; solo se
+    // desprotegen las hojas (Fak edita sin password).
+    await finalizeXlsx(outputPath, null, true);
+    console.log(`  Formato VW ORIGINAL (aleman/ingles, logo VW, sin traducir)`);
     console.log(`  Proteccion VW removida (hojas editables sin password)`);
-} finally {
-    if (existsSync(tempJpegPath)) unlinkSync(tempJpegPath);
+} else {
+    const logoPngPath = new URL('../src/assets/barack_logo.png', import.meta.url).pathname.replace(/^\/([A-Z]:)/, '$1');
+    const tempJpegPath = join(tmpdir(), `barack_logo_${Date.now()}.jpg`);
+    try {
+        convertPngToJpegWhiteBg(logoPngPath, tempJpegPath);
+        const jpegBuf = readFileSync(tempJpegPath);
+        await finalizeXlsx(outputPath, jpegBuf, false);
+        console.log(`  Logo Barack aplicado (${jpegBuf.length} bytes)`);
+        console.log(`  Proteccion VW removida (hojas editables sin password)`);
+    } finally {
+        if (existsSync(tempJpegPath)) unlinkSync(tempJpegPath);
+    }
 }
 
 console.log(`\nExcel Gate 3 generado con formato Barack:`);
@@ -664,7 +711,12 @@ for (const [i, s] of stationsToUse.entries()) {
     const cavLabel = PROCESS_TYPE_LABELS[s.processType]?.cavitiesApplies ? `cavidades=${s.cavities}` : `cavidades=N/A`;
     console.log(`    ${i + 1}. ${s.name} | ciclo=${s.cycleTimeSec}s | ${cavLabel} | oee=${(s.oeeOverride * 100).toFixed(0)}%`);
 }
-console.log(`\nTraducciones EN->ES aplicadas en: CapacitySFN, OEE CalculatorSFN, DiagramSFN`);
-console.log(`Logo VW reemplazado por logo Barack en las 3 hojas visibles`);
+if (vwOriginal) {
+    console.log(`\nFormato VW ORIGINAL: template aleman/ingles + logo VW SIN modificar`);
+    console.log(`Reserva de maquina compartida aplicada: reservationPct = ${(safeNum(pdata.meta?.reservationPct, 1) * 100).toFixed(2)}%`);
+} else {
+    console.log(`\nTraducciones EN->ES aplicadas en: CapacitySFN, OEE CalculatorSFN, DiagramSFN`);
+    console.log(`Logo VW reemplazado por logo Barack en las 3 hojas visibles`);
+}
 console.log(`Hojas editables sin password (proteccion VW removida)`);
 process.exit(0);
