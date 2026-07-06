@@ -57,13 +57,20 @@ export const CavityCalculator: React.FC<Props> = ({
         try {
             // Construye Gate3Project con UNA estacion (la inyeccion del Cavity Calc).
             // Sin OK/NOK estimados — el OEE viene del proyecto (oee prop) como override.
-            const cycleSec = Math.max(0, Number(calculator.metrics.realCycleTime.toFixed(2)));
+            // FIX cavidades VW (2026-07): cycleTimeSec debe ser el ciclo COMPLETO del molde.
+            // realCycleTime es POR PIEZA (= molde / cavidades). La formula VW multiplica cavidades
+            // como factor aparte, asi que sin este x activeN la capacidad sale inflada x cavidades.
+            const cycleSec = Math.max(0, Number((calculator.metrics.realCycleTime * calculator.activeN).toFixed(2)));
+            // Horas/turno reales desde la config de turnos (no hardcodear 8h)
+            const hoursPerShiftReal = (availableSeconds && activeShifts > 0)
+                ? Number((availableSeconds / activeShifts / 3600).toFixed(2))
+                : 8;
             const project: Gate3Project = {
                 partNumber: task.id || '',
                 partDesignation: task.description || 'Pieza inyectada',
                 project: '',
                 supplier: 'Barack Mercosul',
-                location: 'Zarate, Argentina',
+                location: 'Hurlingham, Buenos Aires, Argentina',
                 creator: '',
                 date: `${String(new Date().getDate()).padStart(2, '0')}/${String(new Date().getMonth() + 1).padStart(2, '0')}/${new Date().getFullYear()}`,
                 department: 'Inyeccion',
@@ -80,7 +87,7 @@ export const CavityCalculator: React.FC<Props> = ({
                     okParts: 0,
                     nokParts: 0,
                     shiftsPerWeek: activeShifts * 5,
-                    hoursPerShift: 8,
+                    hoursPerShift: hoursPerShiftReal,
                     reservationPct: 1,
                     machines: 1,
                     oeeOverride: oee,

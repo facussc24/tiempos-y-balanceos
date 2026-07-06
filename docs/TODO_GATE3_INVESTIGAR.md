@@ -2,6 +2,26 @@
 
 Detectado durante export del proyecto 16 (VWA PATAGONIA, Inyeccion PU Armrest+APB) el 2026-04-17.
 
+## ✅ RESUELTO 2026-07-06 — doble conteo de cavidades en el adapter de la app
+
+El bug de doble conteo de cavidades (item #3 de "Que investigar") quedó **corregido en la UI**,
+no solo en el script Node. Verificado con 5 agentes + lectura directa de la cadena
+`useTaskManager.ts:264` (cycleQuantity = cavidades) → `utils/graph.ts:142` (normaliza a por-pieza)
+→ `gate3FromBalancing.ts` (multiplicaba cavidades sobre el por-pieza).
+
+Fix aplicado:
+- `modules/gate3/gate3FromBalancing.ts` — para estaciones de inyección, `cycleTimeSec` se lleva
+  al ciclo COMPLETO del molde (`× cavidades`) antes de exportar (los 3 botones: LineBalancing,
+  ExecutiveSummary y el modal comparten este adapter salvo el modal, ver abajo).
+- `modules/CavityCalculator/index.tsx` — el botón "Excel VW" del modal usaba `realCycleTime`
+  (por-pieza); ahora usa `realCycleTime × activeN` (molde). Además: `hoursPerShift` real (no 8h
+  hardcodeado) y `location` = Hurlingham (no Zárate).
+- Regresión: `__tests__/gate3_cavity_export.test.ts` (cycleTimeSec = molde, capacidad no inflada).
+
+Pendiente menor: `machines: 1` sigue hardcodeado en el export del modal (subestima si hay
+inyectoras en paralelo; el usuario lo ajusta en el Excel). El bug de fecha (Bug 2, offset de 1 día)
+sigue vigente en `gate3FromBalancing.ts` (`new Date(meta.date)`).
+
 ## Bugs preexistentes en el adapter de la app
 
 Vive en `modules/gate3/gate3FromBalancing.ts` (funcion `buildGate3FromProjectData`).

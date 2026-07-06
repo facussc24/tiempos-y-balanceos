@@ -59,15 +59,6 @@ export function buildGate3FromProjectData(data: ProjectData): Gate3Project {
 
         const cfg = cfgMap.get(i);
         const replicas = cfg?.replicas && cfg.replicas > 0 ? cfg.replicas : 1;
-        let effective = calculateEffectiveStationTime(stationTasks);
-        if (!Number.isFinite(effective) || effective < 0) effective = 0;
-        const cycleTime = replicas > 0 ? effective / replicas : 0;
-
-        const stationOee = (() => {
-            const raw = calculateStationOEE(data, i, stationTasks[0]?.sectorId);
-            const num = Number.isFinite(raw) ? raw : globalOee;
-            return Math.min(1, Math.max(0, num));
-        })();
 
         const description = (stationTasks[0]?.description || `Estacion ${i}`).slice(0, 50);
         const processType = inferGate3ProcessType(description);
@@ -76,6 +67,25 @@ export function buildGate3FromProjectData(data: ProjectData): Gate3Project {
         const cavities = processType === 'inyeccion'
             ? Math.max(1, safeNum(stationTasks[0]?.injectionParams?.optimalCavities, 1))
             : 1;
+
+        let effective = calculateEffectiveStationTime(stationTasks);
+        if (!Number.isFinite(effective) || effective < 0) effective = 0;
+        let cycleTime = replicas > 0 ? effective / replicas : 0;
+
+        // FIX cavidades VW (2026-07): calculateEffectiveStationTime devuelve el tiempo POR PIEZA
+        // (times[] se normaliza dividiendo por cycleQuantity = cavidades en utils/graph.ts). La
+        // formula VW (CapacitySFN!G12) multiplica cavidades como factor APARTE, asi que cycleTimeSec
+        // debe ser el CICLO COMPLETO DEL MOLDE (todas las cavidades juntas). Sin esto la capacidad
+        // sale inflada x cavidades. Ref: docs/TODO_GATE3_INVESTIGAR.md.
+        if (processType === 'inyeccion' && cavities > 1) {
+            cycleTime *= cavities;
+        }
+
+        const stationOee = (() => {
+            const raw = calculateStationOEE(data, i, stationTasks[0]?.sectorId);
+            const num = Number.isFinite(raw) ? raw : globalOee;
+            return Math.min(1, Math.max(0, num));
+        })();
 
         stations.push({
             id: uuidv4(),
@@ -100,7 +110,7 @@ export function buildGate3FromProjectData(data: ProjectData): Gate3Project {
         partDesignation: data.meta?.name || '',
         project: data.meta?.name || '',
         supplier: 'Barack Mercosul',
-        location: 'Zarate, Argentina',
+        location: 'Hurlingham, Buenos Aires, Argentina',
         creator: '',
         date: data.meta?.date || today(),
         department: 'Ingenieria',
