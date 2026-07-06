@@ -317,15 +317,15 @@ function buildGate3FromProjectData(data, row) {
     const projDate = data.meta?.date || row.updated_at || new Date().toISOString();
 
     return {
-        // partNumber/partDesignation = nombre de la pieza/proyecto
-        partNumber: data.meta?.name || '',
-        partDesignation: data.meta?.name || '',
+        // partNumber/partDesignation: campos dedicados si existen, sino el nombre
+        partNumber: data.meta?.partNumber || data.meta?.name || '',
+        partDesignation: data.meta?.partDesignation || data.meta?.name || '',
         // "Proyecto" = codigo del proyecto (PATAGONIA, P703, etc.)
         project: data.meta?.project || row.project_code || '',
         supplier: 'Barack Mercosul',
         location: 'Hurlingham, Buenos Aires, Argentina',
-        // Creator vacio — Fak no quiere atribucion
-        creator: '',
+        // Creator: usa meta.creator si esta (ej. F.Santoro), sino vacio
+        creator: data.meta?.creator || '',
         date: formatDate(projDate),
         department: 'Ingenieria',
         // Numero interno de documento
@@ -555,11 +555,22 @@ $bmp.Dispose()
 const envPath = new URL('../.env.local', import.meta.url).pathname.replace(/^\/([A-Z]:)/, '$1');
 const envText = readFileSync(envPath, 'utf8');
 const env = Object.fromEntries(envText.split('\n').filter(l => l.includes('=') && !l.startsWith('#')).map(l => { const i = l.indexOf('='); return [l.slice(0, i).trim(), l.slice(i + 1).trim()]; }));
-const sb = createClient(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_ANON_KEY);
-await sb.auth.signInWithPassword({ email: env.VITE_AUTO_LOGIN_EMAIL, password: env.VITE_AUTO_LOGIN_PASSWORD });
-
-const { data: row, error } = await sb.from('projects').select('*').eq('id', projectId).single();
-if (error) { console.error('Error:', error.message); process.exit(1); }
+let row;
+if (env.SB_ACCESS_TOKEN) {
+    // Auth por token de sesion (navegador) via REST directo — evita el manejo de JWT ES256 de supabase-js
+    const resp = await fetch(`${env.VITE_SUPABASE_URL}/rest/v1/projects?id=eq.${projectId}&select=*`, {
+        headers: { apikey: env.VITE_SUPABASE_ANON_KEY, Authorization: `Bearer ${env.SB_ACCESS_TOKEN}` },
+    });
+    const rows = await resp.json();
+    if (!resp.ok || !Array.isArray(rows) || rows.length === 0) { console.error('Error query:', resp.status, JSON.stringify(rows).slice(0, 300)); process.exit(1); }
+    row = rows[0];
+} else {
+    const sb = createClient(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_ANON_KEY);
+    await sb.auth.signInWithPassword({ email: env.VITE_AUTO_LOGIN_EMAIL, password: env.VITE_AUTO_LOGIN_PASSWORD });
+    const { data, error } = await sb.from('projects').select('*').eq('id', projectId).single();
+    if (error) { console.error('Error:', error.message); process.exit(1); }
+    row = data;
+}
 let pdata = row.data;
 if (typeof pdata === 'string') pdata = JSON.parse(pdata);
 

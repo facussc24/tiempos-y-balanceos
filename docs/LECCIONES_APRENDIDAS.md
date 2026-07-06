@@ -14,6 +14,26 @@ contiene SOLO lo accionable que NO esta ya codificado como regla o gate ejecutab
 
 ## Lecciones operativas vigentes
 
+### 2026-07-06 — Inyección: estudio de tiempos + capacidad de planta (proyecto balanceo id 20)
+- **Cargar tiempos de inyección en "Tiempos y Balanceos" = crear proyecto en tabla `projects`.**
+  `data` es **STRING JSON** (columna TEXT), NO jsonb — al revés que `amfe_documents` (stringify SÍ acá).
+  Sin `.env.local` NI MCP Supabase: se hace por la **sesión logueada del app en Chrome**
+  (admin@barack.com) + PostgREST (anon key del bundle JS, token de `localStorage['sb-...-auth-token']`).
+  Molde = injection task: `times=[ciclo]`, `cycleQuantity=cav`, `standardTime=ciclo/cav`,
+  `injectionParams.optimalCavities=cav`, `pInyectionTime=0`/`pCuringTime=ciclo`, `injectionMode=batch`.
+  Turnos estándar del módulo = **21,5 h netas/día** (T1 8h + T2 7,25h + T3 6,25h).
+- **Capacidad de planta**: `horas_máquina = golpes × ciclo / 3600` — **NO depende de cavidades**
+  (1 golpe saca todas juntas). `piezas = golpes × cavidades`. golpes/día = **TIROS reales** (Fak).
+  Capacidad = Σ horas de moldes + cambios (60 min c/u) vs 21,5h. Resultado real: 1200T **100%**
+  (al límite), 750T **161%** → necesita **2da prensa** (split Delantero/Trasero balancea perfecto).
+- **Meta**: un resultado que a Fak "le parece raro" puede ser real — verificar aritmética Y
+  supuestos (tiros vs piezas; señal delatora: mismo nº con distinta cavidad = quizá piezas mal
+  cargadas) antes de defender el número. Su intuición es buen detector de errores de modelado.
+- **No re-preguntar cuando ya dio los datos**: calcular y ENTREGAR; preguntar solo lo que cambia
+  el resultado. Preguntar de más lo agota/frustra (lección fuerte de esta sesión).
+- **Bug arreglado (commit 0aaf86e)**: export VW Gate3 contaba cavidades ×2 en los 3 caminos
+  (per-pieza × cavidades). Fix: `cycleTimeSec` = ciclo de molde. Detalle: `docs/TODO_GATE3_INVESTIGAR.md`.
+
 ### 2026-07-03 — Instructivos SGC Barack desactualizados (NPR vs AP)
 - El I-AC-005 interno habla de "NPR > 100" (AIAG 4ta ed, vieja). Fak confirma: hoy es AIAG-VDA
   con AP — **manual interno vs practica actual de Fak → gana la practica**. Del instructivo solo
