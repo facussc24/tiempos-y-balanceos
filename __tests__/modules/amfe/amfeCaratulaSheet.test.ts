@@ -1,7 +1,30 @@
 import { describe, it, expect } from 'vitest';
 import XLSX from 'xlsx-js-style';
 import { buildCaratulaSheet, normalizeRevisions } from '../../../modules/amfe/amfeCaratulaSheet';
-import type { AmfeDocument } from '../../../modules/amfe/amfeTypes';
+import { buildAmfeOficialWorkbook, assertAmfeExportable } from '../../../modules/amfe/amfeExcelExport';
+import type { AmfeDocument, AmfeOperation } from '../../../modules/amfe/amfeTypes';
+
+/** Operacion minima con una causa; sod = [severity, occurrence, detection]. */
+function makeOp(sod: [string | number, string | number, string | number]): AmfeOperation {
+    const [severity, occurrence, detection] = sod;
+    return {
+        id: 'op1', opNumber: '10', name: 'COSTURA', workElements: [{
+            id: 'we1', type: 'Machine', name: 'Máquina', functions: [{
+                id: 'fn1', description: 'Coser', requirements: '', failures: [{
+                    id: 'f1', description: 'Costura floja', effectLocal: 'Retrabajo',
+                    effectNextLevel: '', effectEndUser: '', severity,
+                    causes: [{
+                        id: 'c1', cause: 'Tensión mal regulada', preventionControl: '', detectionControl: '',
+                        occurrence, detection, ap: '', characteristicNumber: '', specialChar: '', filterCode: '',
+                        preventionAction: '', detectionAction: '', responsible: '', targetDate: '', status: '',
+                        actionTaken: '', completionDate: '', severityNew: '', occurrenceNew: '', detectionNew: '',
+                        apNew: '', observations: '',
+                    }],
+                }],
+            }],
+        }],
+    } as AmfeOperation;
+}
 
 // Documento minimo con header rico (aliases incluidos) para la caratula.
 function makeDoc(headerOverrides: Record<string, unknown> = {}): AmfeDocument {
@@ -111,5 +134,35 @@ describe('buildCaratulaSheet', () => {
         expect(joined).toContain('FIRMAS DE APROBACION');
         expect(joined).toContain('Carlos Baptista'); // INGENIERIA = responsible
         expect(joined).toContain('Gonzalo Cal');       // CALIDAD = approvedBy
+    });
+});
+
+describe('assertAmfeExportable', () => {
+    it('no lanza cuando todas las causas tienen S/O/D', () => {
+        const doc = { ...makeDoc(), operations: [makeOp([6, 4, 3])] };
+        expect(() => assertAmfeExportable(doc)).not.toThrow();
+    });
+
+    it('lanza si falta la severidad (del failure)', () => {
+        const doc = { ...makeDoc(), operations: [makeOp(['', 4, 3])] };
+        expect(() => assertAmfeExportable(doc)).toThrow(/incompleto/i);
+    });
+
+    it('lanza si falta occurrence o detection (de la causa)', () => {
+        expect(() => assertAmfeExportable({ ...makeDoc(), operations: [makeOp([6, '', 3])] })).toThrow(/incompleto/i);
+        expect(() => assertAmfeExportable({ ...makeDoc(), operations: [makeOp([6, 4, ''])] })).toThrow(/incompleto/i);
+    });
+});
+
+describe('buildAmfeOficialWorkbook', () => {
+    it('antepone la Caratula: SheetNames = [Caratula, AMFE]', () => {
+        const doc = { ...makeDoc(), operations: [makeOp([6, 4, 3])] };
+        const wb = buildAmfeOficialWorkbook(doc, { revisions: [], status: 'draft' });
+        expect(wb.SheetNames).toEqual(['Caratula', 'AMFE']);
+    });
+
+    it('propaga el throw del guard cuando el AMFE esta incompleto', () => {
+        const doc = { ...makeDoc(), operations: [makeOp([6, '', 3])] };
+        expect(() => buildAmfeOficialWorkbook(doc, { revisions: [], status: 'draft' })).toThrow(/incompleto/i);
     });
 });

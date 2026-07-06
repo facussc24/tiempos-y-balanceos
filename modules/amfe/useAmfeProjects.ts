@@ -30,6 +30,7 @@ import { logger } from '../../utils/logger';
 import { loadAmfeByProjectName } from '../../utils/repositories/amfeRepository';
 import { triggerOverrideTracking } from '../../core/inheritance/triggerOverrideTracking';
 import { triggerChangePropagation, triggerCrossFamilyPropagation } from '../../core/inheritance/changePropagation';
+import { recordAmfeChanges } from './recordAmfeChanges';
 import { toast } from '../../components/ui/Toast';
 
 /** Identifies the current open project in the hierarchy */
@@ -410,6 +411,9 @@ export const useAmfeProjects = (
                     const loaded = await loadAmfeByProjectName(projectName);
                     if (loaded) {
                         triggerOverrideTracking(loaded.meta.id, currentData, 'amfe');
+                        // Fire-and-forget: registrar el diff de contenido en amfe_change_log
+                        // (change-log entre revisiones). oldAmfeDoc null = creacion del documento.
+                        recordAmfeChanges(loaded.meta.id, oldAmfeDoc, currentData);
                         // Fire-and-forget: propagate master changes to variants
                         if (oldAmfeDoc) {
                             triggerChangePropagation(loaded.meta.id, oldAmfeDoc, currentData, 'amfe');

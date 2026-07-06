@@ -18,3 +18,4 @@ export * from './familyRepository';
 export * from './familyDocumentRepository';
 export * from './bomRepository';
 export * from './amfeRegistryRepository';
+export * from './amfeChangeLogRepository';

@@ -18,6 +18,7 @@ import AmfeRiskSummaryBar from './AmfeRiskSummaryBar';
 import { RevisionPromptModal } from '../../components/modals/RevisionPromptModal';
 import { CrossDocAlertBanner } from '../../components/ui/CrossDocAlertBanner';
 import { RevisionHistoryPanel } from '../../components/layout/RevisionHistoryPanel';
+import { PendingChangesPanel } from '../../components/panels/PendingChangesPanel';
 import { useRevisionControl } from '../../hooks/useRevisionControl';
 import { useDocumentLock } from '../../hooks/useDocumentLock';
 import DocumentLockBanner from '../../components/ui/DocumentLockBanner';
@@ -250,6 +251,38 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab, initialF
             amfe.updateHeader('revision', newLevel);
         },
     });
+
+    // 4e2. Cambios pendientes (change-log): resumenes para el panel y el modal de revision.
+    // pendingRefreshKey se incrementa tras guardar para recargar el panel.
+    const [pendingRefreshKey, setPendingRefreshKey] = useState(0);
+    const [pendingSummaries, setPendingSummaries] = useState<string[]>([]);
+    // Al abrir el modal de nueva revision, cargar los summaries pendientes para
+    // mostrarlos y prefilear la descripcion.
+    useEffect(() => {
+        if (!revisionControl.showRevisionPrompt || !projects.currentProject) {
+            return;
+        }
+        let cancelled = false;
+        import('../../utils/repositories/amfeChangeLogRepository')
+            .then(({ listPendingChanges }) => listPendingChanges(projects.currentProject as string))
+            .then(rows => {
+                if (!cancelled) setPendingSummaries(rows.map(r => r.summary));
+            })
+            .catch(err => {
+                logger.warn('AmfeApp', 'Failed to load pending summaries for revision modal', {
+                    error: err instanceof Error ? err.message : String(err),
+                });
+                if (!cancelled) setPendingSummaries([]);
+            });
+        return () => { cancelled = true; };
+    }, [revisionControl.showRevisionPrompt, projects.currentProject]);
+
+    // Refrescar el panel de cambios pendientes cada vez que el guardado formal termina.
+    useEffect(() => {
+        if (projects.saveStatus === 'saved') {
+            setPendingRefreshKey(k => k + 1);
+        }
+    }, [projects.saveStatus]);
 
     // 4f. Cross-document alerts
     const crossDocAlerts = useCrossDocAlerts('amfe', projects.currentProject);
@@ -667,6 +700,12 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab, initialF
                 onToggle={() => revisionControl.setShowRevisionHistory(!revisionControl.showRevisionHistory)}
             />
 
+            {/* Cambios sin oficializar desde la ultima revision */}
+            <PendingChangesPanel
+                documentId={projects.currentProject}
+                refreshKey={pendingRefreshKey}
+            />
+
             <AmfeSideDrawer
                 activePanel={activePanel}
                 setActivePanel={setActivePanel}
@@ -860,6 +899,7 @@ const AmfeApp: React.FC<AmfeAppProps> = ({ onBackToLanding, initialTab, initialF
                 onConfirm={(desc, by) => revisionControl.confirmRevision(desc, by)}
                 currentRevisionLevel={amfe.data.header.revision || 'A'}
                 nextRevisionLevel={getNextRevisionLevel(amfe.data.header.revision || 'A')}
+                pendingSummaries={pendingSummaries}
             />
 
         </div>

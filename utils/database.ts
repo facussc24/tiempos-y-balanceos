@@ -495,6 +495,26 @@ CREATE TABLE IF NOT EXISTS amfe_registry (
 
 CREATE INDEX IF NOT EXISTS idx_amfe_registry_estado ON amfe_registry(estado);
 CREATE INDEX IF NOT EXISTS idx_amfe_registry_doc    ON amfe_registry(document_id);
+
+-- Registro de cambios de contenido de un AMFE entre revisiones (diff-on-save).
+CREATE TABLE IF NOT EXISTS amfe_change_log (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    document_id     TEXT NOT NULL REFERENCES amfe_documents(id) ON DELETE CASCADE,
+    op_number       TEXT NOT NULL DEFAULT '',
+    scope           TEXT NOT NULL CHECK (scope IN ('header','operation','workElement','function','failure','cause','document')),
+    change_type     TEXT NOT NULL CHECK (change_type IN ('added','removed','modified')),
+    item_label      TEXT NOT NULL DEFAULT '',
+    field           TEXT NOT NULL DEFAULT '',
+    old_value       TEXT NOT NULL DEFAULT '',
+    new_value       TEXT NOT NULL DEFAULT '',
+    summary         TEXT NOT NULL,
+    changed_by      TEXT NOT NULL DEFAULT '',
+    changed_by_type TEXT NOT NULL DEFAULT 'user',
+    consumed_in_rev TEXT DEFAULT NULL,
+    created_at      TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_amfe_change_log_doc ON amfe_change_log(document_id, consumed_in_rev);
 `;
 
 // ---------------------------------------------------------------------------
@@ -953,6 +973,37 @@ async function runMigrations(adapter: DbAdapter): Promise<void> {
             [18, 'Add amfe_registry catalog table (Listado Maestro de AMFEs)']
         );
         logger.info('Database', 'Migration 18: amfe_registry catalog table created');
+    }
+
+    // Migration 18 → 19: Add amfe_change_log table (diff-on-save change tracking)
+    if (currentVersion < 19) {
+        try {
+            await adapter.execute(`CREATE TABLE IF NOT EXISTS amfe_change_log (
+                id              INTEGER PRIMARY KEY AUTOINCREMENT,
+                document_id     TEXT NOT NULL REFERENCES amfe_documents(id) ON DELETE CASCADE,
+                op_number       TEXT NOT NULL DEFAULT '',
+                scope           TEXT NOT NULL CHECK (scope IN ('header','operation','workElement','function','failure','cause','document')),
+                change_type     TEXT NOT NULL CHECK (change_type IN ('added','removed','modified')),
+                item_label      TEXT NOT NULL DEFAULT '',
+                field           TEXT NOT NULL DEFAULT '',
+                old_value       TEXT NOT NULL DEFAULT '',
+                new_value       TEXT NOT NULL DEFAULT '',
+                summary         TEXT NOT NULL,
+                changed_by      TEXT NOT NULL DEFAULT '',
+                changed_by_type TEXT NOT NULL DEFAULT 'user',
+                consumed_in_rev TEXT DEFAULT NULL,
+                created_at      TEXT NOT NULL DEFAULT (datetime('now'))
+            )`);
+            await adapter.execute(`CREATE INDEX IF NOT EXISTS idx_amfe_change_log_doc ON amfe_change_log(document_id, consumed_in_rev)`);
+        } catch (e) {
+            logger.warn('Database', 'Migration 19: amfe_change_log table creation skipped', {}, e instanceof Error ? e : undefined);
+        }
+
+        await adapter.execute(
+            `INSERT OR REPLACE INTO schema_version (version, description) VALUES (?, ?)`,
+            [19, 'Add amfe_change_log table for diff-on-save change tracking']
+        );
+        logger.info('Database', 'Migration 19: amfe_change_log table created');
     }
 }
 
@@ -1697,6 +1748,7 @@ class SupabaseAdapter implements DbAdapter {
         'projects', 'drafts', 'document_revisions', 'cross_doc_checks',
         'product_families', 'product_family_members', 'products',
         'customer_lines', 'recent_projects', 'pending_exports', 'schema_version',
+        'amfe_change_log',
     ]);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

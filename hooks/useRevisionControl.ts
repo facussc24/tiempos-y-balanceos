@@ -17,6 +17,7 @@ import {
     type RevisionListItem,
 } from '../utils/repositories/revisionRepository';
 import { upsertCrossDocCheck } from '../utils/repositories/crossDocRepository';
+import { markConsumed } from '../utils/repositories/amfeChangeLogRepository';
 import { getDownstreamTargets } from '../utils/crossDocumentAlerts';
 import { generateChecksum } from '../utils/crypto';
 import { logger } from '../utils/logger';
@@ -118,6 +119,21 @@ export function useRevisionControl(params: UseRevisionControlParams): UseRevisio
                 // FIX: Include module/doc context for debuggability
                 logger.error('useRevisionControl', `Failed to save revision ${currentRevisionLevel} for ${module}/${documentId}`);
                 return null;
+            }
+
+            // 3b. Marcar los cambios del change-log como consumidos por esta revision
+            // (solo AMFE tiene change-log). Si falla no se rompe el flujo: el snapshot
+            // ya se guardo; los cambios pendientes simplemente se re-mostrarian.
+            if (module === 'amfe') {
+                try {
+                    await markConsumed(documentId, currentRevisionLevel);
+                } catch (err) {
+                    logger.warn('useRevisionControl', 'Failed to mark change-log consumed (revision already saved)', {
+                        documentId,
+                        rev: currentRevisionLevel,
+                        error: err instanceof Error ? err.message : String(err),
+                    });
+                }
             }
 
             // 4. Compute next level

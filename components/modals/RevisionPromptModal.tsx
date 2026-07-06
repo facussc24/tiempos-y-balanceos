@@ -18,6 +18,8 @@ interface RevisionPromptModalProps {
     currentRevisionLevel: string;
     nextRevisionLevel: string;
     defaultRevisedBy?: string;
+    /** Resumenes de cambios registrados desde la ultima revision (change-log). */
+    pendingSummaries?: string[];
 }
 
 export const RevisionPromptModal: React.FC<RevisionPromptModalProps> = ({
@@ -27,8 +29,14 @@ export const RevisionPromptModal: React.FC<RevisionPromptModalProps> = ({
     currentRevisionLevel,
     nextRevisionLevel,
     defaultRevisedBy = '',
+    pendingSummaries,
 }) => {
-    const [description, setDescription] = useState('');
+    // Prefill de la descripcion con los summaries pendientes (uno por linea).
+    // Al reabrir el modal el componente se remonta (retorna null cuando !isOpen),
+    // por lo que este inicializador corre de nuevo con los summaries frescos.
+    const [description, setDescription] = useState(() =>
+        pendingSummaries && pendingSummaries.length > 0 ? pendingSummaries.join('\n') : ''
+    );
     const [revisedBy, setRevisedBy] = useState(defaultRevisedBy);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const modalRef = useFocusTrap(isOpen);
@@ -108,6 +116,26 @@ export const RevisionPromptModal: React.FC<RevisionPromptModalProps> = ({
                             {formatRevisionLabel(nextRevisionLevel)}
                         </span>
                     </div>
+
+                    {/* Cambios registrados desde la ultima revision (change-log) */}
+                    {pendingSummaries && pendingSummaries.length > 0 && (
+                        <div className="mb-4">
+                            <p className="block text-xs font-bold text-gray-500 mb-1">
+                                Cambios registrados desde la última revisión
+                                <span className="ml-1.5 bg-amber-100 text-amber-700 text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                                    {pendingSummaries.length}
+                                </span>
+                            </p>
+                            <ul className="max-h-28 overflow-y-auto rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 space-y-1">
+                                {pendingSummaries.map((s, i) => (
+                                    <li key={i} className="flex items-start gap-2 text-[11px] text-gray-600">
+                                        <span className="mt-1.5 w-1 h-1 rounded-full bg-amber-400 flex-shrink-0" />
+                                        <span className="flex-1">{s}</span>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
 
                     {/* Description */}
                     <div className="mb-4">
