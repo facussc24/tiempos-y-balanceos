@@ -624,6 +624,19 @@ if (!vwOriginal) {
     applyStationLabels(wb);
 }
 
+// 2. Limpiar el bloque de ejemplo que trae el template VW en la hoja
+//    "Observaciones" (B11:G18: "KM 4000T / Rear spoiler", OEE 0,8, etc.).
+//    Son datos de OTRO producto: si quedan, el cliente ve un descuido.
+//    Aplica en ambos modos (hallazgo validacion Patagonia 2026-07-07).
+const obsSheet = wb.sheet('Observaciones');
+if (obsSheet) {
+    for (let r = 11; r <= 18; r++) {
+        for (const c of ['B', 'C', 'D', 'E', 'F', 'G']) {
+            obsSheet.cell(`${c}${r}`).clear();
+        }
+    }
+}
+
 // 3. Aplicar header con datos del proyecto
 applyHeader(wb, project);
 
