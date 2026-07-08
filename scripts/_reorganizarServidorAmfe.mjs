@@ -58,6 +58,31 @@ function nombreCanonico(code, producto, rev) {
     return `AMFE ${code} - ${prod}${revTxt}.xlsx`;
 }
 
+/**
+ * Resuelve la rev para el NOMBRE, migrando a letras (decision Fak 2026-07-06):
+ *  - archivo con rev en LETRA  → usar la del archivo (verdad fisica; si va adelantado
+ *    del registro se marca para reconciliar el listado).
+ *  - archivo con rev NUMERICA o sin rev → usar la letra del registro (rev_actual).
+ */
+function resolverRevLetra(revArchivo, revRegistro) {
+    const esLetra = /^[A-Z]$/i.test(revArchivo);
+    if (esLetra) return { rev: revArchivo.toUpperCase(), migradoDeNumero: false };
+    return { rev: String(revRegistro || '').toUpperCase(), migradoDeNumero: !!revArchivo };
+}
+
+/**
+ * true si el nombre ya es "aceptable" y no conviene renombrarlo (decision Fak: no
+ * churnear los que ya estan bien, ej. 128/129/159/160):
+ *  - ya en forma "AMFE <code> - <producto> - Rev X" con producto real, o
+ *  - forma del export de la app "REV X - AMFE DE PROCESO N <code>".
+ */
+function yaAceptable(nombre, code) {
+    const n = sinAcentos(nombre);
+    const canonico = new RegExp(`^AMFE\\s+${code}\\s*-\\s*.+-\\s*REV`, 'i');
+    const exportApp = new RegExp(`REV\\s+\\w+\\s*-\\s*AMFE DE PROCESO N\\s*${code}\\b`, 'i');
+    return canonico.test(n) || exportApp.test(n);
+}
+
 const CSV_ESC = (v) => {
     const s = String(v ?? '');
     return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
@@ -79,11 +104,18 @@ for (const r of registry) {
     if (extname(actual).toLowerCase() !== '.xlsx' && extname(actual).toLowerCase() !== '.xls') continue;
 
     const revArchivo = revDeArchivo(actual);
-    const rev = revArchivo || (r.rev_actual || '');
+    const { rev, migradoDeNumero } = resolverRevLetra(revArchivo, r.rev_actual);
     const destino = nombreCanonico(r.amfe_code, r.producto, rev);
 
-    const discrepancia = revArchivo && r.rev_actual && revArchivo !== String(r.rev_actual)
-        ? `rev archivo=${revArchivo} vs registro=${r.rev_actual}` : '';
+    // Discrepancias a marcar para Fak:
+    let discrepancia = '';
+    if (migradoDeNumero) discrepancia = `archivo Rev.${revArchivo} (numero) → letra ${rev || '?'} del registro`;
+    else if (/^[A-Z]$/i.test(revArchivo) && r.rev_actual && revArchivo.toUpperCase() !== String(r.rev_actual).toUpperCase())
+        discrepancia = `archivo Rev.${revArchivo.toUpperCase()} ADELANTADO vs registro ${r.rev_actual} — actualizar listado`;
+
+    const aceptable = yaAceptable(actual, r.amfe_code);
+    const accion = aceptable ? 'OK (nombre aceptable, no se toca)'
+        : (actual === destino ? 'OK (ya canonico)' : 'RENOMBRAR');
 
     plan.push({
         code: r.amfe_code,
@@ -91,7 +123,7 @@ for (const r of registry) {
         carpetaRel,
         actual,
         destino,
-        accion: actual === destino ? 'OK (ya canonico)' : 'RENOMBRAR',
+        accion,
         revArchivo, revRegistro: r.rev_actual || '', discrepancia,
     });
 }
@@ -103,20 +135,30 @@ const quilombo = (inventario.archivos || []).filter(a => a.esExcel && a.enQuilom
 
 mkdirSync('reports', { recursive: true });
 const renombrar = plan.filter(p => p.accion === 'RENOMBRAR');
-const okYa = plan.filter(p => p.accion !== 'RENOMBRAR');
+const aceptables = plan.filter(p => p.accion.startsWith('OK (nombre aceptable'));
+const adelantados = plan.filter(p => p.discrepancia.includes('ADELANTADO'));
 
-const csv = ['amfe_code,estado,carpeta,desde,hacia,rev_archivo,rev_registro,discrepancia'];
+const csv = ['amfe_code,accion,estado,carpeta,desde,hacia,rev_archivo,rev_registro,discrepancia'];
 for (const p of plan) {
-    csv.push([p.code, p.estado, p.carpetaRel, p.actual, p.destino, p.revArchivo, p.revRegistro, p.discrepancia].map(CSV_ESC).join(','));
+    csv.push([p.code, p.accion, p.estado, p.carpetaRel, p.actual, p.destino, p.revArchivo, p.revRegistro, p.discrepancia].map(CSV_ESC).join(','));
 }
 writeFileSync('reports/plan_reorganizacion.csv', csv.join('\n'));
 
-console.info('═══ PLAN DE REORGANIZACION (renombrado in-place) ═══');
-console.info(`Total con server_path: ${plan.length} | a renombrar: ${renombrar.length} | ya canonicos: ${okYa.length}`);
-console.info(`Discrepancias rev archivo/registro: ${plan.filter(p => p.discrepancia).length}`);
+console.info('═══ PLAN DE REORGANIZACION (renombrado in-place, migrando a letras) ═══');
+console.info(`Total con server_path: ${plan.length} | a RENOMBRAR: ${renombrar.length} | nombre ya OK (no se tocan): ${aceptables.length}`);
+console.info(`Numericos que se migran a letra: ${plan.filter(p => p.discrepancia.includes('numero')).length}`);
+console.info(`Archivos ADELANTADOS del listado (reconciliar): ${adelantados.length}`);
 console.info(`Archivos en 1.ORGANIZAR (revision manual, NO se tocan): ${quilombo.length}`);
 console.info('\nEjemplos de renombrado:');
 renombrar.slice(0, 12).forEach(p => console.info(`  [${p.code}] ${p.actual}\n        → ${p.destino}${p.discrepancia ? '  (⚠ ' + p.discrepancia + ')' : ''}`));
+if (aceptables.length) {
+    console.info('\nNombres ya OK (se dejan tal cual):');
+    aceptables.forEach(p => console.info(`  [${p.code}] ${p.actual}`));
+}
+if (adelantados.length) {
+    console.info('\n⚠ Archivos MAS NUEVOS que el listado — actualizar el registro:');
+    adelantados.forEach(p => console.info(`  [${p.code}] ${p.discrepancia}`));
+}
 console.info(`\nCSV completo: reports/plan_reorganizacion.csv`);
 
 if (!APPLY) {
