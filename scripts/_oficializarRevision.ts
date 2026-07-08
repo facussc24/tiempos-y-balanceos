@@ -129,7 +129,7 @@ async function main() {
     const parsed = parseData(doc.data) as AmfeDocument;
     if (!parsed || !Array.isArray(parsed.operations)) throw new Error('El doc no tiene operations[] — data corrupta.');
 
-    const revActual = String(parsed.header?.revision || registry?.amfe_code && 'A' || 'A');
+    const revActual = String(parsed.header?.revision || 'A');
     const revNueva = getNextRevisionLevel(revActual);
     const hoy = fechaAR();
 
