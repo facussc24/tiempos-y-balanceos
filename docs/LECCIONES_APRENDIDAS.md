@@ -43,7 +43,9 @@ contiene SOLO lo accionable que NO esta ya codificado como regla o gate ejecutab
 - **Un paquete con 2 métricas de carga distintas confunde al cliente**: el resumen medía
   (producción+cambios)/21,5h sin OEE (117 %/161 %) y los Gate3 producción/OEE sin cambios
   (116 %/156 %). Ninguno era erróneo, pero el LEEME citaba solo una → parecía contradicción.
-  Si conviven 2 criterios, el LEEME debe explicitar ambos (y el modelo completo: ≈137 %/189 %).
+  Si conviven 2 criterios, el LEEME debe explicitar ambos. Convención canónica del modelo
+  completo (2026-07-07): horas = producción ÷ OEE + cambios de molde FIJOS (el OEE no aplica a
+  paradas planificadas) → relevado 1200T ≈ 134 %, 750T ≈ 184 %.
 - **La duda de Fak "¿esta columna está bien?" se valida en 3 capas**: fuente de datos (¿golpes o
   piezas?), motor de cálculo (¿cavidades 1 sola vez?), y recálculo independiente del archivo final.
   Las 3 dieron OK — horas máquina = golpes×ciclo sin cavidades es correcto (ver 2026-07-06).
