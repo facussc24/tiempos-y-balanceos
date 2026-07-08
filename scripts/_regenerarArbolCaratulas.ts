@@ -71,6 +71,10 @@ for (const r of rows) {
     const destDir = join(DEST_ROOT, relDir);
     if (!existsSync(destDir)) { fallos.push(`${r.code}: no existe la carpeta ${relDir} (¿corriste _construirArbolAmfe?)`); continue; }
 
+    // El N° oficial del AMFE es el del registro (ej. 149), no el id viejo del doc
+    // (ej. VWA-PAT-IPPADS-001). Forzarlo en la caratula para consistencia.
+    if (doc.header) doc.header.amfeNumber = r.code;
+
     try {
         const wb = buildAmfeOficialWorkbook(doc, { revisions: r.revisions, status: r.status as AmfeLifecycleStatus });
         writeFileSync(join(destDir, nombre), Buffer.from(XLSX.write(wb, { bookType: 'xlsx', type: 'array' }) as ArrayBuffer));
