@@ -14,9 +14,17 @@ type: reference
 
 ### Armrest Rear
 - **APQP**: `Armrest Rear\1-APQP\`
-  - AMFE: `22- FMEA de proceso\AMFE - Apb Tra Rev.1 - Patagonia.xlsx`
+  - AMFE: `22- FMEA de proceso\AMFE de Proceso - ARMREST REAR CENTER (3).xlsx` (coincide con Supabase AMFE 150)
   - Plan de Control: `12-Plan de Control\PATAGONIA-ARMREST REAR L3_PdC_Preliminar.pdf`
-  - Flujograma: `20- Flujograma de proceso\FLUJOGRAMA_151_ APB TRA CEN_PATAGONIA_REV.A.pdf`
+  - Flujograma actual: `20- Flujograma de proceso\FLUJOGRAMA_151_ APB TRA CEN_PATAGONIA_REV.A.pdf`
+  - Flujograma preliminar (nuevo, Claude Design): `9-Flujograma del proceso preliminar\FLUJOGRAMA_DE_PROCESO_ARMREST__REAR__L3_preliminar.png`
+
+### Esquema de carpetas APQP de Barack (dentro de `<Producto>\1-APQP\`, mapeado 2026-07-17)
+Las carpetas 1-34 son los elementos APQP. Las mas usadas:
+`9`=Flujograma proceso PRELIMINAR · `12`=Plan de Control · `17`=Caracteristicas Especiales (I-PY-001.7) ·
+`20`=Flujograma de proceso · `22`=FMEA de proceso (AMFE) · `26`=Instrucciones de Proceso ·
+`23`=IMDS · `24`=PdC prelanzamiento · `29`=Estudio preliminar capacidad · `31`=PPAP. Base VWA:
+`Y:\BARACK\CALIDAD\DOCUMENTACION SGC\PPAP CLIENTES\VW\VW427-1LA_K-PATAGONIA\` (`\\server\compartido`=Y:).
 
 ### IP PADs (producto nuevo, no en las 8 familias actuales)
 - **APQP**: `IP PADs\APQP\`
