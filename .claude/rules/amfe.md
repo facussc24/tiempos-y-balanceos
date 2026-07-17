@@ -3,8 +3,23 @@ description: Reglas del modulo AMFE — severidades, CC/SC, funciones VDA, work 
 paths:
   - "modules/amfe/**"
   - "core/amfe/**"
-  - "scripts/**/*.mjs"
   - "utils/seed/**"
+  - "scripts/**/*mfe*.mjs"
+  - "scripts/**/*MFE*.mjs"
+  - "scripts/_lib/**"
+  - "scripts/_auditAll.mjs"
+  - "scripts/_auditWePlaceholdersAndAllocation.mjs"
+  - "scripts/_auditInventos*.mjs"
+  - "scripts/_auditTextQuality.mjs"
+  - "scripts/_auditStructureV2.mjs"
+  - "scripts/_auditarArbolNuevo.mjs"
+  - "scripts/_readiness.mjs"
+  - "scripts/_healWeNameByCrossRef.mjs"
+  - "scripts/_generarListadoMaestro.mjs"
+  - "scripts/_importListadoMaestro.mjs"
+  - "scripts/_regenerar*.ts"
+  - "scripts/_oficializarRevision.ts"
+  - "scripts/_export*.ts"
 ---
 
 # AMFE VDA — Regla consolidada

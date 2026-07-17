@@ -1,37 +1,37 @@
 ---
 name: amfe-cookbook
-description: Recetas prescriptivas para completar gaps en AMFEs Barack Mercosul. Tabla issue-type -> accion con ejemplos. Usar cuando Fak pida "completar AMFE", "reparar AMFE", "fill gaps", "fix AMFE gaps", "llenar faltantes". Complementa amfe-integrity (que detecta) — este skill dice como fijar cada tipo de issue.
+description: Recetas prescriptivas para completar gaps en AMFEs Barack Mercosul. Tabla issue-type -> accion con ejemplos. Usar cuando Fak pida "completar AMFE", "reparar AMFE", "fill gaps", "fix AMFE gaps", "llenar faltantes". Complementa /audit-amfe y los auditores (que detectan) — este skill dice como fijar cada tipo de issue.
 ---
 
 # AMFE Cookbook — Recetas para fijar gaps
 
-Complementa `amfe-integrity` (diagnostico). Este skill responde "COMO completar cada tipo de gap detectado".
+Complementa `/audit-amfe` y los auditores read-only (diagnostico). Este skill responde "COMO completar cada tipo de gap detectado".
 
 ## Cuando usar
 
 - Fak dice: "completa AMFE", "fill gaps", "reparar", "reparar AMFEs", "completa los faltantes"
-- Hay un `tmp/audit_integral.json` con issues identificados
-- Se va a ejecutar `scripts/_autoHeal.mjs` (este skill es su referencia)
+- Hay un `tmp/we_placeholders_audit.json` con issues identificados
+- Se va a ejecutar `scripts/_fixAmfePlaceholdersAndAllocation.mjs` (este skill es su referencia)
 - Comando `/fix-amfe-gaps` fue invocado
 
 ## Flujo operativo
 
 ```
-1. Correr audit:      node scripts/_auditIntegral.mjs
-2. Revisar issues:    cat tmp/audit_integral.json
-3. Ejecutar autoHeal: node scripts/_autoHeal.mjs          (dry-run, genera plan)
-4. Revisar plan:      cat tmp/autoHeal_plan.json
-5. Aplicar fixes:     node scripts/_autoHeal.mjs --apply
-6. Re-sync stats:     node scripts/_fixAmfeStats.mjs --apply
-7. Verificar:         node scripts/_auditIntegral.mjs     (issues deben bajar)
+1. Diagnostico global:  node scripts/_auditAll.mjs --summary
+2. Detalle placeholders: node scripts/_auditWePlaceholdersAndAllocation.mjs [--filter=X]
+3. Revisar issues:      cat tmp/we_placeholders_audit.json
+4. Dry-run del fix:     node scripts/_fixAmfePlaceholdersAndAllocation.mjs [--filter=X]
+5. Aplicar fixes:       node scripts/_fixAmfePlaceholdersAndAllocation.mjs --filter=X --apply
+6. Verificar:           node scripts/_auditAll.mjs --summary   (issues deben bajar)
+7. Si contadores desync: resync con countAmfeStats() + saveAmfe extraFields (ver abajo)
 ```
 
 ## Tabla Issue-Type -> Accion
 
 | IssueType | Accion | Automatizable | Fuente |
 |---|---|---|---|
-| `SUSPICIOUS_OP` ("Clasificacion y Segregacion") | BORRAR op + step PFD | SI | `_structuralFixes.mjs` |
-| `INVALID_OP_CLIPS` (Telas Planas) | BORRAR op + step PFD | SI | `_structuralFixes.mjs` |
+| `SUSPICIOUS_OP` ("Clasificacion y Segregacion") | BORRAR op + step PFD | Resuelto (one-off archivado) | reportar a Fak si reaparece |
+| `INVALID_OP_CLIPS` (Telas Planas) | BORRAR op + step PFD | Resuelto (one-off archivado) | reportar a Fak si reaparece |
 | `FN_TBD_OR_EMPTY` (placeholder name) | BORRAR WE | SI | Lista placeholders (ver abajo) |
 | `FN_TBD_OR_EMPTY` (WE real) | PROPAGAR desde hermano | Parcial | Mapeo operacion -> AMFE (ver abajo) |
 | `FN_NO_FAILURES` (placeholder) | BORRAR WE | SI | Lista placeholders |
@@ -45,9 +45,9 @@ Complementa `amfe-integrity` (diagnostico). Este skill responde "COMO completar 
 | `FM_NO_EFFECT_LOCAL/NEXT/END` | Copiar efectos de hermano con misma failure | Parcial | Mapeo |
 | `EMPTY_OP` | BORRAR si es placeholder; pedir dictado a Fak si es real | Mixto | Consulta Fak |
 
-**Automatizable = SI**: `_autoHeal.mjs` lo ejecuta sin pedir confirmacion caso-por-caso.
-**Parcial**: solo si hay fuente confiable (hermano con mismo nombre de WE + failures cargadas).
-**Consulta Fak**: se reporta en `SIN_FUENTE[]` del plan, requiere decision humana.
+**Automatizable = SI**: `_fixAmfePlaceholdersAndAllocation.mjs` cubre placeholders/allocation; `CAUSE_NO_AP` se recalcula inline con `calculateAP()`.
+**Parcial**: solo si hay fuente confiable (hermano con mismo nombre de WE + failures cargadas) — script one-off segun la receta de abajo, con `runWithValidation`, y OK de Fak antes de aplicar.
+**Consulta Fak**: se reporta como SIN_FUENTE, requiere decision humana.
 
 ## Lista hardcoded de WE names placeholder (para BORRAR)
 
@@ -96,7 +96,7 @@ Para gaps que son WE real (no placeholder), buscar fuente en estos AMFEs segun e
 4. **NO usar S*O*D** — siempre `calculateAP(s,o,d)` del helper `_lib/amfeIo.mjs`.
 5. **NO propagar entre familias con proceso distinto**: inyeccion plastica != inyeccion PU. Verificar fallas/causas del hermano antes de propagar (regla `feedback_verify_content_not_name`).
 6. **data es TEXT** — siempre `JSON.stringify(doc)` al escribir (helper `saveAmfe` lo hace automatico). Regla `feedback_amfe_data_is_text`.
-7. **NO borrar OPs completas con contenido** — solo BORRAR a nivel de WE (work element), no de operacion. Excepcion: `SUSPICIOUS_OP` / `INVALID_OP_CLIPS` via `_structuralFixes.mjs`.
+7. **NO borrar OPs completas con contenido** — solo BORRAR a nivel de WE (work element), no de operacion. (Los casos historicos `SUSPICIOUS_OP` / `INVALID_OP_CLIPS` se resolvieron con one-offs hoy en `scripts/_archive/`; si reaparecen, reportar a Fak.)
 8. **Merge NO-destructivo**: al llenar gaps, preservar valores ya existentes en el target. Solo rellenar campos vacios/null.
 
 ## Ejemplo de uso — fijar un gap `CAUSE_MISSING_SOD`
@@ -163,25 +163,27 @@ Al crear nuevas estructuras, llenar AMBOS alias — el TS y el export Excel usan
 
 Ver regla `.claude/rules/amfe.md` seccion "Schema de campos AMFE".
 
-## Checklist post-autoHeal
+## Checklist post-apply
 
-Despues de `_autoHeal.mjs --apply`:
+Despues de `_fixAmfePlaceholdersAndAllocation.mjs --apply` (o de un one-off de propagacion):
 
-- [ ] Correr `node scripts/_fixAmfeStats.mjs --apply` (resync operation_count/cause_count)
-- [ ] Correr `node scripts/_auditIntegral.mjs` (confirmar que issues bajaron)
+- [ ] Correr `node scripts/_auditAll.mjs --summary` (confirmar que issues bajaron)
+- [ ] Si `_auditAll` reporta operation_count/cause_count desync: resync con
+      `countAmfeStats(doc)` de `_lib/amfeIo.mjs` + `saveAmfe(sb, id, doc, { extraFields: { operation_count, cause_count } })`
+      (no existe script dedicado de resync)
 - [ ] Verificar que los items `SIN_FUENTE` estan reportados a Fak (no se tocaron silenciosamente)
 - [ ] Backup post-fix: `node scripts/_backup.mjs` (opcional — `supabase-guard.sh` ya corre backup pre-apply)
 - [ ] Si el fix fue grande: `git add scripts/ && git commit -m "..."` (trazabilidad de scripts generados)
 
 ## Relacionado
 
-- `.claude/skills/amfe-integrity/SKILL.md` — diagnostico (detecta)
+- `.claude/commands/audit-amfe.md` — diagnostico (detecta)
 - `.claude/skills/supabase-safety/SKILL.md` — protocolo backup/dry-run
 - `.claude/skills/apqp-schema/SKILL.md` — estructura JSON documentos APQP
 - `.claude/agents/amfe-healer.md` — agent que orquesta este flujo
 - `.claude/commands/fix-amfe-gaps.md` — comando user-facing
-- `scripts/_lib/amfeIo.mjs` — helpers I/O + `calculateAP`
-- `scripts/_autoHeal.mjs` — ejecutor automatico
-- `scripts/_structuralFixes.mjs` — fixes de ops invalidas
+- `scripts/_lib/amfeIo.mjs` — helpers I/O + `calculateAP` + `countAmfeStats`
+- `scripts/_fixAmfePlaceholdersAndAllocation.mjs` — ejecutor automatico
+- `scripts/_archive/_autoHeal.mjs` — ejecutor viejo (HISTORICO; conserva el mapeo operacion→AMFE fuente)
 - `.claude/rules/amfe.md` — regla AMFE consolidada (§4 placeholder AP=H, §5 acciones)
 - skill `amfe-domain` — detalle profundo (funciones, placeholders, SQL de auditoria)

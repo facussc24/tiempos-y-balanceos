@@ -14,6 +14,66 @@ contiene SOLO lo accionable que NO esta ya codificado como regla o gate ejecutab
 
 ## Lecciones operativas vigentes
 
+### 2026-07-16 — Enforcement de lecciones (cierre del loop "guardar no alcanza")
+- **Nace el sistema de enforcement** (los 6 fallos de la semana eran el mismo patron:
+  leccion guardada pero pisada en el momento). Ya no depende de memoria:
+  hook SessionStart inyecta este archivo solo al arrancar (+ nucleo post-compact);
+  `consumos-entregable-guard` inyecta el checklist canonico al detectar trabajo de
+  consumos/entregables; `push-guard` exige build fresco antes de `git push`;
+  `validator-check` ahora BLOQUEA `--apply` sin runWithValidation; `file-guard`
+  recuerda rule-enforcement-gate al editar reglas. Validador de tablas:
+  `node scripts/_validarConsumos.mjs` + canon en `scripts/_lib/consumosCanon.data.json`
+  + skill `verificacion-consumos` + regla corta `consumos-entregables.md`.
+- **supabase-guard ya no bloquea `git commit`** (ahora exige ejecucion real
+  `node ...mjs`, no mencion del script en el mensaje) — el workaround
+  `git commit -F` ya no hace falta.
+- **/fix-amfe-gaps recableado al pipeline vivo** (`_auditIntegral`/`_fixAmfeStats`/
+  `_structuralFixes` no existen mas; `_autoHeal.mjs` archivado). Auditor =
+  detect-only y sin NotebookLM (decision Fak 2026-07-14).
+- **Leccion meta (incidente GKK/GKX):** este archivo tuvo el codigo del IP PAD
+  INVERTIDO 2 semanas ("GKX correcto" cuando la 2da sesion confirmo GKK). Al
+  corregir una correccion: grep y actualizar TODAS las copias escritas de la
+  version vieja (LECCIONES + memorias + docs), no solo la fuente principal.
+
+### 2026-07-14/16 — Consumos P703/P21 (SMRC) + carga ARB Patagonia (VW427)
+- **REGLA DURA (Fak: "gravísimo"): nunca pasar un entregable ejecutable sin MIRARLO yo antes**
+  ("faltaba que lo miraras nomás, confié que lo hacías"). Mostrar el dato crudo before→after
+  (columna "actual en arb" al lado del correcto) y verificar el archivo generado abriéndolo.
+- **Regla canónica de memoria > dato puntual de una fuente.** Caí 2 veces: etiqueta térmica
+  100x60 = 1 por CAJA (1/pzas-caja, fichas GE), NUNCA por pieza aunque el arb/BOM sugiera otra
+  cosa. Y químicos A+B con valor IGUAL en "LTS" = fracción-de-envase (adhesivo/reticulante,
+  primer PPBL A/B): envases distintos ≠ 1:1 — va en gramos o unidades reales asimétricas.
+- **Antes de concluir "consumo no documentado": buscar la rev MÁS NUEVA de la BOM en el folder
+  de consumo ACTUAL** (`Documentacion Gestion Ingenieria\14...\2. CONSUMO DE MATERIAL BOM\BOMS\`).
+  El gramaje de adhesivo/primer de P21 SÍ estaba (BOM 127 Rev7); yo miraba la Rev6 vieja.
+- **Consumos de vinilo/tela de SERIE: la fuente autoritativa es la tabla de tizadas de Mesa de
+  Corte** (`Librales Ingenieria\Mesa de Corte\TABLA DE CONSUMO\CONSUMOS TIZADAS <fecha>.xlsx`,
+  hoja por cliente, col ML) — le gana al arb y a BOMs de ingeniería (Rev6 P21 tenía vinilo ×2).
+- **Export RELACIONES del arb corta la fila cuando la descripción trae "*"** (hilos FX483TK):
+  el consumo sale vacío aunque esté cargado — confirmar con Fak antes de flagear.
+- Reglas de etiquetas Patagonia (Fak): 50x20 = 1/pieza, **2 si la pieza lleva inyección propia**
+  (una al inyectar + una PT); 100x60 = 1/caja según ficha GE. Sin semiterminados por ahora
+  (resina directa). Detalle vivo: memorias `project_patagonia_carga_arb`, `project_p21_consumos`,
+  `reference_p703_consumos_verificacion`, `reference_tabla_consumo_mesa_corte`.
+- **En auditorías de consumos: tolerancia 2% TAPA typos reales** (poliol 0,22806 vs 0,225806 =
+  error 1%, pasó mi 40/40). Usar ~0,1% + chequear INVARIANTES que deben cerrar (ISO+POLI = 0,35
+  exacto; vinilo RL1 = suma de variantes) + **siempre un agente independiente con ojos frescos
+  además del script propio**: el script solo chequea lo que uno pensó chequear.
+
+### 2026-07-14 — BOMs telas planas MHV (Toyota/PWA) en el ERP "arb": revisión y carga
+- **"Aplix" = la fijación MAGNÉTICA al molde** — carga magnética / iron load / MCA son lo MISMO;
+  NO distinguir "aplix vs imán" (Fak lo corrigió, lo molesta). Solo importa la CANTIDAD.
+  **Cada aplix = 0,000256 m²** (Cant.Aplix × 0,000256 = consumo; verificado en los 12 art. 21-946x).
+  La cantidad sale del plano: 21-9902 "a criterio del proveedor", 21-9689 = 26 posiciones, 21-8944 = ninguna.
+- **Barack NO usa semiterminados de CORTE (COR-TEL) en telas planas**: la tela va DIRECTA al producto
+  terminado; los COR huérfanos van a la BAJA, NO se enganchan (info de producción). Solo se generan
+  códigos de CORTE, no de troquelado. (Casi hago lo contrario — verificar cómo se usa la estructura antes.)
+- **BOM de un tercero (Paulo) con copy-paste**: repitió el aplix (0,008704 = 34 aplix de otra pieza) y
+  descripciones genéricas. Verificar TODO contra los planos antes de cargar. Los 4 componentes del 21-9902
+  son piezas DISTINTAS (2 fieltros press-felt + 2 placas PP), no duplicados; la tabla de proveedores los
+  rotula mal ("clip plástico" a fieltros). Fieltro 79978: 900/3mm (dic-25) vs 1000/5mm (may-26) → rige el nuevo.
+- Detalle vivo y pendientes en memoria `project_boms_pwa_mhv_arb`.
+
 ### 2026-07-08 — Sistema de ciclo de vida de AMFEs (6 fases)
 - Feature grande entregada: registro maestro `amfe_registry`, carátula oficial en exports
   (`buildAmfeOficialWorkbook`), change-log automático (`amfe_change_log` + diff-on-save en
@@ -21,9 +81,8 @@ contiene SOLO lo accionable que NO esta ya codificado como regla o gate ejecutab
   memoria `project_amfe_lifecycle_system`.
 - **Nombres de archivo de AMFE migran a LETRAS** (decisión Fak): numérico→letra del registro,
   letra→la del archivo (marcar si va adelantado del listado). No churnear nombres ya buenos.
-- **Hook `supabase-guard` bloquea `git commit`** cuando el comando contiene "reorganiz/borra/
-  destructivo" (intenta `_backup.mjs` → falla sin `.env.local` → bloquea). Workaround: `git commit
-  -F <archivo>` con mensaje sin esas palabras. Evaluar que el guard ignore comandos `git`.
+- ~~Hook `supabase-guard` bloquea `git commit`~~ → ARREGLADO 2026-07-16 (el guard ahora
+  exige ejecucion real de un .mjs, no mencion en el mensaje del commit).
 - Tablas Supabase nuevas: MCP `apply_migration` + réplica en DDL string de `database.ts` (migración
   runtime + `CONFLICT_MAP`; si BIGSERIAL, `BIGSERIAL_TABLES`). DDL desde la app = NO-OP contra
   Supabase (`database.ts:1698`). El test de database cuenta CREATE TABLE (subir el número esperado).
@@ -103,9 +162,10 @@ contiene SOLO lo accionable que NO esta ya codificado como regla o gate ejecutab
   trackeados en git por error y se destrackearon).
 
 ### 2026-07-02 — AMFE IP PAD alineado a flujograma/HO/BOM (VWA-PAT-IPPADS-001, id c9b93b84)
-- **Codigo L2 IP PAD = GKX, no GKK.** El BOM006 quedo con GKK — aviso pendiente a Fak.
-  Cuando Fak dice "el codigo esta mal", la fuente de verdad son sus docs nuevos (flujograma + HO),
-  no el dato viejo del AMFE/BOM.
+- **Codigo L2 IP PAD correcto = GKK (confirmado por arb + BOM006 + revisor), NO GKX.**
+  El GKX era un error consistente en los 3 docs Barack; el AMFE ya se corrigio a GKK.
+  (Este archivo tuvo el dato INVERTIDO hasta 2026-07-16 — ver leccion meta arriba.)
+  Detalle y pendientes externos: memoria `project_ippad_amfe`.
 - **Severidad = efecto en el USUARIO, no el scrap.** Costura descosida/desviada con efecto
   estetico va S5-6, no S8. El scrap sube ocurrencia/costo, no severidad.
 - **AIAG-VDA S9-10 SI cubre seguridad del OPERARIO (OS).** Cortadura/quemadura/ventilacion con
@@ -154,8 +214,9 @@ contiene SOLO lo accionable que NO esta ya codificado como regla o gate ejecutab
 - "Datos validos" (gate de `--apply`) ≠ "AMFE entregable". `scripts/_readiness.mjs` (usa
   `scripts/_lib/amfeReadiness.mjs`) promueve los efectos VDA 3-niveles a bloqueante para
   entrega. Correr antes de exportar a cliente; `--summary` da el verdict por AMFE.
-- Hallazgo vigente: **AMFE 128 y 129 (Amarok IP115/IP116) NO LISTOS** — 55 y 61 failures con
-  algun nivel de efecto VDA vacio. Los completa el equipo APQP, NO inventar.
+- Estado de entregabilidad por AMFE: correr `node scripts/_readiness.mjs --summary` en el
+  momento — NO afirmar desde este archivo (foto 2026-06-26: 128/129 no listos por efectos
+  VDA vacios; los completa el equipo APQP, NO inventar).
 
 ### 2026-06-25 — Amarok PA2: importar Excel AIAG-VDA hecho a mano
 - El formato Excel de Fak ES el estandar AIAG-VDA 2019 (7 etapas). NUNCA decir que "Barack
@@ -169,7 +230,6 @@ contiene SOLO lo accionable que NO esta ya codificado como regla o gate ejecutab
 - JSON grande (>~10KB) a Supabase: MCP `execute_sql` NO sirve (imposible reproducir byte a byte,
   md5 falla). Usar SERVICE_ROLE key pasada por variable de entorno a `_insertAmfeService.mjs`
   (Fak la copia del panel; no escribirla a archivo). Verificar md5 + `data::jsonb` es objeto.
-- Pendiente equipo APQP: 4 (IP115) / 6 (IP116) causas sin O/D del Excel original.
 
 ### 2026-06-25 — Export Excel oficial: verificar ANTES de entregar
 - Estandar completo + checklist en skill `.claude/skills/amfe-export-oficial/`: caratula con

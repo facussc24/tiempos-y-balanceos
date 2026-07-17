@@ -1,0 +1,257 @@
+﻿{
+    "key":  "subagents-rules",
+    "topic":  "Documentacion oficial Claude Code (fetcheada 2026-07-16): subagents .claude/agents/*.md y reglas .claude/rules/*.md. Nota: docs.claude.com/en/docs/claude-code/sub-agents da 301 a code.claude.com/docs/en/sub-agents (fuente canonica hoy).",
+    "findings":  [
+                     {
+                         "feature":  "Frontmatter completo de subagents (16 campos)",
+                         "what_it_is":  "Los .md de .claude/agents soportan: name y description (unicos obligatorios), tools, disallowedTools, model, permissionMode, maxTurns, skills, mcpServers, hooks, memory, background, effort, isolation, color, initialPrompt. El body markdown es el system prompt del subagent (reemplaza al system prompt completo de Claude Code, no se suma).",
+                         "source_url":  "https://code.claude.com/docs/en/sub-agents",
+                         "verified_evidence":  "Tabla \u0027Supported frontmatter fields\u0027: \"Only `name` and `description` are required\"; lista incluye memory, effort, isolation, background, initialPrompt",
+                         "relevance":  "auditor.md y amfe-healer.md probablemente usan solo name/description/tools/model; hay ~10 campos nuevos sin explotar (memory, skills, hooks, effort, permissionMode)",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "Memoria persistente de subagents (memory: user|project|local)",
+                         "what_it_is":  "El campo `memory` da al subagent un directorio persistente entre sesiones: user=~/.claude/agent-memory/\u003cname\u003e/, project=.claude/agent-memory/\u003cname\u003e/ (versionable en git, scope recomendado), local=.claude/agent-memory-local/\u003cname\u003e/. Se inyectan las primeras 200 lineas o 25KB de su MEMORY.md al system prompt, y Read/Write/Edit se habilitan automaticamente para que gestione sus archivos.",
+                         "source_url":  "https://code.claude.com/docs/en/sub-agents",
+                         "verified_evidence":  "\"`project` | `.claude/agent-memory/\u003cname-of-agent\u003e/`\" + \"the first 200 lines or 25KB of `MEMORY.md`\"",
+                         "relevance":  "Directo para el auditor: podria acumular patrones de falsos positivos (hoy ~40-50% segun MEMORY.md de Fak) entre sesiones con memory: project, versionado en el repo. amfe-healer podria recordar gaps recurrentes por producto",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "Precarga de skills en subagents (campo skills:)",
+                         "what_it_is":  "El campo `skills` en frontmatter inyecta el CONTENIDO COMPLETO de las skills listadas al contexto del subagent al arrancar (no solo la descripcion). Sin el campo, el subagent igual puede invocar skills via Skill tool, pero tiene que descubrirlas.",
+                         "source_url":  "https://code.claude.com/docs/en/sub-agents",
+                         "verified_evidence":  "\"The full skill content is injected, not only the description\"",
+                         "relevance":  "auditor.md podria precargar apqp-schema y audit-amfe; amfe-healer podria precargar supabase-safety + amfe-cookbook, garantizando que el protocolo de backup/dry-run este SIEMPRE en su contexto en vez de depender de que lo invoque",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "Hooks en frontmatter del subagent",
+                         "what_it_is":  "Un subagent puede definir hooks (PreToolUse, PostToolUse, Stop, todos los eventos) en su propio frontmatter; corren solo mientras ese subagent esta activo y se limpian al terminar. Stop se convierte automaticamente en SubagentStop. Ejemplo documentado: validar comandos Bash con script que hace exit 2 para bloquear. En Windows: script PowerShell + `shell: powershell` en la entrada del hook.",
+                         "source_url":  "https://code.claude.com/docs/en/sub-agents",
+                         "verified_evidence":  "\"Stop hooks in frontmatter are automatically converted to SubagentStop events\" + ejemplo db-reader con PreToolUse matcher Bash",
+                         "relevance":  "Permitiria darle a amfe-healer un guard PreToolUse propio (ej: bloquear .mjs que toque amfe_documents sin runWithValidation) sin ensuciar el settings.json global que hoy tiene los guards de Fak",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "Eventos SubagentStart/SubagentStop en settings.json",
+                         "what_it_is":  "Hooks de proyecto que disparan cuando un subagent arranca o termina, con matcher por nombre del agent (el `name` del frontmatter). Matcher con guion como \u0027db-agent\u0027 matchea exacto desde v2.1.195; antes era regex no anclada.",
+                         "source_url":  "https://code.claude.com/docs/en/sub-agents",
+                         "verified_evidence":  "Tabla: \"`SubagentStart` | Agent type name | When a subagent begins execution\"",
+                         "relevance":  "El setup ya usa Stop hook para checklist de cierre; podria sumar SubagentStop con matcher \u0027auditor\u0027 para forzar verificacion post-audit (ej: recordar el 40-50% de falsos positivos) o SubagentStart para inyectar setup",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "MCP servers scopeados a un subagent (mcpServers:)",
+                         "what_it_is":  "El campo `mcpServers` acepta referencias por nombre a servers ya configurados o definiciones inline (stdio/http/sse/ws). Los inline se conectan al arrancar el subagent y desconectan al terminar. Definir un MCP inline aca en vez de .mcp.json evita que sus descripciones de tools consuman contexto en la conversacion principal.",
+                         "source_url":  "https://code.claude.com/docs/en/sub-agents",
+                         "verified_evidence":  "\"The subagent gets the tools; the parent conversation doesn\u0027t\"",
+                         "relevance":  "El MCP de NotebookLM (y hasta el de Supabase) podria vivir solo dentro de un subagent consultor, liberando contexto de la sesion principal de Barack donde hoy cargan siempre",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "Que hereda un subagent al arrancar (contexto)",
+                         "what_it_is":  "Un subagent NO ve el historial de conversacion ni los archivos ya leidos; recibe: su system prompt (body del .md) + detalles de entorno, el mensaje de delegacion que escribe Claude, TODA la jerarquia CLAUDE.md/reglas/CLAUDE.local.md/policy que carga la sesion principal, snapshot de git status, skills precargadas, y roster de agents nombrados (si tiene SendMessage). Excepcion: los built-in Explore y Plan saltean CLAUDE.md y git status, y no hay campo para cambiar eso.",
+                         "source_url":  "https://code.claude.com/docs/en/sub-agents",
+                         "verified_evidence":  "\"**CLAUDE.md and memory**: every level of the memory hierarchy... The built-in Explore and Plan agents skip this\"",
+                         "relevance":  "Aclara por que auditor/amfe-healer SI ven las reglas de Barack (core-prohibiciones, etc.) pero no la conversacion: instrucciones criticas de la tarea hay que ponerlas en el prompt de delegacion. Ojo: el MEMORY.md de auto-memoria tambien les llega",
+                         "already_used":  true
+                     },
+                     {
+                         "feature":  "permissionMode por subagent",
+                         "what_it_is":  "Campo `permissionMode`: default, acceptEdits, auto, dontAsk, bypassPermissions, plan (y manual como alias de default desde v2.1.200). El subagent hereda el contexto de permisos del padre y puede sobreescribir el modo, salvo que el padre este en bypassPermissions/acceptEdits/auto (esos ganan). plan = exploracion read-only.",
+                         "source_url":  "https://code.claude.com/docs/en/sub-agents",
+                         "verified_evidence":  "\"If the parent uses `bypassPermissions` or `acceptEdits`, this takes precedence and can\u0027t be overridden\"",
+                         "relevance":  "auditor.md podria declararse permissionMode: plan para garantizar read-only por diseÃ±o (hoy depende de la lista de tools); complementa el contrato de autonomia de Fak",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "Semantica de tools/disallowedTools + tools vetadas en subagents",
+                         "what_it_is":  "tools = allowlist (hereda todo si se omite); disallowedTools = denylist aplicada PRIMERO, despues se resuelve tools contra lo que queda. Acepta patrones de server MCP: mcp__\u003cserver\u003e o mcp__\u003cserver\u003e__* (y mcp__* en disallowed). Tools que NUNCA funcionan en subagents aunque se listen: AskUserQuestion, EnterPlanMode, ExitPlanMode (salvo permissionMode plan), ScheduleWakeup, WaitForMcpServers. Desde v2.1.208, si ninguna entrada de tools resuelve, el subagent no arranca y el error nombra las entradas.",
+                         "source_url":  "https://code.claude.com/docs/en/sub-agents",
+                         "verified_evidence":  "\"`disallowedTools` is applied first, then `tools` is resolved against the remaining pool\" + lista con `AskUserQuestion`",
+                         "relevance":  "Clave para Barack: un subagent no puede preguntarle a Fak (AskUserQuestion vetada) â€” todo lo que requiera OK segun autonomy-contract debe volver al main agent, no resolverse dentro del subagent. El patron mcp__\u003cserver\u003e sirve para negar Supabase MCP entero al auditor",
+                         "already_used":  true
+                     },
+                     {
+                         "feature":  "Campo model + orden de resolucion",
+                         "what_it_is":  "model acepta alias (sonnet, opus, haiku, fable), ID completo (ej claude-opus-4-8) o inherit (default). Orden de resolucion: 1) env var CLAUDE_CODE_SUBAGENT_MODEL, 2) parametro model por invocacion, 3) frontmatter, 4) modelo de la conversacion. Desde v2.1.198 los subagents heredan la config de extended thinking del padre (no hay setting por-subagent).",
+                         "source_url":  "https://code.claude.com/docs/en/sub-agents",
+                         "verified_evidence":  "\"`sonnet`, `opus`, `haiku`, `fable`, a full model ID (for example, `claude-opus-4-8`), or `inherit`. Defaults to `inherit`\"",
+                         "relevance":  "Aplica: rutear al auditor (mucha lectura, poca escritura) a haiku/sonnet abarataria los audits de cierre de sesion que hoy corren en el modelo de la sesion",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "Subagents corren en background por default (v2.1.198+)",
+                         "what_it_is":  "Desde v2.1.198 los subagents corren en background por default; Claude solo usa foreground si necesita el resultado ya. Campo `background: true` fuerza background siempre. Los prompts de permiso de un subagent en background aparecen en la sesion principal nombrando al subagent (v2.1.186+; antes se auto-negaban). Ctrl+B manda una task corriendo a background. CLAUDE_CODE_DISABLE_BACKGROUND_TASKS=1 lo apaga todo.",
+                         "source_url":  "https://code.claude.com/docs/en/sub-agents",
+                         "verified_evidence":  "\"as of v2.1.198 it runs subagents in the background by default\"",
+                         "relevance":  "Aplica al flujo de cierre: el auditor puede correr en background mientras se hace el backup/commit, sin bloquear. Ojo con versiones viejas donde background auto-negaba permisos",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "Resumir subagents + SendMessage + transcripts persistentes",
+                         "what_it_is":  "Cada invocacion crea instancia nueva, pero un subagent terminado se puede resumir con su historial completo via SendMessage (por ID o nombre); auto-resume en background. Explore/Plan son one-shot y no se pueden resumir. Transcripts en ~/.claude/projects/{project}/{sessionId}/subagents/agent-{agentId}.jsonl, sobreviven compaction del main y se limpian segun cleanupPeriodDays (30 dias default). Desde v2.1.198 un subagent trata mensajes del agent que lo lanzo como direccion de tarea normal, pero ningun mensaje de agent cuenta como aprobacion de permisos.",
+                         "source_url":  "https://code.claude.com/docs/en/sub-agents",
+                         "verified_evidence":  "\"Each transcript is stored as `agent-{agentId}.jsonl`\" + \"no message from any agent counts as your approval for a pending permission prompt\"",
+                         "relevance":  "Util para audits multi-paso: en vez de re-spawnear el auditor y perder contexto, continuar el mismo (ej: \u0027ahora verifica esos hallazgos uno por uno\u0027)",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "Subagents anidados (v2.1.172+) y limite de profundidad",
+                         "what_it_is":  "Un subagent puede spawnear sus propios subagents si tiene Agent en tools (patron documentado: reviewer que despacha un verificador por hallazgo). Profundidad maxima 5 niveles, fija y no configurable. Para impedirlo: omitir Agent de tools o ponerlo en disallowedTools. Con claude --agent existe sintaxis Agent(worker, researcher) como allowlist de tipos spawneables (solo aplica al main thread; en subagents la lista entre parentesis se ignora).",
+                         "source_url":  "https://code.claude.com/docs/en/sub-agents",
+                         "verified_evidence":  "\"a subagent at depth five doesn\u0027t receive the Agent tool and can\u0027t spawn further. The limit is fixed\"",
+                         "relevance":  "Patron \u0027auditor que despacha verificador por hallazgo\u0027 es EXACTAMENTE la mitigacion del problema de falsos positivos 40-50% que Fak documenta: el intermedio nunca toca el contexto principal",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "Scopes y prioridad de definiciones de subagents",
+                         "what_it_is":  "Prioridad cuando hay nombre repetido: managed settings \u003e flag --agents (JSON por sesion, mismos campos que frontmatter con prompt en vez de body) \u003e .claude/agents/ (proyecto) \u003e ~/.claude/agents/ (usuario) \u003e plugins. Discovery recursivo con subcarpetas; identidad viene del campo name, no del filename. Claude Code vigila los directorios y detecta ediciones en segundos sin reiniciar (salvo directorio agents/ creado despues de arrancar la sesion). El wizard /agents fue removido en v2.1.198: ahora se edita el archivo directo.",
+                         "source_url":  "https://code.claude.com/docs/en/sub-agents",
+                         "verified_evidence":  "\"As of v2.1.198, the `/agents` command no longer opens the interactive creation wizard\" + tabla de 5 scopes con prioridad",
+                         "relevance":  "Setup ya usa .claude/agents/ de proyecto (scope correcto segun best practice \u0027check into version control\u0027). El flag --agents con JSON sirve para el Workflow tool: definir subagents efimeros por corrida",
+                         "already_used":  true
+                     },
+                     {
+                         "feature":  "Sesion entera como agent: --agent flag, setting agent, initialPrompt",
+                         "what_it_is":  "claude --agent \u003cname\u003e arranca una sesion donde el main thread usa el system prompt, tools y model del subagent (reemplaza el system prompt default; CLAUDE.md igual carga). Se puede fijar por proyecto con {\"agent\": \"...\"} en .claude/settings.json. El campo initialPrompt se auto-envia como primer turno cuando el agent corre como sesion principal.",
+                         "source_url":  "https://code.claude.com/docs/en/sub-agents",
+                         "verified_evidence":  "\"Pass `--agent \u003cname\u003e` to start a session where the main thread itself takes on that subagent\u0027s system prompt, tool restrictions, and model\"",
+                         "relevance":  "Permitiria una sesion dedicada \u0027claude --agent auditor\u0027 para audits nocturnos/scheduled sin cargar el rol general, combinable con headless para automatizacion",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "Invocacion explicita: @-mention y lenguaje natural",
+                         "what_it_is":  "Tres niveles: nombrarlo en el prompt (Claude decide), @-mention via typeahead o manual @agent-\u003cname\u003e (garantiza que ESE subagent corre para una tarea), o session-wide con --agent. Para delegacion automatica proactiva, incluir \u0027use proactively\u0027 en el description.",
+                         "source_url":  "https://code.claude.com/docs/en/sub-agents",
+                         "verified_evidence":  "\"@\\\"code-reviewer (agent)\\\" look at the auth changes\" + \"include phrases like \u0027use proactively\u0027 in your subagent\u0027s description field\"",
+                         "relevance":  "Chequear si los description de auditor/amfe-healer tienen lenguaje proactivo; el CLAUDE.md dice \u0027lanzar agente auditor al cerrar\u0027 pero el trigger automatico depende del description del agent",
+                         "already_used":  true
+                     },
+                     {
+                         "feature":  "Deshabilitar subagents especificos y Explore/Plan",
+                         "what_it_is":  "permissions.deny con formato Agent(nombre) bloquea built-ins o customs; denegar Agent a secas impide toda delegacion. CLAUDE_CODE_DISABLE_EXPLORE_PLAN_AGENTS=1 (v2.1.198+) remueve solo Explore y Plan. Un subagent propio llamado \u0027Explore\u0027 overridea al built-in (ej: model: haiku para mantener exploracion barata, ya que desde v2.1.198 Explore hereda el modelo de la sesion en vez de correr en Haiku).",
+                         "source_url":  "https://code.claude.com/docs/en/sub-agents",
+                         "verified_evidence":  "\"deny\": [\"Agent(Explore)\", \"Agent(my-custom-agent)\"] + \"define one with `model: haiku` to keep exploration on a lower-cost model\"",
+                         "relevance":  "Dato de costo relevante: Explore ya no corre siempre en Haiku; si Fak usa Opus, Explore corre en Opus. Un Explore custom con model: haiku recupera el comportamiento barato",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "isolation: worktree y efecto en cwd",
+                         "what_it_is":  "isolation: worktree corre el subagent en un git worktree temporal (rama desde el default branch, no del HEAD del padre), auto-limpiado si no hay cambios. Sin worktree, el subagent arranca en el cwd del main y los cd no persisten entre llamadas Bash/PowerShell. Desde v2.1.203 un comando cuyo cwd resuelve al checkout principal falla con error.",
+                         "source_url":  "https://code.claude.com/docs/en/sub-agents",
+                         "verified_evidence":  "\"Set to `worktree` to run the subagent in a temporary git worktree... automatically cleaned up if the subagent makes no changes\"",
+                         "relevance":  "Util si algun dia un subagent hace cambios de codigo grandes en paralelo; para auditor/healer (que tocan Supabase, no archivos) aplica poco",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "Escaneo de salida de subagents (v2.1.210+)",
+                         "what_it_is":  "Claude Code escanea el reporte final de cada subagent antes de que lo lea el main: inserta backslash en texto que imita salida del harness (tags \u003csystem-reminder\u003e, lineas Human:/Assistant:) y antepone una linea marker cuando el reporte menciona settings de permisos como bypassPermissions. No juzga malicia ni reemplaza restringir tools.",
+                         "source_url":  "https://code.claude.com/docs/en/sub-agents",
+                         "verified_evidence":  "\"[harness: subagent output matched instruction-shaped pattern(s):\" como linea marker documentada",
+                         "relevance":  "Contexto de seguridad: los subagents de Barack leen datos de Supabase/web; esta capa mitiga inyeccion via contenido, pero la doc remarca que no sustituye limitar que puede tocar el subagent",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "Fork de la conversacion (/fork)",
+                         "what_it_is":  "Un fork es un subagent que hereda TODA la conversacion (system prompt, tools, modelo, historial) en vez de arrancar fresco; sus tool calls quedan fuera del contexto principal y solo vuelve el resultado. /fork habilitado por default desde v2.1.161; controlable con CLAUDE_CODE_FORK_SUBAGENT=1/0. Reusa el prompt cache del padre, asi que es mas barato que un subagent fresco para tareas que necesitan el mismo contexto. Un fork no puede spawnear otro fork.",
+                         "source_url":  "https://code.claude.com/docs/en/sub-agents",
+                         "verified_evidence":  "\"From v2.1.161 the `/fork` command is enabled by default\" + tabla fork vs named subagent (\"Prompt cache: Shared with main session\")",
+                         "relevance":  "No usado. Util cuando una verificacion necesita todo el contexto de la sesion (ej: \u0027verifica en paralelo estos 3 numeros del BOM que venimos discutiendo\u0027) sin re-explicar â€” caso frecuente en las auditorias de consumos de Fak",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "Best practices oficiales de subagents",
+                         "what_it_is":  "Cuatro documentadas: subagents enfocados (una tarea), descriptions detalladas (Claude delega segun el description), limitar tool access (seguridad y foco), y versionar en git. Ademas: usar subagent cuando la tarea produce output verboso o es autocontenida; usar main conversation cuando hay ida y vuelta o fases que comparten contexto; usar skills para workflows reusables en contexto principal; /btw para preguntas rapidas sin tools.",
+                         "source_url":  "https://code.claude.com/docs/en/sub-agents",
+                         "verified_evidence":  "Tip block: \"Limit tool access: grant only necessary permissions for security and focus\"",
+                         "relevance":  "Vara para auditar auditor.md y amfe-healer.md: tools minimas, description con trigger claro, un proposito",
+                         "already_used":  true
+                     },
+                     {
+                         "feature":  "Docs oficiales de .claude/rules/ (existen, viven en la pagina de memoria)",
+                         "what_it_is":  "La doc oficial de rules esta en code.claude.com/docs/en/memory seccion \u0027Organize rules with .claude/rules/\u0027. Archivos .md descubiertos recursivamente (subdirectorios como frontend/ funcionan), un topic por archivo. Reglas SIN frontmatter paths cargan al launch con la misma prioridad que .claude/CLAUDE.md. Se saltean si se excluye \u0027project\u0027 de --setting-sources.",
+                         "source_url":  "https://code.claude.com/docs/en/memory.md",
+                         "verified_evidence":  "\"Rules without `paths` frontmatter are loaded at launch with the same priority as `.claude/CLAUDE.md`\"",
+                         "relevance":  "El setup Barack ya lo usa exactamente asi (4 reglas siempre-cargadas + condicionales). Confirma que `paths` es el campo oficial documentado hoy",
+                         "already_used":  true
+                     },
+                     {
+                         "feature":  "Campo paths: sintaxis oficial y LIMITE clave (dispara solo en Read)",
+                         "what_it_is":  "Campo oficial: `paths` como lista YAML de globs (soporta ** , brace expansion {ts,tsx}, multiples patrones). LIMITE documentado: las reglas path-scoped disparan cuando Claude LEE archivos que matchean, no en cada tool use â€” es decir, escribir/editar un archivo matching sin haberlo leido puede no cargar la regla. Desde v2.1.198 el matching tambien funciona via paths symlinkeados. Globs con [ invalido: el patron no matchea nada pero los demas siguen (antes de v2.1.207 rompia el Read de todo).",
+                         "source_url":  "https://code.claude.com/docs/en/memory.md",
+                         "verified_evidence":  "\"Path-scoped rules trigger when Claude reads files matching the pattern, not on every tool use\"",
+                         "relevance":  "CRITICO para Barack: amfe.md, exports.md, testing.md etc. con paths pueden NO cargar cuando Claude crea un archivo nuevo matching sin leer ninguno existente (coincide con issue #23478). Mitigacion: instruir leer un archivo del modulo antes de editar, o mover lo critico a hooks",
+                         "already_used":  true
+                     },
+                     {
+                         "feature":  "Reglas user-level ~/.claude/rules/ y bug de paths ahi",
+                         "what_it_is":  "La doc oficial: reglas personales en ~/.claude/rules/ aplican a todo proyecto y cargan ANTES que las de proyecto (proyecto gana prioridad). La doc no muestra ejemplos con paths a nivel user, y el issue #21858 (Windows, v2.1.25, cerrado como stale sin fix confirmado) reporta que paths: en ~/.claude/rules/ se ignora: la regla nunca carga, aunque el mismo archivo funciona en ./.claude/rules/. Workaround reportado: symlink al directorio de proyecto.",
+                         "source_url":  "https://github.com/anthropics/claude-code/issues/21858",
+                         "verified_evidence":  "Titulo: \"[BUG] paths: frontmatter in user-level rules (~/.claude/rules/) is ignored\"; estado CLOSED con label stale",
+                         "relevance":  "Coincide con lo que Fak ya detecto (\u00272 reglas globales con paths muertos\u0027 en MEMORY.md): las reglas globales deben ser incondicionales o moverse al proyecto. La regla notebooklm-cross-project.md global sin paths esta bien",
+                         "already_used":  true
+                     },
+                     {
+                         "feature":  "Symlinks en .claude/rules/ para compartir reglas entre proyectos",
+                         "what_it_is":  "Documentado oficialmente: el directorio soporta symlinks de directorios o archivos individuales (ln -s ~/shared-claude-rules .claude/rules/shared); ciclos detectados y manejados. En Windows crear symlinks pide permisos de admin o Developer Mode.",
+                         "source_url":  "https://code.claude.com/docs/en/memory.md",
+                         "verified_evidence":  "\"ln -s ~/shared-claude-rules .claude/rules/shared\" + \"circular symlinks are detected and handled gracefully\"",
+                         "relevance":  "Alternativa soportada al patron actual de Fak (regla global que explica como consultar NotebookLM desde otros proyectos): symlinkear reglas Barack a otros proyectos. En Windows requiere Developer Mode",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "Hook InstructionsLoaded para debuggear carga de reglas",
+                         "what_it_is":  "Hook que loguea exactamente que archivos de instrucciones se cargan, cuando y por que. La doc lo recomienda especificamente para debuggear reglas path-specific y archivos lazy-loaded. Complemento: /memory lista todos los CLAUDE.md/CLAUDE.local.md/rules cargados en la sesion actual.",
+                         "source_url":  "https://code.claude.com/docs/en/memory.md",
+                         "verified_evidence":  "\"Use the `InstructionsLoaded` hook to log exactly which instruction files are loaded, when they load, and why\"",
+                         "relevance":  "No usado y encaja perfecto con la skill rule-enforcement-gate de Fak: es EL mecanismo oficial para verificar que amfe.md y demas reglas con paths realmente disparan",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "Reglas y CLAUDE.md son guia, no enforcement",
+                         "what_it_is":  "La doc es explicita: Claude trata CLAUDE.md/reglas como contexto, no configuracion enforced; para bloquear una accion sin importar que decida Claude, usar PreToolUse hook o permissions. Tabla managed: \u0027Block specific tools, commands, or file paths\u0027 va en permissions.deny; \u0027Behavioral instructions\u0027 van en CLAUDE.md.",
+                         "source_url":  "https://code.claude.com/docs/en/memory.md",
+                         "verified_evidence":  "\"To block an action regardless of what Claude decides, use a PreToolUse hook instead\"",
+                         "relevance":  "Valida el diseÃ±o actual de Fak (guards PreToolUse para lo prohibido + reglas para lo conductual) y su meta-regla de enforcement: prohibiciones duras como dev-login.md \u0027NO TOCAR\u0027 deberian tener hook, no solo regla",
+                         "already_used":  true
+                     },
+                     {
+                         "feature":  "claudeMdExcludes: excluir CLAUDE.md/reglas por glob",
+                         "what_it_is":  "Setting (cualquier capa: user/project/local/managed; arrays se mergean) que saltea CLAUDE.md o directorios de rules por path absoluto o glob, ej \"/home/user/monorepo/other-team/.claude/rules/**\". Los managed policy CLAUDE.md no se pueden excluir.",
+                         "source_url":  "https://code.claude.com/docs/en/memory.md",
+                         "verified_evidence":  "Ejemplo JSON: \"claudeMdExcludes\": [\"**/monorepo/CLAUDE.md\", \".../other-team/.claude/rules/**\"]",
+                         "relevance":  "Poco aplicable hoy (repo unico), pero util si Fak monta un monorepo o carpeta madre con varios proyectos",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "Imports @path en CLAUDE.md + comentarios HTML strippeados",
+                         "what_it_is":  "CLAUDE.md importa archivos con @path/to/file (max 4 saltos recursivos; rutas relativas al archivo que importa; backticks evitan el import; imports externos piden aprobacion la primera vez). Ojo: los imports cargan al launch igual â€” organizan pero NO ahorran contexto; para ahorrar contexto la doc manda a paths-scoped rules o skills. Los comentarios HTML block-level (\u003c!-- --\u003e) se strippean antes de inyectar al contexto (sirven para notas de mantenedor gratis en tokens). AGENTS.md no se lee: se puentea con @AGENTS.md.",
+                         "source_url":  "https://code.claude.com/docs/en/memory.md",
+                         "verified_evidence":  "\"imported files still load and enter the context window at launch\" + \"Block-level HTML comments... are stripped before the content is injected\"",
+                         "relevance":  "Dato fino para el plan brain-architecture de Fak: partir CLAUDE.md en imports NO ahorra tokens; solo rules con paths o skills ahorran. Comentarios HTML = anotaciones gratis en reglas",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "Reglas vs skills: criterio oficial de cuando usar cada una",
+                         "what_it_is":  "Nota oficial: rules cargan cada sesion o al abrir archivos matching; para instrucciones task-specific que no necesitan estar siempre en contexto, usar skills (cargan solo al invocarlas o cuando Claude las juzga relevantes al prompt). Tambien: si una entrada de CLAUDE.md es un procedimiento multi-paso o solo importa para una parte del codebase, moverla a skill o regla path-scoped. Target: \u003c200 lineas por CLAUDE.md.",
+                         "source_url":  "https://code.claude.com/docs/en/memory.md",
+                         "verified_evidence":  "\"For task-specific instructions that don\u0027t need to be in context all the time, use skills instead\"",
+                         "relevance":  "El setup ya sigue este split (reglas cortas + 11 skills on-demand); confirma que la arquitectura post-optimizacion 2026-07-03 coincide con la recomendacion oficial",
+                         "already_used":  true
+                     },
+                     {
+                         "feature":  "Pagina .claude directory: reglas como guidance + inventario completo",
+                         "what_it_is":  "Pagina interactiva que mapea todo el directorio .claude (proyecto y global): rules/, agents/, agent-memory/, skills, hooks, etc., con tabla de que carga al startup vs on demand. Reitera para rules: sin paths carga al inicio como CLAUDE.md, con paths solo cuando Claude lee archivo matching; y que agent-memory global guarda memoria de subagents con memory: user.",
+                         "source_url":  "https://code.claude.com/docs/en/claude-directory.md",
+                         "verified_evidence":  "\"A rule without paths: frontmatter loads at session start like CLAUDE.md; a rule with paths: loads only when Claude reads a matching file\"",
+                         "relevance":  "Referencia rapida para el plan de arquitectura hot/warm/cold de Fak: confirma la dicotomia startup vs on-demand por mecanismo, incluyendo .claude/agent-memory/ que hoy no existe en el repo",
+                         "already_used":  false
+                     }
+                 ],
+    "fetch_failures":  [
+
+                       ]
+}

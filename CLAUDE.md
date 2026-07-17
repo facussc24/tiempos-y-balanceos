@@ -99,7 +99,7 @@ hooks/                      useLineBalancing, useProjectPersistence, ...
 modules/                    amfe/ (+ controlPlan tab), controlPlan/, family/, balancing/,
                             dashboard/, registry/, mix/, flow-simulator/, eightD/, flowchart/
 utils/repositories/         17 repositorios tipados — UNICO acceso a datos
-scripts/                    _backup, _restore, _auditAll, _autoHeal, _lib/ (+ archive/ de one-shots)
+scripts/                    _backup, _restore, _auditAll, _readiness, _lib/ (+ archive/ de one-shots)
 __tests__/                  suite Vitest completa
 docs/                       guias APQP + LECCIONES_APRENDIDAS + _archive/
 ```

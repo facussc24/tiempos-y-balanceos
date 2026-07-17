@@ -5,9 +5,11 @@
 Despues de CADA tarea completada que modifique codigo:
 
 1. **`npm run build`** — verificar que el build pasa LOCALMENTE antes de commitear
-2. **`git add` + `git commit`** — commitear TODOS los archivos modificados/creados
+2. **`git add` + `git commit`** — commitear TODOS los archivos modificados/creados (por nombre; NO `git add .` ni `-A`)
 3. **`git push origin main`** — pushear a GitHub
 4. **Verificar CI** — `gh run list --limit 1` para confirmar que el workflow pase
+
+**Why (ademas del deploy):** Fak prueba en GitHub Pages (produccion, no dev server) y trabaja en 2 PCs — el `git pull` al inicio de cada sesion depende de que la PC anterior haya pusheado.
 
 ## Checklist pre-commit
 

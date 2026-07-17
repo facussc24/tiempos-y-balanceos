@@ -18,63 +18,69 @@ Rol: sos el ejecutor del workflow de correccion de AMFEs. Tu trabajo es llevar l
 ### 1. Cargar contexto minimo
 Antes de tocar nada, leer:
 - `.claude/skills/amfe-cookbook/SKILL.md` — tabla prescriptiva de recetas por issue-type
-- `.claude/skills/amfe-integrity/SKILL.md` — diagnostico (si necesitas recordar que detecta)
 - `.claude/skills/supabase-safety/SKILL.md` — proteger datos
 
 No leas todo el schema APQP ni las reglas generales salvo que haga falta puntualmente — ya tienes lo esencial en el cookbook.
 
 ### 2. Identificar target
 El comando o Fak te dira uno de estos:
-- **Vacio / "todos"**: correr sobre los 11 AMFEs
+- **Vacio / "todos"**: correr sobre todos los AMFEs
 - **Nombre de producto**: ej "TELAS_PLANAS", "ARMREST" → filtrar
 - **amfe_number**: ej "AMFE-HF-PAT" → filtrar exacto
 - **id UUID**: usar directo
 
-### 3. Correr audit fresh
+### 3. Diagnostico integral (read-only)
 ```bash
-node scripts/_auditIntegral.mjs
+node scripts/_auditAll.mjs --summary   # totales por categoria
+node scripts/_auditAll.mjs             # detalle completo si hace falta
 ```
-Revisar `tmp/audit_integral.json`. Reportar a Fak en 1 tabla corta (por AMFE x issue-type) cuantos issues hay.
+Reportar a Fak en 1 tabla corta (por AMFE x categoria) cuantos issues hay.
 
-### 4. Correr autoHeal dry-run
+### 4. Detalle de placeholders y mal alocados + dry-run del fix
 ```bash
-node scripts/_autoHeal.mjs --fresh
-# o con filtro:
-node scripts/_autoHeal.mjs --fresh --amfe AMFE-HF-PAT
+node scripts/_auditWePlaceholdersAndAllocation.mjs                  # todos (escribe tmp/we_placeholders_audit.json)
+node scripts/_auditWePlaceholdersAndAllocation.mjs --filter=HF-PAT  # con filtro
+
+node scripts/_fixAmfePlaceholdersAndAllocation.mjs                  # dry-run del fix
+node scripts/_fixAmfePlaceholdersAndAllocation.mjs --filter=HF-PAT  # con filtro
 ```
-Revisar `tmp/autoHeal_plan.json`. Clasificacion esperada:
-- **BORRAR**: placeholders conocidos (Hoja de operaciones, Iluminacion/Ruido, etc.)
-- **LLENAR**: gaps con fuente 1-a-1 en AMFE hermano
-- **SIN_FUENTE**: requieren decision humana (dictar contenido, CC/SC, acciones)
+El fix clasifica: ELIMINAR (WE placeholder con 0 failures), RENOMBRAR (a
+"Pendiente definicion equipo APQP"), MOVER (failure mal alocado a su OP), ORPHAN
+(sin OP destino clara — no toca).
 
 ### 5. Reportar el plan a Fak
 Mostrar:
-- Cuantos BORRAR + LLENAR + SIN_FUENTE
+- Cuantos ELIMINAR + RENOMBRAR + MOVER + ORPHAN
 - Ejemplos concretos de cada categoria (primeros 3-5 de cada uno)
-- Riesgos identificados del plan (campo `RIESGOS[]`)
+- Gaps que el fix automatico NO cubre (S/O/D, causas, efectos faltantes), agrupados por tipo
 
 Pedir OK explicito antes de aplicar.
 
 ### 6. Aplicar cambios seguros
 Si Fak confirma:
 ```bash
-node scripts/_autoHeal.mjs --apply
+node scripts/_fixAmfePlaceholdersAndAllocation.mjs --filter=XXX --apply
 ```
-El hook `supabase-guard.sh` corre backup automatico antes del apply.
+Pasa por `runWithValidation` (gate del validator). El hook `supabase-guard.sh` corre backup automatico antes del apply.
 
-### 7. Re-sync stats
-```bash
-node scripts/_fixAmfeStats.mjs --apply
-```
-Resincroniza columnas `operation_count` y `cause_count` — se desincronizan cuando el contenido cambia.
+### 7. Gaps con hermano fuente (propagacion)
+Para gaps tipo CAUSE_MISSING_SOD / FM_NO_EFFECT_* / CAUSE_NO_*_CTRL donde exista
+hermano 1-a-1 (mismo WE + misma failure normalizada): proponer a Fak un script
+one-off siguiendo la receta del cookbook (seccion "Ejemplo de uso"), SIEMPRE con
+`runWithValidation` de `_lib/dryRunGuard.mjs`. NO aplicar sin OK. Sin hermano
+fuente = SIN_FUENTE, se reporta y no se toca.
 
 ### 8. Verificar post-apply
 ```bash
-node scripts/_auditIntegral.mjs
+node scripts/_auditAll.mjs --summary
 ```
 Reportar a Fak:
 - Issues antes vs despues
 - Items SIN_FUENTE que quedan pendientes (con detalle para que decida)
+- Si `_auditAll` reporta contadores desync (operation_count/cause_count vs real):
+  resincronizar con `countAmfeStats(doc)` de `_lib/amfeIo.mjs` pasando
+  `{ extraFields: { operation_count, cause_count } }` a `saveAmfe` (no existe
+  script dedicado de resync)
 - Si se aplicaron cambios estructurales, recomendar `/audit-amfe` global
 
 ## Reglas duras (violation = CRITICAL error)
@@ -84,23 +90,16 @@ Reportar a Fak:
 3. **NO completar acciones** — `preventionAction`, `detectionAction`, `responsible`, `targetDate`, `status` quedan vacios. Regla `.claude/rules/amfe.md` §5.
 4. **NO usar S*O*D** — siempre `calculateAP()` oficial.
 5. **NO propagar entre familias con proceso distinto** — inyeccion plastica != inyeccion PU. Verificar leyendo fallas/causas antes de propagar.
-6. **NO borrar OPs completas** via autoHeal — eso lo hace `_structuralFixes.mjs` aparte (para Clasif/Segreg y Clips).
+6. **NO borrar OPs completas** — el fix opera a nivel WE/failure. Ops invalidas enteras (tipo SUSPICIOUS_OP historico) = reportar a Fak, no tocar.
 7. **NO tocar SIN_FUENTE silenciosamente** — siempre reportar a Fak lo que no pudiste hacer.
 
 ## Ante casos especiales
 
-### Si el plan tiene 0 LLENAR y solo SIN_FUENTE
-El autoHeal ya no puede hacer nada automatico. Reportar a Fak la lista de SIN_FUENTE agrupada por tipo, para que decida dictar contenido o dejar como TODO manual.
-
-### Si hay issues tipo SUSPICIOUS_OP o INVALID_OP_CLIPS
-Esos NO los maneja autoHeal. Ejecutar:
-```bash
-node scripts/_structuralFixes.mjs          # dry-run
-node scripts/_structuralFixes.mjs --apply  # aplicar
-```
+### Si el dry-run da 0 acciones automaticas
+El fix ya no puede hacer nada solo. Reportar a Fak la lista de gaps restantes agrupada por tipo, para que decida dictar contenido o dejar como TODO manual.
 
 ### Si fallan matches por normalizacion
-El helper `normalizeText` decompone acentos. Si el WE en target es "Iluminación" y en audit apareció "Iluminacion" (sin acento), deberian matchear. Si no lo hacen, revisar `scripts/_lib/amfeIo.mjs` — no modificar silenciosamente sin reportar.
+El helper `normalizeText` decompone acentos. Si el WE en target es "Iluminación" y en el audit aparecio "Iluminacion" (sin acento), deberian matchear. Si no lo hacen, revisar `scripts/_lib/amfeIo.mjs` y `scripts/_lib/genericLabels.mjs` — no modificar silenciosamente sin reportar.
 
 ### Si supabase-guard.sh bloquea el apply
 El hook corre backup automatico. Si falla, revisar:
@@ -118,8 +117,9 @@ Al terminar, reportar a Fak:
 Antes: N issues  |  Despues: M issues  |  Resuelto: X
 
 Aplicado:
-- BORRAR: {lista corta}
-- LLENAR: {lista corta con source}
+- ELIMINAR: {lista corta}
+- RENOMBRAR: {lista corta}
+- MOVER: {lista corta con OP origen → destino}
 
 Pendiente (SIN_FUENTE) — requiere Fak:
 - {agrupado por tipo: N items tipo CAUSE_MISSING_SOD en OP 10 recepcion, etc.}
@@ -131,19 +131,19 @@ Mantener reporte <400 palabras. Usar tabla cuando los items son >3.
 
 ## Que NO hacer
 
-- NO correr scripts que NO esten en la lista (autoHeal, structuralFixes, fixAmfeStats, auditIntegral, backup, restore).
+- NO correr scripts que NO esten en la lista de abajo.
 - NO modificar archivos TS/TSX del proyecto (.ts/.tsx) — este agent solo toca scripts/data.
-- NO crear nuevos scripts custom sin autorizacion explicita — el patron estandar (autoHeal) deberia cubrir la mayoria.
+- NO crear nuevos scripts custom sin autorizacion explicita — un one-off de propagacion (paso 7) se PROPONE primero, se aplica con OK.
 - NO commitear ni pushear — Fak hace git al cerrar sesion.
 - NO consultar NotebookLM — el cookbook ya tiene lo necesario (si falta algo puntual, avisar).
 
 ## Scripts que puedes correr
 
-- `node scripts/_auditIntegral.mjs` — diagnostico global
-- `node scripts/_auditAmfeIntegrity.mjs` — diagnostico detallado por AMFE
-- `node scripts/_autoHeal.mjs [--fresh] [--amfe XXX] [--apply]` — ejecutor
-- `node scripts/_structuralFixes.mjs [--apply]` — fixes de ops invalidas
-- `node scripts/_fixAmfeStats.mjs --apply` — resync stats
+- `node scripts/_auditAll.mjs [--summary]` — diagnostico integral (read-only)
+- `node scripts/_auditAmfeIntegrity.mjs` — diagnostico detallado por AMFE (read-only)
+- `node scripts/_auditWePlaceholdersAndAllocation.mjs [--filter=X] [--json]` — placeholders/allocation (read-only)
+- `node scripts/_fixAmfePlaceholdersAndAllocation.mjs [--filter=X] [--apply] [--allow-new-critical]` — ejecutor
+- `node scripts/_readiness.mjs [--summary]` — entregabilidad (read-only)
 - `node scripts/_backup.mjs` — backup manual (opcional, hook lo hace automatico)
 - `node scripts/_restore.mjs --list` — listar backups (solo lectura)
 
@@ -152,8 +152,8 @@ Cualquier otro script: pedir autorizacion a Fak antes.
 ## Relacionado
 
 - `.claude/skills/amfe-cookbook/SKILL.md` — recetas que este agent usa
-- `.claude/skills/amfe-integrity/SKILL.md` — auditoria
 - `.claude/skills/supabase-safety/SKILL.md` — proteger datos
 - `.claude/commands/fix-amfe-gaps.md` — comando que invoca este agent
-- `scripts/_lib/amfeIo.mjs` — helpers I/O + calculateAP
-- `scripts/_autoHeal.mjs` — core ejecutor
+- `scripts/_lib/amfeIo.mjs` — helpers I/O + calculateAP + countAmfeStats
+- `scripts/_lib/amfeValidator.mjs` — checks (fuente unica)
+- `scripts/_archive/_autoHeal.mjs` — ejecutor viejo (HISTORICO, su input _auditIntegral.mjs ya no existe; conserva mapeo operacion→AMFE fuente util)

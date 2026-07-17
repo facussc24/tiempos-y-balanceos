@@ -1,0 +1,145 @@
+﻿{
+    "key":  "plugins-output-styles",
+    "topic":  "Personalizacion de Claude Code: plugins/marketplace, output styles, statusline, slash commands (frontmatter actual), settings.json y checkpoints/rewind",
+    "findings":  [
+                     {
+                         "feature":  "Commands fusionados con skills + frontmatter completo (incluye context: fork)",
+                         "what_it_is":  "Los .claude/commands ya no son una cosa aparte: un archivo en .claude/commands/deploy.md y un .claude/skills/deploy/SKILL.md crean el mismo /deploy. El frontmatter soportado HOY incluye: name, description, when_to_use, argument-hint, arguments (argumentos nombrados), disable-model-invocation, user-invocable, allowed-tools, disallowed-tools, model, effort, context: fork, agent, hooks, paths y shell. Con context: fork la skill corre en un subagente aislado y con agent elegis que subagente (Explore, Plan, general-purpose o uno custom de .claude/agents/).",
+                         "source_url":  "https://code.claude.com/docs/en/slash-commands",
+                         "verified_evidence":  "\"Custom commands have been merged into skills.\" Tabla frontmatter: \"context | Set to fork to run in a forked subagent context\"",
+                         "relevance":  "Aplica directo: skills pesadas como audit-amfe o fix-amfe-gaps podrian correr con context: fork + agent: auditor para no contaminar el contexto principal. Responde la pregunta del prompt: si, context: fork esta soportado hoy, junto con allowed-tools, model y argument-hint.",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "Frontmatter `paths` en skills (carga condicional por glob, igual que las rules)",
+                         "what_it_is":  "Las skills aceptan un campo `paths` con globs: Claude solo carga la skill automaticamente cuando trabaja con archivos que matchean los patrones. Usa el mismo formato que las path-specific rules de memoria. Acepta string separado por comas o lista YAML.",
+                         "source_url":  "https://code.claude.com/docs/en/slash-commands",
+                         "verified_evidence":  "\"paths | Glob patterns that limit when this skill is activated... Uses the same format as path-specific rules\"",
+                         "relevance":  "El setup ya usa `paths:` en .claude/rules/ pero NO en skills. Skills como injection-process, apqp-schema o supabase-safety podrian auto-activarse solo al tocar scripts/*.mjs o modules/amfe, reduciendo ruido en el listado.",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "Control de invocacion: disable-model-invocation / user-invocable + reglas Skill() en permisos",
+                         "what_it_is":  "disable-model-invocation: true = solo el usuario puede invocar la skill (Claude no la dispara solo; ademas su descripcion sale del contexto). user-invocable: false = solo Claude la invoca (se oculta del menu /, util para conocimiento de fondo). Tambien se puede permitir/negar skills via permission rules con sintaxis Skill(nombre) o Skill(nombre *).",
+                         "source_url":  "https://code.claude.com/docs/en/slash-commands",
+                         "verified_evidence":  "\"disable-model-invocation: true: Only you can invoke the skill... like /commit, /deploy\" y \"Skill(deploy *)\" como deny rule",
+                         "relevance":  "Muy aplicable: fix-amfe-gaps y backup tocan Supabase â€” marcarlas disable-model-invocation: true encaja con el autonomy-contract (batch sobre datos requiere OK de Fak). Skills de puro conocimiento (product-map, amfe-domain) podrian ser user-invocable: false.",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "Inyeccion de contexto dinamico en skills: !`comando` y bloques ```!",
+                         "what_it_is":  "La sintaxis !`comando` dentro de un SKILL.md ejecuta el comando ANTES de que Claude vea el contenido y reemplaza el placeholder con la salida. Hay forma inline y bloque multilinea ```!. El frontmatter `shell` acepta bash (default) o powershell (requiere CLAUDE_CODE_USE_POWERSHELL_TOOL=1). Se puede apagar globalmente con disableSkillShellExecution.",
+                         "source_url":  "https://code.claude.com/docs/en/slash-commands",
+                         "verified_evidence":  "\"The !`\u003ccommand\u003e` syntax runs shell commands before the skill content is sent to Claude\"; shell: \"Accepts bash (default) or powershell\"",
+                         "relevance":  "Aplica: la skill audit-amfe podria inyectar la salida de `node scripts/_auditAll.mjs --summary` ya renderizada, y una skill de cierre de sesion podria inyectar `git status` en vez de que Claude lo corra a mano. En Windows el shell powershell es opcion nativa.",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "allowed-tools / disallowed-tools por skill (pre-aprobacion de permisos)",
+                         "what_it_is":  "allowed-tools en el frontmatter otorga permiso a las tools listadas mientras la skill esta activa, sin prompts de aprobacion (acepta patrones como Bash(git add *)). disallowed-tools quita tools del pool mientras la skill corre; la restriccion se limpia con el siguiente mensaje del usuario. Para skills del repo, allowed-tools aplica recien despues de aceptar el workspace trust.",
+                         "source_url":  "https://code.claude.com/docs/en/slash-commands",
+                         "verified_evidence":  "Ejemplo: \"allowed-tools: Bash(git add *) Bash(git commit *) Bash(git status *)\" â€” \"grants permission for the listed tools while the skill is active\"",
+                         "relevance":  "Aplica: la skill backup podria pre-aprobar Bash(node scripts/_backup.mjs*) y la de export oficial sus comandos node, eliminando prompts repetitivos sin abrir permisos globales.",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "Argumentos nombrados y sustituciones nuevas en skills ($name, ${CLAUDE_SKILL_DIR}, ${CLAUDE_PROJECT_DIR})",
+                         "what_it_is":  "Ademas de $ARGUMENTS, hay $ARGUMENTS[N] y $N por posicion, y el frontmatter `arguments: [issue, branch]` declara nombres que se expanden como $issue/$branch. Variables de entorno de sustitucion: ${CLAUDE_SESSION_ID}, ${CLAUDE_EFFORT}, ${CLAUDE_SKILL_DIR} (carpeta de la skill, para referenciar scripts empaquetados) y ${CLAUDE_PROJECT_DIR} (raiz del proyecto, v2.1.196+, tambien valido dentro de allowed-tools).",
+                         "source_url":  "https://code.claude.com/docs/en/slash-commands",
+                         "verified_evidence":  "\"arguments | Named positional arguments for $name substitution\"; \"${CLAUDE_SKILL_DIR} | The directory containing the skill\u0027s SKILL.md file\"",
+                         "relevance":  "Aplica: audit-amfe acepta filtro de producto â€” con `arguments: [producto]` el prompt queda mas legible; ${CLAUDE_SKILL_DIR} permite que las skills con scripts (notebooklm) no dependan del cwd.",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "skillOverrides + presupuesto del listado de skills (skillListingBudgetFraction)",
+                         "what_it_is":  "El setting skillOverrides controla visibilidad de cada skill sin editar su SKILL.md: valores \"on\", \"name-only\", \"user-invocable-only\", \"off\". El menu /skills lo escribe con Space+Enter a settings.local.json. Aparte, el listado de skills en contexto tiene presupuesto (1% de la ventana; descripcion+when_to_use truncados a 1536 chars); se ajusta con skillListingBudgetFraction o skillListingMaxDescChars, y /doctor estima el costo.",
+                         "source_url":  "https://code.claude.com/docs/en/slash-commands",
+                         "verified_evidence":  "Tabla skillOverrides con valores \"on\"/\"name-only\"/\"user-invocable-only\"/\"off\"; \"The budget scales at 1% of the model\u0027s context window\"",
+                         "relevance":  "Aplica: con 11 skills de dominio + bundled skills, el listado consume contexto cada sesion. skillOverrides permite colapsar a name-only las poco usadas (text-to-cad-harness) sin tocar sus archivos, y /doctor dice cuanto pesa hoy.",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "Hooks con alcance de skill (frontmatter `hooks` en SKILL.md)",
+                         "what_it_is":  "Una skill puede declarar hooks en su propio frontmatter, con alcance limitado al ciclo de vida de esa skill, en vez de vivir globalmente en settings.json. El formato es el mismo de hooks generales (referencia: Hooks in skills and agents).",
+                         "source_url":  "https://code.claude.com/docs/en/slash-commands",
+                         "verified_evidence":  "Tabla frontmatter: \"hooks | Hooks scoped to this skill\u0027s lifecycle\"",
+                         "relevance":  "Aplica al patron rule-enforcement-gate del setup: un guard que solo tiene sentido durante fix-amfe-gaps (p.ej. exigir dry-run antes de --apply) puede vivir en la skill misma en vez de cargar el PreToolUse global toda la sesion.",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "Plugins: estructura, plugin.json, y que pueden empaquetar (bin/, monitors/, settings, LSP)",
+                         "what_it_is":  "Un plugin es un directorio con manifest .claude-plugin/plugin.json (campos name, description, version, author) y en la RAIZ del plugin: skills/, commands/, agents/, hooks/hooks.json, .mcp.json, .lsp.json, monitors/monitors.json, bin/ (ejecutables agregados al PATH del Bash tool) y settings.json (hoy solo soporta las claves agent y subagentStatusLine; agent activa un subagente del plugin como hilo principal). Se testea con `claude --plugin-dir ./mi-plugin` (tambien .zip) o --plugin-url, y se recarga con /reload-plugins. `claude plugin init mi-tool` scaffoldea uno en ~/.claude/skills/ que carga solo como mi-tool@skills-dir sin marketplace.",
+                         "source_url":  "https://code.claude.com/docs/en/plugins",
+                         "verified_evidence":  "Tabla: \"bin/ | Executables added to the Bash tool\u0027s PATH while the plugin is enabled\"; \"claude plugin init my-tool... loads as my-tool@skills-dir\"",
+                         "relevance":  "Aplica como empaquetado: todo el tooling Barack (skills + hooks + agents auditor/amfe-healer + MCP notebooklm) podria ser UN plugin versionado, reusable en otra PC u otro proyecto â€” hoy esta suelto en .claude/ del repo y en ~/.claude. La regla cross-proyecto de NotebookLM (que hoy es un .md manual) se resolveria instalando el plugin a nivel usuario.",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "Background monitors (componente de plugin)",
+                         "what_it_is":  "Un plugin puede declarar monitors/monitors.json: procesos que Claude Code arranca automaticamente al activar el plugin y cuya salida stdout se entrega a Claude como notificaciones durante la sesion (ej: tail -F de un log). Soporta trigger `when` y sustitucion de variables.",
+                         "source_url":  "https://code.claude.com/docs/en/plugins",
+                         "verified_evidence":  "\"Each stdout line from command is delivered to Claude as a notification during the session\"; ejemplo {\"name\": \"error-log\", \"command\": \"tail -F ./logs/error.log\"}",
+                         "relevance":  "Aplica parcialmente: podria vigilar la salida del dev server de Vite o un log de scripts .mjs largos sin que Claude tenga que pollear. Requiere empaquetar como plugin (no funciona standalone en .claude/).",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "Plugin marketplace: marketplace.json y tipos de source",
+                         "what_it_is":  "Un marketplace es un catalogo .claude-plugin/marketplace.json (campos: name, owner{name,email}, plugins[]; opcionales metadata.pluginRoot, renames, allowCrossMarketplaceDependenciesOn). Cada entrada de plugin tiene name + source, donde source puede ser: path relativo \"./plugins/x\", github {repo, ref?, sha?}, url (git), git-subdir (clona sparse para monorepos) o npm {package, version?}. Se agrega con /plugin marketplace add owner/repo (o via setting extraKnownMarketplaces) y los plugins se cachean en ~/.claude/plugins/cache. Anthropic mantiene claude-plugins-official (curado) y claude-plugins-community (submissions revisadas).",
+                         "source_url":  "https://code.claude.com/docs/en/plugin-marketplaces",
+                         "verified_evidence":  "\".claude-plugin/marketplace.json\" con \"name\", \"owner\", \"plugins\"; tabla de sources: github/url/git-subdir/npm; \"/plugin marketplace add owner/repo\"",
+                         "relevance":  "Relevancia baja hoy (usuario unico), pero es el mecanismo para distribuir el plugin Barack a otra maquina: un repo git privado con marketplace.json alcanza â€” no hace falta publicar nada. Tambien: /plugin install skill-creator@claude-plugins-official trae evals automatizados de skills (evals.json, benchmark.json con pass-rate con/sin skill), util para medir si las 11 skills de dominio disparan cuando deben.",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "Output styles (built-in Proactive + estilos custom)",
+                         "what_it_is":  "Los output styles modifican el system prompt (rol, tono, formato). Built-ins: Default, Proactive (ejecuta ya, asume en decisiones rutinarias, prefiere accion sobre planning, sin cambiar permission mode), Explanatory y Learning. Custom: archivo .md en ~/.claude/output-styles o .claude/output-styles con frontmatter name, description, keep-coding-instructions (mantener las instrucciones de ingenieria de Claude Code) y force-for-plugin. Se elige via /config o el setting outputStyle; toma efecto tras /clear o nueva sesion. OJO: /output-style fue deprecado en v2.1.73 y removido en v2.1.91.",
+                         "source_url":  "https://code.claude.com/docs/en/output-styles",
+                         "verified_evidence":  "\"Proactive: Claude executes immediately, makes reasonable assumptions instead of pausing for routine decisions\"; \"deprecated in v2.1.73 and removed in v2.1.91\"",
+                         "relevance":  "Aplica fuerte: el CLAUDE.md de Barack gasta lineas en \u0027NUNCA preguntar queres que haga X â€” HACERLO\u0027 â€” eso es exactamente el estilo Proactive, pero a nivel system prompt (mas fuerte que CLAUDE.md, que es un user message segun la tabla comparativa del doc). Un estilo custom con keep-coding-instructions: true podria codificar el modo-Fak (espanol AR, reportar sin preguntar) de forma persistente.",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "Statusline custom (script + JSON por stdin)",
+                         "what_it_is":  "Barra configurable con setting statusLine {type: \"command\", command: script-o-inline, padding, refreshInterval, hideVimModeIndicator}. Claude Code le pasa JSON por stdin con: model.display_name, context_window.used_percentage, cost.total_cost_usd, rate_limits.five_hour/seven_day.used_percentage y resets_at, effort.level, thinking.enabled, output_style.name, session_name, pr.number/url/review_state, workspace.git_worktree, agent.name, etc. El comando /statusline genera el script por lenguaje natural. Hay seccion de configuracion Windows (PowerShell/Git Bash). Soporta multilinea, colores ANSI y links OSC 8; corre local sin gastar tokens.",
+                         "source_url":  "https://code.claude.com/docs/en/statusline",
+                         "verified_evidence":  "\"statusLine\": {\"type\": \"command\", \"command\": \"~/.claude/statusline.sh\", \"padding\": 2}; campos rate_limits.five_hour.used_percentage y context_window.used_percentage",
+                         "relevance":  "Aplica: en sesiones largas de AMFE/Supabase, ver % de contexto y % de rate limit 5h/7d de la subscripcion en vivo evita sorpresas de compaction o corte. Setup facil: /statusline lo genera solo.",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "Checkpoints y /rewind (existen, con limite clave para Barack)",
+                         "what_it_is":  "Claude Code snapshotea automaticamente los archivos antes de cada prompt del usuario (guarda los 100 checkpoints mas recientes; persisten con la sesion, asi que un resume puede rebobinar). /rewind o Esc Esc abre el menu con opciones: restaurar codigo+conversacion, solo conversacion, solo codigo, y ademas \u0027Summarize from here\u0027 / \u0027Summarize up to here\u0027 (compactar solo una parte de la conversacion, un /compact dirigido). Limitacion dura: NO trackea cambios hechos por comandos bash (rm, mv, scripts) ni cambios externos â€” solo ediciones via las tools de edicion.",
+                         "source_url":  "https://code.claude.com/docs/en/checkpointing",
+                         "verified_evidence":  "\"Run /rewind, or press Esc twice\"; \"Checkpointing does not track files modified by bash commands\"; \"file snapshots for the 100 most recent checkpoints\"",
+                         "relevance":  "Aplica con asterisco: da undo gratis para ediciones de codigo de la app, pero NO cubre los scripts .mjs que tocan Supabase (bash + datos remotos) â€” el protocolo _backup.mjs del setup sigue siendo irreemplazable. El \u0027Summarize up to here\u0027 es util en sesiones largas para compactar el arranque sin perder el trabajo reciente.",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "settings.json: atributos utiles no explotados (defaultShell, attribution, cleanupPeriodDays, askUserQuestionTimeout, autoCompactEnabled, modelo/effort)",
+                         "what_it_is":  "La referencia de settings lista claves mas alla de hooks/permissions: defaultShell (\"bash\" o \"powershell\" para comandos !), attribution.commit y includeCoAuthoredBy (personalizar/quitar la firma de Claude en commits), cleanupPeriodDays (retencion de sesiones, default 30), askUserQuestionTimeout (auto-continuar preguntas: \"60s\"..\"never\"), autoCompactEnabled, alwaysThinkingEnabled, effortLevel (low/medium/high/xhigh), fallbackModel (cadena de hasta 3), availableModels, autoUpdatesChannel (\"stable\"), fileCheckpointingEnabled, spinnerTipsEnabled, y fileSuggestion (script custom para el autocomplete de @). Permisos: allow/deny/ask con patrones Tool(patron), p.ej. deny Read(./.env).",
+                         "source_url":  "https://code.claude.com/docs/en/settings",
+                         "verified_evidence":  "\"permissions\": {\"allow\": [], \"deny\": [], \"ask\": []}; claves vistas: defaultShell, askUserQuestionTimeout, attribution.commit, cleanupPeriodDays, autoUpdatesChannel",
+                         "relevance":  "Aplica: (1) deny Read(./.env*) protegeria las keys VITE_/Supabase que la regla core prohibe hardcodear; (2) defaultShell: powershell alinea el ! de skills con Windows; (3) attribution.commit puede limpiar la firma de commits que Fak muestra a terceros (coincide con feedback_entregables_para_fak: sin marca IA); (4) cleanupPeriodDays mas largo conserva transcripts para el sistema de memoria. Nota: esta pagina la resumio el fetcher â€” los nombres exactos convendria re-verificarlos con /doctor o el $schema json.schemastore.org/claude-code-settings.json antes de escribirlos.",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "footerLinksRegexes (badges clickeables en el footer, sin script)",
+                         "what_it_is":  "Setting que convierte patrones regex detectados en la conversacion en badges clickeables en el footer de Claude Code, sin escribir un script de statusline. Documentado como alternativa liviana a la statusline para IDs que aparecen en el output.",
+                         "source_url":  "https://code.claude.com/docs/en/statusline",
+                         "verified_evidence":  "\"To add clickable link badges to the footer when an ID appears in the conversation, without writing a script, configure footerLinksRegexes\"",
+                         "relevance":  "Aplica chico pero concreto: un regex sobre IDs de documentos AMFE o URLs del dashboard Supabase/GH Pages daria acceso de un click desde la terminal.",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "Skills anidadas por directorio + deteccion de cambios en vivo",
+                         "what_it_is":  "Las skills cargan tambien desde .claude/skills/ anidados (monorepo): al editar archivos de un subdirectorio, sus skills se descubren on-demand con nombre calificado (apps/web:deploy). Ademas hay live change detection: agregar/editar/borrar un SKILL.md bajo ~/.claude/skills o el proyecto toma efecto en la sesion actual sin reiniciar (solo el texto; hooks/.mcp.json de un skill-plugin requieren /reload-plugins).",
+                         "source_url":  "https://code.claude.com/docs/en/slash-commands",
+                         "verified_evidence":  "\"Adding, editing, or removing a skill... takes effect within the current session without restarting\"; nombre calificado \"apps/web:deploy\"",
+                         "relevance":  "Aplica menor: Barack es un solo repo, pero el live-reload significa que iterar una skill (p.ej. afinar amfe-cookbook) no requiere reiniciar la sesion â€” util para el flujo de mejora continua de reglas/skills que ya practica el setup.",
+                         "already_used":  false
+                     }
+                 ],
+    "fetch_failures":  [
+
+                       ]
+}

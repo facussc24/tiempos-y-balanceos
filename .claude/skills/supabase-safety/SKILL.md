@@ -122,7 +122,7 @@ finish(apply);
 
 **Demo ejecutable:** `scripts/_demoValidator.mjs` (read-only, no escribe nada) muestra el flujo con cambios inocuo/warning/critico contra un AMFE real.
 
-**Detalle de los checks:** `scripts/_lib/amfeValidator.mjs` — replica la logica de `_auditIntegral.mjs` (single source of truth: si se agrega un check alla, actualizar aca).
+**Detalle de los checks:** `scripts/_lib/amfeValidator.mjs` es la fuente unica de los checks; `scripts/_auditAll.mjs` lo consume para el dashboard post-escritura. Si se agrega un check al validator, `_auditAll` lo reporta automaticamente.
 
 ## Flujo recomendado para cambios riesgosos
 

@@ -1,0 +1,210 @@
+﻿{
+    "key":  "context-engineering",
+    "topic":  "Context engineering y agentes long-running â€” best practices publicadas por Anthropic (todas las fuentes fetcheadas en esta corrida, 2026-07-16)",
+    "findings":  [
+                     {
+                         "feature":  "Regla madre: minimo set de tokens de alta senal",
+                         "what_it_is":  "Principio rector de todo el post de context engineering: el contexto es un recurso finito con rendimiento decreciente (context rot). Todo lo que se carga (system prompt, reglas, tools, historial) compite por atencion. La calibracion correcta del system prompt es \u0027altitud media\u0027: ni logica hardcodeada fragil ni vaguedad; heuristicas fuertes y flexibles, organizadas en secciones con headers/XML.",
+                         "source_url":  "https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents",
+                         "verified_evidence":  "\"Find the smallest set of high-signal tokens that maximize the likelihood of your desired outcome\"",
+                         "relevance":  "Es el criterio para auditar lo siempre-cargado en Barack: CLAUDE.md 6.5KB + 4 reglas incondicionales + MEMORY.md 200 lineas + descripciones de 11 skills. Cada linea debe pasar el test de senal.",
+                         "already_used":  true
+                     },
+                     {
+                         "feature":  "CLAUDE.md: target \u003c200 lineas y test de borrado por linea",
+                         "what_it_is":  "Guia oficial de tamano: apuntar a menos de 200 lineas por CLAUDE.md; archivos largos reducen adherencia. Para cada linea preguntarse si quitarla causaria errores; si no, borrarla. Si Claude ignora una regla que existe, el archivo probablemente es demasiado largo. Desde v2.1.206 el comando /doctor propone recortes automaticos (corta lo derivable del codigo, conserva gotchas y convenciones no-default).",
+                         "source_url":  "https://code.claude.com/docs/en/memory",
+                         "verified_evidence":  "\"Size: target under 200 lines per CLAUDE.md file. Longer files consume more context and reduce adherence\"",
+                         "relevance":  "CLAUDE.md Barack (~6.5KB, ~150 lineas) esta dentro del target tras la poda 2026-07-03. Accionable nuevo: correr /doctor para el trim check y aplicar el test de borrado tambien a las 4 reglas siempre-cargadas.",
+                         "already_used":  true
+                     },
+                     {
+                         "feature":  "Tabla incluir/excluir para CLAUDE.md",
+                         "what_it_is":  "Tabla explicita de que va y que no: incluir comandos bash no adivinables, estilo distinto del default, etiqueta de repo, gotchas; excluir todo lo que Claude puede deducir leyendo codigo, docs de API (linkear), info que cambia seguido, descripciones archivo-por-archivo. Conocimiento de dominio que solo aplica a veces va a skills, no a CLAUDE.md.",
+                         "source_url":  "https://code.claude.com/docs/en/best-practices",
+                         "verified_evidence":  "Tabla con columna Exclude: \"Anything Claude can figure out by reading code\" y \"Information that changes frequently\"",
+                         "relevance":  "Criterio directo para futuras adiciones al CLAUDE.md Barack: el estado de proyectos activos (que cambia seguido) pertenece a memoria/archivos de proyecto, no a CLAUDE.md â€” hoy ya esta bien separado en MEMORY.md.",
+                         "already_used":  true
+                     },
+                     {
+                         "feature":  "Imports @path NO ahorran contexto",
+                         "what_it_is":  "Los imports @path/to/file en CLAUDE.md se expanden y cargan completos al launch (recursivo, maximo 4 saltos). Sirven para organizacion, no para ahorrar tokens. Para ahorrar de verdad hay que usar reglas path-scoped o skills. Bonus: los comentarios HTML a nivel de bloque en CLAUDE.md se strippean antes de inyectarse, asi que notas de mantenimiento no cuestan tokens.",
+                         "source_url":  "https://code.claude.com/docs/en/memory",
+                         "verified_evidence":  "\"Splitting into @path imports helps organization but doesn\u0027t reduce context, since imported files load at launch\"; \"maximum depth of four hops\"",
+                         "relevance":  "Advertencia preventiva: si algun dia se piensa dividir el CLAUDE.md Barack con imports para \u0027aliviarlo\u0027, no alivia nada. El mecanismo correcto (paths: en rules) ya se usa.",
+                         "already_used":  true
+                     },
+                     {
+                         "feature":  "Reglas con paths: se PIERDEN tras compaction",
+                         "what_it_is":  "Tabla oficial de que sobrevive a la compactacion: system prompt y CLAUDE.md raiz + reglas sin paths se re-inyectan desde disco; auto memory se re-inyecta; pero las reglas con frontmatter paths: y los CLAUDE.md anidados se pierden hasta que se vuelva a leer un archivo que matchee. Recomendacion textual: si una regla debe persistir tras compaction, sacarle el paths: o moverla al CLAUDE.md raiz.",
+                         "source_url":  "https://code.claude.com/docs/en/context-window",
+                         "verified_evidence":  "Tabla: \"Rules with paths: frontmatter | Lost until a matching file is read again\"",
+                         "relevance":  "Gap concreto en Barack: reglas criticas path-scoped (dev-login.md, database.md, amfe.md) desaparecen del contexto tras un auto-compact en sesion larga hasta releer un archivo que matchee. Evaluar cuales prohibiciones duras merecen ser incondicionales o hook.",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "Skills tras compaction: cap 5K tokens/skill, 25K total, lo importante arriba",
+                         "what_it_is":  "Los cuerpos de skills ya invocados se re-inyectan tras compactar pero truncados a 5.000 tokens por skill y 25.000 en total (los mas viejos se descartan primero). El truncado conserva el INICIO del archivo, por lo que las instrucciones criticas deben ir al principio del SKILL.md. Las descripciones de skills no invocadas NO se re-inyectan tras /compact.",
+                         "source_url":  "https://code.claude.com/docs/en/context-window",
+                         "verified_evidence":  "\"Re-injected, capped at 5,000 tokens per skill and 25,000 tokens total; oldest dropped first\"; \"Truncation keeps the start of the file\"",
+                         "relevance":  "Accionable para las 11 skills Barack: verificar que en skills largas (amfe-domain, apqp-schema, supabase-safety) las reglas duras esten en la parte superior del SKILL.md, no al final.",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "disable-model-invocation: true = skill con costo cero de contexto",
+                         "what_it_is":  "Las skills con disable-model-invocation: true no aparecen ni siquiera en el listado de descripciones al startup: quedan 100% fuera de contexto hasta invocarlas manualmente con /nombre. Recomendado para workflows con side effects (commit, deploy, enviar mensajes) que no queres que Claude dispare solo.",
+                         "source_url":  "https://code.claude.com/docs/en/context-window",
+                         "verified_evidence":  "\"Skills with disable-model-invocation: true are not in this list. They stay completely out of context until you invoke them with /name\"",
+                         "relevance":  "Aplicable a skills Barack que son workflows manuales con side effects (backup, fix-amfe-gaps, amfe-export-oficial): marcarlas asi ahorra tokens del listado y evita auto-invocacion indeseada. Hoy ninguna lo usa.",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "Customizar la compactacion via CLAUDE.md y /compact con instrucciones",
+                         "what_it_is":  "Se puede poner en CLAUDE.md una instruccion permanente de que preservar al compactar, y usar /compact \u003cinstrucciones\u003e para enfocar el resumen antes de una tarea larga. Tambien existe compactacion parcial: Esc+Esc o /rewind y elegir \u0027Summarize from here\u0027 / \u0027Summarize up to here\u0027. El resumen automatico conserva: pedidos e intencion, conceptos tecnicos, archivos tocados con snippets, errores y como se arreglaron, tareas pendientes y trabajo actual.",
+                         "source_url":  "https://code.claude.com/docs/en/best-practices",
+                         "verified_evidence":  "\"When compacting, always preserve the full list of modified files and any test commands\" como instruccion ejemplo en CLAUDE.md",
+                         "relevance":  "No usado en Barack. Accionable de 1 linea: agregar al CLAUDE.md una instruccion de compactacion que preserve estado critico de sesion (documentos Supabase tocados, backups pendientes, familias afectadas).",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "Compaction pierde los especificos: escribir numeros criticos a archivo ANTES",
+                         "what_it_s":  "",
+                         "what_it_is":  "El cookbook probo que hechos de alto nivel sobreviven a la compactacion (3/3: lifespans, nombres de organismos, porcentajes grandes) pero los especificos oscuros no (0/3: celdas de tabla, decimales como 0.72). Conclusion operativa: datos finos que importan (tolerancias, consumos, part numbers) deben escribirse a notas/memoria persistente antes de que la compactacion los borre, o darse instrucciones de compactacion custom que los preserven.",
+                         "source_url":  "https://platform.claude.com/cookbook/tool-use-context-engineering-context-engineering-tools",
+                         "verified_evidence":  "Probe testing: \"HIGH-LEVEL FACTS (3/3 survived)... OBSCURE SPECIFICS (0/3 survived): specific decimal values like 0.72\"",
+                         "relevance":  "Directamente relevante al trabajo Barack con consumos/tolerancias/part numbers en sesiones largas: refuerza el habito de volcar cifras a Excel/archivo apenas se obtienen (ya es regla de Fak para entregables) y no confiar en que sobrevivan en contexto.",
+                         "already_used":  true
+                     },
+                     {
+                         "feature":  "Tool-result clearing: la compactacion mas segura y liviana",
+                         "what_it_is":  "Descartar resultados crudos de tools ya procesados es \u0027la forma mas segura y liviana de compactacion\u0027. En la API existe como clear_tool_uses_20250919 con parametros concretos: trigger por input_tokens (ej 30K), keep de los ultimos N tool uses (ej 4), clear_at_least (ej 10K), exclude_tools [\u0027memory\u0027]. Reemplaza el contenido por \u0027[cleared to save context]\u0027 conservando el tool_use block. En el demo del cookbook libero ~163K tokens y bajo el pico de 335K a 173K.",
+                         "source_url":  "https://platform.claude.com/cookbook/tool-use-context-engineering-context-engineering-tools",
+                         "verified_evidence":  "\"type\": \"clear_tool_uses_20250919\", \"trigger\": {\"type\": \"input_tokens\", \"value\": 30_000}, \"keep\": {\"type\": \"tool_uses\", \"value\": 4}",
+                         "relevance":  "Claude Code CLI ya gestiona esto internamente; aplica si algun script Barack construye agentes propios con el Agent SDK/API (ej. workflows de auditoria masiva sobre los 68 AMFEs) â€” ahi conviene configurar clearing antes que compaction.",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "Memory tool de la API (memory_20250818)",
+                         "what_it_is":  "Tool client-side para agentes construidos sobre la API: 6 comandos (view, create, str_replace, insert, delete, rename) sobre un directorio /memories que vos implementas. La API auto-inyecta un prompt que instruye \u0027Always view your memory directory before doing anything else\u0027. Patron de sesiones: la sesion 2 usa el mismo handler y lee los hallazgos de la sesion 1 antes de trabajar.",
+                         "source_url":  "https://platform.claude.com/cookbook/tool-use-context-engineering-context-engineering-tools",
+                         "verified_evidence":  "\"MEMORY_TOOL_SPEC = {\"type\": \"memory_20250818\", \"name\": \"memory\"}\"; prompt auto-inyectado \"Always view your memory directory before doing anything else\"",
+                         "relevance":  "En Claude Code esto ya existe como auto memory (MEMORY.md + topic files), que Barack usa intensivamente. Solo aplica si se scriptean agentes API standalone multi-sesion.",
+                         "already_used":  true
+                     },
+                     {
+                         "feature":  "Just-in-time context: identificadores livianos + carga en runtime",
+                         "what_it_is":  "En vez de pre-cargar datos, mantener referencias livianas (paths, queries guardadas, links) y cargarlas dinamicamente con tools cuando hacen falta. Metadata (jerarquia de carpetas, nombres, timestamps) guia la navegacion. La estrategia optima es hibrida: algo up-front por velocidad + exploracion autonoma a discrecion.",
+                         "source_url":  "https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents",
+                         "verified_evidence":  "\"maintain lightweight identifiers (file paths, stored queries, web links, etc.) and use these references to dynamically load data into context at runtime\"",
+                         "relevance":  "El setup Barack ya es hibrido y alineado: MEMORY.md como indice + topic files on demand, skills on-demand, notebooklm-routing como capa de referencias. Confirma el diseno, no requiere cambio.",
+                         "already_used":  true
+                     },
+                     {
+                         "feature":  "Note-taking estructurado (NOTES.md / to-do fuera del contexto)",
+                         "what_it_is":  "Patron de memoria agentica: el agente escribe notas persistidas FUERA del context window y las re-lee despues. Ejemplos concretos citados: la to-do list de Claude Code, agentes custom con un NOTES.md, y el agente de Pokemon que mantiene conteos precisos y mapas a lo largo de miles de pasos. Mantiene dependencias criticas que se perderian tras docenas de tool calls. Eleccion por tipo de tarea: compaction para flujo conversacional largo; note-taking para desarrollo iterativo con hitos claros; multi-agente para exploracion paralela.",
+                         "source_url":  "https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents",
+                         "verified_evidence":  "Agentes custom \"maintaining a NOTES.md file\"; note-taking \"excels for iterative development with clear milestones\"",
+                         "relevance":  "Barack ya lo hace a nivel repo (MEMORY.md, LECCIONES_APRENDIDAS). Gap: proyectos multi-sesion (carga ARB Patagonia 40 piezas) no tienen archivo de progreso estructurado por tarea con estado item-por-item.",
+                         "already_used":  true
+                     },
+                     {
+                         "feature":  "Harness long-running: initializer + feature_list.json con passes:false + progress file",
+                         "what_it_is":  "Patron de dos agentes para trabajo que excede una ventana: un initializer arma el entorno la primera vez (init.sh, git init, feature list) y un coding agent avanza incremental en cada sesion. Artefactos concretos: feature_list.json (categoria, descripcion, steps, campo passes booleano; el agente SOLO puede cambiar el passes), claude-progress.txt como log, y commits git descriptivos. JSON preferido sobre Markdown porque los modelos lo modifican menos indebidamente. Regla: una sola feature por sesion, marcar passes solo tras verificar end-to-end, terminar con commit + update del progress.",
+                         "source_url":  "https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents",
+                         "verified_evidence":  "\"We prompt coding agents to edit this file only by changing the status of a passes field\"; artefactos feature_list.json y claude-progress.txt",
+                         "relevance":  "Aplicable tal cual a tareas Barack multi-sesion con checklist (carga ARB 40 piezas, renombrado de 35 archivos Y:, sanado de 68 AMFEs): un JSON con passes por item que solo se marca tras verificacion, en vez de estado disperso en memoria.",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "Startup checklist por sesion del coding agent",
+                         "what_it_is":  "Checklist concreto al inicio de cada sesion del agente long-running: (1) pwd para confirmar directorio, (2) leer git log y progress files, (3) leer la feature list y elegir la pendiente de mayor prioridad, (4) correr init.sh, (5) correr un test end-to-end basico ANTES de tocar nada nuevo. Al cierre: dejar el entorno en estado \u0027mergeable\u0027, sin bugs conocidos, documentado.",
+                         "source_url":  "https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents",
+                         "verified_evidence":  "Checklist: \"Read git logs and progress files for recent context... Execute basic end-to-end test before new feature work\"",
+                         "relevance":  "El protocolo de inicio Barack (leer LECCIONES_APRENDIDAS, leer AMFE live antes de tocar) es analogo pero le falta el paso \u0027smoke test antes de trabajar\u0027 (ej. _auditAll --summary al abrir tareas de datos) como norma de arranque.",
+                         "already_used":  true
+                     },
+                     {
+                         "feature":  "Subagents: cuando delegar vs contexto propio (test de inundacion)",
+                         "what_it_is":  "Criterio oficial: usar subagent cuando una tarea lateral inundaria la conversacion principal con resultados de busqueda, logs o contenidos de archivo que no vas a volver a referenciar; el subagent hace eso en su propio contexto y devuelve solo el resumen. En el post de context engineering: cada subagent devuelve un resumen condensado de 1.000-2.000 tokens, con separacion de responsabilidades (busqueda aislada en subagents, sintesis en el lead). Tambien: subagent de verificacion/review en contexto fresco porque no esta sesgado hacia el codigo que acaba de escribir.",
+                         "source_url":  "https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents",
+                         "verified_evidence":  "Subagents devuelven \"a condensed, distilled summary of its work (often 1,000-2,000 tokens)\"",
+                         "relevance":  "Barack ya usa auditor/amfe-healer y Workflow multi-agente. El test de inundacion da el criterio fino: audits masivos de AMFEs y exploraciones de servidor Y: van a subagent; edicion puntual de un AMFE va en contexto propio.",
+                         "already_used":  true
+                     },
+                     {
+                         "feature":  "Cuando NO multi-agente: coding es poco paralelizable y cuesta 15x tokens",
+                         "what_it_is":  "Del post del sistema de research multi-agente: los agentes usan ~4x mas tokens que un chat y los sistemas multi-agente ~15x; solo se justifican en tareas de alto valor, breadth-first, con direcciones independientes. Mal fit explicito: la mayoria de las tareas de coding (pocas subtareas realmente paralelas), dominios donde todos los agentes deben compartir contexto, o con muchas dependencias entre agentes.",
+                         "source_url":  "https://www.anthropic.com/engineering/multi-agent-research-system",
+                         "verified_evidence":  "\"multi-agent systems consume roughly 15x more tokens than chats\"; \"most coding tasks involve fewer truly parallelizable tasks than research\"",
+                         "relevance":  "Regla de gasto para el Workflow tool de Barack: reservarlo para research/auditorias breadth-first (como esta corrida) y NO para features de codigo con dependencias, donde un solo contexto con plan mode rinde mas y cuesta 15x menos.",
+                         "already_used":  true
+                     },
+                     {
+                         "feature":  "Escalado de esfuerzo por complejidad y contrato de delegacion a subagents",
+                         "what_it_is":  "Reglas de escalado embebidas en el prompt del lead agent: fact-finding simple = 1 agente con 3-10 tool calls; comparaciones directas = 2-4 subagents con 10-15 calls cada uno; research compleja = 10+ subagents con responsabilidades claramente divididas. Cada delegacion debe incluir: objetivo, formato de salida, guia de tools/fuentes y limites claros de la tarea; instrucciones vagas (\u0027research the semiconductor shortage\u0027) producen trabajo duplicado o mal interpretado.",
+                         "source_url":  "https://www.anthropic.com/engineering/multi-agent-research-system",
+                         "verified_evidence":  "\"1 agent with 3-10 tool calls\"; delegaciones requieren \"objective, an output format, guidance on the tools and sources\" y \"clear task boundaries\"",
+                         "relevance":  "Plantilla directa para dimensionar los Workflows Barack y escribir prompts de subagents (mitiga el 40-50% de falsos positivos conocido: mucha de esa tasa viene de tareas mal acotadas sin formato de salida).",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "Memoria persistente para subagents (frontmatter memory:)",
+                         "what_it_is":  "Los subagents de .claude/agents/ aceptan el campo frontmatter memory: user|project|local, que les da un directorio persistente entre conversaciones (project = .claude/agent-memory/\u003cnombre\u003e/, versionable en git, scope recomendado). Al activarlo, su system prompt incluye las primeras 200 lineas/25KB de su MEMORY.md e instrucciones de curacion, y se habilitan Read/Write/Edit. Tips oficiales: pedirle que consulte su memoria antes de empezar y que la actualice al terminar, e incluir esas instrucciones en el propio markdown del agente.",
+                         "source_url":  "https://code.claude.com/docs/en/sub-agents",
+                         "verified_evidence":  "Campo \"memory\" = \"Persistent memory scope: user, project, or local. Enables cross-session learning\"; project â†’ \".claude/agent-memory/\u003cname-of-agent\u003e/\"",
+                         "relevance":  "Hallazgo top para Barack: auditor.md y amfe-healer.md NO tienen memory:. Con memory: project el auditor acumularia patrones de falsos positivos entre sesiones (hoy ~40-50% FP) y el healer sus recetas que funcionaron.",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "Precargar skills en subagents (frontmatter skills:)",
+                         "what_it_is":  "El campo skills: en el frontmatter del subagent inyecta el CONTENIDO completo de las skills listadas en su contexto al arranque (no solo la descripcion), dandole conocimiento de dominio sin que tenga que descubrirlo. No se pueden precargar skills con disable-model-invocation: true. Otros campos utiles del mismo doc: maxTurns, effort, isolation: worktree, background: true.",
+                         "source_url":  "https://code.claude.com/docs/en/sub-agents",
+                         "verified_evidence":  "\"The full content of each listed skill is injected, not only the description\"",
+                         "relevance":  "Aplicable ya: auditor.md podria precargar apqp-schema y audit-amfe; amfe-healer podria precargar amfe-cookbook. Hoy los subagents Barack arrancan sin dominio precargado y deben redescubrirlo cada corrida.",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "Hooks determinsticos vs CLAUDE.md advisory (+ limite de 8 bloqueos del Stop hook)",
+                         "what_it_is":  "CLAUDE.md y memoria son contexto advisory, no configuracion enforced; para garantizar una accion usar hooks, que corren como codigo en eventos fijos. Un Stop hook puede correr un check y bloquear el fin del turno hasta que pase, pero Claude Code lo overridea tras 8 bloqueos consecutivos. Anti-patron documentado: si Claude ya hace algo bien sin la instruccion, borrarla del CLAUDE.md o convertirla en hook.",
+                         "source_url":  "https://code.claude.com/docs/en/best-practices",
+                         "verified_evidence":  "\"a Stop hook runs your check as a script and blocks the turn from ending until it passes. Claude Code overrides the hook and ends the turn after 8 consecutive blocks\"",
+                         "relevance":  "Barack ya tiene PreToolUse guards y Stop hook de cierre (y la skill rule-enforcement-gate codifica el principio). Dato nuevo: el tope de 8 bloqueos â€” el Stop hook de cierre no puede forzar indefinidamente; disenar el script sabiendolo.",
+                         "already_used":  true
+                     },
+                     {
+                         "feature":  "Higiene de sesion: /clear entre tareas, regla de 2 correcciones, /context y /btw",
+                         "what_it_is":  "Anti-patrones documentados con fix: \u0027kitchen sink session\u0027 â†’ /clear entre tareas no relacionadas; \u0027correcting over and over\u0027 â†’ tras 2 correcciones fallidas, /clear y reescribir el prompt inicial incorporando lo aprendido (\u0027a clean session with a better prompt almost always outperforms a long session with accumulated corrections\u0027). Herramientas: /context muestra el breakdown vivo del contexto por categoria; /btw responde preguntas rapidas en un overlay que nunca entra al historial.",
+                         "source_url":  "https://code.claude.com/docs/en/best-practices",
+                         "verified_evidence":  "\"After two failed corrections, /clear and write a better initial prompt incorporating what you learned\"",
+                         "relevance":  "Habito operativo para las sesiones largas de Fak (AMFEs + consumos + arb en una misma sesion es el anti-patron kitchen-sink exacto). /btw y /context no se usan hoy.",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "Auto memory: limites 200 lineas/25KB con enforcement, topic files on demand",
+                         "what_it_is":  "Documentacion oficial del sistema que Barack ya usa: MEMORY.md en ~/.claude/projects/\u003cproj\u003e/memory/ carga las primeras 200 lineas o 25KB (lo que llegue primero) en cada sesion; los topic files NO cargan al inicio, se leen on demand. Desde v2.1.210 Claude Code mide el archivo tras cada escritura y avisa/erroriza si excede el limite (todo lo que pase del tope se pierde en la proxima carga). Desde v2.1.211 frontmatter y comentarios HTML no cuentan para el limite. Subagents pueden tener su propia auto memory.",
+                         "source_url":  "https://code.claude.com/docs/en/memory",
+                         "verified_evidence":  "\"The first 200 lines of MEMORY.md, or the first 25KB, whichever comes first, are loaded at the start of every conversation\"",
+                         "relevance":  "Confirma exactamente el diseno actual de la memoria Barack (indice + topic files). Dato util nuevo: el enforcement automatico del limite existe desde v2.1.210, no hace falta vigilarlo a mano.",
+                         "already_used":  true
+                     },
+                     {
+                         "feature":  "Multi-agente long-running: plan a memoria + handoffs + checkpoints (no reiniciar)",
+                         "what_it_is":  "Para agentes que exceden la ventana en sistemas multi-agente: guardar el plan en memoria persistente apenas se formula (si el contexto se trunca, se recupera el plan en vez de perderlo), y al acercarse al limite spawnear subagents frescos con handoffs cuidadosos de contexto. En produccion: checkpoints para reanudar donde estaba el agente al fallar en vez de reiniciar de cero, y deploys \u0027rainbow\u0027 graduales.",
+                         "source_url":  "https://www.anthropic.com/engineering/multi-agent-research-system",
+                         "verified_evidence":  "Agentes \"spawn fresh subagents with clean contexts\" manteniendo continuidad \"through careful handoffs\"; guardar \"the plan to Memory to persist the context\"",
+                         "relevance":  "Aplicable a los Workflows largos de Barack: el plan/estado del workflow deberia persistirse a archivo (scratchpad o memoria) al inicio, para que un agente caido o compactado retome sin re-derivar todo.",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "Sesion como event log externo (managed agents)",
+                         "what_it_is":  "Arquitectura para agentes gestionados a escala: desacoplar cerebro (modelo+harness), manos (sandboxes/tools) y sesion (log de eventos append-only fuera del harness, via emitEvent/getSession). La sesion actua como objeto de contexto que vive fuera de la ventana del modelo y permite rewind, slices posicionales y recuperacion tras fallos (wake(sessionId)). Infra tratada como cattle, no pets.",
+                         "source_url":  "https://www.anthropic.com/engineering/managed-agents",
+                         "verified_evidence":  "\"The session provides this same benefit, serving as a context object that lives outside Claude\u0027s context window\"",
+                         "relevance":  "No aplica directo al setup local Barack (Claude Code CLI ya implementa sesiones persistentes y checkpoints). Solo relevante como principio si algun dia se corre infraestructura de agentes propia contra la API.",
+                         "already_used":  false
+                     }
+                 ],
+    "fetch_failures":  [
+
+                       ]
+}

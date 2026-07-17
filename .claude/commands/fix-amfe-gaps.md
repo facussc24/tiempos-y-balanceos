@@ -19,13 +19,17 @@ Invoca el agent `amfe-healer` para ejecutar el flujo completo de correccion de g
 ## Que hace
 
 1. Carga el agent `amfe-healer` con el target especificado en `$ARGUMENTS`.
-2. El agent corre:
-   - `scripts/_auditIntegral.mjs` → diagnostico
-   - `scripts/_autoHeal.mjs --fresh` → plan de fixes
-3. Reporta el plan a Fak (BORRAR + LLENAR + SIN_FUENTE).
-4. Con OK de Fak, aplica los fixes seguros.
-5. Corre `scripts/_fixAmfeStats.mjs --apply` para re-sincronizar contadores.
-6. Verifica con nuevo audit y reporta cuantos issues se resolvieron.
+2. El agent corre el pipeline vivo:
+   - `scripts/_auditAll.mjs` → diagnostico integral (read-only, todos los checks del validator)
+   - `scripts/_auditWePlaceholdersAndAllocation.mjs` → detalle de placeholders y failures mal alocados
+   - `scripts/_fixAmfePlaceholdersAndAllocation.mjs` → dry-run del fix automatico
+3. Reporta el plan a Fak (BORRAR / RENOMBRAR / MOVER + lo que queda SIN_FUENTE).
+4. Con OK de Fak, aplica con `--apply` (pasa por `runWithValidation`).
+5. Verifica con nuevo `_auditAll.mjs` y reporta cuantos issues se resolvieron.
+
+Gaps SIN fix automatico (S/O/D faltantes, causas, efectos): el agent los reporta
+agrupados. Si existe hermano fuente 1-a-1, propone un script one-off segun la
+receta del skill `amfe-cookbook` (siempre con `runWithValidation`) y espera OK.
 
 ## Diferencia con `/audit-amfe`
 
@@ -42,4 +46,4 @@ Invocar el subagent `amfe-healer` con el argumento $ARGUMENTS como target:
 - Si `$ARGUMENTS` parece un amfe_number (formato AMFE-XXX-YYY): pasarlo tal cual
 - Si `$ARGUMENTS` es un nombre de producto: el agent lo resolvera via `listAmfes()`
 
-El agent sigue su protocolo obligatorio (audit → autoHeal → reportar plan → esperar OK → apply → verificar).
+El agent sigue su protocolo obligatorio (audit → dry-run → reportar plan → esperar OK → apply → verificar).

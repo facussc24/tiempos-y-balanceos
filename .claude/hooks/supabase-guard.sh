@@ -26,12 +26,13 @@ process.stdin.on("end", () => {
 
 if [ -z "$CMD" ]; then exit 0; fi
 
-# Solo nos importan .mjs
-if ! echo "$CMD" | grep -qE '\.mjs'; then exit 0; fi
+# Solo nos importa la EJECUCION de un .mjs (node/npx). Un `git commit -m "...mjs..."`
+# solo MENCIONA el script — no dispara (incidente 2026-07-08: bloqueaba commits).
+if ! echo "$CMD" | grep -qE '(^|[;&|(][[:space:]]*|^[[:space:]]*)(node|npx)[[:space:]][^;&|]*\.mjs'; then exit 0; fi
 
 # Deteccion de destructivo
 DESTRUCTIVE=0
-if echo "$CMD" | grep -qE 'scripts/_(fix|sync|delete|clean|reset|reseed|propagate|apply|seed|migrate)'; then
+if echo "$CMD" | grep -qE '(node|npx)[[:space:]][^;&|]*scripts/_(fix|sync|delete|clean|reset|reseed|propagate|apply|seed|migrate)'; then
     DESTRUCTIVE=1
 fi
 if echo "$CMD" | grep -qE '(^|[[:space:]])--apply([[:space:]]|$)'; then

@@ -1,0 +1,177 @@
+﻿{
+    "key":  "memoria",
+    "topic":  "Memoria persistente en Claude Code (CLAUDE.md, imports, rules, /memory, auto memory, memoria de subagentes) + memory tool de la API Anthropic y recomendaciones de memoria basada en archivos para agentes",
+    "findings":  [
+                     {
+                         "feature":  "Jerarquia CLAUDE.md de 4 niveles (managed policy / user / project / local)",
+                         "what_it_is":  "La doc actual define 4 ubicaciones en orden de carga (de mas amplio a mas especifico): managed policy (en Windows C:\\Program Files\\ClaudeCode\\CLAUDE.md), user (~/.claude/CLAUDE.md), project (./CLAUDE.md o ./.claude/CLAUDE.md â€” ambas rutas son validas), y CLAUDE.local.md. Ademas existe la key `claudeMd` en managed-settings.json para inyectar contenido sin archivo separado. Recomiendan \u003c200 lineas por archivo.",
+                         "source_url":  "https://code.claude.com/docs/en/memory",
+                         "verified_evidence":  "\"A project CLAUDE.md can be stored in either ./CLAUDE.md or ./.claude/CLAUDE.md\"; Windows managed: \"C:\\Program Files\\ClaudeCode\\CLAUDE.md\"",
+                         "already_used":  true,
+                         "relevance":  "Ya usado (CLAUDE.md proyecto 6.5KB + reglas user). Novedad: la variante ./.claude/CLAUDE.md como ubicacion alternativa del project-level y la key claudeMd en managed settings (no aplica, no hay org policy)."
+                     },
+                     {
+                         "feature":  "Resolucion de carga: walk-up del arbol, subdirectorios on-demand, y que sobrevive a /compact",
+                         "what_it_is":  "Claude Code camina hacia arriba desde el cwd cargando CLAUDE.md y CLAUDE.local.md de cada directorio ancestro (concatenados rootâ†’cwd, local despues del normal en cada nivel). Los CLAUDE.md en subdirectorios NO cargan al inicio: se inyectan cuando Claude lee archivos de ese subdirectorio. Tras /compact solo el CLAUDE.md raiz del proyecto se re-inyecta automaticamente; los anidados recargan recien al volver a leer archivos ahi.",
+                         "source_url":  "https://code.claude.com/docs/en/memory",
+                         "verified_evidence":  "\"Nested CLAUDE.md files in subdirectories are not re-injected automatically; they reload the next time Claude reads a file\"",
+                         "already_used":  true,
+                         "relevance":  "Aplica: explica por que instrucciones \u0027se pierden\u0027 tras compactar en sesiones largas Barack. Opcion no usada: CLAUDE.md anidados en modules/ que carguen solo al tocar ese modulo (hoy lo resuelven con rules paths, que es equivalente)."
+                     },
+                     {
+                         "feature":  "Imports con @path (profundidad 4, escape con backticks, dialogo de aprobacion)",
+                         "what_it_is":  "CLAUDE.md puede importar archivos con sintaxis @path/to/file (relativa al archivo que importa, o absoluta). Los imports se expanden y cargan al launch (NO ahorran contexto, solo organizan). Recursivos hasta 4 saltos. Un path entre backticks NO se importa. La primera vez que hay imports externos al proyecto aparece un dialogo de aprobacion; si declinas quedan deshabilitados. Patron recomendado para worktrees: importar @~/.claude/mi-archivo.md.",
+                         "source_url":  "https://code.claude.com/docs/en/memory",
+                         "verified_evidence":  "\"Imported files can recursively import other files, with a maximum depth of four hops\"; \"writing `@README` keeps the text literal\"",
+                         "already_used":  false,
+                         "relevance":  "El CLAUDE.md Barack no usa @imports (lista las rules en tabla manual, que las rules cargan solas). Util si quisieran compartir un bloque entre CLAUDE.md de user y de proyecto. Ojo: importar NO reduce tokens, asi que no es optimizacion de contexto."
+                     },
+                     {
+                         "feature":  "CLAUDE.local.md sigue vigente (no deprecado)",
+                         "what_it_is":  "Archivo en la raiz del proyecto para preferencias personales no versionadas; carga junto al CLAUDE.md y se trata igual. Hay que agregarlo a .gitignore (el /init con opcion personal lo hace). Limitacion documentada: al ser gitignored solo existe en el worktree donde se creo; para compartir entre worktrees recomiendan import desde home.",
+                         "source_url":  "https://code.claude.com/docs/en/memory",
+                         "verified_evidence":  "\"create a CLAUDE.local.md at the project root. It loads alongside CLAUDE.md and is treated the same way\"",
+                         "already_used":  false,
+                         "relevance":  "No usado en Barack. Podria alojar cosas de la maquina de Fak (rutas Y:, OneDrive, credenciales de rutas) sin ensuciar el CLAUDE.md commiteado â€” hoy eso vive mezclado en memoria auto y reglas."
+                     },
+                     {
+                         "feature":  "Comentarios HTML en CLAUDE.md se strippean antes de entrar al contexto",
+                         "what_it_is":  "Los comentarios HTML a nivel de bloque (\u003c!-- ... --\u003e) en CLAUDE.md se eliminan antes de inyectar el contenido al contexto de Claude: sirven para notas de mantenedores humanos sin gastar tokens. Los comentarios dentro de code blocks se preservan, y al leer el archivo con Read si se ven.",
+                         "source_url":  "https://code.claude.com/docs/en/memory",
+                         "verified_evidence":  "\"Block-level HTML comments (\u003c!-- maintainer notes --\u003e) in CLAUDE.md files are stripped before the content is injected\"",
+                         "already_used":  false,
+                         "relevance":  "Aplica gratis: se pueden dejar anotaciones para Fak/mantenimiento (por que existe cada regla, fecha de revision) dentro del CLAUDE.md sin costo de contexto."
+                     },
+                     {
+                         "feature":  ".claude/rules/ â€” descubrimiento recursivo, symlinks, user-level rules y semantica exacta de paths",
+                         "what_it_is":  "Las rules se descubren recursivamente (se pueden organizar en subcarpetas), soportan symlinks para compartir entre proyectos (ciclos detectados), y existen rules de usuario en ~/.claude/rules/ que cargan ANTES que las de proyecto (proyecto gana). Las path-scoped disparan cuando Claude LEE archivos que matchean (no en cada tool use); desde v2.1.198 tambien matchean via paths symlinkeados. Fix v2.1.207: un patron con \u0027[\u0027 invalido ahora matchea nada en vez de romper el Read para todo archivo evaluado.",
+                         "source_url":  "https://code.claude.com/docs/en/memory",
+                         "verified_evidence":  "\"Path-scoped rules trigger when Claude reads files matching the pattern, not on every tool use\"",
+                         "already_used":  true,
+                         "relevance":  "Ya usado (rules con frontmatter paths). Novedades no usadas: subcarpetas dentro de rules/, symlinks a un set compartido, y el detalle de que el trigger es la LECTURA de archivos matching â€” clave para razonar por que una regla no cargo."
+                     },
+                     {
+                         "feature":  "claudeMdExcludes (setting para excluir CLAUDE.md/rules por glob)",
+                         "what_it_is":  "Setting configurable en cualquier capa (user/project/local/managed) que salta CLAUDE.md o directorios de rules especificos por path absoluto o glob, pensado para monorepos donde archivos de otros equipos se cuelan. Los arrays mergean entre capas. Los CLAUDE.md de managed policy no se pueden excluir.",
+                         "source_url":  "https://code.claude.com/docs/en/memory",
+                         "verified_evidence":  "Ejemplo JSON textual: \"claudeMdExcludes\": [\"**/monorepo/CLAUDE.md\", \"/home/user/monorepo/other-team/.claude/rules/**\"]",
+                         "already_used":  false,
+                         "relevance":  "No aplica hoy (BarackMercosul no es monorepo y no hay CLAUDE.md ancestros molestos en C:\\Dev). Conocerlo por si algun dia un CLAUDE.md en un directorio padre interfiere."
+                     },
+                     {
+                         "feature":  "Auto memory: toggle y configuracion (autoMemoryEnabled, CLAUDE_CODE_DISABLE_AUTO_MEMORY, autoMemoryDirectory)",
+                         "what_it_is":  "Auto memory viene ON por default. Se apaga con autoMemoryEnabled:false en settings, la env var CLAUDE_CODE_DISABLE_AUTO_MEMORY=1, o el toggle dentro de /memory. Nuevo: autoMemoryDirectory en settings.json permite mover el directorio de memoria a una ruta custom (absoluta o ~/); si se setea en settings de proyecto solo se honra tras aceptar el workspace trust dialog (misma gate que hooks).",
+                         "source_url":  "https://code.claude.com/docs/en/memory",
+                         "verified_evidence":  "\"To store auto memory in a different location, set autoMemoryDirectory in your settings.json\"",
+                         "already_used":  true,
+                         "relevance":  "Auto memory ya se usa (es exactamente el sistema ~/.claude/projects/\u003cproj\u003e/memory/ con MEMORY.md). autoMemoryDirectory es lo nuevo: permitiria mover la memoria ADENTRO del repo (ej. versionarla o backupearla con git), hoy es machine-local fuera del repo."
+                     },
+                     {
+                         "feature":  "Limite MEMORY.md 200 lineas/25KB con enforcement nuevo (v2.1.210/211)",
+                         "what_it_is":  "Se cargan las primeras 200 lineas o 25KB de MEMORY.md (lo que llegue primero); lo demas se pierde al proximo load. Desde v2.1.210 Claude Code mide el archivo tras cada escritura: cerca del limite manda recordatorio de acortar (una linea por entrada, detalle a topic files), y pasado el limite la escritura funciona pero devuelve un ERROR pidiendo reescribir el indice. Desde v2.1.211 el frontmatter YAML y los comentarios HTML se strippean antes de medir (no cuentan). Los topic files no cargan al inicio: Claude los lee on-demand.",
+                         "source_url":  "https://code.claude.com/docs/en/memory",
+                         "verified_evidence":  "\"If the file is over a limit, the write still succeeds, but Claude Code returns an error telling Claude to rewrite the index\"",
+                         "already_used":  true,
+                         "relevance":  "El tope 200/25KB ya se conocia y respeta en el MEMORY.md Barack. Lo nuevo es el enforcement automatico del harness (reminder + error): ya no depende solo de disciplina propia. Tambien: comentarios HTML en MEMORY.md salen gratis."
+                     },
+                     {
+                         "feature":  "Alcance del auto memory: por repo git, compartido entre worktrees, machine-local",
+                         "what_it_is":  "El \u003cproject\u003e del directorio de memoria se deriva del repositorio git, asi que todos los worktrees y subdirectorios del mismo repo comparten UNA memoria. Fuera de un repo git se usa el project root. Los archivos no se comparten entre maquinas ni entornos cloud. La UI muestra \u0027Writing memory\u0027 / \u0027Recalled memory\u0027 cuando Claude escribe/lee ahi.",
+                         "source_url":  "https://code.claude.com/docs/en/memory",
+                         "verified_evidence":  "\"The \u003cproject\u003e path is derived from the git repository, so all worktrees and subdirectories within the same repo share one auto memory\"",
+                         "already_used":  true,
+                         "relevance":  "Aplica: si se usan worktrees (feature de subagentes isolation:worktree o EnterWorktree), la memoria Barack se comparte automaticamente. Y confirma que la memoria NO viaja si Fak cambia de PC â€” habria que copiar la carpeta o usar autoMemoryDirectory."
+                     },
+                     {
+                         "feature":  "Comando /memory (version actual)",
+                         "what_it_is":  "Lista todos los CLAUDE.md, CLAUDE.local.md y rules cargados en la sesion actual, permite abrir cualquiera en el editor, tiene el toggle de auto memory y un link para abrir la carpeta de auto memory. Es la herramienta de debug primaria para \u0027Claude no sigue mi CLAUDE.md\u0027: si un archivo no aparece listado, Claude no lo ve.",
+                         "source_url":  "https://code.claude.com/docs/en/commands",
+                         "verified_evidence":  "\"Edit CLAUDE.md memory files, enable or disable auto-memory, and view auto-memory entries\"",
+                         "already_used":  true,
+                         "relevance":  "Disponible y util para auditar que rules con paths: cargaron de verdad (bug historico del setup con la clave errada de frontmatter)."
+                     },
+                     {
+                         "feature":  "Atajo \u0027#\u0027 para memorizar: YA NO existe en la doc actual",
+                         "what_it_is":  "La tabla \u0027Quick commands\u0027 del modo interactivo documenta solo 4 prefijos: \u0027/\u0027 (comando/skill), \u0027!\u0027 (shell mode), \u0027@\u0027 (file mention) y \u0027?\u0027 (panel de ayuda). No hay ninguna mencion del prefijo \u0027#\u0027 para agregar memorias ni en interactive-mode ni en commands ni en la pagina de memory. El reemplazo documentado: pedirle a Claude \u0027remember X\u0027 guarda en auto memory, y \u0027add this to CLAUDE.md\u0027 lo agrega al CLAUDE.md.",
+                         "source_url":  "https://code.claude.com/docs/en/interactive-mode",
+                         "verified_evidence":  "Quick commands lista solo: \"/ at start\", \"! at start\", \"@\", \"? on empty input\" â€” sin \u0027#\u0027",
+                         "already_used":  false,
+                         "relevance":  "Aplica como correccion de conocimiento: no ensenarle a Fak el atajo # (removido de la doc). El flujo actual es pedir \u0027acordate de X\u0027 en lenguaje natural â†’ va a auto memory."
+                     },
+                     {
+                         "feature":  "Memoria persistente de SUBAGENTES (frontmatter memory: user|project|local)",
+                         "what_it_is":  "Un subagente puede declarar `memory: \u003cscope\u003e` en su frontmatter y obtiene su propio directorio persistente entre conversaciones: user â†’ ~/.claude/agent-memory/\u003cnombre\u003e/, project â†’ .claude/agent-memory/\u003cnombre\u003e/ (versionable), local â†’ .claude/agent-memory-local/\u003cnombre\u003e/. Su system prompt incluye las primeras 200 lineas/25KB de su MEMORY.md con instrucciones de curarlo, y Read/Write/Edit se habilitan automaticamente. Recomiendan scope `project` como default y pedirle al agente en su prompt que consulte/actualice su memoria.",
+                         "source_url":  "https://code.claude.com/docs/en/sub-agents",
+                         "verified_evidence":  "Tabla: \"project | .claude/agent-memory/\u003cname-of-agent\u003e/ | the subagent\u0027s knowledge is project-specific and shareable via version control\"",
+                         "already_used":  false,
+                         "relevance":  "MUY relevante y NO usado: .claude/agents/auditor.md y amfe-healer.md hoy arrancan de cero cada corrida. Con `memory: project` el auditor acumularia patrones de falsos positivos (el setup reporta 40-50% FP) y el healer sus recetas, versionados en el repo."
+                     },
+                     {
+                         "feature":  "Hook InstructionsLoaded para debuggear que archivos de instrucciones cargan",
+                         "what_it_is":  "La pagina de memory recomienda el hook InstructionsLoaded para loguear exactamente que archivos de instrucciones se cargan, cuando y por que â€” util para debuggear rules path-scoped o archivos lazy-loaded en subdirectorios. Tambien aclara que CLAUDE.md se entrega como mensaje de usuario despues del system prompt (no es parte del system prompt), y que para enforcement duro corresponde un hook, no CLAUDE.md.",
+                         "source_url":  "https://code.claude.com/docs/en/memory",
+                         "verified_evidence":  "\"Use the InstructionsLoaded hook to log exactly which instruction files are loaded, when they load, and why\"",
+                         "already_used":  false,
+                         "relevance":  "Aplica directo: el setup ya tuvo el bug de frontmatter con clave errada que cargaba incondicional. Un hook InstructionsLoaded (sumado a los PreToolUse/Stop existentes) daria evidencia observable de que rule cargo en cada sesion."
+                     },
+                     {
+                         "feature":  "/doctor con trims de CLAUDE.md y /init interactivo nuevo",
+                         "what_it_is":  "Desde v2.1.206, /doctor propone recortes a un CLAUDE.md commiteado: corta lo que Claude puede derivar del codebase (layouts de directorios, listas de dependencias, overviews de arquitectura) y conserva pitfalls, rationale y convenciones no-default; tambien deduplica CLAUDE.md locales contra los commiteados y migra guidance siempre-cargada a skills/CLAUDE.md anidados. Con CLAUDE_CODE_NEW_INIT=1, /init pasa a un flujo interactivo multi-fase que propone CLAUDE.md, skills y hooks con propuesta revisable.",
+                         "source_url":  "https://code.claude.com/docs/en/memory",
+                         "verified_evidence":  "\"The /doctor checkup proposes trims for a checked-in CLAUDE.md: it cuts content Claude can derive from the codebase\"",
+                         "already_used":  false,
+                         "relevance":  "Aplica: correr /doctor sobre el CLAUDE.md Barack de 6.5KB detectaria secciones derivables (ej. el arbol de estructura del proyecto y la tabla de stack podrian ser candidatas a trim segun este criterio)."
+                     },
+                     {
+                         "feature":  "Interop AGENTS.md y carga desde directorios extra (--add-dir)",
+                         "what_it_is":  "Claude Code lee CLAUDE.md, no AGENTS.md; si un repo usa AGENTS.md recomiendan un CLAUDE.md que lo importe (@AGENTS.md) â€” en Windows explicitamente sugieren el import porque el symlink requiere admin/Developer Mode. Aparte, con --add-dir los CLAUDE.md del directorio extra NO cargan por default; la env var CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD=1 los habilita (CLAUDE.md, .claude/CLAUDE.md, .claude/rules/*.md y CLAUDE.local.md del directorio adicional).",
+                         "source_url":  "https://code.claude.com/docs/en/memory",
+                         "verified_evidence":  "\"On Windows, creating a symlink requires Administrator privileges or Developer Mode, so use the @AGENTS.md import instead\"",
+                         "already_used":  false,
+                         "relevance":  "AGENTS.md no aplica (no hay otros agentes en el repo). La env var si podria servir si alguna vez se trabaja Barack con --add-dir apuntando a docs-local/OneDrive y se quieren reglas propias de ese arbol."
+                     },
+                     {
+                         "feature":  "Memory tool de la API (type memory_20250818) â€” ahora GA, sin beta header",
+                         "what_it_is":  "Tool provista por Anthropic para que Claude persista conocimiento entre conversaciones via archivos bajo el prefijo /memories. Es client-side: Claude solo PIDE operaciones y tu aplicacion las ejecuta contra tu storage (disco, DB, cloud) y responde en tool_result. Config completa: {\"type\": \"memory_20250818\", \"name\": \"memory\"} en tools; disponible en todos los modelos Claude 4+; generally available en Messages API sin header beta; elegible ZDR. La API agrega sola al system prompt un protocolo de memoria (\u0027ALWAYS VIEW YOUR MEMORY DIRECTORY BEFORE DOING ANYTHING ELSE... ASSUME INTERRUPTION\u0027).",
+                         "source_url":  "https://platform.claude.com/docs/en/agents-and-tools/tool-use/memory-tool",
+                         "verified_evidence":  "\"The memory tool is generally available on the Messages API: no beta header is required\"; tools entry: {\"type\": \"memory_20250818\", \"name\": \"memory\"}",
+                         "already_used":  false,
+                         "relevance":  "No aplica al uso diario de Claude Code (que ya trae su auto memory propio). Aplicaria solo si se construye un agente propio contra la API â€” ej. un script node Barack que llame a la API y quiera memoria entre corridas."
+                     },
+                     {
+                         "feature":  "Memory tool: 6 comandos, seguridad de paths y helpers de SDK",
+                         "what_it_is":  "El handler cliente debe implementar 6 comandos: view (con view_range opcional), create, str_replace, insert, delete, rename â€” con strings de retorno y errores especificados en la doc. Seguridad critica: validar TODO path contra traversal (ej. /memories/../../secrets.env), mas caps de tamano y expiracion periodica de archivos viejos. Los SDKs Python/TypeScript traen implementacion lista de filesystem local (BetaLocalFilesystemMemoryTool) y tool runners que manejan el loop.",
+                         "source_url":  "https://platform.claude.com/docs/en/agents-and-tools/tool-use/memory-tool",
+                         "verified_evidence":  "\"A malicious path such as /memories/../../secrets.env can reach files outside the /memories directory\"; commands: view, create, str_replace, insert, delete, rename",
+                         "already_used":  false,
+                         "relevance":  "Solo aplica si se implementa un agente API propio. El detalle transferible al setup actual: las practicas que Anthropic exige al store (cap de tamano, expiracion de archivos no accedidos) son buena higiene tambien para la carpeta memory/ de Barack."
+                     },
+                     {
+                         "feature":  "Patron multisesion oficial: initializer + progress log + checklist, y pairing con compaction/context editing",
+                         "what_it_is":  "Para proyectos de software que cruzan varias sesiones de agente, Anthropic documenta armar la memoria deliberadamente: (1) sesion inicializadora que crea progress log, feature checklist y referencia al script de arranque; (2) cada sesion nueva abre leyendo esos archivos; (3) actualizacion de fin de sesion antes de cerrar. Principio clave: una feature a la vez, marcada completa solo tras verificacion end-to-end. Ademas recomiendan combinar memoria con compaction (server-side) y context editing: la memoria preserva lo que debe sobrevivir a la summarizacion.",
+                         "source_url":  "https://platform.claude.com/docs/en/agents-and-tools/tool-use/memory-tool",
+                         "verified_evidence":  "\"Mark a feature complete only after end-to-end verification confirms it works, not when the code is written\"",
+                         "already_used":  true,
+                         "relevance":  "Parcialmente usado: el protocolo de inicio/fin de sesion Barack (LECCIONES_APRENDIDAS + Stop hook + MEMORY.md) ES este patron. Gap: no hay feature-checklist con estado explicito para los proyectos multi-sesion largos (ej. carga ARB Patagonia)."
+                     },
+                     {
+                         "feature":  "Recomendacion Anthropic: structured note-taking / memoria agentica (blog de context engineering)",
+                         "what_it_is":  "El post \u0027Effective context engineering for AI agents\u0027 formaliza la tecnica: el agente escribe notas persistidas FUERA de la ventana de contexto (ej. NOTES.md, to-do lists) y las recupera cuando las necesita â€” memoria como \u0027just-in-time context\u0027: mantener identificadores livianos (paths, queries) y cargar el dato con tools en runtime en vez de precargar todo. Complementos: compaction para conversaciones al limite y sub-agentes para aislar exploracion.",
+                         "source_url":  "https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents",
+                         "verified_evidence":  "\"Agent regularly writes notes persisted to memory outside of the context window\"; agentes mantienen \"lightweight identifiers (file paths, stored queries, web links)\"",
+                         "already_used":  true,
+                         "relevance":  "El setup Barack ya implementa esto (MEMORY.md indice corto + topic files on-demand + skills). Confirma que la arquitectura hot/warm/cold del plan brain_architecture va alineada con la recomendacion oficial."
+                     },
+                     {
+                         "feature":  "Recomendacion Anthropic: harness para agentes de larga duracion (progress file + checklist JSON + git)",
+                         "what_it_is":  "El post \u0027Effective harnesses for long-running agents\u0027 detalla el patron con nombres concretos: sesion inicial crea init.sh + claude-progress.txt + commit git inicial; checklist de features en JSON donde el agente solo cambia el campo \u0027passes\u0027 (JSON porque el modelo es menos propenso a sobreescribirlo mal que markdown); al inicio de cada sesion leer git log + progress file y elegir la feature pendiente de mayor prioridad; commits descriptivos y git como mecanismo de recovery para revertir codigo malo.",
+                         "source_url":  "https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents",
+                         "verified_evidence":  "\"edit this file only by changing the status of a passes field\"; \"the model is less likely to inappropriately change or overwrite JSON files\"",
+                         "already_used":  false,
+                         "relevance":  "Aplica a las tareas autonomas largas de Barack (audits masivos, cargas ARB): el detalle no usado es el checklist JSON con campo de estado inmutable-salvo-status, mas robusto que los pendientes en markdown de MEMORY.md que hoy se usan."
+                     }
+                 ],
+    "fetch_failures":  [
+
+                       ]
+}

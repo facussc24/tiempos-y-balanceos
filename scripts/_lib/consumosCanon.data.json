@@ -1,0 +1,36 @@
+{
+  "_comentario": "Reglas CANONICAS de consumos (2026-07-16). REGLA MADRE: la regla canonica le gana al dato puntual de cualquier fuente (arb, BOM, mi propio analisis). El chequeo va sobre la TABLA FINAL, no sobre la cabeza de Claude. Consumido por scripts/_validarConsumos.mjs; checklist completo en skill verificacion-consumos.",
+  "tolerancia_relativa": 0.001,
+  "tolerancia_comentario": "0,1%. NUNCA 2%: tapa typos reales (poliol 0,22806 vs 0,225806 = 1% y era error). Leccion 2026-07-16.",
+  "quimicos_regex": "adhesivo|reticulante|primer|catalizador|fenoclor|comp\\.?\\s*[ab]\\b|isocianato|poliol|\\biso\\b|\\bpoli\\b",
+  "quimicos_regla": "Dos quimicos de un par A+B con valor IDENTICO en LTS = fraccion-de-envase copiada 1:1. Envases distintos != 1:1: va en gramos o unidades reales asimetricas (BIDONES). Fuente: incidente P703 2026-07-15.",
+  "etiquetas": {
+    "100x60": {
+      "regex": "100\\s*[xX]\\s*60|sato",
+      "regla": "1 por CAJA (= 1/piezas_por_caja segun ficha GAMA EMBALAJE), NUNCA por pieza",
+      "fuente": "fichas GE + Fak 2026-07-15"
+    },
+    "50x20": {
+      "regex": "50\\s*[xX]\\s*20",
+      "regla": "1 por pieza; 2 si la pieza lleva inyeccion propia (una al inyectar + una en PT)",
+      "valores_validos": [1, 2],
+      "fuente": "Fak 2026-07-16 (carga arb Patagonia)"
+    }
+  },
+  "unidades_regla": "La unidad NO se elige, SE BUSCA en el maestro INSUMOS.txt del arb (hogar unico; 0 codigos con 2 unidades). PPBL-4A/4B=LTS, AD-ADFA15=LTS, ET-SATO-100X60=UNI. Fuente: reference_arb_insumos_maestro.",
+  "invariantes": {
+    "P703-EFG": [
+      {
+        "auto": true,
+        "desc": "ISO + POLI = 0,35 exacto (espuma PU del EFG)",
+        "terminos": ["isocianato|\\biso\\b", "poliol|\\bpoli\\b"],
+        "target": 0.35,
+        "fuente": "BOM 127 Rev7 + auditoria 2026-07-15"
+      }
+    ],
+    "_manuales": [
+      "Suma de vinilos de variantes = consumo RL1 (tabla tizadas Mesa de Corte)",
+      "Vinilo/tela de SERIE: fuente autoritativa = CONSUMOS TIZADAS <fecha>.xlsx col ML, le gana al arb y a BOMs de ingenieria"
+    ]
+  }
+}

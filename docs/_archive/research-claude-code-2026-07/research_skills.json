@@ -1,0 +1,217 @@
+﻿{
+    "key":  "skills",
+    "topic":  "Agent Skills en Claude Code: formato SKILL.md, frontmatter completo, progressive disclosure, ubicaciones, descriptions, hot-reload y features 2025-2026",
+    "findings":  [
+                     {
+                         "feature":  "Frontmatter completo de Claude Code (16 campos, todos opcionales)",
+                         "what_it_is":  "La tabla oficial de frontmatter de SKILL.md hoy soporta: name, description, when_to_use, argument-hint, arguments, disable-model-invocation, user-invocable, allowed-tools, disallowed-tools, model, effort, context, agent, hooks, paths y shell. Todos son opcionales; solo description es \u0027recomendado\u0027. name es solo el display name (el comando sale del nombre del directorio, salvo plugin-root SKILL.md).",
+                         "source_url":  "https://code.claude.com/docs/en/skills",
+                         "verified_evidence":  "\"All fields are optional. Only `description` is recommended so Claude knows when to use the skill.\" â€” tabla con los 16 campos",
+                         "relevance":  "Muy alta: los 11 skills de Barack usan aparentemente solo name/description. Campos como paths, user-invocable, context, hooks y shell abren opciones nuevas concretas (ver findings siguientes).",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "Campo `paths` en skills â€” activaciÃ³n condicional por glob",
+                         "what_it_is":  "Un skill puede llevar `paths:` con globs (string separado por comas o lista YAML); Claude solo lo carga automÃ¡ticamente cuando trabaja con archivos que matchean. Es el mismo formato que las path-specific rules de memoria/rules.",
+                         "source_url":  "https://code.claude.com/docs/en/skills",
+                         "verified_evidence":  "\"Glob patterns that limit when this skill is activated... Uses the same format as path-specific rules\"",
+                         "relevance":  "Alta: Barack ya usa `paths:` en .claude/rules/ pero NO en skills. Aplicable directo a injection-process (modules/amfe), apqp-schema (repositorios/scripts .mjs), exports, etc., para que disparen solo en su Ã¡mbito.",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "disable-model-invocation / user-invocable â€” controlar quiÃ©n invoca",
+                         "what_it_is":  "`disable-model-invocation: true` = solo el usuario puede invocar (para flujos con efectos como deploy/commit); ademÃ¡s saca la description del contexto y bloquea preload en subagentes y scheduled tasks (v2.1.196+). `user-invocable: false` = solo Claude puede invocarlo (conocimiento de fondo que no tiene sentido como comando); lo oculta del menÃº /.",
+                         "source_url":  "https://code.claude.com/docs/en/skills",
+                         "verified_evidence":  "Tabla: \"disable-model-invocation: true â†’ Description not in context, full skill loads when you invoke\"",
+                         "relevance":  "Alta: skills de puro conocimiento de Barack (apqp-schema, product-map, amfe-domain, injection-process) son candidatos a user-invocable:false; flujos que tocan datos (fix-amfe-gaps) a disable-model-invocation:true para que no se disparen solos.",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "context: fork + agent â€” skill que corre en subagente",
+                         "what_it_is":  "Con `context: fork` el contenido del SKILL.md se vuelve el prompt de un subagente aislado (sin historia de conversaciÃ³n). El campo `agent` elige el tipo: Explore, Plan, general-purpose o cualquier subagente custom de .claude/agents/. Explore/Plan ademÃ¡s saltean CLAUDE.md y git status para arrancar livianos.",
+                         "source_url":  "https://code.claude.com/docs/en/skills",
+                         "verified_evidence":  "\"Options include built-in agents (Explore, Plan, general-purpose) or any custom subagent from .claude/agents/. If omitted, uses general-purpose.\"",
+                         "relevance":  "Alta: audit-amfe podrÃ­a declararse con context:fork + agent:auditor para que la auditorÃ­a no infle el contexto principal. Solo sirve para skills con tarea explÃ­cita, no para guÃ­as.",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "Preload de skills en subagentes (campo `skills` del agent)",
+                         "what_it_is":  "Los subagentes en .claude/agents/*.md aceptan un campo `skills:` que inyecta el CONTENIDO COMPLETO de esos skills al arrancar (no solo la description). No restringe acceso: el subagente igual puede invocar otros skills vÃ­a Skill tool. No se pueden precargar skills con disable-model-invocation:true.",
+                         "source_url":  "https://code.claude.com/docs/en/sub-agents",
+                         "verified_evidence":  "\"The full skill content is injected, not only the description. Subagents can still invoke unlisted project, user, and plugin skills\"",
+                         "relevance":  "Muy alta: auditor.md y amfe-healer.md podrÃ­an precargar apqp-schema + amfe-domain + supabase-safety, resolviendo el problema de subagentes con 40-50% de falsos positivos por falta de contexto de dominio.",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "Hooks en frontmatter de skills (scoped al ciclo de vida + once)",
+                         "what_it_is":  "Un skill puede declarar `hooks:` en su frontmatter con el mismo formato que settings.json (PreToolUse con matcher, etc.). Corren solo mientras el skill estÃ¡ activo y se limpian al terminar. El campo `once: true` (ejecutar una sola vez) SOLO se respeta en frontmatter de skills, no en settings ni en agents.",
+                         "source_url":  "https://code.claude.com/docs/en/hooks",
+                         "verified_evidence":  "\"Only honored for hooks declared in skill frontmatter; ignored in settings files and agent frontmatter\" (campo once)",
+                         "relevance":  "Alta: los guards PreToolUse de Barack viven globales en settings.json; los que solo aplican a un flujo (ej. supabase-safety bloqueando .mjs sin backup) podrÃ­an moverse al skill y activarse solo cuando corresponde.",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "InyecciÃ³n de contexto dinÃ¡mico: !`comando` y bloques ```!",
+                         "what_it_is":  "La sintaxis !`cmd` dentro del cuerpo del skill ejecuta el comando ANTES de que Claude vea el contenido y reemplaza el placeholder con la salida (preprocesamiento, no lo ejecuta Claude). Para comandos multilÃ­nea hay bloque cercado ```!. Solo se reconoce con ! al inicio de lÃ­nea o tras whitespace. Se puede apagar con \"disableSkillShellExecution\": true en settings.",
+                         "source_url":  "https://code.claude.com/docs/en/skills",
+                         "verified_evidence":  "\"runs shell commands before the skill content is sent to Claude. The command output replaces the placeholder\"",
+                         "relevance":  "Muy alta: audit-amfe podrÃ­a inyectar !`node scripts/_auditAll.mjs --summary` y backup el estado del Ãºltimo snapshot, entregando datos reales en vez de instrucciones para conseguirlos. Ojo: por defecto corre bash.",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "Campo `shell: powershell` para skills en Windows",
+                         "what_it_is":  "El frontmatter acepta `shell:` con valores bash (default) o powershell, que define con quÃ© shell corren los !`cmd` y bloques ```! del skill. powershell requiere la env var CLAUDE_CODE_USE_POWERSHELL_TOOL=1.",
+                         "source_url":  "https://code.claude.com/docs/en/skills",
+                         "verified_evidence":  "\"Accepts `bash` (default) or `powershell`... Requires `CLAUDE_CODE_USE_POWERSHELL_TOOL=1`\"",
+                         "relevance":  "Directa: el setup Barack corre en Windows 11 con PowerShell como shell primario; cualquier skill que use inyecciÃ³n dinÃ¡mica debe decidir shell explÃ­citamente.",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "Sustituciones de strings: $ARGUMENTS, $N, $name, ${CLAUDE_SKILL_DIR}, ${CLAUDE_PROJECT_DIR}",
+                         "what_it_is":  "Los skills soportan $ARGUMENTS (todo), $ARGUMENTS[N] / $N (posicional, quoting estilo shell), argumentos nombrados vÃ­a frontmatter `arguments:` ($issue, $branch), ${CLAUDE_SESSION_ID}, ${CLAUDE_EFFORT}, ${CLAUDE_SKILL_DIR} (carpeta del skill) y ${CLAUDE_PROJECT_DIR} (raÃ­z del proyecto, v2.1.196+, tambiÃ©n vÃ¡lido dentro de allowed-tools). Escape de $ literal con backslash.",
+                         "source_url":  "https://code.claude.com/docs/en/skills",
+                         "verified_evidence":  "\"The ${CLAUDE_PROJECT_DIR} substitution requires Claude Code v2.1.196 or later. It applies to both the skill body and the allowed-tools frontmatter\"",
+                         "relevance":  "Alta: skills Barack que referencian scripts del repo (amfe-export-oficial â†’ scripts/_exportOficial.ts, backup â†’ scripts/_backup.mjs) pueden usar ${CLAUDE_PROJECT_DIR} para rutas robustas, y audit-amfe podrÃ­a tomar el filtro de producto como argumento nombrado.",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "allowed-tools y disallowed-tools por skill",
+                         "what_it_is":  "allowed-tools pre-aprueba herramientas mientras el skill estÃ¡ activo (sin prompt de permiso), con patrones tipo Bash(git add *); NO restringe el pool. disallowed-tools sÃ­ SACA herramientas del pool mientras el skill estÃ¡ activo (ej. AskUserQuestion en loops autÃ³nomos); la restricciÃ³n se limpia con el prÃ³ximo mensaje del usuario. Para skills de proyecto, allowed-tools reciÃ©n aplica tras aceptar el workspace trust dialog.",
+                         "source_url":  "https://code.claude.com/docs/en/skills",
+                         "verified_evidence":  "\"allowed-tools: Bash(git add *) Bash(git commit *) Bash(git status *)\" y \"The restriction clears when you send your next message\"",
+                         "relevance":  "Media-alta: backup y audit-amfe podrÃ­an pre-aprobar Bash(node scripts/_backup.mjs*) / Bash(node scripts/_auditAll.mjs*) y reducir prompts de permiso en el cierre de sesiÃ³n.",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "Overrides de model y effort por skill",
+                         "what_it_is":  "`model:` cambia el modelo mientras el skill estÃ¡ activo (mismos valores que /model, o inherit); dura el resto del turno y no se guarda. `effort:` pisa el nivel de esfuerzo de la sesiÃ³n (low/medium/high/xhigh/max segÃºn modelo). TambiÃ©n existe el tip de incluir la palabra ultrathink en el cuerpo del skill para razonamiento profundo puntual.",
+                         "source_url":  "https://code.claude.com/docs/en/skills",
+                         "verified_evidence":  "\"The override applies for the rest of the current turn and is not saved to settings\"",
+                         "relevance":  "Media: skills pesados de anÃ¡lisis AMFE podrÃ­an pedir effort alto, y skills mecÃ¡nicos (backup) bajar a un modelo barato. No crÃ­tico para el setup actual.",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "Hot-reload (live change detection) de skills",
+                         "what_it_is":  "Claude Code observa los directorios de skills: agregar, editar o borrar un skill bajo ~/.claude/skills/, .claude/skills/ del proyecto o dentro de un --add-dir toma efecto EN la sesiÃ³n actual sin reiniciar. ExcepciÃ³n: crear un directorio skills top-level que no existÃ­a al arrancar requiere reiniciar. Cubre solo el texto de SKILL.md; hooks/.mcp.json/agents de un skill-plugin necesitan /reload-plugins.",
+                         "source_url":  "https://code.claude.com/docs/en/skills",
+                         "verified_evidence":  "\"takes effect within the current session without restarting. Creating a top-level skills directory that did not exist... requires restarting\"",
+                         "relevance":  "Alta operativamente: se pueden iterar los skills de Barack en vivo mientras se prueban, sin reiniciar la sesiÃ³n.",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "Presupuesto del listado de descriptions (1% del contexto) y truncado a 1.536 chars",
+                         "what_it_is":  "El listado de skills en contexto siempre incluye todos los nombres, pero las descriptions se recortan si superan el presupuesto (1% de la ventana de contexto, configurable con skillListingBudgetFraction o SLASH_COMMAND_TOOL_CHAR_BUDGET). Al desbordar, se dropean primero las descriptions de los skills MENOS invocados. Cada entrada (description + when_to_use) se trunca a 1.536 caracteres (configurable con skillListingMaxDescChars). /doctor estima el costo del listado.",
+                         "source_url":  "https://code.claude.com/docs/en/skills",
+                         "verified_evidence":  "\"The budget scales at 1% of the model\u0027s context window\" y \"truncated at 1,536 characters in the skill listing\"",
+                         "relevance":  "Muy alta: Barack tiene 11 skills propios + bundled + plugins; algunas descriptions largas (dataviz, xlsx). Regla prÃ¡ctica: caso de uso clave PRIMERO en la description porque el final se trunca. Correr /doctor para medir.",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "Campo when_to_use y guÃ­a oficial para escribir descriptions que disparen",
+                         "what_it_is":  "when_to_use agrega contexto de disparo (frases gatillo, requests ejemplo) que se anexa a la description en el listado. La guÃ­a de authoring: escribir SIEMPRE en tercera persona (inconsistencia de POV causa problemas de discovery), incluir quÃ© hace + cuÃ¡ndo usarlo + keywords que el usuario dirÃ­a, mÃ¡x 1.024 chars, evitar descriptions vagas (\u0027Helps with documents\u0027). Si el YAML estÃ¡ malformado, el skill carga con metadata vacÃ­a: /skill-name funciona pero Claude no tiene description para matchear (--debug muestra el error de parseo).",
+                         "source_url":  "https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices",
+                         "verified_evidence":  "\"Always write in third person. The description is injected into the system prompt, and inconsistent point-of-view can cause discovery problems.\"",
+                         "relevance":  "Alta: las descriptions de los skills Barack mezclan espaÃ±ol/inglÃ©s y algunas son largas; auditarlas contra estas reglas (tercera persona, keywords de Fak como \u0027completar AMFE\u0027, caso clave primero) mejorarÃ­a el triggering.",
+                         "already_used":  true
+                     },
+                     {
+                         "feature":  "skillOverrides â€” visibilidad por settings sin tocar el SKILL.md",
+                         "what_it_is":  "Setting con 4 estados por skill: \"on\" (nombre+description), \"name-only\" (solo nombre listado), \"user-invocable-only\" (oculto a Claude, visible en menÃº /) y \"off\" (oculto total; desde v2.1.199 tambiÃ©n para Remote Control y Agent SDK). El menÃº /skills lo escribe por vos: Space cicla estados, Enter guarda en .claude/settings.local.json. No afecta skills de plugins.",
+                         "source_url":  "https://code.claude.com/docs/en/skills",
+                         "verified_evidence":  "\"highlight a skill and press Space to cycle states, then Enter to save to .claude/settings.local.json\"",
+                         "relevance":  "Alta: permite bajar a name-only skills poco usados (text-to-cad-harness, notebooklm-manager duplicado) para liberar presupuesto de listado sin editar sus SKILL.md.",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "Ciclo de vida del contenido: dedup de re-invocaciÃ³n y supervivencia a compaction",
+                         "what_it_is":  "El contenido renderizado del skill entra como un mensaje y queda en contexto el resto de la sesiÃ³n (no se relee el archivo). Desde v2.1.202, re-invocar un skill idÃ©ntico agrega una nota corta en vez de duplicar el contenido. En auto-compaction se re-adjunta la invocaciÃ³n mÃ¡s reciente de cada skill: primeros 5.000 tokens por skill, presupuesto combinado de 25.000, priorizando los invocados mÃ¡s recientemente (los viejos pueden caerse).",
+                         "source_url":  "https://code.claude.com/docs/en/skills",
+                         "verified_evidence":  "\"keeping the first 5,000 tokens of each. Re-attached skills share a combined budget of 25,000 tokens\"",
+                         "relevance":  "Media-alta: explica por quÃ© un skill \u0027deja de influir\u0027 en sesiones largas Barack; el fix documentado es re-invocarlo tras compaction o reforzar description/instrucciones, o usar hooks para lo determinÃ­stico.",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "Reglas de permiso Skill(name) y deny del Skill tool",
+                         "what_it_is":  "Se puede controlar quÃ© skills invoca Claude vÃ­a permission rules: Skill en deny apaga todos; Skill(commit) match exacto; Skill(review-pr *) prefijo con argumentos. AdemÃ¡s algunos comandos built-in (/init, /review, /security-review) son invocables por Claude vÃ­a Skill tool y otros (/compact) no.",
+                         "source_url":  "https://code.claude.com/docs/en/skills",
+                         "verified_evidence":  "\"Permission syntax: Skill(name) for exact match, Skill(name *) for prefix match with any arguments.\"",
+                         "relevance":  "Media: alternativa centralizada a disable-model-invocation para bloquear skills riesgosos (ej. denegar Skill(fix-amfe-gaps *) y que solo Fak lo dispare).",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "Custom commands fusionados con skills + stacking de skills (v2.1.199)",
+                         "what_it_is":  "Los .claude/commands/*.md y los skills son ahora el mismo mecanismo: ambos crean /name; si comparten nombre gana el skill. Los skills agregan carpeta de archivos de soporte, frontmatter de invocaciÃ³n y carga automÃ¡tica. Desde v2.1.199 se pueden apilar varios skills al inicio de un mensaje (/code-review /fix-issue 123 carga ambos y les pasa \u0027123\u0027 como $ARGUMENTS a cada uno; hasta 6).",
+                         "source_url":  "https://code.claude.com/docs/en/skills",
+                         "verified_evidence":  "\"Custom commands have been merged into skills.\" y \"typing /code-review /fix-issue 123 loads both skills\"",
+                         "relevance":  "Media: Barack no usa .claude/commands/ (bien). El stacking sirve para el cierre de sesiÃ³n: /backup /audit-amfe en un solo mensaje.",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "Skills anidados por directorio (monorepo) y desde --add-dir",
+                         "what_it_is":  "Los skills cargan tambiÃ©n desde .claude/skills/ de subdirectorios cuando Claude toca archivos ahÃ­ (nombre calificado apps/web:deploy si hay clash; v2.1.203 hace que la variante del directorio aplique aun invocando el nombre sin calificar). TambiÃ©n cargan desde directorios agregados con --add-dir//add-dir (excepciÃ³n explÃ­cita: permissions.additionalDirectories NO carga skills). Un \u003cskill-name\u003e puede ser symlink a otra carpeta del disco.",
+                         "source_url":  "https://code.claude.com/docs/en/skills",
+                         "verified_evidence":  "\"The nested one appears under a directory-qualified name, `apps/web:deploy`\" y \"skills are an exception: .claude/skills/ within an added directory is loaded automatically\"",
+                         "relevance":  "Baja-media hoy (Barack es repo Ãºnico con skills en la raÃ­z), pero el symlink permitirÃ­a compartir un skill entre BarackMercosul y otros proyectos sin duplicarlo.",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "Bundled skills + /run, /verify y /run-skill-generator (v2.1.145+)",
+                         "what_it_is":  "Claude Code trae skills bundled (/doctor, /code-review, /batch, /debug, /loop, /claude-api...) desactivables con disableBundledSkills. TrÃ­o nuevo: /run lanza la app, /verify confirma un cambio contra la app corriendo (no solo tests), y /run-skill-generator descubre cÃ³mo levantar el proyecto desde cero y lo commitea como skill en .claude/skills/run-\u003cname\u003e/ para que todos los agentes usen esa receta. Un skill local con el mismo nombre que uno bundled lo reemplaza.",
+                         "source_url":  "https://code.claude.com/docs/en/skills",
+                         "verified_evidence":  "\"commits it as a per-project skill at `.claude/skills/run-\u003cname\u003e/`\" y \"A skill at any of these levels also overrides a bundled skill\"",
+                         "relevance":  "Alta: correr /run-skill-generator una vez en Barack grabarÃ­a la receta npm run dev + dev-login, y /verify encaja con la regla de verificaciÃ³n obligatoria del CLAUDE.md.",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "Evals de skills con el plugin skill-creator",
+                         "what_it_is":  "El plugin skill-creator (marketplace claude-plugins-official) automatiza el loop de evaluaciÃ³n: casos de prueba en evals/evals.json dentro del skill, corridas aisladas en subagentes, grading.json con pass/fail, benchmark.json comparando con-skill vs sin-skill (pass rate, tokens, tiempo), A/B ciego entre dos versiones, y \u0027description tuning\u0027 que genera prompts should-trigger/should-not-trigger y propone ediciones de description.",
+                         "source_url":  "https://code.claude.com/docs/en/skills",
+                         "verified_evidence":  "\"Description tuning: generates should-trigger and should-not-trigger prompts, measures the hit rate, and proposes description edits\"",
+                         "relevance":  "Alta: forma medible de tunear el triggering de los 11 skills Barack (ej. verificar que fix-amfe-gaps dispara con \u0027completar AMFE\u0027 y NO con consultas de lectura). Requiere instalar el plugin.",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "Best practices de authoring: conciso, 500 lÃ­neas, referencias 1 nivel, workflows con checklist",
+                         "what_it_is":  "GuÃ­a oficial: cuerpo de SKILL.md bajo 500 lÃ­neas; material extra en archivos separados referenciados desde SKILL.md a UN nivel de profundidad (referencias anidadas hacen que Claude lea parcial con head -100); TOC en archivos de referencia \u003e100 lÃ­neas; grados de libertad segÃºn fragilidad de la tarea (script exacto para lo frÃ¡gil, heurÃ­stica para lo abierto); checklists copiables para workflows multi-paso; loops de validaciÃ³n (validarâ†’arreglarâ†’repetir); patrÃ³n plan-validate-execute para operaciones batch/destructivas; nombres en gerundio, sin palabras reservadas \u0027anthropic\u0027/\u0027claude\u0027; siempre forward slashes (nunca rutas estilo Windows); tools MCP con nombre calificado ServerName:tool_name.",
+                         "source_url":  "https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices",
+                         "verified_evidence":  "\"Keep references one level deep from SKILL.md\" y \"Format: ServerName:tool_name... Without the server prefix, Claude may fail to locate the tool\"",
+                         "relevance":  "Muy alta: checklist directo para auditar los 11 skills Barack. El punto de forward slashes y el de MCP calificado (mcp__notebooklm__*, Supabase) aplican tal cual al setup Windows con mÃºltiples MCP. El patrÃ³n plan-validate-execute es exactamente lo que ya exige supabase-safety.",
+                         "already_used":  true
+                     },
+                     {
+                         "feature":  "EstÃ¡ndar abierto Agent Skills (agentskills.io) y validador skills-ref",
+                         "what_it_is":  "El formato es un estÃ¡ndar abierto creado por Anthropic y adoptado por decenas de tools (Cursor, Copilot, Gemini CLI, Codex, VS Code...). La spec exige name (1-64 chars, minÃºsculas/nÃºmeros/guiones, sin guiones consecutivos, DEBE coincidir con el nombre del directorio) y description (1-1024 chars); opcionales: license, compatibility (â‰¤500 chars), metadata (mapa clave-valor libre) y allowed-tools (experimental). Directorios convencionales scripts/, references/, assets/. Hay CLI de validaciÃ³n: skills-ref validate ./my-skill. Claude Code EXTIENDE el estÃ¡ndar (invocation control, subagent execution, dynamic context son extensiones propias).",
+                         "source_url":  "https://agentskills.io/specification",
+                         "verified_evidence":  "\"Must match the parent directory name\" (name) y \"skills-ref validate ./my-skill\"",
+                         "relevance":  "Media-alta: los skills Barack escritos contra la spec base son portables a otros agentes; los campos license/compatibility/metadata no se usan hoy. Ojo al usar extensiones Claude-only (paths, context:fork, hooks) si se busca portabilidad.",
+                         "already_used":  true
+                     },
+                     {
+                         "feature":  "Arquitectura de progressive disclosure (3 niveles) y scripts ejecutables",
+                         "what_it_is":  "Post de ingenierÃ­a de Anthropic: nivel 1 = name+description precargados en el system prompt; nivel 2 = SKILL.md completo al ser relevante; nivel 3+ = archivos linkeados que Claude navega solo si hace falta, con lo cual el contexto empaquetable es \u0027efectivamente ilimitado\u0027. Recomienda bundlear cÃ³digo pre-escrito que Claude EJECUTA (determinÃ­stico, mÃ¡s barato que generar tokens) y, en seguridad, instalar skills solo de fuentes confiables y auditar dependencias y recursos bundleados.",
+                         "source_url":  "https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills",
+                         "verified_evidence":  "\"the amount of context that can be bundled into a skill is effectively unbounded\"",
+                         "relevance":  "Barack ya aplica el patrÃ³n (skills que referencian scripts/*.mjs); el refuerzo es formalizar niveles: SKILL.md corto que apunte a referencias y scripts, en vez de skills monolÃ­ticos.",
+                         "already_used":  true
+                     },
+                     {
+                         "feature":  "Skill-folder como plugin (\u003cname\u003e@skills-dir)",
+                         "what_it_is":  "Agregando un .claude-plugin/plugin.json dentro de la carpeta de un skill, ese folder carga como plugin llamado \u003cname\u003e@skills-dir y puede bundlear agents, hooks y MCP servers junto al skill. En .claude/skills/ de proyecto requiere aceptar el workspace trust dialog primero.",
+                         "source_url":  "https://code.claude.com/docs/en/skills",
+                         "verified_evidence":  "\"it loads as a plugin named `\u003cname\u003e@skills-dir`, so it can bundle agents, hooks, and MCP servers\"",
+                         "relevance":  "Media: permitirÃ­a empaquetar supabase-safety como unidad skill+hook (guard de .mjs) +agente en una sola carpeta versionada, en vez de repartirlo entre skills/, settings.json y agents/.",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "Precedencia por niveles y override de bundled skills",
+                         "what_it_is":  "Con nombres iguales: enterprise pisa personal, personal pisa proyecto, y cualquiera de esos pisa un bundled skill homÃ³nimo. Los skills de plugin usan namespace plugin:skill asÃ­ que nunca chocan. Si un skill y un command comparten nombre, gana el skill.",
+                         "source_url":  "https://code.claude.com/docs/en/skills",
+                         "verified_evidence":  "\"enterprise overrides personal, and personal overrides project. A skill at any of these levels also overrides a bundled skill\"",
+                         "relevance":  "Directa para Barack: notebooklm-manager aparece DUPLICADO en el listado del setup (personal ~/.claude/skills y proyecto); con esta regla la versiÃ³n personal pisa a la del proyecto â€” conviene dejar una sola copia (o symlink).",
+                         "already_used":  true
+                     }
+                 ],
+    "fetch_failures":  [
+                           "https://docs.claude.com/en/docs/claude-code/skills (301 permanente a https://code.claude.com/docs/en/skills â€” el contenido se obtuvo del destino, no de esta URL)"
+                       ]
+}

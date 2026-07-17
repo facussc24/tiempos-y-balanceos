@@ -1,0 +1,133 @@
+﻿{
+    "key":  "enforcement-gaps",
+    "findings":  [
+                     {
+                         "file":  "docs/LECCIONES_APRENDIDAS.md",
+                         "line":  18,
+                         "claim":  "La REGLA DURA 2026-07-14/16 (nunca pasar un entregable ejecutable sin mirarlo antes, mostrar dato crudo before-\u003eafter con columna \u0027actual en arb\u0027) es solo prosa: no existe regla en .claude/rules/, ni hook, ni script validador.",
+                         "evidence":  "Grep -i \u0027entregable|before.?after|actual en arb\u0027 sobre C:\\Dev\\BarackMercosul\\.claude = 0 archivos. Los 5 hooks leidos (file-guard, supabase-guard, validator-check, renumber-guard, session-close-guard) no mencionan xlsx/entregables. Glob scripts/*.mjs no muestra ningun _verifyEntregable*. La propia seccion \u0027Como agregar lecciones nuevas\u0027 (lineas 236-238) exige regla durable CON enforcement via skill rule-enforcement-gate, y no se cumplio.",
+                         "severity":  "MEJORA",
+                         "suggested_fix":  "Crear .claude/rules/entregables.md (corta, always-on: \u0027todo archivo que Fak vaya a ejecutar/cargar se abre y se muestra crudo before-\u003eafter antes de entregar\u0027) + script scripts/_verifyEntregable.mjs que abra el xlsx generado y imprima las filas crudas; enforcement: hook PreToolUse Bash o Stop que detecte escritura de .xlsx fuera del repo (Escritorio/Downloads/OneDrive) en la sesion y bloquee/recuerde (exit 2) hasta que se haya corrido el verificador."
+                     },
+                     {
+                         "file":  "docs/LECCIONES_APRENDIDAS.md",
+                         "line":  37,
+                         "claim":  "La leccion \u0027tolerancia ~0,1% en auditorias de consumos + invariantes que cierran (ISO+POLI=0,35; vinilo RL1=suma variantes) + siempre un agente independiente\u0027 no tiene ningun check ejecutable.",
+                         "evidence":  "Glob scripts/*.mjs y scripts/_lib/*.mjs: no existe ningun _auditConsumos/_validateConsumos/consumosValidator. Grep -i \u0027consumo|toleranc|invariante\u0027 en scripts/ solo matchea scripts AMFE archivados (_archive/) y _bomInventory.md, nada de auditoria de consumos. Los hooks tampoco (grep \u0027consumo|BOM|entregable\u0027 en .claude/hooks = 0).",
+                         "severity":  "MEJORA",
+                         "suggested_fix":  "Crear scripts/_lib/consumosValidator.mjs con TOLERANCIA=0.001 como constante, lista declarativa de invariantes por producto (ISO+POLI=0,35 exacto; suma vinilos variantes=RL1; 100x60=1/pzas-caja) y salida PASS/FAIL; toda futura auditoria de consumos lo importa. El paso \u0027agente independiente\u0027 queda como instruccion en una regla corta de consumos que referencie el validador."
+                     },
+                     {
+                         "file":  "docs/LECCIONES_APRENDIDAS.md",
+                         "line":  21,
+                         "claim":  "La meta-regla \u0027regla canonica de memoria \u003e dato puntual de una fuente\u0027 (etiqueta 100x60=1/caja, quimicos A+B=fraccion-de-envase) vive solo en prosa (LECCIONES + MEMORY.md); no hay lista canonica ejecutable que corra sobre la tabla final.",
+                         "evidence":  "No existe ningun archivo de datos de reglas canonicas de consumos: Grep -i \u0027consumo\u0027 en scripts/ no devuelve ningun data file ni check (solo _archive y _bomInventory.md). El patron ya probado en el repo (lista canonica + normalize, ej. core/amfe/forbiddenContent.data.json -\u003e scanForbidden() citado en amfe.md seccion 6) no se replico para consumos.",
+                         "severity":  "MEJORA",
+                         "suggested_fix":  "Extraer las reglas canonicas a un JSON (ej. scripts/_lib/consumosCanon.data.json: {etiqueta_100x60: \u0027por_caja\u0027, quimicos_par_envase: [...]}) consumido por el mismo consumosValidator.mjs del finding anterior, que flaggee filas de la TABLA FINAL que violen una regla canonica â€” exactamente el punto donde fallaron los 6 incidentes de 2026-07-15/16."
+                     },
+                     {
+                         "file":  "docs/LECCIONES_APRENDIDAS.md",
+                         "line":  25,
+                         "claim":  "La leccion \u0027antes de concluir consumo no documentado, buscar la Rev MAS NUEVA de la BOM en el folder actual (parsear int, tomar la mayor)\u0027 es solo prosa; no existe helper que liste el folder y elija la Rev maxima.",
+                         "evidence":  "Grep -i \u0027BOM\u0027 en scripts/ solo devuelve parsers archivados (_archive/_parseBomFamilyA.mjs, _parseBomFamilyDPwa.mjs) y _bomInventory.md; ningun script vigente parsea numeros de Rev ni selecciona la mayor. Glob scripts/*.mjs confirma que no hay _bomRev*.",
+                         "severity":  "MEJORA",
+                         "suggested_fix":  "Script chico scripts/_bomRevPick.mjs \u003cfolder\u003e: lista el directorio, parsea Rev(\\d+) como int, imprime el listado completo (cumple la regla de memoria \u0027pegar la salida del folder antes de afirmar no existe\u0027) y devuelve la ruta de la Rev mayor. Referenciarlo como paso obligatorio en la regla corta de consumos."
+                     },
+                     {
+                         "file":  "docs/LECCIONES_APRENDIDAS.md",
+                         "line":  31,
+                         "claim":  "Las lecciones \u0027export RELACIONES del arb parte la fila (consumo en fila +2 corrido 3 cols)\u0027 y \u0027tabla de tizadas de Mesa de Corte = fuente autoritativa de vinilo/tela\u0027 dependen de memoria; no hay parser reusable del export arb que aplique la regla estructural.",
+                         "evidence":  "Grep -i \u0027consumo|toleranc|invariante\u0027 y \u0027BOM\u0027 en scripts/ no muestra ningun parser del export RELACIONES ni lector de CONSUMOS TIZADAS; solo existen como memorias (reference_arb_export_estructura.md, reference_tabla_consumo_mesa_corte.md citadas en MEMORY.md) y en LECCIONES lineas 28-32.",
+                         "severity":  "MEJORA",
+                         "suggested_fix":  "Cuando se repita una tarea arb: codificar el conocimiento en scripts/_lib/arbRelacionesParser.mjs (maneja fila partida multi-linea, +7 cols/nivel, codigo 15 chars) para que la regla estructural no dependa de recordarla; hasta entonces, al menos moverla a una skill \u0027arb-erp\u0027 on-demand en el repo en vez de solo memoria personal."
+                     },
+                     {
+                         "file":  ".claude/hooks/supabase-guard.sh",
+                         "line":  30,
+                         "claim":  "El guard matchea CUALQUIER comando Bash que contenga \u0027scripts/_fix...mjs\u0027 (incluido git commit -m con esa string), dispara _backup.mjs que falla sin .env.local y bloquea el commit â€” incidente documentado 2026-07-08 y todavia sin fix.",
+                         "evidence":  "Leido supabase-guard.sh: linea 30 `if ! echo \"$CMD\" | grep -qE \u0027\\.mjs\u0027` y linea 34 grep de `scripts/_(fix|sync|delete|...)` corren sobre el comando completo sin excluir `git`. LECCIONES_APRENDIDAS.md lineas 63-65 documenta el bloqueo de `git commit` y deja \u0027Evaluar que el guard ignore comandos git\u0027 como pendiente; el hook actual no tiene ninguna exclusion.",
+                         "severity":  "ROTO",
+                         "suggested_fix":  "Early-exit en supabase-guard.sh (y validator-check.sh/renumber-guard.sh por consistencia) si el comando no EJECUTA un .mjs: p.ej. `case \"$CMD\" in git\\ *|gh\\ *) exit 0;; esac` o exigir que el patron sea `(^|[;\u0026|]\\s*)node .*scripts/_...` en vez de substring en cualquier parte."
+                     },
+                     {
+                         "file":  ".claude/hooks/validator-check.sh",
+                         "line":  58,
+                         "claim":  "amfe.md seccion 14 y autonomy-contract fila A declaran runWithValidation() \u0027obligatorio\u0027 para scripts que tocan amfe_documents.data, pero el hook que lo chequea explicitamente NO bloquea (solo imprime warning y exit 0).",
+                         "evidence":  "validator-check.sh lineas 3-7: \u0027Alerta (no bloquea)... Exit 2 = bloquea (no lo usamos aqui, solo alertamos)\u0027; lineas 58-65 imprimen el warning y `exit 0`. amfe.md:161 dice \u0027Gate pre-commit: todo script .mjs que toque amfe_documents.data usa runWithValidation()\u0027 y autonomy-contract.md fila A lo marca \u0027**obligatorio**\u0027.",
+                         "severity":  "DESACTUALIZADO",
+                         "suggested_fix":  "Alinear hook con regla: exit 2 cuando el script con --apply escribe amfe_documents.data sin runWithValidation, con bypass explicito (--no-gate-ok) para casos aprobados por Fak; o si se decide que warning alcanza, bajar el \u0027obligatorio\u0027 de amfe.md/autonomy-contract a \u0027recomendado\u0027 para que regla y enforcement digan lo mismo."
+                     },
+                     {
+                         "file":  ".claude/hooks/session-close-guard.sh",
+                         "line":  11,
+                         "claim":  "El protocolo de cierre (backup Supabase + agente auditor, \u0027OBLIGATORIO, NO OPCIONAL\u0027 en CLAUDE.md) solo tiene un recordatorio que se dispara si hay ARCHIVOS sin commitear: una sesion que solo toco datos Supabase (via MCP, sin tocar archivos) cierra sin ningun aviso.",
+                         "evidence":  "session-close-guard.sh lineas 11-15: CHANGES sale de `git status --porcelain` filtrado por extensiones de codigo/docs; `[ -z \"$CHANGES\" ] \u0026\u0026 exit 0`. Ediciones a Supabase por MCP execute_sql no generan diff de git, entonces el hook nunca recuerda \u0027node scripts/_backup.mjs\u0027 ni el auditor en ese escenario. Ademas el cooldown de 20 min (lineas 18-24) puede silenciarlo justo en el cierre real.",
+                         "severity":  "MEJORA",
+                         "suggested_fix":  "Segunda condicion en el Stop hook: marcar un flag en disco desde un hook PreToolUse cuando la sesion use tools MCP Supabase de escritura (apply_migration/execute_sql) o scripts .mjs destructivos, y que session-close-guard tambien dispare el recordatorio de backup/auditor si ese flag existe y no se corrio _backup.mjs despues."
+                     },
+                     {
+                         "file":  ".claude/rules/git-deploy.md",
+                         "line":  22,
+                         "claim":  "La \u0027Regla absoluta: SIEMPRE correr npm run build antes de pushear\u0027 no tiene gate: ningun hook intercepta `git push` para verificar que hubo build exitoso.",
+                         "evidence":  "settings.json define solo 4 hooks PreToolUse (file-guard, supabase-guard, validator-check, renumber-guard) y 2 Stop; ninguno matchea `git push` (grep \u0027push\u0027 en .claude/hooks = 0 conceptual: leidos los 5 hooks completos, ninguno menciona git push ni build). El incidente fuente (2026-04-13, 3 deploys rotos) esta documentado en la misma regla.",
+                         "severity":  "MEJORA",
+                         "suggested_fix":  "Hook PreToolUse Bash: si el comando matchea `git push`, exigir evidencia de build fresco (ej. mtime de dist/index.html \u003e mtime del ultimo commit, o un marker escrito por un wrapper `npm run build`); si falta, exit 2 con instruccion de correr npm run build primero."
+                     },
+                     {
+                         "file":  ".claude/skills/rule-enforcement-gate/SKILL.md",
+                         "line":  30,
+                         "claim":  "El skill que garantiza \u0027toda regla nueva nace con enforcement\u0027 declara como trigger \u0027Edit/Write en .claude/rules/*.md\u0027 pero ese trigger no esta cableado a ningun hook â€” depende de que Claude recuerde invocar el skill (exactamente el patron que el skill denuncia).",
+                         "evidence":  "file-guard.sh (unico hook PreToolUse de Edit|Write) solo bloquea package-lock.json/.env/.git (case en lineas 22-30); no hay rama para .claude/rules/ ni docs/LECCIONES_APRENDIDAS.md. settings.json no registra ningun otro hook de Edit/Write.",
+                         "severity":  "MEJORA",
+                         "suggested_fix":  "Extender file-guard.sh: si file_path matchea .claude/rules/*.md, emitir recordatorio no bloqueante por stderr (\u0027regla nueva/modificada: cargar skill rule-enforcement-gate y crear el check ejecutable en esta sesion\u0027) â€” convierte el trigger prosa del skill en trigger real."
+                     },
+                     {
+                         "file":  ".claude/commands/fix-amfe-gaps.md",
+                         "line":  23,
+                         "claim":  "El comando /fix-amfe-gaps y el agente amfe-healer referencian scripts/_auditIntegral.mjs y scripts/_fixAmfeStats.mjs que ya no existen en scripts/ (quedaron en el archive o fueron podados), asi que el flujo documentado falla al ejecutarse.",
+                         "evidence":  "Glob \u0027scripts/**/_auditIntegral.mjs\u0027 = 0 resultados; Glob \u0027scripts/**/_fixAmfeStats.mjs\u0027 = 0 resultados. Referencias vivas: .claude/commands/fix-amfe-gaps.md lineas 23 y 27, y .claude/agents/amfe-healer.md lineas 35, 61-67, 73, 142, 146 (grep verificado). scripts/_autoHeal.mjs si existe.",
+                         "severity":  "ROTO",
+                         "suggested_fix":  "Actualizar comando y agente para apuntar a los scripts vigentes (scripts/_auditAll.mjs como diagnostico; decidir si _fixAmfeStats se restaura de scripts/_archive/ o se elimina el paso 5), o restaurar los scripts del archive si siguen siendo necesarios."
+                     },
+                     {
+                         "file":  "scripts/_validateGate3Export.mjs",
+                         "line":  1,
+                         "claim":  "La leccion 2026-07-07 (validar el xlsx Gate3 antes de enviar + recalcular caches con Excel COM porque xlsx-populate no calcula) tiene un validador pero es standalone manual: nadie lo invoca automaticamente y el paso COM Calculate no existe en el export.",
+                         "evidence":  "Grep \u0027_validateGate3Export\u0027 en scripts/ = 1 solo archivo (el mismo validador; _exportProjectGate3VW.mjs no lo llama). Grep \u0027B11|Observaciones|validate|Calculate\u0027 en _exportProjectGate3VW.mjs solo matchea la limpieza de Observaciones (lineas 628-631) â€” el fix del template si esta codificado, pero no hay recalc COM ni validacion post-export. LECCIONES lineas 79-81 documentan el paso como prosa.",
+                         "severity":  "MEJORA",
+                         "suggested_fix":  "Que _exportProjectGate3VW.mjs invoque _validateGate3Export.mjs al final de cada export (fallar con exit!=0 si algun check FAIL) y agregar flag --recalc que abra/guarde via PowerShell COM (Workbooks.Open -\u003e Calculate -\u003e Save) antes de declarar el archivo entregable."
+                     },
+                     {
+                         "file":  ".claude/skills/amfe-export-oficial/SKILL.md",
+                         "line":  80,
+                         "claim":  "El export oficial AMFE tiene UN gate real (assertAmfeExportable aborta con S/O/D vacios) pero el resto del checklist pre-entrega (caratula completa, FM secuenciales 1..N, tabla REVISIONES, rev en rojo) es checklist manual en prosa.",
+                         "evidence":  "SKILL.md linea 78 documenta el throw de assertAmfeExportable (enforcement real); lineas 80-87 son checklist con casillas \u0027[ ] abrir el .xlsx y mirar\u0027. No existe script que valide el workbook oficial generado (glob scripts/*.mjs: no hay _validateAmfeExport*; el unico validador de xlsx es _validateGate3Export.mjs, especifico de Gate3).",
+                         "severity":  "MEJORA",
+                         "suggested_fix":  "Clonar el patron de _validateGate3Export.mjs: scripts/_validateAmfeOficialExport.mjs que abra el xlsx generado y verifique hojas Caratula+AMFE, campos de caratula no vacios, secuencia FM 1..N por operacion y fila REVISIONES vigente; invocarlo desde _exportOficial.ts/_oficializarRevision.ts."
+                     },
+                     {
+                         "file":  "scripts/_lib/amfeValidator.mjs",
+                         "line":  527,
+                         "claim":  "La prohibicion core \u0027CC/SC solo las asigna Fak\u0027 no tiene candado: el validator solo flaggea calibracion sospechosa (CC con S\u003c9, SC con S\u003c7, ambos WARNING), pero un script que ASIGNE un CC/SC nuevo con S alto pasa el gate sin ruido.",
+                         "evidence":  "amfeValidator.mjs lineas 525-544: checks CAUSE_CC_LOW_SEVERITY / CAUSE_SC_LOW_SEVERITY con comentario \u0027SOLO FLAGEA calibracion sospechosa. NUNCA asigna\u0027 â€” y ninguno esta en CRITICAL_TYPES (lineas 93-122), o sea ni siquiera bloquean. diffIssues() compara issues, no valores de specialChar, asi que un cambio \u0027\u0027-\u003e\u0027CC\u0027 con S=9 no genera issue nuevo.",
+                         "severity":  "MEJORA",
+                         "suggested_fix":  "En dryRunGuard/runWithValidation: diff explicito de specialChar before-\u003eafter; cualquier transicion \u0027\u0027-\u003eCC/SC introducida por el script bloquea el --apply salvo flag explicito tipo --cc-sc-autorizado-por-fak, cumpliendo core-prohibiciones punto 2 con codigo."
+                     },
+                     {
+                         "file":  ".claude/rules/verify-supabase-live.md",
+                         "line":  1,
+                         "claim":  "El Iron Law \u0027Supabase live = unica fuente de verdad\u0027 es prosa pura: nada detecta cuando se afirma estado desde dumps de tmp/ o backups/.",
+                         "evidence":  "Regla leida completa: define protocolo y formato de cita pero ningun check. Los 5 hooks y el validator no mencionan tmp/ ni backups/ (grep en .claude/hooks sin matches de esos terminos en contexto de lectura).",
+                         "severity":  "MEJORA",
+                         "suggested_fix":  "Enforcement barato y parcial: hook PreToolUse Read/Grep que, al tocar tmp/*.json o backups/**, emita recordatorio por stderr (\u0027foto historica â€” no afirmar estado actual sin query live\u0027). No bloqueante; el gap total es dificil de cerrar por codigo."
+                     },
+                     {
+                         "file":  ".claude/settings.json",
+                         "line":  2,
+                         "claim":  "El protocolo de inicio de sesion de CLAUDE.md (\u0027Leer docs/LECCIONES_APRENDIDAS.md al inicio\u0027) no tiene enforcement: no existe hook SessionStart que lo inyecte o recuerde.",
+                         "evidence":  "settings.json completo leido: solo define hooks PreToolUse (2 matchers) y Stop; no hay clave SessionStart. El cumplimiento depende de que Claude lea CLAUDE.md y obedezca el paso 1.",
+                         "severity":  "MEJORA",
+                         "suggested_fix":  "Hook SessionStart en settings.json que imprima las primeras N lineas de docs/LECCIONES_APRENDIDAS.md (o un recordatorio de leerlo) â€” garantiza que las lecciones vigentes entren al contexto de cada sesion en vez de depender de memoria."
+                     }
+                 ]
+}

@@ -26,8 +26,8 @@ process.stdin.on("end", () => {
 
 if [ -z "$CMD" ]; then exit 0; fi
 
-# Solo nos interesan scripts .mjs en scripts/
-if ! echo "$CMD" | grep -qE 'scripts/_[A-Za-z]+\.mjs'; then exit 0; fi
+# Solo nos interesa la EJECUCION de scripts .mjs (no menciones en git commit etc.)
+if ! echo "$CMD" | grep -qE '(^|[;&|(][[:space:]]*|^[[:space:]]*)(node|npx)[[:space:]][^;&|]*scripts/_[A-Za-z]+\.mjs'; then exit 0; fi
 
 # Patrones de scripts riesgosos: renumber, align, reassign, realloc, reallocate
 if ! echo "$CMD" | grep -qiE 'scripts/_[A-Za-z]*(renumber|align|reassign|realloc)[A-Za-z]*\.mjs'; then exit 0; fi

@@ -1,0 +1,217 @@
+﻿{
+    "key":  "hooks",
+    "topic":  "Hooks de Claude Code â€” documentaciÃ³n oficial completa (code.claude.com, fetcheada 2026-07-16)",
+    "findings":  [
+                     {
+                         "feature":  "Lista completa de eventos: 31 (no 9)",
+                         "what_it_is":  "La doc actual documenta 31 eventos de hook. AdemÃ¡s de los 9 clÃ¡sicos (PreToolUse, PostToolUse, UserPromptSubmit, Stop, SubagentStop, SessionStart, SessionEnd, PreCompact, Notification) existen: Setup, UserPromptExpansion, StopFailure, PostToolUseFailure, PostToolBatch, PermissionRequest, PermissionDenied, SubagentStart, TeammateIdle, TaskCreated, TaskCompleted, FileChanged, ConfigChange, CwdChanged, InstructionsLoaded, WorktreeCreate, WorktreeRemove, PostCompact, Elicitation, ElicitationResult y MessageDisplay.",
+                         "source_url":  "https://code.claude.com/docs/en/hooks-guide",
+                         "verified_evidence":  "Tabla \u0027How hooks work\u0027 lista: \"PostToolBatch | After a full batch of parallel tool calls resolves, before the next model call\"",
+                         "relevance":  "El setup Barack solo usa PreToolUse y Stop. Hay 29 eventos sin explotar; los mÃ¡s aplicables se detallan en findings separados.",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "5 tipos de hook: command, http, mcp_tool, prompt, agent",
+                         "what_it_is":  "AdemÃ¡s de type:command existen: http (POST del JSON del evento a una URL, con headers interpolando env vars via allowedEnvVars), mcp_tool (llama una tool de un MCP server ya conectado, con substituciÃ³n ${tool_input.file_path}), prompt (evaluaciÃ³n LLM de un solo turno) y agent (subagente con tools, experimental).",
+                         "source_url":  "https://code.claude.com/docs/en/hooks-guide",
+                         "verified_evidence":  "\"Four other types are available: type http... mcp_tool... prompt: single-turn LLM evaluation... agent: multi-turn verification with tool access\"",
+                         "relevance":  "Barack solo usa command. mcp_tool podrÃ­a invocar el MCP de Supabase desde un hook (ej: verificar backup). prompt/agent aplican al checklist de cierre (ver findings propios).",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "Prompt hooks (type: prompt)",
+                         "what_it_is":  "En vez de correr un comando, manda el prompt + el JSON del evento (placeholder $ARGUMENTS) a un modelo Claude (Haiku por default, configurable con campo model). El modelo devuelve {\"ok\": true/false, \"reason\": \"...\"}. En Stop/SubagentStop, ok:false hace que Claude siga trabajando usando reason como prÃ³xima instrucciÃ³n. Timeout default 30s.",
+                         "source_url":  "https://code.claude.com/docs/en/hooks-guide",
+                         "verified_evidence":  "\"ok: false... Stop and SubagentStop: the reason is fed back to Claude so it keeps working\"",
+                         "relevance":  "Directo para el Stop hook de Barack: en vez de un checklist de texto fijo, un prompt hook puede JUZGAR si el protocolo de cierre (LECCIONES actualizado, backup, build, commit) se cumpliÃ³ y bloquear con la razÃ³n concreta.",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "Agent hooks (type: agent) â€” experimental",
+                         "what_it_is":  "Spawna un subagente que puede leer archivos, buscar cÃ³digo y correr comandos antes de devolver {ok, reason}. Mismo formato que prompt hooks pero con timeout default 60s y hasta 50 turnos de tool-use. La doc recomienda: prompt hooks cuando el input alcanza; agent hooks cuando hay que verificar contra el estado real del repo.",
+                         "source_url":  "https://code.claude.com/docs/en/hooks-guide",
+                         "verified_evidence":  "\"agent hooks spawn a subagent... with a longer default timeout of 60 seconds and up to 50 tool-use turns\"",
+                         "relevance":  "PodrÃ­a reemplazar el \u0027lanzar agente auditor al cerrar\u0027 manual: un agent hook en Stop que verifique build/tests/backup contra el estado real. Es experimental â€” la doc dice preferir command hooks en producciÃ³n.",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "Campo \u0027if\u0027 con sintaxis de permission rules",
+                         "what_it_is":  "Filtra el hook por nombre de tool + argumentos juntos (ej: \"Bash(git *)\", \"Edit(*.ts)\") de modo que el proceso del hook solo se spawnea cuando el tool call matchea. Chequea cada subcomando en cadenas \u0026\u0026 y dentro de $() y backticks. Falla abierto (corre igual) si no puede parsear el comando. Solo funciona en eventos de tool: PreToolUse, PostToolUse, PostToolUseFailure, PermissionRequest, PermissionDenied; en otros eventos impide que el hook corra.",
+                         "source_url":  "https://code.claude.com/docs/en/hooks-guide",
+                         "verified_evidence":  "\"The if field uses permission rule syntax to filter hooks by tool name and arguments together, so the hook process only spawns when the tool call matches\"",
+                         "relevance":  "Los guards PreToolUse de Barack sobre Edit/Write/Bash spawnean un proceso en CADA tool call; con \u0027if\u0027 se podrÃ­an restringir a los patrones peligrosos y ahorrar latencia. Ojo: falla abierto, no sirve como deny duro (para eso permissions).",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "JSON de salida: campos universales y decision/reason",
+                         "what_it_is":  "Campos comunes a todo evento: continue (false detiene a Claude por completo), stopReason, suppressOutput, systemMessage (warning al usuario), terminalSequence (escapes OSC). Aparte, decision:\"block\" + reason a nivel top aplica a UserPromptSubmit, UserPromptExpansion, PostToolUse, PostToolUseFailure, PostToolBatch, Stop, SubagentStop, ConfigChange y PreCompact. El JSON solo se procesa con exit 0; con exit 2 se ignora.",
+                         "source_url":  "https://code.claude.com/docs/en/hooks",
+                         "verified_evidence":  "\"continue (default: true): If false, stops Claude entirely\"; \"decision: Only value is block\"",
+                         "relevance":  "El Stop hook de Barack (checklist) probablemente usa exit 2/stderr; con decision:block + reason el feedback queda estructurado, y systemMessage permite avisarle a Fak sin ensuciar el contexto.",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "hookSpecificOutput por evento (permissionDecision, updatedInput, additionalContext, etc.)",
+                         "what_it_is":  "Los campos especÃ­ficos van anidados en hookSpecificOutput con hookEventName obligatorio. PreToolUse: permissionDecision allow/deny/ask/defer + permissionDecisionReason + updatedInput (reemplaza los argumentos del tool antes de ejecutar). PostToolUse: updatedToolOutput y additionalContext. Stop/SubagentStop: additionalContext (feedback para que Claude actÃºe). UserPromptSubmit: additionalContext DEBE ir anidado â€” a nivel top se ignora silenciosamente. MessageDisplay: displayContent (reemplazo solo visual).",
+                         "source_url":  "https://code.claude.com/docs/en/hooks",
+                         "verified_evidence":  "\"updatedInput directly under hookSpecificOutput replaces a tool\u0027s arguments before it runs\"",
+                         "relevance":  "Los guards de Barack pueden pasar de bloquear (exit 2) a CORREGIR: updatedInput permite reescribir un comando Bash peligroso (ej: agregar flags seguros) en vez de rechazarlo. additionalContext en Stop estructura el checklist de cierre.",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "SessionStart con salida rica: additionalContext, sessionTitle, watchPaths, reloadSkills, initialUserMessage",
+                         "what_it_is":  "Un hook SessionStart puede devolver additionalContext (texto al contexto inicial), sessionTitle (igual que /rename, ej: nombrar por branch), watchPaths (array de paths absolutos a vigilar para FileChanged), reloadSkills (re-escanea skills instaladas por el propio hook) e initialUserMessage (primer mensaje en modo -p). El stdout simple tambiÃ©n se agrega como contexto. Matchers: startup, resume, clear, compact.",
+                         "source_url":  "https://code.claude.com/docs/en/hooks",
+                         "verified_evidence":  "\"reloadSkills... re-scans the skill and command directories after the SessionStart hooks complete\"; \"watchPaths: Array of absolute paths to watch\"",
+                         "relevance":  "El \u0027protocolo de inicio de sesiÃ³n\u0027 de Barack (leer LECCIONES_APRENDIDAS.md) hoy depende de que Claude lo haga; un SessionStart hook con cat del archivo lo hace determinÃ­stico. sessionTitle automÃ¡tico por proyecto tambiÃ©n aplica.",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "SessionStart matcher \u0027compact\u0027 â€” reinyectar contexto tras compaction",
+                         "what_it_is":  "SessionStart con matcher \"compact\" corre despuÃ©s de cada compaction; lo que el comando escribe a stdout se agrega al contexto de Claude. La guÃ­a lo muestra reinyectando convenciones de proyecto y trabajo reciente que la compaction puede perder. PreCompact/PostCompact tienen matchers manual/auto.",
+                         "source_url":  "https://code.claude.com/docs/en/hooks-guide",
+                         "verified_evidence":  "\"Use a SessionStart hook with a compact matcher to re-inject critical context after every compaction\"",
+                         "relevance":  "En sesiones largas de Barack (audits, cargas arb) la compaction pierde reglas crÃ­ticas (no inventar datos, Supabase live). Un hook compact que reinyecte las 3-4 prohibiciones core es barato y directo.",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "Async hooks y asyncRewake",
+                         "what_it_is":  "async:true corre el command hook en background sin bloquear. asyncRewake:true (implica async) ademÃ¡s despierta a Claude si el proceso termina con exit 2, mostrÃ¡ndole stderr/stdout como system reminder para que reaccione a un fallo de larga duraciÃ³n.",
+                         "source_url":  "https://code.claude.com/docs/en/hooks",
+                         "verified_evidence":  "\"If true, runs in the background and wakes Claude on exit code 2. Implies async\"",
+                         "relevance":  "El backup de fin de sesiÃ³n (_backup.mjs) podrÃ­a dispararse async desde un hook Stop/SessionEnd sin frenar el cierre, y con asyncRewake avisar si el backup fallÃ³.",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "Hooks en frontmatter de skills y agents + campo \u0027once\u0027",
+                         "what_it_is":  "Los hooks se pueden declarar en el YAML frontmatter de una skill o un subagente (misma estructura: hooks: PreToolUse: - matcher... ), activos solo mientras el componente estÃ¡ activo. El campo once:true hace que el hook corra una sola vez por sesiÃ³n y se remueva â€” solo honrado en frontmatter de skills; ignorado en settings y en frontmatter de agents.",
+                         "source_url":  "https://code.claude.com/docs/en/hooks",
+                         "verified_evidence":  "\"once | If true, runs once per session then is removed. Only honored for hooks declared in skill frontmatter\"",
+                         "relevance":  "La skill supabase-safety de Barack podrÃ­a llevar embebido un PreToolUse que bloquee \u0027node scripts/*.mjs\u0027 sin backup previo â€” el enforcement viaja CON la skill (encaja con la regla rule-enforcement-gate). Los agents auditor/amfe-healer tambiÃ©n pueden llevar sus guards.",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "Campo shell: \"powershell\" y exec form (args: [])",
+                         "what_it_is":  "Command hooks aceptan shell:\"bash\"|\"powershell\"; en Windows el default es bash (Git Bash) o powershell si Git Bash no estÃ¡ instalado. Agregar \"args\": [] cambia a exec form: spawnea el script directo sin shell, evitando problemas de quoting. Placeholders como ${CLAUDE_PROJECT_DIR} preferidos en exec form.",
+                         "source_url":  "https://code.claude.com/docs/en/hooks",
+                         "verified_evidence":  "\"shell | Shell to use for this hook. Accepts bash or powershell... Setting powershell runs the command via PowerShell on Windows\"",
+                         "relevance":  "Barack corre en Windows 11 y ya sufriÃ³ fricciÃ³n con guards PowerShell (memoria reference_powershell_command_guard); shell explÃ­cito + exec form elimina la ambigÃ¼edad Git Bash vs PowerShell en los guards existentes.",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "Stop hook: stop_hook_active, last_assistant_message y cap de 8 bloqueos",
+                         "what_it_is":  "El input del Stop hook incluye stop_hook_active (para salir temprano si el hook ya forzÃ³ una continuaciÃ³n y evitar loops) y last_assistant_message (texto completo del Ãºltimo mensaje). Claude Code anula un Stop hook tras 8 bloqueos consecutivos sin progreso; el cap se sube con la env var CLAUDE_CODE_STOP_HOOK_BLOCK_CAP. Stop no dispara en interrupciones del usuario; errores de API disparan StopFailure.",
+                         "source_url":  "https://code.claude.com/docs/en/hooks-guide",
+                         "verified_evidence":  "\"Claude Code overrides a Stop hook after it blocks eight times in a row without progress\"; \"Parse the stop_hook_active field\"",
+                         "relevance":  "El Stop hook de cierre de Barack (commit f5020a5 menciona \u0027cooldown\u0027) deberÃ­a chequear stop_hook_active â€” si su cooldown es casero, este campo es el mecanismo oficial. last_assistant_message permite verificar que Claude realmente reportÃ³ backup/build.",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "Eventos de configuraciÃ³n: ConfigChange e InstructionsLoaded",
+                         "what_it_is":  "ConfigChange dispara cuando un archivo de configuraciÃ³n cambia durante la sesiÃ³n (matchers: user_settings, project_settings, local_settings, policy_settings, skills); puede bloquear el cambio con exit 2 o decision:block. InstructionsLoaded dispara cuando se carga un CLAUDE.md o .claude/rules/*.md, con matchers por razÃ³n de carga: session_start, nested_traversal, path_glob_match, include, compact.",
+                         "source_url":  "https://code.claude.com/docs/en/hooks-guide",
+                         "verified_evidence":  "\"InstructionsLoaded | When a CLAUDE.md or .claude/rules/*.md file is loaded into context\"",
+                         "relevance":  "Directo para Barack: InstructionsLoaded con matcher path_glob_match permite auditar/loguear cuÃ¡ndo se cargan realmente las reglas condicionales con frontmatter paths: (problema ya sufrido: clave errada = carga incondicional). ConfigChange protege settings.json de modificaciones no autorizadas.",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "PermissionRequest y PermissionDenied",
+                         "what_it_is":  "PermissionRequest dispara cuando aparece un diÃ¡logo de permiso; devolviendo hookSpecificOutput.decision.behavior:\"allow\"|\"deny\" (mÃ¡s updatedInput, permissionRule o updatedPermissions con setMode) lo responde automÃ¡ticamente. No dispara en modo -p (usar PreToolUse). PermissionDenied dispara cuando el clasificador de auto mode niega un tool call; retry:true le dice al modelo que puede reintentar.",
+                         "source_url":  "https://code.claude.com/docs/en/hooks-guide",
+                         "verified_evidence":  "\"returning behavior: allow answers it on your behalf\"; ejemplo matcher ExitPlanMode con decision behavior allow",
+                         "relevance":  "Aplica para reducir fricciÃ³n en Barack: auto-aprobar prompts repetitivos seguros (ej: ExitPlanMode, scripts read-only de auditorÃ­a) manteniendo el resto manual. Mantener el matcher angosto como advierte la doc.",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "SemÃ¡ntica de combinaciÃ³n: paralelo, dedup, mÃ¡s restrictivo gana",
+                         "what_it_is":  "Todos los hooks que matchean corren EN PARALELO y los comandos idÃ©nticos se deduplican. Un deny de un hook no frena a los hermanos (los side effects igual ocurren). Al combinar decisiones PreToolUse gana la mÃ¡s restrictiva en orden deny \u003e defer \u003e ask \u003e allow; los additionalContext de todos se concatenan. Si varios hooks devuelven updatedInput, gana el Ãºltimo en terminar (no determinÃ­stico) â€” evitar mÃ¡s de uno modificando el mismo tool.",
+                         "source_url":  "https://code.claude.com/docs/en/hooks-guide",
+                         "verified_evidence":  "\"the most restrictive answer applies, in the order deny, defer, ask, allow\"",
+                         "relevance":  "Barack tiene varios guards PreToolUse conviviendo; esta semÃ¡ntica explica por quÃ© un guard que loguea no evita el bloqueo del otro y advierte contra dos guards que reescriban el mismo comando.",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "Hook deny le gana a bypassPermissions; allow no le gana a deny rules",
+                         "what_it_is":  "PreToolUse dispara antes del chequeo de permission mode: un hook con permissionDecision:deny bloquea incluso en bypassPermissions o --dangerously-skip-permissions. Lo inverso no: allow de un hook no pisa deny rules de settings (incluidas managed settings) ni suprime prompts de tools MCP con requiresUserInteraction. Los hooks endurecen, nunca aflojan.",
+                         "source_url":  "https://code.claude.com/docs/en/hooks-guide",
+                         "verified_evidence":  "\"A hook that returns permissionDecision: deny blocks the tool even in bypassPermissions mode\"",
+                         "relevance":  "Garantiza que los guards de Barack (dev-login intocable, supabase-safety) valen aunque una sesiÃ³n corra con permisos laxos. Argumento para migrar las prohibiciones duras de texto en reglas .md a hooks deny.",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "Input JSON enriquecido: prompt_id, effort, agent_id/agent_type, permission_mode",
+                         "what_it_is":  "Todo evento recibe session_id, transcript_path, cwd, hook_event_name, permission_mode (default|plan|acceptEdits|auto|dontAsk|bypassPermissions) y, en versiones recientes (v2.1.196+), prompt_id y effort:{level}. Dentro de subagentes se agregan agent_id y agent_type (con scope plugin-name:agent-name). PostToolUse suma tool_response y tool_error.",
+                         "source_url":  "https://code.claude.com/docs/en/hooks",
+                         "verified_evidence":  "\"agent_type: Agent name; for plugins, scoped as plugin-name:agent-name\"; \"permission_mode: default, plan, acceptEdits, auto, dontAsk, bypassPermissions\"",
+                         "relevance":  "agent_type en el input permite que los guards de Barack distingan si el que ejecuta es el agente auditor vs la sesiÃ³n principal (ej: permitir writes solo al healer). SubagentStart/SubagentStop matchean por nombre de agente custom.",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "Env vars para hooks: CLAUDE_ENV_FILE, CLAUDE_PROJECT_DIR, CLAUDE_EFFORT, CLAUDE_CODE_REMOTE",
+                         "what_it_is":  "CLAUDE_PROJECT_DIR apunta a la raÃ­z del proyecto. CLAUDE_ENV_FILE (en SessionStart/CwdChanged/FileChanged) es un archivo donde el hook escribe exports que Claude Code corre como preÃ¡mbulo antes de cada comando Bash â€” patrÃ³n direnv documentado. TambiÃ©n CLAUDE_EFFORT, CLAUDE_CODE_REMOTE (\"true\" en entornos web remotos), CLAUDE_PLUGIN_ROOT/DATA. Las OTEL_* fueron removidas de los subprocesos de hooks.",
+                         "source_url":  "https://code.claude.com/docs/en/hooks-guide",
+                         "verified_evidence":  "\"Both write to CLAUDE_ENV_FILE, which Claude Code runs as a script preamble before each Bash command\"",
+                         "relevance":  "CLAUDE_ENV_FILE resolverÃ­a en Barack cosas como PYTHONIOENCODING=utf-8 para las consultas NotebookLM sin repetirlo en cada comando. CLAUDE_PROJECT_DIR ya es lo correcto para rutas de los guards.",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "Exit codes: 0 con JSON, 2 bloqueante, otros no bloqueantes â€” y quÃ© eventos pueden bloquear",
+                         "what_it_is":  "Exit 0: se parsea stdout como JSON; en UserPromptSubmit/UserPromptExpansion/SessionStart el stdout va directo al contexto. Exit 2: bloqueante, stderr se le pasa a Claude como feedback, el JSON se ignora. Otro cÃ³digo: error no bloqueante (primera lÃ­nea de stderr en transcript, resto al debug log). No todos los eventos bloquean: PostToolUse, SessionStart, SessionEnd, Notification, SubagentStart, PostCompact, etc. no pueden (ya ocurriÃ³ la acciÃ³n).",
+                         "source_url":  "https://code.claude.com/docs/en/hooks",
+                         "verified_evidence":  "\"Exit 2... Ignores stdout and any JSON. Stderr fed to Claude as error message\"",
+                         "relevance":  "Base que Barack ya explota en sus guards (exit 2). Lo nuevo a incorporar: no mezclar exit 2 con JSON, y saber quÃ© eventos son solo-observaciÃ³n.",
+                         "already_used":  true
+                     },
+                     {
+                         "feature":  "Matchers: sintaxis exacta, regex, comas y matching de MCP tools",
+                         "what_it_is":  "Matcher \"*\", \"\" u omitido = todo. Solo letras/dÃ­gitos/_/-/espacios/,/| = string exacto o lista separada por | o , (comas desde v2.1.191). Cualquier otro carÃ¡cter = regex JavaScript NO anclada (Edit.* matchea NotebookEdit; usar ^Edit$). MCP tools: mcp__\u003cserver\u003e__\u003ctool\u003e, todo un server con mcp__memory__.* (el .* es obligatorio), servers de plugin como mcp__plugin_\u003cplugin\u003e_\u003cserver\u003e__\u003ctool\u003e. Eventos sin soporte de matcher (Stop, UserPromptSubmit, TaskCreated...) lo ignoran silenciosamente.",
+                         "source_url":  "https://code.claude.com/docs/en/hooks",
+                         "verified_evidence":  "\"Unanchored: Edit.* matches both Edit and NotebookEdit\"; \"Match all from server: mcp__memory__.* (required .*)\"",
+                         "relevance":  "Barack ya usa matchers bÃ¡sicos (Edit|Write|Bash). Lo no usado: matchear tools MCP (ej: guard sobre mcp__supabase__execute_sql / apply_migration para forzar el protocolo supabase-safety antes de escribir datos).",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "Eventos de tareas y equipo: TaskCreated, TaskCompleted, TeammateIdle, PostToolBatch",
+                         "what_it_is":  "TaskCreated/TaskCompleted disparan al crear/completar tareas via TaskCreate (input: task_id, task_title) y pueden bloquearse con exit 2. TeammateIdle dispara cuando un teammate de agent teams estÃ¡ por quedar idle (bloqueable). PostToolBatch corre despuÃ©s de que resuelve un batch de tool calls paralelos, antes de la prÃ³xima llamada al modelo.",
+                         "source_url":  "https://code.claude.com/docs/en/hooks",
+                         "verified_evidence":  "\"TaskCompleted - When task marked as completed\"; \"TeammateIdle - When agent team teammate about to go idle\"",
+                         "relevance":  "Con el Workflow tool multi-agente de Barack, TaskCompleted bloqueable puede exigir evidencia de verificaciÃ³n antes de marcar completada una tarea (regla \u0027verificar antes de afirmar\u0027). TeammateIdle aplica si adoptan agent teams.",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "FileChanged y CwdChanged",
+                         "what_it_is":  "FileChanged dispara cuando un archivo vigilado cambia en disco; el matcher es una lista de nombres literales separados por | (no regex) e input con file_path y change_type modified|added|removed; los paths a vigilar tambiÃ©n se pueden declarar via watchPaths en la salida de SessionStart. CwdChanged dispara cuando cambia el directorio de trabajo (ej: cd), pensado para direnv.",
+                         "source_url":  "https://code.claude.com/docs/en/hooks-guide",
+                         "verified_evidence":  "\"FileChanged | When a watched file changes on disk. The matcher field specifies which filenames to watch\"",
+                         "relevance":  "Barack podrÃ­a vigilar docs/LECCIONES_APRENDIDAS.md o .claude/rules/*.md y reaccionar cuando Fak los edita a mano fuera de la sesiÃ³n (recargar contexto), o vigilar el xlsx de tiempos de inyecciÃ³n.",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "Setup event (--init-only / --init / --maintenance)",
+                         "what_it_is":  "Evento para preparaciÃ³n one-time en CI o scripts: dispara al arrancar Claude Code con --init-only, o con --init o --maintenance en modo -p. Matchers: init, maintenance.",
+                         "source_url":  "https://code.claude.com/docs/en/hooks-guide",
+                         "verified_evidence":  "\"Setup | When you start Claude Code with --init-only, or with --init or --maintenance in -p mode\"",
+                         "relevance":  "Baja prioridad para Barack (no usan CI con Claude Code headless hoy), pero Ãºtil si automatizan el auditor nocturno via -p.",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "Campos operativos: timeout por hook, statusMessage, once, disableAllHooks, /hooks menu",
+                         "what_it_is":  "timeout en segundos por hook (defaults: 600 command/http/mcp_tool, 30 prompt, 60 agent; UserPromptSubmit baja command a 30, MessageDisplay a 10). statusMessage muestra un mensaje custom en el spinner mientras el hook corre. disableAllHooks:true apaga todos (salvo managed). El menÃº /hooks es read-only y muestra evento, matcher, tipo, source y comando. Debug: claude --debug-file /tmp/claude.log o /debug en sesiÃ³n.",
+                         "source_url":  "https://code.claude.com/docs/en/hooks",
+                         "verified_evidence":  "\"statusMessage | Custom spinner message displayed while the hook runs\"",
+                         "relevance":  "Los guards de Barack no declaran timeout ni statusMessage; un statusMessage tipo \u0027Verificando protocolo de cierre...\u0027 hace visible para Fak quÃ© estÃ¡ pasando cuando el Stop hook demora.",
+                         "already_used":  false
+                     },
+                     {
+                         "feature":  "Notification con matchers finos (idle_prompt, agent_needs_input, agent_completed)",
+                         "what_it_is":  "El evento Notification matchea por tipo: permission_prompt, idle_prompt (Claude terminÃ³ y espera el prÃ³ximo prompt), auth_success, elicitation_dialog/complete/response, y agent_needs_input / agent_completed (sesiones background con agent view abierto, v2.1.198+). Ejemplo Windows documentado con PowerShell MessageBox.",
+                         "source_url":  "https://code.claude.com/docs/en/hooks-guide",
+                         "verified_evidence":  "\"agent_needs_input | A background session starts waiting on your input\"; ejemplo Windows: \"[System.Windows.Forms.MessageBox]::Show(\u0027Claude Code needs your attention\u0027...)\"",
+                         "relevance":  "Fak trabaja en Windows y deja tareas largas corriendo (audits, cargas): una notificaciÃ³n nativa con matcher idle_prompt/permission_prompt evita mirar la terminal. El ejemplo PowerShell es copy-paste.",
+                         "already_used":  false
+                     }
+                 ],
+    "fetch_failures":  [
+
+                       ]
+}
