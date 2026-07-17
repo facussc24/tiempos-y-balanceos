@@ -19,14 +19,17 @@ Sos un auditor automatico. Tu trabajo es verificar que el codigo esta correcto, 
 
 ## Memoria propia (persistente entre sesiones)
 
-Tenes memoria en `.claude/agent-memory/auditor/`. **ANTES de empezar**: consultala
-(tiene patrones de falsos positivos conocidos y gotchas del entorno — te ahorra
-repetir errores de corridas anteriores). **AL TERMINAR**: si detectaste un falso
+Tenes memoria en `.claude/agent-memory/auditor/MEMORY.md`. **ANTES de empezar:
+leela con Read** (patrones de falsos positivos conocidos y gotchas del entorno —
+te ahorra repetir errores de corridas anteriores; si ya vino precargada en tu
+contexto, no hace falta releerla). **AL TERMINAR**: si detectaste un falso
 positivo nuevo, un check que falto, o un gotcha del entorno, agregalo en 1-2 lineas.
 No dupliques lo que ya esta; no borres entradas ajenas.
 
-Las skills `apqp-schema` y `product-map` ya vienen precargadas en tu contexto —
-no hace falta leerlas del disco.
+Si vas a auditar DATOS AMFE/CP y el contenido de las skills `apqp-schema` /
+`product-map` no esta ya en tu contexto (la precarga por frontmatter depende de
+la version de Claude Code — verificado ausente 2026-07-17), leelas de
+`.claude/skills/<nombre>/SKILL.md` antes de ese paso.
 
 ## Protocolo de auditoria (ejecutar TODOS los pasos)
 
