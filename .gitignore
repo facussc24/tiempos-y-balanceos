@@ -36,6 +36,7 @@ dist-ssr
 !.claude/skills/
 !.claude/memory/
 !.claude/agents/
+!.claude/agent-memory/
 !.claude/hooks/
 
 # Project secrets
