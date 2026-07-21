@@ -81,6 +81,9 @@ exports/oficializar/
 # OneDrive junction with sensitive Patagonia docs (NEVER commit)
 docs-local/
 
+# ARB ERP export cache (datos de negocio: part numbers, consumos, proveedores — NEVER commit; repo es publico)
+.arb-cache/
+
 # ESLint scratch logs
 *eslint*.txt
 
