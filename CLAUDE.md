@@ -67,13 +67,17 @@ NO preguntar si Fak quiere que lo hagas. HACERLO.
 | `exports.md` | archivos *export* |
 | `testing.md` | __tests__ |
 | `dev-login.md` | components/auth — boton dev-login: NO TOCAR NUNCA |
+| `cad-3d.md` | archivos .step/.stl/.glb, `.venv-cad`, skill cad-design — 2 gates 3D |
 
 **Skills** (on-demand): `apqp-schema` (schema JSONB Supabase), `product-map` (8 familias,
 part numbers, equipo APQP), `amfe-domain` (conocimiento AMFE profundo), `amfe-cookbook`
 (recetas de gaps), `injection-process` (inyeccion plastica/PU, maestros 15/16/17),
 `supabase-safety` (protocolo backup/dry-run/restore), `amfe-export-oficial`,
 `notebooklm-routing` (que notebook consultar), `notebooklm-manager`, `rule-enforcement-gate`
-(toda regla nueva con check debe nacer con enforcement), `audit-amfe`, `backup`, `fix-amfe-gaps`.
+(toda regla nueva con check debe nacer con enforcement), `audit-amfe`, `backup`, `fix-amfe-gaps`,
+`cad-design` (diseño/modificación 3D-CAD: medir STEP, modelar paramétrico, verificar interferencia,
+exportar STEP/STL/GLB; entorno `.venv-cad` Py3.12+build123d y gmsh en Py3.14; incluye los 2 GATES
+pre-modelado/pre-entrega — hook `cad-guard.sh` los enforcea).
 
 ## Stack y comandos
 

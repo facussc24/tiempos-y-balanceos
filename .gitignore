@@ -89,3 +89,6 @@ docs-local/
 
 # Scratch scripts (root-level standalone analysis)
 /analyze.js
+
+# Entorno CAD 3.12 (build123d/OCP) - NO commitear (pesa ~500MB)
+.venv-cad/
