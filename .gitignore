@@ -92,3 +92,6 @@ docs-local/
 
 # Entorno CAD 3.12 (build123d/OCP) - NO commitear (pesa ~500MB)
 .venv-cad/
+
+# Python bytecode (cadlib del skill cad-design)
+__pycache__/

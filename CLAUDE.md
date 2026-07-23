@@ -58,6 +58,8 @@ NO preguntar si Fak quiere que lo hagas. HACERLO.
 | `no-pfd-no-ho.md` | PFD/HO no se hacen aca |
 | `autonomy-contract.md` | Matriz de autonomia |
 | `git-deploy.md` | Build + commit + push al cerrar tareas |
+| `consumos-entregables.md` | Tablas de consumo / cargas arb: validador + checklist canonico |
+| `verify-before-close.md` | Verificar build/diff/archivo generado antes de decir "listo" |
 
 | Con `paths:` (cargan al tocar) | Ambito |
 |---|---|
@@ -73,11 +75,13 @@ NO preguntar si Fak quiere que lo hagas. HACERLO.
 part numbers, equipo APQP), `amfe-domain` (conocimiento AMFE profundo), `amfe-cookbook`
 (recetas de gaps), `injection-process` (inyeccion plastica/PU, maestros 15/16/17),
 `supabase-safety` (protocolo backup/dry-run/restore), `amfe-export-oficial`,
+`verificacion-consumos` (checklist + validador de tablas de consumo/arb),
 `notebooklm-routing` (que notebook consultar), `notebooklm-manager`, `rule-enforcement-gate`
 (toda regla nueva con check debe nacer con enforcement), `audit-amfe`, `backup`, `fix-amfe-gaps`,
-`cad-design` (diseño/modificación 3D-CAD: medir STEP, modelar paramétrico, verificar interferencia,
-exportar STEP/STL/GLB; entorno `.venv-cad` Py3.12+build123d y gmsh en Py3.14; incluye los 2 GATES
-pre-modelado/pre-entrega — hook `cad-guard.sh` los enforcea).
+`cad-design` (diseño/modificación 3D-CAD: librería `cadlib` + CLIs con --help para medir STEP,
+registrar ICP, verificar colisión y entregar; UN intérprete: `.venv-cad` Py3.12; los 2 GATES
+pre-modelado/pre-entrega — hook `cad-guard.sh` los recuerda 1×/h; enforcement duro:
+`export_deliverables.py` no entrega sin evidencia en manifest.json).
 
 ## Stack y comandos
 

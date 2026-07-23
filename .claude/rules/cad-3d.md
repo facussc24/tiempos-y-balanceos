@@ -12,7 +12,8 @@ paths:
 # Diseño 3D / CAD — 2 gates (regla corta; detalle y scripts: skill `cad-design`)
 
 Causa raíz de mis fallos 3D: sustituir la fuente real por un proxy + entregar sin verificar. Los 2
-gates NO son opcionales (los enforcea el hook `cad-guard.sh`):
+gates NO son opcionales (el hook `cad-guard.sh` los recuerda 1×/h; el gate DURO es
+`export_deliverables.py`, que no entrega sin evidencia de colisión + render en manifest.json):
 
 **PRE-MODELADO:** (1) ensamble COMPLETO, no export parcial (si es parcial → STOP, pedir assembly);
 (2) confirmar CUÁL pieza + computar el ROL de cada sólido por código, no adivinar; (3) **si existe el
@@ -23,7 +24,7 @@ STEP medido o es dato de Fak — CERO dimensiones inventadas/redondeadas (extien
 tapizado blando) + CADGenBench (validez→forma→interface→topología) + adjuntar evidencia. Nunca decir
 "listo" sin esto — "un cambio rápido sin verificar no es rápido, es un ida-y-vuelta más".
 
-Entorno: `.venv-cad` (Py3.12 + build123d) para modelar; gmsh en Py3.14 para medir/importar STEP.
+Entorno: TODO corre con `.venv-cad\Scripts\python.exe` (Py3.12: gmsh + build123d + trimesh).
 Tolerancias de impresión: 0,3-0,5 mm/lado en lo que entra en un vano, panza ≥2 mm, inserto heat-set +
 pin anti-giro. Autoridad de identidad = master real, no proxy (unifica con
 `feedback_identidad_codigo_pieza_autoridad_destino`).

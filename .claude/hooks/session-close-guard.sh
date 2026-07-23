@@ -21,10 +21,13 @@ SB=0
 
 [ -z "$CHANGES" ] && [ "$SB" -eq 0 ] && exit 0
 
-# Cooldown: solo recordar una vez cada 20 min
+# Cooldown de 20 min SOLO para el recordatorio de commit. El aviso de Supabase
+# no respeta cooldown: se muestra siempre que haya flag y el flag se borra aca
+# mismo — si respetara cooldown, un cierre silenciado dejaria el flag vivo y la
+# proxima sesion arrancaria con un falso "tocaste Supabase".
 FLAG="${TMPDIR:-/tmp}/claude-close-guard.flag"
 NOW=$(date +%s)
-if [ -f "$FLAG" ]; then
+if [ "$SB" -eq 0 ] && [ -f "$FLAG" ]; then
   LAST=$(cat "$FLAG" 2>/dev/null || echo 0)
   [ $((NOW - LAST)) -lt 1200 ] && exit 0
 fi

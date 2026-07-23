@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# EJEMPLO HISTORICO — caso Posicionador Top Roll Trasero (2026-07). Rutas muertas, NO CORRER.
+# Version generica: scripts/export_deliverables.py + cadlib.geom.extract_cylinder_axes · parametros del caso: params_posicionador.json
 """Cierre: (1) extrae posiciones REALES de los 8 agujeros de los STEP, (2) regenera
 plantilla PNG+DXF desde lo medido, (3) regenera STL fino del cabezal, (4) rearma el
 conjunto con top roll, (5) copia todo al Escritorio."""

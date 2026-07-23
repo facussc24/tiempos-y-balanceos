@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# EJEMPLO HISTORICO — caso Posicionador Top Roll Trasero (2026-07). Rutas muertas, NO CORRER.
+# Version generica: scripts/register_icp.py · parametros del caso: params_posicionador.json
 """ICP traslacion-only (signo correcto) de caras esculpidas del posicionador
 contra (a) esqueleto y (b) top roll completo. Reporta offset por cara."""
 import numpy as np

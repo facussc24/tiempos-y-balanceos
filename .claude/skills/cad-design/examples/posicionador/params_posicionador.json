@@ -1,0 +1,44 @@
+{
+  "_comment": "Parametros del caso Posicionador Top Roll Trasero v2 (2026-07). Rescatados de los scripts congelados: todos los numeros magicos con su significado. Cotas en mm, frames en el sistema del STEP del posicionador.",
+  "fuentes": {
+    "step_originales": "C:\\Users\\facun\\OneDrive\\Escritorio\\Posicionador TopRoll Trasero v2\\_fuentes_y_datos\\",
+    "archivos": ["posicionador_v1.step", "toproll_tras_full.stp (62MB)", "toproll_tras_skeleton.step (44MB)", "T_skeleton.npy", "T_full_v1.npy"],
+    "entrega": "C:\\Users\\facun\\OneDrive\\Escritorio\\Posicionador TopRoll Trasero v2\\"
+  },
+  "frame_dispositivo": {
+    "_comment": "frame local de la tabla de montaje: b = normal de la cara de empuje, a_hint ortogonalizado Gram-Schmidt (cadlib.geom.orthonormal_frame)",
+    "b": [0.0147, 0.9898, 0.1419],
+    "a_hint": [0.9999, -0.0148, 0.0]
+  },
+  "registracion": {
+    "_comment": "ICP traslacion-only: pts_posicionador - T = frame de la pieza. Seed de la etapa exploratoria previa.",
+    "seed": [-3723.4, 834.4, 0.6],
+    "trim": 0.6,
+    "iters": 120,
+    "source_faces": ["BSpline surface", "Torus", "Cylinder"],
+    "skeleton_keep_vol": 2,
+    "full_keep_vol": 1
+  },
+  "empujador_local": {
+    "_comment": "cotas medidas del STEP v1 en frame local (u=a lo largo, v=empuje, w=altura)",
+    "placa": { "u": [436.715, 513.372], "v": [69.007, 76.007], "w": [763.41, 815.161], "espesor": 7.0 },
+    "barra": { "u": [462.101, 497.075], "w": [774.161, 805.495] },
+    "cara_empuje_v1": { "v_arista_sup": 182.762, "v_arista_inf": 176.268, "_": "promedio izq/der medido" },
+    "variantes_grados_extra": { "suave": 5.0, "medio": 8.0, "fuerte": 12.0 }
+  },
+  "agujeros_m5": {
+    "_comment": "4 agujeros por placa, margen simetrico desde el borde. Hallazgo auditoria: margen 12 dejaba la cabeza DIN 7991 pisando la barra (luz 4.30 < 4.6+1.5)",
+    "margen_borde": 10.0,
+    "r_pasante": 2.65,
+    "avellanado": { "r_cono": 5.2, "profundidad": 2.56 },
+    "r_cabeza_din7991": 4.6,
+    "ring_test_r": 4.75
+  },
+  "zonas_verificacion": {
+    "colision_X": [455, 505],
+    "curvatura_pared": { "X": [461, 498], "Z": [778, 826] },
+    "secciones_X": [-240, -210, -180, -150, -120, -95, 445, 460, 480, 500],
+    "secciones_Y": [0.0, 20.0]
+  },
+  "mallado": { "espesor_pared_rigida": 2.56, "placa_cabezal_espesor": 10.0, "placa_empujador_espesor": 7.0 }
+}

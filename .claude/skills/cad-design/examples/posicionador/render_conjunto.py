@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# EJEMPLO HISTORICO — caso Posicionador Top Roll Trasero (2026-07). Rutas muertas, NO CORRER.
+# Version generica: scripts/render_step.py (multi-archivo) · parametros del caso: params_posicionador.json
 """Render del conjunto (top roll + cabezal + empujador) en varias vistas, colores
 distintos por pieza. Proof visual para Fak."""
 import os

@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# EJEMPLO HISTORICO — caso Posicionador Top Roll Trasero (2026-07). Rutas muertas, NO CORRER.
+# Version generica: scripts/check_collision.py --render · parametros del caso: params_posicionador.json
 """Localiza EXACTAMENTE los puntos del sustrato rigido que estan dentro del empujador
 medio, y los renderiza sobre el empujador. Asi se ve donde esta el choque real."""
 import os

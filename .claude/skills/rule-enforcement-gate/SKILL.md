@@ -50,8 +50,8 @@ Si la regla es proceso (commits, testing, dev-login) → capa 3 o gate hook.
 1. Identificar el check ejecutable concreto (funcion, query SQL, regex con lista canonica).
 2. Decidir capa (1-4 segun tipo).
 3. Implementar enforcement EN LA MISMA TAREA.
-4. Agregar test unitario en `tests/` que ejerza el check.
-5. Correr `npm run audit:all` o `npm test` y confirmar que el check funciona.
+4. Agregar test unitario en `__tests__/` que ejerza el check.
+5. Correr `node scripts/_auditAll.mjs --summary` o `npx vitest run` y confirmar que el check funciona.
 6. Recien ahi cerrar la tarea de la regla.
 
 ### Cuando encuentro regla existente con "TODO" sin implementar
@@ -97,7 +97,7 @@ Lo correcto:
 1. Incidente
 2. Fak: "agrega regla"
 3. Claude escribe rule + integra check en amfeValidator.mjs + test unitario
-4. Claude corre tests + audit:all y confirma deteccion
+4. Claude corre tests + `node scripts/_auditAll.mjs --summary` y confirma deteccion
 5. Tarea completa
 6. Si incidente similar repite → es porque el check no cubre todos los casos, escalar el check, no abrir nueva regla decorativa
 ```
@@ -109,9 +109,9 @@ Antes de decir "regla agregada":
 # Verificar que el check corre
 node scripts/_lib/amfeValidator.mjs <archivo-test>
 # o
-npm run audit:all
+node scripts/_auditAll.mjs --summary
 # o
-npm test -- amfeValidation
+npx vitest run amfeValidation
 ```
 
 Si ninguno detecta el caso violador → la regla no esta enforced. Volver al paso 1.

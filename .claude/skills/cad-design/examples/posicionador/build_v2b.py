@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# EJEMPLO HISTORICO — caso Posicionador Top Roll Trasero (2026-07). Rutas muertas, NO CORRER.
+# Version generica: modelado de referencia gmsh OCC (hoy: build123d o gmsh a mano) · parametros del caso: params_posicionador.json
 """Empujador v2 (corregido): la cara de empuje parte del plano REAL de la v1
 (por las aristas sup e inf medidas) y se rota EXTRA grados sobre la arista superior,
 avanzando abajo (zona de la solapa). Variantes SUAVE/MEDIO/FUERTE.

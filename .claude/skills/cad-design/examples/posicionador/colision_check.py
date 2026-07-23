@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# EJEMPLO HISTORICO — caso Posicionador Top Roll Trasero (2026-07). Rutas muertas, NO CORRER.
+# Version generica: scripts/check_collision.py · parametros del caso: params_posicionador.json
 """Chequeo de colision: el empujador v2 (medio y fuerte) contra el SUSTRATO RIGIDO
 (esqueleto), no contra el tapizado. Si penetra el esqueleto = colision dura (la parte
 rigida no se comprime). Ademas identifica los 3 solidos del modelo completo (clips?)."""

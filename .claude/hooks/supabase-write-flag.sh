@@ -17,7 +17,14 @@ process.stdin.on("end", () => {
     const tool = String(j?.tool_name ?? "");
     const q = String(j?.tool_input?.query ?? j?.tool_input?.sql ?? "");
     if (/apply_migration/.test(tool)) { process.stdout.write("1"); return; }
-    if (/insert|update|delete|create|alter|drop|truncate/i.test(q)) { process.stdout.write("1"); return; }
+    // Escritura = un STATEMENT que empieza con verbo DML/DDL. Un SELECT que
+    // menciona columnas como created_at/updated_at NO debe marcar la sesion.
+    const sql = q.replace(/^\s*--[^\n]*$/gm, "");
+    const W = "(insert|update|delete|create|alter|drop|truncate)";
+    const starts = new RegExp("^\\s*" + W + "\\b", "i");
+    const afterSemi = new RegExp(";\\s*" + W + "\\b", "i");
+    const writableCte = new RegExp("^\\s*with\\b[\\s\\S]*\\)\\s*" + W + "\\b", "i");
+    if (starts.test(sql) || afterSemi.test(sql) || writableCte.test(sql)) { process.stdout.write("1"); return; }
     process.stdout.write("0");
   } catch { process.stdout.write("0"); }
 });

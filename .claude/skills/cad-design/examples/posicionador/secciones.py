@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# EJEMPLO HISTORICO — caso Posicionador Top Roll Trasero (2026-07). Rutas muertas, NO CORRER.
+# Version generica: scripts/render_sections.py · parametros del caso: params_posicionador.json
 """Secciones del conjunto top roll + posicionador en frame posicionador (Z = bajada).
 Convencion register_v2: pos_pts - T = frame auto  =>  frame posicionador = auto + T."""
 import numpy as np

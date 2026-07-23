@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# EJEMPLO HISTORICO — caso Posicionador Top Roll Trasero (2026-07). Rutas muertas, NO CORRER.
+# Version generica: cadlib.geom.extract_cylinder_axes · parametros del caso: params_posicionador.json
 """Verifica que la cabeza avellanada M5 despeja el solido en los 4 agujeros de cada pieza
 (ring-test: anillo r=4.75 mm en el frente de placa, ningun punto adentro) y extrae las
 posiciones reales de los 8 agujeros para regenerar la plantilla desde el CAD medido."""

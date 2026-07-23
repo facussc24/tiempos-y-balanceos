@@ -60,6 +60,46 @@ export function finish(apply) {
 
 import { validateAmfeDoc, diffIssues, printIssues } from './amfeValidator.mjs';
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Candado CC/SC — "las caracteristicas especiales solo las asigna Fak"
+// (core-prohibiciones #2 / amfe.md §2). Un script con --apply NO puede
+// introducir CC/SC nuevas: se compara el CONTEO de cada valor before→after
+// (robusto ante renumeraciones que mueven indices) y ademas se reportan las
+// transiciones por path para diagnostico.
+// ─────────────────────────────────────────────────────────────────────────────
+
+function collectSpecialChars(node, path = '', out = new Map()) {
+    if (!node || typeof node !== 'object') return out;
+    if (Array.isArray(node)) {
+        node.forEach((v, i) => collectSpecialChars(v, `${path}[${i}]`, out));
+        return out;
+    }
+    for (const [k, v] of Object.entries(node)) {
+        if (k === 'specialChar') {
+            const val = String(v ?? '').trim().toUpperCase();
+            if (val) out.set(path ? `${path}.${k}` : k, val);
+        } else if (v && typeof v === 'object') {
+            collectSpecialChars(v, path ? `${path}.${k}` : k, out);
+        }
+    }
+    return out;
+}
+
+export function diffSpecialChars(before, after) {
+    const b = collectSpecialChars(before);
+    const a = collectSpecialChars(after);
+    const count = (map, val) => [...map.values()].filter(x => x === val).length;
+    const added = [];
+    for (const [path, val] of a) {
+        if ((b.get(path) ?? '') !== val) added.push({ path, before: b.get(path) ?? '', after: val });
+    }
+    return {
+        transitions: added,
+        ccDelta: count(a, 'CC') - count(b, 'CC'),
+        scDelta: count(a, 'SC') - count(b, 'SC'),
+    };
+}
+
 /**
  * Gate obligatorio ANTES de escribir cambios a amfe_documents.
  * Valida estado before vs after y bloquea el apply si introduce issues criticos.
@@ -78,12 +118,23 @@ export async function runWithValidation(plan, apply, commitFn, opts = {}) {
     let totalIntroducedCritical = 0;
     let totalIntroducedWarning = 0;
     const blockers = [];
+    const scViolations = [];
+    const allowSpecialChar = opts.allowSpecialChar ?? process.argv.includes('--allow-specialchar');
 
     console.log(`\n=== VALIDACION PRE-COMMIT (${plan.length} doc${plan.length === 1 ? '' : 's'}) ===`);
 
     for (const change of plan) {
         const { id, amfeNumber, productName = '', before, after } = change;
         const label = amfeNumber || id || '(sin id)';
+
+        const sc = diffSpecialChars(before, after);
+        if (sc.ccDelta > 0 || sc.scDelta > 0) {
+            scViolations.push({ label, ...sc });
+            console.log(`\n[${label}] CANDADO CC/SC: el cambio AGREGA ${sc.ccDelta > 0 ? `${sc.ccDelta} CC ` : ''}${sc.scDelta > 0 ? `${sc.scDelta} SC` : ''}`);
+            for (const t of sc.transitions.slice(0, 5)) {
+                console.log(`       ${t.path}: '${t.before}' -> '${t.after}'`);
+            }
+        }
 
         const beforeIssues = validateAmfeDoc(before, productName, label);
         const afterIssues = validateAmfeDoc(after, productName, label);
@@ -104,6 +155,17 @@ export async function runWithValidation(plan, apply, commitFn, opts = {}) {
     }
 
     console.log(`\n=== TOTAL: ${totalIntroducedCritical} crit + ${totalIntroducedWarning} warn introducidos ===`);
+
+    const scBlock = scViolations.length > 0 && !allowSpecialChar;
+    if (scBlock && apply) {
+        console.error('\n❌ BLOQUEADO (candado CC/SC): el script AGREGA caracteristicas especiales.');
+        console.error('   CC/SC solo las asigna Fak (core-prohibiciones #2). Si Fak lo autorizo');
+        console.error('   explicitamente para ESTE cambio: correr con --allow-specialchar.');
+        process.exit(1);
+    }
+    if (scViolations.length > 0 && !apply) {
+        console.log('\n⚠ AVISO: este cambio agrega CC/SC — el --apply va a BLOQUEAR salvo --allow-specialchar (requiere OK de Fak).');
+    }
 
     const shouldBlock = totalIntroducedCritical > 0 && apply && !opts.allowNewCritical;
 

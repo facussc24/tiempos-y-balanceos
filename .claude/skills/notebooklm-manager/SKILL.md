@@ -6,6 +6,12 @@ user-invocable: true
 
 # NotebookLM Manager
 
+> **⚠ ROTO (verificado 2026-07-23):** `~/.claude/skills/notebooklm/scripts/` NO existe
+> (solo quedan `.venv` y `data/`) y no hay MCP `notebooklm` registrado en ninguna config.
+> Los comandos de abajo NO funcionan hasta restaurar esa infraestructura. Copias versionadas
+> de `create_notebook.py` / `delete_notebooks.py` estan en `scripts/` de esta skill.
+> Restaurar o retirar NotebookLM = decision pendiente de Fak (memoria `project_brain_architecture_plan`).
+
 Skill para gestionar notebooks de Google NotebookLM desde la terminal. Crear, eliminar y organizar notebooks con browser automation headless (Patchright).
 
 ## Cuando usar esta skill
@@ -22,7 +28,7 @@ Skill para gestionar notebooks de Google NotebookLM desde la terminal. Crear, el
 - MCP `notebooklm` instalado (`npx notebooklm-mcp@latest`)
 - Auth completada (`mcp__notebooklm__setup_auth` o skill notebooklm auth)
 - Cookies en: `~/AppData/Local/notebooklm-mcp/Data/browser_state/state.json`
-- Scripts en: `~/.claude/skills/notebooklm/scripts/`
+- Scripts: copias versionadas en `scripts/` de esta skill (la ruta global historica `~/.claude/skills/notebooklm/scripts/` NO existe — ver warning arriba)
 
 ## Comandos disponibles
 

@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# EJEMPLO HISTORICO — caso Posicionador Top Roll Trasero (2026-07). Rutas muertas, NO CORRER.
+# Version generica: cadlib.geom.fit_plane · parametros del caso: params_posicionador.json
 """¿La pared del pico (zona de empuje) es plana o curva? Si es curva, la cara plana
 del empujador solo tocaria en los picos. Mido la desviacion de los puntos de la pared
 respecto de su mejor plano, en la zona X[461,498] Z[780,825] (frame posicionador)."""
