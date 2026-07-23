@@ -612,7 +612,6 @@ STUCK LOOP DETECTOR:
 PRE-FLIGHT CHECKS (obligatorios antes de salir de F0):
 - ✓ Supabase accesible: `mcp__a174b030-f4bf-4d80-a56f-a6a142cea470__execute_sql` con query trivial `SELECT 1`. Si falla 3 retries: BLOCKED.
 - ✓ Carpeta `4- MANUALES` accesible: `ls "C:\Users\FacundoS-PC\BARACK ARGENTINA SRL\Ingenieria y Proyecto - General\INGENIERIA BARACK (NUNCA BORRAR)\4- MANUALES\" | head -3`. Si no accesible: flag MANUAL_FALLBACK=true en state.json + log.
-- ✓ MCP NotebookLM: `mcp__notebooklm__get_health`. Si auth=false: flag NLM_OFFLINE=true (no bloqueante).
 - ✓ npm/node: `node --version && npm --version`. Si Node <20: BLOCKED.
 
 Exit: branch UTC creada + state.json inicializado + heartbeat.log con primer entry + 4 pre-flight checks completados.
@@ -1137,7 +1136,7 @@ P29 — Dev server zombie → `netstat -ano | findstr :3000` + `taskkill /PID`. 
 
 P30 — Node version mismatch → `node --version` vs `.nvmrc`. `nvm use`.
 
-P31 — MCP server desconectado mid-sesion → reconectar. Fallback (WebFetch en lugar de NotebookLM, SQL directo en lugar de MCP Supabase).
+P31 — MCP server desconectado mid-sesion → reconectar. Fallback (SQL directo en lugar de MCP Supabase).
 
 P32 — WebFetch bloqueado por firewall → leer desde Supabase si esta ingested. Preguntar a Fak.
 
