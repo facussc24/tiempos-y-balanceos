@@ -95,7 +95,7 @@ export interface HoStep {
 
 /**
  * A quality verification item derived from the Control Plan.
- * Per NotebookLM/AIAG: the WI "consumes" CP data — it doesn't create it.
+ * Per AIAG: the WI "consumes" CP data — it doesn't create it.
  *
  * Fields are read-only except `registro` (which log/form to record in).
  */

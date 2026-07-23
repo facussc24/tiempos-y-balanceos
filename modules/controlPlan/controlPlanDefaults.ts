@@ -3,7 +3,7 @@
  *
  * Intelligent defaults for auto-filling Control Plan fields based on
  * AMFE data (AP, severity, phase). Validated against AIAG-VDA standard
- * and Control Plan 1st Edition (2024) via NotebookLM consultation.
+ * and Control Plan 1st Edition (2024).
  *
  * Rules:
  * - sampleSize/Frequency: based on AP + phase

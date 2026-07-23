@@ -29,7 +29,7 @@ Importante: **2 de los 5 con candidato unívoco se aplican TAMBIÉN al AMFE-HRC-
 | 4 | 20 CORTE | Material | Cuchilla de corte | "" (vacío) | WE_NAME_FOREIGN_TYPE (cuchilla es Machine, no Material) + FN_EMPTY | INS-PAT tiene el mismo bug ("Cuchilla de corte" como Material con fn vacía). Sin canónico válido en Barack. | — | **TBD_NO_MATCH — requiere Fak**: dos opciones: <br>a) cambiar WE.type=Machine (es lo que es) <br>b) renombrar a Material real (ej: "Vinilo de cabezal/respaldo" con fn que lo describa). Mismo bug en INS-PAT requiere fix paralelo. |
 | 5 | 30 COSTURA UNION | Machine | "Maquina de coser industrial" | "COSTURA UNION" | FN_TOO_SHORT + FN_NO_VERB + FN_ALL_CAPS | "Realizar la union de paneles de vinilo mediante costura" | AMFE-ARM-PAT OP50 WE "Maquina de coser" | **PROPOSE_APPLY** — sólo llenar fn.desc |
 | 6 | 40 COSTURA VISTA | Machine | "Maquina de coser industrial" | **"Unir partes mediante costura industrial segun especificacion"** | OP_FUNCTION_SEMANTIC_MISMATCH (es VISTA decorativa, no UNION) | "Ejecutar costura decorativa doble conforme a especificacion" | AMFE-ARM-PAT OP51 WE "Maquina de coser" | **PROPOSE_APPLY** — éste es el caso emblemático que mencionó Fak. AMFE-HRC-PAT tiene el MISMO bug → aplicar también ahí |
-| 7 | 50 ENFUNDADO | Man | "Operador de produccion" | "" (vacío) | FN_EMPTY | Sin canónico claro (ARM-PAT OP90 tapizado: "Realizar el cierre final del conjunto" no aplica directamente a enfundado de varilla) | — | **TBD_NO_MATCH — requiere Fak o NotebookLM `operaciones-procesos-planta`**. Sugerencia conservadora: "Calzar funda sobre asta evitando pliegues y centrando costura" (deriva del operationFunction de la OP) |
+| 7 | 50 ENFUNDADO | Man | "Operador de produccion" | "" (vacío) | FN_EMPTY | Sin canónico claro (ARM-PAT OP90 tapizado: "Realizar el cierre final del conjunto" no aplica directamente a enfundado de varilla) | — | **TBD_NO_MATCH — requiere Fak o el cache de operaciones (`.sgc-cache/operaciones/`)**. Sugerencia conservadora: "Calzar funda sobre asta evitando pliegues y centrando costura" (deriva del operationFunction de la OP) |
 | 8 | 51 INSERCION DE VARILLA | Man | "Operador de produccion" | "" (vacío) | FN_EMPTY | Sin canónico (HRC-PAT OP70 también vacío) | — | **TBD_NO_MATCH — requiere Fak**. Sugerencia conservadora: "Insertar varilla en funda asegurando vinilo como reten contra fuga de PU" (deriva del operationFunction) |
 | 9 | 63 INYECCION DE PU | Machine | "Inyectora de poliuretano" | "ESPUMADO" | FN_TOO_SHORT + FN_NO_VERB + FN_ALL_CAPS | "Inyectar poliuretano sobre el sustrato plástico asegurando cobertura y espesor uniforme" | AMFE-ARM-PAT OP70 WE "Inyectora de PUR" | **PROPOSE_APPLY** — AMFE-HRC-PAT tiene el MISMO bug ("ESPUMADO") → aplicar también ahí |
 
@@ -56,7 +56,7 @@ Recomendación: cuando se aplique cualquier PROPOSE_APPLY a HF-PAT, replicar el 
 1. **Fak revisa este reporte y decide:**
    - Aplicar los 5 PROPOSE_APPLY directos (sin riesgo, cross-ref unívoco contra AMFEs canónicos Barack vivos).
    - Para el TBD_AMBIGUOUS (#3 Mesa de corte): elegir entre redacción tipo ARM-PAT o INS-PAT, o dictar texto.
-   - Para los 3 TBD_NO_MATCH: dictar texto o autorizar consulta a NotebookLM `operaciones-procesos-planta`.
+   - Para los 3 TBD_NO_MATCH: dictar texto o autorizar consulta al cache de operaciones (`.sgc-cache/operaciones/`).
 
 2. **Implementar Fases 1-4 del plan** (`witty-shimmying-mochi.md`):
    - L1 source of truth (`genericLabels`)

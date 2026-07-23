@@ -3,7 +3,7 @@
  *
  * Generates Control Plan items from an AMFE document per AIAG-VDA CP 1st Ed 2024.
  *
- * Key rules (validated via NotebookLM, 70 AIAG-VDA sources):
+ * Key rules (validated against AIAG-VDA):
  * - Granularity = per CHARACTERISTIC (not per cause)
  * - AMFE Cause → CP Process Characteristic row (prevention control → control method)
  * - AMFE Failure Mode → CP Product Characteristic row (detection control → evaluation technique)

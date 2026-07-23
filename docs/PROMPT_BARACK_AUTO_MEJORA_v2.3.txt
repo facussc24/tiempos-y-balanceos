@@ -298,7 +298,7 @@ ANTES de crear cualquier skill/regla/agent nuevo, AUDITAR los existentes:
 
 CONOCIMIENTO EMPRESARIAL EXTRAIDO (BarackMercosul/docs/empresa-extracted/) — FUENTE PRIMARIA:
 
-Esta carpeta contiene info real de Barack Mercosul extraida del server SGC el 2026-05-08. CONSULTAR PRIMERO antes de WebSearch o NotebookLM. ~700 archivos en MD/JSON/TXT.
+Esta carpeta contiene info real de Barack Mercosul extraida del server SGC el 2026-05-08. CONSULTAR PRIMERO antes de WebSearch. ~700 archivos en MD/JSON/TXT.
 
 ESTRUCTURA:
 - `iatf-2025/` (337 archivos) — Certificacion IATF 16949 vigente. Incluye:
@@ -339,7 +339,7 @@ CUANDO CONSULTAR CADA UNO:
 - Politica Calidad: `sgc-manuales/Politica-Calidad-rev-2020.txt`.
 - Mapa de procesos SGC: `sgc-manuales/Mapeo-procesos.txt`.
 
-REGLA DE BUSQUEDA: Grep -ri "<keyword>" docs/empresa-extracted/ ANTES de WebSearch o NotebookLM. Citation: `[Fuente: docs/empresa-extracted/<path>:<linea>:<ISO-timestamp>]`.
+REGLA DE BUSQUEDA: Grep -ri "<keyword>" docs/empresa-extracted/ ANTES de WebSearch. Citation: `[Fuente: docs/empresa-extracted/<path>:<linea>:<ISO-timestamp>]`.
 
 REGLAS LOCALES BARACK (auto-load por glob, ubicadas en BarackMercosul/.claude/rules/):
 - amfe.md — severidades calibradas, CC/SC, efectos VDA 3 niveles, 1M por linea
@@ -358,13 +358,11 @@ REGLAS LOCALES BARACK (auto-load por glob, ubicadas en BarackMercosul/.claude/ru
 - exports.md — Excel xlsx-js-style XOR ExcelJS, ordenar parseInt(), testear PDF local
 - injection.md — maestro family 15 vs PU, 6M completo solo en plastica
 - two-pc-sync.md — git fetch al inicio, push al cierre
-- notebooklm-routing.md — auto-consulta NLM por keywords
-- autonomy-contract.md — contrato Supabase/APQP/codigo/NLM (LEER OBLIGATORIO en F0)
+- autonomy-contract.md — contrato Supabase/APQP/codigo/docs-empresa (LEER OBLIGATORIO en F0)
 
 REGLAS GLOBALES (~/.claude/rules/):
 - verify-before-close.md — build/typecheck pass antes de cerrar tarea
 - git-deploy.md — duplicada local
-- notebooklm-cross-project.md — no aplica en sesion Barack
 
 SKILLS LOCALES BARACK:
 - apqp-schema — estructura Supabase AMFE/CP/HO/PFD
@@ -411,16 +409,14 @@ Setting `~/.claude/settings.json`:
 - CLAUDE_CODE_FORK_SUBAGENT=1 (libera contexto principal)
 - autoMemoryEnabled: true
 
-Notebooks NotebookLM — RECURSO OPCIONAL CONDICIONAL (no obligatorio, no parte del pipeline default):
+[NotebookLM RETIRADO 2026-07-23 — reemplazo: cache `.sgc-cache/` + skill `docs-empresa`]
 
 REGLA DE INVOCACION (decidida por el agente sin preguntar al usuario):
-- DEFAULT: NO usar. Preferir `BarackMercosul/docs/manuales-extracted/` + Grep local (ver <knowledge_extraction_pipeline>).
-- INVOCAR SOLO SI las 3 fuentes primarias fallan en orden:
-  1. Buscar en `docs/manuales-extracted/*.md` (Grep) — si encuentra, usar.
+- DEFAULT: fuentes locales primero, en orden:
+  1. Buscar en `docs/manuales-extracted/*.md` y `.sgc-cache/` (Grep) — si encuentra, usar.
   2. Buscar en AMFEs canonicos hermanos en Supabase live — si encuentra, usar.
   3. Buscar en `4-MANUALES/` accesible directo — si encuentra, usar.
-  4. Si TODAS fallaron Y el agente decide que la consulta es critica para la tarea: invocar NotebookLM.
-  5. Si NotebookLM tampoco lo tiene: log gap en `knowledge-gaps.yaml` + placeholder. NO preguntar al usuario.
+  4. Si TODAS fallaron: log gap en `knowledge-gaps.yaml` + placeholder. NO preguntar al usuario.
 
 Razon de la depriorizacion (validada por 4 memorias previas + 3 agentes investigadores en OLA 1+2):
 - Latencia 10-30s/query vs Grep <100ms.
@@ -1323,7 +1319,7 @@ ESCALATION TRIGGERS (siguen aplicando — bloqueos NO terminan sesion, solo paus
 
 E1 — Supabase down/lento >30 min: pausar fases datos, avanzar a UI/tech debt/docs/extraction adicional. Cuando vuelva, retomar.
 
-E2 — MCP NotebookLM offline: fallback a `docs/empresa-extracted/` + 4-MANUALES + AMFEs canonicos. Continuar.
+E2 — `.sgc-cache/` incompleto para el tema: fallback a `docs/empresa-extracted/` + 4-MANUALES + AMFEs canonicos. Continuar.
 
 E3 — 3 gates consecutivos fallan misma fase: marcar fase BLOCKED, salvar wip commit, avanzar a siguiente. NO terminar sesion.
 
@@ -1368,7 +1364,6 @@ EJEMPLOS NO EXHAUSTIVOS de tools que puede invocar libremente:
 - Control PC (`mcp__computer-use__*`): request_access + screenshot/click/type segun tier.
 - Windows automation (`mcp__Windows-MCP__*`): App, Click, FileSystem, PowerShell, Process, Screenshot.
 - Supabase MCP (`mcp__a174b030-*__*`): execute_sql, list_tables, apply_migration.
-- NotebookLM (skill `notebooklm` + `mcp__notebooklm__*`): consulta semantica corpus.
 - Skills Anthropic (anthropic-skills:docx/pdf/xlsx/pptx, design:*, data:*, engineering:*).
 - Cualquier MCP custom que aparezca en la sesion (no enumerados aqui).
 
@@ -1409,7 +1404,6 @@ PROHIBIDO:
 - Deshabilitar tests sin reemplazo. Skip con razon documentada.
 - Tocar boton dev-login.
 - Tocar `.claude/worktrees/`.
-- Subir archivos a NotebookLM si MCP desconectado.
 - Crear PR a main desde la sesion (Fak lo hace al volver).
 - Modificar este prompt fuera de zona `<self_improvement>`.
 - Modificar `learnings_*.md` de sesiones previas.

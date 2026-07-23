@@ -76,7 +76,7 @@ part numbers, equipo APQP), `amfe-domain` (conocimiento AMFE profundo), `amfe-co
 (recetas de gaps), `injection-process` (inyeccion plastica/PU, maestros 15/16/17),
 `supabase-safety` (protocolo backup/dry-run/restore), `amfe-export-oficial`,
 `verificacion-consumos` (checklist + validador de tablas de consumo/arb),
-`notebooklm-routing` (que notebook consultar), `notebooklm-manager`, `rule-enforcement-gate`
+`docs-empresa` (mapa tema→documento real + caché `.sgc-cache/`), `rule-enforcement-gate`
 (toda regla nueva con check debe nacer con enforcement), `audit-amfe`, `backup`, `fix-amfe-gaps`,
 `cad-design` (diseño/modificación 3D-CAD: librería `cadlib` + CLIs con --help para medir STEP,
 registrar ICP, verificar colisión y entregar; UN intérprete: `.venv-cad` Py3.12; los 2 GATES
@@ -129,8 +129,9 @@ docs/                       guias APQP + LECCIONES_APRENDIDAS + _archive/
 - Dev: boton "Acceso rapido (dev)" (borde naranja) con `VITE_AUTO_LOGIN_EMAIL/PASSWORD` — protegido por regla `dev-login.md`.
 - Produccion: https://facussc24.github.io/tiempos-y-balanceos/ — deploy manual `npm run build && npx gh-pages -d dist` (repo publico facussc24/tiempos-y-balanceos).
 
-## NotebookLM
+## Documentos de la empresa
 
-Base de conocimiento Barack (8 notebooks: APQP, SGC, auditorias, 8D, informes tecnicos,
-specs de cliente, operaciones de planta, Claude Code). Antes de consultar: skill
-`notebooklm-routing` (que notebook, como preguntar, limite 50 queries/dia).
+NotebookLM fue RETIRADO (decision Fak 2026-07-23). El conocimiento se consulta DIRECTO
+de las fuentes reales (servidor Y:, OneDrive 4-MANUALES, docs/ del repo, docs-local/) y
+del cache local `.sgc-cache/` (gitignoreado, extractos con fuente+fecha). Routing y
+protocolo de refresh: skill `docs-empresa`. El original SIEMPRE le gana al cache.

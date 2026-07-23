@@ -6,7 +6,7 @@
  * Respects the 6M structure: suggestions are filtered by context
  * (operation name, work element type/name) for relevance.
  *
- * Validated by NotebookLM as "totally aligned" with AIAG-VDA Family FMEAs concept.
+ * Aligned with the AIAG-VDA Family FMEAs concept.
  */
 
 import { AmfeOperation } from './amfeTypes';

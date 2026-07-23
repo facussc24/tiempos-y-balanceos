@@ -25,9 +25,3 @@
 - [reference_novax_tapizadas.md](reference_novax_tapizadas.md) — Ruta NOVAX: Insert, APB, Top Roll
 - [reference_injection_master.md](reference_injection_master.md) — Maestro Inyeccion, familia 15, 7 productos sync
 - [project_ippad_process.md](project_ippad_process.md) — IP PAD: 4 versiones PL0-PL3, part numbers FAKOM
-- [reference_notebooklm_setup.md](reference_notebooklm_setup.md) — NotebookLM: config, notebooks, patrones de consulta
-
-## En NotebookLM — Consultar on-demand (no cargar en contexto)
-
-Guias APQP, errores, lecciones: `ask_question --notebook-id apqp-guias-y-conocimiento`
-Auditorias, historial, comparaciones: `ask_question --notebook-id auditorias-e-historial`

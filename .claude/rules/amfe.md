@@ -105,7 +105,7 @@ Aplica a `preventionControl`, `detectionControl`, `controlMethod`, `evaluationTe
 
 ## 7. WE.name y funciones — placeholder es ULTIMO recurso
 
-Antes de poner placeholder en un campo, agotar EN ORDEN: (1) cross-reference Supabase live con misma OP type en otros AMFEs (costura→ARM-PAT/INS-PAT; iny PU→"Inyectora de PUR"; recepcion→"Autoelevador"); (2) mismo producto (maestro o variante hermana); (3) AMFEs canonicos gold: AMFE-ARM-PAT (recepcion/costura/inyeccion/tapizado), AMFE-INS-PAT (corte/troquelado/embalaje), AMFE-1 (mylar/APLIX/embalaje PWA); (4) NotebookLM `operaciones-procesos-planta`; (5) HOs preliminares en `docs-local/projects/`; (6) preguntar a Fak (tabla con 1 pregunta concreta por celda); (7) `TBD` (corto, NO la frase larga); (8) omitir el WE si la M no aplica al paso — moviendo sus failures al primer WE valido (no perder S/O/D).
+Antes de poner placeholder en un campo, agotar EN ORDEN: (1) cross-reference Supabase live con misma OP type en otros AMFEs (costura→ARM-PAT/INS-PAT; iny PU→"Inyectora de PUR"; recepcion→"Autoelevador"); (2) mismo producto (maestro o variante hermana); (3) AMFEs canonicos gold: AMFE-ARM-PAT (recepcion/costura/inyeccion/tapizado), AMFE-INS-PAT (corte/troquelado/embalaje), AMFE-1 (mylar/APLIX/embalaje PWA); (4) cache `.sgc-cache/operaciones/` (skill `docs-empresa`); (5) HOs preliminares en `docs-local/projects/`; (6) preguntar a Fak (tabla con 1 pregunta concreta por celda); (7) `TBD` (corto, NO la frase larga); (8) omitir el WE si la M no aplica al paso — moviendo sus failures al primer WE valido (no perder S/O/D).
 
 `WE.name` es placeholder INVALIDO si: matchea `/^proceso\s+op\s+\d*$/i`; es etiqueta 6M generica (lista canonica `GENERIC_LABELS` en `core/amfe/genericLabels.ts` + `scripts/_lib/genericLabels.mjs`, comparar con normalize NFD+lowercase+trim — NUNCA regex parcial); es el `type` traducido; o contiene "Op N" con N distinto al opNumber actual (residuo de renumeracion).
 
@@ -145,7 +145,7 @@ Antes de poner placeholder en un campo, agotar EN ORDEN: (1) cross-reference Sup
 - **Parametros numericos van al CP, NO al AMFE**: `failure.description` describe el FENOMENO generico ("Ancho de costura fuera de tolerancia"), el valor exacto (5±1mm, 80-120°C) vive en `cp.specification`. Si aparece `X±Y mm`/`N°C` en un description: copy-paste del CP, limpiar.
 - **Lenguaje simple, max 8-10 palabras por campo**: causa = que salio mal en 3-5 palabras ("Dosificacion corta"); control = que se hace ("Dossier + alarmas en panel"); sin parentesis aclaratorios, sin sinonimos rebuscados ("husillo"→"tornillo"). Si Fak no la dijo, no la uses.
 - **Vocabulario Claude prohibido** (reemplazar): "Inspeccion Humana..."→"Autocontrol con [instrumento]"; "Instruccion de Trabajo (IT) visual"→"Hoja de operacion"; "Implementar/Establecer..."→verbo concreto; "(checklist)"→"Set up"; "por parte del operador o supervisor"→"operador"; "galga"→"calibre". Senales: mayusculas en terminos comunes, sigla entre parentesis repetida, verbos abstractos, frases >60 chars.
-- **"SCRAP" se queda** (no traducir a "DESCARTE"). Terminos tecnicos de industria (KLT, PPAP) OK. Fak es autoridad final sobre NotebookLM/referencias externas.
+- **"SCRAP" se queda** (no traducir a "DESCARTE"). Terminos tecnicos de industria (KLT, PPAP) OK. Fak es autoridad final sobre referencias externas.
 - TODO en espanol argentino, CERO ingles entre parentesis.
 - Valores numericos (pesos, tolerancias, temperaturas): NUNCA confirmar ni inventar sin OK de Fak. Duda = TBD.
 

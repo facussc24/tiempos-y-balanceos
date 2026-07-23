@@ -110,5 +110,4 @@ TODO abierto: `docs/TODO_GATE3_INVESTIGAR.md` — hay que propagar este fix a
 ## Guia detallada
 
 `docs/GUIA_GATE3_VW_CAPACITY_CHECK.md` tiene la metodologia completa, formula,
-casos (batch vs serial, costura, etc.) y ejemplos numericos. Apta para subir
-a NotebookLM como fuente del notebook `apqp-guias-y-conocimiento`.
+casos (batch vs serial, costura, etc.) y ejemplos numericos.

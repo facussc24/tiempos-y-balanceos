@@ -13,6 +13,16 @@ contiene SOLO lo accionable que NO esta ya codificado como regla o gate ejecutab
 
 ## Lecciones operativas vigentes
 
+### 2026-07-23 — NotebookLM RETIRADO → .sgc-cache propio (decision Fak)
+- NotebookLM retirado por completo (ya estaba roto; Fak prefiere acceso directo a fuentes).
+  Reemplazo: skill `docs-empresa` (mapa tema→documento real, rutas verificadas) + cache
+  `.sgc-cache/` gitignoreado con extractos que citan `fuente:`+`rev:`+`extraido:`.
+  Primera extraccion: Manual SGC completo + 19 procedimientos P-xx (rev mayor).
+- Extraccion Word COM: copiar el archivo LOCALMENTE antes de abrir (.doc desde UNC cuelga
+  Word — Vista Protegida) y usar `$doc.Content.Text` (SaveAs2-txt sale con encoding roto).
+  Script: `scripts/_extraerSgc.ps1`.
+- Los 8 notebooks viejos quedan en la nube de Google: no tocar, no citar.
+
 ### 2026-07-23 — Mantenimiento integral (auditoria de deuda + refactor CAD)
 - Skill cad-design refactorizado: libreria `cadlib` + CLIs parametrizados con `--help`,
   UN interprete (`.venv-cad`, con rtree agregado), caso posicionador congelado en
@@ -22,7 +32,7 @@ contiene SOLO lo accionable que NO esta ya codificado como regla o gate ejecutab
 - **SEGURIDAD: password de admin@barack.com estaba hardcodeada en `scripts/_archive/`
   (repo publico)** — archivos borrados; cambio de password + fixes RLS pendientes de Fak.
 - **NotebookLM: los scripts globales y la registracion MCP NO EXISTEN mas** (verificado
-  2026-07-23) — skills lo documentaban como vivo; decision restaurar/retirar pendiente.
+  2026-07-23) — skills lo documentaban como vivo. RESUELTO el mismo dia: retirado (ver arriba).
 - Practica 2026 para codigo generado con IA: auditoria de deuda cada ~2 semanas
   (agentes por area + verificacion manual de hallazgos; ~mitad de fixes fueron de docs
   que prometian enforcement inexistente).
@@ -53,8 +63,8 @@ contiene SOLO lo accionable que NO esta ya codificado como regla o gate ejecutab
   (decision Fak); no churnear nombres ya buenos.
 - Tabla Supabase nueva = MCP `apply_migration` + replica DDL en `database.ts` (`CONFLICT_MAP`;
   si BIGSERIAL, `BIGSERIAL_TABLES`; el test de database cuenta CREATE TABLE — subir el numero).
-- **NPR esta deprecado — hoy es AP (AIAG-VDA).** Manual interno I-AC-005 o NotebookLM SGC con
-  "NPR>100" = info vieja; gana la practica de Fak. CC/SC sigue siendo solo de Fak.
+- **NPR esta deprecado — hoy es AP (AIAG-VDA).** Manual interno I-AC-005 con "NPR>100" =
+  info vieja; gana la practica de Fak. CC/SC sigue siendo solo de Fak.
 
 ### 2026-07-07 — Exports a cliente (Gate3 VW)
 - Template externo: revisar TODAS las hojas (visibles y ocultas) buscando datos de ejemplo antes

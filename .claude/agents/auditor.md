@@ -109,7 +109,7 @@ Reportar dependencias faltantes o conflictos.
 
 ## Reglas del auditor
 - **DETECT-ONLY (decision Fak 2026-07-14):** NUNCA editar archivos ni datos. Solo leer y reportar. Las correcciones las decide y ejecuta la sesion principal con OK de Fak.
-- NO consultar NotebookLM (quema cupo 50/dia; las reglas criticas ya viven en `.claude/rules/amfe.md`).
+- NO consultar fuentes externas (las reglas criticas ya viven en `.claude/rules/amfe.md`).
 - NUNCA inventar hallazgos. Todo debe ser verificable con comandos.
 - Si todo esta OK, decirlo claramente: "Auditoria limpia, sin hallazgos."
 - Si hay CRITICOS, listarlos primero con accion requerida.

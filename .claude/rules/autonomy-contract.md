@@ -40,7 +40,7 @@ Si dudo entre dos filas, aplico la mas restrictiva. Principios: hacer sin pregun
 - Scripts read-only de auditoria: libre. Agente `auditor` al cerrar tareas: obligatorio.
 - NO flaggear como problema: AP=H con placeholder sin responsable/fecha.
 - Correcciones detectadas: solo codigo obvio = libre; datos = confirmar antes.
-- NotebookLM: consultar = libre; subir fuente = confirmar + verificar despues; crear notebook = preguntar; borrar = prohibido.
+- Docs de empresa (servidor Y:/OneDrive): leer = libre; extraer al cache `.sgc-cache/` = libre (gitignoreado); escribir/mover en Y:\ = confirmar antes.
 - `git commit` + `push` al cerrar tareas de codigo: libre (build antes).
 
 ## E. Fallar al lado seguro

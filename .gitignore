@@ -95,3 +95,6 @@ docs-local/
 
 # Python bytecode (cadlib del skill cad-design)
 __pycache__/
+
+# Cache local de documentos de empresa (repo publico — NUNCA commitear)
+.sgc-cache/
