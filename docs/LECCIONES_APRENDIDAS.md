@@ -13,6 +13,13 @@ contiene SOLO lo accionable que NO esta ya codificado como regla o gate ejecutab
 
 ## Lecciones operativas vigentes
 
+### 2026-07-24 — Monitores en background mueren con la sesion
+- Un watcher de CI en background NO sobrevive al cierre de sesion/PC: prometi "te aviso
+  cuando termine el deploy" y el aviso nunca llego — Fak creyo que el deploy llevaba 16 hs
+  cuando habia terminado en 3 min (el run "cancelled" intermedio era el auto-cancel normal
+  de GitHub al pushear un commit nuevo). Regla: para CI, chequear el estado DIRECTO y
+  reportarlo en el momento; no prometer avisos diferidos salvo que la sesion siga activa.
+
 ### 2026-07-23 — NotebookLM RETIRADO → .sgc-cache propio (decision Fak)
 - NotebookLM retirado por completo (ya estaba roto; Fak prefiere acceso directo a fuentes).
   Reemplazo: skill `docs-empresa` (mapa tema→documento real, rutas verificadas) + cache
