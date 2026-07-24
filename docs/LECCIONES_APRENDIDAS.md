@@ -13,6 +13,17 @@ contiene SOLO lo accionable que NO esta ya codificado como regla o gate ejecutab
 
 ## Lecciones operativas vigentes
 
+### 2026-07-24 — Flujograma/HO NO viven en Supabase → van al legajo del server
+- Pregunta de Fak por el flujograma del APB de Novax (Patagonia) y arranque buscando en Supabase.
+  Correccion fuerte de Fak: "la decision correcta era el APQP; en Supabase NO tengo cargados los
+  flujogramas; es un error de inteligencia". Barack no hace PFD/HO en la app (regla `no-pfd-no-ho`):
+  los flujogramas y HOs reales son archivos del legajo/SGC en `Y:`. Routing correcto:
+  HOs en `Y:\BARACK\CALIDAD\DOCUMENTACION SGC\HOJAS DE OPERACIONES\1- CLIENTES\<cliente>\<prog>\<pieza>\`
+  (+ `2- SECTORES\` por proceso); flujogramas en el legajo de Ingenieria (`20- Flujograma`,
+  `6-Diagramas de flujo`) o PPAP. Supabase solo para AMFE/CP, y aun asi el legajo manda para proceso.
+  Detalle + memoria: `feedback_flujograma_ho_viven_en_legajo_no_supabase`. Caso: HO 971 APB Puerta
+  ya tiene la inyeccion en op 50 (plasticas) y op 60 (PU) — `project_apb_puerta_novax_ho971`.
+
 ### 2026-07-24 — Monitores en background mueren con la sesion
 - Un watcher de CI en background NO sobrevive al cierre de sesion/PC: prometi "te aviso
   cuando termine el deploy" y el aviso nunca llego — Fak creyo que el deploy llevaba 16 hs
