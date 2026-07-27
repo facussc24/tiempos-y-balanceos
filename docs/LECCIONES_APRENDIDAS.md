@@ -13,6 +13,21 @@ contiene SOLO lo accionable que NO esta ya codificado como regla o gate ejecutab
 
 ## Lecciones operativas vigentes
 
+### 2026-07-27 — El FORMATO del maestro arb define si un codigo llego completo
+- Sansuy mando los definitivos como `1246030198` (10 car.) y el naranja como `124.505.0372-7`
+  (14 car.). Dije "falta el digito verificador"; despues encontre 3 insumos cargados pelados
+  y me auto-corregi a "no es bloqueante". Correccion de Fak: mirar CUANTOS CARACTERES tienen
+  los que YA estan cargados. Dato: de 24 codigos `124*` del maestro, **21 tienen 14 car.**
+  (`124.603.0157-0`) y solo 3 tienen 10 — y uno de esos 3 (`1246030228`) es duplicado de
+  `124.602.0228-1`. La regla es el formato de 21, no la excepcion de 3.
+- **Meta-leccion (2da vez): la regla canonica le gana al dato puntual.** Un puñado de filas
+  mal cargadas NO redefine la convencion; sirven de contraejemplo solo si son mayoria.
+  Antes de relativizar una regla: contar la distribucion completa, no citar 3 casos sueltos.
+- Corolario reusable: **el ancho del campo en el arb es informacion de identidad.** ARTICULO
+  tope 15 car. — por eso el PN SMRC `00238887-04-V209` (16) se carga `0238887-04-V209` (15),
+  con un cero menos; los `00238887-04-V20` viejos son ese mismo PN con el `9` cortado.
+  Antes de preguntar "que codigo uso", medir los largos del maestro y deducirlo.
+
 ### 2026-07-24 — Flujograma/HO NO viven en Supabase → van al legajo del server
 - Pregunta de Fak por el flujograma del APB de Novax (Patagonia) y arranque buscando en Supabase.
   Correccion fuerte de Fak: "la decision correcta era el APQP; en Supabase NO tengo cargados los
