@@ -98,3 +98,6 @@ __pycache__/
 
 # Cache local de documentos de empresa (repo publico — NUNCA commitear)
 .sgc-cache/
+
+# Datos de la empresa — NO commitear (repo publico)
+REGISTRO_TIEMPOS_INYECCION.xlsx
