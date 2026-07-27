@@ -13,6 +13,23 @@ contiene SOLO lo accionable que NO esta ya codificado como regla o gate ejecutab
 
 ## Lecciones operativas vigentes
 
+### 2026-07-27 — Descarte un hallazgo CORRECTO por mirar el encabezado en vez de los datos
+- Un auditor independiente reporto que el offset del arbol de `RELACIONES.TXT` era +7 y que yo
+  estaba parseando con +9. Lo **descarte** mostrando el encabezado del export, que efectivamente
+  pone los titulos en las columnas 0/9/18/27. **Me equivoque: el encabezado y los datos tienen
+  layouts DISTINTOS.** Las filas reales ponen el sub-articulo en la columna 7 (nivel 1) y 14
+  (nivel 2) — offset **+7**, como decia el README.
+- **Costo medido:** con +9 el parseo devuelve 5387 lineas; con +7, 6245. Se pierden **858
+  sub-ensambles** (niveles 1 y 2 completos). El nivel 0 sale identico con los dos, asi que un
+  chequeo que solo mire el nivel 0 NO detecta el error — por eso la verificacion de los vinilos
+  dio bien igual (los 11 codigos estaban todos en nivel 0; reverificado con ambos offsets).
+- **La leccion no es sobre el arb: es sobre como se refuta.** Cuando un verificador independiente
+  contradice algo mio, la contra-evidencia tiene que ser del MISMO tipo de dato que el reclamo.
+  El reclamo era sobre filas de datos; yo respondi con la fila de titulos. Sirvio para confirmar
+  lo que ya creia, no para probarlo.
+- Codificado en `scripts/_refreshArb.mjs` (parser unico, con los chequeos) y en el README de
+  `.arb-cache/`. Memorias: `reference_arb_local_cache`, `feedback_leer_el_dato_completo_antes_de_afirmar`.
+
 ### 2026-07-27 — El codigo del cliente se carga TAL CUAL; el formato solo manda si no entra
 - **Cierre de Fak: "hay que respetar lo que diga el cliente y punto."** Sansuy (Perticaro)
   mando los 10 definitivos pelados (`1246030198`…) y solo el naranja completo
