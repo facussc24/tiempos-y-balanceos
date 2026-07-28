@@ -13,6 +13,40 @@ contiene SOLO lo accionable que NO esta ya codificado como regla o gate ejecutab
 
 ## Lecciones operativas vigentes
 
+### 2026-07-28 — Le arme a Fak un formato propio teniendo el formulario oficial del SGC al lado
+- Fak pidio armar un estudio para demostrar que el punzon de la mesa de corte ubica mal el
+  agujero de alineacion del Insert. Investigue bien el SGC, **le nombre los formularios oficiales
+  con codigo y ruta… y despues le arme una planilla propia en openpyxl igual.**
+- **Fak dixit: "memoriza que vos no inventas formatos a menos que te lo pida… la idea es usar
+  los formatos oficiales de mi empresa no te parece?"** Tuvo que pedir que la borrara.
+- **Verificar que un formulario existe NO es haberlo leido.** Cuando finalmente abri
+  `I-AC-020.1 Aptitud del Proceso PpPpk A.xls` aparecieron requisitos que yo no habia previsto:
+  **estabilidad, normalidad, sesgo (-1,1 a 1,1) y curtosis (2 a 4)**, determinacion del tamano de
+  muestra y de la frecuencia, y grilla de carga fija (`B12:L32` en ESTUDIO PRELIMINAR, los mismos
+  valores otra vez en `B13:L33` de SESGO Y KURTOSIS). Ningun formato inventado por mi iba a pedir eso.
+- Barack esta certificado IATF: una planilla propia no tiene codigo, no esta en el `Catalogo SGC.xlsx`,
+  no tiene control de revision y **no es registro auditable**. No se puede presentar como evidencia.
+- **Regla:** antes de armar cualquier planilla/informe/formato, buscar el anexo oficial en
+  `...\SISTEMA SGC\Instructivos\<AREA>\Anexos\` o `...\Procedimientos\Anexos\`, ABRIRLO (copia a
+  scratchpad + Excel COM) y usar ese. Si de verdad no existe, decirlo con el listado del folder y
+  el catalogo antes de inventar nada. Los .xlsx existentes de la empresa no los edito yo:
+  instructivo celda por celda.
+- Segundo error de la misma sesion: Fak estaba parado con el calibre y las piezas en la mano y yo
+  seguia generando archivos. **"porque carajo estas haciendo un excel… ya tengo el calibre y los
+  vinilos".** Cuando tiene la herramienta en la mano, primero la secuencia fisica de medicion.
+- Memorias: `feedback_usar_formatos_oficiales_no_inventar`, `feedback_guiar_la_accion_fisica_primero`,
+  `project_estudio_agujero_insert_patagonia`, `reference_openpyxl_excel2016_funciones`.
+
+### 2026-07-28 — Las PCs de planta tienen Excel 2016: openpyxl escribe formulas que fallan MUDAS
+- `STDEV.S`, `MAXIFS` y `MINIFS` escritas por openpyxl **sin el prefijo `_xlfn.`** dan `#NAME?`.
+  Si estan envueltas en `IFERROR(...,"")` —lo natural para que la planilla se vea limpia vacia—
+  **la celda queda en blanco y no avisa nada.** La planilla parece andar y no anda.
+- Detectado solo porque abri el archivo con Excel COM y compare contra un calculo hecho aparte en
+  Python. Abrirlo y mirarlo a ojo no lo detecta.
+- Usar funciones clasicas (`STDEV`, `MAX`/`MIN` sobre bloques fijos de filas) y verificar con:
+  copia + datos de prueba deterministas + `$xl.CalculateFullRebuild()` + barrido
+  `UsedRange.SpecialCells(-4123, 16)`.
+
 ### 2026-07-27 — Descarte un hallazgo CORRECTO por mirar el encabezado en vez de los datos
 - Un auditor independiente reporto que el offset del arbol de `RELACIONES.TXT` era +7 y que yo
   estaba parseando con +9. Lo **descarte** mostrando el encabezado del export, que efectivamente
