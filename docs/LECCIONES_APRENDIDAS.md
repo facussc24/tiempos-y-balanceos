@@ -37,6 +37,23 @@ contiene SOLO lo accionable que NO esta ya codificado como regla o gate ejecutab
 - Memorias: `feedback_usar_formatos_oficiales_no_inventar`, `feedback_guiar_la_accion_fisica_primero`,
   `project_estudio_agujero_insert_patagonia`, `reference_openpyxl_excel2016_funciones`.
 
+### 2026-07-28 — El deck que sale por mail no lleva mi razonamiento adentro
+- Le arme a Fak 9 diapositivas que incluian mi encuadre ("son dos problemas, no uno"), el detalle
+  metodologico de por que una cota no era medible, el plan de medicion, mis puntos debiles y los
+  pendientes internos. **Fak: *"¿a quién le importa realmente? no pensás como una persona que va
+  a recibir el mail y lee eso y no entiende nada"*** y *"¿para qué les sirve a ellos conocer mis
+  puntos débiles o pendientes?"*.
+- Lo rehice en **5 diapositivas**: el defecto con su medida · la causa con el historial · la
+  correccion con lo que cambio · el archivo vigente. **Filtro: ¿esto lo necesita el que abre el
+  mail, o lo necesito yo para justificarme? Si es lo segundo, va al chat.**
+- Despues Fak lo edito y sus ediciones son el estandar real: corto la tabla de la correccion de
+  5 filas a 2 (saco las consecuencias derivadas: largo, consumo, "el resto sin cambios"), borro
+  el bloque de instrucciones al receptor, y **agrego dos graficos del contorno antes/despues
+  superpuestos con zoom y flechas** — que yo no habia hecho.
+- **Regla que me faltaba: cuando el cambio es geometrico, GRAFICARLO antes/despues superpuesto.**
+  Vale mas que el numero. Tenia los dos DXF y no se me ocurrio.
+- Detalle de las ediciones: memoria `feedback_entregable_no_lleva_mi_razonamiento`.
+
 ### 2026-07-28 — Encontre UNA causa y di por cerrado el caso; habia DOS problemas distintos
 - Fak necesitaba justificarle al gerente que **la mesa de corte corta mal**. Encontre que el
   desvio de costura del Insert trasero derecho lo causaba un punto del archivo movido 8 mm, lo
