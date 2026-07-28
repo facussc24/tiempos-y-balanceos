@@ -37,6 +37,27 @@ contiene SOLO lo accionable que NO esta ya codificado como regla o gate ejecutab
 - Memorias: `feedback_usar_formatos_oficiales_no_inventar`, `feedback_guiar_la_accion_fisica_primero`,
   `project_estudio_agujero_insert_patagonia`, `reference_openpyxl_excel2016_funciones`.
 
+### 2026-07-28 — Arme un analisis entero sobre una premisa que nunca confirme, y era falsa
+- Detecte que en los patrones del Insert las marcas de alineacion no estaban espejadas entre mano
+  derecha e izquierda (6 a 10 mm de diferencia, con el contorno espejado al 0,000000000 mm). Lo
+  di por hallazgo mayor, arme la imagen comparativa y dos diapositivas.
+- **Fak: "no importa que las marcas esten distintas, si lo espejas es a proposito... estamos
+  acusando a la mesa de corte no al archivo que NO ES ESPEJADO".** Todo ese tramo fue al tacho.
+- **La premisa "si el contorno es espejo, las marcas tambien deberian serlo" era MIA, no del
+  dominio.** Nunca la puse sobre la mesa como supuesto. Cuando una conclusion depende de una
+  regla de negocio que yo inferi, hay que **enunciarla explicitamente y pedir confirmacion antes
+  de construir encima**, no despues de armar el entregable.
+- Segundo error del mismo tramo: reporte "la mesa de corte dispersa ~2 mm entre piezas"
+  comparando lo medido contra la distancia marca→contorno del DXF. Dos de las cuatro marcas caen
+  contra **bordes curvos** (radio ~600 mm y ~300 mm, sin tramo plano). En un borde curvo el valor
+  cambia segun donde se apoya el calibre: esa dispersion era del metodo, no de la maquina.
+  **Antes de comparar una medida contra un nominal de plano: verificar que el borde de referencia
+  tenga tramo recto suficiente para apoyar el instrumento.**
+- La causa raiz real la dio el historial del archivo, no la estadistica: el punto de anclaje se
+  habia movido 8 mm el 23/7. **Regla de diagnostico: defecto IDENTICO en todas las piezas =
+  archivo o setup; defecto DISTINTO en cada pieza = maquina.** Una mesa con juego no repite el
+  mismo error nueve veces.
+
 ### 2026-07-28 — El formulario oficial I-AC-020.1 devuelve un Ppk FALSO si falta la especificacion
 - Al cargar el estudio de aptitud del Insert en `I-AC-020.1 Aptitud del Proceso PpPpk A.xls`, con el
   campo Especificacion vacio el formulario devolvio **Pp = 0,00 y Ppk = 8,86**. No da error y no
