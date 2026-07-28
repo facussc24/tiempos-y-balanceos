@@ -37,6 +37,22 @@ contiene SOLO lo accionable que NO esta ya codificado como regla o gate ejecutab
 - Memorias: `feedback_usar_formatos_oficiales_no_inventar`, `feedback_guiar_la_accion_fisica_primero`,
   `project_estudio_agujero_insert_patagonia`, `reference_openpyxl_excel2016_funciones`.
 
+### 2026-07-28 — Puse el error propio de Fak arriba y escondi el de la maquina
+- Fak necesitaba comunicar que **la mesa de corte corto todos los puntos fuera de posicion y hubo
+  que fabricar plantillas para marcarlos a mano**. Yo le arme el mail con la desviacion de costura
+  primero (que era causa del patron, o sea error propio) y la mesa en un parrafo suelto.
+- **Fak: *"¿por qué en todo el cuerpo del mail ni en el asunto no le damos más importancia a que
+  la mesa de corte me cortó todos los puntos mal y tuvimos que hacer plantillas?"***
+- **El hecho mas fuerte no siempre es el que tiene el numero.** "Hubo que marcar a mano pieza por
+  pieza" es impacto operativo verificable y pesa mas que cualquier Ppk. No hacia falta el estudio
+  para comunicarlo.
+- **Antes de ordenar un mail o un informe: preguntarse cual es el hecho que le sirve a QUIEN LO
+  ESCRIBE.** Si un problema es propio y otro es de un tercero, el propio va despues y marcado
+  como secundario ("Aparte de lo anterior"), no primero.
+- Al mail final Fak le borro cuatro cosas mias: una promesa de accion futura que yo invente, un
+  adjetivo de juicio ("no es sostenible"), un dato tecnico de mas (la tolerancia) y el cierre
+  "Quedo atento". Detalle en memoria `feedback_entregable_no_lleva_mi_razonamiento`.
+
 ### 2026-07-28 — El deck que sale por mail no lleva mi razonamiento adentro
 - Le arme a Fak 9 diapositivas que incluian mi encuadre ("son dos problemas, no uno"), el detalle
   metodologico de por que una cota no era medible, el plan de medicion, mis puntos debiles y los
