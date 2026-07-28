@@ -37,6 +37,27 @@ contiene SOLO lo accionable que NO esta ya codificado como regla o gate ejecutab
 - Memorias: `feedback_usar_formatos_oficiales_no_inventar`, `feedback_guiar_la_accion_fisica_primero`,
   `project_estudio_agujero_insert_patagonia`, `reference_openpyxl_excel2016_funciones`.
 
+### 2026-07-28 — El formulario oficial I-AC-020.1 devuelve un Ppk FALSO si falta la especificacion
+- Al cargar el estudio de aptitud del Insert en `I-AC-020.1 Aptitud del Proceso PpPpk A.xls`, con el
+  campo Especificacion vacio el formulario devolvio **Pp = 0,00 y Ppk = 8,86**. No da error y no
+  avisa: se lee como si el proceso fuera excelente.
+- **Causa verificada en el propio libro:** `ISTEXT(I7)` da VERDADERO pero `I7+0` da **0** y
+  `ABS("TBD"-0)` da **0** — el libro evalua el texto como cero en vez de tirar `#¡VALOR!`. Por eso
+  poner "TBD" en la especificacion **tampoco** protege. Cadena: `INFORME!H5/I5` →
+  `ESTUDIO PRELIMINAR!H7/I7` → `I42/I40` → `J44` (Pp) y `G47/G52/J50` (Ppk).
+- Contramedida aplicada: aviso en texto rojo al lado de Pp y Ppk (`INFORME!G18` y `G19`).
+  **Pendiente para Calidad: revisar los estudios ya cargados con este formulario.**
+- La leccion general: un formulario oficial tampoco es confiable por ser oficial. Antes de reportar
+  un indice, verificar que el numero se mueva cuando se mueve la entrada. Un valor que no cambia
+  al cambiar la especificacion no esta calculando nada.
+
+### 2026-07-28 — El Escritorio esta en OneDrive y descarta guardados por COM sin avisar
+- Escribi el .xls con Excel COM en `C:\Users\facun\OneDrive\Escritorio\...`, `Save()` y `Close($true)`
+  no dieron error, y la lectura en memoria devolvia los valores correctos. Al reabrir el archivo,
+  **estaba vacio**: OneDrive habia pisado el guardado.
+- Trabajar los archivos de Office en local (scratchpad) y **copiarlos al Escritorio recien al final**,
+  verificando siempre reabriendo el archivo de DESTINO, no el de trabajo.
+
 ### 2026-07-28 — Las PCs de planta tienen Excel 2016: openpyxl escribe formulas que fallan MUDAS
 - `STDEV.S`, `MAXIFS` y `MINIFS` escritas por openpyxl **sin el prefijo `_xlfn.`** dan `#NAME?`.
   Si estan envueltas en `IFERROR(...,"")` —lo natural para que la planilla se vea limpia vacia—
