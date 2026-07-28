@@ -37,6 +37,37 @@ contiene SOLO lo accionable que NO esta ya codificado como regla o gate ejecutab
 - Memorias: `feedback_usar_formatos_oficiales_no_inventar`, `feedback_guiar_la_accion_fisica_primero`,
   `project_estudio_agujero_insert_patagonia`, `reference_openpyxl_excel2016_funciones`.
 
+### 2026-07-28 — Encontre UNA causa y di por cerrado el caso; habia DOS problemas distintos
+- Fak necesitaba justificarle al gerente que **la mesa de corte corta mal**. Encontre que el
+  desvio de costura del Insert trasero derecho lo causaba un punto del archivo movido 8 mm, lo
+  probe bien, y **concluí "no es la mesa, es el archivo"**. Eso le dejaba sin sustento lo que le
+  habia pedido el gerente.
+- **Fak: "es cierto que el trasero derecho tenia un pequeño desfase mio, mi culpa, pero en
+  realidad salio mal la tirada general de hoy por ese error".** Y su propia foto ya lo decia:
+  *"pese al error en los agujeros que se generaron en mesa de corte, los insertos traseros
+  derechos generaron todos el mismo defecto de desviacion de costura"*.
+- **Eran dos problemas con causas distintas**: la costura desviada (archivo, solo trasero
+  derecho, identica en todas las piezas) y los agujeros (mesa, tirada general, variable). Yo los
+  trate como uno y al probar el primero cancele el segundo.
+- **Regla: haber probado una causa NO cierra el caso si el sintoma que reporto el usuario no
+  queda explicado.** Antes de concluir, chequear que la causa encontrada cubra TODO el alcance
+  del defecto (que piezas, desde cuando, con que patron). Si sobra sintoma, sobra causa.
+- Corolario util que si sirvio: **defecto IDENTICO en todas las piezas = archivo o setup;
+  defecto DISTINTO en cada pieza = maquina.** Sirve para separar sin medir nada.
+
+### 2026-07-28 — El parser del arb quedo a medio arreglar: mejora 29 filas y rompe 1
+- `scripts/_refreshArb.mjs` tiene cambios sin commitear de la sesion anterior. Los probe corriendo
+  el parser viejo y el nuevo contra `C:\tmp\RELACIONES.TXT` y comparando los CSV: **29 de 6245
+  filas mejoran** (el parser viejo le pegaba a la descripcion del hilo el codigo de OTRO producto,
+  ej. `"Hilo union Negro Titan... 2HC858417B FAM AL"`), **pero 1 fila empeora**: el `prod_raiz`
+  pasa a ser un fragmento de descripcion (`"(TGA AT2)"`).
+- Causa: el chequeo viejo era `g(r, b+2) && g(r, b+5)`; el nuevo dejo solo `g(r, b+2)`. En una
+  linea de continuacion como `(TGA AT2) | KG | 0,00021300` la columna 2 trae el consumo, asi que
+  el nuevo la toma por fila con codigo. **NO COMMITEADO** hasta arreglar eso.
+- Metodo que conviene repetir: para validar un cambio de parser, correr las dos versiones contra
+  el archivo fuente real y **diffear la salida fila por fila**. Los contadores agregados (6245
+  lineas, 58 fusionadas) dan IGUAL en las dos versiones y no detectan nada.
+
 ### 2026-07-28 — Arme un analisis entero sobre una premisa que nunca confirme, y era falsa
 - Detecte que en los patrones del Insert las marcas de alineacion no estaban espejadas entre mano
   derecha e izquierda (6 a 10 mm de diferencia, con el contorno espejado al 0,000000000 mm). Lo
