@@ -22,6 +22,19 @@
   `curl -s https://api.github.com/repos/facussc24/tiempos-y-balanceos/actions/runs?per_page=1`
 - Esta PC (`C:\Dev\BarackMercosul`) puede no tener `.env.local` → scripts de query
   fallan; en ese caso reportar "no verificable local" en vez de FALLO.
+- `cat > archivo.mjs << 'EOF'` con rutas Windows tambien se come el `\t` de `C:\\tmp` (no es
+  solo `node -e`) — usar SIEMPRE la tool Write para .mjs con rutas Windows, nunca heredoc bash.
+
+## Checklist nuevo — mensaje de commit con datos de negocio (repo publico)
+- 2026-07-29: revisar no solo el DIFF de un commit sino tambien el MENSAJE — un commit puede
+  no tocar ningun archivo de datos y aun asi filtrar codigos de pieza reales en el texto del
+  mensaje (permanente en git log publico). Ninguna regla existente (`git-deploy.md`,
+  `core-prohibiciones.md`) cubre esto explicitamente — flaggear como hallazgo igual, citando
+  el `.gitignore` de la carpeta de datos como referencia de que ese dato es sensible.
+- Al agrupar hallazgos por un campo compartido (ej. "codigo" de producto que se repite en
+  varias filas de BOM), verificar por NUMERO DE LINEA antes de reportar "N ocurrencias juntas"
+  — agrupar solo por valor de texto genera falsos "multi-continuacion"/"multi-evento" cuando
+  en realidad son N filas fisicas distintas que comparten el mismo codigo.
 
 ## Metodo que dio resultado (no solo leer codigo)
 - 2026-07-27: script parser de datos (`_refreshArb.mjs`) con "chequeos de salud" propios

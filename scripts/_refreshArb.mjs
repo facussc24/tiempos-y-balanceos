@@ -105,18 +105,19 @@ function parseRelaciones(src) {
 
     // Una linea es CONTINUACION solo si no trae codigo en NINGUN bloque. Ojo: no alcanza con
     // mirar si trae consumo — hay filas con codigo cuya descripcion se parte y arrastra la
-    // unidad y el consumo a la linea siguiente (ej. linea 2486: FX663TK-11703E). Tratarlas
+    // unidad y el consumo a la linea siguiente (hay ~29 casos, todos hilos). Tratarlas
     // como fragmento hacia dos daños a la vez: perdia esa fila y le pegaba el texto a otra.
     //
-    // Pero pedir SOLO codigo en b+2 tampoco alcanza: la continuacion "AL | KG | 0,00028000 |
-    // COS | PRDCOS" deja el consumo en la columna 2 y el modulo en la 3, asi que se leia como
-    // fila de nivel 0 y causaba dos daños: perdia la fila pendiente y contaminaba carry[0]
-    // (aparecia un prod_raiz "(TGA AT2)"). Tampoco alcanza con exigir descripcion en b+3.
+    // Pero pedir SOLO codigo en b+2 tampoco alcanza: la continuacion tiene la forma
+    // "<resto de la desc> | <unidad> | <consumo> | <modulo> | <proceso>", o sea que deja el
+    // consumo en la columna 2 y el modulo en la 3, y se leia como fila de nivel 0. Causaba dos
+    // daños: perdia la fila pendiente y contaminaba carry[0] con el fragmento de descripcion,
+    // que aparecia como un prod_raiz inventado. Tampoco alcanza con exigir descripcion en b+3.
     // El discriminador que sirve es la CANTIDAD: la fila real siempre trae un numero en b+1
     // ("1"), la continuacion trae ahi la unidad ("KG"). Verificado sobre RELACIONES.TXT:
     // rescata las 29 filas partidas, descarta las 25 continuaciones, y ninguna fila completa
-    // (codigo+consumo) tiene cantidad no numerica. No excluye codigos que parecen numero
-    // (ej. 0103661.180), a diferencia de filtrar por el formato del codigo.
+    // (codigo+consumo) tiene cantidad no numerica. No filtra por el FORMATO del codigo, asi que
+    // sigue tomando los codigos que parecen numero decimal (los hay, y son legitimos).
     const esNum = (v) => /^\d+([.,]\d+)?$/.test(v);
     const traeCodigo = OFFSETS.some((b) => g(r, b + 2) && esNum(g(r, b + 1)));
     if (!traeCodigo) {

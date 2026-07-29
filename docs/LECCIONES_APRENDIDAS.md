@@ -13,15 +13,39 @@ contiene SOLO lo accionable que NO esta ya codificado como regla o gate ejecutab
 
 ## Lecciones operativas vigentes
 
+### 2026-07-29 — El repo publico tenia 828 documentos de la empresa versionados (DECISION DE FAK)
+- Verificado con la API de GitHub: `facussc24/tiempos-y-balanceos` es **`"private": false`**. Se
+  descargo `docs/REFERENCIA_CP_ORIGINALES.md` por `raw.githubusercontent.com` **sin autenticacion**
+  (HTTP 200, 71 KB) con codigos de hilo reales adentro. No era una hipotesis: estaba publicado.
+- `docs/empresa-extracted/` tenia **828 archivos / 259 MB**: 341 de IATF-2025, 175 specs de
+  cliente, 84 instructivos SGC, 70 alertas de calidad, 26 8D, 9 auditorias. Mas part numbers VW
+  en 57 archivos versionados y nombres de proveedores (SMRC 20, Cozzuol 15, Novax 14, Sansuy 7).
+- **El `.gitignore` YA tenia la regla escrita en tres lugares** (`docs-local/`, `.arb-cache/`,
+  `.sgc-cache/`, todos con el comentario "repo es publico — NUNCA commitear"). La carpeta era
+  anterior a esa regla y nunca se limpio. La regla existia; **faltaba el enforcement**.
+- **Contexto de la decision:** Fak no puede pagar. GitHub Pages desde repo privado requiere plan
+  pago, asi que "poner el repo en privado" no es opcion. **Pero repos privados son gratis** — lo
+  que se paga es servir Pages desde uno privado. Solucion sin costo aplicada: el repo queda
+  PUBLICO (Pages sigue andando gratis) y los documentos salen de git a `.sgc-cache/`, que ya
+  estaba gitignoreado. Nada se borro: los 828 archivos siguen en disco.
+- **Riesgo residual ACEPTADO por Fak (2026-07-29):** los archivos siguen en el **historial** de
+  git. Sacarlos de ahi exige `git filter-repo` + force-push a `main`, que es gratis pero
+  irreversible. A favor de limpiarlo: el repo tiene **0 forks, 0 stars, 0 watchers**, o sea que
+  nadie lo copio y la limpieza seria efectiva. Queda pendiente de decision.
+- **Regla:** antes de commitear, preguntarse si el archivo es dato de la empresa. Vale para el
+  contenido de los archivos Y para el **mensaje del commit** (yo meti codigos de pieza reales en
+  el mensaje de `8106575` el mismo dia que le explicaba a Fak que el repo era publico).
+
 ### 2026-07-29 — Un fix sin commitear estaba roto: arreglaba el sintoma y abria un agujero nuevo
 - Al cerrar sesion encontre `scripts/_refreshArb.mjs` modificado y sin commitear (fix del parser
   de RELACIONES para no fusionar filas partidas). El diff se leia impecable, con comentario
-  explicando el caso. **Corri el parser contra el TXT real y el codigo que el propio comentario
-  decia rescatar (`FX663TK-11703E`) NO estaba en el CSV de salida.**
+  explicando el caso. **Corri el parser contra el TXT real y el codigo de hilo que el propio
+  comentario decia rescatar NO estaba en el CSV de salida.**
 - Causa: para detectar "fila real" el fix pedia solo codigo en la columna b+2. Las lineas de
-  continuacion (`AL | KG | 0,00028000 | COS | PRDCOS`) dejan el consumo justo en b+2, asi que
-  se leian como fila de nivel 0 → **perdia 29 filas con codigo y ademas contaminaba `carry[0]`**,
-  apareciendo un `prod_raiz` inventado `(TGA AT2)` en una fila de VINILO. Pedir codigo+descripcion
+  continuacion (`<resto desc> | <unidad> | <consumo> | <modulo> | <proceso>`) dejan el consumo
+  justo en b+2, asi que se leian como fila de nivel 0 → **perdia 29 filas con codigo y ademas
+  contaminaba `carry[0]`**, apareciendo un `prod_raiz` inventado (un fragmento de descripcion)
+  en una fila de vinilo. Pedir codigo+descripcion
   tampoco alcanzo (la continuacion trae modulo y proceso). El discriminador que sirve es la
   **CANTIDAD**: la fila real trae numero en b+1, la continuacion trae ahi la unidad.
 - **Metodo que lo encontro (reusable para cualquier parser):** no leer el diff — correr contra
@@ -112,11 +136,10 @@ contiene SOLO lo accionable que NO esta ya codificado como regla o gate ejecutab
 ### 2026-07-28 — El parser del arb quedo a medio arreglar: mejora 29 filas y rompe 1
 - `scripts/_refreshArb.mjs` tiene cambios sin commitear de la sesion anterior. Los probe corriendo
   el parser viejo y el nuevo contra `C:\tmp\RELACIONES.TXT` y comparando los CSV: **29 de 6245
-  filas mejoran** (el parser viejo le pegaba a la descripcion del hilo el codigo de OTRO producto,
-  ej. `"Hilo union Negro Titan... 2HC858417B FAM AL"`), **pero 1 fila empeora**: el `prod_raiz`
-  pasa a ser un fragmento de descripcion (`"(TGA AT2)"`).
+  filas mejoran** (el parser viejo le pegaba a la descripcion del hilo el codigo de OTRO producto),
+  **pero 1 fila empeora**: el `prod_raiz` pasa a ser un fragmento de descripcion.
 - Causa: el chequeo viejo era `g(r, b+2) && g(r, b+5)`; el nuevo dejo solo `g(r, b+2)`. En una
-  linea de continuacion como `(TGA AT2) | KG | 0,00021300` la columna 2 trae el consumo, asi que
+  linea de continuacion (`<fragmento> | <unidad> | <consumo>`) la columna 2 trae el consumo, asi que
   el nuevo la toma por fila con codigo. **NO COMMITEADO** hasta arreglar eso.
 - Metodo que conviene repetir: para validar un cambio de parser, correr las dos versiones contra
   el archivo fuente real y **diffear la salida fila por fila**. Los contadores agregados (6245
