@@ -172,6 +172,15 @@ function chequear(articulos, insumos, rel) {
   const problemas = [];
   const push = (tipo, detalle) => problemas.push({ tipo, detalle });
 
+  // 0. filas con codigo que el parser DESCARTO por quedarse sin consumo. Tiene que dar 0: si no
+  //    da 0, el parser esta perdiendo filas en silencio. Este chequeo nace del incidente del
+  //    2026-07-29, donde un fix perdia 29 filas y ninguno de los otros chequeos lo detectaba
+  //    (todos miran `rel.filas`, o sea lo que SI entro — ninguno miraba lo que se cayo).
+  const descartadas = (rel.partidas || []).filter((p) => p.tipo === 'descartada_sin_consumo');
+  for (const d of descartadas) {
+    push('fila con codigo descartada sin consumo', `${d.codigo} (linea ${d.linea} del TXT)`);
+  }
+
   // 1. mismo codigo con dos unidades distintas
   const porCod = new Map();
   for (const i of insumos) {
