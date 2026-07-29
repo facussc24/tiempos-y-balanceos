@@ -39,7 +39,8 @@ contiene SOLO lo accionable que NO esta ya codificado como regla o gate ejecutab
   pero siguen accesibles para quien tenga el SHA exacto (y los SHA de repos publicos quedan en el
   archivo publico de eventos de GitHub). Para borrarlos de verdad hay dos caminos, los dos gratis:
   pedirle a GitHub Support que purgue las vistas cacheadas (es el procedimiento que documenta el
-  propio GitHub para datos sensibles), o borrar y recrear el repo. **PENDIENTE.**
+  propio GitHub para datos sensibles), o borrar y recrear el repo. **Fak decidio NO escribirle a
+  GitHub (2026-07-29) y convivir con eso.** Cerrado, no reabrir salvo que el lo pida.
 - **Part numbers: Fak decidio que NO son sensibles** ("no vamos a ser tan exagerados"). Estan en
   todos los planos que ya tiene el cliente. Por eso NO se tocaron los ~39 archivos que los
   contienen ni el skill `product-map`, que los necesita para funcionar. Lo sensible eran los
