@@ -28,10 +28,22 @@ contiene SOLO lo accionable que NO esta ya codificado como regla o gate ejecutab
   que se paga es servir Pages desde uno privado. Solucion sin costo aplicada: el repo queda
   PUBLICO (Pages sigue andando gratis) y los documentos salen de git a `.sgc-cache/`, que ya
   estaba gitignoreado. Nada se borro: los 828 archivos siguen en disco.
-- **Riesgo residual ACEPTADO por Fak (2026-07-29):** los archivos siguen en el **historial** de
-  git. Sacarlos de ahi exige `git filter-repo` + force-push a `main`, que es gratis pero
-  irreversible. A favor de limpiarlo: el repo tiene **0 forks, 0 stars, 0 watchers**, o sea que
-  nadie lo copio y la limpieza seria efectiva. Queda pendiente de decision.
+- **Historial limpiado el mismo dia** (Fak: "si podes limpiarlo si queres", delego la decision).
+  `git filter-repo --path docs/empresa-extracted --invert-paths` + `push --force-with-lease`.
+  Resultado: 955 commits conservados, `.git` de **189 MB → 34 MB**, y el arbol de HEAD quedo con
+  **el mismo hash exacto** (`c72fd353`) antes y despues — o sea que no se perdio ni un archivo del
+  estado actual, solo se reescribio la historia. Backup previo: bundle de 185 MB con `--all`.
+- ⚠️ **LIMITE QUE HAY QUE SABER: el force-push NO borra los objetos del servidor de GitHub.**
+  Verificado despues del push: `raw.githubusercontent.com/<repo>/8106575/docs/empresa-extracted/...`
+  **sigue devolviendo HTTP 200**. Los commits viejos ya no figuran en ningun listado ni en la UI,
+  pero siguen accesibles para quien tenga el SHA exacto (y los SHA de repos publicos quedan en el
+  archivo publico de eventos de GitHub). Para borrarlos de verdad hay dos caminos, los dos gratis:
+  pedirle a GitHub Support que purgue las vistas cacheadas (es el procedimiento que documenta el
+  propio GitHub para datos sensibles), o borrar y recrear el repo. **PENDIENTE.**
+- **Part numbers: Fak decidio que NO son sensibles** ("no vamos a ser tan exagerados"). Estan en
+  todos los planos que ya tiene el cliente. Por eso NO se tocaron los ~39 archivos que los
+  contienen ni el skill `product-map`, que los necesita para funcionar. Lo sensible eran los
+  documentos (alertas, 8D, auditorias IATF, specs de cliente), no la nomenclatura.
 - **Regla:** antes de commitear, preguntarse si el archivo es dato de la empresa. Vale para el
   contenido de los archivos Y para el **mensaje del commit** (yo meti codigos de pieza reales en
   el mensaje de `8106575` el mismo dia que le explicaba a Fak que el repo era publico).
