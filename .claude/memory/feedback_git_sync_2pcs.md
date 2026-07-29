@@ -1,16 +1,19 @@
 ---
-name: Git Sync 2 PCs Obligatorio
-description: SIEMPRE git pull al inicio de sesion — Fak trabaja desde 2 PCs simultaneamente
+name: Git Sync al inicio de sesion
+description: Fak trabaja desde UNA sola PC (FACU-PC) desde 2026-07-29 — la notebook vieja se rompio. El pull de arranque dejo de ser critico; el push al cerrar sigue siendo obligatorio.
 type: feedback
 ---
 
-SIEMPRE sincronizar git al inicio de cada sesion antes de tocar cualquier archivo.
+**ACTUALIZADO 2026-07-29 — ya NO son 2 PCs.** Fak dixit: la otra notebook "ya no existe, la
+rompi toda". Queda solo **`FACU-PC`** (usuario `facun`), con el unico clon en `C:\Dev\BarackMercosul`.
 
-**Why:** Fak trabaja desde 2 PCs en simultaneo (a partir de 2026-04-16). Sin sync, los cambios de una PC pisan los de la otra, generando conflictos y perdida de trabajo.
+**Que cambia:** el `git pull` de arranque dejo de ser critico — no hay otra maquina que pueda
+haber pusheado mientras tanto. No hace falta advertirle a Fak sobre sincronizar otra PC, ni
+dejarle comandos para correr "en la otra maquina".
 
-**How to apply:** Al arrancar cada sesion:
-1. `git fetch origin && git status` en BarackMercosul
-2. Si hay cambios remotos: `git pull origin main`
-3. Si hay cambios locales sin commit: `git stash` → pull → `git stash pop`
-4. Si hay conflictos: REPORTAR a Fak, NO resolver solo
-5. NUNCA empezar a editar archivos sin haber verificado el sync
+**Que NO cambia:** el `git push` al cerrar tareas de codigo sigue siendo **obligatorio**, pero por
+otro motivo — Fak prueba en **GitHub Pages (produccion)** y el deploy corre en el push a `main`.
+Sin push, prueba una version vieja. Ver regla `git-deploy.md`.
+
+**Historico (por que existia esta memoria):** entre 2026-04-16 y 2026-07-29 Fak trabajaba desde
+2 PCs en simultaneo y los cambios de una pisaban los de la otra. Ese riesgo ya no aplica.

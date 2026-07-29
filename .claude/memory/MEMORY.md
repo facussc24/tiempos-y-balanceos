@@ -4,7 +4,7 @@
 
 - [feedback_backup.md](feedback_backup.md) — Backup obligatorio al final de cada sesion
 - [../rules/git-deploy.md](../rules/git-deploy.md) — OBLIGATORIO npm run build + git push (regla durable en rules/)
-- [feedback_git_sync_2pcs.md](feedback_git_sync_2pcs.md) — OBLIGATORIO git pull al inicio — Fak usa 2 PCs
+- [feedback_git_sync_2pcs.md](feedback_git_sync_2pcs.md) — desde 2026-07-29 Fak usa UNA sola PC (FACU-PC); el pull de arranque ya no es critico, el push al cerrar si
 - [feedback_automation_system.md](feedback_automation_system.md) — Hooks + agente auditor + reglas. Lanzar auditor AL FINAL de cada tarea
 - [feedback_ask_before_acting.md](feedback_ask_before_acting.md) — PREGUNTAR antes de actuar sin info suficiente
 - [feedback_no_flag_aph_actions.md](feedback_no_flag_aph_actions.md) — NO reportar AP=H sin acciones como problema
