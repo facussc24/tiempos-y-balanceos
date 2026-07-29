@@ -22,3 +22,13 @@
   `curl -s https://api.github.com/repos/facussc24/tiempos-y-balanceos/actions/runs?per_page=1`
 - Esta PC (`C:\Dev\BarackMercosul`) puede no tener `.env.local` → scripts de query
   fallan; en ese caso reportar "no verificable local" en vez de FALLO.
+
+## Metodo que dio resultado (no solo leer codigo)
+- 2026-07-27: script parser de datos (`_refreshArb.mjs`) con "chequeos de salud" propios
+  y docstring seguro de si mismo NO alcanza como evidencia — hay que CORRER el parser
+  (o una version instrumentada) contra el archivo fuente real (`C:\tmp\*.TXT`) y contar
+  cuantos merges/filas quedan mal atribuidos. Encontre 29/58 "filas partidas" fusionadas
+  con la fila VECINA equivocada (perdida silenciosa de fila + descripcion corrompida) que
+  ninguno de los 6 chequeos de salud del script detecta. Bash con backslashes de rutas
+  Windows rompe `node -e "..."` (se come el primer `\`) — usar Write a un .mjs en el
+  scratchpad y `node archivo.mjs`, no `-e`.

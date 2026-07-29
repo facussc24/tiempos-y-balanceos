@@ -13,6 +13,27 @@ contiene SOLO lo accionable que NO esta ya codificado como regla o gate ejecutab
 
 ## Lecciones operativas vigentes
 
+### 2026-07-29 — Un fix sin commitear estaba roto: arreglaba el sintoma y abria un agujero nuevo
+- Al cerrar sesion encontre `scripts/_refreshArb.mjs` modificado y sin commitear (fix del parser
+  de RELACIONES para no fusionar filas partidas). El diff se leia impecable, con comentario
+  explicando el caso. **Corri el parser contra el TXT real y el codigo que el propio comentario
+  decia rescatar (`FX663TK-11703E`) NO estaba en el CSV de salida.**
+- Causa: para detectar "fila real" el fix pedia solo codigo en la columna b+2. Las lineas de
+  continuacion (`AL | KG | 0,00028000 | COS | PRDCOS`) dejan el consumo justo en b+2, asi que
+  se leian como fila de nivel 0 → **perdia 29 filas con codigo y ademas contaminaba `carry[0]`**,
+  apareciendo un `prod_raiz` inventado `(TGA AT2)` en una fila de VINILO. Pedir codigo+descripcion
+  tampoco alcanzo (la continuacion trae modulo y proceso). El discriminador que sirve es la
+  **CANTIDAD**: la fila real trae numero en b+1, la continuacion trae ahi la unidad.
+- **Metodo que lo encontro (reusable para cualquier parser):** no leer el diff — correr contra
+  la fuente real y contar. Comparar los reglas candidatas midiendo sobre el archivo entero
+  (viejo 6245 / desc 6299 / cantidad 6274 filas) y exigir un **control negativo**: "¿cuantas
+  filas completas perderia esta regla?" → tiene que dar **0**. Verificacion final con diff
+  antes/despues del CSV, no con los "chequeos de salud" del propio script (los 6 que tiene no
+  detectaron nada de esto).
+- **Regla:** un fix de parseo no esta terminado hasta correrlo contra el archivo fuente real y
+  mostrar el before→after contado. Y trabajo ajeno sin commitear **no se commitea a ciegas**:
+  se verifica primero: puede estar a medias.
+
 ### 2026-07-28 — Le arme a Fak un formato propio teniendo el formulario oficial del SGC al lado
 - Fak pidio armar un estudio para demostrar que el punzon de la mesa de corte ubica mal el
   agujero de alineacion del Insert. Investigue bien el SGC, **le nombre los formularios oficiales

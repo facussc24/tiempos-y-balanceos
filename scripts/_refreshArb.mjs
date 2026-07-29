@@ -90,52 +90,79 @@ function parseRelaciones(src) {
   const filas = [];
   const partidas = [];
   const carry = {};
+  let pendiente = null; // fila con codigo a la que le falta unidad/consumo en su propia linea
+
+  const cerrar = () => {
+    if (pendiente && pendiente.consumo) filas.push(pendiente);
+    else if (pendiente) partidas.push({ tipo: 'descartada_sin_consumo', codigo: pendiente.codigo, linea: pendiente._linea });
+    pendiente = null;
+  };
 
   for (let i = 1; i < src.lineas.length; i++) {
     const ln = src.lineas[i];
     if (!ln.trim()) continue;
     const r = ln.split('\t');
 
-    // ¿es continuacion de la anterior? sin codigo en ningun bloque y pocas columnas
-    const tieneCodigo = OFFSETS.some((b) => g(r, b + 2) && g(r, b + 5));
-    if (!tieneCodigo && r.length <= 11 && filas.length) {
-      const prev = filas[filas.length - 1];
+    // Una linea es CONTINUACION solo si no trae codigo en NINGUN bloque. Ojo: no alcanza con
+    // mirar si trae consumo — hay filas con codigo cuya descripcion se parte y arrastra la
+    // unidad y el consumo a la linea siguiente (ej. linea 2486: FX663TK-11703E). Tratarlas
+    // como fragmento hacia dos daños a la vez: perdia esa fila y le pegaba el texto a otra.
+    //
+    // Pero pedir SOLO codigo en b+2 tampoco alcanza: la continuacion "AL | KG | 0,00028000 |
+    // COS | PRDCOS" deja el consumo en la columna 2 y el modulo en la 3, asi que se leia como
+    // fila de nivel 0 y causaba dos daños: perdia la fila pendiente y contaminaba carry[0]
+    // (aparecia un prod_raiz "(TGA AT2)"). Tampoco alcanza con exigir descripcion en b+3.
+    // El discriminador que sirve es la CANTIDAD: la fila real siempre trae un numero en b+1
+    // ("1"), la continuacion trae ahi la unidad ("KG"). Verificado sobre RELACIONES.TXT:
+    // rescata las 29 filas partidas, descarta las 25 continuaciones, y ninguna fila completa
+    // (codigo+consumo) tiene cantidad no numerica. No excluye codigos que parecen numero
+    // (ej. 0103661.180), a diferencia de filtrar por el formato del codigo.
+    const esNum = (v) => /^\d+([.,]\d+)?$/.test(v);
+    const traeCodigo = OFFSETS.some((b) => g(r, b + 2) && esNum(g(r, b + 1)));
+    if (!traeCodigo) {
+      const destino = pendiente || filas[filas.length - 1];
       const trozo = r.map((x) => x.trim()).filter(Boolean);
-      // el primer trozo es resto de la descripcion; despues puede venir unidad y consumo
-      if (trozo.length) {
-        prev.desc = `${prev.desc} ${trozo[0]}`.trim();
-        const uni = trozo[1];
-        const con = trozo[2];
-        if (uni && !prev.unidad) prev.unidad = uni;
-        if (con && /^[\d.,]+$/.test(con) && !prev.consumo) prev.consumo = con;
-        partidas.push({ linea: i + 1, adjuntada_a: prev.codigo });
+      if (destino && trozo.length) {
+        // primer trozo = resto de la descripcion; luego puede venir unidad y consumo
+        const [txt, ...resto] = trozo;
+        if (txt && !/^[\d.,]+$/.test(txt)) destino.desc = `${destino.desc} ${txt}`.trim();
+        for (const v of resto.length ? resto : [txt]) {
+          if (/^[\d.,]+$/.test(v) && !destino.consumo) destino.consumo = v;
+          else if (!/^[\d.,]+$/.test(v) && !destino.unidad && v !== txt) destino.unidad = v;
+        }
+        partidas.push({ linea: i + 1, adjuntada_a: destino.codigo });
       }
+      if (pendiente && pendiente.consumo) cerrar();
       continue;
     }
+
+    cerrar(); // la fila anterior ya no puede recibir mas fragmentos
 
     for (let lvl = 0; lvl < OFFSETS.length; lvl++) {
       const b = OFFSETS[lvl];
       const padre = g(r, b);
       const cod = g(r, b + 2);
-      const desc = g(r, b + 3);
-      const uni = g(r, b + 4);
-      const con = g(r, b + 5);
       if (padre) carry[lvl] = padre;
-      if (cod && con) {
-        filas.push({
-          prod_raiz: carry[0] || '',
-          nivel: lvl,
-          padre: carry[lvl] || '',
-          codigo: cod,
-          desc,
-          unidad: uni,
-          consumo: con,
-          modulo: lvl === 0 ? g(r, b + 6) : '',
-          proceso: lvl === 0 ? g(r, b + 7) : '',
-        });
-      }
+      if (!cod) continue;
+      const fila = {
+        prod_raiz: carry[0] || '',
+        nivel: lvl,
+        padre: carry[lvl] || '',
+        codigo: cod,
+        desc: g(r, b + 3),
+        unidad: g(r, b + 4),
+        consumo: g(r, b + 5),
+        modulo: lvl === 0 ? g(r, b + 6) : '',
+        proceso: lvl === 0 ? g(r, b + 7) : '',
+        _linea: i + 1,
+      };
+      // si ya trae consumo es una fila completa; si no, queda pendiente de la linea siguiente
+      if (fila.consumo) filas.push(fila);
+      else pendiente = fila;
     }
   }
+  cerrar();
+  for (const f of filas) delete f._linea;
   return { filas, partidas };
 }
 
