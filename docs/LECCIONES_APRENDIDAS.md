@@ -31,6 +31,19 @@ contiene SOLO lo accionable que NO esta ya codificado como regla o gate ejecutab
 - Codificado: `gate_aplomo()` / `linea_de_apoyo()` en `patronlib`, regla `patrones-corte.md`,
   hook `patrones-guard.sh`, y `entregar()` que **no escribe el PLT** si el aplomo da CHUECO.
   Selftest: `patronlib_selftest.py` (7 casos, mide rotaciones con error 0.000000).
+- **El patron de corte es una COMPENSACION, no un objeto geometrico (Fak dixit 30/07).** Textual:
+  *"las estamos ajustando en base a como las tira la maquina, no podemos simplemente espejarla"*.
+  Yo venia empujando "hagamos que una mano sea el espejo exacto de la otra" — mal. Cada mano pasa
+  por la maquina distinto, asi que **la correccion de una NO es el espejo de la de la otra**;
+  espejar es copiarle a una mano un error que la otra no tiene. El ajuste es **lazo cerrado sobre
+  lo medido**: medir la pieza real → comparar con spec → mover el punto → cortar → medir. La
+  simetria entre manos es un CHEQUEO, nunca el objetivo. **Prueba dura:** al modelarlo, las dos
+  manos pedian correcciones de **signo opuesto**.
+- **Simular antes de prometer.** Modele la sensibilidad (cuanto se mueve la costura por cada mm de
+  agujero) y aparecio algo que no se veia razonando: dos estaciones de medicion con normales
+  parecidas **responden casi igual a cualquier movimiento del punto**, asi que una diferencia
+  entre ellas es **irreducible por punto**. Si no calculas la sensibilidad primero, prometes una
+  correccion que no existe. Herramienta: `costuralib.py` en el skill.
 - **LA MAS CARA — invertí una direccion que Fak me habia dado explicita.** El me dijo hacia que
   lado mover los puntos. Mi chequeo de distancia al filo daba alarma (el punto caia por debajo
   del rango sano) y **apliqué lo contrario en vez de mostrarle la tabla y preguntar**. Entregue

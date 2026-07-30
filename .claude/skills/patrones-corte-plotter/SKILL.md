@@ -128,7 +128,36 @@ ciegas:
 
 El texto va en **pluma 2**, igual que las marcas — la pluma 1 es lo unico que corta.
 
-## 5. Comparar las dos manos
+## 5. Corregir la costura — lazo cerrado, NO espejo
+
+> **El patron no es un objeto geometrico: es una compensacion de lo que tira la maquina.**
+> Cada mano se comporta distinto, asi que la correccion de una **no es el espejo** de la otra.
+> Espejar seria copiarle a una mano un error que la otra no tiene. Caso real (30/07/2026): las
+> dos manos necesitaban correcciones de **signo opuesto**. La simetria entre manos es un
+> **chequeo**, nunca el objetivo.
+
+El ciclo es: medir la pieza real → comparar contra spec → mover el punto → cortar → medir de
+nuevo. `costuralib.py` hace la parte de calculo:
+
+- La pieza se ancla por sus DOS cruces. Mover **una sola** la hace **pivotear** sobre la otra:
+  correccion en **cuña**, maxima en la cruz que movés y cero en la otra. Mover **las dos** es una
+  **traslacion**: correccion **pareja**. El criterio NO es "grande vs chico" — es la **forma del
+  error**: si una punta esta bien y la otra corrida, va una sola cruz.
+- `delta_medida()` / `simular()` predicen cuanto cambia la medida en cada estacion.
+  `resolver()` hace el inverso por minimos cuadrados: que delta deja todo lo mas cerca del objetivo.
+- **Signo:** el punto sube en Y → la medida costura-borde sube.
+- **Factor k** (cuanto del movimiento del punto llega a la costura): no es 1 por definicion, el
+  armado se come parte. Estimarlo comparando dos piezas con puntos distintos, y **reportar el
+  abanico de resultados** para el rango de k, no un solo numero.
+- Definir **estaciones fijas** (posiciones concretas a lo largo de la costura) para que las
+  mediciones sean comparables entre iteraciones y entre manos.
+
+**Lo que el punto NO puede arreglar:** si dos estaciones tienen normales parecidas, responden casi
+igual a cualquier movimiento del punto — entonces una diferencia entre ellas es **irreducible por
+punto** y sale del CONTORNO (o del armado), no del anclaje. Calcular la sensibilidad ANTES de
+prometer una correccion: puede no existir ningun delta que satisfaga todas las estaciones.
+
+## 6. Comparar las dos manos
 
 `comparar_par(C_der, X_der, C_izq, X_izq)` espeja la izquierda al marco de la derecha
 y devuelve:
@@ -143,7 +172,7 @@ memoria: si pide "mover las 2 cruces N mm para lograr simetria", el par correcto
 da `uniforme = True` con un corrimiento cercano a N. Los otros pares quedan descartados por
 geometria, sin preguntar.
 
-## 6. Nomenclatura y versiones
+## 7. Nomenclatura y versiones
 
 El riesgo mas caro del proyecto es **que se corte un archivo viejo**.
 - Nombre: `Patron_<FAMILIA>_<PIEZA>_<MANO>_<AAAA-MM-DD>.dxf` — fecha ISO para que ordene
@@ -156,7 +185,7 @@ El riesgo mas caro del proyecto es **que se corte un archivo viejo**.
   nombre al archivarse, prefijar — nunca dejar que uno pise al otro.
 - Al entregar: decir tamano 1:1, posicion de las cruces, y **que archivo reemplaza**.
 
-## 7. Imagenes de control
+## 8. Imagenes de control
 
 matplotlib con backend `Agg`. Paleta fija del proyecto:
 `#1f4e8a` azul = contorno · `#c0392b` rojo = marcas y piquetes · `#888888` gris punteado
@@ -170,7 +199,7 @@ todas. En el titulo de cada zoom, antes → despues con numeros.
 **Mirar la imagen antes de entregarla.** Es la unica forma de detectar que se movio la
 cruz equivocada.
 
-## 8. Lecciones caras
+## 9. Lecciones caras
 
 1. **El aplomo primero.** Mover puntos sobre un patron girado manda el movimiento en
    diagonal. Se mide en 3 segundos y no se ve a ojo.
