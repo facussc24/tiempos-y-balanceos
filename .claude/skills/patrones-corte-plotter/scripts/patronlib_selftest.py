@@ -195,6 +195,60 @@ print(f"  [{'OK ' if igual else 'FALLA'}] comparar_par acepta cruces de leer() y
 if not igual:
     fallos.append("comparar_par con las 2 formas")
 
+# rotar90 no puede deformar: perimetro identico y bbox intercambiado
+per0 = sum(P.dist(C[i], C[(i + 1) % len(C)]) for i in range(len(C)))
+Cr = P.rotar90(C)
+per1 = sum(P.dist(Cr[i], Cr[(i + 1) % len(Cr)]) for i in range(len(Cr)))
+b0, b1 = P.bbox(C), P.bbox(Cr)
+okrot = (abs(per1 - per0) < 1e-9
+         and abs((b1[2] - b1[0]) - (b0[3] - b0[1])) < 1e-9
+         and abs((b1[3] - b1[1]) - (b0[2] - b0[0])) < 1e-9)
+print(f"  [{'OK ' if okrot else 'FALLA'}] rotar90: perimetro {per0:.6f} -> {per1:.6f}, "
+      f"bbox {b0[2]-b0[0]:.1f}x{b0[3]-b0[1]:.1f} -> {b1[2]-b1[0]:.1f}x{b1[3]-b1[1]:.1f}")
+if not okrot:
+    fallos.append("rotar90")
+
+# la distancia de un punto al filo tiene que sobrevivir la rotacion EXACTA
+d_antes = P.dist_contorno(CR_OK[0]['c'], C)
+d_desp = P.dist_contorno(P.rotar90([CR_OK[0]['c']])[0], Cr)
+okd = abs(d_antes - d_desp) < 1e-9
+print(f"  [{'OK ' if okd else 'FALLA'}] rotar90 conserva la distancia al filo: "
+      f"{d_antes:.9f} -> {d_desp:.9f}")
+if not okd:
+    fallos.append("rotar90 distancia al filo")
+
+# texto: ubicado adentro, sin tocar contorno ni marcas
+lineas = ["INSERT PRUEBA DERECHO", "2026-01-01"]
+mk = [(a, b) for cr in CR_OK for _, a, b in cr['arms']] + [(p[1], p[2]) for p in PQ]
+pos = P.ubicar_texto(lineas, C, mk, altura=9.0, margen_contorno=10.0, margen_marcas=10.0)
+if pos is None:
+    print("  [FALLA] ubicar_texto no encontro lugar en un rectangulo de 600x200")
+    fallos.append("ubicar_texto")
+else:
+    tr = P.bloque_texto(lineas, pos[0], pos[1], altura=9.0)
+    pts = [p for t in tr for p in t]
+    dc = min(P.dist_contorno(p, C) for p in pts)
+    dm = min(P.seg_dist(p, a, b) for p in pts for a, b in mk)
+    todos = all(P.dentro(p, C) for p in pts)
+    okt = todos and dc >= 10.0 - 1e-6 and dm >= 10.0 - 1e-6
+    print(f"  [{'OK ' if okt else 'FALLA'}] texto: {len(tr)} trazos, {len(pts)} puntos, "
+          f"todos dentro={todos}, al contorno {dc:.2f} mm, a las marcas {dm:.2f} mm")
+    if not okt:
+        fallos.append("ubicar_texto margenes")
+    # un texto absurdamente grande NO tiene que entrar (y no debe reventar)
+    if P.ubicar_texto(["X" * 400], C, mk, altura=40.0) is not None:
+        print("  [FALLA] ubicar_texto acepto un bloque que no entra")
+        fallos.append("ubicar_texto sobredimensionado")
+    else:
+        print("  [OK ] ubicar_texto devuelve None cuando el bloque no entra")
+
+# la fuente no inventa glifos: un caracter desconocido no dibuja nada
+if P.texto_vectorial("Ñ@#", 0, 0, 8.0):
+    print("  [FALLA] la fuente dibujo algo para caracteres que no tiene")
+    fallos.append("fuente inventa glifos")
+else:
+    print("  [OK ] caracteres fuera de la fuente se saltean, no se inventan")
+
 print()
 if fallos:
     print(f"!!! {len(fallos)} FALLAS: " + ", ".join(fallos))

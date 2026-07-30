@@ -104,7 +104,31 @@ PLT**: `escribir_plt()` toma solo CORTE + MARCAS. El DXF sin embargo la conserva
 7. `escribir_plt()` desde el archivo nuevo.
 8. **GATE 3** y una imagen de comparacion.
 
-## 4. Comparar las dos manos
+## 4. Rotar e identificar el PLT
+
+**Rotar** (para aprovechar el ancho del rollo): `rotar90(pts)` — antihorario `(x,y)→(-y,x)`.
+Rotar el **contorno y TODAS las marcas juntos**, y despues `trasladar_al_origen()` con el
+mismo minimo comun. Rotar no deforma, y eso hay que **demostrarlo**: perimetro identico y
+distancia de cada cruz al filo identica al noveno decimal. Si cambia, se roto mal.
+
+**Identificar el patron adentro del archivo** (pieza + mano + fecha), para que nadie corte a
+ciegas:
+- `ubicar_texto(lineas, C, marcas, ...)` busca un lugar dentro de la pieza que respete un
+  margen al contorno y a **todas** las marcas existentes. Usa un campo de holguras con numpy;
+  la version por fuerza bruta no termina sobre un contorno de cientos de vertices.
+- `bloque_texto(lineas, x, y, altura)` genera el texto como **trazos** (fuente de un solo
+  trazo, A-Z 0-9 y algunos signos). A proposito **no** se usa el comando `LB` de HPGL: con
+  trazos son los mismos `PU/PD` que el resto del archivo, no depende de que el plotter tenga
+  fuente, y se puede **verificar geometricamente** donde cae cada punto.
+- La fuente **no inventa glifos**: un caracter que no tiene, lo saltea.
+- Colocar el texto en el marco ORIGINAL (la pieza es ancha y hay lugar) y **despues** rotar
+  todo junto: queda alineado con la pieza sin volver a resolver la ubicacion.
+- Verificar siempre, sobre los trazos reales: todos los puntos `dentro()`, distancia minima al
+  contorno y distancia minima a las marcas.
+
+El texto va en **pluma 2**, igual que las marcas — la pluma 1 es lo unico que corta.
+
+## 5. Comparar las dos manos
 
 `comparar_par(C_der, X_der, C_izq, X_izq)` espeja la izquierda al marco de la derecha
 y devuelve:
@@ -119,7 +143,7 @@ memoria: si pide "mover las 2 cruces N mm para lograr simetria", el par correcto
 da `uniforme = True` con un corrimiento cercano a N. Los otros pares quedan descartados por
 geometria, sin preguntar.
 
-## 5. Nomenclatura y versiones
+## 6. Nomenclatura y versiones
 
 El riesgo mas caro del proyecto es **que se corte un archivo viejo**.
 - Nombre: `Patron_<FAMILIA>_<PIEZA>_<MANO>_<AAAA-MM-DD>.dxf` — fecha ISO para que ordene
@@ -132,7 +156,7 @@ El riesgo mas caro del proyecto es **que se corte un archivo viejo**.
   nombre al archivarse, prefijar — nunca dejar que uno pise al otro.
 - Al entregar: decir tamano 1:1, posicion de las cruces, y **que archivo reemplaza**.
 
-## 6. Imagenes de control
+## 7. Imagenes de control
 
 matplotlib con backend `Agg`. Paleta fija del proyecto:
 `#1f4e8a` azul = contorno · `#c0392b` rojo = marcas y piquetes · `#888888` gris punteado
@@ -146,7 +170,7 @@ todas. En el titulo de cada zoom, antes → despues con numeros.
 **Mirar la imagen antes de entregarla.** Es la unica forma de detectar que se movio la
 cruz equivocada.
 
-## 7. Lecciones caras
+## 8. Lecciones caras
 
 1. **El aplomo primero.** Mover puntos sobre un patron girado manda el movimiento en
    diagonal. Se mide en 3 segundos y no se ve a ojo.

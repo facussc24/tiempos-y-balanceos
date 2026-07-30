@@ -274,6 +274,204 @@ def escribir_plt(path, C, marcas):
     return mx, my
 
 
+# ------------------------------------------------------------------ rotacion
+def rotar90(pts, horario=False):
+    """Gira 90 grados. Antihorario: (x,y) -> (-y, x). Horario: (x,y) -> (y, -x).
+    NO deforma: verificar despues que las distancias cruz->contorno den identicas."""
+    if horario:
+        return [(p[1], -p[0]) for p in pts]
+    return [(-p[1], p[0]) for p in pts]
+
+
+def trasladar_al_origen(*grupos):
+    """Traslada TODOS los grupos con el MISMO minimo comun (si se trasladan por
+    separado se desalinean). Devuelve (grupos_trasladados, (mx, my))."""
+    todos = [p for g in grupos for p in g]
+    mx = min(p[0] for p in todos); my = min(p[1] for p in todos)
+    return [[(p[0] - mx, p[1] - my) for p in g] for g in grupos], (mx, my)
+
+
+# ------------------------------------------------------------------ texto vectorial
+# Fuente de un solo trazo, mayusculas, en una grilla de 4 x 7. Se dibuja con los
+# MISMOS primitivos que el resto (PU/PD), asi que no depende de que el plotter
+# soporte el comando LB de HPGL ni de que tenga fuente cargada.
+_FUENTE = {
+    ' ': [],
+    'A': [[(0, 0), (2, 7), (4, 0)], [(0.85, 3), (3.15, 3)]],
+    'B': [[(0, 0), (0, 7), (3, 7), (4, 6), (4, 4.5), (3, 3.5), (0, 3.5)],
+          [(3, 3.5), (4, 2.5), (4, 1), (3, 0), (0, 0)]],
+    'C': [[(4, 5.5), (3, 7), (1, 7), (0, 5.5), (0, 1.5), (1, 0), (3, 0), (4, 1.5)]],
+    'D': [[(0, 0), (0, 7), (2.5, 7), (4, 5.5), (4, 1.5), (2.5, 0), (0, 0)]],
+    'E': [[(4, 7), (0, 7), (0, 0), (4, 0)], [(0, 3.5), (3, 3.5)]],
+    'F': [[(4, 7), (0, 7), (0, 0)], [(0, 3.5), (3, 3.5)]],
+    'G': [[(4, 5.5), (3, 7), (1, 7), (0, 5.5), (0, 1.5), (1, 0), (3, 0), (4, 1.5), (4, 3), (2.2, 3)]],
+    'H': [[(0, 7), (0, 0)], [(4, 7), (4, 0)], [(0, 3.5), (4, 3.5)]],
+    'I': [[(2, 7), (2, 0)], [(0.8, 7), (3.2, 7)], [(0.8, 0), (3.2, 0)]],
+    'J': [[(3.5, 7), (3.5, 1.5), (2.5, 0), (1, 0), (0, 1.5)]],
+    'K': [[(0, 7), (0, 0)], [(4, 7), (0, 3.2)], [(1.4, 4.4), (4, 0)]],
+    'L': [[(0, 7), (0, 0), (4, 0)]],
+    'M': [[(0, 0), (0, 7), (2, 4), (4, 7), (4, 0)]],
+    'N': [[(0, 0), (0, 7), (4, 0), (4, 7)]],
+    'O': [[(1, 7), (3, 7), (4, 5.5), (4, 1.5), (3, 0), (1, 0), (0, 1.5), (0, 5.5), (1, 7)]],
+    'P': [[(0, 0), (0, 7), (3, 7), (4, 6), (4, 4.5), (3, 3.5), (0, 3.5)]],
+    'Q': [[(1, 7), (3, 7), (4, 5.5), (4, 1.5), (3, 0), (1, 0), (0, 1.5), (0, 5.5), (1, 7)],
+          [(2.5, 1.8), (4.3, -0.3)]],
+    'R': [[(0, 0), (0, 7), (3, 7), (4, 6), (4, 4.5), (3, 3.5), (0, 3.5)], [(2, 3.5), (4, 0)]],
+    'S': [[(4, 5.8), (3, 7), (1, 7), (0, 5.8), (0, 4.4), (1, 3.5), (3, 3.5),
+           (4, 2.5), (4, 1.2), (3, 0), (1, 0), (0, 1.2)]],
+    'T': [[(0, 7), (4, 7)], [(2, 7), (2, 0)]],
+    'U': [[(0, 7), (0, 1.5), (1, 0), (3, 0), (4, 1.5), (4, 7)]],
+    'V': [[(0, 7), (2, 0), (4, 7)]],
+    'W': [[(0, 7), (1, 0), (2, 3.5), (3, 0), (4, 7)]],
+    'X': [[(0, 7), (4, 0)], [(0, 0), (4, 7)]],
+    'Y': [[(0, 7), (2, 3.5), (4, 7)], [(2, 3.5), (2, 0)]],
+    'Z': [[(0, 7), (4, 7), (0, 0), (4, 0)]],
+    '0': [[(1, 7), (3, 7), (4, 5.5), (4, 1.5), (3, 0), (1, 0), (0, 1.5), (0, 5.5), (1, 7)],
+          [(0.6, 1.2), (3.4, 5.8)]],
+    '1': [[(1, 5.6), (2, 7), (2, 0)], [(0.8, 0), (3.2, 0)]],
+    '2': [[(0, 5.6), (1, 7), (3, 7), (4, 5.8), (4, 4.5), (0, 0), (4, 0)]],
+    '3': [[(0, 6), (1, 7), (3, 7), (4, 6), (4, 4.4), (3, 3.5), (1.6, 3.5)],
+          [(3, 3.5), (4, 2.6), (4, 1), (3, 0), (1, 0), (0, 1)]],
+    '4': [[(3, 0), (3, 7), (0, 2.2), (4, 2.2)]],
+    '5': [[(4, 7), (0, 7), (0, 4), (3, 4), (4, 3), (4, 1), (3, 0), (1, 0), (0, 1)]],
+    '6': [[(3.6, 6.2), (2.6, 7), (1, 7), (0, 5.6), (0, 1.4), (1, 0), (3, 0),
+           (4, 1.2), (4, 2.6), (3, 3.6), (1, 3.6), (0, 2.6)]],
+    '7': [[(0, 7), (4, 7), (1.4, 0)]],
+    '8': [[(1, 3.5), (0, 4.6), (0, 5.9), (1, 7), (3, 7), (4, 5.9), (4, 4.6), (3, 3.5),
+           (1, 3.5), (0, 2.4), (0, 1.1), (1, 0), (3, 0), (4, 1.1), (4, 2.4), (3, 3.5)]],
+    '9': [[(0.4, 0.8), (1.4, 0), (3, 0), (4, 1.4), (4, 5.6), (3, 7), (1, 7),
+           (0, 5.8), (0, 4.4), (1, 3.4), (3, 3.4), (4, 4.4)]],
+    '-': [[(0.5, 3.5), (3.5, 3.5)]],
+    '/': [[(0, 0), (4, 7)]],
+    '.': [[(1.8, 0), (2.4, 0)]],
+    ':': [[(2, 2), (2.5, 2)], [(2, 5), (2.5, 5)]],
+}
+_AVANCE = 5.4      # ancho de celda en unidades de la grilla (4 de glifo + 1.4 de espacio)
+
+
+def texto_vectorial(texto, x, y, altura=8.0):
+    """Convierte texto a polilineas dibujables. (x,y) = esquina inferior izquierda.
+    Devuelve lista de polilineas [(x,y), ...]. Los caracteres que no estan en la
+    fuente se saltean (no se inventa un glifo)."""
+    k = altura / 7.0
+    out = []
+    cx = 0.0
+    for ch in texto.upper():
+        for tramo in _FUENTE.get(ch, []):
+            out.append([(x + (cx + px) * k, y + py * k) for px, py in tramo])
+        cx += _AVANCE
+    return out
+
+
+def medir_texto(texto, altura=8.0):
+    """(ancho, alto) que va a ocupar el texto."""
+    k = altura / 7.0
+    return (max(0, len(texto) * _AVANCE - (_AVANCE - 4.0)) * k, altura)
+
+
+def _campo_holgura(C, marcas, x0, y0, x1, y1, paso):
+    """Campo de holgura sobre una grilla: para cada celda, distancia al contorno
+    (negativa si esta afuera) y distancia a la marca mas cercana.
+
+    Se precalcula UNA vez con numpy en vez de recorrer el contorno por cada candidato:
+    la version por fuerza bruta no termina nunca sobre un contorno de 350 vertices.
+    """
+    import numpy as np
+    gx = np.arange(x0, x1 + paso, paso)
+    gy = np.arange(y0, y1 + paso, paso)
+    GX, GY = np.meshgrid(gx, gy)
+    pts = np.stack([GX.ravel(), GY.ravel()], axis=1)
+
+    def dist_a_segmentos(segs):
+        best = np.full(len(pts), np.inf)
+        for a, b in segs:
+            ax, ay = a; bx_, by_ = b
+            dx, dy = bx_ - ax, by_ - ay
+            L2 = dx * dx + dy * dy
+            if L2 == 0:
+                d = np.hypot(pts[:, 0] - ax, pts[:, 1] - ay)
+            else:
+                t = ((pts[:, 0] - ax) * dx + (pts[:, 1] - ay) * dy) / L2
+                t = np.clip(t, 0.0, 1.0)
+                d = np.hypot(pts[:, 0] - (ax + t * dx), pts[:, 1] - (ay + t * dy))
+            np.minimum(best, d, out=best)
+        return best
+
+    segs_C = [(C[i], C[(i + 1) % len(C)]) for i in range(len(C))]
+    dC = dist_a_segmentos(segs_C)
+
+    # dentro/fuera por ray casting vectorizado
+    inside = np.zeros(len(pts), dtype=bool)
+    px, py = pts[:, 0], pts[:, 1]
+    for i in range(len(C)):
+        x1s, y1s = C[i]; x2s, y2s = C[(i + 1) % len(C)]
+        cond = (y1s > py) != (y2s > py)
+        with np.errstate(divide='ignore', invalid='ignore'):
+            xin = (x2s - x1s) * (py - y1s) / (y2s - y1s) + x1s
+        inside ^= cond & (px < xin)
+
+    dC = np.where(inside, dC, -1.0)
+    dM = dist_a_segmentos(marcas) if marcas else np.full(len(pts), np.inf)
+    return gx, gy, dC.reshape(GY.shape), dM.reshape(GY.shape)
+
+
+def ubicar_texto(lineas, C, marcas, altura=8.0, interlinea=1.6,
+                 margen_contorno=8.0, margen_marcas=8.0, paso=3.0):
+    """Busca un lugar DENTRO de la pieza para un bloque de texto, que no interfiera
+    con el contorno ni con ninguna marca existente.
+
+    Devuelve (x, y) de la esquina inferior izquierda del bloque, o None si no entra.
+    Elige el candidato valido mas cercano al centro de la pieza.
+
+    La busqueda es aproximada (grilla); el llamador DEBE verificar despues los trazos
+    reales del texto con dentro()/dist_contorno()/seg_dist() exactos.
+    """
+    import numpy as np
+    if not lineas:
+        return None
+    W = max(medir_texto(t, altura)[0] for t in lineas)
+    H = len(lineas) * altura + (len(lineas) - 1) * (altura * interlinea - altura)
+    if W <= 0:
+        return None
+
+    x0, y0, x1, y1 = bbox(C)
+    if x1 - x0 < W or y1 - y0 < H:
+        return None
+    gx, gy, dC, dM = _campo_holgura(C, marcas, x0, y0, x1, y1, paso)
+
+    okgrid = (dC >= margen_contorno) & (dM >= margen_marcas)
+    nx = max(1, int(round(W / paso)))
+    ny = max(1, int(round(H / paso)))
+
+    # ventana deslizante: el bloque entra si TODAS las celdas que cubre estan ok.
+    # minimo por ventana via reduccion acumulada en los dos ejes.
+    v = okgrid.astype(np.int8)
+    for k in range(1, nx + 1):
+        v[:, :v.shape[1] - k] &= okgrid[:, k:].astype(np.int8)
+    for k in range(1, ny + 1):
+        v[:v.shape[0] - k, :] &= v[k:, :]
+
+    cxp, cyp = (x0 + x1) / 2.0, (y0 + y1) / 2.0
+    idx = np.argwhere(v[:v.shape[0] - ny, :v.shape[1] - nx] == 1)
+    if len(idx) == 0:
+        return None
+    bx = gx[idx[:, 1]]
+    by = gy[idx[:, 0]]
+    d = np.hypot(bx + W / 2 - cxp, by + H / 2 - cyp)
+    j = int(np.argmin(d))
+    return (float(bx[j]), float(by[j]))
+
+
+def bloque_texto(lineas, x, y, altura=8.0, interlinea=1.6):
+    """Genera las polilineas de un bloque multilinea. La primera linea va ARRIBA."""
+    out = []
+    paso = altura * interlinea
+    for i, t in enumerate(lineas):
+        yy = y + (len(lineas) - 1 - i) * paso
+        out.extend(texto_vectorial(t, x, yy, altura))
+    return out
+
+
 class EntregaRechazada(Exception):
     """Los gates no se cumplieron. NO se escribe el entregable."""
 
