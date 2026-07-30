@@ -39,6 +39,24 @@ contiene SOLO lo accionable que NO esta ya codificado como regla o gate ejecutab
   lo medido**: medir la pieza real → comparar con spec → mover el punto → cortar → medir. La
   simetria entre manos es un CHEQUEO, nunca el objetivo. **Prueba dura:** al modelarlo, las dos
   manos pedian correcciones de **signo opuesto**.
+- **🔴 UN CONTORNO DE CORTE ABIERTO 81,9 mm, Y MI LIBRERIA LO LEIA COMO SI CERRARA.** El patron
+  del trasero izquierdo tenia el contorno de la capa CORTE **abierto**, y el pedazo que faltaba
+  —una pestaña de 81,9 x 9,1 mm— dibujado en la **capa 0**. `leer()` tomaba solo CORTE,
+  `escribir_plt()` cerraba el hueco **con una recta**, y el PLT cortaba **4,5 cm2 de menos**, hasta
+  7,6 mm de profundidad. Ningun gate lo veia porque el contorno "cerraba" numericamente.
+- **Y me hizo diagnosticar exactamente al reves.** Como la mano derecha SI tenia esa pestaña en
+  CORTE, al comparar las dos manos concluí que **el derecho tenia un defecto** y le propuse a Fak
+  "repararle el contorno" copiando el del izquierdo. Era al reves: el derecho estaba bien y el
+  izquierdo era el que perdia material. **Cuando dos piezas espejo difieren, antes de declarar
+  defectuosa a una, verificar que se este LEYENDO lo mismo de las dos** (mismas capas, contornos
+  cerrados, misma cantidad de entidades).
+- Lo que lo destapó: tres numeros que cerraban solos. Los extremos de la capa 0 pegaban a
+  **0,0000 mm** con los extremos del contorno; el alto pasaba de 217,544 a **221,347 = exactamente
+  el de la otra mano**; y la LINE de capa 0 medía **69,616 mm = identico** al tramo que yo llamaba
+  "piso de la muesca". Tres coincidencias exactas no son coincidencia.
+- Codificado: `patronlib.leer()` levanta `ContornoAbierto` si hay geometria en otras capas cuyos
+  extremos peguen con los del contorno (detector fuerte, no el hueco a secas: un cierre corto es
+  normal). Verificado: rechaza el archivo roto, deja pasar los 4 sanos.
 - **🔴 PUSE UN SIGNO AL REVES Y ENTREGUE LOS PATRONES INVERTIDOS.** La regla real (Fak dixit, y ya
   estaba escrita en la guia del agente anterior y en el PPTX del 28/07): **para SUBIR la costura
   hay que BAJAR los puntos** — el punto baja en el patron, la pieza queda empujada hacia arriba y

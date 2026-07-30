@@ -16,6 +16,7 @@ Convencion del DXF de salida:
 """
 from __future__ import annotations
 import math
+import os
 
 TOL_BRAZO = 0.15      # tolerancia para reconocer un brazo de cruz (6.0 mm) o un piquete (5.0 mm)
 LARGO_BRAZO = 6.0
@@ -173,6 +174,11 @@ def punta_fina(C, ventana=25.0) -> str:
 
 
 # ------------------------------------------------------------------ lectura
+class ContornoAbierto(Exception):
+    """El contorno de CORTE no cierra. Casi siempre el pedazo que falta esta dibujado en
+    otra capa. Generar el PLT asi corta material de menos."""
+
+
 def leer(path):
     """Lee un DXF ya normalizado del proyecto.
 
@@ -198,6 +204,40 @@ def leer(path):
     if mejor is None:
         raise ValueError(f"{path}: no hay LWPOLYLINE en capa CORTE")
     C = mejor[1]
+
+    # GATE: el contorno TIENE que cerrar, y no puede haber geometria de corte tirada en
+    # otras capas. El 30/07/2026 un patron tenia el contorno ABIERTO 81,9 mm y el pedazo
+    # que faltaba dibujado en la capa 0 (1 LINE + 3 ARCs). leer() lo ignoraba, escribir_plt()
+    # cerraba el hueco con una recta, y el PLT cortaba 4,5 cm2 de menos sin que nada avisara.
+    gap = dist(C[0], C[-1])
+    cerrado = bool(getattr(mejor[2], 'closed', False)) if len(mejor) > 2 else False
+
+    # el detector fuerte no es el hueco en si (un cierre corto es normal), sino que haya
+    # geometria de corte en OTRA capa cuyos extremos peguen justo en los extremos del contorno
+    sueltas = [e for e in msp
+               if e.dxf.layer.upper() not in ('CORTE', 'MARCAS')
+               and e.dxftype() in ('LINE', 'ARC', 'LWPOLYLINE', 'POLYLINE', 'SPLINE')]
+    pega = 0
+    if sueltas:
+        import ezdxf.path as _ezp
+        for e in sueltas:
+            try:
+                pts = [(v.x, v.y) for v in _ezp.make_path(e).flattening(0.5)]
+            except Exception:
+                continue
+            for q in (pts[0], pts[-1]):
+                if min(dist(q, C[0]), dist(q, C[-1])) < 0.05:
+                    pega += 1
+    if pega >= 2 or (gap > 0.5 and not cerrado and sueltas):
+        raise ContornoAbierto(
+            f"{os.path.basename(path)}: el contorno de CORTE esta ABIERTO {gap:.3f} mm y hay "
+            f"{len(sueltas)} entidades de geometria en otras capas "
+            f"({sorted({e.dxf.layer for e in sueltas})}), de las cuales {pega} extremos pegan "
+            f"EXACTO con los extremos del contorno.\n"
+            f"  Ese pedazo ES parte del contorno. NO generar el PLT asi: lo cerraria con una "
+            f"recta y cortaria material de menos.\n"
+            f"  Incorporarlo al contorno (aplanar con ezdxf.path y encadenar por extremos) "
+            f"antes de seguir.")
 
     brazos, piquetes = [], []
     for e in msp.query('LINE'):
