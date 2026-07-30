@@ -13,6 +13,28 @@ contiene SOLO lo accionable que NO esta ya codificado como regla o gate ejecutab
 
 ## Lecciones operativas vigentes
 
+### 2026-07-30 — Patrones de corte: el APLOMO va primero (CORRECCION DE FAK)
+- Fak, al pasar: *"para mover los puntos primero debes asegurarte que el patron este derecho,
+  mirandolo de frente apoyado sobre los bordes de abajo... no puede estar chueco sino se va a
+  mover en diagonal"*. **Tenia razon y yo ya habia movido puntos sin chequearlo.**
+- La **posicion 0** de la pieza es la recta sobre la que APOYA en la mesa = los 2 puntos del
+  **envolvente convexo inferior**. Todo movimiento se mide desde ahi.
+- **Trampa de medicion en la que casi caigo:** ajustar una recta por minimos cuadrados al borde
+  inferior. Ese borde es CURVO, asi que el ajuste devuelve la curvatura, no el giro — me daba
+  "CHUECO" en las 4 piezas (hasta −2,5°) cuando los traseros estaban a −0,49° y +0,09°. Son dos
+  magnitudes distintas y la mala habria disparado un rework innecesario.
+- Cerro bien porque **medi el impacto en mm en vez de discutir el veredicto**: 0,49° mete
+  0,038 mm en un movimiento de 4,5 mm → irrelevante, los archivos quedaron validos. Los
+  delanteros si estan a 3,1° (0,24 mm) y hay que enderezarlos antes de tocarlos.
+- Codificado: `gate_aplomo()` / `linea_de_apoyo()` en `patronlib`, regla `patrones-corte.md`,
+  hook `patrones-guard.sh`, y `entregar()` que **no escribe el PLT** si el aplomo da CHUECO.
+  Selftest: `patronlib_selftest.py` (7 casos, mide rotaciones con error 0.000000).
+- **Segunda leccion del mismo dia, mas cara:** identifique el par de patrones por geometria
+  (contornos espejo exacto + asimetria uniforme corregible con un corrimiento) y di con los
+  DELANTEROS. Fak dijo tres veces que eran los TRASEROS. **Tenia razon el.** La geometria
+  descarta candidatos, no confirma cual es: solo el que hizo el movimiento fisico sabe sobre
+  que pieza lo hizo. Rehacer sobre lo que dice Fak, no defender el analisis propio.
+
 ### 2026-07-30 — Metodo: medir el ARTEFACTO PUBLICADO, no el codigo ni el build local
 - Para saber si un secreto estaba expuesto, lo unico concluyente fue **bajar el bundle que
   sirve GitHub Pages** (`curl` sobre `assets/index-*.js`) y buscar el VALOR ahi. El `dist/`
