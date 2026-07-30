@@ -39,6 +39,24 @@ contiene SOLO lo accionable que NO esta ya codificado como regla o gate ejecutab
   lo medido**: medir la pieza real → comparar con spec → mover el punto → cortar → medir. La
   simetria entre manos es un CHEQUEO, nunca el objetivo. **Prueba dura:** al modelarlo, las dos
   manos pedian correcciones de **signo opuesto**.
+- **🔴 PUSE UN SIGNO AL REVES Y ENTREGUE LOS PATRONES INVERTIDOS.** La regla real (Fak dixit, y ya
+  estaba escrita en la guia del agente anterior y en el PPTX del 28/07): **para SUBIR la costura
+  hay que BAJAR los puntos** — el punto baja en el patron, la pieza queda empujada hacia arriba y
+  la costura se va con ella. Yo puse lo contrario.
+  **Causa raiz:** lei *"21 mm en el arranque contra 18-19 mm en la punta"* como un **antes/despues**
+  cuando son **dos lugares de la misma pieza** (un gradiente espacial). Con eso "confirme"
+  empiricamente un signo que contradecia las tres fuentes escritas — y en vez de frenar ante la
+  contradiccion, le crei a mi lectura. **Antes de derivar un signo o un coeficiente de unos
+  numeros, verificar que sean un antes/despues de la MISMA pieza y no dos posiciones.**
+  Y cuando un calculo propio contradice a la documentacion Y al usuario, el que esta mal soy yo.
+- **Corolario:** tambien estime el factor k comparando una mano contra la otra. Invalido por la
+  misma razon por la que no se pueden espejar: son piezas que pasan por la maquina distinto, asi
+  que esa diferencia no mide el efecto del punto. **Un coeficiente fisico solo sale de un
+  antes/despues de la misma pieza.**
+- **Lo que si funciono:** la verificacion geometrica dio una pista independiente y la ignore — con
+  el signo malo, la correccion empujaba una cruz a 1,45 mm del filo con 2 de 4 puntas afuera; con
+  el signo correcto la aleja a 2,42 mm con 0 afuera. **Cuando la correccion "correcta" empeora la
+  geometria, sospechar del signo.**
 - **Simular antes de prometer.** Modele la sensibilidad (cuanto se mueve la costura por cada mm de
   agujero) y aparecio algo que no se veia razonando: dos estaciones de medicion con normales
   parecidas **responden casi igual a cualquier movimiento del punto**, asi que una diferencia

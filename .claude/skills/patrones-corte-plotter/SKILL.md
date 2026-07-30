@@ -136,6 +136,16 @@ El texto va en **pluma 2**, igual que las marcas — la pluma 1 es lo unico que 
 > dos manos necesitaban correcciones de **signo opuesto**. La simetria entre manos es un
 > **chequeo**, nunca el objetivo.
 
+**EL PUNTO Y LA COSTURA VAN AL REVES: para SUBIR la costura hay que BAJAR los puntos.**
+El punto baja en el patron → la pieza queda empujada hacia arriba → la costura se va con ella →
+la medida costura-borde sube. `costuralib.py` ya lleva ese signo (constante `SIGNO = -1`).
+
+> Error real del 30/07/2026: puse el signo al reves y entregue los patrones invertidos. Causa:
+> lei "21 mm en el arranque contra 18-19 mm en la punta" como un ANTES/DESPUES, cuando son DOS
+> LUGARES DE LA MISMA PIEZA. **Antes de derivar un signo de unos numeros, verificar que sean un
+> antes/despues y no dos posiciones.** Lo agarro Fak preguntando "entendes que para subir la
+> costura hay que bajar los puntos?".
+
 El ciclo es: medir la pieza real → comparar contra spec → mover el punto → cortar → medir de
 nuevo. `costuralib.py` hace la parte de calculo:
 
@@ -145,10 +155,12 @@ nuevo. `costuralib.py` hace la parte de calculo:
   error**: si una punta esta bien y la otra corrida, va una sola cruz.
 - `delta_medida()` / `simular()` predicen cuanto cambia la medida en cada estacion.
   `resolver()` hace el inverso por minimos cuadrados: que delta deja todo lo mas cerca del objetivo.
-- **Signo:** el punto sube en Y → la medida costura-borde sube.
-- **Factor k** (cuanto del movimiento del punto llega a la costura): no es 1 por definicion, el
-  armado se come parte. Estimarlo comparando dos piezas con puntos distintos, y **reportar el
-  abanico de resultados** para el rango de k, no un solo numero.
+- **Factor k** (cuanto del movimiento del punto llega a la costura): no es 1, el armado se come
+  parte. **NO estimarlo comparando una mano contra la otra** — son piezas que pasan por la maquina
+  distinto (misma razon por la que no se pueden espejar), asi que esa comparacion no mide el
+  efecto del punto. Estimarlo con un ANTES/DESPUES de la MISMA pieza. Mientras no se tenga,
+  **dimensionar el paso para k=1,0**: quedarse corto es seguro y se itera; pasarse no.
+  Y **reportar el abanico de resultados** para el rango de k, no un solo numero.
 - Definir **estaciones fijas** (posiciones concretas a lo largo de la costura) para que las
   mediciones sean comparables entre iteraciones y entre manos.
 

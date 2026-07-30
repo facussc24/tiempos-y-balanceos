@@ -16,18 +16,27 @@ MODELO (derivado de datos reales, no de teoria):
 
   Y el cambio en la medida costura->borde en una estacion con normal interior n:
 
-      Delta_d = k * ( v . n )
+      Delta_d = -k * ( v . n )          <-- OJO EL SIGNO MENOS
 
-  SIGNO (confirmado por DOS fuentes independientes):
-      el punto SUBE en Y  ->  la medida costura-borde SUBE.
-    (a) 23/07: el punto de la punta bajo 8 mm y la medida en la punta bajo (21 -> 18-19).
-    (b) 30/07: comparando las dos manos, la cruz de la punta de una esta 6,5 mm mas arriba
-        y esa pieza mide 8 mm mas en la zona recta.
+  SIGNO — **EL PUNTO Y LA COSTURA VAN AL REVES**:
+      el punto BAJA en el patron  ->  la pieza queda empujada hacia ARRIBA  ->  la costura
+      se va con ella  ->  la medida costura-borde SUBE.
+      Dicho como lo dice Fak: **para SUBIR la costura hay que BAJAR los puntos.**
+  Fuentes que coinciden: la guia del agente anterior ("para que la costura baje, el punto
+  sube"), el PPTX del 28/07 verificado contra el DXF, y Fak en persona (30/07).
 
-  FACTOR k: cuanto del movimiento del punto llega a la costura. NO es 1 por definicion —
-  el armado se come parte. Estimado de (b): k = 8/6,5 = 1,23 en la zona recta y
-  6/6,5 = 0,92 en la diagonal. De (a): k = 2,5/8 = 0,31. Se usa un RANGO y se reporta el
-  abanico de resultados posibles, porque con una sola pieza por punto no alcanza para fijarlo.
+  ERROR REAL COMETIDO EL 30/07 — no repetirlo: puse el signo al reves porque interprete
+  "21 mm en el arranque contra 18-19 mm en la punta" como un ANTES/DESPUES, cuando son
+  DOS LUGARES DE LA MISMA PIEZA (un gradiente espacial). En el registro NO hay ningun
+  antes/despues medido: la unica afirmacion confiable es la causal, y dice lo de arriba.
+
+  FACTOR k: cuanto del movimiento del punto llega a la costura. NO es 1 — el armado se come
+  parte. Lo unico registrado: "8 mm de punto produjeron 2-3 mm de costura" -> k ~ 0,31.
+  NO estimar k comparando las dos manos entre si: son piezas distintas que pasan por la
+  maquina distinto (es la misma razon por la que no se pueden espejar), asi que esa
+  comparacion no mide el efecto del punto.
+  Con k incierto, **dimensionar el paso para k = 1,0**: quedarse corto es seguro (se itera),
+  pasarse no. Y medir despues para despejar k de verdad.
 
   ESTE MODELO NO SE ESPEJA ENTRE MANOS. El patron es una compensacion de lo que tira la
   maquina, y cada mano se comporta distinto. La simetria es un chequeo, no un objetivo.
@@ -35,7 +44,8 @@ MODELO (derivado de datos reales, no de teoria):
 from __future__ import annotations
 import math
 
-K_MIN, K_NOM, K_MAX = 0.31, 1.00, 1.23
+K_MIN, K_NOM, K_MAX = 0.31, 1.00, 1.20
+SIGNO = -1.0      # el punto y la costura van al reves. Ver la explicacion de arriba.
 
 
 def _u(v):
@@ -106,9 +116,10 @@ def desplazamiento(p, A, B, dA, dB):
 
 
 def delta_medida(p, normal, A, B, dA, dB, k=K_NOM):
-    """Cuanto cambia la medida costura->borde en la estacion p."""
+    """Cuanto cambia la medida costura->borde en la estacion p.
+    Lleva el SIGNO menos: el punto y la costura van al reves (bajar el punto sube la medida)."""
     v = desplazamiento(p, A, B, dA, dB)
-    return k * (v[0] * normal[0] + v[1] * normal[1])
+    return SIGNO * k * (v[0] * normal[0] + v[1] * normal[1])
 
 
 def simular(estaciones, A, B, dA, dB, k=K_NOM):
@@ -142,9 +153,9 @@ def resolver(estaciones, A, B, k=K_NOM, solo_y=True, mover=('A', 'B')):
         for c in cols:
             w = (1 - t) if c == 'A' else t
             if solo_y:
-                fila.append(k * w * e['normal'][1])
+                fila.append(SIGNO * k * w * e['normal'][1])
             else:
-                fila.extend([k * w * e['normal'][0], k * w * e['normal'][1]])
+                fila.extend([SIGNO * k * w * e['normal'][0], SIGNO * k * w * e['normal'][1]])
         M.append(fila)
         y.append(e['objetivo'] - e['medido'])
     M = np.array(M, dtype=float)
