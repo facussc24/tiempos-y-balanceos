@@ -112,3 +112,7 @@ docs/empresa-extracted/
 
 # Datos de la empresa — NO commitear (repo publico)
 REGISTRO_TIEMPOS_INYECCION.xlsx
+
+# Artefactos de scratch de Claude Code que entraron por una ruta de Windows
+# mal formada (el ":" de "C:" se convirtio en parte del nombre). Ver commit 3a917384.
+*scratchpad*

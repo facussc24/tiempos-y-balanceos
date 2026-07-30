@@ -51,10 +51,10 @@ jobs:
         continue-on-error: true
 
   # Gate 2: Vitest suite. Runs in parallel with typecheck.
-  # Corrida local 2026-07-30: 235 archivos pasan / 1 skipped, 3329 tests pasan / 8 skipped,
-  # exit 0. Los "4 failing" del TODO de abril ya no reproducen; los 8 skipped son
-  # describe.skip a proposito (audit_fixes.test.ts:66 y :150, concurrency.test.ts:50,
-  # station_a11y.test.tsx:8).
+  # Corrida local 2026-07-30 (despues de la ola 1): 236 archivos pasan / 1 skipped,
+  # 3376 tests pasan / 8 skipped, exit 0. Los "4 failing" del TODO de abril ya no
+  # reproducen; los 8 skipped son describe.skip a proposito (audit_fixes.test.ts:66
+  # y :150, concurrency.test.ts:50, station_a11y.test.tsx:8).
   # TODO: sacar `continue-on-error` DESPUES de subir testTimeout y separar jsdom de los
   # tests de logica pura. Medido: `npx vitest run --coverage` todavia falla por timeout en
   # database.test.ts > closeDatabase (aislado tarda 2638ms de un presupuesto de 5000ms),
