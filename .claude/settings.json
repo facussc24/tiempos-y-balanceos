@@ -71,6 +71,10 @@
         "hooks": [
           {
             "type": "command",
+            "command": "bash .claude/hooks/mcp-write-gate.sh"
+          },
+          {
+            "type": "command",
             "command": "bash .claude/hooks/supabase-write-flag.sh"
           }
         ]

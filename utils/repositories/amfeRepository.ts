@@ -15,6 +15,7 @@ import { logger } from '../logger';
 import { getCurrentUserEmail } from '../currentUser';
 import { generateChecksum } from '../crypto';
 import { scheduleBackup } from '../backupService';
+import { archivarYBorrar } from './trash';
 
 // ---------------------------------------------------------------------------
 // ---------------------------------------------------------------------------
@@ -338,22 +339,11 @@ export async function saveAmfeDocument(
 export async function deleteAmfeDocument(id: string): Promise<boolean> {
     try {
         const db = await getDatabase();
-
-        // Soft-delete: save to trash before hard delete
-        try {
-            await db.execute(
-                `INSERT OR REPLACE INTO deleted_documents (id, doc_type, project_name, data, deleted_at, deleted_by)
-                 SELECT id, 'amfe', project_name, data, datetime('now'), ?
-                 FROM amfe_documents WHERE id = ?`,
-                [getCurrentUserEmail(), id]
-            );
-            logger.info('AmfeRepo', `Document ${id} saved to trash before deletion`);
-        } catch (trashErr) {
-            logger.warn('AmfeRepo', `Failed to save document ${id} to trash, proceeding with delete`, {}, trashErr instanceof Error ? trashErr : undefined);
-        }
-
-        await db.execute('DELETE FROM amfe_documents WHERE id = ?', [id]);
-        return true;
+        // Si el archivado en la papelera no se puede CONFIRMAR, `archivarYBorrar`
+        // lanza y el documento queda donde esta. Antes el fallo del archivado se
+        // degradaba a un warning y el DELETE se ejecutaba igual, o sea el borrado
+        // era definitivo y silencioso. Ver utils/repositories/trash.ts.
+        return await archivarYBorrar(db, 'amfe', id);
     } catch (err) {
         logger.error('AmfeRepo', `Failed to delete document ${id}`, {}, err instanceof Error ? err : undefined);
         return false;
@@ -361,41 +351,42 @@ export async function deleteAmfeDocument(id: string): Promise<boolean> {
 }
 
 /**
- * Delete multiple AMFE documents in a single transaction (all-or-nothing).
- * Returns true only if ALL deletions succeed.
+ * Borra varios AMFEs, archivando cada uno en la papelera antes.
+ *
+ * NO es atomico y ya no dice que lo sea. El codigo anterior usaba
+ * BEGIN TRANSACTION / COMMIT / ROLLBACK y se documentaba como "all-or-nothing",
+ * pero `SupabaseAdapter.execute()` descarta esas tres sentencias y devuelve exito
+ * sin mandar nada al servidor (utils/database.ts, rama de DDL + transacciones):
+ * el ROLLBACK nunca revirtio nada. Prometer atomicidad que no existe es peor que
+ * no prometerla.
+ *
+ * Comportamiento real: se procesan en orden y **se corta en el primer fallo**. Lo
+ * ya borrado quedo archivado en la papelera y se puede recuperar con
+ * `node scripts/_trash.mjs --restore <id>`. Devuelve true solo si se borraron todos.
  */
 export async function deleteAmfeDocumentsBatch(ids: string[]): Promise<boolean> {
     if (ids.length === 0) return true;
-    try {
-        const db = await getDatabase();
-        await db.execute('BEGIN TRANSACTION', []);
+    const db = await getDatabase();
+    const borrados: string[] = [];
+
+    for (const id of ids) {
         try {
-            const userEmail = getCurrentUserEmail();
-            for (const id of ids) {
-                // Soft-delete: save to trash before hard delete
-                try {
-                    await db.execute(
-                        `INSERT OR REPLACE INTO deleted_documents (id, doc_type, project_name, data, deleted_at, deleted_by)
-                         SELECT id, 'amfe', project_name, data, datetime('now'), ?
-                         FROM amfe_documents WHERE id = ?`,
-                        [userEmail, id]
-                    );
-                } catch (trashErr) {
-                    logger.warn('AmfeRepo', `Failed to save document ${id} to trash during batch delete`, {}, trashErr instanceof Error ? trashErr : undefined);
-                }
-                await db.execute('DELETE FROM amfe_documents WHERE id = ?', [id]);
-            }
-            await db.execute('COMMIT', []);
-            logger.info('AmfeRepo', `Batch-deleted ${ids.length} documents (saved to trash)`);
-            return true;
-        } catch (innerErr) {
-            try { await db.execute('ROLLBACK', []); } catch { /* rollback best-effort */ }
-            throw innerErr;
+            await archivarYBorrar(db, 'amfe', id);
+            borrados.push(id);
+        } catch (err) {
+            logger.error(
+                'AmfeRepo',
+                `Batch-delete cortado en ${id}: se borraron ${borrados.length} de ${ids.length}. ` +
+                `Los borrados estan en la papelera (scripts/_trash.mjs --list).`,
+                { borrados },
+                err instanceof Error ? err : undefined,
+            );
+            return false;
         }
-    } catch (err) {
-        logger.error('AmfeRepo', `Failed to batch-delete ${ids.length} documents`, {}, err instanceof Error ? err : undefined);
-        return false;
     }
+
+    logger.info('AmfeRepo', `Batch-deleted ${borrados.length} documents (archivados en la papelera)`);
+    return true;
 }
 
 /**

@@ -9,7 +9,7 @@ import type { HoDocument } from '../../modules/hojaOperaciones/hojaOperacionesTy
 import { normalizeHoDocument } from '../../modules/hojaOperaciones/hojaOperacionesTypes';
 import { getDatabase } from '../database';
 import { logger } from '../logger';
-import { getCurrentUserEmail } from '../currentUser';
+import { archivarYBorrar } from './trash';
 import { generateChecksum } from '../crypto';
 import { scheduleBackup } from '../backupService';
 
@@ -49,7 +49,7 @@ export async function listHoDocuments(): Promise<HoDocumentListItem[]> {
 /**
  * List distinct client names from HO documents.
  */
-async function listHoClients(): Promise<string[]> {
+export async function listHoClients(): Promise<string[]> {
     try {
         const db = await getDatabase();
         const rows = await db.select<{ client: string }>(
@@ -65,7 +65,7 @@ async function listHoClients(): Promise<string[]> {
 /**
  * List HO documents filtered by client.
  */
-async function listHoByClient(client: string): Promise<HoDocumentListItem[]> {
+export async function listHoByClient(client: string): Promise<HoDocumentListItem[]> {
     try {
         const db = await getDatabase();
         return await db.select<HoDocumentListItem>(
@@ -161,22 +161,10 @@ export async function saveHoDocument(id: string, doc: HoDocument, linkedAmfeId?:
 export async function deleteHoDocument(id: string): Promise<boolean> {
     try {
         const db = await getDatabase();
-
-        // Soft-delete: save to trash before hard delete
-        try {
-            await db.execute(
-                `INSERT OR REPLACE INTO deleted_documents (id, doc_type, project_name, data, deleted_at, deleted_by)
-                 SELECT id, 'ho', linked_amfe_project, data, datetime('now'), ?
-                 FROM ho_documents WHERE id = ?`,
-                [getCurrentUserEmail(), id]
-            );
-            logger.info('HoRepo', `Document ${id} saved to trash before deletion`);
-        } catch (trashErr) {
-            logger.warn('HoRepo', `Failed to save document ${id} to trash, proceeding with delete`, {}, trashErr instanceof Error ? trashErr : undefined);
-        }
-
-        await db.execute('DELETE FROM ho_documents WHERE id = ?', [id]);
-        return true;
+        // Si el archivado no se puede confirmar, lanza y el documento NO se borra.
+        // Los HOs son referencia historica (regla no-pfd-no-ho): perder uno es
+        // perder un documento que ya no se puede regenerar desde esta app.
+        return await archivarYBorrar(db, 'ho', id);
     } catch (err) {
         logger.error('HoRepo', `Failed to delete document ${id}`, {}, err instanceof Error ? err : undefined);
         return false;

@@ -144,17 +144,86 @@ describe('pfdRepository', () => {
     });
 
     describe('deletePfdDocument', () => {
+        /**
+         * Desde 2026-07-30 el borrado pasa por utils/repositories/trash.ts y tiene
+         * 4 pasos: leer la fila, copiarla a deleted_documents, CONFIRMAR que quedo
+         * copiada, y solo entonces borrar. Antes el fallo del archivado se degradaba
+         * a un warning y el DELETE se ejecutaba igual, o sea borrar era definitivo.
+         */
+
+        /** Simula un documento que existe y un archivado que se confirma OK. */
+        function mockArchivadoExitoso(db: { select: ReturnType<typeof vi.fn> }) {
+            db.select
+                .mockResolvedValueOnce([{ id: 'some-id', linked_amfe_project: 'PROY-TEST', data: '{}' }])
+                .mockResolvedValueOnce([{ id: 'some-id' }]);
+        }
+
         it('should return true on success', async () => {
+            const db = await getDatabase();
+            mockArchivadoExitoso(db as never);
             const result = await deletePfdDocument('some-id');
             expect(result).toBe(true);
         });
 
         it('should call execute with DELETE', async () => {
-            await deletePfdDocument('some-id');
             const db = await getDatabase();
+            mockArchivadoExitoso(db as never);
+            await deletePfdDocument('some-id');
             expect(db.execute).toHaveBeenCalledWith(
                 expect.stringContaining('DELETE FROM pfd_documents'),
                 ['some-id']
+            );
+        });
+
+        it('should archive the full original row to the trash BEFORE deleting', async () => {
+            const db = await getDatabase();
+            mockArchivadoExitoso(db as never);
+            await deletePfdDocument('some-id');
+
+            const llamadas = (db.execute as ReturnType<typeof vi.fn>).mock.calls;
+            const iArchivado = llamadas.findIndex(([sql]) => String(sql).includes('deleted_documents'));
+            const iBorrado = llamadas.findIndex(([sql]) => String(sql).includes('DELETE FROM pfd_documents'));
+
+            expect(iArchivado).toBeGreaterThanOrEqual(0);
+            expect(iBorrado).toBeGreaterThanOrEqual(0);
+            // El orden importa: archivar y DESPUES borrar, nunca al revés.
+            expect(iArchivado).toBeLessThan(iBorrado);
+
+            // row_json tiene que llevar la fila COMPLETA: pfd_documents tiene columnas
+            // NOT NULL, asi que un restore desde solo `data` fallaria.
+            const [, params] = llamadas[iArchivado] as [string, unknown[]];
+            expect(params).toContain('pfd');
+            const rowJson = params.find((p) => typeof p === 'string' && String(p).includes('linked_amfe_project'));
+            expect(rowJson).toBeDefined();
+        });
+
+        it('should NOT delete when the archive cannot be confirmed', async () => {
+            const db = await getDatabase();
+            // La fila existe, pero la verificacion post-escritura vuelve vacia:
+            // el archivado no se pudo confirmar.
+            (db.select as ReturnType<typeof vi.fn>)
+                .mockResolvedValueOnce([{ id: 'some-id', linked_amfe_project: 'PROY-TEST', data: '{}' }])
+                .mockResolvedValueOnce([]);
+
+            const result = await deletePfdDocument('some-id');
+
+            expect(result).toBe(false);
+            expect(db.execute).not.toHaveBeenCalledWith(
+                expect.stringContaining('DELETE FROM pfd_documents'),
+                expect.anything()
+            );
+        });
+
+        it('should not issue a DELETE when the document does not exist', async () => {
+            const db = await getDatabase();
+            // select devuelve [] (no existe, o la lectura fallo). Fallar del lado
+            // seguro = no borrar nada.
+            const result = await deletePfdDocument('nonexistent');
+
+            expect(result).toBe(true);
+            expect(db.execute).not.toHaveBeenCalledWith(
+                expect.stringContaining('DELETE FROM pfd_documents'),
+                expect.anything()
             );
         });
     });

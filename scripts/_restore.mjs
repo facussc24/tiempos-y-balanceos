@@ -33,19 +33,67 @@ const projectRoot = new URL('..', import.meta.url).pathname.replace(/^\/([A-Z]:)
 const backupsRoot = `${projectRoot}/backups`;
 
 // --- LIST MODE --------------------------------------------------------
+//
+// 2026-07-30: antes esta lista filtraba por el regex /^\d{4}-...T\d{2}-\d{2}-\d{2}$/,
+// asi que ESCONDIA toda carpeta con nombre distinto — incluidas las unicas que
+// quedaban (2026-06-25_amarok_final, 2026-06-25_amarok_load) y las dos que alguien
+// habia renombrado a VACIO_NO_RESTAURAR_* como advertencia. Resultado: en una
+// emergencia la herramienta contestaba "no hay backups".
+//
+// Ahora lista CUALQUIER carpeta con .json adentro y dice cuantas filas tiene cada
+// una, para que un backup vacio se vea a simple vista en vez de esconderse.
 if (LIST) {
-    const entries = readdirSync(backupsRoot)
-        .filter(n => /^\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}$/.test(n))
+    const carpetas = readdirSync(backupsRoot, { withFileTypes: true })
+        .filter((d) => d.isDirectory())
+        .map((d) => d.name)
         .sort()
-        .reverse()
-        .slice(0, 20);
-    console.log('Ultimos 20 backups disponibles:\n');
-    for (const e of entries) {
-        const dir = `${backupsRoot}/${e}`;
-        const files = readdirSync(dir).filter(f => f.endsWith('.json'));
-        console.log(`  ${e}  (${files.length} tablas)`);
+        .reverse();
+
+    if (carpetas.length === 0) {
+        console.log('No hay ninguna carpeta de backup en backups/.');
+        console.log('Genera uno con: node scripts/_backup.mjs');
+        process.exit(0);
     }
-    console.log(`\nUso: node scripts/_restore.mjs <timestamp> [tabla] [--apply]`);
+
+    console.log(`Backups en backups/ (${carpetas.length}):\n`);
+
+    for (const nombre of carpetas) {
+        const dir = `${backupsRoot}/${nombre}`;
+        const archivos = readdirSync(dir).filter((f) => f.endsWith('.json') && f !== '_manifest.json');
+
+        let filas = 0;
+        let ilegibles = 0;
+        for (const f of archivos) {
+            try {
+                const contenido = JSON.parse(readFileSync(`${dir}/${f}`, 'utf8') || '[]');
+                filas += Array.isArray(contenido) ? contenido.length : 0;
+            } catch {
+                ilegibles++;
+            }
+        }
+
+        // El manifest lo escribe _backup.mjs desde 2026-07-30 y trae el veredicto.
+        let nota = '';
+        if (existsSync(`${dir}/_manifest.json`)) {
+            try {
+                const m = JSON.parse(readFileSync(`${dir}/_manifest.json`, 'utf8'));
+                const probs = (m.problemas || []).length;
+                nota = probs ? `  [manifest: ${probs} problema(s)]` : '  [manifest: OK]';
+            } catch { nota = '  [manifest ilegible]'; }
+        }
+
+        let estado;
+        if (archivos.length === 0) estado = 'SIN ARCHIVOS — NO RESTAURAR';
+        else if (filas === 0) estado = 'VACIO — NO RESTAURAR';
+        else if (ilegibles > 0) estado = `PARCIAL — ${ilegibles} archivo(s) ilegible(s)`;
+        else estado = 'con datos';
+
+        console.log(`  ${nombre}`);
+        console.log(`      ${archivos.length} tabla(s), ${filas} fila(s) — ${estado}${nota}`);
+    }
+
+    console.log(`\nUso: node scripts/_restore.mjs <carpeta> [tabla] [--apply]`);
+    console.log('Sin --apply es dry-run. Nunca restaures desde una carpeta marcada VACIO.');
     process.exit(0);
 }
 

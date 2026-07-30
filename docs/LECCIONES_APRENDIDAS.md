@@ -13,6 +13,19 @@ contiene SOLO lo accionable que NO esta ya codificado como regla o gate ejecutab
 
 ## Lecciones operativas vigentes
 
+### 2026-07-30 — Metodo: medir el ARTEFACTO PUBLICADO, no el codigo ni el build local
+- Para saber si un secreto estaba expuesto, lo unico concluyente fue **bajar el bundle que
+  sirve GitHub Pages** (`curl` sobre `assets/index-*.js`) y buscar el VALOR ahi. El `dist/`
+  local NO lo tenia (se habia buildeado sin esa variable), asi que mirar local habria dado un
+  falso "esta limpio"; y leer el codigo fuente tampoco alcanza, porque el valor lo inyecta el
+  build de CI. **El artefacto que consume el usuario es el unico que dice la verdad.**
+- Dos trampas de medicion que casi me hacen reportar mal: (1) `grep -c` sobre un bundle
+  minificado devuelve cantidad de LINEAS, no de matches — con un archivo de 1 linea, "1" no
+  prueba nada; usar `grep -oF | wc -l` + un control con una cadena imposible. (2) Buscar el
+  NOMBRE de la variable matchea el texto del mensaje de error, no el secreto: buscar el valor.
+- Generaliza a: xlsx/pdf entregados (abrir el archivo final), datos en Supabase (query live),
+  y cualquier "esta arreglado" sobre algo que se compila o se transforma antes de llegar al uso.
+
 ### 2026-07-29 — El repo publico tenia 828 documentos de la empresa versionados (DECISION DE FAK)
 - Verificado con la API de GitHub: `facussc24/tiempos-y-balanceos` es **`"private": false`**. Se
   descargo `docs/REFERENCIA_CP_ORIGINALES.md` por `raw.githubusercontent.com` **sin autenticacion**

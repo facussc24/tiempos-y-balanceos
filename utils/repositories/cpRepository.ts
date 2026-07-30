@@ -13,6 +13,7 @@ import { logger } from '../logger';
 import { generateChecksum } from '../crypto';
 import { scheduleBackup } from '../backupService';
 import { getCurrentUserEmail } from '../currentUser';
+import { archivarYBorrar, archivarYBorrarPorProyecto } from './trash';
 
 
 export interface CpDocumentListItem {
@@ -199,25 +200,12 @@ export async function saveCpDocument(
 /**
  * Delete a CP document by ID (with soft-delete to trash).
  */
-async function deleteCpDocument(id: string): Promise<boolean> {
+export async function deleteCpDocument(id: string): Promise<boolean> {
     try {
         const db = await getDatabase();
-
-        // Soft-delete: save to trash before hard delete
-        try {
-            await db.execute(
-                `INSERT OR REPLACE INTO deleted_documents (id, doc_type, project_name, data, deleted_at, deleted_by)
-                 SELECT id, 'cp', project_name, data, datetime('now'), ?
-                 FROM cp_documents WHERE id = ?`,
-                [getCurrentUserEmail(), id]
-            );
-            logger.info('CpRepo', `Document ${id} saved to trash before deletion`);
-        } catch (trashErr) {
-            logger.warn('CpRepo', `Failed to save document ${id} to trash, proceeding with delete`, {}, trashErr instanceof Error ? trashErr : undefined);
-        }
-
-        await db.execute('DELETE FROM cp_documents WHERE id = ?', [id]);
-        return true;
+        // Si el archivado no se puede confirmar, lanza y el documento NO se borra.
+        // Ver utils/repositories/trash.ts.
+        return await archivarYBorrar(db, 'cp', id);
     } catch (err) {
         logger.error('CpRepo', `Failed to delete document ${id}`, {}, err instanceof Error ? err : undefined);
         return false;
@@ -230,22 +218,9 @@ async function deleteCpDocument(id: string): Promise<boolean> {
 export async function deleteCpByProjectName(projectName: string): Promise<boolean> {
     try {
         const db = await getDatabase();
-
-        // Soft-delete: save to trash before hard delete
-        try {
-            await db.execute(
-                `INSERT OR REPLACE INTO deleted_documents (id, doc_type, project_name, data, deleted_at, deleted_by)
-                 SELECT id, 'cp', project_name, data, datetime('now'), ?
-                 FROM cp_documents WHERE project_name = ?`,
-                [getCurrentUserEmail(), projectName]
-            );
-            logger.info('CpRepo', `CP document(s) for project '${projectName}' saved to trash before deletion`);
-        } catch (trashErr) {
-            logger.warn('CpRepo', `Failed to save CP document(s) for project '${projectName}' to trash, proceeding with delete`, {}, trashErr instanceof Error ? trashErr : undefined);
-        }
-
-        await db.execute('DELETE FROM cp_documents WHERE project_name = ?', [projectName]);
-        return true;
+        // Un proyecto puede tener mas de un CP: se archiva y borra de a uno, para que
+        // cada documento tenga su propia fila en la papelera. Ver trash.ts.
+        return await archivarYBorrarPorProyecto(db, 'cp', projectName);
     } catch (err) {
         logger.error('CpRepo', `Failed to delete document by name: ${projectName}`, {}, err instanceof Error ? err : undefined);
         return false;

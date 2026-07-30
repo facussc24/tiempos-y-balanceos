@@ -8,6 +8,15 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom', // Simulates browser environment for React/DOM related logic if needed
     exclude: ['node_modules', 'dist', 'e2e', '.claude/worktrees/**'],
+    // El default de 5000ms era intermitente bajo carga. Medido 2026-07-30:
+    // `database.test.ts > closeDatabase > should allow re-initialization after close`
+    // tarda ~2600ms aislado (53% del presupuesto) y se pasaba de los 5000ms cuando
+    // la suite corre en paralelo, sobre todo con --coverage. El costo acumulado de
+    // levantar el environment jsdom fue de 908-913s contra 81-90s de reloj (~11x de
+    // paralelismo), asi que el timeout no medía el test sino la contencion de la maquina.
+    // Un timeout que falla por carga no detecta nada y entrena a ignorar el rojo.
+    testTimeout: 15000,
+    hookTimeout: 15000,
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html', 'json-summary'],

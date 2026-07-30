@@ -8,6 +8,7 @@
  */
 
 import { logger } from './logger';
+import { inlineParams } from './db/sqlTranslate';
 
 // ---------------------------------------------------------------------------
 // Database adapter interface (abstracts Tauri SQL plugin vs in-memory)
@@ -451,12 +452,16 @@ CREATE TABLE IF NOT EXISTS document_locks (
     PRIMARY KEY (document_id, document_type)
 );
 
--- Soft-delete trash for APQP documents (recovery)
+-- Papelera de documentos APQP. Se escribe desde utils/repositories/trash.ts.
+-- row_json guarda la fila ORIGINAL COMPLETA, no solo data: amfe_documents tiene
+-- 16 columnas NOT NULL, asi que un restore desde 4 campos fallaria siempre.
+-- Este DDL refleja la tabla REAL de Supabase (creada 2026-07-30). Mantenerlos iguales:
+-- en SupabaseAdapter el CREATE es no-op, asi que una diferencia aca no falla, solo miente.
 CREATE TABLE IF NOT EXISTS deleted_documents (
     id          TEXT PRIMARY KEY,
     doc_type    TEXT NOT NULL CHECK(doc_type IN ('amfe','cp','ho','pfd')),
     project_name TEXT,
-    data        TEXT NOT NULL,
+    row_json    TEXT NOT NULL,
     deleted_at  TEXT NOT NULL DEFAULT (datetime('now')),
     deleted_by  TEXT
 );
@@ -875,11 +880,13 @@ async function runMigrations(adapter: DbAdapter): Promise<void> {
     // Migration 15 → 16: Add deleted_documents trash table for soft-delete recovery
     if (currentVersion < 16) {
         try {
+            // row_json = la fila original COMPLETA. Ver el comentario del schema arriba
+            // y utils/repositories/trash.ts. Debe coincidir con la tabla real de Supabase.
             await adapter.execute(`CREATE TABLE IF NOT EXISTS deleted_documents (
                 id          TEXT PRIMARY KEY,
                 doc_type    TEXT NOT NULL CHECK(doc_type IN ('amfe','cp','ho','pfd')),
                 project_name TEXT,
-                data        TEXT NOT NULL,
+                row_json    TEXT NOT NULL,
                 deleted_at  TEXT NOT NULL DEFAULT (datetime('now')),
                 deleted_by  TEXT
             )`);
@@ -1818,28 +1825,14 @@ class SupabaseAdapter implements DbAdapter {
 
     /**
      * Inline parameter values into SQL client-side.
-     * Replaces $1, $2, ... with escaped literal values in REVERSE order
-     * to avoid $1 colliding with $10, $11, etc.
-     * This bypasses the server-side apply_params() which has this bug.
+     * Bypasses the server-side apply_params(), which tiene el mismo bug.
+     *
+     * La implementacion vive en utils/db/sqlTranslate.ts para poder testearla:
+     * es codigo que corre en produccion y no tenia tests. Ver el comentario de
+     * `inlineParams` alla para el bug de sustitucion que se arreglo el 2026-07-30.
      */
     private inlineParams(sql: string, params: unknown[]): string {
-        let result = sql;
-        for (let i = params.length - 1; i >= 0; i--) {
-            const val = params[i];
-            let replacement: string;
-            if (val === null || val === undefined) {
-                replacement = 'NULL';
-            } else if (typeof val === 'number') {
-                replacement = String(val);
-            } else if (typeof val === 'boolean') {
-                replacement = val ? '1' : '0';
-            } else {
-                // Escape single quotes by doubling them (standard SQL)
-                replacement = `'${String(val).replace(/'/g, "''")}'`;
-            }
-            result = result.replaceAll(`$${i + 1}`, replacement);
-        }
-        return result;
+        return inlineParams(sql, params);
     }
 
     async execute(sql: string, bindings?: unknown[]): Promise<QueryResult> {
