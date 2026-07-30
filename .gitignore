@@ -30,13 +30,19 @@ dist-ssr
 *.sw?
 
 # Claude Code
+# El repo es PUBLICO. Solo se versiona la CONFIGURACION (reglas, skills, hooks,
+# definiciones de agentes). La MEMORIA nunca: acumula rutas del servidor, nombres
+# de documentos del cliente y datos de la empresa.
+# 2026-07-30: `!.claude/memory/` y `!.claude/agent-memory/` estaban aca y habian
+# publicado 23 archivos (uno con la ruta UNC del servidor y nombres de AMFEs y
+# Planes de Control reales). Sacados del indice con `git rm --cached`; siguen en
+# disco para que los agentes no pierdan su memoria.
+# Enforcement: scripts/_gateRepoPublico.mjs CHECK-2 (bloqueante en CI).
 .claude/*
 !.claude/rules/
 !.claude/commands/
 !.claude/skills/
-!.claude/memory/
 !.claude/agents/
-!.claude/agent-memory/
 !.claude/hooks/
 
 # Project secrets

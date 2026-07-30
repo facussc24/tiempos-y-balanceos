@@ -15,6 +15,23 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Gate 0: candado del repo PUBLICO. Bloqueante desde el dia uno.
+  # No necesita secretos ni red, por eso no se puede saltear ni desactivar de hecho
+  # (a diferencia de un hook local, que `git push --no-verify` ignora).
+  # CHECK-1: credenciales de dev-login en el env de un build (Vite las inlinea en el
+  # bundle publicado). CHECK-2: memoria o documentos internos versionados.
+  repo-publico:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Selftest del gate (un gate que no se prueba roto no es un gate)
+        run: node scripts/_gateRepoPublico.mjs --selftest
+      - name: Gate repo publico
+        run: node scripts/_gateRepoPublico.mjs
+
   # Gate 1: TypeScript typecheck. Blocking — if types break, we do not deploy.
   typecheck:
     runs-on: ubuntu-latest
@@ -34,8 +51,14 @@ jobs:
         continue-on-error: true
 
   # Gate 2: Vitest suite. Runs in parallel with typecheck.
-  # TODO: remove `continue-on-error` once the 4 failing tests are green.
-  # Snapshot 2026-04-20 local run: 4 failed / 3834 passed / 8 skipped.
+  # Corrida local 2026-07-30: 235 archivos pasan / 1 skipped, 3329 tests pasan / 8 skipped,
+  # exit 0. Los "4 failing" del TODO de abril ya no reproducen; los 8 skipped son
+  # describe.skip a proposito (audit_fixes.test.ts:66 y :150, concurrency.test.ts:50,
+  # station_a11y.test.tsx:8).
+  # TODO: sacar `continue-on-error` DESPUES de subir testTimeout y separar jsdom de los
+  # tests de logica pura. Medido: `npx vitest run --coverage` todavia falla por timeout en
+  # database.test.ts > closeDatabase (aislado tarda 2638ms de un presupuesto de 5000ms),
+  # asi que hoy el candado seria intermitente en los runners de GitHub.
   test:
     runs-on: ubuntu-latest
     steps:
@@ -53,7 +76,7 @@ jobs:
   # yet (continue-on-error) but appears in the dependency chain so its status
   # is visible on every deploy.
   build-and-deploy:
-    needs: [typecheck, test]
+    needs: [repo-publico, typecheck, test]
     runs-on: ubuntu-latest
     environment:
       name: github-pages
@@ -65,12 +88,19 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
+      # SEGURIDAD (2026-07-30): VITE_AUTO_LOGIN_EMAIL y VITE_AUTO_LOGIN_PASSWORD
+      # NO se pasan al build de produccion. Vite inlinea todo `import.meta.env.VITE_*`
+      # en el bundle, y el bundle se publica en GitHub Pages, que es publico: la
+      # contrasena de la cuenta de Supabase quedaba legible por cualquiera
+      # (verificado bajando assets/index-C8NUY4aA.js el 2026-07-30).
+      # El boton "Acceso rapido (dev)" de components/auth/LoginPage.tsx NO se toco:
+      # sigue funcionando en local con .env.local, y en produccion simplemente no se
+      # renderiza porque la condicion de la linea 127 queda falsa. Ver .claude/rules/dev-login.md.
+      # NO volver a agregar estas dos variables aca.
       - run: npm run build
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
-          VITE_AUTO_LOGIN_EMAIL: ${{ secrets.VITE_AUTO_LOGIN_EMAIL }}
-          VITE_AUTO_LOGIN_PASSWORD: ${{ secrets.VITE_AUTO_LOGIN_PASSWORD }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
