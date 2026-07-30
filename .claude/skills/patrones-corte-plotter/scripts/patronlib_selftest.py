@@ -110,6 +110,27 @@ caso("6. patron chueco 2 grados (aplomo)",
 caso("7. cruz fuera del contorno",
      lambda o: P.entregar(o, C, C, [cruz((-40.0, 20.0)), CR_OK[1]], PQ, PQ), True)
 
+# 8 — EL PUNTO CIEGO: un vertice que se DESLIZA a lo largo de un tramo recto.
+# La distancia punto-a-contorno da 0.000000 en LAS DOS direcciones aunque se movio 5 mm,
+# porque el vertice sigue cayendo exacto sobre el borde viejo. Solo lo caza la
+# comparacion vertice contra vertice. (Detectado por el auditor el 30/07/2026; su fix
+# propuesto —medir en ambos sentidos— tampoco lo hubiera cazado.)
+C_desliz = list(C)
+C_desliz[5] = (C[5][0] + 5.0, C[5][1])          # sigue sobre el borde inferior recto
+assert P.desviacion_max(C_desliz, C) < 1e-9 and P.desviacion_max(C, C_desliz) < 1e-9, \
+    "el caso 8 dejo de ser ciego para Hausdorff: revisar el contorno de prueba"
+caso("8. vertice deslizado 5 mm sobre un tramo recto",
+     lambda o: P.entregar(o, C_desliz, C, CR_OK, PQ, PQ), True)
+
+# 9 — el sub-check de piquetes NO corre si no se pasan los originales: tiene que DECLARARSE
+_o = os.path.join(TMP, "declara.plt")
+_r = P.entregar(_o, C, C, CR_OK, PQ)            # sin piquetes_originales
+print(f"  [{'OK ' if _r['piquetes_verificados'] is False else 'FALLA'}] "
+      f"9. sin piquetes_originales el retorno lo declara      "
+      f"piquetes_verificados={_r['piquetes_verificados']}")
+if _r['piquetes_verificados'] is not False:
+    fallos.append("declaracion de piquetes no verificados")
+
 print()
 print("=" * 104)
 print("FUNCIONES DE MEDICION")
@@ -152,8 +173,30 @@ print(f"  PLT terminadores CRLF                    : {crlf} lineas")
 if crlf == 0:
     fallos.append("CRLF")
 
+# contornos degenerados: tienen que fallar con mensaje claro, no con un IndexError pelado
+for nombre, degen in (("vacio", []), ("1 punto", [(0.0, 0.0)]),
+                      ("todos iguales", [(5.0, 5.0)] * 6)):
+    try:
+        P.linea_de_apoyo(degen)
+        print(f"  [FALLA] contorno degenerado ({nombre}) no levanto error")
+        fallos.append(f"degenerado {nombre}")
+    except ValueError as ex:
+        print(f"  [OK ] contorno degenerado ({nombre}) -> ValueError con mensaje: "
+              f"{str(ex)[:60]}...")
+    except Exception as ex:
+        print(f"  [FALLA] contorno degenerado ({nombre}) -> {type(ex).__name__} sin mensaje util")
+        fallos.append(f"degenerado {nombre}")
+
+# comparar_par tiene que aceptar la estructura de leer() y tambien (x,y) crudos
+cmp_dicts = P.comparar_par(C, CR_OK, C, CR_OK)
+cmp_tuplas = P.comparar_par(C, [c['c'] for c in CR_OK], C, [c['c'] for c in CR_OK])
+igual = cmp_dicts['residuos'] == cmp_tuplas['residuos']
+print(f"  [{'OK ' if igual else 'FALLA'}] comparar_par acepta cruces de leer() y (x,y) crudos")
+if not igual:
+    fallos.append("comparar_par con las 2 formas")
+
 print()
 if fallos:
     print(f"!!! {len(fallos)} FALLAS: " + ", ".join(fallos))
     sys.exit(1)
-print("TODO OK — el enforcement rechaza los 6 casos malos y acepta el bueno.")
+print("TODO OK — el enforcement rechaza los 7 casos malos y acepta el bueno.")

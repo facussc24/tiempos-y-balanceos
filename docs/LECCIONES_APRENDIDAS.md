@@ -21,26 +21,28 @@ contiene SOLO lo accionable que NO esta ya codificado como regla o gate ejecutab
   **envolvente convexo inferior**. Todo movimiento se mide desde ahi.
 - **Trampa de medicion en la que casi caigo:** ajustar una recta por minimos cuadrados al borde
   inferior. Ese borde es CURVO, asi que el ajuste devuelve la curvatura, no el giro — me daba
-  "CHUECO" en las 4 piezas (hasta −2,5°) cuando los traseros estaban a −0,49° y +0,09°. Son dos
-  magnitudes distintas y la mala habria disparado un rework innecesario.
-- Cerro bien porque **medi el impacto en mm en vez de discutir el veredicto**: 0,49° mete
-  0,038 mm en un movimiento de 4,5 mm → irrelevante, los archivos quedaron validos. Los
-  delanteros si estan a 3,1° (0,24 mm) y hay que enderezarlos antes de tocarlos.
+  "CHUECO" en las 4 piezas cuando en realidad la mitad estaba a plomo. Un orden de magnitud de
+  diferencia, y la medicion mala habria disparado un rework innecesario.
+- Cerro bien porque **medi el impacto en mm en vez de discutir el veredicto**: un angulo chico
+  mete centesimas de mm en un movimiento de pocos mm → irrelevante, y esas piezas quedaron
+  validas; las que estaban a varios grados hay que enderezarlas antes de tocarlas. **La regla
+  util no es el veredicto, es el error en mm que introduce.** (Los angulos y coordenadas reales
+  de cada pieza: `.sgc-cache/patrones-corte/ESTADO_INSERT.md` — no van al repo, es publico.)
 - Codificado: `gate_aplomo()` / `linea_de_apoyo()` en `patronlib`, regla `patrones-corte.md`,
   hook `patrones-guard.sh`, y `entregar()` que **no escribe el PLT** si el aplomo da CHUECO.
   Selftest: `patronlib_selftest.py` (7 casos, mide rotaciones con error 0.000000).
-- **LA MAS CARA — invertí una direccion que Fak me habia dado explicita.** El dijo "movimos
-  ambos puntos 4,5 mm hacia la derecha". Mi chequeo de distancia al filo daba alarma (la cruz
-  quedaba a 1,94 mm del borde, contra un rango sano de 5-17 mm) y **apliqué lo contrario en vez
-  de mostrarle la tabla y preguntar**. Entregue el patron al reves; lo detecto el mirando la
-  imagen. **Un chequeo automatico FRENA, no DECIDE.** Lo que Fak dice que hizo fisicamente es
-  dato duro; mi heuristica es una hipotesis. Cuando chocan, gana el dato y yo pregunto.
+- **LA MAS CARA — invertí una direccion que Fak me habia dado explicita.** El me dijo hacia que
+  lado mover los puntos. Mi chequeo de distancia al filo daba alarma (el punto caia por debajo
+  del rango sano) y **apliqué lo contrario en vez de mostrarle la tabla y preguntar**. Entregue
+  el patron al reves; lo detecto el mirando la imagen. **Un chequeo automatico FRENA, no
+  DECIDE.** Lo que Fak dice que hizo fisicamente es dato duro; mi heuristica es una hipotesis.
+  Cuando chocan, gana el dato y yo pregunto.
 - Y la alarma era un **falso positivo con explicacion de negocio**: el punto ancla la pieza, asi
   que la costura se corre en sentido CONTRARIO al punto — *para que la costura vaya a la
   izquierda, el punto va a la derecha* (Fak dixit 30/07). Que el punto se acerque al filo era
-  exactamente lo buscado. Lo correcto era reportar la **consecuencia medida** (a 1,94 mm del
-  filo, 1 de los 4 extremos de la cruz queda FUERA del contorno → la X se corta contra el borde)
-  y dejar que decida el.
+  exactamente lo buscado. Lo correcto era reportar la **consecuencia medida** (distancia al filo
+  y cuantos de los 4 extremos de la cruz quedan FUERA del contorno → la X se corta contra el
+  borde) y dejar que decida el.
 - **Agravante de metodo:** dejE mi inferencia equivocada ("Fak mira la hoja izquierda girada
   180 grados, su derecha es el -X") escrita **como hecho confirmado** en el skill, en el hook y
   en la memoria. Una suposicion mia disfrazada de dato verificado, que habria envenenado todas

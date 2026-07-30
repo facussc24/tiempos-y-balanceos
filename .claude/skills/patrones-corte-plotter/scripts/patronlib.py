@@ -99,7 +99,13 @@ def linea_de_apoyo(C):
     Devuelve {'a','b','angulo','span','pct'} del tramo de apoyo dominante
     (el de mayor span en X del envolvente inferior).
     """
+    if not C or len(C) < 3:
+        raise ValueError(f"linea_de_apoyo: el contorno tiene {len(C or [])} puntos, "
+                         f"hacen falta al menos 3. Contorno degenerado o mal leido.")
     P = sorted(set((round(p[0], 6), round(p[1], 6)) for p in C))
+    if len(P) < 2 or max(p[0] for p in P) - min(p[0] for p in P) < 1e-9:
+        raise ValueError("linea_de_apoyo: el contorno colapsa a un punto o a una vertical; "
+                         "no hay recta de apoyo que medir.")
 
     def cross(o, a, b):
         return (a[0]-o[0])*(b[1]-o[1]) - (a[1]-o[1])*(b[0]-o[0])
@@ -295,14 +301,25 @@ def entregar(path_plt, C_nuevo, C_original, cruces_nuevas, piquetes_nuevos,
             f"a_marco_pieza() o hay que enderezar el patron. Error que mete: "
             f"{aplomo['error_mm']:.4f} mm en un movimiento de {aplomo['mov_tipico']} mm.")
 
-    # GATE 3a — el contorno NO se toco
-    dev = desviacion_max(C_nuevo, C_original)
-    if dev > 1e-6:
-        fallas.append(f"CONTORNO: se movio {dev:.6f} mm (tiene que dar 0.000000). "
-                      f"Mover puntos NO toca el contorno.")
+    # GATE 3a — el contorno NO se toco.
+    #
+    # OJO con la metrica: la distancia punto-a-contorno (Hausdorff, en cualquiera de las
+    # dos direcciones) es CIEGA a un vertice que se desliza A LO LARGO de un tramo recto:
+    # el vertice sigue cayendo exacto sobre el borde viejo y da 0.000000 en ambos sentidos
+    # aunque se haya movido milimetros. Por eso, cuando la cantidad de vertices coincide,
+    # el chequeo que manda es VERTICE CONTRA VERTICE.
     if len(C_nuevo) != len(C_original):
         fallas.append(f"CONTORNO: cambio la cantidad de vertices "
                       f"({len(C_original)} -> {len(C_nuevo)}).")
+        dev = max(desviacion_max(C_nuevo, C_original), desviacion_max(C_original, C_nuevo))
+        if dev > 1e-6:
+            fallas.append(f"CONTORNO: se movio {dev:.6f} mm (tiene que dar 0.000000). "
+                          f"Mover puntos NO toca el contorno.")
+    else:
+        dev = max((dist(a, b) for a, b in zip(C_original, C_nuevo)), default=0.0)
+        if dev > 1e-6:
+            fallas.append(f"CONTORNO: un vertice se movio {dev:.6f} mm "
+                          f"(tiene que dar 0.000000). Mover puntos NO toca el contorno.")
 
     # GATE 3b — las cruces no se deformaron
     for i, cr in enumerate(cruces_nuevas):
@@ -314,17 +331,28 @@ def entregar(path_plt, C_nuevo, C_original, cruces_nuevas, piquetes_nuevos,
         if len(cr['arms']) != 2:
             fallas.append(f"CRUZ {i}: tiene {len(cr['arms'])} brazos, deberia tener 2.")
 
-    # GATE 2 — ningun punto quedo pegado al filo (sintoma de direccion mal leida)
+    # GATE 2 — un punto pegado al filo. OJO: esto NO diagnostica "direccion mal leida".
+    # Puede ser exactamente lo pedido (para que la costura vaya a la izquierda el punto va a
+    # la derecha). Se reporta el HECHO MEDIDO y decide el usuario; nunca invertir por cuenta
+    # propia. Si el usuario ya lo decidio, pasar forzar=True.
     for i, cr in enumerate(cruces_nuevas):
         d_filo = dist_contorno(cr['c'], C_nuevo)
         if not dentro(cr['c'], C_nuevo):
             fallas.append(f"CRUZ {i} en {cr['c']}: quedo FUERA del contorno.")
         elif d_filo < FILO_PELIGRO:
-            fallas.append(f"CRUZ {i} en {cr['c']}: quedo a {d_filo:.3f} mm del filo "
-                          f"(< {FILO_PELIGRO}). Casi seguro se leyo mal una direccion: "
-                          f"mostrar tabla_4_combinaciones() y FRENAR.")
+            fuera = sum(1 for _, a, b in cr['arms'] for p in (a, b)
+                        if not dentro(p, C_nuevo))
+            fallas.append(
+                f"CRUZ {i} en ({cr['c'][0]:.3f},{cr['c'][1]:.3f}): quedo a {d_filo:.3f} mm "
+                f"del filo (rango habitual {FILO_MIN_SANO}-{FILO_MAX_SANO}) y {fuera} de sus 4 "
+                f"extremos caen fuera del contorno -> la X impresa se corta contra el borde. "
+                f"Esto es un HECHO MEDIDO, no un diagnostico: puede ser lo pedido. Mostrarselo "
+                f"al usuario y que decida; con su OK, forzar=True.")
 
-    # los piquetes no se tocan al mover un punto
+    # los piquetes no se tocan al mover un punto.
+    # Si el llamador no pasa los originales, el sub-check NO corre — y eso se DECLARA en
+    # el retorno (`piquetes_verificados`), para que no parezca verificado algo que no lo esta.
+    piquetes_verificados = piquetes_originales is not None
     if piquetes_originales is not None:
         if len(piquetes_nuevos) != len(piquetes_originales):
             fallas.append(f"PIQUETES: cambio la cantidad "
@@ -345,6 +373,7 @@ def entregar(path_plt, C_nuevo, C_original, cruces_nuevas, piquetes_nuevos,
     mx, my = escribir_plt(path_plt, C_nuevo, marcas)
     return {'ok': not fallas, 'forzado': bool(fallas and forzar), 'fallas': fallas,
             'aplomo': aplomo, 'desviacion_contorno': dev,
+            'piquetes_verificados': piquetes_verificados,
             'traslacion': (mx, my), 'n_marcas': len(marcas)}
 
 
@@ -375,8 +404,19 @@ def leer_plt(path):
 
 
 # ------------------------------------------------------------------ simetria del par
+def _centros(X):
+    """Acepta indistintamente la estructura `cruces` que devuelve leer()
+    ([{'c':(x,y), 'arms':[...]}, ...]) o una lista de (x,y) crudos."""
+    out = []
+    for c in X:
+        out.append(tuple(c['c']) if isinstance(c, dict) else tuple(c))
+    return out
+
+
 def comparar_par(C_der, X_der, C_izq, X_izq):
     """Compara las cruces de la mano izquierda contra las de la derecha, espejando.
+
+    X_der / X_izq: la estructura `cruces` de leer(), o una lista de (x,y). Las dos andan.
 
     El patron de corte del IZQUIERDO es el espejo del patron de corte del DERECHO
     (el espejo de mano y el espejo de corte se cancelan: UN solo mirror).
@@ -398,8 +438,8 @@ def comparar_par(C_der, X_der, C_izq, X_izq):
     dev = max(desviacion_max(A, Bmn), desviacion_max(Bmn, A))
 
     x0a, y0a, _, _ = bbox(C_der)
-    XA = sorted([(c[0] - x0a, c[1] - y0a) for c in X_der], key=lambda p: p[1])
-    XB = sorted([(WB - (c[0] - x0b), c[1] - y0b) for c in X_izq], key=lambda p: p[1])
+    XA = sorted([(c[0] - x0a, c[1] - y0a) for c in _centros(X_der)], key=lambda p: p[1])
+    XB = sorted([(WB - (c[0] - x0b), c[1] - y0b) for c in _centros(X_izq)], key=lambda p: p[1])
     res = [(XB[i][0] - XA[i][0], XB[i][1] - XA[i][1]) for i in range(min(len(XA), len(XB)))]
     disp = abs(res[0][0] - res[1][0]) if len(res) > 1 else 0.0
     return {'espejo_exacto': dev < 0.05, 'desviacion_contorno': dev,
