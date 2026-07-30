@@ -24,18 +24,33 @@ NO ajustar una recta por minimos cuadrados al borde inferior: ese borde suele se
 curvo y el ajuste devuelve la curvatura, no el giro. Son cosas distintas y dan
 numeros distintos.
 
-**GATE 2 — MARCO DE REFERENCIA.** La pieza se corta **del reves**: el archivo de
-corte es el espejo horizontal de la pieza vista de frente. Vertical igual, horizontal
-invertido. Y el patron de la mano izquierda es el espejo del de la derecha (el espejo
-de mano y el de corte se cancelan: **un solo mirror**).
-- NUNCA razonar con "izquierda/derecha" a secas. Anclar a la **anatomia**, que viaja
-  con la pieza: `punta_fina(C)`, el extremo alto, el borde de los piquetes.
-- Antes de aplicar, imprimir `tabla_4_combinaciones()`. Si la combinacion elegida deja
-  el punto **a menos de 3 mm del filo**, se leyo mal una direccion: **FRENAR y mostrar
-  la tabla**. Rango sano observado: 5 a 17 mm.
-- Trampa real: el usuario suele mirar la hoja de una mano **girada 180 grados** para
-  comparar contra la otra (asi las dos puntas miran para el mismo lado). En esa hoja
-  su "derecha" es el **-X** del archivo. La tabla de 4 combinaciones lo delata.
+**GATE 2 — DIRECCION: EL CHEQUEO FRENA, NO DECIDE.**
+Cuando el usuario dice "moveme el punto 4,5 a la derecha", eso es un **dato**, no una
+hipotesis a validar. Si `tabla_4_combinaciones()` da alarma (punto a menos de 3 mm del
+filo; rango sano 5 a 17 mm), la unica accion correcta es **mostrarle la tabla y
+preguntar**. **Jamas invertirle la direccion por cuenta propia.**
+
+> Esto ya rompio un patron (30/07/2026): la alarma sonaba, yo la interpretE como
+> "leyo mal la direccion" y aplique lo contrario de lo que me habian dicho. La alarma
+> tenia razon en el numero y yo estaba equivocado en la conclusion.
+
+**Por que la alarma puede ser un falso positivo — la regla de negocio:** el punto ancla
+la pieza en el armado, asi que la pieza (y la costura) se corre en **sentido contrario**
+al punto. **Para que la costura vaya a la izquierda, el punto va a la derecha.** Que el
+punto se acerque al filo puede ser exactamente lo buscado, no un error.
+
+Lo que si hay que reportar es la **consecuencia fisica medida**, sin opinar sobre la
+direccion: distancia del centro al filo, y **cuantos de los 4 extremos de la cruz quedan
+fuera del contorno** (si alguno sale, la X impresa se corta contra el borde y pierde una
+punta). Si en ese punto va un agujero, poco material al borde puede desgarrar.
+
+Contexto de marcos, para leer bien la geometria (no para decidir por el usuario):
+la pieza se corta **del reves**, asi que el archivo de corte es el espejo horizontal de
+la pieza vista de frente — vertical igual, horizontal invertido. Y el patron de la mano
+izquierda es el espejo del de la derecha (el espejo de mano y el de corte se cancelan:
+**un solo mirror**). NUNCA razonar con "izquierda/derecha" a secas para identificar una
+cruz: anclar a la **anatomia** con `punta_fina(C)`, el extremo alto y el borde de los
+piquetes.
 
 **GATE 3 — VERIFICACION RITUAL.** No se entrega nada sin estos dos bloques impresos:
 - *Lo que SI se movio*: los 4 extremos de la cruz uno por uno con dX/dY a 4 decimales

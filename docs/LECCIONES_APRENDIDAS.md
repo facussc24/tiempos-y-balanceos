@@ -29,6 +29,34 @@ contiene SOLO lo accionable que NO esta ya codificado como regla o gate ejecutab
 - Codificado: `gate_aplomo()` / `linea_de_apoyo()` en `patronlib`, regla `patrones-corte.md`,
   hook `patrones-guard.sh`, y `entregar()` que **no escribe el PLT** si el aplomo da CHUECO.
   Selftest: `patronlib_selftest.py` (7 casos, mide rotaciones con error 0.000000).
+- **LA MAS CARA — invertí una direccion que Fak me habia dado explicita.** El dijo "movimos
+  ambos puntos 4,5 mm hacia la derecha". Mi chequeo de distancia al filo daba alarma (la cruz
+  quedaba a 1,94 mm del borde, contra un rango sano de 5-17 mm) y **apliqué lo contrario en vez
+  de mostrarle la tabla y preguntar**. Entregue el patron al reves; lo detecto el mirando la
+  imagen. **Un chequeo automatico FRENA, no DECIDE.** Lo que Fak dice que hizo fisicamente es
+  dato duro; mi heuristica es una hipotesis. Cuando chocan, gana el dato y yo pregunto.
+- Y la alarma era un **falso positivo con explicacion de negocio**: el punto ancla la pieza, asi
+  que la costura se corre en sentido CONTRARIO al punto — *para que la costura vaya a la
+  izquierda, el punto va a la derecha* (Fak dixit 30/07). Que el punto se acerque al filo era
+  exactamente lo buscado. Lo correcto era reportar la **consecuencia medida** (a 1,94 mm del
+  filo, 1 de los 4 extremos de la cruz queda FUERA del contorno → la X se corta contra el borde)
+  y dejar que decida el.
+- **Agravante de metodo:** dejE mi inferencia equivocada ("Fak mira la hoja izquierda girada
+  180 grados, su derecha es el -X") escrita **como hecho confirmado** en el skill, en el hook y
+  en la memoria. Una suposicion mia disfrazada de dato verificado, que habria envenenado todas
+  las sesiones siguientes. Regla: lo que infiero se escribe como inferencia con su evidencia;
+  solo lo que Fak confirma se escribe como hecho, con "Fak dixit" y fecha.
+- **Bug en mi propio enforcement:** el cooldown de `patrones-guard.sh` usaba `${TMPDIR:-/tmp}`,
+  que en el entorno del hook viene distinto, asi que el recordatorio se disparaba en CADA
+  llamada en vez de 1x/h. Corregido a `$HOME/.claude/patrones-guard.flag` con validacion de que
+  el valor leido sea numerico. Un guard que grita siempre se vuelve ruido y se ignora.
+- **Tercera correccion del mismo dia:** deje un `BITACORA.md` DENTRO de la carpeta de trabajo de
+  Fak. El me lo marco: *"por que pusiste un md en esa carpeta? los md no deberias almacenarlos
+  vos en tu propia carpeta?"*. Dos errores en uno: (a) en sus carpetas va **el entregable exacto
+  y nada mas** — regla que ya estaba escrita; (b) `.md` es un formato MIO, el abre archivos con
+  las apps de Windows y un `.md` no lo va a mirar. Lo habia justificado con que "el registro
+  tiene que viajar con los archivos", que es cierto para un legajo — pero entonces va **PDF**,
+  no markdown. Reparto correcto: entregables en su carpeta, registros en `.sgc-cache/`.
 - **Segunda leccion del mismo dia, mas cara:** identifique el par de patrones por geometria
   (contornos espejo exacto + asimetria uniforme corregible con un corrimiento) y di con los
   DELANTEROS. Fak dijo tres veces que eran los TRASEROS. **Tenia razon el.** La geometria

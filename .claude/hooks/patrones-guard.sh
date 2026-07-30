@@ -55,12 +55,20 @@ fi
 
 [ "$MATCH" -eq 0 ] && exit 0
 
-# Cooldown 60 min
-FLAG="${TMPDIR:-/tmp}/claude-patrones-guard.flag"
-NOW=$(date +%s)
+# Cooldown 60 min.
+# El flag va a una ruta que NO depende de TMPDIR (en los hooks puede venir distinto o
+# vacio, y entonces el recordatorio se dispara en cada llamada en vez de 1x/h).
+FLAGDIR="${HOME:-/tmp}/.claude"
+mkdir -p "$FLAGDIR" 2>/dev/null || true
+FLAG="$FLAGDIR/patrones-guard.flag"
+NOW=$(date +%s 2>/dev/null || echo 0)
 LAST=$(cat "$FLAG" 2>/dev/null || echo 0)
-[ $((NOW - LAST)) -lt 3600 ] && exit 0
-echo "$NOW" > "$FLAG" 2>/dev/null
+case "$LAST" in ''|*[!0-9]*) LAST=0 ;; esac
+case "$NOW" in ''|*[!0-9]*) NOW=0 ;; esac
+if [ "$NOW" -gt 0 ] && [ "$LAST" -gt 0 ] && [ $((NOW - LAST)) -lt 3600 ]; then
+  exit 0
+fi
+printf '%s' "$NOW" > "$FLAG" 2>/dev/null || true
 
 cat >&2 << 'EOF'
 [PATRONES-GUARD — RECORDATORIO 1x/h de los 3 gates. Detalle: skill patrones-corte-plotter]
@@ -72,12 +80,15 @@ GATE 1 — APLOMO (posicion 0), ANTES de mover nada:
   diagonal -> convertir los deltas con a_marco_pieza() o enderezar primero.
   NO ajustar una recta al borde inferior: es curvo, devuelve la curvatura y no el giro.
 
-GATE 2 — MARCO DE REFERENCIA:
-  La pieza se corta DEL REVES y el usuario suele mirar una de las manos GIRADA 180 grados
-  (asi las dos puntas miran para el mismo lado): en esa hoja su "derecha" es el -X del
-  archivo. Imprimir tabla_4_combinaciones() ANTES de aplicar. Punto a menos de 3 mm del
-  filo = direccion mal leida, FRENAR. Rango sano 5-17 mm. Anclar a la anatomia
-  (punta_fina), nunca a "izquierda/derecha" ni al nombre del archivo.
+GATE 2 — DIRECCION: EL CHEQUEO FRENA, NO DECIDE.
+  Si Fak dice "moveme el punto 4,5 a la derecha", eso es un DATO, no una hipotesis.
+  Si tabla_4_combinaciones() da alarma (punto a menos de 3 mm del filo; sano 5-17 mm),
+  la accion correcta es MOSTRARLE LA TABLA Y PREGUNTAR — jamas invertirle la direccion
+  por cuenta propia. Invertir en silencio ya rompio un patron (30/07/2026).
+  Y ojo con la regla de negocio que hace que la alarma sea un falso positivo:
+  PARA QUE LA COSTURA VAYA A LA IZQUIERDA, EL PUNTO VA A LA DERECHA (se mueven en
+  sentido contrario). Que el punto se acerque al filo puede ser exactamente lo buscado.
+  Anclar a la anatomia (punta_fina), nunca a "izquierda/derecha" ni al nombre del archivo.
 
 GATE 3 — VERIFICACION RITUAL antes de entregar:
   contorno con desviacion maxima 0.000000 mm · brazos de cruz en 6.000 · misma cantidad
