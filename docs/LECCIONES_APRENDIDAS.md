@@ -13,6 +13,28 @@ contiene SOLO lo accionable que NO esta ya codificado como regla o gate ejecutab
 
 ## Lecciones operativas vigentes
 
+### 2026-07-31 — Tarde 1h20 en mostrar una foto: el barrido caro antes del camino barato (CORRECCION DE FAK)
+- Fak pidio el 3D del Upper Trim (VW427/Cozzuol) "con el logo" y una foto para verificarlo. Tarde
+  **1 hora 20 minutos**. Sus palabras: *"es demasiado lento todo lo que haces, exageradamente
+  lento"*, *"¿donde carajo esta el logo?"*, *"ya parece que me estas peloteando"*.
+- **Que hice mal:** me puse a mallar la pieza entera (hasta 9 M de triangulos, corridas de 5-10 min
+  cada una) para buscar el grabado a ojo en renders. La respuesta estaba en dos lugares de
+  segundos: (a) el PDF del RFQ que **el propio Barack** le mando al proveedor, que muestra el
+  simbolo dibujado, y (b) la **topologia** del STEP (`getBoundingBox` de las caras = instantaneo).
+- **Regla:** antes de procesar geometria, preguntarse si un **documento del legajo** o la
+  **metadata** (bboxes, nombres de caras, tablas) ya lo responde. Y **mostrar el primer resultado
+  util apenas existe**, aunque sea parcial — no acumular 6 pasos para una entrega perfecta.
+  Si pide "una foto de X", el entregable **es la foto de X**; el analisis va despues y solo si lo pidio.
+- Cuando pide agentes en paralelo, respetar el numero que dice (*"otros 3"*, no 59): le cuesta limite.
+- **Trampa tecnica que me costo un dato mal:** `gmsh.model.removeEntities` no recorto como esperaba,
+  segui mallando la pieza completa y termine comparando el simbolo contra la superficie clase A de
+  alrededor en vez de contra su pad → me dio -0,700 mm (que es el rebaje del PAD) en vez de 0,000.
+  **Verificar siempre contra la vecina TOPOLOGICA real** (`getBoundary` → quien comparte curvas),
+  no contra "la cara mas grande que agarre".
+- Hallazgo que vale guardar: **un grabado modelado como particion de superficie no lo dibuja ningun
+  visor de solidos, solo CATIA** — por eso Fak lo veia unicamente ahi. Detalle completo del caso
+  (rutas, tags de caras, cotas, profundidad TBD) en la memoria `reference_logo_uppertrim_vw427`.
+
 ### 2026-07-31 — La sintesis va ANTES de tocar cosas de Fak (CORRECCION DE FAK)
 - Me puse a construir la regla de archivado del Escritorio (script + hook + tests) y Fak me
   corto a mitad: *"tenes que explicarmelo de una forma sencilla de entender asi apruebo...
