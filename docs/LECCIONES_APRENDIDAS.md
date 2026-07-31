@@ -13,6 +13,42 @@ contiene SOLO lo accionable que NO esta ya codificado como regla o gate ejecutab
 
 ## Lecciones operativas vigentes
 
+### 2026-07-31 — La sintesis va ANTES de tocar cosas de Fak (CORRECCION DE FAK)
+- Me puse a construir la regla de archivado del Escritorio (script + hook + tests) y Fak me
+  corto a mitad: *"tenes que explicarmelo de una forma sencilla de entender asi apruebo...
+  osea sintesis asi apruebo"*. Y enseguida: *"no entendi en donde vamos a guardar esas cosas
+  ¿en tu codigo? ¿en onedrive? ¿en donde?"*.
+- **"Hacelo y reporta" aplica al REPO. Sus carpetas (Escritorio, OneDrive, Y:, ERP) van con
+  sintesis corta y OK previo.** No se contradice con "nunca preguntar ¿queres que haga X?":
+  ahi hablamos de mi trabajo, no de mover cosas suyas.
+- La sintesis que funciono: **que hay hoy en numeros → que criterio propongo → que muevo
+  exactamente hoy → ¿le doy?**. Cuando hay dos destinos posibles (repo publico vs OneDrive),
+  **dibujar el arbol de carpetas**; con eso lo entendio de una.
+- Detalle tecnico que casi me hace pasar un test por el motivo equivocado: los payloads de
+  hook escritos a mano en el shell **colapsan los backslashes de Windows**, el hook cae en su
+  rama de fallback y el test da verde igual. Los payloads de test se arman con
+  `JSON.stringify`, nunca a mano.
+
+### 2026-07-31 — Mirar el destino ANTES de diseñar donde archivar (CORRECCION DE FAK)
+- Diseñe todo el archivado de tareas contra el Escritorio/OneDrive personal. Fak: *"no lo
+  quiero en el escritorio y el one drive es aca el de la empresa jamas el personal"*.
+- Al abrir la biblioteca real se cayo medio diseño: esta organizada **por tipo de documento**
+  y bajo control documental (LISTADO MAESTRO I-IN-001, carpetas OBSOLETO). Archivar ahi la
+  carpeta entera de una tarea **habria duplicado documentos que ya tienen casa** — el mismo
+  problema de "un PN, una BOM vigente". **Un destino no se elige por nombre: se abre y se
+  mira como esta organizado.**
+- De ahi sale la regla: una tarea cerrada tiene dos mitades. El ENTREGABLE ya esta en su
+  carpeta por tipo (eso ES haber terminado); se archiva solo el RASTRO, y el listado dice
+  DONDE quedo el entregable.
+- **Hay dos arboles paralelos por tipo** (`Y:\...\Documentacion Gestion Ingenieria\` numerado
+  vs `1- GENERAL\` de la biblioteca) con contenido distinto. Y: es el maestro.
+- Tres falsos positivos del guard que valen como patron: **`del` es alias de borrado y a la
+  vez preposicion en español** (bloqueaba mis propios commits que decian "del Escritorio");
+  los flags de `rd /s /q` se meten entre el verbo y la ruta (no bloqueaba un borrado real); y
+  un test corrido sin cooldown medi­a el recordatorio en vez de la rama que queria medir.
+  **Al escribir un guard, los vectores negativos (prosa en español) importan tanto como los
+  positivos.**
+
 ### 2026-07-30 — Patrones de corte: el APLOMO va primero (CORRECCION DE FAK)
 - Fak, al pasar: *"para mover los puntos primero debes asegurarte que el patron este derecho,
   mirandolo de frente apoyado sobre los bordes de abajo... no puede estar chueco sino se va a
