@@ -60,6 +60,7 @@ NO preguntar si Fak quiere que lo hagas. HACERLO.
 | `git-deploy.md` | Build + commit + push al cerrar tareas |
 | `consumos-entregables.md` | Tablas de consumo / cargas arb: validador + checklist canonico |
 | `verify-before-close.md` | Verificar build/diff/archivo generado antes de decir "listo" |
+| `escritorio-tareas.md` | El Escritorio = cola de tareas: cuándo se cierra y cómo se archiva |
 
 | Con `paths:` (cargan al tocar) | Ambito |
 |---|---|
