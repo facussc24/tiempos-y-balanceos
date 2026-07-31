@@ -34,6 +34,17 @@ contiene SOLO lo accionable que NO esta ya codificado como regla o gate ejecutab
 - Hallazgo que vale guardar: **un grabado modelado como particion de superficie no lo dibuja ningun
   visor de solidos, solo CATIA** — por eso Fak lo veia unicamente ahi. Detalle completo del caso
   (rutas, tags de caras, cotas, profundidad TBD) en la memoria `reference_logo_uppertrim_vw427`.
+- **CIERRE (misma sesion, commit `e798a7b5`):** al llevar esto a la herramienta aparecio la causa de
+  fondo, peor que la lentitud: **`cadlib.geom._load` importaba con `highestDimOnly=True`** (el
+  default de gmsh), que descarta las caras LIBRES. En este STEP son 189 caras — y ahi vive el logo.
+  Verificado a mano: con el default entran 2548 caras y el simbolo da **0/5**; con
+  `highestDimOnly=False` entran 2737 y da **5/5**. O sea que **todos los CLI del skill venian
+  ciegos a los grabados imprentados**: ningun render los podia mostrar, por mas triangulos que les
+  pusiera. Mi script ad-hoc los vio de casualidad porque use `gmsh.merge`, que carga todo.
+  Ahora hay `cadlib/topo.py` + las sondas `--find/--zone/--neighbors/--offset` de `analyze_step.py`:
+  encuentran el feature **sin saber ningun tag** y lo miden en **14 s** (test de aceptacion
+  `topo_acceptance_test.py`, 22,8 s; smoke 8/8). **Leccion de metodo: cuando algo "no aparece" en
+  el 3D, sospechar del IMPORTADOR antes que de la busqueda.**
 
 ### 2026-07-31 — La sintesis va ANTES de tocar cosas de Fak (CORRECCION DE FAK)
 - Me puse a construir la regla de archivado del Escritorio (script + hook + tests) y Fak me
