@@ -35,11 +35,18 @@ def gmsh_session(terminal=0):
         gmsh.finalize()
 
 
-def _load(path, keep=None, translate=None):
-    """importShapes + filtro de solidos + traslacion. Requiere sesion gmsh abierta."""
+def _load(path, keep=None, translate=None, highest_dim_only=True):
+    """importShapes + filtro de solidos + traslacion. Requiere sesion gmsh abierta.
+
+    OJO con highest_dim_only (default True = el default de gmsh): descarta las caras
+    LIBRES, las que no pertenecen a ningun solido. En STEPs de cliente ahi viven los
+    grabados/logos imprentados sobre la clase A. Caso real Upper Trim VW427: con True
+    entran 2548 caras y el logo NO EXISTE; con False entran 2737 y aparecen las 189
+    caras libres (entre ellas los 2 simbolos). `cadlib.topo` carga siempre con False.
+    """
     if not os.path.isfile(path):
         raise FileNotFoundError("No existe el archivo 3D: %s" % path)
-    gmsh.model.occ.importShapes(path)
+    gmsh.model.occ.importShapes(path, highestDimOnly=highest_dim_only)
     gmsh.model.occ.synchronize()
     if keep is not None:
         keep = set(keep)
@@ -246,12 +253,23 @@ def extract_cylinder_axes(path, r_target=None, tol=0.15, keep=None, n_u=24, n_v=
 
 
 def fit_plane(pts):
-    """Mejor plano por SVD -> (normal, centroide, distancias con signo)."""
+    """Mejor plano por autovector menor de la covarianza 3x3 -> (normal, centroide, dists).
+
+    NO usar np.linalg.svd(pts - ctr): el default es full_matrices=True, o sea que arma
+    U de N x N. Con 490.000 puntos numpy pide 1,75 TiB y el proceso muere. La matriz de
+    covarianza es 3x3 SIEMPRE, sin importar cuantos puntos entren (caso real Upper Trim,
+    2026-07-31). El resultado es el mismo plano; el signo de la normal es arbitrario en
+    los dos metodos — orientarla con gmsh.model.getNormal si el signo importa.
+    """
     pts = np.asarray(pts, dtype=float)
+    if len(pts) < 3:
+        raise ValueError("fit_plane necesita al menos 3 puntos (recibio %d)" % len(pts))
     ctr = pts.mean(0)
-    _, _, Vt = np.linalg.svd(pts - ctr)
-    normal = Vt[2]
-    return normal, ctr, (pts - ctr) @ normal
+    q = pts - ctr
+    cov = (q.T @ q) / max(len(q) - 1, 1)
+    _, vecs = np.linalg.eigh(cov)  # eigh: autovalores ascendentes -> vecs[:,0] = menor
+    normal = vecs[:, 0]
+    return normal, ctr, q @ normal
 
 
 def orthonormal_frame(b, a_hint):

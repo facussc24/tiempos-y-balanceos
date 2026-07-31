@@ -63,8 +63,8 @@ literales sueltos en el código.
 
 ## 3. Flujo punta a punta (CLIs de `scripts/`, todos con `--help`)
 
-1. **Medir** — `analyze_step.py <file>` (sólidos, bbox, caras planas+normales);
-   `bbox_quick.py <files...>` (rápido, sin mallar).
+1. **Medir** — `analyze_step.py <file>` (sólidos, bbox, caras planas+normales, y las 3 sondas
+   de topología del §3bis: `--zone` / `--neighbors` / `--offset`); `bbox_quick.py <files...>`.
 2. **Entender el ensamble POR CÓDIGO** (no "ver": COMPUTAR): rol de cada sólido por bbox +
    relación de aspecto; quién toca/entra en quién con `contains_batched` + cKDTree; reportar
    en criollo + números ANTES de modelar. Si hay dudas → confirmar con Fak.
@@ -85,6 +85,38 @@ literales sueltos en el código.
    [--glb]` → exige evidencia (gate §0), exporta STL binario fino (curvatura 40) + GLB,
    copia y registra la entrega. Después: ABRIR los archivos y mirarlos (verify-before-close).
 
+## 3bis. Antes de mallar: LEER LA TOPOLOGÍA
+
+**Presupuesto: si una consulta 3D va a tardar más de 2 minutos, está mal planteada.** Y el
+primer resultado útil se le muestra a Fak apenas existe, no al final. Escalera de costo:
+
+| Paso | Cómo (`analyze_step.py f.stp ...`) | Costo | Responde |
+|---|---|---|---|
+| buscar el feature | `--find [--only-free]` | instantáneo | DÓNDE está (sin saber tags) |
+| acotar por ventana | `--zone X:a,b --zone Z:c,d` | instantáneo | qué hay en esta zona |
+| vecinos (`getBoundary`) | `--neighbors t1,t2,...` | instantáneo | QUÉ es |
+| muestreo paramétrico | `--offset t1,...` (la referencia se deduce) | segundos | CUÁNTO mide |
+| mallar | los demás CLIs | minutos | último recurso, y solo la zona |
+
+Todo junto: `--find --only-free --measure`. Motor en `cadlib.topo`; test: `topo_acceptance_test.py`.
+
+- **Criterio duro: un feature SIN caras de flanco no tiene relieve.** Si las N caras del grupo
+  comparten TODAS sus curvas con UNA sola vecina, es un contorno *imprentado* sobre la
+  superficie: se ve en CATIA y en ningún visor de sólidos. Buscarlo a ojo en renders es tiempo
+  tirado. Medirlo = offset contra el plano de esa vecina (0,000 mm ⇒ no hay cavidad).
+- **Medir contra la cara equivocada da un número lindo y falso.** La referencia se deduce sola
+  (la vecina que comparte más curvas); si se fuerza una que no está al lado, `measure_offset`
+  ABORTA en vez de inventar. No forzarla sin correr `--neighbors` antes.
+- **Las caras libres (sin sólido padre) se pierden con el default de gmsh**: `highestDimOnly=True`
+  y el grabado directamente no existe (two_upholstered.stp: 2548 caras vs 2737). `cadlib.topo`
+  carga con `False` y las marca `LIBRE`; el resto de los CLIs (mallado, colisión, render) NO las
+  ve — por eso ningún render iba a mostrar el logo, por más triángulos que le pusiera.
+- **`gmsh.model.removeEntities` NO recorta lo que se malla** (medido: caras 3→3, nodos 1344→1344).
+  Para quedarse con parte del modelo: `occ.remove(..., recursive=True)` + `synchronize()` —
+  es lo que hace `geom._load(keep=...)` (verificado end-to-end: 9405 → 356 pts).
+- Ajuste de plano con nubes grandes: covarianza 3×3 (`geom.fit_plane`), **nunca**
+  `np.linalg.svd(pts-ctr)` con `full_matrices=True` — con 490k puntos pide 1,75 TiB.
+
 ## 4. Verificar antes de cerrar — REGLA DURA
 
 Render → MIRARLO → corregir, DESPUÉS de cada cambio (no post-export). Criterio CADGenBench
@@ -101,6 +133,11 @@ inserto heat-set + pin anti-giro.
    ángulo/cuña; interferencia solo contra compresión del material BLANDO (1-2 mm).
 4. Luz de impresión: 0,3-0,5 mm/lado o el fixture impreso raspa/traba.
 5. El ojo de Fak gana: "esto choca" = dato duro; reproducir y corregir, no defender el CAD.
+6. **Logo del Upper Trim (2026-07-31): 1 h 20 buscando un grabado a ojo en renders de 9 M de
+   triángulos, y encima con el número MAL** — reporté −0,700 mm (el rebaje del pad) cuando la
+   profundidad real es 0,000 mm: `removeEntities` no había recortado nada, así que "la cara con
+   más nodos" era la clase A de alrededor y no el pad. Con las sondas del §3bis: 14 segundos y
+   el dato correcto. Antes de mallar, leer la topología.
 
 Mejoras candidatas (build123d-mcp, cad-cae-copilot, etc.): ver `ROADMAP.md` — nada de eso
 está instalado hoy.

@@ -19,6 +19,17 @@ backend build123d + Py3.12 que `.venv-cad`. Instalar (necesita `uv`):
 # verificación FINA — el MCP no hace registración ni interferencia contra sustrato rígido.
 ```
 
+## Pendientes internos (mejoras a cadlib, no herramientas de terceros)
+
+- **Mallar SOLO una zona** (receta verificada 2026-07-31, todavía sin helper):
+  `occ.remove(vols, recursive=False)` deja las caras sueltas → `occ.remove(caras que sobran,
+  recursive=True)` → mallar. Medido en 3 cajas: 1344 → 272 nodos, igual que mallar la caja sola.
+  `removeEntities` NO sirve para esto (no recorta nada de lo que se malla).
+- Exponer las caras libres en el resto de los CLIs: hoy solo `cadlib.topo` carga con
+  `highest_dim_only=False`; `bbox_quick.py` sigue reportando el conteo de caras sin ellas.
+- Ya hecho 2026-07-31 (no volver a proponerlo): `geom._load(highest_dim_only=)`,
+  `geom.fit_plane` por covarianza 3×3, y el módulo `cadlib.topo` con sus sondas.
+
 ## Gemas a minar (barrido 2026-07-21)
 
 - **`armpro24-blip/cad-cae-copilot`** (41★, activo) — punteros de topología estables
