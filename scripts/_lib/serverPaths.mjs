@@ -24,6 +24,25 @@ export const CARPETA_OBSOLETO = 'OBSOLETO';
 /** Carpeta historica sin organizar dentro de AMFES DE PROCESO. */
 export const CARPETA_QUILOMBO = '1.ORGANIZAR';
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Biblioteca de Ingenieria sincronizada (SharePoint) — NO es el servidor Y:
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Biblioteca del departamento, sincronizada localmente. NO es espacio personal: lo que se
+ * deja aca lo ve quien tenga acceso al sitio, y el nombre de la carpeta dice NUNCA BORRAR.
+ * Esta organizada POR TIPO DE DOCUMENTO (FICHAS DE EMBALAJE, 2. CONSUMO DE MATERIAL BOM,
+ * 5. 3D, ULM GATE 2, DESVIOS...), con control documental via LISTADO MAESTRO I-IN-001.
+ */
+export const RUTA_BIBLIOTECA_INGENIERIA =
+    'C:\\Users\\facun\\BARACK ARGENTINA SRL\\Ingeniería y Proyecto - INGENIERIA BARACK (NUNCA BORRAR)';
+
+/** Archivo del RASTRO de las tareas cerradas (mails, capturas, borradores). Regla `escritorio-tareas.md`. */
+export const RUTA_TAREAS_CERRADAS = `${RUTA_BIBLIOTECA_INGENIERIA}\\1- GENERAL\\TAREAS CERRADAS`;
+
+/** La cola de pendientes: una carpeta por tarea abierta. */
+export const RUTA_ESCRITORIO = 'C:\\Users\\facun\\OneDrive\\Escritorio';
+
 /** Nombres de carpeta que marcan contenido archivado/obsoleto (case-insensitive). */
 const RE_OBSOLETO = /^(obsoletos?|old)$/i;
 

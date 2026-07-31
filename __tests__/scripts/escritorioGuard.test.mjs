@@ -15,6 +15,8 @@ import path from 'node:path';
 
 const HOOK = path.resolve(process.cwd(), '.claude/hooks/escritorio-guard.sh');
 const ESC = 'C:\\Users\\facun\\OneDrive\\Escritorio';
+const BIB = 'C:\\Users\\facun\\BARACK ARGENTINA SRL\\Ingeniería y Proyecto - INGENIERIA BARACK (NUNCA BORRAR)';
+const ARCH = `${BIB}\\1- GENERAL\\TAREAS CERRADAS`;
 const FLAG = path.join(process.env.HOME || os.tmpdir(), '.claude', 'escritorio-guard.flag');
 
 /** Corre el hook con el cooldown ya consumido, para aislar los bloqueos duros del recordatorio. */
@@ -47,16 +49,37 @@ describe('escritorio-guard — borrar', () => {
     it('4. NO bloquea un rm fuera del Escritorio', () => {
         expect(correr(bash('rm -rf node_modules/.vite')).code).toBe(0);
     });
+    it('4b. "del Escritorio" en prosa NO es un borrado — `del` es alias de Remove-Item y a la vez preposicion', () => {
+        const msg = 'git commit -m "docs: la sintesis va antes de tocar cosas del Escritorio (OneDrive, Y:)"';
+        expect(correr(bash(msg), { conCooldown: false }).code).toBe(0);
+    });
+    it('4c. bloquea borrar en la biblioteca de Ingenieria, que dice NUNCA BORRAR', () => {
+        const r = correr(bash(`rm -rf "${BIB}\\1- GENERAL\\FICHAS DE EMBALAJE\\x.xlsx"`));
+        expect(r.code).toBe(2);
+        expect(r.err).toMatch(/NUNCA BORRAR/);
+    });
+    it('4d. un mensaje de commit con "del" Y una ruta real citada tampoco es un borrado', () => {
+        // Con cooldown puesto a proposito: aisla la rama de borrado del recordatorio 1x/h,
+        // que SI se dispara con este comando (toca la zona) y daria un falso rojo.
+        const msg = `git commit -m "feat: el rastro va a 1- GENERAL\\TAREAS CERRADAS; antes salia del Escritorio"`;
+        expect(correr(bash(msg)).code).toBe(0);
+    });
+    it('4e. pero `del`/`rd` de verdad (alias CMD, con o sin flags) SI se bloquean', () => {
+        expect(correr(bash(`del "${ARCH}\\2026\\x"`)).code).toBe(2);
+        expect(correr(bash(`rd /s /q "${ARCH}\\2026"`)).code).toBe(2);
+        expect(correr(bash(`del /f /q "${ARCH}\\2026\\x"`)).code).toBe(2);
+    });
 });
 
 describe('escritorio-guard — mover a mano', () => {
-    it('5. bloquea mv hacia _TERMINADAS', () => {
-        const r = correr(bash(`mv "${ESC}\\X" "${ESC}\\_TERMINADAS 2026\\"`));
+    it('5. bloquea mv hacia TAREAS CERRADAS', () => {
+        const r = correr(bash(`mv "${ESC}\\X" "${ARCH}\\2026\\"`));
         expect(r.code).toBe(2);
         expect(r.err).toMatch(/Mover y registrar son UNA operacion/);
     });
-    it('6. bloquea Move-Item sacando algo de _TERMINADAS', () => {
-        expect(correr(bash(`Move-Item "${ESC}\\_TERMINADAS 2026\\X" "${ESC}"`)).code).toBe(2);
+    it('6. bloquea Move-Item sacando algo del archivo, y la vieja _TERMINADAS sigue cubierta', () => {
+        expect(correr(bash(`Move-Item "${ARCH}\\2026\\X" "${ESC}"`)).code).toBe(2);
+        expect(correr(bash(`mv "${ESC}\\_TERMINADAS 2026\\X" "${ARCH}\\2026\\"`)).code).toBe(2);
     });
     it('7. deja pasar el script autorizado, que es la via correcta', () => {
         expect(correr(bash('node scripts/_escritorio.mjs --archivar "X" --cerrada 2026-07-31 --que "a" --donde "b"')).code).toBe(0);
@@ -67,10 +90,10 @@ describe('escritorio-guard — mover a mano', () => {
 });
 
 describe('escritorio-guard — escrituras', () => {
-    it('9. bloquea editar el INDICE a mano', () => {
-        const r = correr(escribir(`${ESC}\\_TERMINADAS 2026\\INDICE.md`));
+    it('9. bloquea tocar el listado de tareas cerradas a mano', () => {
+        const r = correr(escribir(`${ARCH}\\2026\\LISTADO DE TAREAS CERRADAS 2026.xlsx`));
         expect(r.code).toBe(2);
-        expect(r.err).toMatch(/no se edita a mano/);
+        expect(r.err).toMatch(/no se toca a mano/);
     });
     it('10. bloquea el LEEME suelto en una carpeta de Fak (incidente 2026-07-24)', () => {
         const r = correr(escribir(`${ESC}\\Insert\\LEEME - por que esta aca.txt`));
