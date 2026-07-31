@@ -60,7 +60,6 @@ NO preguntar si Fak quiere que lo hagas. HACERLO.
 | `git-deploy.md` | Build + commit + push al cerrar tareas |
 | `consumos-entregables.md` | Tablas de consumo / cargas arb: validador + checklist canonico |
 | `verify-before-close.md` | Verificar build/diff/archivo generado antes de decir "listo" |
-| `escritorio-tareas.md` | El Escritorio = cola de tareas: cuándo se cierra y cómo se archiva |
 
 | Con `paths:` (cargan al tocar) | Ambito |
 |---|---|
@@ -71,6 +70,7 @@ NO preguntar si Fak quiere que lo hagas. HACERLO.
 | `testing.md` | __tests__ |
 | `dev-login.md` | components/auth — boton dev-login: NO TOCAR NUNCA |
 | `cad-3d.md` | archivos .step/.stl/.glb, `.venv-cad`, skill cad-design — 2 gates 3D |
+| `escritorio-tareas.md` | `_escritorio.mjs` + su hook — cola de tareas: cuándo se cierra y cómo se archiva (el hook la recuerda al tocar el Escritorio) |
 
 **Skills** (on-demand): `apqp-schema` (schema JSONB Supabase), `product-map` (8 familias,
 part numbers, equipo APQP), `amfe-domain` (conocimiento AMFE profundo), `amfe-cookbook`
