@@ -169,6 +169,78 @@ igual a cualquier movimiento del punto — entonces una diferencia entre ellas e
 punto** y sale del CONTORNO (o del armado), no del anclaje. Calcular la sensibilidad ANTES de
 prometer una correccion: puede no existir ningun delta que satisfaga todas las estaciones.
 
+## 5 bis. Mover VARIOS puntos: siempre en bloque rigido
+
+Cuando la pieza se cuelga de **3 o mas pines** (no 2), la regla del punto que pivotea deja de
+alcanzar y aparece una restriccion mas fuerte:
+
+> **Un movimiento RIGIDO del juego de agujeros (traslacion + giro) no obliga a mover ningun
+> pin.** Las separaciones no cambian, asi que el triangulo de agujeros sigue calzando en el
+> mismo triangulo de pines: la pieza simplemente se acomoda corrida o girada. En cambio,
+> mover **un** agujero cambia una separacion, y entonces o se mueve un pin o la tela se
+> estira. Con un pin COMPARTIDO con otro producto (que no se puede tocar), esto no es una
+> preferencia: es la unica correccion posible.
+
+Resolver con 3 incognitas — `dx`, `dy`, `theta` — contra N estaciones:
+
+```
+v(p) = (dx, dy) + theta * ( -(p.y - M.y), (p.x - M.x) )      M = centro del juego de agujeros
+delta_medida(p) = SIGNO * k * ( v(p) . n(p) )
+```
+
+Minimos cuadrados sobre las estaciones. Despues **verificar que ningun agujero quedo cerca del
+filo**: el giro pivotea sobre el centro, asi que el agujero mas lejano se mueve mucho mas que
+el resto y es el que se va contra el borde.
+
+**El objetivo NO es clavar el nominal, es CENTRAR el proceso con margen.** Barrer el canje
+"cuanto material exijo en los agujeros" vs "que tan pareja queda la costura" y elegir; clavar
+el nominal suele costar dejar un agujero a 4-5 mm del filo. Barrer **theta** y resolver
+`(dx, dy)` por minimos cuadrados para cada theta: vectorizado con numpy son segundos. Un grid
+3D con `dist_contorno()` adentro del loop **no termina** — error real del 31/07/2026.
+
+**Un defecto LOCALIZADO no se corrige moviendo agujeros.** Cualquier movimiento del bloque
+inclina o corre toda la linea. Si una estacion esta mal y las demas bien, la causa es de
+maquina o de carga. Decirlo, no "corregirlo".
+
+## 5 ter. Antes de corregir: separar variacion de PATRON de variacion de CARGA
+
+Caso real (31/07/2026): de 6 piezas del **mismo archivo**, las 2 primeras salieron perfectas y
+las 4 hechas apuradas salieron mal **repitiendo el mismo error**. Un patron no puede producir
+dos resultados; el operario si.
+
+Sintoma tipico: los pines entran justos y hay que **estirar la tela** para que todos los
+agujeros lleguen. Cargando con calma el estiramiento se reparte; apurado se acumula, y se
+acumula del lado del pin que **no cede** (el fijo o compartido).
+
+**Antes de aplicar cualquier correccion, preguntar de que piezas salio la medicion.** Corregir
+el archivo por un error de carga arruina las piezas que hoy salen bien. Y la solucion de fondo
+no es de patron: es dar **holgura** en los agujeros (uno redondo justo = datum, uno en
+**ranura** orientada hacia el datum que se come el estiramiento, uno holgado que solo frena el
+giro) para que la tela caiga sola sobre los pines.
+
+## 5 quater. Agujeros CORTADOS por el plotter
+
+Punzar a mano agrega variacion. Cortar el agujero con la cuchilla la saca:
+
+- Los agujeros van en la capa **CORTE** (pluma 1), como contornos cerrados propios.
+- **Sobrecorte** de ~1 mm (repetir el arranque) para que la cuchilla cierre el contorno.
+- Radio minimo ~2 mm: una cuchilla de arrastre no gira mas cerrado sin arrastrar la tela.
+- **Los agujeros se cortan ANTES del contorno exterior.** Despues, la pieza ya esta suelta y el
+  agujero se va. `escribir_plt(..., cortes_previos=[...])` los emite primero.
+- **Pero el plotter puede reordenar por su cuenta.** La unica forma de que no dependa de el es
+  partir el trabajo en **dos archivos**: `_1_AGUJEROS.plt` y `_2_CONTORNO.plt`, que se corren
+  uno tras otro sin mover la tela.
+
+> **TRAMPA (31/07/2026, casi se corta mal):** `escribir_plt()` traslada al origen usando **su
+> propio** minimo. Dos archivos del mismo trabajo escritos por separado quedan con **origenes
+> distintos** y los agujeros salen corridos respecto del contorno. Por eso existe el parametro
+> `origen=(mx, my)`: **obligatorio** cuando el trabajo se parte en varios PLT. Verificarlo
+> siempre releyendo los dos PLT y comprobando que **cada agujero cae dentro de su contorno**.
+
+Varias piezas en una hoja: acomodarlas a lo largo del eje que **no** define el ancho del rollo.
+Si hoy se corta 221 mm de ancho, dos piezas en fila siguen dando 221 de ancho y el doble de
+largo — entra seguro. Verificar `bbox` de cada una y que no se solapen.
+
 ## 6. Comparar las dos manos
 
 `comparar_par(C_der, X_der, C_izq, X_izq)` espeja la izquierda al marco de la derecha
@@ -225,3 +297,12 @@ cruz equivocada.
    mueve el borde y le corre la referencia a todo lo ya medido.
 6. La costura y el agujero estan **acoplados por el mismo punto**: al mover el punto para
    corregir la costura, el agujero queda corrido. Avisarlo siempre.
+7. **El calculo directo primero; agentes solo para criterio que no se puede calcular.** Un
+   workflow de 9 agentes (30 min) para decidir hacia que lado mover un agujero, cuando la
+   respuesta salia de un barrido de 3 segundos, es tiempo de maquina perdido en planta. Y si
+   un script pasa de ~30 s, esta mal planteado: pararlo y vectorizar, no esperarlo.
+8. **Un script auxiliar que se importa NO puede leer `sys.argv` en el nivel de modulo.** El
+   31/07/2026 un helper vio el `--apply` del script que lo importaba y genero archivos que
+   nadie pidio en la carpeta del usuario. Guardar el cuerpo ejecutable bajo
+   `if __name__ == "__main__":`, o directamente copiar las funciones.
+9. **Al partir un trabajo en varios PLT, el origen es comun o no hay registro.** Ver 5 quater.

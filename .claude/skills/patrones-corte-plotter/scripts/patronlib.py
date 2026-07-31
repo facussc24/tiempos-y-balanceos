@@ -291,21 +291,40 @@ def tabla_4_combinaciones(cruz, C, dx, dy):
 
 
 # ------------------------------------------------------------------ escritura PLT
-def escribir_plt(path, C, marcas):
-    """HPGL. SP1 = contorno (lo unico que corta), SP2 = marcas.
+def escribir_plt(path, C, marcas, cortes_previos=None, origen=None):
+    """HPGL. SP1 = todo lo que corta, SP2 = marcas.
 
-    Traslada TODO junto (contorno + marcas) al origen usando el minimo comun:
-    si se trasladan por separado, las marcas se desalinean.
+    cortes_previos: lista de contornos cerrados (agujeros) que se cortan ANTES del
+    contorno exterior. El orden importa: mientras la pieza sigue unida al resto del
+    material no se mueve, asi que el agujero sale en posicion. Si se cortan despues,
+    la pieza ya esta suelta y el agujero se va.
+
+    origen: (min_x, min_y) a restar. **OBLIGATORIO cuando se parte el trabajo en varios
+    PLT** (por ejemplo agujeros en un archivo y contorno en otro): si cada archivo se
+    traslada a su propio minimo, quedan con origenes distintos y al cortarlos uno tras
+    otro los agujeros salen corridos respecto del contorno.
+
+    Traslada TODO junto (contorno + agujeros + marcas) al origen usando el minimo comun:
+    si se trasladan por separado, se desalinean.
     Devuelve (min_x, min_y) aplicados.
     """
-    allp = list(C) + [p for m in marcas for p in m]
-    mx = min(p[0] for p in allp); my = min(p[1] for p in allp)
+    cortes_previos = cortes_previos or []
+    allp = list(C) + [p for m in marcas for p in m] + [p for a in cortes_previos for p in a]
+    if origen is not None:
+        mx, my = origen
+    else:
+        mx = min(p[0] for p in allp); my = min(p[1] for p in allp)
 
     def plu(p):
         return f"{round((p[0]-mx)*PLU_POR_MM)},{round((p[1]-my)*PLU_POR_MM)}"
 
-    o = ["IN;", "SP1;", f"PU{plu(C[0])};",
-         "PD" + ",".join(plu(p) for p in list(C[1:]) + [C[0]]) + ";", "PU;", "SP2;"]
+    o = ["IN;", "SP1;"]
+    for a in cortes_previos:                     # agujeros primero
+        o.append(f"PU{plu(a[0])};")
+        o.append("PD" + ",".join(plu(p) for p in a[1:]) + ";")
+        o.append("PU;")
+    o += [f"PU{plu(C[0])};",
+          "PD" + ",".join(plu(p) for p in list(C[1:]) + [C[0]]) + ";", "PU;", "SP2;"]
     for a, b in marcas:
         o.append(f"PU{plu(a)};PD{plu(b)};PU;")
     o.append("PU;SP0;")
