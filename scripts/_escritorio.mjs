@@ -307,6 +307,35 @@ async function cmdArchivar(escritorio, archivo, { nombre, cerrada, quien, que, d
     return cmdCheck(archivo);
 }
 
+/**
+ * Saca UNA carpeta que quedo COMPLETAMENTE vacia despues de archivar.
+ *
+ * "Nada se borra" es sobre DATOS: una carpeta sin un solo archivo adentro no es un dato, es
+ * un cartel vacio. Pero hay que decirle CUAL: la primera version barria todas las vacias del
+ * Escritorio y se llevo puesta una carpeta que Fak acababa de crear para llenar
+ * (2026-07-31). Vacia o no, era suya y no la habia pedido tocar. Un comando de limpieza que
+ * decide solo el alcance es peligroso aunque cada borrado individual sea seguro.
+ *
+ * Doble red: se chequea que este vacia y ademas se usa rmdir, que falla si tiene algo.
+ */
+function cmdLimpiarVacia(escritorio, { nombre, dryRun }) {
+    const ruta = path.join(escritorio, nombre);
+    if (!fs.existsSync(ruta)) { bad(`No existe "${nombre}"`); return 1; }
+    if (!fs.statSync(ruta).isDirectory()) { bad(`"${nombre}" no es una carpeta`); return 1; }
+
+    const adentro = listar(ruta);
+    if (adentro.length > 0) {
+        bad(`"${nombre}" NO esta vacia: tiene ${adentro.length} cosa(s) adentro. No la toco.`);
+        say(`${c.d}Si esta terminada, va por --archivar. Nada se borra con contenido adentro.${c.x}`);
+        return 1;
+    }
+    if (dryRun) { say(`${c.y}DRY-RUN${c.x}  sacaria la carpeta vacia "${nombre}"`); return 0; }
+    try { fs.rmdirSync(ruta); ok(`Sacada la carpeta vacia "${nombre}"`); } catch (e) {
+        bad(`No la pude sacar: ${e.message}`); return 1;
+    }
+    return 0;
+}
+
 async function cmdReabrir(escritorio, archivo, { nombre, dryRun }) {
     const hoy = new Date().toISOString().slice(0, 10);
     for (const anio of listar(archivo).filter((e) => e.dir && /^\d{4}$/.test(e.nombre)).map((e) => e.nombre)) {
@@ -352,6 +381,7 @@ async function main(argv) {
 
     if (args.includes('--archivar')) return cmdArchivar(escritorio, archivo, { nombre: String(flag('--archivar')), ...comun });
     if (args.includes('--reabrir')) return cmdReabrir(escritorio, archivo, { nombre: String(flag('--reabrir')), dryRun });
+    if (args.includes('--limpiar-vacia')) return cmdLimpiarVacia(escritorio, { nombre: String(flag('--limpiar-vacia')), dryRun });
     if (args.includes('--check')) return cmdCheck(archivo);
     return cmdRelevar(escritorio, archivo);
 }

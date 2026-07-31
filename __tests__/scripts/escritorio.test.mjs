@@ -202,6 +202,23 @@ describe('integracion — cola y archivo de mentira', () => {
         expect(correr(['--check']).code).toBe(0);
     });
 
+    it('26b. --limpiar-vacia saca SOLO la que se le nombra, y respeta el dry-run', () => {
+        fs.mkdirSync(path.join(cola, 'quedo vacia'));
+        fs.mkdirSync(path.join(cola, 'otra vacia que Fak acaba de crear'));
+        expect(correr(['--limpiar-vacia', 'quedo vacia', '--dry-run']).code).toBe(0);
+        expect(fs.existsSync(path.join(cola, 'quedo vacia'))).toBe(true);   // dry-run no toca
+        expect(correr(['--limpiar-vacia', 'quedo vacia']).code).toBe(0);
+        expect(fs.existsSync(path.join(cola, 'quedo vacia'))).toBe(false);
+        // La otra vacia NO se toca: el comando no decide solo el alcance (incidente 31/07)
+        expect(fs.existsSync(path.join(cola, 'otra vacia que Fak acaba de crear'))).toBe(true);
+    });
+    it('26c. --limpiar-vacia se planta si la carpeta tiene algo adentro', () => {
+        const r = correr(['--limpiar-vacia', 'Tarea vieja']);
+        expect(r.code).toBe(1);
+        expect(r.out).toMatch(/NO esta vacia/);
+        expect(fs.existsSync(path.join(cola, 'Tarea vieja', 'mail.msg'))).toBe(true);
+    });
+
     it('26. un acceso directo no se puede archivar, y medir() cuenta lo que hay', () => {
         const r = correr(['--archivar', 'GitHub.lnk', '--cerrada', '2026-07-27', '--quien', 'Fak',
             '--que', 'Algo concreto hecho aca', '--donde', 'En el legajo del proyecto']);
