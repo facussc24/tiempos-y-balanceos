@@ -10,9 +10,11 @@ centrado en XY**.
 NO cambia geometria: solo rota y traslada. El control es el VOLUMEN, que se imprime
 antes y despues y tiene que dar identico (tolerancia 1e-6 relativa).
 
-Ejemplo (frame medido con fit_plane sobre la cara de apoyo). OJO: si la normal arranca
-con signo menos hay que usar `--normal=` pegado, o argparse lo lee como otra opcion:
-  a_plano.py --normal=-0.4330,0,0.9014 --out out_print pieza.step
+La normal se saca con `cadlib.geom.fit_plane` sobre la cara de apoyo — no se escribe a mano
+ni se copia de otra pieza. Ejemplo con una cara a 30 grados (valor sintetico; el real sale
+de la medicion). OJO: si arranca con signo menos hay que usar `--normal=` pegado, o argparse
+lo lee como otra opcion:
+  a_plano.py --normal=-0.5,0,0.8660254 --out out_print pieza.step
 """
 import argparse
 import os
