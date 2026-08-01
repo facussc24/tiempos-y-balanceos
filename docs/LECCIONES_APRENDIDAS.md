@@ -13,6 +13,36 @@ contiene SOLO lo accionable que NO esta ya codificado como regla o gate ejecutab
 
 ## Lecciones operativas vigentes
 
+### 2026-07-31 (noche) — El video ES el pliego: pregunte tres cosas que estaban ahi adentro (CORRECCION DE FAK)
+- Fak dejo en el Escritorio (`diseñar en 3d`) un video de WhatsApp y un archivo vacio llamado
+  *"para el upper trimming"*. Le pregunte con AskUserQuestion en que zona, para que modelo y como
+  hacia la fuerza. Respuesta: *"pero loco te hice un video, no podes pensarlo vos, es bastante
+  evidente... mira las fotos, ¿no?"*.
+- **Que hice mal:** trate el video como contexto y no como especificacion. Las tres respuestas
+  estaban en el archivo: los fotogramas muestran la zona, el audio dice el mecanismo, y el nombre
+  del archivo vacio dice la pieza.
+- **Regla:** cuando Fak manda un video/audio, **extraerlo antes de preguntar nada**. Cuesta
+  minutos y esta todo instalado en esta PC:
+  - fotogramas: `av` (PyAV) en el **Python del sistema** (`python`, no `.venv-cad`);
+  - **audio a texto: `faster_whisper` con `large-v3` YA cacheado** en `~/.cache/huggingface/hub`
+    (`WhisperModel('large-v3', device='cpu', compute_type='int8', local_files_only=True)`) —
+    ~2 min para 26 s de audio, en espanol argentino, sin internet.
+  - No hay `ffmpeg` en el PATH: no perder tiempo buscandolo.
+- Recien **despues** de eso, si queda una ambiguedad real de dominio, se pregunta — y con el
+  trabajo ya avanzado y una imagen al lado, no antes de empezar.
+
+### 2026-07-31 (noche) — Dos trampas del CAD que ya tienen herramienta
+- **Buscar aberturas (ranuras, ventanas) en un STEP: son los LAZOS INTERNOS de las caras grandes.**
+  `getBoundary` de la cara + union-find por puntos compartidos = instantaneo y sin mallar. `--find`
+  de `analyze_step.py` esta pensado para grabados (caras finas) y con `--max-diag` grande devuelve
+  un cluster gigante inutil. Para "como es la cara vista": scatter de los centroides de triangulos
+  con normal +Z coloreados por Z — las aberturas aparecen como huecos, en segundos.
+- **El entregable impreso NO va en coordenadas del cliente.** Exporte las dos piezas en
+  coordenadas de vehiculo: llegan al laminador inclinadas y a metros del origen. Hay que
+  entregar la pieza **apoyada plana en z=0 y centrada** (script `a_plano.py`:
+  transformada inversa del frame local medido; el volumen tiene que dar identico, es el control de
+  que no se toco geometria).
+
 ### 2026-07-31 — Tarde 1h20 en mostrar una foto: el barrido caro antes del camino barato (CORRECCION DE FAK)
 - Fak pidio el 3D del Upper Trim (VW427/Cozzuol) "con el logo" y una foto para verificarlo. Tarde
   **1 hora 20 minutos**. Sus palabras: *"es demasiado lento todo lo que haces, exageradamente

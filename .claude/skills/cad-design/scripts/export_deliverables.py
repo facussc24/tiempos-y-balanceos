@@ -30,6 +30,24 @@ def _stl_export(step_path, stl_path, lc, curvature):
         gmsh.write(stl_path)
 
 
+def _aviso_frame_impresion(base, mesh):
+    """Avisa si la pieza sale en coordenadas del cliente en vez de listas para imprimir.
+
+    Incidente 2026-07-31: dos piezas entregadas en el frame del cliente, o sea inclinadas y a
+    metros del origen — el laminador las recibe torcidas. El entregable impreso va apoyado en
+    z=0 y centrado en XY -> `a_plano.py --normal=x,y,z`.
+    Es AVISO, no gate: hay entregables (conjuntos, contrapiezas) que si van en el frame cliente.
+    """
+    lo, hi = mesh.bounds
+    centro = (lo + hi) / 2.0
+    lejos = max(abs(centro[0]), abs(centro[1])) > 200.0
+    despegada = abs(lo[2]) > 1.0
+    if lejos or despegada:
+        print("  AVISO frame de impresion en '%s': centro XY (%.0f, %.0f), z_min %.2f.\n"
+              "    Si esto se imprime, pasarla por a_plano.py (apoyada en z=0, centrada)."
+              % (base, centro[0], centro[1], lo[2]))
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--workdir", required=True)
@@ -87,6 +105,7 @@ def main():
         m = geom.step_to_trimesh(piece, lc=args.stl_lc)
         if not m.is_watertight:
             raise SystemExit("[GATE validez] La malla de '%s' NO es watertight — no se entrega." % base)
+        _aviso_frame_impresion(base, m)
         outs = [piece, stl]
         if args.glb:
             envcheck.require(("trimesh",))

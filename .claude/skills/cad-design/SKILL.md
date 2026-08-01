@@ -81,9 +81,14 @@ literales sueltos en el código.
    [--substrate-keep 2] [--transform skeleton] [--zone X:455,505] --render` → evidencia en el
    manifest, exit 1 si choca, puntos rojos en el render. Planitud: `cadlib.geom.fit_plane`.
    Secciones: `render_sections.py --pieces a.step:gris b.step:rojo --axis X --stations ...`.
-6. **Entregar** — `export_deliverables.py --workdir W --pieces out/*.step --deliver <destino>
+6. **Enderezar para imprimir** — `a_plano.py --normal=<nx,ny,nz> --out out_print pieza.step`
+   lleva la pieza del frame del cliente al de impresión (apoyada en z=0, centrada en XY) y
+   **aborta si cambia el volumen**. La normal sale de `geom.fit_plane` sobre la cara de apoyo,
+   no se adivina. Sin esto el laminador recibe la pieza torcida y a metros del origen.
+7. **Entregar** — `export_deliverables.py --workdir W --pieces out_print/*.step --deliver <destino>
    [--glb]` → exige evidencia (gate §0), exporta STL binario fino (curvatura 40) + GLB,
-   copia y registra la entrega. Después: ABRIR los archivos y mirarlos (verify-before-close).
+   copia y registra la entrega. Avisa si la pieza sale en coordenadas del cliente.
+   Después: ABRIR los archivos y mirarlos (verify-before-close).
 
 ## 3bis. Antes de mallar: LEER LA TOPOLOGÍA
 
@@ -93,6 +98,7 @@ primer resultado útil se le muestra a Fak apenas existe, no al final. Escalera 
 | Paso | Cómo (`analyze_step.py f.stp ...`) | Costo | Responde |
 |---|---|---|---|
 | buscar el feature | `--find [--only-free]` | instantáneo | DÓNDE está (sin saber tags) |
+| buscar una ABERTURA | `find_openings.py f.stp` | instantáneo | ranuras/ventanas = lazos internos |
 | acotar por ventana | `--zone X:a,b --zone Z:c,d` | instantáneo | qué hay en esta zona |
 | vecinos (`getBoundary`) | `--neighbors t1,t2,...` | instantáneo | QUÉ es |
 | muestreo paramétrico | `--offset t1,...` (la referencia se deduce) | segundos | CUÁNTO mide |
@@ -133,7 +139,15 @@ inserto heat-set + pin anti-giro.
    ángulo/cuña; interferencia solo contra compresión del material BLANDO (1-2 mm).
 4. Luz de impresión: 0,3-0,5 mm/lado o el fixture impreso raspa/traba.
 5. El ojo de Fak gana: "esto choca" = dato duro; reproducir y corregir, no defender el CAD.
-6. **Logo del Upper Trim (2026-07-31): 1 h 20 buscando un grabado a ojo en renders de 9 M de
+6. **Una abertura NO se busca con `--find`** (2026-07-31, buscando ranuras): `--find` caza
+   caras finas (grabados); con `--max-diag` grande escupe un cluster de 1465 caras que no dice
+   nada. Las ranuras son **lazos internos** de la cara → `find_openings.py`. Y para ver cómo es
+   una cara clase A: scatter de centroides de triángulos con normal +Z coloreados por Z — las
+   aberturas aparecen como huecos, en segundos.
+7. **El entregable impreso no va en coordenadas del cliente** (mismo día): entregué dos piezas en
+   el frame del cliente, inclinadas y a metros del origen. Van apoyadas en z=0 y centradas →
+   `a_plano.py` (paso 6 del flujo). El control de que no se tocó geometría es el **volumen idéntico**.
+8. **Logo del Upper Trim (2026-07-31): 1 h 20 buscando un grabado a ojo en renders de 9 M de
    triángulos, y encima con el número MAL** — reporté −0,700 mm (el rebaje del pad) cuando la
    profundidad real es 0,000 mm: `removeEntities` no había recortado nada, así que "la cara con
    más nodos" era la clase A de alrededor y no el pad. Con las sondas del §3bis: 14 segundos y
