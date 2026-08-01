@@ -40,6 +40,51 @@ def _rot_a_z(n):
     return ax / s, float(np.arctan2(s, float(n @ z)))
 
 
+def _chequear_primera_capa(model, vol, bb, nombre, umbral=0.15):
+    """Grita si la pieza queda APOYADA EN EL AIRE en la orientacion elegida.
+
+    Incidente 2026-07-31: una placa de 92x108 con 6 pasadores chicos de un lado quedo
+    orientada con los pasadores contra la cama. El laminador la acepta sin chistar y sale
+    basura: las primeras capas son 6 islas y despues aparece la placa entera en el aire.
+    El sintoma es geometrico y barato de ver — el area de la seccion abajo contra la del
+    medio de la pieza.
+    """
+    alto = bb[5] - bb[2]
+    if alto <= 0:
+        return
+    try:
+        import trimesh
+    except ImportError:
+        return
+    # muestreo por contencion: barato y no depende de shapely (que no esta instalado)
+    m = None
+    try:
+        gmsh.option.setNumber("Mesh.MeshSizeMax", max(alto / 4.0, 1.0))
+        model.mesh.generate(2)
+        nodos = model.mesh.getNodes()[1].reshape(-1, 3)
+        tri = model.mesh.getElementsByType(2)[1].reshape(-1, 3) - 1
+        m = trimesh.Trimesh(vertices=nodos, faces=tri, process=True)
+    except Exception:
+        return
+    if m is None or not len(m.faces):
+        return
+    xs = np.linspace(bb[0] + 0.3, bb[3] - 0.3, 40)
+    ys = np.linspace(bb[1] + 0.3, bb[4] - 0.3, 40)
+    X, Y = np.meshgrid(xs, ys, indexing="ij")
+
+    def ocupacion(z):
+        P = np.stack([X.ravel(), Y.ravel(), np.full(X.size, z)], axis=1)
+        return float(m.contains(P).mean())
+
+    abajo = ocupacion(bb[2] + 0.02 * alto)
+    medio = ocupacion(bb[2] + 0.50 * alto)
+    if medio > 0 and abajo < umbral * medio:
+        print("  *** OJO '%s': la base apoya %.0f%% de lo que ocupa el medio de la pieza.\n"
+              "      En esta orientacion se imprime FLOTANDO (islas abajo, cuerpo en el aire).\n"
+              "      Probablemente haya que darla vuelta: --normal con el signo cambiado."
+              % (nombre, 100.0 * abajo / medio))
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -81,6 +126,8 @@ def main():
         if abs(v1 - v0) > 1e-6 * max(abs(v0), 1.0):
             gmsh.finalize()
             raise SystemExit("ABORTA: el volumen cambio (%.6f -> %.6f). Se toco geometria." % (v0, v1))
+
+        _chequear_primera_capa(gmsh.model, vols[0][1], bb, os.path.basename(src))
 
         base = os.path.join(args.out, os.path.splitext(os.path.basename(src))[0])
         gmsh.write(base + ".step")
