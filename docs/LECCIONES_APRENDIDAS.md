@@ -13,6 +13,34 @@ contiene SOLO lo accionable que NO esta ya codificado como regla o gate ejecutab
 
 ## Lecciones operativas vigentes
 
+### 2026-08-02 — "Ya esta sincronizado" no es una verificacion: verificar CUAL cuenta (CORRECCION DE FAK)
+- Fak pidio migrar todo a una notebook nueva y aclaro *"recorda que OneDrive ya esta en mi otra pc"*.
+  Di el Escritorio por cubierto. **Estaba en la otra cuenta de OneDrive.**
+- El Escritorio y Mis Documentos estan redirigidos por KFM a la cuenta **PERSONAL**, **no** a la
+  de la empresa. Fak no lo sabia: *"el personal jamas lo usamos"*. Y esa cuenta esta
+  **`overLimit`** (5,2 de 5,0 GB del plan gratuito). Detalle en la memoria local
+  `reference_escritorio_onedrive_personal` (no va al repo: el repo es publico).
+- **Fak lo detecto antes que yo**, leyendo mi plan: *"osea las cosas de mi escritorio tambien las
+  mudas entonces?"*. Cuando pregunta algo que mi plan da por resuelto, **es que el plan tiene un
+  agujero**, no que no entendio.
+- **Regla:** cuando Fak da por sentado que algo esta respaldado/sincronizado, verificar **cual
+  cuenta / cual carpeta / con que numero**, no si el servicio esta prendido.
+- **Como se verifica de verdad que OneDrive subio algo** (el icono de la bandeja no alcanza):
+  un archivo creado local y nunca subido queda con atributos **planos** (`0x20`), sin reparse
+  point de Cloud Files. Enumerar atributos **no hidrata**; leer contenido **si**. Filtro:
+  `-band 0x400` (ReparsePoint), `0x400000` (RecallOnDataAccess), `0x100000` (RecallOnOpen) — los
+  tres en cero = **nunca subio**. Sobre 63.567 archivos dieron 0, o sea estaba todo.
+- **Trampa de robocopy sobre OneDrive:** `/XJ` **NO** filtra placeholders (solo trata MOUNT_POINT
+  y SYMLINK, no el tag CLOUD). El flag correcto es **`/XA:O`**. Sin el, robocopy abre cada
+  placeholder y **dispara la descarga**: medido, 17,18 GB solo en la cuenta de empresa.
+- Otras dos que aparecieron en el mismo relevamiento y valen para cualquier copia masiva:
+  `AppData\Local\Datos de programa` es un junction **a si mismo** (loop infinito sin `/XJ`), y
+  `/R` por defecto es **1.000.000 reintentos x 30 s** = un archivo en uso cuelga el job ~347 dias.
+- **Lo que un `git clone` se lleva puesto:** habia **213 commits** locales en
+  `auto-mejora/2026-05-08T2233Z` y un `stash@{0}` que no estaban en el remoto. Antes de rearmar un
+  entorno en otra maquina: `git log <rama> --not --remotes` y `git stash list` en **todas** las
+  ramas, y `git bundle create ... --all` como red de seguridad (incluye `refs/stash`).
+
 ### 2026-07-31 (noche) — El video ES el pliego: pregunte tres cosas que estaban ahi adentro (CORRECCION DE FAK)
 - Fak dejo en el Escritorio (`diseñar en 3d`) un video de WhatsApp y un archivo vacio llamado
   *"para el upper trimming"*. Le pregunte con AskUserQuestion en que zona, para que modelo y como
