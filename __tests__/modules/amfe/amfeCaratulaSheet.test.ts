@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import XLSX from 'xlsx-js-style';
-import { buildCaratulaSheet, normalizeRevisions } from '../../../modules/amfe/amfeCaratulaSheet';
+import { buildCaratulaSheet, computeRowHeights, normalizeRevisions } from '../../../modules/amfe/amfeCaratulaSheet';
 import { buildAmfeOficialWorkbook, assertAmfeExportable } from '../../../modules/amfe/amfeExcelExport';
 import type { AmfeDocument, AmfeOperation } from '../../../modules/amfe/amfeTypes';
 
@@ -190,5 +190,57 @@ describe('buildAmfeOficialWorkbook', () => {
     it('propaga el throw del guard cuando el AMFE esta incompleto', () => {
         const doc = { ...makeDoc(), operations: [makeOp([6, '', 3])] };
         expect(() => buildAmfeOficialWorkbook(doc, { revisions: [], status: 'draft' })).toThrow(/incompleto/i);
+    });
+});
+
+describe('computeRowHeights', () => {
+    const cols = [20, 20, 20];
+
+    it('da alto suficiente a una celda con texto largo', () => {
+        const texto = 'x'.repeat(300);
+        const [h] = computeRowHeights([[{ v: texto }]], cols, [], { minPt: 20, maxPt: 400 });
+        expect(h.hpt).toBeGreaterThan(20);
+    });
+
+    it('reparte el alto de un merge VERTICAL entre sus filas, no lo ignora', () => {
+        // Regresion 2026-08-03: el merge vertical se salteaba entero del calculo,
+        // asi que las dos filas quedaban en el minimo y el texto salia cortado.
+        // Pasaba en 262 filas de los 17 AMFE del servidor (columna Efecto de Falla).
+        const largo = 'Interno: riesgo de reproceso o scrap. '.repeat(8);
+        const rows = [[{ v: largo }, { v: 'a' }], [{ v: '' }, { v: 'b' }]];
+        const merges = [{ s: { r: 0, c: 0 }, e: { r: 1, c: 0 } }];
+        const alturas = computeRowHeights(rows, cols, merges, { minPt: 20, maxPt: 400 });
+        expect(alturas).toHaveLength(2);
+        // Las DOS filas del merge reciben alto; ninguna queda en el minimo.
+        expect(alturas[0].hpt).toBeGreaterThan(20);
+        expect(alturas[1].hpt).toBeGreaterThan(20);
+        // Y entre las dos alcanzan para todo el texto.
+        const sinMerge = computeRowHeights([[{ v: largo }]], cols, [], { minPt: 20, maxPt: 400 })[0].hpt;
+        expect(alturas[0].hpt + alturas[1].hpt).toBeGreaterThanOrEqual(sinMerge);
+    });
+
+    it('un merge HORIZONTAL suma el ancho de sus columnas (menos alto, no mas)', () => {
+        const texto = 'y'.repeat(150);
+        const solo = computeRowHeights([[{ v: texto }]], cols, [], { minPt: 15, maxPt: 400 })[0].hpt;
+        const ancho = computeRowHeights([[{ v: texto }, { v: '' }, { v: '' }]], cols,
+            [{ s: { r: 0, c: 0 }, e: { r: 0, c: 2 } }], { minPt: 15, maxPt: 400 })[0].hpt;
+        expect(ancho).toBeLessThan(solo);
+    });
+
+    it('respeta el tope y el minimo, y nunca devuelve NaN', () => {
+        const alturas = computeRowHeights(
+            [[{ v: 'z'.repeat(99999) }], [{ v: '' }], [null], [{ v: undefined }]],
+            cols, [], { minPt: 20, maxPt: 200 });
+        expect(alturas[0].hpt).toBe(200);
+        for (const a of alturas) {
+            expect(Number.isFinite(a.hpt)).toBe(true);
+            expect(a.hpt).toBeGreaterThanOrEqual(20);
+        }
+    });
+
+    it('no rompe con merges que apuntan fuera del rango de columnas', () => {
+        const alturas = computeRowHeights([[{ v: 'hola' }]], cols,
+            [{ s: { r: 0, c: 0 }, e: { r: 0, c: 99 } }], { minPt: 15, maxPt: 200 });
+        expect(Number.isFinite(alturas[0].hpt)).toBe(true);
     });
 });

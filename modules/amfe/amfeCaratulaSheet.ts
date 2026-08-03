@@ -202,7 +202,22 @@ export function computeRowHeights(
 ): Array<{ hpt: number }> {
     const { minPt = 15, maxPt = 130, extraPt = 0 } = opts;
 
-    // Indice de merges: por celda ancla -> ancho de columnas; celdas tapadas -> skip.
+    /** Lineas que ocupa un texto en un ancho dado (suma de columnas del merge). */
+    const linesFor = (raw: unknown, width: number): number => {
+        const chars = Math.max(6, Math.floor((width - 2) * CHARS_PER_WIDTH_UNIT));
+        let lines = 0;
+        for (const segment of String(raw).split('\n')) {
+            lines += Math.max(1, Math.ceil(segment.length / chars));
+        }
+        return lines;
+    };
+    const widthOf = (c: number, span: number): number => {
+        let w = 0;
+        for (let k = 0; k < span; k++) w += colWidths[c + k] ?? 9;
+        return w;
+    };
+
+    // Indice de merges: ancla -> columnas que abarca; celdas tapadas -> se saltean.
     const spanByAnchor = new Map<string, number>();
     const covered = new Set<string>();
     const verticalAnchor = new Set<string>();
@@ -217,24 +232,37 @@ export function computeRowHeights(
         }
     }
 
+    /**
+     * Piso de lineas que impone cada merge VERTICAL a las filas que abarca.
+     *
+     * Su texto no estira una sola fila (se reparte entre todas), pero tampoco es
+     * gratis: si se lo ignora por completo, una celda mergeada en 2 filas con 10
+     * lineas de texto deja ambas filas en el minimo y el texto sale CORTADO. Eso
+     * pasaba en 262 filas de los 17 AMFE del servidor — tipicamente la columna de
+     * Efecto de Falla, que lleva los 3 niveles VDA y se mergea sobre las causas.
+     * Se reparte: cada fila del merge se lleva su parte proporcional.
+     */
+    const floorByRow = new Map<number, number>();
+    for (const m of merges) {
+        if (m.e.r === m.s.r) continue;
+        const raw = rows[m.s.r]?.[m.s.c]?.v;
+        if (raw == null || raw === '') continue;
+        const nRows = m.e.r - m.s.r + 1;
+        const perRow = Math.ceil(linesFor(raw, widthOf(m.s.c, m.e.c - m.s.c + 1)) / nRows);
+        for (let r = m.s.r; r <= m.e.r; r++) {
+            floorByRow.set(r, Math.max(floorByRow.get(r) ?? 0, perRow));
+        }
+    }
+
     return rows.map((row, r) => {
-        let maxLines = 1;
+        let maxLines = floorByRow.get(r) ?? 1;
         for (let c = 0; c < row.length; c++) {
             const key = `${r}:${c}`;
             if (covered.has(key) || verticalAnchor.has(key)) continue;
             const raw = row[c]?.v;
             if (raw == null || raw === '') continue;
 
-            const span = spanByAnchor.get(key) ?? 1;
-            let width = 0;
-            for (let k = 0; k < span; k++) width += colWidths[c + k] ?? 9;
-            // Margen interno de la celda: ~1 unidad de ancho por lado.
-            const chars = Math.max(6, Math.floor((width - 2) * CHARS_PER_WIDTH_UNIT));
-
-            let lines = 0;
-            for (const segment of String(raw).split('\n')) {
-                lines += Math.max(1, Math.ceil(segment.length / chars));
-            }
+            const lines = linesFor(raw, widthOf(c, spanByAnchor.get(key) ?? 1));
             if (lines > maxLines) maxLines = lines;
         }
         const hpt = Math.min(maxPt, Math.max(minPt, maxLines * LINE_PT + extraPt));
