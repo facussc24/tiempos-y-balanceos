@@ -1,6 +1,10 @@
-#!/usr/bin/env node
 /**
  * _escritorio.mjs — la cola de tareas del Escritorio y su archivo.
+ *
+ * SIN shebang a proposito: Vitest inlinea los modulos y se los pasa a `new vm.Script()`,
+ * que NO acepta `#!`. Con el shebang, `escritorio.test.mjs` no llegaba ni a cargar —
+ * moria con "SyntaxError: Invalid or unexpected token" en la linea 1, y el cache de Vite
+ * lo venia tapando: solo aparecia con el cache limpio, como en CI.
  *
  * El Escritorio es la lista de pendientes: una carpeta por tarea. Cuando una se cierra:
  *
@@ -29,6 +33,7 @@ import { fileURLToPath } from 'node:url';
 import ExcelJS from 'exceljs';
 
 import { RUTA_ESCRITORIO, RUTA_TAREAS_CERRADAS } from './_lib/serverPaths.mjs';
+import { leerMsg } from './_leerMsg.mjs';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Configuracion (las rutas viven en _lib/serverPaths.mjs, con el resto)
@@ -135,6 +140,21 @@ export function verificarInvariantes(filas, estadoFs) {
 
 export const diasDesde = (ms, ahora = Date.now()) => Math.floor((ahora - ms) / 86400000);
 
+/**
+ * Desde cuando esta abierta una tarea. La fecha del archivo NO sirve: copiar el Escritorio
+ * a otra maquina (o un resync de OneDrive) le pone a todo la fecha de hoy, y el 02/08/2026
+ * eso borro de un plumazo la antiguedad de 30 carpetas. La fecha del mail, en cambio, viaja
+ * adentro del .msg y sobrevive a cualquier copia — por eso gana siempre que exista.
+ */
+export function elegirFechaTarea({ fechasMail = [], mtimes = [] }) {
+    const validas = (xs) => xs.filter((n) => Number.isFinite(n) && n > 0);
+    const mails = validas(fechasMail);
+    if (mails.length) return { ms: Math.max(...mails), fuente: 'mail' };
+    const archivos = validas(mtimes);
+    if (archivos.length) return { ms: Math.max(...archivos), fuente: 'archivo' };
+    return { ms: 0, fuente: 'sin fecha' };
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Filesystem
 // ─────────────────────────────────────────────────────────────────────────────
@@ -147,6 +167,28 @@ function listar(dir) {
         try { mtime = fs.statSync(p).mtimeMs; } catch { /* OneDrive puede negar el stat */ }
         return { nombre: d.name, dir: d.isDirectory(), ruta: p, mtime };
     });
+}
+
+/**
+ * Junta las fechas candidatas de una tarea: las de los mails que tiene adentro y las del
+ * filesystem. Mira solo el primer nivel — el mail que origino la tarea esta ahi, y abrir
+ * los .msg de las subcarpetas seria leer decenas de megas de adjuntos al pedo.
+ */
+function fechasDeTarea(tarea) {
+    const fechasMail = []; const mtimes = [];
+    const sumarMsg = (ruta) => {
+        try { const { fecha } = leerMsg(ruta); if (fecha) fechasMail.push(fecha.getTime()); } catch { /* .msg roto o placeholder de OneDrive */ }
+    };
+    if (!tarea.dir) {
+        mtimes.push(tarea.mtime);
+        if (tarea.nombre.toLowerCase().endsWith('.msg')) sumarMsg(tarea.ruta);
+    } else {
+        for (const e of listar(tarea.ruta)) {
+            mtimes.push(e.mtime);
+            if (!e.dir && e.nombre.toLowerCase().endsWith('.msg')) sumarMsg(e.ruta);
+        }
+    }
+    return elegirFechaTarea({ fechasMail, mtimes });
 }
 
 /** Cuenta archivos y bytes para poder verificar que el movimiento no perdio nada. */
@@ -205,18 +247,25 @@ async function escribirIndice(archivo, anio, filas) {
 
 async function cmdRelevar(escritorio, archivo) {
     const entradas = listar(escritorio);
-    const tareas = entradas.filter((e) => clasificarEntrada(e.nombre, e.dir) === 'tarea');
+    const tareas = entradas
+        .filter((e) => clasificarEntrada(e.nombre, e.dir) === 'tarea')
+        .map((t) => ({ ...t, fecha: fechasDeTarea(t) }));
 
     say(`\n${c.b}ESCRITORIO${c.x}  ${escritorio}`);
     say(`${c.d}${tareas.length} cosa(s) abiertas${c.x}\n`);
-    for (const t of [...tareas].sort((a, b) => b.mtime - a.mtime)) {
-        const d = t.mtime ? diasDesde(t.mtime) : null;
+    for (const t of [...tareas].sort((a, b) => b.fecha.ms - a.fecha.ms)) {
+        const d = t.fecha.ms ? diasDesde(t.fecha.ms) : null;
         const edad = d === null ? '   ?' : `${String(d).padStart(3)}d`;
-        say(`  ${d !== null && d >= 7 ? c.y : c.d}${edad}${c.x}  ${c.d}${t.dir ? 'carpeta' : 'suelto '}${c.x}  ${t.nombre}`);
+        const origen = t.fecha.fuente === 'mail' ? '        ' : `${c.d}(fecha de archivo)${c.x}`;
+        say(`  ${d !== null && d >= 7 ? c.y : c.d}${edad}${c.x}  ${c.d}${t.dir ? 'carpeta' : 'suelto '}${c.x}  ${t.nombre}  ${origen}`);
     }
-    if (tareas.some((t) => t.mtime && diasDesde(t.mtime) >= 7)) {
-        say(`\n${c.d}Lo amarillo lleva 7 dias o mas sin tocarse: o esta cerrado sin archivar, o esta${c.x}`);
-        say(`${c.d}trabado esperando a alguien. Las dos cosas se resuelven, no se dejan.${c.x}`);
+    if (tareas.some((t) => t.fecha.ms && diasDesde(t.fecha.ms) >= 7)) {
+        say(`\n${c.d}Lo amarillo lleva 7 dias o mas desde que llego el pedido: o esta cerrado sin${c.x}`);
+        say(`${c.d}archivar, o esta trabado esperando a alguien. Las dos cosas se resuelven, no se dejan.${c.x}`);
+    }
+    if (tareas.some((t) => t.fecha.fuente !== 'mail')) {
+        say(`${c.d}Las marcadas "(fecha de archivo)" no tienen mail adentro: esa fecha se pisa sola${c.x}`);
+        say(`${c.d}cuando se copia la carpeta, asi que puede ser mas nueva de lo que la tarea es.${c.x}`);
     }
 
     say(`\n${c.b}ARCHIVO${c.x}  ${archivo}`);

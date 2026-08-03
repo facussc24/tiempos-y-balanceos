@@ -136,7 +136,12 @@ EOF
 esac
 
 # ── Recordatorio del procedimiento, 1x/hora ──────────────────────────────────
-FLAGDIR="${HOME:-/tmp}/.claude"
+#
+# El directorio se puede pisar por env var para que los tests no compitan por el mismo
+# archivo con el guard vivo de la sesion. Compartirlo hace flaky al test del recordatorio:
+# da rojo si la sesion acaba de tocar el Escritorio (el cooldown ya estaba consumido) y
+# verde si corre a favor — que es peor, porque pasa por el motivo equivocado.
+FLAGDIR="${ESCRITORIO_GUARD_FLAGDIR:-${HOME:-/tmp}/.claude}"
 mkdir -p "$FLAGDIR" 2>/dev/null || true
 FLAG="$FLAGDIR/escritorio-guard.flag"
 NOW=$(date +%s 2>/dev/null || echo 0)

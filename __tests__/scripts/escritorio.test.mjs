@@ -11,6 +11,7 @@
  *  10-13  clasificarEntrada
  *  14-18  verificarInvariantes: sin fila / huerfana / nombre no canonico / duplicada / reabierta
  *  19-26  integracion real: el gate mueve o no mueve, y el listado Excel queda bien
+ *  27-30  elegirFechaTarea: la antiguedad sale del mail, porque copiar la carpeta pisa el mtime
  */
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { execFileSync } from 'node:child_process';
@@ -22,7 +23,7 @@ import ExcelJS from 'exceljs';
 
 import {
     validarCierre, nombreCanonico, despojarFecha, clasificarEntrada, verificarInvariantes,
-    anioDe, nombreIndice, esFechaValida, medir, COLUMNAS,
+    anioDe, nombreIndice, esFechaValida, medir, elegirFechaTarea, COLUMNAS,
 } from '../../scripts/_escritorio.mjs';
 
 const SCRIPT = path.resolve(fileURLToPath(import.meta.url), '../../../scripts/_escritorio.mjs');
@@ -119,6 +120,29 @@ describe('verificarInvariantes — que el archivo y el listado no se separen', (
     it('18. duplicada canta; reabierta no se chequea porque ya no esta', () => {
         expect(verificarInvariantes([buena, buena], { archivadas: ['2026-07-21 - Mariana arb'] }).join(' ')).toMatch(/dos veces/);
         expect(verificarInvariantes([{ ...buena, estado: 'reabierta 2026-07-28' }], { archivadas: [] })).toEqual([]);
+    });
+});
+
+describe('elegirFechaTarea — desde cuando esta abierta de verdad', () => {
+    const MAIL = Date.parse('2026-07-20T10:00:00Z');
+    const COPIA = Date.parse('2026-08-02T00:00:00Z');   // el dia que se copio el Escritorio
+
+    it('27. la fecha del mail le gana a la del archivo, aunque el archivo sea mas nuevo', () => {
+        // El vector del incidente: copiar el Escritorio a la notebook le puso 02/08 a todo y
+        // el relevador paso a decir "0d" en 30 tareas, incluidas varias de hace dos semanas.
+        expect(elegirFechaTarea({ fechasMail: [MAIL], mtimes: [COPIA, COPIA] }))
+            .toEqual({ ms: MAIL, fuente: 'mail' });
+    });
+    it('28. sin mail cae al archivo, y lo dice para que esa fecha no se lea como firme', () => {
+        expect(elegirFechaTarea({ fechasMail: [], mtimes: [COPIA] })).toEqual({ ms: COPIA, fuente: 'archivo' });
+    });
+    it('29. con varios mails manda el mas nuevo: es el ultimo movimiento del tema', () => {
+        const nuevo = Date.parse('2026-07-31T21:38:00Z');
+        expect(elegirFechaTarea({ fechasMail: [MAIL, nuevo], mtimes: [] }).ms).toBe(nuevo);
+    });
+    it('30. carpeta vacia o sin stat no inventa una fecha', () => {
+        expect(elegirFechaTarea({ fechasMail: [], mtimes: [] })).toEqual({ ms: 0, fuente: 'sin fecha' });
+        expect(elegirFechaTarea({ fechasMail: [NaN], mtimes: [0] })).toEqual({ ms: 0, fuente: 'sin fecha' });
     });
 });
 

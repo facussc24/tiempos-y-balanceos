@@ -17,17 +17,24 @@ const HOOK = path.resolve(process.cwd(), '.claude/hooks/escritorio-guard.sh');
 const ESC = 'C:\\Users\\facun\\OneDrive\\Escritorio';
 const BIB = 'C:\\Users\\facun\\BARACK ARGENTINA SRL\\Ingeniería y Proyecto - INGENIERIA BARACK (NUNCA BORRAR)';
 const ARCH = `${BIB}\\1- GENERAL\\TAREAS CERRADAS`;
-const FLAG = path.join(process.env.HOME || os.tmpdir(), '.claude', 'escritorio-guard.flag');
+// Cooldown propio: si el test usara el de ~/.claude compartiria archivo con el guard vivo de
+// la sesion, y el test del recordatorio pasaria a depender de si Claude toco el Escritorio en
+// la ultima hora. Da rojo sin motivo — y a veces verde por el motivo equivocado.
+const FLAGDIR = fs.mkdtempSync(path.join(os.tmpdir(), 'escritorio-guard-'));
+const FLAG = path.join(FLAGDIR, 'escritorio-guard.flag');
 
 /** Corre el hook con el cooldown ya consumido, para aislar los bloqueos duros del recordatorio. */
 function correr(toolInput, { conCooldown = true } = {}) {
     if (conCooldown) {
-        fs.mkdirSync(path.dirname(FLAG), { recursive: true });
         fs.writeFileSync(FLAG, String(Math.floor(Date.now() / 1000)));
     } else if (fs.existsSync(FLAG)) {
         fs.rmSync(FLAG);
     }
-    const r = spawnSync('bash', [HOOK], { input: JSON.stringify(toolInput), encoding: 'utf8' });
+    const r = spawnSync('bash', [HOOK], {
+        input: JSON.stringify(toolInput),
+        encoding: 'utf8',
+        env: { ...process.env, ESCRITORIO_GUARD_FLAGDIR: FLAGDIR },
+    });
     return { code: r.status, err: r.stderr ?? '' };
 }
 
