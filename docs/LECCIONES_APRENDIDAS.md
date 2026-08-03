@@ -13,6 +13,49 @@ contiene SOLO lo accionable que NO esta ya codificado como regla o gate ejecutab
 
 ## Lecciones operativas vigentes
 
+### 2026-08-03 — Un verde puede ser el cache: el shebang tumbaba una suite entera y no se veia
+`escritorio.test.mjs` (32 tests) **no cargaba** desde hacia tiempo. El motivo: Vitest inlinea
+los modulos y se los pasa a `new vm.Script()`, que **no acepta `#!/usr/bin/env node`** — muere
+con `SyntaxError: Invalid or unexpected token` apuntando a la linea 1 y sin decir por que. El
+cache de Vite lo tapaba: con cache tibio pasaba, con cache limpio (o sea, en CI) no.
+
+- **Sintoma que hay que aprender a leer:** cuando vitest dice `Failed Suites` y `Tests: no tests`
+  (en vez de un test en rojo), el archivo **ni se cargo**. No es un test que falla: es un modulo
+  que no se puede evaluar. Contar "N passed" ahi es contar sobre una suite que no corrio.
+- **Como se ubica:** un test que haga `await import(...)` adentro de un try/catch imprime el
+  stack real con archivo y linea. Vitest solo, no.
+- Correr `npx vitest run` con el cache borrado (`node_modules/.vite`) antes de dar por buena una
+  suite que toca archivos nuevos. Un fallo que solo aparece con cache limpio es exactamente el
+  que va a aparecer en CI.
+- Los scripts del repo se invocan `node scripts/x.mjs`: el shebang no aportaba nada y ahora esta
+  sacado de los dos que importan los tests, con el porque escrito en el encabezado.
+
+### 2026-08-03 — No reescribir archivos fuente con scripts de node: usar Edit
+Para cambiar un regex con caracteres invisibles me arme un `fix.mjs` que leia el archivo y lo
+volvia a escribir. Resultado: los `\n` de los literales se expandieron a saltos reales y partieron
+el regex en cuatro lineas, y de paso el archivo quedo en CRLF. Perdi ~40 minutos persiguiendo un
+`SyntaxError` que me habia fabricado yo, encima del que ya estaba.
+
+- **Si Edit no matchea por caracteres invisibles, el problema es el `old_string`, no la herramienta.**
+  Anclar en la linea vecina que sea ASCII pura, o reescribir el bloque entero con Write.
+- Los caracteres invisibles no van literales en el fuente: ` `, `​`, `﻿` como
+  escapes. Un string con caracteres de control C1 pegados (las 5 posiciones sin definir de CP1252)
+  **lo rechaza esbuild** y tampoco se ve al leer el archivo.
+- Un `node -e` con comillas dentro de un comando bash en Windows **colapsa los backslashes**:
+  reproducir un bug asi da un falso "no se reproduce". Si el payload lleva rutas de Windows, va
+  en un archivo con `Write`, no en la linea de comando (le pasa igual a los heredoc `<<'EOF'`).
+
+### 2026-08-03 — La fecha del filesystem miente despues de mudar de PC
+El relevador del Escritorio decia "0d" en 30 de 35 carpetas: copiar el Escritorio a la notebook
+el 02/08 le piso el `mtime` a todo. Cuatro tareas que llevaban 12-14 dias figuraban como de hoy,
+y el aviso de "esto lleva mas de 7 dias" no se disparaba en ninguna.
+
+- Para cualquier cosa que venga de un mail, la fecha vive **adentro** del archivo
+  (`PR_CLIENT_SUBMIT_TIME` del `.msg`) y sobrevive a copias, resyncs y mudanzas. El `mtime` no.
+- Cuando se cae a una fecha del filesystem, **decirlo en pantalla**: una fecha que se pisa sola
+  no se puede leer igual que una firme.
+- Vale para todo lo que este bajo OneDrive con Files On-Demand, no solo el Escritorio.
+
 ### 2026-08-03 — "Falta el dato" casi nunca es cierto: primero fijarse si esta con OTRO nombre
 Fak corrigio a mano el `AMFE 150 - APOYABRAZOS TRASERO` y reporto que no tenia fecha de inicio
 ni fecha de revision. Diagnostique "faltan datos en Supabase" y arme un plan para CARGARLOS.
