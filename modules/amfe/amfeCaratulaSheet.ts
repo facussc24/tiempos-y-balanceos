@@ -164,6 +164,23 @@ export function readAliased(h: HeaderLike, field: keyof typeof HEADER_ALIASES): 
 /** Alto de UNA linea de texto, en puntos. Coincide con el autoajuste de Excel. */
 const LINE_PT = 10.2;
 
+/**
+ * Caracteres que entran por unidad de ancho de columna.
+ *
+ * El ancho de columna de Excel (`wch`) se mide en anchos del digito "0" de la
+ * fuente POR DEFECTO del libro (Calibri 11), pero estas hojas escriben en Arial
+ * 8-9, y el texto real es mayormente minusculas, mas angostas que un digito. Con
+ * 1 caracter por unidad de ancho las filas salian ~3x mas altas de lo necesario.
+ *
+ * El 1,4 esta CALIBRADO, no elegido a ojo: se comparo el alto resultante contra
+ * las 117 filas del AMFE 150 que Fak autoajusto a mano el 2026-08-03. Da mediana
+ * 1,00x (identico a su ajuste), p90 1,50x (algo de aire donde el texto es largo)
+ * y una sola fila por debajo. Si se cambia este numero, rehacer esa comparacion:
+ * errar hacia arriba solo alarga el documento, errar hacia abajo CORTA el texto,
+ * que es el problema que este calculo existe para evitar.
+ */
+const CHARS_PER_WIDTH_UNIT = 1.4;
+
 interface MergeRange { s: { r: number; c: number }; e: { r: number; c: number } }
 
 /**
@@ -211,8 +228,8 @@ export function computeRowHeights(
             const span = spanByAnchor.get(key) ?? 1;
             let width = 0;
             for (let k = 0; k < span; k++) width += colWidths[c + k] ?? 9;
-            // Margen interno de la celda: ~1 caracter por lado.
-            const chars = Math.max(4, Math.floor(width) - 2);
+            // Margen interno de la celda: ~1 unidad de ancho por lado.
+            const chars = Math.max(6, Math.floor((width - 2) * CHARS_PER_WIDTH_UNIT));
 
             let lines = 0;
             for (const segment of String(raw).split('\n')) {

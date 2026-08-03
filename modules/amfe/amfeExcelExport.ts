@@ -528,7 +528,7 @@ export function buildAmfeCompletoWorkbook(doc: AmfeDocument): XLSX.WorkBook {
     ws['!merges'] = merges;
     // Alto por contenido: sin esto todas las filas quedan en 15pt y las celdas
     // largas (efectos, controles, causas) salen cortadas al imprimir.
-    ws['!rows'] = computeRowHeights(rows, AMFE_COL_WIDTHS, merges, { minPt: 20, maxPt: 125 });
+    ws['!rows'] = computeRowHeights(rows, AMFE_COL_WIDTHS, merges, { minPt: 20, maxPt: 200 });
     ws['!margins'] = { left: 0.5, right: 0.5, top: 0.6, bottom: 0.6, header: 0.3, footer: 0.3 };
 
     // Freeze panes: freeze header + column headers
