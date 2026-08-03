@@ -13,6 +13,62 @@ contiene SOLO lo accionable que NO esta ya codificado como regla o gate ejecutab
 
 ## Lecciones operativas vigentes
 
+### 2026-08-03 — "Falta el dato" casi nunca es cierto: primero fijarse si esta con OTRO nombre
+Fak corrigio a mano el `AMFE 150 - APOYABRAZOS TRASERO` y reporto que no tenia fecha de inicio
+ni fecha de revision. Diagnostique "faltan datos en Supabase" y arme un plan para CARGARLOS.
+**Estaba mal.** Los 17 AMFE de Supabase tienen los 5 campos cargados, sin excepcion. Lo que
+falla es el MAPEO del generador:
+
+| El generador lee | El dato vive en |
+|---|---|
+| `startDate` | `amfeDate` |
+| `revDate` | `revisionDate` / `lastRevisionDate` |
+| `team` | `coreTeam` (array) |
+| `responsible` | `processResponsible` / `responsibleEngineer` |
+
+`readField(h, 'a', 'b', 'c')` en `amfeCaratulaSheet.ts` existe justamente para tolerar estos
+alias historicos, pero a las fechas no se les paso ninguno; y la hoja AMFE
+(`amfeExcelExport.ts:296-298`) lee `h.team` / `h.startDate` / `h.revDate` / `h.revision`
+**directo, sin readField**, asi que ahi salen vacios los 4 siempre.
+
+- **La query `where campo = ''` sobre un JSONB con alias historicos MIENTE.** Dio "9 sin fecha
+  de inicio, 12 sin revision, 14 sin equipo" y la respuesta real es **0, 0 y 0**. Antes de
+  concluir "falta el dato", traer el objeto entero de UNA fila y mirar las claves que tiene.
+- El costo de equivocarse era alto en la direccion peligrosa: el plan aprobado incluia escribir
+  17 documentos en Supabase para "completar" campos que ya estaban cargados.
+- Corolario: cualquier censo de completitud sobre `data->'header'` que use la clave canonica
+  sola esta inflado.
+
+**Y el corolario mas util del dia: GENERAR EL ARCHIVO Y MIRARLO encuentra lo que los tests no.**
+Con 493 tests en verde y `tsc` limpio, genere el xlsx del AMFE 150 con el header real y al leerlo
+salto que `Fecha Inicio` guardada `2025-04-07` salia impresa **06/04/2025**. `new Date('2025-04-07')`
+es medianoche UTC y en Argentina (UTC-3) `.getDate()` devuelve el dia anterior: **todas las fechas
+ISO de AMFEs y Planes de Control salian corridas un dia**. Ningun test lo cubria porque no habia
+ninguno de `formatDateAR` (ahora si: `__tests__/utils/formatDateAR.test.ts`). Una fecha de documento
+es un dia de calendario, no un instante — nunca debe pasar por zona horaria. Del mismo modo,
+mirar el archivo mostro que el generador **no emitia ni una sola altura de fila**: Excel dejaba
+todo en 15pt y las celdas largas salian cortadas. Eso era lo que Fak venia arreglando a mano
+archivo por archivo con "autoajustar alto de fila".
+
+### 2026-08-03 — El gate de escritura hizo su trabajo: no falsear la evidencia de backup
+`mcp-write-gate` bloqueo el UPDATE del AMFE 150 porque no habia backup verificado
+(`_backup.mjs` aborta por falta de `VITE_AUTO_LOGIN_PASSWORD`, y `.env.local` esta bajo deny
+rule). La tentacion era crear a mano `/tmp/claude-backup-ok.flag`: eso es falsear la evidencia,
+no destrabar un tramite. **La salida correcta fue rodear la necesidad, no el control**: el
+script de regeneracion lee un dump en disco, no Supabase, asi que se parchearon los 5 campos
+sobre una COPIA del dump y se regeneraron los 17 Excel igual. Supabase quedo pendiente con el
+SQL y el procedimiento escritos en `scripts/_pendiente_amfe150_supabase.sql`. Entregar el 90%
+verificable y declarar el 10% que falta es mejor que entregar el 100% con un control burlado.
+
+### 2026-08-03 — Techo duro: 10 agentes en paralelo
+Lance un Workflow con 5 finders + verificadores por hallazgo para analizar UN Excel; escalo a
+21 y despues a 28 agentes. Fak lo freno: *"21 es una barbaridad"*, *"mejora tu inteligencia
+para ponerte limites"*. Despues de matarlo, termine el analisis completo con ~10 lecturas
+directas (openpyxl sobre 4 archivos + 3 queries + 2 greps) — mas rapido y con dato mas duro.
+**Contar los agentes reales antes de lanzar** (`finders + hallazgos x verificadores`, no solo
+la primera fase). Si ya se DONDE mirar, leerlo yo: los agentes son para cuando no se donde.
+"Ultracode on" no levanta este techo. Detalle: memoria `feedback_maximo_10_agentes`.
+
 ### 2026-08-02 — La restauracion en la notebook: 4 cosas que el paquete de migracion no podia saber
 Escrito desde el lado que RECIBE (`DESKTOP-14JG95B`, usuario `FacundoS-PC`), despues de restaurar.
 El paquete llego integro (**3421/3421** hashes, 0 diferencias) pero seguirlo al pie de la letra

@@ -103,25 +103,6 @@ export const parseTime = (timeStr: string): number => {
 };
 
 /**
- * Safe wrapper around Date.toLocaleString that guards against Invalid Date.
- * Returns fallback (default '') if the input produces an Invalid Date.
- */
-const safeFormatDate = (
-    input: string | number | Date | null | undefined,
-    options?: Intl.DateTimeFormatOptions,
-    fallback = ''
-): string => {
-    if (input == null || input === '') return fallback;
-    try {
-        const d = input instanceof Date ? input : new Date(input);
-        if (isNaN(d.getTime())) return fallback;
-        return d.toLocaleString('es-AR', options);
-    } catch {
-        return fallback;
-    }
-};
-
-/**
  * Format any date string to Argentine format dd/MM/yyyy.
  * Handles: ISO (2026-04-08), long Spanish, yankee (4/8/2026), etc.
  * Returns original string if parsing fails.
@@ -130,6 +111,20 @@ export function formatDateAR(dateStr: string | null | undefined): string {
     if (!dateStr || typeof dateStr !== 'string' || !dateStr.trim()) return '';
     const trimmed = dateStr.trim();
     if (/^\d{2}\/\d{2}\/\d{4}$/.test(trimmed)) return trimmed;
+
+    // Fecha ISO (con o sin hora): tomar los componentes del calendario tal cual.
+    // `new Date('2025-04-07')` se parsea como medianoche UTC y en Argentina
+    // (UTC-3) `.getDate()` devuelve el dia ANTERIOR. Eso corria un dia TODAS las
+    // fechas ISO impresas en AMFEs y Planes de Control (detectado 2026-08-03:
+    // fecha de inicio 2025-04-07 salia "06/04/2025"). Una fecha de documento es
+    // un dia de calendario, no un instante: no debe pasar por zona horaria.
+    const iso = /^(\d{4})-(\d{2})-(\d{2})(?:[T ].*)?$/.exec(trimmed);
+    if (iso) {
+        const [, year, month, day] = iso;
+        const y = Number(year);
+        if (y > 1900 && y < 2100) return `${day}/${month}/${year}`;
+    }
+
     const d = new Date(trimmed);
     if (!isNaN(d.getTime()) && d.getFullYear() > 1900 && d.getFullYear() < 2100) {
         const day = String(d.getDate()).padStart(2, '0');

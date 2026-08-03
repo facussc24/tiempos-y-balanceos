@@ -16,6 +16,7 @@
 import XLSX from 'xlsx-js-style';
 import type { AmfeDocument } from './amfeTypes';
 import { sanitizeCellValue } from '../../utils/sanitizeCellValue';
+import { formatDateAR } from '../../utils/formatting';
 
 // ============================================================================
 // Tipos
@@ -123,7 +124,27 @@ const MIN_REV_ROWS = 15;
 
 type HeaderLike = Record<string, unknown>;
 
-function readField(h: HeaderLike, ...keys: string[]): string {
+/**
+ * Alias historicos por campo. La data live nunca uso un solo nombre: los AMFE
+ * importados de Excel guardaron `amfeDate` / `revisionDate` / `coreTeam`, y los
+ * creados desde la app usan `startDate` / `revDate` / `team`. Leer solo el nombre
+ * canonico deja el campo VACIO en el export aunque el dato este cargado.
+ * (Incidente 2026-08-03: 9 caratulas salieron sin fecha de inicio teniendo el
+ * dato en `amfeDate`, y la hoja AMFE sin equipo teniendolo en `coreTeam`.)
+ * UNICA fuente de verdad: la usan la Caratula y la hoja AMFE.
+ */
+export const HEADER_ALIASES = {
+    startDate: ['startDate', 'amfeDate'],
+    revDate: ['revDate', 'revisionDate', 'lastRevisionDate'],
+    revision: ['revision', 'revisionLevel', 'rev'],
+    responsible: ['responsible', 'responsibleEngineer', 'processResponsible'],
+    processResponsible: ['processResponsible', 'responsible'],
+    approvedBy: ['approvedBy', 'plantApproval'],
+    organization: ['organization', 'companyName'],
+    client: ['client', 'customerName'],
+} as const;
+
+export function readField(h: HeaderLike, ...keys: string[]): string {
     for (const k of keys) {
         const v = h[k];
         if (v != null && String(v).trim() !== '') return String(v).trim();
@@ -131,11 +152,84 @@ function readField(h: HeaderLike, ...keys: string[]): string {
     return '';
 }
 
+/** Lee un campo del header por su nombre canonico, probando todos sus alias. */
+export function readAliased(h: HeaderLike, field: keyof typeof HEADER_ALIASES): string {
+    return readField(h, ...HEADER_ALIASES[field]);
+}
+
+// ============================================================================
+// Alto de fila por contenido — compartido por la Caratula y la hoja AMFE
+// ============================================================================
+
+/** Alto de UNA linea de texto, en puntos. Coincide con el autoajuste de Excel. */
+const LINE_PT = 10.2;
+
+interface MergeRange { s: { r: number; c: number }; e: { r: number; c: number } }
+
+/**
+ * Calcula el alto de cada fila segun cuanto texto entra en el ancho de sus
+ * columnas. Sin esto Excel deja todas las filas en el alto por defecto (15pt) y
+ * el texto con wrap sale CORTADO: en la hoja AMFE hay celdas de 200+ caracteres
+ * en columnas de 20 de ancho. Fak lo venia arreglando a mano con "autoajustar
+ * alto de fila" en cada archivo entregado (2026-08-03).
+ *
+ * Reglas: se ignoran las celdas tapadas por un merge (no tienen texto propio) y
+ * las de merge VERTICAL (su texto se reparte entre varias filas, no estira una).
+ * Un merge HORIZONTAL suma el ancho de las columnas que abarca.
+ */
+export function computeRowHeights(
+    rows: ReadonlyArray<ReadonlyArray<{ v?: unknown } | null | undefined>>,
+    colWidths: readonly number[],
+    merges: readonly MergeRange[] = [],
+    opts: { minPt?: number; maxPt?: number; extraPt?: number } = {},
+): Array<{ hpt: number }> {
+    const { minPt = 15, maxPt = 130, extraPt = 0 } = opts;
+
+    // Indice de merges: por celda ancla -> ancho de columnas; celdas tapadas -> skip.
+    const spanByAnchor = new Map<string, number>();
+    const covered = new Set<string>();
+    const verticalAnchor = new Set<string>();
+    for (const m of merges) {
+        const anchor = `${m.s.r}:${m.s.c}`;
+        spanByAnchor.set(anchor, m.e.c - m.s.c + 1);
+        if (m.e.r > m.s.r) verticalAnchor.add(anchor);
+        for (let r = m.s.r; r <= m.e.r; r++) {
+            for (let c = m.s.c; c <= m.e.c; c++) {
+                if (r !== m.s.r || c !== m.s.c) covered.add(`${r}:${c}`);
+            }
+        }
+    }
+
+    return rows.map((row, r) => {
+        let maxLines = 1;
+        for (let c = 0; c < row.length; c++) {
+            const key = `${r}:${c}`;
+            if (covered.has(key) || verticalAnchor.has(key)) continue;
+            const raw = row[c]?.v;
+            if (raw == null || raw === '') continue;
+
+            const span = spanByAnchor.get(key) ?? 1;
+            let width = 0;
+            for (let k = 0; k < span; k++) width += colWidths[c + k] ?? 9;
+            // Margen interno de la celda: ~1 caracter por lado.
+            const chars = Math.max(4, Math.floor(width) - 2);
+
+            let lines = 0;
+            for (const segment of String(raw).split('\n')) {
+                lines += Math.max(1, Math.ceil(segment.length / chars));
+            }
+            if (lines > maxLines) maxLines = lines;
+        }
+        const hpt = Math.min(maxPt, Math.max(minPt, maxLines * LINE_PT + extraPt));
+        return { hpt: Math.round(hpt * 10) / 10 };
+    });
+}
+
 /**
  * Devuelve el equipo multifuncional como lista "Nombre — Area".
  * Tolera header.coreTeam (array) o header.team (string separado por coma/nueva linea).
  */
-function readTeam(h: HeaderLike): string[] {
+export function readTeam(h: HeaderLike): string[] {
     const core = h.coreTeam;
     if (Array.isArray(core)) {
         return core.map(x => String(x).trim()).filter(Boolean);
@@ -235,19 +329,20 @@ export function buildCaratulaSheet(
     const push = (r: Cell[]) => rows.push(r);
     const rowIdx = () => rows.length;
 
-    const org = readField(h, 'organization', 'companyName') || 'BARACK MERCOSUL';
+    const org = readAliased(h, 'organization') || 'BARACK MERCOSUL';
     const subject = readField(h, 'subject');
     const amfeNumber = readField(h, 'amfeNumber');
     const location = readField(h, 'location');
-    const startDate = readField(h, 'startDate');
-    const processResp = readField(h, 'processResponsible', 'responsible');
-    const client = readField(h, 'client', 'customerName');
-    const revDate = readField(h, 'revDate');
+    // Formato AR en las dos hojas: la data live mezcla ISO (2025-04-07) y
+    // DD/MM/YYYY, y la caratula imprimia el crudo mientras la hoja AMFE lo
+    // convertia — el mismo AMFE mostraba la fecha de dos formas distintas.
+    const startDate = formatDateAR(readAliased(h, 'startDate'));
+    const processResp = readAliased(h, 'processResponsible');
+    const client = readAliased(h, 'client');
+    const revDate = formatDateAR(readAliased(h, 'revDate'));
     const confidentiality = readField(h, 'confidentiality') || '-';
     const modelYear = readField(h, 'modelYear');
-    const rev = readField(h, 'revision', 'revisionLevel', 'rev') || 'A';
-    const responsible = readField(h, 'responsible', 'processResponsible');
-    const approvedBy = readField(h, 'approvedBy', 'plantApproval');
+    const rev = readAliased(h, 'revision') || 'A';
     const isPreliminar = opts.status !== 'approved';
 
     // --- Titulo + referencia de formulario ---
@@ -365,12 +460,17 @@ export function buildCaratulaSheet(
         for (let b = 0; b < 3; b++) merges.push({ s: { r: signSpaceIdx, c: b * 4 }, e: { r: signSpaceIdx, c: b * 4 + 3 } });
         push(row);
     }
-    // Etiquetas de firma con nombre debajo del rol
+    // Etiquetas de firma: SOLO el rol, sin nombre impreso.
+    // El formulario I-AC-005.3 real deja los casilleros en blanco para firma
+    // manuscrita (ver AMFE 131 y 144 en el servidor). Los nombres pertenecen al
+    // bloque EQUIPO MULTIFUNCIONAL, de arriba. Imprimir `approvedBy` aca hacia
+    // figurar a Gonzalo Cal (que firma HO/Planta) como firmante de CALIDAD en 11
+    // documentos — error reportado por Fak el 2026-08-03.
     {
         const ri = rowIdx();
         const blocks: Array<[string, string]> = [
-            ['INGENIERIA', responsible],
-            ['CALIDAD', approvedBy],
+            ['INGENIERIA', ''],
+            ['CALIDAD', ''],
             ['CLIENTE', ''],
         ];
         const row: Cell[] = Array.from({ length: COLS }, () => blank({}));
@@ -387,7 +487,11 @@ export function buildCaratulaSheet(
     const ws = XLSX.utils.aoa_to_sheet(rows.map(r => r.map(c => ({ v: c.v, t: 's', s: c.s }))));
     ws['!cols'] = COL_WIDTHS.map(w => ({ wch: w }));
     ws['!merges'] = merges;
-    // Fila de firma mas alta
-    ws['!rows'] = rows.map((_, i) => (i === signSpaceIdx ? { hpt: 42 } : {}));
+    // Alto por contenido; el bloque de identificacion y el encabezado de
+    // REVISIONES van con aire extra (asi los dejaba Fak a mano).
+    const heights = computeRowHeights(rows, COL_WIDTHS, merges, { minPt: 18, maxPt: 90, extraPt: 6 });
+    heights[signSpaceIdx] = { hpt: 42 };   // espacio para la firma manuscrita
+    ws['!rows'] = heights;
+    ws['!margins'] = { left: 0.7, right: 0.7, top: 0.75, bottom: 0.75, header: 0.3, footer: 0.3 };
     return ws;
 }

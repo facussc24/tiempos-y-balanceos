@@ -17,7 +17,7 @@ import {
 } from './amfeTypes';
 import { sanitizeFilename } from '../../utils/filenameSanitization';
 import { sanitizeCellValue } from '../../utils/sanitizeCellValue';
-import { buildCaratulaSheet, normalizeRevisions, type AmfeLifecycleStatus } from './amfeCaratulaSheet';
+import { buildCaratulaSheet, computeRowHeights, normalizeRevisions, readAliased, readTeam, type AmfeLifecycleStatus } from './amfeCaratulaSheet';
 import { downloadWorkbook, generateWorkbookBuffer } from '../../utils/excel';
 import { truncateApplicableParts as truncateParts } from '../../utils/productFamilyAutoFill';
 import { formatDateAR } from '../../utils/formatting';
@@ -288,14 +288,18 @@ function buildMetadataRows(doc: AmfeDocument, colWidths: number[]): { rows: any[
     merges.push({ s: { r: 1, c: 0 }, e: { r: 1, c: metaEnd } });
 
     // Metadata pairs (rows 2-9)
+    // Leer SIEMPRE con readAliased/readTeam: la data live guarda estos campos con
+    // nombres historicos (amfeDate, revisionDate, coreTeam...). Leerlos directo de
+    // `h` los deja vacios aunque esten cargados — ver HEADER_ALIASES.
+    const hh = h as unknown as Record<string, unknown>;
     const metaPairs: [string, string, string, string][] = [
         ['AMFE Nro.', h.amfeNumber, 'Confidencialidad', h.confidentiality],
-        ['Organizacion', h.organization, 'Cliente', h.client],
+        ['Organizacion', readAliased(hh, 'organization'), 'Cliente', readAliased(hh, 'client')],
         ['Ubicacion', h.location, 'Nro. Pieza', h.partNumber],
-        ['Responsable', h.responsible, 'Resp. Proceso', h.processResponsible],
-        ['Equipo', h.team, 'Modelo / Año', h.modelYear],
-        ['Fecha Inicio', formatDateAR(h.startDate), 'Fecha Rev.', formatDateAR(h.revDate)],
-        ['Revision', h.revision, 'Aprobado por', h.approvedBy],
+        ['Responsable', readAliased(hh, 'responsible'), 'Resp. Proceso', readAliased(hh, 'processResponsible')],
+        ['Equipo', readTeam(hh).join(', '), 'Modelo / Año', h.modelYear],
+        ['Fecha Inicio', formatDateAR(readAliased(hh, 'startDate')), 'Fecha Rev.', formatDateAR(readAliased(hh, 'revDate'))],
+        ['Revision', readAliased(hh, 'revision'), 'Aprobado por', readAliased(hh, 'approvedBy')],
         ['Alcance', h.scope, 'Asunto', h.subject],
         ...(h.applicableParts?.trim() ? [['Piezas Aplicables', truncateParts(h.applicableParts).replace(/\n/g, ' · '), '', ''] as [string, string, string, string]] : []),
     ];
@@ -522,6 +526,10 @@ export function buildAmfeCompletoWorkbook(doc: AmfeDocument): XLSX.WorkBook {
     const ws = XLSX.utils.aoa_to_sheet(rows);
     ws['!cols'] = AMFE_COL_WIDTHS.map(w => ({ wch: w }));
     ws['!merges'] = merges;
+    // Alto por contenido: sin esto todas las filas quedan en 15pt y las celdas
+    // largas (efectos, controles, causas) salen cortadas al imprimir.
+    ws['!rows'] = computeRowHeights(rows, AMFE_COL_WIDTHS, merges, { minPt: 20, maxPt: 125 });
+    ws['!margins'] = { left: 0.5, right: 0.5, top: 0.6, bottom: 0.6, header: 0.3, footer: 0.3 };
 
     // Freeze panes: freeze header + column headers
     ws['!freeze'] = { xSplit: 0, ySplit: dataStartRow, topLeftCell: `A${dataStartRow + 1}` };

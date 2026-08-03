@@ -128,12 +128,38 @@ describe('buildCaratulaSheet', () => {
         expect(vals).toContain('Luis Gomez (Calidad)');
     });
 
-    it('incluye las firmas de aprobacion con responsable y aprobador', () => {
+    it('deja los casilleros de firma SIN nombre impreso (se firman a mano)', () => {
+        // El formulario I-AC-005.3 real deja INGENIERIA / CALIDAD / CLIENTE en
+        // blanco. Imprimir approvedBy en el casillero de CALIDAD hacia figurar a
+        // Gonzalo Cal (que firma HO/Planta) como firmante de calidad.
         const ws = buildCaratulaSheet(makeDoc(), { revisions: revs, status: 'approved' });
-        const joined = cells(ws).map(c => c.v).join(' | ');
-        expect(joined).toContain('FIRMAS DE APROBACION');
-        expect(joined).toContain('Carlos Baptista'); // INGENIERIA = responsible
-        expect(joined).toContain('Gonzalo Cal');       // CALIDAD = approvedBy
+        const vals = cells(ws).map(c => String(c.v));
+        expect(vals.join(' | ')).toContain('FIRMAS DE APROBACION');
+        // Las etiquetas estan solas, sin "\nNombre" pegado abajo.
+        expect(vals).toContain('INGENIERIA');
+        expect(vals).toContain('CALIDAD');
+        expect(vals).toContain('CLIENTE');
+        expect(vals.some(v => v.startsWith('CALIDAD\n'))).toBe(false);
+        expect(vals.some(v => v.startsWith('INGENIERIA\n'))).toBe(false);
+    });
+
+    it('lee las fechas y el equipo por sus alias historicos (amfeDate/revisionDate/coreTeam)', () => {
+        // Caso real del AMFE 150: el dato existe pero bajo el nombre viejo.
+        // Antes de 2026-08-03 la caratula salia sin fecha de inicio ni de revision.
+        const ws = buildCaratulaSheet(
+            makeDoc({
+                startDate: undefined, revDate: undefined, revision: undefined, team: undefined,
+                amfeDate: '2025-04-07', revisionDate: '2025-09-23', revisionLevel: 'B',
+                coreTeam: ['Paulo Centurion (Ingenieria)', 'Manuel Meszaros (Calidad)'],
+            }),
+            { revisions: revs, status: 'draft' });
+        const vals = cells(ws).map(c => String(c.v));
+        // Salen en formato AR y con el dia correcto (el ISO es medianoche UTC).
+        expect(vals).toContain('07/04/2025');
+        expect(vals).toContain('23/09/2025');
+        expect(vals).not.toContain('06/04/2025');
+        expect(vals).toContain('B');
+        expect(vals).toContain('Paulo Centurion (Ingenieria)');
     });
 });
 

@@ -47,10 +47,23 @@ Al construir el header de un AMFE nuevo, usar estos nombres canónicos. La cará
 
 En TODAS las carátulas de AMFE:
 - **`responsible` = "Carlos Baptista"** (responsable / revisó). `reviewedBy` y `responsibleEngineer` también Carlos.
-- **`approvedBy` = "Gonzalo Cal"** (aprobó). `plantApproval` también Gonzalo Cal.
+- **`approvedBy` = "Carlos Baptista"** (Ingeniería). **`plantApproval` = "Gonzalo Cal"** (Planta) — campos DISTINTOS.
 - `preparedBy`/`elaboratedBy` = "Facundo Santoro".
 - `processResponsible` = el responsable de proceso del producto (project-specific, ej. "Paulo Centurión" para Amarok).
 - `approvedBy` y `reviewedBy` NUNCA la misma persona (regla `control-plan.md`).
+
+> **Corrección 2026-08-03.** Hasta hoy esta sección decía `approvedBy = "Gonzalo Cal"`, en
+> contra de `control-plan.md` (approvedBy = Ingeniería) y de `product-map` (Gonzalo Cal firma
+> **HO**, no AMFE). Consecuencia: la carátula imprimía "CALIDAD / Gonzalo Cal" en 11 documentos.
+> Fak lo reportó. La evidencia son los AMFE reales hechos a mano más recientes (105 y 107,
+> oct/nov 2025), cuyo equipo dice `Paulo Centurión - INGENIERIA | Manuel Meszaros - CALIDAD |
+> Cristina Rabago - SEGURIDAD E HIGIENE`. **Quedan 11 documentos en Supabase con
+> `approvedBy = 'Gonzalo Cal'`**: corregirlos requiere OK de Fak (ver
+> `scripts/_pendiente_amfe150_supabase.sql`).
+
+**Los casilleros de firma van VACÍOS.** El formulario I-AC-005.3 real deja INGENIERIA /
+CALIDAD / CLIENTE en blanco para firma manuscrita (ver AMFE 131 y 144 en el servidor). El
+generador ya no imprime ningún nombre adentro: los nombres viven en EQUIPO MULTIFUNCIONAL.
 
 ## 3. Modos de falla SECUENCIALES por operación
 
@@ -83,5 +96,9 @@ Desde 2026-07-03 las revisiones van en la **tabla REVISIONES de la Caratula** (f
 - [ ] Nivel de revisión vigente en ROJO; título con " PRELIMINAR" solo si el doc no está approved.
 - [ ] FM numerados 1,2,3,…N sin saltos en cada operación.
 - [ ] Tabla REVISIONES con hitos A→N y columna MODIFICO.
-- [ ] Responsable = Carlos Baptista, Aprobado por = Gonzalo Cal.
+- [ ] Responsable = Carlos Baptista, Aprobado por = Carlos Baptista (Ingeniería); Gonzalo Cal solo en `plantApproval`.
+- [ ] Casilleros de firma (INGENIERIA / CALIDAD / CLIENTE) **sin nombre impreso**.
+- [ ] Fecha de inicio y de revisión NO vacías (si lo están, el dato existe con otro nombre:
+      `amfeDate` / `revisionDate` — ver `HEADER_ALIASES` en `amfeCaratulaSheet.ts`).
+- [ ] Fechas en DD/MM/YYYY y con el día correcto (bug de zona horaria corregido 2026-08-03).
 - [ ] 0 causas sin S/O/D (validar con `amfeValidator`).
