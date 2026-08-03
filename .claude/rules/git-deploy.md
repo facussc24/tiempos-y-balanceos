@@ -9,7 +9,7 @@ Despues de CADA tarea completada que modifique codigo:
 3. **`git push origin main`** — pushear a GitHub
 4. **Verificar CI** — `gh run list --limit 1` para confirmar que el workflow pase
 
-**Why (ademas del deploy):** Fak prueba en GitHub Pages (produccion, no dev server), y el deploy corre en el push a `main` — sin push, prueba una version vieja. (Hasta 2026-07-29 habia un segundo motivo, que Fak trabajaba en 2 PCs; ya no: quedo una sola, `FACU-PC`.)
+**Why (ademas del deploy):** Fak prueba en GitHub Pages (produccion, no dev server), y el deploy corre en el push a `main` — sin push, prueba una version vieja. (Hasta 2026-07-29 habia un segundo motivo, que Fak trabajaba en 2 PCs; ya no: desde 2026-08-02 quedo una sola, la notebook `DESKTOP-14JG95B` (usuario `FacundoS-PC`), con el repo en `C:\Dev\BarackMercosul`.)
 
 ## Checklist pre-commit
 

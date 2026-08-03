@@ -59,7 +59,7 @@ printf '%s' "$TODO" | grep -q '_escritorio\.mjs' && exit 0
 #   · peor: **`del` es alias de borrado Y preposicion en español**, asi que "del Escritorio"
 #     en un mensaje de commit se leia como un borrado y bloqueaba el commit.
 # Toda operacion real trae la ruta con separadores; la prosa no.
-ZONA='[\\/](Escritorio([^A-Za-z]|$)|_TERMINADAS|TAREAS CERRADAS|BARACK ARGENTINA SRL)'
+ZONA='[\\/](Escritorio([^A-Za-z]|$)|Desktop([^A-Za-z]|$)|_TERMINADAS|TAREAS CERRADAS|BARACK ARGENTINA SRL)'
 printf '%s' "$TODO" | grep -qiE "$ZONA" || exit 0
 
 # ── 1. Borrar: prohibido, sin excepcion ──────────────────────────────────────

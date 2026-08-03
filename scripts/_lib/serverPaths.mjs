@@ -35,13 +35,13 @@ export const CARPETA_QUILOMBO = '1.ORGANIZAR';
  * 5. 3D, ULM GATE 2, DESVIOS...), con control documental via LISTADO MAESTRO I-IN-001.
  */
 export const RUTA_BIBLIOTECA_INGENIERIA =
-    'C:\\Users\\facun\\BARACK ARGENTINA SRL\\Ingeniería y Proyecto - INGENIERIA BARACK (NUNCA BORRAR)';
+    'C:\\Users\\FacundoS-PC\\BARACK ARGENTINA SRL\\Ingeniería y Proyecto - General\\INGENIERIA BARACK (NUNCA BORRAR)';
 
 /** Archivo del RASTRO de las tareas cerradas (mails, capturas, borradores). Regla `escritorio-tareas.md`. */
 export const RUTA_TAREAS_CERRADAS = `${RUTA_BIBLIOTECA_INGENIERIA}\\1- GENERAL\\TAREAS CERRADAS`;
 
 /** La cola de pendientes: una carpeta por tarea abierta. */
-export const RUTA_ESCRITORIO = 'C:\\Users\\facun\\OneDrive\\Escritorio';
+export const RUTA_ESCRITORIO = 'C:\\Users\\FacundoS-PC\\OneDrive - BARACK ARGENTINA SRL\\Desktop';
 
 /** Nombres de carpeta que marcan contenido archivado/obsoleto (case-insensitive). */
 const RE_OBSOLETO = /^(obsoletos?|old)$/i;

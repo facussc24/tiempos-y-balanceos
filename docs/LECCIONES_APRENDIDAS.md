@@ -13,6 +13,42 @@ contiene SOLO lo accionable que NO esta ya codificado como regla o gate ejecutab
 
 ## Lecciones operativas vigentes
 
+### 2026-08-02 — La restauracion en la notebook: 4 cosas que el paquete de migracion no podia saber
+Escrito desde el lado que RECIBE (`DESKTOP-14JG95B`, usuario `FacundoS-PC`), despues de restaurar.
+El paquete llego integro (**3421/3421** hashes, 0 diferencias) pero seguirlo al pie de la letra
+hubiera roto tres cosas.
+
+- **Un ZIP hecho en Windows guarda los nombres en codepage OEM (CP850), no en UTF-8.**
+  Extraerlo con .NET en un Windows es-AR los decodifica como CP1252 y **142 nombres salen
+  mojibakeados**: `Año_2024` → `A¤o_2024`, `Política` → `Pol¡tica`, `N°` → `Nø`. El contenido
+  queda intacto, pero `_verificar-hashes.ps1` reporta "142 faltantes" y la skill `docs-empresa`
+  deja de encontrar los archivos por nombre. **El diagnostico correcto es "fallan los nombres",
+  no "faltan datos"** — leer la alarma al reves lleva a la decision equivocada en las dos
+  direcciones. Se arregla re-extrayendo con `entryNameEncoding = CP850`, o en Python leyendo
+  `nombre.encode('cp437').decode('cp850')`. Los 4 nombres con `–` (guion largo) y `™` no
+  sobreviven ni asi: el ZIP los degrado al crearse; se recuperan del manifiesto UTF-8.
+- **El paquete es una foto; el remoto sigue vivo.** El ZIP se cerro 13:19 y a las **13:28** se
+  pusheo un commit mas (`0ca192cd`). No estaba ni en el paquete ni en el clon de la notebook.
+  **Despues de restaurar, antes de tocar nada: `git fetch && git merge --ff-only origin/main`.**
+- **`bash` no es Git Bash y el falso positivo es facil.** El chequeo "Git Bash en el PATH" pasa
+  si lo corres *desde* Git Bash, porque hereda `/usr/bin`. En el PATH **real del registro**
+  (`HKLM\...\Session Manager\Environment` + `HKCU\Environment`) la unica entrada de Git era
+  `Git\cmd`, que no tiene `bash.exe`, y `bash` resolvia a `C:\Windows\System32\bash.exe` = el
+  lanzador de WSL, sin distros. Los 15 hooks del repo arrancan con `bash ` y morian todos, en
+  silencio, incluidos `push-guard` y `mcp-write-gate`. **Agregar `Git\bin` al PATH de USUARIO no
+  alcanza**: Windows arma el PATH como maquina + usuario, asi que `system32` sigue ganando.
+  Requiere admin sobre el PATH de maquina.
+- **Ojo con los junctions al borrar un repo viejo.** `docs-local/` era un junction al OneDrive de
+  la empresa. Borrar el repo sin sacar primero el enlace puede llevarse los 37 archivos del
+  destino. Sacarlo con `[System.IO.Directory]::Delete($ruta, $false)`, verificar que el destino
+  siga entero, y recien despues borrar. Y **recrear el junction en el repo nuevo**, si no se
+  rompe todo lo que lea `docs-local/`.
+- **Corolario de metodo, que es el mismo de la leccion de abajo:** el `RESTAURAR.bat` se anuncia
+  como 6 pasos y no cubre 2 de las 9 carpetas (`05-DOCS-ONEDRIVE`, `09-CONFIG`); su chequeo de
+  memoria cuenta sin recursion y **siempre** termina en rojo; y el `settings.json` que la tabla
+  §1 manda copiar pesa 38 bytes y borra la config entera del Claude de destino. Un script de
+  migracion escrito por el que se va hay que **auditarlo linea por linea** antes de correrlo.
+
 ### 2026-08-02 — "Ya esta sincronizado" no es una verificacion: verificar CUAL cuenta (CORRECCION DE FAK)
 - Fak pidio migrar todo a una notebook nueva y aclaro *"recorda que OneDrive ya esta en mi otra pc"*.
   Di el Escritorio por cubierto. **Estaba en la otra cuenta de OneDrive.**
