@@ -24,6 +24,21 @@ cerrada, esté como esté el archivo.
 - Se archiva lo que **Fak** dio por terminado, no lo que yo creo terminado. Ante la duda,
   se lista como candidata y decide él.
 
+**Los dos motivos por los que no cierra** (triage del 03/08: 30 carpetas, cero cerrables, y
+las 30 caían en uno de estos dos). Buscar estos primero:
+
+| Lo que se ve | Lo que falta | Cómo se comprueba |
+|---|---|---|
+| El trabajo técnico ESTÁ hecho | Nadie avisó al que lo pidió | No hay `.msg` de respuesta en la carpeta |
+| El entregable ESTÁ hecho | Quedó suelto en el Escritorio | No está en su carpeta por tipo |
+
+Que el archivo exista en su carpeta **no prueba que el trabajo se hizo**: puede ser el mismo
+adjunto que ya estaba ahí, reenviado. Comparar fecha y contenido, no el nombre.
+
+**La antigüedad sale del mail, no del archivo.** El `mtime` se pisa al copiar la carpeta o
+cuando OneDrive resincroniza. El relevador ya lo resuelve (vía `_leerMsg.mjs`) y marca
+"(fecha de archivo)" cuando tuvo que caer al filesystem: esas no se leen como firmes.
+
 ## 2. Se archiva el RASTRO, nunca el entregable
 
 Una tarea cerrada tiene dos mitades y van a lugares distintos:

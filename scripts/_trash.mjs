@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 /**
  * _trash.mjs — papelera de documentos APQP: VER y RESTAURAR lo borrado.
  *

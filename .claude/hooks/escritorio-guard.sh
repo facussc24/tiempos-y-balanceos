@@ -161,9 +161,18 @@ CERRADA = la ultima accion que era de Barack esta hecha Y el ENTREGABLE ya esta 
 carpeta por tipo de la biblioteca de Ingenieria. Esperando a un tercero NO es cerrada.
 "El archivo esta listo pero no lo mande" NO es cerrada.
 
+LOS DOS MOTIVOS POR LOS QUE NO CIERRA (triage 03/08: las 30 carpetas caian en uno de estos):
+  1. El trabajo tecnico ESTA hecho, pero nadie le contesto al que lo pidio.
+     -> se comprueba: no hay ningun .msg de respuesta en la carpeta.
+  2. El entregable ESTA hecho, pero quedo suelto en el Escritorio.
+     -> se comprueba: no esta en su carpeta por tipo.
+Que el archivo exista en su carpeta NO prueba que el trabajo se hizo: puede ser el mismo
+adjunto que ya estaba ahi, reenviado. Comparar fecha y contenido, nunca el nombre.
+
 Al archivar NO se copia el entregable: eso duplicaria el documento. Se mueve solo el RASTRO
 (el mail que la origino, capturas, borradores) y el listado dice DONDE quedo el entregable.
 
+  node scripts/_leerMsg.mjs --dir "<carpeta>"   # que se pidio, quien y CUANDO (fecha del mail)
   node scripts/_escritorio.mjs              # relevar: que hay abierto y hace cuanto
   node scripts/_escritorio.mjs --archivar "<carpeta>" --cerrada AAAA-MM-DD \
        --quien "<quien lo pidio>" --que "<que se hizo>" --donde "<donde quedo el entregable>"

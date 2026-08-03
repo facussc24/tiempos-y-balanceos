@@ -13,6 +13,25 @@ contiene SOLO lo accionable que NO esta ya codificado como regla o gate ejecutab
 
 ## Lecciones operativas vigentes
 
+### 2026-08-03 — Al parser de un formato binario, el auditor tiene que FABRICAR archivos
+El lector de `.msg` pasaba 16 tests y leia bien los 25 mails del Escritorio. Le pedi al agente
+`auditor` que buscara modos de falla **silenciosos** y encontro tres reales, ninguno visible
+leyendo el codigo: los encontro **fabricando archivos CFB a mano** y cruzando contra
+`node_modules/cfb/cfb.js` (SheetJS, que ya esta en el repo por xlsx).
+
+- **El caso que no esta entre tus datos igual existe.** Ninguno de los 25 mails usaba sectores
+  de 4096 bytes, asi que el bug no daba sintoma; pero el dia que llegue uno, el lector iba a
+  devolver "(sin asunto)" y fecha vacia **sin tirar error**. Un mail que parece vacio no se
+  distingue de un mail vacio.
+- **Devolver basura sin error es peor que fallar.** Los otros dos eran de la misma familia:
+  una cadena de sectores con ciclo devolvia texto repetido, y un stream de propiedades
+  desalineado devolvia una fecha creible y falsa (casi cualquier combinacion de 8 bytes cae
+  adentro del rango valido de `Date`). Se arreglaron cortando con error y validando el rango.
+- Al pedir la auditoria de un parser: **nombrar los casos que NO pudiste probar** y pedir que
+  los fabrique. "Revisa este parser" no alcanza.
+- El mismo auditor encontro que el fixture "inventado" del test tenia nombres y proyectos
+  REALES de la empresa. En un repo publico, un test tambien es codigo publicado.
+
 ### 2026-08-03 — Un verde puede ser el cache: el shebang tumbaba una suite entera y no se veia
 `escritorio.test.mjs` (32 tests) **no cargaba** desde hacia tiempo. El motivo: Vitest inlinea
 los modulos y se los pasa a `new vm.Script()`, que **no acepta `#!/usr/bin/env node`** — muere
@@ -29,6 +48,32 @@ cache de Vite lo tapaba: con cache tibio pasaba, con cache limpio (o sea, en CI)
   que va a aparecer en CI.
 - Los scripts del repo se invocan `node scripts/x.mjs`: el shebang no aportaba nada y ahora esta
   sacado de los dos que importan los tests, con el porque escrito en el encabezado.
+### 2026-08-03 — En esta notebook CREAR PROCESOS cuesta segundos: vitest miente en verde y en rojo
+Una sola causa explica dos sintomas que parecian distintos. En `DESKTOP-14JG95B` levantar un
+proceso hijo tarda una eternidad, asi que:
+
+1. **`npx vitest run` (pool `forks`, el default de Vitest 4) no corre NI UN test.**
+   `Failed to start forks worker` + `Timeout waiting for worker to respond`, 60s por archivo,
+   y el reporte dice `Test Files: no tests` / `Tests: no tests`... **con exit code 0**.
+   Con `--pool=threads` el mismo archivo da 2 passed en 11,75s. → **falso VERDE**.
+2. **Los tests que spawnean un subproceso se pasan del `testTimeout: 15000`.** Los 16 fallos de
+   `escritorio.test.mjs` + `escritorioGuard.test.mjs` eran *todos* `Test timed out in 15000ms`,
+   ni una sola asercion rota. Con `--testTimeout=120000`: **19/19 passed**, y un test que moria
+   a los 15s tarda **19,6s**. → **falso ROJO**.
+
+- **Comando que sirve aca:**
+  `npx vitest run <ruta> --pool=threads --no-file-parallelism --testTimeout=120000`.
+  Sin `--no-file-parallelism`, aun con threads, algunos workers tampoco arrancan.
+- **El exit code no garantiza NADA en ninguna de las dos direcciones.** Leer siempre las lineas
+  `Test Files` / `Tests`: `no tests` significa que no corrio nada, y "0 fallados" ahi es cero
+  sobre cero. Y antes de creerle a un rojo, mirar si el error es una asercion o un timeout.
+- **Como se aislo, que es lo reusable:** comparacion directa forks/threads sobre UN archivo, y
+  despues el mismo archivo con el timeout subido. Antes de eso le habia echado la culpa a que
+  tenia `npm run build` en paralelo — **era falso**, repetido con la maquina libre da igual.
+  Anotar una causa plausible sin aislarla deja una leccion que miente.
+- **No tocar `vitest.config.ts`:** subir el timeout global o fijar `pool` por un problema de una
+  notebook tapa el sintoma para todos y puede romper CI. Si aparece en otra maquina, ahi si.
+  Candidata a causa de fondo, sin confirmar: el antivirus interceptando cada `node.exe` nuevo.
 
 ### 2026-08-03 — No reescribir archivos fuente con scripts de node: usar Edit
 Para cambiar un regex con caracteres invisibles me arme un `fix.mjs` que leia el archivo y lo

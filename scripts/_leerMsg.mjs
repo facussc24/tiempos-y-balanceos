@@ -50,7 +50,11 @@ export function abrirCFB(buf) {
     const difatInicio = buf.readUInt32LE(0x44);
     const difatCant = buf.readUInt32LE(0x48);
 
-    const sector = (n) => buf.subarray(512 + n * TAM_SECTOR, 512 + (n + 1) * TAM_SECTOR);
+    // El sector n arranca en (n+1)*TAM_SECTOR, NO en 512+n*TAM_SECTOR. Con sectores de 512
+    // las dos cuentas dan igual, pero cuando el archivo declara sectores de 4096 (los .msg
+    // con adjuntos grandes) el header ocupa un sector entero y la version vieja leia todo
+    // corrido 3584 bytes: devolvia "(sin asunto)" y fecha vacia, sin tirar ningun error.
+    const sector = (n) => buf.subarray((n + 1) * TAM_SECTOR, (n + 2) * TAM_SECTOR);
 
     // DIFAT: los primeros 109 punteros a sectores de FAT estan en el header; el resto
     // encadenado en sectores propios, con el "siguiente" en las ultimas 4 bytes.
@@ -75,11 +79,19 @@ export function abrirCFB(buf) {
         for (let i = 0; i < TAM_SECTOR / 4; i++) FAT.push(s.readUInt32LE(i * 4));
     }
 
+    // Un archivo con la FAT corrupta puede tener un ciclo (sector 2 → 3 → 2 → ...). Cortar
+    // por cantidad y devolver lo que salga arma un buffer con los mismos sectores repetidos:
+    // texto plausible pero falso. Mejor cortar y decirlo.
     const cadena = (inicio, tabla) => {
         const out = [];
+        const vistos = new Set();
         let c = inicio;
-        const tope = tabla.length + 1;
-        while (c < FIN_CADENA && out.length < tope) { out.push(c); c = tabla[c]; }
+        while (c < FIN_CADENA) {
+            if (vistos.has(c)) throw new Error(`cadena de sectores con ciclo en el sector ${c}: el archivo esta corrupto`);
+            vistos.add(c);
+            out.push(c);
+            c = tabla[c];
+        }
         return out;
     };
     const leerCadena = (inicio, tam) =>
@@ -223,18 +235,30 @@ export function fileTimeADate(bajo, alto) {
     return Number.isNaN(d.getTime()) ? null : d;
 }
 
+/** Antes de 1995 no habia mail corporativo en Barack; despues de mañana, tampoco. */
+const CABECERA_PROPIEDADES = 32;
+const FECHA_MINIMA = Date.UTC(1995, 0, 1);
+
 /**
  * Busca una propiedad de fecha en `__properties_version1.0`. El stream arranca con un
  * header (32 bytes en el nivel del mensaje) y sigue con entradas fijas de 16 bytes:
  * tag(4) + flags(4) + valor(8).
+ *
+ * Las dos validaciones NO son paranoia. Si el stream no arranca donde se cree, el loop
+ * avanza de a 16 desde un punto corrido y lee los bytes de VALOR de una propiedad como si
+ * fueran el tag de la siguiente; y como casi cualquier combinacion de 8 bytes cae dentro
+ * del rango de fechas de JS, sale una fecha que parece buena y no tiene nada que ver.
+ * Devolver null y caer al header `Date:` es mucho mejor que datar mal una tarea.
  */
-function fechaDePropiedades(buf, tags) {
-    for (let off = 32; off + 16 <= buf.length; off += 16) {
+export function fechaDePropiedades(buf, tags, ahora = Date.now()) {
+    if ((buf.length - CABECERA_PROPIEDADES) % 16 !== 0) return null;   // no es este layout
+    const tope = ahora + 86400000;
+    for (let off = CABECERA_PROPIEDADES; off + 16 <= buf.length; off += 16) {
         const tipo = buf.readUInt16LE(off);
         const prop = buf.readUInt16LE(off + 2).toString(16).padStart(4, '0').toUpperCase();
         if (tipo !== 0x0040 || !tags.includes(prop)) continue;   // 0x0040 = PT_SYSTIME
         const d = fileTimeADate(buf.readUInt32LE(off + 8), buf.readUInt32LE(off + 12));
-        if (d) return d;
+        if (d && d.getTime() >= FECHA_MINIMA && d.getTime() <= tope) return d;
     }
     return null;
 }

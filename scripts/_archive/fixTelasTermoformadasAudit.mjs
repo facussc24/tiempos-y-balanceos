@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 /**
  * fixTelasTermoformadasAudit.mjs
  * Fix 3 audit warnings in Telas Termoformadas 582D AMFE:

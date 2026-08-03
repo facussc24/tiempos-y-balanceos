@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 /**
  * _refreshArb.mjs — refresca el cache local del ERP arb desde los exports crudos.
  *

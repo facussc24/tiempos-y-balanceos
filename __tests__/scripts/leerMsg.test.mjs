@@ -23,14 +23,16 @@ import os from 'node:os';
 import path from 'node:path';
 
 import {
-    leerMsg, abrirCFB, decodificarAnsi, desescapar, htmlATexto, fileTimeADate,
+    leerMsg, abrirCFB, decodificarAnsi, desescapar, htmlATexto, fileTimeADate, fechaDePropiedades,
 } from '../../scripts/_leerMsg.mjs';
+
+/** Los mismos tags de fecha de envio que usa `leerMsg`. */
+const leerFechaDeStream = (buf) => fechaDePropiedades(buf, ['0039', '0E06']);
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Fabrica de .msg: el minimo Compound File Binary que el lector tiene que entender
 // ─────────────────────────────────────────────────────────────────────────────
 
-const SEC = 512;
 const MINI = 64;
 const LIBRE = 0xffffffff;
 const FIN = 0xfffffffe;
@@ -57,7 +59,7 @@ function entradaDir({ nombre, tipo, inicio, tam, der = LIBRE, hijo = LIBRE }) {
  * grandes a sectores propios. Un item con `hijos` se arma como sub-carpeta, que es como
  * viajan los adjuntos y los destinatarios.
  */
-function fabricarMsg(spec) {
+function fabricarMsg(spec, { SEC = 512, ciclo = false } = {}) {
     // Aplanar: cada nodo se queda con el indice de su padre para poder enlazar el arbol.
     const nodos = [];
     const aplanar = (items, padre) => {
@@ -91,7 +93,7 @@ function fabricarMsg(spec) {
     // Sectores: 0 = FAT, despues el directorio (que puede pasar de un sector: entran 4
     // entradas por sector y un mail tiene mas propiedades que eso), la mini-FAT, el
     // mini-stream y al final los streams grandes.
-    const secsDir = Math.ceil((nodos.length + 1) / 4);
+    const secsDir = Math.ceil((nodos.length + 1) / (SEC / 128));
     const SEC_DIR = 1;
     const SEC_MINIFAT = SEC_DIR + secsDir;
     const SEC_MINISTREAM = SEC_MINIFAT + 1;
@@ -117,6 +119,8 @@ function fabricarMsg(spec) {
     enc(SEC_MINIFAT, FIN);
     encadenar(SEC_MINISTREAM, secsMini);
     for (const g of cuerposGrandes) encadenar(g.inicio, g.secs);
+    // FAT corrupta a proposito: el ultimo sector del directorio vuelve al primero.
+    if (ciclo) enc(SEC_DIR + secsDir - 1, SEC_DIR);
 
     const miniFat = Buffer.alloc(SEC, 0xff);
     let mi = 0;
@@ -156,7 +160,7 @@ function fabricarMsg(spec) {
     Buffer.from('d0cf11e0a1b11ae1', 'hex').copy(header, 0);
     header.writeUInt16LE(0x003e, 0x18); header.writeUInt16LE(0x0003, 0x1a);
     header.writeUInt16LE(0xfffe, 0x1c);
-    header.writeUInt16LE(9, 0x1e);                 // sectores de 512
+    header.writeUInt16LE(Math.log2(SEC), 0x1e);    // tamaño de sector (9 = 512, 12 = 4096)
     header.writeUInt16LE(6, 0x20);                 // mini-sectores de 64
     header.writeUInt32LE(1, 0x2c);                 // 1 sector de FAT
     header.writeUInt32LE(SEC_DIR, 0x30);
@@ -213,8 +217,8 @@ describe('htmlATexto — que una lista de pedidos se lea como lista', () => {
             .toEqual(['Necesito:', 'Cargar la BOM', 'Avisar a Leo']);
     });
     it('6. la firma con celdas vacias no deja veinte renglones en blanco', () => {
-        const html = '<div>Gracias.</div>' + '<div>&nbsp;</div>'.repeat(12) + '<div>Carlos</div>';
-        expect(htmlATexto(html)).toBe('Gracias.\n\nCarlos');
+        const html = '<div>Gracias.</div>' + '<div>&nbsp;</div>'.repeat(12) + '<div>Juan</div>';
+        expect(htmlATexto(html)).toBe('Gracias.\n\nJuan');
     });
     it('7. los \\r de Outlook no bloquean el colapso de renglones', () => {
         expect(htmlATexto('uno<br>\r\n\r\n\r\n\r\ndos')).toBe('uno\n\ndos');
@@ -233,25 +237,43 @@ describe('fileTimeADate', () => {
     it('10. cero no es 1601: es "no hay fecha"', () => {
         expect(fileTimeADate(0, 0)).toBeNull();
     });
+    it('19. ante un stream de propiedades desalineado prefiere no dar fecha', () => {
+        // Si el stream no arranca donde se cree, el recorrido lee los bytes de VALOR de una
+        // propiedad como si fueran el tag de la siguiente, y casi cualquier combinacion de
+        // 8 bytes cae adentro del rango de fechas de JS: sale una fecha creible y falsa.
+        // Datar mal una tarea es peor que no datarla, asi que se descarta el stream entero.
+        const FECHA = new Date('2026-07-31T19:42:52.000Z');
+        const sano = propiedades(FECHA);
+        expect(leerFechaDeStream(sano)?.toISOString()).toBe(FECHA.toISOString());
+
+        const corrido = Buffer.concat([sano, Buffer.alloc(8)]);   // ya no es multiplo de 16
+        expect(leerFechaDeStream(corrido)).toBeNull();
+    });
+    it('20. una fecha fuera de lo posible se descarta aunque el layout cierre', () => {
+        expect(leerFechaDeStream(propiedades(new Date('1970-01-01T00:00:00Z')))).toBeNull();
+        expect(leerFechaDeStream(propiedades(new Date('2199-01-01T00:00:00Z')))).toBeNull();
+    });
 });
 
 describe('leerMsg — de punta a punta sobre un .msg fabricado', () => {
+    // Nombres, empresas y productos INVENTADOS: el repo es publico y un fixture no es
+    // excusa para meter datos de la casa. El formato es lo que se prueba, no el contenido.
     const FECHA = new Date('2026-07-31T19:42:52.000Z');
-    const cuerpoHtml = `<html><body><p>Facu, necesito que avances:</p><ol>
-        <li>Puesta a punto del Hot Press</li><li>Cargar la BOM del Upper Trimming</li></ol>
+    const cuerpoHtml = `<html><body><p>Ana, necesito que avances:</p><ol>
+        <li>Puesta a punto de la prensa</li><li>Cargar la lista de materiales</li></ol>
         <p>Gracias.</p></body></html>`;
 
-    function escribir(streams) {
+    function escribir(streams, opciones) {
         const p = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'msg-')), 'prueba.msg');
-        fs.writeFileSync(p, fabricarMsg(streams));
+        fs.writeFileSync(p, fabricarMsg(streams, opciones));
         return p;
     }
 
     const BASE = () => [
         { nombre: '__substg1.0_0037001F', datos: uni('Prioridades de la semana') },
-        { nombre: '__substg1.0_0C1A001F', datos: uni('Carlos Baptista') },
-        { nombre: '__substg1.0_5D01001F', datos: uni('cbaptista@ejemplo.com') },
-        { nombre: '__substg1.0_0E04001F', datos: uni('Facundo Santoro') },
+        { nombre: '__substg1.0_0C1A001F', datos: uni('Juan Perez') },
+        { nombre: '__substg1.0_5D01001F', datos: uni('jperez@ejemplo.com') },
+        { nombre: '__substg1.0_0E04001F', datos: uni('Ana Gomez') },
         { nombre: '__substg1.0_10130102', datos: Buffer.from(cuerpoHtml, 'latin1') },
         { nombre: '__properties_version1.0', datos: propiedades(FECHA) },
     ];
@@ -259,9 +281,25 @@ describe('leerMsg — de punta a punta sobre un .msg fabricado', () => {
     it('11. saca asunto, remitente, destinatario y fecha de envio', () => {
         const m = leerMsg(escribir(BASE()));
         expect(m.asunto).toBe('Prioridades de la semana');
-        expect(m.de).toBe('Carlos Baptista <cbaptista@ejemplo.com>');
-        expect(m.para).toBe('Facundo Santoro');
+        expect(m.de).toBe('Juan Perez <jperez@ejemplo.com>');
+        expect(m.para).toBe('Ana Gomez');
         expect(m.fecha.toISOString()).toBe(FECHA.toISOString());
+    });
+
+    it('17. un .msg con sectores de 4096 se lee igual que uno de 512', () => {
+        // El sector n arranca en (n+1)*tamaño, no en 512+n*tamaño. Con sectores de 512 las
+        // dos cuentas coinciden y el bug no se ve; con 4096 —los .msg con adjuntos grandes—
+        // todo queda corrido 3584 bytes y el lector devolvia "(sin asunto)" y fecha vacia,
+        // SIN tirar error. Ese es el peor modo de falla: dato mudo que parece un mail sin datos.
+        const m = leerMsg(escribir(BASE(), { SEC: 4096 }));
+        expect(m.asunto).toBe('Prioridades de la semana');
+        expect(m.de).toBe('Juan Perez <jperez@ejemplo.com>');
+        expect(m.fecha.toISOString()).toBe(FECHA.toISOString());
+        expect(m.cuerpo).toContain('Puesta a punto de la prensa');
+    });
+
+    it('18. una FAT con ciclo se corta con error, no devuelve sectores repetidos', () => {
+        expect(() => leerMsg(escribir(BASE(), { ciclo: true }))).toThrow(/ciclo/i);
     });
 
     it('12. el cuerpo HTML en CP1252 sale como texto con los renglones separados', () => {
@@ -270,8 +308,8 @@ describe('leerMsg — de punta a punta sobre un .msg fabricado', () => {
             ...BASE().filter((s) => !s.nombre.startsWith('__substg1.0_1013')),
             { nombre: '__substg1.0_10130102', datos: Buffer.from(conAcentos, 'latin1') },
         ]));
-        expect(m.cuerpo).toContain('Puesta a punto del Hot Press');
-        expect(m.cuerpo).toContain('Cargar la BOM del Upper Trimming');
+        expect(m.cuerpo).toContain('Puesta a punto de la prensa');
+        expect(m.cuerpo).toContain('Cargar la lista de materiales');
         expect(m.cuerpo).toContain('coordiná con Leó');
         expect(m.cuerpo).not.toContain('<');
     });
@@ -287,14 +325,14 @@ describe('leerMsg — de punta a punta sobre un .msg fabricado', () => {
     it('14. un cuerpo largo se lee entero: vive fuera del mini-FAT, en sectores propios', () => {
         // Este es el vector que hace fallar a un parser que solo sigue la FAT normal (o solo
         // el mini-FAT): el mismo archivo usa las DOS cadenas a la vez.
-        const largo = `<p>${'Modificaciones de BOM ARB para Patagonia. '.repeat(300)}</p>`;
+        const largo = `<p>${'Renglon repetido para pasarse del corte del mini-FAT. '.repeat(300)}</p>`;
         const m = leerMsg(escribir([
             ...BASE().filter((s) => !s.nombre.startsWith('__substg1.0_1013')),
             { nombre: '__substg1.0_10130102', datos: Buffer.from(largo, 'latin1') },
         ]));
         expect(largo.length).toBeGreaterThan(4096);
         expect(m.asunto).toBe('Prioridades de la semana');              // el chico sigue bien
-        expect(m.cuerpo.match(/Modificaciones de BOM ARB/g)).toHaveLength(300);
+        expect(m.cuerpo.match(/Renglon repetido/g)).toHaveLength(300);
     });
 
     it('16. las propiedades del mensaje le ganan a las del destinatario y las del adjunto', () => {
@@ -311,7 +349,7 @@ describe('leerMsg — de punta a punta sobre un .msg fabricado', () => {
             ] },
             { nombre: '__attach_version1.0_#00000000', hijos: [
                 { nombre: '__substg1.0_0037001F', datos: uni('NO: asunto del adjunto') },
-                { nombre: '__substg1.0_3707001F', datos: uni('Modificaciones BOM ARB_20260731.pdf') },
+                { nombre: '__substg1.0_3707001F', datos: uni('Lista de materiales revisada.pdf') },
                 { nombre: '__substg1.0_3704001F', datos: uni('Modifi~1.pdf') },
                 { nombre: '__properties_version1.0', datos: propiedades(new Date('2001-01-01T00:00:00.000Z')) },
             ] },
@@ -319,7 +357,7 @@ describe('leerMsg — de punta a punta sobre un .msg fabricado', () => {
         expect(m.asunto).toBe('Prioridades de la semana');
         expect(m.fecha.toISOString()).toBe(FECHA.toISOString());
         // El nombre largo, no el 8.3 truncado: "Modifi~1.pdf" no sirve para buscar el archivo.
-        expect(m.adjuntos).toEqual(['Modificaciones BOM ARB_20260731.pdf']);
+        expect(m.adjuntos).toEqual(['Lista de materiales revisada.pdf']);
     });
 
     it('15. un archivo que no es .msg falla diciendo por que, no devuelve basura', () => {

@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 /**
  * _gateRepoPublico.mjs — candado del repo PUBLICO.
  *
