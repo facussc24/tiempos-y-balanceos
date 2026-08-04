@@ -133,6 +133,50 @@ Es el indicador más confiable — evita adivinar:
 (¿`ACEPTA`, F-key?). No se prueba dentro de una fila con datos reales sin OK de Fak — un
 tabulador de más y se pisa un renglón.
 
+## Segundo plano: LEER sí, ESCRIBIR no `PROBADO 2026-08-04`
+
+Los campos son controles Win32 reales (`RichEdit20A` / `Edit`), cada uno con su handle. Eso
+permite **leerlos con `WM_GETTEXT` sin robar el foco** — Fak puede seguir usando la PC.
+Herramienta: `scripts/_arbUI.py --leer`. Funciona perfecto.
+
+**Escribir por mensajes NO funciona.** Probado en el `21-7339`:
+
+| lo que se envió | qué pasó |
+|---|---|
+| `WM_CHAR` letra por letra a la celda `Cantidad` | el número **aparece** en pantalla |
+| `BM_CLICK` al botón `&Acepta` | **no graba**: el export mostró `0,00002460` sin cambios |
+| `TCM_SETCURSEL` al tab control | cambia el índice pero **la pantalla no cambia de solapa** |
+
+**El patrón es siempre el mismo: los mensajes sintéticos cambian el estado visual, pero el
+programa no ejecuta su lógica.** Nunca "toma" el valor tipeado (le falta el evento real que
+confirma la celda), así que `ACEPTA` graba lo que había antes.
+
+⚠️ **Trampa peligrosa:** después de escribir así, la pantalla muestra el valor nuevo y la base
+tiene el viejo. **Leer la pantalla NO prueba que se grabó.** La única verificación válida es
+exportar y mirar el archivo. Casi lo doy por bueno mirando la pantalla.
+
+**Conclusión: para escribir hace falta foco real** (teclado de verdad sobre la ventana activa).
+Si se quiere no interrumpir a Fak, la salida es correr el arb en **otra sesión** (otra PC o RDP):
+el `.exe` vive en `Z:\arb\prod\` y lo puede abrir cualquier máquina de la red.
+
+## Exportar para verificar `CONFIRMADO`
+
+Solapa `Listado de Insumos de Un Producto` → `Desde Artículo` / `Hasta Artículo` / combo
+`Salida`, con estas opciones:
+
+`0 Pantalla` · `1 Impresora` · `2 Disco C` · **`3 Tabla EXcel`** · `4 Formato PDF` ·
+`5 HTML` · `6 Word/RTF` · `7 Electronico`
+
+⚠️ **La salida `Tabla EXcel` SOBRESCRIBE `C:\tmp\RELACIONES.TXT`** con un reporte formateado
+(marcos de caracteres, "Hoja 1", encabezado con fecha) — **no** con el tabulado que parsea
+`_refreshArb.mjs`. Los campos Desde/Hasta tampoco acotaron nada: salió el listado completo.
+Antes de exportar así, tener el tabulado guardado.
+
+En ese reporte, cada línea de insumo es:
+`rubro · codigo · descripcion · unidad · consumo · costo · modulo · proceso`
+y trae **`Costo Unitario`** al pie: **el consumo alimenta el costeo del producto**, no sólo
+las compras. Sube el impacto de cualquier error de consumo.
+
 ## Seguridad — antes de que el robot escriba
 
 1. **Backup del arb primero.** Existe `Z:\arb\prod\BAK`; confirmar que esté fresco y quién
