@@ -13,6 +13,33 @@ contiene SOLO lo accionable que NO esta ya codificado como regla o gate ejecutab
 
 ## Lecciones operativas vigentes
 
+### 2026-08-04 — Al frenar un incendio no rompas lo que estabas salvando, y desconfia del verde
+La notebook se congelaba: un hook `SessionStart` invocaba `claude -p`, y esa invocacion ES
+una sesion nueva que dispara el mismo hook. 103 procesos, 15,1 GB de 16. Lo frene, pero
+cometi tres errores que valen mas que el arreglo.
+
+- **Mi freno destruyo datos.** Para que la cola no creciera al infinito puse "si falla, borra
+  el pedido". Ese mismo dia tiro un pedido real cuyo material seguia intacto en disco. Un
+  fallo tiene MOTIVO: permanente (el material no existe) se descarta, pasajero (timeout,
+  credenciales) se reintenta con contador. **Un freno de emergencia que borra es un segundo
+  incendio.** Lo encontro el auditor, no yo.
+- **Un test sin bloqueos no prueba un guardian.** Compare 99 combinaciones viejo-vs-nuevo:
+  0 diferencias. Pero 0 casos habian llegado a bloquear — verde vacio. El test bueno fue
+  comparar el parseo **byte a byte** (81 casos, con campos vacios y truncados) y forzar el
+  bloqueo con guardianes de mentira. Antes de festejar un verde: **¿este test toco el camino
+  que me importa?**
+- **Atribui a Fak un cambio que habia hecho yo.** Vi que el archivo de credenciales cambio y
+  le dije "algo cambio gracias a vos"; la hora decia que lo habia tocado mi propia prueba 8
+  minutos antes. Mirar el reloj antes de asignar la causa.
+- Dato duro para cualquier hook en Windows: **`SessionStart` es BLOQUEANTE** (la sesion no
+  arranca hasta que vuelve) y **cada hook cuesta ~220 ms de bash + ~255 ms de node**. Los 8
+  guardianes del repo sumaban 3.395 ms antes de CADA comando; consolidados en
+  `_dispatcher.sh` quedaron en 1.607 ms. Ojo: predije 715 ms y erre feo — el parseo era solo
+  una parte, cada guardian lanza ademas 3 a 9 `grep`/`git` propios.
+- En Windows, para saber si un PID vive **nunca `os.kill(pid, 0)`**: CPython lo implementa
+  con `TerminateProcess` y lo MATA. Y al matar procesos filtrando por linea de comando, el
+  propio PowerShell (y el bash que lo lanzo) matchean el patron y se suicidan.
+
 ### 2026-08-04 — Una baja deja huellas: la BOM sobrevive al producto que ya no existe
 Le pase a Fak una lista de 6 productos para cambiar un material discontinuado. Uno estaba
 anulado hacia rato: "ojo con pasarme cosas muy viejas". Yo habia armado la lista buscando en
