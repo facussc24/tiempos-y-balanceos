@@ -46,7 +46,7 @@ const dir = process.argv[1];
 let s = "";
 process.stdin.on("data", d => s += d);
 process.stdin.on("end", () => {
-  let cmd = "", file = "", tool = "", content = "";
+  let cmd = "", file = "", tool = "", content = "", ok = false;
   try {
     const j = JSON.parse(s);
     const t = j?.tool_input || {};
@@ -54,9 +54,23 @@ process.stdin.on("end", () => {
     cmd = String(t.command ?? "");
     file = String(t.file_path ?? "");
     content = String(t.content ?? t.new_string ?? "");
+    ok = true;
   } catch {}
   const clean = x => String(x ?? "").replace(/[\x1f\n\r]/g, " ");
   const w = (n, v) => { try { fs.writeFileSync(dir + "/" + n, v); } catch {} };
+
+  // Si el JSON no se pudo parsear, TODO va vacio de verdad — ni un separador.
+  // cad-guard, patrones-guard y escritorio-guard distinguen "vacio" para caer a
+  // su red de seguridad: greps sobre el JSON crudo (cad-guard:45, patrones:46,
+  // escritorio:49, que mete el INPUT entero en CMD). Si les mandaramos
+  // "\x1f\x1f\x1f" — no vacio — entrarian por la rama normal, leerian campos
+  // todos vacios, no matchearian nada y DEJARIAN PASAR sin decir una palabra.
+  // Es el peor final posible: un guardian que no protege pero parece que si.
+  if (!ok) {
+    for (const n of ["tool","cmd","file","target","parsed4","parsed3"]) w(n, "");
+    return;
+  }
+
   w("tool", tool);                                 // para elegir que guardianes corren
   w("cmd", cmd);                                   // supabase/validator/renumber/push
   w("file", file);                                 // file-guard

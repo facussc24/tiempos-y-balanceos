@@ -23,11 +23,19 @@ cometi tres errores que valen mas que el arreglo.
   fallo tiene MOTIVO: permanente (el material no existe) se descarta, pasajero (timeout,
   credenciales) se reintenta con contador. **Un freno de emergencia que borra es un segundo
   incendio.** Lo encontro el auditor, no yo.
-- **Un test sin bloqueos no prueba un guardian.** Compare 99 combinaciones viejo-vs-nuevo:
-  0 diferencias. Pero 0 casos habian llegado a bloquear — verde vacio. El test bueno fue
-  comparar el parseo **byte a byte** (81 casos, con campos vacios y truncados) y forzar el
-  bloqueo con guardianes de mentira. Antes de festejar un verde: **¿este test toco el camino
-  que me importa?**
+- **Un test sin bloqueos no prueba un guardian, y me paso TRES veces seguidas.** (1) Compare
+  99 combinaciones viejo-vs-nuevo: 0 diferencias, pero 0 casos habian llegado a bloquear.
+  (2) Puse en el commit "JSON roto -> corren los 9" y era cierto — pero **correr no es
+  proteger**: el auditor encontro que con JSON roto el parser compartido escribia
+  `"\x1f\x1f\x1f"`, que NO es vacio, asi que el `[ -z "$PARSED" ]` de cad/patrones/
+  escritorio-guard nunca disparaba y su red de seguridad quedaba muerta: **los tres dejaban
+  pasar un `rm -rf` del Escritorio**. (3) Al ir a reproducirlo me dio verde otra vez, porque
+  esos guardianes tienen **enfriamiento de 3600 s** y salian 0 pasara lo que pasara. Recien
+  borrando la marca aparecio: suelto=2, con despachador=0.
+  La pregunta antes de festejar un verde no es "¿paso?" sino **"¿que tendria que haber dado
+  rojo, y lo dio alguna vez?"**. Si ningun caso bloqueo, el test no probo el guardian.
+  Enforcement: `bash .claude/hooks/_dispatcher.test.sh` (8 chequeos, incluye el JSON roto y
+  borra las marcas de enfriamiento antes de cada corrida).
 - **Atribui a Fak un cambio que habia hecho yo.** Vi que el archivo de credenciales cambio y
   le dije "algo cambio gracias a vos"; la hora decia que lo habia tocado mi propia prueba 8
   minutos antes. Mirar el reloj antes de asignar la causa.
