@@ -31,6 +31,15 @@ import win32process
 u = ctypes.windll.user32
 k32 = ctypes.windll.kernel32
 
+# En 64 bits hay que declarar los tipos: sin esto el HHOOK se trunca y parece fallo.
+u.SetWindowsHookExW.argtypes = [ctypes.c_int, ctypes.c_void_p, w.HINSTANCE, w.DWORD]
+u.SetWindowsHookExW.restype = w.HHOOK
+u.CallNextHookEx.argtypes = [w.HHOOK, ctypes.c_int, w.WPARAM, w.LPARAM]
+u.CallNextHookEx.restype = w.LPARAM
+u.UnhookWindowsHookEx.argtypes = [w.HHOOK]
+k32.GetModuleHandleW.argtypes = [w.LPCWSTR]
+k32.GetModuleHandleW.restype = w.HINSTANCE
+
 WH_KEYBOARD_LL = 13
 WH_MOUSE_LL = 14
 ES_PASSWORD = 0x0020
@@ -161,12 +170,14 @@ def main():
         '.arb-cache', 'grabacion_arb.log'))
     a = ap.parse_args()
 
-    CMPK = ctypes.CFUNCTYPE(ctypes.c_int, ctypes.c_int, w.WPARAM, w.LPARAM)
+    CMPK = ctypes.CFUNCTYPE(w.LPARAM, ctypes.c_int, w.WPARAM, w.LPARAM)
     pk, pm = CMPK(cb_teclado), CMPK(cb_mouse)
-    hk = u.SetWindowsHookExW(WH_KEYBOARD_LL, pk, k32.GetModuleHandleW(None), 0)
-    hm = u.SetWindowsHookExW(WH_MOUSE_LL, pm, k32.GetModuleHandleW(None), 0)
+    hmod = k32.GetModuleHandleW(None)
+    hk = u.SetWindowsHookExW(WH_KEYBOARD_LL, ctypes.cast(pk, ctypes.c_void_p), hmod, 0)
+    hm = u.SetWindowsHookExW(WH_MOUSE_LL, ctypes.cast(pm, ctypes.c_void_p), hmod, 0)
     if not hk:
-        raise SystemExit('no pude instalar el hook de teclado')
+        raise SystemExit('no pude instalar el hook de teclado (error %d)'
+                         % ctypes.get_last_error())
 
     print('=' * 74)
     print('GRABANDO — solo mientras la ventana del arb este al frente.')
