@@ -116,3 +116,6 @@ REGISTRO_TIEMPOS_INYECCION.xlsx
 # Artefactos de scratch de Claude Code que entraron por una ruta de Windows
 # mal formada (el ":" de "C:" se convirtio en parte del nombre). Ver commit 3a917384.
 *scratchpad*
+
+# Cache local de mails (Outlook) — DATOS DE LA EMPRESA, el repo es publico
+.mail-cache/
