@@ -217,6 +217,48 @@ entra por `keybd_event`, aunque se vea. Habría que mirar si hace falta entrar e
 primero (F2 / Enter sobre la celda) antes de tipear. **Pedirle a Fak que lo haga él una vez
 mientras se loguean las teclas** sería la forma directa de cerrarlo.
 
+## RECETA QUE FUNCIONA `13 de 14 cargadas y verificadas 2026-08-04`
+
+`scripts/_arbCargar.py`. Todo por **mensajes dirigidos al control** (`WM_CHAR` / `WM_KEYDOWN`),
+no con teclado real: el teclado real cae donde esté el foco y termina escribiendo en la grilla
+(pasó: los códigos de 13 productos se concatenaron dentro de la celda `Medida` de una pieza).
+
+```
+Alt -> V -> Y3                     abrir (esto sí es teclado real)
+WM_CHAR el codigo -> Parte Superior
+TAB                                trae la BOM
+ubicar la fila POR CODIGO          nunca por posicion — el orden del arb puede variar
+TAB hasta Cantidad (confirmando el foco)
+WM_CHAR el valor
+TAB por TODAS las celdas hasta que el foco caiga en &Acepta
+ENTER sobre el boton               <- graba. NO ESPACIO, NO Alt+A, NO BM_CLICK
+```
+
+**Cuántas celdas hay que recorrer se calcula antes, del export** (idea de Fak): contar los
+insumos del producto en `RELACIONES.TXT` → `insumos x 7 columnas`. Así no se tantea.
+El `21-8908` falla si se asume el largo de los otros: tiene 5 insumos, los demás 3-4.
+
+### Qué necesita foco y qué no `LA CLAVE`
+
+| operación | ¿foco? |
+|---|---|
+| **leer** (`WM_GETTEXT`) | **no** — anda en segundo plano mientras Fak usa la PC |
+| **escribir** en una celda (`WM_CHAR` dirigido) | **no** |
+| **recorrer con TAB hasta el botón** | **SÍ** — `GetGUIThreadInfo` devuelve `None` si la ventana no está activa, y el recorrido se atasca |
+
+**Por eso no se puede cargar en segundo plano mientras Fak trabaja**: no es el escribir, es el
+recorrer. Si Fak escribe en otra ventana durante la corrida, esa pieza queda escrita SIN grabar
+(inofensivo: se descarta al cerrar) pero la tanda se corta. Para tandas largas: máquina libre.
+
+### Errores propios, para no repetirlos
+
+- **No verificar entre pieza y pieza.** Releer el producto deja la ventana en un estado del que
+  no vuelve y la siguiente escribe al vacío. Verificar todo junto al final.
+- **No usar `SetFocus` entre procesos** — no funciona en Windows sin `AttachThreadInput`, y el
+  texto termina en otro control.
+- **Confirmar el foco antes de escribir** (`GetGUIThreadInfo`) y **abortar si no coincide**.
+  Esa guarda es lo único que evitó corromper el código de un insumo de producción.
+
 ## Seguridad — antes de que el robot escriba
 
 1. **Backup del arb primero.** Existe `Z:\arb\prod\BAK`; confirmar que esté fresco y quién
