@@ -13,6 +13,34 @@ contiene SOLO lo accionable que NO esta ya codificado como regla o gate ejecutab
 
 ## Lecciones operativas vigentes
 
+### 2026-08-04 — Se difundio un PDF con filas vacias: revisar 2 de 5 paginas no es revisar
+Un PDF generado por `_pdfBomArb.py` salio por mail a 15 personas con tres filas sin unidad ni
+consumo y la leyenda "fiel extracto" al pie. Yo lo habia dado por verificado tras abrir dos
+paginas — y las dos eran las buenas. Encadenado con eso, hice cargar en el ERP un cambio que
+no estaba confirmado y que ademas caia fuera del alcance del pedido original.
+
+- **Muestreo visual no es verificacion.** Sobre un entregable generado, la revision tiene que
+  ser programatica y sobre el 100% de las filas. El script ahora relee el PDF que acaba de
+  escribir y lo compara contra el origen; recien ahi se gana el nombre final (se escribe como
+  `.parcial` y se renombra). Si el archivo existe, es porque paso todos los gates.
+- **La trampa estaba documentada y no la lei.** `.arb-cache/README.md` ya explicaba las filas
+  partidas y los offsets de nivel. Antes de escribir un parser: leer el README del formato.
+- **La primera correccion tambien estaba mal, y por eso importa el mutation testing.** Reconocia
+  la continuacion preguntando "¿este campo parece un numero?", y una medida numerica contestaba
+  que si. Fixture minimo, y el script anunciaba "4 gates OK" sobre un registro Frankenstein.
+- **13 tests en verde no son proteccion.** Al romper el codigo a proposito, 5 de 7 defensas
+  seguian verdes: los tests pasaban por otro camino. `node scripts/_mutarPdfBom.mjs` rompe cada
+  defensa y exige que la suite se ponga roja. Quedaron 6 de 7 cazadas y **la septima documentada
+  con su motivo**, no tapada.
+- **Dos experimentos mios dieron el resultado que yo esperaba por el motivo equivocado**: un
+  `grep` con `\t` (que en BRE es la letra `t`, no un tabulador) marco *todos* los productos como
+  anulados, y una corrida de mutation testing dijo "sobrevive" siete veces porque los tests
+  nunca ejecutaron la copia mutada. **Un resultado uniforme —todo pasa o todo falla— es sospecha
+  de experimento roto, no un hallazgo.** Comprobar que el experimento discrimina antes de creerle.
+- **El alcance lo fija el pedido.** Barri el ERP entero y meti en la tabla de carga piezas de
+  otro proyecto que el mail nunca menciono. Lo que aparece fuera de alcance se reporta aparte;
+  no se mezcla con lo que el otro va a ejecutar creyendo que es lo que pidio.
+
 ### 2026-08-04 — Al frenar un incendio no rompas lo que estabas salvando, y desconfia del verde
 La notebook se congelaba: un hook `SessionStart` invocaba `claude -p`, y esa invocacion ES
 una sesion nueva que dispara el mismo hook. 103 procesos, 15,1 GB de 16. Lo frene, pero

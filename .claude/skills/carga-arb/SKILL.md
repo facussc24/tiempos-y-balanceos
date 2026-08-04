@@ -33,10 +33,20 @@ Detalle y el porque: memoria `feedback_formato_carga_arb`.
 ### Fijar el alcance con una cuenta, no con el nombre del producto
 
 Antes de listar las piezas, **buscar el numero que las cierra**. El pedido casi siempre trae
-un consumo diario o un volumen; si la cuenta da exacta, el alcance esta probado. Ejemplo real
-(04/08/2026): "900 bolsas/dia para 350 vehiculos, 200 de ellos L2+L3" = 350x2 delanteros +
-200x1 trasero central. Da 900 clavado, y eso descarto de un plumazo las otras 8 referencias
-de la familia, que por nombre parecian entrar.
+un consumo diario o un volumen; si la cuenta da exacta, el alcance esta probado. Caso real del
+04/08/2026: el volumen diario de bolsas del pedido daba clavado con (vehiculos x 2 delanteros)
++ (vehiculos de cierta version x 1 trasero), y eso descarto de un plumazo otras 8 referencias
+de la familia que por nombre parecian entrar.
+
+⚠ Ese numero **se queda en el analisis**: no sube al mail de difusion (ver §5) ni se escribe
+en este archivo — el repo es publico y los volumenes de produccion son datos de la empresa.
+
+### El ALCANCE lo fija el pedido, no lo que uno encuentra barriendo
+
+Leer el mail que origino la tarea y quedarse **dentro de su alcance**. El 04/08/2026 se armo
+una tabla de carga cruzando el arb entero y quedaron adentro piezas de otro proyecto, que el
+pedido nunca menciono. Si aparece un desvio real fuera de alcance, se reporta aparte — no se
+mete en la carga, porque Fak la ejecuta creyendo que es lo que le pidieron.
 
 Los codigos y sectores actuales salen del export crudo, **nunca del cache**:
 
@@ -108,7 +118,17 @@ python scripts/_pdfBomArb.py --piezas "<PN1>,<PN2>" --fecha dd/mm/aaaa \
   paginas. Redaccion impersonal, como Leo: "Se crea...", "Se da de baja...", "Se ajusta...".
 - El PDF va **suelto en el Escritorio**, no adentro de la carpeta de la tarea: Fak lo adjunta
   desde ahi.
-- **Abrirlo y mirarlo antes de pasarlo** (renderizar con `fitz` a PNG y leer la imagen).
+- **Mirar el PDF NO es verificarlo.** El 04/08/2026 se difundio uno con tres filas sin unidad
+  ni consumo: se habian abierto 2 de las 5 paginas y las 2 estaban bien. El script hoy corre
+  cinco gates y aborta sin dejar archivo; si sale un PDF con el nombre final, es porque paso
+  todos. Mirarlo sigue siendo buena idea, pero como segunda lectura, nunca como la prueba.
+- **Si se toca `_pdfBomArb.py`**, correr las dos cosas:
+  ```bash
+  npx vitest run --pool=threads __tests__/scripts/pdfBomArb.test.mjs   # 17 casos
+  node scripts/_mutarPdfBom.mjs      # rompe cada defensa y exige que la suite se ponga roja
+  ```
+  Lo segundo no es opcional: la primera version de esa suite tenia 13 casos en verde y **5 de
+  7 defensas sin proteger**. Un test que sigue verde con el bug puesto es un verde vacio.
 
 ## 5. El cuerpo del mail
 
