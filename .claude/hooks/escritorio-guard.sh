@@ -22,6 +22,11 @@
 set -e
 INPUT=$(cat)
 
+# Camino rapido: si el despachador ya parseo el JSON, lo reuso.
+# Si no (guardian corrido suelto), parseo yo como siempre.
+if [ -n "${HOOK_PARSED3+x}" ]; then
+  PARSED="$HOOK_PARSED3"
+else
 PARSED=$(printf '%s' "$INPUT" | node -e '
 let s = "";
 process.stdin.on("data", d => s += d);
@@ -38,6 +43,7 @@ process.stdin.on("end", () => {
   } catch { process.stdout.write(""); }
 });
 ' 2>/dev/null || true)
+fi
 
 if [ -z "$PARSED" ]; then
   TOOL=""; CMD=$(printf '%s' "$INPUT" | tr -d '\n'); FILE=""

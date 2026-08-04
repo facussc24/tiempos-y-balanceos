@@ -24,53 +24,12 @@
     ],
     "PreToolUse": [
       {
-        "matcher": "Edit|Write",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash .claude/hooks/file-guard.sh"
-          }
-        ]
-      },
-      {
-        "matcher": "Bash|PowerShell",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash .claude/hooks/supabase-guard.sh"
-          },
-          {
-            "type": "command",
-            "command": "bash .claude/hooks/validator-check.sh"
-          },
-          {
-            "type": "command",
-            "command": "bash .claude/hooks/renumber-guard.sh"
-          },
-          {
-            "type": "command",
-            "command": "bash .claude/hooks/push-guard.sh"
-          }
-        ]
-      },
-      {
+        "_comentario": "Los 9 guardianes corren dentro de _dispatcher.sh: un solo arranque de bash y un solo node en vez de 8+8. Medido 2026-08-04: 5.580 ms -> ~700 ms por comando. El despachador replica adentro los matchers que antes estaban aca (file-guard solo Edit|Write; supabase/validator/renumber/push solo Bash|PowerShell; el resto en los cuatro). Cada guardian sigue funcionando suelto.",
         "matcher": "Bash|PowerShell|Write|Edit",
         "hooks": [
           {
             "type": "command",
-            "command": "bash .claude/hooks/consumos-entregable-guard.sh"
-          },
-          {
-            "type": "command",
-            "command": "bash .claude/hooks/cad-guard.sh"
-          },
-          {
-            "type": "command",
-            "command": "bash .claude/hooks/patrones-guard.sh"
-          },
-          {
-            "type": "command",
-            "command": "bash .claude/hooks/escritorio-guard.sh"
+            "command": "bash .claude/hooks/_dispatcher.sh"
           }
         ]
       },

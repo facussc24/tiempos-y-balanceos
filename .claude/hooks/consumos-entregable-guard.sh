@@ -13,6 +13,11 @@ set -e
 
 INPUT=$(cat)
 
+# Camino rapido: si el despachador ya parseo el JSON, lo reuso.
+# Si no (guardian corrido suelto), parseo yo como siempre.
+if [ -n "${HOOK_TARGET+x}" ]; then
+  TARGET="$HOOK_TARGET"
+else
 TARGET=$(printf '%s' "$INPUT" | node -e '
 let s = "";
 process.stdin.on("data", d => s += d);
@@ -24,6 +29,7 @@ process.stdin.on("end", () => {
   } catch { process.stdout.write(""); }
 });
 ' 2>/dev/null || true)
+fi
 
 if [ -z "${TARGET// /}" ]; then exit 0; fi
 
