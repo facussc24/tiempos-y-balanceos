@@ -99,10 +99,22 @@ Difundo actualizacion a ultimo nivel de BOM vigente en ARB para las siguientes p
 <PN>  ->  <descripcion del producto>
 ...
 
-<una o dos lineas de que cambio y por que>
+<una o dos lineas de QUE cambio>
 
 Saludos,
 ```
+
+**El mail difunde EL CAMBIO. Nada mas.** No van volumenes, consumos diarios, cantidades de
+vehiculos, urgencias, plazos ni el motivo del pedido — aunque esten en el mail que lo origino
+y aunque parezcan utiles para Logistica. Dos razones, y la segunda es la grave:
+
+- Los que reciben la difusion ya tienen ese contexto de quien lo pidio. Repetirlo es ruido.
+- **Un dato de otro, metido en un mail que firma Fak, deja de ser una estimacion ajena y pasa
+  a ser un compromiso de Ingenieria.** Si el volumen cambia, el que queda mal es el.
+
+Incidente 04/08/2026: le puse "Consumo estimado: 900 bolsas/dia para 350 vehiculos" —
+proyeccion que habia dado el gerente de Calidad en su pedido. Fak: "esta parte esta de mas,
+no la vuelvas a incorporar nunca mas".
 
 **Ojo con los destinatarios:** responder "a todos" al mail que origino el pedido suele dejar
 afuera a Logistica, Abastecimiento, Recepcion y Compras — que son justo los que tienen que

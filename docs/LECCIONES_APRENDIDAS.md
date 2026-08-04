@@ -13,6 +13,22 @@ contiene SOLO lo accionable que NO esta ya codificado como regla o gate ejecutab
 
 ## Lecciones operativas vigentes
 
+### 2026-08-04 — Un dato ajeno, puesto en un entregable que firma Fak, pasa a ser compromiso suyo
+En el mail de difusion de un cambio de BOM le agregue una linea con el consumo diario estimado
+y la cantidad de vehiculos. No lo invente: era textual del mail del gerente que pidio el cambio,
+y parecia util para Logistica. Fak lo saco: "esta parte esta de mas... no la vuelvas a
+incorporar nunca mas".
+
+- **El ruido era lo de menos.** Lo importante es que una proyeccion de otro, difundida en un
+  mail que firma Fak, deja de leerse como estimacion ajena y pasa a ser un numero de
+  Ingenieria. Si el volumen cambia, el que queda mal es el — por un dato que ni siquiera
+  controla. Reenviar el dato de un tercero **le transfiere la autoria**.
+- El mismo numero **si** lo use bien un paso antes: la cuenta de volumen fue lo que probo que
+  piezas entraban en el alcance. Un dato puede ser la mejor evidencia para MI analisis y no
+  tener nada que hacer en el entregable. Sirve para decidir, no para difundir.
+- Regla practica para cualquier difusion: **va lo que cambio, no por que ni cuanto.** El que
+  recibe ya tiene el contexto de quien lo pidio.
+
 ### 2026-08-04 — "Mas simple" no es menos datos: es que el entregable se ejecute solo
 Fak me pidio la carga de una modificacion de BOM para meter en el ERP. Le arme una seccion por
 producto con descripcion del insumo, unidad, modulo y proceso — todo verdadero y verificado. Me
