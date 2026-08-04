@@ -177,6 +177,46 @@ En ese reporte, cada línea de insumo es:
 y trae **`Costo Unitario`** al pie: **el consumo alimenta el costeo del producto**, no sólo
 las compras. Sube el impacto de cualquier error de consumo.
 
+## Navegación 100% por teclado `CONFIRMADO 2026-08-04`
+
+**Doble `Alt` muestra los KeyTips del ribbon** (dato de Fak — sin esto no hay forma de abrir
+las pantallas sin mouse). Si el ribbon está colapsado, `Ctrl`+`F1` lo expande primero.
+
+```
+Alt  →  V  →  Y3      abre Relación de Consumo de Prod. Terminados
+```
+
+KeyTips de las solapas: `F` Archivo · `M1` Movimientos de Insumos · `P1` Producción ·
+`L` Listados de Stock PT · `S` Consulta por Sector · `P2` Productos Terminados ·
+**`V` Menú de Insumos** · `M2` Maestros · `U` Utilitarios.
+Dentro de `V`: `Y1` ABM de Insumos · `Y2` Rubros · **`Y3` Relación de Consumo** · `Y4` Depósitos.
+
+Con eso, el flujo hasta escribir el valor funciona entero sin tocar el mouse:
+abrir → escribir el producto → `TAB` (trae la BOM) → **2 `TAB` más para llegar a `Cantidad`
+de la fila 0** → escribir.
+
+**Confirmar el foco antes de escribir, siempre.** `GetGUIThreadInfo(tid)` devuelve el
+`hwndFocus` de otro proceso; si no coincide con la celda buscada, **abortar sin escribir**.
+Sin esto los clicks caen en la celda de al lado y se escribe basura en el código del insumo
+(pasó: quedó `tar atA999R8395` en pantalla — no llegó a grabar, pero por suerte, no por diseño).
+
+## LO QUE FALTA: que grabe `ABIERTO`
+
+Se escribe el valor y se ve en pantalla, pero **la base no cambia**. Probado sin éxito:
+
+| intento | resultado |
+|---|---|
+| `Alt`+`A` (acelerador de `&Acepta`) | no graba |
+| `BM_CLICK` al botón `&Acepta` | no graba |
+| tabular hasta el botón + `ESPACIO` | no graba |
+| recorrer hasta el último insumo + `TAB` + `ENTER` (la lógica que dio Fak) | no graba |
+| ídem con `ESC` en vez de `TAB` (el arb avanza de campo con ESC según su ayuda) | no graba |
+
+**Hipótesis para la próxima:** el arb no registra la celda como modificada cuando el texto
+entra por `keybd_event`, aunque se vea. Habría que mirar si hace falta entrar en modo edición
+primero (F2 / Enter sobre la celda) antes de tipear. **Pedirle a Fak que lo haga él una vez
+mientras se loguean las teclas** sería la forma directa de cerrarlo.
+
 ## Seguridad — antes de que el robot escriba
 
 1. **Backup del arb primero.** Existe `Z:\arb\prod\BAK`; confirmar que esté fresco y quién
