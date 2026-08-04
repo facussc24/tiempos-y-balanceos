@@ -77,6 +77,8 @@ part numbers, equipo APQP), `amfe-domain` (conocimiento AMFE profundo), `amfe-co
 (recetas de gaps), `injection-process` (inyeccion plastica/PU, maestros 15/16/17),
 `supabase-safety` (protocolo backup/dry-run/restore), `amfe-export-oficial`,
 `verificacion-consumos` (checklist + validador de tablas de consumo/arb),
+`carga-arb` (ciclo completo de un cambio de BOM en el arb: tabla de carga → validacion contra
+el export post-carga → PDF de difusion formato Leo con `scripts/_pdfBomArb.py` → cuerpo del mail),
 `docs-empresa` (mapa tema→documento real + caché `.sgc-cache/`), `rule-enforcement-gate`
 (toda regla nueva con check debe nacer con enforcement), `audit-amfe`, `backup`, `fix-amfe-gaps`,
 `cad-design` (diseño/modificación 3D-CAD: librería `cadlib` + CLIs con --help para medir STEP,
