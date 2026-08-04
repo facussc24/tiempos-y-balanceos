@@ -13,6 +13,28 @@ contiene SOLO lo accionable que NO esta ya codificado como regla o gate ejecutab
 
 ## Lecciones operativas vigentes
 
+### 2026-08-04 — "Mas simple" no es menos datos: es que el entregable se ejecute solo
+Fak me pidio la carga de una modificacion de BOM para meter en el ERP. Le arme una seccion por
+producto con descripcion del insumo, unidad, modulo y proceso — todo verdadero y verificado. Me
+corrigio: "ponelo de una forma mas simple, codigo de producto terminado, que quitar, que
+agregar". Lo reduje a tres columnas. Segunda correccion, a los dos minutos: que le devuelva el
+sector y las unidades a la tabla, **"sino me tengo que fijar yo"**.
+
+- **Las dos correcciones parecen opuestas y son la misma.** No pedia menos informacion ni mas:
+  pedia que ninguna decision quedara de su lado mientras tipea con el ERP abierto. Lo que sobra
+  lo obliga a filtrar; lo que falta lo obliga a ir a buscarlo. El criterio no es el tamaño de la
+  tabla, es **si se puede ejecutar sin levantar la vista**.
+- Cuando me corrigen un formato, el error es dar por cerrado el criterio con el primer ajuste.
+  Reducir era la mitad; la otra mitad era completar. Conviene preguntarse fila por fila "¿esto
+  lo puede tipear sin abrir nada mas?" antes de mandarla.
+- **Los frenos van ABAJO de la tabla, en dos lineas.** Si algo no cierra y conviene confirmarlo
+  antes de cargar, se dice — pero despues de lo accionable, nunca intercalado ni arriba.
+- La evidencia que respalda cada fila (de donde salio el codigo, la cuenta que fija el alcance)
+  se guarda para cuando pregunte. No se pega salvo que la pida.
+- Corolario: **una preferencia de formato que Fak tuvo que decirme una vez es una regla, no un
+  comentario.** Va a memoria en el momento, con el disparador escrito, o se la voy a hacer
+  repetir. Formato canonico: memoria `feedback_formato_carga_arb`.
+
 ### 2026-08-03 — Al parser de un formato binario, el auditor tiene que FABRICAR archivos
 El lector de `.msg` pasaba 16 tests y leia bien los 25 mails del Escritorio. Le pedi al agente
 `auditor` que buscara modos de falla **silenciosos** y encontro tres reales, ninguno visible
