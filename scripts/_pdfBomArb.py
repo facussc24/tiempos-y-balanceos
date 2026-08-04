@@ -60,6 +60,24 @@ def verificar_export(path):
     return avisos
 
 
+def articulos_vigentes(path_relaciones):
+    """Codigos del maestro ARTICULO.TXT (misma carpeta que RELACIONES).
+
+    Un producto dado de baja DESAPARECE de ARTICULO pero puede conservar sus lineas en
+    RELACIONES: la BOM queda huerfana. Ese cruce es lo unico que distingue un producto
+    vigente de uno anulado, porque el export no trae flag de estado."""
+    path = os.path.join(os.path.dirname(os.path.abspath(path_relaciones)), 'ARTICULO.TXT')
+    if not os.path.exists(path):
+        return None
+    vigentes = set()
+    with open(path, encoding='latin-1') as f:
+        for linea in f:
+            campos = linea.rstrip('\n').split('\t')
+            if len(campos) >= 2:
+                vigentes.add(campos[0].strip())
+    return vigentes
+
+
 def leer_bom(path, piezas):
     boms = {p: [] for p in piezas}
     with open(path, encoding='latin-1') as f:
@@ -101,17 +119,42 @@ def pagina(doc, pieza, filas, fecha, actualizaciones):
 def main():
     ap = argparse.ArgumentParser(description='PDF de difusion de cambios de BOM del arb')
     ap.add_argument('--piezas', required=True, help='codigos de producto terminado, separados por coma')
-    ap.add_argument('--fecha', required=True, help='dd/mm/aaaa del bloque ACTUALIZACIONES')
-    ap.add_argument('--act', action='append', required=True, metavar='TEXTO',
+    ap.add_argument('--fecha', help='dd/mm/aaaa del bloque ACTUALIZACIONES')
+    ap.add_argument('--act', action='append', metavar='TEXTO',
                     help='una linea del bloque ACTUALIZACIONES (repetible)')
-    ap.add_argument('--salida', required=True, help='ruta del PDF a generar')
+    ap.add_argument('--salida', help='ruta del PDF a generar')
     ap.add_argument('--relaciones', default=RELACIONES)
+    ap.add_argument('--verificar-vigencia', action='store_true',
+                    help='solo cruzar las piezas contra ARTICULO.TXT y salir (no genera PDF). '
+                         'Correrlo ANTES de armarle la tabla de carga a Fak.')
     args = ap.parse_args()
 
     piezas = [p.strip() for p in args.piezas.split(',') if p.strip()]
 
+    vigentes = articulos_vigentes(args.relaciones)
+    anulados = [] if vigentes is None else [p for p in piezas if p not in vigentes]
+
+    if args.verificar_vigencia:
+        if vigentes is None:
+            sys.exit('ABORTA: no encuentro ARTICULO.TXT al lado de RELACIONES.TXT.')
+        print(f'maestro ARTICULO: {len(vigentes)} articulos')
+        for p in piezas:
+            print(f'  {"ANULADO  " if p in anulados else "vigente  "} {p}')
+        sys.exit(1 if anulados else 0)
+
+    if not (args.fecha and args.act and args.salida):
+        ap.error('--fecha, --act y --salida son obligatorios para generar el PDF')
+
     for aviso in verificar_export(args.relaciones):
         print(f'  AVISO  {aviso}', file=sys.stderr)
+
+    if anulados:
+        sys.exit(f'ABORTA: estos productos NO estan en ARTICULO.TXT, o sea que estan '
+                 f'ANULADOS: {anulados}.\n'
+                 f'        Sus lineas siguen en RELACIONES porque la BOM queda huerfana al '
+                 f'dar de baja el articulo.\n'
+                 f'        Sacarlos de --piezas. (Si el alta es reciente, chequear que '
+                 f'ARTICULO.TXT no sea de un export viejo.)')
 
     boms = leer_bom(args.relaciones, piezas)
     faltan = [p for p in piezas if not boms[p]]

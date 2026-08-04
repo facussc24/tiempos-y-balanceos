@@ -45,6 +45,29 @@ grep -a "^<PN>" /c/tmp/RELACIONES.TXT     # BOM cruda; ultimas 2 columnas = modu
 grep -a "<codigo>" /c/tmp/INSUMOS.TXT     # maestro: existe? con que unidad?
 ```
 
+⚠ `grep` NO interpreta `\t` como tabulador (en BRE es la letra `t` literal). Un patron como
+`"^<PN> *\t"` da **cero coincidencias siempre**, y eso se lee como "no existe". Para matchear
+por columna, parsear con Python/node y comparar `campos[0].strip()`, no con grep.
+
+### Gate: descartar los productos ANULADOS antes de armar la tabla
+
+**Un producto puede seguir teniendo lineas en `RELACIONES.TXT` despues de dado de baja: la BOM
+queda huerfana.** Si entra en la tabla, Fak carga algo que no existe.
+
+Se detecta cruzando contra el maestro: **si el codigo NO esta en `ARTICULO.TXT`, esta anulado.**
+
+```bash
+python scripts/_pdfBomArb.py --verificar-vigencia "<PN1>,<PN2>,..."
+```
+
+Incidente 04/08/2026: le pase 6 productos para cambiar un isocianato discontinuado y uno
+estaba anulado. Me lo marco el: "ojo con pasarme cosas muy viejas". El maestro tenia 2290
+articulos y el unico ausente era exactamente ese — el cruce lo hubiera cazado solo.
+
+Ojo con la frescura: el arb exporta los tres archivos por separado y Fak puede re-exportar
+solo `RELACIONES`. Si `ARTICULO.TXT` quedo viejo, un alta reciente da falso "anulado" —
+mirar las fechas de los tres antes de creerle al cruce.
+
 ## 2. Fak carga. Yo no cargo.
 
 El arb no abre en esta PC (memoria `arb_erp_btrieve`). Fak carga a mano y **re-exporta**:

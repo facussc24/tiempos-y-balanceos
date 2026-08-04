@@ -13,6 +13,29 @@ contiene SOLO lo accionable que NO esta ya codificado como regla o gate ejecutab
 
 ## Lecciones operativas vigentes
 
+### 2026-08-04 — Una baja deja huellas: la BOM sobrevive al producto que ya no existe
+Le pase a Fak una lista de 6 productos para cambiar un material discontinuado. Uno estaba
+anulado hacia rato: "ojo con pasarme cosas muy viejas". Yo habia armado la lista buscando en
+el export de BOMs, y ahi el producto figuraba con todas sus lineas intactas.
+
+- **Dar de baja un producto lo saca del maestro pero no borra su BOM.** Las lineas quedan
+  huerfanas en el export de relaciones. Una busqueda sobre el archivo "donde esta el dato" no
+  distingue vivo de muerto: hay que cruzar contra el archivo "que existe".
+- El export **no trae ningun flag de estado**. La unica senal es la ausencia: de 2290
+  articulos del maestro, el unico que faltaba era justo ese. Cuando un formato no tiene el
+  campo que necesito, el cruce entre dos archivos suele tenerlo.
+- Generalizable a cualquier lista que le pase para EJECUTAR: antes de mandarla, preguntarse
+  no solo "¿el dato es correcto?" sino **"¿el objeto todavia existe?"**. Un valor correcto
+  sobre un producto muerto sigue siendo trabajo tirado.
+- Enforcement: `scripts/_pdfBomArb.py --verificar-vigencia` cruza contra `ARTICULO.TXT` y sale
+  con codigo 1; el generador del PDF aborta si alguna pieza esta anulada.
+
+**Trampa de herramienta que casi lo tapa:** el primer chequeo lo hice con
+`grep "^<PN> *\t" ARTICULO.TXT`. En expresiones regulares basicas **`\t` no es un tabulador**,
+es la letra `t`, asi que el patron no matchea nunca y dio *todos* los productos como anulados.
+Un resultado uniformemente negativo no es un hallazgo: es un patron roto. Para matchear por
+columna, parsear y comparar campos, nunca `\t` en grep.
+
 ### 2026-08-04 — Un dato ajeno, puesto en un entregable que firma Fak, pasa a ser compromiso suyo
 En el mail de difusion de un cambio de BOM le agregue una linea con el consumo diario estimado
 y la cantidad de vehiculos. No lo invente: era textual del mail del gerente que pidio el cambio,
