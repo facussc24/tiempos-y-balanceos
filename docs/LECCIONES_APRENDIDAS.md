@@ -13,6 +13,29 @@ contiene SOLO lo accionable que NO esta ya codificado como regla o gate ejecutab
 
 ## Lecciones operativas vigentes
 
+### 2026-08-04 — Cuando no se deduce mirando, grabar al humano; y medir antes de parchear
+Automatizando la carga del ERP arb fallé cinco veces seguidas adivinando cómo confirma un alta.
+Fak grabó su propia secuencia y en dos minutos apareció lo que no se ve en pantalla: se graba
+con ENTER sobre el botón tras recorrer toda la grilla. **Ante una caja negra, grabar al que
+sabe usarla es más rápido que razonar sobre ella.**
+
+- **Parchear el síntoma no es resolver.** Cada intento fallido lo tapé con más tabulaciones,
+  más margen, más reintentos — llegué a 20 segundos apretando TAB a ciegas, y Fak me lo mostró
+  en un video. Cuando por fin *medí* qué pasaba, el problema apareció en un comando: el foco
+  cicla en 15 controles dentro de la grilla y nunca sale al botón. **Una medición valía más que
+  las cinco variantes que probé antes.**
+- **El teclado real cae donde está el foco, no donde yo creo.** Escribiendo así, los códigos de
+  13 productos se concatenaron dentro de la celda del código de un insumo de producción. No
+  llegó a grabar por suerte, no por diseño. Lo único que evitó el daño fue la guarda que
+  confirma el foco antes de escribir y aborta si no coincide — **esa guarda es obligatoria en
+  cualquier automatización sobre datos reales.**
+- **Verificar puede romper lo que estás haciendo.** Releer el producto entre pieza y pieza
+  dejaba la ventana en un estado del que no volvía, y la siguiente escribía al vacío. La
+  verificación intermedia costaba más de lo que aportaba: se verifica todo junto al final.
+- **Fak marcó el camino dos veces antes de que yo lo tomara** ("tabulá", "fijate la cantidad de
+  insumos"). Seguí con mi hipótesis. Cuando el usuario que opera el sistema todos los días dice
+  cómo se hace, eso es dato duro, no una sugerencia.
+
 ### 2026-08-04 — Se difundio un PDF con filas vacias: revisar 2 de 5 paginas no es revisar
 Un PDF generado por `_pdfBomArb.py` salio por mail a 15 personas con tres filas sin unidad ni
 consumo y la leyenda "fiel extracto" al pie. Yo lo habia dado por verificado tras abrir dos

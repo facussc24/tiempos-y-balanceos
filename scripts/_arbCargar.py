@@ -32,13 +32,7 @@ KEYUP = 0x0002
 EM_SETSEL = 0x00B1
 COD = 'APLIX-A999R8395'
 
-TAREAS = [
-    ('21-6614', '0.0035840'), ('21-6034', '0.0076800'), ('21-6567', '0.0089600'),
-    ('21-6621', '0.0040960'), ('21-6699', '0.0089600'), ('21-6757', '0.0017920'),
-    ('21-6767', '0.0030720'), ('21-6807', '0.0071680'), ('21-6923', '0.0071680'),
-    ('21-7339', '0.0002560'), ('21-7340', '0.0015360'), ('21-7341', '0.0010240'),
-    ('21-8908', '0.0023040'),
-]
+TAREAS = [('21-8908', '0.0023040')]
 
 
 class GUITHREADINFO(ctypes.Structure):
@@ -153,32 +147,41 @@ def abrir():
     return V()
 
 
+def activa(v):
+    """El recorrido con TAB necesita la ventana activa; escribir no."""
+    try:
+        if win32gui.GetForegroundWindow() != v:
+            win32gui.SetForegroundWindow(v)
+            time.sleep(0.3)
+    except Exception:
+        pass
+
+
+def msg_txt(h, t):
+    u.SendMessageW(h, EM_SETSEL, 0, -1)
+    time.sleep(0.1)
+    for ch in t:
+        u.PostMessageW(h, win32con.WM_CHAR, ord(ch), 0)
+        time.sleep(0.025)
+    time.sleep(0.25)
+
+
+def msg_key(h, vk, esperar=0.15):
+    u.PostMessageW(h, win32con.WM_KEYDOWN, vk, 0)
+    time.sleep(0.035)
+    u.PostMessageW(h, win32con.WM_KEYUP, vk, 0)
+    time.sleep(esperar)
+
+
 def cargar(v, prod, val):
-    """Devuelve (ok, antes, mensaje)."""
+    """Todo por mensajes dirigidos. Devuelve (ok, antes, mensaje)."""
     PS = campo_producto(v)
     if not PS:
         return False, '', 'no veo el campo Parte Superior'
-    try:
-        win32gui.SetForegroundWindow(v)
-    except Exception:
-        pass
-    time.sleep(0.25)
-    u.SetFocus(PS)
-    r = win32gui.GetWindowRect(PS)
-    u.SetCursorPos((r[0] + r[2]) // 2, (r[1] + r[3]) // 2)
-    time.sleep(0.1)
-    u.mouse_event(0x0002, 0, 0, 0, 0)
-    time.sleep(0.04)
-    u.mouse_event(0x0004, 0, 0, 0, 0)
-    time.sleep(0.25)
-
-    u.SendMessageW(PS, EM_SETSEL, 0, -1)
-    time.sleep(0.08)
-    escribir(prod)
-    time.sleep(0.15)
+    msg_txt(PS, prod)
     if leer(PS).strip() != prod:
         return False, '', 'no entro el codigo del producto'
-    k(win32con.VK_TAB, 1.1)
+    msg_key(PS, win32con.VK_TAB, 1.6)
 
     g = G(v)
     idx = next((i for i, f in enumerate(g) if len(f) > 4 and leer(f[1]).strip() == COD), None)
@@ -187,46 +190,46 @@ def cargar(v, prod, val):
     celda = g[idx][4]
     antes = leer(celda)
 
-    # tabular hasta la celda, confirmando el foco
+    activa(v)
     for _ in range(12):
         if foco_de(v) == celda:
             break
-        k(win32con.VK_TAB, 0.12)
+        msg_key(celda if foco_de(v) is None else foco_de(v), win32con.VK_TAB, 0.12)
     if foco_de(v) != celda:
         return False, antes, 'no me pude parar en Cantidad (no escribi nada)'
 
-    for _ in range(14):
-        k(win32con.VK_DELETE, 0.015)
-    escribir(val)
-    time.sleep(0.12)
+    msg_txt(celda, val)
     if val.rstrip('0') not in leer(celda).replace(',', '.'):
         return False, antes, 'la escritura no entro'
 
-    # tabular por toda la grilla hasta el boton, y ENTER
     btn = next((h for r, h, c in C(v) if c == 'Button' and leer(h).replace('&', '') == 'Acepta'),
                None)
     if not btn:
         return False, antes, 'no encuentro el boton Acepta'
-    for _ in range(80):
-        if foco_de(v) == btn:
+
+    # recorrer de a UN tab, verificando. Si el foco se pierde (Fak toco la PC),
+    # reactivar la ventana y seguir desde donde estaba, en vez de atascarse.
+    cur = celda
+    atascos = 0
+    for _ in range(200):
+        f = foco_de(v)
+        if f == btn:
             break
-        k(win32con.VK_TAB, 0.1)
+        if f is None:
+            atascos += 1
+            if atascos > 8:
+                return False, antes, 'la ventana perdio el foco (SIN grabar) — no usar la PC'
+            activa(v)
+            time.sleep(0.25)
+            continue
+        atascos = 0
+        msg_key(f, win32con.VK_TAB, 0.1)
+        if foco_de(v) == f:          # el foco no se movio: empujar desde el anterior
+            msg_key(cur, win32con.VK_TAB, 0.12)
+        cur = f
     if foco_de(v) != btn:
-        return False, antes, 'no llegue al boton Acepta (valor escrito, SIN grabar)'
-    k(win32con.VK_RETURN, 1.8)
-    # el arb recrea los controles al grabar: los handles viejos ya no sirven.
-    # volver al inicio = click en el campo del producto RE-BUSCADO.
-    v2 = V()
-    if v2:
-        ps2 = campo_producto(v2)
-        if ps2:
-            r2 = win32gui.GetWindowRect(ps2)
-            u.SetCursorPos((r2[0] + r2[2]) // 2, (r2[1] + r2[3]) // 2)
-            time.sleep(0.12)
-            u.mouse_event(0x0002, 0, 0, 0, 0)
-            time.sleep(0.04)
-            u.mouse_event(0x0004, 0, 0, 0, 0)
-            time.sleep(0.35)
+        return False, antes, 'no llegue a Acepta (valor escrito, SIN grabar)'
+    msg_key(btn, win32con.VK_RETURN, 1.8)
     return True, antes, ''
 
 
