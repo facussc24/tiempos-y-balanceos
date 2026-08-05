@@ -34,16 +34,24 @@ if (-not (Get-Process -Name OUTLOOK -ErrorAction SilentlyContinue)) {
 
 # 2. Esperar a que el .ost termine de bajar: se mira cuantos items ve MAPI y se espera a
 #    que el numero deje de crecer dos vueltas seguidas. Tope 20 minutos.
+#    El conteo recorre TODO el arbol, igual que _mails.py: si solo mirara el primer nivel
+#    subestimaria el total y podria darlo por "quieto" mientras las subcarpetas siguen bajando.
+function Contar($carpeta) {
+  $n = 0
+  try { $n += $carpeta.Items.Count } catch {}
+  try {
+    for ($j = 1; $j -le $carpeta.Folders.Count; $j++) { $n += Contar $carpeta.Folders.Item($j) }
+  } catch {}
+  return $n
+}
+
 $previo = -1; $quieto = 0; $visto = 0
 for ($i = 0; $i -lt 40; $i++) {
   try {
     $mapi  = (New-Object -ComObject Outlook.Application).GetNamespace('MAPI')
     $visto = 0
     for ($s = 1; $s -le $mapi.Folders.Count; $s++) {
-      $store = $mapi.Folders.Item($s)
-      for ($f = 1; $f -le $store.Folders.Count; $f++) {
-        try { $visto += $store.Folders.Item($f).Items.Count } catch {}
-      }
+      $visto += Contar $mapi.Folders.Item($s)
     }
   } catch {
     Escribir ('Outlook todavia no responde por COM ({0})' -f $_.Exception.Message)
