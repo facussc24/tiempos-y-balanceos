@@ -13,6 +13,43 @@ contiene SOLO lo accionable que NO esta ya codificado como regla o gate ejecutab
 
 ## Lecciones operativas vigentes
 
+### 2026-08-05 (tarde) — Cité el cache del arb como si fuera el arb
+Armando las BOM de Patagonia le pasé a Fak un cuadro del apoyabrazo de puerta sacado del
+cache local del 02/08. Estaba desactualizado: entre el 02 y el 05 de agosto **el arb tuvo 77
+altas, 32 bajas, 13 consumos y 16 unidades cambiadas** en esas mismas piezas — los tres
+desvíos de Gonzalo ya se habían cargado. Le mostré como "estado actual" una foto de tres días
+antes. Es exactamente lo que `verify-supabase-live.md` prohíbe para Supabase, aplicado al arb:
+**`.arb-cache/` es una foto con fecha, no el ERP.** Antes de afirmar qué tiene cargado una
+pieza: mirar el mtime de `C:\tmp\RELACIONES.TXT`, y si el cache es más viejo, leer el crudo.
+
+- **El diff entre dos snapshots es el entregable, no un paso intermedio.** Cuando por fin
+  comparé 02/08 contra hoy, ese diff resultó ser lo más valioso de toda la sesión: dijo qué se
+  cargó, qué falta y qué se rompió al cargar. Si voy a tocar datos que otros están editando en
+  paralelo, el diff va primero.
+- **Un cambio de unidad en el maestro sin recalcular el consumo es un error silencioso.**
+  `427ESP001TRO01` pasó de MT2 a KG y los 16 insertos quedaron con 0,101 en la unidad nueva:
+  pide **9,5 veces** la espuma real (0,0106 kg). Nada lo señala — el número no cambió.
+  Chequeo nuevo y barato: diffear las UNIDADES del maestro entre snapshots, no solo los valores.
+- **El mismo número en dos unidades distintas no es un invariante.** Casi le afirmo a Fak que
+  "el Tesa tiene exactamente el área de la espuma" en 17 piezas; en 16 de esas la espuma está
+  en KG y el Tesa en MT2. Coincide el **número**, no la magnitud. Antes de llamar "invariante"
+  a una coincidencia, comparar también la unidad.
+
+### 2026-08-05 (tarde) — Dos parsers independientes, o el filtro te borra filas sin avisar
+Mi parser del export del arb descartaba las filas con `len(columnas) < 6`. Las filas partidas
+(descripción larga) traen **solo 4 columnas** y el consumo aparece dos filas más abajo: el
+filtro me borró **24 líneas de material en 24 piezas** sin tirar ningún error. Lo cacé porque
+un agente había hecho su propio parser y comparé fila por fila: 440 contra 454.
+
+- **Un parser propio validado contra otro parser propio no prueba nada; contra uno escrito
+  aparte, sí.** El criterio de cierre fue "0 discrepancias celda por celda entre los dos".
+- **Un filtro por cantidad de columnas es un borrador silencioso.** Si el formato admite filas
+  cortas legítimas, filtrar por longitud descarta justo los casos raros — que son los que
+  importan.
+- **Y después: abrir el archivo generado.** Los Excel salieron con la columna "descripción de
+  la pieza" vacía porque leí mal `ARTICULO.TXT` (código en la col 0, no en la 2). El build no
+  falla, el archivo abre, y el defecto solo se ve mirándolo.
+
 ### 2026-08-05 — El dato que ya tenía desmentía mi hipótesis, y no lo miré
 Cerré la automatización del arb (14/14 consumos cargados y verificados), pero llegué ahí
 después de armar un diagnóstico entero sobre una causa falsa.
@@ -20,13 +57,13 @@ después de armar un diagnóstico entero sobre una causa falsa.
 - **Conté el universo y no crucé el resultado.** Vi que el 43% de los productos tiene 6+
   insumos y que la grilla muestra 6, y armé la teoría de que el robot se trababa por el
   scroll. Escribí un plan con eso adentro. **El cruce que la falsaba tardaba 30 segundos**:
-  las piezas que sí habían cargado tenían 6 y 7 insumos, y las que fallaron tenían 4 y 5.
+  las piezas que sí habían cargado eran las de MÁS insumos, y las que fallaron las de menos.
   Una estadística impresionante sobre el universo no dice nada si no la cruzo con los casos
   concretos que ya tengo observados. **Antes de explicar por qué algo falla, mirar qué tienen
   en común los que fallaron — y qué tienen en común los que no.**
 - **Heredé como verdad una frase de mi propia documentación.** La skill afirmaba que escribir
-  por mensaje no necesitaba foco. Es falsa, y era la causa de fondo: sin foco, `21-8908` entra
-  como `218908` y un valor escrito en una celda vuelve solo al viejo. **Lo que yo mismo
+  por mensaje no necesitaba foco. Es falsa, y era la causa de fondo: sin foco un código
+  `NN-NNNN` entra como `NNNNNN` y un valor escrito en una celda vuelve solo al viejo. **Lo que yo mismo
   documenté ayer no es evidencia; la evidencia es la medición de hoy.**
 - **Optimicé rompiendo el mecanismo que hacía que funcionara.** Para ganar velocidad escribí
   todas las celdas de una y después recorrí. El arb descartó los valores. Lo que parecía un

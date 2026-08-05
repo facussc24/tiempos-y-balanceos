@@ -132,13 +132,39 @@ def sync(full=False):
         for m in nuevos:
             f.write(json.dumps(m, ensure_ascii=False) + '\n')
 
+    total = len(previos) + len(nuevos)
     print('revisados en Outlook : %d' % revisados[0])
     print('nuevos al cache      : %d' % len(nuevos))
-    print('total en el cache    : %d' % (len(previos) + len(nuevos)))
+    print('total en el cache    : %d' % total)
+    rango = ''
     if nuevos:
         fs = sorted(m['fecha'] for m in nuevos if m['fecha'])
         if fs:
-            print('rango de los nuevos  : %s  ->  %s' % (fs[0], fs[-1]))
+            rango = '%s -> %s' % (fs[0], fs[-1])
+            print('rango de los nuevos  : %s' % rango)
+
+    # Guard: Outlook clasico tarda en bajar el .ost. Si todavia no termino, el recorrido
+    # ve unos pocos items y "0 nuevos" NO prueba que no haya mails nuevos: prueba que
+    # Outlook todavia no los tiene. Sin este aviso el sync diario miente en silencio.
+    parcial = bool(previos) and revisados[0] < len(previos) * 0.8
+    if parcial:
+        print()
+        print('  *** SYNC PARCIAL — NO confiar en "nuevos: %d" ***' % len(nuevos))
+        print('  Outlook clasico solo mostro %d items y el cache ya tiene %d.'
+              % (revisados[0], len(previos)))
+        print('  Todavia esta bajando el buzon del servidor. Dejalo abierto y reintenta')
+        print('  mas tarde:  python scripts/_mails.py --sync')
+
+    try:
+        with io.open(os.path.join(CACHE, 'sync.log'), 'a', encoding='utf-8') as f:
+            import time
+            f.write('%s\trevisados=%d\tnuevos=%d\ttotal=%d\t%s\t%s\n' % (
+                time.strftime('%Y-%m-%d %H:%M'), revisados[0], len(nuevos), total,
+                'PARCIAL' if parcial else 'OK', rango))
+    except Exception:
+        pass
+
+    return 2 if parcial else 0
 
 
 def buscar(terminos, desde=None, hasta=None, carpeta=None, solo_asunto=False, limite=40):
@@ -246,7 +272,7 @@ def main():
     a = ap.parse_args()
 
     if a.sync:
-        sync(full=a.full)
+        sys.exit(sync(full=a.full))
     elif a.buscar:
         buscar(a.buscar, a.desde, a.hasta, a.carpeta, a.asunto, a.limite)
     elif a.ver:
