@@ -13,6 +13,27 @@ contiene SOLO lo accionable que NO esta ya codificado como regla o gate ejecutab
 
 ## Lecciones operativas vigentes
 
+### 2026-08-05 — El dato estaba adentro del plano y yo lo busqué por afuera
+Me pidieron la medida de un tornillo de un conjunto. La saqué de la ficha de datos maestros
+del componente, que estaba en la carpeta vieja del proyecto, y encima la respuesta era
+correcta. Pero el camino estuvo mal: recorrí el plano del conjunto a ojo, crop por crop, y
+**nunca encontré la lista de materiales que el plano trae embebida** — Fak la ubicó enseguida
+y ahí estaba todo junto: part number, cantidad, material, norma, recubrimiento y **peso
+calculado de cada componente**.
+
+- **El plano de conjunto no es un dibujo: es también una tabla.** Antes de salir a buscar un
+  dato de una pieza (peso, cantidad, material, norma), abrir la lista de materiales del plano.
+  Es la fuente más completa y está en un solo lugar.
+- **No está siempre en el mismo lugar** (aviso de Fak) — cambia de plano a plano, igual que el
+  orden de las columnas. Por eso el método no puede ser "ir a tal coordenada": hay que
+  detectarla. `python scripts/_leerPlano.py <plano.tif> --mapa` lista las tablas del plano y
+  `--tabla N` recorta la elegida; skill `leer-planos`.
+- **Mirar a ojo un archivo de 250 Mpx no es mirar.** Si el barrido manual va por el tercer
+  recorte sin encontrar nada, el problema es el método, no la vista. Parar y buscar el índice
+  del documento (acá: las tablas; en un PDF: el sumario).
+- La columna `Feld/Field` de esa lista (`J48`) dice **en qué zona del marco está dibujada** cada
+  pieza: es el atajo para llegar al globo sin recorrer el plano.
+
 ### 2026-08-05 — Encadené tres inferencias del ERP y le puse cara de verificado
 Me pidieron dar de alta dos códigos en el arb. Encontré con prueba dura que uno estaba mal
 tipeado (el DV no cerraba) — eso estuvo bien y quedó como script. Después Fak preguntó a qué
