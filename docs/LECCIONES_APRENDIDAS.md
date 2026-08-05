@@ -26,14 +26,14 @@ pieza: mirar el mtime de `C:\tmp\RELACIONES.TXT`, y si el cache es más viejo, l
   comparé 02/08 contra hoy, ese diff resultó ser lo más valioso de toda la sesión: dijo qué se
   cargó, qué falta y qué se rompió al cargar. Si voy a tocar datos que otros están editando en
   paralelo, el diff va primero.
-- **Un cambio de unidad en el maestro sin recalcular el consumo es un error silencioso.**
-  `427ESP001TRO01` pasó de MT2 a KG y los 16 insertos quedaron con 0,101 en la unidad nueva:
-  pide **9,5 veces** la espuma real (0,0106 kg). Nada lo señala — el número no cambió.
-  Chequeo nuevo y barato: diffear las UNIDADES del maestro entre snapshots, no solo los valores.
+- **Un cambio de unidad en el maestro sin recalcular el consumo es un error silencioso.** Un
+  insumo pasó de superficie a peso y las piezas quedaron con el mismo número en la unidad
+  nueva: casi un orden de magnitud de más. Nada lo señala — el número no cambió. Chequeo nuevo
+  y barato: diffear las UNIDADES del maestro entre snapshots, no solo los valores.
 - **El mismo número en dos unidades distintas no es un invariante.** Casi le afirmo a Fak que
-  "el Tesa tiene exactamente el área de la espuma" en 17 piezas; en 16 de esas la espuma está
-  en KG y el Tesa en MT2. Coincide el **número**, no la magnitud. Antes de llamar "invariante"
-  a una coincidencia, comparar también la unidad.
+  un material "tiene exactamente el área" de otro en 17 piezas; en 16 de esas uno estaba en
+  peso y el otro en superficie. Coincide el **número**, no la magnitud. Antes de llamar
+  "invariante" a una coincidencia, comparar también la unidad.
 
 ### 2026-08-05 (tarde) — Dos parsers independientes, o el filtro te borra filas sin avisar
 Mi parser del export del arb descartaba las filas con `len(columnas) < 6`. Las filas partidas
