@@ -13,6 +13,32 @@ contiene SOLO lo accionable que NO esta ya codificado como regla o gate ejecutab
 
 ## Lecciones operativas vigentes
 
+### 2026-08-05 — Reporté "choca" tres veces y las tres era mi método, no la pieza
+Auditando si el utillaje 3D del Upper Trim apoya bien sobre la pieza del cliente, encontré un
+choque de 1.365 puntos, después uno de 18.849 y después uno de 3.024. **El resultado real era
+cero interferencia.** Las tres veces el error fue mío, y ninguna la habría cazado mirando el
+render: se cazan con dos preguntas baratas.
+
+- **Un desvío parejo en todo el barrido no es un obstáculo, es un error de anclaje.** Un
+  obstáculo real es una mancha localizada. Cuando la invasión da ~1-2 mm uniformes en toda la
+  huella (o con pendiente lineal), lo que está mal es dónde apoyé la pieza, no la pieza. Ese
+  patrón apareció las tres veces y lo leí como geometría durante media hora.
+- **Antes de concluir, aislar la medición a UNA cara.** Medir "lo más cerca que llega cualquier
+  material" mezcla nervios, bordes y la cara de atrás: me dio 2,158 mm de falta de planitud
+  donde la cara vista sola daba 0,156 mm. Un orden de magnitud, y la conclusión opuesta.
+- **Una chapa tiene dos caras y las dos “contienen” el feature.** Las ranuras aparecen tanto en
+  la cara vista como en la interna; elegir la equivocada corre todo 2 mm. `getBoundary
+  (oriented=True)` no desempata en superficies clase A. Lo que sí: la ranura se ve fina desde
+  la cara vista y con desahogo desde la interna. Y "la cara más cercana al utillaje" es
+  razonamiento **circular** cuando la posición del utillaje es justo lo que se busca.
+- **Encajar features simétricos tiene más de una solución con el mismo error.** Seis pasadores
+  contra seis ranuras a paso constante dieron 4 poses con RMS idéntico (0,016 mm): dos ponen el
+  utillaje de un lado y dos del otro. Quedarse con `min(rms)` es tirar una moneda. Se desempata
+  por algo que no sea la posición — acá, que las ranuras de los extremos miden distinto que las
+  del medio — y se confirma con cuál de las poses no choca.
+
+Detalle reutilizable en la memoria `reference_registrar_fixture_por_features`.
+
 ### 2026-08-05 (tarde) — Cité el cache del arb como si fuera el arb
 Armando las BOM de Patagonia le pasé a Fak un cuadro del apoyabrazo de puerta sacado del
 cache local del 02/08. Estaba desactualizado: entre el 02 y el 05 de agosto **el arb tuvo 77
