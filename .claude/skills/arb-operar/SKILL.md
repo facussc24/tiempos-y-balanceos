@@ -5,8 +5,10 @@ description: Operar el ERP arb (ARB Sistemas "Producción") por teclado desde Cl
 
 # Operar el arb desde Claude
 
-> **EN CONSTRUCCIÓN** (arrancada 2026-08-04). Lo que está marcado `CONFIRMADO` se probó;
-> lo marcado `POR CONFIRMAR` es hipótesis y **no se ejecuta sin verificar antes**.
+> **Cambiar consumos: ANDA** (14/14 cargadas y verificadas contra el export, 2026-08-05).
+> Dar de alta y borrar líneas: fuera de alcance, necesita otra grabación y otra red.
+> Lo marcado `CONFIRMADO`/`medido` se probó; lo demás es hipótesis y **no se ejecuta sin
+> verificar antes**.
 
 ## Qué es
 
@@ -200,55 +202,94 @@ de la fila 0** → escribir.
 Sin esto los clicks caen en la celda de al lado y se escribe basura en el código del insumo
 (pasó: quedó `tar atA999R8395` en pantalla — no llegó a grabar, pero por suerte, no por diseño).
 
-## LO QUE FALTA: que grabe `ABIERTO`
+## RECETA QUE FUNCIONA `14 de 14 cargadas y verificadas 2026-08-05`
 
-Se escribe el valor y se ve en pantalla, pero **la base no cambia**. Probado sin éxito:
-
-| intento | resultado |
-|---|---|
-| `Alt`+`A` (acelerador de `&Acepta`) | no graba |
-| `BM_CLICK` al botón `&Acepta` | no graba |
-| tabular hasta el botón + `ESPACIO` | no graba |
-| recorrer hasta el último insumo + `TAB` + `ENTER` (la lógica que dio Fak) | no graba |
-| ídem con `ESC` en vez de `TAB` (el arb avanza de campo con ESC según su ayuda) | no graba |
-
-**Hipótesis para la próxima:** el arb no registra la celda como modificada cuando el texto
-entra por `keybd_event`, aunque se vea. Habría que mirar si hace falta entrar en modo edición
-primero (F2 / Enter sobre la celda) antes de tipear. **Pedirle a Fak que lo haga él una vez
-mientras se loguean las teclas** sería la forma directa de cerrarlo.
-
-## RECETA QUE FUNCIONA `13 de 14 cargadas y verificadas 2026-08-04`
-
-`scripts/_arbCargar.py`. Todo por **mensajes dirigidos al control** (`WM_CHAR` / `WM_KEYDOWN`),
-no con teclado real: el teclado real cae donde esté el foco y termina escribiendo en la grilla
-(pasó: los códigos de 13 productos se concatenaron dentro de la celda `Medida` de una pieza).
+`scripts/_arbCargar.py`. Modos: `--diagnostico` (read-only), `--seco` (recorre sin grabar),
+`--tabla x.csv` (dry-run) `--apply`, `--verificar`.
 
 ```
-Alt -> V -> Y3                     abrir (esto sí es teclado real)
-WM_CHAR el codigo -> Parte Superior
+Alt -> V -> Y3                     abrir (teclado real)
+gate: ¿estoy en la solapa Altas?   si no hay grilla, ABORTAR — no escribir a ciegas
+foco en Parte Superior + escribir el codigo     <- CON FOCO o se pierde el guion
 TAB                                trae la BOM
-ubicar la fila POR CODIGO          nunca por posicion — el orden del arb puede variar
-TAB hasta Cantidad (confirmando el foco)
-WM_CHAR el valor
-TAB por TODAS las celdas hasta que el foco caiga en &Acepta
-ENTER sobre el boton               <- graba. NO ESPACIO, NO Alt+A, NO BM_CLICK
+ubicar la fila POR CODIGO          nunca por posicion
+TAB real hasta Cantidad            (el de mensaje avanza de a DOS y saltea)
+escribir el valor CON EL FOCO PUESTO
+TAB real por todas las celdas, VERIFICANDO cada una contra la BOM del export
+ENTER sobre &Acepta                <- graba. NO ESPACIO, NO Alt+A, NO BM_CLICK
 ```
 
-**Cuántas celdas hay que recorrer se calcula antes, del export** (idea de Fak): contar los
-insumos del producto en `RELACIONES.TXT` → `insumos x 7 columnas`. Así no se tantea.
-El `21-8908` falla si se asume el largo de los otros: tiene 5 insumos, los demás 3-4.
+**Cuántas celdas se recorre se calcula antes, del export** (idea de Fak). La fórmula, medida
+de la grabación y confirmada en vivo — son **5 celdas tabulables por fila, no 7**:
 
-### Qué necesita foco y qué no `LA CLAVE`
+| desde | hasta | TABs |
+|---|---|---|
+| `Parte Superior` | `Cantidad` de la fila `i` (base 0) | **`3 + 5*i`** |
+| `Parte Superior` | botón `&Acepta`, con `N` insumos | **`5*N + 2`** |
+
+`Descripción` y `U.M.` existen como controles (por eso `Cantidad` es el índice 4 al leer)
+pero **no reciben el foco**. La versión vieja decía "insumos × 7 columnas": estaba mal.
+
+**El conteo es la predicción, no la orden.** Después de cada TAB se lee el control con foco y
+se compara su contenido contra la BOM del export. A la primera discrepancia se aborta **sin
+ENTER** — que es el único punto de no retorno. Comparar por contenido y no por handle es lo
+que hace que ande igual cuando la grilla scrollea (los controles se reciclan, el contenido no).
+
+**El scroll NO es un problema**: se grabaron piezas de 6 y 7 insumos sin drama.
+
+### Qué necesita foco y qué no `CORREGIDO 2026-08-05`
 
 | operación | ¿foco? |
 |---|---|
 | **leer** (`WM_GETTEXT`) | **no** — anda en segundo plano mientras Fak usa la PC |
-| **escribir** en una celda (`WM_CHAR` dirigido) | **no** |
-| **recorrer con TAB hasta el botón** | **SÍ** — `GetGUIThreadInfo` devuelve `None` si la ventana no está activa, y el recorrido se atasca |
+| **escribir** (`WM_CHAR` dirigido) | **SÍ, siempre** — ver abajo |
+| **recorrer con TAB** | **SÍ** — `GetGUIThreadInfo` devuelve `None` si la ventana no está activa |
 
-**Por eso no se puede cargar en segundo plano mientras Fak trabaja**: no es el escribir, es el
-recorrer. Si Fak escribe en otra ventana durante la corrida, esa pieza queda escrita SIN grabar
-(inofensivo: se descarta al cerrar) pero la tanda se corta. Para tandas largas: máquina libre.
+> ⚠️ **La versión vieja de esta tabla decía que escribir NO necesitaba foco. Estaba mal, y
+> era la razón de fondo por la que las cargas "entraban" y no grababan.** Medido el
+> 05/08 sobre el campo `Parte Superior`: sin foco, `21-8908` queda **`218908`** — se pierde
+> el guión; con foco entra entero. En una celda de la grilla es peor: el valor se ve en
+> pantalla y **vuelve solo al viejo** en cuanto el recorrido pasa por ahí.
+
+**Sólo leer anda en segundo plano.** Cualquier escritura o recorrido necesita la máquina
+libre. Si Fak toca la PC durante la corrida se aborta el lote entero: la pieza queda escrita
+SIN grabar (inofensivo, se descarta con CANCELA) pero no se sigue con la siguiente.
+
+### El TAB por mensaje AVANZA DE A DOS `LA CLAVE — medido 2026-08-05`
+
+`PostMessage(WM_KEYDOWN, VK_TAB)` mueve el foco **dos celdas**, no una. Traza real:
+
+```
+fila0.codigo -> fila0.modulo -> fila1.rubro -> fila1.cantidad -> fila1.proceso -> fila2.codigo ...
+```
+
+El arb traduce el `WM_KEYDOWN` a un `WM_CHAR` y procesa los dos. Con lo cual el recorrido
+por mensaje **sólo alcanza la mitad de las posiciones, según la paridad** — y nunca cae en
+las otras. Eso explica de una vez:
+
+- por qué el 04/08 unas piezas cargaban y otras no (dependía de si la celda `Cantidad` caía
+  en la paridad alcanzable, no de cuántos insumos tenía la pieza);
+- por qué el recorrido "ciclaba sin llegar nunca al botón".
+
+**El TAB de teclado real avanza de a una y pasa por todas.** Por eso el recorrido va con
+teclado real, sin excepción.
+
+### Dos botones `&Acepta` `medido 2026-08-05`
+
+La ventana tiene **dos** botones con ese texto: el de la solapa **Altas** (graba la carga) y
+el de la solapa **Listado** (dispara el export). Y **el arb destruye y recrea los controles
+al cambiar de solapa**, así que los handles cambian solos.
+
+Buscar "el `Button` que dice Acepta" devuelve el primero que aparezca en el `EnumChildWindows`
+— una lotería. Hay que **desempatar por parentesco con la grilla y abortar si queda ambiguo**.
+
+### Los controles no son tab stops `medido 2026-08-05`
+
+`WS_TABSTOP` está en **cero** en toda la fila, y `GetNextDlgTabItem` no llega al botón: la
+navegación **no la maneja el dialog manager**, la maneja la grilla. `WM_GETDLGCODE` devuelve
+`0x008B` (incluye `DLGC_WANTTAB`: el control se queda el TAB) y `0x008F` en `Cantidad`, que
+además pide `DLGC_WANTALLKEYS`. Por eso no sirve razonar sobre esta ventana como un diálogo
+normal.
 
 ### Errores propios, para no repetirlos
 
@@ -261,8 +302,13 @@ recorrer. Si Fak escribe en otra ventana durante la corrida, esa pieza queda esc
 
 ## Seguridad — antes de que el robot escriba
 
-1. **Backup del arb primero.** Existe `Z:\arb\prod\BAK`; confirmar que esté fresco y quién
-   lo hace. Sin backup verificado, no se escribe.
+1. ⚠️ **NO HAY BACKUP DE DATOS DEL ARB.** `Z:\arb\prod\BAK` tiene sólo archivos `.DTF`
+   (definiciones de tabla, 1996-2019) — **no datos**; los datos viven en el servidor
+   Pervasive, fuera de alcance por red. La versión vieja de esta skill lo daba por backup.
+   **El único respaldo es el export**: guarda el valor anterior de cada celda, así que un
+   consumo mal cargado se deshace tipeando el viejo. Alcanza para consumos porque son
+   reversibles; **no alcanzaría para altas ni bajas de líneas** — por eso están fuera de
+   alcance (decisión de Fak 05/08). Antes de una tanda: exportar y guardar ese export.
 2. **Probar con UNA sola fila**, la de menor impacto, y **verificar contra el export**
    (`RELACIONES.TXT`, celda por celda, tolerancia 0,1%) antes de seguir con el resto.
 3. **Nunca tantear teclas en la solapa de Altas.** Una tecla de más da de alta un insumo o

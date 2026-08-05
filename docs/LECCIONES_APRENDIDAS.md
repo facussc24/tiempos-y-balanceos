@@ -13,6 +13,35 @@ contiene SOLO lo accionable que NO esta ya codificado como regla o gate ejecutab
 
 ## Lecciones operativas vigentes
 
+### 2026-08-05 — El dato que ya tenía desmentía mi hipótesis, y no lo miré
+Cerré la automatización del arb (14/14 consumos cargados y verificados), pero llegué ahí
+después de armar un diagnóstico entero sobre una causa falsa.
+
+- **Conté el universo y no crucé el resultado.** Vi que el 43% de los productos tiene 6+
+  insumos y que la grilla muestra 6, y armé la teoría de que el robot se trababa por el
+  scroll. Escribí un plan con eso adentro. **El cruce que la falsaba tardaba 30 segundos**:
+  las piezas que sí habían cargado tenían 6 y 7 insumos, y las que fallaron tenían 4 y 5.
+  Una estadística impresionante sobre el universo no dice nada si no la cruzo con los casos
+  concretos que ya tengo observados. **Antes de explicar por qué algo falla, mirar qué tienen
+  en común los que fallaron — y qué tienen en común los que no.**
+- **Heredé como verdad una frase de mi propia documentación.** La skill afirmaba que escribir
+  por mensaje no necesitaba foco. Es falsa, y era la causa de fondo: sin foco, `21-8908` entra
+  como `218908` y un valor escrito en una celda vuelve solo al viejo. **Lo que yo mismo
+  documenté ayer no es evidencia; la evidencia es la medición de hoy.**
+- **Optimicé rompiendo el mecanismo que hacía que funcionara.** Para ganar velocidad escribí
+  todas las celdas de una y después recorrí. El arb descartó los valores. Lo que parecía un
+  rodeo ineficiente —pararse en cada celda antes de escribir— *era el mecanismo*. **Antes de
+  sacar un paso por ineficiente, entender por qué estaba.**
+- **Volví a asumir el punto de partida.** Arranqué a tabular dando por sentado que el foco
+  estaba en `Parte Superior`. Estaba en la fila 1. Es el mismo error de ayer con otra ropa:
+  medí la longitud del camino pero no desde dónde salía.
+- **Lo que cerró el caso fue medir, no razonar**: el TAB por mensaje avanza *dos* celdas (el
+  arb traduce el `WM_KEYDOWN` a un `WM_CHAR` y procesa los dos), así que recorría media grilla
+  por paridad. Eso explicaba de una vez por qué unas piezas cargaban y otras no.
+- **Un segundo par de ojos sobre los mismos archivos encontró lo que yo no vi**: que había dos
+  botones `&Acepta` y que mi código agarraba cualquiera. Cuando una hipótesis me convence
+  mucho, conviene que alguien más lea la misma evidencia.
+
 ### 2026-08-04 — Cuando no se deduce mirando, grabar al humano; y medir antes de parchear
 Automatizando la carga del ERP arb fallé cinco veces seguidas adivinando cómo confirma un alta.
 Fak grabó su propia secuencia y en dos minutos apareció lo que no se ve en pantalla: se graba

@@ -325,11 +325,26 @@ def edad_export(path=EXPORT):
 
 # ---------------------------------------------------------------- traer un producto
 
+def en_solapa_altas(v):
+    """La solapa de Altas es la unica que tiene la grilla de insumos.
+
+    Sin este gate el script escribe a ciegas: estando en la solapa `Listado`,
+    `campo_producto()` devuelve `Desde Articulo` y el codigo termina en el filtro
+    del reporte. Inofensivo ahi, pero es la misma escritura a ciegas que en otra
+    solapa podria caer en un dato.
+    """
+    return len(G(v)) > 0
+
+
 def traer(v, producto):
+    if not en_solapa_altas(v):
+        raise Abortar('no veo la grilla de insumos: la ventana esta en otra solapa. '
+                      'Anda a `Altas de Insumos de Un Producto` y volve a correr.')
     ps = campo_producto(v)
     if not ps:
         raise Abortar('no veo el campo `Parte Superior`')
-    escribir_celda(ps, producto)
+    activar(v)
+    escribir_con_foco(v, ps, producto)
     if leer(ps).strip() != producto:
         raise Abortar('no entro el codigo del producto (quedo "%s")' % leer(ps))
     msg_tab(ps, 1.6)
@@ -352,6 +367,8 @@ def chequear_pantalla(v, producto, bom):
     """La grilla visible tiene que coincidir con la BOM del export, en orden.
     Si no coincide, la ventana esta en un estado que no entendemos: no se escribe."""
     filas = filas_con_datos(G(v))
+    if not filas:
+        raise Abortar('la grilla quedo vacia: no se trajo la BOM de %s' % producto)
     n_vis = min(len(bom), len(filas))
     for i in range(n_vis):
         en_pant = leer(filas[i][IDX_CODIGO]).strip()
@@ -391,9 +408,72 @@ def coincide(real, esperado, es_numero):
     return r == e[:len(r)] or e == r[:len(e)] if (r and e) else r == e
 
 
-def recorrer(v, btn, cadena, desde, pausa=0.03, verboso=False):
+def ir_a_celda(v, celda, maxpasos=60):
+    """Parar el foco en un control, tabulando con TECLADO REAL.
+
+    OJO: el TAB por mensaje AVANZA DE A DOS celdas (medido 2026-08-05:
+    fila0.codigo -> fila0.modulo -> fila1.rubro -> fila1.cantidad ...). El arb traduce el
+    WM_KEYDOWN a un WM_CHAR y procesa los dos. Asi recorre solo la mitad de las posiciones
+    segun la paridad, y por eso el 04/08 unas piezas cargaban y otras no: dependia de si
+    la celda de Cantidad caia en la paridad alcanzable. El TAB real avanza de a una.
+    """
+    if not activar(v):
+        raise Abortar('la ventana no esta al frente: no puedo tabular')
+    for _ in range(maxpasos):
+        f = foco_de(v)
+        if f == celda:
+            return True
+        if f is None:
+            raise Abortar('la ventana no esta activa: no puedo ubicar el foco')
+        if not al_frente(v):
+            raise Abortar('la ventana perdio el frente — no usar la PC')
+        tecla(win32con.VK_TAB, 0.04)
+    return False
+
+
+def escribir_con_foco(v, h, texto):
+    """En el arb, escribir por mensaje SOLO entra bien si el control tiene el foco.
+
+    Medido 2026-08-05: sin foco, `21-8908` queda `218908` (se pierde el guion) y un valor
+    escrito en una celda se revierte al valor viejo en cuanto el recorrido pasa por ahi.
+    La skill decia que escribir no necesitaba foco: estaba mal, y es la razon de fondo por
+    la que las cargas parecian entrar y no grababan.
+    """
+    if foco_de(v) != h and not ir_a_celda(v, h):
+        raise Abortar('no pude poner el foco en el control antes de escribir')
+    escribir_celda(h, texto)
+
+
+def posicion_actual(v, g, ps):
+    """Donde esta el foco AHORA, como indice en la cadena esperada.
+
+    -1 = en `Parte Superior` (antes de la cadena). None = no lo puedo ubicar.
+    Medir esto en vez de asumirlo: despues de traer la BOM el foco NO queda en
+    `Parte Superior`, y arrancar a tabular dando por sentado el punto de partida
+    desalinea toda la cadena desde el primer TAB.
+    """
+    f = foco_de(v)
+    if f is None:
+        return None
+    if f == ps:
+        return -1
+    for i, fila in enumerate(g):
+        for c, h in enumerate(fila):
+            if h == f and c in TABULABLES:
+                return i * 5 + TABULABLES.index(c)
+    return None
+
+
+def recorrer(v, btn, cadena, desde, pausa=0.03, verboso=False, escrituras=None):
     """TAB real desde `desde` (indice en la cadena) hasta el boton, verificando CADA paso.
-    Ante la primera discrepancia aborta sin ENTER."""
+    Ante la primera discrepancia aborta sin ENTER.
+
+    `escrituras` = {indice_cadena: valor_nuevo}. Se escribe AL PASAR por la celda, con el
+    foco puesto: el arb descarta lo que entra por mensaje en una celda que no tiene el
+    foco — se ve en pantalla y al recorrer vuelve el valor viejo. Escribir durante el
+    recorrido respeta ese mecanismo y ademas no cuesta una pasada extra.
+    """
+    escrituras = escrituras or {}
     for p in range(desde + 1, len(cadena)):
         if not al_frente(v):
             raise Abortar('la ventana perdio el frente en el paso %d — no usar la PC' % p)
@@ -413,6 +493,14 @@ def recorrer(v, btn, cadena, desde, pausa=0.03, verboso=False):
         if not coincide(real, esp, esnum):
             raise Abortar('TAB %d: esperaba %s="%s" y el foco cayo en "%s"'
                           % (p + 1, etiq, esp, real))
+        if p in escrituras:
+            nuevo = escrituras[p]
+            escribir_celda(f, nuevo)
+            if not mismo_numero(leer(f), nuevo):
+                raise Abortar('TAB %d: escribi %s en %s y quedo "%s" (SIN grabar)'
+                              % (p + 1, nuevo, etiq, leer(f)))
+            if verboso:
+                print('           escrito: %s -> %s' % (real, nuevo))
     raise Abortar('la cadena se agoto sin llegar al boton')
 
 
@@ -504,8 +592,13 @@ def seco(v, producto):
     if not activar(v):
         print('no pude traer la ventana al frente'); return False
     cadena = cadena_esperada(bom, {})
+    pos = posicion_actual(v, G(v), ps)
+    if pos is None:
+        print('no puedo ubicar donde esta el foco: no arranco a tabular a ciegas')
+        return False
+    print('foco en: %s' % ('`Parte Superior`' if pos < 0 else cadena[pos][0]))
     try:
-        recorrer(v, btn, cadena, -1, 0.05, verboso=True)
+        recorrer(v, btn, cadena, pos, 0.05, verboso=True)
     except Abortar as e:
         print()
         print('CORTADO: %s' % e)
@@ -534,7 +627,7 @@ def cargar_producto(v, producto, cambios, bom):
     ps, g = traer(v, producto)
     filas = chequear_pantalla(v, producto, bom)
 
-    plan, detalle, por_fila = [], [], {}
+    escrituras, detalle = {}, []
     for cod, nuevo, esperado in cambios:
         i = ubicar(bom, cod)
         if i is None:
@@ -542,26 +635,33 @@ def cargar_producto(v, producto, cambios, bom):
         if i >= len(filas):
             raise Abortar('%s esta en la fila %d y la grilla muestra %d: hay que scrollear '
                           'para escribirla, y eso no esta resuelto' % (cod, i, len(filas)))
-        celda = filas[i][IDX_CANTIDAD]
-        actual = leer(celda)
+        actual = leer(filas[i][IDX_CANTIDAD])
         if esperado and not mismo_numero(actual, esperado):
             raise Abortar('%s tiene %s y esperaba %s — no lo piso' % (cod, actual, esperado))
-        plan.append((celda, nuevo))
-        por_fila[i] = nuevo
+        escrituras[i * 5 + 2] = nuevo          # 2 = posicion de Cantidad dentro de la fila
         detalle.append((cod, actual, nuevo))
 
     btn = boton_acepta(v, filas[0][IDX_CANTIDAD])
-
-    for celda, nuevo in plan:
-        escribir_celda(celda, nuevo)
-        if not mismo_numero(leer(celda), nuevo):
-            raise Abortar('la escritura no entro (quedo "%s") — SIN grabar' % leer(celda))
-    journal({'t': time.strftime('%H:%M:%S'), 'producto': producto,
-             'estado': 'escrita', 'detalle': detalle})
-
     if not activar(v):
-        raise Abortar('no pude traer la ventana al frente (escrita SIN grabar)')
-    recorrer(v, btn, cadena_esperada(bom, por_fila), -1)
+        raise Abortar('no pude traer la ventana al frente (nada escrito)')
+
+    # pararse en la PRIMERA celda a cambiar, y recien ahi arrancar el recorrido real
+    primera = min(escrituras)
+    celda = filas[primera // 5][IDX_CANTIDAD]
+    if not ir_a_celda(v, celda):
+        raise Abortar('no me pude parar en la celda de %s (nada escrito)' % detalle[0][0])
+    pos = posicion_actual(v, G(v), ps)
+    if pos != primera:
+        raise Abortar('me pare en el paso %s y esperaba el %d (nada escrito)' % (pos, primera))
+    journal({'t': time.strftime('%H:%M:%S'), 'producto': producto,
+             'estado': 'por_escribir', 'detalle': detalle})
+    # la primera se escribe aca (el foco ya esta puesto); las demas, al pasar
+    escribir_celda(celda, escrituras[primera])
+    if not mismo_numero(leer(celda), escrituras[primera]):
+        raise Abortar('la escritura no entro (quedo "%s") — SIN grabar' % leer(celda))
+    resto = {k: val for k, val in escrituras.items() if k != primera}
+    recorrer(v, btn, cadena_esperada(bom, {primera // 5: escrituras[primera]}), pos,
+             escrituras=resto)
     journal({'t': time.strftime('%H:%M:%S'), 'producto': producto, 'estado': 'por_grabar'})
     tecla(win32con.VK_RETURN, 1.2)          # <- ESTO es lo que graba
     journal({'t': time.strftime('%H:%M:%S'), 'producto': producto, 'estado': 'enter_ok'})
@@ -632,10 +732,13 @@ def main():
         sys.exit('no encuentro la ventana — abri el arb, logueate, y dejalo en '
                  'Menu de Insumos -> Relacion de Consumo')
 
-    if a.diagnostico:
-        return 0 if diagnostico(v, a.diagnostico) else 1
-    if a.seco:
-        return 0 if seco(v, a.seco) else 1
+    if a.diagnostico or a.seco:
+        try:
+            fn = diagnostico if a.diagnostico else seco
+            return 0 if fn(v, a.diagnostico or a.seco) else 1
+        except Abortar as e:
+            print('CORTADO: %s' % e)
+            return 1
 
     boms = bom_del_export()
     if boms is None:
