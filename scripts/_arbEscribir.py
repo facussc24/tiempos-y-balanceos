@@ -1,18 +1,23 @@
 # -*- coding: utf-8 -*-
 """
-Modificar la columna Cantidad de un insumo en el arb, en SEGUNDO PLANO.
+=====================================================================================
+ OBSOLETO — NO USAR. Su premisa es FALSA y su verificacion da un OK que miente.
+ Usar `scripts/_arbCargar.py`. Queda solo como registro del intento.
+=====================================================================================
 
-    python scripts/_arbEscribir.py --codigo APLIX-A999R8395 --valor 0.0002560
-    python scripts/_arbEscribir.py --codigo APLIX-A999R8395 --valor 0.0002560 --dry-run
+Se escribio creyendo que se podia modificar un consumo EN SEGUNDO PLANO, sin robar el
+foco. Medido el 2026-08-05: **eso no funciona**. Escribir por mensaje en un control que
+NO tiene el foco no entra en el arb — el valor se ve en pantalla y vuelve solo al viejo
+en cuanto el foco pasa por ahi (y en un campo de codigo se pierde el guion).
 
-SALVAGUARDAS (no se sacan nunca):
-  - Ubica la fila POR CODIGO, nunca por posicion. Si el codigo no esta, aborta.
-  - Vuelca el estado completo antes de tocar (.arb-cache/pre-cambio/).
-  - Lee de nuevo despues y compara. Si no quedo el valor esperado, lo dice.
-  - --dry-run muestra exactamente que haria, sin tocar nada.
+Lo peligroso no es que no ande: es que su salvaguarda de leer-y-comparar **lee la
+pantalla**, asi que confirma un valor que la base no tiene. Un OK de este script no
+prueba nada. La unica prueba valida es exportar RELACIONES y mirar el archivo.
 
-NO graba: eso lo decide Fak con ACEPTA. Este script solo deja el valor escrito en la celda.
+Ver la skill `arb-operar` y `scripts/_arbCargar.py`: recorre con teclado real, escribe
+con el foco puesto y verifica contra el export.
 """
+raise SystemExit(__doc__)
 import argparse
 import ctypes
 import json

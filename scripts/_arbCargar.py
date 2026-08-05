@@ -2,8 +2,8 @@
 """
 Cambiar consumos en el ERP arb: contando y verificando, no tanteando.
 
-    python scripts/_arbCargar.py --diagnostico 21-8908    read-only puro, CERO teclas
-    python scripts/_arbCargar.py --seco 21-8908           recorre sin escribir ni grabar
+    python scripts/_arbCargar.py --diagnostico <PRODUCTO>  read-only puro, CERO teclas
+    python scripts/_arbCargar.py --seco <PRODUCTO>         recorre sin escribir ni grabar
     python scripts/_arbCargar.py --tabla carga.csv        DRY-RUN (default)
     python scripts/_arbCargar.py --tabla carga.csv --apply
     python scripts/_arbCargar.py --verificar carga.csv    contra el export, tolerancia 0,1%
@@ -28,7 +28,7 @@ lineas (decision de Fak 2026-08-05).
    de teclado real lo procesa el dialogo y sale al boton. Escribir y leer si van por
    mensaje: no necesitan foco y son instantaneos.
 
-4. LA FORMULA, medida de la grabacion de Fak (21-8909, 5 insumos, 27 TAB exactos):
+4. LA FORMULA, medida de la grabacion de Fak (una pieza de 5 insumos, 27 TAB exactos):
        de `Parte Superior` a la Cantidad de la fila i (base 0):  3 + 5*i
        de `Parte Superior` al boton &Acepta, con N insumos:      5*N + 2
    Son 5 celdas tabulables por fila, no 7: `Descripcion` y `U.M.` existen como controles
@@ -80,7 +80,6 @@ EM_SETSEL = 0x00B1
 WM_GETDLGCODE = 0x0087
 GWL_STYLE = -16
 WS_TABSTOP = 0x00010000
-WS_DISABLED = 0x08000000
 ES_READONLY = 0x0800
 
 COLS = ['rubro', 'codigo', 'descripcion', 'unidad', 'cantidad', 'modulo', 'proceso']
@@ -434,7 +433,7 @@ def ir_a_celda(v, celda, maxpasos=60):
 def escribir_con_foco(v, h, texto):
     """En el arb, escribir por mensaje SOLO entra bien si el control tiene el foco.
 
-    Medido 2026-08-05: sin foco, `21-8908` queda `218908` (se pierde el guion) y un valor
+    Medido 2026-08-05: sin foco, un codigo `NN-NNNN` queda `NNNNNN` (se pierde el guion) y un valor
     escrito en una celda se revierte al valor viejo en cuanto el recorrido pasa por ahi.
     La skill decia que escribir no necesitaba foco: estaba mal, y es la razon de fondo por
     la que las cargas parecian entrar y no grababan.
@@ -636,7 +635,12 @@ def cargar_producto(v, producto, cambios, bom):
             raise Abortar('%s esta en la fila %d y la grilla muestra %d: hay que scrollear '
                           'para escribirla, y eso no esta resuelto' % (cod, i, len(filas)))
         actual = leer(filas[i][IDX_CANTIDAD])
-        if esperado and not mismo_numero(actual, esperado):
+        # el "antes" es OBLIGATORIO: sin el no hay dato crudo before->after y se estaria
+        # pisando a ciegas un valor que pudo cambiar entre el export y la corrida
+        # (regla consumos-entregables).
+        if not esperado:
+            raise Abortar('%s no trae valor_esperado en la tabla: no piso a ciegas' % cod)
+        if not mismo_numero(actual, esperado):
             raise Abortar('%s tiene %s y esperaba %s — no lo piso' % (cod, actual, esperado))
         escrituras[i * 5 + 2] = nuevo          # 2 = posicion de Cantidad dentro de la fila
         detalle.append((cod, actual, nuevo))

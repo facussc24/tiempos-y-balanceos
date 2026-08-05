@@ -84,16 +84,19 @@ de acá salen los `.TXT` que después se leen. **Sirve para verificar, no para c
 
 ## Traer la BOM de un producto `CONFIRMADO 2026-08-04`
 
+> ⚠️ **Este repo es PÚBLICO: acá no van códigos de producto, códigos de material ni
+> consumos reales.** Los ejemplos son genéricos. El dato real vive en `.arb-cache/`
+> (gitignoreado) y en el servidor.
+
 ```
 1. Menú de Insumos  →  Relación de Consumo de Prod. Terminados
-2. Escribir el código en `Parte Superior`   (ej: 21-7339)
+2. Escribir el código del producto en `Parte Superior`
 3. >>> TAB <<<   ← ESTA es la tecla que trae los insumos a la grilla
 ```
 
 Al tabular aparecen la **descripción del producto** al lado del código y **todas las filas de
-la BOM**. Verificado en vivo con `21-7339` (TELA TNT 60G/M² RESPALDO TRASERO 100%):
-`APLIX-A999R8395` 0,0000246 · `BA 60 90` 0,01 · `ET-SATO-100X60` 0,0000125 ·
-`TPP60B-1.5` 0,5608 — calcó el export `RELACIONES.TXT`.
+la BOM**. Verificado en vivo contra el export `RELACIONES.TXT`: coincide fila por fila,
+código, unidad y consumo.
 
 **No es `Shift`+`↑`** (probado dos veces, no hace nada) ni `Alt` (el ribbon no tiene KeyTips)
 ni las flechas para cambiar de solapa. La navegación del ribbon es con mouse; **adentro de la
@@ -141,12 +144,12 @@ Los campos son controles Win32 reales (`RichEdit20A` / `Edit`), cada uno con su 
 permite **leerlos con `WM_GETTEXT` sin robar el foco** — Fak puede seguir usando la PC.
 Herramienta: `scripts/_arbUI.py --leer`. Funciona perfecto.
 
-**Escribir por mensajes NO funciona.** Probado en el `21-7339`:
+**Escribir por mensajes NO funciona** (probado sobre una pieza real):
 
 | lo que se envió | qué pasó |
 |---|---|
 | `WM_CHAR` letra por letra a la celda `Cantidad` | el número **aparece** en pantalla |
-| `BM_CLICK` al botón `&Acepta` | **no graba**: el export mostró `0,00002460` sin cambios |
+| `BM_CLICK` al botón `&Acepta` | **no graba**: el export mostró el valor viejo sin cambios |
 | `TCM_SETCURSEL` al tab control | cambia el índice pero **la pantalla no cambia de solapa** |
 
 **El patrón es siempre el mismo: los mensajes sintéticos cambian el estado visual, pero el
@@ -247,8 +250,8 @@ que hace que ande igual cuando la grilla scrollea (los controles se reciclan, el
 
 > ⚠️ **La versión vieja de esta tabla decía que escribir NO necesitaba foco. Estaba mal, y
 > era la razón de fondo por la que las cargas "entraban" y no grababan.** Medido el
-> 05/08 sobre el campo `Parte Superior`: sin foco, `21-8908` queda **`218908`** — se pierde
-> el guión; con foco entra entero. En una celda de la grilla es peor: el valor se ve en
+> 05/08 sobre el campo `Parte Superior`: sin foco, un código `NN-NNNN` queda **`NNNNNN`** —
+> se pierde el guión; con foco entra entero. En una celda de la grilla es peor: el valor se ve en
 > pantalla y **vuelve solo al viejo** en cuanto el recorrido pasa por ahí.
 
 **Sólo leer anda en segundo plano.** Cualquier escritura o recorrido necesita la máquina
