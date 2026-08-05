@@ -78,6 +78,43 @@ Ojo con la frescura: el arb exporta los tres archivos por separado y Fak puede r
 solo `RELACIONES`. Si `ARTICULO.TXT` quedo viejo, un alta reciente da falso "anulado" —
 mirar las fechas de los tres antes de creerle al cruce.
 
+### Alta de un codigo nuevo — validar el DV ANTES, siempre
+
+Si el pedido es **dar de alta** un codigo de proveedor con formato `NNN.NNN.NNNN-N`
+(Sansuy y cia.), correr esto antes de armar nada:
+
+```bash
+python scripts/_dvArb.py 123.456.7890-1        # uno o varios codigos
+```
+
+Llevan **digito verificador modulo 11**, como el CUIT: si el numero viene con digitos
+cambiados de lugar, no cierra. Un codigo real del proveedor siempre cierra — asi que
+"no cierra" es prueba de que esta mal tipeado, no una sospecha.
+
+Si no cierra: **no darlo de alta**. Buscar en el maestro las permutaciones de esos
+digitos que si darian ese DV; la que ya existe cargada es el codigo real. Caso que lo
+estreno (05/08): el codigo pedido no cerraba, y el verificador que traia era el de otro
+codigo con dos digitos cambiados de lugar que ya estaba cargado con el mismo material.
+Crearlo hubiera dejado dos codigos para lo mismo en deposito. Numeros del caso en la
+memoria `project_alta_codigos_sansuy_427` (fuera del repo — este es publico).
+
+Y antes de escribir la descripcion, mirar como esta escrita la familia en el maestro:
+el campo **corta en 60 caracteres** y a veces corta justo antes de lo que diferencia dos
+variantes (ahi nacen los 74 pares de descripciones identicas que reporta el refresh).
+Detalle: memoria `reference_arb_digito_verificador`.
+
+### El arb NO dice a que pieza VA a ir un material
+
+El arb responde **que se consume hoy**. No responde **que se va a consumir**. Deducir el
+destino de un material nuevo cruzando colores, familias o piezas parecidas del arb es
+inventar con pasos intermedios: los productos del arb no estan todos cargados, y una
+pieza puede existir en varios colores y llevar el material en uno solo.
+
+Si preguntan a que pieza va un material que todavia no tiene consumo: contestar el dato
+duro (**"hoy no se consume en ninguna"**, que es una respuesta, no un "no se") y mandar
+la pregunta del destino a Ingenieria. Para afirmarlo hace falta el **plano y el PPAP**,
+no el ERP. Detalle: memoria `feedback_destino_material_se_verifica_en_planos`.
+
 ## 2. Fak carga. Yo no cargo.
 
 El arb no abre en esta PC (memoria `arb_erp_btrieve`). Fak carga a mano y **re-exporta**:

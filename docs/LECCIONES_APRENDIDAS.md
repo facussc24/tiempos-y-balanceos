@@ -13,6 +13,33 @@ contiene SOLO lo accionable que NO esta ya codificado como regla o gate ejecutab
 
 ## Lecciones operativas vigentes
 
+### 2026-08-05 — Encadené tres inferencias del ERP y le puse cara de verificado
+Me pidieron dar de alta dos códigos en el arb. Encontré con prueba dura que uno estaba mal
+tipeado (el DV no cerraba) — eso estuvo bien y quedó como script. Después Fak preguntó a qué
+piezas iban a ir esos vinilos, y ahí inventé con pasos intermedios.
+
+- **El ERP dice qué se consume hoy, no qué se va a consumir.** Armé esto: los apoyacabezas
+  están cargados en tres colores → el Armrest Rear sólo está cargado en Titan Black → los dos
+  vinilos son ese mismo material en los otros dos colores → *van al Armrest Rear en Andino
+  Gray y Dark Slate*. Cada paso salía de un dato real del arb y la conclusión era falsa: **el
+  Armrest Rear lleva vinilo negro solamente.** Me lo corrigió Fak: "deberías verificar los
+  planos PPAP antes de asumir cosas". A qué pieza va un material se mira en el plano y el
+  PPAP; el ERP no tiene esa información y ninguna cantidad de queries la va a producir.
+- **Lo que no está cargado en el arb no prueba nada sobre lo que existe.** Prueba que no está
+  cargado. Que falten dos colores de una pieza no significa que vayan a existir.
+- **Señal para frenar:** si la cadena es "existe A en N variantes + B consume A en una
+  variante + C es A en otra variante → C va a B", son tres inferencias sobre inventario y cero
+  sobre el producto. Ahí va el plano, no otra query.
+- **La respuesta dura ya alcanzaba.** "Hoy ninguno de los tres se consume en ninguna pieza" es
+  una respuesta, no un "no sé" — y era exactamente lo que destrababa la consulta.
+- Aparte: **le tiré tres tablas y cuatro niveles de detalle a algo que se contestaba en dos
+  renglones**, y Fak tuvo que decirme "no te entiendo nada". Cuando la pregunta es "¿se puede
+  o no?", la respuesta empieza por sí o no.
+
+Gate nuevo: `python scripts/_dvArb.py <codigo>` valida el dígito verificador (mod 11, como el
+CUIT) de los códigos `NNN.NNN.NNNN-N` antes de darlos de alta — 45/45 del maestro cierran, así
+que "no cierra" es prueba de typo. Enganchado en la skill `carga-arb`.
+
 ### 2026-08-05 — Reporté "choca" tres veces y las tres era mi método, no la pieza
 Auditando si el utillaje 3D del Upper Trim apoya bien sobre la pieza del cliente, encontré un
 choque de 1.365 puntos, después uno de 18.849 y después uno de 3.024. **El resultado real era
