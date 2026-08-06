@@ -5,7 +5,9 @@ description: Operar el ERP arb (ARB Sistemas "Producción") por teclado desde Cl
 
 # Operar el arb desde Claude
 
-> **Cambiar consumos: ANDA** (14/14 cargadas y verificadas contra el export, 2026-08-05).
+> **Cambiar consumos: ANDA** (14/14 el 2026-08-05 · **16/16 el 2026-08-06**, todas verificadas
+> contra el export y con el diff del arb entero en 0 altas / 0 bajas). Sale con reintentos:
+> ver "Tanda del 2026-08-06" antes de correr una tanda nueva.
 > Dar de alta y borrar líneas: fuera de alcance, necesita otra grabación y otra red.
 > Lo marcado `CONFIRMADO`/`medido` se probó; lo demás es hipótesis y **no se ejecuta sin
 > verificar antes**.
@@ -166,8 +168,25 @@ el `.exe` vive en `Z:\arb\prod\` y lo puede abrir cualquier máquina de la red.
 
 ## Exportar para verificar `CONFIRMADO`
 
-Solapa `Listado de Insumos de Un Producto` → `Desde Artículo` / `Hasta Artículo` / combo
-`Salida`, con estas opciones:
+### La secuencia, en cuatro teclas `dato de Fak 2026-08-06`
+
+Estando en la solapa `Listado de Insumos de Un Producto`:
+
+```
+TAB  TAB            ← Desde Artículo → Hasta Artículo → combo Salida
+↓  ↓  ↓             ← baja 3 en el combo
+ENTER  ENTER  ENTER ← genera el archivo
+```
+
+**Esto es lo primero que hay que probar. Nada de pelearse con el combo.** Perdí ~10 minutos
+mandándole clicks y `WM_CHAR` al ComboBox: el click no le mueve el foco (el arb se lo queda
+en `Desde Artículo`) y la letra que tipeé terminó **escrita en el campo de filtro**. Tabular
+tampoco: el TAB desde ahí cae en un botón y se queda. Fak lo hace en cuatro teclas.
+
+> Ojo: lo probé por teclado sintético (`keybd_event`) y **no disparó el export**. Con teclado
+> real de Fak sí anda. Si hace falta automatizarlo, hay que medirlo — no darlo por hecho.
+
+### El combo y sus opciones
 
 `0 Pantalla` · `1 Impresora` · `2 Disco C` · **`3 Tabla EXcel`** · `4 Formato PDF` ·
 `5 HTML` · `6 Word/RTF` · `7 Electronico`
@@ -213,7 +232,8 @@ Sin esto los clicks caen en la celda de al lado y se escribe basura en el códig
 ```
 Alt -> V -> Y3                     abrir (teclado real)
 gate: ¿estoy en la solapa Altas?   si no hay grilla, ABORTAR — no escribir a ciegas
-foco en Parte Superior + escribir el codigo     <- CON FOCO o se pierde el guion
+CLICK en Parte Superior            <- click, NO tabular (ver abajo)
+escribir el codigo CON FOCO        <- o se pierde el guion
 TAB                                trae la BOM
 ubicar la fila POR CODIGO          nunca por posicion
 TAB real hasta Cantidad            (el de mensaje avanza de a DOS y saltea)
@@ -302,6 +322,75 @@ normal.
   texto termina en otro control.
 - **Confirmar el foco antes de escribir** (`GetGUIThreadInfo`) y **abortar si no coincide**.
   Esa guarda es lo único que evitó corromper el código de un insumo de producción.
+
+## Tanda del 2026-08-06 — 16 de 16, y lo que costó llegar
+
+Segunda tanda real (16 piezas de una familia, 11 insumos cada una). Cerró en **16 de 16
+verificadas contra el export**, y el diff del arb entero dio **0 altas, 0 bajas, 16 cambios**:
+nada fuera de lo pedido. Pero salieron cuatro cosas nuevas.
+
+### Pararse en `Parte Superior` es con CLICK, no tabulando `2026-08-06`
+
+Tabular no llega nunca. Si el foco quedó en la solapa —que es donde queda **siempre después
+de exportar**— el TAB no entra al campo: la navegación la maneja la grilla, no el diálogo.
+Un click real del mouse sí. Adentro de la grilla se sigue tabulando: ahí un click puede caer
+en la celda de al lado y escribir sobre el código de un insumo.
+
+### `activar()` no alcanzaba con `SetForegroundWindow` `2026-08-06`
+
+Windows lo bloquea cuando el foreground lo tiene otro proceso — y eso pasa **en cada comando**,
+porque la consola desde la que se corre le saca el frente al arb. Hay que `AttachThreadInput`
+con el thread que hoy tiene el foreground, y recién ahí Windows deja pasar el cambio. Sin
+esto, `--diagnostico` cortaba con "no pude poner el foco" aunque la ventana estuviera visible.
+
+### Dos bugs del parser del export, los dos silenciosos `2026-08-06`
+
+Ninguno tira error: devuelven una BOM incompleta y el recorrido se desfasa.
+
+- El filtro era `re.match('^[0-9]', articulo)`: **solo dejaba pasar productos con código
+  numérico**. Familias enteras cuyo código arranca con letra quedaban afuera, y el cargador
+  se quedaba sin BOM contra la cual verificar.
+- Pedir `len(columnas) >= 8` **descarta las filas partidas**. Y acá eso no es un detalle de
+  auditoría: el cargador **cuenta los insumos para saber cuántos TAB dar** (`3 + 5*i`), así
+  que un insumo de menos desfasa todo el recorrido y se termina escribiendo sobre otro
+  material. Justo las piezas con descripción larga son las que se parten.
+
+**Regla que sale de acá:** cualquier parser del export se valida contra un conteo crudo
+independiente, pieza por pieza, antes de usarlo para navegar.
+
+### El arb puede tirar `HEAP CORRUPTION DETECTED` `visto 2026-08-06`
+
+Cartel `Microsoft Visual C++ Runtime Library` → *"Debug Error! … HEAP CORRUPTION DETECTED …
+CRT detected that the application wrote to memory after end of heap buffer"*, con botones
+**Anular / Reintentar / Omitir**.
+
+Es un bug del propio arb: se pisó su memoria. Apareció después de ir y venir varias veces
+entre solapas y exportar. **Mientras el cartel está, la ventana no responde a nada** — los
+clicks en las solapas no hacen efecto y parece colgada. Ese es el síntoma que hay que
+reconocer.
+
+- **Anular** y reabrir el programa. Es lo correcto.
+- **Omitir** deja al programa siguiendo con la memoria ya corrupta. Con consumos de
+  producción de por medio, no.
+- Después de reabrir: **re-exportar y diffear contra el respaldo previo**, para confirmar que
+  no quedó nada raro. En este caso no quedó.
+
+Detectarlo es una línea: enumerar las ventanas del proceso del arb y buscar clase `#32770`
+con título `Microsoft Visual C++ Runtime Library`. Conviene chequearlo antes de decidir que
+"la ventana está trabada".
+
+### Reintentar es seguro, y hace falta `2026-08-06`
+
+La tanda no sale de una: el TAB se pierde de vez en cuando y el recorrido se desfasa. Real:
+8/15 → 3/7 → 3/4 → 1/1. Cuando falla, **falla sin escribir** (el gate compara el contenido de
+cada celda y aborta antes del ENTER), así que no deja nada a medias.
+
+**Reintentar no puede pisar dos veces**: el gate de `valor_esperado` compara contra lo que hay
+antes de escribir, así que una pieza ya cargada se rechaza sola con *"tiene X y esperaba Y —
+no lo piso"*. Eso es un éxito del reintento, no un error.
+
+Cuando una pieza falla, la siguiente suele fallar con "la ventana no está activa" — efecto
+dominó del estado que quedó. No significa nada: se reintenta y entra.
 
 ## Seguridad — antes de que el robot escriba
 

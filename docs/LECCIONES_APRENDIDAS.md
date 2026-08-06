@@ -13,6 +13,38 @@ contiene SOLO lo accionable que NO esta ya codificado como regla o gate ejecutab
 
 ## Lecciones operativas vigentes
 
+### 2026-08-06 — Tardé 25 minutos en algo de dos y medio, y el que sabía estaba al lado
+Cargué 16 consumos en el ERP y cerraron 16/16 verificados. Pero de los ~25 minutos, la carga
+en sí fueron **2:30**. Fak lo dijo sin vueltas: *"lo cargaría más rápido yo al final"*.
+
+- **Me peleé diez minutos con un combo que se resuelve en cuatro teclas.** Para exportar probé
+  clicks, mensajes al control, tabular — nada. Le mandé una letra al combo y terminó **escrita
+  en el campo de filtro**, y encima dejé esa suciedad en pantalla. Cuando le pregunté, Fak
+  contestó: *TAB TAB, bajás tres, ENTER tres veces*. **Cuando una interfaz no responde como
+  espero y el que la usa todos los días está del otro lado del chat, preguntar no es
+  interrumpir: es el camino corto.** Tantear es lo caro.
+- **Lo que sí valió el tiempo fue distinto:** tres bugs del cargador que solo aparecieron al
+  correrlo con estas piezas, y dos habrían escrito sobre el material equivocado. Esa parte no
+  se podía saltear. La diferencia entre las dos demoras es que una producía conocimiento y la
+  otra era yo adivinando.
+- **Separar las dos cosas al reportar.** No alcanza con decir "tardé": hay que decir cuánto se
+  fue en descubrir algo real y cuánto en dar vueltas. Si no, no se puede corregir.
+
+### 2026-08-06 — Un filtro que descarta filas no rompe: desvía
+Ya sabía que el export del ERP parte las filas cuando la descripción es larga. Lo que no había
+visto es la consecuencia cuando ese parser se usa para **navegar** y no solo para auditar: el
+robot cuenta los ítems para saber cuántos tabuladores dar, así que **un ítem de menos corre
+todo el recorrido y termina escribiendo en el campo de otro material**. El mismo bug que en una
+auditoría es un dato faltante, acá es un dato pisado.
+
+- **Un parser que alimenta una automatización se valida antes contra un conteo crudo
+  independiente**, ítem por ítem — no alcanza con "parece que anda".
+- El otro filtro era peor de tan simple: aceptaba solo códigos que empiezan con número, y
+  familias enteras que arrancan con letra quedaban invisibles. **Un filtro escrito para los
+  datos que había a mano ese día se vuelve un cepo cuando cambia el conjunto.**
+- Los dos son silenciosos: no tiran error, devuelven menos. **Todo filtro que descarta merece un
+  contador de cuántas descartó**; si el número no es el esperado, ahí saltó la alarma.
+
 ### 2026-08-06 — Le entregué tres mails para mandar y cuatro de las cinco dudas eran mías
 Para actualizar las BOM de los APC Patagonia armé "los mensajes para destrabar": pedirle un código
 a Juan, confirmarle una medida a Leo, y preguntarle a Pablo por sus consumos. Fak me frenó:

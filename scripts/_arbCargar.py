@@ -245,12 +245,41 @@ def al_frente(v):
 
 
 def activar(v):
-    if not al_frente(v):
+    """Traer la ventana del arb al frente.
+
+    `SetForegroundWindow` solo a secas FALLA cuando el foreground lo tiene otro proceso
+    (Windows lo bloquea para que ningun programa robe el foco). Y eso pasa siempre en esta
+    automatizacion: cada comando que se corre desde la consola le saca el frente al arb.
+    La unica via que funciona es `AttachThreadInput` con el thread que hoy tiene el
+    foreground — ahi Windows nos considera parte de la misma cola de entrada y deja pasar
+    el cambio. Medido 2026-08-06: sin esto, `--diagnostico` cortaba con "no pude poner el
+    foco en el control antes de escribir" aunque la ventana estuviera visible.
+    """
+    if al_frente(v):
+        return True
+    me = ctypes.windll.kernel32.GetCurrentThreadId()
+    hilos = {me}
+    for h in (u.GetForegroundWindow(), v):
+        if h:
+            try:
+                hilos.add(win32process.GetWindowThreadProcessId(h)[0])
+            except Exception:
+                pass
+    otros = [t for t in hilos if t != me]
+    for t in otros:
+        u.AttachThreadInput(me, t, True)
+    try:
+        u.ShowWindow(v, win32con.SW_RESTORE)
         try:
             win32gui.SetForegroundWindow(v)
         except Exception:
             pass
-        time.sleep(0.3)
+        u.BringWindowToTop(v)
+        u.SetActiveWindow(v)
+        time.sleep(0.35)
+    finally:
+        for t in otros:
+            u.AttachThreadInput(me, t, False)
     return al_frente(v)
 
 
@@ -305,16 +334,48 @@ def mismo_numero(a, b, tol=0.001):
 # ---------------------------------------------------------------- el export
 
 def bom_del_export(path=EXPORT):
-    """{producto: [ {codigo, cantidad, modulo, proceso, rubro} ]} en el orden del archivo."""
+    """{producto: [ {codigo, cantidad, modulo, proceso, rubro} ]} en el orden del archivo.
+
+    DOS TRAMPAS DEL EXPORT, las dos costaron caro (2026-08-06):
+
+    1. El filtro viejo era `re.match('^[0-9]', articulo)`: solo dejaba pasar productos cuyo
+       codigo arranca con numero. Hay familias enteras cuyo codigo empieza con letra, y
+       quedaban TODAS afuera: el cargador decia "no esta en el export" y se quedaba sin BOM
+       contra la cual verificar. Un filtro escrito para los datos que habia a mano ese dia.
+
+    2. Cuando la descripcion del insumo es larga, el arb parte el registro en 3 filas
+       fisicas: la del codigo queda con 4 columnas (sin unidad ni consumo) y el resto
+       aparece DOS filas mas abajo, corrido 3 columnas a la izquierda. Pedir `len(c) >= 8`
+       las descarta en silencio. Eso es grave aca y no solo en una auditoria: el cargador
+       cuenta los insumos para saber cuantos TAB dar (`3 + 5*i`), asi que perder una fila
+       DESFASA EL RECORRIDO y se termina escribiendo en la celda de otro insumo.
+    """
     if not os.path.exists(path):
         return None
+    lineas = io.open(path, encoding='latin-1').read().splitlines()
     d = {}
-    for ln in io.open(path, encoding='latin-1').read().splitlines():
+    for i, ln in enumerate(lineas):
         c = ln.split('\t')
-        if len(c) >= 8 and c[0].strip() and re.match(r'^[0-9]', c[0].strip()):
-            d.setdefault(c[0].strip(), []).append(
-                {'rubro': c[1].strip(), 'codigo': c[2].strip(), 'cantidad': c[5].strip(),
-                 'modulo': c[6].strip(), 'proceso': c[7].strip()})
+        if len(c) < 4:
+            continue
+        art, cod = c[0].strip(), c[2].strip()
+        if not art or not cod or art.lower().startswith('art'):
+            continue
+        if len(c) >= 8 and c[5].strip():
+            cant, mod, proc = c[5].strip(), c[6].strip(), c[7].strip()
+        else:
+            # fila partida: el resto vive 2 filas mas abajo, corrido 3 a la izquierda
+            if i + 2 >= len(lineas):
+                continue
+            e = lineas[i + 2].split('\t')
+            if len(e) < 3 or not e[2].strip():
+                continue
+            cant = e[2].strip()
+            mod = e[3].strip() if len(e) > 3 else ''
+            proc = e[4].strip() if len(e) > 4 else ''
+        d.setdefault(art, []).append(
+            {'rubro': c[1].strip(), 'codigo': cod, 'cantidad': cant,
+             'modulo': mod, 'proceso': proc})
     return d
 
 
@@ -342,7 +403,15 @@ def traer(v, producto):
     ps = campo_producto(v)
     if not ps:
         raise Abortar('no veo el campo `Parte Superior`')
-    activar(v)
+    if not activar(v):
+        raise Abortar('no pude traer la ventana del arb al frente')
+    # Pararse en `Parte Superior` con un CLICK, no tabulando. Tabular desde donde haya
+    # quedado el foco (p. ej. la solapa, despues de un export) no llega nunca al campo:
+    # la navegacion la maneja la grilla, no el dialogo. El click es ademas lo que haria
+    # Fak. Adentro de la grilla NO se usa click — ahi se tabula, porque un click puede
+    # caer en la celda de al lado y escribir sobre el codigo de un insumo.
+    if foco_de(v) != ps:
+        click_control(v, ps)
     escribir_con_foco(v, ps, producto)
     if leer(ps).strip() != producto:
         raise Abortar('no entro el codigo del producto (quedo "%s")' % leer(ps))
@@ -428,6 +497,32 @@ def ir_a_celda(v, celda, maxpasos=60):
             raise Abortar('la ventana perdio el frente — no usar la PC')
         tecla(win32con.VK_TAB, 0.04)
     return False
+
+
+def click_control(v, h, espera=0.45):
+    """Click REAL del mouse en el centro de un control, y devolver el puntero donde estaba.
+
+    Se usa solo para pararse en `Parte Superior`. Un mensaje no sirve (el arb no ejecuta su
+    logica con eventos sinteticos) y tabular tampoco: si el foco quedo en la solapa —lo que
+    pasa siempre despues de exportar— el TAB no entra al campo.
+    """
+    if not activar(v):
+        return False
+    r = win32gui.GetWindowRect(h)
+    cx, cy = (r[0] + r[2]) // 2, (r[1] + r[3]) // 2
+    try:
+        mx, my = win32gui.GetCursorPos()
+    except Exception:
+        mx = my = None
+    u.SetCursorPos(cx, cy)
+    time.sleep(0.2)
+    u.mouse_event(0x0002, 0, 0, 0, 0)          # LEFTDOWN
+    time.sleep(0.06)
+    u.mouse_event(0x0004, 0, 0, 0, 0)          # LEFTUP
+    time.sleep(espera)
+    if mx is not None:
+        u.SetCursorPos(mx, my)
+    return foco_de(v) == h
 
 
 def escribir_con_foco(v, h, texto):
