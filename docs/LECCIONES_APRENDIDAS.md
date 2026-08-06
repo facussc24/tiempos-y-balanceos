@@ -13,6 +13,48 @@ contiene SOLO lo accionable que NO esta ya codificado como regla o gate ejecutab
 
 ## Lecciones operativas vigentes
 
+### 2026-08-06 — El archivo que "no estaba" vivía en un mail, y yo le pedí a Fak que arreglara la red
+Se cayó el disco de red justo antes de tocar unos DXF. Reporté el bloqueo, pedí que se resolviera la
+conexión, y para no dejarlo con las manos vacías mostré el método corrido **sobre otra pieza**. Fak:
+*"revertí toda esa mierda que hiciste, te dije que era \<la pieza X\> no \<la pieza Y\>"*. Tenía razón.
+Dos minutos después busqué el nombre del archivo en el buzón y **estaba adjunto en un mail viejo,
+byte a byte idéntico** (mismo tamaño exacto que el del servidor).
+
+- **Antes de declarar un archivo inaccesible, buscarlo en el buzón:** `scripts/_mails.py --buscar`
+  sobre el nombre del archivo tarda segundos. Los DXF, planos y BOMs circulan por mail — el servidor
+  es una de las copias, no la única. Vale para cualquier corte de red o de VPN.
+- **Sustituir la pieza pedida por otra "parecida" no es un avance parcial, es ruido.** Si el
+  entregable es la foto de la pieza X, la foto de la pieza Y no aporta aunque el método sea idéntico.
+  Estando bloqueado, la salida es destrabar el bloqueo, no cambiar el objeto.
+
+### 2026-08-06 — Offset local de un contorno: tres bugs que solo aparecieron al MIRAR la imagen
+Agrandando un contorno de corte unos milímetros solo en sus extremos, la primera corrida pasó todos
+los chequeos numéricos y estaba mal en tres cosas. Las tres se vieron en el PNG, ninguna en los números:
+
+- **Agrandó los agujeros junto con la pieza.** Filtraba "piezas" por cantidad de vértices (≥10) y un
+  círculo chico tiene 49. **El filtro va por TAMAÑO** (bbox mínima), no por cantidad de vértices.
+- **La "punta" se comió un cuarto del contorno.** La detectaba como "donde el ancho baja del 90% del
+  máximo", y si el ancho decae de a poco a lo largo de toda la pieza el umbral se lleva medio
+  contorno. **Definir la punta por un largo explícito desde cada extremo del eje principal**
+  (zona plena + rampa) es predecible y se puede discutir con el usuario antes de aplicar.
+- **El contorno se cruzó consigo mismo.** Con la normal calculada como bisectriz de las 2 aristas
+  adyacentes, dos vértices separados décimas de mm sacan normales muy distintas y al desplazarlos se
+  dan vuelta. **La normal se promedia sobre unos mm de ARCO**, ponderada por largo de segmento.
+- Corolario del detector: estos DXF traen **vértices duplicados** (segmentos de largo 0,000000) y un
+  segmento degenerado le da falso positivo al test de orientación — hubo un contorno *original* que
+  ya "auto-intersectaba". El chequeo correcto no es "¿hay cruces?" sino **"¿hay cruces nuevos?"**.
+
+### 2026-08-06 — Casi pusheo datos de la empresa al repo público, y lo frenó el clasificador
+Escribí las dos lecciones de arriba con nombre de cliente, de proyecto, rutas del servidor, medidas
+de pieza y tamaños de archivo, y las quise commitear. El repo es **público**. Lo frenó el gate de
+permisos, no yo — y la regla ya estaba escrita en mi propia memoria.
+
+- **`docs/LECCIONES_APRENDIDAS.md` es un archivo PÚBLICO.** La lección va en método puro: qué falló,
+  por qué, cómo se evita. Cliente, proyecto, rutas, part numbers y medidas reales **nunca**.
+  Si el dato concreto hace falta para entender, va a `.sgc-cache/` (gitignoreado).
+- El reflejo correcto al escribir cualquier archivo del repo es preguntarse **"¿esto lo puede leer
+  cualquiera en internet?"** antes de guardar, no antes de pushear.
+
 ### 2026-08-06 — Diseñé el apriete al lado de donde había que apretar, y lo vio Fak
 Entregué un utillaje verificado con siete números en verde: 0 interferencia, la lengüeta al 0,27%
 de deformación, el gancho mordiendo, el nervio apretando 0,20 mm "en el 100% de la franja". Fak
