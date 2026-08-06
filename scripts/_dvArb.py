@@ -7,7 +7,7 @@ que llega tipeado a mano (mail, planilla, WhatsApp) casi nunca cierra si tiene d
 cambiados de lugar. Esto convierte "me parece que esta mal escrito" en prueba, ANTES de
 darlo de alta y quedarte con dos codigos para el mismo material.
 
-    python scripts/_dvArb.py 123.456.7890-1        # valida uno o varios codigos
+    python scripts/_dvArb.py 123.456.7890-0        # valida uno o varios codigos
     python scripts/_dvArb.py --maestro             # revisa todo INSUMOS.TXT
     python scripts/_dvArb.py --maestro --archivo D:\otro\INSUMOS.TXT
 

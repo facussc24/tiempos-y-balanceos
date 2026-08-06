@@ -84,7 +84,7 @@ Si el pedido es **dar de alta** un codigo de proveedor con formato `NNN.NNN.NNNN
 (Sansuy y cia.), correr esto antes de armar nada:
 
 ```bash
-python scripts/_dvArb.py 123.456.7890-1        # uno o varios codigos
+python scripts/_dvArb.py 123.456.7890-0        # uno o varios codigos
 ```
 
 Llevan **digito verificador modulo 11**, como el CUIT: si el numero viene con digitos
