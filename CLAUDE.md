@@ -55,6 +55,7 @@ NO preguntar si Fak quiere que lo hagas. HACERLO.
 | Siempre cargadas | Contenido |
 |---|---|
 | `core-prohibiciones.md` | No inventar, CC/SC solo Fak, TBD, Supabase live, espanol AR |
+| `techo-agentes.md` | **Maximo 5 subagentes. `Workflow` deshabilitado.** Enforced por hook + settings |
 | `no-pfd-no-ho.md` | PFD/HO no se hacen aca |
 | `autonomy-contract.md` | Matriz de autonomia |
 | `git-deploy.md` | Build + commit + push al cerrar tareas |
