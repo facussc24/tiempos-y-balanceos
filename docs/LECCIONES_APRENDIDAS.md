@@ -13,6 +13,27 @@ contiene SOLO lo accionable que NO esta ya codificado como regla o gate ejecutab
 
 ## Lecciones operativas vigentes
 
+### 2026-08-06 — Cuatro errores de signo seguidos, y el assert que los mata a todos
+Diseñando y verificando el utillaje del Upper Trim me equivoqué **cuatro veces** en la dirección
+de un desplazamiento: al bajar la pieza sobre el vinilo, al reubicarla contra la cara correcta, y
+dos veces al corregir la corrección. Cada vez el número salía plausible y cada vez estaba mal.
+
+- **Lo que lo cortó no fue pensar mejor: fue una línea de código.** Después de reubicar, volver a
+  medir dónde quedó y `assert` contra el valor esperado. Tres minutos de escribirlo contra media
+  hora perdida por iteración. **Toda transformación que se aplica "para que algo quede en X" tiene
+  que terminar comprobando que quedó en X.**
+- **El corolario de diseño:** en la versión vieja la posición vertical la daba el apoyo; en la
+  nueva la fija el gancho. Verificar la nueva con el anclaje de la vieja daba un apriete al triple
+  del real. **Cuando cambia el mecanismo, cambia qué cota manda — y hay que rehacer el anclaje,
+  no reusarlo.**
+- **Un número de control topológico vale más que mirar el render.** El STL cerró con característica
+  de Euler −10, que es exactamente lo que corresponde a los 6 huecos pasantes del diseño: confirma
+  en un renglón que están los seis y que ninguno quedó tapado ni partido.
+- **Dos variantes salen casi gratis y resuelven el dato que no tengo.** No sé cuánto hay que
+  apretar la microfibra para que el hot melt agarre, así que entregué dos versiones (0,20 y
+  0,35 mm de apriete) **con muescas distintas en el canto**: impresas se diferencian en 0,15 mm y
+  sin marca física son indistinguibles sobre la mesa.
+
 ### 2026-08-05 — El dato estaba adentro del plano y yo lo busqué por afuera
 Me pidieron la medida de un tornillo de un conjunto. La saqué de la ficha de datos maestros
 del componente, que estaba en la carpeta vieja del proyecto, y encima la respuesta era
