@@ -68,10 +68,10 @@ auditoría es un dato faltante, acá es un dato pisado.
   contador de cuántas descartó**; si el número no es el esperado, ahí saltó la alarma.
 
 ### 2026-08-06 — Le entregué tres mails para mandar y cuatro de las cinco dudas eran mías
-Para actualizar las BOM de los APC Patagonia armé "los mensajes para destrabar": pedirle un código
-a Juan, confirmarle una medida a Leo, y preguntarle a Pablo por sus consumos. Fak me frenó:
-*"es cualquier cosa que le preguntes a Juan, que ni sé quién es... siento que muchas cosas
-podríamos resolverlas nosotros"*. Las cuatro se contestaban con datos que ya tenía a mano.
+Para una actualización de BOM armé "los mensajes para destrabar": pedirle un código a uno,
+confirmarle una medida a otro, preguntarle por sus números a un tercero. Fak me frenó: *"es
+cualquier cosa que le preguntes... siento que muchas cosas podríamos resolverlas nosotros"*.
+Las cuatro se contestaban con datos que ya tenía a mano.
 
 - **El código que "falta" casi siempre ya existe.** Iba a pedirle a alguien el código de un hilo:
   estaba en el maestro de insumos, y encima ya cargado en ocho piezas hermanas del mismo proyecto.
@@ -83,9 +83,10 @@ podríamos resolverlas nosotros"*. Las cuatro se contestaban con datos que ya te
   el ERP ya usa para ese caso concreto. Un código con descripción perfecta y **cero usos** es un
   candidato, no una conclusión: hay que contar los usos antes de afirmarlo.
 - **Que el pedido traiga "consultalo con X" adentro no me exime de buscar primero.** El "preguntale
-  a Juan" venía escrito en el mail de Leo. Repetírselo a Fak sin haber buscado es hacer de cartero.
-- **No se re-pide un dato que ya dieron** (la medida de la bolsa la había pasado Leo) **ni se
-  pregunta lo que no cambia la acción** (si el embudo es comprado o propio: el código se genera igual).
+  a fulano" venía escrito en el mail que originó la tarea. Repetírselo a Fak sin haber buscado es
+  hacer de cartero.
+- **No se re-pide un dato que ya dieron** (la medida venía en el propio pedido) **ni se pregunta lo
+  que no cambia la acción** (de dónde se compra una pieza, si el código se genera igual).
 - **El patrón que Fak quiere:** varias dudas juntas → agentes en paralelo con la consigna de
   CONCLUIR con evidencia y un escéptico independiente que intente tumbar cada conclusión; recién lo
   que sobrevive sin evidencia se escala como TBD, nombrando el documento que lo cierra.
