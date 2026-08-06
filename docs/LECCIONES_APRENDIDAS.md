@@ -13,6 +13,28 @@ contiene SOLO lo accionable que NO esta ya codificado como regla o gate ejecutab
 
 ## Lecciones operativas vigentes
 
+### 2026-08-06 — Diseñé el apriete al lado de donde había que apretar, y lo vio Fak
+Entregué un utillaje verificado con siete números en verde: 0 interferencia, la lengüeta al 0,27%
+de deformación, el gancho mordiendo, el nervio apretando 0,20 mm "en el 100% de la franja". Fak
+leyó el resumen y preguntó lo obvio: *"hace presión en esos agujeros, no?"*. Fui a medirlo y **no**:
+el hueco que necesitaba la lengüeta para flexionar caía justo sobre el contorno de la ranura, que
+es exactamente donde el borde del vinilo cortado se levanta. El nervio quedaba a 1,7-3,2 mm de ahí.
+
+- **Verifiqué que apretaba, no DÓNDE apretaba.** "100% de la franja" era cierto y era irrelevante:
+  la franja que definí yo no incluía el borde de la ranura. Cuando una métrica se calcula sobre una
+  región que elegí yo, primero hay que verificar **que la región sea la correcta** — si no, un
+  número perfecto tapa el error en lugar de mostrarlo.
+- **La función y el mecanismo se pelean por el mismo espacio, y eso se resuelve a propósito.**
+  La pata tenía que moverse para enganchar y el nervio tenía que apretar, los dos en el mismo lugar.
+  La salida fue girar la flexión 90°: el gancho sale a lo largo de la ranura (donde además el labio
+  mide 5,57 mm en vez de 3,08) y el hueco se va a 3 mm del borde.
+- **Para saber si una lengüeta está realmente suelta hay que usar el test de INTERIOR, no los nodos
+  de malla.** Un cuello macizo no tiene nodos de superficie adentro: buscarlos ahí devuelve "libre"
+  cuando en realidad está fundido a la placa. Con `contains` apareció que el cabezal estaba unido
+  por 21 mm en vez de por los 2,2 del cuello — habría sido diez veces más rígido de lo calculado.
+- **Y hay que acotar el barrido a la pieza que se mide:** ese mismo test, barriendo más ancho que
+  el cabezal, contaba la placa de alrededor como si fuera unión y dio una falsa alarma.
+
 ### 2026-08-06 — Tardé 25 minutos en algo de dos y medio, y el que sabía estaba al lado
 Cargué 16 consumos en el ERP y cerraron 16/16 verificados. Pero de los ~25 minutos, la carga
 en sí fueron **2:30**. Fak lo dijo sin vueltas: *"lo cargaría más rápido yo al final"*.
@@ -51,12 +73,15 @@ a Juan, confirmarle una medida a Leo, y preguntarle a Pablo por sus consumos. Fa
 *"es cualquier cosa que le preguntes a Juan, que ni sé quién es... siento que muchas cosas
 podríamos resolverlas nosotros"*. Las cuatro se contestaban con datos que ya tenía a mano.
 
-- **El código que "falta" casi siempre ya existe bajo la convención interna del proyecto.** El hilo
-  decorativo negro estaba en el maestro como `427HIL002COS01`, con el juego completo
-  `427HIL001/003/004` y descripciones idénticas a los `FX483TK` que sí están cargados. Bastaba
-  **listar todos los códigos `427*` de `INSUMOS.TXT`**. Regla: antes de decir "no existe" o de pedir
-  un código, listar la familia entera del proyecto — no buscar por la palabra que usó quien pidió
-  ("embudo", "bolsa"), que casi nunca es la que está en la descripción del maestro.
+- **El código que "falta" casi siempre ya existe.** Iba a pedirle a alguien el código de un hilo:
+  estaba en el maestro de insumos, y encima ya cargado en ocho piezas hermanas del mismo proyecto.
+  Bastaba **listar la familia entera de códigos del proyecto y mirar qué usan las piezas hermanas**,
+  en vez de buscar por la palabra que usó quien pidió ("embudo", "bolsa"), que casi nunca es la que
+  está escrita en la descripción del maestro.
+- **Corolario que me costó dos vueltas: el primer código que encaja por descripción NO es la
+  respuesta.** Encontré uno con la descripción idéntica y lo di por bueno; el bueno era otro, el que
+  el ERP ya usa para ese caso concreto. Un código con descripción perfecta y **cero usos** es un
+  candidato, no una conclusión: hay que contar los usos antes de afirmarlo.
 - **Que el pedido traiga "consultalo con X" adentro no me exime de buscar primero.** El "preguntale
   a Juan" venía escrito en el mail de Leo. Repetírselo a Fak sin haber buscado es hacer de cartero.
 - **No se re-pide un dato que ya dieron** (la medida de la bolsa la había pasado Leo) **ni se
