@@ -13,6 +13,42 @@ contiene SOLO lo accionable que NO esta ya codificado como regla o gate ejecutab
 
 ## Lecciones operativas vigentes
 
+### 2026-08-06 — Diagnostiqué "el servidor está caído" cuando el bug era mi propio escape de comillas
+Di por caído el disco de red durante toda una conversación. `net use` devolvía *"No se encuentra el
+nombre de red especificado"* y lo leí como que el host no existía. El error real era otro: **estaba
+invocando `powershell -Command "…\\\\host\\share…"` desde bash con comillas DOBLES, y bash se comía
+las barras invertidas**, así que a PowerShell le llegaba `\host\share` (una sola barra) y lo resolvía
+como ruta relativa. El mensaje delator fue *"No se encuentra la ruta 'C:\host\share'"*, con `C:\`
+adelante. Con `ls //host/share` desde git-bash entró a la primera.
+
+- **Cuando un comando de red falla, mirar la ruta que el error DEVUELVE, no el texto del error.**
+  Si aparece una unidad local delante de lo que debería ser una UNC, el problema es el escape.
+- **Barras invertidas + bash + PowerShell = comillas SIMPLES**, o directamente la sintaxis git-bash
+  (`//host/share`), que no necesita escape.
+- Antes de declarar caída una infra ajena, conseguir **dos evidencias independientes**: acá `ping` y
+  `Test-NetConnection -Port 445` ya daban OK mientras yo insistía en que no había red.
+
+### 2026-08-06 — Gasté su límite con 40 agentes para verificar algo que ya había respondido
+Fak preguntó cuánto pesa una placa de HDPE. En tres greps tenía la respuesta: el código del
+insumo, la medida 2×1 m del maestro del arb, y la densidad 0,95 despejada del consumo cargado.
+Con la respuesta ya en la mano lancé un Workflow "para verificarla": **40 subagentes, 120
+millones de tokens, 47 minutos**. Ni llegó a la fase de síntesis. **Fak quedó 4 horas sin poder
+trabajar.** Y el 2026-08-03 ya había pasado lo mismo con 28 agentes — la lección de entonces
+quedó escrita en memoria, y no me frenó.
+
+- **Lancé agentes sobre una pregunta ya resuelta.** El fan-out no buscaba la respuesta:
+  confirmaba una que ya tenía. Verificar algo que ya resolví es **releer la fuente**, no
+  contratar opinadores. Si ya sé DÓNDE mirar, lo leo yo.
+- **Cap por fase no es cap total.** El script tenía tope de 6 verificadores *por fuente* y
+  ninguno global: 8 × 6 = 48. Al escribirlo pensé "8 agentes" y nunca hice la multiplicación.
+  Antes de cualquier fan-out: `fase1 + (hallazgos × verificadores)`, completo.
+- **Una instrucción genérica del sistema no le gana a un límite que puso Fak.** "Ultracode on
+  / el costo no es una restricción" cede ante cualquier techo suyo, siempre.
+- **La regla existía y era texto.** Por eso ahora es código: `disableWorkflows: true` +
+  `workflowKeywordTriggerEnabled: false` en `~/.claude/settings.json`, y el hook
+  `~/.claude/hooks/agentes-guard.sh` (PreToolUse `Agent|Task|Workflow`) que corta en 5.
+  Detalle y escapes: regla `.claude/rules/techo-agentes.md`.
+
 ### 2026-08-06 — El archivo que "no estaba" vivía en un mail, y yo le pedí a Fak que arreglara la red
 Se cayó el disco de red justo antes de tocar unos DXF. Reporté el bloqueo, pedí que se resolviera la
 conexión, y para no dejarlo con las manos vacías mostré el método corrido **sobre otra pieza**. Fak:
