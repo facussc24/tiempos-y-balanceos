@@ -13,6 +13,30 @@ contiene SOLO lo accionable que NO esta ya codificado como regla o gate ejecutab
 
 ## Lecciones operativas vigentes
 
+### 2026-08-06 — Le entregué tres mails para mandar y cuatro de las cinco dudas eran mías
+Para actualizar las BOM de los APC Patagonia armé "los mensajes para destrabar": pedirle un código
+a Juan, confirmarle una medida a Leo, y preguntarle a Pablo por sus consumos. Fak me frenó:
+*"es cualquier cosa que le preguntes a Juan, que ni sé quién es... siento que muchas cosas
+podríamos resolverlas nosotros"*. Las cuatro se contestaban con datos que ya tenía a mano.
+
+- **El código que "falta" casi siempre ya existe bajo la convención interna del proyecto.** El hilo
+  decorativo negro estaba en el maestro como `427HIL002COS01`, con el juego completo
+  `427HIL001/003/004` y descripciones idénticas a los `FX483TK` que sí están cargados. Bastaba
+  **listar todos los códigos `427*` de `INSUMOS.TXT`**. Regla: antes de decir "no existe" o de pedir
+  un código, listar la familia entera del proyecto — no buscar por la palabra que usó quien pidió
+  ("embudo", "bolsa"), que casi nunca es la que está en la descripción del maestro.
+- **Que el pedido traiga "consultalo con X" adentro no me exime de buscar primero.** El "preguntale
+  a Juan" venía escrito en el mail de Leo. Repetírselo a Fak sin haber buscado es hacer de cartero.
+- **No se re-pide un dato que ya dieron** (la medida de la bolsa la había pasado Leo) **ni se
+  pregunta lo que no cambia la acción** (si el embudo es comprado o propio: el código se genera igual).
+- **El patrón que Fak quiere:** varias dudas juntas → agentes en paralelo con la consigna de
+  CONCLUIR con evidencia y un escéptico independiente que intente tumbar cada conclusión; recién lo
+  que sobrevive sin evidencia se escala como TBD, nombrando el documento que lo cierra.
+- Ya estaba escrito en la memoria `feedback_tomar_rol_ingeniero` (15/07) y lo repetí igual. Cuando
+  una lección reincide, el problema no es saberla: es que falta el gesto operativo. Acá es escribir,
+  al lado de cada "preguntarle a X", **qué fuente concreta podría contestarlo** — si no puedo
+  nombrarla, la pregunta no sale.
+
 ### 2026-08-06 — Cuatro errores de signo seguidos, y el assert que los mata a todos
 Diseñando y verificando el utillaje del Upper Trim me equivoqué **cuatro veces** en la dirección
 de un desplazamiento: al bajar la pieza sobre el vinilo, al reubicarla contra la cara correcta, y
