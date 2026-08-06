@@ -336,7 +336,7 @@ def mismo_numero(a, b, tol=0.001):
 def bom_del_export(path=EXPORT):
     """{producto: [ {codigo, cantidad, modulo, proceso, rubro} ]} en el orden del archivo.
 
-    DOS TRAMPAS DEL EXPORT, las dos costaron caro (2026-08-06):
+    TRES TRAMPAS DEL EXPORT, las tres costaron caro (2026-08-06):
 
     1. El filtro viejo era `re.match('^[0-9]', articulo)`: solo dejaba pasar productos cuyo
        codigo arranca con numero. Hay familias enteras cuyo codigo empieza con letra, y
@@ -349,33 +349,56 @@ def bom_del_export(path=EXPORT):
        las descarta en silencio. Eso es grave aca y no solo en una auditoria: el cargador
        cuenta los insumos para saber cuantos TAB dar (`3 + 5*i`), asi que perder una fila
        DESFASA EL RECORRIDO y se termina escribiendo en la celda de otro insumo.
+
+    3. La linea de continuacion (la `i+2`) NO se puede volver a mirar como si fuera una fila
+       nueva: arranca con `resto-de-la-descripcion, unidad, cantidad, modulo, proceso`, que
+       calzan justo en las posiciones del articulo y del codigo. Sin marcarla como consumida
+       aparecen ARTICULOS FANTASMA con un pedazo de descripcion como nombre (medido sobre el
+       export real: `AL` con 8 items, `GR` con 16, `(TGA AT2)` con 1). Hoy ninguno colisiona
+       con un producto real, pero eso es suerte del dato: si un fantasma coincidiera con un
+       codigo real, ese producto ganaria items basura y volveria el desfase del recorrido,
+       que es justo lo que el resto de esta funcion evita.
     """
     if not os.path.exists(path):
         return None
     lineas = io.open(path, encoding='latin-1').read().splitlines()
     d = {}
+    consumidas = set()      # indices que ya se usaron como continuacion de una fila partida
+    perdidas = []           # filas partidas que no se pudieron resolver (no descartar en silencio)
     for i, ln in enumerate(lineas):
+        if i in consumidas:
+            continue
         c = ln.split('\t')
         if len(c) < 4:
             continue
         art, cod = c[0].strip(), c[2].strip()
-        if not art or not cod or art.lower().startswith('art'):
+        if not art or not cod or i == 0 or art.lower().startswith('art'):
             continue
         if len(c) >= 8 and c[5].strip():
             cant, mod, proc = c[5].strip(), c[6].strip(), c[7].strip()
         else:
             # fila partida: el resto vive 2 filas mas abajo, corrido 3 a la izquierda
             if i + 2 >= len(lineas):
+                perdidas.append((i, art, cod))
                 continue
             e = lineas[i + 2].split('\t')
             if len(e) < 3 or not e[2].strip():
+                perdidas.append((i, art, cod))
                 continue
             cant = e[2].strip()
             mod = e[3].strip() if len(e) > 3 else ''
             proc = e[4].strip() if len(e) > 4 else ''
+            consumidas.add(i + 2)
         d.setdefault(art, []).append(
             {'rubro': c[1].strip(), 'codigo': cod, 'cantidad': cant,
              'modulo': mod, 'proceso': proc})
+    if perdidas:
+        # Un descarte silencioso aca es el bug que esta funcion existe para evitar: el
+        # cargador cuenta los insumos para saber cuantos TAB dar.
+        print('  OJO: %d fila(s) partida(s) sin resolver — la BOM de esos productos queda '
+              'incompleta y el recorrido se desfasa:' % len(perdidas))
+        for i, art, cod in perdidas[:5]:
+            print('     linea %d  %s  %s' % (i + 1, art, cod))
     return d
 
 
