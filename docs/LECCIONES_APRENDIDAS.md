@@ -13,6 +13,28 @@ contiene SOLO lo accionable que NO esta ya codificado como regla o gate ejecutab
 
 ## Lecciones operativas vigentes
 
+### 2026-08-06 — Mi número tenía ±1,5 mm y yo lo usaba para discutir 1,2 mm
+Reconstruí un pin del dispositivo TRA/IZQ desde 9 fotos con calibre. Puse el agujero a **12,2 mm**
+desde la punta, medido por fotogrametría. Fak miró el render: *"el círculo está centrado? me dio la
+impresión en la imagen que no... creo que en el mío estaba centrado"*. El centro geométrico era
+13,385 → discutíamos **1,2 mm**.
+
+- Antes de defender mi valor lo audité: según cómo segmentara el tornillo en la foto, el centro me
+  daba **10,6 o 11,8 mm**. **±1,5 mm de incertidumbre, más grande que la diferencia en juego.** Mi
+  medición no tenía resolución para contradecirlo. Fue centrado.
+- **Un número con dos decimales parece un dato aunque su barra de error se coma la conclusión.** El
+  error no es equivocarse: es presentar como medición algo cuya incertidumbre es mayor que el efecto
+  que pretende demostrar. Misma familia que la zona equivocada de acá abajo: precisión aparente
+  tapando incertidumbre real.
+- **Regla:** antes de sostener un valor derivado (fotogrametría, píxeles, escalado, regla de tres),
+  calcular su incertidumbre y compararla con la diferencia en discusión. Si es del mismo orden o
+  mayor, el valor **no decide** y gana el que tiene la pieza en la mano. Y decirlo explícito ("mi
+  medición no alcanzaba para distinguir"), no ceder en silencio: Fak tiene que saber cuál de los dos
+  números era el débil.
+- Lo que **sí** funcionó y conviene repetir: validar que **las 7 lecturas del calibre entraran cada
+  una en una cota, sin sobrar ninguna**. Con 7 de 7 ocupadas, acertar por casualidad es despreciable.
+  Método completo en la memoria `reconstruir-pieza-de-fotos-con-calibre`.
+
 ### 2026-08-06 — Diseñé tres veces un utillaje para la zona equivocada de la pieza
 Me pidieron un dispositivo para asegurar el tapizado en una zona donde al operario le cuesta llegar.
 Medí todo con precisión de centésimas, verifiqué siete cosas, entregué tres versiones — **y había
