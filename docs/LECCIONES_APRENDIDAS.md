@@ -13,6 +13,30 @@ contiene SOLO lo accionable que NO esta ya codificado como regla o gate ejecutab
 
 ## Lecciones operativas vigentes
 
+### 2026-08-06 — Diseñé tres veces un utillaje para la zona equivocada de la pieza
+Me pidieron un dispositivo para asegurar el tapizado en una zona donde al operario le cuesta llegar.
+Medí todo con precisión de centésimas, verifiqué siete cosas, entregué tres versiones — **y había
+agarrado la feature equivocada del 3D**. Tomé las ranuras donde entran los listones del cliente
+cuando la zona era el borde del hueco del cargador, que está en otra parte de la pieza. Fak lo cerró
+en un segundo: circuló la zona sobre un render y me lo mandó.
+
+- **Ninguna de mis verificaciones podía detectarlo, y ese es el punto.** Todas medían contra la
+  región que había elegido yo. Un número perfecto sobre la zona equivocada es peor que no medir,
+  porque da confianza. **Verificar mucho no compensa no haber confirmado el "dónde".**
+- **Gate 0, nuevo y bloqueante** (ya está en `.claude/rules/cad-3d.md`): antes de medir nada,
+  renderizar el 3D del cliente, **marcar sobre esa imagen la zona que entendí** nombrando la feature,
+  y que Fak la confirme. Él contesta marcando círculos sobre el render — lo pidió explícitamente:
+  *"la próxima pedime unas fotos como las que te adjunté para entender exactamente dónde"*.
+- **Si al buscar "la" feature aparecen dos o tres candidatas parecidas, eso no es un problema de
+  filtrado: es la señal de que hay que preguntar.** Yo encontré dos líneas de ranuras y elegí la que
+  encajaba con lo que ya me había imaginado.
+- **El mecanismo sale de la secuencia de la operación, no al revés.** La operación real era
+  *dispositivo en la mesa → pistola de calor → apoyar la pieza con algo de presión → esperar →
+  retirar*. Yo había diseñado un clip a presión en frío. Escribir esa secuencia en una línea y
+  confirmarla cuesta un minuto y define todo el concepto.
+- **No lanzar agentes ni maquinaria pesada sobre un requerimiento sin confirmar:** multiplica el
+  error en vez de encontrarlo. Primero se confirma el "dónde", después se despliega.
+
 ### 2026-08-06 — Diagnostiqué "el servidor está caído" cuando el bug era mi propio escape de comillas
 Di por caído el disco de red durante toda una conversación. `net use` devolvía *"No se encuentra el
 nombre de red especificado"* y lo leí como que el host no existía. El error real era otro: **estaba
