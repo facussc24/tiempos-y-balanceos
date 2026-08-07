@@ -13,6 +13,21 @@ contiene SOLO lo accionable que NO esta ya codificado como regla o gate ejecutab
 
 ## Lecciones operativas vigentes
 
+### 2026-08-07 — El entregable va donde se usa, no donde a mi me queda ordenado
+Fak pidio 4 archivos de corte para mandar al plotter. Los deje prolijos en una subcarpeta
+nueva, con una version de respaldo partida en dos, una imagen de control y un informe de
+verificacion largo. Respuesta: *"no entiendo, me los pones en el escritorio en una copia,
+no voy a leer todo eso... dejalos en el escritorio y listo, no me la compliques"*.
+
+- **El pedido incluye el DONDE, aunque no lo diga.** Si el archivo es para usarlo ya, va
+  suelto y a mano — el Escritorio. Una carpeta mia con estructura propia es trabajo que le
+  traslado a el: ahora tiene que navegar, elegir entre dos versiones y entender mi criterio.
+- **La verificacion la hago yo, no se la leo.** Los 9 decimales, las invariantes y la imagen
+  son para que yo pueda AFIRMAR que esta bien; en la respuesta va la afirmacion y las dos
+  cosas que el necesita saber para decidir. El resto es ruido.
+- Cerrar la tarea es parte de la tarea: sacar la carpeta del Escritorio con
+  `node scripts/_escritorio.mjs --archivar`, sin que me lo pida.
+
 ### 2026-08-07 — Dos limitaciones que yo mismo habia escrito, y ninguna existia
 Automatizando una carga repetitiva, dos cosas quedaron trabadas y las dos las destrabo el que
 usa la herramienta todos los dias, no yo.
