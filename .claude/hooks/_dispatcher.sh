@@ -108,14 +108,16 @@ case "$TOOL_NAME" in
 esac
 case "$TOOL_NAME" in
   Bash|PowerShell|Write|Edit)
-    GUARDIANES+=(consumos-entregable-guard cad-guard patrones-guard escritorio-guard) ;;
+    GUARDIANES+=(consumos-entregable-guard cad-guard patrones-guard escritorio-guard
+                 borrado-masivo-guard) ;;
 esac
 
 # Si no se pudo parsear el tool_name, NO adivino: corro TODOS los guardianes.
 # Fallar hacia el lado seguro es correr de mas, nunca de menos.
 if [ -z "$TOOL_NAME" ]; then
   GUARDIANES=(file-guard supabase-guard validator-check renumber-guard push-guard
-              consumos-entregable-guard cad-guard patrones-guard escritorio-guard)
+              consumos-entregable-guard cad-guard patrones-guard escritorio-guard
+              borrado-masivo-guard)
 fi
 
 if [ ${#GUARDIANES[@]} -eq 0 ]; then exit 0; fi
