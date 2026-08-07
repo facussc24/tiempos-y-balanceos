@@ -13,6 +13,30 @@ contiene SOLO lo accionable que NO esta ya codificado como regla o gate ejecutab
 
 ## Lecciones operativas vigentes
 
+### 2026-08-07 — Escribí un script que borraba, sin dry-run, y movió 942 archivos en vez de 17
+Quería rescatar ~17 archivos CAD de la carpeta `REVISAR` (986 archivos, 1,76 GB). Escribí un `.ps1`
+nuevo que copiaba, verificaba tamaño y después borraba el original. **Movió los 942**, a un árbol de
+carpetas que ni siquiera era el correcto. Dos bugs de PowerShell, los dos **silenciosos**:
+
+- **`.ps1` en UTF-8 sin BOM + `powershell -File`**: PowerShell 5.1 lo lee como ANSI. `Ingeniería` se
+  convirtió en `IngenierÃ­a` y **creó un árbol paralelo completo** al lado del real, adentro de una
+  carpeta sincronizada de SharePoint. Fix: BOM UTF-8, o `pwsh`, o cero caracteres no-ASCII en
+  literales de ruta.
+- **`Get-ChildItem -LiteralPath <dir> -Recurse -Include *.step`**: `-Include` se **ignora** salvo que
+  el Path termine en `\*`. Devuelve todos los archivos. Fix: `-Filter`, `-Path "$dir\*"`, o
+  `Where-Object { $_.Extension -in @(...) }`.
+
+- **La causa de fondo no es PowerShell: es que reimplementé una operación peligrosa que ya estaba
+  resuelta.** `scripts/_escritorio.mjs` tiene `--dry-run`, verificación de bytes y cero llamadas de
+  borrado, justamente por esto. Escribí uno nuevo desde cero sin ninguna de esas protecciones.
+- **Regla:** todo script que borre o mueva en lote va primero en dry-run imprimiendo el plan
+  completo, y **hay que mirar el conteo**: si esperaba 17 y dice 942, ahí se termina. Verificar que
+  el destino resuelto existe y es el que creía (no dejar que se cree solo). Y mandar a **Papelera**,
+  nunca `Remove-Item -Force`.
+- **Lo que no vuelve solo:** no se perdió un byte, pero los archivos quedaron **aplanados** — se
+  perdió qué archivo vivía en qué subcarpeta (los PPAP estaban por número de parte). La jerarquía es
+  dato, y un `Join-Path $dest $_.Name` la destruye aunque copie todo perfecto.
+
 ### 2026-08-06 — Mi número tenía ±1,5 mm y yo lo usaba para discutir 1,2 mm
 Reconstruí un pin del dispositivo TRA/IZQ desde 9 fotos con calibre. Puse el agujero a **12,2 mm**
 desde la punta, medido por fotogrametría. Fak miró el render: *"el círculo está centrado? me dio la
