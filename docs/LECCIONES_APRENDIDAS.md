@@ -1421,3 +1421,22 @@ hubiera roto tres cosas.
 - Si la leccion amerita regla durable → crearla en `.claude/rules/` CON enforcement ejecutable
   (skill `rule-enforcement-gate`) y dejar aca solo 1 linea de referencia, sin duplicar.
 - Cuando este archivo supere ~15 KB: mover lo ya codificado al historico en `docs/_archive/`.
+
+### 2026-08-07 — Un control puede dar verde sin haber mirado nada
+Verificando que una tuerca impresa enrosca en su tornillo, barrí la tuerca por el eje **cada
+0,5 mm sobre una rosca de paso 1,0 mm**. Dio 0 mm³ de interferencia girando bien y **0 mm³
+girando al revés**. Parecía un éxito rotundo; era un control ciego: con muestreo = paso/2 los
+dos sentidos caen exactamente en las mismas poses. Con incremento 0,137·paso, el mismo control
+dio 0 girando bien y 7,5 mm³ girando al revés — recién ahí el 0 significaba algo.
+
+- **En todo barrido sobre algo periódico** (roscas, hélices, engranajes, patrones repetidos)
+  el incremento NO puede ser fracción simple del período. Lo detectó el propio gate porque
+  llevaba el caso que DEBE fallar; sin eso me lo llevaba puesto.
+- **La copia literal no es el diseño correcto.** El original era M4 paso 0,7; copiarlo tal
+  cual en plástico no enrosca (la holgura que pide el FDM se come el 40 % del filete). Se
+  mantuvo el diámetro —que es lo que tiene que seguir pasando por el agujero— y se subió el
+  paso a 1,0. Copiar el número equivocado es tan malo como inventarlo.
+- **Caras coincidentes = sólido no estanco.** Pegar la rosca a la cabeza con la cara de
+  arranque coplanar con el cuello dio 663 bordes abiertos y un STL que no lamina, con el
+  sólido reportando `is_valid=True`. La validez del CAD no garantiza que el STL cierre:
+  hay que medir estanqueidad sobre el archivo que se entrega.
