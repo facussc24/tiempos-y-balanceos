@@ -106,6 +106,15 @@ PLT**: `escribir_plt()` toma solo CORTE + MARCAS. El DXF sin embargo la conserva
 
 ## 4. Rotar e identificar el PLT
 
+> 🔴 **LA ORIENTACION EN EL PLOTTER ESTA AL REVES DE LO QUE PARECE (Fak, 2026-08-07).**
+> **El lado largo en X sale VERTICAL. Para que salga HORIZONTAL, el lado largo va en Y** —
+> o sea el eje **Y** del PLT es el que corre a lo largo del rollo, y el X es el ancho.
+> Es al reves de lo que uno supondria leyendo HPGL. Yo lo asumi al derecho, entregue los 4
+> patrones del Insert con 620 mm en X "para no desperdiciar papel", y salieron parados.
+> **Corolario: los patrones que salen del flujo normal (221 x 620, largo en Y) ya estan
+> bien orientados — no hay que rotarlos.** Y en general: la orientacion no se deduce del
+> archivo, se verifica imprimiendo o se le pregunta a Fak, que tiene la maquina delante.
+
 **Rotar** (para aprovechar el ancho del rollo): `rotar90(pts)` — antihorario `(x,y)→(-y,x)`.
 Rotar el **contorno y TODAS las marcas juntos**, y despues `trasladar_al_origen()` con el
 mismo minimo comun. Rotar no deforma, y eso hay que **demostrarlo**: perimetro identico y
