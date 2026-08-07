@@ -15,13 +15,37 @@ Capacidad probada en el caso Posicionador Top Roll Trasero (ver
 `examples/posicionador/README.md`: el caso completo, sus 4 errores caros y dónde viven
 las fuentes). La librería vive en `scripts/cadlib/` + CLIs genéricos con `--help`.
 
-## 0. LOS 2 GATES (bloqueantes)
+## 0. LOS 3 GATES (bloqueantes)
 
 > **Causa raíz de TODOS mis fallos 3D** (confirmada): bajo presión de "avanzar rápido"
 > sustituyo la fuente real por un proxy (export parcial, capa blanda, dibujo genérico,
 > "confío que salió") y salto la verificación → Fak termina siendo mi control de calidad.
 
-**GATE PRE-MODELADO** (antes de escribir geometría):
+**GATE 0 — LA ZONA** (antes de medir una sola cota). Un utillaje no se define por sus cotas sino
+por la ZONA sobre la que actúa, y un número perfecto sobre la zona equivocada es peor que no medir:
+da confianza. Se computa, no se mira.
+
+```
+gate_zona.py inventario <cliente.stp> --workdir W --render   # -> renders/gate0_mapa_<pieza>.png
+# Fak circula cuál es sobre esa imagen
+gate_zona.py inventario <cliente.stp> --workdir W --confirmar A3 --quien Fak --evidencia "..."
+```
+
+- Clasifica cada contorno PASANTE / REBAJE / ESCALÓN por **paridad de rayos**: un rebaje cosmético
+  y una abertura tienen el mismo contorno y el mismo render; sólo se distinguen contando impactos
+  adentro contra un anillo afuera.
+- Agrupa por familias de tamaño: si la candidata mayor es una de varias iguales, sale AMBIGUO.
+  Una feature que se repite casi nunca es "la" feature.
+- Nunca auto-aprueba (exit 2 mientras falte `--confirmar`). Enforcement: `export_deliverables.py`
+  exige `zona_confirmada` en el manifest.
+- Pasarle `--normal` medida de la cara (`geom.fit_plane`): sin eso la deduce y puede reportar un
+  pasante como resalte.
+
+Hermanos del mismo CLI: `pasante` (un candidato puntual, en segundos), `macizo` (¿ese vano es aire
+o material? — caza la lengüeta fundida que el render no muestra), `pose` (¿la transformación dejó
+la pieza donde dije? — caza los errores de signo).
+
+**GATE 1 — PRE-MODELADO** (antes de escribir geometría):
 - ¿Tengo el ENSAMBLE completo, no un export parcial? Si es parcial → STOP, pedir el assembly.
 - ¿Confirmé CUÁL pieza y computé el ROL de cada sólido por código (`cadlib.geom.contains_batched`
   + bboxes), sin adivinar?
@@ -29,7 +53,7 @@ las fuentes). La librería vive en `scripts/cadlib/` + CLIs genéricos con `--he
 - Toda cota se EXTRAE del CAD medido (`cadlib.geom.extract_cylinder_axes`, `analyze_step.py`)
   o es dato de Fak. CERO dimensiones inventadas/redondeadas (extiende `core-prohibiciones` #1).
 
-**GATE PRE-ENTREGA** (antes de decir "listo"): render + MIRAR yo el resultado + interferencia
+**GATE 2 — PRE-ENTREGA** (antes de decir "listo"): render + MIRAR yo el resultado + interferencia
 contra el sustrato RÍGIDO ≈ 0 + CADGenBench (validez→forma→interface→topología) + evidencia.
 
 **Enforcement**: el hook `cad-guard.sh` solo RECUERDA estos gates 1×/hora. El enforcement
@@ -63,6 +87,9 @@ literales sueltos en el código.
 
 ## 3. Flujo punta a punta (CLIs de `scripts/`, todos con `--help`)
 
+0. **Confirmar la ZONA** — `gate_zona.py inventario <cliente.stp> --workdir W --render`,
+   mandarle `renders/gate0_mapa_<pieza>.png` a Fak, volver con `--confirmar <id>`. **Antes de
+   esto no se mide nada.**
 1. **Medir** — `analyze_step.py <file>` (sólidos, bbox, caras planas+normales, y las 3 sondas
    de topología del §3bis: `--zone` / `--neighbors` / `--offset`); `bbox_quick.py <files...>`.
 2. **Entender el ensamble POR CÓDIGO** (no "ver": COMPUTAR): rol de cada sólido por bbox +

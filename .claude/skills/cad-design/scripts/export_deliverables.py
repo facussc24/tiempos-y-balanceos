@@ -2,10 +2,12 @@
 # Interprete: .venv-cad (Py3.12). Correr: C:\Dev\BarackMercosul\.venv-cad\Scripts\python.exe export_deliverables.py --help
 """Exporta y entrega piezas (STEP + STL binario + GLB opcional) — CON GATE DE EVIDENCIA.
 
-Este es el enforcement REAL del gate pre-entrega (el hook cad-guard solo recuerda):
-por cada pieza exige en el manifest (1) collision_check con n_inside=0 y (2) un render
-mas nuevo que el STEP. Sin evidencia NO entrega. Override explicito --skip-gate con
---reason, y queda huella en el manifest.
+Este es el enforcement REAL de los gates (el hook cad-guard solo recuerda): exige en el
+manifest (0) zona_confirmada — el GATE 0, que la ZONA la haya confirmado Fak, porque un
+utillaje perfecto sobre la feature equivocada pasa todas las demas verificaciones — y por
+cada pieza (1) collision_check con n_inside=0 y (2) un render mas nuevo que el STEP.
+Sin evidencia NO entrega. Override explicito --skip-gate con --reason, y queda huella en
+el manifest.
 """
 import argparse
 import glob
@@ -56,7 +58,7 @@ def main():
     ap.add_argument("--stl-lc", type=float, default=geom.LC_PRINT)
     ap.add_argument("--stl-curvature", type=int, default=geom.CURVATURE_PRINT)
     ap.add_argument("--glb", action="store_true", help="exportar tambien GLB (visor web)")
-    ap.add_argument("--skip-gate", action="append", default=[], choices=["collision", "render"],
+    ap.add_argument("--skip-gate", action="append", default=[], choices=["zona", "collision", "render"],
                     help="saltear un gate (queda registrado; exige --reason)")
     ap.add_argument("--reason", default=None, help="justificacion del --skip-gate")
     args = ap.parse_args()
@@ -65,6 +67,19 @@ def main():
         raise SystemExit("--skip-gate exige --reason (la huella queda en el manifest)")
 
     w = workdir.ensure_workdir(args.workdir)
+
+    # ---- GATE 0: la ZONA (una sola vez, no por pieza) ----
+    if "zona" not in args.skip_gate:
+        if workdir.find_evidence(w, "zona_confirmada") is None:
+            raise SystemExit(
+                "[GATE 0 zona] No hay 'zona_confirmada' en el manifest de %s.\n"
+                "Un utillaje puede estar perfecto y estar sobre la feature EQUIVOCADA: eso no lo\n"
+                "detecta ninguna verificacion posterior, porque todas miden contra la zona que eligi yo.\n"
+                "Correr:  gate_zona.py inventario <cliente.stp> --workdir %s --render\n"
+                "         -> mandarle renders/gate0_mapa.png a Fak, que circule cual es\n"
+                "         gate_zona.py inventario <cliente.stp> --workdir %s --confirmar <id> "
+                "--quien Fak --evidencia '<como lo confirmo>'\n"
+                "(o --skip-gate zona --reason '...' si genuinamente no aplica)" % (w, w, w))
 
     # ---- GATES por pieza ----
     for piece in args.pieces:
