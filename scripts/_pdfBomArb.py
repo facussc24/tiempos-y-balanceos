@@ -223,8 +223,31 @@ def verificar_filas(boms):
     return rotas
 
 
-def pagina(doc, pieza, filas, fecha, actualizaciones):
+
+def descripciones_producto(path=None):
+    """{codigo_articulo: descripcion} desde ARTICULO.TXT.
+
+    RELACIONES trae el codigo del producto pero NO su descripcion, asi que en el extracto
+    cada pagina se identificaba solo con el codigo. Quien no vive en el arb no sabe que
+    pieza esta mirando (pedido de Fak, 07/08/2026).
+    """
+    path = path or os.path.join(os.path.dirname(RELACIONES), 'ARTICULO.TXT')
+    d = {}
+    if not os.path.exists(path):
+        return d
+    with open(path, encoding='latin-1', errors='replace') as f:
+        for linea in f.read().splitlines()[1:]:
+            c = linea.split('	')
+            if len(c) >= 2 and c[0].strip():
+                d[c[0].strip()] = limpiar(c[1])
+    return d
+
+
+def pagina(doc, pieza, filas, fecha, actualizaciones, descripcion=''):
     p = doc.new_page(width=ANCHO, height=ALTO)
+    y = 28
+    titulo = pieza if not descripcion else '%s    %s' % (pieza, descripcion)
+    p.insert_text((28, y), titulo, fontname='cobo', fontsize=FS + 1.5)
     y = 45
     for titulo, x in COLS:
         p.insert_text((x, y), titulo, fontname='cobo', fontsize=FS)
@@ -352,9 +375,10 @@ def main():
     os.makedirs(os.path.dirname(salida), exist_ok=True)
     parcial = salida + '.parcial'
 
+    DESCR = descripciones_producto()
     doc = fitz.open()
     for pieza in piezas:
-        pagina(doc, pieza, boms[pieza], args.fecha, args.act)
+        pagina(doc, pieza, boms[pieza], args.fecha, args.act, DESCR.get(pieza, ''))
     doc.save(parcial)
     doc.close()
 
