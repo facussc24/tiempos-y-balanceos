@@ -127,6 +127,52 @@ def estado():
     return modales
 
 
+def cerrar_excel(espera=2.0):
+    """El export abre el TXT en Excel y Excel SE QUEDA CON EL ARCHIVO: el export siguiente
+    falla en silencio (mtime igual, ningun cartel del arb). Se cierra siempre, antes y
+    despues de exportar.
+
+    Ojo con el cartel "Excel realizara las siguientes conversiones: quitar ceros iniciales":
+    hay que contestar **No convertir**. Aceptar destruiria consumos como 0,00107250.
+    """
+    cerradas = 0
+    for _ in range(3):
+        dlg, xl = [], []
+
+        def _cb(h, _l):
+            if u.IsWindowVisible(h):
+                c = cls(h)
+                if c == 'NUIDialog':
+                    dlg.append(h)
+                elif c == 'XLMAIN':
+                    xl.append(h)
+            return True
+        u.EnumWindows(CB(_cb), 0)
+        if not dlg and not xl:
+            break
+        for d in dlg:                       # contestar "No convertir" (abajo a la derecha)
+            r = R(); u.GetWindowRect(d, ctypes.byref(r))
+            tid = u.GetWindowThreadProcessId(d, None); me = k.GetCurrentThreadId()
+            u.AttachThreadInput(me, tid, True)
+            try:
+                u.SetForegroundWindow(d); u.BringWindowToTop(d); time.sleep(0.4)
+                u.SetCursorPos((r.l + r.r) // 2, r.t + 14); time.sleep(0.15)
+                u.mouse_event(0x0002, 0, 0, 0, 0); time.sleep(0.08)
+                u.mouse_event(0x0004, 0, 0, 0, 0); time.sleep(0.4)
+                u.SetCursorPos(r.l + 383, r.t + 227); time.sleep(0.25)
+                u.mouse_event(0x0002, 0, 0, 0, 0); time.sleep(0.09)
+                u.mouse_event(0x0004, 0, 0, 0, 0); time.sleep(1.0)
+            finally:
+                u.AttachThreadInput(me, tid, False)
+            cerradas += 1
+        for h in xl:
+            u.PostMessageW(h, 0x0010, 0, 0); cerradas += 1
+        time.sleep(espera)
+    if cerradas:
+        print('Excel cerrado (%d ventana/s) — el archivo queda libre' % cerradas)
+    return cerradas
+
+
 # ---------------------------------------------------------------- export
 
 def export(timeout=240):
@@ -145,6 +191,7 @@ def export(timeout=240):
     if not h:
         raise SystemExit('no encuentro la ventana Maestro de Relaciones')
     P = os.path.join('C:' + os.sep, 'tmp', 'RELACIONES.TXT')
+    cerrar_excel()                       # si Excel lo tiene tomado, el export no sale
     antes = os.path.getmtime(P) if os.path.exists(P) else 0
     r = R(); u.GetWindowRect(h, ctypes.byref(r))
     tid = u.GetWindowThreadProcessId(h, None); me = k.GetCurrentThreadId()
@@ -201,6 +248,7 @@ def export(timeout=240):
         if m > antes and n == prev and time.time() - m > 8:
             break
         prev = n
+    cerrar_excel()                       # el export lo reabre: dejarlo libre para el proximo
     ok = os.path.getmtime(P) > antes
     print('export %s: %d bytes  mtime %s' % ('OK' if ok else 'NO SALIO',
           os.path.getsize(P), time.strftime('%H:%M:%S', time.localtime(os.path.getmtime(P)))))
