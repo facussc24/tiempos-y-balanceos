@@ -13,6 +13,29 @@ contiene SOLO lo accionable que NO esta ya codificado como regla o gate ejecutab
 
 ## Lecciones operativas vigentes
 
+### 2026-08-07 — Armé un plan de 3 hallazgos y 2 se cayeron al verificarlos
+Fak pidió detectar qué bloqueos duros faltaban. Presenté tres. Al empezar a implementarlos:
+
+- **"`npx vitest run` no corre nada y sale exit 0"** → no se reproduce. De a un archivo pasa
+  con cualquiera de los dos pools (14/14, exit 0). Lo que **sí** pasa es que la suite COMPLETA
+  con `forks` da 3 archivos y 9 tests en rojo **espurios** por contención (`environment` acumuló
+  1707 s). El hallazgo era real pero el mecanismo que yo describía, no.
+- **"14 migraciones se marcan aplicadas aunque el CREATE falle"** → **inofensivo**.
+  `utils/database.ts:1843` hace **no-op de TODO el DDL** por diseño: el esquema de Supabase se
+  gestiona por Dashboard/CLI. Ni el `CREATE` ni el `INSERT INTO schema_version` se ejecutan
+  nunca contra Postgres. `schema_version` vacía es lo esperado, no un bug. Arreglar el patrón
+  no habría creado ninguna tabla.
+
+- **Lo peor: ese segundo dato ya estaba en mi memoria desde el 30/07** (`supabase_adapter_sin_tests`
+  lo decía con file:line). No abrí el archivo porque **el gancho del índice no lo mencionaba** —
+  decía "cero tests; lectura fallida = []". El índice existe para decidir qué abrir: si el gancho
+  no nombra el dato, la memoria no existe en la práctica. Ya lo corregí.
+- **Y por ese diagnóstico equivocado le di a Fak una causa raíz falsa del bug del 8D** (dije que
+  fallaba por `datetime('now')`). El fix real es crear la tabla en Supabase, no tocar el código.
+- **Regla:** antes de escribir el plan, releer las memorias del área tocada — no sólo los ganchos.
+  Y al escribir un gancho, que nombre **el dato que haría cambiar una decisión**, no el título del
+  archivo. Verificar antes de implementar funcionó: los dos falsos positivos murieron sin costo.
+
 ### 2026-08-07 — Escribí un script que borraba, sin dry-run, y movió 942 archivos en vez de 17
 Quería rescatar ~17 archivos CAD de la carpeta `REVISAR` (986 archivos, 1,76 GB). Escribí un `.ps1`
 nuevo que copiaba, verificaba tamaño y después borraba el original. **Movió los 942**, a un árbol de

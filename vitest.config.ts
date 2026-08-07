@@ -8,6 +8,15 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom', // Simulates browser environment for React/DOM related logic if needed
     exclude: ['node_modules', 'dist', 'e2e', '.claude/worktrees/**'],
+    // Medido 2026-08-07 en la notebook: la suite COMPLETA con el pool por defecto
+    // (`forks`) rompe con "Failed to start forks worker" / "Timeout waiting for worker
+    // to respond" — 3 archivos fallados y 9 tests en rojo que NO tienen nada roto:
+    // corridos de a uno pasan con cualquiera de los dos pools (navigation_a11y: 14/14).
+    // No es un bug de esos tests, es contencion: `forks` levanta un PROCESO por worker
+    // y con 241 archivos en paralelo la maquina no da (environment acumulo 1707s).
+    // `threads` usa hilos y no se cae. Va en la config y no como flag `--pool=threads`
+    // a mano, porque un fallo espurio entrena a ignorar el rojo — que es peor que el rojo.
+    pool: 'threads',
     // El default de 5000ms era intermitente bajo carga. Medido 2026-07-30:
     // `database.test.ts > closeDatabase > should allow re-initialization after close`
     // tarda ~2600ms aislado (53% del presupuesto) y se pasaba de los 5000ms cuando

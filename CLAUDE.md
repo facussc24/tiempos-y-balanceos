@@ -2,8 +2,11 @@
 
 App web React 19 + TypeScript + Supabase para gestion de calidad automotriz
 (**AMFE VDA + Plan de Control AIAG**) y lean manufacturing (balanceo de linea,
-simulador de flujo, mix multi-modelo, calculadora de medios). Multi-usuario con
-auth Supabase. PFDs y Hojas de Operaciones NO se hacen aca (regla `no-pfd-no-ho.md`);
+simulador de flujo, mix multi-modelo, calculadora de medios). Auth Supabase, pero
+**la usa un solo usuario (Fak)** — no hay edicion concurrente, asi que nada que
+dependa de locks entre usuarios es critico (aclarado por Fak el 2026-08-07; antes
+esto decia "multi-usuario" y me hizo sobredimensionar un bug).
+PFDs y Hojas de Operaciones NO se hacen aca (regla `no-pfd-no-ho.md`);
 sus documentos en Supabase son referencia historica de solo lectura.
 
 ## Protocolo de inicio de sesion
