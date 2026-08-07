@@ -127,6 +127,86 @@ def estado():
     return modales
 
 
+# ---------------------------------------------------------------- export
+
+def export(timeout=240):
+    """Dispara el export de RELACIONES y espera a que termine de escribir.
+
+    La receta completa, medida el 2026-08-07. Los dos pasos que no son obvios:
+      - el combo `Salida` se RESETEA a vacio al entrar a la solapa Listado, y con el combo
+        vacio `ACEPTA` no hace nada (parece que el boton estuviera roto);
+      - el click sobre el combo NO le da el foco: hay que llegar tabulando desde
+        `Desde Articulo`.
+    GATE: antes del ENTER se verifica que el combo diga `Tabla EXcel`. Desde vacio, tres
+    flechas abajo caen en `Impresora` — aceptar ahi manda el listado a la impresora.
+    """
+    import os
+    h = buscar('rel')
+    if not h:
+        raise SystemExit('no encuentro la ventana Maestro de Relaciones')
+    P = os.path.join('C:' + os.sep, 'tmp', 'RELACIONES.TXT')
+    antes = os.path.getmtime(P) if os.path.exists(P) else 0
+    r = R(); u.GetWindowRect(h, ctypes.byref(r))
+    tid = u.GetWindowThreadProcessId(h, None); me = k.GetCurrentThreadId()
+    KEYUP, VK_TAB, VK_UP, VK_DOWN, VK_RET = 0x0002, 0x09, 0x26, 0x28, 0x0D
+
+    def tecla(vk, p=0.3):
+        u.keybd_event(vk, 0, 0, 0); time.sleep(0.06)
+        u.keybd_event(vk, 0, KEYUP, 0); time.sleep(p)
+
+    def clic(dx, dy):
+        u.SetCursorPos(r.l + dx, r.t + dy); time.sleep(0.3)
+        u.mouse_event(0x0002, 0, 0, 0, 0); time.sleep(0.09)
+        u.mouse_event(0x0004, 0, 0, 0, 0); time.sleep(0.7)
+
+    CB_GETCURSEL = 0x0147
+    combo = []
+
+    def _cb(hh, _l):
+        if cls(hh) == 'ComboBox':
+            combo.append(hh)
+        return True
+    u.EnumChildWindows(h, CB(_cb), 0)
+
+    u.AttachThreadInput(me, tid, True)
+    try:
+        u.SetForegroundWindow(h); time.sleep(0.35)
+        clic(297, 68)                     # solapa `Listado de Insumos de Un Producto`
+        clic(228, 151)                    # campo `Desde Articulo` -> foco real
+        tecla(VK_TAB); tecla(VK_TAB)      # -> combo Salida
+        for _ in range(8):
+            tecla(VK_UP, 0.12)            # pisar en la opcion 0, venga de donde venga
+        for _ in range(3):
+            tecla(VK_DOWN, 0.25)          # 3 = Tabla EXcel
+
+        # GATE, adentro del mismo bloque: soltar el foco para sacar una foto le hace perder
+        # la seleccion al combo. Se le pregunta al control directamente.
+        #   0 Pantalla · 1 Impresora · 2 Disco C · 3 Tabla EXcel · 4 PDF · 5 HTML · 6 RTF
+        idx = u.SendMessageW(combo[0], CB_GETCURSEL, 0, 0) if combo else -1
+        if idx != 3:
+            raise SystemExit('ABORTADO: el combo Salida quedo en la opcion %s y se esperaba '
+                             '3 (Tabla EXcel). Con 1 (Impresora) esto imprimiria el listado '
+                             'entero.' % idx)
+        for _ in range(3):
+            tecla(VK_RET, 1.0)
+    finally:
+        u.AttachThreadInput(me, tid, False)
+
+    prev, t0 = -1, time.time()
+    while time.time() - t0 < timeout:
+        time.sleep(3)
+        if not os.path.exists(P):
+            continue
+        n, m = os.path.getsize(P), os.path.getmtime(P)
+        if m > antes and n == prev and time.time() - m > 8:
+            break
+        prev = n
+    ok = os.path.getmtime(P) > antes
+    print('export %s: %d bytes  mtime %s' % ('OK' if ok else 'NO SALIO',
+          os.path.getsize(P), time.strftime('%H:%M:%S', time.localtime(os.path.getmtime(P)))))
+    return ok
+
+
 if __name__ == '__main__':
     cmd = sys.argv[1] if len(sys.argv) > 1 else 'estado'
     if cmd == 'foto':
@@ -141,5 +221,7 @@ if __name__ == '__main__':
         if not h:
             sys.exit('no encuentro la ventana %s' % cual)
         click(h, int(sys.argv[2]), int(sys.argv[3]))
+    elif cmd == 'export':
+        sys.exit(0 if export() else 1)
     else:
         sys.exit(1 if estado() else 0)

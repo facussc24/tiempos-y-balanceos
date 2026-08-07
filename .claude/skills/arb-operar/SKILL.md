@@ -466,6 +466,40 @@ Con foco: `V` **sí** selecciona la solapa `Menú de Insumos` del ribbon. Lo que
 `Y3` del KeyTip; el botón `Relación de Consumo de Prod. Terminados` se abre con **click real**
 ubicado en la captura (≈ x=298, y=95 de la ventana principal).
 
+### 🔴🔴 EL EXPORT DEJA EL ARCHIVO TOMADO POR EXCEL `CONFIRMADO 2026-08-07`
+
+**La salida `Tabla EXcel` abre `C:\tmp\RELACIONES.TXT` en Excel, y Excel se queda con el
+archivo.** El export siguiente **falla en silencio**: el arb no avisa nada, el `mtime` no
+cambia, y uno se queda mirando el botón `ACEPTA` creyendo que está roto. Perdí media hora acá.
+Lo cazó Fak: *"es como que sale un error de que tenés otro Excel abierto con el mismo nombre"*.
+
+Peor: Excel abre además un cartel **"De forma predeterminada, Excel realizará las siguientes
+conversiones de datos: • Quitar ceros iniciales"** con botones `Convertir` / `No convertir`.
+⚠ **Nunca `Convertir`**: sobre consumos como `0,00107250` sacar los ceros iniciales destruye
+el dato. Se contesta **`No convertir`** y se cierra Excel.
+
+**Gate antes de exportar:** que no haya proceso `EXCEL.EXE` con `RELACIONES.TXT`, y que el
+archivo se pueda abrir en modo append. Si no:
+
+```python
+open(r'C:\tmp\RELACIONES.TXT', 'a').close()   # PermissionError = alguien lo tiene tomado
+```
+
+**Después de cada export, cerrar Excel.** Si no, el próximo export no sale.
+
+### 🟢 EL SCROLL DE LA GRILLA NO EXISTE COMO PROBLEMA `dato de Fak 2026-08-07`
+
+Pregunté cómo se llega a una línea que está debajo de las 6 visibles. Fak: *"llegás cuando
+llegás a la última línea de la sexta, digamos, y le das TAB: automáticamente baja a la número
+7"*. **La grilla scrollea sola al tabular.** El cargador abortaba con "hay que scrollear y eso
+no está resuelto" y era una limitación inventada: 13 líneas quedaron sin cargar por eso.
+
+Lo único que NO se puede hacer con una fila fuera de vista es **leer** su valor viejo — el
+control todavía no existe. No importa: `recorrer()` compara el contenido de cada celda contra
+el export antes de escribir, así que la verificación pasa de ser previa a ser *al llegar*.
+Implementado en `cargar_producto()`: si la primera celda a cambiar cae fuera de vista, se ancla
+en la última fila visible y se sigue tabulando.
+
 ### 🔴 EXPORTAR: el combo se RESETEA al cambiar de solapa `CONFIRMADO 2026-08-07`
 
 El `Salida` vuelve a **vacío** cada vez que se entra a la solapa `Listado`. Con el combo vacío,

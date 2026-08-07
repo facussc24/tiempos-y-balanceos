@@ -76,6 +76,8 @@ u.GetWindowLongW.restype = ctypes.c_long
 k32.GetCurrentThreadId.restype = w.DWORD
 
 KEYUP = 0x0002
+MOUSE_LDOWN = 0x0002                 # MOUSEEVENTF_LEFTDOWN
+MOUSE_LUP = 0x0004                   # MOUSEEVENTF_LEFTUP
 EM_SETSEL = 0x00B1
 WM_GETDLGCODE = 0x0087
 GWL_STYLE = -16
@@ -277,6 +279,19 @@ def activar(v):
         u.BringWindowToTop(v)
         u.SetActiveWindow(v)
         time.sleep(0.35)
+        if not al_frente(v):
+            # Respaldo: un CLICK REAL en la barra de titulo. Medido 2026-08-07: se puede
+            # tener la ventana en foreground y aun asi `GetGUIThreadInfo().hwndFocus` da
+            # None — foreground NO es foco, y sin foco las teclas se pierden. El click del
+            # mouse es lo unico que da foco de teclado. Va a la barra de titulo a proposito:
+            # es la unica zona de la ventana que no dispara nada.
+            r = win32gui.GetWindowRect(v)
+            u.SetCursorPos((r[0] + r[2]) // 2, r[1] + 12)
+            time.sleep(0.15)
+            u.mouse_event(MOUSE_LDOWN, 0, 0, 0, 0)
+            time.sleep(0.08)
+            u.mouse_event(MOUSE_LUP, 0, 0, 0, 0)
+            time.sleep(0.45)
     finally:
         for t in otros:
             u.AttachThreadInput(me, t, False)
@@ -745,19 +760,32 @@ def cargar_producto(v, producto, cambios, bom):
     filas = chequear_pantalla(v, producto, bom)
 
     escrituras, detalle = {}, []
+    fuera_de_vista = False
     for cod, nuevo, esperado in cambios:
         i = ubicar(bom, cod)
         if i is None:
             raise Abortar('no encuentro %s en la BOM de %s' % (cod, producto))
+        if not esperado:
+            raise Abortar('%s no trae valor_esperado en la tabla: no piso a ciegas' % cod)
         if i >= len(filas):
-            raise Abortar('%s esta en la fila %d y la grilla muestra %d: hay que scrollear '
-                          'para escribirla, y eso no esta resuelto' % (cod, i, len(filas)))
+            # La fila esta debajo de las 6 visibles. NO es un problema: al tabular sobre la
+            # ultima visible, la grilla scrollea sola y el recorrido sigue (dato de Fak,
+            # 2026-08-07). Lo unico que no se puede hacer es LEER el valor viejo desde aca,
+            # porque el control todavia no existe. El control de "no piso a ciegas" no se
+            # pierde: `recorrer()` compara el contenido de CADA celda contra el valor del
+            # export antes de escribir, y `valor_esperado` de la tabla sale de ese mismo
+            # export. La verificacion pasa de ser previa a ser al llegar.
+            if not mismo_numero(bom[i]['cantidad'], esperado):
+                raise Abortar('%s: el export dice %s y la tabla espera %s — re-exporta'
+                              % (cod, bom[i]['cantidad'], esperado))
+            escrituras[i * 5 + 2] = nuevo
+            detalle.append((cod, bom[i]['cantidad'] + ' (del export)', nuevo))
+            fuera_de_vista = True
+            continue
         actual = leer(filas[i][IDX_CANTIDAD])
         # el "antes" es OBLIGATORIO: sin el no hay dato crudo before->after y se estaria
         # pisando a ciegas un valor que pudo cambiar entre el export y la corrida
         # (regla consumos-entregables).
-        if not esperado:
-            raise Abortar('%s no trae valor_esperado en la tabla: no piso a ciegas' % cod)
         if not mismo_numero(actual, esperado):
             raise Abortar('%s tiene %s y esperaba %s — no lo piso' % (cod, actual, esperado))
         escrituras[i * 5 + 2] = nuevo          # 2 = posicion de Cantidad dentro de la fila
@@ -767,23 +795,41 @@ def cargar_producto(v, producto, cambios, bom):
     if not activar(v):
         raise Abortar('no pude traer la ventana al frente (nada escrito)')
 
-    # pararse en la PRIMERA celda a cambiar, y recien ahi arrancar el recorrido real
     primera = min(escrituras)
-    celda = filas[primera // 5][IDX_CANTIDAD]
-    if not ir_a_celda(v, celda):
-        raise Abortar('no me pude parar en la celda de %s (nada escrito)' % detalle[0][0])
-    pos = posicion_actual(v, G(v), ps)
-    if pos != primera:
-        raise Abortar('me pare en el paso %s y esperaba el %d (nada escrito)' % (pos, primera))
     journal({'t': time.strftime('%H:%M:%S'), 'producto': producto,
              'estado': 'por_escribir', 'detalle': detalle})
-    # la primera se escribe aca (el foco ya esta puesto); las demas, al pasar
-    escribir_celda(celda, escrituras[primera])
-    if not mismo_numero(leer(celda), escrituras[primera]):
-        raise Abortar('la escritura no entro (quedo "%s") — SIN grabar' % leer(celda))
-    resto = {k: val for k, val in escrituras.items() if k != primera}
-    recorrer(v, btn, cadena_esperada(bom, {primera // 5: escrituras[primera]}), pos,
-             escrituras=resto)
+
+    if primera // 5 >= len(filas):
+        # La primera celda a cambiar esta debajo de las 6 filas visibles: todavia no existe
+        # el control al que saltar. Se arranca en la ULTIMA fila visible y se sigue
+        # tabulando: al pasar de la ultima, la grilla scrollea sola y el recorrido continua
+        # (dato de Fak, 2026-08-07). No se vuelve a `Parte Superior` — ahi el foco ya no
+        # entra una vez traida la BOM. Riesgo extra: ninguno; `recorrer` verifica cada celda
+        # contra el export antes de escribir y aborta sin ENTER a la primera discrepancia.
+        ancla = len(filas) - 1
+        celda = filas[ancla][IDX_CANTIDAD]
+        if not ir_a_celda(v, celda):
+            raise Abortar('no me pude parar en la ultima fila visible (nada escrito)')
+        pos = posicion_actual(v, G(v), ps)
+        if pos != ancla * 5 + 2:
+            raise Abortar('me pare en el paso %s y esperaba el %d (nada escrito)'
+                          % (pos, ancla * 5 + 2))
+        recorrer(v, btn, cadena_esperada(bom, {}), pos, escrituras=escrituras)
+    else:
+        # pararse en la PRIMERA celda a cambiar, y recien ahi arrancar el recorrido real
+        celda = filas[primera // 5][IDX_CANTIDAD]
+        if not ir_a_celda(v, celda):
+            raise Abortar('no me pude parar en la celda de %s (nada escrito)' % detalle[0][0])
+        pos = posicion_actual(v, G(v), ps)
+        if pos != primera:
+            raise Abortar('me pare en el paso %s y esperaba el %d (nada escrito)' % (pos, primera))
+        # la primera se escribe aca (el foco ya esta puesto); las demas, al pasar
+        escribir_celda(celda, escrituras[primera])
+        if not mismo_numero(leer(celda), escrituras[primera]):
+            raise Abortar('la escritura no entro (quedo "%s") — SIN grabar' % leer(celda))
+        resto = {k: val for k, val in escrituras.items() if k != primera}
+        recorrer(v, btn, cadena_esperada(bom, {primera // 5: escrituras[primera]}), pos,
+                 escrituras=resto)
     journal({'t': time.strftime('%H:%M:%S'), 'producto': producto, 'estado': 'por_grabar'})
     tecla(win32con.VK_RETURN, 1.2)          # <- ESTO es lo que graba
     journal({'t': time.strftime('%H:%M:%S'), 'producto': producto, 'estado': 'enter_ok'})
