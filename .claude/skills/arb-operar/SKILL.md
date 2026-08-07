@@ -437,6 +437,62 @@ Dos cosas que valen para siempre:
 Secuencia para salir: **`Aceptar` en el modal → `CANCELA` en la solapa de Altas → recién ahí
 exportar.** Nunca `ACEPTA` ni `ESC` con una celda escrita a medias.
 
+### 🟢🟢 MIRAR LA PANTALLA: se puede, y cambia todo `CONFIRMADO 2026-08-07`
+
+**El error de método de toda la mañana fue operar a ciegas.** Se puede capturar la ventana con
+`PrintWindow` + PIL y **verla**. Con eso se ubican los botones y se hace click real donde
+corresponde, en vez de adivinar coordenadas o pelearse con teclas que no llegan.
+
+Helper: `arbver.py` (scratchpad) — `foto rel|prod`, `click X Y`, `estado`. Las coordenadas del
+click son **relativas a la ventana**, las mismas que se ven en la captura, y `click()` relee el
+rect en cada llamada: **la ventana se mueve sola entre corridas**, así que nunca guardar
+coordenadas de pantalla.
+
+**Regla nueva: antes de apretar cualquier botón que dispare algo, sacar una foto y mirarla.**
+Costó descubrirlo pero evita, por ejemplo, mandar el listado entero a la impresora (ver export).
+
+### 🔴🔴 FOREGROUND NO ES FOCO — por eso se perdían las teclas `CONFIRMADO 2026-08-07`
+
+`SetForegroundWindow` puede devolver éxito y `GetForegroundWindow()` confirmar la ventana, y aun
+así **`GetGUIThreadInfo(tid).hwndFocus` da `None`: el arb no tiene el foco de teclado.** Medido:
+antes del click `hwndActive=None hwndFocus=None`; después de **un click real del mouse**,
+`hwndActive=662340 hwndFocus=662340`.
+
+**Un click real del mouse es lo único que le da foco de teclado.** Sin eso, `keybd_event` se
+pierde y parece que "las teclas sintéticas no funcionan". Funcionan — pero hay que darle foco
+primero. Chequear `hwndFocus is not None` antes de mandar teclas.
+
+Con foco: `V` **sí** selecciona la solapa `Menú de Insumos` del ribbon. Lo que no anda es el
+`Y3` del KeyTip; el botón `Relación de Consumo de Prod. Terminados` se abre con **click real**
+ubicado en la captura (≈ x=298, y=95 de la ventana principal).
+
+### 🔴 EXPORTAR: el combo se RESETEA al cambiar de solapa `CONFIRMADO 2026-08-07`
+
+El `Salida` vuelve a **vacío** cada vez que se entra a la solapa `Listado`. Con el combo vacío,
+`ACEPTA` no hace nada — y ahí se pierden diez minutos creyendo que el botón está roto.
+
+Y el click sobre el combo **no le da el foco** (ya estaba anotado): el arb se lo queda en
+`Desde Artículo`. La receta que funciona, entera:
+
+```
+click en la solapa `Listado de Insumos de Un Producto`
+click en el campo `Desde Artículo`      <- foco real
+TAB TAB                                  <- ahora sí, foco en el combo Salida
+↑ x8                                     <- pisar en la opcion 0, venga de donde venga
+↓ x3                                     <- 3 = Tabla EXcel
+>>> FOTO Y MIRARLA <<<                   <- GATE, ver abajo
+ENTER ENTER ENTER                        <- 1 dispara ACEPTA, los otros cierran el ARB Editor
+```
+
+⚠️ **El GATE de la foto no es opcional.** Desde el combo vacío, `↓↓↓` cae en **`Impresora`**, no
+en `Tabla EXcel`. Aceptar ahí manda **todo** el listado de relaciones a la impresora de la
+oficina. Se verifica con la captura que dice `Tabla EXcel` **antes** de apretar ENTER.
+
+El export abre una ventana `ARB Editor - Listado de Relaciones` y **tarda ~60 s en terminar de
+escribir** `C:\tmp\RELACIONES.TXT`. Leer el archivo antes da un tabulado **cortado a la mitad**
+que parsea sin error. **Esperar a que el tamaño se estabilice** (y que pasen unos segundos desde
+el último cambio de mtime) antes de verificar.
+
 ### 🔴🔴 UNA CELDA SUCIA ENVENENA TODAS LAS CORRIDAS SIGUIENTES `CONFIRMADO 2026-08-07`
 
 **Es el hallazgo más caro del día.** Una escritura fallida deja el valor podrido en la celda, y
