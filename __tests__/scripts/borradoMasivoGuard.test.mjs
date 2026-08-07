@@ -85,8 +85,11 @@ describe('V3 — borrado permanente en vez de Papelera', () => {
         expect(correr(bash("powershell -Command \"Remove-Item 'C:\\x' -Recurse\"")).code).toBe(2);
     });
 
-    it('bloquea el borrado recursivo forzado de shell', () => {
-        expect(correr(bash(['rm', '-rf', '/c/tmp/x'].join(' '))).code).toBe(2);
+    // Ojo con la ruta del caso: desde la auditoria del 07/08, `/tmp` y el scratchpad estan
+    // EXCLUIDOS a proposito (son efimeros). Para probar el bloqueo hay que apuntar a algo
+    // real. Este test usaba /c/tmp/x y quedo verde-por-el-motivo-equivocado hasta el fix.
+    it('bloquea el borrado recursivo forzado de shell sobre una ruta real', () => {
+        expect(correr(bash(['rm', '-rf', '/c/Dev/BarackMercosul/modules/x'].join(' '))).code).toBe(2);
     });
 
     it('bloquea shutil.rmtree', () => {
@@ -145,6 +148,44 @@ describe('no molesta al trabajo normal', () => {
 
     it('permite el script del repo, que ya trae dry-run', () => {
         expect(correr(bash('node scripts/_escritorio.mjs --archivar "X" --dry-run')).code).toBe(0);
+    });
+});
+
+describe('correcciones que salieron de la auditoria de cierre (07/08)', () => {
+    it('V4 agarra el bucle NATIVO de Python — el mismo incidente en otro lenguaje', () => {
+        const py = [
+            'import os, shutil',
+            'for f in os.listdir(origen):',
+            '    shutil.move(os.path.join(origen, f), destino)',
+        ].join('\n');
+        const r = correr(escribir('C:\\tmp\\mover.py', py));
+        expect(r.code).toBe(2);
+        expect(r.err).toMatch(/V4/);
+    });
+
+    it('V4 sigue permitiendo el mismo .py con dry-run', () => {
+        const py = [
+            'import os, shutil',
+            'DRY_RUN = True',
+            'for f in os.listdir(origen):',
+            '    shutil.move(os.path.join(origen, f), destino)',
+        ].join('\n');
+        expect(correr(escribir('C:\\tmp\\mover.py', py)).code).toBe(0);
+    });
+
+    it('V3 NO bloquea git rm: lo borrado sigue en el historial', () => {
+        expect(correr(bash('git rm -rf modules/oldFeature/')).code).toBe(0);
+    });
+
+    it('V3 NO bloquea limpiar el scratchpad ni carpetas temporales', () => {
+        expect(correr(bash('rm -rf /c/Users/x/AppData/Local/Temp/claude/scratchpad/w')).code).toBe(0);
+        expect(correr(bash('rm -rf node_modules && npm ci')).code).toBe(0);
+    });
+
+    it('pero SIGUE bloqueando el borrado recursivo en una carpeta de Fak', () => {
+        const r = correr(bash('rm -rf "C:/Users/FacundoS-PC/OneDrive - BARACK ARGENTINA SRL/Desktop/REVISAR"'));
+        expect(r.code).toBe(2);
+        expect(r.err).toMatch(/V3/);
     });
 });
 

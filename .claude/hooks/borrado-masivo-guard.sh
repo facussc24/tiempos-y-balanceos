@@ -58,7 +58,7 @@ HAYSTACK="$CMD $BODY"
 MOTIVO=""
 
 # Los tests y los propios guardianes CITAN los patrones peligrosos como dato: es su
-# trabajo. Sin esta excepcion el guardian se bloquea a si mismo — paso al escribir su
+# trabajo. Sin esta excepcion el guardian se bloquea a si mismo - paso al escribir su
 # test, y otra vez al editar este archivo.
 case "$TOOL" in
   Write|Edit)
@@ -90,7 +90,14 @@ if printf '%s' "$FILE" | grep -qiE '\.ps1$'; then
 fi
 
 # --- VECTOR 3: borrado permanente en vez de Papelera ------------------------
-if printf '%s' "$HAYSTACK" | grep -qiE '(Remove-Item[^|;]*-(Force|Recurse)|rm +-[a-z]*r[a-z]*f|rm +-[a-z]*f[a-z]*r|DeletePermanently|shutil\.rmtree|fs\.rmSync)'; then
+# Dos exclusiones, las dos senaladas por el auditor: un guardian que bloquea trabajo
+# legitimo todos los dias termina desactivado, y ahi no protege nada.
+#   - `git rm`: lo borrado sigue en el historial, se recupera con git. No es este riesgo.
+#   - scratchpad / carpetas temporales: son efimeras por definicion, no son cosas de Fak.
+ES_EXCLUIDO=0
+printf '%s' "$HAYSTACK" | grep -qiE '(^|[;&|]|\s)git\s+rm\b' && ES_EXCLUIDO=1
+printf '%s' "$HAYSTACK" | grep -qiE '(scratchpad|[/\\]tmp[/\\]|AppData[/\\]Local[/\\]Temp|node_modules|[/\\]dist[/\\]?|\.venv)' && ES_EXCLUIDO=1
+if [ "$ES_EXCLUIDO" -eq 0 ] && printf '%s' "$HAYSTACK" | grep -qiE '(Remove-Item[^|;]*-(Force|Recurse)|rm +-[a-z]*r[a-z]*f|rm +-[a-z]*f[a-z]*r|DeletePermanently|shutil\.rmtree|fs\.rmSync)'; then
   MOTIVO="${MOTIVO}V3"
 fi
 
@@ -101,7 +108,11 @@ case "$TOOL" in
 esac
 if [ "$ESCRIBE_SCRIPT" -eq 1 ]; then
   if printf '%s' "$BODY" | grep -qiE '(Remove-Item|Move-Item|DeleteFile|DeleteDirectory|shutil\.(move|rmtree)|os\.remove|fs\.(unlink|rm|rename)|\bmv\b|\brm\b)'; then
-    if printf '%s' "$BODY" | grep -qiE '(foreach|for +\(|while|Get-ChildItem|find |glob|walk|readdir)'; then
+    # El bucle, en los 4 lenguajes que cubre la lista de extensiones de arriba.
+    # `for x in y:` de Python NO matcheaba con `for +\(` (estilo C/JS). Lo agarro el
+    # auditor: un .py con `for f in os.listdir(d): shutil.move(...)` y sin dry-run es
+    # EXACTAMENTE el incidente del 07/08 en otro lenguaje, y pasaba limpio.
+    if printf '%s' "$BODY" | grep -qiE '(foreach|for +\(|for +[a-z_]+ +in |while|Get-ChildItem|find |glob|walk|readdir|listdir|iterdir|rglob|scandir)'; then
       printf '%s' "$BODY" | grep -qiE 'dry[-_ ]?run|dryRun|DRYRUN|WhatIf' || MOTIVO="${MOTIVO}V4"
     fi
   fi
