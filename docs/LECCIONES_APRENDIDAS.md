@@ -13,6 +13,29 @@ contiene SOLO lo accionable que NO esta ya codificado como regla o gate ejecutab
 
 ## Lecciones operativas vigentes
 
+### 2026-08-07 — Dos limitaciones que yo mismo habia escrito, y ninguna existia
+Automatizando una carga repetitiva, dos cosas quedaron trabadas y las dos las destrabo el que
+usa la herramienta todos los dias, no yo.
+
+- **La primera la habia escrito yo en el codigo:** "hay que scrollear y eso no esta resuelto",
+  y por esa linea 13 registros quedaron sin cargar. La realidad era que al tabular sobre el
+  ultimo elemento visible **la lista baja sola**. **Un `raise` con un mensaje derrotista se
+  convierte en la verdad del sistema**: nadie lo vuelve a cuestionar, y menos yo, que lo escribi.
+  Cuando encuentre uno propio, tratarlo como hipotesis vieja y volver a probar.
+- **La segunda fallaba EN SILENCIO.** Una exportacion abria el archivo en Excel, y Excel se
+  quedaba con el archivo tomado; la exportacion siguiente no hacia nada — sin cartel, sin error,
+  el archivo con la misma fecha. Media hora mirando un boton creyendo que estaba roto. Lo cazo
+  Fak de una: *"es como que sale un error de que tenes otro Excel abierto con el mismo nombre"*.
+  **Cuando una accion "no hace nada", la hipotesis numero uno es que el recurso esta tomado por
+  otro proceso** — se chequea abriendo el archivo en modo append antes de culpar a la interfaz.
+- **Y un dato que casi arruina el dato:** ese Excel ofrecia "quitar ceros iniciales". Sobre un
+  valor como `0,00107250` eso lo destruye. Aceptar un dialogo sin leerlo es una forma de
+  corromper datos que no deja rastro.
+
+Balance del dia: **36 de 36 modificaciones cargadas y verificadas**, diff de la base entera en
+0 altas, 0 bajas y ningun cambio fuera de lo pedido. Pero de las ~4 horas, la parte que produjo
+valor fue chica; el resto fue perseguir sintomas de errores mios anteriores.
+
 ### 2026-08-07 — Estuve una hora peleando una interfaz a ciegas, pudiendo mirarla
 Automatizando una carga en el ERP fallé cuatro corridas seguidas. Cada explicación que dí era
 plausible y ninguna era la causa. Al final entré por donde tenía que haber entrado al minuto uno:

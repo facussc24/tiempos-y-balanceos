@@ -487,6 +487,36 @@ open(r'C:\tmp\RELACIONES.TXT', 'a').close()   # PermissionError = alguien lo tie
 
 **Después de cada export, cerrar Excel.** Si no, el próximo export no sale.
 
+### 📋 DAR DE ALTA UNA LÍNEA — la secuencia, dictada por Fak `2026-08-07, SIN PROBAR`
+
+Fak la explicó así (textual, resumida): *"cuando llegás a la última línea cargada le das TAB
+nuevamente y ahí primero se va a la última línea en blanco, que debés colocar rubro `1` y luego
+TAB y cargás el código del insumo, luego TAB — automáticamente saltea la descripción y se va al
+consumo directamente —, lo cargás y luego cargás los rubros, siempre con TAB. Y finalmente le
+das TAB y aceptar"*.
+
+```
+tabular hasta la ULTIMA fila cargada, y un TAB mas  -> cae en la fila en blanco
+rubro   = 1                        TAB
+codigo del insumo                  TAB     <- saltea Descripcion y U.M.
+consumo                            TAB
+modulo                             TAB
+proceso                            TAB
+                                   ENTER sobre &Acepta
+```
+
+⚠️ **Esto NO se ejecutó todavía.** Está escrito para no perderlo, pero antes de correrlo sobre
+producción hay que confirmar dos cosas mirando la pantalla (`_arbVer.py foto rel`):
+
+1. si al tabular desde la última fila cargada la grilla **abre sola** el renglón vacío, o si
+   hay que bajar con flecha primero;
+2. cuántas celdas tabulables tiene la fila en blanco — la fórmula `5*N + 2` para llegar al
+   botón asume N filas con datos y cambia al agregar una.
+
+Recordar que **el alta NO es reversible con el export** (a diferencia de un consumo, que se
+deshace tipeando el valor viejo). Por eso se prueba con UNA sola línea y se verifica contra el
+export antes de seguir.
+
 ### 🟢 EL SCROLL DE LA GRILLA NO EXISTE COMO PROBLEMA `dato de Fak 2026-08-07`
 
 Pregunté cómo se llega a una línea que está debajo de las 6 visibles. Fak: *"llegás cuando
