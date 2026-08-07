@@ -437,12 +437,77 @@ Dos cosas que valen para siempre:
 Secuencia para salir: **`Aceptar` en el modal → `CANCELA` en la solapa de Altas → recién ahí
 exportar.** Nunca `ACEPTA` ni `ESC` con una celda escrita a medias.
 
+### 🔴 LA CAUSA RAÍZ DE LA COMA: la grilla usa PUNTO, el export usa COMA `CONFIRMADO 2026-08-07`
+
+```
+grilla en pantalla   0.0005070     ← PUNTO, 7 decimales
+export RELACIONES    0,00050700    ← COMA,  8 decimales
+```
+
+**La tabla del cargador se arma con el valor en formato GRILLA (punto).** Si se genera desde el
+export y se deja la coma, el arb se la come y el número entra multiplicado por 10^n → `Valor
+Fuera de Rango`. Las tandas de 14/14 y 16/16 andaban porque sus CSV tenían punto; la del 07/08
+falló porque generé el CSV desde el export. `valor_esperado` puede quedar con coma: se compara
+con `num()`, que normaliza. **El que importa es `valor_nuevo`.**
+
+Verificarlo cuesta un comando y no roba el foco: `python scripts/_arbUI.py --leer`.
+
+### 🔴 LA GRILLA NO ARRANCA SIEMPRE EN LA FILA 1 DE LA BOM `CONFIRMADO 2026-08-07`
+
+**La posición del scroll es un estado que cambia solo, y el cargador no la mira.** Medido dos
+veces sobre la misma pieza, con minutos de diferencia: una vez las celdas visibles eran los
+renglones 3-6 de la BOM, otra vez los renglones 2-6. La cuenta `3 + 5*i` da por sentado que
+**fila visible 0 == renglón 0 de la BOM**, y cuando la grilla está corrida escribe en el renglón
+equivocado. Ahí el arb rechaza el valor y abre el modal — que es el `Valor Fuera de Rango` que
+apareció en las tres tandas del 07/08 y que se veía como "la ventana perdió el frente".
+
+**Cómo detectarlo sin escribir nada:** enumerar los hijos de la ventana, quedarse con los
+`RichEdit20A` cuyo texto matchea `\d+\.\d{7}` (ésas son las celdas de `Cantidad`) y comparar esa
+secuencia contra la BOM del export. **Si la primera no es el renglón 0, la grilla está corrida.**
+
+```python
+celdas = [t for h, c, t in ctrls if re.fullmatch(r'\d+\.\d{7}', (t or '').strip())]
+# comparar `celdas` contra [f[5] for f in bom] para sacar el offset real
+```
+
+Mientras el cargador no mida ese offset y lo sume al recorrido, **una tanda sólo es confiable si
+se verifica que la grilla arranca en el renglón 0** — y si no, se re-entra la pieza hasta que
+así sea. Este es el arreglo pendiente número uno del robot.
+
+### 🔴 EL MODAL BLOQUEA TODO Y NO SE CIERRA POR MENSAJE `CONFIRMADO 2026-08-07`
+
+Mientras el `#32770` está abierto, `Maestro de Relaciones` y `Producción` quedan
+**`IsWindowEnabled == False`**. Todo intento de escribir falla con *"no pude poner el foco en el
+control antes de escribir"* — **en las 12 piezas, sin excepción**. Ese error en masa no es un
+problema de foreground: **es el síntoma de un modal olvidado**.
+
+Y **`BM_CLICK` sobre su botón `Aceptar` NO lo cierra**, igual que no graba el `&Acepta` de la
+grilla. El modal lo tiene que cerrar una persona con un click real.
+
+**Gate obligatorio al arrancar CUALQUIER tanda** (y antes de cada reintento): enumerar las
+ventanas visibles de `produc.exe`; si hay un `#32770`, **abortar de entrada** pidiendo el click,
+en vez de gastar 12 productos descubriéndolo. El 07/08 corrí dos tandas contra un modal abierto
+desde la primera.
+
 ### La lección de método
 
-Las tres fallas del lote (scroll, coma perdida, pérdida de frente) **fueron todas detectables
-antes de correr**, y ninguna lo estaba: el scroll se calcula del export; la coma perdida la
-delata el propio arb con un tope conocido; la pérdida de frente ya estaba documentada. **Cada
-tanda tiene que dejar su gate escrito acá, si no se paga dos veces.**
+Las fallas del lote **fueron todas detectables antes de correr**, y ninguna lo estaba: el scroll
+se calcula del export; el separador se ve con `--leer`; el modal se detecta enumerando ventanas.
+**Cada tanda tiene que dejar su gate escrito acá, si no se paga dos veces** — y de hecho se pagó:
+escribí el gate del modal a media mañana y aun así lancé dos tandas más sin correrlo.
+
+**Por eso el orden de arranque no es negociable, y va antes de cualquier `--apply`:**
+
+```
+1. ¿hay un #32770 abierto?            -> abortar, pedir el click real
+2. ¿el CSV tiene valor_nuevo con PUNTO? -> si tiene coma, abortar
+3. ¿alguna linea cae en fila >= 6?    -> sacarla del lote, va a mano
+4. export fresco guardado en .arb-cache/pre-cambio/
+5. recien ahi --apply
+6. re-exportar y diffear el archivo ENTERO contra la foto previa
+```
+
+Los seis son mecánicos y baratos. **Ninguno depende de acordarse: se corren siempre.**
 
 ## Seguridad — antes de que el robot escriba
 
