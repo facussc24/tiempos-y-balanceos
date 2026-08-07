@@ -13,6 +13,34 @@ contiene SOLO lo accionable que NO esta ya codificado como regla o gate ejecutab
 
 ## Lecciones operativas vigentes
 
+### 2026-08-07 — Estuve una hora peleando una interfaz a ciegas, pudiendo mirarla
+Automatizando una carga en el ERP fallé cuatro corridas seguidas. Cada explicación que dí era
+plausible y ninguna era la causa. Al final entré por donde tenía que haber entrado al minuto uno:
+**capturar la ventana con `PrintWindow` y mirarla.** En la primera foto estaba todo — el botón que
+buscaba, la solapa que yo creía cerrada ya abierta, y un combo vacío que explicaba por qué el
+botón "no hacía nada".
+
+- **Si la herramienta tiene interfaz, mirarla es el primer paso, no el último.** Adivinar
+  coordenadas y deducir estado a partir de mensajes de error es más lento y da conclusiones falsas.
+- **Foreground no es foco, y esa distinción me costó la mañana.** `SetForegroundWindow` devolvía
+  éxito y `GetForegroundWindow()` confirmaba la ventana, pero `GetGUIThreadInfo().hwndFocus` daba
+  `None`. Las teclas se perdían y yo concluí "las teclas sintéticas no sirven con este programa".
+  Sí sirven: **un click real del mouse es lo único que da foco de teclado**. Fak lo dijo antes que
+  yo — *"no tenías el foco en el programa, por eso no funcionaban las teclas"*.
+- **Mi primer error envenenó todos los diagnósticos siguientes.** Escribí un número con el
+  separador equivocado; quedó basura en la celda, esa basura **sobrevivió a reabrir el registro**,
+  y las tres corridas siguientes fallaron por ella con mensajes que apuntaban a otro lado. **Tras
+  una falla, resetear el estado antes de reintentar** — si no, se depura sobre ruido propio.
+- **Me di por vencido dos veces y las dos veces había camino.** Dije "esto necesita una persona" y
+  no lo necesitaba. Fak: *"no puede ser que te rindas"*. El patrón a vigilar: cuando escribo "esto
+  es un límite del programa", casi siempre es un límite de lo que probé.
+- **Y un gate que salió de un susto:** antes de apretar un botón que dispara algo, sacar la foto y
+  leer el estado. En un combo que se resetea solo, la secuencia "de memoria" caía en *Impresora* —
+  aceptar ahí mandaba un listado completo a la impresora de la oficina.
+
+Cierre: 23 de 23 líneas cargadas, verificadas contra el export, y el diff completo de la base dio
+0 altas, 0 bajas y ningún cambio fuera de lo pedido.
+
 ### 2026-08-07 — Armé un plan de 3 hallazgos y 2 se cayeron al verificarlos
 Fak pidió detectar qué bloqueos duros faltaban. Presenté tres. Al empezar a implementarlos:
 
