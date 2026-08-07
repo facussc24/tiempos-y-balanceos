@@ -5,9 +5,11 @@ description: Operar el ERP arb (ARB Sistemas "Producción") por teclado desde Cl
 
 # Operar el arb desde Claude
 
-> **Cambiar consumos: ANDA** (14/14 el 2026-08-05 · **16/16 el 2026-08-06**, todas verificadas
-> contra el export y con el diff del arb entero en 0 altas / 0 bajas). Sale con reintentos:
-> ver "Tanda del 2026-08-06" antes de correr una tanda nueva.
+> **Cambiar consumos: ANDA, pero sólo si la línea cae en las 6 filas visibles** (14/14 el
+> 2026-08-05 · 16/16 el 2026-08-06 · **0/12 el 2026-08-07**, que falló por líneas en la fila 7+).
+> Sale con reintentos. **Antes de una tanda nueva: calcular el índice de fila de cada línea
+> objetivo y partir la tabla en robot / a mano** — ver "El scroll SÍ es un problema" y las
+> tandas del 06 y del 07.
 > Dar de alta y borrar líneas: fuera de alcance, necesita otra grabación y otra red.
 > Lo marcado `CONFIRMADO`/`medido` se probó; lo demás es hipótesis y **no se ejecuta sin
 > verificar antes**.
@@ -258,7 +260,23 @@ se compara su contenido contra la BOM del export. A la primera discrepancia se a
 ENTER** — que es el único punto de no retorno. Comparar por contenido y no por handle es lo
 que hace que ande igual cuando la grilla scrollea (los controles se reciclan, el contenido no).
 
-**El scroll NO es un problema**: se grabaron piezas de 6 y 7 insumos sin drama.
+**El scroll SÍ es un problema, y la versión vieja de esta línea estaba mal.** Decía "el scroll
+no es un problema: se grabaron piezas de 6 y 7 insumos sin drama" — y es cierto que una pieza
+puede tener 7, 9 u 11 insumos sin drama, pero eso **no es lo que importa**. Lo que importa es
+en qué fila cae **la línea que hay que escribir**: la grilla muestra **6 filas** y una línea en
+la fila 7 o más abajo **no se alcanza**. El cargador aborta con *"está en la fila N y la grilla
+muestra 6: hay que scrollear para escribirla, y eso no está resuelto"*.
+
+**Gate obligatorio antes de correr una tanda** (2026-08-07: 7 de 36 líneas fallaron por esto,
+todas en piezas de 11 insumos): calcular del export el **índice de fila de cada línea objetivo**
+y partir la tabla en dos — las de índice 0-5 van al robot, las de 6 en adelante van a mano.
+
+```python
+idx = [f[2] for f in boms[pn]].index(codigo_insumo)   # 0-based; >=6 => a mano
+```
+
+El índice depende del **orden del arb**, no del orden de la tabla: los materiales de corte suelen
+quedar arriba (índices 0-1) y los hilos abajo. En el lote del 07/08 dio 23 alcanzables y 13 fuera.
 
 ### Qué necesita foco y qué no `CORREGIDO 2026-08-05`
 
@@ -391,6 +409,40 @@ no lo piso"*. Eso es un éxito del reintento, no un error.
 
 Cuando una pieza falla, la siguiente suele fallar con "la ventana no está activa" — efecto
 dominó del estado que quedó. No significa nada: se reintenta y entra.
+
+## Tanda del 2026-08-07 — 0 de 12, y la red de seguridad que faltaba conocer
+
+Lote de 36 líneas sobre 12 piezas (8 a 11 insumos cada una). **Grabó 0.** Tres fallas distintas,
+**ninguna llegó a escribir en la base** — pero por tres mecanismos diferentes, y uno no era mío.
+
+### El tope del arb es 99,999999 y su cartel delata la coma perdida `CONFIRMADO`
+
+Al escribir un consumo **se perdió la coma**: `0,29867000` entró como `029867000`. El arb lo
+leyó como veintinueve millones y abrió un modal propio:
+
+```
+clase #32770 · título "Error" · [Static] "Valor Fuera de Rango (99.999999)" · [Button] Aceptar
+```
+
+Dos cosas que valen para siempre:
+
+- **El campo `Cantidad` topea en 99,999999.** Cualquier valor ≥ 100 lo rechaza el programa. Eso
+  convierte la coma perdida en una falla **ruidosa**, no silenciosa — es la tercera red, después
+  del gate de foco y del gate de contenido, y es la única que no depende de mi código.
+- **Detectarlo es una línea**, igual que el `HEAP CORRUPTION`: enumerar las ventanas visibles del
+  proceso `produc.exe`, buscar clase `#32770`, y leer el `Static` de adentro. Leer no roba el
+  foco, así que se puede diagnosticar sin tocar la sesión de Fak. Vale la pena chequearlo
+  **antes** de concluir "la ventana no responde": puede haber un modal esperando `Aceptar`.
+
+Secuencia para salir: **`Aceptar` en el modal → `CANCELA` en la solapa de Altas → recién ahí
+exportar.** Nunca `ACEPTA` ni `ESC` con una celda escrita a medias.
+
+### La lección de método
+
+Las tres fallas del lote (scroll, coma perdida, pérdida de frente) **fueron todas detectables
+antes de correr**, y ninguna lo estaba: el scroll se calcula del export; la coma perdida la
+delata el propio arb con un tope conocido; la pérdida de frente ya estaba documentada. **Cada
+tanda tiene que dejar su gate escrito acá, si no se paga dos veces.**
 
 ## Seguridad — antes de que el robot escriba
 
