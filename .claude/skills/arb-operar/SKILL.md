@@ -437,6 +437,46 @@ Dos cosas que valen para siempre:
 Secuencia para salir: **`Aceptar` en el modal → `CANCELA` en la solapa de Altas → recién ahí
 exportar.** Nunca `ACEPTA` ni `ESC` con una celda escrita a medias.
 
+### 🔴🔴 UNA CELDA SUCIA ENVENENA TODAS LAS CORRIDAS SIGUIENTES `CONFIRMADO 2026-08-07`
+
+**Es el hallazgo más caro del día.** Una escritura fallida deja el valor podrido en la celda, y
+ese valor **sobrevive a volver a entrar el producto**: el arb mantiene el buffer de edición del
+registro abierto. `chequear_pantalla` no lo caza porque **compara códigos, no valores**.
+
+Consecuencia: la primera falla real fue una coma en la tabla; las tres corridas siguientes
+fallaron **por la basura que dejó la primera**, con mensajes que apuntaban a otro lado
+("la ventana perdió el frente"). Se persiguió el síntoma durante una hora.
+
+**Gate: después de CUALQUIER corrida fallida, resetear la ventana antes de reintentar.**
+`&Cancela` suele estar deshabilitado; lo que sí funciona es **`WM_CLOSE` a la ventana
+`Maestro de Relaciones`**: descarta la edición, no pide confirmación y no graba (probado). Después
+hay que reabrirla — y eso lo tiene que hacer una persona (ver abajo).
+
+**Y verificar los valores, no sólo los códigos**, antes de escribir: leer las celdas de
+`Cantidad` y compararlas contra la BOM del export. Si alguna no coincide, la ventana está sucia.
+
+### 🔴 EL SEPARADOR DECIMAL: la regla completa `CONFIRMADO 2026-08-07`
+
+| qué se manda | resultado |
+|---|---|
+| coma, con o sin foco | **se strippea siempre** — `0,123` queda `0123` |
+| punto, sin foco | **se strippea** — `0.0005070` quedó `00005070` |
+| punto, con foco | entra bien |
+
+O sea: **la tabla va en punto Y la celda tiene que tener el foco.** Cualquiera de las dos que
+falte produce un número multiplicado por 10^n → `Valor Fuera de Rango` → modal → todo lo demás.
+
+Ojo: escribir por mensaje **no es determinístico**. En la misma sesión, la misma secuencia
+`EM_SETSEL` + `WM_CHAR` una vez reemplazó el valor y otra vez no hizo nada. **No improvisar
+escrituras sueltas sobre la ventana viva**: se usa el cargador, que verifica cada celda.
+
+### 🔴 LAS TECLAS SINTÉTICAS NO ABREN EL MENÚ `CONFIRMADO 2026-08-07`
+
+`keybd_event` con la secuencia documentada `Alt Alt → V → Y3` **no abre** `Relación de Consumo`,
+con `Producción` al frente y confirmado. Es el mismo límite que ya estaba anotado para el combo
+del export. **Reabrir la ventana después de cerrarla requiere una persona.** Por eso cerrarla
+para limpiar tiene un costo: hay que pedir que la reabran.
+
 ### 🔴 LA CAUSA RAÍZ DE LA COMA: la grilla usa PUNTO, el export usa COMA `CONFIRMADO 2026-08-07`
 
 ```
