@@ -213,13 +213,15 @@ def export(timeout=240):
         if cls(hh) == 'ComboBox':
             combo.append(hh)
         return True
-    u.EnumChildWindows(h, CB(_cb), 0)
 
     u.AttachThreadInput(me, tid, True)
     try:
         u.SetForegroundWindow(h); time.sleep(0.35)
         clic(297, 68)                     # solapa `Listado de Insumos de Un Producto`
         clic(228, 151)                    # campo `Desde Articulo` -> foco real
+        # el combo se busca ACA: en la solapa Altas todavia no existe (daba idx=-1)
+        del combo[:]
+        u.EnumChildWindows(h, CB(_cb), 0)
         tecla(VK_TAB); tecla(VK_TAB)      # -> combo Salida
         for _ in range(8):
             tecla(VK_UP, 0.12)            # pisar en la opcion 0, venga de donde venga
