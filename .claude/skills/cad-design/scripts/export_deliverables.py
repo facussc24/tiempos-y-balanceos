@@ -58,7 +58,7 @@ def main():
     ap.add_argument("--stl-lc", type=float, default=geom.LC_PRINT)
     ap.add_argument("--stl-curvature", type=int, default=geom.CURVATURE_PRINT)
     ap.add_argument("--glb", action="store_true", help="exportar tambien GLB (visor web)")
-    ap.add_argument("--skip-gate", action="append", default=[], choices=["zona", "collision", "render"],
+    ap.add_argument("--skip-gate", action="append", default=[], choices=["zona", "collision", "render", "ensamble"],
                     help="saltear un gate (queda registrado; exige --reason)")
     ap.add_argument("--reason", default=None, help="justificacion del --skip-gate")
     args = ap.parse_args()
@@ -98,6 +98,28 @@ def main():
                 raise SystemExit(
                     "[GATE colision] El ultimo collision_check de '%s' dio %s puntos DENTRO (%s).\n"
                     "Corregir la pieza y re-verificar antes de entregar." % (base, ev.get("n_inside"), ev.get("date")))
+
+        # GATE ENSAMBLE: si lo que se entrega es un ensamble (pieza del cliente + dispositivo),
+        # el collision_check NO alcanza. El 2026-08-07 se entrego un ensamble con el macho
+        # fuera de la ranura y las verificaciones de entonces (bbox dentro, volumen conservado)
+        # dieron las dos bien: ninguna PODIA ver un corrimiento. Hace falta la evidencia del
+        # emparejamiento macho-hembra, que se saca con gate_ensamble.py.
+        if "ensamble" not in args.skip_gate and "ENSAMBLE" in base.upper():
+            ev = workdir.find_evidence(w, "ensamble_posicionado", fixture=base)
+            if ev is None:
+                raise SystemExit(
+                    "[GATE ensamble] Sin evidencia de gate_ensamble para '%s'.\n"
+                    "Correr: gate_ensamble.py --step %s --pareja <x,y,z de cada abertura> "
+                    "--render %s/renders --workdir %s\n"
+                    "El bbox y el volumen NO sirven aca: los dos dan bien con el dispositivo "
+                    "corrido 60 mm.\n"
+                    "(o --skip-gate ensamble --reason '...' si genuinamente no aplica)"
+                    % (base, piece, w, w))
+            if not ev.get("ok", False):
+                raise SystemExit(
+                    "[GATE ensamble] El ultimo gate_ensamble de '%s' dio FALLA (%s): %s\n"
+                    "Corregir la posicion y re-verificar antes de entregar."
+                    % (base, ev.get("date"), ev.get("motivo", "ver salida del gate")))
 
         if "render" not in args.skip_gate:
             step_mtime = os.path.getmtime(piece)

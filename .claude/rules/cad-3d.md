@@ -67,9 +67,58 @@ EXTRAE del STEP medido o es dato de Fak — CERO dimensiones inventadas (extiend
 (5) **escribir la SECUENCIA DE LA OPERACIÓN en una línea** (quién apoya qué sobre qué, si hay calor,
 presión, cuánto tiempo) y que Fak la confirme. El mecanismo sale de la operación, no al revés.
 
-**PRE-ENTREGA:** render + MIRAR yo el resultado + interferencia contra el sustrato RÍGIDO ≈ 0 (no vs el
-tapizado blando) + CADGenBench (validez→forma→interface→topología) + adjuntar evidencia. Nunca decir
-"listo" sin esto — "un cambio rápido sin verificar no es rápido, es un ida-y-vuelta más".
+**GATE 2 — UN SOLO FRAME, derivado de la pieza.** El 2026-08-07 se entregó un ensamble con el
+dispositivo fuera de la ranura. La causa no fueron tres errores: fue **uno**. Había tres marcos
+dando vueltas (`hueco_one.json`, `ranura_one.json` con `ex`/`ey` invertidos, `OP_cara_two.json`) y
+se copió un offset de un informe **sin re-medirlo en el marco propio**. Ese marco estaba 1,637°
+girado, y de ahí salieron a la vez: 1,88 mm de derrame en un eje (54,43·sen 1,98°), 6,8 mm en el
+otro, el largo del macho girado 90°, y un "escalonamiento de 2,5 mm entre las dos ranuras" que **no
+existe** (89,79·sen 1,637° = 2,56).
+
+```
+.venv-cad\Scripts\python.exe .claude\skills\cad-design\scripts\gate_frame.py \
+    --normal x,y,z --eje-global Y --alineados x1,y1,z1 x2,y2,z2 --salida <W>\frame.json
+```
+1. **Los ejes los define la PIEZA, no yo**: dirección global limpia + normal medida, triedro por
+   productos vectoriales. UN `frame.json` y todo cuelga de ahí.
+2. **Ninguna cota cruza de un informe a otro sin re-medirse en el frame de destino.** Un número que
+   viene de otro marco es un número de otra pieza.
+3. **El frame se verifica con un invariante que sabe fallar**: dos features que la pieza tiene
+   alineados tienen que dar diferencia 0,000 (`--alineados`). Si dan 2,5, el frame está girado — no
+   es ruido. El CLI sale con código 1 y además imprime el valor que daría con el frame torcido.
+
+**GATE 3 — PRE-ENTREGA: verificar el ARTEFACTO, con controles que puedan dar ROJO.**
+
+- **Se verifica el archivo que se entrega, no el diseño.** Los controles C1-C4 del virolador dieron
+  todos verde midiendo el STEP del dispositivo en coordenadas locales — el ensamble exportado nunca
+  se tocó. Es el patrón "medir la orden y no el resultado".
+- **Test del valor gemelo (obligatorio):** al lado de cada número, escribir **cuánto daría ese mismo
+  número si la falla estuviera presente**. Si el valor bueno y el gemelo se parecen, ese control es
+  ciego y hay que cambiarlo. Ejemplos reales de controles ciegos que dieron verde sobre un ensamble
+  roto: **bbox** (un dispositivo corrido sigue cayendo dentro del bbox de una pieza más grande),
+  **volumen** (no cambia al trasladar: de eso se trata trasladar), y **rayos que no impactan nada**
+  (dan exactamente 0 mm de interferencia y 100 % de paso libre).
+- **Todo barrido de rayos reporta qué % impactó.** Menos de ~40 % = la medición no es válida, no es
+  un resultado.
+- **Gate ejecutable e independiente:** `gate_ensamble.py --step <ens.step> --pareja x,y,z --render <dir>`
+  mide, sobre el plano de la abertura real, distancia entre centros / fracción del saliente dentro
+  del contorno / ocupación / relación de tamaños (un macho que entra en un agujero es MÁS CHICO que
+  el agujero), más interferencia clasificada por zona con booleano OCC. Trae control sintético
+  BIEN/MAL, así que se sabe que no es un script que siempre falla.
+- **Un caché sin la firma del archivo miente.** El gate juzgó un ensamble ya corregido con la malla
+  vieja porque la clave del caché no incluía tamaño+mtime. Toda clave de caché lleva la firma.
+
+**PRE-ENTREGA (lo demás):** render + MIRAR yo el resultado + interferencia contra el sustrato RÍGIDO
+≈ 0 (no vs el tapizado blando) + CADGenBench (validez→forma→interface→topología) + adjuntar evidencia.
+Nunca decir "listo" sin esto — "un cambio rápido sin verificar no es rápido, es un ida-y-vuelta más".
+Ojo con el **encuadre del render**: si el cuadro se calcula sobre la unión de las capas, cuanto más
+corrido está el dispositivo más grande da el cuadro y **menos se ve el error**. Encuadre anclado a la
+zona y proporcional al objeto.
+
+**Cuál cara es cuál se computa, no se elige.** Van dos veces de agarrar el lado equivocado (la cara
+interior del sustrato; y la cara de los clips creyendo que era la vista). La cara vista es la LISA:
+sondear las dos y quedarse con la de menor dispersión (0,70 mm contra 5,41 mm en el Upper Trim), con
+un assert que corte si sale la otra.
 
 Entorno: TODO corre con `.venv-cad\Scripts\python.exe` (Py3.12: gmsh + build123d + trimesh).
 Tolerancias de impresión: 0,3-0,5 mm/lado en lo que entra en un vano, panza ≥2 mm, inserto heat-set +
