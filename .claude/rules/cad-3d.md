@@ -108,6 +108,47 @@ existe** (89,79·sen 1,637° = 2,56).
 - **Un caché sin la firma del archivo miente.** El gate juzgó un ensamble ya corregido con la malla
   vieja porque la clave del caché no incluía tamaño+mtime. Toda clave de caché lleva la firma.
 
+**GATE 4 — el resultado tiene que tener SENTIDO, no solo cerrar paso a paso.** El 2026-08-07 un
+utillaje salió de 36 mm de alto y 166 cm³ de PLA para una pieza que aprieta 6 N. Fak lo vio de un
+vistazo: *"tiene demasiada base, muy alta, se ve obvio que se puede"*. Los siete controles daban
+verde — porque todos verificaban el encastre, ninguno el tamaño. Tres fallas de método:
+
+1. **Copié un parámetro sin verificarlo con su propia fórmula, y era el que gobernaba todo el
+   tamaño.** El informe decía k = 7,5 N/mm con t=1,8 y L=26; la fórmula da 2,49 (los 7,5 son L=18).
+   El número era inconsistente consigo mismo y nunca hice la cuenta.
+2. **Dimensioné en cadena y nunca miré el total:** brazo 26 → alto 36 → "huella ≥ alto" → 110×100 →
+   166 cm³. Ningún eslabón era absurdo por separado. Mismo patrón que el incidente de los 40
+   agentes: *cap por fase ≠ cap total*.
+3. **Traté una solución como LA solución.** Fuerza y deformación son 2 ecuaciones con 3 incógnitas
+   (t, L, δ): hay una **familia** con la misma fuerza y la misma deformación. Recalculado da 22 mm y
+   55 cm³ — **66 % menos de material, gratis**.
+
+Y el mismo error otra vez, en la misma sesión: **heredé la fuerza objetivo (6,4 N) sin recalcular el
+área contra MI geometría.** Esa fuerza correspondía a una banda de 45,6 mm²; la mía es de 22,8 →
+2,28 N. El dedo quedó cargado **2,8×**, y con el ángulo vivo daba **SF a fatiga 0,30–0,48: se
+partía**. Lo vio Fak mirando el render (*"los cuadraditos se ven frágiles"*), antes que ningún
+cálculo mío.
+
+```
+viga_voladizo.py --verificar --t 1.8 --brazo 26 --precarga 0.85 --b 12 --k-declarada 7.5
+viga_voladizo.py --fuerza 2.28 --b 12 --eps-max 0.0035      # la familia, y la más baja
+```
+`--k-declarada` compara el número heredado contra la fórmula y, si no cierra, **dice cuál sería el
+brazo correcto**.
+
+**Reglas cortas:**
+- Todo parámetro heredado que se propague a la geometría global se **recalcula** antes de usarlo —
+  incluida la carga: una fuerza sin su área es un número de otra pieza.
+- **El criterio de un elástico impreso es la FATIGA, no la deformación.** ε ≤ 0,6 % equivale a 15 MPa
+  nominales, que con Kt ya supera el límite de fatiga del PLA en Z (10–16 MPa). El criterio es
+  σ·Kt ≤ límite de fatiga → **ε ≤ 0,35 %**.
+- **Ninguna esquina interna viva donde haya flexión.** Kt 2,2 con arista viva contra 1,2 con
+  R ≥ 0,5·t: 45 % menos de tensión, gratis. Y la boquilla FDM no puede hacer la esquina viva igual —
+  deja ~0,2 mm de radio que no alcanza y no es repetible. Las ranuras se construyen con el fondo
+  redondeado (caja + cilindro), no con `addBox` sola.
+- Antes de cerrar, comparar el tamaño del utillaje contra la magnitud de lo que hace. Un dispositivo
+  que aprieta 6 N no puede pesar medio kilo — eso se ve sin calcular nada, y hay que mirarlo.
+
 **PRE-ENTREGA (lo demás):** render + MIRAR yo el resultado + interferencia contra el sustrato RÍGIDO
 ≈ 0 (no vs el tapizado blando) + CADGenBench (validez→forma→interface→topología) + adjuntar evidencia.
 Nunca decir "listo" sin esto — "un cambio rápido sin verificar no es rápido, es un ida-y-vuelta más".
