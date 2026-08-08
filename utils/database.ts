@@ -1727,7 +1727,9 @@ class InMemoryAdapter implements DbAdapter {
  *    INSERT OR IGNORE  → INSERT ... ON CONFLICT DO NOTHING,
  *    ? placeholders    → $1, $2, ...
  */
-class SupabaseAdapter implements DbAdapter {
+// Exportado solo para poder testearlo directo (__tests__/utils/supabaseAdapter.test.ts):
+// es el unico adapter que corre en produccion y hasta 2026-08-07 tenia cero tests.
+export class SupabaseAdapter implements DbAdapter {
     // Conflict columns per table (for INSERT OR REPLACE → ON CONFLICT)
     private static readonly CONFLICT_MAP: Record<string, string> = {
         projects: 'id',
@@ -1965,20 +1967,20 @@ async function initializeAdapter(): Promise<DbAdapter> {
         win.__BARACK_SUPABASE_DB__ = adapter;
         logger.info('Database', 'Using Supabase adapter (web mode)');
 
-        // Run migrations for DML-only steps (backfills, schema_version tracking).
-        // DDL statements (ALTER TABLE, CREATE INDEX) are logged-and-skipped by
-        // SupabaseAdapter.execute() because the `authenticated` role lacks DDL
-        // permissions.  Schema changes must be applied manually via the Supabase
-        // Dashboard SQL Editor or CLI.
-        try {
-            await runMigrations(adapter);
-        } catch (migErr) {
-            logger.warn('Database', 'Supabase migrations had errors (DML parts may have succeeded)',
-                {}, migErr instanceof Error ? migErr : undefined);
-        }
-
+        // NUNCA correr runMigrations() contra Supabase. execute() descarta el INSERT
+        // a schema_version (y todo DDL), asi que la version registrada alla no puede
+        // avanzar: quedo clavada en 12 desde 2026-03-17 y cada arranque re-ejecutaba
+        // los bloques 13-19. El 13 es destructivo — `UPDATE cp_documents SET phase =
+        // 'preLaunch' WHERE phase != 'preLaunch'` — y revertia en silencio cualquier
+        // cambio de fase hecho en la UI. El schema de Supabase se maneja por
+        // Dashboard/CLI (regla database.md); las migraciones quedan solo para
+        // InMemoryAdapter via runInMemorySetup().
         return adapter;
     } catch (err) {
+        // En produccion NO caer a una base en memoria vacia: la app pareceria andar,
+        // pero todo lo guardado desaparece al recargar. Mejor fallar visible.
+        if (import.meta.env.PROD) throw err;
+
         // Supabase unavailable (e.g., test environment without network)
         // Fall back to InMemoryAdapter for local use
         logger.warn('Database', 'Supabase unavailable — falling back to InMemoryAdapter', {}, err instanceof Error ? err : undefined);
