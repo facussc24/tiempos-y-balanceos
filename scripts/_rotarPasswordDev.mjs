@@ -130,8 +130,10 @@ if (backup.status === 0) {
     console.log('  Si la app en produccion te pide login de nuevo, entra con la nueva');
     console.log('  (el navegador te va a ofrecer guardarla).');
 } else {
-    console.error('\n✗ El backup fallo. Causa mas probable: el Run en el SQL Editor no');
-    console.error('  se ejecuto, fallo, o no devolvio la fila con el email. Corre este');
-    console.error('  script de nuevo (genera otra contraseña y repite los pasos).');
+    console.error('\n✗ El backup fallo. COMO LEER ESTO:');
+    console.error('  - Si arriba dice "auth OK": la contraseña quedo BIEN (no repitas nada);');
+    console.error('    fallo otra cosa del backup. Avisale a Claude con el mensaje de arriba.');
+    console.error('  - Si dice "no se pudo autenticar": el Run del SQL Editor no se hizo o');
+    console.error('    fallo. Corre este script de nuevo y repeti los pasos.');
     process.exit(1);
 }
