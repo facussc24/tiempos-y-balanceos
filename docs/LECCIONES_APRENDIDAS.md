@@ -1541,3 +1541,13 @@ NO apoya sobre el pin (24,98 mm³ de interferencia) y el vástago podía pasar d
 - **La resistencia no estaba en el diámetro sino en la rosca.** Engrosar el vástago roscado casi
   no cambia nada (el núcleo es d−1,23·paso); lo que multiplica por 4 la rigidez donde flexa es
   poner un tramo LISO al diámetro pleno contra la cabeza y arrancar la rosca después.
+
+### 2026-08-08 — Mi commit se llevo un archivo stageado por OTRA sesion
+Con dos sesiones de Claude sobre el mismo repo, hice `git add <mis 7 archivos> && git commit`
+y el commit salio con 9: se colaron cosas que la sesion CAD tenia en el index
+(`gate_aristas.py`). Esta vez fue inofensivo (script generico, sin datos de empresa —
+verificado post-push), pero el mismo descuido pudo empujar al repo PUBLICO un archivo a
+medio hacer de otra tarea.
+- **Regla: con sesiones concurrentes, commitear por pathspec** — `git commit <archivos> -m ...`
+  toma SOLO esos paths e ignora el resto del index. O mirar `git status` en el MISMO comando
+  compuesto que el commit, no medio minuto antes.
