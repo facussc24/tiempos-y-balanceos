@@ -1560,3 +1560,17 @@ medio hacer de otra tarea.
 - **Regla: con sesiones concurrentes, commitear por pathspec** — `git commit <archivos> -m ...`
   toma SOLO esos paths e ignora el resto del index. O mirar `git status` en el MISMO comando
   compuesto que el commit, no medio minuto antes.
+
+### 2026-08-08 — El veredicto de mi script culpo al paso equivocado y casi manda a Fak a repetir trabajo
+La rotacion de password salio PERFECTA (el log decia `auth OK`), pero el backup de
+verificacion fallo por otra cosa (recursion RLS en user_roles) y el mensaje final decia
+"corre este script de nuevo". Fak estuvo a un ENTER de rotar todo otra vez sin necesidad.
+- **Un mensaje de error no adivina la causa: la deriva de la evidencia que ya tiene.** Si el
+  script ya vio `auth OK`, el veredicto tiene que decir "tu parte quedo bien, fallo otra cosa".
+  Separar QUE se probo de QUE fallo, rama por rama.
+- **El error real de una RPC de Supabase esta en los logs de Postgres** (`get_logs`
+  service=postgres): ahi aparecio "infinite recursion detected in policy for user_roles" en
+  segundos. Mirar el log antes de teorizar.
+- La saga completa del "[] que miente" quedo cerrada en sus TRES capas (backup 30/07, app
+  5ea05702, y las RPC + policy en la base 08/08): detalle en la memoria
+  reference_supabase_adapter_sin_tests.
