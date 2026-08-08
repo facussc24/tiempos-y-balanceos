@@ -89,6 +89,8 @@ if (enPortapapeles) {
 } else {
     console.log('  1. Contraseña nueva generada (no se pudo copiar al portapapeles):');
     console.log(`     ${password}`);
+    console.log('     ⚠ Quedo impresa aca arriba: CERRA ESTA TERMINAL al terminar,');
+    console.log('       asi no queda en el historial de la consola.');
 }
 
 console.log('\n  2. Se abre el dashboard de Supabase. Ahi:');
