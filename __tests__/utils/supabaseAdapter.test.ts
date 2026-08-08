@@ -19,6 +19,7 @@ vi.mock('../../utils/supabaseClient', () => ({
 }));
 
 import { SupabaseAdapter, getDatabase, closeDatabase } from '../../utils/database';
+import { getDbHealth, clearDbReadError } from '../../utils/dbHealth';
 
 describe('SupabaseAdapter', () => {
     beforeEach(() => {
@@ -68,6 +69,33 @@ describe('SupabaseAdapter', () => {
             const [, args] = rpc.mock.calls[0] as [string, { query: string }];
             expect(args.query).toContain('ON CONFLICT (key) DO UPDATE SET');
             expect(args.query).not.toMatch(/INSERT\s+OR\s+REPLACE/i);
+        });
+    });
+
+    describe('select() — una lectura fallida no puede parecer "0 filas"', () => {
+        beforeEach(() => {
+            clearDbReadError();
+        });
+
+        it('lanza el error en vez de devolver lista vacia, y lo reporta a dbHealth', async () => {
+            rpc.mockResolvedValue({ data: null, error: { message: 'permission denied for table amfe_documents' } });
+            const db = new SupabaseAdapter({ rpc });
+            await expect(db.select('SELECT * FROM amfe_documents')).rejects.toThrow(
+                'DB select failed: permission denied for table amfe_documents',
+            );
+            expect(getDbHealth().lastReadError).toContain('permission denied');
+        });
+
+        it('una lectura exitosa limpia el estado de error', async () => {
+            rpc.mockResolvedValueOnce({ data: null, error: { message: 'timeout' } });
+            const db = new SupabaseAdapter({ rpc });
+            await expect(db.select('SELECT * FROM products')).rejects.toThrow('DB select failed: timeout');
+            expect(getDbHealth().lastReadError).toBe('timeout');
+
+            rpc.mockResolvedValueOnce({ data: [{ id: 1 }], error: null });
+            const rows = await db.select('SELECT * FROM products');
+            expect(rows).toEqual([{ id: 1 }]);
+            expect(getDbHealth().lastReadError).toBeNull();
         });
     });
 

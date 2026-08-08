@@ -13,6 +13,27 @@ contiene SOLO lo accionable que NO esta ya codificado como regla o gate ejecutab
 
 ## Lecciones operativas vigentes
 
+### 2026-08-07 — Fak vio a ojo dos fallas que mis siete controles daban en verde
+Diseñando el virolador del Upper Trim, dos veces me marco algo mirando el render y las dos
+veces el calculo le dio la razon:
+
+- *"tiene demasiada base, muy alta, se ve obvio que se puede"* → 36 mm y 166 cm³ de PLA para
+  una pieza que aprieta 6 N. Recalculado: 22 mm y 55 cm³. **66 % menos, gratis.**
+- *"los cuadraditos se ven fragiles, justamente los que tienen que hacer presion... dejaste
+  muchos angulos de 90 grados"* → factor de seguridad a fatiga **0,24**. Se partia antes del año.
+
+Mis siete controles estaban todos en verde. **Todos verificaban el ENCASTRE y ninguno el
+tamaño ni la resistencia.** Un CAD puede estar perfectamente posicionado y ser una pieza que
+se rompe a la semana o que pesa medio kilo sin motivo.
+
+- **Cuando Fak marca algo de un render, es un dato de ingenieria, no una impresion.** Ir al
+  numero de inmediato; no explicar por que el diseño esta bien.
+- La causa tecnica (heredar un parametro sin recalcularlo contra la propia geometria, y
+  encadenar desde ahi) ya quedo como GATE 4 en `.claude/rules/cad-3d.md` + `viga_voladizo.py`.
+  Lo que NO se puede codificar y va aca: **el conjunto de controles verdes no prueba que el
+  diseño sea bueno, solo que no tiene el error que yo pense en buscar.**
+
+
 ### 2026-08-07 — Dos limitaciones que yo mismo habia escrito, y ninguna existia
 Automatizando la carga en el ERP me frene dos veces contra "esto no se puede", y las dos veces
 el que lo destrabo fue Fak con una frase.

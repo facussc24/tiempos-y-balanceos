@@ -9,6 +9,7 @@
 
 import { logger } from './logger';
 import { inlineParams } from './db/sqlTranslate';
+import { reportDbReadError, clearDbReadError } from './dbHealth';
 
 // ---------------------------------------------------------------------------
 // Database adapter interface (abstracts Tauri SQL plugin vs in-memory)
@@ -1898,10 +1899,15 @@ export class SupabaseAdapter implements DbAdapter {
         });
 
         if (error) {
+            // NUNCA devolver [] aca: "no pude leer" no es "no hay filas". Ese
+            // patron dejo 19 dias de backups vacios en julio 2026 y pantallas
+            // que mostraban "sin documentos" ante cualquier falla de red/RLS.
             logger.error('SupabaseAdapter', 'Select failed', { sql: pgSql, error: error.message });
-            return [];
+            reportDbReadError(error.message);
+            throw new Error(`DB select failed: ${error.message}`);
         }
 
+        clearDbReadError();
         return (data as T[]) ?? [];
     }
 

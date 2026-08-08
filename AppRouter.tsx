@@ -20,6 +20,7 @@ import './utils/seed/cleanupAmfeActions'; // One-time cleanup script (window.__c
 import { AuthProvider } from './components/auth/AuthProvider';
 import { LoginPage } from './components/auth/LoginPage';
 import AppSidebar from './components/layout/AppSidebar';
+import { DbHealthBanner } from './components/ui/DbHealthBanner';
 
 // Lazy-load the heavy modules
 const TiemposApp = lazy(() => import('./App'));
@@ -144,6 +145,8 @@ const AppRouterInner: React.FC = () => {
 
     return (
         <div className="flex h-screen overflow-hidden">
+            {/* Aviso global si una lectura a Supabase falla (utils/dbHealth.ts) */}
+            <DbHealthBanner />
             <AppSidebar
                 currentMode={currentMode}
                 onSelectModule={handleSelectModule}
