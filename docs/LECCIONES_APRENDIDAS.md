@@ -13,6 +13,52 @@ contiene SOLO lo accionable que NO esta ya codificado como regla o gate ejecutab
 
 ## Lecciones operativas vigentes
 
+### 2026-08-07 — Dos limitaciones que yo mismo habia escrito, y ninguna existia
+Automatizando la carga en el ERP me frene dos veces contra "esto no se puede", y las dos veces
+el que lo destrabo fue Fak con una frase.
+
+- **"Hay que scrollear y eso no esta resuelto".** El cargador abortaba cuando la linea caia
+  debajo de las filas visibles de la grilla. Fak: *"llegas a la ultima linea de la sexta y le
+  das TAB: automaticamente baja a la numero 7"*. La grilla scrollea sola. **Por esa limitacion
+  inventada quedaron 13 lineas sin cargar** — y peor, se la conte como si el trabajo estuviera
+  terminado. **Una limitacion escrita por mi mismo hace tres dias no es un hecho verificado: es
+  una hipotesis vieja con cara de dato.**
+- **"Dar de alta lineas esta fuera de alcance".** Me dicto la secuencia en dos renglones y
+  entraron 27 de 27. Lo unico no obvio: al completar el renglon el programa abre OTRO vacio,
+  asi que un solo TAB no llega al boton de aceptar.
+- **El corolario que mas me va a servir:** cuando el que usa la herramienta todos los dias esta
+  del otro lado del chat, preguntarle no es interrumpir — es el camino corto. Tantear contra una
+  interfaz de 25 anios es lo caro.
+
+### 2026-08-07 — Estuve una hora persiguiendo un sintoma que habia dejado yo
+Una escritura fallida (mande el numero con coma y el campo esperaba punto) dejo el valor podrido
+en la celda. Ese valor **sobrevive a volver a entrar el producto**, y el chequeo de pantalla no
+lo cazaba porque **compara codigos, no valores**. Las tres corridas siguientes fallaron por la
+basura de la primera, con mensajes que apuntaban a otro lado ("la ventana perdio el frente").
+
+- **Despues de una corrida fallida, el estado no vuelve solo: hay que resetearlo antes de
+  reintentar.** Si no, se depura el sintoma equivocado.
+- **Un chequeo que compara identidad pero no contenido deja pasar exactamente el dano que se
+  quiere evitar.** Ahora se comparan tambien los valores.
+- Y la de fondo: **estaba operando a ciegas**. Se puede capturar la ventana y mirarla. Cuando
+  saque la primera foto, el boton que buscaba estaba a la vista y la solapa que creia cerrada ya
+  estaba abierta. Ver primero, actuar despues.
+
+### 2026-08-07 — "Foreground" no es "foco", y por eso se perdian las teclas
+Poner la ventana adelante devolvia exito, y las teclas no llegaban. Medido: `hwndFocus` era
+`None` aun con la ventana al frente. **Un click real del mouse es lo unico que da foco de
+teclado.** Fak lo intuyo antes que yo: *"no tenias el foco en el programa, por eso no
+funcionaban las teclas"*. Cuando algo "no responde" y la explicacion tecnica no cierra, medir el
+estado real (¿quien tiene el foco?) en vez de acumular hipotesis.
+
+### 2026-08-07 — El export se comia a si mismo y no avisaba
+El listado del ERP abre el archivo en Excel, y Excel **se lo queda**. El export siguiente falla
+en silencio: mismo tamanio, mismo mtime, ningun cartel. Lo cazo Fak: *"es como que sale un error
+de que tenes otro Excel abierto con el mismo nombre"*. Encima Excel ofrecia "quitar ceros
+iniciales", que sobre un consumo lo destruye. **Todo proceso que escribe un archivo compartido
+necesita un gate previo de "¿alguien lo tiene tomado?" — y verificar el mtime despues, porque el
+exito silencioso es indistinguible del fracaso silencioso.**
+
 ### 2026-08-07 — El entregable va donde se usa, no donde a mi me queda ordenado
 Fak pidio 4 archivos de corte para mandar al plotter. Los deje prolijos en una subcarpeta
 nueva, con una version de respaldo partida en dos, una imagen de control y un informe de
