@@ -26,6 +26,15 @@ Mis siete controles estaban todos en verde. **Todos verificaban el ENCASTRE y ni
 tamaño ni la resistencia.** Un CAD puede estar perfectamente posicionado y ser una pieza que
 se rompe a la semana o que pesa medio kilo sin motivo.
 
+- **Reporte un problema sin chequear que siguiera vigente.** Al cerrar, el pre-commit fallo por
+  un error de eslint en `DbHealthBanner.tsx` y le pase a Fak "hay un error que bloquea los
+  commits". Cuando fui a escribirle a la otra sesion, `npx eslint` sobre ese archivo pasaba
+  limpio: **ya estaba arreglado, y mejor de lo que yo lo habria hecho** (en vez de resetear el
+  estado en un `useEffect`, guarda que error se descarto y compara `health.at === dismissedAt`).
+  Esa sesion ademas ya habia escrito sola la leccion de que se llevo mi archivo en su commit.
+  **Un fallo que vi hace cinco minutos no es el estado actual: es una foto.** Antes de reportar
+  algo de otra sesion — o de pedirle a Fak que intervenga — re-correr la comprobacion.
+
 - **Cuando Fak marca algo de un render, es un dato de ingenieria, no una impresion.** Ir al
   numero de inmediato; no explicar por que el diseño esta bien.
 - La causa tecnica (heredar un parametro sin recalcularlo contra la propia geometria, y
