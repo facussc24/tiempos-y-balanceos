@@ -133,7 +133,7 @@ def cerrar_excel(espera=2.0):
     despues de exportar.
 
     Ojo con el cartel "Excel realizara las siguientes conversiones: quitar ceros iniciales":
-    hay que contestar **No convertir**. Aceptar destruiria consumos como 0,00107250.
+    hay que contestar **No convertir**. Aceptar destruiria cualquier consumo que arranque con ceros.
     """
     cerradas = 0
     for _ in range(3):

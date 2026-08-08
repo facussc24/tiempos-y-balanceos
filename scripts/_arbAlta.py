@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
 """Dar de ALTA una linea nueva en la BOM de un producto del arb.
 
-    python scripts/_arbAlta.py --producto "2HC881901 RL1" --insumo FX483TK-E0PTO \
-        --cantidad 0.00030000 --modulo COS --proceso PRDCOS [--apply]
+    python scripts/_arbAlta.py --producto "<PRODUCTO>" --insumo <INSUMO> \
+        --cantidad 0.00000000 --modulo <MOD> --proceso <PROC> [--apply]
+
+Este repo es PUBLICO: los ejemplos van con placeholders, nunca con codigos ni consumos
+reales (regla `repo_publico_no_datos_empresa`).
 
 Secuencia dictada por Fak (2026-08-07): al llegar a la ultima linea cargada y tabular de
 nuevo, el foco cae en el primer renglon vacio. Ahi se carga rubro `1`, TAB, el codigo del

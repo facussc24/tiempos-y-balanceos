@@ -5,14 +5,18 @@ description: Operar el ERP arb (ARB Sistemas "Producción") por teclado desde Cl
 
 # Operar el arb desde Claude
 
-> **Cambiar consumos: ANDA, pero sólo si la línea cae en las 6 filas visibles** (14/14 el
-> 2026-08-05 · 16/16 el 2026-08-06 · **0/12 el 2026-08-07**, que falló por líneas en la fila 7+).
-> Sale con reintentos. **Antes de una tanda nueva: calcular el índice de fila de cada línea
-> objetivo y partir la tabla en robot / a mano** — ver "El scroll SÍ es un problema" y las
-> tandas del 06 y del 07.
-> Dar de alta y borrar líneas: fuera de alcance, necesita otra grabación y otra red.
-> Lo marcado `CONFIRMADO`/`medido` se probó; lo demás es hipótesis y **no se ejecuta sin
-> verificar antes**.
+> **Cambiar consumos: ANDA** — 14/14 el 05/08 · 16/16 el 06/08 · **36/36 el 07/08**.
+> **Dar de alta líneas: ANDA** (`scripts/_arbAlta.py`) — **31/31 el 07/08**, verificadas contra
+> el export y con 0 bajas en el diff de la base entera. Borrar líneas sigue fuera de alcance.
+>
+> ⚠ El encabezado de esta skill dijo durante medio día "sólo si la línea cae en las 6 filas
+> visibles" y "dar de alta está fuera de alcance". **Las dos eran falsas**: la grilla scrollea
+> sola al tabular, y las altas se resolvieron el mismo día. Quedó escrito acá porque el error
+> costó 13 líneas sin cargar y un "terminado" que no lo era — **una limitación escrita por uno
+> mismo no es un hecho verificado**.
+>
+> Sale con reintentos, y reintentar es seguro. Lo marcado `CONFIRMADO`/`medido` se probó; lo
+> demás es hipótesis y **no se ejecuta sin verificar antes**.
 
 ## Qué es
 
@@ -475,7 +479,7 @@ Lo cazó Fak: *"es como que sale un error de que tenés otro Excel abierto con e
 
 Peor: Excel abre además un cartel **"De forma predeterminada, Excel realizará las siguientes
 conversiones de datos: • Quitar ceros iniciales"** con botones `Convertir` / `No convertir`.
-⚠ **Nunca `Convertir`**: sobre consumos como `0,00107250` sacar los ceros iniciales destruye
+⚠ **Nunca `Convertir`**: sobre un consumo que arranca con ceros, sacarle los ceros iniciales destruye
 el dato. Se contesta **`No convertir`** y se cierra Excel.
 
 **Gate antes de exportar:** que no haya proceso `EXCEL.EXE` con `RELACIONES.TXT`, y que el

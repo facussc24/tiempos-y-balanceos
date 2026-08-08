@@ -4,7 +4,7 @@ Extracto FIEL del Maestro de Relaciones: una pagina por pieza con su BOM complet
 cual sale de C:\\tmp\\RELACIONES.TXT. El bloque ACTUALIZACIONES y la nota de fiel extracto
 se repiten en TODAS las paginas.
 
-    python scripts/_pdfBomArb.py --piezas "2HC881901 RL1,2HC885081 RL1" \\
+    python scripts/_pdfBomArb.py --piezas "<PRODUCTO A>,<PRODUCTO B>" \\
         --fecha 04/08/2026 \\
         --act "Se crea part number XXX ..." --act "Se da de baja YYY ..." \\
         --salida "C:\\...\\Modificaciones BOM ARB_20260804.pdf"

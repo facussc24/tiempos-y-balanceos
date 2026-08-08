@@ -90,7 +90,7 @@ usa la herramienta todos los dias, no yo.
   **Cuando una accion "no hace nada", la hipotesis numero uno es que el recurso esta tomado por
   otro proceso** — se chequea abriendo el archivo en modo append antes de culpar a la interfaz.
 - **Y un dato que casi arruina el dato:** ese Excel ofrecia "quitar ceros iniciales". Sobre un
-  valor como `0,00107250` eso lo destruye. Aceptar un dialogo sin leerlo es una forma de
+  consumo que arranca con ceros eso lo destruye. Aceptar un dialogo sin leerlo es una forma de
   corromper datos que no deja rastro.
 
 Balance del dia: **36 de 36 modificaciones cargadas y verificadas**, diff de la base entera en
