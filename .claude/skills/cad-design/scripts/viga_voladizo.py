@@ -25,9 +25,9 @@ Este CLI hace las tres cosas: verifica un juego de cotas contra la formula, impr
 familia completa, y marca la de menor altura que respeta los minimos de impresion.
 
 USO
-    viga_voladizo.py --fuerza 6.4 --b 12 --eps-max 0.006
+    viga_voladizo.py --fuerza 2.28 --b 12          # eps por defecto = 0,0035 (fatiga)
     viga_voladizo.py --verificar --t 1.8 --brazo 26 --precarga 0.85 --b 12
-    viga_voladizo.py --fuerza 6.4 --b 12 --eps-max 0.006 --t-min 1.2 --json cotas.json
+    viga_voladizo.py --fuerza 2.28 --b 12 --eps-max 0.0022 --t-min 1.2 --json cotas.json
 """
 import argparse
 import json
@@ -36,7 +36,12 @@ import sys
 import numpy as np
 
 E_PLA = 2500.0      # MPa, PLA impreso (rango real 2000-3500)
-EPS_PLA = 0.006     # limite para que no quede set permanente en un ciclo de ~60 s
+# El criterio NO es "que no quede set permanente" (eso daba 0,006 = 15 MPa nominales, que
+# con Kt ya superan el limite de FATIGA del PLA en Z). El criterio es la fatiga:
+#   limite ~6-16 MPa a 1e5 ciclos segun la fuente / con Kt 1,2 -> sigma_nom <= 5-13 MPa
+# 0,0035 = 8,75 MPa nominales. Es el borde: da SF ~1,0 contra el extremo pesimista.
+# Para SF 1,5 hace falta 0,0022. Se deja 0,0035 como default y se avisa.
+EPS_PLA = 0.0035
 
 
 def rigidez(E, b, t, L):
@@ -53,7 +58,7 @@ def main():
     p.add_argument("--E", type=float, default=E_PLA, help="modulo [MPa] (default PLA 2500)")
     p.add_argument("--b", type=float, required=True, help="ancho de la lamina [mm]")
     p.add_argument("--eps-max", type=float, default=EPS_PLA,
-                   help="deformacion maxima admisible (default 0,006 para PLA)")
+                   help="deformacion maxima (default 0,0035 = criterio de FATIGA, no de set permanente)")
     p.add_argument("--fuerza", type=float, help="fuerza objetivo por lamina [N]")
     p.add_argument("--t-min", type=float, default=1.2,
                    help="espesor minimo imprimible [mm] (3 perimetros de 0,4)")
@@ -126,6 +131,12 @@ def main():
     print(f"\n-> LA MAS BAJA que cumple todo: brazo {elegida['brazo']:.0f} · "
           f"t {elegida['t']:.2f} · precarga {elegida['precarga']:.2f}  ->  "
           f"ALTO TOTAL {elegida['alto_total']:.0f} mm")
+    sig = 1.5 * a.E * elegida["t"] * elegida["precarga"] / elegida["brazo"] ** 2
+    for lim, nom in ((6.1, "pesimista"), (16.0, "optimista")):
+        sf = lim / (sig * 1.20)
+        if sf < 1.5:
+            print(f"   [AVISO] con el limite de fatiga {nom} ({lim} MPa) y Kt 1,2 el SF es "
+                  f"{sf:.2f}. Para 1,5 hace falta --eps-max {a.eps_max * sf / 1.5:.4f}")
     print(f"   con el stack tipico de +-0,16 mm, la fuerza iria de "
           f"{(elegida['precarga']-0.16)*elegida['k']:.1f} a "
           f"{(elegida['precarga']+0.16)*elegida['k']:.1f} N "

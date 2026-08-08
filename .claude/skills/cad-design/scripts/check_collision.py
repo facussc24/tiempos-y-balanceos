@@ -3,8 +3,18 @@
 """Chequeo de colision: puntos del SUSTRATO (la pieza rigida del cliente) DENTRO del
 fixture = choque duro. Registra la evidencia en el manifest (la exige export_deliverables).
 
+Dos controles, y hacen falta LOS DOS:
+  1. PENETRACION: puntos del sustrato dentro del fixture = choque duro.
+  2. CONTACTO:    el punto mas cercano del sustrato al fixture, y cuantos puntos apoyan.
+
+El 2 existe porque el 1 solo es CIEGO a la falla que costo mas cara (2026-08-07): se
+entrego un ensamble con el dispositivo a 60 mm de la pieza y este script imprimio
+"OK: sin choque duro" — porque efectivamente no penetraba nada. Aplicando la regla del
+valor gemelo: el valor bueno era 0 y el valor CON la falla presente tambien era 0.
+Un utillaje que no apoya no sujeta nada.
+
 Leccion cara: verificar contra el sustrato RIGIDO, no contra el tapizado blando.
-exit 0 = sin choque; exit 1 = hay choque (render con puntos rojos si --render).
+exit 0 = sin choque Y asienta; exit 1 = hay choque o no toca.
 """
 import argparse
 import os
@@ -39,6 +49,10 @@ def main():
                     help="limitar a una zona, ej: X:455,505 (repetible)")
     ap.add_argument("--lc", type=float, default=geom.LC_ANALYSIS)
     ap.add_argument("--render", action="store_true", help="renderizar el choque (puntos rojos)")
+    ap.add_argument("--contacto-tol", type=float, default=0.30,
+                    help="mm: por debajo de esto se considera que el fixture TOCA (default 0,30)")
+    ap.add_argument("--min-contacto", type=int, default=30,
+                    help="puntos del sustrato en contacto para considerar que asienta (default 30)")
     args = ap.parse_args()
 
     w = workdir.ensure_workdir(args.workdir)
@@ -75,9 +89,34 @@ def main():
     else:
         print("OK: 0 puntos del sustrato dentro del fixture (sin choque duro)")
 
+    # ---------- el control COMPLEMENTARIO: ademas de no penetrar, tiene que TOCAR --------
+    # Sin esto el gate es ciego a la falla que costo mas cara (2026-08-07): un utillaje
+    # flotando a 60 mm de la pieza da n_inside = 0 e imprime "OK: sin choque duro".
+    # Aplicando la regla del valor gemelo: el valor bueno es 0 y el valor CON la falla
+    # presente tambien es 0 -> el control no distingue. Hace falta medir el contacto.
+    import trimesh
+    pq2 = trimesh.proximity.ProximityQuery(m_fix)
+    _, d_all, _ = pq2.on_surface(sub_pts)
+    d_min = float(d_all.min())
+    n_toca = int((d_all <= args.contacto_tol).sum())
+    area_ratio = 100.0 * n_toca / len(sub_pts)
+    print("CONTACTO: el punto mas cercano del sustrato esta a %.2f mm del fixture | "
+          "%d pts (%.1f %%) a menos de %.2f mm"
+          % (d_min, n_toca, area_ratio, args.contacto_tol))
+    sin_contacto = n_toca < args.min_contacto
+    if sin_contacto:
+        print("  [FALLA] el fixture NO TOCA el sustrato (hacen falta >= %d pts en contacto)."
+              % args.min_contacto)
+        print("          Un utillaje que no apoya no sujeta nada. Con la falla del 07/08"
+              " —dispositivo a 60 mm— este control da 0 y el de penetracion daba 0 igual:")
+        print("          por eso hay que correr los dos.")
+    else:
+        print("  OK: el fixture asienta sobre el sustrato.")
+
     workdir.record_evidence(w, "collision_check", fixture=os.path.basename(args.fixture),
                             substrate=os.path.basename(args.substrate), transform=args.transform,
-                            zones=args.zone, n_inside=n_in, **stats)
+                            zones=args.zone, n_inside=n_in, dist_min=round(d_min, 3),
+                            n_contacto=n_toca, contacto_ok=not sin_contacto, **stats)
 
     if args.render:
         fix_tris = geom.step_to_tris(args.fixture, lc=args.lc)
@@ -91,7 +130,8 @@ def main():
         for f in files:
             print("saved %s" % f)
 
-    sys.exit(1 if n_in else 0)
+    # falla si penetra O si no asienta: son dos modos distintos y los dos rompen
+    sys.exit(1 if (n_in or sin_contacto) else 0)
 
 
 if __name__ == "__main__":

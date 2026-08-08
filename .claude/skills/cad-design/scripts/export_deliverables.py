@@ -98,6 +98,15 @@ def main():
                 raise SystemExit(
                     "[GATE colision] El ultimo collision_check de '%s' dio %s puntos DENTRO (%s).\n"
                     "Corregir la pieza y re-verificar antes de entregar." % (base, ev.get("n_inside"), ev.get("date")))
+            # "no penetra" NO alcanza: un utillaje flotando a 60 mm de la pieza da 0 puntos
+            # dentro exactamente igual que uno bien apoyado. Hay que exigir ademas que
+            # ASIENTE — es la falla del 2026-08-07, que este mismo gate dejo pasar.
+            if ev.get("contacto_ok") is not True:
+                raise SystemExit(
+                    "[GATE colision] El collision_check de '%s' no registra CONTACTO (%s).\n"
+                    "0 puntos dentro solo dice que no penetra: un utillaje a 60 mm de la pieza da\n"
+                    "lo mismo. Re-correr check_collision.py (mide tambien distancia minima y\n"
+                    "cuantos puntos apoyan)." % (base, ev.get("date")))
 
         # GATE ENSAMBLE: si lo que se entrega es un ensamble (pieza del cliente + dispositivo),
         # el collision_check NO alcanza. El 2026-08-07 se entrego un ensamble con el macho

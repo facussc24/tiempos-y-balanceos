@@ -79,13 +79,26 @@ def main():
           f"{r_exigido:.2f} mm (0,5.t, da Kt ~ 1,2)\n")
 
     import gmsh
+    import trimesh
+    malla = geom.step_to_trimesh(a.step, lc=a.lc, require_watertight=False)
     with geom.gmsh_session():
         geom._load(a.step)
         gmsh.model.occ.synchronize()
         aristas = gmsh.model.getEntities(1)
-        # una arista con superficie cilindrica adyacente esta redondeada; con dos planas
-        # adyacentes es viva. El radio sale de la cilindrica.
-        vivas, redondeadas, radios = [], 0, []
+        # Una arista con superficie cilindrica adyacente esta redondeada; con dos planas
+        # adyacentes es VIVA. Pero solo importan las CONCAVAS: una arista convexa (el canto
+        # de un bloque) no concentra tension, se astilla y nada mas.
+        #
+        # La primera version de este script marcaba TODAS las aristas plano-plano sin
+        # calcular concavidad. En cualquier pieza prismatica eso es un numero grande y
+        # siempre positivo -> exit 1 siempre -> el gate se saltea siempre. Un control que
+        # nunca puede dar verde no es un control: es ruido, y el ruido se apaga.
+        #
+        # Concavidad, sin ambiguedad: se toma el punto medio de la arista y se lo desplaza
+        # por la bisectriz de las dos normales exteriores. Si ese punto cae DENTRO del
+        # solido, la arista es concava (el material rodea el hueco).
+        vivas, convexas, redondeadas, radios = [], 0, 0, []
+        cand = []
         for d_, t in aristas:
             caras = gmsh.model.getAdjacencies(d_, t)[0]
             tipos = [gmsh.model.getType(2, int(c)) for c in caras]
@@ -101,13 +114,33 @@ def main():
                         ce = np.sort(cb[3:] - cb[:3])
                         radios.append(float(ce[0]) / 2 if ce[0] > 1e-6 else float(ce[1]) / 2)
             elif len(tipos) == 2 and all("lane" in ti for ti in tipos):
-                vivas.append((largo, t, (bb[:3] + bb[3:]) / 2))
+                pb = gmsh.model.getParametrizationBounds(d_, t)
+                pm = np.array(gmsh.model.getValue(d_, t, [(pb[0][0] + pb[1][0]) / 2]))
+                nn = []
+                for c in caras:
+                    par = gmsh.model.getParametrization(2, int(c), pm.tolist())
+                    nrm = np.array(gmsh.model.getNormal(int(c), par))
+                    nn.append(nrm / (np.linalg.norm(nrm) or 1.0))
+                bis = nn[0] + nn[1]
+                nb = np.linalg.norm(bis)
+                if nb < 1e-6:
+                    continue
+                cand.append((largo, t, pm, pm + (bis / nb) * 0.15))
+        if cand:
+            sondas = np.array([c[3] for c in cand])
+            dentro = malla.contains(sondas) if malla.is_watertight else np.zeros(len(cand), bool)
+            for (largo, t, pm, _), es_concava in zip(cand, dentro):
+                if es_concava:
+                    vivas.append((largo, t, pm))
+                else:
+                    convexas += 1
 
     vivas.sort(reverse=True)
     print(f"aristas de mas de 1 mm: {len(vivas) + redondeadas}")
+    print(f"  convexas    : {convexas}   (cantos: se astillan, NO concentran tension)")
     print(f"  redondeadas : {redondeadas}"
           + (f"   radios ~ {sorted(set(round(x, 2) for x in radios))[:6]}" if radios else ""))
-    print(f"  VIVAS       : {len(vivas)}")
+    print(f"  CONCAVAS SIN RADIO: {len(vivas)}   <- las unicas que concentran")
 
     if a.tension_nominal:
         print(f"\nCON LA TENSION NOMINAL DECLARADA ({a.tension_nominal} MPa):")
@@ -128,14 +161,14 @@ def main():
 
     print()
     if vivas:
-        print("las 8 aristas vivas mas largas (revisar si estan en la zona que flexiona):")
+        print("las 8 aristas CONCAVAS sin radio mas largas (revisar si flexionan ahi):")
         for largo, t, c in vivas[:8]:
             print(f"   arista {t:<5} {largo:6.1f} mm  en ({c[0]:8.1f},{c[1]:7.1f},{c[2]:7.1f})")
         print(f"\n[FALLA] quedan {len(vivas)} aristas vivas. Las que esten donde hay flexion")
         print("        hay que redondearlas: construir la ranura con el fondo redondeado")
         print("        (caja + cilindro) en vez de addBox sola, o fillet en lote.")
     else:
-        print("[OK] no quedan aristas vivas entre caras planas.")
+        print("[OK] no quedan aristas concavas sin radio.")
 
     if a.json:
         with open(a.json, "w", encoding="utf-8") as f:

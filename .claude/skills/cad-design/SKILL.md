@@ -53,13 +53,48 @@ la pieza donde dije? — caza los errores de signo).
 - Toda cota se EXTRAE del CAD medido (`cadlib.geom.extract_cylinder_axes`, `analyze_step.py`)
   o es dato de Fak. CERO dimensiones inventadas/redondeadas (extiende `core-prohibiciones` #1).
 
-**GATE 2 — PRE-ENTREGA** (antes de decir "listo"): render + MIRAR yo el resultado + interferencia
-contra el sustrato RÍGIDO ≈ 0 + CADGenBench (validez→forma→interface→topología) + evidencia.
+**GATE 2 — UN SOLO FRAME, derivado de la pieza** (`gate_frame.py`). Un marco 1,637° torcido
+produjo tres errores que parecían independientes, y uno de ellos era un defecto **inventado** en
+la pieza del cliente ("las dos ranuras están escalonadas 2,5 mm" — no lo están). Los ejes se
+derivan por productos vectoriales de una dirección global limpia + la normal medida, y se
+verifican con un invariante que sabe fallar: dos features que la pieza tiene alineados tienen
+que dar **0,000**. *Si el sistema de medición empieza a reportar defectos en la pieza del
+cliente, la primera hipótesis es el sistema de medición.*
 
-**Enforcement**: el hook `cad-guard.sh` solo RECUERDA estos gates 1×/hora. El enforcement
-duro está en `export_deliverables.py`: se NIEGA a entregar sin evidencia de `collision_check`
-con 0 puntos dentro + render posterior al STEP en el manifest (override `--skip-gate` con
-`--reason`, deja huella).
+**GATE 3 — PRE-ENTREGA: verificar el ARTEFACTO, con controles que puedan dar ROJO.**
+- Render + **MIRAR yo** el resultado.
+- `check_collision.py` — **los dos controles**: que no penetre Y **que asiente**. "0 puntos
+  dentro" solo dice que no penetra: un utillaje flotando a 60 mm da exactamente lo mismo.
+- `gate_ensamble.py --pareja x,y,z` — emparejamiento macho/hembra sobre el plano de la abertura
+  real. El bbox y el volumen NO pueden ver un corrimiento (uno cae dentro igual, el otro no
+  cambia al trasladar).
+- `gate_aristas.py --t-fino <mm> --tension-nominal <MPa>` — concentradores **cóncavos** sin
+  radio + factor de seguridad a fatiga. Una esquina interna viva multiplica ×2,2.
+- **Test del valor gemelo:** al lado de cada número, cuánto daría **si la falla estuviera
+  presente**. Si se parecen, el control es ciego y se descarta. Mejor todavía: control sintético
+  BIEN/MAL, como el de `gate_ensamble`.
+- Todo barrido de rayos reporta **qué % impactó**: menos de ~40 % no es un resultado.
+
+**GATE 4 — que el resultado tenga SENTIDO, no solo que cierre paso a paso.**
+- `viga_voladizo.py --verificar --k-declarada` — todo parámetro heredado se **recalcula** contra
+  su propia fórmula antes de usarlo. **Una fuerza sin su área es un número de otra pieza.**
+- Modo propuesta: imprime la **familia** de soluciones (2 ecuaciones, 3 incógnitas → hay
+  infinitas con la misma fuerza y la misma deformación) y marca la más baja.
+- Antes de cerrar: comparar el tamaño de lo diseñado contra la magnitud de lo que hace. Un
+  dispositivo que aprieta 6 N no puede pesar medio kilo — eso se ve sin calcular nada.
+
+**Enforcement**: el hook `cad-guard.sh` solo RECUERDA los gates 1×/hora. El duro está en
+`export_deliverables.py`: no entrega sin `zona_confirmada`, sin `collision_check` con 0 puntos
+dentro **y `contacto_ok`**, sin evidencia de `gate_ensamble` para los STEP de ensamble, y sin un
+render posterior al STEP (override `--skip-gate` con `--reason`, deja huella).
+
+> **Lo que estos gates NO cubren, y hay que saberlo:** los seis nacieron cada uno DESPUÉS de que
+> una persona encontrara el bug. Son tests de regresión: demuestran memoria, no capacidad de
+> detección. Su tasa histórica de hallazgos propios es **cero de seis**. Las tres clases que
+> siguen abiertas: la **trayectoria** (todos miran la posición final, no el recorrido de entrada
+> y salida), el **estado real del material** (el STEP es la pieza fría y desnuda; en uso tiene
+> tela, adhesivo, calor y springback), y la **unicidad del posicionamiento** (nada verifica que
+> haya UNA sola forma de montar el utillaje).
 
 ## 1. Entorno — UN solo intérprete
 
