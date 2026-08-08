@@ -73,6 +73,41 @@ def main():
     p.add_argument("--json", help="volcar el resultado")
     a = p.parse_args()
 
+    # ---------------------------------------------------------------------------------
+    # GATE FUERA DE SERVICIO — 2026-08-08
+    #
+    # Este gate dio FALSO VERDE dos veces seguidas, con dos implementaciones distintas de
+    # la deteccion de concavidad, y las dos veces se "valido" corriendolo sobre una pieza
+    # BUENA y viendo que daba OK. O sea: se comprobo la direccion del falso positivo y
+    # NUNCA la del falso negativo.
+    #
+    #   v1: marcaba toda arista plano-plano  -> exit 1 siempre, sobre cualquier pieza
+    #   v2: sonda sobre la bisectriz de las normales -> exit 0 siempre. Un bloque con una
+    #       ranura de fondo VIVO (2 concavas indiscutibles) daba "0 concavas -> OK"
+    #
+    # v2 es peor que v1: el ruido se apaga, la ceguera se firma.
+    #
+    # La causa de fondo NO era el signo: era el metodo. Sondear un punto a 0,15 mm de una
+    # arista sobre una malla teselada cae dentro del error de discretizacion. El kernel
+    # contesta esto exacto y sin tolerancia — se estaba usando OCC solo para construir,
+    # nunca para preguntar.
+    #
+    # METODO CORRECTO (probado, discrimina el control MAL del BIEN):
+    #   TopExp.MapShapesAndAncestors_s(shape, TopAbs_EDGE, TopAbs_FACE, m)
+    #   para cada arista con exactamente 2 caras:
+    #     n_i = normal de la cara, INVERTIDA si f.Orientation() == TopAbs_REVERSED
+    #           (asi queda la exterior real, que es dato topologico, no geometrico)
+    #     d   = tangente de la arista en el punto medio (BRepAdaptor_Curve.D1)
+    #     concava  <=>  dot(cross(n1, n2), d) < 0
+    #
+    # NO SE REACTIVA hasta que traiga su propio control sintetico BIEN/MAL y lo corra en
+    # cada invocacion (--autotest). Un gate sin par BIEN/MAL declara deteccion cero.
+    print("[FUERA DE SERVICIO] gate_aristas dio falso verde dos veces y esta deshabilitado.")
+    print("  Ver el comentario al inicio de main(): el metodo correcto esta escrito ahi,")
+    print("  falta implementarlo con OCC + su control sintetico BIEN/MAL.")
+    print("  Mientras tanto, para concentradores: mirar el corte y medir a mano.")
+    return 2
+
     r_exigido = 0.5 * a.t_fino
     print(f"pieza: {os.path.basename(a.step)}")
     print(f"pared fina declarada: {a.t_fino} mm  ->  radio exigido en las concavas: "
@@ -121,11 +156,18 @@ def main():
                     par = gmsh.model.getParametrization(2, int(c), pm.tolist())
                     nrm = np.array(gmsh.model.getNormal(int(c), par))
                     nn.append(nrm / (np.linalg.norm(nrm) or 1.0))
+                # OJO CON EL SIGNO. Las normales de OCC son EXTERIORES: en una esquina
+                # interna las dos apuntan hacia el vano, asi que su bisectriz apunta al
+                # AIRE, no al material. Hay que sondear en -bisectriz.
+                # La version anterior sondeaba en +bisectriz: clasificaba TODO como
+                # convexo, la rama "concava" era inalcanzable y el gate daba OK sobre
+                # cualquier pieza. Se valido solo contra una pieza buena — o sea se
+                # comprobo el falso positivo y nunca el falso negativo.
                 bis = nn[0] + nn[1]
                 nb = np.linalg.norm(bis)
                 if nb < 1e-6:
                     continue
-                cand.append((largo, t, pm, pm + (bis / nb) * 0.15))
+                cand.append((largo, t, pm, pm - (bis / nb) * 0.15))
         if cand:
             sondas = np.array([c[3] for c in cand])
             dentro = malla.contains(sondas) if malla.is_watertight else np.zeros(len(cand), bool)
