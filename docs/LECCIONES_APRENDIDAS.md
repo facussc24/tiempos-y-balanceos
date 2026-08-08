@@ -1501,3 +1501,22 @@ dio 0 girando bien y 7,5 mm³ girando al revés — recién ahí el 0 significab
   arranque coplanar con el cuello dio 663 bordes abiertos y un STL que no lamina, con el
   sólido reportando `is_valid=True`. La validez del CAD no garantiza que el STL cierre:
   hay que medir estanqueidad sobre el archivo que se entrega.
+
+### 2026-08-07 — Diseñé un tornillo entero sin mirar el agujero donde entra
+Entregué tornillo + tuerca impresos, medidos y verificados, eligiendo el diámetro del vástago
+por copia del original y la cabeza por un "hacela el doble". Fak los imprimió y no le sirvieron:
+tuerca ancha, se trababa, vástago frágil. Recién en la segunda vuelta me dijo contra qué montaba
+— **el Pin del dispositivo TRA-IZQ, que habíamos entregado el día anterior** y estaba en la
+biblioteca con STEP, STL y croquis. Adentro estaban las tres cotas que gobernaban todo el diseño:
+agujero Ø4,85, espesor 5,62, cara de apoyo 8,13 mm de ancho. Con eso, la cabeza de 15 que pidió
+NO apoya sobre el pin (24,98 mm³ de interferencia) y el vástago podía pasar de 3,75 a 4,3.
+
+- **Un fastener no tiene cotas propias**: las hereda del agujero por el que pasa y de la cara
+  donde apoya. Antes de la primera línea de geometría va la pregunta "¿contra qué monta?" y la
+  búsqueda de esa pieza. Si no aparece, ESO es lo que se le pregunta a Fak — antes, no después.
+- **Medir el archivo, no leer el croquis.** El croquis del pin dice "agujero 4,04 + avellanado
+  4,8"; el 3D entregado tiene un Ø4,85 recto de lado a lado. El 4,04 que Fak midió con calibre
+  nunca entró al modelo. Un barrido de rayos sobre el STL lo dijo en segundos.
+- **La resistencia no estaba en el diámetro sino en la rosca.** Engrosar el vástago roscado casi
+  no cambia nada (el núcleo es d−1,23·paso); lo que multiplica por 4 la rigidez donde flexa es
+  poner un tramo LISO al diámetro pleno contra la cabeza y arrancar la rosca después.

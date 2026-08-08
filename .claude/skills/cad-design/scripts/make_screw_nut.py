@@ -50,8 +50,14 @@ from bd_warehouse.thread import IsoThread  # noqa: E402
 
 # --------------------------------------------------------------------------- tornillo
 def build_screw(*, major, pitch, clearance, total_length, head_dia, head_th,
-                neck, knurl_n, knurl_depth, head_chamfer):
-    """Cabeza en z=[0, head_th], cuello, y rosca hasta z=total_length."""
+                neck, knurl_n, knurl_depth, head_chamfer, fillet_r=None):
+    """Cabeza en z=[0, head_th], vastago LISO al diametro pleno, y rosca hasta total_length.
+
+    El tramo liso (`neck`) no es decorativo: la rosca adelgaza el nucleo a d-1,23*paso, asi
+    que un tornillo roscado de punta a punta se corta justo donde mas flexa, contra la cabeza.
+    El vastago liso va al diametro pleno (es el que tiene que pasar por el agujero) y la
+    rosca arranca recien despues, donde ya no hay momento flector.
+    """
     thread_major = major - clearance
     thread_len = total_length - head_th - neck
     if thread_len <= 2 * pitch:
@@ -75,17 +81,21 @@ def build_screw(*, major, pitch, clearance, total_length, head_dia, head_th,
     # nucleo continuo de punta a punta (enterrado dentro de la cabeza): una sola fusion
     core = Cylinder(thread.min_radius, total_length,
                     align=(Align.CENTER, Align.CENTER, Align.MIN))
-    body = head + core
+    # vastago liso al diametro PLENO desde la cabeza hasta donde arranca la rosca
+    shank = Cylinder(major / 2, head_th + neck,
+                     align=(Align.CENTER, Align.CENTER, Align.MIN))
+    body = head + core + shank
 
-    # radio de acuerdo cabeza-vastago: es donde flexa y donde se corta si no lo tiene
-    if neck > 0:
-        r_fil = min(neck * 0.8, 1.0)
+    # radio de acuerdo cabeza-vastago: es donde flexa y donde se corta si no lo tiene.
+    # Tope: tiene que seguir entrando en el agujero, asi que no puede engordar el vastago
+    # mas alla de la holgura que ese agujero deja (por eso se pasa explicito).
+    if neck > 0 and (fillet_r or 0) > 0:
         target = [e for e in body.edges().filter_by(GeomType.CIRCLE)
                   if abs(e.center().Z - head_th) < 1e-6
-                  and abs(e.radius - thread.min_radius) < 1e-6]
+                  and abs(e.radius - major / 2) < 1e-6]
         if len(target) != 1:
             raise SystemExit(f"esperaba 1 arista de acuerdo, encontre {len(target)}")
-        body = fillet(target, radius=r_fil)
+        body = fillet(target, radius=fillet_r)
 
     # moleteado: gajos cilindricos en el canto para agarrar con los dedos
     if knurl_n > 0 and knurl_depth > 0:
@@ -132,7 +142,11 @@ def main(argv=None):
     p.add_argument("--head-dia", type=float, required=True)
     p.add_argument("--head-th", type=float, required=True)
     p.add_argument("--head-chamfer", type=float, default=0.6)
-    p.add_argument("--neck", type=float, default=1.0, help="tramo liso entre cabeza y rosca")
+    p.add_argument("--neck", type=float, default=1.0,
+                   help="largo del vastago LISO al diametro pleno, entre cabeza y rosca")
+    p.add_argument("--fillet", type=float, default=0.25,
+                   help="radio de acuerdo cabeza-vastago. TOPE: engorda el vastago 2*r en la "
+                        "raiz, asi que no puede pasarse de la holgura del agujero")
     p.add_argument("--knurl-n", type=int, default=12)
     p.add_argument("--knurl-depth", type=float, default=0.8)
     p.add_argument("--nut-af", type=float, required=True, help="entre caras de la tuerca (mm)")
@@ -146,7 +160,7 @@ def main(argv=None):
 
     screw, sth = build_screw(
         major=a.major, pitch=a.pitch, clearance=a.clearance, total_length=a.total_length,
-        head_dia=a.head_dia, head_th=a.head_th, neck=a.neck,
+        head_dia=a.head_dia, head_th=a.head_th, neck=a.neck, fillet_r=a.fillet,
         knurl_n=a.knurl_n, knurl_depth=a.knurl_depth, head_chamfer=a.head_chamfer)
     nut, nth = build_nut(major=a.major, pitch=a.pitch, nut_af=a.nut_af, nut_h=a.nut_h,
                          nut_chamfer=a.nut_chamfer)
@@ -174,6 +188,9 @@ def main(argv=None):
             "diam_mayor_rosca_mm": round(sth.major_diameter, 3),
             "diam_nucleo_mm": round(2 * sth.min_radius, 3),
             "vueltas": round((a.total_length - a.head_th - a.neck) / a.pitch, 1),
+            "vastago_liso_diam_mm": a.major,
+            "vastago_liso_largo_mm": a.neck,
+            "diam_max_que_pasa_por_agujero_mm": round(a.major + 2 * a.fillet, 3),
             "volumen_mm3": round(screw.volume, 1),
         },
         "tuerca": {
