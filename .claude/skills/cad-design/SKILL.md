@@ -70,6 +70,20 @@ cliente, la primera hipótesis es el sistema de medición.*
   cambia al trasladar).
 - `gate_aristas.py --t-fino <mm> --tension-nominal <MPa>` — concentradores **cóncavos** sin
   radio + factor de seguridad a fatiga. Una esquina interna viva multiplica ×2,2.
+  **De vuelta en servicio (2026-08-09)** tras dos falsos verdes: la concavidad ya no se le
+  pregunta a una malla sino a la topología OCC (normal invertida si la cara es `REVERSED`;
+  la tangente **con el signo que la arista tiene dentro del wire de la cara** — ése era el
+  bug que quedaba). Trae par sintético BIEN/MAL propio que corre en **cada** invocación: si
+  no separa, sale con **código 3** y no juzga nada. `--verificar-material` da una segunda
+  opinión con un método que no comparte una línea de código (fracción de material alrededor
+  de la arista, `BRepClass3d_SolidClassifier`); sobre 5 piezas coincidieron en 1094/1094.
+- `reconocer_caras.py --step <f> [--cilindros]` — tipo de cada cara (plano/cilindro/cono/
+  esfera) **sin barrer rayos**: `GetType()` para las analíticas + `ShapeAnalysis_Canonical`
+  `Recognition` para recuperar las que el STEP guardó como NURBS. Sobre nuestras salidas
+  recupera **+28,8 %** de caras (221 planos escondidos en 504 NURBS); sobre el STEP del
+  cliente sólo **+3,7 %**. Da los radios exactos de los cilindros — un agujero no se mide
+  con rayos si el STEP ya sabe su diámetro. **Ojo con `--tol`:** con 5 mm casi todo es un
+  plano (comprobado). También trae par BIEN/MAL y sale con código 3 si no separa.
 - **Test del valor gemelo:** al lado de cada número, cuánto daría **si la falla estuviera
   presente**. Si se parecen, el control es ciego y se descarta. Mejor todavía: control sintético
   BIEN/MAL, como el de `gate_ensamble`.
@@ -101,9 +115,19 @@ render posterior al STEP (override `--skip-gate` con `--reason`, deja huella).
 Todo corre con **`C:\Dev\BarackMercosul\.venv-cad\Scripts\python.exe`** (Py3.12: gmsh 4.15 +
 build123d + cadquery + trimesh + rtree + scipy + matplotlib, verificado 2026-07-23).
 
+**`embreex` instalado el 2026-08-09 — los barridos de rayos van 133× más rápido.** trimesh lo
+toma solo: `mesh.ray` pasa a ser `ray_pyembree.RayMeshIntersector`, no hay que cambiar código.
+Medido sobre `virolador_v9` (51.020 tris, 40.000 rayos): **5,106 s → 0,038 s**, y los resultados
+son **idénticos bit a bit** (36.530 impactos, desvío máximo 0,000e+00 mm) salvo en los rayos
+**exactamente tangentes a la silueta**, donde "impacta o no" es ambiguo de por sí. Por eso una
+rejilla de barrido **no debe arrancar en el borde del bbox**: hay que correrla hacia adentro
+(`lo + paso·(i + 0,137)`), que además es la regla de no aliasear. Sin ese offset, python puro y
+embree difieren en 460 de 40.000 rayos — todos sobre el borde exacto.
+El venv **no tiene pip**: instalar con `uv pip install --python .venv-cad\Scripts\python.exe <pkg>`.
+
 | Qué | Comando |
 |---|---|
-| Crear el venv (si no está) | `py -3.12 -m venv .venv-cad` + `pip install build123d cadquery trimesh rtree numpy scipy matplotlib gmsh` |
+| Crear el venv (si no está) | `py -3.12 -m venv .venv-cad` + `pip install build123d cadquery trimesh rtree numpy scipy matplotlib gmsh embreex` |
 | Correr un script | `PYTHONIOENCODING=utf-8 C:\Dev\BarackMercosul\.venv-cad\Scripts\python.exe <script> --help` |
 | Autoverificar el entorno | `smoke_test.py --out <scratchpad>/cad-smoke` (8 checks, geometría sintética) |
 
