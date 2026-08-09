@@ -92,6 +92,12 @@ registrar ICP, verificar colisión y entregar; UN intérprete: `.venv-cad` Py3.1
 pre-modelado/pre-entrega — hook `cad-guard.sh` los recuerda 1×/h; enforcement duro:
 `export_deliverables.py` no entrega sin evidencia en manifest.json).
 
+**Arquitectura de roles (decision Fak 2026-08-09):** los skills SON el sistema de
+roles — cargan solo al usarse. NO crear agentes-rol por dominio ni proyectos
+separados (multi-agente ≈ 15x tokens); subagentes solo para trabajo batch/paralelo,
+techo 5. `docs/LECCIONES_APRENDIDAS.md` tiene tope 20 KB (gate en el hook): podar
+y archivar en `docs/_archive/`, no dejarlo crecer.
+
 ## Stack y comandos
 
 React 19.2 + TypeScript 5.8 + Vite 6 · Supabase (auth+DB) · Vitest 4 + testing-library ·

@@ -32,8 +32,15 @@ EOF
 fi
 
 LECCIONES="$ROOT/docs/LECCIONES_APRENDIDAS.md"
+MAX_BYTES=20480   # gate 2026-08-09: el archivo llego a 126 KB y se inyectaba entero (~30k tokens/sesion)
 if [ -f "$LECCIONES" ]; then
+  SIZE=$(wc -c < "$LECCIONES")
   echo "[Protocolo de inicio Barack: docs/LECCIONES_APRENDIDAS.md inyectado automaticamente por hook SessionStart — no hace falta volver a leerlo]"
-  cat "$LECCIONES"
+  if [ "$SIZE" -gt "$MAX_BYTES" ]; then
+    echo "[GATE DE TAMANO: el archivo pesa $SIZE bytes (tope $MAX_BYTES). Se inyectan solo los primeros 20 KB. PODAR YA: destilar lo accionable y archivar el detalle en docs/_archive/ (ver poda 2026-08-09).]"
+    head -c "$MAX_BYTES" "$LECCIONES"
+  else
+    cat "$LECCIONES"
+  fi
 fi
 exit 0
