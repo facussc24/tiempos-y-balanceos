@@ -106,6 +106,16 @@ PLT**: `escribir_plt()` toma solo CORTE + MARCAS. El DXF sin embargo la conserva
 
 ## 4. Rotar e identificar el PLT
 
+> 🔴🔴 **"EL PLOTTER" ES UNA MAQUINA DE CORTE CON CUCHILLA (Fak, 2026-08-10).** No es un
+> inkjet y no es la mesa de corte: es una tercera maquina. El nombre de la carpeta del
+> software dice `INKJET PLOTTER` y **miente** — me confie de el, deduje "dibuja, no corta",
+> y arme dos hojas enteras con cruces X. **En una X la cuchilla de arrastre entra de canto,
+> sin filo en la direccion del avance, y corta mal.** La marca que funciona es un
+> **circulito Ø1,0 mm** (la cuchilla lo hace girando, que es como trabaja bien) y marca el
+> centro exacto para punzar. Esto **ya estaba escrito** en el registro de marcas para
+> cuchilla de arrastre; lo pase por alto por creerle al nombre. Una deduccion mia sobre
+> **que maquina es** no le gana a lo que ya esta escrito sobre **como se comporta**.
+
 > 🔴 **LA ORIENTACION EN EL PLOTTER ESTA AL REVES DE LO QUE PARECE (Fak, 2026-08-07).**
 > **El lado largo en X sale VERTICAL. Para que salga HORIZONTAL, el lado largo va en Y** —
 > o sea el eje **Y** del PLT es el que corre a lo largo del rollo, y el X es el ancho.
