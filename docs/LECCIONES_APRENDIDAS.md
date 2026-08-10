@@ -26,14 +26,11 @@ La historia completa de cada incidente vive en los snapshots.
 - **08/06**: Antes de declarar caida una infra, dos evidencias independientes. Unidad local delante de una ruta UNC en el error = mi escape (bash+PowerShell: comillas simples).
 - **08/05**: El cache local del ERP es una foto: mirar el mtime del crudo antes de afirmar estado; el diff entre snapshots suele ser el entregable. Mismo numero en dos unidades no es invariante: diffear tambien las UNIDADES.
 - **08/05**: Antes de explicar una falla, cruzar que tienen en comun los que fallaron y los que NO. Antes de sacar un paso "ineficiente", entender por que estaba.
-- **08/05**: Mirar a ojo un archivo gigante no es mirar: buscar el INDICE (tablas embebidas del plano, sumario del PDF).
 - **08/04**: Un verde sin bloqueos no prueba un guardian: "que tendria que haber dado rojo, y lo dio alguna vez?". Un resultado uniforme es experimento roto, no hallazgo.
 - **08/03**: La query por campo vacio sobre JSONB con alias historicos MIENTE: traer el objeto entero de UNA fila y mirar sus claves. Y GENERAR EL ARCHIVO Y MIRARLO encuentra lo que los tests en verde no (una fecha de documento nunca pasa por zona horaria).
 - **08/03**: Vitest: `Failed Suites` + `no tests` = el modulo NI SE CARGO, no es un test rojo. Cache de Vite borrado antes de dar por buena una suite nueva. Memoria `vitest_forks_roto_notebook`.
 - **07/30**: Medir el ARTEFACTO PUBLICADO (bundle servido, xlsx final, dato live), no el codigo ni el build local.
 - **07/28**: Probar UNA causa no cierra el caso si sobra sintoma (defecto IDENTICO en todas las piezas = archivo/setup; DISTINTO = maquina). Una premisa que inferi yo se enuncia y se confirma ANTES de construir encima.
-- **07/28**: Un formulario oficial tampoco es confiable por serlo: verificar que el numero se MUEVA al mover la entrada.
-- **07/27**: Para refutar a un verificador independiente, contra-evidencia del MISMO tipo de dato que el reclamo.
 
 ## Automatizacion de interfaces / ERP
 
@@ -44,7 +41,6 @@ La historia completa de cada incidente vive en los snapshots.
 - **08/04**: Ante una caja negra, grabar al humano que la usa. Guarda obligatoria: confirmar el foco antes de escribir y abortar si no coincide. Parchear el sintoma no resuelve: MEDIR.
 - **08/04**: Muestreo visual no es verificacion: revision programatica del 100% del entregable + mutation testing. Leer el README del formato antes del parser. El alcance lo fija el pedido.
 - **08/04**: Una baja deja huellas: la BOM sobrevive al producto anulado. Antes de una lista para EJECUTAR: el objeto todavia existe? (cruzar contra el maestro).
-- **07/29**: Un fix de parser se termina corriendolo contra la fuente real, con before-after CONTADO y control negativo (filas completas perdidas = 0). Trabajo ajeno sin commitear no se commitea a ciegas.
 
 ## CAD y 3D
 
@@ -60,6 +56,7 @@ La historia completa de cada incidente vive en los snapshots.
 
 ## Patrones de corte
 
+- **10/08 — Verificar con la MISMA libreria que escribio el archivo no es verificar; y un "no abre" puede tener DOS causas a la vez.** Di por buenos 3 DXF de ezdxf releyendolos **con ezdxf**. AutoCAD rechazaba dos: `Duplicate name "BYBLOCK" in Linetype symbol table` (codificado: regla `dxf-entregable.md` + skill `autocad-verificar`). **Lo importante es la segunda causa, que me la hubiera perdido por quedarme con la mia:** arreglado el contenido, Fak seguia sin poder abrirlos — la ruta del server mide 304 caracteres y el doble click de Windows **trunca en 259**, se pierde el `.dxf` y sale "Seleccione una aplicacion para abrir &lt;nombre cortado&gt;" / "invalid name". Le pasa a **cualquier** archivo de esa carpeta. Lo separo una prueba de 30 s: el mismo archivo, mismo MD5, en `C:\tmp\` abre. **Si arreglo una causa y el sintoma sigue, medir de cero y reproducir por el camino EXACTO del usuario**: doble click != pasarle el archivo al .exe.
 - **07/30**: Un chequeo automatico FRENA, no DECIDE: lo que Fak hizo fisicamente es dato duro, mi heuristica es hipotesis. Se reporta la consecuencia medida y decide el.
 - **07/30**: Un coeficiente fisico solo sale de un antes/despues de la MISMA pieza. Si mi calculo contradice la documentacion Y al usuario, el que esta mal soy yo. Dos piezas espejo que difieren: primero verificar que se este LEYENDO lo mismo de las dos.
 - **07/30**: Lo inferido se escribe como inferencia; solo lo que Fak confirma se escribe como hecho ("Fak dixit" + fecha). La geometria DESCARTA candidatos, no confirma cual es.

@@ -74,6 +74,7 @@ NO preguntar si Fak quiere que lo hagas. HACERLO.
 | `testing.md` | __tests__ |
 | `dev-login.md` | components/auth — boton dev-login: NO TOCAR NUNCA |
 | `cad-3d.md` | archivos .step/.stl/.glb, `.venv-cad`, skill cad-design — 2 gates 3D |
+| `dxf-entregable.md` | `*.dxf` / `*.plt` — **el juez de un DXF es AutoCAD, no ezdxf** (`scripts/_validarDxf.py`); y si la ruta pasa 259 caracteres el doble click de Windows no abre |
 | `escritorio-tareas.md` | `_escritorio.mjs` + su hook — cola de tareas: cuándo se cierra y cómo se archiva (el hook la recuerda al tocar el Escritorio) |
 
 **Skills** (on-demand): `apqp-schema` (schema JSONB Supabase), `product-map` (8 familias,
@@ -90,7 +91,10 @@ embebida en un plano de cliente, con `scripts/_leerPlano.py`), `rule-enforcement
 `cad-design` (diseño/modificación 3D-CAD: librería `cadlib` + CLIs con --help para medir STEP,
 registrar ICP, verificar colisión y entregar; UN intérprete: `.venv-cad` Py3.12; los 2 GATES
 pre-modelado/pre-entrega — hook `cad-guard.sh` los recuerda 1×/h; enforcement duro:
-`export_deliverables.py` no entrega sin evidencia en manifest.json).
+`export_deliverables.py` no entrega sin evidencia en manifest.json),
+`autocad-verificar` (correr AutoCAD 2026 headless con `accoreconsole` para auditar/normalizar un
+DXF antes de entregarlo — el juez es AutoCAD, no ezdxf; enforcement duro: `entregar_dxf()` en
+`scripts/_validarDxf.py` no copia al destino si AutoCAD no lo abrio limpio).
 
 **Arquitectura de roles (decision Fak 2026-08-09):** los skills SON el sistema de
 roles — cargan solo al usarse. NO crear agentes-rol por dominio ni proyectos
