@@ -144,16 +144,21 @@ archivo; si me hubiera quedado con la salida de consola, se lo mandaba a Fak par
   que sea macizo. Ahora el generador lo verifica intersectando el sólido con un cilindro de
   Ø0,6 sobre el eje y exigiendo que el alma esté completa.
 
-### 2026-08-07 — El ajuste que "funciona" lo define la mano de Fak, no la tabla
-Tres iteraciones de holgura de rosca: 0,125 mm radiales se trababa, 0,175 "mucho mejor", y el par
-que Fak eligió fue uno **mal apareado que probó de casualidad** — 0,275 radiales, 49 % de flanco:
-*"entra perfecto, que se mueva rápido, esa es la idea"*. Yo venía optimizando hacia el ajuste más
-fino que enroscara.
+### 2026-08-07 — Seguí "mejorando" tres veces después de que Fak dijo que funcionaba
+Fak imprimió una probeta y dijo *"enrosca muchísimo mejor"* (paso 1,0, holgura 0,35). Ahí
+terminaba. Seguí: (1) subí la holgura a 0,55 porque él había probado de casualidad un par mal
+apareado y dijo *"entra perfecto"* — lo tomé como especificación y **se trabó**; (2) para
+arreglarlo subí el paso a 1,0→1,5 con un razonamiento correcto sobre tolerancias — **peor**;
+(3) ese cambio destapó un bug y le entregué un tornillo hueco. Terminó en *"ya me cansé de
+vos"*. La versión buena estaba en la carpeta desde tres iteraciones antes.
 
-- **Para utillaje impreso que se aprieta a mano, el objetivo es que gire rápido con los dedos**,
-  no el ajuste justo. Apuntar a ~50 % de flanco.
-- **Cuando Fak dice que algo "entra perfecto", ESO es la especificación**: medir ese par y copiar
-  sus números, en vez de seguir la tabla.
-- Y cuando aun así se trabó: el problema no era el modelo (lo medí, estaba suelto) sino la
-  repetibilidad de la impresora. La respuesta correcta no es más holgura, es **más paso**: con
-  paso 1,5 el filete es el doble de profundo y el mismo error de impresión pesa la mitad.
+- **Cuando Fak confirma que algo anda, esa configuración se CONGELA con sus números.** Sólo
+  cambia lo que él pide, de a una cosa, sin tocar lo validado. Si creo que otra cosa mejoraría,
+  se lo digo; no lo aplico y se lo mando.
+- **Un comentario al pasar sobre una prueba accidental no es una especificación.** Antes de
+  convertirlo en cambio, preguntar.
+- **En procesos con tolerancias reales la curva no es monótona.** Más holgura no es "más fácil":
+  pasado el óptimo la tuerca entra torcida y se traba. Mi modelo mental predecía monotonía y la
+  pieza en la mano decía otra cosa.
+- **Un razonamiento correcto no es evidencia.** Los tres cambios estaban bien argumentados y los
+  tres empeoraron el resultado. Lo único que contaba era qué había impreso y probado.
