@@ -42,8 +42,10 @@ def _interferencia(tornillo, tuerca, z, ang):
         inter = trimesh.boolean.intersection([tornillo, n], engine="manifold")
         v = float(inter.volume) if inter is not None and len(inter.faces) else 0.0
     except Exception:
-        v = float("nan")
-    return max(v, 0.0)
+        return float("nan")
+    if v < 0:            # volumen negativo = booleano roto; no se lava a "cero interferencia"
+        return float("nan")
+    return v
 
 
 def barrido(tornillo, tuerca, pitch, z0, z1, paso_z, fase0=0.0, signo=+1):
@@ -86,7 +88,8 @@ def main(argv=None):
     # el control da 0 en los dos y queda CIEGO. Paso por defecto = pitch*0,137 (no aliasea).
     p.add_argument("--paso-z", type=float, default=None)
     p.add_argument("--gemelo", nargs=2, type=Path, metavar=("TORNILLO0", "TUERCA0"),
-                   help="par SIN holgura, para probar que el control sabe dar rojo")
+                   required=True,   # sin gemelo, la AUSENCIA del control se puntuaba como
+                   help="par que SI interfiere, para probar que el control sabe dar rojo")
     p.add_argument("--tol-mm3", type=float, default=1.0,
                    help="interferencia maxima aceptable en la posicion enroscada")
     p.add_argument("--json", type=Path)
@@ -113,9 +116,14 @@ def main(argv=None):
             fase, _ = afinar_fase(tt, nn, a.pitch, a.z_desde, signo)
             br = barrido(tt, nn, a.pitch, a.z_desde, a.z_hasta, a.paso_z, fase0=fase, signo=signo)
             v = [x[2] for x in br]
+            validas = int(np.sum(np.isfinite(v)))
+            if validas < 0.6 * len(v):   # un barrido con la mayoria de booleanos rotos no
+                raise SystemExit(f"solo {validas}/{len(v)} booleanos validos: la medicion "
+                                 f"no es un resultado")
             res[nom] = {
                 "fase_deg": round(float(np.degrees(fase)), 2),
                 "n_posiciones": len(br),
+                "booleanos_validos": validas,
                 "interferencia_max_mm3": round(float(np.nanmax(v)), 4),
                 "interferencia_media_mm3": round(float(np.nanmean(v)), 4),
                 "peor_z_mm": round(float(br[int(np.nanargmax(v))][0]), 2),
@@ -145,7 +153,10 @@ def main(argv=None):
 
     rep["control_ciego"] = {"por_sentido": bool(ciego_sentido), "por_gemelo": bool(ciego_gemelo)}
     ciego = ciego_sentido or ciego_gemelo
-    rep["veredicto"] = "VERDE" if (ok and not ciego) else ("CONTROL CIEGO" if ciego else "ROJO")
+    # ROJO antes que CIEGO: que las piezas se pisen es un hecho de la GEOMETRIA; que el
+    # control no discrimine es un problema de la MEDICION. Si se informa lo segundo cuando
+    # pasa lo primero, el operador va a tocar el gate en vez de la pieza.
+    rep["veredicto"] = "ROJO" if not ok else ("CONTROL CIEGO" if ciego else "VERDE")
     txt = json.dumps(rep, indent=2, ensure_ascii=False)
     print(txt)
     if a.json:

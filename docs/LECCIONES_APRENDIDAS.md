@@ -162,3 +162,26 @@ vos"*. La versión buena estaba en la carpeta desde tres iteraciones antes.
   pieza en la mano decía otra cosa.
 - **Un razonamiento correcto no es evidencia.** Los tres cambios estaban bien argumentados y los
   tres empeoraron el resultado. Lo único que contaba era qué había impreso y probado.
+
+### 2026-08-10 — Todos mis controles medían material de MÁS; ninguno medía que la pieza ESTÉ
+Una auditoría a ciegas del generador de tornillos encontró que los dos scripts sólo sabían detectar
+**interferencia** — material sobrante. Un defecto que SACA material (rosca que no fusionó en un
+tramo, alma vacía, cabeza separada del vástago) da *menos* interferencia, y los gates lo leían como
+"mejor". Reproducido: un tornillo al que le falta un tercio de la rosca pasa `is_valid`, pasa el
+control de volumen (−1,6 %), pasa el gate del alma (el eje está intacto) y el gate de enrosque da
+**VERDE con exit 0**.
+
+- **Por cada control de "no sobra", va uno de "no falta".** Se agregó el control positivo: cuánto
+  material hay en la corona entre raíz y cresta a lo largo del tramo roscado (sano 40-60 %, sin
+  rosca ~0), y `len(solids()) == 1` — con dos cuerpos sueltos `is_valid` sigue True y el volumen se
+  SUMA, así que ningún otro control lo veía.
+- **Se relee el archivo escrito y se compara contra el sólido.** `export_stl` devuelve `False` sin
+  lanzar nada si el destino está bloqueado (abierto en el laminador, OneDrive sincronizando): el
+  archivo de la corrida ANTERIOR quedaba en su lugar y el chequeo de tamaño lo aprobaba.
+- **Casi todo el reporte salía de `vars(args)`, no del sólido.** El número que decide si el tornillo
+  entra en su agujero mentía por 0,94 mm cuando una flag opcional faltaba. Ahora se MIDE sobre el STL.
+- **`warnings.filterwarnings("ignore")` global apagaba justo los avisos de OCC sobre geometría
+  degenerada** — la familia de fallas que ya había mordido dos veces.
+- **ROJO antes que CONTROL CIEGO**: que las piezas se pisen es un hecho de la geometría; que el
+  control no discrimine es un problema de la medición. Confundirlos manda a tocar el gate en vez de
+  la pieza.
