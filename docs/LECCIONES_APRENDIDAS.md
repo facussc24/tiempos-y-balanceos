@@ -121,3 +121,33 @@ La historia completa de cada incidente vive en los snapshots.
 
 ### 2026-08-09 — El archivo de lecciones crecio a 126 KB y el hook lo inyectaba entero
 El "destilado corto" se habia convertido en el mayor gasto fijo de cada sesion (~30k tokens), y encima el harness lo truncaba: ni siquiera se leia completo. Podado a menos de 15 KB (todo el detalle en `docs/_archive/LECCIONES_snapshot_2026-08-09.md`) y el hook ahora corta en 20 KB con aviso. **La leccion: un archivo que se lee en cada arranque necesita un tope DURO con enforcement, no una intencion de brevedad.**
+
+### 2026-08-07 — El exportador escribió un archivo vacío y no dijo nada
+Generé un tornillo, el script imprimió su JSON de medidas y la ruta del STL como si todo hubiera
+salido bien. **El STL no existía y el STEP pesaba 1,6 KB.** El sólido tenía volumen 0 y aun así
+`is_valid` devolvía **True** — un compound vacío es "válido". Lo agarré porque fui a medir el
+archivo; si me hubiera quedado con la salida de consola, se lo mandaba a Fak para imprimir.
+
+- **`is_valid` no prueba que exista geometría.** Todo generador cierra con dos asserts: volumen
+  > 0 y **el archivo escrito existe y pesa lo que tiene que pesar**. Verificar la orden no es
+  verificar el resultado (mismo patrón que el virolador).
+- **La causa era el ORDEN de la unión, no las medidas.** `cabeza + nucleo + vastago + rosca` da
+  vacío; `(nucleo + rosca) + cabeza + vastago` da el sólido. La rosca de `bd_warehouse` es un
+  Compound y sólo fusiona limpio contra el cilindro con el que solapa por `interference`. Con
+  paso 1,0 el orden malo funcionaba de casualidad; al pasar a 1,5 se rompió.
+- **Un caso que funciona no valida el método.** El orden estaba mal desde el principio y tres
+  entregas salieron bien igual. Cuando cambió un parámetro, apareció.
+
+### 2026-08-07 — El ajuste que "funciona" lo define la mano de Fak, no la tabla
+Tres iteraciones de holgura de rosca: 0,125 mm radiales se trababa, 0,175 "mucho mejor", y el par
+que Fak eligió fue uno **mal apareado que probó de casualidad** — 0,275 radiales, 49 % de flanco:
+*"entra perfecto, que se mueva rápido, esa es la idea"*. Yo venía optimizando hacia el ajuste más
+fino que enroscara.
+
+- **Para utillaje impreso que se aprieta a mano, el objetivo es que gire rápido con los dedos**,
+  no el ajuste justo. Apuntar a ~50 % de flanco.
+- **Cuando Fak dice que algo "entra perfecto", ESO es la especificación**: medir ese par y copiar
+  sus números, en vez de seguir la tabla.
+- Y cuando aun así se trabó: el problema no era el modelo (lo medí, estaba suelto) sino la
+  repetibilidad de la impresora. La respuesta correcta no es más holgura, es **más paso**: con
+  paso 1,5 el filete es el doble de profundo y el mismo error de impresión pesa la mitad.
