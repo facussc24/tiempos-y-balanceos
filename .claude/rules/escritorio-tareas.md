@@ -120,7 +120,7 @@ Viven en el listado Excel, en la biblioteca.
   Escritorio o de la biblioteca de Ingeniería, mover a mano hacia/desde el archivo, tocar el
   listado a mano, y escribir un README/LEEME/NOTAS suelto en una carpeta de Fak. Recuerda el
   procedimiento 1×/hora al entrar en ese territorio.
-- **Tests**: `__tests__/scripts/escritorio.test.mjs` (26) y `escritorioGuard.test.mjs` (17).
+- **Tests**: `__tests__/scripts/escritorio.test.mjs` (36) y `escritorioGuard.test.mjs` (19).
   Dos trampas que costaron un test falso-verde y un commit bloqueado, y que están fijadas
   como vectores: los payloads del hook se arman con `JSON.stringify` (a mano en el shell los
   backslashes de Windows se colapsan y el hook cae en su rama de fallback), y la detección
