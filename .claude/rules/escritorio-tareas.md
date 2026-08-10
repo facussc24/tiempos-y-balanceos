@@ -12,6 +12,20 @@ paths:
 Una carpeta por pendiente, con el mail del pedido adentro. **En el Escritorio queda solo lo
 abierto.**
 
+## 0. `_EN ESPERA` — la bandeja (decisión de Fak, 09/08/2026)
+
+El Escritorio llegó a **81 iconos** y a Fak le molestaba. Se creó **`_EN ESPERA`**: a la vista
+quedan solo las tareas de la semana, y las trabadas o de baja prioridad van adentro.
+
+**Lo de adentro sigue ABIERTO.** No es archivo, no es cierre, no es basura: es la misma cola,
+corrida de la vista. El relevador entra y las cuenta (`10 a la vista + 27 en _EN ESPERA = 37
+abiertas`); sin eso contaba la bandeja como *una* tarea y perdía 27 de vista.
+
+Sacar una de la bandeja = mover la carpeta a la raíz. Cerrarla sigue siendo `--archivar`, una
+por una. **Enforcement:** `clasificarEntrada` la devuelve como `'espera'` y `--archivar` la
+rechaza — archivar la bandeja entera mandaría 27 pendientes abiertos al archivo de cerradas de
+un saque (tests 13b-13e).
+
 ## 1. Cuándo se da por cerrada
 
 **La última acción que era de Barack está hecha Y el entregable ya está en su carpeta por

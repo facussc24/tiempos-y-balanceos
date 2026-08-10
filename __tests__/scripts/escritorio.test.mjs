@@ -96,6 +96,77 @@ describe('clasificarEntrada', () => {
         expect(clasificarEntrada('PLAN 28-07-2026.txt', false)).toBe('tarea');
         expect(clasificarEntrada('juegos', true)).toBe('fijo');
     });
+    it('13b. "_EN ESPERA" es la bandeja, no una tarea (si no, 27 tareas cuentan como 1)', () => {
+        expect(clasificarEntrada('_EN ESPERA', true)).toBe('espera');
+        expect(clasificarEntrada('_en espera', true)).toBe('espera');
+        expect(clasificarEntrada('_ENESPERA', true)).toBe('espera');
+    });
+    it('13c. un archivo que se llame igual NO es la bandeja, y "En espera de Leo" es tarea', () => {
+        expect(clasificarEntrada('_EN ESPERA', false)).toBe('tarea');
+        expect(clasificarEntrada('En espera de Leo', true)).toBe('tarea');
+        expect(clasificarEntrada('_EN ESPERA vinilos', true)).toBe('tarea');
+    });
+});
+
+describe('_EN ESPERA — la bandeja esconde de la vista, no cierra', () => {
+    it('13d. el relevador cuenta las de adentro y las muestra aparte', () => {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'escritorio-espera-'));
+        try {
+            fs.mkdirSync(path.join(dir, 'cola', 'Tarea a la vista'), { recursive: true });
+            fs.mkdirSync(path.join(dir, 'cola', '_EN ESPERA', 'Tarea escondida'), { recursive: true });
+            fs.mkdirSync(path.join(dir, 'cola', '_EN ESPERA', 'Otra escondida'), { recursive: true });
+
+            const arch = path.join(dir, '_archivo');
+            fs.mkdirSync(arch, { recursive: true });
+            const salida = execFileSync(
+                process.execPath, [SCRIPT, '--escritorio', path.join(dir, 'cola'), '--archivo', arch],
+                { encoding: 'utf8' },
+            );
+
+            expect(salida).toMatch(/1 a la vista \+ 2 en _EN ESPERA = 3 abiertas/);
+            expect(salida).toContain('Tarea escondida');
+            expect(salida).toContain('Otra escondida');
+            // la bandeja no se cuenta a si misma como tarea
+            expect(salida).not.toMatch(/carpeta\s+_EN ESPERA\s+\(fecha/);
+        } finally {
+            fs.rmSync(dir, { recursive: true, force: true });
+        }
+    });
+
+    it('13e. NO se puede archivar la bandeja entera: mandaria tareas ABIERTAS a cerradas', () => {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'escritorio-espera-'));
+        try {
+            const cola = path.join(dir, 'cola');
+            const arch = path.join(dir, '_archivo');
+            const viva = path.join(cola, '_EN ESPERA', 'Tarea viva');
+            fs.mkdirSync(viva, { recursive: true });
+            fs.mkdirSync(arch, { recursive: true });
+            fs.writeFileSync(path.join(viva, 'pedido.txt'), 'sigue abierta');
+
+            // tiene que salir con codigo != 0, asi que execFileSync tira: la salida va en el error
+            let salida = '';
+            let code = 0;
+            try {
+                salida = execFileSync(process.execPath, [
+                    SCRIPT, '--escritorio', cola, '--archivo', arch, '--archivar', '_EN ESPERA',
+                    '--cerrada', '2026-08-09', '--quien', 'Fak',
+                    '--que', 'Intento de archivar la bandeja completa de un saque',
+                    '--donde', 'no tendria que moverse a ningun lado',
+                ], { encoding: 'utf8' });
+            } catch (e) {
+                salida = String(e.stdout ?? '');
+                code = e.status ?? 1;
+            }
+
+            expect(code).not.toBe(0);
+            expect(salida).toMatch(/es la bandeja, no una tarea/);
+            // y lo que importa: la tarea abierta sigue donde estaba
+            expect(fs.existsSync(path.join(viva, 'pedido.txt'))).toBe(true);
+            expect(fs.readdirSync(arch)).toEqual([]);
+        } finally {
+            fs.rmSync(dir, { recursive: true, force: true });
+        }
+    });
 });
 
 describe('verificarInvariantes — que el archivo y el listado no se separen', () => {

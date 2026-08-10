@@ -44,6 +44,15 @@ export const ARCHIVO_DEFAULT = RUTA_TAREAS_CERRADAS;
 
 const EXT_FIJAS = new Set(['.lnk', '.url', '.ini', '.exe', '.db']);
 const NOMBRES_FIJOS = new Set(['juegos', 'desktop.ini', 'thumbs.db']);
+
+/**
+ * Carpeta-bandeja: Fak la creo el 09/08/2026 para sacarse de la vista las tareas que no son
+ * de esta semana (el Escritorio tenia 81 iconos y le molestaba). NO es una tarea ni un
+ * archivo de cerradas: lo de adentro sigue ABIERTO y se releva igual, solo que aparte.
+ * Sin esto el relevador contaba "_EN ESPERA" como una tarea sola y perdia de vista 27.
+ */
+export const CARPETA_EN_ESPERA = '_EN ESPERA';
+export const esEnEspera = (nombre) => /^_en\s*espera$/i.test(String(nombre).trim());
 const RELLENO = /^(tbd|n\/?a|-+|\.+|ok|listo|pendiente|varios?|nada|sin datos?)$/i;
 
 export const COLUMNAS = [
@@ -107,6 +116,7 @@ export function clasificarEntrada(nombre, esDirectorio) {
     if (NOMBRES_FIJOS.has(bajo)) return 'fijo';
     if (!esDirectorio && EXT_FIJAS.has(path.extname(bajo))) return 'fijo';
     if (esDirectorio && /^_terminadas(\s+\d{4})?$/i.test(nombre)) return 'archivo';
+    if (esDirectorio && esEnEspera(nombre)) return 'espera';
     if (nombre.startsWith('.')) return 'fijo';
     return 'tarea';
 }
@@ -251,19 +261,33 @@ async function cmdRelevar(escritorio, archivo) {
         .filter((e) => clasificarEntrada(e.nombre, e.dir) === 'tarea')
         .map((t) => ({ ...t, fecha: fechasDeTarea(t) }));
 
-    say(`\n${c.b}ESCRITORIO${c.x}  ${escritorio}`);
-    say(`${c.d}${tareas.length} cosa(s) abiertas${c.x}\n`);
-    for (const t of [...tareas].sort((a, b) => b.fecha.ms - a.fecha.ms)) {
+    const bandeja = entradas.find((e) => clasificarEntrada(e.nombre, e.dir) === 'espera');
+    const enEspera = !bandeja ? [] : listar(bandeja.ruta)
+        .filter((e) => clasificarEntrada(e.nombre, e.dir) === 'tarea')
+        .map((t) => ({ ...t, fecha: fechasDeTarea(t) }));
+
+    const linea = (t) => {
         const d = t.fecha.ms ? diasDesde(t.fecha.ms) : null;
         const edad = d === null ? '   ?' : `${String(d).padStart(3)}d`;
         const origen = t.fecha.fuente === 'mail' ? '        ' : `${c.d}(fecha de archivo)${c.x}`;
         say(`  ${d !== null && d >= 7 ? c.y : c.d}${edad}${c.x}  ${c.d}${t.dir ? 'carpeta' : 'suelto '}${c.x}  ${t.nombre}  ${origen}`);
+    };
+    const porFecha = (xs) => [...xs].sort((a, b) => b.fecha.ms - a.fecha.ms);
+
+    say(`\n${c.b}ESCRITORIO${c.x}  ${escritorio}`);
+    say(`${c.d}${tareas.length} a la vista${enEspera.length ? ` + ${enEspera.length} en ${CARPETA_EN_ESPERA}` : ''} = ${tareas.length + enEspera.length} abiertas${c.x}\n`);
+    for (const t of porFecha(tareas)) linea(t);
+
+    if (enEspera.length) {
+        say(`\n  ${c.b}${CARPETA_EN_ESPERA}${c.x} ${c.d}— fuera de la vista, pero ABIERTAS${c.x}`);
+        for (const t of porFecha(enEspera)) linea(t);
     }
-    if (tareas.some((t) => t.fecha.ms && diasDesde(t.fecha.ms) >= 7)) {
+
+    if ([...tareas, ...enEspera].some((t) => t.fecha.ms && diasDesde(t.fecha.ms) >= 7)) {
         say(`\n${c.d}Lo amarillo lleva 7 dias o mas desde que llego el pedido: o esta cerrado sin${c.x}`);
         say(`${c.d}archivar, o esta trabado esperando a alguien. Las dos cosas se resuelven, no se dejan.${c.x}`);
     }
-    if (tareas.some((t) => t.fecha.fuente !== 'mail')) {
+    if ([...tareas, ...enEspera].some((t) => t.fecha.fuente !== 'mail')) {
         say(`${c.d}Las marcadas "(fecha de archivo)" no tienen mail adentro: esa fecha se pisa sola${c.x}`);
         say(`${c.d}cuando se copia la carpeta, asi que puede ser mas nueva de lo que la tarea es.${c.x}`);
     }
@@ -313,6 +337,11 @@ async function cmdArchivar(escritorio, archivo, { nombre, cerrada, quien, que, d
     if (!fs.existsSync(origen)) { bad(`No existe en el Escritorio: "${nombre}"`); return 1; }
     const esDir = fs.statSync(origen).isDirectory();
     const base = path.basename(nombre);
+    if (clasificarEntrada(base, esDir) === 'espera') {
+        bad(`"${base}" es la bandeja, no una tarea: adentro hay pendientes ABIERTOS.`);
+        say(`${c.d}Archivarla mandaria todas al archivo de cerradas de un saque. Archivá una por una.${c.x}`);
+        return 1;
+    }
     if (clasificarEntrada(base, esDir) !== 'tarea') { bad(`"${base}" no es una tarea (acceso directo, archivo de sistema o el archivo de terminadas).`); return 1; }
 
     const anio = anioDe(cerrada);
