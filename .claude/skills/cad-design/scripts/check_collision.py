@@ -61,12 +61,40 @@ def main():
         translate = workdir.get_transform(w, args.transform)
         print("aplicando transform '%s' = (%.3f, %.3f, %.3f) al sustrato" % (args.transform, *translate))
 
-    sub_tris = geom.step_to_tris(args.substrate, lc=args.lc, keep=_parse_tags(args.substrate_keep),
-                                 translate=translate)
-    sub_pts = np.unique(sub_tris.reshape(-1, 3), axis=0)
-    for axis, lo, hi in map(_parse_zone, args.zone):
-        sub_pts = sub_pts[(sub_pts[:, axis] > lo) & (sub_pts[:, axis] < hi)]
-    print("sustrato: %d pts%s" % (len(sub_pts), " (zona filtrada)" if args.zone else ""))
+    # EL SUSTRATO SE CARGA CON LAS CARAS LIBRES. Es el control, no un detalle: los puntos
+    # que este script busca dentro del fixture son NODOS DE MALLA DEL SUSTRATO, y si el
+    # cargador descarta las caras que no pertenecen a ningun solido, esos nodos NO EXISTEN.
+    # En un panel de cliente las dos paredes internas de la ranura viven en un shell
+    # suelto: sin ellas, los dedos del utillaje pueden estar metidos DENTRO de la pared y el
+    # control devuelve n_inside=0, o sea verde por ausencia de geometria. Es la misma
+    # ceguera que ya tuvo este script cuando un utillaje flotando a 60 mm daba "OK".
+    # La malla del sustrato queda no-watertight, y no importa: aca solo se usan sus PUNTOS
+    # (el `contains` corre contra el fixture, que si es watertight).
+    def _pts(libres):
+        t = geom.step_to_tris(args.substrate, lc=args.lc, keep=_parse_tags(args.substrate_keep),
+                              translate=translate, caras_libres=libres)
+        q = np.unique(t.reshape(-1, 3), axis=0)
+        for ax, a_, b_ in map(_parse_zone, args.zone):
+            q = q[(q[:, ax] > a_) & (q[:, ax] < b_)]
+        return q
+
+    # EL VEREDICTO SE DA CONTRA EL SOLIDO. La regla dice "interferencia contra el SUSTRATO
+    # RIGIDO": el sustrato rigido es el cuerpo solido del cliente, que es el plastico.
+    # Las CARAS LIBRES (las que no pertenecen a ningun solido) se miden igual y se reportan
+    # aparte, porque son dos cosas distintas y hasta ahora se confundian en una:
+    #   * a veces son geometria REAL que el STEP no llego a coser al solido — en el panel
+    #     de un panel de cliente las dos paredes internas de la ranura viven ahi, y sin ellas el
+    #     control es CIEGO: los dedos pueden estar metidos dentro de la pared y devolver 0;
+    #   * y a veces son superficies de CONSTRUCCION — en ese mismo panel hay una a 0,500 mm
+    #     exactos por debajo de la cara de apoyo, en dos zonas separadas. Un offset constante
+    #     a tres decimales no es una pieza inyectada, es una superficie de CAD.
+    # Meter las dos en el veredicto hace que el gate rechace por geometria que no es
+    # material. Meter ninguna lo deja ciego. Por eso: veredicto sobre el solido, aviso
+    # sobre las libres, y los dos numeros quedan en el manifest.
+    sub_pts = _pts(False)
+    sub_pts_libres = _pts(True)
+    print("sustrato: %d pts del SOLIDO%s (con caras libres serian %d)"
+          % (len(sub_pts), " (zona filtrada)" if args.zone else "", len(sub_pts_libres)))
     if len(sub_pts) == 0:
         raise SystemExit("La zona filtrada dejo 0 puntos del sustrato — revisar --zone")
 
@@ -87,7 +115,20 @@ def main():
               % (coll[:, 0].min(), coll[:, 0].max(), coll[:, 1].min(), coll[:, 1].max(),
                  coll[:, 2].min(), coll[:, 2].max()))
     else:
-        print("OK: 0 puntos del sustrato dentro del fixture (sin choque duro)")
+        print("OK: 0 puntos del SOLIDO dentro del fixture (sin choque duro)")
+
+    # informativo: lo mismo contra las caras libres, que NO deciden el veredicto
+    ins_lib = geom.contains_batched(m_fix, sub_pts_libres)
+    n_lib = int(ins_lib.sum()) - n_in
+    stats["n_inside_caras_libres"] = int(ins_lib.sum())
+    if n_lib > 0:
+        import trimesh as _tm
+        dl = _tm.proximity.ProximityQuery(m_fix).on_surface(sub_pts_libres[ins_lib])[1]
+        stats["depth_max_caras_libres"] = round(float(dl.max()), 3)
+        print("  AVISO (no decide): %d puntos mas caen dentro si se cuentan las CARAS "
+              "LIBRES, hasta %.2f mm." % (n_lib, dl.max()))
+        print("         Hay que mirar QUE son antes de ignorarlas: si son pared real, el "
+              "choque es real.")
 
     # ---------- el control COMPLEMENTARIO: ademas de no penetrar, tiene que TOCAR --------
     # Sin esto el gate es ciego a la falla que costo mas cara (2026-08-07): un utillaje

@@ -5,6 +5,7 @@ Unifica los helpers que estaban copiados con variantes en 6 scripts del caso
 posicionador (solids_tris / mesh_tris / mesh_tm / mesh_solids / mesh_points / inline).
 """
 import os
+import sys
 from contextlib import contextmanager
 
 from . import envcheck
@@ -40,14 +41,34 @@ def _load(path, keep=None, translate=None, highest_dim_only=True):
 
     OJO con highest_dim_only (default True = el default de gmsh): descarta las caras
     LIBRES, las que no pertenecen a ningun solido. En STEPs de cliente ahi viven los
-    grabados/logos imprentados sobre la clase A. Caso real Upper Trim VW427: con True
+    grabados/logos imprentados sobre la clase A. Caso real de un panel de cliente: con True
     entran 2548 caras y el logo NO EXISTE; con False entran 2737 y aparecen las 189
     caras libres (entre ellas los 2 simbolos). `cadlib.topo` carga siempre con False.
     """
     if not os.path.isfile(path):
         raise FileNotFoundError("No existe el archivo 3D: %s" % path)
-    gmsh.model.occ.importShapes(path, highestDimOnly=highest_dim_only)
+    # Se importa SIEMPRE con False y, si hacen falta solo los solidos, se sacan las caras
+    # libres DESPUES. Cuesta lo mismo e impone que el descarte sea visible: antes el
+    # importShapes con True las borraba en silencio y nadie se enteraba de cuantas.
+    gmsh.model.occ.importShapes(path, highestDimOnly=False)
     gmsh.model.occ.synchronize()
+    if highest_dim_only:
+        libres = [(2, t) for _, t in gmsh.model.getEntities(2)
+                  if not gmsh.model.getAdjacencies(2, t)[0].size]
+        if libres:
+            gmsh.model.occ.remove(libres, recursive=True)
+            gmsh.model.occ.synchronize()
+            sys.stderr.write(
+                "[cadlib.geom] AVISO: %s trae %d caras LIBRES (no pertenecen a ningun "
+                "solido) y se descartaron.\n"
+                "  Si estas MIDIENDO una luz interna, es probable que esas caras SEAN la "
+                "pared que buscas y el\n"
+                "  numero te salga por la envolvente exterior. Paso el 2026-08-09 con la "
+                "ranura de un panel de cliente:\n"
+                "  con True media 12,96 mm (envolvente) y con False 10,90 (luz real), y "
+                "todo el utillaje se dimensiono mal.\n"
+                "  Para medir: step_to_trimesh(..., caras_libres=True).\n"
+                % (os.path.basename(path), len(libres)))
     if keep is not None:
         keep = set(keep)
         vols = gmsh.model.getEntities(3)
@@ -92,10 +113,12 @@ def _surface_tris(surf_tags, xyz):
     return np.concatenate(tris)
 
 
-def step_to_tris(path, lc=LC_ANALYSIS, keep=None, translate=None, per_solid=False):
+def step_to_tris(path, lc=LC_ANALYSIS, keep=None, translate=None, per_solid=False,
+                 caras_libres=False):
     """STEP -> triangulos (N,3,3). per_solid=True -> dict tag -> (tris, bbox)."""
     with gmsh_session():
-        _load(path, keep=keep, translate=translate)
+        _load(path, keep=keep, translate=translate,
+              highest_dim_only=not caras_libres)
         _mesh_2d(lc)
         xyz = _node_xyz()
         if per_solid:
@@ -112,11 +135,20 @@ def step_to_tris(path, lc=LC_ANALYSIS, keep=None, translate=None, per_solid=Fals
         return tris
 
 
-def step_to_trimesh(path, lc=LC_ANALYSIS, keep=None, translate=None, require_watertight=False):
-    """STEP -> trimesh.Trimesh listo para contains/volumen. ValueError si queda vacia."""
+def step_to_trimesh(path, lc=LC_ANALYSIS, keep=None, translate=None, require_watertight=False,
+                    caras_libres=False):
+    """STEP -> trimesh.Trimesh listo para contains/volumen. ValueError si queda vacia.
+
+    caras_libres=True trae tambien las caras que no pertenecen a ningun solido. La malla
+    deja de ser watertight (o sea `contains` no sirve), pero es la UNICA forma de MEDIR una
+    luz interna cuando las paredes viven en un shell suelto, que es lo que pasa en un panel
+    de cliente: con False la ranura mide 12,96 (envolvente exterior de las dos paredes)
+    y con True 10,90 (la luz de verdad).
+    """
     envcheck.require(("trimesh",))
     import trimesh
-    tris = step_to_tris(path, lc=lc, keep=keep, translate=translate)
+    tris = step_to_tris(path, lc=lc, keep=keep, translate=translate,
+                        caras_libres=caras_libres)
     v = tris.reshape(-1, 3)
     f = np.arange(len(v)).reshape(-1, 3)
     m = trimesh.Trimesh(vertices=v, faces=f)
@@ -129,10 +161,11 @@ def step_to_trimesh(path, lc=LC_ANALYSIS, keep=None, translate=None, require_wat
     return m
 
 
-def mesh_nodes(path, lc, keep=None, translate=None, per_face=False):
+def mesh_nodes(path, lc, keep=None, translate=None, per_face=False, caras_libres=False):
     """Nodos de malla de superficie. per_face=True -> dict tag -> (tipo_superficie, pts)."""
     with gmsh_session():
-        _load(path, keep=keep, translate=translate)
+        _load(path, keep=keep, translate=translate,
+              highest_dim_only=not caras_libres)
         _mesh_2d(lc)
         if per_face:
             faces = {}
