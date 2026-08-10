@@ -94,18 +94,17 @@ def build_screw(*, major, pitch, clearance, total_length, head_dia, head_th,
             relief_d / 2, relief_depth * 2, align=(Align.CENTER, Align.CENTER, Align.MIN))
         z_acuerdo = head_th - relief_depth
 
-    # nucleo continuo de punta a punta (enterrado dentro de la cabeza)
-    core = Cylinder(thread.min_radius, total_length,
+    # Nucleo continuo de punta a punta (enterrado dentro de la cabeza).
+    # EL +0,10: si el nucleo va EXACTAMENTE a `thread.min_radius`, su cilindro queda tangente
+    # a la raiz de la rosca y el booleano se vuelve inestable — con paso 1,5 devolvia un
+    # TUBO HUECO (o directamente volumen 0) sin lanzar ninguna excepcion. Con 0,10 mm de
+    # solape real fusiona siempre. Con paso 1,0 el caso tangente funcionaba de casualidad.
+    core = Cylinder(thread.min_radius + 0.10, total_length,
                     align=(Align.CENTER, Align.CENTER, Align.MIN))
-    # ORDEN DE FUSION: la rosca se pega PRIMERO a su nucleo, y recien despues entran cabeza
-    # y vastago. Al reves (head+core+shank+rosca) el resultado sale VACIO con volumen 0 y
-    # `is_valid` True — comprobado con paso 1,5. La rosca es un Compound y solo fusiona
-    # limpio contra el cilindro con el que solapa por `interference`.
-    vastago = core + (Pos(0, 0, head_th + neck) * thread)
     # vastago liso al diametro PLENO desde la cabeza hasta donde arranca la rosca
     shank = Cylinder(shank_d / 2, head_th + neck,
                      align=(Align.CENTER, Align.CENTER, Align.MIN))
-    body = head + vastago + shank
+    body = head + core + shank
 
     # radio de acuerdo cabeza-vastago: es donde flexa y donde se corta si no lo tiene
     if neck > 0 and (fillet_r or 0) > 0:
@@ -127,7 +126,19 @@ def build_screw(*, major, pitch, clearance, total_length, head_dia, head_th,
                 r_cut, head_th * 3, align=(Align.CENTER, Align.CENTER, Align.MIN)
             )
 
-    screw = body
+    screw = body + (Pos(0, 0, head_th + neck) * thread)
+
+    # GATE: un tornillo tiene que ser MACIZO en su eje de punta a punta. Cuando la fusion
+    # de la rosca falla en silencio, lo que queda es una espiral hueca — se ve a simple
+    # vista y ninguna de las otras comprobaciones (watertight, volumen, is_valid) la caza.
+    sonda = Cylinder(0.30, total_length, align=(Align.CENTER, Align.CENTER, Align.MIN))
+    alma = (screw & sonda).volume
+    esperado = math.pi * 0.30**2 * total_length
+    if alma < 0.90 * esperado:
+        raise SystemExit(
+            f"el tornillo salio HUECO: el alma tiene {alma:.2f} mm3 de los {esperado:.2f} "
+            f"que corresponden. La fusion de la rosca fallo (revisar el solape del nucleo)")
+
     return screw, thread
 
 

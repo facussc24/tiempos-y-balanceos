@@ -131,12 +131,19 @@ archivo; si me hubiera quedado con la salida de consola, se lo mandaba a Fak par
 - **`is_valid` no prueba que exista geometría.** Todo generador cierra con dos asserts: volumen
   > 0 y **el archivo escrito existe y pesa lo que tiene que pesar**. Verificar la orden no es
   verificar el resultado (mismo patrón que el virolador).
-- **La causa era el ORDEN de la unión, no las medidas.** `cabeza + nucleo + vastago + rosca` da
-  vacío; `(nucleo + rosca) + cabeza + vastago` da el sólido. La rosca de `bd_warehouse` es un
-  Compound y sólo fusiona limpio contra el cilindro con el que solapa por `interference`. Con
-  paso 1,0 el orden malo funcionaba de casualidad; al pasar a 1,5 se rompió.
-- **Un caso que funciona no valida el método.** El orden estaba mal desde el principio y tres
-  entregas salieron bien igual. Cuando cambió un parámetro, apareció.
+- **La causa real: dos superficies TANGENTES.** El núcleo se construía exactamente al radio de
+  la raíz de la rosca, así que los dos cilindros quedaban tangentes y el booleano se volvía
+  inestable. Con paso 1,0 funcionaba de casualidad; con 1,5 devolvía un sólido vacío. Con
+  0,10 mm de solape real fusiona siempre. **Dos superficies que se tocan sin solapar no son
+  una unión, son una lotería.**
+- **Y mi primer diagnóstico fue el equivocado.** Culpé al orden de la fusión porque cambiar el
+  orden hacía desaparecer el síntoma — pero el orden nuevo devolvía un tornillo HUECO, una
+  espiral sin alma. Pasó las cuatro comprobaciones que tenía (watertight, sin bordes abiertos,
+  volumen > 0, gate de enrosque VERDE) y se lo entregué a Fak, que lo vio de un vistazo:
+  *"hiciste como un resorte, no tiene sólido adentro"*. **Que el síntoma desaparezca no prueba
+  que encontré la causa**, y ninguna de mis métricas miraba lo único que define un tornillo:
+  que sea macizo. Ahora el generador lo verifica intersectando el sólido con un cilindro de
+  Ø0,6 sobre el eje y exigiendo que el alma esté completa.
 
 ### 2026-08-07 — El ajuste que "funciona" lo define la mano de Fak, no la tabla
 Tres iteraciones de holgura de rosca: 0,125 mm radiales se trababa, 0,175 "mucho mejor", y el par
