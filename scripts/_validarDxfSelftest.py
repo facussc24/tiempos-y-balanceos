@@ -64,6 +64,21 @@ def _sin_ltype(path: str, salida: str) -> str:
     return salida
 
 
+def _sacar_eje_z(path: str, salida: str) -> str:
+    """Deja $EXTMIN/$EXTMAX con solo 10/20, como los DXF 2D."""
+    d = Dxf(path)
+    lineas = list(d.lineas)
+    for nombre in ("$EXTMAX", "$EXTMIN"):  # de atras para adelante, no corre indices
+        i = next(k for k in range(0, len(lineas) - 1, 2)
+                 if lineas[k].strip() == "9" and lineas[k + 1].strip() == nombre)
+        # el 30 y su valor son las lineas i+6 e i+7
+        assert lineas[i + 6].strip() == "30", f"{nombre} no tiene eje Z donde esperaba"
+        del lineas[i + 6:i + 8]
+    with open(salida, "wb") as fh:
+        fh.write((d.nl.join(lineas) + d.nl).encode("cp1252", errors="replace"))
+    return salida
+
+
 def _renombrar_capa_en_tabla(path: str, salida: str, viejo: str, nuevo: str) -> str:
     """Renombra la capa SOLO en la tabla LAYER; las entidades siguen apuntando al nombre
     viejo. Trabaja sobre la lista de lineas (no sobre el texto crudo: con CRLF un replace
@@ -153,6 +168,21 @@ def main() -> int:
         fix13 = p("r2013_fix.dxf")
         normalizar(r13, fix13)
         bueno("R2013 normalizado", fix13)
+
+        # $EXTMIN/$EXTMAX de 2 ejes (DXF 2D): escribir un tercero a ciegas pisaba la
+        # variable siguiente del HEADER y corrompia el archivo en silencio
+        dos_ejes = _sacar_eje_z(r13, p("r2013_2ejes.dxf"))
+        fix2 = p("r2013_2ejes_fix.dxf")
+        log2 = normalizar(dos_ejes, fix2)
+        assert any("2 ejes" in l for l in log2), f"no detecto los 2 ejes: {log2}"
+        d_antes, d_desp = Dxf(dos_ejes), Dxf(fix2)
+        ok = list(d_antes.header) == list(d_desp.header) and all(
+            [c for c, _ in d_antes.header[v]] == [c for c, _ in d_desp.header[v]]
+            for v in d_antes.header
+        )
+        print(f"  [{'OK ' if ok else 'MAL'}] normaliza extents de 2 ejes sin romper el HEADER")
+        if not ok:
+            fallidos.append("extents de 2 ejes")
 
         if con_autocad:
             print("== capa real: AutoCAD tiene que abrir los normalizados y rechazar el roto")

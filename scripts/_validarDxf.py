@@ -376,10 +376,14 @@ def normalizar(entrada: str, salida: str) -> list[str]:
             )
 
     if borrar:
+        if "LTYPE" not in d.tabla_conteo:
+            raise DxfInvalido("la tabla LTYPE no declara conteo (codigo 70): no la toco a ciegas")
         declarado, li_conteo = d.tabla_conteo["LTYPE"]
         nuevo = declarado - len(borrar)
         lineas[li_conteo] = re.sub(r"-?\d+", str(nuevo), lineas[li_conteo], count=1)
         log.append(f"tabla LTYPE: conteo {declarado} -> {nuevo}")
+        # de mayor a menor: borrar un rango no puede correr los indices de los anteriores.
+        # El conteo se toca ANTES y esta antes que las entradas, asi que no se desplaza.
         for ini, fin in sorted(borrar, reverse=True):
             del lineas[ini:fin]
 
@@ -387,23 +391,46 @@ def normalizar(entrada: str, salida: str) -> list[str]:
     for nombre, vec in (("$EXTMIN", emin), ("$EXTMAX", emax)):
         if nombre not in d.header:
             continue
+        # OJO: **se escriben solo los ejes que el archivo YA tiene.** Hay DXF 2D que traen
+        # $EXTMIN con 10/20 y sin el 30; escribir un tercer eje a ciegas pisaba la linea de
+        # la variable de HEADER siguiente y dejaba el archivo corrupto EN SILENCIO (la
+        # comparacion de ENTITIES/BLOCKS no lo hubiera visto: el dano es en el HEADER).
+        ejes = [c for c, _ in d.header[nombre] if c in (10, 20, 30)]
         # la posicion se busca sobre la lista YA recortada, no sobre la original
         base = _buscar_header(lineas, nombre)
-        for j, comp in enumerate(vec[:3]):
-            lineas[base + 1 + 2 * j] = f"{comp:.16g}"
-        log.append(f"{nombre} = {vec[0]:.6f}, {vec[1]:.6f}, {vec[2]:.6f}")
+        for j, _codigo in enumerate(ejes):
+            lineas[base + 1 + 2 * j] = f"{vec[j]:.16g}"
+        log.append(
+            f"{nombre} = " + ", ".join(f"{vec[j]:.6f}" for j in range(len(ejes)))
+            + (f"   (el archivo trae {len(ejes)} ejes)" if len(ejes) != 3 else "")
+        )
 
     with open(salida, "wb") as fh:
         fh.write((d.nl.join(lineas) + d.nl).encode("cp1252", errors="replace"))
 
-    # la geometria NO se toca: lo verifico comparando el texto crudo
+    # Nada fuera de lo declarado cambia. La geometria (ENTITIES/BLOCKS) se compara byte por
+    # byte, y del HEADER se verifica que siga teniendo las MISMAS variables en el mismo
+    # orden — asi un desfasaje al escribir los extents no puede pasar desapercibido.
     nuevo_doc = Dxf(salida)
     for sec in ("ENTITIES", "BLOCKS"):
         if d.bytes_seccion(sec) != nuevo_doc.bytes_seccion(sec):
             raise DxfInvalido(
                 f"la seccion {sec} cambio al normalizar -- abortado, la geometria no se toca"
             )
-    log.append("secciones ENTITIES y BLOCKS: identicas byte por byte")
+    if list(d.header) != list(nuevo_doc.header):
+        raise DxfInvalido(
+            "cambio la lista de variables del HEADER al normalizar -- abortado. "
+            f"antes {len(d.header)}, despues {len(nuevo_doc.header)}"
+        )
+    for var in d.header:
+        antes = [c for c, _ in d.header[var]]
+        despues = [c for c, _ in nuevo_doc.header[var]]
+        if antes != despues:
+            raise DxfInvalido(
+                f"la variable {var} del HEADER quedo con otros codigos de grupo "
+                f"({antes} -> {despues}) -- abortado"
+            )
+    log.append("secciones ENTITIES y BLOCKS identicas byte por byte; HEADER con las mismas variables")
     return log
 
 
