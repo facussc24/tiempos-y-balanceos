@@ -13,6 +13,10 @@ La historia completa de cada incidente vive en los snapshots.
 
 ## Verificacion y evidencia
 
+- **10/08 — Fak encontro en el visor dos defectos que 17 controles verdes no vieron.** (a) El ensamble ENTREGADO salio con el panel a medias: se armo con el cargador que descarta caras libres, asi que faltaban las paredes internas de la ranura y el dedo se veia a 1,6 mm de una pared que esta a 0,48. Tercera aparicion del mismo bug y la primera que llego a sus manos. (b) El macho estaba descentrado 0,086 mm respecto del centro REAL de la ranura, y eso se paga doble: un flanco apretaba 0,17 mm menos. **Todo archivo que se entrega para mirar se arma con el mismo cargador con el que se mide**, y el centro de una cavidad se MIDE, no se hereda de un json de otra sesion.
+- **10/08 — Un corte de verificacion cayo justo sobre un canal y dijo "no aprieta".** Los canales de despegue estan cada 2,5 mm y el medio EXACTO del dedo cae sobre uno: el hueco salio 0,3 mm mas grande y el dibujo contradecia al calculo. Misma familia que el aliaseo de barridos: **el punto de muestreo nunca en el centro de una feature periodica**.
+- **10/08 — "Abarrilado" era desmoldeo.** La ranura varia 0,44 mm, pero NO a lo largo (entre dedos hay 0,05): varia con la PROFUNDIDAD, 3,1 grados de desmoldeo. Un dedo recto toca en el punto mas profundo de su banda. Antes de compensar una variacion hay que saber **en que eje** ocurre, o se corrige lo que no era.
+- **10/08 — Un utillaje de virolado interfiere contra el LAMINADO, no contra el sustrato.** Fak pedia que el dedo tocara el plastico "para garantizar presion". Un arbitraje independiente lo cuantifico: tocando, el dedo flexiona los 0,92 de la tela enteros = 1,81x el admisible a fatiga, **vida 4 dias**, 331 kPa, la tela a espesor cero sobre la linea de pegado, y —lo peor— dos solidos rigidos en contacto vuelven la presion INDETERMINADA. El hueco ES el espesor de trabajo. Pero el reclamo tenia razon en el fondo: **toda la presion colgaba de un espesor de tela que nadie midio** (con -30 % la presion cae a un cuarto). Se cubrio con variantes de macho por espesor de tela, misma lamina y misma vida.
 - **10/08 — El cargador de STEP descartaba en silencio las caras libres, y ahi vivia la cota.** El default de gmsh (`highestDimOnly=True`) tiraba las paredes internas de la ranura: el rayo media la envolvente exterior (12,96) creyendo medir la luz (11,04), y el utillaje apretaba 4x. **Tres mediciones "independientes" mias dieron el mismo error porque las tres compartian el cargador** — repetir una medicion no la valida si comparte la fuente del error; lo cazo una revision a ciegas a la que NO le pase mi numero. Arreglado en `cadlib.geom` (descarte explicito por stderr, `caras_libres=True`) y en `check_collision`. Ojo: una cara libre tambien puede ser superficie de construccion (un offset constante a tres decimales no es una pieza inyectada).
 - **10/08**: Un criterio adimensional esconde la decision. "SF fatiga >= 1,5" traducido son **9 anos** pedidos a un consumible impreso de 29 g con galga de desgaste. La barra pasa a **VIDA en anos**. Cambiar la FORMA del criterio y escribir por que no es bajarla; lo segundo se nota porque no se puede explicar.
 - **10/08**: Dimensionar contra el promedio reparte mal el dano — con la mediana de la ranura, **un solo dedo se come toda la fatiga** (vida 2,0e5 → 7,4e4). Se dimensiona contra el punto MAS EXIGENTE: cambia variacion de VIDA (invisible) por variacion de PRESION (que la tela ya introduce).
@@ -26,11 +30,6 @@ La historia completa de cada incidente vive en los snapshots.
 - **08/06**: Antes de declarar caida una infra, dos evidencias independientes. Unidad local delante de una ruta UNC en el error = mi escape (bash+PowerShell: comillas simples).
 - **08/05**: El cache local del ERP es una foto: mirar el mtime del crudo antes de afirmar estado; el diff entre snapshots suele ser el entregable. Mismo numero en dos unidades no es invariante: diffear tambien las UNIDADES.
 - **08/05**: Antes de explicar una falla, cruzar que tienen en comun los que fallaron y los que NO. Antes de sacar un paso "ineficiente", entender por que estaba.
-- **08/04**: Un verde sin bloqueos no prueba un guardian: "que tendria que haber dado rojo, y lo dio alguna vez?". Un resultado uniforme es experimento roto, no hallazgo.
-- **08/03**: La query por campo vacio sobre JSONB con alias historicos MIENTE: traer el objeto entero de UNA fila y mirar sus claves. Y GENERAR EL ARCHIVO Y MIRARLO encuentra lo que los tests en verde no (una fecha de documento nunca pasa por zona horaria).
-- **08/03**: Vitest: `Failed Suites` + `no tests` = el modulo NI SE CARGO, no es un test rojo. Cache de Vite borrado antes de dar por buena una suite nueva. Memoria `vitest_forks_roto_notebook`.
-- **07/30**: Medir el ARTEFACTO PUBLICADO (bundle servido, xlsx final, dato live), no el codigo ni el build local.
-- **07/28**: Probar UNA causa no cierra el caso si sobra sintoma (defecto IDENTICO en todas las piezas = archivo/setup; DISTINTO = maquina). Una premisa que inferi yo se enuncia y se confirma ANTES de construir encima.
 
 ## Automatizacion de interfaces / ERP
 
@@ -38,9 +37,6 @@ La historia completa de cada incidente vive en los snapshots.
 - **08/07**: Preguntarle al que usa la herramienta todos los dias es el camino corto; tantear es lo caro. "Es un limite del programa" casi siempre es un limite de lo que probe: no rendirse.
 - **08/07**: Proceso que escribe un archivo compartido: gate "alguien lo tiene tomado?" + verificar mtime despues (Excel se lo queda y el export siguiente falla EN SILENCIO). Nunca aceptar un dialogo sin leerlo.
 - **08/06**: Un parser que alimenta una automatizacion se valida contra un conteo crudo independiente, o contra OTRO parser escrito aparte. Todo filtro que descarta lleva contador de descartes.
-- **08/04**: Ante una caja negra, grabar al humano que la usa. Guarda obligatoria: confirmar el foco antes de escribir y abortar si no coincide. Parchear el sintoma no resuelve: MEDIR.
-- **08/04**: Muestreo visual no es verificacion: revision programatica del 100% del entregable + mutation testing. Leer el README del formato antes del parser. El alcance lo fija el pedido.
-- **08/04**: Una baja deja huellas: la BOM sobrevive al producto anulado. Antes de una lista para EJECUTAR: el objeto todavia existe? (cruzar contra el maestro).
 
 ## CAD y 3D
 
@@ -50,52 +46,34 @@ La historia completa de cada incidente vive en los snapshots.
 - **08/06**: Cuando una metrica se calcula sobre una region que elegi yo, verificar primero que la region sea la correcta. Pieza suelta se verifica con test de INTERIOR, no con nodos de malla.
 - **08/06**: Toda transformacion "para que quede en X" termina con un assert de que quedo en X. Cuando cambia el mecanismo cambia que cota manda: rehacer el anclaje.
 - **08/05**: Desvio parejo en todo el barrido = error de ANCLAJE, no obstaculo. Aislar la medicion a UNA cara. Features simetricos dan varias poses con igual RMS: memoria `registrar_fixture_por_features`.
-- **07/31**: El video/audio que manda Fak ES el pliego: extraerlo (PyAV + faster-whisper) antes de preguntar nada.
-- **07/31**: Si algo "no aparece" en el 3D, sospechar del IMPORTADOR antes que de la busqueda. Antes de mallar: la metadata o un documento ya lo responde? Mostrar el primer resultado util apenas existe.
-- **07/31**: El entregable impreso va apoyado plano en z=0 y centrado, nunca en coordenadas de vehiculo.
 
 ## Patrones de corte
 
 - **10/08**: Le crei al NOMBRE de la maquina (`INKJET PLOTTER`) en vez de a lo que ya tenia escrito sobre como se comporta: deduje "imprime, no corta" y arme dos hojas con cruces X. Es de CORTE con cuchilla, y en una X la cuchilla entra de canto sin filo (marca buena: circulo Ø1). **Mi propio registro ya lo decia.** Una deduccion sobre QUE es una maquina no le gana a lo escrito sobre COMO se comporta: antes de construir sobre una inferencia propia, buscar si el registro la contradice. Detalle: memoria `plotter_inkjet_software_htv2a`.
 - **10/08**: Un entregable que Fak ya toco es la REFERENCIA, no un borrador mio. Pidio cambiar las marcas "manteniendo como dejo el archivo"; yo asumi que seguia como lo genere y casi le restauro lo que el habia sacado. Lo cazo que **el bbox del archivo no coincidia con el que yo habia reportado (22 mm)**. Si un numero mio no reproduce el archivo actual, el archivo tiene razon.
 - **10/08**: Verificar con la MISMA libreria que escribio el archivo no es verificar (di por buenos DXF de ezdxf releyendolos con ezdxf; AutoCAD los rechazaba). Y un "no abre" puede tener **DOS causas a la vez**: arreglado el contenido, seguia fallando por la ruta de 304 caracteres que el doble click trunca en 259. **Si arreglo una causa y el sintoma sigue, medir de cero y reproducir el camino EXACTO del usuario.** Todo codificado: regla `dxf-entregable.md` + skill `autocad-verificar`.
-- **07/30**: Un chequeo automatico FRENA, no DECIDE: lo que Fak hizo fisicamente es dato duro, mi heuristica es hipotesis. Se reporta la consecuencia medida y decide el.
-- **07/30**: Un coeficiente fisico solo sale de un antes/despues de la MISMA pieza. Si mi calculo contradice la documentacion Y al usuario, el que esta mal soy yo. Dos piezas espejo que difieren: primero verificar que se este LEYENDO lo mismo de las dos.
-- **07/30**: Lo inferido se escribe como inferencia; solo lo que Fak confirma se escribe como hecho ("Fak dixit" + fecha). La geometria DESCARTA candidatos, no confirma cual es.
 
 ## Entregables y comunicacion con Fak
 
 - **08/07**: El pedido incluye el DONDE: para usar ya = suelto en el Escritorio, sin subcarpetas, versiones ni informes. La verificacion la hago yo, no se la leo. Cerrar incluye archivar el rastro (`_escritorio.mjs --archivar`).
 - **08/06**: Antes de preguntarle a un tercero, nombrar que fuente concreta podria contestarlo; si no puedo, la pregunta no sale. El primer codigo que encaja por descripcion NO es la respuesta: contar usos. No re-pedir datos ya dados.
 - **08/06**: Antes de declarar un archivo inaccesible, buscarlo en el buzon (`_mails.py --buscar`). Sustituir la pieza pedida por otra "parecida" es ruido, no avance.
-- **08/04**: Un dato de un tercero en un entregable que firma Fak pasa a ser compromiso SUYO. En una difusion va lo que cambio, no por que ni cuanto.
-- **08/04**: Una tabla de carga se mide por si se ejecuta sin levantar la vista. Frenos en dos lineas ABAJO. Una preferencia de formato dicha una vez es una regla: a memoria en el momento.
 - **08/02**: Cuando Fak da por sentado que algo esta respaldado, verificar CUAL cuenta/carpeta/numero. Si pregunta algo que mi plan da por resuelto, el plan tiene un agujero.
-- **07/31**: "Hacelo y reporta" aplica al REPO; sus carpetas van con sintesis corta y OK previo. Un destino se abre y se mira antes de diseñar sobre el; en sus carpetas va el entregable exacto y nada mas (nada de `.md` mios).
-- **07/28**: No inventar formatos: ABRIR el formulario oficial del SGC. Si Fak tiene el instrumento en la mano, primero la secuencia fisica de medicion.
-- **07/28**: En un mail va primero el hecho que le sirve al que lo firma. El entregable no lleva mi razonamiento ni mis pendientes. Cambio geometrico = graficar antes/despues superpuesto.
 
 ## Agentes y maquinaria pesada
 
 - **08/09**: Investigado a fondo (docs + mediciones): los agentes-rol por dominio NO ahorran tokens — multi-agente ≈ 15x. Los roles son las SKILLS (cargan al usarse); subagentes solo para batch/paralelo con salida pesada, techo 5.
 - **08/06**: Lance 40 agentes para verificar algo ya respondido con 3 greps: verificar algo resuelto es RELEER LA FUENTE. Cap por fase no es cap total: contar fase1 + hallazgos x verificadores. Ninguna instruccion generica le gana a un limite de Fak. Enforcement: `techo-agentes.md`. Y sobre un requerimiento sin confirmar, los agentes multiplican el error en vez de encontrarlo.
-- **08/03**: Al auditar un parser binario, pedir que FABRIQUE los casos no probados. Devolver basura sin error es peor que fallar. Un fixture con nombres reales tambien es codigo publicado.
 
 ## Scripts y archivos (operaciones peligrosas)
 
 - **08/08**: Con sesiones concurrentes, commitear por pathspec (`git commit <archivos>`): mi commit se llevo un archivo stageado por otra sesion.
 - **08/07**: Un script nuevo que borraba movio 942 archivos en vez de 17: dry-run con plan impreso + MIRAR EL CONTEO + Papelera (nunca borrado permanente) + reusar la herramienta segura existente. La jerarquia de carpetas es DATO.
-- **08/04**: Un freno de emergencia que borra es un segundo incendio: fallo permanente se descarta, pasajero se reintenta con contador. Hooks y fork bomb: memoria `hooks_costo_y_fork_bomb`.
-- **08/03**: No reescribir fuentes con scripts node: usar Edit. `node -e`/heredoc con rutas Windows colapsan backslashes: el payload va en archivo.
-- **08/03**: El mtime miente tras copiar/mudar: la fecha firme vive ADENTRO del archivo; si se usa la del filesystem, decirlo.
-- **08/03**: Si un gate bloquea, se rodea la NECESIDAD, no el control. Falsear la evidencia de un gate, nunca.
 - **08/02**: Migrar de maquina: el ZIP de Windows trae nombres en CP850 (fallan los nombres, no faltan datos); sacar junctions antes de borrar un repo; `git log --not --remotes` + `git stash list` antes de rearmar; script de migracion ajeno: auditar linea por linea.
-- **07/28**: Archivos Office: trabajar en scratchpad y copiar al destino al FINAL; verificar reabriendo el archivo de DESTINO.
 
 ## Repo publico
 
 - **08/06**: Este archivo y todo el repo son PUBLICOS: las lecciones van en metodo puro (que fallo, por que, como se evita). Cliente, proyecto, rutas y medidas reales van a `.sgc-cache/` (gitignoreado). La pregunta "esto lo puede leer cualquiera?" va al ESCRIBIR, no al pushear. Vale tambien para mensajes de commit.
-- **07/29**: Hubo 828 documentos de la empresa versionados; historial limpiado. Un force-push NO borra los objetos del servidor de GitHub; Fak decidio convivir con eso: cerrado, no reabrir.
 
 ## Dominio APQP / Supabase
 
