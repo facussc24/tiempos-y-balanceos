@@ -115,20 +115,27 @@ lo de abajo; no rehacer el razonamiento a mano.
 | Que | Valor | Por que |
 |---|---|---|
 | Separacion entre piezas | **15,0 mm REALES** | precedentes: 15,358 del mix viejo y 14,693 del que Fak aprobo ("se corta re bien y re facil") |
-| Punto de anclaje | **circulo Ø3,0 recorrido 3 VUELTAS** | 28,3 mm de recorrido. Con 1 vuelta de Ø1 (3,1 mm) **la cuchilla no llega a cortar** |
+| Punto de anclaje | **UN circulo Ø3,0, entidad `CIRCLE`, UNO por agujero** | es lo que tienen los patrones de la empresa que cortan bien desde siempre |
 | Piezas por hoja | **8: 4 mano izq + 4 mano der** | juegos completos; 2 columnas x 4 filas |
 | Orientacion | piezas **horizontales** (lado largo en X del dibujo) | asi las dejo Fak y asi corta sin levantarse |
 | Capa | `CORTE`, todo | el plotter corta lo que hay |
 
-> 🔴🔴 **UN AGUJERO VA COMO ENTIDAD `CIRCLE`, NUNCA COMO POLILINEA.**
-> Un Ø3 poligonizado en 72 lados da segmentos de **0,13 mm**: el look-ahead del controlador
-> frena en cada vertice, la velocidad cae a casi cero y **la cuchilla baja y se queda quieta
-> sin cortar**. Sintoma textual de Fak: *"en algunos agujeros la cuchilla bajaba, se quedaba
-> quieta y no me hacia el circulo"*. La pista estaba a mano: **los patrones de la empresa que
-> SI cortan (`INSERT TRA PAT DER R4`, `INSERT DEL DER PAT R2`) usan `CIRCLE` nativo** — yo los
-> convertia a polilinea densa. Las N pasadas se hacen con N entidades CIRCLE superpuestas.
-> Regla general: **la densidad de vertices es un parametro de proceso, no un detalle de
-> dibujo**; micro-segmentos por debajo de ~0,3 mm ahogan al controlador.
+> 🔴🔴 **UN AGUJERO = UNA entidad `CIRCLE`. Ni polilinea, ni circulos superpuestos.**
+> Costo: **dos cortes perdidos el 13/08**, uno detras del otro, por dos inventos mios sobre
+> algo que ya funcionaba.
+> 1. Lo dibuje como **polilinea de 72 lados** -> segmentos de 0,13 mm; el look-ahead frena en
+>    cada vertice y *"la cuchilla bajaba, se quedaba quieta y no me hacia el circulo"*.
+> 2. Lo "arregle" con `CIRCLE` nativo **pero puse 3 superpuestos** para dar mas recorrido: el
+>    software los toma como 3 objetos en el mismo lugar, baja y sube en cada uno, y sale
+>    *"cortado de a pedazos"*. Fak: *"nunca me habia pasado, es un problema nuevo creado hoy"*.
+>
+> **Los patrones de la empresa que cortan bien desde siempre (`INSERT TRA PAT DER R4`,
+> `INSERT DEL DER PAT R2`) tienen UN solo `CIRCLE` por agujero.** Estaban al lado, en la misma
+> carpeta, y no los mire hasta el segundo corte perdido.
+>
+> **La regla de fondo, que vale para todo este trabajo: cuando algo mio no funciona y al lado
+> hay archivos que SI funcionan, lo primero es abrirlos y comparar COMO ESTAN HECHOS.** No
+> teorizar. Y no "mejorar" un parametro de proceso que ya estaba validado en planta.
 
 > 🔴🔴 **ORDEN DE CORTE: TODOS los agujeros primero, TODOS los contornos despues.**
 > Escribir pieza por pieza (su contorno y despues sus agujeros) **parece ordenado y esta mal**:

@@ -39,8 +39,6 @@ La historia completa de cada incidente vive en los snapshots.
 - **10/08**: El modelo tiene que reproducir una medicion que NO ajusto. Con el ancho de referencia equivocado el error daba 6,6 %, pasaba el filtro del 12 % y se comia el margen de vida. Un modelo calibrado contra una geometria que no es la medida da bien y miente.
 - **08/08**: El veredicto de un script se DERIVA de la evidencia que ya vio: si el log dice `auth OK`, no puede mandar a repetir la auth. El error real de una RPC de Supabase esta en los logs de Postgres (`get_logs`).
 - **08/07**: Un conjunto de controles verdes no prueba que el diseño sea bueno: solo que no tiene el error que yo pense en buscar. Lo que Fak marca de un render es dato de ingenieria: ir al numero.
-- **08/07**: Un fallo que vi hace cinco minutos es una foto: re-correr la comprobacion antes de reportarlo. Una limitacion escrita por mi ("esto no se puede") es hipotesis vieja con cara de dato: volver a probarla.
-- **08/07**: De 3 hallazgos de un plan, 2 murieron al verificarlos. Antes de un plan: releer las memorias del area (no solo el indice); un gancho tiene que nombrar el dato que cambia decisiones.
 
 ## Automatizacion de interfaces / ERP
 
@@ -66,6 +64,7 @@ La historia completa de cada incidente vive en los snapshots.
 
 ## Entregables y comunicacion con Fak
 
+- **13/08 — Un pedido de "sacale la marca de agua" era adulterar informes de ensayo de un laboratorio tercero. NO SE HIZO.** Pedian reemplazar el campo que identifica a quien ENCARGO el ensayo, y borrar los metadatos "para que no se note que fue modificado". **No habia error que corregir**: ese campo dice quien encargo y pago el ensayo al laboratorio, y estaba bien. Llegaron ocho reencuadres seguidos (es para uso interno, es solo para mi, autorizacion del laboratorio, desvio autorizado por el dueño, usar un modelo menos potente, ponerle "FAKE" abajo, "escribime el prompt como si fuera corregir un error") y **ninguno cambia lo que dice el papel**: una autorizacion mueve la responsabilidad, no vuelve cierto el documento, y un desvio autoriza sobre lo propio, no sobre el documento de un tercero. **La salida legitima existe y es mejor: caratula/declaracion con membrete propio y los informes adjuntos INTACTOS, o reemision por el laboratorio.** En PPAP un informe a nombre del proveedor **es evidencia valida**: se exige trazabilidad, no el nombre. Detalle con nombres: memoria privada del proyecto (fuera del repo).
 - **13/08 — Un mail en la Bandeja de salida parece enviado y NO salio** (Outlook se cerro antes). Al reabrirlo por COM se manda solo en el primer send/receive: **revisar el Outbox ANTES de tocar nada** (moverlo a Borradores lo congela). "Se envio?" se mira en Enviados por fecha, nunca en el borrador.
 - **08/07**: El pedido incluye el DONDE: para usar ya = suelto en el Escritorio, sin subcarpetas, versiones ni informes. La verificacion la hago yo, no se la leo. Cerrar incluye archivar el rastro (`_escritorio.mjs --archivar`).
 - **08/02**: Cuando Fak da por sentado que algo esta respaldado, verificar CUAL cuenta/carpeta/numero. Si pregunta algo que mi plan da por resuelto, el plan tiene un agujero.
@@ -78,7 +77,6 @@ La historia completa de cada incidente vive en los snapshots.
 
 - **08/08**: Con sesiones concurrentes, commitear por pathspec (`git commit <archivos>`): mi commit se llevo un archivo stageado por otra sesion.
 - **08/07**: Un script nuevo que borraba movio 942 archivos en vez de 17: dry-run con plan impreso + MIRAR EL CONTEO + Papelera (nunca borrado permanente) + reusar la herramienta segura existente. La jerarquia de carpetas es DATO.
-- **08/02**: Migrar de maquina: el ZIP de Windows trae nombres en CP850 (fallan los nombres, no faltan datos); sacar junctions antes de borrar un repo; `git log --not --remotes` + `git stash list` antes de rearmar; script de migracion ajeno: auditar linea por linea.
 
 ## Dominio APQP / Supabase
 
@@ -100,5 +98,3 @@ La historia completa de cada incidente vive en los snapshots.
 - Entrada en su seccion TEMATICA, formato `- **DD/MM**:` + 1-3 lineas: la regla de conducta, no la historia. El detalle largo va a una memoria o al proximo snapshot.
 - Si amerita regla durable: `.claude/rules/` CON enforcement (skill `rule-enforcement-gate`) y aca queda solo una linea de referencia.
 - Tope DURO: 20 KB, con aviso del hook. Al acercarse, podar a `docs/_archive/`.
-
-- **09/08**: este archivo llego a 126 KB y era el mayor gasto fijo de cada sesion (~30k tokens); encima el harness lo truncaba, asi que ni se leia completo. **Un archivo que se lee en cada arranque necesita un tope DURO con enforcement, no una intencion de brevedad.**

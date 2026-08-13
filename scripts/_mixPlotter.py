@@ -21,6 +21,8 @@ Uso:
     --sep MM         separacion real minima         (default 15.0)
     --diam MM        diametro del circulo de anclaje(default 3.0)
     --vueltas N      vueltas del circulo            (default 3)
+    --sep-col MM     separacion entre COLUMNAS (default: la de --sep)
+    --partir         emite ademas _1_AGUJEROS y _2_CONTORNO
     --dry-run        solo mide y reporta, no escribe
 """
 import argparse
@@ -145,7 +147,7 @@ def trasladar(tramos, circulos, dx, dy):
 
 # ------------------------------------------------------------------ armado
 
-def armar(manos, filas, sep_real, diam, vueltas):
+def armar(manos, filas, sep_real, diam, vueltas, sep_col=None):
     """Coloca 2 columnas x `filas`. Busca el offset minimo que garantiza `sep_real`
     medida contorno contra contorno — no entre bboxes."""
     (T0, C0), (T1, C1) = manos
@@ -163,13 +165,16 @@ def armar(manos, filas, sep_real, diam, vueltas):
         dy += 0.25
     paso_y = alto + dy
 
-    # separacion horizontal: mano izquierda contra derecha, con el peor solape vertical
+    # separacion horizontal: mano izquierda contra derecha, con el peor solape vertical.
+    # Va aparte de la vertical: Fak pide MAS aire entre columnas que entre filas, para
+    # poder levantar una columna sin tocar la otra.
+    objetivo_col = sep_col if sep_col is not None else sep_real
     ancho = max(max0[0], max1[0])
-    dx = sep_real
+    dx = objetivo_col
     while True:
         peor = min(sep(D0 + np.array([0.0, i * paso_y]), D1 + np.array([ancho + dx, j * paso_y]))
                    for i in range(filas) for j in range(filas))
-        if peor >= sep_real - 1e-6:
+        if peor >= objetivo_col - 1e-6:
             break
         dx += 0.25
     paso_x = ancho + dx
@@ -263,6 +268,8 @@ def main():
     ap.add_argument('--sep', type=float, default=15.0)
     ap.add_argument('--diam', type=float, default=3.0)
     ap.add_argument('--vueltas', type=int, default=3)
+    ap.add_argument('--sep-col', type=float, default=None, dest='sep_col',
+                    help='separacion real minima entre COLUMNAS (default: la de --sep)')
     ap.add_argument('--partir', action='store_true',
                     help='ademas del archivo unico, emite _1_AGUJEROS y _2_CONTORNO')
     ap.add_argument('--dry-run', action='store_true')
@@ -292,7 +299,7 @@ def main():
     print(f'   espejo izq/der: desviacion max {esp:.4f} mm (densificado {PASO_ESP}) '
           f'-> {"SIMETRICOS OPUESTOS" if esp < 2 * PASO_ESP else "*** NO son espejo ***"}')
 
-    piezas, paso_x, paso_y = armar(manos, a.filas, a.sep, a.diam, a.vueltas)
+    piezas, paso_x, paso_y = armar(manos, a.filas, a.sep, a.diam, a.vueltas, a.sep_col)
 
     # --- verificacion ---
     dens = [densificar(p['tramos']) for p in piezas]
@@ -311,12 +318,13 @@ def main():
     print(f'\n   piezas {len(piezas)} ({izq} izq + {len(piezas)-izq} der) | '
           f'circulos O{a.diam} x{a.vueltas} vueltas = {ncirc}  ({rec:.2f} mm de recorrido c/u)')
     print(f'   paso entre columnas {paso_x:.3f} mm | entre filas {paso_y:.3f} mm')
+    minimo = min(a.sep, a.sep_col) if a.sep_col else a.sep
     print(f'   SEPARACION REAL minima {peor:.3f} mm entre pieza {par[0]+1} y {par[1]+1} '
-          f'-> {"OK" if peor >= a.sep - 1e-6 else "*** POR DEBAJO DEL MINIMO ***"}')
+          f'-> {"OK" if peor >= minimo - 1e-6 else "*** POR DEBAJO DEL MINIMO ***"}')
     print(f'   bbox hoja {todo[:,0].max()-todo[:,0].min():.3f} x '
           f'{todo[:,1].max()-todo[:,1].min():.3f} mm')
 
-    if peor < a.sep - 1e-6:
+    if peor < minimo - 1e-6:
         sys.exit('*** ABORTADO: la separacion real quedo por debajo del minimo ***')
 
     if a.dry_run:
