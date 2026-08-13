@@ -54,6 +54,17 @@ else
   IFS=$'\x1f' read -r TOOL CMD FILE BODY <<< "$PARSED"
 fi
 
+# Segunda red: el contenido puede venir RECORTADO (el despachador corta parsed4, y
+# este guardian corta 6000 cuando parsea solo). El bucle que borra suele estar al
+# FINAL del archivo, que es justo lo que se pierde. Verificado 2026-08-13: un .py de
+# 4.842 caracteres con shutil.move en un for daba exit 2 suelto y exit 0 por el
+# despachador. Si el cuerpo llego cerca del tope, sumamos el JSON crudo al haystack:
+# el costo es un grep mas largo; el costo de no hacerlo es no ver el borrado.
+TRUNC_HINT=3900
+if [ "${#BODY}" -ge "$TRUNC_HINT" ] || [ "${#CMD}" -ge "$TRUNC_HINT" ]; then
+  BODY="$BODY $INPUT"
+fi
+
 HAYSTACK="$CMD $BODY"
 MOTIVO=""
 

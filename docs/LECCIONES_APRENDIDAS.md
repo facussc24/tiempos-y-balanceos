@@ -20,6 +20,8 @@ La historia completa de cada incidente vive en los snapshots.
 - **12/08 — Cuando un script aborta, su salida ANTERIOR queda intacta y el paso siguiente la usa.** Paso tres veces en una cadena en segundo plano: el contrato daba "1 solo rojo" sobre la pieza equivocada. `cadlib.pipeline` renombra la salida a `.ABORTADO` con el motivo adentro, distingue "el proceso murio" de "aborto", sella las entradas con sha1 (el mtime solo miente) y **propaga la contaminacion**: una salida impecable cuya entrada esta podrida sale marcada. Era el agujero exacto — el archivo mas nuevo de la carpeta estaba construido sobre una corrida abortada.
 - **12/08 — Una constante sin procedencia es una decision de diseno que nadie tomo.** Un tope de 0,90 mm en dos archivos, un piso de 40 kPa, un "SF >= 1,5" que traducido pedia 9 anos de vida a un consumible de 28 g. Y lo peor de la auditoria: **dos limites de fatiga distintos para el mismo PLA en el mismo skill (6,1 y 10,0 MPa, 1,64x)**, con `viga_voladizo.py` contradiciendo su propio docstring. Queda `cadlib.criterios`: la fuente es keyword-only sin default, un criterio sin procedencia no puede RECHAZAR (solo avisa), y uno DURO sin traduccion a unidad humana revienta.
 - **13/08 — Evidencia documental para un mail: elegir la cita INEQUIVOCA y buscar el periodo que me contradice.** Cite "avancemos de esta forma (…) en las unidades habituales" — para compras las habituales son METROS: probaba lo contrario. El explicito ("seguimos con los consumos como hasta ahora, **En M2**", con el destinatario en copia) lo encontro un agente independiente. Y casi afirmo "siempre fue en m2" cuando en 08/2024 lo cargo Fak en METROS con 10 % de margen. **Leer la cita como la leeria el que no la quiere aceptar; buscar el periodo que la contradice antes de que lo encuentre el otro.**
+- **13/08 — Use una medicion de PRUEBA como si fuera el dato, y contra el documento del cliente.** Le marque a Fak que el Plan de Control (530 ± 30 g) contradecia "su validacion" de 444 g. El me corrigio: *"lo que pese yo en el powerpoint eran pruebas, la info de Marce probablemente salga del plano"*. Al ir al plano aparecio que (a) el dato del cliente es **404 g Soll / 432 g Ist**, (b) su pesaje era de MARZO, **anterior al cambio de ingenieria del 28/05** que redisenio la espuma — no eran comparables, y (c) el 530 lo estimo Marcelo *"a ojimetro del IMDS"*. **Antes de enfrentar dos numeros: preguntar de que es cada uno, de cuando, y contra que revision de diseño.** Una medicion propia de desarrollo no le gana a un documento del cliente, y dos numeros de distinta fecha no se comparan sin mirar si hubo un cambio en el medio.
+- **13/08 — El "plano" de la carpeta 6 del legajo puede no ser un plano.** El `RZ00440.pdf` del Armrest Rear es una **notificacion de cambio de ingenieria de VW** (CSC → B-Release, 28/05/2026) con los pesos y las areas nuevas del cover adentro. Nadie lo habia mirado: el AMFE (Rev B, 09/2025) y el flujograma (Rev A, 04/05/2026) son los dos anteriores al cambio. **Abrir los documentos de la carpeta de planos antes de asumir que son planos** — ahi puede estar el cambio que invalida todo lo de aguas abajo.
 - **13/08 — "Pieza parecida" no es fuente.** Para la HO del APB Trasero Central propuse sacar fotos y pasos del APB Central del Amarok; Fak: *"ojo no es la mimsa pieza… es similar"*. Tenia razon: el del Amarok lleva bisagra y tapa de consola, y su HO de inyeccion PU describe astas metalicas y guias de molde que el APB Patagonia no tiene. **Un proceso "equivalente" se verifica pieza contra pieza antes de copiar un paso o una foto**; lo que se puede reusar es la MAQUINA (misma mesa BM 149, mismo vinilo) y ahi la foto no muestra la pieza. Lo que no tiene fuente va TBD.
 - **13/08 — Conte imagenes en vez de mirarlas.** Dije "las 8 fotos de la pieza que saco Nicolas" leyendo `len(ws._images)`: eran 4 fotos, el logo de Barack y 3 iconos de EPP. En la misma entrega escribi "20 pestañas" sobre una tabla que listaba 19. **Un conteo no describe el contenido, y un total que se escribe a mano se recuenta contra la lista.** Los dos los agarre releyendo el entregable antes de pasarlo, que es exactamente para lo que sirve ese paso.
 - **13/08 — La numeracion de operaciones la manda el FLUJOGRAMA**, no el Plan de Control ni la HO (orden APQP: flujograma → AMFE → PdC). El PdC preliminar del APB Trasero Central traia otra numeracion y una COLISION —80 era "reproceso" en el flujograma y "test de lay out" en el PdC— y los dos iban al BeOn del cliente. Se cazo cotejando las tres fuentes ANTES de escribir una celda. Codificado: regla `no-pfd-no-ho.md` + hook `ho-numeracion-guard.sh`.
@@ -50,6 +52,8 @@ La historia completa de cada incidente vive en los snapshots.
 
 - **07/08**: `is_valid=True` NO prueba que exista geometria (un compound vacio es "valido"): todo generador cierra con volumen > 0, `len(solids()) == 1` y el ARCHIVO escrito existe y pesa. Dos superficies **tangentes** no son una union, son una loteria: 0,10 mm de solape real. Y que el sintoma desaparezca no prueba que encontre la causa — el "arreglo" del orden de fusion devolvia un tornillo HUECO que paso las 4 comprobaciones y lo vio Fak de un vistazo. Detalle en el snapshot 2026-08-09.
 - **07/08**: Segui "mejorando" 3 veces despues de que Fak dijo que funcionaba y termino en *"ya me canse de vos"*; la version buena estaba en la carpeta 3 iteraciones antes. **Cuando Fak confirma que algo anda, esa configuracion se CONGELA con sus numeros.** Un comentario al pasar sobre una prueba accidental no es especificacion. En procesos con tolerancias reales la curva no es monotona (mas holgura no es "mas facil"), y un razonamiento correcto no es evidencia: los 3 cambios estaban bien argumentados y los 3 empeoraron.
+
+- **10/08**: Todos mis controles median material de MAS; ninguno media que la pieza ESTE. Un tornillo al que le falta un tercio de la rosca pasa `is_valid`, pasa el control de volumen (-1,6 %), pasa el gate del alma y da VERDE con exit 0. **Por cada control de "no sobra" va uno de "no falta"** (material en la corona entre raiz y cresta) + `len(solids()) == 1` — con dos cuerpos sueltos el volumen se SUMA y ningun control lo ve. Ademas: `export_stl` devuelve False sin lanzar si el destino esta bloqueado y queda el archivo de la corrida anterior; el reporte salia de `vars(args)` y no del solido; y un `filterwarnings("ignore")` global apagaba justo los avisos de OCC sobre geometria degenerada. **ROJO antes que CONTROL CIEGO**: que las piezas se pisen es un hecho de la geometria, que el control no discrimine es un problema de la medicion. Detalle en el snapshot 2026-08-09.
 
 ## Patrones de corte
 
@@ -94,28 +98,4 @@ La historia completa de cada incidente vive en los snapshots.
 - Si amerita regla durable: `.claude/rules/` CON enforcement (skill `rule-enforcement-gate`) y aca queda solo una linea de referencia.
 - Tope DURO: 20 KB, con aviso del hook. Al acercarse, podar a `docs/_archive/`.
 
-### 2026-08-09 — El archivo de lecciones crecio a 126 KB y el hook lo inyectaba entero
-El "destilado corto" se habia convertido en el mayor gasto fijo de cada sesion (~30k tokens), y encima el harness lo truncaba: ni siquiera se leia completo. Podado a menos de 15 KB (todo el detalle en `docs/_archive/LECCIONES_snapshot_2026-08-09.md`) y el hook ahora corta en 20 KB con aviso. **La leccion: un archivo que se lee en cada arranque necesita un tope DURO con enforcement, no una intencion de brevedad.**
-
-### 2026-08-10 — Todos mis controles medían material de MÁS; ninguno medía que la pieza ESTÉ
-Una auditoría a ciegas del generador de tornillos encontró que los dos scripts sólo sabían detectar
-**interferencia** — material sobrante. Un defecto que SACA material (rosca que no fusionó en un
-tramo, alma vacía, cabeza separada del vástago) da *menos* interferencia, y los gates lo leían como
-"mejor". Reproducido: un tornillo al que le falta un tercio de la rosca pasa `is_valid`, pasa el
-control de volumen (−1,6 %), pasa el gate del alma (el eje está intacto) y el gate de enrosque da
-**VERDE con exit 0**.
-
-- **Por cada control de "no sobra", va uno de "no falta".** Se agregó el control positivo: cuánto
-  material hay en la corona entre raíz y cresta a lo largo del tramo roscado (sano 40-60 %, sin
-  rosca ~0), y `len(solids()) == 1` — con dos cuerpos sueltos `is_valid` sigue True y el volumen se
-  SUMA, así que ningún otro control lo veía.
-- **Se relee el archivo escrito y se compara contra el sólido.** `export_stl` devuelve `False` sin
-  lanzar nada si el destino está bloqueado (abierto en el laminador, OneDrive sincronizando): el
-  archivo de la corrida ANTERIOR quedaba en su lugar y el chequeo de tamaño lo aprobaba.
-- **Casi todo el reporte salía de `vars(args)`, no del sólido.** El número que decide si el tornillo
-  entra en su agujero mentía por 0,94 mm cuando una flag opcional faltaba. Ahora se MIDE sobre el STL.
-- **`warnings.filterwarnings("ignore")` global apagaba justo los avisos de OCC sobre geometría
-  degenerada** — la familia de fallas que ya había mordido dos veces.
-- **ROJO antes que CONTROL CIEGO**: que las piezas se pisen es un hecho de la geometría; que el
-  control no discrimine es un problema de la medición. Confundirlos manda a tocar el gate en vez de
-  la pieza.
+- **09/08**: este archivo llego a 126 KB y era el mayor gasto fijo de cada sesion (~30k tokens); encima el harness lo truncaba, asi que ni se leia completo. **Un archivo que se lee en cada arranque necesita un tope DURO con enforcement, no una intencion de brevedad.**

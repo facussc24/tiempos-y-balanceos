@@ -75,8 +75,12 @@ process.stdin.on("end", () => {
   w("cmd", cmd);                                   // supabase/validator/renumber/push
   w("file", file);                                 // file-guard
   w("target", cmd + " " + file);                   // consumos-entregable-guard
-  w("parsed4", [clean(tool), clean(cmd).slice(0,4000), clean(file),
-                clean(content).slice(0,4000)].join("\x1f"));   // cad + patrones
+  // 6000 y no 4000: borrado-masivo-guard corta en 6000 cuando parsea solo, y con
+  // 4000 veia MENOS por el despachador que suelto — un script de 4.842 car. con el
+  // borrado al final pasaba limpio (verificado 2026-08-13). Los cortes tienen que
+  // ser iguales o el despachador debilita al guardian en silencio.
+  w("parsed4", [clean(tool), clean(cmd).slice(0,6000), clean(file),
+                clean(content).slice(0,6000)].join("\x1f"));   // cad + patrones + borrado
   w("parsed3", [clean(tool), clean(cmd).slice(0,6000),
                 clean(file)].join("\x1f"));        // escritorio-guard
 });
