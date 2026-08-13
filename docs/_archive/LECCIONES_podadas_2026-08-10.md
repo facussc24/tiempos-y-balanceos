@@ -29,3 +29,18 @@ Salieron del destilado vivo por el tope de 20 KB. Son de julio y su contenido ya
 - **08/03**: No reescribir fuentes con scripts node: usar Edit. `node -e`/heredoc con rutas Windows colapsan backslashes: el payload va en archivo.
 - **08/03**: El mtime miente tras copiar/mudar: la fecha firme vive ADENTRO del archivo; si se usa la del filesystem, decirlo.
 - **08/03**: Si un gate bloquea, se rodea la NECESIDAD, no el control. Falsear la evidencia de un gate, nunca.
+
+- **08/06**: Antes de sostener un valor derivado, calcular su incertidumbre: si es del orden de la diferencia en discusion, NO decide y gana el que tiene la pieza en la mano. Decirlo explicito.
+- **08/06**: El ERP dice que se consume HOY, no a que pieza VA a ir un material: eso se mira en plano/PPAP. "Hoy no se consume en ninguna" ES una respuesta.
+- **08/06**: Antes de declarar caida una infra, dos evidencias independientes. Unidad local delante de una ruta UNC en el error = mi escape (bash+PowerShell: comillas simples).
+- **08/05**: El cache local del ERP es una foto: mirar el mtime del crudo antes de afirmar estado; el diff entre snapshots suele ser el entregable. Mismo numero en dos unidades no es invariante: diffear tambien las UNIDADES.
+- **08/05**: Antes de explicar una falla, cruzar que tienen en comun los que fallaron y los que NO. Antes de sacar un paso "ineficiente", entender por que estaba.
+- **08/06**: Un parser que alimenta una automatizacion se valida contra un conteo crudo independiente, o contra OTRO parser escrito aparte. Todo filtro que descarta lleva contador de descartes.
+- **08/06**: Dos o tres features candidatas parecidas = señal de PREGUNTAR, no de filtrar mejor. El mecanismo sale de la secuencia de la operacion real: escribirla en una linea y confirmarla.
+- **08/06**: Cuando una metrica se calcula sobre una region que elegi yo, verificar primero que la region sea la correcta. Pieza suelta se verifica con test de INTERIOR, no con nodos de malla.
+- **08/06**: Toda transformacion "para que quede en X" termina con un assert de que quedo en X. Cuando cambia el mecanismo cambia que cota manda: rehacer el anclaje.
+- **08/05**: Desvio parejo en todo el barrido = error de ANCLAJE, no obstaculo. Aislar la medicion a UNA cara. Features simetricos dan varias poses con igual RMS: memoria `registrar_fixture_por_features`.
+- **08/06**: Antes de preguntarle a un tercero, nombrar que fuente concreta podria contestarlo; si no puedo, la pregunta no sale. El primer codigo que encaja por descripcion NO es la respuesta: contar usos. No re-pedir datos ya dados.
+- **08/06**: Antes de declarar un archivo inaccesible, buscarlo en el buzon (`_mails.py --buscar`). Sustituir la pieza pedida por otra "parecida" es ruido, no avance.
+- **08/06**: Lance 40 agentes para verificar algo ya respondido con 3 greps: verificar algo resuelto es RELEER LA FUENTE. Cap por fase no es cap total: contar fase1 + hallazgos x verificadores. Ninguna instruccion generica le gana a un limite de Fak. Enforcement: `techo-agentes.md`. Y sobre un requerimiento sin confirmar, los agentes multiplican el error en vez de encontrarlo.
+- **08/06**: Este archivo y todo el repo son PUBLICOS: las lecciones van en metodo puro (que fallo, por que, como se evita). Cliente, proyecto, rutas y medidas reales van a `.sgc-cache/` (gitignoreado). La pregunta "esto lo puede leer cualquiera?" va al ESCRIBIR, no al pushear. Vale tambien para mensajes de commit.

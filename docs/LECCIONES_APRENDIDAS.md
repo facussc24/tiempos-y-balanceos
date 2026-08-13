@@ -13,6 +13,10 @@ La historia completa de cada incidente vive en los snapshots.
 
 ## Verificacion y evidencia
 
+- **12/08 — Le afirme a Fak que 112 caras sueltas eran el vinilo, y eran DOS capas.** 74 caras (99 % del area) estan a un offset constante de **0,5000 mm** y solo 10 —las paredes de la ranura— a 0,9692. Cualquier cota tomada fuera de la ranura arrastra 0,5 mm por lado, y ese 0,500 que ya habia aparecido en las mesetas de apoyo era esto. **Un grupo de caras libres no es UNA cosa: hay que agruparlas por OFFSET, no por conectividad** (las 112 son un solo shell conexo, y agrupadas por topologia el promedio no es ninguno de los dos valores). Queda `clasificar_caras_libres.py`, que separa CAPA DE MATERIAL / SUPERFICIE DE CONSTRUCCION / GEOMETRIA REAL con dos mediciones que no comparten codigo (proximidad y rayos) y sale con codigo 2 si no puede clasificar.
+- **12/08 — Un mensaje de rechazo que culpa al filtro equivocado cuesta mas que el rechazo.** El buscador decia "no se cubre 70..200 kPa sin huecos" y el que rechazaba las 87 geometrias era un tope de precarga de 0,90 mm, por 0,02. Media hora buscando en el lugar equivocado. Ahora `cadlib.pipeline.Criba` **exige nombrar el filtro y el valor** para rechazar (un rechazo anonimo es TypeError) y revienta si los conteos no cierran.
+- **12/08 — Cuando un script aborta, su salida ANTERIOR queda intacta y el paso siguiente la usa.** Paso tres veces en una cadena en segundo plano: el contrato daba "1 solo rojo" sobre la pieza equivocada. `cadlib.pipeline` renombra la salida a `.ABORTADO` con el motivo adentro, distingue "el proceso murio" de "aborto", sella las entradas con sha1 (el mtime solo miente) y **propaga la contaminacion**: una salida impecable cuya entrada esta podrida sale marcada. Era el agujero exacto — el archivo mas nuevo de la carpeta estaba construido sobre una corrida abortada.
+- **12/08 — Una constante sin procedencia es una decision de diseno que nadie tomo.** Un tope de 0,90 mm en dos archivos, un piso de 40 kPa, un "SF >= 1,5" que traducido pedia 9 anos de vida a un consumible de 28 g. Y lo peor de la auditoria: **dos limites de fatiga distintos para el mismo PLA en el mismo skill (6,1 y 10,0 MPa, 1,64x)**, con `viga_voladizo.py` contradiciendo su propio docstring. Queda `cadlib.criterios`: la fuente es keyword-only sin default, un criterio sin procedencia no puede RECHAZAR (solo avisa), y uno DURO sin traduccion a unidad humana revienta.
 - **13/08 — Evidencia documental para un mail: elegir la cita INEQUIVOCA y buscar el periodo que me contradice.** Cite "avancemos de esta forma (…) en las unidades habituales" — para compras las habituales son METROS: probaba lo contrario. El explicito ("seguimos con los consumos como hasta ahora, **En M2**", con el destinatario en copia) lo encontro un agente independiente. Y casi afirmo "siempre fue en m2" cuando en 08/2024 lo cargo Fak en METROS con 10 % de margen. **Leer la cita como la leeria el que no la quiere aceptar; buscar el periodo que la contradice antes de que lo encuentre el otro.**
 - **13/08 — Afirme el modelo de un subagente sin verificarlo** ("lo lance en Fable 5" cuando solo lo habia PEDIDO): se verifica en `tasks/<id>.output` (`"model":`). **Un parametro aceptado no es un hecho ejecutado.**
 - **10/08 — Fak encontro en el visor dos defectos que 17 controles verdes no vieron.** (a) El ensamble ENTREGADO salio con el panel a medias — armado con el cargador que descarta caras libres, faltaban las paredes internas de la ranura. Tercera aparicion del mismo bug y la primera que llego a sus manos. (b) El macho, descentrado 0,086 mm del centro REAL de la ranura: un flanco apretaba 0,17 mm menos. **Todo archivo que se entrega para mirar se arma con el mismo cargador con el que se mide**, y el centro de una cavidad se MIDE, no se hereda de un json de otra sesion.
@@ -27,27 +31,17 @@ La historia completa de cada incidente vive en los snapshots.
 - **08/07**: Un conjunto de controles verdes no prueba que el diseño sea bueno: solo que no tiene el error que yo pense en buscar. Lo que Fak marca de un render es dato de ingenieria: ir al numero.
 - **08/07**: Un fallo que vi hace cinco minutos es una foto: re-correr la comprobacion antes de reportarlo. Una limitacion escrita por mi ("esto no se puede") es hipotesis vieja con cara de dato: volver a probarla.
 - **08/07**: De 3 hallazgos de un plan, 2 murieron al verificarlos. Antes de un plan: releer las memorias del area (no solo el indice); un gancho tiene que nombrar el dato que cambia decisiones.
-- **08/06**: Antes de sostener un valor derivado, calcular su incertidumbre: si es del orden de la diferencia en discusion, NO decide y gana el que tiene la pieza en la mano. Decirlo explicito.
-- **08/06**: El ERP dice que se consume HOY, no a que pieza VA a ir un material: eso se mira en plano/PPAP. "Hoy no se consume en ninguna" ES una respuesta.
-- **08/06**: Antes de declarar caida una infra, dos evidencias independientes. Unidad local delante de una ruta UNC en el error = mi escape (bash+PowerShell: comillas simples).
-- **08/05**: El cache local del ERP es una foto: mirar el mtime del crudo antes de afirmar estado; el diff entre snapshots suele ser el entregable. Mismo numero en dos unidades no es invariante: diffear tambien las UNIDADES.
-- **08/05**: Antes de explicar una falla, cruzar que tienen en comun los que fallaron y los que NO. Antes de sacar un paso "ineficiente", entender por que estaba.
 
 ## Automatizacion de interfaces / ERP
 
 - **08/07**: Si la herramienta tiene interfaz, MIRARLA es el primer paso. Foreground NO es foco: solo un click real da foco de teclado. Tras una corrida fallida, resetear el estado antes de reintentar. Un chequeo que compara identidad y no contenido deja pasar el daño.
 - **08/07**: Preguntarle al que usa la herramienta todos los dias es el camino corto; tantear es lo caro. "Es un limite del programa" casi siempre es un limite de lo que probe: no rendirse.
 - **08/07**: Proceso que escribe un archivo compartido: gate "alguien lo tiene tomado?" + verificar mtime despues (Excel se lo queda y el export siguiente falla EN SILENCIO). Nunca aceptar un dialogo sin leerlo.
-- **08/06**: Un parser que alimenta una automatizacion se valida contra un conteo crudo independiente, o contra OTRO parser escrito aparte. Todo filtro que descarta lleva contador de descartes.
 
 ## CAD y 3D
 
 - **08/07**: Barrido sobre algo periodico: el incremento nunca fraccion simple del periodo, y llevar el caso que DEBE fallar. `is_valid=True` no garantiza STL estanco: medir estanqueidad sobre el archivo entregado.
 - **08/07**: Un fastener hereda sus cotas del agujero y de la cara donde apoya: "contra que monta?" va antes de la primera linea de geometria, midiendo el ARCHIVO 3D, no el croquis.
-- **08/06**: Dos o tres features candidatas parecidas = señal de PREGUNTAR, no de filtrar mejor. El mecanismo sale de la secuencia de la operacion real: escribirla en una linea y confirmarla.
-- **08/06**: Cuando una metrica se calcula sobre una region que elegi yo, verificar primero que la region sea la correcta. Pieza suelta se verifica con test de INTERIOR, no con nodos de malla.
-- **08/06**: Toda transformacion "para que quede en X" termina con un assert de que quedo en X. Cuando cambia el mecanismo cambia que cota manda: rehacer el anclaje.
-- **08/05**: Desvio parejo en todo el barrido = error de ANCLAJE, no obstaculo. Aislar la medicion a UNA cara. Features simetricos dan varias poses con igual RMS: memoria `registrar_fixture_por_features`.
 
 ## Patrones de corte
 
@@ -59,14 +53,11 @@ La historia completa de cada incidente vive en los snapshots.
 
 - **13/08 — Un mail en la Bandeja de salida parece enviado y NO salio** (Outlook se cerro antes). Al reabrirlo por COM se manda solo en el primer send/receive: **revisar el Outbox ANTES de tocar nada** (moverlo a Borradores lo congela). "Se envio?" se mira en Enviados por fecha, nunca en el borrador.
 - **08/07**: El pedido incluye el DONDE: para usar ya = suelto en el Escritorio, sin subcarpetas, versiones ni informes. La verificacion la hago yo, no se la leo. Cerrar incluye archivar el rastro (`_escritorio.mjs --archivar`).
-- **08/06**: Antes de preguntarle a un tercero, nombrar que fuente concreta podria contestarlo; si no puedo, la pregunta no sale. El primer codigo que encaja por descripcion NO es la respuesta: contar usos. No re-pedir datos ya dados.
-- **08/06**: Antes de declarar un archivo inaccesible, buscarlo en el buzon (`_mails.py --buscar`). Sustituir la pieza pedida por otra "parecida" es ruido, no avance.
 - **08/02**: Cuando Fak da por sentado que algo esta respaldado, verificar CUAL cuenta/carpeta/numero. Si pregunta algo que mi plan da por resuelto, el plan tiene un agujero.
 
 ## Agentes y maquinaria pesada
 
 - **08/09**: Investigado a fondo (docs + mediciones): los agentes-rol por dominio NO ahorran tokens — multi-agente ≈ 15x. Los roles son las SKILLS (cargan al usarse); subagentes solo para batch/paralelo con salida pesada, techo 5.
-- **08/06**: Lance 40 agentes para verificar algo ya respondido con 3 greps: verificar algo resuelto es RELEER LA FUENTE. Cap por fase no es cap total: contar fase1 + hallazgos x verificadores. Ninguna instruccion generica le gana a un limite de Fak. Enforcement: `techo-agentes.md`. Y sobre un requerimiento sin confirmar, los agentes multiplican el error en vez de encontrarlo.
 
 ## Scripts y archivos (operaciones peligrosas)
 
@@ -76,7 +67,6 @@ La historia completa de cada incidente vive en los snapshots.
 
 ## Repo publico
 
-- **08/06**: Este archivo y todo el repo son PUBLICOS: las lecciones van en metodo puro (que fallo, por que, como se evita). Cliente, proyecto, rutas y medidas reales van a `.sgc-cache/` (gitignoreado). La pregunta "esto lo puede leer cualquiera?" va al ESCRIBIR, no al pushear. Vale tambien para mensajes de commit.
 
 ## Dominio APQP / Supabase
 

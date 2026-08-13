@@ -84,6 +84,17 @@ cliente, la primera hipótesis es el sistema de medición.*
   cliente sólo **+3,7 %**. Da los radios exactos de los cilindros — un agujero no se mide
   con rayos si el STEP ya sabe su diámetro. **Ojo con `--tol`:** con 5 mm casi todo es un
   plano (comprobado). También trae par BIEN/MAL y sale con código 3 si no separa.
+- `clasificar_caras_libres.py <f.stp> --espesores 0.92,0.5` — **QUÉ SON las caras libres, antes
+  de medir contra ellas.** Las agrupa por *offset* al sólido más cercano (por conectividad no
+  alcanza: en el panel de un cliente las 112 caras libres son UN shell con **dos** offsets,
+  0,500 y 0,969 mm) y cada grupo sale **CAPA DE MATERIAL** (offset constante que coincide con un
+  espesor declarado) · **SUPERFICIE DE CONSTRUCCIÓN** (constante que no coincide con nada) ·
+  **GEOMETRÍA REAL** (offset variable). Criterio: IQR (núcleo) **y** fracción-meseta, las dos —
+  si se contradicen el grupo queda sin clasificar y sale con **código 2**. Par sintético BIEN/MAL
+  propio en cada corrida (código 3 si no separa) + control por rayos que no comparte código con
+  la proximidad. **Por qué existe:** medir contra la capa y después restarle otra vez el espesor
+  de la tela lo contó DOS veces y el macho salió 2,11 mm angosto; dos verificaciones
+  "independientes" lo confirmaron porque las tres medían con el mismo criterio.
 - **Test del valor gemelo:** al lado de cada número, cuánto daría **si la falla estuviera
   presente**. Si se parecen, el control es ciego y se descarta. Mejor todavía: control sintético
   BIEN/MAL, como el de `gate_ensamble`.
@@ -203,6 +214,8 @@ Todo junto: `--find --only-free --measure`. Motor en `cadlib.topo`; test: `topo_
   y el grabado directamente no existe (two_upholstered.stp: 2548 caras vs 2737). `cadlib.topo`
   carga con `False` y las marca `LIBRE`; el resto de los CLIs (mallado, colisión, render) NO las
   ve — por eso ningún render iba a mostrar el logo, por más triángulos que le pusiera.
+  **Prenderlas sin saber qué son es igual de malo**: pueden ser el tapizado ya modelado. Antes de
+  medir con `caras_libres=True`, correr `clasificar_caras_libres.py`.
 - **`gmsh.model.removeEntities` NO recorta lo que se malla** (medido: caras 3→3, nodos 1344→1344).
   Para quedarse con parte del modelo: `occ.remove(..., recursive=True)` + `synchronize()` —
   es lo que hace `geom._load(keep=...)` (verificado end-to-end: 9405 → 356 pts).
