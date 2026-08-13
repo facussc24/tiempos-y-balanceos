@@ -364,6 +364,8 @@ def main():
                     help='separacion real minima entre COLUMNAS (default: la de --sep)')
     ap.add_argument('--simplificar', type=float, default=0.0, dest='tol_simp',
                     help='tolerancia mm para sacar vertices redundantes (0 = no tocar)')
+    ap.add_argument('--pisar', action='store_true',
+                    help='sobreescribir la salida si ya existe (por defecto frena)')
     ap.add_argument('--partir', action='store_true',
                     help='ademas del archivo unico, emite _1_AGUJEROS y _2_CONTORNO')
     ap.add_argument('--dry-run', action='store_true')
