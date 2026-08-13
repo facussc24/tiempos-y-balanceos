@@ -120,6 +120,16 @@ lo de abajo; no rehacer el razonamiento a mano.
 | Orientacion | piezas **horizontales** (lado largo en X del dibujo) | asi las dejo Fak y asi corta sin levantarse |
 | Capa | `CORTE`, todo | el plotter corta lo que hay |
 
+> 🔴🔴 **UN AGUJERO VA COMO ENTIDAD `CIRCLE`, NUNCA COMO POLILINEA.**
+> Un Ø3 poligonizado en 72 lados da segmentos de **0,13 mm**: el look-ahead del controlador
+> frena en cada vertice, la velocidad cae a casi cero y **la cuchilla baja y se queda quieta
+> sin cortar**. Sintoma textual de Fak: *"en algunos agujeros la cuchilla bajaba, se quedaba
+> quieta y no me hacia el circulo"*. La pista estaba a mano: **los patrones de la empresa que
+> SI cortan (`INSERT TRA PAT DER R4`, `INSERT DEL DER PAT R2`) usan `CIRCLE` nativo** — yo los
+> convertia a polilinea densa. Las N pasadas se hacen con N entidades CIRCLE superpuestas.
+> Regla general: **la densidad de vertices es un parametro de proceso, no un detalle de
+> dibujo**; micro-segmentos por debajo de ~0,3 mm ahogan al controlador.
+
 > 🔴🔴 **ORDEN DE CORTE: TODOS los agujeros primero, TODOS los contornos despues.**
 > Escribir pieza por pieza (su contorno y despues sus agujeros) **parece ordenado y esta mal**:
 > cuando la cuchilla llega al agujero, esa pieza ya esta cortada y suelta, se mueve, y el

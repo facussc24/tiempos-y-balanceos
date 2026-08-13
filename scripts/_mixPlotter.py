@@ -193,6 +193,21 @@ def _doc_nuevo():
     return doc
 
 
+def _poner_circulos(ms, piezas, diam, vueltas):
+    """Los agujeros van como entidad CIRCLE nativa, una por pasada.
+
+    NO como polilinea: un circulo de O3 poligonizado en 72 lados da segmentos de
+    0,13 mm, y el look-ahead del controlador tiene que frenar en cada vertice —
+    la velocidad cae a casi cero y **la cuchilla baja y se queda quieta sin cortar**.
+    Sintoma real reportado por Fak. Los patrones de la empresa que SI cortan usan
+    CIRCLE nativo; el controlador lo interpola con su propia resolucion.
+    """
+    for pz in piezas:
+        for (cx, cy, _) in pz['circulos']:
+            for _ in range(max(1, vueltas)):
+                ms.add_circle((cx, cy), diam / 2, dxfattribs={'layer': 'CORTE'})
+
+
 def escribir(piezas, salida, diam, vueltas, partir=False):
     """TODOS los circulos primero, TODOS los contornos despues.
 
@@ -207,10 +222,7 @@ def escribir(piezas, salida, diam, vueltas, partir=False):
     """
     doc = _doc_nuevo()
     ms = doc.modelspace()
-    for pz in piezas:                                    # 1) agujeros
-        for (cx, cy, _) in pz['circulos']:
-            ms.add_lwpolyline(circulo(cx, cy, diam, vueltas), close=False,
-                              dxfattribs={'layer': 'CORTE'})
+    _poner_circulos(ms, piezas, diam, vueltas)           # 1) agujeros
     for pz in piezas:                                    # 2) contornos
         for t in pz['tramos']:
             ms.add_lwpolyline(t, close=False, dxfattribs={'layer': 'CORTE'})
@@ -219,10 +231,7 @@ def escribir(piezas, salida, diam, vueltas, partir=False):
     if partir:
         base, ext = os.path.splitext(salida)
         d1 = _doc_nuevo(); m1 = d1.modelspace()
-        for pz in piezas:
-            for (cx, cy, _) in pz['circulos']:
-                m1.add_lwpolyline(circulo(cx, cy, diam, vueltas), close=False,
-                                  dxfattribs={'layer': 'CORTE'})
+        _poner_circulos(m1, piezas, diam, vueltas)
         d1.saveas(f'{base}_1_AGUJEROS{ext}')
         d2 = _doc_nuevo(); m2 = d2.modelspace()
         for pz in piezas:
@@ -231,12 +240,11 @@ def escribir(piezas, salida, diam, vueltas, partir=False):
         d2.saveas(f'{base}_2_CONTORNO{ext}')
 
 
-def verificar_orden(salida, n_vert_circulo):
+def verificar_orden(salida, n_vert_circulo=None):
     """Relee el archivo escrito y exige que no quede ningun agujero despues de un
     contorno. Se comprueba sobre el archivo, no sobre la intencion del codigo."""
     ms = ezdxf.readfile(salida).modelspace()
-    sec = ['O' if len(list(e.get_points())) == n_vert_circulo else '.'
-           for e in ms]
+    sec = ['O' if e.dxftype() == 'CIRCLE' else '.' for e in ms]
     s = ''.join(sec)
     ultimo_circ = s.rfind('O')
     primer_cont = s.find('.')
@@ -316,8 +324,7 @@ def main():
         return
     escribir(piezas, a.salida, a.diam, a.vueltas, partir=a.partir)
 
-    n_vert = int(72 * a.vueltas) + 1
-    ok, ncirc, ult, pri = verificar_orden(a.salida, n_vert)
+    ok, ncirc, ult, pri = verificar_orden(a.salida)
     print(f'\n   ORDEN DE CORTE: {ncirc} agujeros, el ultimo en la posicion {ult}; '
           f'primer tramo de contorno en la {pri}')
     print(f'   -> {"OK: todos los agujeros van ANTES del contorno" if ok else "*** MAL: hay agujeros despues de un contorno ***"}')
