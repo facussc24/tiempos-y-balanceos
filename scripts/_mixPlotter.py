@@ -318,7 +318,7 @@ def main():
     print(f'\n   piezas {len(piezas)} ({izq} izq + {len(piezas)-izq} der) | '
           f'circulos O{a.diam} x{a.vueltas} vueltas = {ncirc}  ({rec:.2f} mm de recorrido c/u)')
     print(f'   paso entre columnas {paso_x:.3f} mm | entre filas {paso_y:.3f} mm')
-    minimo = min(a.sep, a.sep_col) if a.sep_col else a.sep
+    minimo = min(a.sep, a.sep_col) if a.sep_col is not None else a.sep
     print(f'   SEPARACION REAL minima {peor:.3f} mm entre pieza {par[0]+1} y {par[1]+1} '
           f'-> {"OK" if peor >= minimo - 1e-6 else "*** POR DEBAJO DEL MINIMO ***"}')
     print(f'   bbox hoja {todo[:,0].max()-todo[:,0].min():.3f} x '
