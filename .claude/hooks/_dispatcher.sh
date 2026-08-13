@@ -109,7 +109,7 @@ esac
 case "$TOOL_NAME" in
   Bash|PowerShell|Write|Edit)
     GUARDIANES+=(consumos-entregable-guard cad-guard patrones-guard escritorio-guard
-                 borrado-masivo-guard) ;;
+                 borrado-masivo-guard ho-numeracion-guard) ;;
 esac
 
 # Si no se pudo parsear el tool_name, NO adivino: corro TODOS los guardianes.
@@ -117,7 +117,7 @@ esac
 if [ -z "$TOOL_NAME" ]; then
   GUARDIANES=(file-guard supabase-guard validator-check renumber-guard push-guard
               consumos-entregable-guard cad-guard patrones-guard escritorio-guard
-              borrado-masivo-guard)
+              borrado-masivo-guard ho-numeracion-guard)
 fi
 
 if [ ${#GUARDIANES[@]} -eq 0 ]; then exit 0; fi

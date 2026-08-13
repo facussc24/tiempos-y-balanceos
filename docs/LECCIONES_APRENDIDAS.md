@@ -18,6 +18,9 @@ La historia completa de cada incidente vive en los snapshots.
 - **12/08 — Cuando un script aborta, su salida ANTERIOR queda intacta y el paso siguiente la usa.** Paso tres veces en una cadena en segundo plano: el contrato daba "1 solo rojo" sobre la pieza equivocada. `cadlib.pipeline` renombra la salida a `.ABORTADO` con el motivo adentro, distingue "el proceso murio" de "aborto", sella las entradas con sha1 (el mtime solo miente) y **propaga la contaminacion**: una salida impecable cuya entrada esta podrida sale marcada. Era el agujero exacto — el archivo mas nuevo de la carpeta estaba construido sobre una corrida abortada.
 - **12/08 — Una constante sin procedencia es una decision de diseno que nadie tomo.** Un tope de 0,90 mm en dos archivos, un piso de 40 kPa, un "SF >= 1,5" que traducido pedia 9 anos de vida a un consumible de 28 g. Y lo peor de la auditoria: **dos limites de fatiga distintos para el mismo PLA en el mismo skill (6,1 y 10,0 MPa, 1,64x)**, con `viga_voladizo.py` contradiciendo su propio docstring. Queda `cadlib.criterios`: la fuente es keyword-only sin default, un criterio sin procedencia no puede RECHAZAR (solo avisa), y uno DURO sin traduccion a unidad humana revienta.
 - **13/08 — Evidencia documental para un mail: elegir la cita INEQUIVOCA y buscar el periodo que me contradice.** Cite "avancemos de esta forma (…) en las unidades habituales" — para compras las habituales son METROS: probaba lo contrario. El explicito ("seguimos con los consumos como hasta ahora, **En M2**", con el destinatario en copia) lo encontro un agente independiente. Y casi afirmo "siempre fue en m2" cuando en 08/2024 lo cargo Fak en METROS con 10 % de margen. **Leer la cita como la leeria el que no la quiere aceptar; buscar el periodo que la contradice antes de que lo encuentre el otro.**
+- **13/08 — "Pieza parecida" no es fuente.** Para la HO del APB Trasero Central propuse sacar fotos y pasos del APB Central del Amarok; Fak: *"ojo no es la mimsa pieza… es similar"*. Tenia razon: el del Amarok lleva bisagra y tapa de consola, y su HO de inyeccion PU describe astas metalicas y guias de molde que el APB Patagonia no tiene. **Un proceso "equivalente" se verifica pieza contra pieza antes de copiar un paso o una foto**; lo que se puede reusar es la MAQUINA (misma mesa BM 149, mismo vinilo) y ahi la foto no muestra la pieza. Lo que no tiene fuente va TBD.
+- **13/08 — Conte imagenes en vez de mirarlas.** Dije "las 8 fotos de la pieza que saco Nicolas" leyendo `len(ws._images)`: eran 4 fotos, el logo de Barack y 3 iconos de EPP. En la misma entrega escribi "20 pestañas" sobre una tabla que listaba 19. **Un conteo no describe el contenido, y un total que se escribe a mano se recuenta contra la lista.** Los dos los agarre releyendo el entregable antes de pasarlo, que es exactamente para lo que sirve ese paso.
+- **13/08 — La numeracion de operaciones la manda el FLUJOGRAMA**, no el Plan de Control ni la HO (orden APQP: flujograma → AMFE → PdC). El PdC preliminar del APB Trasero Central traia otra numeracion y una COLISION —80 era "reproceso" en el flujograma y "test de lay out" en el PdC— y los dos iban al BeOn del cliente. Se cazo cotejando las tres fuentes ANTES de escribir una celda. Codificado: regla `no-pfd-no-ho.md` + hook `ho-numeracion-guard.sh`.
 - **13/08 — Afirme el modelo de un subagente sin verificarlo** ("lo lance en Fable 5" cuando solo lo habia PEDIDO): se verifica en `tasks/<id>.output` (`"model":`). **Un parametro aceptado no es un hecho ejecutado.**
 - **10/08 — Fak encontro en el visor dos defectos que 17 controles verdes no vieron.** (a) El ensamble ENTREGADO salio con el panel a medias — armado con el cargador que descarta caras libres, faltaban las paredes internas de la ranura. Tercera aparicion del mismo bug y la primera que llego a sus manos. (b) El macho, descentrado 0,086 mm del centro REAL de la ranura: un flanco apretaba 0,17 mm menos. **Todo archivo que se entrega para mirar se arma con el mismo cargador con el que se mide**, y el centro de una cavidad se MIDE, no se hereda de un json de otra sesion.
 - **10/08 — Un corte de verificacion cayo justo sobre un canal y dijo "no aprieta".** Los canales de despegue estan cada 2,5 mm y el medio EXACTO del dedo cae sobre uno: el hueco salio 0,3 mm mas grande y el dibujo contradecia al calculo. Misma familia que el aliaseo de barridos: **el punto de muestreo nunca en el centro de una feature periodica**.
@@ -43,6 +46,9 @@ La historia completa de cada incidente vive en los snapshots.
 - **08/07**: Barrido sobre algo periodico: el incremento nunca fraccion simple del periodo, y llevar el caso que DEBE fallar. `is_valid=True` no garantiza STL estanco: medir estanqueidad sobre el archivo entregado.
 - **08/07**: Un fastener hereda sus cotas del agujero y de la cara donde apoya: "contra que monta?" va antes de la primera linea de geometria, midiendo el ARCHIVO 3D, no el croquis.
 
+- **07/08**: `is_valid=True` NO prueba que exista geometria (un compound vacio es "valido"): todo generador cierra con volumen > 0, `len(solids()) == 1` y el ARCHIVO escrito existe y pesa. Dos superficies **tangentes** no son una union, son una loteria: 0,10 mm de solape real. Y que el sintoma desaparezca no prueba que encontre la causa — el "arreglo" del orden de fusion devolvia un tornillo HUECO que paso las 4 comprobaciones y lo vio Fak de un vistazo. Detalle en el snapshot 2026-08-09.
+- **07/08**: Segui "mejorando" 3 veces despues de que Fak dijo que funcionaba y termino en *"ya me canse de vos"*; la version buena estaba en la carpeta 3 iteraciones antes. **Cuando Fak confirma que algo anda, esa configuracion se CONGELA con sus numeros.** Un comentario al pasar sobre una prueba accidental no es especificacion. En procesos con tolerancias reales la curva no es monotona (mas holgura no es "mas facil"), y un razonamiento correcto no es evidencia: los 3 cambios estaban bien argumentados y los 3 empeoraron.
+
 ## Patrones de corte
 
 - **10/08**: Le crei al NOMBRE de la maquina (`INKJET PLOTTER`) en vez de a lo que ya tenia escrito sobre como se comporta: deduje "imprime, no corta" y arme dos hojas con cruces X. Es de CORTE con cuchilla, y en una X la cuchilla entra de canto sin filo (marca buena: circulo Ø1). **Mi propio registro ya lo decia.** Una deduccion sobre QUE es una maquina no le gana a lo escrito sobre COMO se comporta: antes de construir sobre una inferencia propia, buscar si el registro la contradice. Detalle: memoria `plotter_inkjet_software_htv2a`.
@@ -64,9 +70,6 @@ La historia completa de cada incidente vive en los snapshots.
 - **08/08**: Con sesiones concurrentes, commitear por pathspec (`git commit <archivos>`): mi commit se llevo un archivo stageado por otra sesion.
 - **08/07**: Un script nuevo que borraba movio 942 archivos en vez de 17: dry-run con plan impreso + MIRAR EL CONTEO + Papelera (nunca borrado permanente) + reusar la herramienta segura existente. La jerarquia de carpetas es DATO.
 - **08/02**: Migrar de maquina: el ZIP de Windows trae nombres en CP850 (fallan los nombres, no faltan datos); sacar junctions antes de borrar un repo; `git log --not --remotes` + `git stash list` antes de rearmar; script de migracion ajeno: auditar linea por linea.
-
-## Repo publico
-
 
 ## Dominio APQP / Supabase
 
@@ -91,48 +94,6 @@ La historia completa de cada incidente vive en los snapshots.
 
 ### 2026-08-09 — El archivo de lecciones crecio a 126 KB y el hook lo inyectaba entero
 El "destilado corto" se habia convertido en el mayor gasto fijo de cada sesion (~30k tokens), y encima el harness lo truncaba: ni siquiera se leia completo. Podado a menos de 15 KB (todo el detalle en `docs/_archive/LECCIONES_snapshot_2026-08-09.md`) y el hook ahora corta en 20 KB con aviso. **La leccion: un archivo que se lee en cada arranque necesita un tope DURO con enforcement, no una intencion de brevedad.**
-
-### 2026-08-07 — El exportador escribió un archivo vacío y no dijo nada
-Generé un tornillo, el script imprimió su JSON de medidas y la ruta del STL como si todo hubiera
-salido bien. **El STL no existía y el STEP pesaba 1,6 KB.** El sólido tenía volumen 0 y aun así
-`is_valid` devolvía **True** — un compound vacío es "válido". Lo agarré porque fui a medir el
-archivo; si me hubiera quedado con la salida de consola, se lo mandaba a Fak para imprimir.
-
-- **`is_valid` no prueba que exista geometría.** Todo generador cierra con dos asserts: volumen
-  > 0 y **el archivo escrito existe y pesa lo que tiene que pesar**. Verificar la orden no es
-  verificar el resultado (mismo patrón que el virolador).
-- **La causa real: dos superficies TANGENTES.** El núcleo se construía exactamente al radio de
-  la raíz de la rosca, así que los dos cilindros quedaban tangentes y el booleano se volvía
-  inestable. Con paso 1,0 funcionaba de casualidad; con 1,5 devolvía un sólido vacío. Con
-  0,10 mm de solape real fusiona siempre. **Dos superficies que se tocan sin solapar no son
-  una unión, son una lotería.**
-- **Y mi primer diagnóstico fue el equivocado.** Culpé al orden de la fusión porque cambiar el
-  orden hacía desaparecer el síntoma — pero el orden nuevo devolvía un tornillo HUECO, una
-  espiral sin alma. Pasó las cuatro comprobaciones que tenía (watertight, sin bordes abiertos,
-  volumen > 0, gate de enrosque VERDE) y se lo entregué a Fak, que lo vio de un vistazo:
-  *"hiciste como un resorte, no tiene sólido adentro"*. **Que el síntoma desaparezca no prueba
-  que encontré la causa**, y ninguna de mis métricas miraba lo único que define un tornillo:
-  que sea macizo. Ahora el generador lo verifica intersectando el sólido con un cilindro de
-  Ø0,6 sobre el eje y exigiendo que el alma esté completa.
-
-### 2026-08-07 — Seguí "mejorando" tres veces después de que Fak dijo que funcionaba
-Fak imprimió una probeta y dijo *"enrosca muchísimo mejor"* (paso 1,0, holgura 0,35). Ahí
-terminaba. Seguí: (1) subí la holgura a 0,55 porque él había probado de casualidad un par mal
-apareado y dijo *"entra perfecto"* — lo tomé como especificación y **se trabó**; (2) para
-arreglarlo subí el paso a 1,0→1,5 con un razonamiento correcto sobre tolerancias — **peor**;
-(3) ese cambio destapó un bug y le entregué un tornillo hueco. Terminó en *"ya me cansé de
-vos"*. La versión buena estaba en la carpeta desde tres iteraciones antes.
-
-- **Cuando Fak confirma que algo anda, esa configuración se CONGELA con sus números.** Sólo
-  cambia lo que él pide, de a una cosa, sin tocar lo validado. Si creo que otra cosa mejoraría,
-  se lo digo; no lo aplico y se lo mando.
-- **Un comentario al pasar sobre una prueba accidental no es una especificación.** Antes de
-  convertirlo en cambio, preguntar.
-- **En procesos con tolerancias reales la curva no es monótona.** Más holgura no es "más fácil":
-  pasado el óptimo la tuerca entra torcida y se traba. Mi modelo mental predecía monotonía y la
-  pieza en la mano decía otra cosa.
-- **Un razonamiento correcto no es evidencia.** Los tres cambios estaban bien argumentados y los
-  tres empeoraron el resultado. Lo único que contaba era qué había impreso y probado.
 
 ### 2026-08-10 — Todos mis controles medían material de MÁS; ninguno medía que la pieza ESTÉ
 Una auditoría a ciegas del generador de tornillos encontró que los dos scripts sólo sabían detectar

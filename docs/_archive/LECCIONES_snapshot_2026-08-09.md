@@ -1574,3 +1574,51 @@ verificacion fallo por otra cosa (recursion RLS en user_roles) y el mensaje fina
 - La saga completa del "[] que miente" quedo cerrada en sus TRES capas (backup 30/07, app
   5ea05702, y las RPC + policy en la base 08/08): detalle en la memoria
   reference_supabase_adapter_sin_tests.
+
+
+---
+
+## Anexado 2026-08-13 (poda del destilado — tope 20 KB)
+
+### 2026-08-07 — El exportador escribió un archivo vacío y no dijo nada
+Generé un tornillo, el script imprimió su JSON de medidas y la ruta del STL como si todo hubiera
+salido bien. **El STL no existía y el STEP pesaba 1,6 KB.** El sólido tenía volumen 0 y aun así
+`is_valid` devolvía **True** — un compound vacío es "válido". Lo agarré porque fui a medir el
+archivo; si me hubiera quedado con la salida de consola, se lo mandaba a Fak para imprimir.
+
+- **`is_valid` no prueba que exista geometría.** Todo generador cierra con dos asserts: volumen
+  > 0 y **el archivo escrito existe y pesa lo que tiene que pesar**. Verificar la orden no es
+  verificar el resultado (mismo patrón que el virolador).
+- **La causa real: dos superficies TANGENTES.** El núcleo se construía exactamente al radio de
+  la raíz de la rosca, así que los dos cilindros quedaban tangentes y el booleano se volvía
+  inestable. Con paso 1,0 funcionaba de casualidad; con 1,5 devolvía un sólido vacío. Con
+  0,10 mm de solape real fusiona siempre. **Dos superficies que se tocan sin solapar no son
+  una unión, son una lotería.**
+- **Y mi primer diagnóstico fue el equivocado.** Culpé al orden de la fusión porque cambiar el
+  orden hacía desaparecer el síntoma — pero el orden nuevo devolvía un tornillo HUECO, una
+  espiral sin alma. Pasó las cuatro comprobaciones que tenía (watertight, sin bordes abiertos,
+  volumen > 0, gate de enrosque VERDE) y se lo entregué a Fak, que lo vio de un vistazo:
+  *"hiciste como un resorte, no tiene sólido adentro"*. **Que el síntoma desaparezca no prueba
+  que encontré la causa**, y ninguna de mis métricas miraba lo único que define un tornillo:
+  que sea macizo. Ahora el generador lo verifica intersectando el sólido con un cilindro de
+  Ø0,6 sobre el eje y exigiendo que el alma esté completa.
+
+### 2026-08-07 — Seguí "mejorando" tres veces después de que Fak dijo que funcionaba
+Fak imprimió una probeta y dijo *"enrosca muchísimo mejor"* (paso 1,0, holgura 0,35). Ahí
+terminaba. Seguí: (1) subí la holgura a 0,55 porque él había probado de casualidad un par mal
+apareado y dijo *"entra perfecto"* — lo tomé como especificación y **se trabó**; (2) para
+arreglarlo subí el paso a 1,0→1,5 con un razonamiento correcto sobre tolerancias — **peor**;
+(3) ese cambio destapó un bug y le entregué un tornillo hueco. Terminó en *"ya me cansé de
+vos"*. La versión buena estaba en la carpeta desde tres iteraciones antes.
+
+- **Cuando Fak confirma que algo anda, esa configuración se CONGELA con sus números.** Sólo
+  cambia lo que él pide, de a una cosa, sin tocar lo validado. Si creo que otra cosa mejoraría,
+  se lo digo; no lo aplico y se lo mando.
+- **Un comentario al pasar sobre una prueba accidental no es una especificación.** Antes de
+  convertirlo en cambio, preguntar.
+- **En procesos con tolerancias reales la curva no es monótona.** Más holgura no es "más fácil":
+  pasado el óptimo la tuerca entra torcida y se traba. Mi modelo mental predecía monotonía y la
+  pieza en la mano decía otra cosa.
+- **Un razonamiento correcto no es evidencia.** Los tres cambios estaban bien argumentados y los
+  tres empeoraron el resultado. Lo único que contaba era qué había impreso y probado.
+
