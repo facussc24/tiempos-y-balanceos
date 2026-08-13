@@ -70,12 +70,21 @@ cat >&2 << 'EOF'
 3. Los PASOS de una HO son instruccion de planta. Sin documento fuente van TBD.
    PROHIBIDO redactarlos por analogia con otra pieza "parecida" o copiar los de
    otro producto: el proceso puede ser otro (core-prohibiciones §1).
-4. FOTOS: solo de la pieza real, o de maquina/gesto donde no se reconozca otra
-   pieza. Si no hay, "FOTO PENDIENTE" — no rellenar con la pieza de otro proyecto.
-5. AL CERRAR: actualizar el listado maestro
+4. FOTOS: solo de la pieza real, o de maquina/gesto donde NO SE RECONOZCA otra pieza.
+   Si no hay foto, el recuadro va VACIO — nada de leyendas tipo "FOTO PENDIENTE"
+   (Fak, 13/08: "si no hay imagenes en alguna hoja no pongas nada").
+   Al duplicar una hoja como plantilla, BORRAR sus imagenes de contenido: se arrastran
+   invisibles. Paso con la HO-986: la plantilla era un reproceso de costura y sus 9 fotos
+   de agujas quedaron en las 8 hojas nuevas, incluida la de inyeccion de PU.
+5. UNA HO ES PARA EL OPERARIO, NO PARA AUDITAR: sin "BORRADOR", sin "pendiente de
+   validacion", sin "el Plan de Control dice X pero Y". Donde no hay dato va TBD y nada
+   mas; el analisis va en el informe aparte. Estilo de la casa en el ciclo de control:
+   Resp. = OP / OC / Insp., Registro = RC / Set-up / N/A, frases cortas (las columnas
+   son angostas y un texto largo se CORTA).
+6. AL CERRAR: actualizar el listado maestro
    (3- LISTADO\Listado hojas de proceso.xlsx) con la fila nueva en el bloque de
    su sector + la hoja oculta _CONTEXTO_CLAUDE con el proximo numero libre.
-6. El .xlsx del SGC no se edita a mano: va instructivo celda por celda al agente
+7. El .xlsx del SGC no se edita a mano: va instructivo celda por celda al agente
    de Excel (feedback_no_edito_excel_lo_hace_agente_excel).
 
 Si ya cumpliste esto (o no aplica), reintenta y segui.
