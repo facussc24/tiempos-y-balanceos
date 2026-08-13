@@ -135,6 +135,84 @@ def circulo(cx, cy, diam, vueltas, n=72):
              cy + r * math.sin(2 * math.pi * k / n)) for k in range(int(n * vueltas) + 1)]
 
 
+def encadenar(tramos, tol=TOL_UNION):
+    """Une los segmentos sueltos en cadenas continuas.
+
+    Es LA correccion mas importante de este script: si cada segmento va como una
+    entidad separada, el plotter **baja y sube la cuchilla en cada uno** — 2248 veces
+    para un contorno. Sintoma de Fak: "la cuchilla se levanta muchas veces".
+    Una pieza tiene que salir como UNA polilinea cerrada: baja, recorre, sube.
+    """
+    from collections import defaultdict
+    key = lambda p: (round(p[0] / tol), round(p[1] / tol))
+    extremos = defaultdict(list)
+    for i, t in enumerate(tramos):
+        extremos[key(t[0])].append(i)
+        extremos[key(t[-1])].append(i)
+    usado = [False] * len(tramos)
+    cadenas = []
+    for i in range(len(tramos)):
+        if usado[i]:
+            continue
+        usado[i] = True
+        cad = list(tramos[i])
+        # crecer por los dos extremos
+        for _ in range(2):
+            while True:
+                punta = cad[-1]
+                sig = None
+                for j in extremos.get(key(punta), []):
+                    if usado[j]:
+                        continue
+                    t = tramos[j]
+                    if key(t[0]) == key(punta):
+                        sig, resto = j, t[1:]
+                    elif key(t[-1]) == key(punta):
+                        sig, resto = j, t[-2::-1]
+                    else:
+                        continue
+                    break
+                if sig is None:
+                    break
+                usado[sig] = True
+                cad += resto
+            cad.reverse()
+        cadenas.append(cad)
+    return cadenas
+
+
+def simplificar(pts, tol):
+    """Douglas-Peucker: saca vertices redundantes sin mover la forma mas que `tol`.
+    Los micro-segmentos obligan al controlador a frenar; quitarlos suaviza el corte."""
+    if tol <= 0 or len(pts) < 3:
+        return list(pts)
+
+    def dp(p):
+        if len(p) < 3:
+            return list(p)
+        a, b = np.array(p[0]), np.array(p[-1])
+        ab = b - a
+        L = np.linalg.norm(ab)
+        P = np.array(p)
+        if L < 1e-12:
+            d = np.linalg.norm(P - a, axis=1)
+        else:
+            d = np.abs(np.cross(np.tile(ab, (len(P), 1)), P - a)) / L
+        i = int(np.argmax(d))
+        if d[i] <= tol:
+            return [p[0], p[-1]]
+        return dp(p[:i + 1])[:-1] + dp(p[i:])
+
+    cerrado = math.dist(pts[0], pts[-1]) < 1e-9
+    if cerrado:
+        # partir en dos mitades para no colapsar un contorno cerrado
+        m = len(pts) // 2
+        out = dp(pts[:m + 1])[:-1] + dp(pts[m:])
+    else:
+        out = dp(list(pts))
+    return out
+
+
 def bbox(tramos):
     p = np.array([q for t in tramos for q in t])
     return p.min(axis=0), p.max(axis=0)
@@ -147,7 +225,7 @@ def trasladar(tramos, circulos, dx, dy):
 
 # ------------------------------------------------------------------ armado
 
-def armar(manos, filas, sep_real, diam, vueltas, sep_col=None):
+def armar(manos, filas, sep_real, diam, vueltas, sep_col=None, tol_simp=0.0):
     """Coloca 2 columnas x `filas`. Busca el offset minimo que garantiza `sep_real`
     medida contorno contra contorno — no entre bboxes."""
     (T0, C0), (T1, C1) = manos
@@ -179,13 +257,23 @@ def armar(manos, filas, sep_real, diam, vueltas, sep_col=None):
         dx += 0.25
     paso_x = ancho + dx
 
+    # encadenar UNA vez por mano y simplificar; despues solo se traslada
+    cad_mano = []
+    for T, C in manos:
+        cad = encadenar(T)
+        if tol_simp > 0:
+            cad = [simplificar(c, tol_simp) for c in cad]
+        cad_mano.append(cad)
+
     piezas = []
     for col, (T, C) in enumerate(manos):
         for f in range(filas):
-            t, c = trasladar(T, C, col * paso_x, f * paso_y)
+            dx, dy = col * paso_x, f * paso_y
+            t, c = trasladar(T, C, dx, dy)
+            cad = [[(q[0] + dx, q[1] + dy) for q in k] for k in cad_mano[col]]
             piezas.append({'mano': 'IZQUIERDA' if col == 0 else 'DERECHA',
-                           'fila': f + 1, 'tramos': t, 'circulos': c,
-                           'delta': (col * paso_x, f * paso_y)})
+                           'fila': f + 1, 'tramos': t, 'cadenas': cad, 'circulos': c,
+                           'delta': (dx, dy)})
     return piezas, paso_x, paso_y
 
 
@@ -229,8 +317,10 @@ def escribir(piezas, salida, diam, vueltas, partir=False):
     ms = doc.modelspace()
     _poner_circulos(ms, piezas, diam, vueltas)           # 1) agujeros
     for pz in piezas:                                    # 2) contornos
-        for t in pz['tramos']:
-            ms.add_lwpolyline(t, close=False, dxfattribs={'layer': 'CORTE'})
+        for cad in pz['cadenas']:
+            cerrado = math.dist(cad[0], cad[-1]) < TOL_UNION
+            ms.add_lwpolyline(cad[:-1] if cerrado else cad, close=cerrado,
+                              dxfattribs={'layer': 'CORTE'})
     doc.saveas(salida)
 
     if partir:
@@ -240,8 +330,10 @@ def escribir(piezas, salida, diam, vueltas, partir=False):
         d1.saveas(f'{base}_1_AGUJEROS{ext}')
         d2 = _doc_nuevo(); m2 = d2.modelspace()
         for pz in piezas:
-            for t in pz['tramos']:
-                m2.add_lwpolyline(t, close=False, dxfattribs={'layer': 'CORTE'})
+            for cad in pz['cadenas']:
+                cerrado = math.dist(cad[0], cad[-1]) < TOL_UNION
+                m2.add_lwpolyline(cad[:-1] if cerrado else cad, close=cerrado,
+                                  dxfattribs={'layer': 'CORTE'})
         d2.saveas(f'{base}_2_CONTORNO{ext}')
 
 
@@ -270,6 +362,8 @@ def main():
     ap.add_argument('--vueltas', type=int, default=3)
     ap.add_argument('--sep-col', type=float, default=None, dest='sep_col',
                     help='separacion real minima entre COLUMNAS (default: la de --sep)')
+    ap.add_argument('--simplificar', type=float, default=0.0, dest='tol_simp',
+                    help='tolerancia mm para sacar vertices redundantes (0 = no tocar)')
     ap.add_argument('--partir', action='store_true',
                     help='ademas del archivo unico, emite _1_AGUJEROS y _2_CONTORNO')
     ap.add_argument('--dry-run', action='store_true')
@@ -299,7 +393,8 @@ def main():
     print(f'   espejo izq/der: desviacion max {esp:.4f} mm (densificado {PASO_ESP}) '
           f'-> {"SIMETRICOS OPUESTOS" if esp < 2 * PASO_ESP else "*** NO son espejo ***"}')
 
-    piezas, paso_x, paso_y = armar(manos, a.filas, a.sep, a.diam, a.vueltas, a.sep_col)
+    piezas, paso_x, paso_y = armar(manos, a.filas, a.sep, a.diam, a.vueltas,
+                                   a.sep_col, a.tol_simp)
 
     # --- verificacion ---
     dens = [densificar(p['tramos']) for p in piezas]
@@ -323,6 +418,32 @@ def main():
           f'-> {"OK" if peor >= minimo - 1e-6 else "*** POR DEBAJO DEL MINIMO ***"}')
     print(f'   bbox hoja {todo[:,0].max()-todo[:,0].min():.3f} x '
           f'{todo[:,1].max()-todo[:,1].min():.3f} mm')
+
+    # --- fragmentacion y fidelidad del contorno ---
+    ncad = sum(len(p['cadenas']) for p in piezas)
+    nseg_orig = sum(len(p['tramos']) for p in piezas)
+    cerradas = sum(1 for p in piezas for c in p['cadenas']
+                   if math.dist(c[0], c[-1]) < TOL_UNION)
+    largos = sorted(math.dist(c[i], c[i + 1])
+                    for p in piezas for c in p['cadenas'] for i in range(len(c) - 1))
+    print(f'   CONTORNO: {nseg_orig} segmentos sueltos -> {ncad} trazos continuos '
+          f'({cerradas} cerrados) | bajadas de cuchilla: {nseg_orig} -> {ncad}')
+    print(f'   segmento: min {largos[0]:.4f} | mediana {largos[len(largos)//2]:.3f} mm | '
+          f'menores a 0,3 mm: {sum(1 for l in largos if l < 0.3)}')
+    if a.tol_simp > 0:
+        # OJO: densificar GRUESO aca da un falso positivo — el error de muestreo se
+        # suma a la desviacion real y parece que el contorno se movio 8 veces mas.
+        PASO_FID = 0.02
+        peor_fid = 0.0
+        for p in piezas:
+            D_orig = densificar(p['tramos'], PASO_FID)
+            seg = [[c[i], c[i + 1]] for c in p['cadenas'] for i in range(len(c) - 1)]
+            D_new = densificar(seg, PASO_FID)
+            peor_fid = max(peor_fid, cKDTree(D_new).query(D_orig)[0].max())
+        print(f'   FIDELIDAD tras simplificar: desviacion maxima {peor_fid:.4f} mm '
+              f'(pedida {a.tol_simp}, medida con paso {PASO_FID})')
+        if peor_fid > a.tol_simp + 2 * PASO_FID:
+            sys.exit('*** ABORTADO: la simplificacion movio el contorno mas de lo permitido ***')
 
     if peor < minimo - 1e-6:
         sys.exit('*** ABORTADO: la separacion real quedo por debajo del minimo ***')

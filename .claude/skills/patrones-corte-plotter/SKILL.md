@@ -137,6 +137,16 @@ lo de abajo; no rehacer el razonamiento a mano.
 > hay archivos que SI funcionan, lo primero es abrirlos y comparar COMO ESTAN HECHOS.** No
 > teorizar. Y no "mejorar" un parametro de proceso que ya estaba validado en planta.
 
+> 🔴🔴 **UN CONTORNO = UNA POLILINEA CERRADA. Nunca segmentos sueltos.**
+> Si cada tramo va como entidad separada, el plotter **baja y sube la cuchilla en cada uno**:
+> el Insert trasero salia con **3136 objetos** y el delantero con **2248**, o sea miles de
+> bajadas para 8 piezas. Sintoma de Fak: *"la cuchilla se levanta muchas veces"*, y el corte
+> queda mordido. `encadenar()` une los tramos por sus extremos y `escribir()` emite una
+> LWPOLYLINE con `closed=True` por pieza: **3136 → 8 bajadas**.
+> Va de la mano con `--simplificar` (Douglas-Peucker): a 0,05 mm saca los vertices redundantes
+> —**cero segmentos por debajo de 0,3 mm**— y el contorno se mueve 0,05 mm, nada contra la
+> tolerancia de ±1,5 del plano. El script mide la fidelidad y aborta si se pasa.
+
 > 🔴🔴 **ORDEN DE CORTE: TODOS los agujeros primero, TODOS los contornos despues.**
 > Escribir pieza por pieza (su contorno y despues sus agujeros) **parece ordenado y esta mal**:
 > cuando la cuchilla llega al agujero, esa pieza ya esta cortada y suelta, se mueve, y el
@@ -157,6 +167,12 @@ lo de abajo; no rehacer el razonamiento a mano.
    (el contorno cierra, la costura no) y se descartan. En el Insert son 60 tramos (trasero) y
    56 (delantero); si el descarte da 0, el archivo no traia costura o algo esta mal.
 
+> ⚠️ **TODA verificacion por vecino-mas-cercano necesita densificado FINO.** Me paso dos veces
+> el mismo dia: el espejo izq/der daba 1,05 mm (era 0,05) y la fidelidad tras simplificar daba
+> 0,41 mm (era 0,05) — **el script se aborto solo por su propio error de muestreo**. Si el
+> numero baja proporcional al paso, se estaba midiendo el muestreo. Densificar a 0,02-0,05 y
+> atar el umbral al paso.
+>
 > ⚠️ **Un chequeo de simetria con densificado grueso miente.** El espejo izq/der daba 1,05 mm
 > con paso 1,0 y parecia asimetria; con paso 0,05 da 0,05. **Si el resultado baja proporcional
 > al paso, lo que se estaba midiendo era el muestreo, no la pieza.** El umbral va atado al paso.
