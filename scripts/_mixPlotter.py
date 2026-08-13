@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Arma una hoja (mix) para el plotter de corte a partir de un DXF que trae las 2 manos.
 
-Por que existe: el plotter de Barack es una maquina de CORTE CON CUCHILLA de arrastre.
+Por que existe: el plotter destino es una maquina de CORTE CON CUCHILLA de arrastre.
 Eso fija tres cosas que este script garantiza y verifica:
 
   1. La cuchilla solo corta mientras se DESPLAZA -> los puntos de anclaje van como
