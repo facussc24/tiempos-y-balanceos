@@ -104,6 +104,48 @@ PLT**: `escribir_plt()` toma solo CORTE + MARCAS. El DXF sin embargo la conserva
 7. `escribir_plt()` desde el archivo nuevo.
 8. **GATE 3** y una imagen de comparacion.
 
+## 3 bis. MIX DE PLOTTER — el estandar, en numeros
+
+Armar una hoja con varias piezas para el plotter: **`python scripts/_mixPlotter.py entrada.dxf
+salida.dxf`** (`--filas --sep --diam --vueltas --dry-run`). El script hace y **verifica** todo
+lo de abajo; no rehacer el razonamiento a mano.
+
+**Los valores que Fak valido (13/08/2026), y que son el default:**
+
+| Que | Valor | Por que |
+|---|---|---|
+| Separacion entre piezas | **15,0 mm REALES** | precedentes: 15,358 del mix viejo y 14,693 del que Fak aprobo ("se corta re bien y re facil") |
+| Punto de anclaje | **circulo Ø3,0 recorrido 3 VUELTAS** | 28,3 mm de recorrido. Con 1 vuelta de Ø1 (3,1 mm) **la cuchilla no llega a cortar** |
+| Piezas por hoja | **8: 4 mano izq + 4 mano der** | juegos completos; 2 columnas x 4 filas |
+| Orientacion | piezas **horizontales** (lado largo en X del dibujo) | asi las dejo Fak y asi corta sin levantarse |
+| Capa | `CORTE`, todo | el plotter corta lo que hay |
+
+**Las tres trampas de este trabajo (medidas, no opinadas):**
+
+1. **La separacion se mide CONTORNO CONTRA CONTORNO, nunca entre bounding boxes.** Las piezas
+   son cunas: dos bboxes a 15 mm pueden tener los filos a 3. El script busca el offset minimo
+   que garantiza la separacion real y **aborta** si no la alcanza.
+2. **El contorno de un patron mezcla LINE + ARC + LWPOLYLINE.** Tomando solo las LINEs, el
+   Insert trasero salia **44 mm corto** y no se ve mirando. Juntar todos los tipos.
+3. **Las lineas de costura NO se cortan.** Se detectan porque **quedan con puntas sin pareja**
+   (el contorno cierra, la costura no) y se descartan. En el Insert son 60 tramos (trasero) y
+   56 (delantero); si el descarte da 0, el archivo no traia costura o algo esta mal.
+
+> ⚠️ **Un chequeo de simetria con densificado grueso miente.** El espejo izq/der daba 1,05 mm
+> con paso 1,0 y parecia asimetria; con paso 0,05 da 0,05. **Si el resultado baja proporcional
+> al paso, lo que se estaba midiendo era el muestreo, no la pieza.** El umbral va atado al paso.
+
+**Donde vive el mix** (etapa PROYECTO — en serie se maneja desde la biblioteca de Ingenieria):
+`...\PPAP CLIENTES\<CLIENTE>\<FAMILIA>\13-Especificaciones de Ingenieria F\02 -Computo Tizada de
+Corte- Consumo de Materiales\<PIEZA>\01- Vinilo\<...>\MIXTO\`, y las copias para cortar, sueltas
+en el Escritorio.
+
+> 🔴 **Los entregables de Fak NO van a la Papelera.** Se archivan con
+> `node scripts/_escritorio.mjs --archivar`. El 10/08 mande a la Papelera 14 versiones
+> intermedias confiando en que se recuperan con un click; tres dias despues la Papelera estaba
+> **vacia** y el mix que Fak habia aprobado no aparecio por ningun lado. La Papelera no es un
+> archivo: es una cola que alguien vacia.
+
 ## 4. Rotar e identificar el PLT
 
 > 🔴🔴 **"EL PLOTTER" ES UNA MAQUINA DE CORTE CON CUCHILLA (Fak, 2026-08-10).** No es un
