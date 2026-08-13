@@ -120,6 +120,15 @@ lo de abajo; no rehacer el razonamiento a mano.
 | Orientacion | piezas **horizontales** (lado largo en X del dibujo) | asi las dejo Fak y asi corta sin levantarse |
 | Capa | `CORTE`, todo | el plotter corta lo que hay |
 
+> 🔴🔴 **ORDEN DE CORTE: TODOS los agujeros primero, TODOS los contornos despues.**
+> Escribir pieza por pieza (su contorno y despues sus agujeros) **parece ordenado y esta mal**:
+> cuando la cuchilla llega al agujero, esa pieza ya esta cortada y suelta, se mueve, y el
+> agujero sale mal o no sale. Sintoma exacto que reporto Fak: *"algunos circulos el plotter no
+> los esta haciendo"* — **algunos**, los de las piezas que mas se movieron. `escribir()` emite
+> en dos pasadas y `verificar_orden()` **relee el archivo** y aborta si queda un agujero
+> despues de un contorno. Con `--partir` salen ademas `_1_AGUJEROS` y `_2_CONTORNO` con origen
+> comun, para cuando el plotter reordena por su cuenta.
+
 **Las tres trampas de este trabajo (medidas, no opinadas):**
 
 1. **La separacion se mide CONTORNO CONTRA CONTORNO, nunca entre bounding boxes.** Las piezas

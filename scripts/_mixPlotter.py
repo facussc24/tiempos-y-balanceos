@@ -184,20 +184,64 @@ def armar(manos, filas, sep_real, diam, vueltas):
     return piezas, paso_x, paso_y
 
 
-def escribir(piezas, salida, diam, vueltas):
+def _doc_nuevo():
     doc = ezdxf.new('R2018', setup=True)
     doc.header['$INSUNITS'] = 4
     doc.header['$MEASUREMENT'] = 1
     if 'CORTE' not in doc.layers:
         doc.layers.add('CORTE', color=7)
+    return doc
+
+
+def escribir(piezas, salida, diam, vueltas, partir=False):
+    """TODOS los circulos primero, TODOS los contornos despues.
+
+    Es la regla que mas caro se paga: una vez cortado el contorno la pieza queda
+    suelta, se mueve, y el agujero de esa pieza sale mal o directamente no sale.
+    Escribir pieza por pieza (contorno + sus agujeros) rompe esto aunque el
+    archivo parezca ordenado.
+
+    Con partir=True se emiten ademas dos archivos, _1_AGUJEROS y _2_CONTORNO, para
+    cuando el plotter reordena por su cuenta y no respeta el orden del archivo.
+    Comparten origen porque salen de las mismas coordenadas absolutas.
+    """
+    doc = _doc_nuevo()
     ms = doc.modelspace()
-    for pz in piezas:
-        for t in pz['tramos']:
-            ms.add_lwpolyline(t, close=False, dxfattribs={'layer': 'CORTE'})
+    for pz in piezas:                                    # 1) agujeros
         for (cx, cy, _) in pz['circulos']:
             ms.add_lwpolyline(circulo(cx, cy, diam, vueltas), close=False,
                               dxfattribs={'layer': 'CORTE'})
+    for pz in piezas:                                    # 2) contornos
+        for t in pz['tramos']:
+            ms.add_lwpolyline(t, close=False, dxfattribs={'layer': 'CORTE'})
     doc.saveas(salida)
+
+    if partir:
+        base, ext = os.path.splitext(salida)
+        d1 = _doc_nuevo(); m1 = d1.modelspace()
+        for pz in piezas:
+            for (cx, cy, _) in pz['circulos']:
+                m1.add_lwpolyline(circulo(cx, cy, diam, vueltas), close=False,
+                                  dxfattribs={'layer': 'CORTE'})
+        d1.saveas(f'{base}_1_AGUJEROS{ext}')
+        d2 = _doc_nuevo(); m2 = d2.modelspace()
+        for pz in piezas:
+            for t in pz['tramos']:
+                m2.add_lwpolyline(t, close=False, dxfattribs={'layer': 'CORTE'})
+        d2.saveas(f'{base}_2_CONTORNO{ext}')
+
+
+def verificar_orden(salida, n_vert_circulo):
+    """Relee el archivo escrito y exige que no quede ningun agujero despues de un
+    contorno. Se comprueba sobre el archivo, no sobre la intencion del codigo."""
+    ms = ezdxf.readfile(salida).modelspace()
+    sec = ['O' if len(list(e.get_points())) == n_vert_circulo else '.'
+           for e in ms]
+    s = ''.join(sec)
+    ultimo_circ = s.rfind('O')
+    primer_cont = s.find('.')
+    ok = ultimo_circ < primer_cont if 'O' in s else True
+    return ok, s.count('O'), ultimo_circ, primer_cont
 
 
 # ------------------------------------------------------------------ main
@@ -211,6 +255,8 @@ def main():
     ap.add_argument('--sep', type=float, default=15.0)
     ap.add_argument('--diam', type=float, default=3.0)
     ap.add_argument('--vueltas', type=int, default=3)
+    ap.add_argument('--partir', action='store_true',
+                    help='ademas del archivo unico, emite _1_AGUJEROS y _2_CONTORNO')
     ap.add_argument('--dry-run', action='store_true')
     a = ap.parse_args()
 
@@ -268,8 +314,20 @@ def main():
     if a.dry_run:
         print('\n   dry-run: no se escribio nada')
         return
-    escribir(piezas, a.salida, a.diam, a.vueltas)
+    escribir(piezas, a.salida, a.diam, a.vueltas, partir=a.partir)
+
+    n_vert = int(72 * a.vueltas) + 1
+    ok, ncirc, ult, pri = verificar_orden(a.salida, n_vert)
+    print(f'\n   ORDEN DE CORTE: {ncirc} agujeros, el ultimo en la posicion {ult}; '
+          f'primer tramo de contorno en la {pri}')
+    print(f'   -> {"OK: todos los agujeros van ANTES del contorno" if ok else "*** MAL: hay agujeros despues de un contorno ***"}')
+    if not ok:
+        sys.exit('*** ABORTADO: con ese orden la pieza queda suelta antes de su agujero ***')
     print(f'\n   escrito {a.salida}')
+    if a.partir:
+        base, ext = os.path.splitext(a.salida)
+        print(f'   escrito {base}_1_AGUJEROS{ext}')
+        print(f'   escrito {base}_2_CONTORNO{ext}')
 
 
 if __name__ == '__main__':
