@@ -61,13 +61,24 @@ def _load(path, keep=None, translate=None, highest_dim_only=True):
             sys.stderr.write(
                 "[cadlib.geom] AVISO: %s trae %d caras LIBRES (no pertenecen a ningun "
                 "solido) y se descartaron.\n"
-                "  Si estas MIDIENDO una luz interna, es probable que esas caras SEAN la "
-                "pared que buscas y el\n"
-                "  numero te salga por la envolvente exterior. Paso el 2026-08-09 con la "
-                "ranura de un panel de cliente:\n"
-                "  con True media 12,96 mm (envolvente) y con False 10,90 (luz real), y "
-                "todo el utillaje se dimensiono mal.\n"
-                "  Para medir: step_to_trimesh(..., caras_libres=True).\n"
+                "  QUE SON esas caras hay que AVERIGUARLO, no suponerlo. Hay dos casos y "
+                "dan resultados opuestos:\n"
+                "    (a) SON la pared, y el solido es una envolvente -> medir con "
+                "caras_libres=True.\n"
+                "    (b) son una CAPA sobre la pared (tapizado, vinilo, pintura) -> medir "
+                "con False, o contas\n"
+                "        el espesor de la capa DOS VECES.\n"
+                "  Este aviso decia (a) como si fuera la regla y costo las dos veces: el "
+                "2026-08-09 se dimensiono\n"
+                "  con la envolvente y el macho salio ancho; el 2026-08-12, siguiendo el "
+                "aviso, se midio contra las\n"
+                "  caras sueltas —que eran el VINILO— y el macho salio 2,11 mm ANGOSTO: no "
+                "tocaba nada.\n"
+                "  COMO SE DECIDE (30 s): medir la misma luz de las dos formas y mirar el "
+                "corte crudo de cruces.\n"
+                "  Si las sueltas caen ADENTRO del solido y el offset por lado se parece al "
+                "espesor de una capa\n"
+                "  conocida, son caso (b). Si caen AFUERA, son caso (a).\n"
                 % (os.path.basename(path), len(libres)))
     if keep is not None:
         keep = set(keep)
@@ -139,11 +150,22 @@ def step_to_trimesh(path, lc=LC_ANALYSIS, keep=None, translate=None, require_wat
                     caras_libres=False):
     """STEP -> trimesh.Trimesh listo para contains/volumen. ValueError si queda vacia.
 
-    caras_libres=True trae tambien las caras que no pertenecen a ningun solido. La malla
-    deja de ser watertight (o sea `contains` no sirve), pero es la UNICA forma de MEDIR una
-    luz interna cuando las paredes viven en un shell suelto, que es lo que pasa en un panel
-    de cliente: con False la ranura mide 12,96 (envolvente exterior de las dos paredes)
-    y con True 10,90 (la luz de verdad).
+    caras_libres=True trae tambien las caras que no pertenecen a ningun solido, y la malla
+    deja de ser watertight (o sea `contains` no sirve).
+
+    CUAL DE LOS DOS ES "LA LUZ DE VERDAD" DEPENDE DEL ARCHIVO, y hay que medirlo. Este
+    docstring afirmaba que True daba la luz real; sobre el panel del Upper Trim eso era
+    FALSO y mando el diseno al lado equivocado dos veces seguidas:
+
+      2026-08-09  se midio con False (12,96 = envolvente) -> macho ancho.
+      2026-08-12  se midio con True  (10,90 = el VINILO)  -> macho 2,11 mm ANGOSTO, no
+                  tocaba nada. Las caras sueltas de ese panel eran el tapizado ya modelado,
+                  a 0,95 mm por dentro de cada pared.
+
+    El discriminador es barato: medir la misma luz de las dos formas y mirar el corte crudo
+    de cruces a lo largo del rayo. Si las caras sueltas caen ADENTRO de la luz del solido y
+    el offset por lado se parece al espesor de una capa conocida (tapizado, pintura), son
+    una CAPA -> medir con False. Si caen AFUERA, son la pared -> medir con True.
     """
     envcheck.require(("trimesh",))
     import trimesh
