@@ -43,15 +43,14 @@ La historia completa de cada incidente vive en los snapshots.
 
 ## Automatizacion de interfaces / ERP
 
-- **08/07**: Si la herramienta tiene interfaz, MIRARLA es el primer paso. Foreground NO es foco: solo un click real da foco de teclado. Tras una corrida fallida, resetear el estado. Un chequeo que compara identidad y no contenido deja pasar el daño.
-- **08/07**: Preguntarle al que la usa todos los dias es el camino corto. "Es un limite del programa" casi siempre es un limite de lo que probe.
+- **08/07**: Si la herramienta tiene interfaz, MIRARLA es el primer paso. Foreground NO es foco: solo un click real da foco de teclado. Tras una corrida fallida, resetear el estado. Un chequeo que compara identidad y no contenido deja pasar el daño. Preguntarle al que la usa todos los dias es el camino corto: "es un limite del programa" casi siempre es un limite de lo que probe.
 - **08/07**: Proceso que escribe un archivo compartido: gate "alguien lo tiene tomado?" + verificar mtime despues (Excel se lo queda y el export siguiente falla EN SILENCIO). Nunca aceptar un dialogo sin leerlo.
 
 ## CAD y 3D
 
 - **08/07 y 07/08** (detalle en el snapshot 2026-08-09 y en las memorias `muestreo_que_aliasea_ciega_el_control` y `un_fastener_se_disena_contra_su_agujero`): barrido sobre algo periodico nunca con incremento fraccion simple del periodo; un fastener hereda sus cotas del agujero y de la cara donde apoya, medidas en el ARCHIVO 3D; `is_valid=True` no prueba estanqueidad ni que exista geometria — todo generador cierra con volumen > 0, `len(solids()) == 1` y archivo escrito que pesa.
 
-- **10/08**: Todos mis controles median material de MAS; ninguno media que la pieza ESTE. Un tornillo al que le falta un tercio de la rosca pasa `is_valid`, pasa el control de volumen (-1,6 %), pasa el gate del alma y da VERDE con exit 0. **Por cada control de "no sobra" va uno de "no falta"** (material en la corona entre raiz y cresta) + `len(solids()) == 1` — con dos cuerpos sueltos el volumen se SUMA y ningun control lo ve. Ademas: `export_stl` devuelve False sin lanzar y queda el archivo anterior; el reporte salia de `vars(args)`, no del solido. **ROJO antes que CONTROL CIEGO.** Detalle en el snapshot 2026-08-09.
+- **10/08**: Todos mis controles median material de MAS; ninguno media que la pieza ESTE. Un tornillo sin un tercio de la rosca pasa `is_valid`, el control de volumen (-1,6 %) y el gate del alma, y da VERDE con exit 0. **Por cada control de "no sobra" va uno de "no falta"** (material en la corona entre raiz y cresta) + `len(solids()) == 1` — con dos cuerpos sueltos el volumen se SUMA y nadie lo ve. Ademas `export_stl` devuelve False sin lanzar y queda el archivo anterior. **ROJO antes que CONTROL CIEGO.** Detalle en el snapshot 2026-08-09.
 
 ## Patrones de corte
 
@@ -62,6 +61,7 @@ La historia completa de cada incidente vive en los snapshots.
 
 - **14/08 — 20 min para pasar 2 archivos al pendrive: "inaceptable".** No se donde quedo lo que entregue: la tarea ya estaba cerrada y archivada en la biblioteca SharePoint (`BARACK ARGENTINA SRL\...\TAREAS CERRADAS\<año>\`), no en el Escritorio ni en Y:. Termine leyendo transcripciones de sesiones viejas. **Antes de barrer el disco, mirar TAREAS CERRADAS.** Colateral: PowerShell inline desde bash corrompe `$_` — escribir siempre un `.ps1`. Tarea abierta: `AUTOMATIZAR - buscar y pasar archivos al pendrive.md` (Escritorio).
  - **13/08 — Un mail en la Bandeja de salida parece enviado y NO salio** (Outlook se cerro antes). Al reabrirlo por COM se manda solo en el primer send/receive: **revisar el Outbox ANTES de tocar nada** (moverlo a Borradores lo congela). "Se envio?" se mira en Enviados por fecha, nunca en el borrador.
+- **14/08 — Le ofreci opciones que no se entendian: *"no te entendi un carjao decidi vos"*.** Para elegir por donde arrancar el AMFE de Patagonia le puse los identificadores de MI base (AMFE 150, `AMFE-MAESTRO-LOG-REC-001`) y conteos de hallazgos. Eso no es lo que el mira: el mira la PIEZA y que le va a pasar. **Si necesito nombrar un identificador interno para que una opcion se entienda, la opcion esta mal escrita** — va el nombre de la pieza y la consecuencia. Y "decidi vos" se responde decidiendo + una linea de por que, no repreguntando mas simple.
 - **08/07**: El pedido incluye el DONDE: para usar ya = suelto en el Escritorio, sin subcarpetas, versiones ni informes. La verificacion la hago yo, no se la leo. Cerrar incluye archivar el rastro (`_escritorio.mjs --archivar`).
 - **08/02**: Cuando Fak da por sentado que algo esta respaldado, verificar CUAL cuenta/carpeta/numero. Si pregunta algo que mi plan da por resuelto, el plan tiene un agujero.
 
