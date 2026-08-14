@@ -39,6 +39,7 @@ from build123d import (  # noqa: E402
     Axis,
     Cone,
     Cylinder,
+    Rot,
     GeomType,
     Plane,
     Pos,
@@ -49,13 +50,60 @@ from build123d import (  # noqa: E402
     extrude,
     fillet,
 )
-from bd_warehouse.thread import IsoThread  # noqa: E402
+from bd_warehouse.thread import IsoThread, Thread  # noqa: E402
+
+
+# --------------------------------------------------------------- rosca multi-entrada
+def iso_thread(*, major_diameter, pitch, length, external, end_finishes, starts=1):
+    """Rosca ISO, con soporte de VARIAS ENTRADAS.
+
+    Por que existe: con una sola entrada el avance por vuelta es el paso, y un paso de 1 mm
+    obliga a 20 vueltas para recorrer 20 mm. En una linea de serie eso es tiempo de ciclo y
+    el operario lo rechaza. Subir el paso resuelve el avance pero adelgaza el nucleo
+    (nucleo = major - 1,0825*paso) y el tornillo se vuelve a partir.
+
+    Varias entradas separan las dos cosas: el PERFIL del diente lo sigue fijando `pitch`
+    (mismo filete, mismo nucleo, misma imprimibilidad) y el AVANCE pasa a ser `starts*pitch`.
+    Son N filetes identicos desfasados 360/N.
+
+    TOPE: el avance no puede pasar el angulo de friccion o la union se afloja sola con la
+    vibracion. Con PETG (mu~0,30 -> 16,7 grados) sobre M4,7 el limite son 3 entradas; con 4
+    la helice da 17,5 grados y se desenrosca. El CLI lo verifica y aborta.
+    """
+    min_radius = major_diameter / 2 - 5 * pitch * math.cos(math.radians(30)) / 8
+    if starts <= 1:
+        return IsoThread(major_diameter=major_diameter, pitch=pitch, length=length,
+                         external=external, end_finishes=end_finishes)
+
+    # perfil de un diente ISO del paso indicado (identico al que arma IsoThread)
+    if external:
+        apex_r, apex_w = major_diameter / 2, pitch / 8
+        root_r, root_w = min_radius, 3 * pitch / 4
+    else:
+        apex_r, apex_w = min_radius, pitch / 4
+        root_r, root_w = major_diameter / 2, 7 * pitch / 8
+
+    lead = starts * pitch  # lo que avanza en una vuelta
+    filetes = None
+    for k in range(starts):
+        # OJO: el parametro `rotation=` de Thread NO rota nada — los N filetes salen
+        # superpuestos, la fusion devuelve UNO y el tornillo queda con 1/N de la rosca.
+        # Se detecto porque el gate de "falta rosca" bajo a 13% (sano: 40-60%). Va Rot().
+        f = Rot(0, 0, 360.0 * k / starts) * Thread(
+            apex_radius=apex_r, apex_width=apex_w,
+            root_radius=root_r, root_width=root_w,
+            pitch=lead, length=length, end_finishes=end_finishes)
+        filetes = f if filetes is None else filetes + f
+    # se exponen los mismos atributos que IsoThread para que el resto del script no cambie
+    filetes.min_radius = min_radius
+    filetes.major_diameter = major_diameter
+    return filetes
 
 
 # --------------------------------------------------------------------------- tornillo
 def build_screw(*, major, pitch, clearance, total_length, head_dia, head_th,
                 neck, knurl_n, knurl_depth, head_chamfer, fillet_r=None,
-                relief_d=0.0, relief_depth=0.0, shank_d=None):
+                relief_d=0.0, relief_depth=0.0, shank_d=None, starts=1):
     """Cabeza en z=[0, head_th], vastago LISO al diametro pleno, y rosca hasta total_length.
 
     El tramo liso (`neck`) no es decorativo: la rosca adelgaza el nucleo a d-1,23*paso, asi
@@ -71,7 +119,7 @@ def build_screw(*, major, pitch, clearance, total_length, head_dia, head_th,
     if thread_len <= 2 * pitch:
         raise SystemExit(f"rosca demasiado corta: {thread_len:.2f} mm")
 
-    thread = IsoThread(
+    thread = iso_thread(
         major_diameter=thread_major,
         pitch=pitch,
         length=thread_len,
@@ -79,6 +127,7 @@ def build_screw(*, major, pitch, clearance, total_length, head_dia, head_th,
         # "fade" abajo: la rosca nace DESDE el nucleo, sin cara coincidente con la cabeza
         # (con "square" el plano de arranque coincide con el del cuello y el solido no cierra)
         end_finishes=("fade", "chamfer"),  # arriba chaflan: entra sola en la tuerca
+        starts=starts,
     )
 
     head = Cylinder(head_dia / 2, head_th, align=(Align.CENTER, Align.CENTER, Align.MIN))
@@ -149,21 +198,39 @@ def build_screw(*, major, pitch, clearance, total_length, head_dia, head_th,
 
 
 # --------------------------------------------------------------------------- tuerca
-def build_nut(*, major, pitch, nut_af, nut_h, nut_chamfer, entry_chamfer=1.0):
-    thread = IsoThread(
-        major_diameter=major,
-        pitch=pitch,
-        length=nut_h,
-        external=False,
-        end_finishes=("chamfer", "chamfer"),  # entra sola por los dos lados
-    )
+def build_nut(*, major, pitch, nut_af, nut_h, nut_chamfer, entry_chamfer=1.0, starts=1):
     circum = nut_af / 2 / math.cos(math.radians(30))
     body = extrude(RegularPolygon(circum, 6), amount=nut_h)
     body = Pos(0, 0, 0) * body
     if nut_chamfer > 0:
         body = chamfer(body.edges().filter_by(Plane.XY), length=nut_chamfer)
-    body -= Cylinder(major / 2, nut_h * 3, align=(Align.CENTER, Align.CENTER, Align.CENTER))
-    nut = body + thread
+
+    if starts > 1:
+        # MULTI-ENTRADA: la rosca hembra se saca RESTANDO un macho, no sumando filetes
+        # internos. Sumarlos da un solido que OCC valida (is_valid True, 1 cuerpo) pero que
+        # NO SE PUEDE TESELAR: el STL sale con 1154 bordes abiertos y ademas su volumen no
+        # coincide con el del solido (362 contra 333) — o sea la malla no representa la
+        # pieza. Restando el macho, STL y solido dan el MISMO volumen y cierra.
+        # El macho va al diametro NOMINAL: la holgura vive en el tornillo (major-clearance).
+        macho = iso_thread(major_diameter=major, pitch=pitch, length=nut_h * 3,
+                           external=True, end_finishes=("raw", "raw"), starts=starts)
+        thread = macho
+        nut = (body
+               - Cylinder(macho.min_radius, nut_h * 4,
+                          align=(Align.CENTER, Align.CENTER, Align.CENTER))
+               - Pos(0, 0, -nut_h) * macho)
+    else:
+        thread = iso_thread(
+            major_diameter=major,
+            pitch=pitch,
+            length=nut_h,
+            external=False,
+            end_finishes=("chamfer", "chamfer"),  # entra sola por los dos lados
+            starts=starts,
+        )
+        body -= Cylinder(major / 2, nut_h * 3,
+                         align=(Align.CENTER, Align.CENTER, Align.CENTER))
+        nut = body + thread
 
     # CHAFLAN DE ENTRADA a 45 grados en las DOS bocas de la rosca. Va al final, DESPUES de
     # sumar el filete, para que se coma las primeras vueltas incompletas.
@@ -209,6 +276,13 @@ def main(argv=None):
     p.add_argument("--knurl-depth", type=float, default=0.8)
     p.add_argument("--nut-af", type=float, required=True, help="entre caras de la tuerca (mm)")
     p.add_argument("--nut-h", type=float, required=True)
+    p.add_argument("--starts", type=int, default=1,
+                   help="entradas de rosca. El avance por vuelta pasa a starts*pitch SIN "
+                        "adelgazar el nucleo: 3 entradas = 3x mas rapido de enroscar, mismo "
+                        "filete. TOPE por autobloqueo, se verifica abajo")
+    p.add_argument("--mu", type=float, default=0.30,
+                   help="coeficiente de rozamiento del material, para el gate de autobloqueo. "
+                        "PETG/PLA contra si mismos ~0,30")
     p.add_argument("--nut-chamfer", type=float, default=0.5)
     p.add_argument("--nut-entry-chamfer", type=float, default=1.0,
                    help="chaflan 45 grados en las DOS bocas de la rosca de la tuerca. La "
@@ -241,13 +315,31 @@ def main(argv=None):
     if (a.head_relief > 0) != (a.head_relief_depth > 0):
         raise SystemExit("--head-relief y --head-relief-depth van juntos o no van")
 
+    # GATE DE AUTOBLOQUEO. Con varias entradas el avance por vuelta crece y con el la
+    # inclinacion de la helice. Si esa inclinacion supera el angulo de rozamiento, la union
+    # se desenrosca sola con la vibracion — y eso no se ve en el STL ni en ningun render.
+    if a.starts < 1:
+        raise SystemExit("--starts tiene que ser >= 1")
+    avance = a.starts * a.pitch
+    d_medio = (a.major - a.clearance) - 0.6495 * a.pitch
+    helice = math.degrees(math.atan(avance / (math.pi * d_medio)))
+    ang_roz = math.degrees(math.atan(a.mu))
+    if helice >= ang_roz:
+        raise SystemExit(
+            f"{a.starts} entradas dan una helice de {helice:.1f} grados y el angulo de "
+            f"rozamiento (mu={a.mu}) es {ang_roz:.1f}: la union SE AFLOJA SOLA. "
+            f"El maximo para este paso y diametro es "
+            f"{int(math.tan(math.radians(ang_roz)) * math.pi * d_medio / a.pitch)} entradas.")
+
     screw, sth = build_screw(
         major=a.major, pitch=a.pitch, clearance=a.clearance, total_length=a.total_length,
         head_dia=a.head_dia, head_th=a.head_th, neck=a.neck, fillet_r=a.fillet,
         relief_d=a.head_relief, relief_depth=a.head_relief_depth, shank_d=a.shank_dia,
-        knurl_n=a.knurl_n, knurl_depth=a.knurl_depth, head_chamfer=a.head_chamfer)
+        knurl_n=a.knurl_n, knurl_depth=a.knurl_depth, head_chamfer=a.head_chamfer,
+        starts=a.starts)
     nut, nth = build_nut(major=a.major, pitch=a.pitch, nut_af=a.nut_af, nut_h=a.nut_h,
-                         nut_chamfer=a.nut_chamfer, entry_chamfer=a.nut_entry_chamfer)
+                         nut_chamfer=a.nut_chamfer, entry_chamfer=a.nut_entry_chamfer,
+                         starts=a.starts)
 
     # `is_valid` devuelve True para un compound VACIO: no alcanza como control.
     # Cuando el vastago y la cresta de rosca caen al mismo diametro las caras quedan
