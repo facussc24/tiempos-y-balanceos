@@ -1,3 +1,13 @@
+-- APLICADO el 2026-08-14. NO VOLVER A CORRERLO TAL CUAL.
+--
+-- CORRECCION DE FAK (2026-08-14): la parte de `processResponsible` de este script
+-- estaba MAL. El responsable de proceso es **Carlos Baptista** en TODOS los AMFEs
+-- —es el gerente de Ingenieria— y no Paulo Centurion. Que el archivo original de
+-- abril 2025 dijera "PAULO CENTURION" solo dice quien era responsable entonces.
+-- Ya quedaron los 17 AMFEs con Carlos Baptista. El resto del script (rev B->A,
+-- coreTeam de 4, las 2 filas de revisions) si se aplico y quedo bien.
+-- Memoria: feedback_carlos_baptista_responsable_todos_los_amfes.
+--
 -- PENDIENTE — cambios del AMFE 150 en Supabase (2026-08-03)
 --
 -- Los 17 Excel del servidor YA quedaron regenerados con estos valores. Falta
