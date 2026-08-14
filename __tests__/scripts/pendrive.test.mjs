@@ -17,9 +17,9 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-import { superadosPor, yaEstan, elegirUnidad } from '../../scripts/_pendrive.mjs';
+import { superadosPor, yaEstan, elegirUnidad, parsearArgs } from '../../scripts/_pendrive.mjs';
 import {
-    copiarVerificado, moverVerificado, revisarDestino, md5, MAX_PATH_WINDOWS,
+    copiarVerificado, moverVerificado, revisarDestino, nombreLibre, md5, MAX_PATH_WINDOWS,
 } from '../../scripts/_lib/copiaVerificada.mjs';
 
 const n = (nombre) => ({ nombre, ruta: `X:\\${nombre}` });
@@ -121,5 +121,58 @@ describe('copiarVerificado / moverVerificado', () => {
         const otro = path.join(dir, 'otro.dxf');
         fs.writeFileSync(otro, 'contenido distinto');
         expect(md5(otro)).not.toBe(md5(origen));
+    });
+
+    it('17. NO pisa un archivo que ya esta: asi se pierde un respaldo sin que nadie se entere', () => {
+        const destino = path.join(dir, 'copia.dxf');
+        fs.writeFileSync(destino, 'un respaldo anterior');
+        expect(() => copiarVerificado(origen, destino)).toThrow(/ya existe un archivo ahi/);
+        expect(fs.readFileSync(destino, 'utf8')).toBe('un respaldo anterior');
+    });
+
+    it('18. con pisar:true si sobreescribe (para cuando eso es lo buscado)', () => {
+        const destino = path.join(dir, 'copia.dxf');
+        fs.writeFileSync(destino, 'viejo');
+        copiarVerificado(origen, destino, { pisar: true });
+        expect(fs.readFileSync(destino, 'utf8')).toBe('contenido del patron');
+    });
+
+    it('19. nombreLibre esquiva la colision en vez de tapar el respaldo viejo', () => {
+        const destino = path.join(dir, 'patron.dxf');   // ya existe: es el origen
+        expect(path.basename(nombreLibre(destino))).toBe('patron (2).dxf');
+        fs.writeFileSync(path.join(dir, 'patron (2).dxf'), 'x');
+        expect(path.basename(nombreLibre(destino))).toBe('patron (3).dxf');
+    });
+
+    it('20. si el nombre esta libre, nombreLibre no lo cambia', () => {
+        const p = path.join(dir, 'nuevo.dxf');
+        expect(nombreLibre(p)).toBe(p);
+    });
+});
+
+describe('parsearArgs — las comillas que Fak se puede olvidar', () => {
+    it('21. termino + flag, en cualquier orden', () => {
+        expect(parsearArgs(['x', '--aplicar'])).toEqual({ termino: 'x', sueltos: [] });
+        expect(parsearArgs(['--aplicar', 'x'])).toEqual({ termino: 'x', sueltos: [] });
+    });
+
+    it('22. el valor de --unidad no se confunde con el termino, vaya donde vaya', () => {
+        expect(parsearArgs(['--unidad', 'D:', 'x'])).toEqual({ termino: 'x', sueltos: [] });
+        expect(parsearArgs(['x', '--unidad', 'D:'])).toEqual({ termino: 'x', sueltos: [] });
+    });
+
+    it('23. un termino que se llama IGUAL que el valor de --unidad no se traga', () => {
+        // Con `args.indexOf(a)` dentro del find, este caso devolvia undefined: indexOf
+        // encuentra la PRIMERA aparicion del valor, no la posicion que se esta mirando.
+        expect(parsearArgs(['--unidad', 'D:', 'D:']).termino).toBe('D:');
+    });
+
+    it('24. sin comillas, las palabras que sobran se cantan — no se descartan calladas', () => {
+        expect(parsearArgs(['armrest', 'door', 'panel', '--aplicar']))
+            .toEqual({ termino: 'armrest', sueltos: ['door', 'panel'] });
+    });
+
+    it('25. sin termino devuelve null y el CLI muestra el uso', () => {
+        expect(parsearArgs(['--aplicar']).termino).toBeNull();
     });
 });

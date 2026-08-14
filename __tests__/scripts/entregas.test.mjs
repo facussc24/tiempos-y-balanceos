@@ -54,8 +54,8 @@ describe('familiaEntregable — version vs documento distinto', () => {
     });
 
     it('5. NO se come el numero de documento: es identidad, no version', () => {
-        expect(familiaEntregable('DOC-986 PIEZA A REV.A.xlsx'))
-            .not.toBe(familiaEntregable('DOC-985 PIEZA B REV.A.xlsx'));
+        expect(familiaEntregable('DOC-401 PIEZA A REV.A.xlsx'))
+            .not.toBe(familiaEntregable('DOC-402 PIEZA B REV.A.xlsx'));
     });
 
     it('6. la extension separa: un STEP y un STL son entregables distintos', () => {

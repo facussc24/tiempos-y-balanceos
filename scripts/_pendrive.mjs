@@ -27,7 +27,7 @@ import { fileURLToPath } from 'node:url';
 
 import { relevar, familiaEntregable, fmtFecha, cortar } from './_entregas.mjs';
 import { unidadesExtraibles } from './_lib/powershell.mjs';
-import { copiarVerificado, moverVerificado, revisarDestino } from './_lib/copiaVerificada.mjs';
+import { copiarVerificado, moverVerificado, revisarDestino, nombreLibre } from './_lib/copiaVerificada.mjs';
 
 const c = { r: '\x1b[31m', y: '\x1b[33m', g: '\x1b[32m', d: '\x1b[2m', b: '\x1b[1m', x: '\x1b[0m' };
 const say = (s = '') => console.log(s);
@@ -185,8 +185,14 @@ async function cmd(termino, { aplicar, unidadPedida }) {
         const dirResp = respaldoDe(s);
         try {
             fs.mkdirSync(dirResp, { recursive: true });
-            moverVerificado(s.ruta, path.join(dirResp, s.nombre));
-            say(`  ${c.y}→${c.x} ${s.nombre}   ${c.d}guardado en ${CARPETA_SUPERADOS} y sacado del pendrive${c.x}`);
+            // nombreLibre: si en una corrida anterior ya se respaldo otro archivo con este
+            // mismo nombre, el nuevo va como "... (2)". Pisarlo seria borrar el respaldo
+            // viejo justo en la carpeta que existe para que nada se pierda.
+            const destino = nombreLibre(path.join(dirResp, s.nombre));
+            moverVerificado(s.ruta, destino);
+            say(`  ${c.y}→${c.x} ${s.nombre}   ${c.d}guardado en ${CARPETA_SUPERADOS}`
+                + `${path.basename(destino) !== s.nombre ? ` como "${path.basename(destino)}"` : ''}`
+                + ` y sacado del pendrive${c.x}`);
         } catch (err) { say(`  ${c.r}✗${c.x} ${s.nombre} NO se saco (sigue en el pendrive): ${err.message}`); }
     }
     say();
@@ -198,16 +204,34 @@ async function cmd(termino, { aplicar, unidadPedida }) {
 // CLI
 // ─────────────────────────────────────────────────────────────────────────────
 
+/**
+ * Separa el termino de busqueda de los flags. Devuelve `{termino, sueltos}`.
+ *
+ * `sueltos` son las palabras que quedaron fuera y NO se usan: pasa cuando se olvidan las
+ * comillas (`_pendrive.mjs armrest door panel`). Descartarlas en silencio ampliaria el
+ * matcheo a tareas que no se buscaron, asi que se cantan.
+ */
+export function parsearArgs(args) {
+    const libres = args.filter((a, i) => !a.startsWith('--') && args[i - 1] !== '--unidad');
+    return { termino: libres[0] ?? null, sueltos: libres.slice(1) };
+}
+
 async function main(argv) {
     const args = argv.slice(2);
     const flag = (n, def = null) => { const i = args.indexOf(n); return i === -1 ? def : args[i + 1] ?? true; };
 
     if (args.includes('--unidades')) { say(); listarUnidades(unidadesExtraibles()); return 0; }
 
-    const termino = args.find((a) => !a.startsWith('--') && args[args.indexOf(a) - 1] !== '--unidad');
+    const { termino, sueltos } = parsearArgs(args);
     if (!termino) {
         say('\nuso:  node scripts/_pendrive.mjs "<palabras de la tarea>" [--aplicar] [--unidad <letra|etiqueta>]');
         say('      node scripts/_pendrive.mjs --unidades\n');
+        return 1;
+    }
+    if (sueltos.length) {
+        say(`\n${c.r}✗${c.x}  Faltan las comillas: solo estoy buscando "${termino}" y quedaron afuera `
+            + `${sueltos.map((s) => `"${s}"`).join(', ')}.`);
+        say(`${c.d}   Poné todo junto entre comillas:  node scripts/_pendrive.mjs "${termino} ${sueltos.join(' ')}"${c.x}\n`);
         return 1;
     }
     return cmd(termino, { aplicar: args.includes('--aplicar'), unidadPedida: flag('--unidad') });
