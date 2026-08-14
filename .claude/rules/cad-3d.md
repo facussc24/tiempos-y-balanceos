@@ -156,6 +156,14 @@ Ojo con el **encuadre del render**: si el cuadro se calcula sobre la unión de l
 corrido está el dispositivo más grande da el cuadro y **menos se ve el error**. Encuadre anclado a la
 zona y proporcional al objeto.
 
+**Dos calidades de render, y no se confunden** (medido el 14/08/2026): leer mis propios renders era
+el **59 % de todo lo que entraba al contexto** — `render_views()` escupía 5 archivos de 1540×990 por
+cada mirada y yo los leía los 5. Ahora entrega por default **una sola hoja de contacto**
+`<out>_TODAS.png` con todas las vistas en grilla: 557 KB → 81 KB, **7×**. Esa es la que miro yo, y
+alcanza — lo que DECIDE si algo encaja o choca es el número de `gate_ensamble.py`, no la imagen.
+`--alta` (o `alta=True`) es para **el render que mira Fak** (GATE 0, mapa de zona, antes/después):
+resolución de entregable más cada vista en su archivo. **Para verificar, nunca leer las vistas sueltas.**
+
 **Cuál cara es cuál se computa, no se elige.** Van dos veces de agarrar el lado equivocado (la cara
 interior del sustrato; y la cara de los clips creyendo que era la vista). La cara vista es la LISA:
 sondear las dos y quedarse con la de menor dispersión (0,70 mm contra 5,41 mm en el Upper Trim), con

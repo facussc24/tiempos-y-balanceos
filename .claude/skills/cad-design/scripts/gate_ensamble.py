@@ -352,7 +352,7 @@ def _renders(dirout, ab, tp, td, sal, choques, lim, titulo):
 
     # ---------------- PLANTA: el plano de la abertura --------------------------------
     z0 = sal["z_corte"] + EPS_PLANO if sal else EPS_PLANO
-    fig, ax = plt.subplots(figsize=(12, 9), dpi=115)
+    fig, ax = plt.subplots(figsize=(9, 6.75), dpi=render.DPI_PLOT)
     if s is not None:
         c = s["celdas"]
         ax.scatter(c[:, 0], c[:, 1], s=3, c=COLOR_DISP, alpha=0.13, linewidths=0, zorder=0,
@@ -397,7 +397,7 @@ def _renders(dirout, ab, tp, td, sal, choques, lim, titulo):
           if len(S) and ((S.reshape(-1, 2)[:, 0] > lim[0]) & (S.reshape(-1, 2)[:, 0] < lim[1])).any()]
     zz = np.concatenate(zz) if zz else np.array([-10.0, 10.0])
     alto = max(float(np.abs(zz).max()) * 1.15, 12.0)
-    fig, axs = plt.subplots(1, 2, figsize=(15, 7), dpi=115)
+    fig, axs = plt.subplots(1, 2, figsize=(11.5, 5.4), dpi=render.DPI_PLOT)
     for ax2, (y0, tit) in zip(axs, cortes):
         _dibujar(ax2, segs[y0][0], COLOR_PIEZA, 1.5, "pieza")
         _dibujar(ax2, segs[y0][1], COLOR_DISP, 1.9, "dispositivo")

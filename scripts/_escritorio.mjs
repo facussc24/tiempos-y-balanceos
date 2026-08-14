@@ -169,7 +169,7 @@ export function elegirFechaTarea({ fechasMail = [], mtimes = [] }) {
 // Filesystem
 // ─────────────────────────────────────────────────────────────────────────────
 
-function listar(dir) {
+export function listar(dir) {
     if (!fs.existsSync(dir)) return [];
     return fs.readdirSync(dir, { withFileTypes: true }).map((d) => {
         const p = path.join(dir, d.name);
@@ -219,7 +219,12 @@ export function medir(destino) {
 const carpetaAnio = (archivo, anio) => path.join(archivo, anio);
 const rutaIndice = (archivo, anio) => path.join(carpetaAnio(archivo, anio), nombreIndice(anio));
 
-async function leerIndice(archivo, anio) {
+/**
+ * Filas del listado de tareas cerradas de un año. Exportada porque su columna
+ * "Dónde quedó el entregable" es la ÚNICA pista de dónde fue a parar algo ya entregado:
+ * `_entregas.mjs` empieza la búsqueda por acá antes de barrer disco.
+ */
+export async function leerIndice(archivo, anio) {
     const p = rutaIndice(archivo, anio);
     if (!fs.existsSync(p)) return [];
     const wb = new ExcelJS.Workbook();

@@ -21,6 +21,9 @@ def main():
     ap.add_argument("--colors", nargs="*", default=None, help="un color por archivo (hex o nombre matplotlib)")
     ap.add_argument("--alphas", nargs="*", type=float, default=None, help="un alpha por archivo (0-1)")
     ap.add_argument("--title", default="", help="titulo del render")
+    ap.add_argument("--alta", action="store_true",
+                    help="resolucion de entregable + cada vista en su archivo. Usarlo SOLO cuando "
+                         "el render es para Fak; para verificar alcanza la hoja de contacto")
     args = ap.parse_args()
 
     layers = []
@@ -33,9 +36,9 @@ def main():
         layers.append((tris, color, alpha))
         print("%s: %d tris" % (os.path.basename(path), len(tris)))
 
-    files = render.render_views(layers, args.out, title=args.title)
+    files = render.render_views(layers, args.out, title=args.title, alta=args.alta)
     for f in files:
-        print("saved %s" % f)
+        print("saved %s (%.0f KB)" % (f, os.path.getsize(f) / 1024.0))
 
 
 if __name__ == "__main__":
