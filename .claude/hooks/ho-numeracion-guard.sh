@@ -79,8 +79,10 @@ cat >&2 << 'EOF'
 5. UNA HO ES PARA EL OPERARIO, NO PARA AUDITAR: sin "BORRADOR", sin "pendiente de
    validacion", sin "el Plan de Control dice X pero Y". Donde no hay dato va TBD y nada
    mas; el analisis va en el informe aparte. Estilo de la casa en el ciclo de control:
-   Resp. = OP / OC / Insp., Registro = RC / Set-up / N/A, frases cortas (las columnas
-   son angostas y un texto largo se CORTA).
+   Resp. = OP / OC / Insp.; **Registro: los unicos validos son los "Set up" (de control o
+   de lanzamiento) — "RC" NO EXISTE** (aparece en HOs viejas, es arrastre; Fak 14/08).
+   Si no hay registro asociado va "-", no se inventa un codigo. Frases cortas: las
+   columnas son angostas y un texto largo se CORTA.
 6. AL CERRAR: actualizar el listado maestro
    (3- LISTADO\Listado hojas de proceso.xlsx) con la fila nueva en el bloque de
    su sector + la hoja oculta _CONTEXTO_CLAUDE con el proximo numero libre.
