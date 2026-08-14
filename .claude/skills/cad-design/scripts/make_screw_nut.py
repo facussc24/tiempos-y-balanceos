@@ -37,6 +37,7 @@ import numpy as np  # noqa: E402
 from build123d import (  # noqa: E402
     Align,
     Axis,
+    Cone,
     Cylinder,
     GeomType,
     Plane,
@@ -148,7 +149,7 @@ def build_screw(*, major, pitch, clearance, total_length, head_dia, head_th,
 
 
 # --------------------------------------------------------------------------- tuerca
-def build_nut(*, major, pitch, nut_af, nut_h, nut_chamfer):
+def build_nut(*, major, pitch, nut_af, nut_h, nut_chamfer, entry_chamfer=1.0):
     thread = IsoThread(
         major_diameter=major,
         pitch=pitch,
@@ -163,6 +164,20 @@ def build_nut(*, major, pitch, nut_af, nut_h, nut_chamfer):
         body = chamfer(body.edges().filter_by(Plane.XY), length=nut_chamfer)
     body -= Cylinder(major / 2, nut_h * 3, align=(Align.CENTER, Align.CENTER, Align.CENTER))
     nut = body + thread
+
+    # CHAFLAN DE ENTRADA a 45 grados en las DOS bocas de la rosca. Va al final, DESPUES de
+    # sumar el filete, para que se coma las primeras vueltas incompletas.
+    # Por que importa: `nut_chamfer` de arriba se aplica al hexagono ANTES de perforar, asi
+    # que la boca de la rosca quedaba sin chaflan propio — solo el que trae end_finishes,
+    # que mide ~0,35 mm. La practica FDM pide 0,8-1,5 mm a 45 grados: es lo que guia el
+    # arranque y lo que borra el aplastado de primera capa que estrangula la entrada (es la
+    # cara que apoya en la cama). Sin esto la tuerca muerde en la primera vuelta.
+    if entry_chamfer > 0:
+        r_in, r_out = major / 2, major / 2 + entry_chamfer
+        nut -= Cone(r_out, r_in, entry_chamfer,
+                    align=(Align.CENTER, Align.CENTER, Align.MIN))
+        nut -= Pos(0, 0, nut_h - entry_chamfer) * Cone(
+            r_in, r_out, entry_chamfer, align=(Align.CENTER, Align.CENTER, Align.MIN))
     return nut, thread
 
 
@@ -195,6 +210,10 @@ def main(argv=None):
     p.add_argument("--nut-af", type=float, required=True, help="entre caras de la tuerca (mm)")
     p.add_argument("--nut-h", type=float, required=True)
     p.add_argument("--nut-chamfer", type=float, default=0.5)
+    p.add_argument("--nut-entry-chamfer", type=float, default=1.0,
+                   help="chaflan 45 grados en las DOS bocas de la rosca de la tuerca. La "
+                        "practica FDM pide 0,8-1,5: guia el arranque y borra el aplastado "
+                        "de primera capa. 0 lo desactiva")
     p.add_argument("--out", type=Path, required=True)
     p.add_argument("--name", default="tornillo")
     a = p.parse_args(argv)
@@ -228,7 +247,7 @@ def main(argv=None):
         relief_d=a.head_relief, relief_depth=a.head_relief_depth, shank_d=a.shank_dia,
         knurl_n=a.knurl_n, knurl_depth=a.knurl_depth, head_chamfer=a.head_chamfer)
     nut, nth = build_nut(major=a.major, pitch=a.pitch, nut_af=a.nut_af, nut_h=a.nut_h,
-                         nut_chamfer=a.nut_chamfer)
+                         nut_chamfer=a.nut_chamfer, entry_chamfer=a.nut_entry_chamfer)
 
     # `is_valid` devuelve True para un compound VACIO: no alcanza como control.
     # Cuando el vastago y la cresta de rosca caen al mismo diametro las caras quedan
