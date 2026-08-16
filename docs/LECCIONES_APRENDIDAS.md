@@ -13,6 +13,7 @@ La historia completa de cada incidente vive en los snapshots.
 
 ## Verificacion y evidencia
 
+- **16/08 — Copie el molde sin medir si el molde era la practica de la casa.** Replique el AMFE 150 a los 3 apoyacabezas y le puse las cotas dentro del control detectivo. Medido despues: **los unicos 27 controles con numero de los 17 AMFE eran los mios**, contra el 98,4% que no lleva ninguno — y el AMFE 150 tenia CERO. **Antes de replicar un criterio a N documentos, contar como esta hecho en los N que ya existen: una muestra de 1 no es un patron.** Lo zanjo el manual: el formulario de AMFE no tiene columna de especificacion y el de Plan de Control si. Gate `CONTROL_CON_VALOR`, `amfe.md` §11.
 - **13/08 — Tres cortes perdidos por fragmentar en objetos sueltos lo que era un trazo continuo.** Los patrones de la empresa que SI cortan estaban en la carpeta de al lado. **Cuando algo mio no funciona y al lado hay archivos que funcionan, abrirlos y comparar COMO ESTAN HECHOS** — no teorizar, y no "mejorar" un parametro ya validado en planta. Dos de las tres fallas ya estaban en mi propia skill: **leerla ANTES de escribir el codigo**. Enforcement en `_mixPlotter.py`.
 - **14/08 — Fak vio "ma-o" y casi lo arreglo como typo suelto: eran 17 celdas en 8 pestañas.** Un reemplazo global sin anclar a palabra se habia comido la secuencia **"rc" en TODO el libro**. Se detecto con **grep de `[letra]-[letra]` sobre TODO el texto**. **Un sintoma raro que aparece una vez se trata como MUESTRA, no como caso.** El texto de un entregable se BARRE con patrones, no se lee.
 - **14/08 — Mande un mail que ya se habia enviado: salio DUPLICADO a tres personas.** La entrada duplicada estaba a la vista en Enviados —mismo asunto, destinatarios, CC y adjunto— y la llame "copia vieja" porque contradecia mi conclusion. **El dato que me contradice es un STOP, no algo para explicar.** Y **un mail que Fak ya mando NO SE TOCA**: se le reporta que esta mal y decide el. Mecanismo codificado en `rules/mail-envio.md` + hook `mail-guard.sh`.
@@ -42,13 +43,11 @@ La historia completa de cada incidente vive en los snapshots.
 - **13/08 — Una correccion que vive en el dato y no en el codigo que lo genera no es una correccion.** El 12/08 el hallazgo del vinilo se anoto A MANO en `ranura_z_one.json`, pero `medir_ranura_z.py` siguio con `caras_libres=True`: el numero bueno no tenia script que lo reprodujera y la corrida siguiente lo volvia a pisar con el malo. **Si arreglo un valor, arreglo el generador o no lo arregle.**
 - **13/08 — Dos controles que se contradicen no topean el diseño: lo dejan en el peor de los dos**, y el optimizador devuelve calladamente lo mas blando que pasa. **Bajar la barra hasta que el control pase no es calibrar.** Cuando Fak cambia la estrategia hay que ir a buscar los controles que codificaban la vieja.
 - **10/08**: Un criterio adimensional esconde la decision — "SF fatiga >= 1,5" son **9 años** pedidos a un consumible: la barra pasa a **VIDA en años**. Se dimensiona contra el punto **MAS EXIGENTE**, no el promedio. Y **el modelo tiene que reproducir una medicion que NO ajusto**.
-- **08/08**: El veredicto de un script se DERIVA de la evidencia que ya vio: si el log dice `auth OK`, no puede mandar a repetir la auth.
-- **08/07**: Un conjunto de controles verdes no prueba que el diseño sea bueno: solo que no tiene el error que yo pense en buscar. Lo que Fak marca de un render es dato de ingenieria: ir al numero.
+- **08/08 y 08/07**: el veredicto de un script se DERIVA de la evidencia que ya vio (si el log dice `auth OK`, no manda a repetir la auth). Controles verdes no prueban que el diseño sea bueno: solo que no tiene el error que pense en buscar.
 
 ## Automatizacion de interfaces / ERP
 
-- **08/07**: Si la herramienta tiene interfaz, MIRARLA es el primer paso; foreground NO es foco. Y preguntarle al que la usa todos los dias es el camino corto: "es un limite del programa" casi siempre es un limite de lo que probe. Detalle en skill `arb-operar`.
-- **08/07**: Proceso que escribe un archivo compartido: gate "alguien lo tiene tomado?" + verificar mtime despues. Nunca aceptar un dialogo sin leerlo.
+- **08/07** (detalle en skill `arb-operar`): si tiene interfaz, MIRARLA es el primer paso; "es un limite del programa" casi siempre es un limite de lo que probe. Proceso que escribe un archivo compartido: gate "alguien lo tiene tomado?" + verificar mtime despues.
 
 ## CAD y 3D
 
@@ -69,8 +68,7 @@ La historia completa de cada incidente vive en los snapshots.
 - **14/08 — Antes de optimizar, MEDIR: mi intuicion apuntaba al lugar equivocado.** Iba a podar reglas "para ahorrar tokens"; medido sobre las 6 sesiones mas grandes, **leer mis propios renders 3D era el 59 % del contexto** y todo el arranque la quinta parte de eso, encima cacheado. El desglose sale del transcripto (`~/.claude/projects/<p>/*.jsonl`, agrupando `tool_result` por herramienta): **el costo se cuenta, no se supone.**
  - **13/08 — Un mail en la Bandeja de salida parece enviado y NO salio** (Outlook se cerro antes). Al reabrirlo por COM se manda solo en el primer send/receive: **revisar el Outbox ANTES de tocar nada** (moverlo a Borradores lo congela). "Se envio?" se mira en Enviados por fecha, nunca en el borrador.
 - **14/08 — Dos veces le ofreci opciones mal armadas, y las dos el problema era MI encuadre.** (a) *"no te entendi un carjao decidi vos"*: para arrancar el AMFE de Patagonia le puse identificadores de MI base (AMFE 150, `AMFE-MAESTRO-LOG-REC-001`) y conteos; el mira la PIEZA y que le va a pasar. **Si hace falta un identificador interno para que una opcion se entienda, esta mal escrita.** (b) En el tornillo le di tres opciones de DONDE apretaba y contesto por fuera de las tres: la queja era de TIEMPO. **La respuesta que cae fuera de todas mis opciones es un diagnostico sobre mi.** "Decidi vos" se responde decidiendo + una linea de por que.
-- **08/07**: El pedido incluye el DONDE: para usar ya = suelto en el Escritorio, sin subcarpetas, versiones ni informes. La verificacion la hago yo, no se la leo. Cerrar incluye archivar el rastro (`_escritorio.mjs --archivar`).
-- **08/02**: Cuando Fak da por sentado que algo esta respaldado, verificar CUAL cuenta/carpeta/numero. Si pregunta algo que mi plan da por resuelto, el plan tiene un agujero.
+- **08/07 y 08/02**: el pedido incluye el DONDE (para usar ya = suelto en el Escritorio, sin subcarpetas ni informes; cerrar incluye archivar el rastro con `_escritorio.mjs --archivar`). Si Fak pregunta algo que mi plan da por resuelto, el plan tiene un agujero.
 
 ## Agentes y maquinaria pesada
 
