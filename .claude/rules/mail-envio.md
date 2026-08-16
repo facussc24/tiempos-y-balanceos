@@ -58,6 +58,8 @@ y solo si el destinatario no lo abrio.
   bloquea cualquier `.Send()` / `SendAndReceive` sobre Outlook que no pase por `_mailEnviar.py`.
   Deja pasar `.Display()`, `.Save()`, `ReplyAll()` y la lectura con `_mails.py`.
 - **`_mailEnviar.py --selftest`**: 9 casos de la logica de deteccion, incluido el del incidente.
+- **`mail-guard.test.sh`**: 11 casos de regresion del hook, por el guardian suelto Y por el despachador
+  (el parser compartido ya rompio otros 3 guardianes en silencio, commit `ccef7f09`).
 - El gate se probo contra el caso real del 14/08 leido de Enviados: **bloquea**.
 
 ## Incidente fuente — 2026-08-14
