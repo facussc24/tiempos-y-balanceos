@@ -75,6 +75,26 @@ for (const op of doc.operations ?? []) {
   }
 }
 
+mkdirSync(destDir, { recursive: true });
+const nombre = arg('nombre') ?? `AMFE ${row.amfe_number}.xlsx`;
+const dest = `${destDir}/${nombre}`;
+
+// 1. Borrar ANTES de intentar generar, no despues. Si la generacion falla (el caso mas
+// comun es `assertAmfeExportable` abortando por un S/O/D vacio), el archivo tiene que
+// FALTAR, no sobrevivir el de la corrida anterior — que es como el 14/08 se dio por bueno
+// un PDF viejo. Si el borrado no se puede hacer, se aborta: seguir dejaria el viejo igual.
+if (existsSync(dest)) {
+  try {
+    rmSync(dest);
+  } catch (e) {
+    console.error(
+      `ABORTADO: no se pudo borrar ${dest} antes de regenerarlo `
+      + `(¿abierto en Excel o tomado por OneDrive?): ${e instanceof Error ? e.message : String(e)}`,
+    );
+    process.exit(1);
+  }
+}
+
 let wb: XLSX.WorkBook;
 try {
   wb = buildAmfeOficialWorkbook(doc, {
@@ -86,15 +106,13 @@ try {
   process.exit(1);
 }
 
-mkdirSync(destDir, { recursive: true });
-const nombre = arg('nombre') ?? `AMFE ${row.amfe_number}.xlsx`;
-const dest = `${destDir}/${nombre}`;
-
-// 1. Borrar antes de generar: si falla, el archivo tiene que faltar, no quedar el viejo.
-if (existsSync(dest)) rmSync(dest);
-
-const buf = XLSX.write(wb, { bookType: 'xlsx', type: 'array' }) as ArrayBuffer;
-writeFileSync(dest, Buffer.from(buf));
+try {
+  const buf = XLSX.write(wb, { bookType: 'xlsx', type: 'array' }) as ArrayBuffer;
+  writeFileSync(dest, Buffer.from(buf));
+} catch (e) {
+  console.error(`ABORTADO: no se pudo escribir ${dest}: ${e instanceof Error ? e.message : String(e)}`);
+  process.exit(1);
+}
 
 // 2. Re-leer lo escrito. El destino puede estar tomado y writeFileSync no lanza.
 if (!existsSync(dest)) { console.error(`FALLO: no se escribio ${dest}`); process.exit(1); }

@@ -2,6 +2,12 @@
  * _exportAmfe150.ts — Excel oficial (formulario I-AC-005.3) del AMFE 150
  * APB TRASERO CENTRAL PATAGONIA (2HC.885.081 RL1), para pasar a Calidad.
  *
+ * ⚠️ SUPERADO por `_exportAmfeOficial.ts` (16/08/2026), que hace lo mismo para cualquier
+ * AMFE y ademas borra el destino ANTES de generar y re-lee lo escrito. Este archivo NO
+ * tiene esas dos protecciones: si la generacion falla, deja en disco el .xlsx de la corrida
+ * anterior y lo hace pasar por nuevo. Se conserva como registro de la entrega del 14/08.
+ * Para exportar hoy:  npx tsx scripts/_exportAmfeOficial.ts --amfe 150 --out <carpeta>
+ *
  * Lee Supabase LIVE (regla verify-supabase-live). Usa buildAmfeOficialWorkbook:
  * Caratula (con tabla de REVISIONES) + hoja AMFE. Renumera los modos de falla
  * 1..N por operacion SOLO en la copia que se exporta (skill amfe-export-oficial §3).
