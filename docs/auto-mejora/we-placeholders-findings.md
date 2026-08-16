@@ -1,4 +1,4 @@
-# WE Placeholders + Failure Allocation — 2026-08-16T17:11:30.417Z
+# WE Placeholders + Failure Allocation — 2026-08-16T21:10:44.488Z
 
 **Resumen global**: 36 CRITICAL, 0 WARNING en 6/17 AMFEs.
 

@@ -24,17 +24,10 @@
  * NO se usa `cp_documents` de la app como fuente: esta cargado desde los Planes de Control
  * PRELIMINARES de abril 2025 (carpeta OBSOLETO), que describen materiales que ya no se usan.
  *
- * DONDE VAN LOS NUMEROS (resuelto el 16/08/2026 contra los manuales, ver
- * docs/DECISION_VALORES_AMFE_VS_PLAN_DE_CONTROL.md):
- *   El formulario oficial de AMFE de Barack (Anexo III de I-AC-005) NO tiene columna de
- *   especificacion ni de tolerancia. El de Plan de Control (Anexo I) si: "Especificacion
- *   tolerancia" + "Tecnica de evaluacion/medicion" + "Muestra: Tamaño / Frecuencia".
- *   I-AC-005 §5.2.2: "El AMFE no es un documento que se distribuya, pero si lo son los
- *   Planes de controles". Del AMFE al Plan de Control viajan las ACCIONES RECOMENDADAS
- *   (§5.2), no las especificaciones.
- *   Por eso: en los controles va METODO + INSTRUMENTO + FRECUENCIA + de que documento sale
- *   el criterio. El VALOR no va: se cita el plan que lo tiene. Es ademas la practica real
- *   de la casa (98,4% de los controles de los 17 AMFE no llevan numero).
+ * DONDE VAN LOS NUMEROS — regla `rules/amfe.md` §11, resuelta el 16/08/2026 contra el manual
+ * de AMFE y el instructivo interno del SGC. En los controles va METODO + INSTRUMENTO +
+ * FRECUENCIA + de que documento sale el criterio; el VALOR no va, se cita el plan que lo
+ * tiene. Enforcement: check `CONTROL_CON_VALOR` en `scripts/_lib/amfeValidator.mjs`.
  * amfe.md §5: no se inventan acciones de optimizacion.
  * amfe.md §2 + core-prohibiciones §2: NO se asigna ninguna CC/SC. Va como hallazgo para Fak.
  *   (El PdC vigente no clasifica ni una sola caracteristica de recepcion en las 3 hojas.)

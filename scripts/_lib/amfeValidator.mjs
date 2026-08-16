@@ -136,6 +136,19 @@ const LEGAL_COMPLIANCE_PATTERNS = [
 
 // Patrones que identifican OP/failure de corte (decision Fak 2026-05-17:
 // corte mal = SCRAP, no retrabajo). Ver rules/amfe.md "Calibracion de efectos".
+/**
+ * CONTROL_CON_VALOR (WARNING) — rules/amfe.md §11.
+ * Detecta una especificacion metida en el control del AMFE. Pide un numero CON UNIDAD DE
+ * MEDIDA, o un simbolo de tolerancia, para no confundirse con la frecuencia de muestreo
+ * ("3% del lote", "1 muestra por entrega") ni con codigos de norma o de procedimiento
+ * (MI-IG-08-04, VW 50106, ASTM D5155, P-10/I, plan 1064), que SI deben estar.
+ */
+const CONTROL_VALUE_RE = new RegExp(
+    '(?:±|\\+\\/-)\\s*\\d'                                             // 1,2 ± 0,05
+    + '|\\d+(?:[.,]\\d+)?\\s*(?:mm|cm|m2|g\\/m2|gms?\\/mt2|gr|kg|cps|nm|°c|mm\\/min|cm\\/min)\\b',
+    'i',
+);
+
 const CUTTING_OP_PATTERNS = [/CORTE/i, /TROQUELADO/i];
 const CUTTING_FAILURE_PATTERNS = [/\bcort[aeoó]/i, /troquelad/i];
 const REWORK_TERM_PATTERN = /retrabajo/i;
@@ -486,6 +499,24 @@ export function validateAmfeDoc(doc, productName = '', amfeNumber = '') {
                         }
                         if (!c.detectionControl || String(c.detectionControl).trim() === '') {
                             issues.push({ ...cCtx, type: 'CAUSE_NO_DET_CTRL', detail: 'Sin detectionControl' });
+                        }
+
+                        // CONTROL_CON_VALOR (WARNING) — rules/amfe.md §11.
+                        // En el control va metodo + instrumento + frecuencia + de que documento
+                        // sale el criterio, NUNCA el valor: el formulario oficial de AMFE no tiene
+                        // columna de especificacion, el Plan de Control si. Decidido 16/08/2026
+                        // contra el manual AMFE y el instructivo I-AC-005.
+                        // La frecuencia de muestreo SI va, por eso "3% del lote" o "1 muestra por
+                        // entrega" no matchean: el patron pide una UNIDAD DE MEDIDA al lado.
+                        for (const campo of ['preventionControl', 'detectionControl']) {
+                            const txt = String(c[campo] ?? '');
+                            const m = txt.match(CONTROL_VALUE_RE);
+                            if (m) {
+                                issues.push({
+                                    ...cCtx, type: 'CONTROL_CON_VALOR',
+                                    detail: `${campo} lleva el valor "${m[0].trim()}" — va al Plan de Control, aca se cita el documento`,
+                                });
+                            }
                         }
 
                         // Candado anti-invento en controles y acciones de la causa
