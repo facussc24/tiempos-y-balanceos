@@ -1,4 +1,4 @@
-# Text Quality Audit (L2) — 2026-08-16T14:30:31.342Z
+# Text Quality Audit (L2) — 2026-08-16T17:11:31.763Z
 
 **Resumen global**: 0 CRITICAL, 129 WARNING en 17/17 AMFEs.
 
