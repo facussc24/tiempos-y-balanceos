@@ -24,9 +24,17 @@
  * NO se usa `cp_documents` de la app como fuente: esta cargado desde los Planes de Control
  * PRELIMINARES de abril 2025 (carpeta OBSOLETO), que describen materiales que ya no se usan.
  *
- * amfe.md §11: los valores numericos NO van en `failure.description` (van al Plan de Control).
- * La descripcion nombra el fenomeno; el numero real vive en el control detectivo cuando el
- * documento lo dice.
+ * DONDE VAN LOS NUMEROS (resuelto el 16/08/2026 contra los manuales, ver
+ * docs/DECISION_VALORES_AMFE_VS_PLAN_DE_CONTROL.md):
+ *   El formulario oficial de AMFE de Barack (Anexo III de I-AC-005) NO tiene columna de
+ *   especificacion ni de tolerancia. El de Plan de Control (Anexo I) si: "Especificacion
+ *   tolerancia" + "Tecnica de evaluacion/medicion" + "Muestra: Tamaño / Frecuencia".
+ *   I-AC-005 §5.2.2: "El AMFE no es un documento que se distribuya, pero si lo son los
+ *   Planes de controles". Del AMFE al Plan de Control viajan las ACCIONES RECOMENDADAS
+ *   (§5.2), no las especificaciones.
+ *   Por eso: en los controles va METODO + INSTRUMENTO + FRECUENCIA + de que documento sale
+ *   el criterio. El VALOR no va: se cita el plan que lo tiene. Es ademas la practica real
+ *   de la casa (98,4% de los controles de los 17 AMFE no llevan numero).
  * amfe.md §5: no se inventan acciones de optimizacion.
  * amfe.md §2 + core-prohibiciones §2: NO se asigna ninguna CC/SC. Va como hallazgo para Fak.
  *   (El PdC vigente no clasifica ni una sola caracteristica de recepcion en las 3 hojas.)
@@ -141,7 +149,7 @@ const PREV_CERT = 'Certificado del proveedor por lote (P-14)';
 // ─── Materiales comunes a las 3 piezas — PdC vigente, items 1 a 9 ───────────
 
 /** Un vinilo PVC. Los tres comparten caracteristicas; cambia el color. [PdC items 1-3] */
-function weVinilo({ nombre, codigo, color, tecnicaEspesor, tecnicaFlama }) {
+function weVinilo({ nombre, codigo, tecnicaEspesor, tecnicaFlama }) {
     return mkWorkElement({
         name: `${nombre} (codigo ${codigo})`,
         fnDesc: 'Aportar el vinilo con el grabado, el color, el espesor y la flamabilidad especificados',
@@ -154,7 +162,7 @@ function weVinilo({ nombre, codigo, color, tecnicaEspesor, tecnicaFlama }) {
                 causa: 'Variacion de tono entre partidas del proveedor',
                 s: 6, o: 3, d: 6,
                 prev: PREV_P14,
-                det: `Visual contra patron de tela, 1 pieza por entrega (P-10/I). Color ${color}`,
+                det: 'Visual contra patron de tela, 1 pieza por entrega (P-10/I)',
             }),
             mkFailure({
                 desc: 'Espesor del vinilo fuera de tolerancia',
@@ -181,7 +189,7 @@ function weVinilo({ nombre, codigo, color, tecnicaEspesor, tecnicaFlama }) {
 }
 
 /** Un hilo Linhanyl. [PdC items 5-7] + [H1043/H1063/H1064] para la flamabilidad. */
-function weHilo({ nombre, codigo, articulo, metrico, color, planFlama }) {
+function weHilo({ nombre, codigo, plan }) {
     return mkWorkElement({
         name: `${nombre} (codigo ${codigo})`,
         fnDesc: 'Aportar el hilo con el articulo, el color y la cantidad de cabos especificados',
@@ -194,7 +202,7 @@ function weHilo({ nombre, codigo, articulo, metrico, color, planFlama }) {
                 causa: 'Variacion de tintura entre partidas del proveedor',
                 s: 6, o: 3, d: 6,
                 prev: PREV_P14,
-                det: `Visual con patron de color, 1 muestra por lote (P-10/I). Color ${color}`,
+                det: `Visual con patron de color, 1 muestra por lote (P-10/I, plan ${plan})`,
             }),
             mkFailure({
                 desc: 'Cantidad de cabos del hilo distinta a la especificada',
@@ -204,7 +212,7 @@ function weHilo({ nombre, codigo, articulo, metrico, color, planFlama }) {
                 causa: 'Error de preparacion del pedido en el proveedor',
                 s: 7, o: 2, d: 5,
                 prev: PREV_P14,
-                det: 'Visual, 1 muestra por lote (P-10/I). Cantidad de cabos: 3',
+                det: `Visual, 1 muestra por lote (P-10/I, plan ${plan})`,
             }),
             mkFailure({
                 desc: 'Articulo entregado distinto al pedido',
@@ -214,7 +222,7 @@ function weHilo({ nombre, codigo, articulo, metrico, color, planFlama }) {
                 causa: 'Error de despacho del proveedor',
                 s: 6, o: 3, d: 5,
                 prev: PREV_P14,
-                det: `Visual en etiqueta del material, 1 muestra por lote (P-10/I). Articulo ${articulo}, ${metrico}`,
+                det: `Visual en etiqueta del material, 1 muestra por lote (P-10/I, plan ${plan})`,
             }),
             mkFailure({
                 desc: 'Flamabilidad del hilo fuera de especificacion',
@@ -224,14 +232,14 @@ function weHilo({ nombre, codigo, articulo, metrico, color, planFlama }) {
                 causa: 'Lote del proveedor sin ensayo de flamabilidad conforme',
                 s: 9, o: 3, d: 5,
                 prev: PREV_CERT,
-                det: planFlama,
+                det: `Certificado del proveedor conforme Norma VW 50106, anual (P-10/I y ARB, plan ${plan})`,
             }),
         ],
     });
 }
 
 /** Estructura metalica consignada por VWA. Cotas del plan de recepcion propio de cada pieza. */
-function weVarilla({ nombre, codigoVw, codigoMaxus, plan, cotas }) {
+function weVarilla({ nombre, codigoVw, codigoMaxus, plan }) {
     return mkWorkElement({
         name: `${nombre} ${codigoVw} (consignado VWA)`,
         fnDesc: 'Aportar la estructura con el cromado y las cotas especificadas',
@@ -254,7 +262,7 @@ function weVarilla({ nombre, codigoVw, codigoMaxus, plan, cotas }) {
                 causa: 'Variacion del conformado en el proveedor',
                 s: 7, o: 3, d: 5,
                 prev: PREV_P14,
-                det: `Calibre digital, 3% del lote por entrega (${plan}). Cotas: ${cotas}`,
+                det: `Calibre digital, 3% del lote por entrega (${plan})`,
             }),
         ],
     });
@@ -265,7 +273,6 @@ const WE_COMUNES = () => [
     weVinilo({
         nombre: 'Vinilo PVC Titan Black H narbe (Sansuy BAH RL1)',
         codigo: '427VIN014COR01',
-        color: 'Titan Black',
         tecnicaEspesor: 'Calibre MC 212, 1 pieza por entrega (P-10/I)',
         tecnicaFlama: 'Camara de flamabilidad MC 184, 1 pieza por entrega (P-10/I)',
     }),
@@ -274,7 +281,6 @@ const WE_COMUNES = () => [
     weVinilo({
         nombre: 'Vinilo PVC Andino Gray ST Haptik',
         codigo: '427VIN016COR01',
-        color: 'Andino Gray',
         tecnicaEspesor: 'Calibre MC 212, 1 pieza por entrega (P-10/I)',
         tecnicaFlama: 'Certificado del proveedor, 1 pieza por entrega (P-10/I)',
     }),
@@ -282,7 +288,6 @@ const WE_COMUNES = () => [
     weVinilo({
         nombre: 'Vinilo PVC Dark Slate ML14',
         codigo: '427VIN017COR01',
-        color: 'Dark Slate',
         tecnicaEspesor: 'Calibre, 1 pieza por entrega (P-10/I)',
         tecnicaFlama: 'Camara de flamabilidad, 1 pieza por entrega (P-10/I)',
     }),
@@ -319,7 +324,7 @@ const WE_COMUNES = () => [
                 causa: 'Variacion del proceso de tejido en el proveedor',
                 s: 5, o: 3, d: 6,
                 prev: PREV_P14,
-                det: 'Balanza, 1 pieza por entrega (P-10/I). Minimo 800 - maximo 1000 GMS/MT2',
+                det: 'Balanza, 1 pieza por entrega (P-10/I)',
             }),
             mkFailure({
                 desc: 'Flamabilidad de la tela fuera de especificacion',
@@ -337,28 +342,19 @@ const WE_COMUNES = () => [
     weHilo({
         nombre: 'Hilo de union 30/3 Jet Black (Linhanyl)',
         codigo: '427HIL001COS01',
-        articulo: 'FX284TK-E0PTO segun el Plan de Control del producto (FX284-E0PTO segun el plan de recepcion 1043)',
-        metrico: '30/3 Nm',
-        color: 'Jet Black Pantone 19-0303 TPG',
-        planFlama: 'Certificado del proveedor conforme Norma VW 50106, anual (P-10/I y ARB). 100 mm/min segun el plan 1043',
+        plan: '1043',
     }),
     // [PdC item 6] + [H1063]
     weHilo({
         nombre: 'Hilo vista 20/3 Alpe Gray (Linhanyl)',
         codigo: '427HIL003COS01',
-        articulo: 'FX483TK-11930E',
-        metrico: '20/3 Nm',
-        color: 'Alpe Gray TGA IP3',
-        planFlama: 'Certificado de calidad del proveedor, anual (P-10/I y ARB). Menor a 100 mm/min segun el plan 1063',
+        plan: '1063',
     }),
     // [PdC item 7] + [H1064]
     weHilo({
         nombre: 'Hilo vista 20/3 Gray Violet (Linhanyl)',
         codigo: '427HIL004COS01',
-        articulo: 'FX483TK-11703E',
-        metrico: '20/3 Nm',
-        color: 'Gray Violet Pantone 14-4103 TPG (el Plan de Control lo llama TGA AT2)',
-        planFlama: 'Certificado de calidad del proveedor, anual (P-10/I y ARB). Menor a 100 mm/min segun el plan 1064',
+        plan: '1064',
     }),
     // [PdC item 8] + [PC822]
     mkWorkElement({
@@ -383,7 +379,7 @@ const WE_COMUNES = () => [
                 causa: 'Variacion de la formulacion en el proveedor',
                 s: 6, o: 3, d: 5,
                 prev: PREV_CERT,
-                det: 'Certificado del proveedor, 1 muestra por entrega (P-10/I). Viscosidad poliol 1200-2000',
+                det: 'Certificado del proveedor, 1 muestra por entrega (P-10/I, plan 822)',
             }),
             mkFailure({
                 desc: 'Densidad libre del poliol fuera de especificacion',
@@ -393,7 +389,7 @@ const WE_COMUNES = () => [
                 causa: 'Variacion de la formulacion en el proveedor',
                 s: 6, o: 3, d: 5,
                 prev: PREV_CERT,
-                det: 'Certificado del proveedor, 1 muestra por entrega (P-10/I). Densidad libre 55-85',
+                det: 'Certificado del proveedor, 1 muestra por entrega (P-10/I, plan 822)',
             }),
             mkFailure({
                 desc: 'Tiempo de pegajosidad del poliol fuera de especificacion',
@@ -403,7 +399,7 @@ const WE_COMUNES = () => [
                 causa: 'Variacion de la formulacion en el proveedor',
                 s: 6, o: 3, d: 5,
                 prev: PREV_CERT,
-                det: 'Certificado del proveedor, 1 muestra por entrega (P-10/I). Tiempo de pegajosidad 80-120',
+                det: 'Certificado del proveedor, 1 muestra por entrega (P-10/I, plan 822)',
             }),
             mkFailure({
                 desc: 'Tiempo de crema del poliol fuera de especificacion',
@@ -413,7 +409,7 @@ const WE_COMUNES = () => [
                 causa: 'Variacion de la formulacion en el proveedor',
                 s: 6, o: 3, d: 5,
                 prev: PREV_CERT,
-                det: 'Certificado del proveedor, 1 muestra por entrega (P-10/I). Tiempo de crema 12-18',
+                det: 'Certificado del proveedor, 1 muestra por entrega (P-10/I, plan 822)',
             }),
         ],
     }),
@@ -440,7 +436,7 @@ const WE_COMUNES = () => [
                 causa: 'Variacion de la sintesis en el proveedor',
                 s: 7, o: 3, d: 4,
                 prev: PREV_CERT,
-                det: 'Certificado del fabricante segun ASTM D5155, 1 muestra por lote (P-10/I y ARB). NCO 25,5% a 26,5%',
+                det: 'Certificado del fabricante segun ASTM D5155, 1 muestra por lote (P-10/I y ARB, plan 818)',
             }),
             mkFailure({
                 desc: 'Viscosidad del isocianato fuera de especificacion',
@@ -450,7 +446,7 @@ const WE_COMUNES = () => [
                 causa: 'Variacion de la sintesis en el proveedor',
                 s: 6, o: 3, d: 5,
                 prev: PREV_CERT,
-                det: 'Certificado del fabricante segun MI-IG-08-04, 1 muestra por lote (P-10/I y ARB). 300 cps a 500 cps',
+                det: 'Certificado del fabricante segun MI-IG-08-04, 1 muestra por lote (P-10/I y ARB, plan 818)',
             }),
             mkFailure({
                 desc: 'Densidad del isocianato fuera de especificacion',
@@ -460,7 +456,7 @@ const WE_COMUNES = () => [
                 causa: 'Variacion de la sintesis en el proveedor',
                 s: 6, o: 3, d: 5,
                 prev: PREV_CERT,
-                det: 'Certificado del fabricante segun MI-IG-08-03, 1 muestra por lote (P-10/I y ARB). 1,2 +/- 0,05 gr/cm3',
+                det: 'Certificado del fabricante segun MI-IG-08-03, 1 muestra por lote (P-10/I y ARB, plan 818)',
             }),
         ],
     }),
@@ -519,7 +515,6 @@ const AMFES = [
                 codigoVw: '2HC.881.937',
                 codigoMaxus: 'C00686689',
                 plan: 'P-10/I, plan de recepcion 1064',
-                cotas: 'diametro 90 mm, cota 130 mm, diametro 14 mm +0,05 -0,1 mm',
             }),
         ],
     },
@@ -535,7 +530,6 @@ const AMFES = [
                 codigoVw: '2HC.885.942',
                 codigoMaxus: 'C00683052',
                 plan: 'P-10/I, plan de recepcion 1063',
-                cotas: 'diametro 7 mm +/- 0,1 mm, cota 167 mm, diametro 12,7 mm +0,02 -0,1 mm, cota 80 mm +/- 1 mm, cota 6,8 mm +/- 1 mm',
             }),
         ],
     },
@@ -551,7 +545,6 @@ const AMFES = [
                 codigoVw: '2HC.885.941',
                 codigoMaxus: 'C00683050',
                 plan: 'P-10/I, plan de recepcion 1065',
-                cotas: 'cota 102,6 mm, cota 7 +/- 0,1 mm, cota 130 +/- 1 mm, cota 12,75 +0,02 -0,1 mm',
             }),
         ],
     },
@@ -592,13 +585,23 @@ for (const cfg of AMFES) {
     if (!op10) throw new Error(`${cfg.amfeNumber}: no se encontro la operacion de recepcion`);
     if (!Array.isArray(op10.workElements)) op10.workElements = [];
 
-    const previos = new Set(op10.workElements.map(w => (w.name || '').toLowerCase()));
     const nuevos = [...WE_COMUNES(), ...cfg.propios()];
 
-    let agregados = 0;
+    let agregados = 0, reemplazados = 0;
     for (const we of nuevos) {
-        if (previos.has(we.name.toLowerCase())) {
-            console.log(`  (ya existe, se omite) "${we.name}"`);
+        const i = op10.workElements.findIndex(w => (w.name || '').toLowerCase() === we.name.toLowerCase());
+        if (i >= 0) {
+            // Solo se pisa lo que genero ESTE script (`_autoFilled`). Un work element cargado
+            // a mano o venido del import original no se toca nunca.
+            if (op10.workElements[i]._autoFilled !== true) {
+                console.log(`  (existe y NO es autogenerado, se respeta) "${we.name}"`);
+                continue;
+            }
+            op10.workElements[i] = we;
+            reemplazados++;
+            logChange(apply, `OP10 ~ WE [Material] "${we.name}" (se reescribe)`, {
+                fallas: we.functions[0].failures.length,
+            });
             continue;
         }
         op10.workElements.push(we);
@@ -612,7 +615,7 @@ for (const cfg of AMFES) {
     // Control de cobertura: los renglones de material tienen que dar la cuenta del PdC + la
     // cinta TPU, que el Plan de Control no cubre pero la lista de materiales si.
     const nMaterial = op10.workElements.filter(w => w.type === 'Material').length;
-    console.log(`  -> work elements Material en recepcion: ${nMaterial} (agregados ${agregados})`);
+    console.log(`  -> work elements Material en recepcion: ${nMaterial} (agregados ${agregados}, reescritos ${reemplazados})`);
 
     // Fila de revision. `revisions` es COLUMNA de amfe_documents, no vive dentro de `data`.
     const revsBefore = (() => {
