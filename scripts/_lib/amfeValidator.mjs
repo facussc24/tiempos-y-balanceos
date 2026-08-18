@@ -678,8 +678,24 @@ export function diffIssues(before, after) {
     return groupIssues(newOnes);
 }
 
+/**
+ * Identidad de un issue para el diff before/after.
+ *
+ * ⚠️ Se identifica la operacion por NOMBRE, no por numero. El numero de operacion es
+ * justamente lo que cambia en una renumeracion, y usarlo como clave hacia que un problema
+ * PREEXISTENTE reapareciera como "nuevo" apenas la operacion se movia de lugar — con lo
+ * cual el gate bloqueaba toda renumeracion legitima y se volvia imposible de satisfacer.
+ *
+ * Paso el 18/08/2026 alineando los apoyacabezas con su flujograma: 14 criticos "nuevos" que
+ * eran las MISMAS operaciones vacias de antes, corridas de numero. Se confirmo contando el
+ * total de criticos del documento (7/5/5 antes, 7/5/5 despues), que no se movio.
+ *
+ * Esto no afloja el gate: lo hace medir lo que dice medir. Si el nombre cambia, sigue
+ * contando como issue nuevo — ahi si es otra operacion.
+ */
 function issueKey(i) {
-    return [i.type, i.opNum, i.weName, i.fmDesc, i.causeDesc].join('|');
+    const operacion = String(i.opName || '').trim().toUpperCase() || `#${i.opNum}`;
+    return [i.type, operacion, i.weName, i.fmDesc, i.causeDesc].join('|');
 }
 
 /**

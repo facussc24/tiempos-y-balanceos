@@ -35,11 +35,44 @@ const filtro = (() => {
     return i >= 0 ? process.argv[i + 1] : null;
 })();
 
-/** Los numeros de operacion del AMFE, en el orden en que estan. */
+/**
+ * Los numeros de operacion que el AMFE CUBRE — no solo los que numera.
+ *
+ * Criterio de Fak (18/08/2026, "opcion C"): el flujograma DESGLOSA lo que el AMFE AGRUPA,
+ * y eso esta bien mientras el AMFE lo DECLARE. Una fila que dice `"OP 20-27 CORTE DE
+ * VINILO"` cubre las ocho operaciones de corte del flujograma; una que dice
+ * `"OP 30 / 32-34 COSTURA UNION"` cubre la 30 y las 32 a 34.
+ *
+ * Sin leer ese rango, el chequeo le exigiria al AMFE una fila por cada paso del flujograma
+ * y la convencion de la casa quedaria marcada como error para siempre. Con el rango leido,
+ * declararlo SIRVE: es la diferencia entre agrupar y desalinearse.
+ */
+const RANGO_RE = /\bOPS?\.?\s+([\d\s\-/,]+?)\s+[A-ZÁÉÍÓÚÑ]/i;
+
+function cubiertosPorNombre(nombre) {
+    const m = RANGO_RE.exec(String(nombre || ''));
+    if (!m) return [];
+    const out = [];
+    for (const parte of m[1].split(/[/,]/)) {
+        const rango = parte.trim().match(/^(\d+)\s*-\s*(\d+)$/);
+        if (rango) {
+            const [, a, b] = rango.map(Number);
+            for (let n = a; n <= b; n++) out.push(String(n));
+        } else if (/^\d+$/.test(parte.trim())) {
+            out.push(parte.trim());
+        }
+    }
+    return out;
+}
+
 function numerosDe(doc) {
-    return (doc.operations || [])
-        .map(o => String(o.opNumber ?? o.operationNumber ?? '').trim())
-        .filter(Boolean);
+    const out = [];
+    for (const o of doc.operations || []) {
+        const n = String(o.opNumber ?? o.operationNumber ?? '').trim();
+        if (n) out.push(n);
+        out.push(...cubiertosPorNombre(o.name ?? o.operationName));
+    }
+    return [...new Set(out)];
 }
 
 const sb = await connectSupabase();
