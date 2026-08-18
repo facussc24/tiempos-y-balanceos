@@ -1,0 +1,118 @@
+{
+  "_doc": "Flujograma 152 — APOYACABEZAS (VW427 Patagonia). Transcripcion literal del PNG FLUJOGRAMA_APOYACABEZAS.png (7352 x 8218 px). Lectura exacta: no se agrego, completo ni reinterpreto ningun paso. Tres ramas de costura paralelas (DEL / TC / TL) que divergen despues del traslado a sector de costura y convergen antes del traslado a tapizado.",
+
+  "header": {
+    "title": "FLUJOGRAMA DE PROCESO APOYACABEZAS",
+    "documentCode": "I-IN-002/III",
+    "revision": "B",
+    "date": "18/09/2025",
+    "revisionDate": "18/08/2026",
+    "_nota_fechas": "`date` es la FECHA DE EMISION registrada en el Listado_Maestro_FLUJOGRMAS.xlsx para el ID 152 (18/09/2025) y no se toca mas. El PNG de origen traia 'REVISION A / FECHA EMISION 04/05/2026' en un solo campo — esa era la fecha de la reemision, no la de emision original.",
+    "preparedBy": "FACUNDO SANTORO",
+    "reviewedBy": "CARLOS BAPTISTA",
+    "project": "PATAGONIA",
+    "client": "VWA"
+  },
+
+  "products": [
+    { "code": "2HC 881 901", "level": "L0", "description": "APC DELANTERO", "version": "RL1 (PVC Titan Black)" },
+    { "code": "2HC 881 901 A", "level": "L1", "description": "APC DELANTERO", "version": "GFV (FABRIC Jacquard Black)" },
+    { "code": "2HC 881 901 B", "level": "L2", "description": "APC DELANTERO", "version": "GEV (PVC Andino Gray)" },
+    { "code": "2HC 881 901 C", "level": "L3", "description": "APC DELANTERO", "version": "EFG (PVC Dark Slate)" },
+    { "code": "2HC 885 900", "level": "L0", "description": "APC TRASERO CENTRAL", "version": "RL1 (PVC Titan Black)" },
+    { "code": "2HC 885 900 A", "level": "L1", "description": "APC TRASERO CENTRAL", "version": "EIF (FABRIC Jacquard Black)" },
+    { "code": "2HC 885 900 B", "level": "L2", "description": "APC TRASERO CENTRAL", "version": "SIY (PVC Andino Gray)" },
+    { "code": "2HC 885 900 C", "level": "L3", "description": "APC TRASERO CENTRAL", "version": "SIY (PVC Dark Slate)" },
+    { "code": "2HC 885 901", "level": "L0", "description": "APC TRASERO LATERAL", "version": "RL1 (PVC Titan Black)" },
+    { "code": "2HC 885 901 A", "level": "L1", "description": "APC TRASERO LATERAL", "version": "GFU (FABRIC Jacquard Black)" },
+    { "code": "2HC 885 901 B", "level": "L2", "description": "APC TRASERO LATERAL", "version": "GEQ (PVC Andino Gray)" },
+    { "code": "2HC 885 901 C", "level": "L3", "description": "APC TRASERO LATERAL", "version": "DZS (PVC Dark Slate)" }
+  ],
+
+  "revisions": [
+    { "rev": "A", "date": "18/09/2025", "item": "N/A.", "details": "EMISION INICIAL.", "pswDate": "", "modifiedBy": "FS" },
+    { "rev": "B", "date": "18/08/2026", "item": "20-28 / 30-34 / 40-42 / 50-52 / 60 / 70-72 / 80", "details": "SE DESGLOSA EL CORTE EN LAS OPERACIONES 20 A 27 Y EL CONTROL CON PLANTILLA MYLAR PASA A LA 28, ALINEANDO CON LA HOJA DE OPERACIONES. SE ABREN TRES RAMAS DE COSTURA, UNA POR VARIANTE. SE RENUMERA EL TRAMO DE ENFUNDADO A EMBALAJE.", "pswDate": "", "modifiedBy": "FS" }
+  ],
+
+  "flow": [
+    { "stepId": "10", "type": "op-ins", "description": "RECEPCIÓN E INSPECCIÓN DE MATERIA PRIMA" },
+    { "type": "condition", "labelCondition": "¿MATERIAL CONFORME?", "labelDown": "SI",
+      "branchSide": { "labelNode": "NO", "type": "terminal", "text": "RECLAMO A PROVEEDOR" } },
+    { "type": "transfer", "description": "TRASLADO: MATERIAL APROBADO A ALMACÉN TEMPORAL (FIFO)" },
+    { "type": "storage", "description": "ALMACENADO EN SECTOR DE RECEPCIÓN DE MATERIA PRIMA CONTROLADA E IDENTIFICADA" },
+    { "type": "transfer", "description": "TRASLADO DE HILOS A COSTURA",
+      "branchSide": { "type": "connector", "text": "A", "description": "HILOS" } },
+    { "type": "transfer", "description": "TRASLADO DE VARILLAS Y ACCESORIOS A TAPIZADO",
+      "branchSide": { "type": "connector", "text": "B", "description": "VARILLAS, PRECINTOS Y HERRAJES" } },
+    { "type": "transfer", "description": "TRASLADO DE INSUMOS QUÍMICOS A INYECCIÓN PU",
+      "branchSide": { "type": "connector", "text": "C", "description": "INSUMOS QUÍMICOS (PU)" } },
+    { "type": "transfer", "description": "TRASLADO A SECTOR MESA DE CORTE" },
+
+    { "stepId": "20", "type": "operation", "description": "PREPARACIÓN Y CARGA DEL VINILO" },
+    { "stepId": "21", "type": "operation", "description": "AJUSTE DE RODILLOS Y ALIMENTACIÓN DEL VINILO" },
+    { "stepId": "22", "type": "operation", "description": "AJUSTE DE MATERIAL EN LA MÁQUINA DE CORTE DE CAPAS" },
+    { "stepId": "23", "type": "operation", "description": "CONFIGURACIÓN Y CORTE AUTOMÁTICO DE CAPAS DE VINILO" },
+    { "stepId": "24", "type": "operation", "description": "AVANCE Y ALINEACIÓN DE VINILO EN MESA DE CORTE" },
+    { "stepId": "25", "type": "operation", "description": "MEDICIÓN DE CUCHILLA" },
+    { "stepId": "26", "type": "operation", "description": "PREPARACIÓN Y AJUSTE DE CORTE CON SUCCIÓN" },
+    { "stepId": "27", "type": "operation", "description": "INICIO DEL CORTE Y VERIFICACIÓN AUTOMÁTICA DE MEDIDAS" },
+    { "stepId": "28", "type": "op-ins", "description": "CONTROL DE FORMA CON PLANTILLA MYLAR" },
+    { "type": "condition", "labelCondition": "¿CORTE CONFORME?", "labelDown": "SI",
+      "branchSide": { "labelNode": "NO", "type": "terminal", "text": "SCRAP" } },
+
+    { "type": "transfer", "description": "TRASLADO A SECTOR DE COSTURA", "incomingConnector": "A",
+      "branches": [
+        [
+          { "type": "transfer", "description": "APC DELANTERO (DEL)" },
+          { "stepId": "30", "type": "operation", "description": "COSTURA UNIÓN (PANELES 101 + 102 + 103)" },
+          { "stepId": "31", "type": "operation", "description": "COSTURA VISTA" },
+          { "stepId": "32", "type": "operation", "description": "COSTURA UNIÓN (105 + 106)" },
+          { "stepId": "33", "type": "operation", "description": "COSTURA UNIÓN (105-106 + 104)" },
+          { "stepId": "34", "type": "operation", "description": "COSTURA DE CERRADO COMPLETO" }
+        ],
+        [
+          { "type": "transfer", "description": "APC TRASERO CENTRAL (TC)" },
+          { "stepId": "30", "type": "operation", "description": "COSTURA UNIÓN (PANELES 101 + 102 + 103)" },
+          { "stepId": "31", "type": "operation", "description": "COSTURA VISTA" },
+          { "stepId": "32", "type": "operation", "description": "COSTURA UNIÓN CONJUNTO TRASERO (105 + 106 + 104)" },
+          { "stepId": "33", "type": "operation", "description": "COSTURA DE CERRADO COMPLETO" }
+        ],
+        [
+          { "type": "transfer", "description": "APC TRASERO LATERAL (TL)" },
+          { "stepId": "30", "type": "operation", "description": "COSTURA UNIÓN (PANELES 107 + 108 + 109)" },
+          { "stepId": "31", "type": "operation", "description": "COSTURA VISTA" },
+          { "stepId": "32", "type": "operation", "description": "COSTURA UNIÓN CONJUNTO TRASERO (111 + 112 + 110)" },
+          { "stepId": "33", "type": "operation", "description": "COSTURA DE CERRADO COMPLETO" }
+        ]
+      ] },
+
+    { "type": "transfer", "description": "TRASLADO A SECTOR DE TAPIZADO" },
+    { "stepId": "40", "type": "operation", "description": "ENFUNDADO", "incomingConnector": "B" },
+    { "stepId": "41", "type": "operation", "description": "INSERCIÓN DE VARILLA" },
+    { "stepId": "42", "type": "operation", "description": "COLOCACIÓN DE PRECINTO CON PISTOLA ETIQUETADORA" },
+    { "type": "transfer", "description": "TRASLADO A SECTOR INYECCIÓN PU" },
+    { "stepId": "50", "type": "operation", "description": "COLOCACIÓN DE BOLSA Y CARGA DEL APOYACABEZAS EN EL MOLDE" },
+    { "stepId": "51", "type": "operation", "description": "CIERRE DEL MOLDE Y COLOCACIÓN DE BOQUILLA" },
+    { "stepId": "52", "type": "operation", "description": "INYECCIÓN AUTOMÁTICA DE PU", "incomingConnector": "C" },
+    { "type": "transfer", "description": "TRASLADO A MURO DE CALIDAD" },
+    { "stepId": "60", "type": "op-ins", "description": "CONTROL FINAL DE CALIDAD" },
+
+    { "type": "condition", "labelCondition": "¿PRODUCTO CONFORME?", "labelDown": "SI",
+      "branchSide": { "labelNode": "NO", "sequence": [
+        { "type": "condition", "labelCondition": "¿SE PUEDE RETRABAJAR?", "labelDown": "SI",
+          "branchSide": { "labelNode": "NO", "type": "terminal", "text": "SCRAP" } },
+        { "stepId": "70", "type": "operation", "description": "REPROCESO: ELIMINACIÓN DE HILO SOBRANTE" },
+        { "stepId": "71", "type": "operation", "description": "REPROCESO: PUNTADA FLOJA" },
+        { "stepId": "72", "type": "operation", "description": "REPROCESO: ELIMINACIÓN DE ARRUGAS EN HORNO" },
+        { "type": "condition", "labelCondition": "¿REPROCESO CONFORME?", "labelDown": "SI",
+          "branchSide": { "direction": "left", "labelNode": "NO", "type": "terminal", "text": "SCRAP" } },
+        { "type": "transfer", "description": "RE-ENTRADA AL FLUJO PRINCIPAL",
+          "rework": { "targetId": "60", "label": "REVERIFICAR (A OP. 60)" } }
+      ] } },
+
+    { "type": "transfer", "description": "TRASLADO A SECTOR DE EMBALAJE" },
+    { "stepId": "80", "type": "operation", "description": "EMBALAJE Y ETIQUETADO DE PRODUCTO TERMINADO" },
+    { "type": "transfer", "description": "TRASLADO A ALMACÉN DE PRODUCTO TERMINADO" },
+    { "type": "storage", "description": "ALMACENADO FINAL DE PRODUCTO TERMINADO" }
+  ]
+}
