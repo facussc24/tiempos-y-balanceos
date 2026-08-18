@@ -580,14 +580,24 @@ for (const [amfeNumber, cfg] of Object.entries(PRODUCTOS)) {
     // `modifiedBy` (ver `AmfeOfficialRevision` en modules/amfe/amfeCaratulaSheet.ts).
     // La primera version puso `detail` y `author` y la fila salio con la fecha y el resto
     // en blanco: el documento decia que hubo una revision pero no que se cambio.
-    revisions.push({
+    //
+    // GUARD DE IDEMPOTENCIA: los work elements se de-duplican por `_autoFilled`, pero
+    // `revisions` es un array aparte y un push sin condicion agrega una fila IGUAL en cada
+    // corrida con --apply. El validador no mira `revisions`, asi que `runWithValidation()`
+    // no lo frena. Mismo guard que usa `_revisarAmfesApoyacabezasPatagonia.mjs`.
+    const filaRev = {
         rev: 'A',
         date: FECHA_REV,
         item: '10',
         details: DESC_REV,
         pswDate: '',
         modifiedBy: 'FS',
-    });
+    };
+    if (revisions.some(r => r.date === filaRev.date)) {
+        console.log(`  (la fila de revision ${FECHA_REV} ya existe, no se duplica)`);
+    } else {
+        revisions.push(filaRev);
+    }
 
     plan.push({ id: row.id, amfeNumber, productName: cfg.producto, before, after: doc });
     commits.push(async () => {

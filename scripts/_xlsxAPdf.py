@@ -4,7 +4,7 @@ _xlsxAPdf.py — convierte .xlsx a PDF con Excel, y VERIFICA la copia resultante
 Por que existe y por que verifica tanto (lecciones del 14/08/2026):
   - Un EXCEL.EXE colgado de una corrida anterior deja el archivo tomado: la exportacion
     falla en silencio y queda en disco el PDF VIEJO, que despues se da por bueno.
-    -> se cierran los Excel huerfanos antes de empezar y se BORRA el destino antes de generar.
+    -> se BORRA el destino antes de generar; si falla, el archivo FALTA y se nota.
   - `ExportAsFixedFormat` no siempre lanza cuando el destino esta tomado.
     -> despues de generar se re-lee el PDF y se cuentan paginas y bytes.
   - Excel COM con argumentos NOMBRADOS se comporta distinto que con posicionales.
@@ -20,7 +20,6 @@ Uso:  python scripts/_xlsxAPdf.py <carpeta_con_xlsx>            (dry-run: solo m
 import os
 import sys
 import glob
-import time
 
 try:
     import win32com.client as win32
@@ -28,10 +27,34 @@ except ImportError:
     sys.exit('ERROR: falta pywin32 (win32com). No se puede convertir sin Excel.')
 
 
-def cerrar_excel_huerfanos():
-    """Cierra instancias de Excel colgadas de corridas anteriores (no toca archivos)."""
-    os.system('taskkill /F /IM EXCEL.EXE /T >NUL 2>&1')
-    time.sleep(1)
+def chequear_excel_abierto():
+    """
+    Si Fak tiene Excel abierto con trabajo sin guardar, ABORTA en vez de matarlo.
+
+    La primera version arrancaba con `taskkill /F /IM EXCEL.EXE`, que no distingue el Excel
+    huerfano de una corrida anterior del Excel que Fak esta usando: le habria volado una
+    planilla del arb sin guardar y sin preguntar. Ahora se mira antes de tocar nada.
+    """
+    try:
+        app = win32.GetObject(Class='Excel.Application')
+    except Exception:                                          # noqa: BLE001
+        return  # no hay ninguna instancia: camino limpio
+
+    sin_guardar = []
+    try:
+        for wb in app.Workbooks:
+            if not wb.Saved:
+                sin_guardar.append(wb.Name)
+    except Exception:                                          # noqa: BLE001
+        sin_guardar = ['(no se pudo leer la lista de libros)']
+
+    if sin_guardar:
+        print('ABORTADO: hay Excel abierto con cambios sin guardar.')
+        for n in sin_guardar:
+            print(f'  - {n}')
+        print('Guardalos y cerra Excel, despues volve a correr esto.')
+        sys.exit(1)
+    # Hay Excel abierto pero todo guardado: se usa esa instancia, no se mata nada.
 
 
 def paginas_pdf(ruta):
@@ -92,7 +115,7 @@ def mostrar_plan(plan, carpeta):
 
 
 def convertir(plan):
-    cerrar_excel_huerfanos()
+    chequear_excel_abierto()
     excel = win32.Dispatch('Excel.Application')
     excel.Visible = False
     excel.DisplayAlerts = False
@@ -141,7 +164,6 @@ def convertir(plan):
     finally:
         excel.Quit()
         del excel
-        cerrar_excel_huerfanos()
 
     print(f'\n=== CONVERTIDOS {len(ok)}/{len(plan)} ===')
     for nombre, b, pg in ok:

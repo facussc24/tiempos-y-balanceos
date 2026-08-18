@@ -14,16 +14,22 @@ DOS DESTINOS, cada uno con su convencion (relevada del servidor el 17/08/2026):
 ARCHIVADO: nada se borra. Lo que se reemplaza se MUEVE a `OBSOLETO\\` agregando la fecha
 de baja entre parentesis, que es la convencion que ya usa la carpeta del Armrest Rear.
 
-Uso:  python scripts/_distribuirAmfesPatagonia.py            (dry-run: imprime el plan)
-      python scripts/_distribuirAmfesPatagonia.py --apply
+Uso:  python scripts/_distribuirAmfesPatagonia.py <carpeta_con_los_amfe>
+      python scripts/_distribuirAmfesPatagonia.py <carpeta_con_los_amfe> --apply
+
+La carpeta de origen es la que tiene los `AMFE <nro> - <PIEZA> - Rev.A.xlsx` y `.pdf` ya
+generados y verificados (la que produce `_exportAmfeOficial.ts` + `_xlsxAPdf.py`).
+Sin `--apply` solo imprime el plan con el conteo.
 """
 import os
 import shutil
 import sys
 from datetime import date
 
-ORIGEN = (r'C:\Users\FACUND~1\AppData\Local\Temp\claude\C--Dev-BarackMercosul'
-          r'\3bea1fce-efb8-4810-b3c6-6b0a58c9fa1a\scratchpad\amfes-patagonia')
+# La carpeta de origen se pasa por linea de comandos. La primera version la tenia
+# hardcodeada al scratchpad de UNA sesion de Claude Code (con su UUID adentro): esos
+# scratchpads no sobreviven a la sesion, asi que el script quedaba imposible de reusar.
+ORIGEN = None  # se completa en __main__
 
 MAESTRO = (r'Y:\Ingenieria\Documentacion Gestion Ingenieria'
            r'\13. Analisis del modo de falla y sus efectos ( I-AC-005.3)\2. AMFES DE PROCESO')
@@ -62,13 +68,30 @@ AMFES = {
 HOY = date.today().strftime('%d-%m-%Y')
 
 
-def armar_plan():
+def nombre_libre(carpeta, raiz, ext):
+    """
+    Nombre de archivado que NO pise uno existente.
+
+    En Windows, mover a un destino que ya existe no falla: se copia, se borra el origen y
+    se pisa el destino en silencio, con exit 0. Como el nombre de archivado llevaba solo la
+    fecha (`... (18-08-2026).xlsx`), dos corridas el mismo dia se comian la primera version
+    archivada sin dejar ningun rastro. Si el nombre esta ocupado se agrega un contador.
+    """
+    destino = os.path.join(carpeta, f'{raiz} ({HOY}){ext}')
+    n = 2
+    while os.path.exists(destino):
+        destino = os.path.join(carpeta, f'{raiz} ({HOY}-{n}){ext}')
+        n += 1
+    return destino
+
+
+def armar_plan(origen):
     """Devuelve [(origen, destino, previo_a_archivar_o_None)] y la lista de problemas."""
     acciones, problemas = [], []
     for nro, (pieza, dir_maestro, dir_ppap) in AMFES.items():
         base = f'AMFE {nro} - {pieza} - Rev.A'
         for ext, raiz, sub in (('xlsx', MAESTRO, dir_maestro), ('pdf', PPAP, dir_ppap)):
-            src = os.path.join(ORIGEN, base + '.' + ext)
+            src = os.path.join(origen, base + '.' + ext)
             carpeta = os.path.join(raiz, sub)
             dst = os.path.join(carpeta, base + '.' + ext)
             if not os.path.exists(src):
@@ -105,7 +128,7 @@ def ejecutar(acciones):
                 obsoleto = os.path.join(os.path.dirname(dst), 'OBSOLETO')
                 os.makedirs(obsoleto, exist_ok=True)
                 raiz, ext = os.path.splitext(os.path.basename(previo))
-                destino_viejo = os.path.join(obsoleto, f'{raiz} ({HOY}){ext}')
+                destino_viejo = nombre_libre(obsoleto, raiz, ext)
                 shutil.move(previo, destino_viejo)
                 archivados += 1
                 print(f'  archivado  {os.path.basename(destino_viejo)}')
@@ -132,7 +155,12 @@ def ejecutar(acciones):
 
 
 if __name__ == '__main__':
-    acciones, problemas = armar_plan()
+    if len(sys.argv) < 2 or sys.argv[1].startswith('--'):
+        sys.exit('Uso: python scripts/_distribuirAmfesPatagonia.py <carpeta_con_los_amfe> [--apply]')
+    ORIGEN = os.path.abspath(sys.argv[1])
+    if not os.path.isdir(ORIGEN):
+        sys.exit(f'ERROR: no existe la carpeta de origen {ORIGEN}')
+    acciones, problemas = armar_plan(ORIGEN)
     mostrar_plan(acciones, problemas)
     if problemas:
         print('\nHay problemas sin resolver: no se ejecuta nada. Corregir y reintentar.')
