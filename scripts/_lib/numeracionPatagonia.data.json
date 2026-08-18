@@ -25,7 +25,7 @@
         "estado": "PENDIENTE"
       },
       "secuencia": null,
-      "nota": "El flujograma nuevo trae las operaciones 51 y 52 'Control de pieza inyectada' que NADIE decidio agregar: las produjo el generador. Fak, preguntado el 18/08: 'no se de que hablas sinceramente'. No entran al AMFE hasta que alguien de planta confirme que el control existe.",
+      "nota": "RESUELTO 18/08: el control de pieza inyectada SI existe, pero es UN SOLO PUESTO para las dos piezas (Fak). El flujograma lo dibuja como dos operaciones (51 delantero, 52 trasero) con dos rombos: hay que FUSIONARLAS en una sola 51 con un rombo. HUECO PENDIENTE en el AMFE: no tiene ninguna operacion de control entre la 60 inyeccion plastica y la 70 inyeccion PU. No se agrega todavia porque correria la numeracion justo antes de rehacer el flujograma, y porque hacen falta los modos de falla reales del puesto. Mismo hueco en el 158 y el 162; el 149 si lo tiene.",
       "fuente": "AMFE 161 Supabase live 2026-08-18"
     },
     "AMFE-HF-PAT": {
@@ -37,7 +37,7 @@
         "estado": "PENDIENTE"
       },
       "secuencia": null,
-      "nota": "El tramo es 50 ENFUNDADO, 51 VARILLA, 60 PRECINTO, 61 BOLSA Y CARGA EN MOLDE, 62 CIERRE DE MOLDE, 63 INYECCION DE PU: el PU se inyecta ADENTRO de la funda ya puesta. Los traseros (153/155) declaran el orden inverso y hay una contradiccion abierta sobre si eso es correcto — ver la nota de esos dos. Lo que si hay que unificar entre los tres, que comparten el flujograma 152: mylar 28 aca / 25 en los traseros, control final 70 / 80, embalaje 90 / 100.",
+      "nota": "Orden correcto y sirvio de referencia para corregir los traseros: 50 ENFUNDADO, 51 VARILLA, 60 PRECINTO, 61 BOLSA Y CARGA EN MOLDE, 62 CIERRE DE MOLDE, 63 INYECCION DE PU. El PU entra adentro de la funda ya montada. Diferencia REAL con los traseros que NO se alinea: el delantero lleva inserto EPP y los traseros solo varilla. Lo que si hay que unificar, porque comparten el flujograma 152: mylar 28 aca / 25 en los traseros, control final 70 / 80, embalaje 90 / 100.",
       "fuente": "AMFE 151 Supabase live 2026-08-18"
     },
     "AMFE-HRC-PAT": {
@@ -49,7 +49,7 @@
         "estado": "PENDIENTE"
       },
       "secuencia": null,
-      "nota": "CONTRADICCION SIN RESOLVER — NO TOCAR HASTA QUE FAK LA ZANJE. El AMFE dice 50 INYECCION DE PU y 60 ENFUNDADO (se inyecta primero, se enfunda despues). Fak dijo el 18/08/2026 'en todos, o sea se enfunda antes y despues se inyecta y ya salen listos', que apuntaria a que este AMFE esta al reves. PERO la regla amfe.md seccion 12 dice lo contrario y ademas prohibe alinearlos: 'Headrest Front vs Rear NO tienen el mismo proceso (HF: EPP+varilla, 16 OPs con enfundado; HRC/HRO: solo varilla, 14 OPs directo a PU). NO flaggear como desincronizacion ni sugerir alinear estructuras'. Ojo: esa regla pudo haberse escrito mirando estos mismos AMFE, con lo cual heredaria el error si el error existe. Nadie verifico el proceso contra la planta. Si el orden real es enfundado->PU, no es renumerar: cambia el analisis de falla (aparece el modo 'el PU se fuga por una costura y mancha la funda por la cara vista', que hoy no existe). Los tres comparten inyectora TP900 y molde climatizado en carrusel. Lo que SI hay que unificar igual, sin depender de esto: mylar 25 aca / 28 en el delantero, control final 80 / 70, embalaje 100 / 90. Identico al 155.",
+      "nota": "CORREGIDO 18/08/2026. Tenia el proceso al reves (50 INYECCION DE PU, 60 ENFUNDADO, 70 VARILLA). Fak sobre el puesto: 'es imposible que se inyecte sin la funda, se saldria todo el material', 'se coloca la varilla, la funda, y luego se inyecta', 'lo tengo 100% claro'. Quedo 50 VARILLA, 60 ENFUNDADO, 70 INYECCION DE PU (script _corregirOrdenApoyacabezasTraseros.mjs). La regla amfe.md §12 decia que los traseros iban 'directo a PU' y era falsa: se corrigio y nacio el check PU_ANTES_DE_ENFUNDADO. Identico al 155.",
       "fuente": "AMFE 153 Supabase live 2026-08-18"
     },
     "AMFE-HRO-PAT": {
@@ -61,7 +61,7 @@
         "estado": "PENDIENTE"
       },
       "secuencia": null,
-      "nota": "CONTRADICCION SIN RESOLVER — NO TOCAR HASTA QUE FAK LA ZANJE. El AMFE dice 50 INYECCION DE PU y 60 ENFUNDADO (se inyecta primero, se enfunda despues). Fak dijo el 18/08/2026 'en todos, o sea se enfunda antes y despues se inyecta y ya salen listos', que apuntaria a que este AMFE esta al reves. PERO la regla amfe.md seccion 12 dice lo contrario y ademas prohibe alinearlos: 'Headrest Front vs Rear NO tienen el mismo proceso (HF: EPP+varilla, 16 OPs con enfundado; HRC/HRO: solo varilla, 14 OPs directo a PU). NO flaggear como desincronizacion ni sugerir alinear estructuras'. Ojo: esa regla pudo haberse escrito mirando estos mismos AMFE, con lo cual heredaria el error si el error existe. Nadie verifico el proceso contra la planta. Si el orden real es enfundado->PU, no es renumerar: cambia el analisis de falla (aparece el modo 'el PU se fuga por una costura y mancha la funda por la cara vista', que hoy no existe). Los tres comparten inyectora TP900 y molde climatizado en carrusel. Lo que SI hay que unificar igual, sin depender de esto: mylar 25 aca / 28 en el delantero, control final 80 / 70, embalaje 100 / 90. Identico al 153.",
+      "nota": "CORREGIDO 18/08/2026. Tenia el proceso al reves (50 INYECCION DE PU, 60 ENFUNDADO, 70 VARILLA). Fak sobre el puesto: 'es imposible que se inyecte sin la funda, se saldria todo el material', 'se coloca la varilla, la funda, y luego se inyecta', 'lo tengo 100% claro'. Quedo 50 VARILLA, 60 ENFUNDADO, 70 INYECCION DE PU (script _corregirOrdenApoyacabezasTraseros.mjs). La regla amfe.md §12 decia que los traseros iban 'directo a PU' y era falsa: se corrigio y nacio el check PU_ANTES_DE_ENFUNDADO. Identico al 153.",
       "fuente": "AMFE 155 Supabase live 2026-08-18"
     },
     "AMFE-INS-PAT": {
@@ -99,7 +99,7 @@
       "secuenciaConfirmadaPor": [
         "flujograma 154 Rev.A (vigente, leido del .vsdx del servidor)"
       ],
-      "nota": "El flujograma 154 NO cambia: se queda en Rev. A. La operacion 105 REFILADO POST-TAPIZADO existe SOLO en el Plan de Control preliminar de la app; ni el flujograma ni el AMFE la tienen, y no hay Plan de Control vigente en el servidor que la respalde. No se agrega sin que alguien la afirme. Lo que si falta es del AMFE: le faltan 10 operaciones que el flujograma si declara (30, 40, 51, 61, 71, 80, 81, 92, 100, 111). Agregarlas requiere escribir modos de falla — hace falta la hoja de operaciones.",
+      "nota": "El flujograma 154 NO cambia: se queda en Rev. A. La operacion 105 REFILADO POST-TAPIZADO existe SOLO en el Plan de Control preliminar de la app; ni el flujograma ni el AMFE la tienen, y no hay Plan de Control vigente en el servidor que la respalde. No se agrega sin que alguien la afirme. Lo que si falta es del AMFE: le faltan 10 operaciones que el flujograma si declara (30, 40, 51, 61, 71, 80, 81, 92, 100, 111). Agregarlas requiere escribir modos de falla — hace falta la hoja de operaciones. HUECO ADICIONAL (18/08): tampoco tiene control despues de la inyeccion plastica (OP 70 -> 90 adhesivado). Fak: 'en inyeccion plastica siempre hay control, deberia estar en todos'.",
       "fuente": "FLUJOGRAMA_154_INSERT PAT_REV.A.vsdx leido del servidor 2026-08-18"
     },
     "AMFE-TR-PAT": {
@@ -127,7 +127,7 @@
         "Plan de Control CP-TOPROLL-001: tiene las 11 operaciones completas",
         "flujograma 122/155 vigente: tiene 9 de las 11 (le falta el 11, y el control final figura sin numerar)"
       ],
-      "nota": "Secuencia CONFIRMADA por dos fuentes que coinciden: el Plan de Control CP-TOPROLL-001 la tiene completa, y el flujograma vigente la tiene salvo el 11 (no existe) y el 80 (figura como 'Inspeccion Final' SIN numero). El AMFE hoy usa 10/20/.../100: esta corrido un escalon entero y hay que renumerarlo DESPUES de que salga el flujograma B. Ademas el archivo del servidor se llama '122 ...' y el 122 es 'APC AMAROK CENTRAL VINILO' de SAS: numero de otro producto.",
+      "nota": "Secuencia CONFIRMADA por dos fuentes que coinciden: el Plan de Control CP-TOPROLL-001 la tiene completa, y el flujograma vigente la tiene salvo el 11 (no existe) y el 80 (figura como 'Inspeccion Final' SIN numero). El AMFE hoy usa 10/20/.../100: esta corrido un escalon entero y hay que renumerarlo DESPUES de que salga el flujograma B. Ademas el archivo del servidor se llama '122 ...' y el 122 es 'APC AMAROK CENTRAL VINILO' de SAS: numero de otro producto. HUECO ADICIONAL (18/08): tampoco tiene control despues de la inyeccion plastica (OP 20 -> 30 adhesivado hot melt). Fak: 'en inyeccion plastica siempre hay control, deberia estar en todos'.",
       "fuente": "CP-TOPROLL-001 + 122 FLUJOGRAMA TOP ROLL PAT 2.vsdx, ambos leidos 2026-08-18"
     },
     "VWA-PAT-IPPADS-001": {
@@ -142,5 +142,6 @@
       "nota": "El flujograma NO figura en el Listado_Maestro_FLUJOGRMAS.xlsx: hay que darlo de alta. El 157 es el proximo ID libre (el ultimo cargado es el 156, TELAS ASIENTO Y RESPALDO de PWA). Pendiente: separar la operacion 90 en 90 ALINEACION DE COSTURA y 91 TAPIZADO Y FIJADO SUPERIOR, que es el punto 2 del mail de Lattanzi.",
       "fuente": "AMFE 149 Supabase live + Listado Maestro 2026-08-18"
     }
-  }
+  },
+  "_control_post_inyeccion": "Fak 18/08/2026: 'en inyeccion plastica siempre hay control, deberia estar en todos'. Medido sobre los 8 AMFE: FALTA en 161 (armrest door panel), 158 (insert) y 162 (top roll); el 149 (IP pad) lo tiene dentro de su OP 20. Pendiente de cargar hasta que los flujogramas esten en Rev. B — agregar la operacion corre la numeracion — y hasta tener de Fak que se le controla a la pieza en ese puesto."
 }
