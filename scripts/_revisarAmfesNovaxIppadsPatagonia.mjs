@@ -50,6 +50,10 @@ import {
 
 const PLACEHOLDER_APH = 'Pendiente definicion equipo APQP';
 const FECHA_REV = '17/08/2026';
+const DESC_REV =
+    'REVISION CON FOCO EN RECEPCION DE MATERIALES (PEDIDO DE GERENCIA, ASAICHI 10-11/08/2026). '
+    + 'SE AMPLIA LA OPERACION 10 A UN RENGLON POR MATERIAL DE LA LISTA DE MATERIALES, CON SU '
+    + 'CONTROL PREVENTIVO Y DETECTIVO.';
 
 // ─── Constructores ──────────────────────────────────────────────────────────
 
@@ -572,11 +576,17 @@ for (const [amfeNumber, cfg] of Object.entries(PRODUCTOS)) {
     const revisions = Array.isArray(row.revisions)
         ? row.revisions
         : (typeof row.revisions === 'string' && row.revisions ? JSON.parse(row.revisions) : []);
+    // Los nombres de campo importan: la caratula lee `item`, `details`, `pswDate` y
+    // `modifiedBy` (ver `AmfeOfficialRevision` en modules/amfe/amfeCaratulaSheet.ts).
+    // La primera version puso `detail` y `author` y la fila salio con la fecha y el resto
+    // en blanco: el documento decia que hubo una revision pero no que se cambio.
     revisions.push({
         rev: 'A',
         date: FECHA_REV,
-        author: 'F. Santoro',
-        detail: 'Recepcion de materiales: un renglon por cada material del BOM, con su control.',
+        item: '10',
+        details: DESC_REV,
+        pswDate: '',
+        modifiedBy: 'FS',
     });
 
     plan.push({ id: row.id, amfeNumber, productName: cfg.producto, before, after: doc });
