@@ -147,10 +147,34 @@ def main():
         base = os.path.splitext(os.path.basename(piece))[0]
         stl = os.path.join(os.path.dirname(piece) or ".", base + ".stl")
         _stl_export(piece, stl, args.stl_lc, args.stl_curvature)
-        # watertight del STL de entrega (gate CADGenBench nivel 1: validez)
-        m = geom.step_to_trimesh(piece, lc=args.stl_lc)
+        # ---- GATE validez: sobre EL STL QUE SE ENTREGA, no sobre un re-mallado -------
+        # Antes esto re-mallaba el STEP con step_to_trimesh y juzgaba ESA malla: el
+        # 2026-08-18 un STL con 8 cuerpos (4 de ellos CAVIDADES SELLADAS de volumen
+        # negativo) paso el gate porque la malla juzgada era otra. Patron "medir la orden
+        # y no el resultado". Ahora se carga el archivo exportado.
+        envcheck.require(("trimesh",))
+        import trimesh
+        m = trimesh.load(stl)
         if not m.is_watertight:
             raise SystemExit("[GATE validez] La malla de '%s' NO es watertight — no se entrega." % base)
+        # ---- GATE cavidades selladas / cuerpos sueltos --------------------------------
+        # Quitar un agujero puede SELLAR una cavidad interna que ese agujero ventilaba
+        # de casualidad (caso real: el vaciado de la base respiraba por los 2 M5; al
+        # sacar los M5 quedaron bolsas de aire = cuerpos de volumen NEGATIVO que el
+        # laminador tapa a ciegas). Y un cuerpo POSITIVO suelto es una pieza partida.
+        cuerpos = m.split(only_watertight=False)
+        negativos = [c for c in cuerpos if c.volume < 0]
+        if len(cuerpos) != 1 or negativos:
+            for c in sorted(cuerpos, key=lambda s: s.volume):
+                lo, hi = c.bounds
+                print("   cuerpo: vol %+9.3f cm3 | bbox %.1f x %.1f x %.1f | centro (%.1f, %.1f, %.1f)"
+                      % (c.volume / 1000, hi[0] - lo[0], hi[1] - lo[1], hi[2] - lo[2],
+                         (lo[0] + hi[0]) / 2, (lo[1] + hi[1]) / 2, (lo[2] + hi[2]) / 2))
+            raise SystemExit(
+                "[GATE cuerpos] '%s' tiene %d cuerpos (%d cavidades selladas de volumen "
+                "negativo) — no se entrega.\nSi es una cavidad: abrirla al exterior o hacer "
+                "la zona maciza. Si son piezas sueltas: es un diseño partido." %
+                (base, len(cuerpos), len(negativos)))
         _aviso_frame_impresion(base, m)
         outs = [piece, stl]
         if args.glb:

@@ -71,6 +71,20 @@ def make(outdir):
         gmsh.write(p)
     paths["blob"] = p
 
+    # caja con CAVIDAD INTERNA SELLADA: al mallar da 2 cuerpos, el interior con volumen
+    # NEGATIVO. Es el caso malo del gate de cuerpos de export_deliverables (2026-08-18:
+    # quitar los agujeros M5 sello el vaciado que ventilaban de casualidad, y un STL con
+    # 8 cuerpos paso el gate viejo porque juzgaba un re-mallado y no el archivo entregado).
+    p = os.path.join(outdir, "test_sealed_cavity.step")
+    with geom.gmsh_session():
+        occ = gmsh.model.occ
+        outer = occ.addBox(0, 0, 0, 40, 30, 20)
+        inner = occ.addBox(8, 8, 5, 24, 14, 10)
+        occ.cut([(3, outer)], [(3, inner)])
+        occ.synchronize()
+        gmsh.write(p)
+    paths["sealed_cavity"] = p
+
     return paths
 
 

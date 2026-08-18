@@ -65,7 +65,11 @@ assembly); (2) confirmar CUÁL pieza + computar el ROL de cada sólido por códi
 existe el STEP REAL, PROHIBIDO usar dibujo genérico** — buscar la feature real ANTES; (4) toda cota se
 EXTRAE del STEP medido o es dato de Fak — CERO dimensiones inventadas (extiende `core-prohibiciones` #1);
 (5) **escribir la SECUENCIA DE LA OPERACIÓN en una línea** (quién apoya qué sobre qué, si hay calor,
-presión, cuánto tiempo) y que Fak la confirme. El mecanismo sale de la operación, no al revés.
+presión, cuánto tiempo) y que Fak la confirme. El mecanismo sale de la operación, no al revés;
+(6) si el utillaje aprieta: **¿de dónde sale la elasticidad?** Si la pieza del cliente trae material
+blando (vinilo/tela/espuma), el elástico ES ese material y el utillaje va RÍGIDO — un resorte impreso
+solo se justifica para definir fuerza a través de un hueco desconocido (el resorte del virolador era
+el 84 % de la pieza y sobraba entero; detalle: skill `cad-design` §6).
 
 **GATE 2 — UN SOLO FRAME, derivado de la pieza.** El 2026-08-07 se entregó un ensamble con el
 dispositivo fuera de la ranura. La causa no fueron tres errores: fue **uno**. Había tres marcos
@@ -148,6 +152,9 @@ brazo correcto**.
   redondeado (caja + cilindro), no con `addBox` sola.
 - Antes de cerrar, comparar el tamaño del utillaje contra la magnitud de lo que hace. Un dispositivo
   que aprieta 6 N no puede pesar medio kilo — eso se ve sin calcular nada, y hay que mirarlo.
+- **Requisito que cambia → RE-DERIVAR el diseño, no parchear.** Si el requisito nuevo deja un
+  subsistema sin función, el subsistema se VA, no se refuerza (el resorte del virolador acumuló tope +
+  alma + brazo extra antes de que Fak lo llamara "un parche mal hecho"; skill `cad-design` §6).
 
 **PRE-ENTREGA (lo demás):** render + MIRAR yo el resultado + interferencia contra el sustrato RÍGIDO
 ≈ 0 (no vs el tapizado blando) + CADGenBench (validez→forma→interface→topología) + adjuntar evidencia.

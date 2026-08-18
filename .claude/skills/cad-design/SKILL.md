@@ -252,5 +252,86 @@ inserto heat-set + pin anti-giro.
    más nodos" era la clase A de alrededor y no el pad. Con las sondas del §3bis: 14 segundos y
    el dato correcto. Antes de mallar, leer la topología.
 
+Las 9-17 salen del virolador del Upper Trim (08/2026, tres rondas: resorte → rígido → anillo):
+
+9. **`addThruSections` con el default (spline) SE ABOMBA entre secciones.** Con secciones
+   A, A, B la superficie infla entre las dos primeras: el macho midió 13,088 contra una ranura
+   de 12,982 — 0,05 mm METIDO en la pared en vez de 0,09 de luz. `makeRuled=True` siempre que
+   las secciones deban unirse recto. Se caza midiendo el sólido resultante, nunca asumiendo.
+10. **Quitar un agujero puede SELLAR una cavidad interna.** El vaciado de la base era una
+    cavidad que dos agujeros M5 ventilaban de casualidad; al sacar los M5 quedó aire encerrado:
+    cuerpos de volumen NEGATIVO en el STL que el laminador tapa a ciegas. Gate en
+    `export_deliverables.py`: `split()` → 1 cuerpo, 0 volúmenes negativos, o no entrega.
+11. **Boolean con caras exactamente coincidentes deja la malla no-manifold** (watertight rojo
+    sobre una pieza que antes cerraba). Solape de 0,05 mm en todo fuse de piezas apoyadas.
+12. **El orden de construcción importa:** lo agregado ANTES de los cortes se lo comen los
+    cortes (un alma quedó de 0,30 mm — menos de un cordón, no imprime). Los agregados que
+    deben sobrevivir van DESPUÉS del `cut`, como fuse final. Y un fuse que debe dejar piezas
+    SUELTAS (tope con luz) se verifica midiendo la luz en el resultado a varias alturas.
+13. **Medir la luz de un anillo: el rayo desde el centro pega en la cara INTERNA.** Dio "luz
+    2,550" sobre una pieza con luz 0,15 — y 2,550 = 0,15 + 2,40 (luz + espesor). **Un resultado
+    que es la SUMA exacta de dos cotas conocidas es un error de cara, no un dato.**
+14. **Un calibrador que se ajusta midiendo la pieza construida se CONTAMINA** si la pieza trae
+    un agregado que su modelo no representa: el alma le subía k al flanco y el calibrador
+    "corregía" hacia atrás (proponía volver a 157 kPa). Calibrar contra una referencia
+    construida SIN el agregado, y guardar la calibración contaminada con nombre que lo diga.
+15. **Dos controles que se contradicen no topean el diseño: lo dejan en el peor de los dos.**
+    A7 exigía poder bajar a 70 kPa (estrategia vieja de 3 durezas) y A8 llegar a 200: ninguna
+    pieza cumplía ambos y el optimizador entregaba EN SILENCIO la más blanda que pasaba A7 —
+    59 kPa. Peor: una corrida había bajado la barra de 200 a 30 "para que cierre". Cuando el
+    usuario cambia la ESTRATEGIA, buscar los controles que codificaban la vieja, no solo los
+    parámetros. Bajar la barra hasta que el control pase no es calibrar.
+16. **La banda de medición excluye el radio de entrada de la feature.** La boca redondeada de
+    la ranura metía 17,03 mm en la estadística de una ranura de 12,95 y "midió" un abarrilado
+    de 4,25 mm que no existe (el real, el desmoldeo, era 0,23). El dedo tampoco toca ahí.
+17. **Nada de vida útil calculada en un entregable.** La fatiga sirve como criterio interno
+    go/no-go; "dura X años" salido de una curva de bibliografía NO se afirma (Fak, 18/08:
+    "dejá de decir pelotudeces como vida a fatiga"). Se entrega lo MEDIDO y el control físico
+    (galga/calibre) para que el desgaste se detecte, no se prediga.
+
+## 6. Utillajes de apriete — las decisiones de CONCEPTO (antes de la primera línea)
+
+Todas del virolador del Upper Trim (08/2026). Son las que cambian el diseño de raíz; las
+trampas de código de arriba no salvan un concepto equivocado.
+
+- **La pregunta CERO: ¿de dónde sale la elasticidad?** Si la pieza del cliente ya trae un
+  material blando (vinilo, tela, espuma), **el elástico ES ese material** y el utillaje va
+  RÍGIDO — solo tiene que estar bien medido. Un resorte impreso solo se justifica cuando hay
+  que definir una fuerza a través de un hueco desconocido. El resorte del virolador era el
+  84 % de la pieza (48,4 mm, 40 g) y sobraba entero: la rígida hace lo mismo con 19,4 mm y
+  19 g, sin fatiga, sin tope, sin calibración.
+- **Requisito que cambia → RE-DERIVAR el diseño, no parchear.** "El dedo toca la pared" dejó
+  al resorte sin función; en vez de sacarlo se le colgó un tope anti-rotura, un alma de unión
+  y 1 mm más de brazo. Cada parche tenía una razón local válida; Fak vio el conjunto de un
+  vistazo: *"no parece un diseño profesional, parece un parche mal hecho"*. **Test: si el
+  requisito nuevo deja un subsistema sin función, el subsistema se VA — no se refuerza.**
+- **El postizo se dimensiona contra el CONTORNO MEDIDO completo de la feature, no contra
+  "ancho × largo".** La ranura medía 53,67 y el macho recto cubría 40: 6,5 mm sin apretar en
+  cada punta, y Fak preguntó "¿ahí cómo planeás que se virole si no hay nada?". Además el eje
+  NO era recto (se corre 3 mm a lo largo por los 25,6° de la cara). CLI: `medir_contorno.py`
+  (contorno + normales); el postizo se construye retirado una LUZ CONSTANTE perpendicular a
+  la pared — así el apriete sale parejo (84 % en todos lados contra 80-90 % del ancho fijo).
+- **Un anillo cerrado pide margen de impresión más generoso que nervios sueltos:** si sale
+  grande no entra por NINGÚN lado, y lijar un anillo es mucho peor que lijar dos nervios.
+  (Se fue de luz 0,09 a 0,15 por esto.)
+- **Features que YO agrego sin pedido se declaran o no van.** El grabado de identificación y
+  los 2 agujeros M5 de amarre los agregué por iniciativa; Fak los circuló en el 3D preguntando
+  "¿para qué son?" — dos veces en el mismo proyecto. Si una feature no la pidió y la considero
+  necesaria: la listo con su porqué y "sacala si no la querés". La pieza más simple es la que
+  no hay que explicar.
+- **Verificar la CONCLUSIÓN de Fak aparte de su mecanismo.** "Los dedos más anchos harían más
+  presión" era físicamente falso (presión = fuerza/área), pero la conclusión "esto es PLA, se
+  va a partir" era CIERTA: ningún control miraba el maltrato, solo la carga de trabajo.
+  Refutar el mecanismo no cierra el reclamo — la conclusión se verifica por separado.
+- **Lo que enseñó la PRIMERA PIEZA IMPRESA** (18/08, el dato que ningún cálculo reemplaza):
+  (a) todo borde que TOCA la pieza del cliente va redondeado — no solo donde hay flexión: los
+  pedestales de apoyo con canto vivo MARCAN la cara vista; (b) un encastre manual necesita
+  FEEDBACK — entrada suave y el apriete concentrado al final, que se sienta el "asentó"; si
+  hay que hacer fuerza sin sentir que trabó, el operador no confía; (c) un dispositivo donde
+  se apoya una pieza necesita AUTO-UBICACIÓN — si el operador tiene que buscar el punto a
+  tientas, la pieza se cae: guiado que la lleve solo (pilotos, rampas, topes); (d) las
+  observaciones de la primera impresión se registran EL MISMO DÍA y generan la iteración
+  siguiente — para eso se diseña fácil de medir y corregir.
+
 Mejoras candidatas (build123d-mcp, cad-cae-copilot, etc.): ver `ROADMAP.md` — nada de eso
 está instalado hoy.

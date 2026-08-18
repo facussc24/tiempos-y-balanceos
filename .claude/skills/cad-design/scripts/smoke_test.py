@@ -130,6 +130,35 @@ def main():
     assert len(b3d_holes) == 4, "la pieza build123d debe tener 4 agujeros r=3.0 (dio %d)" % len(b3d_holes)
     print("[8/8] build123d: STEP+STL exportados (GLB: %s), 4 agujeros verificados via gmsh" % glb)
 
+    # --- gate de cuerpos/cavidades de export_deliverables: par BIEN/MAL -----------------
+    # El MAL es test_sealed_cavity (caja con hueco interior sellado): mallada da 2 cuerpos
+    # y el interior con volumen NEGATIVO — exactamente lo que un laminador tapa a ciegas.
+    # Caso real 2026-08-18: quitar 2 agujeros M5 sello el vaciado que ventilaban de
+    # casualidad y un STL con 8 cuerpos paso el gate viejo (que juzgaba un re-mallado, no
+    # el archivo entregado).
+    envcheck.require(("trimesh",))
+    import trimesh
+
+    def _cuerpos(step_path):
+        import gmsh
+        stl_p = step_path.replace(".step", "_gate.stl")
+        with geom.gmsh_session():
+            geom._load(step_path)
+            gmsh.option.setNumber("Mesh.MeshSizeMax", 2.0)
+            gmsh.option.setNumber("Mesh.Binary", 1)
+            gmsh.model.mesh.generate(2)
+            gmsh.write(stl_p)
+        mm = trimesh.load(stl_p)
+        cs = mm.split(only_watertight=False)
+        return len(cs), sum(1 for c in cs if c.volume < 0)
+
+    n_ok, neg_ok = _cuerpos(paths["substrate"])
+    n_mal, neg_mal = _cuerpos(paths["sealed_cavity"])
+    assert n_ok == 1 and neg_ok == 0, "la caja sana debe dar 1 cuerpo/0 negativos (dio %d/%d)" % (n_ok, neg_ok)
+    assert n_mal == 2 and neg_mal == 1, ("la cavidad sellada DEBE detectarse como 2 cuerpos/1 negativo "
+                                         "(dio %d/%d) — si esto falla, el gate de cuerpos quedo ciego" % (n_mal, neg_mal))
+    print("[9/9] gate cuerpos/cavidades: sano 1/0, cavidad sellada 2/1 (discrimina)")
+
     print("\nSMOKE OK — cadlib funcionando de punta a punta en %s" % w)
 
 
