@@ -59,6 +59,10 @@ for (const [clave, canon] of Object.entries(CANON.documentos)) {
     const row = porNumero.get(clave);
     console.log(`\n─── ${canon.producto}  ·  AMFE ${canon.amfe || clave}  ·  flujograma ${canon.flujograma.id} rev ${canon.flujograma.revVigente}`);
 
+    // Un AMFE cuenta UNA vez aunque tenga varios problemas: el total de abajo dice
+    // cuantos DOCUMENTOS estan mal, no cuantos hallazgos hay.
+    let esteDiverge = false;
+
     if (!row) {
         console.log('   ⚠️  no encontre este AMFE en Supabase. Reviso la clave del canon.');
         divergentes++;
@@ -71,10 +75,11 @@ for (const [clave, canon] of Object.entries(CANON.documentos)) {
     const dup = enAmfe.filter((v, i) => enAmfe.indexOf(v) !== i);
     if (dup.length) {
         console.log(`   🔴 numeros de operacion DUPLICADOS en el AMFE: ${[...new Set(dup)].join(', ')}`);
-        divergentes++;
+        esteDiverge = true;
     }
 
     if (!canon.secuencia) {
+        if (esteDiverge) divergentes++;
         pendientes++;
         pendienteDe.push(canon.producto);
         console.log(`   ⏳ NO VERIFICABLE: el flujograma ${canon.flujograma.id} todavia no esta cerrado.`);
@@ -93,8 +98,9 @@ for (const [clave, canon] of Object.entries(CANON.documentos)) {
     } else {
         if (faltan.length) console.log(`   🔴 el flujograma las declara y el AMFE no las tiene: ${faltan.join(', ')}`);
         if (sobran.length) console.log(`   🔴 el AMFE las tiene y el flujograma no las declara: ${sobran.join(', ')}`);
-        if (faltan.length || sobran.length) divergentes++;
+        if (faltan.length || sobran.length) esteDiverge = true;
     }
+    if (esteDiverge) divergentes++;
     if (canon.nota) console.log(`      nota: ${canon.nota}`);
 }
 

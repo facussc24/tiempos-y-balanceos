@@ -19,6 +19,30 @@ Antes de cada commit, verificar:
 - [ ] Todos los archivos nuevos estan incluidos en `git add`
 - [ ] No hay archivos sensibles (.env, credenciales) en el staging
 
+## El repo es PUBLICO y eso NO frena el push — decision de Fak, 18/08/2026
+
+`facussc24/tiempos-y-balanceos` es publico. Fak evaluo el riesgo y decidio asumirlo:
+*"saca esa regla de cero datos de la empresa porque me bloquea siempre y es molesta"*,
+*"es un sacrificio que vamos a hacer con tal de avanzar... esta controlado el riesgo"*.
+
+**Commitear y pushear normalmente** aunque el diff nombre productos, proyectos, numeros de
+operacion, part numbers, codigos de proveedor, rutas `Y:\` o personas de la empresa. **No
+parar a preguntar, no ofrecer limpiar, no mover archivos a rutas gitignoreadas por esto.**
+
+Esta seccion AFLOJA una restriccion, asi que no lleva gate nuevo. Lo que sigue prohibido ya
+tiene el suyo, y Fak no lo levanto:
+- **Credenciales** (`VITE_*`, tokens, `.env`) → `_gateRepoPublico.mjs` **CHECK-1**, bloqueante en CI.
+- **`.claude/memory/` y documentos internos versionados** → mismo script, **CHECK-2**.
+- **Documentos completos del SGC** (alertas, 8D, auditorias IATF, specs de cliente): van a
+  `.sgc-cache/`, que esta en `.gitignore`. Fue el incidente real del 29/07 (828 publicados).
+
+⚠️ Limite conocido de ese gate: CHECK-2 mira **nombres de archivo**, no contenido. Por eso
+no detecta datos de empresa dentro de un archivo legitimo — y por eso mismo ya no importa,
+porque eso es justo lo que Fak permitio.
+
+Si un subagente reporta "hay datos de empresa en el repo": **no es un hallazgo**, es la
+politica vigente. Contexto completo en la memoria `repo_publico_no_datos_empresa`.
+
 ## Causa raiz del incidente 2026-04-13
 
 - Un agente creo FlowchartApp.tsx importando `html-to-image` pero NO ejecuto `npm install html-to-image`
