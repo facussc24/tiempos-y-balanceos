@@ -1,6 +1,5 @@
 {
   "_doc": "Flujograma 155 — TOP ROLL (VW427 Patagonia). Reconstruido leyendo el .vsdx vigente del servidor ('122 FLUJOGRAMA TOP ROLL PAT 2.vsdx', Rev.01) y contrastado contra el Plan de Control CP-TOPROLL-001, que coinciden en las 7 operaciones centrales. Verificar con `node scripts/_verificarNumeracion.mjs`.",
-
   "_cambios_revB": [
     "Se numera la RECEPCION como 5. El .vsdx la dejaba sin numero; el Plan de Control dice 5.",
     "Se agrega 11 ALMACENAMIENTO EN MEDIOS WIP despues de la inyeccion. Esta en el Plan de Control y el flujograma no lo tenia.",
@@ -10,7 +9,6 @@
   ],
   "_numero_de_documento": "Es el 155 segun el Listado_Maestro_FLUJOGRMAS.xlsx. El archivo del servidor se llama '122 ...', y el 122 pertenece a 'APC AMAROK CENTRAL VINILO' de SAS: tenia numero de otro producto.",
   "_pendiente": "Los codigos de producto terminado quedan TBD: el .vsdx tenia la tabla vacia con un TBD literal y no hay otra fuente verificada. NO se inventan.",
-
   "header": {
     "title": "DIAGRAMA DE FLUJO DE PROCESO — TOP ROLL",
     "documentCode": "I-IN-002/III",
@@ -20,63 +18,207 @@
     "preparedBy": "FACUNDO SANTORO",
     "reviewedBy": "CARLOS BAPTISTA",
     "project": "PATAGONIA",
-    "client": "VW"
+    "client": "VWA"
   },
-
   "products": [
-    { "code": "TBD", "level": "", "description": "TOP ROLL — PART NUMBER PENDIENTE DE CONFIRMAR", "version": "" }
+    {
+      "code": "TBD",
+      "level": "",
+      "description": "TOP ROLL — PART NUMBER PENDIENTE DE CONFIRMAR",
+      "version": ""
+    }
   ],
-
   "revisions": [
-    { "rev": "01", "date": "29/12/2025", "item": "N/A.", "details": "EMISION INICIAL (P. GAMBOA).", "pswDate": "", "modifiedBy": "PG" },
-    { "rev": "B", "date": "18/08/2026", "item": "5 / 11 / 20 / 80", "details": "SE NUMERA LA RECEPCION COMO 5. SE AGREGA LA OPERACION 11 ALMACENAMIENTO EN MEDIOS WIP. SE NUMERA COMO 80 EL CONTROL FINAL DE CALIDAD, QUE FIGURABA SIN NUMERO. SE CORRIGE LA DENOMINACION DE LA OPERACION 20 A ADHESIVADO HOT MELT. SE REEMITE EN EL FORMULARIO I-IN-002/III Y SE UNIFICA LA NUMERACION DE REVISION EN LETRAS.", "pswDate": "", "modifiedBy": "FS" }
+    {
+      "rev": "01",
+      "date": "29/12/2025",
+      "item": "N/A.",
+      "details": "EMISION INICIAL (P. GAMBOA).",
+      "pswDate": "",
+      "modifiedBy": "PG"
+    },
+    {
+      "rev": "B",
+      "date": "18/08/2026",
+      "item": "5 / 11 / 20 / 80",
+      "details": "SE NUMERA LA RECEPCION COMO 5. SE AGREGA LA OPERACION 11 ALMACENAMIENTO EN MEDIOS WIP. SE NUMERA COMO 80 EL CONTROL FINAL DE CALIDAD, QUE FIGURABA SIN NUMERO. SE CORRIGE LA DENOMINACION DE LA OPERACION 20 A ADHESIVADO HOT MELT. SE REEMITE EN EL FORMULARIO I-IN-002/III Y SE UNIFICA LA NUMERACION DE REVISION EN LETRAS.",
+      "pswDate": "",
+      "modifiedBy": "FS"
+    }
   ],
-
   "flow": [
-    { "stepId": "5", "type": "operation", "description": "RECEPCION DE MATERIALES" },
-    { "type": "storage", "description": "ALMACENADO EN SECTOR DE RECEPCION DE MATERIA PRIMA PENDIENTE DE CONTROL" },
-    { "type": "inspection", "description": "INSPECCION DE MATERIALES" },
-    { "type": "condition", "labelCondition": "¿MATERIAL CONFORME?", "labelDown": "SI",
-      "branchSide": { "labelNode": "NO", "type": "terminal", "text": "RECLAMO DE CALIDAD AL PROVEEDOR" } },
-    { "type": "storage", "description": "ALMACENADO EN SECTOR DE RECEPCION DE MATERIA PRIMA CONTROLADA E IDENTIFICADA" },
-    { "type": "transfer", "description": "TRASLADO DE MATERIA PRIMA AL SECTOR DE INYECCIÓN" },
-
-    { "stepId": "10", "type": "operation", "description": "INYECCIÓN DE PIEZA PLASTICA" },
-    { "type": "condition", "labelCondition": "¿PIEZA CONFORME?", "labelDown": "SI",
-      "branchSide": { "labelNode": "NO", "type": "terminal", "text": "SCRAP" } },
-    { "type": "storage", "stepId": "11", "description": "ALMACENAMIENTO EN MEDIOS WIP" },
-
-    { "stepId": "20", "type": "operation", "description": "ADHESIVADO HOT MELT" },
-    { "type": "condition", "labelCondition": "¿PIEZA CONFORME?", "labelDown": "SI",
-      "branchSide": { "labelNode": "NO", "type": "terminal", "text": "SCRAP" } },
-
-    { "stepId": "30", "type": "operation", "description": "PROCESO DE IMG" },
-    { "type": "condition", "labelCondition": "¿PIEZA CONFORME?", "labelDown": "SI",
-      "branchSide": { "labelNode": "NO", "type": "terminal", "text": "SCRAP" } },
-
-    { "stepId": "40", "type": "operation", "description": "TRIMMING CORTE FINAL" },
-    { "type": "condition", "labelCondition": "¿PIEZA CONFORME?", "labelDown": "SI",
-      "branchSide": { "labelNode": "NO", "type": "terminal", "text": "SCRAP" } },
-
-    { "stepId": "50", "type": "operation", "description": "EDGE FOLDING" },
-    { "type": "condition", "labelCondition": "¿PIEZA CONFORME?", "labelDown": "SI",
-      "branchSide": { "labelNode": "NO", "type": "terminal", "text": "SCRAP" } },
-
-    { "stepId": "60", "type": "operation", "description": "SOLDADO DE REFUERZOS INTERNOS" },
-    { "type": "condition", "labelCondition": "¿PIEZA CONFORME?", "labelDown": "SI",
-      "branchSide": { "labelNode": "NO", "type": "terminal", "text": "SCRAP" } },
-
-    { "stepId": "70", "type": "operation", "description": "SOLDADO TWEETER" },
-    { "type": "condition", "labelCondition": "¿PIEZA CONFORME?", "labelDown": "SI",
-      "branchSide": { "labelNode": "NO", "type": "terminal", "text": "SCRAP" } },
-
-    { "stepId": "80", "type": "op-ins", "description": "CONTROL FINAL DE CALIDAD" },
-    { "type": "condition", "labelCondition": "¿PIEZA CONFORME?", "labelDown": "SI",
-      "branchSide": { "labelNode": "NO", "type": "terminal", "text": "SCRAP" } },
-
-    { "type": "transfer", "description": "TRASLADO DE PIEZAS AL SECTOR DE PRODUCTO TERMINADO" },
-    { "stepId": "90", "type": "operation", "description": "EMBALAJE" },
-    { "type": "inspection", "description": "CONTROL DE LAS CANTIDADES DE DESPACHO" },
-    { "type": "storage", "description": "ALMACENADO EN SECTOR DE PRODUCTO TERMINADO" }
+    {
+      "stepId": "5",
+      "type": "operation",
+      "description": "RECEPCION DE MATERIALES"
+    },
+    {
+      "type": "storage",
+      "description": "ALMACENADO EN SECTOR DE RECEPCION DE MATERIA PRIMA PENDIENTE DE CONTROL"
+    },
+    {
+      "type": "inspection",
+      "description": "INSPECCION DE MATERIALES"
+    },
+    {
+      "type": "condition",
+      "labelCondition": "¿MATERIAL CONFORME?",
+      "labelDown": "SI",
+      "branchSide": {
+        "labelNode": "NO",
+        "type": "terminal",
+        "text": "RECLAMO DE CALIDAD AL PROVEEDOR"
+      }
+    },
+    {
+      "type": "storage",
+      "description": "ALMACENADO EN SECTOR DE RECEPCION DE MATERIA PRIMA CONTROLADA E IDENTIFICADA"
+    },
+    {
+      "type": "transfer",
+      "description": "TRASLADO DE MATERIA PRIMA AL SECTOR DE INYECCIÓN"
+    },
+    {
+      "stepId": "10",
+      "type": "operation",
+      "description": "INYECCIÓN DE PIEZA PLASTICA"
+    },
+    {
+      "type": "condition",
+      "labelCondition": "¿PIEZA CONFORME?",
+      "labelDown": "SI",
+      "branchSide": {
+        "labelNode": "NO",
+        "type": "terminal",
+        "text": "SCRAP"
+      }
+    },
+    {
+      "type": "storage",
+      "stepId": "11",
+      "description": "ALMACENAMIENTO EN MEDIOS WIP"
+    },
+    {
+      "stepId": "20",
+      "type": "operation",
+      "description": "ADHESIVADO HOT MELT"
+    },
+    {
+      "type": "condition",
+      "labelCondition": "¿PIEZA CONFORME?",
+      "labelDown": "SI",
+      "branchSide": {
+        "labelNode": "NO",
+        "type": "terminal",
+        "text": "SCRAP"
+      }
+    },
+    {
+      "stepId": "30",
+      "type": "operation",
+      "description": "PROCESO DE IMG"
+    },
+    {
+      "type": "condition",
+      "labelCondition": "¿PIEZA CONFORME?",
+      "labelDown": "SI",
+      "branchSide": {
+        "labelNode": "NO",
+        "type": "terminal",
+        "text": "SCRAP"
+      }
+    },
+    {
+      "stepId": "40",
+      "type": "operation",
+      "description": "TRIMMING CORTE FINAL"
+    },
+    {
+      "type": "condition",
+      "labelCondition": "¿PIEZA CONFORME?",
+      "labelDown": "SI",
+      "branchSide": {
+        "labelNode": "NO",
+        "type": "terminal",
+        "text": "SCRAP"
+      }
+    },
+    {
+      "stepId": "50",
+      "type": "operation",
+      "description": "EDGE FOLDING"
+    },
+    {
+      "type": "condition",
+      "labelCondition": "¿PIEZA CONFORME?",
+      "labelDown": "SI",
+      "branchSide": {
+        "labelNode": "NO",
+        "type": "terminal",
+        "text": "SCRAP"
+      }
+    },
+    {
+      "stepId": "60",
+      "type": "operation",
+      "description": "SOLDADO DE REFUERZOS INTERNOS"
+    },
+    {
+      "type": "condition",
+      "labelCondition": "¿PIEZA CONFORME?",
+      "labelDown": "SI",
+      "branchSide": {
+        "labelNode": "NO",
+        "type": "terminal",
+        "text": "SCRAP"
+      }
+    },
+    {
+      "stepId": "70",
+      "type": "operation",
+      "description": "SOLDADO TWEETER"
+    },
+    {
+      "type": "condition",
+      "labelCondition": "¿PIEZA CONFORME?",
+      "labelDown": "SI",
+      "branchSide": {
+        "labelNode": "NO",
+        "type": "terminal",
+        "text": "SCRAP"
+      }
+    },
+    {
+      "stepId": "80",
+      "type": "op-ins",
+      "description": "CONTROL FINAL DE CALIDAD"
+    },
+    {
+      "type": "condition",
+      "labelCondition": "¿PIEZA CONFORME?",
+      "labelDown": "SI",
+      "branchSide": {
+        "labelNode": "NO",
+        "type": "terminal",
+        "text": "SCRAP"
+      }
+    },
+    {
+      "type": "transfer",
+      "description": "TRASLADO DE PIEZAS AL SECTOR DE PRODUCTO TERMINADO"
+    },
+    {
+      "stepId": "90",
+      "type": "operation",
+      "description": "EMBALAJE"
+    },
+    {
+      "type": "inspection",
+      "description": "CONTROL DE LAS CANTIDADES DE DESPACHO"
+    },
+    {
+      "type": "storage",
+      "description": "ALMACENADO EN SECTOR DE PRODUCTO TERMINADO"
+    }
   ]
 }

@@ -1,7 +1,6 @@
 {
   "_doc": "Flujograma 151 — APOYABRAZOS TRASERO CENTRAL (VW427 Patagonia). Transcrito del PNG Rev.A que genero Fak en Claude Design el 04/05/2026, mas la correccion de la Rev.B. Los numeros de operacion tienen que coincidir con el AMFE 150 en Supabase — verificar con `node scripts/_verificarNumeracion.mjs`.",
   "_cambio_revB": "Se agrega la operacion 61 MONTAJE DE PORTAVASOS Y MARCO, entre 60 TAPIZADO y 70 CONTROL FINAL. Ya existe en el AMFE 150 (revision entregada a Calidad el 14/08/2026) y el flujograma no la mostraba. Fuente: AMFE 150 Supabase live.",
-
   "header": {
     "title": "DIAGRAMA DE FLUJO DE PROCESO — APOYABRAZOS TRASERO CENTRAL",
     "documentCode": "I-IN-002/III",
@@ -12,46 +11,164 @@
     "preparedBy": "FACUNDO SANTORO",
     "reviewedBy": "CARLOS BAPTISTA",
     "project": "PATAGONIA",
-    "client": "VW"
+    "client": "VWA"
   },
-
   "products": [
-    { "code": "2HC.885.081 RL1", "level": "L3", "description": "ARMREST, REAR, L3 TITAN BLACK", "version": "RL1" }
+    {
+      "code": "2HC.885.081 RL1",
+      "level": "L3",
+      "description": "ARMREST, REAR, L3 TITAN BLACK",
+      "version": "RL1"
+    }
   ],
-
   "revisions": [
-    { "rev": "A", "date": "18/09/2025", "item": "N/A.", "details": "EMISION INICIAL.", "pswDate": "", "modifiedBy": "FS" },
-    { "rev": "B", "date": "18/08/2026", "item": "61", "details": "SE AGREGA LA OPERACION 61 MONTAJE DE PORTAVASOS Y MARCO, QUE ESTABA INCLUIDA DENTRO DEL TAPIZADO. SE REEMITE EN EL FORMATO NUEVO.", "pswDate": "", "modifiedBy": "FS" }
+    {
+      "rev": "A",
+      "date": "18/09/2025",
+      "item": "N/A.",
+      "details": "EMISION INICIAL.",
+      "pswDate": "",
+      "modifiedBy": "FS"
+    },
+    {
+      "rev": "B",
+      "date": "18/08/2026",
+      "item": "61",
+      "details": "SE AGREGA LA OPERACION 61 MONTAJE DE PORTAVASOS Y MARCO, QUE ESTABA INCLUIDA DENTRO DEL TAPIZADO. SE REEMITE EN EL FORMATO NUEVO.",
+      "pswDate": "",
+      "modifiedBy": "FS"
+    }
   ],
-
   "flow": [
-    { "stepId": "10", "type": "op-ins", "description": "RECEPCIÓN Y CONTROL DE MATERIA PRIMA" },
-    { "type": "condition", "labelCondition": "¿MATERIAL CONFORME?", "labelDown": "SI",
-      "branchSide": { "labelNode": "NO", "type": "terminal", "text": "RECLAMO A PROVEEDOR" } },
-    { "type": "transfer", "description": "TRASLADO: MATERIAL APROBADO A ALMACÉN TEMPORAL (FIFO)" },
-    { "type": "storage", "description": "ALMACENADO EN SECTOR DE RECEPCION DE MATERIA PRIMA CONTROLADA E IDENTIFICADA" },
-    { "type": "transfer", "description": "TRASLADO A SECTOR DE CORTE" },
-    { "stepId": "20", "type": "operation", "description": "CORTE DE COMPONENTES" },
-    { "type": "storage", "description": "ALMACENAMIENTO EN MEDIOS WIP" },
-    { "stepId": "30", "type": "operation", "description": "PREPARACION DE KITS DE COMPONENTES" },
-    { "type": "transfer", "description": "TRASLADO A SECTOR DE COSTURA" },
-    { "stepId": "40", "type": "operation", "description": "COSTURA UNION" },
-    { "type": "transfer", "description": "TRASLADO A SECTOR INYECCION PU" },
-    { "stepId": "50", "type": "operation", "description": "INYECCION DE PUR IN SITU", "incomingConnector": "A" },
-    { "type": "transfer", "description": "TRASLADO A SECTOR DE TAPIZADO" },
-    { "stepId": "60", "type": "operation", "description": "TAPIZADO" },
-    { "stepId": "61", "type": "operation", "description": "MONTAJE DE PORTAVASOS Y MARCO" },
-    { "stepId": "70", "type": "op-ins", "description": "CONTROL FINAL DE CALIDAD Y PRUEBAS FUNCIONALES" },
-    { "type": "condition", "labelCondition": "¿PRODUCTO CONFORME?", "labelDown": "SI",
-      "branchSide": { "labelNode": "NO", "sequence": [
-        { "type": "condition", "labelCondition": "¿SE PUEDE RETRABAJAR?", "labelDown": "SI",
-          "branchSide": { "labelNode": "NO", "type": "terminal", "text": "SCRAP" } },
-        { "stepId": "80", "type": "operation", "description": "REPROCESO: CORRECCION DE DEFECTOS GENERALES" },
-        { "stepId": "82", "type": "operation", "description": "REPROCESO: RE-TAPIZADO DE FUNDA" },
-        { "type": "transfer", "description": "TRASLADO A OP 70", "rework": { "targetId": "70", "label": "REVERIFICAR (A OP. 70)" } }
-      ] } },
-    { "stepId": "90", "type": "operation", "description": "EMBALAJE Y ETIQUETADO DE PRODUCTO TERMINADO" },
-    { "type": "transfer", "description": "TRASLADO A SECTOR DE ALMACENAMIENTO" },
-    { "type": "storage", "description": "ALMACENADO FINAL DE PRODUCTO TERMINADO" }
+    {
+      "stepId": "10",
+      "type": "op-ins",
+      "description": "RECEPCIÓN Y CONTROL DE MATERIA PRIMA"
+    },
+    {
+      "type": "condition",
+      "labelCondition": "¿MATERIAL CONFORME?",
+      "labelDown": "SI",
+      "branchSide": {
+        "labelNode": "NO",
+        "type": "terminal",
+        "text": "RECLAMO A PROVEEDOR"
+      }
+    },
+    {
+      "type": "transfer",
+      "description": "TRASLADO: MATERIAL APROBADO A ALMACÉN TEMPORAL (FIFO)"
+    },
+    {
+      "type": "storage",
+      "description": "ALMACENADO EN SECTOR DE RECEPCION DE MATERIA PRIMA CONTROLADA E IDENTIFICADA"
+    },
+    {
+      "type": "transfer",
+      "description": "TRASLADO A SECTOR DE CORTE"
+    },
+    {
+      "stepId": "20",
+      "type": "operation",
+      "description": "CORTE DE COMPONENTES"
+    },
+    {
+      "type": "storage",
+      "description": "ALMACENAMIENTO EN MEDIOS WIP"
+    },
+    {
+      "stepId": "30",
+      "type": "operation",
+      "description": "PREPARACION DE KITS DE COMPONENTES"
+    },
+    {
+      "type": "transfer",
+      "description": "TRASLADO A SECTOR DE COSTURA"
+    },
+    {
+      "stepId": "40",
+      "type": "operation",
+      "description": "COSTURA UNION"
+    },
+    {
+      "type": "transfer",
+      "description": "TRASLADO A SECTOR INYECCION PU"
+    },
+    {
+      "stepId": "50",
+      "type": "operation",
+      "description": "INYECCION DE PUR IN SITU",
+      "incomingConnector": "A"
+    },
+    {
+      "type": "transfer",
+      "description": "TRASLADO A SECTOR DE TAPIZADO"
+    },
+    {
+      "stepId": "60",
+      "type": "operation",
+      "description": "TAPIZADO"
+    },
+    {
+      "stepId": "61",
+      "type": "operation",
+      "description": "MONTAJE DE PORTAVASOS Y MARCO"
+    },
+    {
+      "stepId": "70",
+      "type": "op-ins",
+      "description": "CONTROL FINAL DE CALIDAD Y PRUEBAS FUNCIONALES"
+    },
+    {
+      "type": "condition",
+      "labelCondition": "¿PRODUCTO CONFORME?",
+      "labelDown": "SI",
+      "branchSide": {
+        "labelNode": "NO",
+        "sequence": [
+          {
+            "type": "condition",
+            "labelCondition": "¿SE PUEDE RETRABAJAR?",
+            "labelDown": "SI",
+            "branchSide": {
+              "labelNode": "NO",
+              "type": "terminal",
+              "text": "SCRAP"
+            }
+          },
+          {
+            "stepId": "80",
+            "type": "operation",
+            "description": "REPROCESO: CORRECCION DE DEFECTOS GENERALES"
+          },
+          {
+            "stepId": "82",
+            "type": "operation",
+            "description": "REPROCESO: RE-TAPIZADO DE FUNDA"
+          },
+          {
+            "type": "transfer",
+            "description": "TRASLADO A OP 70",
+            "rework": {
+              "targetId": "70",
+              "label": "REVERIFICAR (A OP. 70)"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "stepId": "90",
+      "type": "operation",
+      "description": "EMBALAJE Y ETIQUETADO DE PRODUCTO TERMINADO"
+    },
+    {
+      "type": "transfer",
+      "description": "TRASLADO A SECTOR DE ALMACENAMIENTO"
+    },
+    {
+      "type": "storage",
+      "description": "ALMACENADO FINAL DE PRODUCTO TERMINADO"
+    }
   ]
 }

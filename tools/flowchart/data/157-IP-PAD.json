@@ -1,0 +1,399 @@
+{
+  "_doc": "Flujograma 157 — IP PAD (VW427 Patagonia). Transcripcion literal del PNG FLUJOGRAMA_IP_PAD.png (Rev. A, 02/07/2026). El documento original dibuja DOS COLUMNAS que arrancan del mismo tramo de traslados de materia prima y convergen antes de la OP 70 ADHESIVADO: la IZQUIERDA es corte + costura (30 a 38 y 40 a 42) y la DERECHA es inyeccion plastica + troquelado + ensamble (20 a 26, 50 y 60). Aca se representan con `branches` (dos ramas paralelas que convergen).",
+  "_nota_cajetin": "El cajetin del PNG dice REVISION A y FECHA EMISION 02/07/2026. En este archivo la emision queda 02/07/2026 y se emite la revision B del 18/08/2026, segun lo indicado por Fak.",
+  "_nota_numeracion": "La numeracion que se transcribe es la del PNG, no la del AMFE. Diferencias contra el AMFE: el flujograma NO trae una operacion 10 de recepcion ademas del control (trae una sola, 10 RECEPCION Y CONTROL DE MATERIA PRIMA, op+inspeccion); la inyeccion esta desglosada en 20 a 26 (el AMFE la resume en '20 inyeccion de sustratos y control'); el corte esta desglosado en 30 a 37 con el control de forma con plantilla mylar en la 38; y la 90 del AMFE ('alineacion de costura') aparece partida en 90 ALINEACION DE COSTURA (PRE-FIXING) y 91 TAPIZADO Y FIJADO SUPERIOR.",
+  "header": {
+    "title": "FLUJOGRAMA IP PAD",
+    "documentCode": "I-IN-002/III",
+    "revision": "B",
+    "date": "02/07/2026",
+    "revisionDate": "18/08/2026",
+    "preparedBy": "FACUNDO SANTORO",
+    "reviewedBy": "CARLOS BAPTISTA",
+    "project": "PATAGONIA",
+    "client": "VWA"
+  },
+  "products": [
+    {
+      "code": "2HC.858.417.B FAM",
+      "level": "L1",
+      "description": "PLATE ASM-I/P CTR OTLT AIR",
+      "version": "IP PAD - LOW VERSION"
+    },
+    {
+      "code": "2HC.858.417.C GKK",
+      "level": "L2",
+      "description": "PLATE ASM-I/P CTR OTLT AIR",
+      "version": "IP PAD - HIGH VERSION"
+    },
+    {
+      "code": "2HC.858.417.C GKN",
+      "level": "L3",
+      "description": "PLATE ASM-I/P CTR OTLT AIR",
+      "version": "IP PAD - HIGH VERSION"
+    }
+  ],
+  "revisions": [
+    {
+      "rev": "A",
+      "date": "02/07/2026",
+      "item": "N/A.",
+      "details": "EMISION INICIAL.",
+      "pswDate": "",
+      "modifiedBy": "FS"
+    },
+    {
+      "rev": "B",
+      "date": "18/08/2026",
+      "item": "30-38 / 90-91",
+      "details": "SE DESGLOSA EL CORTE EN LAS OPERACIONES 30 A 37 Y EL CONTROL DE FORMA CON PLANTILLA MYLAR PASA A LA 38. SE SEPARA LA OPERACION 90 EN 90 ALINEACION DE COSTURA Y 91 TAPIZADO Y FIJADO SUPERIOR.",
+      "pswDate": "",
+      "modifiedBy": "FS"
+    }
+  ],
+  "flow": [
+    {
+      "stepId": "10",
+      "type": "op-ins",
+      "description": "RECEPCIÓN Y CONTROL DE MATERIA PRIMA"
+    },
+    {
+      "type": "condition",
+      "labelCondition": "¿MATERIAL OK?",
+      "labelDown": "SI",
+      "branchSide": {
+        "labelNode": "NO",
+        "type": "terminal",
+        "text": "RECLAMO A PROVEEDOR"
+      }
+    },
+    {
+      "type": "transfer",
+      "description": "TRASLADO: MATERIAL APROBADO A ALMACÉN TEMPORAL (FIFO)"
+    },
+    {
+      "type": "storage",
+      "description": "ALMACENADO EN SECTOR DE RECEPCION DE MATERIA PRIMA CONTROLADA E IDENTIFICADA"
+    },
+    {
+      "type": "transfer",
+      "description": "TRASLADO DE ADHESIVO A LÍNEA",
+      "branchSide": {
+        "type": "connector",
+        "text": "A",
+        "description": "ADHESIVO"
+      }
+    },
+    {
+      "type": "transfer",
+      "description": "TRASLADO DE COMPONENTES A LÍNEA",
+      "branchSide": {
+        "type": "connector",
+        "text": "B",
+        "description": "CLIPS, LOGO, TORNILLOS, DIFUSOR"
+      },
+      "branches": [
+        [
+          {
+            "type": "transfer",
+            "description": "TRASLADO A CORTE"
+          },
+          {
+            "stepId": "30",
+            "type": "operation",
+            "description": "PREPARACIÓN Y CARGA DEL VINILO"
+          },
+          {
+            "stepId": "31",
+            "type": "operation",
+            "description": "AJUSTE DE RODILLOS Y ALIMENTACIÓN DEL VINILO"
+          },
+          {
+            "stepId": "32",
+            "type": "operation",
+            "description": "AJUSTE DE MATERIAL EN LA MÁQUINA DE CORTE DE CAPAS"
+          },
+          {
+            "stepId": "33",
+            "type": "operation",
+            "description": "CONFIGURACIÓN Y CORTE AUTOMÁTICO DE CAPAS DE VINILO"
+          },
+          {
+            "stepId": "34",
+            "type": "operation",
+            "description": "AVANCE Y ALINEACIÓN DE VINILO EN MESA DE CORTE"
+          },
+          {
+            "stepId": "35",
+            "type": "operation",
+            "description": "MEDICIÓN DE CUCHILLA"
+          },
+          {
+            "stepId": "36",
+            "type": "operation",
+            "description": "PREPARACIÓN Y AJUSTE DE CORTE CON SUCCIÓN"
+          },
+          {
+            "stepId": "37",
+            "type": "operation",
+            "description": "INICIO DEL CORTE Y VERIFICACIÓN AUTOMÁTICA DE MEDIDAS"
+          },
+          {
+            "stepId": "38",
+            "type": "op-ins",
+            "description": "CONTROL DE FORMA CON PLANTILLA MYLAR"
+          },
+          {
+            "type": "condition",
+            "labelCondition": "¿CORTE OK?",
+            "labelDown": "SI",
+            "branchSide": {
+              "labelNode": "NO",
+              "direction": "left",
+              "type": "terminal",
+              "text": "SCRAP"
+            }
+          },
+          {
+            "type": "storage",
+            "description": "WIP - VINILO CORTADO"
+          },
+          {
+            "type": "transfer",
+            "description": "TRASLADO A COSTURA"
+          },
+          {
+            "stepId": "40",
+            "type": "operation",
+            "description": "COSTURA UNIÓN"
+          },
+          {
+            "stepId": "41",
+            "type": "operation",
+            "description": "COSTURA DE UNIÓN — 2ª PARTE (SOLO VERSIONES CON VIVO)"
+          },
+          {
+            "stepId": "42",
+            "type": "operation",
+            "description": "COSTURA VISTA"
+          },
+          {
+            "type": "storage",
+            "description": "WIP - FUNDA COSIDA"
+          }
+        ],
+        [
+          {
+            "type": "transfer",
+            "description": "TRASLADO A INYECCION PLASTICA"
+          },
+          {
+            "stepId": "20",
+            "type": "operation",
+            "description": "SECADO Y CARGA DE MATERIAL"
+          },
+          {
+            "stepId": "21",
+            "type": "operation",
+            "description": "PURGA DEL CAÑÓN"
+          },
+          {
+            "stepId": "22",
+            "type": "operation",
+            "description": "ARRANQUE PROGRESIVO Y ATEMPERADO DEL MOLDE"
+          },
+          {
+            "stepId": "23",
+            "type": "operation",
+            "description": "VALIDACIÓN DE PIEZA Y GRABADO DEL PROGRAMA"
+          },
+          {
+            "stepId": "24",
+            "type": "operation",
+            "description": "PRODUCCIÓN AUTOMÁTICA Y CORTE DE COLADA"
+          },
+          {
+            "stepId": "25",
+            "type": "operation",
+            "description": "LIBERACIÓN DE PRIMERA PIEZA"
+          },
+          {
+            "stepId": "26",
+            "type": "op-ins",
+            "description": "CAMINO DE INSPECCIÓN"
+          },
+          {
+            "type": "condition",
+            "labelCondition": "¿INYECCIÓN OK?",
+            "labelDown": "SI",
+            "branchSide": {
+              "labelNode": "NO",
+              "direction": "left",
+              "type": "terminal",
+              "text": "SCRAP"
+            }
+          },
+          {
+            "type": "storage",
+            "description": "WIP - SUSTRATOS PLASTICOS"
+          },
+          {
+            "type": "transfer",
+            "description": "TRASLADO A SECTOR DE TROQUELADO"
+          },
+          {
+            "stepId": "50",
+            "type": "operation",
+            "description": "TROQUELADO DE ESPUMAS"
+          },
+          {
+            "type": "transfer",
+            "description": "TRASLADO A ENSAMBLE"
+          },
+          {
+            "stepId": "60",
+            "type": "operation",
+            "description": "ENSAMBLE SUSTRATO + ESPUMA"
+          },
+          {
+            "type": "storage",
+            "description": "WIP - SUSTRATO + ESPUMA"
+          }
+        ]
+      ]
+    },
+    {
+      "type": "transfer",
+      "description": "TRASLADO A SECTOR DE ADHESIVADO"
+    },
+    {
+      "stepId": "70",
+      "type": "operation",
+      "description": "ADHESIVADO",
+      "incomingConnector": "A"
+    },
+    {
+      "stepId": "80",
+      "type": "operation",
+      "description": "CONTROL DE CALIDAD ADHESIVADO"
+    },
+    {
+      "type": "condition",
+      "labelCondition": "¿ADHESIVADO OK?",
+      "labelDown": "SI",
+      "branchSide": {
+        "labelNode": "NO",
+        "sequence": [
+          {
+            "type": "condition",
+            "labelCondition": "¿SE PUEDE RETRABAJAR?",
+            "labelDown": "SI",
+            "branchSide": {
+              "labelNode": "NO",
+              "type": "terminal",
+              "text": "SCRAP"
+            }
+          },
+          {
+            "stepId": "81",
+            "type": "operation",
+            "description": "RETRABAJO DE ADHESIVADO"
+          },
+          {
+            "type": "transfer",
+            "description": "TRASLADO A OP 80",
+            "rework": {
+              "targetId": "80",
+              "label": "RETRABAJO (A OP. 80)"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "storage",
+      "description": "WIP - PIEZA ADHESIVADA"
+    },
+    {
+      "type": "transfer",
+      "description": "TRASLADO A SECTOR DE TAPIZADO"
+    },
+    {
+      "stepId": "90",
+      "type": "operation",
+      "description": "ALINEACION DE COSTURA (PRE-FIXING)"
+    },
+    {
+      "stepId": "91",
+      "type": "operation",
+      "description": "TAPIZADO Y FIJADO SUPERIOR"
+    },
+    {
+      "stepId": "100",
+      "type": "operation",
+      "description": "WRAPPING + EDGE FOLDING"
+    },
+    {
+      "stepId": "110",
+      "type": "operation",
+      "description": "SOLDADURA CON ULTRASONIDO Y ENSAMBLE",
+      "incomingConnector": "B"
+    },
+    {
+      "stepId": "120",
+      "type": "operation",
+      "description": "TERMINACION"
+    },
+    {
+      "stepId": "130",
+      "type": "operation",
+      "description": "CONTROL FINAL DE CALIDAD"
+    },
+    {
+      "type": "condition",
+      "labelCondition": "¿PRODUCTO OK?",
+      "labelDown": "SI",
+      "branchSide": {
+        "labelNode": "NO",
+        "sequence": [
+          {
+            "type": "condition",
+            "labelCondition": "¿SE PUEDE RETRABAJAR?",
+            "labelDown": "SI",
+            "branchSide": {
+              "labelNode": "NO",
+              "type": "terminal",
+              "text": "SCRAP"
+            }
+          },
+          {
+            "stepId": "140",
+            "type": "operation",
+            "description": "RETRABAJO DE PRODUCTO TERMINADO"
+          },
+          {
+            "type": "transfer",
+            "description": "TRASLADO A OP 130",
+            "rework": {
+              "targetId": "130",
+              "label": "RETRABAJO (A OP. 130)"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "stepId": "150",
+      "type": "operation",
+      "description": "EMBALAJE DE PRODUCTO TERMINADO"
+    },
+    {
+      "type": "transfer",
+      "description": "TRASLADO A SECTOR DE ALMACENAMIENTO"
+    },
+    {
+      "type": "storage",
+      "description": "ALMACENADO FINAL DE PRODUCTO TERMINADO"
+    }
+  ]
+}
