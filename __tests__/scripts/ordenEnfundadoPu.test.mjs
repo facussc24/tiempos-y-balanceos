@@ -19,7 +19,7 @@
  *  - si matchea "ENFUNDADO" por substring, "REPROCESO: RE-ENFUNDADO" lo confunde.
  */
 import { describe, it, expect } from 'vitest';
-import { validateOrdenEnfundadoPu } from '../../scripts/_lib/amfeValidator.mjs';
+import { validateOrdenEnfundadoPu, validateNombresDeOperacion } from '../../scripts/_lib/amfeValidator.mjs';
 
 /** Doc minimo con las operaciones que importan. */
 function doc(ops) {
@@ -102,5 +102,46 @@ describe('PU_ANTES_DE_ENFUNDADO', () => {
             ['60', 'ENFUNDADO'],
         ]), 'X')).toHaveLength(0);
         expect(validateOrdenEnfundadoPu({ operations: [] }, 'X')).toHaveLength(0);
+    });
+});
+
+/**
+ * Tests de OP_NOMBRE_DUPLICADO.
+ *
+ * Nace junto con el cambio de `issueKey()` a identificar por NOMBRE (18/08/2026). Ese
+ * cambio es seguro mientras no haya dos operaciones homonimas en un AMFE — medido ese dia
+ * sobre los 17 AMFE: cero. Este check es lo que nos avisa el dia que deje de ser cierto,
+ * en vez de que lo descubramos porque un gate dejo pasar algo.
+ */
+describe('OP_NOMBRE_DUPLICADO', () => {
+    it('marca dos operaciones con el mismo nombre', () => {
+        const r = validateNombresDeOperacion({
+            operations: [
+                { opNumber: '20', name: 'CORTE DE COMPONENTES' },
+                { opNumber: '50', name: 'COSTURA UNION' },
+                { opNumber: '70', name: 'corte de componentes' },   // homonima, distinta caja
+            ],
+        }, 'X');
+        expect(r).toHaveLength(1);
+        expect(r[0].type).toBe('OP_NOMBRE_DUPLICADO');
+        expect(r[0].detail).toMatch(/OP 70 y la OP 20/);
+    });
+
+    it('no marca nada cuando todos los nombres son distintos', () => {
+        expect(validateNombresDeOperacion({
+            operations: [
+                { opNumber: '10', name: 'RECEPCION DE MATERIA PRIMA' },
+                { opNumber: '20', name: 'CORTE DE COMPONENTES' },
+                { opNumber: '30', name: 'COSTURA UNION' },
+            ],
+        }, 'X')).toHaveLength(0);
+    });
+
+    it('ignora las operaciones sin nombre en vez de agruparlas como homonimas', () => {
+        // Dos operaciones sin nombre no son "la misma": son otro defecto, que ya cazan
+        // otros checks. Agruparlas aca seria ruido.
+        expect(validateNombresDeOperacion({
+            operations: [{ opNumber: '10', name: '' }, { opNumber: '20', name: '   ' }],
+        }, 'X')).toHaveLength(0);
     });
 });

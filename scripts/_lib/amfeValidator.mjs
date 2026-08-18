@@ -343,6 +343,9 @@ export function validateAmfeDoc(doc, productName = '', amfeNumber = '') {
     // El PU se inyecta DENTRO de la funda ya montada (rules/amfe.md §12).
     issues.push(...validateOrdenEnfundadoPu(doc, amfeNumber));
 
+    // Dos operaciones con el mismo nombre: ambiguas para el flujograma y para el diff.
+    issues.push(...validateNombresDeOperacion(doc, amfeNumber));
+
     const productUp = String(productName).toUpperCase();
 
     for (const op of doc.operations) {
@@ -696,6 +699,39 @@ export function diffIssues(before, after) {
 function issueKey(i) {
     const operacion = String(i.opName || '').trim().toUpperCase() || `#${i.opNum}`;
     return [i.type, operacion, i.weName, i.fmDesc, i.causeDesc].join('|');
+}
+
+/**
+ * OP_NOMBRE_DUPLICADO (WARNING).
+ *
+ * Dos operaciones con el MISMO nombre en un AMFE son el unico caso donde `issueKey()`
+ * —que identifica por nombre— podria tapar un issue nuevo: si una gana el problema que la
+ * otra ya tenia, el diff no lo distingue. Medido el 18/08/2026 sobre los 17 AMFE: cero
+ * homonimas, asi que hoy el diff es seguro. Este check existe para enterarnos el dia que
+ * eso cambie, en vez de descubrirlo cuando un gate deje pasar algo.
+ *
+ * Ademas, dos operaciones homonimas son un defecto por si solas: el flujograma y el Plan
+ * de Control no pueden referenciarlas sin ambiguedad.
+ */
+export function validateNombresDeOperacion(doc, amfeNumber = '') {
+    const out = [];
+    const vistos = new Map();
+    for (const op of doc.operations || []) {
+        const nombre = String(op.name ?? op.operationName ?? '').trim().toUpperCase();
+        if (!nombre) continue;
+        const opNum = String(op.opNumber ?? op.operationNumber ?? '?');
+        if (vistos.has(nombre)) {
+            out.push({
+                amfe: amfeNumber, type: 'OP_NOMBRE_DUPLICADO', opNum, opName: nombre,
+                detail: `La OP ${opNum} y la OP ${vistos.get(nombre)} se llaman igual. `
+                    + 'Ninguna se puede referenciar sin ambiguedad desde el flujograma o el Plan de '
+                    + 'Control, y el diff de este validador identifica los issues por nombre.',
+            });
+        } else {
+            vistos.set(nombre, opNum);
+        }
+    }
+    return out;
 }
 
 /**
