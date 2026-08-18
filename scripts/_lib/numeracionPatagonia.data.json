@@ -9,60 +9,194 @@
       "producto": "APOYABRAZOS TRASERO CENTRAL",
       "flujograma": {
         "id": "151",
-        "revVigente": "A",
-        "estado": "PENDIENTE"
+        "revVigente": "B",
+        "estado": "VIGENTE"
       },
-      "secuencia": null,
+      "secuencia": [
+        "10",
+        "20",
+        "30",
+        "40",
+        "50",
+        "60",
+        "61",
+        "70",
+        "80",
+        "82",
+        "90"
+      ],
       "nota": "El AMFE ya tiene la operacion 61 MONTAJE DE PORTAVASOS Y MARCO; el flujograma no. Aca el que se corrige es el FLUJOGRAMA, no el AMFE: el 61 se agrego en la revision del 14/08 que ya se entrego a Calidad. Cuando el flujograma B lo incorpore, los dos cierran.",
-      "fuente": "AMFE 150 Supabase live 2026-08-18"
+      "fuente": "AMFE 150 Supabase live 2026-08-18",
+      "secuenciaConfirmadaPor": [
+        "flujograma 151 Rev.B generado el 18/08/2026 desde tools/flowchart/data/"
+      ]
     },
     "AMFE-ARM-PAT": {
       "producto": "ARMREST DOOR PANEL (APB de puerta)",
       "amfe": "161",
       "flujograma": {
         "id": "153",
-        "revVigente": "A",
-        "estado": "PENDIENTE"
+        "revVigente": "B",
+        "estado": "VIGENTE"
       },
-      "secuencia": null,
+      "secuencia": [
+        "10",
+        "20",
+        "21",
+        "22",
+        "23",
+        "24",
+        "25",
+        "26",
+        "27",
+        "28",
+        "30",
+        "40",
+        "41",
+        "50",
+        "51",
+        "60",
+        "70",
+        "71",
+        "80",
+        "81",
+        "82",
+        "90",
+        "100",
+        "101",
+        "110"
+      ],
       "nota": "RESUELTO 18/08: el control de pieza inyectada SI existe, pero es UN SOLO PUESTO para las dos piezas (Fak). El flujograma lo dibuja como dos operaciones (51 delantero, 52 trasero) con dos rombos: hay que FUSIONARLAS en una sola 51 con un rombo. HUECO PENDIENTE en el AMFE: no tiene ninguna operacion de control entre la 60 inyeccion plastica y la 70 inyeccion PU. No se agrega todavia porque correria la numeracion justo antes de rehacer el flujograma, y porque hacen falta los modos de falla reales del puesto. Mismo hueco en el 158 y el 162; el 149 si lo tiene.",
-      "fuente": "AMFE 161 Supabase live 2026-08-18"
+      "fuente": "AMFE 161 Supabase live 2026-08-18",
+      "secuenciaConfirmadaPor": [
+        "flujograma 153 Rev.B, control de pieza inyectada unificado en la 51"
+      ]
     },
     "AMFE-HF-PAT": {
       "producto": "APOYACABEZAS DELANTERO CON COSTURA VISTA",
       "amfe": "151",
       "flujograma": {
         "id": "152",
-        "revVigente": "A",
-        "estado": "PENDIENTE"
+        "revVigente": "B",
+        "estado": "VIGENTE"
       },
-      "secuencia": null,
+      "secuencia": [
+        "10",
+        "20",
+        "21",
+        "22",
+        "23",
+        "24",
+        "25",
+        "26",
+        "27",
+        "28",
+        "30",
+        "31",
+        "32",
+        "33",
+        "34",
+        "40",
+        "41",
+        "42",
+        "50",
+        "51",
+        "52",
+        "60",
+        "70",
+        "71",
+        "72",
+        "80"
+      ],
       "nota": "Orden correcto y sirvio de referencia para corregir los traseros: 50 ENFUNDADO, 51 VARILLA, 60 PRECINTO, 61 BOLSA Y CARGA EN MOLDE, 62 CIERRE DE MOLDE, 63 INYECCION DE PU. El PU entra adentro de la funda ya montada. Diferencia REAL con los traseros que NO se alinea: el delantero lleva inserto EPP y los traseros solo varilla. Lo que si hay que unificar, porque comparten el flujograma 152: mylar 28 aca / 25 en los traseros, control final 70 / 80, embalaje 90 / 100.",
-      "fuente": "AMFE 151 Supabase live 2026-08-18"
+      "fuente": "AMFE 151 Supabase live 2026-08-18",
+      "secuenciaConfirmadaPor": [
+        "flujograma 152 Rev.B (compartido por los 3 apoyacabezas)"
+      ]
     },
     "AMFE-HRC-PAT": {
       "producto": "APOYACABEZAS TRASERO CENTRAL CON COSTURA VISTA",
       "amfe": "153",
       "flujograma": {
         "id": "152",
-        "revVigente": "A",
-        "estado": "PENDIENTE"
+        "revVigente": "B",
+        "estado": "VIGENTE"
       },
-      "secuencia": null,
+      "secuencia": [
+        "10",
+        "20",
+        "21",
+        "22",
+        "23",
+        "24",
+        "25",
+        "26",
+        "27",
+        "28",
+        "30",
+        "31",
+        "32",
+        "33",
+        "34",
+        "40",
+        "41",
+        "42",
+        "50",
+        "51",
+        "52",
+        "60",
+        "70",
+        "71",
+        "72",
+        "80"
+      ],
       "nota": "CORREGIDO 18/08/2026. Tenia el proceso al reves (50 INYECCION DE PU, 60 ENFUNDADO, 70 VARILLA). Fak sobre el puesto: 'es imposible que se inyecte sin la funda, se saldria todo el material', 'se coloca la varilla, la funda, y luego se inyecta', 'lo tengo 100% claro'. Quedo 50 VARILLA, 60 ENFUNDADO, 70 INYECCION DE PU (script _corregirOrdenApoyacabezasTraseros.mjs). La regla amfe.md §12 decia que los traseros iban 'directo a PU' y era falsa: se corrigio y nacio el check PU_ANTES_DE_ENFUNDADO. Identico al 155.",
-      "fuente": "AMFE 153 Supabase live 2026-08-18"
+      "fuente": "AMFE 153 Supabase live 2026-08-18",
+      "secuenciaConfirmadaPor": [
+        "flujograma 152 Rev.B (compartido por los 3 apoyacabezas)"
+      ]
     },
     "AMFE-HRO-PAT": {
       "producto": "APOYACABEZAS TRASERO LATERAL CON COSTURA VISTA",
       "amfe": "155",
       "flujograma": {
         "id": "152",
-        "revVigente": "A",
-        "estado": "PENDIENTE"
+        "revVigente": "B",
+        "estado": "VIGENTE"
       },
-      "secuencia": null,
+      "secuencia": [
+        "10",
+        "20",
+        "21",
+        "22",
+        "23",
+        "24",
+        "25",
+        "26",
+        "27",
+        "28",
+        "30",
+        "31",
+        "32",
+        "33",
+        "34",
+        "40",
+        "41",
+        "42",
+        "50",
+        "51",
+        "52",
+        "60",
+        "70",
+        "71",
+        "72",
+        "80"
+      ],
       "nota": "CORREGIDO 18/08/2026. Tenia el proceso al reves (50 INYECCION DE PU, 60 ENFUNDADO, 70 VARILLA). Fak sobre el puesto: 'es imposible que se inyecte sin la funda, se saldria todo el material', 'se coloca la varilla, la funda, y luego se inyecta', 'lo tengo 100% claro'. Quedo 50 VARILLA, 60 ENFUNDADO, 70 INYECCION DE PU (script _corregirOrdenApoyacabezasTraseros.mjs). La regla amfe.md §12 decia que los traseros iban 'directo a PU' y era falsa: se corrigio y nacio el check PU_ANTES_DE_ENFUNDADO. Identico al 153.",
-      "fuente": "AMFE 155 Supabase live 2026-08-18"
+      "fuente": "AMFE 155 Supabase live 2026-08-18",
+      "secuenciaConfirmadaPor": [
+        "flujograma 152 Rev.B (compartido por los 3 apoyacabezas)"
+      ]
     },
     "AMFE-INS-PAT": {
       "producto": "INSERT",
@@ -107,13 +241,12 @@
       "amfe": "162",
       "flujograma": {
         "id": "155",
-        "revVigente": "01",
-        "estado": "PENDIENTE"
+        "revVigente": "B",
+        "estado": "VIGENTE"
       },
       "secuencia": [
         "5",
         "10",
-        "11",
         "20",
         "30",
         "40",
@@ -124,10 +257,9 @@
         "90"
       ],
       "secuenciaConfirmadaPor": [
-        "Plan de Control CP-TOPROLL-001: tiene las 11 operaciones completas",
-        "flujograma 122/155 vigente: tiene 9 de las 11 (le falta el 11, y el control final figura sin numerar)"
+        "flujograma 155 Rev.B: recepcion en 5, 11 WIP, control final en 80"
       ],
-      "nota": "Secuencia CONFIRMADA por dos fuentes que coinciden: el Plan de Control CP-TOPROLL-001 la tiene completa, y el flujograma vigente la tiene salvo el 11 (no existe) y el 80 (figura como 'Inspeccion Final' SIN numero). El AMFE hoy usa 10/20/.../100: esta corrido un escalon entero y hay que renumerarlo DESPUES de que salga el flujograma B. Ademas el archivo del servidor se llama '122 ...' y el 122 es 'APC AMAROK CENTRAL VINILO' de SAS: numero de otro producto. HUECO ADICIONAL (18/08): tampoco tiene control despues de la inyeccion plastica (OP 20 -> 30 adhesivado hot melt). Fak: 'en inyeccion plastica siempre hay control, deberia estar en todos'.",
+      "nota": "Flujograma 155 Rev.B emitido: recepcion=5, se agrego el 11 ALMACENAMIENTO EN MEDIOS WIP y el control final quedo numerado 80. El AMFE 162 sigue corrido un escalon (usa 10/20/.../100) y AHORA SI se puede alinear, porque el flujograma esta cerrado.",
       "fuente": "CP-TOPROLL-001 + 122 FLUJOGRAMA TOP ROLL PAT 2.vsdx, ambos leidos 2026-08-18"
     },
     "VWA-PAT-IPPADS-001": {
@@ -135,13 +267,52 @@
       "amfe": "149",
       "flujograma": {
         "id": "157",
-        "revVigente": "A",
-        "estado": "PENDIENTE"
+        "revVigente": "B",
+        "estado": "VIGENTE"
       },
-      "secuencia": null,
-      "nota": "El flujograma NO figura en el Listado_Maestro_FLUJOGRMAS.xlsx: hay que darlo de alta. El 157 es el proximo ID libre (el ultimo cargado es el 156, TELAS ASIENTO Y RESPALDO de PWA). Pendiente: separar la operacion 90 en 90 ALINEACION DE COSTURA y 91 TAPIZADO Y FIJADO SUPERIOR, que es el punto 2 del mail de Lattanzi.",
-      "fuente": "AMFE 149 Supabase live + Listado Maestro 2026-08-18"
+      "secuencia": [
+        "10",
+        "20",
+        "21",
+        "22",
+        "23",
+        "24",
+        "25",
+        "26",
+        "30",
+        "31",
+        "32",
+        "33",
+        "34",
+        "35",
+        "36",
+        "37",
+        "38",
+        "40",
+        "41",
+        "42",
+        "50",
+        "60",
+        "70",
+        "80",
+        "81",
+        "90",
+        "91",
+        "100",
+        "110",
+        "120",
+        "130",
+        "140",
+        "150"
+      ],
+      "nota": "Flujograma 157 Rev.B emitido. 🔴 HALLAZGO QUE DA VUELTA UNA CONCLUSION PREVIA: el flujograma DESGLOSA la inyeccion en 20, 21, 22, 23, 24, 25 y 26 (secado y carga, purga del cañon, arranque y atemperado, validacion y grabado del programa, produccion automatica, liberacion de 1a pieza, camino de inspeccion), y esos numeros COINCIDEN con la instruccion de trabajo vigente. El AMFE 149 los resume en una sola operacion 20. O sea que el documento desalineado es el AMFE, no la instruccion: yo tenia anotado lo contrario. Alinearlo implica abrir 7 operaciones con sus modos de falla — no es renumerar, y hace falta la instruccion delante.",
+      "fuente": "AMFE 149 Supabase live + Listado Maestro 2026-08-18",
+      "secuenciaConfirmadaPor": [
+        "flujograma 157 Rev.B: corte 30-38 y la 90 partida en 90+91"
+      ]
     }
   },
-  "_control_post_inyeccion": "Fak 18/08/2026: 'en inyeccion plastica siempre hay control, deberia estar en todos'. Medido sobre los 8 AMFE: FALTA en 161 (armrest door panel), 158 (insert) y 162 (top roll); el 149 (IP pad) lo tiene dentro de su OP 20. Pendiente de cargar hasta que los flujogramas esten en Rev. B — agregar la operacion corre la numeracion — y hasta tener de Fak que se le controla a la pieza en ese puesto."
+  "_control_post_inyeccion": "Fak 18/08/2026: 'en inyeccion plastica siempre hay control, deberia estar en todos'. Medido sobre los 8 AMFE: FALTA en 161 (armrest door panel), 158 (insert) y 162 (top roll); el 149 (IP pad) lo tiene dentro de su OP 20. Pendiente de cargar hasta que los flujogramas esten en Rev. B — agregar la operacion corre la numeracion — y hasta tener de Fak que se le controla a la pieza en ese puesto.",
+  "_estado": "Los 5 flujogramas de Patagonia estan en Rev. B y se generan desde el repo con `node scripts/_flujograma.mjs`. El 154 (Insert) se queda en Rev. A: no tenia cambios.",
+  "_pasos_sin_amfe": "El esperado EXCLUYE los `storage` y `transfer` numerados del flujograma: `amfe.md` §9 dice que el almacenamiento WIP y el transporte interno no son operaciones de proceso con AMFE propio. Exigirlos seria pedirle al AMFE justo lo que la regla le prohibe tener. Caso concreto: el 11 ALMACENAMIENTO EN MEDIOS WIP del Top Roll esta numerado en el flujograma y en el Plan de Control, y NO va en el AMFE 162."
 }
