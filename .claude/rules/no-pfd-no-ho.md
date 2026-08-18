@@ -9,7 +9,10 @@ vos mismo los corregis"*, *"si, corregi todas las reglas porque si los vas a hac
 Es la **segunda vez** que lo pide. La primera no la tome y le devolvi un prompt para que los
 dibujara el — mal. **No volver a ofrecer un prompt de flujograma: hacerlo.**
 
-**Como se hacen:** `node scripts/_flujograma.mjs <clave> --apply`. Motor en
+**Como se hacen:** `node scripts/_flujograma.mjs --lista` para ver cuales hay,
+`node scripts/_flujograma.mjs <clave>` para uno, `--todos` para la tanda entera, y
+`--out <carpeta>` para elegir el destino (por defecto `tools/flowchart/.build/`).
+No lleva `--apply`: genera un PNG, no escribe en Supabase ni en el servidor. Motor en
 `tools/flowchart/` (extraido del generador de Claude Design), datos en
 `tools/flowchart/data/*.json`, render con Playwright + Chromium headless -> PNG.
 Detalle del contrato de datos: memoria `flujogramas_barack_numeracion`.

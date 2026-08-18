@@ -113,6 +113,12 @@ const CRITICAL_TYPES = new Set([
     // El PU se inyecta dentro de la funda ya montada (agregado 2026-08-18, rules/amfe.md §12).
     // Los AMFE 153 y 155 lo tuvieron al reves y la regla escrita repetia el error.
     'PU_ANTES_DE_ENFUNDADO',
+    // Dos operaciones homonimas son el punto ciego de `issueKey()`, que identifica los
+    // issues por NOMBRE: si una gana el problema que la otra ya tenia, el diff no lo ve y
+    // el gate deja pasar en silencio. Por eso BLOQUEA en vez de avisar — un gate que se
+    // puede quedar ciego tiene que frenar antes de quedarse ciego. Medido el 18/08/2026:
+    // 0 homonimas en los 17 AMFE, asi que hoy no bloquea nada.
+    'OP_NOMBRE_DUPLICADO',
     // Severidad subcalibrada para fallas con efecto de incumplimiento legal
     // (ver rules/amfe-severity-legal-compliance.md). Pais de origen, aduana, etc.
     'CAUSE_LEGAL_COMPLIANCE_UNDERCALIBRATED',
