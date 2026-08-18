@@ -187,7 +187,17 @@ export async function saveAmfe(sb, id, doc, opts = {}) {
         syncFieldAliases(doc);
     }
 
-    const payload = { data: JSON.stringify(doc), ...(opts.extraFields || {}) };
+    // `updated_at` NO se actualiza solo: la tabla no tiene trigger, asi que si el UPDATE no
+    // lo trae, el documento queda con la fecha de la escritura ANTERIOR. Detectado el
+    // 18/08/2026: los 8 AMFE de Patagonia, reescritos entre el 14 y el 18/08, figuraban
+    // como modificados el 27/05. Es el campo con el que se decide que version es mas nueva
+    // cuando hay dos copias (regla verify-supabase-live + gestion_ingenieria_es_el_maestro),
+    // asi que dejarlo viejo hace que una version nueva parezca vieja.
+    const payload = {
+        data: JSON.stringify(doc),
+        updated_at: new Date().toISOString(),
+        ...(opts.extraFields || {}),
+    };
     // Extra guard: nunca permitir pasar objeto directo en data
     if (typeof payload.data !== 'string') {
         throw new Error(`saveAmfe WRITE GUARD: data must be string, got ${typeof payload.data}`);
@@ -211,7 +221,13 @@ export async function saveAmfe(sb, id, doc, opts = {}) {
 
 export async function saveCp(sb, id, doc, opts = {}) {
     guardDataShape(doc, 'cp');
-    const payload = { data: JSON.stringify(doc), ...(opts.extraFields || {}) };
+    // Mismo caso que saveAmfe: sin `updated_at` explicito el documento queda con la fecha
+    // de la escritura anterior y una version nueva parece vieja.
+    const payload = {
+        data: JSON.stringify(doc),
+        updated_at: new Date().toISOString(),
+        ...(opts.extraFields || {}),
+    };
     if (typeof payload.data !== 'string') throw new Error('saveCp: data must be string');
     const { error } = await sb.from('cp_documents').update(payload).eq('id', id);
     if (error) throw new Error(`SAVE cp/${id}: ${error.message}`);
