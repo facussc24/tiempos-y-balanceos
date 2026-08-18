@@ -110,6 +110,9 @@ const CRITICAL_TYPES = new Set([
     // Bloquea cualquier script que deje causas AP=H sin accion ni placeholder
     // "Pendiente definicion equipo APQP" (ver rules/amfe-aph-pending.md).
     'CAUSE_APH_EMPTY_NO_PLACEHOLDER',
+    // El PU se inyecta dentro de la funda ya montada (agregado 2026-08-18, rules/amfe.md §12).
+    // Los AMFE 153 y 155 lo tuvieron al reves y la regla escrita repetia el error.
+    'PU_ANTES_DE_ENFUNDADO',
     // Severidad subcalibrada para fallas con efecto de incumplimiento legal
     // (ver rules/amfe-severity-legal-compliance.md). Pais de origen, aduana, etc.
     'CAUSE_LEGAL_COMPLIANCE_UNDERCALIBRATED',
@@ -273,6 +276,53 @@ function validateTextQuality(doc, amfeNumber = '') {
  * @param {string} [amfeNumber=''] - Numero AMFE para etiquetar issues.
  * @returns {{critical: Array, warning: Array, all: Array}}
  */
+/**
+ * PU_ANTES_DE_ENFUNDADO (CRITICAL) — rules/amfe.md §12.
+ *
+ * En los apoyacabezas el poliuretano se inyecta ADENTRO de la funda ya montada: se pone la
+ * varilla, se enfunda, se carga al molde y recien ahi se espuma. Fak, 18/08/2026: *"es
+ * imposible que se inyecte sin la funda, se saldria todo el material"*.
+ *
+ * Un AMFE que declare la inyeccion de PU ANTES del enfundado no esta desordenado: esta
+ * describiendo un proceso que no existe, y su analisis de falla queda construido sobre esa
+ * secuencia. Los AMFE 153 y 155 lo tuvieron invertido hasta el 18/08/2026, y la regla del
+ * proyecto —escrita describiendo esos mismos documentos— repetia el error en vez de cazarlo.
+ * Este check existe para que la proxima vez lo cace el codigo y no una charla.
+ *
+ * Solo mira AMFEs que tengan las DOS operaciones; los que no espuman no le importan.
+ */
+export function validateOrdenEnfundadoPu(doc, amfeNumber = '') {
+    const out = [];
+    const nombre = (op) => String(op?.name ?? op?.operationName ?? '');
+    // Ojo `Number('')` devuelve 0, no NaN: una OP sin numero pasaria por "operacion 0" y
+    // dispararia el check contra cualquier enfundado. Se exige que sean digitos.
+    const numero = (op) => {
+        const crudo = String(op?.opNumber ?? op?.operationNumber ?? '').trim();
+        return /^\d+$/.test(crudo) ? Number(crudo) : NaN;
+    };
+
+    const funda = (doc.operations || []).find(o => /^\s*ENFUNDADO\s*$/i.test(nombre(o)));
+    const pu = (doc.operations || []).find(o => /INYECCION\s+DE\s+PU\b/i.test(nombre(o)));
+    if (!funda || !pu) return out;
+
+    const nFunda = numero(funda);
+    const nPu = numero(pu);
+    if (!Number.isFinite(nFunda) || !Number.isFinite(nPu)) return out;
+
+    if (nPu < nFunda) {
+        out.push({
+            amfe: amfeNumber,
+            type: 'PU_ANTES_DE_ENFUNDADO',
+            opNum: String(nPu),
+            opName: nombre(pu),
+            detail: `INYECCION DE PU en OP ${nPu} va antes de ENFUNDADO en OP ${nFunda}. `
+                + 'El PU se inyecta dentro de la funda ya montada (amfe.md §12): sin la funda '
+                + 'el material se sale del molde. Revisar el orden real del puesto antes de aplicar.',
+        });
+    }
+    return out;
+}
+
 export function validateAmfeDoc(doc, productName = '', amfeNumber = '') {
     const issues = [];
 
@@ -289,6 +339,9 @@ export function validateAmfeDoc(doc, productName = '', amfeNumber = '') {
     // Calidad textual 6M (WE/fn genericos, WE.name == type, opFunc == focusFunc)
     // Fuente unica: scripts/_lib/genericLabels.mjs
     issues.push(...validateTextQuality(doc, amfeNumber));
+
+    // El PU se inyecta DENTRO de la funda ya montada (rules/amfe.md §12).
+    issues.push(...validateOrdenEnfundadoPu(doc, amfeNumber));
 
     const productUp = String(productName).toUpperCase();
 
