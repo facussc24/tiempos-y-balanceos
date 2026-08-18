@@ -1,16 +1,16 @@
-# Text Quality Audit (L2) — 2026-08-16T21:10:46.992Z
+# Text Quality Audit (L2) — 2026-08-18T10:03:20.480Z
 
-**Resumen global**: 0 CRITICAL, 129 WARNING en 17/17 AMFEs.
+**Resumen global**: 0 CRITICAL, 125 WARNING en 17/17 AMFEs.
 
-**Por tipo**: OP_FUNCTION_SEMANTIC_MISMATCH=12, FN_NO_VERB=100, FN_TOO_SHORT=12, WE_NAME_FOREIGN_TYPE=5
+**Por tipo**: OP_FUNCTION_SEMANTIC_MISMATCH=12, FN_NO_VERB=100, FN_TOO_SHORT=12, WE_NAME_FOREIGN_TYPE=1
 
 ## Top 5 AMFEs con mas issues
 
 - **AMFE-HRC-PAT** (VWA/PATAGONIA/HEADREST_REAR_CEN): 19 issues
 - **AMFE-HRO-PAT** (VWA/PATAGONIA/HEADREST_REAR_OUT): 19 issues
 - **AMFE-HF-PAT** (VWA/PATAGONIA/HEADREST_FRONT): 18 issues
-- **VWA-PAT-IPPADS-001** (VWA/PATAGONIA/IP_PADS): 10 issues
 - **AMFE-MAESTRO-INY-001** (MAESTRO/INYECCION_PLASTICA): 10 issues
+- **VWA-PAT-IPPADS-001** (VWA/PATAGONIA/IP_PADS): 9 issues
 
 ## Detalle por AMFE
 
@@ -88,22 +88,6 @@
 | WARNING FN_NO_VERB | 90 EMBALAJE Y ETIQUETADO DE PRODU | function.description "Pieza identificada con fecha segun VW 10560" no comienza con verbo |
 | WARNING FN_NO_VERB | 90 EMBALAJE Y ETIQUETADO DE PRODU | function.description "Pieza identificada con material segun VDA 260" no comienza con verbo |
 
-### VWA-PAT-IPPADS-001 (VWA/PATAGONIA/IP_PADS)
-0 CRITICAL + 10 WARNING
-
-| Type | OP | Detalle |
-|---|---|---|
-| WARNING FN_NO_VERB | 20 INYECCION DE SUSTRATOS Y CONTR | function.description "Parámetros validados por producto" no comienza con verbo |
-| WARNING FN_NO_VERB | 20 INYECCION DE SUSTRATOS Y CONTR | function.description "Aire comprimido filtrado y seco" no comienza con verbo |
-| WARNING WE_NAME_FOREIGN_TYPE | 30 CORTE (CARGA, AJUSTE Y CORTE A | WE.name "Cuchilla de corte" no corresponde a WE.type "Material" (patrón: MaterialShouldBeMachine) |
-| WARNING FN_NO_VERB | 40 COSTURA UNION | function.description "Permite la unión de los paneles. Costura unión entre paneles" no comienza con verbo |
-| WARNING FN_NO_VERB | 42 COSTURA VISTA | function.description "Permite la costura decorativa. Realiza costura decorativa" no comienza con verbo |
-| WARNING FN_TOO_SHORT | 60 ENSAMBLE SUSTRATO + ESPUMA | function.description "Adherir la espuma al sustrato" muy corta (< 30 chars) |
-| WARNING FN_NO_VERB | 70 ADHESIVADO | function.description "Rocía la mezcla de adhesivado sobre el vinilo. Adhesivado de" no comienza con verbo |
-| WARNING FN_TOO_SHORT | 120 TERMINACION | function.description "Verificar tolerancias" muy corta (< 30 chars) |
-| WARNING FN_TOO_SHORT | 150 EMBALAJE DE PRODUCTO TERMINADO | function.description "Embalar correctamente" muy corta (< 30 chars) |
-| WARNING FN_TOO_SHORT | 150 EMBALAJE DE PRODUCTO TERMINADO | function.description "Embalar sin deformaciones" muy corta (< 30 chars) |
-
 ### AMFE-MAESTRO-INY-001 (MAESTRO/INYECCION_PLASTICA)
 0 CRITICAL + 10 WARNING
 
@@ -119,6 +103,21 @@
 | WARNING FN_TOO_SHORT | 30 CONTROL DIMENSIONAL POST-Inyec | function.description "Referencia visual de defectos" muy corta (< 30 chars) |
 | WARNING FN_NO_VERB | 30 CONTROL DIMENSIONAL POST-Inyec | function.description "Referencia visual de defectos" no comienza con verbo |
 | WARNING FN_NO_VERB | 30 CONTROL DIMENSIONAL POST-Inyec | function.description "Iluminacion adecuada para inspección visual" no comienza con verbo |
+
+### VWA-PAT-IPPADS-001 (VWA/PATAGONIA/IP_PADS)
+0 CRITICAL + 9 WARNING
+
+| Type | OP | Detalle |
+|---|---|---|
+| WARNING FN_NO_VERB | 20 INYECCION DE SUSTRATOS Y CONTR | function.description "Parámetros validados por producto" no comienza con verbo |
+| WARNING FN_NO_VERB | 20 INYECCION DE SUSTRATOS Y CONTR | function.description "Aire comprimido filtrado y seco" no comienza con verbo |
+| WARNING FN_NO_VERB | 40 COSTURA UNION | function.description "Permite la unión de los paneles. Costura unión entre paneles" no comienza con verbo |
+| WARNING FN_NO_VERB | 42 COSTURA VISTA | function.description "Permite la costura decorativa. Realiza costura decorativa" no comienza con verbo |
+| WARNING FN_TOO_SHORT | 60 ENSAMBLE SUSTRATO + ESPUMA | function.description "Adherir la espuma al sustrato" muy corta (< 30 chars) |
+| WARNING FN_NO_VERB | 70 ADHESIVADO | function.description "Rocía la mezcla de adhesivado sobre el vinilo. Adhesivado de" no comienza con verbo |
+| WARNING FN_TOO_SHORT | 120 TERMINACION | function.description "Verificar tolerancias" muy corta (< 30 chars) |
+| WARNING FN_TOO_SHORT | 150 EMBALAJE DE PRODUCTO TERMINADO | function.description "Embalar correctamente" muy corta (< 30 chars) |
+| WARNING FN_TOO_SHORT | 150 EMBALAJE DE PRODUCTO TERMINADO | function.description "Embalar sin deformaciones" muy corta (< 30 chars) |
 
 ### AMFE-TR-PAT (VWA/PATAGONIA/TOP_ROLL)
 0 CRITICAL + 8 WARNING
@@ -172,18 +171,6 @@
 | WARNING WE_NAME_FOREIGN_TYPE | 20 CORTE DE COMPONENTES | WE.name "Cuchilla de corte" no corresponde a WE.type "Material" (patrón: MaterialShouldBeMachine) |
 | WARNING FN_NO_VERB | 80 COSTURA DE REFUERZOS | function.description "Pieza cumple tolerancia forma/posicion +/-3mm" no comienza con verbo |
 
-### AMFE-INS-PAT (VWA/PATAGONIA/INSERT)
-0 CRITICAL + 6 WARNING
-
-| Type | OP | Detalle |
-|---|---|---|
-| WARNING WE_NAME_FOREIGN_TYPE | 20 CORTE DE COMPONENTES | WE.name "Cuchilla de corte" no corresponde a WE.type "Material" (patrón: MaterialShouldBeMachine) |
-| WARNING FN_NO_VERB | 50 COSTURA CNC | function.description "Colocacion de material dentro de la plantilla. Operador de c" no comienza con verbo |
-| WARNING OP_FUNCTION_SEMANTIC_MISMATCH | 70 Inyección DE PIEZAS PLASTICAS | OP "Inyección DE PIEZAS PLASTICAS" debería contener alguno de [inyectar, conformar] en su función |
-| WARNING FN_NO_VERB | 70 Inyección DE PIEZAS PLASTICAS | function.description "Parámetros validados por producto" no comienza con verbo |
-| WARNING FN_NO_VERB | 70 Inyección DE PIEZAS PLASTICAS | function.description "Inspección visual al 100% de cada pieza inyectada con compar" no comienza con verbo |
-| WARNING FN_NO_VERB | 70 Inyección DE PIEZAS PLASTICAS | function.description "Aire comprimido filtrado y seco" no comienza con verbo |
-
 ### 160 (PWA/SERIE/TELAS_PLANAS)
 0 CRITICAL + 6 WARNING
 
@@ -196,13 +183,22 @@
 | WARNING FN_NO_VERB | 80 CONTROL FINAL DE CALIDAD | function.description "Pieza cumple tolerancia forma/posicion" no comienza con verbo |
 | WARNING FN_NO_VERB | 110 EMBALAJE | function.description "Embalar, identificar y proteger producto para despacho" no comienza con verbo |
 
-### AMFE-ARM-PAT (VWA/PATAGONIA/ARMREST_DOOR_PANEL)
+### AMFE-INS-PAT (VWA/PATAGONIA/INSERT)
 0 CRITICAL + 5 WARNING
 
 | Type | OP | Detalle |
 |---|---|---|
-| WARNING WE_NAME_FOREIGN_TYPE | 15 PREPARACION DE CORTE | WE.name "Cuchilla de corte" no corresponde a WE.type "Material" (patrón: MaterialShouldBeMachine) |
-| WARNING WE_NAME_FOREIGN_TYPE | 20 CORTE DE COMPONENTES | WE.name "Cuchilla de corte" no corresponde a WE.type "Material" (patrón: MaterialShouldBeMachine) |
+| WARNING FN_NO_VERB | 50 COSTURA CNC | function.description "Colocacion de material dentro de la plantilla. Operador de c" no comienza con verbo |
+| WARNING OP_FUNCTION_SEMANTIC_MISMATCH | 70 Inyección DE PIEZAS PLASTICAS | OP "Inyección DE PIEZAS PLASTICAS" debería contener alguno de [inyectar, conformar] en su función |
+| WARNING FN_NO_VERB | 70 Inyección DE PIEZAS PLASTICAS | function.description "Parámetros validados por producto" no comienza con verbo |
+| WARNING FN_NO_VERB | 70 Inyección DE PIEZAS PLASTICAS | function.description "Inspección visual al 100% de cada pieza inyectada con compar" no comienza con verbo |
+| WARNING FN_NO_VERB | 70 Inyección DE PIEZAS PLASTICAS | function.description "Aire comprimido filtrado y seco" no comienza con verbo |
+
+### AMFE-ARM-PAT (VWA/PATAGONIA/ARMREST_DOOR_PANEL)
+0 CRITICAL + 3 WARNING
+
+| Type | OP | Detalle |
+|---|---|---|
 | WARNING OP_FUNCTION_SEMANTIC_MISMATCH | 60 Inyección DE PIEZAS PLASTICAS | OP "Inyección DE PIEZAS PLASTICAS" debería contener alguno de [inyectar, conformar] en su función |
 | WARNING FN_NO_VERB | 60 Inyección DE PIEZAS PLASTICAS | function.description "Parámetros validados por producto" no comienza con verbo |
 | WARNING FN_NO_VERB | 60 Inyección DE PIEZAS PLASTICAS | function.description "Aire comprimido filtrado y seco" no comienza con verbo |
