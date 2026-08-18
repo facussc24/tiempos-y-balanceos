@@ -119,3 +119,7 @@ REGISTRO_TIEMPOS_INYECCION.xlsx
 
 # Cache local de mails (Outlook) — DATOS DE LA EMPRESA, el repo es publico
 .mail-cache/
+
+# Flujogramas: artefactos de build del generador (tools/flowchart).
+# El motor, los datos y el CSS SI se versionan; los PNG y el bundle no.
+tools/flowchart/.build/
