@@ -113,10 +113,12 @@ def armar_plan(origen):
             problemas.append(f'NO EXISTE la carpeta destino: {carpeta_ppap}')
             continue
 
+        # Un "viejo" ausente NO bloquea: en una re-corrida ya fue archivado la vez anterior.
+        # Solo se archiva lo que este; el conteo final dice cuantos se movieron de verdad.
         for viejo in viejos_prod + viejos_ppap:
             base = carpeta_prod if viejo in viejos_prod else carpeta_ppap
             if not os.path.exists(os.path.join(base, viejo)):
-                problemas.append(f'NO ESTA el archivo viejo a archivar: {os.path.join(base, viejo)}')
+                print(f'  (ya archivado antes: {viejo})')
 
         acciones.append((src_png, os.path.join(carpeta_prod, png),
                          [os.path.join(carpeta_prod, v) for v in viejos_prod]))

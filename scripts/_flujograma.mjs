@@ -84,6 +84,17 @@ if (!existsSync(CSS)) {
 }
 const css = readFileSync(CSS, 'utf8');
 
+// Logo oficial Barack — SIEMPRE va en el cajetin (Fak, 19/08/2026: "los flujogramas de
+// proceso tienen que tener este logo"). El original vive en OneDrive
+// (...\VARIOS\Logo y color barack\barack_logo.png); la copia versionada esta en assets/.
+// Si falta, se corta: un flujograma sin logo no es entregable.
+const LOGO = join(TOOLS, 'assets', 'barack_logo.png');
+if (!existsSync(LOGO)) {
+    console.error(`\nFalta el logo oficial: ${LOGO}\nSin logo no se genera ningun flujograma (regla 19/08/2026).`);
+    process.exit(1);
+}
+const logoDataUri = `data:image/png;base64,${readFileSync(LOGO).toString('base64')}`;
+
 // ─── 2. render de cada flujograma ───────────────────────────────────────────
 mkdirSync(salida, { recursive: true });
 const navegador = await chromium.launch();
@@ -94,6 +105,7 @@ try {
         const archivoDatos = join(DATA, `${clave}.json`);
         if (!existsSync(archivoDatos)) { console.error(`  ✗ ${clave}: no existe ${archivoDatos}`); continue; }
         const datos = JSON.parse(readFileSync(archivoDatos, 'utf8'));
+        datos.logoUrl = logoDataUri;   // el motor cae a un logo de TEXTO si no lo recibe
 
         const html = `<!doctype html><html><head><meta charset="utf-8">
 <style>${css}</style>

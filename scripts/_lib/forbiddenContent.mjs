@@ -35,6 +35,7 @@ const _data = JSON.parse(readFileSync(DATA_PATH, 'utf8'));
 
 export const FORBIDDEN_EQUIPMENT_PHRASES = _data.FORBIDDEN_EQUIPMENT_PHRASES || [];
 export const PENINSULAR_TERMS = _data.PENINSULAR_TERMS || [];
+export const ENGLISH_RANDOM_TERMS = _data.ENGLISH_RANDOM_TERMS || [];
 export const CLAUDE_PHRASES = _data.CLAUDE_PHRASES || [];
 export const ARBITRARY_FREQUENCY_PATTERNS = _data.ARBITRARY_FREQUENCY_PATTERNS || [];
 
@@ -49,6 +50,12 @@ const _claudeNorm = CLAUDE_PHRASES.map(p => ({ raw: p, n: normalize(p) }));
 // Peninsular: word-boundary para NO matchear dentro de otra palabra
 // (ej: "coger" NO debe disparar dentro de "recoger"; "raton" NO dentro de "ratones").
 const _peninsularRe = PENINSULAR_TERMS.map(t => ({
+    raw: t,
+    re: new RegExp(`\\b${escapeRegex(normalize(t))}\\b`),
+}));
+// Ingles random (Fak 19/08/2026): word-boundary igual que peninsular — "rattle" no debe
+// disparar dentro de otra palabra, y las frases multi-palabra matchean enteras.
+const _englishRe = ENGLISH_RANDOM_TERMS.map(t => ({
     raw: t,
     re: new RegExp(`\\b${escapeRegex(normalize(t))}\\b`),
 }));
@@ -78,6 +85,11 @@ export function scanForbidden(text) {
     for (const { raw: term, re } of _peninsularRe) {
         if (re.test(n)) {
             forbidden.push({ term, kind: 'espanolismo peninsular' });
+        }
+    }
+    for (const { raw: term, re } of _englishRe) {
+        if (re.test(n)) {
+            forbidden.push({ term, kind: 'ingles random (no se entiende en planta)' });
         }
     }
     for (const { raw: term, n: tn } of _claudeNorm) {
