@@ -136,28 +136,29 @@ def main():
     # Caso real 2026-08-18: quitar 2 agujeros M5 sello el vaciado que ventilaban de
     # casualidad y un STL con 8 cuerpos paso el gate viejo (que juzgaba un re-mallado, no
     # el archivo entregado).
-    envcheck.require(("trimesh",))
-    import trimesh
+    # Esto ejercita LAS FUNCIONES REALES del gate (importadas de export_deliverables),
+    # no una copia local: si alguien toca el gate, este paso corre el codigo tocado.
+    import export_deliverables
 
     def _cuerpos(step_path):
-        import gmsh
         stl_p = step_path.replace(".step", "_gate.stl")
-        with geom.gmsh_session():
-            geom._load(step_path)
-            gmsh.option.setNumber("Mesh.MeshSizeMax", 2.0)
-            gmsh.option.setNumber("Mesh.Binary", 1)
-            gmsh.model.mesh.generate(2)
-            gmsh.write(stl_p)
-        mm = trimesh.load(stl_p)
-        cs = mm.split(only_watertight=False)
-        return len(cs), sum(1 for c in cs if c.volume < 0)
+        export_deliverables._stl_export(step_path, stl_p, lc=2.0, curvature=0)
+        _, cs, negs = export_deliverables.stl_cuerpos(stl_p)
+        return stl_p, len(cs), len(negs)
 
-    n_ok, neg_ok = _cuerpos(paths["substrate"])
-    n_mal, neg_mal = _cuerpos(paths["sealed_cavity"])
+    stl_ok, n_ok, neg_ok = _cuerpos(paths["substrate"])
+    stl_mal, n_mal, neg_mal = _cuerpos(paths["sealed_cavity"])
     assert n_ok == 1 and neg_ok == 0, "la caja sana debe dar 1 cuerpo/0 negativos (dio %d/%d)" % (n_ok, neg_ok)
     assert n_mal == 2 and neg_mal == 1, ("la cavidad sellada DEBE detectarse como 2 cuerpos/1 negativo "
                                          "(dio %d/%d) — si esto falla, el gate de cuerpos quedo ciego" % (n_mal, neg_mal))
-    print("[9/9] gate cuerpos/cavidades: sano 1/0, cavidad sellada 2/1 (discrimina)")
+    # y el VEREDICTO del gate completo, no solo la medicion:
+    export_deliverables.gate_validez_cuerpos(stl_ok, "smoke_sano")
+    try:
+        export_deliverables.gate_validez_cuerpos(stl_mal, "smoke_cavidad")
+        raise AssertionError("gate_validez_cuerpos DEBIA rechazar la cavidad sellada")
+    except SystemExit:
+        pass
+    print("[9/9] gate cuerpos/cavidades (funciones reales del export): sano 1/0 pasa, cavidad 2/1 rechazada")
 
     print("\nSMOKE OK — cadlib funcionando de punta a punta en %s" % w)
 
