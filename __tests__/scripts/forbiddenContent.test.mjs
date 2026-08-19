@@ -70,6 +70,51 @@ describe('scanForbidden — deteccion de inventos y vocabulario prohibido', () =
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
+// A2. ENGLISH_RANDOM_TERMS (Fak 19/08/2026: "no puedo enviar amfes con palabras
+//     asi en ingles... queda obvio que los hiciste vos"). Purgados ese dia de
+//     los 8 AMFE Patagonia; este gate impide que vuelvan a entrar.
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('scanForbidden — ingles random (ENGLISH_RANDOM_TERMS)', () => {
+    const esIngles = r => r.forbidden.filter(f => f.kind.startsWith('ingles'));
+
+    it.each([
+        'posible Gap & Flush NOK',
+        'ausencia de Squeak & Rattle',
+        'con fit & finish conforme',
+        'Lote del proveedor fuera de spec',
+        'Prueba de Torque/Push manual',
+        'Check de lote y fecha',
+    ])('detecta la forma literal: %s', (texto) => {
+        expect(esIngles(scanForbidden(texto)).length).toBeGreaterThan(0);
+    });
+
+    it.each([
+        'posible Gap&Flush NOK',        // sin espacios alrededor del &
+        'con fit&finish conforme',
+        'Prueba de Torque / Push manual', // con espacios alrededor de la barra
+        'GAP  &  FLUSH fuera de espec',   // espacios dobles
+    ])('detecta variantes de espaciado: %s', (texto) => {
+        expect(esIngles(scanForbidden(texto)).length).toBeGreaterThan(0);
+    });
+
+    it.each([
+        'luz y enrase fuera de especificacion',   // la traduccion correcta
+        'Ruidos y chirridos en el modulo',
+        'ajuste y terminacion conforme',
+        'torque de apriete con torquimetro',       // "torque" solo es termino aceptado
+        'ensayo de peeling con dinamometro',       // nombre real del ensayo
+        'Scrap del material mal cortado',          // termino de industria aceptado
+    ])('NO marca el espanol de planta ni terminos aceptados: %s', (texto) => {
+        expect(esIngles(scanForbidden(texto))).toHaveLength(0);
+    });
+
+    it('word-boundary: "rattle" no dispara dentro de otra palabra', () => {
+        expect(esIngles(scanForbidden('El proveedor Rattleson SA entrega KLT'))).toHaveLength(0);
+    });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
 // B + C. integracion con el validador (gate runWithValidation)
 // ─────────────────────────────────────────────────────────────────────────────
 

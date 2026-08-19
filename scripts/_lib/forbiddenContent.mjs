@@ -55,10 +55,15 @@ const _peninsularRe = PENINSULAR_TERMS.map(t => ({
 }));
 // Ingles random (Fak 19/08/2026): word-boundary igual que peninsular — "rattle" no debe
 // disparar dentro de otra palabra, y las frases multi-palabra matchean enteras.
-const _englishRe = ENGLISH_RANDOM_TERMS.map(t => ({
-    raw: t,
-    re: new RegExp(`\\b${escapeRegex(normalize(t))}\\b`),
-}));
+// Espaciado FLEXIBLE alrededor de "&", "/" y entre palabras: "Gap&Flush" y "Torque / Push"
+// tienen que caer igual que la forma tipeada en el JSON (hallazgo del auditor, 19/08).
+const _englishRe = ENGLISH_RANDOM_TERMS.map(t => {
+    const pat = escapeRegex(normalize(t))
+        .replace(/\s*&\s*/g, '\\s*&\\s*')
+        .replace(/\s*\/\s*/g, '\\s*\\/\\s*')
+        .replace(/ +/g, '\\s+');
+    return { raw: t, re: new RegExp(`\\b${pat}\\b`) };
+});
 // Frecuencias: regex sobre texto normalizado (sin tildes, lowercase).
 const _freqRe = ARBITRARY_FREQUENCY_PATTERNS.map(p => ({ raw: p, re: new RegExp(p, 'i') }));
 
