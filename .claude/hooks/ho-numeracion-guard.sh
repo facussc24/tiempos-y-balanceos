@@ -86,8 +86,9 @@ cat >&2 << 'EOF'
 6. AL CERRAR: actualizar el listado maestro
    (3- LISTADO\Listado hojas de proceso.xlsx) con la fila nueva en el bloque de
    su sector + la hoja oculta _CONTEXTO_CLAUDE con el proximo numero libre.
-7. El .xlsx del SGC no se edita a mano: va instructivo celda por celda al agente
-   de Excel (feedback_no_edito_excel_lo_hace_agente_excel).
+7. El .xlsx del SGC lo edito YO con Excel COM (regla modificada por Fak el 19/08/2026:
+   "automaticemos eso asi podes hacerlo vos"). Trampas COM en la memoria
+   excel_com_argumentos_posicionales; verificar lock ~$ antes y releer despues de guardar.
 
 Si ya cumpliste esto (o no aplica), reintenta y segui.
 EOF
