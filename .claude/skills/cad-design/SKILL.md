@@ -323,6 +323,23 @@ trampas de código de arriba no salvan un concepto equivocado.
   presión" era físicamente falso (presión = fuerza/área), pero la conclusión "esto es PLA, se
   va a partir" era CIERTA: ningún control miraba el maltrato, solo la carga de trabajo.
   Refutar el mecanismo no cierra el reclamo — la conclusión se verifica por separado.
+- **ISOSTÁTICA: el panel/pieza lo ubica UN solo elemento (el más preciso); todo lo demás
+  captura con holgura que NUNCA mande.** (19/08, y la pregunta la hizo Fak: "fijate si esto
+  no está hiperestático".) El anillo del virolador ya restringía x, y y rotación con luz
+  0,15; los 2 pasadores agregados con holgura 0,34 se la peleaban: el stack de tolerancias
+  anillo↔pasador a 45 mm (impresión 0,16 + warp FDM 0,1 % + molde 0,075) da 0,28 en el peor
+  caso > 0,19 de margen → el panel quedaba forzado o sin asentar. Se resolvió afinando el
+  pasador (holgura 0,45: umbral 0,30 > 0,28). **La cuenta se hace SIEMPRE que haya más de un
+  elemento ubicando el mismo grado de libertad**: umbral = holgura_secundario − luz_primario,
+  contra el stack de tolerancias a la distancia que los separa.
+- **Una corrección nueva se aplica a la CLASE, no al caso que la generó.** (19/08, causa
+  raíz encontrada a pedido de Fak: "demostraste que no te estás automejorando".) El 18/08
+  se redondearon los pedestales porque marcaban la pieza, y EN LA MISMA ITERACIÓN las
+  orejas nuevas de los localizadores nacieron con canto vivo. Al corregir "los pedestales
+  marcan" la regla real era "todo tope que enfrenta al panel va redondeado" — y una feature
+  agregada en esa misma pasada es el primer lugar donde la regla se olvida. Enforcement:
+  el redondeo es PROPIEDAD del constructor (`caja_tope_redondeado()` en el build), no un
+  retoque por pieza; toda caja nueva orientada al panel pasa por ahí.
 - **Lo que enseñó la PRIMERA PIEZA IMPRESA** (18/08, el dato que ningún cálculo reemplaza):
   (a) todo borde que TOCA la pieza del cliente va redondeado — no solo donde hay flexión: los
   pedestales de apoyo con canto vivo MARCAN la cara vista; (b) un encastre manual necesita
