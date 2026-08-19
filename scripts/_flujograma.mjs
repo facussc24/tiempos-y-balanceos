@@ -32,6 +32,7 @@
 import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync, rmSync, statSync } from 'fs';
 import { dirname, join, resolve } from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
+import { spawnSync } from 'child_process';
 import { build } from 'esbuild';
 import { chromium } from 'playwright';
 
@@ -135,4 +136,17 @@ try {
 }
 
 console.log(`\n${ok}/${claves.length} flujogramas generados en ${salida}`);
+
+// Chequeo anti-corte, encadenado a proposito: es EL modo de falla de este motor —las ramas
+// laterales van en absolute y no empujan el ancho— y falla en silencio, con el PNG entero y
+// del peso normal. Si depende de que me acuerde de correrlo, algun dia no me acuerdo.
+if (ok) {
+    console.log('');
+    const r = spawnSync('python', [join(AQUI, '_verificarFlujogramas.py'), salida], { stdio: 'inherit' });
+    if (r.status !== 0) {
+        console.error('\n🔴 Hay flujogramas CORTADOS: no se entregan asi.');
+        process.exit(1);
+    }
+}
+
 process.exit(ok === claves.length ? 0 : 1);
