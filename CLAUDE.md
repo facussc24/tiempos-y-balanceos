@@ -99,8 +99,10 @@ DXF antes de entregarlo — el juez es AutoCAD, no ezdxf; enforcement duro: `ent
 **Arquitectura de roles (decision Fak 2026-08-09):** los skills SON el sistema de
 roles — cargan solo al usarse. NO crear agentes-rol por dominio ni proyectos
 separados (multi-agente ≈ 15x tokens); subagentes solo para trabajo batch/paralelo,
-techo 5. `docs/LECCIONES_APRENDIDAS.md` tiene tope 20 KB (gate en el hook): podar
-y archivar en `docs/_archive/`, no dejarlo crecer.
+techo 5. `docs/LECCIONES_APRENDIDAS.md`: gate en el hook (aviso 26 KB, tope 28 KB
+con corte en linea completa); al aviso se CONSOLIDA — fusionar lecciones del mismo
+patron y graduar a regla/memoria/archivo (ver su seccion final) — nunca comprimir
+a fragmentos ni pelear bytes.
 
 ## Stack y comandos
 

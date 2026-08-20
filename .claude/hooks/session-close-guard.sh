@@ -19,7 +19,18 @@ SB_FLAG="${TMPDIR:-/tmp}/claude-supabase-write.flag"
 SB=0
 [ -f "$SB_FLAG" ] && SB=1
 
-[ -z "$CHANGES" ] && [ "$SB" -eq 0 ] && exit 0
+# LECCIONES sobre el aviso de 26 KB: al cierre corresponde CONSOLIDAR (fusionar
+# lecciones del mismo patron, graduar a regla/memoria/archivo), no comprimir a
+# fragmentos. Gate del hook de arranque: aviso 26624, tope duro 28672.
+LEC="$REPO/docs/LECCIONES_APRENDIDAS.md"
+LEC_SOFT=26624
+LEC_OVER=0
+if [ -f "$LEC" ]; then
+  LEC_SIZE=$(wc -c < "$LEC")
+  [ "$LEC_SIZE" -gt "$LEC_SOFT" ] && LEC_OVER=1
+fi
+
+[ -z "$CHANGES" ] && [ "$SB" -eq 0 ] && [ "$LEC_OVER" -eq 0 ] && exit 0
 
 # Cooldown de 20 min SOLO para el recordatorio de commit. El aviso de Supabase
 # no respeta cooldown: se muestra siempre que haya flag y el flag se borra aca
@@ -35,6 +46,7 @@ echo "$NOW" > "$FLAG" 2>/dev/null
 
 MSG="Cierre pendiente:"
 [ -n "$CHANGES" ] && MSG="$MSG hay cambios de codigo/docs sin commitear."
+[ "$LEC_OVER" -eq 1 ] && MSG="$MSG LECCIONES_APRENDIDAS.md pesa $LEC_SIZE bytes (aviso $LEC_SOFT): antes de cerrar, pasada de CONSOLIDACION segun su seccion 'Como agregar lecciones' — fusionar lecciones del mismo patron y graduar a regla/memoria/archivo; PROHIBIDO comprimir a fragmentos cripticos o pelear bytes sueltos."
 if [ "$SB" -eq 1 ]; then
   MSG="$MSG TOCASTE SUPABASE esta sesion (escritura via MCP o script): backup OBLIGATORIO (node scripts/_backup.mjs, o CREATE TABLE AS via MCP si no hay .env.local) + verificar con SELECT que lo escrito quedo bien."
   rm -f "$SB_FLAG" 2>/dev/null

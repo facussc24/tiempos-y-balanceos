@@ -4,16 +4,47 @@
 #
 # Uso (cableado en settings.json):
 #   session-start-context.sh lecciones   → matcher startup|resume|clear:
-#       inyecta docs/LECCIONES_APRENDIDAS.md completo (protocolo de inicio paso 1,
-#       antes dependia de que Claude se acordara de leerlo).
+#       inyecta docs/LECCIONES_APRENDIDAS.md (protocolo de inicio paso 1).
 #   session-start-context.sh compact     → matcher compact:
-#       la compactacion NO re-inyecta las reglas .claude/rules/ con paths: ni las
-#       lecciones — reinyectar el nucleo anti-perdida.
+#       reinyecta el nucleo anti-perdida + las LECCIONES completas (2026-08-20:
+#       antes solo iba el nucleo y las lecciones no sobrevivian la compactacion,
+#       justo en las sesiones largas donde mas errores se cometen).
+#
+# Gates de tamano (2026-08-20, decision Fak — antes tope duro 20480):
+#   SOFT 26 KB: se inyecta entero + aviso de consolidar al cierre.
+#   HARD 28 KB: se inyecta hasta el ultimo fin de linea completo + aviso fuerte
+#               con los bytes descartados. Nunca truncado silencioso a mitad de
+#               leccion (el head -c viejo cortaba mudo).
+#   La poda es CONSOLIDAR (fusionar/graduar), no comprimir a fragmentos: ver la
+#   seccion "Como agregar lecciones" del propio archivo.
 
 cat >/dev/null 2>&1   # drenar el JSON de stdin
 
 ROOT="${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null || echo .)}"
 MODE="${1:-lecciones}"
+
+LECCIONES="$ROOT/docs/LECCIONES_APRENDIDAS.md"
+SOFT_BYTES=26624   # 26 KB: aviso de consolidacion
+MAX_BYTES=28672    # 28 KB: corte en fin de linea + aviso fuerte
+
+emitir_lecciones() {
+  [ -f "$LECCIONES" ] || return 0
+  local SIZE
+  SIZE=$(wc -c < "$LECCIONES")
+  echo "[Protocolo de inicio Barack: docs/LECCIONES_APRENDIDAS.md inyectado automaticamente por hook SessionStart — no hace falta volver a leerlo]"
+  if [ "$SIZE" -le "$SOFT_BYTES" ]; then
+    cat "$LECCIONES"
+  elif [ "$SIZE" -le "$MAX_BYTES" ]; then
+    echo "[AVISO DE TAMANO: el archivo pesa $SIZE bytes (aviso $SOFT_BYTES, tope $MAX_BYTES). Entra ENTERO todavia, pero al cierre de esta sesion corresponde una pasada de CONSOLIDACION segun 'Como agregar lecciones': fusionar lecciones del mismo patron, graduar a regla/memoria/archivo. NO comprimir lecciones a fragmentos cripticos.]"
+    cat "$LECCIONES"
+  else
+    local EMITIDO DESCARTADO
+    EMITIDO=$(LC_ALL=C awk -v max="$MAX_BYTES" '{n += length($0) + 1; if (n > max) exit} {print}' "$LECCIONES" | wc -c)
+    DESCARTADO=$((SIZE - EMITIDO))
+    echo "[GATE DE TAMANO — ATENCION: el archivo pesa $SIZE bytes (tope $MAX_BYTES). Se inyecta hasta el ultimo fin de linea completo: quedaron AFUERA $DESCARTADO bytes del FINAL del archivo. CONSOLIDAR ESTA SESION (seccion 'Como agregar lecciones'): fusionar/graduar/archivar hasta volver bajo $SOFT_BYTES. Las lecciones descartadas se leen con Read del archivo.]"
+    LC_ALL=C awk -v max="$MAX_BYTES" '{n += length($0) + 1; if (n > max) exit} {print}' "$LECCIONES"
+  fi
+}
 
 if [ "$MODE" = "compact" ]; then
   cat << 'EOF'
@@ -28,19 +59,9 @@ if [ "$MODE" = "compact" ]; then
 4. Si habia numeros/decisiones criticas en la parte compactada: verificarlos de
    nuevo contra la fuente, no confiar en el resumen.
 EOF
+  emitir_lecciones
   exit 0
 fi
 
-LECCIONES="$ROOT/docs/LECCIONES_APRENDIDAS.md"
-MAX_BYTES=20480   # gate 2026-08-09: el archivo llego a 126 KB y se inyectaba entero (~30k tokens/sesion)
-if [ -f "$LECCIONES" ]; then
-  SIZE=$(wc -c < "$LECCIONES")
-  echo "[Protocolo de inicio Barack: docs/LECCIONES_APRENDIDAS.md inyectado automaticamente por hook SessionStart — no hace falta volver a leerlo]"
-  if [ "$SIZE" -gt "$MAX_BYTES" ]; then
-    echo "[GATE DE TAMANO: el archivo pesa $SIZE bytes (tope $MAX_BYTES). Se inyectan solo los primeros 20 KB. PODAR YA: destilar lo accionable y archivar el detalle en docs/_archive/ (ver poda 2026-08-09).]"
-    head -c "$MAX_BYTES" "$LECCIONES"
-  else
-    cat "$LECCIONES"
-  fi
-fi
+emitir_lecciones
 exit 0
