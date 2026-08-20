@@ -138,7 +138,9 @@ def cerrar_modales():
     `AttachThreadInput` si lo cierra. Medido 2026-08-20 sobre el modal
     `Error / No Ingreso Procesos`: 1 modal -> 0.
 
-    Devuelve cuantos cerro.
+    Devuelve cuantos QUEDAN abiertos, no cuantos cerro: 0 = la ventana esta usable.
+    Misma convencion que `estado()`, para que el exit code signifique lo mismo en los
+    dos comandos (0 = seguir es seguro, 1 = hay un modal que mirar).
     """
     n = 0
     for h in [x for x in ventanas() if cls(x) == '#32770']:
@@ -189,7 +191,13 @@ def reset_relaciones():
     sinteticas no abren el menu"). Cierto para las teclas — pero el boton del ribbon
     se abre con un click real. Medido 2026-08-20: cierra y reabre sin intervencion.
     """
-    cerrar_modales()
+    if cerrar_modales():
+        # Un modal sin boton `Aceptar` deja al .exe con todas sus ventanas en
+        # IsWindowEnabled=False: el WM_CLOSE y los clicks del ribbon no llegarian a
+        # ningun lado y el reset "fallaria" apuntando al lugar equivocado, que es
+        # exactamente el sintoma que costo una tanda entera el 07/08.
+        print('queda un modal abierto sin poder cerrarlo: mirarlo antes de resetear')
+        return 1
     h = buscar('rel')
     if h:
         u.PostMessageW(h, 0x0010, 0, 0)          # WM_CLOSE: descarta, no graba
