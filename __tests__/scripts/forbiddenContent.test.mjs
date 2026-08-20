@@ -98,9 +98,20 @@ describe('scanForbidden — ingles random (ENGLISH_RANDOM_TERMS)', () => {
         expect(esIngles(scanForbidden(texto)).length).toBeGreaterThan(0);
     });
 
+    // Ronda 2 (Fak, 19/08): mi primera traduccion tambien era ajena a la planta.
+    // "enrase" y "chirridos" tienen CERO usos en 1500 mails de gente Barack.
     it.each([
-        'luz y enrase fuera de especificacion',   // la traduccion correcta
+        'luz y enrase fuera de especificacion',
         'Ruidos y chirridos en el modulo',
+        'superficie enrasada con golpeteos',
+    ])('detecta castellano ajeno a la planta: %s', (texto) => {
+        expect(esIngles(scanForbidden(texto)).length).toBeGreaterThan(0);
+    });
+
+    it.each([
+        'alineacion y separacion entre piezas fuera de especificacion', // traduccion final
+        'desalineacion o separacion excesiva',
+        'Ruidos en el modulo',
         'ajuste y terminacion conforme',
         'torque de apriete con torquimetro',       // "torque" solo es termino aceptado
         'ensayo de peeling con dinamometro',       // nombre real del ensayo

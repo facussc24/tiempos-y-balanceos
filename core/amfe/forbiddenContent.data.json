@@ -1,7 +1,7 @@
 {
   "_source": "FUENTE UNICA del candado anti-invento. Derivado VERBATIM de .claude/rules/amfe.md §6 (inventos confirmados + diccionario peninsular) y §11 (vocabulario Claude prohibido + frecuencias inventadas). NO inventar terminos: solo agregar los que Fak/equipo APQP confirmen. Consumido por scripts/_lib/forbiddenContent.mjs (igual patron que genericLabels.data.json).",
   "_severidades": "FORBIDDEN_EQUIPMENT_PHRASES + PENINSULAR_TERMS + ENGLISH_RANDOM_TERMS => CRITICAL (bloquean apply, known-bad 0 FP). CLAUDE_PHRASES + ARBITRARY_FREQUENCY_PATTERNS => WARNING (flag para revision, casi siempre malo pero a veces legitimo).",
-  "_english": "ENGLISH_RANDOM_TERMS: jerga inglesa que delata redaccion IA y nadie en planta entiende (Fak, 19/08/2026: 'no puedo enviar amfes con palabras asi... queda obvio que los hiciste vos'). Purgados ese dia de los 8 AMFE Patagonia: gap & flush -> luz y enrase; squeak & rattle -> ruidos y chirridos; fit & finish -> ajuste y terminacion; fuera de spec -> fuera de especificacion; torque/push -> torque y empuje; check de lote -> control de lote. NO van aca los terminos de industria aceptados (SCRAP, NOK, KLT, PPAP, peeling, hot melt, torque solo) ni nombres de pieza/material del cliente.",
+  "_english": "ENGLISH_RANDOM_TERMS: vocabulario AJENO a la planta — jerga inglesa Y castellano que nadie en Barack usa (Fak, 19/08/2026: 'no puedo enviar amfes con palabras asi... queda obvio que los hiciste vos'; y sobre mi primera traduccion: 'enrase/chirridos son palabras que nunca usariamos'). La fuente del vocabulario correcto son los MAILS de la empresa (.mail-cache, 1500 mails de gente Barack): enrase=0 usos, chirrido=0, ruido=0 tambien — ellos dicen alineacion, separacion, fuera de posicion, terminacion, encastrar. Traducciones finales: gap & flush fuera de espec -> alineacion y separacion entre piezas fuera de especificacion; gap & flush NOK -> desalineacion o separacion excesiva; squeak & rattle -> ruidos; fit & finish -> ajuste y terminacion; fuera de spec -> fuera de especificacion; torque/push -> torque y empuje; check de lote -> control de lote. NO van aca los terminos de industria aceptados (SCRAP, NOK, KLT, PPAP, peeling, hot melt, torque solo) ni nombres de pieza/material del cliente.",
 
   "FORBIDDEN_EQUIPMENT_PHRASES": [
     "hielo seco",
@@ -39,7 +39,14 @@
     "fit and finish",
     "fuera de spec",
     "torque/push",
-    "check de lote"
+    "check de lote",
+    "enrase",
+    "enrases",
+    "enrasado",
+    "chirrido",
+    "chirridos",
+    "golpeteo",
+    "golpeteos"
   ],
 
   "CLAUDE_PHRASES": [

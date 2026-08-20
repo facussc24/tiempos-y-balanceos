@@ -35,7 +35,7 @@ paths:
 |-------|----------|----------|
 | S=9-10 | Flamabilidad, emisiones VOC, interferencia airbag, bordes filosos | TL 1010 VW, REACH |
 | S=7-8 | Falla de encastre severa que para linea VW, desprendimiento en campo | Clips rotos, deformacion estructural |
-| S=5-6 | Arrugas masivas, delaminacion, costura torcida, Squeak & Rattle, retrabajo offline | Burbuja en termoformado |
+| S=5-6 | Arrugas masivas, delaminacion, costura torcida, ruidos en el uso, retrabajo offline | Burbuja en termoformado |
 | S=3-4 | Cosmetico menor, hilo suelto, mancha limpiable, retrabajo in-station | Color desparejo con luz rasante |
 
 **Efecto legal/aduanero → S>=7 obligatorio.** Si algun efecto (local/next/endUser) menciona incumplimiento legal, retencion aduanera, declaracion de origen, multa o sancion legal: TODAS las causas de ese failure van S>=7 (multa/retencion=7, para linea cliente=8, recall/judicial=9, dano a personas=9-10). Enforcement: check `CAUSE_LEGAL_COMPLIANCE_UNDERCALIBRATED` (CRITICAL) en `scripts/_lib/amfeValidator.mjs`. No confundir con menciones genericas de "legal" sin consecuencia.
