@@ -4,6 +4,8 @@
      python arbver.py foto prod       -> captura la ventana principal
      python arbver.py click X Y       -> click real en coordenadas de VENTANA (no de pantalla)
      python arbver.py estado          -> ventanas, modales y foco
+     python arbver.py modal           -> cierra los modales #32770 con click real
+     python arbver.py reset           -> saca la ventana de una celda sucia (cierra y reabre)
 """
 import ctypes, ctypes.wintypes as w, subprocess, sys, time
 from PIL import Image
@@ -125,6 +127,85 @@ def estado():
         print('hwndActive=%s hwndFocus=%s  (None = el arb NO tiene el foco)' % (gi.hwndActive, gi.hwndFocus))
     print('MODALES ABIERTOS: %d %s' % (modales, '<-- ABORTAR' if modales else ''))
     return modales
+
+
+def cerrar_modales():
+    """Cierra los modales #32770 del arb con un CLICK REAL sobre su boton Aceptar.
+
+    La skill decia que el modal "lo tiene que cerrar una persona". Eso vale para
+    `BM_CLICK`, que cambia el estado visual y no ejecuta la logica del programa —
+    el mismo patron de todo lo sintetico en este .exe. Un click real del mouse con
+    `AttachThreadInput` si lo cierra. Medido 2026-08-20 sobre el modal
+    `Error / No Ingreso Procesos`: 1 modal -> 0.
+
+    Devuelve cuantos cerro.
+    """
+    n = 0
+    for h in [x for x in ventanas() if cls(x) == '#32770']:
+        detalle = []
+
+        def cb(hh, _l):
+            t = txt(hh)
+            if t.strip():
+                detalle.append('[%s] %s' % (cls(hh), t))
+            return True
+        u.EnumChildWindows(h, CB(cb), 0)
+        botones = []
+
+        def cb2(hh, _l):
+            if cls(hh) == 'Button' and txt(hh).replace('&', '').strip().lower() in ('aceptar', 'ok'):
+                botones.append(hh)
+            return True
+        u.EnumChildWindows(h, CB(cb2), 0)
+        print('modal: %s | %s' % (txt(h), ' - '.join(detalle)))
+        if not botones:
+            print('   sin boton Aceptar: lo tiene que mirar una persona')
+            continue
+        r = R(); u.GetWindowRect(botones[0], ctypes.byref(r))
+        tid = u.GetWindowThreadProcessId(botones[0], None); me = k.GetCurrentThreadId()
+        u.AttachThreadInput(me, tid, True)
+        try:
+            u.SetCursorPos((r.l + r.r) // 2, (r.t + r.b) // 2); time.sleep(0.3)
+            u.mouse_event(0x0002, 0, 0, 0, 0); time.sleep(0.09); u.mouse_event(0x0004, 0, 0, 0, 0)
+            time.sleep(0.7)
+        finally:
+            u.AttachThreadInput(me, tid, False)
+        n += 1
+    time.sleep(0.5)
+    quedan = len([x for x in ventanas() if cls(x) == '#32770'])
+    print('modales cerrados: %d  |  quedan: %d' % (n, quedan))
+    return quedan
+
+
+def reset_relaciones():
+    """Saca la ventana `Maestro de Relaciones` de una celda sucia y la deja usable.
+
+    Cuando el arb rechaza un renglon (por ejemplo `No Ingreso Procesos`), el valor
+    escrito sobrevive a CANCELA y a volver a entrar el producto: el buffer de edicion
+    del registro sigue abierto y **envenena todas las corridas siguientes**. Lo unico
+    que lo descarta es `WM_CLOSE` a la ventana.
+
+    Lo que esta skill daba por imposible era REABRIRLA sin una persona ("las teclas
+    sinteticas no abren el menu"). Cierto para las teclas — pero el boton del ribbon
+    se abre con un click real. Medido 2026-08-20: cierra y reabre sin intervencion.
+    """
+    cerrar_modales()
+    h = buscar('rel')
+    if h:
+        u.PostMessageW(h, 0x0010, 0, 0)          # WM_CLOSE: descarta, no graba
+        time.sleep(1.5)
+        print('Maestro de Relaciones cerrada: %s' % (buscar('rel') is None))
+    p = buscar('prod')
+    if not p:
+        print('no encuentro la ventana Produccion: la reapertura la tiene que hacer una persona')
+        return 1
+    click(p, 298, 95)                            # boton `Relacion de Consumo de Prod. Terminados`
+    time.sleep(1.5)
+    abierta = buscar('rel')
+    print('Maestro de Relaciones reabierta: %s' % bool(abierta))
+    if abierta:
+        click(abierta, 118, 68)                  # solapa `Altas de Insumos de Un Producto`
+    return 0 if abierta else 1
 
 
 def cerrar_excel(espera=2.0):
@@ -273,5 +354,9 @@ if __name__ == '__main__':
         click(h, int(sys.argv[2]), int(sys.argv[3]))
     elif cmd == 'export':
         sys.exit(0 if export() else 1)
+    elif cmd == 'modal':
+        sys.exit(1 if cerrar_modales() else 0)
+    elif cmd == 'reset':
+        sys.exit(reset_relaciones())
     else:
         sys.exit(1 if estado() else 0)

@@ -5,7 +5,9 @@ description: Operar el ERP arb (ARB Sistemas "Producción") por teclado desde Cl
 
 # Operar el arb desde Claude
 
-> **Cambiar consumos: ANDA** — 14/14 el 05/08 · 16/16 el 06/08 · **36/36 el 07/08**.
+> **Cambiar consumos: ANDA** — 14/14 el 05/08 · 16/16 el 06/08 · 36/36 el 07/08 ·
+> **31/31 el 20/08** (y ahí el robot aprendió a **recuperarse solo**: cierra el modal y
+> reabre la ventana sin pedirle nada a nadie — ver la tanda del 20/08).
 > **Dar de alta líneas: ANDA** (`scripts/_arbAlta.py`) — **31/31 el 07/08**, verificadas contra
 > el export y con 0 bajas en el diff de la base entera. Borrar líneas sigue fuera de alcance.
 >
@@ -598,8 +600,9 @@ escrituras sueltas sobre la ventana viva**: se usa el cargador, que verifica cad
 
 `keybd_event` con la secuencia documentada `Alt Alt → V → Y3` **no abre** `Relación de Consumo`,
 con `Producción` al frente y confirmado. Es el mismo límite que ya estaba anotado para el combo
-del export. **Reabrir la ventana después de cerrarla requiere una persona.** Por eso cerrarla
-para limpiar tiene un costo: hay que pedir que la reabran.
+del export. ~~**Reabrir la ventana después de cerrarla requiere una persona.**~~ **CORREGIDO
+20/08: se reabre con un CLICK REAL en (298, 95) del ribbon** — `_arbVer.py reset` hace el ciclo
+entero. Cerrar la ventana para limpiar ya no tiene costo.
 
 ### 🔴 LA CAUSA RAÍZ DE LA COMA: la grilla usa PUNTO, el export usa COMA `CONFIRMADO 2026-08-07`
 
@@ -646,7 +649,8 @@ control antes de escribir"* — **en las 12 piezas, sin excepción**. Ese error 
 problema de foreground: **es el síntoma de un modal olvidado**.
 
 Y **`BM_CLICK` sobre su botón `Aceptar` NO lo cierra**, igual que no graba el `&Acepta` de la
-grilla. El modal lo tiene que cerrar una persona con un click real.
+grilla. ~~El modal lo tiene que cerrar una persona con un click real.~~ **CORREGIDO 20/08: el
+click real lo puedo dar yo** — `python scripts/_arbVer.py modal`. Ver la tanda del 20/08.
 
 **Gate obligatorio al arrancar CUALQUIER tanda** (y antes de cada reintento): enumerar las
 ventanas visibles de `produc.exe`; si hay un `#32770`, **abortar de entrada** pidiendo el click,
@@ -672,6 +676,92 @@ escribí el gate del modal a media mañana y aun así lancé dos tandas más sin
 ```
 
 Los seis son mecánicos y baratos. **Ninguno depende de acordarse: se corren siempre.**
+
+## Tanda del 2026-08-20 — 31 de 31, y dos "esto lo tiene que hacer una persona" que eran falsos
+
+Aplix de m² a metros lineales: 34 líneas objetivo, **31 productos terminados grabados y
+verificados**, 3 fuera de alcance por una validación del arb que no estaba documentada.
+
+### 🔴 LA GRILLA GUARDA 7 DECIMALES, NO 8 `medido 2026-08-20`
+
+Se cargó `0.00123077` y quedó **`0,0012307`**: el arb **trunca**, no redondea. El export lo
+devuelve como `0,00123070` (8 posiciones, la última siempre 0).
+
+**Las tablas se generan con 7 decimales REDONDEADOS** (`ROUND_HALF_UP`), no con 8 truncados:
+truncar sesga todo el lote para abajo. El error queda en ~0,005%, muy adentro del 0,1%, pero
+es gratis no tenerlo.
+
+### 🟢🟢 EL MODAL LO PUEDO CERRAR YO `CONFIRMADO 2026-08-20` — corrige lo que dice arriba
+
+La sección del 07/08 dice *"el modal lo tiene que cerrar una persona con un click real"*. La
+primera mitad es falsa. `BM_CLICK` no lo cierra —igual que no graba el `&Acepta`, mismo patrón
+de todo lo sintético en este `.exe`—, pero **un click real del mouse sobre su botón `Aceptar`
+sí lo cierra**. Medido: 1 modal → 0.
+
+```bash
+python scripts/_arbVer.py modal      # cierra los #32770 con click real
+```
+
+### 🟢🟢 LA VENTANA LA PUEDO REABRIR YO `CONFIRMADO 2026-08-20` — corrige lo de arriba
+
+La otra mitad que era falsa: *"reabrir la ventana después de cerrarla requiere una persona"*.
+Cierto que `Alt Alt → V → Y3` no abre nada, pero **el botón del ribbon se abre con un click
+real** en (298, 95) de la ventana `Producción`, con la solapa `Menú de Insumos` ya activa.
+
+Eso completa el ciclo de recuperación **sin intervención**, que es lo que hacía que una celda
+sucia terminara la tanda:
+
+```bash
+python scripts/_arbVer.py reset      # cierra modales + WM_CLOSE + reabre + solapa Altas
+```
+
+**`CANCELA` no limpia la celda sucia** cuando el rechazo vino de una validación del arb: se
+cliqueó dos veces y la ventana siguió clavada en la misma pieza con el valor escrito. Lo único
+que la saca es `WM_CLOSE`.
+
+### 🔴 MODAL NUEVO: `No Ingreso Procesos` — sin Módulo/Proceso el arb NO GRABA
+
+Tres líneas del lote (`APLIX 20 X 20`, `APLIX-TROQ`, `P280828`) tienen **Módulo y Proceso
+vacíos** en el export. Al llegar a `&Acepta` el arb abre `Error / No Ingreso Procesos` y no
+graba. La pantalla queda con el valor escrito y el foco en la celda `Módulo` en amarillo.
+
+Peor: **el modal quedó abierto y se llevó puestas las 2 líneas siguientes** del lote con
+"no pude poner el foco" — el síntoma en masa que ya estaba documentado.
+
+**Gate antes de armar el lote**: descartar las líneas cuyo Módulo o Proceso vengan vacíos del
+export. No se completan por cuenta propia: el sector donde se consume un material es dato
+técnico (regla `core-prohibiciones` §1), va **TBD** y se reporta.
+
+```python
+mod, proc = g(r, 6), g(r, 7)
+if not mod or not proc:      # el arb va a rechazar el renglon entero
+    fuera_del_lote.append(pn)
+```
+
+### Después de exportar, la ventana queda en la solapa `Listado`
+
+Ya estaba anotado que el foco queda ahí, pero no que **el cargador aborta por eso**:
+*"no veo la grilla de insumos: la ventana está en otra solapa"*. Entre el export y el
+`--apply` va siempre un `click 118 68` (solapa `Altas`). El comando `reset` ya lo hace.
+
+### El orden que salió bien, de punta a punta
+
+```
+_arbVer.py estado            0 modales, ventana Relaciones abierta
+cp RELACIONES.TXT -> .arb-cache/pre-cambio/
+_arbVer.py export            (reintentar: el combo falla ~1 de cada 2)
+generar tabla del export PRE-CAMBIO, 7 decimales, PUNTO
+_arbVer.py click 118 68      volver a la solapa Altas
+_arbCargar.py --solo <1 pieza> --apply    prueba
+_arbVer.py export  +  verificar
+_arbCargar.py --tabla ... --apply         el resto
+_arbVer.py reset             si algo falló, ANTES de reintentar
+_arbVer.py export  +  verificar + invariantes + diff del archivo entero
+```
+
+⚠️ **La tabla se genera del export PRE-CAMBIO, no del actual.** Si se regenera a mitad de
+lote, las líneas ya convertidas se vuelven a dividir por el ancho. El `valor_esperado` sí
+sale del actual: es contra lo que el cargador compara la celda antes de escribir.
 
 ## Seguridad — antes de que el robot escriba
 

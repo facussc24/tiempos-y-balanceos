@@ -42,6 +42,7 @@ La historia completa de cada incidente vive en los snapshots.
 ## Automatizacion de interfaces / ERP
 
 - **08/07** (detalle en skill `arb-operar`): si tiene interfaz, MIRARLA es el primer paso; "es un limite del programa" casi siempre es un limite de lo que probe. Proceso que escribe un archivo compartido: gate "alguien lo tiene tomado?" + verificar mtime despues.
+- **20/08** (detalle en skill `arb-operar`, tanda del 20/08): **una limitacion escrita por mi mismo se vuelve la verdad del sistema y nadie la vuelve a probar.** Dos frases de la skill decian que el modal y la reapertura de la ventana "los tiene que hacer una persona": las dos eran falsas, las dos se resolvieron con un click real, y entre las dos me habian costado tandas enteras. **Antes de escribir "esto necesita a Fak", listar que NO probe.** Van al codigo, no a la prosa: `_arbVer.py modal` y `reset`. Y el formato del dato es parte del contrato con el programa — la grilla guarda **7 decimales y trunca**, asi que la tabla se genera redondeada a 7, no a 8.
 
 ## CAD y 3D
 
