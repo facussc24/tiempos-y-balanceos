@@ -288,6 +288,20 @@ Las 9-17 salen del virolador del Upper Trim (08/2026, tres rondas: resorte → r
     go/no-go; "dura X años" salido de una curva de bibliografía NO se afirma (Fak, 18/08:
     "dejá de decir pelotudeces como vida a fatiga"). Se entrega lo MEDIDO y el control físico
     (galga/calibre) para que el desgaste se detecte, no se prediga.
+18. **El STEP del cliente es la pieza TERMINADA: el tapizado también cubre las caras de
+    APOYO, no solo la feature que se trabaja.** (19-20/08, el "queda flotando".) Los apoyos
+    de la v12 se midieron contra el sólido desnudo y sobre esas caras va una capa de 0,500
+    (medida: 100 % de las zonas de apoyo, los dos steps) → pedestal 0,25-0,44 METIDO en el
+    vinilo, panel flotando sobre material blando, anillo con ~0,75 de su banda de 1,2. UN
+    error, los dos síntomas que reportó Fak. Tres reglas que deja: (a) toda superficie del
+    utillaje que ENFRENTA al panel se cota contra la superficie real = sólido − capa —
+    el mismo control A0b que ya existía para la ranura aplica a TODOS los contactos;
+    (b) en un utillaje rígido **el tope de inserción ES el apoyo** (holgura chica 0,05
+    para test e impresión, no 0,25 "para no marcar": eso deja la cadena de apoyo
+    indefinida); (c) una capa a offset constante clasificada como "superficie de
+    construcción" puede ser el MATERIAL real — la clasificación geométrica no le gana al
+    síntoma físico, y la cara de apoyo puede además estar INCLINADA (0,78° acá): el tope
+    plano se fija donde toca primero, medido por huella, no en la meseta de otro lado.
 
 ## 6. Utillajes de apriete — las decisiones de CONCEPTO (antes de la primera línea)
 

@@ -161,6 +161,10 @@ def main():
 
     if args.render:
         fix_tris = geom.step_to_tris(args.fixture, lc=args.lc)
+        # el sustrato para DIBUJAR: mismos keep/transform que los puntos del veredicto
+        sub_tris = geom.step_to_tris(args.substrate, lc=args.lc,
+                                     keep=_parse_tags(args.substrate_keep),
+                                     translate=translate, caras_libres=False)
         points = [(sub_pts[inside], "red", "choque (%d pts)" % n_in)] if n_in else None
         files = render.render_views(
             [(fix_tris, "#9ecae1", 0.30), (sub_tris, "#bbbbbb", 0.40)],
