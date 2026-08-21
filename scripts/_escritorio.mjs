@@ -85,6 +85,18 @@ export function despojarFecha(nombre) {
     return String(nombre).replace(/^\d{4}-\d{2}-\d{2}\s+-\s+/, '').trim();
 }
 
+/**
+ * El nombre con el que se archiva, sin la extension si es un archivo suelto.
+ *
+ * Una CARPETA se queda con su nombre entero. `path.parse().name` corta en el ultimo
+ * punto, y Fak les pone la fecha adentro del nombre ("Asaichi 11.8.26",
+ * "Tarea apb son las 10.50am ..."): tratado como extension, el nombre se archiva
+ * mutilado y deja de ser reconocible. Ya paso dos veces antes de detectarse.
+ */
+export function nombreSinExtension(base, esDir) {
+    return esDir ? String(base).trim() : path.parse(String(base)).name;
+}
+
 export function esFechaValida(s) {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(String(s ?? ''))) return false;
     const d = new Date(`${s}T12:00:00Z`);
@@ -350,7 +362,7 @@ async function cmdArchivar(escritorio, archivo, { nombre, cerrada, quien, que, d
     if (clasificarEntrada(base, esDir) !== 'tarea') { bad(`"${base}" no es una tarea (acceso directo, archivo de sistema o el archivo de terminadas).`); return 1; }
 
     const anio = anioDe(cerrada);
-    const tarea = nombreCanonico(cerrada, path.parse(base).name);
+    const tarea = nombreCanonico(cerrada, nombreSinExtension(base, esDir));
     const destino = path.join(carpetaAnio(archivo, anio), tarea);
     if (fs.existsSync(destino)) { bad(`Ya existe "${anio}\\${tarea}". Renombrar antes de archivar.`); return 1; }
     if ((await leerIndice(archivo, anio)).some((f) => f.tarea === tarea)) { bad(`"${tarea}" ya figura en el listado.`); return 1; }

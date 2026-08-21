@@ -22,7 +22,7 @@ import { fileURLToPath } from 'node:url';
 import ExcelJS from 'exceljs';
 
 import {
-    validarCierre, nombreCanonico, despojarFecha, clasificarEntrada, verificarInvariantes,
+    validarCierre, nombreCanonico, despojarFecha, nombreSinExtension, clasificarEntrada, verificarInvariantes,
     anioDe, nombreIndice, esFechaValida, medir, elegirFechaTarea, COLUMNAS,
 } from '../../scripts/_escritorio.mjs';
 
@@ -76,6 +76,21 @@ describe('nombres', () => {
         expect(despojarFecha('Mariana arb')).toBe('Mariana arb');
         expect(anioDe('2026-07-27')).toBe('2026');
         expect(nombreIndice('2026')).toBe('LISTADO DE TAREAS CERRADAS 2026.xlsx');
+    });
+    it('9b. una CARPETA con puntos en el nombre no se archiva truncada', () => {
+        // Fak les mete la fecha adentro del nombre. path.parse().name la lee como
+        // extension y mutila la carpeta: paso con "Asaichi 11.8.26" -> "Asaichi 11.8"
+        // y con "Tarea apb son las 10.50am ..." -> "Tarea apb son las 10".
+        expect(nombreSinExtension('Asaichi 11.8.26', true)).toBe('Asaichi 11.8.26');
+        expect(nombreSinExtension('Tareas de carglos urgentes 20.8.2026', true))
+            .toBe('Tareas de carglos urgentes 20.8.2026');
+        expect(nombreCanonico('2026-08-19', nombreSinExtension('Asaichi 11.8.26', true)))
+            .toBe('2026-08-19 - Asaichi 11.8.26');
+        // un ARCHIVO suelto si pierde la extension: "APB PLOTTER RevB.dxf" no la necesita
+        expect(nombreSinExtension('APB PLOTTER RevB - 32 piezas.dxf', false))
+            .toBe('APB PLOTTER RevB - 32 piezas');
+        expect(nombreSinExtension('Pendientes amfe de proceso tarea.txt', false))
+            .toBe('Pendientes amfe de proceso tarea');
     });
 });
 
