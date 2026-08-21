@@ -222,6 +222,23 @@ for (const row of rows.sort((a, b) => String(a.amfe_number).localeCompare(String
             }
         }
 
+        // B5b. duplicados exactos dentro de un mismo WE: mismo texto Y mismas causas.
+        // Los pares de B5 son el caso dificil (texto distinto, causas iguales); este es el
+        // facil, y estaba en la OP5 — "Falta de documentacion o trazabilidad" dos veces
+        // seguidas en el WE del P-14, identica palabra por palabra.
+        for (const op of doc.operations)
+            for (const we of op.workElements ?? []) {
+                const vistas = new Set();
+                for (const fn of we.functions ?? []) {
+                    fn.failures = (fn.failures ?? []).filter(f => {
+                        const k = `${norm(f.description)}##${firmaCausas(f)}`;
+                        if (!vistas.has(k)) { vistas.add(k); return true; }
+                        cambios.push(`OP${opId(op)}: se borra el modo de falla duplicado exacto "${f.description}" en el WE "${we.name}"`);
+                        return false;
+                    });
+                }
+            }
+
         // B6. vocabulario Claude en un control
         for (const op of doc.operations)
             for (const we of op.workElements ?? [])
