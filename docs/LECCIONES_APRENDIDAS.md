@@ -83,12 +83,7 @@ La historia completa de cada incidente vive en los snapshots.
 
 ## Dominio APQP / Supabase
 
-- NPR esta deprecado: hoy es AP (AIAG-VDA). Manual interno con "NPR>100" es info vieja.
-- Severidad = efecto en el USUARIO (el scrap sube ocurrencia, no S). S9-10 SI cubre seguridad del operario. O=10 con controles declarados es indefendible.
-- horas_maquina = golpes x ciclo (SIN cavidades); piezas = golpes x cavidades.
-- `projects.data` es STRING JSON (al reves que `amfe_documents`). `exec_sql_write` falla en silencio con INSERTs complejos: verificar con SELECT despues.
-- Sin `.env.local` en esta PC: Supabase se edita via MCP `execute_sql`, backup previo `CREATE TABLE AS`, AP replicando `calculateAP` (nunca S*O*D), strings SQL con comilla simple.
-- Template externo: revisar TODAS las hojas (tambien ocultas); xlsx-populate no calcula caches (abrir/guardar con Excel COM). En un Excel importado los merges NO son confiables: asignar FM por CONTENIDO.
+- Graduados a la memoria `gotchas_apqp_supabase` (21/08): NPR deprecado por AP, severidad = efecto en el usuario, golpes vs piezas, `projects.data` como string, `exec_sql_write` mudo, y las hojas ocultas de un template. Son datos de referencia, no conducta.
 
 ## Gotchas vigentes
 
