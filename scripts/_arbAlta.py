@@ -56,27 +56,50 @@ def alta(producto, insumo, cantidad, modulo, proceso, apply=False):
     if not v:
         raise SystemExit('no encuentro la ventana Maestro de Relaciones')
     boms = ac.bom_del_export()
-    bom = boms.get(producto)
-    if not bom:
-        raise SystemExit('no tengo la BOM de %s en el export' % producto)
+    # Un producto SIN BOM es un caso VALIDO de alta (codigo dado de alta y nunca
+    # estructurado): el export no lo trae y eso no es un error. Antes se abortaba aca, y
+    # por eso los 7 CORDUC de ductos —los siete con la BOM vacia— no se podian cargar.
+    bom = boms.get(producto) or []
     if any(f['codigo'] == insumo for f in bom):
         raise SystemExit('%s YA esta en la BOM de %s: esto seria un duplicado' % (insumo, producto))
 
     n = len(bom)
     print('%s: %d insumos. El renglon nuevo es la fila %d.' % (producto, n, n))
     ps, g = ac.traer(v, producto)
-    filas = ac.chequear_pantalla(v, producto, bom)
-    btn = ac.boton_acepta(v, filas[0][ac.IDX_CANTIDAD])
-    if not ac.activar(v):
-        raise SystemExit('no pude traer la ventana al frente (nada escrito)')
 
-    # anclar en la ultima fila visible y tabular hasta el rubro del renglon nuevo
-    ancla = len(filas) - 1
-    if not ac.ir_a_celda(v, filas[ancla][ac.IDX_CANTIDAD]):
-        raise SystemExit('no me pude parar en la ultima fila visible (nada escrito)')
-    pos = ac.posicion_actual(v, ac.G(v), ps)
-    if pos != ancla * 5 + 2:
-        raise SystemExit('me pare en el paso %s y esperaba %d (nada escrito)' % (pos, ancla * 5 + 2))
+    if n == 0:
+        # GATE: si el export dice "sin BOM" pero la grilla trae filas, el export esta viejo.
+        # Escribir aca duplicaria un insumo que ya existe.
+        ya = ac.filas_con_datos(ac.G(v))
+        if ya:
+            raise SystemExit('el export dice que %s no tiene BOM pero la grilla muestra %d '
+                             'fila(s) con datos — re-exporta antes de cargar (nada escrito)'
+                             % (producto, len(ya)))
+        btn = ac.boton_acepta(v, ac.G(v)[0][ac.IDX_CANTIDAD])
+        if not ac.activar(v):
+            raise SystemExit('no pude traer la ventana al frente (nada escrito)')
+        # Sin filas cargadas no hay donde anclar: se arranca desde `Parte Superior`, que es
+        # el paso -1 de la cadena. `traer` deja el foco fuera del campo, asi que se vuelve
+        # con un click (lo mismo que haria Fak) y despues se MIDE, no se asume.
+        if ac.foco_de(v) != ps:
+            ac.click_control(v, ps)
+        pos = ac.posicion_actual(v, ac.G(v), ps)
+        if pos != -1:
+            raise SystemExit('me pare en el paso %s y esperaba -1 (`Parte Superior`) '
+                             '(nada escrito)' % pos)
+    else:
+        filas = ac.chequear_pantalla(v, producto, bom)
+        btn = ac.boton_acepta(v, filas[0][ac.IDX_CANTIDAD])
+        if not ac.activar(v):
+            raise SystemExit('no pude traer la ventana al frente (nada escrito)')
+
+        # anclar en la ultima fila visible y tabular hasta el rubro del renglon nuevo
+        ancla = len(filas) - 1
+        if not ac.ir_a_celda(v, filas[ancla][ac.IDX_CANTIDAD]):
+            raise SystemExit('no me pude parar en la ultima fila visible (nada escrito)')
+        pos = ac.posicion_actual(v, ac.G(v), ps)
+        if pos != ancla * 5 + 2:
+            raise SystemExit('me pare en el paso %s y esperaba %d (nada escrito)' % (pos, ancla * 5 + 2))
 
     cadena = cadena_con_alta(bom)
     valores = {n * 5: '1', n * 5 + 1: insumo, n * 5 + 2: cantidad,
