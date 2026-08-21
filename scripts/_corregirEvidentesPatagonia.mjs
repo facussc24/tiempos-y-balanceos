@@ -69,7 +69,12 @@ for (const row of rows.sort((a, b) => a.amfe_number.localeCompare(b.amfe_number)
       for (const fn of we.functions ?? [])
         for (const f of fn.failures ?? [])
           for (const c of f.causes ?? []) {
-            const s = +c.severity, o = +c.occurrence, d = +c.detection;
+            // La S sale del MODO DE FALLA: es la del efecto y la comparten todas sus
+            // causas. Leerla de `c.severity` fue el error del 21/08/2026 — 145 causas
+            // arrastran una S propia de una importacion vieja, y recalcular con esa bajo
+            // 9 filas del AMFE 162 de M a L, subdeclarando riesgo en un PDF que ya estaba
+            // adjunto a un mail. Solo se cae a la de la causa si el modo de falla no tiene.
+            const s = +f.severity || +c.severity, o = +c.occurrence, d = +c.detection;
             if (!(s && o && d)) continue;
             const esperado = calculateAP(s, o, d);
             const declarado = String(c.ap ?? c.actionPriority ?? '').trim().toUpperCase();

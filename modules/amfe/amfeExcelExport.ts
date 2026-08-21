@@ -445,6 +445,11 @@ export function buildAmfeCompletoWorkbook(doc: AmfeDocument): XLSX.WorkBook {
                             { v: sanitizeCellValue(fail?.description || ''), s: st.cell },
                             { v: sanitizeCellValue(c.cause || ''), s: st.cell },
                             // Step 5: Riesgo (7) — col 9 (S) merged per failure, rest per cause
+                            // La S es del MODO DE FALLA, no de la causa: es la del efecto, y la
+                            // comparten todas sus causas (AIAG-VDA). La UI la edita una sola vez
+                            // con rowSpan sobre las filas de causa (AmfeTableBody, data-field
+                            // "severity") y AmfeCause no tiene el campo. El AP de cada causa sale
+                            // de calculateAP(fail.severity, c.occurrence, c.detection).
                             { v: fail?.severity ?? '', s: st.cellCenter },
                             { v: sanitizeCellValue(c.preventionControl || ''), s: st.cell },
                             { v: c.occurrence ?? '', s: st.cellCenter },

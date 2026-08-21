@@ -530,6 +530,13 @@ export function validateAmfeDoc(doc, productName = '', amfeNumber = '') {
                         }
                     }
 
+                    // La S es del MODO DE FALLA: es la del efecto y la comparten todas sus
+                    // causas (AIAG-VDA). Es la que edita la UI (AmfeTableBody, celda con
+                    // rowSpan sobre las filas de causa), la que imprime el export y la que
+                    // AmfeCause NO tiene como campo. Todo lo que evalue riesgo abajo usa
+                    // esta, no `c.severity`.
+                    const sevFm = !isFmEmpty(fm.severity) ? Number(fm.severity) : null;
+
                     for (const c of causes) {
                         const causeDesc = c.description || c.cause || '';
                         const cCtx = { ...fmCtx, causeDesc };
@@ -546,13 +553,26 @@ export function validateAmfeDoc(doc, productName = '', amfeNumber = '') {
                             }
                         }
 
-                        // C-SOD
-                        const missS = c.severity == null || c.severity === '' || c.severity === 0;
+                        // C-SOD — la S sale del modo de falla; solo si ahi falta se mira la
+                        // que la causa pueda traer suelta.
+                        const sevEf = sevFm ?? (Number(c.severity) || null);
+                        const missS = !sevEf;
                         const missO = c.occurrence == null || c.occurrence === '' || c.occurrence === 0;
                         const missD = c.detection == null || c.detection === '' || c.detection === 0;
                         if (missS || missO || missD) {
                             issues.push({ ...cCtx, type: 'CAUSE_MISSING_SOD',
-                                detail: `S=${c.severity} O=${c.occurrence} D=${c.detection}` });
+                                detail: `S=${fm.severity} O=${c.occurrence} D=${c.detection}` });
+                        }
+
+                        // CAUSE_SEVERITY_PROPIA (WARNING) — la causa trae una S propia distinta
+                        // de la de su modo de falla. Nadie la escribe desde la app (la UI edita
+                        // una sola S por modo de falla) y AmfeCause no tiene el campo: es resto
+                        // de importacion. Avisa porque es una trampa — el 21/08/2026 un script
+                        // recalculo el AP leyendo esa S fantasma y bajo 9 filas de M a L en el
+                        // AMFE 162, subdeclarando riesgo en un PDF que estaba por salir.
+                        if (sevFm && c.severity != null && c.severity !== '' && Number(c.severity) !== sevFm) {
+                            issues.push({ ...cCtx, type: 'CAUSE_SEVERITY_PROPIA',
+                                detail: `cause.severity=${c.severity} distinta de la del modo de falla (${sevFm}); manda la del modo de falla` });
                         }
 
                         // AP: calculable con S/O/D completos → debe existir ap o actionPriority
@@ -569,10 +589,10 @@ export function validateAmfeDoc(doc, productName = '', amfeNumber = '') {
                         if (!missS && !missO && !missD) {
                             const apDeclarado = String(c.ap || c.actionPriority || '').trim().toUpperCase();
                             if (apDeclarado) {
-                                const apEsperado = calculateAP(Number(c.severity), Number(c.occurrence), Number(c.detection));
+                                const apEsperado = calculateAP(sevEf, Number(c.occurrence), Number(c.detection));
                                 if (apEsperado && apDeclarado !== apEsperado) {
                                     issues.push({ ...cCtx, type: 'CAUSE_AP_MISMATCH',
-                                        detail: `AP declarado '${apDeclarado}' pero la tabla AIAG-VDA da '${apEsperado}' (S=${c.severity} O=${c.occurrence} D=${c.detection})` });
+                                        detail: `AP declarado '${apDeclarado}' pero la tabla AIAG-VDA da '${apEsperado}' (S=${sevEf} O=${c.occurrence} D=${c.detection})` });
                                 }
                             }
                         }
@@ -583,9 +603,9 @@ export function validateAmfeDoc(doc, productName = '', amfeNumber = '') {
                         // se CAE al detallar: la fila generica vieja ("Material: Tela termoformable")
                         // conservo su CC y las filas nuevas por material —vinilo, tela, hilo, cada una
                         // con su codigo— quedaron sin ninguna. 63 filas asi en 7 de los 8 documentos.
-                        if (!missS && Number(c.severity) >= 9 && !String(c.specialChar ?? '').trim()) {
+                        if (!missS && sevEf >= 9 && !String(c.specialChar ?? '').trim()) {
                             issues.push({ ...cCtx, type: 'CAUSE_S9_SIN_CC',
-                                detail: `S=${c.severity} sin caracteristica especial declarada (la asigna Fak; ojo si una fila hermana SI tiene CC)` });
+                                detail: `S=${sevEf} sin caracteristica especial declarada (la asigna Fak; ojo si una fila hermana SI tiene CC)` });
                         }
 
                         if (!c.preventionControl || String(c.preventionControl).trim() === '') {
@@ -640,7 +660,7 @@ export function validateAmfeDoc(doc, productName = '', amfeNumber = '') {
                         const isLegalCompliance = effectsTexts.some(t =>
                             LEGAL_COMPLIANCE_PATTERNS.some(re => re.test(t)));
                         if (isLegalCompliance) {
-                            const sevNum = Number(c.severity);
+                            const sevNum = Number(sevEf);
                             if (Number.isFinite(sevNum) && sevNum > 0 && sevNum < 7) {
                                 issues.push({ ...cCtx, type: 'CAUSE_LEGAL_COMPLIANCE_UNDERCALIBRATED',
                                     detail: `failure con efecto de incumplimiento legal pero S=${sevNum} (debe ser >=7, ver rules/amfe-severity-legal-compliance.md)` });
@@ -651,9 +671,7 @@ export function validateAmfeDoc(doc, productName = '', amfeNumber = '') {
                         // SOLO FLAGEA calibracion sospechosa. NUNCA asigna CC/SC (decision de Fak).
                         const specialCh = String(c.specialChar || '').trim().toUpperCase();
                         if (specialCh === 'CC' || specialCh === 'SC') {
-                            const sevForCcSc = Number(
-                                (c.severity != null && c.severity !== '') ? c.severity : fm.severity
-                            ) || 0;
+                            const sevForCcSc = Number(sevEf) || 0;
                             if (specialCh === 'CC' && sevForCcSc > 0 && sevForCcSc < 9) {
                                 const haystack = [fmDesc, ...effectsTexts, causeDesc].join(' ').toLowerCase();
                                 const exempt = FLAMABILITY_LEGAL_KEYWORDS.some(kw => haystack.includes(kw));
