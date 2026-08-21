@@ -55,6 +55,12 @@ def alta(producto, insumo, cantidad, modulo, proceso, apply=False):
     v = ac.V()
     if not v:
         raise SystemExit('no encuentro la ventana Maestro de Relaciones')
+    # GATE: un modal abierto deja el Maestro DESHABILITADO, y entonces todo click cae en el
+    # boton del modal y toda tecla se pierde. Peor: cada intento fallido deja un modal nuevo
+    # ("No Ingreso Insumos"), asi que sin esto el segundo intento falla por culpa del primero
+    # y el sintoma que se ve es otro ("no pude poner el foco"). Medido 2026-08-21.
+    if av.cerrar_modales():
+        raise SystemExit('quedan modales abiertos en el arb que no pude cerrar (nada escrito)')
     boms = ac.bom_del_export()
     # Un producto SIN BOM es un caso VALIDO de alta (codigo dado de alta y nunca
     # estructurado): el export no lo trae y eso no es un error. Antes se abortaba aca, y
@@ -65,7 +71,17 @@ def alta(producto, insumo, cantidad, modulo, proceso, apply=False):
 
     n = len(bom)
     print('%s: %d insumos. El renglon nuevo es la fila %d.' % (producto, n, n))
-    ps, g = ac.traer(v, producto)
+    # Si el producto YA esta traido, no se vuelve a escribir. `traer` reescribe el campo
+    # `Parte Superior`, y para eso necesita ponerle el foco: ese campo es un RichEdit que
+    # NO responde al click (WindowFromPoint sobre su rect devuelve el TabCtrl) y tampoco
+    # entra en el ciclo de tabulacion de la grilla. O sea que una vez que el foco bajo a la
+    # grilla, `traer` no puede volver — y aborta con "no pude poner el foco".
+    ps_actual = ac.campo_producto(v)
+    if ps_actual and ac.leer(ps_actual).strip() == producto:
+        print('   (el producto ya estaba traido en pantalla: no se reescribe)')
+        ps, g = ps_actual, ac.G(v)
+    else:
+        ps, g = ac.traer(v, producto)
 
     if n == 0:
         # GATE: si el export dice "sin BOM" pero la grilla trae filas, el export esta viejo.
@@ -78,15 +94,30 @@ def alta(producto, insumo, cantidad, modulo, proceso, apply=False):
         btn = ac.boton_acepta(v, ac.G(v)[0][ac.IDX_CANTIDAD])
         if not ac.activar(v):
             raise SystemExit('no pude traer la ventana al frente (nada escrito)')
-        # Sin filas cargadas no hay donde anclar: se arranca desde `Parte Superior`, que es
-        # el paso -1 de la cadena. `traer` deja el foco fuera del campo, asi que se vuelve
-        # con un click (lo mismo que haria Fak) y despues se MIDE, no se asume.
-        if ac.foco_de(v) != ps:
-            ac.click_control(v, ps)
+        # Sin filas cargadas no hay donde anclar. Se MIDE donde quedo el foco despues de
+        # traer el producto: con la BOM vacia el arb lo deja parado en la celda `Rubro` de
+        # la fila 0 (paso 0), no en `Parte Superior` (paso -1). Los dos puntos de partida
+        # son validos; lo que NO vale es asumir uno.
         pos = ac.posicion_actual(v, ac.G(v), ps)
-        if pos != -1:
-            raise SystemExit('me pare en el paso %s y esperaba -1 (`Parte Superior`) '
-                             '(nada escrito)' % pos)
+        if pos is None:
+            ac.click_control(v, ps)
+            pos = ac.posicion_actual(v, ac.G(v), ps)
+        if pos not in (-1, 0):
+            raise SystemExit('me pare en el paso %s y esperaba -1 (`Parte Superior`) o 0 '
+                             '(`Rubro` de la fila 0) (nada escrito)' % pos)
+        if pos == 0:
+            # ya estamos EN la celda del rubro: se escribe aca y el loop sigue desde el
+            # codigo. Tabular primero la saltearia y el rubro quedaria vacio.
+            f = ac.foco_de(v)
+            if ac.leer(f).strip():
+                raise SystemExit('la celda `Rubro` de la fila 0 tendria que estar VACIA y '
+                                 'dice "%s" — abortado' % ac.leer(f))
+            ac.escribir_celda(f, '1')
+            time.sleep(0.12)
+            if ac.leer(f).strip() != '1':
+                raise SystemExit('escribi el rubro y quedo "%s" — abortado (SIN grabar)'
+                                 % ac.leer(f))
+            print('   %-16s <- 1' % 'ALTA rubro')
     else:
         filas = ac.chequear_pantalla(v, producto, bom)
         btn = ac.boton_acepta(v, filas[0][ac.IDX_CANTIDAD])
@@ -106,7 +137,7 @@ def alta(producto, insumo, cantidad, modulo, proceso, apply=False):
                n * 5 + 3: modulo, n * 5 + 4: proceso}
     escritas = []
     for p in range(pos + 1, n * 5 + 5):
-        if not ac.al_frente(v):
+        if not ac.asegurar_frente(v):
             raise SystemExit('la ventana perdio el frente en el paso %d — no usar la PC' % p)
         ac.tecla(win32con.VK_TAB, 0.05)
         f = ac.foco_de(v)

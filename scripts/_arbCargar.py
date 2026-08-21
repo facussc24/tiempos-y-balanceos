@@ -246,6 +246,24 @@ def al_frente(v):
     return u.GetForegroundWindow() == v
 
 
+def asegurar_frente(v, intentos=4):
+    """`al_frente` tolerante: si se perdio el frente, intenta recuperarlo antes de rendirse.
+
+    NO afloja la guardia — el invariante sigue siendo "no se manda una sola tecla sin estar
+    al frente". Lo que cambia es que una perdida INSTANTANEA ya no aborta la tanda. En una
+    maquina con Outlook, WhatsApp y Excel abiertos cualquiera de esos roba el foreground por
+    un instante (una notificacion alcanza), y abortar ahi obligaba a Fak a no tocar la PC
+    durante toda la carga. Medido 2026-08-21: se recupera en el primer reintento.
+    """
+    for _ in range(intentos):
+        if al_frente(v):
+            return True
+        if activar(v) and al_frente(v):
+            return True
+        time.sleep(0.25)
+    return al_frente(v)
+
+
 def activar(v):
     """Traer la ventana del arb al frente.
 
@@ -279,7 +297,7 @@ def activar(v):
         u.BringWindowToTop(v)
         u.SetActiveWindow(v)
         time.sleep(0.35)
-        if not al_frente(v):
+        if not asegurar_frente(v):
             # Respaldo: un CLICK REAL en la barra de titulo. Medido 2026-08-07: se puede
             # tener la ventana en foreground y aun asi `GetGUIThreadInfo().hwndFocus` da
             # None — foreground NO es foco, y sin foco las teclas se pierden. El click del
@@ -531,7 +549,7 @@ def ir_a_celda(v, celda, maxpasos=60):
             return True
         if f is None:
             raise Abortar('la ventana no esta activa: no puedo ubicar el foco')
-        if not al_frente(v):
+        if not asegurar_frente(v):
             raise Abortar('la ventana perdio el frente — no usar la PC')
         tecla(win32con.VK_TAB, 0.04)
     return False
@@ -607,7 +625,7 @@ def recorrer(v, btn, cadena, desde, pausa=0.03, verboso=False, escrituras=None):
     """
     escrituras = escrituras or {}
     for p in range(desde + 1, len(cadena)):
-        if not al_frente(v):
+        if not asegurar_frente(v):
             raise Abortar('la ventana perdio el frente en el paso %d — no usar la PC' % p)
         tecla(win32con.VK_TAB, pausa)
         f = foco_de(v)
