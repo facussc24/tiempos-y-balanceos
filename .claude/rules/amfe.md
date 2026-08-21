@@ -184,3 +184,39 @@ A1 S/O/D parciales; A2 AP=H sin accion; A3 failure sin causas; A4 causa sin cont
 ## 16. Auditor proactivo
 
 `node scripts/_auditAll.mjs` (o `--summary`) — correr antes de cada entrega PPAP, tras importar AMFE, y al cerrar tareas de datos. Chequea estructura VDA, alias desync, fm legacy, export-critical, headers, metadata. NO chequea CC/SC ni acciones (solo humanos). Si sale limpio (0 criticos) el dataset es publicable.
+
+## 17. AMFE nuevo — lo que ya nos costo caro (checklist de autoria)
+
+Destilado de la tanda Patagonia (14-21/08/2026) y de la auditoria externa contra AIAG-VDA/IATF.
+Cada punto operativo tiene su gate ejecutable ya cargado; esto es para no llegar al gate.
+
+**El documento lo firma Fak y lo lee el cliente:**
+1. **El log de REVISIONES cuenta que cambio del PROCESO, nunca como se redacto.** Prohibido:
+   traduccion, ortografia, "replicado del AMFE de X", "(decision Fak)", "para no pisar la
+   costura". Un error propio se corrige en silencio. Gate duro: `scanRevisionMeta()` en
+   `_exportAmfeOficial.ts` — con una de esas frases el AMFE **no se exporta**.
+2. **Vocabulario = el de los mails de Barack** (`.mail-cache`, ~1.500 mails). Ni ingles random
+   (gap & flush, squeak & rattle, fit & finish, checklist) ni castellano de diccionario que
+   nadie usa (enrase, chirridos, golpeteos). Gate: `ENGLISH_RANDOM_TERMS` (CRITICAL).
+   **Excepcion que SI se respeta:** nombres de pieza y material como figuran en la BOM y los
+   planos del cliente (`VARILLA POLE HEADREST 2HC.881.937`, `ARMREST DOOR PANEL`) — esos son
+   su identidad, traducirlos rompe la trazabilidad.
+3. Nada de andamiaje interno adentro del documento: `data._meta` del importador, nombres
+   propios pegados a un TBD, disparadores de reuniones internas ("ASAICHI"), ids de la app.
+
+**Coherencia que un auditor mira primero:**
+4. **AP SOLO de `calculateAP`.** Gate `CAUSE_AP_MISMATCH` (CRITICAL). El 21/08 habia 54 causas
+   fuera de tabla — y el fixture de nuestros propios tests tambien.
+5. **Al DETALLAR una fila, la CC/SC viaja con ella.** Cuando la OP 10 paso de un renglon
+   generico a un renglon por material, la CC quedo en la fila vieja y las 63 filas nuevas con
+   S>=9 se quedaron sin ninguna. Aviso: `CAUSE_S9_SIN_CC` (WARNING — **asignarla es de Fak**).
+   Al terminar, borrar la fila generica: duplica cobertura y es donde se esconde la CC.
+6. `header.revDate` = fecha de la ultima fila de revisiones. La caratula no puede
+   contradecirse sola.
+7. **Un control por CAUSA.** Si las N causas de un WE tienen el control identico palabra por
+   palabra, casi seguro no ataca a todas (calibrar caudalimetros no previene contaminacion
+   REACH). Y un control que dice solo "Visual" esta incompleto — pero completarlo a "100%"
+   sin saber el alcance real es peor: eso se pregunta, no se rellena.
+8. Causas de "error humano" no existen (§6, gate `CAUSE_CAPACITACION`). Muchas ya traen la
+   causa real adentro: *"...por ausencia de guia visual"* — esa es la causa; el operario
+   desatento sobra.

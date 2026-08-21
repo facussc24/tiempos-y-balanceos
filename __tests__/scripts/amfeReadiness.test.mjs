@@ -22,7 +22,10 @@ const HDR = {
 function makeDoc({ cause = {}, failure = {}, header = HDR } = {}) {
     const c = {
         description: 'Presion de inyeccion baja', cause: 'Presion de inyeccion baja',
-        severity: 6, occurrence: 3, detection: 4, ap: 'M', actionPriority: 'M',
+        // AP='L' porque la tabla AIAG-VDA da L para 6/3/4. Decia 'M' hasta el 21/08/2026, y lo
+        // destapo el check CAUSE_AP_MISMATCH al nacer: el fixture de nuestros propios tests
+        // tenia el AP mal calculado.
+        severity: 6, occurrence: 3, detection: 4, ap: 'L', actionPriority: 'L',
         preventionControl: 'Dossier + alarmas en panel',
         detectionControl: 'Autocontrol con calibre',
         ...cause,

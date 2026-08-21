@@ -29,6 +29,7 @@ import {
     TYPE_TRANSLATION,
 } from './genericLabels.mjs';
 import { scanForbidden } from './forbiddenContent.mjs';
+import { calculateAP } from './amfeIo.mjs';
 
 const SUSPICIOUS_OP_PATTERNS = [
     'CLASIFICACION Y SEGREGACION',
@@ -113,6 +114,9 @@ const CRITICAL_TYPES = new Set([
     // El PU se inyecta dentro de la funda ya montada (agregado 2026-08-18, rules/amfe.md §12).
     // Los AMFE 153 y 155 lo tuvieron al reves y la regla escrita repetia el error.
     'PU_ANTES_DE_ENFUNDADO',
+    // El AP declarado tiene que salir de la tabla oficial (agregado 2026-08-21, amfe.md §4).
+    // Bloquea porque un AP mal calculado subdeclara riesgo en el documento que va al cliente.
+    'CAUSE_AP_MISMATCH',
     // Dos operaciones homonimas son el punto ciego de `issueKey()`, que identifica los
     // issues por NOMBRE: si una gana el problema que la otra ya tenia, el diff no lo ve y
     // el gate deja pasar en silencio. Por eso BLOQUEA en vez de avisar — un gate que se
@@ -554,6 +558,34 @@ export function validateAmfeDoc(doc, productName = '', amfeNumber = '') {
                         // AP: calculable con S/O/D completos → debe existir ap o actionPriority
                         if (!missS && !missO && !missD && !c.actionPriority && !c.ap) {
                             issues.push({ ...cCtx, type: 'CAUSE_NO_AP', detail: 'S/O/D completos pero sin AP' });
+                        }
+
+                        // CAUSE_AP_MISMATCH (CRITICAL) — el AP declarado no sale de la tabla oficial.
+                        // amfe.md §4: AP se calcula SOLO con calculateAP (AIAG-VDA 2019), la formula
+                        // S*O*D esta prohibida. Un AP que no coincide subdeclara o sobredeclara el
+                        // riesgo, y es lo primero que recalcula un auditor. Lo destapo la auditoria
+                        // externa del 21/08/2026: 54 causas de los 8 AMFE de Patagonia lo tenian mal,
+                        // y 27 de ellas eran identicas entre tres documentos (delataban copy-paste).
+                        if (!missS && !missO && !missD) {
+                            const apDeclarado = String(c.ap || c.actionPriority || '').trim().toUpperCase();
+                            if (apDeclarado) {
+                                const apEsperado = calculateAP(Number(c.severity), Number(c.occurrence), Number(c.detection));
+                                if (apEsperado && apDeclarado !== apEsperado) {
+                                    issues.push({ ...cCtx, type: 'CAUSE_AP_MISMATCH',
+                                        detail: `AP declarado '${apDeclarado}' pero la tabla AIAG-VDA da '${apEsperado}' (S=${c.severity} O=${c.occurrence} D=${c.detection})` });
+                                }
+                            }
+                        }
+
+                        // CAUSE_S9_SIN_CC (WARNING) — S>=9 sin caracteristica especial declarada.
+                        // NO asigna nada: las CC/SC las pone Fak (core-prohibiciones §2). Avisa,
+                        // porque el patron real que encontro la auditoria del 21/08/2026 es que la CC
+                        // se CAE al detallar: la fila generica vieja ("Material: Tela termoformable")
+                        // conservo su CC y las filas nuevas por material —vinilo, tela, hilo, cada una
+                        // con su codigo— quedaron sin ninguna. 63 filas asi en 7 de los 8 documentos.
+                        if (!missS && Number(c.severity) >= 9 && !String(c.specialChar ?? '').trim()) {
+                            issues.push({ ...cCtx, type: 'CAUSE_S9_SIN_CC',
+                                detail: `S=${c.severity} sin caracteristica especial declarada (la asigna Fak; ojo si una fila hermana SI tiene CC)` });
                         }
 
                         if (!c.preventionControl || String(c.preventionControl).trim() === '') {
