@@ -19,6 +19,7 @@ import { writeFileSync, mkdirSync, readFileSync, existsSync, rmSync, statSync } 
 import { createClient } from '@supabase/supabase-js';
 import XLSX from 'xlsx-js-style';
 import { buildAmfeOficialWorkbook } from '../modules/amfe/amfeExcelExport';
+import { scanRevisionMeta } from './_lib/forbiddenContent.mjs';
 import type { AmfeLifecycleStatus } from '../modules/amfe/amfeCaratulaSheet';
 
 function arg(nombre: string): string | undefined {
@@ -58,6 +59,28 @@ const row = rows[0] as {
   revisions: unknown; status?: string;
 };
 const doc = typeof row.data === 'string' ? JSON.parse(row.data) : row.data;
+
+// GATE — el log de REVISIONES no puede hablar del REDACTOR (Fak, 20/08/2026).
+// La caratula del AMFE lleva la tabla de revisiones y la lee el cliente y la auditoria: ahi
+// va que cambio del PROCESO, nunca una correccion de redaccion propia ("se reescriben en
+// espanol los terminos en ingles"), de donde se copio el contenido, ni notas internas.
+// Fak: *"parece una burla... esas cosas se ocultan, nunca tuvieron que haber estado en
+// ingles"*. Se corta ACA porque el export es el unico camino de un AMFE al cliente.
+const revisionesRaw = typeof row.revisions === 'string'
+  ? JSON.parse(row.revisions || '[]') : (row.revisions ?? []);
+const sospechosas = (revisionesRaw as Array<Record<string, string>>)
+  .map((r, i) => ({ i, texto: r.details ?? r.description ?? '', hits: scanRevisionMeta(r.details ?? r.description ?? '') }))
+  .filter(x => x.hits.length > 0);
+if (sospechosas.length) {
+  console.error(`\nABORTADO — el log de revisiones de ${AMFE_NUMBER} habla del redactor, no de la pieza:\n`);
+  for (const s of sospechosas) {
+    console.error(`  [${s.i}] "${s.texto}"`);
+    console.error(`       detectado: ${s.hits.map(h => h.match).join(', ')}`);
+  }
+  console.error('\nUna correccion de redaccion/idioma/estilo NO es una revision del AMFE: se aplica');
+  console.error('en silencio. Sacala del log (scripts/_limpiarRevisionesMeta.mjs) y volve a exportar.\n');
+  process.exit(1);
+}
 
 // Renumerar FM 1..N por operacion (orden WE -> funcion -> falla)
 let renumerados = 0;

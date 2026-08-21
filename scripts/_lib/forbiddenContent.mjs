@@ -36,6 +36,7 @@ const _data = JSON.parse(readFileSync(DATA_PATH, 'utf8'));
 export const FORBIDDEN_EQUIPMENT_PHRASES = _data.FORBIDDEN_EQUIPMENT_PHRASES || [];
 export const PENINSULAR_TERMS = _data.PENINSULAR_TERMS || [];
 export const ENGLISH_RANDOM_TERMS = _data.ENGLISH_RANDOM_TERMS || [];
+export const REVISION_META_PATTERNS = _data.REVISION_META_PATTERNS || [];
 export const CLAUDE_PHRASES = _data.CLAUDE_PHRASES || [];
 export const ARBITRARY_FREQUENCY_PATTERNS = _data.ARBITRARY_FREQUENCY_PATTERNS || [];
 
@@ -66,6 +67,30 @@ const _englishRe = ENGLISH_RANDOM_TERMS.map(t => {
 });
 // Frecuencias: regex sobre texto normalizado (sin tildes, lowercase).
 const _freqRe = ARBITRARY_FREQUENCY_PATTERNS.map(p => ({ raw: p, re: new RegExp(p, 'i') }));
+
+const _revMetaRe = REVISION_META_PATTERNS.map(p => ({ raw: p, re: new RegExp(p, 'i') }));
+
+/**
+ * Detecta si una entrada del log de REVISIONES habla del REDACTOR en vez de la PIEZA.
+ *
+ * El log de revisiones va dentro del AMFE que ve el cliente y la auditoria: ahi se registra
+ * que cambio del proceso o del analisis, no como se redacto el papel ni que error propio se
+ * corrigio. Fak, 20/08/2026: *"parece una burla... esas cosas se ocultan"*.
+ *
+ * @param {string} texto - el campo `details` (o `description`) de una entrada de revision.
+ * @returns {Array<{pattern:string, match:string}>} vacio si la entrada es legitima.
+ */
+export function scanRevisionMeta(texto) {
+    const raw = texto == null ? '' : String(texto);
+    if (!raw.trim()) return [];
+    const n = normalize(raw);
+    const hits = [];
+    for (const { raw: pattern, re } of _revMetaRe) {
+        const m = re.exec(n);
+        if (m) hits.push({ pattern, match: m[0] });
+    }
+    return hits;
+}
 
 /**
  * Escanea un texto buscando contenido inventado / vocabulario prohibido.

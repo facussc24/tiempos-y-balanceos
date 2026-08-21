@@ -14,7 +14,7 @@
  *  C. diffIssues — un invento NUEVO bloquea; uno pre-existente NO bloquea
  */
 import { describe, it, expect } from 'vitest';
-import { scanForbidden } from '../../scripts/_lib/forbiddenContent.mjs';
+import { scanForbidden, scanRevisionMeta } from '../../scripts/_lib/forbiddenContent.mjs';
 import { validateAmfeDoc, diffIssues } from '../../scripts/_lib/amfeValidator.mjs';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -122,6 +122,46 @@ describe('scanForbidden — ingles random (ENGLISH_RANDOM_TERMS)', () => {
 
     it('word-boundary: "rattle" no dispara dentro de otra palabra', () => {
         expect(esIngles(scanForbidden('El proveedor Rattleson SA entrega KLT'))).toHaveLength(0);
+    });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// A3. scanRevisionMeta — el log de revisiones habla de la PIEZA, no del REDACTOR
+//     (Fak, 20/08/2026: "parece una burla... esas cosas se ocultan").
+//     Gate duro en _exportAmfeOficial.ts: un AMFE con una de estas NO se exporta.
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('scanRevisionMeta — confesiones del redactor en el log de revisiones', () => {
+    it.each([
+        // el caso real que Fak freno
+        'SE REESCRIBEN EN ESPANOL, CON EL VOCABULARIO DE LA PLANTA, LOS TERMINOS EN INGLES DE FUNCIONES, EFECTOS Y CONTROLES.',
+        'SE AGREGA LA OPERACION 61 CONTROL DE PIEZA INYECTADA, REPLICADA DEL AMFE DE IP PADS (DECISION FAK 20/08).',
+        'SE NUMERA 61 PARA NO PISAR LA COSTURA DOBLE.',
+        'SE CORRIGE LA TRADUCCION DE LOS EFECTOS.',
+        'SE CORRIGE LA ORTOGRAFIA DE LA OPERACION 30.',
+        'CONTENIDO GENERADO AUTOMATICAMENTE Y REVISADO.',
+    ])('detecta la confesion: %s', (texto) => {
+        expect(scanRevisionMeta(texto).length).toBeGreaterThan(0);
+    });
+
+    it.each([
+        // revisiones legitimas: cambios de ingenieria reales, tal cual estan en los 8 AMFE
+        'EMISION INICIAL.',
+        'SE AGREGA LA OPERACION 61 CONTROL DE PIEZA INYECTADA.',
+        'SE AGREGA EL CONTROL DE PIEZA INYECTADA EN LA OPERACION 70.',
+        'EL ENFUNDADO VA ANTES DEL ESPUMADO. SE ALINEA CON EL FLUJOGRAMA 152 REV. B.',
+        'SE ALINEA CON EL FLUJOGRAMA 152 REV. B. CORTE Y COSTURA DECLARAN SU RANGO.',
+        'REVISION CON FOCO EN RECEPCION DE MATERIALES (ASAICHI 10-11/08/2026). LA OPERACION 10 PASA A UN RENGLON POR MATERIAL, CON SU CONTROL.',
+        'REVISION CONTRA EL FLUJOGRAMA I-IN-002/III REV A Y EL PLAN DE CONTROL DEL 31/07/2026. SE AMPLIA LA RECEPCION A LOS 13 COMPONENTES.',
+        'SE ACTUALIZAN LOS CONTROLES PREVENTIVOS Y DETECTIVOS TRAS REUNION CON EL INSPECTOR DE CALIDAD DE MATERIA PRIMA.',
+        'SE REEMITE EN EL FORMULARIO NUEVO I-AC-005.3.',
+    ])('NO molesta a una revision legitima: %s', (texto) => {
+        expect(scanRevisionMeta(texto)).toHaveLength(0);
+    });
+
+    it('entrada vacia no dispara', () => {
+        expect(scanRevisionMeta('')).toHaveLength(0);
+        expect(scanRevisionMeta(null)).toHaveLength(0);
     });
 });
 

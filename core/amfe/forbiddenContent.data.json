@@ -30,6 +30,18 @@
     "vuestro"
   ],
 
+  "_revision_meta": "REVISION_META_PATTERNS: el log de REVISIONES de un AMFE lo lee el CLIENTE y la auditoria. Registra QUE CAMBIO DEL PROCESO O DEL ANALISIS — nunca como se redacto, quien lo decidio ni que error propio se corrigio. Fak, 20/08/2026, al ver 'SE REESCRIBEN EN ESPANOL... LOS TERMINOS EN INGLES': 'parece una burla... esas cosas se ocultan, nunca tuvieron que haber estado en ingles... esas trampitas debes tener criterio para detectarlas y no escracharme'. VA al log: operacion nueva, renumeracion, S/O/D o controles que cambian, alineacion con flujograma/plan de control, hallazgo de auditoria. NO VA: traduccion, ortografia, vocabulario, 'replicado del AMFE de X', notas internas tipo '(decision Fak)' o 'para no pisar la costura'. Consumido por scanRevisionMeta() y aplicado como gate duro en _exportAmfeOficial.ts.",
+
+  "REVISION_META_PATTERNS": [
+    "\\bre-?escrib|\\bre-?escrit|\\bre-?dact",
+    "\\btraduc|\\btraducci",
+    "\\bingles\\b|\\bidioma\\b|\\bvocabulario\\b|\\bortograf|\\btypo\\b",
+    "\\breplicad[oa]s?\\s+(del?|desde)\\b|\\bcopiad[oa]s?\\s+(del?|desde)\\b",
+    "\\bdecision\\s+(de\\s+)?(fak|facundo)\\b",
+    "\\bpara no pisar\\b",
+    "\\bclaude\\b|\\binteligencia artificial\\b|\\bgenerad[oa] automaticamente\\b"
+  ],
+
   "ENGLISH_RANDOM_TERMS": [
     "gap & flush",
     "gap and flush",
