@@ -207,7 +207,15 @@ def reset_relaciones():
     if not p:
         print('no encuentro la ventana Produccion: la reapertura la tiene que hacer una persona')
         return 1
-    click(p, 298, 95)                            # boton `Relacion de Consumo de Prod. Terminados`
+    # El ribbon del arb NO es un ribbon de Office: no muestra KeyTips con ALT (probado
+    # 2026-08-21), asi que la navegacion sigue siendo por click. Pero el boton vive en la
+    # solapa `Menu de Insumos`, y clickear su coordenada con el ribbon parado en OTRA
+    # solapa cae en el boton que ocupe ese lugar: el 21/08 abrio `Movimiento de Insumos
+    # entre Depositos`, que ademas deja `Produccion` deshabilitada y traba todo lo demas.
+    # Primero se para el ribbon en su solapa, despues se aprieta el boton.
+    click(p, 849, 43)                            # solapa `Menu de Insumos`
+    time.sleep(0.6)
+    click(p, 296, 98)                            # `Relacion de Consumo de Prod. Terminados`
     time.sleep(1.5)
     abierta = buscar('rel')
     print('Maestro de Relaciones reabierta: %s' % bool(abierta))
