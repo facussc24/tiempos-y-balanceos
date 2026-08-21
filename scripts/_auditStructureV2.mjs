@@ -158,12 +158,18 @@ function textMatchesAny(text, keywords) {
 // SCHEMA-AGNOSTIC HELPERS
 // ═══════════════════════════════════════════════════════════════════════════════
 
-/** Get severity — may live on cause (Schema B) or failure (Schema A) */
+/**
+ * La S es del MODO DE FALLA: es la del efecto y la comparten todas sus causas. La de la
+ * causa es la ULTIMA opcion, no la primera — `AmfeCause` ni tiene el campo, y las 145 que
+ * lo traen son resto de una importacion vieja. Leerlas primero fue el incidente del
+ * 21/08/2026: bajo 9 filas del AMFE 162 de M a L, subdeclarando riesgo en un PDF que ya
+ * estaba adjunto a un mail. Ver memoria `amfe_severidad_del_modo_de_falla`.
+ */
 function getSeverity(fail, cause) {
-    const causeSev = Number(cause.severity);
     const failSev = Number(fail.severity);
-    if (!isNaN(causeSev) && causeSev >= 1) return causeSev;
+    const causeSev = Number(cause.severity);
     if (!isNaN(failSev) && failSev >= 1) return failSev;
+    if (!isNaN(causeSev) && causeSev >= 1) return causeSev;
     return NaN;
 }
 

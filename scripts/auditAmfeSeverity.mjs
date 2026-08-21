@@ -119,12 +119,17 @@ function getCauseText(cause) {
     return cause.cause || cause.description || '';
 }
 
+/**
+ * La S es del MODO DE FALLA y la comparten todas sus causas. La de la causa es la ULTIMA
+ * opcion: `AmfeCause` ni tiene el campo, y las 145 que lo traen son resto de una
+ * importacion. Leerlas primero fue el incidente del 21/08/2026 (AMFE 162, 9 filas de M a
+ * L). Ver memoria `amfe_severidad_del_modo_de_falla`.
+ */
 function getSeverity(fail, cause) {
-    // Schema A: severity on failure, Schema B: severity on cause
     const failSev = Number(fail.severity);
     const causeSev = Number(cause.severity);
-    if (!isNaN(causeSev) && causeSev >= 1) return causeSev;
     if (!isNaN(failSev) && failSev >= 1) return failSev;
+    if (!isNaN(causeSev) && causeSev >= 1) return causeSev;
     return NaN;
 }
 

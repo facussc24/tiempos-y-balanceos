@@ -25,7 +25,9 @@ function apRule(s, o, d) {
 
 // ─── Helpers ───
 const getAP = c => c.ap || c.actionPriority || '';
-const getSev = (c, f) => Number(c.severity) || Number(f?.severity) || 0;
+// La S es del modo de falla; la de la causa es el ultimo recurso, no el primero
+// (incidente 21/08/2026, memoria `amfe_severidad_del_modo_de_falla`).
+const getSev = (c, f) => Number(f?.severity) || Number(c.severity) || 0;
 
 function computeStats(doc) {
     let cc = 0, h = 0, m = 0, filled = 0;
@@ -207,7 +209,9 @@ for (const we of (ipOp10.workElements || [])) {
             for (const c of (fail.causes || [])) {
                 const prevCtrl = (c.preventionControl || '').toLowerCase();
                 if (prevCtrl.includes('capacitaci') && Number(c.occurrence) === 3) {
-                    const s = Number(c.severity);
+                    // La S sale del modo de falla; la de la causa es el ultimo recurso
+                    // (incidente 21/08/2026, memoria `amfe_severidad_del_modo_de_falla`).
+                    const s = Number(fail.severity) || Number(c.severity);
                     const oldO = c.occurrence;
                     const d = Number(c.detection);
                     const oldAP = c.ap || c.actionPriority || '';
