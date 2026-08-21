@@ -90,13 +90,15 @@ Es dato crudo del ERP, no interpretacion.
 | MP8150 | FRONT EXTEND PANEL LH y RH | SI | — | — | — | — |
 | MP8151 | CNSL_SIDE PANEL LH y RH | SI | — | — | — | — |
 | MP8146 | AIR DUCT SUB ASS1 | SI | — | — | SI (el cliente lo llama "US WELDED") | SI — `MP8156` x1 |
-| MP8148 | CONSL AIR DUCT ASS | SI | — | — | **TBD** | SI — `MP8160` x1 |
+| MP8148 | CONSL AIR DUCT ASS | SI | — | — | SI (confirmado por su HO, hoja 40) | SI — `MP8160` x1 |
 | MP8147 | DEFROSTER DUCT CTR SUBSTRATE ASS | SI | SI (espuma + tesa) | SI (28 remaches) | SI | SI — 3 sustratos + 4 brackets + connect |
 
 - **Los 4 primeros son los "codigos que solo se cortan y se envian"** del punto 4 de Carlos.
 - **El unico remachado es el MP8147** — esa es la aclaracion del punto 3 (*"hay algunas
   que no van remachadas"*).
-- El ultrasonido del **MP8148 va TBD**: ningun documento leido lo confirma. No se inventa.
+- El ultrasonido del **MP8148 quedo CONFIRMADO** por su hoja de operaciones (hoja 40,
+  SOLDADO) — ver hallazgo 7bis. Estuvo TBD hasta que se leyo esa HO: el nombre del codigo no
+  lo dice, a diferencia del MP8146, que el cliente llama "US WELDED".
 
 BOM completa por padre, tal cual sale del arb (consumo por pieza):
 
@@ -132,6 +134,33 @@ BOM completa por padre, tal cual sale del arb (consumo por pieza):
   visagras segun indica HO"*). **Ninguna BOM de los 7 ductos tiene bisagras.**
 - **OP80 (Inspeccion final)** controla *"1 - Alineacion de costura"* (fila 368).
   **Los ductos no se cosen.**
+
+## Hallazgo 7bis — las 4 hojas de operaciones tienen la MISMA hoja de corte, y es de otra pieza
+
+En `PROYECTO\26 - Instrucciones de Proceso\` hay HO de MP8146, MP8147 (CENTRAL y LATERAL) y
+MP8148. **Las cuatro tienen la hoja `20` identica**, y textual dice:
+
+```
+21-7339 / TELA DE TNT
+Cortar 60 capas de pliegos de TNT PP 60 GRS/M2 A 1,5, segun el largo informado en el programa
+Seleccionar el programa de corte "217339-ECN06"
+```
+
+**Eso no es el material de los ductos.** El insumo real es `427TEL002COR01`, thinsulate de
+**400 g/m²**; ahi dice TNT PP de **60 g/m²**, y `21-7339` es un codigo de producto de otra
+familia (los `21-xxxx` son Toyota/PWA). Es el mismo arrastre por copia que el hallazgo 2 del
+AMFE, pero en las HO. **No hay HO de MP8137, MP8149, MP8150 ni MP8151.**
+
+Lo que si sirve de esas HO (verificado, y resuelve el TBD del hallazgo 4):
+
+| Pieza | Operaciones segun su HO |
+|---|---|
+| MP8146 | 20 corte · 30 posicionamiento · 40 a 40.4 **SOLDADO** |
+| MP8147 CENTRAL | 20 corte · 30 **REMACHADO** · 40 a 40.2 **SOLDADO (ultrasonido)** · 50 pegado de espuma |
+| MP8147 LATERAL | 20 corte · 40 a 40.3 **SOLDADO (remachado + ultrasonido)** · 40.4 ensamble |
+| MP8148 | 20 corte · 40 **SOLDADO** — textual: *"Soldamos con la pistola de ultrasonido los puntos indicados con un circulo amarillo"* |
+
+→ **El MP8148 SI lleva ultrasonido.** El TBD del hallazgo 4 queda cerrado con fuente.
 
 ## Hallazgo 8 — falta la marca VDA "D" roja
 
