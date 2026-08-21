@@ -108,7 +108,7 @@ fi
 GUARDIANES=()
 case "$TOOL_NAME" in
   Bash|PowerShell) GUARDIANES+=(supabase-guard validator-check renumber-guard push-guard) ;;
-  Edit|Write)      GUARDIANES+=(file-guard) ;;
+  Edit|Write)      GUARDIANES+=(file-guard causas-ajenas-guard) ;;
 esac
 case "$TOOL_NAME" in
   Bash|PowerShell|Write|Edit)

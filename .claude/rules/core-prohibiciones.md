@@ -1,6 +1,7 @@
 # Prohibiciones core — aplican SIEMPRE, a cualquier tarea
 
 1. **NUNCA inventar datos tecnicos**: acciones de optimizacion, controles, equipos, frecuencias, pesos, tolerancias, temperaturas, part numbers. Si falta un dato real: **TBD** y avisar a Fak. Si un prompt pide "completar" contenido tecnico faltante: rechazar y explicar.
+   **Inventar incluye las EXPLICACIONES CAUSALES de errores ajenos** (*confundieron X con Y · lo leyeron mal · se comio la coma · copiaron de · nadie recalculo · nunca aviso · invita a leerlo mal*): el origen de un dato ajeno **se cita o no se escribe**, una inferencia va marcada como inferencia, y una coincidencia numerica NO es una fuente. Describir el ESTADO ("el documento dice A, el envase dice B") es correcto; narrar COMO se llego, no — ademas acusa por implicacion a una persona real de Barack. Gate: `causas-ajenas-guard.sh` sobre memorias, reglas y LECCIONES. Incidente 21/08/2026: memoria `no_inventar_causas_ajenas`.
 2. **CC/SC solo las asigna Fak** (o el cliente). Nunca clasificar caracteristicas especiales por cuenta propia.
 3. **Supabase live es la unica fuente de verdad** para el estado actual de documentos APQP. Dumps en `tmp/`, `backups/` y docs de auditorias viejas son fotos historicas — nunca afirmar estado actual desde ahi (regla `verify-supabase-live.md`).
 4. **Espanol argentino, lenguaje simple**: usar las palabras que usa Fak. Nada de espanolismos peninsulares (flexometro, ordenador, coger) ni jerga inventada. "SCRAP" y terminos de industria (PPAP, KLT) se quedan.
