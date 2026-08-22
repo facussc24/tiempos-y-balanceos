@@ -77,6 +77,15 @@ filas.push(['Export exige auditoria de cliente vigente', '_exportAmfeOficial.ts 
   readFileSync('scripts/_exportAmfeOficial.ts', 'utf8').includes('.audit-cliente/')
   && existsSync('.claude/commands/auditoria-cliente.md')]);
 
+// ── 6. efecto de planta en la columna de usuario final (1ra corrida de /auditoria-cliente,
+//       22/08, AMFE 159 OP15: effectEndUser = "Reproceso o scrap"; AIAG-VDA 3.4.5)
+const docEndUser = (texto) => { const d = causa({ severity: 6, occurrence: 4, detection: 4, ap: 'L', actionPriority: 'L' });
+  d.operations[0].workElements[0].functions[0].failures[0].effectEndUser = texto; return d; };
+filas.push(['Efecto de planta como "usuario final"', 'FM_ENDUSER_EFECTO_PLANTA (WARNING)', 'effectEndUser = "Reproceso o scrap" (AMFE 159 OP15)',
+  tiene(docEndUser('Reproceso o scrap'), 'FM_ENDUSER_EFECTO_PLANTA')]);
+filas.push(['  ...y NO molesta a un efecto legitimo', 'idem', 'effectEndUser = "Ruido en el uso"',
+  !tiene(docEndUser('Ruido en el uso'), 'FM_ENDUSER_EFECTO_PLANTA')]);
+
 const anchoA = Math.max(...filas.map(f => f[0].length));
 const anchoB = Math.max(...filas.map(f => f[1].length));
 console.log('\nVERIFICACION DEL APRENDIZAJE — cada gate contra el caso real que lo origino\n');

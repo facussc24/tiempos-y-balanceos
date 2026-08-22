@@ -514,6 +514,18 @@ export function validateAmfeDoc(doc, productName = '', amfeNumber = '') {
                         }
                     }
 
+                    // FM_ENDUSER_EFECTO_PLANTA (WARNING)
+                    // Auditoria de cliente 22/08/2026 (AMFE 159, OP15): "Reproceso o scrap"
+                    // cargado como efecto USUARIO FINAL. AIAG-VDA 3.4.5 (pp. 86-87): reproceso
+                    // y scrap son efectos de planta (in-plant / ship-to-plant); el nivel End
+                    // User es lo que experimenta el usuario del vehiculo. WARNING y no
+                    // CRITICAL: el efecto real lo define el equipo (es dato), esto solo avisa.
+                    const endUserTxt = String(fm.effectEndUser || '');
+                    if (/\b(reproceso|retrabajo|scrap|descarte)\b/i.test(endUserTxt)) {
+                        issues.push({ ...fmCtx, type: 'FM_ENDUSER_EFECTO_PLANTA',
+                            detail: `effectEndUser="${endUserTxt.slice(0, 60)}" es efecto de PLANTA, no del usuario final (AIAG-VDA 3.4.5)` });
+                    }
+
                     // LEGACY FIELDS — fm-level vacio o key missing, pero cause
                     // tiene valor. Export lee fm.X y muestra celda vacia.
                     // IMPORTANTE: reportamos aunque la key NO exista en fm — el
