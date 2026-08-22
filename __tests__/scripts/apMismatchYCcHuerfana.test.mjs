@@ -50,8 +50,9 @@ describe('CAUSE_AP_MISMATCH — el AP sale de la tabla, no del criterio de quien
         expect(res.critical.filter(i => i.type === 'CAUSE_AP_MISMATCH')).toHaveLength(1);
     });
 
-    it('sobredeclarar tambien se marca (S=6 O=2 D=6 declarado M, tabla da L)', () => {
-        const res = validateAmfeDoc(docConCausa({ severity: 6, occurrence: 2, detection: 6, ap: 'M', actionPriority: 'M' }), 'X', 'TEST');
+    it('sobredeclarar tambien se marca (S=7 O=6 D=3 declarado H, la figura da M)', () => {
+        // Figura 3.5-3, banda S 5-8 / O 6-7 / D 2-4 -> M.
+        const res = validateAmfeDoc(docConCausa({ severity: 7, occurrence: 6, detection: 3, ap: 'H', actionPriority: 'H' }), 'X', 'TEST');
         expect(res.critical.filter(i => i.type === 'CAUSE_AP_MISMATCH')).toHaveLength(1);
     });
 

@@ -1,97 +1,118 @@
 /**
- * AIAG-VDA FMEA Action Priority (AP) Lookup Table
+ * AIAG-VDA FMEA Action Priority (AP) — PFMEA
  *
- * Exact reproduction of the AIAG & VDA FMEA Handbook (1st Edition, June 2019)
- * PFMEA Action Priority table. Maps every combination of Severity (1-10),
- * Occurrence (1-10), Detection (1-10) to H (High), M (Medium), or L (Low).
+ * Transcripcion literal de la **Figura 3.5-3 "Action Priority for PFMEA"** del
+ * AIAG & VDA FMEA Handbook, 1st Edition (June 2019), paginas 122-123 del PDF del
+ * manual de Barack (`4- MANUALES\AMFE\FMEA-AMFE-VDA-AIAG\`).
  *
- * The standard groups severity into 5 ranges: 9-10, 7-8, 4-6, 2-3, 1.
- * Within each range, O and D thresholds determine the AP level.
+ * El manual agrupa la severidad en CUATRO bandas: **9-10, 5-8, 2-4 y 1**.
+ *
+ * 🔴 Hasta el 22/08/2026 este archivo usaba las bandas 9-10 / 7-8 / 4-6 / 2-3 / 1, que
+ * NO son las del manual, y ademas se apartaba de la figura en tres celdas (S5-8 O4-5
+ * D5-6, S5-8 O6-7 D2-4 y S9-10 O4-5 D2-4). Resultado: 305 de las 838 combinaciones
+ * validas daban distinto y 281 de ellas SUBDECLARABAN el riesgo. Lo encontro una
+ * auditoria con la norma delante; los tests que decian "verificado 1000/1000" estaban
+ * escritos a partir de este codigo, no del manual, asi que fijaban el error.
+ * Por eso la tabla ahora se escribe como FILAS, en el mismo orden en que estan
+ * impresas: cada fila se puede cotejar con el manual sin leer logica.
  */
 
 type AP = 'H' | 'M' | 'L';
 
-// The table is structured as apLookup[S][O][D] → AP
-// Index 0 is unused (ratings go from 1-10)
-const apLookup: AP[][][] = buildAPTable();
-
-function buildAPTable(): AP[][][] {
-    // Initialize 11x11x11 (index 0 unused) — default all to 'L'
-    const table: AP[][][] = Array.from({ length: 11 }, () =>
-        Array.from({ length: 11 }, () =>
-            Array(11).fill('L')
-        )
-    );
-
-    for (let s = 1; s <= 10; s++) {
-        for (let o = 1; o <= 10; o++) {
-            for (let d = 1; d <= 10; d++) {
-                table[s][o][d] = apRule(s, o, d);
-            }
-        }
-    }
-
-    return table;
+/** Una fila de la Figura 3.5-3: rangos de S, O y D -> AP (o 'Error'). */
+interface FilaAP {
+    s: [number, number];
+    o: [number, number];
+    d: [number, number];
+    ap: AP | 'Error';
 }
 
 /**
- * Pure rule-based AP determination per AIAG-VDA 2019 PFMEA standard.
- * Grouped by the 5 severity ranges published in the handbook.
+ * Figura 3.5-3, fila por fila y en el orden del manual.
+ * Las cuatro ultimas son las filas especiales impresas al pie de la figura.
  */
-function apRule(s: number, o: number, d: number): AP {
-    // ── S = 1: Always L ──────────────────────────────────────
-    if (s <= 1) return 'L';
+export const FIGURA_3_5_3: readonly FilaAP[] = [
+    // ── S 9-10: efectos de seguridad y/o reglamentarios ──────────────────────
+    { s: [9, 10], o: [6, 10], d: [2, 10], ap: 'H' },
+    { s: [9, 10], o: [4, 5], d: [7, 10], ap: 'H' },
+    { s: [9, 10], o: [4, 5], d: [5, 6], ap: 'H' },
+    { s: [9, 10], o: [4, 5], d: [2, 4], ap: 'M' },
+    { s: [9, 10], o: [2, 3], d: [7, 10], ap: 'H' },
+    { s: [9, 10], o: [2, 3], d: [5, 6], ap: 'M' },
+    { s: [9, 10], o: [2, 3], d: [2, 4], ap: 'L' },
 
-    // ── S = 2-3: Only M when O=8-10 AND D=5-10 ──────────────
-    if (s <= 3) {
-        if (o >= 8 && d >= 5) return 'M';
-        return 'L';
-    }
+    // ── S 5-8: perdida o degradacion de funcion / disrupcion de fabricacion ──
+    { s: [5, 8], o: [8, 10], d: [2, 10], ap: 'H' },
+    { s: [5, 8], o: [6, 7], d: [7, 10], ap: 'H' },
+    { s: [5, 8], o: [6, 7], d: [5, 6], ap: 'H' },
+    { s: [5, 8], o: [6, 7], d: [2, 4], ap: 'M' },
+    { s: [5, 8], o: [4, 5], d: [7, 10], ap: 'H' },
+    { s: [5, 8], o: [4, 5], d: [5, 6], ap: 'H' },
+    { s: [5, 8], o: [4, 5], d: [2, 4], ap: 'M' },
+    { s: [5, 8], o: [2, 3], d: [7, 10], ap: 'M' },
+    { s: [5, 8], o: [2, 3], d: [5, 6], ap: 'M' },
+    { s: [5, 8], o: [2, 3], d: [2, 4], ap: 'L' },
 
-    // ── S = 4-6 ──────────────────────────────────────────────
-    if (s <= 6) {
-        if (o >= 8) return d >= 5 ? 'H' : 'M';     // O=8-10: D≥5→H, D≤4→M
-        if (o >= 6) return d >= 2 ? 'M' : 'L';      // O=6-7:  D≥2→M, D=1→L
-        if (o >= 4) return d >= 7 ? 'M' : 'L';      // O=4-5:  D≥7→M, D≤6→L
-        return 'L';                                   // O=1-3:  always L
-    }
+    // ── S 2-4: calidad percibida (aspecto, ruido, tacto) ─────────────────────
+    { s: [2, 4], o: [8, 10], d: [2, 10], ap: 'H' },
+    { s: [2, 4], o: [6, 7], d: [7, 10], ap: 'H' },
+    { s: [2, 4], o: [6, 7], d: [5, 6], ap: 'H' },
+    { s: [2, 4], o: [6, 7], d: [2, 4], ap: 'M' },
+    { s: [2, 4], o: [4, 5], d: [7, 10], ap: 'H' },
+    { s: [2, 4], o: [4, 5], d: [5, 6], ap: 'M' },
+    { s: [2, 4], o: [4, 5], d: [2, 4], ap: 'L' },
+    { s: [2, 4], o: [2, 3], d: [7, 10], ap: 'M' },
+    { s: [2, 4], o: [2, 3], d: [5, 6], ap: 'L' },
+    { s: [2, 4], o: [2, 3], d: [2, 4], ap: 'L' },
 
-    // ── S = 7-8 ──────────────────────────────────────────────
-    if (s <= 8) {
-        if (o >= 8) return 'H';                       // O=8-10: always H
-        if (o >= 6) return d >= 2 ? 'H' : 'M';       // O=6-7:  D≥2→H, D=1→M
-        if (o >= 4) return d >= 7 ? 'H' : 'M';       // O=4-5:  D≥7→H, D≤6→M
-        if (o >= 2) return d >= 5 ? 'M' : 'L';       // O=2-3:  D≥5→M, D≤4→L
-        return 'L';                                    // O=1:    always L
-    }
+    // ── Filas especiales al pie de la figura ─────────────────────────────────
+    // "Low priority due to the failure being virtually eliminated through prevention controls"
+    { s: [2, 10], o: [1, 1], d: [1, 1], ap: 'L' },
+    // "Low priority due to no discernible effect"
+    { s: [1, 1], o: [1, 10], d: [1, 10], ap: 'L' },
+    // "O=1 implausible without D=1"
+    { s: [2, 10], o: [1, 1], d: [2, 10], ap: 'Error' },
+    // "D=1 implausible without O=1"
+    { s: [2, 10], o: [2, 10], d: [1, 1], ap: 'Error' },
+];
 
-    // ── S = 9-10 ─────────────────────────────────────────────
-    if (o >= 6) return 'H';                            // O=6-10: always H
-    if (o >= 4) return d >= 2 ? 'H' : 'M';            // O=4-5:  D≥2→H, D=1→M
-    if (o >= 2) {                                      // O=2-3:
-        if (d >= 7) return 'H';                        //   D≥7→H
-        if (d >= 5) return 'M';                        //   D=5-6→M
-        return 'L';                                    //   D≤4→L
-    }
-    return 'L';                                        // O=1:    always L
+const enRango = (v: number, [min, max]: [number, number]) => v >= min && v <= max;
+
+function buscarFila(s: number, o: number, d: number): FilaAP | undefined {
+    return FIGURA_3_5_3.find(f => enRango(s, f.s) && enRango(o, f.o) && enRango(d, f.d));
 }
 
-/**
- * Calculate the Action Priority (AP) based on AIAG-VDA FMEA standard.
- * 
- * @param s - Severity rating (1-10)
- * @param o - Occurrence rating (1-10)
- * @param d - Detection rating (1-10)
- * @returns 'H' | 'M' | 'L' | '' (empty if inputs invalid)
- */
-export function calculateAP(s: number, o: number, d: number): 'H' | 'M' | 'L' | '' {
-    // Validate inputs — NaN check MUST come first, before Math.round,
-    // because NaN comparisons always return false (bypassing range checks)
-    if (isNaN(s) || isNaN(o) || isNaN(d)) return '';
+function normalizar(s: number, o: number, d: number): [number, number, number] | null {
+    if (isNaN(s) || isNaN(o) || isNaN(d)) return null;
     const sInt = Math.round(s);
     const oInt = Math.round(o);
     const dInt = Math.round(d);
-    if (sInt < 1 || sInt > 10 || oInt < 1 || oInt > 10 || dInt < 1 || dInt > 10) return '';
+    if (sInt < 1 || sInt > 10 || oInt < 1 || oInt > 10 || dInt < 1 || dInt > 10) return null;
+    return [sInt, oInt, dInt];
+}
 
-    return apLookup[sInt][oInt][dInt];
+/**
+ * Calcula el Action Priority segun la Figura 3.5-3 del AIAG-VDA (PFMEA).
+ *
+ * Devuelve '' cuando los valores estan fuera de rango y tambien cuando la figura
+ * marca la combinacion como **Error** (O=1 sin D=1, o D=1 sin O=1): ahi el manual no
+ * asigna prioridad, dice que la calificacion es implausible y el equipo tiene que
+ * revisarla. Para distinguir un caso del otro: `isImplausibleRating()`.
+ */
+export function calculateAP(s: number, o: number, d: number): 'H' | 'M' | 'L' | '' {
+    const v = normalizar(s, o, d);
+    if (!v) return '';
+    const fila = buscarFila(...v);
+    if (!fila || fila.ap === 'Error') return '';
+    return fila.ap;
+}
+
+/**
+ * true si la Figura 3.5-3 marca la combinacion como "Error": O=1 sin D=1, o D=1 sin
+ * O=1. No es un AP bajo: es una calificacion que el manual considera implausible.
+ */
+export function isImplausibleRating(s: number, o: number, d: number): boolean {
+    const v = normalizar(s, o, d);
+    if (!v) return false;
+    return buscarFila(...v)?.ap === 'Error';
 }

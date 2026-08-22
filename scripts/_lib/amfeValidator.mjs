@@ -29,7 +29,7 @@ import {
     TYPE_TRANSLATION,
 } from './genericLabels.mjs';
 import { scanForbidden } from './forbiddenContent.mjs';
-import { calculateAP } from './amfeIo.mjs';
+import { calculateAP, apImplausible } from './amfeIo.mjs';
 
 const SUSPICIOUS_OP_PATTERNS = [
     'CLASIFICACION Y SEGREGACION',
@@ -607,6 +607,18 @@ export function validateAmfeDoc(doc, productName = '', amfeNumber = '') {
                                         detail: `AP declarado '${apDeclarado}' pero la tabla AIAG-VDA da '${apEsperado}' (S=${sevEf} O=${c.occurrence} D=${c.detection})` });
                                 }
                             }
+                        }
+
+                        // CAUSE_SOD_IMPLAUSIBLE (WARNING) — la Figura 3.5-3 del AIAG-VDA no da
+                        // prioridad a estas dos combinaciones, las marca "Error": O=1 sin D=1
+                        // ("O=1 implausible without D=1") y D=1 sin O=1. Un O=1 dice que la
+                        // prevencion practicamente elimino la falla, y entonces la deteccion no
+                        // puede seguir siendo dificil. No se corrige solo: los valores son dato
+                        // tecnico y los define el equipo. Lo encontro la auditoria de cliente del
+                        // 22/08/2026 (6 causas en los 8 AMFE de Patagonia).
+                        if (!missS && !missO && !missD && apImplausible(sevEf, Number(c.occurrence), Number(c.detection))) {
+                            issues.push({ ...cCtx, type: 'CAUSE_SOD_IMPLAUSIBLE',
+                                detail: `S=${sevEf} O=${c.occurrence} D=${c.detection}: la Figura 3.5-3 marca esta combinacion como Error (O=1 exige D=1 y viceversa), no le asigna AP` });
                         }
 
                         // CAUSE_S9_SIN_CC (WARNING) — S>=9 sin caracteristica especial declarada.

@@ -513,53 +513,89 @@ export function countAmfeStats(doc) {
     return { opCount: ops.length, weCount, fnCount, fmCount, causeCount };
 }
 
-// ─── calculateAP (replica AIAG-VDA 2019 oficial) ────────────────────────────
-// Replicado de modules/amfe/apTable.ts porque .mjs no puede importar .ts.
-// Si apTable.ts cambia, actualizar aqui. La tabla es stable (estandar publicado).
+// ─── calculateAP (transcripcion de la Figura 3.5-3 del AIAG-VDA) ────────────
+// Replica de modules/amfe/apTable.ts porque los .mjs no pueden importar .ts sin build.
+// Si apTable.ts cambia, actualizar aca. La fuente es la Figura 3.5-3 "Action Priority
+// for PFMEA" del AIAG & VDA FMEA Handbook 1st Ed. (2019), paginas 122-123 del PDF del
+// manual. Bandas de severidad del manual: 9-10, 5-8, 2-4 y 1.
+// (Hasta el 22/08/2026 esta replica usaba bandas 9-10/7-8/4-6/2-3/1 y subdeclaraba el
+// riesgo en 281 de 1000 combinaciones. Ver el encabezado de apTable.ts.)
 
-function apRule(s, o, d) {
-    if (s <= 1) return 'L';
-    if (s <= 3) {
-        if (o >= 8 && d >= 5) return 'M';
-        return 'L';
-    }
-    if (s <= 6) {
-        if (o >= 8) return d >= 5 ? 'H' : 'M';
-        if (o >= 6) return d >= 2 ? 'M' : 'L';
-        if (o >= 4) return d >= 7 ? 'M' : 'L';
-        return 'L';
-    }
-    if (s <= 8) {
-        if (o >= 8) return 'H';
-        if (o >= 6) return d >= 2 ? 'H' : 'M';
-        if (o >= 4) return d >= 7 ? 'H' : 'M';
-        if (o >= 2) return d >= 5 ? 'M' : 'L';
-        return 'L';
-    }
-    // s = 9-10
-    if (o >= 6) return 'H';
-    if (o >= 4) return d >= 2 ? 'H' : 'M';
-    if (o >= 2) {
-        if (d >= 7) return 'H';
-        if (d >= 5) return 'M';
-        return 'L';
-    }
-    return 'L';
-}
+/** Figura 3.5-3, fila por fila y en el orden impreso. */
+export const FIGURA_3_5_3 = [
+    { s: [9, 10], o: [6, 10], d: [2, 10], ap: 'H' },
+    { s: [9, 10], o: [4, 5], d: [7, 10], ap: 'H' },
+    { s: [9, 10], o: [4, 5], d: [5, 6], ap: 'H' },
+    { s: [9, 10], o: [4, 5], d: [2, 4], ap: 'M' },
+    { s: [9, 10], o: [2, 3], d: [7, 10], ap: 'H' },
+    { s: [9, 10], o: [2, 3], d: [5, 6], ap: 'M' },
+    { s: [9, 10], o: [2, 3], d: [2, 4], ap: 'L' },
 
-/**
- * Calcula Action Priority (AP) siguiendo AIAG-VDA 2019 PFMEA.
- * @param {number} s severity 1-10
- * @param {number} o occurrence 1-10
- * @param {number} d detection 1-10
- * @returns {'H'|'M'|'L'|''} '' si inputs invalidos
- */
-export function calculateAP(s, o, d) {
-    if (s == null || o == null || d == null) return '';
-    if (isNaN(s) || isNaN(o) || isNaN(d)) return '';
+    { s: [5, 8], o: [8, 10], d: [2, 10], ap: 'H' },
+    { s: [5, 8], o: [6, 7], d: [7, 10], ap: 'H' },
+    { s: [5, 8], o: [6, 7], d: [5, 6], ap: 'H' },
+    { s: [5, 8], o: [6, 7], d: [2, 4], ap: 'M' },
+    { s: [5, 8], o: [4, 5], d: [7, 10], ap: 'H' },
+    { s: [5, 8], o: [4, 5], d: [5, 6], ap: 'H' },
+    { s: [5, 8], o: [4, 5], d: [2, 4], ap: 'M' },
+    { s: [5, 8], o: [2, 3], d: [7, 10], ap: 'M' },
+    { s: [5, 8], o: [2, 3], d: [5, 6], ap: 'M' },
+    { s: [5, 8], o: [2, 3], d: [2, 4], ap: 'L' },
+
+    { s: [2, 4], o: [8, 10], d: [2, 10], ap: 'H' },
+    { s: [2, 4], o: [6, 7], d: [7, 10], ap: 'H' },
+    { s: [2, 4], o: [6, 7], d: [5, 6], ap: 'H' },
+    { s: [2, 4], o: [6, 7], d: [2, 4], ap: 'M' },
+    { s: [2, 4], o: [4, 5], d: [7, 10], ap: 'H' },
+    { s: [2, 4], o: [4, 5], d: [5, 6], ap: 'M' },
+    { s: [2, 4], o: [4, 5], d: [2, 4], ap: 'L' },
+    { s: [2, 4], o: [2, 3], d: [7, 10], ap: 'M' },
+    { s: [2, 4], o: [2, 3], d: [5, 6], ap: 'L' },
+    { s: [2, 4], o: [2, 3], d: [2, 4], ap: 'L' },
+
+    { s: [2, 10], o: [1, 1], d: [1, 1], ap: 'L' },       // falla practicamente eliminada por prevencion
+    { s: [1, 1], o: [1, 10], d: [1, 10], ap: 'L' },      // sin efecto perceptible
+    { s: [2, 10], o: [1, 1], d: [2, 10], ap: 'Error' },  // "O=1 implausible without D=1"
+    { s: [2, 10], o: [2, 10], d: [1, 1], ap: 'Error' },  // "D=1 implausible without O=1"
+];
+
+const enRangoAP = (v, [min, max]) => v >= min && v <= max;
+
+function normalizarSOD(s, o, d) {
+    if (s == null || o == null || d == null) return null;
+    if (isNaN(s) || isNaN(o) || isNaN(d)) return null;
     const sInt = Math.round(Number(s));
     const oInt = Math.round(Number(o));
     const dInt = Math.round(Number(d));
-    if (sInt < 1 || sInt > 10 || oInt < 1 || oInt > 10 || dInt < 1 || dInt > 10) return '';
-    return apRule(sInt, oInt, dInt);
+    if (sInt < 1 || sInt > 10 || oInt < 1 || oInt > 10 || dInt < 1 || dInt > 10) return null;
+    return [sInt, oInt, dInt];
+}
+
+function buscarFilaAP(s, o, d) {
+    return FIGURA_3_5_3.find(f => enRangoAP(s, f.s) && enRangoAP(o, f.o) && enRangoAP(d, f.d));
+}
+
+/**
+ * Calcula Action Priority segun la Figura 3.5-3 (PFMEA).
+ * Devuelve '' si los valores estan fuera de rango y tambien si la figura marca la
+ * combinacion como "Error" (O=1 sin D=1, o D=1 sin O=1): ahi no hay prioridad que
+ * asignar, la calificacion es implausible. Para distinguirlo: apImplausible().
+ * @param {number} s severity del MODO DE FALLA (no de la causa)
+ * @param {number} o occurrence 1-10
+ * @param {number} d detection 1-10
+ * @returns {'H'|'M'|'L'|''}
+ */
+export function calculateAP(s, o, d) {
+    const v = normalizarSOD(s, o, d);
+    if (!v) return '';
+    const fila = buscarFilaAP(...v);
+    if (!fila || fila.ap === 'Error') return '';
+    return fila.ap;
+}
+
+/** true si la Figura 3.5-3 marca la combinacion como "Error" (calificacion implausible). */
+export function apImplausible(s, o, d) {
+    const v = normalizarSOD(s, o, d);
+    if (!v) return false;
+    return buscarFilaAP(...v)?.ap === 'Error';
 }

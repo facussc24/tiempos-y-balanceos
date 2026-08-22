@@ -297,7 +297,7 @@ describe('useAmfe', () => {
         });
 
         it('returns empty AP when not all S/O/D are set', () => {
-            const { result, opId, weId, funcId, failId, causeId } = setupWithCause();
+            const { result, opId, weId, funcId, failId } = setupWithCause();
             act(() => result.current.updateFailure(opId, weId, funcId, failId, 'severity', 5));
             // O and D still empty -> AP stays empty
             expect(getCause(result).ap).toBe('');
@@ -411,8 +411,9 @@ describe('useAmfe', () => {
 
             const fail = result.current.data.operations[0].workElements[0].functions[0].failures[0];
             expect(fail.severity).toBe(9);
-            // With S=9, O=5, D=4 → AP should be H (from AP table)
-            expect(fail.causes[0].ap).toBe('H');
+            // S=9, O=5, D=4 → M por la Figura 3.5-3 (banda S 9-10 / O 4-5 / D 2-4).
+            // Antes este test esperaba H, que era lo que devolvia la tabla con las bandas mal.
+            expect(fail.causes[0].ap).toBe('M');
         });
 
         it('manual severity override still works independently', () => {

@@ -54,6 +54,19 @@ filas.push(['AP fuera de la tabla AIAG-VDA', 'CAUSE_AP_MISMATCH (CRITICAL)', 'S=
   tiene(causa({ severity: 8, occurrence: 4, detection: 7, ap: 'M', actionPriority: 'M', specialChar: 'CC' }), 'CAUSE_AP_MISMATCH')]);
 filas.push(['  ...y NO molesta si esta bien', 'idem', 'S=8 O=4 D=7 declarado H',
   !tiene(causa({ severity: 8, occurrence: 4, detection: 7, ap: 'H', actionPriority: 'H', optimizationAction: 'Pendiente definicion equipo APQP', specialChar: 'CC' }), 'CAUSE_AP_MISMATCH')]);
+// La auditoria de cliente del 22/08 encontro que la tabla del repo partia la severidad en
+// bandas que no son las del manual (usaba 7-8 y 4-6 donde la Figura 3.5-3 usa 5-8 y 2-4).
+// 281 de 1000 combinaciones subdeclaraban riesgo, con los tests en verde porque estaban
+// escritos a partir del codigo. Estas dos filas prueban la banda 5-8 con casos reales.
+filas.push(['Banda de severidad 5-8 (no 7-8)', 'CAUSE_AP_MISMATCH (CRITICAL)', 'S=7 O=4 D=6 declarado M (figura: H)',
+  tiene(causa({ severity: 7, occurrence: 4, detection: 6, ap: 'M', actionPriority: 'M' }), 'CAUSE_AP_MISMATCH')]);
+filas.push(['  ...y S=5 tambien es banda 5-8', 'idem', 'S=5 O=5 D=5 declarado L (figura: H)',
+  tiene(causa({ severity: 5, occurrence: 5, detection: 5, ap: 'L', actionPriority: 'L' }), 'CAUSE_AP_MISMATCH')]);
+filas.push(['S/O/D que la figura llama "Error"', 'CAUSE_SOD_IMPLAUSIBLE (WARNING)', 'S=10 O=1 D=8 (O=1 exige D=1)',
+  tiene(causa({ severity: 10, occurrence: 1, detection: 8, ap: 'L', actionPriority: 'L' }), 'CAUSE_SOD_IMPLAUSIBLE')]);
+filas.push(['  ...pero O=1 con D=1 es valido', 'idem', 'S=10 O=1 D=1',
+  !tiene(causa({ severity: 10, occurrence: 1, detection: 1, ap: 'L', actionPriority: 'L' }), 'CAUSE_SOD_IMPLAUSIBLE')]);
+
 filas.push(['CC que se cae al detallar', 'CAUSE_S9_SIN_CC (WARNING, no asigna)', 'S=9 sin specialChar',
   tiene(causa({ severity: 9, occurrence: 3, detection: 4, ap: 'H', actionPriority: 'H', optimizationAction: 'Pendiente definicion equipo APQP', specialChar: '' }), 'CAUSE_S9_SIN_CC')]);
 filas.push(['AP=H sin accion (bloqueo IATF)', 'CAUSE_APH_EMPTY_NO_PLACEHOLDER (CRITICAL)', 'AP=H y accion vacia',
