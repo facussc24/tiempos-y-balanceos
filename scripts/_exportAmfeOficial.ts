@@ -82,6 +82,40 @@ if (sospechosas.length) {
   process.exit(1);
 }
 
+// GATE — auditoria de cliente vigente antes de entregar (regla amfe.md §18).
+// El 21/08 un auditor con la NORMA como fuente encontro en 20 minutos 7 hallazgos que tres
+// dias de trabajo con las reglas destiladas no vieron. El export es el unico camino de un
+// AMFE al cliente, asi que se corta ACA: tiene que existir el marcador que deja
+// /auditoria-cliente en .audit-cliente/<amfe>.json. Vale 7 dias — una auditoria por ciclo
+// de lote cubre las iteraciones con el cliente sin re-auditar cada export.
+const marcadorAuditoria = `.audit-cliente/${AMFE_NUMBER}.json`;
+if (process.argv.includes('--sin-auditoria')) {
+  console.warn('\n*** EXPORT SIN AUDITORIA DE CLIENTE (--sin-auditoria) ***');
+  console.warn('*** Vale para trabajo interno. Si este archivo va al cliente: /auditoria-cliente ***\n');
+} else {
+  const DIAS_VALIDEZ = 7;
+  let motivo = '';
+  if (!existsSync(marcadorAuditoria)) {
+    motivo = 'no hay auditoria de cliente registrada';
+  } else {
+    try {
+      const m = JSON.parse(readFileSync(marcadorAuditoria, 'utf8')) as { fecha?: string };
+      const edadDias = (Date.now() - new Date(m.fecha ?? '').getTime()) / 86_400_000;
+      if (Number.isNaN(edadDias)) motivo = `${marcadorAuditoria} no tiene fecha legible`;
+      else if (edadDias > DIAS_VALIDEZ) motivo = `la ultima auditoria fue hace ${Math.floor(edadDias)} dias (vence a los ${DIAS_VALIDEZ})`;
+    } catch {
+      motivo = `${marcadorAuditoria} no se pudo leer`;
+    }
+  }
+  if (motivo) {
+    console.error(`\nABORTADO — ${AMFE_NUMBER} sin auditoria de cliente vigente: ${motivo}.`);
+    console.error('Antes de entregar, el lote se revisa con el rol y la fuente de quien lo va a');
+    console.error(`auditar (regla amfe.md §18):  /auditoria-cliente ${AMFE_NUMBER}`);
+    console.error('Export de trabajo interno (no va al cliente): agregar --sin-auditoria\n');
+    process.exit(1);
+  }
+}
+
 // Renumerar FM 1..N por operacion (orden WE -> funcion -> falla)
 let renumerados = 0;
 for (const op of doc.operations ?? []) {

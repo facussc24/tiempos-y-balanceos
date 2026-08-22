@@ -105,6 +105,9 @@ __pycache__/
 # Cache local de documentos de empresa (repo publico — NUNCA commitear)
 .sgc-cache/
 
+# Marcadores de /auditoria-cliente (los exige el gate de _exportAmfeOficial.ts)
+.audit-cliente/
+
 # Extractos de documentos de la empresa (alertas, 8D, specs de cliente, SGC, IATF).
 # Estuvieron versionados por error hasta 2026-07-29 (828 archivos, 259 MB, publicos).
 # Ahora viven en .sgc-cache/empresa-extracted/. NO volver a commitear esta ruta.

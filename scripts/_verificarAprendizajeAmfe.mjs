@@ -71,6 +71,12 @@ filas.push(['PU inyectado antes de enfundar', 'PU_ANTES_DE_ENFUNDADO (CRITICAL)'
 filas.push(['Flujograma sin logo oficial', '_flujograma.mjs aborta si falta el asset', 'tools/flowchart/assets/barack_logo.png',
   existsSync('tools/flowchart/assets/barack_logo.png') && readFileSync('scripts/_flujograma.mjs', 'utf8').includes('Sin logo no se genera')]);
 
+// ── 5. auditoria de cliente antes de entregar (analisis 22/08 — el rol del 21/08 vio en
+//       20 min lo que 3 dias no; regla amfe.md §18)
+filas.push(['Export exige auditoria de cliente vigente', '_exportAmfeOficial.ts aborta sin marcador .audit-cliente/', 'export sin .audit-cliente/<amfe>.json',
+  readFileSync('scripts/_exportAmfeOficial.ts', 'utf8').includes('.audit-cliente/')
+  && existsSync('.claude/commands/auditoria-cliente.md')]);
+
 const anchoA = Math.max(...filas.map(f => f[0].length));
 const anchoB = Math.max(...filas.map(f => f[1].length));
 console.log('\nVERIFICACION DEL APRENDIZAJE — cada gate contra el caso real que lo origino\n');

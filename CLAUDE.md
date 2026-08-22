@@ -87,7 +87,9 @@ el export post-carga → PDF de difusion formato Leo con `scripts/_pdfBomArb.py`
 `docs-empresa` (mapa tema→documento real + caché `.sgc-cache/`),
 `leer-planos` (sacar peso calculado / cantidad / material / norma de la lista de materiales
 embebida en un plano de cliente, con `scripts/_leerPlano.py`), `rule-enforcement-gate`
-(toda regla nueva con check debe nacer con enforcement), `audit-amfe`, `backup`, `fix-amfe-gaps`,
+(toda regla nueva con check debe nacer con enforcement), `audit-amfe`, `auditoria-cliente`
+(auditar un lote contra la NORMA con rol de auditor de cliente ANTES de entregar — deja el
+marcador `.audit-cliente/` que exige el export oficial; regla amfe.md §18), `backup`, `fix-amfe-gaps`,
 `cad-design` (diseño/modificación 3D-CAD: librería `cadlib` + CLIs con --help para medir STEP,
 registrar ICP, verificar colisión y entregar; UN intérprete: `.venv-cad` Py3.12; los 2 GATES
 pre-modelado/pre-entrega — hook `cad-guard.sh` los recuerda 1×/h; enforcement duro:

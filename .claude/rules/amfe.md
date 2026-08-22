@@ -220,3 +220,17 @@ Cada punto operativo tiene su gate ejecutable ya cargado; esto es para no llegar
 8. Causas de "error humano" no existen (§6, gate `CAUSE_CAPACITACION`). Muchas ya traen la
    causa real adentro: *"...por ausencia de guia visual"* — esa es la causa; el operario
    desatento sobra.
+
+## 18. Auditoria de cliente antes de entregar — `/auditoria-cliente`
+
+Antes de entregar un lote de AMFEs, revisarlo con **el rol y la fuente de quien lo va a
+auditar**: comando `/auditoria-cliente` (1 subagente con rol de auditor de cliente y la
+NORMA como fuente — **sin** leerle estas reglas, o hereda mis puntos ciegos). Cada hallazgo
+CONFIRMADO se convierte en check ejecutable en la misma sesion (skill
+`rule-enforcement-gate`); datos y CC/SC siguen siendo de Fak. Origen: 21/08/2026 — ese rol
+encontro en 20 minutos 7 hallazgos que 3 dias de trabajo con estas reglas no vieron.
+Enforcement: gate en `_exportAmfeOficial.ts` — sin marcador `.audit-cliente/<amfe>.json`
+vigente (7 dias) el AMFE **no se exporta** (`--sin-auditoria` solo para trabajo interno).
+Señales de fracaso: misma categoria de hallazgo 2 auditorias seguidas (trinquete roto);
+un tercero encuentra 2 veces lo que el gate no vio (rol/fuentes mal); hallazgos en cero
+de golpe (auditor contaminado, no perfeccion).
