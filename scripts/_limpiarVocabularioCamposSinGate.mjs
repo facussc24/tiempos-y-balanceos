@@ -40,10 +40,15 @@ const REEMPLAZOS = [
   // del flujometro). El sentido no cambia: sigue diciendo que el valor no cumple.
   [/fuera de spec\b/gi, 'fuera de especificacion', ['AMFE-MAESTRO-PU-001']],
 
-  // "Gap & Flush NOK" -> el efecto en el vehiculo, dicho en castellano.
-  // La purga del 19-20/08 lo habia traducido como "luz y enrase"; "enrase" es
-  // justamente la palabra que Fak marco, asi que va "alineacion".
-  [/Gap\s*&\s*Flush\s+NOK/gi, 'luz y alineacion fuera de especificacion', ['AMFE-MAESTRO-INY-001']],
+  // "Gap & Flush NOK" -> la traduccion CANONICA que fijo Fak el 20/08 en la 2da ronda
+  // de vocabulario (tabla de la memoria `sin_ingles_random`). No se elige una nueva:
+  // si ya hay una traduccion acordada para un termino, se usa esa en todos los documentos.
+  // (La purga del 19-20/08 lo habia puesto como "luz y enrase", y "enrase" es justamente
+  // la palabra que Fak marco despues.)
+  [/Gap\s*&\s*Flush\s+NOK/gi, 'desalineacion o separacion excesiva', ['AMFE-MAESTRO-INY-001']],
+  // one-off 23/08: la primera corrida de este script uso "luz y alineacion fuera de
+  // especificacion", que no es la de la tabla. Se alinea.
+  [/luz y alineacion fuera de especificacion/gi, 'desalineacion o separacion excesiva', ['AMFE-MAESTRO-INY-001']],
 
   // "el enrase de las lineas" -> "la alineacion de las lineas" (cambia el articulo).
   // Mismo texto en los dos AMFE de telas planas, OP15.
