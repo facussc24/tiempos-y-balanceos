@@ -6,7 +6,7 @@
  * extranas que nadie en esta empresa usaria como 'enrase', 'chirridos'". Las dos estaban
  * en ENGLISH_RANDOM_TERMS desde el 19/08 y el validador daba FORBIDDEN_VOCABULARY = 0.
  *
- * El motivo, medido el 23/08: `pushForbiddenIssues` se llamaba en 9 lugares de
+ * El motivo, medido el 23/08: `pushForbiddenIssues` se llamaba en 10 lugares de
  * amfeValidator.mjs y ninguno cubria el texto de la causa ni el modo de falla con sus
  * 3 efectos. El texto que Fak veia impreso vivia justo ahi. Con el candado ampliado a
  * esos 6 campos aparecen 14 ocurrencias / 9 textos / 4 AMFE. Este script las limpia.

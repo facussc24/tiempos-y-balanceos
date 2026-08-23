@@ -99,7 +99,7 @@ describe('scanForbidden — ingles random (ENGLISH_RANDOM_TERMS)', () => {
     });
 
     // Ronda 2 (Fak, 19/08): mi primera traduccion tambien era ajena a la planta.
-    // "enrase" y "chirridos" tienen CERO usos en 1500 mails de gente Barack.
+    // "enrase" y "chirridos" tienen CERO usos en los 5.144 mails de gente Barack.
     it.each([
         'luz y enrase fuera de especificacion',
         'Ruidos y chirridos en el modulo',
@@ -229,7 +229,7 @@ describe('validateAmfeDoc — candado anti-invento integrado', () => {
 // Fak, sobre los AMFEs que estaban por irse a Calidad: "sigo viendo palabras
 // extranas que nadie en esta empresa usaria como 'enrase', 'chirridos'".
 // Estaban en ENGLISH_RANDOM_TERMS desde el 19/08 y el validador daba
-// FORBIDDEN_VOCABULARY = 0: `pushForbiddenIssues` se llamaba en 9 lugares y
+// FORBIDDEN_VOCABULARY = 0: `pushForbiddenIssues` se llamaba en 10 lugares y
 // ninguno cubria el texto de la causa ni los 3 efectos del modo de falla.
 //
 // Los textos de abajo NO estan escritos desde el codigo: son las cadenas reales
