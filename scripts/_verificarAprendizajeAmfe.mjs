@@ -8,6 +8,7 @@
  *
  * Correr:  node scripts/_verificarAprendizajeAmfe.mjs
  */
+import { ordenInvertido } from './_lib/ordenProceso.mjs';
 import { scanForbidden, scanRevisionMeta } from './_lib/forbiddenContent.mjs';
 import { validateAmfeDoc } from './_lib/amfeValidator.mjs';
 import { readFileSync, existsSync } from 'fs';
@@ -77,8 +78,21 @@ filas.push(['Valor de especificacion en el control', 'CONTROL_CON_VALOR (WARNING
 filas.push(['"Falta de capacitacion" como causa', 'CAUSE_CAPACITACION', 'causa = falta de capacitacion',
   tiene(causa({ severity: 6, occurrence: 3, detection: 4, ap: 'L', actionPriority: 'L',
     description: 'Falta de capacitacion del operario', cause: 'Falta de capacitacion del operario' }), 'CAUSE_CAPACITACION')]);
-filas.push(['PU inyectado antes de enfundar', 'PU_ANTES_DE_ENFUNDADO (CRITICAL)', 'orden invertido en apoyacabezas',
-  existsSync('scripts/_lib/amfeValidator.mjs') && readFileSync('scripts/_lib/amfeValidator.mjs', 'utf8').includes('PU_ANTES_DE_ENFUNDADO')]);
+// 23/08: esta fila era un readFileSync().includes('PU_ANTES_DE_ENFUNDADO') — o sea que
+// seguia VERDE aunque alguien vaciara el cuerpo del check, porque el string sobrevive en el
+// nombre y en el comentario. Es el mismo modo de falla que este archivo existe para cazar
+// ("un control que da el mismo resultado para todos los casos no detecta nada"). Ahora
+// dispara el validador de verdad, con el caso real y con su negativo.
+const docOrdenPu = (numFunda, numPu) => ({
+  operations: [
+    { opNumber: numFunda, operationNumber: numFunda, name: 'ENFUNDADO', operationName: 'ENFUNDADO', workElements: [] },
+    { opNumber: numPu, operationNumber: numPu, name: 'INYECCION DE PU', operationName: 'INYECCION DE PU', workElements: [] },
+  ],
+});
+filas.push(['PU inyectado antes de enfundar', 'PU_ANTES_DE_ENFUNDADO (CRITICAL)', 'AMFE 153/155 pre-18/08: 50 PU / 60 ENFUNDADO',
+  tiene(docOrdenPu('60', '50'), 'PU_ANTES_DE_ENFUNDADO')]);
+filas.push(['  ...y NO molesta al orden correcto', 'idem', '40 ENFUNDADO / 52 INYECCION DE PU',
+  !tiene(docOrdenPu('40', '52'), 'PU_ANTES_DE_ENFUNDADO')]);
 
 // ── 4. el logo del flujograma (Fak, 19/08)
 filas.push(['Flujograma sin logo oficial', '_flujograma.mjs aborta si falta el asset', 'tools/flowchart/assets/barack_logo.png',
@@ -120,6 +134,21 @@ for (const [campo, texto, termino] of [
 }
 filas.push(['  ...y "stock/setup" NO molestan (Fak 23/08)', 'idem', 'effectLocal = "Paro de linea si no hay stock"',
   !tiene(docCampo('effectLocal', 'Paro de linea si no hay stock en el setup'), 'FORBIDDEN_VOCABULARY')]);
+
+// ── 8. una renumeracion no puede dar vuelta el orden de un proceso real (23/08).
+//       El 18/08 12:40 los traseros quedaron VARILLA -> FUNDA -> PU por lo que Fak dijo del
+//       puesto; a las 16:47 `_alinearAmfesPatagonia.mjs` mapeo VARILLA 50->41 y ENFUNDADO
+//       60->40 y lo invirtio, sin que ningun gate se quejara: los tres controles que existian
+//       (PU_ANTES_DE_ENFUNDADO, _verificarNumeracion, este harness) miran funda-vs-PU y
+//       ninguno mira varilla-vs-funda. El fixture es el plan real de aquel dia.
+const opOrden = (n, nombre) => ({ opNumber: String(n), operationNumber: String(n), name: nombre, operationName: nombre });
+const TRASEROS_1240 = [opOrden(50, 'INSERCION DE VARILLA'), opOrden(60, 'ENFUNDADO'), opOrden(70, 'INYECCION DE PU')];
+const TRASEROS_1647 = [opOrden(40, 'ENFUNDADO'), opOrden(41, 'INSERCION DE VARILLA'), opOrden(52, 'INYECCION DE PU')];
+filas.push(['Renumerar da vuelta el orden del proceso', 'ORDEN_PROCESO_ALTERADO (_lib/ordenProceso.mjs)',
+    'AMFE 153/155 el 18/08 16:47: VARILLA 50->41 y ENFUNDADO 60->40',
+    ordenInvertido(TRASEROS_1240, TRASEROS_1647, 'AMFE 153').length > 0]);
+filas.push(['  ...y una renumeracion limpia NO molesta', 'idem', 'los mismos numeros corridos, mismo orden',
+    ordenInvertido(TRASEROS_1240, TRASEROS_1240.map(o => opOrden(Number(o.opNumber) - 5, o.name)), 'x').length === 0]);
 
 const anchoA = Math.max(...filas.map(f => f[0].length));
 const anchoB = Math.max(...filas.map(f => f[1].length));

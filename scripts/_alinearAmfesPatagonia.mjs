@@ -25,6 +25,7 @@
 
 import { parseSafeArgs, logChange, finish, runWithValidation } from './_lib/dryRunGuard.mjs';
 import { connectSupabase, parseData, saveAmfe, syncFieldAliases } from './_lib/amfeIo.mjs';
+import { assertOrdenPreservado } from './_lib/ordenProceso.mjs';
 
 /**
  * Por AMFE: cada fila es [regex del nombre actual, numero actual, numero nuevo, nombre nuevo].
@@ -134,6 +135,13 @@ for (const clave of claves) {
     const dup = nums.filter((v, i) => nums.indexOf(v) !== i);
     if (dup.length) throw new Error(`${clave}: quedarian numeros duplicados: ${dup.join(', ')}`);
     console.log(`   queda: ${nums.join(' · ')}`);
+
+    // GUARD 3 (23/08/2026) — las otras dos guardas de este script (ubicar por NOMBRE, renumerar
+    // de mayor a menor) protegen la integridad de la renumeracion, no el ORDEN RELATIVO. El
+    // 18/08 a las 16:47 este mismo plan mando VARILLA 50->41 y ENFUNDADO 60->40 e invirtio en
+    // silencio el par que se habia fijado a las 12:40 con lo que Fak dijo del puesto.
+    // No decide cual orden es el correcto: solo que la renumeracion no lo de vuelta callada.
+    assertOrdenPreservado(before, doc, `${clave} (${producto})`);
 
     syncFieldAliases(doc);
     plan.push({ id: row.id, amfeNumber: clave, productName: producto, before, after: doc });

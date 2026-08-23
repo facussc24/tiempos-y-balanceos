@@ -107,8 +107,26 @@ Anti-patrones: todo en una linea, "L0, L1, L2, L3" sin PNs, PN sin puntos.
 
 ## 7. Diferencias Headrest Front vs Rear (no flaggear como bug)
 
-- **HF-PAT**: EPP (espuma rigida) + varilla; el EPP se inserta en el enfundado (OP50); 16 OPs con sub-pasos de espumado desglosados (OP60 PRECINTO, OP61 BOLSA, OP62 CIERRE MOLDE).
-- **HRC/HRO-PAT**: solo varilla, sin EPP; van directo a OP50 INYECCION DE PU; 14 OPs.
+> ⚠️ **Numeracion corregida el 23/08/2026 contra Supabase live.** Hasta hoy esta seccion decia
+> que HRC/HRO *"van directo a OP50 INYECCION DE PU"* — **eso es falso desde el 18/08/2026**
+> (Fak, sobre el puesto: *"es imposible que se inyecte sin la funda, se saldria todo el
+> material"*), y la numeracion citada era la previa a la renumeracion del 18-20/08. Este skill
+> se auto-carga al editar AMFEs, asi que estaba inyectando el error corregido en las sesiones
+> que renumeran. **La numeracion se lee de Supabase o de `_verificarNumeracion.mjs`, nunca de aca.**
+
+- **HF-PAT** (151, delantero): lleva **dos** componentes — soporte EPP `2HC.881.915` + varilla POLE
+  `2HC.881.937`; el EPP se inserta dentro de la operacion de enfundado; **16 OPs**, con el tramo de
+  espumado desglosado (`42` precinto, `50` bolsa y carga al molde, `51` cierre de molde y boquilla).
+- **HRC/HRO-PAT** (153/155, traseros): **un solo** componente, la varilla FRAME (`2HC.885.942` /
+  `2HC.885.941`), sin EPP — les llega la estructura ya armada; **14 OPs**: no tienen el tramo `42/50/51`.
+  **Los tres enfundan antes de espumar** y el PU es `52`.
+- 🟢 **El par 40 ENFUNDADO / 41 VARILLA NO esta invertido** (cerrado 23/08/2026). La espuma no
+  existe todavia cuando se enfunda —el PU se crea in-place—, asi que la funda es una **BOLSA** y
+  "enfundar" es meter la estructura adentro. *"Agarras la estructura, le metes la funda"* (Fak) y
+  *"Correcta colocacion de Asta en Funda"* (Plan de Control preliminar, Op 40) son **el mismo gesto
+  visto desde los dos lados**. NO dar vuelta 40/41. El defecto real de los traseros es la
+  **particion**: su OP40 esta VACIA porque 40 y 41 son un solo acto partido en dos — se fusiona,
+  no se intercambia. Detalle y enforcement (`ORDEN_PROCESO_ALTERADO`): regla `amfe.md` §12.
 - Variantes L0 no tienen costura vista (Costura Vista aplica solo L1/L2/L3) — se documenta con restriccion en el nombre de la OP, no con docs separados.
 - SI alinear: severidades de fallas comunes (costura, rebaba, puntadas) calibradas distinto entre los 3 — eso es copy-paste mal.
 
