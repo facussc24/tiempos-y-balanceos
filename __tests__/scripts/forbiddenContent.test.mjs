@@ -222,3 +222,72 @@ describe('validateAmfeDoc — candado anti-invento integrado', () => {
         expect(introduced.critical.some(i => i.type === 'FORBIDDEN_VOCABULARY')).toBe(false);
     });
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// D. EL AGUJERO DE LOS 6 CAMPOS (23/08/2026)
+//
+// Fak, sobre los AMFEs que estaban por irse a Calidad: "sigo viendo palabras
+// extranas que nadie en esta empresa usaria como 'enrase', 'chirridos'".
+// Estaban en ENGLISH_RANDOM_TERMS desde el 19/08 y el validador daba
+// FORBIDDEN_VOCABULARY = 0: `pushForbiddenIssues` se llamaba en 9 lugares y
+// ninguno cubria el texto de la causa ni los 3 efectos del modo de falla.
+//
+// Los textos de abajo NO estan escritos desde el codigo: son las cadenas reales
+// leidas de Supabase live el 23/08/2026 (leccion "un test escrito desde el
+// codigo no verifica nada" — la tabla AP estuvo mal un ano con los tests en verde).
+//   - "enrase"        -> cause.cause / cause.description   en AMFE-1 y 160, OP15
+//   - "Gap & Flush"   -> failure.effectEndUser             en AMFE-MAESTRO-INY-001, OP20
+//   - "fuera de spec" -> failure.description + cause.cause en AMFE-MAESTRO-PU-001, OP10
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Igual que makeDoc pero permite pisar cualquier campo de failure/cause. */
+function makeDocCampos({ fm = {}, cause = {} } = {}) {
+    const doc = makeDoc('Autocontrol con calibre al inicio de turno');
+    const fmObj = doc.operations[0].workElements[0].functions[0].failures[0];
+    Object.assign(fmObj, fm);
+    Object.assign(fmObj.causes[0], cause);
+    return doc;
+}
+
+const forbiddenDe = (doc) => validateAmfeDoc(doc, 'TopRoll', 'AMFE-TEST')
+    .critical.filter(i => i.type === 'FORBIDDEN_VOCABULARY');
+
+describe('candado anti-invento — los 6 campos que no se escaneaban (agujero 23/08/2026)', () => {
+    const REALES = [
+        ['cause.cause', { cause: { cause: 'Operario no verifico el enrase de las lineas de contorno del TNT' } }, 'enrase'],
+        ['cause.description', { cause: { description: 'Operario no verifico el enrase de las lineas de contorno del TNT' } }, 'enrase'],
+        ['failure.description', { fm: { description: 'Lote de Isocianato fuera de spec o contaminado' } }, 'fuera de spec'],
+        ['effectEndUser', { fm: { effectEndUser: 'Pieza no montable o con Gap & Flush NOK en el modulo del vehiculo' } }, 'gap & flush'],
+        ['effectLocal', { fm: { effectLocal: 'Material fuera de spec, va a scrap' } }, 'fuera de spec'],
+        ['effectNextLevel', { fm: { effectNextLevel: 'Lote fuera de spec frena la linea siguiente' } }, 'fuera de spec'],
+    ];
+
+    for (const [campo, override, termino] of REALES) {
+        it(`D. ${campo} con "${termino}" => FORBIDDEN_VOCABULARY`, () => {
+            const hits = forbiddenDe(makeDocCampos(override));
+            expect(hits.length).toBeGreaterThan(0);
+            expect(hits.some(i => i.detail.includes(campo))).toBe(true);
+            expect(hits.some(i => i.detail.toLowerCase().includes(termino))).toBe(true);
+        });
+    }
+
+    it('D7. el doc base (sin palabra rara en ningun campo nuevo) sigue limpio', () => {
+        expect(forbiddenDe(makeDocCampos())).toHaveLength(0);
+    });
+
+    it('D8. diffIssues: meter "enrase" en la causa AHORA bloquea el apply', () => {
+        const before = validateAmfeDoc(makeDocCampos(), 'TopRoll', 'AMFE-TEST');
+        const after = validateAmfeDoc(
+            makeDocCampos({ cause: { cause: 'Operario no verifico el enrase del contorno' } }),
+            'TopRoll', 'AMFE-TEST');
+        expect(diffIssues(before, after).critical.some(i => i.type === 'FORBIDDEN_VOCABULARY')).toBe(true);
+    });
+
+    it('D9. "stock", "setup" y "checklist" NO se marcan (Fak 23/08: las tres se quedan)', () => {
+        const doc = makeDocCampos({
+            fm: { effectLocal: 'Paro de linea si no hay stock' },
+            cause: { cause: 'Checklist de arranque no verificado en el setup' },
+        });
+        expect(forbiddenDe(doc)).toHaveLength(0);
+    });
+});

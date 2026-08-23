@@ -99,6 +99,28 @@ filas.push(['Efecto de planta como "usuario final"', 'FM_ENDUSER_EFECTO_PLANTA (
 filas.push(['  ...y NO molesta a un efecto legitimo', 'idem', 'effectEndUser = "Ruido en el uso"',
   !tiene(docEndUser('Ruido en el uso'), 'FM_ENDUSER_EFECTO_PLANTA')]);
 
+// ── 7. el candado miraba 10 campos y el texto sucio vivia en otros 6 (23/08).
+//       Fak, 19/08: "sigo viendo palabras extranas que nadie en esta empresa usaria
+//       como 'enrase', 'chirridos'". Estaban en ENGLISH_RANDOM_TERMS desde el 19/08 y
+//       FORBIDDEN_VOCABULARY daba 0: nadie escaneaba cause.cause ni los 3 efectos.
+//       Textos reales leidos de Supabase live, no escritos desde el codigo.
+const docCampo = (campo, texto) => {
+  const d = causa({ severity: 6, occurrence: 4, detection: 4, ap: 'L', actionPriority: 'L' });
+  const fm = d.operations[0].workElements[0].functions[0].failures[0];
+  if (campo.startsWith('cause.')) fm.causes[0][campo.slice(6)] = texto; else fm[campo] = texto;
+  return d;
+};
+for (const [campo, texto, termino] of [
+  ['cause.cause', 'Operario no verifico el enrase de las lineas de contorno del TNT', 'enrase'],
+  ['effectEndUser', 'Pieza no montable o con Gap & Flush NOK en el modulo del vehiculo', 'Gap & Flush'],
+  ['description', 'Lote de Isocianato fuera de spec o contaminado', 'fuera de spec'],
+]) {
+  filas.push([`Palabra prohibida en ${campo}`, 'FORBIDDEN_VOCABULARY (CRITICAL)', `${campo} = "${texto}"`,
+    tiene(docCampo(campo, texto), 'FORBIDDEN_VOCABULARY')]);
+}
+filas.push(['  ...y "stock/setup" NO molestan (Fak 23/08)', 'idem', 'effectLocal = "Paro de linea si no hay stock"',
+  !tiene(docCampo('effectLocal', 'Paro de linea si no hay stock en el setup'), 'FORBIDDEN_VOCABULARY')]);
+
 const anchoA = Math.max(...filas.map(f => f[0].length));
 const anchoB = Math.max(...filas.map(f => f[1].length));
 console.log('\nVERIFICACION DEL APRENDIZAJE — cada gate contra el caso real que lo origino\n');

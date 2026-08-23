@@ -490,6 +490,16 @@ export function validateAmfeDoc(doc, productName = '', amfeNumber = '') {
                         issues.push({ ...fmCtx, type: 'FM_NO_EFFECT_END', detail: 'effectEndUser vacio' });
                     }
 
+                    // Candado anti-invento en el modo de falla y sus 3 efectos.
+                    // Agregado 23/08/2026: hasta hoy el candado solo miraba controles, acciones,
+                    // WE.name y function.description. El texto que Fak marco ("enrase") vivia en
+                    // cause.cause y "Gap & Flush" en effectEndUser — dos campos que nadie escaneaba,
+                    // asi que FORBIDDEN_VOCABULARY daba 0 con las palabras a la vista en el PDF.
+                    pushForbiddenIssues(issues, fmCtx, 'failure.description', fm.description);
+                    pushForbiddenIssues(issues, fmCtx, 'effectLocal', fm.effectLocal);
+                    pushForbiddenIssues(issues, fmCtx, 'effectNextLevel', fm.effectNextLevel);
+                    pushForbiddenIssues(issues, fmCtx, 'effectEndUser', fm.effectEndUser);
+
                     const causes = fm.causes || [];
                     if (causes.length === 0) {
                         issues.push({ ...fmCtx, type: 'FM_NO_CAUSES', detail: 'Failure sin causas' });
@@ -656,6 +666,13 @@ export function validateAmfeDoc(doc, productName = '', amfeNumber = '') {
                                 });
                             }
                         }
+
+                        // Candado anti-invento en el TEXTO DE LA CAUSA (23/08/2026).
+                        // `cause` y `description` son alias del mismo texto (syncFieldAliases),
+                        // por eso se escanean los dos: si uno se edita a mano y el otro no,
+                        // el export puede leer el que quedo sucio.
+                        pushForbiddenIssues(issues, cCtx, 'cause.cause', c.cause);
+                        pushForbiddenIssues(issues, cCtx, 'cause.description', c.description);
 
                         // Candado anti-invento en controles y acciones de la causa
                         pushForbiddenIssues(issues, cCtx, 'preventionControl', c.preventionControl);
