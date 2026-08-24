@@ -22,9 +22,14 @@
  *   - Pasos, maquinas y utillajes: las 4 hojas de operacion de MP8146/MP8147/MP8148.
  *   - Secuencia y numeracion: Flujograma 158 Rev.A (regla no-pfd-no-ho: manda el flujograma).
  *
- * LO QUE VA TBD A PROPOSITO (core-prohibiciones §1: falta el dato real, no se inventa)
- *   - Espesor de la espuma: el ERP y la BOM dicen 7 mm, el AMFE viejo dice 6 mm. Sin plano ni
- *     ficha del proveedor Mentvil no se puede dirimir. La densidad 60 kg/m3 si es unanime.
+ * DECISIONES DE FAK QUE CIERRAN DUDAS (24/08/2026)
+ *   - Espesor de la espuma: **gana el arb, 7 mm**. Fak: "la que este en el arb es la que vale,
+ *     asi deberia ser". Se cierra la discusion 6 vs 7 mm; el AMFE no lleva el valor igual,
+ *     porque los parametros van al Plan de Control.
+ *   - Los codigos internos del arb NO van en el AMFE. El material se nombra; su codigo vive en
+ *     la BOM. Fak, 24/08: "pusiste codigos que encima acabas de ver que probablemente
+ *     cambiemos". El codigo interno no cambia — lo que falta es el del PROVEEDOR — pero de
+ *     todos modos no corresponde en un documento que lee el cliente.
  *   - Part number del cliente: no existe en ninguna fuente del legajo.
  *
  * Uso:  node scripts/_crearAmfe172Ductos.mjs            (dry-run: arma, valida y muestra)
@@ -186,14 +191,14 @@ const OP10 = operacion('10', 'RECEPCION DE MATERIALES',
   'Recibir, identificar y liberar la materia prima directa e indirecta contra los requisitos del cliente antes de habilitarla a produccion',
   'Materia prima liberada, identificada por lote y con evidencia de ensayo segun norma del cliente',
   [
-    we('Material', 'Thinsulate 427TEL002COR01', [
+    we('Material', 'Thinsulate', [
       funcion(
         'Aportar la capacidad de absorcion acustica especificada por el cliente',
         'Densidad superficial segun la especificacion de material del cliente',
         [
           falla('Material recibido fuera de la densidad superficial especificada', EF_RUIDO, [
             causa('Rollo recibido con una densidad distinta a la de la orden de compra',
-              'La orden de compra indica el codigo del articulo; el material se recibe con certificado por lote',
+              'El material se pide por su codigo de articulo y se recibe con certificado por lote',
               3,
               'Control de peso por lote con balanza electronica, con registro del resultado',
               6),
@@ -224,14 +229,14 @@ const OP10 = operacion('10', 'RECEPCION DE MATERIALES',
           ]),
         ]),
     ]),
-    we('Material', 'Espuma 427ESP003TRO01', [
+    we('Material', 'Espuma', [
       funcion(
         'Aportar el espesor y la densidad especificados en la zona de las bocas del defroster',
         'Espuma conforme al codigo de articulo indicado en la orden de compra',
         [
           falla('Espuma recibida con espesor distinto del especificado', EF_NO_MONTA, [
             causa('Espuma entregada con un espesor distinto al indicado en la orden de compra',
-              'La orden de compra indica el codigo del articulo; el material se recibe con certificado por lote',
+              'El material se pide por su codigo de articulo y se recibe con certificado por lote',
               5,
               'Control dimensional del espesor por lote en recepcion',
               7),
@@ -245,7 +250,7 @@ const OP10 = operacion('10', 'RECEPCION DE MATERIALES',
         [
           falla('Faltante o mezcla de tipos de braquet en la entrega', EF_NO_MONTA, [
             causa('Los cuatro tipos de braquet tienen aspecto similar y se reciben en el mismo envio',
-              'Recepcion por codigo de articulo, con conteo por tipo contra la BOM',
+              'Recepcion por tipo de braquet, con conteo contra la BOM',
               4,
               'Conteo por tipo de braquet contra la BOM del conjunto al ingresar el lote',
               7),
@@ -357,7 +362,7 @@ const OP20 = operacion('20', 'CORTE DE TELA EN MESA DE CORTE',
           ]),
         ]),
     ]),
-    we('Material', 'Thinsulate 427TEL002COR01 liberado por recepcion', [
+    we('Material', 'Thinsulate liberado por recepcion', [
       funcion(
         'Aportar el material especificado al corte de los 7 codigos',
         'Solo se corta material identificado como liberado por recepcion',
@@ -366,7 +371,7 @@ const OP20 = operacion('20', 'CORTE DE TELA EN MESA DE CORTE',
             causa('El rollo se retira del sector sin verificar su identificacion de estado',
               'Material liberado identificado y separado del pendiente de control en el sector de recepcion',
               3,
-              'Verificacion del codigo y la identificacion del rollo contra la orden antes de montarlo en la mesa',
+              'Verificacion de la identificacion del rollo contra la orden antes de montarlo en la mesa',
               7),
           ]),
         ]),
@@ -422,7 +427,7 @@ const OP30 = operacion('30', 'LAMINADO Y ADHESIVADO DE ESPUMA (Aplica solo a MP8
   'Adherir la espuma a la lamina adhesiva antes del troquelado',
   'Conjunto espuma + adhesivo sin burbujas ni zonas sin adherir',
   [
-    we('Material', 'Espuma 427ESP003TRO01 y rollo tesa 52110', [
+    we('Material', 'Espuma y lamina adhesiva', [
       funcion(
         'Formar el conjunto espuma-adhesivo que despues se troquela',
         'Espuma y lamina adhesiva segun la BOM del conjunto',
@@ -738,7 +743,7 @@ const OP90 = operacion('90', 'EMBALAJE, IDENTIFICACION Y CONTROL DE CANTIDADES',
   'Embalar los conjuntos en su medio, identificarlos y verificar la cantidad de despacho',
   'Medio con la cantidad correcta, identificado y sin daño a las piezas',
   [
-    we('Material', 'Medio de embalaje y etiqueta ET-SATO-100X60', [
+    we('Material', 'Medio de embalaje y etiqueta', [
       funcion(
         'Contener e identificar las piezas hasta el cliente',
         'Un medio identificado por codigo y cantidad, segun la ficha de embalaje del proyecto',
