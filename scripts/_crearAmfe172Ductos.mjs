@@ -15,7 +15,8 @@
  *     "16 remaches + 12 remaches"; desglose por nivel en el sinoptico REV05.
  *   - Los 8 braquets (4+1+1+2): mismas dos fuentes. Son las "visagras" de la HO.
  *   - Densidad superficial 400 +/- 30 g/m2 y su metodo: `PP-PET SOR MATERIAL REQUIREMENT
- *     52171.docx` + CVTC 52171-2023 Anexo A (promedio de 3 probetas, precision 1 g/m2).
+ *     52171.docx` + CVTC 52171-2023 §5.2.1 + Anexo A. OJO: la norma fija el METODO y remite el VALOR al plano;
+ *     el 400 +/- 30 sale de la especificacion de material del cliente, no de la norma.
  *   - Flamabilidad <= 70 mm/min, GB 8410-2006, probeta 356x100 mm, min. 5 probetas:
  *     CVTC 52034-2021 §4.2.1.2, referenciada por CVTC 52171 §5.2.4.
  *   - Pasos, maquinas y utillajes: las 4 hojas de operacion de MP8146/MP8147/MP8148.
@@ -59,8 +60,7 @@ const id = () => randomUUID();
  * pone el PLACEHOLDER, no una accion inventada: las acciones de optimizacion las define
  * el equipo APQP (amfe.md §5 y autonomy-contract).
  */
-function causa(descripcion, prevControl, O, detControl, D, severidadFM, extra = {}) {
-  const ap = calcularAP(severidadFM, O, D);
+function causa(descripcion, prevControl, O, detControl, D, extra = {}) {
   return {
     id: id(),
     cause: descripcion,
@@ -69,20 +69,29 @@ function causa(descripcion, prevControl, O, detControl, D, severidadFM, extra = 
     detectionControl: detControl,
     occurrence: O,
     detection: D,
-    ap,
-    actionPriority: ap,
-    ...(ap === 'H' ? { optimizationAction: 'Pendiente definicion equipo APQP' } : {}),
     ...extra,
   };
 }
 
-/** falla(desc, S, efectos{local,next,end}, causas[]) — la S es del MODO DE FALLA. */
-function falla(descripcion, S, ef, causas) {
+/**
+ * falla(descripcion, efecto, causas) — la S sale del EFECTO y el AP se calcula ACA.
+ *
+ * Ni la severidad ni el AP se pueden escribir a mano en ningun lado de este archivo: la S
+ * la trae el efecto y el AP lo deriva `calculateAP`. Es la unica forma de que no vuelva a
+ * pasar que dos modos de falla con el mismo efecto lleven S distintas.
+ */
+function falla(descripcion, ef, causas) {
+  for (const c of causas) {
+    const ap = calcularAP(ef.s, c.occurrence, c.detection);
+    c.ap = ap;
+    c.actionPriority = ap;
+    if (ap === 'H' && !c.optimizationAction) c.optimizationAction = 'Pendiente definicion equipo APQP';
+  }
   return {
     id: id(),
     description: descripcion,
     failureMode: descripcion,
-    severity: S,
+    severity: ef.s,
     effectLocal: ef.local,
     effectNextLevel: ef.next,
     effectEndUser: ef.end,
@@ -118,29 +127,47 @@ function operacion(numero, nombre, funcionOperacion, funcionFoco, workElements) 
 }
 
 // ---------------------------------------------------------------------------
-// Efectos reutilizables (3 niveles obligatorios — amfe.md §3)
+// Efectos (3 niveles obligatorios) — CADA EFECTO TRAE SU PROPIA SEVERIDAD.
+//
+// La S se asigna al EFECTO, no al modo de falla (AIAG-VDA §3.5.8: "Severity is a rating
+// number associated with the most serious effect for a given failure mode"). Por eso la S
+// vive aca y no la elige quien escribe la falla: asi es estructuralmente imposible que dos
+// modos de falla con el MISMO efecto lleven severidades distintas — que es exactamente el
+// hallazgo que devolvio la auditoria de cliente del 24/08 (un mismo efecto con S=5, 7, 8 y 9).
+//
+// Cada valor esta tomado de la Tabla P1 PFMEA SEVERITY del manual (leida en el original,
+// pag. 116 del PDF), no de una tabla interna:
+//   S=9  "Noncompliance with regulations"
+//   S=8  "100% of product affected may have to be scrapped" / paro de mas de un turno
+//   S=7  "A portion of the production run may have to be scrapped"
+//   S=6  "Loss of convenience function"
 // ---------------------------------------------------------------------------
 const EF_SCRAP_INTERNO = {
+  s: 7,   // P1: "A portion of the production run may have to be scrapped"
   local: 'Pieza rechazada en el puesto, se genera scrap de material',
   next: 'Reposicion del corte y atraso en la entrega del lote a Cozzuol',
   end: 'Sin efecto en el vehiculo: la pieza no sale de planta',
 };
 const EF_RUIDO = {
+  s: 6,   // P1 usuario final: "Loss of convenience function" (la funcion del insono es absorber ruido)
   local: 'Pieza aceptada con menor capacidad de absorcion acustica',
   next: 'Cozzuol monta el conjunto y el desvio se detecta recien en linea VW',
   end: 'Mayor nivel de ruido en el habitaculo',
 };
 const EF_NO_MONTA = {
+  s: 8,   // P1 "Ship to Plant": "Line shutdown greater than full production shift"
   local: 'Conjunto que no cierra con el sustrato plastico',
   next: 'Paro de linea en Cozzuol e imposibilidad de ensamblar el conjunto',
   end: 'Vehiculo no ensamblable con esa pieza',
 };
 const EF_LEGAL = {
+  s: 9,   // P1 usuario final: "Noncompliance with regulations"
   local: 'Material sin evidencia de cumplimiento de la norma del cliente',
   next: 'Rechazo del PPAP por Cozzuol y bloqueo del lote',
   end: 'Incumplimiento de requisito de seguridad y reglamentacion en el vehiculo',
 };
 const EF_FALTANTE = {
+  s: 8,   // P1 "Ship to Plant": paro de linea en el cliente
   local: 'Medio despachado con cantidad o identificacion incorrecta',
   next: 'Faltante o sobrante en la linea de Cozzuol; reconteo del medio',
   end: 'Riesgo de paro de linea en el cliente final',
@@ -156,38 +183,38 @@ const OP10 = operacion('10', 'RECEPCION DE MATERIALES',
     we('Material', 'Thinsulate 427TEL002COR01 (rollo 1,6 m x 50 m, SINOYQX)', [
       funcion(
         'Aportar la capacidad de absorcion acustica especificada por el cliente',
-        'Densidad superficial 400 +/- 30 g/m2 segun CVTC 52171-2023 §5.1.1. Metodo: Anexo A de la misma norma, promedio de 3 probetas con precision de 1 g/m2',
+        'Densidad superficial 400 +/- 30 g/m2 segun la especificacion de material del cliente (PP-PET SOR MATERIAL REQUIREMENT 52171). La CVTC 52171-2023 §5.2.1 fija el METODO (Anexo A) y remite el VALOR al plano de ingenieria',
         [
-          falla('Material recibido fuera de la densidad superficial especificada', 7, EF_RUIDO, [
+          falla('Material recibido fuera de la densidad superficial especificada', EF_RUIDO, [
             causa('El rollo entregado corresponde a una densidad distinta de la solicitada en la orden de compra',
               'La orden de compra indica el codigo 427TEL002COR01 con su densidad; el proveedor emite certificado por lote',
               3,
-              'Ensayo de densidad superficial por lote segun el metodo del Anexo A de CVTC 52171-2023, con registro del resultado',
-              4, 7),
+              'Ensayo de densidad superficial por lote segun el metodo del Anexo A de CVTC 52171-2023 (§5.2.1), con registro del resultado',
+              7),
             causa('Variacion del proceso del proveedor dentro de un mismo lote',
               'Tolerancia de densidad superficial declarada al proveedor en la especificacion de compra',
               4,
               'Ensayo de densidad superficial por lote segun el metodo del Anexo A de CVTC 52171-2023',
-              4, 7),
+              7),
           ]),
-          falla('Material recibido sin evidencia de ensayo de flamabilidad contra la norma del cliente', 9, EF_LEGAL, [
+          falla('Material recibido sin evidencia de ensayo de flamabilidad contra la norma del cliente', EF_LEGAL, [
             causa('El certificado del proveedor declara ensayos de otras normas (UL 94, DIN 4102, EN 45545-2, FMVSS 302) y no CVTC 52034 / GB 8410',
               'La especificacion de compra exige ensayo de flamabilidad segun CVTC 52034-2021 y su remision a GB 8410-2006',
               5,
               'Verificacion documental del certificado de flamabilidad del lote contra el criterio de aceptacion de CVTC 52034-2021 y su remision a GB 8410-2006',
-              5, 9, { specialChar: 'CC' }),
+              7, { specialChar: 'CC' }),
             causa('Lote liberado a produccion antes de recibir el certificado del proveedor',
               'Material en estado pendiente de control en el sector de recepcion hasta contar con el certificado del lote',
               3,
               'Verificacion documental del certificado de lote contra CVTC 52034 antes de habilitar el material',
-              4, 9, { specialChar: 'CC' }),
+              7, { specialChar: 'CC' }),
           ]),
-          falla('Material recibido con contenido de polvo por encima del limite', 6, EF_RUIDO, [
+          falla('Material recibido con contenido de polvo por encima del limite', EF_RUIDO, [
             causa('Degradacion de la fibra por manipulacion o almacenamiento del proveedor',
-              'Requisito de contenido de polvo declarado al proveedor segun CVTC 52167',
+              'Requisito de contenido de polvo menor al 1% (CVTC 52171-2023 §5.2.7) declarado al proveedor en la especificacion de compra',
               4,
-              'Verificacion del certificado de lote contra el criterio de contenido de polvo de CVTC 52167',
-              5, 6),
+              'Verificacion del certificado de lote contra el criterio de contenido de polvo de CVTC 52171-2023 §5.2.7, medido por el metodo de CVTC 52167',
+              7),
           ]),
         ]),
     ]),
@@ -196,12 +223,12 @@ const OP10 = operacion('10', 'RECEPCION DE MATERIALES',
         'Aportar el espesor y la densidad especificados en la zona de las bocas del defroster',
         'Densidad 60 kg/m3. ESPESOR: TBD — el ERP y la BOM declaran 7 mm y el AMFE anterior 6 mm; no hay plano ni ficha del proveedor que lo dirima',
         [
-          falla('Espuma recibida con espesor distinto del especificado', 6, EF_NO_MONTA, [
+          falla('Espuma recibida con espesor distinto del especificado', EF_NO_MONTA, [
             causa('La especificacion de compra no fija un espesor unico: conviven 6 mm y 7 mm en la documentacion interna',
               'TBD — requiere definir el espesor contra el plano del cliente o la ficha del proveedor antes de fijar el control',
               5,
               'TBD — control dimensional de espesor por lote, a definir junto con la especificacion',
-              6, 6),
+              7),
           ]),
         ]),
     ]),
@@ -210,12 +237,12 @@ const OP10 = operacion('10', 'RECEPCION DE MATERIALES',
         'Aportar los 8 puntos de fijacion del defroster central (4 + 1 + 1 + 2 por conjunto)',
         'Ocho braquets por conjunto MP8147, segun BOM del ERP y sinoptico del producto',
         [
-          falla('Faltante o mezcla de tipos de braquet en la entrega', 6, EF_NO_MONTA, [
+          falla('Faltante o mezcla de tipos de braquet en la entrega', EF_NO_MONTA, [
             causa('Los cuatro tipos de braquet tienen aspecto similar y se reciben en el mismo envio',
               'Recepcion por codigo de articulo, con conteo por tipo contra la cantidad que define la BOM',
               4,
               'Conteo por tipo de braquet contra la BOM del conjunto al ingresar el lote',
-              4, 6),
+              7),
           ]),
         ]),
     ]),
@@ -224,12 +251,12 @@ const OP10 = operacion('10', 'RECEPCION DE MATERIALES',
         'Registrar el lote e identificar el material segun el procedimiento de recepcion',
         'Todo material ingresado queda registrado en el ERP arb con codigo y lote antes de pasar a produccion',
         [
-          falla('Material ingresado sin registro de lote en el sistema', 5, EF_LEGAL, [
+          falla('Material ingresado sin registro de lote en el sistema', EF_LEGAL, [
             causa('El material se descarga directamente en el sector de produccion sin pasar por recepcion',
               'Sector de recepcion fisicamente separado, con material en estado pendiente de control hasta su liberacion',
               3,
               'Conciliacion entre el remito del proveedor y el alta de lote en el ERP arb',
-              4, 5),
+              7),
           ]),
         ]),
     ]),
@@ -238,26 +265,26 @@ const OP10 = operacion('10', 'RECEPCION DE MATERIALES',
         'Definir que se controla, con que metodo y contra que norma en cada material recibido',
         'Cada material tiene definido su ensayo, su norma y su criterio de aceptacion',
         [
-          falla('Material liberado sin el ensayo que exige la norma del cliente', 9, EF_LEGAL, [
+          falla('Material liberado sin el ensayo que exige la norma del cliente', EF_LEGAL, [
             causa('El procedimiento de recepcion no incorpora todavia los requisitos de las normas CVTC del proyecto',
               'Especificaciones CVTC 52171, 52034, 52088, 22001 y 52167 incorporadas al procedimiento de recepcion del proyecto',
               4,
               'Verificacion documental por lote contra la norma aplicable antes de liberar',
-              5, 9, { specialChar: 'CC' }),
+              7, { specialChar: 'CC' }),
           ]),
         ]),
     ]),
     we('Measurement', 'Balanza y probeta de flamabilidad', [
       funcion(
         'Medir la densidad superficial y verificar el comportamiento a la llama',
-        'Balanza con resolucion acorde al metodo del Anexo A de CVTC 52171-2023',
+        'Balanza con resolucion acorde al metodo del Anexo A de CVTC 52171-2023 (§5.2.1)',
         [
-          falla('Medicion de densidad superficial no representativa', 6, EF_RUIDO, [
+          falla('Medicion de densidad superficial no representativa', EF_RUIDO, [
             causa('Se reporta el valor de una sola probeta en lugar del promedio de tres que exige el metodo',
               'Metodo de ensayo del Anexo A de CVTC 52171 incorporado al registro de recepcion, con las tres probetas',
               4,
               'El registro de recepcion exige las tres mediciones y su promedio para dar por valido el ensayo',
-              4, 6),
+              7),
           ]),
         ]),
     ]),
@@ -266,12 +293,12 @@ const OP10 = operacion('10', 'RECEPCION DE MATERIALES',
         'Preservar el material entre la recepcion y su uso',
         'Material separado por estado (pendiente de control / controlado e identificado)',
         [
-          falla('Mezcla de material pendiente de control con material ya liberado', 7, EF_LEGAL, [
+          falla('Mezcla de material pendiente de control con material ya liberado', EF_LEGAL, [
             causa('Ambos estados comparten el mismo sector sin separacion fisica',
               'Sectores separados e identificados para material pendiente de control y material liberado',
               3,
               'Verificacion de la identificacion del material al retirarlo para produccion',
-              5, 7),
+              7),
           ]),
         ]),
     ]),
@@ -289,24 +316,24 @@ const OP20 = operacion('20', 'CORTE DE TELA EN MESA DE CORTE',
         'Fijar el material por vacio y cortar con cuchilla siguiendo el programa cargado',
         'El corte reproduce el patron de la tizada de cada codigo dentro de la tolerancia del mylar de control',
         [
-          falla('Desviacion dimensional del corte respecto del patron', 7, EF_NO_MONTA, [
+          falla('Desviacion dimensional del corte respecto del patron', EF_NO_MONTA, [
             causa('Perdida de vacio en la mesa: el material se desplaza durante el corte',
               'Verificacion del vacio de la mesa al inicio de cada lote, segun la hoja de operaciones',
               4,
               'Verificacion de las piezas cortadas contra el mylar de control en la estacion de corte',
-              4, 7),
+              7),
             causa('Desgaste de la cuchilla de corte',
               'Cambio de cuchilla segun el plan de mantenimiento de la mesa de corte',
               4,
               'Verificacion de las piezas cortadas contra el mylar de control en la estacion de corte',
-              4, 7),
+              7),
           ]),
-          falla('Corte incompleto: la pieza queda unida al pliego', 5, EF_SCRAP_INTERNO, [
+          falla('Corte incompleto: la pieza queda unida al pliego', EF_SCRAP_INTERNO, [
             causa('Profundidad de corte insuficiente para el espesor del thinsulate',
               'Parametros de corte definidos por codigo en la hoja de operaciones',
               4,
               'Separacion manual de las piezas al retirar el pliego, donde el corte incompleto queda a la vista',
-              3, 5),
+              7),
           ]),
         ]),
     ]),
@@ -315,12 +342,12 @@ const OP20 = operacion('20', 'CORTE DE TELA EN MESA DE CORTE',
         'Determinar el patron y el anidado de cada uno de los 7 codigos',
         'Cada codigo tiene su programa y su tizada identificados; el operario selecciona el que corresponde a la orden',
         [
-          falla('Corte ejecutado con el programa de otro codigo', 8, EF_NO_MONTA, [
+          falla('Corte ejecutado con el programa de otro codigo', EF_NO_MONTA, [
             causa('Los siete codigos se cortan en la misma mesa y sus programas tienen nombres similares',
               'La orden de produccion indica el codigo y el programa que le corresponde',
               4,
               'Verificacion de la pieza cortada contra el mylar del codigo indicado en la orden',
-              4, 8),
+              7),
           ]),
         ]),
     ]),
@@ -329,12 +356,12 @@ const OP20 = operacion('20', 'CORTE DE TELA EN MESA DE CORTE',
         'Aportar el material especificado al corte de los 7 codigos',
         'Solo se corta material identificado como liberado por recepcion',
         [
-          falla('Se corta material no liberado o de otra especificacion', 8, EF_LEGAL, [
+          falla('Se corta material no liberado o de otra especificacion', EF_LEGAL, [
             causa('El rollo se retira del sector sin verificar su identificacion de estado',
               'Material liberado identificado y separado del pendiente de control en el sector de recepcion',
               3,
               'Verificacion del codigo y la identificacion del rollo contra la orden antes de montarlo en la mesa',
-              4, 8),
+              7),
           ]),
         ]),
     ]),
@@ -343,12 +370,12 @@ const OP20 = operacion('20', 'CORTE DE TELA EN MESA DE CORTE',
         'Montar el rollo, seleccionar el programa y separar e identificar los cortes',
         'Los cortes se identifican por codigo al separarlos del pliego',
         [
-          falla('Cortes de distintos codigos mezclados al separarlos del pliego', 6, EF_NO_MONTA, [
+          falla('Cortes de distintos codigos mezclados al separarlos del pliego', EF_NO_MONTA, [
             causa('La tizada anida piezas de varios codigos en el mismo pliego y se separan sin identificar',
               'Identificacion del contenedor por codigo antes de empezar a separar los cortes del pliego',
               5,
               'Verificacion de la identificacion del contenedor contra el mylar del codigo antes del traslado',
-              5, 6),
+              7),
           ]),
         ]),
     ]),
@@ -357,12 +384,12 @@ const OP20 = operacion('20', 'CORTE DE TELA EN MESA DE CORTE',
         'Verificar el corte contra el patron fisico de cada codigo',
         'Existe un mylar por codigo, identificado y vigente',
         [
-          falla('Verificacion hecha contra un mylar de otro codigo o deteriorado', 7, EF_NO_MONTA, [
+          falla('Verificacion hecha contra un mylar de otro codigo o deteriorado', EF_NO_MONTA, [
             causa('Los mylares se guardan juntos y sin identificacion visible del codigo',
               'Mylares identificados por codigo y con control de vigencia',
               4,
               'El registro de control de corte exige anotar el codigo del mylar utilizado',
-              5, 7),
+              7),
           ]),
         ]),
     ]),
@@ -371,12 +398,12 @@ const OP20 = operacion('20', 'CORTE DE TELA EN MESA DE CORTE',
         'Mantener el material y los cortes libres de contaminacion',
         'Sector con limpieza periodica definida',
         [
-          falla('Contaminacion de los cortes con polvo o particulas del sector', 4, EF_RUIDO, [
+          falla('Contaminacion de los cortes con polvo o particulas del sector', EF_RUIDO, [
             causa('Acumulacion de recortes y polvo de fibra alrededor de la mesa',
               'Limpieza periodica del sector de corte definida en el procedimiento',
               4,
               'Inspeccion visual del corte al separarlo del pliego',
-              5, 4),
+              7),
           ]),
         ]),
     ]),
@@ -394,17 +421,17 @@ const OP30 = operacion('30', 'LAMINADO Y ADHESIVADO DE ESPUMA (Aplica solo a MP8
         'Formar el conjunto espuma-adhesivo que despues se troquela',
         'Consumo de espuma y de tesa identicos por conjunto (0,03714 m2 cada uno, segun BOM del ERP)',
         [
-          falla('Zonas sin adherir entre la espuma y la lamina adhesiva', 6, EF_NO_MONTA, [
+          falla('Zonas sin adherir entre la espuma y la lamina adhesiva', EF_NO_MONTA, [
             causa('Presion de laminado insuficiente sobre la superficie completa',
               'Parametros de laminado definidos en la hoja de operaciones',
               4,
               'Inspeccion visual del conjunto laminado antes de pasar al troquelado',
-              5, 6),
+              7),
             causa('Lamina adhesiva aplicada sobre espuma con polvo de fibra en superficie',
               'Espuma almacenada protegida hasta su uso en el puesto de laminado',
               4,
               'Inspeccion visual de la superficie de la espuma antes de aplicar la lamina',
-              5, 6),
+              7),
           ]),
         ]),
     ]),
@@ -413,12 +440,12 @@ const OP30 = operacion('30', 'LAMINADO Y ADHESIVADO DE ESPUMA (Aplica solo a MP8
         'Posicionar la espuma y aplicar la lamina adhesiva segun la hoja de operaciones',
         'La lamina cubre la superficie definida sin desbordes',
         [
-          falla('Lamina adhesiva desplazada respecto de la espuma', 5, EF_SCRAP_INTERNO, [
+          falla('Lamina adhesiva desplazada respecto de la espuma', EF_SCRAP_INTERNO, [
             causa('El puesto no tiene referencia de posicionado para alinear lamina y espuma',
               'Marcas de posicionado en la mesa de laminado',
               4,
               'Inspeccion visual del conjunto laminado contra la hoja de operaciones',
-              5, 5),
+              7),
           ]),
         ]),
     ]),
@@ -433,12 +460,12 @@ const OP40 = operacion('40', 'TROQUELADO DE ESPUMA (Aplica solo a MP8147)',
         'Cortar el conjunto laminado con el troquel correspondiente a la pieza',
         'Corte pasante y limpio, con las tiras separadas del sobrante',
         [
-          falla('Troquelado incompleto: la tira no se separa del sobrante', 4, EF_SCRAP_INTERNO, [
+          falla('Troquelado incompleto: la tira no se separa del sobrante', EF_SCRAP_INTERNO, [
             causa('Filo del troquel desgastado por cantidad de golpes acumulados',
               'Plan de mantenimiento y control de filo de los troqueles',
               4,
               'Separacion manual de las tiras tras el golpe, donde el corte incompleto queda a la vista',
-              3, 4),
+              7),
           ]),
         ]),
     ]),
@@ -447,12 +474,12 @@ const OP40 = operacion('40', 'TROQUELADO DE ESPUMA (Aplica solo a MP8147)',
         'Asignar a cada pieza el troquel que le corresponde',
         'Cada troquel esta identificado y su codigo figura en la hoja de operaciones',
         [
-          falla('Uso de un troquel que no corresponde a la pieza', 7, EF_NO_MONTA, [
+          falla('Uso de un troquel que no corresponde a la pieza', EF_NO_MONTA, [
             causa('Los troqueles se guardan juntos y su identificacion no es visible en el puesto',
               'Troqueles identificados con su codigo y referenciados en la hoja de operaciones',
               3,
               'Verificacion del codigo del troquel contra la hoja de operaciones antes de empezar el lote',
-              5, 7),
+              7),
           ]),
         ]),
     ]),
@@ -461,12 +488,12 @@ const OP40 = operacion('40', 'TROQUELADO DE ESPUMA (Aplica solo a MP8147)',
         'Posicionar el conjunto laminado en el troquel y evacuar las tiras',
         'Las tiras salen con la longitud definida de 670 mm segun la hoja de operaciones',
         [
-          falla('Conjunto mal posicionado en el troquel', 6, EF_SCRAP_INTERNO, [
+          falla('Conjunto mal posicionado en el troquel', EF_SCRAP_INTERNO, [
             causa('El troquel no tiene topes que limiten la posicion del conjunto',
               'Marcas de posicionado en la mesa de la troqueladora',
               3,
               'Verificacion de la tira troquelada contra la pieza patron del puesto',
-              5, 6),
+              7),
           ]),
         ]),
     ]),
@@ -481,19 +508,19 @@ const OP50 = operacion('50', 'PREARMADO Y REMACHADO DE BRAQUETS (Aplica solo a M
         'Fijar los ocho braquets al sustrato del defroster central',
         'Dieciseis remaches en las ocho zonas definidas en la hoja de operaciones del MP8147 CENTRAL',
         [
-          falla('Braquet montado en una posicion que no le corresponde', 7, EF_NO_MONTA, [
+          falla('Braquet montado en una posicion que no le corresponde', EF_NO_MONTA, [
             causa('Los cuatro tipos de braquet son parecidos entre si y se presentan juntos en el puesto',
               'Presentacion de los braquets separados por tipo en el puesto, segun la hoja de operaciones',
               4,
               'Verificacion del conjunto remachado contra la pieza patron del puesto',
-              5, 7),
+              7),
           ]),
-          falla('Remache faltante en alguna de las ocho zonas', 7, EF_NO_MONTA, [
+          falla('Remache faltante en alguna de las ocho zonas', EF_NO_MONTA, [
             causa('Las ocho zonas se remachan en secuencia y no hay marca de avance sobre la pieza',
               'Secuencia de remachado numerada de 1 a 8 en la hoja de operaciones',
               4,
               'Conteo de remaches del conjunto contra la pieza patron antes de pasar al soldado',
-              4, 7),
+              7),
           ]),
         ]),
     ]),
@@ -502,17 +529,17 @@ const OP50 = operacion('50', 'PREARMADO Y REMACHADO DE BRAQUETS (Aplica solo a M
         'Conformar el remache contra el sustrato y el braquet',
         'Remache conformado sin deformar el sustrato plastico',
         [
-          falla('Remache flojo: no fija el braquet al sustrato', 7, EF_NO_MONTA, [
+          falla('Remache flojo: no fija el braquet al sustrato', EF_NO_MONTA, [
             causa('Presion de la remachadora por debajo de la necesaria para el espesor del conjunto',
               'Parametro de presion definido en la hoja de operaciones del puesto',
               3,
               'Verificacion manual de la fijacion de cada braquet al terminar el conjunto',
-              5, 7),
+              7),
             causa('Deformacion del sustrato plastico por exceso de presion en el remachado',
               'Parametro de presion definido en la hoja de operaciones del puesto',
               3,
               'Inspeccion visual del sustrato alrededor de cada remache contra la pieza patron',
-              5, 7),
+              7),
           ]),
         ]),
     ]),
@@ -521,12 +548,12 @@ const OP50 = operacion('50', 'PREARMADO Y REMACHADO DE BRAQUETS (Aplica solo a M
         'Definir la secuencia de las ocho zonas y la cantidad de remaches',
         'La hoja indica las zonas 1 a 8 y los 16 remaches del defroster',
         [
-          falla('El conjunto avanza sin los 12 remaches del Air Duct Connect Bracket', 6, EF_NO_MONTA, [
+          falla('El conjunto avanza sin los 12 remaches del Air Duct Connect Bracket', EF_NO_MONTA, [
             causa('La hoja de operaciones documenta los 16 remaches del defroster pero no los 12 del connect bracket, que si estan en la BOM',
               'TBD — completar la hoja de operaciones con los 12 remaches del MP7457 antes de fijar el control preventivo',
               5,
               'Conteo de remaches del conjunto contra la BOM en la inspeccion final',
-              4, 6),
+              8),
           ]),
         ]),
     ]),
@@ -544,24 +571,24 @@ const OP60 = operacion('60', 'SOLDADO POR ULTRASONIDO (Aplica solo a MP8146, MP8
         'Aportar la energia de soldadura en cada punto definido',
         'Parametros de soldadura segun la hoja de operaciones de cada pieza',
         [
-          falla('Punto de soldadura sin fusion: el insono no queda fijado', 7, EF_NO_MONTA, [
+          falla('Punto de soldadura sin fusion: el insono no queda fijado', EF_NO_MONTA, [
             causa('Energia por debajo de la necesaria para el espesor del conjunto',
               'Parametros de soldadura definidos por pieza en la hoja de operaciones',
               3,
               'Verificacion de la fijacion del insono en cada punto contra la pieza patron del puesto',
-              5, 7),
+              7),
             causa('Desgaste del sonotrodo, que reduce la energia transmitida',
               'Plan de mantenimiento del equipo de ultrasonido',
               3,
               'Verificacion de la fijacion del insono en cada punto contra la pieza patron del puesto',
-              5, 7),
+              7),
           ]),
-          falla('Soldadura excesiva que perfora el insono o marca el sustrato', 7, EF_RUIDO, [
+          falla('Soldadura excesiva que perfora el insono o marca el sustrato', EF_RUIDO, [
             causa('Energia por encima de la necesaria para el espesor del conjunto',
               'Parametros de soldadura definidos por pieza en la hoja de operaciones',
               3,
               'Inspeccion visual de la cara vista del insono y del sustrato en cada punto soldado',
-              4, 7),
+              7),
           ]),
         ]),
     ]),
@@ -570,12 +597,12 @@ const OP60 = operacion('60', 'SOLDADO POR ULTRASONIDO (Aplica solo a MP8146, MP8
         'Definir cuantos puntos y donde se sueldan en cada pieza',
         'La cantidad de puntos definida prevalece sobre la posicion original del diseño del sustrato',
         [
-          falla('Zonas definidas que quedan sin soldar', 7, EF_NO_MONTA, [
+          falla('Zonas definidas que quedan sin soldar', EF_NO_MONTA, [
             causa('Los puntos se marcan sobre el sustrato plastico y no siempre coinciden con el diseño del insono de tela',
               'Cantidad de puntos definida por pieza en la hoja de operaciones, con ayuda visual del recorrido',
               4,
               'Conteo de los puntos soldados contra la pieza patron del puesto al terminar el conjunto',
-              4, 7),
+              7),
           ]),
         ]),
     ]),
@@ -584,12 +611,12 @@ const OP60 = operacion('60', 'SOLDADO POR ULTRASONIDO (Aplica solo a MP8146, MP8
         'Sujetar el sustrato en posicion durante el soldado',
         'La pieza queda fija y en posicion al bajar el dispositivo, segun la hoja de operaciones del MP8146',
         [
-          falla('Sustrato desplazado durante el soldado', 6, EF_NO_MONTA, [
+          falla('Sustrato desplazado durante el soldado', EF_NO_MONTA, [
             causa('El dispositivo no retiene la pieza en toda su longitud',
               'Fijacion de la alineacion con los primeros puntos de ultrasonido antes de completar el resto, segun la hoja de operaciones',
               4,
               'Verificacion de la posicion del insono contra la pieza patron al terminar el conjunto',
-              5, 6),
+              7),
           ]),
         ]),
     ]),
@@ -598,12 +625,12 @@ const OP60 = operacion('60', 'SOLDADO POR ULTRASONIDO (Aplica solo a MP8146, MP8
         'Posicionar el insono sobre el sustrato y ejecutar los puntos',
         'El insono cubre la zona definida antes del primer punto',
         [
-          falla('Insono posicionado fuera de la zona que debe cubrir', 6, EF_RUIDO, [
+          falla('Insono posicionado fuera de la zona que debe cubrir', EF_RUIDO, [
             causa('El insono es flexible y no tiene referencia propia de posicionado sobre el sustrato',
               'Piloto de localizacion y ayuda visual de posicionado en el puesto, segun la hoja de operaciones',
               4,
               'Verificacion de la cobertura del insono contra la pieza patron antes de soldar',
-              5, 6),
+              7),
           ]),
         ]),
     ]),
@@ -618,19 +645,19 @@ const OP70 = operacion('70', 'ENSAMBLE DE SUSTRATOS CONSIGNADOS (Aplica solo a M
         'Aportar los componentes plasticos que forman cada conjunto',
         'Cada codigo terminado lleva los componentes que define su BOM en el ERP',
         [
-          falla('Conjunto ensamblado con un componente que no le corresponde', 8, EF_NO_MONTA, [
+          falla('Conjunto ensamblado con un componente que no le corresponde', EF_NO_MONTA, [
             causa('Los sustratos del defroster central, RH y LH se presentan juntos en el puesto',
               'Presentacion de los componentes separados por codigo en el puesto de ensamble',
               4,
               'Verificacion del conjunto contra la pieza patron de cada codigo antes de la inspeccion final',
-              4, 8),
+              8),
           ]),
-          falla('Faltante de un componente en el conjunto', 8, EF_NO_MONTA, [
+          falla('Faltante de un componente en el conjunto', EF_NO_MONTA, [
             causa('El conjunto se arma en varias etapas y no hay verificacion de completitud entre ellas',
               'Secuencia de ensamble definida en la hoja de operaciones',
               4,
               'Verificacion del conjunto completo contra la BOM en la inspeccion final',
-              4, 8),
+              8),
           ]),
         ]),
     ]),
@@ -639,12 +666,12 @@ const OP70 = operacion('70', 'ENSAMBLE DE SUSTRATOS CONSIGNADOS (Aplica solo a M
         'Unir los componentes segun la secuencia definida',
         'La union queda firme y sin holgura entre componentes',
         [
-          falla('Union floja entre el connect bracket y el conjunto', 7, EF_NO_MONTA, [
+          falla('Union floja entre el connect bracket y el conjunto', EF_NO_MONTA, [
             causa('Los 12 remaches del connect bracket no estan documentados en ninguna hoja de operaciones',
               'TBD — completar la hoja de operaciones del ensamble con los 12 remaches del MP7457',
               5,
               'Conteo de remaches del conjunto contra la BOM en la inspeccion final',
-              4, 7),
+              8),
           ]),
         ]),
     ]),
@@ -662,12 +689,12 @@ const OP80 = operacion('80', 'INSPECCION FINAL',
         'Servir de referencia de comparacion del conjunto terminado',
         'Existe una pieza patron por codigo, identificada y vigente',
         [
-          falla('Conjunto liberado sin comparar contra la pieza patron del codigo', 7, EF_NO_MONTA, [
+          falla('Conjunto liberado sin comparar contra la pieza patron del codigo', EF_NO_MONTA, [
             causa('No hay pieza patron disponible para todos los codigos en el puesto de inspeccion',
               'Piezas patron de los conjuntos definidas e identificadas por codigo en el puesto',
               4,
               'El registro de inspeccion final exige indicar la pieza patron utilizada',
-              5, 7),
+              8),
           ]),
         ]),
     ]),
@@ -676,12 +703,12 @@ const OP80 = operacion('80', 'INSPECCION FINAL',
         'Verificar aspecto, completitud e identificacion del conjunto',
         'Se verifica el 100% de los conjuntos antes del embalaje',
         [
-          falla('Defecto de aspecto en la cara vista del insono que llega al cliente', 6, EF_RUIDO, [
+          falla('Defecto de aspecto en la cara vista del insono que llega al cliente', EF_RUIDO, [
             causa('El defecto de soldadura queda en una zona que no se observa en la posicion habitual de inspeccion',
               'Secuencia de inspeccion definida que recorre todas las zonas soldadas',
               4,
               'Inspeccion visual del 100% de los conjuntos contra la pieza patron',
-              4, 6),
+              7),
           ]),
         ]),
     ]),
@@ -690,12 +717,12 @@ const OP80 = operacion('80', 'INSPECCION FINAL',
         'Definir que se acepta y que se rechaza',
         'TBD — el criterio de aceptacion vive en el Plan de Control, que todavia no existe para este producto',
         [
-          falla('Criterio de aceptacion aplicado de forma distinta entre turnos', 6, EF_RUIDO, [
+          falla('Criterio de aceptacion aplicado de forma distinta entre turnos', EF_RUIDO, [
             causa('El producto no tiene Plan de Control emitido, que es donde se fija el criterio y la frecuencia',
               'TBD — emitir el Plan de Control del producto (elemento de Calidad en la matriz de PPAP de Cozzuol)',
               5,
               'TBD — a definir junto con el Plan de Control',
-              6, 6),
+              7),
           ]),
         ]),
     ]),
@@ -710,19 +737,19 @@ const OP90 = operacion('90', 'EMBALAJE, IDENTIFICACION Y CONTROL DE CANTIDADES',
         'Contener e identificar las piezas hasta el cliente',
         'Un medio identificado por codigo y cantidad, segun la ficha de embalaje del proyecto',
         [
-          falla('Medio despachado con identificacion incorrecta', 8, EF_FALTANTE, [
+          falla('Medio despachado con identificacion incorrecta', EF_FALTANTE, [
             causa('Los siete codigos comparten el mismo formato de etiqueta y de medio',
               'Etiqueta emitida desde el sistema con el codigo de la orden de produccion',
               3,
               'Verificacion de la etiqueta contra el contenido del medio antes de cerrarlo',
-              4, 8),
+              7),
           ]),
-          falla('Medio despachado sin identificacion', 8, EF_FALTANTE, [
+          falla('Medio despachado sin identificacion', EF_FALTANTE, [
             causa('El medio se cierra antes de recibir la etiqueta impresa',
               'Secuencia de embalaje que coloca la etiqueta antes del cierre del medio',
               3,
               'Verificacion de la presencia de etiqueta en el control de cantidades de despacho',
-              4, 8),
+              7),
           ]),
         ]),
     ]),
@@ -731,19 +758,19 @@ const OP90 = operacion('90', 'EMBALAJE, IDENTIFICACION Y CONTROL DE CANTIDADES',
         'Verificar que la cantidad del medio coincide con la declarada',
         'La cantidad por medio esta definida en la ficha de embalaje del proyecto',
         [
-          falla('Cantidad de piezas por medio menor a la declarada', 8, EF_FALTANTE, [
+          falla('Cantidad de piezas por medio menor a la declarada', EF_FALTANTE, [
             causa('El conteo se hace una sola vez y por la misma persona que embala',
               'Cantidad por medio definida en la ficha de embalaje y visible en el puesto',
               3,
               'Segundo conteo por un metodo distinto al utilizado para embalar',
-              4, 8),
+              7),
           ]),
-          falla('Cantidad de piezas por medio mayor a la declarada', 6, EF_FALTANTE, [
+          falla('Cantidad de piezas por medio mayor a la declarada', EF_FALTANTE, [
             causa('El conteo se hace una sola vez y por la misma persona que embala',
               'Cantidad por medio definida en la ficha de embalaje y visible en el puesto',
               3,
               'Segundo conteo por un metodo distinto al utilizado para embalar',
-              4, 6),
+              7),
           ]),
         ]),
     ]),
@@ -752,12 +779,12 @@ const OP90 = operacion('90', 'EMBALAJE, IDENTIFICACION Y CONTROL DE CANTIDADES',
         'Colocar las piezas en el medio sin dañarlas',
         'Las piezas se ubican sin contacto directo ni presion entre ellas',
         [
-          falla('Pieza deformada o marcada por la disposicion dentro del medio', 7, EF_RUIDO, [
+          falla('Pieza deformada o marcada por la disposicion dentro del medio', EF_RUIDO, [
             causa('Las piezas se apilan sin separadores y quedan bajo presion durante el traslado',
               'Disposicion de las piezas en el medio definida en la ficha de embalaje del proyecto',
               4,
               'Inspeccion visual de la disposicion de las piezas antes de cerrar el medio',
-              5, 7),
+              7),
           ]),
         ]),
     ]),
