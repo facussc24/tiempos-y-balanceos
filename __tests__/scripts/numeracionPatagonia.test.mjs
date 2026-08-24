@@ -26,8 +26,14 @@ const CANON = JSON.parse(
 const entradas = Object.entries(CANON.documentos);
 
 describe('canon de numeracion de Patagonia', () => {
-    it('tiene los 8 documentos del proyecto', () => {
-        expect(entradas).toHaveLength(8);
+    // El numero es un trip-wire a proposito: si alguien agrega o saca un documento del canon,
+    // este test se cae y obliga a mirarlo. Van 9 desde el 24/08/2026, cuando entro el AMFE 172
+    // de los ductos/insonos (commit `88b264f1`). Al agregar el 9no no se actualizo el numero,
+    // asi que la suite quedo en rojo — si lo tocas, actualizalo aca en la misma tanda.
+    const ESPERADOS = 9;
+
+    it(`tiene los ${ESPERADOS} documentos del proyecto`, () => {
+        expect(entradas.map(([clave]) => clave).sort()).toHaveLength(ESPERADOS);
     });
 
     it.each(entradas)('%s declara producto, flujograma y fuente', (clave, doc) => {
