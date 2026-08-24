@@ -93,29 +93,13 @@
     {
       "stepId": "10",
       "type": "op-ins",
-      "description": "RECEPCION DE MATERIALES SEGUN TABLA DE MATERIALES",
+      "description": "RECEPCION E INSPECCION DE MATERIALES - CERTIFICADO Y ENSAYO DE INFLAMABILIDAD (CVTC 52034)",
       "critical": true,
       "criticalType": "D"
     },
     {
       "type": "storage",
       "description": "ALMACENADO EN SECTOR DE RECEPCION DE MATERIA PRIMA PENDIENTE DE CONTROL"
-    },
-    {
-      "type": "inspection",
-      "description": "INSPECCION DE MATERIALES - VERIFICACION DE CERTIFICADO Y ENSAYO DE INFLAMABILIDAD (CVTC 52034)",
-      "critical": true,
-      "criticalType": "D"
-    },
-    {
-      "type": "condition",
-      "labelCondition": "¿MATERIAL CONFORME?",
-      "labelDown": "OK",
-      "branchSide": {
-        "labelNode": "NO OK",
-        "type": "terminal",
-        "text": "RECLAMO DE CALIDAD AL PROVEEDOR"
-      }
     },
     {
       "type": "storage",
@@ -132,7 +116,7 @@
     },
     {
       "type": "inspection",
-      "description": "INSPECCION DE CORTE"
+      "description": "INSPECCION DE CORTE CONTRA MYLAR DE CONTROL"
     },
     {
       "type": "condition",
@@ -165,20 +149,6 @@
             "description": "SOLDADO POR ULTRASONIDO"
           },
           {
-            "type": "inspection",
-            "description": "INSPECCION DE PIEZA SOLDADA"
-          },
-          {
-            "type": "condition",
-            "labelCondition": "¿PIEZA CONFORME?",
-            "labelDown": "SI",
-            "branchSide": {
-              "labelNode": "NO",
-              "type": "terminal",
-              "text": "SCRAP"
-            }
-          },
-          {
             "stepId": "70",
             "type": "operation",
             "description": "ENSAMBLE DE DUCTO CONSIGNADO (MP8156 / MP8160)"
@@ -195,37 +165,9 @@
             "description": "LAMINADO / ADHESIVADO DE ESPUMA 7 MM + TESA"
           },
           {
-            "type": "inspection",
-            "description": "INSPECCION DE ADHESIVADO"
-          },
-          {
-            "type": "condition",
-            "labelCondition": "¿PIEZA CONFORME?",
-            "labelDown": "SI",
-            "branchSide": {
-              "labelNode": "NO",
-              "type": "terminal",
-              "text": "SCRAP"
-            }
-          },
-          {
             "stepId": "40",
             "type": "operation",
             "description": "TROQUELADO DE ESPUMA"
-          },
-          {
-            "type": "inspection",
-            "description": "INSPECCION DE LA PIEZA TROQUELADA"
-          },
-          {
-            "type": "condition",
-            "labelCondition": "¿PIEZA CONFORME?",
-            "labelDown": "SI",
-            "branchSide": {
-              "labelNode": "NO",
-              "type": "terminal",
-              "text": "SCRAP"
-            }
           },
           {
             "stepId": "50",
@@ -233,37 +175,9 @@
             "description": "PREARMADO Y REMACHADO (VISAGRAS + REMACHES)"
           },
           {
-            "type": "inspection",
-            "description": "INSPECCION DE LA PIEZA PREARMADA"
-          },
-          {
-            "type": "condition",
-            "labelCondition": "¿PIEZA CONFORME?",
-            "labelDown": "SI",
-            "branchSide": {
-              "labelNode": "NO",
-              "type": "terminal",
-              "text": "SCRAP"
-            }
-          },
-          {
             "stepId": "60",
             "type": "operation",
             "description": "SOLDADO POR ULTRASONIDO"
-          },
-          {
-            "type": "inspection",
-            "description": "INSPECCION DE PIEZA SOLDADA"
-          },
-          {
-            "type": "condition",
-            "labelCondition": "¿PIEZA CONFORME?",
-            "labelDown": "SI",
-            "branchSide": {
-              "labelNode": "NO",
-              "type": "terminal",
-              "text": "SCRAP"
-            }
           },
           {
             "stepId": "70",
@@ -308,5 +222,6 @@
     "NUMERACION DE LAS HO: las HO usan 20/30/40/40.1/40.2/50 con otro significado que el flujograma. Ademas su hoja 20 (corte) esta OCULTA y es de otra pieza (21-7339 TELA DE TNT, FIAT X6S, HO-956): para los ductos NO existe hoja de corte propia, y no hay HO de MP8137, MP8149, MP8150 ni MP8151.",
     "MP8146 mezcla dos piezas en un mismo libro de HO (AIR DUCT RH/LH en 40-40.1 y AIR DUCT CTR en 40,2-40.4)."
   ],
-  "_nota_visagras": "Las visagras del prearmado NO son arrastre del AMFE de apoyacabezas: la HO MP8147 CENTRAL op30 (REMACHADO) dice textual 'juego de 8 visagras y 16 remaches'. En el arb no tienen codigo propio; los candidatos son los brackets 427VAR002/003/004/005MON01 (Defroster Duct Ctr Braquet 1 a 4). A confirmar en planta."
+  "_nota_visagras": "Las visagras del prearmado NO son arrastre del AMFE de apoyacabezas: la HO MP8147 CENTRAL op30 (REMACHADO) dice textual 'juego de 8 visagras y 16 remaches'. En el arb no tienen codigo propio; los candidatos son los brackets 427VAR002/003/004/005MON01 (Defroster Duct Ctr Braquet 1 a 4). A confirmar en planta.",
+  "_nota_inspecciones": "Puntos de control: recepcion (integrada en la op-ins 10), corte contra mylar, e inspeccion final. Es la practica de la casa, verificada contra los 5 flujogramas ya emitidos: 151 tiene 2 inspecciones, 152 tiene 3, 153 tiene 4, 155 tiene 3 y 157 tiene 3. El flujograma anterior de ductos tenia 7 (adhesivado, pieza troquelada, pieza prearmada, dos de pieza soldada, corte y final) y esta version las habia heredado tal cual. Fak, 24/08/2026: 'normalmente no ponemos tantas, ponemos una en mesa de corte contra mylar de control y una en inspeccion final'. Los controles de deteccion de cada causa siguen estando en el AMFE 172, que es donde van."
 }

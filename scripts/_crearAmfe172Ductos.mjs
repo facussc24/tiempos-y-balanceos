@@ -86,6 +86,12 @@ function falla(descripcion, ef, causas) {
     c.ap = ap;
     c.actionPriority = ap;
     if (ap === 'H' && !c.optimizationAction) c.optimizationAction = 'Pendiente definicion equipo APQP';
+    // Toda causa con S=9 en este documento es de incumplimiento reglamentario (flamabilidad),
+    // y `amfe.md` §2 dice que eso genera CC obligatoria independiente de S/O. Se asigna aca
+    // para que no dependa de acordarse causa por causa. Normalmente las CC las pone solo Fak
+    // (core-prohibiciones §2); para este AMFE lo autorizo el 24/08/2026: "D roja visible + CC
+    // en el dato". Si el efecto deja de ser reglamentario, esto no se dispara.
+    if (ef.s >= 9 && !c.specialChar) c.specialChar = 'CC';
   }
   return {
     id: id(),
@@ -566,7 +572,7 @@ const OP60 = operacion('60', 'SOLDADO POR ULTRASONIDO (Aplica solo a MP8146, MP8
   'Soldar el insono al sustrato plastico por ultrasonido en los puntos definidos',
   'Todos los puntos de soldadura ejecutados, sin dañar el sustrato ni la cara vista del insono',
   [
-    we('Machine', 'Pistola de ultrasonido', [
+    we('Machine', 'Equipo de soldadura por ultrasonido', [
       funcion(
         'Aportar la energia de soldadura en cada punto definido',
         'Parametros de soldadura segun la hoja de operaciones de cada pieza',
@@ -640,7 +646,7 @@ const OP70 = operacion('70', 'ENSAMBLE DE SUSTRATOS CONSIGNADOS (Aplica solo a M
   'Unir los sustratos plasticos consignados entre si y con el connect bracket para formar el conjunto entregable',
   'Conjunto completo, con todos sus componentes y sin faltantes',
   [
-    we('Material', 'Sustratos consignados MP8156 / MP8157 / MP8158 / MP8159 / MP8160 y MP7457', [
+    we('Material', 'Sustratos plasticos consignados (Testori)', [
       funcion(
         'Aportar los componentes plasticos que forman cada conjunto',
         'Cada codigo terminado lleva los componentes que define su BOM en el ERP',

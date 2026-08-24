@@ -219,7 +219,7 @@ function validateTextQuality(doc, amfeNumber = '') {
     for (const op of doc.operations) {
         const opNum = op.opNumber || op.operationNumber || '?';
         const opName = op.name || op.operationName || '';
-        const ctx = { amfe: amfeNumber, opNum, opName };
+        const ctx = { amfe: amfeNumber, opNum, opName, opId: op.id };
 
         // OP_FUNCTION_DUPLICATE_FOCUS: ambos no vacios y literalmente iguales (tras trim)
         const opFunc = (op.operationFunction || '').toString().trim();
@@ -362,7 +362,7 @@ export function validateAmfeDoc(doc, productName = '', amfeNumber = '') {
         const opNum = op.opNumber || op.operationNumber || '?';
         const opName = op.name || op.operationName || '';
         const opNameUp = opName.toUpperCase();
-        const ctx = { amfe: amfeNumber, product: productName, opNum, opName };
+        const ctx = { amfe: amfeNumber, product: productName, opNum, opName, opId: op.id };
 
         // ALIAS DESYNC — op-level
         for (const pair of FIELD_ALIAS_PAIRS.filter(p => p.entity === 'op')) {
@@ -631,6 +631,28 @@ export function validateAmfeDoc(doc, productName = '', amfeNumber = '') {
                                 detail: `S=${sevEf} O=${c.occurrence} D=${c.detection}: la Figura 3.5-3 marca esta combinacion como Error (O=1 exige D=1 y viceversa), no le asigna AP` });
                         }
 
+                        // DETECTION_HUMANA_OPTIMISTA (WARNING) — Tabla P3 del AIAG-VDA.
+                        // Un control que depende de una PERSONA mirando, tocando, escuchando,
+                        // contando o revisando un papel es D=7 (en estacion) u 8 (aguas abajo):
+                        // "the method relies on a human". Para bajar de 7 hace falta INSTRUMENTO;
+                        // de 6, R&R confirmado; de 4, ademas verificacion de poka-yoke.
+                        // Lo destapo /auditoria-cliente sobre el AMFE 172 el 24/08/2026: 47 causas
+                        // con controles visuales calificadas D=3-6. Al corregirlas el AP paso de
+                        // L=9/M=22/H=15 a M=12/H=35 — el riesgo estaba subdeclarado a la mitad.
+                        // La tabla de amfe.md §13 decia lo mismo que el AMFE (visual en 4-5), asi
+                        // que se corrigio la REGLA contra el manual y nacio este check.
+                        // Avisa, no corrige: la calificacion es dato tecnico del equipo.
+                        if (!missD) {
+                            const dNum = Number(c.detection);
+                            const det = String(c.detectionControl ?? '').toLowerCase();
+                            const esHumano = /\b(visual|inspecc|mira|observ|tactil|audi|conteo|cont(ar|eo)|verificacion documental|revision del certificado|pieza patron|contra la pieza|a la vista)\b/.test(det);
+                            const tieneInstrumento = /\b(calibre|comparador|galga|pasa\/no pasa|go\/no.?go|torquim|balanza|micromet|sensor|camara|celda de carga|interlock|poka.?yoke|dinamomet|espesim)\b/.test(det);
+                            if (dNum >= 1 && dNum <= 6 && esHumano && !tieneInstrumento) {
+                                issues.push({ ...cCtx, type: 'DETECTION_HUMANA_OPTIMISTA',
+                                    detail: `D=${dNum} para un control que depende de una persona ("${String(c.detectionControl).slice(0, 60)}"). Tabla P3: visual/tactil/audible/conteo va D=7 en estacion u 8 aguas abajo` });
+                            }
+                        }
+
                         // CAUSE_S9_SIN_CC (WARNING) — S>=9 sin caracteristica especial declarada.
                         // NO asigna nada: las CC/SC las pone Fak (core-prohibiciones §2). Avisa,
                         // porque el patron real que encontro la auditoria del 21/08/2026 es que la CC
@@ -794,7 +816,16 @@ export function diffIssues(before, after) {
  * contando como issue nuevo — ahi si es otra operacion.
  */
 function issueKey(i) {
-    const operacion = String(i.opName || '').trim().toUpperCase() || `#${i.opNum}`;
+    // El `id` de la operacion es lo unico estable: sobrevive tanto a la renumeracion (que
+    // cambia el numero) como al renombre (que cambia el nombre). Agregado el 24/08/2026, al
+    // alinear la OP40 de los apoyacabezas con el nombre que le da el Plan de Control: cambiar
+    // "ENFUNDADO" por "ENSAMBLE ASTA + ENFUNDADO" hizo que los dos EMPTY_OP PREEXISTENTES de
+    // los traseros aparecieran como criticos NUEVOS y el gate bloqueara el apply. Es el caso
+    // espejo del 18/08, que fue el que puso el nombre como clave.
+    // Fallback al nombre y despues al numero para los documentos viejos sin `id`.
+    const operacion = String(i.opId || '').trim()
+        || String(i.opName || '').trim().toUpperCase()
+        || `#${i.opNum}`;
     return [i.type, operacion, i.weName, i.fmDesc, i.causeDesc].join('|');
 }
 

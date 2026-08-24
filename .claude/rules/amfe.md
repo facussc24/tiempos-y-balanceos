@@ -161,16 +161,66 @@ Antes de poner placeholder en un campo, agotar EN ORDEN: (1) cross-reference Sup
 - **Maestros vs familias** (panel "Libreria de AMFEs Maestros"): fundacion = familia SIN productos (memberCount=0); familia = CON productos. No mezclar. El AMFE maestro NO se alinea con HOs (aplica a muchas HOs de varios productos); el AMFE de producto adopta la numeracion real de su HO fisica.
 - Numeracion de OPs: lineal de 10 en 10 sin saltos; EMBALAJE siempre la ULTIMA; reprocesos justo antes (80/82 si embalaje=90); inspeccion final antes de reprocesos; sub-ops del mismo sector = misma decena (11, 35, 82).
 
-## 13. Escalas O y D
+## 13. Escalas O y D — transcritas de las Tablas P2 y P3 del AIAG-VDA
 
-| O | Significado | | D | Significado |
-|---|---|---|---|---|
-| 10 | Falla inevitable, sin control | | 10 | Sin deteccion |
-| 8-9 | Frecuente (5-10% produccion) | | 8-9 | Solo se detecta en campo |
-| 6-7 | Ocasional (1-2/semana) | | 6-7 | Visual por lote |
-| 4-5 | Infrecuente (1/mes) | | 4-5 | 100% visual + dimensional |
-| 2-3 | Rara (1-2/ano) | | 2-3 | Poka-yoke / automatica |
-| 1 | Remota, nunca ocurrio | | 1 | Sensor con interlock |
+🔴 **Corregidas el 24/08/2026 (OK de Fak: *"si no coincide con la oficial hay que corregirla"*).**
+La tabla de D que estaba aca ponia *"100% visual + dimensional"* en **4-5** y *"visual por lote"*
+en **6-7**. Es falso, y subdeclaraba riesgo en todos los AMFE. Lo destapo `/auditoria-cliente`
+sobre el AMFE 172: al recalificar sus 47 causas el AP salto de `L=9/M=22/H=15` a `M=12/H=35`.
+**Enforcement: check `DETECTION_HUMANA_OPTIMISTA` en `scripts/_lib/amfeValidator.mjs`.**
+
+**Fuente** (leida en el original, no parafraseada del codigo — [[verificar_contra_la_fuente]]):
+`4- MANUALES\AMFE\FMEA-AMFE-VDA-AIAG\446076670-FMEA-AIAG-VDA-First-Edition-pdf.pdf`,
+**Tabla P1 pag. 116 · Tabla P2 pag. 117 · Tabla P3 pag. 119-120 del PDF**. Es escaneado: se
+rasteriza y se MIRA; `get_text()` da vacio.
+
+### D — Deteccion (Tabla P3). **La pregunta no es cuanto se mira: es CON QUE.**
+
+| D | Criterio oficial |
+|---|---|
+| 10 | Sin metodo de deteccion / no se detecta |
+| 9 | *"Failure is not easily detected. Random audits <100% of product"* |
+| **8** | Deteccion **aguas abajo** por medios **visuales, tactiles o audibles**. *"The method relies on a human"* |
+| **7** | Lo mismo **en la propia estacion**. *"The method relies on a human"* |
+| 6 | **Galga** (calibre, comparador, pasa/no-pasa). Capacidad del equipo **todavia no probada** |
+| 5 | Galga + *"capability... confirmed through gauge repeatability and reproducibility evaluations"* |
+| 4 | Ademas: metodo probado y *"the required error proofing verification is performed"* (aguas abajo) |
+| 3 | Igual que 4, pero **en estacion** |
+| 2 | Detecta el **ERROR** (la causa), no el defecto, con equipo con R&R confirmado |
+| 1 | El defecto **no se puede producir fisicamente** por diseño de pieza o utillaje |
+
+**Regla practica:** mirar, tocar, escuchar, contar o revisar un papel **es D=7 (en estacion) u
+8 (aguas abajo), por mas que sea al 100%**. Para bajar de 7 hace falta INSTRUMENTO; para bajar
+de 6, R&R confirmado; para 4 o menos, ademas verificacion de poka-yoke.
+
+### O — Ocurrencia (Tabla P2). Se califica por EXPERIENCIA + CONTROL PREVENTIVO.
+
+| O | Criterio oficial |
+|---|---|
+| 10 | *"New process without experience"* · *"Best practices and procedures **do not exist**"* |
+| 9 | *"First application of new procedures with no experience"* |
+| 8 | *"Known but problematic process"* · prevencion no confiable |
+| 7 | Proceso similar con no conformidades por encima de lo aceptable |
+| 6 | Proceso similar con alguna no conformidad; practicas insuficientes |
+| 4-5 | Proceso similar con no conformidades aisladas |
+| **3** | *"Process has been tried and tested with successful results **in series production**. History of capability within control limits"* |
+| 2 | Idem, con capacidad demostrada |
+| 1 | Prevencion que elimina la causa |
+
+**Ojo con O=3:** exige historial **en serie**. Un producto en PPAP, o una causa cuyo control
+preventivo todavia es `TBD`, **no puede estar en 3** — por P2 le corresponde la banda alta.
+
+### S — Severidad (Tabla P1). Se asigna al EFECTO, nunca al modo de falla.
+
+Referencias que mas se usan: **9** = *"Noncompliance with regulations"* · **8** = *"100% of
+product affected may have to be scrapped"* o paro de mas de un turno en el cliente · **7** =
+*"A portion of the production run may have to be scrapped"* · **6** = perdida de funcion de
+confort · **5** = degradacion de funcion de confort. **S=6 para abajo son bandas de RETRABAJO:
+si el efecto dice "scrap", va 7 u 8.**
+
+Si dos modos de falla comparten el mismo efecto, comparten la S. Patron que lo hace imposible
+de romper: que la S viva EN el efecto y no se pueda pasar a mano (ver
+`scripts/_crearAmfe172Ductos.mjs`).
 
 ## 14. Schema y scripts .mjs — OBLIGATORIO
 
