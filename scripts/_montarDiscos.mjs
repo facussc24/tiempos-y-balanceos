@@ -37,10 +37,10 @@ const DISCOS = [
 ];
 
 /** Corre un comando con timeout duro y stdin cerrado. Nunca lanza: devuelve texto. */
-function correr(cmd, args) {
+function correr(cmd, args, timeout = 20_000) {
     try {
         return execFileSync(cmd, args, {
-            timeout: 20_000,               // tope duro: jamas queda colgado
+            timeout,                       // tope duro: jamas queda colgado
             stdio: ['ignore', 'pipe', 'pipe'], // stdin cerrado => no espera contrasena
             encoding: 'latin1',
             windowsHide: true,
@@ -50,7 +50,22 @@ function correr(cmd, args) {
     }
 }
 
-/** Responde de verdad? No alcanza con existsSync: hay que poder LEER. */
+/**
+ * Responde de verdad? No alcanza con que la letra exista: hay que poder LEER.
+ *
+ * LIMITACION CONOCIDA, a la vista y medida: `readdirSync` no acepta timeout. Si la
+ * unidad quedara MAPEADA PERO MUERTA, esta llamada se bloquea hasta que Windows
+ * agota su propio timeout de red, que puede pasar los 20 s de las llamadas `net`.
+ * NO consume CPU —es espera de I/O, no un loop— asi que no repite el incidente que
+ * motivo las advertencias de la cabecera; lo unico que sufre es la promesa de que
+ * esto termina rapido SIEMPRE.
+ *
+ * Se probo reemplazarlo por `dir` en subproceso con timeout y dio FALSO NEGATIVO
+ * ("no responde" con los discos montados), o sea empeoraba la funcion principal
+ * para cubrir un caso de borde. Se deja el mecanismo que funciona y la limitacion
+ * escrita. Si algun dia molesta de verdad, la salida es un chequeo previo por
+ * `net use <letra>` (que no toca el filesystem) — pero medirlo antes de cambiarlo.
+ */
 function responde(letra) {
     try {
         if (!existsSync(`${letra}\\`)) return null;
