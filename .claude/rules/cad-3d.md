@@ -143,6 +143,22 @@ brazo correcto**.
 **Reglas cortas:**
 - Todo parámetro heredado que se propague a la geometría global se **recalcula** antes de usarlo —
   incluida la carga: una fuerza sin su área es un número de otra pieza.
+- **Y el que defino YO se MIDE sobre el artefacto, no se declara.** 2026-08-24, gancho de mochila:
+  el agarre depende de `a/L` y yo puse L = distancia entre centros de las almohadillas (26 mm);
+  la geometría daba **40,7**, porque al bascular el clip apoya en los BORDES, no en los centros.
+  `a/L` real 1,40 contra 1,67 exigido: **la pieza no agarraba.** Los seis controles daban verde
+  porque medían "muerde arriba / muerde abajo", que se cumple con cualquier L. **El control tiene
+  que medir la MAGNITUD QUE GOBIERNA, no una consecuencia visible de ella** — si el valor gemelo
+  no cambia cuando esa magnitud cambia, el control no la está mirando. Es el test del valor gemelo
+  aplicado al parámetro, no al resultado.
+  *Enforcement (patrón a replicar):* `examples/gancho_mochila/verificar_gancho.py` mide L sobre el
+  STL exportado y falla si `a/L` cae por debajo de `1/(2·µ)`; el `params.json` guarda el valor
+  declarado al lado, así el desacuerdo salta.
+- **Y hay fallas que sólo aparecen MIRANDO el render, con la pieza en su lugar de uso.** Mismo día:
+  la nariz del gancho subía 14 mm por encima del clip y habría chocado contra la tapa del
+  escritorio — ninguna cuenta lo veía, porque ninguna sabía que el gancho va pegado a la tapa.
+  *Enforcement:* lo que se aprende mirando vuelve como assert en el propio build —
+  `build_gancho.py` aborta si `z_punta > h_clip`, no queda como recordatorio.
 - **El criterio de un elástico impreso es la FATIGA, no la deformación.** ε ≤ 0,6 % equivale a 15 MPa
   nominales, que con Kt ya supera el límite de fatiga del PLA en Z (10–16 MPa). El criterio es
   σ·Kt ≤ límite de fatiga → **ε ≤ 0,35 %**.

@@ -1,0 +1,95 @@
+{
+  "_comment": "Gancho para colgar mochilas de la pata del escritorio (tarea del Escritorio 'Imprimir gancho para colgar mochilas', 19/08/2026). Cotas en mm. UNICA cota dura de la pieza ajena: t_pata, medida por Fak con calibre. Todo lo demas son cotas de DISENO, derivadas de las tres cuentas de abajo.",
+
+  "fuentes": {
+    "cota_dura": "t_pata = 30.68 mm — calibre de Fak, foto 'WhatsApp Image 2026-08-19 at 4.25.29 PM.jpeg'",
+    "confirmado_por_fak": [
+      "la zona es la pata gris, en la parte de arriba (GATE 0 cerrado en chat 24/08)",
+      "el espesor es el mismo en toda la pata",
+      "se pone y se saca a mano, queda puesto, SIN tornillos",
+      "carga hasta 12 kg"
+    ],
+    "carpeta_tarea": "C:\\Users\\FacundoS-PC\\OneDrive - BARACK ARGENTINA SRL\\Desktop\\Imprimir gancho para colgar mochilas"
+  },
+
+  "sustrato": {
+    "_comment": "la pata: barra de seccion rectangular. El ancho W no lo se (la foto que lo tenia no se lee) y el diseno NO depende de el: el clip solo necesita W >= p_ala. En las fotos la pata es bastante mas ancha que eso.",
+    "t_pata": 30.68,
+    "W_supuesto_para_verificar": 70.0,
+    "W_minimo_requerido": 26.0
+  },
+
+  "carga": {
+    "_comment": "P = 12 kg (dato de Fak). mu = rozamiento PLA sobre chapa pintada, valor conservador de bibliografia (0.30; el rango tipico es 0.30-0.40).",
+    "P_kg": 12.0,
+    "P_N": 117.7,
+    "mu": 0.30
+  },
+
+  "clip": {
+    "_comment": "boca = t_pata + juego. juego 0.62 (0.31/lado) esta dentro de 0.3-0.5/lado de cad-3d.md y permite el basculamiento de ~1.4 grados que activa la cuna.",
+    "juego_total": 0.62,
+    "boca": 31.30,
+    "e_ala": 8.0,
+    "p_ala": 26.0,
+    "h_clip": 28.0,
+    "e_lomo": 8.0,
+    "h_almohadilla": 10.0,
+    "rebaje_fuera_de_almohadilla": 1.0,
+    "_comment_L": "L (brazo del par de mordida) NO es la distancia entre centros de almohadillas: al bascular, el ala +Y toca en su punto MAS BAJO y el ala -Y en el MAS ALTO, asi que L = h_clip. Medido el 24/08 sobre el STL: con h_clip 40 daba L=40,7 y a/L=1,40 < 1,67 -> RESBALABA. Los rebajes reparten la presion, no acortan L. Lo unico que acorta L es acortar el clip.",
+    "rampa_rebaje": 6.0,
+    "chaflan_entrada": 2.0
+  },
+
+  "brazo": {
+    "_comment": "El brazo BAJA hacia afuera a proposito: asi la correa se va al extremo, donde el brazo 'a' es maximo — y 'a' grande es lo que hace que la mordaza agarre (a/L >= 1/(2mu)). Un brazo horizontal dejaria la correa caer cerca del clip y ahi la mordaza se suelta.",
+    "y_raiz": 23.65,
+    "z_raiz": 13.0,
+    "y_fondo": 62.0,
+    "z_fondo": 5.0,
+    "ancho_X": 34.0,
+    "x0": -8.0,
+    "_comment_ancho": "el brazo tiene el MISMO ancho que el clip (34 = e_lomo + p_ala) a proposito: si fuera mas angosto, la carga quedaria descentrada respecto del clip y le meteria torsion. Ademas 34 mm de apoyo no marcan la correa.",
+    "a_centro_carga": 57.0
+  },
+
+  "nariz": {
+    "y_punta_ext": 70.0,
+    "_comment_z": "z_punta = h_clip A PROPOSITO: nada de la pieza sobresale por encima del clip. Fak lo va a montar en la parte de ARRIBA de la pata, pegado a la tapa; una narizona mas alta que el clip chocaria contra la tapa y no entraria. Lo vi en el render del conjunto, no en las cuentas. cuentas() tiene el assert.",
+    "z_punta": 28.0,
+    "r_fondo_gancho": 8.0,
+    "r_canto_externo": 3.0
+  },
+
+  "radios": {
+    "_comment": "cad-3d.md: ninguna esquina interna viva donde hay flexion. Kt 2.2 con arista viva contra 1.2 con R >= 0.5*t.",
+    "r_ala_lomo": 4.0,
+    "r_brazo_clip": 6.0,
+    "r_fondo_rebaje": 0.8,
+    "matar_cantos": 1.0
+  },
+
+  "impresion": {
+    "_comment": "memoria impresora_3d_fak: Elegoo Neptune 4 Max, boquilla 0.4, SIEMPRE Elegoo RAPID PLA+. NO es PETG.",
+    "material": "Elegoo RAPID PLA+",
+    "boquilla_C": [200, 220],
+    "ventilador_pct": 100,
+    "capa_mm": 0.16,
+    "perimetros": 4,
+    "relleno_pct": 40,
+    "relleno_patron": "gyroid",
+    "soportes": false,
+    "brim": true,
+    "orientacion": "apoyada sobre la cara Z=0 tal como sale del STEP — sin girar nada en el laminador"
+  },
+
+  "testigo": {
+    "_comment": "Paso 0: tres bocas juntas para saber cual calza antes de tirar una impresion de 2 h. Se identifican por muescas (1, 2 o 3), no por texto impreso, que a este tamano no se lee.",
+    "bocas": [31.10, 31.30, 31.50],
+    "h": 16.0,
+    "p_ala": 14.0,
+    "e_ala": 5.0,
+    "e_lomo": 6.0,
+    "separacion": 6.0
+  }
+}
