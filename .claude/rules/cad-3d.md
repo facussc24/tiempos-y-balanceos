@@ -162,8 +162,10 @@ brazo correcto**.
   de margen que yo creía tener. Un `params.json` con cotas derivadas escritas a mano se
   desincroniza en el primer cambio y nada avisa.
   *Enforcement ya cargado en esta sesión:* `build_gancho.py::derivadas()` las calcula en cada
-  corrida y ya no viven en el json, más un `raise SystemExit` que aborta si la pieza sale en más
-  de un sólido. Lo destapó el gate de ensamble de `export_deliverables.py`; el bbox y el volumen
+  corrida y las pisa, más un `raise SystemExit` que aborta si la pieza sale en más de un sólido.
+  **Y las claves muertas se BORRAN del json, no alcanza con dejar de leerlas:** el auditor las
+  encontró ahí el mismo día, con el valor viejo, tapadas por el spread — inofensivas sólo hasta
+  que alguien lea `p["brazo"]["y_raiz"]` directo o cambie el orden del merge. Lo destapó el gate de ensamble de `export_deliverables.py`; el bbox y el volumen
   no lo habrían visto.
 - **Y hay fallas que sólo aparecen MIRANDO el render, con la pieza en su lugar de uso.** Mismo día:
   la nariz del gancho subía 14 mm por encima del clip y habría chocado contra la tapa del

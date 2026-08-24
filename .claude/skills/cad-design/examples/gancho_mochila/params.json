@@ -44,13 +44,10 @@
 
   "brazo": {
     "_comment": "El brazo BAJA hacia afuera a proposito: asi la correa se va al extremo, donde el brazo 'a' es maximo — y 'a' grande es lo que hace que la mordaza agarre (a/L >= 1/(2mu)). Un brazo horizontal dejaria la correa caer cerca del clip y ahi la mordaza se suelta.",
-    "y_raiz": 23.65,
     "z_raiz": 13.0,
     "y_fondo": 66.0,
     "z_fondo": 5.0,
-    "ancho_X": 34.0,
-    "x0": -8.0,
-    "_comment_ancho": "el brazo tiene el MISMO ancho que el clip (34 = e_lomo + p_ala) a proposito: si fuera mas angosto, la carga quedaria descentrada respecto del clip y le meteria torsion. Ademas 34 mm de apoyo no marcan la correa.",
+    "_comment_ancho": "el brazo tiene el MISMO ancho que el clip a proposito: mas angosto dejaria la carga descentrada y le meteria torsion, y 34 mm de apoyo no marcan la correa. Se DERIVA (e_lomo + p_ala), igual que y_raiz, x0 y a_centro_carga: ninguna de las cuatro se escribe aca.",
     "_comment_a": "a_centro_carga ya NO se declara: lo deriva derivadas() como y_fondo - r_fondo_gancho. Estaba escrito 57 y el real era 54 — 3 mm de margen que yo creia tener y no tenia. Igual y_raiz, x0 y ancho_X."
   },
 
