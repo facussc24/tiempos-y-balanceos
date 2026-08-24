@@ -855,7 +855,7 @@ const doc = {
 // ---------------------------------------------------------------------------
 // Estadisticas y chequeos propios antes de tocar Supabase
 // ---------------------------------------------------------------------------
-let nWE = 0, nFn = 0, nFM = 0, nCausas = 0, sinAP = 0, tbd = 0, conCC = 0;
+let nWE = 0, nFn = 0, nFM = 0, nCausas = 0, sinAP = 0, tbd = 0, conCC = 0, causasConSOD = 0;
 const apCount = {};
 for (const op of doc.operations) {
   for (const w of op.workElements) {
@@ -868,6 +868,7 @@ for (const op of doc.operations) {
         for (const c of fm.causes) {
           nCausas++;
           if (!c.ap) sinAP++; else apCount[c.ap] = (apCount[c.ap] || 0) + 1;
+          if (fm.severity && c.occurrence && c.detection) causasConSOD++;
           if (c.specialChar === 'CC') conCC++;
           if (/TBD/.test(c.preventiveControl) || /TBD/.test(c.detectionControl)) tbd++;
         }
@@ -933,6 +934,13 @@ const { error } = await sb.from('amfe_documents').insert({
   status: 'draft',
   operation_count: doc.operations.length,
   cause_count: nCausas,
+  // Estos tres los lee el registro de la app para mostrar el riesgo del documento. Si quedan
+  // en 0 el AMFE aparece como si no tuviera ninguna causa de prioridad alta. Se calculan con
+  // la MISMA logica que `computeAmfeStats()` de utils/repositories/amfeRepository.ts.
+  // Los omiti en la primera carga y el auditor los encontro en 0 con 35 causas AP=H reales.
+  ap_h_count: apCount.H || 0,
+  ap_m_count: apCount.M || 0,
+  coverage_percent: nCausas > 0 ? Math.round((causasConSOD / nCausas) * 100) : 0,
   start_date: '2026-08-24',
   last_revision_date: '2026-08-24',
   revision_level: 'A',
