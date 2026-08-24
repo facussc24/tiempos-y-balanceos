@@ -85,10 +85,18 @@ def nombre_libre(carpeta, raiz, ext):
     return destino
 
 
-def armar_plan(origen):
-    """Devuelve [(origen, destino, previo_a_archivar_o_None)] y la lista de problemas."""
+def armar_plan(origen, solo=None):
+    """Devuelve [(origen, destino, previo_a_archivar_o_None)] y la lista de problemas.
+
+    `solo` es una lista de numeros de AMFE ('151', '162'...). Sin ella se distribuyen los 8.
+    Existe porque corregir UN documento no puede obligar a re-archivar los otros siete:
+    cada pasada mueve el anterior a OBSOLETO\\, asi que redistribuir de mas ensucia el
+    historial del legajo con copias identicas (24/08/2026, al sacar el poka-yoke del 151).
+    """
     acciones, problemas = [], []
     for nro, (pieza, dir_maestro, dir_ppap) in AMFES.items():
+        if solo and nro not in solo:
+            continue
         base = f'AMFE {nro} - {pieza} - Rev.A'
         for ext, raiz, sub in (('xlsx', MAESTRO, dir_maestro), ('pdf', PPAP, dir_ppap)):
             src = os.path.join(origen, base + '.' + ext)
@@ -156,11 +164,25 @@ def ejecutar(acciones):
 
 if __name__ == '__main__':
     if len(sys.argv) < 2 or sys.argv[1].startswith('--'):
-        sys.exit('Uso: python scripts/_distribuirAmfesPatagonia.py <carpeta_con_los_amfe> [--apply]')
+        sys.exit('Uso: python scripts/_distribuirAmfesPatagonia.py <carpeta_con_los_amfe> '
+                 '[--solo 151,162] [--apply]')
     ORIGEN = os.path.abspath(sys.argv[1])
     if not os.path.isdir(ORIGEN):
         sys.exit(f'ERROR: no existe la carpeta de origen {ORIGEN}')
-    acciones, problemas = armar_plan(ORIGEN)
+
+    SOLO = None
+    if '--solo' in sys.argv:
+        i = sys.argv.index('--solo')
+        if i + 1 >= len(sys.argv):
+            sys.exit('ERROR: --solo necesita los numeros, por ejemplo: --solo 151,162')
+        SOLO = [n.strip() for n in sys.argv[i + 1].split(',') if n.strip()]
+        desconocidos = [n for n in SOLO if n not in AMFES]
+        if desconocidos:
+            sys.exit(f'ERROR: no conozco estos AMFE: {", ".join(desconocidos)}. '
+                     f'Los validos son: {", ".join(AMFES)}')
+        print(f'FILTRO --solo: {", ".join(SOLO)}  (los demas no se tocan)\n')
+
+    acciones, problemas = armar_plan(ORIGEN, SOLO)
     mostrar_plan(acciones, problemas)
     if problemas:
         print('\nHay problemas sin resolver: no se ejecuta nada. Corregir y reintentar.')
