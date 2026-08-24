@@ -2,7 +2,8 @@
   "_comment": "Gancho para colgar mochilas de la pata del escritorio (tarea del Escritorio 'Imprimir gancho para colgar mochilas', 19/08/2026). Cotas en mm. UNICA cota dura de la pieza ajena: t_pata, medida por Fak con calibre. Todo lo demas son cotas de DISENO, derivadas de las tres cuentas de abajo.",
 
   "fuentes": {
-    "cota_dura": "t_pata = 30.68 mm — calibre de Fak, foto 'WhatsApp Image 2026-08-19 at 4.25.29 PM.jpeg'",
+    "cota_dura_v1_DESCARTADA": "30.68 mm — calibre de Fak, foto del 19/08. Es el espesor de la pata, pero NO donde el gancho termino montado.",
+    "cota_vigente": "t_pata = 27.2 mm — Fak monto el v1 impreso el 24/08 y reporto que a la boca le sobran 3-4 mm. boca 31.30 - 3.5 = 27.80, y de ahi la pata: 27.80 - 0.6 de juego = 27.2. La pieza en la mano le gana a mi medicion, y le gana tambien a la cota del calibre si la cota era de OTRA parte de la pata.",
     "confirmado_por_fak": [
       "la zona es la pata gris, en la parte de arriba (GATE 0 cerrado en chat 24/08)",
       "el espesor es el mismo en toda la pata",
@@ -13,8 +14,8 @@
   },
 
   "sustrato": {
-    "_comment": "la pata: barra de seccion rectangular. El ancho W no lo se (la foto que lo tenia no se lee) y el diseno NO depende de el: el clip solo necesita W >= p_ala. En las fotos la pata es bastante mas ancha que eso.",
-    "t_pata": 30.68,
+    "_comment": "OJO: 27,2 NO esta medido con calibre — sale de que a Fak le sobraron 3-4 mm de boca con la pieza puesta. Por eso los testigos cubren el rango entero (27,3 / 27,8 / 28,3) en vez de apostar a un numero. La pata: barra de seccion rectangular. El ancho W no lo se (la foto que lo tenia no se lee) y el diseno NO depende de el: el clip solo necesita W >= p_ala. En las fotos la pata es bastante mas ancha que eso.",
+    "t_pata": 27.20,
     "W_supuesto_para_verificar": 70.0,
     "W_minimo_requerido": 26.0
   },
@@ -29,7 +30,7 @@
   "clip": {
     "_comment": "boca = t_pata + juego. juego 0.62 (0.31/lado) esta dentro de 0.3-0.5/lado de cad-3d.md y permite el basculamiento de ~1.4 grados que activa la cuna.",
     "juego_total": 0.62,
-    "boca": 31.30,
+    "boca": 27.80,
     "e_ala": 8.0,
     "p_ala": 26.0,
     "h_clip": 28.0,
@@ -45,16 +46,16 @@
     "_comment": "El brazo BAJA hacia afuera a proposito: asi la correa se va al extremo, donde el brazo 'a' es maximo — y 'a' grande es lo que hace que la mordaza agarre (a/L >= 1/(2mu)). Un brazo horizontal dejaria la correa caer cerca del clip y ahi la mordaza se suelta.",
     "y_raiz": 23.65,
     "z_raiz": 13.0,
-    "y_fondo": 62.0,
+    "y_fondo": 66.0,
     "z_fondo": 5.0,
     "ancho_X": 34.0,
     "x0": -8.0,
     "_comment_ancho": "el brazo tiene el MISMO ancho que el clip (34 = e_lomo + p_ala) a proposito: si fuera mas angosto, la carga quedaria descentrada respecto del clip y le meteria torsion. Ademas 34 mm de apoyo no marcan la correa.",
-    "a_centro_carga": 57.0
+    "_comment_a": "a_centro_carga ya NO se declara: lo deriva derivadas() como y_fondo - r_fondo_gancho. Estaba escrito 57 y el real era 54 — 3 mm de margen que yo creia tener y no tenia. Igual y_raiz, x0 y ancho_X."
   },
 
   "nariz": {
-    "y_punta_ext": 70.0,
+    "y_punta_ext": 74.0,
     "_comment_z": "z_punta = h_clip A PROPOSITO: nada de la pieza sobresale por encima del clip. Fak lo va a montar en la parte de ARRIBA de la pata, pegado a la tapa; una narizona mas alta que el clip chocaria contra la tapa y no entraria. Lo vi en el render del conjunto, no en las cuentas. cuentas() tiene el assert.",
     "z_punta": 28.0,
     "r_fondo_gancho": 8.0,
@@ -85,7 +86,7 @@
 
   "testigo": {
     "_comment": "Paso 0: tres bocas juntas para saber cual calza antes de tirar una impresion de 2 h. Se identifican por muescas (1, 2 o 3), no por texto impreso, que a este tamano no se lee.",
-    "bocas": [31.10, 31.30, 31.50],
+    "bocas": [27.30, 27.80, 28.30],
     "h": 16.0,
     "p_ala": 14.0,
     "e_ala": 5.0,

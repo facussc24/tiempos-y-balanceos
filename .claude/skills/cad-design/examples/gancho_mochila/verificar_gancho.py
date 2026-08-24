@@ -89,7 +89,7 @@ def main():
 
     p = json.loads(Path(args.params).read_text(encoding="utf-8"))
     W = Path(args.workdir)
-    stl = Path(args.stl) if args.stl else W / "out" / "gancho_mochila_v1.stl"
+    stl = Path(args.stl) if args.stl else W / "out" / "gancho_mochila_v2.stl"
     print(f"verificando: {stl}")
     mesh = trimesh.load(str(stl))
     rep = Reporte()
@@ -231,7 +231,9 @@ def main():
     # controles de "muerde arriba / muerde abajo" daban verde igual: eran ciegos a esto.
     toca = contacto(-1)
     mu_r = p["carga"]["mu"]
-    a_carga = p["brazo"]["a_centro_carga"]
+    # a se DERIVA igual que en el build: no se lee de params (ahi ya no esta, justamente
+    # porque estaba escrito 57 cuando el real era 54).
+    a_carga = p["brazo"]["y_fondo"] - p["nariz"]["r_fondo_gancho"]
     exigido = 1.0 / (2.0 * mu_r)
     if len(toca) == 0:
         rep.add("L medido sobre la geometria", "sin contacto", "-", "-", False)

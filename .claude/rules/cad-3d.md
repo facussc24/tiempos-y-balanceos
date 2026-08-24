@@ -154,6 +154,17 @@ brazo correcto**.
   *Enforcement (patrón a replicar):* `examples/gancho_mochila/verificar_gancho.py` mide L sobre el
   STL exportado y falla si `a/L` cae por debajo de `1/(2·µ)`; el `params.json` guarda el valor
   declarado al lado, así el desacuerdo salta.
+- **Y el que DEPENDE de otra cota se deriva, nunca se escribe como número.** Mismo día, misma
+  pieza: Fak probó el gancho impreso y dijo que a la boca le sobraban 3-4 mm. Al bajarla de 31,30
+  a 27,80, `y_raiz` (la raíz del brazo) siguió siendo el literal **23,65**, que era `boca/2 + e_ala`
+  de la boca vieja: **el brazo quedó 1,75 mm separado del ala y la pieza salió en DOS sólidos
+  sueltos.** Y de paso apareció que `a` estaba escrito 57 cuando la geometría daba **54** — 3 mm
+  de margen que yo creía tener. Un `params.json` con cotas derivadas escritas a mano se
+  desincroniza en el primer cambio y nada avisa.
+  *Enforcement ya cargado en esta sesión:* `build_gancho.py::derivadas()` las calcula en cada
+  corrida y ya no viven en el json, más un `raise SystemExit` que aborta si la pieza sale en más
+  de un sólido. Lo destapó el gate de ensamble de `export_deliverables.py`; el bbox y el volumen
+  no lo habrían visto.
 - **Y hay fallas que sólo aparecen MIRANDO el render, con la pieza en su lugar de uso.** Mismo día:
   la nariz del gancho subía 14 mm por encima del clip y habría chocado contra la tapa del
   escritorio — ninguna cuenta lo veía, porque ninguna sabía que el gancho va pegado a la tapa.

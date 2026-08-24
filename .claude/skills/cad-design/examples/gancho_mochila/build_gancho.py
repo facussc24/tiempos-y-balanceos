@@ -127,9 +127,27 @@ def construir_clip(p, *, boca, con_rebajes=True, h=None, p_ala=None, e_ala=None,
 # ------------------------------------------------------------------------- el gancho
 
 
+def derivadas(p):
+    """Cotas que NO se declaran: dependen de la boca y se recalculan siempre.
+
+    El 24/08, al bajar la boca de 31,30 a 27,80 por el dato de Fak, y_raiz seguia siendo
+    el literal 23,65 (= la boca vieja). El brazo quedo 1,75 mm separado del ala y la pieza
+    salio en DOS solidos. Lo cazo el gate de ensamble de export_deliverables.
+    """
+    c = p["clip"]
+    yi = c["boca"] / 2.0
+    return {
+        "y_raiz": yi + c["e_ala"],          # cara externa del ala: de ahi nace el brazo
+        "x0": -c["e_lomo"],                 # el brazo arranca en el borde exterior del lomo
+        "ancho_X": c["e_lomo"] + c["p_ala"],  # mismo ancho que el clip, sin excentricidad
+        "a_centro_carga": p["brazo"]["y_fondo"] - p["nariz"]["r_fondo_gancho"],
+    }
+
+
 def construir_gancho(p):
     avisos = []
     c, b, n, r = p["clip"], p["brazo"], p["nariz"], p["radios"]
+    b = {**b, **derivadas(p)}
     boca = c["boca"]
 
     pieza, yi, ye = construir_clip(p, boca=boca)
@@ -241,7 +259,8 @@ def cuentas(p):
     """
     P = p["carga"]["P_N"]
     mu = p["carga"]["mu"]
-    a = p["brazo"]["a_centro_carga"]
+    d = derivadas(p)
+    a = d["a_centro_carga"]
     c = p["clip"]
 
     # L = brazo del par de mordida. Al bascular, el ala +Y apoya en su punto MAS BAJO y el
@@ -256,9 +275,9 @@ def cuentas(p):
     area_almo = c["p_ala"] * c["h_almohadilla"]
 
     # flexion del brazo en la raiz
-    b_ancho = p["brazo"]["ancho_X"]
+    b_ancho = d["ancho_X"]
     h_brazo = p["brazo"]["z_raiz"]
-    M = P * (a - p["brazo"]["y_raiz"])
+    M = P * (a - d["y_raiz"])
     W = b_ancho * h_brazo**2 / 6.0
     sigma = M / W
 
@@ -279,6 +298,8 @@ def cuentas(p):
     theta = math.degrees(math.atan(c["juego_total"] / L_geom))
 
     return {
+        "y_raiz_derivada": round(d["y_raiz"], 2),
+        "a_derivado": round(a, 2),
         "L_altura_del_clip": round(L_geom, 2),
         "a_sobre_L": round(a / L_geom, 3),
         "exigido_1_sobre_2mu": round(exigido, 3),
@@ -327,13 +348,19 @@ def main():
     for a in avisos:
         print("  AVISO:", a)
 
+    n_solidos = len(gancho.solids())
+    if n_solidos != 1:
+        raise SystemExit(
+            f"ABORTA: el gancho salio en {n_solidos} solidos sueltos. Algo no se pego — "
+            "casi seguro una cota que depende de la boca quedo escrita como literal."
+        )
     bb = gancho.bounding_box()
     print(f"  gancho  bbox X[{bb.min.X:.2f},{bb.max.X:.2f}] "
           f"Y[{bb.min.Y:.2f},{bb.max.Y:.2f}] Z[{bb.min.Z:.2f},{bb.max.Z:.2f}]")
     print(f"  gancho  volumen {gancho.volume/1000:.2f} cm3")
 
-    export_step(gancho, str(out / "gancho_mochila_v1.step"))
-    export_stl(gancho, str(out / "gancho_mochila_v1.stl"), tolerance=0.01, angular_tolerance=0.1)
+    export_step(gancho, str(out / "gancho_mochila_v2.step"))
+    export_stl(gancho, str(out / "gancho_mochila_v2.stl"), tolerance=0.01, angular_tolerance=0.1)
 
     for boca, muescas, pieza in construir_testigo(p):
         nombre = f"testigo_boca_{boca:.2f}".replace(".", "_")
