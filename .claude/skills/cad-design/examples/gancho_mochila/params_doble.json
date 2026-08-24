@@ -1,0 +1,55 @@
+{
+  "_comment": "Gancho DOBLE — el diseño del gerente de Fak (croquis en papel, 24/08/2026): una silla de montar que se cuelga sobre el travesaño horizontal del escritorio, con un gancho a cada lado. Cotas en mm.",
+
+  "_por_que_este_y_no_el_mio": [
+    "El v1 (mordaza) agarra por el momento DESEQUILIBRADO del peso: bascula y muerde la pata.",
+    "Si se le ponen dos ganchos y dos mochilas iguales, el momento se anula, N=0 y la friccion",
+    "se va a cero: se resbala. O sea, el v1 NO admite version simetrica — es una limitacion del",
+    "mecanismo, no del dibujo. El del gerente no aprieta nada: APOYA sobre el travesaño, asi que",
+    "anda igual con una mochila que con dos. Por eso este es el que puede llevar dos."
+  ],
+
+  "sustrato": {
+    "_ESTADO": "TBD — los tres valores de abajo son ESTIMACIONES de arranque sacadas a ojo de la foto del 24/08, NO medidas. Antes de imprimir, Fak los mide con el calibre y se regenera. El script avisa mientras sigan sin confirmar.",
+    "confirmado_por_fak": false,
+    "A_alto_travesano": 40.0,
+    "B_espesor_travesano": 30.0,
+    "C_luz_sobre_el_travesano": 6.0
+  },
+
+  "carga": {
+    "_comment": "P por gancho. El peor caso NO es con las dos mochilas (ahi se equilibra) sino con UNA sola: ese es el que vuelca la pieza y el que dimensiona las alas.",
+    "P_kg_por_gancho": 12.0,
+    "P_N": 117.7
+  },
+
+  "silla": {
+    "_comment": "La U invertida. juego 0.6 total (0.3/lado) como en el v1. e_lomo tiene que ENTRAR en la luz C: si no entra, el script aborta.",
+    "juego_total": 0.6,
+    "e_ala": 7.0,
+    "e_lomo": 5.0,
+    "ancho_X": 30.0
+  },
+
+  "gancho": {
+    "_comment": "Mismo criterio que el v1: el brazo BAJA hacia afuera para que la correa se vaya al fondo y no ande buscando donde apoyar. Aca el brazo largo ya no hace falta para agarrar (no hay friccion en juego), asi que se elige por ergonomia: que la mochila no roce la pata — que fue el defecto 3 del v1.",
+    "v_brazo_raiz": 16.0,
+    "v_fondo": 6.0,
+    "v_nariz": 32.0,
+    "u_fondo": 70.0,
+    "u_punta": 78.0,
+    "r_fondo_gancho": 8.0,
+    "r_canto_externo": 3.0,
+    "r_brazo_ala": 6.0
+  },
+
+  "impresion": {
+    "_comment": "memoria impresora_3d_fak. Igual que el v1, la pieza es una EXTRUSION pura: cero soportes, y las capas quedan a lo largo del brazo.",
+    "material": "Elegoo RAPID PLA+",
+    "capa_mm": 0.16,
+    "perimetros": 4,
+    "relleno_pct": 40,
+    "soportes": false,
+    "brim": true
+  }
+}
