@@ -7,6 +7,7 @@ es lo que export_deliverables.py exige antes de entregar (gate duro).
 
 Layout:  <workdir>/manifest.json + in/ + out/ + renders/ + cache/
 """
+import hashlib
 import json
 import os
 import time
@@ -75,6 +76,39 @@ def get_frame(workdir, name):
     if name not in fr:
         raise KeyError("Frame '%s' no existe. Disponibles: %s" % (name, sorted(fr.keys()) or "(ninguno)"))
     return geom.orthonormal_frame(fr[name]["b"], fr[name]["a_hint"])
+
+
+def file_signature(path):
+    """Firma del CONTENIDO de un archivo: tamano + sha1 corto.
+
+    Por que existe: la evidencia se buscaba por NOMBRE de archivo. Retocar la pieza
+    despues de verificarla dejaba la evidencia vieja calzando con el archivo nuevo, y
+    export_deliverables.py entregaba una pieza que nunca se verifico (demostrado en
+    corrida el 2026-08-24: 653 puntos DENTRO, "ENTREGA OK", sin --skip-gate).
+    Es la misma leccion que ya estaba escrita para el cache de mallas de gate_ensamble
+    ("un cache sin la firma del archivo miente") y que el almacen de evidencia no tenia.
+    """
+    h = hashlib.sha1()
+    with open(path, "rb") as fh:
+        for chunk in iter(lambda: fh.read(1 << 20), b""):
+            h.update(chunk)
+    return "%d-%s" % (os.path.getsize(path), h.hexdigest()[:16])
+
+
+def check_signature(evidence, campo, path):
+    """(ok, motivo) — la evidencia habla del archivo que hay HOY en disco?"""
+    if not os.path.isfile(path):
+        return False, "el archivo no existe: %s" % path
+    firmada = evidence.get(campo)
+    if not firmada:
+        return False, ("la evidencia es de una version anterior del sistema (no guardo la "
+                       "firma del archivo). Re-correr la verificacion.")
+    actual = file_signature(path)
+    if firmada != actual:
+        return False, ("el archivo CAMBIO despues de verificarse (firma %s, evidencia %s). "
+                       "Re-correr la verificacion sobre la version que se va a entregar."
+                       % (actual, firmada))
+    return True, ""
 
 
 def record_evidence(workdir, kind, **payload):

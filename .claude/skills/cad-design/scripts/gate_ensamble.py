@@ -758,6 +758,8 @@ def cmd(args):
             json.dump(salida, fh, indent=1, ensure_ascii=False)
         print("json -> %s" % args.json)
     if w:
+        salida = dict(salida)
+        salida["step_firma"] = workdir.file_signature(args.step)
         workdir.record_evidence(w, "ensamble_posicionado", **salida)
     return cod
 

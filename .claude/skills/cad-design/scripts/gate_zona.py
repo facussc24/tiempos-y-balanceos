@@ -421,6 +421,16 @@ def cmd_inventario(args):
                        "centro": [round(float(x), 2) for x in f["centro"]]} for f in pas])
 
     if args.confirmar:
+        if not args.quien:
+            print("\n[GATE 0] --confirmar exige --quien (quien miro el mapa y lo confirmo).")
+            return FALLA
+        if not args.evidencia or not os.path.isfile(args.evidencia):
+            print("\n[GATE 0] --confirmar exige --evidencia apuntando a un ARCHIVO QUE EXISTA")
+            print("         (el render circulado que devolvio Fak, una foto, un mail exportado).")
+            print("         Una frase no alcanza: este gate nacio del error mas caro del sistema")
+            print("         y no puede quedar autofirmado por el mismo agente que lo corre.")
+            print("         Recibido: %r" % (args.evidencia,))
+            return FALLA
         el = [f for f in filas if f["id"] in {x.strip() for x in args.confirmar.split(",")}]
         if not el:
             print("\n[GATE 0] --confirmar %s no coincide con ningun id de la tabla." % args.confirmar)
@@ -428,14 +438,20 @@ def cmd_inventario(args):
         if not w:
             print("\n[GATE 0] --confirmar necesita --workdir para dejar la evidencia.")
             return FALLA
+        guardada = os.path.join(w, "renders", "confirmacion_%s_%s"
+                                % (args.confirmar.replace(",", "-"),
+                                   os.path.basename(args.evidencia)))
+        shutil.copy(args.evidencia, guardada)
         workdir.record_evidence(
             w, "zona_confirmada", step=os.path.basename(args.step),
-            ids=[f["id"] for f in el], quien=args.quien, evidencia=args.evidencia,
+            ids=[f["id"] for f in el], quien=args.quien,
+            evidencia=os.path.basename(guardada),
+            evidencia_firma=workdir.file_signature(guardada),
             zonas=[{"id": f["id"], "verdicto": f["verdicto"],
                     "largo": round(f["largo"], 2), "ancho": round(f["ancho"], 2),
                     "centro": [round(float(x), 2) for x in f["centro"]]} for f in el])
-        print("\n[GATE 0] zona CONFIRMADA por %s (%s): %s. Evidencia en manifest.json."
-              % (args.quien, args.evidencia, ", ".join(f["id"] for f in el)))
+        print("\n[GATE 0] zona CONFIRMADA por %s: %s. Evidencia archivada en %s y firmada "
+              "en el manifest." % (args.quien, ", ".join(f["id"] for f in el), guardada))
         return OK
 
     if not pas:
@@ -756,8 +772,13 @@ def main():
     a.add_argument("--render3d", action="store_true",
                    help="ademas, vistas 3D (mas lento: la malla se decima a 30k triangulos)")
     a.add_argument("--confirmar", default=None, help="id(s) que Fak confirmo, ej: A1 o A1,A2")
-    a.add_argument("--quien", default="Fak")
-    a.add_argument("--evidencia", default="", help="como lo confirmo (ej: circulo en el render)")
+    a.add_argument("--quien", default=None,
+                   help="quien confirmo la zona (obligatorio con --confirmar)")
+    a.add_argument("--evidencia", default=None,
+                   help="RUTA a un ARCHIVO que exista: el render que Fak devolvio circulado, "
+                        "una foto, un mail exportado. Obligatorio con --confirmar. Antes el "
+                        "default era una cadena vacia y --quien salia 'Fak' solo: el mismo "
+                        "agente al que se le desconfia podia autofirmar el gate mas caro.")
     a.set_defaults(func=cmd_inventario)
 
     b = sub.add_parser("pasante", help="un candidato puntual: abertura o rebaje",

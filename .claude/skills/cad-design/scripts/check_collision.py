@@ -155,7 +155,10 @@ def main():
         print("  OK: el fixture asienta sobre el sustrato.")
 
     workdir.record_evidence(w, "collision_check", fixture=os.path.basename(args.fixture),
-                            substrate=os.path.basename(args.substrate), transform=args.transform,
+                            fixture_firma=workdir.file_signature(args.fixture),
+                            substrate=os.path.basename(args.substrate),
+                            substrate_firma=workdir.file_signature(args.substrate),
+                            transform=args.transform,
                             zones=args.zone, n_inside=n_in, dist_min=round(d_min, 3),
                             n_contacto=n_toca, contacto_ok=not sin_contacto, **stats)
 

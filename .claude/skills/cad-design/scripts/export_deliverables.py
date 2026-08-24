@@ -21,6 +21,30 @@ from cadlib import envcheck, geom, workdir  # noqa: E402
 import gmsh  # noqa: E402
 
 
+def _contar_solidos(step_path):
+    """Cuantos solidos trae el STEP. Barato: OCC sin mallar.
+
+    Decide si lo que se entrega es un ENSAMBLE (>=2 solidos) y por lo tanto necesita la
+    evidencia de gate_ensamble. Hasta el 2026-08-24 eso se decidia por el NOMBRE del
+    archivo ("ENSAMBLE" in base.upper()): un ensamble entregado como conjunto.step no
+    disparaba el gate. Es la leccion "el nombre no es el contenido" aplicada al gate
+    que la estaba violando.
+    """
+    from OCP.STEPControl import STEPControl_Reader
+    from OCP.TopExp import TopExp_Explorer
+    from OCP.TopAbs import TopAbs_SOLID
+    r = STEPControl_Reader()
+    if r.ReadFile(step_path) != 1:
+        return 0
+    r.TransferRoots()
+    ex = TopExp_Explorer(r.OneShape(), TopAbs_SOLID)
+    n = 0
+    while ex.More():
+        n += 1
+        ex.Next()
+    return n
+
+
 def _stl_export(step_path, stl_path, lc, curvature):
     with geom.gmsh_session():
         geom._load(step_path)
@@ -148,6 +172,13 @@ def main():
             # "no penetra" NO alcanza: un utillaje flotando a 60 mm de la pieza da 0 puntos
             # dentro exactamente igual que uno bien apoyado. Hay que exigir ademas que
             # ASIENTE — es la falla del 2026-08-07, que este mismo gate dejo pasar.
+            ok_firma, motivo = workdir.check_signature(ev, "fixture_firma", piece)
+            if not ok_firma:
+                raise SystemExit(
+                    "[GATE colision] La evidencia de '%s' NO habla del archivo que se va a\n"
+                    "entregar: %s\n"
+                    "Correr: check_collision.py --workdir %s --fixture %s --substrate <cliente.step>"
+                    % (base, motivo, w, piece))
             if ev.get("contacto_ok") is not True:
                 raise SystemExit(
                     "[GATE colision] El collision_check de '%s' no registra CONTACTO (%s).\n"
@@ -160,7 +191,7 @@ def main():
         # fuera de la ranura y las verificaciones de entonces (bbox dentro, volumen conservado)
         # dieron las dos bien: ninguna PODIA ver un corrimiento. Hace falta la evidencia del
         # emparejamiento macho-hembra, que se saca con gate_ensamble.py.
-        if "ensamble" not in args.skip_gate and "ENSAMBLE" in base.upper():
+        if "ensamble" not in args.skip_gate and _contar_solidos(piece) >= 2:
             ev = workdir.find_evidence(w, "ensamble_posicionado", fixture=base)
             if ev is None:
                 raise SystemExit(
@@ -176,6 +207,12 @@ def main():
                     "[GATE ensamble] El ultimo gate_ensamble de '%s' dio FALLA (%s): %s\n"
                     "Corregir la posicion y re-verificar antes de entregar."
                     % (base, ev.get("date"), ev.get("motivo", "ver salida del gate")))
+
+            ok_firma, motivo = workdir.check_signature(ev, "step_firma", piece)
+            if not ok_firma:
+                raise SystemExit(
+                    "[GATE ensamble] La evidencia de '%s' NO habla del archivo que se va a\n"
+                    "entregar: %s" % (base, motivo))
 
         if "render" not in args.skip_gate:
             step_mtime = os.path.getmtime(piece)
