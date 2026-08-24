@@ -37,6 +37,7 @@ export const FORBIDDEN_EQUIPMENT_PHRASES = _data.FORBIDDEN_EQUIPMENT_PHRASES || 
 export const PENINSULAR_TERMS = _data.PENINSULAR_TERMS || [];
 export const ENGLISH_RANDOM_TERMS = _data.ENGLISH_RANDOM_TERMS || [];
 export const REVISION_META_PATTERNS = _data.REVISION_META_PATTERNS || [];
+export const SELF_EXPOSURE_PATTERNS = _data.SELF_EXPOSURE_PATTERNS || [];
 export const CLAUDE_PHRASES = _data.CLAUDE_PHRASES || [];
 export const ARBITRARY_FREQUENCY_PATTERNS = _data.ARBITRARY_FREQUENCY_PATTERNS || [];
 
@@ -69,6 +70,7 @@ const _englishRe = ENGLISH_RANDOM_TERMS.map(t => {
 const _freqRe = ARBITRARY_FREQUENCY_PATTERNS.map(p => ({ raw: p, re: new RegExp(p, 'i') }));
 
 const _revMetaRe = REVISION_META_PATTERNS.map(p => ({ raw: p, re: new RegExp(p, 'i') }));
+const _selfExpRe = SELF_EXPOSURE_PATTERNS.map(p => ({ raw: p, re: new RegExp(p, 'i') }));
 
 /**
  * Detecta si una entrada del log de REVISIONES habla del REDACTOR en vez de la PIEZA.
@@ -90,6 +92,68 @@ export function scanRevisionMeta(texto) {
         if (m) hits.push({ pattern, match: m[0] });
     }
     return hits;
+}
+
+/**
+ * Escanea un texto buscando frases que EXPONGAN a Barack, a un compañero o a un proveedor.
+ *
+ * Distinto de `scanRevisionMeta()`, que solo mira el log de revisiones: esta funcion se aplica
+ * al CUERPO ENTERO del AMFE — causas, requisitos, controles, efectos, nombres de work element —
+ * que es justo por donde se escaparon las 101 frases del 24/08/2026. El gate viejo existia y no
+ * las vio porque miraba `revisions[].details` y nada mas.
+ *
+ * Un AMFE no dice que a Barack le falta un documento, que dos documentos nuestros se
+ * contradicen, ni que un proveedor no cumple. Eso se resuelve, se pregunta, o va en el mail.
+ *
+ * @param {string} texto - cualquier campo de texto del cuerpo del AMFE.
+ * @returns {Array<{pattern:string, match:string}>} vacio si el texto es legitimo.
+ */
+export function scanSelfExposure(texto) {
+    const raw = texto == null ? '' : String(texto);
+    if (!raw.trim()) return [];
+    const n = normalize(raw);
+    const hits = [];
+    for (const { raw: pattern, re } of _selfExpRe) {
+        const m = re.exec(n);
+        if (m) hits.push({ pattern, match: m[0] });
+    }
+    return hits;
+}
+
+/**
+ * Recorre un documento AMFE completo y devuelve toda frase que exponga a la organizacion.
+ *
+ * @param {object} doc - el documento (con `operations[]`).
+ * @returns {Array<{op:string, campo:string, texto:string, hits:Array}>}
+ */
+export function scanDocSelfExposure(doc) {
+    const salida = [];
+    const mirar = (op, campo, texto) => {
+        const hits = scanSelfExposure(texto);
+        if (hits.length) salida.push({ op, campo, texto: String(texto), hits });
+    };
+    for (const op of doc?.operations ?? []) {
+        const n = op.opNumber || op.operationNumber || '?';
+        mirar(n, 'operationFunction', op.operationFunction);
+        mirar(n, 'focusElementFunction', op.focusElementFunction);
+        for (const we of op.workElements ?? []) {
+            mirar(n, `WE "${we.name}"`, we.name);
+            for (const fn of we.functions ?? []) {
+                mirar(n, 'function.description', fn.description);
+                mirar(n, 'function.requirements', fn.requirements);
+                for (const fm of fn.failures ?? []) {
+                    mirar(n, 'failureMode', fm.description);
+                    for (const c of ['effectLocal', 'effectNextLevel', 'effectEndUser']) mirar(n, c, fm[c]);
+                    for (const ca of fm.causes ?? []) {
+                        mirar(n, 'cause', ca.cause ?? ca.description);
+                        mirar(n, 'preventionControl', ca.preventionControl);
+                        mirar(n, 'detectionControl', ca.detectionControl);
+                    }
+                }
+            }
+        }
+    }
+    return salida;
 }
 
 /**

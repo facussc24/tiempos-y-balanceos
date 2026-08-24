@@ -19,7 +19,7 @@ import { writeFileSync, mkdirSync, readFileSync, existsSync, rmSync, statSync } 
 import { createClient } from '@supabase/supabase-js';
 import XLSX from 'xlsx-js-style';
 import { buildAmfeOficialWorkbook } from '../modules/amfe/amfeExcelExport';
-import { scanRevisionMeta } from './_lib/forbiddenContent.mjs';
+import { scanRevisionMeta, scanDocSelfExposure } from './_lib/forbiddenContent.mjs';
 import type { AmfeLifecycleStatus } from '../modules/amfe/amfeCaratulaSheet';
 
 function arg(nombre: string): string | undefined {
@@ -79,6 +79,24 @@ if (sospechosas.length) {
   }
   console.error('\nUna correccion de redaccion/idioma/estilo NO es una revision del AMFE: se aplica');
   console.error('en silencio. Sacala del log (scripts/_limpiarRevisionesMeta.mjs) y volve a exportar.\n');
+  process.exit(1);
+}
+
+// GATE 2 — el CUERPO no puede escrachar a Barack, a un compañero ni a un proveedor.
+// El gate de arriba mira solo el log de revisiones; el 24/08/2026 se escaparon 101 frases por
+// las CAUSAS, los REQUISITOS y los CONTROLES, que nadie miraba. Fak, al leerlas: *"como vas a
+// escribir eso en uno de mis AMFEs? me estas escrachando enteramente a mi, a Barack"*.
+// Un hueco interno detectado se resuelve, se pregunta, o va en el mail — no en el documento.
+const expuestas = scanDocSelfExposure(doc);
+if (expuestas.length) {
+  console.error(`\nABORTADO — el cuerpo de ${AMFE_NUMBER} expone a Barack o a un tercero:\n`);
+  for (const e of expuestas) {
+    console.error(`  OP${e.op} · ${e.campo}`);
+    console.error(`     "${e.texto}"`);
+    console.error(`     detectado: ${e.hits.map(h => h.match).join(', ')}`);
+  }
+  console.error('\nUn hueco propio no se escribe como causa: se resuelve, se pregunta, o va en el mail.');
+  console.error('Memoria: feedback_documento_no_confiesa_como_se_hizo\n');
   process.exit(1);
 }
 

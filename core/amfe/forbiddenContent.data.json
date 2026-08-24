@@ -2,7 +2,6 @@
   "_source": "FUENTE UNICA del candado anti-invento. Derivado VERBATIM de .claude/rules/amfe.md §6 (inventos confirmados + diccionario peninsular) y §11 (vocabulario Claude prohibido + frecuencias inventadas). NO inventar terminos: solo agregar los que Fak/equipo APQP confirmen. Consumido por scripts/_lib/forbiddenContent.mjs (igual patron que genericLabels.data.json).",
   "_severidades": "FORBIDDEN_EQUIPMENT_PHRASES + PENINSULAR_TERMS + ENGLISH_RANDOM_TERMS => CRITICAL (bloquean apply, known-bad 0 FP). CLAUDE_PHRASES + ARBITRARY_FREQUENCY_PATTERNS => WARNING (flag para revision, casi siempre malo pero a veces legitimo).",
   "_english": "ENGLISH_RANDOM_TERMS: vocabulario AJENO a la planta — jerga inglesa Y castellano que nadie en Barack usa (Fak, 19/08/2026: 'no puedo enviar amfes con palabras asi... queda obvio que los hiciste vos'; y sobre mi primera traduccion: 'enrase/chirridos son palabras que nunca usariamos'). La fuente del vocabulario correcto son los MAILS de la empresa (.mail-cache/mails.jsonl, 5.144 mails 2023-2026; recontado 23/08/2026 con scripts/_mails.py --stats): enrase=0 usos, chirrido=0, golpeteo=0, flush=0 — ellos dicen alineacion (101), especificacion (598), separacion, fuera de posicion, terminacion, encastrar. SE QUEDAN, decision de Fak 23/08/2026: checklist, setup y stock (vocabulario que Barack usa, como SCRAP). Traducciones finales: gap & flush fuera de espec -> alineacion y separacion entre piezas fuera de especificacion; gap & flush NOK -> desalineacion o separacion excesiva; squeak & rattle -> ruidos; fit & finish -> ajuste y terminacion; fuera de spec -> fuera de especificacion; torque/push -> torque y empuje; check de lote -> control de lote. NO van aca los terminos de industria aceptados (SCRAP, NOK, KLT, PPAP, peeling, hot melt, torque solo) ni nombres de pieza/material del cliente.",
-
   "FORBIDDEN_EQUIPMENT_PHRASES": [
     "hielo seco",
     "pistola de ultrasonido",
@@ -14,7 +13,6 @@
     "espectrometro",
     "laser de medicion 3d"
   ],
-
   "PENINSULAR_TERMS": [
     "flexometro",
     "ordenador",
@@ -29,9 +27,7 @@
     "vosotros",
     "vuestro"
   ],
-
   "_revision_meta": "REVISION_META_PATTERNS: el log de REVISIONES de un AMFE lo lee el CLIENTE y la auditoria. Registra QUE CAMBIO DEL PROCESO O DEL ANALISIS — nunca como se redacto, quien lo decidio ni que error propio se corrigio. Fak, 20/08/2026, al ver 'SE REESCRIBEN EN ESPANOL... LOS TERMINOS EN INGLES': 'parece una burla... esas cosas se ocultan, nunca tuvieron que haber estado en ingles... esas trampitas debes tener criterio para detectarlas y no escracharme'. VA al log: operacion nueva, renumeracion, S/O/D o controles que cambian, alineacion con flujograma/plan de control, hallazgo de auditoria. NO VA: traduccion, ortografia, vocabulario, 'replicado del AMFE de X', notas internas tipo '(decision Fak)' o 'para no pisar la costura'. Consumido por scanRevisionMeta() y aplicado como gate duro en _exportAmfeOficial.ts.",
-
   "REVISION_META_PATTERNS": [
     "\\bre-?escrib|\\bre-?escrit|\\bre-?dact",
     "\\btraduc|\\btraducci",
@@ -41,7 +37,6 @@
     "\\bpara no pisar\\b",
     "\\bclaude\\b|\\binteligencia artificial\\b|\\bgenerad[oa] automaticamente\\b"
   ],
-
   "ENGLISH_RANDOM_TERMS": [
     "gap & flush",
     "gap and flush",
@@ -60,7 +55,6 @@
     "golpeteo",
     "golpeteos"
   ],
-
   "CLAUDE_PHRASES": [
     "inspeccion humana",
     "operador o supervisor",
@@ -73,9 +67,24 @@
     "galga",
     "husillo"
   ],
-
   "ARBITRARY_FREQUENCY_PATTERNS": [
     "\\bcada\\s+\\d+\\s*(h|hs|hora|horas|min|minuto|minutos|pieza|piezas|bobina|bobinas)\\b",
     "\\brotacion\\s+cada\\b"
+  ],
+  "_self_exposure": "SELF_EXPOSURE_PATTERNS: un AMFE lo lee el CLIENTE y la auditoria IATF. Nunca dice que a Barack le falta un documento, que dos documentos nuestros se contradicen, ni que un proveedor no cumple. Fak, 24/08/2026, al ver 'la especificacion de compra no fija un espesor unico: conviven 6 mm y 7 mm en la documentacion interna' como causa de falla: 'como vas a escribir eso en uno de mis AMFEs? me estas escrachando enteramente a mi, a Barack. Primero investiga vos a fondo y si no lo podes resolver le preguntamos a otro sector o a nuestro gerente. No ponemos eso en un AMFE que nos escracha'. VA en el AMFE: el modo de falla y su causa TECNICA de proceso (4M), el control que EXISTE hoy. NO VA: huecos documentales propios, contradicciones internas, incumplimientos de terceros, 'pendiente de validacion'. Un hueco detectado se resuelve, se pregunta, o va en el MAIL. A diferencia de REVISION_META_PATTERNS, que solo mira revisions[].details, ESTE se aplica al CUERPO ENTERO del documento — que es donde se escaparon las 101 frases del 24/08. Consumido por scanSelfExposure() y aplicado como gate duro en _exportAmfeOficial.ts.",
+  "SELF_EXPOSURE_PATTERNS": [
+    "\\bno\\s+(se\\s+)?(esta|estan)\\s+documentad",
+    "\\bno\\s+incorpora\\s+(todavia|aun)\\b|\\btodavia\\s+no\\s+(existe|esta|incorpora|se)\\b",
+    "\\bque\\s+todavia\\s+no\\s+existe\\b|\\bno\\s+existe\\s+(todavia|aun|para\\s+este)\\b",
+    "\\bconviven\\s+\\d|\\bconviven\\s+(dos|los)\\b",
+    "\\bdocumentacion\\s+interna\\b",
+    "\\b(el|la)\\s+(amfe|version|documento|flujograma)\\s+anterior\\b",
+    "\\bsin\\s+numerar\\b",
+    "\\bno\\s+fija\\s+un\\b",
+    "\\bno\\s+hay\\s+(plano|ficha|registro|procedimiento)\\b",
+    "\\bdeclara\\s+ensayos\\s+de\\s+otras\\s+normas\\b|\\by\\s+no\\s+cvtc\\b",
+    "\\b(esta|estan)\\s+incomplet",
+    "\\bpendiente\\s+de\\s+validacion\\b|\\bborrador\\b",
+    "\\bno\\s+tiene\\s+(plan\\s+de\\s+control|hoja\\s+de\\s+operaciones)\\b"
   ]
 }
