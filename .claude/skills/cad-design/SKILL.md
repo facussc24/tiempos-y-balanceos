@@ -131,13 +131,18 @@ los tres se demostraron EN CORRIDA antes de arreglarlos — regresión: `test_ga
   se copia a `renders/confirmacion_*` y se firma en el manifest. No es infalsificable: convierte
   una mentira cómoda (un flag) en una laboriosa, que es todo lo que un gate puede hacer acá.
 
-> **Lo que estos gates NO cubren, y hay que saberlo:** los seis nacieron cada uno DESPUÉS de que
-> una persona encontrara el bug. Son tests de regresión: demuestran memoria, no capacidad de
-> detección. Su tasa histórica de hallazgos propios es **cero de seis**. Las tres clases que
-> siguen abiertas: la **trayectoria** (todos miran la posición final, no el recorrido de entrada
-> y salida), el **estado real del material** (el STEP es la pieza fría y desnuda; en uso tiene
-> tela, adhesivo, calor y springback), y la **unicidad del posicionamiento** (nada verifica que
-> haya UNA sola forma de montar el utillaje).
+**GATE 5 — TRAYECTORIA** (`gate_giro.py`, 24/08/2026). Todos los gates de arriba miran **una pose**. Un conjunto que gira no falla en la pose de carga: falla a 137 grados, con la máquina armada y el perfil comprado.
+
+```
+gate_giro.py --step conjunto.step --eje-punto 0,0,1050 --eje-dir 1,0,0 \
+             --moviles 12,13,14,28 --paso 5 --luz-min 40 --workdir W --render
+```
+
+Gira los sólidos `--moviles` alrededor del eje y devuelve **la curva d(ángulo) entera**, no un número. Cuatro veredictos, y la distinción importó en la primera corrida real: **LIBRE** · **ROZA** · **CHOCA** · **ESTÁTICO** — la luz es chica pero **no cambia al girar**, así que el giro no es la causa y el que la juzga es `check_collision`. Sin esa cuarta clase el gate dio *0,00 mm en los 72 ángulos* sobre un concepto real: un control que devuelve lo mismo para toda la vuelta no está midiendo el giro. **La firma de un problema de trayectoria es una CAÍDA de la curva**, no un mínimo bajo.
+
+Dos cosas que enseñó escribirlo: (a) sin decimar, una base de 620×480 con `lc=3` da millones de puntos y el barrido **no termina** — la celda de decimación es además **la resolución del resultado** y se informa; (b) el autotest nació fallado: su caso MAL también chocaba a 0°, así que un gate que mirara sólo la pose inicial lo habría cazado igual y el par no probaba nada. Ahora los dos postes están al mismo radio y ángulo, y el de BIEN corrido sobre el eje: **en la pose de carga los dos dan LIBRE** (106,3 y 70,0 mm) y sólo la vuelta entera los separa.
+
+> **Lo que los gates NO cubren, y hay que saberlo:** los siete nacieron cada uno DESPUÉS de que una persona encontrara el bug. Son tests de regresión: demuestran memoria, no capacidad de detección. Las dos clases que siguen abiertas: el **estado real del material** (el STEP es la pieza fría y desnuda; en uso tiene tela, adhesivo, calor y springback) y la **unicidad del posicionamiento** (nada verifica que haya UNA sola forma de montar el utillaje). Y falta lo que la auditoría del 24/08 dejó abierto para ensambles: **partes de catálogo con procedencia** (hoy GATE 1 exige que toda cota salga del CAD medido o de Fak — para un rodamiento comprado no hay fuente válida posible) y **cálculo del conjunto** (eje entre apoyos, vuelco, par en el volante): el único cálculo estructural del sistema es `viga_voladizo.py`, que sirve para láminas impresas en PLA.
 
 ## 1. Entorno — UN solo intérprete
 
