@@ -310,6 +310,33 @@
       "secuenciaConfirmadaPor": [
         "flujograma 157 Rev.B: corte 30-38 y la 90 partida en 90+91"
       ]
+    },
+    "172": {
+      "producto": "INSONOS / DUCTOS DE CALEFACCION",
+      "claveSupabase": "AMFE-DUC-PAT",
+      "flujograma": {
+        "id": "158",
+        "revVigente": "A",
+        "estado": "VIGENTE"
+      },
+      "secuencia": [
+        "10",
+        "20",
+        "30",
+        "40",
+        "50",
+        "60",
+        "70",
+        "80",
+        "90"
+      ],
+      "nota": "Emitidos juntos el 24/08/2026, con la misma secuencia: el flujograma 158 Rev.A y el AMFE 172 nacen alineados. Se corrigieron cinco colisiones que traia la documentacion anterior: el 80 era EMBALAJE en el flujograma e INSPECCION FINAL en el AMFE, y el 90 era CONTROL DE CANTIDADES en uno y EMBALAJE en el otro (queda 80 inspeccion final y 90 embalaje, criterio de amfe.md §12). Se elimino la OP41 del AMFE viejo: era el traslado 'TRASLADO DE PIEZAS TROQUELADAS AL SECTOR DE PREARMADO' promovido a operacion, sin HO que lo respalde y con material indirecto (cajon plastico) como unico elemento. 🔴 LAS HOJAS DE OPERACION NO ESTAN ALINEADAS y no se tocaron: numeran 40 = SOLDADO donde el flujograma numera 40 = TROQUELADO, 30 = POSICIONAMIENTO o REMACHADO donde el flujograma dice LAMINADO, y 50 = PEGADO DE ESPUMA donde dice PREARMADO. Ademas su celda de N° de operacion esta vacia en todas las hojas propias de ductos: la numeracion vive solo en el nombre de la pestaña de Excel. Alinearlas es tarea aparte.",
+      "fuente": "AMFE 172 (AMFE-DUC-PAT) Supabase live 2026-08-24",
+      "secuenciaConfirmadaPor": [
+        "flujograma 158 Rev.A generado el 24/08/2026 desde tools/flowchart/data/158-INSONOS-DUCTOS.json",
+        "BOM del ERP arb (export RELACIONES.TXT del 21/08/2026): la columna MODULO/PROCESO asigna cada insumo a su proceso — COB/CUMB corte, TRO troquelado, MONTAJE, QUA/QW etiqueta",
+        "hojas de operacion de MP8146 / MP8147 CENTRAL / MP8147 LATERAL / MP8148 (confirman posicionamiento, remachado, soldado por ultrasonido, pegado de espuma y ensamble como operaciones reales)"
+      ]
     }
   },
   "_control_post_inyeccion": "Fak 18/08/2026: 'en inyeccion plastica siempre hay control, deberia estar en todos'. Medido sobre los 8 AMFE: FALTA en 161 (armrest door panel), 158 (insert) y 162 (top roll); el 149 (IP pad) lo tiene dentro de su OP 20. Pendiente de cargar hasta que los flujogramas esten en Rev. B — agregar la operacion corre la numeracion — y hasta tener de Fak que se le controla a la pieza en ese puesto.",

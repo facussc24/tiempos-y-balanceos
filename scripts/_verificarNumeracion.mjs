@@ -89,7 +89,11 @@ const pendienteDe = [];
 for (const [clave, canon] of Object.entries(CANON.documentos)) {
     if (filtro && filtro !== clave) continue;
 
-    const row = porNumero.get(clave);
+    // La clave del canon es el N° de la EMPRESA (el que va en el documento oficial y en el
+    // listado maestro), pero varios AMFE viven en Supabase con una clave propia
+    // (`AMFE-DUC-PAT`, `AMFE-TR-PAT`, ...). Cuando el canon declara `claveSupabase`, se busca
+    // por ahi; si no, por el numero, como siempre. Ver memoria `amfes_patagonia_numeracion`.
+    const row = porNumero.get(canon.claveSupabase) || porNumero.get(clave);
     console.log(`\n─── ${canon.producto}  ·  AMFE ${canon.amfe || clave}  ·  flujograma ${canon.flujograma.id} rev ${canon.flujograma.revVigente}`);
 
     // Un AMFE cuenta UNA vez aunque tenga varios problemas: el total de abajo dice

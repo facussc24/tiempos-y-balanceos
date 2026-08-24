@@ -293,14 +293,69 @@ textual: "juego de 8 visagras y 16 remaches"**. La operacion existe. En el arb n
 propio; los candidatos son los brackets `427VAR002/003/004/005MON01` (Defroster Duct Ctr Braquet
 1 a 4). **No borrar las visagras del AMFE: confirmar que son.**
 
-Divergencia abierta que sale de esto: **el arb carga 28 remaches y la HO dice 16.**
+### Y los 28 remaches del arb NO estaban mal: 28 = 16 + 12
 
-## 2. La norma de flamabilidad es la CVTC **52034**, no la 52171
+`APQP-Lista de materiales\BOM\Obsoleto\INSUMOS_DUCTOS_CODIGOS_ARB.xlsx`, hoja
+`Consumptions`, lo dice literal:
 
-"CVTC 52171" no existe en ningun mail. Cozzuol adjunto el 16/06/2026 cuatro normas:
-**22001** (sustancias prohibidas), **35005** (instrument panel), **52034 "Flammability of
-automotive nonmetal materials"** y **52088** (emisiones). El gramaje de 400 g/m2 del thinsulate
-sale del insumo del arb y de la ficha del proveedor, no de una norma.
+> `Remaches | 427VAR001MON01 | TBD | 28 | pcs | 28 | **16 remaches + 12 remaches**`
+
+Y el sinoptico `PROYECTO\INSONOS_AIR_DUCT_SINOP_PRODCUTO_y _FLUJOGRAMA_REV05.xlsx` los
+desglosa por nivel: **16** en el *Defroster Duct Ctr Substrate SubAss2* (justo debajo de los 4
+braquets) y **12** en el *Air Duct Connect Bracket* (= MP7457).
+
+**El ERP esta bien. La que esta incompleta es la HO**, que solo documenta los 16 del defroster;
+los 12 del connect bracket no aparecen en ninguna hoja de operaciones. Tipo de remache segun el
+AMFE: **REMACHES POP 7,6 x 3,6 mm**; ademas Carlos mando crear el codigo `AD529EC` "remache POP
+aluminio de 4x7,4" el 01/07/2026 — **son dos codigos distintos para el mismo insumo**, a aclarar.
+
+### Y las 8 "visagras" son los 8 BRACKETS — la cuenta cierra exacta
+
+| Codigo | Descripcion | Cant. |
+|---|---|---|
+| 427VAR002MON01 | Defroster Duct Ctr Braquet 1 | 4 |
+| 427VAR003MON01 | Defroster Duct Ctr Braquet 2 | 1 |
+| 427VAR004MON01 | Defroster Duct Ctr Braquet 3 | 1 |
+| 427VAR005MON01 | Defroster Duct Ctr Braquet 4 | 2 |
+| | **TOTAL** | **8** |
+
+Coincide con *"juego de 8 visagras"* y con *"zonas del 1 al 8"* de la HO. **En el AMFE nuevo no
+se les dice "visagras": se les dice Braquet 1 a 4 con su codigo**, que es como estan en la BOM.
+Lo que NO se pudo confirmar es su forma fisica (no hay plano ni despiece).
+
+## 2. CORRECCION: la CVTC **52171 SI EXISTE** — y es LA norma de estos productos
+
+Lo que este documento decia antes ("52171 no existe") era falso. No estaba en los mails, pero
+**esta en el legajo desde el 05/01/2026**:
+`PROYECTO\SPEC\SPEC\CVTC_52171-2023_INSONOS.pdf` (26 pag.) —
+**"Technical requirements for fiber sound absorbing materials"**. Es la norma especifica de los
+materiales fibrosos absorbentes de sonido, o sea la que gobierna estos insonos.
+
+La carpeta tiene **cinco** normas CVTC, no cuatro:
+
+| Norma | Que fija | Aplicacion |
+|---|---|---|
+| **52171-2023** | requisitos de materiales fibrosos absorbentes | **la norma madre del producto** |
+| **52034-2021** | flamabilidad de no metalicos | via 52171 §5.2.4 |
+| 52088-2019 | emisiones de interior | via 52171 §5.2.3 |
+| 22001-2020 | sustancias prohibidas y limitadas | materiales |
+| 52167-2017 | dust-out de fiber sound absorber pad | contenido de polvo |
+
+**Requisitos duros que salen de ahi, para el AMFE:**
+- **Densidad superficial: 400 ± 30 g/m2** — `PP-PET SOR MATERIAL REQUIREMENT 52171.docx`:
+  *"Surface density | CVTC 52171 5.1.1 | 350±30 o 400±30"*. Metodo: Anexo A de la 52171,
+  **promedio de 3 probetas, con precision de 1 g/m2**. El **"430 GR" del AMFE es el limite
+  superior de la tolerancia, no un nominal** — el valor es 400.
+- **Flamabilidad: CVTC 52034-2021 §4.2.1.2 — velocidad de combustion <= 70 mm/min**, ensayo
+  horizontal segun **GB 8410-2006**, probeta **356 x 100 mm, espesor <= 13 mm, minimo 5
+  probetas**. El AMFE actual dice solo *"Probeta de flamabilidad"*: sin norma, sin limite y sin
+  frecuencia.
+- **Contenido de polvo <= 1%** segun CVTC 52167.
+
+🔴 **GAP DE PPAP que hay que levantar:** la ficha del material comprado
+(`APQP\8- Ficha tecnica\Transulate-A 400 gM².pdf`, SINOYQX, junio 2025) declara **UL 94 V-0,
+DIN 4102 B1, EN 45545-2 y FMVSS 302** — **ninguna es CVTC 52034 ni GB 8410**. No hay en el
+legajo ningun ensayo de flamabilidad contra la norma que pide el cliente.
 
 ## 3. La hoja de corte de las HO esta OCULTA y es de otra pieza — confirmado con 6 pruebas
 
@@ -361,3 +416,98 @@ la TABLA DE CODIGOS, que antes decia TBD** — el resto, cajetin incluido, quedo
   **NO es este**: es de enero 2024 y no menciona MP81xx, VW427, Patagonia ni thinsulate).
 - Dos cambios al motor del flujograma: columna de operaciones opcional en la tabla de codigos, y
   `criticalType` en rojo para la marca VDA. Los 5 flujogramas ya emitidos no cambian.
+
+
+---
+
+# RELEVAMIENTO DEL LEGAJO COMPLETO — 24/08/2026
+
+## 🔴 NO EXISTE EL PLAN DE CONTROL. Y el AMFE lo cita 8 veces.
+
+Las tres carpetas de plan de control del legajo estan **vacias** (`APQP
+-Plan de Control`,
+`24- Plan de control de Pre lanzamiento`, `32- Plan de control de Produccion`), y una busqueda
+de `*plan*control*` / `*I-AC-005*` en todo `PPAP CLIENTES\COZZUOL\` no devuelve **ningun**
+archivo del legajo de ductos.
+
+Mientras tanto el AMFE REVA-4 apoya su **control de deteccion** en el, ocho veces —
+celdas `D58`, `D109`, `D182`, `D214`, `D246`, `D270`, `D320`, `D380`:
+
+> "Registros de control en calidad segun plan de control"
+
+y `F29` (OP10): *"4- Utilizar plan de control de recepcion y formatos estandar para ensayos"*.
+
+**Un AMFE cuya deteccion se apoya en un documento inexistente no detecta nada.** Es el hallazgo
+mas grave del legajo y es de auditoria inmediata.
+
+## 🔴 La OP41 no es una operacion: es un TRASLADO promovido a numero
+
+Veredicto con evidencia (filas 224-249):
+
+1. **No transforma el producto.** Sus funciones son manipular: *"1- Tomar espumas y colocarlas
+   en cajon definido"*, *"2- Colocar piezas hasta completar la cantidad requerida"*,
+   *"3- **Transportar cajon al sector de prearmado**"*. Su unico material es `Cajon plastico`,
+   que es material INDIRECTO.
+2. **Es literalmente una flecha del flujograma**: entre la 40 y la 50 el flujograma tiene
+   *"TRASLADO DE PIEZAS TROQUELADAS AL SECTOR DE PREARMADO"* — el mismo texto. En su propia
+   simbologia eso es TRASLADO, no OPERACION.
+3. **Ninguna HO la respalda** — y sin embargo se auto-referencia: su control preventivo es
+   *"1 - Hoja de operaciones"*, de una HO que no existe.
+4. **Se contradice sola**: la cabecera dice *"piezas troqueladas"* y el nombre dice *"espumas
+   adhesivadas"*. Si fuera desdoblamiento de la 40 iria como `40.1`, como hacen las HO.
+
+**Se elimina** y sus dos modos de falla (cantidad incorrecta / posicionado NOK) se absorben en
+la 40 o la 50.
+
+## 🔴 Cinco colisiones de numeracion entre los documentos
+
+| N° | Significados en conflicto | Documentos |
+|---|---|---|
+| **30** | Laminado/adhesivado ↔ Posicionamiento ↔ Remachado | Flujograma+AMFE ↔ HO MP8146 ↔ HO MP8147 CTR |
+| **40** | Troquelado ↔ **Soldado** | Flujograma+AMFE ↔ las 4 HO |
+| **50** | Prearmado de espuma ↔ Pegado de espuma | Flujograma+AMFE ↔ HO MP8147 CTR |
+| **80** | Embalaje ↔ Inspeccion final | Flujograma ↔ AMFE |
+| **90** | Control de cantidades ↔ Embalaje | Flujograma ↔ AMFE |
+
+Ademas, **los numeros de las HO no existen en el formulario**: son solo nombres de pestaña de
+Excel. La celda `B6` (N° DE OPERACION) vale `-` en TODAS las hojas propias de ductos, y `Q3`
+(N° de HO) tambien. La unica con numero real es la hoja de corte ajena (`HO-956`).
+
+## 🔴 Hay una QUINTA fuente de numeracion en el legajo
+
+`PROYECTO\INSONOS_AIR_DUCT_SINOP_PRODCUTO_y _FLUJOGRAMA_REV05.xlsx` (04/02/2026), hoja
+"Flujograma Proceso", numera **OP 10 a OP 120 con otro criterio** (*"OP: 10 Se une el substrato
+a los 8 Brackets Metalicos"*, *"OP: 20 Se suelda por ultrasonido los insonos 1A-2A"*, ...), y
+**colisiona con los 7 numeros**. Es un flujograma de celda/balanceo, no del SGC — pero se llama
+"FLUJOGRAMA" y esta en el legajo. **Si se entrega junto con el resto es un hallazgo seguro:
+mandarlo a OBSOLETO o renombrarlo a "Balanceo de celda".**
+
+## El legajo APQP esta 30/34 vacio
+
+Existen y sirven: `8- Ficha tecnica` (`Transulate-A 400 gM².pdf`), `14-Especificaciones de
+Materiales` (`BOM Insonos Ductos_20260821.pdf`), `PROYECTO\SPEC\SPEC\` (las 5 normas CVTC),
+fichas de embalaje, 2D/3D. **Vacias las 30 restantes**, incluidas `6-Planos de la pieza`,
+`12-Plan de Control`, `17-Caracteristicas Especiales` y `13-Especificaciones de Ingenieria`.
+
+**No hay ni un plano del cliente en todo el arbol**, y por lo tanto **no hay part number de
+cliente para ningun MP81xx**. Lo unico trazable es del header de un STEP:
+`CNSL_AIR_DUCT = C00752827_02`.
+
+## Estado real del PPAP: 1 de 11 completo
+
+Del `ACSA_AIR DUCT_ Seguimiento APQP_11082025.xlsx`, hoja "PPAP Resumido": unico item completo
+= **ficha de embalaje**. Parciales: PFMEA (sin numero, sin registro de revision) y certificados
+de material (solo ficha del proveedor). Los otros 8 sin evidencia. El Gantt del mismo archivo
+quedo congelado en **35,6% al 11/08/2025**, con responsables que ya no son los que firman.
+
+## Lo que sigue SIN RESOLVER despues de leer todo
+
+| Duda | Estado |
+|---|---|
+| **Espesor de espuma: 7 mm (ERP+BOM) vs 6 mm (AMFE)** | 🔴 **ABIERTO** — no hay plano ni ficha del proveedor Mentvil. La densidad 60 kg/m3 si es unanime. Dato coherente entre HO y AMFE: **2 tiras de 670 mm** |
+| **Part number del cliente por MP** | 🔴 **NO EXISTE** en ninguna fuente del legajo |
+| Forma fisica de los braquets | sin plano ni despiece |
+| Dos codigos de remache (`427VAR001MON01` y `AD529EC`) | a aclarar cual queda |
+
+Para cerrarlos hay que **pedirle a Cozzuol/ACSA los planos 2D liberados** del
+`CC 4917-00 F_AG_I_24_23_IP` con su lista de materiales.
