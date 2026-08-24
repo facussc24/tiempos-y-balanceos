@@ -326,6 +326,28 @@ Las 9-17 salen del virolador del Upper Trim (08/2026, tres rondas: resorte → r
     síntoma físico, y la cara de apoyo puede además estar INCLINADA (0,78° acá): el tope
     plano se fija donde toca primero, medido por huella, no en la meseta de otro lado.
 
+19. **El bounding box del CAD MIENTE sobre una pieza de NURBS recortadas — y mintió sobre la
+    pieza de un proyecto real.** (2026-08-24, Insert SAB1740.) `gmsh.model.getBoundingBox` y
+    `BRepBndLib` sin triangular acotan la superficie ENTERA sin recortar, no el trozo que
+    existe: reportaban **625,11 × 86,32 × 289,96** para una pieza que mide **552,73 × 58,01 ×
+    151,01** — el alto salía **1,9 veces** más grande. No es un redondeo: cambia el círculo de
+    barrido, el balanceo y el tamaño del utillaje entero. El número inflado ya había viajado a
+    un documento de ingeniería de la empresa y a una memoria mía.
+    - **El síntoma que lo delata es gratis:** volumen y bbox tienen que ser compatibles. 219,30 cm³
+      con pared media 2,27 mm son ~966 cm² de superficie media; la proyección de 625 × 290 sola
+      ya da 1810 cm² — imposible. Con 553 × 151 (834 cm²) cierra. **Cuando el bbox y el volumen
+      no se pueden dar la mano, el que miente es el bbox.**
+    - Arreglado en `cadlib.geom.bbox_medido()` (muestrea las CURVAS de borde, que sí están
+      recortadas exactas) + `aviso_bbox_inflado()`, y `analyze_step.py` ya reporta el medido y
+      avisa. Concuerda con la triangulación fina (deflexión 0,1) en 0,02 mm sobre 552,73.
+    - **Test del valor gemelo, y pasa:** sobre un STEP de cajas y cilindros primitivos el aviso
+      da 0 y las cotas no cambian; sobre la pieza del cliente da 92 % y 99 %. Un control que
+      avisara siempre no serviría.
+    - Regla que deja: **toda cota que sale de un archivo de cliente se cruza contra una segunda
+      magnitud** (volumen, área, masa) antes de usarla. Cuatro métodos coincidiendo (nodos de
+      malla a dos lc distintos, triangulación OCC fina, muestreo de curvas) valen más que uno
+      que "es el que siempre usamos".
+
 ## 6. Utillajes de apriete — las decisiones de CONCEPTO (antes de la primera línea)
 
 Todas del virolador del Upper Trim (08/2026). Son las que cambian el diseño de raíz; las

@@ -307,6 +307,66 @@ def extract_cylinder_axes(path, r_target=None, tol=0.15, keep=None, n_u=24, n_v=
     return uniq
 
 
+def bbox_medido(dim, tag, n_curva=32):
+    """Bbox REAL de una entidad gmsh, midiendo la geometria RECORTADA.
+
+    `gmsh.model.getBoundingBox` (y `BRepBndLib` sin triangulacion) acotan la superficie
+    NURBS SIN RECORTAR: sobre una pieza de cliente eso INFLA el resultado. Medido el
+    2026-08-24 sobre el Insert SAB1740: getBoundingBox dio 625,11 x 86,32 x 289,96 y la
+    pieza mide 552,73 x 58,01 x 151,02 — el alto salia 1,9 VECES mas grande. Ese numero
+    inflado viajo a un documento de ingenieria y dimensiono un dispositivo entero.
+
+    Aca se muestrean las CURVAS de borde, que SI estan recortadas exactas. Es una cota
+    por el borde: si una cara abombada tuviera su apice adentro, quedaria corta por lo
+    que abomba. Contra la triangulacion fina del Insert (deflexion 0,1) el error fue
+    0,02 mm en 552,73 — el orden del abombado de una pared de 2,3 mm. Devuelve:
+        (lo, hi, lo_cad, hi_cad)   todos np.array(3,)
+    """
+    if dim == 3:
+        _, sdown = gmsh.model.getAdjacencies(3, tag)
+    elif dim == 2:
+        sdown = [tag]
+    else:
+        raise ValueError("bbox_medido: dim debe ser 2 o 3, no %r" % dim)
+
+    pts = []
+    for st in sdown:
+        _, cdown = gmsh.model.getAdjacencies(2, int(st))
+        for ct in cdown:
+            try:
+                (t0,), (t1,) = gmsh.model.getParametrizationBounds(1, int(ct))
+            except Exception:
+                continue
+            ts = np.linspace(t0, t1, n_curva).tolist()
+            try:
+                pts.append(np.asarray(gmsh.model.getValue(1, int(ct), ts), float).reshape(-1, 3))
+            except Exception:
+                pass
+    bb = gmsh.model.getBoundingBox(dim, tag)
+    lo_cad, hi_cad = np.array(bb[:3], float), np.array(bb[3:], float)
+    if not pts:
+        return lo_cad, hi_cad, lo_cad, hi_cad
+    P = np.concatenate(pts)
+    return P.min(0), P.max(0), lo_cad, hi_cad
+
+
+def aviso_bbox_inflado(lo, hi, lo_cad, hi_cad, que="", tol=0.02):
+    """Devuelve el texto de aviso si el bbox del CAD esta inflado, o '' si coinciden."""
+    d, d_cad = hi - lo, hi_cad - lo_cad
+    peor = 0.0
+    for a in range(3):
+        if d[a] > 1e-9:
+            peor = max(peor, d_cad[a] / d[a] - 1.0)
+    if peor <= tol:
+        return ""
+    ejes = "XYZ"
+    det = "  ".join("%s %.2f vs %.2f" % (ejes[a], d[a], d_cad[a]) for a in range(3))
+    return ("AVISO bbox inflado%s: la envolvente SIN recortar es hasta %.0f%% mas grande que "
+            "la pieza real.\n  medido (geometria recortada): %s\n  Usar el MEDIDO. "
+            "El del CAD acota la NURBS entera, no el trozo que existe." %
+            ((" en " + que) if que else "", 100 * peor, det))
+
+
 def fit_plane(pts):
     """Mejor plano por autovector menor de la covarianza 3x3 -> (normal, centroide, dists).
 

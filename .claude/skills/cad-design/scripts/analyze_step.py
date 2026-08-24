@@ -164,18 +164,29 @@ def probe_offset(m, tags, ref, n, n_ref):
 
 def overview(n_planes):
     vols = gmsh.model.getEntities(3)
-    xmin, ymin, zmin, xmax, ymax, zmax = gmsh.model.getBoundingBox(-1, -1)
-    print("BBOX TOTAL: X[%.2f,%.2f] Y[%.2f,%.2f] Z[%.2f,%.2f]" % (xmin, xmax, ymin, ymax, zmin, zmax))
-    print("  dims: %.2f x %.2f x %.2f mm" % (xmax - xmin, ymax - ymin, zmax - zmin))
+    if vols:
+        cajas = [geom.bbox_medido(d, t) for d, t in vols]
+        lo_t = np.min([c[0] for c in cajas], axis=0)
+        hi_t = np.max([c[1] for c in cajas], axis=0)
+    else:
+        _bb = gmsh.model.getBoundingBox(-1, -1)
+        lo_t, hi_t = np.array(_bb[:3], float), np.array(_bb[3:], float)
+    print("BBOX TOTAL: X[%.2f,%.2f] Y[%.2f,%.2f] Z[%.2f,%.2f]"
+          % (lo_t[0], hi_t[0], lo_t[1], hi_t[1], lo_t[2], hi_t[2]))
+    print("  dims: %.2f x %.2f x %.2f mm" % tuple(hi_t - lo_t))
 
     for dim, tag in vols:
-        bb = gmsh.model.getBoundingBox(dim, tag)
         mass = gmsh.model.occ.getMass(dim, tag)
         com = gmsh.model.occ.getCenterOfMass(dim, tag)
         name = gmsh.model.getEntityName(dim, tag)
+        lo, hi, lo_cad, hi_cad = geom.bbox_medido(dim, tag)
         print("\nSOLIDO tag=%d name='%s'" % (tag, name))
-        print("  bbox: %s" % _fmt_bbox(bb))
-        print("  dims: %.2f x %.2f x %.2f mm" % (bb[3] - bb[0], bb[4] - bb[1], bb[5] - bb[2]))
+        print("  bbox: %s" % _fmt_bbox((lo[0], lo[1], lo[2], hi[0], hi[1], hi[2])))
+        print("  dims: %.2f x %.2f x %.2f mm" % (hi[0] - lo[0], hi[1] - lo[1], hi[2] - lo[2]))
+        av = geom.aviso_bbox_inflado(lo, hi, lo_cad, hi_cad, "el solido %d" % tag)
+        if av:
+            for ln in av.splitlines():
+                print("  " + ln)
         print("  volumen: %.2f cm3 | centro masa: (%.1f, %.1f, %.1f)" % (mass / 1000, com[0], com[1], com[2]))
         _, sdown = gmsh.model.getAdjacencies(dim, tag)
         planes = []
