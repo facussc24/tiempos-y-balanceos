@@ -1,8 +1,8 @@
-# WE Placeholders + Failure Allocation — 2026-08-23T15:37:12.965Z
+# WE Placeholders + Failure Allocation — 2026-08-24T15:21:29.395Z
 
-**Resumen global**: 37 CRITICAL, 0 WARNING en 7/17 AMFEs.
+**Resumen global**: 38 CRITICAL, 0 WARNING en 8/18 AMFEs.
 
-**Por tipo**: FAILURE_MISALLOCATED=37
+**Por tipo**: FAILURE_MISALLOCATED=38
 
 ## Detalle por AMFE
 
@@ -46,7 +46,7 @@
 | CRITICAL FAILURE_MISALLOCATED | 10 RECEPCION DE MATERIA PRIMA | failure "Viscosidad del isocianato fuera de especificacion..." contiene "isocianato" (debe ir a OP tipo inyeccion/pu/espumado); OP actual =  |
 | CRITICAL FAILURE_MISALLOCATED | 10 RECEPCION DE MATERIA PRIMA | failure "Densidad del isocianato fuera de especificacion..." contiene "isocianato" (debe ir a OP tipo inyeccion/pu/espumado); OP actual = RE |
 
-### AMFE-HF-PAT (VWA/PATAGONIA/HEADREST_FRONT)
+### AMFE-HRC-PAT (VWA/PATAGONIA/HEADREST_REAR_CEN)
 6 CRITICAL + 0 WARNING
 
 | Type | OP | Detalle |
@@ -58,7 +58,7 @@
 | CRITICAL FAILURE_MISALLOCATED | 10 RECEPCION DE MATERIA PRIMA | failure "Viscosidad del isocianato fuera de especificacion..." contiene "isocianato" (debe ir a OP tipo inyeccion/pu/espumado); OP actual =  |
 | CRITICAL FAILURE_MISALLOCATED | 10 RECEPCION DE MATERIA PRIMA | failure "Densidad del isocianato fuera de especificacion..." contiene "isocianato" (debe ir a OP tipo inyeccion/pu/espumado); OP actual = RE |
 
-### AMFE-HRC-PAT (VWA/PATAGONIA/HEADREST_REAR_CEN)
+### AMFE-HF-PAT (VWA/PATAGONIA/HEADREST_FRONT)
 6 CRITICAL + 0 WARNING
 
 | Type | OP | Detalle |
@@ -77,6 +77,13 @@
 |---|---|---|
 | CRITICAL FAILURE_MISALLOCATED | 10 RECEPCION DE MATERIA PRIMA | failure "Lote de isocianato sin certificado de calidad de la entrega..." contiene "isocianato" (debe ir a OP tipo inyeccion/pu/espumado); OP |
 | CRITICAL FAILURE_MISALLOCATED | 61 MONTAJE DE PORTAVASOS Y MARCO | failure "Posavasos o marco con cortes, manchas o marcas despues del m..." contiene "corte" (debe ir a OP tipo corte); OP actual = MONTAJE DE |
+
+### AMFE-DUC-PAT (VWA/PATAGONIA/INSONOS_DUCTOS)
+1 CRITICAL + 0 WARNING
+
+| Type | OP | Detalle |
+|---|---|---|
+| CRITICAL FAILURE_MISALLOCATED | 20 CORTE DE TELA EN MESA DE CORTE | failure "Verificacion hecha contra un mylar de otro codigo o deterior..." contiene "mylar" (debe ir a OP tipo mylar/control forma/control my |
 
 ### AMFE-ARM-PAT (VWA/PATAGONIA/ARMREST_DOOR_PANEL)
 1 CRITICAL + 0 WARNING

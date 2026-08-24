@@ -1,8 +1,8 @@
-# Text Quality Audit (L2) — 2026-08-23T15:37:09.596Z
+# Text Quality Audit (L2) — 2026-08-24T15:21:31.193Z
 
-**Resumen global**: 0 CRITICAL, 125 WARNING en 17/17 AMFEs.
+**Resumen global**: 0 CRITICAL, 126 WARNING en 18/18 AMFEs.
 
-**Por tipo**: FN_TOO_SHORT=12, FN_NO_VERB=100, OP_FUNCTION_SEMANTIC_MISMATCH=12, WE_NAME_FOREIGN_TYPE=1
+**Por tipo**: OP_FUNCTION_SEMANTIC_MISMATCH=13, FN_TOO_SHORT=12, FN_NO_VERB=100, WE_NAME_FOREIGN_TYPE=1
 
 ## Top 5 AMFEs con mas issues
 
@@ -226,6 +226,13 @@
 |---|---|---|
 | WARNING FN_TOO_SHORT | 20 CORTAR VINILO / TELA | function.description "Verificar con Calibre y Mylar" muy corta (< 30 chars) |
 | WARNING FN_TOO_SHORT | 60 CONTROL FINAL DE CALIDAD | function.description "Verificar con Calibre MC257" muy corta (< 30 chars) |
+
+### AMFE-DUC-PAT (VWA/PATAGONIA/INSONOS_DUCTOS)
+0 CRITICAL + 1 WARNING
+
+| Type | OP | Detalle |
+|---|---|---|
+| WARNING OP_FUNCTION_SEMANTIC_MISMATCH | 10 RECEPCION DE MATERIALES | OP "RECEPCION DE MATERIALES" debería contener alguno de [verificar, conformidad, trazabilidad] en su función |
 
 ### 128 (VWA/AMAROK_PA2/IP_DECORATIVE_115)
 0 CRITICAL + 1 WARNING
