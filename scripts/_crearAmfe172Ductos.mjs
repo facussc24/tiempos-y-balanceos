@@ -151,31 +151,31 @@ function operacion(numero, nombre, funcionOperacion, funcionFoco, workElements) 
 const EF_SCRAP_INTERNO = {
   s: 7,   // P1: "A portion of the production run may have to be scrapped"
   local: 'Pieza rechazada en el puesto, se genera scrap de material',
-  next: 'Reposicion del corte y atraso en la entrega del lote a Cozzuol',
+  next: 'Reposicion del corte y atraso en la entrega del lote',
   end: 'Sin efecto en el vehiculo: la pieza no sale de planta',
 };
 const EF_RUIDO = {
   s: 6,   // P1 usuario final: "Loss of convenience function" (la funcion del insono es absorber ruido)
   local: 'Pieza aceptada con menor capacidad de absorcion acustica',
-  next: 'Cozzuol monta el conjunto y el desvio se detecta recien en linea VW',
+  next: 'El desvio se detecta en la linea de montaje del cliente',
   end: 'Mayor nivel de ruido en el habitaculo',
 };
 const EF_NO_MONTA = {
   s: 8,   // P1 "Ship to Plant": "Line shutdown greater than full production shift"
   local: 'Conjunto que no cierra con el sustrato plastico',
-  next: 'Paro de linea en Cozzuol e imposibilidad de ensamblar el conjunto',
+  next: 'Paro de linea e imposibilidad de ensamblar el conjunto',
   end: 'Vehiculo no ensamblable con esa pieza',
 };
 const EF_LEGAL = {
   s: 9,   // P1 usuario final: "Noncompliance with regulations"
   local: 'Material sin evidencia de cumplimiento de la norma del cliente',
-  next: 'Rechazo del PPAP por Cozzuol y bloqueo del lote',
+  next: 'Bloqueo del lote en la recepcion del cliente',
   end: 'Incumplimiento de requisito de seguridad y reglamentacion en el vehiculo',
 };
 const EF_FALTANTE = {
   s: 8,   // P1 "Ship to Plant": paro de linea en el cliente
   local: 'Medio despachado con cantidad o identificacion incorrecta',
-  next: 'Faltante o sobrante en la linea de Cozzuol; reconteo del medio',
+  next: 'Faltante o sobrante en la linea del cliente; reconteo del medio',
   end: 'Riesgo de paro de linea en el cliente final',
 };
 
@@ -186,66 +186,66 @@ const OP10 = operacion('10', 'RECEPCION DE MATERIALES',
   'Recibir, identificar y liberar la materia prima directa e indirecta contra los requisitos del cliente antes de habilitarla a produccion',
   'Materia prima liberada, identificada por lote y con evidencia de ensayo segun norma del cliente',
   [
-    we('Material', 'Thinsulate 427TEL002COR01 (rollo 1,6 m x 50 m, SINOYQX)', [
+    we('Material', 'Thinsulate 427TEL002COR01', [
       funcion(
         'Aportar la capacidad de absorcion acustica especificada por el cliente',
-        'Densidad superficial 400 +/- 30 g/m2 segun la especificacion de material del cliente (PP-PET SOR MATERIAL REQUIREMENT 52171). La CVTC 52171-2023 §5.2.1 fija el METODO (Anexo A) y remite el VALOR al plano de ingenieria',
+        'Densidad superficial segun la especificacion de material del cliente',
         [
           falla('Material recibido fuera de la densidad superficial especificada', EF_RUIDO, [
-            causa('El rollo entregado corresponde a una densidad distinta de la solicitada en la orden de compra',
-              'La orden de compra indica el codigo 427TEL002COR01 con su densidad; el proveedor emite certificado por lote',
+            causa('Rollo recibido con una densidad distinta a la de la orden de compra',
+              'La orden de compra indica el codigo del articulo; el material se recibe con certificado por lote',
               3,
-              'Ensayo de densidad superficial por lote segun el metodo del Anexo A de CVTC 52171-2023 (§5.2.1), con registro del resultado',
+              'Ensayo de densidad superficial por lote, con registro del resultado',
               7),
-            causa('Variacion del proceso del proveedor dentro de un mismo lote',
-              'Tolerancia de densidad superficial declarada al proveedor en la especificacion de compra',
+            causa('Variacion del material dentro de un mismo lote',
+              'Densidad superficial declarada al proveedor en la especificacion de compra',
               4,
-              'Ensayo de densidad superficial por lote segun el metodo del Anexo A de CVTC 52171-2023',
+              'Ensayo de densidad superficial por lote',
               7),
           ]),
           falla('Material recibido sin evidencia de ensayo de flamabilidad contra la norma del cliente', EF_LEGAL, [
-            causa('El certificado del proveedor declara ensayos de otras normas (UL 94, DIN 4102, EN 45545-2, FMVSS 302) y no CVTC 52034 / GB 8410',
-              'La especificacion de compra exige ensayo de flamabilidad segun CVTC 52034-2021 y su remision a GB 8410-2006',
+            causa('Certificado de lote sin el ensayo que exige la especificacion del material',
+              'La especificacion de compra exige el ensayo de flamabilidad del material',
               5,
-              'Verificacion documental del certificado de flamabilidad del lote contra el criterio de aceptacion de CVTC 52034-2021 y su remision a GB 8410-2006',
+              'Verificacion documental del certificado de flamabilidad del lote contra la especificacion del material',
               7, { specialChar: 'CC' }),
-            causa('Lote liberado a produccion antes de recibir el certificado del proveedor',
+            causa('Lote liberado a produccion antes de contar con su certificado',
               'Material en estado pendiente de control en el sector de recepcion hasta contar con el certificado del lote',
               3,
-              'Verificacion documental del certificado de lote contra CVTC 52034 antes de habilitar el material',
+              'Verificacion documental del certificado de flamabilidad del lote antes de habilitar el material',
               7, { specialChar: 'CC' }),
           ]),
           falla('Material recibido con contenido de polvo por encima del limite', EF_RUIDO, [
-            causa('Degradacion de la fibra por manipulacion o almacenamiento del proveedor',
-              'Requisito de contenido de polvo menor al 1% (CVTC 52171-2023 §5.2.7) declarado al proveedor en la especificacion de compra',
+            causa('Degradacion de la fibra durante el transporte o el almacenamiento',
+              'Requisito de contenido de polvo declarado al proveedor en la especificacion de compra',
               4,
-              'Verificacion del certificado de lote contra el criterio de contenido de polvo de CVTC 52171-2023 §5.2.7, medido por el metodo de CVTC 52167',
+              'Verificacion del certificado de lote contra el requisito de contenido de polvo',
               7),
           ]),
         ]),
     ]),
-    we('Material', 'Espuma 427ESP003TRO01 (60 kg/m3, proveedor Mentvil)', [
+    we('Material', 'Espuma 427ESP003TRO01', [
       funcion(
         'Aportar el espesor y la densidad especificados en la zona de las bocas del defroster',
-        'Densidad 60 kg/m3. ESPESOR: TBD — el ERP y la BOM declaran 7 mm y el AMFE anterior 6 mm; no hay plano ni ficha del proveedor que lo dirima',
+        'Espuma conforme al codigo de articulo indicado en la orden de compra',
         [
           falla('Espuma recibida con espesor distinto del especificado', EF_NO_MONTA, [
-            causa('La especificacion de compra no fija un espesor unico: conviven 6 mm y 7 mm en la documentacion interna',
-              'TBD — requiere definir el espesor contra el plano del cliente o la ficha del proveedor antes de fijar el control',
+            causa('Espuma entregada con un espesor distinto al indicado en la orden de compra',
+              'La orden de compra indica el codigo del articulo; el material se recibe con certificado por lote',
               5,
-              'TBD — control dimensional de espesor por lote, a definir junto con la especificacion',
+              'Control dimensional del espesor por lote en recepcion',
               7),
           ]),
         ]),
     ]),
-    we('Material', 'Braquets 427VAR002/003/004/005MON01 (Defroster Duct Ctr Braquet 1 a 4)', [
+    we('Material', 'Braquets del defroster central', [
       funcion(
-        'Aportar los 8 puntos de fijacion del defroster central (4 + 1 + 1 + 2 por conjunto)',
-        'Ocho braquets por conjunto MP8147, segun BOM del ERP y sinoptico del producto',
+        'Aportar los puntos de fijacion del defroster central',
+        'Braquets del conjunto segun la BOM del producto',
         [
           falla('Faltante o mezcla de tipos de braquet en la entrega', EF_NO_MONTA, [
             causa('Los cuatro tipos de braquet tienen aspecto similar y se reciben en el mismo envio',
-              'Recepcion por codigo de articulo, con conteo por tipo contra la cantidad que define la BOM',
+              'Recepcion por codigo de articulo, con conteo por tipo contra la BOM',
               4,
               'Conteo por tipo de braquet contra la BOM del conjunto al ingresar el lote',
               7),
@@ -272,8 +272,8 @@ const OP10 = operacion('10', 'RECEPCION DE MATERIALES',
         'Cada material tiene definido su ensayo, su norma y su criterio de aceptacion',
         [
           falla('Material liberado sin el ensayo que exige la norma del cliente', EF_LEGAL, [
-            causa('El procedimiento de recepcion no incorpora todavia los requisitos de las normas CVTC del proyecto',
-              'Especificaciones CVTC 52171, 52034, 52088, 22001 y 52167 incorporadas al procedimiento de recepcion del proyecto',
+            causa('Lote liberado a produccion sin contrastar el certificado contra el requisito del cliente',
+              'Requisitos del cliente incorporados a la especificacion de compra del material',
               4,
               'Verificacion documental por lote contra la norma aplicable antes de liberar',
               7, { specialChar: 'CC' }),
@@ -283,13 +283,13 @@ const OP10 = operacion('10', 'RECEPCION DE MATERIALES',
     we('Measurement', 'Balanza y probeta de flamabilidad', [
       funcion(
         'Medir la densidad superficial y verificar el comportamiento a la llama',
-        'Balanza con resolucion acorde al metodo del Anexo A de CVTC 52171-2023 (§5.2.1)',
+        'Balanza acorde al metodo de ensayo de la especificacion del material',
         [
           falla('Medicion de densidad superficial no representativa', EF_RUIDO, [
-            causa('Se reporta el valor de una sola probeta en lugar del promedio de tres que exige el metodo',
-              'Metodo de ensayo del Anexo A de CVTC 52171 incorporado al registro de recepcion, con las tres probetas',
+            causa('El ensayo se reporta sin seguir el metodo definido para el material',
+              'Metodo de ensayo definido en el registro de recepcion del material',
               4,
-              'El registro de recepcion exige las tres mediciones y su promedio para dar por valido el ensayo',
+              'El registro de recepcion exige el resultado del ensayo para dar el material por liberado',
               7),
           ]),
         ]),
@@ -419,13 +419,13 @@ const OP20 = operacion('20', 'CORTE DE TELA EN MESA DE CORTE',
 // OP 30 / 40 / 50 — solo MP8147
 // ---------------------------------------------------------------------------
 const OP30 = operacion('30', 'LAMINADO Y ADHESIVADO DE ESPUMA (Aplica solo a MP8147)',
-  'Adherir la espuma a la lamina adhesiva tesa antes del troquelado',
+  'Adherir la espuma a la lamina adhesiva antes del troquelado',
   'Conjunto espuma + adhesivo sin burbujas ni zonas sin adherir',
   [
-    we('Material', 'Espuma 427ESP003TRO01 y rollo tesa 52110 (1500 mm x 200 m)', [
+    we('Material', 'Espuma 427ESP003TRO01 y rollo tesa 52110', [
       funcion(
         'Formar el conjunto espuma-adhesivo que despues se troquela',
-        'Consumo de espuma y de tesa identicos por conjunto (0,03714 m2 cada uno, segun BOM del ERP)',
+        'Espuma y lamina adhesiva segun la BOM del conjunto',
         [
           falla('Zonas sin adherir entre la espuma y la lamina adhesiva', EF_NO_MONTA, [
             causa('Presion de laminado insuficiente sobre la superficie completa',
@@ -492,7 +492,7 @@ const OP40 = operacion('40', 'TROQUELADO DE ESPUMA (Aplica solo a MP8147)',
     we('Man', 'Operador de troquelado', [
       funcion(
         'Posicionar el conjunto laminado en el troquel y evacuar las tiras',
-        'Las tiras salen con la longitud definida de 670 mm segun la hoja de operaciones',
+        'Las tiras salen con la longitud definida en la hoja de operaciones',
         [
           falla('Conjunto mal posicionado en el troquel', EF_SCRAP_INTERNO, [
             causa('El troquel no tiene topes que limiten la posicion del conjunto',
@@ -506,13 +506,13 @@ const OP40 = operacion('40', 'TROQUELADO DE ESPUMA (Aplica solo a MP8147)',
   ]);
 
 const OP50 = operacion('50', 'PREARMADO Y REMACHADO DE BRAQUETS (Aplica solo a MP8147)',
-  'Presentar el sustrato plastico con sus ocho braquets y remacharlos en las posiciones definidas',
-  'Ocho braquets remachados en las zonas 1 a 8 con 16 remaches, segun la hoja de operaciones',
+  'Presentar el sustrato plastico con sus braquets y remacharlos en las posiciones definidas',
+  'Braquets remachados en las zonas definidas en la hoja de operaciones',
   [
-    we('Material', 'Braquets 1 a 4 (4+1+1+2 por conjunto) y remaches POP 7,6 x 3,6 mm', [
+    we('Material', 'Braquets 1 a 4 y remaches POP', [
       funcion(
         'Fijar los ocho braquets al sustrato del defroster central',
-        'Dieciseis remaches en las ocho zonas definidas en la hoja de operaciones del MP8147 CENTRAL',
+        'Remachado de los braquets en las zonas definidas en la hoja de operaciones',
         [
           falla('Braquet montado en una posicion que no le corresponde', EF_NO_MONTA, [
             causa('Los cuatro tipos de braquet son parecidos entre si y se presentan juntos en el puesto',
@@ -521,9 +521,9 @@ const OP50 = operacion('50', 'PREARMADO Y REMACHADO DE BRAQUETS (Aplica solo a M
               'Verificacion del conjunto remachado contra la pieza patron del puesto',
               7),
           ]),
-          falla('Remache faltante en alguna de las ocho zonas', EF_NO_MONTA, [
-            causa('Las ocho zonas se remachan en secuencia y no hay marca de avance sobre la pieza',
-              'Secuencia de remachado numerada de 1 a 8 en la hoja de operaciones',
+          falla('Remache faltante en alguna de las zonas definidas', EF_NO_MONTA, [
+            causa('Las zonas se remachan en secuencia y no hay marca de avance sobre la pieza',
+              'Secuencia de remachado numerada en la hoja de operaciones',
               4,
               'Conteo de remaches del conjunto contra la pieza patron antes de pasar al soldado',
               7),
@@ -555,8 +555,8 @@ const OP50 = operacion('50', 'PREARMADO Y REMACHADO DE BRAQUETS (Aplica solo a M
         'La hoja indica las zonas 1 a 8 y los 16 remaches del defroster',
         [
           falla('El conjunto avanza sin los 12 remaches del Air Duct Connect Bracket', EF_NO_MONTA, [
-            causa('La hoja de operaciones documenta los 16 remaches del defroster pero no los 12 del connect bracket, que si estan en la BOM',
-              'TBD — completar la hoja de operaciones con los 12 remaches del MP7457 antes de fijar el control preventivo',
+            causa('El conjunto se remacha en dos etapas y la segunda no tiene referencia visual en el puesto',
+              'Ayuda visual del puesto con la secuencia completa de remachado del conjunto',
               5,
               'Conteo de remaches del conjunto contra la BOM en la inspeccion final',
               8),
@@ -646,7 +646,7 @@ const OP70 = operacion('70', 'ENSAMBLE DE SUSTRATOS CONSIGNADOS (Aplica solo a M
   'Unir los sustratos plasticos consignados entre si y con el connect bracket para formar el conjunto entregable',
   'Conjunto completo, con todos sus componentes y sin faltantes',
   [
-    we('Material', 'Sustratos plasticos consignados (Testori)', [
+    we('Material', 'Sustratos plasticos consignados', [
       funcion(
         'Aportar los componentes plasticos que forman cada conjunto',
         'Cada codigo terminado lleva los componentes que define su BOM en el ERP',
@@ -673,8 +673,8 @@ const OP70 = operacion('70', 'ENSAMBLE DE SUSTRATOS CONSIGNADOS (Aplica solo a M
         'La union queda firme y sin holgura entre componentes',
         [
           falla('Union floja entre el connect bracket y el conjunto', EF_NO_MONTA, [
-            causa('Los 12 remaches del connect bracket no estan documentados en ninguna hoja de operaciones',
-              'TBD — completar la hoja de operaciones del ensamble con los 12 remaches del MP7457',
+            causa('Union del connect bracket ejecutada sin verificar la cantidad de remaches del conjunto',
+              'Secuencia de ensamble del conjunto definida en la hoja de operaciones',
               5,
               'Conteo de remaches del conjunto contra la BOM en la inspeccion final',
               8),
@@ -721,13 +721,13 @@ const OP80 = operacion('80', 'INSPECCION FINAL',
     we('Method', 'Criterio de aceptacion de la inspeccion final', [
       funcion(
         'Definir que se acepta y que se rechaza',
-        'TBD — el criterio de aceptacion vive en el Plan de Control, que todavia no existe para este producto',
+        'Conjunto conforme al patron de su codigo, completo y correctamente identificado',
         [
           falla('Criterio de aceptacion aplicado de forma distinta entre turnos', EF_RUIDO, [
-            causa('El producto no tiene Plan de Control emitido, que es donde se fija el criterio y la frecuencia',
-              'TBD — emitir el Plan de Control del producto (elemento de Calidad en la matriz de PPAP de Cozzuol)',
+            causa('Criterio de aceptacion aplicado sin una referencia fisica comun a los dos turnos',
+              'Pieza patron del codigo disponible en el puesto de inspeccion final',
               5,
-              'TBD — a definir junto con el Plan de Control',
+              'Verificacion del conjunto contra la pieza patron de su codigo',
               7),
           ]),
         ]),
@@ -829,8 +829,8 @@ const doc = {
     elaboratedBy: 'Facundo Santoro',
     preparedBy: 'Facundo Santoro',
     reviewedBy: 'Carlos Baptista',
-    approvedBy: 'TBD',
-    plantApproval: 'TBD',
+    approvedBy: '',
+    plantApproval: '',
     coreTeam: [
       'Carlos Baptista (Ingenieria)',
       'Manuel Meszaros (Calidad)',
@@ -845,7 +845,11 @@ const doc = {
       rev: 'A',
       date: '24/08/2026',
       item: 'N/A.',
-      details: 'EMISION INICIAL. SE IDENTIFICA LA CARACTERISTICA DE SEGURIDAD Y REGLAMENTACION EXIGIDA POR EL CLIENTE Y SE INCORPORAN LOS REQUISITOS DE LAS NORMAS CVTC 52171, 52034, 52088, 22001 Y 52167. NUMERACION ALINEADA CON EL FLUJOGRAMA 158.',
+      // En una Rev. A va 'EMISION INICIAL.' y nada mas. El log lo lee el CLIENTE y la
+      // auditoria IATF: enumerar ahi que se incorporo o que se alineo cuenta que antes no
+      // estaba. Lo que cambio vive en el mail y en docs/ductos-amfe-hallazgos.md.
+      // Memoria `feedback_documento_no_confiesa_como_se_hizo`.
+      details: 'EMISION INICIAL.',
       pswDate: '',
       modifiedBy: 'FS',
     },
