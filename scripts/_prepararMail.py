@@ -22,6 +22,10 @@ El JSON:
     "cuerpo": "texto plano, sin firma",
     "adjuntos": ["C:\\ruta\\uno.pdf", "..."]
   }
+
+Opcional: en vez de "cuerpo" se puede pasar "cuerpo_html" con HTML ya armado, que va SIN
+escapar. Sirve para mandar una tabla de verdad (<table>): con "cuerpo" los < y > se escapan
+y los tags se verian como texto. La firma se sigue agregando abajo, igual que siempre.
 """
 import json
 import os
@@ -68,8 +72,15 @@ def preparar(cfg):
     # antepone para que la firma quede debajo, como en un mail escrito a mano.
     mail.GetInspector
     firma = mail.HTMLBody or ''
-    cuerpo = cfg['cuerpo'].replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
-    mail.HTMLBody = f'<div style="font-family:Calibri,sans-serif;font-size:11pt">{cuerpo.replace(chr(10), "<br>")}</div>{firma}'
+    if cfg.get('cuerpo_html'):
+        # Cuerpo ya escrito en HTML: va TAL CUAL, sin escapar. Es la unica forma de mandar una
+        # tabla de verdad — Calibri es proporcional y una "tabla" alineada con espacios sale
+        # torcida. Quien usa esta clave se hace cargo de que el HTML este bien formado.
+        cuerpo = cfg['cuerpo_html']
+    else:
+        cuerpo = cfg['cuerpo'].replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+        cuerpo = cuerpo.replace(chr(10), '<br>')
+    mail.HTMLBody = f'<div style="font-family:Calibri,sans-serif;font-size:11pt">{cuerpo}</div>{firma}'
 
     for a in cfg.get('adjuntos', []):
         mail.Attachments.Add(a)

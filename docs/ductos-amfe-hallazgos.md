@@ -135,10 +135,21 @@ BOM completa por padre, tal cual sale del arb (consumo por pieza):
 - **OP80 (Inspeccion final)** controla *"1 - Alineacion de costura"* (fila 368).
   **Los ductos no se cosen.**
 
-## Hallazgo 7bis — las 4 hojas de operaciones tienen la MISMA hoja de corte, y es de otra pieza
+## Hallazgo 7bis - las 4 HO comparten la hoja de corte, y eso es A PROPOSITO
+
+> [CORREGIDO EL 24/08/2026] Este hallazgo estaba mal planteado. Los HECHOS de abajo son
+> correctos; la conclusion original ("arrastre por copia", "hallazgo de auditoria") era falsa.
+> Fak: *"las hojas 20 si se repiten porque son genericas... las tenemos 'generales' para que
+> sea mas facil, porque son tantas veces; si no, tendria que hacerlas desde 0, y si se
+> actualiza algo en mesa de corte tendria que actualizar 1 por 1 todas las HO"*. La hoja
+> compartida es el DISEÑO, no el defecto: el listado maestro tiene un bloque GENERAL con
+> `10 RECEPCION DE MATERIALES`, `025/027 CORTE`, `926 ADHESIVADO DE PIEZAS`,
+> `914 ESPUMAS TROQUELADAS` y `956 TELA DE TNT`, que es justamente esta. Memoria:
+> `reference_ho_generales_compartidas`. **Corolario: antes de reportar "a esta operacion le
+> falta la HO", buscarla en el bloque GENERAL del listado.**
 
 En `PROYECTO\26 - Instrucciones de Proceso\` hay HO de MP8146, MP8147 (CENTRAL y LATERAL) y
-MP8148. **Las cuatro tienen la hoja `20` identica**, y textual dice:
+MP8148. **Las cuatro reusan la misma hoja `20`**, la HO general de mesa de corte, que dice:
 
 ```
 21-7339 / TELA DE TNT
@@ -146,10 +157,12 @@ Cortar 60 capas de pliegos de TNT PP 60 GRS/M2 A 1,5, segun el largo informado e
 Seleccionar el programa de corte "217339-ECN06"
 ```
 
-**Eso no es el material de los ductos.** El insumo real es `427TEL002COR01`, thinsulate de
-**400 g/m²**; ahi dice TNT PP de **60 g/m²**, y `21-7339` es un codigo de producto de otra
-familia (los `21-xxxx` son Toyota/PWA). Es el mismo arrastre por copia que el hallazgo 2 del
-AMFE, pero en las HO. **No hay HO de MP8137, MP8149, MP8150 ni MP8151.**
+El cajetin de esa hoja general nombra `21-7339 / TELA DE TNT` (FIAT X6S, PWA, `HO-956`,
+rev 2, 27/11/2024) y su material es TNT PP de **60 g/m2**, no el thinsulate de **400 g/m2**
+(`427TEL002COR01`) que se corta para ductos. Eso **no la invalida**: es la hoja general del
+puesto, escrita sobre el caso de esa pieza. Lo que si conviene registrar es que su programa
+de corte (`217339-ECN06`) es el de aquella pieza. **No hay HO propia de MP8137, MP8149,
+MP8150 ni MP8151** - los cuatro que solo se cortan quedan cubiertos por la hoja general.
 
 Lo que si sirve de esas HO (verificado, y resuelve el TBD del hallazgo 4):
 
@@ -357,13 +370,21 @@ La carpeta tiene **cinco** normas CVTC, no cuatro:
 DIN 4102 B1, EN 45545-2 y FMVSS 302** — **ninguna es CVTC 52034 ni GB 8410**. No hay en el
 legajo ningun ensayo de flamabilidad contra la norma que pide el cliente.
 
-## 3. La hoja de corte de las HO esta OCULTA y es de otra pieza — confirmado con 6 pruebas
+## 3. La hoja de corte que comparten las 4 HO es la GENERAL de mesa de corte
 
-Las 4 hojas "20" son identicas entre si (mismo MD5 de contenido) y estan marcadas
-`state="hidden"` en el workbook. Su cajetin dice `21-7339 / TELA DE TNT`, modelo `FIAT X6S`,
-cliente `PWA`, `HO-956`, Rev 2, 2024-11-27. De thinsulate no hay ni una letra en ninguna HO.
-**Para los ductos VW427 no existe hoja de corte propia**, y no hay HO de MP8137, MP8149, MP8150
-ni MP8151.
+> [CORREGIDO EL 24/08/2026] Se escribio como "es de otra pieza, confirmado con 6 pruebas".
+> Las 6 pruebas eran hechos correctos y la conclusion estaba mal: la hoja se comparte a
+> proposito. Ver el Hallazgo 7bis y la memoria `reference_ho_generales_compartidas`.
+
+Las 4 hojas "20" son identicas entre si (mismo MD5 de contenido) y estan `state="hidden"` en
+el workbook. Su cajetin dice `21-7339 / TELA DE TNT`, modelo `FIAT X6S`, cliente `PWA`,
+`HO-956`, Rev 2, 27/11/2024, y de thinsulate no hay ni una letra. Es la **HO general de mesa
+de corte** (`956` en el bloque GENERAL del listado maestro), reusada dentro de cada libro de
+producto para no tener que actualizar HO por HO cuando cambia el puesto.
+
+**Fak, 24/08/2026: esas hojas ocultas se ELIMINAN de los 4 libros de ductos** (*"elimina esas
+hojas ocultas, no las quiero"*). La hoja general sigue existiendo por su cuenta como HO-956.
+Y no hay HO propia de MP8137, MP8149, MP8150 ni MP8151.
 
 ## Secuencia REAL de las HO (no coincide con la del flujograma)
 
@@ -471,7 +492,7 @@ la 40 o la 50.
 
 Ademas, **los numeros de las HO no existen en el formulario**: son solo nombres de pestaña de
 Excel. La celda `B6` (N° DE OPERACION) vale `-` en TODAS las hojas propias de ductos, y `Q3`
-(N° de HO) tambien. La unica con numero real es la hoja de corte ajena (`HO-956`).
+(N° de HO) tambien. La unica con numero real es la hoja general de mesa de corte (`HO-956`).
 
 ## 🔴 Hay una QUINTA fuente de numeracion en el legajo
 
@@ -511,3 +532,79 @@ quedo congelado en **35,6% al 11/08/2025**, con responsables que ya no son los q
 
 Para cerrarlos hay que **pedirle a Cozzuol/ACSA los planos 2D liberados** del
 `CC 4917-00 F_AG_I_24_23_IP` con su lista de materiales.
+
+---
+
+# TANDA DEL 24/08/2026 (tarde) - HO alineadas y la espuma de vuelta en la OP50
+
+## 1. Las 4 HO se alinearon al Flujograma 158 (script `scripts/_alinearHoDuctos.py`)
+
+Numeradas por lo que HACEN los pasos, no por el numero que traian. Quedaron 17 hojas:
+
+| Libro | HO N | Pestañas antes | Pestañas ahora |
+|---|---|---|---|
+| MP8146 | **987** | 20 (oculta) · 30 · 40 · 40.1 · 40,2 · 40.3 · 40.4 | 60 · 60.1 · 60.2 · 60.3 · 60.4 · 60.5 |
+| MP8147 CENTRAL | **988** | 20 (oculta) · 30 · 40 · 40.1 · 40.2 · 50 | 50 · 60 · 60.1 · 60.2 · **50.1** |
+| MP8147 LATERAL | **988** | 20 (oculta) · 40 · 40.1 · 40.2 · 40.3 · 40.4 | 60 · 60.1 · 60.2 · 60.3 · **70** |
+| MP8148 | **989** | 20 (oculta) · 40 | 60 |
+
+Ademas, en las 17 hojas: `B6` = numero de operacion (estaba VACIA en todas), `Q3` = numero de
+HO (idem), `K6` = PATAGONIA, `K8` = COZZUOL, `Q7` = 24/08/2026 y `Q8` = **A** (las revisiones de
+HO van con LETRA, no con numero; antes decian `1`). `Q2` no se toco: sigue `I-IN-002.4-R01`.
+**Los pasos no se modificaron.** Realizo/Aprobo siguen siendo P.GAMBOA / C.BAPTISTA.
+
+Registradas en el listado maestro de hojas de proceso (filas 88-90 del bloque GENERAL, columna
+`#` re-secuenciada) y en su hoja oculta `_CONTEXTO_CLAUDE`, que ahora dice **proximo libre 990**.
+Copias previas en `26 - Instrucciones de Proceso\OBSOLETO\` con su `Detalle Rev..txt`.
+
+Se saco de los 4 libros la pestaña oculta "20" (la HO general de mesa de corte, HO-956): se
+fueron exactamente **15 imagenes y 1 hoja por libro**, y los dibujos e imagenes de las hojas
+propias quedaron intactos. Verificado abriendo el MP8147 CENTRAL en PDF.
+
+## 2. La espuma volvio a la OP50 del AMFE 172 y del flujograma 158
+
+Alinear las HO destapo que la rederivacion del 24/08 dejo la OP50 como "PREARMADO Y REMACHADO DE
+BRAQUETS" y perdio la colocacion de las tiras de espuma. El AMFE REVA-4 numeraba esa misma
+operacion «Prearmado de Espuma + Remachado» y su celda `F251` dice textual
+«Indexa componentes (visagra, remaches, tiras de espuma) a la pieza»; la OP40 del propio AMFE
+172 troquela "las tiras que se aplican en las bocas del defroster" y ninguna operacion las
+aplicaba.
+
+Corregido (`scripts/_corregirOp50EspumaDuctos.mjs`, gate `runWithValidation`: 0 criticos):
+la OP50 es **PREARMADO DE ESPUMA Y REMACHADO DE BRAQUETS**, con un work element nuevo
+`Tiras de espuma 427ESP003TRO01 (2 tiras de 670 mm)`. El flujograma 158 dice ahora
+*PREARMADO: COLOCACION DE TIRAS DE ESPUMA Y REMACHADO DE BRAQUETS*. PNG, PDF y export del AMFE
+regenerados, y los 3 adjuntos del borrador reemplazados.
+
+**Queda abierto:** ese work element no tiene modo de falla. El REVA-4 tenia uno
+("5 - Mal posicionado de espuma troquelada en pieza plastica") pero su causa era
+"Error fuera de estandar", el tipo de causa generica que esta rederivacion saco a proposito.
+Una causa concreta la tiene que dar la planta.
+
+## 3. El remache quedo cerrado con fuente primaria
+
+El plano `AD529S.pdf` que Carlos reenvio el 10/08/2026 es el catalogo de remaches POP de Stanley.
+Fila resaltada: **AD 529-S**, diametro nominal **4,0 mm (5/32")**, largo **7,4 mm**, espesor
+remachable **2,1 a 3,6 mm**, diametro de cuerpo montado 3,90/4,08, diametro de broca 4,1/4,3.
+
+La OC **15990 del 04/08/2026** a **Black y Decker Argentina** compra contra el codigo
+`427VAR001MON01` en dos lineas: `AD529S Remache POP Aluminio 4,00 mm x 7,4 mm` y
+`AD529SPR ... esmalte negro`. El codigo `AD529EC` existe en el maestro con **0 lineas de BOM y
+0 OC** en las 10.635 ordenes barridas. Cual queda lo define Carlos.
+
+## 4. Estado de los codigos de la BOM (maestro del arb + 10.635 OC del disco Z)
+
+El maestro `INSUMOS.TXT` **no tiene campo de proveedor**: la columna sin encabezado esta vacia en
+las 3048 filas. El proveedor sale unicamente de las OC.
+
+| Situacion | Codigos |
+|---|---|
+| Proveedor si, codigo de proveedor no | `427TEL002COR01` (SINOYQX) · `427VAR002/003/004/005MON01` (Establecimientos Gamar) |
+| Proveedor si, codigo de proveedor si | `427VAR001MON01` (Black y Decker, `AD529-S` / `AD529-SPR`) |
+| Sin proveedor definido | `427ESP003TRO01` (0 OC; la BOM del legajo dice Mentvil, la lista de Calidad del 14/05 dice Cortipol) · `AD529EC` (0 OC y 0 BOM) |
+| Consignados | `MP8156/57/58/59/60` (Testori, OC a 0,0001) · `MP7457` (Cozzuol) |
+| No son provisorios | `52110` (el codigo ARB ya es el del fabricante tesa) · `ET-SATO-100X60` (13 OC a Gabriel Iriarte) |
+| No son item de compra | `CORDUC0001V1` a `CORDUC0007V1` - codigos internos de corte, sin BOM y sin OC |
+
+Fechas de los exports usados: `RELACIONES.TXT` 21/08/2026 · `INSUMOS.TXT` 04/08/2026 ·
+`ARTICULO.TXT` 03/08/2026.
