@@ -108,8 +108,13 @@ const FlowNode = ({ node, isLast, hasBranches, converges }) => {
 
         {/* IZQUIERDA: Críticos y Condiciones */}
         <div className="flex-1 flex justify-end items-center pr-6 space-x-2 relative z-10">
+           {/* Caracteristica especial. La "D" de VDA va en ROJO por requisito del cliente:
+               Cristian Anel (Cozzuol) 09/06/2026 — piezas de seguridad y reglamentacion,
+               "toda la documentacion (diagrama de flujo, AMFE, plan de control, etc.) debe
+               estar identificada segun la norma VDA con una letra 'D' de color rojo".
+               `criticalColor` permite otro color si algun cliente pide una marca distinta. */}
            {node.critical && (
-             <span className="text-[10px] font-black text-black bg-white/80 px-1 rounded">{node.criticalType}</span>
+             <span className={`text-[11px] font-black bg-white/80 px-1 rounded border ${node.criticalColor === 'black' ? 'text-black border-black' : 'text-[#DC2626] border-[#DC2626]'}`}>{node.criticalType}</span>
            )}
            {node.type === 'condition' && node.branchSide?.direction !== 'left' && (
              <span className="text-[9px] font-bold text-[#60A5FA] italic uppercase text-right leading-tight max-w-[100px] bg-white/80 px-1 rounded">
@@ -463,13 +468,26 @@ export default function Flowchart({ header, products, flow, revisions = [], show
                 <div className="w-[30%] p-4 bg-white overflow-x-auto">
                   <h4 className="text-[9px] font-black text-[#1E3A8A] border-b border-[#e5e7eb] pb-1 mb-3">CÓDIGOS PROD. TERMINADO</h4>
 
+                  {/* La columna OPERACIONES es opcional y aparece sola cuando algun producto
+                      la trae. Nace de un pedido explicito del cliente interno: Carlos Baptista,
+                      20/08/2026 — "Necesito la planilla de codigos indicando que pieza aplica a
+                      cada operacion, hay algunas que no van remachadas" y "en el proceso de mesa
+                      de corte hay muchos codigos que solo se cortan y se envian". Sin esto, un
+                      flujograma de familia no dice que pieza recorre que camino.
+                      Los 5 flujogramas ya emitidos no traen `operations`: para ellos la tabla
+                      queda exactamente igual que antes. */}
+                  {(() => {
+                    const conOps = products.some(p => p.operations);
+                    const encabezados = header.productsColumns || {};
+                    return (
                   <table className="w-full text-[8.5px] font-bold text-[#374151]">
                     <thead>
                       <tr className="text-[#9ca3af] border-b border-[#e5e7eb] text-left">
-                        <th className="pb-1 font-black whitespace-nowrap">Part Number VW</th>
-                        <th className="pb-1 font-black whitespace-nowrap">Nivel</th>
-                        <th className="pb-1 font-black whitespace-nowrap">Descripción / Componente</th>
-                        <th className="pb-1 font-black whitespace-nowrap text-right">Color/Versión</th>
+                        <th className="pb-1 font-black whitespace-nowrap">{encabezados.code || 'Part Number VW'}</th>
+                        <th className="pb-1 font-black whitespace-nowrap">{encabezados.level || 'Nivel'}</th>
+                        <th className="pb-1 font-black">{encabezados.description || 'Descripción / Componente'}</th>
+                        {conOps && <th className="pb-1 font-black whitespace-nowrap">{encabezados.operations || 'Operaciones'}</th>}
+                        <th className="pb-1 font-black whitespace-nowrap text-right">{encabezados.version || 'Color/Versión'}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[#f3f4f6]">
@@ -477,12 +495,15 @@ export default function Flowchart({ header, products, flow, revisions = [], show
                         <tr key={idx}>
                           <td className="py-1.5 text-[#60A5FA] whitespace-nowrap">{item.code}</td>
                           <td className="py-1.5 whitespace-nowrap">{item.level}</td>
-                          <td className="py-1.5 whitespace-nowrap">{item.description}</td>
-                          <td className="py-1.5 text-right whitespace-nowrap">{item.version}</td>
+                          <td className="py-1.5 pr-2 leading-tight">{item.description}</td>
+                          {conOps && <td className="py-1.5 whitespace-nowrap">{item.operations}</td>}
+                          <td className="py-1.5 text-right leading-tight">{item.version}</td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
+                    );
+                  })()}
                 </div>
 
                 {/* TERCER BLOQUE: HISTORIAL DE REVISIONES.

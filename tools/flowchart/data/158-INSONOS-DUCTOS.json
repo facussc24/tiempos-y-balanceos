@@ -1,0 +1,312 @@
+{
+  "_doc": "Flujograma 158 - INSONOS / DUCTOS DE CALEFACCION (VW427-1LA_K-PATAGONIA, cliente COZZUOL). Rederivado el 24/08/2026 desde tres fuentes: (a) el flujograma vigente 'FLUJOGRAMA DUCTOS.pdf/.vsdx' del 21/08/2026 (secuencia de 9 operaciones, inspecciones y SCRAP - se conserva tal cual, incluidos los puntos donde NO hay retrabajo); (b) el export crudo del ERP arb 'C:\\tmp\\RELACIONES.TXT' del 21/08/2026, que da los materiales por pieza y su columna MODULO/PROCESO (COB/CUMB=corte, TRO=troquelado, MONTAJE, QUA/QW=etiqueta); (c) las hojas de operacion de MP8146/MP8147/MP8148. NO se agrego ninguna operacion que no este en esas fuentes.",
+  "_correcciones_vs_el_vigente": [
+    "OP20 decia 'CORTE DE VINILO Y TELA' y el traslado previo 'TRASLADO DE VINILOS Y TELAS A MESA DE CORTE': en ductos no hay vinilo, se corta thinsulate. Era arrastre del flujograma de apoyacabezas.",
+    "La inspeccion posterior al SOLDADO POR ULTRASONIDO decia 'INSPECCION DE PIEZA ADHESIVADA'. Corregido a pieza soldada.",
+    "El 80 y el 90 significaban cosas distintas en el flujograma (80=EMBALAJE, 90=CONTROL DE CANTIDADES) y en el AMFE (80=INSPECCION FINAL, 90=EMBALAJE), y la inspeccion final no tenia numero. Se unifica con el criterio de amfe.md 12: inspeccion final numerada (80) y EMBALAJE siempre la ULTIMA (90). El control de cantidades queda dentro de la 90, que es donde se hace.",
+    "La TABLA DE CODIGOS tenia 9 lineas con MP8146 y MP8147 duplicados por lado y con MP8150/MP8151 con la MISMA descripcion. En el arb son 7 codigos, uno por pieza: se toman de ahi.",
+    "El cajetin decia FECHA DE REALIZACION 12/02/2026 / REV.01 aunque el archivo se guardo el 21/08/2026, y no traia codigo de formulario, proyecto, cliente ni historial de revisiones. Este sale en el formulario oficial I-IN-002/III con todo eso."
+  ],
+  "_lo_que_NO_se_toco": "El vigente resuelve cada inspeccion con UNA sola decision que manda a SCRAP: no hay paso de retrabajo en ninguna. Se respeta tal cual. Agregar un retrabajo que ningun documento ni persona declara seria inventar contenido (regla no-pfd-no-ho: del generador sale el DIBUJO, no el CONTENIDO).",
+  "header": {
+    "title": "FLUJOGRAMA DE PROCESO INSONOS / DUCTOS DE CALEFACCION",
+    "documentCode": "I-IN-002/III",
+    "revision": "A",
+    "date": "24/08/2026",
+    "revisionDate": "24/08/2026",
+    "preparedBy": "FACUNDO SANTORO",
+    "reviewedBy": "CARLOS BAPTISTA",
+    "project": "VW427-1LA_K-PATAGONIA",
+    "client": "COZZUOL",
+    "productsColumns": {
+      "code": "Codigo",
+      "level": "Tipo",
+      "description": "Descripcion (arb)",
+      "operations": "Operaciones",
+      "version": "Material"
+    }
+  },
+  "_nota_productos": "Los 7 codigos, sus descripciones y sus materiales salen del export del arb del 21/08/2026 (dato crudo, sin interpretar). La columna Operaciones responde al pedido de Carlos Baptista del 20/08/2026: 'necesito la planilla de codigos indicando que pieza aplica a cada operacion, hay algunas que no van remachadas' y 'en el proceso de mesa de corte hay muchos codigos que solo se cortan y se envian'. Los 4 que solo se cortan son MP8137, MP8149, MP8150 y MP8151. El unico que se remacha es el MP8147.",
+  "products": [
+    {
+      "code": "MP8137",
+      "level": "Solo corte",
+      "description": "HUSH_PANEL ASS",
+      "operations": "10 - 20 - 80 - 90",
+      "version": "Thinsulate 400 g/m2"
+    },
+    {
+      "code": "MP8149",
+      "level": "Solo corte",
+      "description": "IP_UPPER_SUBSTRATE",
+      "operations": "10 - 20 - 80 - 90",
+      "version": "Thinsulate 400 g/m2"
+    },
+    {
+      "code": "MP8150",
+      "level": "Solo corte",
+      "description": "FRONT EXTEND PANEL LH y RH",
+      "operations": "10 - 20 - 80 - 90",
+      "version": "Thinsulate 400 g/m2"
+    },
+    {
+      "code": "MP8151",
+      "level": "Solo corte",
+      "description": "CNSL_SIDE PANEL LH y RH",
+      "operations": "10 - 20 - 80 - 90",
+      "version": "Thinsulate 400 g/m2"
+    },
+    {
+      "code": "MP8146",
+      "level": "Conjunto",
+      "description": "AIR DUCT SUB ASS1",
+      "operations": "10 - 20 - 60 - 70 - 80 - 90",
+      "version": "Thinsulate + MP8156"
+    },
+    {
+      "code": "MP8148",
+      "level": "Conjunto",
+      "description": "CONSL AIR DUCT ASS",
+      "operations": "10 - 20 - 60 - 70 - 80 - 90",
+      "version": "Thinsulate + MP8160"
+    },
+    {
+      "code": "MP8147",
+      "level": "Conjunto",
+      "description": "DEFROSTER DUCT CTR SUBSTRATE ASS",
+      "operations": "10 - 20 - 30 - 40 - 50 - 60 - 70 - 80 - 90",
+      "version": "Thinsulate + espuma 7 mm + tesa + remaches"
+    }
+  ],
+  "revisions": [
+    {
+      "rev": "A",
+      "date": "24/08/2026",
+      "item": "N/A.",
+      "details": "EMISION INICIAL EN EL FORMULARIO I-IN-002/III. REEMPLAZA AL FLUJOGRAMA DE DUCTOS SIN NUMERAR (REV.01, 12/02/2026). SE INCORPORA LA TABLA DE CODIGOS POR OPERACION, SE IDENTIFICA LA CARACTERISTICA DE SEGURIDAD Y REGLAMENTACION SEGUN VDA Y SE ALINEA LA NUMERACION 80/90 CON EL AMFE 172.",
+      "pswDate": "",
+      "modifiedBy": "FS"
+    }
+  ],
+  "_nota_D_roja": "La 'D' roja la exige el cliente: Cristian Anel (Albano Cozzuol), 09/06/2026 - 'Al tratarse de componentes para el interior del vehiculo, estos materiales requieren ensayos de inflamabilidad y estan catalogados como piezas de seguridad y reglamentacion. Por tal motivo, toda la documentacion (diagrama de flujo, AMFE, plan de control, etc.) debe estar identificada segun la norma VDA con una letra D de color rojo.' La norma de ensayo es la CVTC 52034 'Flammability of automotive nonmetal materials', que Cozzuol adjunto el 16/06/2026. Se marca donde vive el requisito: el material que ingresa y el control que lo libera. La asignacion definitiva la confirma Fak o el cliente (core-prohibiciones 2).",
+  "flow": [
+    {
+      "stepId": "10",
+      "type": "op-ins",
+      "description": "RECEPCION DE MATERIALES SEGUN TABLA DE MATERIALES",
+      "critical": true,
+      "criticalType": "D"
+    },
+    {
+      "type": "storage",
+      "description": "ALMACENADO EN SECTOR DE RECEPCION DE MATERIA PRIMA PENDIENTE DE CONTROL"
+    },
+    {
+      "type": "inspection",
+      "description": "INSPECCION DE MATERIALES - VERIFICACION DE CERTIFICADO Y ENSAYO DE INFLAMABILIDAD (CVTC 52034)",
+      "critical": true,
+      "criticalType": "D"
+    },
+    {
+      "type": "condition",
+      "labelCondition": "¿MATERIAL CONFORME?",
+      "labelDown": "OK",
+      "branchSide": {
+        "labelNode": "NO OK",
+        "type": "terminal",
+        "text": "RECLAMO DE CALIDAD AL PROVEEDOR"
+      }
+    },
+    {
+      "type": "storage",
+      "description": "ALMACENADO EN SECTOR DE RECEPCION DE MATERIA PRIMA CONTROLADA E IDENTIFICADA"
+    },
+    {
+      "type": "transfer",
+      "description": "TRASLADO DE THINSULATE A MESA DE CORTE"
+    },
+    {
+      "stepId": "20",
+      "type": "operation",
+      "description": "CORTE DE TELA EN MESA DE CORTE (APLICA A LOS 7 CODIGOS)"
+    },
+    {
+      "type": "inspection",
+      "description": "INSPECCION DE CORTE"
+    },
+    {
+      "type": "condition",
+      "labelCondition": "¿PIEZA CONFORME?",
+      "labelDown": "SI",
+      "branchSide": {
+        "labelNode": "NO",
+        "type": "terminal",
+        "text": "SCRAP"
+      }
+    },
+    {
+      "type": "transfer",
+      "description": "TRASLADO DE CORTES SEGUN CODIGO",
+      "branches": [
+        [
+          {
+            "type": "transfer",
+            "description": "MP8137 / MP8149 / MP8150 / MP8151 - SOLO CORTE, SE ENVIAN"
+          }
+        ],
+        [
+          {
+            "type": "transfer",
+            "description": "MP8146 / MP8148 - AL SECTOR DE SOLDADO"
+          },
+          {
+            "stepId": "60",
+            "type": "operation",
+            "description": "SOLDADO POR ULTRASONIDO"
+          },
+          {
+            "type": "inspection",
+            "description": "INSPECCION DE PIEZA SOLDADA"
+          },
+          {
+            "type": "condition",
+            "labelCondition": "¿PIEZA CONFORME?",
+            "labelDown": "SI",
+            "branchSide": {
+              "labelNode": "NO",
+              "type": "terminal",
+              "text": "SCRAP"
+            }
+          },
+          {
+            "stepId": "70",
+            "type": "operation",
+            "description": "ENSAMBLE DE DUCTO CONSIGNADO (MP8156 / MP8160)"
+          }
+        ],
+        [
+          {
+            "type": "transfer",
+            "description": "MP8147 - AL SECTOR DE ADHESIVADO"
+          },
+          {
+            "stepId": "30",
+            "type": "operation",
+            "description": "LAMINADO / ADHESIVADO DE ESPUMA 7 MM + TESA"
+          },
+          {
+            "type": "inspection",
+            "description": "INSPECCION DE ADHESIVADO"
+          },
+          {
+            "type": "condition",
+            "labelCondition": "¿PIEZA CONFORME?",
+            "labelDown": "SI",
+            "branchSide": {
+              "labelNode": "NO",
+              "type": "terminal",
+              "text": "SCRAP"
+            }
+          },
+          {
+            "stepId": "40",
+            "type": "operation",
+            "description": "TROQUELADO DE ESPUMA"
+          },
+          {
+            "type": "inspection",
+            "description": "INSPECCION DE LA PIEZA TROQUELADA"
+          },
+          {
+            "type": "condition",
+            "labelCondition": "¿PIEZA CONFORME?",
+            "labelDown": "SI",
+            "branchSide": {
+              "labelNode": "NO",
+              "type": "terminal",
+              "text": "SCRAP"
+            }
+          },
+          {
+            "stepId": "50",
+            "type": "operation",
+            "description": "PREARMADO Y REMACHADO (VISAGRAS + REMACHES)"
+          },
+          {
+            "type": "inspection",
+            "description": "INSPECCION DE LA PIEZA PREARMADA"
+          },
+          {
+            "type": "condition",
+            "labelCondition": "¿PIEZA CONFORME?",
+            "labelDown": "SI",
+            "branchSide": {
+              "labelNode": "NO",
+              "type": "terminal",
+              "text": "SCRAP"
+            }
+          },
+          {
+            "stepId": "60",
+            "type": "operation",
+            "description": "SOLDADO POR ULTRASONIDO"
+          },
+          {
+            "type": "inspection",
+            "description": "INSPECCION DE PIEZA SOLDADA"
+          },
+          {
+            "type": "condition",
+            "labelCondition": "¿PIEZA CONFORME?",
+            "labelDown": "SI",
+            "branchSide": {
+              "labelNode": "NO",
+              "type": "terminal",
+              "text": "SCRAP"
+            }
+          },
+          {
+            "stepId": "70",
+            "type": "operation",
+            "description": "ENSAMBLE DE SUSTRATOS MP8157 / MP8158 / MP8159 + BRACKETS + MP7457"
+          }
+        ]
+      ]
+    },
+    {
+      "stepId": "80",
+      "type": "inspection",
+      "description": "INSPECCION FINAL"
+    },
+    {
+      "type": "condition",
+      "labelCondition": "¿PIEZA CONFORME?",
+      "labelDown": "SI",
+      "branchSide": {
+        "labelNode": "NO",
+        "type": "terminal",
+        "text": "SCRAP"
+      }
+    },
+    {
+      "type": "transfer",
+      "description": "TRASLADO DE PIEZAS AL SECTOR DE PRODUCTO TERMINADO"
+    },
+    {
+      "stepId": "90",
+      "type": "operation",
+      "description": "EMBALAJE, IDENTIFICACION (ETIQUETA 100X60) Y CONTROL DE CANTIDADES DE DESPACHO"
+    },
+    {
+      "type": "storage",
+      "description": "ALMACENADO EN SECTOR DE PRODUCTO TERMINADO"
+    }
+  ],
+  "_divergencias_a_resolver": [
+    "CANTIDAD DE REMACHES: la BOM del arb carga 28 remaches (427VAR001MON01) en el MP8147; la HO MP8147 CENTRAL op30 dice 'juego de 8 visagras y 16 remaches'. No se pone numero en el flujograma hasta que se defina cual es el correcto.",
+    "ORDEN DE LA ESPUMA: el flujograma vigente y el AMFE ponen laminado (30) y troquelado (40) ANTES del prearmado; la HO MP8147 CENTRAL pone 'PEGADO DE ESPUMA' como op 50, DESPUES del soldado. Se numera contra el flujograma (regla no-pfd-no-ho) y se reporta la divergencia.",
+    "NUMERACION DE LAS HO: las HO usan 20/30/40/40.1/40.2/50 con otro significado que el flujograma. Ademas su hoja 20 (corte) esta OCULTA y es de otra pieza (21-7339 TELA DE TNT, FIAT X6S, HO-956): para los ductos NO existe hoja de corte propia, y no hay HO de MP8137, MP8149, MP8150 ni MP8151.",
+    "MP8146 mezcla dos piezas en un mismo libro de HO (AIR DUCT RH/LH en 40-40.1 y AIR DUCT CTR en 40,2-40.4)."
+  ],
+  "_nota_visagras": "Las visagras del prearmado NO son arrastre del AMFE de apoyacabezas: la HO MP8147 CENTRAL op30 (REMACHADO) dice textual 'juego de 8 visagras y 16 remaches'. En el arb no tienen codigo propio; los candidatos son los brackets 427VAR002/003/004/005MON01 (Defroster Duct Ctr Braquet 1 a 4). A confirmar en planta."
+}

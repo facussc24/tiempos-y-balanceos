@@ -276,3 +276,88 @@ el motor. Ademas habria que dar de alta la entrada en
 
 El AMFE es 1 de los 12 casilleros de la matriz PPAP de Cozzuol. Estado completo, reparto
 Ingenieria/Calidad y que le toca a Fak: memoria `project_ductos_ppap_cozzuol`.
+
+
+---
+
+# ACTUALIZACION 24/08/2026 — correcciones a este mismo documento y trabajo hecho
+
+Se leyeron las fuentes que faltaban (las 4 HO completas, el `.vsdx` del flujograma y el buzon).
+**Tres cosas que este documento afirmaba quedaron corregidas:**
+
+## 1. Las "visagras" NO son arrastre — existen en el proceso real
+
+El hallazgo 7 decia que la OP50 hablaba de visagras y que "ninguna BOM de los 7 ductos tiene
+bisagras". Es cierto que no estan en la BOM, pero **la HO MP8147 CENTRAL op30 (REMACHADO) dice
+textual: "juego de 8 visagras y 16 remaches"**. La operacion existe. En el arb no tienen codigo
+propio; los candidatos son los brackets `427VAR002/003/004/005MON01` (Defroster Duct Ctr Braquet
+1 a 4). **No borrar las visagras del AMFE: confirmar que son.**
+
+Divergencia abierta que sale de esto: **el arb carga 28 remaches y la HO dice 16.**
+
+## 2. La norma de flamabilidad es la CVTC **52034**, no la 52171
+
+"CVTC 52171" no existe en ningun mail. Cozzuol adjunto el 16/06/2026 cuatro normas:
+**22001** (sustancias prohibidas), **35005** (instrument panel), **52034 "Flammability of
+automotive nonmetal materials"** y **52088** (emisiones). El gramaje de 400 g/m2 del thinsulate
+sale del insumo del arb y de la ficha del proveedor, no de una norma.
+
+## 3. La hoja de corte de las HO esta OCULTA y es de otra pieza — confirmado con 6 pruebas
+
+Las 4 hojas "20" son identicas entre si (mismo MD5 de contenido) y estan marcadas
+`state="hidden"` en el workbook. Su cajetin dice `21-7339 / TELA DE TNT`, modelo `FIAT X6S`,
+cliente `PWA`, `HO-956`, Rev 2, 2024-11-27. De thinsulate no hay ni una letra en ninguna HO.
+**Para los ductos VW427 no existe hoja de corte propia**, y no hay HO de MP8137, MP8149, MP8150
+ni MP8151.
+
+## Secuencia REAL de las HO (no coincide con la del flujograma)
+
+| Pieza | Operaciones segun su HO |
+|---|---|
+| MP8146 | 20 (ajena) · 30 POSICIONAMIENTO · 40/40.1 SOLDADO (AIR DUCT RH/LH) · 40,2/40.3/40.4 SOLDADO (AIR DUCT CTR) |
+| MP8147 CENTRAL | 20 (ajena) · 30 REMACHADO · 40/40.1/40.2 SOLDADO · **50 PEGADO DE ESPUMA** |
+| MP8147 LATERAL | 20 (ajena) · 40/40.1 SOLDADO (RH) · 40.2/40.3 SOLDADO (LH) · **40.4 ENSAMBLE** (no soldado; no tiene op30) |
+| MP8148 | 20 (ajena) · 40 SOLDADO |
+
+🔴 **La espuma va DESPUES del soldado en la HO (op50) y ANTES en el flujograma/AMFE (op30-40).**
+Se numera contra el flujograma (`no-pfd-no-ho`) y se reporta la divergencia. El MP8146 ademas
+mezcla dos piezas en un mismo libro.
+
+Detalle integro de las tres lecturas: `tmp/ductos/HO_volcado.md`, `tmp/ductos/FLUJOGRAMA_volcado.md`
+y `tmp/ductos/REVA4_volcado.md`.
+
+## Hallazgos nuevos sobre el AMFE REVA-4
+
+- Son **10 operaciones**: 10, 20, 30, 40, **41**, 50, 60, 70, 80, 90. La 41 es "Colocacion de
+  espumas adhesivadas en medios intermedios" y **el flujograma no la tiene**.
+- **El Paso 6 (Optimizacion) esta completamente vacio**: 0 celdas con datos en las columnas R a AC
+  de las 436 filas. Ni una accion, responsable ni fecha.
+- La **OP70 "Ensamblaje" repite el modo de falla de la OP60** (misma celda, mismos controles).
+- **Contradiccion interna de la espuma**: la recepcion dice "ESPUMA (FOAM) 7MM"; laminado y
+  troquelado dicen 6 mm. El arb dice 7 mm.
+- Los codigos MP81xx **si estan**, pero en una tabla lateral `AF5:AG13` fuera del formulario.
+- Los encabezados dicen "AP **DFMEA**" siendo un AMFE de proceso, y la hoja rotula "RESPONSABLE
+  DEL **DISEÑO**" mientras la caratula dice "RESPONSABLE DEL **PROCESO**".
+- "Organismos regulatorios" aparece 9 veces como destinatario de efecto y **las 9 veces el efecto
+  esta vacio**.
+- El log de revisiones tiene **una sola linea** ("EMISION INICIAL", 13/02/2026) pese a llamarse REVA-4.
+
+## Estado del hilo (Outlook, verificado en vivo)
+
+**No hay ningun mail de ductos posterior al 21/08/2026 15:23.** No existe REVA-5, Carlos no volvio
+a rechazar y Cozzuol no reclamo desde el 11/08. La REVA-4 **nunca se mailéo**: la ultima que
+circulo es la REVA-3 (Gamboa, 14/08 16:25). Del flujograma, **el unico cambio del 21/08 fue llenar
+la TABLA DE CODIGOS, que antes decia TBD** — el resto, cajetin incluido, quedo igual.
+
+## Lo que se hizo el 24/08
+
+- **Flujograma 158 - INSONOS / DUCTOS DE CALEFACCION, Rev.A**, con el generador del repo
+  (`tools/flowchart/data/158-INSONOS-DUCTOS.json`). Formulario I-IN-002/III, tabla de codigos con
+  columna de operaciones, tres ramas segun el camino de cada pieza, y la "D" roja de VDA en
+  recepcion y control de material. El **158** es el siguiente libre (el listado llega al 157).
+- **Planilla de codigos por operacion** en Excel.
+- **Numero de AMFE asignado: 172.** Verificado contra el listado maestro (llega al 160) Y contra
+  las carpetas reales del maestro (llegan al 171, incluido `COZZUOL/167 - INSONORIZANTES`, que
+  **NO es este**: es de enero 2024 y no menciona MP81xx, VW427, Patagonia ni thinsulate).
+- Dos cambios al motor del flujograma: columna de operaciones opcional en la tabla de codigos, y
+  `criticalType` en rojo para la marca VDA. Los 5 flujogramas ya emitidos no cambian.
