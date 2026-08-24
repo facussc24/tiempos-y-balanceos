@@ -1,21 +1,29 @@
-"""Gancho DOBLE — el diseño del gerente: silla de montar sobre el travesaño, 2 ganchos.
+"""Gancho DOBLE — el diseño del gerente: mismo clip sobre la pata, un gancho de cada lado.
 
-Croquis del gerente de Fak, 24/08/2026 (cuaderno, foto por WhatsApp).
+Croquis del gerente de Fak, 24/08/2026. Su dibujo es la vista EN PLANTA: el rectangulo de
+adentro es la boca con la pata metida, y los dos brazos salen a los costados.
 
-MECANISMO — y por que este SI puede llevar dos mochilas y el v1 no:
-el v1 es una mordaza que agarra por el momento DESEQUILIBRADO del peso (bascula y muerde
-la pata). Poniendole dos ganchos y dos mochilas iguales el momento se anula, N va a cero y
-la friccion tambien: se resbala. Es una limitacion del mecanismo, no del dibujo.
-Este no aprieta nada: el lomo APOYA sobre la cara de arriba del travesaño y el peso baja
-por compresion. Con una mochila o con dos, se sostiene igual.
+EL PROBLEMA QUE HABIA QUE RESOLVER, Y COMO SE RESUELVE:
+el v2 agarra por el momento DESEQUILIBRADO del peso — bascula dentro del juego y muerde la
+pata. Con dos mochilas iguales ese momento se anula, la normal va a cero y la friccion
+tambien: poniendole dos brazos y nada mas, la pieza se cae.
 
-Lo unico que las alas tienen que tomar es el momento de UNA sola mochila, que tiende a
-volcar la pieza:  N = P*a / A   (A = alto de las alas = alto del travesaño).
+La salida no es cambiar de lugar, es cambiar de MECANISMO: la boca va **CONICA**, mas
+angosta abajo. El peso empuja la pieza hacia abajo, la boca se cierra sobre la pata y
+aprieta. Mas peso = mas apriete, venga de un lado o de los dos. Y se saca levantandola.
 
-Frame (mismo para uso y para impresion, la pieza es una EXTRUSION pura -> cero soportes):
-    u = horizontal, transversal al travesaño. u=0 es el eje de la pieza.
-    v = vertical. v=0 es la cara de abajo de los brazos, todo lo demas va para arriba.
-    w = a lo largo del travesaño = ancho de la pieza = altura de impresion.
+    traba sola  <=>  semiangulo del cono < arctan(mu)
+    2,05 grados  <  16,7 grados        (2 mm de conicidad en 28 mm de alto, mu = 0,30)
+
+De yapa, el cono ABSORBE la incertidumbre de la cota: agarra en cualquier espesor entre
+26,6 y 28,6, asi que ya no hacen falta testigos de boca. Y absorbe que la pata sea conica
+—el calibre dio 30,68 mas abajo y arriba mide ~27,2—, que es justamente lo que hizo que al
+v1 le sobraran 3-4 mm.
+
+Frame (el mismo para uso y para impresion — no hay que girar nada en el laminador):
+    X = profundidad, a lo largo del ancho de la pata. Lomo en X<0, alas hacia +X.
+    Y = espesor de la pata. Un brazo sale a +Y y el otro a -Y.
+    Z = vertical. Z=0 es la cama, y es tambien donde la boca es MAS ANGOSTA.
 
 Uso:
     .venv-cad\\Scripts\\python.exe build_gancho_doble.py --out <workdir>
@@ -25,10 +33,13 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 from pathlib import Path
 
 from build123d import (
     Axis,
+    Box,
+    Cylinder,
     Plane,
     Polygon,
     Pos,
@@ -36,14 +47,18 @@ from build123d import (
     export_stl,
     extrude,
     fillet,
+    mirror,
 )
 
 AQUI = Path(__file__).parent
 
 
+def caja(x0, x1, y0, y1, z0, z1):
+    return Pos((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2) * Box(x1 - x0, y1 - y0, z1 - z0)
+
+
 def aristas_en(solido, eje, **cerca):
-    """Aristas paralelas a `eje` cuyo centro cae cerca de las coordenadas dadas."""
-    tol = cerca.pop("tol", 0.6)
+    tol = cerca.pop("tol", 0.7)
     fuera = []
     for e in solido.edges().filter_by(eje):
         c = e.center()
@@ -63,125 +78,135 @@ def redondear(solido, aristas, radio, etiqueta, avisos):
         return solido
 
 
-def cuentas(p):
-    """Las cuentas que gobiernan, recalculadas desde los params en cada corrida.
+def derivadas(p):
+    """Cotas que dependen de otras y por eso NO se escriben.
 
-    cad-3d.md GATE 4: ningun parametro se hereda sin recalcularlo, y el que gobierna la
-    geometria se mide despues sobre el artefacto (lo hace verificar_gancho_doble.py).
+    El 24/08, en el v2, `y_raiz` habia quedado como literal de una boca anterior: el brazo
+    salio 1,75 mm separado del ala y la pieza se partio en dos solidos. No se repite.
     """
-    s, g, sub = p["silla"], p["gancho"], p["sustrato"]
+    c = p["clip"]
+    return {
+        # el brazo nace de la cara externa del ala, y la interna es CONICA: se toma el punto
+        # mas ancho (arriba) para que el brazo pegue contra el ala en toda su altura
+        "y_raiz": c["boca_arriba"] / 2.0 + c["e_ala"],
+        "x0": -c["e_lomo"],
+        "ancho_X": c["e_lomo"] + c["p_ala"],
+        "a_centro_carga": p["brazo"]["y_fondo"] - p["nariz"]["r_fondo_gancho"],
+        "semiangulo_cono_deg": math.degrees(
+            math.atan((c["boca_arriba"] - c["boca_abajo"]) / 2.0 / c["h_clip"])
+        ),
+    }
+
+
+def cuentas(p):
+    d = derivadas(p)
+    c = p["clip"]
     P = p["carga"]["P_N"]
-    A = sub["A_alto_travesano"]
-    B = sub["B_espesor_travesano"]
+    mu = p["carga"]["mu"]
 
-    boca = B + s["juego_total"]
-    U = boca / 2.0 + s["e_ala"]
-    v_top = A + s["e_lomo"]
+    alpha = d["semiangulo_cono_deg"]
+    autobloqueo = math.degrees(math.atan(mu))
 
-    # brazo de carga: del eje de la pieza al fondo del gancho (la correa se va al fondo)
-    a = g["u_fondo"] - g["r_fondo_gancho"]
+    # Para sostener el peso por friccion en las dos caras hace falta esta normal. La cuña la
+    # genera bajando; lo que importa es que el cono TRABE (alpha < arctan mu), no cuanto baja.
+    N_para_2_mochilas = 2 * P / (2 * mu)
+    area = c["p_ala"] * c["h_clip"] * 0.6  # apoya ~60% de la cara al asentar el cono
+    presion = N_para_2_mochilas / area
 
-    # peor caso = UNA sola mochila: el momento tiende a volcar la pieza y lo toman las alas
-    N = P * a / A
-    area_ala = s["ancho_X"] * A / 2.0  # apoya media altura del ala al bascular
-    presion = N / area_ala
+    # flexion del brazo en la raiz
+    M = P * (d["a_centro_carga"] - d["y_raiz"])
+    W = d["ancho_X"] * p["brazo"]["z_raiz"] ** 2 / 6.0
+    sigma = M / W
 
-    # flexion del brazo en su raiz (donde sale del ala)
-    M_brazo = P * (a - U)
-    W_brazo = s["ancho_X"] * g["v_brazo_raiz"] ** 2 / 6.0
-    sigma_brazo = M_brazo / W_brazo
-
-    # el ala a traccion: se la lleva entera el peso que cuelga de ella
-    sigma_ala = P / (s["ancho_X"] * s["e_ala"])
-
-    # el lomo apoya en toda su superficie sobre el travesaño; lo que trabaja es el voladizo
-    # que sobresale del travesaño hacia cada lado (el espesor del ala)
-    M_lomo = P * s["e_ala"]
-    W_lomo = s["ancho_X"] * s["e_lomo"] ** 2 / 6.0
-    sigma_lomo = M_lomo / W_lomo
+    # el lomo toma el par de las dos alas cuando la cuña aprieta: torsion de seccion delgada
+    largo_lomo = c["boca_arriba"] + 2 * c["e_ala"]
+    J = largo_lomo * c["e_lomo"] ** 3 / 3.0
+    tau = N_para_2_mochilas * c["h_clip"] * c["e_lomo"] / J
 
     return {
-        "boca_de_la_silla": round(boca, 2),
-        "ancho_total_U2": round(2 * U, 1),
-        "alto_total": round(v_top, 1),
-        "brazo_de_carga_a": round(a, 1),
-        "N_por_ala_1_mochila_N": round(N, 1),
-        "presion_sobre_el_travesano_MPa": round(presion, 3),
-        "sigma_brazo_MPa": round(sigma_brazo, 2),
-        "SF_brazo_vs_PLA_60MPa": round(60.0 / sigma_brazo, 1),
-        "sigma_ala_traccion_MPa": round(sigma_ala, 2),
-        "sigma_lomo_MPa": round(sigma_lomo, 2),
-        "SF_lomo_vs_PLA_60MPa": round(60.0 / sigma_lomo, 1),
-        "garganta_del_gancho_mm": round(g["v_nariz"] - g["v_fondo"], 1),
-        "carga_2_mochilas_kg": round(2 * p["carga"]["P_kg_por_gancho"], 1),
+        "semiangulo_del_cono_deg": round(alpha, 2),
+        "autobloqueo_arctan_mu_deg": round(autobloqueo, 2),
+        "traba_sola": alpha < autobloqueo,
+        "rango_de_espesor_que_agarra": f"{c['boca_abajo']} a {c['boca_arriba']} mm",
+        "y_raiz_derivada": round(d["y_raiz"], 2),
+        "a_derivado": round(d["a_centro_carga"], 2),
+        "carga_total_2_mochilas_kg": round(2 * p["carga"]["P_kg_por_gancho"], 1),
+        "N_necesaria_2_mochilas_N": round(N_para_2_mochilas, 1),
+        "presion_sobre_la_pata_MPa": round(presion, 3),
+        "sigma_brazo_MPa": round(sigma, 2),
+        "SF_brazo_vs_PLA_60MPa": round(60.0 / sigma, 1),
+        "tau_lomo_MPa": round(tau, 2),
+        "SF_lomo_vs_corte_35MPa": round(35.0 / tau, 1),
+        "garganta_del_gancho_mm": round(p["nariz"]["z_punta"] - p["brazo"]["z_fondo"], 1),
     }
 
 
 def construir(p):
     avisos = []
-    s, g, sub = p["silla"], p["gancho"], p["sustrato"]
-    boca = sub["B_espesor_travesano"] + s["juego_total"]
-    ui = boca / 2.0            # cara interna del ala (la que toca el travesaño)
-    U = ui + s["e_ala"]        # cara externa del ala
-    v_ala_top = sub["A_alto_travesano"]        # cara inferior del lomo
-    v_top = v_ala_top + s["e_lomo"]
+    c, b, n, r = p["clip"], p["brazo"], p["nariz"], p["radios"]
+    d = derivadas(p)
+    h = c["h_clip"]
+    ia, ib = c["boca_abajo"] / 2.0, c["boca_arriba"] / 2.0   # cara interna: abajo y arriba
+    ye = ib + c["e_ala"]                                      # cara externa del ala
 
-    # Contorno cerrado, recorrido de una: lomo -> ala derecha -> brazo -> nariz -> vuelta por
-    # abajo -> boca (el hueco donde entra el travesaño) -> espejo del lado izquierdo.
+    # --- clip: lomo + dos alas con la cara interna INCLINADA (esa inclinacion ES el mecanismo)
+    pieza = caja(-c["e_lomo"], 0.0, -ye, ye, 0.0, h)
+    ala = extrude(
+        Plane.YZ * Polygon((ia, 0.0), (ye, 0.0), (ye, h), (ib, h), align=None),
+        amount=c["p_ala"],
+    )
+    pieza += ala
+    pieza += mirror(ala, about=Plane.XZ)
+
+    # --- los dos brazos. Se construye UNO y se espeja: extruir el perfil espejado a mano
+    # invierte el sentido del contorno y el solido sale para el otro lado en X (el bbox se iba
+    # a -42 en vez de -8). El espejo no tiene ese problema.
     pts = [
-        (0.0, v_top),
-        (U, v_top),
-        (U, g["v_brazo_raiz"]),
-        (g["u_fondo"], g["v_fondo"]),
-        (g["u_fondo"], g["v_nariz"]),
-        (g["u_punta"], g["v_nariz"]),
-        (g["u_punta"], 0.0),
-        (ui, 0.0),
-        (ui, v_ala_top),          # sube por dentro del ala derecha
-        (-ui, v_ala_top),         # cruza por debajo del lomo: ESTA es la boca
-        (-ui, 0.0),
-        (-g["u_punta"], 0.0),
-        (-g["u_punta"], g["v_nariz"]),
-        (-g["u_fondo"], g["v_nariz"]),
-        (-g["u_fondo"], g["v_fondo"]),
-        (-U, g["v_brazo_raiz"]),
-        (-U, v_top),
+        (d["y_raiz"], 0.0),
+        (n["y_punta_ext"], 0.0),
+        (n["y_punta_ext"], n["z_punta"]),
+        (b["y_fondo"], n["z_punta"]),
+        (b["y_fondo"], b["z_fondo"]),
+        (d["y_raiz"], b["z_raiz"]),
     ]
-    perfil = Plane.XY * Polygon(*pts, align=None)
-    # el contorno queda en sentido horario, asi que extrude sale hacia -Z: se lo sube para
-    # que la pieza apoye en Z=0 y salga lista para el laminador sin girar nada.
-    pieza = Pos(0, 0, s["ancho_X"]) * extrude(perfil, amount=s["ancho_X"])
+    brazo = Pos(d["x0"], 0, 0) * extrude(Plane.YZ * Polygon(*pts, align=None), amount=d["ancho_X"])
+    pieza += brazo
+    pieza += mirror(brazo, about=Plane.XZ)
 
-    # Radios. cad-3d.md: ninguna esquina interna viva donde haya flexion.
+    # --- radios
     for signo in (+1, -1):
+        lado = "der" if signo > 0 else "izq"
         pieza = redondear(
             pieza,
-            aristas_en(pieza, Axis.Z, x=signo * g["u_fondo"], y=g["v_fondo"]),
-            g["r_fondo_gancho"],
-            f"fondo del gancho {'derecho' if signo > 0 else 'izquierdo'}",
-            avisos,
+            aristas_en(pieza, Axis.X, y=signo * b["y_fondo"], z=b["z_fondo"]),
+            n["r_fondo_gancho"], f"fondo del gancho {lado}", avisos,
         )
         pieza = redondear(
             pieza,
-            aristas_en(pieza, Axis.Z, x=signo * U, y=g["v_brazo_raiz"]),
-            g["r_brazo_ala"],
-            f"union brazo-ala {'derecha' if signo > 0 else 'izquierda'}",
-            avisos,
+            aristas_en(pieza, Axis.X, y=signo * d["y_raiz"], z=b["z_raiz"]),
+            r["r_brazo_clip"], f"union brazo-clip {lado}", avisos,
         )
         pieza = redondear(
             pieza,
-            aristas_en(pieza, Axis.Z, x=signo * ui, y=v_ala_top),
-            3.0,
-            f"esquina interna de la boca {'derecha' if signo > 0 else 'izquierda'}",
-            avisos,
+            aristas_en(pieza, Axis.X, y=signo * n["y_punta_ext"], z=n["z_punta"])
+            + aristas_en(pieza, Axis.X, y=signo * b["y_fondo"], z=n["z_punta"]),
+            n["r_canto_externo"], f"punta de la nariz {lado}", avisos,
         )
-        pieza = redondear(
-            pieza,
-            aristas_en(pieza, Axis.Z, x=signo * g["u_punta"], y=g["v_nariz"]),
-            g["r_canto_externo"],
-            f"punta de la nariz {'derecha' if signo > 0 else 'izquierda'}",
-            avisos,
+        # alivio ala-lomo excavado, no fillet: un fillet ahi mete material DENTRO del canal
+        # y choca contra el canto de la pata (pasó el 24/08 en el v1).
+        pieza -= Pos(0.0, signo * ib, h / 2.0) * Cylinder(radius=r["r_ala_lomo"], height=h + 2)
+
+    # --- entrada guiada por el canto, del lado por donde entra la pata
+    ent = c["chaflan_entrada"]
+    for signo in (+1, -1):
+        tri = Plane.XY * Polygon(
+            (c["p_ala"], signo * ib),
+            (c["p_ala"] - ent, signo * ib),
+            (c["p_ala"], signo * (ib + ent)),
+            align=None,
         )
+        pieza -= extrude(tri, amount=h)
+
     return pieza, avisos
 
 
@@ -195,35 +220,30 @@ def main():
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
 
-    sub = p["sustrato"]
-    if not sub.get("confirmado_por_fak"):
-        print("=" * 78)
-        print("  ATENCION: A / B / C del travesaño son ESTIMACIONES, no medidas.")
-        print("  Esta pieza NO se imprime hasta que Fak las mida con el calibre.")
-        print(f"  A={sub['A_alto_travesano']}  B={sub['B_espesor_travesano']}  "
-              f"C={sub['C_luz_sobre_el_travesano']}")
-        print("=" * 78)
-
-    # GATE duro: si el lomo no entra en la luz que hay sobre el travesaño, no hay diseño.
-    if p["silla"]["e_lomo"] > sub["C_luz_sobre_el_travesano"]:
-        raise SystemExit(
-            f"ABORTA: el lomo mide {p['silla']['e_lomo']} mm y sobre el travesaño hay "
-            f"{sub['C_luz_sobre_el_travesano']} mm. No entra. O se afina el lomo, o esta "
-            "pieza no se puede colgar ahi y hay que buscar otro punto de apoyo."
-        )
-
-    print("\n=== cuentas (recalculadas desde params) ===")
+    print("=== cuentas (recalculadas desde params) ===")
     num = cuentas(p)
     for k, v in num.items():
-        print(f"  {k:34s} {v}")
+        print(f"  {k:32s} {v}")
+    if not num["traba_sola"]:
+        raise SystemExit(
+            f"ABORTA: el cono es de {num['semiangulo_del_cono_deg']}° y traba recien por debajo "
+            f"de {num['autobloqueo_arctan_mu_deg']}°. Asi no agarra: achicar la conicidad."
+        )
+    c = p["clip"]
+    if c["boca_abajo"] >= c["boca_arriba"]:
+        raise SystemExit("ABORTA: la boca tiene que ser MAS ANGOSTA ABAJO, si no el peso la afloja.")
 
     print("\n=== construyendo ===")
     pieza, avisos = construir(p)
     for a in avisos:
         print("  AVISO:", a)
 
+    n_sol = len(pieza.solids())
+    if n_sol != 1:
+        raise SystemExit(f"ABORTA: la pieza salio en {n_sol} solidos sueltos.")
+
     bb = pieza.bounding_box()
-    print(f"  bbox  X[{bb.min.X:.2f},{bb.max.X:.2f}] Y[{bb.min.Y:.2f},{bb.max.Y:.2f}] "
+    print(f"  bbox X[{bb.min.X:.2f},{bb.max.X:.2f}] Y[{bb.min.Y:.2f},{bb.max.Y:.2f}] "
           f"Z[{bb.min.Z:.2f},{bb.max.Z:.2f}]")
     print(f"  volumen {pieza.volume/1000:.2f} cm3")
 

@@ -1,50 +1,65 @@
 {
-  "_comment": "Gancho DOBLE — el diseño del gerente de Fak (croquis en papel, 24/08/2026): una silla de montar que se cuelga sobre el travesaño horizontal del escritorio, con un gancho a cada lado. Cotas en mm.",
+  "_comment": "Gancho DOBLE — el diseño del gerente de Fak (croquis en papel, 24/08/2026): el MISMO clip que el v2, sobre la pata, con un gancho a cada lado. Su dibujo es la vista EN PLANTA: el rectangulo de adentro es la boca con la pata metida, y los dos brazos salen a los costados. Cotas en mm.",
 
-  "_por_que_este_y_no_el_mio": [
-    "El v1 (mordaza) agarra por el momento DESEQUILIBRADO del peso: bascula y muerde la pata.",
-    "Si se le ponen dos ganchos y dos mochilas iguales, el momento se anula, N=0 y la friccion",
-    "se va a cero: se resbala. O sea, el v1 NO admite version simetrica — es una limitacion del",
-    "mecanismo, no del dibujo. El del gerente no aprieta nada: APOYA sobre el travesaño, asi que",
-    "anda igual con una mochila que con dos. Por eso este es el que puede llevar dos."
+  "_como_se_resuelve_lo_de_las_dos_mochilas": [
+    "El v2 agarra por el momento DESEQUILIBRADO del peso: bascula y muerde. Con dos mochilas",
+    "iguales ese momento se anula y la friccion se va a cero. Poniendole dos brazos y nada mas,",
+    "la pieza se cae.",
+    "La salida no es cambiar de lugar: es que el clip agarre por CUÑA en vez de por momento.",
+    "La boca va CONICA, mas angosta abajo. El peso empuja la pieza hacia abajo, la boca se cierra",
+    "sobre la pata y aprieta. Mas peso = mas apriete, venga de un lado o de los dos.",
+    "Y para sacarla se levanta, que es justo lo que pidio Fak.",
+    "Dos cosas mas que salen gratis: el cono ABSORBE la incertidumbre de la medida (agarra en",
+    "cualquier espesor entre 26,6 y 28,6, o sea que ya no hacen falta testigos), y absorbe tambien",
+    "que la pata sea conica — el calibre dio 30,68 mas abajo y arriba mide ~27,2."
   ],
 
   "sustrato": {
-    "_ESTADO": "TBD — los tres valores de abajo son ESTIMACIONES de arranque sacadas a ojo de la foto del 24/08, NO medidas. Antes de imprimir, Fak los mide con el calibre y se regenera. El script avisa mientras sigan sin confirmar.",
-    "confirmado_por_fak": false,
-    "A_alto_travesano": 40.0,
-    "B_espesor_travesano": 30.0,
-    "C_luz_sobre_el_travesano": 6.0
+    "_comment": "La pata se afina hacia arriba: 30,68 medido con calibre mas abajo, ~27,2 arriba (deducido de que a Fak le sobraban 3-4 mm de boca con el v1 puesto). La boca conica cubre todo ese rango, asi que NO hace falta clavar el numero.",
+    "t_pata_arriba": 27.20,
+    "t_pata_abajo_medida": 30.68,
+    "W_supuesto_para_verificar": 70.0
   },
 
   "carga": {
-    "_comment": "P por gancho. El peor caso NO es con las dos mochilas (ahi se equilibra) sino con UNA sola: ese es el que vuelca la pieza y el que dimensiona las alas.",
+    "_comment": "P por gancho. Con la boca conica el peor caso ya no es una sola mochila: las dos suman y las dos aprietan.",
     "P_kg_por_gancho": 12.0,
-    "P_N": 117.7
+    "P_N": 117.7,
+    "mu": 0.30
   },
 
-  "silla": {
-    "_comment": "La U invertida. juego 0.6 total (0.3/lado) como en el v1. e_lomo tiene que ENTRAR en la luz C: si no entra, el script aborta.",
-    "juego_total": 0.6,
-    "e_ala": 7.0,
-    "e_lomo": 5.0,
-    "ancho_X": 30.0
+  "clip": {
+    "_comment": "boca_abajo < boca_arriba: esa es toda la gracia. La conicidad total (2 mm en 28 de alto) da 2,05 grados por lado, muy por debajo del angulo de autobloqueo (arctan 0,30 = 16,7 grados), asi que traba sola y se suelta levantandola.",
+    "boca_abajo": 26.60,
+    "boca_arriba": 28.60,
+    "e_ala": 8.0,
+    "p_ala": 26.0,
+    "h_clip": 28.0,
+    "e_lomo": 10.0,
+    "chaflan_entrada": 2.0
   },
 
-  "gancho": {
-    "_comment": "Mismo criterio que el v1: el brazo BAJA hacia afuera para que la correa se vaya al fondo y no ande buscando donde apoyar. Aca el brazo largo ya no hace falta para agarrar (no hay friccion en juego), asi que se elige por ergonomia: que la mochila no roce la pata — que fue el defecto 3 del v1.",
-    "v_brazo_raiz": 16.0,
-    "v_fondo": 6.0,
-    "v_nariz": 32.0,
-    "u_fondo": 70.0,
-    "u_punta": 78.0,
+  "brazo": {
+    "_comment": "Igual que el v2 y por el mismo motivo: baja hacia afuera para que la correa se vaya al fondo. y_raiz, x0 y ancho_X se DERIVAN — no se escriben (el 24/08 un literal desincronizado partio la pieza en dos solidos).",
+    "z_raiz": 13.0,
+    "y_fondo": 66.0,
+    "z_fondo": 5.0
+  },
+
+  "nariz": {
+    "y_punta_ext": 74.0,
+    "z_punta": 28.0,
     "r_fondo_gancho": 8.0,
-    "r_canto_externo": 3.0,
-    "r_brazo_ala": 6.0
+    "r_canto_externo": 3.0
+  },
+
+  "radios": {
+    "r_ala_lomo": 4.0,
+    "r_brazo_clip": 6.0
   },
 
   "impresion": {
-    "_comment": "memoria impresora_3d_fak. Igual que el v1, la pieza es una EXTRUSION pura: cero soportes, y las capas quedan a lo largo del brazo.",
+    "_comment": "memoria impresora_3d_fak. Igual que el v2: cero soportes, capas a lo largo de los brazos.",
     "material": "Elegoo RAPID PLA+",
     "capa_mm": 0.16,
     "perimetros": 4,
