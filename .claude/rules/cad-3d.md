@@ -190,6 +190,24 @@ brazo correcto**.
   subsistema sin función, el subsistema se VA, no se refuerza (el resorte del virolador acumuló tope +
   alma + brazo extra antes de que Fak lo llamara "un parche mal hecho"; skill `cad-design` §6).
 
+**GATE 5 — antes de rediseñar, medir si el PROCESO repite.** 2026-08-22/24, gancho de mochila:
+cuatro impresiones corrigiendo el modelo porque el mismo `.stl` calzaba una vez y la siguiente no.
+La holgura que estaba ajustando (±0,15 mm) era **del tamaño del error normal de la impresora**, así
+que cada corrida "refutaba" a la anterior y el rediseño perseguía ruido. **Un rediseño sólo tiene
+sentido cuando el proceso REPITE: si el mismo archivo da resultados opuestos, lo que hay que medir
+es el proceso, no la pieza.**
+
+*Cómo se mide (antes de tocar el modelo):* imprimir **3 testigos del MISMO archivo** en la misma
+tanda y medir con calibre la cota que gobierna. Si la dispersión entre testigos es del orden de la
+tolerancia que estoy persiguiendo, el modelo no es el problema — se ajusta el proceso (material,
+temperatura, velocidad, orientación) o se rediseña para que la función **no dependa** de esa
+tolerancia. La boca cónica del gancho salió de aplicar esto: deja de depender de una cota exacta.
+
+*Enforcement:* el `params.json` de la pieza lleva la tolerancia de proceso medida al lado de la
+holgura de diseño, y `verificar_*.py` falla si la holgura de diseño no la supera — una pieza cuya
+función vive dentro del ruido de la máquina no pasa el gate. Memorias `impresora_3d_fak`
+(**Elegoo RAPID PLA+**, Neptune 4 Max, boquilla 0,4), `roscas_impresas_3d`.
+
 **PRE-ENTREGA (lo demás):** render + MIRAR yo el resultado + interferencia contra el sustrato RÍGIDO
 ≈ 0 (no vs el tapizado blando) + CADGenBench (validez→forma→interface→topología) + adjuntar evidencia.
 Nunca decir "listo" sin esto — "un cambio rápido sin verificar no es rápido, es un ida-y-vuelta más".

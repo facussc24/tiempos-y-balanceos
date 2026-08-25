@@ -42,6 +42,21 @@ validaciones igual — no se entera de que no es una persona. Nunca escribir en 
 de datos por fuera del programa: el daño no se ve el día que pasa, se ve semanas después en
 el stock.
 
+## Antes de decir "no se puede" (graduado de LECCIONES, 25/08/2026)
+
+**En una interfaz, el límite y la causa casi siempre están de MI lado: MIRAR LA PANTALLA antes
+de rediagnosticar.** Tres cosas que no viven en las tandas de abajo y que cuestan caro:
+
+- **"Es un límite del programa" casi siempre es un límite de lo que probé.** Dos frases de esta
+  misma skill decían que hacía falta una persona: las dos falsas, las dos resueltas con un click
+  (tanda del 20/08). Una limitación que escribí yo se vuelve la verdad del sistema y **nadie la
+  vuelve a probar**.
+- **Arreglar el código no cierra el incidente si la prosa que lo describía sigue diciendo que es
+  imposible.** Cuando se destrabe algo, corregir el texto de esta skill en la misma sesión.
+- **Antes de decir "no puedo":** `grep "^def "` sobre los scripts del dominio y listar qué NO probé.
+  Y **cuando el segundo intento falla DISTINTO al primero, la hipótesis 1 es que el primero ensució
+  el estado** — cerrar y reabrir la pantalla antes de teorizar.
+
 ## Pantalla principal `CONFIRMADO`
 
 Ribbon estilo Office con estas solapas:
