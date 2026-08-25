@@ -163,6 +163,11 @@ brazo correcto**.
   desincroniza en el primer cambio y nada avisa.
   *Enforcement ya cargado en esta sesión:* `build_gancho.py::derivadas()` las calcula en cada
   corrida y las pisa, más un `raise SystemExit` que aborta si la pieza sale en más de un sólido.
+- **Un número que va a una máquina se confirma con su UNIDAD, y el artefacto de verificación tiene
+  que REPRESENTAR lo que mido.** Si un valor sale mal se arregla el GENERADOR, no el valor: un
+  número corregido a mano sobre un artefacto que se regenera vuelve al día siguiente.
+  *Enforcement:* es el mismo de los dos puntos de arriba (`derivadas()` y `verificar_gancho.py`
+  midiendo sobre el STL exportado); acá se enuncia el criterio que esos dos gates ya aplican.
   **Y las claves muertas se BORRAN del json, no alcanza con dejar de leerlas:** el auditor las
   encontró ahí el mismo día, con el valor viejo, tapadas por el spread — inofensivas sólo hasta
   que alguien lea `p["brazo"]["y_raiz"]` directo o cambie el orden del merge. Lo destapó el gate de ensamble de `export_deliverables.py`; el bbox y el volumen
