@@ -108,9 +108,11 @@ Al tabular aparecen la **descripción del producto** al lado del código y **tod
 la BOM**. Verificado en vivo contra el export `RELACIONES.TXT`: coincide fila por fila,
 código, unidad y consumo.
 
-**No es `Shift`+`↑`** (probado dos veces, no hace nada) ni `Alt` (el ribbon no tiene KeyTips)
-ni las flechas para cambiar de solapa. La navegación del ribbon es con mouse; **adentro de la
-ventana, el teclado sí manda**.
+**No es `Shift`+`↑`** (probado dos veces, no hace nada). ~~ni `Alt` (el ribbon no tiene
+KeyTips) ni las flechas para cambiar de solapa. La navegación del ribbon es con mouse~~ —
+**las tres afirmaciones eran falsas, corregido el 25/08/2026**: el ribbon SÍ tiene KeyTips
+(son ventanas `KbxLabelClass` y se leen), las flechas SÍ cambian de solapa una vez que `Alt`
+lo activó, y la navegación entera se hace por teclado. Ver "Navegación 100% por teclado".
 
 ## Mapa de teclas del programa `CONFIRMADO` (extraído del binario)
 
@@ -214,14 +216,51 @@ las compras. Sube el impacto de cualquier error de consumo.
 **Doble `Alt` muestra los KeyTips del ribbon** (dato de Fak — sin esto no hay forma de abrir
 las pantallas sin mouse). Si el ribbon está colapsado, `Ctrl`+`F1` lo expande primero.
 
-```
-Alt  →  V  →  Y3      abre Relación de Consumo de Prod. Terminados
+### 🟢🟢 LOS KEYTIPS SE LEEN, NO SE ADIVINAN `CONFIRMADO 2026-08-25`
+
+**Los KeyTips son ventanas top-level propias, de clase `KbxLabelClass`, y su TEXTO es la
+tecla.** O sea que no hay que fotografiarlos ni acordarse: se enumeran y se leen.
+
+```bash
+python scripts/_arbKeytips.py --esperar    # una persona aprieta Alt sostenido; el script los lee
 ```
 
-KeyTips de las solapas: `F` Archivo · `M1` Movimientos de Insumos · `P1` Producción ·
-`L` Listados de Stock PT · `S` Consulta por Sector · `P2` Productos Terminados ·
-**`V` Menú de Insumos** · `M2` Maestros · `U` Utilitarios.
-Dentro de `V`: `Y1` ABM de Insumos · `Y2` Rubros · **`Y3` Relación de Consumo** · `Y4` Depósitos.
+⚠️ **No salen en la captura.** `PrintWindow` sobre la ventana principal NO los dibuja, porque
+son ventanas aparte. Perdí varias fotos buscándolos ahí. Y se dibujan **de a poco**: una sola
+lectura agarra 2 de 25, por eso el script poletea y acumula durante 12 s.
+
+El Alt lo tiene que apretar **una persona**: `keybd_event` activa el ribbon (se ve la solapa
+seleccionarse) pero **no dibuja los KeyTips**. Una vez leídos, la tecla sí se manda sintética.
+
+### 🔴🔴 EL KEYTIP DEL PANEL ES DE TRES CARACTERES — `Y03`, NO `Y3`
+
+**Ese era el error que hacía "imposible" la navegación por teclado.** Leídos en vivo el
+25/08/2026, los 25 KeyTips de la ventana `Producción`:
+
+| solapas (y=57) | | panel de botones (y=131) |
+|---|---|---|
+| `F` Archivo · `M1` Movimientos de Insumos · `P1` Producción · `L` Listados de Stock PT · `S` Consulta por Sector · `P2` Productos Terminados · **`V` Menú de Insumos** · `M2` Maestros · `U` Utilitarios | | **`Y01` … `Y11`** — con **cero adelante** |
+
+Dentro de `V`: `Y01` ABM de Insumos · `Y02` Rubros · **`Y03` Relación de Consumo** ·
+`Y04` Depósitos.
+
+La secuencia que **funciona** (probada de punta a punta el 25/08, abrió `Maestro de
+Relaciones - BA` sin un solo click sobre un control):
+
+```
+click en la BARRA DE TITULO     <- da foco de teclado sin tocar nada; ver abajo
+Alt                             <- activa el ribbon
+V                               <- solapa Menu de Insumos
+Y  0  3                         <- Relacion de Consumo  (TRES teclas, no dos)
+```
+
+**El click en la barra de título es la forma segura de dar foco.** Ya estaba anotado que sólo
+un click real da foco de teclado; lo que faltaba es que **no hace falta clickear un control**
+para conseguirlo — la barra de título alcanza y no puede pisar ningún dato.
+
+**Y si el ribbon ya está activado, las flechas cambian de solapa** (`→` avanza una). Sirve de
+respaldo si el KeyTip falla, pero es frágil: bajar al panel con `↓` + flechas me abrió
+`Selección de Empresa` en vez de `Relación de Consumo`. Con el KeyTip no hay que contar nada.
 
 Con eso, el flujo hasta escribir el valor funciona entero sin tocar el mouse:
 abrir → escribir el producto → `TAB` (trae la BOM) → **2 `TAB` más para llegar a `Cantidad`
@@ -238,7 +277,7 @@ Sin esto los clicks caen en la celda de al lado y se escribe basura en el códig
 `--tabla x.csv` (dry-run) `--apply`, `--verificar`.
 
 ```
-Alt -> V -> Y3                     abrir (teclado real)
+Alt -> V -> Y 0 3                  abrir (el KeyTip es Y03, no Y3 - ver arriba)
 gate: ¿estoy en la solapa Altas?   si no hay grilla, ABORTAR — no escribir a ciegas
 CLICK en Parte Superior            <- click, NO tabular (ver abajo)
 escribir el codigo CON FOCO        <- o se pierde el guion
@@ -469,7 +508,7 @@ pierde y parece que "las teclas sintéticas no funcionan". Funcionan — pero ha
 primero. Chequear `hwndFocus is not None` antes de mandar teclas.
 
 Con foco: `V` **sí** selecciona la solapa `Menú de Insumos` del ribbon. Lo que no anda es el
-`Y3` del KeyTip; el botón `Relación de Consumo de Prod. Terminados` se abre con **click real**
+~~`Y3` del KeyTip~~ - el KeyTip real es **`Y03`** y SI abre (25/08). Tambien anda con **click real**
 ubicado en la captura (≈ x=298, y=95 de la ventana principal).
 
 ### 🔴🔴 EL EXPORT DEJA EL ARCHIVO TOMADO POR EXCEL `CONFIRMADO 2026-08-07`
@@ -596,13 +635,28 @@ Ojo: escribir por mensaje **no es determinístico**. En la misma sesión, la mis
 `EM_SETSEL` + `WM_CHAR` una vez reemplazó el valor y otra vez no hizo nada. **No improvisar
 escrituras sueltas sobre la ventana viva**: se usa el cargador, que verifica cada celda.
 
-### 🔴 LAS TECLAS SINTÉTICAS NO ABREN EL MENÚ `CONFIRMADO 2026-08-07`
+### ~~🔴 LAS TECLAS SINTÉTICAS NO ABREN EL MENÚ~~ — **ERA FALSO. La tecla estaba mal.**
 
-`keybd_event` con la secuencia documentada `Alt Alt → V → Y3` **no abre** `Relación de Consumo`,
-con `Producción` al frente y confirmado. Es el mismo límite que ya estaba anotado para el combo
-del export. ~~**Reabrir la ventana después de cerrarla requiere una persona.**~~ **CORREGIDO
-20/08: se reabre con un CLICK REAL en (298, 95) del ribbon** — `_arbVer.py reset` hace el ciclo
-entero. Cerrar la ventana para limpiar ya no tiene costo.
+Decía: *"`keybd_event` con la secuencia documentada `Alt Alt → V → Y3` no abre Relación de
+Consumo, con Producción al frente y confirmado"*. El experimento estaba bien hecho; **la
+conclusión estaba mal sacada**. No era que las teclas sintéticas no llegaran: era que
+**`Y3` no existe** — el KeyTip real es `Y03`, de tres caracteres. Se mandaba una tecla que no
+correspondía a nada y se concluyó que el canal no funcionaba.
+
+**CORREGIDO 25/08/2026**, con la secuencia leída (no adivinada) de los `KbxLabelClass`:
+`Alt → V → Y 0 3` abre la ventana. Ver la sección de navegación por teclado.
+
+**La lección de método, que es lo que vale:** el experimento decía *"mandé estas teclas y no
+pasó nada"*, y de ahí salió *"las teclas sintéticas no funcionan"* — un enunciado mucho más
+grande que la evidencia. **Antes de concluir que un canal no funciona, verificar que lo que
+se mandó por ese canal era correcto.** El dato que faltaba estaba a una lectura de distancia:
+los KeyTips son ventanas y se pueden enumerar.
+
+Lo mismo pasó, en chiquito, con *"reabrir la ventana requiere una persona"* (corregido el
+20/08 con un click real) — dos veces el mismo patrón en la misma skill.
+
+`_arbVer.py reset` sigue usando el click de (298, 95): funciona y está probado. La vía por
+teclado es la alternativa cuando no se quiere mover el mouse.
 
 ### 🔴 LA CAUSA RAÍZ DE LA COMA: la grilla usa PUNTO, el export usa COMA `CONFIRMADO 2026-08-07`
 
@@ -705,7 +759,7 @@ python scripts/_arbVer.py modal      # cierra los #32770 con click real
 ### 🟢🟢 LA VENTANA LA PUEDO REABRIR YO `CONFIRMADO 2026-08-20` — corrige lo de arriba
 
 La otra mitad que era falsa: *"reabrir la ventana después de cerrarla requiere una persona"*.
-Cierto que `Alt Alt → V → Y3` no abre nada, pero **el botón del ribbon se abre con un click
+Cierto que `Y3` no abre nada -el KeyTip es `Y03`, corregido el 25/08-, y **el boton tambien se abre con un click
 real** en (298, 95) de la ventana `Producción`, con la solapa `Menú de Insumos` ya activa.
 
 Eso completa el ciclo de recuperación **sin intervención**, que es lo que hacía que una celda
