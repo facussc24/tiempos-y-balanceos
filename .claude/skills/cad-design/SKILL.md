@@ -348,6 +348,69 @@ Las 9-17 salen del virolador del Upper Trim (08/2026, tres rondas: resorte → r
       malla a dos lc distintos, triangulación OCC fina, muestreo de curvas) valen más que uno
       que "es el que siempre usamos".
 
+20. **Un DISPOSITIVO no es una pieza impresa, y los gates de pieza le mienten.** (2026-08-24/25,
+    dispositivo de adhesivado del Insert.) Cinco trampas, todas encontradas por control y
+    ninguna a ojo:
+    - **El gate de "1 solo cuerpo" es de pieza impresa.** En un ensamble las piezas van con luz
+      a proposito, asi que el STL fusionado tiene tantos cuerpos como piezas y el gate lo
+      rechaza. Lo que se valida es **cada pieza por separado** (1 cuerpo, cerrada, volumen
+      positivo) y la envolvente solo sirve para interferencia. Ojo: la envolvente concatenada
+      puede salir con **normales invertidas aunque cada pieza este bien** — con el volumen
+      negativo, `signed_distance` da vuelta adentro/afuera y la pieza entera aparece "metida"
+      6 mm en el nido (medio espesor de placa). Chequear el signo del volumen en el export.
+    - **Los tubos trazados de EJE a EJE se interpenetran media seccion.** Un travesano que
+      llega al eje del larguero se mete 20 mm adentro: en el modelo es un cruce y en el taller
+      es un corte que no existe. Van recortados a la CARA, y ese largo recortado es el que va a
+      la lista de corte. Para distinguir un cruce real de una union en T: el cruce es cuando el
+      acercamiento minimo cae en el **interior de los dos tramos**; si cae en la punta de uno,
+      es una union a tope. Sin esa distincion el control marca las 17 uniones del marco como
+      defectos.
+    - **Las piezas compradas tienen altura de catalogo.** Una rueda giratoria O125 con placa
+      mide ~160 mm: modelarla como un cilindro tangente al piso dejo todas las alturas
+      ergonomicas verificadas 160 mm por debajo de la realidad. Y los nidos apoyados sobre la
+      **linea de centro** de los travesanos quedaban embutidos 20 mm dentro del cano. Las dos
+      cosas se ven lindas en el render y son falsas.
+    - **Un bucle de correccion tiene que ACUMULAR.** El que ajustaba la altura de los apoyos
+      guardaba el desvio pelado: el build lo aplicaba, el desvio pasaba a 0 y el build
+      siguiente volvia a dejar el poste sin corregir. Oscilaba en vez de converger, y el
+      sintoma es que "converge" en la segunda pasada pero no se queda. **Correr tres pasadas y
+      exigir que la tercera no se mueva.**
+    - **Los travesanos van donde APOYA la pieza, no repartidos parejo.** Con `linspace` caian
+      en 0/195,7/391,3/587 y los nidos ocupaban 0-169/209-378/418-587: los bordes quedaban en
+      el aire. Centrando cada travesano en la luz entre nidos, un mismo tubo toma el borde de
+      arriba de uno y el de abajo del siguiente.
+
+21. **Antes de dimensionar un apoyo blando, hace falta la cuenta de la fuerza.** Puse 8 pads
+    de gomaespuma O18 bajo una pieza de 250 g: 2036 mm2. Para que esa espuma se comprima el
+    25 % nominal hacen falta ~6 N y la pieza apoya con 1,73 N a 45 grados — o sea que la
+    espuma la **empujaba hacia afuera** del nido en vez de sostenerla. El area sale de
+    `area = F_normal / CFD25` (2,5-4,5 kPa en PU celda abierta 25-35 kg/m3): dio 578 mm2, o
+    sea **3 pads de O15,7**. Y de paso 3 es lo unico que define un plano sin hiperestatismo;
+    los tres se eligen de modo que la proyeccion del centro de masa caiga DENTRO del triangulo
+    (margen medido: 35,5 mm). Corolario del mismo error: un **tope** que no carga lleva la
+    espuma SIN comprimir, asi que se cota con el espesor entero mas su luz — cotizarlo con el
+    espesor comprimido dejaba el disco metido 1 mm en la pieza.
+
+22. **La pieza de la mano contraria se verifica, no se supone.** El Insert tiene mano izquierda
+    y derecha y sus dos barrenos de localizacion estaban casi simetricos (44,4 y 36,0 mm de
+    cada punta): la duda de si la mano equivocada podia calzar era legitima. Se espeja el STL
+    real y se prueban **las dos formas** en que un operario puede presentarla (vuelta sobre el
+    eje largo y vuelta de punta a punta). Dio que los pines erran los barrenos por 8 a 76 mm y
+    que traba a 10-20 mm de altura contra la correcta que no toca: **el nido ya rechaza la
+    mano contraria** y no hace falta bloque anti-error. Sin la medicion habria agregado un
+    poste que no servia para nada.
+
+23. **La cobertura de un rociado es una pregunta de acceso y se puede simular.** Antes de
+    aceptar que un dispositivo tiene que girar, medir cuanto agrega girar: rayos desde un cono
+    de posiciones de pistola, con umbral de incidencia y linea de vista contra la pieza Y el
+    utillaje. En el Insert dio **+0,2 puntos porcentuales**, o sea que el giro no se paga. El
+    resultado solo vale si aguanta la sensibilidad: se repitio con umbrales de incidencia
+    30/45/60 grados y conos de +/-45 a +/-100, y con la cara A mirando abajo la cobertura se
+    derrumba de 98,9 % a 0,0 % (el control puede dar rojo). **Ojo con la resolucion:** con el
+    rayo saliendo 0,4 mm de una grilla de 3 mm quedaban 69 celdas "inalcanzables" que
+    desaparecen al salir 3 mm — eran la grilla, no una sombra. Eso se demuestra con un barrido
+    del offset, no se afirma.
+
 ## 6. Utillajes de apriete — las decisiones de CONCEPTO (antes de la primera línea)
 
 Todas del virolador del Upper Trim (08/2026). Son las que cambian el diseño de raíz; las
