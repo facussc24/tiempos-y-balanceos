@@ -214,9 +214,24 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--out", required=True)
     ap.add_argument("--params", default=str(AQUI / "params_doble.json"))
+    ap.add_argument(
+        "--tal-cual",
+        action="store_true",
+        help="El dibujo de Leo TAL CUAL: boca RECTA, sin el cono. Es lo que el dibujo "
+        "muestra; el cono es agregado mio. Con una sola mochila anda igual; con dos "
+        "parejas el momento se anula y se suelta. Se entrega igual porque Fak lo pidio "
+        "asi, a ver si funciona en la practica.",
+    )
     args = ap.parse_args()
 
     p = json.loads(Path(args.params).read_text(encoding="utf-8"))
+    if args.tal_cual:
+        recta = p["clip"]["boca_recta_tal_cual"]
+        p["clip"]["boca_abajo"] = p["clip"]["boca_arriba"] = recta
+        print("=" * 78)
+        print("  MODO TAL CUAL: boca RECTA de %.2f, como el dibujo de Leo." % recta)
+        print("  Con UNA mochila anda. Con DOS parejas el momento se anula y se suelta.")
+        print("=" * 78)
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
 
@@ -224,13 +239,13 @@ def main():
     num = cuentas(p)
     for k, v in num.items():
         print(f"  {k:32s} {v}")
-    if not num["traba_sola"]:
+    if not args.tal_cual and not num["traba_sola"]:
         raise SystemExit(
             f"ABORTA: el cono es de {num['semiangulo_del_cono_deg']}° y traba recien por debajo "
             f"de {num['autobloqueo_arctan_mu_deg']}°. Asi no agarra: achicar la conicidad."
         )
     c = p["clip"]
-    if c["boca_abajo"] >= c["boca_arriba"]:
+    if not args.tal_cual and c["boca_abajo"] >= c["boca_arriba"]:
         raise SystemExit("ABORTA: la boca tiene que ser MAS ANGOSTA ABAJO, si no el peso la afloja.")
 
     print("\n=== construyendo ===")
@@ -247,10 +262,11 @@ def main():
           f"Z[{bb.min.Z:.2f},{bb.max.Z:.2f}]")
     print(f"  volumen {pieza.volume/1000:.2f} cm3")
 
-    export_step(pieza, str(out / "gancho_doble_v1.step"))
-    export_stl(pieza, str(out / "gancho_doble_v1.stl"), tolerance=0.01, angular_tolerance=0.1)
+    nombre = "gancho_doble_LEO_tal_cual" if args.tal_cual else "gancho_doble_v1"
+    export_step(pieza, str(out / f"{nombre}.step"))
+    export_stl(pieza, str(out / f"{nombre}.stl"), tolerance=0.01, angular_tolerance=0.1)
     num["volumen_cm3"] = round(pieza.volume / 1000, 3)
-    (out / "cuentas_doble.json").write_text(json.dumps(num, indent=2), encoding="utf-8")
+    (out / f"cuentas_{nombre}.json").write_text(json.dumps(num, indent=2), encoding="utf-8")
     print(f"\nlisto -> {out}")
     if avisos:
         raise SystemExit(f"HUBO {len(avisos)} AVISO(S) DE RADIO — revisar antes de imprimir")

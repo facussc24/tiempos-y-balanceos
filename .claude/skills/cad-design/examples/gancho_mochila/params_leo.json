@@ -1,0 +1,49 @@
+{
+  "_comment": "EL DISEÑO DE LEO, tal cual su croquis del 24/08/2026. Una Pi (U invertida) que se calza sobre el TOPE del caño, con una cuna a cada lado. Cotas en mm.",
+
+  "_como_se_leyo_el_croquis": [
+    "Lectura independiente del croquis (agente, sin contexto de lo que yo habia hecho antes):",
+    "  - FIG B es la vista de FRENTE. El rectangulo de adentro es EL CAÑO; la Pi es la pieza.",
+    "  - La barra de arriba apoya sobre la cara superior del caño; las dos paredes lo abrazan.",
+    "  - Queda abierta abajo: el caño sigue de largo (las dos lineas finas del dibujo).",
+    "  - Dos brazos simetricos a la misma altura, cada uno una CUNA: piso, curva concava del",
+    "    lado de la raiz y labio hacia arriba en la punta, para que la correa no se salga.",
+    "El croquis NO tiene una sola cota. Lo que se saco de el son PROPORCIONES, y estan abajo."
+  ],
+
+  "_proporciones_medidas_en_el_croquis": {
+    "ancho_exterior_sobre_hueco": 1.5,
+    "pared_sobre_hueco": 0.26,
+    "vuelo_de_cada_brazo_sobre_hueco": 1.0,
+    "span_punta_a_punta_sobre_hueco": 3.5,
+    "alto_pared_sobre_alto_barra": 2.5
+  },
+
+  "cano": {
+    "_comment": "El espesor lo confirmo Fak con la pieza impresa puesta: a la boca de 31,30 le sobraban 3-4 mm, o sea ~27,2. Boca = 27,80 (la misma del v2, ya validada). Fak, 25/08: 'ya tenes mas o menos bien el ancho del caño'.",
+    "espesor": 27.20,
+    "boca": 27.80
+  },
+
+  "carga": {
+    "P_kg_por_mochila": 12.0,
+    "P_N": 117.7
+  },
+
+  "pi": {
+    "_comment": "pared 7,2 = 0,26 x hueco, redondeado a 7. La barra de ARRIBA va mas fina que las paredes (6 y no 7) por una sola razon: es lo unico que tiene que entrar en la luz que queda entre el tope del caño y la tapa. Si no entra, se afina y listo — es el unico numero de riesgo de la pieza.",
+    "pared": 7.0,
+    "barra_arriba": 6.0,
+    "alto_pared": 20.0,
+    "ancho_Z": 30.0
+  },
+
+  "cuna": {
+    "_comment": "vuelo 28 = 1,0 x hueco, como el croquis. Es MUCHO mas corta que el brazo del v2 (58 mm) y esta bien que lo sea: el v2 necesitaba brazo largo para que la mordaza agarrara, esta apoya y no necesita nada. Ademas la mochila queda mas cerca del caño y no molesta.",
+    "vuelo": 28.0,
+    "piso": 7.0,
+    "labio_espesor": 6.0,
+    "r_concavo_raiz": 5.0,
+    "r_canto": 2.5
+  }
+}

@@ -30,6 +30,8 @@
 
   "clip": {
     "_comment": "boca_abajo < boca_arriba: esa es toda la gracia. La conicidad total (2 mm en 28 de alto) da 2,05 grados por lado, muy por debajo del angulo de autobloqueo (arctan 0,30 = 16,7 grados), asi que traba sola y se suelta levantandola.",
+    "_comment_tal_cual": "boca_recta_tal_cual es la del dibujo de Leo sin el cono (--tal-cual). Vale la corregida del v2: 27,80.",
+    "boca_recta_tal_cual": 27.80,
     "boca_abajo": 26.60,
     "boca_arriba": 28.60,
     "e_ala": 8.0,
