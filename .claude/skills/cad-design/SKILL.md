@@ -411,6 +411,61 @@ Las 9-17 salen del virolador del Upper Trim (08/2026, tres rondas: resorte → r
     desaparecen al salir 3 mm — eran la grilla, no una sombra. Eso se demuestra con un barrido
     del offset, no se afirma.
 
+24. **Subir la tolerancia de un control hasta que el problema desaparezca no lo corrige: APAGA
+    el control.** (2026-08-25, revision independiente del dispositivo de adhesivado. Es la
+    leccion mas cara de esta serie porque el numero apagado ya estaba entregado.)
+    - El caso: la simulacion de rociado sobre una grilla de 3 mm daba 69 celdas
+      "inalcanzables". Subi la salida del rayo de 0,4 a 3 mm, las celdas desaparecieron, y
+      publique **100 % de cobertura**. Con el offset honesto la misma posicion daba 98,93 %.
+    - **El sintoma que lo delata es de logica pura y no cuesta nada mirarlo:** agregar
+      obstaculos no puede MEJORAR una cobertura. El caballete con 12 piezas y un marco de
+      acero daba 100,0 % y la pieza sola al aire 99,1 %. Cuando un resultado mejora al
+      agregarle estorbos, el control esta roto, no la geometria.
+    - **La causa raiz era el modelo, no el parametro.** Un campo de alturas `ymax(x,z)` pone
+      el punto en el centro de la celda, que NO esta sobre la superficie: el rayo sale
+      rozando la celda vecina. La correccion no es un offset mas grande sino trabajar sobre
+      los **triangulos de la malla**, cada uno con su normal y su area, y sacar el rayo **por
+      su propia normal** (0,2 mm alcanzan: por construccion no puede re-entrar). De paso se
+      arregla solo el sesgo que tenia: el gradiente perdia 230 celdas y el 100 % de ellas
+      estaba a menos de 20 mm del borde, o sea que el porcentaje se calculaba sin la franja
+      que mas importa.
+    - **A un modelo hay que exigirle que RESPONDA antes de creerle una diferencia chica.** El
+      viejo daba el mismo 99,1 % con un cono de pistola de +/-30 que con uno de +/-100: no
+      estaba midiendo accesibilidad, y sin embargo la decision de sacarle el giro al
+      dispositivo se apoyaba en el. El nuevo da 96,4 / 97,5 / 98,0 / 99,8 / 100 % para
+      +/-20, +/-30, +/-45, +/-60 y +/-100. **Barrer el parametro que DEBERIA mover el
+      resultado es el control del control.**
+    - **Y buscar el argumento que no dependa del simulador.** El motivo real por el que ese
+      dispositivo no necesita girar es que el **95,8 % del area de la cara A tiene su normal
+      a menos de 30 grados de la direccion de rociado y la mas inclinada llega a 88,2**: no
+      hay una sola zona que mire para atras. Eso es geometria de la pieza, se calcula en
+      segundos, y convierte a la simulacion en confirmacion en vez de en argumento.
+
+25. **Un control que aprende a NO marcar los falsos positivos suele quedarse ciego para el
+    verdadero.** (misma revision.) El detector de tubos cruzados marcaba las 17 uniones en T
+    del marco, asi que le puse "solo cuenta si el acercamiento cae en el interior de los dos
+    tramos". Con eso dejo de marcar las uniones sanas — y tambien las uniones en T **metidas
+    20 mm adentro del larguero**, que es exactamente la falla que se queria cazar (dan
+    tc = 0,000). Se le escapaban 4 de 5 casos inyectados.
+    - La salida no es aflojar el filtro sino **separar las dos preguntas**: (A) cruce = el
+      acercamiento minimo cae en el interior de los dos, y (B) penetracion = la PUNTA de uno
+      cae adentro del volumen del otro. Son fallas distintas y se buscan distinto.
+    - Sacar tambien los factores de correccion inventados: el limite era (a1+a2)/2 * 0,72 y
+      dejaba **12,2 mm de solape ciego** entre dos tubos de 40. Con (a1+a2)/2 pelado, un tubo
+      tangente queda justo en el limite y uno que se pisa cae por debajo.
+    - **El autotest de un caso no vale.** El que tenia probaba "un tubo que cruza por el
+      medio", el unico que el control si detectaba. Ahora inyecta cinco fallas distintas
+      (cruce al medio, cruce cerca de la punta, colineal solapado, union en T penetrada, ejes
+      a 30 mm) y tiene que cazar las cinco.
+
+26. **Tres cosas de armado que no se ven en el render y las encuentra el control:**
+    (a) **el recorte a tope NO es lado/2** salvo que los tubos se encuentren a 90 grados: en
+    angulo es (lado/2)/sen(theta), y con el recorte fijo las patas y los travesanos del
+    vertice quedaban 5,9 mm metidos adentro del larguero;
+    (b) **todo tramo tiene que TOCAR algo** — las manijas quedaron 20 mm afuera del larguero,
+    flotando, y ningun control lo miraba porque todos buscaban solapes, no huerfanos;
+    (c) **los travesanos van donde apoya la pieza**, no repartidos parejo con `linspace`.
+
 ## 6. Utillajes de apriete — las decisiones de CONCEPTO (antes de la primera línea)
 
 Todas del virolador del Upper Trim (08/2026). Son las que cambian el diseño de raíz; las
