@@ -1,4 +1,4 @@
-# Text Quality Audit (L2) — 2026-08-24T15:21:31.193Z
+# Text Quality Audit (L2) — 2026-08-24T19:44:07.211Z
 
 **Resumen global**: 0 CRITICAL, 126 WARNING en 18/18 AMFEs.
 
@@ -19,14 +19,14 @@
 
 | Type | OP | Detalle |
 |---|---|---|
-| WARNING OP_FUNCTION_SEMANTIC_MISMATCH | 10 RECEPCION DE MATERIA PRIMA | OP "RECEPCION DE MATERIA PRIMA" debería contener alguno de [verificar, conformidad, trazabilidad] en su función |
-| WARNING FN_NO_VERB | 10 RECEPCION DE MATERIA PRIMA | function.description "Material resiste ciclo termico cabina" no comienza con verbo |
-| WARNING FN_NO_VERB | 10 RECEPCION DE MATERIA PRIMA | function.description "Material supera 50 ciclos ambientales sin alteracion" no comienza con verbo |
-| WARNING FN_TOO_SHORT | 10 RECEPCION DE MATERIA PRIMA | function.description "Material resiste intemperie" muy corta (< 30 chars) |
-| WARNING FN_NO_VERB | 10 RECEPCION DE MATERIA PRIMA | function.description "Material resiste intemperie" no comienza con verbo |
-| WARNING FN_NO_VERB | 10 RECEPCION DE MATERIA PRIMA | function.description "Material mantiene color lote a lote" no comienza con verbo |
-| WARNING FN_NO_VERB | 10 RECEPCION DE MATERIA PRIMA | function.description "Material mantiene color bajo radiacion solar" no comienza con verbo |
-| WARNING FN_NO_VERB | 10 RECEPCION DE MATERIA PRIMA | function.description "Material cumple solidez color escala grises >= 4" no comienza con verbo |
+| WARNING OP_FUNCTION_SEMANTIC_MISMATCH | 10 RECEPCION E INSPECCION DE MATE | OP "RECEPCION E INSPECCION DE MATERIA PRIMA" debería contener alguno de [verificar, conformidad, trazabilidad] en su función |
+| WARNING FN_NO_VERB | 10 RECEPCION E INSPECCION DE MATE | function.description "Material resiste ciclo termico cabina" no comienza con verbo |
+| WARNING FN_NO_VERB | 10 RECEPCION E INSPECCION DE MATE | function.description "Material supera 50 ciclos ambientales sin alteracion" no comienza con verbo |
+| WARNING FN_TOO_SHORT | 10 RECEPCION E INSPECCION DE MATE | function.description "Material resiste intemperie" muy corta (< 30 chars) |
+| WARNING FN_NO_VERB | 10 RECEPCION E INSPECCION DE MATE | function.description "Material resiste intemperie" no comienza con verbo |
+| WARNING FN_NO_VERB | 10 RECEPCION E INSPECCION DE MATE | function.description "Material mantiene color lote a lote" no comienza con verbo |
+| WARNING FN_NO_VERB | 10 RECEPCION E INSPECCION DE MATE | function.description "Material mantiene color bajo radiacion solar" no comienza con verbo |
+| WARNING FN_NO_VERB | 10 RECEPCION E INSPECCION DE MATE | function.description "Material cumple solidez color escala grises >= 4" no comienza con verbo |
 | WARNING FN_NO_VERB | 31 COSTURA VISTA | function.description "Costura Y cubierta simple con largo puntada especificado" no comienza con verbo |
 | WARNING FN_NO_VERB | 31 COSTURA VISTA | function.description "Ancho cubierta costura Y dentro de tolerancia" no comienza con verbo |
 | WARNING OP_FUNCTION_SEMANTIC_MISMATCH | 52 INYECCION DE PU | OP "INYECCION DE PU" debería contener alguno de [inyectar, conformar] en su función |
@@ -44,14 +44,14 @@
 
 | Type | OP | Detalle |
 |---|---|---|
-| WARNING OP_FUNCTION_SEMANTIC_MISMATCH | 10 RECEPCION DE MATERIA PRIMA | OP "RECEPCION DE MATERIA PRIMA" debería contener alguno de [verificar, conformidad, trazabilidad] en su función |
-| WARNING FN_NO_VERB | 10 RECEPCION DE MATERIA PRIMA | function.description "Material resiste ciclo termico cabina" no comienza con verbo |
-| WARNING FN_NO_VERB | 10 RECEPCION DE MATERIA PRIMA | function.description "Material supera 50 ciclos ambientales sin alteracion" no comienza con verbo |
-| WARNING FN_TOO_SHORT | 10 RECEPCION DE MATERIA PRIMA | function.description "Material resiste intemperie" muy corta (< 30 chars) |
-| WARNING FN_NO_VERB | 10 RECEPCION DE MATERIA PRIMA | function.description "Material resiste intemperie" no comienza con verbo |
-| WARNING FN_NO_VERB | 10 RECEPCION DE MATERIA PRIMA | function.description "Material mantiene color lote a lote" no comienza con verbo |
-| WARNING FN_NO_VERB | 10 RECEPCION DE MATERIA PRIMA | function.description "Material mantiene color bajo radiacion solar" no comienza con verbo |
-| WARNING FN_NO_VERB | 10 RECEPCION DE MATERIA PRIMA | function.description "Material cumple solidez color escala grises >= 4" no comienza con verbo |
+| WARNING OP_FUNCTION_SEMANTIC_MISMATCH | 10 RECEPCION E INSPECCION DE MATE | OP "RECEPCION E INSPECCION DE MATERIA PRIMA" debería contener alguno de [verificar, conformidad, trazabilidad] en su función |
+| WARNING FN_NO_VERB | 10 RECEPCION E INSPECCION DE MATE | function.description "Material resiste ciclo termico cabina" no comienza con verbo |
+| WARNING FN_NO_VERB | 10 RECEPCION E INSPECCION DE MATE | function.description "Material supera 50 ciclos ambientales sin alteracion" no comienza con verbo |
+| WARNING FN_TOO_SHORT | 10 RECEPCION E INSPECCION DE MATE | function.description "Material resiste intemperie" muy corta (< 30 chars) |
+| WARNING FN_NO_VERB | 10 RECEPCION E INSPECCION DE MATE | function.description "Material resiste intemperie" no comienza con verbo |
+| WARNING FN_NO_VERB | 10 RECEPCION E INSPECCION DE MATE | function.description "Material mantiene color lote a lote" no comienza con verbo |
+| WARNING FN_NO_VERB | 10 RECEPCION E INSPECCION DE MATE | function.description "Material mantiene color bajo radiacion solar" no comienza con verbo |
+| WARNING FN_NO_VERB | 10 RECEPCION E INSPECCION DE MATE | function.description "Material cumple solidez color escala grises >= 4" no comienza con verbo |
 | WARNING FN_NO_VERB | 31 COSTURA VISTA | function.description "Costura Y cubierta simple con largo puntada especificado" no comienza con verbo |
 | WARNING FN_NO_VERB | 31 COSTURA VISTA | function.description "Ancho cubierta costura Y dentro de tolerancia" no comienza con verbo |
 | WARNING OP_FUNCTION_SEMANTIC_MISMATCH | 52 INYECCION DE PU | OP "INYECCION DE PU" debería contener alguno de [inyectar, conformar] en su función |
@@ -69,13 +69,13 @@
 
 | Type | OP | Detalle |
 |---|---|---|
-| WARNING FN_NO_VERB | 10 RECEPCION DE MATERIA PRIMA | function.description "Material resiste ciclo termico cabina" no comienza con verbo |
-| WARNING FN_NO_VERB | 10 RECEPCION DE MATERIA PRIMA | function.description "Material supera 50 ciclos ambientales sin alteracion" no comienza con verbo |
-| WARNING FN_TOO_SHORT | 10 RECEPCION DE MATERIA PRIMA | function.description "Material resiste intemperie" muy corta (< 30 chars) |
-| WARNING FN_NO_VERB | 10 RECEPCION DE MATERIA PRIMA | function.description "Material resiste intemperie" no comienza con verbo |
-| WARNING FN_NO_VERB | 10 RECEPCION DE MATERIA PRIMA | function.description "Material mantiene color lote a lote" no comienza con verbo |
-| WARNING FN_NO_VERB | 10 RECEPCION DE MATERIA PRIMA | function.description "Material mantiene color bajo radiacion solar" no comienza con verbo |
-| WARNING FN_NO_VERB | 10 RECEPCION DE MATERIA PRIMA | function.description "Material cumple solidez color escala grises >= 4" no comienza con verbo |
+| WARNING FN_NO_VERB | 10 RECEPCION E INSPECCION DE MATE | function.description "Material resiste ciclo termico cabina" no comienza con verbo |
+| WARNING FN_NO_VERB | 10 RECEPCION E INSPECCION DE MATE | function.description "Material supera 50 ciclos ambientales sin alteracion" no comienza con verbo |
+| WARNING FN_TOO_SHORT | 10 RECEPCION E INSPECCION DE MATE | function.description "Material resiste intemperie" muy corta (< 30 chars) |
+| WARNING FN_NO_VERB | 10 RECEPCION E INSPECCION DE MATE | function.description "Material resiste intemperie" no comienza con verbo |
+| WARNING FN_NO_VERB | 10 RECEPCION E INSPECCION DE MATE | function.description "Material mantiene color lote a lote" no comienza con verbo |
+| WARNING FN_NO_VERB | 10 RECEPCION E INSPECCION DE MATE | function.description "Material mantiene color bajo radiacion solar" no comienza con verbo |
+| WARNING FN_NO_VERB | 10 RECEPCION E INSPECCION DE MATE | function.description "Material cumple solidez color escala grises >= 4" no comienza con verbo |
 | WARNING FN_NO_VERB | 31 COSTURA VISTA | function.description "Costura Y cubierta simple con largo puntada especificado" no comienza con verbo |
 | WARNING FN_NO_VERB | 31 COSTURA VISTA | function.description "Ancho cubierta costura Y dentro de tolerancia" no comienza con verbo |
 | WARNING OP_FUNCTION_SEMANTIC_MISMATCH | 52 INYECCION DE PU | OP "INYECCION DE PU" debería contener alguno de [inyectar, conformar] en su función |

@@ -1,8 +1,8 @@
-# WE Placeholders + Failure Allocation — 2026-08-24T15:21:29.395Z
+# WE Placeholders + Failure Allocation — 2026-08-24T19:44:04.693Z
 
-**Resumen global**: 38 CRITICAL, 0 WARNING en 8/18 AMFEs.
+**Resumen global**: 41 CRITICAL, 0 WARNING en 8/18 AMFEs.
 
-**Por tipo**: FAILURE_MISALLOCATED=38
+**Por tipo**: FAILURE_MISALLOCATED=41
 
 ## Detalle por AMFE
 
@@ -35,40 +35,43 @@
 | CRITICAL FAILURE_MISALLOCATED | 52 VIROLADO + REFILADO DE PIEZAS | failure "4- Contacto del operador con herramienta de corte..." contiene "corte" (debe ir a OP tipo corte); OP actual = VIROLADO + REFILADO D |
 
 ### AMFE-HRO-PAT (VWA/PATAGONIA/HEADREST_REAR_OUT)
-6 CRITICAL + 0 WARNING
+7 CRITICAL + 0 WARNING
 
 | Type | OP | Detalle |
 |---|---|---|
-| CRITICAL FAILURE_MISALLOCATED | 10 RECEPCION DE MATERIA PRIMA | failure "Viscosidad del poliol fuera de especificacion..." contiene "poliol" (debe ir a OP tipo inyeccion/pu/espumado); OP actual = RECEPCIO |
-| CRITICAL FAILURE_MISALLOCATED | 10 RECEPCION DE MATERIA PRIMA | failure "Densidad libre del poliol fuera de especificacion..." contiene "poliol" (debe ir a OP tipo inyeccion/pu/espumado); OP actual = RECE |
-| CRITICAL FAILURE_MISALLOCATED | 10 RECEPCION DE MATERIA PRIMA | failure "Tiempo de pegajosidad del poliol fuera de especificacion..." contiene "poliol" (debe ir a OP tipo inyeccion/pu/espumado); OP actual |
-| CRITICAL FAILURE_MISALLOCATED | 10 RECEPCION DE MATERIA PRIMA | failure "Tiempo de crema del poliol fuera de especificacion..." contiene "poliol" (debe ir a OP tipo inyeccion/pu/espumado); OP actual = REC |
-| CRITICAL FAILURE_MISALLOCATED | 10 RECEPCION DE MATERIA PRIMA | failure "Viscosidad del isocianato fuera de especificacion..." contiene "isocianato" (debe ir a OP tipo inyeccion/pu/espumado); OP actual =  |
-| CRITICAL FAILURE_MISALLOCATED | 10 RECEPCION DE MATERIA PRIMA | failure "Densidad del isocianato fuera de especificacion..." contiene "isocianato" (debe ir a OP tipo inyeccion/pu/espumado); OP actual = RE |
-
-### AMFE-HRC-PAT (VWA/PATAGONIA/HEADREST_REAR_CEN)
-6 CRITICAL + 0 WARNING
-
-| Type | OP | Detalle |
-|---|---|---|
-| CRITICAL FAILURE_MISALLOCATED | 10 RECEPCION DE MATERIA PRIMA | failure "Viscosidad del poliol fuera de especificacion..." contiene "poliol" (debe ir a OP tipo inyeccion/pu/espumado); OP actual = RECEPCIO |
-| CRITICAL FAILURE_MISALLOCATED | 10 RECEPCION DE MATERIA PRIMA | failure "Densidad libre del poliol fuera de especificacion..." contiene "poliol" (debe ir a OP tipo inyeccion/pu/espumado); OP actual = RECE |
-| CRITICAL FAILURE_MISALLOCATED | 10 RECEPCION DE MATERIA PRIMA | failure "Tiempo de pegajosidad del poliol fuera de especificacion..." contiene "poliol" (debe ir a OP tipo inyeccion/pu/espumado); OP actual |
-| CRITICAL FAILURE_MISALLOCATED | 10 RECEPCION DE MATERIA PRIMA | failure "Tiempo de crema del poliol fuera de especificacion..." contiene "poliol" (debe ir a OP tipo inyeccion/pu/espumado); OP actual = REC |
-| CRITICAL FAILURE_MISALLOCATED | 10 RECEPCION DE MATERIA PRIMA | failure "Viscosidad del isocianato fuera de especificacion..." contiene "isocianato" (debe ir a OP tipo inyeccion/pu/espumado); OP actual =  |
-| CRITICAL FAILURE_MISALLOCATED | 10 RECEPCION DE MATERIA PRIMA | failure "Densidad del isocianato fuera de especificacion..." contiene "isocianato" (debe ir a OP tipo inyeccion/pu/espumado); OP actual = RE |
+| CRITICAL FAILURE_MISALLOCATED | 10 RECEPCION E INSPECCION DE MATE | failure "Viscosidad del poliol fuera de especificacion..." contiene "poliol" (debe ir a OP tipo inyeccion/pu/espumado); OP actual = RECEPCIO |
+| CRITICAL FAILURE_MISALLOCATED | 10 RECEPCION E INSPECCION DE MATE | failure "Densidad libre del poliol fuera de especificacion..." contiene "poliol" (debe ir a OP tipo inyeccion/pu/espumado); OP actual = RECE |
+| CRITICAL FAILURE_MISALLOCATED | 10 RECEPCION E INSPECCION DE MATE | failure "Tiempo de pegajosidad del poliol fuera de especificacion..." contiene "poliol" (debe ir a OP tipo inyeccion/pu/espumado); OP actual |
+| CRITICAL FAILURE_MISALLOCATED | 10 RECEPCION E INSPECCION DE MATE | failure "Tiempo de crema del poliol fuera de especificacion..." contiene "poliol" (debe ir a OP tipo inyeccion/pu/espumado); OP actual = REC |
+| CRITICAL FAILURE_MISALLOCATED | 10 RECEPCION E INSPECCION DE MATE | failure "Viscosidad del isocianato fuera de especificacion..." contiene "isocianato" (debe ir a OP tipo inyeccion/pu/espumado); OP actual =  |
+| CRITICAL FAILURE_MISALLOCATED | 10 RECEPCION E INSPECCION DE MATE | failure "Densidad del isocianato fuera de especificacion..." contiene "isocianato" (debe ir a OP tipo inyeccion/pu/espumado); OP actual = RE |
+| CRITICAL FAILURE_MISALLOCATED | 40 ENSAMBLE ASTA + ENFUNDADO | failure "Las dos varillas no sobresalen parejas por la parte trasera..." contiene "varilla" (debe ir a OP tipo varilla/insercion); OP actual |
 
 ### AMFE-HF-PAT (VWA/PATAGONIA/HEADREST_FRONT)
-6 CRITICAL + 0 WARNING
+7 CRITICAL + 0 WARNING
 
 | Type | OP | Detalle |
 |---|---|---|
-| CRITICAL FAILURE_MISALLOCATED | 10 RECEPCION DE MATERIA PRIMA | failure "Viscosidad del poliol fuera de especificacion..." contiene "poliol" (debe ir a OP tipo inyeccion/pu/espumado); OP actual = RECEPCIO |
-| CRITICAL FAILURE_MISALLOCATED | 10 RECEPCION DE MATERIA PRIMA | failure "Densidad libre del poliol fuera de especificacion..." contiene "poliol" (debe ir a OP tipo inyeccion/pu/espumado); OP actual = RECE |
-| CRITICAL FAILURE_MISALLOCATED | 10 RECEPCION DE MATERIA PRIMA | failure "Tiempo de pegajosidad del poliol fuera de especificacion..." contiene "poliol" (debe ir a OP tipo inyeccion/pu/espumado); OP actual |
-| CRITICAL FAILURE_MISALLOCATED | 10 RECEPCION DE MATERIA PRIMA | failure "Tiempo de crema del poliol fuera de especificacion..." contiene "poliol" (debe ir a OP tipo inyeccion/pu/espumado); OP actual = REC |
-| CRITICAL FAILURE_MISALLOCATED | 10 RECEPCION DE MATERIA PRIMA | failure "Viscosidad del isocianato fuera de especificacion..." contiene "isocianato" (debe ir a OP tipo inyeccion/pu/espumado); OP actual =  |
-| CRITICAL FAILURE_MISALLOCATED | 10 RECEPCION DE MATERIA PRIMA | failure "Densidad del isocianato fuera de especificacion..." contiene "isocianato" (debe ir a OP tipo inyeccion/pu/espumado); OP actual = RE |
+| CRITICAL FAILURE_MISALLOCATED | 10 RECEPCION E INSPECCION DE MATE | failure "Viscosidad del poliol fuera de especificacion..." contiene "poliol" (debe ir a OP tipo inyeccion/pu/espumado); OP actual = RECEPCIO |
+| CRITICAL FAILURE_MISALLOCATED | 10 RECEPCION E INSPECCION DE MATE | failure "Densidad libre del poliol fuera de especificacion..." contiene "poliol" (debe ir a OP tipo inyeccion/pu/espumado); OP actual = RECE |
+| CRITICAL FAILURE_MISALLOCATED | 10 RECEPCION E INSPECCION DE MATE | failure "Tiempo de pegajosidad del poliol fuera de especificacion..." contiene "poliol" (debe ir a OP tipo inyeccion/pu/espumado); OP actual |
+| CRITICAL FAILURE_MISALLOCATED | 10 RECEPCION E INSPECCION DE MATE | failure "Tiempo de crema del poliol fuera de especificacion..." contiene "poliol" (debe ir a OP tipo inyeccion/pu/espumado); OP actual = REC |
+| CRITICAL FAILURE_MISALLOCATED | 10 RECEPCION E INSPECCION DE MATE | failure "Viscosidad del isocianato fuera de especificacion..." contiene "isocianato" (debe ir a OP tipo inyeccion/pu/espumado); OP actual =  |
+| CRITICAL FAILURE_MISALLOCATED | 10 RECEPCION E INSPECCION DE MATE | failure "Densidad del isocianato fuera de especificacion..." contiene "isocianato" (debe ir a OP tipo inyeccion/pu/espumado); OP actual = RE |
+| CRITICAL FAILURE_MISALLOCATED | 42 COLOCACION DE PRECINTO CON PIS | failure "Precinto colocado fuera del punto de union de la abertura co..." contiene "costura" (debe ir a OP tipo costura); OP actual = COLOCA |
+
+### AMFE-HRC-PAT (VWA/PATAGONIA/HEADREST_REAR_CEN)
+7 CRITICAL + 0 WARNING
+
+| Type | OP | Detalle |
+|---|---|---|
+| CRITICAL FAILURE_MISALLOCATED | 10 RECEPCION E INSPECCION DE MATE | failure "Viscosidad del poliol fuera de especificacion..." contiene "poliol" (debe ir a OP tipo inyeccion/pu/espumado); OP actual = RECEPCIO |
+| CRITICAL FAILURE_MISALLOCATED | 10 RECEPCION E INSPECCION DE MATE | failure "Densidad libre del poliol fuera de especificacion..." contiene "poliol" (debe ir a OP tipo inyeccion/pu/espumado); OP actual = RECE |
+| CRITICAL FAILURE_MISALLOCATED | 10 RECEPCION E INSPECCION DE MATE | failure "Tiempo de pegajosidad del poliol fuera de especificacion..." contiene "poliol" (debe ir a OP tipo inyeccion/pu/espumado); OP actual |
+| CRITICAL FAILURE_MISALLOCATED | 10 RECEPCION E INSPECCION DE MATE | failure "Tiempo de crema del poliol fuera de especificacion..." contiene "poliol" (debe ir a OP tipo inyeccion/pu/espumado); OP actual = REC |
+| CRITICAL FAILURE_MISALLOCATED | 10 RECEPCION E INSPECCION DE MATE | failure "Viscosidad del isocianato fuera de especificacion..." contiene "isocianato" (debe ir a OP tipo inyeccion/pu/espumado); OP actual =  |
+| CRITICAL FAILURE_MISALLOCATED | 10 RECEPCION E INSPECCION DE MATE | failure "Densidad del isocianato fuera de especificacion..." contiene "isocianato" (debe ir a OP tipo inyeccion/pu/espumado); OP actual = RE |
+| CRITICAL FAILURE_MISALLOCATED | 40 ENSAMBLE ASTA + ENFUNDADO | failure "Las dos varillas no sobresalen parejas por la parte trasera..." contiene "varilla" (debe ir a OP tipo varilla/insercion); OP actual |
 
 ### 150 (VWA/PATAGONIA/ARMREST_REAR_CEN)
 2 CRITICAL + 0 WARNING
