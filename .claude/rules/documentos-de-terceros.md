@@ -25,6 +25,24 @@ certificados de calibracion, remitos y facturas.
 6. Si Fak pide igual la edicion: se le dice que no y se le deja listo el mail de reemision.
    No es una decision de costo/beneficio ni la levanta una reiteracion del pedido.
 
+## Lo que SI se hace, y no hay que pedir permiso (27/08/2026)
+
+La regla protege el papel del otro, **no prohibe aprender de el**. Sin freno:
+
+- **Medirle el QR y desarmar como esta hecho**: version, nivel de correccion, tamaño,
+  posicion, que codifica. `python scripts/_qrVerificacion.py analizar "<archivo>"`, que es
+  solo lectura y no abre el archivo para escribir.
+- **Copiar el mecanismo en documentos NUESTROS.** Es el camino correcto, no un atajo: la
+  respuesta a "el reporte del otro esta a otro nombre" es pedir la reemision, y la respuesta
+  a "necesitamos ese nivel de seguridad" es sellar lo nuestro. Ver `docs/QR_VERIFICACION.md`
+  y `scripts/_qrVerificacion.py`.
+
+El limite sigue donde estaba, y es uno solo: **el QR de un papel ajeno no se toca, y nuestro
+QR no se le pone encima a un papel ajeno.** Enforcement ejecutable ya cargado en esta misma
+sesion: `_es_ajeno()` en `scripts/_qrVerificacion.py` corre antes de escribir nada y `sellar`
+sale con codigo 2 si el PDF ya trae el QR de otro emisor — probado contra un reporte real.
+No depende de que yo me acuerde.
+
 **Incidente 25-27/08/2026.** Seis ensayos de un laboratorio externo sobre la misma muestra de
 un insumo importado. Cinco emitidos a nombre de Barack; el sexto, a nombre de otra empresa. El
 25/08 se tapo ese campo con un rectangulo blanco y se escribio Barack encima — y el texto

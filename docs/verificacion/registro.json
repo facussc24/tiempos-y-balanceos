@@ -1,0 +1,20 @@
+{
+  "documentos": {
+    "49C98C6E8F8CAF79A384DB01": {
+      "doc_id": "IT-2026-007-REV0",
+      "tipo": "IT",
+      "numero": "2026-007",
+      "revision": "0",
+      "titulo": "Verificacion de espesor Insert Patagonia VW427",
+      "producto": "Insert lateral puerta VW427",
+      "emisor": "Ingenieria",
+      "empresa": "Barack Mercosul S.R.L.",
+      "emitido": "2026-08-27T19:54:34-03:00",
+      "archivo": "IT-2026-007.pdf",
+      "sha256": "33234118bd639dde792cec0a111748fa208bbf0e78c6b9a24c2002f1eae725a0",
+      "sha256_sin_qr": "8573fea80fffabf7fc06876486422e6ddf2841c5e97156ef640af2ad29f42df6",
+      "estado": "vigente",
+      "url": "https://facussc24.github.io/tiempos-y-balanceos/v.html#49C98C6E8F8CAF79A384DB01"
+    }
+  }
+}

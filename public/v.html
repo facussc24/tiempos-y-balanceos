@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="es-AR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Verificacion de documento — Barack Mercosul S.R.L.</title>
+<style>
+  :root{
+    --tinta:#0f172a; --suave:#64748b; --linea:#e2e8f0; --fondo:#f8fafc; --papel:#ffffff;
+    --ok:#15803d; --ok-fondo:#f0fdf4; --ok-linea:#bbf7d0;
+    --mal:#b91c1c; --mal-fondo:#fef2f2; --mal-linea:#fecaca;
+    --duda:#b45309; --duda-fondo:#fffbeb; --duda-linea:#fde68a;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--fondo);color:var(--tinta);
+       font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  .hoja{max-width:640px;margin:0 auto;padding:24px 18px 56px}
+  header{border-bottom:2px solid var(--tinta);padding-bottom:14px;margin-bottom:22px}
+  .empresa{font-size:19px;font-weight:700;letter-spacing:.2px}
+  .area{font-size:12.5px;color:var(--suave);margin-top:2px}
+  h1{font-size:14px;text-transform:uppercase;letter-spacing:1.1px;color:var(--suave);
+     margin:0 0 14px;font-weight:600}
+  .estado{border-radius:10px;padding:16px 18px;margin-bottom:20px;border:1px solid}
+  .estado .tit{font-size:17px;font-weight:700;margin-bottom:4px}
+  .estado .sub{font-size:13.5px;line-height:1.5}
+  .e-ok{background:var(--ok-fondo);border-color:var(--ok-linea);color:var(--ok)}
+  .e-mal{background:var(--mal-fondo);border-color:var(--mal-linea);color:var(--mal)}
+  .e-duda{background:var(--duda-fondo);border-color:var(--duda-linea);color:var(--duda)}
+  .ficha{background:var(--papel);border:1px solid var(--linea);border-radius:10px;overflow:hidden}
+  .fila{display:flex;gap:14px;padding:11px 16px;border-bottom:1px solid var(--linea);font-size:14px}
+  .fila:last-child{border-bottom:0}
+  .fila dt{flex:0 0 116px;color:var(--suave);margin:0;font-size:13px}
+  .fila dd{margin:0;flex:1;min-width:0;word-break:break-word}
+  dl{margin:0}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:11.5px;
+        word-break:break-all;color:var(--suave)}
+  .caja{margin-top:22px;background:var(--papel);border:1px solid var(--linea);border-radius:10px;padding:18px}
+  .caja h2{font-size:14px;margin:0 0 6px}
+  .caja p{font-size:13.5px;color:var(--suave);margin:0 0 14px}
+  .suelta{border:2px dashed #cbd5e1;border-radius:9px;padding:26px 16px;text-align:center;
+          color:var(--suave);font-size:13.5px;cursor:pointer;transition:.15s;background:var(--fondo)}
+  .suelta:hover,.suelta.encima{border-color:#94a3b8;background:#f1f5f9;color:var(--tinta)}
+  .resultado{margin-top:14px;font-size:14px;padding:13px 15px;border-radius:9px;border:1px solid;display:none}
+  .resultado.ver{display:block}
+  footer{margin-top:30px;font-size:12px;color:var(--suave);line-height:1.6}
+  footer b{color:var(--tinta)}
+  input[type=file]{display:none}
+</style>
+</head>
+<body>
+<div class="hoja">
+  <header>
+    <div class="empresa">BARACK MERCOSUL S.R.L.</div>
+    <div class="area">Ingenieria de Producto y Procesos — verificacion de documentos</div>
+  </header>
+
+  <h1>Resultado de la consulta</h1>
+  <div id="estado" class="estado e-duda">
+    <div class="tit">Buscando…</div>
+    <div class="sub">Leyendo el registro de documentos emitidos.</div>
+  </div>
+
+  <div id="ficha" class="ficha" hidden><dl id="datos"></dl></div>
+
+  <div class="caja" id="cajaHash" hidden>
+    <h2>Comprobar que el archivo no fue modificado</h2>
+    <p>El registro guarda la huella digital (SHA-256) del PDF tal como se emitio.
+       Solta aca el archivo que tenes en la mano y se compara. El archivo no se sube
+       a ningun lado: la cuenta se hace en este navegador.</p>
+    <label class="suelta" id="suelta">
+      Toca aca para elegir el PDF, o arrastralo
+      <input type="file" id="archivo" accept="application/pdf,.pdf">
+    </label>
+    <div class="resultado" id="resHash"></div>
+  </div>
+
+  <footer>
+    <b>Como se lee esta pagina.</b> El codigo QR de la portada apunta al registro de
+    documentos emitidos por Barack Mercosul S.R.L. Si el documento figura aca, el papel
+    salio de nuestra Ingenieria. Si ademas la huella digital coincide, el archivo es
+    identico al que se emitio.<br><br>
+    Un documento nuestro sin QR en la portada, o cuyo QR no resuelva contra este registro,
+    es una copia alterada.<br><br>
+    Dudas sobre un documento: ingenieria@barack.com.ar
+  </footer>
+</div>
+
+<script>
+(function () {
+  var estado = document.getElementById('estado');
+  var ficha  = document.getElementById('ficha');
+  var datos  = document.getElementById('datos');
+  var caja   = document.getElementById('cajaHash');
+  var esperado = null;
+
+  function pintar(clase, titulo, sub) {
+    estado.className = 'estado ' + clase;
+    estado.innerHTML = '<div class="tit"></div><div class="sub"></div>';
+    estado.firstChild.textContent = titulo;
+    estado.lastChild.textContent = sub;
+  }
+
+  function fila(et, valor, mono) {
+    var d = document.createElement('div'); d.className = 'fila';
+    var dt = document.createElement('dt'); dt.textContent = et;
+    var dd = document.createElement('dd'); dd.textContent = valor;
+    if (mono) dd.className = 'mono';
+    d.appendChild(dt); d.appendChild(dd); datos.appendChild(d);
+  }
+
+  function consultar() {
+  datos.textContent = '';
+  ficha.hidden = true;
+  caja.hidden = true;
+  res.className = 'resultado';
+  esperado = null;
+
+  var token = (location.hash || '').replace(/^#/, '').trim().toUpperCase();
+  if (!/^[0-9A-F]{16,64}$/.test(token)) {
+    pintar('e-duda', 'Falta el codigo',
+      'Esta pagina se abre escaneando el QR de la portada de un documento de Barack.');
+    return;
+  }
+
+  fetch('verificacion/registro.json', { cache: 'no-store' })
+    .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+    .then(function (reg) {
+      var d = reg.documentos && reg.documentos[token];
+      if (!d) {
+        pintar('e-mal', 'Documento no registrado',
+          'Este codigo no figura entre los documentos emitidos por Barack Mercosul S.R.L. ' +
+          'No lo uses como valido: consultanos antes.');
+        return;
+      }
+      var vigente = d.estado === 'vigente';
+      pintar(vigente ? 'e-ok' : 'e-duda',
+        vigente ? 'Documento emitido por Barack Mercosul S.R.L.'
+                : 'Documento ' + d.estado,
+        vigente ? 'Figura en el registro de Ingenieria. Los datos son los de abajo.'
+                : 'Figura en el registro pero ya no esta vigente. Pedi la version actual.');
+
+      fila('Documento', d.doc_id);
+      if (d.titulo)   fila('Titulo', d.titulo);
+      if (d.producto) fila('Producto', d.producto);
+      fila('Revision', d.revision);
+      // La fecha se muestra tal como se emitio (hora de Buenos Aires). No se convierte
+      // a la zona del que mira: un documento emitido el 27/08 dice 27/08 en todo el mundo.
+      fila('Emitido', (function (iso) {
+        var m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(iso || '');
+        return m ? m[3] + '/' + m[2] + '/' + m[1] + ' ' + m[4] + ':' + m[5] + ' hs' : (iso || '');
+      })(d.emitido));
+      fila('Emisor', d.emisor + ' — ' + d.empresa);
+      fila('Estado', d.estado);
+      fila('SHA-256', d.sha256, true);
+      ficha.hidden = false;
+
+      esperado = d.sha256;
+      if (window.crypto && crypto.subtle) caja.hidden = false;
+    })
+    .catch(function () {
+      pintar('e-duda', 'No se pudo leer el registro',
+        'Volve a intentar en un momento. Si sigue igual, escribinos a ingenieria@barack.com.ar.');
+    });
+  }
+
+  // --- comprobacion de la huella, en el navegador ---
+  var suelta = document.getElementById('suelta');
+  var input  = document.getElementById('archivo');
+  var res    = document.getElementById('resHash');
+
+  function mostrar(clase, texto) {
+    res.className = 'resultado ver ' + clase;
+    res.textContent = texto;
+  }
+
+  function comprobar(file) {
+    if (!file || !esperado) return;
+    mostrar('e-duda', 'Calculando la huella de ' + file.name + '…');
+    file.arrayBuffer()
+      .then(function (buf) { return crypto.subtle.digest('SHA-256', buf); })
+      .then(function (h) {
+        var hex = Array.prototype.map
+          .call(new Uint8Array(h), function (b) { return b.toString(16).padStart(2, '0'); })
+          .join('');
+        if (hex === esperado) {
+          mostrar('e-ok', 'Coincide. El archivo es identico al que se emitio.');
+        } else {
+          mostrar('e-mal', 'NO coincide: este archivo no es el que se emitio con ese codigo. ' +
+                           'Huella del archivo: ' + hex);
+        }
+      })
+      .catch(function () { mostrar('e-mal', 'No se pudo leer el archivo.'); });
+  }
+
+  input.addEventListener('change', function () { comprobar(input.files[0]); });
+  ['dragenter', 'dragover'].forEach(function (ev) {
+    suelta.addEventListener(ev, function (e) { e.preventDefault(); suelta.classList.add('encima'); });
+  });
+  ['dragleave', 'drop'].forEach(function (ev) {
+    suelta.addEventListener(ev, function (e) { e.preventDefault(); suelta.classList.remove('encima'); });
+  });
+  suelta.addEventListener('drop', function (e) {
+    if (e.dataTransfer && e.dataTransfer.files[0]) comprobar(e.dataTransfer.files[0]);
+  });
+
+  // Escanear un segundo QR con la pagina ya abierta solo cambia el hash: sin esto
+  // se quedaria mostrando el documento anterior.
+  window.addEventListener('hashchange', consultar);
+  consultar();
+})();
+</script>
+</body>
+</html>
