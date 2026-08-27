@@ -33,7 +33,7 @@ INPUT=$(cat)
 # no acelerarlo.
 #   Bash|PowerShell ............ supabase, validator, renumber, push
 #   Edit|Write ................. file-guard
-#   Bash|PowerShell|Write|Edit . consumos, cad, patrones, escritorio
+#   Bash|PowerShell|Write|Edit . consumos, cad, patrones, escritorio, doc-tercero
 TMP=$(mktemp -d 2>/dev/null || echo "${TMPDIR:-/tmp}/hookdisp.$$")
 mkdir -p "$TMP"
 trap 'rm -rf "$TMP"' EXIT
@@ -104,7 +104,7 @@ fi
 # acelerarlo.
 #   Bash|PowerShell ............ supabase, validator, renumber, push
 #   Edit|Write ................. file-guard
-#   Bash|PowerShell|Write|Edit . consumos, cad, patrones, escritorio
+#   Bash|PowerShell|Write|Edit . consumos, cad, patrones, escritorio, doc-tercero
 GUARDIANES=()
 case "$TOOL_NAME" in
   Bash|PowerShell) GUARDIANES+=(supabase-guard validator-check renumber-guard push-guard) ;;
@@ -113,7 +113,7 @@ esac
 case "$TOOL_NAME" in
   Bash|PowerShell|Write|Edit)
     GUARDIANES+=(consumos-entregable-guard cad-guard patrones-guard escritorio-guard
-                 borrado-masivo-guard ho-numeracion-guard mail-guard) ;;
+                 borrado-masivo-guard ho-numeracion-guard mail-guard doc-tercero-guard) ;;
 esac
 
 # Si no se pudo parsear el tool_name, NO adivino: corro TODOS los guardianes.
@@ -121,7 +121,7 @@ esac
 if [ -z "$TOOL_NAME" ]; then
   GUARDIANES=(file-guard supabase-guard validator-check renumber-guard push-guard
               consumos-entregable-guard cad-guard patrones-guard escritorio-guard
-              borrado-masivo-guard ho-numeracion-guard mail-guard)
+              borrado-masivo-guard ho-numeracion-guard mail-guard doc-tercero-guard)
 fi
 
 if [ ${#GUARDIANES[@]} -eq 0 ]; then exit 0; fi
