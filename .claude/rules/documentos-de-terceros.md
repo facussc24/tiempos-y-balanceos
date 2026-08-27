@@ -6,6 +6,12 @@ paths:
 
 # Un documento emitido por un TERCERO no se edita: se pide la reemision
 
+**El limite exacto, para no aplicar esto de mas:** solo entra en juego cuando (a) el
+EMISOR no es Barack Y (b) se va a tocar su CONTENIDO (cliente, fecha, resultado) o su
+MECANISMO DE VERIFICACION (QR, hash, firma). Todo lo demas — un PDF nuestro, o leer /
+extraer / OCR / traducir aparte / citar un PDF ajeno — no entra aca y no amerita aviso
+ni freno.
+
 Aplica a todo papel cuyo EMISOR no es Barack: reportes de laboratorio, certificados de
 material, PPAP y declaraciones de proveedor (ELV, IMDS, RoHS), planos y normas de cliente,
 certificados de calibracion, remitos y facturas.
@@ -27,21 +33,11 @@ certificados de calibracion, remitos y facturas.
 
 ## Lo que SI se hace, y no hay que pedir permiso (27/08/2026)
 
-La regla protege el papel del otro, **no prohibe aprender de el**. Sin freno:
-
-- **Medirle el QR y desarmar como esta hecho**: version, nivel de correccion, tamaño,
-  posicion, que codifica. `python scripts/_qrVerificacion.py analizar "<archivo>"`, que es
-  solo lectura y no abre el archivo para escribir.
-- **Copiar el mecanismo en documentos NUESTROS.** Es el camino correcto, no un atajo: la
-  respuesta a "el reporte del otro esta a otro nombre" es pedir la reemision, y la respuesta
-  a "necesitamos ese nivel de seguridad" es sellar lo nuestro. Ver `docs/QR_VERIFICACION.md`
-  y `scripts/_qrVerificacion.py`.
-
-El limite sigue donde estaba, y es uno solo: **el QR de un papel ajeno no se toca, y nuestro
-QR no se le pone encima a un papel ajeno.** Enforcement ejecutable ya cargado en esta misma
-sesion: `_es_ajeno()` en `scripts/_qrVerificacion.py` corre antes de escribir nada y `sellar`
-sale con codigo 2 si el PDF ya trae el QR de otro emisor — probado contra un reporte real.
-No depende de que yo me acuerde.
+La regla protege el papel del otro, **no prohibe aprender de el**. Sin freno: medirle el
+QR y desarmar como esta hecho (`python scripts/_qrVerificacion.py analizar "<archivo>"`,
+solo lectura) y copiar el mecanismo en documentos NUESTROS (`docs/QR_VERIFICACION.md`).
+Enforcement ejecutable: `_es_ajeno()` en `scripts/_qrVerificacion.py` corre antes de
+escribir y `sellar` sale con codigo 2 si el PDF ya trae el QR de otro emisor.
 
 **Incidente 25-27/08/2026.** Seis ensayos de un laboratorio externo sobre la misma muestra de
 un insumo importado. Cinco emitidos a nombre de Barack; el sexto, a nombre de otra empresa. El

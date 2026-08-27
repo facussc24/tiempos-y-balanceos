@@ -80,25 +80,10 @@ echo "$NOW" > "$FLAG" 2>/dev/null
 cat >&2 << 'EOF'
 [DOC-TERCERO-GUARD — 1x/h. Regla: .claude/rules/documentos-de-terceros.md]
 
-Estas por escribir sobre un PDF. Si el EMISOR no es Barack (reporte de
-laboratorio, certificado de material, PPAP o declaracion de proveedor, plano o
-norma de cliente, calibracion, remito, factura):
-
-1. NO se edita el contenido — ni el cliente, ni la fecha, ni el numero de
-   reporte, ni el resultado. Aunque el ensayo sea el mismo y el resultado valga.
-2. NO se toca el mecanismo de verificacion: QR, link al LIMS, hash, firma, sello.
-   Reapuntar un QR a una copia nuestra es FALSIFICAR el certificado — la
-   verificacion la hace el emisor, no el PDF.
-3. Lo que se hace es pedir la REEMISION al proveedor/emisor: que campo esta mal
-   y cual es el correcto. Mail de cinco lineas, tramite normal.
-4. Un rectangulo blanco encima NO borra: el texto original queda en la capa de
-   texto y sale con Ctrl+F. Lo tapado no esta sacado.
-5. Si Fak lo pide igual: se le dice que no y se le deja listo el mail de
-   reemision. No lo levanta una reiteracion del pedido.
-
-Permitido y sin freno: leerlo, extraerle datos, OCR, traducirlo APARTE, citarlo
-desde un documento PROPIO, y generar PDFs nuestros.
-
-Si el PDF es NUESTRO (o ya cumpliste esto), reintenta y segui.
+Solo aplica si el EMISOR no es Barack Y vas a tocar su CONTENIDO (cliente,
+fecha, resultado) o su VERIFICACION (QR/LIMS/hash/firma) — reapuntar eso a una
+copia nuestra es falsificar el certificado. Si es asi: no se edita, se pide la
+REEMISION al emisor (mail corto). Si el PDF es nuestro, o es leer/extraer/OCR/
+traducir aparte, no aplica nada de esto — reintenta y segui.
 EOF
 exit 2
