@@ -466,6 +466,60 @@ Las 9-17 salen del virolador del Upper Trim (08/2026, tres rondas: resorte → r
     flotando, y ningun control lo miraba porque todos buscaban solapes, no huerfanos;
     (c) **los travesanos van donde apoya la pieza**, no repartidos parejo con `linspace`.
 
+20. **La POBLACION sobre la que medis decide el resultado mas que el metodo.** (Dispositivo
+    de adhesivado, 08/2026 — el error mas caro de ese trabajo, y lo encontro una revision
+    independiente, no yo.) Defini "la cara a rociar" como *lo que se ve primero mirando
+    desde arriba* y ademas forcé las normales hacia el frente. Con esa definicion la pared
+    del borde —que solo se ve en angulo— **no podia entrar**, y ninguna normal podia pasar
+    de 90°. El 99 % de cobertura que reporte, y la conclusion "girar no aporta", eran
+    **techos del modelo**, no propiedades de la pieza.
+    - Rehecha por PROCESO (se engoma lo que toca el recubrimiento, medido contra el otro
+      solido del STEP) la misma pieza dio 82,8 % sin girar. Tres tolerancias distintas, mismo
+      resultado. **Una conclusion que cambia 16 puntos al cambiar la definicion de la
+      poblacion no era una conclusion: era la definicion.**
+    - Y despues hubo que partirla otra vez: 90 de esos 451 cm² miran para atras y **ningun
+      utillaje los alcanza con la pieza apoyada** (atras es siempre el nido). Sobre lo que si
+      se puede resolver, girar aporta +0,4. **Antes de comparar dos disenos, separar lo que
+      el diseno puede cambiar de lo que no.**
+    - Regla: la poblacion se define por el PROCESO (que se moja, que se pega, que se mide),
+      nunca por lo que es comodo de calcular. Y se declara arriba del resultado, siempre.
+
+21. **Cuatro veces seguidas escribi un control que no podia dar rojo.** Y las cuatro el
+    autotest "generico" pasaba igual. El patron:
+    - `gate_giro`: 0,00 mm en los 72 angulos — la luz no dependia del giro.
+    - chequeo de marco: dos guardias (`comparten punta`, `entre 2 % y 98 %`) que tapaban
+      justo las penetraciones reales. Una revision le inyecto 5 casos nuevos: **cazo 1**.
+    - autotest de basculacion: bajaba el eje, cuando lo que topeaba era AXIAL.
+    - cobertura: el autotest daba la pieza vuelta, que el modelo ya no podia representar.
+    **El valor gemelo tiene que ser la falla REAL de ESA geometria, no una perturbacion
+    cualquiera.** Se elige preguntando "¿que tendria que estar mal para que esto fallara en
+    planta?" y se inyecta ESO. Si el control sigue verde con la falla puesta, el control se
+    tira, no se ajusta el umbral.
+
+22. **Un ensamble no es una pieza impresa, y el gate de entrega tampoco.** Exigir "1 solo
+    cuerpo, cerrado" a un conjunto de 8 piezas que van con luz a proposito lo rechaza siempre.
+    Lo que se valida es **cada pieza por separado** (1 cuerpo, cerrada, volumen positivo) y
+    la envolvente solo para interferencia — informando su cantidad de cuerpos como dato
+    esperado, no como falla. Ojo tambien con el bobinado: la envolvente concatenada salio con
+    volumen NEGATIVO y `signed_distance` daba la pieza entera "adentro" a 6 mm (medio espesor
+    de placa). Cada pieza estaba bien; la union, no.
+
+23. **Un tubo que llega en angulo no se acorta: se corta con un PLANO.** Acortar el eje deja
+    las esquinas de la seccion metidas adentro del otro — 14,14 mm en un empalme a 45°. Y el
+    largo que va a la lista de corte se mide **entre planos de corte, no entre nodos**: el
+    X-brace del piso figuraba 1606,9 y el real era 1548,0, 11 de 33 tramos estaban mal, y con
+    ese numero el herrero corta de mas y la pieza no entra. Tres cosas mas de ese mismo
+    trabajo: la orientacion de la seccion **se fija a proposito** (si la elige una convencion
+    del codigo, aparecen cortes compuestos que nadie puede ejecutar y diagonales que se comen
+    8 mm de un travesano); en una **esquina** donde las dos puntas coinciden no se corta
+    ninguna de las dos o el rincon queda hueco; y un control de "tramo suelto" que
+    submuestrea pierde el contacto cara a cara de un inglete, que es de 0 mm.
+
+24. **Un bucle de autocorreccion que PISA en vez de acumular oscila, no converge.** El ajuste
+    de altura de los apoyos guardaba el desvio pelado; el build lo aplicaba, el desvio pasaba
+    a 0, y el build siguiente volvia a dejar el poste sin corregir. Se veia "0,00" mirando una
+    sola pasada. **Se prueba corriendo TRES pasadas y exigiendo que la tercera no se mueva.**
+
 ## 6. Utillajes de apriete — las decisiones de CONCEPTO (antes de la primera línea)
 
 Todas del virolador del Upper Trim (08/2026). Son las que cambian el diseño de raíz; las
