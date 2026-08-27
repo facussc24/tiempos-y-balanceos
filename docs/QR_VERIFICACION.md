@@ -55,7 +55,7 @@ documento?"*. El nuestro responde tambien *"es este archivo, sin tocar?"*.
 | Tamaño y posicion | **26,46 mm**, 25,83 mm del borde derecho, 30,91 mm del pie — identico |
 | Contenido | `https://facussc24.github.io/tiempos-y-balanceos/v.html#<24 hex>` = 78 bytes |
 | El token | 12 bytes / 96 bits: `HMAC-SHA256(clave, doc_id + hash del PDF)`, truncado |
-| Registro | `docs/verificacion/registro.json` (fuente) → `public/verificacion/registro.json` (lo que sirve la web) |
+| Registro | `public/verificacion/registro.json` — uno solo, y es el que sirve la web |
 | Pagina de verificacion | `public/v.html` — publica, sin login, sin backend |
 
 ### El token
@@ -104,14 +104,29 @@ python scripts/_qrVerificacion.py sellar "<archivo>" \
 # comprobarlo contra el registro
 python scripts/_qrVerificacion.py verificar "<archivo>"
 
-# ver / republicar el registro
+# dar de baja un documento superado (la copia vieja deja de dar verde)
+python scripts/_qrVerificacion.py anular <token> --estado anulado
+
+# ver el registro
 python scripts/_qrVerificacion.py registro --listar
-python scripts/_qrVerificacion.py registro --publicar
 python scripts/_qrVerificacion.py registro --sql     # tabla, si algun dia va a Supabase
+
+# probar el ciclo entero sin tocar nada real (21 casos)
+python scripts/_qrVerificacion.py selftest
 ```
 
-Despues de sellar hay que **pushear** el registro publicado: la pagina lo lee de GitHub Pages,
+Despues de sellar o anular hay que **pushear**: la pagina lee el registro de GitHub Pages,
 asi que un documento sellado y no pusheado da "no registrado".
+
+### Cuando sale una revision nueva
+
+Sellar la revision nueva **con `--forzar` sobre el documento sellado anterior** marca sola la
+version vieja como `reemplazado` y le anota cual la reemplaza: la copia que siga circulando
+deja de verificar "vigente" y la pagina avisa que hay una revision posterior. Si un documento
+se da de baja sin reemplazo, `anular <token>`.
+
+**Esto importa mas de lo que parece:** sin eso, un PDF superado que ande dando vueltas se
+sigue verificando como bueno para siempre — el QR es el mismo y el archivo no cambio.
 
 ### La leyenda del documento
 
@@ -133,4 +148,7 @@ del laboratorio. En la pagina de declaraciones:
 - **No vale sin el push.** Sellar escribe el registro local; hasta que no se publica, la pagina
   no lo encuentra.
 - **El registro es publico y por eso solo lleva lo que puede ver un tercero**: identificacion
-  del documento, emisor, fecha, estado y hash. Nada mas.
+  del documento, emisor, fecha, estado y hash. Nada mas — `guardar_registro()` aborta si
+  aparece un campo fuera de esa lista. Al principio habia dos archivos, uno "interno" con el
+  hash previo al sello y otro publicado sin el; los dos vivian en el mismo repo publico, asi
+  que el filtro no filtraba nada. **Se saco el campo en vez de esconderlo.**

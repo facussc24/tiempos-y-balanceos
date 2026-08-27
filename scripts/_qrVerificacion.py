@@ -24,7 +24,13 @@ Uso:
   python scripts/_qrVerificacion.py sellar    "<archivo>" --tipo AMFE --numero 172 --rev 0 \
          --titulo "AMFE de proceso ductos" --producto "Ductos Patagonia" --emisor "Ingenieria"
   python scripts/_qrVerificacion.py verificar "<archivo>"
+  python scripts/_qrVerificacion.py anular    <token> [--estado anulado|reemplazado]
   python scripts/_qrVerificacion.py registro  [--listar | --sql]
+  python scripts/_qrVerificacion.py selftest
+
+El registro (`public/verificacion/registro.json`) se sirve por HTTP y ademas vive en un
+repo publico: TODO lo que se escribe ahi es publico. Lo unico que no sale del disco es la
+clave de `.qr-secret`. Despues de sellar o anular hay que PUSHEAR, o la pagina no lo ve.
 """
 from __future__ import annotations
 
@@ -50,8 +56,11 @@ import segno
 # quiet zone de 4 modulos, en la portada contra el margen derecho.
 # --------------------------------------------------------------------------------------
 RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-REGISTRO = os.path.join(RAIZ, "docs", "verificacion", "registro.json")      # fuente interna
-PUBLICADO = os.path.join(RAIZ, "public", "verificacion", "registro.json")  # lo que sirve la web
+# Un solo registro, y es el que sirve la web. Al principio habia dos —uno "interno" con el
+# hash previo al sello y otro publicado sin el— pero los dos vivian en el mismo repo, que es
+# publico: el filtro no filtraba nada. Se saco el campo en vez de esconderlo. Lo unico que
+# de verdad no se publica es la clave, y esa esta afuera del repo.
+REGISTRO = os.path.join(RAIZ, "public", "verificacion", "registro.json")
 ARCHIVO_CLAVE = os.path.join(RAIZ, ".qr-secret")  # gitignoreado
 
 URL_BASE = "https://facussc24.github.io/tiempos-y-balanceos/v.html#"
@@ -140,28 +149,21 @@ def cargar_registro() -> dict:
     return {"documentos": {}}
 
 
-PUBLICOS = ("doc_id", "tipo", "numero", "revision", "titulo", "producto", "emisor",
-            "empresa", "emitido", "archivo", "sha256", "estado")
+# Todo lo que se escribe aca es publico por definicion: el registro se sirve por HTTP y ademas
+# esta en un repo publico. Que no entre nada que no querriamos que lea un tercero.
+CAMPOS = ("doc_id", "tipo", "numero", "revision", "titulo", "producto", "emisor",
+          "empresa", "emitido", "archivo", "sha256", "estado", "reemplazado_por", "url")
 
 
 def guardar_registro(reg: dict) -> None:
+    reg["actualizado"] = datetime.now(timezone.utc).astimezone().isoformat(timespec="seconds")
+    for token, d in reg["documentos"].items():
+        sobra = set(d) - set(CAMPOS)
+        if sobra:
+            raise SystemExit(f"el registro es publico y {token} trae campos de mas: {sobra}")
     os.makedirs(os.path.dirname(REGISTRO), exist_ok=True)
     with open(REGISTRO, "w", encoding="utf-8") as f:
         json.dump(reg, f, ensure_ascii=False, indent=2)
-    publicar_registro(reg)
-
-
-def publicar_registro(reg: dict | None = None) -> str:
-    """Copia publicable del registro: la que lee v.html. Sin el hash previo al sello,
-    que no le sirve a nadie de afuera y solo delata como se arma el documento."""
-    reg = reg or cargar_registro()
-    pub = {"actualizado": datetime.now(timezone.utc).astimezone().isoformat(timespec="seconds"),
-           "documentos": {t: {k: v for k, v in d.items() if k in PUBLICOS}
-                          for t, d in reg["documentos"].items()}}
-    os.makedirs(os.path.dirname(PUBLICADO), exist_ok=True)
-    with open(PUBLICADO, "w", encoding="utf-8") as f:
-        json.dump(pub, f, ensure_ascii=False, indent=2)
-    return PUBLICADO
 
 
 # ======================================================================================
@@ -329,6 +331,8 @@ def hacer_qr_png(payload: str, lado_mm: float, dpi: int) -> tuple[bytes, dict]:
 
 def sellar(path: str, meta: dict, salida: str | None, pagina: int,
            forzar: bool = False) -> dict:
+    anteriores = [q for q in analizar_silencioso(path)
+                  if q["payload"].startswith(URL_BASE)]
     motivo = _es_ajeno(path)
     if motivo and not forzar:
         print("\n[ABORTA] Este PDF " + motivo)
@@ -355,11 +359,17 @@ def sellar(path: str, meta: dict, salida: str | None, pagina: int,
     y1 = pag.rect.height - MARGEN_INF_MM * MM_PT
     rect = fitz.Rect(x1 - lado_pt, y1 - lado_pt, x1, y1)
 
-    # No tapar contenido: si donde va el QR ya hay texto, se avisa y se sube al margen.
+    # No tapar contenido: si donde va el QR ya hay texto se prueba el margen de arriba, y si
+    # ese tampoco esta libre se avisa en vez de pisar el documento callado.
     if pag.get_text("text", clip=rect).strip():
-        print("[aviso] habia texto donde iba el QR: se corrio al margen superior derecho")
-        y1 = MARGEN_INF_MM * MM_PT + lado_pt
-        rect = fitz.Rect(x1 - lado_pt, y1 - lado_pt, x1, y1)
+        alto = fitz.Rect(x1 - lado_pt, MARGEN_INF_MM * MM_PT,
+                         x1, MARGEN_INF_MM * MM_PT + lado_pt)
+        if pag.get_text("text", clip=alto).strip():
+            print("[AVISO] las dos posiciones del QR tienen texto encima: queda abajo a la")
+            print("        derecha y PISA contenido. Mira la portada antes de mandarlo.")
+        else:
+            print("[aviso] habia texto donde iba el QR: se corrio al margen superior derecho")
+            rect = alto
 
     pag.insert_image(rect, stream=png, keep_proportion=True)
 
@@ -367,12 +377,28 @@ def sellar(path: str, meta: dict, salida: str | None, pagina: int,
     pag.insert_textbox(caja, f"Verificar: {url}", fontsize=5.2, fontname="helv",
                        color=(0.35, 0.35, 0.35), align=fitz.TEXT_ALIGN_RIGHT)
 
+    # Nunca guardar sobre el archivo que PyMuPDF tiene abierto: si el nombre no termina en
+    # .pdf el sub() no cambia nada y destino seria el mismo path.
     destino = salida or re.sub(r"\.pdf$", "_sellado.pdf", path, flags=re.I)
+    if os.path.abspath(destino) == os.path.abspath(path):
+        destino = path + "_sellado.pdf"
     doc.save(destino, garbage=4, deflate=True)
     doc.close()
 
     hash_final = sha256(destino)
     reg = cargar_registro()
+
+    # Re-sello de un documento propio: la version anterior deja de estar vigente. Sin esto,
+    # una copia vieja que siga circulando se verifica como buena para siempre.
+    reemplazados = []
+    for q in anteriores:
+        viejo = q["payload"][len(URL_BASE):].strip().upper()
+        d = reg["documentos"].get(viejo)
+        if d and viejo != token and d.get("estado") == "vigente":
+            d["estado"] = "reemplazado"
+            d["reemplazado_por"] = token
+            reemplazados.append(viejo)
+
     reg["documentos"][token] = {
         "doc_id": doc_id, "tipo": meta["tipo"], "numero": str(meta["numero"]),
         "revision": str(meta["rev"]), "titulo": meta.get("titulo", ""),
@@ -380,7 +406,7 @@ def sellar(path: str, meta: dict, salida: str | None, pagina: int,
         "empresa": "Barack Mercosul S.R.L.",
         "emitido": datetime.now(timezone.utc).astimezone().isoformat(timespec="seconds"),
         "archivo": os.path.basename(destino),
-        "sha256": hash_final, "sha256_sin_qr": hash_base,
+        "sha256": hash_final,
         "estado": "vigente", "url": url,
     }
     guardar_registro(reg)
@@ -395,8 +421,11 @@ def sellar(path: str, meta: dict, salida: str | None, pagina: int,
           f"pagina {pagina}")
     print(f"  SHA-256 ..... {hash_final}")
     print(f"  registro .... {os.path.relpath(REGISTRO, RAIZ)}")
+    for viejo in reemplazados:
+        print(f"  reemplaza ... {viejo} (queda como 'reemplazado', ya no verifica vigente)")
     print(f"\n  Leyenda para el pie del documento:\n  \"{LEYENDA}\"")
-    return reg["documentos"][token]
+    print("  Acordate de pushear: la pagina lee el registro desde GitHub Pages.")
+    return {**reg["documentos"][token], "_sha256_sin_qr": hash_base}
 
 
 # ======================================================================================
@@ -465,7 +494,6 @@ create table if not exists documentos_verificacion (
   emitido        timestamptz not null default now(),
   archivo        text,
   sha256         text not null,
-  sha256_sin_qr  text,
   estado         text not null default 'vigente'
                  check (estado in ('vigente','anulado','reemplazado')),
   reemplazado_por text references documentos_verificacion(token)
@@ -483,8 +511,33 @@ def mostrar_registro(listar: bool, sql: bool) -> None:
     reg = cargar_registro()["documentos"]
     print(f"\n{len(reg)} documentos en {os.path.relpath(REGISTRO, RAIZ)}")
     for token, d in reg.items():
+        marca = "" if d["estado"] == "vigente" else f"  -> {d.get('reemplazado_por', '')}"
         print(f"  {token}  {d['doc_id']:<24} {d['estado']:<12} {d['emitido'][:10]}  "
-              f"{d['titulo']}")
+              f"{d['titulo']}{marca}")
+
+
+def anular(token: str, estado: str, reemplazado_por: str | None) -> int:
+    """Un documento superado no puede seguir verificando 'vigente': la copia vieja sigue
+    circulando y el QR es el mismo. Se marca aca, y con el push deja de dar verde."""
+    token = token.strip().upper()
+    reg = cargar_registro()
+    d = reg["documentos"].get(token)
+    if not d:
+        print(f"El token {token} no figura en el registro.")
+        return 1
+    if reemplazado_por:
+        nuevo = reemplazado_por.strip().upper()
+        if nuevo not in reg["documentos"]:
+            print(f"El token de reemplazo {nuevo} no figura en el registro: sella primero el "
+                  f"documento nuevo.")
+            return 1
+        d["reemplazado_por"] = nuevo
+    d["estado"] = estado
+    guardar_registro(reg)
+    print(f"\n{token} — {d['doc_id']} quedo como '{estado}'"
+          + (f", reemplazado por {d['reemplazado_por']}" if d.get("reemplazado_por") else ""))
+    print("  Pushea para que la pagina lo refleje.")
+    return 0
 
 
 # ======================================================================================
@@ -492,11 +545,13 @@ def mostrar_registro(listar: bool, sql: bool) -> None:
 # ======================================================================================
 def selftest() -> int:
     import tempfile
-    global REGISTRO, PUBLICADO
-    reg_real, pub_real = REGISTRO, PUBLICADO
+    global REGISTRO, ARCHIVO_CLAVE
+    reg_real, clave_real = REGISTRO, ARCHIVO_CLAVE
     tmp = tempfile.mkdtemp(prefix="qrtest_")
     REGISTRO = os.path.join(tmp, "registro.json")
-    PUBLICADO = os.path.join(tmp, "publicado.json")
+    # Tambien la clave: en un clon fresco, correr el selftest generaba y escribia la clave
+    # REAL del repo como efecto colateral. Un test no crea la clave de produccion.
+    ARCHIVO_CLAVE = os.path.join(tmp, "clave")
     ok = fallas = 0
 
     def caso(nombre, cond):
@@ -563,13 +618,43 @@ def selftest() -> int:
         except SystemExit as e:
             caso("sellar un papel ajeno aborta con codigo 2", e.code == 2)
 
-        caso("el registro publicado no lleva el hash previo al sello",
-             "sha256_sin_qr" not in json.load(open(PUBLICADO, encoding="utf-8"))
-             ["documentos"][token])
+        # El registro se sirve por HTTP y ademas vive en un repo publico: no alcanza con
+        # "filtrar al publicar", no puede existir un campo que no querriamos que se lea.
+        guardado = json.load(open(REGISTRO, encoding="utf-8"))["documentos"][token]
+        caso("el registro no guarda el hash previo al sello", "sha256_sin_qr" not in guardado)
+        caso("el registro no tiene ningun campo fuera de los declarados",
+             not (set(guardado) - set(CAMPOS)))
         caso("el token es determinista",
-             calcular_token(r["doc_id"], r["sha256_sin_qr"]) == token)
+             calcular_token(r["doc_id"], r["_sha256_sin_qr"]) == token)
+
+        # Un documento superado no puede seguir verificando vigente.
+        resellado = os.path.join(tmp, "resellado.pdf")
+        r2 = sellar(sellado, {"tipo": "TEST", "numero": "1", "rev": "1", "titulo": "prueba rev1",
+                              "producto": "", "emisor": "Ingenieria"}, resellado, 1, forzar=True)
+        docs = cargar_registro()["documentos"]
+        caso("re-sellar marca la version anterior como reemplazada",
+             docs[token]["estado"] == "reemplazado")
+        caso("y deja apuntado cual la reemplaza",
+             docs[token].get("reemplazado_por") == r2["url"][len(URL_BASE):])
+        caso("el PDF viejo ya no verifica vigente", verificar(sellado) == 1)
+
+        caso("anular un token inexistente da 1", anular("F" * (TOKEN_BYTES * 2), "anulado", None) == 1)
+        nuevo = r2["url"][len(URL_BASE):]
+        caso("anular un token existente da 0", anular(nuevo, "anulado", None) == 0)
+        caso("y el anulado no verifica vigente", verificar(resellado) == 1)
+
+        # Un nombre que no termina en .pdf no puede hacer que se guarde sobre si mismo.
+        raro = os.path.join(tmp, "sin_extension")
+        d = fitz.open()
+        d.new_page()
+        d.save(raro)
+        d.close()
+        antes = sha256(raro)
+        sellar(raro, {"tipo": "TEST", "numero": "3", "rev": "0", "titulo": "",
+                      "producto": "", "emisor": "Ingenieria"}, None, 1)
+        caso("sellar no pisa el archivo de entrada", sha256(raro) == antes)
     finally:
-        REGISTRO, PUBLICADO = reg_real, pub_real
+        REGISTRO, ARCHIVO_CLAVE = reg_real, clave_real
 
     print(f"\nok={ok}  fallas={fallas}")
     return 1 if fallas else 0
@@ -603,11 +688,16 @@ def main() -> int:
 
     sub.add_parser("selftest", help="probar el ciclo entero sin tocar el registro real")
 
+    n = sub.add_parser("anular", help="marcar un documento como anulado o reemplazado")
+    n.add_argument("token")
+    n.add_argument("--estado", choices=("anulado", "reemplazado", "vigente"),
+                   default="anulado")
+    n.add_argument("--reemplazado-por", default=None,
+                   help="token del documento que lo reemplaza (tiene que estar sellado)")
+
     r = sub.add_parser("registro", help="ver el registro de documentos emitidos")
     r.add_argument("--listar", action="store_true")
     r.add_argument("--sql", action="store_true")
-    r.add_argument("--publicar", action="store_true",
-                   help="regenerar public/verificacion/registro.json")
 
     args = ap.parse_args()
 
@@ -624,10 +714,9 @@ def main() -> int:
         return verificar(args.pdf)
     if args.cmd == "selftest":
         return selftest()
+    if args.cmd == "anular":
+        return anular(args.token, args.estado, args.reemplazado_por)
     if args.cmd == "registro":
-        if args.publicar:
-            print("publicado:", os.path.relpath(publicar_registro(), RAIZ))
-            return 0
         mostrar_registro(args.listar, args.sql)
         return 0
     return 1

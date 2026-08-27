@@ -136,9 +136,13 @@
       var vigente = d.estado === 'vigente';
       pintar(vigente ? 'e-ok' : 'e-duda',
         vigente ? 'Documento emitido por Barack Mercosul S.R.L.'
-                : 'Documento ' + d.estado,
+                : (d.estado === 'reemplazado' ? 'Documento reemplazado por una version nueva'
+                                              : 'Documento anulado'),
         vigente ? 'Figura en el registro de Ingenieria. Los datos son los de abajo.'
-                : 'Figura en el registro pero ya no esta vigente. Pedi la version actual.');
+                : (d.estado === 'reemplazado'
+                   ? 'Este ejemplar salio de Barack pero ya no es el vigente: hay una revision '
+                     + 'posterior. No lo uses, pedinos la version actual.'
+                   : 'Este ejemplar salio de Barack pero fue dado de baja. No lo uses.'));
 
       fila('Documento', d.doc_id);
       if (d.titulo)   fila('Titulo', d.titulo);
@@ -152,6 +156,7 @@
       })(d.emitido));
       fila('Emisor', d.emisor + ' — ' + d.empresa);
       fila('Estado', d.estado);
+      if (d.reemplazado_por) fila('Reemplazado por', d.reemplazado_por, true);
       fila('SHA-256', d.sha256, true);
       ficha.hidden = false;
 
