@@ -4,14 +4,7 @@ Archivo mantenido por Claude Code. Se lee COMPLETO al inicio de cada sesion, por
 contiene SOLO lo accionable que NO esta ya codificado como regla o gate ejecutable.
 La historia completa de cada incidente vive en los snapshots.
 
-- **Historico completo** (2026-03-30 a 2026-07-02): `docs/_archive/LECCIONES_APRENDIDAS_2026H1_completo.md`
-- **Snapshot pre-poda 2026-07-23**: `docs/_archive/LECCIONES_APRENDIDAS_snapshot_2026-07-23.md`
-- **Snapshot pre-poda 2026-08-09** (detalle integro de todo lo destilado abajo): `docs/_archive/LECCIONES_snapshot_2026-08-09.md`
-- **Snapshot pre-consolidacion 2026-08-20** (tanda AMFE 150 integra): `docs/_archive/LECCIONES_snapshot_2026-08-20.md`
-- **Snapshot pre-consolidacion 2026-08-21** (version larga de todo lo de agosto): `docs/_archive/LECCIONES_snapshot_2026-08-21.md`
-- **Snapshot pre-consolidacion 2026-08-24** (version larga de las 4 lecciones fusionadas en "el nombre no es el contenido"): `docs/_archive/LECCIONES_snapshot_2026-08-24.md`
-- **Snapshot pre-consolidacion 2026-08-27** (version larga del bullet de "lo mismo pero simetrico"): `docs/_archive/LECCIONES_snapshot_2026-08-27.md`
-- **Snapshot pre-consolidacion 2026-08-28** (version larga de "reconstruir como se equivoco un tercero", graduada a `core-prohibiciones` §1 + gate `causas-ajenas-guard.sh`): `docs/_archive/LECCIONES_snapshot_2026-08-28.md`
+- **Snapshots** (la version larga de cada consolidacion, en `docs/_archive/`): [2026H1](docs/_archive/LECCIONES_APRENDIDAS_2026H1_completo.md) · [2026-07-23](docs/_archive/LECCIONES_APRENDIDAS_snapshot_2026-07-23.md) · [2026-08-09](docs/_archive/LECCIONES_snapshot_2026-08-09.md) · [2026-08-20](docs/_archive/LECCIONES_snapshot_2026-08-20.md) · [2026-08-21](docs/_archive/LECCIONES_snapshot_2026-08-21.md) · [2026-08-24](docs/_archive/LECCIONES_snapshot_2026-08-24.md) · [2026-08-27](docs/_archive/LECCIONES_snapshot_2026-08-27.md) · [2026-08-28](docs/_archive/LECCIONES_snapshot_2026-08-28.md). El historico completo 2026-03-30 a 07-02 es el primero de la lista.
 - **Tabla incidente → regla**: `docs/_archive/INCIDENTES_REGLAS_AMFE.md`
 - Lo ya codificado NO se repite aca: reglas de `.claude/rules/` y sus gates ejecutables
   (amfe.md + amfeValidator, database.md, verify-supabase-live.md, no-pfd-no-ho.md, techo-agentes.md, cad-3d.md).
