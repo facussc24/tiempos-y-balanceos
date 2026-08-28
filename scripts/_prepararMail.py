@@ -46,11 +46,31 @@ def preparar(cfg):
         sys.exit(1)
 
     ol = win32.Dispatch('Outlook.Application')
-    mail = ol.CreateItem(0)  # olMailItem
+    ns = ol.GetNamespace('MAPI')
+
+    # "responder_a": texto del asunto de un mail YA ENVIADO. La respuesta sale sobre el mismo
+    # hilo (asunto "RE: ...", mismo ConversationIndex), que es lo que ve el destinatario como
+    # continuacion y no como mail suelto.
+    # OJO: `Reply()` sobre un item de Enviados pone en Para al REMITENTE, o sea a nosotros
+    # mismos. Por eso el Para se sobreescribe SIEMPRE, explicito, mas abajo.
+    if cfg.get('responder_a'):
+        enviados = ns.GetDefaultFolder(5).Items
+        enviados.Sort('[SentOn]', True)
+        clave = cfg['responder_a'].lower()
+        cands = [x for x in enviados if clave in str(getattr(x, 'Subject', '') or '').lower()]
+        if len(cands) != 1:
+            print(f'ABORTADO: esperaba 1 mail enviado que diga "{cfg["responder_a"]}" '
+                  f'y hay {len(cands)}.')
+            for x in cands[:10]:
+                print(f'  - {x.SentOn} | {x.Subject} | {x.To}')
+            sys.exit(1)
+        print(f'respondiendo sobre: {cands[0].SentOn} | {cands[0].Subject}')
+        mail = cands[0].Reply()
+    else:
+        mail = ol.CreateItem(0)  # olMailItem
 
     # Resolver cada destinatario contra la libreta ANTES de mostrar el mail: si un nombre
     # no resuelve, es mejor saberlo aca que descubrirlo al apretar Enviar.
-    ns = ol.GetNamespace('MAPI')
     sin_resolver = []
     for nombre in cfg.get('para', []) + cfg.get('cc', []):
         r = ns.CreateRecipient(nombre)
@@ -64,9 +84,9 @@ def preparar(cfg):
         sys.exit(1)
 
     mail.To = '; '.join(cfg.get('para', []))
-    if cfg.get('cc'):
-        mail.CC = '; '.join(cfg['cc'])
-    mail.Subject = cfg['asunto']
+    mail.CC = '; '.join(cfg.get('cc', []))
+    if cfg.get('asunto'):
+        mail.Subject = cfg['asunto']   # en una respuesta se omite: vale el "RE: ..." de Outlook
 
     # GetInspector fuerza a Outlook a cargar la firma en el HTML del cuerpo; el texto se
     # antepone para que la firma quede debajo, como en un mail escrito a mano.

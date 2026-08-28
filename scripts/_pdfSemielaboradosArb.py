@@ -22,8 +22,17 @@ Criterio de seleccion (no es libre: sale del esquema de codificacion de Barack, 
 difundio el 26/05/2026 -> P1 Depto/Proceso + P2 Familia+SKU base + version de ingenieria):
   - `<PROCESO>-<FAMILIA><NNNN>-V<n>`  con FAMILIA de las del proyecto
   - `N <nnn> - SM`  (semiterminados de top roll, formato pedido por C. Baptista el 08/06/2026)
+  - la lista `extra`: los que PERTENECEN y no siguen el esquema
 Los que matchean el patron pero son de OTRO proyecto se descartan por descripcion, y el
 descarte se imprime en consola para poder auditarlo a ojo.
+
+⚠ POR QUE HAY UNA LISTA `extra` Y UNA RED QUE LA CUIDA (28/08/2026)
+El listado salio por mail con 21 codigos y le faltaban 2: el sustrato del IP Pad esta dado
+de alta con el part number de VW (`2HC.858.417.B/C`), no con el esquema. **Un patron solo
+encuentra lo que sigue el patron**, y lo que se cae no hace ruido. Por eso el criterio deja
+de ser solo un regex — hay lista canonica — y por eso existe `sustratos_sueltos()`, que
+mira el otro lado (la DESCRIPCION del maestro de insumos) y aborta si aparece un sustrato
+del proyecto que la seleccion no tiene. Probado en rojo: sin el IP en la lista, lo caza.
 """
 import argparse
 import datetime
@@ -59,6 +68,15 @@ PROYECTOS = {
                      'APB': 'APOYABRAZO DE PUERTA'},
         'conjunto_sm': 'TOP ROLL',   # los `N <nnn> - SM` son top roll (mail C. Baptista 08/06)
         'ajenos': ('AMAROK', 'MIRGOR', 'TAOS', 'FOCUS', 'P703', 'HILUX', 'TOYOTA'),
+        # Los que PERTENECEN pero no siguen el esquema de codificacion. Al IP Pad le dieron
+        # de alta el sustrato con el part number de VW, no con `INY-<familia><nnnn>-V1`.
+        # Una lista canonica, no un regex mas ancho: el regex fue justo lo que los perdio.
+        'extra': {'2HC.858.417.B': 'IP PAD',
+                  '2HC.858.417.C': 'IP PAD'},
+        # Red de seguridad: el prefijo de part number del proyecto y su nombre. Cualquier
+        # SUSTRATO del maestro de insumos que caiga aca y no este elegido, aborta.
+        'prefijos_pn': ('2HC',),
+        'marca': 'PATAGONIA',
     },
 }
 
@@ -140,9 +158,49 @@ def seleccionar(articulos, proyecto, proceso):
                 descartados.append((cod, desc, 'la descripcion dice %s' % ajeno))
                 continue
             elegidos.append((cod, desc, cfg['conjunto_sm']))
-    orden = list(cfg['familias'].values())
+    for cod, conjunto in cfg.get('extra', {}).items():
+        if cod in articulos:
+            elegidos.append((cod, articulos[cod], conjunto))
+    orden = list(cfg['familias'].values()) + sorted(set(cfg.get('extra', {}).values()))
     elegidos.sort(key=lambda e: (orden.index(e[2]) if e[2] in orden else 99, e[0]))
     return elegidos, descartados
+
+
+def candidatos_sueltos(articulos, insumos, elegidos, proyecto):
+    """Codigos del proyecto con pinta de semielaborado que la seleccion NO agarro.
+
+    La red que faltaba. El criterio principal es un patron de codigo, y un patron solo
+    encuentra lo que sigue el patron: el sustrato del IP Pad se dio de alta con el part
+    number de VW y se cayo en silencio de un listado que ya se habia mandado. Esto mira
+    el otro lado — los maestros — y aborta antes de generar nada.
+
+    Dos señales, y la primera es la fuerte:
+
+    1. **Esta en los DOS maestros.** Un semielaborado se da de alta como ARTICULO porque lo
+       fabricamos nosotros, y como INSUMO porque ademas se consume. Un componente COMPRADO
+       existe solo como insumo. Verificado el 28/08 sobre los `2HC.*` del proyecto: carcasa
+       difusor, posavasos, clip, tornillo, logo airbag y rejilla de altavoz son insumo-solo;
+       el sustrato del IP Pad esta en los dos. Esto es lo que separa `2HC.885.725` /
+       `2HC.885.925` (marco posavasos y estructura interna: se consumen con modulo INY
+       porque son insertos que van al molde, pero NO los hacemos) de un semielaborado.
+    2. La descripcion dice SUSTRATO — mas debil, pero atrapa el caso mal dado de alta.
+    """
+    cfg = PROYECTOS[proyecto]
+    ya = {c for c, _, _ in elegidos}
+    marca, prefijos = cfg.get('marca', ''), cfg.get('prefijos_pn', ())
+    sueltos = []
+    for cod in sorted(set(articulos) | set(insumos)):
+        if cod in ya:
+            continue
+        desc_a, desc_i = articulos.get(cod, ''), insumos.get(cod, '')
+        if not (marca in (desc_a + desc_i).upper() or cod.startswith(prefijos)):
+            continue
+        en_los_dos = cod in articulos and cod in insumos
+        dice_sustrato = 'SUSTRATO' in (desc_a + desc_i).upper()
+        if en_los_dos or dice_sustrato:
+            motivo = 'esta en los dos maestros' if en_los_dos else 'la descripcion dice SUSTRATO'
+            sueltos.append((cod, desc_i or desc_a, motivo))
+    return sueltos
 
 
 def verificar_export(path, minimo):
@@ -163,11 +221,10 @@ def fecha_archivo(path):
     return datetime.datetime.fromtimestamp(os.path.getmtime(path)).strftime('%d/%m/%Y %H:%M')
 
 
-def pagina(doc, titulo, filas, pies):
+def pagina(doc, titulo, subtitulo, filas, pies):
     p = doc.new_page(width=ANCHO, height=ALTO)
     p.insert_text((28, 30), titulo, fontname='cobo', fontsize=FS + 2.5)
-    p.insert_text((28, 46), 'SEMIELABORADOS DE INYECCION DADOS DE ALTA EN ARB',
-                  fontname='cobo', fontsize=FS)
+    p.insert_text((28, 46), subtitulo, fontname='cobo', fontsize=FS)
     y = 60
     for t, x in COLS:
         p.insert_text((x, y), t, fontname='cobo', fontsize=FS)
@@ -214,6 +271,9 @@ def main():
     ap.add_argument('--proyecto', required=True, choices=sorted(PROYECTOS))
     ap.add_argument('--proceso', default='INY', help='prefijo de proceso del codigo (default INY)')
     ap.add_argument('--salida', required=True)
+    ap.add_argument('--solo', help='codigos separados por coma: imprime SOLO esos, como '
+                                   'complemento de un listado ya entregado. Los gates '
+                                   'corren igual sobre la seleccion COMPLETA.')
     ap.add_argument('--articulo', default=ARTICULO)
     ap.add_argument('--insumos', default=INSUMOS)
     ap.add_argument('--relaciones', default=RELACIONES)
@@ -233,6 +293,19 @@ def main():
                  + ''.join('        - %s\n' % p for p in problemas))
     gates.append('los 3 exports enteros')
 
+    # Los tres exports se sacan del arb por separado y se re-exportan con distinta frecuencia.
+    # `seleccionar()` mira SOLO el maestro de articulos: si ese quedo viejo, un codigo dado de
+    # alta despues no existe para el script y ningun gate lo nota. No aborta —Fak no siempre
+    # puede re-exportar en el momento— pero se avisa fuerte, y las 3 fechas van en el PDF.
+    edades = {p: os.path.getmtime(p) for p in (args.articulo, args.insumos, args.relaciones)}
+    dias = (max(edades.values()) - min(edades.values())) / 86400.0
+    if dias > 7:
+        print('\n*** OJO: los exports NO son de la misma fecha (%.0f dias de diferencia).' % dias)
+        for p, t in sorted(edades.items(), key=lambda kv: kv[1]):
+            print('    %-14s %s' % (os.path.basename(p), fecha_archivo(p)))
+        print('    La seleccion sale del maestro de ARTICULOS: lo dado de alta despues de esa')
+        print('    fecha no aparece. Re-exportarlo si el listado tiene que estar al dia.\n')
+
     articulos = leer_articulos(args.articulo)
     insumos = leer_insumos(args.insumos)
     print('maestro de articulos: %d  |  maestro de insumos: %d' % (len(articulos), len(insumos)))
@@ -251,7 +324,17 @@ def main():
         sys.exit('ABORTA: estos codigos no tienen descripcion en el maestro: %s' % sin_desc)
     gates.append('todas las descripciones presentes')
 
-    # -- GATE 3: el listado tiene que entrar en la hoja --
+    # -- GATE 3: ningun candidato del proyecto afuera de la seleccion --
+    sueltos = candidatos_sueltos(articulos, insumos, elegidos, args.proyecto)
+    if sueltos:
+        sys.exit('ABORTA: los maestros tienen codigos de este proyecto con pinta de '
+                 'semielaborado que la seleccion NO agarro. Hay que resolverlos (meterlos '
+                 'en la lista canonica, o descartarlos con fundamento) antes de generar '
+                 'nada:\n'
+                 + ''.join('        - %-18s %-44s (%s)\n' % s for s in sueltos))
+    gates.append('sin candidatos del proyecto sueltos')
+
+    # -- GATE 4: el listado tiene que entrar en la hoja --
     # La pagina es una sola. Si el listado creciera (otro proyecto, mas familias), las filas
     # de abajo se irian fuera del papel: el gate de relectura las cazaria igual, pero diria
     # "falta el codigo X" en vez de decir que sobran filas. Se aborta ACA, explicando por que.
@@ -266,6 +349,18 @@ def main():
 
     filas = [(c, d, conj, 'Articulo e Insumo' if c in insumos else 'Articulo')
              for c, d, conj in elegidos]
+
+    # --solo recorta DESPUES de los gates: se valida el universo completo y se imprime una
+    # parte. Asi un complemento no puede nacer de una seleccion que no cerraba.
+    subtitulo = 'SEMIELABORADOS DE INYECCION DADOS DE ALTA EN ARB'
+    if args.solo:
+        pedidos = [c.strip() for c in args.solo.split(',') if c.strip()]
+        faltan = [c for c in pedidos if c not in {f[0] for f in filas}]
+        if faltan:
+            sys.exit('ABORTA: --solo pide codigos que no estan en la seleccion: %s' % faltan)
+        filas = [f for f in filas if f[0] in pedidos]
+        subtitulo = ('SEMIELABORADOS DE INYECCION - COMPLEMENTO DEL LISTADO DEL %s'
+                     % datetime.date.today().strftime('%d/%m/%Y'))
 
     print('\nSELECCION (%d codigos):' % len(filas))
     for c, d, conj, alta in filas:
@@ -284,11 +379,11 @@ def main():
 
     # El PDF se arma entero en memoria y se valida ANTES de tocar el disco.
     doc = fitz.open()
-    pagina(doc, PROYECTOS[args.proyecto]['nombre'], filas, pies)
+    pagina(doc, PROYECTOS[args.proyecto]['nombre'], subtitulo, filas, pies)
     crudo = doc.tobytes()
     doc.close()
 
-    # -- GATE 4: releer el PDF y confirmar que todo llego a la hoja --
+    # -- GATE 5: releer el PDF y confirmar que todo llego a la hoja --
     perdidas = validar_pdf(crudo, filas)
     if perdidas:
         sys.exit('ABORTA: hay datos del origen que no llegaron al PDF. No se escribio nada.\n'
