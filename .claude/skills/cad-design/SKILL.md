@@ -624,5 +624,52 @@ trampas de código de arriba no salvan un concepto equivocado.
     a lo largo del borde no cambia nada—: es correr la MISMA simplificacion con la tolerancia
     20 veces mas floja y exigir que la mida.
 
+33. **Antes de agregarle un MECANISMO a un dispositivo, barre los parametros ESTATICOS que
+    hacen lo mismo.** (2026-08-28, caballete de adhesivado.) El basculante compraba +4,6
+    puntos de cobertura en el frente y +14,2 en el borde, y con eso la discusion era "¿vale
+    un eje con rodamientos?". La pregunta estaba mal planteada.
+    - **Lo que la desbloqueo fue separar dos causas que el porcentaje mezcla:** de lo que
+      faltaba, ¿cuanto es *nadie puede llegar ahi* y cuanto es *algo se interpone*? Se mide
+      tirando los rayos contra cada cuerpo por separado en vez de contra la escena
+      concatenada. Dio **16,71 de 16,75 cm2 del primer tipo**: el marco, las piezas vecinas
+      y los nidos vecinos juntos tapaban 0,04. **Cuando lo que falta no lo tapa nadie, la
+      respuesta no es sacar un obstaculo: es cambiar como esta PRESENTADA la pieza.**
+    - La inclinacion de las caras era 45 grados **por decision, no por calculo**, y cambiarla
+      no cuesta nada: es como se sueldan los largueros. Barrida de 15 a 75 grados, a 30 el
+      caballete FIJO da 98,7 % de frente y 99,5 % de borde — lo mismo que el basculante — y
+      el mecanismo pasa a valer **+0,2**.
+    - **Y el escalon se corre con el parametro que uno asumio.** Repetido con conos de
+      pistola de +/-70, 85, 100 y 120 grados, el angulo al que aparece el salto se mueve:
+      con +/-85 hay que bajar a 20 grados, y con +/-70 no llega ninguno. O sea que la
+      conclusion honesta no es "30 grados" sino **"inclinacion y alcance del operario se
+      compensan"**, con la tabla al lado. Lo que si vale bajo las cuatro hipotesis, y por eso
+      se puede afirmar: **45 era peor que mas plano en todas.**
+    - Regla: cuando un mecanismo se justifica por una diferencia de porcentaje, listar
+      primero los parametros que ya existen y no cuestan nada, y barrerlos. Un grado de
+      soldadura es mas barato que un rodamiento.
+
+34. **Un control tambien puede dar ROJO por su propia resolucion, y eso NO se arregla
+    subiendo el umbral.** (Misma noche.) El detector de "tramos sueltos" reportaba 1,5 a
+    1,7 mm en una junta que apoya **cara contra cara**, con luz cero: sembraba solo las
+    cuatro caras LATERALES del tubo y no la cara de la punta, asi que el punto mas cercano al
+    corte quedaba a medio paso de muestreo (2 mm) del plano de contacto. **Estaba midiendo su
+    propio paso.**
+    - La tentacion es subir `LUZ_CONTACTO` de 1 a 3 mm y seguir. Eso apaga el control (§24).
+      Lo que corresponde es **sembrar la superficie completa**: la cara de la punta es
+      superficie del tubo como cualquier otra.
+    - Es el hermano de §28 y hay que buscarlo igual: **antes de creerle un numero CHICO a una
+      medicion muestreada, comprobar que el muestreo cubre la feature que se esta midiendo.**
+      Un contacto tangente se mide en la tangencia; si ahi no hay puntos, se mide el paso.
+
+35. **Un arriostramiento que se toca A SI MISMO no esta arriostrando nada.** La cruz del piso
+    del caballete tenia las dos puntas retiradas 150 mm en X **y** en Y para que no cayeran en
+    la esquina: con eso quedaron flotando en el medio del hueco de la base, sin tocar ningun
+    tubo. **El control de "tramos sueltos" no lo veia porque los tres tramos de la cruz se
+    tocaban ENTRE SI**, y para el control eso ya es "toca a otro". Aparecio recien al cambiar
+    la inclinacion, cuando dejaron de tocarse — o sea por casualidad.
+    Regla: **un elemento que existe para unir A con B se verifica contra A y contra B, no
+    contra "¿toca algo?"**. Y el retiro para no caer en un nudo se hace sobre UNA coordenada:
+    retirar sobre las dos saca la punta de la pieza que tenia que tocar.
+
 Mejoras candidatas (build123d-mcp, cad-cae-copilot, etc.): ver `ROADMAP.md` — nada de eso
 está instalado hoy.
