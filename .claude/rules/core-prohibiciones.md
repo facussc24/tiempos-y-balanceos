@@ -9,4 +9,3 @@
 6. **Reusar antes de crear**: buscar si ya existe una funcion/hook/export que haga lo mismo antes de escribir una nueva.
 7. **Barack ya NO hace PFDs ni HOs** en este software (regla `no-pfd-no-ho.md`).
 8. Si Fak te corrige: registrar la leccion (docs/LECCIONES_APRENDIDAS.md) inmediatamente. Si detectas un problema: reportarlo sin esperar a que pregunte. NUNCA preguntar "queres que haga X?" — hacerlo y reportar.
-9. **Un papel que emitio OTRO no se edita ni se le toca la verificacion** (QR/hash/firma): se pide la reemision al emisor. Leerlo, extraerlo, traducirlo aparte y citarlo desde un documento propio: libre, y no amerita mencionar esto.
