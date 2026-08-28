@@ -21,6 +21,10 @@ sus documentos en Supabase son referencia historica de solo lectura.
 2. Si tocaste datos Supabase: `node scripts/_backup.mjs` (snapshot preventivo).
 3. Lanzar agente `auditor` al cerrar tareas de codigo.
 4. Tareas de codigo: `npm run build` OK → commit → push (regla `git-deploy.md`).
+5. **Tarea de Barack terminada: el entregable a su carpeta por tipo de la biblioteca de
+   Ingenieria y la carpeta de la tarea ARCHIVADA** (`node scripts/_escritorio.mjs --archivar`,
+   regla `escritorio-tareas.md`). **En el Escritorio no queda nada mio**: ni el entregable, ni
+   notas, ni archivos sueltos. "Te lo deje en el Escritorio" NO es entregar.
 
 NO preguntar si Fak quiere que lo hagas. HACERLO.
 

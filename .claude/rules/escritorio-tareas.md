@@ -53,6 +53,40 @@ adjunto que ya estaba ahí, reenviado. Comparar fecha y contenido, no el nombre.
 cuando OneDrive resincroniza. El relevador ya lo resuelve (vía `_leerMsg.mjs`) y marca
 "(fecha de archivo)" cuando tuvo que caer al filesystem: esas no se leen como firmes.
 
+## 1b. El entregable NO se genera en el Escritorio — 2026-08-28
+
+Fak, textual: *"no me dejes cosas en el escritorio, ese es el procedimiento, llenarme el
+escritorio de cosas? me respondiste que me dejaste algo en el escritorio, eso absolutamente
+molesto"*. Y: *"está mal la regla, hace falta actualizar el procedimiento, no es tan obvio"*.
+
+Tenía razón: la regla decía dónde va el entregable **al cerrar** y no decía dónde **se
+genera**. Yo generé el PDF de difusión de un cambio de BOM dentro de la carpeta de la tarea,
+en el Escritorio, y se lo reporté como si eso fuera entregarlo. De ahí salen solas las dos
+copias que el §2 prohíbe: una suelta en la cola y otra que se va al archivo al cerrar.
+
+**Un entregable se escribe DIRECTO en su carpeta por tipo de la biblioteca de Ingeniería.**
+El Escritorio guarda el RASTRO — el mail del pedido, capturas, borradores —, nunca el
+producto. Para elegir la carpeta se miran los hermanos que ya están ahí, no se inventa una
+rama nueva sin evidencia de a qué cliente y proyecto pertenece la pieza.
+
+**Enforcement (duro): `escritorio-guard.sh` bloque 4.** Bloquea escribir un archivo de
+entregable (`.pdf .xlsx .xlsm .docx .pptx .dxf .plt .step .stl .glb .iges`) con destino
+adentro del Escritorio, tanto por la tool `Write` como por un comando con `--salida` /
+`--out` / redirección. Un `.md` o `.txt` de trabajo sigue pasando: lo que se corta es el
+producto terminado.
+
+### Y el reporte tampoco termina en el Escritorio
+
+Una tarea no se reporta como hecha diciendo "te lo dejé en el Escritorio". Eso **no es
+entregar**: es dejarle a Fak el trabajo de archivarlo, que es exactamente lo que le molesta.
+El cierre se reporta con las tres cosas juntas: **qué se hizo · en qué carpeta por tipo quedó
+el entregable · que la carpeta de la tarea ya está archivada.** Si alguna de las tres falta,
+la tarea no está cerrada y se dice cuál falta.
+
+**Cerrar la tarea es parte de terminarla, no un extra.** Cuando la última acción de Barack
+está hecha y el entregable llegó a su casa, `--archivar` se corre en la misma sesión, sin
+esperar a que Fak lo pida.
+
 ## 2. Se archiva el RASTRO, nunca el entregable
 
 Una tarea cerrada tiene dos mitades y van a lugares distintos:

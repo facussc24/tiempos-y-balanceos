@@ -141,6 +141,58 @@ EOF
     ;;
 esac
 
+# ── 4. Generar un ENTREGABLE dentro del Escritorio ───────────────────────────
+#
+# 2026-08-28, Fak: *"no me dejes cosas en el escritorio, ese es el procedimiento,
+# llenarme el escritorio de cosas? eso absolutamente molesto"*. Yo habia generado el PDF de
+# difusion DENTRO de la carpeta de la tarea, en el Escritorio, y encima se lo reporte como
+# si eso fuera entregarlo. De ahi salen las dos copias que la regla prohibe: una suelta en
+# el Escritorio y otra que se va al archivo al cerrar.
+#
+# La casa del entregable es su carpeta POR TIPO de la biblioteca de Ingenieria. El
+# Escritorio guarda el RASTRO (el mail del pedido, capturas, borradores), no el producto.
+#
+# OJO CON LA OTRA MITAD: un archivo que Fak va a USAR YA (el .dxf/.plt que se lleva al
+# plotter, un 3D para imprimir) SI va suelto en el Escritorio — lo pidio explicito el
+# 10/08/2026: *"dejalos en el escritorio y listo, no me la compliques"*. Por eso `dxf`,
+# `plt`, `stl` y `glb` quedan FUERA de esta lista. Lo que se corta es el DOCUMENTO DE
+# REGISTRO (el que se archiva y se difunde), no la herramienta de trabajo del dia.
+ENTREGABLE='\.(pdf|xlsx|xlsm|xls|docx|doc|pptx|step|stp|igs|iges)([^A-Za-z0-9]|$)'
+GENERA='--salida|--out|--output|-o[[:space:]]|>[[:space:]]*[\"'"'"']?[A-Za-z]:'
+_bloque4() {
+  cat >&2 << 'EOF'
+[ESCRITORIO-GUARD] BLOQUEADO: estas GENERANDO un entregable adentro del Escritorio.
+
+El Escritorio es la cola de tareas: guarda el RASTRO (el mail del pedido, capturas,
+borradores). El ENTREGABLE tiene su casa y es otra: su carpeta POR TIPO de la biblioteca
+de Ingenieria (2. CONSUMO DE MATERIAL BOM, FICHAS DE EMBALAJE, 5. 3D, ULM GATE 2, FLUJOGRAMA,
+DESVIOS...). Generarlo aca deja DOS copias: una suelta que le molesta a Fak, y otra que se
+va al archivo al cerrar la tarea.
+
+  1. Generalo directo en su carpeta por tipo (mira los hermanos para elegir cual).
+  2. En la carpeta de la tarea, en el Escritorio, no queda ninguna copia.
+  3. Al cerrar: node scripts/_escritorio.mjs --archivar ... --donde "<esa carpeta por tipo>"
+
+Incidente 2026-08-28: PDF de difusion de BOM generado en el Escritorio y reportado como
+entregado. Fak: "no me dejes cosas en el escritorio".
+EOF
+}
+case "$TOOL" in
+  Write|Edit)
+    # Se aceptan los dos separadores en el patron en vez de normalizar con `tr`:
+    # `tr '\' '/'` con una sola barra invertida avisa "unescaped backslash" en cada corrida.
+    if printf '%s' "$FILE" | grep -qiE '[\/](Escritorio|Desktop)[\/]' \
+       && printf '%s' "$FILE" | grep -qiE "$ENTREGABLE"; then
+      _bloque4; exit 2
+    fi
+    ;;
+  *)
+    if printf '%s' "$CMD" | grep -qiE -e "$GENERA"        && printf '%s' "$CMD" | grep -qiE '[\/](Escritorio|Desktop)[\/]'        && printf '%s' "$CMD" | grep -qiE "$ENTREGABLE"; then
+      _bloque4; exit 2
+    fi
+    ;;
+esac
+
 # ── Recordatorio del procedimiento, 1x/hora ──────────────────────────────────
 #
 # El directorio se puede pisar por env var para que los tests no compitan por el mismo
