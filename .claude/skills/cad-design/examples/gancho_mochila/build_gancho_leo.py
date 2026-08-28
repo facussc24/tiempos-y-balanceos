@@ -77,6 +77,25 @@ def derivadas(p):
     }
 
 
+def medir_hueco(pieza, p):
+    """Ancho del hueco MEDIDO en el solido, no leido de los params.
+
+    Se corta el sólido con un plano a media altura de las paredes y se mira dónde están las
+    caras internas. Si la construcción se fuera a otro lado, esto lo ve; comparar params
+    contra params, no.
+    """
+    d = derivadas(p)
+    y = d["v_hombro"] / 2.0
+    z = p["collar"]["profundidad"] / 2.0
+    caras = [
+        v.X for v in pieza.vertices()
+        if abs(v.Y) < d["v_hombro"] and abs(abs(v.X) - d["ui"]) < 2.0
+    ]
+    if not caras:
+        raise SystemExit("ABORTA: no se encontraron las caras internas del hueco.")
+    return max(caras) - min(caras)
+
+
 def cuentas(p):
     d = derivadas(p)
     ca, co, cu = p["cano"], p["collar"], p["cuna"]
@@ -176,9 +195,29 @@ def main():
     bb = pieza.bounding_box()
     if abs(bb.min.Z) > 0.01:
         raise SystemExit(f"ABORTA: no apoya en la cama (Zmin = {bb.min.Z:.2f}).")
-    # el hueco tiene que ser el ANCHO del caño, no el espesor: es el error que se corrigio
-    if abs((2 * derivadas(p)["ui"]) - (p["cano"]["ancho"] + p["cano"]["juego"])) > 0.01:
-        raise SystemExit("ABORTA: el hueco no es el ANCHO del caño.")
+    # --- que el hueco sea el ANCHO del caño y no el espesor: es EL error de la v1.
+    # Ojo con como se escribe este check. La primera version comparaba 2*ui contra
+    # ancho+juego, y ui se calcula como (ancho+juego)/2: era una resta de un valor contra
+    # si mismo, siempre 0. Nunca podia dar rojo — lo cazo el auditor poniendo ancho=27.2
+    # (el espesor) y viendo que el build no abortaba. Es justo lo que dicen las LECCIONES:
+    # un control que da lo mismo para todos los casos no detecta nada.
+    ca = p["cano"]
+    if ca["ancho"] <= ca["espesor"]:
+        raise SystemExit(
+            f"ABORTA: cano.ancho ({ca['ancho']}) tiene que ser MAYOR que cano.espesor "
+            f"({ca['espesor']}) — el ancho es la dimension mayor del caño por definicion. "
+            "Si son iguales o estan al reves, se confundieron las dos cotas, que es "
+            "exactamente el error que dejo la pieza girada 90 grados."
+        )
+    # y que eso haya llegado a la GEOMETRIA: se mide el hueco sobre el solido construido
+    hueco_medido = medir_hueco(pieza, p)
+    esperado = ca["ancho"] + ca["juego"]
+    if abs(hueco_medido - esperado) > 0.05:
+        raise SystemExit(
+            f"ABORTA: el hueco del solido mide {hueco_medido:.2f} y tendria que medir "
+            f"{esperado:.2f} (ancho {ca['ancho']} + juego {ca['juego']})."
+        )
+    print(f"  hueco medido en el solido: {hueco_medido:.2f} mm (esperado {esperado:.2f})")
     print(f"  bbox X[{bb.min.X:.1f},{bb.max.X:.1f}] Y[{bb.min.Y:.1f},{bb.max.Y:.1f}] "
           f"Z[{bb.min.Z:.1f},{bb.max.Z:.1f}]")
     print(f"  volumen {pieza.volume/1000:.2f} cm3")

@@ -120,9 +120,13 @@ mochilas quedaban en el hueco de las piernas. Dos veces seguidas, con dos lectur
 mismo dibujo. **Antes de multiplicar una proporción por algo, decir en voz alta QUÉ es el
 denominador en la pieza real y verificarlo contra una foto del conjunto montado.** Y si la escala
 no está identificada con certeza, el croquis no está listo para modelar: falta una cota, no falta
-interpretación. *Enforcement:* `examples/gancho_mochila/build_gancho_leo.py` aborta si el hueco del
-collar no es el ANCHO declarado del caño — el assert nombra la cota, así el error no puede volver
-en silencio.
+interpretación. *Enforcement:* `examples/gancho_mochila/build_gancho_leo.py` aborta si `cano.ancho` no es mayor
+que `cano.espesor` (confundirlas ES el error), y además **mide el hueco sobre el sólido construido**
+y lo compara contra el ancho declarado. **Ojo con cómo se escribe un assert así:** el primero
+comparaba `2·ui` contra `ancho+juego` — y `ui` se calcula como `(ancho+juego)/2`, o sea una resta
+de un valor contra sí mismo, **siempre 0**. Nunca podía dar rojo; lo cazó el auditor poniendo el
+espesor en el ancho y viendo que el build no abortaba. **Un assert se prueba con su contraejemplo
+el mismo día que se escribe: si nunca lo viste dar ROJO, no sabés si protege.**
 
 **GATE 4 — el resultado tiene que tener SENTIDO, no solo cerrar paso a paso.** El 2026-08-07 un
 utillaje salió de 36 mm de alto y 166 cm³ de PLA para una pieza que aprieta 6 N. Fak lo vio de un
