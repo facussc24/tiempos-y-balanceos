@@ -112,6 +112,18 @@ existe** (89,79·sen 1,637° = 2,56).
 - **Un caché sin la firma del archivo miente.** El gate juzgó un ensamble ya corregido con la malla
   vieja porque la clave del caché no incluía tamaño+mtime. Toda clave de caché lleva la firma.
 
+**GATE 3.5 — un croquis a mano se escala contra una cota IDENTIFICADA, no contra la que tengo a mano.**
+2026-08-25: de un croquis sin una sola cota se midieron bien las proporciones (ancho/hueco 1,5 ·
+vuelo/hueco 1,0 · span/hueco 3,5) y se aplicaron sobre el número equivocado — el espesor de la pata
+(27,8) en vez de su ancho (69,2). La pieza salió **girada 90° y a un tercio de escala**: las
+mochilas quedaban en el hueco de las piernas. Dos veces seguidas, con dos lecturas distintas del
+mismo dibujo. **Antes de multiplicar una proporción por algo, decir en voz alta QUÉ es el
+denominador en la pieza real y verificarlo contra una foto del conjunto montado.** Y si la escala
+no está identificada con certeza, el croquis no está listo para modelar: falta una cota, no falta
+interpretación. *Enforcement:* `examples/gancho_mochila/build_gancho_leo.py` aborta si el hueco del
+collar no es el ANCHO declarado del caño — el assert nombra la cota, así el error no puede volver
+en silencio.
+
 **GATE 4 — el resultado tiene que tener SENTIDO, no solo cerrar paso a paso.** El 2026-08-07 un
 utillaje salió de 36 mm de alto y 166 cm³ de PLA para una pieza que aprieta 6 N. Fak lo vio de un
 vistazo: *"tiene demasiada base, muy alta, se ve obvio que se puede"*. Los siete controles daban

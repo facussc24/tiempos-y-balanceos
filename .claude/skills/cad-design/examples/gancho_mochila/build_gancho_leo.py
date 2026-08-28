@@ -1,23 +1,24 @@
-"""EL DISEÑO DE LEO, tal cual su croquis — Pi sobre el tope del caño + una cuna de cada lado.
+"""EL DISEÑO DE LEO — collar sobre el tope del caño + una cuna de cada lado.
 
 Croquis a mano de Leonardo Lattanzi, 24/08/2026.
 
-COMO SE SOSTIENE (y por que este SI lleva dos mochilas):
-la barra de arriba APOYA sobre la cara superior del caño. El peso baja por compresion
-contra ese tope — no hay friccion en juego, no hay nada que apretar. Por eso le da lo
-mismo una mochila que dos.
-Las dos paredes laterales solo tienen que impedir que la pieza vuelque cuando cuelga UNA
-sola: N = P*a / alto_pared. Y con las dos mochilas puestas, ni eso — se contrapesan.
+COMO SE SOSTIENE, y por que este SI lleva dos mochilas:
+la barra de arriba APOYA sobre la cara superior del caño. El peso baja por compresion contra
+ese tope; no hay friccion en juego ni nada que apretar, asi que le da lo mismo una mochila que
+dos. Las paredes largas que bajan por los cantos son las que impiden el ladeo cuando cuelga
+una sola — y son largas justamente por eso: es el defecto de la pieza que ya esta puesta.
 
-Es exactamente lo contrario del v2, que agarra por el momento DESEQUILIBRADO del peso y
-por eso no admite version simetrica.
+EL ERROR QUE ESTA VERSION CORRIGE (auditoria independiente, Fable 5):
+la version anterior abrazaba el ESPESOR del caño (27,2) y tiraba las cunas hacia adelante y
+atras — las mochilas quedaban en el hueco de las piernas. Estaba girada 90 grados y, por
+haber aplicado las proporciones del croquis sobre 27,8 en vez de sobre el ancho, a un tercio
+de escala. Aca el collar abraza el ANCHO (69,23) y las cunas salen a los COSTADOS, a lo largo
+del travesaño: la version simetrica del brazo que ya tiene la pieza montada.
 
-La pieza es una EXTRUSION pura del perfil de frente: cero soportes, y se calza deslizandola
-sobre el extremo del caño.
-
-    u = horizontal, transversal al caño (el espesor de 27,2 va aca)
-    v = vertical. v=0 es la cama de la impresora y la cara de abajo de las cunas
-    w = profundidad, a lo largo de la cara ancha del caño = ancho de la pieza
+Frame (el mismo para uso y para impresion — no hay que girar nada en el laminador):
+    X = a lo largo del travesaño. El caño ocupa el centro; las cunas salen a los costados.
+    Y = vertical. Y=0 es la cara de abajo de las cunas.
+    Z = profundidad, en la direccion del espesor del caño. Es la altura de impresion.
 
 Uso:
     .venv-cad\\Scripts\\python.exe build_gancho_leo.py --out <workdir>
@@ -29,18 +30,14 @@ import argparse
 import json
 from pathlib import Path
 
-from build123d import (
-    Axis,
-    Plane,
-    Pos,
-    Polygon,
-    export_step,
-    export_stl,
-    extrude,
-    fillet,
-)
+from build123d import Axis, Box, Pos, export_step, export_stl, fillet
 
 AQUI = Path(__file__).parent
+
+
+def caja(x0, x1, y0, y1, z0, z1):
+    """Box por extremos, no por centro+tamaño: menos errores de signo."""
+    return Pos((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2) * Box(x1 - x0, y1 - y0, z1 - z0)
 
 
 def redondear(solido, aristas, radio, etiqueta, avisos):
@@ -55,7 +52,7 @@ def redondear(solido, aristas, radio, etiqueta, avisos):
 
 
 def aristas_en(solido, eje, **cerca):
-    tol = cerca.pop("tol", 0.7)
+    tol = cerca.pop("tol", 0.8)
     return [
         e for e in solido.edges().filter_by(eje)
         if all(abs(getattr(e.center(), k.upper()) - v) < tol for k, v in cerca.items())
@@ -63,112 +60,93 @@ def aristas_en(solido, eje, **cerca):
 
 
 def derivadas(p):
-    """Todo lo que depende de otra cota se calcula. Nada de literales sueltos."""
-    boca, pared = p["cano"]["boca"], p["pi"]["pared"]
-    U = boca / 2.0 + pared                        # cara exterior de la pared
+    """Todo lo que depende de otra cota se calcula. Ninguna se escribe en el json."""
+    ca, co, cu = p["cano"], p["collar"], p["cuna"]
+    hueco = ca["ancho"] + ca["juego"]          # el ANCHO del caño, no el espesor
+    ui = hueco / 2.0                            # cara interna de la pared
+    U = ui + co["pared"]                        # cara externa de la pared
     return {
+        "hueco": hueco,
+        "ui": ui,
         "U": U,
-        "v_hombro": p["pi"]["alto_pared"],        # cara de abajo de la barra = tope del caño
-        "v_top": p["pi"]["alto_pared"] + p["pi"]["barra_arriba"],
-        "u_punta": U + p["cuna"]["vuelo"],
-        "ancho_exterior": 2 * U,
-        "span": 2 * (U + p["cuna"]["vuelo"]),
+        "u_punta": U + cu["vuelo"],
+        "v_hombro": co["alto_pared"],           # donde apoya el tope del caño
+        "v_top": co["alto_pared"] + co["barra_arriba"],
+        "span": 2 * (U + cu["vuelo"]),
+        "a_carga": U + cu["vuelo"] / 2.0,       # la correa duerme en el medio de la bocha
     }
 
 
 def cuentas(p):
     d = derivadas(p)
-    P = p["carga"]["P_N"]
-    w = p["pi"]["ancho_Z"]
-    c = p["cuna"]
+    ca, co, cu = p["cano"], p["collar"], p["cuna"]
+    P, w, A = p["carga"]["P_N"], co["profundidad"], ca["ancho"]
 
-    # centro de carga de una mochila: en el medio del piso de la cuna
-    a = d["U"] + c["vuelo"] / 2.0
-
-    # la cuna es un voladizo desde la pared: se la lleva el piso
-    M = P * (a - d["U"])
-    W = w * c["piso"] ** 2 / 6.0
+    # la cuna es un voladizo desde la pared
+    M = P * (d["a_carga"] - d["U"])
+    W = w * cu["fondo"] ** 2 / 6.0
     sigma_cuna = M / W
 
-    # vuelco con UNA sola mochila: lo toman las dos paredes contra las caras del caño
-    N = P * a / p["pi"]["alto_pared"]
-    presion = N / (w * p["pi"]["alto_pared"])
+    # vuelco con UNA sola mochila: lo toman las paredes contra los cantos del caño
+    N = P * d["a_carga"] / co["alto_pared"]
+    presion = N / (w * co["alto_pared"])
 
-    # la barra de arriba apoya sobre el tope del caño: compresion pura con las dos puestas
-    compresion = 2 * P / (w * p["cano"]["espesor"])
+    # con las DOS puestas se contrapesan y solo queda compresion sobre el tope del caño
+    compresion = 2 * P / (w * ca["espesor"])
 
     return {
-        "ancho_exterior_mm": round(d["ancho_exterior"], 1),
+        "ancho_del_cano_A": A,
         "span_punta_a_punta_mm": round(d["span"], 1),
         "alto_total_mm": round(d["v_top"], 1),
-        "vuelo_de_cada_cuna_mm": round(c["vuelo"], 1),
-        "brazo_de_carga_a_mm": round(a, 1),
+        "abraza_del_cano_mm": round(co["alto_pared"], 1),
+        "garganta_de_la_bocha_mm": round(cu["alto"] - cu["fondo"], 1),
+        "ancho_de_la_bocha_mm": round(cu["vuelo"] - cu["labio_espesor"], 1),
+        "brazo_de_carga_mm": round(d["a_carga"], 1),
         "sigma_cuna_MPa": round(sigma_cuna, 2),
         "SF_cuna_vs_PLA_60MPa": round(60.0 / sigma_cuna, 1),
         "N_vuelco_1_mochila_N": round(N, 1),
         "presion_sobre_el_cano_MPa": round(presion, 3),
-        "compresion_en_la_barra_MPa": round(compresion, 3),
+        "compresion_en_el_tope_MPa": round(compresion, 3),
         "carga_2_mochilas_kg": round(2 * p["carga"]["P_kg_por_mochila"], 1),
-        "_proporciones_vs_croquis": {
-            "ancho_ext/hueco": round(d["ancho_exterior"] / p["cano"]["boca"], 2),
-            "pared/hueco": round(p["pi"]["pared"] / p["cano"]["boca"], 2),
-            "vuelo/hueco": round(c["vuelo"] / p["cano"]["boca"], 2),
-            "span/hueco": round(d["span"] / p["cano"]["boca"], 2),
+        "_proporciones_sobre_A": {
+            "pared/A": round(co["pared"] / A, 2),
+            "alto_pared/A": round(co["alto_pared"] / A, 2),
+            "vuelo/A": round(cu["vuelo"] / A, 2),
+            "span/A": round(d["span"] / A, 2),
         },
     }
 
 
 def construir(p):
-    """El perfil de frente, de una sola pasada, y se extruye. Nada mas."""
     avisos = []
     d = derivadas(p)
-    c, pi = p["cuna"], p["pi"]
-    ui = p["cano"]["boca"] / 2.0     # cara interna de la pared (el hueco donde entra el caño)
-    U, up = d["U"], d["u_punta"]
-    v_h, v_t = d["v_hombro"], d["v_top"]
-    piso = c["piso"]
-    v_labio = v_h                    # el labio llega al ras de las paredes, no sobresale
+    co, cu = p["collar"], p["cuna"]
+    ui, U, up = d["ui"], d["U"], d["u_punta"]
+    v_h, v_t, w = d["v_hombro"], d["v_top"], co["profundidad"]
 
-    # El contorno, de una sola pasada y en un solo sentido: barra de arriba -> pared y
-    # cuna derecha -> vuelta por abajo -> hueco del caño (abierto abajo) -> espejo izquierdo.
-    pts = [
-        (0.0, v_t),
-        (U, v_t),
-        (U, v_labio),
-        (up, v_labio),
-        (up, 0.0),
-        (up - c["labio_espesor"], 0.0),
-        (up - c["labio_espesor"], piso),          # cara interna del labio derecho
-        (U, piso),                                 # piso de la cuna derecha
-        (U, 0.0),                                  # baja por fuera de la pared
-        (ui, 0.0),
-        (ui, v_h),                                 # sube por dentro: ESTE es el hueco del caño
-        (-ui, v_h),
-        (-ui, 0.0),
-        (-U, 0.0),
-        (-U, piso),
-        (-(up - c["labio_espesor"]), piso),
-        (-(up - c["labio_espesor"]), 0.0),
-        (-up, 0.0),
-        (-up, v_labio),
-        (-U, v_labio),
-        (-U, v_t),
-    ]
-    pieza = extrude(Plane.XY * Polygon(*pts, align=None), amount=pi["ancho_Z"])
-    # segun el sentido del contorno, extrude puede salir hacia -Z: se lo sube para que la
-    # pieza apoye en la cama y salga lista para el laminador sin girar nada.
-    if pieza.bounding_box().min.Z < -0.01:
-        pieza = Pos(0, 0, pi["ancho_Z"]) * pieza
+    # --- collar: caja exterior menos el hueco donde entra el caño (abierto abajo)
+    pieza = caja(-U, U, 0.0, v_t, 0.0, w)
+    pieza -= caja(-ui, ui, 0.0, v_h, -1.0, w + 1.0)
 
-    # radios: el concavo de la raiz de cada cuna es el que trabaja (ahi flexiona)
-    for signo in (+1, -1):
-        lado = "der" if signo > 0 else "izq"
-        pieza = redondear(pieza, aristas_en(pieza, Axis.Z, x=signo * U, y=piso),
-                          c["r_concavo_raiz"], f"concavo de la raiz {lado}", avisos)
-        pieza = redondear(pieza, aristas_en(pieza, Axis.Z, x=signo * (up - c["labio_espesor"]), y=piso),
-                          c["r_canto"], f"pie del labio {lado}", avisos)
-        pieza = redondear(pieza, aristas_en(pieza, Axis.Z, x=signo * ui, y=v_h),
-                          3.0, f"esquina interna del hueco {lado}", avisos)
+    # --- una cuna a cada lado, al pie de la pared
+    for s in (+1, -1):
+        pieza += caja(min(s * U, s * up), max(s * U, s * up), 0.0, cu["alto"], 0.0, w)
+        # la bocha: se vacia desde el fondo para arriba, y se abre por el techo
+        u_a, u_b = s * U, s * (up - cu["labio_espesor"])
+        pieza -= caja(min(u_a, u_b), max(u_a, u_b), cu["fondo"], cu["alto"] + 5.0, -1.0, w + 1.0)
+
+    # --- radios. El fondo de la bocha es el que toca la correa; la raiz es la que flexiona.
+    for s in (+1, -1):
+        lado = "der" if s > 0 else "izq"
+        pieza = redondear(pieza, aristas_en(pieza, Axis.Z, x=s * U, y=cu["fondo"]),
+                          cu["r_fondo"], f"fondo de la bocha, lado pared {lado}", avisos)
+        pieza = redondear(pieza,
+                          aristas_en(pieza, Axis.Z, x=s * (up - cu["labio_espesor"]), y=cu["fondo"]),
+                          cu["r_fondo"], f"fondo de la bocha, lado labio {lado}", avisos)
+        # (no va fillet en x=U, y=alto: ahi la pared del collar sigue de largo hacia arriba,
+        #  no hay arista concava — la que trabaja es la del fondo de la bocha, ya redondeada)
+        pieza = redondear(pieza, aristas_en(pieza, Axis.Z, x=s * ui, y=v_h),
+                          4.0, f"esquina interna del hueco {lado}", avisos)
     return pieza, avisos
 
 
@@ -185,7 +163,7 @@ def main():
     print("=== cuentas ===")
     num = cuentas(p)
     for k, v in num.items():
-        print(f"  {k:30s} {v}")
+        print(f"  {k:28s} {v}")
 
     print("\n=== construyendo ===")
     pieza, avisos = construir(p)
@@ -198,6 +176,9 @@ def main():
     bb = pieza.bounding_box()
     if abs(bb.min.Z) > 0.01:
         raise SystemExit(f"ABORTA: no apoya en la cama (Zmin = {bb.min.Z:.2f}).")
+    # el hueco tiene que ser el ANCHO del caño, no el espesor: es el error que se corrigio
+    if abs((2 * derivadas(p)["ui"]) - (p["cano"]["ancho"] + p["cano"]["juego"])) > 0.01:
+        raise SystemExit("ABORTA: el hueco no es el ANCHO del caño.")
     print(f"  bbox X[{bb.min.X:.1f},{bb.max.X:.1f}] Y[{bb.min.Y:.1f},{bb.max.Y:.1f}] "
           f"Z[{bb.min.Z:.1f},{bb.max.Z:.1f}]")
     print(f"  volumen {pieza.volume/1000:.2f} cm3")

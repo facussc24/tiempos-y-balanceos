@@ -1,28 +1,19 @@
 {
-  "_comment": "EL DISEÑO DE LEO, tal cual su croquis del 24/08/2026. Una Pi (U invertida) que se calza sobre el TOPE del caño, con una cuna a cada lado. Cotas en mm.",
+  "_comment": "EL DISEÑO DE LEO — croquis a mano de Leonardo Lattanzi, 24/08/2026. Un collar en U que se calza sobre el TOPE del caño abrazando su ANCHO, con una cuna a cada lado. Cotas en mm.",
 
-  "_como_se_leyo_el_croquis": [
-    "Lectura independiente del croquis (agente, sin contexto de lo que yo habia hecho antes):",
-    "  - FIG B es la vista de FRENTE. El rectangulo de adentro es EL CAÑO; la Pi es la pieza.",
-    "  - La barra de arriba apoya sobre la cara superior del caño; las dos paredes lo abrazan.",
-    "  - Queda abierta abajo: el caño sigue de largo (las dos lineas finas del dibujo).",
-    "  - Dos brazos simetricos a la misma altura, cada uno una CUNA: piso, curva concava del",
-    "    lado de la raiz y labio hacia arriba en la punta, para que la correa no se salga.",
-    "El croquis NO tiene una sola cota. Lo que se saco de el son PROPORCIONES, y estan abajo."
+  "_el_error_que_corrige_esta_version": [
+    "La v1 de este archivo abrazaba el ESPESOR (27,2) y tiraba las cunas hacia adelante y atras:",
+    "las mochilas hubieran quedado en el hueco de las piernas. Auditoria independiente (Fable 5):",
+    "la pieza estaba girada 90 grados y a un tercio de escala.",
+    "El collar abraza el ANCHO del caño (69,23) y las cunas salen a los COSTADOS, a lo largo del",
+    "travesaño — o sea, la version simetrica del brazo que ya tiene la pieza montada."
   ],
 
-  "_proporciones_medidas_en_el_croquis": {
-    "ancho_exterior_sobre_hueco": 1.5,
-    "pared_sobre_hueco": 0.26,
-    "vuelo_de_cada_brazo_sobre_hueco": 1.0,
-    "span_punta_a_punta_sobre_hueco": 3.5,
-    "alto_pared_sobre_alto_barra": 2.5
-  },
-
   "cano": {
-    "_comment": "El espesor lo confirmo Fak con la pieza impresa puesta: a la boca de 31,30 le sobraban 3-4 mm, o sea ~27,2. Boca = 27,80 (la misma del v2, ya validada). Fak, 25/08: 'ya tenes mas o menos bien el ancho del caño'.",
+    "_comment": "LAS DOS COTAS SALEN DEL CALIBRE DE FAK, ninguna estimada. El ancho estaba en la foto de las 16:25:11 del 19/08: el display estaba rotado y en sombra, se aislo por color, se enderezo 107,3 grados y se amplio 6x -> 69.23. El espesor lo confirmo Fak con la pieza puesta (a la boca de 31,30 le sobraban 3-4 mm).",
+    "ancho": 69.23,
     "espesor": 27.20,
-    "boca": 27.80
+    "juego": 0.60
   },
 
   "carga": {
@@ -30,20 +21,21 @@
     "P_N": 117.7
   },
 
-  "pi": {
-    "_comment": "pared 7,2 = 0,26 x hueco, redondeado a 7. La barra de ARRIBA va mas fina que las paredes (6 y no 7) por una sola razon: es lo unico que tiene que entrar en la luz que queda entre el tope del caño y la tapa. Si no entra, se afina y listo — es el unico numero de riesgo de la pieza.",
-    "pared": 7.0,
+  "collar": {
+    "_comment": "Proporciones del croquis referidas al ANCHO del caño (A = 69,23): pared 0,14 A, alto de pared 0,87 A, span total 3,0 A. El croquis es a mano: las proporciones valen +-15%. La pared se dejo en 10 y no en los 14-17 que daria el dibujo literal porque con 10 la tension ya es despreciable y 17 seria material tirado (GATE 4 de cad-3d).",
+    "pared": 10.0,
     "barra_arriba": 6.0,
-    "alto_pared": 20.0,
-    "ancho_Z": 30.0
+    "alto_pared": 60.0,
+    "profundidad": 25.0
   },
 
   "cuna": {
-    "_comment": "vuelo 28 = 1,0 x hueco, como el croquis. Es MUCHO mas corta que el brazo del v2 (58 mm) y esta bien que lo sea: el v2 necesitaba brazo largo para que la mordaza agarrara, esta apoya y no necesita nada. Ademas la mochila queda mas cerca del caño y no molesta.",
-    "vuelo": 28.0,
-    "piso": 7.0,
-    "labio_espesor": 6.0,
-    "r_concavo_raiz": 5.0,
-    "r_canto": 2.5
+    "_comment": "Bocha para que la correa DUERMA adentro, no un canal cuadrado — ese fue otro de los hallazgos de la auditoria. Garganta 30 mm de hondo por 45 de ancho: entra un mazo de asas de mochila. Labio a media altura de la pared, como el dibujo grande del croquis.",
+    "vuelo": 55.0,
+    "alto": 40.0,
+    "fondo": 10.0,
+    "labio_espesor": 10.0,
+    "r_fondo": 8.0,
+    "r_raiz": 6.0
   }
 }
