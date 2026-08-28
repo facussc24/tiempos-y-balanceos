@@ -46,6 +46,7 @@ La historia completa de cada incidente vive en los snapshots.
 ## Automatizacion de interfaces / ERP
 
 - Graduada entera al skill `arb-operar` (§"Antes de decir no se puede"): en una interfaz el limite y la causa casi siempre estan de MI lado — mirar la pantalla antes de rediagnosticar.
+- **🔴 28/08 — SABER LA REGLA NO ALCANZA: TIENE QUE ESTAR EN EL CAMINO QUE SE EJECUTA.** Dos veces el mismo dia, con el conocimiento ya escrito y sin efecto. (a) **Parser al vuelo**: conte las BOM de 12 headrest con un `len(cols)>=8: continue` de tres lineas y reporte 12 insumos donde habia 13 — la fila faltante era una descripcion multilinea que el arb parte en tres, cosa que la memoria `arb_export_estructura` ya decia y que el parser del repo (`bom_del_export`, `_pdfBomArb`) si resuelve. **Si ya existe un parser del formato, se usa ese; y un `continue` que saltea filas tiene que CONTAR lo que saltea y avisarlo.** (b) **Prosa arreglada, codigo no**: el KeyTip para abrir el Maestro de Relaciones se corrigio en el texto de la skill el 25/08 y `_arbCargar.abrir()` siguio mandando el viejo, asi que abortaba con *"no encuentro la ventana — abri el arb"* con el arb abierto. **Tocar el codigo Y el texto en la misma sesion**, y desconfiar del error que manda a mirar afuera. Detalle en `arb-operar`.
 
 ## Identidad de un dato
 

@@ -237,7 +237,10 @@ def abrir():
         time.sleep(0.8)
     tecla(win32con.VK_MENU, 0.5)      # doble Alt muestra los KeyTips
     tecla(ord('V'), 0.7)
+    # El KeyTip del boton `Relacion de Consumo` es `Y03`, no `Y3`: sin el `0` del medio la
+    # secuencia se descarta y la ventana no abre (leido con _arbKeytips.py el 2026-08-25).
     tecla(ord('Y'), 0.25)
+    tecla(ord('0'), 0.25)
     tecla(ord('3'), 2.0)
     return V()
 

@@ -10,6 +10,8 @@ description: Operar el ERP arb (ARB Sistemas "Producción") por teclado desde Cl
 > reabre la ventana sin pedirle nada a nadie — ver la tanda del 20/08).
 > **Dar de alta líneas: ANDA** (`scripts/_arbAlta.py`) — **31/31 el 07/08**, verificadas contra
 > el export y con 0 bajas en el diff de la base entera. Borrar líneas sigue fuera de alcance.
+> **Altas EN LOTE: ANDA** (`scripts/_arbAltaLote.py`) — **12/12 el 28/08 en 116 seg**, mismo
+> insumo en 12 BOM, diff de la base entera 12 altas / 0 bajas / 0 cambios.
 >
 > ⚠ El encabezado de esta skill dijo durante medio día "sólo si la línea cae en las 6 filas
 > visibles" y "dar de alta está fuera de alcance". **Las dos eran falsas**: la grilla scrollea
@@ -576,6 +578,35 @@ producción hay que confirmar dos cosas mirando la pantalla (`_arbVer.py foto re
 Recordar que **el alta NO es reversible con el export** (a diferencia de un consumo, que se
 deshace tipeando el valor viejo). Por eso se prueba con UNA sola línea y se verifica contra el
 export antes de seguir.
+
+### 🟢 ALTAS EN LOTE — `_arbAltaLote.py` `CONFIRMADO 2026-08-28`
+
+```bash
+python scripts/_arbAltaLote.py --tabla .arb-cache/<tabla>.csv --apply [--reset-primero]
+```
+
+CSV con encabezado `producto,insumo,cantidad,modulo,proceso`, una fila por producto terminado.
+Envuelve a `_arbAlta.py` (que hace UNA línea por invocación) y agrega lo que había que repetir
+a mano: abre la ventana si no está, **resetea después de cada fallo** (una celda sucia
+envenena la alta siguiente), sigue con el resto del lote y lista lo que quedó pendiente.
+Sin `--apply` es dry-run — y ahí el reset es obligatorio igual, porque el renglón queda
+escrito en pantalla.
+
+**Estrenado el 28/08**: mismo insumo en 12 BOM de headrest, 12/12 en 116 seg.
+
+### 🔴 DOS COSAS QUE FRENABAN EL ARRANQUE, LAS DOS DE NUESTRO LADO `2026-08-28`
+
+1. **`abrir()` mandaba el KeyTip `Y3` y el real es `Y03`.** La skill tenía corregido el `Y03`
+   desde el 25/08 pero `_arbCargar.abrir()` seguía con el viejo, así que **abortaba con
+   "no encuentro la ventana — abrí el arb"** y el mensaje mandaba a buscar el problema
+   afuera: el arb estaba abierto y logueado. Corregido en el código, no sólo en la prosa.
+   *Arreglar la prosa no arregla el script, y arreglar el script no arregla la prosa: hay
+   que tocar los dos.*
+2. **Después de exportar, la ventana queda en la solapa `Listado`** y `traer()` aborta con
+   "andá a Altas de Insumos de Un Producto". El export es justo lo que se hace antes de
+   cargar, así que este tropiezo cae siempre. Se destraba con un click real en la solapa
+   `Altas` (≈ x=120, y=68 de la ventana `rel`) — es lo mismo que ya hace
+   `reset_relaciones()` en su último paso.
 
 ### 🟢 EL SCROLL DE LA GRILLA NO EXISTE COMO PROBLEMA `dato de Fak 2026-08-07`
 
