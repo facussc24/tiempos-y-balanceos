@@ -62,7 +62,9 @@ def aristas_en(solido, eje, **cerca):
 def derivadas(p):
     """Todo lo que depende de otra cota se calcula. Ninguna se escribe en el json."""
     ca, co, cu = p["cano"], p["collar"], p["cuna"]
-    hueco = ca["ancho"] + ca["juego"]          # el ANCHO del caño, no el espesor
+    # el hueco va sobre el ESPESOR (Fak, con el caño delante, 28/08). El ancho es la otra
+    # dimension del caño y no se abraza.
+    hueco = ca["espesor"] + ca["juego"]
     ui = hueco / 2.0                            # cara interna de la pared
     U = ui + co["pared"]                        # cara externa de la pared
     return {
@@ -205,17 +207,21 @@ def main():
     if ca["ancho"] <= ca["espesor"]:
         raise SystemExit(
             f"ABORTA: cano.ancho ({ca['ancho']}) tiene que ser MAYOR que cano.espesor "
-            f"({ca['espesor']}) — el ancho es la dimension mayor del caño por definicion. "
-            "Si son iguales o estan al reves, se confundieron las dos cotas, que es "
-            "exactamente el error que dejo la pieza girada 90 grados."
+            f"({ca['espesor']}) — son dos cotas distintas del mismo caño y el ancho es la "
+            "mayor. Si estan iguales o al reves, se confundieron."
+        )
+    if ca.get("dimension_que_se_abraza") != "espesor":
+        raise SystemExit(
+            "ABORTA: la pieza abraza el ESPESOR del caño (Fak, 28/08). Si se cambia a otra "
+            "dimension hay que rehacer las proporciones, no solo el numero."
         )
     # y que eso haya llegado a la GEOMETRIA: se mide el hueco sobre el solido construido
     hueco_medido = medir_hueco(pieza, p)
-    esperado = ca["ancho"] + ca["juego"]
+    esperado = ca["espesor"] + ca["juego"]
     if abs(hueco_medido - esperado) > 0.05:
         raise SystemExit(
             f"ABORTA: el hueco del solido mide {hueco_medido:.2f} y tendria que medir "
-            f"{esperado:.2f} (ancho {ca['ancho']} + juego {ca['juego']})."
+            f"{esperado:.2f} (espesor {ca['espesor']} + juego {ca['juego']})."
         )
     print(f"  hueco medido en el solido: {hueco_medido:.2f} mm (esperado {esperado:.2f})")
     print(f"  bbox X[{bb.min.X:.1f},{bb.max.X:.1f}] Y[{bb.min.Y:.1f},{bb.max.Y:.1f}] "

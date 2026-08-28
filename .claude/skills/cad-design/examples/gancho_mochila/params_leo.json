@@ -1,6 +1,5 @@
 {
   "_comment": "EL DISEÑO DE LEO — croquis a mano de Leonardo Lattanzi, 24/08/2026. Un collar en U que se calza sobre el TOPE del caño abrazando su ANCHO, con una cuna a cada lado. Cotas en mm.",
-
   "_el_error_que_corrige_esta_version": [
     "La v1 de este archivo abrazaba el ESPESOR (27,2) y tiraba las cunas hacia adelante y atras:",
     "las mochilas hubieran quedado en el hueco de las piernas. Auditoria independiente (Fable 5):",
@@ -8,31 +7,28 @@
     "El collar abraza el ANCHO del caño (69,23) y las cunas salen a los COSTADOS, a lo largo del",
     "travesaño — o sea, la version simetrica del brazo que ya tiene la pieza montada."
   ],
-
   "cano": {
-    "_comment": "LAS DOS COTAS SALEN DEL CALIBRE DE FAK, ninguna estimada. El ancho estaba en la foto de las 16:25:11 del 19/08: el display estaba rotado y en sombra, se aislo por color, se enderezo 107,3 grados y se amplio 6x -> 69.23. El espesor lo midio Fak con regla el 28/08: 'cerca de 30'. Se toma 30 y la PROFUNDIDAD de la pieza se iguala a el, para que el collar apoye sobre TODA la seccion del cano y no sobre una franja.",
+    "_comment": "Fak, con el cano delante (28/08): el hueco donde entra va de 30 -- o sea sobre el ESPESOR, el mismo agarre que la pieza que ya esta puesta y funciona. El ancho (69,23) es la otra dimension del cano y NO es la que se abraza. La auditoria habia leido el croquis al reves y yo la segui; quien tiene el cano delante gana.",
     "ancho": 69.23,
-    "espesor": 30.00,
-    "juego": 0.60
+    "espesor": 30.0,
+    "juego": 0.6,
+    "dimension_que_se_abraza": "espesor"
   },
-
   "carga": {
     "P_kg_por_mochila": 12.0,
     "P_N": 117.7
   },
-
   "collar": {
     "_comment_barra": "LUZ MEDIDA POR FAK entre la punta del cano y la tapa: 15 mm (25/08). La barra va de 12 y no de 15 para dejar 3 mm de holgura y que entre deslizando. Era el unico numero de riesgo que quedaba en la pieza; ya no lo es.",
-    "_comment": "Proporciones del croquis referidas al ANCHO del caño (A = 69,23): pared 0,14 A, alto de pared 0,87 A, span total 3,0 A. El croquis es a mano: las proporciones valen +-15%. La pared se dejo en 10 y no en los 14-17 que daria el dibujo literal porque con 10 la tension ya es despreciable y 17 seria material tirado (GATE 4 de cad-3d).",
-    "pared": 10.0,
+    "_comment": "pared 8 = 0,26 x hueco, la proporcion del croquis. alto_pared 45 = 1,5 x hueco: por resistencia sobraria con 25 (la presion sobre el cano es 0,07 MPa), pero lo que manda aca es que no se LADEE con una sola mochila, que es el defecto de la pieza puesta -- y eso mejora con pared larga. La profundidad corre a lo largo del ancho del cano (69,23), asi que 35 apoya en la mitad y sobra.",
+    "pared": 8.0,
     "barra_arriba": 12.0,
-    "alto_pared": 60.0,
-    "profundidad": 30.0
+    "alto_pared": 45.0,
+    "profundidad": 35.0
   },
-
   "cuna": {
-    "_comment": "Bocha para que la correa DUERMA adentro, no un canal cuadrado — ese fue otro de los hallazgos de la auditoria. Garganta 30 mm de hondo por 45 de ancho: entra un mazo de asas de mochila. Labio a media altura de la pared, como el dibujo grande del croquis.",
-    "vuelo": 55.0,
+    "_comment": "Al pasar el hueco de 69,8 a 30,6 las cunas de 55 quedaban desproporcionadas. Se bajan a 42: la bocha util queda en 32 mm de ancho por 30 de hondo -- entra un mazo de asas de mochila -- y la mochila cuelga a ~4 cm del cano sin rozarlo. Mas vuelo solo agrega momento y volumen.",
+    "vuelo": 42.0,
     "alto": 40.0,
     "fondo": 10.0,
     "labio_espesor": 10.0,
