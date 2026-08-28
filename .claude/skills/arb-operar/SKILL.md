@@ -863,6 +863,137 @@ _arbVer.py export  +  verificar + invariantes + diff del archivo entero
 lote, las líneas ya convertidas se vuelven a dividir por el ancho. El `valor_esperado` sí
 sale del actual: es contra lo que el cargador compara la celda antes de escribir.
 
+## ABM de Insumos — dar de alta un CÓDIGO en el maestro `APRENDIDO 2026-08-28`
+
+Hasta hoy esto lo hacía Fak a mano. Se grabó una sesión suya completa con
+`scripts/_arbAprender.py` (teclas + foco + fotos) y quedó todo medido. Fak, ese día:
+*"hoy es la última vez que lo hago yo"*. Herramienta: **`scripts/_arbInsumo.py`**.
+
+### Cómo se llega
+
+```
+ventana Producción  ->  ribbon solapa `Menú de Insumos`  (click en ~869,47)
+                    ->  botón `ABM de Insumos`           (click en ~36,84)
+```
+Abre la ventana **`Maestro de Insumos - BA`**, clase `TabCtrl`, 810x730.
+Por teclado el KeyTip es `V` (Menú de Insumos) y después `Y01` (ABM de Insumos) —
+ojo con el **cero adelante**, es `Y01`, no `Y1`.
+
+Ocho solapas, todas a **y=67**:
+
+| solapa | x | para qué |
+|---|---|---|
+| `Altas` | 52 | **crear** un código nuevo |
+| `Bajas` | 96 | |
+| `Modificaciones` | 160 | **corregir** uno existente — y **leerlo sin tocarlo** |
+| `Recupera` | 231 | |
+| `Precios` | 287 | |
+| `Listado` | 331 | exportar el maestro |
+| `Control de Calidad` | 403 | |
+| `Escape` | 477 | |
+
+### Mapa de campos (Altas y Modificaciones son la misma pantalla)
+
+Coordenadas del **centro de la caja**, relativas a la ventana:
+
+| campo | x,y | qué va |
+|---|---|---|
+| `Rubro` | 215,152 | `1` = materia prima |
+| **`Medida`** | 355,152 | **es el CÓDIGO del insumo** (mismo nombre engañoso que en Relaciones) |
+| `Descripción` | 370,181 | caja de 2 renglones — **tope 60 caracteres** |
+| `C. Costo Ingreso` · `Imputación Ingreso` | 215,266 · 477,266 | se dejan vacíos |
+| `C. Costo Descarga` · `Imputación Descarga` | 215,295 · 477,295 | se dejan vacíos |
+| **`Unidad`** | 217,323 | `MTS`, `MT2`, `KG`, `UN`… |
+| `Doble Medida S/N` | 466,323 | `N` |
+| `Stock Mínimo` · `Lote Óptimo de Compra` | 245,352 · 507,352 | vacíos |
+| `Unidad Mínima de Compra` · `Tiempo de Entrega` | 245,380 · 471,380 | vacíos |
+| `Proveedor` · `Código Original` (x2) | 215/514, 409 y 437 | vacíos |
+| `Es Sub-Producto S/N` · `Etiquetas` | 204,466 · 477,466 | `N` |
+| `Tiene Vencimiento S/N` | 204,494 | `N` |
+| `Tipo de Descarga O/G/I` | 466,494 | `I` |
+| `Origen Descarga M/L` | 650,494 | `M` |
+| **`Posee PAPP/PSW S/N`** | 204,523 | `S` — **es el flag de PPAP** |
+| `&Acepta` · `&Cancela` | 411,580 · 512,580 | |
+
+El pie de la ventana **dice qué espera el campo donde estás parado** (ej. *"Indique si el
+Insumo Tiene Documentación de Calidad Aprobada S/N/X"*). Es la ayuda en vivo: leerla en la
+foto antes de tipear algo dudoso.
+
+### La secuencia del alta (medida sobre Fak, 27 segundos)
+
+```
+click en `Altas`
+click en Rubro   -> 1 -> TAB
+click en Medida  -> <código> -> TAB
+click en Descripción -> <descripción> -> TAB
+TAB TAB          (saltea los centros de costo/imputación)
+Unidad -> MTS -> TAB
+... TAB hasta los flags ...
+Tipo de Descarga -> I -> TAB
+Origen Descarga  -> M -> TAB
+Posee PAPP/PSW   -> S -> TAB   <- el TAB desde acá cae en el botón &Acepta
+ENTER            (sobre &Acepta)
+```
+Después del alta la pantalla **se limpia sola y queda lista para el siguiente código**. Los
+campos que se dejan en blanco quedan en blanco: el arb no los exige.
+
+### 🔴 Tres cosas que rompen el método de siempre
+
+1. **Los campos son `RichEdit20A` y NO devuelven texto por `WM_GETTEXT`.** `txt(hwnd)` da
+   `''` siempre. Todo el control de "leo la celda antes de escribir" que sí funciona en
+   Relaciones (`Edit` común) **acá no sirve**. La única forma de saber qué dice un campo es
+   **`PrintWindow` y mirar la foto**. Ningún alta se da por buena sin foto.
+2. **El campo `Descripción` scrollea.** Con el cursor al final muestra el FINAL del texto y
+   se come las primeras letras: `PUNZONADO…` se ve `UNZONADO…`. **Eso no es un error de
+   carga**, es el render. Para leer la descripción real: solapa `Modificaciones`, traer el
+   código, y ahí se ve desde el principio.
+3. **El arb puede tirar `Microsoft Visual C++ Runtime Library` justo al apretar `&Acepta`**
+   (cartel `#32770`, botones `&Anular` / `&Reintentar` / `Om&itir`). Pasó en el alta del
+   28/08 y **el registro se grabó igual y correcto** — verificado después contra el maestro.
+   Aun así: la salida documentada es **`Anular` y reabrir el programa**, nunca `Omitir`
+   (sigue con la memoria corrupta). Si se apretó `Omitir`: **verificar el registro y cerrar
+   y reabrir el arb antes de escribir nada más.**
+
+### Verificar un alta sin tocar nada — solapa `Modificaciones`
+
+```bash
+python scripts/_arbInsumo.py solapa modificaciones
+python scripts/_arbInsumo.py click rubro
+python scripts/_arbInsumo.py escribir 1
+python scripts/_arbInsumo.py teclas TAB
+python scripts/_arbInsumo.py escribir <CODIGO>
+python scripts/_arbInsumo.py teclas TAB      # trae el registro
+# mirar la foto
+python scripts/_arbInsumo.py click cancela   # salir SIN grabar
+```
+**Se sale con `&Cancela`, no con `ESC`** — en el arb ESC avanza de campo, no cancela.
+
+### Exportar el maestro — solapa `Listado`
+
+`Desde Insumo` / `Hasta Insumo` (vacíos = todos) y el combo **`Salida`**, que tiene 8
+opciones **owner-drawn**: `CB_GETLBTEXT` devuelve vacío, **pero `CB_GETCURSEL` (0x0147) y
+`CB_SETCURSEL` (0x014E) sí funcionan cross-process**. Por eso el índice se fija por mensaje
+y se verifica, en vez de contar flechas a ciegas:
+
+| idx | opción | archivo que deja en `C:\tmp` |
+|---|---|---|
+| 0 | Pantalla | — |
+| **1** | **Impresora** | ⚠️ **manda el listado entero a la impresora de la oficina** |
+| 2 | Disco C | `INSUMOS.TXT` en **formato reporte** (con recuadros, `Hoja 1`, descripción cortada a 40) |
+| **3** | **Tabla EXcel** | `INSUMOS.TXT` **tab-separated** — es el que parsean los scripts |
+| 4 | Formato PDF | `INSUMOS.PDF` |
+| 5 | HTML | `INSUMOS.HTM` |
+| 6 | Word/RTF | |
+| 7 | Electronico | |
+
+⚠️ **`Disco C` y `Tabla EXcel` escriben el MISMO archivo `INSUMOS.TXT` con formatos
+distintos.** Exportar con `Disco C` te pisa el tab-separated. Antes de exportar, copiar el
+que haya a `.arb-cache/`.
+
+**Gate obligatorio:** leer `CB_GETCURSEL` y abortar si no es el índice buscado. El 28/08 ese
+gate frenó una corrida donde el combo había quedado en 2 en vez de 3. Un índice de más cae
+en `Impresora`.
+
 ## Seguridad — antes de que el robot escriba
 
 1. ⚠️ **NO HAY BACKUP DE DATOS DEL ARB.** `Z:\arb\prod\BAK` tiene sólo archivos `.DTF`
