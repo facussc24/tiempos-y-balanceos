@@ -22,9 +22,10 @@
   },
 
   "collar": {
+    "_comment_barra": "LUZ MEDIDA POR FAK entre la punta del cano y la tapa: 15 mm (25/08). La barra va de 12 y no de 15 para dejar 3 mm de holgura y que entre deslizando. Era el unico numero de riesgo que quedaba en la pieza; ya no lo es.",
     "_comment": "Proporciones del croquis referidas al ANCHO del caño (A = 69,23): pared 0,14 A, alto de pared 0,87 A, span total 3,0 A. El croquis es a mano: las proporciones valen +-15%. La pared se dejo en 10 y no en los 14-17 que daria el dibujo literal porque con 10 la tension ya es despreciable y 17 seria material tirado (GATE 4 de cad-3d).",
     "pared": 10.0,
-    "barra_arriba": 6.0,
+    "barra_arriba": 12.0,
     "alto_pared": 60.0,
     "profundidad": 25.0
   },
