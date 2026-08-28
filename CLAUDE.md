@@ -74,7 +74,6 @@ NO preguntar si Fak quiere que lo hagas. HACERLO.
 | `testing.md` | __tests__ |
 | `dev-login.md` | components/auth — boton dev-login: NO TOCAR NUNCA |
 | `cad-3d.md` | archivos .step/.stl/.glb, `.venv-cad`, skill cad-design — 2 gates 3D |
-| `documentos-de-terceros.md` | `*.pdf` — **un papel emitido por otro no se edita: se pide la reemision**; el QR/hash de verificacion es del emisor, tocarlo es falsificar el certificado |
 | `dxf-entregable.md` | `*.dxf` / `*.plt` — **el juez de un DXF es AutoCAD, no ezdxf** (`scripts/_validarDxf.py`); y si la ruta pasa 259 caracteres el doble click de Windows no abre |
 | `escritorio-tareas.md` | `_escritorio.mjs` + su hook — cola de tareas: cuándo se cierra y cómo se archiva (el hook la recuerda al tocar el Escritorio) |
 

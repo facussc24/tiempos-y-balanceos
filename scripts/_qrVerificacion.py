@@ -17,7 +17,7 @@ ademas del puntero al registro, guardamos el hash del archivo emitido. Eso respo
 dos preguntas en vez de una: "existe este documento?" y "es este archivo, sin tocar?".
 
 QUE NO HACE, y no es un olvido: no pone un QR sobre un documento emitido por otro.
-Regla .claude/rules/documentos-de-terceros.md — la verificacion la hace el emisor.
+La verificacion la hace el emisor.
 
 Uso:
   python scripts/_qrVerificacion.py analizar  "<archivo>"
@@ -338,7 +338,7 @@ def sellar(path: str, meta: dict, salida: str | None, pagina: int,
         print("\n[ABORTA] Este PDF " + motivo)
         print("  Un documento emitido por otro no lleva nuestro QR: la verificacion la hace")
         print("  el emisor. Si un campo esta mal, se pide la reemision al que lo emitio.")
-        print("  Regla: .claude/rules/documentos-de-terceros.md")
+
         raise SystemExit(2)
 
     doc_id = f"{meta['tipo']}-{meta['numero']}-REV{meta['rev']}"

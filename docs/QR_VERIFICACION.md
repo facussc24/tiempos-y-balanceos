@@ -38,7 +38,7 @@ Dos cosas que no son casualidad y que conviene copiar:
 - **El QR no contiene los datos del reporte: contiene un puntero opaco.** No se puede leer nada
   del token, ni adivinar el siguiente, ni fabricar uno. La verificacion la hace el servidor del
   emisor, y por eso reapuntar ese QR a una copia propia no "corrige" nada: falsifica el
-  certificado. Ver `.claude/rules/documentos-de-terceros.md`.
+  certificado.
 
 ---
 
