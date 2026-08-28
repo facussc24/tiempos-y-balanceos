@@ -574,5 +574,55 @@ trampas de código de arriba no salvan un concepto equivocado.
     a 0, y el build siguiente volvia a dejar el poste sin corregir. Se veia "0,00" mirando una
     sola pasada. **Se prueba corriendo TRES pasadas y exigiendo que la tercera no se mueva.**
 
+30. **Abrir el archivo correcto no es usarlo.** (2026-08-28, dispositivo de adhesivado del
+    Insert. Lo vio Fak de un vistazo: *"ojo que no estabas usando los 3D reales del insert"*.)
+    El STEP del cliente estaba ahi, con el md5 del servidor. Pero TODA la geometria del nido
+    salia de una cadena de proxys: malla `lc=3` -> grilla de 3 mm por **binning de vertices**
+    -> contorno por marching squares -> **media movil de 5 puntos**. Sobre esa sombra pixelada
+    se cortaba la placa CNC, se elegia la altura de los apoyos, se detectaban las torretas y
+    se juzgaba la luz de los pines.
+    - Lo que costo, medido: el contorno se desviaba hasta **5,01 mm** del real (mediana 1,71),
+      con bbox 555,00 x 153,00 sobre una pieza de **552,71 x 151,00** y perimetro 1326,4 contra
+      **1296,7**; la silueta figuraba 718,2 cm2 y son **695,3**. La orla de **6,00 mm** con la
+      que se diseño la placa era en realidad de **1,70 a 6,92** (mediana 3,78). El area de
+      torretas venia inflada **61 %** (4266 -> 2649 mm2). Las alturas de cara B usadas para los
+      postes erraban hasta **8,97 mm** sobre un pad de espuma de 12.
+    - **El control lo confesaba y nadie lo leyo.** El docstring de `verificar_nido` decia que
+      con `lc=3` un O3,50 queda en 3 facetas con 0,51 mm de flecha, *17 veces* la luz de 0,05
+      que ese mismo control decia verificar. Un control que explica por que no puede medir lo
+      que mide **no es un control**: o se arregla la entrada o se saca.
+    - **La resolucion de cada paso intermedio se declara AL LADO del numero, y se compara
+      contra la tolerancia del entregable.** 3 mm de celda para cotar una placa de CNC y 0,05
+      de luz de pin no conviven.
+    - Como se arregla cada eslabon: silueta **exacta** (union de los triangulos proyectados)
+      en vez de marching squares; muestreo por **AREA** en vez de binning de vertices; ventana
+      de filtro en **milimetros** (45), no en celdas; y **Douglas-Peucker con tolerancia
+      declarada** en vez de media movil — suavizar no tiene tolerancia, simplificar si.
+
+31. **Tres formas de que una eleccion de diseño no sea una eleccion** (mismo trabajo, las tres
+    aparecieron el mismo dia):
+    - **Un INDICE no es un criterio.** El trio de apoyos vivia en `params` como
+      `apoyos_trio: [5,6,8]`. Al re-medir la pieza la lista de candidatos cambio de largo y de
+      orden, y esos tres numeros pasaron a apuntar a otros puntos **sin que nada fallara**. Lo
+      que se guarda es el criterio; los indices los deriva un script.
+    - **Un muestreo sin semilla vuelve el entregable irreproducible.** `sample_surface` usa el
+      RNG global: tres corridas del mismo script sobre el mismo STEP dieron triangulos de apoyo
+      de **144,3 / 159,9 / 190,5 cm2**. Un auditor que reproduce y no da lo mismo tiene razon.
+    - **Y la semilla sola no alcanza si la eleccion la decide un desempate.** Tomar "los 8
+      maximos de la transformada de distancia" con `argsort` deja la decision en manos del
+      orden de empate. La salida no es estabilizar el desempate: es **enumerar todo el conjunto
+      factible** (grilla de 10 mm sobre la superficie donde el pad entra entero, 155 posiciones)
+      y **optimizar** sobre el — 120.284 trios validos, optimo 205,5 cm2 y 48,2 mm de margen,
+      contra 11,0 cm2 y 0,0 mm del peor valido. Ahi el valor gemelo sale gratis y separa solo.
+
+32. **Medir contra los VERTICES lo que se aparta de los SEGMENTOS rechaza lo que esta bien.**
+    El control de la simplificacion del contorno reportaba **59,88 mm** de desvio sobre una
+    poligonal que respetaba 0,1: con tramos de ~28 mm, el punto del medio esta a 14 mm del
+    vertice mas cercano y a 0,02 de la recta. Es la leccion 13 (el rayo que pega en la cara
+    interna) con otra ropa: **antes de creerle un numero grande a un control, mirar contra QUE
+    lo esta midiendo.** Y el gemelo de ese control no es mover un vertice —si el movimiento cae
+    a lo largo del borde no cambia nada—: es correr la MISMA simplificacion con la tolerancia
+    20 veces mas floja y exigir que la mida.
+
 Mejoras candidatas (build123d-mcp, cad-cae-copilot, etc.): ver `ROADMAP.md` — nada de eso
 está instalado hoy.
