@@ -10,9 +10,9 @@
   ],
 
   "cano": {
-    "_comment": "LAS DOS COTAS SALEN DEL CALIBRE DE FAK, ninguna estimada. El ancho estaba en la foto de las 16:25:11 del 19/08: el display estaba rotado y en sombra, se aislo por color, se enderezo 107,3 grados y se amplio 6x -> 69.23. El espesor lo confirmo Fak con la pieza puesta (a la boca de 31,30 le sobraban 3-4 mm).",
+    "_comment": "LAS DOS COTAS SALEN DEL CALIBRE DE FAK, ninguna estimada. El ancho estaba en la foto de las 16:25:11 del 19/08: el display estaba rotado y en sombra, se aislo por color, se enderezo 107,3 grados y se amplio 6x -> 69.23. El espesor lo midio Fak con regla el 28/08: 'cerca de 30'. Se toma 30 y la PROFUNDIDAD de la pieza se iguala a el, para que el collar apoye sobre TODA la seccion del cano y no sobre una franja.",
     "ancho": 69.23,
-    "espesor": 27.20,
+    "espesor": 30.00,
     "juego": 0.60
   },
 
@@ -27,7 +27,7 @@
     "pared": 10.0,
     "barra_arriba": 12.0,
     "alto_pared": 60.0,
-    "profundidad": 25.0
+    "profundidad": 30.0
   },
 
   "cuna": {
