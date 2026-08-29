@@ -80,6 +80,7 @@ NO preguntar si Fak quiere que lo hagas. HACERLO.
 | `cad-3d.md` | archivos .step/.stl/.glb, `.venv-cad`, skill cad-design — 2 gates 3D |
 | `dxf-entregable.md` | `*.dxf` / `*.plt` — **el juez de un DXF es AutoCAD, no ezdxf** (`scripts/_validarDxf.py`); y si la ruta pasa 259 caracteres el doble click de Windows no abre |
 | `escritorio-tareas.md` | `_escritorio.mjs` + su hook — cola de tareas: cuándo se cierra y cómo se archiva (el hook la recuerda al tocar el Escritorio) |
+| `lecciones-consolidacion.md` | `docs/LECCIONES_APRENDIDAS.md` — ciclo de vida de una lección: cómo entra, cómo se gradúa y la pasada de consolidación al llegar al aviso de 26 KB |
 
 **Skills** (on-demand): `apqp-schema` (schema JSONB Supabase), `product-map` (8 familias,
 part numbers, equipo APQP), `amfe-domain` (conocimiento AMFE profundo), `amfe-cookbook`
@@ -107,7 +108,7 @@ roles — cargan solo al usarse. NO crear agentes-rol por dominio ni proyectos
 separados (multi-agente ≈ 15x tokens); subagentes solo para trabajo batch/paralelo,
 techo 5. `docs/LECCIONES_APRENDIDAS.md`: gate en el hook (aviso 26 KB, tope 28 KB
 con corte en linea completa); al aviso se CONSOLIDA — fusionar lecciones del mismo
-patron y graduar a regla/memoria/archivo (ver su seccion final) — nunca comprimir
+patron y graduar a regla/memoria/archivo (regla `lecciones-consolidacion.md`) — nunca comprimir
 a fragmentos ni pelear bytes.
 
 ## Stack y comandos
