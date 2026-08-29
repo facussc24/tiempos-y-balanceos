@@ -206,6 +206,50 @@ brazo correcto**.
   subsistema sin función, el subsistema se VA, no se refuerza (el resorte del virolador acumuló tope +
   alma + brazo extra antes de que Fak lo llamara "un parche mal hecho"; skill `cad-design` §6).
 
+**GATE 3.6 — un control puede SEPARAR y estar mirando el número equivocado.** 2026-08-29,
+dispositivo de adhesivado: para decidir cuál sólido del STEP es el sustrato escribí un criterio
+por espesor de pared (el recubrimiento sería la lámina fina). **Elegía el sólido equivocado**, y
+lo cazó el propio gate al no separar: el sustrato del SAB1740 es el sólido 1 y resulta ser el
+**más delgado** (2,28 mm contra 2,92 del "recubrimiento", que trae su espuma). Un rato después,
+el criterio de reemplazo —mayor volumen— *sí* separaba… con un volumen de **391,7 cm³ contra
+229,9 cm³ reales**: la teselación de OCC sale con un vértice por cara, la malla **no cierra** y
+el volumen por divergencia da cualquier cosa. Dos moralejas que no son la misma:
+- **Un volumen se integra sobre el B-Rep, no sobre la malla** — y si se mide sobre malla, primero
+  `merge_vertices()` y `is_watertight`.
+- **Que un criterio separe no prueba que esté mirando lo que cree.** Al lado de cada criterio va
+  el número que lo sostiene, y si dos criterios independientes no coinciden, **ABORTA** en vez de
+  quedarse con el más probable. El que quedó: la caja que contiene a la otra manda (cualitativo,
+  robusto) y el volumen del B-Rep confirma.
+
+**GATE 3.7 — un mallador que no converge no es "lento": es el mallador equivocado, y el motor se
+DECLARA.** Mismo día: gmsh no puede mallar el Insert delantero (SAB1726). Dos corridas se comieron
+**2 horas de CPU cada una sin terminar**, y bajando el detalle hasta lc=20 tampoco termina en 4
+minutos — o sea no es el tamaño de elemento, es la geometría. **La teselación de OpenCascade sobre
+el mismo archivo tarda 25 segundos.** Reglas que deja:
+- Antes de esperar, **medir**: si un mallado no cierra en un tiempo que se pueda explicar, probar el
+  otro motor en vez de subir el límite.
+- **El motor va declarado por pieza y escrito en el JSON de salida**, nunca elegido en silencio
+  "el que ande": comparar dos piezas malladas con motores distintos sin verlo es un error invisible.
+- Y se mide cuánto mueve el cambio **sobre la pieza donde se conoce la respuesta**: OCC contra gmsh
+  en el SAB1740 movió el bbox <0,02 mm y el perímetro 0,1 mm sobre 1.296. Recién con eso el motor
+  nuevo es neutro; sin eso es una fe.
+- **El nombre del caché sale de UN lugar y lleva firma + motor + el parámetro que gobierna la malla**
+  (`lc` para gmsh, `tol` para OCC). Estaba escrito a mano en 8 scripts como `insert_s1_lc08.npz`: con
+  otra pieza apuntaba a un archivo inexistente y la cadena caía en cascada.
+
+**GATE 3.8 — un barrido que no PUEDE refutar la conclusión no es evidencia.** Mismo día: barrí la
+sección del tubo del caballete (40x40 → 30x30 → 20x20) y publiqué que el umbral de vuelco casi no se
+movía (0,760 → 0,759 → 0,754). Cierto, pero **vacío**: el umbral es semibase/altura del cg y la
+sección no toca ninguna de las dos, así que el resultado era así **por construcción**. Es el test del
+valor gemelo aplicado al parámetro: si el gemelo no cambia cuando cambia la magnitud que barro, ese
+barrido no está midiendo eso. Para mover el vuelco hay que barrer la **geometría**. Y de paso: una
+premisa de comparación (*"un frenazo corriente es ~1 g"*) **se cita o no se escribe** — si no tiene
+fuente, se nombra el evento real (la rueda contra una junta) o se deja fuera.
+
+**Y no se edita un script mientras la cadena está corriendo.** Mismo día, corrida entera perdida: la
+segunda pasada de `verificar_nido.py` agarró el archivo a medio editar y salió con `NameError`. Los
+subprocesos leen el archivo cuando arrancan, no cuando arrancó la cadena.
+
 **GATE 5 — antes de rediseñar, medir si el PROCESO repite.** 2026-08-22/24, gancho de mochila:
 cuatro impresiones corrigiendo el modelo porque el mismo `.stl` calzaba una vez y la siguiente no.
 La holgura que estaba ajustando (±0,15 mm) era **del tamaño del error normal de la impresora**, así
