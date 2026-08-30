@@ -67,7 +67,10 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: pip install PyMuPDF
+      # Version PINEADA = la probada en la notebook. La ultima de pip imprime una
+      # advertencia de deprecacion por stdout al hacer `import fitz`, y los tests
+      # de pdfBomArb parsean stdout (el JSON y el "ok" quedan contaminados).
+      - run: pip install PyMuPDF==1.27.2.2
       - run: npm ci
       - name: Run vitest
         run: npx vitest run
