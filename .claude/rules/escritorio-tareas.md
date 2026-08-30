@@ -128,12 +128,20 @@ ve el equipo. Es deliberado — sirve de trazabilidad si Fak no está.
 ## 5. Cómo se hace
 
 ```bash
-node scripts/_escritorio.mjs                   # relevar: qué está abierto y hace cuántos días
+node scripts/_escritorio.mjs                   # relevar + barrido de mails + verificar
 node scripts/_escritorio.mjs --check           # invariantes del archivo
 node scripts/_escritorio.mjs --archivar "<carpeta>" --cerrada AAAA-MM-DD \
      --quien "<quién lo pidió>" --que "<qué se hizo>" --donde "<dónde quedó el entregable>"
 node scripts/_escritorio.mjs --reabrir "<carpeta archivada>"
 ```
+
+**El barrido de mails es parte del relevamiento** (automatizado 30/08/2026 — antes era un
+paso manual que en 3 relevamientos destapó 7 pedidos invisibles). Cruza la Bandeja de
+entrada de los últimos 10 días contra los nombres de tarea (abiertas + cerradas) y lista:
+los hilos **sin carpeta** (candidatas a pedido invisible) y los **borradores/bandeja de
+salida** recientes (la firma de "hecho pero no avisado"). Detect-only: no crea carpetas ni
+manda mails. Lógica y tests: `scripts/_lib/mailCache.mjs` + `mailCache.test.mjs` (21).
+Necesita el cache de `_mails.py` (sync programado 2×/día); si está viejo, lo canta.
 
 Todos aceptan `--dry-run`. Las rutas viven en `scripts/_lib/serverPaths.mjs`.
 **Datos reales de las tareas (clientes, proyectos, números) NO van al repo: es público.**

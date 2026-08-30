@@ -19,7 +19,7 @@
  *
  * NADA SE BORRA NUNCA: no hay una sola llamada de borrado en este archivo.
  *
- *   node scripts/_escritorio.mjs                      # relevar + verificar
+ *   node scripts/_escritorio.mjs                      # relevar + barrido de mails + verificar
  *   node scripts/_escritorio.mjs --check              # solo invariantes (exit 1 si rompen)
  *   node scripts/_escritorio.mjs --archivar "<carpeta>" --cerrada AAAA-MM-DD \
  *        --quien "<quien lo pidio>" --que "<que se hizo>" --donde "<donde quedo el entregable>"
@@ -34,6 +34,9 @@ import ExcelJS from 'exceljs';
 
 import { RUTA_ESCRITORIO, RUTA_TAREAS_CERRADAS } from './_lib/serverPaths.mjs';
 import { leerMsg } from './_leerMsg.mjs';
+import {
+    MAILS_JSONL, leerMailsDesde, cruzarMailsConTareas, fechaCorte,
+} from './_lib/mailCache.mjs';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Configuracion (las rutas viven en _lib/serverPaths.mjs, con el resto)
@@ -310,15 +313,77 @@ async function cmdRelevar(escritorio, archivo) {
         say(`${c.d}cuando se copia la carpeta, asi que puede ser mas nueva de lo que la tarea es.${c.x}`);
     }
 
+    // El listado de cerradas se lee ANTES de imprimir el archivo porque el cruce de mails
+    // tambien lo necesita: un mail sobre una tarea recien cerrada no es un pedido invisible.
+    const cerradasPorAnio = [];
+    if (fs.existsSync(archivo)) {
+        for (const anio of listar(archivo).filter((e) => e.dir && /^\d{4}$/.test(e.nombre)).map((e) => e.nombre)) {
+            cerradasPorAnio.push({ anio, filas: await leerIndice(archivo, anio) });
+        }
+    }
+    await relevarMails([...tareas, ...enEspera], cerradasPorAnio);
+
     say(`\n${c.b}ARCHIVO${c.x}  ${archivo}`);
     if (!fs.existsSync(archivo)) { warn('Todavia no existe: se crea con el primer --archivar.'); return 0; }
-    for (const anio of listar(archivo).filter((e) => e.dir && /^\d{4}$/.test(e.nombre)).map((e) => e.nombre)) {
-        const filas = await leerIndice(archivo, anio);
+    for (const { anio, filas } of cerradasPorAnio) {
         say(`  ${anio}: ${filas.length} tarea(s) en el listado`);
         for (const f of filas.slice(-8)) say(`    ${c.d}${f.cerrada}${c.x}  ${f.tarea}`);
     }
     say('');
     return cmdCheck(archivo);
+}
+
+/**
+ * El barrido de la Bandeja contra la cola — automatizado el 30/08/2026.
+ *
+ * Antes era un paso MANUAL del relevamiento ("barrer la Bandeja de los ultimos ~10 dias
+ * contra los nombres de carpeta") y en los tres relevamientos en que se hizo (03/08, 14/08,
+ * 19/08) destapo SIETE pedidos que llegaron por mail y nunca se volvieron carpeta. Las dos
+ * secciones son listas para OJEAR, no verdades: la decision de abrir una carpeta o mandar
+ * un borrador sigue siendo humana.
+ */
+const DIAS_BARRIDO = 10;
+async function relevarMails(abiertas, cerradasPorAnio, { dias = DIAS_BARRIDO, jsonl = MAILS_JSONL } = {}) {
+    if (!fs.existsSync(jsonl)) {
+        say(`\n${c.y}⚠${c.x}  Sin cache de mails (${jsonl}): el barrido Bandeja↔Escritorio no se puede hacer.`);
+        say(`${c.d}   Corre primero:  python scripts/_mails.py --sync${c.x}`);
+        return;
+    }
+    const nombres = [
+        ...abiertas.map((t) => t.nombre),
+        ...cerradasPorAnio.flatMap(({ filas }) => filas.map((f) => despojarFecha(f.tarea))),
+    ];
+    const mails = await leerMailsDesde(fechaCorte(dias), jsonl);
+    const { sinCarpeta, noAvisados } = cruzarMailsConTareas(mails, nombres);
+
+    // Cuando de verdad se sincronizo, no cuando llego el ultimo mail: un finde sin mails
+    // nuevos deja el cache "viejo" estando perfectamente al dia.
+    let ultimoSync = 0;
+    try { ultimoSync = fs.statSync(path.join(path.dirname(jsonl), 'sync.log')).mtimeMs; } catch { /* sin log */ }
+    const syncViejo = ultimoSync && diasDesde(ultimoSync) >= 2;
+
+    say(`\n${c.b}MAILS DE LA BANDEJA SIN CARPETA${c.x}  ${c.d}ultimos ${dias} dias — candidatas a pedido invisible${c.x}`);
+    if (syncViejo) say(`${c.y}⚠${c.x}  El cache no se sincroniza hace ${diasDesde(ultimoSync)} dias: puede faltar lo ultimo (python scripts/_mails.py --sync).`);
+    if (!sinCarpeta.length) {
+        say(`${c.d}  (ninguno: todos los hilos recientes matchean alguna tarea abierta o cerrada)${c.x}`);
+    } else {
+        const TOPE = 15;
+        for (const h of sinCarpeta.slice(0, TOPE)) {
+            say(`  ${c.d}${h.fecha.slice(5, 10)}${c.x}  ${h.de.slice(0, 24).padEnd(24)}  ${h.asunto.slice(0, 70)}${h.mails > 1 ? `  ${c.d}(${h.mails} mails)${c.x}` : ''}`);
+        }
+        if (sinCarpeta.length > TOPE) say(`  ${c.d}… y ${sinCarpeta.length - TOPE} hilo(s) mas${c.x}`);
+        say(`${c.d}  Un hilo aca puede ser charla sin tarea — pero si es un pedido, hoy NADIE lo esta mirando.${c.x}`);
+    }
+
+    if (noAvisados.length) {
+        say(`\n${c.b}HECHO PERO NO AVISADO${c.x}  ${c.d}borradores y bandeja de salida de los ultimos ${dias} dias${c.x}`);
+        say(`${c.d}  la firma del patron que explicaba 30 de 30 tareas sin cerrar (triage 03/08): el trabajo esta, el aviso no salio${c.x}`);
+        for (const m of noAvisados) {
+            const tipo = m.tipo === 'salida' ? `${c.r}EN COLA DE SALIDA${c.x}` : 'borrador';
+            say(`  ${c.d}${m.fecha.slice(5, 10)}${c.x}  ${tipo}  ${c.d}para:${c.x} ${m.para.slice(0, 30).padEnd(30)}  ${m.asunto.slice(0, 55)}`);
+        }
+        say(`${c.d}  Solo aviso: los mails los manda Fak, o van por scripts/_mailEnviar.py (regla mail-envio).${c.x}`);
+    }
 }
 
 async function cmdCheck(archivo) {

@@ -19,6 +19,7 @@ commitear contenido de mails ni pegarlo en archivos del repo.
 Enviar, responder o borrar mails NO se hace desde aca: es a mano, por Fak.
 """
 import argparse
+import datetime
 import io
 import json
 import os
@@ -29,6 +30,7 @@ RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CACHE = os.path.join(RAIZ, '.mail-cache')
 MAILS = os.path.join(CACHE, 'mails.jsonl')
 ADJ = os.path.join(CACHE, 'adjuntos')
+ESTADO = os.path.join(CACHE, 'sync-state.json')
 
 MAX_CUERPO = 20000   # un mail con 300 reenviados no aporta mas que sus primeras paginas
 
@@ -69,6 +71,76 @@ def _leer_cache():
             except Exception:
                 pass
     return out
+
+
+def _leer_estado():
+    try:
+        with io.open(ESTADO, encoding='utf-8') as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+
+def _guardar_estado(estado):
+    try:
+        if not os.path.isdir(CACHE):
+            os.makedirs(CACHE)
+        with io.open(ESTADO, 'w', encoding='utf-8') as f:
+            json.dump(estado, f)
+    except Exception:
+        pass
+
+
+def evaluar_parcial(revisados, fechas_cache, estado, hoy=None):
+    """¿El .ost estaba entero cuando se sincronizo?  ->  (parcial, motivo, estado_nuevo)
+
+    HISTORIA: la version anterior comparaba los items que expone Outlook contra el TOTAL
+    del cache — pero el cache guarda mails desde 2023 y el .ost solo una ventana (~2 años,
+    hoy ~2.780 items contra 5.241 del cache), asi que daba PARCIAL en TODAS las corridas.
+    Un control que da siempre el mismo resultado no detecta nada: el dia que el sync
+    fallara en serio, nadie se iba a enterar (medido 30/08/2026: PARCIAL eterno desde que
+    el cache supero la ventana).
+
+    Dos señales, comparando siempre contra lo que Outlook PUEDE tener:
+      1. PISO — los mails de los ultimos 60 dias del cache tienen que estar si o si en la
+         ventana del .ost (hoy son ~560 contra ~2.780: margen 5x). Menos que eso = el .ost
+         no termino de bajar. Caza el arranque en frio (40 items).
+      2. CAIDA — mas de 20% menos items que la ultima corrida completa = descarga a medias.
+         Caza el .ost cargado por la mitad, que el piso solo no ve.
+
+    Y para no fabricar el mismo PARCIAL eterno del otro lado: si la ventana del .ost se
+    achica DE VERDAD (limpieza de buzon, cambio de politica), tres corridas seguidas
+    estables en el numero nuevo lo aceptan como base. Una caida real de descarga no es
+    estable: cada corrida ve un numero distinto mientras el .ost sigue bajando.
+    """
+    estado = dict(estado or {})
+    if not fechas_cache:
+        estado.update(revisados_ok=revisados, sospechas=0, ultimo_revisados=revisados)
+        return False, '', estado
+
+    hoy = hoy or datetime.date.today()
+    corte = (hoy - datetime.timedelta(days=60)).strftime('%Y-%m-%d')
+    piso = sum(1 for f in fechas_cache if f and f[:10] >= corte)
+    if revisados < piso:
+        estado.update(sospechas=0, ultimo_revisados=revisados)
+        return True, ('Outlook mostro %d items y solo los ultimos 60 dias del cache ya son %d: '
+                      'el .ost no termino de bajar.' % (revisados, piso)), estado
+
+    ok_previo = estado.get('revisados_ok') or 0
+    if ok_previo and revisados < ok_previo * 0.8:
+        ultimo = estado.get('ultimo_revisados') or 0
+        estable = ultimo and abs(revisados - ultimo) <= ultimo * 0.05
+        sospechas = (estado.get('sospechas') or 0) + 1 if estable else 1
+        if sospechas >= 3:
+            estado.update(revisados_ok=revisados, sospechas=0, ultimo_revisados=revisados)
+            return False, ('ventana del .ost mas chica aceptada como nueva base: %d items, '
+                           '3 corridas estables' % revisados), estado
+        estado.update(sospechas=sospechas, ultimo_revisados=revisados)
+        return True, ('Outlook mostro %d items; la ultima corrida completa habia mostrado %d.'
+                      % (revisados, ok_previo)), estado
+
+    estado.update(revisados_ok=revisados, sospechas=0, ultimo_revisados=revisados)
+    return False, '', estado
 
 
 def sync(full=False):
@@ -145,15 +217,19 @@ def sync(full=False):
 
     # Guard: Outlook clasico tarda en bajar el .ost. Si todavia no termino, el recorrido
     # ve unos pocos items y "0 nuevos" NO prueba que no haya mails nuevos: prueba que
-    # Outlook todavia no los tiene. Sin este aviso el sync diario miente en silencio.
-    parcial = bool(previos) and revisados[0] < len(previos) * 0.8
+    # Outlook todavia no los tiene. La decision vive en evaluar_parcial() — la version
+    # anterior comparaba contra el cache ENTERO y daba PARCIAL eterno (ver su docstring).
+    fechas_cache = [m.get('fecha', '') for m in previos.values()]
+    parcial, motivo, estado = evaluar_parcial(revisados[0], fechas_cache, _leer_estado())
+    _guardar_estado(estado)
     if parcial:
         print()
         print('  *** SYNC PARCIAL — NO confiar en "nuevos: %d" ***' % len(nuevos))
-        print('  Outlook clasico solo mostro %d items y el cache ya tiene %d.'
-              % (revisados[0], len(previos)))
+        print('  ' + motivo)
         print('  Todavia esta bajando el buzon del servidor. Dejalo abierto y reintenta')
         print('  mas tarde:  python scripts/_mails.py --sync')
+    elif motivo:
+        print('  (%s)' % motivo)
 
     try:
         with io.open(os.path.join(CACHE, 'sync.log'), 'a', encoding='utf-8') as f:
@@ -255,6 +331,55 @@ def stats():
         print('  %-58s %6d' % (c[:58], n))
 
 
+def selftest():
+    """Prueba evaluar_parcial() SIN Outlook — incluidos los casos en ROJO.
+
+    Regla de la casa: un control nuevo se estrena contra el caso donde ya se conoce la
+    respuesta, y se prueba que da ROJO contra un caso rojo (un control que da verde
+    siempre no controla nada). Los numeros son los reales del 30/08/2026.
+    """
+    hoy = datetime.date(2026, 8, 30)
+    viejos = ['2024-%02d-01 09:00' % (i % 12 + 1) for i in range(4600)]
+    recientes = ['2026-08-%02d 09:00' % (i % 28 + 1) for i in range(641)]
+    cache = viejos + recientes          # 5.241 mails, como el cache real
+    fallas = []
+
+    def caso(nombre, esperado, revisados, fechas, estado):
+        parcial, motivo, estado_nuevo = evaluar_parcial(revisados, fechas, estado, hoy=hoy)
+        ok = parcial == esperado
+        print('  %s %-58s -> %s%s' % ('ok ' if ok else 'MAL', nombre,
+                                      'PARCIAL' if parcial else 'OK',
+                                      ('  (%s)' % motivo) if motivo else ''))
+        if not ok:
+            fallas.append(nombre)
+        return estado_nuevo
+
+    print('selftest de evaluar_parcial (%d casos):' % 9)
+    # 1. La corrida real de hoy: 2.779 items contra un cache de 5.241 desde 2023 = OK.
+    #    (la version vieja daba PARCIAL aca: es EL caso que motivo el fix)
+    caso('corrida real de hoy (ventana .ost < cache historico)', False, 2779, cache, {'revisados_ok': 2787})
+    # 2. EN ROJO: .ost cargado por la mitad -> lo caza la señal de CAIDA.
+    caso('ROJO: descarga por la mitad (1.400 de 2.787)', True, 1400, cache, {'revisados_ok': 2787})
+    # 3. EN ROJO: arranque en frio, sin estado previo -> lo caza el PISO de 60 dias.
+    caso('ROJO: arranque en frio (40 items, sin estado)', True, 40, cache, {})
+    # 4. Primer sync de la vida: cache vacio, nada con que comparar.
+    caso('primer sync (cache vacio)', False, 2779, [], {})
+    # 5. Deriva normal de la ventana (items que van saliendo por atras).
+    caso('deriva normal (2.779 tras 2.790)', False, 2779, cache, {'revisados_ok': 2790})
+    # 6-8. Ventana que se achico DE VERDAD: 3 corridas estables la aceptan como base...
+    e = caso('ventana achicada, corrida 1 (avisa)', True, 1800, cache, {'revisados_ok': 2787})
+    e = caso('ventana achicada, corrida 2 estable (avisa)', True, 1810, cache, e)
+    e = caso('ventana achicada, corrida 3 estable (acepta base)', False, 1795, cache, e)
+    # ...y con la base nueva, una caida real se vuelve a cazar.
+    caso('ROJO: caida contra la base nueva (1.400 de 1.795)', True, 1400, cache, e)
+
+    if fallas:
+        print('FALLARON %d caso(s): %s' % (len(fallas), ', '.join(fallas)))
+        return 1
+    print('todo verde')
+    return 0
+
+
 def main():
     ap = argparse.ArgumentParser(description='Mails de Outlook (solo lectura)')
     ap.add_argument('--sync', action='store_true', help='volcar el buzon al cache (incremental)')
@@ -269,9 +394,12 @@ def main():
     ap.add_argument('--adjuntos', metavar='ID')
     ap.add_argument('--out', metavar='CARPETA')
     ap.add_argument('--stats', action='store_true')
+    ap.add_argument('--selftest', action='store_true', help='probar el detector de sync parcial (sin Outlook)')
     a = ap.parse_args()
 
-    if a.sync:
+    if a.selftest:
+        sys.exit(selftest())
+    elif a.sync:
         sys.exit(sync(full=a.full))
     elif a.buscar:
         buscar(a.buscar, a.desde, a.hasta, a.carpeta, a.asunto, a.limite)
