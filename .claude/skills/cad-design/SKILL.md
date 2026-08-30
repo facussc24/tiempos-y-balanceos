@@ -168,6 +168,35 @@ El venv **no tiene pip**: instalar con `uv pip install --python .venv-cad\Script
 Si un script se corre con el Python equivocado, `cadlib.envcheck` lo dice y sale con código 3.
 (Fallback histórico: gmsh también corre en el Py3.14 del sistema, pero no hace falta.)
 
+## 1bis. Segunda opinión independiente — `build123d-mcp` (instalado 2026-08-29)
+
+Servidor MCP configurado en `.mcp.json` (raíz del repo), versión **pineada 0.3.83**, con
+`BUILD123D_IN_PROCESS=1` — **obligatorio en esta notebook**: el worker subprocess del server
+se cuelga en Windows (medido: `import_cad_file` no responde ni con 300 s de budget; in-process
+responde en 8 s). Sus tools aparecen como `mcp__build123d__*` en la sesión siguiente al enable.
+
+**Rol: segunda opinión AL LADO de los gates, nunca reemplazo.** Mide con OCCT pero con una
+implementación que no comparte una línea de código con `cadlib`. ICP (`register_icp.py`) y
+colisión contra sustrato (`check_collision.py`) siguen siendo nuestros — el MCP no los hace.
+Cuándo llamarlo: contra-verificar un volumen/bbox/solape que decide algo; `validate` antes de
+entregar (watertight/manifold con diagnóstico: "4 open edges"); `compare kind='shape'` cuando
+el cliente manda una revisión nueva de un STEP; `locate_gate_defects` cuando un export falla.
+
+Tools reales de 0.3.83 (los nombres de la doc del branch main NO coinciden):
+`import_cad_file(path, name)` · `measure(object_name)` · `validate(object_name)` ·
+`compare(a, b, kind='shape'|'fit'|'align')` (fit = interferencia/clearance) ·
+`cross_sections` · `locate_gate_defects` · `inspect_part` · `render_view` · `design_audit` ·
+`execute` (código build123d con `show()`). El payload JSON viene anidado en
+`structuredContent.result` como STRING.
+
+**Evidencia de adopción** (test del propio criterio del ROADMAP, 2026-08-29):
+`test_build123d_mcp.py` — volumen analítico 22.429,2037 mm³ exacto (desv 0,0000%), bbox exacto,
+solape por construcción 4.500,0 mm³ exacto + status `interpenetrating`, par separado `apart` con
+luz 10,0, `validate` ROJO sobre shell abierto y VERDE sobre sólido sano (los dos colores), y
+agreement 0,000000% contra gmsh/OCC en un STEP real de 28 sólidos (34.186.208,822 mm³).
+**Upgrade de versión = cambiar el pin y re-correr `test_build123d_mcp.py` (exit 0 = adoptar);
+nunca subir el pin sin el test.**
+
 ## 2. Convención de workdir
 
 Cada pieza/trabajo usa un workdir en el scratchpad con `manifest.json` (transforms con
@@ -671,5 +700,5 @@ trampas de código de arriba no salvan un concepto equivocado.
     contra "¿toca algo?"**. Y el retiro para no caer en un nudo se hace sobre UNA coordenada:
     retirar sobre las dos saca la punta de la pieza que tenia que tocar.
 
-Mejoras candidatas (build123d-mcp, cad-cae-copilot, etc.): ver `ROADMAP.md` — nada de eso
-está instalado hoy.
+Mejoras candidatas (cad-cae-copilot, argus-diff, etc.): ver `ROADMAP.md`. De esa lista,
+`build123d-mcp` YA está instalado y verificado (§1bis); el resto sigue sin instalar.

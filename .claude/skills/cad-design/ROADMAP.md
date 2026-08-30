@@ -4,20 +4,17 @@ Investigación 2026-07-21, movida fuera del SKILL.md para que la skill describa 
 capacidad REAL. Antes de adoptar cualquiera: instalar, probar con el smoke test, y
 recién ahí mencionarla en SKILL.md.
 
-## Próximo paso concreto — `build123d-mcp`
+## ✅ `build123d-mcp` — INSTALADO Y VERIFICADO 2026-08-29 (detalle: SKILL.md §1bis)
 
-github.com/pzfreo/build123d-mcp (Apache, activo): MCP que da al agente OJOS EN VIVO en el
-loop — render PNG/SVG/DXF, medir geometría, detección de features (agujeros, bosses,
-avellanados, patrones), comparar fit/alineación, importar STEP/STL, validez/printability,
-`last_error`. Evidencia: CADGenBench 0.360→0.457, validez geométrica 88%→100%. Mismo
-backend build123d + Py3.12 que `.venv-cad`. Instalar (necesita `uv`):
-
-```
-# en .mcp.json del proyecto:
-#   "build123d": { "command": "uvx", "args": ["--python","3.12","build123d-mcp@latest"] }
-# (activa la próxima sesión). Mantener register_icp/check_collision propios para la
-# verificación FINA — el MCP no hace registración ni interferencia contra sustrato rígido.
-```
+Pineado `0.3.83` en `.mcp.json` con `BUILD123D_IN_PROCESS=1` (el worker subprocess se
+cuelga en Windows — medido, no responde ni con 300 s; issue del upstream a reportar).
+Aceptación con verdad analítica + valor gemelo: `scripts/test_build123d_mcp.py`, 7/7 verde
+(volumen exacto a 4 decimales, solape 4.500,0 exacto, validate separa ROJO/VERDE, agreement
+0,000000% con gmsh/OCC sobre STEP real de 28 sólidos). `register_icp`/`check_collision`
+siguen propios. **Upgrade = cambiar pin + re-correr el test; exit 0 = adoptar.**
+Los nombres de tools de la doc del branch main NO son los de 0.3.83 (no hay `interference`
+ni `clearance`: es `compare(kind='fit')`) — otra confirmación de "el nombre no es el
+contenido": la API se lee del `tools/list` real, no de la doc.
 
 ## Pendientes internos (mejoras a cadlib, no herramientas de terceros)
 
