@@ -144,8 +144,13 @@ manda mails. Lógica y tests: `scripts/_lib/mailCache.mjs` + `mailCache.test.mjs
 Necesita el cache de `_mails.py` (sync programado 2×/día); si está viejo, lo canta.
 
 Todos aceptan `--dry-run`. Las rutas viven en `scripts/_lib/serverPaths.mjs`.
-**Datos reales de las tareas (clientes, proyectos, números) NO van al repo: es público.**
-Viven en el listado Excel, en la biblioteca.
+**El DETALLE de las tareas (el listado Excel, los mails, los adjuntos) vive en la biblioteca
+y en `.mail-cache/` (gitignoreado), nunca en el repo.** Nombrar una tarea, producto o persona
+en código, tests o commits está cubierto por la decisión de Fak del 18/08/2026 (regla
+`git-deploy.md`: el repo es público y eso no frena el push) — esta línea decía "datos reales
+NO van al repo" desde antes de esa decisión y quedaba en contradicción con ella (lo señaló el
+auditor el 30/08). Lo prohibido sigue siendo lo de `git-deploy.md`: credenciales, contenido
+de mails/documentos del SGC, `.claude/memory/` versionado.
 
 ## Enforcement
 
