@@ -250,6 +250,27 @@ fuente, se nombra el evento real (la rueda contra una junta) o se deja fuera.
 segunda pasada de `verificar_nido.py` agarró el archivo a medio editar y salió con `NameError`. Los
 subprocesos leen el archivo cuando arrancan, no cuando arrancó la cadena.
 
+**GATE 3.9 — todo paso largo lleva TOPE DE TIEMPO adentro, y antes de tocarlo se mide si el
+tiempo se explica.** 2026-08-29: un paso de la cadena de adhesivado (`extraccion.py` con el
+Insert delantero) se quedó **1 h 32 min** sin terminar. Mi única señal era la notificación de
+fin: si no llegaba, no me enteraba nunca. Fak: *"¿te hubieses quedado así 48 horas? totalmente
+inaceptable, poné un guardián"* — y en la misma frase la otra mitad, que también era correcta:
+*"si realmente sigue funcionando dejalo, medio raro que tarde 2 horas pero podría pasar"*.
+
+- **Esperar no es supervisar.** El que espera no puede distinguir *"está trabajando"* de *"se
+  colgó"* sin un límite declarado. El tope va **en el código**, no en mi memoria:
+  `validar_todo.py` corta cualquier paso a los 25 min (`ADH_TOPE_MIN`), lo marca `CORTADO` y
+  **sigue con los demás** — una corrida de 25 pasos no se pierde por uno. Y cada paso imprime
+  sus minutos, así que algo que se fue de escala se ve en la primera corrida.
+- **Primero medir, después matar.** No era un cuelgue: era un **bug de escala disfrazado de
+  cuelgue**, que es peor porque no da señal. La malla *"gruesa"* del delantero tenía **753.073
+  triángulos contra 96.252** de la otra pieza. Si el costo se explica con un número, está
+  trabajando; si no, es un bug.
+- **Un parámetro que cambia de significado entre dos motores no es el mismo parámetro.** gmsh
+  limita el TAMAÑO del elemento (`lc`), OCC limita la FLECHA (`tol`): pedirle "3 mm" a uno y
+  "0,3 mm" al otro no da mallas comparables. Lo que se pide es el **resultado** — cantidad de
+  triángulos — no el parámetro.
+
 **GATE 5 — antes de rediseñar, medir si el PROCESO repite.** 2026-08-22/24, gancho de mochila:
 cuatro impresiones corrigiendo el modelo porque el mismo `.stl` calzaba una vez y la siguiente no.
 La holgura que estaba ajustando (±0,15 mm) era **del tamaño del error normal de la impresora**, así
