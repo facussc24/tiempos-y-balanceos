@@ -90,17 +90,4 @@ export async function snapshotDatabase(): Promise<MergeExportDataset | null> {
     return null;
 }
 
-async function _writeDatasetToDb(_dataset: MergeExportDataset): Promise<boolean> {
-    logger.warn('BackupService', 'writeDatasetToDb called in web mode — no-op');
-    return false;
-}
-
-// ---------------------------------------------------------------------------
-// Server/startup checks (no-op in web)
-// ---------------------------------------------------------------------------
-
-async function _checkAndOfferRestore(): Promise<null> { return null; }
-
-async function _checkForNewerServerData(): Promise<null> { return null; }
-
 export async function exportAllData(): Promise<null> { return null; }

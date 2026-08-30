@@ -119,24 +119,6 @@ export async function deleteProject(id: number): Promise<void> {
 }
 
 /**
- * Search projects by name or client.
- */
-async function searchProjects(query: string): Promise<ProjectListItem[]> {
-    try {
-        const db = await getDatabase();
-        const pattern = `%${query}%`;
-        return await db.select<ProjectListItem>(
-            `SELECT id, name, client, project_code, engineer, version, daily_demand, updated_at
-             FROM projects WHERE name LIKE ? OR client LIKE ? ORDER BY updated_at DESC`,
-            [pattern, pattern]
-        );
-    } catch (err) {
-        logger.error('ProjectRepo', 'Failed to search projects', {}, err instanceof Error ? err : undefined);
-        return [];
-    }
-}
-
-/**
  * Get projects by client name.
  */
 export async function getProjectsByClient(client: string): Promise<ProjectListItem[]> {

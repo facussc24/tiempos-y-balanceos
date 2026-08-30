@@ -27,24 +27,3 @@ export type FSFileHandle = FileSystemFileHandle | string;
  * - Tauri mode: string (directory path)
  */
 export type FSDirectoryHandle = FileSystemDirectoryHandle | string;
-
-/**
- * Type guard: Check if handle is a Tauri path (string)
- */
-function _isTauriPath(handle: FSFileHandle | FSDirectoryHandle | null | undefined): handle is string {
-  return typeof handle === 'string';
-}
-
-/**
- * Type guard: Check if handle is a Web FileSystemFileHandle
- */
-function _isWebFileHandle(handle: FSFileHandle | null | undefined): handle is FileSystemFileHandle {
-  return handle !== null && handle !== undefined && typeof handle !== 'string' && 'getFile' in handle;
-}
-
-/**
- * Type guard: Check if handle is a Web FileSystemDirectoryHandle
- */
-function _isWebDirectoryHandle(handle: FSDirectoryHandle | null | undefined): handle is FileSystemDirectoryHandle {
-  return handle !== null && handle !== undefined && typeof handle !== 'string' && 'getDirectoryHandle' in handle;
-}

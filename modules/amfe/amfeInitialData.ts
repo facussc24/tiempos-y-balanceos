@@ -35,8 +35,3 @@ export function createEmptyAmfeDoc(): AmfeDocument {
         operations: [],
     };
 }
-
-/**
- * @deprecated Use createEmptyAmfeDoc() instead. Kept for backward compatibility.
- */
-const EMPTY_AMFE_DOC: AmfeDocument = createEmptyAmfeDoc();

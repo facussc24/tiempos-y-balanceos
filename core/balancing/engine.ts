@@ -280,7 +280,7 @@ const optimizeWorkloadSmoothing = (
         });
     });
 
-    const isMoveValid = (taskId: string, fromStId: number, toStId: number, currentStations: SimStation[]): boolean => {
+    const isMoveValid = (taskId: string, _fromStId: number, toStId: number, currentStations: SimStation[]): boolean => {
         // Precedence Check
 
         const preds = predsMap.get(taskId) || [];

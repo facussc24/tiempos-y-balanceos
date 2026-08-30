@@ -186,6 +186,7 @@ function log(
 
     switch (level) {
         case 'debug':
+            // eslint-disable-next-line no-console -- el logger es el unico emisor legitimo de console.debug
             console.debug(consoleMsg, details || '');
             break;
         case 'info':
@@ -296,46 +297,6 @@ function redactPath(path: string): string {
 export function exportDiagnosticJSON(projectPath?: string | null): string {
     const report = generateDiagnosticReport(projectPath);
     return JSON.stringify(report, null, 2);
-}
-
-/**
- * Format logs for display
- */
-function formatLogsForDisplay(entries: LogEntry[]): string {
-    return entries
-        .map(e => {
-            let line = `[${e.timestamp}] [${e.level.toUpperCase()}] [${e.category}] ${e.message}`;
-            if (e.details) {
-                line += `\n  Details: ${JSON.stringify(e.details)}`;
-            }
-            if (e.stack) {
-                line += `\n  Stack: ${e.stack.split('\n').slice(0, 3).join('\n    ')}`;
-            }
-            return line;
-        })
-        .join('\n\n');
-}
-
-// ============================================================================
-// INTEGRATION HELPERS
-// ============================================================================
-
-/**
- * Log an error and return a formatted user message
- */
-function logErrorForUser(
-    category: string,
-    error: unknown,
-    context?: Record<string, any>
-): { message: string; details: string } {
-    const err = error instanceof Error ? error : new Error(String(error));
-
-    logger.error(category, err.message, context, err);
-
-    return {
-        message: err.message,
-        details: formatLogsForDisplay(logStore.getRecent(10))
-    };
 }
 
 export default logger;

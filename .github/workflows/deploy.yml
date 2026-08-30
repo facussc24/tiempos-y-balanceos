@@ -43,22 +43,16 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run typecheck
-      # Strict typecheck baseline for core/ and utils/repositories/.
-      # Non-blocking for visibility while legacy `any`/unused code is cleaned up.
-      # TODO: enforce blocking when strict errors reach 0
-      - name: Run strict typecheck (non-blocking baseline)
+      # Strict typecheck for core/ and utils/repositories/. Blocking desde 2026-08-30:
+      # los 25 errores restantes (todos codigo muerto TS6133) se limpiaron ese dia.
+      - name: Run strict typecheck
         run: npm run typecheck:strict
-        continue-on-error: true
 
-  # Gate 2: Vitest suite. Runs in parallel with typecheck.
-  # Corrida local 2026-07-30 (despues de la ola 1): 236 archivos pasan / 1 skipped,
-  # 3376 tests pasan / 8 skipped, exit 0. Los "4 failing" del TODO de abril ya no
-  # reproducen; los 8 skipped son describe.skip a proposito (audit_fixes.test.ts:66
-  # y :150, concurrency.test.ts:50, station_a11y.test.tsx:8).
-  # TODO: sacar `continue-on-error` DESPUES de subir testTimeout y separar jsdom de los
-  # tests de logica pura. Medido: `npx vitest run --coverage` todavia falla por timeout en
-  # database.test.ts > closeDatabase (aislado tarda 2638ms de un presupuesto de 5000ms),
-  # asi que hoy el candado seria intermitente en los runners de GitHub.
+  # Gate 2: Vitest suite. Runs in parallel with typecheck. BLOCKING desde 2026-08-30:
+  # la precondicion del viejo TODO (subir testTimeout) ya estaba cumplida en
+  # vitest.config.ts (testTimeout/hookTimeout 15000, medido 2026-07-30), y la suite
+  # completa paso local ese dia: 3708 tests / 0 fallos / exit 0. Los skipped son
+  # describe.skip a proposito.
   test:
     runs-on: ubuntu-latest
     steps:
@@ -70,13 +64,24 @@ jobs:
       - run: npm ci
       - name: Run vitest
         run: npx vitest run
-        continue-on-error: true
 
-  # Build + deploy only runs if typecheck passed. `test` is not a hard gate
-  # yet (continue-on-error) but appears in the dependency chain so its status
-  # is visible on every deploy.
+  # Gate 3: ESLint. En local solo corre via husky pre-commit (lint-staged), que un
+  # `git push --no-verify` saltea — aca no hay como saltearlo.
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+
+  # Build + deploy solo corre si TODOS los gates pasaron (todos bloqueantes
+  # desde 2026-08-30: un rojo en tests, tipos o lint frena el deploy).
   build-and-deploy:
-    needs: [repo-publico, typecheck, test]
+    needs: [repo-publico, typecheck, test, lint]
     runs-on: ubuntu-latest
     environment:
       name: github-pages

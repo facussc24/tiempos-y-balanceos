@@ -30,11 +30,11 @@ export interface DbAdapter {
 // Schema DDL
 // ---------------------------------------------------------------------------
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- kept for test-source regex validation (DDL structure contract)
-const SCHEMA_VERSION = 17;
+// Exported as the DDL structure contract: __tests__/utils/database.test.ts parses
+// this source file by regex to validate required indices and statement splitting.
+export const SCHEMA_VERSION = 17;
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- kept for test-source regex validation (DDL structure contract)
-const SCHEMA_DDL = `
+export const SCHEMA_DDL = `
 -- Version tracking
 CREATE TABLE IF NOT EXISTS schema_version (
     version     INTEGER PRIMARY KEY,
@@ -1841,7 +1841,6 @@ export class SupabaseAdapter implements DbAdapter {
     async execute(sql: string, bindings?: unknown[]): Promise<QueryResult> {
         const b = bindings ?? [];
         let pgSql = this.normalizeNow(sql.trim());
-        const _upper = pgSql.toUpperCase();
 
         // DDL + transactions + schema_version tracking → no-op
         // (Supabase schema is managed via Dashboard/CLI, not via RPC)

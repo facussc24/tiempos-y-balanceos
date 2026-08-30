@@ -279,14 +279,6 @@ export async function addOverride(params: {
     return result.lastInsertId;
 }
 
-/**
- * Remove an override record.
- */
-async function removeOverride(id: number): Promise<void> {
-    const db = await getDatabase();
-    await db.execute('DELETE FROM family_document_overrides WHERE id = ?', [id]);
-}
-
 // ---------------------------------------------------------------------------
 // Change Proposals CRUD
 // ---------------------------------------------------------------------------

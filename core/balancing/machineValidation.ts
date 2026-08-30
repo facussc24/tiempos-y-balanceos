@@ -150,19 +150,6 @@ export function validateMachineResources(
     };
 }
 
-/**
- * Get the primary machine for a station (first required machine, or undefined)
- */
-function getStationPrimaryMachine(
-    stationId: number,
-    stationRequirements: StationMachineRequirement[],
-    machines: MachineType[]
-): MachineType | undefined {
-    const req = stationRequirements.find(r => r.stationId === stationId);
-    if (!req || req.requiredMachineIds.length === 0) return undefined;
-    return machines.find(m => m.id === req.requiredMachineIds[0]);
-}
-
 // =============================================================================
 // V8.1: PROCESS CONSTRAINT VALIDATION (Chemical/Physical Hard Floors)
 // =============================================================================

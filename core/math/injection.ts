@@ -1,4 +1,4 @@
-import { ManualOperation, InjectionSimulationParams, InjectionScenario } from '../../types';
+import { ManualOperation, InjectionScenario } from '../../types';
 import { RotaryInjectionStrategy } from '../../modules/strategies/RotaryStrategy';
 import { validateInjectionParams } from '../../modules/validation/injectionValidation'; // Re-export or move later? For now import from legacy location
 import { BUSINESS_RULES } from '../config/constants';

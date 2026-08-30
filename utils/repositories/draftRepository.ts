@@ -76,15 +76,3 @@ export async function listDraftKeys(module: DraftModule): Promise<string[]> {
         return [];
     }
 }
-
-/**
- * Delete all drafts for a module.
- */
-async function clearDrafts(module: DraftModule): Promise<void> {
-    try {
-        const db = await getDatabase();
-        await db.execute('DELETE FROM drafts WHERE module = ?', [module]);
-    } catch (err) {
-        logger.warn('DraftRepo', `Failed to clear drafts for ${module}`, { error: String(err) });
-    }
-}

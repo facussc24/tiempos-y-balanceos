@@ -374,40 +374,6 @@ export function balanceMixedModel(
     }
 }
 
-/**
- * Calculate product breakdown for a station
- * Used for stacked bar visualization
- */
-function _calculateStationProductBreakdown(
-    stationTasks: MixTask[],
-    totalDemand: number
-): Record<string, number> {
-    const breakdown: Record<string, number> = {};
-    if (totalDemand <= 0) return breakdown;
-
-    for (const task of stationTasks) {
-        const times = task._originalTimes || task._multiProductTimes;
-        if (!times) continue;
-
-        for (const entry of times) {
-            const percentage = entry.demand / totalDemand;
-            const contribution = entry.time * percentage;
-
-            if (!breakdown[entry.productId]) {
-                breakdown[entry.productId] = 0;
-            }
-            breakdown[entry.productId] += contribution;
-        }
-    }
-
-    // Round values
-    for (const key of Object.keys(breakdown)) {
-        breakdown[key] = Math.round(breakdown[key] * 100) / 100;
-    }
-
-    return breakdown;
-}
-
 export function validateMixBalance(
     result: SimulationResult,
     taktTime: number
@@ -734,8 +700,7 @@ import {
     MixSectorAnalysis,
     SectorRequirement,
     MachineRequirement,
-    PlantConfig,
-    ParallelStationAlert
+    PlantConfig
 } from '../../types';
 import { PRODUCT_COLORS } from '../../utils/constants';
 import { logger } from '../../utils/logger';
@@ -945,47 +910,3 @@ export function analyzeMixBySector(
     }
 }
 
-/**
- * V4.3: Detect tasks that require parallel stations
- * These are tasks where a single workstation cannot meet the Takt,
- * requiring 2+ operators/machines working in parallel.
- * 
- * @param products Loaded product data with tasks
- * @param taktTime Calculated Takt Time in seconds
- * @returns Array of alerts for tasks requiring parallel stations
- */
-function detectParallelStationNeeds(
-    products: ProjectData[],
-    taktTime: number
-): ParallelStationAlert[] {
-    if (taktTime <= 0) return [];
-    const alerts: ParallelStationAlert[] = [];
-
-    for (const product of products) {
-        const productName = product.meta?.name || 'Producto';
-
-        for (const task of product.tasks) {
-            const parallelNeeded = Math.ceil(task.standardTime / taktTime);
-
-            // Only alert if task requires 2+ parallel stations
-            if (parallelNeeded >= 2) {
-                alerts.push({
-                    productName,
-                    taskId: task.id,
-                    taskDescription: task.description,
-                    taskTime: task.standardTime,
-                    taktTime,
-                    parallelStationsNeeded: parallelNeeded
-                });
-            }
-        }
-    }
-
-    // Sort by parallel stations needed (highest first)
-    alerts.sort((a, b) => b.parallelStationsNeeded - a.parallelStationsNeeded);
-
-    return alerts;
-}
-
-// Backward compatibility alias
-const _detectTaktViolations = detectParallelStationNeeds;
