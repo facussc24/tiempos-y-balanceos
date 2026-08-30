@@ -30,42 +30,13 @@
  *     - CC/SC percentages or missing classifications (Fak assigns personally)
  */
 
-import { createClient } from '@supabase/supabase-js';
-import { readFileSync } from 'fs';
-import { resolve } from 'path';
+import { connectSupabase } from './_lib/amfeIo.mjs';
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// ENV + AUTH
+// ENV + AUTH — centralizados en _lib/amfeIo.mjs (fail-loudly si falta login)
 // ═══════════════════════════════════════════════════════════════════════════════
 
-const envPath = resolve(process.cwd(), '.env.local');
-const envContent = readFileSync(envPath, 'utf-8');
-const env = {};
-for (const line of envContent.split('\n')) {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith('#')) continue;
-    const eqIdx = trimmed.indexOf('=');
-    if (eqIdx < 0) continue;
-    env[trimmed.slice(0, eqIdx)] = trimmed.slice(eqIdx + 1);
-}
-
-const SUPABASE_URL = env.VITE_SUPABASE_URL;
-const SUPABASE_KEY = env.VITE_SUPABASE_ANON_KEY;
-if (!SUPABASE_URL || !SUPABASE_KEY) {
-    console.error('Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY in .env.local');
-    process.exit(1);
-}
-
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-
-const { error: authErr } = await supabase.auth.signInWithPassword({
-    email: env.VITE_AUTO_LOGIN_EMAIL,
-    password: env.VITE_AUTO_LOGIN_PASSWORD,
-});
-if (authErr) {
-    console.error('Auth failed:', authErr.message);
-    process.exit(1);
-}
+const supabase = await connectSupabase();
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // AP LOOKUP TABLE — copied from modules/amfe/apTable.ts

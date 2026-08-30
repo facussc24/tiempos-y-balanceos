@@ -30,15 +30,33 @@ import { readFileSync } from 'fs';
 // ─── Env + connect ──────────────────────────────────────────────────────────
 
 /**
+ * Las 4 variables sin las cuales un script Supabase NO puede correr.
+ * El incidente que motiva el chequeo: los backups del 8/7 al 27/7 de 2026
+ * salieron VACIOS porque faltaba VITE_AUTO_LOGIN_PASSWORD — sin login, las
+ * tablas con RLS devuelven 0 filas SIN error, y nadie se entero por 19 dias.
+ * Regla: una lista vacia nunca puede significar "no pude leer".
+ */
+const ENV_REQUERIDAS = [
+    'VITE_SUPABASE_URL',
+    'VITE_SUPABASE_ANON_KEY',
+    'VITE_AUTO_LOGIN_EMAIL',
+    'VITE_AUTO_LOGIN_PASSWORD',
+];
+
+/**
  * Lee .env.local del proyecto (subiendo un nivel desde scripts/).
  * Replica el patron de _backup.mjs — no requiere paquete dotenv.
+ * ABORTA (throw) si falta alguna de las 4 variables requeridas: con RLS,
+ * seguir sin login significa leer 0 filas sin ningun error visible.
+ * @param {{requeridas?: string[]}} [opts] — override de la lista solo para
+ *   scripts que NO van a loguearse (p.ej. service-role); por defecto las 4.
  * @returns {Record<string,string>} diccionario de variables
  */
-export function loadEnv() {
+export function loadEnv(opts = {}) {
     const envPath = new URL('../../.env.local', import.meta.url)
         .pathname.replace(/^\/([A-Z]:)/, '$1');
     const envText = readFileSync(envPath, 'utf8');
-    return Object.fromEntries(
+    const env = Object.fromEntries(
         envText.split('\n')
             .filter(l => l.includes('=') && !l.startsWith('#'))
             .map(l => {
@@ -46,10 +64,23 @@ export function loadEnv() {
                 return [l.slice(0, i).trim(), l.slice(i + 1).trim()];
             })
     );
+    const requeridas = opts.requeridas ?? ENV_REQUERIDAS;
+    const faltan = requeridas.filter((k) => !env[k]);
+    if (faltan.length) {
+        throw new Error(
+            `faltan variables en .env.local: ${faltan.join(', ')}\n` +
+            '  Sin login, las tablas con RLS devuelven 0 filas SIN error: todo lo que\n' +
+            '  este script lea va a parecer vacio (asi salieron vacios los backups del\n' +
+            '  8/7 al 27/7 de 2026). Completar .env.local antes de reintentar.'
+        );
+    }
+    return env;
 }
 
 /**
  * Crea cliente Supabase autenticado con credenciales de .env.local.
+ * Falla FUERTE (throw) si el login no devuelve usuario: un cliente sin sesion
+ * "funciona" pero lee 0 filas por RLS, que es el peor modo de falla posible.
  * @returns {Promise<import('@supabase/supabase-js').SupabaseClient>}
  */
 export async function connectSupabase() {
@@ -59,10 +90,25 @@ export async function connectSupabase() {
         email: env.VITE_AUTO_LOGIN_EMAIL,
         password: env.VITE_AUTO_LOGIN_PASSWORD,
     });
-    if (res.error) {
-        throw new Error(`AUTH FAILED: ${res.error.message}`);
+    if (res.error || !res.data?.user) {
+        throw new Error(
+            `AUTH FAILED: ${res.error?.message || 'login sin usuario'}\n` +
+            '  Revisar VITE_AUTO_LOGIN_EMAIL / VITE_AUTO_LOGIN_PASSWORD en .env.local.\n' +
+            '  NO seguir sin sesion: con RLS las queries devuelven 0 filas sin error.'
+        );
     }
     return sb;
+}
+
+/**
+ * Igual que connectSupabase() pero devuelve tambien el usuario logueado,
+ * para scripts que lo registran (p.ej. el manifest del backup).
+ * @returns {Promise<{sb: import('@supabase/supabase-js').SupabaseClient, user: object}>}
+ */
+export async function connectSupabaseConUsuario() {
+    const sb = await connectSupabase();
+    const { data } = await sb.auth.getSession();
+    return { sb, user: data.session.user };
 }
 
 // ─── Parse seguro (handles double-serialization) ────────────────────────────

@@ -12,20 +12,9 @@
  * 8. Every failure has at least 1 cause
  * 9. CC/SC percentages: CC should be 1-5%, SC 10-15%
  */
-import { createClient } from '@supabase/supabase-js';
-import { readFileSync } from 'fs';
+import { connectSupabase } from './_lib/amfeIo.mjs';
 
-// --- Load env ---
-const envPath = new URL('../.env.local', import.meta.url).pathname.replace(/^\/([A-Z]:)/, '$1');
-const envText = readFileSync(envPath, 'utf8');
-const env = Object.fromEntries(
-    envText.split('\n')
-        .filter(l => l.includes('=') && !l.startsWith('#'))
-        .map(l => { const i = l.indexOf('='); return [l.slice(0, i).trim(), l.slice(i + 1).trim()]; })
-);
-
-const sb = createClient(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_ANON_KEY);
-await sb.auth.signInWithPassword({ email: env.VITE_AUTO_LOGIN_EMAIL, password: env.VITE_AUTO_LOGIN_PASSWORD });
+const sb = await connectSupabase();
 
 // --- Fetch all AMFE documents ---
 const { data: rows, error } = await sb.from('amfe_documents').select('*');

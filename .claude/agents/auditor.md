@@ -171,7 +171,7 @@ Cuando Fak pida "auditoria" o "auditar" de un AMFE/CP, ejecutar este protocolo. 
 
 7. **Field names consistentes**
    - Todos los docs usan mismos aliases: `opNumber`/`operationNumber`, `ap`/`actionPriority`, `cause`/`description`.
-   - Si hay inconsistencias: REPORTAR con el patron de fix sugerido (agregar ambos aliases; referencia `scripts/fixIpPadNormalize.mjs`). No corregir.
+   - Si hay inconsistencias: REPORTAR con el patron de fix sugerido (agregar ambos aliases; referencia `syncFieldAliases()` en `scripts/_lib/amfeIo.mjs`). No corregir.
 
 ### Principios
 

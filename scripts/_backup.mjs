@@ -23,50 +23,24 @@
  * Nadie se entero durante 19 dias. La regla que sale de ahi: **una lista vacia nunca
  * puede significar "no pude leer"**.
  */
-import { createClient } from '@supabase/supabase-js';
-import { readFileSync, writeFileSync, mkdirSync } from 'fs';
+import { writeFileSync, mkdirSync } from 'fs';
+// El chequeo de variables requeridas y el login fail-loudly viven en _lib/amfeIo.mjs
+// (movidos el 2026-08-30 para que TODOS los scripts fallen fuerte, no solo el backup).
+import { connectSupabaseConUsuario } from './_lib/amfeIo.mjs';
 
 const rutaLocal = (relativa) =>
     new URL(relativa, import.meta.url).pathname.replace(/^\/([A-Z]:)/, '$1');
 
-const envText = readFileSync(rutaLocal('../.env.local'), 'utf8');
-const env = Object.fromEntries(
-    envText
-        .split('\n')
-        .filter((l) => l.includes('=') && !l.startsWith('#'))
-        .map((l) => {
-            const i = l.indexOf('=');
-            return [l.slice(0, i).trim(), l.slice(i + 1).trim()];
-        }),
-);
-
-const REQUERIDAS = [
-    'VITE_SUPABASE_URL',
-    'VITE_SUPABASE_ANON_KEY',
-    'VITE_AUTO_LOGIN_EMAIL',
-    'VITE_AUTO_LOGIN_PASSWORD',
-];
-const faltan = REQUERIDAS.filter((k) => !env[k]);
-if (faltan.length) {
-    console.error(`\n✗ BACKUP ABORTADO — faltan variables en .env.local: ${faltan.join(', ')}`);
-    console.error('  Sin login, las tablas con RLS devuelven 0 filas y el backup queda vacio.');
+let sb, usuario;
+try {
+    ({ sb, user: usuario } = await connectSupabaseConUsuario());
+} catch (e) {
+    console.error(`\n✗ BACKUP ABORTADO — ${e.message}`);
     console.error('  Un backup vacio que se reporta OK es peor que no hacer backup: si despues');
     console.error('  alguien restaura desde ahi, borra todo.\n');
     process.exit(1);
 }
-
-const sb = createClient(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_ANON_KEY);
-
-const { data: auth, error: authError } = await sb.auth.signInWithPassword({
-    email: env.VITE_AUTO_LOGIN_EMAIL,
-    password: env.VITE_AUTO_LOGIN_PASSWORD,
-});
-if (authError || !auth?.user) {
-    console.error(`\n✗ BACKUP ABORTADO — no se pudo autenticar: ${authError?.message || 'sin usuario'}`);
-    console.error('  Revisar VITE_AUTO_LOGIN_EMAIL / VITE_AUTO_LOGIN_PASSWORD en .env.local.\n');
-    process.exit(1);
-}
-console.log(`  auth OK: ${auth.user.email}`);
+console.log(`  auth OK: ${usuario.email}`);
 
 // --------------------------------------------------------------------------
 // 1. Descubrir las tablas y sus conteos REALES.
@@ -117,7 +91,7 @@ const ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
 const dir = rutaLocal(`../backups/${ts}`);
 mkdirSync(dir, { recursive: true });
 
-const manifest = { generado: new Date().toISOString(), usuario: auth.user.email, tablas: {} };
+const manifest = { generado: new Date().toISOString(), usuario: usuario.email, tablas: {} };
 const problemas = [];
 let total = 0;
 

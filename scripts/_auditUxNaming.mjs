@@ -15,29 +15,10 @@
  * Usage: node scripts/_auditUxNaming.mjs
  */
 
-import { createClient } from '@supabase/supabase-js';
-import { readFileSync } from 'fs';
+import { connectSupabase } from './_lib/amfeIo.mjs';
 
-// ─── Load .env.local ───────────────────────────────────────────────────────────
-const envPath = new URL('../.env.local', import.meta.url).pathname.replace(/^\/([A-Z]:)/, '$1');
-const envText = readFileSync(envPath, 'utf8');
-const env = Object.fromEntries(
-    envText.split('\n')
-        .filter(l => l.includes('=') && !l.startsWith('#'))
-        .map(l => { const i = l.indexOf('='); return [l.slice(0, i).trim(), l.slice(i + 1).trim()]; })
-);
-
-const sb = createClient(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_ANON_KEY);
-
-// ─── Auth ──────────────────────────────────────────────────────────────────────
-const { error: authErr } = await sb.auth.signInWithPassword({
-    email: env.VITE_AUTO_LOGIN_EMAIL,
-    password: env.VITE_AUTO_LOGIN_PASSWORD,
-});
-if (authErr) {
-    console.error('Auth failed:', authErr.message);
-    process.exit(1);
-}
+// ─── Env + auth centralizados en _lib/amfeIo.mjs ──────────────────────────────
+const sb = await connectSupabase();
 console.log('Authenticated OK.\n');
 
 // ─── Fetch data ────────────────────────────────────────────────────────────────

@@ -22,9 +22,8 @@
  *   node scripts/_fixAmfePlaceholdersAndAllocation.mjs --filter=HF-PAT --apply
  *   node scripts/_fixAmfePlaceholdersAndAllocation.mjs --apply --allow-new-critical  # full apply
  */
-import { createClient } from '@supabase/supabase-js';
-import { readFileSync } from 'fs';
 import { parseSafeArgs, runWithValidation } from './_lib/dryRunGuard.mjs';
+import { connectSupabase } from './_lib/amfeIo.mjs';
 
 const PLACEHOLDER = 'Pendiente definicion equipo APQP';
 
@@ -156,12 +155,7 @@ const filter = (argv.find(a => a.startsWith('--filter='))?.split('=')[1]) || nul
 const allowNewCritical = argv.includes('--allow-new-critical');
 const { apply } = parseSafeArgs();
 
-const envPath = new URL('../.env.local', import.meta.url).pathname.replace(/^\/([A-Z]:)/, '$1');
-const envText = readFileSync(envPath, 'utf8');
-const env = Object.fromEntries(envText.split('\n').filter(l => l.includes('=') && !l.startsWith('#'))
-  .map(l => { const i = l.indexOf('='); return [l.slice(0, i).trim(), l.slice(i + 1).trim()]; }));
-const sb = createClient(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_ANON_KEY);
-await sb.auth.signInWithPassword({ email: env.VITE_AUTO_LOGIN_EMAIL, password: env.VITE_AUTO_LOGIN_PASSWORD });
+const sb = await connectSupabase();
 
 let q = sb.from('amfe_documents').select('id, amfe_number, project_name, data');
 if (filter) q = q.ilike('amfe_number', `%${filter}%`);

@@ -19,9 +19,9 @@
  *
  * Uso: node scripts/_exportProjectGate3VW.mjs <projectId> [outputDir]
  */
-import { createClient } from '@supabase/supabase-js';
 import { readFileSync, writeFileSync, mkdirSync, unlinkSync, existsSync } from 'fs';
 import { homedir, tmpdir } from 'os';
+import { loadEnv, connectSupabase } from './_lib/amfeIo.mjs';
 import { join } from 'path';
 import { execSync } from 'child_process';
 import XlsxPopulate from 'xlsx-populate';
@@ -588,9 +588,7 @@ if (dataFile) {
         project_code: pdataLocal.meta?.project || '',
     };
 } else {
-const envPath = new URL('../.env.local', import.meta.url).pathname.replace(/^\/([A-Z]:)/, '$1');
-const envText = readFileSync(envPath, 'utf8');
-const env = Object.fromEntries(envText.split('\n').filter(l => l.includes('=') && !l.startsWith('#')).map(l => { const i = l.indexOf('='); return [l.slice(0, i).trim(), l.slice(i + 1).trim()]; }));
+const env = loadEnv();
 if (env.SB_ACCESS_TOKEN) {
     // Auth por token de sesion (navegador) via REST directo — evita el manejo de JWT ES256 de supabase-js
     const resp = await fetch(`${env.VITE_SUPABASE_URL}/rest/v1/projects?id=eq.${projectId}&select=*`, {
@@ -600,8 +598,7 @@ if (env.SB_ACCESS_TOKEN) {
     if (!resp.ok || !Array.isArray(rows) || rows.length === 0) { console.error('Error query:', resp.status, JSON.stringify(rows).slice(0, 300)); process.exit(1); }
     row = rows[0];
 } else {
-    const sb = createClient(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_ANON_KEY);
-    await sb.auth.signInWithPassword({ email: env.VITE_AUTO_LOGIN_EMAIL, password: env.VITE_AUTO_LOGIN_PASSWORD });
+    const sb = await connectSupabase();
     const { data, error } = await sb.from('projects').select('*').eq('id', projectId).single();
     if (error) { console.error('Error:', error.message); process.exit(1); }
     row = data;

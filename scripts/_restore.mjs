@@ -19,8 +19,8 @@
  *   - NUNCA borra filas que existan en Supabase pero no en el backup (comportamiento conservador).
  *     -> Si queres eliminar esas filas despues, hay que hacerlo a mano.
  */
-import { createClient } from '@supabase/supabase-js';
 import { readFileSync, readdirSync, existsSync, mkdirSync, writeFileSync } from 'fs';
+import { connectSupabase } from './_lib/amfeIo.mjs';
 
 const args = process.argv.slice(2);
 const APPLY = args.includes('--apply');
@@ -108,12 +108,8 @@ if (!existsSync(backupDir)) {
     process.exit(1);
 }
 
-// --- CONNECT ----------------------------------------------------------
-const envPath = `${projectRoot}/.env.local`;
-const envText = readFileSync(envPath, 'utf8');
-const env = Object.fromEntries(envText.split('\n').filter(l => l.includes('=') && !l.startsWith('#')).map(l => { const i = l.indexOf('='); return [l.slice(0, i).trim(), l.slice(i + 1).trim()]; }));
-const sb = createClient(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_ANON_KEY);
-await sb.auth.signInWithPassword({ email: env.VITE_AUTO_LOGIN_EMAIL, password: env.VITE_AUTO_LOGIN_PASSWORD });
+// --- CONNECT (env + login fail-loudly centralizados en _lib/amfeIo.mjs) ---
+const sb = await connectSupabase();
 
 // --- PRE-RESTORE BACKUP (si vamos a ejecutar) -------------------------
 if (APPLY) {

@@ -19,9 +19,9 @@
  * Output: tmp/we_placeholders_audit.json + docs/auto-mejora/we-placeholders-findings.md + console
  * Exit: 1 si CRITICAL > 0, 0 si solo warnings, 2 si error de ejecucion.
  */
-import { createClient } from '@supabase/supabase-js';
-import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'fs';
+import { writeFileSync, mkdirSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
+import { connectSupabase } from './_lib/amfeIo.mjs';
 import {
   GENERIC_LABELS,
   TYPE_TRANSLATION as _TYPE_TRANSLATION,
@@ -112,12 +112,7 @@ const jsonOnly = argv.includes('--json');
 // Connect Supabase
 // ─────────────────────────────────────────────────────────────────────────────
 
-const envPath = new URL('../.env.local', import.meta.url).pathname.replace(/^\/([A-Z]:)/, '$1');
-const envText = readFileSync(envPath, 'utf8');
-const env = Object.fromEntries(envText.split('\n').filter(l => l.includes('=') && !l.startsWith('#'))
-  .map(l => { const i = l.indexOf('='); return [l.slice(0, i).trim(), l.slice(i + 1).trim()]; }));
-const sb = createClient(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_ANON_KEY);
-await sb.auth.signInWithPassword({ email: env.VITE_AUTO_LOGIN_EMAIL, password: env.VITE_AUTO_LOGIN_PASSWORD });
+const sb = await connectSupabase();
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Audit
