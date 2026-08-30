@@ -111,8 +111,14 @@ describe('escritorio-guard — escrituras', () => {
         expect(correr(escribir(`${ESC}\\Insert\\README.md`)).code).toBe(2);
         expect(correr(escribir(`${ESC}\\Insert\\notas.txt`)).code).toBe(2);
     });
-    it('12. deja pasar el entregable de verdad', () => {
-        expect(correr(escribir(`${ESC}\\Insert\\Consumos SMRC.xlsx`)).code).toBe(0);
+    it('12. bloquea GENERAR el entregable dentro del Escritorio (regla escritorio-tareas.md §1b, 2026-08-28)', () => {
+        // El Escritorio guarda el RASTRO; el producto se escribe DIRECTO en su carpeta por tipo.
+        const r = correr(escribir(`${ESC}\\Insert\\Consumos SMRC.xlsx`));
+        expect(r.code).toBe(2);
+        expect(r.err).toMatch(/GENERANDO un entregable adentro del Escritorio/);
+    });
+    it('12b. el mismo entregable en su carpeta por tipo de la biblioteca SI pasa', () => {
+        expect(correr(escribir(`${BIB}\\2. CONSUMO DE MATERIAL BOM\\Consumos SMRC.xlsx`)).code).toBe(0);
     });
     it('13. no se mete con archivos del repo', () => {
         expect(correr(escribir('C:\\Dev\\BarackMercosul\\README.md')).code).toBe(0);
