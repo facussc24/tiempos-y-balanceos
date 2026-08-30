@@ -49,7 +49,11 @@ MSG="Cierre pendiente:"
 [ "$LEC_OVER" -eq 1 ] && MSG="$MSG LECCIONES_APRENDIDAS.md pesa $LEC_SIZE bytes (aviso $LEC_SOFT): antes de cerrar, pasada de CONSOLIDACION segun su seccion 'Como agregar lecciones' — fusionar lecciones del mismo patron y graduar a regla/memoria/archivo; PROHIBIDO comprimir a fragmentos cripticos o pelear bytes sueltos."
 if [ "$SB" -eq 1 ]; then
   MSG="$MSG TOCASTE SUPABASE esta sesion (escritura via MCP o script): backup OBLIGATORIO (node scripts/_backup.mjs, o CREATE TABLE AS via MCP si no hay .env.local) + verificar con SELECT que lo escrito quedo bien."
-  rm -f "$SB_FLAG" 2>/dev/null
+  # Renombrar, NO borrar: _cierreSesion.mjs compara este epoch contra el del ultimo
+  # backup valido. Con rm, un aviso silenciado hacia desaparecer la evidencia y el
+  # checklist daba "no aplica" con un backup todavia pendiente. El .avisado deja de
+  # pesar solo cuando un backup posterior lo cubre.
+  mv -f "$SB_FLAG" "$SB_FLAG.avisado" 2>/dev/null
 fi
-echo "$MSG SI ya terminaste las tareas, cerra la sesion (regla git-deploy + protocolo CLAUDE.md): 1) npm run build  2) git commit + push  3) actualiza docs/LECCIONES_APRENDIDAS.md  4) si Fak te corrigio, decidio o revelo algo nuevo esta sesion: grabalo YA como memoria con su fuente (Fak dixit / doc / arb / Supabase / Y:) y el PORQUE — no confies en acordarte  5) backup si hubo datos  6) lanza el agente auditor. SI todavia estas trabajando, ignora esto y segui sin mencionarlo." >&2
+echo "$MSG Corre 'node scripts/_cierreSesion.mjs' para medir el checklist de cierre (LECCIONES, backup, build, git, Escritorio) en vez de recordarlo. SI ya terminaste las tareas, cerra la sesion (regla git-deploy + protocolo CLAUDE.md): 1) npm run build  2) git commit + push  3) actualiza docs/LECCIONES_APRENDIDAS.md  4) si Fak te corrigio, decidio o revelo algo nuevo esta sesion: grabalo YA como memoria con su fuente (Fak dixit / doc / arb / Supabase / Y:) y el PORQUE — no confies en acordarte  5) backup si hubo datos  6) lanza el agente auditor. SI todavia estas trabajando, ignora esto y segui sin mencionarlo." >&2
 exit 2

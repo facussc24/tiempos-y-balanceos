@@ -27,6 +27,9 @@ sus documentos en Supabase son referencia historica de solo lectura.
    notas, ni archivos sueltos. "Te lo deje en el Escritorio" NO es entregar.
 
 NO preguntar si Fak quiere que lo hagas. HACERLO.
+Estado medible del checklist: `node scripts/_cierreSesion.mjs` (chequea LECCIONES, backup
+vs escrituras Supabase, build, git y Escritorio; exit 1 si falta algo; `--sin-build` para
+la pasada rapida). Solo mide y reporta — commit/push/archivar los hace Claude.
 
 ## Como interactuar con Fak
 

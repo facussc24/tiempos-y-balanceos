@@ -195,8 +195,9 @@ export function listar(dir) {
  * Junta las fechas candidatas de una tarea: las de los mails que tiene adentro y las del
  * filesystem. Mira solo el primer nivel — el mail que origino la tarea esta ahi, y abrir
  * los .msg de las subcarpetas seria leer decenas de megas de adjuntos al pedo.
+ * Exportada: _cierreSesion.mjs releva la antiguedad con la MISMA regla (mail > mtime).
  */
-function fechasDeTarea(tarea) {
+export function fechasDeTarea(tarea) {
     const fechasMail = []; const mtimes = [];
     const sumarMsg = (ruta) => {
         try { const { fecha } = leerMsg(ruta); if (fecha) fechasMail.push(fecha.getTime()); } catch { /* .msg roto o placeholder de OneDrive */ }
