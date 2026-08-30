@@ -39,10 +39,21 @@ export default defineConfig(({ mode }) => {
       target: 'es2020',
       rollupOptions: {
         output: {
-          manualChunks: {
-            'react-vendor': ['react', 'react-dom'],
-            'supabase': ['@supabase/supabase-js'],
-            'charts': ['recharts'],
+          // Forma funcion, no objeto: la forma objeto dejaba react-vendor VACIO (1 byte)
+          // y React quedaba adentro de charts -> el entry importaba charts estaticamente
+          // y cada arranque bajaba 407 KB de Recharts sin usarlos (medido 2026-08-29).
+          manualChunks(id: string) {
+            if (!id.includes('node_modules')) return undefined;
+            if (/[\\/]node_modules[\\/](recharts|victory-vendor|d3-[^\\/]+|react-smooth|recharts-scale)[\\/]/.test(id)) {
+              return 'charts';
+            }
+            if (/[\\/]node_modules[\\/](react|react-dom|scheduler)[\\/]/.test(id)) {
+              return 'react-vendor';
+            }
+            if (id.includes('@supabase')) {
+              return 'supabase';
+            }
+            return undefined;
           },
         },
       },
