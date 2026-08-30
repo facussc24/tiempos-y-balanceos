@@ -1,6 +1,6 @@
 
 import { simulateBalance } from '../core/balancing/engine';
-import { ProjectData, Task, Shift, Assignment } from '../types';
+import { ProjectData, Task, Shift } from '../types';
 
 describe('Phase 16: Ghost Tasks (Exclusión de Balanceo)', () => {
     // Mock Data Setup
@@ -52,8 +52,8 @@ describe('Phase 16: Ghost Tasks (Exclusión de Balanceo)', () => {
 
         const data = createProject([machineTask, internalTask]);
 
-        console.log("DEBUG DATA TASKS:", data.tasks ? data.tasks.length : "UNDEFINED");
-        console.log("DEBUG DATA ARRAY?:", Array.isArray(data.tasks));
+        console.info("DEBUG DATA TASKS:", data.tasks ? data.tasks.length : "UNDEFINED");
+        console.info("DEBUG DATA ARRAY?:", Array.isArray(data.tasks));
 
         // Run Logic
         const result = simulateBalance(data, 'RPW', 'UnitTest', 27, 27 * 0.85);

@@ -61,6 +61,13 @@ jobs:
         with:
           node-version: 20
           cache: npm
+      # __tests__/scripts/pdfBomArb.test.mjs corre scripts/_pdfBomArb.py, que importa
+      # fitz (PyMuPDF). Por diseño ese test NO se saltea si falta el entorno ("un test
+      # salteado es un verde vacio"), asi que el runner necesita Python + PyMuPDF.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install PyMuPDF
       - run: npm ci
       - name: Run vitest
         run: npx vitest run

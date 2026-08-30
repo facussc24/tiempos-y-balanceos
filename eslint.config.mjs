@@ -6,7 +6,25 @@ import reactRefresh from 'eslint-plugin-react-refresh';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
-    { ignores: ['dist', '.claude/worktrees/**'] },
+    {
+        ignores: [
+            'dist',
+            '.claude/worktrees/**',
+            // Directorios locales no trackeados (no existen en CI): sin esto el lint
+            // local barre JS vendor (p. ej. .venv-cad trae matplotlib/trame) y da
+            // un resultado distinto al del runner.
+            '.venv-cad/**',
+            'docs-local/**',
+            '.sgc-cache/**',
+            'coverage/**',
+            'tmp/**',
+            'backups/**',
+            'test-results/**',
+            '.arb-cache/**',
+            '.mail-cache/**',
+            'tools/flowchart/.build/**',
+        ],
+    },
     {
         extends: [js.configs.recommended, ...tseslint.configs.recommended],
         files: ['**/*.{ts,tsx}'],

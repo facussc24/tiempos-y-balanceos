@@ -8,7 +8,7 @@
  * @version 9.0.0
  */
 
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { resolveProductProcess, ParentLoaderFn } from '../core/inheritance/resolver';
 import { ProjectData, TaskMaterial } from '../types';
 
@@ -144,7 +144,7 @@ describe('Starvation E2E: Inherited Variant', () => {
         const demandDuringCycle = materialConsumption * (cycleTimeMin + safetyMin) / shiftMinutes;
         const binsNeeded = Math.ceil(demandDuringCycle / mat.standardPack!);
 
-        console.log('Starvation analysis:', {
+        console.info('Starvation analysis:', {
             materialConsumption,
             demandDuringCycle: demandDuringCycle.toFixed(1),
             binsNeeded,
@@ -160,7 +160,7 @@ describe('Starvation E2E: Inherited Variant', () => {
 
         expect(shortfall).toBeGreaterThan(5); // Significant shortfall
 
-        console.log(`⚠️ STARVATION RISK: Need ${binsNeeded} bins, have ${typicalBinsAtLine}, shortfall: ${shortfall}`);
+        console.info(`⚠️ STARVATION RISK: Need ${binsNeeded} bins, have ${typicalBinsAtLine}, shortfall: ${shortfall}`);
     });
 
     it('parent product should NOT show starvation with generous bins', async () => {
@@ -183,7 +183,7 @@ describe('Starvation E2E: Inherited Variant', () => {
         const demandDuringCycle = materialConsumption * (cycleTimeMin + safetyMin) / shiftMinutes;
         const binsNeeded = Math.ceil(demandDuringCycle / mat.standardPack!);
 
-        console.log('Parent analysis:', {
+        console.info('Parent analysis:', {
             demandDuringCycle: demandDuringCycle.toFixed(1),
             binsNeeded,
             standardPack: mat.standardPack
@@ -192,7 +192,7 @@ describe('Starvation E2E: Inherited Variant', () => {
         // With large bins, need very few
         expect(binsNeeded).toBeLessThanOrEqual(3);
 
-        console.log(`✅ NO STARVATION: Parent only needs ${binsNeeded} bins`);
+        console.info(`✅ NO STARVATION: Parent only needs ${binsNeeded} bins`);
     });
 
 });

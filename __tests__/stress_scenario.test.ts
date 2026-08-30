@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { runGeneticAlgorithm, generateValidSequence } from '../core/balancing/geneticAlgorithm';
+import { describe, it } from 'vitest';
+import { runGeneticAlgorithm } from '../core/balancing/geneticAlgorithm';
 import { simulateBalance } from '../core/balancing/engine';
 import { ProjectData, Task } from '../types';
 
@@ -124,7 +124,7 @@ describe('INDUSTRIAL STRESS TEST SCENARIO', () => {
     it('Executes Industrial Stress Scenario', async () => {
         const fs = await import('fs');
         try {
-            console.log("--- STARTING STRESS TEST SCENARIO ---");
+            console.info("--- STARTING STRESS TEST SCENARIO ---");
 
             // 1. Run Greedy (Reference)
             const greedyResult = simulateBalance(data, 'RPW', 'Greedy', TAKT_TIME, TAKT_TIME);

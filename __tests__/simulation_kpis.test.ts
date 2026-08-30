@@ -7,7 +7,6 @@
 import { describe, it, expect } from 'vitest';
 import {
     createEmptyKPIs,
-    SimulationKPIs,
 } from '../modules/flow-simulator/flowTypes';
 
 describe('SimulationKPIs', () => {

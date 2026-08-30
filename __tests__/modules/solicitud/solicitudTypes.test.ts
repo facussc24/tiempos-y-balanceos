@@ -11,7 +11,6 @@ import {
     MAX_ATTACHMENT_SIZE_BYTES,
     MAX_TOTAL_ATTACHMENTS_BYTES,
 } from '../../../modules/solicitud/solicitudTypes';
-import type { SolicitudDocument } from '../../../modules/solicitud/solicitudTypes';
 
 describe('solicitudTypes', () => {
     describe('createEmptySolicitud', () => {

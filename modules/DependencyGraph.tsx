@@ -91,7 +91,7 @@ export const DependencyGraph: React.FC<Props> = ({ data, initialState, onStateCh
         setTimeout(() => {
             try {
                 window.print();
-            } catch (e) {
+            } catch {
                 toast.error('Error de Impresión', 'No se pudo imprimir el diagrama');
             }
         }, 100);

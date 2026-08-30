@@ -12,7 +12,7 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { INITIAL_PROJECT, ProjectData, Task, Assignment, StationConfig, Shift } from '../types';
+import { INITIAL_PROJECT, ProjectData, Task, Assignment } from '../types';
 import { calculateTaktTime } from '../core/balancing/simulation';
 
 // =============================================================================

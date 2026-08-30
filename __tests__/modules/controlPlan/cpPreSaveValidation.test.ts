@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { validateCpBeforeSave } from '../../../modules/controlPlan/cpPreSaveValidation';
 import type { ControlPlanDocument, ControlPlanItem, ControlPlanHeader } from '../../../modules/controlPlan/controlPlanTypes';
-import type { AmfeDocument } from '../../../modules/amfe/amfeTypes';
 
 function makeHeader(overrides: Partial<ControlPlanHeader> = {}): ControlPlanHeader {
     return {

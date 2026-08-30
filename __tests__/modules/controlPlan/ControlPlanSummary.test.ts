@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { computeCpStats, CpSummaryStats } from '../../../modules/controlPlan/ControlPlanSummary';
+import { computeCpStats } from '../../../modules/controlPlan/ControlPlanSummary';
 import { ControlPlanDocument, ControlPlanItem, EMPTY_CP_HEADER } from '../../../modules/controlPlan/controlPlanTypes';
 
 /** Helper to build a minimal CP item with overrides */

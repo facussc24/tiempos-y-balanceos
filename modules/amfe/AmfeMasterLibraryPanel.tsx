@@ -49,7 +49,6 @@ interface FamilyMasterInfo {
 
 const AmfeMasterLibraryPanel: React.FC<AmfeMasterLibraryPanelProps> = ({
     onLoadDocument,
-    onClose,
     currentDocumentId,
     module = 'amfe',
 }) => {

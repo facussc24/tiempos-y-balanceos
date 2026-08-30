@@ -239,31 +239,6 @@ function stopHeartbeat(): void {
 }
 
 /**
- * Check if we currently hold the lock for a project
- */
-function hasLock(projectId: string | number): boolean {
-    const lockKey = `${LOCK_PREFIX}${projectId}`;
-    const existingLock = localStorage.getItem(lockKey);
-
-    if (!existingLock) return false;
-
-    try {
-        const lockInfo: LockInfo = JSON.parse(existingLock);
-        return lockInfo.tabId === TAB_ID &&
-            (Date.now() - lockInfo.timestamp) < LEASE_DURATION_MS;
-    } catch {
-        return false;
-    }
-}
-
-/**
- * Get current tab ID (useful for debugging)
- */
-function getTabId(): string {
-    return TAB_ID;
-}
-
-/**
  * Subscribe to lock events
  * V4.1: Added lockedBy for READ-ONLY banner
  */

@@ -156,11 +156,6 @@ describe('Monte Carlo Simulation - stdDev Fallback', () => {
 
     it('should NOT block simulation when tasks lack stdDev', () => {
         // Simulate the validation logic from Simulation.tsx
-        const assignments = [
-            { stationId: 1, taskId: 'T1' },
-            { stationId: 1, taskId: 'T2' },
-        ];
-
         const tasks = [
             { id: 'T1', standardTime: 30, stdDev: undefined },
             { id: 'T2', standardTime: 45, stdDev: 0 },

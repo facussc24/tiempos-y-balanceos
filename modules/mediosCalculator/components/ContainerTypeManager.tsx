@@ -25,7 +25,7 @@ const EMPTY_CT = {
 };
 
 export const ContainerTypeManager: React.FC<Props> = ({
-  containerTypes, onAdd, onUpdate, onDelete, project, onUpdateProject,
+  containerTypes, onAdd, onDelete, project, onUpdateProject,
 }) => {
   const [adding, setAdding] = useState(false);
   const [newCt, setNewCt] = useState(EMPTY_CT);

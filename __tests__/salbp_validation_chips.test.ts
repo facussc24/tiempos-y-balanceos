@@ -1,7 +1,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { simulateBalance } from '../core/balancing/engine';
-import { ProjectData, Task, Sector } from '../types';
+import { ProjectData, Task } from '../types';
 
 describe('SALBP-1 Validation - Chips Scenario', () => {
     it('should balance Chips scenario into 1 station (Pure Time Logic)', () => {
@@ -55,9 +55,9 @@ describe('SALBP-1 Validation - Chips Scenario', () => {
 
         const result = simulateBalance(projectData, 'RPW', 'Test', nominalSeconds, effectiveSeconds);
 
-        console.log("Stations:", result.stationsCount);
-        console.log("Efficiency:", result.efficiency);
-        console.log("Assignments:", result.assignments);
+        console.info("Stations:", result.stationsCount);
+        console.info("Efficiency:", result.efficiency);
+        console.info("Assignments:", result.assignments);
 
         // The engine now correctly produces 1 station (total 64.44s < takt 69.94s).
         // Previously the engine produced 2 stations due to injection task handling,

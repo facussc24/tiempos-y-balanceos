@@ -15,7 +15,7 @@
 
 import { describe, test, expect } from 'vitest';
 import { simulateBalance, simulateBalanceType2 } from '../core/balancing/engine';
-import { ProjectData, Task, FatigueCategory, FATIGUE_OPTIONS } from '../types';
+import { ProjectData, Task, FatigueCategory } from '../types';
 
 // Helper to create a minimal valid ProjectData
 const createTestProject = (tasks: Partial<Task>[], _taktTimeSeconds: number): ProjectData => {
@@ -94,11 +94,11 @@ describe('LineEfficiency Consistency (SALBP-1 vs SALBP-2)', () => {
         );
 
         // Log for debugging
-        console.log('=== LineEfficiency Consistency Test ===');
-        console.log(`SALBP-1 lineEfficiency: ${salbp1Result.lineEfficiency?.toFixed(2)}%`);
-        console.log(`SALBP-2 lineEfficiency: ${salbp2Result.lineEfficiency?.toFixed(2)}%`);
-        console.log(`SALBP-1 stations: ${salbp1Result.stationsCount}`);
-        console.log(`SALBP-2 stations: ${salbp2Result.stationsCount}`);
+        console.info('=== LineEfficiency Consistency Test ===');
+        console.info(`SALBP-1 lineEfficiency: ${salbp1Result.lineEfficiency?.toFixed(2)}%`);
+        console.info(`SALBP-2 lineEfficiency: ${salbp2Result.lineEfficiency?.toFixed(2)}%`);
+        console.info(`SALBP-1 stations: ${salbp1Result.stationsCount}`);
+        console.info(`SALBP-2 stations: ${salbp2Result.stationsCount}`);
 
         // INVARIANT: Both should calculate lineEfficiency the same way
         // They might have different station counts, but for same config, efficiency formula must be identical
@@ -106,7 +106,6 @@ describe('LineEfficiency Consistency (SALBP-1 vs SALBP-2)', () => {
 
         // Check that both use raw time (not inflated by fatigue) for the efficiency numerator
         // Total raw work = 100 + 100 + 100 = 300 seconds
-        const expectedRawWork = 300;
 
         // For SALBP-2 with 3 stations and 100s tasks, each station has 100s
         // lineEfficiency = totalRawWork / (headcount * maxCycle) * 100
@@ -150,8 +149,8 @@ describe('LineEfficiency Consistency (SALBP-1 vs SALBP-2)', () => {
 
         // The real difference shows when comparing cross-algorithm, but we can check
         // that the internal 'totalEffWork' calculation matches raw time
-        console.log(`Single task lineEfficiency: ${result.lineEfficiency}%`);
-        console.log(`realCycleTime: ${result.realCycleTime}s`);
+        console.info(`Single task lineEfficiency: ${result.lineEfficiency}%`);
+        console.info(`realCycleTime: ${result.realCycleTime}s`);
 
         // For a single task, lineEfficiency should be 100% regardless
         // but realCycleTime should reflect the effective time for scheduling
@@ -174,9 +173,9 @@ describe('LineEfficiency Consistency (SALBP-1 vs SALBP-2)', () => {
         const salbp1Result = simulateBalance(project, 'RPW', 'Test', taktTime, effectiveSeconds);
         const salbp2Result = simulateBalanceType2(project, 3, 'Test', taktTime);
 
-        console.log('=== No Fatigue Test ===');
-        console.log(`SALBP-1: ${salbp1Result.stationsCount} stations, ${salbp1Result.lineEfficiency?.toFixed(2)}% eff`);
-        console.log(`SALBP-2: ${salbp2Result.stationsCount} stations, ${salbp2Result.lineEfficiency?.toFixed(2)}% eff`);
+        console.info('=== No Fatigue Test ===');
+        console.info(`SALBP-1: ${salbp1Result.stationsCount} stations, ${salbp1Result.lineEfficiency?.toFixed(2)}% eff`);
+        console.info(`SALBP-2: ${salbp2Result.stationsCount} stations, ${salbp2Result.lineEfficiency?.toFixed(2)}% eff`);
 
         // Both should have valid efficiency values
         expect(salbp1Result.lineEfficiency).toBeGreaterThan(0);

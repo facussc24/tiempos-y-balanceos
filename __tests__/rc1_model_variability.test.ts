@@ -6,7 +6,7 @@
  */
 
 import { describe, test, expect } from 'vitest';
-import { validateModelVariability, validateMixComplete } from '../core/balancing/mixBalancing';
+import { validateModelVariability } from '../core/balancing/mixBalancing';
 
 describe('RC1 Critical Fix: Model Variability Validation', () => {
     const TAKT_TIME = 61.2; // From UAT scenario
@@ -46,7 +46,7 @@ describe('RC1 Critical Fix: Model Variability Validation', () => {
         expect(criticalAlerts[0].modelTime).toBe(80);
         expect(criticalAlerts[0].excessSeconds).toBeCloseTo(18.8, 1);
 
-        console.log('✅ Critical Alert:', criticalAlerts[0].message);
+        console.info('✅ Critical Alert:', criticalAlerts[0].message);
     });
 
     test('Generates correct message with excess seconds', () => {
@@ -59,7 +59,7 @@ describe('RC1 Critical Fix: Model Variability Validation', () => {
         expect(alert.message).toContain('61.2');
         expect(alert.message).toContain('engañoso');
 
-        console.log('✅ Full message:', alert.message);
+        console.info('✅ Full message:', alert.message);
     });
 
     test('Calculates required capacity correctly (1.3 machines)', () => {
@@ -68,7 +68,7 @@ describe('RC1 Critical Fix: Model Variability Validation', () => {
 
         // 80 / 61.2 = 1.307
         expect(alert.requiredCapacity).toBeCloseTo(1.3, 1);
-        console.log(`✅ Required capacity: ${alert.requiredCapacity.toFixed(2)} machines`);
+        console.info(`✅ Required capacity: ${alert.requiredCapacity.toFixed(2)} machines`);
     });
 
     test('Tracks worst case model correctly', () => {
@@ -102,7 +102,7 @@ describe('RC1 Critical Fix: Model Variability Validation', () => {
 
         expect(result.valid).toBe(true);
         expect(result.alerts.filter(a => a.severity === 'critical')).toHaveLength(0);
-        console.log('✅ Good tasks pass validation');
+        console.info('✅ Good tasks pass validation');
     });
 
     test('Detects warning for 90-100% zone', () => {
@@ -131,6 +131,6 @@ describe('RC1 Critical Fix: Model Variability Validation', () => {
         const warnings = result.alerts.filter(a => a.severity === 'warning');
         expect(warnings.length).toBe(1);
         expect(warnings[0].message).toContain('AJUSTADO');
-        console.log('✅ Warning detected:', warnings[0].message);
+        console.info('✅ Warning detected:', warnings[0].message);
     });
 });

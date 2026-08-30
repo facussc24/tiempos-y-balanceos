@@ -8,7 +8,7 @@ vi.mock('xlsx-js-style', () => ({
             aoa_to_sheet: (data: any[][]) => ({ '!data': data, '!cols': [], '!merges': [], '!rows': [] }),
             decode_cell: (ref: string) => { const m = ref.match(/^([A-Z]+)(\d+)$/); if (!m) return { r: 0, c: 0 }; return { r: parseInt(m[2]) - 1, c: m[1].charCodeAt(0) - 65 }; },
             encode_cell: (c: { r: number; c: number }) => String.fromCharCode(65 + c.c) + (c.r + 1),
-            decode_range: (ref: string) => ({ s: { r: 0, c: 0 }, e: { r: 10, c: 10 } }),
+            decode_range: (_ref: string) => ({ s: { r: 0, c: 0 }, e: { r: 10, c: 10 } }),
             encode_range: (rng: any) => `${String.fromCharCode(65 + rng.s.c)}${rng.s.r + 1}:${String.fromCharCode(65 + rng.e.c)}${rng.e.r + 1}`,
         },
         write: () => new ArrayBuffer(10),

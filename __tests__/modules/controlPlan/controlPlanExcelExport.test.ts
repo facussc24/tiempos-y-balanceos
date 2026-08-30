@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { ControlPlanDocument, ControlPlanHeader, ControlPlanItem, EMPTY_CP_HEADER, CP_COLUMNS, CP_COLUMN_GROUPS } from '../../../modules/controlPlan/controlPlanTypes';
+import { ControlPlanDocument, ControlPlanHeader, ControlPlanItem, EMPTY_CP_HEADER, CP_COLUMN_GROUPS } from '../../../modules/controlPlan/controlPlanTypes';
 
 // Mock XLSX
 const mockWrite = vi.fn().mockReturnValue(new ArrayBuffer(8));

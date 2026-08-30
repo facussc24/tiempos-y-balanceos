@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { runGeneticAlgorithm } from '../core/balancing/geneticAlgorithm';
-import { ProjectData, Task, Assignment, MachineType } from '../types';
+import { ProjectData, Task, MachineType } from '../types';
 
 /**
  * Phase 30: GALBP (General Assembly Line Balancing Problem) Tests
@@ -96,7 +96,7 @@ describe('GALBP Constraints (Phase 30)', () => {
         });
 
         // Verify no station has mixed zones (Set size == 1)
-        for (const [stId, zones] of stations) {
+        for (const [_stId, zones] of stations) {
             expect(zones.size).toBe(1); // Station should not have mixed zones
         }
     });

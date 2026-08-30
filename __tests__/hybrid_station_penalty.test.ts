@@ -7,8 +7,7 @@
 import { describe, it, expect } from 'vitest';
 import {
     canAssignToStationRC,
-    SimStation,
-    ResourceValidationStatus
+    SimStation
 } from '../core/balancing/engine';
 import { Task } from '../types';
 

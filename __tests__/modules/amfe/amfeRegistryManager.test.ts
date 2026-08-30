@@ -31,7 +31,7 @@ import {
     findDuplicateAmfeNumbers,
     repairDuplicateNumbers,
 } from '../../../modules/amfe/amfeRegistryManager';
-import { AmfeRegistry, AmfeRegistryEntry, EMPTY_REGISTRY } from '../../../modules/amfe/amfeRegistryTypes';
+import { AmfeRegistry, AmfeRegistryEntry } from '../../../modules/amfe/amfeRegistryTypes';
 import { AmfeDocument } from '../../../modules/amfe/amfeTypes';
 
 const mockedListDocs = vi.mocked(listAmfeDocuments);

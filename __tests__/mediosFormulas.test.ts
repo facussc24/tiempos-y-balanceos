@@ -9,7 +9,6 @@ import {
   calcCoverageLevel,
   calcM2PerContainer,
   calcFloorPositions,
-  calcContainersM2,
   calcTotalFloorM2,
   calcLocationCode,
   calcSpaceResult,

@@ -26,7 +26,6 @@ export const ScenariosPanel: React.FC<Props> = ({
   results, sensitivityMatrix, safetyPcts, leadTimeDeltas, spaceResult, utilizationRate, onUpdateProject,
 }) => {
   const [summaryView, setSummaryView] = useState<SummaryView>('client');
-  const [editingM2, setEditingM2] = useState(false);
 
   const summaryRows = useMemo((): SummaryRow[] => {
     switch (summaryView) {

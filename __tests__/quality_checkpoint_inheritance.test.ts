@@ -8,7 +8,7 @@
  */
 import { describe, it, expect } from 'vitest';
 import { resolveProductProcess, ParentLoaderFn } from '../core/inheritance/resolver';
-import { ProjectData, Task, FatigueCategory, TaskMaterial } from '../types';
+import { ProjectData, FatigueCategory } from '../types';
 
 // =============================================================================
 // TEST FIXTURES: Exact scenario from user request
@@ -107,16 +107,16 @@ describe('Quality Checkpoint: JSON Inheritance Fusion', () => {
 
         // 1. tiempo: 100 (heredado del padre)
         expect(soldarTask!.standardTime).toBe(100);
-        console.log('✅ tiempo: 100 - HEREDADO CORRECTAMENTE');
+        console.info('✅ tiempo: 100 - HEREDADO CORRECTAMENTE');
 
         // 2. material: B (sobreescrito por hijo)
         expect(soldarTask!.materials).toBeDefined();
         expect(soldarTask!.materials!.length).toBe(1);
         expect(soldarTask!.materials![0].materialId).toBe('B');
-        console.log('✅ material: B - SOBREESCRITO CORRECTAMENTE');
+        console.info('✅ material: B - SOBREESCRITO CORRECTAMENTE');
 
         // 3. Milk Run should see the correct SKU
-        console.log('✅ MILK RUN READY: El consumo de material será SKU-B, no SKU-A');
+        console.info('✅ MILK RUN READY: El consumo de material será SKU-B, no SKU-A');
     });
 
     it('Regression: Override only time, keep parent materials', async () => {
@@ -141,7 +141,7 @@ describe('Quality Checkpoint: JSON Inheritance Fusion', () => {
 
         // material heredado (A, no B)
         expect(soldarTask!.materials![0].materialId).toBe('A');
-        console.log('✅ Partial override: tiempo=150, material=A (heredado)');
+        console.info('✅ Partial override: tiempo=150, material=A (heredado)');
     });
 
 });

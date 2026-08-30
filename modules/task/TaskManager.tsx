@@ -55,7 +55,7 @@ export const TaskManager: React.FC<Props> = ({ data, updateData, rootHandle }) =
 
     // V9.0: Variant Creation Modal state
     const [isVariantModalOpen, setIsVariantModalOpen] = React.useState(false);
-    const [isCreatingVariant, setIsCreatingVariant] = React.useState(false);
+    const [isCreatingVariant] = React.useState(false);
 
     // FIX 3: Zoning Constraints Modal state
     const [isZoningModalOpen, setIsZoningModalOpen] = React.useState(false);

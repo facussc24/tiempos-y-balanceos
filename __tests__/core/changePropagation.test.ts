@@ -53,7 +53,6 @@ import {
     diffMasterChanges,
     propagateChangesToVariants,
     triggerChangePropagation,
-    type DetectedMasterChange,
 } from '../../core/inheritance/changePropagation';
 import { logger } from '../../utils/logger';
 

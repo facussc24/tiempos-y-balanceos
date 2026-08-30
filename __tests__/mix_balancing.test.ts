@@ -11,7 +11,6 @@ import { describe, it, expect } from 'vitest';
 import {
     calculateWeightedTimes,
     generateHeijunkaSequence,
-    validateMixBalance,
     validateModelVariability,
     MIN_SATURATION_THRESHOLD
 } from '../core/balancing/mixBalancing';

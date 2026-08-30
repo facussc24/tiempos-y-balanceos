@@ -30,12 +30,3 @@ export interface CpSuggestionContext {
     operationCategory?: string;
     existingValues?: string[];
 }
-
-/** Set of CP fields that support AI suggestions */
-const CP_AI_FIELDS = new Set<string>([
-    'controlMethod',
-    'evaluationTechnique',
-    'sampleSize',
-    'sampleFrequency',
-    'reactionPlan',
-]);

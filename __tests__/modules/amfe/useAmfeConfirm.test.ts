@@ -11,12 +11,11 @@ describe('useAmfeConfirm', () => {
     it('opens modal on requestConfirm', async () => {
         const { result } = renderHook(() => useAmfeConfirm());
 
-        let resolvedValue: boolean | undefined;
         act(() => {
-            result.current.requestConfirm({
+            void result.current.requestConfirm({
                 title: 'Eliminar',
                 message: '¿Seguro?',
-            }).then(v => { resolvedValue = v; });
+            });
         });
 
         expect(result.current.confirmState.isOpen).toBe(true);

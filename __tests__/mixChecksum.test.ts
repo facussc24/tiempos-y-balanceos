@@ -8,8 +8,7 @@
 import { describe, it, expect } from 'vitest';
 import {
     generateProductChecksum,
-    verifyMixIntegrity,
-    ProductIntegrityStatus
+    verifyMixIntegrity
 } from '../utils/mixHelpers';
 import { ProjectData, MixScenario, MixEnrichedProduct, INITIAL_PROJECT } from '../types';
 

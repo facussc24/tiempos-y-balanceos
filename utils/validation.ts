@@ -71,31 +71,6 @@ export const parsePercentage = (value: string, defaultValue: number = 0): number
 };
 
 /**
- * Validates and parses OEE value (0-1)
- */
-const parseOEEValue = (value: string, defaultValue: number = 0.85): number => {
-    const percentage = parseNumberInput(value, {
-        min: 0,
-        max: 100,
-        defaultValue: defaultValue * 100,
-        allowNegative: false
-    });
-    return percentage / 100;
-};
-
-/**
- * Validates time input (seconds, must be positive)
- */
-const parseTimeSeconds = (value: string, defaultValue: number = 0): number => {
-    return parseNumberInput(value, {
-        min: 0,
-        max: 86400, // 24 hours in seconds
-        defaultValue,
-        allowNegative: false
-    });
-};
-
-/**
  * Validates demand/quantity input (must be positive integer)
  */
 export const parseDemand = (value: string, defaultValue: number = 0): number => {

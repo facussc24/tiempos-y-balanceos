@@ -1,6 +1,5 @@
 import {
     truncateApplicableParts,
-    APPLICABLE_PARTS_DISPLAY_MAX,
     resolveApplicableParts,
 } from '../../utils/productFamilyAutoFill';
 import { getFamiliesByProductCode, getFamilyMembers } from '../../utils/repositories/familyRepository';

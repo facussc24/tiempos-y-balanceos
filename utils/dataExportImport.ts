@@ -113,55 +113,6 @@ export async function openAndAnalyzeImport(): Promise<{
     });
 }
 
-/**
- * Analyze a .barack file at a known path (used by folder sync too).
- * In web mode this always returns null since filesystem paths are not accessible.
- * TODO: Implement via backend API when a server-side proxy is available.
- */
-async function analyzeImportFile(filePath: string): Promise<{
-    filePath: string;
-    dataset: ExportDataset;
-    analysis: MergeResult;
-} | null> {
-    try {
-        // Filesystem access is not available in web mode.
-        logger.warn('ExportImport', 'analyzeImportFile called with path in web mode — no filesystem access', { path: filePath });
-        const json: string | null = null;
-        if (!json) {
-            logger.error('ExportImport', 'Could not read file', { path: filePath });
-            return null;
-        }
-
-        const dataset = JSON.parse(json) as ExportDataset;
-
-        // Validate basic structure
-        if (!dataset.version || !dataset.tables) {
-            logger.error('ExportImport', 'Invalid .barack file format');
-            return null;
-        }
-
-        // Snapshot current DB for comparison
-        const localSnapshot = await snapshotDatabase();
-        if (!localSnapshot) {
-            logger.error('ExportImport', 'Failed to snapshot database');
-            return null;
-        }
-
-        // Analyze differences
-        const analysis = analyzeDatasets(localSnapshot, dataset);
-
-        logger.info('ExportImport', 'Import analysis complete', {
-            file: filePath,
-            summary: analysis.summary,
-        });
-
-        return { filePath, dataset, analysis };
-    } catch (err) {
-        logger.error('ExportImport', 'File analysis failed', {}, err instanceof Error ? err : undefined);
-        return null;
-    }
-}
-
 // ---------------------------------------------------------------------------
 // Import: apply changes
 // ---------------------------------------------------------------------------

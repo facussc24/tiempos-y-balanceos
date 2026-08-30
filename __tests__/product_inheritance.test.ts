@@ -10,10 +10,9 @@ import { describe, it, expect, vi } from 'vitest';
 import {
     resolveProductProcess,
     validateInheritance,
-    ResolvedProduct,
     ParentLoaderFn
 } from '../core/inheritance/resolver';
-import { ProjectData, Task, TaskOverride, FatigueCategory, TaskMaterial } from '../types';
+import { ProjectData, Task, FatigueCategory, TaskMaterial } from '../types';
 
 // =============================================================================
 // TEST FIXTURES

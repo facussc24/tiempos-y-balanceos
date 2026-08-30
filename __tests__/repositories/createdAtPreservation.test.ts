@@ -27,7 +27,6 @@ import { saveAmfeDocument } from '../../utils/repositories/amfeRepository';
 import { saveCpDocument } from '../../utils/repositories/cpRepository';
 import { saveHoDocument } from '../../utils/repositories/hoRepository';
 import { getDatabase } from '../../utils/database';
-import type { DbAdapter } from '../../utils/database';
 import type { AmfeDocument } from '../../modules/amfe/amfeTypes';
 import type { ControlPlanDocument } from '../../modules/controlPlan/controlPlanTypes';
 import type { HoDocument } from '../../modules/hojaOperaciones/hojaOperacionesTypes';

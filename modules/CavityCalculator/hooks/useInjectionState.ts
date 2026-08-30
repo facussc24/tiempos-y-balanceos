@@ -77,6 +77,7 @@ export const useInjectionState = (task: Task, projectTasks: Task[] = []) => {
     // SYNC STATE WITH PROPS (Fix for Async Persistence Loading)
     useEffect(() => {
         if (task.injectionParams?.pInyectionTime) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect -- sync deliberado con props cargadas async (persistencia); refactor a estado derivado es cambio funcional
             setPuInyTimeStr(task.injectionParams.pInyectionTime.toString());
         }
         if (task.injectionParams?.pCuringTime) setPuCurTimeStr(task.injectionParams.pCuringTime.toString());

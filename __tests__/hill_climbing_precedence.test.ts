@@ -10,7 +10,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { simulateBalance, calculateEffectiveStationTime } from '../core/balancing/engine';
+import { simulateBalance } from '../core/balancing/engine';
 import { ProjectData, Task, Assignment } from '../types';
 
 const createMinimalProjectData = (tasks: Partial<Task>[]): ProjectData => ({

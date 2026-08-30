@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { simulateBalance, multiPassOptimize, SimulationResult } from '../core/balancing/engine';
+import { simulateBalance, multiPassOptimize } from '../core/balancing/engine';
 import { ProjectData, Task } from '../types';
 
 /**
@@ -34,7 +34,7 @@ const createTask = (
 });
 
 // Helper: Create minimal project data
-const createProjectData = (tasks: Task[], taktTime: number = 60): ProjectData => ({
+const createProjectData = (tasks: Task[], _taktTime: number = 60): ProjectData => ({
     tasks,
     assignments: [],
     sectors: [],

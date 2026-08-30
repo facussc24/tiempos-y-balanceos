@@ -3,7 +3,6 @@ import {
     getCpPdfPreviewHtml,
     esc,
     groupByProcessStep,
-    CpPdfTemplate,
 } from '../../../modules/controlPlan/controlPlanPdfExport';
 import {
     ControlPlanDocument,

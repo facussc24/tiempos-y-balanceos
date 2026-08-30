@@ -165,23 +165,6 @@ export async function getActiveBasePath(): Promise<string> {
     return settings.sharedStoragePath || getPathConfig().basePath;
 }
 
-async function getStorageModeInfo(): Promise<{ local: StorageModeInfo; shared: StorageModeInfo; current: StorageMode }> {
-    const settings = await loadStorageSettings();
-    const localPath = settings.localStoragePath || await getDefaultLocalPath();
-    const sharedPath = settings.sharedStoragePath || getPathConfig().basePath;
-
-    const [localAvailable, sharedAvailable] = await Promise.all([
-        isPathAccessible(localPath),
-        isPathAccessible(sharedPath)
-    ]);
-
-    return {
-        local: { mode: 'local', path: localPath, isAvailable: localAvailable, label: 'Modo Local (Casa)', icon: '💻' },
-        shared: { mode: 'shared', path: sharedPath, isAvailable: sharedAvailable, label: 'Modo Compartido (Servidor)', icon: '📡' },
-        current: settings.storageMode
-    };
-}
-
 // ============================================================================
 // CONFIGURATION
 // ============================================================================

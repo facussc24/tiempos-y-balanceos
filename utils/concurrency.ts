@@ -90,12 +90,8 @@ export class ConflictError extends Error {
 
 import {
     LOCK_TTL_MS as DEFAULT_LOCK_TTL_MS,
-    LOCK_HEARTBEAT_MS,
     LOCK_MAX_RETRIES as DEFAULT_MAX_RETRIES
 } from '../config';
-
-// Re-export for backward compatibility
-const LOCK_HEARTBEAT_INTERVAL_MS = LOCK_HEARTBEAT_MS;
 
 const DEFAULT_BACKOFF_MS = [100, 500, 1000];
 const LOCK_FILE_SUFFIX = '.lock';

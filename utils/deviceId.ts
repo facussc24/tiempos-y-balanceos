@@ -59,20 +59,6 @@ export async function getDeviceInfo(): Promise<DeviceInfo> {
 }
 
 /**
- * Shorthand: get just the device ID.
- */
-async function getDeviceId(): Promise<string> {
-    return (await getDeviceInfo()).id;
-}
-
-/**
- * Shorthand: get just the friendly device name.
- */
-async function getDeviceName(): Promise<string> {
-    return (await getDeviceInfo()).name;
-}
-
-/**
  * Rename this device (persisted across sessions).
  */
 export async function setDeviceName(name: string): Promise<void> {

@@ -55,13 +55,6 @@ export const CP_COLUMN_TO_GROUP: Record<string, keyof CpColumnGroupVisibility> =
     controlProcedure: 'metodos',
 };
 
-/** Column counts per group (for colspan calculation). */
-const CP_COLUMN_COUNTS: Record<keyof CpColumnGroupVisibility, number> = {
-    proceso: 4,
-    caracteristicas: 4,
-    metodos: 8,
-};
-
 export const useCpColumnVisibility = () => {
     const [visibility, setVisibility] = useState<CpColumnGroupVisibility>(() => {
         try {

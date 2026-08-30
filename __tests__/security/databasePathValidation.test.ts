@@ -125,9 +125,6 @@ describe('database — isValidDbPath (Fix 4)', () => {
 });
 
 describe('database — resolveDbPath falls back on invalid localStorage path (Fix 4)', () => {
-    const DEFAULT_PATH =
-        'Y:\\Ingenieria\\Documentacion Gestion Ingenieria\\15. Tiempos\\barack_mercosul.db';
-
     beforeEach(() => {
         resetDatabaseForTesting();
         localStorage.clear();

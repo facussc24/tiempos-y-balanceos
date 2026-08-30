@@ -48,7 +48,6 @@ import {
     diffDocuments,
     trackOverrides,
     getOverrideStatus,
-    type DetectedOverride,
 } from '../../core/inheritance/overrideTracker';
 
 // ---------------------------------------------------------------------------

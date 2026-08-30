@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { simulateBalance, SimulationResult } from '../core/balancing/engine';
+import { simulateBalance } from '../core/balancing/engine';
 import { ProjectData, Task } from '../types';
 
 /**

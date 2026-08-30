@@ -379,8 +379,8 @@ test.describe('Navegación Volver', () => {
         }
 
         await page.waitForTimeout(1000);
-        // Check if we're back on landing
-        const isLanding = await page.locator('h1:has-text("Barack Mercosul")').isVisible({ timeout: 3000 }).catch(() => false);
+        // Wait for landing to settle (visibility itself is not asserted)
+        await page.locator('h1:has-text("Barack Mercosul")').isVisible({ timeout: 3000 }).catch(() => false);
 
         await page.screenshot({ path: path.join(SCREENSHOT_DIR, '14-back-to-landing.png'), fullPage: true });
 

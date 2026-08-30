@@ -184,25 +184,3 @@ export const LEAN_TERMS: Record<string, LeanTermDefinition> = {
 export function getTerm(key: string): LeanTermDefinition | undefined {
     return LEAN_TERMS[key.toUpperCase().replace(/\s+/g, '_')];
 }
-
-/**
- * Get all terms for a category
- * Useful for building help pages or glossaries
- */
-function getAllTerms(): LeanTermDefinition[] {
-    return Object.values(LEAN_TERMS);
-}
-
-/**
- * Search terms by keyword
- * @param keyword - Search keyword
- * @returns Array of matching terms
- */
-function searchTerms(keyword: string): LeanTermDefinition[] {
-    const lowerKeyword = keyword.toLowerCase();
-    return Object.values(LEAN_TERMS).filter(term =>
-        term.term.toLowerCase().includes(lowerKeyword) ||
-        term.simple.toLowerCase().includes(lowerKeyword) ||
-        term.definition.toLowerCase().includes(lowerKeyword)
-    );
-}

@@ -80,18 +80,17 @@ describe('RALBP-2 Scenario 3: Deep Injection (Verification)', () => {
         const result = simulateBalance(projectData, 'RPW', 'Scenario 3', Creq, Creq);
 
         // 1. Grouping verification
-        const stationIds = new Set(result.assignments.map(a => a.stationId));
         const injAssignment = result.assignments.find(a => a.taskId === 'INJ');
         const targetStation = injAssignment?.stationId;
 
-        console.log('\n--- REPORT VALUES ---');
-        console.log(`C_req (Input): ${Creq}`);
-        console.log(`Station Count: ${result.stationsCount}`);
-        console.log(`Headcount (N_op): ${result.totalHeadcount}`);
-        console.log(`Efficiency (E): ${result.efficiency.toFixed(2)}%`);
-        console.log(`Assignments:`);
+        console.info('\n--- REPORT VALUES ---');
+        console.info(`C_req (Input): ${Creq}`);
+        console.info(`Station Count: ${result.stationsCount}`);
+        console.info(`Headcount (N_op): ${result.totalHeadcount}`);
+        console.info(`Efficiency (E): ${result.efficiency.toFixed(2)}%`);
+        console.info(`Assignments:`);
         result.assignments.forEach(a => {
-            console.log(`  ${a.taskId} -> Station ${a.stationId}`);
+            console.info(`  ${a.taskId} -> Station ${a.stationId}`);
         });
 
         // Verify Grouping
