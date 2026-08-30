@@ -266,6 +266,13 @@ inaceptable, poné un guardián"* — y en la misma frase la otra mitad, que tam
   cuelgue**, que es peor porque no da señal. La malla *"gruesa"* del delantero tenía **753.073
   triángulos contra 96.252** de la otra pieza. Si el costo se explica con un número, está
   trabajando; si no, es un bug.
+- **Y cuando el paso es lento de verdad, se cronometra por partes antes de optimizar.** Los
+  relojes por sección dieron: preparar obstáculos 2 s, armar el índice 1 s, preparar la pieza
+  0,1 s, **barrido 414 s**. El 99,7 % estaba en una línea. Sin ese reparto, el candidato
+  "obvio" a optimizar era el muestreo, que no costaba nada.
+- **Una corrida en segundo plano no se manda con `| tail` ni `| grep`**: el filtro retiene la
+  salida hasta el final y deja la corrida sin señal de avance — el mismo problema que el tope
+  venía a resolver, reintroducido por la forma de invocarla.
 - **Un parámetro que cambia de significado entre dos motores no es el mismo parámetro.** gmsh
   limita el TAMAÑO del elemento (`lc`), OCC limita la FLECHA (`tol`): pedirle "3 mm" a uno y
   "0,3 mm" al otro no da mallas comparables. Lo que se pide es el **resultado** — cantidad de
