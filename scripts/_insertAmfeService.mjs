@@ -1,5 +1,10 @@
 // Inserta AMFE 128 y 129 en Supabase usando la SERVICE_ROLE key (bypassa RLS, sin login).
 // Lee .env.local (VITE_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY). Verifica round-trip + md5.
+//
+// NO archivar en el barrido de one-shots (2026-08-30): es la plantilla de insert con
+// service-role del importador xlsx (memorias project_amarok_pa2_amfe y
+// reference_amfe_xlsx_importer). Tampoco migrarlo a connectSupabase() de _lib/amfeIo.mjs:
+// usa service-role SIN login a proposito, y su clave no esta entre las 4 requeridas de loadEnv().
 import { readFileSync } from 'fs';
 import { createHash } from 'crypto';
 import { createClient } from '@supabase/supabase-js';
