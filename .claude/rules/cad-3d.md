@@ -93,6 +93,17 @@ existe** (89,79·sen 1,637° = 2,56).
 
 **GATE 3 — PRE-ENTREGA: verificar el ARTEFACTO, con controles que puedan dar ROJO.**
 
+- **Un control que NO EXISTE tampoco puede dar rojo, y nada avisa de su ausencia.** 30/08/2026:
+  en el caballete de adhesivado la placa del nido quedaba **7,45 mm en el aire** sobre la repisa
+  que el propio plano describe como la que "toma el peso", y **los 26 pasos de la cadena daban
+  verde**. No fallaba ninguno porque ninguno miraba esa interfaz: `chequeo_marco` compara tubo
+  contra tubo, `verificar_nido` compara nido contra pieza. Antes de creerle a una cadena verde,
+  **listar que PARES de cosas compara cada control** y ver cual interfaz no la mira nadie.
+  Enforcement: `chequeo_apoyo_nido.py`, que nacio con su control sintetico y con codigo 1.
+- **Posicionar por el bbox del CONJUNTO pone el punto MAS BAJO en el datum, y ese punto puede no
+  ser la cara que apoya.** Ahi fue `-bb.zmin` con el vastago del pin 11,95 mm por debajo de la
+  placa. El comentario de la linea decia la intencion correcta; la geometria no la cumplia.
+
 - **Se verifica el archivo que se entrega, no el diseño.** Los controles C1-C4 del virolador dieron
   todos verde midiendo el STEP del dispositivo en coordenadas locales — el ensamble exportado nunca
   se tocó. Es el patrón "medir la orden y no el resultado".
