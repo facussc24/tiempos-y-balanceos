@@ -10,6 +10,9 @@ description: Operar el ERP arb (ARB Sistemas "Producción") por teclado desde Cl
 > reabre la ventana sin pedirle nada a nadie — ver la tanda del 20/08).
 > **Dar de alta líneas: ANDA** (`scripts/_arbAlta.py`) — **31/31 el 07/08**, verificadas contra
 > el export y con 0 bajas en el diff de la base entera. Borrar líneas sigue fuera de alcance.
+> **Modificar un campo del MAESTRO DE INSUMOS: ANDA** — **31/08/2026**, `Es Sub-Producto`
+> de `TRO-TEL0001-V1`, diff del export entero 2 altas / 0 bajas / 0 cambios. Todo por
+> teclado: se TABULA, no se clickea por coordenada (ver la seccion nueva del 31/08).
 > **Altas EN LOTE: ANDA** (`scripts/_arbAltaLote.py`) — **12/12 el 28/08 en 116 seg**, mismo
 > insumo en 12 BOM, diff de la base entera 12 altas / 0 bajas / 0 cambios.
 >
@@ -966,7 +969,86 @@ python scripts/_arbInsumo.py teclas TAB      # trae el registro
 # mirar la foto
 python scripts/_arbInsumo.py click cancela   # salir SIN grabar
 ```
-**Se sale con `&Cancela`, no con `ESC`** — en el arb ESC avanza de campo, no cancela.
+~~**Se sale con `&Cancela`, no con `ESC`**~~ — **FALSO, corregido 31/08/2026 por Fak**:
+*"se sale con ESC y te movés con TAB, ¿ya te olvidaste de todo?"*. Medido el mismo día:
+**`&Cancela` está DESHABILITADO** mientras no hay edición pendiente, así que clickearlo no
+hace nada. La salida real es **`ESC` → modal `Desea Finalizar ??` → `&Sí`**.
+
+### 🟢🟢 MODIFICAR UN CAMPO DEL MAESTRO — todo por TECLADO `CONFIRMADO 2026-08-31`
+
+Primera modificación real grabada por robot: `TRO-TEL0001-V1`, campo `Es Sub-Producto` de
+`N` a `S`. Export antes/después: **2 altas, 0 bajas, 0 cambios** — nada fuera de lo pedido.
+
+**Dentro del formulario NO se clickea por coordenada: se TABULA.** Ese fue el error del día:
+click en `(204, 466)` para pararme en `Es Sub-Producto`, el foco **no se movió** (siguió en
+`Descripción`), y el `BACKSPACE` que le mandé después fue a parar a la descripción del insumo.
+El click no falló ruidosamente: falló *en silencio*, que es peor.
+
+**El tab order, medido control por control** (los `RichEdit20A` en el orden del
+`EnumChildWindows`, que es el mismo del TAB):
+
+| # | campo | pos (x,y) |
+|---|---|---|
+| 1-3 | Rubro · Medida · **Descripción** | (194,140) · (297,140) · (194,169) |
+| 4-7 | C. Costo Ingreso · Imputación Ingreso · C. Costo Descarga · Imputación Descarga | (194,254) · (459,254) · (194,283) · (459,283) |
+| 8-9 | Unidad · Doble Medida | (194,311) · (459,311) |
+| 10-13 | Stock Mínimo · Lote Óptimo · Unidad Mín. Compra · Tiempo Entrega | (194,340) · (459,340) · (194,368) · (459,368) |
+| 14-17 | Proveedor · Cód. Original · Proveedor · Cód. Original | (194,397) · (459,397) · (194,425) · (459,425) |
+| 18 | **Es Sub-Producto** | (194,454) |
+| 19-23 | Etiquetas · Tiene Vencimiento · Tipo Descarga · Origen Descarga · Posee PAPP/PSW | (459,454) · (194,482) · (459,482) · (640,482) · (194,511) |
+| — | **`&Acepta`** (Button) | (385,568) |
+
+Después del TAB que trae el registro **el foco queda en `Descripción` (#3)**. Desde ahí:
+
+```
+14 TAB  -> Es Sub-Producto        (verificar el handle ANTES de tocar nada)
+FIN, BACKSPACE, <valor>           reemplaza el contenido de un campo de 1 caracter
+ 6 TAB  -> boton &Acepta
+ENTER                             graba; la pantalla se limpia sola
+```
+
+### 🟢🟢 LOS `RichEdit20A` SÍ DEVUELVEN TEXTO — cuando tienen el FOCO `CORRIGE lo de arriba`
+
+La sección del 28/08 dice *"los campos son `RichEdit20A` y NO devuelven texto por
+`WM_GETTEXT`… la única forma de saber qué dice un campo es `PrintWindow` y mirar la foto"*.
+**Es verdad a medias.** Sin foco devuelven `''`; **con el foco puesto, `WM_GETTEXT` devuelve
+el contenido** — leídos en vivo el 31/08 mientras tabulaba: `'N'`, `'I'`, `'M'`, `'S'`.
+
+Eso habilita el gate barato que faltaba: **tabular y leer el valor de cada campo al pasar**,
+igual que hace `recorrer()` en la grilla de Relaciones, sin gastar una foto por paso. La foto
+queda para el control final, no para navegar.
+
+### El gate de handle, que es lo que hace segura la escritura
+
+```python
+TARGET = [h for h,x,y in ctrls if abs(x-194)<6 and abs(y-454)<6][0]   # el campo buscado
+...
+if GetGUIThreadInfo(tid).hwndFocus != TARGET:
+    raise SystemExit("ABORTO: el foco no esta donde creo")
+```
+Comparar **handles**, no coordenadas ni "cuántos TAB conté". Si el foco no es el control
+esperado, se aborta **antes** de la primera tecla que modifica.
+
+### Si algo salió mal: `WM_CLOSE` descarta la edición `CONFIRMADO 2026-08-31`
+
+Con la descripción ya pisada en pantalla y `&Cancela` deshabilitado, **`WM_CLOSE` sobre
+`Maestro de Insumos` cerró sin grabar**: al reabrir y traer el mismo código, la descripción
+estaba intacta. Mismo comportamiento que ya estaba documentado para `Maestro de Relaciones`.
+
+⚠ **El campo `Descripción` engaña al mirarlo.** Después del BACKSPACE mostraba `RO` y parecía
+que había borrado casi todo; era el render con el cursor al final (la propia skill ya lo
+avisa). **No diagnosticar un campo por lo que muestra: cerrar, reabrir y releer.**
+
+### Abrir `ABM de Insumos` — el árbol de la izquierda NO abre con ENTER
+
+Probado el 31/08: click en `ABM de Insumos` del árbol de `Producción` **sólo lo selecciona**
+(queda resaltado en azul) y `ENTER` no lo abre. Lo que sí abre es el **botón del ribbon**:
+
+```
+click (849, 43)   solapa `Menú de Insumos`
+click ( 37, 95)   botón `ABM de Insumos`
+```
+(o la vía por teclado ya documentada: `Alt` → `V` → `Y01`).
 
 ### Exportar el maestro — solapa `Listado`
 
