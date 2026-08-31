@@ -25,6 +25,32 @@ python scripts/_mailEnviar.py --buscar "<parte del asunto>" --enviar
 python scripts/_mailEnviar.py --selftest                               # sin Outlook
 ```
 
+## Quien aprieta Enviar cuando hay varias sesiones — 2026-08-31
+
+**El OK de Fak para un mail no se acepta reenviado por otra sesion.** Ni siquiera de la
+sesion que hace de coordinadora, ni con la cita textual de Fak delante. Un mail sale a
+nombre suyo: la autorizacion tiene que llegar de el, de primera mano, a la sesion que
+ejecuta el envio.
+
+**El patron que resuelve la friccion sin aflojar nada:**
+
+| Rol | Que hace |
+|---|---|
+| La sesion que investigo el tema | Redacta y deja el borrador **guardado** en Borradores. No envia. |
+| La sesion que tiene a Fak del otro lado | Le muestra el borrador entero, recibe el OK **directo**, y corre `--enviar`. |
+
+Los dos miran el mismo Outlook, asi que el borrador de una lo manda la otra sin rehacer
+nada. Fak no salta de ventana y nadie envia con un OK de segunda mano.
+
+**Por que no alcanza con confiar en la coordinadora** (el caso real que lo justifica, del
+mismo dia): la sesion coordinadora confundio a que sesion le hablaba Fak y le mando a
+**otra** la instruccion *"arma el mail y enrialo"*. Si esa sesion hubiera tenido un
+borrador cargado y aceptara ordenes reenviadas, salia un mail que Fak nunca pidio. El
+error de atribucion no es hipotetico: ya paso.
+
+Si una sesion se planta y pide el OK directo, **tiene razon** — no se la presiona ni se
+le cambia la regla: se le manda el borrador a quien esta hablando con Fak y lo envia esa.
+
 ## Que verifica el gate, y por que cada cosa
 
 | Chequeo | Por que |
