@@ -68,6 +68,38 @@ filas.push(['S/O/D que la figura llama "Error"', 'CAUSE_SOD_IMPLAUSIBLE (WARNING
 filas.push(['  ...pero O=1 con D=1 es valido', 'idem', 'S=10 O=1 D=1',
   !tiene(causa({ severity: 10, occurrence: 1, detection: 1, ap: 'L', actionPriority: 'L' }), 'CAUSE_SOD_IMPLAUSIBLE')]);
 
+// ── La D se califica primero por la COBERTURA, no por el instrumento (31/08/2026).
+//    Tabla P3 renglon 9: "Random audits <100% of product". La auditoria de cliente
+//    encontro 298 causas con control por muestreo calificadas entre 3 y 8 — y 100 de
+//    ellas las habia puesto en 7 esa misma manana un script que trataba igual una
+//    inspeccion al 100% y un muestreo. Textos reales de los AMFE de Patagonia.
+const conControl = (texto, d) => causa({ severity: 6, occurrence: 4, detection: d,
+  ap: 'H', actionPriority: 'H', optimizationAction: 'Pendiente definicion equipo APQP',
+  detectionControl: texto });
+
+filas.push(['Muestreo (<100%) calificado por debajo de 9', 'DETECCION_MUESTREO_OPTIMISTA (WARNING)',
+  '"Inspeccion por muestreo segun P-14 en recepcion" con D=4',
+  tiene(conControl('Inspeccion por muestreo segun P-14 en recepcion', 4), 'DETECCION_MUESTREO_OPTIMISTA')]);
+filas.push(['  ...y un control al 100% NO es muestreo', 'idem',
+  '"Inspeccion visual 100% + pieza patron" con D=4',
+  !tiene(conControl('Inspeccion visual 100% + pieza patron', 4), 'DETECCION_MUESTREO_OPTIMISTA')]);
+filas.push(['  ...ni el 100% con un control por lote aguas abajo', 'idem',
+  '"Autocontrol visual 100% + control por Calidad por lote" con D=7',
+  !tiene(conControl('Autocontrol visual 100% + control por Calidad por lote', 7), 'DETECCION_MUESTREO_OPTIMISTA')]);
+filas.push(['  ...y el muestreo NO entra por deteccion humana', 'DETECCION_HUMANA_OPTIMISTA (el bug del 31/08)',
+  'un muestreo visual con D=4 no debe empujarse a 7',
+  !tiene(conControl('Verificacion visual de la etiqueta, 1 muestra por entrega (P-10/I)', 4), 'DETECCION_HUMANA_OPTIMISTA')]);
+
+// ── Sin metodo declarado la tabla dice 10, no 8 (Tabla P3 renglon 10). 36 causas del
+//    lote de Patagonia tenian el control vacio o en "-" calificadas D=8.
+filas.push(['Control de deteccion vacio calificado D=8', 'DETECCION_SIN_CONTROL_DECLARADO (WARNING)',
+  'detectionControl = "" con D=8',
+  tiene(conControl('', 8), 'DETECCION_SIN_CONTROL_DECLARADO')]);
+filas.push(['  ...y el guion tambien es "sin control"', 'idem', 'detectionControl = "-" con D=8',
+  tiene(conControl('-', 8), 'DETECCION_SIN_CONTROL_DECLARADO')]);
+filas.push(['  ...pero con D=10 ya esta bien declarado', 'idem', 'detectionControl = "" con D=10',
+  !tiene(conControl('', 10), 'DETECCION_SIN_CONTROL_DECLARADO')]);
+
 filas.push(['CC que se cae al detallar', 'CAUSE_S9_SIN_CC (WARNING, no asigna)', 'S=9 sin specialChar',
   tiene(causa({ severity: 9, occurrence: 3, detection: 4, ap: 'H', actionPriority: 'H', optimizationAction: 'Pendiente definicion equipo APQP', specialChar: '' }), 'CAUSE_S9_SIN_CC')]);
 filas.push(['AP=H sin accion (bloqueo IATF)', 'CAUSE_APH_EMPTY_NO_PLACEHOLDER (CRITICAL)', 'AP=H y accion vacia',

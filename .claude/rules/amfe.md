@@ -189,9 +189,25 @@ rasteriza y se MIRA; `get_text()` da vacio.
 | 2 | Detecta el **ERROR** (la causa), no el defecto, con equipo con R&R confirmado |
 | 1 | El defecto **no se puede producir fisicamente** por diseño de pieza o utillaje |
 
-**Regla practica:** mirar, tocar, escuchar, contar o revisar un papel **es D=7 (en estacion) u
-8 (aguas abajo), por mas que sea al 100%**. Para bajar de 7 hace falta INSTRUMENTO; para bajar
-de 6, R&R confirmado; para 4 o menos, ademas verificacion de poka-yoke.
+**Regla practica, y en este orden — primero la COBERTURA, despues el instrumento:**
+
+1. **¿Cubre el 100% del producto?** Si NO, es **D=9**, tenga o no instrumento: la tabla dice
+   *"Random audits <100% of product"*. Un muestreo con calibre sigue siendo un muestreo.
+   "1 muestra por entrega", "3% del lote", "auditoria periodica", "5 pz/turno" son D=9.
+2. **Recien si es al 100%:** mirar, tocar, escuchar, contar o revisar un papel es **D=7** (en
+   estacion) u **8** (aguas abajo). Para bajar de 7 hace falta INSTRUMENTO; de 6, R&R
+   confirmado; para 4 o menos, ademas verificacion de poka-yoke.
+3. **Sin metodo declarado es D=10**, no 8. Un 8 presupone un control visual aguas abajo que el
+   documento tiene que decir; un control vacio o en "-" no lo dice.
+
+🔴 El 31/08/2026 esta regla tenia solo el punto 2 y por eso un script llevo **100 causas de
+muestreo a D=7**, que es MEJOR de lo que la tabla admite. Lo destapo `/auditoria-cliente`:
+eran 298 en el lote de Patagonia, y otras 36 con el control vacio calificadas 8.
+Enforcement de los dos puntos nuevos: checks **`DETECCION_MUESTREO_OPTIMISTA`** y
+**`DETECCION_SIN_CONTROL_DECLARADO`** (WARNING) en `scripts/_lib/amfeValidator.mjs`, con
+`esMuestreoParcial()` exportado para que el validador y los scripts usen **una sola**
+definicion de "muestreo"; 7 casos en `_verificarAprendizajeAmfe.mjs` (37/37) y test propio.
+Memoria: `feedback_muestreo_no_es_control_al_100`.
 
 ### O — Ocurrencia (Tabla P2). Se califica por EXPERIENCIA + CONTROL PREVENTIVO.
 

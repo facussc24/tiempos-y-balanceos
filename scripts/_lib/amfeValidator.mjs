@@ -349,9 +349,57 @@ export function esDeteccionHumanaOptimista(detectionControl, detection) {
     const dNum = Number(detection);
     if (!Number.isFinite(dNum) || dNum < 1 || dNum > 6) return false;
     const det = String(detectionControl ?? '').toLowerCase();
+    // Un muestreo tiene su propio piso (9) y su propio check: no entra por aca, o lo
+    // mandariamos a 7, que es MEJOR de lo que la tabla admite. Ver esMuestreoParcial().
+    if (esMuestreoParcial(detectionControl)) return false;
     const esHumano = /\b(visual|inspecc|mira|observ|tactil|audi|conteo|cont(ar|eo)|verificacion documental|revision del certificado|pieza patron|contra la pieza|a la vista)\b/.test(det);
     const tieneInstrumento = /\b(calibre|comparador|galga|pasa\/no pasa|go\/no.?go|torquim|balanza|micromet|sensor|camara|celda de carga|interlock|poka.?yoke|dinamomet|espesim)\b/.test(det);
     return esHumano && !tieneInstrumento;
+}
+
+/**
+ * ¿El control cubre MENOS del 100% del producto?
+ *
+ * La D no se califica por el instrumento sino, primero, por la COBERTURA. Tabla P3 del
+ * AIAG-VDA, renglon 9 (pagina 119 del PDF del manual, escaneada — se rasteriza y se mira):
+ * *"Failure is not easily detected. Random audits <100% of product."*
+ *
+ * Un "100%" explicito manda sobre cualquier otra pista: "Autocontrol visual 100% + control
+ * por Calidad por lote" tiene un control al 100% en la estacion y NO es un muestreo parcial,
+ * aunque nombre un control por lote aguas abajo.
+ */
+export function esMuestreoParcial(detectionControl) {
+    const det = String(detectionControl ?? '').toLowerCase();
+    if (!det.trim()) return false;
+    if (/100\s*%/.test(det)) return false;
+    return /\d+\s*%|\b\d+\s*(muestras?|pz|piezas?)\s*(por|\/)|\b(una|1)\s+muestra|muestra por|muestreo|por lote|por entrega|por turno|auditoria periodica|auditor[ií]a peri[oó]dica|anual\b/.test(det);
+}
+
+/**
+ * DETECCION_MUESTREO_OPTIMISTA — cobertura menor al 100% calificada por debajo de 9.
+ * Nacio del hallazgo de /auditoria-cliente del 31/08/2026: 298 causas de los 8 AMFE de
+ * Patagonia con control por muestreo calificadas entre 3 y 8. Cien de ellas las habia
+ * puesto en 7 esa misma manana un script que trataba igual una inspeccion al 100% y un
+ * muestreo. Avisa, no corrige: la calificacion es dato del equipo.
+ */
+export function esDeteccionMuestreoOptimista(detectionControl, detection) {
+    const dNum = Number(detection);
+    if (!Number.isFinite(dNum) || dNum < 1 || dNum > 8) return false;
+    return esMuestreoParcial(detectionControl);
+}
+
+/**
+ * DETECCION_SIN_CONTROL_DECLARADO — no hay metodo y la D no lo dice.
+ * Tabla P3, renglon 10: *"The failure will not or cannot be detected as no testing or
+ * inspection method has been established or is known"*. Un 8 presupone un control visual
+ * aguas abajo que el documento tiene que declarar. Mismo hallazgo del 31/08: 36 causas con
+ * el control vacio o en "-" calificadas D=8.
+ */
+export function esDeteccionSinControlDeclarado(detectionControl, detection) {
+    const dNum = Number(detection);
+    if (!Number.isFinite(dNum) || dNum >= 10) return false;
+    const det = String(detectionControl ?? '').trim();
+    return det === '' || det === '-' || det.toLowerCase() === 'tbd';
 }
 
 export function validateAmfeDoc(doc, productName = '', amfeNumber = '') {
@@ -666,6 +714,18 @@ export function validateAmfeDoc(doc, productName = '', amfeNumber = '') {
                         if (!missD && esDeteccionHumanaOptimista(c.detectionControl, c.detection)) {
                             issues.push({ ...cCtx, type: 'DETECTION_HUMANA_OPTIMISTA',
                                 detail: `D=${Number(c.detection)} para un control que depende de una persona ("${String(c.detectionControl).slice(0, 60)}"). Tabla P3: visual/tactil/audible/conteo va D=7 en estacion u 8 aguas abajo` });
+                        }
+
+                        // DETECCION_MUESTREO_OPTIMISTA (WARNING) — Tabla P3 renglon 9.
+                        if (!missD && esDeteccionMuestreoOptimista(c.detectionControl, c.detection)) {
+                            issues.push({ ...cCtx, type: 'DETECCION_MUESTREO_OPTIMISTA',
+                                detail: `D=${Number(c.detection)} para un control que NO cubre el 100% ("${String(c.detectionControl).slice(0, 60)}"). Tabla P3: "Random audits <100% of product" va D=9` });
+                        }
+
+                        // DETECCION_SIN_CONTROL_DECLARADO (WARNING) — Tabla P3 renglon 10.
+                        if (!missD && esDeteccionSinControlDeclarado(c.detectionControl, c.detection)) {
+                            issues.push({ ...cCtx, type: 'DETECCION_SIN_CONTROL_DECLARADO',
+                                detail: `D=${Number(c.detection)} sin control de deteccion declarado. Tabla P3: sin metodo establecido va D=10` });
                         }
 
                         // CAUSE_S9_SIN_CC (WARNING) — S>=9 sin caracteristica especial declarada.
