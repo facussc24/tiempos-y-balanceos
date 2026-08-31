@@ -239,9 +239,20 @@ export async function saveAmfe(sb, id, doc, opts = {}) {
     // como modificados el 27/05. Es el campo con el que se decide que version es mas nueva
     // cuando hay dos copias (regla verify-supabase-live + gestion_ingenieria_es_el_maestro),
     // asi que dejarlo viejo hace que una version nueva parezca vieja.
+    // AUTO-SYNC: los conteos de la fila son DERIVADOS del documento, y ningun camino de
+    // escritura los mantenia — quedaban con el valor de la primera carga. Detectado el
+    // 31/08/2026 por el agente auditor: al podar 6 causas en cada apoyacabezas,
+    // `cause_count` siguio diciendo 184/178/175 cuando el real era 178/172/169. Y habia
+    // dos preexistentes que nadie habia tocado en esa tanda (el 150 y el Top Roll, este
+    // con 29 de diferencia), o sea que el desfasaje venia de antes y de cualquier script.
+    // Se calculan aca, del doc que se esta por guardar, para que no dependan de que cada
+    // script se acuerde. `_auditAll.mjs` los compara y reporta `metadata_desync`.
+    const stats = countAmfeStats(doc);
     const payload = {
         data: JSON.stringify(doc),
         updated_at: new Date().toISOString(),
+        operation_count: stats.opCount,
+        cause_count: stats.causeCount,
         ...(opts.extraFields || {}),
     };
     // Extra guard: nunca permitir pasar objeto directo en data
