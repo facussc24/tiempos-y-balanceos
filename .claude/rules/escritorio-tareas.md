@@ -38,6 +38,32 @@ cerrada, esté como esté el archivo.
 - Se archiva lo que **Fak** dio por terminado, no lo que yo creo terminado. Ante la duda,
   se lista como candidata y decide él.
 
+### 1a. Las CLARAS se cierran solas — decisión de Fak, 31/08/2026
+
+Fak, textual: *"modifiquemos el criterio entonces, las que estés seguro que están cerradas
+cerrémoslas, porque si no voy a tener que verificar todo cada vez y me canso"*.
+
+Antes, toda candidata volvía a él. Con 56 tareas abiertas eso lo convertía en el cuello de
+botella de su propia cola: revisar 20 carpetas para archivar 20 obvias.
+
+**Ahora: si se cumplen las TRES patas, se archiva sin consultar.** Si falta una sola, la
+tarea NO se toca y va a la lista de dudosas, que sigue siendo de él. La duda no se resuelve
+preguntando de a una: se deja abierta y se sigue.
+
+| Pata | Qué la prueba | Qué NO la prueba |
+|---|---|---|
+| 1. El trabajo está hecho | El texto de la carpeta lo dice, o está el documento emitido | Que el nombre de la carpeta suene a terminado |
+| 2. El entregable está en su carpeta por tipo | Se abrió esa carpeta y el archivo está ahí, con fecha posterior al pedido | Que el archivo exista en el Escritorio |
+| 3. Nadie quedó esperando respuesta | Hay `.msg` de respuesta, o el pedido no venía de un tercero | Que el trabajo técnico esté hecho |
+
+**Va a la lista de dudosas, nunca al archivo:** cualquier `D` del triage (sin notas
+adentro), las bloqueadas por un tercero, las que dicen "listo pero no lo mandé", y toda
+carpeta donde las tres patas no se puedan mostrar con una cita textual o una ruta.
+
+Esto AFLOJA una restricción y por eso no lleva gate nuevo. Lo que sigue protegido ya tiene
+el suyo: `--archivar` exige `--cerrada` / `--quien` / `--que` / `--donde` (`validarCierre`),
+rechaza `_EN ESPERA` entera, y **nada se borra** — archivar es mover, y existe `--reabrir`.
+
 **Los dos motivos por los que no cierra** (triage del 03/08: 30 carpetas, cero cerrables, y
 las 30 caían en uno de estos dos). Buscar estos primero:
 
