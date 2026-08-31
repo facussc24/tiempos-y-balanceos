@@ -53,7 +53,14 @@ def preparar(cfg):
     # continuacion y no como mail suelto.
     # OJO: `Reply()` sobre un item de Enviados pone en Para al REMITENTE, o sea a nosotros
     # mismos. Por eso el Para se sobreescribe SIEMPRE, explicito, mas abajo.
-    if cfg.get('responder_a'):
+    # "responder_a_id": EntryID de un mail RECIBIDO (el que sale de `_mails.py --buscar`).
+    # Es el camino para contestarle a alguien: `responder_a` busca en Enviados y solo sirve
+    # para seguir un hilo que arrancamos nosotros.
+    if cfg.get('responder_a_id'):
+        orig = ns.GetItemFromID(cfg['responder_a_id'])
+        print(f'respondiendo a: {orig.ReceivedTime} | {orig.SenderName} | {orig.Subject}')
+        mail = orig.Reply()
+    elif cfg.get('responder_a'):
         enviados = ns.GetDefaultFolder(5).Items
         enviados.Sort('[SentOn]', True)
         clave = cfg['responder_a'].lower()
