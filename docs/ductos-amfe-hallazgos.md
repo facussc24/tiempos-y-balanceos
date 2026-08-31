@@ -235,14 +235,12 @@ Pero **no cierra con el arb**:
   (`MP8157` Central + `MP8158` RH + `MP8159` LH) como componentes — se sueldan por
   ultrasonido y se remachan en una sola pieza. **No se parte por lado.**
 - **MP8150 y MP8151 tienen la MISMA descripcion** ("ACOUSTIC FOAM LH-RH"), asi que no se
-  distinguen entre si. ⚠️ **Esto NO es un error de Gamboa**: es literalmente el nombre que
-  usa el cliente en su Nota de Pedido (`MP8150 ACOUSTIC FOAM_RH` / `MP8151 ACOUSTIC
-  FOAM_LH`). El problema es mas profundo y **no esta resuelto**: para Cozzuol los dos son
-  el **CNSL Side** y el Front Extend tiene codigos propios `MP8152`/`MP8153` (que no
-  existen en el arb), mientras que el arb, la tizada y las OC al proveedor tratan a
-  MP8150 como el Front Extend chico. Detalle y evidencia en la memoria
-  `project_patagonia_ductos_insonos_arb`. **No alinear el AMFE por este punto hasta que
-  Paulo/Carlos definan.**
+  distinguen entre si. Va corregido con las descripciones del arb: **MP8150 = FRONT EXTEND
+  PANEL** (chica) y **MP8151 = CNSL_SIDE PANEL** (grande).
+  ✅ **CERRADO por decision de Fak el 24/08/2026: gana el arb, y no se vuelve a plantear** —
+  ni como pregunta ni como nota al pie. Que la Nota de Pedido de Cozzuol use esos numeros
+  para otra cosa (y tenga MP8152/MP8153, que no existen aca) es historia de por que existio
+  la duda, no una tarea. Detalle en la memoria `project_patagonia_ductos_insonos_arb`.
 - `MP8149IP INSULATOR PAD` va pegado, sin espacio.
 
 ### Colision de numeracion flujograma vs AMFE
