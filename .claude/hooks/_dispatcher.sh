@@ -107,7 +107,8 @@ fi
 #   Bash|PowerShell|Write|Edit . consumos, cad, patrones, escritorio
 GUARDIANES=()
 case "$TOOL_NAME" in
-  Bash|PowerShell) GUARDIANES+=(supabase-guard validator-check renumber-guard push-guard) ;;
+  Bash|PowerShell) GUARDIANES+=(supabase-guard validator-check renumber-guard push-guard
+                                arb-cerrar-guard) ;;
   Edit|Write)      GUARDIANES+=(file-guard causas-ajenas-guard) ;;
 esac
 case "$TOOL_NAME" in
@@ -121,7 +122,7 @@ esac
 if [ -z "$TOOL_NAME" ]; then
   GUARDIANES=(file-guard supabase-guard validator-check renumber-guard push-guard
               consumos-entregable-guard cad-guard patrones-guard escritorio-guard
-              borrado-masivo-guard ho-numeracion-guard mail-guard)
+              borrado-masivo-guard ho-numeracion-guard mail-guard arb-cerrar-guard)
 fi
 
 if [ ${#GUARDIANES[@]} -eq 0 ]; then exit 0; fi

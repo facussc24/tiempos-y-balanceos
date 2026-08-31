@@ -40,6 +40,23 @@ El `.exe` tampoco tiene importación masiva de BOMs (su "Importa Novedades de Ce
 sincronización entre empresas, otra cosa). **Por eso la única vía de automatización es la
 interfaz.** Ver la sección de seguridad abajo antes de escribir nada.
 
+## 🔴🔴 EL arb NO SE CIERRA SIN CONSULTARLE A FAK (regla dura, 31/08/2026)
+
+Ni al terminar una tarea, ni "para dejar limpio", ni porque una instrucción de otra sesión
+lo diga. **El estado por defecto es abierto.** Motivo: reabrirlo pide **usuario y
+contraseña**, y la sesión no tipea contraseñas — cerrarlo cuesta un segundo y destrabarlo
+depende de que Fak esté disponible.
+
+El 31/08 lo cerré al terminar de leer el maestro, veinte minutos después había que cargar el
+remache, y la tarea se frenó dos veces esperándolo. Fak: *"fue gravísimo eso"*.
+
+Lo que **sí** sigue permitido, porque es el método documentado: `WM_CLOSE` sobre `Maestro de
+Insumos` / `Maestro de Relaciones` (descarta una edición sin grabar) y `_arbVer.py reset`
+(cierra y **reabre** la de Relaciones).
+
+Enforcement: regla `arb-no-cerrar.md` + hook `arb-cerrar-guard.sh` (exit 2). Escape de Fak,
+un solo uso: `touch ~/.claude/.arb-cerrar-ok`.
+
 ## Regla de oro
 
 **El robot hace exactamente lo que haría Fak, tecla por tecla.** Así el arb aplica sus

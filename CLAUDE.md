@@ -80,6 +80,7 @@ la pasada rapida). Solo mide y reporta — commit/push/archivar los hace Claude.
 | `exports.md` | archivos *export* |
 | `testing.md` | __tests__ |
 | `dev-login.md` | components/auth — boton dev-login: NO TOCAR NUNCA |
+| `arb-no-cerrar.md` | `scripts/_arb*.py` + skill `arb-operar` — **el arb NO se cierra sin consultarle a Fak**: reabrirlo pide contraseña y la sesion no tipea contraseñas (hook `arb-cerrar-guard.sh`) |
 | `cad-3d.md` | archivos .step/.stl/.glb, `.venv-cad`, skill cad-design — 2 gates 3D |
 | `dxf-entregable.md` | `*.dxf` / `*.plt` — **el juez de un DXF es AutoCAD, no ezdxf** (`scripts/_validarDxf.py`); y si la ruta pasa 259 caracteres el doble click de Windows no abre |
 | `escritorio-tareas.md` | `_escritorio.mjs` + su hook — cola de tareas: cuándo se cierra y cómo se archiva (el hook la recuerda al tocar el Escritorio) |

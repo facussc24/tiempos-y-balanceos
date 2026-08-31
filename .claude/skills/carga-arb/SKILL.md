@@ -5,9 +5,10 @@ description: Ciclo completo de una modificacion de BOM en el ERP arb — tabla d
 
 # Carga en el arb — de la tabla al mail de difusion
 
-Cinco pasos, en este orden. **Fak carga a mano en el arb**: todo lo que le paso tiene que
-poder tipearse sin levantar la vista, y todo lo que verifico tiene que salir del export
-posterior, nunca de suponer que cargo lo que le pedi.
+Cinco pasos, en este orden. **La carga en el arb la hace la sesion** (ver §2); la tabla se
+arma igual, porque es lo que Fak revisa antes y lo que queda como rastro de la tarea. Todo
+lo que se verifica tiene que salir del **export posterior**, nunca de suponer que quedo
+cargado lo que se pidio.
 
 ## 1. Armar la tabla de carga
 
@@ -115,10 +116,22 @@ duro (**"hoy no se consume en ninguna"**, que es una respuesta, no un "no se") y
 la pregunta del destino a Ingenieria. Para afirmarlo hace falta el **plano y el PPAP**,
 no el ERP. Detalle: memoria `feedback_destino_material_se_verifica_en_planos`.
 
-## 2. Fak carga. Yo no cargo.
+## 2. La carga la hago YO. Lo unico de Fak es loguearse.
 
-El arb no abre en esta PC (memoria `arb_erp_btrieve`). Fak carga a mano y **re-exporta**:
-el arb escribe `ARTICULO.TXT`, `INSUMOS.TXT` y `RELACIONES.TXT` en `C:\tmp` (latin-1).
+⚠ Esta seccion decia **"Fak carga. Yo no cargo"** y estaba DESACTUALIZADA — corregido el
+31/08/2026. Las cargas las hace la sesion desde el 05/08 (skill `arb-operar`, memoria
+`feedback_arb_lo_opero_yo_y_lo_mejoro`): consumos con `_arbCargar.py`, altas con
+`_arbAlta.py` / `_arbAltaLote.py`, y **cambiar el CODIGO de una linea que ya existe con
+`_arbSustituir.py`** (estrenado el 31/08 con el remache de ductos: 1/1, diff del archivo
+entero 1 alta / 1 baja / 0 cambios de mas). Fak, 31/08: *"incluso ahora las altas y bajas
+las hacen las sesiones, no yo"*. Lo unico sin probar sigue siendo **borrar** una linea.
+
+Lo que SI necesita a Fak: la pantalla `Inicio de Sesion` del arb, que pide usuario y
+contraseña. La sesion no tipea contraseñas. Por eso **el arb no se cierra sin consultarle**
+— regla `arb-no-cerrar.md`, hook `arb-cerrar-guard.sh`.
+
+Despues de cargar hay que **re-exportar**: el arb escribe `ARTICULO.TXT`, `INSUMOS.TXT` y
+`RELACIONES.TXT` en `C:\tmp` (latin-1). Con `python scripts/_arbVer.py export`.
 
 ## 3. Validar contra el export nuevo — antes de creerle a nadie, ni a mi
 
@@ -145,7 +158,7 @@ Cuatro verificaciones, todas contra el export nuevo:
 ```bash
 python scripts/_pdfBomArb.py --piezas "<PN1>,<PN2>" --fecha dd/mm/aaaa \
     --act "Se crea part number ... " --act "Se da de baja ... " \
-    --salida "<Escritorio>\Modificaciones BOM ARB_AAAAMMDD.pdf"
+    --salida "<biblioteca>\1- GENERAL\2. CONSUMO DE MATERIAL BOM\BOMS\...\Modificaciones BOM ARB_AAAAMMDD.pdf"
 ```
 
 - **Se hace DESPUES de cargar y DESPUES de re-exportar.** Es un extracto post-carga, no una
@@ -153,8 +166,13 @@ python scripts/_pdfBomArb.py --piezas "<PN1>,<PN2>" --fecha dd/mm/aaaa \
 - Una pagina por pieza con la BOM **completa**, no solo la linea que cambio.
 - El bloque `ACTUALIZACIONES dd/mm/aaaa` y la nota de fiel extracto van **en todas** las
   paginas. Redaccion impersonal, como Leo: "Se crea...", "Se da de baja...", "Se ajusta...".
-- El PDF va **suelto en el Escritorio**, no adentro de la carpeta de la tarea: Fak lo adjunta
-  desde ahi.
+- El PDF va a su **carpeta POR TIPO de la biblioteca de Ingenieria**:
+  `1- GENERAL\2. CONSUMO DE MATERIAL BOM\BOMS\<cliente>\...\<pieza>\`. Desde ahi se adjunta
+  al mail. Si la subcarpeta de la pieza no existe, se crea mirando como estan las hermanas
+  (APC, IP, TOP ROLL...).
+  ⚠ Esta linea decia **"va suelto en el Escritorio"** y estaba DESACTUALIZADA: desde el
+  incidente del 28/08 (*"no me dejes cosas en el escritorio"*) el `escritorio-guard.sh`
+  **bloquea** generar un entregable ahi. Lo descubri el 31/08 comiendome el bloqueo.
 - **Mirar el PDF NO es verificarlo.** El 04/08/2026 se difundio uno con tres filas sin unidad
   ni consumo: se habian abierto 2 de las 5 paginas y las 2 estaban bien. El script hoy corre
   cinco gates y aborta sin dejar archivo; si sale un PDF con el nombre final, es porque paso
