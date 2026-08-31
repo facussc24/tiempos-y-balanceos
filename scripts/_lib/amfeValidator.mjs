@@ -333,6 +333,27 @@ export function validateOrdenEnfundadoPu(doc, amfeNumber = '') {
     return out;
 }
 
+/**
+ * DETECTION_HUMANA_OPTIMISTA — el predicado, aparte del check que lo usa.
+ *
+ * Vive suelto porque no lo consume solo el validador: el script que recalifica la columna D
+ * tiene que elegir EXACTAMENTE las mismas causas, y una regex paralela escrita alla se
+ * desincroniza en el primer retoque (es el modo de falla "un artefacto propio no es fuente").
+ * Una sola definicion, dos consumidores.
+ *
+ * Devuelve true cuando el control de deteccion depende de una PERSONA (mirar, tocar, oir,
+ * contar, revisar un papel), NO nombra instrumento, y la D esta por debajo del piso que la
+ * Tabla P3 del AIAG-VDA admite para ese tipo de control (7 en estacion, 8 aguas abajo).
+ */
+export function esDeteccionHumanaOptimista(detectionControl, detection) {
+    const dNum = Number(detection);
+    if (!Number.isFinite(dNum) || dNum < 1 || dNum > 6) return false;
+    const det = String(detectionControl ?? '').toLowerCase();
+    const esHumano = /\b(visual|inspecc|mira|observ|tactil|audi|conteo|cont(ar|eo)|verificacion documental|revision del certificado|pieza patron|contra la pieza|a la vista)\b/.test(det);
+    const tieneInstrumento = /\b(calibre|comparador|galga|pasa\/no pasa|go\/no.?go|torquim|balanza|micromet|sensor|camara|celda de carga|interlock|poka.?yoke|dinamomet|espesim)\b/.test(det);
+    return esHumano && !tieneInstrumento;
+}
+
 export function validateAmfeDoc(doc, productName = '', amfeNumber = '') {
     const issues = [];
 
@@ -642,15 +663,9 @@ export function validateAmfeDoc(doc, productName = '', amfeNumber = '') {
                         // La tabla de amfe.md §13 decia lo mismo que el AMFE (visual en 4-5), asi
                         // que se corrigio la REGLA contra el manual y nacio este check.
                         // Avisa, no corrige: la calificacion es dato tecnico del equipo.
-                        if (!missD) {
-                            const dNum = Number(c.detection);
-                            const det = String(c.detectionControl ?? '').toLowerCase();
-                            const esHumano = /\b(visual|inspecc|mira|observ|tactil|audi|conteo|cont(ar|eo)|verificacion documental|revision del certificado|pieza patron|contra la pieza|a la vista)\b/.test(det);
-                            const tieneInstrumento = /\b(calibre|comparador|galga|pasa\/no pasa|go\/no.?go|torquim|balanza|micromet|sensor|camara|celda de carga|interlock|poka.?yoke|dinamomet|espesim)\b/.test(det);
-                            if (dNum >= 1 && dNum <= 6 && esHumano && !tieneInstrumento) {
-                                issues.push({ ...cCtx, type: 'DETECTION_HUMANA_OPTIMISTA',
-                                    detail: `D=${dNum} para un control que depende de una persona ("${String(c.detectionControl).slice(0, 60)}"). Tabla P3: visual/tactil/audible/conteo va D=7 en estacion u 8 aguas abajo` });
-                            }
+                        if (!missD && esDeteccionHumanaOptimista(c.detectionControl, c.detection)) {
+                            issues.push({ ...cCtx, type: 'DETECTION_HUMANA_OPTIMISTA',
+                                detail: `D=${Number(c.detection)} para un control que depende de una persona ("${String(c.detectionControl).slice(0, 60)}"). Tabla P3: visual/tactil/audible/conteo va D=7 en estacion u 8 aguas abajo` });
                         }
 
                         // CAUSE_S9_SIN_CC (WARNING) — S>=9 sin caracteristica especial declarada.
