@@ -1,21 +1,21 @@
-# Text Quality Audit (L2) — 2026-08-24T19:44:07.211Z
+# Text Quality Audit (L2) — 2026-08-31T13:32:12.992Z
 
-**Resumen global**: 0 CRITICAL, 126 WARNING en 18/18 AMFEs.
+**Resumen global**: 0 CRITICAL, 108 WARNING en 18/18 AMFEs.
 
-**Por tipo**: OP_FUNCTION_SEMANTIC_MISMATCH=13, FN_TOO_SHORT=12, FN_NO_VERB=100, WE_NAME_FOREIGN_TYPE=1
+**Por tipo**: OP_FUNCTION_SEMANTIC_MISMATCH=13, FN_NO_VERB=82, FN_TOO_SHORT=12, WE_NAME_FOREIGN_TYPE=1
 
 ## Top 5 AMFEs con mas issues
 
-- **AMFE-HRO-PAT** (VWA/PATAGONIA/HEADREST_REAR_OUT): 19 issues
-- **AMFE-HRC-PAT** (VWA/PATAGONIA/HEADREST_REAR_CEN): 19 issues
-- **AMFE-HF-PAT** (VWA/PATAGONIA/HEADREST_FRONT): 18 issues
+- **AMFE-HRO-PAT** (VWA/PATAGONIA/HEADREST_REAR_OUT): 13 issues
+- **AMFE-HRC-PAT** (VWA/PATAGONIA/HEADREST_REAR_CEN): 13 issues
+- **AMFE-HF-PAT** (VWA/PATAGONIA/HEADREST_FRONT): 12 issues
 - **AMFE-MAESTRO-INY-001** (MAESTRO/INYECCION_PLASTICA): 10 issues
 - **VWA-PAT-IPPADS-001** (VWA/PATAGONIA/IP_PADS): 9 issues
 
 ## Detalle por AMFE
 
 ### AMFE-HRO-PAT (VWA/PATAGONIA/HEADREST_REAR_OUT)
-0 CRITICAL + 19 WARNING
+0 CRITICAL + 13 WARNING
 
 | Type | OP | Detalle |
 |---|---|---|
@@ -32,15 +32,9 @@
 | WARNING OP_FUNCTION_SEMANTIC_MISMATCH | 52 INYECCION DE PU | OP "INYECCION DE PU" debería contener alguno de [inyectar, conformar] en su función |
 | WARNING FN_NO_VERB | 52 INYECCION DE PU | function.description "Dar forma a la pieza durante el espumado y curado" no comienza con verbo |
 | WARNING FN_NO_VERB | 80 EMBALAJE Y ETIQUETADO DE PRODU | function.description "Pieza identificada segun VW 10500" no comienza con verbo |
-| WARNING FN_NO_VERB | 80 EMBALAJE Y ETIQUETADO DE PRODU | function.description "Pieza identificada con logotipo segun VW 10514-C10" no comienza con verbo |
-| WARNING FN_NO_VERB | 80 EMBALAJE Y ETIQUETADO DE PRODU | function.description "Pieza identificada con pais de origen segun VW 10550" no comienza con verbo |
-| WARNING FN_NO_VERB | 80 EMBALAJE Y ETIQUETADO DE PRODU | function.description "Pieza identificada con codigo fabricante segun VW 10540" no comienza con verbo |
-| WARNING FN_NO_VERB | 80 EMBALAJE Y ETIQUETADO DE PRODU | function.description "Numero de pieza con tipografia DIN 1451-4-3" no comienza con verbo |
-| WARNING FN_NO_VERB | 80 EMBALAJE Y ETIQUETADO DE PRODU | function.description "Pieza identificada con fecha segun VW 10560" no comienza con verbo |
-| WARNING FN_NO_VERB | 80 EMBALAJE Y ETIQUETADO DE PRODU | function.description "Pieza identificada con material segun VDA 260" no comienza con verbo |
 
 ### AMFE-HRC-PAT (VWA/PATAGONIA/HEADREST_REAR_CEN)
-0 CRITICAL + 19 WARNING
+0 CRITICAL + 13 WARNING
 
 | Type | OP | Detalle |
 |---|---|---|
@@ -57,15 +51,9 @@
 | WARNING OP_FUNCTION_SEMANTIC_MISMATCH | 52 INYECCION DE PU | OP "INYECCION DE PU" debería contener alguno de [inyectar, conformar] en su función |
 | WARNING FN_NO_VERB | 52 INYECCION DE PU | function.description "Dar forma a la pieza durante el espumado y curado" no comienza con verbo |
 | WARNING FN_NO_VERB | 80 EMBALAJE Y ETIQUETADO DE PRODU | function.description "Pieza identificada segun VW 10500" no comienza con verbo |
-| WARNING FN_NO_VERB | 80 EMBALAJE Y ETIQUETADO DE PRODU | function.description "Pieza identificada con logotipo segun VW 10514-C10" no comienza con verbo |
-| WARNING FN_NO_VERB | 80 EMBALAJE Y ETIQUETADO DE PRODU | function.description "Pieza identificada con pais de origen segun VW 10550" no comienza con verbo |
-| WARNING FN_NO_VERB | 80 EMBALAJE Y ETIQUETADO DE PRODU | function.description "Pieza identificada con codigo fabricante segun VW 10540" no comienza con verbo |
-| WARNING FN_NO_VERB | 80 EMBALAJE Y ETIQUETADO DE PRODU | function.description "Numero de pieza con tipografia DIN 1451-4-3" no comienza con verbo |
-| WARNING FN_NO_VERB | 80 EMBALAJE Y ETIQUETADO DE PRODU | function.description "Pieza identificada con fecha segun VW 10560" no comienza con verbo |
-| WARNING FN_NO_VERB | 80 EMBALAJE Y ETIQUETADO DE PRODU | function.description "Pieza identificada con material segun VDA 260" no comienza con verbo |
 
 ### AMFE-HF-PAT (VWA/PATAGONIA/HEADREST_FRONT)
-0 CRITICAL + 18 WARNING
+0 CRITICAL + 12 WARNING
 
 | Type | OP | Detalle |
 |---|---|---|
@@ -81,12 +69,6 @@
 | WARNING OP_FUNCTION_SEMANTIC_MISMATCH | 52 INYECCION DE PU | OP "INYECCION DE PU" debería contener alguno de [inyectar, conformar] en su función |
 | WARNING FN_NO_VERB | 52 INYECCION DE PU | function.description "Dar forma a la pieza durante el espumado y curado" no comienza con verbo |
 | WARNING FN_NO_VERB | 80 EMBALAJE Y ETIQUETADO DE PRODU | function.description "Pieza identificada segun VW 10500" no comienza con verbo |
-| WARNING FN_NO_VERB | 80 EMBALAJE Y ETIQUETADO DE PRODU | function.description "Pieza identificada con logotipo segun VW 10514-C10" no comienza con verbo |
-| WARNING FN_NO_VERB | 80 EMBALAJE Y ETIQUETADO DE PRODU | function.description "Pieza identificada con pais de origen segun VW 10550" no comienza con verbo |
-| WARNING FN_NO_VERB | 80 EMBALAJE Y ETIQUETADO DE PRODU | function.description "Pieza identificada con codigo fabricante segun VW 10540" no comienza con verbo |
-| WARNING FN_NO_VERB | 80 EMBALAJE Y ETIQUETADO DE PRODU | function.description "Numero de pieza con tipografia DIN 1451-4-3" no comienza con verbo |
-| WARNING FN_NO_VERB | 80 EMBALAJE Y ETIQUETADO DE PRODU | function.description "Pieza identificada con fecha segun VW 10560" no comienza con verbo |
-| WARNING FN_NO_VERB | 80 EMBALAJE Y ETIQUETADO DE PRODU | function.description "Pieza identificada con material segun VDA 260" no comienza con verbo |
 
 ### AMFE-MAESTRO-INY-001 (MAESTRO/INYECCION_PLASTICA)
 0 CRITICAL + 10 WARNING
