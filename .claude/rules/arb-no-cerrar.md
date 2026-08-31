@@ -53,11 +53,46 @@ Vale para **un** comando: el guardián lo consume y vuelve a quedar armado.
 `.claude/hooks/arb-cerrar-guard.sh` (PreToolUse, `Bash|PowerShell`, dentro de
 `_dispatcher.sh`). Devuelve exit 2 y explica el porqué.
 
-Probado en las **dos** direcciones — `bash .claude/hooks/arb-cerrar-guard.test.sh`, 15 casos:
-6 que tienen que bloquear (incluido el comando exacto del incidente), 7 del trabajo diario
-que tienen que pasar, y 2 del escape de un solo uso. Un gate probado sólo en rojo no está
-probado: lo caro es que frene el trabajo de todos los días
-(memoria `feedback_un_control_se_audita_en_las_dos_direcciones`).
+Probado en las **dos** direcciones — `bash .claude/hooks/arb-cerrar-guard.test.sh`, 26 casos:
+14 que tienen que bloquear, 10 del trabajo diario que tienen que pasar, y 2 del escape de un
+solo uso. Un gate probado sólo en rojo no está probado: lo caro es que frene el trabajo de
+todos los días (memoria `feedback_un_control_se_audita_en_las_dos_direcciones`).
+
+### Lo que le agregó la auditoría del 31/08 (8 bypasses reales)
+
+La primera versión cazaba **la forma en que yo lo había escrito** y nada más. El agente
+auditor encontró 8 maneras de cerrar el arb que pasaban limpias, verificadas una por una — y
+varias son sintaxis **más natural** que la que sí cazaba (`.Kill()` es más idiomático en
+PowerShell que `Stop-Process`). Todas están hoy en la suite, marcadas `[AUDIT 31/08]`:
+
+`.Kill()` · `.CloseMainWindow()` · `os.kill(pid)` · `wmic process … delete` ·
+`taskkill /PID <n>` sin nombrar el proceso · `0x10` (mismo WM_CLOSE que `0x0010`, sin padding)
+· `pywinauto .close()` / `pyautogui` / `SendKeys %{F4}` · `shutdown /l`.
+
+Dos decisiones de diseño que salieron de ahí:
+
+- **Los verbos van en lista canónica, no en un regex parcial.** El agujero grande era exigir
+  un espacio detrás de `kill`, que descartaba `.Kill()` y `os.kill(`.
+- **Un kill por PID pelado se RESUELVE**: el guardián extrae el número y pregunta
+  `tasklist //FI "PID eq N"` si ese proceso es `produc.exe`. Sólo en ese caso, que es raro,
+  así que el costo no se paga en cada comando.
+
+### Límites conocidos, escritos a propósito
+
+- **Mira el texto del comando, no el resultado.** Un PreToolUse corre antes: no puede saber si
+  el arb sigue vivo. Si aparece una forma nueva de cerrarlo, hay que agregarla.
+- **Las dos señales tienen que estar en el MISMO comando.** Un `PostMessageW(h, 0x0112, 0xF060, 0)`
+  con el handle traído de un paso anterior no se distingue de cerrar una ventana hija, y pasa.
+- Esto es un **guardián contra el olvido, no un sandbox contra un adversario**. El actor es la
+  propia sesión, y lo que se busca es que la regla se vea justo cuando se la va a romper.
+- El guardián **se autobloqueaba al auditarse y al documentarse a sí mismo**: un `grep` de sus
+  propios tokens sobre la skill, y el `git commit` que describe qué bypasses tapó. Dos
+  exenciones lo resuelven, las dos con su caso negativo probado:
+  - comandos de **sólo lectura** que no encadenan a un intérprete (`cat x.sh | bash` no se exime);
+  - el **cuerpo de un heredoc es contenido, no comando**, cuando la línea arranca con `git`,
+    `cat`, `tee`, `echo` o `printf`. Si arranca con un intérprete no se exime, porque
+    `python - <<PY` se come el cuerpo por stdin **sin pipe** — y ése es justamente el comando
+    del incidente del 31/08.
 
 ## La forma general, por si aparece otra igual
 
