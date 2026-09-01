@@ -13,6 +13,10 @@ description: Operar el ERP arb (ARB Sistemas "Producción") por teclado desde Cl
 > **Modificar un campo del MAESTRO DE INSUMOS: ANDA** — **31/08/2026**, `Es Sub-Producto`
 > de `TRO-TEL0001-V1`, diff del export entero 2 altas / 0 bajas / 0 cambios. Todo por
 > teclado: se TABULA, no se clickea por coordenada (ver la seccion nueva del 31/08).
+> **Y la `Descripción` tambien: 3/3 el 01/09/2026** — 27 filas partidas del export → 0, con
+> 0 altas / 0 bajas / **0 consumos cambiados**. Ojo con los dos gates que la trababan:
+> `&Acepta` esta deshabilitado hasta que `Posee PAPP/PSW` tenga valor, y una tecla mandada
+> muy rapido **no llega y no da error** (ver la seccion del 01/09).
 > **Altas EN LOTE: ANDA** (`scripts/_arbAltaLote.py`) — **12/12 el 28/08 en 116 seg**, mismo
 > insumo en 12 BOM, diff de la base entera 12 altas / 0 bajas / 0 cambios.
 >
@@ -1023,6 +1027,69 @@ FIN, BACKSPACE, <valor>           reemplaza el contenido de un campo de 1 caract
  6 TAB  -> boton &Acepta
 ENTER                             graba; la pantalla se limpia sola
 ```
+
+### 🟢🟢 MODIFICAR LA `Descripción` DEL MAESTRO — ANDA `CONFIRMADO 3/3 el 2026-09-01`
+
+Los 3 hilos que Producción reportó como "ERROR BOM". Export antes/después de la base entera:
+**0 altas, 0 bajas, 0 consumos cambiados**, 27 descripciones nuevas y **27 filas partidas → 0**.
+
+**El campo son DOS RENGLONES DE 40 caracteres.** Medido sobre `INSUMOS.TXT`: 470 descripciones
+llegan justo a 40, **ninguna pasa de 40**. Cuando el nombre no entra, se usa el segundo renglón
+— **144 insumos del maestro están así**, es la convención, no un error. El que no sabe manejar
+el segundo renglón es el **reporte de RELACIONES** (lo escupe en la columna A y corre
+unidad/consumo/módulo/proceso 3 columnas a la izquierda).
+
+⚠️ **El export TRUNCA el segundo renglón: no lo uses para saber qué dice.** Del export salía
+`GR`; el texto real era `GRAY VIOLET - TGA AT2`. Reescribir con lo que muestra el export
+**borraba 19 caracteres reales**. La descripción de verdad se lee con `WM_GETTEXT` sobre el
+RichEdit **con foco**, en `Modificaciones`.
+
+Y por eso el arreglo **no es "sacar el salto"**: el texto no entra en 40. Hay que acortarlo, y
+**poniendo primero lo distintivo** — RELACIONES corta a 40 y dos hilos que comparten los
+primeros 36 caracteres quedan indistinguibles ([[reference_arb_insumos_maestro]]).
+
+#### 🔴 `&Acepta` está DESHABILITADO hasta que `Posee PAPP/PSW` tenga valor
+
+Con ese campo vacío **el TAB se clava ahí** (probado: del TAB 17 al 26, mismo handle) y el
+botón nunca recibe foco — se ve como "no llego al botón en 30 TAB". No es un problema de
+teclas: es la validación del arb, y el pie de la ventana lo dice (*"Indique si el Insumo Tiene
+Documentación de Calidad Aprobada S/N/X"*).
+
+🟢 **VA SIEMPRE `S`. No se pregunta y no frena una carga** — decisión de Fak, 01/09/2026:
+*"siempre va la S así cargamos rápido, luego Calidad revisa"*. Yo lo leí como dato técnico y
+paré a preguntar; la casa ya tenía la respuesta y el control está aguas abajo, no en el
+maestro. Ya viene por defecto en `scripts/_arbDescripcion.py`.
+Memoria: [[feedback_arb_papp_siempre_s]].
+
+#### 🔴 `FIN` va al fin del RENGLÓN, no del texto — y las teclas rápidas se PIERDEN
+
+Dos errores del mismo intento, los dos silenciosos:
+
+- `FIN` deja el cursor en la posición 28 de un texto de 44: es fin de **renglón**. Para vaciar
+  el campo entero: **`EM_SETSEL(0, -1)` por mensaje** (sólo mueve la selección, no escribe) **+
+  UN `BACKSPACE` real**. Medido: deja el campo en `''`.
+- **`ai.tecla(..., pausa=0.012)` no llega**: 90 BACKSPACE a 12 ms no borraron **una sola letra**,
+  y el gate lo cazó comparando el contenido. Con 0,15-0,25 s anda siempre. **Una tecla que no
+  llega no da error: devuelve el campo intacto**, así que sin gate se graba lo viejo creyendo
+  que se grabó lo nuevo.
+
+#### La receta que funcionó
+
+```
+solapa Modificaciones -> click Rubro -> 1 -> TAB -> codigo -> TAB   (trae; foco en Descripcion)
+GATE: el foco es RichEdit20A Y su texto == el viejo esperado, exacto   <- si no, WM_CLOSE
+EM_SETSEL(0,-1) + BACKSPACE real          vaciar; verificar que quedo ''
+escribir el texto nuevo (<= 40, sin saltos)
+GATE: el campo dice EXACTAMENTE el texto nuevo                        <- si no, WM_CLOSE
+TAB hasta `Posee PAPP/PSW`, IDENTIFICANDOLO POR POSICION (194,511)    <- 17 o 19 TAB, varia
+EM_SETSEL(0,-1) + BACKSPACE + escribir el valor; verificar
+TAB -> GATE: el foco es el Button 'Acepta' Y IsWindowEnabled          <- si no, WM_CLOSE
+ENTER
+```
+
+**El conteo de TABs varía entre registros (17 y 19 en la misma tanda): identificar el control
+por posición o handle, nunca por cuántos TAB conté.** Ante cualquier gate en rojo, `WM_CLOSE`
+descarta sin grabar — verificado releyendo el registro después.
 
 ### 🟢🟢 LOS `RichEdit20A` SÍ DEVUELVEN TEXTO — cuando tienen el FOCO `CORRIGE lo de arriba`
 
