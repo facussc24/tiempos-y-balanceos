@@ -205,7 +205,13 @@ def fijar(codigo, nuevo, apply_=False, esperado=None):
     time.sleep(1.2)
     modales = [x for x in av.ventanas() if av.cls(x) == '#32770']
     if modales:
-        return False, 'quedo un modal abierto: %r' % [av.txt(x) for x in modales]
+        # Un modal de validacion del arb despues de Acepta. Se limpia ACA, si no la fila
+        # siguiente del lote muere con "hay un modal abierto" y el reporte final culpa a la
+        # fila equivocada. WM_CLOSE no sirve con un modal encima: lo cierra un click real.
+        rotulos = [av.txt(x) for x in modales]
+        av.cerrar_modales()
+        cerrar()
+        return False, 'el arb abrio un modal al grabar: %r' % rotulos
     return True, 'GRABADO'
 
 
@@ -228,6 +234,9 @@ def main(argv):
         return 0
 
     if argv[0] == '--fijar':
+        if len(argv) < 3:
+            print('Uso: --fijar COD "TEXTO NUEVO" [--apply]')
+            return 1
         cod, nuevo = argv[1], argv[2]
         print('%s' % cod)
         ok, msg = fijar(cod, nuevo, apply_)
@@ -235,9 +244,17 @@ def main(argv):
         return 0 if ok else 1
 
     if argv[0] == '--tabla':
+        if len(argv) < 2:
+            print('Uso: --tabla archivo.csv [--apply]     (csv: codigo,nuevo)')
+            return 1
         with open(argv[1], encoding='utf-8-sig', newline='') as fh:
-            filas = [r for r in csv.reader(fh) if r and r[0].strip()
-                     and r[0].strip().lower() not in ('codigo', 'código')]
+            crudas = [r for r in csv.reader(fh) if r and r[0].strip()
+                      and r[0].strip().lower() not in ('codigo', 'código')]
+        cortas = [r[0].strip() for r in crudas if len(r) < 2 or not r[1].strip()]
+        if cortas:
+            print('ABORTADO: estas filas no traen la descripcion nueva: %s' % ', '.join(cortas))
+            return 1
+        filas = crudas
         print('%d fila(s)  |  modo %s\n' % (len(filas), 'APPLY' if apply_ else 'dry-run'))
         malas = []
         for r in filas:
