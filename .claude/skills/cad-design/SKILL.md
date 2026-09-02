@@ -15,11 +15,57 @@ Capacidad probada en el caso Posicionador Top Roll Trasero (ver
 `examples/posicionador/README.md`: el caso completo, sus 4 errores caros y dónde viven
 las fuentes). La librería vive en `scripts/cadlib/` + CLIs genéricos con `--help`.
 
-## 0. LOS 3 GATES (bloqueantes)
+## 0. LOS GATES (bloqueantes)
 
 > **Causa raíz de TODOS mis fallos 3D** (confirmada): bajo presión de "avanzar rápido"
 > sustituyo la fuente real por un proxy (export parcial, capa blanda, dibujo genérico,
 > "confío que salió") y salto la verificación → Fak termina siendo mi control de calidad.
+>
+> **Y la segunda causa raíz, encontrada el 02/09/2026 después de tres entregas rechazadas
+> en tres días:** diseño la **ESTRUCTURA** (que aguante, que no vuelque, que entre por la
+> puerta) y no diseño el **PROCESO** (qué le pasa a la pieza mientras la trabajan). En las
+> tres entregas el cálculo estructural estaba bien. Todos los gates de abajo miran la pieza
+> **quieta**: la zona, el frame, el ensamble, el tamaño. Un dispositivo puede pasarlos todos
+> y no servir, porque lo que lo hace fallar pasa **mientras el operario trabaja**. Por eso
+> el primer gate ya no es el 0.
+
+**GATE P — EL PROCESO** (antes que todo lo demás, incluso antes de mirar la zona).
+
+```
+gate_proceso.py familias                                   # qué pregunta cada fuerza
+gate_proceso.py plantilla --tags adhesivo-a-pistola,pieza-flexible,la-pieza-gira > pliego.json
+gate_proceso.py verificar pliego.json --workdir W --carpeta-pedido <carpeta del pedido>
+```
+
+Tres cosas, y cada una nace de un fallo real de la tanda de adhesivado (29-31/08/2026):
+
+- **(a) LAS FUERZAS.** Por cada familia que aplica al proceso: qué magnitud tiene, **en qué
+  ETAPA** actúa y **qué PIEZA del dispositivo la resuelve**. Una pieza que no está en la lista
+  de piezas no es una respuesta; "se sujeta" tampoco; un número sin unidad ni fuente tampoco.
+  Y **toda etapa de la secuencia tiene que tener al menos una fuerza analizada**: la etapa muda
+  es la que nadie pensó, que es literalmente lo que pasó con *"mientras se rocía"*. El carro
+  apoyaba la pieza y asumía que se quedaba quieta; el adhesivo va **a pistola**. Fak, textual:
+  *"pones la tela ahí, le tirás adhesivo directamente, **SE VA A VOLAR LA TELA**"*.
+- **(b) EL VIDEO ES EL PLIEGO.** Si el que pide mandó un video, un plano o una foto, se mira
+  **antes** de diseñar. Con `--carpeta-pedido` el gate **busca los videos en la carpeta del
+  pedido y falla si el pliego no los declara**: lo que hay que cazar es la OMISIÓN, no la
+  mentira. El video de Carlos (7 min, adhesivado con rueda y plato giratorio) estaba desde el
+  20/08 y no se usó en dos vueltas de diseño. Declarar `visto: true` exige evidencia en disco
+  (los cuadros extraídos): marcarlo a mano es el verde vacío que el gate existe para no dar.
+- **(c) RETORNO DE EXPERIENCIA.** Antes de inventar, mirar lo que Barack **ya tiene fabricado
+  y andando** — Fak: *"no entiendo por qué no lo hacemos"*. El gate lo verifica contra el
+  índice de `indice_dispositivos.py`: si el índice tiene dispositivos y el pliego no abrió
+  ninguno, es rojo; descartar uno que ya funciona exige motivo. Y si el índice está viejo o le
+  falta una raíz obligatoria, también — **un índice incompleto se lee igual que "no hay nada
+  parecido"**, que es justo la conclusión falsa que habilita a inventar de cero.
+
+Lo que este gate **no** hace: juzgar si la respuesta es buena. No sabe de adhesivos. Verifica
+que la pregunta esté contestada, que apunte a una pieza que existe y que los números tengan
+unidad o digan TBD con motivo. *La máquina puede MATAR un dato, nunca APROBARLO.*
+
+Una fuerza puede quedar `no_resuelto` **durante el diseño** (queda marcada y a la vista), pero
+`export_deliverables.py` **no entrega con eso**: pliego v2, *"un dispositivo con una fuerza sin
+contestar no está terminado, por más que la estructura calcule perfecto"*.
 
 **GATE 0 — LA ZONA** (antes de medir una sola cota). Un utillaje no se define por sus cotas sino
 por la ZONA sobre la que actúa, y un número perfecto sobre la zona equivocada es peor que no medir:
@@ -109,9 +155,13 @@ cliente, la primera hipótesis es el sistema de medición.*
   dispositivo que aprieta 6 N no puede pesar medio kilo — eso se ve sin calcular nada.
 
 **Enforcement**: el hook `cad-guard.sh` solo RECUERDA los gates 1×/hora. El duro está en
-`export_deliverables.py`: no entrega sin `zona_confirmada`, sin `collision_check` con 0 puntos
-dentro **y `contacto_ok`**, sin evidencia de `gate_ensamble` cuando el STEP trae ≥2 sólidos, y sin
+`export_deliverables.py`: no entrega sin `proceso_declarado` **y sin ninguna fuerza en
+`no_resuelto`**, sin `zona_confirmada`, sin `collision_check` con 0 puntos dentro **y
+`contacto_ok`**, sin evidencia de `gate_ensamble` cuando el STEP trae ≥2 sólidos, y sin
 un render posterior al STEP (override `--skip-gate` con `--reason`, deja huella).
+Y con **`--final`** —la entrega que va a Fak, no una copia de trabajo— corre además el GATE E
+sobre la carpeta destino: si sale rojo, los archivos quedan copiados pero **la entrega no se
+certifica** (no se escribe la evidencia `delivery` y el script sale con código 1).
 
 **Los 3 agujeros que tenía ese enforcement, cerrados el 2026-08-24** (auditoría independiente;
 los tres se demostraron EN CORRIDA antes de arreglarlos — regresión: `test_gates_entrega.py`):
@@ -141,6 +191,49 @@ gate_giro.py --step conjunto.step --eje-punto 0,0,1050 --eje-dir 1,0,0 \
 Gira los sólidos `--moviles` alrededor del eje y devuelve **la curva d(ángulo) entera**, no un número. Cuatro veredictos, y la distinción importó en la primera corrida real: **LIBRE** · **ROZA** · **CHOCA** · **ESTÁTICO** — la luz es chica pero **no cambia al girar**, así que el giro no es la causa y el que la juzga es `check_collision`. Sin esa cuarta clase el gate dio *0,00 mm en los 72 ángulos* sobre un concepto real: un control que devuelve lo mismo para toda la vuelta no está midiendo el giro. **La firma de un problema de trayectoria es una CAÍDA de la curva**, no un mínimo bajo.
 
 Dos cosas que enseñó escribirlo: (a) sin decimar, una base de 620×480 con `lc=3` da millones de puntos y el barrido **no termina** — la celda de decimación es además **la resolución del resultado** y se informa; (b) el autotest nació fallado: su caso MAL también chocaba a 0°, así que un gate que mirara sólo la pose inicial lo habría cazado igual y el par no probaba nada. Ahora los dos postes están al mismo radio y ángulo, y el de BIEN corrido sobre el eje: **en la pose de carga los dos dan LIBRE** (106,3 y 70,0 mm) y sólo la vuelta entera los separa.
+
+**GATE E — EL ENTREGABLE: que Fak pueda ENTENDERLO, no que esté documentado.**
+
+```
+gate_entregable.py --entrega <carpeta> --motor foto3d --render a.png b.png --workdir W
+# o, en un solo paso, como parte de la entrega certificada:
+export_deliverables.py --workdir W --pieces out/*.step --deliver <carpeta> \
+                       --final --motor foto3d --render <carpeta>/render_*.png
+```
+
+De las tres entregas rechazadas, **dos no fallaron por el diseño: fallaron por cómo llegaron.**
+
+- **G-E1 — formato.** Tienen que estar los tres: **PDF visual + STEP + simulación grabada**
+  (mp4/gif de la secuencia: la pieza entra, se sujeta, se trabaja, sale). Un `.txt` o un
+  `.html` pueden ir de anexo pero **no reemplazan al PDF**. Fak, textual: *"los txt son al
+  pedo… lo único que debés hacer con los 3D es un PDF fácil de entender a prueba de boludos"*.
+- **G-E2 — misma corrida.** Si el STEP se tocó después de armar el PDF, el PDF describe un
+  modelo que ya no existe.
+- **G-E3a — el motor de imagen se DECLARA** y tiene que ser uno de los aceptados de
+  `procesoCanon.data.json`. **matplotlib está en los rechazados**: algoritmo del pintor, sin
+  oclusión ni sombra, un caballete de tubos sale como una chapa. Fak miró 4 capturas y sacó 6
+  preguntas; **5 de las 6 se contestaban con una imagen legible**. Con `--motor foto3d` el gate
+  corre además el **autotest del propio motor** (una rampa pura no puede tener contorno, un
+  escalón sí): que el motor ande se prueba, no se asume.
+- **G-E3b — cuánto color tiene el render**, medido sobre los píxeles del objeto. Es la mitad
+  medible de *"todo del mismo gris"*.
+
+> **Y acá una hipótesis mía que los datos refutaron, para que nadie la reinvente.** El primer
+> G-E3b medía el **histograma de luminancia**: la idea era que sin sombras la imagen colapsa a
+> pocos tonos. Calibrado contra los renders reales **dio al revés** — el malo del 30/08 daba
+> **70** tonos para cubrir el 90 % de los píxeles y los buenos del 01/09 daban **26-28**,
+> porque el malo eran líneas finas con antialias y los buenos son superficies grandes de color
+> plano. Se tiró. Lo que **sí** separa, sobre los mismos archivos, es la **saturación**: malo
+> 0,28-0,29 · buenos 0,42 / 0,63 / 0,75 / 0,76 → umbral 0,35. **Límite conocido y escrito en el
+> canon: la clase mala tiene UNA imagen real, y esto mide color, no oclusión.** Por eso G-E3b
+> no va solo y ninguno de los dos se presenta como "detecta matplotlib".
+
+El motor bueno vive ahora **acá**: `scripts/foto3d.py` (trazado de rayos ortográfico, oclusión
+exacta, sombra proyectada, contorno por segunda derivada de la profundidad, maniquí a escala
+para poner el operario en la escena, **fondo blanco** — Fak 02/09: *"necesito verlos bien los
+modelos 3D, con fondo blanco"*). Nació suelto en la carpeta de trabajo del carro; vivir ahí
+significaba que la tarea siguiente volvía a matplotlib, que es el fallo que existe para no
+repetir.
 
 > **Lo que los gates NO cubren, y hay que saberlo:** los siete nacieron cada uno DESPUÉS de que una persona encontrara el bug. Son tests de regresión: demuestran memoria, no capacidad de detección. Las dos clases que siguen abiertas: el **estado real del material** (el STEP es la pieza fría y desnuda; en uso tiene tela, adhesivo, calor y springback) y la **unicidad del posicionamiento** (nada verifica que haya UNA sola forma de montar el utillaje). Y falta lo que la auditoría del 24/08 dejó abierto para ensambles: **partes de catálogo con procedencia** (hoy GATE 1 exige que toda cota salga del CAD medido o de Fak — para un rodamiento comprado no hay fuente válida posible) y **cálculo del conjunto** (eje entre apoyos, vuelco, par en el volante): el único cálculo estructural del sistema es `viga_voladizo.py`, que sirve para láminas impresas en PLA.
 
@@ -209,7 +302,13 @@ literales sueltos en el código.
 
 ## 3. Flujo punta a punta (CLIs de `scripts/`, todos con `--help`)
 
-0. **Confirmar la ZONA** — `gate_zona.py inventario <cliente.stp> --workdir W --render`,
+0. **Declarar el PROCESO** — mirar primero lo que mandó el que pide (video, plano, foto) y lo
+   que Barack ya tiene hecho (`indice_dispositivos.py --buscar <mecanismo>`), y recién ahí
+   `gate_proceso.py plantilla --tags <etiquetas> > pliego.json` →
+   `gate_proceso.py verificar pliego.json --workdir W --carpeta-pedido <carpeta del pedido>`.
+   **Antes de esto no se abre un CAD.** Qué fuerzas actúan sobre la pieza en cada etapa y qué
+   parte del dispositivo resuelve cada una.
+0b. **Confirmar la ZONA** — `gate_zona.py inventario <cliente.stp> --workdir W --render`,
    mandarle `renders/gate0_mapa_<pieza>.png` a Fak, volver con `--confirmar <id>`. **Antes de
    esto no se mide nada.**
 1. **Medir** — `analyze_step.py <file>` (sólidos, bbox, caras planas+normales, y las 3 sondas
@@ -234,9 +333,15 @@ literales sueltos en el código.
    lleva la pieza del frame del cliente al de impresión (apoyada en z=0, centrada en XY) y
    **aborta si cambia el volumen**. La normal sale de `geom.fit_plane` sobre la cara de apoyo,
    no se adivina. Sin esto el laminador recibe la pieza torcida y a metros del origen.
-7. **Entregar** — `export_deliverables.py --workdir W --pieces out_print/*.step --deliver <destino>
-   [--glb]` → exige evidencia (gate §0), exporta STL binario fino (curvatura 40) + GLB,
-   copia y registra la entrega. Avisa si la pieza sale en coordenadas del cliente.
+7. **Armar lo que Fak mira** — el PDF visual (imagen grande arriba, pocos renglones abajo, una
+   idea por página), los renders con `foto3d.py` (**nunca matplotlib**, fondo blanco, con el
+   operario a escala en la misma escena que el dispositivo cargado) y la **simulación grabada**
+   de la secuencia del proceso.
+8. **Entregar** — `export_deliverables.py --workdir W --pieces out_print/*.step --deliver <destino>
+   [--glb] --final --motor foto3d --render <destino>/render_*.png` → exige evidencia (gates
+   §0), exporta STL binario fino (curvatura 40) + GLB, copia, corre el GATE E sobre la carpeta
+   destino y recién ahí registra la entrega. Sin `--final` queda registrada como entrega de
+   TRABAJO y lo dice. Avisa si la pieza sale en coordenadas del cliente.
    Después: ABRIR los archivos y mirarlos (verify-before-close).
 
 ## 3bis. Antes de mallar: LEER LA TOPOLOGÍA

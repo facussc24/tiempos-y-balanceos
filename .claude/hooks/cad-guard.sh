@@ -70,9 +70,21 @@ LAST=$(cat "$FLAG" 2>/dev/null || echo 0)
 echo "$NOW" > "$FLAG" 2>/dev/null
 
 cat >&2 << 'EOF'
-[CAD-GUARD — RECORDATORIO 1x/h de los 2 gates 3D. Detalle: skill cad-design]
-Causa raiz de los fallos 3D: sustituir la fuente real por un proxy (export parcial, capa
-blanda, dibujo generico, "confio que salio") y NO verificar contra la fuente. Los 2 gates:
+[CAD-GUARD — RECORDATORIO 1x/h de los gates 3D. Detalle: skill cad-design]
+Dos causas raiz. La primera: sustituir la fuente real por un proxy (export parcial, capa
+blanda, dibujo generico, "confio que salio") y NO verificar contra la fuente. La segunda,
+encontrada el 02/09/2026 despues de TRES entregas rechazadas en tres dias con el calculo
+estructural bien las tres veces: disenar la ESTRUCTURA y no el PROCESO.
+
+GATE P — EL PROCESO (antes de abrir un CAD). Todo lo de abajo mira la pieza QUIETA; lo que
+hace fallar un dispositivo pasa MIENTRAS el operario trabaja:
+  0a. Que FUERZAS actuan sobre la pieza en cada etapa, y que PIEZA del dispositivo resuelve
+      cada una. Toda etapa de la secuencia lleva al menos una fuerza analizada.
+  0b. Si el que pide mando un VIDEO/plano/foto, se mira ANTES de disenar. El video ES el pliego.
+  0c. Que tiene Barack YA fabricado que resuelva algo parecido:
+      indice_dispositivos.py --buscar <mecanismo>
+  Ejecutable:  gate_proceso.py plantilla --tags <...> > pliego.json
+               gate_proceso.py verificar pliego.json --workdir W --carpeta-pedido <dir>
 
 GATE PRE-MODELADO (antes de escribir geometria):
   1. Tengo el ENSAMBLE completo, no un export parcial? Si es parcial -> STOP, pedir el assembly.
@@ -84,9 +96,13 @@ GATE PRE-ENTREGA (antes de decir "listo" / pasarle algo a Fak):
   5. Renderice y MIRE yo el resultado. Adjuntar el render + el dato crudo.
   6. Interferencia contra el SUSTRATO RIGIDO ~= 0 (no vs el tapizado blando).
   7. CADGenBench: validez(watertight) -> forma -> interface/fit -> topologia.
+  8. Lo que va a Fak: PDF visual + STEP + SIMULACION GRABADA. Un .txt o un .html NO son el
+     entregable. Los renders con foto3d.py (fondo blanco), NUNCA con matplotlib.
+     Ejecutable:  gate_entregable.py --entrega <carpeta> --motor foto3d --render *.png
 
 Enforcement DURO: export_deliverables.py NO entrega sin evidencia en manifest.json
-(collision_check con 0 puntos dentro + render fresco). Usa el workdir + los CLIs del skill.
-Si ya cumpliste (o no aplica), reintenta y segui.
+(proceso_declarado sin fuerzas pendientes + collision_check con 0 puntos dentro + render
+fresco), y con --final corre ademas el gate de entregable sobre la carpeta destino.
+Usa el workdir + los CLIs del skill. Si ya cumpliste (o no aplica), reintenta y segui.
 EOF
 exit 2

@@ -87,7 +87,7 @@ def main():
     shutil.copy(os.path.join(W, "pieza_MALA.step"), pieza)
     os.utime(png, None)
     rc, out = run("export_deliverables.py", "--workdir", W, "--pieces", pieza,
-                  "--deliver", os.path.join(W, "entrega"), "--skip-gate", "zona",
+                  "--deliver", os.path.join(W, "entrega"), "--skip-gate", "zona", "--skip-gate", "proceso",
                   "--reason", "test sintetico")
     check("entregar una pieza retocada post-verificacion queda RECHAZADO",
           rc != 0 and "NO habla del archivo" in out, out)
@@ -102,7 +102,7 @@ def main():
     check("la buena vuelve a verificar", rc == 0, out)
     os.utime(png, None)
     rc, out = run("export_deliverables.py", "--workdir", W, "--pieces", pieza,
-                  "--deliver", os.path.join(W, "entrega"), "--skip-gate", "zona",
+                  "--deliver", os.path.join(W, "entrega"), "--skip-gate", "zona", "--skip-gate", "proceso",
                   "--reason", "test sintetico")
     check("la pieza verificada de verdad SI se entrega", rc == 0 and "ENTREGA OK" in out, out)
 
@@ -111,7 +111,7 @@ def main():
     run("check_collision.py", "--workdir", W, "--fixture", conj, "--substrate", sus)
     os.utime(png, None)
     rc, out = run("export_deliverables.py", "--workdir", W, "--pieces", conj,
-                  "--deliver", os.path.join(W, "entrega"), "--skip-gate", "zona",
+                  "--deliver", os.path.join(W, "entrega"), "--skip-gate", "zona", "--skip-gate", "proceso",
                   "--reason", "test sintetico")
     check("un ensamble que no se llama ENSAMBLE dispara el gate igual",
           rc != 0 and "GATE ensamble" in out, out)

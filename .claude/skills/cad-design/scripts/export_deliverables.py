@@ -2,10 +2,26 @@
 # Interprete: .venv-cad (Py3.12). Correr: C:\Dev\BarackMercosul\.venv-cad\Scripts\python.exe export_deliverables.py --help
 """Exporta y entrega piezas (STEP + STL binario + GLB opcional) — CON GATE DE EVIDENCIA.
 
-Este es el enforcement REAL de los gates (el hook cad-guard solo recuerda): exige en el
-manifest (0) zona_confirmada — el GATE 0, que la ZONA la haya confirmado Fak, porque un
-utillaje perfecto sobre la feature equivocada pasa todas las demas verificaciones — y por
-cada pieza (1) collision_check con n_inside=0 y (2) un render mas nuevo que el STEP.
+Este es el enforcement REAL de los gates (el hook cad-guard solo recuerda). Exige en el
+manifest, una sola vez:
+
+  (0) zona_confirmada    — GATE 0: la ZONA la confirmo Fak. Un utillaje perfecto sobre la
+                           feature equivocada pasa todas las demas verificaciones.
+  (P) proceso_declarado  — GATE DE PROCESO: que le pasa a la PIEZA mientras la trabajan.
+                           Agregado el 02/09/2026 despues de tres entregas rechazadas del
+                           dispositivo de adhesivado en las que el calculo estructural
+                           estaba bien y el proceso no se habia disenado (gate_proceso.py).
+                           Aca ademas es DURO con las fuerzas 'no_resuelto': el gate de
+                           diseno las deja pasar marcadas, la ENTREGA no.
+
+y por cada pieza (1) collision_check con n_inside=0 y contacto, (2) evidencia de ensamble
+si el STEP trae 2+ solidos, (3) un render mas nuevo que el STEP.
+
+Con --final (la entrega que va a Fak, no una copia de trabajo) corre ademas el GATE DE
+ENTREGABLE sobre la carpeta destino: PDF + STEP + simulacion grabada, misma corrida, y
+renders con motor declarado y con color medido (gate_entregable.py). Sin --final la
+corrida queda registrada como entrega de trabajo y lo dice.
+
 Sin evidencia NO entrega. Override explicito --skip-gate con --reason, y queda huella en
 el manifest.
 """
@@ -129,9 +145,15 @@ def main():
     ap.add_argument("--stl-lc", type=float, default=geom.LC_PRINT)
     ap.add_argument("--stl-curvature", type=int, default=geom.CURVATURE_PRINT)
     ap.add_argument("--glb", action="store_true", help="exportar tambien GLB (visor web)")
-    ap.add_argument("--skip-gate", action="append", default=[], choices=["zona", "collision", "render", "ensamble"],
+    ap.add_argument("--skip-gate", action="append", default=[],
+                    choices=["zona", "proceso", "collision", "render", "ensamble", "entregable"],
                     help="saltear un gate (queda registrado; exige --reason)")
     ap.add_argument("--reason", default=None, help="justificacion del --skip-gate")
+    ap.add_argument("--final", action="store_true",
+                    help="esta es LA entrega que va a Fak: corre ademas el gate de entregable "
+                         "sobre la carpeta destino (PDF + STEP + simulacion + renders legibles)")
+    ap.add_argument("--motor", default="", help="--final: motor de imagen de los renders (ver procesoCanon)")
+    ap.add_argument("--render", nargs="*", default=[], help="--final: los PNG que muestran el 3D")
     args = ap.parse_args()
 
     if args.skip_gate and not args.reason:
@@ -151,6 +173,29 @@ def main():
                 "         gate_zona.py inventario <cliente.stp> --workdir %s --confirmar <id> "
                 "--quien Fak --evidencia '<como lo confirmo>'\n"
                 "(o --skip-gate zona --reason '...' si genuinamente no aplica)" % (w, w, w))
+
+    # ---- GATE DE PROCESO: que le pasa a la PIEZA mientras la trabajan (una sola vez) ----
+    if "proceso" not in args.skip_gate:
+        ev = workdir.find_evidence(w, "proceso_declarado")
+        if ev is None:
+            raise SystemExit(
+                "[GATE proceso] No hay 'proceso_declarado' en el manifest de %s.\n"
+                "Los otros gates miran la pieza QUIETA: la zona, el ensamble, el tamano. Un\n"
+                "dispositivo puede pasarlos todos y no servir, porque lo que lo hace fallar pasa\n"
+                "MIENTRAS el operario trabaja. El 31/08/2026 el carro apoyaba la pieza y el\n"
+                "adhesivo iba a pistola: 'pones la tela ahi, le tiras adhesivo directamente, se\n"
+                "va a volar la tela'.\n"
+                "Correr:  gate_proceso.py plantilla --tags <etiquetas> > pliego.json\n"
+                "         gate_proceso.py verificar pliego.json --workdir %s\n"
+                "(o --skip-gate proceso --reason '...' si genuinamente no aplica)" % (w, w))
+        pendientes = ev.get("no_resueltas") or []
+        if pendientes:
+            raise SystemExit(
+                "[GATE proceso] El pliego deja %d fuerza(s) SIN RESOLVER: %s\n"
+                "Durante el diseno eso es un estado valido y queda marcado; en la entrega no.\n"
+                "Pliego v2, 31/08/2026: 'un dispositivo con una fuerza sin contestar no esta\n"
+                "terminado, por mas que la estructura calcule perfecto'."
+                % (len(pendientes), ", ".join(str(x) for x in pendientes)))
 
     # ---- GATES por pieza ----
     for piece in args.pieces:
@@ -245,9 +290,25 @@ def main():
             delivered.append(os.path.basename(f))
         print("entregado: %s (%s)" % (base, ", ".join(os.path.splitext(x)[1] for x in outs)))
 
+    # ---- GATE DE ENTREGABLE: solo la entrega que va a Fak ----
+    # Va DESPUES de copiar a proposito: juzga la carpeta como la va a recibir Fak, con el
+    # PDF y el video adentro. Si sale rojo, los archivos quedan pero la entrega NO se
+    # certifica: no se escribe la evidencia y el script sale con codigo 1.
+    if args.final and "entregable" not in args.skip_gate:
+        print("")
+        import gate_entregable
+        if gate_entregable.verificar(args.deliver, args.motor, args.render, workdir_path=w) != 0:
+            raise SystemExit(
+                "\n[GATE entregable] La carpeta tiene los archivos pero NO esta certificada.\n"
+                "Corregir lo de arriba y volver a correr con --final. La entrega no queda registrada.")
+
     workdir.record_evidence(w, "delivery", dest=args.deliver, files=delivered,
+                            final=bool(args.final),
                             skipped_gates=args.skip_gate, reason=args.reason)
     print("\nENTREGA OK -> %s (%d archivos). Evidencia registrada en el manifest." % (args.deliver, len(delivered)))
+    if not args.final:
+        print("OJO: esto es una entrega de TRABAJO. La que va a Fak se corre con --final "
+              "--motor <motor> --render <png...>, que ademas exige PDF + simulacion grabada.")
     print("Ultimo paso humano: ABRIR los archivos y mirarlos (regla verify-before-close).")
 
 

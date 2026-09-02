@@ -9,11 +9,61 @@ paths:
   - "**/*.iges"
 ---
 
-# Diseño 3D / CAD — 3 gates (regla corta; detalle y scripts: skill `cad-design`)
+# Diseño 3D / CAD — los gates (regla corta; detalle y scripts: skill `cad-design`)
 
 Causa raíz de mis fallos 3D: sustituir la fuente real por un proxy + entregar sin verificar. Los
 gates NO son opcionales (el hook `cad-guard.sh` los recuerda 1×/h; el gate DURO es
-`export_deliverables.py`, que no entrega sin evidencia de colisión + render en manifest.json):
+`export_deliverables.py`, que no entrega sin evidencia de proceso + colisión + render en
+manifest.json):
+
+**GATE P — EL PROCESO, antes que todo lo demás.** 02/09/2026, después de **tres entregas
+rechazadas en tres días** del dispositivo de adhesivado: **el cálculo estructural estaba bien las
+tres veces.** Lo que fallaba era que diseñé la ESTRUCTURA (que aguante, que no vuelque, que entre
+por la puerta) y no el PROCESO (qué le pasa a la pieza mientras la trabajan). Todos los gates de
+abajo miran la pieza **quieta** — la zona, el frame, el ensamble, el tamaño —: un dispositivo puede
+pasarlos todos y no servir. El carro apoyaba la pieza y asumía que se quedaba quieta; el adhesivo va
+**a pistola**. Fak, textual: *"pones la tela ahí, le tirás adhesivo directamente, **SE VA A VOLAR LA
+TELA**"*.
+
+```
+gate_proceso.py plantilla --tags adhesivo-a-pistola,pieza-flexible,la-pieza-gira > pliego.json
+gate_proceso.py verificar pliego.json --workdir W --carpeta-pedido <carpeta del pedido>
+indice_dispositivos.py --buscar <mecanismo que necesito>
+```
+
+- **(a) Las FUERZAS.** Cada familia que aplica al proceso: magnitud (con unidad y fuente, o TBD con
+  motivo), **en qué ETAPA** actúa y **qué PIEZA la resuelve** — una pieza que no está en la lista no
+  es una respuesta, y "se sujeta" tampoco. **Toda etapa de la secuencia lleva al menos una fuerza
+  analizada**: la etapa muda es la que nadie pensó, y fue literalmente *"mientras se rocía"*.
+- **(b) El VIDEO es el pliego.** Si el que pide mandó un video/plano/foto, se mira ANTES de diseñar.
+  `--carpeta-pedido` busca los videos ahí y falla si el pliego no los declara: **lo que hay que cazar
+  es la omisión**. El de Carlos estaba desde el 20/08 y no se usó en dos vueltas.
+- **(c) RETORNO DE EXPERIENCIA.** Mirar lo que Barack ya tiene andando antes de inventar (Fak: *"no
+  entiendo por qué no lo hacemos"*). Verificado contra el índice de `indice_dispositivos.py`: si hay
+  dispositivos y no se abrió ninguno, rojo; descartar uno que funciona exige motivo. **Un índice
+  viejo o con una raíz caída también es rojo** — se lee igual que "no hay nada parecido".
+
+Una fuerza puede quedar `no_resuelto` durante el diseño (marcada y visible); **la ENTREGA no**.
+
+**GATE E — EL ENTREGABLE: que Fak lo ENTIENDA, no que esté documentado.** De las tres entregas, dos
+fallaron por cómo llegaron. `gate_entregable.py --entrega <carpeta> --motor foto3d --render *.png`,
+o en un paso con `export_deliverables.py ... --final --motor --render`.
+
+- **PDF visual + STEP + simulación grabada**, los tres. Un `.txt`/`.html` va de anexo, **no
+  reemplaza al PDF**: *"los txt son al pedo… lo único que debés hacer con los 3D es un PDF fácil de
+  entender a prueba de boludos"*. Y el PDF no puede ser más viejo que el STEP.
+- **El motor de imagen se declara y `matplotlib` está rechazado** (algoritmo del pintor: sin
+  oclusión ni sombra, un caballete de tubos sale como una chapa). Fak sacó 6 preguntas de 4
+  capturas; **5 de las 6 se contestaban con una imagen legible**. El motor bueno vive en
+  `scripts/foto3d.py` del skill — fondo BLANCO, y trae maniquí a escala para poner al operario en la
+  escena. Con `--motor foto3d` el gate corre el autotest del propio motor.
+- **Se mide cuánto color tiene el render** (umbral 0,35 de saturación sobre los píxeles del objeto;
+  malo real 0,28 · buenos 0,42-0,76). Ojo: mide color, **no oclusión**. La primera versión medía
+  luminancia y **los datos la refutaron al revés** — está escrito en el skill para que nadie la
+  reinvente.
+
+Enforcement de los dos: 25 casos ROJO/VERDE en `test_gates_proceso.py`, con el texto real de los
+tres fallos; listas canónicas en `procesoCanon.data.json`, nunca un regex a ojo.
 
 **GATE 0 — DÓNDE (antes que cualquier otra cosa).** Un utillaje no se define por sus cotas sino por
 la ZONA de la pieza sobre la que actúa. Antes de medir nada:

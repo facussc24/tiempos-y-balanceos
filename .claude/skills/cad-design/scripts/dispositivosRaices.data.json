@@ -1,0 +1,74 @@
+{
+  "_leeme": "Donde vive lo que Barack YA fabrico. Lo lee indice_dispositivos.py. Raiz nueva se agrega ACA, no como argumento suelto de una corrida — si vive en un flag, el proximo escaneo la pierde y el indice miente por omision.",
+  "_origen": "Fak 31/08/2026, sobre relevar los dispositivos ya hechos antes de inventar uno nuevo: 'no entiendo por que no lo hacemos'. Memoria retorno_de_experiencia_antes_de_disenar.",
+  "raices": [
+    {
+      "id": "biblio-2d-mejoras",
+      "ruta": "C:\\Users\\FacundoS-PC\\BARACK ARGENTINA SRL\\Ingeniería y Proyecto - General\\INGENIERIA BARACK (NUNCA BORRAR)\\1- GENERAL\\4. 2D\\MEJORAS DE PROCESO",
+      "que": "Dispositivos y mascaras de mejora de proceso, en 2D (DXF de corte + planos)",
+      "obligatoria": true
+    },
+    {
+      "id": "biblio-3d",
+      "ruta": "C:\\Users\\FacundoS-PC\\BARACK ARGENTINA SRL\\Ingeniería y Proyecto - General\\INGENIERIA BARACK (NUNCA BORRAR)\\1- GENERAL\\5. 3D",
+      "que": "Piezas y dispositivos en 3D: calibres de costura, bases de ultrasonido, pines de alineacion, impresos",
+      "obligatoria": true
+    },
+    {
+      "id": "servidor-utillajes",
+      "ruta": "Y:\\Ingenieria\\Librales Ingenieria\\Documentación\\Herramentales",
+      "que": "Herramentales y utillajes del servidor de Ingenieria (calibres, troqueles, insertos, moldes). Solo responde con la notebook por CABLE (memoria discos_red_y_z_solo_por_cable): si no esta montado, el indice lo dice en vez de salir corto en silencio. OJO: apuntar esta raiz a 'Y:\\Ingenieria' entero trae 2.919 entradas de Mesa de Corte\\MYLAR, que son TIZADAS y no dispositivos — tapan los 30 mecanismos reales y el escaneo pasa de segundos a 10 minutos.",
+      "obligatoria": false
+    }
+  ],
+  "extensiones": {
+    "_leeme": "Que archivo hace que una carpeta cuente como dispositivo, y de que tipo es cada uno.",
+    "modelo3d": [
+      ".step",
+      ".stp",
+      ".stl",
+      ".3mf",
+      ".iges",
+      ".igs",
+      ".catpart",
+      ".catproduct",
+      ".glb"
+    ],
+    "corte2d": [
+      ".dxf",
+      ".plt",
+      ".hpgl"
+    ],
+    "plano": [
+      ".pdf"
+    ],
+    "imagen": [
+      ".png",
+      ".jpg",
+      ".jpeg",
+      ".webp"
+    ],
+    "fabricacion": [
+      ".gcode",
+      ".nc",
+      ".tap"
+    ]
+  },
+  "ignorar": {
+    "_leeme": "DOS listas distintas, y confundirlas hace desaparecer dispositivos en silencio. 'podar' = carpetas cuyo contenido NO se indexa (versiones viejas). 'contenedores' = carpetas que no son un dispositivo pero SI se recorren: sus archivos cuelgan del padre. Al principio estaban juntas y os.walk podaba 'files/', asi que el 'Fully 3D-printable turntable' —que vive entero adentro de files/— no aparecia en el indice. Un indice al que le faltan entradas se lee igual que 'no hay nada parecido', que es la conclusion falsa que este indice existe para impedir.",
+    "podar": [
+      "OBSOLETO",
+      "OBSOLETOS",
+      "OLD",
+      "_superado",
+      "__pycache__"
+    ],
+    "contenedores": [
+      "files",
+      "images",
+      "source",
+      "img",
+      "renders"
+    ]
+  }
+}

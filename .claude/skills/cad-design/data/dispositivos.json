@@ -1,0 +1,1156 @@
+{
+  "generado": "2026-09-02 15:35:05",
+  "raices": [
+    {
+      "id": "biblio-2d-mejoras",
+      "ruta": "C:\\Users\\FacundoS-PC\\BARACK ARGENTINA SRL\\Ingeniería y Proyecto - General\\INGENIERIA BARACK (NUNCA BORRAR)\\1- GENERAL\\4. 2D\\MEJORAS DE PROCESO",
+      "que": "Dispositivos y mascaras de mejora de proceso, en 2D (DXF de corte + planos)",
+      "obligatoria": true,
+      "estado": "ok",
+      "dispositivos": 4
+    },
+    {
+      "id": "biblio-3d",
+      "ruta": "C:\\Users\\FacundoS-PC\\BARACK ARGENTINA SRL\\Ingeniería y Proyecto - General\\INGENIERIA BARACK (NUNCA BORRAR)\\1- GENERAL\\5. 3D",
+      "que": "Piezas y dispositivos en 3D: calibres de costura, bases de ultrasonido, pines de alineacion, impresos",
+      "obligatoria": true,
+      "estado": "ok",
+      "dispositivos": 28
+    },
+    {
+      "id": "servidor-utillajes",
+      "ruta": "Y:\\Ingenieria\\Librales Ingenieria\\Documentación\\Herramentales",
+      "que": "Herramentales y utillajes del servidor de Ingenieria (calibres, troqueles, insertos, moldes). Solo responde con la notebook por CABLE (memoria discos_red_y_z_solo_por_cable): si no esta montado, el indice lo dice en vez de salir corto en silencio. OJO: apuntar esta raiz a 'Y:\\Ingenieria' entero trae 2.919 entradas de Mesa de Corte\\MYLAR, que son TIZADAS y no dispositivos — tapan los 30 mecanismos reales y el escaneo pasa de segundos a 10 minutos.",
+      "obligatoria": false,
+      "estado": "ok",
+      "dispositivos": 23
+    }
+  ],
+  "dispositivos": [
+    {
+      "id": "biblio-2d-mejoras/cuna-top-roll-alineacion",
+      "nombre": "CUNA TOP ROLL ALINEACION",
+      "raiz": "biblio-2d-mejoras",
+      "ruta": "C:\\Users\\FacundoS-PC\\BARACK ARGENTINA SRL\\Ingeniería y Proyecto - General\\INGENIERIA BARACK (NUNCA BORRAR)\\1- GENERAL\\4. 2D\\MEJORAS DE PROCESO\\CUNA TOP ROLL ALINEACION",
+      "contexto": [],
+      "archivos": {
+        "corte2d": [
+          "Top roll cuna otro lado.dxf",
+          "Top roll cuna un lado.dxf"
+        ]
+      },
+      "fecha": "2025-04-28",
+      "resuelve": null,
+      "notas": null
+    },
+    {
+      "id": "biblio-2d-mejoras/dispositivo-adhesivado-insert-sab1740",
+      "nombre": "INSERT SAB1740",
+      "raiz": "biblio-2d-mejoras",
+      "ruta": "C:\\Users\\FacundoS-PC\\BARACK ARGENTINA SRL\\Ingeniería y Proyecto - General\\INGENIERIA BARACK (NUNCA BORRAR)\\1- GENERAL\\4. 2D\\MEJORAS DE PROCESO\\DISPOSITIVO ADHESIVADO\\INSERT SAB1740",
+      "contexto": [
+        "DISPOSITIVO ADHESIVADO"
+      ],
+      "archivos": {
+        "corte2d": [
+          "PLACA CNC - nido Insert DELANTERO SAB1726.dxf",
+          "PLACA CNC - nido MANO DERECHA.dxf",
+          "PLACA CNC - nido MANO IZQUIERDA.dxf"
+        ],
+        "imagen": [
+          "CARRO UNICO - plano constructivo.png",
+          "NIDO - plano de las piezas de torno.png"
+        ],
+        "plano": [
+          "CARRO UNICO - plano constructivo.pdf",
+          "NIDO - plano de las piezas de torno.pdf"
+        ]
+      },
+      "fecha": "2026-08-31",
+      "resuelve": "Nido de adhesivado del Insert trasero SAB1740: placa CNC que copia el contorno de la pieza (una por mano) + piezas de torno. Version entregada el 31/08/2026, sobre carro estatico. El pliego v3 (02/09) la reemplaza por un carro que GIRA, asi que el nido sirve, el soporte no.",
+      "notas": null
+    },
+    {
+      "id": "biblio-2d-mejoras/mascaras-adhesivado-smrc-p703-apb-delantero",
+      "nombre": "APB DELANTERO",
+      "raiz": "biblio-2d-mejoras",
+      "ruta": "C:\\Users\\FacundoS-PC\\BARACK ARGENTINA SRL\\Ingeniería y Proyecto - General\\INGENIERIA BARACK (NUNCA BORRAR)\\1- GENERAL\\4. 2D\\MEJORAS DE PROCESO\\MASCARAS ADHESIVADO\\SMRC\\P703\\APB DELANTERO",
+      "contexto": [
+        "MASCARAS ADHESIVADO",
+        "SMRC",
+        "P703"
+      ],
+      "archivos": {
+        "corte2d": [
+          "Apb mascara v1.dxf",
+          "Triangulo para adhesivar apb.dxf"
+        ]
+      },
+      "fecha": "2025-03-11",
+      "resuelve": null,
+      "notas": null
+    },
+    {
+      "id": "biblio-2d-mejoras/mascaras-adhesivado-smrc-p703-top-roll",
+      "nombre": "TOP ROLL",
+      "raiz": "biblio-2d-mejoras",
+      "ruta": "C:\\Users\\FacundoS-PC\\BARACK ARGENTINA SRL\\Ingeniería y Proyecto - General\\INGENIERIA BARACK (NUNCA BORRAR)\\1- GENERAL\\4. 2D\\MEJORAS DE PROCESO\\MASCARAS ADHESIVADO\\SMRC\\P703\\TOP ROLL",
+      "contexto": [
+        "MASCARAS ADHESIVADO",
+        "SMRC",
+        "P703"
+      ],
+      "archivos": {
+        "corte2d": [
+          "TOP ROLL 4 PIEZAS BASE.dxf",
+          "TOP ROLL 4 PIEZAS MASCARA.dxf"
+        ]
+      },
+      "fecha": "2025-03-11",
+      "resuelve": null,
+      "notas": null
+    },
+    {
+      "id": "biblio-3d/alambre-pwa",
+      "nombre": "PWA",
+      "raiz": "biblio-3d",
+      "ruta": "C:\\Users\\FacundoS-PC\\BARACK ARGENTINA SRL\\Ingeniería y Proyecto - General\\INGENIERIA BARACK (NUNCA BORRAR)\\1- GENERAL\\5. 3D\\ALAMBRE\\PWA",
+      "contexto": [
+        "ALAMBRE"
+      ],
+      "archivos": {
+        "modelo3d": [
+          "Mylar alambre base 1579.3mf",
+          "Mylar alambre base 3474.3mf",
+          "Mylar alambre base 5667.3mf",
+          "Mylar alambre base 6483.3mf",
+          "Mylar alambre base 7169.3mf"
+        ]
+      },
+      "fecha": "2025-04-03",
+      "resuelve": null,
+      "notas": null
+    },
+    {
+      "id": "biblio-3d/archivos-3d-varios-calibre-miniatura-3cm",
+      "nombre": "CALIBRE MINIATURA 3CM",
+      "raiz": "biblio-3d",
+      "ruta": "C:\\Users\\FacundoS-PC\\BARACK ARGENTINA SRL\\Ingeniería y Proyecto - General\\INGENIERIA BARACK (NUNCA BORRAR)\\1- GENERAL\\5. 3D\\ARCHIVOS 3D VARIOS\\CALIBRE MINIATURA 3CM",
+      "contexto": [
+        "ARCHIVOS 3D VARIOS"
+      ],
+      "archivos": {
+        "imagen": [
+          "Height_Clamp.png",
+          "Left_Jaw.png",
+          "Right_Jaw.png",
+          "Right_Jaw_and_Height_Clamp.png",
+          "pocket-caliper-keychain-1.webp",
+          "pocket-caliper-keychain-2.webp",
+          "pocket-caliper-keychain-3.webp"
+        ],
+        "modelo3d": [
+          "Height_Clamp.stl",
+          "Left_Jaw.3mf",
+          "Left_Jaw.stl",
+          "Right_Jaw.stl",
+          "Right_Jaw_and_Height_Clamp.3mf"
+        ]
+      },
+      "fecha": "2025-07-04",
+      "resuelve": null,
+      "notas": null
+    },
+    {
+      "id": "biblio-3d/archivos-3d-varios-creality-3d-scan-marker-holders",
+      "nombre": "CREALITY 3D Scan Marker Holders",
+      "raiz": "biblio-3d",
+      "ruta": "C:\\Users\\FacundoS-PC\\BARACK ARGENTINA SRL\\Ingeniería y Proyecto - General\\INGENIERIA BARACK (NUNCA BORRAR)\\1- GENERAL\\5. 3D\\ARCHIVOS 3D VARIOS\\CREALITY 3D Scan Marker Holders",
+      "contexto": [
+        "ARCHIVOS 3D VARIOS"
+      ],
+      "archivos": {
+        "modelo3d": [
+          "Scan_Marker_3mm_InnerDiameter_6mm_OuterDiameter_GOLDENTUNA.stl",
+          "Scan_Marker_6mm_InnerDiameter_10mm_OuterDiameter_GOLDENTUNA.stl"
+        ]
+      },
+      "fecha": "2025-06-24",
+      "resuelve": null,
+      "notas": null
+    },
+    {
+      "id": "biblio-3d/archivos-3d-varios-creality-3d-scan-marker-holders-fully-3d-printable-turntable-3723618",
+      "nombre": "Fully 3D-printable turntable - 3723618",
+      "raiz": "biblio-3d",
+      "ruta": "C:\\Users\\FacundoS-PC\\BARACK ARGENTINA SRL\\Ingeniería y Proyecto - General\\INGENIERIA BARACK (NUNCA BORRAR)\\1- GENERAL\\5. 3D\\ARCHIVOS 3D VARIOS\\CREALITY 3D Scan Marker Holders\\Fully 3D-printable turntable - 3723618",
+      "contexto": [
+        "ARCHIVOS 3D VARIOS",
+        "CREALITY 3D Scan Marker Holders"
+      ],
+      "archivos": {
+        "imagen": [
+          "022cdd93f24da2ba617324d872875dc6.png",
+          "3035904f6407bbd5b5ad95b9815b6c38.png",
+          "3d7952b96e55ca3e7a637e06def6070b.png",
+          "4638622d86cee3659400a41a4d8b5e77.png",
+          "52190062207eed1ba8cbf00efa9c4985.png",
+          "8a3382cc03ee76342fe00fa42da51241.png",
+          "IMG_0004.JPG",
+          "IMG_0005.JPG",
+          "IMG_0009.JPG",
+          "IMG_0011.JPG",
+          "IMG_0012.JPG",
+          "IMG_0014.JPG",
+          "IMG_0015.JPG",
+          "IMG_0016.JPG",
+          "IMG_0017.JPG",
+          "IMG_0018.JPG",
+          "babb7deb09a6394986e9ab809f800f71.png",
+          "d1052f28e869660a7caba9eba4ad74a2.png",
+          "thumbnail_V1.PNG"
+        ],
+        "modelo3d": [
+          "Leg_V2.stl",
+          "big_gear_V2.stl",
+          "handle_V2.stl",
+          "plate_V1.stl",
+          "plumbing_V3.stl",
+          "slide_bearing_V3.stl",
+          "small_gear_V2.stl"
+        ],
+        "plano": [
+          "Turntable_white_platform_template.pdf"
+        ]
+      },
+      "fecha": "2025-07-04",
+      "resuelve": null,
+      "notas": null
+    },
+    {
+      "id": "biblio-3d/archivos-3d-varios-creality-3d-scan-marker-holders-marker-target-60-deg-far-distant",
+      "nombre": "marker-target-60-deg-far-distant",
+      "raiz": "biblio-3d",
+      "ruta": "C:\\Users\\FacundoS-PC\\BARACK ARGENTINA SRL\\Ingeniería y Proyecto - General\\INGENIERIA BARACK (NUNCA BORRAR)\\1- GENERAL\\5. 3D\\ARCHIVOS 3D VARIOS\\CREALITY 3D Scan Marker Holders\\marker-target-60-deg-far-distant",
+      "contexto": [
+        "ARCHIVOS 3D VARIOS",
+        "CREALITY 3D Scan Marker Holders"
+      ],
+      "archivos": {
+        "modelo3d": [
+          "Marker 60 fardistant.stl"
+        ]
+      },
+      "fecha": "2025-07-04",
+      "resuelve": null,
+      "notas": null
+    },
+    {
+      "id": "biblio-3d/archivos-3d-varios-espatulas-extractoras",
+      "nombre": "ESPATULAS EXTRACTORAS",
+      "raiz": "biblio-3d",
+      "ruta": "C:\\Users\\FacundoS-PC\\BARACK ARGENTINA SRL\\Ingeniería y Proyecto - General\\INGENIERIA BARACK (NUNCA BORRAR)\\1- GENERAL\\5. 3D\\ARCHIVOS 3D VARIOS\\ESPATULAS EXTRACTORAS",
+      "contexto": [
+        "ARCHIVOS 3D VARIOS"
+      ],
+      "archivos": {
+        "modelo3d": [
+          "Extractor de piezas impresas chico.stl",
+          "Extractor de piezas impresas grande.stl"
+        ]
+      },
+      "fecha": "2025-04-16",
+      "resuelve": null,
+      "notas": null
+    },
+    {
+      "id": "biblio-3d/archivos-3d-varios-functional-threaded-m6-screw-4601576",
+      "nombre": "Functional Threaded M6 Screw - 4601576",
+      "raiz": "biblio-3d",
+      "ruta": "C:\\Users\\FacundoS-PC\\BARACK ARGENTINA SRL\\Ingeniería y Proyecto - General\\INGENIERIA BARACK (NUNCA BORRAR)\\1- GENERAL\\5. 3D\\ARCHIVOS 3D VARIOS\\Functional Threaded M6 Screw - 4601576",
+      "contexto": [
+        "ARCHIVOS 3D VARIOS"
+      ],
+      "archivos": {
+        "imagen": [
+          "Fusion_360_Threaded_Nut.JPG",
+          "Threaded_Screw_v2.png",
+          "image0.jpeg"
+        ],
+        "modelo3d": [
+          "Threaded_Screw_v2.stl"
+        ]
+      },
+      "fecha": "2025-07-04",
+      "resuelve": null,
+      "notas": null
+    },
+    {
+      "id": "biblio-3d/archivos-3d-varios-rescatados-de-revisar-2026-08-07",
+      "nombre": "Rescatados de REVISAR 2026-08-07",
+      "raiz": "biblio-3d",
+      "ruta": "C:\\Users\\FacundoS-PC\\BARACK ARGENTINA SRL\\Ingeniería y Proyecto - General\\INGENIERIA BARACK (NUNCA BORRAR)\\1- GENERAL\\5. 3D\\ARCHIVOS 3D VARIOS\\Rescatados de REVISAR 2026-08-07",
+      "contexto": [
+        "ARCHIVOS 3D VARIOS"
+      ],
+      "archivos": {
+        "modelo3d": [
+          "Dispositivo en Catia para ultrasonido apb trasero .CATPart",
+          "Imprimir 11.40 JAJAJ.step",
+          "Part1.CATPart",
+          "Pin para ductos.step",
+          "base doble.step",
+          "defrosterducto_der_.CATPart",
+          "imprimi ahoraS.step",
+          "parte de arriba chiquita.stp",
+          "ultimo imprimir.step"
+        ]
+      },
+      "fecha": "2026-02-10",
+      "resuelve": null,
+      "notas": null
+    },
+    {
+      "id": "biblio-3d/archivos-3d-varios-soporte-notbook-regulable-laptop-stand-model-files",
+      "nombre": "laptop-stand-model_files",
+      "raiz": "biblio-3d",
+      "ruta": "C:\\Users\\FacundoS-PC\\BARACK ARGENTINA SRL\\Ingeniería y Proyecto - General\\INGENIERIA BARACK (NUNCA BORRAR)\\1- GENERAL\\5. 3D\\ARCHIVOS 3D VARIOS\\SOPORTE NOTBOOK REGULABLE\\laptop-stand-model_files",
+      "contexto": [
+        "ARCHIVOS 3D VARIOS",
+        "SOPORTE NOTBOOK REGULABLE"
+      ],
+      "archivos": {
+        "modelo3d": [
+          "portable_laptop_stand_-_arm.stl",
+          "portable_laptop_stand_-_base.stl",
+          "portable_laptop_stand_-_clip.stl",
+          "portable_laptop_stand_-_pin.stl",
+          "portable_laptop_stand_-_support.stl"
+        ],
+        "plano": [
+          "1254280-laptop-stand-2a4c6932-52cd-470e-a6ee-e281240a3d30.pdf"
+        ]
+      },
+      "fecha": "2025-04-16",
+      "resuelve": null,
+      "notas": null
+    },
+    {
+      "id": "biblio-3d/archivos-3d-varios-test-impresora",
+      "nombre": "TEST IMPRESORA",
+      "raiz": "biblio-3d",
+      "ruta": "C:\\Users\\FacundoS-PC\\BARACK ARGENTINA SRL\\Ingeniería y Proyecto - General\\INGENIERIA BARACK (NUNCA BORRAR)\\1- GENERAL\\5. 3D\\ARCHIVOS 3D VARIOS\\TEST IMPRESORA",
+      "contexto": [
+        "ARCHIVOS 3D VARIOS"
+      ],
+      "archivos": {
+        "modelo3d": [
+          "All_in_One_3D_Printer_Test.stl"
+        ]
+      },
+      "fecha": "2025-09-12",
+      "resuelve": null,
+      "notas": null
+    },
+    {
+      "id": "biblio-3d/archivos-3d-varios-tope-de-puerta",
+      "nombre": "TOPE DE PUERTA",
+      "raiz": "biblio-3d",
+      "ruta": "C:\\Users\\FacundoS-PC\\BARACK ARGENTINA SRL\\Ingeniería y Proyecto - General\\INGENIERIA BARACK (NUNCA BORRAR)\\1- GENERAL\\5. 3D\\ARCHIVOS 3D VARIOS\\TOPE DE PUERTA",
+      "contexto": [
+        "ARCHIVOS 3D VARIOS"
+      ],
+      "archivos": {
+        "modelo3d": [
+          "Firefighter Chock v8.stl"
+        ]
+      },
+      "fecha": "2025-04-16",
+      "resuelve": null,
+      "notas": null
+    },
+    {
+      "id": "biblio-3d/mirgor-costura-union",
+      "nombre": "COSTURA UNION",
+      "raiz": "biblio-3d",
+      "ruta": "C:\\Users\\FacundoS-PC\\BARACK ARGENTINA SRL\\Ingeniería y Proyecto - General\\INGENIERIA BARACK (NUNCA BORRAR)\\1- GENERAL\\5. 3D\\MIRGOR\\COSTURA UNION",
+      "contexto": [
+        "MIRGOR"
+      ],
+      "archivos": {
+        "modelo3d": [
+          "Calibre MC390.3mf"
+        ]
+      },
+      "fecha": "2025-04-24",
+      "resuelve": null,
+      "notas": null
+    },
+    {
+      "id": "biblio-3d/mirgor-costura-vista",
+      "nombre": "COSTURA VISTA",
+      "raiz": "biblio-3d",
+      "ruta": "C:\\Users\\FacundoS-PC\\BARACK ARGENTINA SRL\\Ingeniería y Proyecto - General\\INGENIERIA BARACK (NUNCA BORRAR)\\1- GENERAL\\5. 3D\\MIRGOR\\COSTURA VISTA",
+      "contexto": [
+        "MIRGOR"
+      ],
+      "archivos": {
+        "modelo3d": [
+          "MC 387 VISTA.3mf"
+        ]
+      },
+      "fecha": "2025-04-24",
+      "resuelve": null,
+      "notas": null
+    },
+    {
+      "id": "biblio-3d/pin-dispositivo-control-tra-izq-rear-left",
+      "nombre": "Pin dispositivo control TRA-IZQ rear left",
+      "raiz": "biblio-3d",
+      "ruta": "C:\\Users\\FacundoS-PC\\BARACK ARGENTINA SRL\\Ingeniería y Proyecto - General\\INGENIERIA BARACK (NUNCA BORRAR)\\1- GENERAL\\5. 3D\\Pin dispositivo control TRA-IZQ rear left",
+      "contexto": [],
+      "archivos": {
+        "imagen": [
+          "Croquis acotado - Pin dispositivo TRA-IZQ.png",
+          "Render - Pin dispositivo TRA-IZQ.png"
+        ],
+        "modelo3d": [
+          "Pin dispositivo TRA-IZQ.step",
+          "Pin dispositivo TRA-IZQ.stl"
+        ]
+      },
+      "fecha": "2026-08-06",
+      "resuelve": null,
+      "notas": null
+    },
+    {
+      "id": "biblio-3d/smrc-p703-apb-base-ultrasonido-trasero",
+      "nombre": "BASE ULTRASONIDO TRASERO",
+      "raiz": "biblio-3d",
+      "ruta": "C:\\Users\\FacundoS-PC\\BARACK ARGENTINA SRL\\Ingeniería y Proyecto - General\\INGENIERIA BARACK (NUNCA BORRAR)\\1- GENERAL\\5. 3D\\SMRC\\P703\\APB\\BASE ULTRASONIDO TRASERO",
+      "contexto": [
+        "SMRC",
+        "P703",
+        "APB"
+      ],
+      "archivos": {
+        "fabricacion": [
+          "Soportes - Pieza.gcode"
+        ],
+        "modelo3d": [
+          "Base ultrasonido.3mf",
+          "P703 ARMREST ASSY TRAS BASE ULTRASONIDO V1.step",
+          "Soportes - Pieza.3mf"
+        ]
+      },
+      "fecha": "2025-08-26",
+      "resuelve": null,
+      "notas": null
+    },
+    {
+      "id": "biblio-3d/smrc-p703-apb-costura",
+      "nombre": "COSTURA",
+      "raiz": "biblio-3d",
+      "ruta": "C:\\Users\\FacundoS-PC\\BARACK ARGENTINA SRL\\Ingeniería y Proyecto - General\\INGENIERIA BARACK (NUNCA BORRAR)\\1- GENERAL\\5. 3D\\SMRC\\P703\\APB\\COSTURA",
+      "contexto": [
+        "SMRC",
+        "P703",
+        "APB"
+      ],
+      "archivos": {
+        "modelo3d": [
+          "MC234 (VISTA).3mf",
+          "MC235 (UNION).3mf"
+        ]
+      },
+      "fecha": "2025-04-23",
+      "resuelve": null,
+      "notas": null
+    },
+    {
+      "id": "biblio-3d/smrc-p703-top-roll",
+      "nombre": "TOP ROLL",
+      "raiz": "biblio-3d",
+      "ruta": "C:\\Users\\FacundoS-PC\\BARACK ARGENTINA SRL\\Ingeniería y Proyecto - General\\INGENIERIA BARACK (NUNCA BORRAR)\\1- GENERAL\\5. 3D\\SMRC\\P703\\TOP ROLL",
+      "contexto": [
+        "SMRC",
+        "P703"
+      ],
+      "archivos": {
+        "modelo3d": [
+          "Calibre exceso de vinilo.step",
+          "Pines top roll alineación 22.4.25.3mf"
+        ]
+      },
+      "fecha": "2026-04-24",
+      "resuelve": null,
+      "notas": null
+    },
+    {
+      "id": "biblio-3d/tornillo-y-tuerca-impresos-pin-dispositivo-tra-izq",
+      "nombre": "Tornillo y tuerca impresos - pin dispositivo TRA-IZQ",
+      "raiz": "biblio-3d",
+      "ruta": "C:\\Users\\FacundoS-PC\\BARACK ARGENTINA SRL\\Ingeniería y Proyecto - General\\INGENIERIA BARACK (NUNCA BORRAR)\\1- GENERAL\\5. 3D\\Tornillo y tuerca impresos - pin dispositivo TRA-IZQ",
+      "contexto": [],
+      "archivos": {
+        "imagen": [
+          "Por que se partia - el acuerdo bajo la cabeza.png"
+        ],
+        "modelo3d": [
+          "TORNILLO v5 - imprimir con la TUERCA v5.stl",
+          "TUERCA v5 - imprimir con el TORNILLO v5.stl"
+        ],
+        "plano": [
+          "Como imprimirlo.pdf"
+        ]
+      },
+      "fecha": "2026-08-24",
+      "resuelve": null,
+      "notas": null
+    },
+    {
+      "id": "biblio-3d/tornillo-y-tuerca-impresos-pin-dispositivo-tra-izq-fuente-step-para-modificar",
+      "nombre": "FUENTE (STEP para modificar)",
+      "raiz": "biblio-3d",
+      "ruta": "C:\\Users\\FacundoS-PC\\BARACK ARGENTINA SRL\\Ingeniería y Proyecto - General\\INGENIERIA BARACK (NUNCA BORRAR)\\1- GENERAL\\5. 3D\\Tornillo y tuerca impresos - pin dispositivo TRA-IZQ\\FUENTE (STEP para modificar)",
+      "contexto": [
+        "Tornillo y tuerca impresos - pin dispositivo TRA-IZQ"
+      ],
+      "archivos": {
+        "modelo3d": [
+          "PERILLA.step",
+          "TORNILLO GRUESO.step",
+          "TORNILLO suave 0,45.step",
+          "TORNILLO suave 0,55.step",
+          "TORNILLO v5.step",
+          "TORNILLO.step",
+          "TUERCA GRUESA.step",
+          "TUERCA baja 5mm.step",
+          "TUERCA v5.step",
+          "TUERCA.step"
+        ]
+      },
+      "fecha": "2026-08-24",
+      "resuelve": null,
+      "notas": null
+    },
+    {
+      "id": "biblio-3d/tornillo-y-tuerca-impresos-pin-dispositivo-tra-izq-probeta-para-calibrar-de-una-vez",
+      "nombre": "PROBETA - para calibrar de una vez",
+      "raiz": "biblio-3d",
+      "ruta": "C:\\Users\\FacundoS-PC\\BARACK ARGENTINA SRL\\Ingeniería y Proyecto - General\\INGENIERIA BARACK (NUNCA BORRAR)\\1- GENERAL\\5. 3D\\Tornillo y tuerca impresos - pin dispositivo TRA-IZQ\\PROBETA - para calibrar de una vez",
+      "contexto": [
+        "Tornillo y tuerca impresos - pin dispositivo TRA-IZQ"
+      ],
+      "archivos": {
+        "modelo3d": [
+          "A - holgura 0,40 (mas justo).stl",
+          "B - holgura 0,50 (la del par v5).stl",
+          "C - holgura 0,60 (mas flojo).stl",
+          "TUERCA para las tres.stl"
+        ]
+      },
+      "fecha": "2026-08-24",
+      "resuelve": null,
+      "notas": null
+    },
+    {
+      "id": "biblio-3d/vuteq-cofia-costura-union",
+      "nombre": "COSTURA UNION",
+      "raiz": "biblio-3d",
+      "ruta": "C:\\Users\\FacundoS-PC\\BARACK ARGENTINA SRL\\Ingeniería y Proyecto - General\\INGENIERIA BARACK (NUNCA BORRAR)\\1- GENERAL\\5. 3D\\VUTEQ COFIA\\COSTURA UNION",
+      "contexto": [
+        "VUTEQ COFIA"
+      ],
+      "archivos": {
+        "modelo3d": [
+          "COFIA90 LADO OP.3mf",
+          "Cofia union.3mf"
+        ]
+      },
+      "fecha": "2025-04-12",
+      "resuelve": null,
+      "notas": null
+    },
+    {
+      "id": "biblio-3d/vuteq-cofia-doble-vista",
+      "nombre": "DOBLE VISTA",
+      "raiz": "biblio-3d",
+      "ruta": "C:\\Users\\FacundoS-PC\\BARACK ARGENTINA SRL\\Ingeniería y Proyecto - General\\INGENIERIA BARACK (NUNCA BORRAR)\\1- GENERAL\\5. 3D\\VUTEQ COFIA\\DOBLE VISTA",
+      "contexto": [
+        "VUTEQ COFIA"
+      ],
+      "archivos": {
+        "modelo3d": [
+          "COFIA DOBLE VISTA.3mf"
+        ]
+      },
+      "fecha": "2025-04-12",
+      "resuelve": null,
+      "notas": null
+    },
+    {
+      "id": "biblio-3d/vuteq-cofia-vista-alambre",
+      "nombre": "VISTA ALAMBRE",
+      "raiz": "biblio-3d",
+      "ruta": "C:\\Users\\FacundoS-PC\\BARACK ARGENTINA SRL\\Ingeniería y Proyecto - General\\INGENIERIA BARACK (NUNCA BORRAR)\\1- GENERAL\\5. 3D\\VUTEQ COFIA\\VISTA ALAMBRE",
+      "contexto": [
+        "VUTEQ COFIA"
+      ],
+      "archivos": {
+        "modelo3d": [
+          "Cofia vista alambre.3mf"
+        ]
+      },
+      "fecha": "2025-04-14",
+      "resuelve": null,
+      "notas": null
+    },
+    {
+      "id": "biblio-3d/vuteq-cofia-vista-cierre",
+      "nombre": "VISTA CIERRE",
+      "raiz": "biblio-3d",
+      "ruta": "C:\\Users\\FacundoS-PC\\BARACK ARGENTINA SRL\\Ingeniería y Proyecto - General\\INGENIERIA BARACK (NUNCA BORRAR)\\1- GENERAL\\5. 3D\\VUTEQ COFIA\\VISTA CIERRE",
+      "contexto": [
+        "VUTEQ COFIA"
+      ],
+      "archivos": {
+        "modelo3d": [
+          "Cofia vista cierre.3mf"
+        ]
+      },
+      "fecha": "2025-04-12",
+      "resuelve": null,
+      "notas": null
+    },
+    {
+      "id": "biblio-3d/vwa-apc-amarok-pa2",
+      "nombre": "APC AMAROK PA2",
+      "raiz": "biblio-3d",
+      "ruta": "C:\\Users\\FacundoS-PC\\BARACK ARGENTINA SRL\\Ingeniería y Proyecto - General\\INGENIERIA BARACK (NUNCA BORRAR)\\1- GENERAL\\5. 3D\\VWA\\APC AMAROK PA2",
+      "contexto": [
+        "VWA"
+      ],
+      "archivos": {
+        "modelo3d": [
+          "Calibre apc amarok pa2 costura.3mf"
+        ]
+      },
+      "fecha": "2025-04-28",
+      "resuelve": null,
+      "notas": null
+    },
+    {
+      "id": "biblio-3d/vwa-apc-taos",
+      "nombre": "APC TAOS",
+      "raiz": "biblio-3d",
+      "ruta": "C:\\Users\\FacundoS-PC\\BARACK ARGENTINA SRL\\Ingeniería y Proyecto - General\\INGENIERIA BARACK (NUNCA BORRAR)\\1- GENERAL\\5. 3D\\VWA\\APC TAOS",
+      "contexto": [
+        "VWA"
+      ],
+      "archivos": {
+        "modelo3d": [
+          "Talon VW TAOS.3mf"
+        ]
+      },
+      "fecha": "2025-04-12",
+      "resuelve": null,
+      "notas": null
+    },
+    {
+      "id": "biblio-3d/vwa-patagonia-dispositivo-adhesivado-insert-sab1740",
+      "nombre": "INSERT SAB1740",
+      "raiz": "biblio-3d",
+      "ruta": "C:\\Users\\FacundoS-PC\\BARACK ARGENTINA SRL\\Ingeniería y Proyecto - General\\INGENIERIA BARACK (NUNCA BORRAR)\\1- GENERAL\\5. 3D\\VWA\\PATAGONIA - DISPOSITIVO ADHESIVADO\\INSERT SAB1740",
+      "contexto": [
+        "VWA",
+        "PATAGONIA - DISPOSITIVO ADHESIVADO"
+      ],
+      "archivos": {
+        "modelo3d": [
+          "CARRO UNICO - 3D con las piezas adentro.step",
+          "CARRO UNICO - caballete.step",
+          "CARRO UNICO - caballete.stl",
+          "NIDO - Insert delantero SAB1726.step",
+          "NIDO - mano derecha.step",
+          "NIDO - mano derecha.stl",
+          "NIDO - mano izquierda.step",
+          "NIDO - mano izquierda.stl"
+        ]
+      },
+      "fecha": "2026-08-31",
+      "resuelve": null,
+      "notas": null
+    },
+    {
+      "id": "biblio-3d/vwa-patagonia-dispositivo-adhesivado-ip-pad",
+      "nombre": "IP PAD",
+      "raiz": "biblio-3d",
+      "ruta": "C:\\Users\\FacundoS-PC\\BARACK ARGENTINA SRL\\Ingeniería y Proyecto - General\\INGENIERIA BARACK (NUNCA BORRAR)\\1- GENERAL\\5. 3D\\VWA\\PATAGONIA - DISPOSITIVO ADHESIVADO\\IP PAD",
+      "contexto": [
+        "VWA",
+        "PATAGONIA - DISPOSITIVO ADHESIVADO"
+      ],
+      "archivos": {
+        "modelo3d": [
+          "CARRO IP - 3D con las piezas adentro.step",
+          "CARRO IP - conjunto.step"
+        ]
+      },
+      "fecha": "2026-08-31",
+      "resuelve": "Carro de adhesivado del IP PAD: bandejas a distinta altura, nada por debajo de 560 mm por ergonomia (Fak: 'no quiero que el operario se agache'). Entregado 31/08/2026; le falta resuelta la sujecion contra el aire de la pistola.",
+      "notas": null
+    },
+    {
+      "id": "servidor-utillajes/calibres-71245-x7a02",
+      "nombre": "71245-X7A02",
+      "raiz": "servidor-utillajes",
+      "ruta": "Y:\\Ingenieria\\Librales Ingenieria\\Documentación\\Herramentales\\CALIBRES\\71245-X7A02",
+      "contexto": [
+        "CALIBRES"
+      ],
+      "archivos": {
+        "corte2d": [
+          "71245-X7A02.dxf"
+        ],
+        "plano": [
+          "71245-X7A02.pdf"
+        ]
+      },
+      "fecha": "2025-02-25",
+      "resuelve": null,
+      "notas": null
+    },
+    {
+      "id": "servidor-utillajes/calibres-71247-x7a03",
+      "nombre": "71247-X7A03",
+      "raiz": "servidor-utillajes",
+      "ruta": "Y:\\Ingenieria\\Librales Ingenieria\\Documentación\\Herramentales\\CALIBRES\\71247-X7A03",
+      "contexto": [
+        "CALIBRES"
+      ],
+      "archivos": {
+        "corte2d": [
+          "71247-X7A03.dxf"
+        ],
+        "plano": [
+          "71247-X7A03.pdf"
+        ]
+      },
+      "fecha": "2025-02-25",
+      "resuelve": null,
+      "notas": null
+    },
+    {
+      "id": "servidor-utillajes/calibres-calibres-71222-x7a05",
+      "nombre": "71222-X7A05",
+      "raiz": "servidor-utillajes",
+      "ruta": "Y:\\Ingenieria\\Librales Ingenieria\\Documentación\\Herramentales\\CALIBRES\\Calibres\\71222-X7A05",
+      "contexto": [
+        "CALIBRES",
+        "Calibres"
+      ],
+      "archivos": {
+        "corte2d": [
+          "71222-X7A05.dxf"
+        ],
+        "imagen": [
+          "photo_5053379695395057245_y.jpg"
+        ]
+      },
+      "fecha": "2024-11-25",
+      "resuelve": null,
+      "notas": null
+    },
+    {
+      "id": "servidor-utillajes/calibres-calibres-71224-x7a12",
+      "nombre": "71224-X7A12",
+      "raiz": "servidor-utillajes",
+      "ruta": "Y:\\Ingenieria\\Librales Ingenieria\\Documentación\\Herramentales\\CALIBRES\\Calibres\\71224-X7A12",
+      "contexto": [
+        "CALIBRES",
+        "Calibres"
+      ],
+      "archivos": {
+        "corte2d": [
+          "71224-X7A12.dxf"
+        ],
+        "imagen": [
+          "photo_5053379695395057244_y.jpg"
+        ]
+      },
+      "fecha": "2024-11-25",
+      "resuelve": null,
+      "notas": null
+    },
+    {
+      "id": "servidor-utillajes/calibres-calibres-71224-x7a13",
+      "nombre": "71224-X7A13",
+      "raiz": "servidor-utillajes",
+      "ruta": "Y:\\Ingenieria\\Librales Ingenieria\\Documentación\\Herramentales\\CALIBRES\\Calibres\\71224-X7A13",
+      "contexto": [
+        "CALIBRES",
+        "Calibres"
+      ],
+      "archivos": {
+        "corte2d": [
+          "71224-7AX13.dxf"
+        ],
+        "imagen": [
+          "photo_5053379695395057243_y.jpg"
+        ]
+      },
+      "fecha": "2024-11-25",
+      "resuelve": null,
+      "notas": null
+    },
+    {
+      "id": "servidor-utillajes/calibres-calibres-71245-x7a02",
+      "nombre": "71245-X7A02",
+      "raiz": "servidor-utillajes",
+      "ruta": "Y:\\Ingenieria\\Librales Ingenieria\\Documentación\\Herramentales\\CALIBRES\\Calibres\\71245-X7A02",
+      "contexto": [
+        "CALIBRES",
+        "Calibres"
+      ],
+      "archivos": {
+        "corte2d": [
+          "71245-X7A02.dxf",
+          "Drawing1.dxf"
+        ],
+        "modelo3d": [
+          "Part4.stp"
+        ]
+      },
+      "fecha": "2024-11-28",
+      "resuelve": null,
+      "notas": null
+    },
+    {
+      "id": "servidor-utillajes/calibres-calibres-71247-x7a03",
+      "nombre": "71247-X7A03",
+      "raiz": "servidor-utillajes",
+      "ruta": "Y:\\Ingenieria\\Librales Ingenieria\\Documentación\\Herramentales\\CALIBRES\\Calibres\\71247-X7A03",
+      "contexto": [
+        "CALIBRES",
+        "Calibres"
+      ],
+      "archivos": {
+        "corte2d": [
+          "71247-X7A03.dxf"
+        ],
+        "modelo3d": [
+          "Pieza1.STEP"
+        ]
+      },
+      "fecha": "2024-11-28",
+      "resuelve": null,
+      "notas": null
+    },
+    {
+      "id": "servidor-utillajes/calibres-calibres-71265-x7a02",
+      "nombre": "71265-X7A02",
+      "raiz": "servidor-utillajes",
+      "ruta": "Y:\\Ingenieria\\Librales Ingenieria\\Documentación\\Herramentales\\CALIBRES\\Calibres\\71265-X7A02",
+      "contexto": [
+        "CALIBRES",
+        "Calibres"
+      ],
+      "archivos": {
+        "corte2d": [
+          "71265-X7A02.dxf"
+        ],
+        "modelo3d": [
+          "71265-X7A02.STEP"
+        ]
+      },
+      "fecha": "2024-11-29",
+      "resuelve": null,
+      "notas": null
+    },
+    {
+      "id": "servidor-utillajes/calibres-calibres-79383-x7a03",
+      "nombre": "79383-X7A03",
+      "raiz": "servidor-utillajes",
+      "ruta": "Y:\\Ingenieria\\Librales Ingenieria\\Documentación\\Herramentales\\CALIBRES\\Calibres\\79383-X7A03",
+      "contexto": [
+        "CALIBRES",
+        "Calibres"
+      ],
+      "archivos": {
+        "corte2d": [
+          "79383-X7A03.dxf"
+        ],
+        "modelo3d": [
+          "Pieza4.STEP"
+        ]
+      },
+      "fecha": "2024-11-28",
+      "resuelve": null,
+      "notas": null
+    },
+    {
+      "id": "servidor-utillajes/calibres-calibres-95512-23013-033",
+      "nombre": "95512-23013-033",
+      "raiz": "servidor-utillajes",
+      "ruta": "Y:\\Ingenieria\\Librales Ingenieria\\Documentación\\Herramentales\\CALIBRES\\Calibres\\95512-23013-033",
+      "contexto": [
+        "CALIBRES",
+        "Calibres"
+      ],
+      "archivos": {
+        "corte2d": [
+          "95512-23013-033.dxf"
+        ]
+      },
+      "fecha": "2024-11-22",
+      "resuelve": null,
+      "notas": null
+    },
+    {
+      "id": "servidor-utillajes/espuma-p703-espuma-del-p703",
+      "nombre": "ESPUMA DEL P703",
+      "raiz": "servidor-utillajes",
+      "ruta": "Y:\\Ingenieria\\Librales Ingenieria\\Documentación\\Herramentales\\ESPUMA P703\\ESPUMA DEL P703",
+      "contexto": [
+        "ESPUMA P703"
+      ],
+      "archivos": {
+        "corte2d": [
+          "Espuma apb delantero p703.dxf"
+        ],
+        "plano": [
+          "MYLAR ESPUMA P703 DELANTERO-Modelo.pdf"
+        ]
+      },
+      "fecha": "2025-05-14",
+      "resuelve": null,
+      "notas": null
+    },
+    {
+      "id": "servidor-utillajes/espuma-p703-espuma-trasero-p703",
+      "nombre": "ESPUMA TRASERO P703",
+      "raiz": "servidor-utillajes",
+      "ruta": "Y:\\Ingenieria\\Librales Ingenieria\\Documentación\\Herramentales\\ESPUMA P703\\ESPUMA TRASERO P703",
+      "contexto": [
+        "ESPUMA P703"
+      ],
+      "archivos": {
+        "corte2d": [
+          "ESP-TRA-DER.dxf",
+          "ESP-TRA-IZQ.dxf"
+        ],
+        "plano": [
+          "MYLAR ESPUMA P703 TRASERO-Modelo.pdf"
+        ]
+      },
+      "fecha": "2025-05-14",
+      "resuelve": null,
+      "notas": null
+    },
+    {
+      "id": "servidor-utillajes/inserto",
+      "nombre": "Inserto",
+      "raiz": "servidor-utillajes",
+      "ruta": "Y:\\Ingenieria\\Librales Ingenieria\\Documentación\\Herramentales\\Inserto",
+      "contexto": [],
+      "archivos": {
+        "corte2d": [
+          "TAOS INSERT R20 PLANTILLA V3.dxf"
+        ]
+      },
+      "fecha": "2025-01-29",
+      "resuelve": null,
+      "notas": null
+    },
+    {
+      "id": "servidor-utillajes/mirgor",
+      "nombre": "Mirgor",
+      "raiz": "servidor-utillajes",
+      "ruta": "Y:\\Ingenieria\\Librales Ingenieria\\Documentación\\Herramentales\\Mirgor",
+      "contexto": [],
+      "archivos": {
+        "modelo3d": [
+          "Mirgor Nuevo.3MF"
+        ]
+      },
+      "fecha": "2024-11-12",
+      "resuelve": null,
+      "notas": null
+    },
+    {
+      "id": "servidor-utillajes/p703-apb",
+      "nombre": "APB",
+      "raiz": "servidor-utillajes",
+      "ruta": "Y:\\Ingenieria\\Librales Ingenieria\\Documentación\\Herramentales\\P703\\APB",
+      "contexto": [
+        "P703"
+      ],
+      "archivos": {
+        "modelo3d": [
+          "P703 NOK.3MF",
+          "Soporte de soldado P703 v9.STEP"
+        ]
+      },
+      "fecha": "2024-12-05",
+      "resuelve": null,
+      "notas": null
+    },
+    {
+      "id": "servidor-utillajes/p703-top-roll-cuna",
+      "nombre": "CUNA",
+      "raiz": "servidor-utillajes",
+      "ruta": "Y:\\Ingenieria\\Librales Ingenieria\\Documentación\\Herramentales\\P703\\TOP ROLL\\CUNA",
+      "contexto": [
+        "P703",
+        "TOP ROLL"
+      ],
+      "archivos": {
+        "corte2d": [
+          "BASE TOP ROLL RE17.dxf",
+          "CUNA TOP ROLL RE17.dxf",
+          "CUNA TOP ROLL RE17V3.dxf"
+        ],
+        "modelo3d": [
+          "Pines.3MF",
+          "Pines.STL",
+          "Punta.3MF"
+        ]
+      },
+      "fecha": "2025-04-03",
+      "resuelve": null,
+      "notas": null
+    },
+    {
+      "id": "servidor-utillajes/p703-top-roll-plantilla",
+      "nombre": "PLANTILLA",
+      "raiz": "servidor-utillajes",
+      "ruta": "Y:\\Ingenieria\\Librales Ingenieria\\Documentación\\Herramentales\\P703\\TOP ROLL\\PLANTILLA",
+      "contexto": [
+        "P703",
+        "TOP ROLL"
+      ],
+      "archivos": {
+        "corte2d": [
+          "MASCARA BASE TOP ROLL RE17.dxf",
+          "MASCARA FRENTE TOP ROLL RE17.dxf"
+        ]
+      },
+      "fecha": "2025-02-18",
+      "resuelve": null,
+      "notas": null
+    },
+    {
+      "id": "servidor-utillajes/p703-top-roll-top-roll-adhesivado",
+      "nombre": "TOP ROLL ADHESIVADO",
+      "raiz": "servidor-utillajes",
+      "ruta": "Y:\\Ingenieria\\Librales Ingenieria\\Documentación\\Herramentales\\P703\\TOP ROLL\\TOP ROLL ADHESIVADO",
+      "contexto": [
+        "P703",
+        "TOP ROLL"
+      ],
+      "archivos": {
+        "modelo3d": [
+          "SOPORTE ADHESIVADO.STEP"
+        ]
+      },
+      "fecha": "2025-03-11",
+      "resuelve": null,
+      "notas": null
+    },
+    {
+      "id": "servidor-utillajes/po-jota-2024",
+      "nombre": "2024",
+      "raiz": "servidor-utillajes",
+      "ruta": "Y:\\Ingenieria\\Librales Ingenieria\\Documentación\\Herramentales\\PO\\JOTA\\2024",
+      "contexto": [
+        "PO",
+        "JOTA"
+      ],
+      "archivos": {
+        "corte2d": [
+          "PLANO.dxf"
+        ],
+        "plano": [
+          "PLANO.pdf"
+        ]
+      },
+      "fecha": "2024-02-19",
+      "resuelve": null,
+      "notas": null
+    },
+    {
+      "id": "servidor-utillajes/po-jota-2025",
+      "nombre": "2025",
+      "raiz": "servidor-utillajes",
+      "ruta": "Y:\\Ingenieria\\Librales Ingenieria\\Documentación\\Herramentales\\PO\\JOTA\\2025",
+      "contexto": [
+        "PO",
+        "JOTA"
+      ],
+      "archivos": {
+        "corte2d": [
+          "PLANO JOTA REV2.dxf"
+        ],
+        "plano": [
+          "PLANO JOTA REV2.pdf"
+        ]
+      },
+      "fecha": "2025-02-03",
+      "resuelve": null,
+      "notas": null
+    },
+    {
+      "id": "servidor-utillajes/top-roll-taos",
+      "nombre": "TOP ROLL TAOS",
+      "raiz": "servidor-utillajes",
+      "ruta": "Y:\\Ingenieria\\Librales Ingenieria\\Documentación\\Herramentales\\TOP ROLL TAOS",
+      "contexto": [],
+      "archivos": {
+        "corte2d": [
+          "Rectangulo.dxf",
+          "TAOS TOP ROLL PLANTILLA 13V8.dxf"
+        ]
+      },
+      "fecha": "2025-02-18",
+      "resuelve": null,
+      "notas": null
+    },
+    {
+      "id": "servidor-utillajes/troqueles-t290601-2",
+      "nombre": "T290601-2",
+      "raiz": "servidor-utillajes",
+      "ruta": "Y:\\Ingenieria\\Librales Ingenieria\\Documentación\\Herramentales\\TROQUELES\\T290601-2",
+      "contexto": [
+        "TROQUELES"
+      ],
+      "archivos": {
+        "corte2d": [
+          "T290601.dxf",
+          "T290602.dxf"
+        ],
+        "plano": [
+          "T290602.PDF"
+        ]
+      },
+      "fecha": "2025-02-24",
+      "resuelve": null,
+      "notas": null
+    },
+    {
+      "id": "servidor-utillajes/vw",
+      "nombre": "VW",
+      "raiz": "servidor-utillajes",
+      "ruta": "Y:\\Ingenieria\\Librales Ingenieria\\Documentación\\Herramentales\\VW",
+      "contexto": [],
+      "archivos": {
+        "modelo3d": [
+          "Talon VW 789.3MF"
+        ]
+      },
+      "fecha": "2024-11-12",
+      "resuelve": null,
+      "notas": null
+    }
+  ]
+}

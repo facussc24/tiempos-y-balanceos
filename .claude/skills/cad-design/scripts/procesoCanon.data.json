@@ -1,0 +1,180 @@
+{
+  "_leeme": "Listas canonicas del GATE DE PROCESO y del GATE DE ENTREGABLE (skill cad-design). Las usan gate_proceso.py y gate_entregable.py. Regla de la casa: lista canonica controlada, NUNCA un regex escrito a ojo (feedback_heuristicas_lista_canonica_no_regex_parcial). Una frase nueva de Fak se agrega ACA, con su fuente, en la misma sesion.",
+  "_origen": "Las tres entregas fallidas del dispositivo de adhesivado (29-31/08/2026). El calculo estructural estaba bien las tres veces: lo que fallo fue el PROCESO (que le pasa a la pieza mientras la trabajan) y el FORMATO del entregable. Pliegos v2 (31/08) y v3 (02/09) en el Escritorio, carpeta 'Dispositivos de adhesivado Patagonia'.",
+
+  "etiquetasProceso": {
+    "_leeme": "Vocabulario controlado con el que un pliego describe QUE le pasa a la pieza. De estas etiquetas sale la lista de familias de fuerza obligatorias. Etiqueta nueva = se agrega aca con su fuente, no se inventa en el JSON del pliego.",
+    "entradas": [
+      { "id": "adhesivo-a-pistola", "que": "Se rocia adhesivo con pistola de aire sobre la pieza" },
+      { "id": "adhesivo-a-rodillo", "que": "Se aplica adhesivo con rodillo, pincel o espatula" },
+      { "id": "pieza-flexible", "que": "La pieza es tela, vinilo, espuma o lamina: no conserva su forma sola" },
+      { "id": "pieza-liviana", "que": "La pieza pesa poco frente a las fuerzas del proceso" },
+      { "id": "la-pieza-gira", "que": "La pieza cambia de orientacion durante el proceso (voltea, rota, se da vuelta)" },
+      { "id": "hay-calor", "que": "Hay horno, termoformado, soldadura o secado con temperatura" },
+      { "id": "hay-espera", "que": "La pieza queda quieta un tiempo en el dispositivo (secado, curado, cola de proceso)" },
+      { "id": "el-operario-la-sostiene", "que": "El operario sostiene o guia la pieza mientras se la trabaja" },
+      { "id": "hay-apriete", "que": "El dispositivo aprieta, sujeta o deforma la pieza" },
+      { "id": "hay-corte", "que": "Se corta, troquela o punzona sobre el dispositivo" },
+      { "id": "carro-movil", "que": "El dispositivo se desplaza cargado (ruedas, traslado entre puestos)" }
+    ]
+  },
+
+  "familiasDeFuerza": {
+    "_leeme": "G-P1. Cada familia es una PREGUNTA que el pliego tiene que contestar antes de tocar CAD. 'aplica_si' vacio = SIEMPRE obligatoria. El gate no juzga la respuesta: juzga que exista, que nombre una pieza del dispositivo y que traiga una magnitud o un TBD con motivo.",
+    "entradas": [
+      {
+        "id": "peso-propio",
+        "pregunta": "Cuanto pesa la pieza y como se deforma apoyada. Una tela no es un plastico rigido.",
+        "aplica_si": [],
+        "fuente": "Pliego v2 31/08/2026, lista de fuerzas de Fak"
+      },
+      {
+        "id": "como-entra",
+        "pregunta": "Como ENTRA la pieza y como queda centrada aunque el operario la apoye torcida.",
+        "aplica_si": [],
+        "fuente": "Pliego v3 02/09/2026 — Fak: 'nunca lograste hasta ahora demostrarme como colocas el sustrato plastico y queda fijo en su posicion. La idea es que sea facil. Capaz podes hacer tipo un embudo'"
+      },
+      {
+        "id": "como-queda-fija",
+        "pregunta": "Que la retiene mientras se la trabaja, y contra que fuerza concreta.",
+        "aplica_si": [],
+        "fuente": "Pliego v3 02/09/2026 — 'un carro que gira con la pieza mal sujeta es peor que uno estatico'"
+      },
+      {
+        "id": "como-se-saca",
+        "pregunta": "Como se saca, sin tocar la zona trabajada y sin herramienta.",
+        "aplica_si": [],
+        "fuente": "Pliego v3 02/09/2026"
+      },
+      {
+        "id": "gesto-operario",
+        "pregunta": "A que altura llega comodo, con cuantas manos, cuantas veces por hora.",
+        "aplica_si": [],
+        "fuente": "Pliego v2 31/08/2026 — Fak: 'yo no quiero que el operario se agache, no es ergonomico. Prefiero que pongas menos piezas'"
+      },
+      {
+        "id": "aire-de-la-pistola",
+        "pregunta": "El chorro de aire de la pistola sobre la pieza: a que presion y desde que distancia, y QUE la sujeta contra el.",
+        "aplica_si": ["adhesivo-a-pistola"],
+        "fuente": "Fak 31/08/2026, textual: 'pones la tela ahi, le tiras adhesivo directamente, SE VA A VOLAR LA TELA'. Es el fallo que origino este gate."
+      },
+      {
+        "id": "arrastre-de-la-herramienta",
+        "pregunta": "La fuerza lateral que mete el rodillo, el pincel o la cuchilla, y que la absorbe.",
+        "aplica_si": ["adhesivo-a-rodillo", "hay-corte"],
+        "fuente": "Pliego v2 31/08/2026, generalizacion de la lista de fuerzas"
+      },
+      {
+        "id": "agarre-mojado",
+        "pregunta": "Como se agarra la pieza mojada sin tocar la zona engomada.",
+        "aplica_si": ["adhesivo-a-pistola", "adhesivo-a-rodillo"],
+        "fuente": "Pliego v2 31/08/2026, lista de fuerzas de Fak"
+      },
+      {
+        "id": "secado",
+        "pregunta": "Cuanto tiempo queda ahi, si algo puede caerle encima, y si el adhesivo pega la pieza al dispositivo.",
+        "aplica_si": ["adhesivo-a-pistola", "adhesivo-a-rodillo", "hay-espera"],
+        "fuente": "Pliego v2 31/08/2026, lista de fuerzas de Fak"
+      },
+      {
+        "id": "inversion-al-girar",
+        "pregunta": "Cuando la pieza queda cabeza abajo el peso deja de ayudar y juega en contra. Que la retiene ahi.",
+        "aplica_si": ["la-pieza-gira"],
+        "fuente": "Pliego v3 02/09/2026 — 'al girar, el peso deja de ayudar y pasa a jugar en contra'"
+      },
+      {
+        "id": "esfuerzo-del-accionamiento",
+        "pregunta": "Que fuerza tiene que hacer el operario para accionar el mecanismo, y donde queda trabado.",
+        "aplica_si": ["la-pieza-gira", "hay-apriete"],
+        "fuente": "Pliego v3 02/09/2026 — Fak: 'ojo con eso, que la manivela se trabe luego de girar, que la pueda trabar rapida y facilmente'"
+      },
+      {
+        "id": "dilatacion-y-temperatura",
+        "pregunta": "Que le hace el calor a la pieza y al dispositivo, y que pasa al enfriarse.",
+        "aplica_si": ["hay-calor"],
+        "fuente": "Generalizacion de la lista de fuerzas del pliego v2 a procesos con temperatura"
+      },
+      {
+        "id": "vuelco-y-traslado",
+        "pregunta": "Que pasa con el dispositivo CARGADO cuando se lo mueve: vuelco, rueda contra una junta, puertas.",
+        "aplica_si": ["carro-movil"],
+        "fuente": "cad-3d.md GATE 3.8 (barrido de vuelco del caballete, 29/08/2026)"
+      },
+      {
+        "id": "reaccion-del-apriete",
+        "pregunta": "Con que fuerza aprieta y de donde sale la elasticidad. Si la pieza trae material blando, el elastico ES ese material.",
+        "aplica_si": ["hay-apriete"],
+        "fuente": "cad-3d.md GATE 1 punto (6) — el resorte del virolador era el 84 % de la pieza y sobraba entero"
+      }
+    ]
+  },
+
+  "motoresDeImagen": {
+    "_leeme": "G-E3a. Con que se dibuja una imagen que va a mirar Fak. El nombre del motor se DECLARA en el pliego de entregable; el gate no lo adivina. Es el check barato y gameable — al lado corre G-E3b, que mide sobre los pixeles.",
+    "aceptados": [
+      { "id": "foto3d", "que": "Trazado de rayos ortografico con oclusion exacta, sombra proyectada y contorno por profundidad. scripts/foto3d.py de este skill." },
+      { "id": "render_step", "que": "El render de cadlib.render — hoja de contacto para verificar YO, y --alta para lo que mira Fak." },
+      { "id": "captura-cad", "que": "Captura de pantalla de un CAD real (CATIA, Onshape, visor GLB). Tiene oclusion y sombreado del propio visor." },
+      { "id": "foto", "que": "Foto de la pieza real o de un dispositivo ya fabricado." }
+    ],
+    "rechazados": [
+      {
+        "id": "matplotlib",
+        "alias": ["matplotlib", "Poly3DCollection", "mplot3d", "pyplot"],
+        "motivo": "Algoritmo del pintor: ordena caras por profundidad, no calcula oclusion ni sombra. Un caballete de tubos sale como una chapa.",
+        "fuente": "Entrega del 31/08/2026. Fak miro 4 capturas y saco 6 preguntas; 5 de las 6 se contestaban con una imagen legible. Textual: 'no veo el insert, veo esa cosa extrana'."
+      }
+    ]
+  },
+
+  "formatosEntregable": {
+    "_leeme": "G-E1 y G-E2. Que tiene que haber en la carpeta de entrega para que Fak pueda leerla.",
+    "obligatorios": [
+      {
+        "id": "pdf-visual",
+        "extensiones": [".pdf"],
+        "que": "El documento que Fak abre. Imagen grande arriba, pocos renglones abajo, una idea por pagina.",
+        "fuente": "Fak 31/08/2026, textual: 'los txt son al pedo... lo unico que debes hacer con los 3D es un PDF facil de entender a prueba de boludos'"
+      },
+      {
+        "id": "modelo-3d",
+        "extensiones": [".step", ".stp"],
+        "que": "El STEP, de la MISMA corrida que el PDF.",
+        "fuente": "Pliego v2 31/08/2026, punto b de lo que hay que entregar"
+      },
+      {
+        "id": "simulacion-grabada",
+        "extensiones": [".mp4", ".gif", ".webm", ".avi", ".mkv"],
+        "que": "Un video corto de la secuencia del proceso: la pieza entra, se sujeta, se trabaja, sale. Aunque sea la geometria moviendose.",
+        "fuente": "Fak 31/08/2026: 'incluso si podes hacerlo una simulacion y grabarla, no lo se'. Pliego v3 02/09: 'necesito luego ver la simulacion idealmente de como encastra, me gustaria verlo'"
+      }
+    ],
+    "noExplican": {
+      "_leeme": "Extensiones que NO cuentan como el documento explicativo. Pueden ir de anexo (una lista de corte .txt esta bien), pero si NO hay PDF, esto no lo reemplaza.",
+      "extensiones": [".txt", ".html", ".htm", ".md"],
+      "fuente": "Fak 31/08/2026: 'los txt son al pedo'. En la entrega fallida fueron a la biblioteca un .html y un .txt como documento tecnico."
+    }
+  },
+
+  "umbrales": {
+    "_leeme": "Numeros con los que el gate decide. Cada uno dice de donde sale. Ninguno es 'a ojo'.",
+    "cromaMinima": {
+      "valor": 0.35,
+      "que": "G-E3b: fraccion de los pixeles del OBJETO cuya saturacion (max canal - min canal) supera 0,08. Debajo de esto la imagen es 'todo del mismo gris'.",
+      "calibracion": "Medido el 02/09/2026 sobre renders reales. MALO (matplotlib, 30/08, el que Fak no pudo leer): 0,28 y 0,29. BUENOS (foto3d, 01/09): 0,42 · 0,63 · 0,75 · 0,76. El umbral 0,35 deja margen a los dos lados.",
+      "limite_conocido": "La clase MALA tiene una sola imagen real (dos archivos casi identicos). No mide oclusion ni sombra: mide si las piezas estan diferenciadas por color, que es la mitad de lo que hizo ilegible aquel render. La otra mitad la cubre G-E3a (motor declarado)."
+    },
+    "cromaUmbralPixel": {
+      "valor": 0.08,
+      "que": "Saturacion por pixel a partir de la cual se lo cuenta como 'con color' y no como gris."
+    },
+    "minCaracteresComo": {
+      "valor": 25,
+      "que": "Largo minimo del campo 'como' de una respuesta. Corta las respuestas de una palabra ('se sujeta') que no dicen nada verificable."
+    },
+    "indiceDiasFrescura": {
+      "valor": 30,
+      "que": "Dias que vale un indice de dispositivos antes de exigir re-escaneo. Un 'no hay nada parecido' apoyado en un indice viejo no es un relevamiento."
+    }
+  }
+}
