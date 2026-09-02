@@ -17,9 +17,12 @@
  *                   sesiones todo el dia y un gate pesado ahi es el candado que se saltea.
  *
  * ESCAPE (un solo uso), para mensajes que no son encargos — un "gracias", un aviso:
- *   touch ~/.claude/.encargo-libre
- * Vale mientras el archivo este VACIO. Al usarlo, el guardian le escribe la fecha adentro y
- * deja de valer. Para volver a habilitarlo:  : > ~/.claude/.encargo-libre
+ *   : > ~/.claude/.encargo-libre.<session_id>
+ * VA CON  : >  Y NO CON touch. Si el escape ya se uso, adentro quedo "consumido ..." y touch
+ * solo le cambia la fecha: sigue sin valer, porque tiene que estar VACIO. Lo reporto
+ * barackmercosul-38 el 02/09/2026, chocandose con el mensaje de bloqueo que decia touch.
+ * Es POR SESION a proposito: con varias sesiones abiertas un flag compartido te lo consume
+ * otra en el medio. El global sin sufijo sigue valiendo, para que Fak destrabe a mano.
  * (No se borra: en esta casa nada se borra, ni un flag.)
  *
  * SALIDA: exit 0 = pasa · exit 2 = bloquea (stderr vuelve a Claude como feedback).
@@ -39,25 +42,46 @@ const ESCAPE = path.join(os.homedir(), '.claude', '.encargo-libre');
 const RE_MARCADOR = /\[ENCARGO\s+(E\d{6}-[0-9a-f]{4})\]/;
 
 /**
- * El escape vale solo si es un ARCHIVO REGULAR vacio y se puede escribir.
+ * El escape es POR SESION: `~/.claude/.encargo-libre.<session_id>`.
  *
- * Auditoria del 02/09/2026: `mkdir ~/.claude/.encargo-libre` dejaba el escape abierto para
- * siempre — un directorio da size 0 (vigente) y el consumo tiraba EISDIR, que el catch se
- * comia. Lo mismo con `attrib +R`: EPERM al consumir, seguia vigente. Un escape que no se
- * puede consumir no es un escape de un solo uso: es el candado apagado en silencio.
+ * Era uno solo en el HOME y lo reporto barackmercosul-38 desde el uso real (02/09/2026):
+ * con cuatro sesiones abiertas el flag es compartido, asi que armas el escape y te lo
+ * consume otra sesion en el medio. Es una carrera, y le paso de verdad.
+ *
+ * Sigue valiendo el global sin sufijo, para que Fak pueda destrabar a mano sin saber el id.
+ */
+export function rutaEscape(sessionId) {
+  return sessionId ? `${ESCAPE}.${sessionId}` : ESCAPE;
+}
+
+/**
+ * Vale solo si es un ARCHIVO REGULAR vacio y escribible.
+ *
+ * Auditoria del 02/09/2026: `mkdir ~/.claude/.encargo-libre` lo dejaba abierto para siempre
+ * — un directorio da size 0 (vigente) y el consumo tiraba EISDIR, que el catch se comia.
+ * Idem `attrib +R`: EPERM al consumir, seguia vigente. Un escape que no se puede consumir
+ * no es de un solo uso: es el candado apagado en silencio.
  */
 export function escapeVigente(f = ESCAPE) {
   try {
     const st = fs.statSync(f);
     if (!st.isFile() || st.size !== 0) return false;
-    // Prueba de que se puede consumir. Si no se puede, el escape NO vale.
-    fs.accessSync(f, fs.constants.W_OK);
+    fs.accessSync(f, fs.constants.W_OK);   // si no se puede consumir, NO vale
     return true;
   } catch { return false; }
 }
-function consumirEscape(f = ESCAPE) {
+
+/** El de esta sesion primero; el global como respaldo manual de Fak. */
+export function escapeVigenteSesion(sessionId) {
+  const propio = rutaEscape(sessionId);
+  if (sessionId && escapeVigente(propio)) return propio;
+  if (escapeVigente(ESCAPE)) return ESCAPE;
+  return null;
+}
+
+function consumirEscape(f) {
   try { fs.writeFileSync(f, `consumido ${new Date().toISOString()}\n`); }
-  catch { /* escapeVigente ya probo que se puede escribir; si igual fallo, no hay que hacer */ }
+  catch { /* escapeVigente ya probo que se puede escribir; si igual fallo, no hay nada que hacer */ }
 }
 
 /**
@@ -75,9 +99,13 @@ export function mismoTexto(cuerpo, textoValidado) {
 }
 
 /** Decide sobre un payload ya parseado. Exportada para poder testear sin proceso. */
-export function decidir(payload, { hayEscape = escapeVigente, leerEncargo } = {}) {
+export function decidir(payload, { hayEscape, leerEncargo } = {}) {
   const tool = payload?.tool_name;
   const inp = payload?.tool_input || {};
+  const sid = payload?.session_id;
+  // hayEscape se inyecta en los tests; en produccion se resuelve por sesion.
+  const buscarEscape = hayEscape ? () => (hayEscape() ? rutaEscape(sid) : null)
+                                 : () => escapeVigenteSesion(sid);
 
   // --- Lanzamientos de trabajo: solo los dos checks baratos ----------------
   // Todas las tools que arrancan trabajo en otro lado con un prompt propio. La auditoria del
@@ -121,7 +149,8 @@ export function decidir(payload, { hayEscape = escapeVigente, leerEncargo } = {}
   const cuerpo = inp.message || inp.content || '';
   if (typeof cuerpo !== 'string' || !cuerpo.trim()) return { ok: true };
 
-  if (hayEscape()) return { ok: true, escape: true };
+  const esc = buscarEscape();
+  if (esc) return { ok: true, escape: esc };
 
   const m = cuerpo.match(RE_MARCADOR);
   if (!m) {
@@ -141,7 +170,12 @@ export function decidir(payload, { hayEscape = escapeVigente, leerEncargo } = {}
         '  escribieron las siete veces y ninguna frenaba nada.',
         '',
         '  Si esto NO es un encargo (un gracias, un aviso, una correccion de una linea):',
-        '    touch ~/.claude/.encargo-libre     # un solo uso, lo consume el guardian',
+        `    : > ~/.claude/.encargo-libre.${sid || '<session_id>'}`,
+        '',
+        '  Va con  : >  y NO con touch: si el escape ya se uso antes, touch solo le cambia la',
+        '  fecha y adentro queda "consumido", asi que sigue sin valer. Y es por SESION a',
+        '  proposito — con varias sesiones abiertas, un flag compartido te lo consume otra en',
+        '  el medio (lo reporto barackmercosul-38 el 02/09, le paso de verdad).',
       ] };
   }
 
@@ -232,7 +266,7 @@ async function main() {
   }
 
   const r = decidir(payload);
-  if (r.escape) consumirEscape();
+  if (r.escape) consumirEscape(r.escape);
   if (r.ok) process.exit(0);
 
   console.error(`\n[COORDINADOR-GUARD — BLOQUEO] ${r.titulo}\n`);

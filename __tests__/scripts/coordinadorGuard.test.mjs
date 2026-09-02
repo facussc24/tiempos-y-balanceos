@@ -105,7 +105,7 @@ describe('coordinador-guard · VERDE (NO puede bloquear)', () => {
   it('3. mensaje corto no-encargo con el escape puesto', () => {
     const r = decidir(msg('Gracias, recibido. Te doy por cerrada en el tablero.'), { hayEscape: conEscape });
     expect(r.ok).toBe(true);
-    expect(r.escape).toBe(true);
+    expect(r.escape).toBeTruthy();   // ahora devuelve la RUTA del escape que valio, no un booleano
   });
 
   it('4. subagente normal de trabajo diario', () => {
