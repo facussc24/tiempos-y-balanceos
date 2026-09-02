@@ -105,6 +105,9 @@ __pycache__/
 # Cache local de documentos de empresa (repo publico — NUNCA commitear)
 .sgc-cache/
 
+# cuadros y clips intermedios del skill editar-video (se regeneran)
+.video/
+
 # Marcadores de /auditoria-cliente (los exige el gate de _exportAmfeOficial.ts)
 .audit-cliente/
 
