@@ -144,12 +144,11 @@
     ]
   },
   "conectoresSegundaTarea": {
-    "_leeme": "G3 — un encargo, un entregable. Estos conectores delatan una segunda tarea pegada al final. NO incluir conectores que unen PASOS del mismo entregable ('despues', 'luego', 'entonces') porque un encargo de 4 pasos es legitimo.",
+    "_leeme": "G3 — un encargo, un entregable. Estos conectores delatan una segunda tarea pegada al final. NO incluir conectores que unen PASOS del mismo entregable ('despues', 'luego', 'entonces') porque un encargo de 4 pasos es legitimo. OJO: 'de paso' suelto NO va — bloqueaba 'paso 1,0' de las roscas impresas, que es vocabulario canonico de la casa (auditoria 02/09/2026). Queda solo 'y de paso'.",
     "patrones": [
       "y ademas",
       "y además",
       "y de paso",
-      "de paso ",
       "aprovechá y",
       "aprovecha y",
       "aprovechando",

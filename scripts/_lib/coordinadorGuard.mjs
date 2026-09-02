@@ -38,12 +38,40 @@ const ESCAPE = path.join(os.homedir(), '.claude', '.encargo-libre');
 
 const RE_MARCADOR = /\[ENCARGO\s+(E\d{6}-[0-9a-f]{4})\]/;
 
-/** El escape vale solo si existe y esta vacio (asi es de un solo uso, sin borrar nada). */
+/**
+ * El escape vale solo si es un ARCHIVO REGULAR vacio y se puede escribir.
+ *
+ * Auditoria del 02/09/2026: `mkdir ~/.claude/.encargo-libre` dejaba el escape abierto para
+ * siempre — un directorio da size 0 (vigente) y el consumo tiraba EISDIR, que el catch se
+ * comia. Lo mismo con `attrib +R`: EPERM al consumir, seguia vigente. Un escape que no se
+ * puede consumir no es un escape de un solo uso: es el candado apagado en silencio.
+ */
 export function escapeVigente(f = ESCAPE) {
-  try { return fs.existsSync(f) && fs.statSync(f).size === 0; } catch { return false; }
+  try {
+    const st = fs.statSync(f);
+    if (!st.isFile() || st.size !== 0) return false;
+    // Prueba de que se puede consumir. Si no se puede, el escape NO vale.
+    fs.accessSync(f, fs.constants.W_OK);
+    return true;
+  } catch { return false; }
 }
 function consumirEscape(f = ESCAPE) {
-  try { fs.writeFileSync(f, `consumido ${new Date().toISOString()}\n`); } catch { /* da igual */ }
+  try { fs.writeFileSync(f, `consumido ${new Date().toISOString()}\n`); }
+  catch { /* escapeVigente ya probo que se puede escribir; si igual fallo, no hay que hacer */ }
+}
+
+/**
+ * Compara el mensaje contra el texto validado sin castigar el transporte.
+ * Un CRLF o un espacio al final de linea NO son una edicion: son el portapapeles.
+ * Pero el mensaje tiene que ser el encargo, no el encargo perdido adentro de otra cosa.
+ */
+export function mismoTexto(cuerpo, textoValidado) {
+  const limpiar = (s) => s
+    .replace(/\r\n/g, '\n')
+    .split('\n').map((l) => l.replace(/[ \t ]+$/, '')).join('\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+  return limpiar(cuerpo) === limpiar(textoValidado);
 }
 
 /** Decide sobre un payload ya parseado. Exportada para poder testear sin proceso. */
@@ -51,9 +79,14 @@ export function decidir(payload, { hayEscape = escapeVigente, leerEncargo } = {}
   const tool = payload?.tool_name;
   const inp = payload?.tool_input || {};
 
-  // --- Agent: solo los dos checks baratos ---------------------------------
-  if (tool === 'Agent' || tool === 'Task') {
-    const texto = `${inp.description || ''} ${inp.prompt || ''}`;
+  // --- Lanzamientos de trabajo: solo los dos checks baratos ----------------
+  // Todas las tools que arrancan trabajo en otro lado con un prompt propio. La auditoria del
+  // 02/09/2026 encontro que el matcher solo nombraba dos y dejaba abiertos spawn_task,
+  // send_message del MCP y las tareas agendadas: tres puertas al mismo cuarto.
+  const LANZADORAS = ['Agent', 'Task', 'mcp__ccd_session__spawn_task',
+                      'mcp__scheduled-tasks__create_scheduled_task'];
+  if (LANZADORAS.includes(tool)) {
+    const texto = `${inp.description || ''} ${inp.prompt || ''} ${inp.title || ''} ${inp.tldr || ''}`;
     const irre = detectarIrreversibles(texto);
     if (irre.length) {
       return { ok: false, titulo: 'un subagente no puede recibir una orden irreversible',
@@ -73,6 +106,13 @@ export function decidir(payload, { hayEscape = escapeVigente, leerEncargo } = {}
                  '  Partilo en dos lanzamientos.'] };
     }
     return { ok: true };
+  }
+
+  // Cualquier otra tool que empiece trabajo en otro lado y todavia no este contemplada:
+  // se avisa una vez, no se bloquea. Una lista de tools es una lista canonica mas, y esta
+  // casa ya sabe que envejecen — pero bloquear a ciegas algo que no se conoce es peor.
+  if (/spawn|dispatch|remote_trigger|create_scheduled/i.test(String(tool || ''))) {
+    return { ok: true, aviso: `tool "${tool}" arranca trabajo en otro lado y el guardian no la revisa. Si le estas mandando un encargo, armalo con _encargo.mjs.` };
   }
 
   // --- SendMessage: canal unico -------------------------------------------
@@ -105,6 +145,16 @@ export function decidir(payload, { hayEscape = escapeVigente, leerEncargo } = {}
       ] };
   }
 
+  // Dos marcadores = uno valido usado de coartada para otro texto. `match` sin /g solo veia
+  // el primero (auditoria 02/09, H5).
+  const todos = cuerpo.match(new RegExp(RE_MARCADOR.source, 'g')) || [];
+  if (todos.length > 1) {
+    return { ok: false, titulo: 'el mensaje tiene mas de un marcador de encargo',
+      lineas: [`  Encontrados: ${todos.join(' , ')}`,
+               '  Un mensaje, un encargo. Dos marcadores es un encargo valido prestandole',
+               '  la firma a un texto que nadie valido.'] };
+  }
+
   const id = m[1];
   const leer = leerEncargo || ((i) => {
     const f = path.join(DIR_ESTADO, `${i}.json`);
@@ -120,33 +170,47 @@ export function decidir(payload, { hayEscape = escapeVigente, leerEncargo } = {}
                '  Arma el encargo de verdad con node scripts/_encargo.mjs'] };
   }
 
-  if (typeof reg.texto === 'string' && reg.texto && !cuerpo.includes(reg.texto.trim())) {
-    return { ok: false, titulo: `el encargo ${id} se edito despues de validarlo`,
-      lineas: ['  El texto que mandas no coincide con el que el script valido y registro.',
-               '  Si necesitas cambiarlo, volve a armarlo: los checks corren sobre el texto',
-               '  final, no sobre el que se aprobo antes de editarlo a mano.'] };
+  // Un registro SIN el campo `texto` no habilita nada. Antes el check era
+  // `typeof reg.texto === 'string' && ...`, o sea que si el campo faltaba el check se
+  // salteaba entero: los 7 encargos escritos por la version anterior del script eran
+  // llaves maestras para cualquier prosa (auditoria 02/09, H1 — el agujero mas grave).
+  if (typeof reg.texto !== 'string' || !reg.texto.trim()) {
+    return { ok: false, titulo: `el encargo ${id} no tiene texto registrado`,
+      lineas: ['  Es un registro viejo o incompleto: no se puede comparar contra nada, asi que',
+               '  no habilita ningun mensaje. Arma el encargo de nuevo.'] };
   }
 
-  // El bloque validado esta entero, pero pudieron AGREGARLE texto alrededor. Un encargo
-  // inocuo con "y cerrá el arb" pegado al final pasaba el check de arriba: contenerlo no
-  // alcanza. Los checks de contenido se corren sobre el mensaje COMPLETO — lo que ya salio
-  // del script no puede dispararlos de nuevo, asi que lo unico que cazan es lo agregado.
-  // (Bypass encontrado por el propio test rojo 3, 02/09/2026.)
-  const irre = detectarIrreversibles(cuerpo);
-  if (irre.length) {
-    return { ok: false, titulo: `el encargo ${id} lleva pegada una accion IRREVERSIBLE`,
-      lineas: [`  Encontrado fuera del bloque validado: "${irre[0].encontrados[0]}"  (${irre[0].id})`,
-               `  ${irre[0].motivo}`,
-               `  Se revierte con: ${irre[0].revierte}`,
-               '',
-               '  Eso vuelve a Fak. Sacalo del mensaje.'] };
+  // Un encargo cerrado ya cumplio su funcion. Antes `cerrado` no se miraba nunca y los
+  // encargos cerrados seguian siendo llaves permanentes (auditoria 02/09, H3).
+  if (reg.cerrado) {
+    return { ok: false, titulo: `el encargo ${id} ya esta cerrado`,
+      lineas: [`  Se cerro el ${String(reg.cerrado).slice(0, 16).replace('T', ' ')}.`,
+               '  Un encargo cerrado no habilita mensajes nuevos: arma otro.'] };
   }
-  const seg = detectarSegundaTarea(cuerpo);
-  if (seg.length) {
-    return { ok: false, titulo: `el encargo ${id} lleva pegada una SEGUNDA TAREA`,
-      lineas: [`  Conector encontrado: "${seg.join('", "')}"`,
-               '  Un encargo, un entregable. Si hace falta otra cosa, es otro encargo y sale',
-               '  cuando vuelva este.'] };
+
+  // El encargo salio PARA una sesion. Mandarlo a otra es exactamente el error de hablarle a
+  // la sesion equivocada, que G7 dice cubrir y el hook no comprobaba (auditoria 02/09, H4).
+  const destino = inp.to || inp.recipient || '';
+  if (reg.a && destino && String(reg.a).trim() !== String(destino).trim()) {
+    return { ok: false, titulo: `el encargo ${id} no era para ${destino}`,
+      lineas: [`  Se emitio para: ${reg.a}`,
+               `  Lo estas mandando a: ${destino}`,
+               '',
+               '  Si es para otra sesion, es otro encargo. El mismo encargo mandado a varias',
+               '  sesiones es como se termina trabajando dos veces lo mismo.'] };
+  }
+
+  // El mensaje tiene que SER el encargo, no contenerlo. Con `includes` alcanzaba con pegar
+  // el bloque validado al final de cualquier prosa: el 95% del mensaje podia no estar
+  // validado (auditoria 02/09, H2). mismoTexto() ignora CRLF y espacios de fin de linea,
+  // que son transporte y no edicion (H22).
+  if (!mismoTexto(cuerpo, reg.texto)) {
+    return { ok: false, titulo: `el mensaje no es el encargo ${id} tal como se valido`,
+      lineas: ['  El texto tiene que ir SOLO y TAL CUAL. Si le agregaste algo alrededor, eso',
+               '  que agregaste no paso por ningun control — que es justo lo que el canal',
+               '  existe para impedir.',
+               '',
+               '  Si hace falta decir algo mas, va adentro del --cuerpo cuando armas el encargo.'] };
   }
 
   return { ok: true };

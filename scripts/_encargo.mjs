@@ -53,10 +53,48 @@ export const normalizar = (s) =>
 
 export const hashCuerpo = (s) => crypto.createHash('sha256').update(s, 'utf8').digest('hex').slice(0, 16);
 
-/** Busca patrones de una lista canonica dentro de un texto. Devuelve los que aparecen. */
-export function buscarPatrones(texto, patrones) {
+/**
+ * Palabras que, delante de un patron y en la misma oracion, lo dan vuelta.
+ * "NO mandes el mail" es lo contrario de "manda el mail", y frenarla es frenar justo la
+ * frase que prohibe la accion. Idem hablar del control: "el hook existe para que nadie
+ * pueda cerrar el arb".
+ */
+const NEGADORES = [
+  'no ', 'ni ', 'sin ', 'nunca ', 'jamas ', 'evita', 'evitar', 'nadie ', 'nadie',
+  'prohibido', 'prohibe', 'prohíbe', 'no hace falta', 'no vayas a', 'no hay que',
+  'acordate de no', 'todavia no', 'aun no', 'quedo pendiente', 'queda pendiente',
+  'yo no', 'ya ', 'existe para', 'para que nadie', 'no se puede', 'no podes', 'no puede',
+];
+
+/** El fragmento de oracion que termina donde arranca el patron. */
+function anteceden(textoNorm, posPatron) {
+  const desde = Math.max(0, textoNorm.lastIndexOf('.', posPatron) + 1);
+  const arranque = Math.max(desde, textoNorm.lastIndexOf('\n', posPatron) + 1);
+  return textoNorm.slice(arranque, posPatron);
+}
+
+/**
+ * Busca patrones de una lista canonica dentro de un texto. Devuelve los que aparecen.
+ *
+ * Descarta los que van precedidos de una negacion en la misma oracion. La auditoria del
+ * 02/09/2026 midio 21 falsos positivos sobre 37 mensajes legitimos, y la mitad eran esto:
+ * reportes de estado ("quedo pendiente mandar el mail — lo hace Fak"), negaciones
+ * ("no vayas a borrar el archivo") y explicaciones del propio control. Un candado que
+ * frena el trabajo normal se termina desactivando entero, asi que un falso positivo cuesta
+ * lo mismo que un agujero.
+ */
+export function buscarPatrones(texto, patrones, { ignorarNegados = true } = {}) {
   const t = normalizar(texto);
-  return patrones.filter((p) => t.includes(normalizar(p)));
+  return patrones.filter((p) => {
+    const pn = normalizar(p);
+    let i = t.indexOf(pn);
+    while (i !== -1) {
+      const antes = anteceden(t, i);
+      if (!ignorarNegados || !NEGADORES.some((n) => antes.includes(normalizar(n)))) return true;
+      i = t.indexOf(pn, i + 1);   // negado aca, pero puede aparecer sin negar mas adelante
+    }
+    return false;
+  });
 }
 
 // ───────────────────────────────────────────────────────────── los 7 gates, uno por funcion
