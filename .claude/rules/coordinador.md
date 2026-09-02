@@ -33,11 +33,19 @@ Se pega la salida **tal cual**. Un mensaje que no es encargo (un gracias, un avi
 | G5 | El **origen** se declara (`fak` · `lista-oficial` · `continuidad`). Un **hallazgo NO es un encargo**: se anota. Y si toca consumos, se declara la **etapa** | el rastreo del thinsulate: hallazgo lateral + criterio de serie sobre pieza en proyecto |
 | G6 | El tablero se arma **desde la fuente**, no de lo que las sesiones cuentan, y cada fila lleva la hora de su foto | una hora repitiendo un estado viejo, con `lastActivityAt` a una llamada de distancia · 21 carpetas sin abrir |
 
-**G6 en concreto:** `node scripts/_tablero.mjs` arma el estado leyendo la cola del Escritorio, los transcripts en disco (la ultima actividad real de cada sesion, no lo que la sesion diga de si misma) y los encargos abiertos. Cada fila lleva la hora de su foto y una de mas de 60 min sale marcada **VIEJO — volver a mirar**. `--check` sale con codigo 1 si hay carpetas de las que no se sabe nada, una sesion con dos encargos a la vez, o el tablero pasado de hora. `--solo-encargos` es la version acotada: deja afuera el conteo de carpetas mudas porque esa lista cambia de a poco y gritarla en cada turno es como se gasta un control hasta que alguien lo desactiva.
 | G7 | El destino va por **nombre completo**, no por apodo. Y una autorizacion de Fak **no se reenvia**: solo `--ok-fak "<cita>"`, rotulado como OK REENVIADO que no habilita nada | se le hablo a la sesion equivocada · se reenvio el OK de Fak para mandar un mail |
 
 **En etapa PROYECTO un consumo aproximado NO es un error**, es lo esperable: `--etapa proyecto`
 rechaza los encargos que mandan a auditar o rastrear un consumo.
+
+**G6 en concreto:** `node scripts/_tablero.mjs` arma el estado leyendo la cola del Escritorio,
+los transcripts en disco (la ultima actividad REAL de cada sesion, no lo que la sesion diga de
+si misma) y los encargos abiertos. Cada fila lleva la hora de su foto, y una de mas de 60 min
+sale marcada **VIEJO — volver a mirar** en vez de reportarse como presente. `--check` sale con
+codigo 1 si hay carpetas de las que no se sabe nada, una sesion con dos encargos a la vez, o el
+tablero pasado de hora. `--solo-encargos` es la version acotada para correr seguido: deja
+afuera el conteo de carpetas mudas, porque esa lista cambia de a poco y gritarla en cada turno
+es como se gasta un control hasta que alguien lo desactiva.
 
 ## Enforcement (ejecutable, no prosa)
 
