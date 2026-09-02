@@ -33,7 +33,7 @@ las fuentes). La librería vive en `scripts/cadlib/` + CLIs genéricos con `--he
 
 ```
 gate_proceso.py familias                                   # qué pregunta cada fuerza
-gate_proceso.py plantilla --tags adhesivo-a-pistola,pieza-flexible,la-pieza-gira > pliego.json
+gate_proceso.py plantilla --tags adhesivo-a-pistola,pieza-flexible,la-pieza-gira --out pliego.json
 gate_proceso.py verificar pliego.json --workdir W --carpeta-pedido <carpeta del pedido>
 ```
 
@@ -215,18 +215,26 @@ De las tres entregas rechazadas, **dos no fallaron por el diseño: fallaron por 
   preguntas; **5 de las 6 se contestaban con una imagen legible**. Con `--motor foto3d` el gate
   corre además el **autotest del propio motor** (una rampa pura no puede tener contorno, un
   escalón sí): que el motor ande se prueba, no se asume.
-- **G-E3b — cuánto color tiene el render**, medido sobre los píxeles del objeto. Es la mitad
-  medible de *"todo del mismo gris"*.
+- **G-E3b — cuánto color tiene el render**, medido sobre los píxeles del objeto. **Se informa;
+  no bloquea.** Un número bajo es una razón para mirar la imagen, no un veredicto.
 
-> **Y acá una hipótesis mía que los datos refutaron, para que nadie la reinvente.** El primer
-> G-E3b medía el **histograma de luminancia**: la idea era que sin sombras la imagen colapsa a
-> pocos tonos. Calibrado contra los renders reales **dio al revés** — el malo del 30/08 daba
-> **70** tonos para cubrir el 90 % de los píxeles y los buenos del 01/09 daban **26-28**,
-> porque el malo eran líneas finas con antialias y los buenos son superficies grandes de color
-> plano. Se tiró. Lo que **sí** separa, sobre los mismos archivos, es la **saturación**: malo
-> 0,28-0,29 · buenos 0,42 / 0,63 / 0,75 / 0,76 → umbral 0,35. **Límite conocido y escrito en el
-> canon: la clase mala tiene UNA imagen real, y esto mide color, no oclusión.** Por eso G-E3b
-> no va solo y ninguno de los dos se presenta como "detecta matplotlib".
+> **DOS hipótesis mías que los datos refutaron el mismo día, para que nadie las reinvente.**
+> 1. El primer G-E3b medía el **histograma de luminancia**: sin sombras la imagen colapsaría a
+>    pocos tonos. Calibrado contra los renders reales **dio al revés** — el malo daba **70**
+>    tonos para cubrir el 90 % de los píxeles y los buenos **26-28**, porque el malo eran líneas
+>    finas con antialias y los buenos superficies grandes de color plano. Tirada.
+> 2. Después la **saturación**, que con dos muestras malas (0,293 y 0,29) contra cuatro buenas
+>    (0,42-0,76) parecía separar limpio, y salió **bloqueante** con umbral 0,35. Una auditoría
+>    independiente la tumbó por los dos lados en el mismo día: la tercera muestra mala real
+>    —`caballete_TODAS.png`, matplotlib, la misma masa ilegible— da **0,353 y pasaba por 0,003**;
+>    y un render legítimo de foto3d de un dispositivo **de un solo material** (un caballete de
+>    tubo pintado de un color, que es lo que Barack fabrica) da **0,000 y quedaba rechazado**.
+>
+> Dejaba pasar lo malo **y** frenaba lo bueno, que es la peor de las dos combinaciones: un control
+> que molesta se termina desactivando entero. Quedó como medición informada. **Lo que aprendí de
+> las dos: con n=2 en una clase no hay umbral, hay coincidencia** — y lo escribí como límite
+> conocido en el canon *antes* de que el auditor lo probara, lo cual no me salvó de haberlo puesto
+> a bloquear igual.
 
 El motor bueno vive ahora **acá**: `scripts/foto3d.py` (trazado de rayos ortográfico, oclusión
 exacta, sombra proyectada, contorno por segunda derivada de la profundidad, maniquí a escala
@@ -304,7 +312,7 @@ literales sueltos en el código.
 
 0. **Declarar el PROCESO** — mirar primero lo que mandó el que pide (video, plano, foto) y lo
    que Barack ya tiene hecho (`indice_dispositivos.py --buscar <mecanismo>`), y recién ahí
-   `gate_proceso.py plantilla --tags <etiquetas> > pliego.json` →
+   `gate_proceso.py plantilla --tags <etiquetas> --out pliego.json` →
    `gate_proceso.py verificar pliego.json --workdir W --carpeta-pedido <carpeta del pedido>`.
    **Antes de esto no se abre un CAD.** Qué fuerzas actúan sobre la pieza en cada etapa y qué
    parte del dispositivo resuelve cada una.

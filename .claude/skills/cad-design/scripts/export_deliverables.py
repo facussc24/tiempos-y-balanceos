@@ -185,9 +185,23 @@ def main():
                 "MIENTRAS el operario trabaja. El 31/08/2026 el carro apoyaba la pieza y el\n"
                 "adhesivo iba a pistola: 'pones la tela ahi, le tiras adhesivo directamente, se\n"
                 "va a volar la tela'.\n"
-                "Correr:  gate_proceso.py plantilla --tags <etiquetas> > pliego.json\n"
+                "Correr:  gate_proceso.py plantilla --tags <etiquetas> --out pliego.json\n"
                 "         gate_proceso.py verificar pliego.json --workdir %s\n"
                 "(o --skip-gate proceso --reason '...' si genuinamente no aplica)" % (w, w))
+        # La evidencia tiene que hablar del pliego que hay HOY en disco. Es la misma leccion
+        # que cerro el agujero (A) del 24/08 para las piezas —"un cache sin la firma del
+        # archivo miente"— aplicada al pliego: verificar, editarlo y entregar no puede pasar.
+        pliego = ev.get("pliego")
+        firma = ev.get("pliego_firma")
+        if firma and pliego:
+            for cand in (os.path.join(w, pliego), pliego):
+                if os.path.isfile(cand):
+                    ok_f, motivo = workdir.check_signature(ev, "pliego_firma", cand)
+                    if not ok_f:
+                        raise SystemExit(
+                            "[GATE proceso] El pliego cambio despues de verificarse: %s\n"
+                            "Re-correr gate_proceso.py sobre la version que vale." % motivo)
+                    break
         pendientes = ev.get("no_resueltas") or []
         if pendientes:
             raise SystemExit(

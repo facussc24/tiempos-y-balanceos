@@ -21,19 +21,29 @@ Los cuatro checks:
   G-E2  El PDF y el STEP son de la MISMA corrida: si el STEP se toco despues del PDF, el
         PDF describe un modelo que ya no existe.
   G-E3a El motor de imagen esta DECLARADO y es uno de los aceptados. matplotlib esta en
-        la lista de rechazados con su motivo. Es el check barato: se le miente facil.
+        la lista de rechazados con su motivo. **Es el unico de los dos que BLOQUEA.**
   G-E3b Sobre los pixeles de los renders declarados: que fraccion del objeto tiene color
-        de verdad. Es la mitad medible de "todo del mismo gris".
+        de verdad. Se MIDE y se informa; no bloquea.
 
-SOBRE G-E3b, Y LO QUE NO ES. Mide COLOR, no oclusion. La primera version de este check
-media el histograma de LUMINANCIA (la idea era: sin sombras la imagen colapsa a pocos
-tonos) y al calibrarla contra los renders reales **dio al reves**: el render malo del
-30/08 daba 70 tonos para cubrir el 90 % de los pixeles y los buenos del 01/09 daban 26-28,
-porque el malo eran lineas finas con antialias y los buenos son superficies grandes con
-color plano. La hipotesis quedo refutada por los datos y se tiro. Lo que SI separa, medido
-sobre los mismos archivos, es la saturacion: MALO 0,28-0,29 · BUENOS 0,42 / 0,63 / 0,75 /
-0,76. Limite conocido y escrito: la clase mala tiene UNA imagen real. Por eso G-E3b va
-siempre acompanado de G-E3a y ninguno de los dos se presenta como "detecta matplotlib".
+SOBRE G-E3b, Y POR QUE NO BLOQUEA. Dos hipotesis mias, las dos caidas contra datos reales
+el mismo dia. Queda escrito con los numeros para que nadie las reinvente:
+
+  1. Primero medi el histograma de LUMINANCIA — sin sombras la imagen colapsaria a pocos
+     tonos. Al calibrarlo **dio al reves**: el render malo daba 70 tonos para cubrir el
+     90 % de los pixeles y los buenos 26-28, porque el malo eran lineas finas con antialias
+     y los buenos superficies grandes de color plano. Tirada.
+  2. Despues la SATURACION, que con dos muestras malas (0,293 y 0,29) contra cuatro buenas
+     (0,42-0,76) parecia separar limpio, y nacio bloqueante con umbral 0,35. Una auditoria
+     independiente trajo la tercera muestra mala —`caballete_TODAS.png`, matplotlib, la
+     misma masa ilegible— y da **0,353: pasa por 0,003**. Y del otro lado el falso positivo
+     que la mata: un render legitimo de foto3d de un dispositivo de **un solo material** (un
+     caballete de tubo pintado de un color, que es lo que Barack fabrica) da **0,000** y
+     quedaba rechazado.
+
+O sea que como control binario no sirve: dejaba pasar el malo Y frenaba el bueno, y un
+control que frena el trabajo bueno se termina desactivando entero. Se queda como MEDICION
+informada al lado del render — un numero bajo es una razon para mirar la imagen, no un
+veredicto. El que bloquea es G-E3a. Y no se presenta como "detecta matplotlib": no lo hace.
 
 Uso:
     gate_entregable.py --entrega <carpeta> --motor foto3d --render a.png b.png --workdir W
@@ -140,11 +150,16 @@ def verificar(entrega, motor, renders, workdir_path=None, sin_render=False, moti
     # ---- G-E2: PDF y STEP de la misma corrida ----
     pdfs, steps = encontrados.get("pdf-visual") or [], encontrados.get("modelo-3d") or []
     if pdfs and steps:
-        pdf_new = max(os.path.getmtime(p) for p in pdfs)
+        # Contra el PDF mas VIEJO, no el mas nuevo (ROB-11 de la auditoria del 02/09). Con
+        # max() un segundo PDF fresco —un plano, una caratula— tapaba a un informe viejo, y
+        # en una entrega real siempre hay 2 o mas PDFs: era el caso normal, no el raro.
+        pdf_old = min(os.path.getmtime(p) for p in pdfs)
+        viejo = min(pdfs, key=os.path.getmtime)
         step_new = max(os.path.getmtime(p) for p in steps)
-        if step_new > pdf_new + 1.0:
-            rojo("G-E2", "el STEP es %.0f min mas nuevo que el PDF" % ((step_new - pdf_new) / 60.0),
-                 "El PDF describe un modelo que ya cambio. Se regenera el PDF, no se entrega asi.")
+        if step_new > pdf_old + 1.0:
+            rojo("G-E2", "el STEP es %.0f min mas nuevo que '%s'"
+                 % ((step_new - pdf_old) / 60.0, os.path.basename(viejo)),
+                 "Ese PDF describe un modelo que ya cambio. Se regenera, no se entrega asi.")
 
     # ---- G-E3a: el motor declarado ----
     aceptados = {m["id"] for m in c["motoresDeImagen"]["aceptados"]}
@@ -188,12 +203,22 @@ def verificar(entrega, motor, renders, workdir_path=None, sin_render=False, moti
                 rojo("G-E3a", "no se pudo correr el autotest de foto3d: %s" % e)
 
     # ---- G-E3b: cuanto color tiene cada render ----
-    umbral = c["umbrales"]["cromaMinima"]["valor"]
+    cm = c["umbrales"]["cromaMinima"]
+    umbral, bloquea = cm["valor"], bool(cm.get("bloqueante", False))
     upx = c["umbrales"]["cromaUmbralPixel"]["valor"]
+    raiz_entrega = os.path.normcase(os.path.abspath(entrega))
     medidos = []
     for r in renders or []:
         if not os.path.isfile(r):
             rojo("G-E3b", "el render declarado no existe: %s" % r)
+            continue
+        # ROB-9: --render aceptaba cualquier ruta. Se podia declarar el render bueno de otra
+        # carpeta mientras la entrega llevaba adentro el malo — el gate juzgaba una imagen
+        # que Fak no iba a recibir. Es "medir la orden y no el resultado" otra vez.
+        if not os.path.normcase(os.path.abspath(r)).startswith(raiz_entrega + os.sep):
+            rojo("G-E3b", "el render '%s' no esta dentro de la entrega" % os.path.basename(r),
+                 "Se juzga lo que Fak va a recibir, no una copia que quedo en otra carpeta.\n"
+                 "  Entrega: %s" % entrega)
             continue
         try:
             frac, n = croma_del_objeto(r, upx)
@@ -207,10 +232,13 @@ def verificar(entrega, motor, renders, workdir_path=None, sin_render=False, moti
             continue
         medidos.append((os.path.basename(r), frac, n))
         if frac < umbral:
-            rojo("G-E3b", "el render %s tiene %.2f de color (minimo %.2f)"
-                 % (os.path.basename(r), frac, umbral),
-                 "%s\n  Calibracion: %s"
-                 % (c["umbrales"]["cromaMinima"]["que"], c["umbrales"]["cromaMinima"]["calibracion"]))
+            msg = ("el render %s tiene %.2f de color (referencia %.2f) — si las piezas no se "
+                   "distinguen por color, MIRALO antes de mandarlo"
+                   % (os.path.basename(r), frac, umbral))
+            if bloquea:
+                rojo("G-E3b", msg, cm["calibracion"])
+            else:
+                avisos.append("G-E3b · %s" % msg)
 
     # ---- salida ----
     print("GATE DE ENTREGABLE — %s" % entrega)

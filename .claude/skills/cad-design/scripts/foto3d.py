@@ -60,9 +60,23 @@ class Escena(object):
         self._n = 0
 
     def agregar(self, T, color, nombre=None):
+        """Agrega un lote de triangulos (N,3,3).
+
+        OJO con la forma: hasta el 02/09/2026 esta funcion devolvia self EN SILENCIO si el
+        array no venia como (N,3,3). Resultado real: anim_giro le pasaba la manivela como
+        (3N,3) y el solido movil NO SE DIBUJABA -- el GIF mostraba la maquina quieta y no
+        habia ningun error. La curva de luz salia bien (esa va por otro camino), asi que
+        todos los numeros daban verde sobre una imagen que no mostraba la pieza. Un lote
+        vacio se saltea (es legitimo); una forma equivocada ABORTA.
+        """
         T = np.asarray(T, np.float64)
-        if T.ndim != 3 or T.shape[1:] != (3, 3) or len(T) == 0:
+        if len(T) == 0:
             return self
+        if T.ndim != 3 or T.shape[1:] != (3, 3):
+            raise ValueError(
+                "Escena.agregar espera triangulos (N,3,3) y recibio %s. Casi siempre es un "
+                "reshape perdido: (3N,3) es la MISMA nube de vertices sin agrupar de a 3."
+                % (T.shape,))
         self.tris.append(T)
         self.cols.append(np.repeat(_rgb(color)[None, :], len(T), 0))
         self.ids.append(np.full(len(T), self._n, np.int32))

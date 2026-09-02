@@ -83,7 +83,7 @@ hace fallar un dispositivo pasa MIENTRAS el operario trabaja:
   0b. Si el que pide mando un VIDEO/plano/foto, se mira ANTES de disenar. El video ES el pliego.
   0c. Que tiene Barack YA fabricado que resuelva algo parecido:
       indice_dispositivos.py --buscar <mecanismo>
-  Ejecutable:  gate_proceso.py plantilla --tags <...> > pliego.json
+  Ejecutable:  gate_proceso.py plantilla --tags <...> --out pliego.json
                gate_proceso.py verificar pliego.json --workdir W --carpeta-pedido <dir>
 
 GATE PRE-MODELADO (antes de escribir geometria):

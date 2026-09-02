@@ -26,7 +26,7 @@ pasarlos todos y no servir. El carro apoyaba la pieza y asumía que se quedaba q
 TELA**"*.
 
 ```
-gate_proceso.py plantilla --tags adhesivo-a-pistola,pieza-flexible,la-pieza-gira > pliego.json
+gate_proceso.py plantilla --tags adhesivo-a-pistola,pieza-flexible,la-pieza-gira --out pliego.json
 gate_proceso.py verificar pliego.json --workdir W --carpeta-pedido <carpeta del pedido>
 indice_dispositivos.py --buscar <mecanismo que necesito>
 ```
@@ -57,13 +57,19 @@ o en un paso con `export_deliverables.py ... --final --motor --render`.
   capturas; **5 de las 6 se contestaban con una imagen legible**. El motor bueno vive en
   `scripts/foto3d.py` del skill — fondo BLANCO, y trae maniquí a escala para poner al operario en la
   escena. Con `--motor foto3d` el gate corre el autotest del propio motor.
-- **Se mide cuánto color tiene el render** (umbral 0,35 de saturación sobre los píxeles del objeto;
-  malo real 0,28 · buenos 0,42-0,76). Ojo: mide color, **no oclusión**. La primera versión medía
-  luminancia y **los datos la refutaron al revés** — está escrito en el skill para que nadie la
-  reinvente.
+- **Se MIDE cuánto color tiene el render y se informa — no bloquea.** Nació bloqueante con umbral
+  0,35 y una auditoría independiente lo tumbó el mismo día por los dos lados: un matplotlib real
+  (`caballete_TODAS.png`) da **0,353 y pasaba**, y un render legítimo de foto3d de un dispositivo
+  **de un solo material** —un caballete de tubo pintado de un color, que es lo que Barack fabrica—
+  da **0,000 y quedaba rechazado**. Dejaba pasar lo malo y frenaba lo bueno. **Dos hipótesis mías
+  caídas contra datos el mismo día** (antes había probado luminancia y dio al revés): están escritas
+  con los números en el skill para que nadie las reinvente. El que bloquea es el motor declarado.
 
-Enforcement de los dos: 25 casos ROJO/VERDE en `test_gates_proceso.py`, con el texto real de los
-tres fallos; listas canónicas en `procesoCanon.data.json`, nunca un regex a ojo.
+Enforcement de los dos: casos ROJO/VERDE en `test_gates_proceso.py` con el texto real de los tres
+fallos **y con las evasiones que encontró el auditor**; listas canónicas en `procesoCanon.data.json`,
+nunca un regex a ojo. **Y la lección de método, que vale más que los gates:** el primer día el gate
+de proceso frenaba 1 de 12 evasiones y aprobaba su propio formulario en blanco. *Un gate recién
+escrito no está probado hasta que alguien lo ataca* — y quien lo escribió no es quien lo ataca.
 
 **GATE 0 — DÓNDE (antes que cualquier otra cosa).** Un utillaje no se define por sus cotas sino por
 la ZONA de la pieza sobre la que actúa. Antes de medir nada:
