@@ -89,9 +89,16 @@ export function buscarPatrones(texto, patrones, { ignorarNegados = true } = {}) 
     const pn = normalizar(p);
     let i = t.indexOf(pn);
     while (i !== -1) {
-      const antes = anteceden(t, i);
-      if (!ignorarNegados || !NEGADORES.some((n) => antes.includes(normalizar(n)))) return true;
-      i = t.indexOf(pn, i + 1);   // negado aca, pero puede aparecer sin negar mas adelante
+      // El patron tiene que terminar en LIMITE DE PALABRA. Sin esto, "pushea" caza dentro de
+      // "pusheado" y frena un reporte de algo YA HECHO ("commiteado y pusheado") como si
+      // fuera una orden. Lo cazo el propio guardian bloqueandome un lanzamiento, 02/09/2026.
+      const sig = t[i + pn.length] || ' ';
+      const cierraPalabra = !/[a-z0-9]/.test(sig) || !/[a-z0-9]$/.test(pn);
+      if (cierraPalabra) {
+        const antes = anteceden(t, i);
+        if (!ignorarNegados || !NEGADORES.some((n) => antes.includes(normalizar(n)))) return true;
+      }
+      i = t.indexOf(pn, i + 1);   // aca no valia, pero puede aparecer de verdad mas adelante
     }
     return false;
   });
