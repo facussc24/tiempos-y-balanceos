@@ -99,6 +99,8 @@ def clonar_slide(prs, idx_origen, insertar_en=None, quitar_ole=True):
     for rel in list(src.part.rels.values()):
         if rel.reltype in (RT.SLIDE_LAYOUT, RT.NOTES_SLIDE):
             continue
+        if quitar_ole and rel.reltype == RT.OLE_OBJECT:
+            continue   # el shape ya no se copio: sin esto quedaba una relacion huerfana al .bin (auditor 02/09)
         if rel.is_external:
             new_rid = dst.part.rels.get_or_add_ext_rel(rel.reltype, rel.target_ref)
         else:
