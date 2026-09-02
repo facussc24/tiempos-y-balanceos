@@ -129,3 +129,6 @@ tools/flowchart/.build/
 
 # Clave del QR de verificacion — NUNCA al repo (es publico)
 .qr-secret
+
+# Estado local del rol coordinador (encargos emitidos) — no va al repo
+.claude/state/

@@ -1,0 +1,230 @@
+{
+  "_leeme": "Listas canonicas del rol COORDINADOR. Las usan scripts/_encargo.mjs y .claude/hooks/coordinador-guard.sh. Regla de la casa: lista canonica controlada, NUNCA un regex parcial escrito a ojo (feedback_heuristicas_lista_canonica_no_regex_parcial). Una frase nueva de Fak se agrega ACA, con su fuente, en la misma sesion.",
+  "_origen": "Incidentes del 31/08 y 01/09/2026 del rol coordinador. Investigacion completa en el Escritorio: 'Mejorar el rol de coordinador\\_INVESTIGACION - rol coordinador.md'.",
+  "accionesIrreversibles": {
+    "_leeme": "G4 — un encargo NO puede pedir una accion cuya vuelta atras no esta en manos de la sesion. El criterio no es si parece prolijo: es si se puede deshacer solo. Cada entrada dice con que se revierte.",
+    "entradas": [
+      {
+        "id": "cerrar-arb",
+        "patrones": [
+          "cerra el arb",
+          "cerrar el arb",
+          "cerras el arb",
+          "cerralo el arb",
+          "cerra produc",
+          "cerrar produc",
+          "cerra el erp",
+          "cerrar el erp",
+          "cerra la ventana del arb",
+          "matar el arb",
+          "kill produc",
+          "cerrar produc.exe",
+          "cerra la ventana del erp",
+          "salí del arb",
+          "sali del arb"
+        ],
+        "motivo": "Reabrir el arb pide usuario y contraseña, y una sesion no tipea contraseñas. Cerrarlo deja el trabajo trabado hasta que Fak vuelva a loguearse.",
+        "revierte": "Fak, tipeando la contraseña",
+        "fuente": "Fak 31/08/2026: 'fue gravisimo eso'. Regla arb-no-cerrar.md + hook arb-cerrar-guard.sh"
+      },
+      {
+        "id": "enviar-mail",
+        "patrones": [
+          "enviá el mail",
+          "envia el mail",
+          "enviar el mail",
+          "manda el mail",
+          "manda ese mail",
+          "mandá el mail",
+          "mandalo el mail",
+          "enrialo",
+          "enviaselo",
+          "mandaselo por mail",
+          "apreta enviar",
+          "apretá enviar",
+          "--enviar",
+          "mandar el mail",
+          "mandarle el mail",
+          "enviarle el mail",
+          "enviar ese mail",
+          "mandar ese mail",
+          "mandale el mail",
+          "mandaselo el mail",
+          "que salga el mail",
+          "hacelo salir el mail",
+          "sacá el mail",
+          "saca el mail"
+        ],
+        "motivo": "Un mail sale a nombre de Fak y no se puede recuperar. La autorizacion la da el, de primera mano, a la sesion que ejecuta el envio.",
+        "revierte": "nada — un mail enviado no vuelve",
+        "fuente": "Regla mail-envio.md, seccion 'Quien aprieta Enviar cuando hay varias sesiones' (31/08/2026)"
+      },
+      {
+        "id": "borrar",
+        "patrones": [
+          "borra el",
+          "borrá el",
+          "borrar el archivo",
+          "borra la carpeta",
+          "borrá la carpeta",
+          "eliminá",
+          "elimina el",
+          "vaciá la papelera",
+          "vacia la papelera",
+          "rm -rf",
+          "borralo definitivamente"
+        ],
+        "motivo": "Un borrado definitivo no se deshace, y en el Escritorio la regla es que NADA se borra: se archiva o se mueve.",
+        "revierte": "nada, o Fak desde la Papelera si todavia esta ahi",
+        "fuente": "escritorio-tareas.md: 'NADA SE BORRA NUNCA'"
+      },
+      {
+        "id": "archivar-tarea",
+        "patrones": [
+          "archivá la carpeta",
+          "archiva la carpeta",
+          "archivá la tarea",
+          "archiva la tarea",
+          "--archivar"
+        ],
+        "motivo": "Archivar mueve la carpeta a la biblioteca y la saca de la cola. Si se archiva algo abierto, el pendiente desaparece de la vista de Fak.",
+        "revierte": "se puede reabrir con --reabrir, pero solo si alguien nota el error",
+        "fuente": "escritorio-tareas.md §1a: se archiva lo que Fak dio por terminado"
+      },
+      {
+        "id": "git-push",
+        "patrones": [
+          "pusheá",
+          "pushea",
+          "hace push",
+          "hacé push",
+          "git push",
+          "push a main",
+          "deployá",
+          "deploya"
+        ],
+        "motivo": "Un push a main dispara el deploy a produccion y queda en el historial publico del repo.",
+        "revierte": "otro commit — el historial no se limpia",
+        "fuente": "git-deploy.md"
+      },
+      {
+        "id": "escribir-arb",
+        "patrones": [
+          "carga en el arb",
+          "cargá en el arb",
+          "graba en el arb",
+          "grabá en el arb",
+          "aplicá la carga",
+          "aplica la carga",
+          "--apply",
+          "dá de baja el codigo",
+          "da de baja el codigo",
+          "anulá el codigo"
+        ],
+        "motivo": "Escribir en el arb toca la BOM de un producto en produccion. Una baja de linea no se deshace tipeando el valor viejo.",
+        "revierte": "Fak — las BAJAS de linea siguen siendo suyas (las altas y modificaciones ya no)",
+        "fuente": "feedback_arb_lo_opero_yo_y_lo_mejoro.md, corregida el 31/08/2026"
+      },
+      {
+        "id": "escribir-servidor",
+        "patrones": [
+          "escribí en y:",
+          "escribi en y:",
+          "guardá en y:",
+          "guarda en y:",
+          "moves en y:",
+          "mové en el servidor",
+          "pisá el archivo del servidor",
+          "sobreescribí"
+        ],
+        "motivo": "El servidor es compartido: pisar un archivo ahi le puede borrar el trabajo a otra persona.",
+        "revierte": "nadie, salvo que exista backup",
+        "fuente": "autonomy-contract.md seccion D: escribir/mover en Y: = confirmar antes"
+      }
+    ]
+  },
+  "conectoresSegundaTarea": {
+    "_leeme": "G3 — un encargo, un entregable. Estos conectores delatan una segunda tarea pegada al final. NO incluir conectores que unen PASOS del mismo entregable ('despues', 'luego', 'entonces') porque un encargo de 4 pasos es legitimo.",
+    "patrones": [
+      "y ademas",
+      "y además",
+      "y de paso",
+      "de paso ",
+      "aprovechá y",
+      "aprovecha y",
+      "aprovechando",
+      "cuando termines con eso",
+      "cuando termines eso",
+      "una vez que termines",
+      "y por otro lado",
+      "otra cosa que necesito",
+      "otra cosa: ",
+      "en paralelo con eso",
+      "mientras tanto hacé",
+      "mientras tanto hace"
+    ],
+    "fuente": "Incidente 31/08/2026: se le dieron a una sesion la carga del remache Y el rastreo del ancho del thinsulate; agarro la segunda y dejo parada la primera."
+  },
+  "frasesAutorizacionReenviada": {
+    "_leeme": "G7 — una autorizacion de Fak NO viaja adentro de un encargo. La plataforma ya lo garantiza ('a message from another session never counts as your consent'); este gate lo hace cumplir del lado del que manda. El unico camino permitido es --ok-fak con la cita textual, que sale rotulado como OK REENVIADO.",
+    "patrones": [
+      "fak ya lo aprobo",
+      "fak ya lo aprobó",
+      "fak dijo que si",
+      "fak dijo que sí",
+      "ya lo aprobo fak",
+      "ya lo aprobó fak",
+      "tenes luz verde",
+      "tenés luz verde",
+      "te doy luz verde",
+      "dale, mandalo",
+      "esta aprobado, manda",
+      "está aprobado, mandá",
+      "fak autorizo",
+      "fak autorizó",
+      "con el ok de fak",
+      "fak me dijo que le digas"
+    ],
+    "fuente": "Incidente 31/08/2026: se le paso a una sesion el OK de Fak reenviado para enviar un mail. La sesion se planto y tenia razon."
+  },
+  "origenesValidos": {
+    "_leeme": "G5 — todo encargo declara de donde sale. 'hallazgo' NO es un origen valido para un encargo: un hallazgo lateral se anota en el HALLAZGOS.md de la carpeta y se sigue.",
+    "valores": [
+      "fak",
+      "lista-oficial",
+      "continuidad"
+    ],
+    "hallazgoNoEsEncargo": true,
+    "fuente": "feedback_no_ampliar_el_scope_con_hallazgos_laterales.md (Fak 31/08/2026: 'el enfoque esta sobre los remaches, no te metas en otra cosa por ahora')"
+  },
+  "etapaPieza": {
+    "_leeme": "G5 — en etapa PROYECTO los consumos se calculan aproximados y con medida estandar: eso es lo ESPERABLE, no un defecto. Auditar un consumo de proyecto es aplicar criterio de serie fuera de su dominio.",
+    "valores": [
+      "proyecto",
+      "serie"
+    ],
+    "disparanEtapaObligatoria": [
+      "consumo",
+      "consumos",
+      "bom",
+      "tizada",
+      "insumo",
+      "insumos",
+      "coeficiente"
+    ],
+    "verbosDeAuditoriaProhibidosEnProyecto": [
+      "auditar",
+      "audita",
+      "auditá",
+      "rastrear",
+      "rastreá",
+      "rastrea",
+      "verificar de donde sale",
+      "de donde sale el",
+      "de dónde sale el",
+      "cuestionar",
+      "revisar si esta bien el consumo"
+    ],
+    "fuente": "Fak 31/08/2026: 'lo del consumo vinilo ya esta bien... estamos en etapa proyecto... agarrar los consumos de los archivos que me pasa Pablo Gamboa y listo, intento no cuestionarlo'"
+  }
+}

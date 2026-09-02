@@ -1,5 +1,7 @@
 {
-  "enabledMcpjsonServers": ["build123d"],
+  "enabledMcpjsonServers": [
+    "build123d"
+  ],
   "hooks": {
     "SessionStart": [
       {
@@ -44,6 +46,15 @@
           {
             "type": "command",
             "command": "bash .claude/hooks/supabase-write-flag.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "SendMessage|Agent",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/coordinador-guard.sh"
           }
         ]
       }

@@ -71,6 +71,7 @@ la pasada rapida). Solo mide y reporta — commit/push/archivar los hace Claude.
 | `git-deploy.md` | Build + commit + push al cerrar tareas |
 | `consumos-entregables.md` | Tablas de consumo / cargas arb: validador + checklist canonico |
 | `verify-before-close.md` | Verificar build/diff/archivo generado antes de decir "listo" |
+| `coordinador.md` | **Rol coordinador**: lo que sale hacia otra sesion pasa por `_encargo.mjs` (7 candados + hook) |
 
 | Con `paths:` (cargan al tocar) | Ambito |
 |---|---|
