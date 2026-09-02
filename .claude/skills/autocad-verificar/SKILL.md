@@ -77,3 +77,22 @@ Si Fak dice "no abre" o "invalid name", **medir el largo de la ruta completa**. 
 *"Seleccione una aplicacion para abrir …"*. Prueba de 30 segundos que lo separa del
 contenido: copiar el mismo archivo a `C:\tmp\` y hacerle doble click. Si desde ahi abre,
 el archivo esta bien y el problema es la carpeta.
+
+## Plotear un DWG a PDF sin ventana (verificado 01/09/2026, layout Patagonia 31 MB)
+
+`-EXPORT` es el camino: exporta cada pestaña de layout (paper space) a un PDF multipagina con
+la configuracion de pagina que ya tiene el dibujo. Tres trampas que costaron una corrida cada una:
+
+1. **Un espacio en un `.scr` es un Enter.** `SECTOR 1` se corta en `SECTOR`. Para activar una
+   pestaña con espacios se usa LISP en una sola linea: `(setvar "CTAB" "SECTOR 1")`. Lo mismo
+   para rutas: el PDF de salida va a una carpeta SIN espacios.
+2. **Si la pestaña activa es Model, `-EXPORT` pregunta otra cosa** (`Display/Extents/Window`) y
+   no ofrece `All layouts`. Primero `CTAB` a un layout, despues `_-EXPORT _PDF _A`.
+3. **No hay prompt "Detailed plot configuration?"**: el siguiente prompt ya es el nombre de
+   archivo. Un `_N` de mas termina siendo el PDF `_N.pdf` en el directorio de trabajo, y el
+   script sigue como si nada. Secuencia buena: `(setvar "CTAB" "<layout>")`, `_-EXPORT`, `_PDF`,
+   `_A`, `<ruta.pdf>`, `_QUIT`, `_Y`. Redirigir stdout a un archivo (UTF-16LE) y leerlo:
+   ahi se ve que prompt comio cada linea.
+
+Referencia de uso: `C:\Dev\_lsr_patagonia\_scripts\plot_dwg.py` (la version que anduvo es la
+secuencia de arriba; `-PLOT` con configuracion detallada se colgo en un prompt y no se uso).
