@@ -92,6 +92,7 @@ la pasada rapida). Solo mide y reporta — commit/push/archivar los hace Claude.
 | `cad-3d.md` | archivos .step/.stl/.glb, `.venv-cad`, skill cad-design — gates 3D (el primero es el de PROCESO) |
 | `dxf-entregable.md` | `*.dxf` / `*.plt` — **el juez de un DXF es AutoCAD, no ezdxf** (`scripts/_validarDxf.py`); y si la ruta pasa 259 caracteres el doble click de Windows no abre |
 | `escritorio-tareas.md` | `_escritorio.mjs` + su hook — cola de tareas: cuándo se cierra y cómo se archiva (el hook la recuerda al tocar el Escritorio) |
+| `hojas-proceso.md` | hojas de proceso / HO (`I-IN-002.4-R01`) — **una hoja se juzga impresa, no en el monitor**: la imagen principal se declara y lo que hay que leer va a 7 pt o mas (skill `hojas-de-proceso`, gate `hoja_proceso_check.py`) |
 | `lecciones-consolidacion.md` | `docs/LECCIONES_APRENDIDAS.md` — ciclo de vida de una lección: cómo entra, cómo se gradúa y la pasada de consolidación al llegar al aviso de 26 KB |
 
 **Skills** (on-demand): `apqp-schema` (schema JSONB Supabase), `product-map` (8 familias,
@@ -103,7 +104,10 @@ part numbers, equipo APQP), `amfe-domain` (conocimiento AMFE profundo), `amfe-co
 el export post-carga → PDF de difusion formato Leo con `scripts/_pdfBomArb.py` → cuerpo del mail),
 `docs-empresa` (mapa tema→documento real + caché `.sgc-cache/`),
 `leer-planos` (sacar peso calculado / cantidad / material / norma de la lista de materiales
-embebida en un plano de cliente, con `scripts/_leerPlano.py`), `rule-enforcement-gate`
+embebida en un plano de cliente, con `scripts/_leerPlano.py`), `hojas-de-proceso`
+(criterios de imagen de una hoja de operaciones: cual imagen manda y que se lea impresa;
+libreria `hojalib` + gate `hoja_proceso_check.py` + selftest de 12 casos),
+`rule-enforcement-gate`
 (toda regla nueva con check debe nacer con enforcement), `audit-amfe`, `auditoria-cliente`
 (auditar un lote contra la NORMA con rol de auditor de cliente ANTES de entregar — deja el
 marcador `.audit-cliente/` que exige el export oficial; regla amfe.md §18), `backup`, `fix-amfe-gaps`,

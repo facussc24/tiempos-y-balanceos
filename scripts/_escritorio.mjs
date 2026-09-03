@@ -431,7 +431,13 @@ async function cmdArchivar(escritorio, archivo, { nombre, cerrada, quien, que, d
     const tarea = nombreCanonico(cerrada, nombreSinExtension(base, esDir));
     const destino = path.join(carpetaAnio(archivo, anio), tarea);
     if (fs.existsSync(destino)) { bad(`Ya existe "${anio}\\${tarea}". Renombrar antes de archivar.`); return 1; }
-    if ((await leerIndice(archivo, anio)).some((f) => f.tarea === tarea)) { bad(`"${tarea}" ya figura en el listado.`); return 1; }
+    // Una fila "reabierta" NO cuenta como duplicado: reabrir existe justamente para volver a
+    // archivar despues. Sin esta salvedad, toda tarea reabierta quedaba trabada afuera y habia
+    // que inventarle un nombre distinto, que es peor que el problema que el chequeo evita.
+    const yaEsta = (await leerIndice(archivo, anio))
+        .filter((f) => !String(f.estado ?? '').startsWith('reabierta'))
+        .some((f) => f.tarea === tarea);
+    if (yaEsta) { bad(`"${tarea}" ya figura en el listado.`); return 1; }
 
     const antes = medir(origen);
     if (dryRun) {
