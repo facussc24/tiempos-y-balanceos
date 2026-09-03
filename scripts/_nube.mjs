@@ -33,6 +33,7 @@
  *    node scripts/_nube.mjs --subir --aplicar
  *    node scripts/_nube.mjs --bajar          dry-run de la bajada
  *    node scripts/_nube.mjs --bajar --aplicar
+ *    node scripts/_nube.mjs --liberar        deja la copia SOLO en la nube (0 bytes en disco)
  */
 import { spawnSync, execSync } from 'child_process';
 import { existsSync, mkdirSync, writeFileSync, readFileSync } from 'fs';
@@ -69,6 +70,7 @@ const args = process.argv.slice(2);
 const subir = args.includes('--subir');
 const bajar = args.includes('--bajar');
 const aplicar = args.includes('--aplicar');
+const liberar = args.includes('--liberar');
 
 if (subir && bajar) {
     console.error('\n[X] --subir y --bajar juntos no. Una direccion por vez.\n');
@@ -120,6 +122,30 @@ if (est.sinPushear > 0) {
     console.log('      La otra PC clona de GitHub, asi que eso NO le llega. Pushear primero.');
 } else if (est.sinPushear === 0) {
     console.log('\n  [OK] Repo al dia con GitHub — la otra PC lo baja con git clone.');
+}
+
+// ── --liberar: dejar la copia solo en la nube ───────────────────────────────────
+// OneDrive "Archivos a pedido": el archivo queda como puntero de 0 bytes en disco y se
+// baja solo cuando algo lo abre. Reversible con `attrib -U +P /s`. Robocopy compara por
+// fecha y tamano (metadata, que sigue estando), asi que un --subir posterior no rehidrata
+// los 288 MB: solo baja lo que de verdad tenga que copiar.
+if (liberar) {
+    if (!existsSync(NUBE)) {
+        console.error('\n[X] La carpeta en la nube no existe todavia. Correr --subir --aplicar primero.\n');
+        process.exit(1);
+    }
+    console.log('\n  Marcando la copia como "solo en la nube"...\n');
+    const r = spawnSync('attrib', ['+U', '-P', join(NUBE, '*'), '/s'], {
+        encoding: 'utf8', windowsHide: true, maxBuffer: 32 * 1024 * 1024,
+    });
+    if ((r.status ?? 1) !== 0) {
+        console.error(`  [X] attrib fallo: ${(r.stderr || r.stdout || '').trim().slice(0, 300)}\n`);
+        process.exit(1);
+    }
+    console.log('  [OK] Hecho. Los archivos siguen ahi y se abren igual: Windows los baja solo.');
+    console.log('       Lo que OneDrive todavia no termino de subir se libera cuando termine.');
+    console.log('       Para volver a tenerlos en disco: attrib -U +P "<carpeta>\\*" /s\n');
+    process.exit(0);
 }
 
 // ── Sin flags: solo informar ────────────────────────────────────────────────────
