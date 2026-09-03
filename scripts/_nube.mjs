@@ -38,10 +38,14 @@
 import { spawnSync, execSync } from 'child_process';
 import { existsSync, mkdirSync, writeFileSync, readFileSync, readdirSync } from 'fs';
 import { homedir } from 'os';
-import { join } from 'path';
+import { join, dirname, resolve } from 'path';
+import { fileURLToPath } from 'url';
+import { construirFlags } from './_lib/nubeFlags.mjs';
 
 const HOME = homedir();
-const REPO = 'C:\\Dev\\BarackMercosul';
+// El repo es el padre de scripts/, no una ruta fija: si se clona en otra carpeta, el
+// script escribe .env.local y los caches DONDE ESTA, no en C:\Dev\BarackMercosul.
+const REPO = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const CLAUDE = join(HOME, '.claude');
 
 // La carpeta de OneDrive corporativo lleva el nombre del tenant y el usuario de Windows
@@ -93,19 +97,8 @@ if (subir && bajar) {
 }
 
 /** Corre robocopy. `listar` = /L: enumera lo que HARIA, sin tocar nada. */
-function robocopy(origen, destino, { espejo, listar, soloArchivo }) {
-    const flags = [origen, destino];
-    // Un archivo suelto va SIN /E: con recursion, robocopy encuentra el mismo nombre en
-    // subcarpetas (los worktrees de .claude tienen su propio .env.example) y copia de mas.
-    if (soloArchivo) flags.push(soloArchivo);
-    else flags.push(espejo ? '/MIR' : '/E');
-    // /XO en la bajada: sin esto robocopy tambien copia los "mas antiguos", o sea que
-    // BAJAR pisa un archivo local nuevo con la version vieja de la nube. Se vio con
-    // feedback_la_info_ya_la_tengo_no_preguntar.md, editado por otra sesion despues de
-    // la ultima subida. No borra, pero perder el contenido nuevo es igual de grave.
-    if (!espejo) flags.push('/XO');
-    flags.push('/NFL', '/NDL', '/NJH', '/R:2', '/W:2', '/XD', 'node_modules', '__pycache__');
-    if (listar) flags.push('/L');
+function robocopy(origen, destino, { direccion, listar, soloArchivo }) {
+    const flags = construirFlags({ origen, destino, direccion, soloArchivo, listar });
     const r = spawnSync('robocopy', flags, { encoding: 'utf8', windowsHide: true, maxBuffer: 32 * 1024 * 1024 });
     const salida = (r.stdout || '') + (r.stderr || '');
     // Robocopy: 0-7 son estados normales (0 = nada que hacer), >=8 es error real.
@@ -181,7 +174,7 @@ if (!subir && !bajar) {
     let total = 0;
     for (const [clave, local, sub] of PIEZAS) {
         if (!existsSync(local)) { console.log(`    ${clave.padEnd(11)} (no existe local)`); continue; }
-        const r = robocopy(local, join(NUBE, sub), { espejo: true, listar: true });
+        const r = robocopy(local, join(NUBE, sub), { direccion: 'subir', listar: true });
         total += r.archivos;
         console.log(`    ${clave.padEnd(11)} ${humano(r.archivos)}${r.err ? '  [X] ' + r.err : ''}`);
     }
@@ -222,7 +215,7 @@ for (const [clave, local, sub, que] of PIEZAS) {
         console.log(`    ${clave.padEnd(11)} -- origen no existe, salteado`);
         continue;
     }
-    const r = robocopy(origen, destino, { espejo: subir, listar });
+    const r = robocopy(origen, destino, { direccion: subir ? 'subir' : 'bajar', listar });
     totalArch += r.archivos;
     if (r.err) { fallos++; console.log(`    ${clave.padEnd(11)} [X] ${r.err}`); }
     else console.log(`    ${clave.padEnd(11)} ${humano(r.archivos).padEnd(16)} ${que}`);
@@ -235,8 +228,11 @@ for (const [dir, nombre, sub, que] of SUELTOS) {
         console.log(`    ${nombre.padEnd(11)} -- no existe en origen, salteado`);
         continue;
     }
-    // Archivo suelto: nunca espejo — /MIR aca borraria el resto de la carpeta destino.
-    const r = robocopy(origen, destino, { espejo: false, listar, soloArchivo: nombre });
+    // Va la direccion REAL, no un 'false': que sea un archivo suelto ya evita el /MIR
+    // adentro de construirFlags. Pasar espejo:false aca metia /XO tambien en la SUBIDA,
+    // y entonces un .env.local editado no subia y el resumen lo mostraba igual que
+    // "no habia nada que subir" (auditoria 03/09).
+    const r = robocopy(origen, destino, { direccion: subir ? 'subir' : 'bajar', listar, soloArchivo: nombre });
     totalArch += r.archivos;
     if (r.err) { fallos++; console.log(`    ${nombre.padEnd(11)} [X] ${r.err}`); }
     else console.log(`    ${nombre.padEnd(11)} ${humano(r.archivos).padEnd(16)} ${que}`);

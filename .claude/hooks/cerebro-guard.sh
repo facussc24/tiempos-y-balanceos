@@ -19,7 +19,11 @@
 
 set -uo pipefail
 
-MEMORIA="$HOME/.claude/projects/C--Dev-BarackMercosul/memory"
+# ${HOME:-} y no $HOME: con set -u, un HOME sin definir aborta el hook con "unbound
+# variable" en vez de informar. No pasa en un shell normal, pero la promesa de este
+# archivo es que nunca rompe el arranque de la sesion.
+CASA="${HOME:-}"
+MEMORIA="$CASA/.claude/projects/C--Dev-BarackMercosul/memory"
 MINIMO_MEMORIAS=20   # por debajo de esto la PC no tiene cerebro util, no es "faltan algunas"
 
 # La carpeta del OneDrive corporativo trae el nombre del tenant y el usuario cambia
