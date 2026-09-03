@@ -497,13 +497,22 @@ Las 9-17 salen del virolador del Upper Trim (08/2026, tres rondas: resorte → r
       a proposito, asi que el STL fusionado tiene tantos cuerpos como piezas y el gate lo
       rechaza. Lo que se valida es **cada pieza por separado** (1 cuerpo, cerrada, volumen
       positivo) y la envolvente solo sirve para interferencia.
-      **IMPLEMENTADO el 2026-09-03** — hasta ese dia esto estaba escrito aca y no en el
-      codigo, y `gate_validez_cuerpos` rechazaba entregas correctas: el techo ya no es 1
-      fijo sino **`_contar_solidos(step)`** (con 1 solido se sigue exigiendo 1 cuerpo, con N
-      se admiten hasta N) y **las cavidades selladas siguen siendo rojo siempre**. Par
-      BIEN/MAL en `test_gate_cuerpos.py`: 4 casos, 3 rojos por motivos distintos. Aflojar un
-      gate es justo donde se cuelan los falsos verdes, asi que el que lo afloja escribe el
-      par que demuestra que el gate sigue sabiendo dar rojo. Ojo: la envolvente concatenada
+      **IMPLEMENTADO el 2026-09-03, y CORREGIDO el mismo dia** — leer esto entero antes de
+      tocar el techo de ese gate. Primero puse el techo en **`_contar_solidos(step)`**, y una
+      auditoria independiente lo tumbo en corrida a las horas: **el techo y lo que se mide
+      salian DEL MISMO ARCHIVO**. Un fuse que falla y deja 2 solidos da un STEP que declara 2
+      y un STL con 2 cuerpos: coinciden SIEMPRE, el gate no dispara nunca, y encima imprimia
+      *"es un ENSAMBLE, no una pieza partida"*. Para el bug que el control existe para cazar
+      quedaba **tautologico** — y con el techo viejo (1 fijo) ese caso daba ROJO. Es la
+      leccion 24 otra vez: subir el umbral hasta que el problema desaparece APAGA el control.
+      Ademas cualquier resto de geometria de construccion olvidado en el STEP (un sliver
+      disociado) subia el techo solo. **Como quedo: el techo es 1 salvo que una PERSONA
+      declare `--ensamble NOMBRE:N`**, que se coteja contra los solidos del STEP y queda
+      escrito en la evidencia `delivery` del manifest junto con los cuerpos medidos. Las
+      cavidades selladas siguen siendo rojo SIEMPRE. Par BIEN/MAL: `test_gate_cuerpos.py`,
+      **5 casos, 3 rojos**, y el 5o es el fuse roto que se colaba. **Lo que esto enseña de
+      metodo: un techo que se lee del mismo archivo que se esta juzgando no es un techo.**
+      Ojo: la envolvente concatenada
       puede salir con **normales invertidas aunque cada pieza este bien** — con el volumen
       negativo, `signed_distance` da vuelta adentro/afuera y la pieza entera aparece "metida"
       6 mm en el nido (medio espesor de placa). Chequear el signo del volumen en el export.

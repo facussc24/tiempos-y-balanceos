@@ -100,15 +100,30 @@ def gate_validez_cuerpos(stl_path, base, n_solidos=1):
     al sacar los M5 quedaron bolsas de aire = cuerpos de volumen NEGATIVO que el
     laminador tapa a ciegas). Y un cuerpo POSITIVO suelto es una pieza partida.
 
-    EL TECHO ES EL NUMERO DE SOLIDOS QUE DECLARA EL STEP, no 1 (2026-09-03).
-    "Un solo cuerpo" es criterio de PIEZA IMPRESA. En un ensamble las piezas van
-    separadas a proposito, asi que el STL fusionado tiene tantos cuerpos como piezas
-    y el gate lo rechazaba — es la leccion 20 del skill, que estaba escrita y no
-    estaba implementada aca. El criterio correcto es RELATIVO a lo declarado: con un
-    STEP de 1 solido se sigue exigiendo 1 cuerpo (comportamiento anterior intacto), y
-    con un ensamble de N solidos se admiten hasta N. Menos que N es legitimo (dos
-    solidos que se tocan se funden al mallar); MAS que N significa que algo se partio.
-    Las cavidades selladas siguen siendo rojo siempre.
+    EL TECHO LO DECLARA UNA PERSONA, NO EL ARCHIVO. (2026-09-03, corregido el mismo dia)
+
+    "Un solo cuerpo" es criterio de PIEZA IMPRESA: en un ensamble las piezas van separadas
+    a proposito y el gate rechazaba entregas correctas (leccion 20 del skill). La primera
+    correccion de hoy puso el techo en `_contar_solidos(step)` y ESO ESTABA MAL, con un
+    agujero demostrado en corrida por una auditoria independiente el mismo dia:
+
+        el techo y lo que se mide salian DEL MISMO ARCHIVO. Un boolean fuse que falla y
+        deja 2 solidos sueltos produce un STEP que declara 2 y un STL con 2 cuerpos: los
+        dos numeros coinciden SIEMPRE, el gate no dispara nunca y encima imprime "es un
+        ENSAMBLE, no una pieza partida". O sea que para el bug de dominio mas comun --
+        el que este control existe para cazar, y del que hay precedente en este repo --
+        el gate quedaba tautologico. Con el techo viejo (1 fijo) ese caso daba ROJO.
+
+    Es la leccion 24 con otra ropa: subir el umbral hasta que el problema desaparece no
+    lo corrige, APAGA el control. Y ademas cualquier resto de geometria de construccion
+    olvidado en el STEP (un sliver disociado) subia el techo solo.
+
+    Ahora: el techo es 1 salvo que quien entrega DECLARE que la pieza es un ensamble, con
+    `--ensamble <nombre>:<N>`. Esa declaracion se coteja contra los solidos del STEP (si
+    no coinciden, el que declara no esta mirando la misma pieza) y queda escrita en el
+    manifest. No es infalsificable: convierte una mentira comoda -- el archivo
+    auto-legitimandose -- en una laboriosa y firmada, que es todo lo que un gate puede
+    hacer. Las cavidades selladas siguen siendo rojo SIEMPRE, se declare lo que se declare.
 
     Devuelve la malla si pasa; SystemExit si no.
     """
@@ -123,14 +138,16 @@ def gate_validez_cuerpos(stl_path, base, n_solidos=1):
                   % (c.volume / 1000, hi[0] - lo[0], hi[1] - lo[1], hi[2] - lo[2],
                      (lo[0] + hi[0]) / 2, (lo[1] + hi[1]) / 2, (lo[2] + hi[2]) / 2))
         raise SystemExit(
-            "[GATE cuerpos] '%s' tiene %d cuerpos y el STEP declara %d solidos "
+            "[GATE cuerpos] '%s' tiene %d cuerpos y el techo DECLARADO es %d "
             "(%d cavidades selladas de volumen negativo) — no se entrega.\n"
-            "Si es una cavidad: abrirla al exterior o hacer la zona maciza. Si son "
-            "cuerpos de mas: es un diseño partido." %
-            (base, len(cuerpos), tope, len(negativos)))
+            "Si es una cavidad: abrirla al exterior o hacer la zona maciza.\n"
+            "Si son cuerpos de mas: o el diseño se partio (un fuse que no cerro), o es\n"
+            "un ENSAMBLE y hay que DECLARARLO a mano: --ensamble %s:%d\n"
+            "El techo NO se lee del archivo que se esta juzgando." %
+            (base, len(cuerpos), tope, len(negativos), base, len(cuerpos)))
     if len(cuerpos) > 1:
-        print("  %s: %d cuerpos para %d solidos declarados, 0 cavidades selladas — es un "
-              "ENSAMBLE, no una pieza partida." % (base, len(cuerpos), tope))
+        print("  %s: %d cuerpos, techo declarado %d, 0 cavidades selladas — ensamble "
+              "declarado a mano." % (base, len(cuerpos), tope))
     return m
 
 
@@ -160,6 +177,13 @@ def main():
     ap.add_argument("--stl-lc", type=float, default=geom.LC_PRINT)
     ap.add_argument("--stl-curvature", type=int, default=geom.CURVATURE_PRINT)
     ap.add_argument("--glb", action="store_true", help="exportar tambien GLB (visor web)")
+    ap.add_argument("--ensamble", action="append", default=[], metavar="NOMBRE:N",
+                    help="declarar que una pieza es un ENSAMBLE de N cuerpos y no una "
+                         "pieza impresa. Sin esto el techo es 1. El numero lo pone una "
+                         "PERSONA: si se leyera del propio STEP, un fuse que falla y deja "
+                         "2 solidos declararia 2, el STL tendria 2 y el gate no dispararia "
+                         "NUNCA (demostrado en corrida el 03/09). Se coteja contra los "
+                         "solidos del STEP y queda escrito en el manifest.")
     ap.add_argument("--skip-gate", action="append", default=[],
                     choices=["zona", "proceso", "collision", "render", "ensamble", "entregable"],
                     help="saltear un gate (queda registrado; exige --reason)")
@@ -173,6 +197,14 @@ def main():
 
     if args.skip_gate and not args.reason:
         raise SystemExit("--skip-gate exige --reason (la huella queda en el manifest)")
+
+    declarados = {}
+    for d in args.ensamble:
+        if ":" not in d:
+            raise SystemExit("--ensamble se escribe NOMBRE:N (ej: nido_volteador_SAB1740:5)")
+        nom, n = d.rsplit(":", 1)
+        declarados[nom] = int(n)
+    cuerpos_por_pieza = {}
 
     w = workdir.ensure_workdir(args.workdir)
 
@@ -305,7 +337,20 @@ def main():
         base = os.path.splitext(os.path.basename(piece))[0]
         stl = os.path.join(os.path.dirname(piece) or ".", base + ".stl")
         _stl_export(piece, stl, args.stl_lc, args.stl_curvature)
-        m = gate_validez_cuerpos(stl, base, _contar_solidos(piece))
+        n_step = _contar_solidos(piece)
+        n_decl = declarados.get(base)
+        if n_decl is None:
+            tope = 1
+        elif n_decl != n_step:
+            raise SystemExit(
+                "[GATE cuerpos] Se declaro --ensamble %s:%d pero el STEP tiene %d solidos.\n"
+                "El que declara no esta mirando la misma pieza: revisar cual es el archivo."
+                % (base, n_decl, n_step))
+        else:
+            tope = n_decl
+        m = gate_validez_cuerpos(stl, base, tope)
+        cuerpos_por_pieza[base] = {"solidos_step": n_step, "techo_declarado": tope,
+                                   "cuerpos_stl": len(stl_cuerpos(stl)[1])}
         _aviso_frame_impresion(base, m)
         outs = [piece, stl]
         if args.glb:
@@ -331,8 +376,14 @@ def main():
                 "\n[GATE entregable] La carpeta tiene los archivos pero NO esta certificada.\n"
                 "Corregir lo de arriba y volver a correr con --final. La entrega no queda registrada.")
 
+    # La evidencia de entrega guarda, por pieza, los solidos del STEP, el techo que se
+    # DECLARO y los cuerpos que tenia el STL entregado. Sin esos tres numeros el manifest
+    # no deja rastro auditable de con que criterio paso el gate de cuerpos, que es
+    # justamente el que se aflojo y se volvio a apretar el 03/09.
     workdir.record_evidence(w, "delivery", dest=args.deliver, files=delivered,
                             final=bool(args.final),
+                            cuerpos_por_pieza=cuerpos_por_pieza,
+                            ensambles_declarados=args.ensamble,
                             skipped_gates=args.skip_gate, reason=args.reason)
     print("\nENTREGA OK -> %s (%d archivos). Evidencia registrada en el manifest." % (args.deliver, len(delivered)))
     if not args.final:
