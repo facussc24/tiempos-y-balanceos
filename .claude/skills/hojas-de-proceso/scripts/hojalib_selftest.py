@@ -8,7 +8,6 @@ Arma pptx sinteticos en memoria — nada de datos de cliente, el repo es publico
 
     py -3 hojalib_selftest.py          ->  codigo 0 si todos pasan
 """
-import io
 import os
 import sys
 import tempfile
@@ -135,6 +134,26 @@ caso("el mismo texto en una caja que le da",
 caso("hoja sin imagenes", hoja([]), {}, None)
 
 
+def sizing():
+    """`ancho_que_le_toca_cm` es lo que el GATE 2 manda usar ANTES de dibujar una pantalla.
+    Si mintiera por exceso, uno dimensiona una pantalla que despues no entra. El invariante
+    que importa no es que acierte al centimetro: es que **nunca prometa mas ancho del que el
+    reparto real le va a dar**."""
+    malos = 0
+    W, H = HL.bloque_cm()
+    for (w_px, h_px), n in (((1260, 1052), 3), ((1400, 1004), 2), ((1760, 872), 1),
+                            ((900, 1600), 3), ((1600, 900), 2)):
+        promete = HL.ancho_que_le_toca_cm(w_px, h_px, n_imagenes=n)
+        ars = [w_px / float(h_px)] + [0.5625] * (n - 1)
+        real = HL.layout_principal(ars, W - 0.2, H - 0.2, 0)
+        da = real[0][2] if real else 0.0
+        ok = promete <= da + 1e-9
+        print("  %s  %4dx%-4d con %d  promete %5.2f cm, el reparto da %5.2f"
+              % ("ok  " if ok else "FALLA", w_px, h_px, n, promete, da))
+        malos += not ok
+    return malos
+
+
 def main():
     ancho = max(len(c[0]) for c in CASOS)
     malos = 0
@@ -149,7 +168,9 @@ def main():
             dice = ("marca %s" % espera) if ok else "NO marco %s (dio %s)" % (espera, t or "nada")
         print("  %s  %-*s  %s" % ("ok  " if ok else "FALLA", ancho, nombre, dice))
         malos += not ok
-    print("\n%d casos, %d fallan." % (len(CASOS), malos))
+    print("\n  -- el ancho que promete el GATE 2 nunca supera al que da el reparto --")
+    malos += sizing()
+    print("\n%d casos, %d fallan." % (len(CASOS) + 5, malos))
     return 1 if malos else 0
 
 
