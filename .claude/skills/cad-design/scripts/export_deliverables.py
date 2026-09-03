@@ -87,7 +87,7 @@ def stl_cuerpos(stl_path):
     return m, cuerpos, negativos
 
 
-def gate_validez_cuerpos(stl_path, base):
+def gate_validez_cuerpos(stl_path, base, n_solidos=1):
     """GATEs validez + cuerpos/cavidades sobre EL STL QUE SE ENTREGA.
 
     Antes esto re-mallaba el STEP con step_to_trimesh y juzgaba ESA malla: el
@@ -100,22 +100,37 @@ def gate_validez_cuerpos(stl_path, base):
     al sacar los M5 quedaron bolsas de aire = cuerpos de volumen NEGATIVO que el
     laminador tapa a ciegas). Y un cuerpo POSITIVO suelto es una pieza partida.
 
+    EL TECHO ES EL NUMERO DE SOLIDOS QUE DECLARA EL STEP, no 1 (2026-09-03).
+    "Un solo cuerpo" es criterio de PIEZA IMPRESA. En un ensamble las piezas van
+    separadas a proposito, asi que el STL fusionado tiene tantos cuerpos como piezas
+    y el gate lo rechazaba — es la leccion 20 del skill, que estaba escrita y no
+    estaba implementada aca. El criterio correcto es RELATIVO a lo declarado: con un
+    STEP de 1 solido se sigue exigiendo 1 cuerpo (comportamiento anterior intacto), y
+    con un ensamble de N solidos se admiten hasta N. Menos que N es legitimo (dos
+    solidos que se tocan se funden al mallar); MAS que N significa que algo se partio.
+    Las cavidades selladas siguen siendo rojo siempre.
+
     Devuelve la malla si pasa; SystemExit si no.
     """
     m, cuerpos, negativos = stl_cuerpos(stl_path)
     if not m.is_watertight:
         raise SystemExit("[GATE validez] La malla de '%s' NO es watertight — no se entrega." % base)
-    if len(cuerpos) != 1 or negativos:
+    tope = max(1, int(n_solidos))
+    if len(cuerpos) > tope or negativos:
         for c in sorted(cuerpos, key=lambda s: s.volume):
             lo, hi = c.bounds
             print("   cuerpo: vol %+9.3f cm3 | bbox %.1f x %.1f x %.1f | centro (%.1f, %.1f, %.1f)"
                   % (c.volume / 1000, hi[0] - lo[0], hi[1] - lo[1], hi[2] - lo[2],
                      (lo[0] + hi[0]) / 2, (lo[1] + hi[1]) / 2, (lo[2] + hi[2]) / 2))
         raise SystemExit(
-            "[GATE cuerpos] '%s' tiene %d cuerpos (%d cavidades selladas de volumen "
-            "negativo) — no se entrega.\nSi es una cavidad: abrirla al exterior o hacer "
-            "la zona maciza. Si son piezas sueltas: es un diseño partido." %
-            (base, len(cuerpos), len(negativos)))
+            "[GATE cuerpos] '%s' tiene %d cuerpos y el STEP declara %d solidos "
+            "(%d cavidades selladas de volumen negativo) — no se entrega.\n"
+            "Si es una cavidad: abrirla al exterior o hacer la zona maciza. Si son "
+            "cuerpos de mas: es un diseño partido." %
+            (base, len(cuerpos), tope, len(negativos)))
+    if len(cuerpos) > 1:
+        print("  %s: %d cuerpos para %d solidos declarados, 0 cavidades selladas — es un "
+              "ENSAMBLE, no una pieza partida." % (base, len(cuerpos), tope))
     return m
 
 
@@ -290,7 +305,7 @@ def main():
         base = os.path.splitext(os.path.basename(piece))[0]
         stl = os.path.join(os.path.dirname(piece) or ".", base + ".stl")
         _stl_export(piece, stl, args.stl_lc, args.stl_curvature)
-        m = gate_validez_cuerpos(stl, base)
+        m = gate_validez_cuerpos(stl, base, _contar_solidos(piece))
         _aviso_frame_impresion(base, m)
         outs = [piece, stl]
         if args.glb:

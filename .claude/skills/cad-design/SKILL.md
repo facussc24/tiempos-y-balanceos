@@ -496,7 +496,14 @@ Las 9-17 salen del virolador del Upper Trim (08/2026, tres rondas: resorte → r
     - **El gate de "1 solo cuerpo" es de pieza impresa.** En un ensamble las piezas van con luz
       a proposito, asi que el STL fusionado tiene tantos cuerpos como piezas y el gate lo
       rechaza. Lo que se valida es **cada pieza por separado** (1 cuerpo, cerrada, volumen
-      positivo) y la envolvente solo sirve para interferencia. Ojo: la envolvente concatenada
+      positivo) y la envolvente solo sirve para interferencia.
+      **IMPLEMENTADO el 2026-09-03** — hasta ese dia esto estaba escrito aca y no en el
+      codigo, y `gate_validez_cuerpos` rechazaba entregas correctas: el techo ya no es 1
+      fijo sino **`_contar_solidos(step)`** (con 1 solido se sigue exigiendo 1 cuerpo, con N
+      se admiten hasta N) y **las cavidades selladas siguen siendo rojo siempre**. Par
+      BIEN/MAL en `test_gate_cuerpos.py`: 4 casos, 3 rojos por motivos distintos. Aflojar un
+      gate es justo donde se cuelan los falsos verdes, asi que el que lo afloja escribe el
+      par que demuestra que el gate sigue sabiendo dar rojo. Ojo: la envolvente concatenada
       puede salir con **normales invertidas aunque cada pieza este bien** — con el volumen
       negativo, `signed_distance` da vuelta adentro/afuera y la pieza entera aparece "metida"
       6 mm en el nido (medio espesor de placa). Chequear el signo del volumen en el export.
@@ -812,6 +819,51 @@ trampas de código de arriba no salvan un concepto equivocado.
     Regla: **un elemento que existe para unir A con B se verifica contra A y contra B, no
     contra "¿toca algo?"**. Y el retiro para no caer en un nudo se hace sobre UNA coordenada:
     retirar sobre las dos saca la punta de la pieza que tenia que tocar.
+
+36. **LA ZONA QUE UN CONTROL EXCLUYE A PROPOSITO QUEDA SIN CONTROL.** (2026-09-03, carro
+    giratorio de adhesivado del Insert. Es la leccion mas cara de esta tanda porque la
+    exclusion estaba declarada, comentada Y contada, y aun asi tapo una interferencia dura
+    durante dias.)
+    - El caso: `verificar_giro_carro.py` excluye del barrido todo lo que esta a menos de
+      32 mm del eje, con el motivo escrito (*"el nido va CALZADO en su eje: sus munones y el
+      eje se tocan a proposito"*) y con el conteo de puntos excluidos impreso en cada
+      corrida. Nadie miro **adentro**. Ahi el nido tenia un munon macizo O16 que quedaba
+      ENTERO dentro del eje O20 del carro, y el eje ademas atravesaba una oreja de 90x90x10
+      **sin agujero**. Ni el render ni el barrido de giro podian verlo: los dos miran los
+      nidos contra el marco, y esto pasaba en la junta.
+    - **Toda zona que un control saca de su universo necesita SU PROPIO control**, o la
+      exclusion es una alfombra. El que se escribio (`verificar_calce_eje.py`) mide las dos
+      cosas que hacen falta y que son distintas: **que no se pisen** y **que SI se toquen**
+      — "0 puntos dentro" lo cumple igual un utillaje flotando (la leccion del 2026-08-07,
+      otra vez). Su gemelo levanta el nido 5 mm: ahi deja de tocar y el control lo dice.
+    - **Un muestreo no le gana a un booleano.** El "¿pasa el eje?" no se resolvio con rayos
+      ni con nubes: se corta el cilindro del eje real contra el solido del nido y se mide el
+      volumen de la interseccion. Da **0,000 cm³**, y el gemelo (el mismo eje 25 mm fuera de
+      centro) **6,1 cm³**. Donde haya un booleano exacto disponible, el muestreo sobra.
+    - **Partir el modelo en "lo que se mueve" y "lo que no" es en si mismo un control.** Al
+      exportar el carro en tres grupos (`fijo` / `rot` / `traba`) para poder animarlo, la
+      separacion por componente conexa destapo **dos defectos mas** que ningun gate miraba,
+      porque pasaban entre piezas del carro y no entre el carro y los nidos: la manivela
+      estaba a **15 mm** de la punta de su eje (flotando: no movia nada) y su mango se metia
+      **12 mm** dentro del disco indexador de la fila de arriba, con lo que las dos piezas
+      salian FUSIONADAS en el STL. El control quedo escrito en el build: *tantos cuerpos
+      rotantes como ejes, y cada cuerpo toca UN solo eje*. Un cuerpo de mas = algo suelto;
+      un cuerpo que toca dos ejes = dos piezas que se pisan.
+    - Corolario de diseño, no de codigo: **si el eje ideal no entra, la posicion del eje se
+      DERIVA del hueco que hay, y el precio se calcula y se declara.** El eje "por el CG"
+      era imposible (el CG cae 2,9 mm sobre la cara de la placa). Se centro en el hueco
+      medido entre la placa y el punto mas bajo de la pieza (21,69 mm), quedo 7,97 mm sobre
+      el CG, y eso cuesta 0,0986 Nm por nido = 3,7 N en la manivela. Un numero chico que se
+      publica vale mas que un "pasa por el CG" que no es cierto.
+
+37. **Un gemelo que CONVERGE al caso bueno no es un gemelo.** (mismo dia.) El de la
+    simulacion de encastre multiplicaba x1,6 el desvio lateral **derivado del chaflan**, y
+    ese desvio ya vale 0 en los ultimos cuadros: justo donde la pieza llega a la altura del
+    piloto, el "gemelo" estaba perfectamente centrado y daba **0 puntos de choque, igual que
+    el diseño**. Con el desvio CLAVADO en 1,6 veces la captura garantizada: 10. Es la
+    familia de la leccion 28 con otra ropa — el gemelo se elige preguntando *que tendria que
+    estar mal para que esto fallara en planta*, no perturbando el parametro que uno tiene a
+    mano.
 
 Mejoras candidatas (cad-cae-copilot, argus-diff, etc.): ver `ROADMAP.md`. De esa lista,
 `build123d-mcp` YA está instalado y verificado (§1bis); el resto sigue sin instalar.
