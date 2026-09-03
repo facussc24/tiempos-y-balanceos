@@ -63,5 +63,9 @@ EOF
   exit 0
 fi
 
+# El cerebro va PRIMERO: si esta PC no lo tiene, bajarlo es prioritario sobre todo lo
+# demas — incluidas las lecciones, que sin memorias ni .env.local quedan a medias.
+bash "$ROOT/.claude/hooks/cerebro-guard.sh" 2>/dev/null
+
 emitir_lecciones
 exit 0

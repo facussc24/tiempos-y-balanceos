@@ -11,6 +11,13 @@ sus documentos en Supabase son referencia historica de solo lectura.
 
 ## Protocolo de inicio de sesion
 
+0. **PC nueva** (el repo se acaba de clonar): si `~/.claude/projects/C--Dev-BarackMercosul/memory/`
+   no tiene cientos de archivos, esta PC tiene el codigo pero NO el cerebro — sin memorias,
+   sin reglas globales y sin `.env.local` para leer Supabase. Correr **antes que nada**
+   `node scripts/_nube.mjs --bajar --aplicar` (anda con Node pelado, no necesita `npm install`).
+   Hacerlo y avisar en una linea; no preguntar. Normalmente lo detecta solo el hook
+   `cerebro-guard.sh`, pero los hooks de un repo recien clonado esperan aprobacion: este paso
+   es la red por si no corrieron.
 1. Leer `docs/LECCIONES_APRENDIDAS.md` (destilado corto de lecciones vigentes).
 2. Si Fak menciona un producto: leer su AMFE/CP en Supabase live ANTES de hacer cambios.
 3. PDFs de referencia: leerlos con el metodo de `docs/COMO_LEER_PDF.md`.

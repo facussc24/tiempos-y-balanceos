@@ -36,14 +36,29 @@
  *    node scripts/_nube.mjs --liberar        deja la copia SOLO en la nube (0 bytes en disco)
  */
 import { spawnSync, execSync } from 'child_process';
-import { existsSync, mkdirSync, writeFileSync, readFileSync } from 'fs';
+import { existsSync, mkdirSync, writeFileSync, readFileSync, readdirSync } from 'fs';
 import { homedir } from 'os';
 import { join } from 'path';
 
 const HOME = homedir();
 const REPO = 'C:\\Dev\\BarackMercosul';
 const CLAUDE = join(HOME, '.claude');
-const NUBE = join(HOME, 'OneDrive - BARACK ARGENTINA SRL', 'Barack-cerebro');
+
+// La carpeta de OneDrive corporativo lleva el nombre del tenant y el usuario de Windows
+// cambia segun la PC: se busca, no se hardcodea. Si no aparece ninguna, se cae a la
+// canonica para que los mensajes de error muestren una ruta concreta.
+const CANONICA = 'OneDrive - BARACK ARGENTINA SRL';
+function buscarNube() {
+    try {
+        const cand = readdirSync(HOME, { withFileTypes: true })
+            .filter((d) => d.isDirectory() && /^OneDrive.*BARACK/i.test(d.name))
+            .map((d) => join(HOME, d.name, 'Barack-cerebro'));
+        return cand.find((p) => existsSync(p)) || cand[0] || join(HOME, CANONICA, 'Barack-cerebro');
+    } catch {
+        return join(HOME, CANONICA, 'Barack-cerebro');
+    }
+}
+const NUBE = buscarNube();
 
 // Cada pieza: [clave, carpeta local, subcarpeta en la nube, que es]
 const PIEZAS = [
@@ -84,6 +99,11 @@ function robocopy(origen, destino, { espejo, listar, soloArchivo }) {
     // subcarpetas (los worktrees de .claude tienen su propio .env.example) y copia de mas.
     if (soloArchivo) flags.push(soloArchivo);
     else flags.push(espejo ? '/MIR' : '/E');
+    // /XO en la bajada: sin esto robocopy tambien copia los "mas antiguos", o sea que
+    // BAJAR pisa un archivo local nuevo con la version vieja de la nube. Se vio con
+    // feedback_la_info_ya_la_tengo_no_preguntar.md, editado por otra sesion despues de
+    // la ultima subida. No borra, pero perder el contenido nuevo es igual de grave.
+    if (!espejo) flags.push('/XO');
     flags.push('/NFL', '/NDL', '/NJH', '/R:2', '/W:2', '/XD', 'node_modules', '__pycache__');
     if (listar) flags.push('/L');
     const r = spawnSync('robocopy', flags, { encoding: 'utf8', windowsHide: true, maxBuffer: 32 * 1024 * 1024 });
@@ -169,6 +189,20 @@ if (!subir && !bajar) {
     console.log('\n  Para subir : node scripts/_nube.mjs --subir --aplicar');
     console.log('  Para bajar : node scripts/_nube.mjs --bajar --aplicar\n');
     process.exit(0);
+}
+
+// Bajar de una carpeta que no existe salteaba las 13 piezas y terminaba diciendo
+// "se bajarian --", que se lee igual que "no habia nada que traer". Una lista vacia
+// nunca puede significar "no pude leer" (misma leccion que _backup.mjs).
+if (bajar && !existsSync(NUBE)) {
+    console.error(`\n[X] NO EXISTE la carpeta del cerebro en la nube:\n    ${NUBE}\n`);
+    console.error('    Sin eso no hay nada que bajar. Suele ser una de tres:');
+    console.error('      1. Falta iniciar sesion en OneDrive con la cuenta de Barack.');
+    console.error('      2. OneDrive todavia no termino de sincronizar la carpeta.');
+    console.error('      3. Nunca se subio: correr "--subir --aplicar" en la PC que tiene el cerebro.');
+    console.error('\n    NO seguir trabajando como si estuviera todo: sin memorias ni .env.local');
+    console.error('    la sesion no puede leer Supabase ni sabe como trabaja Fak.\n');
+    process.exit(1);
 }
 
 // ── Subida / bajada ─────────────────────────────────────────────────────────────
