@@ -874,5 +874,45 @@ trampas de código de arriba no salvan un concepto equivocado.
     estar mal para que esto fallara en planta*, no perturbando el parametro que uno tiene a
     mano.
 
+38. **EL AGUJERO DONDE APOYAS LA RETENCION PUEDE SER CIEGO — y la zona que un control
+    excluye se repite hasta que se le pone SU control.** (2026-09-04, carro de adhesivado
+    del Insert. Fak miro el render y dijo *"veo que como que atraviesa la pieza"*; tenia
+    razon, y cuatro gates verdes no lo veian.)
+    - Los "barrenos O5,6" eran **torretas de tornillo CIEGAS**: tubo O7,9/O5,3 abierto
+      hacia la cara B y cerrado por 2,6 mm de pared del lado vista. El clip con cabeza
+      asomando sobre la cara A atravesaba esa pared. Nadie habia tirado UN rayo por el
+      eje del agujero: se llamaba "barreno", se diseño como pasante. **Pasante se mide
+      (dos rayos por el eje, uno de cada lado, y el perfil de radios a lo alto); una
+      pieza con `huecos: 0` en la silueta no tiene NINGUN agujero pasante**, y con eso
+      la retencion positiva es imposible: queda friccion, y el unico lugar que la admite
+      sin tocar adhesivo es el EXTERIOR de la torreta (horquilla de POM por debajo de los
+      nervios, apriete 0,15/lado sobre el radio MEDIDO, fuerza estimada con mu declarado
+      y MEDIDA con dinamometro).
+    - Por que no lo vio el control: A excluia todo lo que estaba a 8 mm del eje de un
+      pin o clip ("dentro de un barreno es artefacto"). Es la leccion 36 por tercera vez
+      en dos dias (munon en el eje, clip en la torreta, y despues el pin en la bajada).
+      **Una exclusion no se declara por RADIO: se declara por CRITERIO** — en la zona del
+      pin es artefacto solo lo que esta DENTRO del radio del barreno; en la de la
+      horquilla, solo hasta el apriete de diseño; y el maximo de cada zona se reporta.
+    - **Y la zona se mueve con la pieza.** Con las zonas fijas en la posicion nominal, un
+      pin metido en la pared de la torreta (pieza corrida 1,5 mm) quedaba a r<1,8 del
+      eje NOMINAL y contaba como "boca". Corriendo las zonas junto con la pieza: 6
+      choques donde antes daba 0. Eso destapo que **la cadena de entrada no cerraba**:
+      luz del piloto 1,5 contra ventana del cono del pin 0,55, y el piloto centraba
+      2 mm ANTES del asiento cuando el pin tocaba la torreta 8 mm antes. La cadena que
+      cierra: luz del guia <= ventana del pin, y la cara vertical del guia sube hasta
+      canto + engrane + margen (medido que la pieza no se ensancha ahi). El gemelo que
+      vale es la falla real —el guia con mas luz de la que el pin captura— no un desvio
+      cualquiera: 0 choques el diseño, 25 el gemelo.
+    - Lo que dejo de metodo: (a) **antes de disenar sobre una feature de la pieza, medir
+      lo que la feature ES** (pasante/ciego, radio exterior, donde empiezan los nervios);
+      (b) **un ensamble se entrega con 1 cuerpo por pieza soldada/atornillada**: el nido
+      tenia 5 cuerpos (2 orejas y 3 pilotos SUELTOS) y el gate lo dejo pasar como
+      "ensamble de 5" — Fak lo vio como "cosas flotando"; (c) **una feature que no
+      actua nunca se saca**: los topes con 4 mm de luz no podian actuar porque el pin ya
+      topeaba a los 2; (d) **la pose de trabajo se mide con la pistola donde el operario
+      la tiene**, no con un cono desde cualquier lado — acostada, el frente recibia el
+      chorro a <45 en el 40 %; de frente a 75, en el 94 %.
+
 Mejoras candidatas (cad-cae-copilot, argus-diff, etc.): ver `ROADMAP.md`. De esa lista,
 `build123d-mcp` YA está instalado y verificado (§1bis); el resto sigue sin instalar.
