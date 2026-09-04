@@ -18,9 +18,13 @@ sus documentos en Supabase son referencia historica de solo lectura.
    Hacerlo y avisar en una linea; no preguntar. Normalmente lo detecta solo el hook
    `cerebro-guard.sh`, pero los hooks de un repo recien clonado esperan aprobacion: este paso
    es la red por si no corrieron.
-1. Leer `docs/LECCIONES_APRENDIDAS.md` (destilado corto de lecciones vigentes).
+1. Las lecciones vigentes YA estan en este contexto: `docs/LECCIONES_APRENDIDAS.md` entra por
+   el `@import` de abajo (desde 04/09/2026; el hook que lo inyectaba llegaba recortado a 2 KB).
+   No releerlo; si un tema tiene memoria propia, esa si se lee al tocarlo.
 2. Si Fak menciona un producto: leer su AMFE/CP en Supabase live ANTES de hacer cambios.
 3. PDFs de referencia: leerlos con el metodo de `docs/COMO_LEER_PDF.md`.
+
+@docs/LECCIONES_APRENDIDAS.md
 
 ## Protocolo de fin de sesion — OBLIGATORIO, NO OPCIONAL
 
@@ -122,10 +126,16 @@ DXF antes de entregarlo — el juez es AutoCAD, no ezdxf; enforcement duro: `ent
 **Arquitectura de roles (decision Fak 2026-08-09):** los skills SON el sistema de
 roles — cargan solo al usarse. NO crear agentes-rol por dominio ni proyectos
 separados (multi-agente ≈ 15x tokens); subagentes solo para trabajo batch/paralelo,
-techo 5. `docs/LECCIONES_APRENDIDAS.md`: gate en el hook (aviso 26 KB, tope 28 KB
-con corte en linea completa); al aviso se CONSOLIDA — fusionar lecciones del mismo
-patron y graduar a regla/memoria/archivo (regla `lecciones-consolidacion.md`) — nunca comprimir
-a fragmentos ni pelear bytes.
+techo 5. `docs/LECCIONES_APRENDIDAS.md`: gate POR BULLET (600 caracteres por leccion; una
+"graduada a X", 2 lineas), medido por `_cierreSesion.mjs` y por el hook Stop; el techo de
+26/28 KB queda como red. Lo que no entra legible se GRADUA a regla/memoria/archivo (regla
+`lecciones-consolidacion.md`), nunca se comprime a fragmentos ni se pelean bytes.
+
+**Modelo y sesion (decision Fak 04/09/2026):** Fable 5.1 para mejoras de codigo importantes,
+Opus 5 para el resto — no tocar el selector por cuenta propia. Toda sesion arranca en modo
+plan (`permissions.defaultMode`) y auto-compacta a 400k tokens (`CLAUDE_CODE_AUTO_COMPACT_WINDOW`
+en los settings globales); el hook Stop `cierre-guard.sh` corta el turno si termina pidiendo
+permiso para mi propio trabajo o si entregue afuera del repo sin decir la ruta.
 
 ## Stack y comandos
 

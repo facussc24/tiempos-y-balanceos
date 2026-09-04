@@ -9,8 +9,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash .claude/hooks/session-start-context.sh lecciones",
-            "statusMessage": "Inyectando LECCIONES_APRENDIDAS..."
+            "command": "bash .claude/hooks/session-start-context.sh inicio",
+            "statusMessage": "Chequeando cerebro (memorias + .env.local)..."
           }
         ]
       },
@@ -57,6 +57,16 @@
             "command": "bash .claude/hooks/coordinador-guard.sh"
           }
         ]
+      },
+      {
+        "_comentario": "04/09/2026: recordatorio NO bloqueante (additionalContext) en el momento exacto de preguntar. 37 AskUserQuestion en 2 semanas, 14 contestadas con fastidio o ya-te-lo-dije.",
+        "matcher": "AskUserQuestion",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/pregunta-guard.sh"
+          }
+        ]
       }
     ],
     "Stop": [
@@ -69,10 +79,13 @@
           },
           {
             "type": "command",
-            "command": "bash .claude/hooks/session-close-guard.sh"
+            "command": "bash .claude/hooks/cierre-guard.sh"
           }
         ]
       }
     ]
+  },
+  "permissions": {
+    "defaultMode": "plan"
   }
 }

@@ -2,7 +2,13 @@
 # session-close-guard.sh — Recuerda el checklist de cierre de sesion cuando hay
 # cambios de codigo/docs sin commitear en el repo. Cooldown de 20 min para no
 # repetir el recordatorio en cada turno. Se dispara en el evento Stop.
-cat >/dev/null 2>&1   # drenar el JSON de stdin
+# RETIRADO 04/09/2026 — reemplazado por cierre-guard.sh (logica en scripts/_lib/cierreGuard.mjs).
+# Motivo, medido sobre los transcripts: devolvio exit 2 en 115 cierres de turno en dos semanas,
+# cada uno un turno extra a 300-500k de contexto con el mismo texto. El nuevo solo habla cuando
+# el mensaje DECLARA cierre y hay pendientes medibles, con cooldown por sesion. No esta cableado
+# en settings.json; si alguien lo vuelve a cablear, sale sin hacer nada.
+cat >/dev/null 2>&1
+exit 0
 
 REPO=$(git rev-parse --show-toplevel 2>/dev/null)
 [ -z "$REPO" ] && exit 0

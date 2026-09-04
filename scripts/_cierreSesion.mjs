@@ -38,10 +38,13 @@ import {
 
 const REPO = path.resolve(fileURLToPath(import.meta.url), '..', '..');
 
-// Umbrales del gate de LECCIONES (los mismos de session-close-guard.sh y
-// session-start-context.sh — si se cambian alla, cambiarlos aca).
-export const LECCIONES_AVISO = 26624;
-export const LECCIONES_TOPE = 28672;
+// Umbrales del gate de LECCIONES: UNA fuente, scripts/_lib/cierreCanon.data.json (la
+// misma que lee el hook Stop cierre-guard). Desde el 04/09/2026 el archivo entra al
+// system prompt por @import desde CLAUDE.md, asi que el tope por bytes ya no recorta
+// nada: es una red. Lo que gobierna es el gate POR BULLET (evaluarBullets).
+import { CANON as CANON_CIERRE, evaluarBullets } from './_lib/cierreGuard.mjs';
+export const LECCIONES_AVISO = CANON_CIERRE.lecciones.aviso_bytes;
+export const LECCIONES_TOPE = CANON_CIERRE.lecciones.tope_bytes;
 
 const c = { r: '\x1b[31m', y: '\x1b[33m', g: '\x1b[32m', b: '\x1b[34m', d: '\x1b[2m', x: '\x1b[0m' };
 const say = (s = '') => console.log(s);
@@ -146,6 +149,24 @@ export function evaluarLecciones(bytes) {
     return { estado: 'ok', detalle: `${kb} KB, bajo el aviso de 26 KB` };
 }
 
+/**
+ * Gate POR BULLET de LECCIONES (desde 04/09/2026): cada leccion ≤ 600 caracteres, y la
+ * que dice "graduado a X" no conserva la narrativa (≤ 2 lineas). Es lo que hace que la
+ * pasada de consolidacion sea GRADUAR y no pelear bytes: 31 consolidaciones en 14 dias
+ * porque los bullets graduados seguian contando el caso entero.
+ */
+export function evaluarLeccionesBullets(texto) {
+    if (texto == null) return { estado: 'aviso', detalle: 'no se pudo leer docs/LECCIONES_APRENDIDAS.md' };
+    const malos = evaluarBullets(texto);
+    if (!malos.length) return { estado: 'ok', detalle: `todos los bullets bajo ${CANON_CIERRE.lecciones.bullet_max_chars} caracteres; los graduados, en ≤ ${CANON_CIERRE.lecciones.graduado_max_lineas} lineas` };
+    return {
+        estado: 'falta',
+        detalle: `${malos.length} bullet(s) fuera del gate por bullet — graduar el detalle a memoria/regla, no recortar frases:\n`
+            + malos.slice(0, 6).map((m) => `      · ${m.motivo}: "${m.inicio}…"`).join('\n')
+            + (malos.length > 6 ? `\n      ${c.d}… y ${malos.length - 6} mas${c.x}` : ''),
+    };
+}
+
 /** 1 si algun check quedo en 'falta'; 'aviso', 'manual' y 'no-aplica' no bloquean. */
 export function veredicto(checks) {
     return checks.some((ch) => ch.estado === 'falta') ? 1 : 0;
@@ -244,6 +265,14 @@ function chequearLecciones() {
     }
 }
 
+function chequearLeccionesBullets() {
+    try {
+        return evaluarLeccionesBullets(fs.readFileSync(path.join(REPO, 'docs', 'LECCIONES_APRENDIDAS.md'), 'utf8'));
+    } catch {
+        return evaluarLeccionesBullets(null);
+    }
+}
+
 /**
  * El Escritorio: cuantas tareas siguen abiertas, cuales llevan 7+ dias (candidatas
  * a estar cerradas sin archivar — decide Fak, por eso es aviso y no falta), y si
@@ -316,6 +345,7 @@ async function main(argv) {
 
     const checks = [
         { paso: 'LECCIONES_APRENDIDAS bajo el gate de consolidacion', ...chequearLecciones() },
+        { paso: 'LECCIONES_APRENDIDAS: gate por bullet (graduar, no comprimir)', ...chequearLeccionesBullets() },
         { paso: 'Backup Supabase posterior a la ultima escritura', ...evaluarBackup({ escritura: ultimaEscrituraSupabase(tmp), backup: ultimoBackupValido(tmp) }) },
         { paso: 'Build de produccion', ...chequearBuild(sinBuild) },
         { paso: 'Git: commit + push (regla git-deploy)', ...chequearGit() },
