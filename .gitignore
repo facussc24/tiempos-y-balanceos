@@ -135,3 +135,7 @@ tools/flowchart/.build/
 
 # Estado local del rol coordinador (encargos emitidos) — no va al repo
 .claude/state/
+
+# Cache local de ordenes de compra (Z:\arb\oc\ocauto\BA) — DATOS DE LA EMPRESA (proveedores,
+# precios, codigos), el repo es publico. Lo genera scripts/_oc.py --indexar.
+.oc-cache/
