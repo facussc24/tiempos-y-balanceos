@@ -884,10 +884,12 @@ trampas de código de arriba no salvan un concepto equivocado.
       eje del agujero: se llamaba "barreno", se diseño como pasante. **Pasante se mide
       (dos rayos por el eje, uno de cada lado, y el perfil de radios a lo alto); una
       pieza con `huecos: 0` en la silueta no tiene NINGUN agujero pasante**, y con eso
-      la retencion positiva es imposible: queda friccion, y el unico lugar que la admite
-      sin tocar adhesivo es el EXTERIOR de la torreta (horquilla de POM por debajo de los
-      nervios, apriete 0,15/lado sobre el radio MEDIDO, fuerza estimada con mu declarado
-      y MEDIDA con dinamometro).
+      la retencion positiva es imposible: queda FRICCION. Primera solucion: horquilla
+      de POM abrazando la torreta por FUERA. **La revision independiente del mismo dia la
+      cambio por un PIN CON O-RING que entra por DENTRO del agujero ciego** (leccion 39):
+      la pared interior del agujero es superficie moldeada contra nucleo y varia menos
+      que el diametro exterior, que es la cara donde pega el rechupe. En los dos casos la
+      fuerza se estima con mu DECLARADO y se MIDE con dinamometro.
     - Por que no lo vio el control: A excluia todo lo que estaba a 8 mm del eje de un
       pin o clip ("dentro de un barreno es artefacto"). Es la leccion 36 por tercera vez
       en dos dias (munon en el eje, clip en la torreta, y despues el pin en la bajada).
@@ -913,6 +915,31 @@ trampas de código de arriba no salvan un concepto equivocado.
       topeaba a los 2; (d) **la pose de trabajo se mide con la pistola donde el operario
       la tiene**, no con un cono desde cualquier lado — acostada, el frente recibia el
       chorro a <45 en el 40 %; de frente a 75, en el 94 %.
+
+39. **UN DISENO NUEVO NO REEMPLAZA AL VIEJO HASTA QUE SUS DOCUMENTOS TAMBIEN CAMBIAN
+    — y el numero que un documento tiene TIPEADO no se entera de nada.** (2026-09-04,
+    misma tarde. Fak pidio una revision independiente del encastre: *"quiero quedarme
+    tranquilo de que va a encastrar facil"*. Salio bien — dos revisores sin contexto
+    coincidieron solos y la retencion mejoro — y despues aparecio el costo.)
+    - Cambiada la retencion (horquilla por fuera -> pin con o-ring por dentro) y los
+      apoyos (espuma -> POM rigido), el SOLIDO quedo bien y los cuatro controles verdes.
+      **Seis documentos siguieron describiendo el diseno anterior**: la lista de
+      materiales (pin "O3,40 engrane 8" TIPEADO cuando el solido ya era O3,30 engrane 9
+      — y esa lista es la que va al TORNERO), el plano del carro (mu 0,30 de la horquilla
+      al lado de su propio detalle que dice 0,60, y un pie que decia *"abrazar la torreta
+      por fuera es lo unico que la geometria deja"*), el plano del nido ("gomaespuma
+      comprimida al X %" con espuma_util = 0), el pliego, un render de demo, y **la
+      imagen del GATE 0 — la que se le manda a Fak para que confirme la zona, o sea que
+      le preguntaba por un diseno que ya no existia**.
+    - Ninguno fallo: todos corrieron en verde. Un texto no tiene control de coherencia,
+      y un numero tipeado tampoco: **si el dato existe en el JSON, el documento lo LEE**
+      (`nd["localizadores"]["d_barreno"] - luz_pin`, `NV["parametros"]["clip_mu"]`); si
+      hay que escribirlo a mano, es que falta publicarlo.
+    - Metodo, barato: despues de cambiar un concepto, **grep del nombre viejo por toda la
+      carpeta** (`horquilla|abraza|gomaespuma|espuma`) y mirar CADA hit. El orden importa:
+      primero lo que sale de la casa (la imagen que va a Fak, el plano del tornero),
+      despues lo interno. Y el numero que aparece en dos lugares del MISMO documento y no
+      coincide es la firma barata de esto — se busca a proposito.
 
 Mejoras candidatas (cad-cae-copilot, argus-diff, etc.): ver `ROADMAP.md`. De esa lista,
 `build123d-mcp` YA está instalado y verificado (§1bis); el resto sigue sin instalar.
