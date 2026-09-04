@@ -941,5 +941,19 @@ trampas de código de arriba no salvan un concepto equivocado.
       despues lo interno. Y el numero que aparece en dos lugares del MISMO documento y no
       coincide es la firma barata de esto — se busca a proposito.
 
+**LIMITE CONOCIDO de G-E2, encontrado el 04/09/2026 (anotado, NO parcheado).** El control
+"PDF y STEP de la misma corrida" compara **mtime**, y `export_deliverables --final` copia las
+piezas a la carpeta destino **justo antes** de correr el gate: la copia siempre queda mas
+nueva que el PDF, asi que `--final` no puede cerrar en una sola corrida cuando el PDF no lo
+copia el propio export. Sale ROJO por G-E2 con un PDF que describe exactamente ese solido.
+Rodeo correcto (el orden real de trabajo, el PDF ultimo): `export_deliverables` sin `--final`
+(copia las piezas y registra `delivery`) -> regenerar el PDF -> copiarlo a la entrega ->
+`gate_entregable.py --entrega <carpeta>` (registra `entregable_ok`). Quedan las dos evidencias
+que produce `--final` y el gate juzga exactamente la carpeta que se entrega.
+El arreglo de fondo es el mismo aprendizaje del 24/08 sin aplicar aca: **comparar la FIRMA del
+STEP** (`file_signature`, que `pdf_entrega` ya verifica en su control de misma corrida) en vez
+del mtime de una copia. No se toco sobre la marcha: cambiar un gate para que pase la entrega
+propia es justo lo que el gate existe para impedir, y merece su propio par BIEN/MAL.
+
 Mejoras candidatas (cad-cae-copilot, argus-diff, etc.): ver `ROADMAP.md`. De esa lista,
 `build123d-mcp` YA está instalado y verificado (§1bis); el resto sigue sin instalar.
