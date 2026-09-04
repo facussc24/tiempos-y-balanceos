@@ -20,6 +20,11 @@
  *  - SI van .sgc-cache y .arb-cache: son regenerables, pero regenerarlos exige el
  *    servidor Y: y el ERP a mano. Sin ellos la otra PC arranca ciega.
  *
+ *  - SI va .mail-cache (agregado el 2026-09-03): el buzon volcado a JSONL. Se regenera
+ *    con `--sync`, pero solo mientras Outlook clasico tenga el .ost al dia — un mail
+ *    borrado o una cuenta dada de baja ya no vuelven. Ademas es la unica copia que hay
+ *    fuera de Exchange, y esa tarde OneDrive estuvo 14 h sin subir nada sin avisar.
+ *
  * SEGURIDAD
  *  - Por defecto TODO es dry-run. Sin `--aplicar` no se copia ni se borra un solo byte.
  *  - `--subir` usa espejo (/MIR): borra en la nube lo que ya no existe local. Esta PC es
@@ -75,6 +80,7 @@ const PIEZAS = [
     ['planes', join(CLAUDE, 'plans'), 'claude-config\\plans', 'planes guardados'],
     ['sgc-cache', join(REPO, '.sgc-cache'), 'repo-privado\\.sgc-cache', 'extractos de documentos del SGC'],
     ['arb-cache', join(REPO, '.arb-cache'), 'repo-privado\\.arb-cache', 'fotos de exports del ERP arb'],
+    ['mail-cache', join(REPO, '.mail-cache'), 'repo-privado\\.mail-cache', 'el buzon volcado a JSONL (5.300+ mails)'],
 ];
 
 // Archivos sueltos: [carpeta de origen, nombre, subcarpeta nube, que es]
