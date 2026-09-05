@@ -226,6 +226,11 @@ def leer_adjuntos(msg):
 BASURA_NOMBRE = re.compile(r'(?i)^(image\d+\.(png|jpg|jpeg|gif)|oledata\.mso|~.*)$')
 
 
+def nombre_ocurrencia(base, k):
+    """La k-esima vez que aparece el mismo nombre: la 1 va pelada, el resto con sufijo."""
+    return base + '.eml' if k == 1 else '%s (%d).eml' % (base, k)
+
+
 def exportar(ost, rol, destino, limite=0, sin_adjuntos=False, carpetas_no=(), carpetas_solo=(),
              reanudar=False):
     f = pypff.file()
@@ -239,6 +244,7 @@ def exportar(ost, rol, destino, limite=0, sin_adjuntos=False, carpetas_no=(), ca
     vistos_adj = {}          # hash -> ruta relativa, para deduplicar
     cont = {'mails': 0, 'saltados': 0, 'adj': 0, 'adj_unicos': 0, 'bytes': 0,
             'ya_estaba': 0, 'ramas_rotas': []}
+    veces = {}               # nombre base -> cuantas veces salio en ESTE recorrido
 
     idx = open(indice_path, 'a', encoding='utf-8')
 
@@ -276,15 +282,23 @@ def exportar(ost, rol, destino, limite=0, sin_adjuntos=False, carpetas_no=(), ca
             os.makedirs(carpeta, exist_ok=True)
 
             adjuntos = leer_adjuntos(msg)
-            base = '%s_%s' % (sello, nombre_seguro(asunto))
-            eml_path = os.path.join(carpeta, base + '.eml')
+            base = os.path.join(carpeta, '%s_%s' % (sello, nombre_seguro(asunto)))
+
+            # Dos mails distintos pueden dar el MISMO nombre (misma fecha-hora al minuto y
+            # mismo asunto: un hilo reenviado, una difusion). El desempate es un sufijo
+            # " (2)", " (3)"... y tiene que ser el mismo numero en cada corrida, si no
+            # --reanudar da por archivado un mail que en realidad nunca se escribio: asi se
+            # perdieron 129 mails del buzon de Fak el 04/09. Por eso la ocurrencia se cuenta
+            # aca, en el orden del recorrido, y NO se deduce de que archivos ya existen.
+            veces[base] = veces.get(base, 0) + 1
+            eml_path = nombre_ocurrencia(base, veces[base])
+
             if reanudar and os.path.exists(eml_path):
                 cont['ya_estaba'] += 1
                 continue
-            k = 2
             while os.path.exists(eml_path):
-                eml_path = os.path.join(carpeta, '%s (%d).eml' % (base, k))
-                k += 1
+                veces[base] += 1
+                eml_path = nombre_ocurrencia(base, veces[base])
 
             try:
                 em, cuerpo_txt = construir_eml(msg, adjuntos)

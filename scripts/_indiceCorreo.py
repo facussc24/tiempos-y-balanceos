@@ -24,10 +24,25 @@ from collections import Counter
 
 try:
     from openpyxl import Workbook
+    from openpyxl.cell.cell import ILLEGAL_CHARACTERS_RE
     from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
     from openpyxl.utils import get_column_letter
 except ImportError:
     sys.exit('falta openpyxl — usar el Python del sistema (3.13), no .venv-mail')
+
+
+# El cuerpo de un mail trae caracteres de control (tabulaciones verticales, saltos de
+# pagina, restos de codificacion) que Excel RECHAZA: openpyxl tira IllegalCharacterError
+# y se cae el libro entero por una sola celda. Paso el 04/09 con un mail de ductos.
+# Ademas Excel corta a 32.767 caracteres por celda, asi que se recorta antes de escribir.
+TOPE_CELDA = 32000
+
+
+def limpio(v):
+    if not isinstance(v, str):
+        return v
+    v = ILLEGAL_CHARACTERS_RE.sub(' ', v)
+    return v[:TOPE_CELDA] if len(v) > TOPE_CELDA else v
 
 
 COLUMNAS = [
@@ -114,7 +129,7 @@ def main():
             d.get('eml', ''),
         ]
         for i, v in enumerate(valores):
-            c = ws.cell(row=r, column=2 + i, value=v)
+            c = ws.cell(row=r, column=2 + i, value=limpio(v))
             c.alignment = Alignment(vertical='top', wrap_text=(i in (5, 6, 7)))
             c.border = BORDE
             if j % 2:
