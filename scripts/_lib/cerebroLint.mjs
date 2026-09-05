@@ -52,12 +52,14 @@ export function dirMemoriaDe(repo, home = os.homedir()) {
 }
 
 // ─────────────────────────────────────────────────────────────── lectura
-function leerSeguro(p) { try { return fs.readFileSync(p, 'utf8'); } catch { return null; } }
+// Sin BOM: un editor de Windows que lo agregue no convierte una memoria sana en "sin frontmatter".
+function leerSeguro(p) { try { return fs.readFileSync(p, 'utf8').replace(/^\uFEFF/, ''); } catch { return null; } }
 function listar(dir) { try { return fs.readdirSync(dir, { withFileTypes: true }); } catch { return []; } }
 
 /** Frontmatter YAML minimo: name, description, type (arriba o bajo metadata:) y si tiene paths:. */
 export function leerFrontmatter(texto) {
-  if (!texto || !texto.startsWith('---')) return null;
+  texto = String(texto ?? '').replace(/^\uFEFF/, '');
+  if (!texto.startsWith('---')) return null;
   const fin = texto.indexOf('\n---', 3);
   if (fin < 0) return null;
   const bloque = texto.slice(3, fin);
@@ -165,7 +167,9 @@ export function chequearWikilinks(c) {
   const out = [];
   for (const f of fuentes(c)) {
     const vistos = new Set();
-    for (const m of f.texto.matchAll(/\[\[([^\]\n]+?)\]\]/g)) {
+    // Un [[wikilink]] dentro de un bloque ``` es un EJEMPLO de sintaxis, no un link (auditoria 05/09).
+    const sinCodigo = f.texto.replace(/```[\s\S]*?```/g, '');
+    for (const m of sinCodigo.matchAll(/\[\[([^\]\n]+?)\]\]/g)) {
       let link = m[1].split('|')[0].trim();
       if (!link || link.startsWith(':')) continue;               // [[:space:]] de una regex, no un link
       if (vistos.has(link)) continue;

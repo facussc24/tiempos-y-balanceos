@@ -203,3 +203,20 @@ describe('cerebroLint — ROJO: cada defecto se ve', () => {
     expect(r.detalle).toMatch(/1 roto\(s\) \(wikilinks 1\) \+ 1 aviso/);
   });
 });
+
+// Auditoria independiente del 05/09 (Ola 3): dos gaps latentes, 0 ocurrencias en el corpus real.
+describe('cerebroLint — BOM y bloques de codigo (auditoria 05/09)', () => {
+  it('VERDE: una memoria con BOM UTF-8 adelante del frontmatter se lee entera (name, description, type)', () => {
+    const conBom = '\uFEFF' + fm({ name: 'feedback_uno' });
+    const c = armar({ memorias: { feedback_uno: { fm: conBom, texto: 'ok' }, reference_dos: {} } });
+    expect(de(lintCerebro(c), 'frontmatter')).toEqual([]);
+    expect(leerFrontmatter('\uFEFF---\nname: x\ndescription: d\ntype: feedback\n---\n')).toMatchObject({ name: 'x', type: 'feedback' });
+  });
+  it('un [[wikilink]] de EJEMPLO dentro de ``` no es un link; el mismo texto afuera del bloque si rompe', () => {
+    const ejemplo = 'Asi se escribe un link:\n```md\nVer [[no_existe_ejemplo]] al final.\n```\n';
+    const c = armar({ memorias: { feedback_uno: { texto: ejemplo }, reference_dos: {} } });
+    expect(de(lintCerebro(c), 'wikilinks')).toEqual([]);
+    const c2 = armar({ memorias: { feedback_uno: { texto: 'Ver [[no_existe_ejemplo]] al final.' }, reference_dos: {} } });
+    expect(de(lintCerebro(c2), 'wikilinks')).toHaveLength(1);
+  });
+});

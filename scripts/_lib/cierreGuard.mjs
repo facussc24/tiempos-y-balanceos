@@ -130,7 +130,10 @@ export function evaluarBullets(texto, cfg = CANON.lecciones) {
 // Relevadores (leen el mundo). En los tests se inyectan versiones falsas.
 // ---------------------------------------------------------------------------------------
 
-const SCRATCH = /[\\/]Temp[\\/]claude[\\/]|[\\/]scratchpad[\\/]|[\\/]tmp[\\/]/i;
+// Solo el arbol REAL del scratchpad (…\AppData\Local\Temp\claude\… en Windows, /tmp/claude/… en
+// Linux). Una carpeta de entrega que se llame `tmp` o `scratchpad` (Desktop\tarea\tmp,
+// Y:\…\tmp) sigue siendo afuera: el regex anterior eximia por nombre pelado (auditoria 05/09, C.2).
+const SCRATCH = /[\\/](Temp|tmp)[\\/]claude[\\/]/i;
 
 function esRutaFuera(ruta) {
   if (!ruta) return false;
@@ -177,6 +180,29 @@ export function rutaRelativaAlRepo(bloque) {
   return norm.slice(repo.length + 1).replace(/\\/g, '/');
 }
 
+const EXT_CODIGO = /\.(ts|tsx|js|jsx|mjs|css|json|md|py|sh)$/i;
+const RE_TOKEN_RUTA = /^[\w@.\-]+(?:\/[\w@.\-]+)*$/;
+
+/** Rutas del repo que NOMBRA un comando Bash/PowerShell: `sed -i … scripts/x.mjs`, `cat > docs/x.md`,
+ *  `python scripts/_arb.py`, `git add a b`. Relativas con extension de codigo, o absolutas dentro
+ *  del repo (se relativizan). No mira el disco, asi cuenta tambien lo borrado. Un token que sube
+ *  con `..` (imports dentro de un heredoc) no se puede ubicar y se salta; URLs y rutas de afuera
+ *  tampoco entran. Sobreincluir es barato: solo cuenta si ademas esta sucio en git. */
+export function rutasRepoEnComando(cmd) {
+  const out = new Set();
+  for (let t of String(cmd || '').split(/\s+/)) {
+    t = t.replace(/^["'`(]+|["'`),;:]+$/g, '');
+    if (!t || !EXT_CODIGO.test(t)) continue;
+    const rel = rutaRelativaAlRepo({ name: 'Write', input: { file_path: t } });
+    if (rel) { out.add(rel); continue; }
+    if (/^[a-z]:[\\/]/i.test(t) || t.startsWith('\\\\') || t.startsWith('/')) continue;   // absoluta, afuera del repo
+    const n = t.replace(/\\/g, '/').replace(/^\.\//, '');
+    if (!RE_TOKEN_RUTA.test(n) || n.split('/').includes('..')) continue;
+    out.add(n);
+  }
+  return out;
+}
+
 function esMensajeRealDeUsuario(obj) {
   if (obj.isMeta) return false;
   const c = obj.message?.content;
@@ -186,12 +212,16 @@ function esMensajeRealDeUsuario(obj) {
 }
 
 /** Recorre el transcript y se queda con lo que paso DESPUES del ultimo mensaje real de Fak.
- *  De paso junta `tocados`: los archivos del repo que ESTA sesion escribio (Write/Edit), en
- *  toda la sesion — con dos sesiones sobre el mismo repo, lo sucio de la otra no es pendiente
- *  mio (falso positivo del 05/09: me reclamo guardianes.mjs, que editaba otra sesion). */
+ *  De paso junta `tocados`: los archivos del repo que ESTA sesion escribio (Write/Edit) o nombro
+ *  en un comando (sed -i, cat >, python x.py), en toda la sesion — con dos sesiones sobre el
+ *  mismo repo, lo sucio de la otra no es pendiente mio (falso positivo del 05/09: me reclamo
+ *  guardianes.mjs, que editaba otra sesion). Si la sesion corrio comandos o agentes y aun asi no
+ *  se le puede atribuir NINGUN archivo, `tocados` vuelve null y se cuenta todo lo sucio, como
+ *  antes: un Set vacio filtraba a cero y escondia pendientes reales (auditoria 05/09, C.1). */
 export async function escribioFueraEnEsteTurno(transcriptPath) {
   if (!transcriptPath || !fs.existsSync(transcriptPath)) return { fuera: false };
   let ejemplo = null;
+  let huboComando = false;
   const tocados = new Set();
   const rl = readline.createInterface({ input: fs.createReadStream(transcriptPath, 'utf8'), crlfDelay: Infinity });
   for await (const linea of rl) {
@@ -206,14 +236,17 @@ export async function escribioFueraEnEsteTurno(transcriptPath) {
       if (b.type !== 'tool_use') continue;
       const rel = rutaRelativaAlRepo(b);
       if (rel) tocados.add(rel);
+      if (/^(Bash|PowerShell|Agent|Task)$/.test(b.name || '')) {
+        huboComando = true;
+        for (const r of rutasRepoEnComando(b.input?.command)) tocados.add(r);
+      }
       const e = evaluarToolUse(b);
       if (e) ejemplo = e;
     }
   }
-  return ejemplo ? { fuera: true, ejemplo, tocados } : { fuera: false, tocados };
+  const atribuibles = tocados.size > 0 || !huboComando ? tocados : null;
+  return ejemplo ? { fuera: true, ejemplo, tocados: atribuibles } : { fuera: false, tocados: atribuibles };
 }
-
-const EXT_CODIGO = /\.(ts|tsx|js|jsx|mjs|css|json|md|py|sh)$/i;
 
 function flagSupabase() {
   const dir = process.env.TEMP || process.env.TMPDIR || os.tmpdir();
@@ -233,8 +266,9 @@ function flagSupabase() {
 }
 
 /** Pendientes medibles al declarar un cierre. Cada renglon es accionable.
- *  `tocados` (Set de rutas repo-relativas que escribio esta sesion) filtra el git status: si
- *  viene null (sin transcript), se cuenta todo lo sucio como antes. */
+ *  `tocados` (Set de rutas repo-relativas que escribio o nombro esta sesion) filtra el git
+ *  status: si viene null (sin transcript, o sesion con comandos sin archivo atribuible), se
+ *  cuenta todo lo sucio como antes. */
 export function relevarPendientes(tocados = null) {
   const out = [];
   try {
