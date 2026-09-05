@@ -226,7 +226,8 @@ def leer_adjuntos(msg):
 BASURA_NOMBRE = re.compile(r'(?i)^(image\d+\.(png|jpg|jpeg|gif)|oledata\.mso|~.*)$')
 
 
-def exportar(ost, rol, destino, limite=0, sin_adjuntos=False, carpetas_no=(), carpetas_solo=()):
+def exportar(ost, rol, destino, limite=0, sin_adjuntos=False, carpetas_no=(), carpetas_solo=(),
+             reanudar=False):
     f = pypff.file()
     f.open(ost)
 
@@ -236,7 +237,8 @@ def exportar(ost, rol, destino, limite=0, sin_adjuntos=False, carpetas_no=(), ca
 
     indice_path = os.path.join(destino, '_indice.jsonl')
     vistos_adj = {}          # hash -> ruta relativa, para deduplicar
-    cont = {'mails': 0, 'saltados': 0, 'adj': 0, 'adj_unicos': 0, 'bytes': 0}
+    cont = {'mails': 0, 'saltados': 0, 'adj': 0, 'adj_unicos': 0, 'bytes': 0,
+            'ya_estaba': 0, 'ramas_rotas': []}
 
     idx = open(indice_path, 'a', encoding='utf-8')
 
@@ -249,7 +251,11 @@ def exportar(ost, rol, destino, limite=0, sin_adjuntos=False, carpetas_no=(), ca
         # cuelga de la rama pedida (los buzones de terceros que Outlook dejo cacheados).
         activos = [x for x in carpetas_solo if x]
         dentro = (not activos) or any(x.lower() in ruta.lower() for x in activos)
-        n = folder.get_number_of_sub_messages() if dentro else 0
+        try:
+            n = folder.get_number_of_sub_messages() if dentro else 0
+        except Exception as e:
+            cont['ramas_rotas'].append((ruta, str(e).split('.')[0][:90]))
+            n = 0
         for i in range(n):
             if limite and cont['mails'] >= limite:
                 return
@@ -272,6 +278,9 @@ def exportar(ost, rol, destino, limite=0, sin_adjuntos=False, carpetas_no=(), ca
             adjuntos = leer_adjuntos(msg)
             base = '%s_%s' % (sello, nombre_seguro(asunto))
             eml_path = os.path.join(carpeta, base + '.eml')
+            if reanudar and os.path.exists(eml_path):
+                cont['ya_estaba'] += 1
+                continue
             k = 2
             while os.path.exists(eml_path):
                 eml_path = os.path.join(carpeta, '%s (%d).eml' % (base, k))
@@ -332,10 +341,24 @@ def exportar(ost, rol, destino, limite=0, sin_adjuntos=False, carpetas_no=(), ca
                 print('   %5d mails  |  %5d adjuntos unicos  |  %6.1f MB'
                       % (cont['mails'], cont['adj_unicos'], cont['bytes'] / 1024 ** 2), flush=True)
 
-        for i in range(folder.get_number_of_sub_folders()):
+        # Un rincon ilegible del .ost NO puede matar la corrida entera. Paso real: el buzon
+        # de Fak tenia un nodo de indice que libpff no soporta ("unsupported index node
+        # type: 0x6a") a 4,5 GB de profundidad, y se llevo puesto todo el archivado a los
+        # 1.888 mails. Se anota la rama que fallo y se sigue con las demas.
+        try:
+            n_sub = folder.get_number_of_sub_folders()
+        except Exception as e:
+            cont['ramas_rotas'].append((ruta, str(e).split('.')[0][:90]))
+            return
+        for i in range(n_sub):
             if limite and cont['mails'] >= limite:
                 return
-            una_carpeta(folder.get_sub_folder(i), ruta)
+            try:
+                hija = folder.get_sub_folder(i)
+            except Exception as e:
+                cont['ramas_rotas'].append(('%s [hija %d]' % (ruta, i), str(e).split('.')[0][:90]))
+                continue
+            una_carpeta(hija, ruta)
 
     una_carpeta(f.get_root_folder(), '')
     idx.close()
@@ -351,6 +374,7 @@ def main():
     ap.add_argument('--sin-adjuntos', action='store_true')
     ap.add_argument('--carpetas-no', default='')
     ap.add_argument('--carpetas-solo', default='', help='archiva SOLO lo que cuelga de esta rama')
+    ap.add_argument('--reanudar', action='store_true', help='saltea los .eml que ya existen')
     a = ap.parse_args()
 
     # La ruta puede venir con comodin: los nombres con tilde ("Ingenieria") se rompen al
@@ -373,7 +397,7 @@ def main():
 
     c = exportar(a.ost, a.rol, a.destino, a.limite, a.sin_adjuntos,
                  [x.strip() for x in a.carpetas_no.split(',')],
-                 [x.strip() for x in a.carpetas_solo.split(',')])
+                 [x.strip() for x in a.carpetas_solo.split(',')], a.reanudar)
 
     print()
     print('LISTO %s' % datetime.now().strftime('%H:%M:%S'))
@@ -381,6 +405,12 @@ def main():
     print('  items salteados  : %d  (metadatos sin asunto ni fecha)' % c['saltados'])
     print('  adjuntos vistos  : %d' % c['adj'])
     print('  adjuntos unicos  : %d  (%.1f MB tras deduplicar)' % (c['adj_unicos'], c['bytes'] / 1024 ** 2))
+    if c['ya_estaba']:
+        print('  ya estaban       : %d  (--reanudar)' % c['ya_estaba'])
+    if c['ramas_rotas']:
+        print('  RAMAS ILEGIBLES  : %d — el .ost tiene zonas que libpff no puede leer:' % len(c['ramas_rotas']))
+        for ruta, err in c['ramas_rotas'][:10]:
+            print('     %s  ->  %s' % (ruta[-60:], err))
 
 
 if __name__ == '__main__':
