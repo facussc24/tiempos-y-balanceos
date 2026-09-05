@@ -139,3 +139,6 @@ tools/flowchart/.build/
 # Cache local de ordenes de compra (Z:\arb\oc\ocauto\BA) — DATOS DE LA EMPRESA (proveedores,
 # precios, codigos), el repo es publico. Lo genera scripts/_oc.py --indexar.
 .oc-cache/
+
+# Venv de transcripcion de audio (faster-whisper + modelo, ~2 GB) — no va al repo
+.venv-audio/
