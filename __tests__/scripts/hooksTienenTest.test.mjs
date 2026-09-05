@@ -33,6 +33,7 @@ const VARIOS = '__tests__/scripts/hooksVarios.test.mjs';
 const COBERTURA = {
   '_dispatcher.sh': { test: '.claude/hooks/_dispatcher.test.sh', tipo: 'bloquea' },
   'file-guard.sh': { test: GUARDIANES, tipo: 'bloquea' },
+  'secretos-guard.sh': { test: GUARDIANES, tipo: 'bloquea' },
   'validator-check.sh': { test: GUARDIANES, tipo: 'bloquea' },
   'renumber-guard.sh': { test: GUARDIANES, tipo: 'bloquea' },
   'push-guard.sh': { test: GUARDIANES, tipo: 'bloquea' },

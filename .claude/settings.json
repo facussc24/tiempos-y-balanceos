@@ -1,7 +1,4 @@
 {
-  "enabledMcpjsonServers": [
-    "build123d"
-  ],
   "hooks": {
     "SessionStart": [
       {

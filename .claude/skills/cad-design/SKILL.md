@@ -269,12 +269,23 @@ El venv **no tiene pip**: instalar con `uv pip install --python .venv-cad\Script
 Si un script se corre con el Python equivocado, `cadlib.envcheck` lo dice y sale con código 3.
 (Fallback histórico: gmsh también corre en el Py3.14 del sistema, pero no hace falta.)
 
-## 1bis. Segunda opinión independiente — `build123d-mcp` (instalado 2026-08-29)
+## 1bis. Segunda opinión independiente — `build123d-mcp` (instalado 2026-08-29, **apagado por defecto desde 05/09/2026**)
 
-Servidor MCP configurado en `.mcp.json` (raíz del repo), versión **pineada 0.3.83**, con
-`BUILD123D_IN_PROCESS=1` — **obligatorio en esta notebook**: el worker subprocess del server
-se cuelga en Windows (medido: `import_cad_file` no responde ni con 300 s de budget; in-process
-responde en 8 s). Sus tools aparecen como `mcp__build123d__*` en la sesión siguiente al enable.
+**Se levanta a demanda, no arranca con la sesión.** La auditoría del 04/09/2026 midió **0 llamadas
+a `mcp__build123d__*` en toda la historia** y 30 s de timeout de conexión en CADA arranque de
+sesión (`uvx` no llega a responder en esta notebook), así que se sacó de `.mcp.json` y de
+`enabledMcpjsonServers`. El skill trabaja igual: build123d corre in-process desde `.venv-cad`.
+Para usarlo como segunda opinión en una sesión, recrear `.mcp.json` en la raíz del repo con
+exactamente esto (versión **pineada 0.3.83**, `BUILD123D_IN_PROCESS=1` **obligatorio en esta
+notebook**: el worker subprocess del server se cuelga en Windows — medido: `import_cad_file` no
+responde ni con 300 s de budget; in-process responde en 8 s), agregar
+`"enabledMcpjsonServers": ["build123d"]` a `.claude/settings.json`, y abrir una sesión nueva: sus
+tools aparecen como `mcp__build123d__*`. Al terminar, volver a sacarlo (no commitear el `.mcp.json`).
+
+```json
+{ "mcpServers": { "build123d": { "command": "uvx", "args": ["--python", "3.12", "build123d-mcp==0.3.83"],
+                                 "env": { "BUILD123D_IN_PROCESS": "1" } } } }
+```
 
 **Rol: segunda opinión AL LADO de los gates, nunca reemplazo.** Mide con OCCT pero con una
 implementación que no comparte una línea de código con `cadlib`. ICP (`register_icp.py`) y

@@ -167,10 +167,10 @@ export function ctxDesdeEnv(env) {
  * settings.json antes del despachador (2026-08-04). Si corrieran todos siempre, guardianes
  * que hoy no ven un Write empezarian a verlo: eso es cambiar el comportamiento, no acelerarlo.
  */
-const SOLO_SHELL = ['supabase-guard', 'validator-check', 'renumber-guard', 'push-guard', 'arb-cerrar-guard', 'script-inline-guard'];
+const SOLO_SHELL = ['supabase-guard', 'validator-check', 'renumber-guard', 'push-guard', 'arb-cerrar-guard', 'script-inline-guard', 'secretos-guard'];
 const SOLO_ARCHIVO = ['file-guard', 'causas-ajenas-guard'];
 const LOS_CUATRO = ['consumos-entregable-guard', 'cad-guard', 'patrones-guard', 'escritorio-guard', 'borrado-masivo-guard', 'ho-numeracion-guard', 'mail-guard', 'documentacion-oficial-guard'];
-export const TODOS = ['file-guard', 'supabase-guard', 'validator-check', 'renumber-guard', 'push-guard', 'script-inline-guard', ...LOS_CUATRO, 'arb-cerrar-guard', 'causas-ajenas-guard'];
+export const TODOS = ['file-guard', 'supabase-guard', 'validator-check', 'renumber-guard', 'push-guard', 'script-inline-guard', 'secretos-guard', ...LOS_CUATRO, 'arb-cerrar-guard', 'causas-ajenas-guard'];
 
 export function matriz(tool) {
   // Si no se pudo leer el tool_name, NO se adivina: corren TODOS. Fallar hacia el lado seguro
@@ -196,7 +196,7 @@ export const GUARDIANES = {};
 GUARDIANES['file-guard'] = (ctx, { env }) => {
   if (!ctx.file) return null;
   const f = ctx.file.replace(/\\/g, '/');
-  if (f.endsWith('package-lock.json') || f.endsWith('.env') || f.includes('.env.') || f.includes('/.git/')) {
+  if (f.endsWith('package-lock.json') || f.endsWith('.env') || f.includes('.env.') || f.endsWith('.qr-secret') || f.includes('/.git/')) {
     return bloqueo(`BLOCKED: ${f} es archivo protegido`);
   }
   if (/\.claude\/rules\/.*\.md$/.test(f)) {
@@ -204,6 +204,53 @@ GUARDIANES['file-guard'] = (ctx, { env }) => {
       `RULE-GATE: estas editando una regla (${f}). Si declara un SIEMPRE/NUNCA operativo, cargala con su ENFORCEMENT ejecutable en esta misma sesion (hook, check del validator o gate de script) — skill rule-enforcement-gate. Si ya lo tenes cubierto o es solo prosa informativa, segui.`);
   }
   return null;
+};
+
+// ── secretos-guard ─────────────────────────────────────────────────────────
+// Bloquea que un comando de shell LEA o PISE un archivo de secretos: `.env`, `.env.<algo>`
+// (menos `.env.example`, que es la plantilla) y `.qr-secret`. El deny de settings
+// (`Read(**/.env.local)`) cubre la tool Read, no Bash: la auditoria del entorno del 04/09/2026
+// (H7 del plan de mejoras) probo `head -c 1 .env.local | wc -c` -> 1, y `.qr-secret` no
+// figuraba en ningun deny. Lo que se frena es que el CONTENIDO llegue al contexto de la sesion
+// (y de ahi al transcript, que se sincroniza a la nube) o que un `>` lo pise.
+// Pasa: los scripts del repo que lo leen por dentro (el comando no nombra al archivo), cp/copy
+// (memoria worktree_sin_env_local), ls/stat/test -f, git, un grep que lo nombra ENTRE COMILLAS
+// como patron (buscar quien lo usa no es leerlo), y un heredoc o un -m que lo mencionan (los
+// verbos se buscan fuera de las comillas; el nombre del archivo, adentro tambien, porque
+// `python -c "open('.env.local')"` es justamente la lectura). En bypass es una red, no un candado.
+const SECRETO_SRC = String.raw`(?:^|[\s"'\x60=(\/\\:])(\.env(?:\.(?!example\b)[\w.-]+)?|\.qr-secret)(?=$|[\s"'\x60|;&)>\\/])`;
+const SECRETO_RE = new RegExp(SECRETO_SRC, 'i');
+const LECTORES_RE = /(?:^|[\s|;&(`])(?:cat|type|head|tail|less|more|bat|strings|od|xxd|hexdump|base64|nl|tac|rev|cut|paste|column|tee|source|python[\d.]*|py|node|perl|ruby|php|pwsh|powershell|Get-Content|gc|Out-String|Import-Csv|Format-Table|ft)(?=\s|$)/i;
+const PATRONEROS_RE = /(?:^|[\s|;&(`])(?:grep|egrep|fgrep|rg|ag|sed|awk|findstr|Select-String|sls)(?=\s|$)/i;
+const REDIRECCION_RE = /[<>]{1,2}\s*["']?(?:[^\s"'|;&<>]*[\/\\])?\.(?:env(?:\.(?!example\b)[\w.-]+)?|qr-secret)(?=$|[\s"'|;&)])/i;
+const SOURCE_PUNTO_RE = /(?:^|[;&|(]\s*)\.\s+\S*\.env(?:\.[\w.-]+)?(?=$|[\s;&|)])/;
+const sinComillas = (s) => s.replace(/"(?:[^"\\]|\\.)*"|'[^']*'/g, ' "" ');
+
+/** null si el comando no lee ni pisa un secreto; si no, { como: 'lectura'|'redireccion'|'source', nombres }. */
+export function comandoTocaSecreto(cmd) {
+  const c = sinCuerposHeredoc(String(cmd ?? ''));
+  if (!SECRETO_RE.test(c)) return null;
+  const nombres = [...new Set([...c.matchAll(new RegExp(SECRETO_SRC, 'gi'))].map((m) => m[1]))];
+  if (REDIRECCION_RE.test(c)) return { como: 'redireccion', nombres };
+  if (SOURCE_PUNTO_RE.test(c)) return { como: 'source', nombres };
+  const pelado = sinComillas(c);
+  if (LECTORES_RE.test(pelado)) return { como: 'lectura', nombres };
+  if (PATRONEROS_RE.test(pelado) && SECRETO_RE.test(pelado)) return { como: 'lectura', nombres };
+  return null;
+}
+
+GUARDIANES['secretos-guard'] = (ctx) => {
+  if (!ctx.ok || !ctx.cmd) return null;
+  const t = comandoTocaSecreto(ctx.cmd);
+  if (!t) return null;
+  const verbo = t.como === 'redireccion' ? 'pisa' : 'lee';
+  return bloqueo(`[SECRETOS-GUARD] BLOQUEADO: el comando ${verbo} un archivo de secretos (${t.nombres.join(', ')}).
+Su contenido no entra al contexto de la sesion: queda en el transcript, que se sincroniza a la nube.
+Los scripts del repo lo leen por dentro y no lo imprimen (node scripts/_backup.mjs, _nube.mjs, los
+_tmp_query con dotenv): correlos por ruta. A la sesion le alcanza con saber que existe: ls -la,
+test -f. Para un worktree: cp .env.local <worktree>/.env.local. Buscar quien lo usa: grep con el
+patron entre comillas. Si hace falta un VALOR, lo mira Fak: aca no se tipea ni se pega (memoria
+supabase_no_rotar_decidido: una clave filtrada no se rota).`);
 };
 
 // ── causas-ajenas-guard ────────────────────────────────────────────────────

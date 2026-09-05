@@ -28,7 +28,7 @@ import { spawnSync } from 'node:child_process';
 vi.setConfig({ testTimeout: 60_000 });
 import {
   parsear, matriz, correr, resolver, evaluar, GUARDIANES, TODOS, NOMBRES,
-  medirInline, sinCuerposHeredoc, frasesCausalesSinFuente, ultimaRuta, INLINE_MAX,
+  medirInline, sinCuerposHeredoc, frasesCausalesSinFuente, ultimaRuta, INLINE_MAX, comandoTocaSecreto,
 } from '../../scripts/_lib/guardianes.mjs';
 
 const RAIZ = process.cwd();
@@ -588,6 +588,75 @@ describe('documentacion-oficial-guard — en la carpeta del original no entra na
     expect(ultimaRuta('cp "a b/x.pdf" "C:\\M\\4- MANUALES\\x.pdf"')).toBe('C:\\M\\4- MANUALES\\x.pdf');
     expect(ultimaRuta('cp -r origen/ destino/ --verbose')).toBe('destino/');
     expect(ultimaRuta('echo hola')).toBe('');
+  });
+});
+
+// ───────────────────────────────────────────────────────────── secretos-guard
+// H7 de la auditoria del entorno (04/09/2026): el deny `Read(**/.env.local)` no cubre Bash
+// (`head -c 1 .env.local | wc -c` -> 1) y `.qr-secret` no figuraba en ningun deny.
+describe('secretos-guard — .env.local y .qr-secret no se leen ni se pisan desde la shell', () => {
+  const solo = { nombres: ['secretos-guard'] };
+  const rojo = (p) => {
+    const r = ev(p, solo);
+    expect(r.exit, p.tool_input.command).toBe(2);
+    expect(r.err).toMatch(/SECRETOS-GUARD/);
+    return r;
+  };
+  const verde = (p) => expect(ev(p, solo).exit, p.tool_input.command).toBe(0);
+
+  it('ROJO — la evasion que midio el auditor y las lecturas directas', () => {
+    rojo(bash('head -c 1 .env.local | wc -c'));
+    rojo(bash('cat .env.local'));
+    rojo(bash('cat "C:\\Dev\\BarackMercosul\\.env.local"'));
+    rojo(bash('type C:\\Dev\\BarackMercosul\\.qr-secret'));
+    rojo(bash('sed -n 1,3p .env.local'));
+    rojo(bash('grep VITE_SUPABASE_ANON_KEY .env.local'));
+    rojo(bash('tail -n 2 .env.production.local'));
+    rojo(bash('cat .env'));
+  });
+  it('ROJO — por interprete, por source y por redireccion (leer con < y pisar con >)', () => {
+    rojo(bash(`python -c "print(open('.env.local').read())"`));
+    rojo(bash(`node -e "console.log(require('fs').readFileSync('.qr-secret','utf8'))"`));
+    rojo(bash('export $(cat .env.local | xargs)'));
+    rojo(bash('set -a; . .env.local; set +a'));
+    rojo(bash('source .env.local && node scripts/x.mjs'));
+    rojo(bash('while read l; do echo "$l"; done < .env.local'));
+    const pisa = rojo(bash('echo "VITE_X=1" >> .env.local'));
+    expect(pisa.err).toMatch(/pisa un archivo de secretos/);
+    rojo(bash('echo nueva-clave > .qr-secret'));
+  });
+  it('ROJO — PowerShell', () => {
+    rojo(ps('Get-Content .env.local'));
+    rojo(ps('gc C:\\Dev\\BarackMercosul\\.qr-secret | Out-String'));
+    rojo(ps('Select-String VITE .env.local'));
+  });
+  it('VERDE — lo que la casa hace de verdad con esos archivos', () => {
+    verde(bash('cp .env.local .claude/worktrees/x/.env.local')); // memoria worktree_sin_env_local
+    verde(bash('ls -la .env.local .qr-secret'));
+    verde(bash('test -f .env.local && echo ok'));
+    verde(bash('stat -c %s .env.local'));
+    verde(bash('git check-ignore -v .env.local'));
+    verde(bash('node scripts/_nube.mjs --subir --aplicar'));
+    verde(bash('node scripts/_backup.mjs'));
+    verde(bash('cat .env.example'));
+    verde(bash('cat README.md && head docs/LECCIONES_APRENDIDAS.md'));
+    verde(bash('grep -rn "VITE_SUPABASE" --include=*.ts .'));
+    verde(ps('Test-Path .env.local'));
+  });
+  it('VERDE — nombrarlo no es leerlo: grep con el patron entre comillas, commits, tests, process.env', () => {
+    verde(bash('grep -rn "\\.env\\.local" scripts/ .claude/'));
+    verde(bash('git commit -m "fix(guard): cat .env.local queda bloqueado desde Bash"'));
+    verde(bash(`git commit -q -F - <<'EOF'\nfeat: secretos-guard\n\nhead -c 1 .env.local | wc -c ya no pasa.\nEOF`));
+    verde(bash('npx vitest run __tests__/scripts/guardianes.test.mjs -t secretos'));
+    verde(bash('echo "process.env.VITE_SUPABASE_URL" && node -e "console.log(process.env.HOME)"'));
+    verde(bash('npm install dotenv && cat .envrc'));
+  });
+  it('comandoTocaSecreto: dice QUE archivo y COMO', () => {
+    expect(comandoTocaSecreto('cat .env.local')).toEqual({ como: 'lectura', nombres: ['.env.local'] });
+    expect(comandoTocaSecreto('echo x > .qr-secret').como).toBe('redireccion');
+    expect(comandoTocaSecreto('set -a; . .env.local').como).toBe('source');
+    expect(comandoTocaSecreto('ls .env.local')).toBeNull();
+    expect(comandoTocaSecreto('')).toBeNull();
   });
 });
 
