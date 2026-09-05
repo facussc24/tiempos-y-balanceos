@@ -40,9 +40,12 @@ export const LIMITES = {
 };
 
 // ─────────────────────────────────────────────────────────────── ubicacion
-/** Slug que usa Claude Code para la carpeta del proyecto: C:\Dev\X -> C--Dev-X. */
+/** Slug que usa Claude Code para la carpeta del proyecto: C:\Dev\X -> C--Dev-X (y en Linux
+ *  /home/x/repo -> -home-x-repo). Una ruta ya absoluta no se resuelve: en el runner de CI
+ *  (Linux) `path.resolve('C:\\Dev\\X')` la colgaria del cwd. */
 export function slugProyecto(repo) {
-  return path.resolve(repo).replace(/[:\\/]/g, '-');
+  const abs = path.isAbsolute(repo) || /^[a-z]:[\\/]/i.test(repo) ? repo : path.resolve(repo);
+  return abs.replace(/[\\/]+$/, '').replace(/[:\\/]/g, '-');
 }
 export function dirMemoriaDe(repo, home = os.homedir()) {
   return path.join(home, '.claude', 'projects', slugProyecto(repo), 'memory');

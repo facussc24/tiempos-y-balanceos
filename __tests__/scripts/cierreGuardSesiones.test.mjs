@@ -31,7 +31,8 @@ describe('cierre-guard · pendientes solo de ESTA sesion (falso positivo 2)', ()
   it('rutaRelativaAlRepo: Write/Edit dentro del repo (Windows o Git Bash) → relativa con /; afuera o Bash → null', () => {
     expect(rutaRelativaAlRepo({ name: 'Write', input: { file_path: `${repoWin}\\scripts\\_lib\\x.mjs` } })).toBe('scripts/_lib/x.mjs');
     expect(rutaRelativaAlRepo({ name: 'Edit', input: { file_path: `${repoWin.replace(/\\/g, '/')}/CLAUDE.md` } })).toBe('CLAUDE.md');
-    expect(rutaRelativaAlRepo({ name: 'Edit', input: { file_path: `${repoGitBash}/docs/x.md` } })).toBe('docs/x.md');
+    // la forma /c/Dev/... solo existe en Git Bash de Windows; en el runner Linux REPO no tiene letra de unidad
+    if (process.platform === 'win32') expect(rutaRelativaAlRepo({ name: 'Edit', input: { file_path: `${repoGitBash}/docs/x.md` } })).toBe('docs/x.md');
     expect(rutaRelativaAlRepo({ name: 'Write', input: { file_path: 'C:\\Users\\x\\Desktop\\a.md' } })).toBe(null);
     expect(rutaRelativaAlRepo({ name: 'Bash', input: { command: 'echo' } })).toBe(null);
   });
