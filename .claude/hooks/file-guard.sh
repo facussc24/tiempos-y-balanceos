@@ -1,54 +1,16 @@
 #!/usr/bin/env bash
-# File Guard — bloquea edits a archivos protegidos.
-# Exit 2 = bloquea. Exit 0 = permite.
-
-set -e
-
-INPUT=$(cat)
-
-# Camino rapido: si el despachador ya parseo el JSON, lo reuso.
-# Si no (guardian corrido suelto), parseo yo como siempre.
-if [ -n "${HOOK_FILE+x}" ]; then
-  FILE="$HOOK_FILE"
-else
-FILE=$(printf '%s' "$INPUT" | node -e '
-let s = "";
-process.stdin.on("data", d => s += d);
-process.stdin.on("end", () => {
-  try {
-    const j = JSON.parse(s);
-    process.stdout.write(String(j?.tool_input?.file_path ?? ""));
-  } catch { process.stdout.write(""); }
-});
-' 2>/dev/null || true)
-fi
-
-if [ -z "$FILE" ]; then exit 0; fi
-
-# Normalizar separadores Windows → POSIX para que los globs matcheen
-FILE=$(printf '%s' "$FILE" | tr '\\' '/')
-
-case "$FILE" in
-    *package-lock.json|*.env|*.env.*|*/.git/*)
-        echo "BLOCKED: $FILE es archivo protegido" >&2
-        exit 2
-        ;;
-esac
-
-# Regla nueva/modificada en .claude/rules/ → recordar el gate de enforcement
-# (skill rule-enforcement-gate: toda regla con SIEMPRE/NUNCA nace con check
-# ejecutable en la misma sesion). Speed bump una vez por hora, despues pasa.
-case "$FILE" in
-    *.claude/rules/*.md)
-        FLAG="${TMPDIR:-/tmp}/claude-rule-gate.flag"
-        NOW=$(date +%s)
-        LAST=$(cat "$FLAG" 2>/dev/null || echo 0)
-        if [ $((NOW - LAST)) -ge 3600 ]; then
-            echo "$NOW" > "$FLAG" 2>/dev/null
-            echo "RULE-GATE: estas editando una regla ($FILE). Si declara un SIEMPRE/NUNCA operativo, cargala con su ENFORCEMENT ejecutable en esta misma sesion (hook, check del validator o gate de script) — skill rule-enforcement-gate. Si ya lo tenes cubierto o es solo prosa informativa, reintenta el edit y segui." >&2
-            exit 2
-        fi
-        ;;
-esac
-
-exit 0
+# file-guard.sh — wrapper fino. Desde el 05/09/2026 la logica vive en
+# scripts/_lib/guardianes.mjs (guardian "file-guard"), junto con la de los otros doce: el
+# despachador _dispatcher.sh los corre a todos dentro de UN solo node (Ola 2 del plan de
+# mejoras: de 2,6-3,5 s a menos de 1 s por cada Bash/Edit/Write).
+# Antes: File Guard — bloquea edits a archivos protegidos.
+#
+# Este archivo queda para que el guardian siga corriendo SUELTO, que es como lo invocan sus
+# tests (.test.sh y Vitest) y el uso manual:
+#   printf '%s' "$JSON" | bash .claude/hooks/file-guard.sh      # exit 0 pasa · exit 2 bloquea
+# Con HOOK_FILE / HOOK_PARSED4 / HOOK_CMD en el entorno no lee stdin (asi lo usa su .test.sh).
+# La historia del guardian (que incidente lo origino, que bloquea y que no) esta en el
+# encabezado de su funcion en guardianes.mjs. Los recordatorios 1x/h salen como
+# additionalContext (JSON en stdout, exit 0); los bloqueos siguen siendo exit 2 + stderr.
+RAIZ="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+exec node "$RAIZ/scripts/_lib/guardianes.mjs" --solo file-guard

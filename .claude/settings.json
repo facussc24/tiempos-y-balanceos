@@ -27,7 +27,7 @@
     ],
     "PreToolUse": [
       {
-        "_comentario": "Los 9 guardianes corren dentro de _dispatcher.sh: un solo arranque de bash y un solo node en vez de 8+8. Medido 2026-08-04: 5.580 ms -> ~700 ms por comando. El despachador replica adentro los matchers que antes estaban aca (file-guard solo Edit|Write; supabase/validator/renumber/push solo Bash|PowerShell; el resto en los cuatro). Cada guardian sigue funcionando suelto.",
+        "_comentario": "Los 14 guardianes corren dentro de _dispatcher.sh, que arranca UN node con scripts/_lib/guardianes.mjs (desde 05/09/2026; antes cada guardian era un bash aparte: medido 2.600-3.500 ms por comando con la maquina tranquila, 6-12 s con otras sesiones; ahora ~550 ms). La matriz tool->guardian vive en guardianes.mjs (file-guard/causas solo Edit|Write; supabase/validator/renumber/push/arb/script-inline solo Bash|PowerShell; el resto en los cuatro). Los recordatorios 1x/h salen como additionalContext con exit 0, ya no bloquean. Cada *-guard.sh es un wrapper que sigue andando suelto (asi lo usan sus tests). Tests: _dispatcher.test.sh, guardianes.test.mjs, hooksTienenTest.test.mjs.",
         "matcher": "Bash|PowerShell|Write|Edit",
         "hooks": [
           {

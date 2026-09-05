@@ -1,73 +1,16 @@
 #!/usr/bin/env bash
-# Renumber Guard Hook (PreToolUse, matcher=Bash)
+# renumber-guard.sh — wrapper fino. Desde el 05/09/2026 la logica vive en
+# scripts/_lib/guardianes.mjs (guardian "renumber-guard"), junto con la de los otros doce: el
+# despachador _dispatcher.sh los corre a todos dentro de UN solo node (Ola 2 del plan de
+# mejoras: de 2,6-3,5 s a menos de 1 s por cada Bash/Edit/Write).
+# Antes: Renumber Guard Hook (PreToolUse, matcher=Bash)
 #
-# Bloquea ejecucion de scripts .mjs que renumeren/reasignen OPs si no se corrio
-# antes el auditor _auditWePlaceholdersAndAllocation.mjs en la sesion. Defensa
-# contra el incidente 2026-05-14: renumerar sin leer contenido.
-#
-# Bypass: agregar flag --i-read-content al comando si ya se hizo la lectura.
-#
-# Exit 0 = permite. Exit 2 = bloquea (stderr se muestra al modelo).
-
-set -e
-
-INPUT=$(cat)
-
-# Camino rapido: si el despachador ya parseo el JSON, lo reuso.
-# Si no (guardian corrido suelto), parseo yo como siempre.
-if [ -n "${HOOK_CMD+x}" ]; then
-  CMD="$HOOK_CMD"
-else
-CMD=$(printf '%s' "$INPUT" | node -e '
-let s = "";
-process.stdin.on("data", d => s += d);
-process.stdin.on("end", () => {
-  try {
-    const j = JSON.parse(s);
-    process.stdout.write(String(j?.tool_input?.command ?? ""));
-  } catch { process.stdout.write(""); }
-});
-' 2>/dev/null || true)
-fi
-
-if [ -z "$CMD" ]; then exit 0; fi
-
-# Solo nos interesa la EJECUCION de scripts .mjs (no menciones en git commit etc.)
-if ! echo "$CMD" | grep -qE '(^|[;&|(][[:space:]]*|^[[:space:]]*)(node|npx)[[:space:]][^;&|]*scripts/_[A-Za-z]+\.mjs'; then exit 0; fi
-
-# Patrones de scripts riesgosos: renumber, align, reassign, realloc, reallocate
-if ! echo "$CMD" | grep -qiE 'scripts/_[A-Za-z]*(renumber|align|reassign|realloc)[A-Za-z]*\.mjs'; then exit 0; fi
-
-# Solo si --apply esta presente (dry-run no requiere lectura previa)
-if ! echo "$CMD" | grep -qE '(^|[[:space:]])--apply([[:space:]]|$)'; then exit 0; fi
-
-# Bypass: --i-read-content presente
-if echo "$CMD" | grep -qE '(^|[[:space:]])--i-read-content([[:space:]]|$)'; then exit 0; fi
-
-# Bloquear con mensaje educativo
-cat >&2 << 'EOF'
-
-[RENUMBER-GUARD BLOQUEO]
-
-Estas por correr un script que renumera o reasigna OPs/WEs en amfe_documents
-sin haber verificado el contenido previo. La regla
-`amfe.md` §10 (leer contenido antes de renumerar) requiere:
-
-  1. Correr ANTES:
-     node scripts/_auditWePlaceholdersAndAllocation.mjs
-
-  2. Resolver placeholders y failures mal alocados PRIMERO
-
-  3. Mostrar tabla diff a Fak (WE.name actual vs propuesto, failure mappings)
-
-  4. RECIEN ENTONCES renumerar
-
-Si ya hiciste los pasos 1-3, agregar el flag al comando para bypass:
-     ... --apply --i-read-content
-
-Incidente fuente: 2026-05-14 (AMFE-HF-PAT) — renumeracion ciega dejo 76 placeholders
-pobres + failures mal alocados que el equipo APQP tuvo que corregir post-hoc.
-
-EOF
-
-exit 2
+# Este archivo queda para que el guardian siga corriendo SUELTO, que es como lo invocan sus
+# tests (.test.sh y Vitest) y el uso manual:
+#   printf '%s' "$JSON" | bash .claude/hooks/renumber-guard.sh      # exit 0 pasa · exit 2 bloquea
+# Con HOOK_FILE / HOOK_PARSED4 / HOOK_CMD en el entorno no lee stdin (asi lo usa su .test.sh).
+# La historia del guardian (que incidente lo origino, que bloquea y que no) esta en el
+# encabezado de su funcion en guardianes.mjs. Los recordatorios 1x/h salen como
+# additionalContext (JSON en stdout, exit 0); los bloqueos siguen siendo exit 2 + stderr.
+RAIZ="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+exec node "$RAIZ/scripts/_lib/guardianes.mjs" --solo renumber-guard

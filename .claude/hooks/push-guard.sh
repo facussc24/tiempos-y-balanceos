@@ -1,55 +1,16 @@
 #!/usr/bin/env bash
-# push-guard.sh — Enforcement de la regla git-deploy: "SIEMPRE npm run build antes
-# de pushear" (incidente 2026-04-13: 3 deploys rotos por import sin dependencia).
+# push-guard.sh — wrapper fino. Desde el 05/09/2026 la logica vive en
+# scripts/_lib/guardianes.mjs (guardian "push-guard"), junto con la de los otros doce: el
+# despachador _dispatcher.sh los corre a todos dentro de UN solo node (Ola 2 del plan de
+# mejoras: de 2,6-3,5 s a menos de 1 s por cada Bash/Edit/Write).
+# Antes: push-guard.sh — Enforcement de la regla git-deploy: "SIEMPRE npm run build antes
 #
-# Bloquea `git push` si hay codigo fuente mas nuevo que el ultimo build (dist/).
-# El build de vite solo escribe dist/ cuando pasa, asi que dist mas nuevo que
-# todo el codigo == hubo build exitoso post-cambios.
-#
-# Exit 0 = permite. Exit 2 = bloquea.
-
-set -e
-
-INPUT=$(cat)
-
-# Camino rapido: si el despachador ya parseo el JSON, lo reuso.
-# Si no (guardian corrido suelto), parseo yo como siempre.
-if [ -n "${HOOK_CMD+x}" ]; then
-  CMD="$HOOK_CMD"
-else
-CMD=$(printf '%s' "$INPUT" | node -e '
-let s = "";
-process.stdin.on("data", d => s += d);
-process.stdin.on("end", () => {
-  try {
-    const j = JSON.parse(s);
-    process.stdout.write(String(j?.tool_input?.command ?? ""));
-  } catch { process.stdout.write(""); }
-});
-' 2>/dev/null || true)
-fi
-
-if [ -z "$CMD" ]; then exit 0; fi
-
-# Solo comandos que ejecutan git push
-if ! echo "$CMD" | grep -qE '(^|[;&|][[:space:]]*)git[[:space:]]+(-C[[:space:]]+[^[:space:]]+[[:space:]]+)?push'; then exit 0; fi
-
-ROOT="${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null || echo .)}"
-DIST="$ROOT/dist/index.html"
-
-if [ ! -f "$DIST" ]; then
-    echo "PUSH-GUARD: no existe dist/index.html — corre 'npm run build' ANTES de pushear (regla git-deploy). Si el build pasa, reintenta el push." >&2
-    exit 2
-fi
-
-DIST_M=$(stat -c %Y "$DIST" 2>/dev/null || echo 0)
-NEWEST=$(cd "$ROOT" && git ls-files -z -- '*.ts' '*.tsx' '*.css' 'index.html' 'package.json' 'vite.config.ts' 2>/dev/null \
-  | xargs -0 stat -c %Y 2>/dev/null | sort -rn | head -1)
-NEWEST=${NEWEST:-0}
-
-if [ "$NEWEST" -gt "$DIST_M" ]; then
-    echo "PUSH-GUARD: hay codigo fuente mas nuevo que el ultimo build (dist/). Corre 'npm run build' primero (regla git-deploy — incidente 2026-04-13: el build de CI valida imports que el dev server no). Si pasa, reintenta el push." >&2
-    exit 2
-fi
-
-exit 0
+# Este archivo queda para que el guardian siga corriendo SUELTO, que es como lo invocan sus
+# tests (.test.sh y Vitest) y el uso manual:
+#   printf '%s' "$JSON" | bash .claude/hooks/push-guard.sh      # exit 0 pasa · exit 2 bloquea
+# Con HOOK_FILE / HOOK_PARSED4 / HOOK_CMD en el entorno no lee stdin (asi lo usa su .test.sh).
+# La historia del guardian (que incidente lo origino, que bloquea y que no) esta en el
+# encabezado de su funcion en guardianes.mjs. Los recordatorios 1x/h salen como
+# additionalContext (JSON en stdout, exit 0); los bloqueos siguen siendo exit 2 + stderr.
+RAIZ="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+exec node "$RAIZ/scripts/_lib/guardianes.mjs" --solo push-guard

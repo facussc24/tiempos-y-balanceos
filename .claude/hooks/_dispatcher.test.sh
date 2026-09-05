@@ -37,6 +37,9 @@ afirmar() { # nombre, esperado, obtenido
 }
 
 correr() { limpiar; printf '%s' "$1" | bash "$H/_dispatcher.sh" >/dev/null 2>&1; echo $?; }
+# Desde el 05/09/2026 los recordatorios NO bloquean: salen como additionalContext (JSON en
+# stdout, exit 0). "avisa" se mide en el stdout, no en el exit.
+avisa() { limpiar; printf '%s' "$1" | bash "$H/_dispatcher.sh" 2>/dev/null | grep -q "$2" && echo si || echo no; }
 
 RUTA='/c/Users/FacundoS-PC/OneDrive/Escritorio/tarea'
 ROTO_ESC='{"tool_name":"Bash","tool_input":{"command":"rm -rf '"$RUTA"'"'   # sin cerrar
@@ -46,7 +49,8 @@ echo "Test de regresion — despachador de guardianes"
 echo ""
 echo "JSON ROTO (el guardian tiene que caer a su red de seguridad):"
 afirmar "borrado del Escritorio con JSON roto -> BLOQUEA" 2 "$(correr "$ROTO_ESC")"
-afirmar "comando CAD con JSON roto -> avisa"              2 "$(correr "$ROTO_CAD")"
+afirmar "comando CAD con JSON roto -> pasa (exit 0)"       0 "$(correr "$ROTO_CAD")"
+afirmar "  ...y avisa por additionalContext (CAD-GUARD)"   si "$(avisa "$ROTO_CAD" CAD-GUARD)"
 
 echo ""
 echo "JSON VALIDO (comportamiento normal):"

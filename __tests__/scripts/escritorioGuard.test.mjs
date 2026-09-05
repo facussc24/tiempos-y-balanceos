@@ -35,7 +35,7 @@ function correr(toolInput, { conCooldown = true } = {}) {
         encoding: 'utf8',
         env: { ...process.env, ESCRITORIO_GUARD_FLAGDIR: FLAGDIR },
     });
-    return { code: r.status, err: r.stderr ?? '' };
+    return { code: r.status, err: r.stderr ?? '', out: r.stdout ?? '' };
 }
 
 const bash = (command) => ({ tool_name: 'Bash', tool_input: { command } });
@@ -127,11 +127,18 @@ describe('escritorio-guard — escrituras', () => {
 
 describe('escritorio-guard — recordatorio', () => {
     beforeEach(() => { if (fs.existsSync(FLAG)) fs.rmSync(FLAG); });
+    // Cambio deliberado 05/09/2026 (Ola 2): el recordatorio ya NO bloquea. Sale como
+    // additionalContext (JSON en stdout) con exit 0, y el cooldown de 1 h sigue igual.
     it('14. sin cooldown recuerda el procedimiento al tocar el Escritorio, y despues calla', () => {
         const primero = correr(bash(`ls "${ESC}"`), { conCooldown: false });
-        expect(primero.code).toBe(2);
-        expect(primero.err).toMatch(/CERRADA = la ultima accion/);
-        expect(correr(bash(`ls "${ESC}"`)).code).toBe(0);
+        expect(primero.code).toBe(0);
+        expect(primero.err).toBe('');
+        const ctx = JSON.parse(primero.out).hookSpecificOutput;
+        expect(ctx.hookEventName).toBe('PreToolUse');
+        expect(ctx.additionalContext).toMatch(/CERRADA = la ultima accion/);
+        const segundo = correr(bash(`ls "${ESC}"`));
+        expect(segundo.code).toBe(0);
+        expect(segundo.out).toBe('');
     });
     it('15. un comando que no toca el Escritorio nunca molesta', () => {
         expect(correr(bash('npm run build'), { conCooldown: false }).code).toBe(0);
