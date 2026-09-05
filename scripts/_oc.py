@@ -19,6 +19,14 @@ contra el export RELACIONES salio el caso del IP Pad: la espuma BOCO se COMPRA c
 `185` y se CONSUME con `427ESP002TRO01` — dos codigos del maestro con la misma descripcion,
 asi que lo que entra nunca se descuenta. Eso a mano no se ve; aca sale en una corrida.
 
+`--cruzar` deja cuatro CSV en `.oc-cache/`. La que se mira es la 4 (mismo material con dos
+codigos), y dentro de esa las marcadas `distinto`: las `raiz-comun` son el mismo codigo escrito
+de dos largos, que rompe el descuento igual pero es otro problema.
+
+LIMITE CONOCIDO: la lista 4 son CANDIDATOS por descripcion, no veredictos — dos materiales
+distintos pueden compartir los primeros 40 caracteres (RELACIONES corta ahi). Cada par se
+confirma abriendo la OC y la BOM antes de tocar nada.
+
 ATENCION — el repo es PUBLICO. El cache va a `.oc-cache/` (gitignoreado): tiene proveedores,
 precios y codigos. Nunca commitear su contenido ni pegarlo en archivos del repo.
 
@@ -53,6 +61,7 @@ RE_SECTOR = re.compile(r'Sector Solicitante\s*:\s*(.+)')
 RE_AUTOR = re.compile(r'Autoriz.\s*:\s*(.+)')
 RE_MONEDA = re.compile(r'expresados en\s+(\w+)')
 RE_IMPUT = re.compile(r'[A-Z][A-Z0-9_]{2,}(?:[ /\-][A-Z0-9_]+)*')
+RE_NUMERO = re.compile(r'^[\d.,]+$')
 
 
 def numero(txt):
@@ -130,7 +139,15 @@ def parsear(texto, archivo=''):
         if not m:
             continue
         rubro, codigo, desc, unidad, cola = m.groups()
-        nums = [numero(x) for x in cola.split()]
+        cola = cola.split()
+        # Renglon SIN unidad: la columna esta vacia en el reporte y lo que quedo en el lugar
+        # de la unidad es el primer numero. Pasa en ~2.600 de 27.800 renglones y, sin esto,
+        # corre toda la fila: la cantidad sale en el precio y la cuenta nunca cierra.
+        # La unidad se deja VACIA — no se adivina (memoria arb_insumos_maestro: se BUSCA).
+        if RE_NUMERO.match(unidad):
+            cola.insert(0, unidad)
+            unidad = ''
+        nums = [numero(x) for x in cola]
         subtotal = nums[-1]
         cantidad, precio, control = _cantidad_precio(nums[:-1] + [subtotal], subtotal)
         it = dict(cab)
@@ -259,8 +276,27 @@ def buscar(termino, limite=60):
     return 0
 
 
+def clave_material(desc):
+    """Descripcion -> huella para comparar dos codigos que nombran el MISMO material.
+
+    Se saca todo lo que no sea letra o numero porque el mismo material aparece escrito
+    distinto en cada tabla: la BOM dice "BOCO ET 45 GR IG 1550X3 LAMINADA" y la OC
+    "BOCO ET 45 GR IG 1550 X 3 LAMINADA". Sin normalizar, ese par —que es el caso del
+    IP Pad— no se cruza. RELACIONES ademas corta a 40 caracteres, asi que dos huellas
+    se dan por iguales si una empieza con la otra (minimo 12 caracteres, para que
+    "ESPUMA DE PU" no se coma media familia).
+    """
+    return re.sub(r'[^A-Z0-9]', '', (desc or '').upper())
+
+
+def _mismo_material(a, b):
+    if len(a) < 12 or len(b) < 12:
+        return a == b and bool(a)
+    return a.startswith(b) or b.startswith(a)
+
+
 def _relaciones():
-    """Codigos de insumo usados en alguna BOM del arb -> {codigo: (unidad, [articulos])}.
+    """Codigos de insumo usados en alguna BOM del arb -> {codigo: (unidad, [articulos], desc)}.
 
     Lee el export RELACIONES mas nuevo de .arb-cache. Ojo con el formato (memoria
     reference_arb_export_estructura): latin-1, tabulado, el articulo viene rellenado a 15
@@ -282,26 +318,38 @@ def _relaciones():
                     if cod and not cod.isdigit() or (cod.isdigit() and c[iuni].strip()):
                         if cod:
                             art = c[0].strip() or c[max(icod - 9, 0)].strip()
-                            u, arts = usados.get(cod, ('', []))
+                            u, arts, desc = usados.get(cod, ('', [], ''))
                             if len(arts) < 8 and art:
                                 arts.append(art)
-                            usados[cod] = (u or c[iuni].strip(), arts)
+                            usados[cod] = (u or c[iuni].strip(), arts,
+                                           desc or c[icod + 1].strip())
     return os.path.basename(ruta), usados
 
 
+def _ultima(ocs):
+    """La compra mas reciente de un codigo (las fechas vienen dd/mm/aaaa, no ordenan solas)."""
+    if not ocs:
+        return ('', '', '', '')
+    return sorted(ocs, key=lambda o: (o[0][6:], o[0][3:5], o[0][:2]))[-1]
+
+
 def cruzar():
-    """Cruza el indice de OC contra las BOM del arb y saca los tres desvios que importan."""
+    """Cruza el indice de OC contra las BOM del arb y saca los desvios que importan."""
     filas = _cargar()
     fuente, usados = _relaciones()
-    comprados = {}
+    comprados, sin_unidad = {}, 0
     for r in filas:
         cod = (r.get('codigo') or '').strip()
         if not cod:
             continue
-        u, ocs = comprados.get(cod, ('', []))
-        ocs.append((r.get('fecha') or '', r.get('oc') or '', r.get('unidad') or '',
-                    r.get('proveedor') or ''))
-        comprados[cod] = (r.get('unidad') or u, ocs)
+        # Una unidad numerica no es una unidad: es un renglon donde el reporte dejo la columna
+        # vacia. No entra a la comparacion de unidades — comparar contra eso inventa desvios.
+        uni = (r.get('unidad') or '').strip()
+        if RE_NUMERO.match(uni):
+            uni, sin_unidad = '', sin_unidad + 1
+        u, ocs, desc = comprados.get(cod, ('', [], ''))
+        ocs.append((r.get('fecha') or '', r.get('oc') or '', uni, r.get('proveedor') or ''))
+        comprados[cod] = (uni or u, ocs, desc or (r.get('descripcion') or '').strip())
 
     en_bom_sin_oc = sorted(c for c in usados if c not in comprados)
     comprado_sin_bom = sorted(c for c in comprados if c not in usados)
@@ -309,32 +357,83 @@ def cruzar():
                              and usados[c][0] and comprados[c][0]
                              and usados[c][0].upper() != comprados[c][0].upper())
 
-    print('OC indexadas: %d renglones  |  BOM: %s  |  insumos usados: %d'
+    # LA LISTA QUE IMPORTA: el mismo material con un codigo para comprar y otro para consumir.
+    # Sale de cruzar las dos primeras por DESCRIPCION, no por codigo — el codigo es justamente
+    # lo que difiere. Asi aparecio el par 185 / 427ESP002TRO01 del IP Pad.
+    huellas_oc = {}
+    for c in comprado_sin_bom:
+        huellas_oc.setdefault(clave_material(comprados[c][2]), []).append(c)
+    partidos = []
+    for c in en_bom_sin_oc:
+        h = clave_material(usados[c][2])
+        for h_oc, codigos in huellas_oc.items():
+            if _mismo_material(h, h_oc):
+                for c_oc in codigos:
+                    # Si un codigo empieza con el otro (00152438-0 / 00152438-02-NHZ) es la
+                    # misma raiz escrita de dos largos, no dos codigos distintos. Rompe igual
+                    # el descuento, pero es otro problema — y ya conocido (codigos SMRC).
+                    raiz = c.startswith(c_oc) or c_oc.startswith(c)
+                    partidos.append((c, c_oc, 'raiz-comun' if raiz else 'distinto'))
+    # Primero los codigos que no se parecen en nada (el caso IP Pad) y, dentro de eso, por
+    # compra mas reciente: un par cuya ultima OC es de 2020 es arqueologia, no un pendiente.
+    def _orden(p):
+        f = _ultima(comprados[p[1]][1])[0] or '01/01/1900'
+        return (p[2] != 'distinto', [-int(x) for x in f.split('/')[::-1]])
+    partidos.sort(key=_orden)
+    distintos = [p for p in partidos if p[2] == 'distinto']
+
+    print('OC indexadas: %d renglones  |  BOM: %s  |  insumos usados en BOM: %d'
           % (len(filas), fuente, len(usados)))
     print()
     print('1) EN UNA BOM Y NUNCA COMPRADOS ........ %d' % len(en_bom_sin_oc))
     print('2) COMPRADOS Y EN NINGUNA BOM .......... %d' % len(comprado_sin_bom))
     print('3) UNIDAD DE LA OC != UNIDAD DE LA BOM . %d' % len(unidad_distinta))
+    if sin_unidad:
+        print('   (%d renglones de OC no traen unidad en el reporte: quedan fuera de la 3)'
+              % sin_unidad)
     print()
-    print('   (un mismo material partido en dos codigos aparece en las listas 1 y 2 a la vez:')
-    print('    asi salio el caso del IP Pad, 185 vs 427ESP002TRO01)')
+    print('4) MISMO MATERIAL, DOS CODIGOS ......... %d, de los cuales %d con codigos que no'
+          % (len(partidos), len(distintos)))
+    print('   se parecen en nada  <- ESA es la lista que hay que mirar')
+    print('   Se compra por uno y se consume por el otro, asi que lo que entra no se')
+    print('   descuenta y lo que se consume no pide compra. Asi salio el caso del IP Pad.')
+    for c_bom, c_oc, tipo in partidos[:15]:
+        ult = _ultima(comprados[c_oc][1])
+        print('   %-16s (BOM) <-> %-14s (compra) %-30s ult. OC %-6s %s'
+              % (c_bom, c_oc, (comprados[c_oc][2] or '')[:30], ult[1], ult[0]))
+    if len(partidos) > 15:
+        print('   ... y %d mas en el CSV' % (len(partidos) - 15))
 
     if not os.path.isdir(CACHE):
         os.makedirs(CACHE)
-    salidas = [('en_bom_sin_oc.csv', en_bom_sin_oc, 1), ('comprado_sin_bom.csv', comprado_sin_bom, 2),
-               ('unidad_distinta.csv', unidad_distinta, 3)]
-    for nombre, codigos, cual in salidas:
-        ruta = os.path.join(CACHE, nombre)
-        with io.open(ruta, 'w', encoding='utf-8', newline='') as f:
+    for nombre, codigos, cual in (('en_bom_sin_oc.csv', en_bom_sin_oc, 1),
+                                  ('comprado_sin_bom.csv', comprado_sin_bom, 2),
+                                  ('unidad_distinta.csv', unidad_distinta, 3)):
+        with io.open(os.path.join(CACHE, nombre), 'w', encoding='utf-8', newline='') as f:
             w = csv.writer(f)
-            w.writerow(['codigo', 'unidad_bom', 'articulos_que_lo_usan', 'unidad_oc',
-                        'compras', 'ultima_oc', 'ultima_fecha', 'proveedor'])
+            w.writerow(['codigo', 'descripcion', 'unidad_bom', 'articulos_que_lo_usan',
+                        'unidad_oc', 'compras', 'ultima_oc', 'ultima_fecha', 'proveedor'])
             for cod in codigos:
-                u_bom, arts = usados.get(cod, ('', []))
-                u_oc, ocs = comprados.get(cod, ('', []))
-                ult = sorted(ocs, key=lambda o: (o[0][6:], o[0][3:5], o[0][:2]))[-1] if ocs else ('', '', '', '')
-                w.writerow([cod, u_bom, ' '.join(arts), u_oc, len(ocs), ult[1], ult[0], ult[3]])
-        print('   lista %d -> %s' % (cual, ruta))
+                u_bom, arts, d_bom = usados.get(cod, ('', [], ''))
+                u_oc, ocs, d_oc = comprados.get(cod, ('', [], ''))
+                ult = _ultima(ocs)
+                w.writerow([cod, d_bom or d_oc, u_bom, ' '.join(arts), u_oc, len(ocs),
+                            ult[1], ult[0], ult[3]])
+        print('   lista %d -> %s' % (cual, os.path.join(CACHE, nombre)))
+
+    ruta4 = os.path.join(CACHE, 'mismo_material_dos_codigos.csv')
+    with io.open(ruta4, 'w', encoding='utf-8', newline='') as f:
+        w = csv.writer(f)
+        w.writerow(['tipo', 'codigo_en_la_bom', 'descripcion_bom', 'unidad_bom',
+                    'articulos_que_lo_usan', 'codigo_con_que_se_compra', 'descripcion_oc',
+                    'unidad_oc', 'compras', 'ultima_oc', 'ultima_fecha', 'proveedor'])
+        for c_bom, c_oc, tipo in partidos:
+            u_bom, arts, d_bom = usados[c_bom]
+            u_oc, ocs, d_oc = comprados[c_oc]
+            ult = _ultima(ocs)
+            w.writerow([tipo, c_bom, d_bom, u_bom, ' '.join(arts), c_oc, d_oc, u_oc,
+                        len(ocs), ult[1], ult[0], ult[3]])
+    print('   lista 4 -> %s' % ruta4)
     return 0
 
 
@@ -373,6 +472,12 @@ OC_7205 = u""" O. de Compra N\xb0 7205  -  Control  N\xb0 7205  (24/06/2021)
  Atenci\xf3n  : TEXTIL VALERIO  S.A.C.I.F.
       1-TPES100 -2       Punz. PES 70 + TNT PP 30 BCO. Ancho: 2mt            MT2              18149.00      0.6000    10.889,400
       1-TPES100 -1       Punz. PES 100  A 1.5 ML Termofijado Blan            MT2               2643.00      0.5600     1.480,080
+"""
+
+# Renglon con la columna Unidad VACIA (OC 4703). Es el 9,3% del archivo: si no se detecta,
+# la cantidad se lee como precio y la fila entera queda corrida.
+OC_4703 = u""" O. de Compra N\xb0 4703  -  Control  N\xb0 4703  (14/11/2019)
+      1-3641222           DILOUR SATIN BLACK                                    100.00     15.8400     1.584,000
 """
 
 
@@ -415,6 +520,13 @@ def selftest():
     chequear('OC 7205 - descripcion con espacio doble', items[1]['descripcion'],
              'Punz. PES 100  A 1.5 ML Termofijado Blan')
     chequear('OC 7205 - cantidad', items[0]['cantidad'], 18149.0)
+
+    _, items = parsear(OC_4703, 'OC04703.pdf')
+    it = items[0]
+    chequear('OC 4703 - sin unidad: queda VACIA', it['unidad'], '')
+    chequear('OC 4703 - sin unidad: cantidad', it['cantidad'], 100.0)
+    chequear('OC 4703 - sin unidad: precio', it['precio'], 15.84)
+    chequear('OC 4703 - sin unidad: la cuenta cierra', it['control_importe'], 'ok')
 
     # EN ROJO: importe que no cierra con cantidad x precio -> tiene que avisar.
     roto = OC_15964.replace('1.430,000', '9.999,000')
