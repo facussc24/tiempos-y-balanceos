@@ -49,6 +49,14 @@ export function normalizarUnidad(u) {
   return { crudo, familia: ALIAS.get(crudo) ?? crudo };
 }
 
+/**
+ * Clave para cruzar CODIGOS: sin NBSP, sin espacios en las puntas, en mayusculas. El maestro real
+ * trae 21 codigos con minuscula (AzInc1176, GrInc4403, PPComp3380...) y la tabla los suele escribir
+ * en mayusculas: si no se normalizan los dos lados, el codigo "no esta en el maestro" y la unidad
+ * mal cargada pasa sin FAIL (lo encontro el auditor de la Ola 4, 05/09/2026).
+ */
+export const claveCodigo = (c) => String(c ?? '').replace(/\u00a0/g, ' ').trim().toUpperCase();
+
 /** 'igual' | 'grafia' (misma familia, otra grafia) | 'distinta' | 'sin-dato' (alguna vacia). */
 export function compararUnidad(a, b) {
   const A = normalizarUnidad(a);
@@ -88,14 +96,19 @@ export function parsearInsumosTxt(texto) {
   return mapa;
 }
 
-/** CSV `codigo,descripcion,unidad` (el de .arb-cache). Primera y ultima columna: la descripcion puede traer comas. */
+/**
+ * CSV `codigo,descripcion,unidad` (el de .arb-cache). Primera y ultima columna: la descripcion puede
+ * traer comas. Si la cabecera viene con `;` (Excel regional) se usa `;`.
+ */
 export function parsearInsumosCsv(texto) {
   const mapa = new Map();
   const lineas = String(texto ?? '').replace(/^\uFEFF/, '').split(/\r?\n/);
+  const cab = lineas[0] ?? '';
+  const sep = cab.includes(';') && !cab.includes(',') ? ';' : ',';
   for (const ln of lineas.slice(1)) {
     if (!ln.trim()) continue;
-    const i = ln.indexOf(',');
-    const j = ln.lastIndexOf(',');
+    const i = ln.indexOf(sep);
+    const j = ln.lastIndexOf(sep);
     if (i < 0 || j <= i) continue;
     const cod = ln.slice(0, i).trim().replace(/^"|"$/g, '');
     const uni = ln.slice(j + 1).trim().replace(/^"|"$/g, '');
@@ -163,7 +176,10 @@ function fuenteArchivo(ruta, nombre, parsear, { fecha = null, nota = '' } = {}) 
   const texto = /\.csv$/i.test(ruta) ? buf.toString('utf8') : decodificar(buf);
   const res = parsear(texto);
   const mapa = res instanceof Map ? res : res.mapa;
-  return { nombre, ruta, fecha: fecha ?? st.mtime, mapa, codigos: mapa.size, nota, dobles: res.dobles ?? [] };
+  // `conDatos`: el archivo tiene filas ademas de la cabecera. Con datos y 0 codigos, el parser no
+  // entendio el formato (separador, columnas): eso se AVISA, no se traga (ver insumos.csv 01/09).
+  const conDatos = texto.split(/\r?\n/).filter((l) => l.trim()).length > 1;
+  return { nombre, ruta, fecha: fecha ?? st.mtime, mapa, codigos: mapa.size, nota, dobles: res.dobles ?? [], conDatos };
 }
 
 function listarBackups(dir) {
@@ -174,9 +190,9 @@ function listarBackups(dir) {
  * Junta la unidad del maestro desde todas las fuentes disponibles.
  * `extra` es un archivo pasado a mano (--insumos): INSUMOS tabulado o CSV; gana sobre el resto.
  * @returns {{
- *   mapa: Map<string,{unidad:string, fuente:string, fecha:Date}>,   la mas nueva por codigo
- *   historico: Map<string,Array>,                                    todas, de la mas nueva a la mas vieja
- *   cambios: Array<{codigo, antes, ahora}>,                          codigos cuya FAMILIA de unidad cambio entre fotos
+ *   mapa: Map<clave,{codigo, unidad, fuente, fecha}>,   la mas nueva por codigo; clave = claveCodigo(codigo)
+ *   historico: Map<clave,Array>,                        todas, de la mas nueva a la mas vieja
+ *   cambios: Array<{codigo, clave, antes, ahora}>,      codigos cuya FAMILIA de unidad cambio entre fotos
  *   fuentes: Array<{nombre, ruta, fecha, codigos, nota}>,            ordenadas por fecha, la mas nueva primero
  *   avisos: string[]
  * }}
@@ -204,27 +220,33 @@ export function cargarMaestroUnidades({ tmpDir = TMP_ARB, cacheDir = CACHE_ARB, 
 
   const cache = fuenteArchivo(path.join(cacheDir, 'insumos.csv'), '.arb-cache/insumos.csv', parsearInsumosCsv, { nota: 'lo que escribio _refreshArb.mjs' });
   if (cache?.codigos) agregar(cache);
+  else if (cache?.conDatos) avisos.push(`${cache.ruta} tiene filas pero no le saque ningun codigo: ¿separador o columnas distintas de codigo,descripcion,unidad?`);
   for (const n of listarBackups(cacheDir)) {
-    agregar(fuenteArchivo(path.join(cacheDir, n), `.arb-cache/${n}`, parsearInsumosCsv, { fecha: fechaDeNombre(n), nota: 'foto vieja del maestro' }));
+    const f = agregar(fuenteArchivo(path.join(cacheDir, n), `.arb-cache/${n}`, parsearInsumosCsv, { fecha: fechaDeNombre(n), nota: 'foto vieja del maestro' }));
+    if (f && !f.codigos && f.conDatos) avisos.push(`${f.ruta} tiene filas pero no le saque ningun codigo: ¿separador o columnas distintas de codigo,descripcion,unidad?`);
   }
 
   // La fuente mas nueva gana; las demas quedan como historico para ver cambios de etiqueta.
+  // Todo se indexa por claveCodigo() (mayusculas, sin NBSP): el codigo tal cual lo escribe el arb
+  // queda en `codigo` de cada entrada.
   const orden = [...fuentes].sort((a, b) => (b.fecha?.getTime() ?? 0) - (a.fecha?.getTime() ?? 0));
   const mapa = new Map();
   const historico = new Map();
   for (const f of orden) {
     for (const [cod, uni] of f.mapa) {
-      const e = { unidad: uni, fuente: f.nombre, fecha: f.fecha };
-      if (!mapa.has(cod)) mapa.set(cod, e);
-      if (!historico.has(cod)) historico.set(cod, []);
-      historico.get(cod).push(e);
+      const k = claveCodigo(cod);
+      if (!k) continue;
+      const e = { codigo: cod, unidad: uni, fuente: f.nombre, fecha: f.fecha };
+      if (!mapa.has(k)) mapa.set(k, e);
+      if (!historico.has(k)) historico.set(k, []);
+      historico.get(k).push(e);
     }
   }
   const cambios = [];
-  for (const [codigo, hist] of historico) {
+  for (const [clave, hist] of historico) {
     const ahora = hist[0];
     const antes = hist.find((h) => h.unidad && ahora.unidad && compararUnidad(h.unidad, ahora.unidad) === 'distinta');
-    if (antes) cambios.push({ codigo, antes, ahora });
+    if (antes) cambios.push({ codigo: ahora.codigo, clave, antes, ahora });
   }
   return { mapa, historico, cambios, fuentes: orden, avisos };
 }

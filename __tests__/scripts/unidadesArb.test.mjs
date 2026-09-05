@@ -61,6 +61,7 @@ const BACKUP_CSV = [
   'APLIX-A999R8395,"APLIX 16MM, GANCHO",MT2',
   'SOLO-BACKUP-01,ETIQUETA VIEJA,UNID',
   'SIN-UNIDAD-01,ALGO SIN UNIDAD,',
+  'AzInc1176,AZUL INCOLENO,KG', // el maestro real trae 21 codigos con minuscula
 ].join('\n');
 
 let dir;
@@ -140,7 +141,16 @@ describe('INSUMOS.TXT: el tabulado sirve, el listado impreso no', () => {
     const m = parsearInsumosCsv('\uFEFF' + BACKUP_CSV);
     expect(m.get('APLIX-A999R8395')).toBe('MT2');
     expect(m.get('SIN-UNIDAD-01')).toBe('');
-    expect(m.size).toBe(4);
+    expect(m.size).toBe(5);
+  });
+  it('un csv con `;` (Excel regional) se lee igual; uno que no se entiende deja aviso en vez de tragarse el maestro', () => {
+    expect([...parsearInsumosCsv('codigo;descripcion;unidad\nCOD-PC;ALGO; CON PUNTO Y COMA;LTS\n')]).toEqual([['COD-PC', 'LTS']]);
+    const d = fs.mkdtempSync(path.join(os.tmpdir(), 'unidadesArb5-'));
+    fs.writeFileSync(path.join(d, 'insumos_20260101_backup.csv'), 'codigo\tdescripcion\tunidad\nCOD-TAB\tALGO\tKG\n');
+    const r = cargarMaestroUnidades({ tmpDir: d, cacheDir: d });
+    expect(r.mapa.size).toBe(0);
+    expect(r.avisos.some((a) => /insumos_20260101_backup\.csv tiene filas pero no le saque ningun codigo/.test(a))).toBe(true);
+    fs.rmSync(d, { recursive: true, force: true });
   });
 });
 
@@ -263,6 +273,30 @@ describe('_validarConsumos.mjs busca el maestro solo y frena la unidad equivocad
     const { status, out } = correrValidador(['codigo;descripcion;consumo;unidad', 'CONNCT-HEX;CONECTOR;1;UN'].join('\n'), ['--insumos', mano]);
     expect(status).toBe(1);
     expect(out).toMatch(/UNIDAD_VS_MAESTRO: CONNCT-HEX: tabla dice "UN", maestro dice "KG" \(--insumos mano\.csv/);
+  });
+  it('ROJO (auditor Ola 4): el codigo del maestro con minuscula se cruza igual en mayusculas, y la unidad mal cargada da FAIL', () => {
+    const r = cargarMaestroUnidades({ tmpDir, cacheDir });
+    expect(r.mapa.get('AZINC1176')).toMatchObject({ codigo: 'AzInc1176', unidad: 'KG' });
+    const { status, out } = correrValidador(['codigo;descripcion;consumo;unidad', 'AZINC1176;AZUL INCOLENO;0,00235;UN', ' azinc1176 ;AZUL INCOLENO;0,00235;KG'].join('\n'));
+    expect(status).toBe(1);
+    expect(out).toMatch(/\[FAIL\] UNIDAD_VS_MAESTRO: AZINC1176: tabla dice "UN", maestro dice "KG"/);
+    expect(out).not.toMatch(/UNIDAD_CODIGO_SIN_MAESTRO/);
+    expect(out).toMatch(/Resultado: 1 FAIL/);
+  });
+  it('ROJO (auditor Ola 4): el mismo codigo dos veces, la segunda con otra unidad, da FAIL; repetido identico no se reporta dos veces', () => {
+    const { status, out } = correrValidador([
+      'codigo;descripcion;consumo;unidad',
+      'CONNCT-HEX;CONECTOR;1;UN',   // bien
+      'CONNCT-HEX;CONECTOR;1;KG',   // typo en la segunda fila
+      'SOLO-BACKUP-01;ETIQUETA;2;UN',
+      'SOLO-BACKUP-01;ETIQUETA;2;UN',
+      'APLIX-A999R8395;APLIX;0,25;MTL',
+      'APLIX-A999R8395;APLIX;0,25;MTL',
+    ].join('\n'));
+    expect(status).toBe(1);
+    expect(out).toMatch(/\[FAIL\] UNIDAD_VS_MAESTRO: CONNCT-HEX: tabla dice "KG", maestro dice "UN"/);
+    expect((out.match(/UNIDAD_GRAFIA: SOLO-BACKUP-01/g) || []).length).toBe(1);
+    expect((out.match(/UNIDAD_CAMBIO_ETIQUETA: APLIX-A999R8395/g) || []).length).toBe(1);
   });
   it('sin ninguna fuente de maestro avisa UNIDAD_SIN_MAESTRO (no valida en silencio)', () => {
     const vacio = fs.mkdtempSync(path.join(os.tmpdir(), 'unidadesArb4-'));

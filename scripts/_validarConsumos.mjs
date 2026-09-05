@@ -31,7 +31,7 @@
 import { readFileSync, existsSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join, extname } from 'path';
-import { cargarMaestroUnidades, compararUnidad, fechaCorta, TMP_ARB, CACHE_ARB } from './_lib/unidadesArb.mjs';
+import { cargarMaestroUnidades, compararUnidad, normalizarUnidad, claveCodigo, fechaCorta, TMP_ARB, CACHE_ARB } from './_lib/unidadesArb.mjs';
 
 const __dir = dirname(fileURLToPath(import.meta.url));
 const CANON = JSON.parse(readFileSync(join(__dir, '_lib', 'consumosCanon.data.json'), 'utf8'));
@@ -196,14 +196,21 @@ if (!cUni) {
     if (!maestro.mapa.size) {
         flag('WARN', 'UNIDAD_SIN_MAESTRO', 'No encontre ningun maestro de unidades (ni INSUMOS.TXT tabulado, ni RELACIONES.TXT, ni .arb-cache): no puedo validar unidades. Exportar del arb a C:\\tmp o pasar --insumos.');
     }
-    const cambios = new Map(maestro.cambios.map(x => [x.codigo, x]));
-    const avisados = new Set();
+    const cambios = new Map(maestro.cambios.map(x => [x.clave, x]));
+    // Se valida CADA par codigo+unidad distinto: la misma fila repetida no se reporta dos veces,
+    // pero una segunda fila del mismo codigo con OTRA unidad si (auditor Ola 4: con un Set por
+    // codigo, el typo de la segunda fila pasaba sin FAIL).
+    const paresVistos = new Set();
+    const cambioAvisado = new Set();
     for (const r of rows) {
         const c = String(r[cCod] ?? '').trim();
         const u = String(r[cUni] ?? '').trim();
-        if (!c || avisados.has(c)) continue;
-        avisados.add(c);
-        const m = maestro.mapa.get(c) ?? maestro.mapa.get(c.toUpperCase());
+        if (!c) continue;
+        const k = claveCodigo(c);
+        const par = `${k}|${normalizarUnidad(u).crudo}`;
+        if (paresVistos.has(par)) continue;
+        paresVistos.add(par);
+        const m = maestro.mapa.get(k);
         if (!m) {
             if (maestro.mapa.size) flag('WARN', 'UNIDAD_CODIGO_SIN_MAESTRO', `${c}: no esta en ninguna fuente del maestro. ¿Codigo nuevo o mal tipeado? Si es nuevo, la unidad la fija la FACTURA del proveedor, no la tabla.`);
             continue;
@@ -221,8 +228,9 @@ if (!cUni) {
                 else if (u && !m.unidad) flag('WARN', 'UNIDAD_MAESTRO_VACIA', `${c}: el maestro no tiene unidad cargada (${origen}) y la tabla dice "${u}". La unidad se carga en el MAESTRO antes que la BOM, con la factura del proveedor a la vista.`);
                 break;
         }
-        const cambio = cambios.get(c) ?? cambios.get(c.toUpperCase());
-        if (cambio) {
+        const cambio = cambios.get(k);
+        if (cambio && !cambioAvisado.has(k)) {
+            cambioAvisado.add(k);
             flag('WARN', 'UNIDAD_CAMBIO_ETIQUETA', `${c}: era "${cambio.antes.unidad}" (${cambio.antes.fuente} ${fechaCorta(cambio.antes.fecha)}) y hoy es "${cambio.ahora.unidad}" (${cambio.ahora.fuente} ${fechaCorta(cambio.ahora.fecha)}). Si cantidad y precio de las OC no se movieron fue un cambio de ETIQUETA: el consumo se reconvierte con el factor fisico, no se copia.`);
         }
     }

@@ -194,12 +194,13 @@ export function skillsDisponibles(raiz = RAIZ) {
 export function lineasArranque({ carpeta, skills = [], sinArranque = false } = {}) {
   if (sinArranque) return [];
   const P = CANON.plantillaArranque;
+  const lista = [...new Set(skills)];   // --skill repetido no se imprime dos veces
   const out = [P.titulo];
   let n = 0;
   for (const l of P.lineas) {
     let texto = l;
     if (l === '{carpeta}') texto = carpeta ? P.conCarpeta.replace('{carpeta}', carpeta) : P.sinCarpeta;
-    else if (l === '{skills}') { if (!skills.length) continue; texto = P.conSkills.replace('{skills}', skills.join(', ')); }
+    else if (l === '{skills}') { if (!lista.length) continue; texto = P.conSkills.replace('{skills}', lista.join(', ')); }
     out.push(`  ${++n}. ${texto}`);
   }
   return out;
@@ -300,8 +301,13 @@ export function validarArranque(a, { existe = fs.existsSync, disponibles = skill
       if (!lista.includes(sk)) errores.push(`--skill "${sk}" no existe en .claude/skills/. Disponibles: ${lista.join(', ') || '(ninguno)'}`);
     }
   }
-  if (a.carpeta && a.carpeta !== true && !existe(a.carpeta)) {
-    errores.push(`--carpeta "${a.carpeta}": la ruta no existe. La carpeta de la tarea se crea ANTES del encargo (y solo con OK de Fak: el Escritorio es su cola).`);
+  if (a.carpeta && a.carpeta !== true) {
+    // Absoluta: la sesion que recibe el encargo tiene OTRO cwd, una ruta relativa no le sirve.
+    if (!path.isAbsolute(a.carpeta) && !/^[a-z]:[\\/]/i.test(a.carpeta)) {
+      errores.push(`--carpeta "${a.carpeta}": va la ruta COMPLETA (C:\\... o \\\\servidor\\...). La sesion que recibe el encargo tiene otro directorio de trabajo y una ruta relativa no le sirve.`);
+    } else if (!existe(a.carpeta)) {
+      errores.push(`--carpeta "${a.carpeta}": la ruta no existe. La carpeta de la tarea se crea ANTES del encargo (y solo con OK de Fak: el Escritorio es su cola).`);
+    }
   }
   if (a.carpeta === true) errores.push('--carpeta sin valor: va la ruta completa de la carpeta de la tarea en el Escritorio.');
   return errores;
@@ -374,7 +380,7 @@ function main() {
 
   fs.writeFileSync(path.join(DIR_ESTADO, `${id}.json`), JSON.stringify({
     id, a: a.a, entregable: a.entregable, origen: a.origen, etapa: a.etapa || null,
-    carpeta: a.carpeta && a.carpeta !== true ? a.carpeta : null, skills: (a.skill || []).filter((s) => s !== true),
+    carpeta: a.carpeta && a.carpeta !== true ? a.carpeta : null, skills: [...new Set((a.skill || []).filter((s) => s !== true))],
     creado: new Date().toISOString(), hash: hashCuerpo(texto), cerrado: null,
     // El texto completo queda guardado para que el guardian compare LITERAL lo que se manda
     // contra lo que se valido. Sin esto, escribir el marcador a mano alcanzaria para pasar.

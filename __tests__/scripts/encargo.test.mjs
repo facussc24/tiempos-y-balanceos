@@ -108,6 +108,16 @@ describe('validacion de --skill y --carpeta', () => {
     expect(validarArranque({ carpeta: true })[0]).toMatch(/--carpeta sin valor/);
   });
 
+  it('ROJO (auditor Ola 4): una carpeta RELATIVA se rechaza aunque exista; un --skill repetido sale una sola vez', () => {
+    const rel = path.relative(process.cwd(), carpeta);
+    const e = validarArranque({ carpeta: rel });
+    expect(e).toHaveLength(1);
+    expect(e[0]).toMatch(/va la ruta COMPLETA/);
+    const t = armarTexto({ ...base(), skills: ['carga-arb', 'carga-arb'] });
+    expect(t).toMatch(/Cargá con la tool Skill, antes de empezar: carga-arb\./);
+    expect(t).not.toMatch(/carga-arb, carga-arb/);
+  });
+
   it('VERDE: skills reales del repo y carpeta existente pasan; sin ninguno de los dos tambien', () => {
     expect(skillsDisponibles()).toContain('verificacion-consumos');
     expect(validarArranque({ skill: ['verificacion-consumos', 'carga-arb'], carpeta })).toEqual([]);
