@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 /**
  * node scripts/_cerebroLint.mjs [--json] [--sin-globales] [--memoria <dir>]
  *

@@ -101,7 +101,7 @@ describe('cerebroLint — ROJO: cada defecto se ve', () => {
   it('indice: memoria sin puntero, puntero fantasma, puntero a archivada', () => {
     const c = armar({
       memorias: { feedback_uno: {}, reference_dos: {} },
-      indice: '# I\n- feedback_uno.md — x · project_fantasma.md — y · project_vieja.md — z\n',
+      indice: '# I\n> CLAUDE.md y MEMORY.md tienen CRLF; ver README.md\n- feedback_uno.md — x · project_fantasma.md — y · project_vieja.md — z\n',
       archivadas: ['project_vieja'],
     });
     const hs = chequearIndice(c);
@@ -109,6 +109,8 @@ describe('cerebroLint — ROJO: cada defecto se ve', () => {
     expect(hs.some((h) => /project_fantasma\.md, que no existe/.test(h.detalle))).toBe(true);
     expect(hs.some((h) => /project_vieja\.md, que esta en _archive/.test(h.detalle))).toBe(true);
     expect(hs.every((h) => h.nivel === 'falta')).toBe(true);
+    expect(hs.some((h) => /cita (CLAUDE|README|MEMORY)\.md/.test(h.detalle))).toBe(false);   // no son punteros
+    expect(hs).toHaveLength(3);
   });
   it('indice: aviso a 22 KB o 180 lineas, falta a 25 KB o 200', () => {
     const linea = (i) => `- feedback_uno.md — gancho ${i}`;

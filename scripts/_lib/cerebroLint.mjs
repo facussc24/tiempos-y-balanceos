@@ -185,8 +185,11 @@ export function chequearIndice(c) {
   for (const m of c.memorias) {
     if (!citados.has(m.archivo)) out.push({ check: 'indice', nivel: 'falta', archivo: `memory/${m.archivo}`, detalle: 'no tiene puntero en MEMORY.md (una memoria sin puntero no se recuerda nunca)' });
   }
+  // Puntero fantasma: solo tokens con forma de memoria (feedback_x.md, reference_x.md…). Un
+  // `CLAUDE.md` o `README.md` nombrado en un gancho no es un puntero (falso positivo 05/09).
+  const conPrefijo = new RegExp(`^(${PREFIJOS.join('|')})_`);
   for (const nombre of citados) {
-    if (nombre === 'MEMORY.md') continue;
+    if (!conPrefijo.test(nombre)) continue;
     if (!c.memoriaStems.has(nombre.replace(/\.md$/, ''))) {
       const d = c.archivadas.has(nombre.replace(/\.md$/, '')) ? 'esta en _archive*/: sacar el puntero' : 'no existe (puntero fantasma)';
       out.push({ check: 'indice', nivel: 'falta', archivo: 'memory/MEMORY.md', detalle: `cita ${nombre}, que ${d}` });
