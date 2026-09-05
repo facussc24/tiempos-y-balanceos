@@ -29,12 +29,13 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
+import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import ExcelJS from 'exceljs';
 
 import { RUTA_ESCRITORIO, RUTA_TAREAS_CERRADAS } from './_lib/serverPaths.mjs';
 import { leerMsg } from './_leerMsg.mjs';
-import {
+import { claveHilo,
     MAILS_JSONL, leerMailsDesde, cruzarMailsConTareas, fechaCorte,
 } from './_lib/mailCache.mjs';
 
@@ -384,6 +385,56 @@ async function relevarMails(abiertas, cerradasPorAnio, { dias = DIAS_BARRIDO, js
         }
         say(`${c.d}  Solo aviso: los mails los manda Fak, o van por scripts/_mailEnviar.py (regla mail-envio).${c.x}`);
     }
+
+    relevarSinRespuesta(jsonl, { nombresTareas: nombres });
+}
+
+/**
+ * PEDIDOS SIN RESPUESTA — Ola 4 (05/09/2026), plan del 04/09 H6: el dia de la auditoria habia
+ * 5 pedidos abiertos en la Bandeja (codigos 21-9694/95 con 14 dias, BOM IP Pad, dispositivo de
+ * adhesivado, relevamiento de medios, PSW vinilos) y ninguno era una carpeta del Escritorio.
+ * La logica vive en python (scripts/_mails.py --sin-respuesta, con selftest de 16 casos): aca
+ * solo se corre y se muestra. Si python o el script fallan, se dice y se sigue: esta seccion
+ * nunca tumba el relevamiento.
+ */
+export function relevarSinRespuesta(jsonl = MAILS_JSONL, { dias = 5, ventana = 45, tope = 15, nombresTareas = [] } = {}) {
+    const script = path.join(path.dirname(fileURLToPath(import.meta.url)), '_mails.py');
+    say(`\n${c.b}PEDIDOS SIN RESPUESTA${c.x}  ${c.d}Bandeja de entrada, dirigidos a Fak, ultimos ${ventana} dias, sin mail suyo en el hilo hace ${dias} dias o mas${c.x}`);
+    const r = spawnSync('python', [script, '--sin-respuesta', '--json', '--dias', String(dias), '--ventana', String(ventana)], {
+        encoding: 'utf8', timeout: 60000,
+        env: { ...process.env, BARACK_MAIL_CACHE: path.dirname(jsonl), PYTHONIOENCODING: 'utf-8' },
+    });
+    let datos = null;
+    try { datos = JSON.parse((r.stdout || '').trim().split(/\r?\n/).pop()); } catch { /* sin JSON */ }
+    if (datos?.error) {
+        say(`${c.y}⚠${c.x}  ${datos.error}: sin cache de mails no hay pedidos que mirar (python scripts/_mails.py --sync). Correlo a mano despues.`);
+        return null;
+    }
+    if (r.status !== 0 || !datos || !Array.isArray(datos.pedidos)) {
+        say(`${c.y}⚠${c.x}  No pude correr \`python scripts/_mails.py --sin-respuesta\` (${(r.stderr || r.error?.message || 'sin salida').toString().trim().slice(0, 160)}). Correlo a mano.`);
+        return null;
+    }
+    if (!datos.pedidos.length) {
+        say(`${c.d}  (ninguno: todo lo que le pidieron a Fak por mail tiene respuesta suya, o tiene menos de ${dias} dias)${c.x}`);
+        return datos.pedidos;
+    }
+    // El mismo cruce que el barrido de arriba: un pedido sin respuesta Y sin carpeta es el que
+    // nadie esta mirando; uno con carpeta ya esta en la cola (se contesto por otro canal, o se
+    // esta haciendo). Se reusa cruzarMailsConTareas con los pedidos disfrazados de mails de la
+    // Bandeja, para que "matchea una tarea" signifique lo mismo en las dos secciones.
+    const pseudo = datos.pedidos.map((p) => ({ carpeta: 'Bandeja de entrada', asunto: p.asunto, fecha: p.fecha, de: p.de, de_mail: p.de_mail }));
+    const clavesSinCarpeta = new Set(cruzarMailsConTareas(pseudo, nombresTareas).sinCarpeta.map((h) => claveHilo(h.asunto)));
+    for (const p of datos.pedidos) p.sinCarpeta = clavesSinCarpeta.has(claveHilo(p.asunto));
+    const orden = [...datos.pedidos].sort((a, b) => (b.sinCarpeta - a.sinCarpeta) || (b.dias - a.dias));
+    for (const p of orden.slice(0, tope)) {
+        const marca = p.estado === 'sin respuesta' ? '' : `  ${c.r}${p.estado.toUpperCase()}${c.x}`;
+        const carpeta = p.sinCarpeta ? `  ${c.y}SIN CARPETA${c.x}` : `  ${c.d}(tiene carpeta)${c.x}`;
+        say(`  ${p.dias >= 7 ? c.y : ''}${String(p.dias).padStart(3)} d${c.x}  ${p.de.slice(0, 24).padEnd(24)}  ${p.asunto.slice(0, 56)}${p.mails > 1 ? `  ${c.d}(${p.mails} mails)${c.x}` : ''}${carpeta}${marca}`);
+    }
+    if (orden.length > tope) say(`  ${c.d}… y ${orden.length - tope} hilo(s) mas (python scripts/_mails.py --sin-respuesta)${c.x}`);
+    const nSin = orden.filter((p) => p.sinCarpeta).length;
+    say(`${c.d}  ${nSin} sin carpeta de ${orden.length}. Lista para OJEAR: un hilo aca puede ser un FYI o haberse contestado por WhatsApp. Los contesta Fak; una carpeta nueva en el Escritorio se abre solo con su OK.${c.x}`);
+    return orden;
 }
 
 async function cmdCheck(archivo) {

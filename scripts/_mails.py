@@ -12,6 +12,8 @@ Outlook ya tiene abierta, como haria una macro de VBA.
     python scripts/_mails.py --ver <id>             # un mail completo
     python scripts/_mails.py --adjuntos <id>        # extrae sus adjuntos
     python scripts/_mails.py --stats                # que hay en el cache
+    python scripts/_mails.py --sin-respuesta        # pedidos de la Bandeja sin mail de Fak a 5 dias
+                                 [--dias 5] [--ventana 45] [--json]   (lo corre _escritorio.mjs)
 
 ATENCION — el repo es PUBLICO. El cache va a .mail-cache/ (gitignoreado). Nunca
 commitear contenido de mails ni pegarlo en archivos del repo.
@@ -27,7 +29,8 @@ import re
 import sys
 
 RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-CACHE = os.path.join(RAIZ, '.mail-cache')
+# BARACK_MAIL_CACHE: otra carpeta de cache (la usan los tests para no tocar el real).
+CACHE = os.environ.get('BARACK_MAIL_CACHE') or os.path.join(RAIZ, '.mail-cache')
 MAILS = os.path.join(CACHE, 'mails.jsonl')
 ADJ = os.path.join(CACHE, 'adjuntos')
 ESTADO = os.path.join(CACHE, 'sync-state.json')
@@ -331,6 +334,280 @@ def stats():
         print('  %-58s %6d' % (c[:58], n))
 
 
+# ─────────────────────────────────────────────────────────── pedidos sin respuesta
+
+FAK_MAIL = 'f.santoro@barackmercosul.com'
+FAK_NOMBRE = 'facundo santoro'
+RUIDO_REMITENTE = re.compile(r'no-?_?reply|noreply|postmaster|mailer-?daemon|donotreply', re.I)
+# Medido sobre los 64 hilos "sin respuesta" de los ultimos 45 dias al 05/09/2026 (regla de la
+# casa: el umbral se prueba contra la POBLACION, no a ojo). Robots que no se contestan por mail:
+#   - Info@vwgroupsupply.com (portal VW: "Canceled:", "Submit offer", "tasks will expire")   9 de 64
+#   - "Microsoft on behalf of" (avisos del Planner) y "Read Assistant" (acuses de lectura)   1 de 64
+REMITENTE_AUTOMATICO = re.compile(r'^info@|on behalf of|read assistant', re.I)
+# Asuntos que no son un pedido: respuestas automaticas (3 de 64), avisos de calendario (2 de 64),
+# y la lista diaria "Asaichi Ingenieria - Prioridades" de Carlos (8 de 64), que es la LISTA
+# OFICIAL y tiene su propio canal (memoria project_prioridades_asaichi). Un RE: sobre el Asaichi
+# SI queda: ahi adentro puede haber una pregunta.
+ASUNTO_NO_PEDIDO = re.compile(
+    r'^(respuesta automatica|automatic reply|out of office|fuera de la oficina|autoreply'
+    r'|canceled|cancelado|accepted|aceptado|declined|rechazado|tentative|provisional'
+    r'|asaichi)\b', re.I)
+# Una difusion a 10 o mas destinatarios no le pide nada a Fak en particular (2 de 64: las
+# "Difusion actualizacion BOM ARB" de Leo, a 15 personas).
+DIFUSION_DESDE = 10
+
+
+def _normalizar(s):
+    """Mismo criterio que normalizarTexto() de scripts/_lib/mailCache.mjs: sin tildes, minusculas,
+    solo letras y numeros. Los dos lados agrupan el hilo igual o el Escritorio y este script se
+    contradicen."""
+    import unicodedata
+    t = unicodedata.normalize('NFD', s or '')
+    t = ''.join(ch for ch in t if not unicodedata.combining(ch)).lower()
+    return re.sub(r'\s+', ' ', re.sub(r'[^a-z0-9]+', ' ', t)).strip()
+
+
+def clave_hilo(asunto):
+    """'RE: RV: Alta código' -> 'alta codigo' (igual que claveHilo() del .mjs)."""
+    t = _normalizar(asunto)
+    while True:
+        t2 = re.sub(r'^(re|rv|fw|fwd)\s+', '', t)
+        if t2 == t:
+            return t
+        t = t2
+
+
+def _es_de_fak(m):
+    return (m.get('de_mail') or '').lower() == FAK_MAIL or FAK_NOMBRE in (m.get('de') or '').lower()
+
+
+def _para_fak(m):
+    p = (m.get('para') or '').lower()
+    return FAK_MAIL in p or FAK_NOMBRE in p or 'f.santoro' in p
+
+
+def _es_ruido(m):
+    de_mail = (m.get('de_mail') or '').strip()
+    de = (m.get('de') or '').strip()
+    if RUIDO_REMITENTE.search(de_mail + ' ' + de) or REMITENTE_AUTOMATICO.search(de_mail) \
+            or REMITENTE_AUTOMATICO.search(de):
+        return True
+    asunto = _normalizar(m.get('asunto'))
+    if re.search(r'feli(z|ces) cumple', asunto):
+        return True
+    # el prefijo RE/RV se mira sobre el asunto ORIGINAL: "RE: Asaichi..." es conversacion, no lista
+    sin_prefijo = not re.match(r'^\s*(re|rv|fw|fwd)\s*:', m.get('asunto') or '', re.I)
+    if sin_prefijo and ASUNTO_NO_PEDIDO.match(asunto):
+        return True
+    destinatarios = [x for x in (m.get('para') or '').split(';') if x.strip()]
+    return len(destinatarios) >= DIFUSION_DESDE
+
+
+def _tipo_carpeta(carpeta):
+    c = _normalizar(carpeta)
+    if 'bandeja de entrada' in c:
+        return 'entrada'
+    if 'elementos enviados' in c or 'enviados' in c:
+        return 'enviados'
+    if 'bandeja de salida' in c:
+        return 'salida'
+    if 'borradores' in c:
+        return 'borradores'
+    return 'otro'
+
+
+def pedidos_sin_respuesta(mails, dias=5, ventana=45, hoy=None):
+    """Hilos de la Bandeja de entrada dirigidos A Fak cuyo ultimo mail recibido lleva `dias` o mas
+    sin un mail de Fak posterior en el mismo hilo. Funcion pura (sin Outlook): la prueba el selftest.
+
+    Que cuenta como respuesta de Fak: un mail suyo (de_mail = f.santoro@) en cualquier carpeta,
+    posterior al ultimo recibido, con la misma clave de hilo. Si la respuesta esta en la Bandeja
+    de SALIDA (en cola, nunca salio) o en BORRADORES, el hilo se lista igual con ese estado: es
+    la firma de "hecho pero no avisado" del triage del 03/08/2026.
+
+    Que NO entra: mails en los que Fak esta solo en copia (79 de 256 en los ultimos 45 dias al
+    05/09/2026: los mira, pero no le piden nada a el), remitentes automaticos y saludos de
+    cumpleanos (mismo criterio que esRuido() del .mjs), y los mails que mando el mismo Fak.
+    Cada exclusion nueva ESCONDE pedidos: agregar solo casos inequivocos.
+
+    Devuelve una lista de dicts ordenada por dias sin respuesta (el mas viejo primero).
+    """
+    hoy = hoy or datetime.date.today()
+    corte = (hoy - datetime.timedelta(days=ventana)).strftime('%Y-%m-%d')
+    hilos = {}
+    for m in mails:
+        fecha = m.get('fecha') or ''
+        if not fecha or fecha < corte:
+            continue
+        k = clave_hilo(m.get('asunto'))
+        if not k:
+            continue
+        h = hilos.setdefault(k, {'recibidos': [], 'de_fak': []})
+        if _es_de_fak(m):
+            h['de_fak'].append(m)
+            continue
+        if _tipo_carpeta(m.get('carpeta')) != 'entrada' or _es_ruido(m) or not _para_fak(m):
+            continue
+        h['recibidos'].append(m)
+
+    out = []
+    for k, h in hilos.items():
+        if not h['recibidos']:
+            continue
+        ultimo = max(h['recibidos'], key=lambda m: m['fecha'])
+        despues = [m for m in h['de_fak'] if m['fecha'] >= ultimo['fecha']]
+        estado = 'sin respuesta'
+        if despues:
+            tipos = set(_tipo_carpeta(m.get('carpeta')) for m in despues)
+            if tipos & {'enviados', 'entrada', 'otro'}:
+                continue                      # Fak ya contesto (o su mail volvio a la Bandeja)
+            estado = 'en cola de salida' if 'salida' in tipos else 'borrador sin enviar'
+        try:
+            f_ult = datetime.datetime.strptime(ultimo['fecha'][:10], '%Y-%m-%d').date()
+        except ValueError:
+            continue
+        d = (hoy - f_ult).days
+        if d < dias:
+            continue
+        out.append({
+            'hilo': k,
+            'asunto': ultimo.get('asunto') or '',
+            'de': ultimo.get('de') or '',
+            'de_mail': ultimo.get('de_mail') or '',
+            'fecha': ultimo['fecha'],
+            'dias': d,
+            'mails': len(h['recibidos']),
+            'estado': estado,
+            'id': ultimo.get('id') or '',
+        })
+    out.sort(key=lambda x: (-x['dias'], x['asunto']))
+    return out
+
+
+def sin_respuesta(dias=5, ventana=45, como_json=False):
+    cache = _leer_cache()
+    if not cache:
+        if como_json:
+            print(json.dumps({'error': 'cache vacio', 'pedidos': []}))
+            return 0
+        sys.exit('El cache esta vacio. Corre primero:  python scripts/_mails.py --sync')
+    pedidos = pedidos_sin_respuesta(cache.values(), dias=dias, ventana=ventana)
+    if como_json:
+        print(json.dumps({'dias': dias, 'ventana': ventana, 'total': len(pedidos), 'pedidos': pedidos},
+                         ensure_ascii=False))
+        return 0
+    print('PEDIDOS SIN RESPUESTA  (Bandeja de entrada, dirigidos a Fak, ultimos %d dias, '
+          'sin mail suyo en el hilo hace %d dias o mas): %d' % (ventana, dias, len(pedidos)))
+    print()
+    for p in pedidos:
+        marca = '' if p['estado'] == 'sin respuesta' else '  [%s]' % p['estado'].upper()
+        print('  %3d d  %-24s %s%s%s' % (p['dias'], p['de'][:24], p['asunto'][:70],
+                                         ('  (%d mails)' % p['mails']) if p['mails'] > 1 else '', marca))
+    print()
+    print('Lista para OJEAR, no verdad: un hilo aca puede ser un FYI. Pero si es un pedido, hoy nadie lo')
+    print('esta mirando. Los mails los contesta Fak; la carpeta en el Escritorio se abre solo con su OK.')
+    return 0
+
+
+def selftest_sin_respuesta():
+    """Casos sinteticos con fecha fija (hoy = 05/09/2026). Cada regla se ve fallar y pasar."""
+    hoy = datetime.date(2026, 9, 5)
+    ENT = 'f.santoro@barackmercosul.com / Bandeja de entrada'
+    ENV = 'f.santoro@barackmercosul.com / Elementos enviados'
+    SAL = 'f.santoro@barackmercosul.com / Bandeja de salida'
+    BOR = 'f.santoro@barackmercosul.com / Borradores'
+    FAK = 'Facundo Santoro'
+    n = [0]
+
+    def mail(carpeta, fecha, de, asunto, para=FAK, cc='', de_mail=None):
+        n[0] += 1
+        if de_mail is None:
+            de_mail = FAK_MAIL if de == FAK else de.lower().replace(' ', '.') + '@x.com'
+        return {'id': 'm%d' % n[0], 'carpeta': carpeta, 'fecha': fecha, 'de': de, 'de_mail': de_mail,
+                'para': para, 'cc': cc, 'asunto': asunto, 'adjuntos': [], 'cuerpo': ''}
+
+    fallas = []
+
+    def caso(nombre, mails, esperado, **kw):
+        res = pedidos_sin_respuesta(mails, hoy=hoy, **kw)
+        got = [(p['hilo'], p['dias'], p['estado']) for p in res]
+        ok = got == esperado
+        print('  %s %-64s -> %s' % ('ok ' if ok else 'MAL', nombre, got if got else 'nada'))
+        if not ok:
+            fallas.append(nombre)
+
+    print('selftest de pedidos_sin_respuesta (16 casos):')
+    # 1. ROJO: el caso real — codigos 21-9694/95, Pablo, 14 dias sin respuesta.
+    caso('ROJO: pedido de hace 14 dias sin mail de Fak', [
+        mail(ENT, '2026-08-22 10:00', 'Pablo Gamboa', 'Alta codigos 21-9694/95')],
+        [('alta codigos 21 9694 95', 14, 'sin respuesta')])
+    # 2. Todavia dentro de los 5 dias: no molesta.
+    caso('pedido de hace 3 dias: todavia no', [
+        mail(ENT, '2026-09-02 10:00', 'Pablo Gamboa', 'Alta codigos 21-9694/95')], [])
+    # 3. Fak contesto (Elementos enviados, mismo hilo con RE:): no.
+    caso('contestado por Fak en Enviados', [
+        mail(ENT, '2026-08-22 10:00', 'Pablo Gamboa', 'Alta codigos 21-9694/95'),
+        mail(ENV, '2026-08-23 09:00', FAK, 'RE: Alta codigos 21-9694/95', para='Pablo Gamboa')], [])
+    # 4. ROJO: Fak contesto, pero le VOLVIERON a escribir despues y eso quedo sin respuesta.
+    caso('ROJO: Fak contesto y le volvieron a escribir (10 dias)', [
+        mail(ENT, '2026-08-20 10:00', 'Carlos Baptista', 'BOM IP Pad'),
+        mail(ENV, '2026-08-21 09:00', FAK, 'RE: BOM IP Pad', para='Carlos Baptista'),
+        mail(ENT, '2026-08-26 15:00', 'Carlos Baptista', 'RE: BOM IP Pad')],
+        [('bom ip pad', 10, 'sin respuesta')])
+    # 5. Fak solo en copia: lo mira, no le piden nada.
+    caso('Fak solo en CC: no', [
+        mail(ENT, '2026-08-22 10:00', 'Marcelo Nieve', 'PSW vinilos', para='Leo Perez', cc=FAK)], [])
+    # 6. Remitente automatico y cumpleanos: ruido.
+    caso('no-reply y feliz cumple: ruido', [
+        mail(ENT, '2026-08-22 10:00', 'Portal', 'Notificacion INCA', de_mail='no-reply@portal.com'),
+        mail(ENT, '2026-08-22 10:00', 'RRHH', 'Feliz cumple Facu!')], [])
+    # 7. La respuesta esta EN COLA DE SALIDA: se lista con ese estado (nunca salio).
+    caso('respuesta en Bandeja de salida: en cola', [
+        mail(ENT, '2026-08-22 10:00', 'Federico Kipersain', 'Dispositivo adhesivado'),
+        mail(SAL, '2026-08-25 09:00', FAK, 'RE: Dispositivo adhesivado', para='Federico Kipersain')],
+        [('dispositivo adhesivado', 14, 'en cola de salida')])
+    # 8. Un borrador no es una respuesta.
+    caso('respuesta en Borradores: borrador sin enviar', [
+        mail(ENT, '2026-08-22 10:00', 'Federico Kipersain', 'Relevamiento de medios'),
+        mail(BOR, '2026-08-25 09:00', FAK, 'RE: Relevamiento de medios', para='Federico Kipersain')],
+        [('relevamiento de medios', 14, 'borrador sin enviar')])
+    # 9. Un mail del propio Fak que cayo en la Bandeja (a si mismo o en copia) no es un pedido.
+    caso('mail de Fak en la Bandeja: no es pedido', [
+        mail(ENT, '2026-08-22 10:00', FAK, 'Nota para mi')], [])
+    # 10. Fuera de la ventana de 45 dias: no se mira.
+    caso('pedido de hace 60 dias: fuera de la ventana', [
+        mail(ENT, '2026-07-07 10:00', 'Pablo Gamboa', 'Algo viejo')], [])
+    # 11. RV: y RE: del mismo asunto son UN hilo; cuenta los mails recibidos.
+    caso('RV/RE del mismo asunto = un hilo de 2 mails', [
+        mail(ENT, '2026-08-20 10:00', 'Pablo Gamboa', 'RV: Codigos Sansuy'),
+        mail(ENT, '2026-08-24 10:00', 'Carlos Baptista', 'RE: RV: Codigos Sansuy')],
+        [('codigos sansuy', 12, 'sin respuesta')])
+    # 12. --dias y --ventana se respetan: con dias=20 el de 14 no entra.
+    caso('con --dias 20 el de 14 dias no entra', [
+        mail(ENT, '2026-08-22 10:00', 'Pablo Gamboa', 'Alta codigos 21-9694/95')], [], dias=20)
+    # 13-16. Lo que la poblacion del 05/09 mostro como ruido (23 de 64 hilos).
+    caso('portal VW (Info@vwgroupsupply.com) y acuse de lectura: robots', [
+        mail(ENT, '2026-08-22 10:00', 'Info@vwgroupsupply.com', 'Submit offer: G BM I 26 202', de_mail='Info@vwgroupsupply.com'),
+        mail(ENT, '2026-08-22 10:00', 'Read Assistant', 'Piezas para PWA | Read', de_mail='ra@toyota.com')], [])
+    caso('respuesta automatica y aviso de calendario: no son pedidos', [
+        mail(ENT, '2026-08-22 10:00', 'Gonzalo Cal', 'Respuesta autom\u00e1tica: Mesa de corte'),
+        mail(ENT, '2026-08-22 10:00', 'Portal', 'Canceled: F PA I 24 45 - K1 Sitzsystem', de_mail='p@vw.com')], [])
+    caso('la lista Asaichi de Carlos no es pedido, pero un RE: sobre ella si', [
+        mail(ENT, '2026-08-22 10:00', 'Carlos Baptista', 'Asaichi Ingeneiria - Prioridades 22/08/2026', para='Facundo Santoro; Leo; Nico; Pablo'),
+        mail(ENT, '2026-08-24 10:00', 'Leo Lattanzi', 'RE: Asaichi Ingeneiria - Prioridades 24/08/2026', para='Facundo Santoro; Carlos')],
+        [('asaichi ingeneiria prioridades 24 08 2026', 12, 'sin respuesta')])
+    caso('difusion a 15 personas: no le pide nada a Fak; a 4 si', [
+        mail(ENT, '2026-08-22 10:00', 'Leo Lattanzi', 'PATAGONIA ARMREST REAR - Difusion BOM ARB', para='; '.join(['Facundo Santoro'] + ['P%d' % i for i in range(14)])),
+        mail(ENT, '2026-08-22 10:00', 'Carlos Baptista', 'Relevamiento de medios', para='Facundo Santoro; Leo; Nico; Pablo')],
+        [('relevamiento de medios', 14, 'sin respuesta')])
+
+    if fallas:
+        print('FALLARON %d caso(s): %s' % (len(fallas), ', '.join(fallas)))
+        return 1
+    print('todo verde (sin respuesta)')
+    return 0
+
+
 def selftest():
     """Prueba evaluar_parcial() SIN Outlook — incluidos los casos en ROJO.
 
@@ -376,11 +653,19 @@ def selftest():
     if fallas:
         print('FALLARON %d caso(s): %s' % (len(fallas), ', '.join(fallas)))
         return 1
+    print()
+    if selftest_sin_respuesta():
+        return 1
     print('todo verde')
     return 0
 
 
 def main():
+    # La consola de Windows es cp1252: un emoji en un asunto tumbaba el listado entero.
+    try:
+        sys.stdout.reconfigure(errors='replace')
+    except Exception:
+        pass
     ap = argparse.ArgumentParser(description='Mails de Outlook (solo lectura)')
     ap.add_argument('--sync', action='store_true', help='volcar el buzon al cache (incremental)')
     ap.add_argument('--full', action='store_true', help='con --sync: rehacer el cache de cero')
@@ -394,7 +679,11 @@ def main():
     ap.add_argument('--adjuntos', metavar='ID')
     ap.add_argument('--out', metavar='CARPETA')
     ap.add_argument('--stats', action='store_true')
-    ap.add_argument('--selftest', action='store_true', help='probar el detector de sync parcial (sin Outlook)')
+    ap.add_argument('--selftest', action='store_true', help='probar el detector de sync parcial y el de pedidos sin respuesta (sin Outlook)')
+    ap.add_argument('--sin-respuesta', action='store_true', help='pedidos de la Bandeja dirigidos a Fak sin mail suyo en el hilo')
+    ap.add_argument('--dias', type=int, default=5, help='con --sin-respuesta: dias sin respuesta para listar (default 5)')
+    ap.add_argument('--ventana', type=int, default=45, help='con --sin-respuesta: cuantos dias para atras mirar (default 45)')
+    ap.add_argument('--json', action='store_true', help='con --sin-respuesta: salida JSON (la lee _escritorio.mjs)')
     a = ap.parse_args()
 
     if a.selftest:
@@ -409,6 +698,8 @@ def main():
         adjuntos(a.adjuntos, a.out)
     elif a.stats:
         stats()
+    elif a.sin_respuesta:
+        sys.exit(sin_respuesta(dias=a.dias, ventana=a.ventana, como_json=a.json))
     else:
         ap.print_help()
 

@@ -14,6 +14,8 @@
  */
 import { describe, it, expect } from 'vitest';
 import { execFileSync } from 'node:child_process';
+import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -23,9 +25,43 @@ describe('_mails.py --selftest (detector de sync parcial)', () => {
     it('los 9 casos pasan, y el rojo sigue siendo rojo', () => {
         const out = execFileSync('python', [SCRIPT, '--selftest'], { encoding: 'utf8' });
         expect(out).toContain('todo verde');
+        // Ola 4 (05/09/2026): el mismo selftest corre los 16 casos de pedidos_sin_respuesta.
+        expect(out).toContain('todo verde (sin respuesta)');
+        const bloque = out.slice(out.indexOf('selftest de pedidos_sin_respuesta'));
+        expect((bloque.match(/^  ok  /gm) || []).length).toBe(16);
+        expect(bloque).toMatch(/ROJO: pedido de hace 14 dias sin mail de Fak.*'sin respuesta'/);
+        expect(bloque).toMatch(/en cola de salida/);
         expect(out).not.toContain('MAL');
         // Que el rojo siga siendo rojo: 5 veredictos PARCIAL (los 3 casos ROJO + las dos
         // corridas de aviso de "ventana achicada"; la tercera de esas ya acepta base y da OK).
         expect((out.match(/-> PARCIAL/g) ?? []).length).toBe(5);
+    });
+});
+
+describe('_mails.py --sin-respuesta --json sobre un cache temporal (BARACK_MAIL_CACHE)', () => {
+    it('lista el pedido de hace 14 dias, no el contestado, y sale JSON parseable', () => {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'mailcache-'));
+        const hace = (d) => new Date(Date.now() - d * 86400000).toISOString().slice(0, 10) + ' 10:00';
+        const ENT = 'f.santoro@barackmercosul.com / Bandeja de entrada';
+        const ENV = 'f.santoro@barackmercosul.com / Elementos enviados';
+        const m = (id, carpeta, fecha, de, asunto, para = 'Facundo Santoro') =>
+            JSON.stringify({ id, carpeta, fecha, de, de_mail: de === 'Facundo Santoro' ? 'f.santoro@barackmercosul.com' : 'x@x.com', para, cc: '', asunto, adjuntos: [], cuerpo: '' });
+        fs.writeFileSync(path.join(dir, 'mails.jsonl'), [
+            m('1', ENT, hace(14), 'Pablo Gamboa', 'Alta codigos 21-9694/95'),
+            m('2', ENT, hace(9), 'Carlos Baptista', 'Medios carton'),
+            m('3', ENV, hace(8), 'Facundo Santoro', 'RE: Medios carton', 'Carlos Baptista'),
+            m('4', ENT, hace(2), 'Federico Kipersain', 'BOM IP Pad'),
+        ].join('\n') + '\n');
+        const out = execFileSync('python', [SCRIPT, '--sin-respuesta', '--json'], {
+            encoding: 'utf8', env: { ...process.env, BARACK_MAIL_CACHE: dir, PYTHONIOENCODING: 'utf-8' },
+        });
+        const datos = JSON.parse(out.trim().split(/\r?\n/).pop());
+        expect(datos.total).toBe(1);
+        expect(datos.pedidos[0]).toMatchObject({ hilo: 'alta codigos 21 9694 95', de: 'Pablo Gamboa', dias: 14, estado: 'sin respuesta', id: '1' });
+        // el texto plano tampoco revienta (la consola cp1252 tumbaba el listado con un emoji en el asunto)
+        const txt = execFileSync('python', [SCRIPT, '--sin-respuesta'], { encoding: 'utf8', env: { ...process.env, BARACK_MAIL_CACHE: dir } });
+        expect(txt).toMatch(/PEDIDOS SIN RESPUESTA/);
+        expect(txt).toMatch(/14 d  Pablo Gamboa/);
+        fs.rmSync(dir, { recursive: true, force: true });
     });
 });
