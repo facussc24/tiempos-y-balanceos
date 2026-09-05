@@ -98,6 +98,7 @@ la pasada rapida). Solo mide y reporta — commit/push/archivar los hace Claude.
 | `escritorio-tareas.md` | `_escritorio.mjs` + su hook — cola de tareas: cuándo se cierra y cómo se archiva (el hook la recuerda al tocar el Escritorio) |
 | `hojas-proceso.md` | hojas de proceso / HO (`I-IN-002.4-R01`) — **una hoja se juzga impresa, no en el monitor**: la imagen principal se declara y lo que hay que leer va a 7 pt o mas (skill `hojas-de-proceso`, gate `hoja_proceso_check.py`) |
 | `lecciones-consolidacion.md` | `docs/LECCIONES_APRENDIDAS.md` — ciclo de vida de una lección: cómo entra, cómo se gradúa y la pasada de consolidación al llegar al aviso de 26 KB |
+| `documentacion-oficial.md` | `4- MANUALES`, `0-Documentacion cliente`, `1. Imput`, `normas-vw` — **documentación de un tercero: el original manda y tiene que verse CUÁL es**. Nada producido acá comparte carpeta con él, las traducciones van a `TRADUCIDOS\`, y lo que no es archivo (una ayuda online) va como transcripción `.txt` con fuente y fecha (hook `documentacion-oficial-guard.sh`) |
 
 **Skills** (on-demand): `apqp-schema` (schema JSONB Supabase), `product-map` (8 familias,
 part numbers, equipo APQP), `amfe-domain` (conocimiento AMFE profundo), `amfe-cookbook`

@@ -43,6 +43,7 @@ const COBERTURA = {
   'borrado-masivo-guard.sh': { test: '__tests__/scripts/borradoMasivoGuard.test.mjs', tipo: 'bloquea' },
   'ho-numeracion-guard.sh': { test: GUARDIANES, tipo: 'bloquea' },
   'mail-guard.sh': { test: '.claude/hooks/mail-guard.test.sh', tipo: 'bloquea' },
+  'documentacion-oficial-guard.sh': { test: GUARDIANES, tipo: 'bloquea' },
   'arb-cerrar-guard.sh': { test: '.claude/hooks/arb-cerrar-guard.test.sh', tipo: 'bloquea' },
   'causas-ajenas-guard.sh': { test: '.claude/hooks/causas-ajenas-guard.test.sh', tipo: 'bloquea' },
   'supabase-guard.sh': { test: VARIOS, tipo: 'bloquea' },

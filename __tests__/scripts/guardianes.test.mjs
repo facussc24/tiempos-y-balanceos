@@ -24,7 +24,7 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import {
   parsear, matriz, correr, resolver, evaluar, GUARDIANES, TODOS, NOMBRES,
-  medirInline, sinCuerposHeredoc, frasesCausalesSinFuente, INLINE_MAX,
+  medirInline, sinCuerposHeredoc, frasesCausalesSinFuente, ultimaRuta, INLINE_MAX,
 } from '../../scripts/_lib/guardianes.mjs';
 
 const RAIZ = process.cwd();
@@ -513,6 +513,80 @@ describe('script-inline-guard — comandos REALES de los transcripts', () => {
   });
 });
 
+// ───────────────────────────────────────────────────────────── documentacion-oficial-guard
+// Los dos casos rojos son literalmente el incidente del 05/09/2026: guarde una guia MIA
+// (armada reordenando la ayuda online del BeOn) junto al Formel Q, y le cambie el nombre al PDF
+// que habia mandado VW. Regla: .claude/rules/documentacion-oficial.md
+describe('documentacion-oficial-guard — en la carpeta del original no entra nada mio', () => {
+  const BIBL = 'C:\\Users\\FacundoS-PC\\BARACK ARGENTINA SRL\\Ingeniería y Proyecto - General\\INGENIERIA BARACK (NUNCA BORRAR)';
+  const MAN = `${BIBL}\\4- MANUALES\\Fórmula Q Piezas Nuevas Integral VW`;
+  const SCRATCH = 'C:\\Users\\FACUND~1\\AppData\\Local\\Temp\\claude\\C--Dev-BarackMercosul\\abc\\scratchpad';
+  const solo = { nombres: ['documentacion-oficial-guard'] };
+  const doc = (p) => ev(p, solo);
+
+  it('ROJO — el incidente: escribir mi guia entre los originales, y renombrar el PDF que mando VW', () => {
+    const guia = doc(escribir(`${MAN}\\BeOn - Guia de carga (EMPB) - 09-2026.pdf`));
+    expect(guia.exit).toBe(2);
+    expect(guia.err).toMatch(/DOCUMENTACION-OFICIAL/);
+    const ren = doc(bash(`mv "${MAN}\\Documentos que deben cargar en BEON.pdf" "${MAN}\\Documentos que deben cargar en BEON - VW 06-06-2022.pdf"`));
+    expect(ren.exit).toBe(2);
+    expect(ren.err).toMatch(/nombre que le puso el emisor/);
+  });
+
+  it('ROJO — copiar ahi algo generado en esta PC, generarlo directo adentro, y el .txt que no es transcripcion', () => {
+    expect(doc(bash(`cp "${SCRATCH}\\guia_sacada.pdf" "${MAN}\\BeOn - Guia.pdf"`)).exit).toBe(2);
+    expect(doc(ps(`Copy-Item "C:\\Dev\\BarackMercosul\\tmp\\resumen.docx" "${MAN}\\resumen.docx"`)).exit).toBe(2);
+    expect(doc(bash(`python scripts/_beon.py --out "${MAN}\\ayuda.pdf"`)).exit).toBe(2);
+    // Un .txt no zafa por ser .txt: sin fuente ni fecha de consulta es un resumen mio.
+    expect(doc(escribir(`${MAN}\\BeOn - lo que dice la ayuda.txt`, 'La carga se hace en 8 pasos...')).exit).toBe(2);
+  });
+
+  it('VERDE — la transcripcion con fuente y fecha, la carpeta TRADUCIDOS, y sacar de ahi lo que no va', () => {
+    const transcripcion = [
+      'Fuente: https://sso.volkswagen.de/beon-doc/onlineHelp/en/BeOn.htm',
+      'Fecha de consulta: 05/09/2026',
+      'Como se obtuvo: navegador con la sesion del portal VW abierta (la ayuda pide login).',
+      '', 'BeOn — Bemusterung Online', '...',
+    ].join('\n');
+    expect(doc(escribir(`${MAN}\\BeOn - ayuda online - transcripcion 05-09-2026.txt`, transcripcion)).exit).toBe(0);
+    expect(doc(escribir(`${MAN}\\TRADUCIDOS\\Formel_Q_Neuteile Integral - ES.txt`, 'texto traducido')).exit).toBe(0);
+    // Sacar un archivo mio de la carpeta del original es la unica correccion posible: no se bloquea.
+    expect(doc(bash(`mv "${MAN}\\BeOn - Guia de carga.pdf" "${SCRATCH}\\guia_sacada.pdf"`)).exit).toBe(0);
+    // Y el original que manda el emisor entra tal cual, desde donde llego (un adjunto, Descargas).
+    expect(doc(bash(`cp "${BIBL}\\6- ARCHIVO DE CORREO\\ADJUNTOS\\Formel_Q.pdf" "${MAN}\\Formel_Q.pdf"`)).exit).toBe(0);
+    expect(doc(bash(`mv "C:\\Users\\FacundoS-PC\\Downloads\\Formel_Q_Neuteile.pdf" "${MAN}\\Formel_Q_Neuteile.pdf"`)).exit).toBe(0);
+    // Leer un manual con una opcion que se parece a "generar": `grep -o` / `sort -o` no generan nada.
+    expect(doc(bash(`grep -o "BeOn" "${MAN}\\Handbook QPN.pdf"`)).exit).toBe(0);
+    expect(doc(bash(`python scripts/_leerPlano.py "${MAN}\\Handbook QPN.pdf" --out "C:\\Dev\\BarackMercosul\\tmp\\qpn.txt"`)).exit).toBe(0);
+  });
+
+  it('VERDE — leer la carpeta solo recuerda 1x/h; fuera de la zona no dice nada', () => {
+    expect(rec(bash(`ls -la "${MAN}"`), solo)).toMatch(/DOCUMENTACION-OFICIAL — RECORDATORIO/);
+    expect(rec(escribir(`${BIBL}\\1- GENERAL\\FORMATOS GENERAL\\guia BeOn.pdf`), solo)).toBe('');
+    expect(rec(bash('git commit -m "docs: 4- MANUALES no lleva archivos mios"'), solo)).toBe('');
+    // El guardian, su wrapper, su test y la regla NOMBRAN las carpetas como dato: no se disparan.
+    expect(rec(editar('C:\\Dev\\BarackMercosul\\.claude\\rules\\documentacion-oficial.md'), solo)).toBe('');
+    expect(rec(escribir('C:\\Dev\\BarackMercosul\\__tests__\\scripts\\guardianes.test.mjs'), solo)).toBe('');
+  });
+
+  it('VERDE — la transcripcion se puede COPIAR desde el scratchpad: se mira el archivo, no el nombre', () => {
+    const conCabecera = path.join(TMP, 'scratchpad', 'beon_ayuda_en.txt');
+    const sinCabecera = path.join(TMP, 'scratchpad', 'beon_resumen.txt');
+    fs.mkdirSync(path.dirname(conCabecera), { recursive: true });
+    fs.writeFileSync(conCabecera, 'Fuente: https://sso.volkswagen.de/beon-doc/onlineHelp/en/BeOn.htm\nFecha de consulta: 05/09/2026\n\nWelcome...');
+    fs.writeFileSync(sinCabecera, 'La carga se hace en 8 pasos, lo primero que conviene es...');
+    expect(doc(bash(`cp "${conCabecera}" "${MAN}\\BeOn - ayuda online (en) - transcripcion 05-09-2026.txt"`)).exit).toBe(0);
+    // El mismo comando con un .txt que NO declara de donde salio sigue bloqueado.
+    expect(doc(bash(`cp "${sinCabecera}" "${MAN}\\BeOn - resumen.txt"`)).exit).toBe(2);
+  });
+
+  it('ultimaRuta: el destino de un cp/mv es el ultimo token con pinta de ruta, no una opcion', () => {
+    expect(ultimaRuta('cp "a b/x.pdf" "C:\\M\\4- MANUALES\\x.pdf"')).toBe('C:\\M\\4- MANUALES\\x.pdf');
+    expect(ultimaRuta('cp -r origen/ destino/ --verbose')).toBe('destino/');
+    expect(ultimaRuta('echo hola')).toBe('');
+  });
+});
+
 // ───────────────────────────────────────────────────────────── por bash: wrappers y despachador
 describe('por bash — los wrappers finos y el despachador (el camino real)', () => {
   const correrSh = (script, payload, extraEnv = {}) => {
@@ -526,6 +600,13 @@ describe('por bash — los wrappers finos y el despachador (el camino real)', ()
     const r = correrSh('escritorio-guard.sh', bash(`ls "${ESC}"`));
     expect(r.code).toBe(0);
     expect(JSON.parse(r.out).hookSpecificOutput.additionalContext).toMatch(/ESCRITORIO-GUARD/);
+  });
+  it('documentacion-oficial-guard.sh suelto: bloquea la guia mia entre los originales y recuerda al leer', () => {
+    const MAN = 'C:\\Users\\FacundoS-PC\\BARACK ARGENTINA SRL\\Ingeniería y Proyecto - General\\INGENIERIA BARACK (NUNCA BORRAR)\\4- MANUALES';
+    expect(correrSh('documentacion-oficial-guard.sh', escribir(`${MAN}\\BeOn - Guia de carga.pdf`)).code).toBe(2);
+    const r = correrSh('documentacion-oficial-guard.sh', bash(`ls "${MAN}/"`));
+    expect(r.code).toBe(0);
+    expect(JSON.parse(r.out).hookSpecificOutput.additionalContext).toMatch(/DOCUMENTACION-OFICIAL/);
   });
   it('_dispatcher.sh: inocente 0 · Read 0 · rm en el Escritorio 2 · JSON roto con rm 2 · CAD roto recuerda con 0', () => {
     expect(correrSh('_dispatcher.sh', bash('echo hola')).code).toBe(0);

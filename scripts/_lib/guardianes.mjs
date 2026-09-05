@@ -169,7 +169,7 @@ export function ctxDesdeEnv(env) {
  */
 const SOLO_SHELL = ['supabase-guard', 'validator-check', 'renumber-guard', 'push-guard', 'arb-cerrar-guard', 'script-inline-guard'];
 const SOLO_ARCHIVO = ['file-guard', 'causas-ajenas-guard'];
-const LOS_CUATRO = ['consumos-entregable-guard', 'cad-guard', 'patrones-guard', 'escritorio-guard', 'borrado-masivo-guard', 'ho-numeracion-guard', 'mail-guard'];
+const LOS_CUATRO = ['consumos-entregable-guard', 'cad-guard', 'patrones-guard', 'escritorio-guard', 'borrado-masivo-guard', 'ho-numeracion-guard', 'mail-guard', 'documentacion-oficial-guard'];
 export const TODOS = ['file-guard', 'supabase-guard', 'validator-check', 'renumber-guard', 'push-guard', 'script-inline-guard', ...LOS_CUATRO, 'arb-cerrar-guard', 'causas-ajenas-guard'];
 
 export function matriz(tool) {
@@ -699,6 +699,167 @@ memoria y, si la tarea se cierra, a la fila del listado (--quien / --que / --don
   // el mismo archivo con el guardian vivo de la sesion.
   const flagdir = env.ESCRITORIO_GUARD_FLAGDIR ? aRutaWin(env.ESCRITORIO_GUARD_FLAGDIR, env.ESCRITORIO_GUARD_FLAGDIR) : path.join(dirHome(env), '.claude');
   return recordatorio(path.join(flagdir, 'escritorio-guard.flag'), TEXTO_ESC_RECORDATORIO);
+};
+
+// ── documentacion-oficial-guard ────────────────────────────────────────────
+// Regla `.claude/rules/documentacion-oficial.md` (Fak, 05/09/2026). En la carpeta donde vive un
+// documento de un TERCERO (cliente, proveedor, organismo) no entra nada producido aca, y el
+// original conserva el nombre que le puso el emisor. Incidente que lo origino: extraje la ayuda
+// online del BeOn (portal VW, no descargable), arme con eso una guia en espaniol REORDENADA POR
+// MI y la guarde junto al Formel Q; ademas le cambie el nombre al PDF que habia mandado VW.
+// Fak: "no pueden haber archivos interpretados por vos ahi, sino esa interpretacion luego le vas
+// a hacer otra y los datos no van a ser reales al final del dia".
+// Lo UNICO mio que puede compartir carpeta con el original es la TRANSCRIPCION .txt de algo que
+// no es archivo (una ayuda online, la pantalla de un portal), y solo si trae en la cabecera de
+// donde salio y cuando: fuente + fecha de consulta es justo lo que separa una transcripcion de
+// un resumen. Las traducciones van a la carpeta hermana TRADUCIDOS.
+// Los nombres de carpeta son los REALES, verificados: `4- MANUALES` en la biblioteca de la nube,
+// `0-Documentacion cliente` de la estructura QTR, `1. Imput` del legajo APQP y `normas-vw`.
+const DOC_ZONA = /[\\/](4-\s*MANUALES|0-\s*Documentaci[oó]n cliente|1\.\s*Imput|normas-vw)(?=[\\/]|["'\s]|$)/i;
+const DOC_EXCEPCION = /(__tests__|\.test\.|\.spec\.|[/\\]hooks[/\\]|[/\\]_lib[/\\]guardianes\.mjs$|[/\\]\.claude[/\\]rules[/\\]|LECCIONES_APRENDIDAS)/i;
+// Origen que delata que el archivo lo produje YO en esta PC.
+const DOC_MIO = /(scratchpad|[/\\]tmp[/\\]|[/\\]\.build[/\\]|[A-Za-z]:[\\/]Dev[\\/]|[\\/](Escritorio|Desktop)[\\/]|_trabajo)/i;
+const DOC_COPIA = /(^|[;&|\s])(cp|copy|xcopy|robocopy)(\s|$)|Copy-Item|shutil\.copy/im;
+const DOC_MUEVE = /(^|[;&|\s])(mv|move|ren|rename)(\s|$)|Move-Item|Rename-Item|shutil\.move|os\.rename/im;
+// Sin `-o` pelado a proposito: `grep -o` y `sort -o` sobre un manual son lectura, no generacion.
+const DOC_GENERA = /--salida\b|--out\b|--output\b|--destino\b|>\s*["']?[^"'\s|]*[\\/]/i;
+const DOC_TRADUCIDOS = /[\\/]TRADUCIDOS[\\/]/i;
+// Cabecera de transcripcion: de donde salio y cuando. Sin las dos cosas no es transcripcion.
+const DOC_FUENTE = /(^|\n)\s*(fuente|url|origen)\s*:/i;
+const DOC_FECHA = /fecha de (consulta|extraccion|descarga)\s*:/i;
+
+/** Ultimo token con pinta de ruta: en un cp/mv/Copy-Item es el DESTINO. */
+export function ultimaRuta(cmd) {
+  const tokens = String(cmd).match(/"[^"]*"|'[^']*'|\S+/g) || [];
+  for (let i = tokens.length - 1; i >= 0; i--) {
+    const t = tokens[i].replace(/^["']|["']$/g, '');
+    if (/[\\/]/.test(t) && !t.startsWith('-')) return t;
+  }
+  return '';
+}
+
+/**
+ * Un .txt que arranca declarando de donde salio y cuando es una TRANSCRIPCION (regla 4), y esa
+ * SI va en la carpeta del original: es el original disponible cuando la fuente no es un archivo.
+ * Se mira el archivo en el disco, no el nombre — el nombre no es el contenido.
+ */
+function esTranscripcionEnDisco(origen) {
+  for (const t of String(origen).match(/"[^"]+\.txt"|'[^']+\.txt'|\S+\.txt/gi) || []) {
+    const p = aRutaWin(t.replace(/^["']|["']$/g, ''), '');
+    if (!p) continue;
+    try {
+      const cab = fs.readFileSync(p, 'utf8').slice(0, 1200);
+      if (DOC_FUENTE.test(cab) && DOC_FECHA.test(cab)) return true;
+    } catch { /* no existe o no se puede leer: no prueba nada, sigue */ }
+  }
+  return false;
+}
+
+const DOC_CIERRE = `Fak, 05/09/2026: "primero debe estar claro cuales son los manuales originales, que me importa
+si esta en aleman o en ingles", "no pueden haber archivos interpretados por vos ahi, sino esa
+interpretacion luego le vas a hacer otra y los datos no van a ser reales al final del dia".`;
+const TEXTO_DOC_RECORDATORIO = `[DOCUMENTACION-OFICIAL — RECORDATORIO 1x/h. Regla: .claude/rules/documentacion-oficial.md]
+Estas tocando una carpeta donde vive documentacion de un tercero (cliente, proveedor, organismo).
+Ahi el criterio es uno solo: tiene que quedar claro CUAL es el original.
+
+1. El original entra TAL CUAL, con el nombre que le puso el emisor. No se renombra, no se le
+   agrega fecha, sigla ni revision. Que este en aleman o en ingles no es un problema.
+2. En la carpeta del original no va NADA producido aca: ni resumen, ni guia, ni indice.
+3. Traduccion: carpeta hermana TRADUCIDOS, el mismo texto en otro idioma, tema por tema, sin
+   reordenar ni resumir. Nombre = nombre del original + idioma.
+4. Lo que NO es un archivo (una ayuda online, la pantalla de un portal, lo que dijo el cliente
+   por mail) se guarda como transcripcion .txt con URL o fuente, fecha de consulta y como se
+   obtuvo, en la cabecera. Transcripcion es lo que DICE, no lo que entendi.
+5. Mi material propio (guias, checklists, resumenes) va a la carpeta de trabajo del tema o de la
+   tarea, y arranca diciendo de donde salio.
+
+${DOC_CIERRE}`;
+GUARDIANES['documentacion-oficial-guard'] = (ctx, { env }) => {
+  let tool, cmd, file, body;
+  if (ctx.ok) { tool = ctx.toolL; cmd = ctx.cmd6; file = ctx.fileL; body = ctx.body6; }
+  else {
+    tool = ctx.rescate.tool; file = ctx.rescate.file;
+    cmd = `${ctx.rescate.cmd} ${ctx.raw.replace(/\n/g, ' ')}`; body = ctx.rescate.content;
+  }
+  const esEscritura = tool === 'Write' || tool === 'Edit';
+  // Los tests, los hooks, este modulo y la propia regla NOMBRAN estas carpetas como dato.
+  if (DOC_EXCEPCION.test(file)) return null;
+
+  if (esEscritura && DOC_ZONA.test(file)) {
+    const esTranscripcion = /\.txt$/i.test(file) && DOC_FUENTE.test(body) && DOC_FECHA.test(body);
+    if (!esTranscripcion && !DOC_TRADUCIDOS.test(file)) {
+      return bloqueo(`[DOCUMENTACION-OFICIAL] BLOQUEADO: estas ESCRIBIENDO un archivo tuyo en la carpeta de un
+documento oficial de un tercero.
+
+${file}
+
+Un archivo mio guardado entre los originales deja de distinguirse a la semana siguiente: la
+proxima consulta se hace sobre MI version, la siguiente interpretacion sobre esa, y a los dos
+pasos lo que Barack tiene escrito ya no es lo que dijo el cliente.
+
+Los tres destinos que SI existen:
+  1. Es una TRANSCRIPCION de algo que no es archivo (ayuda online, pantalla de un portal):
+     guardala en .txt y arranca la cabecera con "Fuente:" (URL) y "Fecha de consulta:".
+     Transcripcion es lo que DICE, no lo que entendi: sin reordenar y sin resumir.
+  2. Es una TRADUCCION del original: carpeta hermana TRADUCIDOS\\, nombre del original + idioma.
+  3. Es material MIO (guia, resumen, checklist, indice): va a la carpeta de trabajo del tema o
+     a la de la tarea, nunca aca, y dice en la primera linea de donde salio.
+
+${DOC_CIERRE}`);
+    }
+  }
+
+  if (!esEscritura) {
+    const destino = ultimaRuta(cmd);
+    const haciaLaZona = DOC_ZONA.test(destino);
+    const origen = destino ? cmd.replace(destino, '') : cmd;
+    // 1. Renombrar o reordenar DENTRO de la carpeta oficial (el origen tambien esta en la zona).
+    //    Sacar algo de ahi NO se bloquea: es la unica correccion posible cuando ya se colo un
+    //    archivo mio. Y traer el original desde donde llego (un adjunto, Descargas) tampoco: asi
+    //    es como entra.
+    if (DOC_MUEVE.test(cmd) && haciaLaZona && DOC_ZONA.test(origen)) {
+      return bloqueo(`[DOCUMENTACION-OFICIAL] BLOQUEADO: mover o renombrar dentro de la carpeta de documentacion
+oficial.
+
+El original entra TAL CUAL y se queda con el nombre que le puso el emisor, aunque el nombre sea
+un desastre: es el nombre por el que el cliente lo va a nombrar cuando lo reclame. Agregarle
+fecha, sigla, cliente o revision lo convierte en un archivo de Barack.
+
+  · Si lo que estas sacando de ahi es un archivo TUYO que no deberia estar: eso si va, moviendolo
+    hacia AFUERA de la carpeta (este guardian no lo bloquea).
+  · Si de verdad hay que renombrar un original, lo decide Fak explicitamente.
+
+${DOC_CIERRE}`);
+    }
+    // 2. Copiar o mover hacia la carpeta oficial algo que se produjo en esta PC.
+    if ((DOC_COPIA.test(cmd) || DOC_MUEVE.test(cmd)) && haciaLaZona && DOC_MIO.test(origen)
+        && !esTranscripcionEnDisco(origen)) {
+      return bloqueo(`[DOCUMENTACION-OFICIAL] BLOQUEADO: estas poniendo en la carpeta del original un archivo
+generado en esta PC (scratchpad, repo, .build, Escritorio).
+
+Lo que se guarda ahi es lo que MANDO el emisor, con su nombre. Lo mio va a la carpeta de trabajo
+del tema o a la de la tarea. Si lo que necesitas es dejar disponible algo que no es un archivo
+(una ayuda online, una pantalla del portal), va como transcripcion .txt con "Fuente:" y
+"Fecha de consulta:" en la cabecera; si es una traduccion, a la carpeta hermana TRADUCIDOS\\.
+
+${DOC_CIERRE}`);
+    }
+    // 3. Generar el archivo directamente adentro (redireccion o --out del script).
+    if (DOC_GENERA.test(cmd) && haciaLaZona) {
+      return bloqueo(`[DOCUMENTACION-OFICIAL] BLOQUEADO: estas generando un archivo DIRECTO adentro de la carpeta
+de documentacion oficial.
+
+Que lo escriba un script no lo hace original: sigue siendo material producido aca, y ahi adentro
+en dos consultas pasa por documento del cliente. Generalo en la carpeta de trabajo del tema o de
+la tarea. Si es una transcripcion de algo que no es archivo, .txt con "Fuente:" y "Fecha de
+consulta:" en la cabecera; si es una traduccion, TRADUCIDOS\\.
+
+${DOC_CIERRE}`);
+    }
+  }
+
+  if (!DOC_ZONA.test(`${cmd} ${file}`)) return null;
+  return recordatorio(path.join(dirTmp(env), 'claude-docoficial-guard.flag'), TEXTO_DOC_RECORDATORIO);
 };
 
 // ── borrado-masivo-guard ───────────────────────────────────────────────────

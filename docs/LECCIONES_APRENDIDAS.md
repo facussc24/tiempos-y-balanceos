@@ -50,6 +50,8 @@ La historia completa de cada incidente vive en los snapshots.
 
 - **🔴🔴 04/09 — "NO SE COMPRA" NO ES "ESTA MAL CARGADO", y el listado del legajo NO valida al arb que se cargo DESDE el.** Conteste *"si, es correcto"* cruzando los dos: una sola fuente contada dos veces (*"no me convenciste"*). El plano del cliente, la unica fuente que no salio de Barack, pedia 100 g/m2 igual que el codigo — **el material estaba bien y el codigo llevaba sin comprarse desde 2021**. Y mi lista de hallazgos era **94% ruido**: el reporte de OC cortaba los codigos a 10 caracteres. Memoria `validar_insumo_de_bom_tres_fuentes`.
 
+- **🔴🔴 05/09 — UN ARCHIVO MIO GUARDADO ENTRE LOS ORIGINALES SE VUELVE FUENTE FALSA POR ESTAR AHI.** Guarde junto al Formel Q una guia del BeOn reordenada por mi, y le cambie el nombre al PDF de VW. Fak: *"no pueden haber archivos interpretados por vos ahi, sino esa interpretacion luego le vas a hacer otra y los datos no van a ser reales al final del dia"*. **El original entra tal cual, con el nombre del emisor y en su idioma; la traduccion va a `TRADUCIDOS\`; lo que no es archivo va como transcripcion .txt con fuente y fecha; lo mio, afuera.** Regla `documentacion-oficial.md`.
+
 ## Consumos de material
 
 - **Un numero que no cuadra casi nunca es un error: es la misma cosa en otra magnitud, o el mismo numero con la merma adentro** — se normaliza a la unidad que gobierna ANTES de reportar un desvio. Graduado a `consumos-entregables.md` + `_validarConsumos.mjs` + skill `verificacion-consumos`; memorias `adhesivo_fa_retic_gv_densidades`, `tabla_consumo_mesa_corte`, `aplix_dos_unidades`. Version larga: snapshot 2026-08-28.
