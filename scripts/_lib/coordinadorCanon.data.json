@@ -225,5 +225,20 @@
       "revisar si esta bien el consumo"
     ],
     "fuente": "Fak 31/08/2026: 'lo del consumo vinilo ya esta bien... estamos en etapa proyecto... agarrar los consumos de los archivos que me pasa Pablo Gamboa y listo, intento no cuestionarlo'"
+  },
+  "plantillaArranque": {
+    "_leeme": "Lo que Fak tipeaba a mano al arrancar cada sesion (medido en 77 transcripts del 21/08 al 04/09/2026: \"modo plan\" 47 veces, \"agente independiente que audite\" 41, \"la tarea esta en el Escritorio\" 31, \"sintetiza\" 24, \"procedimiento de cierre\" 14, \"lee este archivo entero + carga skill\" 10). _encargo.mjs lo agrega al final de todo encargo salvo --sin-arranque. Las lineas pasan por los mismos candados que el cuerpo (G3/G4/G7): una linea nueva se prueba con __tests__/scripts/encargo.test.mjs antes de agregarla aca.",
+    "fuente": "plan 04/09/2026 (fluttering-moseying-cherny.md) item 17 · memorias feedback_modo_plan_y_autonomia_no_se_contradicen, feedback_rol_coordinador_como_se_opera, feedback_entregables_para_fak",
+    "titulo": "ARRANQUE (fijo para toda sesion; lo que Fak tipeaba a mano):",
+    "lineas": [
+      "Entrá en modo plan antes de tocar nada. El plan aprueba el QUE; el COMO no se pregunta: si el camino es claro se hace y se reporta.",
+      "{carpeta}",
+      "Leé ENTERO cada archivo fuente de arriba antes de opinar sobre él, no la primera pantalla.",
+      "{skills}",
+      "Al cerrar: node scripts/_cierreSesion.mjs --sin-build en verde; agente auditor con el informe a un ARCHIVO dentro de la carpeta de la tarea, no al chat; y a Fak una síntesis de 12 líneas o menos, con la RUTA del entregable en la primera."
+    ],
+    "conCarpeta": "La tarea vive en el Escritorio: {carpeta}. Todo lo que produzcas queda ahí hasta que se archive; nada tuyo queda suelto en el Escritorio.",
+    "sinCarpeta": "Carpeta de la tarea: ninguna declarada. Si es trabajo de Barack va en una carpeta del Escritorio, y la carpeta la decide Fak.",
+    "conSkills": "Cargá con la tool Skill, antes de empezar: {skills}."
   }
 }

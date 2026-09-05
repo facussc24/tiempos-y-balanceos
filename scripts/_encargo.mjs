@@ -20,7 +20,14 @@
  *   node scripts/_encargo.mjs --a "<sesion>" --entregable "<UNO solo>" --origen fak \
  *        --cuerpo "<el texto>" [--fuente <ruta>]... [--fuente-condicional "<desc>"]... \
  *        [--supuesto "<...>" | --sin-supuestos] [--etapa proyecto|serie] \
- *        [--ok-fak "<cita textual>" --hora HH:MM]
+ *        [--ok-fak "<cita textual>" --hora HH:MM] \
+ *        [--carpeta "<carpeta de la tarea en el Escritorio>"] [--skill <nombre>]... [--sin-arranque]
+ *
+ *   ARRANQUE (desde el 05/09/2026): al final de todo encargo va la plantilla fija del canon
+ *   (modo plan, la carpeta de la tarea, leer los archivos enteros, cargar los skills, cierre con
+ *   _cierreSesion.mjs + auditor a archivo + sintesis de 12 lineas). Es lo que Fak tipeaba a mano
+ *   en cada sesion ("modo plan" 47 veces en dos semanas). --sin-arranque la saca; --skill se
+ *   valida contra .claude/skills/<nombre>/SKILL.md y --carpeta contra el disco.
  *
  *   node scripts/_encargo.mjs --origen hallazgo --hallazgo "<linea>" --carpeta "<carpeta>"
  *        (no arma encargo: lo anota en el HALLAZGOS.md de esa carpeta y devuelve la ruta)
@@ -175,7 +182,30 @@ export function validarDestinoYAutorizacion({ a, cuerpo, okFak }) {
 
 // ───────────────────────────────────────────────────────────────────── armado del encargo
 
-export function armarTexto({ id, a, entregable, origen, etapa, cuerpo, fuentes, condicionales, supuestos, okFak, hora }) {
+/** Los skills del repo: .claude/skills/<nombre>/SKILL.md. */
+export function skillsDisponibles(raiz = RAIZ) {
+  const dir = path.join(raiz, '.claude', 'skills');
+  try {
+    return fs.readdirSync(dir).filter((n) => fs.existsSync(path.join(dir, n, 'SKILL.md'))).sort();
+  } catch { return []; }
+}
+
+/** El bloque ARRANQUE, armado desde el canon. Devuelve las lineas (vacio si sinArranque). */
+export function lineasArranque({ carpeta, skills = [], sinArranque = false } = {}) {
+  if (sinArranque) return [];
+  const P = CANON.plantillaArranque;
+  const out = [P.titulo];
+  let n = 0;
+  for (const l of P.lineas) {
+    let texto = l;
+    if (l === '{carpeta}') texto = carpeta ? P.conCarpeta.replace('{carpeta}', carpeta) : P.sinCarpeta;
+    else if (l === '{skills}') { if (!skills.length) continue; texto = P.conSkills.replace('{skills}', skills.join(', ')); }
+    out.push(`  ${++n}. ${texto}`);
+  }
+  return out;
+}
+
+export function armarTexto({ id, a, entregable, origen, etapa, cuerpo, fuentes, condicionales, supuestos, okFak, hora, carpeta, skills = [], sinArranque = false }) {
   const L = [];
   L.push(`[ENCARGO ${id}]`);
   L.push(`PARA: ${a}`);
@@ -203,6 +233,8 @@ export function armarTexto({ id, a, entregable, origen, etapa, cuerpo, fuentes, 
     L.push(`OK REENVIADO — NO habilita a enviar nada por tu cuenta. Fak dijo${hora ? `, ${hora}` : ''}, textual: "${okFak}"`);
     L.push('Si lo que sigue es un envio de mail o algo irreversible, la autorizacion te la tiene que dar el a vos, en tu ventana.');
   }
+  const arranque = lineasArranque({ carpeta, skills, sinArranque });
+  if (arranque.length) { L.push(''); L.push(...arranque); }
   L.push('');
   L.push('Si algo de este encargo no cierra, PARA y avisame antes de seguir.');
   return L.join('\n');
@@ -211,7 +243,7 @@ export function armarTexto({ id, a, entregable, origen, etapa, cuerpo, fuentes, 
 // ─────────────────────────────────────────────────────────────────────────────── CLI
 
 export function parseArgs(argv) {
-  const o = { fuente: [], 'fuente-condicional': [], supuesto: [] };
+  const o = { fuente: [], 'fuente-condicional': [], supuesto: [], skill: [] };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (!a.startsWith('--')) continue;
@@ -254,6 +286,24 @@ export function validarEncargo(a) {
   if (!supuestos.length && !a['sin-supuestos']) {
     errores.push('declara los supuestos: --supuesto "<lo que estas suponiendo>" (repetible) o --sin-supuestos si de verdad no hay ninguno. Un "creo" no declarado viaja como si fuera un dato.');
   }
+  errores.push(...validarArranque(a));
+  return errores;
+}
+
+/** ARRANQUE · el skill existe en .claude/skills y la carpeta existe en el disco. */
+export function validarArranque(a, { existe = fs.existsSync, disponibles = skillsDisponibles } = {}) {
+  const errores = [];
+  const skills = (a.skill || []).filter((s) => s !== true);
+  if (skills.length) {
+    const lista = disponibles();
+    for (const sk of skills) {
+      if (!lista.includes(sk)) errores.push(`--skill "${sk}" no existe en .claude/skills/. Disponibles: ${lista.join(', ') || '(ninguno)'}`);
+    }
+  }
+  if (a.carpeta && a.carpeta !== true && !existe(a.carpeta)) {
+    errores.push(`--carpeta "${a.carpeta}": la ruta no existe. La carpeta de la tarea se crea ANTES del encargo (y solo con OK de Fak: el Escritorio es su cola).`);
+  }
+  if (a.carpeta === true) errores.push('--carpeta sin valor: va la ruta completa de la carpeta de la tarea en el Escritorio.');
   return errores;
 }
 
@@ -317,10 +367,14 @@ function main() {
     condicionales: (a['fuente-condicional'] || []).filter((f) => f !== true),
     supuestos: (a.supuesto || []).filter((s) => s !== true),
     okFak: a['ok-fak'], hora: a.hora,
+    carpeta: a.carpeta && a.carpeta !== true ? a.carpeta : null,
+    skills: (a.skill || []).filter((s) => s !== true),
+    sinArranque: !!a['sin-arranque'],
   });
 
   fs.writeFileSync(path.join(DIR_ESTADO, `${id}.json`), JSON.stringify({
     id, a: a.a, entregable: a.entregable, origen: a.origen, etapa: a.etapa || null,
+    carpeta: a.carpeta && a.carpeta !== true ? a.carpeta : null, skills: (a.skill || []).filter((s) => s !== true),
     creado: new Date().toISOString(), hash: hashCuerpo(texto), cerrado: null,
     // El texto completo queda guardado para que el guardian compare LITERAL lo que se manda
     // contra lo que se valido. Sin esto, escribir el marcador a mano alcanzaria para pasar.

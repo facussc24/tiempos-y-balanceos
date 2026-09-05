@@ -17,9 +17,15 @@ formulario validado**. Mismo patron que ya funciona dos veces en esta casa: `_ma
 ```bash
 node scripts/_encargo.mjs --a "<sesion>" --entregable "<UNO>" --origen fak \
      --cuerpo "<texto>" [--fuente <ruta>] [--supuesto "<...>" | --sin-supuestos] \
-     [--etapa proyecto|serie] [--ok-fak "<cita>" --hora HH:MM]
+     [--etapa proyecto|serie] [--ok-fak "<cita>" --hora HH:MM] \
+     [--carpeta "<carpeta de la tarea en el Escritorio>"] [--skill <nombre>]... [--sin-arranque]
 ```
-Se pega la salida **tal cual**. Un mensaje que no es encargo (un gracias, un aviso):
+Se pega la salida **tal cual**. Al final de todo encargo va el bloque **ARRANQUE** (desde el
+05/09/2026, canon `plantillaArranque`): modo plan, la carpeta de la tarea, leer los archivos
+ENTEROS, cargar los skills, y el cierre (`_cierreSesion.mjs`, auditor a un ARCHIVO, sintesis de
+12 lineas con la ruta primero). Es lo que Fak tipeaba a mano en cada sesion ("modo plan" 47 veces
+en dos semanas). `--skill` se valida contra `.claude/skills/` y `--carpeta` contra el disco; una
+linea nueva de la plantilla se prueba en `encargo.test.mjs` (pasa por los mismos candados). Un mensaje que no es encargo (un gracias, un aviso):
 `touch ~/.claude/.encargo-libre` — vale una vez, mientras el archivo este vacio.
 
 ## Los 7 candados, uno por error real
