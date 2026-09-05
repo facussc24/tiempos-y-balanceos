@@ -25,7 +25,7 @@ Regla corta. El detalle, los umbrales y los errores caros: skill `hojas-de-proce
 
 - **Duro:** `py -3 .claude/skills/hojas-de-proceso/scripts/hoja_proceso_check.py "<deck.pptx>"`
   sale con codigo 1 y la hoja no se entrega.
-- **Una sola fuente:** los umbrales viven solo en `scripts/hojalib.py`; el generador dibuja
+- **Una sola fuente:** los umbrales viven solo en `.claude/skills/hojas-de-proceso/scripts/hojalib.py`; el generador dibuja
   con los mismos numeros con los que el gate rechaza.
 - **Regresion:** `py -3 .claude/skills/hojas-de-proceso/scripts/hojalib_selftest.py` — 12
   casos, cada criterio en ROJO y en VERDE.

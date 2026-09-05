@@ -55,7 +55,7 @@ o en un paso con `export_deliverables.py ... --final --motor --render`.
 - **El motor de imagen se declara y `matplotlib` está rechazado** (algoritmo del pintor: sin
   oclusión ni sombra, un caballete de tubos sale como una chapa). Fak sacó 6 preguntas de 4
   capturas; **5 de las 6 se contestaban con una imagen legible**. El motor bueno vive en
-  `scripts/foto3d.py` del skill — fondo BLANCO, y trae maniquí a escala para poner al operario en la
+  `.claude/skills/cad-design/scripts/foto3d.py` — fondo BLANCO, y trae maniquí a escala para poner al operario en la
   escena. Con `--motor foto3d` el gate corre el autotest del propio motor.
 - **Se MIDE cuánto color tiene el render y se informa — no bloquea.** Nació bloqueante con umbral
   0,35 y una auditoría independiente lo tumbó el mismo día por los dos lados: un matplotlib real

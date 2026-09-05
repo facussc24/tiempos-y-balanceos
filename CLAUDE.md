@@ -39,7 +39,7 @@ sus documentos en Supabase son referencia historica de solo lectura.
 
 NO preguntar si Fak quiere que lo hagas. HACERLO.
 Estado medible del checklist: `node scripts/_cierreSesion.mjs` (chequea LECCIONES, backup
-vs escrituras Supabase, build, git y Escritorio; exit 1 si falta algo; `--sin-build` para
+vs escrituras Supabase, build, git, Escritorio y cerebro —`_cerebroLint.mjs`—; exit 1 si falta algo; `--sin-build` para
 la pasada rapida). Solo mide y reporta — commit/push/archivar los hace Claude.
 
 ## Como interactuar con Fak
@@ -58,17 +58,14 @@ la pasada rapida). Solo mide y reporta — commit/push/archivar los hace Claude.
 
 ## Reglas criticas — NO ROMPER
 
-1. **Nada de datos mock/placeholder**: todo dato mostrado/exportado/testeado viene de
-   Supabase real, via los mismos hooks/repositories que usa la UI.
-2. **Cero duplicados en Supabase**: query antes de insertar. Las familias canonicas de
-   producto son 8; si un seed crea mas, abortar y reportar. Cliente = "VWA"/"PWA".
-3. **Export Excel**: AMFE y CP solo `xlsx-js-style`; HO (legacy) solo `ExcelJS`.
+1. **Nada de datos mock, cero duplicados en Supabase, reusar antes de crear**: regla
+   `core-prohibiciones.md` §5-6 (8 familias canonicas — si un seed crea mas, abortar y
+   reportar; cliente = "VWA"/"PWA"; exports, hooks y repositorios ya funcionan: llamarlos).
+2. **Export Excel**: AMFE y CP solo `xlsx-js-style`; HO (legacy) solo `ExcelJS`.
    Export AMFE oficial via node (skill `amfe-export-oficial`), no desde la app.
-4. **Reusar antes de crear**: los exports individuales, hooks y repositorios ya
-   funcionan — llamarlos, no reimplementar.
-5. **Verificacion obligatoria**: tras seed/migracion contar familias (8) y duplicados (0);
+3. **Verificacion obligatoria**: tras seed/migracion contar familias (8) y duplicados (0);
    tras export abrir el archivo; `npx tsc --noEmit` y tests del modulo afectado.
-6. Documentos APQP son "documentos vivos" (IATF): cambios diarios van al audit trail;
+4. Documentos APQP son "documentos vivos" (IATF): cambios diarios van al audit trail;
    revisiones mayores (A/B/C) solo en hitos oficiales (prelanzamiento/PPAP/ECN).
 
 ## Reglas contextuales (.claude/rules/) — carga automatica
@@ -82,7 +79,6 @@ la pasada rapida). Solo mide y reporta — commit/push/archivar los hace Claude.
 | `git-deploy.md` | Build + commit + push al cerrar tareas |
 | `consumos-entregables.md` | Tablas de consumo / cargas arb: validador + checklist canonico |
 | `verify-before-close.md` | Verificar build/diff/archivo generado antes de decir "listo" |
-| `coordinador.md` | **Rol coordinador**: lo que sale hacia otra sesion pasa por `_encargo.mjs` (7 candados + hook) |
 
 | Con `paths:` (cargan al tocar) | Ambito |
 |---|---|
@@ -90,6 +86,9 @@ la pasada rapida). Solo mide y reporta — commit/push/archivar los hace Claude.
 | `control-plan.md` | modules/controlPlan |
 | `database.md` + `verify-supabase-live.md` | repositorios, scripts, persistencia |
 | `exports.md` | archivos *export* |
+| `mail-envio.md` | `scripts/_mail*` + `*.py` — mandar un mail: nunca con un `.Send()` suelto; gate anti-duplicado (hook `mail-guard.sh`) |
+| `patrones-corte.md` | `*.dxf` / `*.plt` / `*.hpgl` + skill `patrones-corte-plotter` — 3 gates antes de mover un punto |
+| `coordinador.md` | `_encargo.mjs`, `coordinadorGuard`, su hook y su test — **rol coordinador**: lo que sale hacia otra sesion pasa por `_encargo.mjs` (7 candados + hook `coordinador-guard.sh`) |
 | `testing.md` | __tests__ |
 | `dev-login.md` | components/auth — boton dev-login: NO TOCAR NUNCA |
 | `arb-no-cerrar.md` | `scripts/_arb*.py` + skill `arb-operar` — **el arb NO se cierra sin consultarle a Fak**: reabrirlo pide contraseña y la sesion no tipea contraseñas (hook `arb-cerrar-guard.sh`) |
@@ -127,10 +126,8 @@ DXF antes de entregarlo — el juez es AutoCAD, no ezdxf; enforcement duro: `ent
 **Arquitectura de roles (decision Fak 2026-08-09):** los skills SON el sistema de
 roles — cargan solo al usarse. NO crear agentes-rol por dominio ni proyectos
 separados (multi-agente ≈ 15x tokens); subagentes solo para trabajo batch/paralelo,
-techo 5. `docs/LECCIONES_APRENDIDAS.md`: gate POR BULLET (600 caracteres por leccion; una
-"graduada a X", 2 lineas), medido por `_cierreSesion.mjs` y por el hook Stop; el techo de
-26/28 KB queda como red. Lo que no entra legible se GRADUA a regla/memoria/archivo (regla
-`lecciones-consolidacion.md`), nunca se comprime a fragmentos ni se pelean bytes.
+techo 5. `docs/LECCIONES_APRENDIDAS.md`: gate por bullet y ciclo de graduacion en la regla
+`lecciones-consolidacion.md` (lo miden `_cierreSesion.mjs` y el hook Stop).
 
 **Modelo y sesion (decision Fak 04/09/2026):** Fable 5.1 para mejoras de codigo importantes,
 Opus 5 para el resto — no tocar el selector por cuenta propia. Toda sesion arranca en modo
@@ -176,13 +173,13 @@ docs/                       guias APQP + LECCIONES_APRENDIDAS + _archive/
 ## Calidad
 
 - Nivel senior: leer el codigo completo antes de editar; verificar antes de afirmar.
-- Subagentes tienen ~40-50% falsos positivos en audits — verificar manualmente antes de aplicar.
+- Un hallazgo de subagente se verifica contra la fuente antes de aplicarlo: en los audits la mayoria suelen ser falsos positivos, y el 02/09 un auditor independiente le paso 92 de 111 evasiones a gates que yo daba por probados (`coordinador.md`).
 - En deep audits autonomos: clasificar TRUE BUG > ROBUSTNESS > FALSE POSITIVE; ante la duda NO aplicar el fix; correr tests tras cada batch.
 
 ## Auth y deploy
 
 - Dev: boton "Acceso rapido (dev)" (borde naranja) con `VITE_AUTO_LOGIN_EMAIL/PASSWORD` — protegido por regla `dev-login.md`.
-- Produccion: https://facussc24.github.io/tiempos-y-balanceos/ — deploy manual `npm run build && npx gh-pages -d dist` (repo publico facussc24/tiempos-y-balanceos).
+- Produccion: https://facussc24.github.io/tiempos-y-balanceos/ — la despliega el workflow `.github/workflows/deploy.yml` en cada push a `main` (repo publico facussc24/tiempos-y-balanceos). `npx gh-pages -d dist` NO se usa: publica una rama que Pages no sirve (memoria `ghpages_manual_deploy`).
 
 ## Documentos de la empresa
 

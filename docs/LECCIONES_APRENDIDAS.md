@@ -46,7 +46,7 @@ La historia completa de cada incidente vive en los snapshots.
 
 ## Identidad de un dato
 
-- **🔴🔴 UNA FUENTE QUE SALE DE MI LADO DEL MOSTRADOR NO ES UNA SEGUNDA FUENTE — Y UN ARTEFACTO PROPIO DESCRIBE LA FUENTE, NO LA ES.** Regla mia, test, MEMORIA, EXPORT o cita de un subagente: si afirma un hecho que un documento puede zanjar, se abre el documento ANTES de actuar. Cuatro formas de caer: el artefacto propio; fuentes que parecen varias y comparten origen; el agente al que le paso mis supuestos; el test que se mira al espejo. Memorias `agente_no_independiente`, `verificar_contra_la_fuente_no_el_codigo`; `amfe.md` §12; snapshot 2026-09-04.
+- **🔴🔴 UNA FUENTE QUE SALE DE MI LADO DEL MOSTRADOR NO ES UNA SEGUNDA FUENTE — Y UN ARTEFACTO PROPIO DESCRIBE LA FUENTE, NO LA ES.** Regla mia, test, MEMORIA, EXPORT o cita de un subagente: si afirma un hecho que un documento puede zanjar, se abre el documento ANTES de actuar. Cuatro formas de caer: el artefacto propio; fuentes que parecen varias y comparten origen; el agente al que le paso mis supuestos; el test que se mira al espejo. Memorias `un_agente_no_es_independiente`, `verificar_contra_la_fuente_no_el_codigo`; `amfe.md` §12; snapshot 2026-09-04.
 
 - **🔴🔴 04/09 — "NO SE COMPRA" NO ES "ESTA MAL CARGADO", y el listado del legajo NO valida al arb que se cargo DESDE el.** Conteste *"si, es correcto"* cruzando los dos: una sola fuente contada dos veces (*"no me convenciste"*). El plano del cliente, la unica fuente que no salio de Barack, pedia 100 g/m2 igual que el codigo — **el material estaba bien y el codigo llevaba sin comprarse desde 2021**. Y mi lista de hallazgos era **94% ruido**: el reporte de OC cortaba los codigos a 10 caracteres. Memoria `validar_insumo_de_bom_tres_fuentes`.
 
@@ -54,7 +54,7 @@ La historia completa de cada incidente vive en los snapshots.
 
 ## Consumos de material
 
-- **Un numero que no cuadra casi nunca es un error: es la misma cosa en otra magnitud, o el mismo numero con la merma adentro** — se normaliza a la unidad que gobierna ANTES de reportar un desvio. Graduado a `consumos-entregables.md` + `_validarConsumos.mjs` + skill `verificacion-consumos`; memorias `adhesivo_fa_retic_gv_densidades`, `tabla_consumo_mesa_corte`, `aplix_dos_unidades`. Version larga: snapshot 2026-08-28.
+- **Un numero que no cuadra casi nunca es un error: es la misma cosa en otra magnitud, o el mismo numero con la merma adentro** — se normaliza a la unidad que gobierna ANTES de reportar un desvio. Graduado a `consumos-entregables.md` + `_validarConsumos.mjs` + skill `verificacion-consumos`; memorias `adhesivo_fa_retic_gv_densidades`, `tabla_consumo_mesa_corte`, `aplix_consumo_dos_unidades`. Version larga: snapshot 2026-08-28.
 
 ## Entregables y comunicacion con Fak
 

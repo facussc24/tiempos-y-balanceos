@@ -27,6 +27,7 @@
  */
 
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execSync } from 'node:child_process';
@@ -43,6 +44,7 @@ const REPO = path.resolve(fileURLToPath(import.meta.url), '..', '..');
 // system prompt por @import desde CLAUDE.md, asi que el tope por bytes ya no recorta
 // nada: es una red. Lo que gobierna es el gate POR BULLET (evaluarBullets).
 import { CANON as CANON_CIERRE, evaluarBullets } from './_lib/cierreGuard.mjs';
+import { relevarCerebro, lintCerebro, dirMemoriaDe, resumir as resumirCerebro } from './_lib/cerebroLint.mjs';
 export const LECCIONES_AVISO = CANON_CIERRE.lecciones.aviso_bytes;
 export const LECCIONES_TOPE = CANON_CIERRE.lecciones.tope_bytes;
 
@@ -274,6 +276,21 @@ function chequearLeccionesBullets() {
 }
 
 /**
+ * El cerebro (desde 05/09/2026, Ola 3): wikilinks, indice MEMORY.md, frontmatter, rutas
+ * citadas y tablas de reglas de CLAUDE.md. Un puntero roto no avisa solo: la sesion lee
+ * "ver memoria X", no la encuentra y sigue sin ella. Detalle: node scripts/_cerebroLint.mjs.
+ */
+function chequearCerebro() {
+    try {
+        const c = relevarCerebro({ repo: REPO, memoria: dirMemoriaDe(REPO), globales: path.join(os.homedir(), '.claude') });
+        if (!c.memorias.length) return { estado: 'aviso', detalle: `no encuentro memorias en ${dirMemoriaDe(REPO)} (¿PC sin cerebro? node scripts/_nube.mjs --bajar)` };
+        return resumirCerebro(lintCerebro(c));
+    } catch (e) {
+        return { estado: 'aviso', detalle: `no se pudo lintear el cerebro: ${e.message.split('\n')[0]}` };
+    }
+}
+
+/**
  * El Escritorio: cuantas tareas siguen abiertas, cuales llevan 7+ dias (candidatas
  * a estar cerradas sin archivar — decide Fak, por eso es aviso y no falta), y si
  * el archivo de cerradas mantiene sus invariantes (eso SI bloquea: un indice roto
@@ -350,6 +367,7 @@ async function main(argv) {
         { paso: 'Build de produccion', ...chequearBuild(sinBuild) },
         { paso: 'Git: commit + push (regla git-deploy)', ...chequearGit() },
         { paso: 'Escritorio: cola de tareas y archivo de cerradas', ...(await chequearEscritorio()) },
+        { paso: 'Cerebro: wikilinks, indice, rutas citadas y tablas de reglas (_cerebroLint)', ...chequearCerebro() },
         // Lo que ningun script puede medir — se lista para que no se olvide, no bloquea:
         { paso: 'Auditor al cerrar tareas de codigo', estado: 'manual', detalle: 'lanzar el agente `auditor` si esta sesion toco codigo' },
         { paso: 'Lecciones y memorias de la sesion', estado: 'manual', detalle: 'si Fak corrigio, decidio o revelo algo: LECCIONES_APRENDIDAS + memoria con fuente' },

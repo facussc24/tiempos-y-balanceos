@@ -169,7 +169,7 @@ en **6-7**. Es falso, y subdeclaraba riesgo en todos los AMFE. Lo destapo `/audi
 sobre el AMFE 172: al recalificar sus 47 causas el AP salto de `L=9/M=22/H=15` a `M=12/H=35`.
 **Enforcement: check `DETECTION_HUMANA_OPTIMISTA` en `scripts/_lib/amfeValidator.mjs`.**
 
-**Fuente** (leida en el original, no parafraseada del codigo — [[verificar_contra_la_fuente]]):
+**Fuente** (leida en el original, no parafraseada del codigo — [[feedback_verificar_contra_la_fuente_no_el_codigo]]):
 `4- MANUALES\AMFE\FMEA-AMFE-VDA-AIAG\446076670-FMEA-AIAG-VDA-First-Edition-pdf.pdf`,
 **Tabla P1 pag. 116 · Tabla P2 pag. 117 · Tabla P3 pag. 119-120 del PDF**. Es escaneado: se
 rasteriza y se MIRA; `get_text()` da vacio.
