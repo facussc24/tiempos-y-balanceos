@@ -21,8 +21,16 @@ cabeza. Enforcement: hook `consumos-entregable-guard.sh` + este checklist +
    - Vinilo/tela de SERIE: tabla tizadas Mesa de Corte (`CONSUMOS TIZADAS
      <fecha>.xlsx`, hoja por cliente, col ML) — le gana al arb y a BOMs.
      Ver memoria `reference_tabla_consumo_mesa_corte`.
-   - Unidades: **NO se eligen, SE BUSCAN** en `INSUMOS.txt` (maestro arb, hogar
-     unico). Ver memoria `reference_arb_insumos_maestro`.
+   - Unidades: **NO se eligen, SE BUSCAN en el maestro del arb, y BOM = maestro =
+     FACTURA del proveedor** (la OC copia la etiqueta del maestro, no prueba nada:
+     `reference_unidad_oc_es_etiqueta_del_maestro`). Desde el 05/09/2026 el validador
+     las busca solo (`scripts/_lib/unidadesArb.mjs`): INSUMOS.TXT **tabulado** →
+     RELACIONES.TXT col Unidad → `.arb-cache/insumos.csv` → backup 02/08, la fuente mas
+     nueva gana y el reporte dice cual uso. Ojo: el INSUMOS.TXT exportado el 28/08 es el
+     **listado impreso, sin columna de unidad**: no sirve, hay que re-exportar el tabulado.
+     Dos grafias de la misma familia (UN/UNI/UNID, MTS/MTL/ML) no son error; dos familias
+     distintas (MT2 vs MTL, UN vs KG) si. Familias en `unidades_alias` del canon, medidas
+     sobre la poblacion, no a ojo. Ver memoria `reference_arb_insumos_maestro`.
    - Piezas/caja: ficha GAMA EMBALAJE (`reference_fichas_embalaje_server`).
 2. **Reglas canonicas** (detalle en `scripts/_lib/consumosCanon.data.json`):
    - Etiqueta 100x60/SATO = 1 por CAJA (1/pzas-caja), NUNCA por pieza.
@@ -38,8 +46,8 @@ cabeza. Enforcement: hook `consumos-entregable-guard.sh` + este checklist +
 4. **Correr el validador** sobre la tabla final:
    ```bash
    node scripts/_validarConsumos.mjs <tabla.xlsx|csv> \
-     [--producto P703-EFG] [--pzas-caja N] [--insumos INSUMOS.txt] \
-     [--compare consumo actual_arb]
+     [--producto P703-EFG] [--pzas-caja N] [--compare consumo actual_arb] \
+     [--arb-dir C:\tmp] [--arb-cache .arb-cache] [--insumos maestro_a_mano]
    ```
    Tolerancia **0,1%** — NUNCA 2% (tapa typos reales: poliol 0,22806 vs
    0,225806 = 1% y era error). Invariantes que cierran (ISO+POLI=0,35 exacto;
@@ -55,7 +63,13 @@ cabeza. Enforcement: hook `consumos-entregable-guard.sh` + este checklist +
 
 `CODIGO_DUPLICADO` (mismo codigo, valores distintos) · `QUIMICO_VALOR_IDENTICO`
 (par A+B 1:1) · `ETIQUETA_100X60` (por pieza vs 1/caja) · `ETIQUETA_50X20`
-(fuera de {1,2}) · `UNIDAD_VS_MAESTRO` (contra INSUMOS.txt) · `INVARIANTE`
+(fuera de {1,2}) · **unidades contra el maestro del arb, sin flags**: `UNIDAD_VS_MAESTRO`
+(FAIL, familia distinta) · `UNIDAD_GRAFIA` (INFO, misma unidad escrita distinto) ·
+`UNIDAD_CAMBIO_ETIQUETA` (WARN: el codigo decia MT2 en una foto vieja y hoy MTL — si las OC
+no movieron cantidad ni precio fue cambio de etiqueta y el consumo se reconvierte con el
+factor fisico, caso aplix/Haartz 20/08) · `UNIDAD_CODIGO_SIN_MAESTRO` · `UNIDAD_MAESTRO_VACIA`
+· `UNIDAD_VACIA_EN_TABLA` · `TABLA_SIN_UNIDAD` · `UNIDAD_FUENTE` (el INSUMOS.TXT es el
+listado impreso, un codigo con dos unidades en RELACIONES) · `INVARIANTE`
 (sumas por producto del canon) · `DIFF_SOBRE_TOLERANCIA` (compare 2 columnas al
 0,1%). Exit 1 si hay FAIL.
 

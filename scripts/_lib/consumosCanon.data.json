@@ -13,17 +13,122 @@
     "50x20": {
       "regex": "50\\s*[xX]\\s*20",
       "regla": "1 por pieza; 2 si la pieza lleva inyeccion propia (una al inyectar + una en PT)",
-      "valores_validos": [1, 2],
+      "valores_validos": [
+        1,
+        2
+      ],
       "fuente": "Fak 2026-07-16 (carga arb Patagonia)"
     }
   },
-  "unidades_regla": "La unidad NO se elige, SE BUSCA en el maestro INSUMOS.txt del arb (hogar unico; 0 codigos con 2 unidades). PPBL-4A/4B=LTS, AD-ADFA15=LTS, ET-SATO-100X60=UNI. Fuente: reference_arb_insumos_maestro.",
+  "unidades_regla": "La unidad NO se elige, SE BUSCA en el maestro INSUMOS.txt del arb (hogar unico; 0 codigos con 2 unidades). PPBL-4A/4B=LTS, AD-ADFA15=LTS, ET-SATO-100X60=UNI. Fuente: reference_arb_insumos_maestro. Desde el 05/09/2026 el validador la busca solo (scripts/_lib/unidadesArb.mjs): --insumos ya no hace falta.",
+  "unidades_alias": {
+    "_leeme": "Familias de unidad del maestro del arb. Dos grafias de la misma familia (UN/UNI/UNID) NO son un error de unidad; dos familias distintas (UN vs KG, MT2 vs MTL) SI. Medido el 05/09/2026 sobre RELACIONES.TXT del 01/09 (1.064 codigos, 0 con dos unidades): UN 2106, KG 1443, MTS 503, LTS 439, MT2 434, UNI 430, MTL 400, BI 235, ROLL 175, UNID 145, LAT 25, CAJ 16, FT2 7, GRS 6; y el maestro del 02/08 (3.035 insumos, 118 sin unidad). MTS en este maestro es METRO LINEAL (reference_arb_insumos_maestro). Una grafia nueva se agrega ACA, no en el codigo.",
+    "UN": [
+      "UN",
+      "UNI",
+      "UNID",
+      "UNIDAD",
+      "UNIDADES",
+      "U"
+    ],
+    "KG": [
+      "KG",
+      "KGS",
+      "KILO",
+      "KILOS"
+    ],
+    "GR": [
+      "GR",
+      "GRS",
+      "G",
+      "GRAMOS"
+    ],
+    "LT": [
+      "LT",
+      "LTS",
+      "L",
+      "LITRO",
+      "LITROS"
+    ],
+    "ML": [
+      "ML",
+      "MTL",
+      "MTS",
+      "MT",
+      "M",
+      "METRO",
+      "METROS",
+      "METRO LINEAL"
+    ],
+    "M2": [
+      "M2",
+      "MT2",
+      "M²"
+    ],
+    "M3": [
+      "M3",
+      "MT3"
+    ],
+    "ROLLO": [
+      "ROLL",
+      "ROLLO",
+      "ROLLOS"
+    ],
+    "BI": [
+      "BI",
+      "BIDON"
+    ],
+    "LAT": [
+      "LAT",
+      "LATA"
+    ],
+    "CAJ": [
+      "CAJ",
+      "CAJA"
+    ],
+    "BO": [
+      "BO",
+      "BOLSA"
+    ],
+    "JG": [
+      "JG",
+      "JGO",
+      "JUEGO"
+    ],
+    "FT2": [
+      "FT2"
+    ],
+    "GAL": [
+      "GAL"
+    ],
+    "TON": [
+      "TON"
+    ]
+  },
+  "unidades_tres_fuentes": {
+    "regla_corta": "BOM = maestro = factura del proveedor. La OC copia la etiqueta del maestro; quien prueba en que unidad se compra es la factura o la pro forma.",
+    "regla": "La unidad de una linea de BOM es la del MAESTRO del insumo, y la del maestro tiene que ser la unidad en la que FACTURA el proveedor (BOM = maestro = factura). Una orden de compra NO prueba la unidad de compra: imprime la etiqueta del maestro al momento de emitirse. Si la etiqueta del maestro cambio y la cantidad y el precio de las OC no se movieron, fue un cambio de ETIQUETA: el consumo cargado sigue en la unidad vieja hasta que alguien lo reconvierta con el factor fisico (aplix 20/08/2026: ML = m2 / 0,208; el Haartz quedo a medias ese mismo dia). Quien cierra la discusion es la factura o la pro forma del proveedor, no la OC ni el maestro.",
+    "fuente": "reference_unidad_oc_es_etiqueta_del_maestro (31 OC de aplix, 19/08/2026) · reference_aplix_consumo_dos_unidades (Pro Forma Aplix 1478158, 17/04/2026) · plan 04/09/2026 H6: 4 de las 7 correcciones externas de julio-septiembre fueron de unidad",
+    "herramientas": "node scripts/_validarConsumos.mjs <tabla>  (UNIDAD_VS_MAESTRO, UNIDAD_CAMBIO_ETIQUETA, UNIDAD_CODIGO_SIN_MAESTRO) · python scripts/_ocHistoria.py \"<PROVEEDOR>\"  (linea de tiempo de la unidad en las OC: avisa si un codigo salio con mas de una)"
+  },
+  "unidades_fuentes": {
+    "_leeme": "De donde sale la unidad del maestro. El loader (scripts/_lib/unidadesArb.mjs) usa la fuente MAS NUEVA que tenga el codigo y declara cual uso.",
+    "orden": [
+      "C:\\tmp\\INSUMOS.TXT solo si es el export TABULADO (columna U.Medida). El del 28/08/2026 es el listado impreso, sin unidad: 0 insumos parseables",
+      "C:\\tmp\\RELACIONES.TXT columna Unidad: la llena el arb desde el maestro; 0 codigos con dos unidades",
+      ".arb-cache/insumos.csv, lo que escribio _refreshArb.mjs (vacio desde el 01/09/2026 por el punto 1)",
+      ".arb-cache/insumos_AAAAMMDD_backup.csv: foto vieja, solo para codigos que las otras no tienen"
+    ]
+  },
   "invariantes": {
     "P703-EFG": [
       {
         "auto": true,
         "desc": "ISO + POLI = 0,35 exacto (espuma PU del EFG)",
-        "terminos": ["isocianato|\\biso\\b", "poliol|\\bpoli\\b"],
+        "terminos": [
+          "isocianato|\\biso\\b",
+          "poliol|\\bpoli\\b"
+        ],
         "target": 0.35,
         "fuente": "BOM 127 Rev7 + auditoria 2026-07-15"
       }

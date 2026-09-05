@@ -13,8 +13,11 @@
  *   --sheet <nombre|indice>   hoja del xlsx (default: primera)
  *   --producto <clave>        aplica invariantes de esa clave del canon (ej P703-EFG)
  *   --pzas-caja <n>           valida etiqueta 100x60 == 1/n
- *   --insumos <archivo>       maestro codigo→unidad (export INSUMOS.txt del arb,
- *                             lineas con codigo y unidad) para validar unidades
+ *   --insumos <archivo>       maestro codigo→unidad pasado a mano (INSUMOS.TXT TABULADO o
+ *                             csv codigo,desc,unidad). Desde el 05/09/2026 NO hace falta: el
+ *                             maestro se busca solo en C:\tmp (INSUMOS/RELACIONES) y .arb-cache
+ *   --arb-dir <carpeta>       donde estan los exports del arb (default C:\tmp)
+ *   --arb-cache <carpeta>     donde esta el cache del arb (default .arb-cache del repo)
  *   --compare <colA> <colB>   compara 2 columnas numericas (por header) con
  *                             tolerancia 0,1% — para "doc vs actual en arb"
  *   --col-codigo <header>     override de autodeteccion de columnas
@@ -28,6 +31,7 @@
 import { readFileSync, existsSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join, extname } from 'path';
+import { cargarMaestroUnidades, compararUnidad, fechaCorta, TMP_ARB, CACHE_ARB } from './_lib/unidadesArb.mjs';
 
 const __dir = dirname(fileURLToPath(import.meta.url));
 const CANON = JSON.parse(readFileSync(join(__dir, '_lib', 'consumosCanon.data.json'), 'utf8'));
@@ -42,7 +46,7 @@ function opt(name, n = 1) {
     return n === 1 ? argv[i + 1] : argv.slice(i + 1, i + 1 + n);
 }
 if (!file || !existsSync(file)) {
-    console.error('Uso: node scripts/_validarConsumos.mjs <tabla.xlsx|.csv> [--producto P703-EFG] [--pzas-caja N] [--insumos maestro] [--compare colA colB]');
+    console.error('Uso: node scripts/_validarConsumos.mjs <tabla.xlsx|.csv> [--producto P703-EFG] [--pzas-caja N] [--arb-dir C:\\tmp] [--insumos maestro] [--compare colA colB]');
     process.exit(2);
 }
 
@@ -172,24 +176,56 @@ for (const r of rows) {
     }
 }
 
-// 4. Unidades contra maestro INSUMOS
+// 4. Unidades: la de la tabla tiene que ser la del MAESTRO del arb (BOM = maestro = factura).
+//    Hasta el 05/09/2026 esto solo corria si alguien pasaba --insumos a mano, y desde el 28/08 el
+//    INSUMOS.TXT exportado era el listado impreso (sin unidad): 4 de las 7 correcciones que
+//    llegaron de afuera entre julio y septiembre fueron de unidad. Ahora el maestro se busca solo
+//    (scripts/_lib/unidadesArb.mjs) y el reporte dice de que fuente y de que fecha salio cada unidad.
 const insumosPath = opt('insumos');
-if (insumosPath && cCod && cUni) {
-    if (!existsSync(insumosPath)) { console.error(`--insumos: no existe ${insumosPath}`); process.exit(2); }
-    const master = new Map();
-    for (const line of readFileSync(insumosPath, 'utf8').split(/\r?\n/)) {
-        const m = line.match(/([A-Z0-9][A-Z0-9._\/-]{3,15})[^A-Z0-9]+.*?\b(LTS|KGS|UNI|MTS|GRS|M2|ML)\b/i);
-        if (m) master.set(m[1].toUpperCase(), m[2].toUpperCase());
+if (insumosPath && !existsSync(insumosPath)) { console.error(`--insumos: no existe ${insumosPath}`); process.exit(2); }
+if (!cUni) {
+    flag('WARN', 'TABLA_SIN_UNIDAD', `La tabla no tiene columna de unidad (o no la detecte: --col-unidad), asi que no se en que unidad esta cada consumo. ${CANON.unidades_tres_fuentes.regla_corta}`);
+} else if (!cCod) {
+    flag('INFO', 'UNIDAD_SIN_CODIGO', `Sin columna de codigo no puedo cruzar unidades con el maestro (--col-codigo). ${CANON.unidades_tres_fuentes.regla_corta}`);
+} else {
+    const maestro = cargarMaestroUnidades({ tmpDir: opt('arb-dir') ?? TMP_ARB, cacheDir: opt('arb-cache') ?? CACHE_ARB, extra: insumosPath });
+    console.log('Maestro de unidades: ' + (maestro.fuentes.length
+        ? maestro.fuentes.map(f => `${f.nombre} (${fechaCorta(f.fecha)}, ${f.codigos} codigos)`).join(' · ')
+        : 'NINGUNA FUENTE') + '\n');
+    for (const a of maestro.avisos) flag('WARN', 'UNIDAD_FUENTE', a);
+    if (!maestro.mapa.size) {
+        flag('WARN', 'UNIDAD_SIN_MAESTRO', 'No encontre ningun maestro de unidades (ni INSUMOS.TXT tabulado, ni RELACIONES.TXT, ni .arb-cache): no puedo validar unidades. Exportar del arb a C:\\tmp o pasar --insumos.');
     }
+    const cambios = new Map(maestro.cambios.map(x => [x.codigo, x]));
+    const avisados = new Set();
     for (const r of rows) {
-        const c = String(r[cCod] ?? '').trim().toUpperCase();
-        const u = String(r[cUni] ?? '').trim().toUpperCase();
-        if (c && u && master.has(c) && master.get(c) !== u) {
-            flag('FAIL', 'UNIDAD_VS_MAESTRO', `${c}: tabla dice "${u}", INSUMOS.txt dice "${master.get(c)}". ${CANON.unidades_regla}`);
+        const c = String(r[cCod] ?? '').trim();
+        const u = String(r[cUni] ?? '').trim();
+        if (!c || avisados.has(c)) continue;
+        avisados.add(c);
+        const m = maestro.mapa.get(c) ?? maestro.mapa.get(c.toUpperCase());
+        if (!m) {
+            if (maestro.mapa.size) flag('WARN', 'UNIDAD_CODIGO_SIN_MAESTRO', `${c}: no esta en ninguna fuente del maestro. ¿Codigo nuevo o mal tipeado? Si es nuevo, la unidad la fija la FACTURA del proveedor, no la tabla.`);
+            continue;
+        }
+        const origen = `${m.fuente} ${fechaCorta(m.fecha)}`;
+        switch (compararUnidad(u, m.unidad)) {
+            case 'distinta':
+                flag('FAIL', 'UNIDAD_VS_MAESTRO', `${c}: tabla dice "${u}", maestro dice "${m.unidad}" (${origen}). ${CANON.unidades_tres_fuentes.regla_corta}`);
+                break;
+            case 'grafia':
+                flag('INFO', 'UNIDAD_GRAFIA', `${c}: "${u}" y "${m.unidad}" (${origen}) son la misma unidad escrita distinto; el arb la va a mostrar como "${m.unidad}".`);
+                break;
+            case 'sin-dato':
+                if (!u && m.unidad) flag('WARN', 'UNIDAD_VACIA_EN_TABLA', `${c}: la tabla no trae unidad; el maestro dice "${m.unidad}" (${origen}).`);
+                else if (u && !m.unidad) flag('WARN', 'UNIDAD_MAESTRO_VACIA', `${c}: el maestro no tiene unidad cargada (${origen}) y la tabla dice "${u}". La unidad se carga en el MAESTRO antes que la BOM, con la factura del proveedor a la vista.`);
+                break;
+        }
+        const cambio = cambios.get(c) ?? cambios.get(c.toUpperCase());
+        if (cambio) {
+            flag('WARN', 'UNIDAD_CAMBIO_ETIQUETA', `${c}: era "${cambio.antes.unidad}" (${cambio.antes.fuente} ${fechaCorta(cambio.antes.fecha)}) y hoy es "${cambio.ahora.unidad}" (${cambio.ahora.fuente} ${fechaCorta(cambio.ahora.fecha)}). Si cantidad y precio de las OC no se movieron fue un cambio de ETIQUETA: el consumo se reconvierte con el factor fisico, no se copia.`);
         }
     }
-} else if (!insumosPath) {
-    flag('INFO', 'UNIDAD_SIN_MAESTRO', `Sin --insumos no valido unidades. Recorda: ${CANON.unidades_regla}`);
 }
 
 // 5. Invariantes por producto
