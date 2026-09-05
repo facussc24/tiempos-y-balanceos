@@ -157,9 +157,24 @@ export function evaluarToolUse(bloque) {
   }
   if (/^(Bash|PowerShell)$/.test(nombre)) {
     const cmd = String(input.command || '');
-    if (BASH_ENTREGA.test(cmd) && FUERA.some((f) => f.test(cmd))) return `${nombre}: ${cmd.slice(0, 120)}`;
+    // Un `git commit -F <scratchpad>/msg.txt` no entrega nada afuera: las rutas del scratchpad
+    // y de Temp se sacan antes de mirar si el comando apunta afuera (falso positivo del 05/09).
+    const sinScratch = cmd.split(/\s+/).filter((t) => !SCRATCH.test(t)).join(' ');
+    if (BASH_ENTREGA.test(sinScratch) && FUERA.some((f) => f.test(sinScratch))) return `${nombre}: ${cmd.slice(0, 120)}`;
   }
   return null;
+}
+
+/** Ruta repo-relativa (con /) de un Write/Edit DENTRO del repo, o null. */
+export function rutaRelativaAlRepo(bloque) {
+  if (!/^(Write|Edit|MultiEdit|NotebookEdit)$/.test(bloque?.name || '')) return null;
+  let r = String(bloque.input?.file_path || bloque.input?.notebook_path || '').trim();
+  const m = r.match(/^\/([a-z])\/(.*)$/i);
+  if (m) r = `${m[1].toUpperCase()}:\\${m[2].replace(/\//g, '\\')}`;
+  const norm = r.replace(/\//g, '\\');
+  const repo = REPO.replace(/\//g, '\\');
+  if (!norm.toLowerCase().startsWith(`${repo.toLowerCase()}\\`)) return null;
+  return norm.slice(repo.length + 1).replace(/\\/g, '/');
 }
 
 function esMensajeRealDeUsuario(obj) {
@@ -170,10 +185,14 @@ function esMensajeRealDeUsuario(obj) {
   return false;
 }
 
-/** Recorre el transcript y se queda con lo que paso DESPUES del ultimo mensaje real de Fak. */
+/** Recorre el transcript y se queda con lo que paso DESPUES del ultimo mensaje real de Fak.
+ *  De paso junta `tocados`: los archivos del repo que ESTA sesion escribio (Write/Edit), en
+ *  toda la sesion — con dos sesiones sobre el mismo repo, lo sucio de la otra no es pendiente
+ *  mio (falso positivo del 05/09: me reclamo guardianes.mjs, que editaba otra sesion). */
 export async function escribioFueraEnEsteTurno(transcriptPath) {
   if (!transcriptPath || !fs.existsSync(transcriptPath)) return { fuera: false };
   let ejemplo = null;
+  const tocados = new Set();
   const rl = readline.createInterface({ input: fs.createReadStream(transcriptPath, 'utf8'), crlfDelay: Infinity });
   for await (const linea of rl) {
     if (!linea.includes('"tool_use"') && !linea.includes('"type":"user"')) continue;
@@ -185,11 +204,13 @@ export async function escribioFueraEnEsteTurno(transcriptPath) {
     if (!Array.isArray(bloques)) continue;
     for (const b of bloques) {
       if (b.type !== 'tool_use') continue;
+      const rel = rutaRelativaAlRepo(b);
+      if (rel) tocados.add(rel);
       const e = evaluarToolUse(b);
       if (e) ejemplo = e;
     }
   }
-  return ejemplo ? { fuera: true, ejemplo } : { fuera: false };
+  return ejemplo ? { fuera: true, ejemplo, tocados } : { fuera: false, tocados };
 }
 
 const EXT_CODIGO = /\.(ts|tsx|js|jsx|mjs|css|json|md|py|sh)$/i;
@@ -211,12 +232,15 @@ function flagSupabase() {
   } catch { return false; }
 }
 
-/** Pendientes medibles al declarar un cierre. Cada renglon es accionable. */
-export function relevarPendientes() {
+/** Pendientes medibles al declarar un cierre. Cada renglon es accionable.
+ *  `tocados` (Set de rutas repo-relativas que escribio esta sesion) filtra el git status: si
+ *  viene null (sin transcript), se cuenta todo lo sucio como antes. */
+export function relevarPendientes(tocados = null) {
   const out = [];
   try {
     const st = execSync('git status --porcelain', { cwd: REPO, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
-    const archivos = st.split(/\r?\n/).filter(Boolean).map((l) => l.slice(3).trim()).filter((a) => EXT_CODIGO.test(a));
+    let archivos = st.split(/\r?\n/).filter(Boolean).map((l) => l.slice(3).trim().replace(/^.*-> /, '').replace(/^"|"$/g, '')).filter((a) => EXT_CODIGO.test(a));
+    if (tocados instanceof Set) archivos = archivos.filter((a) => tocados.has(a.replace(/\\/g, '/')));
     if (archivos.length) {
       out.push(`hay ${archivos.length} archivo(s) sin commitear (${archivos.slice(0, 4).join(', ')}${archivos.length > 4 ? ', …' : ''}) — regla git-deploy: build + commit por ruta + push`);
     }
@@ -293,7 +317,7 @@ export async function decidir(payload = {}, deps = {}) {
   if (declaraCierre(texto)) {
     const sid = payload.session_id || 'sin-id';
     if (!d.enCooldown(sid)) {
-      const pend = d.pendientes() || [];
+      const pend = d.pendientes(fuera?.tocados ?? null) || [];
       if (pend.length) {
         d.marcar(sid);
         return {
