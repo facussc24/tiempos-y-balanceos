@@ -160,6 +160,9 @@ describe('escritorio-guard (bloqueos duros)', () => {
     expect(ev(bash(`rm -rf "${BIB}\\1- GENERAL\\FICHAS DE EMBALAJE\\x.xlsx"`)).exit).toBe(2);
     expect(ev(bash(`del "${ARCH}\\2026\\x"`)).exit).toBe(2);
     expect(ev(bash(`rd /s /q "${ARCH}\\2026"`)).exit).toBe(2);
+    // HUECO TAPADO 05/09 (auditor de la Ola 2): `ri` es el alias PowerShell de Remove-Item.
+    expect(ev(ps(`ri -Recurse -Force "${ESC}\\Insert"`)).exit).toBe(2);
+    expect(ev(ps(`ri "${ESC}\\Insert\\nota.txt"`)).exit).toBe(2);
   });
   it('"del Escritorio" en prosa no es un borrado (del = preposicion)', () => {
     expect(ev(bash('git commit -m "docs: la sintesis va antes de tocar cosas del Escritorio (OneDrive, Y:)"')).exit).toBe(0);

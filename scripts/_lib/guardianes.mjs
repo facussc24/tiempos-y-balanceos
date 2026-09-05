@@ -582,7 +582,9 @@ GUARDIANES['patrones-guard'] = (ctx, { env }) => {
 // de unidad atras: `del` es alias de borrado Y preposicion en español.
 const ESC_ZONA = /[\\/](Escritorio([^A-Za-z]|$)|Desktop([^A-Za-z]|$)|_TERMINADAS|TAREAS CERRADAS|BARACK ARGENTINA SRL)/im;
 const ESC_BORRA = /(^|[;&|\s])(rm|rmdir|unlink|erase)(\s|$)|Remove-Item|Clear-Content|shutil\.rmtree/im;
-const ESC_BORRA_CMD = /(^|[;&|\s])(del|rd)(\s+\/[A-Za-z]+)*\s+.?[A-Za-z]:/im;
+// `ri` es el alias PowerShell de Remove-Item: lo destapo el auditor de la Ola 2 (05/09/2026), pasaba
+// en el bash original y en el port. Como `del`/`rd`, exige una ruta con letra de unidad detras.
+const ESC_BORRA_CMD = /(^|[;&|\s])(del|rd|ri)(\s+-?\/?[A-Za-z]+)*\s+.?[A-Za-z]:/im;
 const ESC_MUEVE = /(^|[;&|\s])(mv|move|cp|copy|xcopy|robocopy)(\s|$)|Move-Item|Copy-Item|shutil\.(move|copy)/im;
 const ESC_ENTREGABLE = /\.(pdf|xlsx|xlsm|xls|docx|doc|pptx|step|stp|igs|iges)([^A-Za-z0-9]|$)/im;
 const ESC_GENERA = /--salida|--out|--output|-o\s|>\s*["']?[A-Za-z]:/i;
