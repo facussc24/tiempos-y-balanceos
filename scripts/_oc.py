@@ -19,13 +19,21 @@ contra el export RELACIONES salio el caso del IP Pad: la espuma BOCO se COMPRA c
 `185` y se CONSUME con `427ESP002TRO01` — dos codigos del maestro con la misma descripcion,
 asi que lo que entra nunca se descuenta. Eso a mano no se ve; aca sale en una corrida.
 
-`--cruzar` deja cuatro CSV en `.oc-cache/`. La que se mira es la 4 (mismo material con dos
-codigos), y dentro de esa las marcadas `distinto`: las `raiz-comun` son el mismo codigo escrito
-de dos largos, que rompe el descuento igual pero es otro problema.
+`--cruzar` deja cinco CSV en `.oc-cache/`. Las dos que se miran:
+
+  4) mismo material con dos codigos, y dentro de esa las marcadas `distinto` (las
+     `raiz-comun` son el mismo codigo escrito de dos largos, que rompe el descuento igual
+     pero es otro problema). Asi salio el IP Pad.
+  5) ABASTECIMIENTO MUERTO: el codigo esta en una BOM viva y su ultima compra es de hace
+     mas de `--anios` (2 por defecto). El material puede ser el correcto y el codigo estar
+     discontinuado igual. Asi salio el punzonado `TPES100 -2` de las piezas 21-9689 y
+     21-8944, que el 04/09/2026 pregunto Federico: el plano pide 100 g/m2 y el codigo dice
+     100 g/m2, pero esa linea no se compra desde el 24/06/2021.
 
 LIMITE CONOCIDO: la lista 4 son CANDIDATOS por descripcion, no veredictos — dos materiales
 distintos pueden compartir los primeros 40 caracteres (RELACIONES corta ahi). Cada par se
-confirma abriendo la OC y la BOM antes de tocar nada.
+confirma abriendo la OC y la BOM antes de tocar nada. La 5 dice que el codigo no se compra,
+NO cual es el codigo que corresponde: eso lo define la homologacion, no el arb.
 
 ATENCION — el repo es PUBLICO. El cache va a `.oc-cache/` (gitignoreado): tiene proveedores,
 precios y codigos. Nunca commitear su contenido ni pegarlo en archivos del repo.
@@ -34,6 +42,7 @@ Esto NO emite ni modifica ordenes de compra: lee los PDF que ya emitio Compras.
 """
 import argparse
 import csv
+import datetime
 import io
 import json
 import os
@@ -329,11 +338,48 @@ def _relaciones():
 def _ultima(ocs):
     """La compra mas reciente de un codigo (las fechas vienen dd/mm/aaaa, no ordenan solas)."""
     if not ocs:
-        return ('', '', '', '')
+        return ('', '', '', '', '')
     return sorted(ocs, key=lambda o: (o[0][6:], o[0][3:5], o[0][:2]))[-1]
 
 
-def cruzar():
+def _antes_de(fecha, anios, hoy=None):
+    """True si esa fecha dd/mm/aaaa es anterior a `anios` atras. Sin fecha, True."""
+    if not fecha:
+        return True
+    hoy = hoy or datetime.date.today()
+    try:
+        d, m, y = (int(x) for x in fecha.split('/'))
+    except ValueError:
+        return True
+    try:
+        corte = hoy.replace(year=hoy.year - anios)
+    except ValueError:                     # 29/02 en un año no bisiesto
+        corte = hoy.replace(year=hoy.year - anios, day=28)
+    return datetime.date(y, m, d) < corte
+
+
+def compras_de(cod, desc_bom, comprados):
+    """Las OC de un codigo de BOM, sumando las que quedaron bajo su forma cortada a 10.
+
+    Hasta el 30/10/2024 el reporte de OC cortaba el codigo a 10 caracteres: `TPES70/PP3` y
+    `TPES70/PP30B A:` son el MISMO insumo (48 + 25 OC). Contar solo la forma larga le da
+    "nunca comprado" a un codigo que se compro 48 veces — son 148 codigos en el export del
+    04/09/2026, o sea el 22% de los codigos largos.
+
+    El renglon cortado se acepta SOLO si su descripcion es la del mismo material: bajo
+    `124.544.00` conviven cuatro codigos distintos (0066-0, 0067-2, 0080-5, 0081-7), y
+    sumarlos todos inventaria compras que no existieron.
+    """
+    ocs = list(comprados.get(cod, ('', [], ''))[1])
+    if len(cod) > 10:
+        huella = clave_material(desc_bom)
+        for o in comprados.get(cod[:10], ('', [], ''))[1]:
+            if _mismo_material(huella, clave_material(o[4])):
+                ocs.append(o)
+    return ocs
+
+
+def cruzar(anios=2):
     """Cruza el indice de OC contra las BOM del arb y saca los desvios que importan."""
     filas = _cargar()
     fuente, usados = _relaciones()
@@ -348,14 +394,30 @@ def cruzar():
         if RE_NUMERO.match(uni):
             uni, sin_unidad = '', sin_unidad + 1
         u, ocs, desc = comprados.get(cod, ('', [], ''))
-        ocs.append((r.get('fecha') or '', r.get('oc') or '', uni, r.get('proveedor') or ''))
+        ocs.append((r.get('fecha') or '', r.get('oc') or '', uni, r.get('proveedor') or '',
+                    (r.get('descripcion') or '').strip()))
         comprados[cod] = (uni or u, ocs, desc or (r.get('descripcion') or '').strip())
 
-    en_bom_sin_oc = sorted(c for c in usados if c not in comprados)
-    comprado_sin_bom = sorted(c for c in comprados if c not in usados)
+    # Las compras de cada codigo de la BOM, ya con las que quedaron bajo la forma cortada
+    # a 10 caracteres. Sin esto la lista 1 se llena de falsos "nunca comprado" y la 5 no ve
+    # los codigos que SI se compraron alguna vez y despues se discontinuaron.
+    compras = {c: compras_de(c, usados[c][2], comprados) for c in usados}
+    # Un codigo cortado cuyo largo esta en una BOM no es "comprado y en ninguna BOM": es el
+    # mismo insumo escrito corto. Se saca de la lista 2 para que no ensucie tambien la 4.
+    truncados = {c[:10] for c in usados if len(c) > 10 and len(compras[c]) >
+                 len(comprados.get(c, ('', [], ''))[1])}
+
+    en_bom_sin_oc = sorted(c for c in usados if not compras[c])
+    comprado_sin_bom = sorted(c for c in comprados if c not in usados and c not in truncados)
     unidad_distinta = sorted(c for c in usados if c in comprados
                              and usados[c][0] and comprados[c][0]
                              and usados[c][0].upper() != comprados[c][0].upper())
+    # LISTA 5: el codigo esta en una BOM viva pero hace años que no se compra. No es lo mismo
+    # que "nunca comprado": aca el material puede ser el correcto y el codigo estar
+    # discontinuado igual, que es el caso del punzonado TPES100 -2.
+    muertos = sorted((c for c in usados if compras[c]
+                      and _antes_de(_ultima(compras[c])[0], anios)),
+                     key=lambda c: _ultima(compras[c])[0][6:] + _ultima(compras[c])[0][3:5])
 
     # LA LISTA QUE IMPORTA: el mismo material con un codigo para comprar y otro para consumir.
     # Sale de cruzar las dos primeras por DESCRIPCION, no por codigo — el codigo es justamente
@@ -391,6 +453,20 @@ def cruzar():
     if sin_unidad:
         print('   (%d renglones de OC no traen unidad en el reporte: quedan fuera de la 3)'
               % sin_unidad)
+    if truncados:
+        print('   (%d codigos de OC son la forma cortada a 10 de un codigo de BOM: se suman'
+              % len(truncados))
+        print('    a sus compras y salen de la lista 2, no cuentan como codigo aparte)')
+    print()
+    print('5) EN UNA BOM Y SIN COMPRAR HACE %d+ AÑOS . %d  <- codigo vivo, abastecimiento muerto'
+          % (anios, len(muertos)))
+    print('   El material puede ser el correcto y el codigo estar discontinuado igual.')
+    for c in muertos[:15]:
+        ult = _ultima(compras[c])
+        print('   %-16s %-40s ult. OC %-6s %s  (%s)'
+              % (c, (usados[c][2] or '')[:40], ult[1], ult[0], ' '.join(usados[c][1][:3])))
+    if len(muertos) > 15:
+        print('   ... y %d mas en el CSV' % (len(muertos) - 15))
     print()
     print('4) MISMO MATERIAL, DOS CODIGOS ......... %d, de los cuales %d con codigos que no'
           % (len(partidos), len(distintos)))
@@ -408,7 +484,8 @@ def cruzar():
         os.makedirs(CACHE)
     for nombre, codigos, cual in (('en_bom_sin_oc.csv', en_bom_sin_oc, 1),
                                   ('comprado_sin_bom.csv', comprado_sin_bom, 2),
-                                  ('unidad_distinta.csv', unidad_distinta, 3)):
+                                  ('unidad_distinta.csv', unidad_distinta, 3),
+                                  ('abastecimiento_muerto.csv', muertos, 5)):
         with io.open(os.path.join(CACHE, nombre), 'w', encoding='utf-8', newline='') as f:
             w = csv.writer(f)
             w.writerow(['codigo', 'descripcion', 'unidad_bom', 'articulos_que_lo_usan',
@@ -416,6 +493,9 @@ def cruzar():
             for cod in codigos:
                 u_bom, arts, d_bom = usados.get(cod, ('', [], ''))
                 u_oc, ocs, d_oc = comprados.get(cod, ('', [], ''))
+                # Para los codigos de BOM vale el total CON la forma cortada; para los de la
+                # lista 2 no hay forma larga, asi que es el mismo conjunto.
+                ocs = compras.get(cod, ocs)
                 ult = _ultima(ocs)
                 w.writerow([cod, d_bom or d_oc, u_bom, ' '.join(arts), u_oc, len(ocs),
                             ult[1], ult[0], ult[3]])
@@ -536,6 +616,36 @@ def selftest():
     chequear('ROJO: numero argentino', numero('1.430,000'), 1430.0)
     chequear('numero con punto decimal', numero('50.000'), 50.0)
 
+    # --- lista 5: abastecimiento muerto ---
+    hoy = datetime.date(2026, 9, 4)
+    chequear('vieja: la del punzonado de 2021', _antes_de('24/06/2021', 2, hoy), True)
+    chequear('fresca: comprado hoy', _antes_de('04/09/2026', 2, hoy), False)
+    chequear('justo en el limite (no es anterior)', _antes_de('04/09/2024', 2, hoy), False)
+    chequear('un dia antes del limite', _antes_de('03/09/2024', 2, hoy), True)
+    chequear('sin fecha se trata como vieja', _antes_de('', 2, hoy), True)
+
+    # El codigo cortado a 10 y el largo son el mismo insumo: sus compras se suman.
+    D70 = 'Punz. PES 70 + TNT PP 30 BCO. Ancho: 2mt'
+    comprados = {
+        'TPES70/PP3': ('MT2', [('25/10/2019', '4400', 'MT2', 'TEXTIL VALERIO', D70),
+                               ('24/06/2021', '7205', 'MT2', 'TEXTIL VALERIO', D70)], D70),
+        'TPES70/PP30B A:': ('MT2', [('04/09/2026', '15990', 'MT2', 'TEXTIL VALERIO', D70)], D70),
+        # Bajo 124.544.00 conviven cuatro codigos: el truncado NO puede sumarse a ciegas.
+        '124.544.00': ('MT2', [('12/03/2024', '9001', 'MT2', 'SANCOR', 'SANVEO PP PR CL81')],
+                       'SANVEO PP PR CL81'),
+    }
+    chequear('truncado a 10: se suman las 3 compras',
+             len(compras_de('TPES70/PP30B A:', D70, comprados)), 3)
+    chequear('truncado a 10: la mas reciente sigue siendo la de hoy',
+             _ultima(compras_de('TPES70/PP30B A:', D70, comprados))[0], '04/09/2026')
+    # EN ROJO: mismo truncado, OTRO material -> no se suma ni una.
+    chequear('ROJO: truncado con otra descripcion no suma',
+             len(compras_de('124.544.0066-0', 'SANLEATHER IV IS LE CL68 TITANSCHWARZ',
+                            comprados)), 0)
+    chequear('codigo corto (<=10) no busca truncado',
+             len(compras_de('TPES100 -2', 'Punz. PES 100  A 2 ML Termofijado Blan',
+                            comprados)), 0)
+
     if fallas:
         print('FALLARON %d caso(s): %s' % (len(fallas), ', '.join(fallas)))
         return 1
@@ -550,6 +660,8 @@ def main():
     ap.add_argument('--buscar', metavar='TEXTO', help='codigo, descripcion o proveedor')
     ap.add_argument('--limite', type=int, default=60)
     ap.add_argument('--cruzar', action='store_true', help='OC contra las BOM del arb')
+    ap.add_argument('--anios', type=int, default=2,
+                    help='lista 5: sin comprar hace mas de N años (default 2)')
     ap.add_argument('--stats', action='store_true')
     ap.add_argument('--selftest', action='store_true', help='probar el parser, sin el disco Z')
     a = ap.parse_args()
@@ -561,7 +673,7 @@ def main():
     elif a.buscar:
         sys.exit(buscar(a.buscar, a.limite))
     elif a.cruzar:
-        sys.exit(cruzar())
+        sys.exit(cruzar(a.anios))
     elif a.stats:
         sys.exit(stats())
     else:
