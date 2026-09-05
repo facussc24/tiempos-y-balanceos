@@ -5,11 +5,17 @@
 //
 // Se corren como los corre Claude Code: `bash <hook>` con el JSON por stdin, en un TMPDIR /
 // HOME / repo git temporales para no tocar los flags reales de la maquina.
-import { describe, it, expect, beforeEach, afterAll } from 'vitest';
+import { describe, it, expect, beforeEach, afterAll, vi } from 'vitest';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { spawnSync, execFileSync } from 'node:child_process';
+
+// Cada caso levanta bash -> node (y agentes-guard, siete veces seguidas). Solos tardan
+// decimas; con la suite entera en paralelo en la notebook de Windows pasaron los 15 s del
+// config (05/09/2026: 5 timeouts, todos con la maquina cargada por otra sesion). El tope
+// es por carga, no por logica: 60 s aca, sin tocar el global.
+vi.setConfig({ testTimeout: 60_000 });
 
 const RAIZ = process.cwd();
 const HOOKS = path.join(RAIZ, '.claude', 'hooks');

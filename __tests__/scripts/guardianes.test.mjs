@@ -17,11 +17,15 @@
  * Windows se colapsan y el guardian cae en su rama de fallback (verde por el motivo equivocado).
  * Este archivo cita los patrones peligrosos como DATO; los guardianes lo eximen por `.test.`.
  */
-import { describe, it, expect, beforeEach, afterAll } from 'vitest';
+import { describe, it, expect, beforeEach, afterAll, vi } from 'vitest';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
+
+// El bloque "por bash" levanta _dispatcher.sh + node varias veces por caso: solo tarda
+// decimas, con la suite entera en paralelo en Windows paso los 15 s (05/09/2026). 60 s aca.
+vi.setConfig({ testTimeout: 60_000 });
 import {
   parsear, matriz, correr, resolver, evaluar, GUARDIANES, TODOS, NOMBRES,
   medirInline, sinCuerposHeredoc, frasesCausalesSinFuente, ultimaRuta, INLINE_MAX,
