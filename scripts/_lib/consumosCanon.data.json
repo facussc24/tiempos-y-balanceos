@@ -32,5 +32,30 @@
       "Suma de vinilos de variantes = consumo RL1 (tabla tizadas Mesa de Corte)",
       "Vinilo/tela de SERIE: fuente autoritativa = CONSUMOS TIZADAS <fecha>.xlsx col ML, le gana al arb y a BOMs de ingenieria"
     ]
-  }
+  },
+  "guard_comentario": "Disparadores del hook consumos-entregable-guard (recordatorio 1x/h, additionalContext). Lista CANONICA desde 05/09/2026: antes la palabra suelta \"consumo\" disparaba con memorias, commits y el nombre del propio hook (26 disparos 15/08-04/09, la mitad sin trabajo de consumos detras). Se prueba contra esa poblacion en __tests__/scripts/guardianes.test.mjs. Las regex se aplican con flag i sobre comando + file_path.",
+  "guard_entregable_regex": "(desktop|escritorio|downloads|onedrive)[^ \\n]*\\.(xlsx|xlsm|csv)",
+  "guard_disparadores": [
+    {
+      "regex": "consumos?\\s+de\\s+material|CONSUMO DE MATERIAL BOM|[\\\\/]BOMS?[\\\\/]",
+      "que": "la biblioteca de BOMs / consumo de material"
+    },
+    {
+      "regex": "tablas?\\s+de\\s+consumos?|consumos?\\s+(por|x)\\s+pieza|relaci[oó]n(es)?\\s+de\\s+consumo|consumos?\\s+tizad",
+      "que": "una tabla de consumos"
+    },
+    {
+      "regex": "\\btizad",
+      "que": "tizadas (Mesa de Corte)"
+    },
+    {
+      "regex": "INSUMOS\\.TXT|RELACIONES\\.TXT|ARTICULO\\.TXT|\\.arb-cache",
+      "que": "exports del arb"
+    },
+    {
+      "regex": "_validarConsumos|_arbSustituir|_arbCargar|_arbRelaciones|_arbAlta|carga[ _-]?arb|cargar?\\s+(en\\s+)?(el\\s+)?arb\\b",
+      "que": "carga en el arb"
+    }
+  ],
+  "guard_excluir_rutas": "[\\\\/](memory|hooks|__tests__|_lib)[\\\\/]|LECCIONES_APRENDIDAS|MEMORY\\.md|\\.claude[\\\\/]rules|\\b(feedback|reference|project)_[a-z0-9_]{6,}"
 }
