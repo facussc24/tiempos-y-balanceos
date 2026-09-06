@@ -183,7 +183,18 @@ export function cruzarMailsConTareas(mails, nombresTareas) {
     return { sinCarpeta, noAvisados };
 }
 
-/** AAAA-MM-DD de hace `dias` dias. */
+/**
+ * AAAA-MM-DD en hora LOCAL (no `toISOString()`, que es UTC): las fechas del cache y el
+ * `date.today()` de `_mails.py` son locales, y despues de las 21:00 de Argentina el dia UTC ya
+ * es el siguiente — el 05/09/2026 a las 21:30 el corte de "ultimos N dias" corria un dia.
+ */
+export function fechaLocal(fecha = new Date()) {
+    const f = fecha instanceof Date ? fecha : new Date(fecha);
+    const p = (n) => String(n).padStart(2, '0');
+    return `${f.getFullYear()}-${p(f.getMonth() + 1)}-${p(f.getDate())}`;
+}
+
+/** AAAA-MM-DD (local) de hace `dias` dias. */
 export function fechaCorte(dias, ahora = Date.now()) {
-    return new Date(ahora - dias * 86400000).toISOString().slice(0, 10);
+    return fechaLocal(new Date(ahora - dias * 86400000));
 }

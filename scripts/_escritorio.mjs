@@ -36,7 +36,7 @@ import ExcelJS from 'exceljs';
 import { RUTA_ESCRITORIO, RUTA_TAREAS_CERRADAS } from './_lib/serverPaths.mjs';
 import { leerMsg } from './_leerMsg.mjs';
 import { claveHilo,
-    MAILS_JSONL, leerMailsDesde, cruzarMailsConTareas, fechaCorte,
+    MAILS_JSONL, leerMailsDesde, cruzarMailsConTareas, fechaCorte, fechaLocal,
 } from './_lib/mailCache.mjs';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -555,7 +555,7 @@ function cmdLimpiarVacia(escritorio, { nombre, dryRun }) {
 }
 
 async function cmdReabrir(escritorio, archivo, { nombre, dryRun }) {
-    const hoy = new Date().toISOString().slice(0, 10);
+    const hoy = fechaLocal();
     for (const anio of listar(archivo).filter((e) => e.dir && /^\d{4}$/.test(e.nombre)).map((e) => e.nombre)) {
         const actual = path.join(carpetaAnio(archivo, anio), nombre);
         if (!fs.existsSync(actual)) continue;

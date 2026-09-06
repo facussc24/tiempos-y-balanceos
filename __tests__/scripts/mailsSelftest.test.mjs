@@ -25,10 +25,11 @@ describe('_mails.py --selftest (detector de sync parcial)', () => {
     it('los 9 casos pasan, y el rojo sigue siendo rojo', () => {
         const out = execFileSync('python', [SCRIPT, '--selftest'], { encoding: 'utf8' });
         expect(out).toContain('todo verde');
-        // Ola 4 (05/09/2026): el mismo selftest corre los 18 casos de pedidos_sin_respuesta (16 + los 2 de acuses).
+        // Ola 4 (05/09/2026): el mismo selftest corre los 19 casos de pedidos_sin_respuesta
+        // (16 + 2 de acuses + 1 con las dos evasiones que encontro el auditor independiente).
         expect(out).toContain('todo verde (sin respuesta)');
         const bloque = out.slice(out.indexOf('selftest de pedidos_sin_respuesta'));
-        expect((bloque.match(/^  ok  /gm) || []).length).toBe(18);
+        expect((bloque.match(/^  ok  /gm) || []).length).toBe(19);
         expect(bloque).toMatch(/ROJO: pedido de hace 14 dias sin mail de Fak.*'sin respuesta'/);
         expect(bloque).toMatch(/en cola de salida/);
         expect(out).not.toContain('MAL');

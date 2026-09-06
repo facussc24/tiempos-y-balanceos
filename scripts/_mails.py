@@ -370,8 +370,11 @@ ACUSE_RE = re.compile(
     re.I)
 PEDIDO_RE = re.compile(
     r'\?|por favor|podr[ií]as|pod[eé]s|necesit|pas[aá]me|mand[aá]me|envi[aá]me|carg[aá]|revis[aá]'
-    r'|confirm[aá]|adjunto|te paso|hay que|ten[eé]s que|deber[ií]a|pendiente|urgente|cuando puedas'
+    r'|confirm[aá]|adjunto|te paso|hay que|ten[eé]s que|deber[ií]a|pendiente|urgente'
+    r'|cuando (?:puedas|tengas|est[eé]s|termines|vuelvas)|falt[aeoó]|te pido|llam[aá]'
     r'|quedo (?:a la espera|atento)|difund|avis[aá]', re.I)
+# "falt" y la familia "cuando tengas un rato" las agrego el auditor del 05/09: "Ok, perfecto. Falta el
+# plano del 0428." y "Excelente, gracias! Cuando tengas un rato, llamame." quedaban escondidos.
 ACUSE_MAX = 400   # texto propio con firma; un pedido real casi nunca entra en eso arrancando con "gracias"
 
 
@@ -569,7 +572,7 @@ def selftest_sin_respuesta():
         if not ok:
             fallas.append(nombre)
 
-    print('selftest de pedidos_sin_respuesta (18 casos):')
+    print('selftest de pedidos_sin_respuesta (19 casos):')
     # 1. ROJO: el caso real — codigos 21-9694/95, Pablo, 14 dias sin respuesta.
     caso('ROJO: pedido de hace 14 dias sin mail de Fak', [
         mail(ENT, '2026-08-22 10:00', 'Pablo Gamboa', 'Alta codigos 21-9694/95')],
@@ -645,6 +648,13 @@ def selftest_sin_respuesta():
         mail(ENT, '2026-08-22 10:00', 'Leo Lattanzi', 'RE: Modificaciones BOM', cuerpo='Parece estar todo en orden Facu. Excelente sintesis. Difundilo' + CITA),
         mail(ENT, '2026-08-22 10:00', 'Carlos Baptista', 'RE: MUESTREO DE PESOS', cuerpo='@Facundo Santoro buen dia, Por favor tomar los valores adjuntos +15% por perdida en aplicado, para el uso de adhesivos para las BOM, Gracias.' + FIRMA + CITA)],
         [('muestreo de pesos', 14, 'sin respuesta'), ('modificaciones bom', 14, 'sin respuesta')])
+    # 19. Las dos evasiones que encontro el auditor independiente del 05/09 (arrancan como acuse y piden algo
+    #     sin ninguna de las palabras de la lista original); el control "Perfecto, gracias." sigue escondido.
+    caso('"Ok, perfecto. Falta el plano" y "gracias! Cuando tengas un rato, llamame" son pedidos; "Perfecto, gracias." no', [
+        mail(ENT, '2026-08-22 10:00', 'Carlos Baptista', 'RE: Plano 0428', cuerpo='Ok, perfecto. Falta el plano del 0428.' + FIRMA + CITA),
+        mail(ENT, '2026-08-22 10:00', 'Leo Lattanzi', 'RE: Layout linea', cuerpo='Excelente, gracias! Cuando tengas un rato, llamame.' + CITA),
+        mail(ENT, '2026-08-22 10:00', 'Pablo Gamboa', 'RE: Fichas tecnicas', cuerpo='Perfecto, gracias.' + CITA)],
+        [('layout linea', 14, 'sin respuesta'), ('plano 0428', 14, 'sin respuesta')])
 
     if fallas:
         print('FALLARON %d caso(s): %s' % (len(fallas), ', '.join(fallas)))

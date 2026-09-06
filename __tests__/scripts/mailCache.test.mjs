@@ -169,4 +169,9 @@ describe('fechaCorte', () => {
     it('resta dias en ISO', () => {
         expect(fechaCorte(10, Date.UTC(2026, 7, 30, 12))).toBe('2026-08-20');
     });
+    it('cuenta en dia LOCAL: a las 23:30 de Argentina el dia UTC ya es el siguiente y el corte no se corre', () => {
+        // new Date(a, m, d, h) es hora local en cualquier zona: acá y en el runner de CI (UTC) da lo mismo.
+        expect(fechaCorte(10, new Date(2026, 7, 30, 23, 30).getTime())).toBe('2026-08-20');
+        expect(fechaCorte(0, new Date(2026, 8, 5, 21, 33).getTime())).toBe('2026-09-05');
+    });
 });
