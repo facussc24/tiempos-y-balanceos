@@ -355,6 +355,38 @@ ASUNTO_NO_PEDIDO = re.compile(
 # Una difusion a 10 o mas destinatarios no le pide nada a Fak en particular (2 de 64: las
 # "Difusion actualizacion BOM ARB" de Leo, a 15 personas).
 DIFUSION_DESDE = 10
+# Un mail que solo AGRADECE o ACUSA RECIBO no es un pedido: 3 de los 9 hilos "sin carpeta" que
+# quedaron el 05/09/2026 eran "Muchas Gracias Facu" / "Gracias Facu" / "Gracias por el aporte"
+# (Carlos y Marcelo contestando algo que Fak ya habia mandado). Se mira solo el texto PROPIO del
+# mail (antes del primer "De:" / "From:" / "El ... escribio:" del citado); el agradecimiento
+# tiene que estar AL FRENTE (tras un nombre o saludo, a lo sumo), el texto propio ser corto
+# (firma incluida) y no traer ninguna marca de pedido. "Excelente sintesis. Difundilo" (Leo,
+# 07/08) sigue siendo pedido: el "excelente" no esta al frente. "Gracias, ¿me pasas X?" tambien.
+CITADO_RE = re.compile(r'(?:^|\s)(?:de|from|von)\s*:\s|_{5,}|-{5,}|\bel\b.{5,90}?\bescribi[oó]\s*:', re.I | re.S)
+_INICIO = r'^(?:@?(?:[\wÀ-ÿ.]+\s*){1,3}[,:.!\-]\s*)?(?:(?:hola|buen\s*d[ií]a|buenas(?:\s+tardes|\s+noches)?|buenos\s+d[ií]as)\s*[,:.!\-]?\s*)?'
+ACUSE_RE = re.compile(
+    _INICIO + r'(?:(?:muchas|mil)\s+)?gracias\b'
+    + '|' + _INICIO + r'(?:ok|oka|okey|dale|perfecto|genial|excelente|buen[ií]simo|recibido|listo|entendido|de acuerdo)\b',
+    re.I)
+PEDIDO_RE = re.compile(
+    r'\?|por favor|podr[ií]as|pod[eé]s|necesit|pas[aá]me|mand[aá]me|envi[aá]me|carg[aá]|revis[aá]'
+    r'|confirm[aá]|adjunto|te paso|hay que|ten[eé]s que|deber[ií]a|pendiente|urgente|cuando puedas'
+    r'|quedo (?:a la espera|atento)|difund|avis[aá]', re.I)
+ACUSE_MAX = 400   # texto propio con firma; un pedido real casi nunca entra en eso arrancando con "gracias"
+
+
+def texto_propio(cuerpo):
+    """El texto que escribio el remitente, sin el mail citado que viene abajo."""
+    txt = ' '.join((cuerpo or '').split())
+    m = CITADO_RE.search(txt)
+    return txt[:m.start()].strip() if m else txt
+
+
+def _es_acuse(m):
+    propio = texto_propio(m.get('cuerpo'))
+    if not propio or len(propio) > ACUSE_MAX:
+        return False
+    return bool(ACUSE_RE.match(propio)) and not PEDIDO_RE.search(propio)
 
 
 def _normalizar(s):
@@ -427,7 +459,8 @@ def pedidos_sin_respuesta(mails, dias=5, ventana=45, hoy=None):
 
     Que NO entra: mails en los que Fak esta solo en copia (79 de 256 en los ultimos 45 dias al
     05/09/2026: los mira, pero no le piden nada a el), remitentes automaticos y saludos de
-    cumpleanos (mismo criterio que esRuido() del .mjs), y los mails que mando el mismo Fak.
+    cumpleanos (mismo criterio que esRuido() del .mjs), los que solo agradecen o acusan recibo
+    (`_es_acuse`), y los mails que mando el mismo Fak.
     Cada exclusion nueva ESCONDE pedidos: agregar solo casos inequivocos.
 
     Devuelve una lista de dicts ordenada por dias sin respuesta (el mas viejo primero).
@@ -446,7 +479,7 @@ def pedidos_sin_respuesta(mails, dias=5, ventana=45, hoy=None):
         if _es_de_fak(m):
             h['de_fak'].append(m)
             continue
-        if _tipo_carpeta(m.get('carpeta')) != 'entrada' or _es_ruido(m) or not _para_fak(m):
+        if _tipo_carpeta(m.get('carpeta')) != 'entrada' or _es_ruido(m) or _es_acuse(m) or not _para_fak(m):
             continue
         h['recibidos'].append(m)
 
@@ -519,12 +552,12 @@ def selftest_sin_respuesta():
     FAK = 'Facundo Santoro'
     n = [0]
 
-    def mail(carpeta, fecha, de, asunto, para=FAK, cc='', de_mail=None):
+    def mail(carpeta, fecha, de, asunto, para=FAK, cc='', de_mail=None, cuerpo=''):
         n[0] += 1
         if de_mail is None:
             de_mail = FAK_MAIL if de == FAK else de.lower().replace(' ', '.') + '@x.com'
         return {'id': 'm%d' % n[0], 'carpeta': carpeta, 'fecha': fecha, 'de': de, 'de_mail': de_mail,
-                'para': para, 'cc': cc, 'asunto': asunto, 'adjuntos': [], 'cuerpo': ''}
+                'para': para, 'cc': cc, 'asunto': asunto, 'adjuntos': [], 'cuerpo': cuerpo}
 
     fallas = []
 
@@ -536,7 +569,7 @@ def selftest_sin_respuesta():
         if not ok:
             fallas.append(nombre)
 
-    print('selftest de pedidos_sin_respuesta (16 casos):')
+    print('selftest de pedidos_sin_respuesta (18 casos):')
     # 1. ROJO: el caso real — codigos 21-9694/95, Pablo, 14 dias sin respuesta.
     caso('ROJO: pedido de hace 14 dias sin mail de Fak', [
         mail(ENT, '2026-08-22 10:00', 'Pablo Gamboa', 'Alta codigos 21-9694/95')],
@@ -600,6 +633,18 @@ def selftest_sin_respuesta():
         mail(ENT, '2026-08-22 10:00', 'Leo Lattanzi', 'PATAGONIA ARMREST REAR - Difusion BOM ARB', para='; '.join(['Facundo Santoro'] + ['P%d' % i for i in range(14)])),
         mail(ENT, '2026-08-22 10:00', 'Carlos Baptista', 'Relevamiento de medios', para='Facundo Santoro; Leo; Nico; Pablo')],
         [('relevamiento de medios', 14, 'sin respuesta')])
+    # 17-18. Acuses (05/09: 3 de los 9 "sin carpeta" eran un "gracias" con firma). Se ve fallar y pasar.
+    FIRMA = ' Eng. Carlos Baptista Engineering - Ingenieria Barack Mercosul Los Arboles 842 B1686 - Hurlingham'
+    CITA = ' ________________________________ De: Facundo Santoro <f.santoro@barackmercosul.com> Enviado: viernes Asunto: RE: Medios carton Buenas, les paso los medios...'
+    caso('un "gracias" con firma y citado no es pedido; "Gracias, ¿me pasas el de Patagonia?" si', [
+        mail(ENT, '2026-08-22 10:00', 'Carlos Baptista', 'RE: Medios carton', cuerpo='Muchas Gracias Facu.' + FIRMA + CITA),
+        mail(ENT, '2026-08-22 10:00', 'Marcelo Nieve', 'RE: PDF modificados', cuerpo='Facus, Gracias por el aporte. Quedo a su disposicion ante cualquier consulta, Marcelo Nieve Quality Projects' + CITA),
+        mail(ENT, '2026-08-22 10:00', 'Carlos Baptista', 'RE: Codigos Sansuy', cuerpo='Gracias Facu, ¿me pasas tambien el de Patagonia?' + FIRMA)],
+        [('codigos sansuy', 14, 'sin respuesta')])
+    caso('"Excelente sintesis. Difundilo" y "@Facundo buen dia, por favor tomar..." siguen siendo pedidos', [
+        mail(ENT, '2026-08-22 10:00', 'Leo Lattanzi', 'RE: Modificaciones BOM', cuerpo='Parece estar todo en orden Facu. Excelente sintesis. Difundilo' + CITA),
+        mail(ENT, '2026-08-22 10:00', 'Carlos Baptista', 'RE: MUESTREO DE PESOS', cuerpo='@Facundo Santoro buen dia, Por favor tomar los valores adjuntos +15% por perdida en aplicado, para el uso de adhesivos para las BOM, Gracias.' + FIRMA + CITA)],
+        [('muestreo de pesos', 14, 'sin respuesta'), ('modificaciones bom', 14, 'sin respuesta')])
 
     if fallas:
         print('FALLARON %d caso(s): %s' % (len(fallas), ', '.join(fallas)))

@@ -16,7 +16,10 @@ import path from 'node:path';
 import { relevarSinRespuesta } from '../../scripts/_escritorio.mjs';
 
 let dir, jsonl;
-const hace = (d) => new Date(Date.now() - d * 86400000).toISOString().slice(0, 10) + ' 10:00';
+// Fecha LOCAL (no toISOString, que es UTC): _mails.py cuenta los dias desde date.today() local, y
+// despues de las 21:00 de Argentina el dia UTC ya es el siguiente (el 05/09 a las 21:30 dio 13 en vez de 14).
+const hace = (d) => { const f = new Date(Date.now() - d * 86400000); const p = (n) => String(n).padStart(2, '0');
+    return `${f.getFullYear()}-${p(f.getMonth() + 1)}-${p(f.getDate())} 10:00`; };
 const ENT = 'f.santoro@barackmercosul.com / Bandeja de entrada';
 const ENV = 'f.santoro@barackmercosul.com / Elementos enviados';
 const mail = (id, carpeta, fecha, de, asunto, para = 'Facundo Santoro') => JSON.stringify({

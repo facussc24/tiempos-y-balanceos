@@ -25,10 +25,10 @@ describe('_mails.py --selftest (detector de sync parcial)', () => {
     it('los 9 casos pasan, y el rojo sigue siendo rojo', () => {
         const out = execFileSync('python', [SCRIPT, '--selftest'], { encoding: 'utf8' });
         expect(out).toContain('todo verde');
-        // Ola 4 (05/09/2026): el mismo selftest corre los 16 casos de pedidos_sin_respuesta.
+        // Ola 4 (05/09/2026): el mismo selftest corre los 18 casos de pedidos_sin_respuesta (16 + los 2 de acuses).
         expect(out).toContain('todo verde (sin respuesta)');
         const bloque = out.slice(out.indexOf('selftest de pedidos_sin_respuesta'));
-        expect((bloque.match(/^  ok  /gm) || []).length).toBe(16);
+        expect((bloque.match(/^  ok  /gm) || []).length).toBe(18);
         expect(bloque).toMatch(/ROJO: pedido de hace 14 dias sin mail de Fak.*'sin respuesta'/);
         expect(bloque).toMatch(/en cola de salida/);
         expect(out).not.toContain('MAL');
@@ -41,7 +41,10 @@ describe('_mails.py --selftest (detector de sync parcial)', () => {
 describe('_mails.py --sin-respuesta --json sobre un cache temporal (BARACK_MAIL_CACHE)', () => {
     it('lista el pedido de hace 14 dias, no el contestado, y sale JSON parseable', () => {
         const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'mailcache-'));
-        const hace = (d) => new Date(Date.now() - d * 86400000).toISOString().slice(0, 10) + ' 10:00';
+        // Fecha LOCAL (no toISOString, que es UTC): _mails.py cuenta los dias desde date.today() local, y
+        // despues de las 21:00 de Argentina el dia UTC ya es el siguiente (el 05/09 a las 21:30 dio 13 en vez de 14).
+        const hace = (d) => { const f = new Date(Date.now() - d * 86400000); const p = (n) => String(n).padStart(2, '0');
+            return `${f.getFullYear()}-${p(f.getMonth() + 1)}-${p(f.getDate())} 10:00`; };
         const ENT = 'f.santoro@barackmercosul.com / Bandeja de entrada';
         const ENV = 'f.santoro@barackmercosul.com / Elementos enviados';
         const m = (id, carpeta, fecha, de, asunto, para = 'Facundo Santoro') =>
