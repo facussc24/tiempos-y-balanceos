@@ -41,11 +41,12 @@
  *    node scripts/_nube.mjs --liberar        deja la copia SOLO en la nube (0 bytes en disco)
  */
 import { spawnSync, execSync } from 'child_process';
-import { existsSync, mkdirSync, writeFileSync, readFileSync, readdirSync } from 'fs';
+import { existsSync, mkdirSync, writeFileSync, readFileSync } from 'fs';
 import { homedir } from 'os';
 import { join, dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
 import { construirFlags } from './_lib/nubeFlags.mjs';
+import { buscarNube } from './_lib/nubeRutas.mjs';
 
 const HOME = homedir();
 // El repo es el padre de scripts/, no una ruta fija: si se clona en otra carpeta, el
@@ -54,20 +55,10 @@ const REPO = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const CLAUDE = join(HOME, '.claude');
 
 // La carpeta de OneDrive corporativo lleva el nombre del tenant y el usuario de Windows
-// cambia segun la PC: se busca, no se hardcodea. Si no aparece ninguna, se cae a la
-// canonica para que los mensajes de error muestren una ruta concreta.
-const CANONICA = 'OneDrive - BARACK ARGENTINA SRL';
-function buscarNube() {
-    try {
-        const cand = readdirSync(HOME, { withFileTypes: true })
-            .filter((d) => d.isDirectory() && /^OneDrive.*BARACK/i.test(d.name))
-            .map((d) => join(HOME, d.name, 'Barack-cerebro'));
-        return cand.find((p) => existsSync(p)) || cand[0] || join(HOME, CANONICA, 'Barack-cerebro');
-    } catch {
-        return join(HOME, CANONICA, 'Barack-cerebro');
-    }
-}
-const NUBE = buscarNube();
+// cambia segun la PC: se busca, no se hardcodea (`_lib/nubeRutas.mjs`, que ademas la
+// encuentra cuando es un reparse point). Si no aparece ninguna, se cae a la canonica
+// para que los mensajes de error muestren una ruta concreta.
+const NUBE = buscarNube(HOME);
 
 // Cada pieza: [clave, carpeta local, subcarpeta en la nube, que es]
 const PIEZAS = [
