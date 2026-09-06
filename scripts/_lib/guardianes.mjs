@@ -922,7 +922,7 @@ ${DOC_CIERRE}`);
 // 06/09/2026: tambien la POLITICA administrada de Claude Code (`managed-settings*.json`): su lista
 // `permissions.deny` cita `rm -rf` y `Remove-Item -Recurse` justamente para PROHIBIRLOS en las PCs
 // de Claude Barack. Sin la excepcion, el guardian bloqueaba escribir la regla que lo replica.
-const BM_EXCEPCION = /(__tests__|\.test\.|\.spec\.|[/\\]hooks[/\\]([a-z-]+-guard|_dispatcher)\.sh$|[/\\]_lib[/\\]guardianes\.mjs$|managed-settings[^/\\]*\.json$)/i;
+const BM_EXCEPCION = /(__tests__|\.test\.|\.spec\.|[/\\]hooks[/\\]([a-z-]+-guard|_dispatcher)\.sh$|[/\\]_lib[/\\]guardianes\.mjs$|[/\\]managed-settings(\.[a-z]+)?\.json$)/i;
 GUARDIANES['borrado-masivo-guard'] = (ctx) => {
   let tool, cmd, file, body;
   if (ctx.ok) { tool = ctx.toolL; cmd = ctx.cmd6; file = ctx.fileL; body = ctx.body6; }

@@ -222,4 +222,14 @@ describe('la excepcion de test/guardianes — sin ella el hook se bloquea a si m
         expect(r.code).toBe(2);
         expect(r.err).toMatch(/V3/);
     });
+
+    // Hallazgo del auditor 06/09: la excepcion tiene que estar anclada al INICIO del nombre del
+    // archivo. "Contiene la palabra" no alcanza: un prefijo o sufijo arbitrario sigue bloqueado.
+    it('y un .json que solo CONTIENE "managed-settings" en el nombre tambien se bloquea', () => {
+        for (const p of ['C:\\tmp\\managed-settings-hack.json', 'C:\\tmp\\evil-managed-settings-x.json', 'C:\\tmp\\managed-settingsX.json']) {
+            const r = correr(escribir(p, '{"cmd":"Remove-Item -Recurse -Force $p"}'));
+            expect(r.code, p).toBe(2);
+            expect(r.err, p).toMatch(/V3/);
+        }
+    });
 });
