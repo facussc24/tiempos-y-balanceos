@@ -205,4 +205,21 @@ describe('la excepcion de test/guardianes — sin ella el hook se bloquea a si m
     it('pero un .ps1 de verdad con el mismo contenido SI se bloquea', () => {
         expect(correr(escribir('C:\\tmp\\real.ps1', 'Remove-Item -Force $p')).code).toBe(2);
     });
+
+    // 06/09/2026 — la politica administrada de Claude Barack PROHIBE esos comandos en las PCs
+    // de la empresa, y para eso tiene que citarlos en `permissions.deny`.
+    it('deja escribir la politica administrada de Claude Code, que cita los patrones para PROHIBIRLOS', () => {
+        expect(correr(escribir(
+            'C:\\Dev\\barack-claude\\politica\\managed-settings.base.json',
+            '{"permissions":{"deny":["Bash(rm -rf*)","Bash(Remove-Item*-Recurse*)"]}}')).code).toBe(0);
+        expect(correr(escribir(
+            'C:\\Program Files\\ClaudeCode\\managed-settings.json',
+            '{"permissions":{"deny":["Bash(rm -rf*)"]}}')).code).toBe(0);
+    });
+
+    it('pero un .json cualquiera con el mismo contenido SI se bloquea', () => {
+        const r = correr(escribir('C:\\tmp\\config.json', '{"cmd":"Remove-Item -Recurse -Force $p"}'));
+        expect(r.code).toBe(2);
+        expect(r.err).toMatch(/V3/);
+    });
 });

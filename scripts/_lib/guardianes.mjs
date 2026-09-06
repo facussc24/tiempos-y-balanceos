@@ -919,7 +919,10 @@ ${DOC_CIERRE}`);
 // La causa de fondo fue de metodo: _escritorio.mjs ya hacia esto con --dry-run y verificacion
 // de bytes. El dry-run habria impreso "942" cuando yo esperaba 17. Sin cooldown: los 4
 // vectores son bugs objetivos o pasos salteados, no recordatorios de estilo.
-const BM_EXCEPCION = /(__tests__|\.test\.|\.spec\.|[/\\]hooks[/\\]([a-z-]+-guard|_dispatcher)\.sh$|[/\\]_lib[/\\]guardianes\.mjs$)/i;
+// 06/09/2026: tambien la POLITICA administrada de Claude Code (`managed-settings*.json`): su lista
+// `permissions.deny` cita `rm -rf` y `Remove-Item -Recurse` justamente para PROHIBIRLOS en las PCs
+// de Claude Barack. Sin la excepcion, el guardian bloqueaba escribir la regla que lo replica.
+const BM_EXCEPCION = /(__tests__|\.test\.|\.spec\.|[/\\]hooks[/\\]([a-z-]+-guard|_dispatcher)\.sh$|[/\\]_lib[/\\]guardianes\.mjs$|managed-settings[^/\\]*\.json$)/i;
 GUARDIANES['borrado-masivo-guard'] = (ctx) => {
   let tool, cmd, file, body;
   if (ctx.ok) { tool = ctx.toolL; cmd = ctx.cmd6; file = ctx.fileL; body = ctx.body6; }
