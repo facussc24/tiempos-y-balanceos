@@ -169,7 +169,7 @@ export function ctxDesdeEnv(env) {
  */
 const SOLO_SHELL = ['supabase-guard', 'validator-check', 'renumber-guard', 'push-guard', 'arb-cerrar-guard', 'script-inline-guard', 'secretos-guard'];
 const SOLO_ARCHIVO = ['file-guard', 'causas-ajenas-guard'];
-const LOS_CUATRO = ['consumos-entregable-guard', 'cad-guard', 'patrones-guard', 'escritorio-guard', 'borrado-masivo-guard', 'ho-numeracion-guard', 'mail-guard', 'documentacion-oficial-guard'];
+const LOS_CUATRO = ['consumos-entregable-guard', 'cad-guard', 'patrones-guard', 'escritorio-guard', 'borrado-masivo-guard', 'ho-numeracion-guard', 'mail-guard', 'documentacion-oficial-guard', 'video-maquina-guard'];
 export const TODOS = ['file-guard', 'supabase-guard', 'validator-check', 'renumber-guard', 'push-guard', 'script-inline-guard', 'secretos-guard', ...LOS_CUATRO, 'arb-cerrar-guard', 'causas-ajenas-guard'];
 
 export function matriz(tool) {
@@ -1078,6 +1078,102 @@ Se le reporta que esta mal y decide el.
 Si de verdad hay que mandar algo que el gate marca como duplicado, requiere OK
 EXPLICITO de Fak para ese mail y se corre con --forzar.
 `);
+};
+
+// ── video-maquina-guard ────────────────────────────────────────────────────
+// Regla `.claude/rules/video-maquina.md`. Los videos y fotos de maquina de Barack viven en
+// `5- VIDEOS Y FOTOS` de la biblioteca de Ingenieria, por cliente/proyecto/maquina y con
+// nombre `AAAA-MM-DD - lo que se ve (IMG_xxxx).MOV`. Ese `(IMG_xxxx)` del final existe para
+// poder CRUZAR contra el indice del celular y no bajar dos veces lo mismo.
+// Incidente 2026-09-07 (Fak: "ah nunca entendiste que tenias que cargarlos ahi? es gravisimo
+// lo que paso"): baje 39 videos del iPhone y los deje en carpetas de tarea del Escritorio;
+// 13 (el 02/09 entero, 5,59 GB) YA ESTABAN archivados en MAQUINA MOLDEADORA IMG desde el
+// 02/09, con su nombre descriptivo. La respuesta estaba escrita en los nombres de archivo de
+// la biblioteca y no la mire. Esa misma mañana Fak habia preguntado si no se repetian.
+// BLOQUEA dos cosas:
+//   1. dejar un video en una carpeta del Escritorio (su lugar es la biblioteca);
+//   2. copiar del telefono por MTP sin haber cruzado antes contra la biblioteca.
+// El cruce lo hace `node scripts/_videoBiblioteca.mjs --cruzar <indice.tsv>`, que deja la
+// marca ~/.claude/.cruce-video con la hora. Vale 12 h: el celular no cambia cada 5 minutos,
+// pero un cruce de la semana pasada no dice nada.
+const VID_EXT = /\.(mov|mp4|m4v)\b/i;
+const VID_BIBLIOTECA = /5-\s*VIDEOS Y FOTOS/i;
+const VID_ESCRITORIO = /[\\/](Desktop|Escritorio)[\\/]/i;
+const VID_MTP = /Apple\s*iPhone|Internal\s*Storage|CopyHere|NameSpace\(\s*17\s*\)|tel_a_nube|tel_copiar/i;
+const VID_MUEVE = /(^|[;&|\s])(cp|copy|mv|move|xcopy|robocopy)(\s|$)|Copy-Item|Move-Item|shutil\.(copy|move)|os\.rename|CopyHere/im;
+// Lo que NOMBRA estas rutas como dato (tests, hooks, reglas, memorias, lecciones) no las toca.
+// Ojo con anclar a `[/\\]` a secas: una ruta RELATIVA (`.claude/rules/x.md`, tal como llega
+// desde la tool Write) arranca sin barra, y ademas el guardian mira `cmd + " " + file`, asi que
+// tampoco esta al principio de la cadena — quedaba afuera de la excepcion y el guardian se
+// autobloqueaba al escribir su propia regla. El separador valido es inicio, espacio, comilla
+// o barra: `SEP`.
+const SEP = '(?:^|[\\s"\'/\\\\])';
+const VID_EXCEPCION = new RegExp(`(__tests__|\\.test\\.|\\.spec\\.|${SEP}hooks[/\\\\]|guardianes\\.mjs|${SEP}\\.claude[/\\\\]rules[/\\\\]|LECCIONES_APRENDIDAS|MEMORY\\.md|${SEP}memory[/\\\\]|_videoBiblioteca)`, 'i');
+const VID_CRUCE_H = 12;
+
+const VID_CIERRE = `Fak, 07/09/2026: "ah nunca entendiste que tenias que cargarlos ahi? ... es gravisimo lo que paso",
+"no se pone algo que te obligue a recordar? un seguro", "porque sino se me hace que va a volver a pasar".`;
+
+const VID_DONDE = `DONDE VAN (verificado, ya existe y esta poblado):
+  ...\\INGENIERIA BARACK (NUNCA BORRAR)\\5- VIDEOS Y FOTOS\\
+      1- CLIENTES\\<CLIENTE>\\<PROYECTO>\\<PIEZA o MAQUINA>\\     NOVAX\\TOP ROLL\\MAQUINA HOTMELT
+      2- SECTORES\\<SECTOR>\\                                    2- SECTORES\\INYECCION PU
+  Nombre: "AAAA-MM-DD - lo que se ve (IMG_xxxx).MOV"
+  Reales: "2026-08-26 - PARAMETROS - rodillos 130 grados produccion 195 (IMG_0383).MOV"
+          "2026-08-25 - DEFECTO - el material se traba (IMG_0362).MOV"
+  El (IMG_xxxx) del final NO es decorativo: es la clave para cruzar contra el celular.`;
+
+GUARDIANES['video-maquina-guard'] = (ctx, { ahora, env }) => {
+  let tool, cmd, file;
+  if (ctx.ok) { tool = ctx.toolL; cmd = ctx.cmd6; file = ctx.fileL; }
+  else { tool = ctx.rescate.tool; file = ctx.rescate.file; cmd = `${ctx.rescate.cmd} ${ctx.raw.replace(/\n/g, ' ')}`; }
+  const todo = `${cmd} ${file}`;
+  if (VID_EXCEPCION.test(todo)) return null;
+
+  // 1. Un video que termina en una carpeta del Escritorio. La carpeta de la tarea es para
+  //    trabajar; el master no vive ahi. Sacarlo del Escritorio HACIA la biblioteca si va.
+  if (VID_EXT.test(todo) && VID_MUEVE.test(cmd) && VID_ESCRITORIO.test(todo) && !VID_BIBLIOTECA.test(todo)) {
+    return bloqueo(`[VIDEO-MAQUINA] BLOQUEADO: estas dejando un video en una carpeta del Escritorio.
+
+El Escritorio es la cola de tareas, no el archivo. Un video guardado ahi se pierde cuando la
+tarea se cierra, no lo encuentra nadie del equipo, y — lo que ya paso — se vuelve a bajar del
+celular porque nadie sabe que ya estaba.
+
+${VID_DONDE}
+
+Si lo que estas haciendo es justamente SACARLO del Escritorio hacia la biblioteca, poné la ruta
+de destino completa (tiene que contener "5- VIDEOS Y FOTOS") y este guardian te deja pasar.
+
+${VID_CIERRE}`);
+  }
+
+  // 2. Copiar del telefono sin haber cruzado antes contra la biblioteca.
+  if (VID_MTP.test(cmd) && VID_MUEVE.test(cmd)) {
+    const marca = path.join(dirHome(env), '.claude', '.cruce-video');
+    let edadH = Infinity;
+    try {
+      const t = parseInt(fs.readFileSync(marca, 'utf8').trim(), 10);
+      if (Number.isFinite(t) && t > 0) edadH = (ahora - t) / 3600;
+    } catch { /* sin marca: nunca se cruzo */ }
+    if (edadH > VID_CRUCE_H) {
+      return bloqueo(`[VIDEO-MAQUINA] BLOQUEADO: vas a copiar del telefono sin haber cruzado antes contra la
+biblioteca.
+
+${edadH === Infinity ? 'No hay ningun cruce hecho.' : `El ultimo cruce fue hace ${edadH.toFixed(1)} h (vale ${VID_CRUCE_H} h).`}
+
+El 07/09/2026 baje 39 videos y 13 YA ESTABAN archivados con nombre descriptivo desde el 02/09:
+5,59 GB de red, de disco y de tu tiempo para llegar a un duplicado. Y el disco se lleno.
+
+  node scripts/_videoBiblioteca.mjs --cruzar <indice-del-telefono.tsv>
+
+imprime que falta de verdad y deja la marca. Despues copia solo eso.
+
+${VID_DONDE}
+
+${VID_CIERRE}`);
+    }
+  }
+  return null;
 };
 
 // ── arb-cerrar-guard ───────────────────────────────────────────────────────
