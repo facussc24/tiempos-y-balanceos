@@ -137,7 +137,12 @@ def sustituir_producto(v, producto, cambios, bom):
         if pos != ancla * 5 + 2:
             raise Abortar('me pare en el paso %s y esperaba el %d (nada escrito)'
                           % (pos, ancla * 5 + 2))
-        recorrer(v, btn, cadena_esperada(bom, nuevos_por_fila), pos, escrituras)
+        # La cadena describe lo que la celda tiene AL LLEGAR, y `recorrer` chequea antes de
+        # escribir: por este camino todavia no se escribio nada, asi que TODAS las celdas
+        # tienen el codigo viejo. Pasar `nuevos_por_fila` aca hacia que se esperara el codigo
+        # nuevo en una celda que aun decia el viejo y abortaba siempre (07/09/2026: es el
+        # camino de las filas que no entran en las 6 visibles, nunca se habia usado).
+        recorrer(v, btn, cadena_esperada(bom, {}), pos, escrituras)
     else:
         celda = filas[fila0][C.IDX_CODIGO]
         if not C.ir_a_celda(v, celda):
@@ -151,7 +156,9 @@ def sustituir_producto(v, producto, cambios, bom):
             raise Abortar('la escritura no entro (quedo "%s") — SIN grabar' % quedo)
         print('   celda %d: %s' % (primera, escrituras[primera]))
         resto = {kk: vv for kk, vv in escrituras.items() if kk != primera}
-        recorrer(v, btn, cadena_esperada(bom, nuevos_por_fila), pos, resto)
+        # Idem: la unica celda ya reescrita es la de `fila0`. Las otras del lote todavia
+        # dicen el codigo viejo cuando el recorrido pasa por ellas.
+        recorrer(v, btn, cadena_esperada(bom, {fila0: escrituras[primera]}), pos, resto)
 
     C.journal({'t': time.strftime('%H:%M:%S'), 'producto': producto, 'estado': 'por_grabar'})
     C.tecla(win32con.VK_RETURN, 1.2)              # <- esto es lo que graba
