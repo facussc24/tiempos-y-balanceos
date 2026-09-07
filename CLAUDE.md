@@ -98,6 +98,7 @@ la pasada rapida). Solo mide y reporta — commit/push/archivar los hace Claude.
 | `hojas-proceso.md` | hojas de proceso / HO (`I-IN-002.4-R01`) — **una hoja se juzga impresa, no en el monitor**: la imagen principal se declara y lo que hay que leer va a 7 pt o mas (skill `hojas-de-proceso`, gate `hoja_proceso_check.py`) |
 | `lecciones-consolidacion.md` | `docs/LECCIONES_APRENDIDAS.md` — ciclo de vida de una lección: cómo entra, cómo se gradúa y la pasada de consolidación al llegar al aviso de 26 KB |
 | `documentacion-oficial.md` | `4- MANUALES`, `0-Documentacion cliente`, `1. Imput`, `normas-vw` — **documentación de un tercero: el original manda y tiene que verse CUÁL es**. Nada producido acá comparte carpeta con él, las traducciones van a `TRADUCIDOS\`, y lo que no es archivo (una ayuda online) va como transcripción `.txt` con fuente y fecha (hook `documentacion-oficial-guard.sh`) |
+| `video-maquina.md` | `_videoBiblioteca.mjs`, `*.MOV` / `*.MP4`, material del telefono — **el video de maquina vive en `5- VIDEOS Y FOTOS` de la biblioteca, no en el Escritorio**: antes de bajar del celular se cruza contra lo archivado por el `(IMG_xxxx)` del nombre, y el master NO se borra (hook `video-maquina-guard.sh`) |
 
 **Skills** (on-demand): `apqp-schema` (schema JSONB Supabase), `product-map` (8 familias,
 part numbers, equipo APQP), `amfe-domain` (conocimiento AMFE profundo), `amfe-cookbook`
