@@ -1124,13 +1124,23 @@ const VID_CRUCE_H = 12;
  * Si no logra identificar un destino devuelve '' y el guardian vuelve al criterio viejo (mirar
  * el comando entero): ante la duda bloquea, no afloja.
  */
-function vidDestino(cmd) {
-  const explicito = cmd.match(/-(?:Destination|dest|dst)\s+("[^"]+"|'[^']+'|\S+)/i);
+function vidDestino(sentencia) {
+  const explicito = sentencia.match(/-(?:Destination|dest|dst)\s+("[^"]+"|'[^']+'|\S+)/i);
   const candidatos = explicito
     ? [explicito[1]]
-    : (cmd.match(/"[^"]+"|'[^']+'|\S+/g) || []).filter((t) => /[\\/]/.test(t));
+    : (sentencia.match(/"[^"]+"|'[^']+'|\S+/g) || []).filter((t) => /[\\/]/.test(t));
   if (!candidatos.length) return '';
   return candidatos[candidatos.length - 1].replace(/^["']+/, '').replace(/["')\],;]+$/, '');
+}
+
+/**
+ * Las sentencias de un comando compuesto. Sin esto, `vidDestino` sobre un `mv ... ; ls <carpeta>`
+ * devuelve la carpeta del `ls` y el guardian bloquea un movimiento que estaba bien (paso en la
+ * misma sesion del arreglo). El destino sale de la sentencia que MUEVE, no del comando entero.
+ * No parte por `|` solo: rompe `find ... | xargs mv`.
+ */
+function vidSentencias(cmd) {
+  return cmd.split(/\r?\n|&&|\|\||;/).map((s) => s.trim()).filter(Boolean);
 }
 
 const VID_CIERRE = `Fak, 07/09/2026: "ah nunca entendiste que tenias que cargarlos ahi? ... es gravisimo lo que paso",
@@ -1155,10 +1165,15 @@ GUARDIANES['video-maquina-guard'] = (ctx, { ahora, env }) => {
   // 1. Un video que TERMINA en una carpeta del Escritorio. La carpeta de la tarea es para
   //    trabajar; el master no vive ahi. Se mira el DESTINO, no el comando entero: sacarlo del
   //    Escritorio (a la biblioteca o al disco de transito) es la correccion, no la falta.
-  const destino = vidDestino(cmd) || (VID_EXT.test(file) ? file : '');
-  const dejaEnEscritorio = destino ? VID_ESCRITORIO.test(destino) : VID_ESCRITORIO.test(todo);
-  const vaALaBiblioteca = destino ? VID_BIBLIOTECA.test(destino) : VID_BIBLIOTECA.test(todo);
-  if (VID_EXT.test(todo) && VID_MUEVE.test(cmd) && dejaEnEscritorio && !vaALaBiblioteca) {
+  const enEscritorioSinBiblioteca = (t) => VID_ESCRITORIO.test(t) && !VID_BIBLIOTECA.test(t);
+  const queMueven = vidSentencias(cmd).filter((s) => VID_MUEVE.test(s));
+  const dejaEnEscritorio = queMueven.length
+    ? queMueven.some((s) => {
+        const destino = vidDestino(s) || (VID_EXT.test(file) ? file : '');
+        return enEscritorioSinBiblioteca(destino || todo);
+      })
+    : enEscritorioSinBiblioteca(todo);
+  if (VID_EXT.test(todo) && VID_MUEVE.test(cmd) && dejaEnEscritorio) {
     return bloqueo(`[VIDEO-MAQUINA] BLOQUEADO: estas dejando un video en una carpeta del Escritorio.
 
 El Escritorio es la cola de tareas, no el archivo. Un video guardado ahi se pierde cuando la

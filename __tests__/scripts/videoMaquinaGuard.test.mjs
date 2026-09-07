@@ -65,6 +65,18 @@ describe('video-maquina-guard — un video en el Escritorio', () => {
         expect(correr(`cp ${ESCRITORIO} .`, { horasDelCruce: 0 })?.tipo).toBe('bloqueo');
     });
 
+    // El destino sale de la sentencia que MUEVE. Antes se tomaba la ultima ruta del comando
+    // entero, asi que un `mv` correcto seguido de un `ls` a la carpeta de la tarea se bloqueaba.
+    it('VERDE: comando compuesto — el mv va afuera aunque despues haya un ls al Escritorio', () => {
+        expect(correr(`cat ${ESCRITORIO} > /dev/null ; mv ${ESCRITORIO} "/c/Dev/_telefono/_PERSONAL - NO ARCHIVAR/" && ls -l "/c/Users/FacundoS-PC/OneDrive - BARACK ARGENTINA SRL/Desktop/tarea/Videos del celular de Fak/"`,
+            { horasDelCruce: 0 })).toBeNull();
+    });
+
+    it('ROJO: comando compuesto donde el que mueve SI deja el video en el Escritorio', () => {
+        expect(correr(`ls /c/Dev/_telefono ; cp /c/Dev/_telefono/IMG_0645.MOV ${ESCRITORIO}`,
+            { horasDelCruce: 0 })?.tipo).toBe('bloqueo');
+    });
+
     it('VERDE: leer, listar o ffprobe un video del Escritorio no mueve nada', () => {
         expect(correr(`ls -la ${ESCRITORIO}`, { horasDelCruce: 0 })).toBeNull();
         expect(correr(`ffprobe -v error ${ESCRITORIO}`, { horasDelCruce: 0 })).toBeNull();
