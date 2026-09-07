@@ -52,6 +52,19 @@ describe('video-maquina-guard — un video en el Escritorio', () => {
         expect(correr(`mv ${ESCRITORIO} ${BIBLIOTECA}`, { horasDelCruce: 0 })).toBeNull();
     });
 
+    // 07/09/2026: el guardian miraba si "Desktop" aparecia en CUALQUIER lado del comando, asi
+    // que frenaba tambien SACAR un video de una carpeta de tarea — que es justo lo que la regla
+    // pide. Aparecio con un video PERSONAL que habia caido en una carpeta de trabajo y habia que
+    // sacar de ahi. Ahora mira el DESTINO.
+    it('VERDE: sacar un video del Escritorio al disco de transito (fuera de OneDrive) pasa', () => {
+        expect(correr(`mv ${ESCRITORIO} /c/Dev/_telefono/2026-09-03/`, { horasDelCruce: 0 })).toBeNull();
+        expect(correr(`Move-Item -LiteralPath ${ESCRITORIO} -Destination C:\\Dev\\_telefono\\2026-09-03\\`, { horasDelCruce: 0 })).toBeNull();
+    });
+
+    it('ROJO: si el destino no se puede identificar, sigue bloqueando (ante la duda, frena)', () => {
+        expect(correr(`cp ${ESCRITORIO} .`, { horasDelCruce: 0 })?.tipo).toBe('bloqueo');
+    });
+
     it('VERDE: leer, listar o ffprobe un video del Escritorio no mueve nada', () => {
         expect(correr(`ls -la ${ESCRITORIO}`, { horasDelCruce: 0 })).toBeNull();
         expect(correr(`ffprobe -v error ${ESCRITORIO}`, { horasDelCruce: 0 })).toBeNull();

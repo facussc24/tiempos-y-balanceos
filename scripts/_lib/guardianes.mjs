@@ -1111,6 +1111,28 @@ const SEP = '(?:^|[\\s"\'/\\\\])';
 const VID_EXCEPCION = new RegExp(`(__tests__|\\.test\\.|\\.spec\\.|${SEP}hooks[/\\\\]|guardianes\\.mjs|${SEP}\\.claude[/\\\\]rules[/\\\\]|LECCIONES_APRENDIDAS|MEMORY\\.md|${SEP}memory[/\\\\]|_videoBiblioteca)`, 'i');
 const VID_CRUCE_H = 12;
 
+/**
+ * El DESTINO de un comando que mueve o copia: el ultimo argumento con pinta de ruta
+ * (o el que va detras de `-Destination`).
+ *
+ * Por que existe (07/09/2026): la regla 1 miraba si "Desktop" aparecia en CUALQUIER lado del
+ * comando, asi que SACAR un video de una carpeta de tarea hacia afuera quedaba bloqueado igual
+ * que meterlo — el candado frenaba justo la correccion que pide la regla. Aparecio sacando un
+ * video PERSONAL que habia caido en una carpeta de trabajo. Un candado que frena la correccion
+ * no protege nada (LECCIONES 07/09).
+ *
+ * Si no logra identificar un destino devuelve '' y el guardian vuelve al criterio viejo (mirar
+ * el comando entero): ante la duda bloquea, no afloja.
+ */
+function vidDestino(cmd) {
+  const explicito = cmd.match(/-(?:Destination|dest|dst)\s+("[^"]+"|'[^']+'|\S+)/i);
+  const candidatos = explicito
+    ? [explicito[1]]
+    : (cmd.match(/"[^"]+"|'[^']+'|\S+/g) || []).filter((t) => /[\\/]/.test(t));
+  if (!candidatos.length) return '';
+  return candidatos[candidatos.length - 1].replace(/^["']+/, '').replace(/["')\],;]+$/, '');
+}
+
 const VID_CIERRE = `Fak, 07/09/2026: "ah nunca entendiste que tenias que cargarlos ahi? ... es gravisimo lo que paso",
 "no se pone algo que te obligue a recordar? un seguro", "porque sino se me hace que va a volver a pasar".`;
 
@@ -1130,9 +1152,13 @@ GUARDIANES['video-maquina-guard'] = (ctx, { ahora, env }) => {
   const todo = `${cmd} ${file}`;
   if (VID_EXCEPCION.test(todo)) return null;
 
-  // 1. Un video que termina en una carpeta del Escritorio. La carpeta de la tarea es para
-  //    trabajar; el master no vive ahi. Sacarlo del Escritorio HACIA la biblioteca si va.
-  if (VID_EXT.test(todo) && VID_MUEVE.test(cmd) && VID_ESCRITORIO.test(todo) && !VID_BIBLIOTECA.test(todo)) {
+  // 1. Un video que TERMINA en una carpeta del Escritorio. La carpeta de la tarea es para
+  //    trabajar; el master no vive ahi. Se mira el DESTINO, no el comando entero: sacarlo del
+  //    Escritorio (a la biblioteca o al disco de transito) es la correccion, no la falta.
+  const destino = vidDestino(cmd) || (VID_EXT.test(file) ? file : '');
+  const dejaEnEscritorio = destino ? VID_ESCRITORIO.test(destino) : VID_ESCRITORIO.test(todo);
+  const vaALaBiblioteca = destino ? VID_BIBLIOTECA.test(destino) : VID_BIBLIOTECA.test(todo);
+  if (VID_EXT.test(todo) && VID_MUEVE.test(cmd) && dejaEnEscritorio && !vaALaBiblioteca) {
     return bloqueo(`[VIDEO-MAQUINA] BLOQUEADO: estas dejando un video en una carpeta del Escritorio.
 
 El Escritorio es la cola de tareas, no el archivo. Un video guardado ahi se pierde cuando la
