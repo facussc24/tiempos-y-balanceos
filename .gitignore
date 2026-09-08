@@ -145,3 +145,10 @@ tools/flowchart/.build/
 
 # spec privado de las hojas HOTMELT (contrasena de HMI)
 scripts/hotmelt/datos_privados.py
+# documentos COMPLETOS del SGC (AMFE, Plan de Control, flujograma): el repo es publico
+scripts/hotmelt/docs_fuente/
+# lo que el generador PRODUCE (se rehace corriendolo) y los scripts ya reemplazados
+scripts/hotmelt/**/_*.png
+scripts/hotmelt/**/_*.jpg
+scripts/hotmelt/__pycache__/
+scripts/hotmelt/_reemplazados_*/
