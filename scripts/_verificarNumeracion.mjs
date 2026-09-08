@@ -65,11 +65,27 @@ function cubiertosPorNombre(nombre) {
     return out;
 }
 
+/**
+ * Una fila del AMFE puede cubrir dos pasos del flujograma y numerarse `70-71`. Pasa cuando el
+ * flujograma separa un paso y su control y el AMFE los analiza juntos (Fak, 08/09/2026 sobre el
+ * INSERT: "lo del 71 no me importa en el AMFE, pone 70-71 y listo"). Devuelve los dos numeros;
+ * si no es un rango, el numero tal cual.
+ */
+function expandirRango(n) {
+    const rango = n.match(/^(\d+)\s*-\s*(\d+)$/);
+    if (!rango) return [n];
+    const [, a, b] = rango.map(Number);
+    if (!(b > a) || b - a > 20) return [n];   // "103-2" o basura: no se inventa un rango
+    const out = [];
+    for (let i = a; i <= b; i++) out.push(String(i));
+    return out;
+}
+
 function numerosDe(doc) {
     const out = [];
     for (const o of doc.operations || []) {
         const n = String(o.opNumber ?? o.operationNumber ?? '').trim();
-        if (n) out.push(n);
+        if (n) out.push(...expandirRango(n));
         out.push(...cubiertosPorNombre(o.name ?? o.operationName));
     }
     return [...new Set(out)];
