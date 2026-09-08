@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import XLSX from 'xlsx-js-style';
-import { buildCaratulaSheet, computeRowHeights, normalizeRevisions } from '../../../modules/amfe/amfeCaratulaSheet';
+import { buildCaratulaSheet, computeRowHeights, consolidateRevisions, normalizeRevisions, wrapLines } from '../../../modules/amfe/amfeCaratulaSheet';
+import { leyendaDeMarcas } from '../../../modules/amfe/specialChars';
 import { buildAmfeOficialWorkbook, assertAmfeExportable } from '../../../modules/amfe/amfeExcelExport';
 import type { AmfeDocument, AmfeOperation } from '../../../modules/amfe/amfeTypes';
 
@@ -242,5 +243,104 @@ describe('computeRowHeights', () => {
         const alturas = computeRowHeights([[{ v: 'hola' }]], cols,
             [{ s: { r: 0, c: 0 }, e: { r: 0, c: 99 } }], { minPt: 15, maxPt: 200 });
         expect(Number.isFinite(alturas[0].hpt)).toBe(true);
+    });
+});
+
+describe('consolidateRevisions — una fila por letra (Fak, 08/09/2026)', () => {
+    it('junta todas las entradas de una misma letra en una sola fila', () => {
+        const out = consolidateRevisions([
+            { rev: 'A', date: '20/08/2026', item: '70', details: 'SE AGREGA CONTROL.', modifiedBy: 'FS' },
+            { rev: 'A', date: '08/09/2026', item: '93', details: 'EL REPROCESO PASA A 93.', modifiedBy: 'FS' },
+            { rev: 'A', date: '08/09/2026', item: '100', details: 'SE AGREGA TAPIZADO.', modifiedBy: 'FS' },
+        ]);
+        expect(out).toHaveLength(1);
+        expect(out[0].rev).toBe('A');
+        // La fecha que queda es la ULTIMA: es cuando la revision quedo como esta.
+        expect(out[0].date).toBe('08/09/2026');
+        expect(out[0].item).toBe('70, 93, 100');
+        expect(out[0].details).toBe('SE AGREGA CONTROL. EL REPROCESO PASA A 93. SE AGREGA TAPIZADO.');
+        // "FS" tres veces es una sola persona, no tres.
+        expect(out[0].modifiedBy).toBe('FS');
+    });
+
+    it('mantiene separadas las letras distintas y en su orden', () => {
+        const out = consolidateRevisions([
+            { rev: 'A', date: '12/11/2025', item: 'N/A', details: 'EMISION INICIAL.' },
+            { rev: 'B', date: '08/09/2026', item: '20', details: 'CAMBIO.' },
+        ]);
+        expect(out.map(r => r.rev)).toEqual(['A', 'B']);
+    });
+
+    it('ordena los items por numero de operacion y parte las listas', () => {
+        const out = consolidateRevisions([
+            { rev: 'A', date: '08/09/2026', item: '100', details: 'a.' },
+            { rev: 'A', date: '08/09/2026', item: '20 / 21 / 22', details: 'b.' },
+            { rev: 'A', date: '08/09/2026', item: '70-71', details: 'c.' },
+            { rev: 'A', date: '08/09/2026', item: '93', details: 'd.' },
+        ]);
+        // "70-71" es UN numero de operacion: no se parte en 70 y 71.
+        expect(out[0].item).toBe('20, 21, 22, 70-71, 93, 100');
+    });
+
+    it('no repite un item ni un detalle que ya estaba', () => {
+        const out = consolidateRevisions([
+            { rev: 'A', date: '08/09/2026', item: '20', details: 'MISMO TEXTO.' },
+            { rev: 'A', date: '08/09/2026', item: '20', details: 'MISMO TEXTO.' },
+        ]);
+        expect(out[0].item).toBe('20');
+        expect(out[0].details).toBe('MISMO TEXTO.');
+    });
+});
+
+describe('wrapLines — se cuenta como corta Excel: por palabra', () => {
+    it('manda la palabra entera a la linea siguiente en vez de partirla', () => {
+        expect(wrapLines('aaaaa bbbbb', 6)).toBe(2);
+        expect(wrapLines('aaaaa bbbbb ccccc', 11)).toBe(2);
+    });
+
+    it('cuenta MAS lineas que el corte por caracter cuando las palabras no cierran justo', () => {
+        // 20 caracteres en lineas de 12: por caracter darian 2, pero ninguna palabra entra
+        // de a dos, asi que Excel dibuja 3. Esa linea de diferencia es la que dejaba el
+        // DETALLES del AMFE 158 cortado en "TOMADAS DE LA HO-" (PDF del 08/09/2026).
+        const texto = 'AAAAAA BBBBBB CCCCCC';
+        expect(Math.ceil(texto.length / 12)).toBe(2);
+        expect(wrapLines(texto, 12)).toBe(3);
+    });
+
+    it('parte la palabra que es mas larga que la linea entera', () => {
+        expect(wrapLines('x'.repeat(45), 10)).toBeGreaterThanOrEqual(5);
+    });
+
+    it('un texto vacio ocupa una linea, no cero', () => {
+        expect(wrapLines('', 10)).toBe(1);
+        expect(wrapLines('   ', 10)).toBe(1);
+    });
+});
+
+describe('leyendaDeMarcas — la sigla se explica con la fuente que la respalda', () => {
+    it('a D/TLD le pone la norma VW y a W la tabla de conversion interna', () => {
+        const leyenda = leyendaDeMarcas(['D/TLD', 'W']);
+        const critica = leyenda.find(l => l.mark === 'D/TLD');
+        const signif = leyenda.find(l => l.mark === 'W');
+        expect(critica?.meaning).toContain('Formel Q');
+        // "W" no esta en ninguna norma VW que tenga Barack: su fuente es el I-PY-001.7.
+        expect(signif?.meaning).toContain('I-PY-001.7');
+        expect(signif?.meaning).not.toContain('Formel Q');
+        // La critica va primero.
+        expect(leyenda[0].mark).toBe('D/TLD');
+    });
+
+    it('no repite una sigla que aparece muchas veces, ni cuenta el numero como parte', () => {
+        expect(leyendaDeMarcas(['W', 'W 1', 'W 2', 'W']).map(l => l.mark)).toEqual(['W']);
+    });
+
+    it('sin marcas no hay leyenda', () => {
+        expect(leyendaDeMarcas(['', null, undefined])).toEqual([]);
+    });
+
+    it('una sigla que ninguna fuente define se lista, no se adivina', () => {
+        const [entrada] = leyendaDeMarcas(['XX']);
+        expect(entrada.mark).toBe('XX');
+        expect(entrada.meaning).toMatch(/NO DEFINIDA/);
     });
 });

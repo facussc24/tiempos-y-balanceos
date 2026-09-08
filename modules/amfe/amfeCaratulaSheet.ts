@@ -17,6 +17,7 @@ import XLSX from 'xlsx-js-style';
 import type { AmfeDocument } from './amfeTypes';
 import { sanitizeCellValue } from '../../utils/sanitizeCellValue';
 import { formatDateAR } from '../../utils/formatting';
+import { leyendaDeMarcas } from './specialChars';
 
 // ============================================================================
 // Tipos
@@ -96,6 +97,12 @@ const S = {
         alignment: { horizontal: 'center' as const, vertical: 'center' as const },
         border: BORDER,
     },
+    /** Centrada y con wrap: ITEM CAMBIADO lista todas las OP tocadas por la revision. */
+    cellCenterWrap: {
+        font: { sz: 9, name: 'Arial' },
+        alignment: { horizontal: 'center' as const, vertical: 'top' as const, wrapText: true },
+        border: BORDER,
+    },
     /** Rev vigente EN ROJO dentro de la tabla de revisiones. */
     cellRevRed: {
         font: { bold: true, sz: 9, name: 'Arial', color: { rgb: 'FF0000' } },
@@ -114,9 +121,22 @@ const S = {
 
 // 12 columnas: 3 pares (label 2 cols + valor 2 cols) por fila.
 const COLS = 12;
-const COL_WIDTHS = [9, 9, 11, 11, 9, 9, 11, 11, 9, 9, 11, 13];
-/** Minimo de filas de la tabla de revisiones (aspecto de formulario). */
-const MIN_REV_ROWS = 15;
+/**
+ * Anchos de las 12 columnas (total 122). Lo que gobierna el bloque de identificacion de
+ * arriba son los PARES, y las sumas por par NO cambiaron: 18 / 22 / 18 / 22 / 18 / 24. Lo
+ * que se movio es el reparto DENTRO de cada par, para que la tabla de REVISIONES de abajo
+ * pueda darle a DETALLES 58 de ancho en vez de 40 (+45%), sacandoselo a ITEM CAMBIADO,
+ * FECHA PSW y MODIFICO — que llevaban 20, 9 y 24 para escribir "08/09/2026", nada y "FS".
+ * Fak, 08/09/2026: "dejale mas espacio a esa columna detalles y sacale a item cambiado o a
+ * fecha PSW... que no se corten los textos".
+ */
+const COL_WIDTHS = [7, 11, 11, 11, 9, 9, 11, 11, 9, 9, 8, 16];
+/**
+ * Minimo de filas de la tabla de revisiones (aspecto de formulario). Eran 15: con las
+ * revisiones consolidadas en una fila por letra, 14 renglones vacios empujaban la caratula
+ * a una segunda hoja sin decir nada.
+ */
+const MIN_REV_ROWS = 6;
 
 // ============================================================================
 // Lectura tolerante de header (la data live tiene aliases historicos)
@@ -172,16 +192,55 @@ const LINE_PT = 10.2;
  * 8-9, y el texto real es mayormente minusculas, mas angostas que un digito. Con
  * 1 caracter por unidad de ancho las filas salian ~3x mas altas de lo necesario.
  *
- * El 1,4 esta CALIBRADO, no elegido a ojo: se comparo el alto resultante contra
- * las 117 filas del AMFE 150 que Fak autoajusto a mano el 2026-08-03. Da mediana
- * 1,00x (identico a su ajuste), p90 1,50x (algo de aire donde el texto es largo)
- * y una sola fila por debajo. Si se cambia este numero, rehacer esa comparacion:
- * errar hacia arriba solo alarga el documento, errar hacia abajo CORTA el texto,
- * que es el problema que este calculo existe para evitar.
+ * Estuvo en 1,4 desde el 2026-08-03, calibrado contra las 117 filas del AMFE 150
+ * que Fak habia autoajustado a mano: mediana 1,00x, p90 1,50x... y UNA fila por
+ * debajo, que en su momento se dejo pasar. Esa fila era el sintoma.
+ *
+ * Bajado a 1,1 el 08/09/2026, medido sobre el PDF exportado y no sobre otra
+ * estimacion: en la columna DETALLES de la caratula (ancho 58) Excel mete entre
+ * 60 y 69 caracteres por linea segun que letras toquen — 271 pt de ancho util
+ * repartidos en Arial 9. Se toma el PEOR caso (60 -> 60/56 = 1,07, redondeado a
+ * 1,1), porque los dos errores no cuestan lo mismo: pasarse solo deja aire
+ * blanco, quedarse corto CORTA el texto y nadie se entera. Junto con el corte por
+ * palabra (`wrapLines`), la revision del AMFE 158 pasa de 9 lineas estimadas a
+ * las 11 que Excel realmente dibuja.
+ *
+ * Si se vuelve a tocar: la prueba es exportar, pasar a PDF y leer el texto DEL
+ * PDF, no del xlsx — el recorte solo existe al imprimir.
  */
-const CHARS_PER_WIDTH_UNIT = 1.4;
+const CHARS_PER_WIDTH_UNIT = 1.1;
 
 interface MergeRange { s: { r: number; c: number }; e: { r: number; c: number } }
+
+/**
+ * Lineas que ocupa un texto que se corta por PALABRA en `chars` caracteres.
+ *
+ * Excel no parte las palabras: la que no entra se va entera a la linea siguiente y la
+ * anterior queda a medias. Contarlo como `ceil(largo / chars)` (corte por caracter)
+ * subestima, y subestimar el alto no deja el texto apretado: lo CORTA, sin ningun aviso.
+ * En el AMFE 158 esa diferencia era de una linea entera sobre ocho y el DETALLES de la
+ * revision terminaba en "TOMADAS DE LA HO-" (visto en el PDF, 08/09/2026).
+ *
+ * Una palabra mas larga que la linea si se parte (es lo que hace Excel).
+ */
+export function wrapLines(segment: string, chars: number): number {
+    const words = segment.split(/\s+/).filter(Boolean);
+    if (words.length === 0) return 1;
+    let lines = 1;
+    let used = 0;
+    for (const w of words) {
+        const need = used === 0 ? w.length : used + 1 + w.length;
+        if (need <= chars) { used = need; continue; }
+        if (w.length > chars) {
+            lines += Math.ceil(w.length / chars);
+            used = w.length % chars || chars;
+            continue;
+        }
+        lines += 1;
+        used = w.length;
+    }
+    return lines;
+}
 
 /**
  * Calcula el alto de cada fila segun cuanto texto entra en el ancho de sus
@@ -207,7 +266,7 @@ export function computeRowHeights(
         const chars = Math.max(6, Math.floor((width - 2) * CHARS_PER_WIDTH_UNIT));
         let lines = 0;
         for (const segment of String(raw).split('\n')) {
-            lines += Math.max(1, Math.ceil(segment.length / chars));
+            lines += wrapLines(segment, chars);
         }
         return lines;
     };
@@ -332,6 +391,72 @@ interface Cell { v: string; s: object; }
 const cell = (v: string, s: object): Cell => ({ v: String(sanitizeCellValue(v)), s });
 const blank = (s: object = S.empty): Cell => ({ v: '', s });
 
+/**
+ * Ordena los items de una revision como se leen: por numero de operacion ascendente, y lo
+ * que no empieza con un numero al final, en el orden en que se escribio. Sin esto la lista
+ * sale en orden de tipeo ("70, 20 / 21 / 22, 93, 100") y no se puede leer de un vistazo.
+ */
+function ordenarItems(items: readonly string[]): string[] {
+    const num = (s: string): number | null => {
+        const m = s.match(/^\s*(\d+)/);
+        return m ? Number(m[1]) : null;
+    };
+    return [...items]
+        .map((v, i) => ({ v, i, n: num(v) }))
+        .sort((a, b) => {
+            if (a.n === null && b.n === null) return a.i - b.i;
+            if (a.n === null) return 1;
+            if (b.n === null) return -1;
+            return a.n - b.n || a.v.localeCompare(b.v);
+        })
+        .map(x => x.v);
+}
+
+/**
+ * Una fila por LETRA de revision.
+ *
+ * El log se escribe empujando una entrada por cada cosa que se toca, asi que una misma
+ * revision terminaba en 5 o 6 filas con la misma letra y la misma fecha, repitiendo el
+ * encabezado y comiendose la hoja. Fak, 08/09/2026: *"aca lo que deberiamos ver es solo
+ * una Rev A con fecha 8/09 con todos los items cambiados y en detalles todo junto"*.
+ *
+ * No se pierde nada: los ITEM se concatenan sin repetir y los DETALLES se pegan en un solo
+ * texto en el orden en que se escribieron. La FECHA que queda es la ULTIMA de la letra (es
+ * la fecha en que esa revision quedo como esta). Las letras conservan el orden de aparicion.
+ */
+export function consolidateRevisions(revs: readonly AmfeOfficialRevision[]): AmfeOfficialRevision[] {
+    const porLetra = new Map<string, AmfeOfficialRevision & { _items: string[]; _detalles: string[]; _quien: string[] }>();
+    for (const r of revs) {
+        const clave = (r.rev || '').trim().toUpperCase();
+        const previo = porLetra.get(clave);
+        const acc = previo ?? {
+            rev: r.rev, date: '', item: '', details: '', pswDate: '', modifiedBy: '',
+            _items: [], _detalles: [], _quien: [],
+        };
+        // Cada campo se suma sin repetir; el vacio no pisa lo que ya habia.
+        const sumar = (lista: string[], valor: string | undefined) => {
+            const v = (valor || '').trim();
+            if (v && !lista.some(x => x.toUpperCase() === v.toUpperCase())) lista.push(v);
+        };
+        // El item puede venir como lista ("20 / 21 / 22"): se parte para no repetir numeros
+        // entre entradas. Se corta por coma y por barra CON espacios, asi "70-71" (que es
+        // UN numero de operacion, no un rango de dos items) queda entero.
+        for (const parte of String(r.item || '').split(/\s*,\s*|\s+\/\s+/)) sumar(acc._items, parte);
+        sumar(acc._detalles, r.details);
+        sumar(acc._quien, r.modifiedBy);
+        if ((r.date || '').trim()) acc.date = r.date.trim();
+        if (!acc.pswDate && (r.pswDate || '').trim()) acc.pswDate = r.pswDate!.trim();
+        porLetra.set(clave, acc);
+    }
+    return [...porLetra.values()].map(({ _items, _detalles, _quien, ...rest }) => ({
+        ...rest,
+        item: ordenarItems(_items).join(', '),
+        // Los detalles ya vienen como frases terminadas en punto; se pegan con un espacio.
+        details: _detalles.join(' '),
+        modifiedBy: _quien.join(' / '),
+    }));
+}
+
 /** Emite una fila de 3 pares label/valor (cada uno mergeado en 2 columnas). */
 function pairRow(
     rowIdx: number,
@@ -357,6 +482,28 @@ function bandRow(rowIdx: number, text: string, merges: XLSX.Range[]): Cell[] {
     row[0] = cell(text, S.band);
     merges.push({ s: { r: rowIdx, c: 0 }, e: { r: rowIdx, c: COLS - 1 } });
     return row;
+}
+
+/**
+ * Todas las marcas de caracteristica especial que trae el documento, en orden de recorrido.
+ * Es el mismo camino que usa el export de la hoja AMFE:
+ * operations -> workElements -> functions -> failures -> causes.specialChar.
+ */
+function marcasDelDocumento(doc: AmfeDocument): string[] {
+    const out: string[] = [];
+    for (const op of (doc.operations ?? [])) {
+        for (const we of (op.workElements ?? [])) {
+            for (const fn of (we.functions ?? [])) {
+                for (const f of (fn.failures ?? [])) {
+                    for (const c of (f.causes ?? [])) {
+                        const marca = (c as { specialChar?: string }).specialChar;
+                        if (marca && String(marca).trim()) out.push(String(marca));
+                    }
+                }
+            }
+        }
+    }
+    return out;
 }
 
 /**
@@ -444,6 +591,27 @@ export function buildCaratulaSheet(
         push(row);
     }
 
+    // --- Caracteristicas especiales usadas en este AMFE ---
+    // Fak, 08/09/2026: "estaria bueno que este en el AMFE eso tambien, que lo explique...
+    // en algun lugar asi todos saben cuando abren el AMFE". Sale de las marcas que el
+    // documento REALMENTE usa: si no marca ninguna, el bloque no aparece.
+    const leyenda = leyendaDeMarcas(marcasDelDocumento(doc));
+    if (leyenda.length) {
+        push(Array.from({ length: COLS }, () => ({ v: '', s: {} }))); // spacer
+        push(bandRow(rowIdx(), 'CARACTERISTICAS ESPECIALES', merges));
+        for (const { mark, meaning } of leyenda) {
+            const ri = rowIdx();
+            const row: Cell[] = Array.from({ length: COLS }, () => blank());
+            row[0] = cell(mark, S.cellRevRed);
+            row[1] = blank(S.cellRevRed);
+            row[2] = cell(meaning, S.cell);
+            for (let k = 3; k < COLS; k++) row[k] = blank(S.cell);
+            merges.push({ s: { r: ri, c: 0 }, e: { r: ri, c: 1 } });
+            merges.push({ s: { r: ri, c: 2 }, e: { r: ri, c: COLS - 1 } });
+            push(row);
+        }
+    }
+
     push(Array.from({ length: COLS }, () => ({ v: '', s: {} }))); // spacer
 
     // --- Tabla de REVISIONES ---
@@ -451,8 +619,12 @@ export function buildCaratulaSheet(
 
     // Encabezado: REV | FECHA | ITEM CAMBIADO | DETALLES | FECHA PSW | MODIFICO
     const headerIdx = rowIdx();
+    // Anchos que gobiernan (ver COL_WIDTHS): REV 7 | FECHA 11 | ITEM 22 | DETALLES 58 |
+    // PSW 8 | MODIFICO 16. FECHA PSW es la fecha en que el cambio quedo aprobado en el PSW
+    // (Part Submission Warrant, la hoja de aprobacion del PPAP); casi siempre va vacia
+    // hasta que el cliente aprueba, por eso es la columna mas angosta.
     const revHeaders: Array<[string, number]> = [
-        ['REV', 1], ['FECHA', 2], ['ITEM CAMBIADO', 2], ['DETALLES', 4], ['FECHA PSW', 1], ['MODIFICO', 2],
+        ['REV', 1], ['FECHA', 1], ['ITEM CAMBIADO', 2], ['DETALLES', 6], ['FECHA PSW', 1], ['MODIFICO', 1],
     ];
     {
         const row: Cell[] = Array.from({ length: COLS }, () => blank(S.colHeader));
@@ -467,7 +639,8 @@ export function buildCaratulaSheet(
     }
 
     // Filas de datos (rev vigente en rojo). Relleno hasta MIN_REV_ROWS.
-    const revs = opts.revisions;
+    // Una fila por letra: el log trae una entrada por cambio y se repetian letra y fecha.
+    const revs = consolidateRevisions(opts.revisions);
     const dataRowCount = Math.max(revs.length, MIN_REV_ROWS);
     for (let i = 0; i < dataRowCount; i++) {
         const ri = rowIdx();
@@ -476,11 +649,11 @@ export function buildCaratulaSheet(
         const revStyle = isCurrent ? S.cellRevRed : S.cellCenter;
         const cols: Array<[value: string, span: number, style: object]> = [
             [rv?.rev ?? '', 1, revStyle],
-            [rv?.date ?? '', 2, S.cellCenter],
-            [rv?.item ?? '', 2, S.cellCenter],
-            [rv?.details ?? '', 4, S.cell],
+            [rv?.date ?? '', 1, S.cellCenter],
+            [rv?.item ?? '', 2, S.cellCenterWrap],
+            [rv?.details ?? '', 6, S.cell],
             [rv?.pswDate ?? '', 1, S.cellCenter],
-            [rv?.modifiedBy ?? '', 2, S.cellCenter],
+            [rv?.modifiedBy ?? '', 1, S.cellCenter],
         ];
         const row: Cell[] = Array.from({ length: COLS }, () => blank());
         let c = 0;
@@ -534,7 +707,11 @@ export function buildCaratulaSheet(
     ws['!merges'] = merges;
     // Alto por contenido; el bloque de identificacion y el encabezado de
     // REVISIONES van con aire extra (asi los dejaba Fak a mano).
-    const heights = computeRowHeights(rows, COL_WIDTHS, merges, { minPt: 18, maxPt: 90, extraPt: 6 });
+    // maxPt 400 (el techo de Excel es 409). Estaba en 90 —unas 8 lineas— y por eso el
+    // DETALLES de una revision larga salia CORTADO en el PDF, sin ningun aviso: la fila se
+    // quedaba en 90 pt y el resto del texto no se veia. Fak, 08/09/2026: "termino todo
+    // bastante cortado, eso no puede pasar". Una fila alta se lee; una cortada, no.
+    const heights = computeRowHeights(rows, COL_WIDTHS, merges, { minPt: 18, maxPt: 400, extraPt: 6 });
     heights[signSpaceIdx] = { hpt: 42 };   // espacio para la firma manuscrita
     ws['!rows'] = heights;
     ws['!margins'] = { left: 0.7, right: 0.7, top: 0.75, bottom: 0.75, header: 0.3, footer: 0.3 };

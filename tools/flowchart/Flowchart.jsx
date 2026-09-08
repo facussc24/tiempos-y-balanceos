@@ -424,7 +424,7 @@ export default function Flowchart({ header, products, flow, revisions = [], show
               <div className="flex flex-row divide-x-[1.5px] divide-[#60A5FA]">
 
                 {/* MITAD IZQUIERDA: REFERENCIAS */}
-                <div className="w-[24%] p-4 space-y-3 bg-[#f9fafb]">
+                <div className="p-4 space-y-3 bg-[#f9fafb] shrink-0" style={{ width: '22%' }}>
                   <h4 className="text-[9px] font-black text-[#1E3A8A] border-b border-[#e5e7eb] pb-1 mb-3">SÍMBOLOS Y REFERENCIAS</h4>
 
                   <div className="flex items-center gap-3 text-[9px] font-bold text-[#374151]">
@@ -509,7 +509,7 @@ export default function Flowchart({ header, products, flow, revisions = [], show
                 </div>
 
                 {/* MITAD DERECHA: CÓDIGOS DE PRODUCTO */}
-                <div className="w-[30%] p-4 bg-white overflow-x-auto">
+                <div className="p-4 bg-white overflow-x-auto shrink-0" style={{ width: '24%' }}>
                   <h4 className="text-[9px] font-black text-[#1E3A8A] border-b border-[#e5e7eb] pb-1 mb-3">CÓDIGOS PROD. TERMINADO</h4>
 
                   {/* La columna OPERACIONES es opcional y aparece sola cuando algun producto
@@ -557,18 +557,25 @@ export default function Flowchart({ header, products, flow, revisions = [], show
                     de Control (I-AC-005.2) de Barack, para que los tres documentos
                     registren los cambios igual. El motor de Claude Design no lo tenia:
                     `revision` era un escalar y no habia donde decir QUE cambio. */}
-                <div className="w-[46%] p-4 bg-white overflow-x-auto">
+                {/* ANCHOS INLINE, NO CLASES: `tailwind.css` es un CSS pre-compilado que el
+                    build NO regenera, asi que una clase de valor arbitrario nueva queda en
+                    `auto` sin dar error (leccion 08/09/2026). Reparto de la banda:
+                    22% referencias / 24% codigos / 54% revisiones — Fak, 08/09/2026:
+                    "busca la forma de alargar mas el historial de revisiones asi queda mas
+                    alargada la parte detalles y entra mejor". Dentro de la tabla, DETALLES se
+                    lleva el 63%: lo que se le saco a "Item cambiado" y a "Fecha PSW". */}
+                <div className="p-4 bg-white overflow-x-auto shrink-0" style={{ width: '54%' }}>
                   <h4 className="text-[9px] font-black text-[#1E3A8A] border-b border-[#e5e7eb] pb-1 mb-3">HISTORIAL DE REVISIONES</h4>
 
                   <table className="w-full text-[8.5px] font-bold text-[#374151] table-fixed">
                     <thead>
                       <tr className="text-[#9ca3af] border-b border-[#e5e7eb] text-left">
-                        <th className="pb-1 font-black w-[7%]">Rev.</th>
-                        <th className="pb-1 font-black w-[15%]">Fecha</th>
-                        <th className="pb-1 font-black w-[16%]">Ítem cambiado</th>
-                        <th className="pb-1 font-black w-[44%]">Detalles</th>
-                        <th className="pb-1 font-black w-[10%]">Fecha PSW</th>
-                        <th className="pb-1 font-black w-[8%] text-right">Modificó</th>
+                        <th className="pb-1 font-black" style={{ width: '4%' }}>Rev.</th>
+                        <th className="pb-1 font-black" style={{ width: '9%' }}>Fecha</th>
+                        <th className="pb-1 font-black" style={{ width: '12%' }}>Ítem cambiado</th>
+                        <th className="pb-1 font-black" style={{ width: '63%' }}>Detalles</th>
+                        <th className="pb-1 font-black" style={{ width: '6%' }}>Fecha PSW</th>
+                        <th className="pb-1 font-black text-right" style={{ width: '6%' }}>Modificó</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[#f3f4f6]">
@@ -579,8 +586,8 @@ export default function Flowchart({ header, products, flow, revisions = [], show
                           <tr key={idx} className="align-top">
                             <td className={`py-1.5 ${vigente ? 'text-[#DC2626] font-black' : ''}`}>{r.rev}</td>
                             <td className="py-1.5 whitespace-nowrap">{r.date}</td>
-                            <td className="py-1.5 break-words">{r.item}</td>
-                            <td className="py-1.5 font-semibold leading-snug break-words">{r.details}</td>
+                            <td className="py-1.5 break-words" style={{ paddingRight: '12px' }}>{r.item}</td>
+                            <td className="py-1.5 font-semibold leading-snug break-words" style={{ paddingRight: '12px' }}>{r.details}</td>
                             <td className="py-1.5 whitespace-nowrap">{r.pswDate}</td>
                             <td className="py-1.5 text-right">{r.modifiedBy}</td>
                           </tr>

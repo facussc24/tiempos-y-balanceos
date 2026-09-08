@@ -11,6 +11,8 @@
 
   "_nota_numeracion": "Rev.B mantiene el ESQUEMA de la Rev.A, que es el que ya usan el AMFE 158 y el Plan de Control CP-INSERT-001 — no adopta el de la HO-215, que tiene DOS operaciones 20 (INYECCION PLASTICA y Preparacion y Carga del Vinilo) y numera el tapizado antes que la costura, cuando en el proceso se cose primero. El documento que se renumera despues es la HO. Lo que si cambia respecto de la Rev.A es el agrupamiento por sector (ver _cambio_revB_sectores).",
 
+  "_fuente_de_las_siglas": "D/TLD esta verificado en documentos de VW: Formel Q Capacidad de Calidad (8a ed., jun-2015) pag. 28 §7.5 (\"el Cliente tiene dos tipos de identificaciones que tienen el mismo rango, la D mas antigua y la TLD mas reciente\"); VW Group CSR IATF 16949 (ene-2018) pag. 2 §8.2.3.1.2; VW 01058 pag. 31 §5.1.4. La sigla W NO aparece en ningun documento de VW que tenga Barack (barrido del 08/09/2026 sobre las 24 normas del legajo VW427 + Formel Q + su anexo + el CSR + el Quality Management Agreement; el unico \"wichtig\" es la palabra dentro de \"Funktionswichtige Teile\", que es otra cosa). Su unica fuente es la tabla de conversion del I-PY-001.7, hoja \"Tipos de caracteristicas\", celda E22 — que es justamente la matriz de correlacion que el propio Formel Q §7.5 le exige al proveedor que usa simbologia propia. Por eso la leyenda cita el Formel Q para D/TLD y el I-PY-001.7 para W: poner \"simbologia VW\" al lado de W seria afirmar algo que ninguna norma dice. Rutas y paginas: memoria reference_caracteristicas_especiales_notacion_barack.",
+
   "_nota_caracteristicas_especiales": "SE PASA A LA SIMBOLOGIA DE VW (decision de Fak, 08/09/2026). La Rev.A marcaba las mismas cuatro operaciones con la notacion del manual AIAG-VDA — ▽ (Critica) y SC (Significativa) — y traia esta leyenda al pie: 'Para todas las operaciones marcadas con ▽ (Caracteristica Critica) o SC (Caracteristica Significativa), es obligatorio consultar el Plan de Control N° [X] y el PFMEA N° [X] asociado a cada operacion' (los [X] nunca se completaron). Al abrir las fuentes el 08/09 aparecieron TRES notaciones que no cierran: el instructivo del SGC I-AC-005 define CC y CS; el manual AIAG-VDA usa ▽, SC, OS y HI; y la tabla de conversion del I-PY-001.7 dice que para VW corresponden D/TLD (critica) y Wichtig/W (significativa). El propio I-AC-005 cierra con 'sera utilizada la simbologia especificada por el Cliente cuando el mismo asi lo requiera', asi que en un documento VW van D/TLD y W. QUE OPERACIONES: las mismas cuatro de la Rev.A, sin agregar ni sacar ninguna — 10 recepcion (D/TLD , W), 22 control con mylar (D/TLD), 93 reproceso de adhesivado (D/TLD , W) y 110 control final (W). Lo unico que cambia es la SIGLA: la clasificacion la asigna Fak o el cliente, no esta sesion. Ojo: el elemento 17 del legajo (I-PY-001.7) no tiene una sola fila del Insert, asi que estas marcas todavia no tienen listado que las respalde.",
 
   "header": {
@@ -25,10 +27,10 @@
     "client": "VWA",
     "productsColumns": { "code": "Código Novax", "version": "" },
     "specialChars": [
-      { "mark": "D/TLD", "meaning": "CARACTERÍSTICA CRÍTICA (simbología VW; interna CC)" },
-      { "mark": "W", "meaning": "CARACTERÍSTICA SIGNIFICATIVA — WICHTIG (simbología VW; interna SC)" }
+      { "mark": "D/TLD", "meaning": "CARACTERÍSTICA CRÍTICA — simbología VW (Formel Q Capacidad de Calidad §7.5). Interna: CC." },
+      { "mark": "W", "meaning": "CARACTERÍSTICA SIGNIFICATIVA — tabla de conversión I-PY-001.7. Interna: SC." }
     ],
-    "footerNote": "Para todas las operaciones marcadas con D/TLD (Característica Crítica) o W (Característica Significativa) es obligatorio consultar el Plan de Control del INSERT y el AMFE 158 asociados a cada operación."
+    "footerNote": "Simbología de características especiales según la tabla de conversión del I-PY-001.7, correlación exigida por Formel Q – Capacidad de Calidad §7.5. Para toda operación marcada con D/TLD o W es obligatorio consultar el Plan de Control del INSERT y el AMFE 158 de esa operación."
   },
 
   "products": [
@@ -52,7 +54,7 @@
 
   "revisions": [
     { "rev": "A", "date": "12/11/2025", "item": "N/A.", "details": "EMISION INICIAL (P. GAMBOA).", "pswDate": "", "modifiedBy": "PG" },
-    { "rev": "B", "date": "08/09/2026", "item": "20-23 / 40 / 71-72 / 93 / 101-102", "details": "SE AGRUPA LA MESA DE CORTE EN UNA SOLA DECENA: 20 PREPARACION DE CORTE, 21 CORTAR COMPONENTES, 22 CONTROL CON MYLAR Y 23 ALMACENAMIENTO EN MEDIOS WIP. SE ELIMINA LA OPERACION 40 REFILADO: LA PIEZA YA NO SE REFILA ANTES DE COSER. SE AGREGA LA OPERACION 71 CONTROL DE PIEZA INYECTADA Y EL ALMACENAMIENTO DE INYECCION PASA A 72. SE AGREGAN LAS OPERACIONES 101 VIROLADO MANUAL Y 102 REFILADO POST-TAPIZADO, TOMADAS DE LA HOJA DE OPERACIONES HO-215. EL REPROCESO DE ADHESIVADO PASA DE 103 A 93, LA DECENA DE SU SECTOR. SE REDIBUJA EL RETRABAJO DEL ADHESIVADO CON LAS DOS DECISIONES SEPARADAS Y EL SCRAP COMO TERMINAL LATERAL. SE COMPLETA LA TABLA DE CODIGOS DE PRODUCTO TERMINADO, QUE ESTABA EN TBD. LAS CARACTERISTICAS ESPECIALES PASAN A LA SIMBOLOGIA DEL CLIENTE VW: D/TLD (CRITICA) Y W (SIGNIFICATIVA), SOBRE LAS MISMAS OPERACIONES QUE MARCABA LA REV.A. SE RESTITUYE LA LEYENDA DE CARACTERISTICAS ESPECIALES Y LA NOTA AL PIE, CON EL AMFE 158 EN LUGAR DEL PLACEHOLDER.", "pswDate": "", "modifiedBy": "FS" }
+    { "rev": "B", "date": "08/09/2026", "item": "20-23 / 40 / 71-72 / 93 / 101-102", "details": "NUMERACION POR SECTOR: MESA DE CORTE 20-23 Y REPROCESO DE ADHESIVADO 103 A 93. SE ELIMINA LA OP 40 REFILADO PREVIO A COSTURA. SE AGREGAN 71 CONTROL DE PIEZA INYECTADA (WIP A 72), 101 VIROLADO MANUAL Y 102 REFILADO POST-TAPIZADO (HO-215). SE REDIBUJA EL RETRABAJO DE ADHESIVADO. CARACTERISTICAS ESPECIALES EN SIMBOLOGIA VW: D/TLD Y W, CON SU LEYENDA. SE COMPLETA LA TABLA DE CODIGOS.", "pswDate": "", "modifiedBy": "FS" }
   ],
 
   "flow": [

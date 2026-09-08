@@ -57,6 +57,11 @@ const st = {
     },
     metaValue: {
         font: { sz: 9, name: 'Arial' },
+        // wrapText: sin esto Excel dibuja UNA linea y recorta en el borde de la celda. El
+        // "Equipo" del AMFE 158 (83 caracteres) salia como "...Manuel Meszaros (Calidad), M"
+        // en el PDF y nadie lo veia: en el xlsx el texto esta entero. Visto el 08/09/2026
+        // cruzando cada celda del xlsx contra el texto del PDF.
+        alignment: { vertical: 'center' as const, wrapText: true },
         border: BORDER,
     },
     groupHeader: {
@@ -533,7 +538,9 @@ export function buildAmfeCompletoWorkbook(doc: AmfeDocument): XLSX.WorkBook {
     ws['!merges'] = merges;
     // Alto por contenido: sin esto todas las filas quedan en 15pt y las celdas
     // largas (efectos, controles, causas) salen cortadas al imprimir.
-    ws['!rows'] = computeRowHeights(rows, AMFE_COL_WIDTHS, merges, { minPt: 20, maxPt: 200 });
+    // maxPt 400 (techo de Excel: 409). Con 200 una celda muy larga se quedaba en 200 pt y
+    // el resto del texto no se veia — el mismo corte silencioso que tenia la caratula.
+    ws['!rows'] = computeRowHeights(rows, AMFE_COL_WIDTHS, merges, { minPt: 20, maxPt: 400 });
     ws['!margins'] = { left: 0.5, right: 0.5, top: 0.6, bottom: 0.6, header: 0.3, footer: 0.3 };
 
     // Freeze panes: freeze header + column headers

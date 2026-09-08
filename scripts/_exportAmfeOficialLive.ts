@@ -17,7 +17,8 @@ import { writeFileSync, mkdirSync } from 'node:fs';
 import XLSX from 'xlsx-js-style';
 import { buildAmfeOficialWorkbook } from '../modules/amfe/amfeExcelExport';
 import type { AmfeLifecycleStatus } from '../modules/amfe/amfeCaratulaSheet';
-// @ts-expect-error — helper .mjs sin tipos, es el unico acceso a Supabase de los scripts
+// El helper .mjs es el unico acceso a Supabase de los scripts; `allowJs` lo resuelve solo,
+// asi que NO lleva @ts-expect-error (tsc lo marcaba como directiva sin usar).
 import { connectSupabase, readAmfe } from './_lib/amfeIo.mjs';
 
 const CLAVE = process.argv[2];
