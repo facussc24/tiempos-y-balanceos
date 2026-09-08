@@ -1,0 +1,4 @@
+# salidas del render, no se versionan
+control.png
+_render.html
+*.pdf
