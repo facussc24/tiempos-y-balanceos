@@ -1,6 +1,7 @@
 import React, { memo, useCallback, useMemo, useState, useEffect } from 'react';
 import { AmfeOperation, AmfeWorkElement, AmfeFunction, AmfeFailure, AmfeCause, AMFE_STATUS_OPTIONS, WORK_ELEMENT_TYPES, WORK_ELEMENT_LABELS, WorkElementType, EFFECT_LABELS } from './amfeTypes';
 import { clampSOD, getFailureWarnings, getCauseValidationState, CauseValidationState } from './amfeValidation';
+import { esCritica, esSignificativa } from './specialChars';
 import { AlertTriangle } from 'lucide-react';
 import { useAmfe } from './useAmfe';
 import { Trash2, Plus, Copy, ChevronRight, ChevronDown } from 'lucide-react';
@@ -482,7 +483,11 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
                 </td>
                 <td className={`${cellClass} bg-yellow-50/10`} data-field="specialChar">
                     {readOnly
-                        ? <span className={`text-[10px] text-center block font-bold ${cause.specialChar === 'CC' ? 'text-red-600' : cause.specialChar === 'SC' ? 'text-orange-600' : ''}`}>{cause.specialChar || '—'}</span>
+                        /* El color sale del NIVEL, no de la sigla: la misma caracteristica se
+                           escribe CC o D/TLD segun a quien vaya el documento (ver
+                           `specialChars.ts`). Una marca que ninguna de las tres fuentes
+                           reconoce queda sin color, para que se note. */
+                        ? <span className={`text-[10px] text-center block font-bold ${esCritica(cause.specialChar) ? 'text-red-600' : esSignificativa(cause.specialChar) ? 'text-orange-600' : ''}`}>{cause.specialChar || '—'}</span>
                         : <>
                             <input value={cause.specialChar} onChange={e => amfe.updateCause(op.id, we.id, func.id, fail.id, cause.id, 'specialChar', e.target.value)} className="w-full text-center outline-none bg-transparent text-[10px]" placeholder="-" aria-label="Característica especial (CC/SC)" />
                             {!cause.specialChar && Number(fail.severity) >= 7 && (

@@ -9,6 +9,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { AmfeDocument, AmfeFailure, AmfeCause, WorkElementType } from './amfeTypes';
 import type { SaveValidationResult } from '../../utils/repositories/validationTypes';
 import type { AmfeLifecycleStatus } from './amfeRegistryTypes';
+import { esCritica } from './specialChars';
 import {
     isGeneric6MLabel,
     isTextDescriptive,
@@ -81,9 +82,10 @@ export function getCauseValidationState(failure: AmfeFailure, cause: AmfeCause):
         if (level !== 'error') level = 'warning';
     }
 
-    // Severity >= 9 without CC
-    if (hasS && s >= 9 && cause.specialChar !== 'CC') {
-        messages.push('Severidad >= 9: debería tener característica CC');
+    // Severidad >= 9 sin caracteristica critica. La sigla depende del destinatario del
+    // documento (interna CC, manual ∇, VW D/TLD): se compara el NIVEL, no el texto.
+    if (hasS && s >= 9 && !esCritica(cause.specialChar)) {
+        messages.push('Severidad >= 9: debería tener característica crítica');
         if (level !== 'error') level = 'warning';
     }
 
@@ -648,13 +650,13 @@ function validateCcSeverity(doc: AmfeDocument): string[] {
                 for (const fail of func.failures) {
                     const s = Number(fail.severity) || 0;
                     for (const cause of fail.causes) {
-                        if (cause.specialChar !== 'CC') continue;
+                        if (!esCritica(cause.specialChar)) continue;
                         if (s >= 9) continue;
                         const haystack = [fail.description, fail.effectLocal, fail.effectNextLevel, fail.effectEndUser, cause.cause].join(' ').toLowerCase();
                         const isExempt = FLAMABILITY_LEGAL_KEYWORDS.some(kw => haystack.includes(kw));
                         if (!isExempt) {
                             issues.push(
-                                `Op ${op.opNumber} "${fail.description || '(sin desc)'}": causa marcada CC pero Severidad=${s} (se requiere S>=9 salvo flamabilidad/legal)`
+                                `Op ${op.opNumber} "${fail.description || '(sin desc)'}": causa marcada como crítica (${cause.specialChar}) pero Severidad=${s} (se requiere S>=9 salvo flamabilidad/legal)`
                             );
                         }
                     }

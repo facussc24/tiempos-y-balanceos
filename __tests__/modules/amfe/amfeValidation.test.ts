@@ -426,12 +426,24 @@ describe('getCauseValidationState', () => {
         expect(result.messages.some(m => m.includes('S/O/D incompletos'))).toBe(true);
     });
 
-    it('returns warning when severity >= 9 without CC', () => {
+    it('returns warning when severity >= 9 without a critical characteristic', () => {
         const cause = makeBaseCause({ specialChar: '', ap: 'H', preventionAction: 'Fix', responsible: 'John', targetDate: '2025-01-01' });
         const failure = makeBaseFailure(9, [cause]);
         const result = getCauseValidationState(failure, cause);
         expect(result.level).toBe('warning');
-        expect(result.messages.some(m => m.includes('CC'))).toBe(true);
+        expect(result.messages.some(m => m.includes('caracteristica critica') || m.includes('característica crítica'))).toBe(true);
+    });
+
+    // La sigla depende del destinatario del documento: interna CC, manual AIAG-VDA ∇, VW
+    // D/TLD (rules/amfe.md §2.1). El aviso mira el NIVEL, no el texto, asi que un AMFE ya
+    // convertido a la simbologia de VW no puede volver a avisar por lo mismo.
+    it('does not warn at severity >= 9 when the critical mark is written in VW symbology', () => {
+        for (const sigla of ['CC', 'D/TLD', '∇']) {
+            const cause = makeBaseCause({ specialChar: sigla, ap: 'H', preventionAction: 'Fix', responsible: 'John', targetDate: '2025-01-01' });
+            const failure = makeBaseFailure(9, [cause]);
+            const result = getCauseValidationState(failure, cause);
+            expect(result.messages.some(m => m.includes('crítica')), sigla).toBe(false);
+        }
     });
 
     it('returns ok when severity >= 9 with CC set', () => {
@@ -690,10 +702,12 @@ describe('validateAmfeBeforeSave - Rule A6: CC with S < 9', () => {
         expect(result.errors.filter(e => e.includes('CC pero Severidad'))).toHaveLength(0);
     });
 
-    it('flags CC with S < 9 and no exemption', () => {
-        const doc = makeDoc([makeFailure({ severity: 5 }, [makeCause({ specialChar: 'CC' })])]);
-        const result = validateAmfeBeforeSave(doc, 'approved');
-        expect(result.errors.some(e => e.includes('CC pero Severidad=5'))).toBe(true);
+    it('flags a critical mark with S < 9 and no exemption, in any symbology', () => {
+        for (const sigla of ['CC', 'D/TLD']) {
+            const doc = makeDoc([makeFailure({ severity: 5 }, [makeCause({ specialChar: sigla })])]);
+            const result = validateAmfeBeforeSave(doc, 'approved');
+            expect(result.errors.some(e => e.includes(`(${sigla}) pero Severidad=5`)), sigla).toBe(true);
+        }
     });
 
     it('exempts CC with S < 9 if flamability keyword present', () => {

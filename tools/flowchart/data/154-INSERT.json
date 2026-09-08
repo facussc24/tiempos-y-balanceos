@@ -11,7 +11,7 @@
 
   "_nota_numeracion": "Rev.B mantiene el ESQUEMA de la Rev.A, que es el que ya usan el AMFE 158 y el Plan de Control CP-INSERT-001 — no adopta el de la HO-215, que tiene DOS operaciones 20 (INYECCION PLASTICA y Preparacion y Carga del Vinilo) y numera el tapizado antes que la costura, cuando en el proceso se cose primero. El documento que se renumera despues es la HO. Lo que si cambia respecto de la Rev.A es el agrupamiento por sector (ver _cambio_revB_sectores).",
 
-  "_nota_cc_sc": "Las marcas de caracteristica especial (▽ , SC) se transcriben tal como estan en la Rev.A, sobre las mismas operaciones aunque hayan cambiado de numero: recepcion, control con mylar, reproceso de adhesivado y control final. No se agrega ninguna marca nueva — las CC/SC las asigna Fak o el cliente. Ojo: el elemento 17 del legajo no tiene una sola fila del Insert, asi que hoy estas marcas no tienen listado que las respalde.",
+  "_nota_caracteristicas_especiales": "SE PASA A LA SIMBOLOGIA DE VW (decision de Fak, 08/09/2026). La Rev.A marcaba las mismas cuatro operaciones con la notacion del manual AIAG-VDA — ▽ (Critica) y SC (Significativa) — y traia esta leyenda al pie: 'Para todas las operaciones marcadas con ▽ (Caracteristica Critica) o SC (Caracteristica Significativa), es obligatorio consultar el Plan de Control N° [X] y el PFMEA N° [X] asociado a cada operacion' (los [X] nunca se completaron). Al abrir las fuentes el 08/09 aparecieron TRES notaciones que no cierran: el instructivo del SGC I-AC-005 define CC y CS; el manual AIAG-VDA usa ▽, SC, OS y HI; y la tabla de conversion del I-PY-001.7 dice que para VW corresponden D/TLD (critica) y Wichtig/W (significativa). El propio I-AC-005 cierra con 'sera utilizada la simbologia especificada por el Cliente cuando el mismo asi lo requiera', asi que en un documento VW van D/TLD y W. QUE OPERACIONES: las mismas cuatro de la Rev.A, sin agregar ni sacar ninguna — 10 recepcion (D/TLD , W), 22 control con mylar (D/TLD), 93 reproceso de adhesivado (D/TLD , W) y 110 control final (W). Lo unico que cambia es la SIGLA: la clasificacion la asigna Fak o el cliente, no esta sesion. Ojo: el elemento 17 del legajo (I-PY-001.7) no tiene una sola fila del Insert, asi que estas marcas todavia no tienen listado que las respalde.",
 
   "header": {
     "title": "FLUJOGRAMA DE PROCESO INSERT PATAGONIA",
@@ -23,7 +23,12 @@
     "reviewedBy": "CARLOS BAPTISTA",
     "project": "PATAGONIA",
     "client": "VWA",
-    "productsColumns": { "code": "Código Novax", "version": "" }
+    "productsColumns": { "code": "Código Novax", "version": "" },
+    "specialChars": [
+      { "mark": "D/TLD", "meaning": "CARACTERÍSTICA CRÍTICA (simbología VW; interna CC)" },
+      { "mark": "W", "meaning": "CARACTERÍSTICA SIGNIFICATIVA — WICHTIG (simbología VW; interna SC)" }
+    ],
+    "footerNote": "Para todas las operaciones marcadas con D/TLD (Característica Crítica) o W (Característica Significativa) es obligatorio consultar el Plan de Control del INSERT y el AMFE 158 asociados a cada operación."
   },
 
   "products": [
@@ -47,11 +52,11 @@
 
   "revisions": [
     { "rev": "A", "date": "12/11/2025", "item": "N/A.", "details": "EMISION INICIAL (P. GAMBOA).", "pswDate": "", "modifiedBy": "PG" },
-    { "rev": "B", "date": "08/09/2026", "item": "20-23 / 40 / 71-72 / 93 / 101-102", "details": "SE AGRUPA LA MESA DE CORTE EN UNA SOLA DECENA: 20 PREPARACION DE CORTE, 21 CORTAR COMPONENTES, 22 CONTROL CON MYLAR Y 23 ALMACENAMIENTO EN MEDIOS WIP. SE ELIMINA LA OPERACION 40 REFILADO: LA PIEZA YA NO SE REFILA ANTES DE COSER. SE AGREGA LA OPERACION 71 CONTROL DE PIEZA INYECTADA Y EL ALMACENAMIENTO DE INYECCION PASA A 72. SE AGREGAN LAS OPERACIONES 101 VIROLADO MANUAL Y 102 REFILADO POST-TAPIZADO, TOMADAS DE LA HOJA DE OPERACIONES HO-215. EL REPROCESO DE ADHESIVADO PASA DE 103 A 93, LA DECENA DE SU SECTOR. SE REDIBUJA EL RETRABAJO DEL ADHESIVADO CON LAS DOS DECISIONES SEPARADAS Y EL SCRAP COMO TERMINAL LATERAL. SE COMPLETA LA TABLA DE CODIGOS DE PRODUCTO TERMINADO, QUE ESTABA EN TBD.", "pswDate": "", "modifiedBy": "FS" }
+    { "rev": "B", "date": "08/09/2026", "item": "20-23 / 40 / 71-72 / 93 / 101-102", "details": "SE AGRUPA LA MESA DE CORTE EN UNA SOLA DECENA: 20 PREPARACION DE CORTE, 21 CORTAR COMPONENTES, 22 CONTROL CON MYLAR Y 23 ALMACENAMIENTO EN MEDIOS WIP. SE ELIMINA LA OPERACION 40 REFILADO: LA PIEZA YA NO SE REFILA ANTES DE COSER. SE AGREGA LA OPERACION 71 CONTROL DE PIEZA INYECTADA Y EL ALMACENAMIENTO DE INYECCION PASA A 72. SE AGREGAN LAS OPERACIONES 101 VIROLADO MANUAL Y 102 REFILADO POST-TAPIZADO, TOMADAS DE LA HOJA DE OPERACIONES HO-215. EL REPROCESO DE ADHESIVADO PASA DE 103 A 93, LA DECENA DE SU SECTOR. SE REDIBUJA EL RETRABAJO DEL ADHESIVADO CON LAS DOS DECISIONES SEPARADAS Y EL SCRAP COMO TERMINAL LATERAL. SE COMPLETA LA TABLA DE CODIGOS DE PRODUCTO TERMINADO, QUE ESTABA EN TBD. LAS CARACTERISTICAS ESPECIALES PASAN A LA SIMBOLOGIA DEL CLIENTE VW: D/TLD (CRITICA) Y W (SIGNIFICATIVA), SOBRE LAS MISMAS OPERACIONES QUE MARCABA LA REV.A. SE RESTITUYE LA LEYENDA DE CARACTERISTICAS ESPECIALES Y LA NOTA AL PIE, CON EL AMFE 158 EN LUGAR DEL PLACEHOLDER.", "pswDate": "", "modifiedBy": "FS" }
   ],
 
   "flow": [
-    { "stepId": "10", "type": "operation", "description": "RECEPCIÓN DE MATERIA PRIMA", "critical": true, "criticalType": "▽ , SC", "criticalColor": "black" },
+    { "stepId": "10", "type": "operation", "description": "RECEPCIÓN DE MATERIA PRIMA", "critical": true, "criticalType": "D/TLD , W", "criticalColor": "black" },
     { "type": "storage", "description": "ALMACENADO EN SECTOR DE RECEPCIÓN DE MATERIA PRIMA PENDIENTE DE CONTROL" },
     { "type": "inspection", "description": "INSPECCIÓN DE MATERIA PRIMA" },
     { "type": "condition", "labelCondition": "¿MATERIAL CONFORME?", "labelDown": "SI",
@@ -65,7 +70,7 @@
           { "type": "transfer", "description": "TRASLADO: VINILOS Y TELAS A SECTOR DE MESA DE CORTE" },
           { "stepId": "20", "type": "operation", "description": "PREPARACIÓN DE CORTE" },
           { "stepId": "21", "type": "operation", "description": "CORTAR COMPONENTES" },
-          { "stepId": "22", "type": "op-ins", "description": "CONTROL CON MYLAR", "critical": true, "criticalType": "▽", "criticalColor": "black" },
+          { "stepId": "22", "type": "op-ins", "description": "CONTROL CON MYLAR", "critical": true, "criticalType": "D/TLD", "criticalColor": "black" },
           { "type": "condition", "labelCondition": "¿CORTE CONFORME?", "labelDown": "SI",
             "branchSide": { "labelNode": "NO", "type": "terminal", "text": "SCRAP" } },
           { "stepId": "23", "type": "storage", "description": "ALMACENAMIENTO EN MEDIOS WIP" },
@@ -103,7 +108,7 @@
       "branchSide": { "labelNode": "NO", "sequence": [
         { "type": "condition", "labelCondition": "¿SE PUEDE RETRABAJAR?", "labelDown": "SI",
           "branchSide": { "labelNode": "NO", "type": "terminal", "text": "SCRAP" } },
-        { "stepId": "93", "type": "operation", "description": "REPROCESO: FALTA DE ADHESIVO", "critical": true, "criticalType": "▽ , SC", "criticalColor": "black" },
+        { "stepId": "93", "type": "operation", "description": "REPROCESO: FALTA DE ADHESIVO", "critical": true, "criticalType": "D/TLD , W", "criticalColor": "black" },
         { "type": "transfer", "description": "RE-ENTRADA AL FLUJO PRINCIPAL", "rework": { "targetId": "91", "label": "REVERIFICAR (A OP. 91)" } }
       ] } },
     { "stepId": "92", "type": "storage", "description": "ALMACENAMIENTO EN MEDIOS WIP" },
@@ -111,7 +116,7 @@
     { "stepId": "100", "type": "operation", "description": "TAPIZADO SEMIAUTOMÁTICO" },
     { "stepId": "101", "type": "operation", "description": "VIROLADO MANUAL" },
     { "stepId": "102", "type": "operation", "description": "REFILADO POST-TAPIZADO" },
-    { "stepId": "110", "type": "op-ins", "description": "CONTROL FINAL DE CALIDAD", "critical": true, "criticalType": "SC", "criticalColor": "black" },
+    { "stepId": "110", "type": "op-ins", "description": "CONTROL FINAL DE CALIDAD", "critical": true, "criticalType": "W", "criticalColor": "black" },
     { "type": "condition", "labelCondition": "¿PRODUCTO CONFORME?", "labelDown": "SI",
       "branchSide": { "labelNode": "NO", "sequence": [
         { "stepId": "111", "type": "operation", "description": "CLASIFICACIÓN Y SEGREGACIÓN DE PRODUCTO NO CONFORME" },

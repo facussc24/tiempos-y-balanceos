@@ -55,9 +55,33 @@ Decision Fak 2026-05-22: "el manual es la ley". Criterio oficial, no reglas mas 
 
 - Flamabilidad TL 1010, VW 50180 (VOC) y EU 2000/53/EG (ELV) generan **CC obligatoria** por requerimiento legal (independiente de S/O).
 - NUNCA asignar CC/SC/OS/HI sin verificar S/O previo. Si falta O: dejar "Estandar".
-- **Asignar o cambiar CC/SC requiere autorizacion explicita de Fak** (autonomy-contract).
-- Simbolos propios del cliente se traducen a simbologia Barack via tabla de correlacion.
-- `specialChar` valores validos: `"CC"`, `"SC"`, `""`. Override manual tiene prioridad sobre calculo automatico.
+- **Asignar o cambiar una caracteristica especial requiere autorizacion explicita de Fak** (autonomy-contract). Traducir la SIGLA de una que ya esta asignada no es asignarla.
+
+### 2.1 La sigla depende del destinatario — verificado 08/09/2026
+
+🔴 **En Barack conviven TRES notaciones y no coinciden.** Antes de esta fecha esta regla decia
+que los valores validos eran solo `"CC"`, `"SC"` y `""`, y que los simbolos del cliente se
+traducian **hacia** Barack. Las dos cosas quedaron desactualizadas.
+
+| Fuente | Critica | Significativa | Otras |
+|---|---|---|---|
+| Instructivo SGC `I-AC-005` rev.B (y rev.A de 2018) | `CC` | **`CS`** | — |
+| Manual AMFE SETEC / AIAG-VDA pag. 129 | `▽` | `SC` | `OS`, `HI` |
+| Tabla de conversion IATF del `I-PY-001.7` | VW `D/TLD` · PWA: consultar CSR | VW `Wichtig (W)` · PWA `SC` | `OS`/`HI`: N/A |
+
+- **`CS` no lo usa ningun documento de trabajo**: todos escriben `SC`, la del manual. Por eso
+  `CS` se lee como alias de `SC`, no como valor invalido.
+- El propio I-AC-005 cierra con *"sera utilizada la simbologia especificada por el Cliente
+  cuando el mismo asi lo requiera"*. **Decision de Fak 08/09/2026: en la documentacion que va
+  a VW se escriben `D/TLD` y `W`.** Para PWA la significativa sigue siendo `SC`.
+- **Comparar el NIVEL, nunca el texto**: `esCritica()` / `esSignificativa()` /
+  `convertirSimbologia()` en `modules/amfe/specialChars.ts`, con la tabla y sus fuentes citadas.
+  Tests en `__tests__/amfe/specialChars.test.ts` (incluye los casos en rojo: `PV2005`, `Clave`
+  y los `YC`/`YS`, que son de AMFE de DISEÑO y no entran en el de proceso).
+- Una sigla que ninguna de las tres fuentes reconoce **no se adivina**: se reporta.
+- ⚠️ Abierto, lo decide Calidad: el instructivo dice `CS` y la practica dice `SC`. Hasta que se
+  zanje, no se "corrige" ningun documento a `CS`. Memoria
+  `caracteristicas_especiales_notacion_barack`.
 
 **Normas por cliente:** flamabilidad VW = TL 1010; Toyota/PWA = norma propia (NO TL 1010). NUNCA extrapolar normas de un cliente a otro.
 

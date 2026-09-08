@@ -481,6 +481,31 @@ export default function Flowchart({ header, products, flow, revisions = [], show
                     <span>CONECTOR</span>
                   </div>
 
+                  {/* CARACTERISTICAS ESPECIALES — sale del dato, no del motor.
+                      Las siglas NO son universales: el instructivo I-AC-005 define CC/CS, el
+                      manual AIAG-VDA usa ▽/SC (+ OS y HI) y para VW corresponden D/TLD y W
+                      (Wichtig). Cada flujograma declara las suyas en `header.specialChars`
+                      con su significado, porque el que lee el documento impreso no tiene la
+                      tabla de conversion al lado. Nacio el 08/09/2026: la Rev.A del 154 traia
+                      las marcas Y su leyenda, y la Rev.B se llevo las marcas sin la leyenda. */}
+                  {Array.isArray(header.specialChars) && header.specialChars.length > 0 && (
+                    <div className="mt-2 pt-2 border-t border-[#e5e7eb] space-y-2">
+                      <h4 className="text-[9px] font-black text-[#1E3A8A]">CARACTERÍSTICAS ESPECIALES</h4>
+                      {header.specialChars.map((sc, i) => (
+                        <div key={i} className="flex items-start gap-3 text-[9px] font-bold text-[#374151]">
+                          <div className="w-8 flex justify-center shrink-0 text-[#DC2626] font-black">{sc.mark}</div>
+                          <span className="leading-tight">{sc.meaning}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {header.footerNote && (
+                    <div className="mt-2 pt-2 border-t border-[#e5e7eb] text-[8px] font-semibold text-[#4b5563] leading-snug">
+                      {header.footerNote}
+                    </div>
+                  )}
+
                 </div>
 
                 {/* MITAD DERECHA: CÓDIGOS DE PRODUCTO */}
