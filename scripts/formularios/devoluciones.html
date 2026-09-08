@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+<meta charset="utf-8">
+<style>
+  @page { size: A4; margin: 16mm 19mm 14mm 19mm; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 8pt;
+    color: #000;
+    margin: 0;
+    line-height: 1.25;
+  }
+
+  /* ---------- Encabezado ---------- */
+  .head { display: flex; align-items: center; gap: 10px; }
+  .head img { width: 118px; height: auto; }
+  .head .titulo {
+    flex: 1;
+    text-align: center;
+    font-size: 12pt;
+    font-weight: bold;
+    letter-spacing: .2px;
+  }
+  .rule { border-bottom: 1.6px solid #000; margin: 6px 0 8px 0; }
+
+  .atencion { font-size: 8pt; font-weight: bold; margin-bottom: 4px; }
+
+  .rellenar {
+    font-size: 8.2pt;
+    font-weight: bold;
+    text-decoration: underline;
+    margin: 14px 0 4px 1px;
+  }
+
+  /* ---------- Tablas ---------- */
+  table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+  td, th { border: 0.6px solid #000; padding: 1.5px 3px; vertical-align: middle; }
+  .bloque { margin-bottom: 13px; }
+
+  .barra {
+    background: #c8c8c8;
+    font-weight: bold;
+    font-size: 8pt;
+    height: 15px;
+    padding: 1.5px 4px;
+  }
+  .lbl { background: #efefef; font-size: 7.4pt; white-space: nowrap; }
+  .campo { height: 24px; }
+  .campo-alto { height: 30px; }
+
+  /* casilleros */
+  .chk {
+    display: inline-block;
+    width: 8px; height: 8px;
+    border: 0.6px solid #000;
+    margin: 0 3px -1px 0;
+    background: #fff;
+  }
+  .opt { font-size: 7.4pt; white-space: nowrap; }
+
+  .nota { font-size: 6.9pt; font-style: italic; margin: 2px 0 0 1px; }
+
+  /* ---------- Motivo ---------- */
+  .motivo-lista td { border: none; padding: 1.5px 3px; }
+  .caja-com { height: 110px; vertical-align: top; }
+
+  /* ---------- Importante ---------- */
+  .importante { margin-top: 14px; font-size: 7.2pt; }
+  .importante .tit { font-weight: bold; font-size: 7.8pt; margin-bottom: 2px; }
+  .importante ul { margin: 0; padding-left: 12px; }
+  .importante li { margin-bottom: 1.5px; }
+
+  /* ---------- Pie ---------- */
+  .pie {
+    margin-top: 14px;
+    border-top: 0.6px solid #000;
+    padding-top: 3px;
+    font-size: 6pt;
+    white-space: nowrap;
+    color: #333;
+    display: flex;
+    justify-content: space-between;
+  }
+</style>
+</head>
+<body>
+
+  <!-- ENCABEZADO -->
+  <div class="head">
+    <img src="__LOGO__" alt="Barack Mercosul">
+    <div class="titulo">FORMULARIO DE ACEPTACIÓN DE DEVOLUCIONES</div>
+  </div>
+  <div class="rule"></div>
+
+  <div class="atencion">ATENCIÓN: NO ENVIAR EL MATERIAL SIN PREVIA ACEPTACIÓN. EN CASO CONTRARIO SERÁ RECHAZADO.</div>
+
+  <!-- ============ A COMPLETAR POR EL CLIENTE ============ -->
+  <div class="rellenar">A completar por el CLIENTE:</div>
+
+  <!-- Identificación del cliente -->
+  <div class="bloque">
+    <table>
+      <colgroup>
+        <col style="width:18%"><col style="width:17%">
+        <col style="width:15%"><col style="width:16%">
+        <col style="width:12%"><col style="width:22%">
+      </colgroup>
+      <tr><td class="barra" colspan="6">Identificación del CLIENTE</td></tr>
+      <tr>
+        <td class="lbl">Nombre del CLIENTE</td>
+        <td class="campo" colspan="5"></td>
+      </tr>
+      <tr>
+        <td class="lbl">Persona de contacto</td>
+        <td class="campo" colspan="2"></td>
+        <td class="lbl">Teléfono</td>
+        <td class="campo" colspan="2"></td>
+      </tr>
+      <tr>
+        <td class="lbl">Domicilio</td>
+        <td class="campo" colspan="5"></td>
+      </tr>
+      <tr>
+        <td class="lbl">Nº Factura</td>
+        <td class="campo"></td>
+        <td class="lbl">Fecha de factura</td>
+        <td class="campo"></td>
+        <td class="lbl">Nº Remito</td>
+        <td class="campo"></td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- Estado del material -->
+  <div class="bloque">
+    <table>
+      <colgroup>
+        <col style="width:19%"><col style="width:13%"><col style="width:13%">
+        <col style="width:13%"><col style="width:42%">
+      </colgroup>
+      <tr><td class="barra" colspan="5">Estado del material</td></tr>
+      <tr>
+        <td class="lbl">Embalaje de origen</td>
+        <td class="opt"><span class="chk"></span>Sí</td>
+        <td class="opt"><span class="chk"></span>No</td>
+        <td class="campo" colspan="2"></td>
+      </tr>
+      <tr>
+        <td class="lbl">Material completo</td>
+        <td class="opt"><span class="chk"></span>Sí</td>
+        <td class="opt"><span class="chk"></span>No</td>
+        <td class="lbl">Faltan</td>
+        <td class="campo"></td>
+      </tr>
+      <tr>
+        <td class="lbl">Estado del material</td>
+        <td class="opt"><span class="chk"></span>Nuevo</td>
+        <td class="opt"><span class="chk"></span>Usado</td>
+        <td class="campo" colspan="2"></td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- Material a devolver -->
+  <div class="bloque">
+    <table>
+      <colgroup>
+        <col style="width:19%"><col style="width:36%">
+        <col style="width:11%"><col style="width:34%">
+      </colgroup>
+      <tr><td class="barra" colspan="4">Material a devolver</td></tr>
+      <tr>
+        <td class="lbl" style="text-align:center">Código / Referencia</td>
+        <td class="lbl" style="text-align:center">Descripción</td>
+        <td class="lbl" style="text-align:center">Cantidad</td>
+        <td class="lbl" style="text-align:center">Comentarios</td>
+      </tr>
+      <tr><td class="campo-alto"></td><td></td><td></td><td></td></tr>
+      <tr><td class="campo-alto"></td><td></td><td></td><td></td></tr>
+      <tr><td class="campo-alto"></td><td></td><td></td><td></td></tr>
+      <tr><td class="campo-alto"></td><td></td><td></td><td></td></tr>
+    </table>
+    <div class="nota">* Si el material a devolver no entra en las líneas disponibles, adjuntar el remito.</div>
+  </div>
+
+  <!-- Motivo de la devolución -->
+  <div class="bloque">
+    <table>
+      <colgroup><col style="width:50%"><col style="width:50%"></colgroup>
+      <tr><td class="barra" colspan="2">Motivo de la devolución</td></tr>
+      <tr>
+        <td style="padding:0">
+          <table class="motivo-lista" style="border:none">
+            <tr><td class="opt"><span class="chk"></span>Material no solicitado</td></tr>
+            <tr><td class="opt"><span class="chk"></span>Material no conforme con el pedido</td></tr>
+            <tr><td class="opt"><span class="chk"></span>Material recibido en mal estado</td></tr>
+            <tr><td class="opt"><span class="chk"></span>El producto no funciona correctamente</td></tr>
+          </table>
+        </td>
+        <td class="caja-com">
+          <span style="font-size:7.4pt">Comentarios:</span>
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- ============ A COMPLETAR POR BARACK ============ -->
+  <div class="rellenar">A completar por BARACK:</div>
+
+  <div class="bloque">
+    <table>
+      <colgroup>
+        <col style="width:19%"><col style="width:13%"><col style="width:13%">
+        <col style="width:19%"><col style="width:36%">
+      </colgroup>
+      <tr><td class="barra" colspan="5">Aceptación de la devolución</td></tr>
+      <tr>
+        <td class="lbl">Devolución aceptada</td>
+        <td class="opt"><span class="chk"></span>Sí</td>
+        <td class="opt"><span class="chk"></span>No</td>
+        <td class="lbl">Nº de devolución *</td>
+        <td class="campo"></td>
+      </tr>
+    </table>
+    <div class="nota">* Si el Nº de devolución no figura en la documentación y en las etiquetas del material, la devolución será rechazada.</div>
+  </div>
+
+  <!-- Firma del Responsable de Calidad (campo agregado) -->
+  <div class="bloque">
+    <table>
+      <colgroup>
+        <col style="width:19%"><col style="width:31%">
+        <col style="width:19%"><col style="width:31%">
+      </colgroup>
+      <tr><td class="barra" colspan="4">Aprobación — Responsable de Calidad</td></tr>
+      <tr>
+        <td class="lbl">Nombre y apellido</td>
+        <td class="campo"></td>
+        <td class="lbl">Fecha</td>
+        <td class="campo"></td>
+      </tr>
+      <tr>
+        <td class="lbl">Firma y sello</td>
+        <td colspan="3" style="height:70px"></td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- IMPORTANTE -->
+  <div class="importante">
+    <div class="tit">Importante:</div>
+    <ul>
+      <li>El material no debe enviarse hasta que BARACK devuelva este formulario aceptado y firmado por el Responsable de Calidad.</li>
+      <li>El material debe devolverse en su embalaje de origen, completo e identificado con el Nº de devolución en la documentación y en cada bulto.</li>
+      <li>La aceptación de la devolución no implica la emisión automática de la nota de crédito: el material será verificado a su recepción y recién entonces se define su disposición.</li>
+    </ul>
+  </div>
+
+  <div class="pie">
+    <span>Barack Argentina S.R.L. — Los Arboles 842, B1686HDF Hurlingham, Buenos Aires</span>
+    <span>Código: (a asignar por Calidad) &nbsp;|&nbsp; Rev.: 00 &nbsp;|&nbsp; Fecha: 08/09/2026 &nbsp;|&nbsp; Pág. 1 de 1</span>
+  </div>
+
+</body>
+</html>
