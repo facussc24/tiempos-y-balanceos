@@ -208,11 +208,10 @@
       },
       "secuencia": [
         "10",
-        "15",
         "20",
-        "25",
-        "30",
-        "40",
+        "21",
+        "22",
+        "23",
         "50",
         "51",
         "60",
@@ -225,10 +224,10 @@
         "90",
         "91",
         "92",
+        "93",
         "100",
         "101",
         "102",
-        "103",
         "110",
         "111",
         "120"
@@ -236,8 +235,8 @@
       "secuenciaConfirmadaPor": [
         "flujograma 154 Rev.B (emitido 08/09/2026, datos en tools/flowchart/data/154-INSERT.json)"
       ],
-      "nota": "Flujograma 154 Rev.B emitido el 08/09/2026. CONSERVA la numeracion de la Rev.A, que es la que ya usan el AMFE 158 y el Plan de Control CP-INSERT-001, y agrega tres operaciones que si tienen documento: 71 CONTROL DE PIEZA INYECTADA (paso 3 de la OP 20 de la HO-215 + elementos de medicion de la OP 70 del AMFE; Fak 08/09: 'deberia ser un paso de proceso eso, con su numero propio'), 101 VIROLADO MANUAL (OP 31 de la HO-215, aprobada por C. Baptista el 06/07/2026) y 102 REFILADO POST-TAPIZADO (OP 40 de la HO-215 en sector TAPIZADO). El WIP de inyeccion pasa de 71 a 72. 🔴 SE CAE UNA AFIRMACION DE LA NOTA ANTERIOR: decia que el 105 REFILADO POST-TAPIZADO del Plan de Control no lo respaldaba nadie — si lo respalda, es la OP 40 de la HO-215, leida el 08/09/2026. El Insert tiene DOS refilados: el 40 del vinilo cortado antes de coser y el 102 despues de tapizar. LO QUE FALTA AHORA ES DEL AMFE 158: le faltan 40, 100 y las tres nuevas 71, 101, 102 (las demas de la lista vieja — 30, 51, 61, 81, 92, 111 — son almacenamientos WIP y clasificacion, que no llevan AMFE propio). Agregarlas pide escribir modos de falla con la HO-215 delante. LA HO-215 ES LA QUE HAY QUE RENUMERAR: tiene DOS operaciones 20 (INYECCION PLASTICA y Preparacion y Carga del Vinilo) y numera el tapizado 30-31 antes que la costura 50-53, cuando en el proceso se cose primero.",
-      "fuente": "PDF FLUJOGRAMA_154_INSERT PAT_REV.pdf (Rev.A) + HO-215 + AMFE 158 Supabase live + CP-INSERT-001, los cuatro leidos 2026-09-08"
+      "nota": "Flujograma 154 Rev.B emitido el 08/09/2026. Mantiene el ESQUEMA de la Rev.A (el que ya usan el AMFE 158 y el Plan de Control CP-INSERT-001) y le hace cuatro cambios, todos con documento o con criterio de Fak detras. (1) UN SOLO DECIMAL POR SECTOR (Fak, 08/09: 'dentro del mismo sector intentemos mantenernos en el mismo decimal'): la mesa de corte estaba repartida en 15/20/25/30 y queda 20 PREPARACION DE CORTE, 21 CORTAR COMPONENTES, 22 CONTROL CON MYLAR y 23 ALMACENAMIENTO EN MEDIOS WIP; por lo mismo el reproceso de adhesivado pasa de 103 a 93, que es la decena de su sector. Las decenas 30 y 40 quedan LIBRES. (2) SE ELIMINA LA OPERACION 40 REFILADO del vinilo cortado antes de coser (Fak, 08/09: 'esa pieza no se refila mas'): la HO-215 no tiene ningun refilado antes de la costura - su OP 40 REFILADO DE PIEZA es del sector TAPIZADO y va despues de tapizar - y el AMFE 158 tampoco declara una OP 40. El unico documento que todavia la trae es el CP-INSERT-001, que es de Calidad. (3) SE AGREGAN TRES OPERACIONES: 71 CONTROL DE PIEZA INYECTADA (paso 3 de la OP 20 de la HO-215 + elementos de medicion de la OP 70 del AMFE; Fak 08/09: 'deberia ser un paso de proceso eso, con su numero propio'), 101 VIROLADO MANUAL (OP 31 de la HO-215, aprobada por C. Baptista el 06/07/2026) y 102 REFILADO POST-TAPIZADO (OP 40 de la HO-215 en sector TAPIZADO). El WIP de inyeccion pasa de 71 a 72. (4) Se saca el texto huerfano 'REPROCESO: PUNTADA FLOJA' de la Rev.A, que estaba sin figura, sin numero y sin flecha. SE CAE UNA AFIRMACION DE LA NOTA ANTERIOR: decia que el 105 REFILADO POST-TAPIZADO del Plan de Control no lo respaldaba nadie - si lo respalda, es la OP 40 de la HO-215, leida el 08/09/2026. LO QUE FALTA AHORA ES DEL AMFE 158: le faltan 100 y las tres nuevas 71, 101, 102, y hay que renumerarle el corte (15/20/25 -> 20/21/22) y el reproceso (103 -> 93). Los almacenamientos WIP (23, 51, 61, 72, 81, 92) y la 111 no llevan AMFE propio. LA HO-215 ES LA QUE HAY QUE RENUMERAR: tiene DOS operaciones 20 (INYECCION PLASTICA y Preparacion y Carga del Vinilo) y numera el tapizado 30-31 antes que la costura 50-53, cuando en el proceso se cose primero.",
+      "fuente": "PDF FLUJOGRAMA_154_INSERT PAT_REV.pdf (Rev.A) + HO-215 + AMFE 158 Supabase live + CP-INSERT-001, los cuatro leidos 2026-09-08; agrupamiento por sector y baja del refilado, criterio de Fak 08/09/2026"
     },
     "AMFE-TR-PAT": {
       "producto": "TOP ROLL",

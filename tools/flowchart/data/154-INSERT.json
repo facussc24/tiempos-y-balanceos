@@ -1,15 +1,17 @@
 {
   "_doc": "Flujograma 154 — INSERT (VW427 Patagonia). Rev.B. Parte del PDF FLUJOGRAMA_154_INSERT PAT_REV.pdf (Rev.A, P. Gamboa, 12/11/2025), leido como imagen y transcripto nodo por nodo. El documento dibuja TRES columnas que arrancan del almacen de MP: corte/costura a la izquierda, espuma en el medio e inyeccion a la derecha. La de inyeccion NO llega hasta el final: converge con la de espuma en el 80 PREARMADO DE ESPUMA, y recien despues el conjunto se junta con corte/costura en el 90 ADHESIVADO. Aca esa convergencia en dos etapas se arma con `branches` anidados.",
 
-  "_cambio_revB": "TRES OPERACIONES NUEVAS, las tres con documento que las respalda. (1) 71 CONTROL DE PIEZA INYECTADA: hoy vive como paso 3 de la OP 20 de la HO-215 ('CONTROL DE PIEZA INYECTADA: inspeccionar visualmente cada pieza verificando falta de llenado, rebabas, orificios tapados, quemaduras y flashes') y como elementos de medicion adentro de la OP 70 del AMFE 158; Fak, 08/09/2026: 'deberia ser un paso de proceso eso, con su numero propio'. Es el mismo criterio con el que el flujograma 153 Rev.B tiene su OP 51. El almacenamiento WIP de inyeccion, que era 71, pasa a 72. (2) 101 VIROLADO MANUAL: es la OP 31 de la HO-215, tres paginas, aprobada por C. Baptista el 06/07/2026. No estaba en ningun flujograma ni en el AMFE. (3) 102 REFILADO POST-TAPIZADO: es la OP 40 de la HO-215 en el sector TAPIZADO ('tomar las piezas pre-tapizadas y colocarlas en la mesa de refilado, con un cutter realizar el refilado completo'), y es la misma operacion que el Plan de Control CP-INSERT-001 numera 105. No confundir con el 40 REFILADO de este flujograma, que es el del vinilo cortado, antes de coser: el Insert tiene DOS refilados.",
+  "_cambio_revB": "TRES OPERACIONES NUEVAS, las tres con documento que las respalda. (1) 71 CONTROL DE PIEZA INYECTADA: hoy vive como paso 3 de la OP 20 de la HO-215 ('CONTROL DE PIEZA INYECTADA: inspeccionar visualmente cada pieza verificando falta de llenado, rebabas, orificios tapados, quemaduras y flashes') y como elementos de medicion adentro de la OP 70 del AMFE 158; Fak, 08/09/2026: 'deberia ser un paso de proceso eso, con su numero propio'. Es el mismo criterio con el que el flujograma 153 Rev.B tiene su OP 51. El almacenamiento WIP de inyeccion, que era 71, pasa a 72. (2) 101 VIROLADO MANUAL: es la OP 31 de la HO-215, tres paginas, aprobada por C. Baptista el 06/07/2026. No estaba en ningun flujograma ni en el AMFE. (3) 102 REFILADO POST-TAPIZADO: es la OP 40 de la HO-215 en el sector TAPIZADO ('tomar las piezas pre-tapizadas y colocarlas en la mesa de refilado, con un cutter realizar el refilado completo'), y es la misma operacion que el Plan de Control CP-INSERT-001 numera 105.",
 
-  "_cambio_revB_retrabajo": "El retrabajo del adhesivado se redibuja con las DOS decisiones separadas que pide la convencion de la casa y que ya usa el flujograma 153 Rev.B: primero el rombo de conformidad y despues el de si se puede retrabajar, con el SCRAP como terminal lateral. La Rev.A lo hacia al reves: mandaba a reprocesar y despues preguntaba si el reproceso habia salido bien.",
+  "_cambio_revB_sectores": "UN SOLO DECIMAL POR SECTOR (criterio de Fak, 08/09/2026: 'dentro del mismo sector intentemos mantenernos en el mismo decimal'). La mesa de corte estaba repartida en tres decenas — 15 preparacion, 20 cortar, 25 mylar y 30 el WIP — mientras la costura si respetaba el criterio con 50 y 51. Queda toda en la decena del 20: 20 PREPARACION DE CORTE, 21 CORTAR COMPONENTES, 22 CONTROL CON MYLAR, 23 ALMACENAMIENTO EN MEDIOS WIP. Por lo mismo el reproceso de adhesivado pasa de 103 a 93: con el virolado en 101 y el refilado en 102, un 103 se leia como parte del tapizado cuando es del adhesivado. Las decenas 30 y 40 quedan LIBRES.",
+
+  "_cambio_revB_refilado": "SE SACA LA OPERACION 40 REFILADO (la del vinilo cortado, antes de coser). Fak, 08/09/2026: 'esa pieza no se refila mas'. Lo respaldan dos documentos: la HO-215 no tiene ningun refilado antes de la costura — su OP 40 REFILADO DE PIEZA es del sector TAPIZADO y va despues de tapizar — y el AMFE 158 tampoco declara una OP 40. El unico documento que todavia la trae es el Plan de Control CP-INSERT-001 (fila '40 COSTURA - REFILADO', 09/03/2026), que es de Calidad y hay que corregir ahi.",
 
   "_texto_huerfano_revA": "La Rev.A tiene el texto 'REPROCESO: PUNTADA FLOJA' suelto a la derecha del rombo del reproceso: sin figura, sin numero y sin ninguna flecha que lo conecte. No existe en el AMFE 158 ni en el Plan de Control. Se saca. Si es un reproceso real le falta su cuadro y su numero, y hay que definirlo.",
 
-  "_nota_numeracion": "Rev.B conserva la numeracion de la Rev.A, que es la misma que ya usan el AMFE 158 y el Plan de Control CP-INSERT-001. La HO-215 usa otra numeracion (corte 20-28, tapizado 30-31, refilado 40, costura 50-53) y ademas tiene DOS operaciones 20 — INYECCION PLASTICA y Preparacion y Carga del Vinilo — y numera el tapizado antes que la costura, cuando en el proceso se cose primero. Por eso el documento que se renumera despues es la HO, no este.",
+  "_nota_numeracion": "Rev.B mantiene el ESQUEMA de la Rev.A, que es el que ya usan el AMFE 158 y el Plan de Control CP-INSERT-001 — no adopta el de la HO-215, que tiene DOS operaciones 20 (INYECCION PLASTICA y Preparacion y Carga del Vinilo) y numera el tapizado antes que la costura, cuando en el proceso se cose primero. El documento que se renumera despues es la HO. Lo que si cambia respecto de la Rev.A es el agrupamiento por sector (ver _cambio_revB_sectores).",
 
-  "_nota_cc_sc": "Las marcas de caracteristica especial (▽ , SC) se transcriben tal como estan en la Rev.A: 10, 25, 103 y 110. No se agrega ninguna marca nueva — las CC/SC las asigna Fak o el cliente. Ojo: el elemento 17 del legajo no tiene una sola fila del Insert, asi que hoy estas marcas no tienen listado que las respalde.",
+  "_nota_cc_sc": "Las marcas de caracteristica especial (▽ , SC) se transcriben tal como estan en la Rev.A, sobre las mismas operaciones aunque hayan cambiado de numero: recepcion, control con mylar, reproceso de adhesivado y control final. No se agrega ninguna marca nueva — las CC/SC las asigna Fak o el cliente. Ojo: el elemento 17 del legajo no tiene una sola fila del Insert, asi que hoy estas marcas no tienen listado que las respalde.",
 
   "header": {
     "title": "FLUJOGRAMA DE PROCESO INSERT PATAGONIA",
@@ -45,7 +47,7 @@
 
   "revisions": [
     { "rev": "A", "date": "12/11/2025", "item": "N/A.", "details": "EMISION INICIAL (P. GAMBOA).", "pswDate": "", "modifiedBy": "PG" },
-    { "rev": "B", "date": "08/09/2026", "item": "71 / 72 / 101 / 102 / 103", "details": "SE AGREGA LA OPERACION 71 CONTROL DE PIEZA INYECTADA, QUE HASTA AHORA ERA UN PASO INTERNO DE LA INYECCION; EL ALMACENAMIENTO WIP DE INYECCION PASA DE 71 A 72. SE AGREGAN LAS OPERACIONES 101 VIROLADO MANUAL Y 102 REFILADO POST-TAPIZADO, AMBAS TOMADAS DE LA HOJA DE OPERACIONES HO-215. SE REDIBUJA EL RETRABAJO DEL ADHESIVADO CON LAS DOS DECISIONES SEPARADAS Y EL SCRAP COMO TERMINAL LATERAL. SE ELIMINA EL TEXTO SUELTO REPROCESO: PUNTADA FLOJA, QUE NO TENIA FIGURA NI NUMERO. SE COMPLETA LA TABLA DE CODIGOS DE PRODUCTO TERMINADO, QUE ESTABA EN TBD.", "pswDate": "", "modifiedBy": "FS" }
+    { "rev": "B", "date": "08/09/2026", "item": "20-23 / 40 / 71-72 / 93 / 101-102", "details": "SE AGRUPA LA MESA DE CORTE EN UNA SOLA DECENA: 20 PREPARACION DE CORTE, 21 CORTAR COMPONENTES, 22 CONTROL CON MYLAR Y 23 ALMACENAMIENTO EN MEDIOS WIP. SE ELIMINA LA OPERACION 40 REFILADO: LA PIEZA YA NO SE REFILA ANTES DE COSER. SE AGREGA LA OPERACION 71 CONTROL DE PIEZA INYECTADA Y EL ALMACENAMIENTO DE INYECCION PASA A 72. SE AGREGAN LAS OPERACIONES 101 VIROLADO MANUAL Y 102 REFILADO POST-TAPIZADO, TOMADAS DE LA HOJA DE OPERACIONES HO-215. EL REPROCESO DE ADHESIVADO PASA DE 103 A 93, LA DECENA DE SU SECTOR. SE REDIBUJA EL RETRABAJO DEL ADHESIVADO CON LAS DOS DECISIONES SEPARADAS Y EL SCRAP COMO TERMINAL LATERAL. SE COMPLETA LA TABLA DE CODIGOS DE PRODUCTO TERMINADO, QUE ESTABA EN TBD.", "pswDate": "", "modifiedBy": "FS" }
   ],
 
   "flow": [
@@ -61,14 +63,13 @@
       "branches": [
         [
           { "type": "transfer", "description": "TRASLADO: VINILOS Y TELAS A SECTOR DE MESA DE CORTE" },
-          { "stepId": "15", "type": "operation", "description": "PREPARACIÓN DE CORTE" },
-          { "stepId": "20", "type": "operation", "description": "CORTAR COMPONENTES" },
-          { "stepId": "25", "type": "op-ins", "description": "CONTROL CON MYLAR", "critical": true, "criticalType": "▽", "criticalColor": "black" },
+          { "stepId": "20", "type": "operation", "description": "PREPARACIÓN DE CORTE" },
+          { "stepId": "21", "type": "operation", "description": "CORTAR COMPONENTES" },
+          { "stepId": "22", "type": "op-ins", "description": "CONTROL CON MYLAR", "critical": true, "criticalType": "▽", "criticalColor": "black" },
           { "type": "condition", "labelCondition": "¿CORTE CONFORME?", "labelDown": "SI",
             "branchSide": { "labelNode": "NO", "type": "terminal", "text": "SCRAP" } },
-          { "stepId": "30", "type": "storage", "description": "ALMACENAMIENTO EN MEDIOS WIP" },
+          { "stepId": "23", "type": "storage", "description": "ALMACENAMIENTO EN MEDIOS WIP" },
           { "type": "transfer", "description": "TRASLADO: KITS DE COMPONENTES A SECTOR DE COSTURA" },
-          { "stepId": "40", "type": "operation", "description": "REFILADO" },
           { "stepId": "50", "type": "operation", "description": "COSTURA EN MÁQUINA CNC", "incomingConnector": "A" },
           { "stepId": "51", "type": "storage", "description": "ALMACENAMIENTO EN MEDIOS WIP" },
           { "type": "transfer", "description": "TRASLADO: SEMITERMINADOS COSIDOS AL SECTOR DE ADHESIVADO" }
@@ -102,7 +103,7 @@
       "branchSide": { "labelNode": "NO", "sequence": [
         { "type": "condition", "labelCondition": "¿SE PUEDE RETRABAJAR?", "labelDown": "SI",
           "branchSide": { "labelNode": "NO", "type": "terminal", "text": "SCRAP" } },
-        { "stepId": "103", "type": "operation", "description": "REPROCESO: FALTA DE ADHESIVO", "critical": true, "criticalType": "▽ , SC", "criticalColor": "black" },
+        { "stepId": "93", "type": "operation", "description": "REPROCESO: FALTA DE ADHESIVO", "critical": true, "criticalType": "▽ , SC", "criticalColor": "black" },
         { "type": "transfer", "description": "RE-ENTRADA AL FLUJO PRINCIPAL", "rework": { "targetId": "91", "label": "REVERIFICAR (A OP. 91)" } }
       ] } },
     { "stepId": "92", "type": "storage", "description": "ALMACENAMIENTO EN MEDIOS WIP" },

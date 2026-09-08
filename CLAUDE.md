@@ -108,6 +108,8 @@ part numbers, equipo APQP), `amfe-domain` (conocimiento AMFE profundo), `amfe-co
 `carga-arb` (ciclo completo de un cambio de BOM en el arb: tabla de carga → validacion contra
 el export post-carga → PDF de difusion formato Leo con `scripts/_pdfBomArb.py` → cuerpo del mail),
 `docs-empresa` (mapa tema→documento real + caché `.sgc-cache/`),
+`flujogramas` (armar/corregir un flujograma con `tools/flowchart/`: criterio de numeracion
+—un decimal por sector—, convenciones de dibujo de Fak, trampas del motor y como se entrega),
 `leer-planos` (sacar peso calculado / cantidad / material / norma de la lista de materiales
 embebida en un plano de cliente, con `scripts/_leerPlano.py`), `hojas-de-proceso`
 (criterios de imagen de una hoja de operaciones: cual imagen manda y que se lea impresa;

@@ -32,8 +32,20 @@ const ShapeStorage = ({ id }) => (
     <svg width="40" height="40" viewBox="0 0 48 48" fill="none">
       <path d="M4 8L44 8L24 40L4 8Z" fill="white" stroke="#60A5FA" strokeWidth="1.8" strokeLinejoin="round"/>
     </svg>
+    {/* El numero va DENTRO del triangulo, no montado sobre su borde ni colgando del vertice.
+        El svg mide 40 px dentro de una caja de 48, o sea escala 0,833: el borde superior del
+        triangulo cae a 10,7 px del tope de la caja y el vertice a 37,3. A 13 px los digitos
+        entran en la banda ancha de arriba (~20 px de luz al pie del numero: tres digitos
+        entran) y quedan 3 px libres contra la linea de arriba.
+        El `top` va INLINE a proposito: `tools/flowchart/tailwind.css` es un CSS pre-compilado
+        que vive en el repo, no se regenera en el build, y no trae la clase `top-[13px]` — una
+        clase arbitraria que no este en ese archivo no existe y el estilo queda en `auto`.
+        Lo vio Fak el 08/09/2026 en el flujograma 154, el primero que numera los WIP. */}
     {id && (
-      <span className="absolute top-[7px] left-1/2 -translate-x-1/2 text-[#1E40AF] text-[10px] font-bold">{id}</span>
+      <span
+        className="absolute left-1/2 -translate-x-1/2 text-[#1E40AF] text-[10px] font-bold leading-none"
+        style={{ top: '13px' }}
+      >{id}</span>
     )}
   </div>
 );
@@ -148,13 +160,20 @@ const FlowNode = ({ node, isLast, hasBranches, converges }) => {
           )}
         </div>
 
-        {/* RAMA LATERAL (Descartes, Ramas o Conectores de Salida) */}
+        {/* RAMA LATERAL (Descartes, Ramas o Conectores de Salida).
+            Ancho de la linea: cuando el nodo tiene descripcion, la rama lateral sale POR ENCIMA
+            de ella — la descripcion arranca a ~64 px del centro y puede medir 280 px (su max-w),
+            asi que una linea de 280 px dejaba la figura lateral ADENTRO del texto, y como el
+            bloque de descripcion pinta fondo blanco y va en z-10 mientras la rama va en -z-10,
+            la tapaba. Con 360 px la figura queda limpia despues del texto mas largo posible.
+            Lo vio Fak el 08/09/2026 en el conector (A) HILOS del flujograma 154; el mismo caso
+            estaba en el 152, el 153 y el 157. */}
         {node.branchSide && (
           <div
             className={`absolute top-1/2 h-[1.5px] bg-[#93C5FD] -translate-y-1/2 -z-10 flex items-center ${
               node.branchSide.direction === 'left' ? 'right-[50%] mr-10' : 'left-[50%] ml-10'
             }`}
-            style={{ width: node.branchSide.lineWidth ? `${node.branchSide.lineWidth}px` : (node.branchSide.sequence ? '550px' : (node.description && node.branchSide.direction !== 'left' ? '280px' : '120px')) }}
+            style={{ width: node.branchSide.lineWidth ? `${node.branchSide.lineWidth}px` : (node.branchSide.sequence ? '550px' : (node.description && node.branchSide.direction !== 'left' ? '360px' : '120px')) }}
           >
              {node.branchSide.direction === 'left' ? (
                 <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-1.5 border-b-[1.5px] border-l-[1.5px] border-[#60A5FA] transform rotate-45 translate-x-[-1px]"></div>
