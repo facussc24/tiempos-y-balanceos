@@ -1,6 +1,6 @@
 # Dispositivos que Barack ya fabrico
 
-Generado por `indice_dispositivos.py` el 2026-09-02 15:35:05. **No se edita a mano**: el campo
+Generado por `indice_dispositivos.py` el 2026-09-08 09:09:34. **No se edita a mano**: el campo
 `resuelve` se escribe en `dispositivos.json` y el re-escaneo lo conserva.
 
 Para que existe: antes de disenar un dispositivo nuevo hay que mirar los que ya
