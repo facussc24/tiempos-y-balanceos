@@ -76,7 +76,7 @@ traducian **hacia** Barack. Las dos cosas quedaron desactualizadas.
   a VW se escriben `D/TLD` y `W`.** Para PWA la significativa sigue siendo `SC`.
 - **Comparar el NIVEL, nunca el texto**: `esCritica()` / `esSignificativa()` /
   `convertirSimbologia()` en `modules/amfe/specialChars.ts`, con la tabla y sus fuentes citadas.
-  Tests en `__tests__/amfe/specialChars.test.ts` (incluye los casos en rojo: `PV2005`, `Clave`
+  Tests en `__tests__/modules/amfe/specialChars.test.ts` (incluye los casos en rojo: `PV2005`, `Clave`
   y los `YC`/`YS`, que son de AMFE de DISEÑO y no entran en el de proceso).
 - Una sigla que ninguna de las tres fuentes reconoce **no se adivina**: se reporta.
 - ⚠️ Abierto, lo decide Calidad: el instructivo dice `CS` y la practica dice `SC`. Hasta que se
