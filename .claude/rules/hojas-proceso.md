@@ -15,8 +15,12 @@ Regla corta. El detalle, los umbrales y los errores caros: skill `hojas-de-proce
    de parametros mas chica que una mano con un celular (paso el 03/09/2026, lo vio Fak).
 2. **Lo que hay que leer se lee a 7 pt impresos como minimo.** Lo decide el cuerpo en
    centimetros sobre el papel, nunca la imagen ampliada en pantalla.
-3. **Las pantallas de HMI se redibujan.** No se fotografian de costado y **no se pasan por
-   un generador de imagenes**: reinventa digitos, y una marca de procedencia no se saca.
+3. **Una pantalla de HMI es la FOTO REAL enderezada, con el rotulo en castellano encima**
+   (Fak, 08/09/2026: *"poner la foto de la pantalla real y metele un edit y ponele encima el
+   dato que vos queres"*). No se redibuja —el operario tiene adelante la pantalla en chino—,
+   no se deja de costado —se rectifica la perspectiva—, **ningun valor se tapa ni se
+   retoca**, el texto va al costado del LCD, y **no se pasa por un generador de imagenes**:
+   reinventa digitos, y una marca de procedencia no se saca.
 4. **Un umbral se prueba contra el conjunto entero antes de declararlo.** El primero que
    escribi ("45 % del bloque") reprobaba 13 de 17 hojas sanas: era imposible de cumplir para
    una foto vertical.

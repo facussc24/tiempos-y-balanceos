@@ -43,6 +43,22 @@ IMAGENES_MAX = 3           # mas de 3 en A4 = ninguna se ve
 ANCHO_MIN_LEER_CM = 7.0    # para una FOTO marcada `leer` (no lleva metrica adentro)
 TOPE_ACOMPANANTE = 3.0     # cada acompañante, hasta 1/3 del area de la principal
 
+# ── modo SECUENCIA: cada foto es un paso ────────────────────────────────────
+# El criterio de "una imagen principal" no aplica cuando las fotos son los pasos 1, 2, 3 y 4
+# de la misma maniobra: ahi ninguna manda, y agrandar una sola rompe la lectura. Lo que
+# reemplaza a la jerarquia es que cada foto se VEA y se sepa a que paso pertenece.
+# Los pisos salen de MEDIR el deck publicado de la HOTMELT (45 fotos, 08/09/2026), no de
+# elegir un numero: la mitad de esas fotos media 11,2 cm2 — 2,5 x 4,5 cm, una estampilla —
+# y esa es la razon por la que las hojas "estan pero no se entiende un carajo". La foto que
+# si se miraba era siempre la grande, de 46 cm2 para arriba.
+SECUENCIA_MAX = 4            # mas de 4 pasos en una lamina: se PARTE la hoja, no se achica
+SECUENCIA_AREA_MIN = 25.0    # cm2 impresos por foto (una grilla 2x2 da 34; una 3x1, 15)
+SECUENCIA_LADO_MIN = 3.5     # y ningun lado por debajo de esto
+SECUENCIA_DISPARIDAD = 2.0   # si una dobla a otra hay jerarquia: se declara, no es secuencia
+# El corolario de la disparidad es una regla de recorte: las fotos de una secuencia van
+# todas con la MISMA proporcion. Una vertical y una horizontal en la misma grilla dan 34 y
+# 11 cm2, y el reparto no puede arreglarlo.
+
 # La fraccion se mide sobre la TINTA, no sobre el bloque: una foto vertical 9:16 a la altura
 # completa del bloque ocupa el 32% y no hay forma de que ocupe mas. Con "45% del bloque",
 # 13 de 17 hojas violaban un umbral imposible. Sobre la tinta el criterio si discrimina: la
@@ -223,6 +239,27 @@ def layout_principal(ars, W, H, idx):
         return None
     # gana la que le da mas superficie a la PRINCIPAL, no la de mayor area total
     return max(salidas, key=lambda L: L[idx][2] * L[idx][3])
+
+def layout_secuencia(ars, W, H):
+    """Reparto para una hoja que muestra una SECUENCIA: cada foto es un paso.
+
+    Existe porque el criterio de "una imagen principal" no aplica cuando las fotos son los
+    pasos 1, 2, 3 y 4 de la misma maniobra: ahi ninguna manda sobre las otras, y agrandar
+    una sola rompe la lectura. Gana la grilla que hace mas grande a la foto MAS CHICA
+    —no la de mayor area total—, porque el paso que no se ve es el que falla.
+    """
+    n = len(ars)
+    if n == 0:
+        return None
+    salidas = []
+    for cols in range(1, n + 1):
+        L = layout_grilla(ars, W, H, cols)
+        if L:
+            salidas.append(L)
+    if not salidas:
+        return None
+    return max(salidas, key=lambda L: min(w * h for _, _, w, h in L))
+
 
 def layout_grilla(ars, W, H, cols):
     """Grilla uniforme de `cols` columnas. Devuelve [(x, y, w, h), ...] o None."""

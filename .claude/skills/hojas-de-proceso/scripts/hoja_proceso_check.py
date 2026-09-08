@@ -11,16 +11,19 @@ aplicando". Midiendo las 17 hojas salieron DOS problemas, no uno:
 
 Lo que chequea, con los umbrales de `hojalib`:
 
-  1. cada hoja declara su imagen PRINCIPAL, y esa es la mas grande
+  1. la hoja declara COMO se miran sus fotos, en uno de los dos modos:
+       · jerarquia — declara su imagen PRINCIPAL, y esa es la mas grande
+       · secuencia — cada foto es un paso: lleva su NUMERO encima, ninguna es una
+         estampilla y ninguna dobla a otra (si una manda, entonces hay jerarquia)
   2. lo que hay que leer, se lee: cuerpo impreso >= 7 pt
-  3. como maximo 3 imagenes por hoja
+  3. como maximo 3 imagenes por hoja (4 en secuencia; con mas, la hoja se PARTE)
   4. ningun texto se sale de su caja
 
     hoja_proceso_check.py <archivo.pptx> [--spec <modulo>] [--jerarquia op=idx,...]
 
-`--spec` es un modulo python con una lista HOJAS de dicts {op, principal, leer}. Vive fuera
-del repo cuando trae datos de la maquina (contraseñas de HMI, part numbers del cliente).
-`--jerarquia` es el atajo para chequear sin spec: 20.2=0,20.4=0
+`--spec` es un modulo python con una lista HOJAS de dicts {op, principal, leer, secuencia}.
+Vive fuera del repo cuando trae datos de la maquina (contraseñas de HMI, part numbers del
+cliente). `--jerarquia` es el atajo para chequear sin spec: 20.2=0,20.4=0
 """
 import argparse
 import os
@@ -46,6 +49,18 @@ def es_contenido(sh):
     if x > 17.0 and sh.width / EMU < 2.5:              # banda de EPP
         return False
     return True
+
+
+def numeros_sueltos(s):
+    """Centros (x, y) en cm de los circulos con un numero adentro: los badges de paso."""
+    out = []
+    for sh in s.shapes:
+        if sh.shape_type != 1 or not sh.has_text_frame:      # 1 = AUTO_SHAPE
+            continue
+        if not sh.text_frame.text.strip().isdigit():
+            continue
+        out.append(((sh.left + sh.width / 2) / EMU, (sh.top + sh.height / 2) / EMU))
+    return out
 
 
 def texto_no_entra(sh):
@@ -108,12 +123,15 @@ def revisar(ruta, declara=None):
         if not fotos:
             continue                                   # recuadro vacio: permitido
 
-        if len(fotos) > HL.IMAGENES_MAX:               # criterio 3
-            fallas.append((i + 1, op, "cantidad",
-                           "tiene %d imagenes; el maximo es %d"
-                           % (len(fotos), HL.IMAGENES_MAX)))
-
         h = declara.get(op, {})
+        sec = bool(h.get("secuencia"))
+        tope = HL.SECUENCIA_MAX if sec else HL.IMAGENES_MAX
+        if len(fotos) > tope:                          # criterio 3
+            fallas.append((i + 1, op, "cantidad",
+                           "tiene %d imagenes; el maximo es %d%s"
+                           % (len(fotos), tope, " (en secuencia se PARTE la hoja)" if sec
+                              else "")))
+
         leer = set(h.get("leer", []))
         for k, sh in enumerate(fotos):                 # criterio 2
             ancho = sh.width / EMU
@@ -132,9 +150,34 @@ def revisar(ruta, declara=None):
                                "la imagen %d esta marcada `leer` y mide %.1f cm (minimo %.0f)"
                                % (k + 1, ancho, HL.ANCHO_MIN_LEER_CM)))
 
+        if sec:                                        # criterio 1, modo SECUENCIA
+            badges = numeros_sueltos(s)
+            areas = [(x.width / EMU) * (x.height / EMU) for x in fotos]
+            for k, sh in enumerate(fotos):
+                x, y = sh.left / EMU, sh.top / EMU
+                w, hh = sh.width / EMU, sh.height / EMU
+                if not any(abs(bx - x) < 1.0 and abs(by - y) < 1.0 for bx, by in badges):
+                    fallas.append((i + 1, op, "sin numero",
+                                   "la imagen %d no tiene el numero del paso: nadie sabe a "
+                                   "cual mirar" % (k + 1)))
+                if areas[k] < HL.SECUENCIA_AREA_MIN or min(w, hh) < HL.SECUENCIA_LADO_MIN:
+                    fallas.append((i + 1, op, "estampilla",
+                                   "la imagen %d mide %.1f x %.1f cm = %.0f cm2 (minimo "
+                                   "%.0f cm2 y %.1f cm de lado): se parte la hoja"
+                                   % (k + 1, w, hh, areas[k], HL.SECUENCIA_AREA_MIN,
+                                      HL.SECUENCIA_LADO_MIN)))
+            if areas and min(areas) and max(areas) / min(areas) > HL.SECUENCIA_DISPARIDAD:
+                fallas.append((i + 1, op, "despareja",
+                               "la mayor (%.0f cm2) le saca %.1fx a la menor (%.0f cm2): si "
+                               "una manda, se declara `principal`; si no, van con la misma "
+                               "proporcion" % (max(areas), max(areas) / min(areas),
+                                               min(areas))))
+            continue
+
         if "principal" not in h:                       # criterio 1
             fallas.append((i + 1, op, "sin jerarquia",
-                           "la hoja no declara cual es su imagen principal"))
+                           "la hoja no declara cual es su imagen principal ni se declara "
+                           "`secuencia`"))
             continue
         idx = h["principal"]
         if not (0 <= idx < len(fotos)):
@@ -167,10 +210,12 @@ def informe(fallas):
     ancho = max(len(f[2]) for f in fallas)
     for lam, op, tipo, det in fallas:
         out.append("  lam %-2d  %-6s  %-*s  %s" % (lam, op, ancho, tipo, det))
-    out += ["", "Criterios: la principal >= %.0f%% de la foto de la hoja y %.1fx la segunda "
-            "· lo que hay que leer >= %.0f pt impreso · maximo %d imagenes."
-            % (HL.PRINCIPAL_MIN * 100, HL.PRINCIPAL_VENTAJA, HL.CUERPO_MIN_PT,
-               HL.IMAGENES_MAX)]
+    out += ["", "Criterios: jerarquia — la principal >= %.0f%% de la foto de la hoja y %.1fx "
+            "la segunda · secuencia — cada foto con su numero, >= %.0f cm2, y ninguna %.1fx "
+            "otra · lo que hay que leer >= %.0f pt impreso · maximo %d imagenes (%d en "
+            "secuencia)."
+            % (HL.PRINCIPAL_MIN * 100, HL.PRINCIPAL_VENTAJA, HL.SECUENCIA_AREA_MIN,
+               HL.SECUENCIA_DISPARIDAD, HL.CUERPO_MIN_PT, HL.IMAGENES_MAX, HL.SECUENCIA_MAX)]
     return "\n".join(out)
 
 

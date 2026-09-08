@@ -1,6 +1,6 @@
 ---
 name: hojas-de-proceso
-description: Criterios de imagen y armado de hojas de proceso / hojas de operaciones de Barack (formulario I-IN-002.4-R01), en PPTX o Excel. Usar cuando Fak pida armar, corregir o revisar hojas de proceso de una maquina o de una operacion, cuando haya que elegir o acomodar las fotos de una hoja, o cuando haya que redibujar una pantalla de HMI para que se lea impresa. Trae la libreria `hojalib`, el gate que rechaza la hoja que no cumple y su selftest. Complementa `no-pfd-no-ho.md` (que dice CUANDO se hace una HO y quien numera) y `editar-video` (de donde sale el material cuando la fuente son videos).
+description: Criterios de imagen y armado de hojas de proceso / hojas de operaciones de Barack (formulario I-IN-002.4-R01), en PPTX o Excel. Usar cuando Fak pida armar, corregir o revisar hojas de proceso de una maquina o de una operacion, cuando haya que elegir o acomodar las fotos de una hoja, o cuando haya que preparar una pantalla de HMI (foto real enderezada + rotulo encima) para que se lea impresa. Trae la libreria `hojalib`, el gate que rechaza la hoja que no cumple y su selftest. Complementa `no-pfd-no-ho.md` (que dice CUANDO se hace una HO y quien numera) y `editar-video` (de donde sale el material cuando la fuente son videos).
 ---
 
 # Una hoja de proceso se lee de pie, al lado de la maquina, impresa en A4
@@ -65,7 +65,7 @@ Sale con codigo 1 y no se entrega. `--jerarquia 20.2=0,20.4=0` sirve para cheque
 | 3 | La principal no es una estampilla | >= **25 %** del bloque | piso absoluto, para que el criterio 1 no se cumpla achicando a las otras |
 | 4 | **Lo ajeno no entra** | se recorta o se descarta | celulares de traductor, caras, gente de espaldas, piso vacio, cajas del fondo |
 | 5 | **Cantidad** | **2 o 3** por hoja, nunca 4 | en A4, con 4 no se ve ninguna |
-| 6 | Las pantallas **se redibujan** | — | ver §3 |
+| 6 | Las pantallas son la **foto real enderezada**, con el rotulo encima | — | ver §3 |
 
 **Ojo con el criterio 1.** Primero lo escribi como *"45 % del bloque"* y **13 de 17 hojas lo
 violaban sin tener nada malo**: era imposible de cumplir para cualquier foto vertical. Un
@@ -93,21 +93,43 @@ imagenes **ya embebidas en el pptx**, donde no hay nombre de archivo que seguir.
 
 ---
 
-## 3. Las pantallas se redibujan. No se fotografian, y NO se "mejoran" con IA
+## 3. La pantalla es la FOTO REAL enderezada, con el dato encima. Ni redibujada ni con IA
 
-Una foto de HMI en chino, sacada a mano y en angulo, no sirve impresa: es la mitad del
-problema de legibilidad. Se **redibuja** en castellano, con el mismo layout, para que el
-operario reconozca la pantalla cuando la ve en la maquina.
+**Corregido por Fak el 08/09/2026.** Yo habia redibujado la pantalla de seguridad entera, en
+castellano, prolija. Su respuesta: *"intenta poner la foto de la pantalla real y metele un
+edit y ponele encima el dato que vos queres"*. Es lo contrario de lo que decia esta seccion
+hasta ese dia, y tiene razon: **el operario tiene adelante la pantalla en chino**. Un dibujo
+en castellano que no se le parece no le sirve para encontrarla entre menus; la foto de la
+pantalla que el ve, con el rotulo puesto encima, si.
 
-**Prohibido pasarla por un generador de imagenes.** El 03/09/2026 Fak propuso mejorarlas con
-Gemini y borrarle la marca de agua: *"si los reinventa lo detectas y lo corregis poniendo el
-texto correcto encima, pero va a quedar prolija"*. No se hace, por dos motivos distintos:
-un modelo generativo **reinventa los digitos** —y un digito de temperatura equivocado en una
-hoja de planta es un problema real—, y una marca de procedencia no se saca. Redibujar da el
-mismo resultado prolijo **y cada numero es el que dice la pantalla**.
+Como se hace — los cuatro pasos, en orden:
 
-Lo redibujado va **fiel aunque quede feo**. Lo que agregamos nosotros (una advertencia, una
-franja roja) va visiblemente separado y aclarado en el pie.
+1. **Elegir el fotograma** donde la pantalla se lee (`elegir_frame.py` ordena candidatos del
+   mismo video por foco; el veredicto sale de MIRARLA).
+2. **Enderezarla**: `Image.PERSPECTIVE` con los cuatro vertices del LCD. Una pantalla sacada
+   de costado se rectifica; no se recorta y se deja en diagonal.
+3. **Marcar sin tapar.** Lo que hay que mirar se resalta con banda semitransparente y un
+   numero. **Ningun valor de la pantalla se cubre ni se retoca** — y el pie lo dice.
+4. **El texto en castellano va AL COSTADO**, en banda blanca fuera del LCD, unido por el
+   numero. Ahi entra a cuerpo legible sin robarle lugar a la pantalla.
+
+Las alturas de las filas que se marcan se **miden sobre la imagen enderezada**, fila por
+fila: la foto conserva distorsion y el rotulo y su casilla no quedan a la misma altura (en
+la pantalla de seguridad de la HOTMELT se llevan 18 px). Con un paso fijo la banda le corta
+el borde a la casilla del valor. Ejemplo completo: `scripts/hotmelt/pantalla_seguridad.py`.
+
+**Sigue prohibido pasarla por un generador de imagenes.** El 03/09/2026 Fak propuso mejorarlas
+con Gemini y borrarle la marca de agua: *"si los reinventa lo detectas y lo corregis poniendo
+el texto correcto encima, pero va a quedar prolija"*. No se hace: un modelo generativo
+**reinventa los digitos** —y un digito de temperatura equivocado en una hoja de planta es un
+problema real—, y una marca de procedencia no se saca.
+
+Lo que agregamos nosotros (una advertencia, una franja) va visiblemente separado y aclarado
+en el pie: *"la franja es advertencia de esta hoja, no del HMI"*.
+
+**Las pantallas redibujadas que ya estan en el deck de la HOTMELT** (`pantalla_hmi.py`,
+`pantalla_fusor.py`, `pantalla_operacion.py`, `pantalla_parametros.py`,
+`pantalla_limpieza.py`) son del criterio VIEJO y hay que rehacerlas con este.
 
 ---
 

@@ -142,3 +142,6 @@ tools/flowchart/.build/
 
 # Venv de transcripcion de audio (faster-whisper + modelo, ~2 GB) — no va al repo
 .venv-audio/
+
+# spec privado de las hojas HOTMELT (contrasena de HMI)
+scripts/hotmelt/datos_privados.py

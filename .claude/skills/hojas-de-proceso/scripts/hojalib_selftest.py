@@ -14,6 +14,7 @@ import tempfile
 
 from PIL import Image
 from pptx import Presentation
+from pptx.enum.shapes import MSO_SHAPE
 from pptx.util import Cm, Pt
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -36,16 +37,21 @@ def imagen(w_px, h_px, cuerpo_px=None, nombre=None):
     return ruta
 
 
-def hoja(imagenes, op="20.1", texto=None, caja=(6.0, 2.0)):
+def hoja(imagenes, op="20.1", texto=None, caja=(6.0, 2.0), badges=False):
     """Un pptx de una lamina: el numero de operacion, las imagenes con su tamaño en cm, y
-    opcionalmente un texto en una caja de `caja` cm."""
+    opcionalmente un texto en una caja de `caja` cm. Con `badges`, cada foto lleva el
+    circulito con el numero del paso, como lo dibuja el generador."""
     prs = Presentation()
     prs.slide_width, prs.slide_height = Cm(29.7), Cm(21.0)
     s = prs.slides.add_slide(prs.slide_masters[0].slide_layouts[6])
     c = s.shapes.add_textbox(Cm(0.6), Cm(3.0), Cm(2.0), Cm(0.6))
     c.text_frame.text = op
-    for ruta, (x, y, w, h) in imagenes:
+    for k, (ruta, (x, y, w, h)) in enumerate(imagenes):
         s.shapes.add_picture(ruta, Cm(x), Cm(y), Cm(w), Cm(h))
+        if badges:
+            b = s.shapes.add_shape(MSO_SHAPE.OVAL, Cm(x - 0.16), Cm(y - 0.16),
+                                   Cm(0.70), Cm(0.70))
+            b.text_frame.text = str(k + 1)
     if texto:
         t = s.shapes.add_textbox(Cm(18.0), Cm(5.0), Cm(caja[0]), Cm(caja[1]))
         tf = t.text_frame
@@ -90,6 +96,33 @@ caso("la principal domina", hoja(domina), {"20.1": {"principal": 0}}, None)
 
 # ROJO: declara principal la que NO es la mas grande — el caso de la 20.2 con el celular
 caso("declara principal la mas chica", hoja(domina), {"20.1": {"principal": 1}}, "jerarquia")
+
+# ── 1 bis. secuencia: cada foto es un paso ──────────────────────────────────
+# La grilla 2x2 del reparto: 4 fotos apaisadas de 7,8 x 4,4 cm = 34 cm2 cada una.
+horiz = imagen(1600, 900)
+cuatro_seq = [(horiz, (X0 + (k % 2) * 8.1, Y0 + (k // 2) * 4.6, 7.8, 4.4)) for k in range(4)]
+SEQ = {"20.1": {"secuencia": True}}
+# ROJO: las 4 fotos bien repartidas, pero sin el numero del paso encima
+caso("secuencia sin los numeros", hoja(cuatro_seq), SEQ, "sin numero")
+# VERDE: las mismas 4, numeradas
+caso("secuencia de 4 numerada", hoja(cuatro_seq, badges=True), SEQ, None)
+# ROJO: numeradas, pero una quedo de 2,5 x 4,5 — el tamaño de la MITAD de las fotos del
+# deck publicado el 07/09, que es justo lo que no se entendia
+estampilla = [(horiz, (X0, Y0, 7.8, 4.4)), (horiz, (X0 + 8.1, Y0, 7.8, 4.4)),
+              (horiz, (X0, Y0 + 4.6, 4.5, 2.5))]
+caso("secuencia con una estampilla", hoja(estampilla, badges=True), SEQ, "estampilla")
+# ROJO: las dos entran holgadas, pero una dobla a la otra -> eso es jerarquia, no secuencia
+caso("secuencia despareja",
+     hoja([(horiz, (X0, Y0, 10.0, 5.6)), (horiz, (X0 + 10.4, Y0, 5.0, 5.0))], badges=True),
+     SEQ, "despareja")
+# ROJO: 5 pasos no entran en una lamina — se parte, no se achica
+caso("5 fotos en secuencia",
+     hoja([(horiz, (X0 + k * 3.2, Y0, 3.0, 1.7)) for k in range(5)], badges=True),
+     SEQ, "cantidad")
+# VERDE: 4 fotos numeradas SIN declarar principal — en jerarquia esto seria "sin jerarquia"
+# y ademas "cantidad": el modo tiene que ser el que cambia el veredicto, no el dibujo.
+caso("las mismas 4, pero declaradas como jerarquia", hoja(cuatro_seq, badges=True),
+     {"20.1": {"principal": 0}}, "jerarquia")
 
 # ── 2. legibilidad ──────────────────────────────────────────────────────────
 # ROJO: pantalla de 1760 px con cuerpo 27 puesta a 5,4 cm -> 2,3 pt. Es la 20.15 del deck.
