@@ -1,0 +1,124 @@
+{
+  "_doc": "Flujograma 154 — INSERT (VW427 Patagonia). Rev.B. Parte del PDF FLUJOGRAMA_154_INSERT PAT_REV.pdf (Rev.A, P. Gamboa, 12/11/2025), leido como imagen y transcripto nodo por nodo. El documento dibuja TRES columnas que arrancan del almacen de MP: corte/costura a la izquierda, espuma en el medio e inyeccion a la derecha. La de inyeccion NO llega hasta el final: converge con la de espuma en el 80 PREARMADO DE ESPUMA, y recien despues el conjunto se junta con corte/costura en el 90 ADHESIVADO. Aca esa convergencia en dos etapas se arma con `branches` anidados.",
+
+  "_cambio_revB": "TRES OPERACIONES NUEVAS, las tres con documento que las respalda. (1) 71 CONTROL DE PIEZA INYECTADA: hoy vive como paso 3 de la OP 20 de la HO-215 ('CONTROL DE PIEZA INYECTADA: inspeccionar visualmente cada pieza verificando falta de llenado, rebabas, orificios tapados, quemaduras y flashes') y como elementos de medicion adentro de la OP 70 del AMFE 158; Fak, 08/09/2026: 'deberia ser un paso de proceso eso, con su numero propio'. Es el mismo criterio con el que el flujograma 153 Rev.B tiene su OP 51. El almacenamiento WIP de inyeccion, que era 71, pasa a 72. (2) 101 VIROLADO MANUAL: es la OP 31 de la HO-215, tres paginas, aprobada por C. Baptista el 06/07/2026. No estaba en ningun flujograma ni en el AMFE. (3) 102 REFILADO POST-TAPIZADO: es la OP 40 de la HO-215 en el sector TAPIZADO ('tomar las piezas pre-tapizadas y colocarlas en la mesa de refilado, con un cutter realizar el refilado completo'), y es la misma operacion que el Plan de Control CP-INSERT-001 numera 105. No confundir con el 40 REFILADO de este flujograma, que es el del vinilo cortado, antes de coser: el Insert tiene DOS refilados.",
+
+  "_cambio_revB_retrabajo": "El retrabajo del adhesivado se redibuja con las DOS decisiones separadas que pide la convencion de la casa y que ya usa el flujograma 153 Rev.B: primero el rombo de conformidad y despues el de si se puede retrabajar, con el SCRAP como terminal lateral. La Rev.A lo hacia al reves: mandaba a reprocesar y despues preguntaba si el reproceso habia salido bien.",
+
+  "_texto_huerfano_revA": "La Rev.A tiene el texto 'REPROCESO: PUNTADA FLOJA' suelto a la derecha del rombo del reproceso: sin figura, sin numero y sin ninguna flecha que lo conecte. No existe en el AMFE 158 ni en el Plan de Control. Se saca. Si es un reproceso real le falta su cuadro y su numero, y hay que definirlo.",
+
+  "_nota_numeracion": "Rev.B conserva la numeracion de la Rev.A, que es la misma que ya usan el AMFE 158 y el Plan de Control CP-INSERT-001. La HO-215 usa otra numeracion (corte 20-28, tapizado 30-31, refilado 40, costura 50-53) y ademas tiene DOS operaciones 20 — INYECCION PLASTICA y Preparacion y Carga del Vinilo — y numera el tapizado antes que la costura, cuando en el proceso se cose primero. Por eso el documento que se renumera despues es la HO, no este.",
+
+  "_nota_cc_sc": "Las marcas de caracteristica especial (▽ , SC) se transcriben tal como estan en la Rev.A: 10, 25, 103 y 110. No se agrega ninguna marca nueva — las CC/SC las asigna Fak o el cliente. Ojo: el elemento 17 del legajo no tiene una sola fila del Insert, asi que hoy estas marcas no tienen listado que las respalde.",
+
+  "header": {
+    "title": "FLUJOGRAMA DE PROCESO INSERT PATAGONIA",
+    "documentCode": "I-IN-002/III",
+    "revision": "B",
+    "date": "12/11/2025",
+    "revisionDate": "08/09/2026",
+    "preparedBy": "FACUNDO SANTORO",
+    "reviewedBy": "CARLOS BAPTISTA",
+    "project": "PATAGONIA",
+    "client": "VWA",
+    "productsColumns": { "code": "Código Novax", "version": "" }
+  },
+
+  "products": [
+    { "code": "N 227", "level": "L0", "description": "INSERTO PTA. DEL. IZQ.", "version": "" },
+    { "code": "N 392", "level": "L0", "description": "INSERTO PTA. DEL. DER.", "version": "" },
+    { "code": "N 389", "level": "L1", "description": "INSERTO PTA. DEL. IZQ.", "version": "" },
+    { "code": "N 393", "level": "L1", "description": "INSERTO PTA. DEL. DER.", "version": "" },
+    { "code": "N 390", "level": "L2", "description": "INSERTO PTA. DEL. IZQ.", "version": "" },
+    { "code": "N 394", "level": "L2", "description": "INSERTO PTA. DEL. DER.", "version": "" },
+    { "code": "N 391", "level": "L3", "description": "INSERTO PTA. DEL. IZQ.", "version": "" },
+    { "code": "N 395", "level": "L3", "description": "INSERTO PTA. DEL. DER.", "version": "" },
+    { "code": "N 396", "level": "L0", "description": "INSERTO PTA. TRAS. IZQ.", "version": "" },
+    { "code": "N 400", "level": "L0", "description": "INSERTO PTA. TRAS. DER.", "version": "" },
+    { "code": "N 397", "level": "L1", "description": "INSERTO PTA. TRAS. IZQ.", "version": "" },
+    { "code": "N 401", "level": "L1", "description": "INSERTO PTA. TRAS. DER.", "version": "" },
+    { "code": "N 398", "level": "L2", "description": "INSERTO PTA. TRAS. IZQ.", "version": "" },
+    { "code": "N 402", "level": "L2", "description": "INSERTO PTA. TRAS. DER.", "version": "" },
+    { "code": "N 399", "level": "L3", "description": "INSERTO PTA. TRAS. IZQ.", "version": "" },
+    { "code": "N 403", "level": "L3", "description": "INSERTO PTA. TRAS. DER.", "version": "" }
+  ],
+
+  "revisions": [
+    { "rev": "A", "date": "12/11/2025", "item": "N/A.", "details": "EMISION INICIAL (P. GAMBOA).", "pswDate": "", "modifiedBy": "PG" },
+    { "rev": "B", "date": "08/09/2026", "item": "71 / 72 / 101 / 102 / 103", "details": "SE AGREGA LA OPERACION 71 CONTROL DE PIEZA INYECTADA, QUE HASTA AHORA ERA UN PASO INTERNO DE LA INYECCION; EL ALMACENAMIENTO WIP DE INYECCION PASA DE 71 A 72. SE AGREGAN LAS OPERACIONES 101 VIROLADO MANUAL Y 102 REFILADO POST-TAPIZADO, AMBAS TOMADAS DE LA HOJA DE OPERACIONES HO-215. SE REDIBUJA EL RETRABAJO DEL ADHESIVADO CON LAS DOS DECISIONES SEPARADAS Y EL SCRAP COMO TERMINAL LATERAL. SE ELIMINA EL TEXTO SUELTO REPROCESO: PUNTADA FLOJA, QUE NO TENIA FIGURA NI NUMERO. SE COMPLETA LA TABLA DE CODIGOS DE PRODUCTO TERMINADO, QUE ESTABA EN TBD.", "pswDate": "", "modifiedBy": "FS" }
+  ],
+
+  "flow": [
+    { "stepId": "10", "type": "operation", "description": "RECEPCIÓN DE MATERIA PRIMA", "critical": true, "criticalType": "▽ , SC", "criticalColor": "black" },
+    { "type": "storage", "description": "ALMACENADO EN SECTOR DE RECEPCIÓN DE MATERIA PRIMA PENDIENTE DE CONTROL" },
+    { "type": "inspection", "description": "INSPECCIÓN DE MATERIA PRIMA" },
+    { "type": "condition", "labelCondition": "¿MATERIAL CONFORME?", "labelDown": "SI",
+      "branchSide": { "labelNode": "NO", "type": "terminal", "text": "RECLAMO DE CALIDAD AL PROVEEDOR" } },
+    { "type": "transfer", "description": "TRASLADO: MATERIAL APROBADO A ALMACÉN TEMPORAL (FIFO)" },
+
+    { "type": "storage", "description": "ALMACENADO EN SECTOR DE RECEPCIÓN DE MATERIA PRIMA CONTROLADA E IDENTIFICADA",
+      "branchSide": { "type": "connector", "text": "A", "description": "HILOS" },
+      "branches": [
+        [
+          { "type": "transfer", "description": "TRASLADO: VINILOS Y TELAS A SECTOR DE MESA DE CORTE" },
+          { "stepId": "15", "type": "operation", "description": "PREPARACIÓN DE CORTE" },
+          { "stepId": "20", "type": "operation", "description": "CORTAR COMPONENTES" },
+          { "stepId": "25", "type": "op-ins", "description": "CONTROL CON MYLAR", "critical": true, "criticalType": "▽", "criticalColor": "black" },
+          { "type": "condition", "labelCondition": "¿CORTE CONFORME?", "labelDown": "SI",
+            "branchSide": { "labelNode": "NO", "type": "terminal", "text": "SCRAP" } },
+          { "stepId": "30", "type": "storage", "description": "ALMACENAMIENTO EN MEDIOS WIP" },
+          { "type": "transfer", "description": "TRASLADO: KITS DE COMPONENTES A SECTOR DE COSTURA" },
+          { "stepId": "40", "type": "operation", "description": "REFILADO" },
+          { "stepId": "50", "type": "operation", "description": "COSTURA EN MÁQUINA CNC", "incomingConnector": "A" },
+          { "stepId": "51", "type": "storage", "description": "ALMACENAMIENTO EN MEDIOS WIP" },
+          { "type": "transfer", "description": "TRASLADO: SEMITERMINADOS COSIDOS AL SECTOR DE ADHESIVADO" }
+        ],
+        [
+          { "type": "transfer", "description": "TRASLADO: ESPUMAS Y MATERIA PRIMA PLÁSTICA A LOS SECTORES DE TROQUELADO E INYECCIÓN",
+            "branches": [
+              [
+                { "stepId": "60", "type": "operation", "description": "TROQUELADO" },
+                { "stepId": "61", "type": "storage", "description": "ALMACENAMIENTO EN MEDIOS WIP" },
+                { "type": "transfer", "description": "TRASLADO: PIEZAS TROQUELADAS A SECTOR DE PREARMADO" }
+              ],
+              [
+                { "stepId": "70", "type": "operation", "description": "INYECCIÓN DE PIEZAS PLÁSTICAS" },
+                { "stepId": "71", "type": "op-ins", "description": "CONTROL DE PIEZA INYECTADA" },
+                { "type": "condition", "labelCondition": "¿PIEZA CONFORME?", "labelDown": "SI",
+                  "branchSide": { "labelNode": "NO", "direction": "left", "type": "terminal", "text": "PLAN DE REACCIÓN / SCRAP" } },
+                { "stepId": "72", "type": "storage", "description": "ALMACENAMIENTO EN MEDIOS WIP" },
+                { "type": "transfer", "description": "TRASLADO: SUSTRATO A SECTOR DE PREARMADO DE ESPUMA" }
+              ]
+            ] },
+          { "stepId": "80", "type": "operation", "description": "PREARMADO DE ESPUMA" },
+          { "stepId": "81", "type": "storage", "description": "ALMACENAMIENTO EN MEDIOS WIP" },
+          { "type": "transfer", "description": "TRASLADO: PIEZA PREARMADA AL SECTOR DE ADHESIVADO" }
+        ]
+      ] },
+
+    { "stepId": "90", "type": "operation", "description": "ADHESIVADO" },
+    { "stepId": "91", "type": "op-ins", "description": "INSPECCIÓN DE PIEZA ADHESIVADA" },
+    { "type": "condition", "labelCondition": "¿ADHESIVADO OK?", "labelDown": "SI",
+      "branchSide": { "labelNode": "NO", "sequence": [
+        { "type": "condition", "labelCondition": "¿SE PUEDE RETRABAJAR?", "labelDown": "SI",
+          "branchSide": { "labelNode": "NO", "type": "terminal", "text": "SCRAP" } },
+        { "stepId": "103", "type": "operation", "description": "REPROCESO: FALTA DE ADHESIVO", "critical": true, "criticalType": "▽ , SC", "criticalColor": "black" },
+        { "type": "transfer", "description": "RE-ENTRADA AL FLUJO PRINCIPAL", "rework": { "targetId": "91", "label": "REVERIFICAR (A OP. 91)" } }
+      ] } },
+    { "stepId": "92", "type": "storage", "description": "ALMACENAMIENTO EN MEDIOS WIP" },
+    { "type": "transfer", "description": "TRASLADO: PIEZA PREARMADA AL SECTOR DE TAPIZADO" },
+    { "stepId": "100", "type": "operation", "description": "TAPIZADO SEMIAUTOMÁTICO" },
+    { "stepId": "101", "type": "operation", "description": "VIROLADO MANUAL" },
+    { "stepId": "102", "type": "operation", "description": "REFILADO POST-TAPIZADO" },
+    { "stepId": "110", "type": "op-ins", "description": "CONTROL FINAL DE CALIDAD", "critical": true, "criticalType": "SC", "criticalColor": "black" },
+    { "type": "condition", "labelCondition": "¿PRODUCTO CONFORME?", "labelDown": "SI",
+      "branchSide": { "labelNode": "NO", "sequence": [
+        { "stepId": "111", "type": "operation", "description": "CLASIFICACIÓN Y SEGREGACIÓN DE PRODUCTO NO CONFORME" },
+        { "type": "terminal", "text": "SCRAP" }
+      ] } },
+    { "type": "transfer", "description": "TRASLADO A SECTOR DE PRODUCTO TERMINADO" },
+    { "stepId": "120", "type": "operation", "description": "EMBALAJE Y ETIQUETADO DE PRODUCTO TERMINADO" },
+    { "type": "transfer", "description": "TRASLADO A SECTOR DE ALMACENAMIENTO" },
+    { "type": "storage", "description": "ALMACENAMIENTO: PRODUCTO TERMINADO (FIFO)" }
+  ]
+}
