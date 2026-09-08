@@ -122,6 +122,44 @@ def main():
     check("no se puede autofirmar la confirmacion de zona",
           rc != 0 and "ARCHIVO QUE EXISTA" in out, out)
 
+    print("\n7) G-E2 compara fechas de CONSTRUCCION, no de copia")
+    # El 07/09 rechazo una entrega buena: el STEP se habia construido 42 min ANTES del PDF y
+    # el gate lo veia 8 min despues, porque `shutil.copy` le pone al destino la hora de la
+    # copia y el STEP se copia ultimo. Con copy2 la fecha viaja con el archivo.
+    ent2 = os.path.join(W, "entrega_ge2")
+    os.makedirs(ent2, exist_ok=True)
+    shutil.copy(os.path.join(W, "pieza_BUENA.step"), pieza)
+    run("check_collision.py", "--workdir", W, "--fixture", pieza, "--substrate", sus)
+    t0 = time.time() - 3600.0            # el STEP se construyo hace una hora
+    os.utime(pieza, (t0, t0))
+    for nom, cont in (("documento.pdf", b"%PDF-1.4 test"), ("simulacion.gif", b"GIF89a")):
+        open(os.path.join(ent2, nom), "wb").write(cont)
+        t1 = t0 + 1800.0                 # el PDF se hizo media hora DESPUES del STEP: correcto
+        os.utime(os.path.join(ent2, nom), (t1, t1))
+    png2 = os.path.join(ent2, "render.png")
+    shutil.copy(png, png2)
+    os.utime(png2, (t0 + 1800.0, t0 + 1800.0))
+    rc, out = run("export_deliverables.py", "--workdir", W, "--pieces", pieza,
+                  "--deliver", ent2, "--skip-gate", "zona", "--skip-gate", "proceso",
+                  "--reason", "test sintetico")
+    entregado = os.path.join(ent2, os.path.basename(pieza))
+    check("la copia a la entrega conserva la fecha de construccion del STEP",
+          os.path.exists(entregado) and abs(os.path.getmtime(entregado) - t0) < 2.0,
+          "mtime entregado %s vs original %s\n%s"
+          % (os.path.getmtime(entregado) if os.path.exists(entregado) else "no existe",
+             t0, out))
+    rc, out = run("gate_entregable.py", "--entrega", ent2, "--motor", "foto3d",
+                  "--render", png2)
+    check("una entrega con el PDF posterior al STEP pasa G-E2", "[G-E2]" not in out, out)
+
+    print("\n   gemelo: el STEP DE VERDAD posterior al PDF tiene que dar rojo")
+    t2 = t0 + 3600.0                     # ahora si: el modelo cambio despues del PDF
+    os.utime(entregado, (t2, t2))
+    rc, out = run("gate_entregable.py", "--entrega", ent2, "--motor", "foto3d",
+                  "--render", png2)
+    check("un STEP realmente mas nuevo que el PDF lo caza G-E2",
+          rc != 0 and "[G-E2]" in out, out)
+
     print("\n" + ("TODOS LOS CONTROLES DAN LO ESPERADO" if not fallos
                   else "FALLARON: %s" % ", ".join(fallos)))
     print("workdir del test: %s" % W)

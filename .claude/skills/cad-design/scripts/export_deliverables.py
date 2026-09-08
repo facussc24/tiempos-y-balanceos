@@ -360,7 +360,12 @@ def main():
             trimesh.load(stl).export(glb)
             outs.append(glb)
         for f in outs:
-            shutil.copy(f, args.deliver)
+            # copy2 y no copy: G-E2 compara las fechas de la carpeta de entrega para ver si
+            # el PDF y el STEP son de la misma corrida. Con copy (que pone la hora de la
+            # copia) el STEP quedaba siempre mas nuevo -- se copia despues, a proposito --
+            # y el gate no podia dar verde nunca. Conservando la fecha del original compara
+            # cuando se CONSTRUYO cada cosa, que es lo que dice medir.
+            shutil.copy2(f, args.deliver)
             delivered.append(os.path.basename(f))
         print("entregado: %s (%s)" % (base, ", ".join(os.path.splitext(x)[1] for x in outs)))
 
