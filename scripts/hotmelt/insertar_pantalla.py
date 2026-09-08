@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Mete una pantalla redibujada en UNA lamina del PPTX que ya existe, sin regenerarlo.
+"""Mete una pantalla preparada en UNA lamina del PPTX que ya existe, sin regenerarlo.
 
 Existe porque desde el 03/09 el deck lo edita Fak a mano: correr `armar_deck.py` encima
 le borraria los cambios. Esto abre el archivo que hay, toca UNA lamina y guarda.

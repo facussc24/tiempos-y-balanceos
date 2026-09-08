@@ -45,9 +45,10 @@ PORTADA = dict(
 #               Sin esta clave el reparto vuelve a ser por geometria, que fue lo que puso
 #               una mano con un celular mas grande que la tabla de parametros del fusor.
 #   leer      = indices de imagenes con numeros o rotulos que el operario TIENE que leer.
-#               Las pantallas redibujadas ademas llevan su metrica adentro del PNG.
+#               Las pantallas preparadas (foto real enderezada + rotulo encima, Fak
+#               08/09: NO redibujadas) llevan su metrica adentro del PNG.
 # El indice es la posicion en el bloque, de arriba-izquierda a abajo-derecha.
-# Umbrales y chequeo: _hojaProcesoCheck.py.
+# Umbrales y chequeo: el gate CANONICO del skill, .claude/skills/hojas-de-proceso/
 
 HOJAS = [
  dict(op="20.1", etapa="PREPARAR Y ARRANCAR", principal=0, leer=[], denominacion="RECONOCIMIENTO DE LA MÁQUINA Y RIESGOS",

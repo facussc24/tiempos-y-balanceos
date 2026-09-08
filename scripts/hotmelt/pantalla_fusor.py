@@ -1,6 +1,14 @@
 # -*- coding: utf-8 -*-
 """Pantalla del FUSOR GLSC y pantalla de RECETA del HMI, redibujadas en castellano.
 
+🔴 CRITERIO DEROGADO POR FAK EL 08/09/2026. Esta pantalla esta REDIBUJADA, y ya
+no se hace asi: va la FOTO REAL enderezada con el rotulo en castellano encima, sin
+tapar ningun valor ("poner la foto de la pantalla real y metele un edit y ponele
+encima el dato que vos queres"). El operario tiene adelante la pantalla en chino.
+Hay que REHACER esta pantalla con el criterio nuevo — modelo: pantalla_seguridad.py,
+regla .claude/rules/hojas-proceso.md §3. Lo de abajo queda como historia.
+
+
 Mismo criterio que pantalla_hmi.py: la pantalla se redibuja, no se fotografia. Cada
 numero esta transcripto de un fotograma que se puede citar.
   · Fusor  -> IMG_9527 fotograma 623  (28/08/2026 22:04)

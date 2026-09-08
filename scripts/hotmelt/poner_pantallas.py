@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Cambia las FOTOS de pantalla por las pantallas redibujadas, en el PPTX que ya existe.
+"""Cambia las FOTOS de pantalla por las pantallas PREPARADAS, en el PPTX que ya existe.
 
 Regla dura: **no se toca una sola letra**. El deck lo edita Fak desde el 03/09 y sus cambios
 mandan. Este script solo saca y pone IMAGENES, y al final compara el texto de las 18 laminas
@@ -24,7 +24,7 @@ AQUI = os.path.dirname(os.path.abspath(__file__))
 FOTOS = (r"C:\Users\FacundoS-PC\OneDrive - BARACK ARGENTINA SRL\Desktop"
          r"\Hojas de proceso maquina HOTMELT - desde los videos\_trabajo\fotos_hoja")
 
-# hoja -> [(foto original que se saca, pantalla redibujada que entra), ...]
+# hoja -> [(foto original que se saca, pantalla preparada que entra), ...]
 CAMBIOS = {
     "20.2":  [("h02_b_panel_glsc2.jpg",      "_pantalla_fusor.png")],
     "20.4":  [("h04_a_pantalla_operacion.jpg", "_pantalla_receta.png"),

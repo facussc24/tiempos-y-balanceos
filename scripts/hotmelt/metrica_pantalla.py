@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Cada pantalla redibujada lleva ADENTRO el tamaño de su tipografía.
+"""Cada pantalla preparada lleva ADENTRO el tamaño de su tipografía.
 
 Por que: lo que decide si una pantalla se lee impresa no es su tamaño en pixeles, es el
 cuerpo que le queda en centimetros dentro de la hoja. Eso solo se puede calcular sabiendo

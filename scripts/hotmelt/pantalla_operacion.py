@@ -1,6 +1,14 @@
 # -*- coding: utf-8 -*-
 """Pantalla de OPERACION del HMI (`操作画面`, tecla F1), redibujada en castellano.
 
+🔴 CRITERIO DEROGADO POR FAK EL 08/09/2026. Esta pantalla esta REDIBUJADA, y ya
+no se hace asi: va la FOTO REAL enderezada con el rotulo en castellano encima, sin
+tapar ningun valor ("poner la foto de la pantalla real y metele un edit y ponele
+encima el dato que vos queres"). El operario tiene adelante la pantalla en chino.
+Hay que REHACER esta pantalla con el criterio nuevo — modelo: pantalla_seguridad.py,
+regla .claude/rules/hojas-proceso.md §3. Lo de abajo queda como historia.
+
+
 Es UNA sola pantalla que el operario ve en cuatro momentos distintos, asi que se genera
 en tres estados y cada hoja usa el suyo:
     detenido            -> 20.15  parada de la maquina

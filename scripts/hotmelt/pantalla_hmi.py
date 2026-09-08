@@ -1,6 +1,14 @@
 # -*- coding: utf-8 -*-
 """Redibuja la pantalla del HMI tal cual es, pero limpia y en castellano.
 
+🔴 CRITERIO DEROGADO POR FAK EL 08/09/2026. Esta pantalla esta REDIBUJADA, y ya
+no se hace asi: va la FOTO REAL enderezada con el rotulo en castellano encima, sin
+tapar ningun valor ("poner la foto de la pantalla real y metele un edit y ponele
+encima el dato que vos queres"). El operario tiene adelante la pantalla en chino.
+Hay que REHACER esta pantalla con el criterio nuevo — modelo: pantalla_seguridad.py,
+regla .claude/rules/hojas-proceso.md §3. Lo de abajo queda como historia.
+
+
 Es lo que hacen los manuales de maquina: la pantalla se REDIBUJA, no se fotografia.
 Queda prolija impresa, el operario reconoce el layout cuando la ve en la maquina, y
 —a diferencia de una foto "mejorada" con IA— cada numero es el que dice la pantalla

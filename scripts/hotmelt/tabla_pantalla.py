@@ -1,5 +1,13 @@
 # -*- coding: utf-8 -*-
-"""Redibuja una pantalla del HMI como TABLA LIMPIA, en castellano y en el estilo Barack.
+"""Redibuja una pantalla del HMI como TABLA LIMPIA. 🔴 CRITERIO VIEJO (ver abajo).
+
+🔴 CRITERIO DEROGADO POR FAK EL 08/09/2026. Esta pantalla esta REDIBUJADA, y ya
+no se hace asi: va la FOTO REAL enderezada con el rotulo en castellano encima, sin
+tapar ningun valor ("poner la foto de la pantalla real y metele un edit y ponele
+encima el dato que vos queres"). El operario tiene adelante la pantalla en chino.
+Hay que REHACER esta pantalla con el criterio nuevo — modelo: pantalla_seguridad.py,
+regla .claude/rules/hojas-proceso.md §3. Lo de abajo queda como historia.
+
 
 Por que existe: la foto de una pantalla filmada nunca va a ser legible impresa (reflejo
 quemado, angulo, foco). Y "mejorarla" con IA generativa NO sirve para esto: reinventa los

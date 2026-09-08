@@ -111,6 +111,17 @@ caso("secuencia de 4 numerada", hoja(cuatro_seq, badges=True), SEQ, None)
 estampilla = [(horiz, (X0, Y0, 7.8, 4.4)), (horiz, (X0 + 8.1, Y0, 7.8, 4.4)),
               (horiz, (X0, Y0 + 4.6, 4.5, 2.5))]
 caso("secuencia con una estampilla", hoja(estampilla, badges=True), SEQ, "estampilla")
+# El check de estampilla es un OR (area < 25 cm2 O lado < 3,5 cm) y el caso de arriba
+# dispara las DOS condiciones juntas: nunca vi a ninguna fallar sola. Estas dos aislan
+# cada rama — una tira larga y angosta tiene area de sobra, y un cuadradito tiene lado
+# de sobra en el limite pero no llega al area.
+tira = [(horiz, (X0, Y0, 7.8, 4.4)), (horiz, (X0 + 8.1, Y0, 7.8, 4.4)),
+        (horiz, (X0, Y0 + 4.6, 11.0, 3.0))]          # 33 cm2: el area pasa, el lado no
+caso("estampilla por el LADO, con area de sobra", hoja(tira, badges=True), SEQ, "estampilla")
+cuadrito = [(horiz, (X0, Y0, 4.6, 4.6)), (horiz, (X0 + 5.0, Y0, 4.6, 4.6)),
+            (horiz, (X0 + 10.0, Y0, 4.6, 4.6))]      # 21 cm2: el lado pasa, el area no
+caso("estampilla por el AREA, con lado de sobra", hoja(cuadrito, badges=True), SEQ,
+     "estampilla")
 # ROJO: las dos entran holgadas, pero una dobla a la otra -> eso es jerarquia, no secuencia
 caso("secuencia despareja",
      hoja([(horiz, (X0, Y0, 10.0, 5.6)), (horiz, (X0 + 10.4, Y0, 5.0, 5.0))], badges=True),

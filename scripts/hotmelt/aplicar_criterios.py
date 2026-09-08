@@ -24,8 +24,13 @@ from datetime import datetime
 from pptx import Presentation
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import _hojaProcesoCheck as CK          # noqa: E402
+# hoja_pptx agrega al path los scripts del skill: de ahi sale el gate CANONICO.
+# Hasta el 08/09/2026 esto importaba `_hojaProcesoCheck`, una copia local que
+# reimplementaba sus propios umbrales y no conocia el modo `secuencia` (0 menciones
+# contra 16 en el canonico). Dos gates con numeros propios es exactamente lo que la
+# regla `hojas-proceso.md` prohibe: "una sola fuente".
 import hoja_pptx as HP                  # noqa: E402
+import hoja_proceso_check as CK         # noqa: E402
 
 RUTA = ("C:/Users/FacundoS-PC/BARACK ARGENTINA SRL/Ingeniería y Proyecto - General/"
         "INGENIERIA BARACK (NUNCA BORRAR)/1- GENERAL/INSTRUCTIVOS/INSTRUCCIONES OPERATIVAS/"

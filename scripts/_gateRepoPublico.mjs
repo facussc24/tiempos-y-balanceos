@@ -16,8 +16,21 @@
  *            tenia 21 archivos pusheados con la ruta del servidor y nombres de
  *            documentos del cliente. Enforcement de: la regla de repo publico.
  *
- * Corre SIN secretos y SIN red, por eso puede ser bloqueante en CI desde el dia uno
- * y no se puede saltear con `git push --no-verify`.
+ *   CHECK-3  un secreto de PLANTA (la contrasena de un HMI, no una `VITE_*`) copiado
+ *            dentro de un archivo versionado. Near-miss real del 08/09/2026: la
+ *            contrasena del HMI de la HOTMELT estaba en texto plano en
+ *            `scripts/hotmelt/_reemplazados_03-09_manana/hojas_spec.py`, una carpeta
+ *            que en ese momento NO estaba versionada pero TAMPOCO gitignoreada. Un
+ *            `git add -A` la publicaba. No entro por casualidad —la carpeta se
+ *            ignoro por vieja, no por saber que tenia la clave—, y una casualidad
+ *            no es un control.
+ *            El gate NO contiene ningun secreto: los LEE de los archivos privados
+ *            gitignoreados (`datos_privados.py`) y busca esos valores en lo
+ *            versionado. Sin esos archivos (CI, otra PC) el check se saltea y lo
+ *            dice; los otros dos siguen siendo bloqueantes.
+ *
+ * CHECK-1 y CHECK-2 corren SIN secretos y SIN red, por eso pueden ser bloqueantes en
+ * CI desde el dia uno y no se pueden saltear con `git push --no-verify`.
  *
  * Uso:
  *   node scripts/_gateRepoPublico.mjs             # exit 0 = limpio, 1 = fuga
@@ -93,6 +106,76 @@ export function buscarPathsProhibidos(listarVersionados) {
   return hallazgos;
 }
 
+/**
+ * Archivos gitignoreados de los que se leen los secretos de planta. Se agregan aca
+ * a medida que aparecen: si un secreto no esta en esta lista, CHECK-3 no lo cuida.
+ */
+const FUENTES_DE_SECRETOS = ['scripts/hotmelt/datos_privados.py'];
+
+/** Nombres de variable que declaran un secreto. */
+// El prefijo va SIN exigir un caracter previo: `CLAVE_HMI` empieza con la palabra
+// misma. Con `[A-Za-z_][A-Za-z0-9_]*` delante, el nombre real no matcheaba — lo
+// cazo el caso rojo del selftest, no la lectura.
+const RE_SECRETO = /^\s*([A-Za-z0-9_]*(?:CLAVE|PASS|PASSWORD|SECRET|TOKEN|PIN)[A-Za-z0-9_]*)\s*=\s*["']([^"']{3,})["']/i;
+
+/** Palabras que, en la misma linea que el valor, lo delatan como credencial. */
+const RE_CONTEXTO = /contrase|clave|password|passwd|\bpin\b|login|usuario|secret|token/i;
+
+/** Lee los valores secretos de los archivos privados. Vacio si no estan (CI). */
+export function leerSecretosLocales(leerArchivo, existe) {
+  const valores = new Set();
+  for (const fuente of FUENTES_DE_SECRETOS) {
+    if (!existe(fuente)) continue;
+    for (const linea of leerArchivo(fuente).split(/\r?\n/)) {
+      const m = RE_SECRETO.exec(linea);
+      // "TBD" y demas placeholders no son secretos: buscarlos daria ruido puro.
+      if (m && !/^(TBD|XXX+|CAMBIAR|PLACEHOLDER|None)$/i.test(m[2])) valores.add(m[2]);
+    }
+  }
+  return [...valores];
+}
+
+/**
+ * CHECK-3. Busca esos valores dentro de lo versionado.
+ *
+ * Exige que la linea ADEMAS hable de una credencial. Una clave de HMI son cuatro
+ * digitos, y cuatro digitos tambien son una cota, un codigo de insumo o un ano: sin
+ * ese contexto el check ahogaria el verde en falsos positivos, y un gate que grita
+ * siempre se termina ignorando.
+ *
+ * (Este comentario llegó a tener el valor real adentro, como ejemplo. Lo cazó el
+ *  propio CHECK-3 en su primera corrida: ni un ejemplo lleva el secreto de verdad.)
+ */
+export function buscarSecretosVersionados(leerArchivo, listarVersionados, secretos) {
+  const hallazgos = [];
+  if (secretos.length === 0) return hallazgos;
+  for (const path of listarVersionados()) {
+    const normalizado = path.replace(/\\/g, '/');
+    let contenido;
+    try {
+      contenido = leerArchivo(normalizado);
+    } catch {
+      continue;                                    // binario o ilegible: no aplica
+    }
+    contenido.split(/\r?\n/).forEach((linea, i) => {
+      if (!RE_CONTEXTO.test(linea)) return;
+      for (const secreto of secretos) {
+        if (linea.includes(secreto)) {
+          hallazgos.push({
+            check: 'CHECK-3',
+            archivo: normalizado,
+            linea: i + 1,
+            detalle: 'un secreto de planta (leido de un archivo privado) esta en texto '
+              + 'plano en un archivo VERSIONADO de un repo publico',
+          });
+          return;
+        }
+      }
+    });
+  }
+  return hallazgos;
+}
+
 // ---------------------------------------------------------------- entrada real
 
 function listarWorkflowsReales() {
@@ -153,6 +236,39 @@ function selftest() {
     ok: buscarPathsProhibidos(() => ['.claude/rules/dev-login.md']).length === 0,
   });
 
+  // CHECK-3. El fixture reproduce el near-miss del 08/09: el archivo privado declara
+  // la clave y un .py versionado la repite dentro de un paso de la hoja de proceso.
+  const privado = 'CLAVE_HMI = "9137"\nOTRA = "no es secreto"\n';
+  const leerPrivado = () => privado;
+  const secretos = leerSecretosLocales(leerPrivado, () => true);
+
+  const pyMalo = 'PASOS = [\n    "En el HMI, ingresar la contrasena 9137.",\n]\n';
+  const pyBueno = 'try:\n    from datos_privados import CLAVE_HMI\nexcept ImportError:\n'
+    + '    CLAVE_HMI = "TBD"\nPASOS = ["En el HMI, ingresar la contrasena %s." % CLAVE_HMI]\n';
+  const pyCoincidenciaBoba = 'ANCHO_MAX = 9137  # milimetros de la bobina\n';
+
+  casos.push({
+    nombre: 'CHECK-3 lee la clave del archivo privado y descarta los placeholders',
+    ok: secretos.length === 1 && secretos[0] === '9137',
+  });
+  casos.push({
+    nombre: 'CHECK-3 detecta la clave en texto plano en un archivo versionado',
+    ok: buscarSecretosVersionados(() => pyMalo, () => ['scripts/x/spec.py'], secretos).length === 1,
+  });
+  casos.push({
+    nombre: 'CHECK-3 NO se dispara con el patron correcto (import + fallback TBD)',
+    ok: buscarSecretosVersionados(() => pyBueno, () => ['scripts/x/spec.py'], secretos).length === 0,
+  });
+  casos.push({
+    nombre: 'CHECK-3 NO se dispara por el mismo numero sin contexto de credencial',
+    ok: buscarSecretosVersionados(() => pyCoincidenciaBoba, () => ['scripts/x/m.py'], secretos).length === 0,
+  });
+  casos.push({
+    nombre: 'CHECK-3 sin el archivo privado (CI) no inventa hallazgos',
+    ok: leerSecretosLocales(leerPrivado, () => false).length === 0
+      && buscarSecretosVersionados(() => pyMalo, () => ['scripts/x/spec.py'], []).length === 0,
+  });
+
   let fallados = 0;
   for (const c of casos) {
     console.log((c.ok ? '  OK   ' : '  FALLA') + ' ' + c.nombre);
@@ -170,13 +286,22 @@ function selftest() {
 
 if (process.argv.includes('--selftest')) selftest();
 
+const leer = (f) => readFileSync(f, 'utf8');
+const secretosLocales = leerSecretosLocales(leer, (f) => existsSync(f));
+
 const hallazgos = [
-  ...buscarCredencialesEnCI((f) => readFileSync(f, 'utf8'), listarWorkflowsReales),
+  ...buscarCredencialesEnCI(leer, listarWorkflowsReales),
   ...buscarPathsProhibidos(listarVersionadosReales),
+  ...buscarSecretosVersionados(leer, listarVersionadosReales, secretosLocales),
 ];
+
+const notaCheck3 = secretosLocales.length === 0
+  ? 'CHECK-3 SALTEADO: no hay archivos privados en esta PC, no hay secreto contra el que comparar'
+  : 'CHECK-3: ' + secretosLocales.length + ' secreto(s) de planta buscados en lo versionado';
 
 if (hallazgos.length === 0) {
   console.log('✓ GATE REPO PUBLICO: limpio (0 credenciales en CI, 0 paths internos versionados)');
+  console.log('  ' + notaCheck3);
   process.exit(0);
 }
 

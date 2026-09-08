@@ -31,7 +31,7 @@ Regla corta. El detalle, los umbrales y los errores caros: skill `hojas-de-proce
   sale con codigo 1 y la hoja no se entrega.
 - **Una sola fuente:** los umbrales viven solo en `.claude/skills/hojas-de-proceso/scripts/hojalib.py`; el generador dibuja
   con los mismos numeros con los que el gate rechaza.
-- **Regresion:** `py -3 .claude/skills/hojas-de-proceso/scripts/hojalib_selftest.py` — 12
+- **Regresion:** `py -3 .claude/skills/hojas-de-proceso/scripts/hojalib_selftest.py` — 25
   casos, cada criterio en ROJO y en VERDE.
 
 El **spec de cada maquina va fuera del repo** (contraseñas de HMI, part numbers de cliente).

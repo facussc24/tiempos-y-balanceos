@@ -64,7 +64,7 @@ Sale con codigo 1 y no se entrega. `--jerarquia 20.2=0,20.4=0` sirve para cheque
 | 2 | **Lo que hay que leer, se lee** | cuerpo impreso >= **7 pt** | es lo mas chico que Barack imprime en estas hojas (las referencias de EPP) |
 | 3 | La principal no es una estampilla | >= **25 %** del bloque | piso absoluto, para que el criterio 1 no se cumpla achicando a las otras |
 | 4 | **Lo ajeno no entra** | se recorta o se descarta | celulares de traductor, caras, gente de espaldas, piso vacio, cajas del fondo |
-| 5 | **Cantidad** | **2 o 3** por hoja, nunca 4 | en A4, con 4 no se ve ninguna |
+| 5 | **Cantidad** | **2 o 3** en jerarquia · **hasta 4** en secuencia, y con mas la hoja se PARTE | en A4, con 4 fotos de tamaños distintos no se ve ninguna; en secuencia van las 4 iguales en grilla 2x2, 34 cm² cada una |
 | 6 | Las pantallas son la **foto real enderezada**, con el rotulo encima | — | ver §3 |
 
 **Ojo con el criterio 1.** Primero lo escribi como *"45 % del bloque"* y **13 de 17 hojas lo
@@ -184,11 +184,11 @@ CICLO DE CONTROL · ELEMENTOS DE SEGURIDAD · PLAN DE REACCION.
 |---|---|---|
 | **Dura** | `hoja_proceso_check.py` sale con codigo 1 y la hoja no se entrega | `scripts/hoja_proceso_check.py` |
 | **Dura** | los umbrales viven **solo** en `hojalib.py`: el generador dibuja con los mismos numeros con los que el gate rechaza | `scripts/hojalib.py` |
-| **Regresion** | 12 casos, cada criterio en ROJO y en VERDE | `scripts/hojalib_selftest.py` |
+| **Regresion** | 25 casos, cada criterio en ROJO y en VERDE | `scripts/hojalib_selftest.py` |
 | **Dato** | la metrica de legibilidad viaja dentro del PNG, sobrevive al pptx | `hojalib.guardar_pantalla()` |
 
 ```bash
-py -3 .claude/skills/hojas-de-proceso/scripts/hojalib_selftest.py     # 12 casos
+py -3 .claude/skills/hojas-de-proceso/scripts/hojalib_selftest.py     # 25 casos
 py -3 .claude/skills/hojas-de-proceso/scripts/hoja_proceso_check.py "<deck.pptx>" --spec <spec.py>
 ```
 
@@ -199,7 +199,7 @@ cliente). En el repo va solo lo generico: libreria, gate y selftest.
 
 ## 7. Antes de entregar
 
-- [ ] `hojalib_selftest.py` en verde (12/12)
+- [ ] `hojalib_selftest.py` en verde (25/25)
 - [ ] `hoja_proceso_check.py` en verde sobre el deck
 - [ ] **las laminas miradas una por una**, renderizadas — no el script, el archivo publicado
 - [ ] las pantallas miradas **al ancho que van a tener impresas**, no ampliadas
