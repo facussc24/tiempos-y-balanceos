@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <style>
-  @page { size: A4; margin: 16mm 19mm 14mm 19mm; }
+  @page { size: A4; margin: 13mm 18mm 11mm 18mm; }
   * { box-sizing: border-box; }
   body {
-    font-family: Arial, Helvetica, sans-serif;
-    font-size: 8pt;
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 8.5pt;
     color: #000;
     margin: 0;
     line-height: 1.25;
@@ -31,13 +31,13 @@
     font-size: 8.2pt;
     font-weight: bold;
     text-decoration: underline;
-    margin: 14px 0 4px 1px;
+    margin: 10px 0 3px 1px;
   }
 
   /* ---------- Tablas ---------- */
   table { width: 100%; border-collapse: collapse; table-layout: fixed; }
   td, th { border: 0.6px solid #000; padding: 1.5px 3px; vertical-align: middle; }
-  .bloque { margin-bottom: 13px; }
+  .bloque { margin-bottom: 9px; }
 
   .barra {
     background: #c8c8c8;
@@ -46,9 +46,9 @@
     height: 15px;
     padding: 1.5px 4px;
   }
-  .lbl { background: #efefef; font-size: 7.4pt; white-space: nowrap; }
-  .campo { height: 24px; }
-  .campo-alto { height: 30px; }
+  .lbl { background: #efefef; font-size: 7.9pt; white-space: nowrap; }
+  .campo { height: 19px; }
+  .campo-alto { height: 23px; }
 
   /* casilleros */
   .chk {
@@ -58,16 +58,16 @@
     margin: 0 3px -1px 0;
     background: #fff;
   }
-  .opt { font-size: 7.4pt; white-space: nowrap; }
+  .opt { font-size: 7.9pt; white-space: nowrap; }
 
-  .nota { font-size: 6.9pt; font-style: italic; margin: 2px 0 0 1px; }
+  .nota { font-size: 7.3pt; font-style: italic; margin: 2px 0 0 1px; }
 
   /* ---------- Motivo ---------- */
   .motivo-lista td { border: none; padding: 1.5px 3px; }
-  .caja-com { height: 110px; vertical-align: top; }
+  .caja-com { height: 74px; vertical-align: top; }
 
   /* ---------- Importante ---------- */
-  .importante { margin-top: 14px; font-size: 7.2pt; }
+  .importante { margin-top: 14px; font-size: 7.6pt; }
   .importante .tit { font-weight: bold; font-size: 7.8pt; margin-bottom: 2px; }
   .importante ul { margin: 0; padding-left: 12px; }
   .importante li { margin-bottom: 1.5px; }
@@ -223,8 +223,26 @@
         <td class="lbl">Nº de devolución *</td>
         <td class="campo"></td>
       </tr>
+      <tr>
+        <td class="lbl">Nº de 8D</td>
+        <td class="campo" colspan="2"></td>
+        <td class="lbl">Fecha de recepción</td>
+        <td class="campo"></td>
+      </tr>
     </table>
     <div class="nota">* Si el Nº de devolución no figura en la documentación y en las etiquetas del material, la devolución será rechazada.</div>
+  </div>
+
+  <!-- Disposicion del material — exigido por I-AC-012 5.4 -->
+  <div class="bloque">
+    <table>
+      <colgroup><col style="width:50%"><col style="width:50%"></colgroup>
+      <tr><td class="barra" colspan="2">Disposición del material recibido</td></tr>
+      <tr>
+        <td class="opt"><span class="chk"></span>Reparable — se identifica con sticker de retrabajo</td>
+        <td class="opt"><span class="chk"></span>Irreparable — sticker de rechazo y envío a Scrap</td>
+      </tr>
+    </table>
   </div>
 
   <!-- Firma del Responsable de Calidad (campo agregado) -->
@@ -243,7 +261,7 @@
       </tr>
       <tr>
         <td class="lbl">Firma y sello</td>
-        <td colspan="3" style="height:70px"></td>
+        <td colspan="3" style="height:48px"></td>
       </tr>
     </table>
   </div>
@@ -259,8 +277,8 @@
   </div>
 
   <div class="pie">
-    <span>Barack Argentina S.R.L. — Los Arboles 842, B1686HDF Hurlingham, Buenos Aires</span>
-    <span>Código: (a asignar por Calidad) &nbsp;|&nbsp; Rev.: 00 &nbsp;|&nbsp; Fecha: 08/09/2026 &nbsp;|&nbsp; Pág. 1 de 1</span>
+    <span>Anexo I del instructivo <b>I-AC-012</b> Devolución de clientes &nbsp;—&nbsp; Barack Argentina S.R.L.</span>
+    <span><b>I-AC-012.1</b> &nbsp;-Rev. A-&nbsp; 09-26 &nbsp;|&nbsp; Pág. 1 de 1</span>
   </div>
 
 </body>
