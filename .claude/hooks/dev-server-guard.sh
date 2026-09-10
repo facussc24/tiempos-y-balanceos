@@ -18,6 +18,9 @@ set -uo pipefail
 
 RAIZ="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 INPUT=$(cat 2>/dev/null)
+# Si este Stop viene de un Stop anterior ya bloqueado (stop_hook_active), no se vuelve a frenar:
+# sin esto el turno no puede terminar nunca (visto 10/09/2026, tres Stop seguidos por archivos ajenos).
+case "$INPUT" in *'"stop_hook_active":true'*|*'"stop_hook_active": true'*) exit 0;; esac
 
 cd "$(git rev-parse --show-toplevel 2>/dev/null || echo .)" || exit 0
 
