@@ -80,13 +80,13 @@ print("\n=== 4. la jornada nueva esta completa y en su lugar ===")
 ESPERADO_ES = ["TRYOUT IMG — DÍA 6", "Resumen de actividades — Día 6",
                "Secuencia de trials — T3 a T7", "Secuencia de trials — T8 a T14",
                "Estado por cavidad al inicio de la jornada — T3",
-               "Cavidad 4 — retiro del suplemento",
+               "Cavidad 4 — se le sacó el suplemento",
                "Tiempos de vacío del molde inferior — antes y después",
                "al cierre del 08/09", "acciones técnicas al 08/09"]
 ESPERADO_EN = ["TRYOUT IMG — DAY 6", "Activity summary — Day 6",
                "Trial sequence — T3 to T7", "Trial sequence — T8 to T14",
                "Status per cavity at the start of the day — T3",
-               "Cavity 4 — removal of the shim",
+               "Cavity 4 — the shim was removed",
                "Lower mold vacuum times — before and after",
                "at the close of 08/09", "technical actions as of 08/09"]
 for p, esp, tag in ((es, ESPERADO_ES, "ES"), (en, ESPERADO_EN, "EN")):

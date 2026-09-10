@@ -11,6 +11,7 @@ dejaria sin ningun ejemplar en el mundo.
 
 Uso:
     python scripts/_deshidratarOneDrive.py "<carpeta>" [...]  [--ext .mov,.mp4] [--patron 2026-09]
+    ... --recursivo para barrer el arbol entero (sin esto mira SOLO el primer nivel)
     ... agregar --aplicar para que haga el trabajo (sin eso es dry-run y no toca nada)
 
 Por que esta escrito con esta combinacion rara de PowerShell + ctypes (07/09/2026, cinco
@@ -64,9 +65,11 @@ _set.restype = ctypes.c_bool
 # ARGUMENTO, nunca literal adentro del .ps1: powershell.exe lee el script como ANSI y las
 # rutas de Barack llevan tildes (arbol de carpetas fantasma, 07/08/2026).
 PS = r'''
-param([string]$Carpeta, [string]$Salida, [string]$Ext, [string]$Patron)
+param([string]$Carpeta, [string]$Salida, [string]$Ext, [string]$Patron, [string]$Recursivo)
 $hidratados = @(); $subiendo = @()
-foreach ($f in (Get-ChildItem -LiteralPath $Carpeta -File -Force)) {
+$gci = @{ LiteralPath = $Carpeta; File = $true; Force = $true; ErrorAction = "SilentlyContinue" }
+if ($Recursivo -eq "1") { $gci.Recurse = $true }
+foreach ($f in (Get-ChildItem @gci)) {
     if ($Ext -and ($Ext -split ',') -notcontains $f.Extension.ToLower()) { continue }
     if ($Patron -and $f.Name -notmatch $Patron) { continue }
     $a = [int]$f.Attributes
@@ -86,7 +89,7 @@ def atributos(ruta):
     return a
 
 
-def hidratados(carpetas, ext, patron):
+def hidratados(carpetas, ext, patron, recursivo=False):
     """Los que ya subieron y todavia ocupan disco, segun PowerShell (el unico que ve el
     ReparsePoint). Devuelve rutas absolutas."""
     ps = os.path.join(tempfile.gettempdir(), '_deshidratarOneDrive.ps1')
@@ -100,7 +103,8 @@ def hidratados(carpetas, ext, patron):
             print('NO ESTA  %s' % carpeta)
             continue
         r = subprocess.run(['powershell', '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', ps,
-                            '-Carpeta', carpeta, '-Salida', salida, '-Ext', ext, '-Patron', patron],
+                            '-Carpeta', carpeta, '-Salida', salida, '-Ext', ext, '-Patron', patron,
+                            '-Recursivo', '1' if recursivo else '0'],
                            capture_output=True, text=True)
         if r.stdout.strip():
             print(r.stdout.strip())
@@ -115,7 +119,8 @@ def hidratados(carpetas, ext, patron):
 def main():
     args = sys.argv[1:]
     aplicar = '--aplicar' in args
-    args = [a for a in args if a != '--aplicar']
+    recursivo = '--recursivo' in args
+    args = [a for a in args if a not in ('--aplicar', '--recursivo')]
     ext = patron = ''
     for bandera in ('--ext', '--patron'):
         if bandera in args:
@@ -130,7 +135,7 @@ def main():
         print(__doc__)
         return 2
 
-    rutas = hidratados(args, ext, patron)
+    rutas = hidratados(args, ext, patron, recursivo)
     if not rutas:
         print('No hay nada para deshidratar: o ya estan todos en 0 bytes, o todavia estan subiendo.')
         return 0
@@ -139,8 +144,12 @@ def main():
     print('%d archivos ya subidos ocupan %.2f GB de disco'
           % (len(rutas), sum(tam.values()) / 1073741824.0))
     if not aplicar:
-        for r in rutas:
-            print('  %7.1f MB  %s' % (tam[r] / 1048576.0, os.path.basename(r)))
+        # en un barrido recursivo la lista entera son miles de lineas: van los 20 mas grandes
+        top = sorted(rutas, key=lambda x: -tam[x])[:20]
+        for r in top:
+            print('  %7.1f MB  %s' % (tam[r] / 1048576.0, r if recursivo else os.path.basename(r)))
+        if len(rutas) > len(top):
+            print('  ... y %d archivo(s) mas' % (len(rutas) - len(top)))
         print('PLAN (dry-run). Nada se toco. Para aplicar: --aplicar')
         return 0
 

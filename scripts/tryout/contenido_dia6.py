@@ -38,8 +38,8 @@ ES = dict(
     kicker="INFORME TÉCNICO DE TRYOUT",
     tit_portada="TRYOUT IMG — DÍA 6",
     sub="Molde delantero (Front TopRoll) — temperatura y tiempos de vacío",
-    desc=("Serie de tiradas T3 a T14 sobre el molde delantero: retiro del suplemento de la "
-          "cavidad 4, barrido de temperatura por zonas contra las marcas de vacío de la "
+    desc=("Serie de tiradas T3 a T14 sobre el molde delantero: se le sacó el suplemento a la "
+          "cavidad 4, bajadas de temperatura por zonas para las marcas de vacío de la "
           "cavidad 3, y ajuste de los tiempos de vacío del molde inferior."),
     fecha="FECHA:  08/09/2026",
     equipos="EQUIPOS:  Barack · GS · KP",
@@ -49,17 +49,17 @@ ES = dict(
     rotulo="CRONOLOGÍA DE LA JORNADA",
     items=[
         ("Punto de partida — T3",
-         "La jornada arranca con problema en las cavidades 3 y 4: hundimiento en la cavidad 4 "
-         "y marcas de vacío en la cavidad 3. Las cavidades 1 y 2 salen conformes."),
+         "La jornada arranca con problemas en las cavidades 3 y 4: hundimiento en la cavidad 4 "
+         "y marcas de vacío en la cavidad 3. Las cavidades 1 y 2 salen bien."),
         ("Retiro del suplemento de la cavidad 4",
          "A la cavidad 4 se le sacó el suplemento: no tuvo más hundimiento, pero apareció una "
          "arruga. En el T6, con el papel colocado de otra forma, la cavidad 4 queda resuelta."),
-        ("Barrido de temperatura por zonas — T6 a T11",
+        ("Bajadas de temperatura por zonas — T6 a T11",
          "Se bajó la zona superior en pasos de 5 y 10 grados, después a 400 °C, y por último se "
          "bajó toda la línea zonal. La cavidad 3 repite el defecto en todas las tiradas."),
-        ("Cambio de enfoque — tiempos de vacío",
-         "KP indica que la etapa inferior del molde tiene dos modos de vacío, uno rápido y otro "
-         "lento, y que la sincronización entre ambos no es la correcta."),
+        ("Se pasa a los tiempos de vacío",
+         "KP dice que la etapa inferior del molde tiene dos modos de vacío, uno rápido y otro "
+         "lento, y que la sincronización entre los dos no es la correcta."),
         ("Cierre de la jornada — T13 y T14",
          "En el T13 se bajó a 4,0 s el tiempo de vacío lento del molde inferior. A las 16:28 "
          "quedaron cargados los parámetros del T14."),
@@ -75,13 +75,13 @@ ES = dict(
     tit_trials_a="Secuencia de trials — T3 a T7",
     items_a=[
         ("T3  ·  14:29",
-         "Punto de partida de la jornada. Problema en las cavidades 3 y 4: la 4 con hundimiento "
-         "y la 3 con marcas de vacío. Las cavidades 1 y 2 salen conformes."),
+         "Punto de partida de la jornada. Problemas en las cavidades 3 y 4: la 4 con hundimiento "
+         "y la 3 con marcas de vacío. Las cavidades 1 y 2 salen bien."),
         ("T4  ·  14:41",
          "Se probó con estiramiento. Repite los mismos defectos en las mismas dos cavidades "
          "que el T3."),
         ("T5  ·  14:58",
-         "Sólo se modificaron las zonas 12 y 13. A esa misma hora se informa que a la cavidad 4 "
+         "Sólo se cambiaron las zonas 12 y 13. A esa misma hora avisa que a la cavidad 4 "
          "se le sacó el suplemento: no tuvo más hundimiento, pero apareció una arruga."),
         ("T6  ·  14:59 → 15:05",
          "Se colocó el papel de otra forma y se bajaron 5 grados en la zona superior 12, porque "
@@ -92,14 +92,14 @@ ES = dict(
     ],
     tit_panel_a="Qué se movió en cada tirada",
     panel_a=("Cavidad 4",
-             "Se le retiró el suplemento. El hundimiento no volvió a aparecer.",
+             "Se le sacó el suplemento. El hundimiento no volvió a aparecer.",
              "Cavidad 3",
-             "Marcas de vacío desde el T3. Es el defecto que gobierna toda la jornada.",
+             "Marcas de vacío desde el T3. Es el problema principal de la jornada.",
              "Zonas de calentamiento",
              "T5: zonas 12 y 13.   ·   T6: zona superior 12, 5 grados menos.   ·   "
              "T7: zona superior 13, 10 grados menos y después 10 grados más.",
-             "Criterio de trabajo",
-             "Se movió una variable por vez y se fotografió la pantalla de parámetros de cada tirada."),
+             "Cómo se trabajó",
+             "Se cambió una cosa por vez y se sacó foto de la pantalla en cada tirada."),
 
     # --- D. trials T8 a T14
     tit_trials_b="Secuencia de trials — T8 a T14",
@@ -110,7 +110,7 @@ ES = dict(
          "Repite el problema."),
         ("T10  ·  15:34",
          "Se dejó la temperatura superior como estaba y se bajó la inferior de 435 °C a 410 °C, "
-         "como el resto de la línea zonal, que va de la zona 13, 17, 20, 23 y 27."),
+         "como el resto de la línea zonal: zonas 13, 17, 20, 23 y 27."),
         ("T11  ·  15:42",
          "Se bajó toda la línea zonal a 400 °C, y a 385 °C y 395 °C. El problema está en la "
          "cavidad 3 y levemente en la 2, que no se había visto bien pero se repetía."),
@@ -118,15 +118,15 @@ ES = dict(
          "En el T13 se bajó a 4,0 s el tiempo de vacío lento del molde inferior. A las 16:28 "
          "quedaron cargados los parámetros del T14."),
     ],
-    tit_panel_b="Del ajuste térmico al ajuste de tiempos",
-    panel_b=("Resultado del barrido térmico",
+    tit_panel_b="De la temperatura a los tiempos de vacío",
+    panel_b=("Resultado de bajar la temperatura",
              "Del T6 al T11 se bajó la temperatura en todas las combinaciones que se probaron y "
              "el defecto de la cavidad 3 se repitió en todas.",
-             "Lo que aporta KP",
+             "Lo que dice KP",
              "La etapa inferior del molde tiene dos modos de vacío: uno rápido y otro lento.",
-             "Diagnóstico",
+             "El problema, según KP",
              "La sincronización entre las bombas rápida y lenta no es la correcta. El tiempo "
-             "total permanece inalterado.",
+             "total no cambia.",
              "Acción",
              "Se pasó de ajustar la temperatura a ajustar los tiempos de vacío del molde inferior."),
 
@@ -136,29 +136,29 @@ ES = dict(
     chip_der_def="08/09 · 14:30",
     cap_def=("Izquierda: cavidad 4, hundimiento.   ·   Derecha: cavidad 3, marcas de vacío.   "
              "Fotos de planta de la jornada, 08/09/2026 14:30."),
-    panel_def=("Cavidad 4", "Hundimiento sobre la pieza.",
-               "Cavidad 3", "Marcas de vacío sobre la superficie.",
+    panel_def=("Cavidad 4", "Hundimiento en la pieza.",
+               "Cavidad 3", "Marcas de vacío en la superficie.",
                "Cavidades 1 y 2",
-               "Conformes al inicio de la jornada. En el T11 se detectaron marcas leves también "
+               "Salen bien al inicio de la jornada. En el T11 aparecieron marcas leves también "
                "en la cavidad 2.",
-               "Alcance e identificación",
+               "Cómo se nombran las cavidades",
                "Los dos defectos se repitieron en el T4, en las mismas dos cavidades. Las "
                "cavidades se identifican por número, del 1 al 4: la marcación A / B / C / D del "
                "molde delantero sigue abierta en el plan de acción."),
 
     # --- F. suplemento de la cavidad 4 (2 fotos verticales)
-    tit_supl="Cavidad 4 — retiro del suplemento",
-    chip_izq_supl="INTERVENCIÓN",
+    tit_supl="Cavidad 4 — se le sacó el suplemento",
+    chip_izq_supl="AJUSTE",
     chip_der_supl="08/09 · 14:58",
     cap_supl=("Izquierda: el suplemento sobre el molde.   ·   Derecha: la arruga que apareció al "
-              "retirarlo.   Fotos de planta, 08/09/2026 14:58 y 14:59."),
-    panel_supl=("Qué se hizo", "A la cavidad 4 se le retiró el suplemento.",
-                "Qué resolvió y qué trajo",
+              "sacarlo.   Fotos de planta, 08/09/2026 14:58 y 14:59."),
+    panel_supl=("Qué se hizo", "A la cavidad 4 se le sacó el suplemento.",
+                "Qué pasó",
                 "El hundimiento no volvió a aparecer, pero apareció una arruga sobre la pieza.",
                 "Cómo siguió",
                 "En el T6 se colocó el papel de otra forma y la cavidad 4 quedó resuelta. El "
                 "problema que siguió abierto es el de la cavidad 3.",
-                "Registro", "La posición del suplemento sobre el molde quedó fotografiada a las 15:06."),
+                "Registro", "La posición del suplemento sobre el molde quedó en la foto de las 15:06."),
 
     # --- G. tiempos de vacio (2 fotos horizontales)
     tit_tiempos="Tiempos de vacío del molde inferior — antes y después",
@@ -180,8 +180,8 @@ ES = dict(
                    "Molde 12,0  (segundos).",
                    "Por qué se tocan estos tiempos",
                    "La etapa inferior del molde tiene dos modos de vacío, uno rápido y otro "
-                   "lento, y la sincronización entre ambos no es la correcta. El tiempo total "
-                   "permanece inalterado.",
+                   "lento, y la sincronización entre los dos no es la correcta. El tiempo total "
+                   "no cambia.",
                    "Registro",
                    "Fotos de la pantalla de la máquina, 08/09/2026 16:02."),
 
@@ -189,22 +189,22 @@ ES = dict(
     tit_situ="Situación y próximos pasos — al cierre del 08/09",
     rotulo_situ="SITUACIÓN Y PLAN INMEDIATO",
     bullets=[
-        "La jornada se trabajó sobre el molde delantero, con la serie de tiradas T3 a T14.",
-        "Las marcas de vacío de la cavidad 3 son el defecto que gobierna la jornada: se repitieron en todas las tiradas, con todas las combinaciones de temperatura que se probaron.",
-        "El barrido térmico llegó hasta bajar toda la línea zonal a 400 °C, y la inferior de 435 °C a 410 °C, sin corregir el defecto.",
-        "En el T11 se detectó que la cavidad 2 también tiene marcas, más leves, que no se habían visto bien y se venían repitiendo.",
-        "El hundimiento de la cavidad 4 se resolvió retirándole el suplemento; a cambio apareció una arruga, y en el T6, con el papel colocado de otra forma, la cavidad quedó resuelta.",
-        "KP indica que la etapa inferior del molde tiene dos modos de vacío, rápido y lento, y que la sincronización entre ambos no es la correcta: en el T13 el vacío lento inferior se bajó a 4,0 s, y a las 16:28 quedaron cargados los parámetros del T14.",
+        "Se trabajó sobre el molde delantero, con las tiradas T3 a T14.",
+        "Las marcas de vacío de la cavidad 3 son el problema principal de la jornada: se repitieron en todas las tiradas, con todas las combinaciones de temperatura que se probaron.",
+        "Se bajó la temperatura hasta dejar toda la línea zonal en 400 °C, y la inferior de 435 °C a 410 °C, sin corregir el defecto.",
+        "En el T11 se vio que la cavidad 2 también tiene marcas, más leves, que no se habían visto bien y se venían repitiendo.",
+        "El hundimiento de la cavidad 4 se resolvió sacándole el suplemento; a cambio apareció una arruga, y en el T6, con el papel colocado de otra forma, la cavidad quedó resuelta.",
+        "KP dice que la etapa inferior del molde tiene dos modos de vacío, rápido y lento, y que la sincronización entre los dos no es la correcta: en el T13 el vacío lento inferior se bajó a 4,0 s, y a las 16:28 quedaron cargados los parámetros del T14.",
     ],
     rotulo2="A VERIFICAR EN LA PRÓXIMA TIRADA",
     cajas=[["Cavidad 3", "Si el ajuste de tiempos corrige las marcas"],
-           ["Cavidad 2", "Alcance real de las marcas leves"],
+           ["Cavidad 2", "Hasta dónde llegan las marcas leves"],
            ["Cavidad 4", "Que la arruga no vuelva con el papel definitivo"]],
     tit_panel_situ="Qué queda por verificar",
     verif=[
-        "Cavidad 3: confirmar si corregir la sincronización entre el vacío rápido y el lento del molde inferior elimina las marcas, ahora que el camino de la temperatura quedó recorrido.",
-        "Cavidad 2: determinar el alcance real de las marcas leves detectadas en el T11 y si responden a la misma causa que las de la cavidad 3.",
-        "Tiempos de vacío: registrar el resultado del T14 y dejar asentados los valores con los que la pieza sale conforme. Verificar además que la arruga de la cavidad 4 no se presente con la colocación definitiva del papel.",
+        "Cavidad 3: confirmar si corregir la sincronización entre el vacío rápido y el lento del molde inferior elimina las marcas, ya que con temperatura no se corrigieron.",
+        "Cavidad 2: ver hasta dónde llegan las marcas leves que aparecieron en el T11, y si son por lo mismo que las de la cavidad 3.",
+        "Tiempos de vacío: anotar el resultado del T14 y los valores con los que la pieza sale bien. Y ver que la arruga de la cavidad 4 no vuelva cuando el papel quede puesto de forma definitiva.",
     ],
 
     # --- I. plan de accion
@@ -215,7 +215,7 @@ ES = dict(
     filas_nuevas=[
         ("Cavidad 3 — marcas de vacío: el ajuste de temperatura por zonas no las corrigió",
          "Barack / GS / KP", "Crítica", "OPEN"),
-        ("Cavidad 2 — marcas leves detectadas en el T11: determinar su alcance",
+        ("Cavidad 2 — marcas leves que aparecieron en el T11: ver hasta dónde llegan",
          "Barack / GS / KP", "Alta", "OPEN"),
         ("Tiempos de vacío del molde inferior — sincronizar el vacío rápido con el lento",
          "GS / KP", "Crítica", "IN PROGRESS"),
@@ -235,7 +235,7 @@ EN = dict(
     tit_portada="TRYOUT IMG — DAY 6",
     sub="Front mold (Front TopRoll) — temperature and vacuum times",
     desc=("Trial series T3 to T14 on the front mold: removal of the cavity 4 shim, zone "
-          "temperature sweep against the cavity 3 vacuum marks, and adjustment of the lower "
+          "temperature reductions for the cavity 3 vacuum marks, and adjustment of the lower "
           "mold vacuum times."),
     fecha="DATE:  08/09/2026",
     equipos="TEAMS:  Barack · GS · KP",
@@ -244,15 +244,15 @@ EN = dict(
     rotulo="TIMELINE OF THE DAY",
     items=[
         ("Starting point — T3",
-         "The day starts with a problem in cavities 3 and 4: a sink mark in cavity 4 and vacuum "
-         "marks in cavity 3. Cavities 1 and 2 come out conforming."),
+         "The day starts with problems in cavities 3 and 4: a sink mark in cavity 4 and vacuum "
+         "marks in cavity 3. Cavities 1 and 2 come out OK."),
         ("Removal of the cavity 4 shim",
          "The shim was removed from cavity 4: no more sink mark, but a wrinkle appeared. In T6, "
          "with the paper placed differently, cavity 4 is solved."),
-        ("Zone temperature sweep — T6 to T11",
+        ("Zone temperature reductions — T6 to T11",
          "The upper zone was lowered in steps of 5 and 10 degrees, then to 400 °C, and finally "
          "the whole zone line was lowered. Cavity 3 repeats the defect in every trial."),
-        ("Change of approach — vacuum times",
+        ("Moving on to the vacuum times",
          "KP states that the lower stage of the mold has two vacuum modes, one fast and one "
          "slow, and that the synchronization between them is not correct."),
         ("Close of the day — T13 and T14",
@@ -269,12 +269,12 @@ EN = dict(
     tit_trials_a="Trial sequence — T3 to T7",
     items_a=[
         ("T3  ·  14:29",
-         "Starting point of the day. Problem in cavities 3 and 4: cavity 4 with a sink mark and "
-         "cavity 3 with vacuum marks. Cavities 1 and 2 come out conforming."),
+         "Starting point of the day. Problems in cavities 3 and 4: cavity 4 with a sink mark and "
+         "cavity 3 with vacuum marks. Cavities 1 and 2 come out OK."),
         ("T4  ·  14:41",
          "Tested with stretching. It repeats the same defects in the same two cavities as T3."),
         ("T5  ·  14:58",
-         "Only zones 12 and 13 were modified. At that same time it is reported that the shim was "
+         "Only zones 12 and 13 were changed. At that same time he reports that the shim was "
          "removed from cavity 4: no more sink mark, but a wrinkle appeared."),
         ("T6  ·  14:59 → 15:05",
          "The paper was placed differently and upper zone 12 was lowered by 5 degrees, because "
@@ -287,12 +287,12 @@ EN = dict(
     panel_a=("Cavity 4",
              "The shim was removed. The sink mark did not appear again.",
              "Cavity 3",
-             "Vacuum marks from T3 on. This is the defect that governs the whole day.",
+             "Vacuum marks from T3 on. This is the main problem of the day.",
              "Heating zones",
              "T5: zones 12 and 13.   ·   T6: upper zone 12, 5 degrees lower.   ·   "
              "T7: upper zone 13, 10 degrees lower and then a further 10 degrees.",
-             "Working criterion",
-             "One variable was changed at a time and the parameter screen of each trial was photographed."),
+             "How the work was done",
+             "One thing was changed at a time and the parameter screen of each trial was photographed."),
 
     tit_trials_b="Trial sequence — T8 to T14",
     items_b=[
@@ -302,7 +302,7 @@ EN = dict(
          "The problem repeats."),
         ("T10  ·  15:34",
          "The upper temperature was left as it was and the lower one was brought down from "
-         "435 °C to 410 °C, like the rest of the zone line, which runs zones 13, 17, 20, 23 and 27."),
+         "435 °C to 410 °C, like the rest of the zone line: zones 13, 17, 20, 23 and 27."),
         ("T11  ·  15:42",
          "The whole zone line was lowered to 400 °C, and to 385 °C and 395 °C. The problem is in "
          "cavity 3 and slightly in cavity 2, which had not been seen clearly but was repeating."),
@@ -310,15 +310,15 @@ EN = dict(
          "In T13 the lower mold slow vacuum time was lowered to 4.0 s. At 16:28 the T14 "
          "parameters were loaded."),
     ],
-    tit_panel_b="From temperature adjustment to time adjustment",
-    panel_b=("Result of the temperature sweep",
+    tit_panel_b="From temperature to the vacuum times",
+    panel_b=("Result of lowering the temperature",
              "From T6 to T11 the temperature was lowered in every combination tried and the "
              "cavity 3 defect repeated in all of them.",
-             "What KP contributes",
+             "What KP says",
              "The lower stage of the mold has two vacuum modes: one fast and one slow.",
-             "Diagnosis",
+             "The problem, according to KP",
              "The synchronization between the fast and slow pumps is not correct. The total "
-             "time remains unchanged.",
+             "time does not change.",
              "Action",
              "Work moved from adjusting the temperature to adjusting the lower mold vacuum times."),
 
@@ -330,25 +330,25 @@ EN = dict(
     panel_def=("Cavity 4", "Sink mark on the part.",
                "Cavity 3", "Vacuum marks on the surface.",
                "Cavities 1 and 2",
-               "Conforming at the start of the day. In T11 light marks were also detected in "
+               "They come out OK at the start of the day. In T11 light marks also appeared in "
                "cavity 2.",
-               "Scope and identification",
+               "How the cavities are named",
                "Both defects repeated in T4, in the same two cavities. Cavities are identified "
                "by number, 1 to 4: the A / B / C / D marking of the front mold is still open in "
                "the action plan."),
 
-    tit_supl="Cavity 4 — removal of the shim",
-    chip_izq_supl="INTERVENTION",
+    tit_supl="Cavity 4 — the shim was removed",
+    chip_izq_supl="ADJUSTMENT",
     chip_der_supl="08/09 · 14:58",
     cap_supl=("Left: the shim on the mold.   ·   Right: the wrinkle that appeared once it was "
-              "removed.   Floor photos, 08/09/2026 14:58 and 14:59."),
+              "taken off.   Floor photos, 08/09/2026 14:58 and 14:59."),
     panel_supl=("What was done", "The shim was removed from cavity 4.",
-                "What it solved and what it brought",
+                "What happened",
                 "The sink mark did not appear again, but a wrinkle appeared on the part.",
                 "How it continued",
                 "In T6 the paper was placed differently and cavity 4 was solved. The problem "
                 "that stayed open is the one in cavity 3.",
-                "Record", "The position of the shim on the mold was photographed at 15:06."),
+                "Record", "The position of the shim on the mold is in the 15:06 photo."),
 
     tit_tiempos="Lower mold vacuum times — before and after",
     chip_izq_tiempos="RECORD",
@@ -378,22 +378,22 @@ EN = dict(
     tit_situ="Situation and next steps — at the close of 08/09",
     rotulo_situ="SITUATION AND IMMEDIATE PLAN",
     bullets=[
-        "The day was worked on the front mold, with the trial series T3 to T14.",
-        "The cavity 3 vacuum marks are the defect that governs the day: they repeated in every trial, with every temperature combination that was tried.",
-        "The temperature sweep went as far as lowering the whole zone line to 400 °C, and the lower one from 435 °C to 410 °C, without correcting the defect.",
+        "The work was done on the front mold, with trials T3 to T14.",
+        "The cavity 3 vacuum marks are the main problem of the day: they repeated in every trial, with every temperature combination that was tried.",
+        "The temperature was lowered until the whole zone line was at 400 °C, and the lower one from 435 °C to 410 °C, without correcting the defect.",
         "In T11 it was detected that cavity 2 also has marks, lighter ones, which had not been seen clearly and were repeating.",
         "The cavity 4 sink mark was solved by removing its shim; in exchange a wrinkle appeared, and in T6, with the paper placed differently, the cavity was solved.",
         "KP states that the lower stage of the mold has two vacuum modes, fast and slow, and that the synchronization between them is not correct: in T13 the lower slow vacuum was lowered to 4.0 s, and at 16:28 the T14 parameters were loaded.",
     ],
     rotulo2="TO BE VERIFIED IN THE NEXT RUN",
     cajas=[["Cavity 3", "Whether the time adjustment corrects the marks"],
-           ["Cavity 2", "Actual scope of the light marks"],
+           ["Cavity 2", "How far the light marks reach"],
            ["Cavity 4", "That the wrinkle does not return with the final paper"]],
     tit_panel_situ="What remains to be verified",
     verif=[
-        "Cavity 3: confirm whether correcting the synchronization between the fast and the slow vacuum of the lower mold removes the marks, now that the temperature route has been covered.",
-        "Cavity 2: determine the actual scope of the light marks detected in T11 and whether they come from the same cause as those in cavity 3.",
-        "Vacuum times: record the T14 result and set down the values with which the part comes out conforming. Verify as well that the cavity 4 wrinkle does not show up with the final placement of the paper.",
+        "Cavity 3: confirm whether correcting the synchronization between the fast and the slow vacuum of the lower mold removes the marks, since the temperature did not correct them.",
+        "Cavity 2: see how far the light marks that appeared in T11 reach, and whether they come from the same cause as those in cavity 3.",
+        "Vacuum times: write down the T14 result and the values with which the part comes out OK. And check that the cavity 4 wrinkle does not come back once the paper is placed for good.",
     ],
 
     tit_plan="Current action plan — technical actions as of 08/09",
@@ -403,7 +403,7 @@ EN = dict(
     filas_nuevas=[
         ("Cavity 3 — vacuum marks: the zone temperature adjustment did not correct them",
          "Barack / GS / KP", "Critical", "OPEN"),
-        ("Cavity 2 — light marks detected in T11: determine their scope",
+        ("Cavity 2 — light marks that appeared in T11: see how far they reach",
          "Barack / GS / KP", "High", "OPEN"),
         ("Lower mold vacuum times — synchronize the fast vacuum with the slow one",
          "GS / KP", "Critical", "IN PROGRESS"),
