@@ -1,0 +1,6 @@
+# Salidas de trabajo del kit de TryOut: se regeneran con los scripts, no se versionan.
+__pycache__/
+_gemelo_roto.pptx
+*.pptx
+*.pdf
+*.png
