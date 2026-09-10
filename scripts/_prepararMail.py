@@ -76,11 +76,23 @@ def preparar(cfg):
     else:
         mail = ol.CreateItem(0)  # olMailItem
 
+    # Limpiar destinatarios heredados del Reply para no auto-enviarse el correo
+    if cfg.get('para') or cfg.get('cc'):
+        while mail.Recipients.Count > 0:
+            mail.Recipients.Remove(1)
+
     # Resolver cada destinatario contra la libreta ANTES de mostrar el mail: si un nombre
     # no resuelve, es mejor saberlo aca que descubrirlo al apretar Enviar.
     sin_resolver = []
-    for nombre in cfg.get('para', []) + cfg.get('cc', []):
-        r = ns.CreateRecipient(nombre)
+    for nombre in cfg.get('para', []):
+        r = mail.Recipients.Add(nombre)
+        r.Type = 1
+        r.Resolve()
+        if not r.Resolved:
+            sin_resolver.append(nombre)
+    for nombre in cfg.get('cc', []):
+        r = mail.Recipients.Add(nombre)
+        r.Type = 2
         r.Resolve()
         if not r.Resolved:
             sin_resolver.append(nombre)
@@ -89,9 +101,7 @@ def preparar(cfg):
         for n in sin_resolver:
             print(f'  - {n}')
         sys.exit(1)
-
-    mail.To = '; '.join(cfg.get('para', []))
-    mail.CC = '; '.join(cfg.get('cc', []))
+    mail.Recipients.ResolveAll()
     if cfg.get('asunto'):
         mail.Subject = cfg['asunto']   # en una respuesta se omite: vale el "RE: ..." de Outlook
 
@@ -108,6 +118,10 @@ def preparar(cfg):
         cuerpo = cfg['cuerpo'].replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
         cuerpo = cuerpo.replace(chr(10), '<br>')
     mail.HTMLBody = f'<div style="font-family:Calibri,sans-serif;font-size:11pt">{cuerpo}</div>{firma}'
+
+    # Limpiar adjuntos previos o heredados antes de adjuntar los oficiales
+    while mail.Attachments.Count > 0:
+        mail.Attachments.Remove(1)
 
     for a in cfg.get('adjuntos', []):
         mail.Attachments.Add(a)
