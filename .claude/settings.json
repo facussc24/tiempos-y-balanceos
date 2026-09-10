@@ -66,8 +66,44 @@
         ]
       }
     ],
+    "InstructionsLoaded": [
+      {
+        "_comentario": "10/09/2026 (C5): registra en .claude/.instrucciones-cargadas.log (gitignoreado) cada CLAUDE.md, regla, @import y memoria que Claude Code cargo de verdad, con su load_reason. Convierte la leccion del 04/09 (lo que un hook inyecta se verifica en el transcript) en un registro que se mira despues de cada actualizacion de Claude Code. Test: hooksVarios.test.mjs.",
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/instrucciones-log.sh"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "_comentario": "10/09/2026 (A2): un comando cortado por timeout NO es evidencia (LECCIONES 08/09, anexo I-AC-012.1). El .sh hace un grep del stdin y solo levanta node si dice 'timed out'; el aviso sale como additionalContext, exit 0. Se cablea tambien en PostToolUseFailure porque no esta verificado en cual de los dos eventos llega el timeout de Bash. Tests: hooksVarios.test.mjs.",
+        "matcher": "Bash|PowerShell",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/timeout-guard.sh"
+          }
+        ]
+      }
+    ],
+    "PostToolUseFailure": [
+      {
+        "matcher": "Bash|PowerShell",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/timeout-guard.sh"
+          }
+        ]
+      }
+    ],
     "Stop": [
       {
+        "_comentario": "10/09/2026 (A1, A3, A4): cierre-guard suma dos chequeos (entregable afuera nunca abierto; cierre largo) y los dos Stop hooks miran solo lo que toco ESTA sesion (transcript_path del payload, subagentes incluidos). Logica en scripts/_lib/cierreGuard.mjs, frases en cierreCanon.data.json.",
         "matcher": "",
         "hooks": [
           {

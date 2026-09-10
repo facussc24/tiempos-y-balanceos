@@ -42,6 +42,7 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { sinCuerposHeredoc } from './shellTexto.mjs';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
@@ -98,18 +99,9 @@ function sinComentarios(s) {
     .join('\n');
 }
 
-/** Port del awk de arb-cerrar-guard: quita los CUERPOS de heredoc, deja las lineas de comando. */
-export function sinCuerposHeredoc(cmd) {
-  const out = [];
-  let fin = '';
-  for (const l of cmd.split('\n')) {
-    if (fin) { if (l === fin || l.trim().split(/\s+/)[0] === fin) fin = ''; continue; }
-    const m = l.match(/<<-?\s*'?([A-Za-z_][A-Za-z0-9_]*)'?/);
-    if (m) fin = m[1];
-    out.push(l);
-  }
-  return out.join('\n');
-}
+// `sinCuerposHeredoc` vive en shellTexto.mjs desde el 10/09/2026 (la comparte cierreGuard.mjs);
+// se re-exporta para que los tests y quien la importaba de aca sigan andando.
+export { sinCuerposHeredoc };
 
 // ─────────────────────────────────────────────────────────────────────────── parseo
 

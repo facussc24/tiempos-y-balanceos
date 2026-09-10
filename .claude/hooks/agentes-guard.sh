@@ -16,12 +16,19 @@
 #   echo 0  > ~/.claude/.agent-limit          # 0 = sin limite (desactiva el guard)
 #   touch ~/.claude/.workflow-ok              # permite UN Workflow (se consume al usarlo)
 #
+# El override VENCE a las 12 horas (A6, 10/09/2026): se respeta solo si el archivo tiene menos
+# de VENCE_SEG desde su ultima modificacion; pasado eso se retira y vuelve el techo de 5 solo.
+# Un `echo 0` de otro dia no puede seguir apagando el guard en silencio. Cuando Fak lo pide
+# TEXTUAL en el chat ("usa agentes en paralelo", "no me importa gastar tokens"), Claude lo
+# escribe por el (Fak no corre comandos) y lo dice; sin esa frase de Fak, no se toca.
+#
 # Salida: exit 2 = bloquea la tool call y manda stderr a Claude como feedback.
 
 set -uo pipefail
 
 LIMITE_DEFAULT=5
 VENTANA_SEG=600          # 10 min — una ventana de trabajo real
+VENCE_SEG=43200          # 12 h — vida util de ~/.claude/.agent-limit
 
 BASE="${HOME}/.claude"
 LOG="${BASE}/.agent-spawns.log"
@@ -40,17 +47,25 @@ TOOL=$(printf '%s' "$INPUT" \
   | head -1)
 [ -z "$TOOL" ] && TOOL="Agent"
 
-# Techo configurable sin tocar codigo
+AHORA=$(date +%s)
+
+# Techo configurable sin tocar codigo — con vencimiento (12 h desde la ultima modificacion).
+# Si `stat` no puede leer la fecha, se respeta el archivo como antes (fallar abierto aca es
+# respetar lo que Fak escribio, no aflojar el techo).
 LIMITE="$LIMITE_DEFAULT"
 if [ -f "$ARCHIVO_LIMITE" ]; then
-  L=$(tr -cd '0-9' < "$ARCHIVO_LIMITE" | head -c 4)
-  [ -n "$L" ] && LIMITE="$L"
+  MOD=$(stat -c %Y "$ARCHIVO_LIMITE" 2>/dev/null || echo 0)
+  if [ "$MOD" -gt 0 ] 2>/dev/null && [ $((AHORA - MOD)) -gt "$VENCE_SEG" ]; then
+    rm -f "$ARCHIVO_LIMITE"
+    echo "agentes-guard: el override ~/.claude/.agent-limit tenia mas de 12 h y se retiro; techo de vuelta en $LIMITE_DEFAULT." >&2
+  else
+    L=$(tr -cd '0-9' < "$ARCHIVO_LIMITE" | head -c 4)
+    [ -n "$L" ] && LIMITE="$L"
+  fi
 fi
 
-# Limite 0 = guard desactivado a proposito por Fak
+# Limite 0 = guard desactivado a proposito por Fak (por 12 h)
 [ "$LIMITE" = "0" ] && exit 0
-
-AHORA=$(date +%s)
 
 # ---------------------------------------------------------------- Workflow: denegado
 if [ "$TOOL" = "Workflow" ]; then
@@ -104,8 +119,9 @@ limite de uso y lo dejaran 4 horas sin poder trabajar. No es una sugerencia.
 NO reintentes ni reformules la llamada. Lo que corresponde:
   - Hace el trabajo vos, directo. Si ya identificaste el archivo o la query, leelo.
     El fan-out casi nunca gana contra 10 lecturas dirigidas.
-  - Si te faltan agentes para algo realmente ancho: esperá ~$ESPERA min, o decile a Fak
-    que suba el techo:   echo 8 > ~/.claude/.agent-limit
+  - Si te faltan agentes para algo realmente ancho: esperá ~$ESPERA min, o que Fak suba el
+    techo:   echo 8 > ~/.claude/.agent-limit   (vale 12 h). Si Fak ya lo pidio TEXTUAL en el
+    chat ("usa agentes en paralelo", "no me importa gastar tokens"), escribilo vos y decilo.
   - Reportale a Fak que llegaste al techo y por que lo necesitabas. No lo escondas.
 EOF
   exit 2

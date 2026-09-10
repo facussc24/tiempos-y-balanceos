@@ -49,9 +49,13 @@ hace a mano y se le avisa a Fak que se llego al techo.
 ## Escapes (los usa Fak, no yo por mi cuenta)
 
 ```bash
-echo 8 > ~/.claude/.agent-limit     # sube el techo
-echo 0 > ~/.claude/.agent-limit     # apaga el guard
+echo 8 > ~/.claude/.agent-limit     # sube el techo (vale 12 h, despues vuelve a 5 solo)
+echo 0 > ~/.claude/.agent-limit     # apaga el guard (idem, 12 h)
 touch ~/.claude/.workflow-ok        # habilita UN Workflow (se consume al usarlo)
 ```
+
+Si Fak lo pide **textual en el chat** ("usá agentes en paralelo", "no me importa gastar tokens"),
+lo escribo yo con `echo 8 > ~/.claude/.agent-limit` y lo digo: Fak no corre comandos. Sin esa
+frase suya, no se toca (10/09/2026).
 
 Para reactivar Workflow del todo: sacar `disableWorkflows` de `~/.claude/settings.json`.

@@ -171,6 +171,115 @@ describe('dev-server-guard.sh (Stop) — recuerda el preview solo si se toco cod
     fs.writeFileSync(SCRIPT, 'export const b = 1;\n');
     expect(correr().exit).toBe(0);
   });
+
+  // A4 (10/09/2026): solo lo que ESTA sesion toco, via transcript_path del payload del Stop.
+  const l = (o) => JSON.stringify(o);
+  const transcriptCon = (bloques) => {
+    const f = path.join(TMP, `dsg-${Date.now()}-${Math.random().toString(36).slice(2)}.jsonl`);
+    fs.writeFileSync(f, [l({ type: 'user', message: { content: 'dale' } }), ...bloques.map((b) => l({ type: 'assistant', message: { content: [{ type: 'tool_use', ...b }] } }))].join('\n') + '\n');
+    return f;
+  };
+  const correrCon = (transcript) => hook('dev-server-guard.sh', { hook_event_name: 'Stop', transcript_path: posix(transcript) }, { cwd: repo });
+
+  it('A4 ROJO: App.tsx sucio y ESTA sesion lo escribio → 2 nombrandolo', () => {
+    fs.appendFileSync(APP, 'export const c = 2;\n');
+    const r = correrCon(transcriptCon([{ name: 'Write', input: { file_path: APP, content: '' } }]));
+    expect(r.exit).toBe(2);
+    expect(r.err).toMatch(/App\.tsx/);
+  });
+
+  it('A4 VERDE: App.tsx sucio pero ESTA sesion solo toco scripts/x.ts → 0 (lo sucio es de OTRA sesion)', () => {
+    fs.appendFileSync(APP, 'export const c = 2;\n');
+    const r = correrCon(transcriptCon([{ name: 'Edit', input: { file_path: SCRIPT, old_string: 'a', new_string: 'b' } }]));
+    expect(r.exit).toBe(0);
+    expect(r.err).toBe('');
+  });
+
+  it('A4 VERDE: .claude/*.json y .mcp.json sucios no son codigo de la app (sin transcript, que cuenta todo)', () => {
+    fs.writeFileSync(path.join(repo, '.mcp.json'), '{}\n');
+    git('add', '.mcp.json');
+    git('commit', '-q', '-m', 'mcp');
+    fs.appendFileSync(path.join(repo, '.claude', 'launch.json'), '\n');
+    fs.appendFileSync(path.join(repo, '.mcp.json'), '\n');
+    const r = correr();
+    expect(r.exit).toBe(0);
+    expect(r.err).toBe('');
+  });
+});
+
+// ─────────────────────── session-start-context (SessionStart compact): el nucleo trae el idioma
+describe('session-start-context.sh (SessionStart) — el nucleo post-compact se emite entero y en espanol', () => {
+  it('compact: exit 0, drena el JSON de stdin y el punto 6 pide seguir en espanol rioplatense', () => {
+    const r = spawnSync('bash', [path.join(HOOKS, 'session-start-context.sh'), 'compact'], { input: '{"hook_event_name":"SessionStart","source":"compact"}', encoding: 'utf8', cwd: RAIZ });
+    expect(r.status).toBe(0);
+    expect(r.stdout).toMatch(/POST-COMPACT/);
+    expect(r.stdout).toMatch(/^6\. Seguis en espanol rioplatense/m);
+    expect(r.stdout.length).toBeLessThan(2000);      // el tope de 10 KB de salida de hook queda lejos
+  });
+});
+
+// ──────────────── instrucciones-log (InstructionsLoaded): registro de lo que se cargo DE VERDAD
+describe('instrucciones-log.sh (InstructionsLoaded) — siempre exit 0; deja una linea TSV por carga', () => {
+  const proyecto = path.join(TMP, 'proy');
+  fs.mkdirSync(path.join(proyecto, '.claude'), { recursive: true });
+  const LOG = path.join(proyecto, '.claude', '.instrucciones-cargadas.log');
+  const correr = (payload, extra) => hook('instrucciones-log.sh', payload, { env: { CLAUDE_PROJECT_DIR: posix(proyecto) }, ...extra });
+  beforeEach(() => fs.rmSync(LOG, { force: true }));
+
+  it('ROJO (deja marca): CLAUDE.md por session_start y LECCIONES por include quedan en el log con su razon y su ruta', () => {
+    const r = correr({ session_id: 'abcdef1234', hook_event_name: 'InstructionsLoaded', file_path: 'C:\\Dev\\BarackMercosul\\CLAUDE.md', load_reason: 'session_start', memory_type: 'Project', trigger: '' });
+    expect(r.exit).toBe(0);
+    expect(r.out).toBe('');
+    correr({ session_id: 'abcdef1234', hook_event_name: 'InstructionsLoaded', file_path: 'C:\\Dev\\BarackMercosul\\docs\\LECCIONES_APRENDIDAS.md', load_reason: 'include' });
+    const lineas = fs.readFileSync(LOG, 'utf8').trim().split('\n');
+    expect(lineas).toHaveLength(2);
+    expect(lineas[0]).toMatch(/\tabcdef12\tsession_start\tProject\tC:\\Dev\\BarackMercosul\\CLAUDE\.md$/);
+    expect(lineas[1]).toMatch(/\tinclude\t\tC:\\Dev\\BarackMercosul\\docs\\LECCIONES_APRENDIDAS\.md$/);
+  });
+
+  it('VERDE (no rompe nada): un payload ilegible tambien es exit 0 y deja una linea con "?"', () => {
+    expect(correr(null, { stdin: '{roto' }).exit).toBe(0);
+    expect(fs.readFileSync(LOG, 'utf8')).toMatch(/\t\?\t\t\?$/m);
+  });
+});
+
+// ─────────────── timeout-guard (PostToolUse|PostToolUseFailure): un comando cortado no es evidencia
+describe('timeout-guard.sh (PostToolUse) — el timeout deja el aviso; todo lo demas pasa en silencio', () => {
+  const correr = (payload, extra) => hook('timeout-guard.sh', payload, extra);
+
+  it('ROJO (deja marca): "Command timed out" en tool_response → exit 0 + additionalContext con el comando', () => {
+    const r = correr({ hook_event_name: 'PostToolUse', tool_name: 'Bash', tool_input: { command: 'find /y/BARACK -name "I-AC-012*"' }, tool_response: { stdout: '', stderr: 'Command timed out after 2m 0.0s', interrupted: false } });
+    expect(r.exit).toBe(0);
+    const ctx = JSON.parse(r.out).hookSpecificOutput;
+    expect(ctx.hookEventName).toBe('PostToolUse');
+    expect(ctx.additionalContext).toMatch(/TIMEOUT-GUARD/);
+    expect(ctx.additionalContext).toMatch(/I-AC-012\*/);
+    expect(ctx.additionalContext).toMatch(/NO es un chequeo/);
+    const f = correr({ hook_event_name: 'PostToolUseFailure', tool_name: 'Bash', tool_input: { command: 'grep -r x /y' }, error: 'Command timed out after 2m 0s' });
+    expect(JSON.parse(f.out).hookSpecificOutput.hookEventName).toBe('PostToolUseFailure');
+  });
+
+  it('ROJO en el otro formato: la frase del pase a background, y la frase tras un salto de linea del stderr', () => {
+    const bg = correr({ hook_event_name: 'PostToolUse', tool_name: 'Bash', tool_input: { command: 'find /y -name x' }, tool_response: { stdout: 'Command did not complete within its 120s timeout and was moved to the background (ID: b1).', stderr: '' } });
+    expect(JSON.parse(bg.out).hookSpecificOutput.additionalContext).toMatch(/TIMEOUT-GUARD/);
+    const nl = correr({ hook_event_name: 'PostToolUse', tool_name: 'Bash', tool_input: { command: 'x' }, tool_response: { stdout: '', stderr: 'algo\nCommand timed out after 2m 0.0s' } });
+    expect(JSON.parse(nl.out).hookSpecificOutput.additionalContext).toMatch(/TIMEOUT-GUARD/);
+  });
+
+  it('VERDE: salida normal, "timed out" solo en el COMANDO (un grep), o JSON ilegible → exit 0 sin nada', () => {
+    expect(correr({ tool_name: 'Bash', tool_input: { command: 'ls' }, tool_response: { stdout: 'a\nb', stderr: '' } })).toEqual({ exit: 0, out: '', err: '' });
+    const g = correr({ tool_name: 'Bash', tool_input: { command: 'grep "timed out" log.txt' }, tool_response: { stdout: 'nada', stderr: '' } });
+    expect(g.exit).toBe(0);
+    expect(g.out).toBe('');
+    expect(correr(null, { stdin: '{roto Command timed out after 2m' })).toEqual({ exit: 0, out: '', err: '' });
+  });
+
+  it('VERDE por su motivo (visto fallar 10/09): la frase CITADA en un stdout —la salida de vitest con el titulo de este test, o un cat del test— no es un timeout', () => {
+    const vitest = correr({ tool_name: 'Bash', tool_input: { command: 'npx vitest run' }, tool_response: { stdout: ' ✓ ROJO (deja marca): "Command timed out" en tool_response → exit 0\n Tests 177 passed', stderr: '' } });
+    expect(vitest.out).toBe('');
+    const cat = correr({ tool_name: 'Bash', tool_input: { command: 'cat x.test.mjs' }, tool_response: { stdout: "    tool_response: { stdout: '', stderr: 'Command timed out after 2m 0.0s', interrupted: false }", stderr: '' } });
+    expect(cat.out).toBe('');
+  });
 });
 
 // ───────────────────────────────────────────── pregunta-guard (AskUserQuestion): solo aviso
@@ -281,5 +390,16 @@ describe.skipIf(!fs.existsSync(AGENTES))('agentes-guard.sh (global) — techo de
     expect(correr('Workflow').exit).toBe(0);
     expect(fs.existsSync(archivo('.workflow-ok'))).toBe(false);   // se consumio
     expect(correr('Workflow').exit).toBe(2);
+  });
+
+  it('A6 ROJO: un .agent-limit=0 de hace 13 h ya no apaga el guard — el sexto Agent bloquea y el archivo se retira', () => {
+    fs.writeFileSync(archivo('.agent-limit'), '0');
+    const hace13h = Date.now() / 1000 - 13 * 3600;
+    fs.utimesSync(archivo('.agent-limit'), hace13h, hace13h);
+    for (let i = 0; i < 5; i++) expect(correr('Agent').exit, `spawn ${i + 1}`).toBe(0);
+    const sexto = correr('Agent');
+    expect(sexto.exit).toBe(2);
+    expect(sexto.err).toMatch(/techo de subagentes alcanzado \(5\/5/);
+    expect(fs.existsSync(archivo('.agent-limit'))).toBe(false);
   });
 });

@@ -56,9 +56,14 @@ const COBERTURA = {
   'cierre-guard.sh': { test: VARIOS, tipo: 'bloquea' },
   'coordinador-guard.sh': { test: '__tests__/scripts/coordinadorGuard.test.mjs', tipo: 'bloquea' },
   'cerebro-guard.sh': { test: '.claude/hooks/cerebro-guard.test.sh', tipo: 'aviso' },
-  // Inyecta contexto (SessionStart). Lo que inyecta se verifica en el TRANSCRIPT de una sesion
-  // nueva, no con un test unitario (LECCIONES 04/09: 144 sesiones con el preview de 2 KB).
-  'session-start-context.sh': { test: null, tipo: 'aviso', motivo: 'se verifica en el transcript' },
+  // Inyecta contexto (SessionStart). El test unitario prueba que el texto sale entero y corto;
+  // que el MODELO lo recibe se sigue verificando en el TRANSCRIPT de una sesion nueva
+  // (LECCIONES 04/09: 144 sesiones con el preview de 2 KB).
+  'session-start-context.sh': { test: VARIOS, tipo: 'aviso' },
+  // PostToolUse|PostToolUseFailure (10/09/2026, A2): additionalContext cuando el comando se corto.
+  'timeout-guard.sh': { test: VARIOS, tipo: 'aviso' },
+  // InstructionsLoaded (10/09/2026, C5): registro TSV de lo que Claude Code cargo de verdad.
+  'instrucciones-log.sh': { test: VARIOS, tipo: 'observa' },
   'agentes-guard.sh': { test: VARIOS, tipo: 'bloquea', ruta: GLOBAL },
 };
 /** En el disco pero no cableados. Borrarlos es decision de Fak (autonomy-contract C). */

@@ -35,6 +35,8 @@ if [ "$MODE" = "compact" ]; then
    nuevo contra la fuente, no confiar en el resumen.
 5. docs/LECCIONES_APRENDIDAS.md sigue en el system prompt (@import desde CLAUDE.md):
    no hace falta releerlo. Las memorias del tema que estabas tocando, si.
+6. Seguis en espanol rioplatense, como siempre: el resumen de compactacion viene en
+   ingles y arrastra el idioma (19 arranques en ingles en la semana del 02/09/2026).
 NUCLEO
   exit 0
 fi

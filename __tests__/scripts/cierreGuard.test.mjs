@@ -9,7 +9,7 @@
  */
 import { describe, it, expect } from 'vitest';
 import {
-  evaluarPermiso, declaraCierre, tieneRuta, evaluarBullets, decidir, normalizar, CANON,
+  evaluarPermiso, declaraCierre, tieneRuta, evaluarBullets, decidir, normalizar, CANON, evaluarLargo,
 } from '../../scripts/_lib/cierreGuard.mjs';
 
 const ROJOS = [
@@ -172,5 +172,65 @@ describe('gate por bullet de LECCIONES (evaluarBullets)', () => {
     const m = evaluarBullets(dos, cfg);
     expect(m).toHaveLength(1);
     expect(m[0].inicio).toMatch(/^\*\*B/);
+  });
+});
+
+// ───────────────────────────────── A3 (10/09/2026): el cierre es un informe → cinco lineas
+describe('cierre-guard · chequeo 5: un cierre declarado que es un informe no pasa', () => {
+  const deps = (extra = {}) => ({
+    fueraEnEsteTurno: async () => ({ fuera: false, ultimoMensajeFak: 'dale, cerralo' }),
+    pendientes: () => [], enCooldown: () => false, marcar: () => {}, yaReclamado: () => false, reclamar: () => {}, ...extra,
+  });
+  const informe = Array.from({ length: 40 }, (_, i) => `- Punto ${i + 1}: ${'detalle '.repeat(10)}`).join('\n');
+  const largoQueCierra = `${informe}\n\nListo: todo commiteado y pusheado.`;
+  const tabla = (n) => Array.from({ length: n }, (_, i) => `| fila ${i} | valor |`).join('\n');
+
+  it('evaluarLargo mide caracteres, lineas no vacias y bloques de tabla', () => {
+    const r = evaluarLargo(largoQueCierra);
+    expect(r.largo).toBe(true);
+    expect(r.motivos.join(' ')).toMatch(/caracteres/);
+    expect(r.motivos.join(' ')).toMatch(/lineas/);
+    const dosTablas = `Listo.\n\n${tabla(3)}\n\nprosa corta\n\n${tabla(3)}`;
+    expect(evaluarLargo(dosTablas)).toMatchObject({ largo: true, tablas: 2 });
+    expect(evaluarLargo(`Listo.\n\n${tabla(6)}`)).toMatchObject({ largo: false, tablas: 1 });
+  });
+
+  it('ROJO: 40 renglones + "Listo, commiteado" → bloquea y dice el motivo y la frase de Fak', async () => {
+    const r = await decidir({ session_id: 's-largo', last_assistant_message: largoQueCierra }, deps());
+    expect(r.ok).toBe(false);
+    expect(r.titulo).toMatch(/informe/);
+    expect(r.detalle).toMatch(/caracteres/);
+    expect(r.detalle).toMatch(/no voy a leer todo eso/);
+  });
+
+  it('ROJO por su motivo: dos tablas cortas tambien son informe', async () => {
+    const r = await decidir({ session_id: 's-largo', last_assistant_message: `${tabla(3)}\n\ny ademas\n\n${tabla(3)}\n\nListo.` }, deps());
+    expect(r.ok).toBe(false);
+    expect(r.detalle).toMatch(/2 tablas/);
+  });
+
+  it('VERDE: el mismo informe sin declarar cierre (sigue trabajando) → pasa', async () => {
+    const r = await decidir({ session_id: 's-largo', last_assistant_message: `${informe}\n\nSigo con el paso 3.` }, deps());
+    expect(r.ok).toBe(true);
+  });
+
+  it('VERDE: Fak pidio el detalle con esas palabras → pasa', async () => {
+    const r = await decidir({ session_id: 's-largo', last_assistant_message: largoQueCierra },
+      deps({ fueraEnEsteTurno: async () => ({ fuera: false, ultimoMensajeFak: 'explicame en detalle todo lo que hiciste, paso a paso' }) }));
+    expect(r.ok).toBe(true);
+  });
+
+  it('VERDE: en modo plan, o con el cooldown "largo" vigente → pasa (y el cooldown del chequeo 3 no lo tapa)', async () => {
+    expect((await decidir({ session_id: 's-largo', permission_mode: 'plan', last_assistant_message: largoQueCierra }, deps())).ok).toBe(true);
+    let marcado = null;
+    const r = await decidir({ session_id: 's-largo', last_assistant_message: largoQueCierra },
+      deps({ enCooldown: (sid, clave) => clave === 'largo', marcar: (sid, clave) => { marcado = clave; } }));
+    expect(r.ok).toBe(true);
+    expect(marcado).toBe(null);
+  });
+
+  it('VERDE: un cierre corto con una tabla de 6 filas y la ruta pasa', async () => {
+    const corto = `Quedó en C:\\Users\\x\\Desktop\\tarea\\informe.pdf.\n\n${tabla(6)}\n\nListo.`;
+    expect((await decidir({ session_id: 's-largo', last_assistant_message: corto }, deps())).ok).toBe(true);
   });
 });

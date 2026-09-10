@@ -8,8 +8,16 @@
 # Lo reporto Claude y Fak autorizo el arreglo ("si arregalalo").
 #
 # Ahora: (1) si el dev server ya escucha, no hay nada que recordar; (2) solo mira codigo que
-# el navegador puede llegar a mostrar — `scripts/`, `__tests__/` y `tools/` no se ven ahi.
+# el navegador puede llegar a mostrar — `scripts/`, `__tests__/` y `tools/` no se ven ahi;
+# (3) desde el 10/09/2026 (A4) solo lo que ESTA sesion toco: el JSON del Stop trae
+# `transcript_path` y scripts/_lib/archivosSesion.mjs lo convierte en la lista de archivos de la
+# sesion (subagentes incluidos). Lo sucio de OTRA sesion sobre el mismo repo no es mio, y
+# `.claude/`, `.mcp.json` y los `.md` no se ven en el navegador (8 falsos positivos en la semana).
+# Si la lista no se puede atribuir (`*`: sin transcript, o comandos sin archivo) se cuenta todo.
 set -uo pipefail
+
+RAIZ="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+INPUT=$(cat 2>/dev/null)
 
 cd "$(git rev-parse --show-toplevel 2>/dev/null || echo .)" || exit 0
 
@@ -27,9 +35,21 @@ fi
 # (2) Solo codigo de la app. Lo de scripts/tests/tools no es observable en el navegador.
 EDITED=$(git diff --name-only HEAD 2>/dev/null \
   | grep -E '\.(ts|tsx|js|jsx|css|json)$' \
-  | grep -vE '^(scripts|__tests__|tools|docs)/' \
-  | grep -vE '(^|/)(package(-lock)?|tsconfig[^/]*|vite\.config|vitest\.config)\.json$' \
-  | head -5)
+  | grep -vE '^(scripts|__tests__|tools|docs|\.claude)/' \
+  | grep -vE '(^|/)\.mcp\.json$' \
+  | grep -vE '(^|/)(package(-lock)?|tsconfig[^/]*|vite\.config|vitest\.config)\.json$')
+
+[ -z "$EDITED" ] && exit 0
+
+# (3) Solo lo que ESTA sesion toco. `*` = no atribuible: se cuenta todo, como antes.
+TOCADOS=""
+if command -v node >/dev/null 2>&1 && [ -f "$RAIZ/scripts/_lib/archivosSesion.mjs" ]; then
+  TOCADOS=$(printf '%s' "$INPUT" | node "$RAIZ/scripts/_lib/archivosSesion.mjs" --repo "$(pwd)" 2>/dev/null)
+fi
+if [ -n "$TOCADOS" ] && [ "$TOCADOS" != "*" ]; then
+  EDITED=$(printf '%s\n' "$EDITED" | grep -Fx -f <(printf '%s\n' "$TOCADOS"))
+fi
+EDITED=$(printf '%s\n' "$EDITED" | grep . | head -5)
 
 [ -z "$EDITED" ] && exit 0
 

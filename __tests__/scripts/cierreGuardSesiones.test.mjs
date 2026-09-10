@@ -8,7 +8,10 @@ import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { evaluarToolUse, rutaRelativaAlRepo, rutasRepoEnComando, escribioFueraEnEsteTurno, decidir, REPO } from '../../scripts/_lib/cierreGuard.mjs';
+import {
+  evaluarToolUse, rutaRelativaAlRepo, rutasRepoEnComando, escribioFueraEnEsteTurno, decidir, REPO,
+  relevarTranscript, archivosTocadosEnSesion, entregablesEnComando, esEntregableFuera,
+} from '../../scripts/_lib/cierreGuard.mjs';
 
 const SCR = 'C:\\Users\\FACUND~1\\AppData\\Local\\Temp\\claude\\C--Dev-BarackMercosul\\e0a735af\\scratchpad';
 const repoWin = REPO.replace(/\//g, '\\');
@@ -129,5 +132,159 @@ describe('cierre-guard · C.1: lo que la sesion escribio con Bash tambien cuenta
       expect(r.tocados).toBeInstanceOf(Set);
       expect(r.tocados.size).toBe(0);
     } finally { fs.unlinkSync(f); }
+  });
+});
+
+// ───────────────────────────────────────────── Ola A del 10/09/2026: A4, relevador unico y A1
+const DESK = 'C:\\Users\\FacundoS-PC\\Desktop\\tarea';
+const l = (o) => JSON.stringify(o);
+const asis = (b) => l({ type: 'assistant', message: { content: [{ type: 'tool_use', ...b }] } });
+const user = (texto) => l({ type: 'user', message: { content: texto } });
+function transcriptDe(lineas, prefijo = 'cg-olaA') {
+  const f = path.join(os.tmpdir(), `${prefijo}-${process.pid}-${Date.now()}-${Math.random().toString(36).slice(2)}.jsonl`);
+  fs.writeFileSync(f, [...lineas].join('\n') + '\n');
+  return f;
+}
+
+describe('cierre-guard · A4: el mensaje de un commit y el TEMP del sistema no entregan nada', () => {
+  it('VERDE: `git commit -m "…Escritorio…"`, un heredoc de commit que dice Desktop, o una copia al TEMP → null', () => {
+    expect(evaluarToolUse({ name: 'Bash', input: { command: 'git commit -m "docs(escritorio): mover el informe al Escritorio y entregar la copia"' } })).toBe(null);
+    expect(evaluarToolUse({ name: 'Bash', input: { command: "git commit -F - <<'EOF'\nfeat: copiar al Desktop\n\nentregar en OneDrive\nEOF" } })).toBe(null);
+    expect(evaluarToolUse({ name: 'Bash', input: { command: 'cp informe.pdf "C:\\Users\\FacundoS-PC\\AppData\\Local\\Temp\\Ingenieria_informe.pdf"' } })).toBe(null);
+  });
+  it('ROJO sigue rojo: el mensaje del commit no tapa un cp real al Escritorio en el mismo comando', () => {
+    expect(evaluarToolUse({ name: 'Bash', input: { command: `git commit -m "x" && cp informe.pdf "${DESK}\\informe.pdf"` } })).toMatch(/^Bash: git commit/);
+  });
+});
+
+describe('cierre-guard · relevarTranscript: ultimo mensaje de Fak, subagentes y repo inyectado', () => {
+  it('ultimoMensajeFak es lo que ESCRIBIO Fak: los avisos que Claude Code mete como user no cuentan', async () => {
+    const f = transcriptDe([
+      user('hace el informe corto'),
+      asis({ name: 'Write', input: { file_path: `${repoWin}\\docs\\x.md`, content: '' } }),
+      user('<system-reminder>\nrecordatorio\n</system-reminder>'),
+      user('[SYSTEM NOTIFICATION - NOT USER INPUT]\n<task-notification>listo</task-notification>'),
+      l({ type: 'user', message: { content: [{ type: 'tool_result', content: 'ok' }] } }),
+    ]);
+    try {
+      const r = await relevarTranscript(f);
+      expect(r.ultimoMensajeFak).toBe('hace el informe corto');
+      expect([...r.tocados]).toEqual(['docs/x.md']);
+    } finally { fs.unlinkSync(f); }
+  });
+
+  it('los Edit de un subagente (<sesion>/subagents/*.jsonl) cuentan como tocados de la sesion', async () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'cg-sub-'));
+    const f = path.join(dir, 'ses.jsonl');
+    fs.writeFileSync(f, [user('audita'), asis({ name: 'Agent', input: { prompt: 'audita' } })].join('\n') + '\n');
+    fs.mkdirSync(path.join(dir, 'ses', 'subagents'), { recursive: true });
+    fs.writeFileSync(path.join(dir, 'ses', 'subagents', 'agent-1.jsonl'), [
+      l({ type: 'user', isSidechain: true, message: { content: 'audita' } }),
+      l({ type: 'assistant', isSidechain: true, message: { content: [{ type: 'tool_use', name: 'Edit', input: { file_path: `${repoWin}\\scripts\\sub.mjs`, old_string: 'a', new_string: 'b' } }] } }),
+    ].join('\n') + '\n');
+    try {
+      expect([...(await archivosTocadosEnSesion(f))]).toEqual(['scripts/sub.mjs']);
+    } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+  });
+
+  it('con --repo inyectado (repo temporal con nombre corto 8.3, o en forma Git Bash) relativiza igual', async () => {
+    const repoTmp = fs.mkdtempSync(path.join(os.tmpdir(), 'cg-repo-'));      // C:\Users\FACUND~1\… en Windows
+    const largo = fs.realpathSync.native(repoTmp);
+    const f = transcriptDe([
+      user('dale'),
+      asis({ name: 'Write', input: { file_path: path.join(largo, 'App.tsx'), content: '' } }),
+      asis({ name: 'Edit', input: { file_path: path.join(repoTmp, 'x.ts'), old_string: 'a', new_string: 'b' } }),
+      asis({ name: 'Write', input: { file_path: `${repoWin}\\CLAUDE.md`, content: '' } }),     // del repo REAL: no es de este
+    ]);
+    try {
+      expect([...(await relevarTranscript(f, { repo: repoTmp })).tocados].sort()).toEqual(['App.tsx', 'x.ts']);
+      if (process.platform === 'win32') {
+        const gitBash = `/${largo[0].toLowerCase()}/${largo.slice(3).replace(/\\/g, '/')}`;
+        expect([...(await relevarTranscript(f, { repo: gitBash })).tocados].sort()).toEqual(['App.tsx', 'x.ts']);
+      }
+    } finally { fs.unlinkSync(f); fs.rmSync(repoTmp, { recursive: true, force: true }); }
+  });
+});
+
+describe('cierre-guard · A1: un entregable escrito afuera y nunca abierto no se declara listo', () => {
+  const deps = { pendientes: () => [], enCooldown: () => false, marcar: () => {}, yaReclamado: () => false, reclamar: () => {} };
+  const cierre = (f, extra = {}) => decidir({ session_id: 's-a1', transcript_path: f, last_assistant_message: `Listo, quedó en ${DESK}\\difusion.pdf.`, ...extra }, deps);
+
+  it('esEntregableFuera: pdf/xlsx/step afuera si; repo, scratchpad, TEMP, .claude y .txt no', () => {
+    expect(esEntregableFuera(`${DESK}\\difusion.pdf`)).toBe(true);
+    expect(esEntregableFuera('Y:\\BARACK\\CALIDAD\\tabla.xlsx')).toBe(true);
+    expect(esEntregableFuera('/c/Users/x/Desktop/carro.step')).toBe(true);
+    expect(esEntregableFuera(`${repoWin}\\tools\\flowchart\\.build\\154.png`)).toBe(false);
+    expect(esEntregableFuera(`${SCR}\\render.png`)).toBe(false);
+    expect(esEntregableFuera('C:\\Users\\FacundoS-PC\\AppData\\Local\\Temp\\x.pdf')).toBe(false);
+    expect(esEntregableFuera('C:\\Users\\FacundoS-PC\\.claude\\projects\\p\\memory\\foto.png')).toBe(false);
+    expect(esEntregableFuera(`${DESK}\\notas.txt`)).toBe(false);
+  });
+
+  it('entregablesEnComando: --out y .save( escriben; cp escribe el destino; fitz/Read miran; un ls no hace nada', () => {
+    expect(entregablesEnComando(`python scripts/_pdfBomArb.py --out "${DESK}\\difusion.pdf"`)).toEqual({ escritos: [`${DESK}\\difusion.pdf`], mirados: [] });
+    expect(entregablesEnComando(`node scripts/x.mjs > ${DESK}\\tabla.csv`)).toEqual({ escritos: [`${DESK}\\tabla.csv`], mirados: [] });
+    expect(entregablesEnComando(`cp "${SCR}\\a.xlsx" "${DESK}\\a.xlsx"`)).toEqual({ escritos: [`${DESK}\\a.xlsx`], mirados: [] });
+    expect(entregablesEnComando(`python - <<'EOF'\nimport fitz\nd = fitz.open(r"${DESK}\\difusion.pdf")\nEOF`)).toEqual({ escritos: [], mirados: [`${DESK}\\difusion.pdf`] });
+    expect(entregablesEnComando(`python - <<'EOF'\nimport openpyxl\nwb = openpyxl.load_workbook(r"${DESK}\\a.xlsx")\nwb.save(r"${DESK}\\b.xlsx")\nEOF`)).toEqual({ escritos: [`${DESK}\\b.xlsx`], mirados: [`${DESK}\\a.xlsx`] });
+    expect(entregablesEnComando(`ls -la "${DESK}\\difusion.pdf"`)).toEqual({ escritos: [], mirados: [] });
+    expect(entregablesEnComando(undefined)).toEqual({ escritos: [], mirados: [] });
+  });
+
+  it('ROJO: genero el PDF en el Escritorio con --out, nunca lo abri, digo "listo" → bloquea nombrando el archivo', async () => {
+    const f = transcriptDe([user('arma la difusion'), asis({ name: 'Bash', input: { command: `python scripts/_pdfBomArb.py --out "${DESK}\\difusion.pdf"` } })]);
+    try {
+      const r = await relevarTranscript(f);
+      expect(r.sinMirar.map((e) => e.nombre)).toEqual(['difusion.pdf']);
+      const d = await cierre(f);
+      expect(d.ok).toBe(false);
+      expect(d.titulo).toMatch(/no lo abriste/);
+      expect(d.detalle).toMatch(/difusion\.pdf/);
+    } finally { fs.unlinkSync(f); }
+  });
+
+  it('ROJO por su motivo: lo mire ANTES de la ultima escritura → sigue sin mirar', async () => {
+    const f = transcriptDe([
+      user('arma la difusion'),
+      asis({ name: 'Bash', input: { command: `python scripts/_pdfBomArb.py --out "${DESK}\\difusion.pdf"` } }),
+      asis({ name: 'Read', input: { file_path: `${DESK}\\difusion.pdf` } }),
+      asis({ name: 'Bash', input: { command: `python scripts/_pdfBomArb.py --out "${DESK}\\difusion.pdf"` } }),
+    ]);
+    try { expect((await cierre(f)).ok).toBe(false); } finally { fs.unlinkSync(f); }
+  });
+
+  it('VERDE: lo abri despues — con Read, con fitz en un heredoc, con el PNG del render, con Start-Process o con una tool MCP', async () => {
+    const escribir = asis({ name: 'Bash', input: { command: `cp "${SCR}\\difusion.pdf" "${DESK}\\difusion.pdf"` } });
+    const miradas = [
+      asis({ name: 'Read', input: { file_path: `${DESK}\\difusion.pdf` } }),
+      asis({ name: 'Bash', input: { command: `python - <<'EOF'\nimport fitz\nfor p in fitz.open(r"${DESK}\\difusion.pdf"): print(p.get_text()[:80])\nEOF` } }),
+      asis({ name: 'Read', input: { file_path: `${SCR}\\difusion.png` } }),
+      asis({ name: 'PowerShell', input: { command: `Start-Process "${DESK}\\difusion.pdf"` } }),
+      asis({ name: 'mcp__pdf-viewer__read_pdf', input: { path: `${DESK}\\difusion.pdf`, pages: '1' } }),
+    ];
+    for (const mirada of miradas) {
+      const f = transcriptDe([user('arma la difusion'), escribir, mirada]);
+      try {
+        const r = await relevarTranscript(f);
+        expect(r.sinMirar, JSON.parse(mirada).message.content[0].name).toEqual([]);
+        expect((await cierre(f)).ok).toBe(true);
+      } finally { fs.unlinkSync(f); }
+    }
+  });
+
+  it('VERDE: sin declarar cierre no reclama; en el scratchpad no es entregable; ya reclamado (archivo@escritura) no se repite', async () => {
+    const f = transcriptDe([user('arma la difusion'), asis({ name: 'Bash', input: { command: `python scripts/_pdfBomArb.py --out "${DESK}\\difusion.pdf"` } })]);
+    const g = transcriptDe([user('arma la difusion'), asis({ name: 'Bash', input: { command: `python scripts/_pdfBomArb.py --out "${SCR}\\difusion.pdf"` } })]);
+    try {
+      expect((await cierre(f, { last_assistant_message: `Sigo con la tabla; el PDF va quedando en ${DESK}\\difusion.pdf.` })).ok).toBe(true);
+      expect((await relevarTranscript(g)).entregables).toEqual([]);
+      const reclamos = [];
+      const conMemoria = { ...deps, yaReclamado: (sid, k) => reclamos.includes(k), reclamar: (sid, k) => reclamos.push(k) };
+      const d1 = await decidir({ session_id: 's-a1', transcript_path: f, last_assistant_message: `Listo, quedó en ${DESK}\\difusion.pdf.` }, conMemoria);
+      expect(d1.ok).toBe(false);
+      expect(reclamos).toEqual(['difusion.pdf@1']);
+      const d2 = await decidir({ session_id: 's-a1', transcript_path: f, last_assistant_message: `Listo, quedó en ${DESK}\\difusion.pdf.` }, conMemoria);
+      expect(d2.ok).toBe(true);
+    } finally { fs.unlinkSync(f); fs.unlinkSync(g); }
   });
 });

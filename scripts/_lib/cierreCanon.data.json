@@ -110,7 +110,32 @@
     "Ingeniería"
   ],
   "bash_que_entrega": "robocopy|xcopy|\\bcopy\\b|\\bcp\\b|Copy-Item|Move-Item|\\bmv\\b|_entregas\\.mjs|entregar|shutil\\.(copy|move)|export_deliverables|_escritorio\\.mjs --archivar",
+  "scratch_re": "[\\\\/](Temp|tmp)[\\\\/]claude[\\\\/]",
+  "temp_re": "[\\\\/]AppData[\\\\/]Local[\\\\/]Temp[\\\\/]|^/tmp/",
+  "_scratch_y_temp": "scratch_re: solo el arbol REAL del scratchpad de Claude (una carpeta de entrega que se llame tmp sigue siendo afuera: auditoria 05/09 C.2). temp_re: el TEMP del sistema, que tampoco es una entrega (10/09/2026, A4).",
   "cooldown_recordatorio_seg": 1200,
+  "cierre_largo": {
+    "_que_es": "Chequeo 5 (10/09/2026, A3): el cierre de una tarea pasa el test de un mail. ~17 correcciones de Fak por informe largo en la semana del 02/09 (08/09: 'no voy a leer todo eso... podes sintetizar que recomendas'). Aplica solo cuando el mensaje DECLARA cierre; exento si el ultimo mensaje de Fak pide detalle (pide_detalle_re) o la sesion esta en modo plan.",
+    "max_chars": 3000,
+    "max_lineas": 35,
+    "max_tablas": 1,
+    "pide_detalle_re": "detall|explic|complet[oa]\\b|largo|todo lo que|paso a paso|informe|contame todo|desarroll|en profundidad|punto por punto",
+    "cooldown_seg": 1200
+  },
+  "entregables": {
+    "_que_es": "Chequeo 4 (10/09/2026, A1): un entregable escrito afuera del repo y no abierto despues de su ultima escritura no se declara listo. Familia mas grande de correcciones de la semana del 02/09 (~42 'afirmado o entregado sin verificar': el anexo I-AC-012.1, la W de VW, el STEP con placeholders, el margen del PDF que no se veia en el HTML). Escrito = Write con esa ruta, o un comando con la ruta detras de un flag de salida (salida_antes_re), o el destino de una copia (bash_que_entrega), o un generador (escribe_re) que la nombra. Mirado = Read posterior de ese archivo o de una imagen con el mismo nombre base, un verificador (mira_re) que lo nombra, o una tool MCP que lo abre. Dentro de un heredoc (python - <<EOF) una ruta cuenta como escrita solo si esta detras de un .save(/flag de salida, y como mirada si el texto trae un verificador; la copia (cp/robocopy) se juzga por la linea de comando. Ante la duda no se marca: menos cobertura, cero falsos rojos.",
+    "extensiones": "xlsx|xlsm|xls|pdf|pptx|docx|png|jpg|jpeg|svg|step|stp|stl|glb|dxf|plt|hpgl|mp4|csv",
+    "excluir_re": "[\\\\/]\\.claude[\\\\/]|[\\\\/]node_modules[\\\\/]|[\\\\/]\\.sgc-cache[\\\\/]|[\\\\/]\\.build[\\\\/]|[\\\\/]\\.mail-cache[\\\\/]",
+    "salida_antes_re": "(^|\\s|[;&|(])(--?(out(put)?|salida|destino|dest|pdf|xlsx|png|csv)|-o|>{1,2}|Out-File(\\s+-FilePath)?|Set-Content(\\s+-Path)?)(=|\\s+)?$|\\.(save|save_as|to_excel|to_csv|savefig|write_pdf|writeFileSync|writeFile|write_bytes|write_text)\\(\\s*r?$",
+    "escribe_re": "\\.save\\(|savefig|to_excel|to_csv|writeFile|write_pdf|export_deliverables|_pdfBomArb|_xlsxAPdf|_flujograma|_pptxSlides|hotmelt|reportlab|img2pdf|Out-File|Set-Content|entregar",
+    "mira_re": "fitz|pymupdf|pdftoppm|pdftotext|pdfplumber|_xlsxAPdf|_validarDxf|gate_entregable|hoja_proceso_check|load_workbook|openpyxl|Presentation\\(|python-pptx|Start-Process|\\bstart\\b|explorer|soffice|libreoffice|get_pixmap|_rasteriz|trimesh|cadquery|ezdxf|_leerPlano|ffprobe|\\bmagick\\b|\\bidentify\\b|xlsx-js-style|ExcelJS|pdf-parse|pdfjs|read_excel|read_csv|ExcelFile\\(|Document\\("
+  },
+  "timeout": {
+    "_que_es": "timeout-guard (10/09/2026, A2): PostToolUse y PostToolUseFailure de Bash|PowerShell. Un comando que se corto por timeout no es evidencia de nada (LECCIONES 08/09: el anexo I-AC-012.1 'nunca se emitio' porque el find en Y: se corto, y el mail salio con el dato falso).",
+    "_re": "Las dos frases con que Claude Code corta un Bash, ancladas al INICIO de un campo del resultado (^, tras \":\" en el JSON, o tras un salto de linea). Sin anclar disparaba con la salida de vitest que nombraba el test ROJO de este mismo guard (visto fallar el 10/09/2026): un 'timed out' citado en un stdout no es un timeout.",
+    "re": "(^|\":\\s*\"|\\\\n|\\n)\\s*(Command timed out after \\d+|Command did not complete within its \\d+s timeout)",
+    "mensaje": "TIMEOUT-GUARD: el comando se corto por timeout: {comando}\nUn chequeo que no termino NO es un chequeo (LECCIONES 08/09, anexo I-AC-012.1: lo di por inexistente porque el find se corto, y el mail ya habia salido). Este resultado no prueba que algo no exista ni que este bien. Repetilo acotado (ruta exacta, -maxdepth, por nombre o por indice y nunca grep -r sobre OneDrive/Y:) o en background con run_in_background, y espera la vuelta antes de concluir."
+  },
   "lecciones": {
     "_que_es": "Gate de docs/LECCIONES_APRENDIDAS.md. Desde el 04/09/2026 el archivo entra al system prompt por @import desde CLAUDE.md (el hook lo recortaba a 2 KB desde el 03/08). El techo por bytes se queda como red; lo que evita la pelea por bytes es el gate POR BULLET: una leccion graduada no conserva su narrativa.",
     "aviso_bytes": 26624,
