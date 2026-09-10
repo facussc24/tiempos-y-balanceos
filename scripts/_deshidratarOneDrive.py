@@ -67,7 +67,8 @@ _set.restype = ctypes.c_bool
 PS = r'''
 param([string]$Carpeta, [string]$Salida, [string]$Ext, [string]$Patron, [string]$Recursivo)
 $hidratados = @(); $subiendo = @()
-$gci = @{ LiteralPath = $Carpeta; File = $true; Force = $true; ErrorAction = "SilentlyContinue" }
+$gci = @{ LiteralPath = $Carpeta; File = $true; Force = $true
+          ErrorAction = "SilentlyContinue"; ErrorVariable = "errGci" }
 if ($Recursivo -eq "1") { $gci.Recurse = $true }
 foreach ($f in (Get-ChildItem @gci)) {
     if ($Ext -and ($Ext -split ',') -notcontains $f.Extension.ToLower()) { continue }
@@ -79,6 +80,10 @@ foreach ($f in (Get-ChildItem @gci)) {
 }
 [IO.File]::AppendAllLines($Salida, [string[]]$hidratados, [Text.UTF8Encoding]::new($false))
 foreach ($s in $subiendo) { Write-Output ("TODAVIA NO SUBIO - no se toca: " + [IO.Path]::GetFileName($s)) }
+if ($errGci) {
+    Write-Output ("NO SE PUDO LEER: " + $errGci.Count + " carpeta(s): lo que haya adentro NO se conto")
+    $errGci | Select-Object -First 5 | ForEach-Object { Write-Output ("   " + $_.CategoryInfo.TargetName) }
+}
 '''
 
 
@@ -106,10 +111,11 @@ def hidratados(carpetas, ext, patron, recursivo=False):
                             '-Carpeta', carpeta, '-Salida', salida, '-Ext', ext, '-Patron', patron,
                             '-Recursivo', '1' if recursivo else '0'],
                            capture_output=True, text=True)
-        if r.stdout.strip():
+        # con un decode fallido subprocess devuelve None, y .strip() explotaba
+        if (r.stdout or '').strip():
             print(r.stdout.strip())
         if r.returncode:
-            print(r.stderr.strip())
+            print((r.stderr or '(sin stderr legible)').strip())
     if not os.path.exists(salida):
         return []
     with io.open(salida, encoding='utf-8') as fh:
@@ -173,8 +179,21 @@ def main():
 
     print('deshidratados: %d de %d  (%.2f GB liberados)'
           % (libres, len(rutas), bytes_libres / 1073741824.0))
-    for r in pendientes:
+    for r in pendientes[:20]:
         print('SIGUE OCUPANDO  0x%06x  %s' % (atributos(r), os.path.basename(r)))
+    if len(pendientes) > 20:
+        print('  ... y %d mas' % (len(pendientes) - 20))
+    # Si NINGUNO se libero y todos quedaron con UNPINNED puesto y RECALL apagado, el bit se
+    # escribio bien: el que no esta trabajando es el motor de sync. Marcar no vacia el archivo.
+    if pendientes and not libres:
+        atras = [x for x in pendientes if atributos(x) & UNPINNED and not atributos(x) & RECALL]
+        if len(atras) == len(pendientes):
+            print('\nOJO: el atributo quedo escrito en los %d y OneDrive no vacio ninguno.'
+                  % len(pendientes))
+            print('     Quien vacia el archivo es el motor de sync, no este script: si esta')
+            print('     colgado, el pedido queda encolado para siempre. Medir el atraso y, si')
+            print('     no se mueve, reconstruir el indice — memoria')
+            print('     reference_onedrive_sync_colgado_como_detectarlo.')
     return 1 if pendientes else 0
 
 
