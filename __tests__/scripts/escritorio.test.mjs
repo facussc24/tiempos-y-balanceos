@@ -213,10 +213,15 @@ describe('verificarInvariantes — que el archivo y el listado no se separen', (
         const reabierta = { ...buena, estado: 'reabierta 2026-07-28' };
         expect(verificarInvariantes([reabierta], { archivadas: ['2026-07-21 - Mariana arb'] })).toEqual([]);
     });
-    it('18c. y aun reabierta, dos filas de la misma tarea siguen cantando', () => {
-        const reabierta = { ...buena, estado: 'reabierta 2026-07-28' };
-        expect(verificarInvariantes([reabierta, reabierta], { archivadas: ['2026-07-21 - Mariana arb'] })
-            .join(' ')).toMatch(/dos veces/);
+    it('18c. una tarea cerrada y reabierta VARIAS veces deja varias filas: es historia, no duplicado', () => {
+        // El HOTMELT: cerrado el 03/09 y reabierto, cerrado de nuevo y reabierto el 08/09.
+        // Lo que no puede repetirse es el cierre vigente, no el historico.
+        const r1 = { ...buena, estado: 'reabierta 2026-07-28' };
+        const r2 = { ...buena, estado: 'reabierta 2026-08-04' };
+        const arch = { archivadas: ['2026-07-21 - Mariana arb'] };
+        expect(verificarInvariantes([r1, r2], arch)).toEqual([]);
+        expect(verificarInvariantes([r1, buena], arch)).toEqual([]);
+        expect(verificarInvariantes([r1, buena, buena], arch).join(' ')).toMatch(/dos veces/);
     });
 });
 

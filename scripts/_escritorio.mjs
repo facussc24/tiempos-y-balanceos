@@ -145,14 +145,19 @@ export function verificarInvariantes(filas, estadoFs) {
     const problemas = [];
     const archivadas = new Set(estadoFs.archivadas);
     const registradas = new Set();
+    const vigentes = new Set();
 
     for (const f of filas) {
         // Una fila reabierta REGISTRA igual su carpeta: si no, el segundo bucle la reporta como
         // "archivada pero no tiene fila" y el gate queda en rojo para siempre (caso real: las
         // hojas del HOTMELT, cerradas el 03/09 y reabiertas el 07/09 con la carpeta archivada).
-        if (registradas.has(f.tarea)) problemas.push(`"${f.tarea}" esta dos veces en el INDICE`);
         registradas.add(f.tarea);
-        if (String(f.estado ?? '').startsWith('reabierta')) continue;   // el resto es historia
+        // Una tarea que se cerro, se reabrio y se volvio a cerrar deja VARIAS filas reabiertas:
+        // es historia, y la regla dice que la fila no se borra. Lo que no puede repetirse es el
+        // cierre VIGENTE.
+        if (String(f.estado ?? '').startsWith('reabierta')) continue;
+        if (vigentes.has(f.tarea)) problemas.push(`"${f.tarea}" esta dos veces en el INDICE`);
+        vigentes.add(f.tarea);
         if (!esFechaValida(f.cerrada)) problemas.push(`fila con fecha invalida: "${f.cerrada}" (${f.tarea})`);
         if (!archivadas.has(f.tarea)) problemas.push(`el INDICE nombra "${f.tarea}" pero esa carpeta no esta en el archivo`);
         for (const [campo, v, minimo] of [['quien lo pidio', f.quien, 3], ['que se hizo', f.que, 10], ['donde quedo', f.donde, 10]]) {
