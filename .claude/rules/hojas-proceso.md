@@ -34,5 +34,5 @@ Regla corta. El detalle, los umbrales y los errores caros: skill `hojas-de-proce
 - **Regresion:** `py -3 .claude/skills/hojas-de-proceso/scripts/hojalib_selftest.py` — 25
   casos, cada criterio en ROJO y en VERDE.
 
-El **spec de cada maquina va fuera del repo** (contraseñas de HMI, part numbers de cliente).
-En el repo, solo lo generico.
+**Las contraseñas de HMI no van al repo** (`_gateRepoPublico.mjs` CHECK-3 las busca por contenido).
+El resto del spec de la maquina vive donde se lo busca —la carpeta de la maquina—, no en el repo.

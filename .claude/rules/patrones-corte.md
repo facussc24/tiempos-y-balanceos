@@ -34,15 +34,18 @@ y guardar con `doc.saveas()` sobre el documento leído (nunca reescribir el DXF 
 Nomenclatura: `Patron_<FAMILIA>_<PIEZA>_<MANO>_<AAAA-MM-DD>`, el "qué cambió" va en la
 bitácora, no en el nombre. Lo reemplazado va a `obsoleto\` en el mismo momento.
 
-**Datos de piezas reales (medidas, coordenadas, historial) NO van al repo: es público.**
-Van a `.sgc-cache/patrones-corte/` (ignorado) o a la carpeta de trabajo de Fak.
+Los patrones, sus bitácoras y los archivos de trabajo viven en la carpeta de la pieza o en
+`.sgc-cache/patrones-corte/`, que es donde se los busca. Que el diff nombre una pieza, una medida
+o un part number **no frena el push** (decisión de Fak 18/08/2026, regla `git-deploy.md`); lo que
+sigue prohibido es lo de ahí: credenciales y documentos completos del SGC.
 
 **Enforcement:**
 - DURO — `patronlib.entregar()` levanta `EntregaRechazada` y **no escribe el PLT** si el
   contorno se movió, si una cruz quedó a menos de 3 mm del filo o fuera del contorno, si un
   brazo no mide 6.000, si cambió la cantidad de vértices/piquetes, o si el aplomo da CHUECO.
   Cuando no se le pasan los piquetes originales, ese sub-check no corre y lo **declara** en
-  `piquetes_verificados`. Verificable: `python scripts/patronlib_selftest.py` — 7 casos malos
+  `piquetes_verificados`. Verificable:
+  `.venv-cad\Scripts\python.exe .claude\skills\patrones-corte-plotter\scripts\patronlib_selftest.py` — 7 casos malos
   que tienen que ser rechazados (incluido el vértice deslizado, punto ciego de Hausdorff) +
   contornos degenerados + roundtrip del PLT.
 - BLANDO — hook `patrones-guard.sh` (PreToolUse) recuerda los 3 gates 1×/hora al tocar

@@ -6,7 +6,7 @@ paths:
 
 # Plan de Control (CP)
 
-Criterios CC/SC, severidades y escalas: regla `amfe.md`. HOs no se hacen aca (regla `no-pfd-no-ho.md`); las reglas de filtrado CP→HO quedan solo como conocimiento historico.
+Criterios CC/SC, severidades y escalas: regla `amfe.md`. Las HOs no se arman desde este modulo (regla `no-pfd-no-ho.md`).
 
 ## Filtrado AMFE → CP
 - TODO pasa del AMFE al CP: AP=H/M y CC/SC como linea individual; AP=L sin CC/SC se agrupa en lineas genericas por operacion.

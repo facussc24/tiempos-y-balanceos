@@ -4,19 +4,15 @@ paths:
   - "components/auth/**"
 ---
 
-# Regla: Botón de Dev-Login — NO TOCAR NUNCA
+# El botón de dev-login no se toca
 
-El componente de login tiene un botón "Acceso rápido (dev)" con borde naranja.
-Este botón es CRÍTICO para verificación visual del proyecto.
+`components/auth/LoginPage.tsx` tiene un botón "Acceso rápido (dev)" con borde naranja. **Ya se
+borró tres veces en auditorías de código**, siempre por la misma razón: parece código muerto y no
+lo es — es como se verifica visualmente la app sin tipear credenciales en cada arranque.
 
-## Reglas absolutas:
-- NUNCA eliminar este botón
-- NUNCA mover su lógica a otro archivo
-- NUNCA cambiar su comportamiento
-- NUNCA remover las variables VITE_AUTO_LOGIN_EMAIL / VITE_AUTO_LOGIN_PASSWORD
-  **de `.env.local`** (desarrollo). En CI/producción ver la excepción de abajo.
-- Si refactorizás LoginPage o el sistema de auth, el botón DEBE sobrevivir intacto
-- Si hacés una auditoría de código, este botón NO es código muerto — es infraestructura de desarrollo
+El botón, su lógica, su comportamiento y las variables `VITE_AUTO_LOGIN_EMAIL` /
+`VITE_AUTO_LOGIN_PASSWORD` **de `.env.local`** se quedan como están, también al refactorizar
+LoginPage o el sistema de auth. En CI/producción, ver la excepción de abajo.
 
 ## Cómo funciona:
 - Lee credenciales de `import.meta.env.VITE_AUTO_LOGIN_EMAIL` y `import.meta.env.VITE_AUTO_LOGIN_PASSWORD`

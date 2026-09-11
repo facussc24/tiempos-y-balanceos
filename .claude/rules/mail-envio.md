@@ -2,14 +2,12 @@
 description: Envio de mails desde Outlook — gate anti-duplicado obligatorio
 paths:
   - "scripts/_mail*"
-  - "**/*.py"
+  - "**/*mail*.py"
+  - "**/*outlook*"
+  - ".claude/hooks/mail-guard*"
 ---
 
 # Mandar un mail: nunca con un `.Send()` suelto
-
-> ENFORCEMENT YA CARGADO (misma sesion, 2026-08-14): hook `mail-guard.sh` registrado en
-> `_dispatcher.sh` + `scripts/_mailEnviar.py` con gate y `--selftest` (9 casos, verde),
-> probado contra el caso real del incidente: bloquea.
 
 ## Las tres reglas
 
@@ -121,10 +119,8 @@ y solo si el destinatario no lo abrio.
   (el parser compartido ya rompio otros 3 guardianes en silencio, commit `ccef7f09`).
 - El gate se probo contra el caso real del 14/08 leido de Enviados: **bloquea**.
 
-## Incidente fuente — 2026-08-14
+## De donde sale el gate — 2026-08-14
 
-Fak mando el mail del AMFE 150 a Marcelo, Nicolas y Carlos. Quedo en la Bandeja de salida sin
-transmitir (Outlook estaba corriendo sin ninguna ventana). Yo mire la cola, vi el item y le afirme
-en negrita *"el mail no salio, no hay nada que recuperar"*. Lo saque de la cola, lo edite y lo
-mande. Salieron **dos mails**. Fak: *"se terminó enviando 2 veces… es un error grave"*.
-Detalle en la memoria `mail_ya_enviado_verificar_justo_antes`.
+Un mail que Fak ya habia mandado se reenvio porque lei la Bandeja de salida como prueba de que no
+habia salido. Fak: *"se terminó enviando 2 veces… es un error grave"*.
+Caso completo: memoria `mail_ya_enviado_verificar_justo_antes`.

@@ -15,10 +15,9 @@ paths:
 desde CLAUDE.md (desde el 04/09/2026). Por eso contiene **solo lo accionable que NO esta ya
 codificado como regla o gate ejecutable** — lo codificado no se repite ahi.
 
-Por que @import y no el hook: entre el 03/08 y el 04/09 lo inyectaba `session-start-context.sh`,
-y Claude Code guarda toda salida de hook mayor a ~10 KB en un archivo dejandole al modelo un
-preview de 2 KB. **144 sesiones arrancaron sin leerlo** mientras se hacian 31 consolidaciones
-para mantenerlo. El @import no tiene ese tope y sobrevive la compactacion.
+Por que @import y no un hook: Claude Code guarda toda salida de hook mayor a ~10 KB en un archivo
+y le deja al modelo un preview de 2 KB — un archivo de este tamaño no llega entero por ahi. El
+@import no tiene ese tope y sobrevive la compactacion.
 
 ## Como entra una leccion nueva
 
@@ -48,9 +47,8 @@ Tests en las dos direcciones: `__tests__/scripts/cierreGuard.test.mjs`.
 | Un bullet que dice "graduado a X" | **2 lineas** | borrar la narrativa: lo graduado ya vive en X |
 | Techo del archivo (red, no gobierna) | aviso 26 KB · tope 28 KB | si se llega, es porque hay bullets que no pasaron el gate de arriba |
 
-La causa del ciclo de agosto (17 commits de poda en 19 dias, el archivo oscilando entre 24 y
-29 KB, 2,2 consolidaciones por dia) era exactamente esa: los bullets "graduados a X"
-conservaban su historia completa. Con el gate por bullet el techo de bytes no se toca.
+Un archivo que oscila contra su techo y se poda todos los dias tiene siempre la misma causa: los
+bullets "graduados a X" conservan su historia completa. Con el gate por bullet el techo de bytes no se toca.
 
 ## Pasada de consolidacion (cuando el gate marca bullets)
 
@@ -59,7 +57,7 @@ conservaban su historia completa. Con el gate por bullet el techo de bytes no se
    el destino contenga el detalle que se va a sacar de aca.
 3. **Archivar** al snapshot lo que dejo de aplicar.
 
-## 🔴 PROHIBIDO pelear bytes
+## No se pelean bytes
 
 **No se reduce una leccion a fragmentos cripticos para ganar bytes.** Si no entra legible, se
 gradua; no se achica hasta el ruido. Corolario del 29/08/2026: terminar una consolidacion a

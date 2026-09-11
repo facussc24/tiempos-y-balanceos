@@ -57,13 +57,10 @@ o en un paso con `export_deliverables.py ... --final --motor --render`.
   capturas; **5 de las 6 se contestaban con una imagen legible**. El motor bueno vive en
   `.claude/skills/cad-design/scripts/foto3d.py` — fondo BLANCO, y trae maniquí a escala para poner al operario en la
   escena. Con `--motor foto3d` el gate corre el autotest del propio motor.
-- **Se MIDE cuánto color tiene el render y se informa — no bloquea.** Nació bloqueante con umbral
-  0,35 y una auditoría independiente lo tumbó el mismo día por los dos lados: un matplotlib real
-  (`caballete_TODAS.png`) da **0,353 y pasaba**, y un render legítimo de foto3d de un dispositivo
-  **de un solo material** —un caballete de tubo pintado de un color, que es lo que Barack fabrica—
-  da **0,000 y quedaba rechazado**. Dejaba pasar lo malo y frenaba lo bueno. **Dos hipótesis mías
-  caídas contra datos el mismo día** (antes había probado luminancia y dio al revés): están escritas
-  con los números en el skill para que nadie las reinvente. El que bloquea es el motor declarado.
+- **El color del render se MIDE y se informa; el que bloquea es el motor declarado.** Un umbral de
+  color no separa: un matplotlib malo da 0,353 y un render legítimo de un dispositivo de un solo
+  material —lo que Barack fabrica— da 0,000. Las dos hipótesis probadas y caídas (color y
+  luminancia) están con sus números en el skill `cad-design` para que nadie las reinvente.
 
 Enforcement de los dos: casos ROJO/VERDE en `test_gates_proceso.py` con el texto real de los tres
 fallos **y con las evasiones que encontró el auditor**; listas canónicas en `procesoCanon.data.json`,
@@ -155,7 +152,8 @@ existe** (89,79·sen 1,637° = 2,56).
   verde**. No fallaba ninguno porque ninguno miraba esa interfaz: `chequeo_marco` compara tubo
   contra tubo, `verificar_nido` compara nido contra pieza. Antes de creerle a una cadena verde,
   **listar que PARES de cosas compara cada control** y ver cual interfaz no la mira nadie.
-  Enforcement: `chequeo_apoyo_nido.py`, que nacio con su control sintetico y con codigo 1.
+  Toda interfaz que carga peso lleva su propio control, con su caso sintetico en rojo. (El
+  chequeo de aquel caballete vivia en la carpeta del dispositivo de adhesivado, fuera del repo.)
 - **Posicionar por el bbox del CONJUNTO pone el punto MAS BAJO en el datum, y ese punto puede no
   ser la cara que apoya.** Ahi fue `-bb.zmin` con el vastago del pin 11,95 mm por debajo de la
   placa. El comentario de la linea decia la intencion correcta; la geometria no la cumplia.
@@ -180,14 +178,8 @@ existe** (89,79·sen 1,637° = 2,56).
   vieja porque la clave del caché no incluía tamaño+mtime. Toda clave de caché lleva la firma.
 
 **GATE 3.5 — un croquis a mano se escala contra una cota IDENTIFICADA, no contra la que tengo a mano.**
-2026-08-25: de un croquis sin una sola cota se midieron bien las proporciones (ancho/hueco 1,5 ·
-vuelo/hueco 1,0 · span/hueco 3,5) y se aplicaron sobre el número equivocado — el espesor de la pata
-(27,8) en vez de su ancho (69,2). La pieza salió **girada 90° y a un tercio de escala**: las
-mochilas quedaban en el hueco de las piernas. Dos veces seguidas, con dos lecturas distintas del
-mismo dibujo. **Antes de multiplicar una proporción por algo, decir en voz alta QUÉ es el
-denominador en la pieza real y verificarlo contra una foto del conjunto montado.** Y si la escala
-no está identificada con certeza, el croquis no está listo para modelar: falta una cota, no falta
-interpretación. *Enforcement:* `examples/gancho_mochila/build_gancho_leo.py` aborta si `cano.ancho` no es mayor
+**Antes de multiplicar una proporción por algo, decir en voz alta QUÉ es el denominador en la pieza real y verificarlo contra una foto del conjunto montado.** Si la escala no está identificada con certeza, el croquis no está listo para modelar: falta una cota, no falta interpretación. (El caso que lo origino: memoria `cad_gates_casos_fuente_2026-08`.)
+*Enforcement:* `examples/gancho_mochila/build_gancho_leo.py` aborta si `cano.ancho` no es mayor
 que `cano.espesor` (confundirlas ES el error), y además **mide el hueco sobre el sólido construido**
 y lo compara contra el ancho declarado. **Ojo con cómo se escribe un assert así:** el primero
 comparaba `2·ui` contra `ancho+juego` — y `ui` se calcula como `(ancho+juego)/2`, o sea una resta
@@ -195,10 +187,7 @@ de un valor contra sí mismo, **siempre 0**. Nunca podía dar rojo; lo cazó el 
 espesor en el ancho y viendo que el build no abortaba. **Un assert se prueba con su contraejemplo
 el mismo día que se escribe: si nunca lo viste dar ROJO, no sabés si protege.**
 
-**GATE 4 — el resultado tiene que tener SENTIDO, no solo cerrar paso a paso.** El 2026-08-07 un
-utillaje salió de 36 mm de alto y 166 cm³ de PLA para una pieza que aprieta 6 N. Fak lo vio de un
-vistazo: *"tiene demasiada base, muy alta, se ve obvio que se puede"*. Los siete controles daban
-verde — porque todos verificaban el encastre, ninguno el tamaño. Tres fallas de método:
+**GATE 4 — el resultado tiene que tener SENTIDO, no solo cerrar paso a paso.** Un utillaje puede pasar los siete controles del encastre y ser tres veces más grande de lo que la función pide: todos verificaban el encastre, ninguno el tamaño (caso con sus números: memoria `cad_gates_casos_fuente_2026-08`). Tres fallas de método lo producen:
 
 1. **Copié un parámetro sin verificarlo con su propia fórmula, y era el que gobernaba todo el
    tamaño.** El informe decía k = 7,5 N/mm con t=1,8 y L=26; la fórmula da 2,49 (los 7,5 son L=18).
@@ -210,11 +199,7 @@ verde — porque todos verificaban el encastre, ninguno el tamaño. Tres fallas 
    (t, L, δ): hay una **familia** con la misma fuerza y la misma deformación. Recalculado da 22 mm y
    55 cm³ — **66 % menos de material, gratis**.
 
-Y el mismo error otra vez, en la misma sesión: **heredé la fuerza objetivo (6,4 N) sin recalcular el
-área contra MI geometría.** Esa fuerza correspondía a una banda de 45,6 mm²; la mía es de 22,8 →
-2,28 N. El dedo quedó cargado **2,8×**, y con el ángulo vivo daba **SF a fatiga 0,30–0,48: se
-partía**. Lo vio Fak mirando el render (*"los cuadraditos se ven frágiles"*), antes que ningún
-cálculo mío.
+**Y una fuerza objetivo heredada se recalcula contra MI geometría**: heredarla sin rehacer el área dejó el dedo cargado 2,8× y con SF a fatiga 0,30–0,48, o sea partiéndose. Lo vio Fak mirando el render (*"los cuadraditos se ven frágiles"*), antes que ningún cálculo mío.
 
 ```
 viga_voladizo.py --verificar --t 1.8 --brazo 26 --precarga 0.85 --b 12 --k-declarada 7.5
@@ -237,14 +222,14 @@ brazo correcto**.
   *Enforcement (patrón a replicar):* `examples/gancho_mochila/verificar_gancho.py` mide L sobre el
   STL exportado y falla si `a/L` cae por debajo de `1/(2·µ)`; el `params.json` guarda el valor
   declarado al lado, así el desacuerdo salta.
-- **Y el que DEPENDE de otra cota se deriva, nunca se escribe como número.** Mismo día, misma
+- **Y el que DEPENDE de otra cota se deriva, nunca se escribe como número.** 2026-08-24, misma
   pieza: Fak probó el gancho impreso y dijo que a la boca le sobraban 3-4 mm. Al bajarla de 31,30
   a 27,80, `y_raiz` (la raíz del brazo) siguió siendo el literal **23,65**, que era `boca/2 + e_ala`
   de la boca vieja: **el brazo quedó 1,75 mm separado del ala y la pieza salió en DOS sólidos
   sueltos.** Y de paso apareció que `a` estaba escrito 57 cuando la geometría daba **54** — 3 mm
   de margen que yo creía tener. Un `params.json` con cotas derivadas escritas a mano se
   desincroniza en el primer cambio y nada avisa.
-  *Enforcement ya cargado en esta sesión:* `build_gancho.py::derivadas()` las calcula en cada
+  *Enforcement:* `build_gancho.py::derivadas()` las calcula en cada
   corrida y las pisa, más un `raise SystemExit` que aborta si la pieza sale en más de un sólido.
 - **Un número que va a una máquina se confirma con su UNIDAD, y el artefacto de verificación tiene
   que REPRESENTAR lo que mido.** Si un valor sale mal se arregla el GENERADOR, no el valor: un
@@ -255,7 +240,7 @@ brazo correcto**.
   encontró ahí el mismo día, con el valor viejo, tapadas por el spread — inofensivas sólo hasta
   que alguien lea `p["brazo"]["y_raiz"]` directo o cambie el orden del merge. Lo destapó el gate de ensamble de `export_deliverables.py`; el bbox y el volumen
   no lo habrían visto.
-- **Y hay fallas que sólo aparecen MIRANDO el render, con la pieza en su lugar de uso.** Mismo día:
+- **Y hay fallas que sólo aparecen MIRANDO el render, con la pieza en su lugar de uso.** 2026-08-24:
   la nariz del gancho subía 14 mm por encima del clip y habría chocado contra la tapa del
   escritorio — ninguna cuenta lo veía, porque ninguna sabía que el gancho va pegado a la tapa.
   *Enforcement:* lo que se aprende mirando vuelve como assert en el propio build —
@@ -273,14 +258,7 @@ brazo correcto**.
   subsistema sin función, el subsistema se VA, no se refuerza (el resorte del virolador acumuló tope +
   alma + brazo extra antes de que Fak lo llamara "un parche mal hecho"; skill `cad-design` §6).
 
-**GATE 3.6 — un control puede SEPARAR y estar mirando el número equivocado.** 2026-08-29,
-dispositivo de adhesivado: para decidir cuál sólido del STEP es el sustrato escribí un criterio
-por espesor de pared (el recubrimiento sería la lámina fina). **Elegía el sólido equivocado**, y
-lo cazó el propio gate al no separar: el sustrato del SAB1740 es el sólido 1 y resulta ser el
-**más delgado** (2,28 mm contra 2,92 del "recubrimiento", que trae su espuma). Un rato después,
-el criterio de reemplazo —mayor volumen— *sí* separaba… con un volumen de **391,7 cm³ contra
-229,9 cm³ reales**: la teselación de OCC sale con un vértice por cara, la malla **no cierra** y
-el volumen por divergencia da cualquier cosa. Dos moralejas que no son la misma:
+**GATE 3.6 — un control puede SEPARAR y estar mirando el número equivocado.** (Caso con sus números: memoria `cad_gates_casos_fuente_2026-08`.) Dos moralejas que no son la misma:
 - **Un volumen se integra sobre el B-Rep, no sobre la malla** — y si se mide sobre malla, primero
   `merge_vertices()` y `is_watertight`.
 - **Que un criterio separe no prueba que esté mirando lo que cree.** Al lado de cada criterio va
@@ -289,10 +267,7 @@ el volumen por divergencia da cualquier cosa. Dos moralejas que no son la misma:
   robusto) y el volumen del B-Rep confirma.
 
 **GATE 3.7 — un mallador que no converge no es "lento": es el mallador equivocado, y el motor se
-DECLARA.** Mismo día: gmsh no puede mallar el Insert delantero (SAB1726). Dos corridas se comieron
-**2 horas de CPU cada una sin terminar**, y bajando el detalle hasta lc=20 tampoco termina en 4
-minutos — o sea no es el tamaño de elemento, es la geometría. **La teselación de OpenCascade sobre
-el mismo archivo tarda 25 segundos.** Reglas que deja:
+DECLARA.** (Caso: gmsh 2 h sin terminar contra 25 s de OpenCascade sobre la misma pieza; memoria `cad_gates_casos_fuente_2026-08`.) Reglas que deja:
 - Antes de esperar, **medir**: si un mallado no cierra en un tiempo que se pueda explicar, probar el
   otro motor en vez de subir el límite.
 - **El motor va declarado por pieza y escrito en el JSON de salida**, nunca elegido en silencio
@@ -304,18 +279,15 @@ el mismo archivo tarda 25 segundos.** Reglas que deja:
   (`lc` para gmsh, `tol` para OCC). Estaba escrito a mano en 8 scripts como `insert_s1_lc08.npz`: con
   otra pieza apuntaba a un archivo inexistente y la cadena caía en cascada.
 
-**GATE 3.8 — un barrido que no PUEDE refutar la conclusión no es evidencia.** Mismo día: barrí la
-sección del tubo del caballete (40x40 → 30x30 → 20x20) y publiqué que el umbral de vuelco casi no se
-movía (0,760 → 0,759 → 0,754). Cierto, pero **vacío**: el umbral es semibase/altura del cg y la
-sección no toca ninguna de las dos, así que el resultado era así **por construcción**. Es el test del
+**GATE 3.8 — un barrido que no PUEDE refutar la conclusión no es evidencia.** (Caso: barrer la sección del tubo no podía mover un umbral que depende de semibase y altura del cg; memoria `cad_gates_casos_fuente_2026-08`.) Es el test del
 valor gemelo aplicado al parámetro: si el gemelo no cambia cuando cambia la magnitud que barro, ese
 barrido no está midiendo eso. Para mover el vuelco hay que barrer la **geometría**. Y de paso: una
 premisa de comparación (*"un frenazo corriente es ~1 g"*) **se cita o no se escribe** — si no tiene
 fuente, se nombra el evento real (la rueda contra una junta) o se deja fuera.
 
-**Y no se edita un script mientras la cadena está corriendo.** Mismo día, corrida entera perdida: la
-segunda pasada de `verificar_nido.py` agarró el archivo a medio editar y salió con `NameError`. Los
-subprocesos leen el archivo cuando arrancan, no cuando arrancó la cadena.
+**Y no se edita un script mientras la cadena está corriendo.** Los subprocesos leen el archivo
+cuando arrancan, no cuando arrancó la cadena: editar a mitad de corrida devuelve un `NameError`
+en la segunda pasada y se pierde la corrida entera (29/08/2026).
 
 **GATE 3.9 — todo paso largo lleva TOPE DE TIEMPO adentro, y antes de tocarlo se mide si el
 tiempo se explica.** 2026-08-29: un paso de la cadena de adhesivado (`extraccion.py` con el
@@ -325,9 +297,9 @@ inaceptable, poné un guardián"* — y en la misma frase la otra mitad, que tam
 *"si realmente sigue funcionando dejalo, medio raro que tarde 2 horas pero podría pasar"*.
 
 - **Esperar no es supervisar.** El que espera no puede distinguir *"está trabajando"* de *"se
-  colgó"* sin un límite declarado. El tope va **en el código**, no en mi memoria:
-  `validar_todo.py` corta cualquier paso a los 25 min (`ADH_TOPE_MIN`), lo marca `CORTADO` y
-  **sigue con los demás** — una corrida de 25 pasos no se pierde por uno. Y cada paso imprime
+  colgó"* sin un límite declarado. **El tope va en el código de la cadena, no en mi memoria**:
+  cada paso corta a los 25 min, se marca `CORTADO` y la cadena **sigue con los demás** — una
+  corrida de 25 pasos no se pierde por uno. Y cada paso imprime
   sus minutos, así que algo que se fue de escala se ve en la primera corrida.
 - **Primero medir, después matar.** No era un cuelgue: era un **bug de escala disfrazado de
   cuelgue**, que es peor porque no da señal. La malla *"gruesa"* del delantero tenía **753.073

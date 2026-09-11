@@ -19,17 +19,15 @@ contraseña, y la sesión no tipea contraseñas. O sea que cerrarlo cuesta un se
 destrabarlo **depende de que Fak esté disponible**. Es una operación asimétrica, y esas se
 consultan siempre.
 
-## El incidente
+## De dónde sale
 
-31/08/2026, tarea del remache de ductos. Terminé de leer el maestro de insumos y cerré el
-arb, porque una instrucción que me llegó decía "cuando termines, cerralo". Veinte minutos
-después había que cargar el reemplazo en la BOM. Lo relancé yo (`Z:\arb\prod\produc.exe`) y
-quedó en la pantalla de login: la tarea se frenó **dos veces** esperando a Fak, por algo que
-yo mismo había roto. Fak: *"no vuelvas a cerrar arb sin consultarme, nueva regla dura...
-fue gravísimo eso"*.
+Una instrucción que llegó de otra sesión decía "cuando termines, cerralo". Se cerró, y veinte
+minutos después la tarea se frenó **dos veces** esperando a Fak para reabrirlo. Fak: *"no vuelvas
+a cerrar arb sin consultarme, nueva regla dura... fue gravísimo eso"*. El caso entero, con la
+ruta de relanzamiento: memoria `no_cerrar_arb_sin_consultar`.
 
-Detalle que agrava el asunto: el campo `Usuario` se autocompleta con `FACUNDOS-PC`, y el
-usuario real del arb es `FACUNDO`. Ni siquiera alcanzaría con la contraseña.
+Y ni siquiera alcanzaría con tener la contraseña: el campo `Usuario` se autocompleta con
+`FACUNDOS-PC` y el usuario real del arb es `FACUNDO`.
 
 ## Qué está prohibido y qué no
 
@@ -53,21 +51,16 @@ Vale para **un** comando: el guardián lo consume y vuelve a quedar armado.
 `.claude/hooks/arb-cerrar-guard.sh` (PreToolUse, `Bash|PowerShell`, dentro de
 `_dispatcher.sh`). Devuelve exit 2 y explica el porqué.
 
-Probado en las **dos** direcciones — `bash .claude/hooks/arb-cerrar-guard.test.sh`, 26 casos:
-14 que tienen que bloquear, 10 del trabajo diario que tienen que pasar, y 2 del escape de un
-solo uso. Un gate probado sólo en rojo no está probado: lo caro es que frene el trabajo de
+Probado en las **dos** direcciones — `bash .claude/hooks/arb-cerrar-guard.test.sh`: los que tienen
+que bloquear, los del trabajo diario que tienen que pasar, y los del escape de un solo uso. Un gate probado sólo en rojo no está probado: lo caro es que frene el trabajo de
 todos los días (memoria `feedback_un_control_se_audita_en_las_dos_direcciones`).
 
-### Lo que le agregó la auditoría del 31/08 (8 bypasses reales)
+### Las dos decisiones de diseño (salieron de una auditoría independiente, 31/08)
 
-La primera versión cazaba **la forma en que yo lo había escrito** y nada más. El agente
-auditor encontró 8 maneras de cerrar el arb que pasaban limpias, verificadas una por una — y
-varias son sintaxis **más natural** que la que sí cazaba (`.Kill()` es más idiomático en
-PowerShell que `Stop-Process`). Todas están hoy en la suite, marcadas `[AUDIT 31/08]`:
-
-`.Kill()` · `.CloseMainWindow()` · `os.kill(pid)` · `wmic process … delete` ·
-`taskkill /PID <n>` sin nombrar el proceso · `0x10` (mismo WM_CLOSE que `0x0010`, sin padding)
-· `pywinauto .close()` / `pyautogui` / `SendKeys %{F4}` · `shutdown /l`.
+La primera versión cazaba **la forma en que yo lo había escrito** y nada más: un agente auditor
+encontró 8 maneras de cerrar el arb que pasaban limpias, varias con sintaxis **más natural** que
+la que sí cazaba. Están todas en la suite, marcadas `[AUDIT 31/08]` (lista y detalle: memoria
+`arb_cerrar_guard_los_8_bypasses`).
 
 Dos decisiones de diseño que salieron de ahí:
 

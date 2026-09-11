@@ -14,12 +14,12 @@ abierto.**
 
 ## 0. `_EN ESPERA` — la bandeja (decisión de Fak, 09/08/2026)
 
-El Escritorio llegó a **81 iconos** y a Fak le molestaba. Se creó **`_EN ESPERA`**: a la vista
+Cuando el Escritorio se llena, a Fak le molesta. Por eso existe **`_EN ESPERA`**: a la vista
 quedan solo las tareas de la semana, y las trabadas o de baja prioridad van adentro.
 
 **Lo de adentro sigue ABIERTO.** No es archivo, no es cierre, no es basura: es la misma cola,
-corrida de la vista. El relevador entra y las cuenta (`10 a la vista + 27 en _EN ESPERA = 37
-abiertas`); sin eso contaba la bandeja como *una* tarea y perdía 27 de vista.
+corrida de la vista. El relevador **entra y las cuenta una por una**: abiertas = las de la raíz
++ las de `_EN ESPERA`. Contar la bandeja como *una* tarea pierde de vista todo lo que hay adentro.
 
 Sacar una de la bandeja = mover la carpeta a la raíz. Cerrarla sigue siendo `--archivar`, una
 por una. **Enforcement:** `clasificarEntrada` la devuelve como `'espera'` y `--archivar` la
@@ -43,8 +43,8 @@ cerrada, esté como esté el archivo.
 Fak, textual: *"modifiquemos el criterio entonces, las que estés seguro que están cerradas
 cerrémoslas, porque si no voy a tener que verificar todo cada vez y me canso"*.
 
-Antes, toda candidata volvía a él. Con 56 tareas abiertas eso lo convertía en el cuello de
-botella de su propia cola: revisar 20 carpetas para archivar 20 obvias.
+Devolverle toda candidata lo convierte en el cuello de botella de su propia cola: revisar veinte
+carpetas para archivar veinte obvias.
 
 **Ahora: si se cumplen las TRES patas, se archiva sin consultar.** Si falta una sola, la
 tarea NO se toca y va a la lista de dudosas, que sigue siendo de él. La duda no se resuelve
@@ -85,10 +85,8 @@ Fak, textual: *"no me dejes cosas en el escritorio, ese es el procedimiento, lle
 escritorio de cosas? me respondiste que me dejaste algo en el escritorio, eso absolutamente
 molesto"*. Y: *"está mal la regla, hace falta actualizar el procedimiento, no es tan obvio"*.
 
-Tenía razón: la regla decía dónde va el entregable **al cerrar** y no decía dónde **se
-genera**. Yo generé el PDF de difusión de un cambio de BOM dentro de la carpeta de la tarea,
-en el Escritorio, y se lo reporté como si eso fuera entregarlo. De ahí salen solas las dos
-copias que el §2 prohíbe: una suelta en la cola y otra que se va al archivo al cerrar.
+Generar el entregable dentro de la carpeta de la tarea y reportarlo desde ahí produce solas las
+dos copias que el §2 prohíbe: una suelta en la cola y otra que se va al archivo al cerrar.
 
 **Un entregable se escribe DIRECTO en su carpeta por tipo de la biblioteca de Ingeniería.**
 El Escritorio guarda el RASTRO — el mail del pedido, capturas, borradores —, nunca el
@@ -166,16 +164,14 @@ paso manual que en 3 relevamientos destapó 7 pedidos invisibles). Cruza la Band
 entrada de los últimos 10 días contra los nombres de tarea (abiertas + cerradas) y lista:
 los hilos **sin carpeta** (candidatas a pedido invisible) y los **borradores/bandeja de
 salida** recientes (la firma de "hecho pero no avisado"). Detect-only: no crea carpetas ni
-manda mails. Lógica y tests: `scripts/_lib/mailCache.mjs` + `mailCache.test.mjs` (21).
+manda mails. Lógica y tests: `scripts/_lib/mailCache.mjs` + `mailCache.test.mjs`.
 Necesita el cache de `_mails.py` (sync programado 2×/día); si está viejo, lo canta.
 
 Todos aceptan `--dry-run`. Las rutas viven en `scripts/_lib/serverPaths.mjs`.
 **El DETALLE de las tareas (el listado Excel, los mails, los adjuntos) vive en la biblioteca
 y en `.mail-cache/` (gitignoreado), nunca en el repo.** Nombrar una tarea, producto o persona
 en código, tests o commits está cubierto por la decisión de Fak del 18/08/2026 (regla
-`git-deploy.md`: el repo es público y eso no frena el push) — esta línea decía "datos reales
-NO van al repo" desde antes de esa decisión y quedaba en contradicción con ella (lo señaló el
-auditor el 30/08). Lo prohibido sigue siendo lo de `git-deploy.md`: credenciales, contenido
+`git-deploy.md`: el repo es público y eso no frena el push). Lo prohibido sigue siendo lo de `git-deploy.md`: credenciales, contenido
 de mails/documentos del SGC, `.claude/memory/` versionado.
 
 ## Enforcement
@@ -193,7 +189,7 @@ de mails/documentos del SGC, `.claude/memory/` versionado.
   Escritorio o de la biblioteca de Ingeniería, mover a mano hacia/desde el archivo, tocar el
   listado a mano, y escribir un README/LEEME/NOTAS suelto en una carpeta de Fak. Recuerda el
   procedimiento 1×/hora al entrar en ese territorio.
-- **Tests**: `__tests__/scripts/escritorio.test.mjs` (36) y `escritorioGuard.test.mjs` (19).
+- **Tests**: `__tests__/scripts/escritorio.test.mjs` y `escritorioGuard.test.mjs`.
   Dos trampas que costaron un test falso-verde y un commit bloqueado, y que están fijadas
   como vectores: los payloads del hook se arman con `JSON.stringify` (a mano en el shell los
   backslashes de Windows se colapsan y el hook cae en su rama de fallback), y la detección

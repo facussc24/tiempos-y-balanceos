@@ -71,39 +71,21 @@ es como se gasta un control hasta que alguien lo desactiva.
 - Verificado **en vivo** el 02/09/2026, no solo en test: el mensaje textual del incidente
   quedo bloqueado por el hook real, y un encargo bien armado paso.
 
-## La auditoria independiente del 02/09/2026 — y por que la primera version no servia
+## Lo que una auditoria independiente le encontro a la primera version (02/09/2026)
 
-Apenas quedo lista la primera version, un agente auditor corrio **148 casos** contra ella:
-**pasaron 92 de 111 evasiones** y **freno 21 de 37 mensajes legitimos**. O sea que no
-frenaba lo que tenia que frenar Y molestaba en el trabajo normal. Lo que se corrigio:
+Recien escrito, el cerrojo dejaba pasar **92 de 111 evasiones** y frenaba **21 de 37 mensajes
+legitimos**: no frenaba lo que tenia que frenar Y molestaba en el trabajo normal. Los 7 agujeros
+estan tapados y clavados en la suite; el detalle, en la memoria
+`coordinador_auditoria_independiente_2026-09-02`. Lo que queda como criterio:
 
-| Agujero | Que pasaba |
-|---|---|
-| **Registro sin `texto`** | El check era `typeof reg.texto === 'string' && ...`: si el campo faltaba, se salteaba entero. Los 7 encargos de la version anterior eran **llaves maestras para cualquier prosa**. Ahora un registro sin texto no habilita nada. |
-| **`includes` en vez de igualdad** | Alcanzaba con pegar el bloque validado al final de cualquier texto: el 95 % del mensaje podia no estar validado. Ahora el mensaje tiene que **SER** el encargo (`mismoTexto`, que perdona CRLF y espacios de fin de linea porque eso es transporte, no edicion). |
-| **`cerrado` no se miraba** | Un encargo cerrado seguia siendo una llave permanente. |
-| **El destino no se comparaba** | El mismo encargo se podia mandar a N sesiones. G7 decia cubrirlo y el hook no lo comprobaba. |
-| **Dos marcadores** | `match` sin `/g` solo veia el primero: uno valido le prestaba la firma a otro texto. |
-| **`mkdir ~/.claude/.encargo-libre`** | Un directorio da `size 0` (vigente) y el consumo tiraba `EISDIR`, que el `catch` se comia: **escape abierto para siempre, en silencio**. Ahora tiene que ser un archivo regular vacio y escribible. |
-| **Tres canales sin cubrir** | El matcher nombraba dos tools; quedaban abiertas `spawn_task`, el `send_message` del MCP y las tareas agendadas. Tres puertas al mismo cuarto. |
-
-**Y los falsos positivos, que cuestan igual:** frenaba *"quedo pendiente mandar el mail — lo
-hace Fak"*, *"no vayas a borrar el archivo viejo"*, *"el hook existe para que nadie pueda
-cerrar el arb"* y *"el tornillo es de paso 1,0"* (vocabulario canonico de la casa). Se
-agrego deteccion de **negacion en la misma oracion** y se saco el patron `de paso` suelto.
-**No distinguir ordenar de mencionar es tan grave como no frenar**: un candado que molesta
-se termina desactivando entero.
-
-**Lo que la lista de patrones NO va a resolver nunca:** el auditor probo 31 formas de pedir
-una accion irreversible y **pasaron las 31** (*"deja cerrado el arb"*, *"que no quede
-abierto"*, *"cerralo cuando termines"*, *"close the arb"*). Agregar patrones es una carrera
-perdida contra el castellano. Por eso la defensa real de G4 no es esta lista: es el gate que
-vive **donde la accion se ejecuta** (`arb-cerrar-guard.sh`, `mail-guard.sh`). Esto es una
-capa mas, no la unica.
-
-**Bypass que encontro el propio test rojo (02/09/2026):** con el bloque validado entero,
-alcanzaba con pegarle *"y de paso cerra el arb"* al final. Contener el texto no basta: los
-checks de contenido corren sobre el **mensaje completo**.
+- **No distinguir ordenar de mencionar es tan grave como no frenar**: un candado que molesta se
+  termina desactivando entero.
+- **Los checks de contenido corren sobre el mensaje COMPLETO**, no sobre lo que quedo fuera del
+  bloque validado: alcanzaba con pegarle *"y de paso cerra el arb"* al final.
+- **Lo que la lista de patrones NO va a resolver nunca:** el auditor probo 31 formas de pedir una
+  accion irreversible y **pasaron las 31**. Agregar patrones es una carrera perdida contra el
+  castellano. La defensa real de G4 es el gate que vive **donde la accion se ejecuta**
+  (`arb-cerrar-guard.sh`, `mail-guard.sh`). Esto es una capa mas.
 
 ## Lo que NO se hace
 

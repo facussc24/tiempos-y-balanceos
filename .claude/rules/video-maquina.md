@@ -67,17 +67,12 @@ Sale del Escritorio **hacia** la biblioteca: pasa (la ruta destino contiene `5- 
 Leer, listar o `ffprobe` un video: pasa. Tests en las dos direcciones:
 `__tests__/scripts/videoMaquinaGuard.test.mjs`.
 
-## El incidente (07/09/2026)
+## De donde sale el candado (07/09/2026)
 
-Baje 39 videos del iPhone y los deje en carpetas de tarea del Escritorio. **Trece — el 02/09
-entero, 5,59 GB — ya estaban archivados en `MAQUINA MOLDEADORA IMG` desde el 02/09**, con
-nombre descriptivo. Los volvi a bajar, los verifique con ffprobe y los reporte como un logro;
-de paso llene el disco. La respuesta estaba escrita en los nombres de archivo de la biblioteca,
-y esa misma mañana Fak habia preguntado si no se repetian.
-
+Se bajaron 39 videos del iPhone a carpetas del Escritorio; **13 ya estaban archivados en la
+biblioteca**, con nombre descriptivo: la respuesta estaba escrita en los nombres de archivo.
 Fak: *"ah nunca entendiste que tenias que cargarlos ahi? ... es gravisimo lo que paso"*,
-*"no se pone algo que te obligue a recordar? un seguro"*, *"porque sino se me hace que va a
-volver a pasar"*.
+*"no se pone algo que te obligue a recordar? un seguro"*. El cruce que este candado obliga a hacer
+encontro, sobre el carrete completo, **50 de 153 videos ya archivados**.
+Caso completo: memoria `videos_y_fotos_de_maquina_donde_van`.
 
-El cruce que este candado obliga a hacer encontro, sobre el carrete completo: **50 de 153
-videos (11,20 GB) ya estaban archivados**.
