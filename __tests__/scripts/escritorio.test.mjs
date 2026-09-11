@@ -207,6 +207,17 @@ describe('verificarInvariantes — que el archivo y el listado no se separen', (
         expect(verificarInvariantes([buena, buena], { archivadas: ['2026-07-21 - Mariana arb'] }).join(' ')).toMatch(/dos veces/);
         expect(verificarInvariantes([{ ...buena, estado: 'reabierta 2026-07-28' }], { archivadas: [] })).toEqual([]);
     });
+    it('18b. reabierta CON su carpeta todavia archivada: la fila cuenta, no es "sin fila"', () => {
+        // El caso que el 18 no cubria: se cierra, se archiva la carpeta y despues se reabre.
+        // La fila existe y la carpeta tambien, asi que el gate tiene que dar sano.
+        const reabierta = { ...buena, estado: 'reabierta 2026-07-28' };
+        expect(verificarInvariantes([reabierta], { archivadas: ['2026-07-21 - Mariana arb'] })).toEqual([]);
+    });
+    it('18c. y aun reabierta, dos filas de la misma tarea siguen cantando', () => {
+        const reabierta = { ...buena, estado: 'reabierta 2026-07-28' };
+        expect(verificarInvariantes([reabierta, reabierta], { archivadas: ['2026-07-21 - Mariana arb'] })
+            .join(' ')).toMatch(/dos veces/);
+    });
 });
 
 describe('elegirFechaTarea — desde cuando esta abierta de verdad', () => {
