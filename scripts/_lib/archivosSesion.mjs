@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 /**
  * archivosSesion.mjs — CLI: los archivos del repo que ESTA sesion toco (Write/Edit, o nombrados
  * en un comando: sed -i, cat >, python x.py), subagentes incluidos.

@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 /**
  * _buscarDocSgc.mjs — buscar un documento del SGC en el servidor, SIN colgarse y SIN mentir.
  *

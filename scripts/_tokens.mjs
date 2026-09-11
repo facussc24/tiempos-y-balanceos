@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 /**
  * _tokens.mjs — contabilidad de tokens y de conducta sobre los transcripts de Claude Code.
  *

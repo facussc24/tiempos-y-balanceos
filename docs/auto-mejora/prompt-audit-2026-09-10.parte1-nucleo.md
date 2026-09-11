@@ -143,7 +143,7 @@ Dos memorias nuevas reciben la historia que sale de las reglas:
 
 Resultado medido el 11/09: `CLAUDE.md` 13.949 B → 9.610 B (el objetivo era < 9.000 B; lo que queda es la tabla de
 routing de las 18 reglas con `paths:`, ~3,3 KB, que si sirve porque esas reglas NO estan cargadas). Reglas siempre
-cargadas: 18,5 KB → 15,1 KB (una menos: `verify-before-close.md`). Ademas se saco la tabla "Siempre cargadas" de
+cargadas: 18,5 KB → 15,8 KB (una menos: `verify-before-close.md`). Ademas se saco la tabla "Siempre cargadas" de
 CLAUDE.md (repetia reglas que ya estan en el contexto) y `_cerebroLint.mjs` ahora acepta esa lista como parrafo
 (`reglasDeParrafo`, con su test). Las 4 citas a `verify-before-close.md` en skills (`cad-design`, `editar-video`,
 `hojas-de-proceso`, `verificacion-consumos`) y en la memoria `ghpages_manual_deploy` apuntan a `git-deploy.md`.
