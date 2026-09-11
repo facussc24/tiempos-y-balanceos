@@ -21,10 +21,19 @@ FFMPEG = (r"C:\Users\FacundoS-PC\AppData\Local\Microsoft\WinGet\Packages"
 FFPROBE = FFMPEG.replace("ffmpeg.exe", "ffprobe.exe")
 
 
-OBJETIVO_LUFS = -15.5     # cama de fondo sola (sin locucion ni ambiente)
+# -20 LUFS. El numero NO sale de mi criterio: AES TD1008 §5 pone ese piso para material
+# que se reproduce SIN normalizacion de plataforma, y este video se manda como ARCHIVO —
+# lo abre el reproductor del celular o de Windows, que no normalizan nada. EBU R128 s2 §g
+# sanciona el rango -20 a -16 LUFS para ese caso. La v3 salio a -15,5 (altura de un master
+# de Spotify) y Fak, 10/09/2026: *"tiene el volumen al maximo, despertar a toda su
+# familia"*. -4,5 dB se perciben como ~27% menos fuerte, muy por encima del umbral de 1 dB.
+OBJETIVO_LUFS = -20.0
 PICO_MAX = -4.0           # techo del limitador. NO es el pico del entregable: el AAC
                           # agrega sobrepico entre muestras (medido: hasta +2,2 dB), y
                           # con -2,0 el master salio en +0,2 dBFS, o sea recortando.
+                          # Con -4,0 el entregable queda cerca de -1,8 dBTP, que es lo que
+                          # pide EBU R128 §m (-1 dBTP) con margen extra por la recodificacion
+                          # de WhatsApp (AES TD1008 §7B: bajar el umbral si baja el bitrate).
 
 
 def dur(f):
