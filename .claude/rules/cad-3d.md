@@ -122,7 +122,7 @@ presión, cuánto tiempo) y que Fak la confirme. El mecanismo sale de la operaci
 (6) si el utillaje aprieta: **¿de dónde sale la elasticidad?** Si la pieza del cliente trae material
 blando (vinilo/tela/espuma), el elástico ES ese material y el utillaje va RÍGIDO — un resorte impreso
 solo se justifica para definir fuerza a través de un hueco desconocido (el resorte del virolador era
-el 84 % de la pieza y sobraba entero; detalle: skill `cad-design` §6).
+el 84 % de la pieza y sobraba entero; detalle: `cad-design/reference/utillajes-de-apriete.md`).
 
 **GATE 2 — UN SOLO FRAME, derivado de la pieza.** El 2026-08-07 se entregó un ensamble con el
 dispositivo fuera de la ranura. La causa no fueron tres errores: fue **uno**. Había tres marcos
@@ -256,7 +256,8 @@ brazo correcto**.
   que aprieta 6 N no puede pesar medio kilo — eso se ve sin calcular nada, y hay que mirarlo.
 - **Requisito que cambia → RE-DERIVAR el diseño, no parchear.** Si el requisito nuevo deja un
   subsistema sin función, el subsistema se VA, no se refuerza (el resorte del virolador acumuló tope +
-  alma + brazo extra antes de que Fak lo llamara "un parche mal hecho"; skill `cad-design` §6).
+  alma + brazo extra antes de que Fak lo llamara "un parche mal hecho";
+  `cad-design/reference/utillajes-de-apriete.md`).
 
 **GATE 3.6 — un control puede SEPARAR y estar mirando el número equivocado.** (Caso con sus números: memoria `cad_gates_casos_fuente_2026-08`.) Dos moralejas que no son la misma:
 - **Un volumen se integra sobre el B-Rep, no sobre la malla** — y si se mide sobre malla, primero

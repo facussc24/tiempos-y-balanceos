@@ -56,10 +56,20 @@ validaciones igual — no se entera de que no es una persona. Nunca escribir en 
 de datos por fuera del programa: el daño no se ve el día que pasa, se ve semanas después en
 el stock.
 
+## Cuándo leer qué
+
+| Si voy a... | Leer antes |
+|---|---|
+| dar de alta una línea o un lote en una BOM | `reference/altas-de-linea.md` |
+| tocar un código del maestro (alta, descripción, un flag) | `reference/maestro-de-insumos.md` |
+| una tanda falló, o apareció un cartel que no reconozco | `reference/fallas-modales-y-export.md` |
+| entender por qué un gate está donde está | `reference/bitacora-tandas-2026-08.md` |
+
 ## Antes de decir "no se puede" (graduado de LECCIONES, 25/08/2026)
 
 **En una interfaz, el límite y la causa casi siempre están de MI lado: MIRAR LA PANTALLA antes
-de rediagnosticar.** Tres cosas que no viven en las tandas de abajo y que cuestan caro:
+de rediagnosticar.** Tres cosas que no viven en la crónica de las tandas
+(`reference/bitacora-tandas-2026-08.md`) y que cuestan caro:
 
 - **"Es un límite del programa" casi siempre es un límite de lo que probé.** Dos frases de esta
   misma skill decían que hacía falta una persona: las dos falsas, las dos resueltas con un click
@@ -308,7 +318,7 @@ Sin esto los clicks caen en la celda de al lado y se escribe basura en el códig
 ```
 Alt -> V -> Y 0 3                  abrir (el KeyTip es Y03, no Y3 - ver arriba)
 gate: ¿estoy en la solapa Altas?   si no hay grilla, ABORTAR — no escribir a ciegas
-CLICK en Parte Superior            <- click, NO tabular (ver abajo)
+CLICK en Parte Superior            <- click, NO tabular (por que: reference/bitacora-tandas-2026-08.md)
 escribir el codigo CON FOCO        <- o se pierde el guion
 TAB                                trae la BOM
 ubicar la fila POR CODIGO          nunca por posicion
@@ -339,8 +349,8 @@ tabular** (dato de Fak, 07/08: *"llegás a la última línea de la sexta y le da
 baja a la número 7"*), y `cargar_producto()` lo implementa: si la primera celda a cambiar cae fuera
 de vista, se ancla en la última fila visible y sigue tabulando. Lo único que no se puede hacer con
 una fila fuera de vista es **leer** su valor viejo — el control no existe todavía —, así que la
-verificación por contenido pasa de ser previa a ser *al llegar*. Detalle en §EL SCROLL DE LA GRILLA
-NO EXISTE COMO PROBLEMA.
+verificación por contenido pasa de ser previa a ser *al llegar*. Detalle en
+`reference/altas-de-linea.md`.
 
 ### Qué necesita foco y qué no `CORREGIDO 2026-08-05`
 
@@ -405,444 +415,6 @@ normal.
 - **Confirmar el foco antes de escribir** (`GetGUIThreadInfo`) y **abortar si no coincide**.
   Esa guarda es lo único que evitó corromper el código de un insumo de producción.
 
-## Tanda del 2026-08-06 — 16 de 16, y lo que costó llegar
-
-Segunda tanda real (16 piezas de una familia, 11 insumos cada una). Cerró en **16 de 16
-verificadas contra el export**, y el diff del arb entero dio **0 altas, 0 bajas, 16 cambios**:
-nada fuera de lo pedido. Pero salieron cuatro cosas nuevas.
-
-### Pararse en `Parte Superior` es con CLICK, no tabulando `2026-08-06`
-
-Tabular no llega nunca. Si el foco quedó en la solapa —que es donde queda **siempre después
-de exportar**— el TAB no entra al campo: la navegación la maneja la grilla, no el diálogo.
-Un click real del mouse sí. Adentro de la grilla se sigue tabulando: ahí un click puede caer
-en la celda de al lado y escribir sobre el código de un insumo.
-
-### `activar()` no alcanzaba con `SetForegroundWindow` `2026-08-06`
-
-Windows lo bloquea cuando el foreground lo tiene otro proceso — y eso pasa **en cada comando**,
-porque la consola desde la que se corre le saca el frente al arb. Hay que `AttachThreadInput`
-con el thread que hoy tiene el foreground, y recién ahí Windows deja pasar el cambio. Sin
-esto, `--diagnostico` cortaba con "no pude poner el foco" aunque la ventana estuviera visible.
-
-### Dos bugs del parser del export, los dos silenciosos `2026-08-06`
-
-Ninguno tira error: devuelven una BOM incompleta y el recorrido se desfasa.
-
-- El filtro era `re.match('^[0-9]', articulo)`: **solo dejaba pasar productos con código
-  numérico**. Familias enteras cuyo código arranca con letra quedaban afuera, y el cargador
-  se quedaba sin BOM contra la cual verificar.
-- Pedir `len(columnas) >= 8` **descarta las filas partidas**. Y acá eso no es un detalle de
-  auditoría: el cargador **cuenta los insumos para saber cuántos TAB dar** (`3 + 5*i`), así
-  que un insumo de menos desfasa todo el recorrido y se termina escribiendo sobre otro
-  material. Justo las piezas con descripción larga son las que se parten.
-
-**Regla que sale de acá:** cualquier parser del export se valida contra un conteo crudo
-independiente, pieza por pieza, antes de usarlo para navegar.
-
-### El arb puede tirar `HEAP CORRUPTION DETECTED` `visto 2026-08-06`
-
-Cartel `Microsoft Visual C++ Runtime Library` → *"Debug Error! … HEAP CORRUPTION DETECTED …
-CRT detected that the application wrote to memory after end of heap buffer"*, con botones
-**Anular / Reintentar / Omitir**.
-
-Es un bug del propio arb: se pisó su memoria. Apareció después de ir y venir varias veces
-entre solapas y exportar. **Mientras el cartel está, la ventana no responde a nada** — los
-clicks en las solapas no hacen efecto y parece colgada. Ese es el síntoma que hay que
-reconocer.
-
-- **Anular** y reabrir el programa. Es lo correcto.
-- **Omitir** deja al programa siguiendo con la memoria ya corrupta. Con consumos de
-  producción de por medio, no.
-- Después de reabrir: **re-exportar y diffear contra el respaldo previo**, para confirmar que
-  no quedó nada raro. En este caso no quedó.
-
-Detectarlo es una línea: enumerar las ventanas del proceso del arb y buscar clase `#32770`
-con título `Microsoft Visual C++ Runtime Library`. Conviene chequearlo antes de decidir que
-"la ventana está trabada".
-
-### Reintentar es seguro, y hace falta `2026-08-06`
-
-La tanda no sale de una: el TAB se pierde de vez en cuando y el recorrido se desfasa. Real:
-8/15 → 3/7 → 3/4 → 1/1. Cuando falla, **falla sin escribir** (el gate compara el contenido de
-cada celda y aborta antes del ENTER), así que no deja nada a medias.
-
-**Reintentar no puede pisar dos veces**: el gate de `valor_esperado` compara contra lo que hay
-antes de escribir, así que una pieza ya cargada se rechaza sola con *"tiene X y esperaba Y —
-no lo piso"*. Eso es un éxito del reintento, no un error.
-
-Cuando una pieza falla, la siguiente suele fallar con "la ventana no está activa" — efecto
-dominó del estado que quedó. No significa nada: se reintenta y entra.
-
-## Tanda del 2026-08-07 — 0 de 12, y la red de seguridad que faltaba conocer
-
-Lote de 36 líneas sobre 12 piezas (8 a 11 insumos cada una). **Grabó 0.** Tres fallas distintas,
-**ninguna llegó a escribir en la base** — pero por tres mecanismos diferentes, y uno no era mío.
-
-### El tope del arb es 99,999999 y su cartel delata la coma perdida `CONFIRMADO`
-
-Al escribir un consumo **se perdió la coma**: `0,29867000` entró como `029867000`. El arb lo
-leyó como veintinueve millones y abrió un modal propio:
-
-```
-clase #32770 · título "Error" · [Static] "Valor Fuera de Rango (99.999999)" · [Button] Aceptar
-```
-
-Dos cosas que valen para siempre:
-
-- **El campo `Cantidad` topea en 99,999999.** Cualquier valor ≥ 100 lo rechaza el programa. Eso
-  convierte la coma perdida en una falla **ruidosa**, no silenciosa — es la tercera red, después
-  del gate de foco y del gate de contenido, y es la única que no depende de mi código.
-- **Detectarlo es una línea**, igual que el `HEAP CORRUPTION`: enumerar las ventanas visibles del
-  proceso `produc.exe`, buscar clase `#32770`, y leer el `Static` de adentro. Leer no roba el
-  foco, así que se puede diagnosticar sin tocar la sesión de Fak. Vale la pena chequearlo
-  **antes** de concluir "la ventana no responde": puede haber un modal esperando `Aceptar`.
-
-Secuencia para salir: **`Aceptar` en el modal → `CANCELA` en la solapa de Altas → recién ahí
-exportar.** Nunca `ACEPTA` ni `ESC` con una celda escrita a medias.
-
-### 🟢🟢 MIRAR LA PANTALLA: se puede, y cambia todo `CONFIRMADO 2026-08-07`
-
-**El error de método de toda la mañana fue operar a ciegas.** Se puede capturar la ventana con
-`PrintWindow` + PIL y **verla**. Con eso se ubican los botones y se hace click real donde
-corresponde, en vez de adivinar coordenadas o pelearse con teclas que no llegan.
-
-Helper: `scripts/_arbVer.py` — `foto rel|prod`, `click X Y`, `estado`. Las coordenadas del
-click son **relativas a la ventana**, las mismas que se ven en la captura, y `click()` relee el
-rect en cada llamada: **la ventana se mueve sola entre corridas**, así que nunca guardar
-coordenadas de pantalla.
-
-**Regla nueva: antes de apretar cualquier botón que dispare algo, sacar una foto y mirarla.**
-Costó descubrirlo pero evita, por ejemplo, mandar el listado entero a la impresora (ver export).
-
-### 🔴🔴 FOREGROUND NO ES FOCO — por eso se perdían las teclas `CONFIRMADO 2026-08-07`
-
-`SetForegroundWindow` puede devolver éxito y `GetForegroundWindow()` confirmar la ventana, y aun
-así **`GetGUIThreadInfo(tid).hwndFocus` da `None`: el arb no tiene el foco de teclado.** Medido:
-antes del click `hwndActive=None hwndFocus=None`; después de **un click real del mouse**,
-`hwndActive=662340 hwndFocus=662340`.
-
-**Un click real del mouse es lo único que le da foco de teclado.** Sin eso, `keybd_event` se
-pierde y parece que "las teclas sintéticas no funcionan". Funcionan — pero hay que darle foco
-primero. Chequear `hwndFocus is not None` antes de mandar teclas.
-
-Con foco: `V` **sí** selecciona la solapa `Menú de Insumos` del ribbon. Lo que no anda es el
-~~`Y3` del KeyTip~~ - el KeyTip real es **`Y03`** y SI abre (25/08). Tambien anda con **click real**
-ubicado en la captura (≈ x=298, y=95 de la ventana principal).
-
-### 🔴🔴 EL EXPORT DEJA EL ARCHIVO TOMADO POR EXCEL `CONFIRMADO 2026-08-07`
-
-**La salida `Tabla EXcel` abre `C:\tmp\RELACIONES.TXT` en Excel, y Excel se queda con el
-archivo.** El export siguiente **falla en silencio**: el arb no avisa nada, el `mtime` no
-cambia, y uno se queda mirando el botón `ACEPTA` creyendo que está roto. Perdí media hora acá.
-Lo cazó Fak: *"es como que sale un error de que tenés otro Excel abierto con el mismo nombre"*.
-
-Peor: Excel abre además un cartel **"De forma predeterminada, Excel realizará las siguientes
-conversiones de datos: • Quitar ceros iniciales"** con botones `Convertir` / `No convertir`.
-⚠ **Nunca `Convertir`**: sobre un consumo que arranca con ceros, sacarle los ceros iniciales destruye
-el dato. Se contesta **`No convertir`** y se cierra Excel.
-
-**Gate antes de exportar:** que no haya proceso `EXCEL.EXE` con `RELACIONES.TXT`, y que el
-archivo se pueda abrir en modo append. Si no:
-
-```python
-open(r'C:\tmp\RELACIONES.TXT', 'a').close()   # PermissionError = alguien lo tiene tomado
-```
-
-**Después de cada export, cerrar Excel.** Si no, el próximo export no sale.
-
-### 📋 DAR DE ALTA UNA LÍNEA — la secuencia `dictada por Fak 2026-08-07 · 31/31 el mismo día`
-
-Fak la explicó así (textual, resumida): *"cuando llegás a la última línea cargada le das TAB
-nuevamente y ahí primero se va a la última línea en blanco, que debés colocar rubro `1` y luego
-TAB y cargás el código del insumo, luego TAB — automáticamente saltea la descripción y se va al
-consumo directamente —, lo cargás y luego cargás los rubros, siempre con TAB. Y finalmente le
-das TAB y aceptar"*.
-
-```
-tabular hasta la ULTIMA fila cargada, y un TAB mas  -> cae en la fila en blanco
-rubro   = 1                        TAB
-codigo del insumo                  TAB     <- saltea Descripcion y U.M.
-consumo                            TAB
-modulo                             TAB
-proceso                            TAB
-                                   ENTER sobre &Acepta
-```
-
-Lo hace `scripts/_arbAlta.py` (una línea por invocación) con sus gates: verifica cada celda
-contra lo esperado antes de escribir la siguiente, saca una **foto** y lee las 5 celdas del
-renglón nuevo antes del ENTER, y sin `--apply` no aprieta ENTER (el renglón queda escrito en
-pantalla y se descarta con CANCELA).
-
-**El alta NO es reversible con el export** (a diferencia de un consumo, que se deshace tipeando el
-valor viejo). Por eso se prueba con UNA sola línea y se verifica contra el export antes de seguir
-con el resto.
-
-### 🟢 ALTAS EN LOTE — `_arbAltaLote.py` `CONFIRMADO 2026-08-28`
-
-```bash
-python scripts/_arbAltaLote.py --tabla .arb-cache/<tabla>.csv --apply [--reset-primero]
-```
-
-CSV con encabezado `producto,insumo,cantidad,modulo,proceso`, una fila por producto terminado.
-Envuelve a `_arbAlta.py` (que hace UNA línea por invocación) y agrega lo que había que repetir
-a mano: abre la ventana si no está, **resetea después de cada fallo** (una celda sucia
-envenena la alta siguiente), sigue con el resto del lote y lista lo que quedó pendiente.
-Sin `--apply` es dry-run — y ahí el reset es obligatorio igual, porque el renglón queda
-escrito en pantalla.
-
-**Estrenado el 28/08**: mismo insumo en 12 BOM de headrest, 12/12 en 116 seg.
-
-### 🔴 DOS COSAS QUE FRENABAN EL ARRANQUE, LAS DOS DE NUESTRO LADO `2026-08-28`
-
-1. **`abrir()` mandaba el KeyTip `Y3` y el real es `Y03`.** La skill tenía corregido el `Y03`
-   desde el 25/08 pero `_arbCargar.abrir()` seguía con el viejo, así que **abortaba con
-   "no encuentro la ventana — abrí el arb"** y el mensaje mandaba a buscar el problema
-   afuera: el arb estaba abierto y logueado. Corregido en el código, no sólo en la prosa.
-   *Arreglar la prosa no arregla el script, y arreglar el script no arregla la prosa: hay
-   que tocar los dos.*
-2. **Después de exportar, la ventana queda en la solapa `Listado`** y `traer()` aborta con
-   "andá a Altas de Insumos de Un Producto". El export es justo lo que se hace antes de
-   cargar, así que este tropiezo cae siempre. Se destraba con un click real en la solapa
-   `Altas` (≈ x=120, y=68 de la ventana `rel`) — es lo mismo que ya hace
-   `reset_relaciones()` en su último paso.
-
-### 🟢 EL SCROLL DE LA GRILLA NO EXISTE COMO PROBLEMA `dato de Fak 2026-08-07`
-
-Pregunté cómo se llega a una línea que está debajo de las 6 visibles. Fak: *"llegás cuando
-llegás a la última línea de la sexta, digamos, y le das TAB: automáticamente baja a la número
-7"*. **La grilla scrollea sola al tabular.** El cargador abortaba con "hay que scrollear y eso
-no está resuelto" y era una limitación inventada: 13 líneas quedaron sin cargar por eso.
-
-Lo único que NO se puede hacer con una fila fuera de vista es **leer** su valor viejo — el
-control todavía no existe. No importa: `recorrer()` compara el contenido de cada celda contra
-el export antes de escribir, así que la verificación pasa de ser previa a ser *al llegar*.
-Implementado en `cargar_producto()`: si la primera celda a cambiar cae fuera de vista, se ancla
-en la última fila visible y se sigue tabulando.
-
-### 🔴 EXPORTAR: el combo se RESETEA al cambiar de solapa `CONFIRMADO 2026-08-07`
-
-El `Salida` vuelve a **vacío** cada vez que se entra a la solapa `Listado`. Con el combo vacío,
-`ACEPTA` no hace nada — y ahí se pierden diez minutos creyendo que el botón está roto.
-
-Y el click sobre el combo **no le da el foco** (ya estaba anotado): el arb se lo queda en
-`Desde Artículo`. La receta que funciona, entera:
-
-```
-click en la solapa `Listado de Insumos de Un Producto`
-click en el campo `Desde Artículo`      <- foco real
-TAB TAB                                  <- ahora sí, foco en el combo Salida
-↑ x8                                     <- pisar en la opcion 0, venga de donde venga
-↓ x3                                     <- 3 = Tabla EXcel
->>> FOTO Y MIRARLA <<<                   <- GATE, ver abajo
-ENTER ENTER ENTER                        <- 1 dispara ACEPTA, los otros cierran el ARB Editor
-```
-
-⚠️ **El GATE de la foto no es opcional.** Desde el combo vacío, `↓↓↓` cae en **`Impresora`**, no
-en `Tabla EXcel`. Aceptar ahí manda **todo** el listado de relaciones a la impresora de la
-oficina. Se verifica con la captura que dice `Tabla EXcel` **antes** de apretar ENTER.
-
-El export abre una ventana `ARB Editor - Listado de Relaciones` y **tarda ~60 s en terminar de
-escribir** `C:\tmp\RELACIONES.TXT`. Leer el archivo antes da un tabulado **cortado a la mitad**
-que parsea sin error. **Esperar a que el tamaño se estabilice** (y que pasen unos segundos desde
-el último cambio de mtime) antes de verificar.
-
-### 🔴🔴 UNA CELDA SUCIA ENVENENA TODAS LAS CORRIDAS SIGUIENTES `CONFIRMADO 2026-08-07`
-
-**Es el hallazgo más caro del día.** Una escritura fallida deja el valor podrido en la celda, y
-ese valor **sobrevive a volver a entrar el producto**: el arb mantiene el buffer de edición del
-registro abierto. `chequear_pantalla` no lo caza porque **compara códigos, no valores**.
-
-Consecuencia: la primera falla real fue una coma en la tabla; las tres corridas siguientes
-fallaron **por la basura que dejó la primera**, con mensajes que apuntaban a otro lado
-("la ventana perdió el frente"). Se persiguió el síntoma durante una hora.
-
-**Gate: después de CUALQUIER corrida fallida, resetear la ventana antes de reintentar.**
-`&Cancela` suele estar deshabilitado; lo que sí funciona es **`WM_CLOSE` a la ventana
-`Maestro de Relaciones`**: descarta la edición, no pide confirmación y no graba (probado). Después
-hay que reabrirla — y eso lo tiene que hacer una persona (ver abajo).
-
-**Y verificar los valores, no sólo los códigos**, antes de escribir: leer las celdas de
-`Cantidad` y compararlas contra la BOM del export. Si alguna no coincide, la ventana está sucia.
-
-### 🔴 EL SEPARADOR DECIMAL: la regla completa `CONFIRMADO 2026-08-07`
-
-| qué se manda | resultado |
-|---|---|
-| coma, con o sin foco | **se strippea siempre** — `0,123` queda `0123` |
-| punto, sin foco | **se strippea** — `0.0005070` quedó `00005070` |
-| punto, con foco | entra bien |
-
-O sea: **la tabla va en punto Y la celda tiene que tener el foco.** Cualquiera de las dos que
-falte produce un número multiplicado por 10^n → `Valor Fuera de Rango` → modal → todo lo demás.
-
-Ojo: escribir por mensaje **no es determinístico**. En la misma sesión, la misma secuencia
-`EM_SETSEL` + `WM_CHAR` una vez reemplazó el valor y otra vez no hizo nada. **No improvisar
-escrituras sueltas sobre la ventana viva**: se usa el cargador, que verifica cada celda.
-
-### ~~🔴 LAS TECLAS SINTÉTICAS NO ABREN EL MENÚ~~ — **ERA FALSO. La tecla estaba mal.**
-
-Decía: *"`keybd_event` con la secuencia documentada `Alt Alt → V → Y3` no abre Relación de
-Consumo, con Producción al frente y confirmado"*. El experimento estaba bien hecho; **la
-conclusión estaba mal sacada**. No era que las teclas sintéticas no llegaran: era que
-**`Y3` no existe** — el KeyTip real es `Y03`, de tres caracteres. Se mandaba una tecla que no
-correspondía a nada y se concluyó que el canal no funcionaba.
-
-**CORREGIDO 25/08/2026**, con la secuencia leída (no adivinada) de los `KbxLabelClass`:
-`Alt → V → Y 0 3` abre la ventana. Ver la sección de navegación por teclado.
-
-**La lección de método, que es lo que vale:** el experimento decía *"mandé estas teclas y no
-pasó nada"*, y de ahí salió *"las teclas sintéticas no funcionan"* — un enunciado mucho más
-grande que la evidencia. **Antes de concluir que un canal no funciona, verificar que lo que
-se mandó por ese canal era correcto.** El dato que faltaba estaba a una lectura de distancia:
-los KeyTips son ventanas y se pueden enumerar.
-
-Lo mismo pasó, en chiquito, con *"reabrir la ventana requiere una persona"* (corregido el
-20/08 con un click real) — dos veces el mismo patrón en la misma skill.
-
-`_arbVer.py reset` sigue usando el click de (298, 95): funciona y está probado. La vía por
-teclado es la alternativa cuando no se quiere mover el mouse.
-
-### 🔴 LA CAUSA RAÍZ DE LA COMA: la grilla usa PUNTO, el export usa COMA `CONFIRMADO 2026-08-07`
-
-```
-grilla en pantalla   0.0005070     ← PUNTO, 7 decimales
-export RELACIONES    0,00050700    ← COMA,  8 decimales
-```
-
-**La tabla del cargador se arma con el valor en formato GRILLA (punto).** Si se genera desde el
-export y se deja la coma, el arb se la come y el número entra multiplicado por 10^n → `Valor
-Fuera de Rango`. Las tandas de 14/14 y 16/16 andaban porque sus CSV tenían punto; la del 07/08
-falló porque generé el CSV desde el export. `valor_esperado` puede quedar con coma: se compara
-con `num()`, que normaliza. **El que importa es `valor_nuevo`.**
-
-Verificarlo cuesta un comando y no roba el foco: `python scripts/_arbUI.py --leer`.
-
-### 🔴 LA GRILLA NO ARRANCA SIEMPRE EN LA FILA 1 DE LA BOM `CONFIRMADO 2026-08-07`
-
-**La posición del scroll es un estado que cambia solo, y el cargador no la mira.** Medido dos
-veces sobre la misma pieza, con minutos de diferencia: una vez las celdas visibles eran los
-renglones 3-6 de la BOM, otra vez los renglones 2-6. La cuenta `3 + 5*i` da por sentado que
-**fila visible 0 == renglón 0 de la BOM**, y cuando la grilla está corrida escribe en el renglón
-equivocado. Ahí el arb rechaza el valor y abre el modal — que es el `Valor Fuera de Rango` que
-apareció en las tres tandas del 07/08 y que se veía como "la ventana perdió el frente".
-
-**Cómo detectarlo sin escribir nada:** enumerar los hijos de la ventana, quedarse con los
-`RichEdit20A` cuyo texto matchea `\d+\.\d{7}` (ésas son las celdas de `Cantidad`) y comparar esa
-secuencia contra la BOM del export. **Si la primera no es el renglón 0, la grilla está corrida.**
-
-```python
-celdas = [t for h, c, t in ctrls if re.fullmatch(r'\d+\.\d{7}', (t or '').strip())]
-# comparar `celdas` contra [f[5] for f in bom] para sacar el offset real
-```
-
-Mientras el cargador no mida ese offset y lo sume al recorrido, **una tanda sólo es confiable si
-se verifica que la grilla arranca en el renglón 0** — y si no, se re-entra la pieza hasta que
-así sea. Este es el arreglo pendiente número uno del robot.
-
-### 🔴 EL MODAL BLOQUEA TODO Y NO SE CIERRA POR MENSAJE `CONFIRMADO 2026-08-07`
-
-Mientras el `#32770` está abierto, `Maestro de Relaciones` y `Producción` quedan
-**`IsWindowEnabled == False`**. Todo intento de escribir falla con *"no pude poner el foco en el
-control antes de escribir"* — **en las 12 piezas, sin excepción**. Ese error en masa no es un
-problema de foreground: **es el síntoma de un modal olvidado**.
-
-Y **`BM_CLICK` sobre su botón `Aceptar` NO lo cierra**, igual que no graba el `&Acepta` de la
-grilla. ~~El modal lo tiene que cerrar una persona con un click real.~~ **CORREGIDO 20/08: el
-click real lo puedo dar yo** — `python scripts/_arbVer.py modal`. Ver la tanda del 20/08.
-
-**Gate obligatorio al arrancar CUALQUIER tanda** (y antes de cada reintento): enumerar las
-ventanas visibles de `produc.exe`; si hay un `#32770`, **abortar de entrada** pidiendo el click,
-en vez de gastar 12 productos descubriéndolo. El 07/08 corrí dos tandas contra un modal abierto
-desde la primera.
-
-### La lección de método
-
-Las fallas del lote **fueron todas detectables antes de correr**, y ninguna lo estaba: el scroll
-se calcula del export; el separador se ve con `--leer`; el modal se detecta enumerando ventanas.
-**Cada tanda tiene que dejar su gate escrito acá, si no se paga dos veces** — y de hecho se pagó:
-escribí el gate del modal a media mañana y aun así lancé dos tandas más sin correrlo.
-
-**Por eso el orden de arranque no es negociable, y va antes de cualquier `--apply`:**
-
-```
-1. ¿hay un #32770 abierto?            -> abortar, pedir el click real
-2. ¿el CSV tiene valor_nuevo con PUNTO? -> si tiene coma, abortar
-3. ¿el export que genero la tabla es el PRE-CAMBIO? -> si se regenero a mitad, rehacerla
-4. export fresco guardado en .arb-cache/pre-cambio/
-5. recien ahi --apply
-6. re-exportar y diffear el archivo ENTERO contra la foto previa
-```
-
-Los seis son mecánicos y baratos. **Ninguno depende de acordarse: se corren siempre.**
-
-## Tanda del 2026-08-20 — 31 de 31, y dos "esto lo tiene que hacer una persona" que eran falsos
-
-Aplix de m² a metros lineales: 34 líneas objetivo, **31 productos terminados grabados y
-verificados**, 3 fuera de alcance por una validación del arb que no estaba documentada.
-
-### 🔴 LA GRILLA GUARDA 7 DECIMALES, NO 8 `medido 2026-08-20`
-
-Se cargó `0.00123077` y quedó **`0,0012307`**: el arb **trunca**, no redondea. El export lo
-devuelve como `0,00123070` (8 posiciones, la última siempre 0).
-
-**Las tablas se generan con 7 decimales REDONDEADOS** (`ROUND_HALF_UP`), no con 8 truncados:
-truncar sesga todo el lote para abajo. El error queda en ~0,005%, muy adentro del 0,1%, pero
-es gratis no tenerlo.
-
-### 🟢🟢 EL MODAL LO PUEDO CERRAR YO `CONFIRMADO 2026-08-20` — corrige lo que dice arriba
-
-La sección del 07/08 dice *"el modal lo tiene que cerrar una persona con un click real"*. La
-primera mitad es falsa. `BM_CLICK` no lo cierra —igual que no graba el `&Acepta`, mismo patrón
-de todo lo sintético en este `.exe`—, pero **un click real del mouse sobre su botón `Aceptar`
-sí lo cierra**. Medido: 1 modal → 0.
-
-```bash
-python scripts/_arbVer.py modal      # cierra los #32770 con click real
-```
-
-### 🟢🟢 LA VENTANA LA PUEDO REABRIR YO `CONFIRMADO 2026-08-20` — corrige lo de arriba
-
-La otra mitad que era falsa: *"reabrir la ventana después de cerrarla requiere una persona"*.
-Cierto que `Y3` no abre nada -el KeyTip es `Y03`, corregido el 25/08-, y **el boton tambien se abre con un click
-real** en (298, 95) de la ventana `Producción`, con la solapa `Menú de Insumos` ya activa.
-
-Eso completa el ciclo de recuperación **sin intervención**, que es lo que hacía que una celda
-sucia terminara la tanda:
-
-```bash
-python scripts/_arbVer.py reset      # cierra modales + WM_CLOSE + reabre + solapa Altas
-```
-
-**`CANCELA` no limpia la celda sucia** cuando el rechazo vino de una validación del arb: se
-cliqueó dos veces y la ventana siguió clavada en la misma pieza con el valor escrito. Lo único
-que la saca es `WM_CLOSE`.
-
-### 🔴 MODAL NUEVO: `No Ingreso Procesos` — sin Módulo/Proceso el arb NO GRABA
-
-Tres líneas del lote (`APLIX 20 X 20`, `APLIX-TROQ`, `P280828`) tienen **Módulo y Proceso
-vacíos** en el export. Al llegar a `&Acepta` el arb abre `Error / No Ingreso Procesos` y no
-graba. La pantalla queda con el valor escrito y el foco en la celda `Módulo` en amarillo.
-
-Peor: **el modal quedó abierto y se llevó puestas las 2 líneas siguientes** del lote con
-"no pude poner el foco" — el síntoma en masa que ya estaba documentado.
-
-**Gate antes de armar el lote**: descartar las líneas cuyo Módulo o Proceso vengan vacíos del
-export. No se completan por cuenta propia: el sector donde se consume un material es dato
-técnico (regla `core-prohibiciones` §1), va **TBD** y se reporta.
-
-```python
-mod, proc = g(r, 6), g(r, 7)
-if not mod or not proc:      # el arb va a rechazar el renglon entero
-    fuera_del_lote.append(pn)
-```
-
-### Después de exportar, la ventana queda en la solapa `Listado`
-
-Ya estaba anotado que el foco queda ahí, pero no que **el cargador aborta por eso**:
-*"no veo la grilla de insumos: la ventana está en otra solapa"*. Entre el export y el
-`--apply` va siempre un `click 118 68` (solapa `Altas`). El comando `reset` ya lo hace.
-
 ### El orden que salió bien, de punta a punta
 
 ```
@@ -861,167 +433,6 @@ _arbVer.py export  +  verificar + invariantes + diff del archivo entero
 ⚠️ **La tabla se genera del export PRE-CAMBIO, no del actual.** Si se regenera a mitad de
 lote, las líneas ya convertidas se vuelven a dividir por el ancho. El `valor_esperado` sí
 sale del actual: es contra lo que el cargador compara la celda antes de escribir.
-
-## ABM de Insumos — dar de alta un CÓDIGO en el maestro `APRENDIDO 2026-08-28`
-
-Hasta hoy esto lo hacía Fak a mano. Se grabó una sesión suya completa con
-`scripts/_arbAprender.py` (teclas + foco + fotos) y quedó todo medido. Fak, ese día:
-*"hoy es la última vez que lo hago yo"*. Herramienta: **`scripts/_arbInsumo.py`**.
-
-### Cómo se llega
-
-```
-ventana Producción  ->  ribbon solapa `Menú de Insumos`  (click en ~869,47)
-                    ->  botón `ABM de Insumos`           (click en ~36,84)
-```
-Abre la ventana **`Maestro de Insumos - BA`**, clase `TabCtrl`, 810x730.
-Por teclado el KeyTip es `V` (Menú de Insumos) y después `Y01` (ABM de Insumos) —
-ojo con el **cero adelante**, es `Y01`, no `Y1`.
-
-Ocho solapas, todas a **y=67**:
-
-| solapa | x | para qué |
-|---|---|---|
-| `Altas` | 52 | **crear** un código nuevo |
-| `Bajas` | 96 | |
-| `Modificaciones` | 160 | **corregir** uno existente — y **leerlo sin tocarlo** |
-| `Recupera` | 231 | |
-| `Precios` | 287 | |
-| `Listado` | 331 | exportar el maestro |
-| `Control de Calidad` | 403 | |
-| `Escape` | 477 | |
-
-### Mapa de campos (Altas y Modificaciones son la misma pantalla)
-
-Coordenadas del **centro de la caja**, relativas a la ventana:
-
-| campo | x,y | qué va |
-|---|---|---|
-| `Rubro` | 215,152 | `1` = materia prima |
-| **`Medida`** | 355,152 | **es el CÓDIGO del insumo** (mismo nombre engañoso que en Relaciones) |
-| `Descripción` | 370,181 | caja de 2 renglones — **tope 60 caracteres** |
-| `C. Costo Ingreso` · `Imputación Ingreso` | 215,266 · 477,266 | se dejan vacíos |
-| `C. Costo Descarga` · `Imputación Descarga` | 215,295 · 477,295 | se dejan vacíos |
-| **`Unidad`** | 217,323 | `MTS`, `MT2`, `KG`, `UN`… |
-| `Doble Medida S/N` | 466,323 | `N` |
-| `Stock Mínimo` · `Lote Óptimo de Compra` | 245,352 · 507,352 | vacíos |
-| `Unidad Mínima de Compra` · `Tiempo de Entrega` | 245,380 · 471,380 | vacíos |
-| `Proveedor` · `Código Original` (x2) | 215/514, 409 y 437 | vacíos |
-| `Es Sub-Producto S/N` · `Etiquetas` | 204,466 · 477,466 | `N` |
-| `Tiene Vencimiento S/N` | 204,494 | `N` |
-| `Tipo de Descarga O/G/I` | 466,494 | `I` |
-| `Origen Descarga M/L` | 650,494 | `M` |
-| **`Posee PAPP/PSW S/N`** | 204,523 | `S` — **es el flag de PPAP** |
-| `&Acepta` · `&Cancela` | 411,580 · 512,580 | |
-
-El pie de la ventana **dice qué espera el campo donde estás parado** (ej. *"Indique si el
-Insumo Tiene Documentación de Calidad Aprobada S/N/X"*). Es la ayuda en vivo: leerla en la
-foto antes de tipear algo dudoso.
-
-### La secuencia del alta (medida sobre Fak, 27 segundos)
-
-```
-click en `Altas`
-click en Rubro   -> 1 -> TAB
-click en Medida  -> <código> -> TAB
-click en Descripción -> <descripción> -> TAB
-TAB TAB          (saltea los centros de costo/imputación)
-Unidad -> MTS -> TAB
-... TAB hasta los flags ...
-Tipo de Descarga -> I -> TAB
-Origen Descarga  -> M -> TAB
-Posee PAPP/PSW   -> S -> TAB   <- el TAB desde acá cae en el botón &Acepta
-ENTER            (sobre &Acepta)
-```
-Después del alta la pantalla **se limpia sola y queda lista para el siguiente código**. Los
-campos que se dejan en blanco quedan en blanco: el arb no los exige.
-
-### 🔴 Tres cosas que rompen el método de siempre
-
-1. **Los campos son `RichEdit20A` y NO devuelven texto por `WM_GETTEXT`.** `txt(hwnd)` da
-   `''` siempre. Todo el control de "leo la celda antes de escribir" que sí funciona en
-   Relaciones (`Edit` común) **acá no sirve**. La única forma de saber qué dice un campo es
-   **`PrintWindow` y mirar la foto**. Ningún alta se da por buena sin foto.
-2. **El campo `Descripción` scrollea.** Con el cursor al final muestra el FINAL del texto y
-   se come las primeras letras: `PUNZONADO…` se ve `UNZONADO…`. **Eso no es un error de
-   carga**, es el render. Para leer la descripción real: solapa `Modificaciones`, traer el
-   código, y ahí se ve desde el principio.
-3. **El arb puede tirar `Microsoft Visual C++ Runtime Library` justo al apretar `&Acepta`**
-   (cartel `#32770`, botones `&Anular` / `&Reintentar` / `Om&itir`). Pasó en el alta del
-   28/08 y **el registro se grabó igual y correcto** — verificado después contra el maestro.
-   Aun así: la salida documentada es **`Anular` y reabrir el programa**, nunca `Omitir`
-   (sigue con la memoria corrupta). Si se apretó `Omitir`: **verificar el registro y cerrar
-   y reabrir el arb antes de escribir nada más.**
-
-### Verificar un alta sin tocar nada — solapa `Modificaciones`
-
-```bash
-python scripts/_arbInsumo.py solapa modificaciones
-python scripts/_arbInsumo.py click rubro
-python scripts/_arbInsumo.py escribir 1
-python scripts/_arbInsumo.py teclas TAB
-python scripts/_arbInsumo.py escribir <CODIGO>
-python scripts/_arbInsumo.py teclas TAB      # trae el registro
-# mirar la foto
-python scripts/_arbInsumo.py click cancela   # salir SIN grabar
-```
-~~**Se sale con `&Cancela`, no con `ESC`**~~ — **FALSO, corregido 31/08/2026 por Fak**:
-*"se sale con ESC y te movés con TAB, ¿ya te olvidaste de todo?"*. Medido el mismo día:
-**`&Cancela` está DESHABILITADO** mientras no hay edición pendiente, así que clickearlo no
-hace nada. La salida real es **`ESC` → modal `Desea Finalizar ??` → `&Sí`**.
-
-### 🟢🟢 MODIFICAR UN CAMPO DEL MAESTRO — todo por TECLADO `CONFIRMADO 2026-08-31`
-
-Primera modificación real grabada por robot: `TRO-TEL0001-V1`, campo `Es Sub-Producto` de
-`N` a `S`. Export antes/después: **2 altas, 0 bajas, 0 cambios** — nada fuera de lo pedido.
-
-**Dentro del formulario NO se clickea por coordenada: se TABULA.** Ese fue el error del día:
-click en `(204, 466)` para pararme en `Es Sub-Producto`, el foco **no se movió** (siguió en
-`Descripción`), y el `BACKSPACE` que le mandé después fue a parar a la descripción del insumo.
-El click no falló ruidosamente: falló *en silencio*, que es peor.
-
-**El tab order, medido control por control** (los `RichEdit20A` en el orden del
-`EnumChildWindows`, que es el mismo del TAB):
-
-| # | campo | pos (x,y) |
-|---|---|---|
-| 1-3 | Rubro · Medida · **Descripción** | (194,140) · (297,140) · (194,169) |
-| 4-7 | C. Costo Ingreso · Imputación Ingreso · C. Costo Descarga · Imputación Descarga | (194,254) · (459,254) · (194,283) · (459,283) |
-| 8-9 | Unidad · Doble Medida | (194,311) · (459,311) |
-| 10-13 | Stock Mínimo · Lote Óptimo · Unidad Mín. Compra · Tiempo Entrega | (194,340) · (459,340) · (194,368) · (459,368) |
-| 14-17 | Proveedor · Cód. Original · Proveedor · Cód. Original | (194,397) · (459,397) · (194,425) · (459,425) |
-| 18 | **Es Sub-Producto** | (194,454) |
-| 19-23 | Etiquetas · Tiene Vencimiento · Tipo Descarga · Origen Descarga · Posee PAPP/PSW | (459,454) · (194,482) · (459,482) · (640,482) · (194,511) |
-| — | **`&Acepta`** (Button) | (385,568) |
-
-Después del TAB que trae el registro **el foco queda en `Descripción` (#3)**. Desde ahí:
-
-```
-14 TAB  -> Es Sub-Producto        (verificar el handle ANTES de tocar nada)
-FIN, BACKSPACE, <valor>           reemplaza el contenido de un campo de 1 caracter
- 6 TAB  -> boton &Acepta
-ENTER                             graba; la pantalla se limpia sola
-```
-
-### 🟢🟢 MODIFICAR LA `Descripción` DEL MAESTRO — ANDA `CONFIRMADO 3/3 el 2026-09-01`
-
-Los 3 hilos que Producción reportó como "ERROR BOM". Export antes/después de la base entera:
-**0 altas, 0 bajas, 0 consumos cambiados**, 27 descripciones nuevas y **27 filas partidas → 0**.
-
-**El campo son DOS RENGLONES DE 40 caracteres.** Medido sobre `INSUMOS.TXT`: 470 descripciones
-llegan justo a 40, **ninguna pasa de 40**. Cuando el nombre no entra, se usa el segundo renglón
-— **144 insumos del maestro están así**, es la convención, no un error. El que no sabe manejar
-el segundo renglón es el **reporte de RELACIONES** (lo escupe en la columna A y corre
-unidad/consumo/módulo/proceso 3 columnas a la izquierda).
-
-⚠️ **El export TRUNCA el segundo renglón: no lo uses para saber qué dice.** Del export salía
-`GR`; el texto real era `GRAY VIOLET - TGA AT2`. Reescribir con lo que muestra el export
-**borraba 19 caracteres reales**. La descripción de verdad se lee con `WM_GETTEXT` sobre el
-RichEdit **con foco**, en `Modificaciones`.
-
-Y por eso el arreglo **no es "sacar el salto"**: el texto no entra en 40. Hay que acortarlo, y
-**poniendo primero lo distintivo** — RELACIONES corta a 40 y dos hilos que comparten los
-primeros 36 caracteres quedan indistinguibles ([[reference_arb_insumos_maestro]]).
 
 #### 🔴 `&Acepta` está DESHABILITADO hasta que `Posee PAPP/PSW` tenga valor
 
@@ -1066,74 +477,24 @@ ENTER
 por posición o handle, nunca por cuántos TAB conté.** Ante cualquier gate en rojo, `WM_CLOSE`
 descarta sin grabar — verificado releyendo el registro después.
 
-### 🟢🟢 LOS `RichEdit20A` SÍ DEVUELVEN TEXTO — cuando tienen el FOCO `CORRIGE lo de arriba`
+## Orden de arranque de una tanda
 
-La sección del 28/08 dice *"los campos son `RichEdit20A` y NO devuelven texto por
-`WM_GETTEXT`… la única forma de saber qué dice un campo es `PrintWindow` y mirar la foto"*.
-**Es verdad a medias.** Sin foco devuelven `''`; **con el foco puesto, `WM_GETTEXT` devuelve
-el contenido** — leídos en vivo el 31/08 mientras tabulaba: `'N'`, `'I'`, `'M'`, `'S'`.
-
-Eso habilita el gate barato que faltaba: **tabular y leer el valor de cada campo al pasar**,
-igual que hace `recorrer()` en la grilla de Relaciones, sin gastar una foto por paso. La foto
-queda para el control final, no para navegar.
-
-### El gate de handle, que es lo que hace segura la escritura
-
-```python
-TARGET = [h for h,x,y in ctrls if abs(x-194)<6 and abs(y-454)<6][0]   # el campo buscado
-...
-if GetGUIThreadInfo(tid).hwndFocus != TARGET:
-    raise SystemExit("ABORTO: el foco no esta donde creo")
-```
-Comparar **handles**, no coordenadas ni "cuántos TAB conté". Si el foco no es el control
-esperado, se aborta **antes** de la primera tecla que modifica.
-
-### Si algo salió mal: `WM_CLOSE` descarta la edición `CONFIRMADO 2026-08-31`
-
-Con la descripción ya pisada en pantalla y `&Cancela` deshabilitado, **`WM_CLOSE` sobre
-`Maestro de Insumos` cerró sin grabar**: al reabrir y traer el mismo código, la descripción
-estaba intacta. Mismo comportamiento que ya estaba documentado para `Maestro de Relaciones`.
-
-⚠ **El campo `Descripción` engaña al mirarlo.** Después del BACKSPACE mostraba `RO` y parecía
-que había borrado casi todo; era el render con el cursor al final (la propia skill ya lo
-avisa). **No diagnosticar un campo por lo que muestra: cerrar, reabrir y releer.**
-
-### Abrir `ABM de Insumos` — el árbol de la izquierda NO abre con ENTER
-
-Probado el 31/08: click en `ABM de Insumos` del árbol de `Producción` **sólo lo selecciona**
-(queda resaltado en azul) y `ENTER` no lo abre. Lo que sí abre es el **botón del ribbon**:
+Las fallas de una tanda **son detectables antes de correrla**: el separador se ve con `--leer`, el
+modal se detecta enumerando ventanas, y el export pre-cambio se guarda o no se guarda. Por eso
+estos seis pasos van **antes de cualquier `--apply`**, siempre, sin decidir cada vez.
 
 ```
-click (849, 43)   solapa `Menú de Insumos`
-click ( 37, 95)   botón `ABM de Insumos`
+1. ¿hay un #32770 abierto?            -> abortar, pedir el click real
+2. ¿el CSV tiene valor_nuevo con PUNTO? -> si tiene coma, abortar
+3. ¿el export que genero la tabla es el PRE-CAMBIO? -> si se regenero a mitad, rehacerla
+4. export fresco guardado en .arb-cache/pre-cambio/
+5. recien ahi --apply
+6. re-exportar y diffear el archivo ENTERO contra la foto previa
 ```
-(o la vía por teclado ya documentada: `Alt` → `V` → `Y01`).
 
-### Exportar el maestro — solapa `Listado`
-
-`Desde Insumo` / `Hasta Insumo` (vacíos = todos) y el combo **`Salida`**, que tiene 8
-opciones **owner-drawn**: `CB_GETLBTEXT` devuelve vacío, **pero `CB_GETCURSEL` (0x0147) y
-`CB_SETCURSEL` (0x014E) sí funcionan cross-process**. Por eso el índice se fija por mensaje
-y se verifica, en vez de contar flechas a ciegas:
-
-| idx | opción | archivo que deja en `C:\tmp` |
-|---|---|---|
-| 0 | Pantalla | — |
-| **1** | **Impresora** | ⚠️ **manda el listado entero a la impresora de la oficina** |
-| 2 | Disco C | `INSUMOS.TXT` en **formato reporte** (con recuadros, `Hoja 1`, descripción cortada a 40) |
-| **3** | **Tabla EXcel** | `INSUMOS.TXT` **tab-separated** — es el que parsean los scripts |
-| 4 | Formato PDF | `INSUMOS.PDF` |
-| 5 | HTML | `INSUMOS.HTM` |
-| 6 | Word/RTF | |
-| 7 | Electronico | |
-
-⚠️ **`Disco C` y `Tabla EXcel` escriben el MISMO archivo `INSUMOS.TXT` con formatos
-distintos.** Exportar con `Disco C` te pisa el tab-separated. Antes de exportar, copiar el
-que haya a `.arb-cache/`.
-
-**Gate obligatorio:** leer `CB_GETCURSEL` y abortar si no es el índice buscado. El 28/08 ese
-gate frenó una corrida donde el combo había quedado en 2 en vez de 3. Un índice de más cae
-en `Impresora`.
+Los seis son mecánicos y baratos. **Cada tanda que falla deja su gate escrito acá**: si no, se
+paga dos veces (pasó el 07/08 — escribí el gate del modal a media mañana y lancé dos tandas más
+sin correrlo). La crónica de dónde salió cada uno: `reference/bitacora-tandas-2026-08.md`.
 
 ## Seguridad — antes de que el robot escriba
 
