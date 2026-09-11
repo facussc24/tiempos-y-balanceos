@@ -195,6 +195,13 @@ describe('dev-server-guard.sh (Stop) — recuerda el preview solo si se toco cod
     expect(r.err).toBe('');
   });
 
+  it('A4 VERDE: App.tsx sucio y ESTA sesion solo LEYO → 0 (lista vacia no es "no se puede atribuir")', () => {
+    fs.appendFileSync(APP, 'export const c = 2;\n');
+    const r = correrCon(transcriptCon([{ name: 'Read', input: { file_path: APP } }]));
+    expect(r.exit).toBe(0);
+    expect(r.err).toBe('');
+  });
+
   it('A4 VERDE: .claude/*.json y .mcp.json sucios no son codigo de la app (sin transcript, que cuenta todo)', () => {
     fs.writeFileSync(path.join(repo, '.mcp.json'), '{}\n');
     git('add', '.mcp.json');

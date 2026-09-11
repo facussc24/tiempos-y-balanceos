@@ -44,12 +44,15 @@ EDITED=$(git diff --name-only HEAD 2>/dev/null \
 
 [ -z "$EDITED" ] && exit 0
 
-# (3) Solo lo que ESTA sesion toco. `*` = no atribuible: se cuenta todo, como antes.
+# (3) Solo lo que ESTA sesion toco. `-` = no toco nada del repo (lo sucio es de otra sesion);
+# `*` = no se puede atribuir: se cuenta todo, como antes.
 TOCADOS=""
 if command -v node >/dev/null 2>&1 && [ -f "$RAIZ/scripts/_lib/archivosSesion.mjs" ]; then
   TOCADOS=$(printf '%s' "$INPUT" | node "$RAIZ/scripts/_lib/archivosSesion.mjs" --repo "$(pwd)" 2>/dev/null)
 fi
-if [ -n "$TOCADOS" ] && [ "$TOCADOS" != "*" ]; then
+if [ "$TOCADOS" = "-" ]; then
+  EDITED=""
+elif [ -n "$TOCADOS" ] && [ "$TOCADOS" != "*" ]; then
   EDITED=$(printf '%s\n' "$EDITED" | grep -Fx -f <(printf '%s\n' "$TOCADOS"))
 fi
 EDITED=$(printf '%s\n' "$EDITED" | grep . | head -5)

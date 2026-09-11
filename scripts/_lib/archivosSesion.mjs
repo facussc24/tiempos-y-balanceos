@@ -9,8 +9,9 @@
  * Uso:
  *   node scripts/_lib/archivosSesion.mjs --transcript <ruta.jsonl> [--repo <dir>]
  *   printf '%s' "$JSON_DEL_HOOK" | node scripts/_lib/archivosSesion.mjs [--repo <dir>]
- * Salida: una ruta repo-relativa por linea. `*` si no se puede atribuir (sin transcript, o sesion
- * que corrio comandos/agentes sin ningun archivo atribuible): el que llama cuenta todo lo sucio.
+ * Salida: una ruta repo-relativa por linea. `-` si la sesion no toco ningun archivo del repo
+ * (lo sucio que haya es de otra sesion). `*` si no se puede atribuir (sin transcript, o sesion que
+ * corrio comandos/agentes sin ningun archivo atribuible): ahi el que llama cuenta todo lo sucio.
  * `--repo` acepta la forma de Git Bash (/c/Dev/x); por defecto es el repo de este script.
  */
 import fs from 'node:fs';
@@ -29,4 +30,5 @@ if (!transcript) {
 
 const opts = valor('--repo') ? { repo: valor('--repo') } : undefined;
 const tocados = await archivosTocadosEnSesion(transcript, opts);
-process.stdout.write(tocados instanceof Set ? [...tocados].map((r) => `${r}\n`).join('') : '*\n');
+const lista = tocados instanceof Set ? [...tocados].map((r) => `${r}\n`).join('') : '*\n';
+process.stdout.write(lista || '-\n');   // vacio y no-atribuible son cosas distintas
