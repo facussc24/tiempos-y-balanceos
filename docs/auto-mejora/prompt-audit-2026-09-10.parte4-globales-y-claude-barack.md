@@ -780,3 +780,54 @@ A29 (reporte de avance sin plantilla), correr una tarea normal de Barack y mirar
 sesion no vuelva a preguntar por trabajo propio (lo mide el hook Stop `cierre-guard.sh`, chequeo 1) y
 que el cierre siga contando que cambio, que se verifico y que queda abierto. Si alguno regresa, se
 re-agrega en su forma minima, no el original.
+
+## 8. Lo que se aplico el 11/09/2026
+
+### Global (`C:\Users\FacundoS-PC\.claude\skills\`, no va a ningun repo)
+
+| Skill | Antes | Despues | Hunks |
+|---|---|---|---|
+| `verify-before-claim` | 6.074 B | 4.172 B | A6, A1, A7, A8 + la linea de costo que estaba dos veces |
+| `cross-check` | 4.100 B | 2.754 B | A19, A10, A11, A13 |
+| `propose-before-do` | 3.935 B | 3.644 B | A16, A17, A18, A19, A20 |
+| `autonomous-execution-mode` | 7.270 B | 5.904 B | A21, A22, A23, A24, A25, A26, A27, A29 + el titulo |
+| `onshape` | 7.469 B | 6.217 B | A30, A31, A32 + A34 (el informe pedia fusionar si se tocaba el archivo) |
+
+27.046 B -> 22.691 B. Los seis skills en ingles no se tocaron: ya tenian
+`disable-model-invocation: true`.
+
+Tres arrastres que aparecieron al aplicar y se corrigieron en la misma pasada:
+
+- La **descripcion** del frontmatter de `autonomous-execution-mode` repetia el skill inexistente
+  (`no-inventar-controles`). La descripcion viaja en cada turno: el puntero roto costaba mas ahi
+  que en el cuerpo.
+- El paso "SI hacer" seguia pidiendo reporte **por paso**, que es justo lo que sacaba A29.
+- La heuristica 5 decia "tests stale en Barack" dentro de un skill que carga en toda la PC; la
+  misma razon de A24.
+
+### Claude Barack (`C:\Dev\barack-claude`, commit `4551620`)
+
+B1, B2, B3, B14 (+ su fila C8 en `docs/prueba-fase0.md`), B15, B22, B23, B24, B31, B32.
+`node tests/validar.mjs`: 93 chequeos, 0 fallas. Publicado con
+`node plugins/barack-central/scripts/publicar.mjs` (dry-run antes: el espejo es `/MIR`).
+
+**Un desvio del informe, con la fuente mirada.** B24 mandaba sacar los nombres del equipo APQP de
+`product-map` y apuntar al organigrama de `SGC_ROOT\ORGANIGRAMAS\`. Ese folder existe, pero sus
+archivos son **`Organigrama General ENERO 2023.xlsx`** y compania: tres anios mas viejos que las
+firmas de mails de agosto de 2026 que ya estaban en la tabla. Cambiar la fuente por una peor no es
+corregir. Lo que si estaba roto era el **"confirmar"** que vencia solo cada 30 dias y que por lo
+tanto ya habia vencido: la tabla ahora dice de donde salen los nombres, con su fecha, y que se
+confirman con la persona que esta usando la sesion.
+
+**Un hallazgo que el informe no tenia**, que salio de intentar abrir ese organigrama:
+`plugins/barack-core/skills/docs-empresa/SKILL.md:31` declaraba la raiz del SGC en
+`Y:\CALIDAD\DOCUMENTACION SGC\`. Esa carpeta **no existe**. `Y:` mapea a `\\server\compartido` y la
+ruta real es `Y:\BARACK\CALIDAD\DOCUMENTACION SGC\` — faltaba el segmento `BARACK\`. Es la ruta que
+el skill ofrece primero, en todas las PCs.
+
+### Lo que queda sin aplicar
+
+- **Parte 2, hallazgo #27**: dice que `scripts/_prepararMail.py` no existe. Existe. Falso positivo,
+  el hunk no se aplico.
+- **A28** (el tope de ">30 minutos sin checkpoint") y **A35** (el stub de identidad de `onshape:8`):
+  confianza baja, quedan flageados como los dejo el informe.
