@@ -69,8 +69,14 @@ if (!plan.length) {
     process.exit(0);
 }
 
-await runWithValidation(plan, apply, async (change) => {
-    await saveAmfe(sb, change.id, change.after, { expectedAmfeNumber: change.amfeNumber });
+// runWithValidation llama al commit SIN argumentos (dryRunGuard.mjs:180): el recorrido
+// del plan lo hace el commit, no el guard. Pasarle un `change` por parametro lo recibia
+// undefined y reventaba al escribir (11/09/2026).
+await runWithValidation(plan, apply, async () => {
+    for (const change of plan) {
+        await saveAmfe(sb, change.id, change.after, { expectedAmfeNumber: change.amfeNumber });
+        console.log(`  guardado ${change.amfeNumber}`);
+    }
 });
 
 finish(apply);
