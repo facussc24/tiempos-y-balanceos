@@ -58,10 +58,16 @@ def reenviar(cfg):
                  % '; '.join(sin_resolver))
 
     fw = original.Forward()
-    if cfg.get('para'):
-        fw.To = '; '.join(cfg['para'])
-    if cfg.get('cc'):
-        fw.CC = '; '.join(cfg['cc'])
+    # Los destinatarios se agregan con Recipients.Add() y se tipifican, NUNCA como string en
+    # .To / .CC: asignando el string quedan con Address vacia y Exchange rebota el envio con
+    # "Ninguna de sus cuentas pudo enviar a este destinatario" (incidente 08/09/2026 en
+    # _prepararMail.py — regla mail-envio.md).
+    for nombre in cfg.get('para', []):
+        fw.Recipients.Add(nombre).Type = 1          # olTo
+    for nombre in cfg.get('cc', []):
+        fw.Recipients.Add(nombre).Type = 2          # olCC
+    if not fw.Recipients.ResolveAll():
+        sys.exit('ABORTADO: Outlook no pudo resolver todos los destinatarios del reenvio')
 
     # Display PRIMERO: ahi Outlook inserta la firma. Recien despues se mete el encabezado
     # arriba del <body>, sin tocar lo que ya esta.

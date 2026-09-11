@@ -1035,6 +1035,34 @@ GUARDIANES['mail-guard'] = (ctx) => {
   // 1) Tiene que oler a Outlook. 2) Tiene que haber un envio real (Display/Save/ReplyAll no
   // envian). 3) Si va por la via autorizada, pasa.
   if (!/Outlook\.Application|olMailItem|GetDefaultFolder|MailItem|CreateItem\(/i.test(target)) return null;
+
+  // 0) Destinatarios como STRING en .To/.CC/.BCC. Incidente 08/09/2026: asi quedan con
+  //    Address vacia y Exchange rebota ("Ninguna de sus cuentas pudo enviar a este
+  //    destinatario"). El 10/09 el mismo patron seguia vivo en _reenviarMail.py.
+  //    Se exime a los archivos que DESCRIBEN el patron, si no el guardian se bloquea solo.
+  const meta = /guardianes\.mjs|mail-envio\.md|mail-guard\.test\.sh|LECCIONES_APRENDIDAS/i;
+  if (!meta.test(ctx.fileL) && !meta.test(ctx.cmd6) &&
+      /\.(To|CC|BCC)\s*=[^=]/i.test(target)) {
+    return bloqueo(`
+[MAIL-GUARD — BLOQUEO. Regla: .claude/rules/mail-envio.md]
+
+Estas asignando destinatarios como string a .To / .CC / .BCC de un item de Outlook.
+
+Asi quedan con Address vacia y Exchange rebota con "Ninguna de sus cuentas pudo
+enviar a este destinatario" (incidente 08/09/2026 en _prepararMail.py; el mismo
+patron seguia vivo en _reenviarMail.py hasta el 10/09/2026).
+
+EL CAMINO CORRECTO:
+
+    for direccion, tipo in destinatarios:      # tipo: 1 = Para, 2 = CC, 3 = CCO
+        r = mail.Recipients.Add(direccion)
+        r.Type = tipo
+    if not mail.Recipients.ResolveAll():       # sobre el ITEM, no sobre cada recipient
+        sys.exit('ABORTADO: hay destinatarios sin resolver')
+
+Leer .To para mostrarlo por pantalla esta bien; lo que no va es ASIGNARLO.
+`);
+  }
   if (!/\.Send\(\)|\.Send\s*\(|SendAndReceive|\.Submit\(/i.test(target)) return null;
   if (/_mailEnviar\.py/.test(target)) return null;
   return bloqueo(`

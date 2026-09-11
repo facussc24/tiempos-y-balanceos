@@ -51,6 +51,37 @@ error de atribucion no es hipotetico: ya paso.
 Si una sesion se planta y pide el OK directo, **tiene razon** — no se la presiona ni se
 le cambia la regla: se le manda el borrador a quien esta hablando con Fak y lo envia esa.
 
+## Como se arma el item en Outlook (COM)
+
+**Los destinatarios se agregan con `mail.Recipients.Add()`, NUNCA como string en `mail.To`.**
+Incidente 08/09/2026: `_prepararMail.py` resolvia contra el namespace pero asignaba un string
+a `mail.To`; los destinatarios quedaban con `Address: ""` vacia y Exchange rebotaba con
+*"Ninguna de sus cuentas pudo enviar a este destinatario"*. El camino correcto:
+
+```python
+for direccion, tipo in destinatarios:      # tipo: 1 = Para, 2 = CC
+    r = mail.Recipients.Add(direccion)
+    r.Type = tipo
+mail.Recipients.ResolveAll()               # sobre el ITEM, no sobre cada recipient
+```
+
+Asi quedan vinculados a su casilla real de Exchange. Si `ResolveAll()` devuelve falso, hay al
+menos uno sin resolver: se reporta cual, no se manda igual.
+
+## Que va y que NO va en el cuerpo
+
+**El mail va al grano: piezas, entregables y rutas.** Fak, 08/09/2026, sobre el correo de
+entrega del PPAP: *"esto no lo pongas nunca mas en ningun mail, el imds es de calidad... y el
+otro esta de mas"*.
+
+- **Nada de temas de otra area.** El IMDS es de Calidad; los ensayos, dimensionales y PSW los
+  gestiona quien corresponda. Nombrarlos "por las dudas" es meterse en el sector ajeno.
+- **No se le recuerda a los demas lo que les falta entregar.** Eso es paternalismo y ademas
+  deja mal a un compañero por escrito.
+- **No se recuerda lo obvio ni se agrega relleno.** El test: *¿el que lee tiene que hacer algo
+  con esto hoy?* Si no, afuera. Al mail para Gamboa le sume siete codigos que nadie iba a
+  tocar: *"los agregaste y aclaraste de mas, es un error conocido tuyo"*.
+
 ## Que verifica el gate, y por que cada cosa
 
 | Chequeo | Por que |
@@ -84,7 +115,9 @@ y solo si el destinatario no lo abrio.
   bloquea cualquier `.Send()` / `SendAndReceive` sobre Outlook que no pase por `_mailEnviar.py`.
   Deja pasar `.Display()`, `.Save()`, `ReplyAll()` y la lectura con `_mails.py`.
 - **`_mailEnviar.py --selftest`**: 9 casos de la logica de deteccion, incluido el del incidente.
-- **`mail-guard.test.sh`**: 11 casos de regresion del hook, por el guardian suelto Y por el despachador
+- **`mail-guard.test.sh`**: 15 casos de regresion del hook, por el guardian suelto Y por el despachador
+  (incluye los dos sentidos del chequeo de destinatarios: `.To = "..."` bloquea, `Recipients.Add()` y
+  leer `.To` para reportarlo pasan)
   (el parser compartido ya rompio otros 3 guardianes en silencio, commit `ccef7f09`).
 - El gate se probo contra el caso real del 14/08 leido de Enviados: **bloquea**.
 

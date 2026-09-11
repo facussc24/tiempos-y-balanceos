@@ -47,6 +47,10 @@ probar guard ".Send() escrito con Write" \
   '{"tool_name":"Write","tool_input":{"file_path":"x.py","content":"import win32com.client\nol=win32com.client.Dispatch(\"Outlook.Application\")\nm=ol.CreateItem(0)\nm.Send()"}}' 2
 probar guard ".Send() metido con Edit" \
   '{"tool_name":"Edit","tool_input":{"file_path":"x.py","new_string":"ol=Dispatch(\"Outlook.Application\")\nmsg=ol.CreateItem(0)\nmsg.Send()"}}' 2
+probar guard "destinatarios como string en .To (incidente 08/09)" \
+  '{"tool_name":"Write","tool_input":{"file_path":"x.py","content":"import win32com.client\nol=win32com.client.Dispatch(\"Outlook.Application\")\nmail=ol.CreateItem(0)\nmail.To = \"Carlos Baptista; Nicolas Godoy\"\nmail.Display()"}}' 2
+probar guard "lo mismo en .CC, metido con Edit" \
+  '{"tool_name":"Edit","tool_input":{"file_path":"x.py","new_string":"ol=Dispatch(\"Outlook.Application\")\nmail=ol.CreateItem(0)\nmail.CC = destinatarios_cc\nmail.Display()"}}' 2
 
 echo
 echo "DEJA PASAR (no envia, o va por la via autorizada):"
@@ -58,6 +62,10 @@ probar guard "leer mails con _mails.py" \
   '{"tool_name":"Bash","tool_input":{"command":"python scripts/_mails.py --buscar Nieve"}}' 0
 probar guard "un .Send() que no es de Outlook" \
   '{"tool_name":"Bash","tool_input":{"command":"node -e \"socket.Send()\""}}' 0
+probar guard "la via correcta: Recipients.Add() + ResolveAll()" \
+  '{"tool_name":"Write","tool_input":{"file_path":"x.py","content":"import win32com.client\nol=win32com.client.Dispatch(\"Outlook.Application\")\nmail=ol.CreateItem(0)\nmail.Recipients.Add(\"Carlos Baptista\").Type = 1\nmail.Recipients.ResolveAll()\nmail.Display()"}}' 0
+probar guard "LEER .To para reportarlo no es asignarlo" \
+  '{"tool_name":"Write","tool_input":{"file_path":"x.py","content":"ol=Dispatch(\"Outlook.Application\")\nmail=ol.CreateItem(0)\nprint(mail.To, mail.CC)\nassert mail.To == mail.CC"}}' 0
 probar guard "ReplyAll sin enviar" \
   '{"tool_name":"Bash","tool_input":{"command":"python -c \"import win32com.client as w; w.Dispatch(\\\"Outlook.Application\\\").GetNamespace(\\\"MAPI\\\").GetDefaultFolder(6).Items.Item(1).ReplyAll().Display()\""}}' 0
 
