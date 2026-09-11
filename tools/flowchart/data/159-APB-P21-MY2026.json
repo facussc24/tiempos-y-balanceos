@@ -1,0 +1,85 @@
+{
+  "_doc": "Flujograma 159 — APB P21 HILO NARANJA COSTURA SIMPLE (MY2026), SMRC / Stellantis. DOCUMENTO NUEVO, Rev. A. Es la pieza del ECR-0368291 del 17/06/2026 ('New ver sewing with orange thread'), con part numbers nuevos del cliente 00257327-01-NHZD (FR.RH) y 00257328-01-NHZD (FR.LH), y va al casillero 05 del paquete de PPAP que pidio SMRC ('Process Flow & Standar Work').",
+
+  "_por_que_documento_nuevo": "Fak, 11/09/2026: la pieza es nueva, arranca en Rev. A. El flujograma REV.03 P21 (P. Gamboa, emitido 09/11/2023, revisado 10/02/2026) y el AMFE 127 Rev.O son los documentos con los que se produce HOY el hilo verde, el azul, el cuero y el naranja anterior: no se les sube la revision por una pieza que todavia esta en desarrollo. El contenido SI se reusa — este flujograma se armo leyendo el Rev.03 nodo por nodo y cotejandolo operacion por operacion contra el AMFE 127 y la HO 927 Rev.5.",
+
+  "_numero": "159 es el proximo ID libre del Listado_Maestro_FLUJOGRMAS.xlsx (el ultimo cargado es el 158, INSONOS/DUCTOS de COZZUOL). OJO: el '127' que aparece en el nombre del PDF 'FLUJOGRAMA 127 REV.02.pdf' del legajo de 2023 es el numero del AMFE, no del flujograma — en el listado de flujogramas el 127 es 'IP AMAROK LARGO' de SAS, Rev.G. El flujograma del P21 en serie no esta cargado en el listado: queda anotado como hallazgo.",
+
+  "_costura": "OP 50 COSTURA VISTA: el AMFE 127 la describe como 'recta doble aguja triple arrastre', que es la version anterior. Esta pieza lleva PESPUNTE SIMPLE HAQ, UNA sola linea, a 4 +0/-1 mm por arriba de la linea de union de vinilos, con 10 a 11 puntos cada 50 mm (LSC v1 del cliente, SC 2.1 a 2.4). El flujograma declara la operacion; el parametro con su tolerancia vive en la HO y en el Plan de Control, no en el sinoptico.",
+
+  "_hilo": "La tabla de materiales del Rev.03 lista el hilo VERDE (Linhanyl FX284EX - 12125E) y dos hilos Coats NEO-631YJ-TEX92. El hilo de esta pieza es Linhanyl articulo BX138, codigo de proveedor 12124E, Nylon 6.6, color Orange Zeus T90 / FHS-F090 (LSC v1 SC 2.5), con costura de union en hilo Nylon M40 negro (SC 2.6). El sinoptico no dibuja tabla de materiales: los materiales viven en la BOM y en el Plan de Control.",
+
+  "_numeracion_120": "El AMFE 127 numera 120 INSPECCION FINAL y 130 EMBALAJE. El flujograma Rev.03 usa el 120 para 'Traslado al sector de embalaje' y deja la inspeccion final SIN numero: el mismo 120 nombra dos cosas distintas en dos documentos que van juntos al cliente. Aca se numera 120 INSPECCION FINAL y 130 EMBALAJE, y los traslados quedan sin numero como el resto del flujograma. El AMFE 173 sale con esta misma numeracion.",
+
+  "_caracteristicas_especiales": "ESTE ARCHIVO NO LLEVA MARCAS TODAVIA. La marca de una operacion sale de las siglas de sus causas en el AMFE (S y O de esa causa) y la asigna Fak. Lo que el cliente designo por su lado es la LISTA DE CARACTERISTICAS ESPECIALES (LSC v1 del 15/07/2026), con 19 items en tres grupos: SC 1.1 a 1.6 recubrimiento vinilo TEP, SC 2.1 a 2.6 hilo y costura, SC 3.1 a 3.7 apoyabrazo ensamblado. El checklist de PPAP de SMRC exige que esas caracteristicas esten cubiertas en el flujograma, en el AMFE y en el Plan de Control. Mapeo propuesto, para revisar con Fak antes de marcar: SC 1.1 a 1.5 (material del vinilo y sus ensayos) -> OP 10 RECEPCION; SC 1.6 (limite de corte tela/TEP) -> OP 20 CORTE; SC 2.1 a 2.6 (costura y hilo) -> OP 50 COSTURA VISTA y OP 40 COSTURA DE UNION; SC 3.1 a 3.7 (apoyabrazo ensamblado) -> son ensayos sobre el producto terminado, a cargo de SMRC segun el plan de validacion del 31/07/2026, y se cubren en OP 120 INSPECCION FINAL.",
+
+  "_fuentes": "FLUJOGRAMA REV.03 P21.pdf (10/02/2026) · P21 AMFE REV2.xlsx, AMFE N 127 (20/08/2024): operaciones 10, 20 (20.1 a 20.5), 30, 40, 50, 60, 70, 80, 90 (90.1), 100, 110, 120, 130 · HO 927 REV.5 (03/11/2025) · LSC v1 P21 ARMREST_SSRT MY2026 (15/07/2026) · SNL Amendment 02-Rev03 (26/08/2026).",
+
+  "header": {
+    "title": "FLUJOGRAMA DE PROCESO APB P21 — HILO NARANJA COSTURA SIMPLE (MY2026)",
+    "documentCode": "I-IN-002/III",
+    "revision": "A",
+    "date": "11/09/2026",
+    "revisionDate": "",
+    "preparedBy": "FACUNDO SANTORO",
+    "reviewedBy": "CARLOS BAPTISTA",
+    "project": "P21 SSRT MY2026",
+    "client": "SMRC / STELLANTIS",
+    "productsColumns": { "code": "Código SMRC", "version": "Variante" },
+    "specialChars": [],
+    "footerNote": "Pieza del ECR-0368291 (17/06/2026): la OP 50 se ejecuta con pespunte simple de una línea. El detalle de parámetros está en la HO y en el Plan de Control."
+  },
+
+  "products": [
+    { "code": "00257327-01-NHZD", "level": "", "description": "ARMREST P21 FR.RH — STITCH ORANGE SIMPLE LINE", "version": "HILO NARANJA (costura simple)" },
+    { "code": "00257328-01-NHZD", "level": "", "description": "ARMREST P21 FR.LH — STITCH ORANGE SIMPLE LINE", "version": "HILO NARANJA (costura simple)" }
+  ],
+
+  "revisions": [
+    { "rev": "A", "date": "11/09/2026", "item": "N/A.", "details": "EMISIÓN INICIAL DEL FLUJOGRAMA DE LA PIEZA APB P21 HILO NARANJA CON COSTURA SIMPLE DE UNA LÍNEA (ECR-0368291).", "pswDate": "", "modifiedBy": "FS" }
+  ],
+
+  "flow": [
+    { "stepId": "10", "type": "operation", "description": "RECEPCIÓN DE MATERIA PRIMA" },
+    { "type": "storage", "description": "ALMACENADO EN SECTOR DE RECEPCIÓN DE MATERIA PRIMA PENDIENTE DE CONTROL" },
+    { "type": "inspection", "description": "INSPECCIÓN DE MATERIA PRIMA" },
+    { "type": "condition", "labelCondition": "¿MATERIAL CONFORME?", "labelDown": "SI",
+      "branchSide": { "labelNode": "NO", "type": "terminal", "text": "RECLAMO DE CALIDAD AL PROVEEDOR" } },
+
+    { "type": "storage", "description": "ALMACENADO EN SECTOR DE RECEPCIÓN DE MATERIA PRIMA CONTROLADA E IDENTIFICADA",
+      "branches": [
+        [
+          { "type": "transfer", "description": "TRASLADO DE VINILO O TELA AL SECTOR DE CORTE" },
+          { "stepId": "20", "type": "operation", "description": "CORTE DE VINILO O TELA" },
+          { "stepId": "30", "type": "operation", "description": "REFILADO DE COMPONENTES CORTADOS" },
+          { "type": "transfer", "description": "TRASLADO AL SECTOR DE COSTURA" },
+          { "stepId": "40", "type": "operation", "description": "COSTURA DE UNIÓN" },
+          { "stepId": "50", "type": "operation", "description": "COSTURA VISTA — PESPUNTE SIMPLE, UNA LÍNEA" },
+          { "type": "condition", "labelCondition": "¿COSTURA CONFORME?", "labelDown": "SI",
+            "branchSide": { "labelNode": "NO", "type": "terminal", "text": "RETRABAJO DE COSTURA / SCRAP" } },
+          { "type": "transfer", "description": "TRASLADO DE LA FUNDA AL SECTOR DE ADHESIVADO" }
+        ],
+        [
+          { "type": "transfer", "description": "TRASLADO DEL SUSTRATO PLÁSTICO AL SECTOR DE LIMPIEZA" },
+          { "stepId": "60", "type": "operation", "description": "LIMPIEZA DE PIEZA PLÁSTICA" },
+          { "type": "condition", "labelCondition": "¿EL SUSTRATO LLEVA PRIMER?", "labelDown": "SI",
+            "branchSide": { "labelNode": "NO", "direction": "left", "type": "connector", "text": "B", "description": "AL ADHESIVADO" } },
+          { "stepId": "70", "type": "operation", "description": "APLICACIÓN DE PRIMER" },
+          { "type": "transfer", "description": "TRASLADO DEL SUSTRATO AL SECTOR DE ADHESIVADO" }
+        ]
+      ] },
+
+    { "stepId": "80", "type": "operation", "description": "ADHESIVADO DE PIEZA PLÁSTICA Y VINILO" },
+    { "type": "transfer", "description": "TRASLADO AL SECTOR DE TAPIZADO" },
+    { "stepId": "90", "type": "operation", "description": "TAPIZADO" },
+    { "stepId": "100", "type": "operation", "description": "REFILADO CON MÁSCARA" },
+    { "stepId": "110", "type": "operation", "description": "TROQUELADO" },
+    { "type": "transfer", "description": "TRASLADO AL SECTOR DE INSPECCIÓN FINAL" },
+    { "stepId": "120", "type": "inspection", "description": "INSPECCIÓN FINAL" },
+    { "type": "condition", "labelCondition": "¿PIEZA CONFORME?", "labelDown": "SI",
+      "branchSide": { "labelNode": "NO", "type": "terminal", "text": "SCRAP" } },
+    { "type": "transfer", "description": "TRASLADO AL SECTOR DE EMBALAJE" },
+    { "stepId": "130", "type": "operation", "description": "EMBALAJE E IDENTIFICACIÓN" },
+    { "type": "storage", "description": "ALMACENADO EN DEPÓSITO DE PRODUCTO TERMINADO — DESPACHO A SMRC" }
+  ]
+}
