@@ -301,12 +301,16 @@ estetica: quien lo abre revisa el volumen en vez de mirar la planta.
   Fak grabe 30–60 s de ambiente de planta con el telefono y se acuesta debajo.
 - La decision es de Fak. Lo que no se hace es entregar el mudo sin mencionarlo.
 
-### 6.1 Si va musica, se sintetiza aca — y el objetivo se MIDE de una referencia real
+### 6.1 Si la musica se sintetiza, el objetivo se MIDE de una referencia real
 
-En el disco no hay musica de libreria, y **un tema de terceros no entra en un video de Barack
-que se va a mostrar a un cliente**: no hay licencia que respalde el uso. La salida es generar
-la cama con numpy + scipy (`scripts/video/musica.py`). Se rinde a la duracion exacta del
-armado y se regenera en ~70 s si a Fak no le pega.
+> **Primero mirar §6.2.** Desde el 11/09/2026 el camino vivo es montar el tema que elige
+> Fak. Esta seccion vale igual: **lo que se aprendio midiendo sigue siendo el criterio con
+> el que se juzga cualquier musica**, propia o ajena, y `musica.py` sigue siendo la salida
+> cuando no se puede depender de la licencia de nadie.
+
+En el disco no hay musica de libreria. Si hay que generarla, se hace con numpy + scipy
+(`scripts/video/musica.py`): se rinde a la duracion exacta del armado y se regenera en ~70 s
+si a Fak no le pega.
 
 Costo **cuatro vueltas** con Fak en un mismo dia. Las cuatro criticas fueron distintas y las
 cuatro tenian razon; en las cuatro habia un numero que la capturaba y que yo no habia mirado:
@@ -549,6 +553,74 @@ abajo de 600 Hz y mandados a la reverb. Se oye la maquina, no se oye una bateria
   `volume=-2.2dB` que dejaba una cama en -15,4 dejo la siguiente en **-19,5**: a igual pico,
   una mezcla con bateria mide mucho menos que una de pad largo. `master.py` mide con
   `ebur128=peak=true` y calcula la ganancia sola.
+
+### 6.2 Si Fak pasa un tema, el trabajo es de MONTAJE (y es el camino bueno)
+
+Fak, 11/09/2026, despues de cuatro vueltas de musica sintetizada: *"usa esa cancion, las
+tuyas son malisimas"*, con el MP3 adjunto. **Cuando pasa eso no se discute ni se ofrece la
+propia**: se monta la suya. El sintetizador tiene un techo que ninguna cantidad de medicion
+levanta — un tema producido tiene instrumentos grabados, y eso no se emula.
+
+Lo que cambia es la naturaleza del trabajo: ya no es elegir timbres, es **cortar**. Y cortar
+musica tiene una sola regla dura: **lo que se saca tiene que medir un numero entero de
+compases**, o la musica tropieza. Asi que lo primero es medir el compas, no estimarlo:
+
+```bash
+# el flujo que se uso, en scratchpad/: ver_cancion.py (mapa por segundo) -> grilla.py
+# (periodo, fase, golpes grandes) -> zonas.py (lupa de 25 ms sobre las zonas elegidas)
+```
+
+- El **periodo** sale de la autocorrelacion de la envolvente de novedad, pero **el numero
+  fino sale de dos golpes lejanos**: 56 compases entre 18,454 s y 135,320 s dan 2,086893 s,
+  o sea 115,0 BPM exactos. La autocorrelacion sola daba 2,0870 — con 0,1% de error, a los
+  60 s ya se corrio 60 ms.
+- El **mapa por segundo** (dB + centroide espectral) dice donde cambia de seccion sin tener
+  que escucharla: un centroide que salta a 3.000-4.000 Hz en un solo segundo es un platillo,
+  o sea el 1 de una seccion nueva.
+
+**El montaje que salio, para un video de 60,8 s con un tema de 144 s: dos pedazos y UN
+empalme.** Tres cosas que hay que hacer coincidir, en este orden de prioridad:
+
+| Que | Con que | Por que |
+|---|---|---|
+| El **bajon** del tema | El corte al plano del gesto | El efecto que a Fak le gusto ya existe adentro de la cancion: no hay que duckear nada |
+| El **final** del tema | La placa de cierre | Un video que corta la musica al medio se lee como archivo roto |
+| El **arranque** | La placa del logo | Que no arranque mudo (§6.1) |
+
+El empalme se busca donde **el tema esta mas callado y entra en un tiempo fuerte con
+acento**: ahi la oreja esta esperando que pase algo, y lo que pasa tapa el corte. Verificar
+que no quedo click NO es escucharlo: es medir el **salto maximo entre muestras seguidas** en
+±50 ms del empalme y compararlo con el percentil 99,99 del archivo entero. Si el del empalme
+es menor, no hay click.
+
+**Dos cosas que muerden y no avisan:**
+
+1. **Un tema comercial viene masterizado tocando 0 dBFS**, y remuestrear de 44,1 a 48 kHz lo
+   pasa (medido: 1,004). Escrito tal cual, el WAV intermedio recorta y ese recorte queda
+   adentro para siempre. Se baja a -2 dBFS antes de escribirlo; el nivel final no se pierde
+   porque `master.py` lo repone por SONORIDAD, no por pico.
+2. **El MP3 no se commitea** (repo publico, licencia de un tercero). Va a la carpeta del
+   entregable en la biblioteca, al lado del video, y el `_LEEME` dice de donde salio.
+
+`scripts/video/cancion.py` hace todo esto; las cuatro constantes medidas del tema estan
+arriba del archivo, con el comentario de que se vuelven a medir si se cambia de tema.
+
+```bash
+python scripts/video/master.py "<destino>.mp4" --cancion "<el MP3>"
+```
+
+### 6.3 Un chequeo que compara dos cosas distintas da verde o rojo por la razon equivocada
+
+`scratchpad/mono.py` decia "compatible en mono, la peor banda pierde 0,36 dB" y con eso se
+certifico una entrega. Estaba comparando el espectro de la **envolvente** `sqrt((L²+R²)/2)`
+—una señal rectificada, llena de continua— contra el de la señal mono. Por eso daba **+13 dB
+en los graves**, que no significa nada. Lo correcto es filtrar cada canal por separado y
+comparar `RMS((L+R)/2)` contra `sqrt((RMS_L² + RMS_R²)/2)`.
+
+Y el umbral tampoco se elige: **0 dB es contenido igual en los dos canales y -3 dB es
+contenido independiente** — geometria, no un defecto. Medidas las 13 referencias reales, su
+peor banda va de **-0,0 a -5,5 dB** (mediana -2,6). Poner el aviso en -3 reprueba a la
+mayoria de la musica comercial; va en **-6,0**. Corregido en `scratchpad/mono2.py`.
 
 ## 7. Render y entrega
 

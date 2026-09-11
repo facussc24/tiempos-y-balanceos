@@ -1,17 +1,18 @@
 # -*- coding: utf-8 -*-
-"""Genera la cama musical a la medida exacta del armado y saca el master de entrega.
+"""Pone la musica a la medida exacta del armado y saca el master de entrega.
 
-La musica se sintetiza aca mismo (musica.py): no lleva ningun sample, loop ni pista de
-terceros, asi que el video se puede mostrar y mandar sin problema de derechos. Y se arma
-CONTRA EL CORTE: armar.py deja en armado.json el segundo en que entra la planta, el tramo
-de la camara lenta y el arranque de la placa de cierre, y esas marcas van a musica.py para
-que el golpe caiga en el corte y la bateria se abra en la camara lenta.
+La musica se arma CONTRA EL CORTE: armar.py deja en armado.json el segundo en que entra la
+planta, el tramo del gesto y el arranque de la placa de cierre, y esas marcas mandan.
+Con `--cancion` se monta un tema real a esa medida (cancion.py) — es lo que se entrega
+desde el 11/09/2026, con el MP3 que eligio Fak. Sin `--cancion` la cama se sintetiza
+(musica.py): no lleva ningun sample ni pista de terceros, asi que no depende de la licencia
+de nadie, pero Fak la rechazo.
 
 H.264 en MP4 (no HEVC): el que lo abre es alguien con un Windows cualquiera, y HEVC puede
 pedirle un codec de la Store. `+faststart` deja el indice al principio, para que empiece a
 verse sin bajarlo entero desde OneDrive o WeTransfer.
 """
-import json, os, subprocess, sys
+import argparse, json, os, subprocess, sys
 
 RAIZ = r"C:\Dev\BarackMercosul"
 WORK = os.path.join(RAIZ, ".video", "work")
@@ -65,7 +66,7 @@ def sonoridad(f):
     return lufs, pico
 
 
-def main(destino):
+def main(destino, cancion=None):
     armado = os.path.join(WORK, "armado.mp4")
     d = dur(armado)
     marcas = json.load(open(os.path.join(WORK, "armado.json")))
@@ -73,10 +74,17 @@ def main(destino):
           % (d, marcas["entrada"], marcas["gesto"][0], marcas["gesto"][1], marcas["salida"]))
 
     musica = os.path.join(WORK, "musica.wav")
-    # musica.py lee el armado.json entero: no le alcanza con tres marcas sueltas, necesita
-    # la lista completa de cortes para poner los acentos y para sacar el tempo del corte.
-    subprocess.run([sys.executable, os.path.join(AQUI, "musica.py"), "%.2f" % d, musica,
-                    "--marcas", os.path.join(WORK, "armado.json")], check=True)
+    # Dos caminos. Con --cancion se MONTA un tema real a la medida del corte (cancion.py);
+    # sin el, se SINTETIZA la cama (musica.py). Fak eligio el tema el 11/09/2026 — *"usa
+    # esa cancion, las tuyas son malisimas"* — asi que el camino vivo es el primero; el
+    # sintetizado queda porque no depende de la licencia de nadie.
+    # Los dos leen el armado.json entero: no les alcanza con tres marcas sueltas, necesitan
+    # la lista completa de cortes.
+    if cancion:
+        orden = [sys.executable, os.path.join(AQUI, "cancion.py"), cancion, "%.2f" % d, musica]
+    else:
+        orden = [sys.executable, os.path.join(AQUI, "musica.py"), "%.2f" % d, musica]
+    subprocess.run(orden + ["--marcas", os.path.join(WORK, "armado.json")], check=True)
 
     lufs, pico = sonoridad(musica)
     ganancia = OBJETIVO_LUFS - lufs
@@ -107,4 +115,8 @@ def main(destino):
 
 
 if __name__ == "__main__":
-    main(sys.argv[1])
+    ap = argparse.ArgumentParser()
+    ap.add_argument("destino")
+    ap.add_argument("--cancion", help="MP3/WAV real para montar en vez de sintetizar la cama")
+    a = ap.parse_args()
+    main(a.destino, a.cancion)
