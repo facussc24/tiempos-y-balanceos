@@ -322,19 +322,24 @@ def mallet(f, n, rng, tau=0.55, ataque=0.008, brillo=1.0):
     Ataque de 8 ms en vez de 2, caida de 0,55 s en vez de 0,18 y sin ruido de mazo: eso es
     la diferencia entre 'percusivo' y 'suave'."""
     t = np.arange(n) / float(SR)
-    f = cents(f, rng.normal(0, 1.5))                       # cada nota afina distinto
-    fase = rng.uniform(0, 2 * math.pi, 3)                  # y arranca en otra fase: sin
-    v = (1.00 * np.sin(2 * math.pi * f * t + fase[0])      # esto dos notas iguales salen
-         + 0.20 * brillo * np.sin(2 * math.pi * f * 4.00 * t + fase[1])   # identicas y
-         + 0.070 * brillo * np.sin(2 * math.pi * f * 9.80 * t + fase[2])) # suena a maquina
+    # cada nota afina distinto y arranca en otra fase: sin esto dos notas iguales salen
+    # identicas y suena a ametralladora
+    f = cents(f, rng.normal(0, 1.5))
+    fase = rng.uniform(0, 2 * math.pi, 3)
+    v = 1.00 * np.sin(2 * math.pi * f * t + fase[0])
+    for k, (ratio, amp) in enumerate(((4.00, 0.20), (9.80, 0.070)), start=1):
+        # guarda de Nyquist: un parcial arriba de 24 kHz vuelve PLEGADO como una frecuencia
+        # que no es armonica de nada, y ese plegado es el sonido "digital barato"
+        if f * ratio < 18000.0:
+            v += amp * brillo * np.sin(2 * math.pi * f * ratio * t + fase[k])
     v *= env_perc(n, ataque, tau * rng.uniform(0.95, 1.05))
-    return pasabajos(v, 6000.0, 2)
+    return pasabajos(v, 17000.0, 2)
 
 
 def sierras(f, n, rng):
     """Pad. Siete sierras como el supersaw del JP-8000, con los ratios asimetricos que
-    midio Szabo y la perilla al medio (x0,0967): +-3,3 / +-10,4 / +-18 cents. Diez armonicos
-    y pasa-bajos a 6,5 kHz — la v3 llegaba al doceavo y a 9 kHz, y ese brillo es el que
+    midio Szabo y la perilla al medio (x0,0967): +-3,3 / +-10,4 / +-18 cents. Dieciseis armonicos
+    y pasa-bajos a 11 kHz — la v3 llegaba al doceavo y a 9 kHz, y ese brillo es el que
     aparecia en la banda 3-8 kHz, donde las referencias tienen 0,2 a 2%."""
     t = np.arange(n) / float(SR)
     ratios = [-201.8, -112.4, -34.1, 0.0, 34.1, 104.4, 176.7]
@@ -348,15 +353,15 @@ def sierras(f, n, rng):
                                      + rng.uniform(0, 6.28))
         fase = rng.uniform(0, 2 * math.pi)
         v = np.zeros(n)
-        for h in range(1, 11):
-            if fv * h > 11000:
+        for h in range(1, 17):
+            if fv * h > 16000:
                 break
             v += np.sin(2 * math.pi * fv * h * np.cumsum(deriva) / SR + fase * h) / (h ** 1.15)
         gi = 0.585 if c else 1.0
         L += v * gi * (1 - p) / 2.0
         R += v * gi * (1 + p) / 2.0
     L, R = pasaaltos(L, f * 0.85), pasaaltos(R, f * 0.85)
-    L, R = pasabajos(L, 6500.0, 2), pasabajos(R, 6500.0, 2)
+    L, R = pasabajos(L, 11000.0, 2), pasabajos(R, 11000.0, 2)
     e = env_asr(n, 0.70, 1.0)                   # ataque lento: el pad no empuja, envuelve
     return L / 5.0 * e, R / 5.0 * e
 
@@ -398,11 +403,11 @@ def latido(n):
 
 def floracion(n, f0=110.0):
     """Lo que cae en el cuadro del gesto. NO es un impacto: no tiene click, ni capa de
-    metal inarmonico, ni ataque. Es una floracion — un cuerpo grave que crece en 60 ms y
+    metal inarmonico, ni ataque. Es una floracion — un cuerpo grave que crece en 35 ms y
     dura tres segundos, con dos armonicos y nada arriba de 900 Hz. Conserva la figura que a
     Fak le gusto y le saca el golpe."""
     t = np.arange(n) / float(SR)
-    e = env_perc(n, 0.060, 1.10)
+    e = env_perc(n, 0.035, 1.10)
     v = (np.sin(2 * math.pi * f0 * t)
          + 0.45 * np.sin(2 * math.pi * f0 * 2 * t + 1.1)
          + 0.18 * np.sin(2 * math.pi * f0 * 3 * t + 2.3)) * e
@@ -459,7 +464,7 @@ MELODIA = [
 # El arco, en dB por compas. La v3 tenia 10 dB: demasiado para una pieza de 61 s. EBU R128
 # s1 §d fija el maximo short-term en objetivo +5 LU, asi que 4,5 dB deja margen. Estos
 # escalones van sobre la CAMA; los efectos quedan afuera.
-ARCO_DB = [(0, -4.5), (2, -3.5), (4, -2.6), (6, -1.8), (10, -0.8), (14, 0.0)]
+ARCO_DB = [(0, -3.4), (2, -2.8), (4, -2.2), (6, -1.6), (10, -0.7), (14, 0.0)]
 
 
 def envolvente_arco(n, m, n_compases):
@@ -484,11 +489,11 @@ def envolvente_arco(n, m, n_compases):
 # Balance. Los numeros salen de medir la mezcla contra el reparto de las referencias, no de
 # la intuicion: el grave (sub + bajo + latido) tiene que MANDAR y el medio quedar atras.
 NIV = dict(sub=0.55, bajo=0.30, latido=0.22, mallet=0.62, pad=0.85, mel=0.55,
-           perc=0.34, fx=0.34)
+           perc=0.34, fx=0.34, aire=0.055)
 
 # Secciones: entra un elemento cada 2-4 compases. El pico va entre el 70 y el 80% del
 # metraje, pero con 4,5 dB de recorrido, no 10.
-S_PAD, S_SUB, S_BAJO, S_GANCHO, S_LATIDO, S_MELODIA = 0, 1, 4, 6, 10, 13
+S_PAD, S_SUB, S_BAJO, S_GANCHO, S_LATIDO, S_MELODIA = 0, 0, 0, 0, 10, 13
 
 
 # --------------------------------------------------------------------------- el arreglo
@@ -527,7 +532,7 @@ def construir(dur, marcas):
 
     pistas = {k: np.zeros(n) for k in
               ("sub", "bajo", "latido", "perc", "mallet_l", "mallet_r", "pad_l", "pad_r",
-               "mel", "fx_l", "fx_r")}
+               "mel", "fx_l", "fx_r", "aire_l", "aire_r")}
 
     def quieto(bar):
         return b_gesto <= bar < b_vuelta
@@ -535,8 +540,8 @@ def construir(dur, marcas):
     # ---------- APERTURA. La placa del logo dura 2,7 s y hasta la v3 quedaba en SILENCIO
     # ABSOLUTO: medido, -120 dB. Un video que arranca mudo se lee como archivo roto — el
     # que lo abre revisa el volumen en vez de mirar la maquina. Entra el primer acorde
-    # creciendo desde 0,35 s, con su sub, y desemboca en el primer compas.
-    i_ap = int(0.35 * SR)
+    # creciendo desde 0,20 s, con su sub, y desemboca en el primer compas.
+    i_ap = int(0.20 * SR)
     largo_ap = m(0) + int(0.9 * compas * SR) - i_ap
     if largo_ap > 0:
         ac0 = ACORDES[0]
@@ -546,7 +551,7 @@ def construir(dur, marcas):
             l, r = sierras(nota(md), largo_ap, rng)
             Lp += l
             Rp += r
-        subida = np.linspace(0.22, 1.0, largo_ap) ** 1.6
+        subida = np.linspace(0.45, 1.0, largo_ap) ** 1.2
         sumar(pistas["pad_l"], i_ap, Lp / 4.0 * subida)
         sumar(pistas["pad_r"], i_ap, Rp / 4.0 * subida)
         sumar(pistas["sub"], i_ap,
@@ -618,6 +623,13 @@ def construir(dur, marcas):
                 # 1,2 a 8 kHz que tienen todas las referencias y la mezcla no tenia
                 v = v + mallet(nota(md + 12), largo, rng, tau=0.40, ataque=0.006,
                                brillo=2.2) * g * 0.72
+                if j == 0 and b % 2 == 0:
+                    # la campanita: dos octavas arriba, en el 1 de cada dos compases. Es la
+                    # unica voz del arreglo que llega a 12-19 kHz, y sin ella la mezcla
+                    # queda cortada en 11 kHz (escalon de 37 dB contra 1-8 de las
+                    # referencias) y suena tapada aunque el reparto por bandas cierre.
+                    v = v + mallet(nota(md + 24), largo, rng, tau=0.90, ataque=0.004,
+                                   brillo=3.0) * g * 0.17
                 pan = 0.5 + 0.20 * math.sin(j * 1.7)
                 sumar(pistas["mallet_l"], i, v, 1 - pan)
                 sumar(pistas["mallet_r"], i, v, pan)
@@ -649,8 +661,8 @@ def construir(dur, marcas):
 
     # ------------------------------------------------------------------ diseño de sonido
     fx_l, fx_r = pistas["fx_l"], pistas["fx_r"]
-    ir_sala = ir_reverb(0.80, 0.012, 5000, 3)
-    ir_hall = ir_reverb(3.00, 0.045, 5000, 11)
+    ir_sala = ir_reverb(0.80, 0.012, 10000, 3)
+    ir_hall = ir_reverb(3.00, 0.045, 13000, 11)
 
     def fx(i, v, ancho=0.0):
         sumar(fx_l, i, v, 1.0 - ancho * 0.5)
@@ -689,10 +701,10 @@ def construir(dur, marcas):
 
     # 4) la imagen vuelve a la prensa: un swell que muere en el cuadro y otra floracion. Sin
     #    riser: un riser es la figura mas "trailer" que hay y no va en una cama tranquila.
-    i_v = m(b_vuelta)
-    nv = int(1.50 * SR)
-    fx(i_v - nv, swell_invertido(nv, ir_hall, rng) * 0.26, 0.4)
-    fx(i_v, floracion(int(2.6 * SR), 104.0) * 1.10)
+    i_v = m(b_vuelta) + int(0.10 * SR)      # 100 ms mas tarde: el compas caia 38 ms
+    nv = int(1.50 * SR)                     # ANTES del arranque del encadenado de salida,
+    fx(i_v - nv, swell_invertido(nv, ir_hall, rng) * 0.26, 0.4)   # y del lado adelantado
+    fx(i_v, floracion(int(2.6 * SR), 104.0) * 1.10)               # el oido tolera 3x menos
 
     # 5) la placa final: floracion larga y cola
     fx(m(b_final), floracion(int(3.6 * SR), 92.0) * 0.50)
@@ -733,17 +745,36 @@ def construir(dur, marcas):
             mezcla[-nb:] = np.linspace(1, 0, nb)
             pistas[k][g0:g1] = seg * (1 - mezcla) + oscuro * mezcla
 
+    # ---------- AIRE. Toda la mezcla es suma de senos, y una suma de senos no tiene nada
+    # arriba de su parcial mas alto: medido, la banda de 12,5-15 kHz caia 39 dB por debajo
+    # de la de 8-10 kHz, contra 1 a 8 dB en las ocho referencias de musica sola. Eso se oye
+    # como "tapado" aunque el reparto por bandas anchas cierre. Se agrega ruido pasa-altos
+    # modulado por la envolvente de la cama YA EDITADA: asi sigue el arco, se oscurece en la
+    # camara lenta y se apaga en el hueco del gesto, sin una linea extra de codigo.
+    cama = (pistas["mallet_l"] + pistas["mallet_r"] + pistas["pad_l"] + pistas["pad_r"]
+            + pistas["mel"])
+    k_env = int(0.040 * SR)
+    cum = np.concatenate([[0.0], np.cumsum(np.abs(cama))])
+    env_aire = (cum[k_env:] - cum[:-k_env]) / k_env            # media movil sin convolucion
+    env_aire = np.concatenate([env_aire, np.full(n - len(env_aire), env_aire[-1])])
+    env_aire = (env_aire / max(env_aire.max(), 1e-12)) ** 0.75
+    for lado in ("aire_l", "aire_r"):                          # ruido distinto a cada lado:
+        ruido = pasabajos(pasaaltos(rng.standard_normal(n), 6500, 4), 15000, 2)
+        pistas[lado] = ruido * env_aire                         # da ancho
+
     # NO HAY SIDECHAIN. Sin bombo en cada negra no hay que duckear nada, y el bombeo del
     # sidechain es una firma de pista energica: se oye como que la musica "respira" rapido.
 
     L = (pistas["sub"] * NIV["sub"] + pistas["bajo"] * NIV["bajo"]
          + pistas["latido"] * NIV["latido"] + pistas["perc"] * NIV["perc"]
          + pistas["mallet_l"] * NIV["mallet"] + pistas["pad_l"] * NIV["pad"]
-         + pistas["mel"] * NIV["mel"] + pistas["fx_l"] * NIV["fx"])
+         + pistas["mel"] * NIV["mel"] + pistas["fx_l"] * NIV["fx"]
+         + pistas["aire_l"] * NIV["aire"])
     R = (pistas["sub"] * NIV["sub"] + pistas["bajo"] * NIV["bajo"]
          + pistas["latido"] * NIV["latido"] + pistas["perc"] * NIV["perc"]
          + pistas["mallet_r"] * NIV["mallet"] + pistas["pad_r"] * NIV["pad"]
-         + pistas["mel"] * NIV["mel"] + pistas["fx_r"] * NIV["fx"])
+         + pistas["mel"] * NIV["mel"] + pistas["fx_r"] * NIV["fx"]
+         + pistas["aire_r"] * NIV["aire"])
 
     # Dos envios: una sala corta para el color de la prensa y un hall largo para pad,
     # gancho, melodia y efectos. Los retornos van filtrados — un reverb con graves embarra.
@@ -752,13 +783,13 @@ def construir(dur, marcas):
                 + (pistas["fx_l"] + pistas["fx_r"]) * 0.30)
     for envio, ir, g in ((env_sala, ir_sala, 0.18), (env_hall, ir_hall, 0.28)):
         cola = conv(envio, ir)
-        cola = pasabajos(pasaaltos(cola, 220, 2), 6000, 2) * g
+        cola = pasabajos(pasaaltos(cola, 220, 2), 13000, 2) * g
         L += cola
         R += cola * 0.92                       # la cola apenas distinta a cada lado
 
     # En la camara lenta la cola del hall se abre: es la mitad del efecto.
     extra = conv(env_hall, ir_hall)
-    extra = pasabajos(pasaaltos(extra, 220, 2), 6000, 2)
+    extra = pasabajos(pasaaltos(extra, 220, 2), 13000, 2)
     vent = np.zeros(n)
     vent[g0:g1] = 1.0
     na = min(int(0.30 * SR), g1 - g0)
@@ -780,9 +811,9 @@ def construir(dur, marcas):
     nf = int(0.30 * SR)
     L[:nf] *= np.linspace(0, 1, nf)
     R[:nf] *= np.linspace(0, 1, nf)
-    nf = int(1.40 * SR)
-    L[-nf:] *= np.linspace(1, 0, nf) ** 1.4
-    R[-nf:] *= np.linspace(1, 0, nf) ** 1.4
+    nf = int(2.30 * SR)                     # el cierre RESUELVE, no se corta: 2,3 s
+    L[-nf:] *= np.linspace(1, 0, nf)        # de cola debajo del fundido a negro de
+    R[-nf:] *= np.linspace(1, 0, nf)        # la placa final (antes eran 0,97 s)
 
     p = max(np.abs(L).max(), np.abs(R).max())
     L, R = L / p * 0.88, R / p * 0.88

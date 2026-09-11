@@ -444,10 +444,27 @@ ffmpeg -loglevel verbose -nostats -i entrega.mp4 \
    filtros causales (`scipy.signal.sosfilt` con `butter`). Y ese mismo `convolve` con kernels
    largos es convolucion directa: un suavizado de 12.000 taps sobre 2,9 M de muestras llevo un
    render de 1m15 a **7 minutos**.
-8. **El video NO arranca mudo.** Hasta la v3 la placa del logo se comia 2,7 s de silencio
-   absoluto (-120 dB) porque la grilla empezaba en el primer corte. Eso se lee como archivo
-   roto: el que lo abre revisa el volumen en vez de mirar. Entra un acorde creciendo desde el
-   segundo 0,35.
+8. **Una suma de senos NO TIENE AIRE, y ningun filtro se lo puede dar.** El defecto mas
+   dificil de ver de toda la tanda, y lo caza una sola medida: **cuanto cae la banda de
+   12,5-15 kHz respecto de la de 8-10 kHz**. En las 8 referencias de musica sola ese escalon
+   va de **1,1 a 7,5 dB**; la v4 daba **31 dB** — arriba de 11 kHz no habia nada. El motivo es
+   estructural: el parcial mas alto del mallet es 9,8x la fundamental (7,7 kHz) y el pad suma
+   armonicos de notas de 165-392 Hz. **Subir los pasa-bajos no sirve (un filtro saca, no
+   inventa) y la reverb tampoco (convolucionar multiplica espectros)**. Lo que lo arregla es
+   una capa de **ruido pasa-altos en 6,5 kHz con techo en 15 kHz, modulada por la envolvente
+   de la cama ya editada** — asi respira con la musica, sigue el arco, se oscurece en la
+   camara lenta y se apaga sola en el hueco del gesto, sin una linea extra. Escalon
+   resultante: **3,8 dB**. Ojo tambien con la **guarda de Nyquist** en los parciales: arriba
+   de 24 kHz se pliegan y ESO es el sonido digital barato.
+9. **El video NO arranca mudo, y el arranque tampoco se queda atras.** Hasta la v3 la placa
+   del logo se comia 2,7 s de silencio absoluto (-120 dB) porque la grilla empezaba en el
+   primer corte: se lee como archivo roto, el que lo abre revisa el volumen en vez de mirar.
+   Pero no alcanza con que suene: **la ventana de 4 a 8 s tiene que estar a menos de ~8 dB
+   del maximo short-term**, medido en las 8 referencias (van de **2,2 a 8,6 dB**, mediana 6).
+   Si esta 12 dB abajo el modo de falla es peor que el silencio: el destinatario sube el
+   volumen y despues le llega el cuerpo. **Y el escalon no se arregla con ganancia: se
+   arregla haciendo entrar los elementos antes** — en las referencias la ventana de 4-8 s y
+   la de 8-12 s son planas entre si, el arco lo hace el climax, no el arranque.
 
 #### El tempo sale del CORTE, no de un BPM lindo
 
@@ -491,8 +508,8 @@ y le gusto: *"en la parte de Manuel me gusto eso que hiciste"*. Es esto, en orde
 6. **Al volver**: otro swell que muere en el cuadro y una segunda floracion. **Nada de riser**:
    es la figura mas "trailer" que hay y no va en una cama tranquila.
 
-Verificado midiendo el MP4 final cada 100 ms: **-21 dB antes, -30 dB en el hueco, -19 dB
-cuando florece**, y el pico 100 ms DESPUES del cuadro del corte. La referencia de cuanto tiene
+Verificado midiendo el MP4 final cada 100 ms: **-21,5 dB antes, -31,5 dB en el hueco,
+-19,4 dB cuando florece**, y el pico 100 ms DESPUES del cuadro del corte. La referencia de cuanto tiene
 que bajar: **10 dB de hueco y 2 dB por encima del entorno** cuando florece. Con 6 dB de hueco
 el efecto no se lee.
 
