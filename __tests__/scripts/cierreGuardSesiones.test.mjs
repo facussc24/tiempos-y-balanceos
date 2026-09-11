@@ -62,6 +62,16 @@ describe('cierre-guard · pendientes solo de ESTA sesion (falso positivo 2)', ()
     expect(esEntregableFuera('/home/runner/Desktop/154.png', repoLinux)).toBe(true);
   });
 
+  // El repo llega en forma Git Bash (`/c/Dev/x`) cuando dev-server-guard.sh pasa `--repo "$(pwd)"`.
+  // Eso arranca con `/` pero es Windows: la rama POSIX no tiene que activarse ahi.
+  it('repo en forma Git Bash: arranca con / pero es Windows, no habilita las rutas POSIX', () => {
+    const repoGB = '/c/Dev/BarackMercosul';
+    const w = (file_path) => ({ name: 'Write', input: { file_path } });
+    expect(esEntregableFuera('/home/x/informe.pdf', repoGB)).toBe(false);
+    expect(rutaRelativaAlRepo(w('/c/Dev/BarackMercosul/scripts/x.mjs'), repoGB)).toBe('scripts/x.mjs');
+    expect(esEntregableFuera('C:\\Users\\FacundoS-PC\\Desktop\\carro.step', repoGB)).toBe(true);
+  });
+
   it('escribioFueraEnEsteTurno junta los tocados de TODA la sesion y no toma el scratchpad como entrega', async () => {
     const f = path.join(os.tmpdir(), `cg-sesiones-${process.pid}-${Date.now()}.jsonl`);
     const l = (o) => JSON.stringify(o);

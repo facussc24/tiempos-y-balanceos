@@ -186,7 +186,7 @@ function aWindows(r) {
  *  (el runner del CI es Linux: sin esto toda ruta absoluta se leia como relativa y la
  *  lista de tocados salia vacia). El criterio sale del repo, no de `process.platform`. */
 const esAbsoluta = (r, repo = REPO) => /^[a-z]:[\\/]/i.test(r) || /^\\\\/.test(r)
-  || (r.startsWith('/') && String(repo ?? '').startsWith('/'));
+  || (r.startsWith('/') && aWindows(String(repo ?? '')).startsWith('/'));
 const rutaLarga = (p) => { try { return fs.realpathSync.native(p); } catch { return p; } };
 
 const repoNormalizado = new Map();
