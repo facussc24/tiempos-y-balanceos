@@ -55,6 +55,11 @@ FLUJOGRAMAS = {
             ['FLUJOGRAMA_153_ARMREST_REV.A.vsdx'],
             rf'NOVAX\Tapizadas puerta\{EL20}',
             []),
+    '154': ('FLUJOGRAMA_154-INSERT.png',
+            'INSERT',
+            ['FLUJOGRAMA_154_INSERT PAT_REV.A.vsdx'],
+            rf'NOVAX\Tapizadas puerta\{EL20}',
+            []),
     '155': ('FLUJOGRAMA_155-TOP-ROLL.png',
             'TOP ROLL',
             ['122 FLUJOGRAMA TOP ROLL PAT 2..vsdx',
@@ -88,10 +93,12 @@ def png_a_pdf(png, pdf):
         img.convert('RGB').save(pdf, 'PDF', resolution=150)
 
 
-def armar_plan(origen):
+def armar_plan(origen, solo=None):
     """[(src, dst, [viejos a archivar en la carpeta destino])] + carpetas a crear + problemas."""
     acciones, crear, problemas = [], [], []
     for fid, (png, dir_prod, viejos_prod, dir_ppap, viejos_ppap) in FLUJOGRAMAS.items():
+        if solo and fid not in solo:
+            continue
         src_png = os.path.join(origen, png)
         if not os.path.exists(src_png):
             problemas.append(f'FALTA el origen: {src_png}')
@@ -194,18 +201,23 @@ def ejecutar(acciones, crear):
 
 if __name__ == '__main__':
     if len(sys.argv) < 2 or sys.argv[1].startswith('--'):
-        sys.exit('Uso: python scripts/_distribuirFlujogramasPatagonia.py <carpeta_con_los_png> [--apply]')
+        sys.exit('Uso: python scripts/_distribuirFlujogramasPatagonia.py <carpeta_con_los_png> [solo...] [--apply]')
     origen = os.path.abspath(sys.argv[1])
     if not os.path.isdir(origen):
         sys.exit(f'ERROR: no existe la carpeta de origen {origen}')
 
+    solo_args = [a for a in sys.argv[2:] if not a.startswith('--')]
+    solo = set(solo_args) if solo_args else None
+
     # Los PDF se generan SIEMPRE (tambien en dry-run) para poder mirarlos antes de aplicar.
     for fid, (png, *_resto) in FLUJOGRAMAS.items():
+        if solo and fid not in solo:
+            continue
         src_png = os.path.join(origen, png)
         if os.path.exists(src_png):
             png_a_pdf(src_png, os.path.splitext(src_png)[0] + '.pdf')
 
-    acciones, crear, problemas = armar_plan(origen)
+    acciones, crear, problemas = armar_plan(origen, solo=solo)
     mostrar_plan(acciones, crear, problemas)
     if problemas:
         print('\nHay problemas sin resolver: no se ejecuta nada. Corregir y reintentar.')

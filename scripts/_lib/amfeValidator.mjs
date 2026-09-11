@@ -22,6 +22,9 @@
  * of truth: si se agrega un check alli, copiarlo aca tambien).
  */
 
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import {
     isGeneric6MLabel,
     classifyWeNameVsType,
@@ -91,7 +94,7 @@ function hasCauseValue(causes, field) {
 }
 
 /** Tipos de issue que son BLOQUEANTES (bloquean apply) */
-const CRITICAL_TYPES = new Set([
+export const CRITICAL_TYPES = new Set([
     'EMPTY_OP',
     'SUSPICIOUS_OP',
     'INVALID_OP_CLIPS',
@@ -132,7 +135,39 @@ const CRITICAL_TYPES = new Set([
     // Ver rules/amfe-no-inventar-controles.md + scripts/_lib/forbiddenContent.mjs.
     // CLAUDE_PHRASE (frases-Claude + frecuencias inventadas) es WARNING, NO va aca.
     'FORBIDDEN_VOCABULARY',
+    // Caracteristica especial contra S/O (agregado 2026-09-11, regla caracteristicas-especiales.md).
+    // Fak: "es un error gravisimo que debemos corregir para siempre". Una sigla se justifica SOLO
+    // con la S y la O de su causa: critica con S<9, significativa fuera de S 5-8 / O>=4, o una
+    // sigla que ninguna fuente reconoce, son documento mal clasificado y bloquean.
+    'CAUSE_CC_LOW_SEVERITY',
+    'CAUSE_SC_FUERA_DE_REGLA',
+    'SIGLA_DESCONOCIDA',
 ]);
+
+// Caracteristicas especiales — FUENTE UNICA core/amfe/caracteristicasEspeciales.data.json
+// (la misma que lee modules/amfe/specialChars.ts en la app y guardianes.mjs en los hooks).
+const CE = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'core', 'amfe', 'caracteristicasEspeciales.data.json'), 'utf8'));
+/** "SC 1", "D/TLD 3": el numero es el ID de la caracteristica, no parte de la sigla. */
+export const normalizarSigla = (raw) => String(raw ?? '').trim().toUpperCase().replace(/\s*\d+$/, '').trim();
+/** "-", "—", "N/A" o vacio: la celda dice "sin caracteristica". */
+export const esSinMarca = (v) => CE.sin_marca.includes(normalizarSigla(v));
+/** Nivel canonico de una sigla (CRITICA / SIGNIFICATIVA / SEGURIDAD_OPERADOR / ALTO_IMPACTO) o null si ninguna fuente la reconoce. */
+export function nivelDeSigla(raw) {
+    const v = normalizarSigla(raw);
+    if (!v) return null;
+    for (const [nivel, siglas] of Object.entries(CE.aliases)) if (siglas.includes(v)) return nivel;
+    return null;
+}
+/** Nivel que el criterio del I-AC-005 asigna por S y O: CRITICA si S>=9; SIGNIFICATIVA si S 5-8 y O>=4; null si ninguna. */
+export function nivelPorCriterio(severidad, ocurrencia) {
+    const s = Number(severidad), o = Number(ocurrencia);
+    if (!Number.isFinite(s) || s <= 0) return null;
+    if (s >= CE.criterio.CRITICA.severidad_min) return 'CRITICA';
+    const r = CE.criterio.SIGNIFICATIVA;
+    if (s >= r.severidad_min && s <= r.severidad_max && Number.isFinite(o) && o >= r.ocurrencia_min) return 'SIGNIFICATIVA';
+    return null;
+}
+export const CARACTERISTICAS_ESPECIALES = CE;
 
 // Patrones que identifican failures con efecto de incumplimiento legal/aduanero.
 // Ver rules/amfe-severity-legal-compliance.md. Match contra los 3 niveles de efecto.
@@ -168,7 +203,6 @@ const REWORK_TERM_PATTERN = /retrabajo/i;
 
 // Keywords que eximen a una CC de requerir S>=9 (flamabilidad/legal/seguridad).
 // Porta A6 de modules/amfe/amfeValidation.ts:640. Ver rules/amfe.md.
-const FLAMABILITY_LEGAL_KEYWORDS = ['flamabilidad', 'flamable', 'tl 1010', 'voc', 'emisiones', 'airbag', 'legal', 'seguridad'];
 
 /**
  * Candado anti-invento: escanea un campo de texto del AMFE y empuja issues.
@@ -805,28 +839,34 @@ export function validateAmfeDoc(doc, productName = '', amfeNumber = '') {
                             }
                         }
 
-                        // CC/SC sanity (WARNING) — porta A6/A7 de modules/amfe/amfeValidation.ts:643-689.
-                        // SOLO FLAGEA calibracion sospechosa. NUNCA asigna CC/SC (decision de Fak).
-                        // La sigla depende del destinatario del documento: interna CC/SC, manual
-                        // AIAG-VDA ▽/SC, y para VW D/TLD y W (rules/amfe.md §2.1, verificado
-                        // 08/09/2026). Se compara el NIVEL, no el texto — espejo .mjs de
-                        // modules/amfe/specialChars.ts.
-                        const specialCh = String(c.specialChar || '').trim().toUpperCase().replace(/\s*\d+$/, '').trim();
-                        const esCriticaSc = ['CC', '∇', '▽', 'D', 'D/TLD', 'TLD'].includes(specialCh);
-                        const esSignifSc = ['SC', 'CS', 'W', 'WICHTIG'].includes(specialCh);
-                        if (esCriticaSc || esSignifSc) {
-                            const sevForCcSc = Number(sevEf) || 0;
-                            if (esCriticaSc && sevForCcSc > 0 && sevForCcSc < 9) {
-                                const haystack = [fmDesc, ...effectsTexts, causeDesc].join(' ').toLowerCase();
-                                const exempt = FLAMABILITY_LEGAL_KEYWORDS.some(kw => haystack.includes(kw));
-                                if (!exempt) {
-                                    issues.push({ ...cCtx, type: 'CAUSE_CC_LOW_SEVERITY',
-                                        detail: `causa marcada como critica (${specialCh}) pero S=${sevForCcSc} (requiere S>=9 salvo flamabilidad/legal, ver rules/amfe.md)` });
-                                }
-                            }
-                            if (esSignifSc && sevForCcSc > 0 && sevForCcSc < 7) {
-                                issues.push({ ...cCtx, type: 'CAUSE_SC_LOW_SEVERITY',
-                                    detail: `causa marcada como significativa (${specialCh}) con S=${sevForCcSc} (tipicamente S=7-8; sospechoso de formula vieja)` });
+                        // Caracteristica especial vs S/O (CRITICAL) — regla `caracteristicas-especiales.md`,
+                        // fuente unica core/amfe/caracteristicasEspeciales.data.json (CE), espejo .mjs de
+                        // modules/amfe/specialChars.ts. NUNCA asigna CC/SC (eso es de Fak): frena la
+                        // sigla que S y O no sostienen. Fak 11/09/2026: "es un error gravisimo que
+                        // debemos corregir para siempre".
+                        //   - CAUSE_CC_LOW_SEVERITY: critica (CC / D/TLD / ▽) con S < 9. SIN la exencion por
+                        //     palabras que hubo hasta el 11/09 ("seguridad", "airbag", "legal" en el texto):
+                        //     por ese agujero paso una costura S7 O3 con D/TLD y "riesgo de seguridad" en
+                        //     el efecto. Si el texto dice seguridad y la S es 7, lo incoherente es el par texto/S.
+                        //   - CAUSE_SC_FUERA_DE_REGLA: significativa (SC / CS) con S fuera de 5-8 o con O < 4
+                        //     (I-AC-005 punto 5). Reemplaza a CAUSE_SC_LOW_SEVERITY, que miraba "S < 7".
+                        //   - SIGLA_DESCONOCIDA: texto que ninguna fuente reconoce (W, Wichtig, Clave, PV2005).
+                        //     No se adivina: se reporta.
+                        //   - CAUSE_S9_SIN_CC (WARNING, mas arriba) queda como candidata: asignarla es de Fak.
+                        const specialCh = normalizarSigla(c.specialChar);
+                        if (specialCh && !esSinMarca(specialCh)) {
+                            const nivelSigla = nivelDeSigla(specialCh);
+                            const sN = Number(sevEf) || 0;
+                            const oN = Number(c.occurrence) || 0;
+                            if (nivelSigla === null) {
+                                issues.push({ ...cCtx, type: 'SIGLA_DESCONOCIDA',
+                                    detail: `"${String(c.specialChar).trim()}" no es una sigla del I-AC-005 (CC/CS), del manual AIAG-VDA (▽/SC/OS/HI) ni de VW (D/TLD): no se adivina, se corrige a mano` });
+                            } else if (nivelSigla === 'CRITICA' && sN > 0 && sN < CE.criterio.CRITICA.severidad_min) {
+                                issues.push({ ...cCtx, type: 'CAUSE_CC_LOW_SEVERITY',
+                                    detail: `marcada critica (${specialCh}) con S=${sN}: el I-AC-005 exige S 9 o 10, sin excepciones (si el efecto habla de seguridad o ley, la S es la que esta mal)` });
+                            } else if (nivelSigla === 'SIGNIFICATIVA' && sN > 0 && !missO && nivelPorCriterio(sN, oN) !== 'SIGNIFICATIVA') {
+                                issues.push({ ...cCtx, type: 'CAUSE_SC_FUERA_DE_REGLA',
+                                    detail: `marcada significativa (${specialCh}) con S=${sN} O=${oN}: el I-AC-005 exige S 5 a 8 y O >= 4` });
                             }
                         }
 

@@ -66,6 +66,18 @@
         ]
       }
     ],
+    "UserPromptSubmit": [
+      {
+        "_comentario": "11/09/2026: cuando el mensaje de Fak nombra las caracteristicas especiales (CC/SC, D/TLD, critica, significativa, la sigla, las marcas del flujograma, el I-AC-005) inyecta el criterio canonico como additionalContext, SIN cooldown. Pedido textual de Fak: 'siempre que te preguntes, recuerdes todo esto... me gustan esas memorias pero a veces no las lees'. Texto y disparadores en core/amfe/caracteristicasEspeciales.data.json (la misma fuente del validador, la app y el guard PreToolUse). Nunca bloquea. Test: hooksVarios.test.mjs.",
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/caracteristicas-especiales-prompt.sh"
+          }
+        ]
+      }
+    ],
     "InstructionsLoaded": [
       {
         "_comentario": "10/09/2026 (C5): registra en .claude/.instrucciones-cargadas.log (gitignoreado) cada CLAUDE.md, regla, @import y memoria que Claude Code cargo de verdad, con su load_reason. Convierte la leccion del 04/09 (lo que un hook inyecta se verifica en el transcript) en un registro que se mira despues de cada actualizacion de Claude Code. Test: hooksVarios.test.mjs.",

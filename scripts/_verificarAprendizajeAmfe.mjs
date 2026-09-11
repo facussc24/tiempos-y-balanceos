@@ -102,6 +102,25 @@ filas.push(['  ...pero con D=10 ya esta bien declarado', 'idem', 'detectionContr
 
 filas.push(['CC que se cae al detallar', 'CAUSE_S9_SIN_CC (WARNING, no asigna)', 'S=9 sin specialChar',
   tiene(causa({ severity: 9, occurrence: 3, detection: 4, ap: 'H', actionPriority: 'H', optimizationAction: 'Pendiente definicion equipo APQP', specialChar: '' }), 'CAUSE_S9_SIN_CC')]);
+// ── 3b. la sigla se justifica con S y O de ESA causa (Fak, 11/09: "es un error gravisimo que
+//        debemos corregir para siempre"). El caso real: D/TLD en una costura S7 O3 con "riesgo
+//        de seguridad" en el efecto — y la palabra "seguridad" EXIMIA al gate. Regla
+//        `caracteristicas-especiales.md`; fuente unica core/amfe/caracteristicasEspeciales.data.json.
+const conSigla = (sigla, severity, occurrence, extra = {}) => causa({ severity, occurrence, detection: 4,
+  ap: severity >= 9 || occurrence >= 4 ? 'H' : 'M', actionPriority: severity >= 9 || occurrence >= 4 ? 'H' : 'M',
+  optimizationAction: 'Pendiente definicion equipo APQP', specialChar: sigla, ...extra });
+filas.push(['Critica con S<9 (el caso de la costura)', 'CAUSE_CC_LOW_SEVERITY (CRITICAL, sin exencion)', 'D/TLD con S=7 O=3 y "Riesgo en cabina" en el efecto',
+  tiene(conSigla('D/TLD', 7, 3), 'CAUSE_CC_LOW_SEVERITY')]);
+filas.push(['  ...y "flamabilidad" en el texto ya no exime', 'idem', 'CC con S=6 en el failure "Flamabilidad fuera de TL 1010"',
+  tiene(conSigla('CC', 6, 3), 'CAUSE_CC_LOW_SEVERITY')]);
+filas.push(['  ...pero con S=9 esta bien', 'idem', 'D/TLD con S=9 O=3',
+  !tiene(conSigla('D/TLD', 9, 3), 'CAUSE_CC_LOW_SEVERITY')]);
+filas.push(['Significativa fuera de S 5-8 y O>=4', 'CAUSE_SC_FUERA_DE_REGLA (CRITICAL)', 'SC con S=8 O=2 (AMFE 158 OP 110)',
+  tiene(conSigla('SC', 8, 2), 'CAUSE_SC_FUERA_DE_REGLA')]);
+filas.push(['  ...y con S=7 O=5 no molesta', 'idem', 'SC con S=7 O=5',
+  !tiene(conSigla('SC', 7, 5), 'CAUSE_SC_FUERA_DE_REGLA')]);
+filas.push(['Sigla que ninguna norma define', 'SIGLA_DESCONOCIDA (CRITICAL)', 'W (no existe en VW; Fak 09/09)',
+  tiene(conSigla('W', 7, 5), 'SIGLA_DESCONOCIDA')]);
 filas.push(['AP=H sin accion (bloqueo IATF)', 'CAUSE_APH_EMPTY_NO_PLACEHOLDER (CRITICAL)', 'AP=H y accion vacia',
   tiene(causa({ severity: 9, occurrence: 4, detection: 7, ap: 'H', actionPriority: 'H', specialChar: 'CC' }), 'CAUSE_APH_EMPTY_NO_PLACEHOLDER')]);
 filas.push(['Valor de especificacion en el control', 'CONTROL_CON_VALOR (WARNING)', 'Calibre... Cotas: diametro 90 mm',

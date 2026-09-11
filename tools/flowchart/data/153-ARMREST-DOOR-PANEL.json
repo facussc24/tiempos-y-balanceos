@@ -3,89 +3,374 @@
   "_cambio_revB": "El original traia DOS controles de pieza inyectada — `51 CONTROL DE PIEZA INYECTADA — APB DELANTERO` (rombo ¿PIEZA DELANTERA OK?) y `52 CONTROL DE PIEZA INYECTADA — APB TRASERO` (rombo ¿PIEZA TRASERA OK?). En planta es UN SOLO PUESTO (confirmado por el responsable el 18/08/2026), asi que queda una sola operacion 51 CONTROL DE PIEZA INYECTADA con un unico rombo ¿PIEZA CONFORME? y su misma rama NO al plan de reaccion / scrap. La operacion 52 NO existe. No se renumero nada mas.",
   "_nota_cajetin": "El cajetin del PNG dice REVISION A y FECHA EMISION 08/06/2026. Los valores que van al documento son los indicados por Fak: emision 12/11/2025, revision B del 18/08/2026. Se deja constancia de la diferencia contra la imagen.",
   "_nota_tbd": "En la tabla CODIGOS PROD. TERMINADO el Part Number VW figura como TBD en el original. Se deja TBD.",
-
   "header": {
     "title": "FLUJOGRAMA DE PROCESO DOOR PANEL",
     "documentCode": "I-IN-002/III",
-    "revision": "B",
+    "revision": "C",
     "date": "12/11/2025",
-    "revisionDate": "18/08/2026",
+    "revisionDate": "11/09/2026",
     "preparedBy": "FACUNDO SANTORO",
     "reviewedBy": "CARLOS BAPTISTA",
     "project": "PATAGONIA",
-    "client": "VWA"
+    "client": "VWA",
+    "productsColumns": {
+      "code": "Código Novax",
+      "version": ""
+    },
+    "specialChars": [
+      {
+        "mark": "D/TLD",
+        "meaning": "CARACTERÍSTICA CRÍTICA"
+      },
+      {
+        "mark": "SC",
+        "meaning": "CARACTERÍSTICA SIGNIFICATIVA"
+      }
+    ],
+    "footerNote": "Para toda operación marcada con D/TLD o SC es obligatorio consultar el Plan de Control del DOOR PANEL y el AMFE 161 de esa operación."
   },
-
   "products": [
-    { "code": "TBD", "level": "L1", "description": "DOOR PANEL, FRONT ROW", "version": "A" }
+    {
+      "code": "N 231",
+      "level": "L1",
+      "description": "DOOR PANEL DEL. IZQ.",
+      "version": ""
+    },
+    {
+      "code": "N 267",
+      "level": "L1",
+      "description": "DOOR PANEL DEL. DER.",
+      "version": ""
+    },
+    {
+      "code": "N 297",
+      "level": "L1",
+      "description": "DOOR PANEL TRAS. IZQ.",
+      "version": ""
+    },
+    {
+      "code": "N 328",
+      "level": "L1",
+      "description": "DOOR PANEL TRAS. DER.",
+      "version": ""
+    }
   ],
-
   "revisions": [
-    { "rev": "A", "date": "12/11/2025", "item": "N/A.", "details": "EMISION INICIAL.", "pswDate": "", "modifiedBy": "FS" },
-    { "rev": "B", "date": "18/08/2026", "item": "20-28 / 40-41 / 51 / 60 / 70-71 / 80-82 / 90 / 100-101 / 110", "details": "SE DESGLOSA EL CORTE EN LAS OPERACIONES 20 A 27 Y EL CONTROL CON MYLAR PASA A LA 28, ALINEANDO CON LA HO-971. EL CONTROL DE PIEZA INYECTADA QUEDA EN UNA SOLA OPERACION 51, QUE ES COMO SE HACE EN PLANTA. SE RENUMERA EL TRAMO DE COSTURA A EMBALAJE.", "pswDate": "", "modifiedBy": "FS" }
+    {
+      "rev": "A",
+      "date": "12/11/2025",
+      "item": "N/A.",
+      "details": "EMISION INICIAL.",
+      "pswDate": "",
+      "modifiedBy": "FS"
+    },
+    {
+      "rev": "B",
+      "date": "09/09/2026",
+      "item": "10 / 20-23 / 50-51 / 90",
+      "details": "RESTITUCION DE CONTROL DE MATERIA PRIMA (IQC) CON CUARENTENA Y RECHAZO A PROVEEDOR. ESTANDARIZACION DE MESA DE CORTE (OP. 20 PREPARACION, 21 CORTE, 22 MYLAR SC, 23 WIP). CARGA DE CODIGOS NOVAX N 231, N 267, N 297 Y N 328. SIMBOLOGIA VW (D/TLD Y SC) CON LEYENDA Y NOTA AL PIE.",
+      "pswDate": "",
+      "modifiedBy": "FS"
+    },
+    {
+      "rev": "C",
+      "date": "11/09/2026",
+      "item": "10 / 20-22 / 30 / 40-41 / 50 / 70-71 / 80-82 / 90 / 100",
+      "details": "SE ALINEAN LAS CARACTERISTICAS ESPECIALES CON EL AMFE 161: D/TLD Y SC EN LA RECEPCION (10) Y SC EN 20, 21, 30, 40, 41, 50, 70, 71, 80-82 Y 100.",
+      "pswDate": "",
+      "modifiedBy": "FS"
+    }
   ],
-
   "flow": [
-    { "stepId": "10", "type": "operation", "description": "RECEPCIÓN DE MATERIA PRIMA" },
-    { "type": "transfer", "description": "TRASLADO: MATERIAL APROBADO A ALMACÉN TEMPORAL (FIFO)" },
-    { "type": "storage", "description": "ALMACENAMIENTO DE MP EN SECTORES CORRESPONDIENTES" },
-
-    { "type": "transfer", "description": "TRASLADO DE ADHESIVO DESDE ALMACÉN A SECTOR DE ADHESIVADO",
-      "branchSide": { "type": "connector", "text": "A", "description": "ADHESIVO" },
+    {
+      "stepId": "10",
+      "type": "operation",
+      "description": "RECEPCIÓN DE MATERIA PRIMA",
+      "critical": true,
+      "criticalType": "D/TLD , SC",
+      "criticalColor": "black"
+    },
+    {
+      "type": "storage",
+      "description": "ALMACENADO EN SECTOR DE RECEPCIÓN DE MATERIA PRIMA PENDIENTE DE CONTROL"
+    },
+    {
+      "type": "inspection",
+      "description": "INSPECCIÓN DE MATERIA PRIMA"
+    },
+    {
+      "type": "condition",
+      "labelCondition": "¿MATERIAL CONFORME?",
+      "labelDown": "SI",
+      "branchSide": {
+        "labelNode": "NO",
+        "type": "terminal",
+        "text": "RECLAMO DE CALIDAD AL PROVEEDOR"
+      }
+    },
+    {
+      "type": "transfer",
+      "description": "TRASLADO: MATERIAL APROBADO A ALMACÉN TEMPORAL (FIFO)"
+    },
+    {
+      "type": "storage",
+      "description": "ALMACENADO EN SECTOR DE RECEPCIÓN DE MATERIA PRIMA CONTROLADA E IDENTIFICADA"
+    },
+    {
+      "type": "transfer",
+      "description": "TRASLADO DE ADHESIVO DESDE ALMACÉN A SECTOR DE ADHESIVADO",
+      "branchSide": {
+        "type": "connector",
+        "text": "A",
+        "description": "ADHESIVO"
+      },
       "branches": [
         [
-          { "type": "transfer", "description": "TRASLADO A SECTOR DE CORTE Y MESA DE CORTE" },
-          { "stepId": "20", "type": "operation", "description": "PREPARACIÓN Y CARGA DE VINILO" },
-          { "stepId": "21", "type": "operation", "description": "AJUSTE DE RODILLOS Y ALIMENTACIÓN DEL VINILO" },
-          { "stepId": "22", "type": "operation", "description": "AJUSTE DE MATERIAL EN LA MÁQUINA DE CORTE DE CAPAS" },
-          { "stepId": "23", "type": "operation", "description": "CONFIGURACIÓN Y CORTE AUTOMÁTICO DE CAPAS DE VINILO" },
-          { "stepId": "24", "type": "operation", "description": "AVANCE Y ALINEACIÓN DE VINILO EN MESA DE CORTE" },
-          { "stepId": "25", "type": "operation", "description": "MEDICIÓN DE CUCHILLA" },
-          { "stepId": "26", "type": "operation", "description": "PREPARACIÓN Y AJUSTE DE CORTE CON SUCCIÓN" },
-          { "stepId": "27", "type": "operation", "description": "INICIO DE CORTE Y VERIFICACIÓN AUTOMÁTICA DE MEDIDAS" },
-          { "stepId": "28", "type": "op-ins", "description": "CONTROL CON MYLAR" },
-          { "type": "condition", "labelCondition": "¿CORTE CONFORME?", "labelDown": "SI",
-            "branchSide": { "labelNode": "NO", "type": "terminal", "text": "SCRAP" } },
-          { "type": "transfer", "description": "TRASLADO A SECTOR DE COSTURA" },
-          { "stepId": "30", "type": "operation", "description": "REFILADO" },
-          { "stepId": "40", "type": "operation", "description": "COSTURA UNIÓN" },
-          { "stepId": "41", "type": "operation", "description": "COSTURA VISTA (1 SOLA LÍNEA)" },
-          { "type": "transfer", "description": "TRASLADO A SECTOR DE TAPIZADO" }
+          {
+            "type": "transfer",
+            "description": "TRASLADO A SECTOR DE CORTE Y MESA DE CORTE"
+          },
+          {
+            "stepId": "20",
+            "type": "operation",
+            "description": "PREPARACIÓN Y CARGA DE VINILO",
+            "critical": true,
+            "criticalType": "SC",
+            "criticalColor": "black"
+          },
+          {
+            "stepId": "21",
+            "type": "operation",
+            "description": "CORTE AUTOMÁTICO DE COMPONENTES",
+            "critical": true,
+            "criticalType": "SC",
+            "criticalColor": "black"
+          },
+          {
+            "stepId": "22",
+            "type": "op-ins",
+            "description": "CONTROL CON MYLAR"
+          },
+          {
+            "type": "condition",
+            "labelCondition": "¿CORTE CONFORME?",
+            "labelDown": "SI",
+            "branchSide": {
+              "labelNode": "NO",
+              "type": "terminal",
+              "text": "SCRAP"
+            }
+          },
+          {
+            "stepId": "23",
+            "type": "storage",
+            "description": "ALMACENAMIENTO EN MEDIOS WIP"
+          },
+          {
+            "type": "transfer",
+            "description": "TRASLADO A SECTOR DE COSTURA"
+          },
+          {
+            "stepId": "30",
+            "type": "operation",
+            "description": "REFILADO",
+            "critical": true,
+            "criticalType": "SC",
+            "criticalColor": "black"
+          },
+          {
+            "stepId": "40",
+            "type": "operation",
+            "description": "COSTURA UNIÓN",
+            "critical": true,
+            "criticalType": "SC",
+            "criticalColor": "black"
+          },
+          {
+            "stepId": "41",
+            "type": "operation",
+            "description": "COSTURA VISTA (1 SOLA LÍNEA)",
+            "critical": true,
+            "criticalType": "SC",
+            "criticalColor": "black"
+          },
+          {
+            "type": "transfer",
+            "description": "TRASLADO A SECTOR DE TAPIZADO"
+          }
         ],
         [
-          { "type": "transfer", "description": "TRASLADO A SECTOR DE INYECCIÓN PLÁSTICAS" },
-          { "stepId": "50", "type": "operation", "description": "INYECCIÓN DE PIEZAS PLÁSTICAS" },
-          { "stepId": "51", "type": "op-ins", "description": "CONTROL DE PIEZA INYECTADA" },
-          { "type": "condition", "labelCondition": "¿PIEZA CONFORME?", "labelDown": "SI",
-            "branchSide": { "labelNode": "NO", "direction": "left", "type": "terminal", "text": "PLAN DE REACCIÓN / SCRAP" } },
-          { "type": "transfer", "description": "TRASLADO A SECTOR DE INYECCIÓN PU" },
-          { "stepId": "60", "type": "operation", "description": "INYECCIÓN PU (POLIURETANO)" },
-          { "type": "transfer", "description": "TRASLADO A SECTOR DE TAPIZADO" }
+          {
+            "type": "transfer",
+            "description": "TRASLADO A SECTOR DE INYECCIÓN PLÁSTICAS"
+          },
+          {
+            "stepId": "50",
+            "type": "operation",
+            "description": "INYECCIÓN DE PIEZAS PLÁSTICAS",
+            "critical": true,
+            "criticalType": "SC",
+            "criticalColor": "black"
+          },
+          {
+            "stepId": "51",
+            "type": "op-ins",
+            "description": "CONTROL DE PIEZA INYECTADA"
+          },
+          {
+            "type": "condition",
+            "labelCondition": "¿PIEZA CONFORME?",
+            "labelDown": "SI",
+            "branchSide": {
+              "labelNode": "NO",
+              "direction": "left",
+              "type": "terminal",
+              "text": "PLAN DE REACCIÓN / SCRAP"
+            }
+          },
+          {
+            "type": "transfer",
+            "description": "TRASLADO A SECTOR DE INYECCIÓN PU"
+          },
+          {
+            "stepId": "60",
+            "type": "operation",
+            "description": "INYECCIÓN PU (POLIURETANO)"
+          },
+          {
+            "type": "transfer",
+            "description": "TRASLADO A SECTOR DE TAPIZADO"
+          }
         ]
-      ] },
-
-    { "stepId": "70", "type": "operation", "description": "ADHESIVADO", "incomingConnector": "A" },
-    { "stepId": "71", "type": "op-ins", "description": "INSP. ADHESIVADO" },
-    { "type": "condition", "labelCondition": "¿ADHESIVADO OK?", "labelDown": "SI",
-      "branchSide": { "labelNode": "NO", "sequence": [
-        { "type": "condition", "labelCondition": "¿SE PUEDE RETRABAJAR?", "labelDown": "SI",
-          "branchSide": { "labelNode": "NO", "type": "terminal", "text": "SCRAP" } },
-        { "stepId": "100", "type": "operation", "description": "REPROCESO: FALTA DE ADHESIVO (TELA NO ADHERIDA AL SUSTRATO)" },
-        { "type": "transfer", "description": "RE-ENTRADA AL FLUJO PRINCIPAL", "rework": { "targetId": "71", "label": "REVERIFICAR (A OP. 71)" } }
-      ] } },
-    { "stepId": "80", "type": "operation", "description": "TAPIZADO CONFIGURACIÓN" },
-    { "stepId": "81", "type": "operation", "description": "TAPIZADO AUTOMÁTICO" },
-    { "stepId": "82", "type": "operation", "description": "TAPIZADO REFILADO MANUAL" },
-    { "stepId": "90", "type": "op-ins", "description": "CONTROL FINAL" },
-    { "type": "condition", "labelCondition": "¿PRODUCTO CONFORME?", "labelDown": "SI",
-      "branchSide": { "labelNode": "NO", "sequence": [
-        { "type": "condition", "labelCondition": "¿SE PUEDE RETRABAJAR?", "labelDown": "SI",
-          "branchSide": { "labelNode": "NO", "type": "terminal", "text": "SCRAP" } },
-        { "stepId": "101", "type": "operation", "description": "REPROCESO: REACTIVACIÓN DE ADHESIVO POR CALOR" },
-        { "type": "transfer", "description": "RE-ENTRADA AL FLUJO PRINCIPAL", "rework": { "targetId": "90", "label": "REVERIFICAR (A OP. 90)" } }
-      ] } },
-    { "stepId": "110", "type": "operation", "description": "EMBALAJE Y ETIQUETADO DE PRODUCTO TERMINADO" },
-    { "type": "transfer", "description": "TRASLADO A ALMACÉN DE PRODUCTO TERMINADO" },
-    { "type": "storage", "description": "ALMACENADO FINAL DE PRODUCTO TERMINADO" }
+      ]
+    },
+    {
+      "stepId": "70",
+      "type": "operation",
+      "description": "ADHESIVADO",
+      "incomingConnector": "A",
+      "critical": true,
+      "criticalType": "SC",
+      "criticalColor": "black"
+    },
+    {
+      "stepId": "71",
+      "type": "op-ins",
+      "description": "INSPECCIÓN DE PIEZA ADHESIVADA",
+      "critical": true,
+      "criticalType": "SC",
+      "criticalColor": "black"
+    },
+    {
+      "type": "condition",
+      "labelCondition": "¿ADHESIVADO OK?",
+      "labelDown": "SI",
+      "branchSide": {
+        "labelNode": "NO",
+        "sequence": [
+          {
+            "type": "condition",
+            "labelCondition": "¿SE PUEDE RETRABAJAR?",
+            "labelDown": "SI",
+            "branchSide": {
+              "labelNode": "NO",
+              "type": "terminal",
+              "text": "SCRAP"
+            }
+          },
+          {
+            "stepId": "100",
+            "type": "operation",
+            "description": "REPROCESO: FALTA DE ADHESIVO (TELA NO ADHERIDA AL SUSTRATO)",
+            "critical": true,
+            "criticalType": "SC",
+            "criticalColor": "black"
+          },
+          {
+            "type": "transfer",
+            "description": "RE-ENTRADA AL FLUJO PRINCIPAL",
+            "rework": {
+              "targetId": "71",
+              "label": "REVERIFICAR (A OP. 71)"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "stepId": "80",
+      "type": "operation",
+      "description": "TAPIZADO CONFIGURACIÓN",
+      "critical": true,
+      "criticalType": "SC",
+      "criticalColor": "black"
+    },
+    {
+      "stepId": "81",
+      "type": "operation",
+      "description": "TAPIZADO AUTOMÁTICO",
+      "critical": true,
+      "criticalType": "SC",
+      "criticalColor": "black"
+    },
+    {
+      "stepId": "82",
+      "type": "operation",
+      "description": "TAPIZADO REFILADO MANUAL",
+      "critical": true,
+      "criticalType": "SC",
+      "criticalColor": "black"
+    },
+    {
+      "stepId": "90",
+      "type": "op-ins",
+      "description": "CONTROL FINAL DE CALIDAD"
+    },
+    {
+      "type": "condition",
+      "labelCondition": "¿PRODUCTO CONFORME?",
+      "labelDown": "SI",
+      "branchSide": {
+        "labelNode": "NO",
+        "sequence": [
+          {
+            "type": "condition",
+            "labelCondition": "¿SE PUEDE RETRABAJAR?",
+            "labelDown": "SI",
+            "branchSide": {
+              "labelNode": "NO",
+              "type": "terminal",
+              "text": "SCRAP"
+            }
+          },
+          {
+            "stepId": "101",
+            "type": "operation",
+            "description": "REPROCESO: REACTIVACIÓN DE ADHESIVO POR CALOR"
+          },
+          {
+            "type": "transfer",
+            "description": "RE-ENTRADA AL FLUJO PRINCIPAL",
+            "rework": {
+              "targetId": "90",
+              "label": "REVERIFICAR (A OP. 90)"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "stepId": "110",
+      "type": "operation",
+      "description": "EMBALAJE Y ETIQUETADO DE PRODUCTO TERMINADO"
+    },
+    {
+      "type": "transfer",
+      "description": "TRASLADO A ALMACÉN DE PRODUCTO TERMINADO"
+    },
+    {
+      "type": "storage",
+      "description": "ALMACENADO FINAL DE PRODUCTO TERMINADO"
+    }
   ]
 }

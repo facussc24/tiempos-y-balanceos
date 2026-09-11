@@ -63,7 +63,8 @@ commit/push/archivar los hago yo.
 ## Reglas contextuales (.claude/rules/) — carga automatica
 
 Las reglas sin `paths:` ya estan en este contexto: `core-prohibiciones.md`, `techo-agentes.md`,
-`no-pfd-no-ho.md`, `autonomy-contract.md`, `git-deploy.md`, `consumos-entregables.md`.
+`no-pfd-no-ho.md`, `autonomy-contract.md`, `git-deploy.md`, `consumos-entregables.md`,
+`caracteristicas-especiales.md` (criterio CC/SC, D/TLD y sus fuentes — pedido de Fak 11/09/2026).
 
 | Con `paths:` (cargan al tocar) | Ambito |
 |---|---|

@@ -710,24 +710,64 @@ describe('validateAmfeBeforeSave - Rule A6: CC with S < 9', () => {
         }
     });
 
-    it('exempts CC with S < 9 if flamability keyword present', () => {
+    it('NO exime por palabras: "Flamabilidad" con S=7 sigue siendo CC mal calibrada (11/09/2026)', () => {
+        // Hasta el 11/09 "flamabilidad/airbag/legal/seguridad" en el texto eximian: por ese agujero
+        // paso una costura S7 O3 con D/TLD y "riesgo de seguridad" en el efecto. Si es legal, la S es 9.
         const doc = makeDoc([makeFailure({ severity: 7, description: 'Flamabilidad del material' }, [makeCause({ specialChar: 'CC' })])]);
         const result = validateAmfeBeforeSave(doc, 'approved');
-        expect(result.errors.filter(e => e.includes('CC pero Severidad'))).toHaveLength(0);
+        expect(result.errors.some(e => e.includes('(CC) pero Severidad=7'))).toBe(true);
+        const costura = makeDoc([makeFailure({ severity: 7, effectEndUser: 'Riesgo de seguridad para el usuario' }, [makeCause({ specialChar: 'D/TLD', occurrence: 3 })])]);
+        expect(validateAmfeBeforeSave(costura, 'approved').errors.some(e => e.includes('(D/TLD) pero Severidad=7'))).toBe(true);
     });
 });
 
-describe('validateAmfeBeforeSave - Rule A7: SC guard', () => {
-    it('passes SC with S >= 7', () => {
-        const doc = makeDoc([makeFailure({ severity: 7 }, [makeCause({ specialChar: 'SC' })])]);
-        const result = validateAmfeBeforeSave(doc);
-        expect(result.warnings.filter(w => w.includes('SC con S='))).toHaveLength(0);
+describe('validateAmfeBeforeSave - Rule A7: SC exige S 5-8 Y O >= 4 (I-AC-005 punto 5; 11/09/2026)', () => {
+    // Hasta el 11/09 A7 miraba "S < 7" y no miraba la O. La regla real es la del instructivo:
+    // significativa = S 5 a 8 y O >= 4. Regla `caracteristicas-especiales.md`.
+    it('passes SC with S 5-8 and O >= 4 (S=7 O=4, S=5 O=4, S=8 O=9)', () => {
+        for (const [severity, occurrence] of [[7, 4], [5, 4], [8, 9]]) {
+            const doc = makeDoc([makeFailure({ severity }, [makeCause({ specialChar: 'SC', occurrence })])]);
+            const result = validateAmfeBeforeSave(doc);
+            expect(result.warnings.filter(w => w.includes('marcada SC')), `S=${severity} O=${occurrence}`).toHaveLength(0);
+        }
     });
 
-    it('warns SC with S < 7', () => {
-        const doc = makeDoc([makeFailure({ severity: 5 }, [makeCause({ specialChar: 'SC' })])]);
+    it('warns SC with O < 4 even if S is 8 (AMFE 158 OP 110: S8 O2)', () => {
+        const doc = makeDoc([makeFailure({ severity: 8 }, [makeCause({ specialChar: 'SC', occurrence: 2 })])]);
         const result = validateAmfeBeforeSave(doc);
-        expect(result.warnings.some(w => w.includes('SC con S=5'))).toBe(true);
+        expect(result.warnings.some(w => w.includes('marcada SC con S=8 O=2'))).toBe(true);
+    });
+
+    it('warns SC with S outside 5-8 (S=4 O=6; S=9 O=5 es CC, no SC)', () => {
+        for (const [severity, occurrence] of [[4, 6], [9, 5]]) {
+            const doc = makeDoc([makeFailure({ severity }, [makeCause({ specialChar: 'SC', occurrence })])]);
+            const result = validateAmfeBeforeSave(doc);
+            expect(result.warnings.some(w => w.includes(`marcada SC con S=${severity} O=${occurrence}`)), `S=${severity}`).toBe(true);
+        }
+    });
+
+    it('blocks (error) in approved status, like A6', () => {
+        const doc = makeDoc([makeFailure({ severity: 8 }, [makeCause({ specialChar: 'SC', occurrence: 2 })])]);
+        const result = validateAmfeBeforeSave(doc, 'approved');
+        expect(result.errors.some(w => w.includes('marcada SC con S=8 O=2'))).toBe(true);
+    });
+});
+
+describe('validateAmfeBeforeSave - Rule A7b: sigla desconocida (W, Wichtig, PV2005) no se adivina', () => {
+    it('warns on W — la W no existe en ninguna norma VW (Fak 09/09/2026)', () => {
+        for (const sigla of ['W', 'Wichtig', 'PV2005']) {
+            const doc = makeDoc([makeFailure({ severity: 7 }, [makeCause({ specialChar: sigla, occurrence: 5 })])]);
+            const result = validateAmfeBeforeSave(doc);
+            expect(result.warnings.some(w => w.includes(`sigla "${sigla}"`)), sigla).toBe(true);
+        }
+    });
+
+    it('does not warn on empty, "-", OS or HI', () => {
+        for (const sigla of ['', '-', 'OS', 'HI']) {
+            const doc = makeDoc([makeFailure({ severity: 7 }, [makeCause({ specialChar: sigla, occurrence: 5 })])]);
+            const result = validateAmfeBeforeSave(doc);
+            expect(result.warnings.some(w => w.includes('no es CC/SC')), JSON.stringify(sigla)).toBe(false);
+        }
     });
 });
 

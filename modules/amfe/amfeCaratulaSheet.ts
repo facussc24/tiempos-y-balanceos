@@ -100,13 +100,19 @@ const S = {
     /** Centrada y con wrap: ITEM CAMBIADO lista todas las OP tocadas por la revision. */
     cellCenterWrap: {
         font: { sz: 9, name: 'Arial' },
-        alignment: { horizontal: 'center' as const, vertical: 'top' as const, wrapText: true },
+        alignment: { horizontal: 'center' as const, vertical: 'center' as const, wrapText: true },
         border: BORDER,
     },
     /** Rev vigente EN ROJO dentro de la tabla de revisiones. */
     cellRevRed: {
         font: { bold: true, sz: 9, name: 'Arial', color: { rgb: 'FF0000' } },
         alignment: { horizontal: 'center' as const, vertical: 'center' as const },
+        border: BORDER,
+    },
+    /** Celda con alineacion vertical centrada (leyenda de caracteristicas especiales). */
+    cellVCenter: {
+        font: { sz: 9, name: 'Arial' },
+        alignment: { vertical: 'center' as const, wrapText: true },
         border: BORDER,
     },
     empty: { border: BORDER },
@@ -604,8 +610,8 @@ export function buildCaratulaSheet(
             const row: Cell[] = Array.from({ length: COLS }, () => blank());
             row[0] = cell(mark, S.cellRevRed);
             row[1] = blank(S.cellRevRed);
-            row[2] = cell(meaning, S.cell);
-            for (let k = 3; k < COLS; k++) row[k] = blank(S.cell);
+            row[2] = cell(meaning, S.cellVCenter);
+            for (let k = 3; k < COLS; k++) row[k] = blank(S.cellVCenter);
             merges.push({ s: { r: ri, c: 0 }, e: { r: ri, c: 1 } });
             merges.push({ s: { r: ri, c: 2 }, e: { r: ri, c: COLS - 1 } });
             push(row);

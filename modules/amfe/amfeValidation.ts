@@ -9,7 +9,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { AmfeDocument, AmfeFailure, AmfeCause, WorkElementType } from './amfeTypes';
 import type { SaveValidationResult } from '../../utils/repositories/validationTypes';
 import type { AmfeLifecycleStatus } from './amfeRegistryTypes';
-import { esCritica } from './specialChars';
+import { esCritica, esSignificativa, esMarcaDesconocida, nivelPorCriterio, CRITERIO } from './specialChars';
 import {
     isGeneric6MLabel,
     isTextDescriptive,
@@ -639,9 +639,13 @@ function validateCauseHasControls(doc: AmfeDocument): string[] {
     return issues;
 }
 
-const FLAMABILITY_LEGAL_KEYWORDS = ['flamabilidad', 'flamable', 'tl 1010', 'voc', 'emisiones', 'airbag', 'legal', 'seguridad'];
-
-/** A6: CC classification on causes where severity < 9 (unless flamability/legal). */
+/**
+ * A6: marca critica (CC / D/TLD / ▽) en una causa con S < 9.
+ * SIN exenciones por palabras: hasta el 11/09/2026 "seguridad", "airbag" o "legal" en el
+ * texto eximian, y por ese agujero paso una costura S7 O3 con D/TLD y "riesgo de seguridad"
+ * en el efecto. Si el texto dice seguridad y la S es 7, lo incoherente es el par texto/S
+ * (regla `caracteristicas-especiales.md`; criterio en `caracteristicasEspeciales.data.json`).
+ */
 function validateCcSeverity(doc: AmfeDocument): string[] {
     const issues: string[] = [];
     for (const op of doc.operations) {
@@ -651,14 +655,10 @@ function validateCcSeverity(doc: AmfeDocument): string[] {
                     const s = Number(fail.severity) || 0;
                     for (const cause of fail.causes) {
                         if (!esCritica(cause.specialChar)) continue;
-                        if (s >= 9) continue;
-                        const haystack = [fail.description, fail.effectLocal, fail.effectNextLevel, fail.effectEndUser, cause.cause].join(' ').toLowerCase();
-                        const isExempt = FLAMABILITY_LEGAL_KEYWORDS.some(kw => haystack.includes(kw));
-                        if (!isExempt) {
-                            issues.push(
-                                `Op ${op.opNumber} "${fail.description || '(sin desc)'}": causa marcada como crítica (${cause.specialChar}) pero Severidad=${s} (se requiere S>=9 salvo flamabilidad/legal)`
-                            );
-                        }
+                        if (s >= CRITERIO.CRITICA.severidad_min) continue;
+                        issues.push(
+                            `Op ${op.opNumber} "${fail.description || '(sin desc)'}": causa marcada como crítica (${cause.specialChar}) pero Severidad=${s} (el I-AC-005 exige S 9 o 10, sin excepciones)`
+                        );
                     }
                 }
             }
@@ -667,8 +667,8 @@ function validateCcSeverity(doc: AmfeDocument): string[] {
     return issues;
 }
 
-/** A7: SC classification guard — SC with S < 7 is suspicious (likely old formula remnant). */
-function validateScNotByFormula(doc: AmfeDocument): string[] {
+/** A7: marca significativa (SC / CS) fuera de la regla del I-AC-005: S 5 a 8 y O >= 4. */
+function validateScFueraDeRegla(doc: AmfeDocument): string[] {
     const issues: string[] = [];
     for (const op of doc.operations) {
         for (const we of op.workElements) {
@@ -676,12 +676,31 @@ function validateScNotByFormula(doc: AmfeDocument): string[] {
                 for (const fail of func.failures) {
                     const s = Number(fail.severity) || 0;
                     for (const cause of fail.causes) {
-                        if (cause.specialChar !== 'SC') continue;
-                        if (s < 7) {
-                            issues.push(
-                                `Op ${op.opNumber} "${fail.description || '(sin desc)'}": causa marcada SC con S=${s}. SC solo es valido por designacion explicita del cliente o funcion primaria (tipicamente S=7-8)`
-                            );
-                        }
+                        if (!esSignificativa(cause.specialChar)) continue;
+                        if (nivelPorCriterio(s, cause.occurrence) === 'SIGNIFICATIVA') continue;
+                        issues.push(
+                            `Op ${op.opNumber} "${fail.description || '(sin desc)'}": causa marcada ${cause.specialChar} con S=${s} O=${cause.occurrence} (el I-AC-005 exige S 5 a 8 y O >= 4)`
+                        );
+                    }
+                }
+            }
+        }
+    }
+    return issues;
+}
+
+/** A7b: sigla que ninguna fuente reconoce (W, Wichtig, Clave, PV2005...). No se adivina: se reporta. */
+function validateSiglaDesconocida(doc: AmfeDocument): string[] {
+    const issues: string[] = [];
+    for (const op of doc.operations) {
+        for (const we of op.workElements) {
+            for (const func of we.functions) {
+                for (const fail of func.failures) {
+                    for (const cause of fail.causes) {
+                        if (!esMarcaDesconocida(cause.specialChar)) continue;
+                        issues.push(
+                            `Op ${op.opNumber} "${fail.description || '(sin desc)'}": sigla "${cause.specialChar}" no es CC/SC/OS/HI, D/TLD ni ▽ — no se adivina, se corrige a mano`
+                        );
                     }
                 }
             }
@@ -843,12 +862,11 @@ export function validateAmfeBeforeSave(doc: AmfeDocument, status?: AmfeLifecycle
         }
     }
 
-    // A6: CC with S < 9
-    const ccIssues = validateCcSeverity(doc);
-    (blocking ? errors : warnings).push(...ccIssues);
-
-    // A7: SC by formula guard (always warning, never blocking)
-    warnings.push(...validateScNotByFormula(doc));
+    // A6: critica con S < 9 · A7: significativa fuera de S 5-8 y O >= 4 · A7b: sigla desconocida.
+    // Los tres son el mismo gate (`caracteristicas-especiales.md`): warning en draft, bloqueo en approved.
+    (blocking ? errors : warnings).push(...validateCcSeverity(doc));
+    (blocking ? errors : warnings).push(...validateScFueraDeRegla(doc));
+    (blocking ? errors : warnings).push(...validateSiglaDesconocida(doc));
 
     // A8-A12: text quality (always warning, never blocking — incluso en approved/archived)
     // Plan: ~/.claude/plans/warm-plotting-snowflake.md

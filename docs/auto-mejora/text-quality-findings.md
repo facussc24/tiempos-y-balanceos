@@ -1,8 +1,8 @@
-# Text Quality Audit (L2) — 2026-09-08T14:42:15.691Z
+# Text Quality Audit (L2) — 2026-09-11T18:26:15.836Z
 
-**Resumen global**: 0 CRITICAL, 108 WARNING en 18/18 AMFEs.
+**Resumen global**: 0 CRITICAL, 106 WARNING en 18/18 AMFEs.
 
-**Por tipo**: FN_NO_VERB=82, FN_TOO_SHORT=12, OP_FUNCTION_SEMANTIC_MISMATCH=13, WE_NAME_FOREIGN_TYPE=1
+**Por tipo**: FN_NO_VERB=80, FN_TOO_SHORT=12, OP_FUNCTION_SEMANTIC_MISMATCH=13, WE_NAME_FOREIGN_TYPE=1
 
 ## Top 5 AMFEs con mas issues
 
@@ -101,20 +101,6 @@
 | WARNING FN_TOO_SHORT | 150 EMBALAJE DE PRODUCTO TERMINADO | function.description "Embalar correctamente" muy corta (< 30 chars) |
 | WARNING FN_TOO_SHORT | 150 EMBALAJE DE PRODUCTO TERMINADO | function.description "Embalar sin deformaciones" muy corta (< 30 chars) |
 
-### AMFE-TR-PAT (VWA/PATAGONIA/TOP_ROLL)
-0 CRITICAL + 8 WARNING
-
-| Type | OP | Detalle |
-|---|---|---|
-| WARNING OP_FUNCTION_SEMANTIC_MISMATCH | 10 Inyección DE PIEZA Plástica | OP "Inyección DE PIEZA Plástica" debería contener alguno de [inyectar, conformar] en su función |
-| WARNING FN_NO_VERB | 10 Inyección DE PIEZA Plástica | function.description "Inspección visual al 100% de cada pieza inyectada con compar" no comienza con verbo |
-| WARNING FN_NO_VERB | 10 Inyección DE PIEZA Plástica | function.description "Iluminacion adecuada para inspección visual" no comienza con verbo |
-| WARNING FN_NO_VERB | 10 Inyección DE PIEZA Plástica | function.description "Parámetros validados por producto" no comienza con verbo |
-| WARNING FN_NO_VERB | 10 Inyección DE PIEZA Plástica | function.description "Aire comprimido filtrado y seco" no comienza con verbo |
-| WARNING FN_NO_VERB | 30 TERMOFORMADO | function.description "Base receptora del adhesivo con tensión superficial correcta" no comienza con verbo |
-| WARNING FN_NO_VERB | 30 TERMOFORMADO | function.description "Base receptora del adhesivo con tensión superficial correcta" no comienza con verbo |
-| WARNING FN_NO_VERB | 50 PLEGADO DE BORDES | function.description "Plegado de bordes: revertir los bordes sobrantes de TPO sobr" no comienza con verbo |
-
 ### AMFE-1 (PWA/HILUX/TELAS_PLANAS)
 0 CRITICAL + 7 WARNING
 
@@ -165,25 +151,37 @@
 | WARNING FN_NO_VERB | 80 CONTROL FINAL DE CALIDAD | function.description "Pieza cumple tolerancia forma/posicion" no comienza con verbo |
 | WARNING FN_NO_VERB | 110 EMBALAJE | function.description "Embalar, identificar y proteger producto para despacho" no comienza con verbo |
 
+### AMFE-TR-PAT (VWA/PATAGONIA/TOP_ROLL)
+0 CRITICAL + 6 WARNING
+
+| Type | OP | Detalle |
+|---|---|---|
+| WARNING OP_FUNCTION_SEMANTIC_MISMATCH | 10 INYECCIÓN DE PIEZA PLÁSTICA | OP "INYECCIÓN DE PIEZA PLÁSTICA" debería contener alguno de [inyectar, conformar] en su función |
+| WARNING FN_NO_VERB | 10 INYECCIÓN DE PIEZA PLÁSTICA | function.description "Inspección visual al 100% de cada pieza inyectada con compar" no comienza con verbo |
+| WARNING FN_NO_VERB | 10 INYECCIÓN DE PIEZA PLÁSTICA | function.description "Iluminacion adecuada para inspección visual" no comienza con verbo |
+| WARNING FN_NO_VERB | 10 INYECCIÓN DE PIEZA PLÁSTICA | function.description "Parámetros validados por producto" no comienza con verbo |
+| WARNING FN_NO_VERB | 10 INYECCIÓN DE PIEZA PLÁSTICA | function.description "Aire comprimido filtrado y seco" no comienza con verbo |
+| WARNING FN_NO_VERB | 50 PLEGADO DE BORDES (EDGE FOLDIN | function.description "Plegado de bordes: revertir los bordes sobrantes de TPO sobr" no comienza con verbo |
+
 ### AMFE-INS-PAT (VWA/PATAGONIA/INSERT)
 0 CRITICAL + 5 WARNING
 
 | Type | OP | Detalle |
 |---|---|---|
-| WARNING FN_NO_VERB | 50 COSTURA CNC | function.description "Colocacion de material dentro de la plantilla. Operador de c" no comienza con verbo |
-| WARNING OP_FUNCTION_SEMANTIC_MISMATCH | 70 Inyección DE PIEZAS PLASTICAS | OP "Inyección DE PIEZAS PLASTICAS" debería contener alguno de [inyectar, conformar] en su función |
-| WARNING FN_NO_VERB | 70 Inyección DE PIEZAS PLASTICAS | function.description "Parámetros validados por producto" no comienza con verbo |
-| WARNING FN_NO_VERB | 70 Inyección DE PIEZAS PLASTICAS | function.description "Inspección visual al 100% de cada pieza inyectada con compar" no comienza con verbo |
-| WARNING FN_NO_VERB | 70 Inyección DE PIEZAS PLASTICAS | function.description "Aire comprimido filtrado y seco" no comienza con verbo |
+| WARNING FN_NO_VERB | 50 COSTURA EN MÁQUINA CNC | function.description "Colocacion de material dentro de la plantilla. Operador de c" no comienza con verbo |
+| WARNING OP_FUNCTION_SEMANTIC_MISMATCH | 70-71 INYECCION DE PIEZAS PLASTICAS | OP "INYECCION DE PIEZAS PLASTICAS Y CONTROL DE PIEZA INYECTADA" debería contener alguno de [inyectar, conformar] en su función |
+| WARNING FN_NO_VERB | 70-71 INYECCION DE PIEZAS PLASTICAS | function.description "Parámetros validados por producto" no comienza con verbo |
+| WARNING FN_NO_VERB | 70-71 INYECCION DE PIEZAS PLASTICAS | function.description "Inspección visual al 100% de cada pieza inyectada con compar" no comienza con verbo |
+| WARNING FN_NO_VERB | 70-71 INYECCION DE PIEZAS PLASTICAS | function.description "Aire comprimido filtrado y seco" no comienza con verbo |
 
 ### AMFE-ARM-PAT (VWA/PATAGONIA/ARMREST_DOOR_PANEL)
 0 CRITICAL + 3 WARNING
 
 | Type | OP | Detalle |
 |---|---|---|
-| WARNING OP_FUNCTION_SEMANTIC_MISMATCH | 60 Inyección DE PIEZAS PLASTICAS | OP "Inyección DE PIEZAS PLASTICAS" debería contener alguno de [inyectar, conformar] en su función |
-| WARNING FN_NO_VERB | 60 Inyección DE PIEZAS PLASTICAS | function.description "Parámetros validados por producto" no comienza con verbo |
-| WARNING FN_NO_VERB | 60 Inyección DE PIEZAS PLASTICAS | function.description "Aire comprimido filtrado y seco" no comienza con verbo |
+| WARNING OP_FUNCTION_SEMANTIC_MISMATCH | 50 INYECCIÓN DE PIEZAS PLÁSTICAS | OP "INYECCIÓN DE PIEZAS PLÁSTICAS" debería contener alguno de [inyectar, conformar] en su función |
+| WARNING FN_NO_VERB | 50 INYECCIÓN DE PIEZAS PLÁSTICAS | function.description "Parámetros validados por producto" no comienza con verbo |
+| WARNING FN_NO_VERB | 50 INYECCIÓN DE PIEZAS PLÁSTICAS | function.description "Aire comprimido filtrado y seco" no comienza con verbo |
 
 ### AMFE-MAESTRO-PU-001 (MAESTRO/INYECCION_PUR_IN_PLACE)
 0 CRITICAL + 2 WARNING
@@ -209,19 +207,19 @@
 | WARNING FN_TOO_SHORT | 20 CORTAR VINILO / TELA | function.description "Verificar con Calibre y Mylar" muy corta (< 30 chars) |
 | WARNING FN_TOO_SHORT | 60 CONTROL FINAL DE CALIDAD | function.description "Verificar con Calibre MC257" muy corta (< 30 chars) |
 
-### 128 (VWA/AMAROK_PA2/IP_DECORATIVE_115)
-0 CRITICAL + 1 WARNING
-
-| Type | OP | Detalle |
-|---|---|---|
-| WARNING FN_TOO_SHORT | 20 CORTAR VINILO / TELA | function.description "Verificar con Calibre y Mylar" muy corta (< 30 chars) |
-
 ### AMFE-DUC-PAT (VWA/PATAGONIA/INSONOS_DUCTOS)
 0 CRITICAL + 1 WARNING
 
 | Type | OP | Detalle |
 |---|---|---|
 | WARNING OP_FUNCTION_SEMANTIC_MISMATCH | 10 RECEPCION DE MATERIALES | OP "RECEPCION DE MATERIALES" debería contener alguno de [verificar, conformidad, trazabilidad] en su función |
+
+### 128 (VWA/AMAROK_PA2/IP_DECORATIVE_115)
+0 CRITICAL + 1 WARNING
+
+| Type | OP | Detalle |
+|---|---|---|
+| WARNING FN_TOO_SHORT | 20 CORTAR VINILO / TELA | function.description "Verificar con Calibre y Mylar" muy corta (< 30 chars) |
 
 ### AMFE-MAESTRO-LOG-REC-001 (MAESTRO/LOGISTICA_RECEPCION)
 0 CRITICAL + 1 WARNING

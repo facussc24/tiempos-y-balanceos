@@ -46,6 +46,11 @@ const COBERTURA = {
   'mail-guard.sh': { test: '.claude/hooks/mail-guard.test.sh', tipo: 'bloquea' },
   'documentacion-oficial-guard.sh': { test: GUARDIANES, tipo: 'bloquea' },
   'video-maquina-guard.sh': { test: '__tests__/scripts/videoMaquinaGuard.test.mjs', tipo: 'bloquea' },
+  // PreToolUse via _dispatcher (11/09/2026): recordatorio 1x/h del criterio CC/SC (S 9-10 · S 5-8 y O>=4)
+  // al tocar siglas, flujogramas o el tema. No bloquea: el bloqueo duro son los CRITICAL del validador.
+  'caracteristicas-especiales-guard.sh': { test: GUARDIANES, tipo: 'aviso' },
+  // UserPromptSubmit (11/09/2026): el mismo criterio, SIN cooldown, cuando Fak nombra el tema.
+  'caracteristicas-especiales-prompt.sh': { test: VARIOS, tipo: 'aviso' },
   'arb-cerrar-guard.sh': { test: '.claude/hooks/arb-cerrar-guard.test.sh', tipo: 'bloquea' },
   'causas-ajenas-guard.sh': { test: '.claude/hooks/causas-ajenas-guard.test.sh', tipo: 'bloquea' },
   'supabase-guard.sh': { test: VARIOS, tipo: 'bloquea' },

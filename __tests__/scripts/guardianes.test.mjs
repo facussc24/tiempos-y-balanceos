@@ -261,6 +261,47 @@ describe('consumos-entregable-guard — lista canonica, probada contra los dispa
   });
 });
 
+// ───────────────────────────────────────── caracteristicas-especiales-guard (Fak 11/09/2026)
+describe('caracteristicas-especiales-guard — el criterio CC/SC se recuerda al tocar siglas, flujogramas o el tema', () => {
+  // Fak, 11/09/2026: "es un error gravisimo que debemos corregir para siempre... me gustan esas
+  // memorias pero a veces no las lees, me gustaria que incluyas guards". Ese dia llame "error"
+  // a que dos causas S7 O3 perdieran su D/TLD comparando contra un backup, sin mirar S y O.
+  const recuerda = (p) => /CARACTERISTICAS ESPECIALES/.test(rec(p));
+  it('SI recuerda: la columna de sigla, un flujograma, la sigla D/TLD y el tema por su nombre', () => {
+    expect(recuerda(editar('C:\\Dev\\BarackMercosul\\tools\\flowchart\\data\\154-INSERT.json', '"criticalType": "SC"'))).toBe(true);
+    expect(recuerda(escribir('C:\\Dev\\BarackMercosul\\scripts\\_alinearNovaxSiglas.mjs', 'c.specialChar = sigla;'))).toBe(true);
+    expect(recuerda(bash('node scripts/_flujograma.mjs 154-INSERT --out tmp/export-novax'))).toBe(true);
+    expect(recuerda(bash('grep -n "D/TLD" tmp/export-novax/siglas_casillero17.md'))).toBe(true);
+    expect(recuerda(escribir('C:\\tmp\\nota.md', 'Las caracteristicas especiales del Insert quedan asi'))).toBe(true);
+    expect(recuerda(bash('node -e "const s = doc.operations[0]; console.log(s.criticalType)"'))).toBe(true);
+  });
+  it('el recordatorio es el texto canonico del JSON, con el criterio entero', () => {
+    const texto = rec(editar('C:\\Dev\\BarackMercosul\\tools\\flowchart\\data\\153-ARMREST-DOOR-PANEL.json', 'x'));
+    expect(texto).toMatch(/S 9 o 10/);
+    expect(texto).toMatch(/S 5 a 8 Y O >= 4/);
+    expect(texto).toMatch(/UNA sola marca/);
+    expect(texto).toMatch(/NUNCA porque otro documento/);
+    expect(texto).toMatch(/caracteristicas-especiales\.md/);
+  });
+  it('NO recuerda: escribir SOBRE el tema (memorias, LECCIONES, reglas, hooks, tests, commits) ni trabajo ajeno', () => {
+    expect(recuerda(editar('C:\\Users\\FacundoS-PC\\.claude\\projects\\C--Dev-BarackMercosul\\memory\\feedback_sigla_se_justifica_por_s_y_o.md', 'D/TLD es una marca'))).toBe(false);
+    expect(recuerda(editar('C:\\Dev\\BarackMercosul\\.claude\\rules\\caracteristicas-especiales.md', 'CC = S 9-10'))).toBe(false);
+    expect(recuerda(editar('C:\\Dev\\BarackMercosul\\docs\\LECCIONES_APRENDIDAS.md', 'una sigla se justifica con S y O; D/TLD'))).toBe(false);
+    expect(recuerda(bash('cat -n .claude/hooks/caracteristicas-especiales-guard.sh'))).toBe(false);
+    expect(recuerda(bash('npx vitest run __tests__/scripts/caracteristicasEspeciales.test.mjs'))).toBe(false);
+    expect(recuerda(bash('git commit -m "fix(amfe): criterio D/TLD y SC por S y O"'))).toBe(false);
+    expect(recuerda(bash('ls tmp/export-novax'))).toBe(false);
+    expect(recuerda(editar('C:\\Dev\\BarackMercosul\\scripts\\_backup.mjs', 'const x = 1;'))).toBe(false);
+  });
+  it('los disparadores y el texto viven en core/amfe/caracteristicasEspeciales.data.json, no en el codigo', () => {
+    const canon = JSON.parse(fs.readFileSync(path.join(RAIZ, 'core/amfe/caracteristicasEspeciales.data.json'), 'utf8'));
+    expect(canon.guard_disparadores.length).toBeGreaterThanOrEqual(4);
+    for (const d of canon.guard_disparadores) expect(() => new RegExp(d.regex, 'i')).not.toThrow();
+    expect(typeof canon.guard_excluir_rutas).toBe('string');
+    expect(Array.isArray(canon.recordatorio) && canon.recordatorio.length >= 4).toBe(true);
+  });
+});
+
 // ───────────────────────────────────────────────────────────── mail-guard
 describe('mail-guard (casos de mail-guard.test.sh)', () => {
   const INCIDENTE = bash('python - <<PY\nimport win32com.client as win32\nol=win32.Dispatch("Outlook.Application"); ns=ol.GetNamespace("MAPI")\nit=ns.GetDefaultFolder(16).Items.Item(1)\nit.Send()\nPY');

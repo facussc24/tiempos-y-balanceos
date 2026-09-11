@@ -1,0 +1,124 @@
+{
+  "_comentario": [
+    "FUENTE UNICA del criterio de caracteristicas especiales. Pedido de Fak, 11/09/2026: 'no quiero que nunca mas lo olvides... siempre que te preguntes, recuerdes todo esto'. Ese dia llame 'error' a que dos causas S7 O3 perdieran su D/TLD comparando contra un backup, sin mirar S y O ('estas tirando como al azar... es un error gravisimo que debemos corregir para siempre').",
+    "La leen: modules/amfe/specialChars.ts (app: niveles, simbologia, sugerencia, leyenda), scripts/_lib/amfeValidator.mjs (gates CAUSE_CC_LOW_SEVERITY / CAUSE_SC_FUERA_DE_REGLA / SIGLA_DESCONOCIDA), scripts/_lib/guardianes.mjs (hook PreToolUse caracteristicas-especiales-guard), .claude/hooks/caracteristicas-especiales-prompt.sh (hook UserPromptSubmit) y los scripts que calculan siglas por criterio.",
+    "Regla always-on con las fuentes y sus paginas: .claude/rules/caracteristicas-especiales.md. NO duplicar estas tablas en codigo: se cambian ACA y todos las ven."
+  ],
+  "criterio": {
+    "CRITICA": { "severidad_min": 9, "severidad_max": 10, "ocurrencia_min": 1, "texto": "S = 9 o 10, O indistinto" },
+    "SIGNIFICATIVA": { "severidad_min": 5, "severidad_max": 8, "ocurrencia_min": 4, "texto": "S = 5 a 8 y O >= 4" }
+  },
+  "criterio_fuente": "I-AC-005 rev.B, tabla del punto 5 ('Severidad: 9 o 10 / Ocurrencia: indistinto' -> CC; 'Severidad: 5 a 8 / Ocurrencia: >= 4' -> CS, verificado en el XML del docx el 11/09/2026); manual AMFE AIAG-VDA (SETEC R06 jul-2020, pag. 129). Legal = S 9 por la tabla P1 del AIAG-VDA ('noncompliance with regulations'): la CC SALE de la S, no es independiente de S/O.",
+  "aliases": {
+    "CRITICA": ["CC", "CS/CC", "∇", "▽", "D", "D/TLD", "TLD"],
+    "SIGNIFICATIVA": ["SC", "CS"],
+    "SEGURIDAD_OPERADOR": ["OS"],
+    "ALTO_IMPACTO": ["HI"]
+  },
+  "aliases_comentario": "W / WICHTIG NO estan a proposito: no existen en ninguna norma VW (barrido 08/09/2026: 24 normas del legajo VW427 + Formel Q + Anexo + CSR + QMA; Fak 09/09: 'la w no existe'). Una sigla que no esta aca sale como SIGLA_DESCONOCIDA: nunca se adivina. CS es la escritura del instructivo; todos los documentos de trabajo escriben SC.",
+  "sin_marca": ["", "-", "—", "N/A"],
+  "simbologia": {
+    "INTERNA": { "CRITICA": "CC", "SIGNIFICATIVA": "SC", "SEGURIDAD_OPERADOR": "OS", "ALTO_IMPACTO": "HI" },
+    "VW": { "CRITICA": "D/TLD", "SIGNIFICATIVA": "SC", "SEGURIDAD_OPERADOR": "OS", "ALTO_IMPACTO": "HI" }
+  },
+  "simbologia_comentario": "Para VW la critica se escribe D/TLD (Formel Q pag. 28 §7.5: D y TLD son UNA marca, mismo rango; CSR VW 'parts with D/TLD-marking') y la significativa SC (VW no tiene sigla propia; Fak 09/09/2026). En caratula y flujograma la leyenda dice solo CARACTERISTICA CRITICA / SIGNIFICATIVA, sin citar instructivos ni manuales (Fak 08/09/2026).",
+  "texto_nivel": {
+    "CRITICA": "CARACTERISTICA CRITICA",
+    "SIGNIFICATIVA": "CARACTERISTICA SIGNIFICATIVA",
+    "SEGURIDAD_OPERADOR": "SEGURIDAD DEL OPERADOR",
+    "ALTO_IMPACTO": "ALTO IMPACTO"
+  },
+  "fuente_por_sigla": {
+    "D/TLD": "simbologia VW — Formel Q Capacidad de Calidad 8a ed. pag. 28 §7.5 y pag. 35; CSR VW IATF 2018 §8.3.3.3",
+    "D": "simbologia VW — la marca mas antigua, mismo rango que TLD (Formel Q pag. 28 §7.5)",
+    "TLD": "simbologia VW — Formel Q pag. 28 §7.5; VW 01058 §5.1.4 pag. 31 (cajetin 'Doc. de seguridad')",
+    "CC": "instructivo I-AC-005 rev.B, punto 5",
+    "CS": "instructivo I-AC-005 rev.B, punto 5 (escritura del instructivo; en la practica SC)",
+    "SC": "manual AMFE AIAG-VDA (SETEC pag. 129)",
+    "∇": "manual AMFE AIAG-VDA (SETEC pag. 129)",
+    "▽": "manual AMFE AIAG-VDA (SETEC pag. 129)",
+    "OS": "manual AMFE AIAG-VDA (SETEC pag. 129)",
+    "HI": "manual AMFE AIAG-VDA (SETEC pag. 129)"
+  },
+  "fuentes": [
+    {
+      "doc": "Formel Q Capacidad de Calidad, 8a ed. junio 2015 (Volkswagen)",
+      "paginas": "24-28 (cap. 7), 35 (abreviaturas), 37 (glosario)",
+      "dice": "D/TLD = 'Dokumentationspflichtig / Technische Leitlinie Dokumentation' (partes de documentacion obligatoria / guia tecnica documentacion). Cap. 7: la documentacion obligatoria sale de exigencias legales sobre el vehiculo (seguridad, homologacion, responsabilidad de producto); registros 15 anos; auto-auditoria D/TLD anual. §7.5 pag. 28: 'El Cliente tiene dos tipos de identificaciones que tienen el mismo rango (la D mas antigua y la TLD mas reciente)'; si el proveedor usa otra simbologia, matriz de correlacion bajo control de documentos. §7.2 pag. 26: el proveedor nombra ademas las caracteristicas que el determine como relevantes por su funcion o de seguridad, mas alla de las especificadas por el Cliente.",
+      "ruta": "Y:\\BARACK\\CALIDAD\\Documentacion IATF\\IATF 2025\\REQUISITOS ESP DE CLIENTES\\Requisitos especificos\\VW\\Formel_Q_Capacidad_de_Calidad.pdf"
+    },
+    {
+      "doc": "Volkswagen Group CSR IATF 16949, enero 2018",
+      "paginas": "2 (§8.2.3.1.2 / 8.3.3.3)",
+      "dice": "'Customer-designated special characteristics: VWAG requires suppliers that supply parts with D/TLD-marking to perform an annual self-audit.'",
+      "ruta": "Y:\\BARACK\\CALIDAD\\Documentacion IATF\\IATF 2025\\REQUISITOS ESP DE CLIENTES\\Requisitos especificos\\VW\\Volkswagen-Group_CSR_IATF-16949_Jan-2018.pdf"
+    },
+    {
+      "doc": "VW 01058 (rotulacion de planos), 2014-10",
+      "paginas": "31 (§5.1.4 Documentacion de seguridad)",
+      "dice": "En el cajetin, campo 'Doc. de seguridad', va la entrada 'TLD'; la hoja TLD (campo 'Documentos') lista las caracteristicas sujetas a documentacion obligatoria. La designa el CLIENTE en el plano.",
+      "ruta": "Y:\\BARACK\\CALIDAD\\DOCUMENTACION SGC\\PPAP CLIENTES\\VW\\VW427-1LA_K-PATAGONIA\\Normas\\VW_01058_ES.pdf"
+    },
+    {
+      "doc": "TLD_812_046_V1_241129.pdf (hoja TLD real: ZSB Seitenpolster / Hintersitz)",
+      "paginas": "1-2",
+      "dice": "Formulario VW FE 237A 'Dokumentationspflichtige Merkmale / Positionen von D-Merkmalen' (normas FMVSS/ECE): ejemplo de como VW lista las caracteristicas D de una pieza.",
+      "ruta": "Y:\\BARACK\\CALIDAD\\DOCUMENTACION SGC\\PPAP CLIENTES\\VW\\VW427-1LA_K-PATAGONIA\\Normas\\TLD_812_046_V1_241129.pdf"
+    },
+    {
+      "doc": "I-AC-005 Emision y control del AMFE y plan de control, rev.B (SGC Barack)",
+      "paginas": "punto 5, tabla 'Tipo de caracteristica / Criterio / Simbologia'",
+      "dice": "Caracteristica critica: Severidad 9 o 10, Ocurrencia indistinto -> CC. Caracteristica significativa: Severidad 5 a 8, Ocurrencia >= 4 -> CS. 'Caracteristica especial: nombre generico para definir a las caracteristicas criticas o significativas.' 'Sera utilizada la simbologia especificada por el Cliente cuando el mismo asi lo requiera.'",
+      "ruta": "Y:\\BARACK\\CALIDAD\\DOCUMENTACION SGC\\SISTEMA\\SISTEMA SGC\\Instructivos\\CALIDAD\\I-AC-005 Emision y control del AMFE y plan de control B.docx"
+    },
+    {
+      "doc": "Manual AMFE AIAG-VDA (SETEC R06 julio 2020, participante)",
+      "paginas": "128-129",
+      "dice": "AMFE de proceso (pag. 129): critica ▽ (S 9-10), significativa SC (S 5-8 y O >= 4), OS seguridad del operador, HI alto impacto. YC/YS (pag. 128) son del AMFE de DISENO y no entran en el de proceso. La columna CLASIFICACION del PFMEA lleva las especiales designadas por la organizacion o el cliente; los simbolos del cliente se traducen con tablas de correlacion.",
+      "ruta": "C:\\Users\\FacundoS-PC\\BARACK ARGENTINA SRL\\Ingeniería y Proyecto - General\\INGENIERIA BARACK (NUNCA BORRAR)\\4- MANUALES\\AMFE\\MANUAL AMFE  R06 Julio 2020 Participante.pdf"
+    },
+    {
+      "doc": "IATF 16949:2016 §8.3.3.3 Caracteristicas especiales (PDF integrado con SIs mayo 2022)",
+      "paginas": "47 (definicion en pag. 20)",
+      "dice": "Las determina la organizacion con su analisis de riesgo (AMFE) mas las designadas por el cliente, con un proceso multidisciplinario; se documentan en planos, AMFE, plan de control e instrucciones con una marca especifica; simbolos del cliente o equivalentes de la organizacion via tabla de conversion presentada al cliente si lo requiere.",
+      "ruta": "C:\\Users\\FacundoS-PC\\BARACK ARGENTINA SRL\\Ingeniería y Proyecto - General\\INGENIERIA BARACK (NUNCA BORRAR)\\4- MANUALES\\IATF\\IATF16949-IATF-SIs-May-2022-ISO9001-Integrados.pdf"
+    },
+    {
+      "doc": "Planos SAIC MOTOR de Novax: Top Roll C00739615, Insert C00739619, Armrest C00739621 (rel. 01, 2025-03-26)",
+      "paginas": "4 de 6 (notas generales)",
+      "dice": "Nota 7: ◇ = caracteristica clave del producto; simbolo aparte = reglamentaria (seguridad/legal); los dos juntos = ambas. Tabla KCDS (Safety/Compliance KPC · Fit/Function PQC · Attribute AQC · Document Required DR) VACIA en los tres planos: el cliente no designo ninguna. Nota 10: inflamabilidad segun CVTC 52034 (tambien en el SOR PKK1 pag. 8).",
+      "ruta": "Y:\\BARACK\\CALIDAD\\DOCUMENTACION SGC\\PPAP CLIENTES\\NOVAX\\Tapizadas puerta\\6-Planos de la pieza\\17- Planos\\02- 2D\\"
+    }
+  ],
+  "regla_operativa": [
+    "La sigla de una causa se justifica SOLO con su S y su O contra la tabla, mas lo que el cliente designo en el plano. NUNCA porque otro documento (backup, Rev.A de un flujograma, plan de control viejo, otro AMFE) la tenia.",
+    "Antes de proponer poner, sacar o restaurar una sigla: escribir S, O y la regla. Si el efecto dice 'riesgo de seguridad' y la S es 7, lo incoherente es el par texto/S, no la falta de sigla.",
+    "D y TLD son UNA marca de VW (mismo rango): documentacion obligatoria LEGAL (inflamabilidad, emisiones, sustancias prohibidas, homologacion), designada por el cliente en el plano. Equivale a nuestra CC (S 9-10). Una costura rota NO es D/TLD.",
+    "VW no tiene sigla de significativa: la SC (S 5-8 y O >= 4) es criterio de Barack y para VW se escribe SC. La W no existe en ninguna norma.",
+    "La marca de una operacion en el flujograma = union de las siglas de sus causas en el AMFE. Una ▽ heredada sin causa S >= 9 detras no se copia: se informa como diferencia.",
+    "Asignar o cambiar CC/SC es de Fak o del cliente (core-prohibiciones §2): la lista calculada por criterio se muestra con S y O al lado y el OK de Fak la asigna. Lo que un documento contesta no se le pregunta.",
+    "Una sigla que ninguna fuente reconoce (W, Wichtig, Clave, PV2005, YC/YS de diseno) no se adivina: se reporta."
+  ],
+  "recordatorio": [
+    "[CARACTERISTICAS ESPECIALES — criterio que NO se olvida (Fak 11/09/2026: 'es un error gravisimo que debemos corregir para siempre'). Regla always-on: .claude/rules/caracteristicas-especiales.md]",
+    "CRITICA = S 9 o 10 (O indistinto) -> CC; para VW se escribe D/TLD. D y TLD son UNA sola marca (mismo rango, Formel Q pag. 28 §7.5) = documentacion obligatoria LEGAL (inflamabilidad, emisiones, sustancias prohibidas), la designa el cliente en el plano. Una costura rota NO es D/TLD.",
+    "SIGNIFICATIVA = S 5 a 8 Y O >= 4 -> SC (I-AC-005 punto 5 la escribe CS; todos escriben SC). VW no tiene sigla propia: SC. La W NO existe.",
+    "La sigla se justifica SOLO con S y O de ESA causa (+ lo que el cliente designo en el plano). NUNCA porque otro documento (backup, Rev.A, PdC viejo) la tenia. Antes de poner, sacar o restaurar una sigla: escribir S, O y la regla. Si el efecto dice 'seguridad' con S7, lo incoherente es el par texto/S.",
+    "Flujograma: la marca de la OP = union de las siglas de sus causas en el AMFE; una ▽ heredada sin causa S>=9 detras se informa, no se copia. Asignar sigue siendo de Fak: la lista por criterio se muestra con S y O y su OK la asigna. Lo que un documento contesta no se le pregunta.",
+    "Gates CRITICAL en scripts/_lib/amfeValidator.mjs: CAUSE_CC_LOW_SEVERITY (critica con S<9, sin exencion por palabras), CAUSE_SC_FUERA_DE_REGLA (SC con S fuera de 5-8 u O<4), SIGLA_DESCONOCIDA. Fuente unica: core/amfe/caracteristicasEspeciales.data.json."
+  ],
+  "guard_comentario": "Disparadores del hook PreToolUse caracteristicas-especiales-guard (recordatorio 1x/h, additionalContext, NO bloquea). Se prueban en las dos direcciones en __tests__/scripts/guardianes.test.mjs. Las regex se aplican con flag i sobre comando + file_path + contenido escrito. guard_excluir_rutas se aplica solo sobre comando + file_path: escribir SOBRE el tema (memorias, LECCIONES, reglas, hooks, tests, commits) no dispara.",
+  "guard_disparadores": [
+    { "regex": "specialChar|criticalType|nivelPorCriterio|caracteristicasEspeciales|specialChars\\.ts|amfeValidation\\.ts", "que": "codigo o datos que tocan la columna de caracteristica especial" },
+    { "regex": "tools[\\\\/]flowchart[\\\\/]data[\\\\/]|_flujograma\\.mjs|FLUJOGRAMA_\\d", "que": "un flujograma (las marcas de cada operacion)" },
+    { "regex": "D\\s*/\\s*TLD|\\bTLD\\b", "que": "la sigla D/TLD" },
+    { "regex": "caracter[ií]stica[s]?\\s+(especial|cr[ií]tica|significativa)|\\bCC\\s*/\\s*SC\\b|\\bSC\\s*/\\s*CC\\b|I-AC-005|I-PY-001\\.7", "que": "caracteristicas especiales por su nombre" }
+  ],
+  "guard_excluir_rutas": "caracteristicas-especiales|caracteristicasEspeciales\\.data\\.json|LECCIONES_APRENDIDAS|[\\\\/]memory[\\\\/]|[\\\\/]\\.claude[\\\\/](rules|plans|hooks)[\\\\/]|\\.test\\.|\\bgit\\s+(commit|log|diff|status|add|show)\\b",
+  "prompt_comentario": "Disparadores del hook UserPromptSubmit caracteristicas-especiales-prompt.sh: si el mensaje de Fak nombra el tema, el recordatorio entra SIN cooldown ('siempre que te preguntes, recuerdes todo esto'). Se prueba en __tests__/scripts/hooksVarios.test.mjs.",
+  "prompt_disparadores": [
+    { "regex": "caracter[ií]stica[s]?\\s+(especial|cr[ií]tica|significativa)|caracter[ií]sticas?\\s+esp\\b", "que": "nombra las caracteristicas especiales" },
+    { "regex": "\\bTLD\\b|D\\s*/\\s*TLD|\\bCC\\s*[/y,]\\s*SC\\b|\\bSC\\s*[/y,]\\s*CC\\b|\\bsiglas?\\b|\\bcr[ií]tica\\b|significativa|▽|∇|\\bwichtig\\b|\\b(la|una|esa|esta)\\s+w\\b", "que": "nombra una sigla o un nivel (incluida 'la W', que no existe)" },
+    { "regex": "marcas?\\s+(del|de los|en el|en los)\\s+flujograma|simbolog[ií]a|I-AC-005|I-PY-001|plan(es)?\\s+de\\s+control", "que": "marcas del flujograma, simbologia o plan de control" }
+  ]
+}

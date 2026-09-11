@@ -1,13 +1,14 @@
 /**
  * Pasa las caracteristicas especiales de los AMFE de VW a la simbologia del cliente:
- * CC -> D/TLD y SC -> W (Wichtig).
+ * critica -> D/TLD y significativa -> SC.
  *
  * Por que: el instructivo del SGC `I-AC-005` cierra con "sera utilizada la simbologia
- * especificada por el Cliente cuando el mismo asi lo requiera", y la tabla de conversion del
- * `I-PY-001.7` (requisito IATF 16949) dice que para VW la critica es `D/TLD` y la significativa
- * `Wichtig (W)`. Decision de Fak, 08/09/2026: *"quedo claro que deberiamos usar las siglas de VW
- * entonces... y corregir la documentacion de VW porque en ingenieria no la veniamos usando"*.
- * Fuentes y divergencias: rules/amfe.md §2.1 + memoria `caracteristicas_especiales_notacion_barack`.
+ * especificada por el Cliente cuando el mismo asi lo requiera". Para VW la critica es `D/TLD`
+ * (Formel Q Capacidad de Calidad pag. 28 §7.5: D y TLD son UNA sola marca, documentacion
+ * obligatoria legal, la designa el cliente en el plano) y VW no tiene sigla propia de
+ * significativa, asi que se escribe `SC` (Fak 09/09/2026: "la W no existe"). Hasta el 09/09
+ * este script escribia `W`, que salia de una hoja del I-PY-001.7 que hoy esta en OBSOLETOS.
+ * Criterio, siglas por destinatario y fuentes con pagina: regla `caracteristicas-especiales.md`.
  *
  * NO asigna ni saca ninguna caracteristica: solo TRADUCE la sigla de las que ya estan puestas.
  * La clasificacion la asigna Fak o el cliente (core-prohibiciones.md §2).
@@ -18,31 +19,33 @@
  *   - AMFE-MAESTRO-PU-001: es maestro, no va a ningun cliente.
  *   - AMFE-DUC-PAT (insonos/ductos): el proyecto es VW427 pero el CLIENTE de Barack es COZZUOL
  *     — asi lo declara su propio flujograma 158. La simbologia de VW no le aplica sola.
- *   - `OS` y `HI`: la tabla de conversion dice N/A para VW, asi que se quedan como estan.
+ *   - `OS` y `HI`: no tienen equivalente VW, se quedan como estan.
+ *   - Una sigla que ninguna fuente reconoce (`W`, `Wichtig`, `Clave`...) NO se traduce: se
+ *     reporta, y el validador la frena como SIGLA_DESCONOCIDA.
+ *
+ * Las tablas salen de la fuente unica core/amfe/caracteristicasEspeciales.data.json, a traves
+ * de scripts/_lib/amfeValidator.mjs (mismo canon que la app y los hooks; sin espejo a mano).
  *
  * Uso:  node scripts/_simbologiaVwAmfes.mjs            (dry-run, no escribe)
  *       node scripts/_simbologiaVwAmfes.mjs --apply    (escribe)
  */
 import { connectSupabase, readAmfe, saveAmfe } from './_lib/amfeIo.mjs';
 import { parseSafeArgs, runWithValidation, logChange, finish } from './_lib/dryRunGuard.mjs';
+import { CARACTERISTICAS_ESPECIALES, nivelDeSigla, esSinMarca } from './_lib/amfeValidator.mjs';
 
-// Espejo de modules/amfe/specialChars.ts (los .mjs no pueden importar .ts sin build).
-// Si cambia alla, cambia aca: los tests de specialChars.test.ts fijan el contrato.
-const CRITICA = ['CC', '∇', '▽', 'D', 'D/TLD', 'TLD'];
-const SIGNIFICATIVA = ['SC', 'CS', 'W', 'WICHTIG'];
-const VW = { CRITICA: 'D/TLD', SIGNIFICATIVA: 'W' };
+const VW = CARACTERISTICAS_ESPECIALES.simbologia.VW;
 
 /** Excluidos a proposito, con el motivo. Un AMFE que no este aca ni sea VWA se reporta. */
 const NO_VW = new Set(['AMFE-1', 'AMFE-2', '159', '160', 'AMFE-MAESTRO-PU-001', 'AMFE-DUC-PAT']);
 
+/** Sigla en simbologia VW, o null si ninguna fuente la reconoce (se reporta, no se adivina). */
 function convertir(raw) {
     const txt = String(raw || '').trim();
-    if (!txt) return txt;
+    if (!txt || esSinMarca(txt)) return txt;
     const num = txt.match(/\s*(\d+)$/);
-    const base = txt.toUpperCase().replace(/\s*\d+$/, '').trim();
-    if (CRITICA.includes(base)) return VW.CRITICA + (num ? ` ${num[1]}` : '');
-    if (SIGNIFICATIVA.includes(base)) return VW.SIGNIFICATIVA + (num ? ` ${num[1]}` : '');
-    return txt; // OS, HI y cualquier sigla que no reconozcamos quedan intactas
+    const nivel = nivelDeSigla(txt);
+    if (!nivel || !VW[nivel]) return null;
+    return VW[nivel] + (num ? ` ${num[1]}` : '');
 }
 
 const { apply } = parseSafeArgs();
@@ -74,19 +77,17 @@ for (const row of rows) {
                 for (const fail of fn.failures || []) {
                     for (const c of fail.causes || []) {
                         const antesSc = String(c.specialChar || '').trim();
-                        if (!antesSc) continue;
+                        if (!antesSc || esSinMarca(antesSc)) continue;
                         totalCausas++;
                         const despues = convertir(antesSc);
-                        if (despues === antesSc) {
-                            const base = antesSc.toUpperCase().replace(/\s*\d+$/, '').trim();
-                            if (!['OS', 'HI'].includes(base)) {
-                                desconocidas.set(`${num}: '${antesSc}'`,
-                                    (desconocidas.get(`${num}: '${antesSc}'`) || 0) + 1);
-                            }
+                        if (despues === null) {
+                            const k = `${num}: '${antesSc}'`;
+                            desconocidas.set(k, (desconocidas.get(k) || 0) + 1);
                             continue;
                         }
+                        if (despues === antesSc) continue;
                         c.specialChar = despues;
-                        if (fail.specialChar) fail.specialChar = convertir(fail.specialChar);
+                        if (fail.specialChar) fail.specialChar = convertir(fail.specialChar) ?? fail.specialChar;
                         tocadas++;
                         const k = `${antesSc} -> ${despues}`;
                         resumen.set(k, (resumen.get(k) || 0) + 1);
@@ -104,7 +105,7 @@ for (const row of rows) {
 
 console.log(`\nCausas con caracteristica especial revisadas: ${totalCausas}`);
 if (desconocidas.size) {
-    console.log('\n⚠ SIGLAS QUE NINGUNA FUENTE RECONOCE (no se tocaron):');
+    console.log('\n⚠ SIGLAS QUE NINGUNA FUENTE RECONOCE (no se tocaron; las asigna Fak o se corrigen a mano):');
     for (const [k, n] of desconocidas) console.log(`   ${k}  x${n}`);
 }
 

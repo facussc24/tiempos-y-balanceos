@@ -88,17 +88,34 @@ describe('computeReadiness — scorecard AMFE listo para entregar', () => {
         expect(s.blockers.some(b => b.type === 'FM_NO_EFFECT_END')).toBe(true);
     });
 
-    it('6. specialChar=CC con S=6 (sin flam/legal) => LISTO con aviso (no bloquea)', () => {
+    it('6. specialChar=CC con S=6 => NO LISTO: desde el 11/09/2026 CAUSE_CC_LOW_SEVERITY bloquea', () => {
+        // Una critica exige S 9 o 10 (I-AC-005 punto 5). Regla `caracteristicas-especiales.md`.
         const s = computeReadiness(makeDoc({ cause: { specialChar: 'CC', severity: 6 } }), 'Armrest', 'AMFE-TEST', HDR);
-        expect(s.verdict).toBe('LISTO');
-        expect(s.warnings.some(w => w.type === 'CAUSE_CC_LOW_SEVERITY')).toBe(true);
+        expect(s.verdict).toBe('NO_LISTO');
+        expect(s.blockers.some(b => b.type === 'CAUSE_CC_LOW_SEVERITY')).toBe(true);
+        expect(s.dimensions['CC/SC calibracion'].blockers).toBeGreaterThan(0);
     });
 
-    it('6b. specialChar=CC con S=6 PERO efecto flamabilidad => sin aviso (exento)', () => {
+    it('6b. ...y "flamabilidad" en el efecto ya NO exime: si es legal, la S tiene que ser 9', () => {
+        // Hasta el 11/09 la palabra eximia; por ese agujero paso una costura S7 con D/TLD y
+        // "riesgo de seguridad" en el efecto. Si el texto dice ley y la S es 6, la S esta mal.
         const s = computeReadiness(
             makeDoc({ cause: { specialChar: 'CC', severity: 6 }, failure: { effectEndUser: 'Riesgo de flamabilidad TL 1010' } }),
             'Armrest', 'AMFE-TEST', HDR);
-        expect(s.warnings.some(w => w.type === 'CAUSE_CC_LOW_SEVERITY')).toBe(false);
+        expect(s.verdict).toBe('NO_LISTO');
+        expect(s.blockers.some(b => b.type === 'CAUSE_CC_LOW_SEVERITY')).toBe(true);
+    });
+
+    it('6c. specialChar=SC con S=8 O=2 => NO LISTO (CAUSE_SC_FUERA_DE_REGLA); con O=4 => LISTO', () => {
+        const mal = computeReadiness(makeDoc({ cause: { specialChar: 'SC', severity: 8, occurrence: 2 } }), 'Armrest', 'AMFE-TEST', HDR);
+        expect(mal.blockers.some(b => b.type === 'CAUSE_SC_FUERA_DE_REGLA')).toBe(true);
+        const bien = computeReadiness(makeDoc({ cause: { specialChar: 'SC', severity: 8, occurrence: 4 } }), 'Armrest', 'AMFE-TEST', HDR);
+        expect(bien.blockers.some(b => b.type === 'CAUSE_SC_FUERA_DE_REGLA')).toBe(false);
+    });
+
+    it('6d. specialChar=W => NO LISTO (SIGLA_DESCONOCIDA): la W no existe en ninguna norma VW', () => {
+        const s = computeReadiness(makeDoc({ cause: { specialChar: 'W', severity: 7, occurrence: 5 } }), 'Armrest', 'AMFE-TEST', HDR);
+        expect(s.blockers.some(b => b.type === 'SIGLA_DESCONOCIDA')).toBe(true);
     });
 
     it('7. header vacio => NO LISTO (HEADER_MISSING)', () => {

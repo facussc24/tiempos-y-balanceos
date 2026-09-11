@@ -37,6 +37,10 @@ if [ "$MODE" = "compact" ]; then
    no hace falta releerlo. Las memorias del tema que estabas tocando, si.
 6. Seguis en espanol rioplatense, como siempre: el resumen de compactacion viene en
    ingles y arrastra el idioma (19 arranques en ingles en la semana del 02/09/2026).
+7. Caracteristicas especiales (Fak 11/09/2026, "para siempre"): CC = S 9-10 (para VW se
+   escribe D/TLD: UNA marca, legal, la designa el cliente en el plano); SC = S 5-8 y O>=4.
+   La sigla se justifica con S y O de ESA causa, nunca porque otro documento la tenia.
+   Regla always-on caracteristicas-especiales.md; fuente core/amfe/caracteristicasEspeciales.data.json.
 NUCLEO
   exit 0
 fi

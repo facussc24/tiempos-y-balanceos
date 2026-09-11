@@ -161,7 +161,7 @@ export function ctxDesdeEnv(env) {
  */
 const SOLO_SHELL = ['supabase-guard', 'validator-check', 'renumber-guard', 'push-guard', 'arb-cerrar-guard', 'script-inline-guard', 'secretos-guard'];
 const SOLO_ARCHIVO = ['file-guard', 'causas-ajenas-guard'];
-const LOS_CUATRO = ['consumos-entregable-guard', 'cad-guard', 'patrones-guard', 'escritorio-guard', 'borrado-masivo-guard', 'ho-numeracion-guard', 'mail-guard', 'documentacion-oficial-guard', 'video-maquina-guard'];
+const LOS_CUATRO = ['consumos-entregable-guard', 'cad-guard', 'patrones-guard', 'escritorio-guard', 'borrado-masivo-guard', 'ho-numeracion-guard', 'mail-guard', 'documentacion-oficial-guard', 'video-maquina-guard', 'caracteristicas-especiales-guard'];
 export const TODOS = ['file-guard', 'supabase-guard', 'validator-check', 'renumber-guard', 'push-guard', 'script-inline-guard', 'secretos-guard', ...LOS_CUATRO, 'arb-cerrar-guard', 'causas-ajenas-guard'];
 
 export function matriz(tool) {
@@ -502,6 +502,41 @@ GUARDIANES['consumos-entregable-guard'] = (ctx, { env }) => {
   if (!match) match = disparadores.some((d) => new RegExp(d.regex, 'i').test(target));
   if (!match) return null;
   return recordatorio(path.join(dirTmp(env), 'claude-consumos-guard.flag'), TEXTO_CONSUMOS);
+};
+
+// ── caracteristicas-especiales-guard ─────────────────────────────────────────
+// RECORDATORIO 1x/h del criterio de caracteristicas especiales. Pedido de Fak 11/09/2026
+// ("es un error gravisimo que debemos corregir para siempre... me gustan esas memorias pero
+// a veces no las lees, me gustaria que incluyas guards"): ese dia llame "error" a que dos
+// causas S7 O3 perdieran su D/TLD comparando contra un backup, sin mirar S y O.
+// El texto (`recordatorio`), los disparadores y las exclusiones viven en
+// core/amfe/caracteristicasEspeciales.data.json — la MISMA fuente que leen el validador y la
+// app. Dispara al tocar la columna de sigla (specialChar/criticalType), un flujograma, la
+// sigla D/TLD o el tema por su nombre; NO dispara al escribir SOBRE el tema (memorias,
+// LECCIONES, reglas, hooks, tests, commits). NO bloquea: el enforcement duro son los checks
+// CRITICAL del validador (CAUSE_CC_LOW_SEVERITY, CAUSE_SC_FUERA_DE_REGLA, SIGLA_DESCONOCIDA).
+let _canonCE;
+function canonCaracteristicasEspeciales() {
+  if (_canonCE !== undefined) return _canonCE;
+  try { _canonCE = JSON.parse(fs.readFileSync(path.join(AQUI, '..', '..', 'core', 'amfe', 'caracteristicasEspeciales.data.json'), 'utf8')); } catch { _canonCE = null; }
+  return _canonCE;
+}
+/** El recordatorio canonico, tal cual lo inyectan los dos hooks (PreToolUse y UserPromptSubmit). */
+export function textoCaracteristicasEspeciales() {
+  const c = canonCaracteristicasEspeciales();
+  return Array.isArray(c?.recordatorio) ? c.recordatorio.join('\n') : '';
+}
+GUARDIANES['caracteristicas-especiales-guard'] = (ctx, { env }) => {
+  const target = ctx.target;
+  if (!target.trim()) return null;
+  const canon = canonCaracteristicasEspeciales();
+  if (!canon || !Array.isArray(canon.guard_disparadores) || !Array.isArray(canon.recordatorio)) {
+    return aviso('caracteristicas-especiales-guard: core/amfe/caracteristicasEspeciales.data.json sin guard_disparadores/recordatorio — el recordatorio quedo apagado.');
+  }
+  if (canon.guard_excluir_rutas && new RegExp(canon.guard_excluir_rutas, 'i').test(target)) return null;
+  const texto = `${target} ${ctx.content || ''}`;
+  if (!canon.guard_disparadores.some((d) => new RegExp(d.regex, 'i').test(texto))) return null;
+  return recordatorio(path.join(dirTmp(env), 'claude-caracteristicas-especiales-guard.flag'), textoCaracteristicasEspeciales());
 };
 
 // ── cad-guard ──────────────────────────────────────────────────────────────

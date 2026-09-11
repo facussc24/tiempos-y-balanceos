@@ -1,7 +1,11 @@
 import React, { memo, useCallback, useMemo, useState, useEffect } from 'react';
 import { AmfeOperation, AmfeWorkElement, AmfeFunction, AmfeFailure, AmfeCause, AMFE_STATUS_OPTIONS, WORK_ELEMENT_TYPES, WORK_ELEMENT_LABELS, WorkElementType, EFFECT_LABELS } from './amfeTypes';
 import { clampSOD, getFailureWarnings, getCauseValidationState, CauseValidationState } from './amfeValidation';
-import { esCritica, esSignificativa } from './specialChars';
+import { esCritica, esSignificativa, siglaSugerida } from './specialChars';
+
+/** Sigla que el criterio del I-AC-005 sugiere para S y O (CC / SC / null). Solo sugiere: la asigna Fak. */
+const sugerenciaSigla = (severidad: number | string | undefined, ocurrencia: number | string | undefined) =>
+    siglaSugerida(severidad, ocurrencia, 'INTERNA');
 import { AlertTriangle } from 'lucide-react';
 import { useAmfe } from './useAmfe';
 import { Trash2, Plus, Copy, ChevronRight, ChevronDown } from 'lucide-react';
@@ -490,17 +494,20 @@ const AmfeTableBody: React.FC<Props> = ({ operations, amfe, requestConfirm, colu
                         ? <span className={`text-[10px] text-center block font-bold ${esCritica(cause.specialChar) ? 'text-red-600' : esSignificativa(cause.specialChar) ? 'text-orange-600' : ''}`}>{cause.specialChar || '—'}</span>
                         : <>
                             <input value={cause.specialChar} onChange={e => amfe.updateCause(op.id, we.id, func.id, fail.id, cause.id, 'specialChar', e.target.value)} className="w-full text-center outline-none bg-transparent text-[10px]" placeholder="-" aria-label="Característica especial (CC/SC)" />
-                            {!cause.specialChar && Number(fail.severity) >= 7 && (
+                            {/* Sugerencia por el criterio del I-AC-005 (CC: S 9-10 · SC: S 5-8 y O >= 4), leido
+                                de caracteristicasEspeciales.data.json. Hasta el 11/09/2026 sugeria SC con S >= 7
+                                sin mirar la O. Sigue siendo una sugerencia: la asigna Fak o el cliente. */}
+                            {!cause.specialChar && sugerenciaSigla(fail.severity, cause.occurrence) && (
                                 <button
-                                    onClick={() => amfe.updateCause(op.id, we.id, func.id, fail.id, cause.id, 'specialChar', Number(fail.severity) >= 9 ? 'CC' : 'SC')}
+                                    onClick={() => amfe.updateCause(op.id, we.id, func.id, fail.id, cause.id, 'specialChar', sugerenciaSigla(fail.severity, cause.occurrence) ?? '')}
                                     className={`text-[8px] px-1 py-0.5 rounded mt-0.5 block mx-auto font-bold transition-colors ${
-                                        Number(fail.severity) >= 9
+                                        sugerenciaSigla(fail.severity, cause.occurrence) === 'CC'
                                             ? 'bg-red-100 text-red-700 hover:bg-red-200'
                                             : 'bg-orange-100 text-orange-700 hover:bg-orange-200'
                                     }`}
-                                    title={`Sugerencia: S=${fail.severity} → ${Number(fail.severity) >= 9 ? 'CC (Crítica)' : 'SC (Significativa)'}`}
+                                    title={`Sugerencia I-AC-005: S=${fail.severity} O=${cause.occurrence} → ${sugerenciaSigla(fail.severity, cause.occurrence) === 'CC' ? 'CC (Crítica: S 9-10)' : 'SC (Significativa: S 5-8 y O >= 4)'}`}
                                 >
-                                    {Number(fail.severity) >= 9 ? '→ CC' : '→ SC'}
+                                    {sugerenciaSigla(fail.severity, cause.occurrence) === 'CC' ? '→ CC' : '→ SC'}
                                 </button>
                             )}
                             {cause.characteristicNumber && <span className="text-[8px] text-gray-400 block text-center mt-0.5">#{cause.characteristicNumber}</span>}

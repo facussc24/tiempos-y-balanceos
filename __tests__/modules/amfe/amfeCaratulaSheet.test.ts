@@ -317,21 +317,22 @@ describe('wrapLines — se cuenta como corta Excel: por palabra', () => {
     });
 });
 
-describe('leyendaDeMarcas — la sigla se explica con la fuente que la respalda', () => {
-    it('a D/TLD le pone la norma VW y a W la tabla de conversion interna', () => {
-        const leyenda = leyendaDeMarcas(['D/TLD', 'W']);
+describe('leyendaDeMarcas — la sigla se explica sin citar normas (Fak 08/09/2026)', () => {
+    it('D/TLD es CARACTERISTICA CRITICA y SC es CARACTERISTICA SIGNIFICATIVA, sin instructivos ni manuales', () => {
+        // En Caratula y Flujograma no se citan instructivos ni manuales en la simbologia (LECCIONES
+        // 08/09): planta y cliente leen el entregable, no la cocina. Las fuentes viven en el JSON.
+        const leyenda = leyendaDeMarcas(['D/TLD', 'SC']);
         const critica = leyenda.find(l => l.mark === 'D/TLD');
-        const signif = leyenda.find(l => l.mark === 'W');
-        expect(critica?.meaning).toContain('Formel Q');
-        // "W" no esta en ninguna norma VW que tenga Barack: su fuente es el I-PY-001.7.
-        expect(signif?.meaning).toContain('I-PY-001.7');
-        expect(signif?.meaning).not.toContain('Formel Q');
+        const signif = leyenda.find(l => l.mark === 'SC');
+        expect(critica?.meaning).toBe('CARACTERISTICA CRITICA');
+        expect(signif?.meaning).toBe('CARACTERISTICA SIGNIFICATIVA');
+        for (const l of leyenda) expect(l.meaning).not.toMatch(/VW|AIAG|I-AC-005|manual|instructivo|Formel/i);
         // La critica va primero.
         expect(leyenda[0].mark).toBe('D/TLD');
     });
 
     it('no repite una sigla que aparece muchas veces, ni cuenta el numero como parte', () => {
-        expect(leyendaDeMarcas(['W', 'W 1', 'W 2', 'W']).map(l => l.mark)).toEqual(['W']);
+        expect(leyendaDeMarcas(['SC', 'SC 1', 'SC 2', 'SC']).map(l => l.mark)).toEqual(['SC']);
     });
 
     it('sin marcas no hay leyenda', () => {

@@ -54,7 +54,7 @@ const ENV_REQUERIDAS = [
  */
 export function loadEnv(opts = {}) {
     const envPath = new URL('../../.env.local', import.meta.url)
-        .pathname.replace(/^\/([A-Z]:)/, '$1');
+        .pathname.replace(/^\/([a-zA-Z]:)/, '$1');
     const envText = readFileSync(envPath, 'utf8');
     const env = Object.fromEntries(
         envText.split('\n')

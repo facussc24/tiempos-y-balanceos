@@ -53,9 +53,10 @@ Decision Fak 2026-05-22: "el manual es la ley". Criterio oficial, no reglas mas 
 | OS | Seguridad del Operador | S = 5-8 Y O >= 4 (efecto en planta) | Acciones de seguridad |
 | HI | Alto Impacto | S = 5-8 Y O >= 4 (efecto en planta) | Enfasis |
 
-- Flamabilidad TL 1010, VW 50180 (VOC) y EU 2000/53/EG (ELV) generan **CC obligatoria** por requerimiento legal (independiente de S/O).
+- Flamabilidad TL 1010, VW 50180 (VOC) y EU 2000/53/EG (ELV) son **incumplimiento legal: S=9 por la tabla P1** del AIAG-VDA, y de esa S sale la CC. La CC **no** es independiente de S/O (hasta el 11/09/2026 esta linea decia eso y el validador eximia por palabras: por ese agujero paso una costura S7 O3 con D/TLD y "riesgo de seguridad" en el efecto). Si el efecto habla de ley o seguridad y la S es 7, lo que esta mal es la S.
+- **La sigla de una causa se justifica SOLO con la S y la O de ESA causa** contra la tabla de arriba, mas lo que el cliente designo en el plano. Nunca porque otro documento (backup, Rev.A de un flujograma, plan de control viejo) la tenia. Antes de poner, sacar o restaurar una sigla: escribir S, O y la regla. Regla always-on **`caracteristicas-especiales.md`** (criterio, siglas por destinatario, fuentes con pagina); fuente unica `core/amfe/caracteristicasEspeciales.data.json`, que leen la app, el validador y los hooks.
 - NUNCA asignar CC/SC/OS/HI sin verificar S/O previo. Si falta O: dejar "Estandar".
-- **Asignar o cambiar una caracteristica especial requiere autorizacion explicita de Fak** (autonomy-contract). Traducir la SIGLA de una que ya esta asignada no es asignarla.
+- **Asignar o cambiar una caracteristica especial requiere autorizacion explicita de Fak** (autonomy-contract). Traducir la SIGLA de una que ya esta asignada no es asignarla. La lista calculada por criterio (`nivelPorCriterio(S, O)`) se muestra con S y O al lado; el OK de Fak la asigna.
 
 ### 2.1 La sigla depende del destinatario — verificado 08/09/2026
 
@@ -67,18 +68,24 @@ traducian **hacia** Barack. Las dos cosas quedaron desactualizadas.
 |---|---|---|---|
 | Instructivo SGC `I-AC-005` rev.B (y rev.A de 2018) | `CC` | **`CS`** | — |
 | Manual AMFE SETEC / AIAG-VDA pag. 129 | `▽` | `SC` | `OS`, `HI` |
-| Tabla de conversion IATF del `I-PY-001.7` | VW `D/TLD` · PWA: consultar CSR | VW `Wichtig (W)` · PWA `SC` | `OS`/`HI`: N/A |
+| Cliente VW (Formel Q Capacidad de Calidad pag. 28 §7.5 y 35; CSR VW IATF 2018 §8.3.3.3) | `D/TLD` — **una sola marca**, D la vieja y TLD la nueva, mismo rango: documentacion obligatoria LEGAL, la designa el cliente en el plano (VW 01058 §5.1.4) | **VW no tiene sigla de significativa** (§7.2: el proveedor nombra las suyas): se escribe `SC`. La `W` **no existe** en ninguna norma VW (Fak 09/09/2026) | — |
 
 - **`CS` no lo usa ningun documento de trabajo**: todos escriben `SC`, la del manual. Por eso
   `CS` se lee como alias de `SC`, no como valor invalido.
 - El propio I-AC-005 cierra con *"sera utilizada la simbologia especificada por el Cliente
-  cuando el mismo asi lo requiera"*. **Decision de Fak 08/09/2026: en la documentacion que va
-  a VW se escriben `D/TLD` y `W`.** Para PWA la significativa sigue siendo `SC`.
+  cuando el mismo asi lo requiera"*. **Decision de Fak 08-09/09/2026: en la documentacion que va
+  a VW se escriben `D/TLD` y `SC`.** (El 08/09 esta regla decia `W`: salia de la hoja "Tipos de
+  caracteristicas" del `I-PY-001.7`, no de VW; esa hoja esta en `OBSOLETOS\` desde el 09/09 y hoy
+  no hay matriz de correlacion vigente — la pide Formel Q §7.5 y la define Calidad.)
 - **Comparar el NIVEL, nunca el texto**: `esCritica()` / `esSignificativa()` /
-  `convertirSimbologia()` en `modules/amfe/specialChars.ts`, con la tabla y sus fuentes citadas.
-  Tests en `__tests__/modules/amfe/specialChars.test.ts` (incluye los casos en rojo: `PV2005`, `Clave`
-  y los `YC`/`YS`, que son de AMFE de DISEÑO y no entran en el de proceso).
-- Una sigla que ninguna de las tres fuentes reconoce **no se adivina**: se reporta.
+  `convertirSimbologia()` / `nivelPorCriterio(S, O)` en `modules/amfe/specialChars.ts`, que lee
+  las tablas de `core/amfe/caracteristicasEspeciales.data.json` (fuente unica, con las fuentes y
+  su pagina). Tests en `__tests__/modules/amfe/specialChars.test.ts` (incluye los casos en rojo:
+  `W`, `PV2005`, `Clave` y los `YC`/`YS`, que son de AMFE de DISEÑO y no entran en el de proceso).
+- Una sigla que ninguna de las tres fuentes reconoce **no se adivina**: se reporta
+  (`SIGLA_DESCONOCIDA`, CRITICAL).
+- **Flujograma**: la marca de una operacion = union de las siglas de sus causas en el AMFE. Una `▽`
+  heredada de una Rev.A sin causa S>=9 detras **no se copia**: se informa como diferencia.
 - ⚠️ Abierto, lo decide Calidad: el instructivo dice `CS` y la practica dice `SC`. Hasta que se
   zanje, no se "corrige" ningun documento a `CS`. Memoria
   `caracteristicas_especiales_notacion_barack`.
@@ -267,16 +274,16 @@ de romper: que la S viva EN el efecto y no se pueda pasar a mano (ver
 - **Campos alias — usar AMBOS nombres** (TS usa unos, export Excel otros): `op.opNumber↔operationNumber`, `op.name↔operationName`, `fn.description↔functionDescription`, `cause.cause↔description`, `cause.ap↔actionPriority`. `saveAmfe()` en `scripts/_lib/amfeIo.mjs` llama `syncFieldAliases()` + `syncLegacyFmFields()` automaticamente; si escribis con `.update()` crudo, correrlos a mano.
 - **Campos legacy fm.\*** (severity/occurrence/detection/controles/specialChar/ap a nivel failure): deprecados pero exports los leen — si `cause[].X` tiene valor, `fm.X` = max de las causas, no vacio.
 - `WE.name` (NO "description"), `WE.type` ∈ {Machine, Man, Method, Material, Measurement, Environment}. Al crear/modificar datos usar SIEMPRE `failure.causes[]`, nunca los 13 campos @deprecated del failure.
-- **Gate pre-commit**: todo script .mjs que toque `amfe_documents.data` usa `runWithValidation()` de `scripts/_lib/dryRunGuard.mjs` (dry-run → review → --apply). Bloquea si introduce criticos nuevos: `FIELD_ALIAS_DESYNC`, `FM_LEGACY_EMPTY_BUT_CAUSE_HAS_VALUE`, `CAUSE_APH_EMPTY_NO_PLACEHOLDER`, `FORBIDDEN_VOCABULARY`, `CAUSE_LEGAL_COMPLIANCE_UNDERCALIBRATED`, causas sin S/O/D, failures sin causas. Override `{allowNewCritical:true}` solo con OK de Fak.
+- **Gate pre-commit**: todo script .mjs que toque `amfe_documents.data` usa `runWithValidation()` de `scripts/_lib/dryRunGuard.mjs` (dry-run → review → --apply). Bloquea si introduce criticos nuevos: `FIELD_ALIAS_DESYNC`, `FM_LEGACY_EMPTY_BUT_CAUSE_HAS_VALUE`, `CAUSE_APH_EMPTY_NO_PLACEHOLDER`, `FORBIDDEN_VOCABULARY`, `CAUSE_LEGAL_COMPLIANCE_UNDERCALIBRATED`, `CAUSE_CC_LOW_SEVERITY` / `CAUSE_SC_FUERA_DE_REGLA` / `SIGLA_DESCONOCIDA` (sigla que S y O no sostienen, desde 11/09/2026), causas sin S/O/D, failures sin causas. Override `{allowNewCritical:true}` solo con OK de Fak.
 - Protocolo completo de seguridad Supabase (backup, restore, verificacion JSONB): skill `supabase-safety`.
 
 ## 15. Validaciones pre-guardado (amfeValidation.ts)
 
-A1 S/O/D parciales; A2 AP=H sin accion; A3 failure sin causas; A4 causa sin controles; A5 efectos 3-niveles incompletos; A6 CC con S<9 (exentos: flamabilidad/VOC/airbag/legal/seguridad); A7 SC con S<7. Todas warning en draft, bloqueo en approved (A7 siempre warning).
+A1 S/O/D parciales; A2 AP=H sin accion; A3 failure sin causas; A4 causa sin controles; A5 efectos 3-niveles incompletos; A6 critica (CC / D/TLD / ▽) con S<9 — **sin exenciones** (hasta el 11/09/2026 "flamabilidad/airbag/legal/seguridad" en el texto eximian; por ahi paso una costura S7 con D/TLD); A7 significativa (SC / CS) fuera de S 5-8 y O>=4; A7b sigla que ninguna fuente reconoce (W, Wichtig, PV2005). Todas warning en draft, bloqueo en approved. Espejo .mjs en `scripts/_lib/amfeValidator.mjs`: `CAUSE_CC_LOW_SEVERITY` / `CAUSE_SC_FUERA_DE_REGLA` / `SIGLA_DESCONOCIDA`, **CRITICAL** (bloquean `--apply` y el export oficial). Criterio y fuentes: regla `caracteristicas-especiales.md`.
 
 ## 16. Auditor proactivo
 
-`node scripts/_auditAll.mjs` (o `--summary`) — correr antes de cada entrega PPAP, tras importar AMFE, y al cerrar tareas de datos. Chequea estructura VDA, alias desync, fm legacy, export-critical, headers, metadata. NO chequea CC/SC ni acciones (solo humanos). Si sale limpio (0 criticos) el dataset es publicable.
+`node scripts/_auditAll.mjs` (o `--summary`) — correr antes de cada entrega PPAP, tras importar AMFE, y al cerrar tareas de datos. Chequea estructura VDA, alias desync, fm legacy, export-critical, headers, metadata. NO asigna CC/SC ni acciones (solo humanos); desde el 11/09/2026 si **frena** la sigla que S y O no sostienen (`CAUSE_CC_LOW_SEVERITY`, `CAUSE_SC_FUERA_DE_REGLA`, `SIGLA_DESCONOCIDA`). Si sale limpio (0 criticos) el dataset es publicable.
 
 ## 17. AMFE nuevo — lo que ya nos costo caro (checklist de autoria)
 

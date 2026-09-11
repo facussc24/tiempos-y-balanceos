@@ -2,7 +2,7 @@
   "_comentario": "Numeracion canonica de las operaciones de Patagonia (VW427). REGLA MADRE: la numeracion la manda el FLUJOGRAMA (orden APQP flujograma -> AMFE -> Plan de Control). Este archivo es la secuencia que el flujograma declara; el AMFE de Supabase se verifica CONTRA esto con scripts/_verificarNumeracion.mjs. Origen: mail de L. Lattanzi del 02/07/2026 'Condiciones que rompen trazabilidad Flujograma - AMFE - Instruccion de trabajo', que freno la carga en BeOn.",
   "_como_actualizar": "Cuando un flujograma pase a Rev. B, poner aca su secuencia REAL (leida del documento, no supuesta) y cambiar estado a VIGENTE.",
   "_dos_campos_distintos": "`flujograma.estado` es un HECHO: VIGENTE = el documento existe y es el que manda; PENDIENTE = todavia no se emitio. `secuencia` es OTRA cosa: el esperado contra el que se mide el AMFE. Pueden ir separados. Un flujograma PENDIENTE puede tener secuencia si hay fuentes independientes que ya la fijan (caso Top Roll: el Plan de Control y el flujograma vigente coinciden), y en ese caso `secuenciaConfirmadaPor` tiene que listar 2 o mas — lo exige el test. Si no hay con que confirmarla, `secuencia` va null y el script reporta NO VERIFICABLE en vez de inventar un esperado.",
-  "_fecha": "2026-09-08",
+  "_fecha": "2026-09-11",
   "_no_confundir": "cp_documents de la app es PRELIMINAR (memoria plan_control_app_es_preliminar_obsoleto). No usarlo como fuente de numeracion; solo como pista a contrastar.",
   "documentos": {
     "150": {
@@ -31,12 +31,39 @@
         "flujograma 151 Rev.B generado el 18/08/2026 desde tools/flowchart/data/"
       ]
     },
+    "172": {
+      "producto": "INSONOS / DUCTOS DE CALEFACCION",
+      "claveSupabase": "AMFE-DUC-PAT",
+      "flujograma": {
+        "id": "158",
+        "revVigente": "A",
+        "estado": "VIGENTE"
+      },
+      "secuencia": [
+        "10",
+        "20",
+        "30",
+        "40",
+        "50",
+        "60",
+        "70",
+        "80",
+        "90"
+      ],
+      "nota": "Emitidos juntos el 24/08/2026, con la misma secuencia: el flujograma 158 Rev.A y el AMFE 172 nacen alineados. Se corrigieron cinco colisiones que traia la documentacion anterior: el 80 era EMBALAJE en el flujograma e INSPECCION FINAL en el AMFE, y el 90 era CONTROL DE CANTIDADES en uno y EMBALAJE en el otro (queda 80 inspeccion final y 90 embalaje, criterio de amfe.md §12). Se elimino la OP41 del AMFE viejo: era el traslado 'TRASLADO DE PIEZAS TROQUELADAS AL SECTOR DE PREARMADO' promovido a operacion, sin HO que lo respalde y con material indirecto (cajon plastico) como unico elemento. LAS HOJAS DE OPERACION YA ESTAN ALINEADAS (24/08/2026): HO 987 (MP8146), 988 (MP8147 central y lateral) y 989 (MP8148), Rev.A, con el N de operacion escrito en la celda B6 y el N de HO en Q3 — antes las dos estaban vacias y la numeracion vivia solo en el nombre de la pestaña. Quedan 17 hojas: 50 y 50.1 prearmado, 60 a 60.5 soldado, 70 ensamble. DIVERGENCIA ABIERTA: la HO coloca las tiras de espuma sobre la pieza 'ya tapizada', o sea DESPUES del soldado, y el flujograma las rutea ANTES (30 laminado - 40 troquelado - 50 prearmado). Se numero contra el flujograma; cual orden es el real lo define la planta. NO hay HO propia de MP8137, MP8149, MP8150 ni MP8151: los cuatro que solo se cortan quedan cubiertos por la HO general de mesa de corte.",
+      "fuente": "AMFE 172 (AMFE-DUC-PAT) Supabase live 2026-08-24",
+      "secuenciaConfirmadaPor": [
+        "flujograma 158 Rev.A generado el 24/08/2026 desde tools/flowchart/data/158-INSONOS-DUCTOS.json",
+        "BOM del ERP arb (export RELACIONES.TXT del 21/08/2026): la columna MODULO/PROCESO asigna cada insumo a su proceso — COB/CUMB corte, TRO troquelado, MONTAJE, QUA/QW etiqueta",
+        "hojas de operacion de MP8146 / MP8147 CENTRAL / MP8147 LATERAL / MP8148 (confirman posicionamiento, remachado, soldado por ultrasonido, pegado de espuma y ensamble como operaciones reales)"
+      ]
+    },
     "AMFE-ARM-PAT": {
       "producto": "ARMREST DOOR PANEL (APB de puerta)",
       "amfe": "161",
       "flujograma": {
         "id": "153",
-        "revVigente": "B",
+        "revVigente": "C",
         "estado": "VIGENTE"
       },
       "secuencia": [
@@ -44,12 +71,6 @@
         "20",
         "21",
         "22",
-        "23",
-        "24",
-        "25",
-        "26",
-        "27",
-        "28",
         "30",
         "40",
         "41",
@@ -66,10 +87,11 @@
         "101",
         "110"
       ],
-      "nota": "RESUELTO 18/08: el control de pieza inyectada SI existe, pero es UN SOLO PUESTO para las dos piezas (Fak). El flujograma lo dibuja como dos operaciones (51 delantero, 52 trasero) con dos rombos: hay que FUSIONARLAS en una sola 51 con un rombo. HUECO PENDIENTE en el AMFE: no tiene ninguna operacion de control entre la 60 inyeccion plastica y la 70 inyeccion PU. No se agrega todavia porque correria la numeracion justo antes de rehacer el flujograma, y porque hacen falta los modos de falla reales del puesto. Mismo hueco en el 158 y el 162; el 149 si lo tiene.",
-      "fuente": "AMFE 161 Supabase live 2026-08-18",
+      "nota": "Alineado el 09/09/2026 contra Flujograma 153 Rev.B y verificado de nuevo el 11/09/2026 contra la Rev.C. La mesa de corte se estandarizo a 20-22 (corte en decena 20: 20 preparacion, 21 corte, 22 control mylar, 23 WIP) unificando con el criterio de la casa aplicado en el Insert. El tapizado en el AMFE numera 80-82 cubriendo los tres pasos del flujograma (80 configuracion, 81 automatico, 82 refilado). Hay DOS reprocesos y los dos van en la secuencia: 100 REPROCESO: FALTA DE ADHESIVO (vuelve a la 71) y 101 REPROCESO: REACTIVACION DE ADHESIVO POR CALOR (vuelve a la 90); el 101 lo respalda la HO-971 pag. 25 y el AMFE 161 lo tiene desde el 09/09/2026 - hasta el 11/09 esta secuencia no lo declaraba y _verificarNumeracion.mjs lo marcaba como operacion del AMFE sin flujograma. La Rev.C del 11/09/2026 NO cambia la numeracion: solo alinea las marcas de caracteristicas especiales con el AMFE 161 (D/TLD y SC en la recepcion 10; SC en 20, 21, 30, 40, 41, 50, 70, 71, 80-82 y 100). Quedan resueltas las colisiones de numeracion.",
+      "fuente": "Flujograma 153 Rev.B (09/09/2026) y Rev.C (11/09/2026) + AMFE 161 Supabase live 2026-09-11 + HO-971 pag. 25",
       "secuenciaConfirmadaPor": [
-        "flujograma 153 Rev.B, control de pieza inyectada unificado en la 51"
+        "flujograma 153 Rev.C (11/09/2026, datos en tools/flowchart/data/153-ARMREST-DOOR-PANEL.json; la numeracion es la misma de la Rev.B del 09/09/2026)",
+        "AMFE 161 Supabase live 11/09/2026 (17 operaciones, 80-82 en una fila)"
       ]
     },
     "AMFE-HF-PAT": {
@@ -203,7 +225,7 @@
       "amfe": "158",
       "flujograma": {
         "id": "154",
-        "revVigente": "B",
+        "revVigente": "C",
         "estado": "VIGENTE"
       },
       "secuencia": [
@@ -226,9 +248,10 @@
         "120"
       ],
       "secuenciaConfirmadaPor": [
-        "flujograma 154 Rev.B (emitido 08/09/2026, datos en tools/flowchart/data/154-INSERT.json)"
+        "flujograma 154 Rev.B (emitido 08/09/2026) y Rev.C (11/09/2026, datos en tools/flowchart/data/154-INSERT.json; misma numeracion, solo cambian las marcas de caracteristicas especiales)",
+        "AMFE 158 Supabase live 11/09/2026"
       ],
-      "nota": "Flujograma 154 Rev.B emitido el 08/09/2026. Mantiene el ESQUEMA de la Rev.A (el que ya usan el AMFE 158 y el Plan de Control CP-INSERT-001) y le hace cuatro cambios, todos con documento o con criterio de Fak detras. (1) UN SOLO DECIMAL POR SECTOR (Fak, 08/09: 'dentro del mismo sector intentemos mantenernos en el mismo decimal'): la mesa de corte estaba repartida en 15/20/25/30 y queda 20 PREPARACION DE CORTE, 21 CORTAR COMPONENTES, 22 CONTROL CON MYLAR y 23 ALMACENAMIENTO EN MEDIOS WIP; por lo mismo el reproceso de adhesivado pasa de 103 a 93, que es la decena de su sector. Las decenas 30 y 40 quedan LIBRES. (2) SE ELIMINA LA OPERACION 40 REFILADO del vinilo cortado antes de coser (Fak, 08/09: 'esa pieza no se refila mas'): la HO-215 no tiene ningun refilado antes de la costura - su OP 40 REFILADO DE PIEZA es del sector TAPIZADO y va despues de tapizar - y el AMFE 158 tampoco declara una OP 40. El unico documento que todavia la trae es el CP-INSERT-001, que es de Calidad. (3) SE AGREGAN TRES OPERACIONES: 71 CONTROL DE PIEZA INYECTADA (paso 3 de la OP 20 de la HO-215 + elementos de medicion de la OP 70 del AMFE; Fak 08/09: 'deberia ser un paso de proceso eso, con su numero propio'), 101 VIROLADO MANUAL (OP 31 de la HO-215, aprobada por C. Baptista el 06/07/2026) y 102 REFILADO POST-TAPIZADO (OP 40 de la HO-215 en sector TAPIZADO). El WIP de inyeccion pasa de 71 a 72. (4) Se saca el texto huerfano 'REPROCESO: PUNTADA FLOJA' de la Rev.A, que estaba sin figura, sin numero y sin flecha. SE CAE UNA AFIRMACION DE LA NOTA ANTERIOR: decia que el 105 REFILADO POST-TAPIZADO del Plan de Control no lo respaldaba nadie - si lo respalda, es la OP 40 de la HO-215, leida el 08/09/2026. EL AMFE 158 SE ALINEO EL MISMO 08/09/2026, en dos pasadas verificadas contra Supabase live: (a) `_renumerarAmfeInsert.mjs` renumero el corte (15/20/25 -> 20/21/22) y el reproceso (103 -> 93); (b) `_agregarOpsTapizadoInsert.mjs` cargo las tres operaciones del sector TAPIZADO que el AMFE no tenia - 100 TAPIZADO SEMIAUTOMATICO, 101 VIROLADO MANUAL y 102 REFILADO POST-TAPIZADO - con la HO-215 (OP 30, OP 31 y OP 40) como unica fuente. Las caracteristicas especiales de esas causas quedaron VACIAS a proposito: las asigna Fak. La revision NO subio de letra porque el INSERT no entro en serie; las cinco filas nuevas del log van como Rev. A. LA 71 CONTROL DE PIEZA INYECTADA NO SE PARTE: su contenido ya vivia dentro de la OP 70 (la Rev. A del 20/08 dice textual 'SE AGREGA CONTROL DE PIEZA INYECTADA (WE MEASUREMENT: BALANZA/CALIBRE Y PIEZA PATRON) EN LA OP 70'), asi que la fila pasa a numerarse '70-71' y cubre los dos pasos del flujograma - Fak, 08/09: 'lo del 71 no me importa en el AMFE, pone 70-71 y listo'. `_verificarNumeracion.mjs` expande ese rango. QUEDA UN HUECO REAL EN EL AMFE: la 80 PREARMADO DE ESPUMA, que no tiene NINGUNA fuente: no hay hoja de operacion en la HO-215 ni operacion en el AMFE, solo la figura del flujograma y una fila del Plan de Control. Los almacenamientos WIP (23, 51, 61, 72, 81, 92) y la 111 no llevan AMFE propio (amfe.md §9) y por eso no entran en la secuencia esperada, igual que en el resto de los productos. LA HO-215 ES LA QUE HAY QUE RENUMERAR: tiene DOS operaciones 20 (INYECCION PLASTICA y Preparacion y Carga del Vinilo) y numera el tapizado 30-31 antes que la costura 50-53, cuando en el proceso se cose primero. Su ciclo de control tambien tiene huecos: la OP 31 VIROLADO MANUAL lo tiene en TBD en las tres paginas, y la OP 30 TAPIZADO tiene en TBD el tiempo de ciclo del operador.",
+      "nota": "Flujograma 154 Rev.B emitido el 08/09/2026. Mantiene el ESQUEMA de la Rev.A (el que ya usan el AMFE 158 y el Plan de Control CP-INSERT-001) y le hace cuatro cambios, todos con documento o con criterio de Fak detras. (1) UN SOLO DECIMAL POR SECTOR (Fak, 08/09: 'dentro del mismo sector intentemos mantenernos en el mismo decimal'): la mesa de corte estaba repartida en 15/20/25/30 y queda 20 PREPARACION DE CORTE, 21 CORTAR COMPONENTES, 22 CONTROL CON MYLAR y 23 ALMACENAMIENTO EN MEDIOS WIP; por lo mismo el reproceso de adhesivado pasa de 103 a 93, que es la decena de su sector. Las decenas 30 y 40 quedan LIBRES. (2) SE ELIMINA LA OPERACION 40 REFILADO del vinilo cortado antes de coser (Fak, 08/09: 'esa pieza no se refila mas'): la HO-215 no tiene ningun refilado antes de la costura - su OP 40 REFILADO DE PIEZA es del sector TAPIZADO y va despues de tapizar - y el AMFE 158 tampoco declara una OP 40. El unico documento que todavia la trae es el CP-INSERT-001, que es de Calidad. (3) SE AGREGAN TRES OPERACIONES: 71 CONTROL DE PIEZA INYECTADA (paso 3 de la OP 20 de la HO-215 + elementos de medicion de la OP 70 del AMFE; Fak 08/09: 'deberia ser un paso de proceso eso, con su numero propio'), 101 VIROLADO MANUAL (OP 31 de la HO-215, aprobada por C. Baptista el 06/07/2026) y 102 REFILADO POST-TAPIZADO (OP 40 de la HO-215 en sector TAPIZADO). El WIP de inyeccion pasa de 71 a 72. (4) Se saca el texto huerfano 'REPROCESO: PUNTADA FLOJA' de la Rev.A, que estaba sin figura, sin numero y sin flecha. SE CAE UNA AFIRMACION DE LA NOTA ANTERIOR: decia que el 105 REFILADO POST-TAPIZADO del Plan de Control no lo respaldaba nadie - si lo respalda, es la OP 40 de la HO-215, leida el 08/09/2026. EL AMFE 158 SE ALINEO EL MISMO 08/09/2026, en dos pasadas verificadas contra Supabase live: (a) `_renumerarAmfeInsert.mjs` renumero el corte (15/20/25 -> 20/21/22) y el reproceso (103 -> 93); (b) `_agregarOpsTapizadoInsert.mjs` cargo las tres operaciones del sector TAPIZADO que el AMFE no tenia - 100 TAPIZADO SEMIAUTOMATICO, 101 VIROLADO MANUAL y 102 REFILADO POST-TAPIZADO - con la HO-215 (OP 30, OP 31 y OP 40) como unica fuente. Las caracteristicas especiales de esas causas quedaron VACIAS a proposito: las asigna Fak. La revision NO subio de letra porque el INSERT no entro en serie; las cinco filas nuevas del log van como Rev. A. LA 71 CONTROL DE PIEZA INYECTADA NO SE PARTE: su contenido ya vivia dentro de la OP 70 (la Rev. A del 20/08 dice textual 'SE AGREGA CONTROL DE PIEZA INYECTADA (WE MEASUREMENT: BALANZA/CALIBRE Y PIEZA PATRON) EN LA OP 70'), asi que la fila pasa a numerarse '70-71' y cubre los dos pasos del flujograma - Fak, 08/09: 'lo del 71 no me importa en el AMFE, pone 70-71 y listo'. `_verificarNumeracion.mjs` expande ese rango. QUEDA UN HUECO REAL EN EL AMFE: la 80 PREARMADO DE ESPUMA, que no tiene NINGUNA fuente: no hay hoja de operacion en la HO-215 ni operacion en el AMFE, solo la figura del flujograma y una fila del Plan de Control. Los almacenamientos WIP (23, 51, 61, 72, 81, 92) y la 111 no llevan AMFE propio (amfe.md §9) y por eso no entran en la secuencia esperada, igual que en el resto de los productos. LA HO-215 ES LA QUE HAY QUE RENUMERAR: tiene DOS operaciones 20 (INYECCION PLASTICA y Preparacion y Carga del Vinilo) y numera el tapizado 30-31 antes que la costura 50-53, cuando en el proceso se cose primero. Su ciclo de control tambien tiene huecos: la OP 31 VIROLADO MANUAL lo tiene en TBD en las tres paginas, y la OP 30 TAPIZADO tiene en TBD el tiempo de ciclo del operador. REV.C DEL 11/09/2026: no cambia la numeracion; alinea las marcas de caracteristicas especiales con el AMFE 158 (D/TLD y SC en la recepcion 10; SC en 20, 21, 22, 50, 60, 71, 90, 91, 93, 100, 101, 102 y 110). La 80 PREARMADO DE ESPUMA sigue sin AMFE (hueco real, ver arriba) y por eso el chequeo la reporta como paso del flujograma sin operacion en el AMFE.",
       "fuente": "PDF FLUJOGRAMA_154_INSERT PAT_REV.pdf (Rev.A) + HO-215 + AMFE 158 Supabase live + CP-INSERT-001, los cuatro leidos 2026-09-08; agrupamiento por sector y baja del refilado, criterio de Fak 08/09/2026"
     },
     "AMFE-TR-PAT": {
@@ -236,7 +259,7 @@
       "amfe": "162",
       "flujograma": {
         "id": "155",
-        "revVigente": "B",
+        "revVigente": "C",
         "estado": "VIGENTE"
       },
       "secuencia": [
@@ -252,10 +275,12 @@
         "90"
       ],
       "secuenciaConfirmadaPor": [
-        "flujograma 155 Rev.B: recepcion en 5, 11 WIP, control final en 80"
+        "flujograma 155 Rev.B: recepcion en 5, 11 WIP, control final en 80",
+        "flujograma 155 Rev.C (11/09/2026, datos en tools/flowchart/data/155-TOP-ROLL.json; misma numeracion, solo cambian las marcas de caracteristicas especiales)",
+        "AMFE 162 Supabase live 11/09/2026 (10 operaciones: 5 a 90)"
       ],
-      "nota": "Flujograma 155 Rev.B emitido: recepcion=5, se agrego el 11 ALMACENAMIENTO EN MEDIOS WIP y el control final quedo numerado 80. El AMFE 162 sigue corrido un escalon (usa 10/20/.../100) y AHORA SI se puede alinear, porque el flujograma esta cerrado.",
-      "fuente": "CP-TOPROLL-001 + 122 FLUJOGRAMA TOP ROLL PAT 2.vsdx, ambos leidos 2026-08-18"
+      "nota": "Flujograma 155 Rev.B emitido: recepcion=5, se agrego el 11 ALMACENAMIENTO EN MEDIOS WIP y el control final quedo numerado 80. El AMFE 162 se alineo a esa numeracion (5/10/.../90) y el 11/09/2026 el chequeo cierra contra Supabase live. Rev.C del 11/09/2026: no cambia la numeracion; alinea las marcas de caracteristicas especiales con el AMFE 162 (D/TLD y SC en la recepcion 5; SC en 10, 50 y 80).",
+      "fuente": "CP-TOPROLL-001 + 122 FLUJOGRAMA TOP ROLL PAT 2.vsdx (leidos 2026-08-18) + flujograma 155 Rev.C y AMFE 162 Supabase live 2026-09-11"
     },
     "VWA-PAT-IPPADS-001": {
       "producto": "IP PAD",
@@ -305,36 +330,9 @@
       "secuenciaConfirmadaPor": [
         "flujograma 157 Rev.B: corte 30-38 y la 90 partida en 90+91"
       ]
-    },
-    "172": {
-      "producto": "INSONOS / DUCTOS DE CALEFACCION",
-      "claveSupabase": "AMFE-DUC-PAT",
-      "flujograma": {
-        "id": "158",
-        "revVigente": "A",
-        "estado": "VIGENTE"
-      },
-      "secuencia": [
-        "10",
-        "20",
-        "30",
-        "40",
-        "50",
-        "60",
-        "70",
-        "80",
-        "90"
-      ],
-      "nota": "Emitidos juntos el 24/08/2026, con la misma secuencia: el flujograma 158 Rev.A y el AMFE 172 nacen alineados. Se corrigieron cinco colisiones que traia la documentacion anterior: el 80 era EMBALAJE en el flujograma e INSPECCION FINAL en el AMFE, y el 90 era CONTROL DE CANTIDADES en uno y EMBALAJE en el otro (queda 80 inspeccion final y 90 embalaje, criterio de amfe.md §12). Se elimino la OP41 del AMFE viejo: era el traslado 'TRASLADO DE PIEZAS TROQUELADAS AL SECTOR DE PREARMADO' promovido a operacion, sin HO que lo respalde y con material indirecto (cajon plastico) como unico elemento. LAS HOJAS DE OPERACION YA ESTAN ALINEADAS (24/08/2026): HO 987 (MP8146), 988 (MP8147 central y lateral) y 989 (MP8148), Rev.A, con el N de operacion escrito en la celda B6 y el N de HO en Q3 — antes las dos estaban vacias y la numeracion vivia solo en el nombre de la pestaña. Quedan 17 hojas: 50 y 50.1 prearmado, 60 a 60.5 soldado, 70 ensamble. DIVERGENCIA ABIERTA: la HO coloca las tiras de espuma sobre la pieza 'ya tapizada', o sea DESPUES del soldado, y el flujograma las rutea ANTES (30 laminado - 40 troquelado - 50 prearmado). Se numero contra el flujograma; cual orden es el real lo define la planta. NO hay HO propia de MP8137, MP8149, MP8150 ni MP8151: los cuatro que solo se cortan quedan cubiertos por la HO general de mesa de corte.",
-      "fuente": "AMFE 172 (AMFE-DUC-PAT) Supabase live 2026-08-24",
-      "secuenciaConfirmadaPor": [
-        "flujograma 158 Rev.A generado el 24/08/2026 desde tools/flowchart/data/158-INSONOS-DUCTOS.json",
-        "BOM del ERP arb (export RELACIONES.TXT del 21/08/2026): la columna MODULO/PROCESO asigna cada insumo a su proceso — COB/CUMB corte, TRO troquelado, MONTAJE, QUA/QW etiqueta",
-        "hojas de operacion de MP8146 / MP8147 CENTRAL / MP8147 LATERAL / MP8148 (confirman posicionamiento, remachado, soldado por ultrasonido, pegado de espuma y ensamble como operaciones reales)"
-      ]
     }
   },
-  "_control_post_inyeccion": "Fak 18/08/2026: 'en inyeccion plastica siempre hay control, deberia estar en todos'. Medido sobre los 8 AMFE: FALTA en 161 (armrest door panel), 158 (insert) y 162 (top roll); el 149 (IP pad) lo tiene dentro de su OP 20. Pendiente de cargar hasta que los flujogramas esten en Rev. B — agregar la operacion corre la numeracion — y hasta tener de Fak que se le controla a la pieza en ese puesto. 08/09/2026: en el INSERT ya quedo dibujado como OP 71 CONTROL DE PIEZA INYECTADA en el flujograma 154 Rev.B, con lo que se le controla escrito en la OP 20 de la HO-215 (falta de llenado, rebabas, orificios tapados, quemaduras, flashes y control dimensional con calibre). Falta cargarlo en el AMFE 158. En el 161 y el 162 sigue pendiente.",
-  "_estado": "Los 6 flujogramas de Patagonia estan en Rev. B y se generan desde el repo con `node scripts/_flujograma.mjs`. El 154 (Insert) paso a Rev. B el 08/09/2026: hasta entonces esta nota decia que se quedaba en Rev. A porque 'no tenia cambios', y era falso — la HO-215 traia dos operaciones que ningun flujograma dibujaba (virolado manual y refilado post-tapizado). La conclusion salia de comparar el flujograma solo contra el AMFE y el Plan de Control, sin abrir la hoja de operaciones.",
+  "_control_post_inyeccion": "Fak 18/08/2026: 'en inyeccion plastica siempre hay control, deberia estar en todos'. Medido sobre los 8 AMFE: FALTA en 161 (armrest door panel), 158 (insert) y 162 (top roll); el 149 (IP pad) lo tiene dentro de su OP 20. Pendiente de cargar hasta que los flujogramas esten en Rev. B — agregar la operacion corre la numeracion — y hasta tener de Fak que se le controla a la pieza en ese puesto. 08/09/2026: en el INSERT ya quedo dibujado como OP 71 CONTROL DE PIEZA INYECTADA en el flujograma 154 Rev.B, con lo que se le controla escrito en la OP 20 de la HO-215 (falta de llenado, rebabas, orificios tapados, quemaduras, flashes y control dimensional con calibre). En el AMFE 158 la fila 70-71 lo cubre (Fak 08/09: \"pone 70-71 y listo\"). En el ARMREST quedo como OP 51 CONTROL DE PIEZA INYECTADA en el flujograma 153 Rev.B y en el AMFE 161 (verificado en Supabase live el 11/09/2026). En el 162 (Top Roll) sigue pendiente.",
+  "_estado": "Los 6 flujogramas de Patagonia se generan desde el repo con `node scripts/_flujograma.mjs`. Los tres de las tapizadas de puerta NOVAX (153 Armrest, 154 Insert, 155 Top Roll) estan en Rev. C desde el 11/09/2026: la C solo alinea las marcas de caracteristicas especiales con el AMFE de cada uno (criterio I-AC-005: D/TLD si S 9-10, SC si S 5-8 y O>=4), la numeracion es la de la Rev. B. Los otros tres (apoyacabezas) siguen en Rev. B. El 154 (Insert) paso a Rev. B el 08/09/2026: hasta entonces esta nota decia que se quedaba en Rev. A porque \"no tenia cambios\", y era falso - la HO-215 traia dos operaciones que ningun flujograma dibujaba (virolado manual y refilado post-tapizado). La conclusion salia de comparar el flujograma solo contra el AMFE y el Plan de Control, sin abrir la hoja de operaciones.",
   "_pasos_sin_amfe": "El esperado EXCLUYE los `storage` y `transfer` numerados del flujograma: `amfe.md` §9 dice que el almacenamiento WIP y el transporte interno no son operaciones de proceso con AMFE propio. Exigirlos seria pedirle al AMFE justo lo que la regla le prohibe tener. Caso concreto: el 11 ALMACENAMIENTO EN MEDIOS WIP del Top Roll esta numerado en el flujograma y en el Plan de Control, y NO va en el AMFE 162."
 }

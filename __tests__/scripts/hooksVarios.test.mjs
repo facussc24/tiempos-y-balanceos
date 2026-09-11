@@ -214,7 +214,57 @@ describe('session-start-context.sh (SessionStart) — el nucleo post-compact se 
     expect(r.status).toBe(0);
     expect(r.stdout).toMatch(/POST-COMPACT/);
     expect(r.stdout).toMatch(/^6\. Seguis en espanol rioplatense/m);
-    expect(r.stdout.length).toBeLessThan(2000);      // el tope de 10 KB de salida de hook queda lejos
+    // 11/09/2026: el criterio de caracteristicas especiales sobrevive la compactacion.
+    expect(r.stdout).toMatch(/^7\. Caracteristicas especiales/m);
+    expect(r.stdout).toMatch(/S 9-10/);
+    expect(r.stdout).toMatch(/S 5-8 y O>=4/);
+    expect(r.stdout).toMatch(/caracteristicas-especiales\.md/);
+    expect(r.stdout.length).toBeLessThan(3000);      // el tope de 10 KB de salida de hook queda lejos
+  });
+});
+
+// ──────────── caracteristicas-especiales-prompt (UserPromptSubmit): el criterio cuando Fak lo nombra
+describe('caracteristicas-especiales-prompt.sh (UserPromptSubmit) — inyecta el criterio CC/SC sin cooldown, nunca bloquea', () => {
+  // Fak, 11/09/2026: "siempre que te preguntes, recuerdes todo esto... me gustan esas memorias
+  // pero a veces no las lees". Los disparadores viven en core/amfe/caracteristicasEspeciales.data.json.
+  const correr = (prompt) => hook('caracteristicas-especiales-prompt.sh', { hook_event_name: 'UserPromptSubmit', prompt });
+  const inyecta = (prompt) => {
+    const r = correr(prompt);
+    expect(r.exit).toBe(0);
+    if (!r.out.trim()) return '';
+    const j = JSON.parse(r.out);
+    expect(j.hookSpecificOutput.hookEventName).toBe('UserPromptSubmit');
+    return j.hookSpecificOutput.additionalContext;
+  };
+  it('ROJO (inyecta): "que es TLD", "la sigla", "caracteristicas especiales", "marcas del flujograma", CC/SC', () => {
+    for (const p of [
+      'nunca entendi si D / TLD van siempre juntos o son cosas distintas',
+      'porque seria d tld etc justifica dale',
+      'la sigla esa de la costura esta bien?',
+      'revisa las caracteristicas especiales del insert',
+      'las marcas del flujograma 154 estan alineadas con el amfe?',
+      'cc/sc de las 3 piezas para el casillero 17',
+      'es critica o significativa esa causa?',
+    ]) {
+      const texto = inyecta(p);
+      expect(texto, p).toMatch(/CARACTERISTICAS ESPECIALES/);
+      expect(texto, p).toMatch(/S 9 o 10/);
+      expect(texto, p).toMatch(/S 5 a 8 Y O >= 4/);
+      expect(texto, p).toMatch(/NUNCA porque otro documento/);
+    }
+  });
+  it('VERDE (vacio): un mensaje que no nombra el tema no recibe nada', () => {
+    for (const p of ['arma el mail para Manuel', 'corre el backup y commitea', 'que hora es', 'fijate el consumo de adhesivo del top roll']) {
+      expect(inyecta(p), p).toBe('');
+    }
+  });
+  it('sin cooldown: dos mensajes seguidos sobre el tema reciben el texto las dos veces', () => {
+    expect(inyecta('que es TLD?')).toMatch(/CARACTERISTICAS ESPECIALES/);
+    expect(inyecta('y la W que es?')).toMatch(/CARACTERISTICAS ESPECIALES/);
+  });
+  it('JSON roto por stdin: exit 0 y no rompe el turno', () => {
+    const r = hook('caracteristicas-especiales-prompt.sh', null, { stdin: '{no es json' });
+    expect(r.exit).toBe(0);
   });
 });
 

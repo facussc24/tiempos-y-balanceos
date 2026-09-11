@@ -1,0 +1,25 @@
+Scripts one-shot que corrio Gemini sobre los AMFE de NOVAX (158 Insert, 161 Armrest, 162 Top Roll)
+entre el 08/09 y el 10/09/2026. Se archivan el 11/09/2026 tal cual quedaron: ya se aplicaron a
+Supabase y no se vuelven a correr. Los imports relativos (./_lib/...) NO resuelven desde aca a
+proposito.
+
+  _renumerarAmfeArmrest.mjs          renumero el 161 contra el flujograma 153 Rev.B (09/09)
+  _sanearAmfesNovax.mjs              saneamiento integral de los 3 (09/09)
+  _sanearMaterialesNovax.mjs         materiales de la OP 10 alineados a las BOM 001/002/003 (09/09)
+  _sanearEstructuraNovax.mjs         unificacion de maquinas y deduplicacion de modos de falla (09/09)
+  _sanearMetodologiaY4MNovax.mjs     4M, cruces entre piezas y recalculo de AP (10/09)
+  _sanearFaseFinalNovax.mjs          materiales, cotas y elementos huerfanos (10/09)
+  _sanearControlesYAlinearAmfes.mjs  controles sin codigos internos + OP 101 del 161 y OP 80 del 158 (10/09)
+  _simplificarControlesAmfes.mjs     controles en lenguaje de planta, sin normas ni siglas en ingles (10/09)
+  _unificarHilosInsert.mjs           los 3 hilos de vista del 158 en un solo elemento (10/09)
+  _revertirAmfeInsertCcSc.mjs        revirtio las siglas del 158 (08/09)
+  _auditDeepAnomalies.mjs            auditoria read-only de anomalias (10/09)
+  _dumpLiveAmfes.mjs                 dump read-only a tmp/ (10/09)
+  apTable.mjs                        copia en .mjs de modules/amfe/apTable.ts que importaban los de arriba;
+                                     lo que hoy se usa es calculateAP de scripts/_lib/amfeIo.mjs
+  _purgarBorradoresNovax.py          NUNCA SE CORRIO Y NO SE CORRE: borra borradores de Outlook.
+
+Lo que quedo despues de todo esto se verifico y se corrigio el 11/09/2026 con
+scripts/_alinearNovaxSiglas.mjs (siglas por criterio del I-AC-005, causa de la OP 22 del 158
+repuesta, caratulas, revision) y los flujogramas 153/154/155 pasaron a Rev.C.
+Detalle: memoria project_ppap_novax_tapizadas_puerta y la nota de la tarea en el Escritorio.
