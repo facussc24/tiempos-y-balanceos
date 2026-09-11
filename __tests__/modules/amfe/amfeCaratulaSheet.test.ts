@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import XLSX from 'xlsx-js-style';
-import { buildCaratulaSheet, computeRowHeights, consolidateRevisions, normalizeRevisions, wrapLines } from '../../../modules/amfe/amfeCaratulaSheet';
+import { buildCaratulaSheet, computeRowHeights, consolidateRevisions, mergeRevisions, normalizeRevisions, wrapLines } from '../../../modules/amfe/amfeCaratulaSheet';
 import { leyendaDeMarcas } from '../../../modules/amfe/specialChars';
 import { buildAmfeOficialWorkbook, assertAmfeExportable } from '../../../modules/amfe/amfeExcelExport';
 import type { AmfeDocument, AmfeOperation } from '../../../modules/amfe/amfeTypes';
@@ -343,5 +343,79 @@ describe('leyendaDeMarcas — la sigla se explica sin citar normas (Fak 08/09/20
         const [entrada] = leyendaDeMarcas(['XX']);
         expect(entrada.mark).toBe('XX');
         expect(entrada.meaning).toMatch(/NO DEFINIDA/);
+    });
+});
+
+describe('mergeRevisions — la columna y el documento se unen, no se pisan', () => {
+    // Caso real del 11/09/2026 (AMFE 158 INSERT): la columna `revisions` de la tabla estaba
+    // congelada en agosto y `data.revisions` tenia las revisiones de septiembre. El export
+    // leia solo la columna, asi que el PDF que iba al cliente no registraba ningun cambio.
+    const columna = [
+        { rev: 'A', date: '17/08/2026', item: '10', description: 'RECEPCION DE MATERIALES.' },
+        { rev: 'A', date: '20/08/2026', item: '70', description: 'CONTROL DE PIEZA INYECTADA.' },
+    ];
+    const documento = [
+        { rev: 'A', date: '08/09/2026', item: '20, 21, 22', details: 'REORGANIZACION DEL CORTE.' },
+        { rev: 'A', date: '11/09/2026', item: '10, 50', details: 'CARACTERISTICAS ESPECIALES POR CRITERIO.' },
+    ];
+
+    it('ROJO sin el merge: la columna sola pierde las revisiones del documento', () => {
+        const soloColumna = normalizeRevisions(columna);
+        expect(soloColumna.map(r => r.date)).not.toContain('11/09/2026');
+    });
+
+    it('VERDE: unidas quedan las cuatro, y la consolidada nombra la fecha mas nueva', () => {
+        const todas = mergeRevisions(columna, documento);
+        expect(todas).toHaveLength(4);
+        expect(todas.map(r => r.date)).toEqual(['17/08/2026', '20/08/2026', '08/09/2026', '11/09/2026']);
+        const [fila] = consolidateRevisions(todas);
+        expect(fila.date).toBe('11/09/2026');
+        expect(fila.details).toMatch(/CARACTERISTICAS ESPECIALES POR CRITERIO/);
+        expect(fila.item).toContain('10');
+        expect(fila.item).toContain('50');
+    });
+
+    it('la misma entrada en las dos fuentes no se duplica y gana la version completa', () => {
+        const conRepetida = mergeRevisions(
+            [{ rev: 'A', date: '17/08/2026', item: '10', description: 'RECEPCION.' }],
+            [{ rev: 'A', date: '17/08/2026', item: '10', details: 'RECEPCION DE MATERIALES (ASAICHI 10-11/08).' }],
+        );
+        expect(conRepetida).toHaveLength(1);
+        expect(conRepetida[0].details).toMatch(/ASAICHI/);
+    });
+
+    it('tolera fuentes vacias, nulas o en JSON string', () => {
+        expect(mergeRevisions(null, undefined)).toEqual([]);
+        expect(mergeRevisions('[{"rev":"A","date":"x","item":"1","description":"y"}]', [])).toHaveLength(1);
+    });
+});
+
+describe('consolidateRevisions — la fila unica se lee como un texto, no como un pegote', () => {
+    it('un item "A-B" se come los sueltos que caen adentro del rango', () => {
+        // AMFE 161, 11/09/2026: una revision escribio "20-22" y otra "20","21","22";
+        // la fila salia "20, 20-22, 21, 22".
+        const [fila] = consolidateRevisions(normalizeRevisions([
+            { rev: 'A', date: '09/09/2026', item: '20-22, 40-41, 80-82', description: 'a' },
+            { rev: 'A', date: '11/09/2026', item: '10, 20, 21, 40, 41, 80, 81, 82, 100', description: 'b' },
+        ]));
+        expect(fila.item).toBe('10, 20-22, 40-41, 80-82, 100');
+    });
+
+    it('un item que no es "numero-numero" no se toca', () => {
+        const [fila] = consolidateRevisions(normalizeRevisions([
+            { rev: 'A', date: '18/08/2026', item: 'OP 5 A 90', description: 'a' },
+            { rev: 'A', date: '11/09/2026', item: '5, 10', description: 'b' },
+        ]));
+        expect(fila.item).toContain('OP 5 A 90');
+        expect(fila.item).toContain('5');
+        expect(fila.item).toContain('10');
+    });
+
+    it('los detalles se separan con punto aunque la entrada no lo traiga', () => {
+        const [fila] = consolidateRevisions(normalizeRevisions([
+            { rev: 'A', date: '17/08/2026', item: '10', description: 'RECEPCION DE MATERIALES' },
+            { rev: 'A', date: '11/09/2026', item: '50', description: 'SE ALINEA CON EL FLUJOGRAMA.' },
+        ]));
+        expect(fila.details).toBe('RECEPCION DE MATERIALES. SE ALINEA CON EL FLUJOGRAMA.');
     });
 });

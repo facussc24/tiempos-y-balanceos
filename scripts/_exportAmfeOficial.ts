@@ -20,7 +20,7 @@ import { createClient } from '@supabase/supabase-js';
 import XLSX from 'xlsx-js-style';
 import { buildAmfeOficialWorkbook } from '../modules/amfe/amfeExcelExport';
 import { scanRevisionMeta, scanDocSelfExposure } from './_lib/forbiddenContent.mjs';
-import type { AmfeLifecycleStatus } from '../modules/amfe/amfeCaratulaSheet';
+import { mergeRevisions, type AmfeLifecycleStatus } from '../modules/amfe/amfeCaratulaSheet';
 
 function arg(nombre: string): string | undefined {
   const i = process.argv.indexOf(`--${nombre}`);
@@ -66,10 +66,13 @@ const doc = typeof row.data === 'string' ? JSON.parse(row.data) : row.data;
 // espanol los terminos en ingles"), de donde se copio el contenido, ni notas internas.
 // Fak: *"parece una burla... esas cosas se ocultan, nunca tuvieron que haber estado en
 // ingles"*. Se corta ACA porque el export es el unico camino de un AMFE al cliente.
-const revisionesRaw = typeof row.revisions === 'string'
-  ? JSON.parse(row.revisions || '[]') : (row.revisions ?? []);
-const sospechosas = (revisionesRaw as Array<Record<string, string>>)
-  .map((r, i) => ({ i, texto: r.details ?? r.description ?? '', hits: scanRevisionMeta(r.details ?? r.description ?? '') }))
+// El historial vive en la columna `revisions` Y en `data.revisions`, y se desincronizan
+// (11/09/2026: la columna de los 3 AMFE de NOVAX estaba en agosto y el documento tenia las
+// revisiones de septiembre). Se unen las dos fuentes, aca y en el workbook.
+const revisionesUnidas = mergeRevisions(row.revisions, doc?.revisions);
+const revisionesRaw = revisionesUnidas;
+const sospechosas = revisionesRaw
+  .map((r, i) => ({ i, texto: r.details ?? '', hits: scanRevisionMeta(r.details ?? '') }))
   .filter(x => x.hits.length > 0);
 if (sospechosas.length) {
   console.error(`\nABORTADO — el log de revisiones de ${AMFE_NUMBER} habla del redactor, no de la pieza:\n`);
@@ -173,7 +176,7 @@ if (existsSync(dest)) {
 let wb: XLSX.WorkBook;
 try {
   wb = buildAmfeOficialWorkbook(doc, {
-    revisions: row.revisions as never,
+    revisions: revisionesUnidas as never,
     status: (row.status ?? 'draft') as AmfeLifecycleStatus,
   });
 } catch (e) {

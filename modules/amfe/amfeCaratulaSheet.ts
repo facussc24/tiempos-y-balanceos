@@ -398,6 +398,53 @@ const cell = (v: string, s: object): Cell => ({ v: String(sanitizeCellValue(v)),
 const blank = (s: object = S.empty): Cell => ({ v: '', s });
 
 /**
+ * El historial de revisiones vive en DOS lugares que se desincronizan: la columna
+ * `amfe_documents.revisions` y el `data.revisions` del propio documento. La app y los
+ * scripts escriben en el documento; el export leia solo la columna.
+ *
+ * Medido el 11/09/2026 en los tres AMFE de NOVAX: la columna estaba congelada en agosto y
+ * el documento tenia las revisiones del 08, 09 y 11/09. **El PDF que iba al cliente no
+ * registraba ninguno de los cambios que el mail anunciaba.**
+ *
+ * Se unen las dos fuentes y se deduplica por letra + fecha + item; cuando la misma entrada
+ * esta en las dos, gana la de DETALLES mas largo (la version completa). No se descarta nada:
+ * una revision vieja que solo exista en la columna sigue apareciendo.
+ */
+export function mergeRevisions(...fuentes: unknown[]): AmfeOfficialRevision[] {
+    const porClave = new Map<string, AmfeOfficialRevision>();
+    for (const fuente of fuentes) {
+        for (const r of normalizeRevisions(fuente)) {
+            const clave = [r.rev, r.date, r.item].map(v => (v || '').trim().toUpperCase()).join('|');
+            const previo = porClave.get(clave);
+            if (!previo || (r.details || '').length > (previo.details || '').length) porClave.set(clave, r);
+        }
+    }
+    return [...porClave.values()];
+}
+
+/**
+ * Al unir el historial de varias revisiones, la misma operacion aparece escrita de dos
+ * formas: una entrada dice "20-22" y otra "20", "21", "22" — y la fila consolidada salia
+ * "20, 20-22, 21, 22" (visto en el AMFE 161 el 11/09/2026). Un item "A-B" se come los
+ * sueltos que caen adentro de ese rango, extremos incluidos. Lo que no es "numero-numero"
+ * (por ejemplo "OP 5 A 90") no se toca.
+ */
+function colapsarRangos(items: readonly string[]): string[] {
+    const rangos = items
+        .map(v => v.trim().match(/^(\d+)\s*-\s*(\d+)$/))
+        .filter((m): m is RegExpMatchArray => m != null)
+        .map(m => [Number(m[1]), Number(m[2])] as const)
+        .filter(([a, b]) => a <= b);
+    if (!rangos.length) return [...items];
+    return items.filter(v => {
+        const solo = v.trim().match(/^(\d+)$/);
+        if (!solo) return true;
+        const n = Number(solo[1]);
+        return !rangos.some(([a, b]) => n >= a && n <= b);
+    });
+}
+
+/**
  * Ordena los items de una revision como se leen: por numero de operacion ascendente, y lo
  * que no empieza con un numero al final, en el orden en que se escribio. Sin esto la lista
  * sale en orden de tipeo ("70, 20 / 21 / 22, 93, 100") y no se puede leer de un vistazo.
@@ -407,7 +454,7 @@ function ordenarItems(items: readonly string[]): string[] {
         const m = s.match(/^\s*(\d+)/);
         return m ? Number(m[1]) : null;
     };
-    return [...items]
+    return [...colapsarRangos(items)]
         .map((v, i) => ({ v, i, n: num(v) }))
         .sort((a, b) => {
             if (a.n === null && b.n === null) return a.i - b.i;
@@ -457,8 +504,12 @@ export function consolidateRevisions(revs: readonly AmfeOfficialRevision[]): Amf
     return [...porLetra.values()].map(({ _items, _detalles, _quien, ...rest }) => ({
         ...rest,
         item: ordenarItems(_items).join(', '),
-        // Los detalles ya vienen como frases terminadas en punto; se pegan con un espacio.
-        details: _detalles.join(' '),
+        // Los detalles se pegan en un solo texto. No todos vienen terminados en punto, y
+        // sin el las frases se leian corridas ("...CON SU CONTROL SE ALINEA CON EL
+        // FLUJOGRAMA..."), como si fueran una sola oracion (visto en el PDF, 11/09/2026).
+        details: _detalles
+            .map(d => (/[.;:]$/.test(d.trim()) ? d.trim() : `${d.trim()}.`))
+            .join(' '),
         modifiedBy: _quien.join(' / '),
     }));
 }

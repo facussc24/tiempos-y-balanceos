@@ -50,6 +50,10 @@ const normalize = (raw: string | undefined | null): string =>
         // "SC 1", "SC1", "D/TLD 3" — el numero es el ID de la caracteristica en el
         // I-PY-001.7, no parte de la sigla.
         .replace(/\s*\d+$/, '')
+        // "D / TLD" es la misma marca que "D/TLD": los espacios alrededor de la barra son
+        // tipeo, no notacion (auditor 11/09/2026; sin esto caia en sigla desconocida).
+        .replace(/\s*\/\s*/g, '/')
+        .replace(/\s+/g, ' ')
         .trim();
 
 /**

@@ -147,8 +147,18 @@ export const CRITICAL_TYPES = new Set([
 // Caracteristicas especiales — FUENTE UNICA core/amfe/caracteristicasEspeciales.data.json
 // (la misma que lee modules/amfe/specialChars.ts en la app y guardianes.mjs en los hooks).
 const CE = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'core', 'amfe', 'caracteristicasEspeciales.data.json'), 'utf8'));
-/** "SC 1", "D/TLD 3": el numero es el ID de la caracteristica, no parte de la sigla. */
-export const normalizarSigla = (raw) => String(raw ?? '').trim().toUpperCase().replace(/\s*\d+$/, '').trim();
+/**
+ * "SC 1", "D/TLD 3": el numero es el ID de la caracteristica, no parte de la sigla.
+ * "D / TLD" y "D/TLD" son la MISMA marca: los espacios alrededor de la barra son tipeo, no
+ * notacion (auditor 11/09/2026 — sin esto la celda caia en SIGLA_DESCONOCIDA, que desde hoy
+ * es CRITICAL y frena el export).
+ */
+export const normalizarSigla = (raw) => String(raw ?? '')
+    .trim().toUpperCase()
+    .replace(/\s*\d+$/, '')
+    .replace(/\s*\/\s*/g, '/')
+    .replace(/\s+/g, ' ')
+    .trim();
 /** "-", "—", "N/A" o vacio: la celda dice "sin caracteristica". */
 export const esSinMarca = (v) => CE.sin_marca.includes(normalizarSigla(v));
 /** Nivel canonico de una sigla (CRITICA / SIGNIFICATIVA / SEGURIDAD_OPERADOR / ALTO_IMPACTO) o null si ninguna fuente la reconoce. */

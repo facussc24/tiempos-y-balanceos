@@ -178,6 +178,13 @@ describe('los helpers .mjs leen la MISMA fuente que la app', () => {
         expect(esSinMarca('')).toBe(true);
         expect(esSinMarca('SC')).toBe(false);
         expect(normalizarSigla(' sc 12 ')).toBe('SC');
+        // "D / TLD" es la misma marca que "D/TLD" (auditor 11/09/2026): los espacios
+        // alrededor de la barra son tipeo. Antes caia en SIGLA_DESCONOCIDA, que bloquea.
+        expect(normalizarSigla('D / TLD')).toBe('D/TLD');
+        expect(nivelDeSigla('D / TLD')).toBe('CRITICA');
+        expect(nivelDeSigla('  d / tld 4 ')).toBe('CRITICA');
+        // El gate sigue pudiendo dar rojo: una sigla inventada con barra no se reconoce.
+        expect(nivelDeSigla('W / WICHTIG')).toBeNull();
     });
 
     it('el JSON es el que exporta el validador, y dice lo que tiene que decir', () => {

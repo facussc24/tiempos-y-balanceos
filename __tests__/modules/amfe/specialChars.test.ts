@@ -52,6 +52,15 @@ describe('specialChars — las tres notaciones significan lo mismo', () => {
         expect(nivelDeCaracteristica('D/TLD 3')).toBe('CRITICA');
     });
 
+    it('"D / TLD" con espacios es la misma marca que "D/TLD"', () => {
+        // Auditor 11/09/2026: los espacios alrededor de la barra son tipeo, no notacion.
+        // Sin esto la celda caia en sigla desconocida, que ahora frena el export.
+        expect(nivelDeCaracteristica('D / TLD')).toBe('CRITICA');
+        expect(nivelDeCaracteristica('  d  /  tld  2 ')).toBe('CRITICA');
+        // Y lo que ninguna fuente reconoce sigue dando null, con barra o sin ella.
+        expect(nivelDeCaracteristica('W / WICHTIG')).toBeNull();
+    });
+
     it('tolera espacios y minusculas', () => {
         expect(esCritica('  cc  ')).toBe(true);
         expect(esSignificativa('sc')).toBe(true);
