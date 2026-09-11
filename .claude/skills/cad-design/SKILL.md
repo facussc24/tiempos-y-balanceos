@@ -361,7 +361,7 @@ literales sueltos en el código.
    §0), exporta STL binario fino (curvatura 40) + GLB, copia, corre el GATE E sobre la carpeta
    destino y recién ahí registra la entrega. Sin `--final` queda registrada como entrega de
    TRABAJO y lo dice. Avisa si la pieza sale en coordenadas del cliente.
-   Después: ABRIR los archivos y mirarlos (verify-before-close).
+   Después: ABRIR los archivos y mirarlos (`git-deploy.md`, "Antes de decir listo").
 
 ## 3bis. Antes de mallar: LEER LA TOPOLOGÍA
 

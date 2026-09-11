@@ -3,82 +3,67 @@
 App web React 19 + TypeScript + Supabase para gestion de calidad automotriz
 (**AMFE VDA + Plan de Control AIAG**) y lean manufacturing (balanceo de linea,
 simulador de flujo, mix multi-modelo, calculadora de medios). Auth Supabase, pero
-**la usa un solo usuario (Fak)** — no hay edicion concurrente, asi que nada que
-dependa de locks entre usuarios es critico (aclarado por Fak el 2026-08-07; antes
-esto decia "multi-usuario" y me hizo sobredimensionar un bug).
-PFDs y Hojas de Operaciones NO se hacen aca (regla `no-pfd-no-ho.md`);
+**la usa un solo usuario (Fak)** (aclarado 2026-08-07): no hay edicion concurrente, asi que
+nada que dependa de locks entre usuarios es critico.
+PFDs y Hojas de Operaciones no se hacen aca (regla `no-pfd-no-ho.md`);
 sus documentos en Supabase son referencia historica de solo lectura.
 
 ## Protocolo de inicio de sesion
 
-0. **PC nueva** (el repo se acaba de clonar): si `~/.claude/projects/C--Dev-BarackMercosul/memory/`
-   no tiene cientos de archivos, esta PC tiene el codigo pero NO el cerebro — sin memorias,
-   sin reglas globales y sin `.env.local` para leer Supabase. Correr **antes que nada**
-   `node scripts/_nube.mjs --bajar --aplicar` (anda con Node pelado, no necesita `npm install`).
-   Hacerlo y avisar en una linea; no preguntar. Normalmente lo detecta solo el hook
-   `cerebro-guard.sh`, pero los hooks de un repo recien clonado esperan aprobacion: este paso
-   es la red por si no corrieron.
-1. Las lecciones vigentes YA estan en este contexto: `docs/LECCIONES_APRENDIDAS.md` entra por
-   el `@import` de abajo (desde 04/09/2026; el hook que lo inyectaba llegaba recortado a 2 KB).
-   No releerlo; si un tema tiene memoria propia, esa si se lee al tocarlo.
-2. Si Fak menciona un producto: leer su AMFE/CP en Supabase live ANTES de hacer cambios.
+0. **PC nueva** (repo recien clonado y `~/.claude/projects/C--Dev-BarackMercosul/memory/` casi
+   vacio): esta PC tiene el codigo pero no el cerebro. Correr `node scripts/_nube.mjs --bajar --aplicar`
+   (Node pelado) y avisarlo en una linea. Es la red por si el hook `cerebro-guard.sh` no corrio.
+1. Las lecciones vigentes ya estan en este contexto: `docs/LECCIONES_APRENDIDAS.md` entra por
+   el `@import` de abajo. No releerlo; si un tema tiene memoria propia, esa si se lee al tocarlo.
+2. Si Fak menciona un producto: leer su AMFE/CP en Supabase live antes de hacer cambios.
 3. PDFs de referencia: leerlos con el metodo de `docs/COMO_LEER_PDF.md`.
 
 @docs/LECCIONES_APRENDIDAS.md
 
-## Protocolo de fin de sesion — OBLIGATORIO, NO OPCIONAL
+## Protocolo de fin de sesion
 
 1. Actualizar `docs/LECCIONES_APRENDIDAS.md` con errores cometidos y correcciones de Fak.
 2. Si tocaste datos Supabase: `node scripts/_backup.mjs` (snapshot preventivo).
 3. Lanzar agente `auditor` al cerrar tareas de codigo.
 4. Tareas de codigo: `npm run build` OK → commit → push (regla `git-deploy.md`).
 5. **Tarea de Barack terminada: el entregable a su carpeta por tipo de la biblioteca de
-   Ingenieria y la carpeta de la tarea ARCHIVADA** (`node scripts/_escritorio.mjs --archivar`,
-   regla `escritorio-tareas.md`). **En el Escritorio no queda nada mio**: ni el entregable, ni
-   notas, ni archivos sueltos. "Te lo deje en el Escritorio" NO es entregar.
+   Ingenieria y la carpeta de la tarea archivada** (`node scripts/_escritorio.mjs --archivar`,
+   regla `escritorio-tareas.md`). En el Escritorio no queda nada mio: "te lo deje en el
+   Escritorio" no es entregar.
 
-NO preguntar si Fak quiere que lo hagas. HACERLO.
-Estado medible del checklist: `node scripts/_cierreSesion.mjs` (chequea LECCIONES, backup
-vs escrituras Supabase, build, git, Escritorio y cerebro —`_cerebroLint.mjs`—; exit 1 si falta algo; `--sin-build` para
-la pasada rapida). Solo mide y reporta — commit/push/archivar los hace Claude.
+Lo mide `node scripts/_cierreSesion.mjs` (LECCIONES, backup vs escrituras Supabase, build, git,
+Escritorio, cerebro; exit 1 si falta algo; `--sin-build` para la pasada rapida). Solo mide:
+commit/push/archivar los hago yo.
 
 ## Como interactuar con Fak
 
 - Fak escribe en espanol informal con typos. Entender sin corregir.
-- Fak NO es programador. Explicar decisiones tecnicas en lenguaje simple.
-- NUNCA preguntar "queres que haga X?" — HACERLO y reportar. Si estas por escribir
-  "queres que...?" o "lo hago?": PARA, la respuesta es siempre SI.
+- Fak no es programador. Explicar decisiones tecnicas en lenguaje simple.
+- No preguntar "¿queres que haga X?": se hace y se reporta. La respuesta es siempre si, y cada
+  pregunta le cuesta un turno a Fak (37 por semana antes de los hooks `pregunta-guard.sh` y
+  `cierre-guard.sh`; 2 despues).
 - Si Fak dice "decidi vos": decidir con mejor practica y explicar brevemente por que.
-  NO devolverle la pregunta.
+  No devolverle la pregunta.
 - Si Fak te corrige: registrarlo en LECCIONES_APRENDIDAS inmediatamente.
 - Si detectas un problema o inconsistencia: reportar sin esperar a que pregunte.
 - Si un cambio afecta multiples productos: sugerir aplicarlo/verificarlos todos.
-- Ante duda de datos: TBD y avisar. NUNCA inventar (regla `core-prohibiciones.md`).
+- Ante duda de datos: TBD y avisar. Nunca inventar (regla `core-prohibiciones.md`).
 - Contrato de autonomia (que hago solo vs que requiere OK): `.claude/rules/autonomy-contract.md`.
 
-## Reglas criticas — NO ROMPER
+## Reglas del dominio
 
-1. **Nada de datos mock, cero duplicados en Supabase, reusar antes de crear**: regla
-   `core-prohibiciones.md` §5-6 (8 familias canonicas — si un seed crea mas, abortar y
-   reportar; cliente = "VWA"/"PWA"; exports, hooks y repositorios ya funcionan: llamarlos).
+1. Nada de datos mock, cero duplicados en Supabase, reusar antes de crear: `core-prohibiciones.md` §5-6.
 2. **Export Excel**: AMFE y CP solo `xlsx-js-style`; HO (legacy) solo `ExcelJS`.
    Export AMFE oficial via node (skill `amfe-export-oficial`), no desde la app.
-3. **Verificacion obligatoria**: tras seed/migracion contar familias (8) y duplicados (0);
+3. **Verificacion**: tras seed/migracion contar familias (8) y duplicados (0);
    tras export abrir el archivo; `npx tsc --noEmit` y tests del modulo afectado.
 4. Documentos APQP son "documentos vivos" (IATF): cambios diarios van al audit trail;
    revisiones mayores (A/B/C) solo en hitos oficiales (prelanzamiento/PPAP/ECN).
 
 ## Reglas contextuales (.claude/rules/) — carga automatica
 
-| Siempre cargadas | Contenido |
-|---|---|
-| `core-prohibiciones.md` | No inventar, CC/SC solo Fak, TBD, Supabase live, espanol AR |
-| `techo-agentes.md` | **Maximo 5 subagentes. `Workflow` deshabilitado.** Enforced por hook + settings |
-| `no-pfd-no-ho.md` | PFD/HO no se hacen aca |
-| `autonomy-contract.md` | Matriz de autonomia |
-| `git-deploy.md` | Build + commit + push al cerrar tareas |
-| `consumos-entregables.md` | Tablas de consumo / cargas arb: validador + checklist canonico |
-| `verify-before-close.md` | Verificar build/diff/archivo generado antes de decir "listo" |
+Las reglas sin `paths:` ya estan en este contexto: `core-prohibiciones.md`, `techo-agentes.md`,
+`no-pfd-no-ho.md`, `autonomy-contract.md`, `git-deploy.md`, `consumos-entregables.md`.
 
 | Con `paths:` (cargan al tocar) | Ambito |
 |---|---|
@@ -86,86 +71,53 @@ la pasada rapida). Solo mide y reporta — commit/push/archivar los hace Claude.
 | `control-plan.md` | modules/controlPlan |
 | `database.md` + `verify-supabase-live.md` | repositorios, scripts, persistencia |
 | `exports.md` | archivos *export* |
-| `mail-envio.md` | `scripts/_mail*` + `*.py` — mandar un mail: nunca con un `.Send()` suelto; gate anti-duplicado (hook `mail-guard.sh`) |
+| `mail-envio.md` | `scripts/_mail*` + `*.py` — mandar un mail: nunca con un `.Send()` suelto (hook `mail-guard.sh`) |
 | `patrones-corte.md` | `*.dxf` / `*.plt` / `*.hpgl` + skill `patrones-corte-plotter` — 3 gates antes de mover un punto |
-| `coordinador.md` | `_encargo.mjs`, `coordinadorGuard`, su hook y su test — **rol coordinador**: lo que sale hacia otra sesion pasa por `_encargo.mjs` (7 candados + hook `coordinador-guard.sh`) |
+| `coordinador.md` | `_encargo.mjs`, `coordinadorGuard`, su hook y test — lo que sale hacia otra sesion pasa por `_encargo.mjs` (hook `coordinador-guard.sh`) |
 | `testing.md` | __tests__ |
-| `dev-login.md` | components/auth — boton dev-login: NO TOCAR NUNCA |
-| `arb-no-cerrar.md` | `scripts/_arb*.py` + skill `arb-operar` — **el arb NO se cierra sin consultarle a Fak**: reabrirlo pide contraseña y la sesion no tipea contraseñas (hook `arb-cerrar-guard.sh`) |
+| `dev-login.md` | components/auth — el boton dev-login no se toca (regla propia) |
+| `arb-no-cerrar.md` | `scripts/_arb*.py` + skill `arb-operar` — el arb no se cierra sin consultarle a Fak (hook `arb-cerrar-guard.sh`) |
 | `cad-3d.md` | archivos .step/.stl/.glb, `.venv-cad`, skill cad-design — gates 3D (el primero es el de PROCESO) |
-| `dxf-entregable.md` | `*.dxf` / `*.plt` — **el juez de un DXF es AutoCAD, no ezdxf** (`scripts/_validarDxf.py`); y si la ruta pasa 259 caracteres el doble click de Windows no abre |
-| `escritorio-tareas.md` | `_escritorio.mjs` + su hook — cola de tareas: cuándo se cierra y cómo se archiva (el hook la recuerda al tocar el Escritorio) |
-| `hojas-proceso.md` | hojas de proceso / HO (`I-IN-002.4-R01`) — **una hoja se juzga impresa, no en el monitor**: la imagen principal se declara y lo que hay que leer va a 7 pt o mas (skill `hojas-de-proceso`, gate `hoja_proceso_check.py`) |
-| `lecciones-consolidacion.md` | `docs/LECCIONES_APRENDIDAS.md` — ciclo de vida de una lección: cómo entra, cómo se gradúa y la pasada de consolidación al llegar al aviso de 26 KB |
-| `documentacion-oficial.md` | `4- MANUALES`, `0-Documentacion cliente`, `1. Imput`, `normas-vw` — **documentación de un tercero: el original manda y tiene que verse CUÁL es**. Nada producido acá comparte carpeta con él, las traducciones van a `TRADUCIDOS\`, y lo que no es archivo (una ayuda online) va como transcripción `.txt` con fuente y fecha (hook `documentacion-oficial-guard.sh`) |
-| `video-maquina.md` | `_videoBiblioteca.mjs`, `*.MOV` / `*.MP4`, material del telefono — **el video de maquina vive en `5- VIDEOS Y FOTOS` de la biblioteca, no en el Escritorio**: antes de bajar del celular se cruza contra lo archivado por el `(IMG_xxxx)` del nombre, y el master NO se borra (hook `video-maquina-guard.sh`) |
+| `dxf-entregable.md` | `*.dxf` / `*.plt` — el juez de un DXF es AutoCAD, no ezdxf (`scripts/_validarDxf.py`); rutas de mas de 259 caracteres no abren |
+| `escritorio-tareas.md` | `_escritorio.mjs` + su hook — cola de tareas: cuando se cierra y como se archiva |
+| `hojas-proceso.md` | hojas de proceso / HO (`I-IN-002.4-R01`) — una hoja se juzga impresa (skill `hojas-de-proceso`, gate `hoja_proceso_check.py`) |
+| `lecciones-consolidacion.md` | `docs/LECCIONES_APRENDIDAS.md` — ciclo de vida de una leccion y gate por bullet |
+| `documentacion-oficial.md` | `4- MANUALES`, `0-Documentacion cliente`, `1. Imput`, `normas-vw` — el original de un tercero manda y nada mio comparte su carpeta (hook `documentacion-oficial-guard.sh`) |
+| `video-maquina.md` | `_videoBiblioteca.mjs`, `*.MOV` / `*.MP4`, material del telefono — va a `5- VIDEOS Y FOTOS`, se cruza por `(IMG_xxxx)` antes de bajar del celular y el master no se borra (hook `video-maquina-guard.sh`) |
 
-**Skills** (on-demand): `apqp-schema` (schema JSONB Supabase), `product-map` (8 familias,
-part numbers, equipo APQP), `amfe-domain` (conocimiento AMFE profundo), `amfe-cookbook`
-(recetas de gaps), `injection-process` (inyeccion plastica/PU, maestros 15/16/17),
-`supabase-safety` (protocolo backup/dry-run/restore), `amfe-export-oficial`,
-`verificacion-consumos` (checklist + validador de tablas de consumo/arb),
-`carga-arb` (ciclo completo de un cambio de BOM en el arb: tabla de carga → validacion contra
-el export post-carga → PDF de difusion formato Leo con `scripts/_pdfBomArb.py` → cuerpo del mail),
-`docs-empresa` (mapa tema→documento real + caché `.sgc-cache/`),
-`flujogramas` (armar/corregir un flujograma con `tools/flowchart/`: criterio de numeracion
-—un decimal por sector—, convenciones de dibujo de Fak, trampas del motor y como se entrega),
-`leer-planos` (sacar peso calculado / cantidad / material / norma de la lista de materiales
-embebida en un plano de cliente, con `scripts/_leerPlano.py`), `hojas-de-proceso`
-(criterios de imagen de una hoja de operaciones: cual imagen manda y que se lea impresa;
-libreria `hojalib` + gate `hoja_proceso_check.py` + selftest de 12 casos),
-`rule-enforcement-gate`
-(toda regla nueva con check debe nacer con enforcement), `audit-amfe`, `auditoria-cliente`
-(auditar un lote contra la NORMA con rol de auditor de cliente ANTES de entregar — deja el
-marcador `.audit-cliente/` que exige el export oficial; regla amfe.md §18), `backup`, `fix-amfe-gaps`,
-`cad-design` (diseño/modificación 3D-CAD: librería `cadlib` + CLIs con --help para medir STEP,
-registrar ICP, verificar colisión y entregar; UN intérprete: `.venv-cad` Py3.12; los 2 GATES
-pre-modelado/pre-entrega — hook `cad-guard.sh` los recuerda 1×/h; enforcement duro:
-`export_deliverables.py` no entrega sin evidencia en manifest.json),
-`autocad-verificar` (correr AutoCAD 2026 headless con `accoreconsole` para auditar/normalizar un
-DXF antes de entregarlo — el juez es AutoCAD, no ezdxf; enforcement duro: `entregar_dxf()` en
-`scripts/_validarDxf.py` no copia al destino si AutoCAD no lo abrio limpio).
-
-**Arquitectura de roles (decision Fak 2026-08-09):** los skills SON el sistema de
-roles — cargan solo al usarse. NO crear agentes-rol por dominio ni proyectos
-separados (multi-agente ≈ 15x tokens); subagentes solo para trabajo batch/paralelo,
-techo 5. `docs/LECCIONES_APRENDIDAS.md`: gate por bullet y ciclo de graduacion en la regla
+**Skills** (on-demand): son el sistema de roles y cargan solo al usarse (decision Fak 2026-08-09:
+no crear agentes-rol por dominio ni proyectos separados, multi-agente ≈ 15x tokens; subagentes solo
+para trabajo batch/paralelo, techo 5). La lista con la descripcion de cada skill la inyecta Claude
+Code en cada sesion; el detalle vive en su `SKILL.md` bajo `.claude/skills/`.
+`docs/LECCIONES_APRENDIDAS.md`: gate por bullet y ciclo de graduacion en la regla
 `lecciones-consolidacion.md` (lo miden `_cierreSesion.mjs` y el hook Stop).
 
 **Modelo y sesion (decision Fak 04/09/2026):** Fable 5.1 para mejoras de codigo importantes,
-Opus 5 para el resto — no tocar el selector por cuenta propia. Toda sesion arranca en modo
-plan (`permissions.defaultMode`) y auto-compacta a 400k tokens (`CLAUDE_CODE_AUTO_COMPACT_WINDOW`
-en los settings globales); el hook Stop `cierre-guard.sh` corta el turno si termina pidiendo
-permiso para mi propio trabajo o si entregue afuera del repo sin decir la ruta.
+Opus 5 para el resto; no tocar el selector por cuenta propia. Toda sesion arranca en modo plan
+(`permissions.defaultMode`) y auto-compacta a 400k tokens (settings globales); el hook Stop
+`cierre-guard.sh` corta el turno si termina pidiendo permiso para mi propio trabajo o si entregue
+afuera del repo sin decir la ruta.
 
 ## Stack y comandos
 
-React 19.2 + TypeScript 5.8 + Vite 6 · Supabase (auth+DB) · Vitest 4 + testing-library ·
-TailwindCSS 3.4 · xlsx-js-style / ExcelJS / html2pdf.js · Recharts · @dnd-kit.
+React + TypeScript + Vite · Supabase (auth+DB) · Vitest + testing-library · TailwindCSS ·
+xlsx-js-style / ExcelJS / html2pdf.js · Recharts · @dnd-kit (versiones: `package.json`).
 
 ```bash
 npm run dev          # Vite dev server (localhost:3000)
 npx vitest run       # tests (durante desarrollo: --testPathPattern=<modulo>)
-npm run build        # build de produccion — OBLIGATORIO antes de push
+npm run build        # build de produccion — obligatorio antes de push
 npx tsc --noEmit     # chequeo de tipos
 node scripts/_auditAll.mjs --summary   # salud de los AMFEs en Supabase
 ```
 
 ## Estructura del proyecto (codigo en la RAIZ, no en src/)
 
-```
-App.tsx / AppRouter.tsx     Entry + routing lazy
-types.ts, types/            Barrel de tipos por dominio
-components/                 auth, ui, modals, layout, charts, navigation, landing
-core/                       balancing/ (SALBP, COMSOAL...), inheritance/ (maestro→variante), amfe/
-hooks/                      useLineBalancing, useProjectPersistence, ...
-modules/                    amfe/ (+ controlPlan tab), controlPlan/, family/, balancing/,
-                            dashboard/, registry/, mix/, flow-simulator/, eightD/, flowchart/
-utils/repositories/         17 repositorios tipados — UNICO acceso a datos
-scripts/                    _backup, _restore, _auditAll, _readiness, _lib/ (+ archive/ de one-shots)
-__tests__/                  suite Vitest completa
-docs/                       guias APQP + LECCIONES_APRENDIDAS + _archive/
-```
+`App.tsx`/`AppRouter.tsx` (entry + routing lazy) · `types/` · `components/` · `core/` (balancing,
+inheritance maestro→variante, amfe) · `hooks/` · `modules/` (amfe, controlPlan, family, balancing,
+dashboard, registry, mix, flow-simulator, eightD, flowchart) · `utils/repositories/` (repositorios
+tipados: UNICO acceso a datos) · `scripts/` (_backup, _restore, _auditAll, `_lib/`, `archive/` de
+one-shots) · `__tests__/` (Vitest) · `docs/` (guias APQP, LECCIONES, `_archive/`).
 
 - Path alias `@/*` → raiz. Modulos lazy con `React.lazy()` + `Suspense`.
 - NO hardcodear API keys (`VITE_*`). `logger.ts` en vez de console.log. NO `as any` ni `@ts-ignore`.
@@ -176,17 +128,18 @@ docs/                       guias APQP + LECCIONES_APRENDIDAS + _archive/
 ## Calidad
 
 - Nivel senior: leer el codigo completo antes de editar; verificar antes de afirmar.
-- Un hallazgo de subagente se verifica contra la fuente antes de aplicarlo: en los audits la mayoria suelen ser falsos positivos, y el 02/09 un auditor independiente le paso 92 de 111 evasiones a gates que yo daba por probados (`coordinador.md`).
+- Un hallazgo de subagente se verifica contra la fuente antes de aplicarlo: en los audits la
+  mayoria son falsos positivos (el caso del 02/09, 92 de 111 evasiones, esta en LECCIONES y en `coordinador.md`).
 - En deep audits autonomos: clasificar TRUE BUG > ROBUSTNESS > FALSE POSITIVE; ante la duda NO aplicar el fix; correr tests tras cada batch.
 
 ## Auth y deploy
 
 - Dev: boton "Acceso rapido (dev)" (borde naranja) con `VITE_AUTO_LOGIN_EMAIL/PASSWORD` — protegido por regla `dev-login.md`.
-- Produccion: https://facussc24.github.io/tiempos-y-balanceos/ — la despliega el workflow `.github/workflows/deploy.yml` en cada push a `main` (repo publico facussc24/tiempos-y-balanceos). `npx gh-pages -d dist` NO se usa: publica una rama que Pages no sirve (memoria `ghpages_manual_deploy`).
+- Produccion: https://facussc24.github.io/tiempos-y-balanceos/ — la despliega `.github/workflows/deploy.yml` en cada push a `main` (repo publico). `npx gh-pages -d dist` no se usa (memoria `ghpages_manual_deploy`).
 
 ## Documentos de la empresa
 
-NotebookLM fue RETIRADO (decision Fak 2026-07-23). El conocimiento se consulta DIRECTO
-de las fuentes reales (servidor Y:, OneDrive 4-MANUALES, docs/ del repo, docs-local/) y
-del cache local `.sgc-cache/` (gitignoreado, extractos con fuente+fecha). Routing y
-protocolo de refresh: skill `docs-empresa`. El original SIEMPRE le gana al cache.
+El conocimiento de la empresa se consulta directo de las fuentes reales (servidor Y:, OneDrive
+4-MANUALES, docs/ del repo, docs-local/) y del cache local `.sgc-cache/` (gitignoreado, extractos
+con fuente+fecha). Routing y protocolo de refresh: skill `docs-empresa`. El original siempre le
+gana al cache. NotebookLM se retiro (decision Fak 2026-07-23).

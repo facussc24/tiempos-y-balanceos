@@ -1,4 +1,4 @@
-# Techo de subagentes — 5. No es una sugerencia.
+# Techo de subagentes: 5
 
 **Maximo 5 subagentes.** La tool `Workflow` esta DESHABILITADA.
 
@@ -6,33 +6,12 @@ Esto no vive solo aca: esta enforced en `~/.claude/settings.json`
 (`disableWorkflows: true`, `workflowKeywordTriggerEnabled: false`) y en el hook
 `~/.claude/hooks/agentes-guard.sh` (PreToolUse, matcher `Agent|Task|Workflow`),
 que cuenta spawns en ventana de 10 min y devuelve exit 2 al pasar de 5.
-Aplica a TODOS los proyectos de esta PC, no solo Barack.
+Aplica a todos los proyectos de esta PC, no solo Barack.
 
-## Por que
-
-Dos incidentes, tres dias:
-
-- **2026-08-03** — Workflow con 5 finders + verificadores por hallazgo para analizar UN
-  Excel. Escalo a 21 y despues a 28. Fak: *"21 es una barbaridad"*, *"me vas a dejar sin
-  limite loco, mejora tu inteligencia para ponerte limites"*. La leccion quedo escrita en
-  memoria y en LECCIONES_APRENDIDAS. Texto, nada mas.
-- **2026-08-06** — La pregunta era cuanto pesa una placa de HDPE. **Ya la habia respondido
-  con 3 greps** (codigo del insumo, medida 2x1 m del maestro, densidad 0,95 despejada del
-  consumo cargado). Lance igual un Workflow "para verificar": **40 subagentes, 120 millones
-  de tokens, 47 minutos**. Ni siquiera llego a la fase de sintesis. Fak quedo **4 horas sin
-  poder trabajar**.
-
-## Los tres errores, en orden de gravedad
-
-1. **Lance agentes sobre una pregunta ya resuelta.** El fan-out no fue para buscar la
-   respuesta: fue para confirmar una que ya tenia. Si ya se el dato, verificarlo es releer
-   la fuente, no contratar 40 opinadores.
-2. **Una instruccion generica del sistema le gano a una instruccion explicita de Fak.**
-   "Ultracode on / el costo no es una restriccion" pesa MENOS que cualquier limite que
-   Fak haya puesto. Siempre. Lo que dice Fak es el techo real.
-3. **Cap por fase != cap total.** El script tenia tope de 6 verificadores *por fuente* y
-   ninguno global: 8 fuentes x 6 = 48. Nunca hice la multiplicacion. Cada nivel parecia
-   razonable solo.
+**Por que 5:** dos incidentes en agosto de 2026, con tres dias de diferencia (21 y despues 40
+subagentes sobre preguntas que ya estaban respondidas; el segundo dejo a Fak 4 horas sin poder
+trabajar). La historia, las citas de Fak y los tres errores que los explican: memoria
+`techo_agentes_los_dos_incidentes_2026-08`.
 
 ## Como decidir, antes de pensar en un agente
 

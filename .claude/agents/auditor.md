@@ -37,7 +37,7 @@ la version de Claude Code — verificado ausente 2026-07-17), leelas de
 ```bash
 npx tsc --noEmit 2>&1 | grep "error TS" | head -20
 ```
-Reportar cantidad de errores. Clasificar: nuevos vs pre-existentes (CavityCalculator son pre-existentes).
+Reportar cantidad de errores. El proyecto compila sin errores (verificado 10/09/2026): cualquier error es nuevo.
 
 ### 2. Build Check
 ```bash
@@ -61,10 +61,11 @@ git log origin/main..HEAD --oneline
 Si hay commits locales sin pushear, REPORTAR como CRITICO.
 
 ### 5. CI Status
+`gh` no tiene login en esta PC (memoria `gh_cli_sin_login_ci_por_api`); el ultimo run se lee por API:
 ```bash
-gh run list --limit 1 --json status,conclusion -q '.[] | .status + " " + (.conclusion // "running")'
+curl -s "https://api.github.com/repos/facussc24/tiempos-y-balanceos/actions/runs?per_page=1" | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{const r=JSON.parse(s).workflow_runs[0];console.log(r.status,r.conclusion||'running')})"
 ```
-El último run DEBE ser `completed success`. Si es `failure`, reportar el error.
+El último run debe ser `completed success`. Si es `failure`, reportar el error; si el curl falla, reportar "CI sin verificar", no "CI fallo".
 
 ### 6. Integridad del modulo auditado
 Si se indica un modulo especifico, verificar:

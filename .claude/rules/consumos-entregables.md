@@ -16,8 +16,8 @@ Enforcement: hook `consumos-entregable-guard.sh` (PreToolUse, logica en
 `scripts/_lib/guardianes.mjs`) recuerda el checklist 1×/h al detectar trabajo de
 consumos/entregables — como `additionalContext`, no bloquea. Que cuenta como "trabajo de
 consumos" es la lista `guard_disparadores` del canon (rutas de BOM, INSUMOS.TXT, scripts
-`_arb*`/`_validarConsumos`, "carga arb", tizadas), calibrada el 05/09/2026 contra los 26
-disparos reales de 15/08-04/09; la palabra suelta "consumo" ya no dispara (bloqueaba
-escribir memorias y reglas SOBRE consumos). Reglas canonicas viven en
+`_arb*`/`_validarConsumos`, "carga arb", tizadas; la palabra suelta "consumo" no esta en la
+lista, para poder escribir memorias y reglas sobre consumos), calibrada el 05/09/2026 contra
+los disparos reales de 15/08-04/09. Reglas canonicas viven en
 `scripts/_lib/consumosCanon.data.json` — regla nueva de Fak se agrega AHI en la
 misma sesion, con `fuente:`.

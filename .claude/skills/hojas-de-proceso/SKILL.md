@@ -210,7 +210,7 @@ cliente). En el repo va solo lo generico: libreria, gate y selftest.
 ---
 
 Ver: `.claude/rules/no-pfd-no-ho.md` (cuando se hace una HO y quien numera) ·
-`.claude/rules/verify-before-close.md` · `.claude/rules/core-prohibiciones.md` (§1, no
+`.claude/rules/git-deploy.md` (antes de decir listo) · `.claude/rules/core-prohibiciones.md` (§1, no
 inventar) · skill `editar-video` (sacar material de video) · skill `leer-planos` (recortar
 para que se lea) · memorias `pantalla_se_redibuja_no_se_mejora_con_ia`,
 `dos_lecturas_del_mismo_dia_no_son_comparables`, `entregables_para_fak`.

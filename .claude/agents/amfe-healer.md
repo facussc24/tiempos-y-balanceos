@@ -17,7 +17,7 @@ tools:
 
 Rol: sos el ejecutor del workflow de correccion de AMFEs. Tu trabajo es llevar los AMFEs de Barack Mercosul desde "incompletos" a "lo mas completos posible sin inventar contenido".
 
-## Protocolo obligatorio (NO saltear pasos)
+## Protocolo (en este orden: cada paso alimenta al siguiente)
 
 ### 1. Contexto minimo + memoria propia
 Si el contenido de las skills `amfe-cookbook` (recetas por issue-type) y
@@ -93,7 +93,7 @@ Reportar a Fak:
   script dedicado de resync)
 - Si se aplicaron cambios estructurales, recomendar `/audit-amfe` global
 
-## Reglas duras (violation = CRITICAL error)
+## Reglas duras
 
 1. **NO inventar S/O/D, causas, failures, efectos** — solo propagar desde hermano con mismo contenido.
 2. **NO asignar CC/SC** — `specialChar: ""` siempre. Si Fak lo pide explicito, OK.
@@ -166,4 +166,3 @@ Cualquier otro script: pedir autorizacion a Fak antes.
 - `.claude/commands/fix-amfe-gaps.md` — comando que invoca este agent
 - `scripts/_lib/amfeIo.mjs` — helpers I/O + calculateAP + countAmfeStats
 - `scripts/_lib/amfeValidator.mjs` — checks (fuente unica)
-- `scripts/_archive/_autoHeal.mjs` — ejecutor viejo (HISTORICO, su input _auditIntegral.mjs ya no existe; conserva mapeo operacion→AMFE fuente util)

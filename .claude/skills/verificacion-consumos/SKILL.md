@@ -56,8 +56,8 @@ cabeza. Enforcement: hook `consumos-entregable-guard.sh` + este checklist +
    frescos sobre la tabla (mi script solo chequea lo que yo pense chequear).
 6. **Entrega a Fak**: mostrar dato crudo **before→after** con columna "actual en
    arb" al lado del correcto. NO asumir que mi analisis esta bien.
-7. **Abrir el archivo generado** antes de entregarlo (regla verify-before-close
-   paso 5 — leccion "gravisimo" 2026-07-15).
+7. **Abrir el archivo generado** antes de entregarlo (regla `git-deploy.md`, "Antes de decir listo"
+   — leccion "gravisimo" 2026-07-15).
 
 ## Que hace el validador (automatico)
 

@@ -705,7 +705,7 @@ Store, y el destinatario es un directivo abriendo un adjunto, no un editor.
 
 1. **Mirar el video generado de punta a punta.** Extraer una hoja de contacto del
    ENTREGABLE (`hojas --cada 3`) y leerla. Un video que no se miro no se entrega
-   (`verify-before-close.md`).
+   (`git-deploy.md`, "Antes de decir listo").
 2. Verificar duracion, resolucion, fps y que **abra** (`sondeo` sobre el entregable).
 3. Chequear que no haya salto de color entre planos consecutivos (se ve en la hoja).
 4. **Los originales no se tocan.** Todo sobre copias, en `.video/` o `C:\tmp`.

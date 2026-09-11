@@ -7,7 +7,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import {
-  relevarCerebro, lintCerebro, resolverLink, leerFrontmatter, reglasDeTabla, slugProyecto, dirMemoriaDe,
+  relevarCerebro, lintCerebro, resolverLink, leerFrontmatter, reglasDeTabla, reglasDeParrafo, slugProyecto, dirMemoriaDe,
   chequearWikilinks, chequearIndice, chequearFrontmatter, chequearRutas, chequearTablasClaude, chequearCerradas, chequearGlobales,
   resumir, LIMITES,
 } from '../../scripts/_lib/cerebroLint.mjs';
@@ -168,10 +168,20 @@ describe('cerebroLint — ROJO: cada defecto se ve', () => {
     const det = chequearTablasClaude(c).map((h) => h.detalle).join('\n');
     expect(det).toMatch(/`amfe\.md` figura como "siempre cargada" pero tiene paths/);
     expect(det).toMatch(/`core-prohibiciones\.md` figura en la tabla de paths: pero no tiene paths/);
-    expect(det).toMatch(/`testing\.md` no figura en ninguna/);
-    expect(det).toMatch(/cita `fantasma\.md`, que no existe/);
+    expect(det).toMatch(/`testing\.md` no figura ni en la lista/);
+    expect(det).toMatch(/cita la regla `fantasma\.md`, que no existe/);
     expect(reglasDeTabla(claude, /^\|\s*Siempre cargadas/)).toEqual(['amfe', 'fantasma']);
     expect(reglasDeTabla('sin tablas', /^\|\s*Siempre cargadas/)).toBe(null);
+  });
+  it('tablas de CLAUDE.md: las reglas sin paths pueden ir en el parrafo "Las reglas sin `paths:`..." en vez de la tabla (desde 11/09/2026)', () => {
+    const claude = '# X\n\nLas reglas sin `paths:` ya estan en este contexto: `core-prohibiciones.md`,\n`techo-agentes.md`.\n\n| Con `paths:` (cargan al tocar) | Ambito |\n|---|---|\n| `amfe.md` | x |\n';
+    const reglas = { 'core-prohibiciones': { paths: false }, 'techo-agentes': { paths: false }, amfe: { paths: true } };
+    expect(chequearTablasClaude(armar({ claude, reglas }))).toEqual([]);
+    expect(reglasDeParrafo(claude, /^Las reglas sin `paths:` ya estan en este contexto/)).toEqual(['core-prohibiciones', 'techo-agentes']);
+    // sin parrafo ni tabla: un solo hallazgo que lo dice, no una lluvia de faltantes
+    const sinLista = chequearTablasClaude(armar({ claude: '# X\n\n| Con `paths:` (cargan al tocar) | Ambito |\n|---|---|\n| `amfe.md` | x |\n', reglas }));
+    expect(sinLista).toHaveLength(1);
+    expect(sinLista[0].detalle).toMatch(/no encuentro la lista de reglas sin paths/);
   });
   it('cerradas: CERRADO en el gancho o la description es aviso; "no reenviar"/"backlog" la salvan; "lo cerrado" en minuscula no cuenta', () => {
     const c = armar({

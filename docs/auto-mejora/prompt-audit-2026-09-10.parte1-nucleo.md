@@ -134,12 +134,20 @@ Campos: Ubicacion · Evidencia · Patron · Por que obsoleto para Fable 5.1 · C
 
 ## 5. Cambios aplicados (alta/media)
 
-Se aplicaron en este mismo commit los hallazgos 1-11, 14-26, 28-29, 32; los `baja`/`flag` quedan aca.
+Aplicados el 11/09/2026, en el commit siguiente al del informe: hallazgos 1-12, 14-26, 28-29, 32
+(el 33 tambien, por trivial); `verify-before-close.md` eliminado. Los demas `baja`/`flag` quedan aca.
 Dos memorias nuevas reciben la historia que sale de las reglas:
 
 - `feedback_techo_agentes_los_dos_incidentes_2026-08.md` ← `techo-agentes.md` "Por que" + "Los tres errores", integro.
 - `reference_incidente_deploy_html_to_image_2026-04-13.md` ← `git-deploy.md` "Causa raiz" + "Regla absoluta" + "Nunca mas".
 
-Verificacion: `node scripts/_cerebroLint.mjs` (punteros de memoria), `node scripts/_cierreSesion.mjs --sin-build`,
-y el peso de `CLAUDE.md` antes/despues (13.949 B → objetivo < 9.000 B). La medicion de contexto del primer turno
-se repite en una sesion nueva con `node scripts/_tokens.mjs --desde 2026-09-10`.
+Resultado medido el 11/09: `CLAUDE.md` 13.949 B → 9.610 B (el objetivo era < 9.000 B; lo que queda es la tabla de
+routing de las 18 reglas con `paths:`, ~3,3 KB, que si sirve porque esas reglas NO estan cargadas). Reglas siempre
+cargadas: 18,5 KB → 15,1 KB (una menos: `verify-before-close.md`). Ademas se saco la tabla "Siempre cargadas" de
+CLAUDE.md (repetia reglas que ya estan en el contexto) y `_cerebroLint.mjs` ahora acepta esa lista como parrafo
+(`reglasDeParrafo`, con su test). Las 4 citas a `verify-before-close.md` en skills (`cad-design`, `editar-video`,
+`hojas-de-proceso`, `verificacion-consumos`) y en la memoria `ghpages_manual_deploy` apuntan a `git-deploy.md`.
+
+Verificacion: `node scripts/_cerebroLint.mjs` 0 rotos (1 aviso previo, ajeno a esto), `node scripts/_cierreSesion.mjs
+--sin-build` con LECCIONES en verde. La medicion de contexto del primer turno se repite en una sesion nueva con
+`node scripts/_tokens.mjs --desde 2026-09-10`.

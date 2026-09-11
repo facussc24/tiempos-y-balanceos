@@ -21,7 +21,8 @@
  *                existen; "regla `x.md`", "skill `x`", "hook `x.sh`" y "memoria `x`" resuelven.
  *                Un script que se mudo a scripts/archive/ es aviso.
  *   tablas       las dos tablas de reglas de CLAUDE.md coinciden con .claude/rules/: sin `paths:`
- *                en "Siempre cargadas", con `paths:` en la otra, ninguna fantasma ni faltante.
+ *                en el parrafo "Las reglas sin `paths:`..." (o la tabla "Siempre cargadas" vieja),
+ *                con `paths:` en su tabla, ninguna fantasma ni faltante.
  *   cerradas     memorias project_* que el indice o su description dan por CERRADAS: candidatas
  *                a _archive (aviso: decide quien consolida, no el script).
  *   globales     reglas de ~/.claude/rules/ que duplican una del repo (aviso: borrarlas es de Fak).
@@ -281,19 +282,34 @@ export function reglasDeTabla(claudeMd, tituloRe) {
   return out;
 }
 
+/** Desde el 11/09/2026 las reglas sin paths: no van en tabla (ya estan cargadas: la tabla las
+ *  repetia) sino en un parrafo "Las reglas sin `paths:` ya estan en este contexto: `a.md`, `b.md`."
+ *  Devuelve los nombres citados hasta la linea en blanco, o null si el parrafo no esta. */
+export function reglasDeParrafo(claudeMd, inicioRe) {
+  const lineas = claudeMd.split('\n');
+  const i = lineas.findIndex((l) => inicioRe.test(l));
+  if (i < 0) return null;
+  const out = [];
+  for (let j = i; j < lineas.length && lineas[j].trim() !== ''; j++) {
+    for (const m of lineas[j].matchAll(/`([a-z0-9-]+)\.md`/g)) out.push(m[1]);
+  }
+  return out;
+}
+
 export function chequearTablasClaude(c) {
   const out = [];
-  const siempre = reglasDeTabla(c.claudeMd, /^\|\s*Siempre cargadas/);
+  const siempre = reglasDeTabla(c.claudeMd, /^\|\s*Siempre cargadas/)
+    ?? reglasDeParrafo(c.claudeMd, /^Las reglas sin `paths:` ya estan en este contexto/);
   const conPaths = reglasDeTabla(c.claudeMd, /^\|\s*Con `paths:`/);
-  if (!siempre || !conPaths) return [{ check: 'tablas', nivel: 'falta', archivo: 'CLAUDE.md', detalle: 'no encuentro las dos tablas de reglas ("Siempre cargadas" / "Con `paths:`")' }];
+  if (!siempre || !conPaths) return [{ check: 'tablas', nivel: 'falta', archivo: 'CLAUDE.md', detalle: 'no encuentro la lista de reglas sin paths: (parrafo "Las reglas sin `paths:` ya estan en este contexto" o tabla "Siempre cargadas") y/o la tabla "Con `paths:`"' }];
   const enTabla = (s) => siempre.includes(s) || conPaths.includes(s);
   for (const r of c.reglas) {
-    if (!enTabla(r.stem)) out.push({ check: 'tablas', nivel: 'falta', archivo: 'CLAUDE.md', detalle: `la regla \`${r.archivo}\` no figura en ninguna de las dos tablas` });
+    if (!enTabla(r.stem)) out.push({ check: 'tablas', nivel: 'falta', archivo: 'CLAUDE.md', detalle: `la regla \`${r.archivo}\` no figura ni en la lista de reglas sin paths: ni en la tabla de paths:` });
     else if (r.conPaths && siempre.includes(r.stem)) out.push({ check: 'tablas', nivel: 'falta', archivo: 'CLAUDE.md', detalle: `\`${r.archivo}\` figura como "siempre cargada" pero tiene paths: (carga solo al tocar su ambito)` });
     else if (!r.conPaths && conPaths.includes(r.stem)) out.push({ check: 'tablas', nivel: 'falta', archivo: 'CLAUDE.md', detalle: `\`${r.archivo}\` figura en la tabla de paths: pero no tiene paths: (carga siempre)` });
   }
   for (const s of [...siempre, ...conPaths]) {
-    if (!c.reglas.some((r) => r.stem === s)) out.push({ check: 'tablas', nivel: 'falta', archivo: 'CLAUDE.md', detalle: `la tabla cita \`${s}.md\`, que no existe en .claude/rules/` });
+    if (!c.reglas.some((r) => r.stem === s)) out.push({ check: 'tablas', nivel: 'falta', archivo: 'CLAUDE.md', detalle: `CLAUDE.md cita la regla \`${s}.md\`, que no existe en .claude/rules/` });
   }
   return out;
 }

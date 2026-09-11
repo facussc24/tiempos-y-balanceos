@@ -13,7 +13,7 @@ paths:
 
 # Persistencia y Base de Datos
 
-**Regla de oro:** SIEMPRE repositorios tipados (`utils/repositories/`, 17 repos via index.ts). NUNCA SQL directo fuera de database.ts.
+**Regla de oro:** SIEMPRE repositorios tipados (`utils/repositories/`, via index.ts). NUNCA SQL directo fuera de database.ts.
 
 **Iron Law (regla `verify-supabase-live.md`):** el estado actual de cualquier doc APQP se afirma SOLO con query a Supabase live. Dumps de `tmp/`/`backups/`/docs viejos son fotos historicas.
 

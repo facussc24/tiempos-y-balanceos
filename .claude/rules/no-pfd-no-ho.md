@@ -1,13 +1,13 @@
-# Flujogramas SI (desde 18/08/2026, con el generador del repo) · HO solo a pedido · el MODULO de la app sigue muerto
+# Flujogramas: los hago yo con el generador del repo · HO solo a pedido · el modulo PFD de la app esta muerto
 
-## 🔴 Cambio del 18/08/2026 — los flujogramas los hago YO
+## Los flujogramas los hago yo (decision Fak 18/08/2026)
 
 Fak, textual: *"vos sos el que hace los flujogramas ahora, te lo habia dicho ya"*, *"te pase el
 codigo de los flujogramas... ahora vos debes integrarlo y testearlo"*, *"no necesito prompts,
 vos mismo los corregis"*, *"si, corregi todas las reglas porque si los vas a hacer vos al final".*
 
-Es la **segunda vez** que lo pide. La primera no la tome y le devolvi un prompt para que los
-dibujara el — mal. **No volver a ofrecer un prompt de flujograma: hacerlo.**
+Lo pidio dos veces porque la primera le devolvi un prompt para que los dibujara el.
+**No ofrecer un prompt de flujograma: hacerlo.**
 
 **Como se hacen:** `node scripts/_flujograma.mjs --lista` para ver cuales hay,
 `node scripts/_flujograma.mjs <clave>` para uno, `--todos` para la tanda entera, y
@@ -17,18 +17,15 @@ No lleva `--apply`: genera un PNG, no escribe en Supabase ni en el servidor. Mot
 `tools/flowchart/data/*.json`, render con Playwright + Chromium headless -> PNG.
 Detalle del contrato de datos: memoria `flujogramas_barack_numeracion`.
 
-**Lo que NO cambio:** el **modulo PFD de la app** sigue podado y no se resucita (decision
-2026-05-17, sigue vigente). Los flujogramas no son una pantalla del software: son un
-entregable que se genera por script. `pfd_documents` en Supabase queda como referencia
+**El modulo PFD de la app** esta podado y no se resucita (decision 2026-05-17). Los flujogramas
+no son una pantalla del software: son un entregable que se genera por script. `pfd_documents` en Supabase queda como referencia
 historica de solo lectura.
 
-## Hojas de operaciones (HO) — a pedido explicito, nunca por cuenta propia
+## Hojas de operaciones (HO) — solo cuando Fak las pide
 
-- Decision original 2026-05-22: *"las hago yo manuales"*. **Aclarado 2026-08-13** (HO-986 APB
-  Trasero Central): cuando Fak lo pide, las HO **si se arman aca** — en Excel, sobre el
-  formulario oficial del SGC `I-IN-002.4-R01`, una pestaña por operacion. Ya paso con la
-  HO 118 (05/06) y la HO-985 IP PAD (02/07). Lo prohibido sigue siendo **ofrecerlas por
-  cuenta propia**. Enforcement: hook `ho-numeracion-guard.sh`.
+- Cuando Fak lo pide, las HO se arman aca (aclarado 2026-08-13, HO-986 APB Trasero Central): en
+  Excel, sobre el formulario oficial del SGC `I-IN-002.4-R01`, una pestaña por operacion. Lo
+  prohibido es **ofrecerlas por cuenta propia**. Enforcement: hook `ho-numeracion-guard.sh`.
 - Los pasos de una HO son instruccion de planta: sin documento fuente van **TBD**. No se
   redactan por analogia con otra pieza "parecida" (`core-prohibiciones` §1). El listado
   maestro (`3- LISTADO\Listado hojas de proceso.xlsx` + hoja oculta `_CONTEXTO_CLAUDE`) manda
