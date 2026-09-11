@@ -34,6 +34,40 @@ Lo que NO se sube: `react`/`react-dom` (ya en 19.3, sin mayor pendiente), `@supa
 (2.116, sin mayor), `xlsx-js-style`/`exceljs` (reglas del repo: AMFE y CP solo `xlsx-js-style`, HO
 solo `ExcelJS`; sin mayor pendiente).
 
+## Deuda abierta: las reglas del React Compiler (11/09/2026)
+
+El bump menor de `eslint-plugin-react-hooks` 7.0.1 -> 7.1.1 activo siete reglas nuevas, las del
+React Compiler, y dejaron el lint en **115 errores** sobre codigo que nadie toco desde agosto
+(`TaskManager.tsx` el 30/08, `Dashboard.tsx` el 28/04, `AmfeApp.tsx` el 06/07). El CI quedo rojo
+desde el commit `5eccd7a8`.
+
+Estan puestas en **aviso** en `eslint.config.mjs` para que el deploy vuelva a correr; las dos
+clasicas (`rules-of-hooks` y `exhaustive-deps`) siguen en error. El reparto real:
+
+| Regla | Casos |
+|---|---|
+| `react-hooks/error-boundaries` | 50 |
+| `react-hooks/set-state-in-effect` | 46 |
+| `react-hooks/immutability` | 9 |
+| `react-hooks/refs` | 5 |
+| `react-hooks/static-components` | 2 |
+| `react-hooks/preserve-manual-memoization` | 2 |
+| `react-hooks/purity` | 1 |
+
+| Archivo | Casos |
+|---|---|
+| `modules/task/TaskManager.tsx` | 50 |
+| `modules/dashboard/Dashboard.tsx` | 9 |
+| `modules/amfe/AmfeApp.tsx` | 6 |
+| los otros 30 archivos | 1 a 3 cada uno |
+
+**Como se salda:** un archivo por commit, empezando por `TaskManager.tsx`, que solo con el se va
+el 43%. Cada uno con `npx vitest run` del modulo al lado, porque `set-state-in-effect` y
+`error-boundaries` cambian **cuando** corre el codigo, no solo como se ve. Cuando un archivo
+queda limpio, su regla vuelve a `error` para ese archivo con un override de ruta. No se hace en
+la misma sesion que otra cosa: es refactor de render, y el sintoma de equivocarse es un loop
+infinito que el test no siempre ve.
+
 ## Checklist por salto
 
 1. Rama `deps/<paquete>-<mayor>`; leer el changelog/migration guide del paquete (no de memoria).
