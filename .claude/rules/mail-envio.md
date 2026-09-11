@@ -80,6 +80,25 @@ otro esta de mas"*.
   con esto hoy?* Si no, afuera. Al mail para Gamboa le sume siete codigos que nadie iba a
   tocar: *"los agregaste y aclaraste de mas, es un error conocido tuyo"*.
 
+## El mail lo firma Fak: primera persona del singular
+
+**"Revise", no "Revisamos".** 11/09/2026, sobre el correo de correccion del PPAP de NOVAX:
+*"revise porque revisamos, yo revise"*. El mail sale de su casilla y lo firma el; el plural
+inventa un equipo que no es el que hizo el trabajo y le saca la responsabilidad de encima.
+Vale para todo verbo del cuerpo: adjunto, revise, corregi, mande.
+
+## Al cerrar un tema por mail, barrer Borradores por asunto
+
+Un borrador viejo del mismo hilo es **una bomba con el asunto correcto**: mismo tema, mismos
+destinatarios, adjuntos superados. El 11/09/2026, despues de mandar la correccion del PPAP de
+NOVAX, quedaban **4 borradores del 10/09** con el mismo asunto y los mismos destinatarios, cada
+uno con una version distinta de los tres AMFE (hash distinto en los cuatro). Apretar Enviar en
+cualquiera mandaba justo lo que el mail recien enviado declaraba obsoleto.
+
+Cuando un tema se cierra por mail: listar Borradores por asunto, comparar los adjuntos por hash
+contra el archivo del legajo, y mover a Elementos eliminados los que quedaron superados
+(`Delete()` de COM mueve, no borra definitivo: se recuperan de ahi).
+
 ## Que verifica el gate, y por que cada cosa
 
 | Chequeo | Por que |
