@@ -34,15 +34,22 @@ El hook `.claude/hooks/supabase-guard.sh` corre `_backup.mjs` antes de CUALQUIER
 
 Si el backup falla, el comando se bloquea. No hay que recordar correrlo.
 
-### 3. NUNCA double-serializar JSONB
-Las columnas `data` son JSONB. Pasar el OBJETO directo:
+### 3. La columna `data` de los documentos APQP es TEXT, no JSONB
+En `amfe_documents`, `cp_documents`, `ho_documents` y `pfd_documents` la columna `data` guarda el
+JSON como **texto**: al leer va `JSON.parse`, al escribir `JSON.stringify` (verificado contra
+Supabase live el 11/09/2026: las cuatro devuelven `typeof data === 'string'`, y los repositorios
+de la app hacen lo mismo).
 ```js
 // CORRECTO
-await sb.from('amfe_documents').update({ data: obj }).eq('id', id);
-// INCORRECTO — convierte a string dentro de JSONB
 await sb.from('amfe_documents').update({ data: JSON.stringify(obj) }).eq('id', id);
+// INCORRECTO — PostgREST no serializa por vos y el documento queda ilegible
+await sb.from('amfe_documents').update({ data: obj }).eq('id', id);
 ```
-Verificar despues: `typeof row.data === 'object'`. Si es `string`, esta roto.
+Mejor todavia: no escribir a mano. `saveAmfe()` / `saveCp()` / `saveHo()` / `savePfd()` de
+`scripts/_lib/amfeIo.mjs` hacen el `stringify`, **abortan si les llega un objeto** y verifican la
+escritura releyendo.
+Lo que `parseData()` sigue cuidando es la **double-serialization** (un JSON adentro de otro JSON,
+incidente 2026-04-06): ese es un bug distinto y sigue siendo malo.
 
 ### 4. NUNCA DELETE directo si hay alternativa
 Preferir UPDATE con un flag (ej `deleted_at`, `archived: true`) sobre DELETE. Los DELETE son irreversibles salvo por backup.
@@ -149,7 +156,7 @@ finish(apply);
 
 | # | Check | Como detectarlo |
 |---|-------|----------------|
-| 1 | `data` como string (double-serialization) | `typeof row.data === 'object'` debe ser true |
+| 1 | `data` doble-serializado (un JSON adentro de otro) | `JSON.parse(row.data)` tiene que dar un objeto con `operations`/`items`, no otro string |
 | 2 | Campos borrados silenciosamente | Comparar counts antes/despues: operations, failures, causes |
 | 3 | AP recalculado con formula mala | Usar `calculateAP(s, o, d)` de `modules/amfe/apTable.ts`. Nunca `S*O*D` |
 | 4 | Nombres de campo incorrectos | AMFE: `opNumber` Y `operationNumber`; `ap` Y `actionPriority`; `cause` Y `description` (ambos alias) |
@@ -179,7 +186,7 @@ Si se agrega una tabla nueva a Supabase, **actualizar la lista `tables` en `scri
 ## Como detectar mas errores a futuro
 
 1. Cada vez que se rompe algo, agregar el patron de deteccion a la tabla del checklist arriba.
-2. Si el patron es automatizable, agregarlo a `_auditAmfeIntegrity.mjs` / `_auditFinal*.mjs` y correrlo como paso de CI.
+2. Si el patron es automatizable, agregarlo a `scripts/_lib/amfeValidator.mjs` (lo consume `_auditAll.mjs`) o a `scripts/_auditAmfeIntegrity.mjs`, y correrlo como paso de CI.
 3. Los scripts de auditoria (`_audit*.mjs`) son read-only — se pueden correr siempre sin miedo.
 4. Si un incidente es reproducible, convertirlo en test en `__tests__/`.
 

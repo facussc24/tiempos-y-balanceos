@@ -13,7 +13,9 @@ description: >
 
 Capacidad probada en el caso Posicionador Top Roll Trasero (ver
 `examples/posicionador/README.md`: el caso completo, sus 4 errores caros y dónde viven
-las fuentes). La librería vive en `scripts/cadlib/` + CLIs genéricos con `--help`.
+las fuentes). La librería y los CLIs viven en `.claude/skills/cad-design/scripts/` (`cadlib/` +
+un CLI por gate, todos con `--help`). Acá se los nombra pelados (`gate_zona.py`); la ruta completa
+es esa, **no** el `scripts/` de la raíz del repo, que es otro.
 
 ## 0. LOS GATES (bloqueantes)
 
@@ -236,7 +238,7 @@ De las tres entregas rechazadas, **dos no fallaron por el diseño: fallaron por 
 > conocido en el canon *antes* de que el auditor lo probara, lo cual no me salvó de haberlo puesto
 > a bloquear igual.
 
-El motor bueno vive ahora **acá**: `scripts/foto3d.py` (trazado de rayos ortográfico, oclusión
+El motor bueno vive ahora **acá**: `.claude/skills/cad-design/scripts/foto3d.py` (trazado de rayos ortográfico, oclusión
 exacta, sombra proyectada, contorno por segunda derivada de la profundidad, maniquí a escala
 para poner el operario en la escena, **fondo blanco** — Fak 02/09: *"necesito verlos bien los
 modelos 3D, con fondo blanco"*). Nació suelto en la carpeta de trabajo del carro; vivir ahí

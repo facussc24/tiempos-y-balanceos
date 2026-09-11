@@ -8,7 +8,9 @@ user-invocable: false
 
 ## Tablas principales de documentos
 
-Todos los documentos APQP guardan sus datos en una columna `data` de tipo JSONB. La estructura es:
+Todos los documentos APQP guardan sus datos en una columna `data` de tipo **TEXT** (JSON
+stringificado, igual que `projects.data`): al leer `JSON.parse`, al escribir `JSON.stringify`.
+Verificado contra Supabase live el 11/09/2026. La estructura es:
 
 ```
 amfe_documents    → data: { header: {...}, operations: [...] }
@@ -182,7 +184,7 @@ si escribís `.update({ data: objeto })` con el objeto crudo, la app leería mal
 `data: JSON.stringify(objeto)` y verificar `typeof JSON.parse(row.data) === 'object'`.
 RLS = authenticated (anon → `[]`). Acceso sin `.env.local`: MCP Supabase, o token de la app
 (el navegador logueado descarga un archivo con `SB_ACCESS_TOKEN`; supabase-js maneja mal el
-JWT ES256 desde Node → usar fetch REST directo). Detalle: memoria `project-registro-tiempos-inyeccion`.
+JWT ES256 desde Node → usar fetch REST directo). Detalle: memoria `project_registro_tiempos_inyeccion`.
 
 Estructura de `data` (ProjectData, ver `types/project.ts`):
 - `meta`: { name, date, client, project, version, engineer, dailyDemand, activeShifts,
@@ -238,11 +240,13 @@ updatedData.items = updatedData.items.map(item => {
   return item;
 });
 
-// 3. Guardar el documento completo
+// 3. Guardar el documento completo — `data` es TEXT: va stringificado
 await supabase
   .from('cp_documents')
-  .update({ data: updatedData })
+  .update({ data: JSON.stringify(updatedData) })
   .eq('id', docId);
 ```
 
-Para documentos grandes (>100KB), usar `updateDocDirect()` del helper si existe.
+En un script `.mjs` esto no se escribe a mano: `saveCp()` (y `saveAmfe`, `saveHo`, `savePfd`) de
+`scripts/_lib/amfeIo.mjs` hacen el `stringify`, abortan si les llega un objeto, mantienen
+`updated_at` y los contadores derivados, y releen para verificar.

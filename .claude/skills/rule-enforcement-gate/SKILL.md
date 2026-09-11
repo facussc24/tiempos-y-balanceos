@@ -1,6 +1,6 @@
 ---
 name: rule-enforcement-gate
-description: Activar cada vez que se agrega/modifica un archivo en BarackMercosul/.claude/rules/ que defina una heuristica, validacion o check. Forzar que la regla tenga enforcement ejecutable EN LA MISMA SESION (gate pre-commit en amfeValidator.mjs, auditor en _auditAll.mjs, o gate pre-save en amfeValidation.ts). Tambien activar al detectar "TODO: agregar check" en una rule existente — implementar EN LA SESION ACTUAL o no aceptar la regla. Patron recurrente Barack 2026-04/05: 3 incidentes con regla + auditor read-only pero nunca gate.
+description: Toda regla nueva con una heuristica, validacion o check nace con enforcement ejecutable en la misma sesion. Usar al crear o modificar una regla de `.claude/rules/`, al encontrar un "TODO: agregar check" en una existente, y al cerrar una tarea que toco una regla.
 ---
 
 # rule-enforcement-gate
@@ -13,7 +13,8 @@ Cada vez que escribo regla en `.claude/rules/` con heuristica/check/validacion, 
 
 ## Por que existe esta skill
 
-Patron documentado en `feedback_rule_enforcement_gap.md` (memoria 2026-05-14):
+Patron documentado el 2026-05-14. Su memoria se retiro en la consolidacion del 20/08/2026 y el
+texto completo quedo en `memory/_archive_2026-08-20_consolidacion/feedback_rule_enforcement_gap.md`:
 
 | Incidente | Regla creada | Auditor read-only | Gate pre-commit |
 |---|---|---|---|
@@ -118,7 +119,7 @@ Si ninguno detecta el caso violador → la regla no esta enforced. Volver al pas
 
 ## Cross-references
 
-- `feedback_rule_enforcement_gap.md` — memoria fuente
+- `memory/_archive_2026-08-20_consolidacion/feedback_rule_enforcement_gap.md` — memoria fuente (retirada)
 - `feedback_heuristicas_lista_canonica_no_regex_parcial.md` — pattern de implementacion del check
 - `feedback_renumerar_sin_leer_contenido.md` — el incidente 2026-05-14 que origino esta skill
 - `BarackMercosul/.claude/rules/autonomy-contract.md` — contrato general de autonomia

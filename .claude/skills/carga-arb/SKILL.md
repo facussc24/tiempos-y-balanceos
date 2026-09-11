@@ -118,8 +118,7 @@ no el ERP. Detalle: memoria `feedback_destino_material_se_verifica_en_planos`.
 
 ## 2. La carga la hago YO. Lo unico de Fak es loguearse.
 
-⚠ Esta seccion decia **"Fak carga. Yo no cargo"** y estaba DESACTUALIZADA — corregido el
-31/08/2026. Las cargas las hace la sesion desde el 05/08 (skill `arb-operar`, memoria
+Las cargas las hace la sesion desde el 05/08/2026 (skill `arb-operar`, memoria
 `feedback_arb_lo_opero_yo_y_lo_mejoro`): consumos con `_arbCargar.py`, altas con
 `_arbAlta.py` / `_arbAltaLote.py`, y **cambiar el CODIGO de una linea que ya existe con
 `_arbSustituir.py`** (estrenado el 31/08 con el remache de ductos: 1/1, diff del archivo
@@ -170,9 +169,8 @@ python scripts/_pdfBomArb.py --piezas "<PN1>,<PN2>" --fecha dd/mm/aaaa \
   `1- GENERAL\2. CONSUMO DE MATERIAL BOM\BOMS\<cliente>\...\<pieza>\`. Desde ahi se adjunta
   al mail. Si la subcarpeta de la pieza no existe, se crea mirando como estan las hermanas
   (APC, IP, TOP ROLL...).
-  ⚠ Esta linea decia **"va suelto en el Escritorio"** y estaba DESACTUALIZADA: desde el
-  incidente del 28/08 (*"no me dejes cosas en el escritorio"*) el `escritorio-guard.sh`
-  **bloquea** generar un entregable ahi. Lo descubri el 31/08 comiendome el bloqueo.
+  ⚠ En el Escritorio no queda nada: `escritorio-guard.sh` **bloquea** generar un entregable ahi
+  (Fak, 28/08: *"no me dejes cosas en el escritorio"*).
 - **Mirar el PDF NO es verificarlo.** El 04/08/2026 se difundio uno con tres filas sin unidad
   ni consumo: se habian abierto 2 de las 5 paginas y las 2 estaban bien. El script hoy corre
   cinco gates y aborta sin dejar archivo; si sale un PDF con el nombre final, es porque paso

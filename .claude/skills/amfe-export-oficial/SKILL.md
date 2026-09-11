@@ -52,14 +52,12 @@ En TODAS las carátulas de AMFE:
 - `processResponsible` = el responsable de proceso del producto (project-specific, ej. "Paulo Centurión" para Amarok).
 - `approvedBy` y `reviewedBy` NUNCA la misma persona (regla `control-plan.md`).
 
-> **Corrección 2026-08-03.** Hasta hoy esta sección decía `approvedBy = "Gonzalo Cal"`, en
-> contra de `control-plan.md` (approvedBy = Ingeniería) y de `product-map` (Gonzalo Cal firma
-> **HO**, no AMFE). Consecuencia: la carátula imprimía "CALIDAD / Gonzalo Cal" en 11 documentos.
-> Fak lo reportó. La evidencia son los AMFE reales hechos a mano más recientes (105 y 107,
+> **Gonzalo Cal firma HO, no AMFE** (`product-map`; `approvedBy` = Ingeniería por
+> `control-plan.md`). La evidencia son los AMFE reales hechos a mano más recientes (105 y 107,
 > oct/nov 2025), cuyo equipo dice `Paulo Centurión - INGENIERIA | Manuel Meszaros - CALIDAD |
-> Cristina Rabago - SEGURIDAD E HIGIENE`. **Quedan 11 documentos en Supabase con
-> `approvedBy = 'Gonzalo Cal'`**: corregirlos requiere OK de Fak (ver
-> `scripts/_pendiente_amfe150_supabase.sql`).
+> Cristina Rabago - SEGURIDAD E HIGIENE`. **Al 03/08/2026 quedaban 11 documentos en Supabase con
+> `approvedBy = 'Gonzalo Cal'` — contarlos de nuevo antes de citar el número**: corregirlos
+> requiere OK de Fak (ver `scripts/_pendiente_amfe150_supabase.sql`).
 
 **Los casilleros de firma van VACÍOS.** El formulario I-AC-005.3 real deja INGENIERIA /
 CALIDAD / CLIENTE en blanco para firma manuscrita (ver AMFE 131 y 144 en el servidor). El

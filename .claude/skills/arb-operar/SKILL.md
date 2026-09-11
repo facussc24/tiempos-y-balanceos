@@ -20,11 +20,9 @@ description: Operar el ERP arb (ARB Sistemas "Producción") por teclado desde Cl
 > **Altas EN LOTE: ANDA** (`scripts/_arbAltaLote.py`) — **12/12 el 28/08 en 116 seg**, mismo
 > insumo en 12 BOM, diff de la base entera 12 altas / 0 bajas / 0 cambios.
 >
-> ⚠ El encabezado de esta skill dijo durante medio día "sólo si la línea cae en las 6 filas
-> visibles" y "dar de alta está fuera de alcance". **Las dos eran falsas**: la grilla scrollea
-> sola al tabular, y las altas se resolvieron el mismo día. Quedó escrito acá porque el error
-> costó 13 líneas sin cargar y un "terminado" que no lo era — **una limitación escrita por uno
-> mismo no es un hecho verificado**.
+> **Una limitación escrita por mí no es un hecho verificado.** Antes de anotar que algo "no se
+> puede", probarlo y fecharlo: las dos veces que esta skill lo dio por imposible (el scroll de la
+> grilla, las altas) costaron 13 líneas sin cargar y un "terminado" que no lo era.
 >
 > Sale con reintentos, y reintentar es seguro. Lo marcado `CONFIRMADO`/`medido` se probó; lo
 > demás es hipótesis y **no se ejecuta sin verificar antes**.
@@ -44,22 +42,12 @@ El `.exe` tampoco tiene importación masiva de BOMs (su "Importa Novedades de Ce
 sincronización entre empresas, otra cosa). **Por eso la única vía de automatización es la
 interfaz.** Ver la sección de seguridad abajo antes de escribir nada.
 
-## 🔴🔴 EL arb NO SE CIERRA SIN CONSULTARLE A FAK (regla dura, 31/08/2026)
+## El arb no se cierra sin consultarle a Fak
 
-Ni al terminar una tarea, ni "para dejar limpio", ni porque una instrucción de otra sesión
-lo diga. **El estado por defecto es abierto.** Motivo: reabrirlo pide **usuario y
-contraseña**, y la sesión no tipea contraseñas — cerrarlo cuesta un segundo y destrabarlo
-depende de que Fak esté disponible.
-
-El 31/08 lo cerré al terminar de leer el maestro, veinte minutos después había que cargar el
-remache, y la tarea se frenó dos veces esperándolo. Fak: *"fue gravísimo eso"*.
-
-Lo que **sí** sigue permitido, porque es el método documentado: `WM_CLOSE` sobre `Maestro de
-Insumos` / `Maestro de Relaciones` (descarta una edición sin grabar) y `_arbVer.py reset`
-(cierra y **reabre** la de Relaciones).
-
-Enforcement: regla `arb-no-cerrar.md` + hook `arb-cerrar-guard.sh` (exit 2). Escape de Fak,
-un solo uso: `touch ~/.claude/.arb-cerrar-ok`.
+Regla dura (31/08/2026). **El estado por defecto es abierto**: cerrarlo lo puedo hacer yo,
+reabrirlo no. Lo que sí está permitido es `WM_CLOSE` sobre `Maestro de Insumos` / `Maestro de
+Relaciones` y `_arbVer.py reset`. El incidente, la tabla de lo prohibido y lo permitido, el escape
+y el hook: regla `arb-no-cerrar.md`, que carga sola al abrir este skill.
 
 ## Regla de oro
 
@@ -187,9 +175,9 @@ Es el indicador más confiable — evita adivinar:
 
 `TAB` avanza de celda: `Parte Superior` → `Rubro` fila 1 → `Medida` fila 1 → … `ESC` finaliza.
 
-**POR CONFIRMAR:** cuántos TAB hasta `Cantidad`, cómo bajar de fila, y cómo se graba
-(¿`ACEPTA`, F-key?). No se prueba dentro de una fila con datos reales sin OK de Fak — un
-tabulador de más y se pisa un renglón.
+Cuántos TAB hasta `Cantidad` y cómo se graba están medidos abajo (`3 + 5*i` y `ENTER` sobre
+`&Acepta`). Lo que no está medido no se prueba dentro de una fila con datos reales sin OK de Fak:
+un tabulador de más y se pisa un renglón.
 
 ## Segundo plano: LEER sí, ESCRIBIR no `PROBADO 2026-08-04`
 
@@ -346,23 +334,13 @@ se compara su contenido contra la BOM del export. A la primera discrepancia se a
 ENTER** — que es el único punto de no retorno. Comparar por contenido y no por handle es lo
 que hace que ande igual cuando la grilla scrollea (los controles se reciclan, el contenido no).
 
-**El scroll SÍ es un problema, y la versión vieja de esta línea estaba mal.** Decía "el scroll
-no es un problema: se grabaron piezas de 6 y 7 insumos sin drama" — y es cierto que una pieza
-puede tener 7, 9 u 11 insumos sin drama, pero eso **no es lo que importa**. Lo que importa es
-en qué fila cae **la línea que hay que escribir**: la grilla muestra **6 filas** y una línea en
-la fila 7 o más abajo **no se alcanza**. El cargador aborta con *"está en la fila N y la grilla
-muestra 6: hay que scrollear para escribirla, y eso no está resuelto"*.
-
-**Gate obligatorio antes de correr una tanda** (2026-08-07: 7 de 36 líneas fallaron por esto,
-todas en piezas de 11 insumos): calcular del export el **índice de fila de cada línea objetivo**
-y partir la tabla en dos — las de índice 0-5 van al robot, las de 6 en adelante van a mano.
-
-```python
-idx = [f[2] for f in boms[pn]].index(codigo_insumo)   # 0-based; >=6 => a mano
-```
-
-El índice depende del **orden del arb**, no del orden de la tabla: los materiales de corte suelen
-quedar arriba (índices 0-1) y los hilos abajo. En el lote del 07/08 dio 23 alcanzables y 13 fuera.
+**El scroll no saca ninguna línea del lote.** La grilla muestra 6 filas pero **scrollea sola al
+tabular** (dato de Fak, 07/08: *"llegás a la última línea de la sexta y le das TAB: automáticamente
+baja a la número 7"*), y `cargar_producto()` lo implementa: si la primera celda a cambiar cae fuera
+de vista, se ancla en la última fila visible y sigue tabulando. Lo único que no se puede hacer con
+una fila fuera de vista es **leer** su valor viejo — el control no existe todavía —, así que la
+verificación por contenido pasa de ser previa a ser *al llegar*. Detalle en §EL SCROLL DE LA GRILLA
+NO EXISTE COMO PROBLEMA.
 
 ### Qué necesita foco y qué no `CORREGIDO 2026-08-05`
 
@@ -529,7 +507,7 @@ exportar.** Nunca `ACEPTA` ni `ESC` con una celda escrita a medias.
 `PrintWindow` + PIL y **verla**. Con eso se ubican los botones y se hace click real donde
 corresponde, en vez de adivinar coordenadas o pelearse con teclas que no llegan.
 
-Helper: `arbver.py` (scratchpad) — `foto rel|prod`, `click X Y`, `estado`. Las coordenadas del
+Helper: `scripts/_arbVer.py` — `foto rel|prod`, `click X Y`, `estado`. Las coordenadas del
 click son **relativas a la ventana**, las mismas que se ven en la captura, y `click()` relee el
 rect en cada llamada: **la ventana se mueve sola entre corridas**, así que nunca guardar
 coordenadas de pantalla.
@@ -573,7 +551,7 @@ open(r'C:\tmp\RELACIONES.TXT', 'a').close()   # PermissionError = alguien lo tie
 
 **Después de cada export, cerrar Excel.** Si no, el próximo export no sale.
 
-### 📋 DAR DE ALTA UNA LÍNEA — la secuencia, dictada por Fak `2026-08-07, SIN PROBAR`
+### 📋 DAR DE ALTA UNA LÍNEA — la secuencia `dictada por Fak 2026-08-07 · 31/31 el mismo día`
 
 Fak la explicó así (textual, resumida): *"cuando llegás a la última línea cargada le das TAB
 nuevamente y ahí primero se va a la última línea en blanco, que debés colocar rubro `1` y luego
@@ -591,17 +569,14 @@ proceso                            TAB
                                    ENTER sobre &Acepta
 ```
 
-⚠️ **Esto NO se ejecutó todavía.** Está escrito para no perderlo, pero antes de correrlo sobre
-producción hay que confirmar dos cosas mirando la pantalla (`_arbVer.py foto rel`):
+Lo hace `scripts/_arbAlta.py` (una línea por invocación) con sus gates: verifica cada celda
+contra lo esperado antes de escribir la siguiente, saca una **foto** y lee las 5 celdas del
+renglón nuevo antes del ENTER, y sin `--apply` no aprieta ENTER (el renglón queda escrito en
+pantalla y se descarta con CANCELA).
 
-1. si al tabular desde la última fila cargada la grilla **abre sola** el renglón vacío, o si
-   hay que bajar con flecha primero;
-2. cuántas celdas tabulables tiene la fila en blanco — la fórmula `5*N + 2` para llegar al
-   botón asume N filas con datos y cambia al agregar una.
-
-Recordar que **el alta NO es reversible con el export** (a diferencia de un consumo, que se
-deshace tipeando el valor viejo). Por eso se prueba con UNA sola línea y se verifica contra el
-export antes de seguir.
+**El alta NO es reversible con el export** (a diferencia de un consumo, que se deshace tipeando el
+valor viejo). Por eso se prueba con UNA sola línea y se verifica contra el export antes de seguir
+con el resto.
 
 ### 🟢 ALTAS EN LOTE — `_arbAltaLote.py` `CONFIRMADO 2026-08-28`
 
@@ -793,7 +768,7 @@ escribí el gate del modal a media mañana y aun así lancé dos tandas más sin
 ```
 1. ¿hay un #32770 abierto?            -> abortar, pedir el click real
 2. ¿el CSV tiene valor_nuevo con PUNTO? -> si tiene coma, abortar
-3. ¿alguna linea cae en fila >= 6?    -> sacarla del lote, va a mano
+3. ¿el export que genero la tabla es el PRE-CAMBIO? -> si se regenero a mitad, rehacerla
 4. export fresco guardado en .arb-cache/pre-cambio/
 5. recien ahi --apply
 6. re-exportar y diffear el archivo ENTERO contra la foto previa
@@ -1166,9 +1141,9 @@ en `Impresora`.
    (definiciones de tabla, 1996-2019) — **no datos**; los datos viven en el servidor
    Pervasive, fuera de alcance por red. La versión vieja de esta skill lo daba por backup.
    **El único respaldo es el export**: guarda el valor anterior de cada celda, así que un
-   consumo mal cargado se deshace tipeando el viejo. Alcanza para consumos porque son
-   reversibles; **no alcanzaría para altas ni bajas de líneas** — por eso están fuera de
-   alcance (decisión de Fak 05/08). Antes de una tanda: exportar y guardar ese export.
+   consumo mal cargado se deshace tipeando el viejo. **Un alta no se deshace así**, por eso va de
+   a una, con foto antes del ENTER y verificada contra el export (`_arbAlta.py`, `_arbAltaLote.py`).
+   **Borrar una línea sigue fuera de alcance.** Antes de una tanda: exportar y guardar ese export.
 2. **Probar con UNA sola fila**, la de menor impacto, y **verificar contra el export**
    (`RELACIONES.TXT`, celda por celda, tolerancia 0,1%) antes de seguir con el resto.
 3. **Nunca tantear teclas en la solapa de Altas.** Una tecla de más da de alta un insumo o

@@ -1,6 +1,6 @@
 ---
 name: editar-video
-description: Editar video en Barack — armar un institucional/recorrida de planta a partir de tomas crudas (dron o mano), elegir que sirve y que se descarta con criterio medido, mejorar la calidad (color, ruido, nitidez), y entregar un master que se abra en cualquier lado. Usar cuando Fak pase videos para editar, pida "mejorar la calidad" de un video, un video para un cliente o para la direccion, un recorrido de planta, o cortar/unir tomas. Incluye lo que NO sirve (upscaling con IA, estabilizacion sobre material de gimbal) medido en esta maquina, no leido.
+description: Editar video en Barack — armar un institucional o una recorrida de planta desde tomas crudas, elegir que sirve con criterio medido, mejorar color y nitidez, y entregar un master que abra en cualquier lado. Incluye lo que NO sirve (upscaling con IA, estabilizar material de gimbal), medido en esta maquina.
 ---
 
 # editar-video — armar un video que se pueda mostrar
@@ -565,10 +565,8 @@ Lo que cambia es la naturaleza del trabajo: ya no es elegir timbres, es **cortar
 musica tiene una sola regla dura: **lo que se saca tiene que medir un numero entero de
 compases**, o la musica tropieza. Asi que lo primero es medir el compas, no estimarlo:
 
-```bash
-# el flujo que se uso, en scratchpad/: ver_cancion.py (mapa por segundo) -> grilla.py
-# (periodo, fase, golpes grandes) -> zonas.py (lupa de 25 ms sobre las zonas elegidas)
-```
+El flujo son tres pasadas y las hace `scripts/video/cancion.py`: mapa por segundo (dB +
+centroide) -> grilla (periodo, fase, golpes grandes) -> lupa de 25 ms sobre las zonas elegidas.
 
 - El **periodo** sale de la autocorrelacion de la envolvente de novedad, pero **el numero
   fino sale de dos golpes lejanos**: 56 compases entre 18,454 s y 135,320 s dan 2,086893 s,
@@ -611,8 +609,8 @@ python scripts/video/master.py "<destino>.mp4" --cancion "<el MP3>"
 
 ### 6.3 Un chequeo que compara dos cosas distintas da verde o rojo por la razon equivocada
 
-`scratchpad/mono.py` decia "compatible en mono, la peor banda pierde 0,36 dB" y con eso se
-certifico una entrega. Estaba comparando el espectro de la **envolvente** `sqrt((L²+R²)/2)`
+Un chequeo de compatibilidad en mono dijo "la peor banda pierde 0,36 dB" y con eso se certifico
+una entrega. Estaba comparando el espectro de la **envolvente** `sqrt((L²+R²)/2)`
 —una señal rectificada, llena de continua— contra el de la señal mono. Por eso daba **+13 dB
 en los graves**, que no significa nada. Lo correcto es filtrar cada canal por separado y
 comparar `RMS((L+R)/2)` contra `sqrt((RMS_L² + RMS_R²)/2)`.
@@ -620,7 +618,8 @@ comparar `RMS((L+R)/2)` contra `sqrt((RMS_L² + RMS_R²)/2)`.
 Y el umbral tampoco se elige: **0 dB es contenido igual en los dos canales y -3 dB es
 contenido independiente** — geometria, no un defecto. Medidas las 13 referencias reales, su
 peor banda va de **-0,0 a -5,5 dB** (mediana -2,6). Poner el aviso en -3 reprueba a la
-mayoria de la musica comercial; va en **-6,0**. Corregido en `scratchpad/mono2.py`.
+mayoria de la musica comercial; va en **-6,0**. El chequeo se rehace cada vez: vive en el
+scratchpad de la sesion, que no sobrevive — lo que sobrevive es el criterio de esta seccion.
 
 ## 7. Render y entrega
 
@@ -714,15 +713,17 @@ Store, y el destinatario es un directivo abriendo un adjunto, no un editor.
 
 ## 9. Estado de la maquina (verificado 02/09/2026)
 
-- **ffmpeg 8.1-full_build** (Gyan, via winget) en `%LOCALAPPDATA%\Microsoft\WinGet\Packages\...\bin`.
-  **No esta en el PATH** — `_video.py` lo resuelve solo. Trae `libvidstab`, `libx264/265`,
+- **ffmpeg 8.1-full_build** (Gyan, via winget) en `%LOCALAPPDATA%\Microsoft\WinGet\Packages\...\bin`,
+  resoluble por PATH desde Git Bash (verificado 11/09/2026); `_video.py` lo resuelve igual por su
+  cuenta, asi que no depende del shell. Trae `libvidstab`, `libx264/265`,
   `drawtext` con fuentes del sistema, `vulkan`, `opencl`.
 - **Sin GPU dedicada**: Intel Iris Xe. `h264_qsv` (Quick Sync) funciona; `nvenc` y `amf`
   estan compilados pero **no hay hardware detras** — cualquier receta de internet que use
   NVENC no corre aca.
 - Python 3.13 con `opencv-python` y `numpy` ya instalados.
-- **Disco C: al 98%** (~7 GB libres). Un render de 1080p come rapido: borrar intermedios no,
-  pero trabajar solo sobre los recortes elegidos si.
+- **Disco C ajustado** (11/09/2026: 27,6 GB libres de 237; llego a estar al 98 %). Un render de
+  1080p come rapido: **medir antes** de arrancar una tanda larga y trabajar solo sobre los
+  recortes elegidos.
 - Fuentes para `drawtext`: `C:/Windows/Fonts/`. Dentro de un filtro hay que escapar los dos
   puntos, **tambien los del texto**: `text='00\:12'`, `fontfile='C\:/Windows/Fonts/arialbd.ttf'`.
 

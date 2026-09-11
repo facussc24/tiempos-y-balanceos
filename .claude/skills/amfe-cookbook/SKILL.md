@@ -94,8 +94,8 @@ Para gaps que son WE real (no placeholder), buscar fuente en estos AMFEs segun e
 2. **NO asignar CC/SC** — siempre `specialChar: ""` en causas nuevas. Autorizacion CC/SC solo por Fak explicitamente.
 3. **NO completar acciones** — `preventionAction`, `detectionAction`, `responsible`, `targetDate`, `status`, `actionTaken`, `completionDate` quedan vacios. Regla `.claude/rules/amfe.md` §5.
 4. **NO usar S*O*D** — siempre `calculateAP(s,o,d)` del helper `_lib/amfeIo.mjs`.
-5. **NO propagar entre familias con proceso distinto**: inyeccion plastica != inyeccion PU. Verificar fallas/causas del hermano antes de propagar (regla `feedback_verify_content_not_name`).
-6. **data es TEXT** — siempre `JSON.stringify(doc)` al escribir (helper `saveAmfe` lo hace automatico). Regla `feedback_amfe_data_is_text`.
+5. **NO propagar entre familias con proceso distinto**: inyeccion plastica != inyeccion PU. Verificar fallas/causas del hermano antes de propagar — el nombre no es el contenido (memoria `feedback_el_nombre_no_es_el_contenido`, skill `injection-process`).
+6. **data es TEXT** — siempre `JSON.stringify(doc)` al escribir; el helper `saveAmfe` lo hace solo y **aborta** si le llega un objeto (`scripts/_lib/amfeIo.mjs`, cabecera y WRITE GUARD).
 7. **NO borrar OPs completas con contenido** — solo BORRAR a nivel de WE (work element), no de operacion. (Los casos historicos `SUSPICIOUS_OP` / `INVALID_OP_CLIPS` se resolvieron con one-offs hoy en `scripts/_archive/`; si reaparecen, reportar a Fak.)
 8. **Merge NO-destructivo**: al llenar gaps, preservar valores ya existentes en el target. Solo rellenar campos vacios/null.
 

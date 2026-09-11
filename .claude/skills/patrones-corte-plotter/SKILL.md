@@ -1,6 +1,6 @@
 ---
 name: patrones-corte-plotter
-description: Patrones de corte 2D en DXF y PLT/HPGL para mesa de corte y plotter — leer un DXF crudo y cerrar el contorno, mover los puntos de anclaje (cruces X) y los piquetes, generar el PLT, y demostrar con numeros que el cambio salio exacto. Usar cuando Fak pase un .dxf o .plt de un patron, pida mover/corregir puntos de alineacion, hable de tizada, mesa de corte, plotter, mylar o troquel, o pida comparar el patron de una mano contra el de la otra. Incluye los 3 gates que evitan los errores caros (aplomo, marco de referencia, verificacion ritual).
+description: Patrones de corte 2D en DXF y PLT/HPGL para mesa de corte y plotter — leer el DXF, mover puntos de anclaje y piquetes, generar el PLT y demostrar con numeros que el cambio salio exacto. Cubre tambien tizadas, mix de plotter y comparar las dos manos. Trae los 3 gates que evitan los errores caros.
 ---
 
 # patrones-corte-plotter — mover puntos sin equivocarse
@@ -66,7 +66,7 @@ piquetes.
 |---|---|
 | Interprete (unico) | `C:\Dev\BarackMercosul\.venv-cad\Scripts\python.exe` |
 | Librerias | `ezdxf` (DXF), `matplotlib` backend `Agg` (imagenes) |
-| Libreria propia | `scripts/patronlib.py` — importar desde ahi, no reescribir |
+| Libreria propia | `.claude/skills/patrones-corte-plotter/scripts/patronlib.py` (+ `costuralib.py`, `patronlib_selftest.py`) — importar desde ahi, no reescribir. **Ojo:** `scripts/_mixPlotter.py` si cuelga de la raiz del repo; son dos carpetas distintas |
 
 El PLT se escribe a mano: es texto plano HPGL, no hace falta libreria.
 

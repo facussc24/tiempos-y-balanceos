@@ -107,12 +107,11 @@ Anti-patrones: todo en una linea, "L0, L1, L2, L3" sin PNs, PN sin puntos.
 
 ## 7. Diferencias Headrest Front vs Rear (no flaggear como bug)
 
-> ⚠️ **Numeracion corregida el 23/08/2026 contra Supabase live.** Hasta hoy esta seccion decia
-> que HRC/HRO *"van directo a OP50 INYECCION DE PU"* — **eso es falso desde el 18/08/2026**
-> (Fak, sobre el puesto: *"es imposible que se inyecte sin la funda, se saldria todo el
-> material"*), y la numeracion citada era la previa a la renumeracion del 18-20/08. Este skill
-> se auto-carga al editar AMFEs, asi que estaba inyectando el error corregido en las sesiones
-> que renumeran. **La numeracion se lee de Supabase o de `_verificarNumeracion.mjs`, nunca de aca.**
+> ⚠️ **La numeracion se lee de Supabase live o de `scripts/_verificarNumeracion.mjs`, nunca de
+> aca.** Los numeros de abajo son de la renumeracion del 18-20/08/2026 y sirven para entender la
+> diferencia entre delantero y traseros, no para renumerar. Los tres **enfundan antes de
+> espumar** — Fak, sobre el puesto: *"es imposible que se inyecte sin la funda, se saldria todo
+> el material"*.
 
 - **HF-PAT** (151, delantero): lleva **dos** componentes — soporte EPP `2HC.881.915` + varilla POLE
   `2HC.881.937`; el EPP se inserta dentro de la operacion de enfundado; **16 OPs**, con el tramo de

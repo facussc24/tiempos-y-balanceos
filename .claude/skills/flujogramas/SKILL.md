@@ -1,6 +1,6 @@
 ---
 name: flujogramas
-description: Armar, corregir o revisar un flujograma de proceso de Barack (formulario I-IN-002/III) con el generador de `tools/flowchart/`. Usar cuando Fak pida hacer o corregir un flujograma, cuando haya que decidir la numeracion de un proceso, cuando haya que mirar un flujograma renderizado para revisarlo, o cuando el AMFE y el Plan de Control no cierren con el flujograma. Trae el criterio de numeracion, las convenciones de dibujo validadas por Fak, las trampas del motor y como se entrega. Complementa `no-pfd-no-ho.md` (que dice QUE se hace y quien manda la numeracion) y `amfe.md` §12.
+description: Flujogramas de proceso de Barack (formulario I-IN-002/III) con el generador de `tools/flowchart/` — criterio de numeracion, convenciones de dibujo validadas por Fak, trampas del motor y como se entrega. Tambien cuando el AMFE y el Plan de Control no cierran con el flujograma.
 ---
 
 # El flujograma manda la numeracion, y se juzga renderizado

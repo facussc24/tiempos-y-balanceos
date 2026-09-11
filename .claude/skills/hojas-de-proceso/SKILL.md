@@ -1,6 +1,6 @@
 ---
 name: hojas-de-proceso
-description: Criterios de imagen y armado de hojas de proceso / hojas de operaciones de Barack (formulario I-IN-002.4-R01), en PPTX o Excel. Usar cuando Fak pida armar, corregir o revisar hojas de proceso de una maquina o de una operacion, cuando haya que elegir o acomodar las fotos de una hoja, o cuando haya que preparar una pantalla de HMI (foto real enderezada + rotulo encima) para que se lea impresa. Trae la libreria `hojalib`, el gate que rechaza la hoja que no cumple y su selftest. Complementa `no-pfd-no-ho.md` (que dice CUANDO se hace una HO y quien numera) y `editar-video` (de donde sale el material cuando la fuente son videos).
+description: Hojas de proceso / hojas de operaciones de Barack (formulario I-IN-002.4-R01) en PPTX o Excel — que imagen manda, como se acomodan y como se prepara una pantalla de HMI para que se lea impresa. Trae la libreria `hojalib`, el gate que rechaza la hoja y su selftest.
 ---
 
 # Una hoja de proceso se lee de pie, al lado de la maquina, impresa en A4
@@ -95,16 +95,15 @@ imagenes **ya embebidas en el pptx**, donde no hay nombre de archivo que seguir.
 
 ## 3. La pantalla es la FOTO REAL enderezada, con el dato encima. Ni redibujada ni con IA
 
-**Corregido por Fak el 08/09/2026.** Yo habia redibujado la pantalla de seguridad entera, en
-castellano, prolija. Su respuesta: *"intenta poner la foto de la pantalla real y metele un
-edit y ponele encima el dato que vos queres"*. Es lo contrario de lo que decia esta seccion
-hasta ese dia, y tiene razon: **el operario tiene adelante la pantalla en chino**. Un dibujo
+**Fak, 08/09/2026:** *"intenta poner la foto de la pantalla real y metele un edit y ponele encima
+el dato que vos queres"* — despues de que yo entregara la pantalla de seguridad redibujada entera,
+en castellano y prolija. El motivo: **el operario tiene adelante la pantalla en chino**. Un dibujo
 en castellano que no se le parece no le sirve para encontrarla entre menus; la foto de la
 pantalla que el ve, con el rotulo puesto encima, si.
 
 Como se hace — los cuatro pasos, en orden:
 
-1. **Elegir el fotograma** donde la pantalla se lee (`elegir_frame.py` ordena candidatos del
+1. **Elegir el fotograma** donde la pantalla se lee (`scripts/hotmelt/elegir_frame.py` ordena candidatos del
    mismo video por foco; el veredicto sale de MIRARLA).
 2. **Enderezarla**: `Image.PERSPECTIVE` con los cuatro vertices del LCD. Una pantalla sacada
    de costado se rectifica; no se recorta y se deja en diagonal.
@@ -182,9 +181,9 @@ CICLO DE CONTROL · ELEMENTOS DE SEGURIDAD · PLAN DE REACCION.
 
 | Capa | Que | Donde |
 |---|---|---|
-| **Dura** | `hoja_proceso_check.py` sale con codigo 1 y la hoja no se entrega | `scripts/hoja_proceso_check.py` |
-| **Dura** | los umbrales viven **solo** en `hojalib.py`: el generador dibuja con los mismos numeros con los que el gate rechaza | `scripts/hojalib.py` |
-| **Regresion** | 25 casos, cada criterio en ROJO y en VERDE | `scripts/hojalib_selftest.py` |
+| **Dura** | `hoja_proceso_check.py` sale con codigo 1 y la hoja no se entrega | `.claude/skills/hojas-de-proceso/scripts/hoja_proceso_check.py` |
+| **Dura** | los umbrales viven **solo** en `hojalib.py`: el generador dibuja con los mismos numeros con los que el gate rechaza | `.claude/skills/hojas-de-proceso/scripts/hojalib.py` |
+| **Regresion** | 25 casos, cada criterio en ROJO y en VERDE | `.claude/skills/hojas-de-proceso/scripts/hojalib_selftest.py` |
 | **Dato** | la metrica de legibilidad viaja dentro del PNG, sobrevive al pptx | `hojalib.guardar_pantalla()` |
 
 ```bash
