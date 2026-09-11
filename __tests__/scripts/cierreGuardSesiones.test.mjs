@@ -14,8 +14,12 @@ import {
 } from '../../scripts/_lib/cierreGuard.mjs';
 
 const SCR = 'C:\\Users\\FACUND~1\\AppData\\Local\\Temp\\claude\\C--Dev-BarackMercosul\\e0a735af\\scratchpad';
-const repoWin = REPO.replace(/\//g, '\\');
-const repoGitBash = `/${repoWin[0].toLowerCase()}/${repoWin.slice(3).replace(/\\/g, '/')}`;
+// `REPO` sale de path.resolve: trae `\` en Windows y `/` en el runner de Linux. Rearmarlo
+// a mano con `\` rompia en Linux (no era absoluta ni relativa: tocados salia vacio).
+const raizRepo = REPO;
+const repoGitBash = process.platform === 'win32'
+  ? `/${raizRepo[0].toLowerCase()}/${raizRepo.slice(3).replace(/\\/g, '/')}`
+  : '';
 
 describe('cierre-guard · scratchpad no es "afuera" (falso positivo 1)', () => {
   it('VERDE: un commit con el mensaje en el scratchpad, o copiar dentro del scratchpad, no entrega nada', () => {
@@ -32,12 +36,30 @@ describe('cierre-guard · scratchpad no es "afuera" (falso positivo 1)', () => {
 
 describe('cierre-guard · pendientes solo de ESTA sesion (falso positivo 2)', () => {
   it('rutaRelativaAlRepo: Write/Edit dentro del repo (Windows o Git Bash) → relativa con /; afuera o Bash → null', () => {
-    expect(rutaRelativaAlRepo({ name: 'Write', input: { file_path: `${repoWin}\\scripts\\_lib\\x.mjs` } })).toBe('scripts/_lib/x.mjs');
-    expect(rutaRelativaAlRepo({ name: 'Edit', input: { file_path: `${repoWin.replace(/\\/g, '/')}/CLAUDE.md` } })).toBe('CLAUDE.md');
+    expect(rutaRelativaAlRepo({ name: 'Write', input: { file_path: `${raizRepo}\\scripts\\_lib\\x.mjs` } })).toBe('scripts/_lib/x.mjs');
+    expect(rutaRelativaAlRepo({ name: 'Edit', input: { file_path: `${raizRepo.replace(/\\/g, '/')}/CLAUDE.md` } })).toBe('CLAUDE.md');
     // la forma /c/Dev/... solo existe en Git Bash de Windows; en el runner Linux REPO no tiene letra de unidad
     if (process.platform === 'win32') expect(rutaRelativaAlRepo({ name: 'Edit', input: { file_path: `${repoGitBash}/docs/x.md` } })).toBe('docs/x.md');
     expect(rutaRelativaAlRepo({ name: 'Write', input: { file_path: 'C:\\Users\\x\\Desktop\\a.md' } })).toBe(null);
     expect(rutaRelativaAlRepo({ name: 'Bash', input: { command: 'echo' } })).toBe(null);
+  });
+
+  // 11/09/2026: en el runner de Linux el repo es `/home/runner/work/...` y `esAbsoluta` solo
+  // conocia `C:\` y `\\server\`, asi que toda ruta absoluta caia en "relativa = dentro del
+  // repo" y el set de tocados salia vacio. Se prueba con un repo de forma POSIX, que en
+  // Windows tampoco existe en el disco: el criterio sale del repo, no de la plataforma.
+  it('repo con forma POSIX (el runner del CI): adentro da la relativa, afuera sigue siendo afuera', () => {
+    const repoLinux = '/home/runner/work/tiempos-y-balanceos/tiempos-y-balanceos';
+    const w = (file_path) => ({ name: 'Write', input: { file_path } });
+    expect(rutaRelativaAlRepo(w(`${repoLinux}/scripts/_lib/x.mjs`), repoLinux)).toBe('scripts/_lib/x.mjs');
+    expect(rutaRelativaAlRepo(w(`${repoLinux}/CLAUDE.md`), repoLinux)).toBe('CLAUDE.md');
+    expect(rutaRelativaAlRepo(w('/home/runner/otro/x.mjs'), repoLinux)).toBe(null);
+    // `fuera_del_repo` es una lista de destinos reales (Desktop, OneDrive, Y:), no "todo lo
+    // que no es el repo": un Escritorio de Linux tiene que seguir contando como afuera.
+    expect(evaluarToolUse(w('/home/runner/Desktop/informe.pdf'), repoLinux)).toMatch(/informe\.pdf/);
+    expect(evaluarToolUse(w(`${repoLinux}/docs/x.md`), repoLinux)).toBe(null);
+    expect(esEntregableFuera(`${repoLinux}/tools/flowchart/.build/154.png`, repoLinux)).toBe(false);
+    expect(esEntregableFuera('/home/runner/Desktop/154.png', repoLinux)).toBe(true);
   });
 
   it('escribioFueraEnEsteTurno junta los tocados de TODA la sesion y no toma el scratchpad como entrega', async () => {
@@ -45,10 +67,10 @@ describe('cierre-guard · pendientes solo de ESTA sesion (falso positivo 2)', ()
     const l = (o) => JSON.stringify(o);
     fs.writeFileSync(f, [
       l({ type: 'user', message: { content: 'arranca' } }),
-      l({ type: 'assistant', message: { content: [{ type: 'tool_use', name: 'Write', input: { file_path: `${repoWin}\\scripts\\x.mjs`, content: '' } }] } }),
+      l({ type: 'assistant', message: { content: [{ type: 'tool_use', name: 'Write', input: { file_path: `${raizRepo}\\scripts\\x.mjs`, content: '' } }] } }),
       l({ type: 'user', message: { content: 'segui' } }),
       l({ type: 'assistant', message: { content: [{ type: 'tool_use', name: 'Bash', input: { command: `git commit -F "${SCR}\\c.txt"` } }] } }),
-      l({ type: 'assistant', message: { content: [{ type: 'tool_use', name: 'Edit', input: { file_path: `${repoWin}\\CLAUDE.md`, old_string: 'a', new_string: 'b' } }] } }),
+      l({ type: 'assistant', message: { content: [{ type: 'tool_use', name: 'Edit', input: { file_path: `${raizRepo}\\CLAUDE.md`, old_string: 'a', new_string: 'b' } }] } }),
     ].join('\n') + '\n');
     try {
       const r = await escribioFueraEnEsteTurno(f);
@@ -101,7 +123,7 @@ describe('cierre-guard · C.1: lo que la sesion escribio con Bash tambien cuenta
     expect([...rutasRepoEnComando(`sed -i 's/a/b/' scripts/foo.mjs`)]).toEqual(['scripts/foo.mjs']);
     expect([...rutasRepoEnComando(`cat > docs/x.md <<'EOF'\nimport y from '../../scripts/_lib/y.mjs';\nver https://x.com/a.md\nEOF`)]).toEqual(['docs/x.md']);
     expect([...rutasRepoEnComando(`python scripts/_arb.py --aplicar && git add scripts\\_lib\\z.json ./CLAUDE.md`)].sort()).toEqual(['CLAUDE.md', 'scripts/_arb.py', 'scripts/_lib/z.json']);
-    expect([...rutasRepoEnComando(`node "${repoWin}\\scripts\\x.mjs" --json`)]).toEqual(['scripts/x.mjs']);
+    expect([...rutasRepoEnComando(`node "${raizRepo}\\scripts\\x.mjs" --json`)]).toEqual(['scripts/x.mjs']);
     expect([...rutasRepoEnComando(`git commit -F "${SCR}\\c.txt" && cp x.pdf "C:\\Users\\x\\Desktop\\x.md" && ls -la && npx vitest run`)]).toEqual([]);
     expect([...rutasRepoEnComando(undefined)]).toEqual([]);
   });
@@ -126,7 +148,7 @@ describe('cierre-guard · C.1: lo que la sesion escribio con Bash tambien cuenta
     try { expect((await escribioFueraEnEsteTurno(f)).tocados).toBe(null); } finally { fs.unlinkSync(f); }
   });
   it('sesion que solo leyo (Read/Grep) → Set vacio: cero pendientes propios es lo correcto', async () => {
-    const f = transcript([{ name: 'Read', input: { file_path: `${repoWin}\\CLAUDE.md` } }, { name: 'Grep', input: { pattern: 'x' } }]);
+    const f = transcript([{ name: 'Read', input: { file_path: `${raizRepo}\\CLAUDE.md` } }, { name: 'Grep', input: { pattern: 'x' } }]);
     try {
       const r = await escribioFueraEnEsteTurno(f);
       expect(r.tocados).toBeInstanceOf(Set);
@@ -161,7 +183,7 @@ describe('cierre-guard · relevarTranscript: ultimo mensaje de Fak, subagentes y
   it('ultimoMensajeFak es lo que ESCRIBIO Fak: los avisos que Claude Code mete como user no cuentan', async () => {
     const f = transcriptDe([
       user('hace el informe corto'),
-      asis({ name: 'Write', input: { file_path: `${repoWin}\\docs\\x.md`, content: '' } }),
+      asis({ name: 'Write', input: { file_path: `${raizRepo}\\docs\\x.md`, content: '' } }),
       user('<system-reminder>\nrecordatorio\n</system-reminder>'),
       user('[SYSTEM NOTIFICATION - NOT USER INPUT]\n<task-notification>listo</task-notification>'),
       l({ type: 'user', message: { content: [{ type: 'tool_result', content: 'ok' }] } }),
@@ -180,7 +202,7 @@ describe('cierre-guard · relevarTranscript: ultimo mensaje de Fak, subagentes y
     fs.mkdirSync(path.join(dir, 'ses', 'subagents'), { recursive: true });
     fs.writeFileSync(path.join(dir, 'ses', 'subagents', 'agent-1.jsonl'), [
       l({ type: 'user', isSidechain: true, message: { content: 'audita' } }),
-      l({ type: 'assistant', isSidechain: true, message: { content: [{ type: 'tool_use', name: 'Edit', input: { file_path: `${repoWin}\\scripts\\sub.mjs`, old_string: 'a', new_string: 'b' } }] } }),
+      l({ type: 'assistant', isSidechain: true, message: { content: [{ type: 'tool_use', name: 'Edit', input: { file_path: `${raizRepo}\\scripts\\sub.mjs`, old_string: 'a', new_string: 'b' } }] } }),
     ].join('\n') + '\n');
     try {
       expect([...(await archivosTocadosEnSesion(f))]).toEqual(['scripts/sub.mjs']);
@@ -194,7 +216,7 @@ describe('cierre-guard · relevarTranscript: ultimo mensaje de Fak, subagentes y
       user('dale'),
       asis({ name: 'Write', input: { file_path: path.join(largo, 'App.tsx'), content: '' } }),
       asis({ name: 'Edit', input: { file_path: path.join(repoTmp, 'x.ts'), old_string: 'a', new_string: 'b' } }),
-      asis({ name: 'Write', input: { file_path: `${repoWin}\\CLAUDE.md`, content: '' } }),     // del repo REAL: no es de este
+      asis({ name: 'Write', input: { file_path: `${raizRepo}\\CLAUDE.md`, content: '' } }),     // del repo REAL: no es de este
     ]);
     try {
       expect([...(await relevarTranscript(f, { repo: repoTmp })).tocados].sort()).toEqual(['App.tsx', 'x.ts']);
@@ -214,7 +236,7 @@ describe('cierre-guard · A1: un entregable escrito afuera y nunca abierto no se
     expect(esEntregableFuera(`${DESK}\\difusion.pdf`)).toBe(true);
     expect(esEntregableFuera('Y:\\BARACK\\CALIDAD\\tabla.xlsx')).toBe(true);
     expect(esEntregableFuera('/c/Users/x/Desktop/carro.step')).toBe(true);
-    expect(esEntregableFuera(`${repoWin}\\tools\\flowchart\\.build\\154.png`)).toBe(false);
+    expect(esEntregableFuera(`${raizRepo}\\tools\\flowchart\\.build\\154.png`)).toBe(false);
     expect(esEntregableFuera(`${SCR}\\render.png`)).toBe(false);
     expect(esEntregableFuera('C:\\Users\\FacundoS-PC\\AppData\\Local\\Temp\\x.pdf')).toBe(false);
     expect(esEntregableFuera('C:\\Users\\FacundoS-PC\\.claude\\projects\\p\\memory\\foto.png')).toBe(false);

@@ -182,7 +182,11 @@ function aWindows(r) {
   if (m) s = `${m[1].toUpperCase()}:\\${m[2].replace(/\//g, '\\')}`;
   return s;
 }
-const esAbsoluta = (r) => /^[a-z]:[\\/]/i.test(r) || /^\\\\/.test(r);
+/** `C:\x` o `\\server\x` siempre; y `/home/x` cuando el repo tambien arranca en `/`
+ *  (el runner del CI es Linux: sin esto toda ruta absoluta se leia como relativa y la
+ *  lista de tocados salia vacia). El criterio sale del repo, no de `process.platform`. */
+const esAbsoluta = (r, repo = REPO) => /^[a-z]:[\\/]/i.test(r) || /^\\\\/.test(r)
+  || (r.startsWith('/') && String(repo ?? '').startsWith('/'));
 const rutaLarga = (p) => { try { return fs.realpathSync.native(p); } catch { return p; } };
 
 const repoNormalizado = new Map();
@@ -211,7 +215,7 @@ function dentroDelRepo(rutaWin, repo) {
 function esRutaFuera(ruta, repo = REPO) {
   if (!ruta) return false;
   const r = aWindows(ruta);
-  if (!esAbsoluta(r)) return false;                  // relativa = dentro del repo
+  if (!esAbsoluta(r, repo)) return false;            // relativa = dentro del repo
   if (dentroDelRepo(r, repo) !== null) return false;
   if (SCRATCH.test(r) || TEMP.test(r)) return false;
   return FUERA.some((f) => f.test(r));
@@ -242,7 +246,7 @@ export function evaluarToolUse(bloque, repo = REPO) {
 export function rutaRelativaAlRepo(bloque, repo = REPO) {
   if (!/^(Write|Edit|MultiEdit|NotebookEdit)$/.test(bloque?.name || '')) return null;
   const r = aWindows(bloque.input?.file_path || bloque.input?.notebook_path || '');
-  if (!esAbsoluta(r)) return null;
+  if (!esAbsoluta(r, repo)) return null;
   return dentroDelRepo(r, repo);
 }
 
@@ -282,7 +286,7 @@ const limpiarToken = (t) => String(t ?? '').replace(/^["'`(]+|["'`),;:]+$/g, '')
  *  cualquier carpeta que no sea el repo es un entregable para alguien. */
 export function esEntregableFuera(ruta, repo = REPO) {
   const r = aWindows(limpiarToken(ruta));
-  if (!EXT_ENTREGABLE.test(r) || !esAbsoluta(r)) return false;
+  if (!EXT_ENTREGABLE.test(r) || !esAbsoluta(r, repo)) return false;
   if (dentroDelRepo(r, repo) !== null) return false;
   if (SCRATCH.test(r) || TEMP.test(r) || EXCLUIR_ENTREGABLE.test(r)) return false;
   return true;
