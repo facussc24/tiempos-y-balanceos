@@ -1,0 +1,8 @@
+{
+  "name": "barack-apqp",
+  "version": "0.1.0",
+  "description": "Skills de ingenieria APQP de Barack Mercosul (AMFE, plan de control, consumos, ERP arb, flujogramas, CAD). Empaquetado para poder medirlo con `claude plugin eval --ablation with-without`.",
+  "author": { "name": "facussc24" },
+  "skills": "./.claude/skills",
+  "experimental": { "evals": "evals/" }
+}

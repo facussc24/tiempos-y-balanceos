@@ -9,7 +9,7 @@
 import { describe, it, expect } from 'vitest';
 import {
     carpetaTemporal, leerEpochFlag, clasificarPorcelain,
-    evaluarGit, evaluarBackup, evaluarLecciones, veredicto,
+    evaluarGit, evaluarBackup, evaluarLecciones, evaluarComponentesClaude, veredicto,
     LECCIONES_AVISO, LECCIONES_TOPE,
 } from '../../scripts/_cierreSesion.mjs';
 
@@ -119,6 +119,59 @@ describe('evaluarLecciones', () => {
     });
     it('archivo ilegible avisa en vez de mentir un ok', () => {
         expect(evaluarLecciones(null).estado).toBe('aviso');
+    });
+});
+
+describe('evaluarComponentesClaude', () => {
+    const ok = (ambito) => ({ ambito, disponible: true, fallas: [] });
+
+    it('verde cuando todo parsea y .gitattributes sigue fijando eol=lf', () => {
+        const r = evaluarComponentesClaude([ok('.claude'), ok('skills globales')], { eolFijado: true });
+        expect(r.estado).toBe('ok');
+        expect(r.detalle).toContain('.claude + skills globales');
+    });
+
+    // El caso 11/09/2026: frontmatter que no parsea = skill que carga sin description
+    // y por lo tanto no se dispara sola. Tiene que BLOQUEAR el cierre.
+    it('ROJO cuando un componente no parsea — es el incidente que lo origino', () => {
+        const r = evaluarComponentesClaude([
+            {
+                ambito: '.claude',
+                disponible: true,
+                fallas: [{
+                    archivo: '.claude/skills/rule-enforcement-gate/SKILL.md',
+                    mensaje: 'YAML frontmatter failed to parse: loads with empty metadata',
+                }],
+            },
+            ok('skills globales'),
+        ], { eolFijado: true });
+        expect(r.estado).toBe('falta');
+        expect(r.detalle).toContain('rule-enforcement-gate');
+    });
+
+    it('corta el listado en 6 y dice cuantas quedaron', () => {
+        const fallas = Array.from({ length: 9 }, (_, i) => ({ archivo: `s${i}/SKILL.md`, mensaje: 'roto' }));
+        const r = evaluarComponentesClaude([{ ambito: '.claude', disponible: true, fallas }], { eolFijado: true });
+        expect(r.estado).toBe('falta');
+        expect(r.detalle).toContain('9 componente(s)');
+        expect(r.detalle).toContain('3 mas');
+    });
+
+    it('avisa (no bloquea) si la CLI no esta: sin juez no hay veredicto', () => {
+        const r = evaluarComponentesClaude([
+            { ambito: '.claude', disponible: false, fallas: [] },
+            { ambito: 'skills globales', disponible: false, fallas: [] },
+        ], { eolFijado: true });
+        expect(r.estado).toBe('aviso');
+        expect(r.detalle).toContain('plugin validate');
+    });
+
+    // Todo verde hoy no sirve si el proximo clon reintroduce CRLF: el arreglo de raiz
+    // es .gitattributes, y que siga ahi tambien se mide.
+    it('avisa si validan OK pero .gitattributes dejo de fijar eol=lf', () => {
+        const r = evaluarComponentesClaude([ok('.claude')], { eolFijado: false });
+        expect(r.estado).toBe('aviso');
+        expect(r.detalle).toContain('eol=lf');
     });
 });
 

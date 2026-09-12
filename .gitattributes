@@ -1,0 +1,53 @@
+# Finales de linea: LF en el arbol de trabajo, en TODAS las PCs.
+#
+# Por que existe este archivo (11/09/2026): esta PC tiene `core.autocrlf=true`, asi que cada
+# clon fresco escribia CRLF en el arbol de trabajo. Un SKILL.md en CRLF cuya `description`
+# tenga un `: ` sin comillas NO PARSEA: Claude Code descarta name y description en silencio y
+# la skill deja de dispararse sola. Pasaba con `amfe-export-oficial` y `rule-enforcement-gate`.
+# Detectado con `claude plugin validate .claude --strict`.
+#
+# `eol=lf` le gana a `core.autocrlf`, asi que el arreglo no depende de la config de cada PC
+# (protocolo "PC nueva" de CLAUDE.md). El indice de git ya era LF: esto no cambia contenido.
+
+* text=auto eol=lf
+
+# Binarios: git no les toca un byte.
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.webp binary
+*.ico  binary
+*.pdf  binary
+*.xlsx binary
+*.xls  binary
+*.xlsm binary
+*.docx binary
+*.pptx binary
+*.zip  binary
+*.wav  binary
+*.mp3  binary
+*.mp4  binary
+*.mov  binary
+*.ttf  binary
+*.woff binary
+*.woff2 binary
+
+# Formatos que parecen texto pero los juzga otro programa (AutoCAD, el plotter):
+# que git no les normalice nada.
+*.dxf  binary
+*.dwg  binary
+*.plt  binary
+*.hpgl binary
+*.step binary
+*.stp  binary
+*.stl  binary
+*.glb  binary
+
+# Scripts que corre bash: CRLF en un shebang rompe el interprete.
+*.sh text eol=lf
+
+# Al reves: lo que ejecuta o abre Windows quiere CRLF.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf

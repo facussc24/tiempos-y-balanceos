@@ -169,6 +169,42 @@ export function evaluarLeccionesBullets(texto) {
     };
 }
 
+/**
+ * Skills, agents y commands: ¿los carga Claude Code, o los descarta en silencio?
+ *
+ * Incidente 11/09/2026: `amfe-export-oficial` y `rule-enforcement-gate` cargaban con
+ * METADATA VACIA. El frontmatter no parseaba (CRLF + un `: ` sin comillas adentro de la
+ * description) y Claude Code descartaba name y description sin decir nada: sin description
+ * una skill no se dispara sola, solo si la nombro a mano. Las dos venian muertas y ningun
+ * chequeo lo miraba — incluida `rule-enforcement-gate`, que es justo la que dice que una
+ * regla sin enforcement no es una regla.
+ *
+ * El juez es `claude plugin validate`, no un parser mio: el que tiene que poder leer el
+ * archivo es el runtime que lo carga. `.gitattributes` (eol=lf) tapa la causa; esto mide
+ * la consecuencia, que es lo que realmente importa.
+ */
+export function evaluarComponentesClaude(reportes, { eolFijado = true } = {}) {
+    const vistos = reportes.filter((r) => r.disponible);
+    if (!vistos.length) {
+        return { estado: 'aviso', detalle: 'no pude correr `claude plugin validate` (¿CLI fuera del PATH?) — sin el, una skill con frontmatter roto pasa callada' };
+    }
+    const fallas = vistos.flatMap((r) => r.fallas.map((f) => ({ ...f, ambito: r.ambito })));
+    if (fallas.length) {
+        return {
+            estado: 'falta',
+            detalle: `${fallas.length} componente(s) que Claude Code NO carga bien — se descartan en silencio:\n`
+                + fallas.slice(0, 6).map((f) => `      · ${f.archivo}\n        ${f.mensaje}`).join('\n')
+                + (fallas.length > 6 ? `\n      ${c.d}… y ${fallas.length - 6} mas${c.x}` : '')
+                + `\n      ${c.d}(detalle: claude plugin validate .claude --strict)${c.x}`,
+        };
+    }
+    const ambitos = vistos.map((r) => r.ambito).join(' + ');
+    if (!eolFijado) {
+        return { estado: 'aviso', detalle: `${ambitos}: validan OK, pero .gitattributes ya no fija eol=lf — el proximo clon vuelve a escribir CRLF y la falla vuelve` };
+    }
+    return { estado: 'ok', detalle: `${ambitos}: todos los skills/agents/commands parsean y cargan con su metadata` };
+}
+
 /** 1 si algun check quedo en 'falta'; 'aviso', 'manual' y 'no-aplica' no bloquean. */
 export function veredicto(checks) {
     return checks.some((ch) => ch.estado === 'falta') ? 1 : 0;
@@ -291,6 +327,51 @@ function chequearCerebro() {
 }
 
 /**
+ * Corre `claude plugin validate <dir> --strict --json` y normaliza la salida.
+ * Nunca tira: si la CLI no esta, el ambito queda `disponible: false` y el check avisa.
+ */
+function validarComponentes(ambito, dir) {
+    if (!fs.existsSync(dir)) return { ambito, disponible: false, fallas: [] };
+    let crudo;
+    try {
+        crudo = execSync(`claude plugin validate "${dir}" --strict --json`, {
+            cwd: REPO, encoding: 'utf8', windowsHide: true,
+            stdio: ['ignore', 'pipe', 'pipe'],
+            timeout: 90 * 1000,             // tope adentro: esperar sin tope no es supervisar
+        });
+    } catch (e) {
+        // La CLI devuelve el JSON tambien cuando falla; si no hay stdout, no corrio.
+        crudo = e.stdout;
+        if (!crudo) return { ambito, disponible: false, fallas: [] };
+    }
+    let json;
+    try { json = JSON.parse(crudo); } catch { return { ambito, disponible: false, fallas: [] }; }
+    const fallas = (json.contents ?? []).flatMap((it) => (it.errors ?? []).map((err) => ({
+        archivo: path.relative(REPO, it.file) || it.file,
+        mensaje: err.message,
+    })));
+    return { ambito, disponible: true, fallas };
+}
+
+/** ¿Sigue en pie el arreglo de raiz? `.gitattributes` es lo que le gana a core.autocrlf. */
+function eolFijadoEnGitattributes() {
+    const p = path.join(REPO, '.gitattributes');
+    return fs.existsSync(p) && /^\s*\*\s+text=auto\s+eol=lf\s*$/m.test(fs.readFileSync(p, 'utf8'));
+}
+
+function chequearComponentesClaude() {
+    try {
+        const reportes = [
+            validarComponentes('.claude', path.join(REPO, '.claude')),
+            validarComponentes('skills globales', path.join(os.homedir(), '.claude', 'skills')),
+        ];
+        return evaluarComponentesClaude(reportes, { eolFijado: eolFijadoEnGitattributes() });
+    } catch (e) {
+        return { estado: 'aviso', detalle: `no se pudieron validar los componentes de Claude: ${e.message.split('\n')[0]}` };
+    }
+}
+
+/**
  * El Escritorio: cuantas tareas siguen abiertas, cuales llevan 7+ dias (candidatas
  * a estar cerradas sin archivar — decide Fak, por eso es aviso y no falta), y si
  * el archivo de cerradas mantiene sus invariantes (eso SI bloquea: un indice roto
@@ -368,6 +449,7 @@ async function main(argv) {
         { paso: 'Git: commit + push (regla git-deploy)', ...chequearGit() },
         { paso: 'Escritorio: cola de tareas y archivo de cerradas', ...(await chequearEscritorio()) },
         { paso: 'Cerebro: wikilinks, indice, rutas citadas y tablas de reglas (_cerebroLint)', ...chequearCerebro() },
+        { paso: 'Skills/agents/commands: los carga Claude Code (claude plugin validate)', ...chequearComponentesClaude() },
         // Lo que ningun script puede medir — se lista para que no se olvide, no bloquea:
         { paso: 'Auditor al cerrar tareas de codigo', estado: 'manual', detalle: 'lanzar el agente `auditor` si esta sesion toco codigo' },
         { paso: 'Lecciones y memorias de la sesion', estado: 'manual', detalle: 'si Fak corrigio, decidio o revelo algo: LECCIONES_APRENDIDAS + memoria con fuente' },
