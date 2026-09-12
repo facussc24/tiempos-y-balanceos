@@ -48,8 +48,50 @@ export function slugProyecto(repo) {
   const abs = path.isAbsolute(repo) || /^[a-z]:[\\/]/i.test(repo) ? repo : path.resolve(repo);
   return abs.replace(/[\\/]+$/, '').replace(/[:\\/]/g, '-');
 }
+/**
+ * Raiz del repo PRINCIPAL: desde un git worktree devuelve el clon del que cuelga; desde
+ * cualquier otro lado devuelve `repo` tal cual.
+ *
+ * POR QUE (11/09/2026): el cerebro vive en ~/.claude/projects/<slug del repo>/memory y el slug
+ * sale de la RUTA. Corrido desde `.claude/worktrees/<nombre>` el slug daba
+ * `C--Dev-BarackMercosul--claude-worktrees-<nombre>`, una carpeta sin memorias: el lint marcaba
+ * 73 ROJOS (0 memorias, MEMORY.md vacio, 70 "memoria `X` no existe") sobre reglas y LECCIONES
+ * que estaban perfectas. Las memorias son del REPO, no de la copia de trabajo.
+ *
+ * Se resuelve leyendo disco, no llamando a `git`: el lint solo lee y los tests no dependen de un
+ * git en el PATH. En un clon normal `.git` es una CARPETA y se corta en la primera linea — ese
+ * es el camino del CI (Linux, sin worktree), que no re-resuelve nada. En un worktree `.git` es
+ * un ARCHIVO `gitdir: <principal>/.git/worktrees/<nombre>`, y su `commondir` (`../..`) apunta al
+ * `.git` comun: la carpeta que lo contiene es la raiz principal. Si algo no cierra (worktree de
+ * un repo bare, gitdir colgado, submodulo) se vuelve a `repo`: el peor caso es el comportamiento
+ * de hoy, y no queda mudo, porque el lint vuelve a gritar los 73 rojos.
+ */
+export function repoPrincipalDe(repo) {
+  const abs = absoluta(repo) ? repo : path.resolve(repo);
+  let st;
+  try { st = fs.statSync(path.join(abs, '.git')); } catch { return repo; }
+  if (st.isDirectory()) return repo;                        // clon normal (y el CI): no se toca
+  const m = (leerSeguro(path.join(abs, '.git')) ?? '').match(/^\s*gitdir:\s*(.+?)\s*$/m);
+  if (!m) return repo;
+  const gitdir = resolverDesde(abs, m[1]);
+  const comun = leerSeguro(path.join(gitdir, 'commondir'));
+  const gitComun = comun ? resolverDesde(gitdir, comun.trim()) : path.dirname(path.dirname(gitdir));
+  if (path.basename(gitComun) !== '.git') return repo;      // worktree de un bare: no hay principal
+  // Normalizado: git escribe el gitlink con `/` y en Windows eso volvia con las barras cambiadas.
+  // El slug lo aguanta (cambia `/` y `\` igual), pero la ruta se imprime y se compara.
+  const principal = path.normalize(path.dirname(gitComun));
+  return fs.existsSync(path.join(principal, '.git')) ? principal : repo;
+}
+const absoluta = (p) => path.isAbsolute(p) || /^[a-z]:[\\/]/i.test(p);
+/** base + p, salvo que p ya sea absoluta. Misma precaucion que slugProyecto: en Linux,
+ *  `path.resolve` de una ruta absoluta de Windows la colgaria del cwd. */
+function resolverDesde(base, p) {
+  const limpia = p.replace(/[\\/]+$/, '');
+  return absoluta(limpia) ? limpia : path.resolve(base, limpia);
+}
+
 export function dirMemoriaDe(repo, home = os.homedir()) {
-  return path.join(home, '.claude', 'projects', slugProyecto(repo), 'memory');
+  return path.join(home, '.claude', 'projects', slugProyecto(repoPrincipalDe(repo)), 'memory');
 }
 
 // ─────────────────────────────────────────────────────────────── lectura

@@ -11,9 +11,10 @@
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { relevarCerebro, lintCerebro, dirMemoriaDe, resumir } from './_lib/cerebroLint.mjs';
+import { relevarCerebro, lintCerebro, dirMemoriaDe, repoPrincipalDe, resumir } from './_lib/cerebroLint.mjs';
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const PRINCIPAL = repoPrincipalDe(REPO);
 const argv = process.argv.slice(2);
 const arg = (k) => { const i = argv.indexOf(k); return i >= 0 ? argv[i + 1] : null; };
 
@@ -29,6 +30,9 @@ if (argv.includes('--json')) {
 } else {
   const d = '\x1b[2m', r = '\x1b[31m', y = '\x1b[33m', g = '\x1b[32m', x = '\x1b[0m';
   process.stdout.write(`\nCEREBRO  ${d}${c.memorias.length} memorias · ${c.reglas.length} reglas · MEMORY.md ${(c.indice.bytes / 1024).toFixed(1)} KB / ${c.indice.lineas} lineas${x}\n`);
+  // Desde un worktree el cerebro es el del repo principal: se dice de donde salio, para que una
+  // resolucion equivocada se vea en la linea y no se confunda con "el cerebro esta vacio".
+  if (PRINCIPAL !== REPO) process.stdout.write(`${d}         worktree · memorias del repo principal ${PRINCIPAL}${x}\n`);
   const porCheck = {};
   for (const h of hallazgos) (porCheck[h.check] ??= []).push(h);
   for (const [check, hs] of Object.entries(porCheck)) {

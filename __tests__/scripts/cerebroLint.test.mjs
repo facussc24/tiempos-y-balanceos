@@ -7,7 +7,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import {
-  relevarCerebro, lintCerebro, resolverLink, leerFrontmatter, reglasDeTabla, reglasDeParrafo, slugProyecto, dirMemoriaDe,
+  relevarCerebro, lintCerebro, resolverLink, leerFrontmatter, reglasDeTabla, reglasDeParrafo, slugProyecto, dirMemoriaDe, repoPrincipalDe,
   chequearWikilinks, chequearIndice, chequearFrontmatter, chequearRutas, chequearTablasClaude, chequearCerradas, chequearGlobales,
   resumir, LIMITES,
 } from '../../scripts/_lib/cerebroLint.mjs';
@@ -228,5 +228,73 @@ describe('cerebroLint — BOM y bloques de codigo (auditoria 05/09)', () => {
     expect(de(lintCerebro(c), 'wikilinks')).toEqual([]);
     const c2 = armar({ memorias: { feedback_uno: { texto: 'Ver [[no_existe_ejemplo]] al final.' }, reference_dos: {} } });
     expect(de(lintCerebro(c2), 'wikilinks')).toHaveLength(1);
+  });
+});
+
+// Incidente 11/09/2026: corrido desde .claude/worktrees/<x>, el slug se armaba con la ruta del
+// WORKTREE adentro (`C--Dev-BarackMercosul--claude-worktrees-<x>`), una carpeta sin memorias: 73
+// ROJOS (0 memorias, MEMORY.md vacio, 70 "memoria `X` no existe") sobre reglas y LECCIONES sanas.
+// Los fixtures son reales (carpetas y archivos `.git` de verdad), no mocks: lo que se prueba es
+// justamente la lectura del disco.
+describe('cerebroLint — el cerebro es el del repo PRINCIPAL, tambien desde un worktree', () => {
+  /** Un clon con un worktree colgando: <principal>/.git/ (carpeta) y <principal>/.claude/worktrees/<n>/.git (archivo). */
+  function armarWorktree({ nombre = 'wt', relativo = false, commondir = '../..', bare = false } = {}) {
+    const base = path.join(TMP, `w${n++}`);
+    const principal = path.join(base, 'BarackMercosul');
+    const wt = path.join(principal, '.claude', 'worktrees', nombre);
+    const comun = bare ? path.join(base, 'bare.git') : path.join(principal, '.git');
+    const gitdir = path.join(comun, 'worktrees', nombre);
+    fs.mkdirSync(gitdir, { recursive: true });
+    fs.mkdirSync(wt, { recursive: true });
+    fs.writeFileSync(path.join(comun, 'HEAD'), 'ref: refs/heads/main\n');
+    const destino = relativo ? path.relative(wt, gitdir) : gitdir;
+    fs.writeFileSync(path.join(wt, '.git'), `gitdir: ${destino.replace(/\\/g, '/')}\n`);
+    if (commondir !== null) fs.writeFileSync(path.join(gitdir, 'commondir'), `${commondir}\n`);
+    return { base, principal, wt };
+  }
+  /** Deja dos memorias y su MEMORY.md en <home>/.claude/projects/<slug del principal>/memory. */
+  function sembrarCerebro(home, principal) {
+    const dir = dirMemoriaDe(principal, home);
+    fs.mkdirSync(dir, { recursive: true });
+    for (const stem of ['feedback_uno', 'reference_dos']) fs.writeFileSync(path.join(dir, `${stem}.md`), fm({ name: stem, type: stem.split('_')[0] }) + 'texto');
+    fs.writeFileSync(path.join(dir, 'MEMORY.md'), '# Memory Index\n\n## A\n- feedback_uno.md — g\n- reference_dos.md — g\n');
+    return dir;
+  }
+
+  it('desde el worktree y desde el principal se cae en la MISMA carpeta y se relevan las MISMAS memorias', () => {
+    const { base, principal, wt } = armarWorktree();
+    const home = path.join(base, 'home');
+    sembrarCerebro(home, principal);
+
+    expect(repoPrincipalDe(wt)).toBe(principal);
+    expect(dirMemoriaDe(wt, home)).toBe(dirMemoriaDe(principal, home));
+    expect(slugProyecto(wt)).not.toBe(slugProyecto(principal));   // el defecto: el slug SI difiere
+
+    const desde = (repo) => relevarCerebro({ repo, memoria: dirMemoriaDe(repo, home) }).memorias.map((m) => m.archivo).sort();
+    expect(desde(wt)).toEqual(['feedback_uno.md', 'reference_dos.md']);
+    expect(desde(wt)).toEqual(desde(principal));
+  });
+
+  it('un clon normal NO se re-resuelve: es el camino del CI (.git carpeta, sin worktree)', () => {
+    const { principal } = armarWorktree();
+    expect(repoPrincipalDe(principal)).toBe(principal);
+    const suelto = path.join(TMP, `sin-git-${n++}`);
+    fs.mkdirSync(suelto, { recursive: true });
+    expect(repoPrincipalDe(suelto)).toBe(suelto);                 // sin .git tampoco inventa raiz
+  });
+
+  it('gitdir relativo y commondir ausente tambien resuelven al principal', () => {
+    const a = armarWorktree({ relativo: true });
+    expect(repoPrincipalDe(a.wt)).toBe(a.principal);
+    const b = armarWorktree({ commondir: null });                 // sin commondir: <gitdir>/../..
+    expect(repoPrincipalDe(b.wt)).toBe(b.principal);
+  });
+
+  it('lo que no cierra vuelve al repo de hoy: worktree de un bare, y gitdir basura', () => {
+    const { wt } = armarWorktree({ bare: true });                 // el comun no se llama .git
+    expect(repoPrincipalDe(wt)).toBe(wt);
+    const roto = armarWorktree();
+    fs.writeFileSync(path.join(roto.wt, '.git'), 'no soy un gitlink\n');
+    expect(repoPrincipalDe(roto.wt)).toBe(roto.wt);
   });
 });
