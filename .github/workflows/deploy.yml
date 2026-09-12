@@ -81,11 +81,18 @@ jobs:
         run: |
           set -o pipefail
           npx vitest run --reporter=default --reporter=github-actions 2>&1 | tee /tmp/vitest.log
-      # Las anotaciones no alcanzan solas: el 11/09/2026 un rojo REAL dejo el job con
-      # "1 error" y NINGUNA anotacion de test — el unico dato legible era "exit code 1", que
-      # es exactamente lo que la linea de arriba queria evitar. El summary del job SI se lee
-      # sin estar logueado (el log no), asi que el rojo queda legible siempre, y si el dia de
-      # mañana el reporter deja de anotar, esto no se entera tarde.
+      # Las anotaciones no alcanzan solas: el 11/09/2026 un rojo dejo el job con "1 error" y
+      # NINGUNA anotacion de test — el unico dato legible era "exit code 1", que es exactamente
+      # lo que la linea de arriba queria evitar. El summary del job SI se lee sin estar
+      # logueado (el log no), asi que el rojo queda legible siempre, y si el dia de mañana el
+      # reporter deja de anotar, esto no se entera tarde.
+      #
+      # Como termino ese caso: el commit siguiente, con el MISMO codigo y solo este cambio de
+      # workflow, salio verde — o sea que era INTERMITENTE. Dos cosas que aprender de ahi: que
+      # la suite tarde lo mismo que un verde NO prueba que el rojo sea deterministico (lo
+      # prueba volver a correr el mismo codigo), y que un rojo intermitente ilegible es el peor
+      # de todos, porque no se puede ni reproducir ni leer. Si vuelve a pasar, el que aparece
+      # en el summary es el test que hay que mirar.
       - name: Publicar el rojo en el summary (las anotaciones no siempre salen)
         if: failure()
         run: |
