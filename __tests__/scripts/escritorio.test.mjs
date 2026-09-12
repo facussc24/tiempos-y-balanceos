@@ -10,6 +10,8 @@
  *   8-9   nombres canonicos idempotentes
  *  10-13  clasificarEntrada
  *  14-18  verificarInvariantes: sin fila / huerfana / nombre no canonico / duplicada / reabierta
+ *  18b-f  verificarInvariantes: la carpeta que VOLVIO al archivo y la tarea que esta en los dos
+ *         lados a la vez — los dos estados que el 11/09/2026 salian como "no tiene fila"
  *  19-26  integracion real: el gate mueve o no mueve, y el listado Excel queda bien
  *  27-30  elegirFechaTarea: la antiguedad sale del mail, porque copiar la carpeta pisa el mtime
  */
@@ -207,6 +209,47 @@ describe('verificarInvariantes — que el archivo y el listado no se separen', (
         expect(verificarInvariantes([buena, buena], { archivadas: ['2026-07-21 - Mariana arb'] }).join(' ')).toMatch(/dos veces/);
         expect(verificarInvariantes([{ ...buena, estado: 'reabierta 2026-07-28' }], { archivadas: [] })).toEqual([]);
     });
+
+    // 18b-18e: los dos estados que el 11/09/2026 nadie veia. La tarea HOTMELT se reabrio el
+    // 08/09 (la carpeta salio del archivo) y el 10/09 REAPARECIO en el archivo con el contenido
+    // viejo, quedando abierta en la cola y archivada al mismo tiempo. El unico aviso que salia
+    // era "no tiene fila en el INDICE" — falso: tenia dos, las dos "reabierta".
+    it('18b. ROJO: la carpeta volvio al archivo y su unica fila es "reabierta" — no dice "falta la fila"', () => {
+        const reabierta = { ...buena, estado: 'reabierta 2026-07-28' };
+        const salida = verificarInvariantes([reabierta], { archivadas: ['2026-07-21 - Mariana arb'] }).join(' ');
+        expect(salida).toMatch(/sobra la carpeta/);
+        expect(salida).toMatch(/reabierta 2026-07-28/);
+        expect(salida).not.toMatch(/no tiene fila en el INDICE/);
+    });
+    it('18c. ROJO: con dos reaperturas manda la ultima, que es la que explica el estado de hoy', () => {
+        const filas = [{ ...buena, estado: 'reabierta 2026-07-28' }, { ...buena, estado: 'reabierta 2026-08-04' }];
+        expect(verificarInvariantes(filas, { archivadas: ['2026-07-21 - Mariana arb'] }).join(' ')).toMatch(/reabierta 2026-08-04/);
+    });
+    it('18d. ROJO: archivada Y abierta en la cola a la vez, aunque la fila y la carpeta cierren', () => {
+        const salida = verificarInvariantes([buena], {
+            archivadas: ['2026-07-21 - Mariana arb'],
+            abiertas: ['Mariana arb'],
+        }).join(' ');
+        expect(salida).toMatch(/archivada Y hay una tarea abierta con el mismo nombre/);
+        // Frena, no decide: nombra las dos lecturas posibles y no manda a borrar ninguna.
+        expect(salida).toMatch(/dos vueltas distintas/);
+    });
+    it('18e. VERDE: cerrar, reabrir y volver a cerrar es sano — y una tarea abierta que NO esta archivada no molesta', () => {
+        // Fila vieja "reabierta" + fila nueva "cerrada" + la carpeta en el archivo: el ciclo normal.
+        const ciclo = [{ ...buena, estado: 'reabierta 2026-07-28' }, { ...buena, cerrada: '2026-08-04' }];
+        expect(verificarInvariantes(ciclo, { archivadas: ['2026-07-21 - Mariana arb'], abiertas: [] })).toEqual([]);
+        // Y la cola llena de tareas abiertas que no estan archivadas no genera un solo problema.
+        expect(verificarInvariantes([buena], {
+            archivadas: ['2026-07-21 - Mariana arb'],
+            abiertas: ['Otra cosa', 'Mariana arb pero de otro tema'],
+        })).toEqual([]);
+    });
+    it('18f. la comparacion despoja la fecha y no distingue mayusculas, como el disco', () => {
+        expect(verificarInvariantes([buena], {
+            archivadas: ['2026-07-21 - Mariana arb'],
+            abiertas: ['  MARIANA ARB  '],
+        }).join(' ')).toMatch(/mismo nombre/);
+    });
 });
 
 describe('elegirFechaTarea — desde cuando esta abierta de verdad', () => {
@@ -302,14 +345,52 @@ describe('integracion — cola y archivo de mentira', () => {
         expect(r.out).toMatch(/no tiene fila en el INDICE/);
     });
 
-    it('25. --reabrir la devuelve a la cola y la fila queda como historia', async () => {
+    // 25 y sus hermanos: la reapertura. Son los tests mas caros del archivo — cada `correr()`
+    // levanta un node entero — asi que ninguno pasa de dos spawns con Excel adentro. El 25
+    // tenia TRES (archivar + reabrir + check) y era el unico que se pasaba de los 15000 ms
+    // cuando la suite completa corre en paralelo: medido 3786 ms aislado y 8351 ms con los 275
+    // archivos encima, el 56% del presupuesto. Ahora el --check lo corre --reabrir solo, que
+    // ademas es lo que corresponde: mover sin verificar es como se perdio la carpeta HOTMELT.
+    it('25. --reabrir la devuelve a la cola, la fila queda como historia y verifica sola', async () => {
         archivarOk();
-        expect(correr(['--reabrir', '2026-07-27 - Tarea vieja']).code).toBe(0);
+        const r = correr(['--reabrir', '2026-07-27 - Tarea vieja']);
+        expect(r.code).toBe(0);
         expect(fs.existsSync(path.join(cola, 'Tarea vieja', 'mail.msg'))).toBe(true);
+        expect(fs.existsSync(path.join(arch, '2026', '2026-07-27 - Tarea vieja'))).toBe(false);
+        expect(r.out).toMatch(/1 archivo\(s\) verificados/);       // conto lo que movio
+        expect(r.out).toMatch(/todas registradas/);                 // y corrio el --check al final
         const hoja = await listado();
         expect(hoja.rowCount).toBe(2);
         expect(hoja.getRow(2).getCell(6).text).toMatch(/^reabierta \d{4}-\d{2}-\d{2}$/);
-        expect(correr(['--check']).code).toBe(0);
+    });
+
+    it('25b. la cola entera bloquea la vuelta (_EN ESPERA incluida) y --como resuelve el choque', () => {
+        // --como es un NOMBRE, nunca una ruta: no se escribe fuera del Escritorio.
+        expect(correr(['--reabrir', '2026-07-27 - Tarea vieja', '--como', 'sub/otra']).code).toBe(1);
+
+        archivarOk();
+        // Lo de adentro de la bandeja sigue ABIERTO: traerla con ese nombre la duplicaria.
+        fs.mkdirSync(path.join(cola, '_EN ESPERA', 'Tarea vieja'), { recursive: true });
+        const choque = correr(['--reabrir', '2026-07-27 - Tarea vieja']);
+        expect(choque.code).toBe(1);
+        expect(choque.out).toMatch(/_EN ESPERA/);
+        expect(fs.existsSync(path.join(arch, '2026', '2026-07-27 - Tarea vieja'))).toBe(true);  // no se movio
+
+        // Con otro nombre si sale: es el caso de la copia que volvio sola al archivo y hay que
+        // sacar sin pisar la carpeta viva que ya ocupa el nombre bueno.
+        const r = correr(['--reabrir', '2026-07-27 - Tarea vieja', '--como', '_Tarea vieja (copia del archivo)']);
+        expect(r.code).toBe(0);
+        expect(fs.existsSync(path.join(cola, '_Tarea vieja (copia del archivo)', 'mail.msg'))).toBe(true);
+        expect(fs.existsSync(path.join(arch, '2026', '2026-07-27 - Tarea vieja'))).toBe(false);
+    });
+
+    it('25c. ROJO: la misma tarea archivada y abierta a la vez la canta el --check', () => {
+        archivarOk();
+        fs.mkdirSync(path.join(cola, 'Tarea vieja'));   // reaparecio en la cola, o nunca se fue
+        const r = correr(['--check']);
+        expect(r.code).toBe(1);
+        expect(r.out).toMatch(/archivada Y hay una tarea abierta con el mismo nombre/);
+        // El VERDE de este mismo gate lo dan el 20 y el 25, donde la tarea esta en un solo lado.
     });
 
     it('26b. --limpiar-vacia saca SOLO la que se le nombra, y respeta el dry-run', () => {

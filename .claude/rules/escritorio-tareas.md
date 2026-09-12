@@ -145,6 +145,41 @@ Sin plazo de retención: el contexto de un reclamo aparece dos años después co
 PPAP viejo. Si una tarea archivada se reabre, **vuelve al Escritorio** y su fila queda
 marcada `reabierta AAAA-MM-DD` — la fila no se borra.
 
+### 4a. Reabrir MUEVE la carpeta — nunca queda en los dos lados
+
+`--reabrir` saca la carpeta del archivo y la pone en la cola. La carpeta está **en un solo
+lugar**: la fila del listado es la que cuenta la historia. Dos copias de la misma tarea en dos
+lugares es el mismo problema del §2, y la peor versión: la copia vieja no se distingue de la
+viva salvo abriéndolas.
+
+**Una tarea archivada Y abierta al mismo tiempo es un ROJO del `--check`.** Puede ser una copia
+que quedó atrás, o dos vueltas distintas del mismo tema con el mismo nombre — el chequeo dice
+las dos lecturas y no decide: se abren las dos carpetas y se mira.
+
+**El caso que originó esto (08 al 11/09/2026).** La tarea de las hojas de proceso del HOTMELT se
+reabrió bien el 08/09 — el script dijo "Reabierta" y la carpeta salió del archivo. El 10/09 a las
+23:58:35Z **volvió a aparecer en el archivo**, con el contenido viejo del 03/09, el mismo segundo
+en que se tocaron las 72 carpetas del año: una pasada sobre el árbol entero, no un comando sobre
+esa carpeta. Estuvo dos días en los dos lados y el único aviso que salía era *"está archivada
+pero no tiene fila en el INDICE"* — falso: tenía dos filas, las dos `reabierta`. El mensaje
+mandaba a buscar al Excel, que estaba bien.
+
+De ahí salieron las tres cosas que ahora hace el script:
+
+1. **`--reabrir` verifica el movimiento** (cantidad de archivos y bytes, igual que `--archivar`)
+   y **corre el `--check` al final**. Mover sin verificar es como se perdió de vista la carpeta.
+2. **El `--check` mira la cola, no solo el archivo**: cruza las carpetas archivadas contra las
+   tareas abiertas (raíz **y** `_EN ESPERA`) y canta la que está en los dos lados.
+3. **Una carpeta cuyas únicas filas son `reabierta` no se reporta como "sin fila"**: se reporta
+   como lo que es — *no falta la fila, sobra la carpeta*, con la fecha de la última reapertura.
+
+**`--reabrir ... --como "<otro nombre>"`** es para exactamente ese caso: la carpeta viva ya ocupa
+el nombre bueno en la cola y hay que sacar del archivo la copia que quedó atrás sin pisarla. Es
+un nombre, nunca una ruta. Igual que sin `--como`, la carpeta se mueve y la fila queda.
+
+**Lo que el script NO puede hacer es impedir que la carpeta vuelva**: quien la trajo de vuelta
+está afuera del script. Lo que sí puede es que no pase otra vez desapercibida.
+
 **Ojo con el destino**: la biblioteca de Ingeniería es del departamento, no espacio personal
 (lleva `(NUNCA BORRAR)` en el nombre y está bajo control documental). Lo que se deja ahí lo
 ve el equipo. Es deliberado — sirve de trazabilidad si Fak no está.
@@ -156,7 +191,7 @@ node scripts/_escritorio.mjs                   # relevar + barrido de mails + ve
 node scripts/_escritorio.mjs --check           # invariantes del archivo
 node scripts/_escritorio.mjs --archivar "<carpeta>" --cerrada AAAA-MM-DD \
      --quien "<quién lo pidió>" --que "<qué se hizo>" --donde "<dónde quedó el entregable>"
-node scripts/_escritorio.mjs --reabrir "<carpeta archivada>"
+node scripts/_escritorio.mjs --reabrir "<carpeta archivada>" [--como "<otro nombre>"]
 ```
 
 **El barrido de mails es parte del relevamiento** (automatizado 30/08/2026 — antes era un
@@ -183,8 +218,12 @@ de mails/documentos del SGC, `.claude/memory/` versionado.
   que no se haya perdido ningún archivo** comparando cantidad y bytes (OneDrive con Files
   On-Demand puede morder); si no cierra, lo canta y no registra.
   **No tiene una sola llamada de borrado.** `--check` sale con código 1 si una carpeta
-  archivada no tiene fila, si una fila apunta a una carpeta que no está, si hay duplicadas
-  o si un nombre no arranca con la fecha.
+  archivada no tiene fila, si una fila apunta a una carpeta que no está, si hay duplicadas,
+  si un nombre no arranca con la fecha, **si una carpeta volvió al archivo después de
+  reabrirse** (fila `reabierta` + carpeta presente) o **si la misma tarea está archivada y
+  abierta a la vez** en la cola (raíz o `_EN ESPERA`) — §4a. `--reabrir` verifica el
+  movimiento y corre ese `--check` al terminar; `_cierreSesion.mjs` corre los mismos
+  invariantes y **bloquea el cierre de sesión** si alguno rompe.
 - **DURO — hook `escritorio-guard.sh`** (PreToolUse): bloquea borrar cualquier cosa del
   Escritorio o de la biblioteca de Ingeniería, mover a mano hacia/desde el archivo, tocar el
   listado a mano, y escribir un README/LEEME/NOTAS suelto en una carpeta de Fak. Recuerda el

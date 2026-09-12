@@ -23,7 +23,7 @@
  *   node scripts/_escritorio.mjs --check              # solo invariantes (exit 1 si rompen)
  *   node scripts/_escritorio.mjs --archivar "<carpeta>" --cerrada AAAA-MM-DD \
  *        --quien "<quien lo pidio>" --que "<que se hizo>" --donde "<donde quedo el entregable>"
- *   node scripts/_escritorio.mjs --reabrir "<carpeta archivada>"
+ *   node scripts/_escritorio.mjs --reabrir "<carpeta archivada>" [--como "<otro nombre>"]
  *   ... + --dry-run  para ver el plan sin tocar nada
  */
 
@@ -31,7 +31,6 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import ExcelJS from 'exceljs';
 
 import { RUTA_ESCRITORIO, RUTA_TAREAS_CERRADAS } from './_lib/serverPaths.mjs';
 import { leerMsg } from './_leerMsg.mjs';
@@ -67,6 +66,16 @@ export const COLUMNAS = [
     { key: 'donde', header: 'Dónde quedó el entregable', width: 62 },
     { key: 'estado', header: 'Estado', width: 18 },
 ];
+
+/**
+ * ExcelJS se carga a demanda. Es el 90% del arranque de este script: medido el 11/09/2026 en
+ * esta maquina, `node -e "import('exceljs')"` tarda 877-926 ms contra 94-101 ms de node pelado,
+ * y el script arranca UNA VEZ POR COMANDO. Los caminos que no abren el listado (--relevar sin
+ * archivo todavia, --limpiar-vacia, el --archivar que frena en el gate) dejan de pagarlo, y los
+ * tests de integracion — que son 11 spawns — bajan otro tanto.
+ */
+let excelJS = null;
+const cargarExcel = async () => (excelJS ??= (await import('exceljs')).default);
 
 const c = { r: '\x1b[31m', y: '\x1b[33m', g: '\x1b[32m', b: '\x1b[34m', d: '\x1b[2m', x: '\x1b[0m' };
 const say = (s = '') => console.log(s);
@@ -138,16 +147,37 @@ export function clasificarEntrada(nombre, esDirectorio) {
 }
 
 /**
- * Invariantes. `estadoFs.archivadas` = carpetas presentes en el año del archivo.
- * Devuelve la lista de problemas (vacia = sano).
+ * Clave para comparar la MISMA tarea entre la cola y el archivo: el archivo le pone la fecha
+ * de cierre adelante y Windows no distingue mayusculas, asi que se despoja y se baja todo.
+ */
+export const claveTarea = (nombre) => despojarFecha(nombre).trim().toLowerCase();
+
+/**
+ * Invariantes del archivo de cerradas. Devuelve la lista de problemas (vacia = sano).
+ *
+ *   estadoFs.archivadas  carpetas presentes en el año del archivo.
+ *   estadoFs.abiertas    nombres de las tareas que HOY estan abiertas en la cola (raiz +
+ *                        `_EN ESPERA`). Opcional; sin esto no se ve la tarea que esta en los
+ *                        dos lados a la vez, que es el estado peor: dos fuentes de lo mismo.
  */
 export function verificarInvariantes(filas, estadoFs) {
     const problemas = [];
     const archivadas = new Set(estadoFs.archivadas);
+    const abiertas = new Set((estadoFs.abiertas ?? []).map(claveTarea));
     const registradas = new Set();
+    const reabiertas = new Map();
 
     for (const f of filas) {
-        if (String(f.estado ?? '').startsWith('reabierta')) continue;   // historia, no se chequea
+        // Una fila "reabierta" es HISTORIA: la carpeta se fue de vuelta a la cola, asi que no
+        // se le exige carpeta ni contenido. Pero se ANOTA, porque si la carpeta igual esta en
+        // el archivo el problema no es que falte la fila: es que la carpeta volvio.
+        const estado = String(f.estado ?? '');
+        if (estado.startsWith('reabierta')) {
+            const cuando = estado.replace(/^reabierta\s*/, '').trim();
+            const previa = reabiertas.get(f.tarea);
+            if (!previa || cuando > previa) reabiertas.set(f.tarea, cuando);
+            continue;
+        }
         if (!esFechaValida(f.cerrada)) problemas.push(`fila con fecha invalida: "${f.cerrada}" (${f.tarea})`);
         if (!archivadas.has(f.tarea)) problemas.push(`el INDICE nombra "${f.tarea}" pero esa carpeta no esta en el archivo`);
         if (registradas.has(f.tarea)) problemas.push(`"${f.tarea}" esta dos veces en el INDICE`);
@@ -158,7 +188,20 @@ export function verificarInvariantes(filas, estadoFs) {
         }
     }
     for (const carpeta of estadoFs.archivadas) {
-        if (!registradas.has(carpeta)) problemas.push(`"${carpeta}" esta archivada pero no tiene fila en el INDICE`);
+        // El mensaje tiene que mandar a mirar donde esta el problema. Una carpeta cuyas unicas
+        // filas son "reabierta" SI tiene fila: lo que pasa es que volvio al archivo despues de
+        // haberse reabierto. Decirle "no tiene fila en el INDICE" manda a buscar al Excel, que
+        // esta bien, y la carpeta se queda donde no va (caso HOTMELT, 11/09/2026).
+        if (!registradas.has(carpeta)) {
+            problemas.push(reabiertas.has(carpeta)
+                ? `"${carpeta}" esta en el archivo Y su ultima fila dice "reabierta ${reabiertas.get(carpeta)}": no falta la fila, sobra la carpeta. O volvio sola despues de reabrirse, o se re-archivo sin registrar.`
+                : `"${carpeta}" esta archivada pero no tiene fila en el INDICE`);
+        }
+        // El chequeo frena, no decide: las dos lecturas son posibles y la de al lado no se
+        // adivina desde el nombre. Se dicen las dos y se abren las dos carpetas.
+        if (abiertas.has(claveTarea(carpeta))) {
+            problemas.push(`"${carpeta}" esta archivada Y hay una tarea abierta con el mismo nombre ("${despojarFecha(carpeta)}"): o una de las dos es una copia que quedo atras (la del archivo sale con --reabrir), o son dos vueltas distintas del mismo tema y a la abierta le falta nombre propio. Se abren las dos y se mira.`);
+        }
         if (!/^\d{4}-\d{2}-\d{2} - .+/.test(carpeta)) problemas.push(`"${carpeta}" no arranca con la fecha de cierre (AAAA-MM-DD - nombre)`);
     }
     return problemas;
@@ -194,6 +237,22 @@ export function listar(dir) {
         return { nombre: d.name, dir: d.isDirectory(), ruta: p, mtime };
     });
 }
+
+/**
+ * Las tareas ABIERTAS de la cola: las de la raiz mas las de adentro de `_EN ESPERA` (la bandeja
+ * esconde de la vista, no cierra — regla `escritorio-tareas.md` §0). Exportada porque el
+ * relevador, el `--check` y `_cierreSesion.mjs` tienen que contar exactamente lo mismo: cuando
+ * cada uno se armaba su propia lista, alcanzaba con que uno se olvidara de la bandeja.
+ */
+export function tareasAbiertas(escritorio) {
+    const entradas = listar(escritorio);
+    const esTarea = (e) => clasificarEntrada(e.nombre, e.dir) === 'tarea';
+    const bandeja = entradas.find((e) => clasificarEntrada(e.nombre, e.dir) === 'espera');
+    return { vista: entradas.filter(esTarea), enEspera: bandeja ? listar(bandeja.ruta).filter(esTarea) : [] };
+}
+
+/** El nombre con el que una tarea abierta se compara contra el archivo (sin extension si es suelta). */
+export const nombresDeTareas = (tareas) => tareas.map((t) => nombreSinExtension(t.nombre, t.dir));
 
 /**
  * Junta las fechas candidatas de una tarea: las de los mails que tiene adentro y las del
@@ -244,6 +303,7 @@ const rutaIndice = (archivo, anio) => path.join(carpetaAnio(archivo, anio), nomb
 export async function leerIndice(archivo, anio) {
     const p = rutaIndice(archivo, anio);
     if (!fs.existsSync(p)) return [];
+    const ExcelJS = await cargarExcel();
     const wb = new ExcelJS.Workbook();
     await wb.xlsx.readFile(p);
     const hoja = wb.worksheets[0];
@@ -259,6 +319,7 @@ export async function leerIndice(archivo, anio) {
 
 async function escribirIndice(archivo, anio, filas) {
     const p = rutaIndice(archivo, anio);
+    const ExcelJS = await cargarExcel();
     const wb = new ExcelJS.Workbook();
     const hoja = wb.addWorksheet(`Tareas cerradas ${anio}`);
     hoja.columns = COLUMNAS.map(({ header, key, width }) => ({ header, key, width }));
@@ -278,15 +339,10 @@ async function escribirIndice(archivo, anio, filas) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 async function cmdRelevar(escritorio, archivo) {
-    const entradas = listar(escritorio);
-    const tareas = entradas
-        .filter((e) => clasificarEntrada(e.nombre, e.dir) === 'tarea')
-        .map((t) => ({ ...t, fecha: fechasDeTarea(t) }));
-
-    const bandeja = entradas.find((e) => clasificarEntrada(e.nombre, e.dir) === 'espera');
-    const enEspera = !bandeja ? [] : listar(bandeja.ruta)
-        .filter((e) => clasificarEntrada(e.nombre, e.dir) === 'tarea')
-        .map((t) => ({ ...t, fecha: fechasDeTarea(t) }));
+    const abiertas = tareasAbiertas(escritorio);
+    const conFecha = (xs) => xs.map((t) => ({ ...t, fecha: fechasDeTarea(t) }));
+    const tareas = conFecha(abiertas.vista);
+    const enEspera = conFecha(abiertas.enEspera);
 
     const linea = (t) => {
         const d = t.fecha.ms ? diasDesde(t.fecha.ms) : null;
@@ -331,7 +387,7 @@ async function cmdRelevar(escritorio, archivo) {
         for (const f of filas.slice(-8)) say(`    ${c.d}${f.cerrada}${c.x}  ${f.tarea}`);
     }
     say('');
-    return cmdCheck(archivo);
+    return cmdCheck(archivo, escritorio);
 }
 
 /**
@@ -437,16 +493,20 @@ export function relevarSinRespuesta(jsonl = MAILS_JSONL, { dias = 5, ventana = 4
     return orden;
 }
 
-async function cmdCheck(archivo) {
+async function cmdCheck(archivo, escritorio) {
     if (!fs.existsSync(archivo)) { warn(`El archivo todavia no existe: ${archivo}`); return 0; }
     const anios = listar(archivo).filter((e) => e.dir && /^\d{4}$/.test(e.nombre)).map((e) => e.nombre);
     if (anios.length === 0) { warn('No hay ningun año en el archivo.'); return 0; }
+
+    // La cola entra al chequeo: una tarea no puede estar cerrada y abierta a la vez.
+    const cola = escritorio && fs.existsSync(escritorio) ? tareasAbiertas(escritorio) : { vista: [], enEspera: [] };
+    const abiertas = nombresDeTareas([...cola.vista, ...cola.enEspera]);
 
     let problemas = 0;
     for (const anio of anios) {
         const filas = await leerIndice(archivo, anio);
         const archivadas = listar(carpetaAnio(archivo, anio)).filter((e) => e.dir).map((e) => e.nombre);
-        const lista = verificarInvariantes(filas, { archivadas });
+        const lista = verificarInvariantes(filas, { archivadas, abiertas });
         if (lista.length === 0) ok(`${anio}: ${archivadas.length} carpeta(s), todas registradas y con nombre canonico.`);
         else {
             problemas += lista.length;
@@ -522,7 +582,7 @@ async function cmdArchivar(escritorio, archivo, { nombre, cerrada, quien, que, d
     filas.sort((a, b) => String(a.cerrada).localeCompare(String(b.cerrada)));
     await escribirIndice(archivo, anio, filas);
     ok(`Archivada en ${anio}\\${tarea}  ${c.d}(${despues.archivos} archivo(s) verificados)${c.x}`);
-    return cmdCheck(archivo);
+    return cmdCheck(archivo, escritorio);
 }
 
 /**
@@ -554,27 +614,91 @@ function cmdLimpiarVacia(escritorio, { nombre, dryRun }) {
     return 0;
 }
 
-async function cmdReabrir(escritorio, archivo, { nombre, dryRun }) {
+/**
+ * --reabrir: la tarea vuelve a la COLA.
+ *
+ * La carpeta se MUEVE, no se copia: dos copias de la misma tarea en dos lugares es el problema,
+ * no la solucion (regla `escritorio-tareas.md` §2). La fila del listado queda marcada
+ * `reabierta AAAA-MM-DD` y NO se borra: es la historia de que estuvo cerrada (§4).
+ *
+ * Verifica el movimiento y corre el `--check` al final, igual que --archivar. No lo hacia, y el
+ * 11/09/2026 se vio por que hace falta: el 08/09 esta tarea se reabrio bien (el script dijo
+ * "Reabierta"), y el 10/09 a las 23:58:35Z la carpeta REAPARECIO en el archivo con el contenido
+ * viejo del 03/09 — el mismo segundo en que se tocaron las 72 carpetas del año, o sea una pasada
+ * sobre el arbol entero y no un comando sobre esa carpeta. Quedo dos dias en los dos lados sin
+ * que nadie se enterara, y el aviso que al final salio mandaba a buscar una fila que estaba.
+ *
+ * `--como` deja elegir con que nombre vuelve. Es para exactamente ese caso: la carpeta viva ya
+ * ocupa el nombre en la cola, y la que hay que sacar del archivo es la copia que quedo atras.
+ */
+async function cmdReabrir(escritorio, archivo, { nombre, como, dryRun }) {
     const hoy = fechaLocal();
+    let renombre = null;
+    if (como !== null && como !== undefined) {
+        renombre = typeof como === 'string' ? como.trim() : '';
+        if (!renombre || renombre !== path.basename(renombre) || renombre === '.' || renombre === '..') {
+            bad('--como tiene que ser un NOMBRE de carpeta, no una ruta ni vacio.');
+            return 1;
+        }
+    }
+
     for (const anio of listar(archivo).filter((e) => e.dir && /^\d{4}$/.test(e.nombre)).map((e) => e.nombre)) {
         const actual = path.join(carpetaAnio(archivo, anio), nombre);
         if (!fs.existsSync(actual)) continue;
-        const vuelta = despojarFecha(nombre);
+        const vuelta = renombre ?? despojarFecha(nombre);
         const destino = path.join(escritorio, vuelta);
-        if (fs.existsSync(destino)) { bad(`Ya hay algo llamado "${vuelta}" en el Escritorio.`); return 1; }
+        if (fs.existsSync(destino)) {
+            bad(`Ya hay algo llamado "${vuelta}" en el Escritorio.`);
+            say(`${c.d}Si esa es la carpeta viva y esta del archivo es una copia, sacala con otro nombre:${c.x}`);
+            say(`${c.d}  --reabrir "${nombre}" --como "_${vuelta} (copia que volvio del archivo)"${c.x}`);
+            return 1;
+        }
+        // La bandeja tambien es la cola: una tarea guardada ahi sigue ABIERTA (§0). Si no se
+        // mira, reabrir la deja duplicada — la misma tarea en la raiz y adentro de _EN ESPERA.
+        const bandeja = listar(escritorio).find((e) => clasificarEntrada(e.nombre, e.dir) === 'espera');
+        if (bandeja && fs.existsSync(path.join(bandeja.ruta, vuelta))) {
+            bad(`"${vuelta}" ya esta abierta adentro de ${CARPETA_EN_ESPERA}: sacala de la bandeja, o traela con otro nombre (--como).`);
+            return 1;
+        }
 
+        const antes = medir(actual);
         if (dryRun) {
+            // El dry-run LEE el listado en vez de anunciar lo que suele pasar: si la tarea ya
+            // venia reabierta, ninguna fila se marca y decir que si es prometer de mas.
+            const marcables = (await leerIndice(archivo, anio))
+                .filter((f) => f.tarea === nombre && !String(f.estado).startsWith('reabierta')).length;
             say(`${c.y}DRY-RUN${c.x} — no se toca nada.`);
-            say(`  mover    ${anio}\\${nombre}  →  Escritorio\\${vuelta}`);
-            say(`  listado  la fila queda marcada "reabierta ${hoy}" (no se borra)`);
+            say(`  mover    ${anio}\\${nombre}   ${c.d}(${antes.archivos} archivo(s), ${(antes.bytes / 1024).toFixed(0)} KB)${c.x}`);
+            say(`  a        Escritorio\\${vuelta}`);
+            say(marcables
+                ? `  listado  ${marcables} fila(s) quedan marcadas "reabierta ${hoy}" (no se borra ninguna)`
+                : `  listado  sin cambios: la(s) fila(s) de esta tarea ya dicen "reabierta"`);
             return 0;
         }
-        fs.renameSync(actual, destino);
+        try {
+            fs.renameSync(actual, destino);
+        } catch (e) {
+            bad(`No se pudo mover "${nombre}": ${e.message}`);
+            say(`${c.d}Nada quedo a medias: la carpeta sigue en el archivo y el listado sin tocar.${c.x}`);
+            return 1;
+        }
+
+        // La fila se marca SIEMPRE que la carpeta se haya movido, aunque el conteo no cierre:
+        // dejarla en "cerrada" con la carpeta afuera es una mentira peor que el desvio, y es la
+        // que despues hace saltar "el INDICE nombra X pero esa carpeta no esta en el archivo".
         const filas = (await leerIndice(archivo, anio)).map((f) => (f.tarea === nombre && !String(f.estado).startsWith('reabierta')
             ? { ...f, estado: `reabierta ${hoy}` } : f));
         await escribirIndice(archivo, anio, filas);
-        ok(`Reabierta: vuelve al Escritorio como "${vuelta}". La fila queda como historia.`);
-        return 0;
+
+        const despues = medir(destino);
+        if (despues.archivos !== antes.archivos || despues.bytes !== antes.bytes) {
+            bad(`El movimiento no cierra: antes ${antes.archivos} archivo(s)/${antes.bytes} bytes, ahora ${despues.archivos}/${despues.bytes}.`);
+            say(`${c.d}La carpeta esta en ${destino} y la fila quedo "reabierta ${hoy}" — revisala a mano antes de seguir.${c.x}`);
+            return 1;
+        }
+        ok(`Reabierta: vuelve al Escritorio como "${vuelta}"  ${c.d}(${despues.archivos} archivo(s) verificados)${c.x}`);
+        say(`${c.d}   La fila queda como historia. Si la carpeta reaparece en el archivo, el --check de abajo lo canta.${c.x}`);
+        return cmdCheck(archivo, escritorio);
     }
     bad(`No encontre "${nombre}" en el archivo.`);
     return 1;
@@ -598,9 +722,15 @@ async function main(argv) {
     if (!fs.existsSync(escritorio)) { bad(`No existe el Escritorio: ${escritorio}`); return 1; }
 
     if (args.includes('--archivar')) return cmdArchivar(escritorio, archivo, { nombre: String(flag('--archivar')), ...comun });
-    if (args.includes('--reabrir')) return cmdReabrir(escritorio, archivo, { nombre: String(flag('--reabrir')), dryRun });
+    if (args.includes('--reabrir')) {
+        return cmdReabrir(escritorio, archivo, {
+            nombre: String(flag('--reabrir')),
+            como: args.includes('--como') ? flag('--como') : null,
+            dryRun,
+        });
+    }
     if (args.includes('--limpiar-vacia')) return cmdLimpiarVacia(escritorio, { nombre: String(flag('--limpiar-vacia')), dryRun });
-    if (args.includes('--check')) return cmdCheck(archivo);
+    if (args.includes('--check')) return cmdCheck(archivo, escritorio);
     return cmdRelevar(escritorio, archivo);
 }
 

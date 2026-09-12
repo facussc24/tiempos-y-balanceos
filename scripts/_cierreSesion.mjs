@@ -33,7 +33,7 @@ import { fileURLToPath } from 'node:url';
 import { execSync } from 'node:child_process';
 
 import {
-    listar, clasificarEntrada, fechasDeTarea, diasDesde, leerIndice,
+    listar, fechasDeTarea, diasDesde, leerIndice, tareasAbiertas, nombresDeTareas,
     verificarInvariantes, CARPETA_EN_ESPERA, ESCRITORIO_DEFAULT, ARCHIVO_DEFAULT,
 } from './_escritorio.mjs';
 
@@ -301,21 +301,20 @@ async function chequearEscritorio() {
         return { estado: 'aviso', detalle: `el Escritorio no es accesible desde aca (${ESCRITORIO_DEFAULT})` };
     }
     try {
-        const entradas = listar(ESCRITORIO_DEFAULT);
-        const esTarea = (e) => clasificarEntrada(e.nombre, e.dir) === 'tarea';
-        const vista = entradas.filter(esTarea);
-        const bandeja = entradas.find((e) => clasificarEntrada(e.nombre, e.dir) === 'espera');
-        const enEspera = bandeja ? listar(bandeja.ruta).filter(esTarea) : [];
+        const { vista, enEspera } = tareasAbiertas(ESCRITORIO_DEFAULT);
         const todas = [...vista, ...enEspera].map((t) => ({ ...t, fecha: fechasDeTarea(t) }));
         const viejas = todas.filter((t) => t.fecha.ms && diasDesde(t.fecha.ms) >= 7);
 
         const problemas = [];
         if (fs.existsSync(ARCHIVO_DEFAULT)) {
+            // La cola entra al chequeo: una tarea archivada que ademas esta abierta aca existe
+            // en dos lugares, y ese es el estado que nadie miraba (caso HOTMELT, 08 al 11/09).
+            const abiertas = nombresDeTareas([...vista, ...enEspera]);
             const anios = listar(ARCHIVO_DEFAULT).filter((e) => e.dir && /^\d{4}$/.test(e.nombre)).map((e) => e.nombre);
             for (const anio of anios) {
                 const filas = await leerIndice(ARCHIVO_DEFAULT, anio);
                 const archivadas = listar(path.join(ARCHIVO_DEFAULT, anio)).filter((e) => e.dir).map((e) => e.nombre);
-                problemas.push(...verificarInvariantes(filas, { archivadas }).map((p) => `${anio}: ${p}`));
+                problemas.push(...verificarInvariantes(filas, { archivadas, abiertas }).map((p) => `${anio}: ${p}`));
             }
         }
         if (problemas.length) {
