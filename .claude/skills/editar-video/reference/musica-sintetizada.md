@@ -220,6 +220,15 @@ abajo de 600 Hz y mandados a la reverb. Se oye la maquina, no se oye una bateria
   octava, y **si alguna pierde mas de 3 dB hay cancelacion de fase**.
 - **Dos envios de reverb, no doce convoluciones**: sala 0,8 s (predelay 12 ms) y hall 3,0 s
   (predelay 45 ms), los dos con pasa-altos 220 y pasa-bajos 6 kHz en el retorno.
+- **El impulso de la reverb se normaliza por ENERGIA, no por pico** — y esto es lo que pisa
+  todo lo de arriba si esta mal. El 10/09/2026 la cama del institucional medida daba 99% de
+  la energia debajo de 800 Hz y ataque tres veces las FUENTES (mas armonicos en el pad,
+  arpegio mas brillante, balance RMS de los stems) sin mover el numero: el que se lo comia
+  era el mezclador, que normalizaba el impulso por su PICO. Un impulso largo y difuso tiene
+  el mismo pico que uno corto y muchisima mas energia, asi que al igualar picos el retorno
+  entraba con una ganancia enorme y tapaba el espectro que las fuentes acababan de arreglar.
+  **Si dos o tres arreglos seguidos al contenido no mueven el numero medido, el problema esta
+  en un paso POSTERIOR de la cadena, no en las fuentes.**
 - **La correccion final de espectro va TOPEADA** (aca, 5 dB). **Si toca el tope, el arreglo
   esta mal y hay que arreglarlo ahi**: en la v4 el estante de 3,5 kHz pidio +5,0 dB (o sea,
   tope) y aun asi la banda quedaba en 0,03% — la respuesta no era subir el tope, era que al
