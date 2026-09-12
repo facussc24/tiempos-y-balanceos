@@ -228,7 +228,7 @@ def main() -> int:
 
     # 3b. la VOZ: el mail sale a nombre de Fak y tiene que sonar a el.
     # Fak, 11/09/2026: "revise porque revisamos, yo revise". Regla mail-envio.md; el gate y
-    # sus numeros, en scripts/_lib/vozGate.mjs (calibrado contra 954 mails suyos).
+    # sus numeros, en scripts/_lib/vozGate.mjs (calibrado contra 935 mails suyos).
     if not a.sin_chequeo_voz:
         cuerpo_txt = str(getattr(it, 'Body', '') or '')
         print("\n[3b] Voz del mail:")

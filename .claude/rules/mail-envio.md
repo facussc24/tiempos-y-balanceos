@@ -146,7 +146,7 @@ listas del AMFE).
 recomendacion (*convendria*) · cierre fuera del set medido · explicar el razonamiento en vez
 del resultado.
 
-**Calibracion, en las dos direcciones** (`__tests__/scripts/vozGate.test.mjs`, 25 casos): los tres
+**Calibracion, en las dos direcciones** (`__tests__/scripts/vozGate.test.mjs`, 26 casos): los tres
 mails mios en plural dan rojo, los cuatro plurales legitimos de Fak dan verde, y el selftest mide
 el **falso rojo contra sus 935 mails: 8, o sea 0,86%**. Si ese numero sube, el gate empezo a medir
 mi idea de el y no se cablea hasta que baje.
@@ -204,8 +204,14 @@ y solo si el destinatario no lo abrio.
 - **Gate de voz en las tres puntas**, para que no dependa de que yo me acuerde:
   `_prepararMail.py` imprime el semaforo al armar el borrador · el hook `mail-guard` avisa al
   escribir un `_mail*.txt` de borrador · **`_mailEnviar.py` bloquea el `--enviar` si hay un ROJO**
-  (`--sin-chequeo-voz` lo saltea; `--forzar` tambien). Si node falla, **no bloquea**: un chequeo
-  de estilo roto no puede dejar a Fak sin poder mandar un correo.
+  (`--sin-chequeo-voz` lo saltea; `--forzar` **tambien lo saltea**, ademas del anti-duplicado —
+  los dos piden el OK de Fak para ESE mail). Si node falla, **no bloquea**: un chequeo de estilo
+  roto no puede dejar a Fak sin poder mandar un correo.
+- **El fail-open necesita su propio caso, y por eso existe `python scripts/_lib/vozMail.py
+  --selftest`** (rojo y verde por la cadena real, clavado en el test 26). El 12/09/2026
+  `vozMail.py` calculaba mal su raiz y buscaba el gate en un "scripts/scripts/_vozFak.mjs" (la carpeta repetida) que no existe: los 25
+  tests del gate daban verde —importan `vozGate.mjs` directo— y **el bloqueo del envio no corrio
+  ni una vez**, porque el camino fail-open se lo tragaba en silencio. Lo encontro el auditor.
 
 ## De donde sale el gate — 2026-08-14
 

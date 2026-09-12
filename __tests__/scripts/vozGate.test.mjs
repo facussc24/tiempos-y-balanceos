@@ -26,8 +26,15 @@
  *  22-23   el guardian del hook, en las dos direcciones
  *  24-25   cuerpo HTML (`cuerpo_html` / `HTMLBody`): se mide el TEXTO, no el marcado —
  *          y la tabla de verdad adentro del HTML sigue dando rojo
+ *  26      la CADENA REAL que corre al mandar un mail (python -> node -> gate). Los 25 de
+ *          arriba importan `vozGate.mjs` directo, y por eso dieron verde mientras
+ *          `vozMail.py` apuntaba a una ruta que no existe: el bloqueo del envio nunca
+ *          corrio, y el camino fail-open lo tapaba. Probado en las dos direcciones.
  */
 import { describe, it, expect } from 'vitest';
+import { spawnSync } from 'node:child_process';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { revisarVoz, cuerpoPropio, primeraOracion, ROJO, AMARILLO } from '../../scripts/_lib/vozGate.mjs';
 import { GUARDIANES, ctxDesdeEnv } from '../../scripts/_lib/guardianes.mjs';
 
@@ -87,7 +94,7 @@ describe('vozGate — el plural de Fak es suyo y tiene que pasar', () => {
 });
 
 describe('vozGate — las marcas de que el mail lo escribi yo', () => {
-    it('11. el giro "Tres cosas para mirar:" (0 de 954 mails de Fak)', () => {
+    it('11. el giro "Tres cosas para mirar:" (0 de 935 mails de Fak)', () => {
         expect(rojos('Manuel,\n\nTe paso el estado del PPAP.\n\nTres cosas para mirar:\n')).toContain('GIRO_N_COSAS');
     });
 
@@ -110,7 +117,7 @@ describe('vozGate — las marcas de que el mail lo escribi yo', () => {
         expect(r.rojos).toBe(0);
     });
 
-    it('16. vinetas: 0 de 954 mails suyos las usan', () => {
+    it('16. vinetas: 0 de 935 mails suyos las usan', () => {
         expect(amarillos('Te paso dos temas:\n\n- El primero.\n- El segundo.\n')).toContain('VINETAS');
     });
 
@@ -170,6 +177,22 @@ describe('vozGate — el texto que se mide', () => {
         const html = '<p>Te paso el detalle:</p><table><tr><td>Pieza</td><td>Consumo</td></tr>'
             + '<tr><td>21-9689</td><td>0,18</td></tr></table>';
         expect(rojos(html)).toContain('TABLA_EN_EL_CUERPO');
+    });
+
+    // 26 mide la CADENA REAL (python -> subprocess node -> vozGate), que es la que de verdad
+    // corre cuando se manda un mail. Los 25 casos de arriba importan `vozGate.mjs` directo y
+    // por eso dieron verde mientras `vozMail.py` apuntaba a `scripts/scripts/_vozFak.mjs`: el
+    // bloqueo del envio NUNCA corrio, y el camino fail-open lo tapaba en silencio.
+    const RAIZ = path.resolve(fileURLToPath(import.meta.url), '../../..');
+    const PYTHON = ['python', 'python3', 'py'].find(
+        (exe) => spawnSync(exe, ['--version'], { encoding: 'utf8' }).status === 0,
+    );
+
+    it.skipIf(!PYTHON)('26. la cadena real python->node corre, y da rojo y verde', () => {
+        const r = spawnSync(PYTHON, ['scripts/_lib/vozMail.py', '--selftest'],
+            { cwd: RAIZ, encoding: 'utf8' });
+        expect(r.stdout, 'el gate no esta donde vozMail.py lo busca').toContain('selftest: 2/2');
+        expect(r.status).toBe(0);
     });
 
     it('21. EN ROJO: sin la frase que lo exime, el mismo mail de Fak se enciende', () => {
