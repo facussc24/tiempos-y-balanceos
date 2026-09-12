@@ -78,7 +78,23 @@ jobs:
       # (`/repos/.../check-runs/<job_id>/annotations`). Un rojo que no se puede leer desde
       # donde trabajo obliga a adivinar — 11/09/2026.
       - name: Run vitest
-        run: npx vitest run --reporter=default --reporter=github-actions
+        run: |
+          set -o pipefail
+          npx vitest run --reporter=default --reporter=github-actions 2>&1 | tee /tmp/vitest.log
+      # Las anotaciones no alcanzan solas: el 11/09/2026 un rojo REAL dejo el job con
+      # "1 error" y NINGUNA anotacion de test — el unico dato legible era "exit code 1", que
+      # es exactamente lo que la linea de arriba queria evitar. El summary del job SI se lee
+      # sin estar logueado (el log no), asi que el rojo queda legible siempre, y si el dia de
+      # mañana el reporter deja de anotar, esto no se entera tarde.
+      - name: Publicar el rojo en el summary (las anotaciones no siempre salen)
+        if: failure()
+        run: |
+          {
+            echo '## vitest en rojo'
+            echo '```'
+            grep -aE 'FAIL|AssertionError|Expected|Received|Tests  |Test Files|✕|×|→' /tmp/vitest.log | head -c 60000 || tail -c 60000 /tmp/vitest.log
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
 
   # Gate 3: ESLint. En local solo corre via husky pre-commit (lint-staged), que un
   # `git push --no-verify` saltea — aca no hay como saltearlo.
