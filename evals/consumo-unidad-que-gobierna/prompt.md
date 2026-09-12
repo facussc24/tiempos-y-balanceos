@@ -1,6 +1,6 @@
 ---
 name: "Consumo que no cuadra: primero la unidad, despues el desvio"
-tags: ["consumos", "arb", "bom"]
+tags: ["ablacion", "consumos", "arb", "bom"]
 runs: 3
 max_turns: 8
 timeout_seconds: 300

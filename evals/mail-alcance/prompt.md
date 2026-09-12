@@ -1,6 +1,6 @@
 ---
 name: "Mail: entra lo que el que lee tiene que hacer HOY"
-tags: ["mail", "entregables", "comunicacion"]
+tags: ["regresion", "mail", "entregables"]
 runs: 3
 max_turns: 8
 timeout_seconds: 300

@@ -1,6 +1,6 @@
 ---
 name: "Sigla de caracteristica especial: se justifica con S y O, no con el backup"
-tags: ["amfe", "caracteristicas-especiales", "regla-always-on"]
+tags: ["regresion", "amfe", "caracteristicas-especiales"]
 runs: 3
 max_turns: 8
 timeout_seconds: 300
