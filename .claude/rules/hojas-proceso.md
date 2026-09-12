@@ -24,6 +24,11 @@ Regla corta. El detalle, los umbrales y los errores caros: skill `hojas-de-proce
 4. **Un umbral se prueba contra el conjunto entero antes de declararlo.** El primero que
    escribi ("45 % del bloque") reprobaba 13 de 17 hojas sanas: era imposible de cumplir para
    una foto vertical.
+5. **El aire y los margenes son parte del formato que se calca — y no se ven en el HTML.** Un
+   screenshot del navegador ignora `@page margin`, asi que la hoja se juzga RASTERIZADA (PDF) y
+   al zoom en que se va a usar; yo di una por buena mirando el screenshot y Fak contesto *"no
+   tiene bordes blancos a los alrededores y los mismos espaciados"*. El mismo error en Excel se
+   ve al reves: un texto recortado que la celda no muestra. Vale igual para `_xlsxAPdf.py`.
 
 ## Enforcement
 
