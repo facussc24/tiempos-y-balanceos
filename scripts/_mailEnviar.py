@@ -28,9 +28,13 @@ USO
   --forzar solo si Fak lo autoriza EXPLICITAMENTE para ese mail puntual.
 """
 import argparse
+import os
 import re
 import sys
 import time
+
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '_lib'))
+from vozMail import mostrar_voz                                          # noqa: E402
 
 VENTANA_HORAS = 72          # cuanto para atras se mira Enviados
 INLINE = re.compile(r'^(image\d+\.(png|jpg|jpeg|gif)|Outlook-[\w\-]+\.(png|jpg|jpeg))$', re.I)
@@ -151,6 +155,8 @@ def main() -> int:
     ap.add_argument('--enviar', action='store_true', help='ejecuta (sin esto es dry-run)')
     ap.add_argument('--forzar', action='store_true',
                     help='saltea el gate de duplicados — SOLO con OK explicito de Fak')
+    ap.add_argument('--sin-chequeo-voz', action='store_true', dest='sin_chequeo_voz',
+                    help='saltea el gate de voz — solo con OK de Fak para ESE mail')
     ap.add_argument('--selftest', action='store_true')
     a = ap.parse_args()
 
@@ -219,6 +225,16 @@ def main() -> int:
         print(f"\nABORTA: ya hay {len(encolados)} item(s) de este asunto en la Bandeja de salida.")
         return 2
     print(f"  Bandeja de salida: {out.Items.Count} item(s), ninguno de este asunto.")
+
+    # 3b. la VOZ: el mail sale a nombre de Fak y tiene que sonar a el.
+    # Fak, 11/09/2026: "revise porque revisamos, yo revise". Regla mail-envio.md; el gate y
+    # sus numeros, en scripts/_lib/vozGate.mjs (calibrado contra 954 mails suyos).
+    if not a.sin_chequeo_voz:
+        cuerpo_txt = str(getattr(it, 'Body', '') or '')
+        print("\n[3b] Voz del mail:")
+        mostrar_voz(cuerpo_txt, bloquear=a.enviar and not a.forzar)
+    else:
+        print("\n[3b] Voz del mail: SALTEADO (--sin-chequeo-voz)")
 
     # 4. Outlook sin ventana no ejecuta envio/recepcion (incidente 14/08)
     if ol.Explorers.Count == 0:

@@ -292,9 +292,13 @@ Cada punto operativo tiene su gate ejecutable ya cargado; esto es para no llegar
    traduccion, ortografia, "replicado del AMFE de X", "(decision Fak)", "para no pisar la
    costura". Un error propio se corrige en silencio. Gate duro: `scanRevisionMeta()` en
    `_exportAmfeOficial.ts` — con una de esas frases el AMFE **no se exporta**.
-2. **Vocabulario = el de los mails de Barack** (`.mail-cache`, ~1.500 mails). Ni ingles random
-   (gap & flush, squeak & rattle, fit & finish, checklist) ni castellano de diccionario que
-   nadie usa (enrase, chirridos, golpeteos). Gate: `ENGLISH_RANDOM_TERMS` (CRITICAL).
+2. **Vocabulario = el de los mails de Barack** (`.mail-cache`: 5.496 mails, 1.549 enviados por
+   Fak — recontado 12/09/2026). Ni ingles random (gap & flush, squeak & rattle, fit & finish,
+   check de lote) ni castellano de diccionario que nadie usa (enrase, chirridos, golpeteos).
+   Gate: `ENGLISH_RANDOM_TERMS` (CRITICAL) — la lista vive en el `.data.json`, esta prosa solo
+   la ilustra. **`checklist`, `setup` y `stock` NO estan prohibidos** y no se agregan: Fak los
+   dejo el 23/08/2026 con los conteos delante (*"ninguna, las tres se quedan"*, 9/22/48 usos),
+   como SCRAP (memoria `sin_ingles_random_en_entregables`).
    **Excepcion que SI se respeta:** nombres de pieza y material como figuran en la BOM y los
    planos del cliente (`VARILLA POLE HEADREST 2HC.881.937`, `ARMREST DOOR PANEL`) — esos son
    su identidad, traducirlos rompe la trazabilidad.

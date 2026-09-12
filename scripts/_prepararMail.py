@@ -31,6 +31,9 @@ import json
 import os
 import sys
 
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '_lib'))
+from vozMail import mostrar_voz                                          # noqa: E402
+
 try:
     import win32com.client as win32
 except ImportError:
@@ -38,6 +41,11 @@ except ImportError:
 
 
 def preparar(cfg):
+    # Semaforo de voz ANTES de tocar Outlook: el borrador se corrige mas barato aca que
+    # despues, abierto en pantalla. No bloquea — el que envia es Fak y el ROJO que importa
+    # lo frena _mailEnviar.py.
+    mostrar_voz(cfg.get('cuerpo') or cfg.get('cuerpo_html') or '')
+
     faltan = [a for a in cfg.get('adjuntos', []) if not os.path.exists(a)]
     if faltan:
         print('ABORTADO: estos adjuntos no existen:')

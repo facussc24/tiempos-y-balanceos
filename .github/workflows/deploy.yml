@@ -72,8 +72,13 @@ jobs:
       # de pdfBomArb parsean stdout (el JSON y el "ok" quedan contaminados).
       - run: pip install PyMuPDF==1.27.2.2
       - run: npm ci
+      # `--reporter=github-actions` publica cada test en rojo como ANOTACION del job.
+      # Sin eso, lo unico que queda afuera es "Process completed with exit code 1": el log
+      # del job pide estar logueado en GitHub, pero las anotaciones se leen sin auth
+      # (`/repos/.../check-runs/<job_id>/annotations`). Un rojo que no se puede leer desde
+      # donde trabajo obliga a adivinar — 11/09/2026.
       - name: Run vitest
-        run: npx vitest run
+        run: npx vitest run --reporter=default --reporter=github-actions
 
   # Gate 3: ESLint. En local solo corre via husky pre-commit (lint-staged), que un
   # `git push --no-verify` saltea — aca no hay como saltearlo.

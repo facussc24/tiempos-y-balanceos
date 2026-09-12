@@ -80,12 +80,76 @@ otro esta de mas"*.
   con esto hoy?* Si no, afuera. Al mail para Gamboa le sume siete codigos que nadie iba a
   tocar: *"los agregaste y aclaraste de mas, es un error conocido tuyo"*.
 
-## El mail lo firma Fak: primera persona del singular
+## El mail lo firma Fak: primera persona del singular — y su voz esta MEDIDA
 
 **"Revise", no "Revisamos".** 11/09/2026, sobre el correo de correccion del PPAP de NOVAX:
 *"revise porque revisamos, yo revise"*. El mail sale de su casilla y lo firma el; el plural
 inventa un equipo que no es el que hizo el trabajo y le saca la responsabilidad de encima.
 Vale para todo verbo del cuerpo: adjunto, revise, corregi, mande.
+
+Hasta el 12/09/2026 eso era **solo texto**: una regla escrita, sin nadie que la mida. Y el error
+volvio igual — el plural de apertura **salio enviado** dos veces (01/09 a Carlos y Leo,
+*"Actualizamos en INCA..."*; 07/09 a Pablo, *"Corregimos en el arb..."*). Es el rule enforcement
+gap del skill `rule-enforcement-gate`. Desde hoy la voz se mide contra su propio corpus.
+
+### El perfil, contado — no es mi idea de como escribe Fak
+
+Fuente: `.mail-cache/mails.jsonl`, carpeta *Elementos enviados*, **935 mails suyos hasta
+2026-03-01** (corte de voz pura: despues empiezo a redactarle yo). Se regenera con
+`node scripts/_vozFak.mjs --medir` y queda en `scripts/_lib/vozFak.data.json`.
+**Ese JSON no se escribe a mano**: si lo escribo yo es mi idea de el, no el.
+
+| Medido | Fak | Yo escribiendo a su nombre (desde 08/2026) |
+|---|---|---|
+| Largo mediano | **148 caracteres / 24 palabras** | 348 caracteres / 63 palabras (**2,4x**) |
+| p75 / p90 | 305 / 585 caracteres | 664 / 1.173 |
+| 1a persona **singular** | 0,43 verbos por mail | — |
+| 1a persona **plural** | 0,02 por mail | el plural que corrigio, en la 1a oracion |
+| Arranque | `Buen dia` 136 · `Buenos dias` 85 · `Buenas tardes` 58 · `Hola` 40 | — |
+| Cierre | `Saludos,` 174 · `Gracias` 14 | — |
+| `cordialmente` · `atentamente` · `por medio de la presente` | **0 · 0 · 0** | — |
+| Viñetas, secciones numeradas, tabla en el cuerpo | **0** | las ponia yo |
+
+**La desviacion real es el LARGO.** Su mail tipico son **dos renglones**. Y el numero corrige a
+la memoria `mail_corto_como_los_de_fak`: el mail de 592 caracteres que guarda como ejemplo de
+"corto" esta cerca de su **p90**, no de su mediana.
+
+### El plural es suyo: lo que se prohibe es la ATRIBUCION, no la palabra
+
+De las **26** ocurrencias de 1a persona del plural en los 1.549 enviados, **22 las escribio Fak**
+(*"Nosotros lo hicimos en metros lineales"*, *"Logramos meter muchas mas piezas"*, *"avisame y lo
+revisamos juntos"*). Un gate que las marque no mide a Fak: mide mi idea de Fak
+(leccion `un_control_se_audita_en_las_dos_direcciones`).
+
+| Caso | Que va |
+|---|---|
+| Informa un trabajo que hizo el solo, en la **primera oracion** | ROJO — singular: *hice*, *revise*, *corregi* |
+| Hay un **tercero nombrado** (*"junto con Paulo y Nicolas, hicimos..."*) | plural, va |
+| Es el **sector hacia afuera** (*"les informamos"*, *"queria informarles"*) | plural, va |
+| Es **a futuro con el otro** (*"lo revisamos juntos"*, *"acordamos"*) | plural, va |
+| Plural en **subordinada** (*"los tiempos que hicimos"*) | plural, va |
+
+### El gate
+
+```bash
+node scripts/_vozFak.mjs --revisar "<archivo.txt>"   # semaforo; - para leer de stdin
+node scripts/_vozFak.mjs --medir                     # regenera el perfil del cache
+node scripts/_vozFak.mjs --selftest                  # 11 casos dirigidos + falsos rojos del corpus
+node scripts/_vozFak.mjs --diff                      # que le cambio Fak a mis borradores
+```
+
+**ROJO, bloquea:** plural de apertura atribuyendose trabajo propio · impersonal de informe
+(*se procedio a*) · formula formal que el nunca uso · *"Tres cosas para mirar:"* · tabla en el
+cuerpo · mas de 2.500 caracteres · vocabulario prohibido (reusa `scanForbidden()`, las mismas
+listas del AMFE).
+**AMARILLO, avisa:** largo sobre su p90 · viñetas · secciones numeradas · condicional de
+recomendacion (*convendria*) · cierre fuera del set medido · explicar el razonamiento en vez
+del resultado.
+
+**Calibracion, en las dos direcciones** (`__tests__/scripts/vozGate.test.mjs`, 25 casos): los tres
+mails mios en plural dan rojo, los cuatro plurales legitimos de Fak dan verde, y el selftest mide
+el **falso rojo contra sus 935 mails: 8, o sea 0,86%**. Si ese numero sube, el gate empezo a medir
+mi idea de el y no se cablea hasta que baje.
 
 ## Al cerrar un tema por mail, barrer Borradores por asunto
 
@@ -137,6 +201,11 @@ y solo si el destinatario no lo abrio.
   leer `.To` para reportarlo pasan)
   (el parser compartido ya rompio otros 3 guardianes en silencio, commit `ccef7f09`).
 - El gate se probo contra el caso real del 14/08 leido de Enviados: **bloquea**.
+- **Gate de voz en las tres puntas**, para que no dependa de que yo me acuerde:
+  `_prepararMail.py` imprime el semaforo al armar el borrador · el hook `mail-guard` avisa al
+  escribir un `_mail*.txt` de borrador · **`_mailEnviar.py` bloquea el `--enviar` si hay un ROJO**
+  (`--sin-chequeo-voz` lo saltea; `--forzar` tambien). Si node falla, **no bloquea**: un chequeo
+  de estilo roto no puede dejar a Fak sin poder mandar un correo.
 
 ## De donde sale el gate — 2026-08-14
 

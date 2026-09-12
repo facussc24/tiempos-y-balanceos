@@ -1,0 +1,113 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Como escribis los mails</title>
+<style>
+  @page { size: A4 portrait; margin: 11mm 12mm; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family:"Segoe UI",Arial,sans-serif; color:#1d2330; font-size:9.2pt; line-height:1.35; }
+  h1 { font-size:17pt; margin:0 0 1mm; letter-spacing:-.2px; }
+  .sub { color:#5d6779; font-size:9pt; margin:0 0 4mm; }
+  h2 { font-size:10pt; margin:0 0 2mm; text-transform:uppercase; letter-spacing:.7px; color:#2f6fb3; }
+  .caja { border:1px solid #d7dce5; border-radius:3mm; padding:3.5mm 4mm; margin-bottom:3.5mm; }
+  table { width:100%; border-collapse:collapse; font-size:8.8pt; }
+  th { text-align:left; font-weight:600; color:#5d6779; border-bottom:1px solid #d7dce5; padding:1mm 1.5mm; }
+  td { padding:1.2mm 1.5mm; border-bottom:1px solid #eef1f6; vertical-align:top; }
+  td.v { font-weight:700; color:#1a7f4b; white-space:nowrap; }
+  td.y { color:#b23b2e; white-space:nowrap; }
+  .reglas { display:grid; grid-template-columns:1fr 1fr; gap:2.5mm 5mm; }
+  .r { display:flex; gap:2.5mm; }
+  .n { flex:0 0 5.5mm; height:5.5mm; border-radius:50%; background:#2f6fb3; color:#fff;
+       font-weight:700; font-size:8.5pt; display:flex; align-items:center; justify-content:center; }
+  .r b { display:block; font-size:9.2pt; }
+  .ej { display:block; color:#3f4a5e; font-style:italic; }
+  .ej::before { content:"« "; } .ej::after { content:" »"; }
+  .cnt { display:block; color:#8a93a5; font-size:8pt; margin-top:.6mm; }
+  .sem { display:grid; grid-template-columns:auto 1fr; gap:2mm 3mm; align-items:baseline; }
+  .chip { font-weight:700; font-size:8pt; color:#fff; padding:.7mm 2mm; border-radius:2mm; white-space:nowrap; }
+  .rojo { background:#c0392b; } .amar { background:#c98a08; }
+  code { font-family:Consolas,monospace; font-size:8.4pt; background:#f2f5f9; padding:.3mm 1mm; border-radius:1mm; }
+  .pie { color:#8a93a5; font-size:7.8pt; border-top:1px solid #d7dce5; padding-top:2mm; }
+  .big { font-size:13pt; font-weight:700; }
+</style>
+
+<h1>Como escribis los mails — y que mide Claude ahora</h1>
+<p class="sub">Medido sobre <b>935 mails tuyos</b> de Elementos enviados (hasta 03/2026, antes de que empiece a
+redactarte yo). No es mi impresion de como escribis: esta contado, y se vuelve a contar solo con
+<code>node scripts/_vozFak.mjs --medir</code>. &nbsp;·&nbsp; 12/09/2026</p>
+
+<div class="caja">
+  <h2>Lo que estaba saliendo mal</h2>
+  <table>
+    <tr><th style="width:42%">Medido</th><th style="width:29%">Vos</th><th>Yo escribiendo a tu nombre (desde 08/2026)</th></tr>
+    <tr><td>Largo del mail</td><td class="v">148 caracteres · 24 palabras</td><td class="y">348 caracteres · 63 palabras — <b>2,4 veces mas largo</b></td></tr>
+    <tr><td>Los mas largos (p90)</td><td class="v">585 caracteres</td><td class="y">1.173 caracteres</td></tr>
+    <tr><td>Primera persona del plural</td><td class="v">0,02 por mail</td><td class="y">justo en la primera oracion: <i>"Actualizamos en INCA…"</i> (01/09) · <i>"Corregimos en el arb…"</i> (07/09)</td></tr>
+    <tr><td>Viñetas, tablas, secciones numeradas</td><td class="v">0 en 935 mails</td><td class="y">las ponia yo</td></tr>
+  </table>
+  <p style="margin:2.5mm 0 0"><b>La desviacion real es el LARGO</b>, no la gramatica: tu mail tipico son dos renglones.
+  Y el <i>"logramos"</i> que me marcaste <b>salio enviado</b> dos veces, no quedo en el borrador.</p>
+</div>
+
+<div class="caja">
+  <h2>Tu voz, en seis reglas — cada una con un mail tuyo</h2>
+  <div class="reglas">
+    <div class="r"><div class="n">1</div><div>
+      <b>Lo que hiciste vos va en singular</b>
+      <span class="ej">Actualice el arb con los consumos del P703</span>
+    </div></div>
+    <div class="r"><div class="n">2</div><div>
+      <b>El plural es tuyo cuando hay otro adentro</b>
+      <span class="ej">Junto con Paulo Centurion y Nicolas Perez, hicimos modificaciones en el Top Roll</span>
+      <span class="cnt">22 de los 26 plurales del buzon los escribiste vos: no se prohibe la palabra, se prohibe atribuirte un equipo que no existio</span>
+    </div></div>
+    <div class="r"><div class="n">3</div><div>
+      <b>Dos renglones y afuera</b>
+      <span class="ej">Adjunto tambien el flujograma actualizado.</span>
+      <span class="cnt">7 palabras — un mail entero tuyo</span>
+    </div></div>
+    <div class="r"><div class="n">4</div><div>
+      <b>Arrancas saludando y nombrando</b>
+      <span class="ej">Buen dia Pablo, …</span>
+      <span class="cnt">Buen dia 136 · Buenos dias 85 · Buenas tardes 58 · Hola 40</span>
+    </div></div>
+    <div class="r"><div class="n">5</div><div>
+      <b>Cerras con Saludos</b>
+      <span class="ej">Saludos,</span>
+      <span class="cnt">174 veces · <i>Cordialmente</i>, <i>Atentamente</i>, <i>Por medio de la presente</i>: <b>0 en 935 mails</b></span>
+    </div></div>
+    <div class="r"><div class="n">6</div><div>
+      <b>Decis que mandaste y donde quedo, no como lo hiciste</b>
+      <span class="ej">Quedo en Y:\BARACK\CALIDAD\…</span>
+      <span class="cnt">43 mails con la ruta del servidor; cero parrafos explicando el razonamiento</span>
+    </div></div>
+  </div>
+</div>
+
+<div class="caja">
+  <h2>Que frena el chequeo antes de que el mail salga</h2>
+  <div class="sem">
+    <span class="chip rojo">ROJO</span>
+    <div><b>No sale.</b> Plural de apertura atribuyendome un trabajo tuyo · <i>"se procedio a"</i> ·
+      <i>"Cordialmente"</i> · <i>"Tres cosas para mirar:"</i> · una tabla adentro del cuerpo ·
+      mas de 2.500 caracteres · ingles random y palabras de robot.</div>
+    <span class="chip amar">AMARILLO</span>
+    <div><b>Avisa y deja pasar.</b> Mas largo que tu p90 · viñetas · secciones numeradas ·
+      <i>"convendria"</i> · un cierre que no es tuyo · explicar el razonamiento en vez del resultado.</div>
+  </div>
+  <p style="margin:3mm 0 0">Corre en las tres puntas, para que no dependa de que yo me acuerde:
+  al <b>armar</b> el borrador, al <b>escribirlo</b> (te avisa solo), y <b>bloqueando el envio</b> —
+  <code>_mailEnviar.py</code> sigue siendo el unico camino con <code>.Send()</code>.</p>
+</div>
+
+<div class="caja" style="background:#f7f9fc">
+  <h2>Como se que no invente la regla</h2>
+  <p style="margin:0">Un chequeo se audita en las dos direcciones. Este se probo contra <b>tus propios 935 mails</b>:
+  <span class="big">8 falsos rojos, 0,86%</span> — 927 mails tuyos pasan en verde, y los tres mios en plural se
+  encienden. Si ese numero sube, el chequeo dejo de medirte a vos y paso a medir mi idea de vos, y se corrige
+  antes de seguir. Los 25 casos estan escritos y corren solos con los tests del repo.</p>
+</div>
+
+<p class="pie">Perfil: <code>scripts/_lib/vozFak.data.json</code> (se regenera del buzon) ·
+Chequeo: <code>scripts/_lib/vozGate.mjs</code> · Regla: <code>.claude/rules/mail-envio.md</code> ·
+Uso: <code>node scripts/_vozFak.mjs --revisar "&lt;borrador.txt&gt;"</code>.
+Lo que NO cambia: <b>el mail lo seguis enviando vos</b>.</p>

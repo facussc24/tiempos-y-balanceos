@@ -1066,6 +1066,23 @@ GUARDIANES['ho-numeracion-guard'] = (ctx, { env }) => {
 // escribe en 3 segundos dentro de un heredoc. Por eso el bloqueo es aca.
 GUARDIANES['mail-guard'] = (ctx) => {
   if (!ctx.ok) return null;
+
+  // 0-bis) VOZ: un borrador `_mail*.txt` se mide contra como escribe Fak antes de que exista
+  // el mail. Fak, 11/09/2026: "revise porque revisamos, yo revise", y al dia siguiente el
+  // mismo pedido. Avisa, no bloquea: el ROJO que frena esta en _mailEnviar.py, que es el
+  // unico camino de envio. Solo corre para ese patron de archivo, para no sumarle un node
+  // al despachador en cada Write.
+  if (/[\\/]_mail[^\\/]*\.txt$/i.test(ctx.file || '') && String(ctx.content || '').trim()) {
+    const r = spawnSync(process.execPath, [path.join(RAIZ, 'scripts', '_vozFak.mjs'), '--revisar', '-'],
+      { input: ctx.content, encoding: 'utf8', cwd: RAIZ, timeout: 30000 });
+    const salida = (r.stdout || '').trim();
+    if (salida && !/\[VERDE\]/.test(salida)) {
+      return aviso(`[MAIL-GUARD — voz del mail. Regla: .claude/rules/mail-envio.md]\n\n${salida}\n\n`
+        + 'El mail sale a nombre de Fak. Los numeros salen de sus 935 mails:\n'
+        + '  node scripts/_vozFak.mjs --revisar "<archivo>"   (vuelve a medirlo)');
+    }
+  }
+
   const target = `${ctx.cmd6} ${ctx.fileL} ${ctx.body6}`;
   // 1) Tiene que oler a Outlook. 2) Tiene que haber un envio real (Display/Save/ReplyAll no
   // envian). 3) Si va por la via autorizada, pasa.

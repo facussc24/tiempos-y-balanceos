@@ -1,0 +1,102 @@
+{
+  "_generado": "2026-09-12",
+  "_fuente": ".mail-cache/mails.jsonl · \"Elementos enviados\" · hasta 2026-03-01 (voz pura)",
+  "_como_se_regenera": "node scripts/_vozFak.mjs --medir",
+  "n": 935,
+  "largo": {
+    "mediana": 148,
+    "p75": 305,
+    "p90": 585,
+    "testamento": 2500,
+    "palabras_mediana": 24,
+    "palabras_p90": 89
+  },
+  "persona": {
+    "singular_por_mail": 0.43,
+    "plural_por_mail": 0.02
+  },
+  "arranques": [
+    {
+      "texto": "buen dia",
+      "n": 136
+    },
+    {
+      "texto": "buenos dias",
+      "n": 85
+    },
+    {
+      "texto": "buenas tardes",
+      "n": 58
+    },
+    {
+      "texto": "hola",
+      "n": 40
+    },
+    {
+      "texto": "hola marcelo",
+      "n": 12
+    },
+    {
+      "texto": "buen dia pablo",
+      "n": 9
+    },
+    {
+      "texto": "y",
+      "n": 9
+    },
+    {
+      "texto": "hola pablo",
+      "n": 9
+    },
+    {
+      "texto": "buen dia marcelo",
+      "n": 7
+    },
+    {
+      "texto": "envio documentacion so",
+      "n": 7
+    }
+  ],
+  "cierres": [
+    {
+      "texto": "saludos,",
+      "n": 139
+    },
+    {
+      "texto": "saludos",
+      "n": 35
+    },
+    {
+      "texto": "gracias",
+      "n": 14
+    },
+    {
+      "texto": "y:\\barack\\calidad\\docu",
+      "n": 8
+    },
+    {
+      "texto": "y:\\ingenieria\\documena",
+      "n": 8
+    },
+    {
+      "texto": "envio documentacion so",
+      "n": 7
+    },
+    {
+      "texto": "facundo",
+      "n": 7
+    },
+    {
+      "texto": "saludos cordiales,",
+      "n": 6
+    },
+    {
+      "texto": "y:\\ingenieria\\document",
+      "n": 5
+    },
+    {
+      "texto": "esta tarea esta en el",
+      "n": 5
+    }
+  ]
+}
