@@ -283,11 +283,39 @@ describe('cerebroLint — el cerebro es el del repo PRINCIPAL, tambien desde un 
     expect(repoPrincipalDe(suelto)).toBe(suelto);                 // sin .git tampoco inventa raiz
   });
 
-  it('gitdir relativo y commondir ausente tambien resuelven al principal', () => {
+  it('un gitdir relativo tambien resuelve al principal', () => {
     const a = armarWorktree({ relativo: true });
     expect(repoPrincipalDe(a.wt)).toBe(a.principal);
-    const b = armarWorktree({ commondir: null });                 // sin commondir: <gitdir>/../..
-    expect(repoPrincipalDe(b.wt)).toBe(b.principal);
+  });
+
+  // Medido contra git de verdad el 11/09/2026: el gitdir de un worktree enlazado SIEMPRE trae
+  // `commondir` (`../..`); el de un submodulo NUNCA — es un repo entero, trae objects/ y config.
+  // Por eso commondir es el discriminador y no se deduce contando carpetas.
+  it('sin commondir no es un worktree: vuelve al repo', () => {
+    const b = armarWorktree({ commondir: null });
+    expect(repoPrincipalDe(b.wt)).toBe(b.wt);
+  });
+
+  it('un SUBMODULO no es un worktree — tampoco el colgado de la raiz, que devolvia el superproyecto', () => {
+    // Hallazgo del auditor (11/09/2026), reproducido con `git submodule add` real: `.git/modules/x`
+    // colgado de la RAIZ tiene la misma profundidad que `.git/worktrees/x`, asi que el fallback por
+    // conteo de carpetas daba el SUPERPROYECTO — el cerebro real de otro proyecto, con memorias
+    // adentro y sin nada que se notara. Es peor que el defecto original, que al menos daba vacio.
+    const armarSubmodulo = (ruta) => {
+      const base = path.join(TMP, `s${n++}`);
+      const sub = path.join(base, 'super', ruta);
+      const gitdir = path.join(base, 'super', '.git', 'modules', ruta);
+      fs.mkdirSync(path.join(gitdir, 'objects'), { recursive: true });   // un submodulo ES un repo
+      fs.writeFileSync(path.join(gitdir, 'HEAD'), 'ref: refs/heads/main\n');
+      fs.writeFileSync(path.join(gitdir, 'config'), '[core]\n');         // y NO trae commondir
+      fs.mkdirSync(sub, { recursive: true });
+      fs.writeFileSync(path.join(sub, '.git'), `gitdir: ${path.relative(sub, gitdir).replace(/\\/g, '/')}\n`);
+      return sub;
+    };
+    const raiz = armarSubmodulo('topsub');                              // gitdir: ../.git/modules/topsub
+    expect(repoPrincipalDe(raiz)).toBe(raiz);
+    const anidado = armarSubmodulo(path.join('vendor', 'sub'));         // gitdir: ../../.git/modules/vendor/sub
+    expect(repoPrincipalDe(anidado)).toBe(anidado);
   });
 
   it('lo que no cierra vuelve al repo de hoy: worktree de un bare, y gitdir basura', () => {

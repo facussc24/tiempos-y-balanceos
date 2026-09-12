@@ -74,8 +74,17 @@ export function repoPrincipalDe(repo) {
   const m = (leerSeguro(path.join(abs, '.git')) ?? '').match(/^\s*gitdir:\s*(.+?)\s*$/m);
   if (!m) return repo;
   const gitdir = resolverDesde(abs, m[1]);
+  // `commondir` es lo que SEPARA un worktree de un submodulo, y no es una heuristica: git lo
+  // escribe siempre en el gitdir de un worktree enlazado (`../..`) y nunca en el de un submodulo,
+  // que es un repo entero (tiene objects/ y config). Sin el, no es un worktree: se vuelve a repo.
+  // Deducirlo contando carpetas (`dirname(dirname(gitdir))`) fallaba justo donde mas duele: un
+  // submodulo colgado de la RAIZ (`gitdir: ../.git/modules/<n>`) tiene la misma profundidad que un
+  // worktree y devolvia el SUPERPROYECTO — o sea el cerebro real de otro proyecto, con memorias
+  // adentro, sin error ni carpeta vacia que se note. Lo encontro el auditor el 11/09/2026 y se
+  // confirmo contra git de verdad (`git submodule add`), no contra una reconstruccion.
   const comun = leerSeguro(path.join(gitdir, 'commondir'));
-  const gitComun = comun ? resolverDesde(gitdir, comun.trim()) : path.dirname(path.dirname(gitdir));
+  if (comun === null) return repo;
+  const gitComun = resolverDesde(gitdir, comun.trim());
   if (path.basename(gitComun) !== '.git') return repo;      // worktree de un bare: no hay principal
   // Normalizado: git escribe el gitlink con `/` y en Windows eso volvia con las barras cambiadas.
   // El slug lo aguanta (cambia `/` y `\` igual), pero la ruta se imprime y se compara.
