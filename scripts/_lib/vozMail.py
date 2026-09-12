@@ -3,7 +3,7 @@ _lib/vozMail.py — puente a `scripts/_vozFak.mjs --revisar`, para que los scrip
 midan la voz del cuerpo antes de que el mail exista en Outlook.
 
 Por que un puente y no una copia de la logica: los patrones estan calibrados contra el
-corpus (`_lib/vozGate.mjs`, 954 mails de Fak). Dos copias de una heuristica se desincronizan
+corpus (`_lib/vozGate.mjs`, 935 mails de Fak). Dos copias de una heuristica se desincronizan
 el mismo dia en que Fak corrige algo.
 
 Si node no esta o el gate falla, NO se bloquea el mail: se avisa. Un chequeo de estilo roto
