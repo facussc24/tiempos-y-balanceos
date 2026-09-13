@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 /**
  * _anotarVitest.mjs — deja el rojo de vitest en las ANOTACIONES del job.
  *
@@ -17,6 +16,11 @@
  *
  * Lo unico que la API devuelve SIN auth es `/repos/{o}/{r}/check-runs/{job_id}/annotations`.
  * Por eso esto imprime `::error::` propios: son anotaciones que no dependen del reporter.
+ *
+ * SIN SHEBANG a proposito (convencion de scripts/, ver convencionesScripts.test.mjs): Vitest
+ * inlinea los modulos y `new vm.Script()` no acepta `#!`. La primera version de este archivo
+ * lo tenia y volteo la suite entera EN CI --con cache tibio local pasaba--, o sea que el
+ * script escrito para leer el rojo salio rojo por un motivo que solo se veia alla.
  *
  * Uso:  node scripts/_anotarVitest.mjs /tmp/vitest.log
  * Sale SIEMPRE con 0: corre dentro de un `if: failure()` y no tiene que tapar el rojo
