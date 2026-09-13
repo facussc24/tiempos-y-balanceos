@@ -3,17 +3,23 @@
  * GitHub. El fixture `fixtures/vitestRojo.txt` es una corrida en rojo de verdad (capturada
  * el 13/09/2026 con dos tests plantados: un assert que falla y una excepcion que no es
  * assert), no un log escrito a mano.
+ *
+ * Los casos de ruido y de cupo salen de la PRIMERA corrida real del script en CI (job
+ * 103663765832): saco 10 anotaciones y 8 eran console.warn de otros tests que decian
+ * "TypeError" adentro de un JSON de log. Un cupo lleno de eso deja afuera el fallo.
  */
 import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { lineasDelRojo } from '../../scripts/_anotarVitest.mjs';
+import { lineasDelRojo, paraAnotacion } from '../../scripts/_anotarVitest.mjs';
 
 const AQUI = path.dirname(fileURLToPath(import.meta.url));
 const FIXTURE = path.join(AQUI, 'fixtures', 'vitestRojo.txt');
 const SCRIPT = path.join(AQUI, '..', '..', 'scripts', '_anotarVitest.mjs');
+
+const RUIDO_REAL = "[2026-09-13T03:07:49.244Z] [WARN] [adminRepository] is_admin RPC failed { error: 'TypeError: fetch failed' }";
 
 describe('_anotarVitest', () => {
   const log = fs.readFileSync(FIXTURE, 'utf8');
@@ -31,7 +37,31 @@ describe('_anotarVitest', () => {
   });
 
   it('sin color: los codigos ANSI no entran en la anotacion', () => {
-    expect(lineasDelRojo(log).some((x) => x.includes('') || /\[\d+m/.test(x))).toBe(false);
+    // \u001b escrito como escape a proposito: el caracter ESC crudo se pierde al copiar el
+    // archivo y `includes('')` da true para cualquier texto — el test pasaba a ser ciego.
+    expect(lineasDelRojo(log).some((x) => x.includes('\u001b') || /\[\d+m/.test(x))).toBe(false);
+  });
+
+  // EL CASO DE LA PRIMERA CORRIDA REAL: un console.warn que NOMBRA un error no es el error.
+  it('un log de la app que dice TypeError adentro no cuenta como fallo', () => {
+    expect(lineasDelRojo(RUIDO_REAL)).not.toContain(RUIDO_REAL);
+    expect(lineasDelRojo(`${RUIDO_REAL}\nstderr | algun test\n  at foo (bar.ts:1:2)\n`))
+      .not.toContain(RUIDO_REAL);
+  });
+
+  it('el ruido no se come el cupo: el resumen entra igual', () => {
+    const ruido = Array.from({ length: 40 }, (_, i) => RUIDO_REAL.replace('49.244', `49.${i}`));
+    const l = lineasDelRojo([...ruido, 'FAIL  __tests__/x.test.ts > caso', 'Tests  3 failed | 9 passed (12)'].join('\n'));
+    expect(l.some((x) => x.startsWith('FAIL'))).toBe(true);
+    expect(l.some((x) => /^Tests\s{2}/.test(x))).toBe(true);
+    expect(l.length).toBeLessThanOrEqual(20);
+  });
+
+  it('con muchos FAIL, el resumen sigue entrando (cupo por grupo)', () => {
+    const fails = Array.from({ length: 30 }, (_, i) => `FAIL  __tests__/x${i}.test.ts > caso ${i}`);
+    const l = lineasDelRojo([...fails, 'Test Files  30 failed (30)'].join('\n'));
+    expect(l.some((x) => x.startsWith('Test Files'))).toBe(true);
+    expect(l.length).toBeLessThanOrEqual(20);
   });
 
   // EL CASO QUE LO MOTIVO. El 11 y el 13/09 el job quedo con CERO anotaciones de test: el
@@ -45,8 +75,19 @@ describe('_anotarVitest', () => {
     expect(l).toContain('exit code 1');
   });
 
+  it('ni el fallback reanota lineas del reporter', () => {
+    const soloReporter = '::error file=a.ts,title=x::algo\n::error file=b.ts,title=y::otra cosa\n';
+    expect(lineasDelRojo(soloReporter).some((x) => x.startsWith('::'))).toBe(false);
+  });
+
   it('un log vacio no revienta', () => {
     expect(Array.isArray(lineasDelRojo(''))).toBe(true);
+  });
+
+  it('el % se escapa entero, no cortado por el tope', () => {
+    const l = paraAnotacion(`${'x'.repeat(898)}%RESTO`);
+    expect(l.endsWith('%2')).toBe(false);
+    expect(/%(?!25)/.test(l)).toBe(false);
   });
 
   it('corriendolo de verdad, imprime anotaciones y sale con 0', () => {

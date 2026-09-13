@@ -93,7 +93,7 @@ jobs:
       # prueba volver a correr el mismo codigo), y que un rojo intermitente ilegible es el peor
       # de todos, porque no se puede ni reproducir ni leer. Si vuelve a pasar, el que aparece
       # en el summary es el test que hay que mirar.
-      - name: Publicar el rojo donde se lea SIN cuenta de GitHub
+      - name: El rojo en el summary (esto SI pide estar logueado)
         if: failure()
         run: |
           {
@@ -101,17 +101,23 @@ jobs:
             echo '```'
             grep -aE 'FAIL|AssertionError|Expected|Received|Tests  |Test Files|✕|×|→' /tmp/vitest.log | head -c 60000 || tail -c 60000 /tmp/vitest.log
             echo '```'
-          } >> "$GITHUB_STEP_SUMMARY"
-          # Y EL SUMMARY TAMPOCO SE LEE SIN CUENTA (13/09/2026). El 11/09 esto se escribio
-          # creyendo que si; abierto el run desde una sesion sin login, la pagina del job dice
-          # "Sign in to view logs" y la del run no muestra ningun summary. Lo unico que sale
-          # sin auth son las ANOTACIONES (/repos/.../check-runs/<job_id>/annotations), y el
-          # reporter de vitest dejo el job con CERO anotaciones de test las dos veces que hubo
-          # rojo (11 y 13/09): anota asserts que fallan, no una corrida que muere de otra
-          # forma. Asi que el rojo se anota aca a mano, con lo que haya en el log. Un rojo
-          # ilegible obliga a adivinar, y adivinar sobre uno INTERMITENTE --4 de los ultimos
-          # 20 runs, todos en commits que solo tocan docs-- es lo peor de los dos mundos.
-          node scripts/_anotarVitest.mjs /tmp/vitest.log
+          } >> "$GITHUB_STEP_SUMMARY" || true
+      # Y EL SUMMARY TAMPOCO SE LEE SIN CUENTA (13/09/2026). El 11/09 el paso de arriba se
+      # escribio creyendo que si; abierto el run desde una sesion sin login, la pagina del job
+      # dice "Sign in to view logs" y la del run no muestra ningun summary. Lo unico que sale
+      # sin auth son las ANOTACIONES (/repos/.../check-runs/<job_id>/annotations), y el
+      # reporter de vitest dejo el job con CERO anotaciones de test las dos veces que hubo rojo
+      # (11 y 13/09): anota asserts que fallan, no una corrida que muere de otra forma.
+      #
+      # VA EN UN PASO PROPIO, no al final del de arriba: el runner corre cada `run` con
+      # `bash --noprofile --norc -eo pipefail`, asi que si el job muere ANTES de "Run vitest"
+      # (npm ci, pip install, setup-python) el log no existe, `grep` y `tail` fallan los dos
+      # y `set -e` corta el paso antes de llegar a esta linea. O sea que el unico camino que
+      # deja el rojo legible se apagaba solo justo cuando menos se sabe que paso. Reproducido
+      # con los flags exactos del runner, no leyendo el YAML.
+      - name: El rojo como ANOTACION, que es lo unico que se lee sin cuenta
+        if: failure()
+        run: node scripts/_anotarVitest.mjs /tmp/vitest.log
 
   # Gate 3: ESLint. En local solo corre via husky pre-commit (lint-staged), que un
   # `git push --no-verify` saltea — aca no hay como saltearlo.
