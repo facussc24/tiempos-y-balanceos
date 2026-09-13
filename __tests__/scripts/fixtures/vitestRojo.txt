@@ -1,0 +1,52 @@
+
+ RUN  v4.1.11 C:/Dev/BarackMercosul
+
+ ❯ __tests__/scripts/_tmpRojoCalibracion.test.mjs (2 tests | 2 failed) 110ms
+     × un assert que falla 85ms
+     × una excepcion que no es assert 20ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  __tests__/scripts/_tmpRojoCalibracion.test.mjs > calibracion del anotador > un assert que falla
+AssertionError: expected { margen: 1.07 } to deeply equal { margen: 1.25 }
+
+- Expected
++ Received
+
+  {
+-   "margen": 1.25,
++   "margen": 1.07,
+  }
+
+ ❯ __tests__/scripts/_tmpRojoCalibracion.test.mjs:8:30
+      6| describe('calibracion del anotador', () => {
+      7|   it('un assert que falla', () => {
+      8|     expect({ margen: 1.07 }).toEqual({ margen: 1.25 });
+       |                              ^
+      9|   });
+     10|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  __tests__/scripts/_tmpRojoCalibracion.test.mjs > calibracion del anotador > una excepcion que no es assert
+TypeError: Cannot read properties of null (reading 'pilotos')
+ ❯ __tests__/scripts/_tmpRojoCalibracion.test.mjs:13:14
+     11|   it('una excepcion que no es assert', () => {
+     12|     const o = null;
+     13|     return o.pilotos.length;
+       |              ^
+     14|   });
+     15| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed (2)
+   Start at  00:00:29
+   Duration  7.61s (transform 245ms, setup 0ms, import 423ms, tests 110ms, environment 5.40s)
+
+
+::error file=C%3A/Dev/BarackMercosul/__tests__/scripts/_tmpRojoCalibracion.test.mjs,title=__tests__/scripts/_tmpRojoCalibracion.test.mjs > calibracion del anotador > un assert que falla,line=8,column=30::AssertionError: expected { margen: 1.07 } to deeply equal { margen: 1.25 }%0A%0A- Expected%0A+ Received%0A%0A  {%0A-   "margen": 1.25,%0A+   "margen": 1.07,%0A  }%0A%0A ❯ __tests__/scripts/_tmpRojoCalibracion.test.mjs:8:30%0A%0A
+
+::error file=C%3A/Dev/BarackMercosul/__tests__/scripts/_tmpRojoCalibracion.test.mjs,title=__tests__/scripts/_tmpRojoCalibracion.test.mjs > calibracion del anotador > una excepcion que no es assert,line=13,column=14::TypeError: Cannot read properties of null (reading 'pilotos')%0A ❯ __tests__/scripts/_tmpRojoCalibracion.test.mjs:13:14%0A%0A
