@@ -7,12 +7,16 @@
      python arbver.py modal           -> cierra los modales #32770 con click real
      python arbver.py reset           -> saca la ventana de una celda sucia (cierra y reabre)
 """
-import ctypes, ctypes.wintypes as w, subprocess, sys, time
+import ctypes, ctypes.wintypes as w, os, subprocess, sys, time
 from PIL import Image
 
 u = ctypes.windll.user32; k = ctypes.windll.kernel32; g = ctypes.windll.gdi32
 CB = ctypes.WINFUNCTYPE(w.BOOL, w.HWND, w.LPARAM)
-BASE = r'C:\Users\FACUND~1\AppData\Local\Temp\claude\C--Dev-BarackMercosul\0fe4e13b-5c8b-455a-805a-69bd34e16439\scratchpad'
+# Las fotos van a una carpeta fija del usuario, NO al scratchpad de una sesion: estuvo
+# clavada al de la sesion 0fe4e13b (05/08/2026) y desde entonces `foto` reventaba con
+# FileNotFoundError en cualquier otra sesion. Es la misma carpeta que usa `_arbInsumo.py`.
+BASE = os.path.join(os.path.expanduser('~'), 'arb_fotos')
+os.makedirs(BASE, exist_ok=True)
 
 
 class R(ctypes.Structure):

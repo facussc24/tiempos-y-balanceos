@@ -13,6 +13,12 @@ description: Operar el ERP arb (ARB Sistemas "Producción") por teclado desde Cl
 > **Modificar un campo del MAESTRO DE INSUMOS: ANDA** — **31/08/2026**, `Es Sub-Producto`
 > de `TRO-TEL0001-V1`, diff del export entero 2 altas / 0 bajas / 0 cambios. Todo por
 > teclado: se TABULA, no se clickea por coordenada (ver la seccion nueva del 31/08).
+> **Dar de ALTA un CODIGO en el maestro: ANDA** — **15/09/2026**, `427VAR002TAP01`, primera
+> corrida del robot (hasta ese dia era "APRENDIDO", grabado de Fak pero nunca ejecutado).
+> En `Altas` el click por coordenada **tambien** falla en silencio: un solo click en `Rubro`
+> y de ahi TAB (ver `reference/maestro-de-insumos.md`).
+> **Sustituir el codigo de una linea: 5/5 el 15/09** — la bolsa de embalaje Patagonia en sus
+> 5 BOM, con una linea en la fila 7; diff de la base entera 6257 -> 6257, 0 fuera de lo pedido.
 > **Y la `Descripción` tambien: 3/3 el 01/09/2026** — 27 filas partidas del export → 0, con
 > 0 altas / 0 bajas / **0 consumos cambiados**. Ojo con los dos gates que la trababan:
 > `&Acepta` esta deshabilitado hasta que `Posee PAPP/PSW` tenga valor, y una tecla mandada

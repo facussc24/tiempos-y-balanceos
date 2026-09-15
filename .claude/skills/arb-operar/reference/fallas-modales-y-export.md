@@ -17,11 +17,23 @@ entre solapas y exportar. **Mientras el cartel está, la ventana no responde a n
 clicks en las solapas no hacen efecto y parece colgada. Ese es el síntoma que hay que
 reconocer.
 
-- **Anular** y reabrir el programa. Es lo correcto.
-- **Omitir** deja al programa siguiendo con la memoria ya corrupta. Con consumos de
-  producción de por medio, no.
-- Después de reabrir: **re-exportar y diffear contra el respaldo previo**, para confirmar que
-  no quedó nada raro. En este caso no quedó.
+- 🔴 **Lo decide Fak, y su respuesta fue `Omitir`** (15/09/2026, textual: *"ahí le di a
+  omitir, la próxima que te aparezca ese cartel de mierda le das a **Omitir**"*). El cartel
+  le sale seguido y **`Anular` cierra el arb**, que después sólo reabre él porque pide su
+  contraseña (regla `arb-no-cerrar.md`): la cura salía más cara que la enfermedad.
+- **Qué NO cambia con eso:** después de un `Omitir` el proceso sigue con la memoria ya
+  corrupta, así que **lo que se escribió se verifica igual, contra el export, y el diff va
+  sobre la base ENTERA** — no sobre las líneas del lote. El 15/09 se hizo así y dio
+  6257 → 6257 líneas, 5 altas, 5 bajas, **0 líneas tocadas fuera de lo pedido**.
+- Yo **no aprieto `Anular` por mi cuenta**: cierra el arb. Si me parece la salida correcta,
+  se la pido a Fak con el motivo.
+- Después: **re-exportar y diffear contra el respaldo previo**, para confirmar que no quedó
+  nada raro. En los dos casos (06/08 con `Anular`, 15/09 con `Omitir`) no quedó.
+
+⚠️ **El cartel no siempre dice `HEAP CORRUPTION`.** El 15/09, al apretar `&Acepta` en un alta
+del maestro, el mismo `#32770` decía **`Run-Time Check Failure #2 - S`** (stack corruption).
+Misma familia, mismos tres botones, mismo manejo — reconocelo por la clase y el título de la
+ventana, no por el texto del error. **Y el registro se había grabado igual**, como el 28/08.
 
 Detectarlo es una línea: enumerar las ventanas del proceso del arb y buscar clase `#32770`
 con título `Microsoft Visual C++ Runtime Library`. Conviene chequearlo antes de decidir que

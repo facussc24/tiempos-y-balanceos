@@ -91,9 +91,39 @@ campos que se dejan en blanco quedan en blanco: el arb no los exige.
 3. **El arb puede tirar `Microsoft Visual C++ Runtime Library` justo al apretar `&Acepta`**
    (cartel `#32770`, botones `&Anular` / `&Reintentar` / `Om&itir`). Pasó en el alta del
    28/08 y **el registro se grabó igual y correcto** — verificado después contra el maestro.
-   Aun así: la salida documentada es **`Anular` y reabrir el programa**, nunca `Omitir`
-   (sigue con la memoria corrupta). Si se apretó `Omitir`: **verificar el registro y cerrar
-   y reabrir el arb antes de escribir nada más.**
+   **Vuelve a pasar: el 15/09 el mismo cartel salió con `Run-Time Check Failure #2 - S` y el
+   registro también se grabó bien.** El botón lo decidió Fak y es **`Omitir`** — `Anular`
+   cierra el arb y sólo él puede reabrirlo. Detalle y qué verificar igual después:
+   `fallas-modales-y-export.md`.
+
+### 🟢 EL ALTA POR ROBOT — CORRIÓ POR PRIMERA VEZ `CONFIRMADO 2026-09-15`
+
+`427VAR002TAP01` (bolsa de embalaje Patagonia). Verificado indirecto y duro: el export de
+RELACIONES trae la **descripción** de cada insumo, y esa descripción sale del maestro — si
+el alta no hubiera grabado, las 5 BOMs no podrían mostrar `BOLSA PP 520 MM ...`.
+
+**Los tres que hay que saber antes de correrlo:**
+
+1. 🔴 **En `Altas` el click por coordenada TAMBIÉN falla en silencio** — no es sólo de
+   `Modificaciones` (lo de la línea 120). `click rubro` y `click medida` devolvieron **el
+   mismo handle** (`foco=1247026` las dos veces) y el código entró **adentro de `Rubro`**,
+   encima del `1`: el campo es angosto y scrollea, así que mostraba `2TAP01` y parecía otra
+   cosa. **La señal es el handle repetido entre dos clicks a campos distintos.** Receta que
+   sí anda: **un solo click en `Rubro` y de ahí todo con TAB.**
+2. **`&Acepta` arranca deshabilitado y se habilita recién al salir de `Posee PAPP/PSW`**, o
+   sea con el TAB que cae en el botón. Si la foto lo muestra grisado con el campo ya en `S`,
+   **todavía no tabulaste**: no es que falte un dato.
+3. **Una foto puede salir a medio dibujar** (media pantalla sin campos ni botones) mientras
+   el arb repinta. No es un cuelgue: antes de diagnosticar, `estado` + `Responding` — si
+   dice `ena=True`, `MODALES 0` y `Responding=True`, sacá la foto de nuevo.
+
+**Los TAB del alta, contados** (desde `Rubro`, tab order de la línea 124):
+`Rubro` →1→ `Medida` →1→ `Descripción` →**5**→ `Unidad` →**13**→ `Tipo de Descarga` →1→
+`Origen Descarga` →1→ `Posee PAPP/PSW` →1→ `&Acepta` → ENTER.
+
+**No inventes los campos que no te dieron: copialos del hermano.** Antes de escribir se fue a
+`Modificaciones`, se trajo el código que se estaba reemplazando y se leyó su configuración
+(`UNID`, `PAPP/PSW=S`, `Tipo I`, `Origen M`). Eso es dato, no criterio.
 
 ### Verificar un alta sin tocar nada — solapa `Modificaciones`
 
