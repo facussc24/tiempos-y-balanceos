@@ -30,6 +30,7 @@ y los tags se verian como texto. La firma se sigue agregando abajo, igual que si
 import json
 import os
 import sys
+import time
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '_lib'))
 from vozMail import mostrar_voz                                          # noqa: E402
@@ -55,6 +56,23 @@ def preparar(cfg):
 
     ol = win32.Dispatch('Outlook.Application')
     ns = ol.GetNamespace('MAPI')
+
+    # Si Outlook no estaba abierto, el Dispatch de arriba lo ARRANCA sin ninguna ventana
+    # (`Explorers.Count == 0`) y ahi el script se cuelga: `GetInspector` / `Display()` nunca
+    # vuelven. Paso el 15/09/2026 — la corrida murio por timeout, sin salida y sin borrador,
+    # y Outlook quedo de fondo en ese estado. Se abre la Bandeja de entrada antes de tocar
+    # el item. Es la misma condicion que ya chequea `_mailEnviar.py` para el envio.
+    if ol.Explorers.Count == 0:
+        print('Outlook estaba sin ventana: abro la Bandeja de entrada antes de armar el mail.')
+        exp = ol.Explorers.Add(ns.GetDefaultFolder(6), 0)   # 6 = olFolderInbox
+        exp.Display()
+        exp.Activate()
+        for _ in range(30):
+            if ol.Explorers.Count > 0:
+                break
+            time.sleep(1)
+        if ol.Explorers.Count == 0:
+            sys.exit('ABORTADO: Outlook no llego a abrir una ventana en 30 s.')
 
     # "responder_a": texto del asunto de un mail YA ENVIADO. La respuesta sale sobre el mismo
     # hilo (asunto "RE: ...", mismo ConversationIndex), que es lo que ve el destinatario como

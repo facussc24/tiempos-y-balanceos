@@ -171,7 +171,7 @@ contra el archivo del legajo, y mover a Elementos eliminados los que quedaron su
 | El chequeo corre **justo antes del Send**, no al empezar | Ese dia mire Enviados y mande 30 minutos despues |
 | Match por **tres señales**, no solo el asunto | Un hilo tiene muchos mails con el mismo asunto |
 | Nada de ese asunto en la **Bandeja de salida** | Evita encolar dos veces |
-| Outlook con **al menos una ventana abierta** | Sin ventana (`Explorers.Count == 0`) no ejecuta envio/recepcion |
+| Outlook con **al menos una ventana abierta** | Sin ventana (`Explorers.Count == 0`) no ejecuta envio/recepcion — y `_prepararMail.py` directamente **se cuelga** ahi (15/09/2026: `GetInspector`/`Display()` no vuelven, la corrida muere por timeout sin salida y sin borrador). Desde hoy ese script abre la Bandeja de entrada si no hay ninguna |
 | Post-envio: cola vacia **y** item nuevo en Enviados | "Se envio?" se mira en Enviados por fecha, nunca en el borrador |
 
 ## Lo que NO prueba nada
