@@ -34,6 +34,7 @@ import time
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '_lib'))
 from vozMail import mostrar_voz                                          # noqa: E402
+from outlookUi import asegurar_outlook, cartel_de_seguridad              # noqa: E402
 
 try:
     import win32com.client as win32
@@ -54,14 +55,16 @@ def preparar(cfg):
             print(f'  - {f}')
         sys.exit(1)
 
+    # Outlook se abre ANTES del Dispatch y como programa del usuario. Si lo arranca el
+    # Dispatch queda sin ninguna ventana (`Explorers.Count == 0`) y el script se cuelga:
+    # `GetInspector` / `Display()` nunca vuelven. Paso el 15/09/2026 — la corrida murio por
+    # timeout, sin salida y sin borrador. Ademas, a un Outlook nacido de la automatizacion el
+    # Object Model Guard le saca el cartel "un programa intenta enviar correo en su nombre".
+    print(f'Outlook: {asegurar_outlook()}')
     ol = win32.Dispatch('Outlook.Application')
     ns = ol.GetNamespace('MAPI')
 
-    # Si Outlook no estaba abierto, el Dispatch de arriba lo ARRANCA sin ninguna ventana
-    # (`Explorers.Count == 0`) y ahi el script se cuelga: `GetInspector` / `Display()` nunca
-    # vuelven. Paso el 15/09/2026 — la corrida murio por timeout, sin salida y sin borrador,
-    # y Outlook quedo de fondo en ese estado. Se abre la Bandeja de entrada antes de tocar
-    # el item. Es la misma condicion que ya chequea `_mailEnviar.py` para el envio.
+    # Red por si quedo corriendo de antes sin ventana (el caso que dejo el arranque fallido).
     if ol.Explorers.Count == 0:
         print('Outlook estaba sin ventana: abro la Bandeja de entrada antes de armar el mail.')
         exp = ol.Explorers.Add(ns.GetDefaultFolder(6), 0)   # 6 = olFolderInbox

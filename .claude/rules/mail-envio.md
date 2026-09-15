@@ -171,7 +171,8 @@ contra el archivo del legajo, y mover a Elementos eliminados los que quedaron su
 | El chequeo corre **justo antes del Send**, no al empezar | Ese dia mire Enviados y mande 30 minutos despues |
 | Match por **tres señales**, no solo el asunto | Un hilo tiene muchos mails con el mismo asunto |
 | Nada de ese asunto en la **Bandeja de salida** | Evita encolar dos veces |
-| Outlook con **al menos una ventana abierta** | Sin ventana (`Explorers.Count == 0`) no ejecuta envio/recepcion — y `_prepararMail.py` directamente **se cuelga** ahi (15/09/2026: `GetInspector`/`Display()` no vuelven, la corrida muere por timeout sin salida y sin borrador). Desde hoy ese script abre la Bandeja de entrada si no hay ninguna |
+| Outlook **abierto como programa del usuario, ANTES del `Dispatch`** | Un Outlook que levanta el `Dispatch` queda sin ventana (`Explorers.Count == 0`, no transmite) y el script **se cuelga** en `GetInspector`/`Display()`. Lo abre `asegurar_outlook()` de `scripts/_lib/outlookUi.py`, corriendo el `.exe` |
+| **El cartel de seguridad de Outlook se ve, no se adivina** | El *Object Model Guard* (*"Un programa intenta enviar correo en su nombre"*) es MODAL: bloquea el `Send()` y la corrida muere muda por timeout. `vigilando()` lo detecta por el TEXTO de los hijos del `#32770` y lo grita en el momento |
 | Post-envio: cola vacia **y** item nuevo en Enviados | "Se envio?" se mira en Enviados por fecha, nunca en el borrador |
 
 ## Lo que NO prueba nada
@@ -189,6 +190,33 @@ moviendolo a Borradores y haciendo `Send()` desde ahi.
 todos / Reenviar / Responder en carpeta. El boton esta solo en la interfaz
 (Mensaje → Acciones → Recuperar este mensaje), sirve solo dentro de la misma organizacion Exchange
 y solo si el destinatario no lo abrio.
+
+## El cartel "Un programa intenta enviar correo en su nombre" — 2026-09-15
+
+Es el **Object Model Guard** de Outlook. Fak lo fotografio y pidio saltearlo: *"fijate si podes
+hacerle un bypass porque no te das cuenta y te impide mandar los mails"*.
+
+**No se saltea, y las dos mitades del pedido se separan:**
+
+| Mitad | Que se hizo |
+|---|---|
+| *"me impide mandar"* | Se ataca la CAUSA, no el cartel: `asegurar_outlook()` abre Outlook corriendo el `.exe` **antes** del `Dispatch`. Un Outlook nacido de la automatizacion es, para el guard, un programa externo; uno que ya corre como programa del usuario, con antivirus sano, no dispara el aviso en `Send()` |
+| *"no te das cuenta"* | `vigilando()` corre el vigia en un hilo (la operacion COM se queda en el principal: llamarla desde otro hilo revienta con `RPC_E_WRONG_THREAD`), detecta el `#32770` de OUTLOOK.EXE por el TEXTO de sus hijos y lo avisa en el momento, repitiendo cada 15 s |
+
+**Por que no se apaga:** ese cartel existe justo para que un programa no mande correo a nombre
+de Fak sin que el se entere — apagarlo es tocar una configuracion de seguridad de su maquina, y
+no es mia esa decision. El interruptor soportado vive en *Archivo -> Opciones -> Centro de
+confianza -> Configuracion -> Acceso mediante programacion*, y lo aprieta el. En esta PC la
+sesion **no es administradora**, asi que lo mas probable es que le aparezca gris.
+
+**Lo que NO es la causa** (verificado el 15/09/2026, no supuesto): Windows Defender estaba
+activo, al dia y con tiempo real prendido (`root/SecurityCenter2`), y no habia **ninguna**
+politica puesta — ni `HKCU\...\Outlook\Security` ni las de `Policies`. O sea que no fue el
+antivirus vencido, que es la causa clasica.
+
+Calibrado en las dos direcciones: `python scripts/_lib/outlookUi.py` (9 casos — los tres textos
+del guard en sus dos idiomas dan rojo, y otros avisos de Outlook, el titulo pelado y el vacio dan
+verde; mas que `vigilando` devuelve lo de `fn` y no se come su excepcion).
 
 ## Enforcement
 

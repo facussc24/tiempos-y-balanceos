@@ -35,6 +35,7 @@ import time
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '_lib'))
 from vozMail import mostrar_voz                                          # noqa: E402
+from outlookUi import asegurar_outlook, cartel_de_seguridad, vigilando   # noqa: E402
 
 VENTANA_HORAS = 72          # cuanto para atras se mira Enviados
 INLINE = re.compile(r'^(image\d+\.(png|jpg|jpeg|gif)|Outlook-[\w\-]+\.(png|jpg|jpeg))$', re.I)
@@ -168,6 +169,10 @@ def main() -> int:
     import win32com.client as win32
     import pythoncom
     pythoncom.CoInitialize()
+    # Outlook se abre ANTES del Dispatch y como programa del usuario: uno que levanta el
+    # Dispatch queda sin ventana y ademas el Object Model Guard le saca el cartel
+    # "un programa intenta enviar correo en su nombre" en cada Send() (15/09/2026).
+    print(f'Outlook: {asegurar_outlook()}')
     ol = win32.Dispatch('Outlook.Application')
     ns = ol.GetNamespace('MAPI')
 
@@ -248,8 +253,11 @@ def main() -> int:
         print("\nDRY-RUN: no se envio nada. Agrega --enviar cuando este OK.")
         return 0
 
-    # 5. enviar
-    it.Send()
+    # 5. enviar — vigilado: si Outlook saca el cartel de seguridad, el Send() se queda
+    #    bloqueado esperando un clic y el script se colgaba MUDO hasta el timeout.
+    _, cartel = vigilando(it.Send, descripcion='el envio')
+    if cartel:
+        print("  (hubo cartel de seguridad de Outlook y se respondio; sigo)")
     try:
         ns.SendAndReceive(False)
     except Exception as e:
