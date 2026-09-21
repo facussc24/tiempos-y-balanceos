@@ -58,6 +58,14 @@
     { "nombre": "Marcelo Nieve",     "area": "Ingenieria",          "funcion": "Calidad Proyectos",            "activo": false, "baja": "2026-09-01", "evidencia": "su mail 'Fin del ciclo', 01/09/2026 16:22: 'hoy es mi ultimo dia en Barack'. Sale de la lista de RRHH entre el 31/08 y el 04/09/2026", "nota": "colgaba de Ingenieria, no de Calidad: en el organigrama esta en la rama de Baptista con la funcion 'Calidad Proyectos'" }
   ],
 
+  "quien_compone_el_equipo_multifuncional": {
+    "respuesta": "NINGUN documento vigente del SGC lo define. Barrido completo de Y:\\BARACK\\CALIDAD\\DOCUMENTACION SGC\\ el 21/09/2026: el instructivo I-AC-005 rev.B (que gobierna la emision del AMFE) no dice la palabra 'equipo' ni una vez, y la columna 'Equipo / Contactos' del Listado Maestro de AMFEs esta vacia en las 70 filas.",
+    "lo_unico_que_hubo": "Un organigrama POR PROYECTO, practica abandonada: 'Organigrama equipo multifuncional Proyecto Barack.xlsx' (JUL 2018, hoy en ORGANIGRAMAS\\OBSOLETOS), mas uno de PSA (2018) y otro de TBA (2014) adentro de sus paquetes de PPAP. De todos esos nombres, el unico que sigue apareciendo en un AMFE vigente es Carlos Baptista. El casillero '12-Organigrama' del PPAP de PWA quedo vacio.",
+    "esqueleto_por_funcion": ["Ingenieria", "Calidad", "Produccion", "Planificacion", "Logistica"],
+    "lo_que_se_escribe_hoy": "No coincide con ese esqueleto: 17 de los 43 AMFE vigentes con bloque de equipo nombran Seguridad e Higiene, y ninguno nombra Planificacion ni Logistica.",
+    "como_se_llena": "El formulario pide 'Nombre y sector de los participantes al equipo FMEA' (planilla de capacitacion del SGC): son los que PARTICIPARON de ese analisis, no un plantel fijo. Por eso esta nomina dice quien puede figurar, no quien tiene que figurar."
+  },
+
   "dudosos": [
     { "nombre": "Jean Claudio Pagliaroli", "area": "Seguridad e Higiene", "funcion": "Asistente S&H", "evidencia": "desaparece de la lista de RRHH despues del 10/08/2026 y falta en las 7 siguientes; ultimo mail propio 02/06/2026. No hay mail de despedida", "que_falta": "confirmarlo con Fak: es el mismo patron que dieron Nieve y Atencio, pero un negativo no prueba la baja" }
   ]

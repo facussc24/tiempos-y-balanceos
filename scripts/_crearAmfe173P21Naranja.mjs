@@ -420,8 +420,11 @@ const OP20 = operacion('20', 'CORTE DE VINILO O TELA',
         'Cuchilla dentro de su medida de uso y cabezal en posicion de trabajo',
         [
           falla('Corte imperfecto en la capa cortada', EF_SCRAP_INTERNO, [
+            // El control de prevencion NO puede afirmar lo que la causa niega: decia "medida
+            // minima de cuchilla DEFINIDA" al lado de una causa que dice que ese criterio no
+            // existe. Lo que si hay en el puesto es el calibre.
             causa('La cuchilla se usa mas alla de su medida minima porque no hay un criterio de cambio definido',
-              'Medida minima de cuchilla definida y calibre en el puesto',
+              'Calibre en el puesto para medir la cuchilla',
               5, 'Medicion de la cuchilla con calibre antes de arrancar el corte', 9),
           ]),
           falla('Cabezal mal posicionado al arrancar el corte', EF_SCRAP_INTERNO, [
@@ -448,8 +451,8 @@ const OP20 = operacion('20', 'CORTE DE VINILO O TELA',
         [
           falla('Exposicion del operario a un corte con la herramienta', EF_SEG_OPERARIO, [
             causa('No hay guantes anticorte asignados al puesto en cantidad suficiente',
-              'Guantes anticorte definidos como EPP del puesto',
-              10, 'Control del uso de EPP en el recorrido de turno', 8),
+              'TBD - falta asegurar la provision de guantes anticorte del puesto',
+              10, 'Control del uso de EPP en el recorrido de turno', 9),
           ]),
           falla('Carga manual de los rollos en el portarrollos', EF_SEG_OPERARIO, [
             causa('No hay un medio mecanico para subir el rollo al portarrollos',
@@ -469,9 +472,12 @@ const OP20 = operacion('20', 'CORTE DE VINILO O TELA',
         'Bin identificado con la descripcion y la cantidad de la orden',
         [
           falla('Piezas no conformes pasan el control del puesto', EF_SCRAP_INTERNO, [
+            // La deteccion decia "contra el patron del puesto" y la causa dice que ese patron
+            // NO existe: el control se apoyaba en algo que la misma fila niega. Sin criterio
+            // contra el cual comparar no hay metodo de deteccion establecido -> Tabla P3, D=10.
             causa('El control es visual y no hay un patron de comparacion en el puesto',
               'TBD - falta el patron de comparacion en el puesto de corte',
-              5, 'Control visual contra el patron del puesto', 8),
+              5, 'Control visual del operario, sin patron contra el cual comparar', 10),
           ]),
           falla('Bin identificado con una descripcion que no corresponde a su contenido', EF_SCRAP_INTERNO, [
             causa('La etiqueta se completa a mano despues de cerrar el bin',
@@ -581,7 +587,7 @@ const OP40 = operacion('40', 'COSTURA DE UNION',
         [
           falla('Tendinitis o dolor articular en el brazo del operario', EF_SEG_OPERARIO, [
             causa('El ciclo del puesto es repetitivo y no hay rotacion ni pausa activa definidas',
-              'Rotacion de puestos y pausa activa',
+              'TBD - falta definir la rotacion de puestos y la pausa activa',
               10, 'Seguimiento de Seguridad e Higiene y del servicio medico', 8),
           ]),
           falla('Herida del operario con la aguja de la maquina', EF_SEG_OPERARIO, [
@@ -705,7 +711,7 @@ const OP50 = operacion('50', 'COSTURA VISTA - PESPUNTE SIMPLE, UNA LINEA',
         [
           falla('Tendinitis o dolor articular en el brazo del operario', EF_SEG_OPERARIO, [
             causa('El ciclo del puesto es repetitivo y no hay rotacion ni pausa activa definidas',
-              'Rotacion de puestos y pausa activa',
+              'TBD - falta definir la rotacion de puestos y la pausa activa',
               10, 'Seguimiento de Seguridad e Higiene y del servicio medico', 8),
           ]),
           falla('Herida del operario con la aguja de la maquina', EF_SEG_OPERARIO, [
@@ -773,24 +779,59 @@ const OP60 = operacion('60', 'LIMPIEZA DE PIEZA PLASTICA',
 // ===========================================================================
 // OP 70 — APLICACION DE PRIMER
 // ===========================================================================
+// El sustrato SIEMPRE lleva primer, y siempre lo llevo. Verificado el 21/09/2026 en once
+// documentos: OP 70 propia en la HO 927 desde la REV.2 (2023), instructivos IO-07 (mezcla) e
+// IO-19 (aplicacion), items PPBL-3A/3B en la BOM 927 Rev03 y en la BOM 127 Rev7, consumo en el
+// arb, y el plano RP-00238891 V06 con la misma materia prima (>P/E< -HC PPT X9127) para las 17
+// piezas — el ECR-0368291 solo cambia la costura. La Rev.A decia "cuando la pieza lo requiere":
+// ese condicional no lo respalda ninguna fuente y el flujograma lo dibujaba como una
+// bifurcacion cuya rama NO no aterrizaba en ningun lado.
+//
+// La vida util de la mezcla (9 h) y su receta son PARAMETROS: van al Plan de Control, no aca
+// (amfe.md §11). El modo de falla nombra el fenomeno.
 const OP70 = operacion('70', 'APLICACION DE PRIMER',
-  'Aplicar primer sobre el sustrato plastico cuando la pieza lo requiere',
-  'Primer preparado segun su mezcla y aplicado dentro de su vida util',
+  'Aplicar primer sobre el sustrato plastico antes del adhesivado',
+  'Primer vigente, mezclado segun IO-07 y aplicado segun IO-19 dentro de su vida util',
   [
     we('Material', 'Primer de dos componentes', [
       funcion(
         'Preparar y usar el primer segun su especificacion',
-        'Mezcla de los componentes y uso dentro de las 9 horas de preparada',
+        'Componentes mezclados y mezcla usada dentro de su vida util',
         [
+          // Este modo de falla YA PASO y llego como reclamo del cliente: el log de revisiones
+          // del Plan de Control rev L registra "Revision por reclamo de cliente QR 219344
+          // primer vencido". El AMFE 127 lo tiene con S=8; la Rev.A de este documento lo habia
+          // perdido. Un AMFE nuevo que no contiene la falla que ya le ocurrio al cliente es
+          // hallazgo de auditoria (IATF 16949 §10.2: lecciones aprendidas).
+          falla('Primer aplicado despues de su fecha de vencimiento', EF_PARO_LINEA, [
+            causa('El envase en el puesto no se coteja contra su fecha de vencimiento antes de usarlo',
+              'Control de vencimiento del primer en la recepcion del material',
+              4, 'Verificacion de la fecha de vencimiento del envase antes de preparar la mezcla', 7),
+          ]),
           falla('Primer aplicado sin mezclar sus componentes', EF_PARO_LINEA, [
             causa('La preparacion no deja registro de que la mezcla se hizo',
-              'Instructivo de preparacion en el puesto',
+              'Instructivo IO-07 de mezcla en el puesto',
               4, 'Registro de preparacion del primer con hora', 8),
           ]),
-          falla('Primer usado despues de las 9 horas de preparado', EF_ASPECTO, [
+          falla('Primer usado despues del fin de su vida util', EF_ASPECTO, [
             causa('El envase preparado no lleva la hora de preparacion a la vista',
-              'Identificacion del envase con la hora de preparacion',
+              'TBD - falta la identificacion del envase con la hora de preparacion',
               4, 'Control de la hora del envase antes de usarlo', 8),
+          ]),
+        ]),
+    ]),
+    // El otro modo de falla del AMFE 127 que la Rev.A habia perdido. El IO-19 pide cubrir la
+    // cara superior, la cara lateral, los ojales y las esquinas: una aplicacion incompleta deja
+    // zonas sin adherencia y el vinilo se despega despues del horno.
+    we('Metodo', 'Aplicacion del primer con pincel', [
+      funcion(
+        'Cubrir toda la superficie que despues recibe el adhesivo',
+        'Cara superior, cara lateral, ojales y esquinas cubiertos segun IO-19',
+        [
+          falla('Primer aplicado en forma incompleta sobre el sustrato', EF_ASPECTO, [
+            causa('El primer es transparente y la zona cubierta no se distingue a simple vista',
+              'Instructivo IO-19 con la secuencia de aplicacion en el puesto',
+              5, 'Control visual de la pieza antes de pasar al adhesivado', 8),
           ]),
         ]),
     ]),
@@ -832,7 +873,35 @@ const OP80 = operacion('80', 'ADHESIVADO DE PIEZA PLASTICA Y VINILO',
 // ===========================================================================
 // OP 90 — TAPIZADO
 // ===========================================================================
-const OP90 = operacion('90', 'TAPIZADO',
+// La Rev.A saltaba del adhesivado al tapizado y se comia una operacion entera. El ACTIVADO DEL
+// ADHESIVO EN HORNO lo declaran TRES fuentes independientes: HO 927 REV6 hoja 90.1 (corte
+// 66 °C, minimo 55 °C, ciclo 150-180 s), AMFE 127 OP 90.1, y Plan de Control rev M fila 166
+// ("Activado de adhesivo en pieza plastica y vinilo", maquina Horno, con tres QRCI detras).
+// Se adopta la particion 90.1 / 90.2 de la HO, que es la numeracion del flujograma 159.
+const OP90A = operacion('90.1', 'ACTIVADO DEL ADHESIVO EN HORNO',
+  'Activar el adhesivo de las dos partes antes del montaje',
+  'Sustrato y vinilo dentro de la ventana de temperatura y de ciclo del horno',
+  [
+    we('Maquina', 'Horno de activado', [
+      funcion(
+        'Llevar el adhesivo a su temperatura de activado',
+        'Temperatura de la pieza dentro de la ventana y ciclo completo',
+        [
+          falla('Adhesivo que sale del horno por debajo de su temperatura de activado', EF_PARO_LINEA, [
+            causa('El horno se habilita para trabajar antes de estabilizar su temperatura',
+              'Corte de temperatura seteado en el panel del horno',
+              4, 'Verificacion de la temperatura de la pieza al salir del horno', 8),
+          ]),
+          falla('Pieza sobrecalentada en el horno', EF_ASPECTO, [
+            causa('La pieza queda en el horno mas alla del ciclo cuando el puesto siguiente esta ocupado',
+              'Ciclo del horno definido en la hoja de operaciones',
+              4, 'Control del tiempo de ciclo en el puesto', 8),
+          ]),
+        ]),
+    ]),
+  ]);
+
+const OP90 = operacion('90.2', 'TAPIZADO',
   'Montar la funda cosida sobre el sustrato adhesivado',
   'Funda montada sin arrugas, centrada y con la costura vista en su posicion',
   [
@@ -845,6 +914,17 @@ const OP90 = operacion('90', 'TAPIZADO',
             causa('El sustrato se sostiene a mano durante el montaje, sin un dispositivo que lo posicione',
               'Ayuda visual del montaje en el puesto',
               3, 'Control visual de la pieza terminada contra la muestra patron', 8),
+          ]),
+          // El control con REGLA MYLAR. Sale de la HO 927 REV6, hoja 90.2, celda L39:
+          // "Alineacion visual de costura utilizando regla Mylar de soporte", responsable OP,
+          // frecuencia 1, registro "Set up 1° pieza OK + Registro control calidad". Entro en la
+          // REV.5 (31/10/2025). Es el unico medio del proceso que verifica la posicion de la
+          // costura, que es caracteristica designada por el cliente, y la Rev.A de este AMFE no
+          // lo tenia en ninguna fila. Tampoco esta en el Plan de Control: hay que declararlo.
+          falla('Costura vista fuera de su alineacion sobre el radio del sustrato', EF_ASPECTO, [
+            causa('La funda se acomoda a mano y el talon de costura se corre en la curva delantera',
+              'Regla mylar de soporte en el puesto (HO 927, hoja 90.2)',
+              4, 'Alineacion de la costura con regla mylar, primera pieza del lote y registro de control de calidad', 7),
           ]),
         ]),
     ]),
@@ -953,7 +1033,13 @@ const OP120 = operacion('120', 'INSPECCION FINAL',
           falla('Apoyabrazos ensamblado que no cumple un ensayo de validacion del cliente', EF_PIEZA_DISTINTA, [
             causa('La pieza se fabrica con una combinacion de sustrato y recubrimiento que no reproduce la que se valido',
               'Materiales y proceso congelados contra la pieza de validacion',
-              2, 'Ensayos B62 0400, D45 1010, ST 01439, D47 1309 y D14 1055 a cargo de SMRC segun el plan de validacion del 31/07/2026: Barack no los ejecuta', 7,
+              // D=10, no 7: la Tabla P3 califica "each detection activity performed PRIOR TO
+              // SHIPMENT of the product". Un ensayo que corre el cliente DESPUES de recibir la
+              // pieza no es un control de deteccion de Barack. Declararlo con D=7 le pone al
+              // documento una deteccion propia que no existe.
+              // La O tampoco puede ser 2: P2-2 exige "carryover application" con historial de
+              // capacidad en serie, y esta combinacion de sustrato y recubrimiento es nueva.
+              4, 'Sin control propio: los ensayos B62 0400, D45 1010, ST 01439, D47 1309 y D14 1055 quedaron a cargo de SMRC en el plan de validacion del 31/07/2026', 10,
               sc('SC 3.1 a 3.7', 'cc/h')),
           ]),
         ]),
@@ -991,7 +1077,7 @@ const OP130 = operacion('130', 'EMBALAJE E IDENTIFICACION',
     ]),
   ]);
 
-const OPERACIONES = [OP10, OP20, OP30, OP40, OP50, OP60, OP70, OP80, OP90, OP100, OP110, OP120, OP130];
+const OPERACIONES = [OP10, OP20, OP30, OP40, OP50, OP60, OP70, OP80, OP90A, OP90, OP100, OP110, OP120, OP130];
 
 const doc = {
   header: {
@@ -1090,7 +1176,7 @@ const errores = [];
 if (sinAP) errores.push(`${sinAP} causas sin AP calculado`);
 
 // 1) las 13 operaciones del flujograma 159, ni una mas ni una menos
-const DEL_FLUJOGRAMA = ['10', '20', '30', '40', '50', '60', '70', '80', '90', '100', '110', '120', '130'];
+const DEL_FLUJOGRAMA = ['10', '20', '30', '40', '50', '60', '70', '80', '90.1', '90.2', '100', '110', '120', '130'];
 const mias = doc.operations.map((o) => o.opNumber);
 for (const n of DEL_FLUJOGRAMA) if (!mias.includes(n)) errores.push(`falta la OP ${n} del flujograma 159`);
 for (const n of mias) if (!DEL_FLUJOGRAMA.includes(n)) errores.push(`la OP ${n} no existe en el flujograma 159`);
@@ -1178,7 +1264,7 @@ for (const [pat, que] of [
 
 console.log(errores.length
   ? `\nERRORES (${errores.length}):\n  ${errores.join('\n  ')}`
-  : '\nChequeos propios: OK\n  - las 13 operaciones del flujograma 159, sin sobrantes\n  - las 19 caracteristicas del LSC v1 cubiertas, cada una con la sigla que les puso el cliente\n  - sin "error de operario", sin controles de capacitacion, sin deteccion que diga solo "Visual"\n  - los 3 efectos en todos los modos de falla y todos los AP calculados\n  - nada de la version anterior (doble aguja, COATS, hilo verde/azul/cuero)');
+  : `\nChequeos propios: OK\n  - las ${DEL_FLUJOGRAMA.length} operaciones del flujograma 159, sin sobrantes\n  - las 19 caracteristicas del LSC v1 cubiertas, cada una con la sigla que les puso el cliente\n  - sin "error de operario", sin controles de capacitacion, sin deteccion que diga solo "Visual"\n  - los 3 efectos en todos los modos de falla y todos los AP calculados\n  - nada de la version anterior (doble aguja, COATS, hilo verde/azul/cuero)`);
 
 // ---------------------------------------------------------------------------
 // LA DIFERENCIA QUE DECIDE FAK — no es un error del documento, es una discrepancia real
