@@ -102,23 +102,42 @@ function build(parsed, header) {
   const operations = parsed.operations.map(op => {
     const buck = bucket(op.operationName);
     // agrupar FMs por 6M
+    // Si el AMFE de origen lista sus PROPIOS elementos de trabajo por 6M (columna "elemento
+    // de trabajo"), esos nombres mandan: son los del documento, no derivados de otro AMFE.
+    const propios = op.weByM || {};
+    const tienePropio = (m) => Array.isArray(propios[m]) && propios[m].length > 0;
     const groups = {}; // m -> [failures]
     for (const f of op.failures) {
       const m0 = classify6M(`${f.fm} ${f.causes[0]?.cause || ''}`);
       let m = m0;
-      if (resolveWeName(buck, m) == null) m = 'Man'; // si esa M no aplica al proceso, va a Operador
+      if (!tienePropio(m) && resolveWeName(buck, m) == null) m = 'Man'; // esa M no aplica: va a Operador
       (groups[m] ||= []).push(f);
     }
     // construir WEs (orden 6M canónico, solo los que tienen FMs)
     const order = ['Machine', 'Man', 'Material', 'Method', 'Measurement', 'Environment'];
-    const workElements = order.filter(m => groups[m]?.length).map(m => {
-      const name = resolveWeName(buck, m) || 'Operador de Producción';
+    const workElements = order.filter(m => groups[m]?.length).flatMap(m => {
+      // con elementos propios: un WE por elemento (regla 1M por linea), y cada FM va al que
+      // lo nombra; el que no nombra a ninguno cae en el primero de esa M
+      if (tienePropio(m)) {
+        const items = propios[m].map(n => norm(n).replace(/ \/ /g, ' y ')); // 1M por linea: sin "/"
+        const reparto = new Map(items.map(n => [n, []]));
+        for (const f of groups[m]) {
+          const txt = nk(`${f.fm} ${f.causes.map(c => c.cause).join(' ')}`);
+          const elegido = items.find(n => nk(n).length > 3 && txt.includes(nk(n))) || items[0];
+          reparto.get(elegido).push(f);
+        }
+        return items.filter(n => reparto.get(n).length).map(n => buildWe(m, n, reparto.get(n)));
+      }
+      return [buildWe(m, resolveWeName(buck, m) || 'Operador de Producción', groups[m])];
+    });
+
+    function buildWe(m, name, grupo) {
       // corte = SCRAP, no retrabajo (regla amfe.md / decisión Fak: si se corta mal no hay vuelta atrás)
       const fixCorte = (s) => (buck !== 'corte' || !s) ? s : s
         .replace(/^Retrabajo$/i, 'Scrap (material mal cortado, no recuperable)')
         .replace(/Retrabajo de una porción de la producción\.?/i, 'Scrap de una porción de la producción (material no recuperable).')
         .replace(/retrabajo/gi, 'scrap');
-      const failures = groups[m].map(f => ({
+      const failures = grupo.map(f => ({
         id: uid(),
         description: f.fm,
         effectLocal: fixCorte(f.effectLocal || ''),
@@ -169,7 +188,7 @@ function build(parsed, header) {
       }));
       const desc = weFunction(buck, m, name);
       return { id: uid(), name, type: m, functions: [{ id: uid(), description: desc, functionDescription: desc, requirements: '', failures }] };
-    });
+    }
     // Renumerar FM SECUENCIAL por operacion (en el orden de aparicion WE->fn->falla),
     // para que el export muestre 1,2,3,4,5... y no salteado por el agrupamiento 6M.
     let fmSeq = 0;
@@ -199,6 +218,14 @@ const TEAM = 'Paulo Centurión (Ingeniería), Manuel Meszaros (Calidad), Cristin
 const HEADERS = {
   '128': { ip: '115', subject: 'IP DECORATIVE PA2 AMAROK - IP CORTO', partNumber: '2HT.857.115 HOA / 2HT.857.115 YZM / 2HT.857.115 DEC' },
   '129': { ip: '116', subject: 'IP DECORATIVE PA2 AMAROK', partNumber: '2HT.857.116 HOA / 2HT.857.116 YZM / 2HT.857.116 DEC' },
+  // 131: datos de la caratula del xlsx del servidor (Rev.D). Part numbers del Listado Maestro
+  // de AMFE. La caratula NO declara equipo ni responsable de proceso: no se inventan.
+  '131': {
+    subject: 'APB CENTRAL VW AMAROK',
+    partNumber: '2H6.863.761.B OIO / 2H6.863.761.B IYO / 2HT.863.761 SMC',
+    startDate: '13/05/2024', revDate: '29/07/2025', rev: 'D',
+    processResponsible: '', team: '', coreTeam: [],
+  },
 };
 
 for (const k of keys) {
@@ -217,14 +244,16 @@ for (const k of keys) {
     confidentiality: 'Confidencial',
     scope: 'Proceso de produccion completo', subject: h.subject,
     partNumber: h.partNumber, applicableParts: h.partNumber,
-    startDate: '04/03/2024', revDate: '28/07/2025', revisionDate: '28/07/2025', amfeDate: '04/03/2024',
-    rev: 'G', revision: 'G', revisionLevel: 'G',
+    startDate: h.startDate || '04/03/2024', revDate: h.revDate || '28/07/2025',
+    revisionDate: h.revDate || '28/07/2025', amfeDate: h.startDate || '04/03/2024',
+    rev: h.rev || 'G', revision: h.rev || 'G', revisionLevel: h.rev || 'G',
     responsible: 'Carlos Baptista', responsibleEngineer: 'Carlos Baptista',
-    processResponsible: 'Paulo Centurión',
+    processResponsible: h.processResponsible ?? 'Paulo Centurión',
     reviewedBy: 'Carlos Baptista',
     approvedBy: 'Gonzalo Cal', plantApproval: 'Gonzalo Cal',
     preparedBy: 'Facundo Santoro', elaboratedBy: 'Facundo Santoro',
-    team: TEAM, coreTeam: ['Paulo Centurión (Ingeniería)', 'Manuel Meszaros (Calidad)', 'Cristina Rabago (Seguridad e Higiene)', 'Mariana Vera (Producción)'],
+    team: h.team ?? TEAM,
+    coreTeam: h.coreTeam ?? ['Paulo Centurión (Ingeniería)', 'Manuel Meszaros (Calidad)', 'Cristina Rabago (Seguridad e Higiene)', 'Mariana Vera (Producción)'],
   };
   const doc = build(parsed, header);
   syncLegacyFmFields(doc);
