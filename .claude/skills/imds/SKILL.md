@@ -370,36 +370,53 @@ vigente); se abre con el **`Edit`** del bloque *Source of material, including ci
    por ahora"*. **Queda pendiente conseguir el administrador y poner un contacto real: es a
    quien el cliente le escribe.**
 
-### 🔴 Lo que NO se puede operar en remoto: los desplegables de la barra del arbol
+### Cambiar un nodo del arbol: el boton es `Add …`, NO `Replace`
 
-**Medido el 21/09/2026, ocho intentos.** En la pestaña *Ingredients*, la barra de botones que
-esta arriba del arbol (`Add component`, `Add semicomponent`, **`Replace`**, `Delete`,
-`Move reference/node`) son **botones con menu desplegable** — el propio DOM los anuncia como
-*"Button has a popup, press down arrow key to access the popup"*.
+Los botones de la barra del arbol (`Add component`, `Add semicomponent`, `Replace`, `Delete`,
+`Move reference/node`) son **botones con menu desplegable** — el DOM los anuncia como
+*"Button has a popup, press down arrow key to access the popup"*. **El menu no se logro abrir
+operando en remoto** (icono, flecha, `Down`, evento por codigo). Un clic normal dispara la
+**accion por defecto** del boton, y eso alcanza:
 
-**Ese menu no se abre operando IMDS de forma remota.** Probado: clic sobre el icono, clic sobre
-la flecha, `Down` con el foco puesto, y disparar el evento por codigo. El unico que "funciono"
-fue el evento por codigo sobre `Semicomponent`, y **hizo otra cosa**: en vez de abrir el
-buscador creo un **semicomponente nuevo y vacio** (`SemiComponent_<id>`) colgando del arbol.
+| Boton | Su accion por defecto abre… |
+|---|---|
+| `Replace` | el buscador de **COMPONENTES** (aunque el nodo seleccionado sea otra cosa) |
+| **`Add semicomponent`** | el buscador de **SEMICOMPONENTES** ← el que sirve para el Aplix |
+| `Add component` | el buscador de componentes |
+
+**Como se sabe cual se abrio:** el buscador de semicomponentes tiene el campo **`Article
+Name`**; el de componentes tiene **`Description`**. Si buscas un semicomponente en el buscador
+de componentes, da **0 resultados** y parece que el MDS no existe.
+
+⚠ **Nunca disparar el item del menu por codigo.** Probado el 21/09: sobre `Semicomponent`
+**creo un semicomponente nuevo y vacio** (`SemiComponent_<id>`) en vez de abrir el buscador.
 En la base de Barack hay **4 de esos huerfanos** de sesiones anteriores — probablemente el
-mismo accidente.
+mismo accidente. Si pasa, salir **sin guardar**.
 
-**Lo que SI responde:** escribir en un campo de texto (pesos, descripciones), los combos
-normales (`form_input`), el menu **MDS** de arriba (Save / Check / Release Internal / Save as),
-las pestañas, y el buscador de MDS.
+### El buscador del arbol vive en un IFRAME y tiene dos trampas
 
-**Consecuencia practica para repartir el trabajo:** todo lo que sea **cambiar la ESTRUCTURA del
-arbol** (agregar, reemplazar o borrar un nodo) lo hace Fak a mano. Lo que es **llenar campos,
-versionar, guardar, chequear y liberar** lo puedo hacer yo. Antes de prometer una carga
-completa, separar las dos mitades.
+1. **Esta en un `<iframe>`** (`j_id<NN>::f`), asi que no aparece en el DOM principal: hay que
+   entrar por `contentDocument`. Buscar sus campos en el documento de afuera da vacio y parece
+   que el dialogo no se abrio.
+2. **Por defecto solo busca `own MDSs`.** Un MDS **recibido de un proveedor** (el Aplix es de
+   APLIX, INC.) no aparece hasta **tildar `accepted MDSs`**.
+3. El boton **`Search` no se dispara con Enter**: hay que clickearlo, y suele caer fuera del
+   ancho visible del dialogo (tiene scroll horizontal propio).
 
-### Coordenadas: leer el rect del DOM, nunca estimar
+### Coordenadas: releer el rect JUSTO ANTES de cada clic
 
-El pane del navegador y el viewport tienen escalas distintas (el 21/09: viewport 991 px,
-screenshot 800 px → factor **0,8073**). Las coordenadas de `computer` van en el frame del
-screenshot, asi que hay que **leer el `getBoundingClientRect()` del elemento y multiplicar**.
-Estimar "a ojo" desde una captura hace clic en el boton de al lado: perdi varios intentos
-clickeando `Move reference/node` creyendo que era `Replace`.
+Dos cosas se mueven y arruinan un clic calculado hace dos pasos:
+
+- **La escala.** El frame de las capturas y el viewport no coinciden y **cambian durante la
+  sesion**: el 21/09 hubo 991→800 (factor 0,8073), 800→800 (1:1) y 1500→800 (0,5333) en la
+  misma sesion. La coordenada del clic va en el frame de la captura ⇒
+  `x_clic = rect.x * (800 / window.innerWidth)`.
+- **La barra de herramientas se corre en vertical** segun lo que muestre el panel de detalle
+  (misma sesion: y=85, 88, 94 y 116 para el mismo boton).
+
+**Regla: medir con `getBoundingClientRect()` y clickear en el mismo paso.** Y verificar que el
+nodo correcto quedo seleccionado leyendo el `Type` / `ID / Version` del panel, antes de apretar
+cualquier boton que modifique.
 
 ### El panel del navegador muestra capturas VIEJAS
 
