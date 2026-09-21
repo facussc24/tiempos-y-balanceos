@@ -152,3 +152,15 @@ scripts/hotmelt/**/_*.png
 scripts/hotmelt/**/_*.jpg
 scripts/hotmelt/__pycache__/
 scripts/hotmelt/_reemplazados_*/
+
+# Hojas de proceso de la MOLDEADORA IMG: va el generador, no lo generado.
+# El deck y los renders se rehacen con `py -3 scripts/img/generar_hojas_img.py`.
+scripts/img/*.pptx
+scripts/img/*.pdf
+scripts/img/render_deck_img/
+scripts/img/analysis/
+scripts/img/__pycache__/
+scripts/img/assets/
+scripts/img/last_run.txt
+scripts/img/**/_*.jpg
+scripts/img/**/_*.png

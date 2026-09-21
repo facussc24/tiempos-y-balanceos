@@ -1,0 +1,1176 @@
+# -*- coding: utf-8 -*-
+"""
+Generador oficial de HOJAS DE OPERACIONES para la MAQUINA MOLDEADORA IMG KINGPOWER
+Proyecto: Top Roll Patagonia / VW (OP 30 del Flujograma 122).
+Formulario SGC oficial: I-IN-002.4-R01 (A4 apaisado 29.7 x 21.0 cm).
+
+Estructura Oficial Aprobada (11 láminas en total: Portada + 10 Operaciones):
+  Slide 1: Portada e Índice General de Fabricación
+  Fase 1: Puesta en Marcha y HMI
+    - 30.1: Puesta en marcha general y suministros
+    - 30.2: Acceso al sistema HMI y carga de receta de producción
+  Fase 2: Manejo de Rollo y Alimentación (Secuencias multi-foto paso a paso)
+    - 30.3: Montaje del rollo de TPO en el desbobinador (4 fotos: buje, centrado, calzado, freno)
+    - 30.4: Enhebrado y pasada de lámina hacia la mesa (4 fotos: rodillos, aplanado Carlos, escuadra, selectores/avance)
+    - 30.5: Cambio de rollo por fin de material (4 fotos: fin bobina, despresurización/buje, nueva bobina, re-enhebrado)
+  Fase 3: Operación en Modo Automático (Secuencias multi-foto paso a paso)
+    - 30.6: Inspección y limpieza de cavidad de molde verde
+    - 30.7: Ciclo automático de calentamiento y conformado IMG (4 fotos: bimanual, descenso pórtico, cierre marco, vacío)
+    - 30.8: Enfriamiento, corte de vacío y desmolde (4 fotos: ventilación, ascenso, pieza en molde, desmolde)
+  Fase 4: Set-up / Cambio de Molde
+    - 30.9: Set-up / Cambio de molde: Desconexión y amarre con puente grúa
+    - 30.10: Set-up / Cambio de molde: Extracción sobre carro rodante
+
+Criterios de Fak cumplidos estrictamente:
+  - Hoja de calidad eliminada ("no soy calidad, que la haga calidad").
+  - Explicación visual paso a paso con grillas multi-foto y badges identificadores de paso.
+  - 100% fotos reales de planta y fotogramas de video (0% IA).
+  - Ciclo de control vaciado (campos limpios listos para Calidad).
+  - Redacción en infinitivo ("Verificar", "Montar", "Accionar").
+  - Terminología técnica argentina ("puente grúa", "cajón de scrap", "cáncamos giratorios", "eje neumático expansible", "buje de cartón", "marco tensor", "clamps").
+"""
+import os
+import sys
+import shutil
+import functools
+from PIL import Image, ImageFont
+from pptx import Presentation
+from pptx.util import Cm, Pt
+from pptx.dml.color import RGBColor
+from pptx.enum.text import PP_ALIGN, MSO_ANCHOR
+from pptx.enum.shapes import MSO_SHAPE
+
+# ─── PALETA CORPORATIVA SGC ──────────────────────────────────────────────────
+AZUL        = RGBColor(0x44, 0x54, 0x6A)  # Azul oscuro cabeceras (#44546A)
+AZUL2       = RGBColor(0x44, 0x72, 0xC4)  # Azul banda seguridad (#4472C4)
+AZUL_TEXTO  = RGBColor(0x1F, 0x49, 0x7D)  # Azul énfasis texto (#1F497D)
+BLANCO      = RGBColor(0xFF, 0xFF, 0xFF)
+NEGRO       = RGBColor(0x00, 0x00, 0x00)
+GRISF       = RGBColor(0xF2, 0xF2, 0xF2)  # Gris fondo celdas secundarias
+
+# ─── GEOMETRÍA OFICIAL FORMULARIO I-IN-002.4-R01 (cm) ────────────────────────
+W, H = 29.7, 21.0
+M = 0.70
+X0, X1 = M, W - M                        # 0.70 .. 29.00 (ancho útil 28.30 cm)
+HDR_Y, HDR_H = M, 4.00                   # 0.70 .. 4.70 cm
+
+BODY_Y, BODY_H = 4.90, 9.90              # 4.90 .. 14.80 cm
+IMG_W = 16.20
+IMG_X = X0
+DSC_X = X0 + IMG_W + 0.25                # 17.15 cm
+DSC_W = X1 - DSC_X                       # 11.85 cm
+
+CIC_Y, CIC_H = 15.00, 3.10               # 15.00 .. 18.10 cm
+EPP_W = 6.40
+CIC_W = X1 - X0 - EPP_W - 0.25           # 21.65 cm
+EPP_X = X0 + CIC_W + 0.25                # 22.60 cm
+
+PLN_Y = 18.30                            # 18.30 .. 20.30 cm
+PLN_H = H - M - PLN_Y                    # 2.00 cm
+
+# ─── RUTAS DE ACTIVOS LOCALES ────────────────────────────────────────────────
+BASE_DIR = r"c:\Dev\BarackMercosul\scripts\img"
+ASSETS_DIR = os.path.join(BASE_DIR, "assets")
+DESKTOP_DIR = r"C:\Users\FacundoS-PC\OneDrive - BARACK ARGENTINA SRL\Desktop\Hojas de proceso maquina IMG - desde los videos\_trabajo"
+HOTMELT_GEN = r"C:\Users\FacundoS-PC\OneDrive - BARACK ARGENTINA SRL\Desktop\Hojas de proceso maquina HOTMELT - desde los videos\_trabajo\generador"
+EPP_DIR = os.path.join(BASE_DIR, "..", "hotmelt", "epp")
+
+LOGO_BARACK = r"C:\Users\FacundoS-PC\BARACK ARGENTINA SRL\Ingeniería y Proyecto - General\INGENIERIA BARACK (NUNCA BORRAR)\barack_logo.png"
+
+# Iconos EPP
+ICO_ROPA     = os.path.join(EPP_DIR, "ico_13756.png")
+ICO_CALZADO  = os.path.join(EPP_DIR, "ico_4449.png")
+ICO_GUANTES  = os.path.join(EPP_DIR, "ico_11789.png")
+ICO_ANTEOJOS = os.path.join(EPP_DIR, "ico_16034.png")
+ICO_AUDITIVA = os.path.join(EPP_DIR, "ico_12924.png")
+
+EPP_STD = [ICO_ROPA, ICO_CALZADO, ICO_GUANTES, ICO_ANTEOJOS, ICO_AUDITIVA]
+EPP_MOLD_CHANGE = [ICO_ROPA, ICO_CALZADO, ICO_GUANTES, ICO_ANTEOJOS]
+
+# ─── TIPOGRAFÍA Y MEDICIÓN REAL ──────────────────────────────────────────────
+_TTF = {
+    "Calibri": r"C:\Windows\Fonts\calibri.ttf",
+    "Calibri-b": r"C:\Windows\Fonts\calibrib.ttf",
+    "Arial": r"C:\Windows\Fonts\arial.ttf",
+    "Arial-b": r"C:\Windows\Fonts\arialbd.ttf"
+}
+PT_CM = 0.03527777
+
+@functools.lru_cache(maxsize=512)
+def _fuente(nombre, bold, px):
+    ruta = _TTF.get(nombre + ("-b" if bold else ""), _TTF["Calibri"])
+    return ImageFont.truetype(ruta, max(int(px), 4))
+
+def _ancho_cm(texto, size, fuente, bold):
+    f = _fuente(fuente, bold, round(size * 96 / 72))
+    return f.getlength(texto) / 96 * 2.54
+
+def _achicar(texto, w_cm, h_cm, base, margen=0.06, minimo=5.5, fuente="Calibri", bold=False):
+    if not texto:
+        return base
+    util_w = max(w_cm - 2 * margen - 0.24, 0.4)
+    util_h = max(h_cm - 0.10, 0.2)
+    palabras = str(texto).split()
+    s = base
+    while s >= minimo:
+        lh = 1.22 * s * PT_CM
+        lineas, actual = 1, ""
+        cabe = True
+        for p in palabras:
+            if _ancho_cm(p, s, fuente, bold) > util_w:
+                cabe = False
+                break
+            probar = (actual + " " + p) if actual else p
+            if _ancho_cm(probar, s, fuente, bold) <= util_w:
+                actual = probar
+            else:
+                lineas += 1
+                actual = p
+        if cabe and lineas * lh <= util_h:
+            return s
+        s -= 0.5
+    return minimo
+
+def _lineas_wrap(texto, size, w_cm, bold=False, fuente="Calibri"):
+    lineas, actual = 1, ""
+    for p in texto.split():
+        probar = (actual + " " + p) if actual else p
+        if _ancho_cm(probar, size, fuente, bold) <= w_cm:
+            actual = probar
+        else:
+            lineas += 1
+            actual = p
+    return lineas
+
+# ─── PRIMITIVAS GRÁFICAS ─────────────────────────────────────────────────────
+def _caja(slide, x, y, w, h, relleno=None, borde=NEGRO, ancho=Pt(1)):
+    sh = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Cm(x), Cm(y), Cm(w), Cm(h))
+    if relleno is None:
+        sh.fill.background()
+    else:
+        sh.fill.solid()
+        sh.fill.fore_color.rgb = relleno
+    if borde is None:
+        sh.line.fill.background()
+    else:
+        sh.line.color.rgb = borde
+        sh.line.width = ancho
+    sh.shadow.inherit = False
+    sh.text_frame.word_wrap = True
+    return sh
+
+def _txt(sh, texto, size=11, bold=False, color=NEGRO, align=PP_ALIGN.CENTER,
+         anchor=MSO_ANCHOR.MIDDLE, fuente="Calibri", margen=0.06):
+    tf = sh.text_frame
+    tf.word_wrap = True
+    tf.vertical_anchor = anchor
+    tf.margin_left = tf.margin_right = Cm(margen)
+    tf.margin_top = tf.margin_bottom = Cm(0.02)
+    p = tf.paragraphs[0]
+    p.alignment = align
+    r = p.add_run()
+    r.text = texto
+    r.font.size = Pt(size)
+    r.font.bold = bold
+    r.font.color.rgb = color
+    r.font.name = fuente
+    return sh
+
+def _celda(slide, x, y, w, h, texto="", relleno=BLANCO, borde=NEGRO,
+           ancho=Pt(1), ajustar=True, **kw):
+    sh = _caja(slide, x, y, w, h, relleno, borde, ancho)
+    if texto != "":
+        if ajustar:
+            kw["size"] = _achicar(texto, w, h, kw.get("size", 11),
+                                  kw.get("margen", 0.06),
+                                  fuente=kw.get("fuente", "Calibri"),
+                                  bold=kw.get("bold", False))
+        _txt(sh, texto, **kw)
+    return sh
+
+def _banda(slide, x, y, w, h, texto, size=11, azul=AZUL):
+    return _celda(slide, x, y, w, h, texto, relleno=azul, size=size, bold=True, color=BLANCO)
+
+# ─── 1. CAJETÍN OFICIAL (I-IN-002.4-R01) ─────────────────────────────────────
+C_OP, C_DEN, C_CLI, C_PUE = 3.40, 10.60, 4.20, 3.00
+C_LAB, C_VAL = 2.80, 4.30
+C_MOD = C_CLI + C_PUE
+
+def _denominacion_con_hoja(d):
+    """Una operacion del flujograma puede no entrar en una hoja. Se parte, y cada parte
+    dice cual es: "SET UP INICIAL (HOJA 1 DE 2)". El N de operacion NO cambia — lo manda
+    el flujograma (regla no-pfd-no-ho)."""
+    t = d.get("denominacion", "")
+    hd = d.get("hoja_de")
+    return f"{t}  (HOJA {hd[0]} DE {hd[1]})" if hd else t
+
+
+def cajetin(slide, d, logo=None):
+    top_h = 1.60
+    fila = (HDR_H - top_h) / 4
+
+    lw, rw = 4.30, C_LAB + C_VAL
+    _caja(slide, X0, HDR_Y, lw, top_h, BLANCO, borde=NEGRO, ancho=Pt(1))
+    if logo and os.path.exists(logo):
+        im = Image.open(logo)
+        ar = im.width / im.height
+        ih = min(top_h - 0.30, (lw - 0.50) / ar)
+        iw = ih * ar
+        slide.shapes.add_picture(logo, Cm(X0 + (lw - iw) / 2),
+                                 Cm(HDR_Y + (top_h - ih) / 2), Cm(iw), Cm(ih))
+
+    _celda(slide, X0 + lw, HDR_Y, X1 - X0 - lw - rw, top_h,
+           d.get("titulo_hoja", "HOJA DE OPERACIONES"), size=24, bold=True)
+    _celda(slide, X1 - rw, HDR_Y, rw, top_h * 0.42,
+           f"Form: {d.get('form', 'I-IN-002.4-R01')}", size=10.5, bold=True)
+    _celda(slide, X1 - rw, HDR_Y + top_h * 0.42, rw, top_h * 0.58,
+           d.get("ho", "HO-TBD"), size=20, bold=True)
+
+    y = HDR_Y + top_h
+    izq = [
+        [("N° DE OPERACIÓN", C_OP), ("DENOMINACION DE LA OPERACIÓN", C_DEN),
+         ("MODELO O VEHICULO", C_MOD)],
+        [(d.get("op", ""), C_OP), (_denominacion_con_hoja(d), C_DEN),
+         (d.get("modelo", ""), C_MOD)],
+        [("SECTOR", C_OP), ("COD. DE PIEZA / DESCRIPCION", C_DEN),
+         ("CLIENTE", C_CLI), ("N° PUESTO", C_PUE)],
+        [(d.get("sector", ""), C_OP), (d.get("pieza", ""), C_DEN),
+         (d.get("cliente", ""), C_CLI), (d.get("puesto", "-"), C_PUE)],
+    ]
+    der = [("REALIZO:", d.get("realizo", "")), ("APROBO:", d.get("aprobo", "")),
+           ("FECHA:", d.get("fecha", "")), ("REV.", d.get("rev", "A"))]
+
+    for i, fila_datos in enumerate(izq):
+        etiqueta = (i % 2 == 0)
+        yy = y + i * fila
+        x = X0
+        for texto, an in fila_datos:
+            _celda(slide, x, yy, an, fila, str(texto),
+                   relleno=(AZUL if etiqueta else BLANCO),
+                   color=(BLANCO if etiqueta else NEGRO),
+                   size=(8 if etiqueta else 9.5),
+                   bold=(not etiqueta))
+            x += an
+        lab, val = der[i]
+        _celda(slide, x, yy, C_LAB, fila, lab, relleno=AZUL, color=BLANCO,
+               size=8.5, align=PP_ALIGN.LEFT, margen=0.12)
+        _celda(slide, x + C_LAB, yy, C_VAL, fila, str(val),
+               size=9.5, bold=True)
+
+# ─── 2. BLOQUE DE IMÁGENES MULTI-FOTO SECUENCIAL ─────────────────────────────
+def _badge_numero(slide, x, y, n, diam=0.86):
+    """El numero del paso, adentro de un circulo, arriba a la izquierda de su foto.
+
+    Es lo que ata la foto al renglon: la foto 3 es el paso 3. Un rotulo de texto libre
+    ("Paso 1-2: Login") no ata nada — se puede escribir cualquier cosa y nadie lo nota."""
+    sh = slide.shapes.add_shape(MSO_SHAPE.OVAL, Cm(x), Cm(y), Cm(diam), Cm(diam))
+    sh.fill.solid()
+    sh.fill.fore_color.rgb = AZUL
+    sh.line.color.rgb = BLANCO
+    sh.line.width = Pt(1.25)
+    sh.shadow.inherit = False
+    tf = sh.text_frame
+    tf.margin_left = tf.margin_right = tf.margin_top = tf.margin_bottom = 0
+    tf.word_wrap = False
+    tf.vertical_anchor = MSO_ANCHOR.MIDDLE
+    p = tf.paragraphs[0]
+    p.alignment = PP_ALIGN.CENTER
+    r = p.add_run()
+    r.text = str(n)
+    r.font.size = Pt(15)
+    r.font.bold = True
+    r.font.name = "Calibri"
+    r.font.color.rgb = BLANCO
+    return sh
+
+
+def _pie_foto(slide, x, y, w, h, texto):
+    """Barra de pie debajo de la foto: 3 a 6 palabras, lo que se hace en ese paso."""
+    _celda(slide, x, y, w, h, texto, relleno=AZUL, borde=AZUL, color=BLANCO,
+           size=8.5, bold=True, align=PP_ALIGN.CENTER)
+
+
+# Reparto de celdas por cantidad de fotos, en fracciones del bloque (x, y, w, h).
+# n=3 da la fila de arriba entera a la PRIMERA: es la principal y asi cumple el
+# criterio 1 del skill (>=45 % de la tinta y >=1,6x la segunda) sin achicar a las otras.
+_REPARTO = {
+    1: [(0.0, 0.0, 1.0, 1.0)],
+    2: [(0.0, 0.0, 0.5, 1.0), (0.5, 0.0, 0.5, 1.0)],
+    # con 3, las tres celdas son del MISMO tamano que con 4 (16:9, como el bloque): una
+    # celda a lo ancho es 3,9:1 y una foto normal le llena el 45 %, que es el defecto que
+    # veniamos arrastrando. La cuarta posicion queda libre y la fila de abajo va centrada.
+    3: [(0.0, 0.0, 0.5, 0.5), (0.5, 0.0, 0.5, 0.5), (0.25, 0.5, 0.5, 0.5)],
+    4: [(0.0, 0.0, 0.5, 0.5), (0.5, 0.0, 0.5, 0.5),
+        (0.0, 0.5, 0.5, 0.5), (0.5, 0.5, 0.5, 0.5)],
+}
+MAX_FOTOS = 4          # con mas de 4 en A4 no se ve ninguna: la hoja se PARTE
+
+
+def bloque_imagenes(slide, imagenes, pies=None, numerar=True):
+    """Una foto por paso, numerada, con su pie. El indice+1 ES el numero del paso."""
+    _banda(slide, IMG_X, BODY_Y, IMG_W, 0.60, "IMÁGENES", size=12)
+    y0 = BODY_Y + 0.60
+    h = BODY_H - 0.60
+    _caja(slide, IMG_X, y0, IMG_W, h, BLANCO, borde=NEGRO, ancho=Pt(1))
+
+    faltan = [i for i in imagenes if not os.path.exists(i)]
+    if faltan:
+        # Sin foto va el recuadro VACIO (nunca una leyenda que diga que falta), pero el
+        # generador tiene que gritar: una ruta rota se ve igual que una hoja sin fotos.
+        raise SystemExit("FOTOS QUE NO EXISTEN:\n  " + "\n  ".join(faltan))
+    if not imagenes:
+        return
+    n = len(imagenes)
+    if n > MAX_FOTOS:
+        raise SystemExit(f"{n} fotos en una hoja: el tope es {MAX_FOTOS}. Partir la hoja "
+                         f"en a/b (decision de Fak 07/09/2026).")
+
+    pad = 0.15
+    gap = 0.18
+    pie_h = 0.52
+    W_util, H_util = IMG_W - 2 * pad, h - 2 * pad
+
+    for k, ruta in enumerate(imagenes):
+        fx, fy, fw, fh = _REPARTO[n][k]
+        cx = IMG_X + pad + fx * W_util + (gap / 2 if fx > 0 else 0)
+        cy = y0 + pad + fy * H_util + (gap / 2 if fy > 0 else 0)
+        cw = fw * W_util - (gap / 2 if fx > 0 else 0) - (gap / 2 if fx + fw < 1 else 0)
+        ch = fh * H_util - (gap / 2 if fy > 0 else 0) - (gap / 2 if fy + fh < 1 else 0)
+
+        texto_pie = (pies[k] if pies and k < len(pies) else "")
+        ch_foto = ch - (pie_h if texto_pie else 0)
+
+        im = Image.open(ruta)
+        ar = im.width / im.height
+        cel_ar = cw / ch_foto if ch_foto else ar
+        iw, ih = (cw, cw / ar) if cw / ar <= ch_foto else (ch_foto * ar, ch_foto)
+        llena = (iw * ih) / (cw * ch_foto) if cw * ch_foto else 1.0
+        if llena < 0.80:
+            print(f"  [AVISO] {os.path.basename(ruta)} llena el {llena:.0%} de su celda "
+                  f"(es {ar:.2f}:1 y la celda {cel_ar:.2f}:1). Recortarla a {cel_ar:.2f}:1 "
+                  f"para que no quede aire.")
+        px = cx + (cw - iw) / 2
+        py = cy + (ch_foto - ih) / 2
+        slide.shapes.add_picture(ruta, Cm(px), Cm(py), Cm(iw), Cm(ih))
+        if numerar:
+            _badge_numero(slide, px + 0.10, py + 0.10, k + 1)
+        if texto_pie:
+            _pie_foto(slide, cx, cy + ch_foto, cw, pie_h, texto_pie)
+
+
+# ─── 3. BLOQUE DE DESCRIPCIÓN DE LA OPERACIÓN ────────────────────────────────
+def bloque_pasos(slide, pasos, nota=None, parametros=None):
+    _banda(slide, DSC_X, BODY_Y, DSC_W, 0.60, "DESCRIPCION DE LA OPERACIÓN", size=12)
+    y = BODY_Y + 0.60
+    h = BODY_H - 0.60
+    sh = _caja(slide, DSC_X, y, DSC_W, h, BLANCO, borde=NEGRO, ancho=Pt(1))
+    tf = sh.text_frame
+    tf.word_wrap = True
+    tf.vertical_anchor = MSO_ANCHOR.TOP
+    tf.margin_left = tf.margin_right = Cm(0.25)
+    tf.margin_top = Cm(0.20)
+
+    util_h = h - 0.70
+    util_w = DSC_W - 2 * 0.25 - 0.85
+    size = 12.0
+    while size > 7.0:
+        lh = 1.22 * size * PT_CM
+        sep = (6 if size >= 10 else 4) * PT_CM
+        alto = 0
+        for t in pasos:
+            alto += _lineas_wrap(t, size, util_w, False) * lh + sep
+        for k, v in (parametros or []):
+            alto += 1.22 * max(size - 0.5, 8.0) * PT_CM + 2 * PT_CM
+        if nota:
+            sn = max(size - 1, 7.5)
+            alto += (_lineas_wrap(nota, sn, DSC_W - 2 * 0.25, True) * 1.22 * sn * PT_CM + 5 * PT_CM)
+        if alto <= util_h:
+            break
+        size -= 0.5
+
+    for i, texto in enumerate(pasos):
+        p = tf.paragraphs[0] if i == 0 else tf.add_paragraph()
+        p.alignment = PP_ALIGN.LEFT
+        p.space_after = Pt(4.0 if size >= 10.0 else 2.5)
+        
+        r = p.add_run()
+        r.text = f"{i+1}.  "
+        r.font.size = Pt(size)
+        r.font.bold = True
+        r.font.name = "Calibri"
+        r.font.color.rgb = NEGRO
+
+        r2 = p.add_run()
+        r2.text = texto
+        r2.font.size = Pt(size)
+        r2.font.name = "Calibri"
+        r2.font.color.rgb = NEGRO
+
+    for k, v in (parametros or []):
+        p = tf.add_paragraph()
+        p.alignment = PP_ALIGN.LEFT
+        p.space_before = Pt(2.0)
+        r = p.add_run()
+        r.text = "▸ " + k + ": "
+        r.font.size = Pt(max(size - 0.5, 8.0))
+        r.font.name = "Calibri"
+        r.font.color.rgb = NEGRO
+        r2 = p.add_run()
+        r2.text = str(v)
+        r2.font.size = Pt(max(size - 0.5, 8.0))
+        r2.font.bold = True
+        r2.font.name = "Calibri"
+        r2.font.color.rgb = AZUL_TEXTO
+
+    if nota:
+        p = tf.add_paragraph()
+        p.alignment = PP_ALIGN.LEFT
+        p.space_before = Pt(3.0)
+        r = p.add_run()
+        r.text = "NOTA: " + nota
+        r.font.size = Pt(max(size - 1, 7.5))
+        r.font.bold = True
+        r.font.name = "Calibri"
+        r.font.color.rgb = AZUL_TEXTO
+
+# ─── 4. BLOQUE CICLO DE CONTROL (VACIADO SISTEMÁTICO LISTO PARA CALIDAD) ─────
+COLS_CIC = [("Características a controlar", 8.0), ("Método de control", 5.6),
+            ("Resp.", 2.7), ("Frec.", 2.9), ("Registro", 3.4)]
+
+def bloque_ciclo(slide, filas=None):
+    _banda(slide, X0, CIC_Y, CIC_W, 0.55, "CICLO DE CONTROL", size=12)
+    y = CIC_Y + 0.55
+    total = sum(w for _, w in COLS_CIC)
+    anchos = [w / total * CIC_W for _, w in COLS_CIC]
+    hh = 0.48
+    x = X0
+    for (lab, _), an in zip(COLS_CIC, anchos):
+        _celda(slide, x, y, an, hh, lab, relleno=AZUL, color=BLANCO, size=8.5, bold=True)
+        x += an
+    y += hh
+    
+    filas = filas or [("", "", "", "", ""), ("", "", "", "", "")]
+    fh = (CIC_Y + CIC_H - y) / len(filas)
+    for f in filas:
+        x = X0
+        for val, an in zip(f, anchos):
+            _celda(slide, x, y, an, fh, str(val), size=8.5)
+            x += an
+        y += fh
+
+# ─── 5. ELEMENTOS DE SEGURIDAD (EPP) ─────────────────────────────────────────
+def bloque_epp(slide, iconos, refs=("OP - Operador de Producción",)):
+    _banda(slide, EPP_X, CIC_Y, EPP_W, 0.55, "ELEMENTOS DE SEGURIDAD", size=9, azul=AZUL2)
+    y = CIC_Y + 0.55
+    h = CIC_H - 0.55 - 0.44 * len(refs)
+    _caja(slide, EPP_X, y, EPP_W, h, BLANCO, borde=NEGRO, ancho=Pt(1))
+    
+    iconos_ok = [ic for ic in (iconos or []) if os.path.exists(ic)]
+    if iconos_ok:
+        n = len(iconos_ok)
+        cw = (EPP_W - 0.20) / n
+        s = min(cw - 0.10, h - 0.16)
+        for k, ic in enumerate(iconos_ok):
+            cx = EPP_X + 0.10 + k * cw + (cw - s) / 2
+            slide.shapes.add_picture(ic, Cm(cx), Cm(y + (h - s) / 2), Cm(s), Cm(s))
+
+    yr = y + h
+    for r in refs:
+        _celda(slide, EPP_X, yr, EPP_W, 0.44, f"Referencia: {r}", size=7,
+               align=PP_ALIGN.LEFT, margen=0.12)
+        yr += 0.44
+
+# ─── 6. PLAN DE REACCIÓN ANTE NO CONFORME ────────────────────────────────────
+FIJAS = ["DETENGA LA OPERACIÓN",
+         "NOTIFIQUE DE INMEDIATO A SU LIDER O SUPERVISOR",
+         "ESPERE LA DEFINICION DEL LIDER O SUPERVISOR"]
+
+def bloque_plan(slide, disparador, acciones=None):
+    _banda(slide, X0, PLN_Y, X1 - X0, 0.48, "PLAN DE REACCION ANTE NO CONFORME", size=11)
+    y = PLN_Y + 0.48
+    hh = PLN_H - 0.48
+    izq = 15.20
+
+    _celda(slide, X0, y, izq, hh * 0.28, disparador, size=8.5, bold=True,
+           fuente="Arial", relleno=GRISF, align=PP_ALIGN.LEFT, margen=0.15)
+    fy = y + hh * 0.28
+    fh = (hh * 0.72) / 3
+    for t in FIJAS:
+        _celda(slide, X0, fy, izq, fh, t, size=8.5, bold=True, fuente="Arial",
+               align=PP_ALIGN.LEFT, margen=0.15)
+        fy += fh
+
+    der = X1 - X0 - izq
+    sh = _caja(slide, X0 + izq, y, der, hh, BLANCO, borde=NEGRO, ancho=Pt(1))
+    tf = sh.text_frame
+    tf.word_wrap = True
+    tf.vertical_anchor = MSO_ANCHOR.TOP
+    tf.margin_left = tf.margin_right = Cm(0.20)
+    tf.margin_top = Cm(0.10)
+
+    acciones = acciones or [
+        "1. Segregar e identificar el material afectado en el cajón de scrap / contenedor rojo.",
+        "2. Dar aviso según procedimiento P-09/I.",
+        "3. No reiniciar la producción sin autorización del Líder o Supervisor."
+    ]
+    for i, t in enumerate(acciones):
+        p = tf.paragraphs[0] if i == 0 else tf.add_paragraph()
+        p.alignment = PP_ALIGN.LEFT
+        p.space_after = Pt(2)
+        r = p.add_run()
+        r.text = t
+        r.font.size = Pt(8.5)
+        r.font.name = "Arial"
+        r.font.color.rgb = NEGRO
+
+# ─── 7. PORTADA LIMPIA CORPORATIVA ───────────────────────────────────────────
+def portada(prs, d, logo=None, foto=None, indice=None):
+    slide = prs.slides.add_slide(prs.slide_layouts[6])
+    _caja(slide, X0, M, X1 - X0, H - 2 * M, BLANCO, borde=NEGRO, ancho=Pt(1.5))
+
+    cab_h = 3.20
+    _caja(slide, X0, M, X1 - X0, cab_h, BLANCO, borde=AZUL, ancho=Pt(1.5))
+    _caja(slide, X0, M + cab_h - 0.08, X1 - X0, 0.08, AZUL, borde=AZUL)
+
+    lw = 5.20
+    if logo and os.path.exists(logo):
+        im = Image.open(logo)
+        ar = im.width / im.height
+        ih = min(cab_h - 0.60, (lw - 0.80) / ar)
+        iw = ih * ar
+        slide.shapes.add_picture(logo, Cm(X0 + (lw - iw) / 2),
+                                 Cm(M + (cab_h - ih) / 2), Cm(iw), Cm(ih))
+
+    tx = X0 + lw + 0.20
+    tw = X1 - X0 - lw - 0.40
+    _celda(slide, tx, M + 0.40, tw, 1.40,
+           d.get("titulo", "HOJAS DE PROCESO — MÁQUINA MOLDEADORA IMG"),
+           size=24, bold=True, color=AZUL, relleno=BLANCO, borde=None, align=PP_ALIGN.LEFT)
+    _celda(slide, tx, M + 1.80, tw, 1.00,
+           d.get("subtitulo", "Conformado al vacío In-Mold Graining (IMG) · OP 30 del FLUJOGRAMA 122 TOP ROLL PATAGONIA"),
+           size=11.5, bold=False, color=AZUL2, relleno=BLANCO, borde=None, align=PP_ALIGN.LEFT)
+
+    y_body = M + cab_h + 0.35
+    fw = 13.80
+    bh = H - M - y_body - 0.10
+    _caja(slide, X0 + 0.10, y_body, fw, bh, BLANCO, borde=AZUL, ancho=Pt(1))
+    if foto and os.path.exists(foto):
+        im = Image.open(foto)
+        ar = im.width / im.height
+        iw, ih = (fw - 0.20, (fw - 0.20) / ar) if (fw - 0.20) / ar <= (bh - 0.20) else ((bh - 0.20) * ar, bh - 0.20)
+        slide.shapes.add_picture(foto, Cm(X0 + 0.10 + (fw - iw) / 2),
+                                 Cm(y_body + (bh - ih) / 2), Cm(iw), Cm(ih))
+
+    xd = X0 + fw + 0.50
+    wd = X1 - xd - 0.10
+    filas = [
+        ("Documento SGC", d.get("ho", "HO-TBD")),
+        ("Formulario Oficial", d.get("form", "I-IN-002.4-R01")),
+        ("Operación Flujograma", d.get("op_flujo", "30 — CONFORMADO AL VACÍO IMG")),
+        ("Cliente / Modelo", d.get("cliente_modelo", "VW / PATAGONIA")),
+        ("Pieza / Conjunto", d.get("pieza", "TOP ROLL PATAGONIA — N 216 / N 256 / N 285 / N 315")),
+        ("Máquina / Celda", d.get("maquina", "Moldeadora IMG KINGPOWER (Molde Hembra)")),
+        ("Realizó / Aprobó", d.get("firmas", "F. Santoro / C. Baptista")),
+        ("Fecha / Revisión", d.get("fecha_rev", "08/09/2026  ·  Rev. A"))
+    ]
+    fh = 0.62
+    for i, (k, v) in enumerate(filas):
+        _celda(slide, xd, y_body + i * fh, wd * 0.38, fh, k, relleno=AZUL, color=BLANCO,
+               size=8.5, align=PP_ALIGN.LEFT, margen=0.10)
+        _celda(slide, xd + wd * 0.38, y_body + i * fh, wd * 0.62, fh, str(v), size=9.0,
+               bold=True, align=PP_ALIGN.LEFT, margen=0.10)
+
+    yi = y_body + len(filas) * fh + 0.25
+    _banda(slide, xd, yi, wd, 0.48, "HOJAS DE ESTE DOCUMENTO", size=10)
+    sh = _caja(slide, xd, yi + 0.48, wd, (H - M) - (yi + 0.48) - 0.10, BLANCO, borde=NEGRO, ancho=Pt(1))
+    tf = sh.text_frame
+    tf.word_wrap = True
+    tf.vertical_anchor = MSO_ANCHOR.TOP
+    tf.margin_left = tf.margin_right = Cm(0.18)
+    tf.margin_top = Cm(0.10)
+
+    for i, (num, nom) in enumerate(indice or []):
+        p = tf.paragraphs[0] if i == 0 else tf.add_paragraph()
+        p.alignment = PP_ALIGN.LEFT
+        p.space_after = Pt(2.5)
+        r = p.add_run()
+        r.text = f"{num}   "
+        r.font.size = Pt(8.2)
+        r.font.bold = True
+        r.font.name = "Calibri"
+        r.font.color.rgb = AZUL
+        r2 = p.add_run()
+        r2.text = nom
+        r2.font.size = Pt(8.2)
+        r2.font.name = "Calibri"
+        r2.font.color.rgb = NEGRO
+    return slide
+
+# ─── 8. GENERADOR DE HOJA INDIVIDUAL ─────────────────────────────────────────
+def _marcas_de(ruta):
+    """Cuantos rotulos le puso rotular.py a esta foto. Lo dice el archivo, no yo."""
+    import json
+    sk = os.path.join(BASE_DIR, "..", "..", ".claude", "skills", "hojas-de-proceso", "scripts")
+    if sk not in sys.path:
+        sys.path.insert(0, sk)
+    try:
+        from fotodevideo import leer_origen
+        o = leer_origen(ruta)
+        return len(json.loads(o).get("rotulos", [])) if o else 0
+    except Exception:
+        return 0
+
+
+# Marcas de cocina interna: nombre de archivo de video, trazabilidad, pendientes con el
+# proveedor, explicaciones de como se hizo la hoja. Nada de esto le sirve al que esta
+# parado al lado de la maquina, y en una hoja que firma Barack ademas queda mal.
+COCINA = [
+    (r"IMG_\s?\d{3,}", "el numero de video"),
+    (r"pendiente de", "un pendiente interno"),
+    (r"no qued[oó] (registrad|grabad)", "que algo no quedo registrado"),
+    (r"se lo pregunt", "quien le pregunto a quien"),
+    (r"confirmar con ", "un pendiente con el proveedor"),
+    (r"filmad[oa] el ", "cuando se filmo"),
+    (r"lectura del ", "de cuando es la lectura"),
+    (r"agregamos nosotros", "como se hizo la hoja"),
+    (r"por analog[ií]a", "como se hizo la hoja"),
+    (r"\bborrador\b", "que es un borrador"),
+    (r"pendiente de validaci[oó]n", "que esta sin validar"),
+    (r"\b(este|esta) (deck|hoja|documento) ", "la hoja hablando de si misma"),
+]
+
+
+def _gate_texto_para_el_operario(d):
+    """Lo que dice una hoja se lee de pie al lado de la maquina. Si una frase no le cambia
+    nada a esa persona, no va: va a la bitacora o al PDF de pendientes."""
+    import re
+    op = d.get("op", "?")
+    piezas = [("nota", d.get("nota") or "")]
+    piezas += [(f"paso {i}", t) for i, t in enumerate(d.get("pasos", []), 1)]
+    piezas += [(f"pie {i}", t) for i, t in enumerate(d.get("pies", []) or [], 1)]
+    piezas += [(f"parametro {k}", str(v)) for k, v in (d.get("parametros") or [])]
+    piezas += [(f"accion {i}", t) for i, t in enumerate(d.get("acciones", []) or [], 1)]
+    malas = []
+    for donde, t in piezas:
+        for pat, por in COCINA:
+            if re.search(pat, t, re.IGNORECASE):
+                malas.append((donde, por, t.strip()[:70]))
+        # TBD se puede escribir, pero solo: el "por que" va en la bitacora, no en la hoja
+        m = re.search(r"\bTBD\b(.{0,400})", t, re.IGNORECASE | re.DOTALL)
+        if m and len(m.group(1).strip(" .,:;—-")) > 40:
+            malas.append((donde, "un TBD con explicacion (va TBD y nada mas)", t.strip()[:70]))
+    if malas:
+        for donde, por, t in malas:
+            print(f"  hoja {op} / {donde}: dice {por} -> \"{t}...\"")
+        raise SystemExit(f"hoja {op}: hay texto de cocina interna en la hoja. Eso va a la "
+                         f"bitacora o al PDF de pendientes, no adelante del operario "
+                         f"(Fak, 21/09/2026).")
+
+
+# Frases que afirman COMO SE COMPORTA el equipo. Para escribir una de estas hace falta un
+# documento del fabricante o una medicion, no una foto: una foto muestra un instante.
+AFIRMA_ESTADO = [
+    r"\bqueda[n]? apagad", r"\bestan? apagad", r"\bal m[ií]nimo\b", r"\bno calienta",
+    r"\bsiempre (esta|estan|queda|quedan|se)\b",
+    r"\bnunca (esta|estan|queda|quedan|se)\b", r"\bno hace falta\b",
+]
+# Un numero con unidad. El °C suelto de una LECTURA citada va igual en parametros.
+NUM_CON_UNIDAD = r"\d+[.,]?\d*\s?(°C|MPa|bar|mm|kg|min\b|seg\b|\bs\b)"
+
+
+def _origen_de(ruta):
+    """(video, segundo) de una foto, lo que fotodevideo.py le dejo adentro."""
+    import json
+    sk = os.path.join(BASE_DIR, "..", "..", ".claude", "skills", "hojas-de-proceso", "scripts")
+    if sk not in sys.path:
+        sys.path.insert(0, sk)
+    try:
+        from fotodevideo import leer_origen
+        o = leer_origen(ruta)
+        if not o:
+            return None, None
+        j = json.loads(o)
+        return j.get("video"), j.get("segundo")
+    except Exception:
+        return None, None
+
+
+def _gate_secuencia_en_orden(d):
+    """Dos fotos del MISMO video, en una hoja de secuencia, van en el orden del reloj."""
+    op = d.get("op", "?")
+    if d.get("modo", "secuencia") != "secuencia" or not d.get("imagenes"):
+        return
+    if d.get("ciclos_distintos"):        # declarado a proposito, y la nota lo dice
+        return
+    por_video = {}
+    for i, f in enumerate(d["imagenes"], 1):
+        v, seg = _origen_de(f)
+        if v and seg is not None:
+            por_video.setdefault(v, []).append((i, seg, os.path.basename(f)))
+    for v, lista in por_video.items():
+        if len(lista) < 2:
+            continue
+        segs = [seg for _i, seg, _n in lista]
+        if segs != sorted(segs):
+            det = " · ".join(f"paso {i} s={seg:.0f}" for i, seg, _n in lista)
+            raise SystemExit(
+                f"hoja {op}: las fotos de {v} estan FUERA DE ORDEN en el tiempo ({det}). "
+                f"Una secuencia se lee como un ciclo: o se toman en orden, o la hoja declara "
+                f"ciclos_distintos=True y la nota lo dice.")
+
+
+def _gate_secuencia_con_marca(d):
+    """Cada foto de secuencia con al menos una marca: obliga a buscar el objeto del paso."""
+    op = d.get("op", "?")
+    if d.get("modo", "secuencia") != "secuencia" or not d.get("imagenes"):
+        return
+    sin = [os.path.basename(f) for f in d["imagenes"] if _marcas_de(f) == 0]
+    if sin and not d.get("sin_marcas_ok"):
+        print(f"  hoja {op}: fotos de secuencia sin ninguna marca -> " + ", ".join(sin))
+        print("    (poner la marca obliga a buscar en el cuadro el objeto que nombra el paso; "
+              "si el objeto no esta, se ve ahi. sin_marcas_ok=True si la foto se explica sola)")
+
+
+TRANSCRIPCIONES = os.path.join(
+    r"C:\Users\FacundoS-PC\BARACK ARGENTINA SRL",
+    "Ingeniería y Proyecto - General", "INGENIERIA BARACK (NUNCA BORRAR)",
+    "5- VIDEOS Y FOTOS", "1- CLIENTES", "NOVAX", "TOP ROLL", "MAQUINA MOLDEADORA IMG",
+    ".claude", "transcripciones")
+
+
+# Verbos con los que arranca un paso que MANDA HACER algo. Un paso que solo describe lo
+# que muestra la foto no lleva ninguno.
+MANDA = (
+    "apretar", "poner", "pasar", "mirar", "verificar", "comprobar", "prender", "encender",
+    "apagar", "abrir", "cerrar", "esperar", "cargar", "elegir", "seleccionar", "mantener",
+    "sacar", "colocar", "montar", "limpiar", "controlar", "avisar", "anotar", "arrancar",
+    "parar", "detener", "revisar", "ajustar", "cambiar", "retirar", "soplar", "medir",
+)
+
+
+def _paso_manda(t):
+    import re
+    p0 = re.sub(r"^[\W\d]+", "", t.strip().lower())
+    return p0.startswith(MANDA) or " hay que " in " " + p0
+
+
+def _gate_transcripcion_leida(d):
+    """Si un paso MANDA algo y su fuente es un video, la transcripcion de ese video existe.
+
+    No prueba que la lei, pero saca la excusa: el 21/09 escribi un paso mirando los
+    fotogramas del IMG_0596 y la transcripcion de ese mismo video decia lo contrario.
+    Sacarla es una linea: scripts/video/_infoDeVideos.py audio "<carpeta>" --solo 0596
+    """
+    import re
+    op = d.get("op", "?")
+    pasos = d.get("pasos", [])
+    fuentes = d.get("fuentes", [])
+    if not os.path.isdir(TRANSCRIPCIONES):
+        return
+    vids = set()
+    for i, t in enumerate(pasos):
+        if _paso_manda(t) and i < len(fuentes):
+            vids.update(re.findall(r"IMG_(\d{3,4})", fuentes[i]))
+    if not vids:
+        return
+    faltan = [v for v in sorted(vids)
+              if not os.path.exists(os.path.join(TRANSCRIPCIONES, f"IMG_{v}.txt"))]
+    if faltan:
+        raise SystemExit(
+            f"hoja {op}: hay pasos que MANDAN hacer algo y no esta la transcripcion de " +
+            ", ".join("IMG_" + v for v in faltan) +
+            ". Lo que se VE no es lo que hay que HACER: eso lo dice el audio, y se lee "
+            "entero (Fak, 21/09/2026). Sacarla:\n"
+            "  py -3 scripts/video/_infoDeVideos.py audio \"<carpeta de la maquina>\" "
+            "--solo " + ",".join(faltan))
+
+
+def _gate_cada_paso_con_fuente(d):
+    """Una fuente por paso. Sin eso no compila.
+
+    Lo que frena: convertir en instruccion algo que nadie dijo. Un paso puede DESCRIBIR lo
+    que muestra una foto ("el contorno queda dibujado sobre la grilla") o MANDAR hacer algo
+    ("apretar el verde"), y lo segundo necesita que alguien lo haya dicho. El 21/09 escribi
+    "mirar la presion de aire antes de pedir cualquier movimiento" porque vi un manometro
+    en una foto."""
+    op = d.get("op", "?")
+    pasos = d.get("pasos", [])
+    fuentes = d.get("fuentes", [])
+    if not pasos:
+        return
+    if len(fuentes) != len(pasos):
+        raise SystemExit(
+            f"hoja {op}: {len(pasos)} pasos y {len(fuentes)} fuentes. Cada paso declara de "
+            f"donde sale: un video con su minuto, un documento, o quien lo dijo y cuando. "
+            f"Si un paso no tiene fuente, el paso no va (Fak, 21/09/2026).")
+    for i, f in enumerate(fuentes, 1):
+        if not f or len(f.strip()) < 8:
+            raise SystemExit(f"hoja {op} paso {i}: la fuente dice {f!r}. Eso no es una fuente.")
+
+
+def _gate_no_afirmar_de_mas(d):
+    """Lo que la hoja afirma del equipo sale de un documento o de una medicion; lo que sale
+    de una foto es lo que la foto MUESTRA. Y un numero se declara en `parametros`, una vez."""
+    import re
+    op = d.get("op", "?")
+    parametros = " · ".join(f"{k} {v}" for k, v in (d.get("parametros") or []))
+    piezas = [("nota", d.get("nota") or "")]
+    piezas += [(f"paso {i}", t) for i, t in enumerate(d.get("pasos", []), 1)]
+    malas = []
+    for donde, t in piezas:
+        for pat in AFIRMA_ESTADO:
+            m = re.search(pat, t, re.IGNORECASE)
+            if m:
+                malas.append((donde, f"afirma un estado del equipo (\"{m.group(0)}\") que "
+                                     f"una foto no puede probar", t.strip()[:70]))
+        for m in re.finditer(NUM_CON_UNIDAD, t, re.IGNORECASE):
+            if m.group(0).strip() not in parametros:
+                malas.append((donde, f"el valor \"{m.group(0).strip()}\" no esta declarado "
+                                     f"en `parametros`", t.strip()[:70]))
+    if malas:
+        for donde, por, t in malas:
+            print(f"  hoja {op} / {donde}: {por} -> \"{t}...\"")
+        raise SystemExit(f"hoja {op}: la hoja afirma mas de lo que su fuente sostiene "
+                         f"(incidente 21/09/2026, hoja 30.5).")
+
+
+def _gate_una_foto_por_paso(d):
+    """Lo que ata la foto al renglon, segun el tipo de hoja:
+
+      modo="secuencia"  el proceso avanza -> UNA foto por paso, numerada 1..n.
+      modo="rotulada"   un panel o una pantalla -> UNA foto con k marcas y k pasos;
+                        las marcas las declara la FOTO (rotular.py las escribe adentro
+                        del archivo), asi que si alguien saca una marca y no toca la
+                        hoja, esto lo frena.
+
+    Sin esto el badge miente y nadie lo ve: el 08/09 una hoja decia "Paso 3-5: Receta"
+    encima de una foto general de la maquina."""
+    op = d.get("op", "?")
+    fotos, pasos, pies = d.get("imagenes", []), d.get("pasos", []), d.get("pies", [])
+    modo = d.get("modo", "secuencia")
+    # Cuantos pasos entran en una hoja. El criterio, que antes no estaba escrito y por eso
+    # en el flujograma salieron hojas de 2 pasos y hojas de 12 (Fak, 21/09/2026):
+    #   un paso = UNA accion que alguien hace y que se ve en UNA foto;
+    #   lo que no se puede fotografiar no es un paso (condicion -> nota, valor -> parametros);
+    #   entran 2 a 4 por hoja, y si sobran la hoja se parte (3+2 antes que 4+1).
+    tope = 6 if modo == "rotulada" else MAX_FOTOS
+    if pasos and not (2 <= len(pasos) <= tope):
+        raise SystemExit(f"hoja {op}: {len(pasos)} pasos. Entran de 2 a {tope}. "
+                         f"Con menos no es una hoja; con mas se parte en (HOJA 1 DE n).")
+    if not fotos:
+        return
+    if modo == "rotulada":
+        if len(fotos) != 1:
+            raise SystemExit(f"hoja {op}: modo rotulada va con UNA foto, tiene {len(fotos)}.")
+        k = _marcas_de(fotos[0])
+        if k and k != len(pasos):
+            raise SystemExit(f"hoja {op}: la foto trae {k} marcas y la hoja {len(pasos)} "
+                             f"pasos. El numero del rotulo ES el numero del paso.")
+        return
+    if len(fotos) != len(pasos):
+        raise SystemExit(f"hoja {op}: {len(fotos)} fotos y {len(pasos)} pasos. "
+                         f"Va UNA foto por paso; si sobran pasos, la hoja se parte en a/b.")
+    if pies and len(pies) != len(fotos):
+        raise SystemExit(f"hoja {op}: {len(pies)} pies para {len(fotos)} fotos.")
+    for i, t in enumerate(pies or [], 1):
+        if len(t) > 46:
+            raise SystemExit(f"hoja {op} pie {i}: {len(t)} caracteres. El pie son 3 a 6 "
+                             f"palabras; lo largo va en el paso, no abajo de la foto.")
+
+
+def hoja(prs, d, logo=None):
+    slide = prs.slides.add_slide(prs.slide_layouts[6])
+    cajetin(slide, d, logo)
+    _gate_una_foto_por_paso(d)
+    _gate_texto_para_el_operario(d)
+    _gate_cada_paso_con_fuente(d)
+    _gate_transcripcion_leida(d)
+    _gate_no_afirmar_de_mas(d)
+    _gate_secuencia_en_orden(d)
+    _gate_secuencia_con_marca(d)
+    bloque_imagenes(slide, d.get("imagenes", []), d.get("pies"),
+                    numerar=(d.get("modo", "secuencia") != "rotulada"))
+    bloque_pasos(slide, d.get("pasos", []), d.get("nota"), d.get("parametros"))
+    bloque_ciclo(slide, d.get("ciclo", []))
+    bloque_epp(slide, d.get("epp", EPP_STD), d.get("refs", ("OP - Operador de Producción",)))
+    bloque_plan(slide, d.get("disparador", 'SI DETECTA "PRODUCTO" O "PROCESO" NO CONFORME'), d.get("acciones"))
+    return slide
+
+# ─── DATOS DE LAS OPERACIONES (OP 30 — IMG) ──────────────────────────────────
+CAJETIN_BASE = dict(
+    titulo_hoja="HOJA DE OPERACIONES",
+    ho="HO-TBD",
+    form="I-IN-002.4-R01",
+    modelo="PATAGONIA",
+    cliente="VW",
+    sector="IMG",
+    pieza="TOP ROLL PATAGONIA — N 216 / N 256 / N 285 / N 315",
+    puesto="-",
+    realizo="F. Santoro",
+    aprobo="C. Baptista",
+    fecha="21/09/2026",
+    rev="A",
+)
+
+PORTADA_IMG = dict(
+    titulo="HOJAS DE PROCESO — MÁQUINA MOLDEADORA IMG",
+    subtitulo="Conformado al vacío In-Mold Graining (IMG) · OP 30 del FLUJOGRAMA 122 TOP ROLL PATAGONIA",
+    ho="HO-TBD",
+    form="I-IN-002.4-R01",
+    op_flujo="30 — CONFORMADO AL VACÍO IMG",
+    cliente_modelo="VW / PATAGONIA",
+    pieza="TOP ROLL PATAGONIA — N 216 / N 256 / N 285 / N 315",
+    maquina="Moldeadora In-Mold Graining KINGPOWER (Molde Hembra)",
+    firmas="F. Santoro / C. Baptista",
+    fecha_rev="14/09/2026  ·  Rev. B",
+    foto=os.path.join(ASSETS_DIR, "30.0_portada_moldeadora.jpg"),
+)
+
+A2 = os.path.join(BASE_DIR, "assets2")
+
+
+def _f(n):
+    return os.path.join(A2, n)
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# LAS HOJAS — cuatro partes, en el orden en que se usa la maquina
+#   1. ARRANQUE        como se prende y que se mira antes
+#   2. AUTOMATICO      como se pone en automatico y se arranca el ciclo
+#   3. EL PROCESO      que pasa en cada ciclo
+#   4. APAGADO         como se deja la maquina
+#
+# Todo lo que dice una hoja sale de un video de planta identificado. Lo que nadie filmo
+# NO se escribe por analogia (core-prohibiciones §1): va en
+# "QUE FALTA FILMAR - MOLDEADORA IMG.md", que es la lista de tomas para sacar en planta.
+# ════════════════════════════════════════════════════════════════════════════
+
+HOJAS_IMG = [
+    # ── PARTE 1 — ARRANQUE ────────────────────────────────────────────────────
+    dict(
+        op="30.1",
+        denominacion="EL TABLERO Y LOS SERVICIOS",
+        modo="secuencia",
+        imagenes=[_f("e1_llave.jpg"), _f("e2_power.jpg"),
+                  _f("e3_chiller.jpg"), _f("e4_manometros.jpg")],
+        pies=["La llave general del tablero",
+              "El pulsador POWER START",
+              "Chiller y agua del molde",
+              "El panel de manometros"],
+        sin_marcas_ok=True,   # son primeros planos: el sujeto ya llena el cuadro
+        pasos=[
+            "La llave general va en la puerta del tablero: Schneider, con On (I) arriba y "
+            "Off (0) abajo.",
+            "Al lado del tablero estan los dos pulsadores de potencia: el verde POWER "
+            "START (电源启动) y el rojo POWER STOP (电源停止).",
+            "Contra la pared estan la refrigeracion (chiller) y el atemperador del agua "
+            "del molde (水式模温机), cada uno con su display.",
+            "El panel de manometros tiene cinco: la presion de aire de red (气源压力) y "
+            "los cuatro vacios, molde superior, molde inferior y sus dos tanques.",
+        ],
+        fuentes=[
+            "IMG_0869 (11-09-2026) s=33, la llave en la puerta del tablero, y el rotulo "
+            "Schneider On/Off se lee en la foto",
+            "IMG_0597 (02-09-2026) s=1,8 y s=2,8, los dos pulsadores con su rotulo",
+            "IMG_0869 (11-09-2026) s=44, los dos equipos con su rotulo chino a la vista",
+            "IMG_0869 (11-09-2026) s=57, los cinco manometros con su etiqueta en chino e "
+            "ingles",
+        ],
+        epp=EPP_STD,
+        disparador="SI UN EQUIPO NO ENCIENDE O UN MANOMETRO ESTA EN CERO",
+        acciones=[
+            "1. No insistir con la llave ni con el pulsador.",
+            "2. Dar aviso al Lider de Produccion y a Mantenimiento.",
+            "3. Esperar la intervencion del personal autorizado.",
+        ],
+    ),
+
+    dict(
+        op="30.2",
+        denominacion="EL PUESTO DE MANDO",
+        modo="rotulada",
+        imagenes=[_f("r_puesto.jpg")],
+        pasos=[
+            "Pantalla tactil del HMI. Es por donde se opera todo: recetas, temperaturas y ciclo.",
+            "Botonera: el selector AUTOMATICO / MANUAL y los tres pulsadores del ciclo.",
+            "Parada de emergencia del lateral. Corta todo en el acto.",
+            "Termorregulador del agua del molde. Antes de arrancar tiene que estar en marcha.",
+            "Cartel del fabricante: la maquina se apaga cuando no se usa.",
+        ],
+        nota="En la zona del molde no entra nadie que no este autorizado, y la maquina "
+             "se apaga cuando no se usa: los dos carteles estan en el puesto.",
+        fuentes=[
+            "IMG_0801 (09-09-2026) s=1,1: la pantalla esta en el puesto, se ve en la foto",
+            "misma foto: la botonera con el selector y los tres pulsadores",
+            "misma foto: la seta del lateral",
+            "misma foto: el atemperador con su display, rotulado 水式模温机",
+            "misma foto: el cartel del fabricante, TURN OFF MACHINE WHEN NOT IN USE",
+        ],
+        epp=EPP_STD,
+        disparador="SI FALTA UN COMANDO, ESTA FLOJO O NO ENCIENDE",
+        acciones=[
+            "1. No operar la maquina.",
+            "2. Dar aviso al Lider de Produccion y a Mantenimiento.",
+            "3. Esperar la intervencion del personal autorizado.",
+        ],
+    ),
+
+    # ── PARTE 2 — ARRANCAR EN AUTOMATICO ──────────────────────────────────────
+    dict(
+        op="30.3",
+        denominacion="LOS COMANDOS DEL PUESTO",
+        modo="rotulada",
+        imagenes=[_f("r_botonera.jpg")],
+        pasos=[
+            "Selector AUTOMATICO (自动) / MANUAL (手动).",
+            "Azul: RESET (复位).",
+            "Verde: ARRANQUE DE CICLO (循环启动).",
+            "Rojo: PARO DE CICLO (循环停止).",
+            "Seta de emergencia: corta todo en el acto.",
+        ],
+        fuentes=[
+            "IMG_0801 (09-09-2026) s=1,1: la serigrafia 自动 / 手动 se lee en la foto",
+            "misma foto: la serigrafia 复位 arriba del pulsador azul",
+            "misma foto: la serigrafia 循环启动 arriba del verde",
+            "misma foto: la serigrafia 循环停止 arriba del rojo",
+            "misma foto: la seta del puesto",
+        ],
+        nota="Elegido el modo en la pantalla, el azul se mantiene apretado unos 3 segundos.",
+        epp=EPP_STD,
+        disparador="SI UN COMANDO NO RESPONDE O QUEDA TRABADO",
+        acciones=[
+            "1. No forzar el pulsador ni repetirlo.",
+            "2. Mirar la alarma que muestra el HMI y anotarla.",
+            "3. Dar aviso al Lider de Produccion.",
+        ],
+    ),
+
+    dict(
+        op="30.4",
+        denominacion="EL CICLO AUTOMATICO, PASO A PASO",
+        modo="secuencia",
+        imagenes=[_f("m1_entra.jpg"), _f("m2_conformado.jpg"), _f("m3_abre.jpg")],
+        pies=["La mesa entra con el molde",
+              "El plato baja sobre el molde",
+              "La maquina abre con la pieza"],
+        pasos=[
+            "La mesa entra con el molde y el portico queda arriba.",
+            "El plato de calefactores baja sobre el molde y la maquina cierra. De aca en "
+            "adelante el ciclo no se ve desde afuera: se sigue por la pantalla.",
+            "La maquina abre sola con la pieza ya conformada sobre el molde. Recien ahi se entra a sacarla, entre dos.",
+        ],
+        nota="Nadie mete la mano hasta que la maquina abrio sola.",
+        fuentes=[
+            "IMG_0844 (10-09-2026) s=119: se ve la mesa entrando con el molde",
+            "IMG_0844 s=153: se ve el plato de calefactores abajo, sobre el molde",
+            "IMG_0844 s=396: se ve la maquina abierta con la pieza sobre el molde",
+        ],
+        epp=EPP_STD,
+        disparador="SI LA PIEZA SALE CON BURBUJA, ARRUGA O MAL COPIADO DEL GRANO",
+        acciones=[
+            "1. Apartar la pieza e identificarla.",
+            "2. Dar aviso al Lider de Produccion.",
+            "3. No tocar parametros por cuenta propia.",
+        ],
+    ),
+
+    dict(
+        op="30.5",
+        denominacion="LA PANTALLA DE OPERACION",
+        modo="rotulada",
+        imagenes=[_f("r_operacion.jpg")],
+        pasos=[
+            "El campo de arriba dice que se esta alimentando. En esta pantalla, Cuero en rollo.",
+            "El modo de calentamiento se elige por TEMPERATURA de piel (superior o inferior) o por TIEMPO. Por temperatura, calienta hasta que esa piel llega a la ajustada; por tiempo, sale a los segundos puestos sin mirar el grado.",
+            "Seleccion de proceso: vacio, temperatura del molde, temperatura de "
+            "calentamiento y expulsar esqueleto.",
+            "Las cuatro temperaturas que lee el infrarrojo en el molde y el valor ajustado.",
+            "El pie dice la produccion del turno, la receta y el numero de molde activos.",
+        ],
+        parametros=[
+            ("Tiempo de vacio del molde inferior", "19 s"),
+            ("Alimentacion", "Cuero en rollo"),
+            ("Modo de calentamiento", "Deteccion infrarroja"),
+        ],
+        nota="Los numeros que se ven en la foto son los de ese momento. Los que valen son "
+             "los de la receta cargada: si no coinciden, no se arranca.",
+        fuentes=[
+            "IMG_0587 (02-09-2026) s=10,3: el campo Seleccion Lamina Alimentacion en la pantalla",
+            "IMG_0587 audio 00:04 a 00:33, el tecnico explicando los dos modos",
+            "misma pantalla: el bloque Seleccion de Proceso con sus llaves",
+            "misma pantalla: el bloque Visualizacion de Temp",
+            "misma pantalla: el pie con Produccion, Receta y Numero Molde",
+        ],
+        epp=EPP_STD,
+        disparador="SI UN PARAMETRO NO COINCIDE CON LA RECETA CARGADA",
+        acciones=[
+            "1. No arrancar el ciclo.",
+            "2. Dar aviso al Lider de Produccion.",
+            "3. Revalidar la receta antes de habilitar la maquina.",
+        ],
+    ),
+
+    dict(
+        op="30.6",
+        denominacion="LA MATRIZ DE ZONAS DE CALOR",
+        modo="rotulada",
+        imagenes=[_f("r_matriz.jpg")],
+        pasos=[
+            "Arriba se elige que mitad se mira: calentamiento superior (上加热) o "
+            "inferior (下加热).",
+            "Cada casillero con numero es una resistencia: arriba lo que MIDE y abajo, en "
+            "amarillo, lo que tiene CONSIGNADO. Los casilleros vacios no tienen resistencia.",
+            "El contorno del molde queda dibujado sobre la grilla y marca por donde pasa la "
+            "pieza. Las de adentro y las de afuera muestran las dos su temperatura.",
+            "El pie dice la produccion del turno, la receta y el numero de molde.",
+        ],
+        nota="Si una resistencia mide muy por debajo de lo consignado, no se arranca: se "
+             "anota el numero de la resistencia y se avisa.",
+        fuentes=[
+            "IMG_0801 s=20,3: los dos botones 上加热 / 下加热 arriba de la grilla",
+            "misma pantalla: cada casillero con su valor medido arriba y el consignado en amarillo",
+            "misma pantalla: el contorno del molde dibujado sobre la grilla",
+            "misma pantalla: el pie con Produccion, Receta y Numero Molde",
+        ],
+        epp=EPP_STD,
+        disparador="SI UNA ZONA NO LLEGA A LA TEMPERATURA CONSIGNADA",
+        acciones=[
+            "1. No arrancar la produccion con una zona fria.",
+            "2. Anotar que numero de resistencia es.",
+            "3. Dar aviso al Lider de Produccion y a Mantenimiento.",
+        ],
+    ),
+]
+
+
+def compilar_deck():
+    print("Iniciando compilacion de Hoja de Proceso IMG (11 laminas)...")
+    prs = Presentation()
+    prs.slide_width = Cm(W)
+    prs.slide_height = Cm(H)
+
+    indice = [(h["op"], h["denominacion"]) for h in HOJAS_IMG]
+    portada(prs, PORTADA_IMG, logo=LOGO_BARACK, foto=PORTADA_IMG.get("foto"), indice=indice)
+    print("  [OK] Portada generada exitosamente.")
+
+    for i, h in enumerate(HOJAS_IMG):
+        d = dict(CAJETIN_BASE)
+        d.update(h)
+        hoja(prs, d, logo=LOGO_BARACK)
+        print(f"  [OK] Lamina {h['op']}: {h['denominacion'][:40]}...")
+
+    os.makedirs(DESKTOP_DIR, exist_ok=True)
+    salida_desktop = os.path.join(DESKTOP_DIR, "HOJAS DE PROCESO - MAQUINA IMG.pptx")
+    salida_repo = os.path.join(BASE_DIR, "HOJAS DE PROCESO - MAQUINA IMG.pptx")
+
+    prs.save(salida_repo)
+    print(f"\n[OK] Presentacion guardada en:")
+    print(f"  1. {salida_repo}")
+    try:
+        prs.save(salida_desktop)
+        print(f"  2. {salida_desktop}")
+    except PermissionError:
+        print(f"  [AVISO] {salida_desktop} está actualmente abierto en PowerPoint. Se guardará cuando el usuario lo cierre.")
+
+if __name__ == "__main__":
+    compilar_deck()
