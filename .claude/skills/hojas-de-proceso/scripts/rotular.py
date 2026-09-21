@@ -141,7 +141,8 @@ def chequear_marcas(foto, marcas, permitir_lisa):
     return malas
 
 
-def rotular(foto: str, marcas: list[tuple], banda: str, ancho: int, titulo: str | None):
+def rotular(foto: str, marcas: list[tuple], banda: str, ancho: int, titulo: str | None,
+            numeros: bool = True):
     im = Image.open(foto).convert("RGB")
     if ancho and im.width != ancho:
         im = im.resize((ancho, round(im.height * ancho / im.width)), Image.LANCZOS)
@@ -161,7 +162,10 @@ def rotular(foto: str, marcas: list[tuple], banda: str, ancho: int, titulo: str 
         d.rectangle([X, Y, X + Wd, Y + Hd], outline=ROJO, width=grosor)
         # el numero va MONTADO SOBRE LA ESQUINA, no adentro: adentro le tapa al control
         # justo la serigrafia que el rotulo esta citando (paso el 21/09 con 循环启动).
-        _circulo(d, min(max(X, r), W - r), min(max(Y, r), H - r), r, i, f_num)
+        # con UNA sola marca el numerito sobra y encima choca con el badge del paso que
+        # el generador dibuja en la misma esquina: queda el recuadro solo.
+        if numeros and len(marcas) > 1:
+            _circulo(d, min(max(X, r), W - r), min(max(Y, r), H - r), r, i, f_num)
 
     # "ninguna": la foto va DENTRO de una hoja, donde el texto de cada numero ya esta en el
     # bloque DESCRIPCION. Repetirlo en una banda al costado lo pone dos veces y, al tamano
@@ -317,7 +321,12 @@ def main() -> int:
         dic = json.loads(origen)
     except Exception:
         dic = {"origen_crudo": origen}
+    # La CAJA tambien, no solo el texto: sin ella nadie puede chequear despues si la marca
+    # cubre el sujeto, si dos chapas se pisan o si una quedo fuera del cuadro. Una posicion
+    # que no queda escrita se vuelve a estimar, y ahi es donde se erro el 21/09.
     dic["rotulos"] = [t for (_x, _y, _w, _h, t) in marcas]
+    dic["cajas"] = [[round(x, 2), round(y, 2), round(w, 2), round(h, 2)]
+                    for (x, y, w, h, _t) in marcas]
     if a.titulo:
         dic["titulo"] = a.titulo
     guardar(im, a.out, json.dumps(dic, ensure_ascii=False))

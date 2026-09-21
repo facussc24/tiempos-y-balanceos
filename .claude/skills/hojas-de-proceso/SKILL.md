@@ -31,6 +31,9 @@ fotografiar no es un paso: una condicion va en la NOTA, un valor va en PARAMETRO
 
 - **De 2 a 4 pasos por hoja, con una foto cada uno.** Cuatro es el tope: en A4 con mas de
   cuatro fotos no se ve ninguna. Menos de dos no es una hoja, es una foto con epigrafe.
+  La excepcion es `modo="rotulada"` (un panel, una pantalla): ahi la foto es una sola y
+  entran hasta **6** items, porque partir el panel en dos hojas se ve peor que mostrarlo
+  entero una vez.
 - **La operacion que no entra se PARTE, no se comprime**: `SET UP INICIAL (HOJA 1 DE 2)`,
   `(HOJA 2 DE 2)`. **El N° de operacion no cambia** — lo manda el flujograma
   (`no-pfd-no-ho.md`). Sale solo del campo `hoja_de=(1, 2)`.
@@ -94,6 +97,33 @@ umbral se prueba contra la poblacion entera antes de declararlo, no contra el ca
 inspiro.
 
 ---
+
+## 1 bis. Que hace que una foto EXPLIQUE un paso (criterios 7 a 13)
+
+El test: **sin leer nada, ¿se contesta QUE OBJETO y QUE LE ESTA PASANDO?** Si no, la foto
+decora. Medido sobre las laminas del 21/09/2026.
+
+| # | Criterio | Como se ve que esta mal |
+|---|---|---|
+| 7 | **El sujeto del paso llena el cuadro** | En `r_botonera` los cinco comandos que la hoja señala vivian en **2,7 cm de alto** impresos (25 % del area). Recortada a la banda, los mismos botones pasan a 9,3 cm: **3,4x** |
+| 8 | **Lo ajeno no es solo gente: es todo lo que ningun renglon nombra** | el cartel del proveedor ocupaba el **36 % del alto** de una foto del ciclo; pared y techo, entre 36 y 41 % |
+| 9 | **Una persona entra si sus MANOS son el paso. Si entra su espalda, tapa el paso** | dos operarios de espaldas tapaban el **35 % del ancho** y el molde quedaba en **2,5 cm²**: no se distingue si sacan la pieza o un marco |
+| 10 | **En una secuencia, la foto n+1 dice QUE CAMBIO — y va en el orden del reloj** | cuatro fotos del mismo video en los segundos 198 · 153 · 110 · 327: los pasos 1→2→3 iban **para atras**. Y dos con el mismo recorte y el mismo punto de vista no muestran ningun cambio |
+| 11 | **El pie describe el instante que la foto MUESTRA**, no el que el paso quiere | el pie decia *"la pieza queda en la cavidad"* y la foto mostraba una mano ya sacandola |
+| 12 | **El punto de vista es el del operario parado en el puesto** | una toma centrada de frente al molde es el punto de vista del que filmo, no el del que opera |
+| 13 | **Si la accion pasa ADENTRO, la foto del paso es la PANTALLA** | una maquina cerrada es la misma foto para cualquier paso del ciclo |
+
+Del 7 y del 14 (*dos chapas no se pisan*) falta el numero: **el umbral se corre antes contra
+las 17 hojas de la HOTMELT**, que es la poblacion que hay. Con 4 fotos no se declara un
+umbral — eso ya costo una vez (criterio 1, "45 % del bloque", reprobaba 13 de 17 hojas sanas).
+
+Lo que **si** esta en codigo hoy: el orden del reloj (`_gate_secuencia_en_orden`), que cada
+foto de secuencia lleve al menos una marca (aviso: poner la marca obliga a BUSCAR el objeto
+en el cuadro, y ahi se ve solo que no esta), y que la foto llene su celda.
+
+Lo que **no ve ningun script** y hay que mirar: si lo que esta en el cuadro es el objeto que
+el paso nombra, si el pie describe el instante que se ve, si la persona agarra o tapa, y el
+punto de vista.
 
 ## 2. Como se dimensiona una pantalla para que entre legible
 
