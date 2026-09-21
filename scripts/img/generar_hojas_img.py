@@ -646,20 +646,11 @@ def _marcas_de(ruta):
 # Marcas de cocina interna: nombre de archivo de video, trazabilidad, pendientes con el
 # proveedor, explicaciones de como se hizo la hoja. Nada de esto le sirve al que esta
 # parado al lado de la maquina, y en una hoja que firma Barack ademas queda mal.
-COCINA = [
-    (r"IMG_\s?\d{3,}", "el numero de video"),
-    (r"pendiente de", "un pendiente interno"),
-    (r"no qued[oó] (registrad|grabad)", "que algo no quedo registrado"),
-    (r"se lo pregunt", "quien le pregunto a quien"),
-    (r"confirmar con ", "un pendiente con el proveedor"),
-    (r"filmad[oa] el ", "cuando se filmo"),
-    (r"lectura del ", "de cuando es la lectura"),
-    (r"agregamos nosotros", "como se hizo la hoja"),
-    (r"por analog[ií]a", "como se hizo la hoja"),
-    (r"\bborrador\b", "que es un borrador"),
-    (r"pendiente de validaci[oó]n", "que esta sin validar"),
-    (r"\b(este|esta) (deck|hoja|documento) ", "la hoja hablando de si misma"),
-]
+# La lista de cocina interna vive en el SKILL (`vocabulario.data.json`), no aca:
+# el gate que decide si el deck se entrega es `hoja_proceso_check.py` sobre el
+# PPTX, y el 21/09 dio PASA sobre una nota prohibida porque la lista era local.
+from redaccion import revisar_cocina  # noqa: E402
+
 
 
 def _gate_texto_para_el_operario(d):
@@ -674,13 +665,8 @@ def _gate_texto_para_el_operario(d):
     piezas += [(f"accion {i}", t) for i, t in enumerate(d.get("acciones", []) or [], 1)]
     malas = []
     for donde, t in piezas:
-        for pat, por in COCINA:
-            if re.search(pat, t, re.IGNORECASE):
-                malas.append((donde, por, t.strip()[:70]))
-        # TBD se puede escribir, pero solo: el "por que" va en la bitacora, no en la hoja
-        m = re.search(r"\bTBD\b(.{0,400})", t, re.IGNORECASE | re.DOTALL)
-        if m and len(m.group(1).strip(" .,:;—-")) > 40:
-            malas.append((donde, "un TBD con explicacion (va TBD y nada mas)", t.strip()[:70]))
+        for hallado, por in revisar_cocina(t):
+            malas.append((donde, por, t.strip()[:70]))
     if malas:
         for donde, por, t in malas:
             print(f"  hoja {op} / {donde}: dice {por} -> \"{t}...\"")
@@ -930,9 +916,12 @@ CAJETIN_BASE = dict(
     pieza="TOP ROLL PATAGONIA — N 216 / N 256 / N 285 / N 315",
     puesto="-",
     realizo="F. Santoro",
-    aprobo="C. Baptista",
+    # vacio a proposito: el documento controlado lo firma Fak, y todavia no lo
+    # firmo nadie (autonomy-contract.md F). Decir "C. Baptista" en una hoja que
+    # el no vio es afirmar una aprobacion que no existe.
+    aprobo="",
     fecha="21/09/2026",
-    rev="A",
+    rev="-",
 )
 
 PORTADA_IMG = dict(
@@ -944,8 +933,8 @@ PORTADA_IMG = dict(
     cliente_modelo="VW / PATAGONIA",
     pieza="TOP ROLL PATAGONIA — N 216 / N 256 / N 285 / N 315",
     maquina="Moldeadora In-Mold Graining KINGPOWER (Molde Hembra)",
-    firmas="F. Santoro / C. Baptista",
-    fecha_rev="21/09/2026  ·  Rev. A",
+    firmas="F. Santoro / (sin aprobar)",
+    fecha_rev="21/09/2026  ·  PRELIMINAR, sin aprobar",
     foto=os.path.join(BASE_DIR, "assets2", "p1_listo.jpg"),
 )
 
@@ -968,11 +957,51 @@ def _f(n):
 # "QUE FALTA FILMAR - MOLDEADORA IMG.md", que es la lista de tomas para sacar en planta.
 # ════════════════════════════════════════════════════════════════════════════
 
+# ── Que entra y que sale de la OP 30 ─────────────────────────────────────────
+# No sale de los videos: sale del flujograma 155 y del AMFE-TR-PAT (Supabase live, Nº 162,
+# updated 11/09/2026), que existen antes que estas hojas. Cada renglon tiene que estar
+# nombrado en alguna hoja, o hay una parte del trabajo que el operario hace y nadie escribio.
+MATERIALES_OP30 = [
+    # (que es, con que palabras puede aparecer en una hoja, de donde sale que existe)
+    ("el rollo de vinilo", r"vinilo|rollo|lamina|bobina",
+     "AMFE-TR-PAT OP 30, elemento de trabajo 'Rollo Pre-laminado (TPO + Hot Melt)'"),
+    ("los sustratos plasticos", r"sustrato",
+     "IMG_0579 min 7:42: \u00abahora tiene que poner los sustratos\u00bb"),
+    ("la pieza terminada", r"\bpieza\b",
+     "AMFE-TR-PAT OP 30: la salida de la operacion"),
+    ("el recorte de vinilo que sobra", r"resto de vinilo|esqueleto|recorte|scrap",
+     "Fak, 21/09/2026: \u00abretirar las piezas y luego el resto de vinilo\u00bb"),
+]
+
+
+def gate_materiales_del_deck(hojas):
+    """Corre sobre el DECK entero, no sobre una hoja. Lo que falta no se ve de a una."""
+    import re
+    texto = []
+    for h in hojas:
+        texto.append(str(h.get("denominacion", "")))
+        texto.append(str(h.get("nota", "")))
+        texto += [str(x) for x in (h.get("pasos") or [])]
+        texto += [str(x) for x in (h.get("pies") or [])]
+        texto += [" ".join(map(str, p)) for p in (h.get("parametros") or [])]
+    todo = " ".join(texto).lower()
+    faltan = [(q, d) for q, pat, d in MATERIALES_OP30 if not re.search(pat, todo)]
+    if faltan:
+        print("\n  FALTA UNA PARTE DEL TRABAJO, no un paso:")
+        for q, d in faltan:
+            print(f"    - {q}: ninguna hoja lo nombra.")
+            print(f"      existe porque: {d}")
+        raise SystemExit(
+            "el deck no cubre todo lo que entra y sale de la operacion. El 21/09 me faltaba "
+            "el vinilo entero y ningun gate lo vio, porque todos miran una hoja por vez.")
+    return True
+
+
 HOJAS_IMG = [
-    # ── PARTE 1 — PRENDER LA MAQUINA ──────────────────────────────────────────
+    # ── PREPARAR Y ARRANCAR ──────────────────────────────────────────
     dict(
         op="30.1",
-        denominacion="ENCENDIDO DE LA MAQUINA",
+        denominacion="ENCENDIDO GENERAL Y PUESTA EN MARCHA DE SERVICIOS",
         modo="secuencia",
         imagenes=[_f("e1_llave.jpg"), _f("e2_power.jpg"), _f("n3_servicios.jpg")],
         pies=["La llave general del tablero",
@@ -1010,14 +1039,15 @@ HOJAS_IMG = [
 
     dict(
         op="30.2",
-        denominacion="EL PUESTO DE MANDO",
+        denominacion="RECONOCIMIENTO DEL PUESTO DE MANDO",
         modo="rotulada",
         imagenes=[_f("r_puesto.jpg")],
         pasos=[
             "Operar la maquina desde la pantalla tactil: receta, temperaturas y ciclo.",
             "Mandar el ciclo desde la botonera: el selector de modo y los botones.",
             "Golpear el boton de parada de emergencia ante cualquier riesgo: corta todo.",
-            "Verificar que el atemperador del agua del molde este en marcha antes de arrancar.",
+            "Controlar el atemperador del agua del molde en su display: se prende y se apaga "
+            "desde la pantalla de la maquina, no desde el equipo.",
             "Respetar los carteles del puesto: a la zona del molde no entra nadie sin "
             "autorizacion.",
         ],
@@ -1025,7 +1055,7 @@ HOJAS_IMG = [
             "IMG_0801 (09-09-2026) s=1,1: la pantalla del puesto, se ve en la foto",
             "misma foto: la botonera con el selector y los botones del ciclo",
             "misma foto: el boton de parada de emergencia del lateral",
-            "misma foto: el atemperador del agua del molde, con su display",
+            "IMG_0596 (02-09-2026) min 0:30 a 0:34, parados frente al equipo de agua: \u00abtodo eso se maneja de alla, de la pantalla\u00bb",
             "misma foto: los dos carteles del puesto",
         ],
         epp=EPP_IMG,
@@ -1037,35 +1067,32 @@ HOJAS_IMG = [
         ],
     ),
 
-    # ── PARTE 2 — ARRANCAR EN AUTOMATICO ──────────────────────────────────────
+    # ── PRODUCIR ──────────────────────────────────────
     dict(
         op="30.3",
-        denominacion="LOS COMANDOS DEL PUESTO",
+        denominacion="RECONOCIMIENTO DE LOS COMANDOS DE LA BOTONERA",
         modo="rotulada",
         imagenes=[_f("r2_botonera.jpg")],
         pasos=[
             "Poner el selector de modo en AUTOMATICO.",
-            "Apretar el boton verde para arrancar el ciclo.",
-            "Apretar el boton rojo para parar el ciclo.",
             "Mantener apretado el boton azul de RESET hasta que quede encendido.",
-            "Apretar el boton negro de la caja colgante enseguida despues del verde: es lo "
-            "que larga el ciclo.",
+            "Apretar el boton verde de arranque de ciclo.",
+            "Apretar enseguida el boton negro de la caja colgante.",
+            "Apretar el boton rojo para parar el ciclo al terminar.",
             "Golpear el boton de parada de emergencia ante cualquier riesgo.",
         ],
         parametros=[("Tiempo que se mantiene el RESET", "3 s")],
         fuentes=[
             "IMG_0579 (02-09-2026) min 6:41 a 6:49, el tecnico: \u00abes automatico, "
             "directamente automatico\u00bb; el selector se ve en IMG_0840 s=4",
-            "IMG_0842 (10-09-2026) min 0:00: \u00abboton verde y despues boton negro\u00bb",
-            "IMG_0840 (10-09-2026) s=4: el boton rojo con su cartel, al lado del verde",
             "IMG_0579 (02-09-2026) min 7:33 a 7:40: \u00ab3 segundos... 3 segundos hasta que "
             "se enciende\u00bb, y min 7:09: \u00abcuando este luce azul esta encendido\u00bb",
+            "IMG_0842 (10-09-2026) min 0:00: \u00abboton verde y despues boton negro\u00bb",
             "IMG_0842 (10-09-2026) min 0:00 y 0:06: \u00abboton verde y despues boton "
             "negro\u00bb / \u00abarranca si queres de ahi\u00bb",
+            "IMG_0840 (10-09-2026) s=4: el boton rojo con su cartel, al lado del verde",
             "IMG_0840 (10-09-2026) s=4: el hongo de emergencia sobre fondo amarillo",
         ],
-        nota="Que hace exactamente el boton negro no esta documentado: lo unico registrado "
-             "es que va enseguida despues del verde. Preguntar antes de usarlo de otra forma.",
         epp=EPP_IMG,
         disparador="SI UN COMANDO NO RESPONDE O QUEDA TRABADO",
         acciones=[
@@ -1077,7 +1104,7 @@ HOJAS_IMG = [
 
     dict(
         op="30.4",
-        denominacion="ARRANCAR EN AUTOMATICO",
+        denominacion="ARRANQUE DE LA MAQUINA EN MODO AUTOMATICO",
         modo="rotulada",
         imagenes=[_f("r2_automatico.jpg")],
         pasos=[
@@ -1091,8 +1118,6 @@ HOJAS_IMG = [
             ("Tiempo que se mantiene el RESET", "3 s"),
             ("Usuario y contrase\u00f1a", "solo para cambiar un parametro, no para arrancar"),
         ],
-        nota="Antes de dar arranque, los sustratos van en su lugar y todas las luces tienen "
-             "que estar encendidas: si falta una luz, falta un sustrato.",
         fuentes=[
             "IMG_0579 (02-09-2026) min 6:41 a 6:49: \u00abes automatico, directamente "
             "automatico\u00bb, y la lista se lee en la pantalla",
@@ -1113,10 +1138,10 @@ HOJAS_IMG = [
         ],
     ),
 
-    # ── PARTE 3 — TRABAJAR Y CONTROLAR ────────────────────────────────────────
+    # ── CONTROLAR ────────────────────────────────────────
     dict(
         op="30.5",
-        denominacion="EL CICLO: QUE HACE EL OPERARIO",
+        denominacion="DESCARGA DE PIEZAS Y CARGA DE SUSTRATOS",
         modo="secuencia",
         imagenes=[_f("m1_entra.jpg"), _f("m2_conformado.jpg"), _f("m3_abre.jpg")],
         pies=["La mesa entra con el molde",
@@ -1147,18 +1172,18 @@ HOJAS_IMG = [
 
     dict(
         op="30.6",
-        denominacion="CONTROL DE LA PIEZA",
+        denominacion="CONTROL DE PIEZA TERMOFORMADA",
         modo="secuencia",
         imagenes=[_f("n5_mano.jpg"), _f("n8_canto.jpg"), _f("n7_despegue.jpg")],
         pies=["Pasar la mano por la superficie",
-              "Mirar el canto envuelto",
+              "Mirar la punta y el borde",
               "Abrir la punta con los dedos"],
         sin_marcas_ok=True,
         pasos=[
             "Pasar la mano por la superficie de la pieza recien sacada del molde y mirar que "
             "no quede ningun globito.",
-            "Mirar el canto y la punta, y avisar si aparecen los tres puntitos que dejan los "
-            "agujeros de vacio.",
+            "Mirar la punta y el borde de la pieza, y avisar si aparecen los tres puntitos "
+            "que dejan los agujeros de vacio.",
             "Abrir la punta con los dedos y verificar que la piel este pegada.",
         ],
         nota="Ante la duda, apartar la pieza y avisar. El criterio de aceptacion y la "
@@ -1185,6 +1210,7 @@ HOJAS_IMG = [
 
 
 def compilar_deck():
+    gate_materiales_del_deck(HOJAS_IMG)
     print(f"Iniciando compilacion de Hoja de Proceso IMG "
           f"({len(HOJAS_IMG) + 1} laminas: portada + {len(HOJAS_IMG)})...")
     prs = Presentation()

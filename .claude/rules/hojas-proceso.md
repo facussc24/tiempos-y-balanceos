@@ -76,6 +76,30 @@ Regla corta. El detalle, los umbrales y los errores caros: skill `hojas-de-proce
     puesto**, no de un set generico (*"¿para que necesito gafas? nadie usa gafas en esta
     maquina"*).
 
+17. **La lista de hojas se deriva de la JORNADA del operario, no del material filmado.**
+    Se escribe primero que hace de punta a punta y despues se busca con que fotos contarlo.
+    Al reves, lo que no esta filmado deja de existir: el 21/09 entregue seis hojas con los
+    seis gates en verde y **faltaba el vinilo entero** (colocar el rollo, pasar el material,
+    sacar el recorte). Chequeo de deck: **todo lo que entra y sale de la operacion —del
+    flujograma y del AMFE, no de los videos— tiene que estar nombrado en alguna hoja**
+    (`gate_materiales_del_deck()`).
+18. **Una NOTA no le cuenta al operario lo que yo no averigue.** *"No esta documentado...
+    preguntar antes de usarlo"* le pasa mi problema a el (Fak: *"esta nota esta al pedo,
+    eliminala"*). El hueco va a la lista de lo que falta preguntar; en la hoja va `TBD`
+    pelado o no va nada.
+19. **Si una frase hay que explicarla, esta mal escrita.** *"Mirar el canto envuelto"* —Fak:
+    *"¿que carajo significa eso? no se entiende"*. La prueba es leerla en voz alta como si
+    la leyera alguien que recien entra.
+
+
+
+20. **La operacion se llama `SUSTANTIVO DE ACCION + DE/EN/CON + objeto`**, mayusculas,
+    tope 64 caracteres: asi son las 113 denominaciones reales de Barack, y **ninguna**
+    arranca con articulo ni lleva dos puntos. El objeto de la pieza va en COD. DE PIEZA, no
+    en el titulo. **Antes de inventar una forma se abre la maquina hermana**: el deck de la
+    HOTMELT ya tenia sus 17 sub-operaciones bien nombradas y no lo mire (Fak: *"eso es
+    cualquier cosa"*). Lo frena `redaccion.revisar_denominacion()`.
+
 ## Enforcement
 
 - **Duro:** `py -3 .claude/skills/hojas-de-proceso/scripts/hoja_proceso_check.py "<deck.pptx>"`

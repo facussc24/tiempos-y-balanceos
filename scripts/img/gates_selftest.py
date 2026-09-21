@@ -23,10 +23,25 @@ CASOS = [
     (G._gate_una_foto_por_paso, "4 fotos y 4 pasos",
      dict(op='X', imagenes=[F('m1_entra.jpg')] * 4, pasos=list('abcd')), False),
 
+    # la coma que falta: en una lista de Python, dos strings sin coma se pegan en silencio.
+    # Me paso el 21/09 con los pies de la hoja de control y habria salido impreso.
+    (G._gate_una_foto_por_paso, "2 pies para 3 fotos (falto una coma)",
+     dict(op='X', modo='secuencia', imagenes=[F('m1_entra.jpg')] * 3, pasos=list('abc'),
+          pies=["Pasar la mano", "Mirar la punta y el bordeAbrir la punta"]), True),
+    (G._gate_una_foto_por_paso, "3 pies para 3 fotos",
+     dict(op='X', modo='secuencia', imagenes=[F('m1_entra.jpg')] * 3, pasos=list('abc'),
+          pies=["Pasar la mano", "Mirar la punta", "Abrir la punta"]), False),
+
     (G._gate_texto_para_el_operario, "la nota cita el numero de video",
      dict(op='X', nota='Las cuatro fotos son del IMG_0844.'), True),
     (G._gate_texto_para_el_operario, "un pendiente con el proveedor",
      dict(op='X', nota='Pendiente de confirmar con KINGPOWER.'), True),
+    (G._gate_texto_para_el_operario, "la nota confiesa un hueco mio",
+     dict(op='X', nota='Que hace exactamente el boton negro no esta documentado: preguntar '
+                       'antes de usarlo de otra forma.'), True),
+    (G._gate_texto_para_el_operario, "un TBD pelado, que si va",
+     dict(op='X', parametros=[('Temperatura de molde', 'TBD')]), False),
+
     (G._gate_texto_para_el_operario, "una nota operativa",
      dict(op='X', nota='Nadie mete la mano hasta que la maquina abrio sola.'), False),
 

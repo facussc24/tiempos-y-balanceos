@@ -97,6 +97,72 @@ la reaccion, el operario queda solo con el problema.
 del HMI: *"no se de que me sirve conocer esa pantalla... quiero saber como empezar"*. La
 pantalla entra cuando el paso manda **mirarla o tocarla**, y entra dentro de ese paso.
 
+### GATE 0 cuatro — la operacion se llama como Barack las llama
+
+**`SUSTANTIVO DE ACCION [+ calificador] [+ DE/EN/CON + objeto]`**, en mayusculas, 20 a 40
+caracteres, tope real 64. Contado sobre **113 denominaciones reales** (los nodos de los 8
+flujogramas, `data.operations[].name` de los 20 AMFE de Supabase live y el campo
+DENOMINACION del cajetin de las HO limpias):
+
+- **110 de 113 arrancan con sustantivo de accion.** Las 3 excepciones son infinitivos del
+  mismo AMFE.
+- **0 de 113 arrancan con articulo. 0 llevan dos puntos con una pregunta atras.**
+- El **objeto de la pieza NO va en el titulo**: HO-71 se llama *"EMBALAJE APB DEL CONTENEDOR
+  PLASTICO"* en el nombre del archivo, y su denominacion dice **`EMBALAJE`** a secas. La
+  pieza vive en el campo COD. DE PIEZA del cajetin.
+- **Parte 2 de una operacion**: guion largo + calificador (`LAMINADO - CONTROL DURANTE LA
+  MARCHA`), mismo sustantivo + calificador (`TAPIZADO AUTOMATICO`), o decimal (`20.1`).
+
+> **El precedente manda sobre el criterio, y ya existia.** El deck de la **HOTMELT** —mismo
+> formulario, mismo autor, tres semanas antes— tiene 17 sub-operaciones que cumplen la regla
+> sin excepcion: `20.1 RECONOCIMIENTO DE LA MAQUINA Y RIESGOS`, `20.6 MONTAJE DEL ROLLO EN
+> EL DESBOBINADOR`, `20.9 ARRANQUE Y ALINEACION`, `20.15 PARADA DE LA MAQUINA`. Igual titule
+> la IMG con `EL CICLO: QUE HACE EL OPERARIO`, y Fak: *"eso es cualquier cosa"*. **Antes de
+> inventar una forma, se abre la maquina hermana.**
+>
+> Ojo con mezclar registros: en el spec de la HOTMELT el campo `etapa=` SI lleva infinitivo
+> (`PREPARAR Y ARRANCAR`, `PRODUCIR`, `TERMINAR`) — ese es el **banner que agrupa**, no el
+> cajetin. Yo use el registro de banner adentro de `denominacion`.
+
+Lo frena `redaccion.revisar_denominacion()` contra la **lista canonica de 67 primeras
+palabras reales**, no contra un sufijo: mi primera version, hecha con sufijos, marcaba en
+rojo `CONTROL DE PIEZA INYECTADA` y `ARRANQUE Y ALINEACION`, que son de Barack. Una palabra
+nueva da **aviso**, no rojo, para agregarla mirando un documento real.
+
+### GATE 0 tres — la lista de hojas sale del TRABAJO, no de lo que hay filmado
+
+**Antes de decidir cuantas hojas son, se escribe la jornada del operario de punta a punta**,
+y recien despues se busca con que fotos se cuenta cada parte. Al reves —mirar el material y
+armar hojas con lo que se puede mostrar— **lo que no esta filmado deja de existir**.
+
+El 21/09/2026 entregue seis hojas con los seis gates en verde y **faltaba el vinilo entero**:
+colocar el rollo, pasar el material por la mesa y sacar el recorte que sobra en cada ciclo.
+Fak: *"no pusimos en ningun lugar el tema del vinilo... hay que ponerlo por mas que sea modo
+automatico porque lo hace el operario"*. Ninguno de los seis gates podia verlo: **todos miran
+una hoja por vez, y lo que falta no esta en ninguna hoja.**
+
+Lo que si se puede chequear a nivel DECK es el **balance de materiales**:
+
+> **Todo lo que ENTRA y todo lo que SALE de la operacion tiene que estar nombrado en alguna
+> hoja.** La lista no sale de los videos: sale del **flujograma y del AMFE**, que existen
+> antes que las hojas.
+
+En la MOLDEADORA IMG son cuatro: el rollo de vinilo · los sustratos plasticos · la pieza
+terminada · el recorte de vinilo que sobra. Lo frena `gate_materiales_del_deck()`, que corre
+sobre `HOJAS_IMG` entera antes de compilar y nombra lo que falta con la fuente de por que
+existe. **Corrido contra el deck del 21/09 reprodujo la correccion de Fak sin ayuda**: los
+tres materiales que el habia nombrado.
+
+No prueba que las hojas esten completas — prueba que no falta un bloque entero, que es
+exactamente lo que fallo.
+
+**Las tres preguntas del arranque, en este orden:**
+
+1. ¿Que hace esta persona desde que llega hasta que se va? (la jornada, escrita antes que nada)
+2. ¿Que entra y que sale de la operacion? (del flujograma y del AMFE, no de los videos)
+3. ¿Con que material cuento para mostrar cada parte? — y lo que falta filmar **va a la lista
+   de lo que falta**, no se borra del alcance.
+
 ### GATE 0 dos — el castellano de planta
 
 Antes de escribir, el vocabulario: **`vocabulario.data.json`** (la tabla 3.2 del canon, en
@@ -482,6 +548,8 @@ CICLO DE CONTROL · ELEMENTOS DE SEGURIDAD · PLAN DE REACCION.
 | **Dura** | un termino que en planta no se dice asi (`seta`, `izaje`, `chumacera`...) | `redaccion.py` + `vocabulario.data.json` |
 | **Dura** | un paso que describe la maquina en vez de mandarle algo al operario | `redaccion.gate_redaccion()` |
 | **Regresion** | 36 casos de idioma, vocabulario y voz, en ROJO y en VERDE | `redaccion_selftest.py` |
+| **Dura (deck)** | un material que entra o sale de la operacion y ninguna hoja nombra | `gate_materiales_del_deck()` del generador |
+| **Dura** | una NOTA que le cuenta al operario un hueco mio ("no esta documentado", "preguntar antes") | `COCINA` en `_gate_texto_para_el_operario()` |
 
 ```bash
 py -3 .claude/skills/hojas-de-proceso/scripts/hojalib_selftest.py     # 25 casos

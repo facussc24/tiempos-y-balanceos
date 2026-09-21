@@ -11,6 +11,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from redaccion import (revisar_vocabulario, revisar_voz, revisar_idioma,  # noqa: E402
+                       revisar_pie, revisar_cocina, revisar_denominacion,
                        gate_redaccion)
 
 for _f in (sys.stdout, sys.stderr):
@@ -28,6 +29,46 @@ IDIOMA = [
      "el mismo comando, con el ideograma rotulado sobre la foto"),
     ("Apretar el pulsador verde de arranque de ciclo.", False, "castellano puro"),
 ]
+
+# ── EL PIE DE FOTO: nombra lo que se ve, no narra ────────────────────────────
+# Calibrado contra el corpus: Barack rotula "REF. 1 - PIEZA APROBADA", un sustantivo. Si el
+# gate marcara el articulo, daria rojo sobre las hojas reales de la casa.
+PIES = [
+    ("La mesa entra con el molde", True, "el pie que quedo impreso"),
+    ("El plato baja y la maquina cierra", True, "idem, y ademas un fotograma es un instante"),
+    ("La maquina abre con la pieza", True, "ademas es falso: expulsa, no abre"),
+    ("La llave general del tablero", False, "un sustantivo: asi va"),
+    ("REF. 1 - PIEZA APROBADA", False, "como rotula Barack de verdad"),
+    ("El boton verde POWER START", False, "nombra lo que se ve"),
+    ("Pasar la mano por la superficie", False, "el gesto del operario, no la maquina"),
+]
+
+# ── LA COCINA: lo mio no va impreso adelante del operario ────────────────────
+COCINA_CASOS = [
+    ("Las cuatro fotos son del IMG_0844.", True, "el numero de video"),
+    ("Que hace el boton negro no esta documentado. Preguntar antes de usarlo.", True,
+     "la nota que Fak mando borrar"),
+    ("Pendiente de confirmar con KINGPOWER.", True, "un pendiente con el proveedor"),
+    ("Temperatura de molde: TBD", False, "TBD pelado, que si va"),
+    ("Nadie mete la mano hasta que la maquina abrio.", False, "una nota operativa"),
+]
+
+
+# ── LA DENOMINACION: como se llama una operacion en Barack ───────────────────
+# Calibrado contra el corpus: 113 denominaciones reales. Si el gate marcara en rojo
+# "CONTROL DE PIEZA INYECTADA" o "ARRANQUE Y ALINEACION", que son de Barack, estaria roto.
+DENOM = [
+    ("EL CICLO: QUE HACE EL OPERARIO", True, "el que Fak rechazo: articulo y dos puntos"),
+    ("LOS COMANDOS DEL PUESTO", True, "arranca con articulo"),
+    ("LA PANTALLA DE OPERACION", True, "idem"),
+    ("CONTROL DE PIEZA INYECTADA", False, "de Barack, flujogramas 153 y 154"),
+    ("ARRANQUE Y ALINEACION", False, "de Barack, HOTMELT 20.9"),
+    ("MONTAJE DEL ROLLO EN EL DESBOBINADOR", False, "de Barack, HOTMELT 20.6"),
+    ("ENCENDIDO GENERAL Y PUESTA EN MARCHA DE SERVICIOS", False, "el nuevo de la 30.1"),
+    ("EMBALAJE", False, "una sola palabra, como la escribe HO-71"),
+    ("LAMINADO - CONTROL DURANTE LA MARCHA", False, "parte 2 con guion, HOTMELT 20.10"),
+]
+
 
 # ── VOCABULARIO ───────────────────────────────────────────────────────────────
 VOCAB = [
@@ -81,27 +122,39 @@ HOJA_BUENA = dict(op="30.1", denominacion="ENCENDIDO DE LA MAQUINA",
                          "Apretar el pulsador verde POWER START y esperar que quede iluminado."])
 
 malos = 0
+corridos = 0
 
-print("IDIOMA — IATF 8.5.1.2 c): el texto del puesto va en el idioma del que ejecuta\n")
-for txt, espera_rojo, por_que in IDIOMA:
-    rojo = bool(revisar_idioma(txt))
-    ok = rojo == espera_rojo
-    malos += not ok
-    print(f"  {'ok  ' if ok else 'FALLA'}  {'ROJO ' if rojo else 'verde'}  {por_que}")
 
-print("\nVOCABULARIO — cada termino prohibido, y su reemplazo que TIENE que pasar\n")
-for txt, espera_rojo, por_que in VOCAB:
-    rojo = bool(revisar_vocabulario(txt))
-    ok = rojo == espera_rojo
-    malos += not ok
-    print(f"  {'ok  ' if ok else 'FALLA'}  {'ROJO ' if rojo else 'verde'}  {por_que}")
+def correr(titulo, casos, fn):
+    """Corre un bloque y CUENTA lo que corrio. El total no se escribe a mano."""
+    global malos, corridos
+    print("\n" + titulo + "\n")
+    for txt, espera_rojo, por_que in casos:
+        rojo = bool(fn(txt))
+        ok = rojo == espera_rojo
+        malos += not ok
+        corridos += 1
+        print(f"  {'ok  ' if ok else 'FALLA'}  {'ROJO ' if rojo else 'verde'}  {por_que}")
 
-print("\nVOZ DEL PASO — describir la maquina da rojo; mandarle algo al operario, verde\n")
+
+correr("IDIOMA \u2014 IATF 8.5.1.2 c): el texto va en el idioma del que ejecuta",
+       IDIOMA, revisar_idioma)
+correr("EL PIE DE FOTO \u2014 narrar un movimiento da rojo; nombrar lo que se ve, verde",
+       PIES, revisar_pie)
+correr("LA COCINA \u2014 lo que es mio y no del operario", COCINA_CASOS, revisar_cocina)
+correr("LA DENOMINACION \u2014 como se llama una operacion en Barack",
+       DENOM, lambda x: (lambda m: m and not m.startswith("AVISO"))
+       (revisar_denominacion(x)))
+correr("VOCABULARIO \u2014 cada termino prohibido, y su reemplazo que TIENE que pasar",
+       VOCAB, revisar_vocabulario)
+
+print("\nVOZ DEL PASO \u2014 describir la maquina da rojo; mandarle algo al operario, verde\n")
 for txt, espera, por_que in VOZ:
     estado, _ = revisar_voz(txt)
     real = "narrativo" if estado == "narrativo" else "ok"
     ok = real == espera
     malos += not ok
+    corridos += 1
     print(f"  {'ok  ' if ok else 'FALLA'}  {real:9s}  {por_que}")
 
 print("\nLA HOJA ENTERA\n")
@@ -114,8 +167,8 @@ for hoja, espera_rojo, por_que in ((HOJA_MALA, True, "la 30.3 como la entregue")
         rojo = True
     ok = rojo == espera_rojo
     malos += not ok
+    corridos += 1
     print(f"  {'ok  ' if ok else 'FALLA'}  {'ROJO ' if rojo else 'verde'}  {por_que}")
 
-total = len(IDIOMA) + len(VOCAB) + len(VOZ) + 2
-print(f"\n{total} casos, {malos} fallan.")
+print(f"\n{corridos} casos CORRIDOS, {malos} fallan.")
 sys.exit(1 if malos else 0)

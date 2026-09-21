@@ -112,6 +112,66 @@ def revisar_idioma(texto):
     return "".join(dict.fromkeys(hallados))
 
 
+def revisar_cocina(texto, datos=None):
+    """Lo que es mio y no del operario. Devuelve [(hallado, que_es)]."""
+    datos = datos or cargar()
+    plano = _plano(texto)
+    out = []
+    for pat, que in datos.get("cocina", {}).get("patrones", []):
+        # los patrones se escriben como se lean mejor; el texto ya viene sin acentos y en
+        # minusculas, asi que la busqueda va sin distinguir mayusculas (IMG_0844 / img_0844)
+        m = re.search(pat, plano, re.IGNORECASE)
+        if m:
+            out.append((m.group(0), que))
+    # TBD se puede escribir, pero solo: el porque va a la bitacora
+    m = re.search(r"\btbd\b(.{0,400})", plano, re.DOTALL)
+    if m and len(m.group(1).strip(" .,:;-")) > 40:
+        out.append(("TBD ...", "un TBD con explicacion (va TBD y nada mas)"))
+    return out
+
+
+def revisar_pie(pie, datos=None):
+    """Un pie NOMBRA lo que se ve. Devuelve el verbo de movimiento si lo narra."""
+    datos = datos or cargar()
+    plano = " " + _plano(pie) + " "
+    for v in datos.get("pie_narrado", {}).get("verbos", []):
+        if " " + v + " " in plano:
+            return v
+    return None
+
+
+def revisar_denominacion(nombre, datos=None):
+    """Como se llama la operacion. Devuelve el motivo si no es un nombre de Barack."""
+    datos = datos or cargar()
+    r = datos.get("denominacion", {})
+    t = str(nombre).strip()
+    if not t:
+        return "esta vacia"
+    if len(t) < r.get("largo_min", 8):
+        return f"tiene {len(t)} caracteres; en el corpus el minimo es {r['largo_min']}"
+    if len(t) > r.get("largo_max", 64):
+        return (f"tiene {len(t)} caracteres; la mas larga del corpus tiene "
+                f"{r['largo_max']}. Se parte con guion largo y calificador.")
+    plano = _plano(t)
+    if re.match(r"^(el|la|los|las|un|una)\b", plano):
+        return ("arranca con articulo. En 113 denominaciones reales de Barack no hay "
+                "NINGUNA que empiece asi.")
+    if ":" in t or "?" in t or "\u00bf" in t:
+        return ("lleva dos puntos o una pregunta. Eso es un titulo de capitulo, no una "
+                "denominacion: en el corpus no aparece ni una vez.")
+    primera = re.split(r"[\s,.-]+", plano)[0]
+    if t.upper() in [x.upper() for x in r.get("una_palabra_ok", [])]:
+        return None
+    canon = [_plano(x) for x in r.get("primera_palabra", [])]
+    if primera in canon:
+        return None
+    # una palabra nueva no da rojo: avisa, para que se agregue mirando un documento real
+    return ("AVISO: arranca con \"%s\", que no esta entre las %d primeras palabras que "
+            "Barack usa de verdad. Si es correcta, agregarla a primera_palabra citando la "
+            "denominacion real de donde sale. Ejemplos: %s."
+            % (primera, len(canon), ", ".join(r.get("ejemplos_reales", [])[:3])))
+
+
 def revisar_voz(paso):
     """(estado, detalle) para UN paso. estado: 'ok' | 'narrativo' | 'verbo_nuevo'."""
     t = _plano(paso).strip()
@@ -162,6 +222,30 @@ def gate_redaccion(hoja, datos=None):
                 '        El ideograma va ROTULADO SOBRE LA FOTO, donde el operario lo\n'
                 '        reconoce; en el texto del paso va el nombre en castellano.\n'
                 '        fuente: IATF 16949:2016 8.5.1.2 c), pag. 55 + canon 2.6.')
+
+    mal = revisar_denominacion(hoja.get("denominacion", ""), datos)
+    if mal and mal.startswith("AVISO"):
+        avisos.append(f'{op} denominacion: {mal}')
+    elif mal:
+        rojos.append(
+            f'{op} la denominacion "{hoja.get("denominacion", "")}" {mal}\n'
+            '        Fak, 21/09/2026: "eso es cualquier cosa". La regla y los ejemplos\n'
+            '        reales estan en vocabulario.data.json, seccion denominacion.')
+
+    for donde, txt in campos:
+        for hallado, que in revisar_cocina(txt, datos):
+            rojos.append(
+                f'{op} {donde}: dice {que} -> "{hallado}".\n'
+                '        Eso es mio, no del operario: va a la bitacora o al PDF de\n'
+                '        pendientes, no impreso adelante suyo (Fak, 21/09/2026).')
+
+    for i, pie in enumerate(hoja.get("pies") or [], 1):
+        v = revisar_pie(pie, datos)
+        if v:
+            rojos.append(
+                f'{op} pie {i} narra un movimiento ("{v}"): "{pie}".\n'
+                '        Un fotograma es un instante: no puede mostrar que algo se mueve.\n'
+                '        El pie NOMBRA lo que se ve; lo que pasa va en el paso.')
 
     for i, paso in enumerate(hoja.get("pasos") or [], 1):
         estado, det = revisar_voz(paso)

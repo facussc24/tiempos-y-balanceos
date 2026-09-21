@@ -122,6 +122,13 @@ def revisar(ruta, declara=None):
                     sh.text_frame.text):
                 fallas.append((i + 1, op or "portada", "vocabulario",
                                "dice %r y aca se dice %r" % (hallado, reemplazo)))
+            # la cocina interna tambien se mira sobre el ARCHIVO ENTREGADO: el 21/09 este
+            # gate dio PASA sobre un deck con la nota "no esta documentado... preguntar
+            # antes", porque la lista vivia solo adentro del generador
+            for hallado, que in RED.revisar_cocina(sh.text_frame.text):
+                fallas.append((i + 1, op or "portada", "cocina",
+                               "dice %s (%r): eso va a la bitacora, no a la hoja"
+                               % (que, hallado)))
         if not op:
             continue
 

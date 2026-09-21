@@ -10,7 +10,6 @@
     "`contexto` (opcional) limita el rojo a las hojas de proceso donde ese sentido aplica;",
     "si esta, la palabra sola no alcanza para dar rojo fuera de ese contexto."
   ],
-
   "prohibidos": [
     {
       "patron": "\\bsetas?\\b",
@@ -91,7 +90,6 @@
       "fuente": "CRITERIOS_HOJAS_DE_PROCESO.md 3.2."
     }
   ],
-
   "prohibidos_con_contexto": [
     {
       "patron": "\\bmordazas?\\b",
@@ -108,12 +106,10 @@
       "fuente": "CRITERIOS_HOJAS_DE_PROCESO.md 3.2."
     }
   ],
-
   "_contextos": {
     "termoformado": "lamina|molde|vacio|termoform|conformad|marco tensor",
     "bobina": "bobina|rollo|desbobinad|lamina"
   },
-
   "dramatizacion": {
     "_leeme": "4.4: tono tecnico sobrio. La hoja manda una accion, no lamenta una consecuencia.",
     "patrones": [
@@ -128,7 +124,6 @@
     ],
     "fuente": "CRITERIOS_HOJAS_DE_PROCESO.md 4.4: \"'Se rompen al instante' es una exageracion melodramatica no profesional. La HO debe indicar una accion positiva concreta de verificacion, no un lamento\"."
   },
-
   "borrador": {
     "_leeme": "4.4: no se imprime una hoja que se declara provisoria. El dato que falta es TBD.",
     "patrones": [
@@ -138,5 +133,249 @@
       "\\bprovisorio\\b"
     ],
     "fuente": "CRITERIOS_HOJAS_DE_PROCESO.md 4.4."
+  },
+  "cocina": {
+    "_leeme": [
+      "Lo que es MIO y no del operario: numeros de video, pendientes, como se hizo la hoja,",
+      "y los huecos que no llene yo. Va a la bitacora, no impreso en el puesto.",
+      "Lo miran el generador Y el gate del PPTX entregado: un control que decide si algo se",
+      "entrega tiene que ver todo lo que decide."
+    ],
+    "fuente": "Fak 21/09/2026: \"esas notas no le aportan nada util al operario\" y, sobre la nota que confesaba un hueco mio, \"esta nota esta al pedo, eliminala, no la quiero\". Regla hojas-proceso.md 8 y 18.",
+    "patrones": [
+      [
+        "IMG_\\s?\\d{3,}",
+        "el numero de video"
+      ],
+      [
+        "pendiente de",
+        "un pendiente interno"
+      ],
+      [
+        "no qued[oó] (registrad|grabad)",
+        "que algo no quedo registrado"
+      ],
+      [
+        "se lo pregunt",
+        "quien le pregunto a quien"
+      ],
+      [
+        "confirmar con ",
+        "un pendiente con el proveedor"
+      ],
+      [
+        "filmad[oa] el ",
+        "cuando se filmo"
+      ],
+      [
+        "lectura del ",
+        "de cuando es la lectura"
+      ],
+      [
+        "agregamos nosotros",
+        "como se hizo la hoja"
+      ],
+      [
+        "por analog[ií]a",
+        "como se hizo la hoja"
+      ],
+      [
+        "pendiente de validaci[oó]n",
+        "que esta sin validar"
+      ],
+      [
+        "\\b(este|esta) (deck|hoja|documento) ",
+        "la hoja hablando de si misma"
+      ],
+      [
+        "no est[aá] documentado",
+        "que algo no esta documentado"
+      ],
+      [
+        "no (se sabe|sabemos|esta claro)",
+        "que no sabemos algo"
+      ],
+      [
+        "\\bpreguntar (antes|al|a |primero)",
+        "que hay que preguntar"
+      ],
+      [
+        "(falta|faltaria) (confirmar|definir|averiguar|relevar)",
+        "un hueco mio"
+      ],
+      [
+        "(habria|hay) que (confirmar|preguntar|averiguar|verificar con)",
+        "un hueco mio"
+      ],
+      [
+        "\\bsin confirmar\\b",
+        "que algo esta sin confirmar"
+      ],
+      [
+        "lo unico (que se|registrado|documentado)",
+        "hasta donde llegue yo"
+      ]
+    ]
+  },
+  "pie_narrado": {
+    "_leeme": [
+      "Un pie de foto NOMBRA lo que se ve; no cuenta lo que pasa. Un fotograma es un",
+      "instante: no puede mostrar que algo 'entra', 'baja' o 'abre'.",
+      "OJO: un pie sin verbo SI va — las hojas de Barack rotulan 'REF. 1 - PIEZA APROBADA'.",
+      "Lo que da rojo es el VERBO de movimiento conjugado, no el articulo."
+    ],
+    "fuente": "Fak 21/09/2026: \"la maquina no se abre sola, expulsa las piezas con los expulsores\" — el pie decia \"La maquina abre con la pieza\", y ademas de narrar, era falso. CRITERIOS_HOJAS_DE_PROCESO.md 4.4.",
+    "verbos": [
+      "entra",
+      "entran",
+      "sale",
+      "salen",
+      "baja",
+      "bajan",
+      "sube",
+      "suben",
+      "abre",
+      "abren",
+      "cierra",
+      "cierran",
+      "gira",
+      "giran",
+      "avanza",
+      "avanzan",
+      "retrocede",
+      "retroceden",
+      "expulsa",
+      "expulsan",
+      "arranca",
+      "arrancan",
+      "para",
+      "paran",
+      "corta",
+      "cortan",
+      "calienta",
+      "calientan",
+      "enfria",
+      "enfrian",
+      "funciona",
+      "funcionan",
+      "trabaja",
+      "trabajan",
+      "queda",
+      "quedan",
+      "se mueve",
+      "se mueven",
+      "empieza",
+      "termina"
+    ]
+  },
+  "denominacion": {
+    "_leeme": [
+      "Como se llama una operacion en Barack: SUSTANTIVO DE ACCION [+ DE/EN/CON + objeto].",
+      "Contado sobre 113 denominaciones reales (flujogramas + AMFEs live + cajetines HO).",
+      "El objeto de la pieza NO va en el titulo: va en el campo COD. DE PIEZA del cajetin",
+      "(HO-71 se llama 'EMBALAJE APB DEL CONTENEDOR PLASTICO' pero su denominacion dice",
+      "'EMBALAJE' a secas).",
+      "Parte 2 de una operacion: guion largo + calificador, como 'LAMINADO - CONTROL",
+      "DURANTE LA MARCHA' (HOTMELT 20.10).",
+      "La lista de primeras palabras es CANONICA: sale de contar el corpus, no de un sufijo. Una palabra que no esta da AVISO, no rojo: se agrega mirando un documento real."
+    ],
+    "fuente": "Fak 21/09/2026: \"'EL CICLO: QUE HACE EL OPERARIO' no son nombres de pasos de proceso aceptables, eso es cualquier cosa\". Corpus: 113 denominaciones, 110 con sustantivo de accion, 0 con articulo inicial, 0 con dos puntos.",
+    "largo_min": 8,
+    "largo_max": 64,
+    "una_palabra_ok": [
+      "TAPIZADO",
+      "EMBALAJE",
+      "REFILADO",
+      "ADHESIVADO",
+      "TROQUELADO",
+      "ENFUNDADO",
+      "TERMINACION",
+      "LAMINADO",
+      "VIROLADO",
+      "COSTURA",
+      "INYECCION",
+      "SCRAP"
+    ],
+    "ejemplos_reales": [
+      "ENCENDIDO Y ACCESO AL HMI",
+      "PUESTA EN MARCHA DEL FUSOR DE ADHESIVO",
+      "RECONOCIMIENTO DE LA MAQUINA Y RIESGOS",
+      "MONTAJE DEL ROLLO EN EL DESBOBINADOR",
+      "ENHEBRADO DEL MATERIAL",
+      "ARRANQUE Y ALINEACION",
+      "LAMINADO - CONTROL DURANTE LA MARCHA",
+      "CONTROL DE PIEZA INYECTADA",
+      "PROCESO DE TERMOFORMADO Y LAMINADO IMG",
+      "EMBALAJE"
+    ],
+    "primera_palabra": [
+      "ADHESIVADO",
+      "AJUSTE",
+      "ALINEACION",
+      "ALMACENADO",
+      "ALMACENAMIENTO",
+      "APERTURA",
+      "APLICACION",
+      "ARMADO",
+      "ARRANQUE",
+      "AVANCE",
+      "CALENTAMIENTO",
+      "CAMBIO",
+      "CAMINO",
+      "CARGA",
+      "CENTRADO",
+      "CIERRE",
+      "COLOCACION",
+      "COLOCADO",
+      "CONFIGURACION",
+      "CONTROL",
+      "CORTE",
+      "COSTURA",
+      "DESCARGA",
+      "DESTRABE",
+      "EDGE",
+      "EMBALAJE",
+      "EMPALME",
+      "ENCENDIDO",
+      "ENFUNDADO",
+      "ENHEBRADO",
+      "ENSAMBLE",
+      "ESPERA",
+      "INICIO",
+      "INSERCION",
+      "INSPECCION",
+      "INYECCION",
+      "LAMINADO",
+      "LIBERACION",
+      "LIMPIEZA",
+      "MEDICION",
+      "MONTAJE",
+      "PARADA",
+      "PEGADO",
+      "PLAN",
+      "PREARMADO",
+      "PREPARACION",
+      "PROCESO",
+      "PRODUCCION",
+      "PUESTA",
+      "PURGA",
+      "RECEPCION",
+      "RECLAMO",
+      "RECONOCIMIENTO",
+      "REFILADO",
+      "REPROCESO",
+      "SCRAP",
+      "SECADO",
+      "SELECCION",
+      "SOLDADURA",
+      "TAPIZADO",
+      "TERMINACION",
+      "TRASLADO",
+      "TRIMMING",
+      "TROQUELADO",
+      "VALIDACION",
+      "VIROLADO",
+      "WRAPPING"
+    ]
   }
 }
