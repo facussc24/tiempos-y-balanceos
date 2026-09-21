@@ -54,6 +54,8 @@ const ROJOS = [
     ['Write directo sobre un listado maestro', ctx('Write', { file: LISTADO })],
     ['script de alta en un listado maestro con --apply', ctx('Bash', { cmd: 'py -3 scripts/_registrarAmfe173.py --apply' })],
     ['el otro script de alta, con --apply', ctx('Bash', { cmd: 'py -3 scripts/_registrarFlujograma159.py --apply' })],
+    ['el script de alta despues de un cd (la forma real de correrlo)',
+        ctx('Bash', { cmd: 'cd /c/Dev/BarackMercosul && py -3 scripts/_registrarAmfe173.py --apply' })],
 ];
 
 const VERDES = [
@@ -69,6 +71,19 @@ const VERDES = [
         ctx('Bash', { cmd: 'py -3 scripts/_registrarAmfe173.py' })],
     ['LEER el listado maestro',
         ctx('Bash', { cmd: `py -3 -c "from openpyxl import load_workbook; load_workbook(r'${LISTADO}')"` })],
+    // Falso positivo real del 21/09/2026: un script que solo ABRIA el listado para verificar
+    // la fila cayo en rojo porque su regex incluia `[^>]*` y mas adelante una barra, y el
+    // detector de escritura miraba el `>` de redireccion. Bloquear una lectura es peor que no
+    // bloquear: el gate termina apagado. El `>` quedo solo para el paquete del cliente.
+    ['LEER el listado con un script cuyo texto tiene ">" y barras',
+        ctx('Bash', { cmd: `py -3 -c "import re; re.findall(r'Id=([^>]+)Target=', z.read('xl/_rels/workbook.xml.rels'))" ${LISTADO}` })],
+    // Tercer falso positivo del mismo dia: nombrar el script de alta como ARGUMENTO de un
+    // grep o un ls es leerlo. El ultimo corte fue justo sobre el comando con el que iba a
+    // arreglar la fila que el gate cuida.
+    ['LEER el script de alta con grep (su texto tiene --apply)',
+        ctx('Bash', { cmd: 'grep -n "def \\|--apply" scripts/_registrarAmfe173.py' })],
+    ['LISTAR el script de alta',
+        ctx('Bash', { cmd: 'ls -la scripts/_registrarAmfe173.py scripts/_registrarFlujograma159.py' })],
     ['listar la carpeta del paquete del cliente',
         ctx('Bash', { cmd: `ls -la "${PAQUETE}"` })],
     ['un Write cualquiera del repo',

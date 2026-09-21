@@ -1423,9 +1423,26 @@ y 'python scripts/_arbVer.py reset', que cierra y REABRE la de Relaciones.`);
 const APQP_PAQUETE = /[\\/]PPAP_[A-Za-z0-9][A-Za-z0-9._-]*[\\/]/;
 const APQP_LISTADO = /Listado_Maestro_[A-Za-z]+\.xlsx|Listado hojas de proceso\.xlsx/i;
 const APQP_EXCEPCION = /(__tests__|\.test\.|\.spec\.|[/\\]hooks[/\\]|[/\\]_lib[/\\]guardianes\.mjs$|[/\\]\.claude[/\\]rules[/\\]|[/\\]\.claude[/\\]skills[/\\]|LECCIONES_APRENDIDAS)/i;
-const APQP_ESCRIBE = /(^|[;&|\s])(cp|copy|xcopy|robocopy|mv|move)(\s|$)|Copy-Item|Move-Item|shutil\.(copy|move)|>\s*["']?[^"'\s|]*[\\/]/im;
+// Que cuenta como ESCRIBIR. Son comandos concretos, no heuristicas.
+//
+// Sin el `>` a proposito: la redireccion es demasiado facil de encontrar adentro de un
+// `python -c` cualquiera, y bloquear una LECTURA es peor que no bloquear nada — un gate que
+// frena leer termina apagado. Paso el 21/09/2026: un script que solo abria el listado para
+// verificarlo cayo en rojo porque su regex incluia `[^>]*` y una barra mas adelante.
+// Lo que de verdad escribe en un listado maestro llega por dos caminos y los dos estan aca:
+// copiar/mover un archivo encima, o correr un script de alta con --apply (APQP_REGISTRA).
+const APQP_ESCRIBE = /(^|[;&|\s])(cp|copy|xcopy|robocopy|mv|move)(\s|$)|Copy-Item|Move-Item|shutil\.(copy|move)/im;
+// El `>` SI se mira para el paquete del cliente, donde un archivo generado directo adentro es
+// justamente una de las formas de colarlo, y la ruta del paquete es inconfundible.
+const APQP_GENERA = /(^|[;&|\s])(cp|copy|xcopy|robocopy|mv|move)(\s|$)|Copy-Item|Move-Item|shutil\.(copy|move)|>\s*["']?[^"'\s|]*[\\/]/im;
 // Los scripts de alta en un listado maestro siguen todos el mismo patron: `_registrar*` + --apply.
-const APQP_REGISTRA = /_registrar[A-Za-z0-9]*\.(py|mjs)\b[^\n]*--apply|--apply[^\n]*_registrar[A-Za-z0-9]*\.(py|mjs)\b/i;
+//
+// Tiene que estar EJECUTANDOSE: un interprete adelante, y en el mismo tramo del comando.
+// Nombrar el script como argumento de un `grep`, un `ls` o un `cat` es LEERLO, y un gate que
+// frena leer termina apagado. El 21/09/2026 este patron corto tres veces seguidas sin que
+// hubiera una sola escritura: la ultima fue `grep -n "...--apply..." scripts/_registrarAmfe173.py`,
+// o sea el comando con el que iba a ARREGLAR la fila que el gate cuida.
+const APQP_REGISTRA = /(^|[;&|]+\s*)(py|python3?|node)\b[^\n;&|]*_registrar[A-Za-z0-9]*\.(py|mjs)\b[^\n;&|]*--apply/i;
 
 const APQP_CIERRE = `Regla: .claude/rules/autonomy-contract.md §F — "la PRIMERA VEZ se pregunta".
 Que va en cada casillero del legajo APQP: skill \`apqp-legajo\`.`;
@@ -1441,7 +1458,7 @@ GUARDIANES['apqp-cliente-guard'] = (ctx, { env } = {}) => {
   // 1. El paquete del cliente
   const destino = esEscritura ? file : ultimaRuta(cmd);
   const vaAlPaquete = APQP_PAQUETE.test(destino);
-  if (vaAlPaquete && (esEscritura || APQP_ESCRIBE.test(cmd))) {
+  if (vaAlPaquete && (esEscritura || APQP_GENERA.test(cmd))) {
     return bloqueo(`[APQP-CLIENTE] BLOQUEADO: estas poniendo un archivo en el PAQUETE QUE VA AL CLIENTE.
 
 ${destino}
