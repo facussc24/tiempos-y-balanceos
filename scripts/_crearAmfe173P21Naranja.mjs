@@ -132,8 +132,12 @@ function sc(caracteristica, siglaCliente) {
   const propia = SIGLA_BARACK[siglaCliente];
   if (!propia) throw new Error(`sigla de cliente no mapeada: ${siglaCliente}`);
   return {
-    specialChar: propia,
-    specialCharCustomer: siglaCliente,
+    // Va la sigla del CLIENTE. Fak, 21/09/2026: "no, usa las del cliente... incorporalas a
+    // nuestro canon porque las vamos a volver a utilizar, son las oficiales de SMRC". Estan
+    // en core/amfe/caracteristicasEspeciales.data.json con su tabla de conversion, asi que
+    // el validador las reconoce. El equivalente interno viaja al lado para el que lo precise.
+    specialChar: siglaCliente,
+    specialCharBarack: propia,
     specialCharSource: `LSC v1 del cliente, ${caracteristica} (SMRC la marca <${siglaCliente}>)`,
   };
 }
@@ -168,11 +172,24 @@ const EF_LEGAL_FUEGO = {
   next: 'Bloqueo del lote en la recepcion de SMRC',
   end: 'Incumplimiento de un requisito legal de inflamabilidad en el habitaculo del vehiculo',
 };
-const EF_HOMOLOGACION = {
-  s: 9,
-  local: 'Pieza fabricada fuera de una caracteristica que el cliente designo como critica',
-  next: 'Rechazo del lote y bloqueo del PPAP en SMRC',
-  end: 'Vehiculo montado con una pieza distinta de la homologada',
+// La pieza no es la que se aprobo: material, hilo o tipo de costura distintos de los de la
+// muestra patron. El efecto REAL es que el cliente rechaza el lote entero.
+// P1 Ship to Plant: "100% of product affected may have to be scrapped" / paro de mas de un turno.
+// NO es 9: el 9 de la columna End User es "Noncompliance with regulations", y eso lo cumple la
+// inflamabilidad (EF_LEGAL_FUEGO), no una costura cambiada.
+const EF_PIEZA_DISTINTA = {
+  s: 8,
+  local: 'Pieza fabricada con un material, un hilo o una costura distintos de la muestra patron',
+  next: 'Rechazo del lote completo en la recepcion de SMRC y riesgo de paro de linea',
+  end: 'Vehiculo montado con una pieza que no es la aprobada',
+};
+// La costura esta, es la que corresponde, pero se fue de tolerancia.
+// P1: "A portion of the production run may have to be scrapped".
+const EF_ASPECTO_COSTURA = {
+  s: 7,
+  local: 'Costura vista fuera de la tolerancia de posicion o de densidad',
+  next: 'Clasificacion de parte de la corrida en la planta del cliente',
+  end: 'Aspecto de la costura por debajo del estandar percibido por el usuario',
 };
 const EF_PARO_LINEA = {
   s: 8,
@@ -233,7 +250,7 @@ const OP10 = operacion('10', 'RECEPCION DE MATERIA PRIMA',
         'Entregar el vinilo con la construccion y el aspecto de la pieza aprobada',
         'SC 1.4: TEP Zina espumado, vinilo 1 +/-0,1 mm, espuma (backing) 5 +/-0,5 mm, grano V252, color Mistral HZD, proveedor York',
         [
-          falla('Vinilo recibido con espesor, grano o color distintos del especificado', EF_HOMOLOGACION, [
+          falla('Vinilo recibido con espesor, grano o color distintos del especificado', EF_PIEZA_DISTINTA, [
             causa('Los rollos de distintos granos y colores llegan sin una identificacion que los distinga en el deposito',
               'Un solo grano y un solo color habilitados para esta pieza, declarados en la orden de compra',
               3, 'Certificacion del proveedor de materia prima para cada lote, que el LSC v1 exige de forma explicita', 6,
@@ -244,7 +261,7 @@ const OP10 = operacion('10', 'RECEPCION DE MATERIA PRIMA',
         'Mantener adherido el recubrimiento a su backing durante la vida del vehiculo',
         'SC 1.5: fuerza de arrancamiento a 90 grados >= 5 N/cm despues de los ciclos de envejecimiento 4AF + 6BF, metodo D51 1485',
         [
-          falla('Fuerza de arrancamiento a 90 grados por debajo de 5 N/cm', EF_HOMOLOGACION, [
+          falla('Fuerza de arrancamiento a 90 grados por debajo de 5 N/cm', EF_PIEZA_DISTINTA, [
             causa('Adherencia insuficiente entre el vinilo y su backing de espuma en el lote entregado',
               'Requisito >= 5 N/cm y metodo D51 1485 declarados a York en la especificacion de compra',
               3, 'Ensayo de arrancamiento segun el plan de validacion del 31/07/2026', 6,
@@ -257,7 +274,7 @@ const OP10 = operacion('10', 'RECEPCION DE MATERIA PRIMA',
         'Entregar el hilo de costura vista de la pieza aprobada',
         'SC 2.5: Nylon 6.6, color Orange Zeus T90 / FHS-F090, proveedor Linhanyl SA, codigo 12124E, articulo BX138, titulo 1600 a 1980 dtex, resistencia > 9100 gf',
         [
-          falla('Hilo de costura vista recibido distinto del especificado', EF_HOMOLOGACION, [
+          falla('Hilo de costura vista recibido distinto del especificado', EF_PIEZA_DISTINTA, [
             causa('Los conos de los distintos articulos de Linhanyl son visualmente parecidos y se almacenan juntos',
               'Un unico articulo de hilo vista habilitado para esta pieza (BX138 / 12124E), declarado en la orden de compra',
               4, 'Cotejo de la etiqueta del cono contra la orden de compra, cono por cono, en la recepcion', 5,
@@ -493,7 +510,7 @@ const OP40 = operacion('40', 'COSTURA DE UNION',
         'Unir los vinilos con el hilo que el cliente designo',
         'SC 2.6: hilo Nylon, Thread M40, color negro standard',
         [
-          falla('Costura de union ejecutada con un hilo distinto del Nylon M40 negro', EF_HOMOLOGACION, [
+          falla('Costura de union ejecutada con un hilo distinto del Nylon M40 negro', EF_PIEZA_DISTINTA, [
             causa('En el puesto conviven conos de hilo de union y de hilo vista, de articulos distintos',
               'Un solo cono de hilo de union habilitado en el puesto, identificado en la hoja de operaciones',
               4, 'Cotejo del cono montado contra la hoja de operaciones al inicio de turno y en cada cambio de lote', 6,
@@ -587,13 +604,13 @@ const OP50 = operacion('50', 'COSTURA VISTA - PESPUNTE SIMPLE, UNA LINEA',
         'Ejecutar la costura vista con el tipo de puntada y la cantidad de lineas que designo el cliente',
         'SC 2.1: pespunte simple HAQ (rebatida / seam deck).  SC 2.2: 1 sola linea de costura',
         [
-          falla('Costura vista ejecutada con un tipo de puntada distinto del pespunte simple HAQ', EF_HOMOLOGACION, [
+          falla('Costura vista ejecutada con un tipo de puntada distinto del pespunte simple HAQ', EF_PIEZA_DISTINTA, [
             causa('El puesto produce tambien las versiones anteriores del P21 y el seteo de la maquina se comparte',
               'Hoja de operaciones propia de la pieza nueva, separada de la de las versiones anteriores',
               4, 'Cotejo de la primera pieza del lote contra la muestra patron de la pieza nueva', 6,
               sc('SC 2.1', 'cc/h')),
           ]),
-          falla('Costura vista ejecutada con dos lineas en lugar de una sola', EF_HOMOLOGACION, [
+          falla('Costura vista ejecutada con dos lineas en lugar de una sola', EF_PIEZA_DISTINTA, [
             causa('La maquina de doble aguja de las versiones anteriores esta disponible en el mismo sector',
               'Puesto y maquina identificados para la pieza de una sola linea',
               4, 'Cotejo de la primera pieza del lote contra la muestra patron de la pieza nueva', 4,
@@ -606,13 +623,13 @@ const OP50 = operacion('50', 'COSTURA VISTA - PESPUNTE SIMPLE, UNA LINEA',
         'Dejar la linea de costura en la posicion y con la densidad que designo el cliente',
         'SC 2.3: 4 +0 / -1 mm por arriba de la linea de union de vinilos.  SC 2.4: 10 a 11 puntos cada 50 mm',
         [
-          falla('Linea de costura vista fuera de 4 +0 / -1 mm de la linea de union', EF_HOMOLOGACION, [
+          falla('Linea de costura vista fuera de 4 +0 / -1 mm de la linea de union', EF_ASPECTO_COSTURA, [
             causa('La guia del pie de la maquina es regulable y no queda fijada entre lotes',
               'Guia de referencia seteada y verificada en el set up, contra la hoja de operaciones',
               5, 'Medicion con calibre de la distancia a la linea de union, al inicio de turno y en cada cambio de lote', 6,
               sc('SC 2.3', 'cc/h')),
           ]),
-          falla('Cantidad de puntos fuera de 10 a 11 cada 50 mm', EF_HOMOLOGACION, [
+          falla('Cantidad de puntos fuera de 10 a 11 cada 50 mm', EF_ASPECTO_COSTURA, [
             causa('El largo de puntada se ajusta con una perilla sin traba y se corre con la vibracion',
               'Largo de puntada seteado y verificado en el set up de la maquina',
               5, 'Conteo de puntos con calibre contra la hoja de operaciones, al inicio de turno y en cada cambio de lote', 6,
@@ -629,7 +646,7 @@ const OP50 = operacion('50', 'COSTURA VISTA - PESPUNTE SIMPLE, UNA LINEA',
         'Ejecutar la costura vista con el hilo que designo el cliente',
         'SC 2.5: Linhanyl articulo BX138, codigo 12124E, Nylon 6.6, color Orange Zeus T90 / FHS-F090',
         [
-          falla('Costura vista ejecutada con un hilo distinto del Linhanyl BX138 naranja', EF_HOMOLOGACION, [
+          falla('Costura vista ejecutada con un hilo distinto del Linhanyl BX138 naranja', EF_PIEZA_DISTINTA, [
             causa('En el sector conviven los conos de las variantes verde, azul y cuero de la misma pieza',
               'Un solo articulo de hilo vista habilitado en el puesto, identificado en la hoja de operaciones',
               4, 'Cotejo de la etiqueta del cono montado contra la hoja de operaciones al inicio de turno', 4,
@@ -894,17 +911,24 @@ const OP120 = operacion('120', 'INSPECCION FINAL',
         'Detectar en la pieza terminada los desvios de las caracteristicas designadas',
         'Criterios de aceptacion segun la muestra patron y el LSC v1 del cliente',
         [
-          falla('Pieza no conforme que pasa la inspeccion final', EF_HOMOLOGACION, [
-            causa('La inspeccion es visual al 100 % y no cubre la medicion de la posicion ni la densidad de la costura',
+          // La fila se contradecia a si misma: la causa decia que la inspeccion NO mide la
+          // costura y el control declaraba que SI la mide con calibre, y de esa segunda
+          // frase salia el D=7. El auditor lo marco el 21/09/2026 (Tabla P3 / A3.2 3.5.2:
+          // "controles que pueden no ejecutarse realmente"). Se deja lo que de verdad pasa:
+          // la inspeccion final es visual contra la muestra patron. La MEDICION de la
+          // posicion y la densidad ya vive donde corresponde, en la OP 50, al inicio de
+          // turno y en cada cambio de lote.
+          falla('Pieza no conforme que pasa la inspeccion final', EF_PIEZA_DISTINTA, [
+            causa('La inspeccion final compara contra la muestra patron y no mide la posicion ni la densidad de la costura',
               'Muestra patron de la pieza nueva disponible en el puesto',
-              4, 'Control al 100 % contra la muestra patron, mas la medicion con calibre de la posicion y la densidad de la costura vista', 7),
+              4, 'Control visual al 100 % contra la muestra patron, en la estacion de inspeccion final', 7),
           ]),
         ]),
       funcion(
         'Verificar que el apoyabrazos ensamblado cumple los ensayos de validacion del cliente',
         'SC 3.1 fogging (B62 0400), 3.2 frotamiento (D45 1010), 3.3 flexibilidad, 3.4 esfuerzo excepcional y 3.5 solicitacion dinamica (ST 01439), 3.6 envejecimiento climatico (D47 1309), 3.7 usura (D14 1055 y D47 1309). Los siete quedaron a cargo de SMRC en el plan de validacion del 31/07/2026',
         [
-          falla('Apoyabrazos ensamblado que no cumple un ensayo de validacion del cliente', EF_HOMOLOGACION, [
+          falla('Apoyabrazos ensamblado que no cumple un ensayo de validacion del cliente', EF_PIEZA_DISTINTA, [
             causa('La pieza se fabrica con una combinacion de sustrato y recubrimiento que no reproduce la que se valido',
               'Materiales y proceso congelados contra la pieza de validacion',
               2, 'Ensayos B62 0400, D45 1010, ST 01439, D47 1309 y D14 1055 a cargo de SMRC segun el plan de validacion del 31/07/2026: Barack no los ejecuta', 7,
@@ -1057,6 +1081,8 @@ const LSC = {
   'SC 3.5': 'cc/h', 'SC 3.6': 'cc/h', 'SC 3.7': 'cc/h',
 };
 const cubiertas = new Map();
+const diferencias = [];
+const criticasQueCierran = [];
 for (const op of doc.operations) for (const w of op.workElements) for (const f of w.functions) for (const fm of f.failures) for (const c of fm.causes) {
   if (!c.specialChar) continue;
   const m = /LSC v1 del cliente, (.+)$/.exec(c.specialCharSource || '');
@@ -1067,12 +1093,15 @@ for (const op of doc.operations) for (const w of op.workElements) for (const f o
     : [etiqueta];
   for (const it of items) {
     if (!(it in LSC)) { errores.push(`la sigla cita "${it}", que no existe en el LSC v1`); continue; }
-    if (LSC[it] !== c.specialCharCustomer) errores.push(`${it}: el LSC v1 dice "${LSC[it]}" y la causa lleva "${c.specialCharCustomer}"`);
-    if (SIGLA_BARACK[LSC[it]] !== c.specialChar) errores.push(`${it}: "${LSC[it]}" del cliente se escribe "${SIGLA_BARACK[LSC[it]]}" y la causa lleva "${c.specialChar}"`);
+    if (LSC[it] !== c.specialChar) errores.push(`${it}: el LSC v1 dice "${LSC[it]}" y la causa lleva "${c.specialChar}"`);
     cubiertas.set(it, (cubiertas.get(it) || 0) + 1);
   }
   // una CC exige S>=9 (gate CAUSE_CC_LOW_SEVERITY)
-  if (c.specialChar === 'CC' && fm.severity < 9) errores.push(`${etiqueta}: CC con S=${fm.severity} (<9)`);
+  // OJO: aca NO se frena por "critica con S<9". Esa diferencia es real y se INFORMA
+  // (regla caracteristicas-especiales.md §2bis): el cliente designa por su criterio y
+  // nuestra S sale del efecto. Subir la S para que cierre es fabricar el riesgo.
+  if (c.specialChar && c.specialChar.startsWith('cc') && fm.severity >= 9) criticasQueCierran.push(etiqueta);
+  if (c.specialChar && c.specialChar.startsWith('cc') && fm.severity < 9) diferencias.push({ ca: etiqueta, sigla: c.specialChar, s: fm.severity, fm: fm.description });
 }
 for (const it of Object.keys(LSC)) if (!cubiertas.has(it)) errores.push(`la caracteristica ${it} del LSC v1 no esta cubierta por ninguna causa`);
 
@@ -1125,7 +1154,41 @@ for (const [pat, que] of [
 
 console.log(errores.length
   ? `\nERRORES (${errores.length}):\n  ${errores.join('\n  ')}`
-  : '\nChequeos propios: OK\n  - las 13 operaciones del flujograma 159, sin sobrantes\n  - las 19 caracteristicas del LSC v1 cubiertas, cada una con la sigla del cliente\n  - ninguna sigla critica con S<9\n  - sin "error de operario", sin controles de capacitacion, sin deteccion que diga solo "Visual"\n  - los 3 efectos en todos los modos de falla y todos los AP calculados\n  - nada de la version anterior (doble aguja, COATS, hilo verde/azul/cuero)');
+  : '\nChequeos propios: OK\n  - las 13 operaciones del flujograma 159, sin sobrantes\n  - las 19 caracteristicas del LSC v1 cubiertas, cada una con la sigla que les puso el cliente\n  - sin "error de operario", sin controles de capacitacion, sin deteccion que diga solo "Visual"\n  - los 3 efectos en todos los modos de falla y todos los AP calculados\n  - nada de la version anterior (doble aguja, COATS, hilo verde/azul/cuero)');
+
+// ---------------------------------------------------------------------------
+// LA DIFERENCIA QUE DECIDE FAK — no es un error del documento, es una discrepancia real
+//
+// El cliente designa por SU criterio y nuestra severidad sale del EFECTO (Tabla P1). Cuando
+// las dos no coinciden, la regla `caracteristicas-especiales.md` §2bis dice que se INFORMA,
+// nunca que se sube la S: inflar la severidad para que cierre con la marca es fabricar el
+// riesgo. Asi que el documento sale con la S honesta y con la sigla del cliente, y la
+// diferencia se pone sobre la mesa.
+// ---------------------------------------------------------------------------
+if (diferencias.length) {
+  console.log(`\n${'='.repeat(78)}`);
+  console.log(`DIFERENCIA CLIENTE vs EFECTO — ${diferencias.length} causas. LA DECIDE FAK, no el script.`);
+  console.log('='.repeat(78));
+  console.log('\nSMRC marco estas caracteristicas como CRITICAS. Por la Tabla P1 el efecto que');
+  console.log('producen no llega a S=9 ("Noncompliance with regulations"), asi que la S quedo');
+  console.log('en el valor que le corresponde al efecto:\n');
+  const porSigla = new Map();
+  for (const d of diferencias) {
+    const k = `${d.sigla} · S=${d.s} · ${d.fm}`;
+    if (!porSigla.has(k)) porSigla.set(k, []);
+    porSigla.get(k).push(d.ca);
+  }
+  for (const [k, cas] of porSigla) console.log(`  ${cas.join(', ').padEnd(22)}  ${k}`);
+  console.log('\nLas dos lecturas, para que la decision sea con las dos delante:');
+  console.log('  (a) Montar un vehiculo con una pieza que no es la homologada ES un incumplimiento');
+  console.log('      reglamentario -> S=9 y la critica cierra sola. Es el razonamiento del cliente.');
+  console.log('  (b) El efecto que Barack puede describir es que SMRC rechaza el lote y para su');
+  console.log('      linea -> S=8 por la columna Ship to Plant. Es lo que dice el documento hoy.');
+  console.log('\n  Mientras quede en (b), el validador va a marcar CAUSE_CC_LOW_SEVERITY en esas');
+  console.log('  causas y el export oficial no corre. Eso NO es una falla del documento: es el');
+  console.log('  gate mostrando una discrepancia que tiene que resolver una persona.');
+  console.log(`\n  Criticas que SI cierran con S>=9 por su propio efecto: ${criticasQueCierran.length ? [...new Set(criticasQueCierran)].join(', ') : 'ninguna'}`);
+}
 
 mkdirSync('tmp/p21naranja', { recursive: true });
 writeFileSync('tmp/p21naranja/amfe173.json', JSON.stringify(doc, null, 1));
