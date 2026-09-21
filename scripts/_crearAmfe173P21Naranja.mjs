@@ -902,12 +902,12 @@ const OP120 = operacion('120', 'INSPECCION FINAL',
         ]),
       funcion(
         'Verificar que el apoyabrazos ensamblado cumple los ensayos de validacion del cliente',
-        'SC 3.1 fogging, 3.2 frotamiento, 3.3 flexibilidad, 3.4 esfuerzo excepcional, 3.5 solicitacion dinamica, 3.6 envejecimiento climatico, 3.7 usura. Los siete quedaron a cargo de SMRC en el plan de validacion del 31/07/2026',
+        'SC 3.1 fogging (B62 0400), 3.2 frotamiento (D45 1010), 3.3 flexibilidad, 3.4 esfuerzo excepcional y 3.5 solicitacion dinamica (ST 01439), 3.6 envejecimiento climatico (D47 1309), 3.7 usura (D14 1055 y D47 1309). Los siete quedaron a cargo de SMRC en el plan de validacion del 31/07/2026',
         [
           falla('Apoyabrazos ensamblado que no cumple un ensayo de validacion del cliente', EF_HOMOLOGACION, [
             causa('La pieza se fabrica con una combinacion de sustrato y recubrimiento que no reproduce la que se valido',
               'Materiales y proceso congelados contra la pieza de validacion',
-              2, 'Ensayos de validacion a cargo de SMRC segun el plan del 31/07/2026: Barack no los ejecuta', 7,
+              2, 'Ensayos B62 0400, D45 1010, ST 01439, D47 1309 y D14 1055 a cargo de SMRC segun el plan de validacion del 31/07/2026: Barack no los ejecuta', 7,
               sc('SC 3.1 a 3.7', 'cc/h')),
           ]),
         ]),
