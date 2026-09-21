@@ -1112,7 +1112,7 @@ for (const op of doc.operations) {
   }
 }
 camposDescriptivos.push(doc.header.scope, doc.header.subject, doc.header.applicableParts);
-const texto = camposDescriptivos.join('   ').toLowerCase();
+const texto = camposDescriptivos.join('\n').toLowerCase();
 for (const [pat, que] of [
   [/doble aguja/, 'doble aguja'],
   [/coats/, 'hilo COATS'],
