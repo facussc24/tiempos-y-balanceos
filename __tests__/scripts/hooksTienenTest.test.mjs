@@ -46,6 +46,9 @@ const COBERTURA = {
   'mail-guard.sh': { test: '.claude/hooks/mail-guard.test.sh', tipo: 'bloquea' },
   'documentacion-oficial-guard.sh': { test: GUARDIANES, tipo: 'bloquea' },
   'video-maquina-guard.sh': { test: '__tests__/scripts/videoMaquinaGuard.test.mjs', tipo: 'bloquea' },
+  // PreToolUse via _dispatcher (21/09/2026): el paquete de PPAP que va al cliente lo arma
+  // CALIDAD, y los listados maestros son registro compartido. Regla autonomy-contract.md §F.
+  'apqp-cliente-guard.sh': { test: '__tests__/scripts/apqpClienteGuard.test.mjs', tipo: 'bloquea' },
   // PreToolUse via _dispatcher (11/09/2026): recordatorio 1x/h del criterio CC/SC (S 9-10 · S 5-8 y O>=4)
   // al tocar siglas, flujogramas o el tema. No bloquea: el bloqueo duro son los CRITICAL del validador.
   'caracteristicas-especiales-guard.sh': { test: GUARDIANES, tipo: 'aviso' },

@@ -192,7 +192,13 @@ describe('los helpers .mjs leen la MISMA fuente que la app', () => {
         expect(canon.criterio.CRITICA.severidad_min).toBe(9);
         expect(canon.criterio.SIGNIFICATIVA).toMatchObject({ severidad_min: 5, severidad_max: 8, ocurrencia_min: 4 });
         expect(canon.aliases.CRITICA).toEqual(expect.arrayContaining(['CC', 'D/TLD', 'D', 'TLD', '▽', '∇']));
-        expect(canon.aliases.SIGNIFICATIVA).toEqual(['SC', 'CS']);
+        expect(canon.aliases.SIGNIFICATIVA).toEqual(['SC', 'CS', 'SC/F']);
+        // SMRC / Stellantis parte la critica en dos marcas y tiene la suya de significativa
+        // (LSC v1, columnas K/L/M). Incorporadas el 21/09/2026 a pedido de Fak: cuando el
+        // cliente tiene simbologia propia se usa la del cliente, no se traduce en silencio.
+        expect(canon.aliases.CRITICA).toEqual(expect.arrayContaining(['CC/S', 'CC/H']));
+        expect(canon.simbologia.SMRC).toMatchObject({ CRITICA: 'cc/h', SIGNIFICATIVA: 'sc/f' });
+        expect(Object.keys(canon.tabla_conversion)).toEqual(expect.arrayContaining(['SMRC', 'VW']));
         expect(canon.simbologia.VW).toMatchObject({ CRITICA: 'D/TLD', SIGNIFICATIVA: 'SC' });
         expect(JSON.stringify(canon.aliases)).not.toMatch(/WICHTIG|"W"/);
     });
