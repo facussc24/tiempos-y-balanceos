@@ -553,13 +553,22 @@ def portada(prs, d, logo=None, foto=None, indice=None):
     y_body = M + cab_h + 0.35
     fw = 13.80
     bh = H - M - y_body - 0.10
-    _caja(slide, X0 + 0.10, y_body, fw, bh, BLANCO, borde=AZUL, ancho=Pt(1))
     if foto and os.path.exists(foto):
         im = Image.open(foto)
         ar = im.width / im.height
-        iw, ih = (fw - 0.20, (fw - 0.20) / ar) if (fw - 0.20) / ar <= (bh - 0.20) else ((bh - 0.20) * ar, bh - 0.20)
+        iw = fw - 0.20
+        ih = iw / ar
+        if ih > bh - 0.20:                      # la foto es mas alta que el hueco
+            ih = bh - 0.20
+            iw = ih * ar
+        # el recuadro se ajusta a la FOTO, no al reves: si no, una foto apaisada deja dos
+        # bandas blancas arriba y abajo y parece que falta algo
+        bh_real = min(bh, ih + 0.20)
+        _caja(slide, X0 + 0.10, y_body, fw, bh_real, BLANCO, borde=AZUL, ancho=Pt(1))
         slide.shapes.add_picture(foto, Cm(X0 + 0.10 + (fw - iw) / 2),
-                                 Cm(y_body + (bh - ih) / 2), Cm(iw), Cm(ih))
+                                 Cm(y_body + (bh_real - ih) / 2), Cm(iw), Cm(ih))
+    else:
+        _caja(slide, X0 + 0.10, y_body, fw, bh, BLANCO, borde=AZUL, ancho=Pt(1))
 
     xd = X0 + fw + 0.50
     wd = X1 - xd - 0.10
@@ -923,7 +932,7 @@ PORTADA_IMG = dict(
     maquina="Moldeadora In-Mold Graining KINGPOWER (Molde Hembra)",
     firmas="F. Santoro / C. Baptista",
     fecha_rev="21/09/2026  ·  Rev. A",
-    foto=os.path.join(ASSETS_DIR, "30.0_portada_moldeadora.jpg"),
+    foto=os.path.join(BASE_DIR, "assets2", "p1_listo.jpg"),
 )
 
 A2 = os.path.join(BASE_DIR, "assets2")
