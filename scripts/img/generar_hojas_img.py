@@ -1157,7 +1157,8 @@ HOJAS_IMG = [
         pasos=[
             "Pasar la mano por la superficie de la pieza recien sacada del molde y mirar que "
             "no quede ningun globito.",
-            "Mirar el canto envuelto y avisar si se marcan los agujeros de vacio.",
+            "Mirar el canto y la punta, y avisar si aparecen los tres puntitos que dejan los "
+            "agujeros de vacio.",
             "Abrir la punta con los dedos y verificar que la piel este pegada.",
         ],
         nota="Ante la duda, apartar la pieza y avisar. El criterio de aceptacion y la "
@@ -1165,17 +1166,18 @@ HOJAS_IMG = [
         fuentes=[
             "IMG_0859 (11-09-2026) min 0:08 a 0:21: \u00abes la que tenia el globito\u00bb / "
             "\u00abcon eso logramos eliminar el globito\u00bb",
-            "IMG_0660 (04-09-2026) min 0:00 a 0:09: \u00abse notan los agujeros de vacio, lo "
-            "sigue marcando... estos agujeritos pueden ser culpa del plastico\u00bb",
+            "IMG_0820 (09-09-2026) min 0:39: \u00abel defecto ese que sigue marcando los 3 "
+            "puntitos ahi en la punta de la pieza\u00bb; IMG_0660 (04-09-2026) min 0:00: "
+            "\u00abse notan los agujeros de vacio, lo sigue marcando\u00bb",
             "IMG_0813 (09-09-2026) min 0:00: \u00abel T17 genero este defecto que no termino "
             "de pegar bien en la punta\u00bb",
         ],
         epp=EPP_IMG,
-        disparador="SI LA PIEZA SALE CON GLOBITO, CON LA PIEL DESPEGADA EN LA PUNTA O CON LA "
-                   "MARCA DE LOS AGUJEROS DE VACIO",
+        disparador="SI LA PIEZA SALE CON GLOBITO, CON LA PIEL DESPEGADA EN LA PUNTA O CON "
+                   "LOS TRES PUNTITOS DE LOS AGUJEROS DE VACIO",
         acciones=[
-            "1. Apartar la pieza e identificarla.",
-            "2. Dar aviso al Lider de Produccion.",
+            "1. Apartar la pieza, identificarla y segregarla al cajon de scrap.",
+            "2. Dar aviso segun el procedimiento de no conformidades P-09/I.",
             "3. No tocar parametros por cuenta propia.",
         ],
     ),
