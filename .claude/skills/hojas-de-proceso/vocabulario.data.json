@@ -92,10 +92,10 @@
   ],
   "prohibidos_con_contexto": [
     {
-      "patron": "\\bmordazas?\\b",
+      "patron": "\\bmordazas?\\b(?!\\s+de tiro)",
       "reemplazo": "clamps neumaticos",
       "contexto": "termoformado",
-      "motivo": "En la termoformadora, lo que fija la lamina al marco tensor son los clamps neumaticos.",
+      "motivo": "En la termoformadora, lo que fija la lamina al marco tensor son los clamps neumaticos. OJO: la 'mordaza de tiro' SI existe con ese nombre, escrito por la maquina en su pantalla en castellano, y no es esta pieza.",
       "fuente": "CRITERIOS_HOJAS_DE_PROCESO.md 3.2 (la tabla la marca como prohibida 'aislada / mecanica')."
     },
     {
@@ -377,5 +377,21 @@
       "VIROLADO",
       "WRAPPING"
     ]
+  },
+  "partes_inexistentes": {
+    "_leeme": [
+      "Partes que en ESTA maquina no existen y yo nombre igual. No es vocabulario: es",
+      "inventar una pieza. El nombre de una parte se copia de la serigrafia o de la",
+      "pantalla del HMI en castellano; si no esta en ninguna, se describe lo que hace y",
+      "no se le pone nombre.",
+      "Una entrada nueva se agrega cuando Fak corrige, con su frase textual."
+    ],
+    "patrones": [
+      [
+        "\\bcintas?\\b(?!\\s+(de enmascarar|adhesiva|de papel|metrica|de doble|bicapa))",
+        "en la MOLDEADORA IMG no hay cinta: hay mesa de carga con placa prensadora y placa soporte, y una mordaza de tiro que arrastra el material"
+      ]
+    ],
+    "fuente": "Fak 21/09/2026: \"decis que la cinta se mueve con un boton, pero si ni siquiera tenemos cinta\". Los nombres reales se leen en el HMI en castellano (Manual > Carga: Desenrollador, Placa Prensad., Placa Soporte, Cuch. Corte, Mordaza de tiro) y en la botonera de carga."
   }
 }

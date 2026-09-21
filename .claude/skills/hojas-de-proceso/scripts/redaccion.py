@@ -89,6 +89,12 @@ def revisar_vocabulario(texto, datos=None):
         m = re.search(e["patron"], plano)
         if m and re.search(ctx.get(e.get("contexto", ""), r"$^"), plano):
             hallazgos.append((m.group(0), e["reemplazo"], e["motivo"], e["fuente"]))
+    for e in datos.get("partes_inexistentes", {}).get("patrones", []):
+        m = re.search(e[0], plano)
+        if m:
+            hallazgos.append((m.group(0), "(esa pieza no existe en esta maquina)", e[1],
+                              datos["partes_inexistentes"].get("fuente", "")))
+
     for clave in ("dramatizacion", "borrador"):
         bloque = datos.get(clave, {})
         for pat in bloque.get("patrones", []):

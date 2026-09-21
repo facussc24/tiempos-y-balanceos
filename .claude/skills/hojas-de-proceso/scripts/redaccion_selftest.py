@@ -89,10 +89,20 @@ VOCAB = [
      False, "la forma correcta, del mismo canon"),
     ("HOJA EN BORRADOR - SUJETO A REVISION", True, "4.4 lo prohibe imprimir"),
     ("Temperatura de molde: TBD", False, "TBD si va"),
+    # una pieza que en esta maquina no existe. No es vocabulario: es inventar un fierro.
+    ("Apoyar la lamina sobre la cinta y alisarla con la mano.", True,
+     "la cinta que no existe (Fak: \"ni siquiera tenemos cinta\")"),
+    ("Leather Conveyor para la cinta.", True, "la misma, al final de la frase"),
+    ("Apoyar la lamina sobre la mesa de carga y alisarla.", False, "la pieza que si existe"),
+    ("Cerrar la mordaza de tiro sobre la punta del vinilo.", False, "nombre del HMI"),
+    ("Pegar cinta de enmascarar sobre el molde.", False, "esa cinta si existe"),
+    ("Medir con cinta metrica.", False, "idem"),
     # que NO se le escape el rojo por contexto, y que no de rojo de mas:
     ("Cerrar los clamps neumaticos sobre la lamina del molde.", False, "el termino correcto"),
     ("Abrir las mordazas del marco tensor antes de cargar la lamina.",
      True, "en termoformado son clamps"),
+    ("Cerrar la mordaza de tiro sobre la punta de la lamina del molde.", False,
+     "la mordaza de tiro la nombra asi la pantalla de la maquina"),
     ("Ajustar las mordazas de la morsa del banco.", False,
      "una morsa de banco no es el marco tensor: sin contexto no hay rojo"),
 ]

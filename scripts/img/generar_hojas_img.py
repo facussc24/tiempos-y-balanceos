@@ -1104,49 +1104,79 @@ HOJAS_IMG = [
 
     dict(
         op="30.4",
-        denominacion="MONTAJE DEL ROLLO DE VINILO Y ENHEBRADO DEL MATERIAL",
+        denominacion="MONTAJE DEL ROLLO DE VINILO EN EL DESENROLLADOR",
         modo="secuencia",
-        imagenes=[_f("v0_montaje.jpg"), _f("v3_punta.jpg"),
-                  _f("v2_uncoiler.jpg"), _f("v4_cinta.jpg")],
-        pies=["El rollo sobre la cuna del desbobinador",
-              "La punta por arriba del rollo",
-              "Los selectores del desbobinador",
-              "La lamina sobre la cinta de carga"],
+        imagenes=[_f("w1_rollo.jpg"), _f("w3_mesa.jpg"), _f("w4_derecho.jpg")],
+        pies=["El rollo con su eje sobre la cuna",
+              "El material sobre la mesa de carga",
+              "El material derecho, del rollo a la maquina"],
         sin_marcas_ok=True,
         pasos=[
-            "Colocar el rollo de vinilo con su eje sobre la cuna de rodillos del "
-            "desbobinador.",
-            "Pasar la punta del vinilo por arriba del rollo hasta la mesa de carga.",
-            "Mover el material con los dos selectores de la caja colgante: "
-            "UNCOILER para el rollo y Leather Conveyor para la cinta.",
-            "Apoyar la lamina sobre la cinta y alisarla con la mano hasta que quede sin "
-            "panza.",
-        ],
-        parametros=[
-            ("Alimentacion, en la pantalla", "Cuero en rollo"),
-            ("Largo de lamina", "1100 mm"),
+            "Colocar el rollo de vinilo con su eje sobre la cuna del desenrollador.",
+            "Apoyar la punta del material sobre la mesa de carga y alinearla con las barras "
+            "guia.",
+            "Verificar que el material salga derecho del rollo, sin arrugas ni desvio.",
         ],
         fuentes=[
-            "IMG_0393 (26-08-2026) s=0: se ve el rollo con el eje pasante y el collar de "
-            "tope, apoyado sobre la cuna de rodillos del bastidor",
-            "IMG_0393 (26-08-2026) s=18: se ve la punta del vinilo llevada por encima del "
-            "rollo hacia la mesa",
-            "IMG_0393 (26-08-2026) s=90: se leen las dos chapas, UNCOILER \u5f00\u5377\u673a "
-            "FWD/REV y Leather Conveyor \u76ae\u6599\u8f93\u9001 FWD/REV",
-            "IMG_0393 (26-08-2026) s=112: se ve la lamina sobre la cinta y dos operarios "
-            "alisandola con las palmas",
+            "IMG_0393 (26-08-2026) s=14: se ve el rollo con su eje pasante mientras lo "
+            "colocan sobre el soporte del desenrollador",
+            "IMG_0393 (26-08-2026) s=107: se ve al operario apoyando el material sobre la "
+            "mesa de carga, con las dos manos",
+            "IMG_0393 (26-08-2026) s=135: se ve el rollo ya montado en la cuna y el material "
+            "corriendo derecho hacia la maquina",
         ],
         epp=EPP_IMG,
-        disparador="SI EL VINILO ENTRA TORCIDO, ARRUGADO O CON EMPALME",
+        disparador="SI EL ROLLO NO APOYA BIEN O EL MATERIAL SALE TORCIDO",
         acciones=[
-            "1. Parar el avance con el selector antes de que entre a la mesa.",
+            "1. No forzar el rollo a mano con la maquina en marcha.",
             "2. Dar aviso al Lider de Produccion.",
-            "3. No cortar ni empalmar por cuenta propia.",
+            "3. Esperar la intervencion del personal autorizado.",
         ],
     ),
 
     dict(
         op="30.5",
+        denominacion="CARGA Y CORTE DE LA PRIMERA LAMINA",
+        modo="secuencia",
+        imagenes=[_f("w7_alimentacion.jpg"), _f("w5_selectores.jpg"),
+                  _f("v5_carga_hmi.jpg"), _f("w6_cuchilla.jpg")],
+        pies=["Alimentacion en Cuero en rollo",
+              "Los selectores del desenrollador",
+              "La pantalla de carga, en castellano",
+              "El selector de la cuchilla de corte"],
+        sin_marcas_ok=True,
+        pasos=[
+            "Elegir Cuero en rollo en la pantalla, en Seleccion Lamina Alimentacion.",
+            "Mover el material con los dos selectores del desenrollador hasta la mesa de "
+            "carga: UNCOILER para el rollo y Leather Conveyor para el avance.",
+            "Bajar la placa prensadora y la placa soporte, y cerrar la mordaza de tiro sobre "
+            "la punta del material.",
+            "Cortar la lamina con el selector de la cuchilla de corte (CUTTING BLADE).",
+        ],
+        parametros=[("Largo de lamina", "1100 mm")],
+        fuentes=[
+            "IMG_0661 (04-09-2026) s=30: se lee en la pantalla Operacion del Equipo, "
+            "\u00abSeleccion Lamina Alimentacion: Cuero en rollo\u00bb",
+            "IMG_0393 (26-08-2026) s=162: se leen las dos chapas del desenrollador, "
+            "UNCOILER \u5f00\u5377\u673a y Leather Conveyor \u76ae\u6599\u8f93\u9001, "
+            "cada una con FWD y REV",
+            "IMG_0830 (10-09-2026) s=41: la pantalla Manual - Carga en castellano, con "
+            "Placa Prensad., Placa Soporte y Mordaza de tiro",
+            "IMG_0579 (02-09-2026) min 2:02 y 2:10: \u00aby ahi con ese boton lo cortas y "
+            "agarras\u00bb / \u00abtenes que poner el down de bajar para que ese cuchillo "
+            "baje\u00bb; el selector se lee en IMG_0585 s=96",
+        ],
+        epp=EPP_IMG,
+        disparador="SI LA LAMINA SALE CORTA, TORCIDA O LA CUCHILLA NO BAJA",
+        acciones=[
+            "1. No repetir el corte sobre la misma lamina.",
+            "2. Apartar el recorte y dar aviso al Lider de Produccion.",
+            "3. No tocar los largos de la receta por cuenta propia.",
+        ],
+    ),
+
+    dict(
+        op="30.6",
         denominacion="ARRANQUE DE LA MAQUINA EN MODO AUTOMATICO",
         modo="rotulada",
         imagenes=[_f("r2_automatico.jpg")],
@@ -1185,7 +1215,7 @@ HOJAS_IMG = [
 
     # ── CONTROLAR ────────────────────────────────────────
     dict(
-        op="30.6",
+        op="30.7",
         denominacion="DESCARGA DE PIEZAS Y CARGA DE SUSTRATOS",
         modo="secuencia",
         imagenes=[_f("d1_pieza.jpg"), _f("d2_vinilo.jpg"),
@@ -1226,7 +1256,7 @@ HOJAS_IMG = [
     ),
 
     dict(
-        op="30.7",
+        op="30.8",
         denominacion="CONTROL DE PIEZA TERMOFORMADA",
         modo="secuencia",
         imagenes=[_f("n5_mano.jpg"), _f("n8_canto.jpg"), _f("n7_despegue.jpg")],
