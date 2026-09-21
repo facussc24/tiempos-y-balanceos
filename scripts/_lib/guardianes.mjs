@@ -1430,7 +1430,7 @@ const APQP_REGISTRA = /_registrar[A-Za-z0-9]*\.(py|mjs)\b[^\n]*--apply|--apply[^
 const APQP_CIERRE = `Regla: .claude/rules/autonomy-contract.md §F — "la PRIMERA VEZ se pregunta".
 Que va en cada casillero del legajo APQP: skill \`apqp-legajo\`.`;
 
-GUARDIANES['apqp-cliente-guard'] = (ctx) => {
+GUARDIANES['apqp-cliente-guard'] = (ctx, { env } = {}) => {
   let tool, cmd, file;
   if (ctx.ok) { tool = ctx.toolL; cmd = ctx.cmd6; file = ctx.fileL; }
   else { tool = ctx.rescate.tool; file = ctx.rescate.file; cmd = `${ctx.rescate.cmd} ${ctx.raw.replace(/\n/g, ' ')}`; }
@@ -1463,6 +1463,15 @@ ${APQP_CIERRE}`);
   // 2. Los listados maestros
   const tocaListado = APQP_LISTADO.test(destino) || (!esEscritura && APQP_LISTADO.test(cmd));
   if ((esEscritura && APQP_LISTADO.test(file)) || (!esEscritura && tocaListado && APQP_ESCRIBE.test(cmd)) || APQP_REGISTRA.test(cmd)) {
+    // Escape de UN uso, igual que arb-cerrar-guard: cuando Fak ya dijo que si, el gate tiene
+    // que poder abrirse. Un gate que no se puede pasar ni con autorizacion no se respeta, se
+    // esquiva — y ahi deja de existir. Se consume al usarlo para que valga por UNA carga.
+    const okListado = path.join(dirHome(env ?? process.env), '.claude', '.apqp-listado-ok');
+    if (fs.existsSync(okListado)) {
+      try { fs.unlinkSync(okListado); } catch { /* si no se puede borrar, igual paso: el aviso queda */ }
+      return aviso(`[APQP-CLIENTE] Paso con el OK de Fak (se consumio ~/.claude/.apqp-listado-ok).
+Despues de cargar: releer la fila y verificar que la de al lado quedo intacta.`);
+    }
     return bloqueo(`[APQP-CLIENTE] BLOQUEADO: estas por escribir en un LISTADO MAESTRO.
 
 ${destino || cmd.slice(0, 120)}
@@ -1474,6 +1483,7 @@ de mas, o con una ruta que todavia no existe, la arrastra despues todo el mundo.
   · Corre el script en DRY-RUN (sin --apply), mostrale a Fak la fila que va a quedar, y
     aplicala con su OK.
   · Leer el listado no esta bloqueado.
+  · Si Fak YA dijo que si:  : > ~/.claude/.apqp-listado-ok   y reintenta (vale UNA carga).
 
 ${APQP_CIERRE}`);
   }

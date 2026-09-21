@@ -14,6 +14,9 @@
  * in file"). Los tests van en `__tests__/`.
  */
 import { describe, it, expect } from 'vitest';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 import { GUARDIANES } from '../../scripts/_lib/guardianes.mjs';
 
 const LEGAJO = 'Y:\\BARACK\\CALIDAD\\DOCUMENTACION SGC\\PPAP CLIENTES\\REYDEL-SMRC\\APB P21\\P21 SSRT-MY2026 HILO NARANJA\\APQP';
@@ -98,5 +101,43 @@ describe('apqp-cliente-guard', () => {
     it('el gate puede dar rojo Y puede dar verde (ninguna de las dos listas quedo vacia)', () => {
         expect(ROJOS.length).toBeGreaterThan(3);
         expect(VERDES.length).toBeGreaterThan(3);
+    });
+
+    /**
+     * El escape del listado maestro, con su HOME propio para no tocar el del usuario.
+     *
+     * Existe porque un gate que no se puede pasar ni con autorizacion no se respeta: se
+     * esquiva, y ahi deja de existir. Es de UN uso — se consume al pasar — asi que un OK de
+     * Fak vale por UNA carga y no queda la puerta abierta.
+     */
+    it('con el OK de Fak pasa UNA vez, y la segunda vuelve a bloquear', () => {
+        const home = fs.mkdtempSync(path.join(os.tmpdir(), 'apqp-ok-'));
+        fs.mkdirSync(path.join(home, '.claude'), { recursive: true });
+        const env = { HOME: home };
+        const c = () => ctx('Bash', { cmd: 'py -3 scripts/_registrarAmfe173.py --apply' });
+
+        // sin el flag: bloquea
+        expect(GUARDIANES['apqp-cliente-guard'](c(), { env })?.tipo).toBe('bloqueo');
+
+        // con el flag: pasa con aviso
+        fs.writeFileSync(path.join(home, '.claude', '.apqp-listado-ok'), '');
+        expect(GUARDIANES['apqp-cliente-guard'](c(), { env })?.tipo).toBe('aviso');
+
+        // y el flag se consumio: la siguiente vuelve a bloquear
+        expect(fs.existsSync(path.join(home, '.claude', '.apqp-listado-ok'))).toBe(false);
+        expect(GUARDIANES['apqp-cliente-guard'](c(), { env })?.tipo).toBe('bloqueo');
+
+        fs.rmSync(home, { recursive: true, force: true });
+    });
+
+    it('el escape NO abre el paquete del cliente: eso no tiene salida', () => {
+        const home = fs.mkdtempSync(path.join(os.tmpdir(), 'apqp-ok-'));
+        fs.mkdirSync(path.join(home, '.claude'), { recursive: true });
+        fs.writeFileSync(path.join(home, '.claude', '.apqp-listado-ok'), '');
+        const r = GUARDIANES['apqp-cliente-guard'](ctx('Write', { file: `${PAQUETE}\\x.pdf` }), { env: { HOME: home } });
+        expect(r?.tipo).toBe('bloqueo');
+        // y no se consumio el flag, porque no es lo que ese flag autoriza
+        expect(fs.existsSync(path.join(home, '.claude', '.apqp-listado-ok'))).toBe(true);
+        fs.rmSync(home, { recursive: true, force: true });
     });
 });
