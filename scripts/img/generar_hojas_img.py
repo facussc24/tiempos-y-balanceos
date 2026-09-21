@@ -547,7 +547,7 @@ def portada(prs, d, logo=None, foto=None, indice=None):
            d.get("titulo", "HOJAS DE PROCESO — MÁQUINA MOLDEADORA IMG"),
            size=24, bold=True, color=AZUL, relleno=BLANCO, borde=None, align=PP_ALIGN.LEFT)
     _celda(slide, tx, M + 1.80, tw, 1.00,
-           d.get("subtitulo", "Conformado al vacío In-Mold Graining (IMG) · OP 30 del FLUJOGRAMA 122 TOP ROLL PATAGONIA"),
+           d.get("subtitulo", "Termoformado y laminado In-Mold Graining (IMG) · OP 30 del FLUJOGRAMA 155 TOP ROLL PATAGONIA"),
            size=11.5, bold=False, color=AZUL2, relleno=BLANCO, borde=None, align=PP_ALIGN.LEFT)
 
     y_body = M + cab_h + 0.35
@@ -566,7 +566,7 @@ def portada(prs, d, logo=None, foto=None, indice=None):
     filas = [
         ("Documento SGC", d.get("ho", "HO-TBD")),
         ("Formulario Oficial", d.get("form", "I-IN-002.4-R01")),
-        ("Operación Flujograma", d.get("op_flujo", "30 — CONFORMADO AL VACÍO IMG")),
+        ("Operación Flujograma", d.get("op_flujo", "30 — PROCESO DE TERMOFORMADO Y LAMINADO IMG")),
         ("Cliente / Modelo", d.get("cliente_modelo", "VW / PATAGONIA")),
         ("Pieza / Conjunto", d.get("pieza", "TOP ROLL PATAGONIA — N 216 / N 256 / N 285 / N 315")),
         ("Máquina / Celda", d.get("maquina", "Moldeadora IMG KINGPOWER (Molde Hembra)")),
@@ -914,15 +914,15 @@ CAJETIN_BASE = dict(
 
 PORTADA_IMG = dict(
     titulo="HOJAS DE PROCESO — MÁQUINA MOLDEADORA IMG",
-    subtitulo="Conformado al vacío In-Mold Graining (IMG) · OP 30 del FLUJOGRAMA 122 TOP ROLL PATAGONIA",
+    subtitulo="Termoformado y laminado In-Mold Graining (IMG) · OP 30 del FLUJOGRAMA 155 TOP ROLL PATAGONIA",
     ho="HO-TBD",
     form="I-IN-002.4-R01",
-    op_flujo="30 — CONFORMADO AL VACÍO IMG",
+    op_flujo="30 — PROCESO DE TERMOFORMADO Y LAMINADO IMG",
     cliente_modelo="VW / PATAGONIA",
     pieza="TOP ROLL PATAGONIA — N 216 / N 256 / N 285 / N 315",
     maquina="Moldeadora In-Mold Graining KINGPOWER (Molde Hembra)",
     firmas="F. Santoro / C. Baptista",
-    fecha_rev="14/09/2026  ·  Rev. B",
+    fecha_rev="21/09/2026  ·  Rev. A",
     foto=os.path.join(ASSETS_DIR, "30.0_portada_moldeadora.jpg"),
 )
 
