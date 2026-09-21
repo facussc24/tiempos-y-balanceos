@@ -41,6 +41,17 @@ recuerdes todo esto"*. Esta regla no lleva `paths:` a proposito: entra en TODAS 
 2. Antes de proponer poner, sacar o restaurar una sigla: **escribir S, O y la regla**. Si el
    efecto dice "riesgo de seguridad" y la S es 7, lo incoherente es el par texto/S, no la
    falta de sigla.
+2bis. **La S sale del EFECTO, nunca de la sigla. Derivarla al reves es fabricar el riesgo
+   para que encaje en la marca.** El 21/09/2026 puse **S=9 en 11 modos de falla del AMFE
+   173** porque el cliente habia designado esas caracteristicas como criticas; con eso
+   *"costura con dos lineas en lugar de una"* quedaba **mas grave que un paro de linea**
+   (S=8). La **Tabla P1 del AIAG-VDA califica lo que PASA**: apariencia inaceptable es 4 a 2,
+   incumplimiento de regulacion es 9. Lo cazo el auditor en un dia.
+   **Es el error del 11/09 dado vuelta**: aquella vez copie la sigla sin mirar S y O; esta
+   vez infle la S para sostener la sigla. Las dos direcciones estan prohibidas por lo mismo:
+   el par S/O y la sigla se leen **cada uno de su fuente**, nunca uno del otro.
+   Si el cliente designo una caracteristica y la S por efecto no llega a 9, eso **se informa
+   como diferencia** (§5) — no se sube la S.
 3. La marca de una operacion en el flujograma = union de las siglas de sus causas en el AMFE.
    Una `▽` heredada sin causa S >= 9 detras no se copia: se informa como diferencia.
 4. Asignar o cambiar CC/SC sigue siendo de Fak o del cliente (`core-prohibiciones.md` §2):
@@ -55,6 +66,11 @@ recuerdes todo esto"*. Esta regla no lleva `paths:` a proposito: entra en TODAS 
   `CAUSE_CC_LOW_SEVERITY` (CRITICAL, **sin exencion por palabras**), `CAUSE_SC_FUERA_DE_REGLA`
   (CRITICAL: S fuera de 5-8 u O < 4), `SIGLA_DESCONOCIDA` (CRITICAL), `CAUSE_S9_SIN_CC`
   (WARNING: candidata, la asigna Fak). Frenan `--apply` (`runWithValidation`) y el export oficial.
+- ⚠ **El §2bis (S inflada para sostener la sigla) NO tiene check automatico** y conviene
+  saberlo: el validador mira la coherencia sigla↔S/O, pero **no puede juzgar si una S=9 la
+  merece el efecto**. Eso lo caza el agente `auditor` / el comando `/auditoria-cliente` contra
+  la **Tabla P1 del AIAG-VDA**, que es lo que lo encontro el 21/09/2026. Al tocar S de varios
+  modos de falla a la vez, correr esa auditoria antes de cerrar.
 - Hooks: `caracteristicas-especiales-guard` (PreToolUse, recordatorio 1x/h al tocar siglas o
   flujogramas) y `caracteristicas-especiales-prompt.sh` (UserPromptSubmit: cada vez que Fak
   nombra el tema, sin cooldown); linea 7 del nucleo post-compact.
