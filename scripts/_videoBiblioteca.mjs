@@ -202,10 +202,24 @@ export function auditarCarpeta(dir, nombre = path.basename(dir)) {
         if (claves.has(k)) conTranscripcion.add(k);
         else anota('TRABAJO_DE_OTRA_MAQUINA', `${TRABAJO}/${TRANSCRIPCIONES}/${f}`, 'no hay ningun original de esa clave aca');
     }
+    // `.claude/NO PROCESAR.txt`: claves que NO se abren ni se les saca material, por mas que
+    // el nombre diga otra cosa. Lo decide Fak, no una sesion. Existe porque un barrido del
+    // telefono por fecha arrastra material que no es de la fabrica, y sacarle cuadros lo
+    // desparrama por una carpeta compartida del equipo.
+    const noProcesar = new Set();
+    try {
+        for (const l of fs.readFileSync(path.join(trabajo, 'NO PROCESAR.txt'), 'utf8').split(/\r?\n/)) {
+            const k = claveDe(l.trim());
+            if (k) noProcesar.add(k);
+        }
+    } catch { /* sin lista: se procesa todo */ }
+
     for (const v of originales.filter((x) => VIDEO.test(x))) {
         const k = claveDe(v);
-        if (k && !conFotogramas.has(k)) anota('VIDEO_SIN_FOTOGRAMAS', v, 'nadie le saco los cuadros todavia');
-        if (k && !conTranscripcion.has(k)) anota('VIDEO_SIN_TRANSCRIPCION', v, 'nadie le saco el audio todavia');
+        if (!k) continue;
+        if (noProcesar.has(k)) { anota('NO_SE_PROCESA', v, 'esta en NO PROCESAR.txt: no se le saca material'); continue; }
+        if (!conFotogramas.has(k)) anota('VIDEO_SIN_FOTOGRAMAS', v, 'nadie le saco los cuadros todavia');
+        if (!conTranscripcion.has(k)) anota('VIDEO_SIN_TRANSCRIPCION', v, 'nadie le saco el audio todavia');
     }
     if (!fs.existsSync(path.join(trabajo, 'LEEME - que hay aca.txt')))
         anota('SIN_LEEME', `${TRABAJO}/LEEME - que hay aca.txt`, 'el que abre la carpeta tiene que saber que hay adentro');
@@ -310,7 +324,7 @@ function auditar(raiz) {
     // El ORDEN es lo que este control exige (y lo que Fak pidio): eso tiene que dar cero.
     // Que a un video todavia no le sacaron los cuadros, o que un original siga en el celular,
     // es trabajo pendiente: se lista, pero no pone en rojo una carpeta que esta ordenada.
-    const pendiente = (c) => ['VIDEO_SIN_FOTOGRAMAS', 'VIDEO_SIN_TRANSCRIPCION', 'ORIGINAL_QUE_FALTA'].includes(c);
+    const pendiente = (c) => ['VIDEO_SIN_FOTOGRAMAS', 'VIDEO_SIN_TRANSCRIPCION', 'ORIGINAL_QUE_FALTA', 'NO_SE_PROCESA'].includes(c);
     const desorden = filas.filter((h) => !pendiente(h.codigo)).length;
     console.log(`\nTOTAL: ${total} hallazgo(s) en ${carpetas.length} carpeta(s)`
         + ` — ${desorden} de orden, ${total - desorden} de trabajo pendiente (material sin sacar).`);

@@ -42,10 +42,36 @@ def fecha_de(nombre: str) -> str:
     return m.group(1) if m else ""
 
 
+def no_procesar(carpeta: str) -> set[str]:
+    """Claves que NO se abren, por mas que el nombre diga que son de la maquina.
+
+    Se declaran en `.claude/NO PROCESAR.txt`, una por linea. Existe porque un barrido del
+    telefono por fecha arrastra material que no es de la fabrica, y sacarle cuadros lo
+    desparrama por una carpeta compartida del equipo. Que salga de la lista lo decide Fak.
+    """
+    fuera = set()
+    for d in (".claude", "_INFO SACADA DE LOS VIDEOS"):
+        try:
+            with open(os.path.join(carpeta, d, "NO PROCESAR.txt"), encoding="utf-8") as f:
+                for linea in f:
+                    m = re.search(r"IMG_E?(\d+)", linea, re.IGNORECASE)
+                    if m:
+                        fuera.add(m.group(1))
+        except OSError:
+            pass
+    return fuera
+
+
 def videos_de(carpeta: str, desde: str | None) -> list[str]:
     vs = [f for f in os.listdir(carpeta) if f.lower().endswith((".mov", ".mp4", ".m4v"))]
     if desde:
         vs = [f for f in vs if fecha_de(f) >= desde]
+    fuera = no_procesar(carpeta)
+    if fuera:
+        quedan = [f for f in vs if tag_de(f) not in fuera]
+        if len(quedan) != len(vs):
+            print(f"NO PROCESAR: salteo {len(vs) - len(quedan)} video(s) declarados", flush=True)
+        vs = quedan
     return sorted(vs)
 
 

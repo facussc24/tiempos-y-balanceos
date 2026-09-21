@@ -103,6 +103,14 @@ Sale del Escritorio **hacia** la biblioteca: pasa (la ruta destino contiene `5- 
 Leer, listar o `ffprobe` un video: pasa. Tests en las dos direcciones:
 `__tests__/scripts/videoMaquinaGuard.test.mjs`.
 
+## Material que NO se abre
+
+Un barrido del telefono por fecha arrastra cosas que no son de la fabrica, y el nombre de
+archivo no avisa. Las claves que **no se procesan** —ni cuadros, ni audio, ni indice— van en
+`<maquina>\.claude\NO PROCESAR.txt`, una por linea y **sin describir que son**: la carpeta es
+compartida con el equipo. Las respetan `_infoDeVideos.py` y `--auditar` (las marca
+`NO_SE_PROCESA`). Sacar una de esa lista, o sacar el archivo de la biblioteca, **lo decide Fak**.
+
 ## Lo que quedo abierto (21/09/2026)
 
 - **IMG_9527 no esta archivado**: el video de 1 h 30 narrado en español — la unica fuente buena
