@@ -11,7 +11,7 @@
  */
 import { describe, it, expect } from 'vitest';
 import {
-  NOMINA, buscarPersona, trabajaHoy, revisarEquipo, normalizarNombre, activosDe, nominaVencida,
+  NOMINA, buscarPersona, trabajaHoy, revisarEquipo, normalizarNombre, activosDe, nominaVencida, aFecha,
 } from '../../scripts/_lib/nomina.mjs';
 
 const EQUIPO_QUE_EMITI = [
@@ -37,7 +37,7 @@ describe('nomina de Barack', () => {
       expect(p.find((x) => x.persona === 'Araceli Maidana').motivo).toMatch(/2024/);
     });
 
-    it('Marcelo Nieve tampoco pasa: renuncio el 01/09/2026', () => {
+    it('Marcelo Nieve tampoco pasa en un documento de hoy: renuncio el 01/09/2026', () => {
       expect(trabajaHoy('Marcelo Nieve (Calidad)')).toBe(false);
       expect(revisarEquipo(['Marcelo Nieve (Calidad)'])[0].gravedad).toBe('CRITICAL');
     });
@@ -52,6 +52,48 @@ describe('nomina de Barack', () => {
       const p = revisarEquipo(['Jean Claudio Pagliaroli (Seguridad e Higiene)']);
       expect(p[0].gravedad).toBe('WARNING');
       expect(p[0].motivo).toMatch(/sin confirmar/);
+    });
+  });
+
+  /**
+   * Fak, 21/09/2026: "no vamos a modificar los viejos, los viejos pueden tener nombres
+   * viejos hasta que se actualicen, no pasa nada". Un documento es la foto de SU fecha.
+   * Sin esto el gate bloquearia re-exportar cualquier AMFE viejo — y un gate que frena
+   * trabajo legitimo se termina apagando.
+   */
+  describe('la fecha del documento decide', () => {
+    it('el AMFE 172 (24/08/2026) con Marcelo Nieve NO es problema: el se fue el 01/09', () => {
+      expect(revisarEquipo(['Marcelo Nieve (Calidad)'], { fechaDocumento: '24/08/2026' })).toEqual([]);
+    });
+
+    it('pero el MISMO nombre en un documento de hoy si lo es', () => {
+      const p = revisarEquipo(['Marcelo Nieve (Calidad)'], { fechaDocumento: '21/09/2026' });
+      expect(p[0].gravedad).toBe('CRITICAL');
+    });
+
+    // El AMFE 127, de donde copie la lista, se emitio el 19/02/2024 (hoja P21, celda I6) y
+    // Maidana se fue alrededor del 01/03/2024: ESE documento estaba bien el dia que salio.
+    // Yo habia dicho que era de agosto de 2024 mirando la fecha de MODIFICACION del archivo
+    // (20/08/2024), y con eso arme una explicacion falsa — que el 127 "ya venia mal".
+    it('el 127, emitido el 19/02/2024, NO es un error: Maidana se fue diez dias despues', () => {
+      expect(revisarEquipo(['Araceli Maidana (Ingenieria)'], { fechaDocumento: '19/02/2024' })).toEqual([]);
+    });
+
+    it('pero un documento posterior a su baja si la arrastra', () => {
+      const p = revisarEquipo(['Araceli Maidana (Ingenieria)'], { fechaDocumento: '20/08/2024' });
+      expect(p[0].gravedad).toBe('CRITICAL');
+    });
+
+    it('sin fecha de documento se reporta igual: no se excusa lo que no se puede fechar', () => {
+      expect(revisarEquipo(['Araceli Maidana (Ingenieria)'])[0].gravedad).toBe('CRITICAL');
+    });
+
+    it('lee las tres formas de escribir una fecha', () => {
+      expect(aFecha('21/09/2026').toISOString().slice(0, 10)).toBe('2026-09-21');
+      expect(aFecha('2026-09-21').toISOString().slice(0, 10)).toBe('2026-09-21');
+      // Mes solo: el ultimo dia. Estirarlo para atras seria inventar para poder marcar.
+      expect(aFecha('2024-03').toISOString().slice(0, 10)).toBe('2024-03-31');
+      expect(aFecha('cuando sea')).toBeNull();
     });
   });
 

@@ -61,11 +61,44 @@ export function nominaVencida(hoy = new Date()) {
   return hoy > vence;
 }
 
+/** Acepta "21/09/2026", "2026-09-21" y "2026-09". Devuelve null si no entiende. */
+export function aFecha(txt) {
+  const s = String(txt ?? '').trim();
+  let m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (m) return new Date(Date.UTC(+m[3], +m[2] - 1, +m[1]));
+  m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (m) return new Date(Date.UTC(+m[1], +m[2] - 1, +m[3]));
+  m = s.match(/^(\d{4})-(\d{2})$/);
+  // Mes solo: se toma el ULTIMO dia. La precision de una baja es la que es, y estirarla
+  // para que caiga antes seria inventar un dato para poder marcar un error.
+  if (m) return new Date(Date.UTC(+m[1], +m[2], 0));
+  return null;
+}
+
+/**
+ * Una persona "sobra" en un documento solo si YA SE HABIA IDO cuando el documento se emitio.
+ *
+ * Decision de Fak, 21/09/2026: *"no vamos a modificar los viejos, los viejos pueden tener
+ * nombres viejos hasta que se actualicen, no pasa nada"*. Un AMFE de 2024 con el equipo de
+ * 2024 es correcto — es una foto de su fecha. Lo que no puede pasar es emitir HOY un
+ * documento con alguien que se fue hace dos anos, que es lo del AMFE 173.
+ *
+ * Sin esto el gate bloquearia re-exportar cualquier AMFE viejo, y un gate que frena trabajo
+ * legitimo se termina apagando.
+ */
+export function yaSeHabiaIdo(persona, fechaDocumento) {
+  if (persona?.activo !== false) return false;
+  const baja = aFecha(persona.baja);
+  const doc = aFecha(fechaDocumento);
+  if (!baja || !doc) return true;   // sin fecha no se puede excusar: se reporta
+  return baja < doc;
+}
+
 /**
  * Revisa una lista de equipo y devuelve UN problema por persona, con el motivo escrito.
  * Un control que frena tiene que decir CUAL renglon lo frena.
  */
-export function revisarEquipo(equipo) {
+export function revisarEquipo(equipo, { fechaDocumento = null } = {}) {
   const lista = Array.isArray(equipo) ? equipo : String(equipo ?? '').split(/\s*,\s*(?![^(]*\))/);
   const problemas = [];
   for (const entrada of lista) {
@@ -77,6 +110,9 @@ export function revisarEquipo(equipo) {
         comoArreglar: 'si es alguien que entro, agregalo a core/amfe/nominaBarack.data.json con su evidencia; si esta mal escrito, corregilo',
       });
     } else if (p.activo === false) {
+      // Se fue DESPUES de que el documento se emitio: el documento es una foto de su fecha
+      // y no se toca (decision de Fak, 21/09/2026). Ver `yaSeHabiaIdo`.
+      if (fechaDocumento && !yaSeHabiaIdo(p, fechaDocumento)) continue;
       problemas.push({
         entrada, persona: p.nombre, gravedad: 'CRITICAL',
         motivo: `no trabaja mas en Barack (baja ${p.baja ?? 'sin fecha'}): ${p.evidencia}`,
