@@ -55,15 +55,6 @@ TOMAS = [
         ("Una pieza con el defecto tipico al lado de una buena",
          "Para el plan de reaccion: que el operario sepa que esta mirando."),
     ]),
-    ("3 · DOS COSAS QUE NO SON DE FILMAR", [
-        ("El disco C: tiene 0,8 GB libres de 254,6",
-         "Por eso quedaron dos videos sin mirar (IMG_0662 y IMG_0649, los dos largos del "
-         "04-09): OneDrive no los puede bajar. Liberando disco se miran."),
-        ("Varios videos estan archivados con un nombre que no es lo que muestran",
-         "Ejemplos verificados: 0857 dice rodillos y es el molde · 0858 dice rodillos y es "
-         "el HMI · 0838 dice inspeccion y es una oficina · 0896 dice guia y marco y es el "
-         "piso · 0843 dice HMI fin de jornada y es la maquina quieta."),
-    ]),
 ]
 
 COMO = ("COMO CONVIENE SACARLAS — 3 a 5 segundos de VIDEO fijo por toma, no una foto: de un "
@@ -118,8 +109,8 @@ def armar():
          "QUE FALTA FILMAR — MAQUINA MOLDEADORA IMG", size=20, bold=True, color=BLANCO)
     _txt(_caja(slide, M, 2.0, W - 2 * M, 0.85, None, None),
          "Barridos los 91 videos y las 31 fotos: el encendido, los servicios y los "
-         "comandos YA estan filmados y ya entraron en las hojas. Falta el apagado. "
-         "21/09/2026.", size=11, color=AZUL2)
+         "comandos YA estan filmados y ya entraron en las hojas. Lo unico que no "
+         "tiene una sola toma es el APAGADO. 21/09/2026.", size=11, color=AZUL2)
 
     # todo tiene que entrar en una pagina: se mide primero y se escala si no cierra
     Y0, PIE_H = 2.90, 1.05
