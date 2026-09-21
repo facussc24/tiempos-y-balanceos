@@ -126,9 +126,23 @@ export const NOMBRE_DE_LA_CASA = /^(\d{4})-(\d{2})-(\d{2}) - (.+) \(([^()]+)\)\.
  *  pantalla o dos .txt cortos pueden pesar igual — y marcarlas seria un rojo falso. */
 export const MISMO_TAMANO_MIN = 1_000_000;
 
+/**
+ * La clave sale del ORIGEN — lo que va entre parentesis al final — y no de la descripcion.
+ *
+ * Buscarla en el nombre entero la sacaba de cualquier lado: `[A-Z]{4}\d{3,5}` con la `i`
+ * matchea tambien minusculas, asi que "prueba KINGPOWER1004 turno A (WhatsApp Fer).MOV"
+ * daba clave `OWER1004`, y dos videos distintos del mismo dia pasaban por el mismo archivo
+ * repetido. Lo encontro el auditor el 21/09/2026; de los 159 originales que hay hoy no
+ * afectaba a ninguno, pero KINGPOWER 1004 es el nombre de una de las maquinas.
+ *
+ * Si el nombre no tiene el formato de la casa (una carpeta de fotogramas `0578`, un
+ * `IMG_0823.txt`) se busca en el nombre entero, que es lo unico que hay.
+ */
 export function claveDe(nombre) {
-    const m = nombre.toUpperCase().match(CLAVE);
-    return m ? m[m.length - 1] : '';
+    const m = nombre.match(NOMBRE_DE_LA_CASA);
+    const donde = m ? m[5] : nombre;
+    const k = donde.toUpperCase().match(CLAVE);
+    return k ? k[k.length - 1] : '';
 }
 
 const esFechaReal = (a, m, d) => {
@@ -192,13 +206,16 @@ export function auditarCarpeta(dir, nombre = path.basename(dir)) {
     const conFotogramas = new Set(), conTranscripcion = new Set();
     for (const d of hijos(FOTOGRAMAS)) {
         const k = claveDe(d) || d.toUpperCase();
-        const kk = /^\d/.test(d) ? `IMG_${d.slice(0, 4)}` : k;
+        // El numero del telefono NO siempre tiene 4 digitos (el 9527 esta al borde y despues
+        // del 9999 siguen 5): cortar por posicion truncaba la clave y daba el falso rojo
+        // "esto es de otra maquina" sobre material que si era de esta. Auditor, 21/09/2026.
+        const kk = /^\d/.test(d) ? `IMG_${d.match(/^\d+/)[0]}` : k;
         if (claves.has(kk) || claves.has(k)) conFotogramas.add(claves.has(kk) ? kk : k);
         else anota('TRABAJO_DE_OTRA_MAQUINA', `${TRABAJO}/${FOTOGRAMAS}/${d}`, 'no hay ningun original de esa clave aca');
     }
     for (const f of hijos(TRANSCRIPCIONES)) {
         const base = path.parse(f).name;
-        const k = claveDe(base) || `IMG_${base.slice(0, 4)}`;
+        const k = claveDe(base) || `IMG_${(base.match(/^\d+/) || [''])[0]}`;
         if (claves.has(k)) conTranscripcion.add(k);
         else anota('TRABAJO_DE_OTRA_MAQUINA', `${TRABAJO}/${TRANSCRIPCIONES}/${f}`, 'no hay ningun original de esa clave aca');
     }
@@ -216,7 +233,10 @@ export function auditarCarpeta(dir, nombre = path.basename(dir)) {
 
     for (const v of originales.filter((x) => VIDEO.test(x))) {
         const k = claveDe(v);
-        if (!k) continue;
+        // Sin clave del telefono no hay con que atar el video a sus cuadros: se DICE, no se
+        // saltea en silencio (un control solo ve lo que declara). Pasa con lo que llega por
+        // WhatsApp, que no trae IMG_xxxx.
+        if (!k) { anota('SIN_CLAVE_NO_SE_PUEDE_CRUZAR', v, 'su origen no es del telefono: su material no se puede seguir por clave'); continue; }
         if (noProcesar.has(k)) { anota('NO_SE_PROCESA', v, 'esta en NO PROCESAR.txt: no se le saca material'); continue; }
         if (!conFotogramas.has(k)) anota('VIDEO_SIN_FOTOGRAMAS', v, 'nadie le saco los cuadros todavia');
         if (!conTranscripcion.has(k)) anota('VIDEO_SIN_TRANSCRIPCION', v, 'nadie le saco el audio todavia');
@@ -324,7 +344,7 @@ function auditar(raiz) {
     // El ORDEN es lo que este control exige (y lo que Fak pidio): eso tiene que dar cero.
     // Que a un video todavia no le sacaron los cuadros, o que un original siga en el celular,
     // es trabajo pendiente: se lista, pero no pone en rojo una carpeta que esta ordenada.
-    const pendiente = (c) => ['VIDEO_SIN_FOTOGRAMAS', 'VIDEO_SIN_TRANSCRIPCION', 'ORIGINAL_QUE_FALTA', 'NO_SE_PROCESA'].includes(c);
+    const pendiente = (c) => ['VIDEO_SIN_FOTOGRAMAS', 'VIDEO_SIN_TRANSCRIPCION', 'ORIGINAL_QUE_FALTA', 'NO_SE_PROCESA', 'SIN_CLAVE_NO_SE_PUEDE_CRUZAR'].includes(c);
     const desorden = filas.filter((h) => !pendiente(h.codigo)).length;
     console.log(`\nTOTAL: ${total} hallazgo(s) en ${carpetas.length} carpeta(s)`
         + ` — ${desorden} de orden, ${total - desorden} de trabajo pendiente (material sin sacar).`);

@@ -146,6 +146,34 @@ describe('las piezas sueltas', () => {
         expect(claveDe('2026-09-09 - PIZARRA - enderezada (IMG_E0815).JPG')).toBe('IMG_E0815');
     });
 
+    it('la clave sale del ORIGEN, no de la descripcion (el nombre de la maquina parece una clave)', () => {
+        // Auditor 21/09/2026: "KINGPOWER1004" en la descripcion daba clave OWER1004, y dos
+        // videos distintos del mismo dia se reportaban como el mismo archivo repetido.
+        const a = '2026-09-21 - prueba KINGPOWER1004 turno A (WhatsApp Fer).MOV';
+        const b = '2026-09-21 - otra prueba KINGPOWER1004 distinta (WhatsApp Juan).MOV';
+        expect(claveDe(a)).toBe('');
+        expect(claveDe(b)).toBe('');
+        const d = path.join(raiz, 'MAQUINA CON NOMBRE LARGO');
+        tocar(path.join(d, a)); tocar(path.join(d, b));
+        tocar(path.join(d, '.claude', 'LEEME - que hay aca.txt'));
+        expect(codigos(d)).not.toContain('CLAVE_REPETIDA');
+        fs.rmSync(d, { recursive: true, force: true });
+    });
+
+    it('una clave de 5 digitos no se trunca: su material no es "de otra maquina"', () => {
+        // El numero del telefono pasa de 4 a 5 digitos despues del 9999 (el 9527 ya esta cerca).
+        const d = path.join(raiz, 'MAQUINA CINCO DIGITOS');
+        tocar(path.join(d, '2026-09-21 - MOLDEADORA - HMI (IMG_10234).MOV'));
+        tocar(path.join(d, '.claude', 'LEEME - que hay aca.txt'));
+        tocar(path.join(d, '.claude', 'fotogramas de cada video', '10234', 'x.jpg'));
+        tocar(path.join(d, '.claude', 'transcripciones', '10234.txt'));   // nombre viejo, valido
+        const c = codigos(d);
+        expect(c).not.toContain('TRABAJO_DE_OTRA_MAQUINA');
+        expect(c).not.toContain('VIDEO_SIN_FOTOGRAMAS');
+        expect(c).not.toContain('VIDEO_SIN_TRANSCRIPCION');
+        fs.rmSync(d, { recursive: true, force: true });
+    });
+
     it('el nombre de la casa exige fecha adelante y clave entre parentesis', () => {
         expect(NOMBRE_DE_LA_CASA.test('2026-09-09 - PIZARRA - tiradas T1 a T10 (IMG_0802).HEIC')).toBe(true);
         expect(NOMBRE_DE_LA_CASA.test('Prensa KingPower - Parte 1 (02-09, 18 min).MOV')).toBe(false);

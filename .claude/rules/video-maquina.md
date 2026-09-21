@@ -88,6 +88,11 @@ Hook `video-maquina-guard.sh` (PreToolUse, logica en `scripts/_lib/guardianes.mj
 | copiar del telefono por MTP sin cruce fresco (< 12 h) | es lo que hizo rebajar 13 videos que ya estaban |
 | dejar en la **raiz de una carpeta de maquina** algo que no sea un original con el nombre de la casa | lo que no es original va a `.claude`; asi la carpeta ordena por fecha y se lee de un vistazo |
 
+**Alcance del hook, a proposito**: la tercera regla cuida la raiz de **cualquier** carpeta que
+empiece con `MAQUINA `, no solo las tres de la lista que audita el script. Una maquina nueva
+nace con esta convencion; el auditor, en cambio, solo mira las tres (lo viejo de VWA/SMRC se
+ordeno con otro criterio y Fak no pidio tocarlo).
+
 **Limite conocido del hook**: mira la LINEA DE COMANDO, asi que un script que lee su lista de
 movimientos de un archivo (como el `mover.ps1` que se uso el 21/09) le pasa por al lado. El que
 cierra esa puerta es el chequeo de abajo, que mira el RESULTADO — por eso se corre despues de
