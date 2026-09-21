@@ -24,6 +24,27 @@ Ninguna se arregla con buena voluntad. Las dos se arreglan con un numero.
 
 ## 0. LOS GATES (bloqueantes, en este orden)
 
+### GATE 0 — antes de escribir nada: ¿cuantos pasos tiene esta hoja, y entran?
+
+**Un paso es UNA accion que alguien hace y que se ve en UNA foto.** Lo que no se puede
+fotografiar no es un paso: una condicion va en la NOTA, un valor va en PARAMETROS.
+
+- **De 2 a 4 pasos por hoja, con una foto cada uno.** Cuatro es el tope: en A4 con mas de
+  cuatro fotos no se ve ninguna. Menos de dos no es una hoja, es una foto con epigrafe.
+- **La operacion que no entra se PARTE, no se comprime**: `SET UP INICIAL (HOJA 1 DE 2)`,
+  `(HOJA 2 DE 2)`. **El N° de operacion no cambia** — lo manda el flujograma
+  (`no-pfd-no-ho.md`). Sale solo del campo `hoja_de=(1, 2)`.
+- Si al partir queda un paso suelto, se reparte: **3+2 antes que 4+1**.
+
+Fak, 21/09/2026: *"en el flujograma lo que nos paso es que en algunos casos pusimos muy
+pocos pasos, a veces muchisimos, esta medio confuso"*. Antes esto no estaba escrito y por
+eso cada hoja salia con la cantidad de pasos que quedara. Ahora lo frena
+`_gate_una_foto_por_paso()` del generador.
+
+**La hoja es operativa, no un manual** (Fak, mismo dia): *"con las fotos se entienda
+rapidamente de que va el paso, y solo haga falta leer para entender mas a fondo"*. La foto
+cuenta el paso; el renglon lo precisa; los parametros van en la hoja, no aparte.
+
 ### GATE 1 — antes de acomodar: ¿cual es la imagen PRINCIPAL de esta hoja?
 
 Se contesta **por hoja y por escrito**, antes de tocar el layout: *la imagen que el paso
@@ -92,6 +113,105 @@ El dato viaja en un chunk de texto del PNG y no en un archivo al lado porque el 
 imagenes **ya embebidas en el pptx**, donde no hay nombre de archivo que seguir.
 
 ---
+
+## 2 bis. La foto sale del VIDEO, no del fotograma de la biblioteca
+
+`_INFO SACADA DE LOS VIDEOS` (hoy `.claude\fotogramas de cada video`) muestrea **un cuadro
+cada 2 segundos, escalado a 1600**. Eso sirve para ENCONTRAR el momento; la foto de la hoja
+se saca aparte, y por tres motivos medidos el 21/09/2026:
+
+1. **Entre dos muestras hay 59 cuadros que nadie miro** y el foco entre vecinos se mueve un
+   orden de magnitud. Se extrae la ventana entera a resolucion completa y se elige por foco.
+2. **El metadato de rotacion del telefono puede estar mal**: el IMG_0585 declara
+   `rotation=90`, ffmpeg la aplica, y el tablero igual sale acostado. La rotacion se MIRA.
+3. **Una toma general sin recortar no explica un paso.** Desde un punto fijo, el portico
+   arriba y el portico abajo se parecen. El recorte es lo que convierte una foto en una
+   instruccion.
+
+```bash
+S=.claude/skills/hojas-de-proceso/scripts
+py -3 $S/fotodevideo.py ubicar  --video V --cuadro <frame de la biblioteca>   # el segundo
+py -3 $S/fotodevideo.py ventana --video V --seg 110 --radio 2 --plancha p.jpg # mirar y elegir
+py -3 $S/fotodevideo.py sacar   --video V --seg 110 --crop 15,25,34,34 --out f.jpg --nota "..."
+py -3 $S/fotodevideo.py leer    assets/*.jpg      # sale 1 si alguna no dice de donde salio
+```
+
+**La procedencia va ADENTRO del archivo** (EXIF / chunk PNG): video, segundo, rotacion,
+recorte y nota. Un JPG suelto en una carpeta de assets sin eso es un huerfano — nadie puede
+rehacerlo ni verificarlo. Y es lo que evita el defecto que tenia el set anterior: de 36
+fotos, **7 eran el mismo archivo con otro nombre** (una foto del portico se llamaba
+`30.9_b_cadenas_grua` y tambien `30.7_b_descenso_portico`).
+
+**El recorte se pide en la relacion de la celda.** Con 4 fotos la celda es 16:9; una foto de
+otra relacion entra contenida y queda mas chica que las otras. El generador avisa cuando una
+foto llena menos del 80 % de su celda.
+
+## 2 ter. Rotular: el numero va en la foto, el texto va en la HOJA
+
+`rotular.py` pone recuadro + numero sobre lo que hay que mirar. Dentro de una hoja se usa
+**`--banda ninguna`**: el texto de cada numero ya esta en el bloque DESCRIPCION, y repetirlo
+en una banda al costado lo pone dos veces y, al tamaño que le toca a la foto en A4, la copia
+no se lee. La banda (`derecha` / `abajo`) es para una foto que viaja sola, en un mail o un PDF.
+
+```bash
+py -3 $S/rotular.py --foto f.jpg --out r.jpg --banda ninguna \
+     --marca "8,50,25,28|Selector AUTOMATICO / MANUAL" --marca "52,48,9,27|Verde ARRANQUE"
+```
+
+- **La serigrafia en chino se cita, no se traduce sobre la maquina**: el rotulo dice
+  *"Verde ARRANQUE DE CICLO (循环启动)"* porque eso es lo que el operario tiene delante.
+  La fuente es Microsoft YaHei (latino + CJK); con Calibri los ideogramas salen como
+  cuadraditos vacios y `sin_glifo()` corta antes de guardar.
+- **El numero va montado sobre la ESQUINA del recuadro**, no adentro: adentro le tapa al
+  control justo la serigrafia que el rotulo esta citando.
+- La foto guarda la lista de rotulos adentro, y el generador la lee: **si la foto trae 5
+  marcas, la hoja tiene que tener 5 pasos**. Si alguien saca una marca y no toca la hoja,
+  el gate lo frena.
+
+## 2 quater. Una marca es una POSICION, y una posicion se mide
+
+Fak, 21/09/2026: *"le erraste con los cuadraditos, no estan bien puestos sobre los botones,
+eso revisalo cuidadosamente... errores obvios"*, *"el skill deberia verificar bien esas
+cosas, no podemos fallar en algo tan obvio"*. Y tenia razon: yo habia puesto las marcas
+mirando un render, despues **cambie el recorte y volvi a estimar los porcentajes sin volver
+a mirar**. Es el mismo error del 15/09 con el aire de una tarjeta: mirar no es medir.
+
+```bash
+py -3 $S/medir_marca.py --foto f.jpg --marcado prueba.jpg   # donde esta cada pulsador
+py -3 $S/rotular.py --foto f.jpg --out r.jpg --zona 50,45,90,75 \
+     --marca "color:verde|Verde ARRANQUE DE CICLO" --marca "color:rojo#1|Rojo PARO"
+```
+
+- **`color:verde` mide la caja**; nadie tipea la posicion, asi que no se puede poner mal.
+  Colores: verde, rojo, azul, amarillo, y `oscuro` / `claro` para lo que no es de color
+  (el contorno del molde sobre la grilla de resistencias). Si hay varias manchas del mismo
+  color, **corta y las lista** en vez de elegir por su cuenta: se desempata con `rojo#1` o
+  acotando con `--zona`.
+- **La marca escrita a mano se chequea**: si la caja cae sobre una zona LISA (chapa, pared,
+  panel vacio) `rotular.py` sale con error. Una marca corrida unos centimetros cae justo al
+  lado del boton, se ve prolija en el codigo y mal en el papel. `--lisa-ok 2` para el caso
+  en que rodear una zona lisa sea a proposito.
+- **El orden de los numeros es el orden en que se escriben las marcas**, midan o no. El
+  numero del rotulo ES el numero del paso.
+- Y despues igual **se mira la foto rotulada a tamaño completo**, antes de meterla en la
+  hoja. El control ubica, no aprueba.
+
+## 2 quinquies. La NOTA es para el operario, o no va
+
+Fak, 21/09/2026, mirando la nota de una hoja: *"esas notas son una mierda, no le aportan
+nada util al operario, o sea cualquier cosa son"*. Lo que yo habia escrito ahi era mi
+propia contabilidad: de que video sale la foto, a quien le pregunte que, que quedo pendiente
+con el proveedor, como arme la hoja.
+
+**Test de una nota: ¿esto le cambia algo al que esta parado al lado de la maquina?** Si no,
+va a la bitacora o al PDF de pendientes, no a la hoja. Sirven: un limite, una advertencia,
+un "no arranques si...", un "esto se hace entre dos". No sirven —y las frena el gate
+`_gate_texto_para_el_operario()`— el numero de video, "pendiente de confirmar con X",
+"filmado el ...", "lectura del ...", "lo agregamos nosotros", "BORRADOR". **`TBD` se puede
+escribir, pero solo**: el por que va aparte (`no-pfd-no-ho.md` §5).
+
+Lo mismo para los parametros: va el valor que rige (`Tiempo de vacio: 19 s`), no su
+historia (`subido de 8 s el 10/09 porque...`).
 
 ## 3. La pantalla es la FOTO REAL enderezada, con el dato encima. Ni redibujada ni con IA
 
@@ -185,9 +305,17 @@ CICLO DE CONTROL · ELEMENTOS DE SEGURIDAD · PLAN DE REACCION.
 | **Dura** | los umbrales viven **solo** en `hojalib.py`: el generador dibuja con los mismos numeros con los que el gate rechaza | `.claude/skills/hojas-de-proceso/scripts/hojalib.py` |
 | **Regresion** | 25 casos, cada criterio en ROJO y en VERDE | `.claude/skills/hojas-de-proceso/scripts/hojalib_selftest.py` |
 | **Dato** | la metrica de legibilidad viaja dentro del PNG, sobrevive al pptx | `hojalib.guardar_pantalla()` |
+| **Dato** | de que video y que segundo salio cada foto, adentro del archivo | `fotodevideo.py leer` (sale 1 si alguna no lo dice) |
+| **Dura** | una foto por paso · 2 a 4 pasos · las marcas de la foto = los pasos de la hoja | `_gate_una_foto_por_paso()` del generador |
+| **Aviso** | una foto que llena menos del 80 % de su celda | el generador lo imprime al compilar |
+| **Dura** | un rotulo con caracteres que la fuente no dibuja | `rotular.sin_glifo()` |
+| **Dura** | una marca que cae sobre una zona lisa (al lado del boton, no encima) | `rotular.chequear_marcas()` |
+| **Dura** | cocina interna en el texto de la hoja (Nº de video, pendientes, metodo) | `_gate_texto_para_el_operario()` del generador |
+| **Medido** | donde esta cada pulsador, en vez de estimarlo | `medir_marca.py` / `--marca "color:verde|..."` |
 
 ```bash
 py -3 .claude/skills/hojas-de-proceso/scripts/hojalib_selftest.py     # 25 casos
+py -3 .claude/skills/hojas-de-proceso/scripts/fotodevideo.py leer <assets>/*.jpg  # procedencia
 py -3 .claude/skills/hojas-de-proceso/scripts/hoja_proceso_check.py "<deck.pptx>" --spec <spec.py>
 ```
 
@@ -204,6 +332,12 @@ cliente). En el repo va solo lo generico: libreria, gate y selftest.
 - [ ] las pantallas miradas **al ancho que van a tener impresas**, no ampliadas
 - [ ] PowerPoint cerrado antes de generar, y el texto verificado sobre el archivo guardado
 - [ ] si el archivo lo venia editando Fak: su texto **intacto**, verificado con diff
+- [ ] `fotodevideo.py leer` en verde: **ninguna foto sin decir de que video salio**
+- [ ] **ninguna foto repetida con dos nombres** (`md5sum *.jpg | sort | uniq -d` sobre el hash)
+- [ ] cada hoja con 2 a 4 pasos, una foto por paso, y las partidas con su (HOJA n DE m)
+- [ ] **cada foto rotulada, mirada a tamaño completo DESPUES del ultimo cambio de recorte**
+- [ ] cada nota pasa el test: ¿le cambia algo al que esta al lado de la maquina?
+- [ ] lo que falta filmar, en su lista aparte — **no se escribe por analogia**
 - [ ] ningun `TBD` sin avisar, ninguna foto sin mirar, ningun numero sin fuente citada
 
 ---

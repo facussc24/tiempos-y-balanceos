@@ -30,6 +30,23 @@ Regla corta. El detalle, los umbrales y los errores caros: skill `hojas-de-proce
    tiene bordes blancos a los alrededores y los mismos espaciados"*. El mismo error en Excel se
    ve al reves: un texto recortado que la celda no muestra. Vale igual para `_xlsxAPdf.py`.
 
+6. **Una foto por paso, de 2 a 4 pasos por hoja, y la operacion que no entra se PARTE**
+   (`SET UP INICIAL (HOJA 1 DE 2)`) sin cambiar el N° de operacion. Un paso es una accion
+   que se ve en una foto; lo que no se puede fotografiar es una nota o un parametro, no un
+   paso. Criterio afinado con Fak el 21/09/2026, despues de hojas de 2 pasos y hojas de 12.
+7. **La foto de la hoja sale del VIDEO a resolucion completa, recortada, y dice adentro del
+   archivo de donde salio** (`fotodevideo.py`). El fotograma de la biblioteca sirve para
+   encontrar el momento, no para ilustrar. Sin procedencia es un huerfano: en el set
+   anterior 7 de 36 fotos eran el mismo archivo con otro nombre.
+
+8. **La NOTA y los pasos son para el OPERARIO.** Nada de numero de video, pendientes con
+   el proveedor, "filmado el", "lectura del" ni como se hizo la hoja: eso va a la bitacora
+   (Fak, 21/09/2026: *"esas notas no le aportan nada util al operario"*). Lo frena
+   `_gate_texto_para_el_operario()`.
+9. **La posicion de una marca se MIDE, no se estima** — y se vuelve a mirar despues de
+   cualquier cambio de recorte. `medir_marca.py` la ubica, `--marca "color:verde|..."` la
+   coloca sola, y `rotular.chequear_marcas()` rechaza la que cae sobre chapa lisa.
+
 ## Enforcement
 
 - **Duro:** `py -3 .claude/skills/hojas-de-proceso/scripts/hoja_proceso_check.py "<deck.pptx>"`
