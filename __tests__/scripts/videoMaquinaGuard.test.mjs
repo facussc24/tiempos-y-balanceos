@@ -110,6 +110,49 @@ describe('video-maquina-guard — copiar del telefono sin cruzar', () => {
     });
 });
 
+describe('video-maquina-guard — la raiz de una carpeta de maquina es solo para originales', () => {
+    // Pedido de Fak el 21/09/2026. Antes de ordenarlas, las tres carpetas de la linea Top Roll
+    // tenian en la raiz el generador de las hojas, los fotogramas de OTRA maquina, el PDF de un
+    // caso y dos carpetas numeradas: 228 hallazgos, y un video de 1,19 GB guardado dos veces.
+    const RAIZ = '/c/Users/FacundoS-PC/BARACK ARGENTINA SRL/Ing/INGENIERIA BARACK (NUNCA BORRAR)/5- VIDEOS Y FOTOS/1- CLIENTES/NOVAX/TOP ROLL/MAQUINA MOLDEADORA IMG';
+
+    it('ROJO: dejar un PDF, un script o una carpeta de trabajo en la raiz', () => {
+        for (const x of ['CASO - burbuja en la punta.pdf', 'hojas_spec.py', '_INFO SACADA DE LOS VIDEOS']) {
+            const r = correr(`mv "algo" "${RAIZ}/${x}"`, { horasDelCruce: 0 });
+            expect(r?.tipo, x).toBe('bloqueo');
+            expect(r.texto).toMatch(/SOLO los originales/);
+            expect(r.texto).toMatch(/\.claude/);
+        }
+    });
+
+    it('ROJO: un video con nombre que no es el de la casa, y el mensaje dice cual es el formato', () => {
+        const r = correr(`mv "x.MOV" "${RAIZ}/Prensa KingPower - Parte 1 (02-09, 18 min).MOV"`, { horasDelCruce: 0 });
+        expect(r?.tipo).toBe('bloqueo');
+        expect(r.texto).toMatch(/AAAA-MM-DD - lo que se ve \(IMG_xxxx\)/);
+    });
+
+    it('ROJO: tambien cuando lo escribe la tool Write, no solo un mv', () => {
+        const r = correr('', { horasDelCruce: 0, file: `${RAIZ}/notas.txt`, tool: 'Write' });
+        expect(r?.tipo).toBe('bloqueo');
+    });
+
+    it('VERDE: un original con el nombre de la casa entra a la raiz', () => {
+        const ok = `${RAIZ}/2026-09-09 - PIZARRA - tiradas T1 a T10 de la manana (IMG_0802).HEIC`;
+        expect(correr(`mv "origen.HEIC" "${ok}"`, { horasDelCruce: 0 })).toBeNull();
+    });
+
+    it('VERDE: lo que va adentro de .claude pasa, que para eso esta', () => {
+        for (const d of ['.claude', '.claude/transcripciones/IMG_0802.txt', '.claude/casos/CASO - burbuja.pdf']) {
+            expect(correr(`mv "algo" "${RAIZ}/${d}"`, { horasDelCruce: 0 }), d).toBeNull();
+        }
+    });
+
+    it('VERDE: una carpeta que no es de maquina no la mira este candado', () => {
+        const otra = '/c/Users/FacundoS-PC/BARACK ARGENTINA SRL/Ing/INGENIERIA BARACK (NUNCA BORRAR)/5- VIDEOS Y FOTOS/3- INSTITUCIONAL/2026-09-10 - La prensa/_LEEME.txt';
+        expect(correr(`mv "algo" "${otra}"`, { horasDelCruce: 0 })).toBeNull();
+    });
+});
+
 describe('video-maquina-guard — no estorba a quien lo documenta', () => {
     it('VERDE: la regla, el test, la memoria y LECCIONES nombran estas rutas como dato', () => {
         for (const f of ['.claude/rules/video-maquina.md', '__tests__/scripts/videoMaquinaGuard.test.mjs',

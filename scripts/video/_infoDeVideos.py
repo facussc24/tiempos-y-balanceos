@@ -8,10 +8,13 @@ distintas. Lo que sirve son esas 20. Y el audio de planta con los tecnicos chino
 sirve como fuente de un numero, pero si sirve cuando narra Facundo.
 
 Deja, dentro de la carpeta de los videos:
-  _INFO SACADA DE LOS VIDEOS/
-      fotogramas de cada video/<IMG_xxxx>/   el mas nitido de cada pantalla distinta
-      transcripciones/<IMG_xxxx>.txt         audio con marca de tiempo
-      LEEME - que hay en cada carpeta.txt
+  .claude/
+      fotogramas de cada video/<xxxx>/       el mas nitido de cada pantalla distinta
+      transcripciones/IMG_<xxxx>.txt         audio con marca de tiempo
+      LEEME - que hay aca.txt
+
+En la RAIZ de la carpeta de la maquina van solo los originales (videos y fotos). Lo chequea
+`node scripts/_videoBiblioteca.mjs --auditar`.
 
 NO BORRA NADA (la biblioteca esta bajo control documental y lleva "NUNCA BORRAR" en el
 nombre): si una carpeta ya tiene cuadros, la saltea.
@@ -30,7 +33,7 @@ import argparse, os, re, shutil, subprocess, sys
 
 
 def tag_de(nombre: str) -> str:
-    m = re.search(r"\(IMG_(\d+)\)", nombre)
+    m = re.search(r"IMG_E?(\d+)", nombre, re.IGNORECASE)
     return m.group(1) if m else os.path.splitext(nombre)[0][:12]
 
 
@@ -47,7 +50,15 @@ def videos_de(carpeta: str, desde: str | None) -> list[str]:
 
 
 def carpeta_info(carpeta: str) -> str:
-    d = os.path.join(carpeta, "_INFO SACADA DE LOS VIDEOS")
+    """Todo lo que genero yo va a `.claude`, al lado de los originales.
+
+    Hasta el 21/09/2026 esta carpeta se llamaba `_INFO SACADA DE LOS VIDEOS`. Fak pidio que
+    la carpeta de la maquina tenga SOLO los originales y que lo demas quede junto y aparte;
+    las tres carpetas de la linea Top Roll ya estan mudadas. Si aparece una carpeta vieja sin
+    migrar se usa esa, para no dejar el material partido en dos lugares.
+    """
+    viejo = os.path.join(carpeta, "_INFO SACADA DE LOS VIDEOS")
+    d = viejo if os.path.isdir(viejo) else os.path.join(carpeta, ".claude")
     os.makedirs(d, exist_ok=True)
     return d
 
@@ -124,7 +135,11 @@ def audio(carpeta: str, desde: str | None, solo: set[str] | None, trabajo: str) 
         t = tag_de(v)
         if solo and t not in solo:
             continue
-        dst = os.path.join(destino, f"{t}.txt")
+        # El nombre unificado es IMG_xxxx.txt (21/09/2026); `xxxx.txt` es como se llamaban
+        # antes y se respeta para no re-transcribir 1 h 30 de audio al pedo.
+        dst = os.path.join(destino, f"IMG_{t}.txt")
+        if os.path.exists(os.path.join(destino, f"{t}.txt")):
+            dst = os.path.join(destino, f"{t}.txt")
         if os.path.exists(dst):
             print(f"skip {t}", flush=True)
             continue

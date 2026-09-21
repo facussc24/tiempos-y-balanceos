@@ -1182,6 +1182,12 @@ const VID_MUEVE = /(^|[;&|\s])(cp|copy|mv|move|xcopy|robocopy)(\s|$)|Copy-Item|M
 const SEP = '(?:^|[\\s"\'/\\\\])';
 const VID_EXCEPCION = new RegExp(`(__tests__|\\.test\\.|\\.spec\\.|${SEP}hooks[/\\\\]|guardianes\\.mjs|${SEP}\\.claude[/\\\\]rules[/\\\\]|LECCIONES_APRENDIDAS|MEMORY\\.md|${SEP}memory[/\\\\]|_videoBiblioteca)`, 'i');
 const VID_CRUCE_H = 12;
+// La RAIZ de una carpeta de maquina: `...5- VIDEOS Y FOTOS\...\MAQUINA <X>\<un solo nombre>`.
+// Si despues de la carpeta de la maquina hay mas de un tramo, ya esta adentro de una subcarpeta
+// (`.claude\transcripciones\x.txt`) y no es asunto de este candado.
+const VID_RAIZ_MAQUINA = /5-\s*VIDEOS Y FOTOS[\\/].*[\\/]MAQUINA [^\\/]+[\\/][^\\/]+$/i;
+const VID_MEDIA = /\.(mov|mp4|m4v|heic|jpe?g|png)$/i;
+const VID_NOMBRE_CASA = /[\\/]\d{4}-\d{2}-\d{2} - [^\\/]+ \([^()\\/]+\)\.[A-Za-z0-9]{2,4}$/;
 
 /**
  * El DESTINO de un comando que mueve o copia: el ultimo argumento con pinta de ruta
@@ -1258,6 +1264,36 @@ Si lo que estas haciendo es justamente SACARLO del Escritorio hacia la bibliotec
 de destino completa (tiene que contener "5- VIDEOS Y FOTOS") y este guardian te deja pasar.
 
 ${VID_CIERRE}`);
+  }
+
+  // 3. Dejar en la RAIZ de una carpeta de maquina algo que no sea un original bien nombrado.
+  //    Pedido de Fak el 21/09/2026: "que esten los archivos originales videos o fotos
+  //    originales y todo lo demas dentro de una carpeta que diga .claude para que no estorbe".
+  //    Antes de ordenarlas, esas tres carpetas tenian adentro el generador de las hojas, los
+  //    fotogramas de otra maquina, un PDF de un caso y dos carpetas numeradas: 228 hallazgos.
+  const destinos = [];
+  for (const s of vidSentencias(cmd)) if (VID_MUEVE.test(s)) destinos.push(vidDestino(s));
+  if (file) destinos.push(file);
+  for (const d of destinos.filter(Boolean)) {
+    if (!VID_RAIZ_MAQUINA.test(d)) continue;
+    if (/[\\/]\.claude$/i.test(d)) continue;             // la carpeta de trabajo, justamente
+    const esMedia = VID_MEDIA.test(d);
+    if (esMedia && VID_NOMBRE_CASA.test(d)) continue;    // original bien nombrado: pasa
+    return bloqueo(`[VIDEO-MAQUINA] BLOQUEADO: ${esMedia
+      ? 'ese nombre no es el de la casa y la carpeta de la maquina ordena por fecha.'
+      : 'en la raiz de una carpeta de maquina van SOLO los originales (videos y fotos).'}
+
+  ${d}
+
+En la raiz de MAQUINA <X> van solo videos y fotos, con el nombre
+    AAAA-MM-DD - lo que se ve (IMG_xxxx).ext
+y TODO lo demas — transcripciones, fotogramas, PDFs, scripts, borradores — va adentro de
+\`.claude\`, que para eso esta. Lo chequea:
+
+  node scripts/_videoBiblioteca.mjs --auditar
+
+Fak, 21/09/2026: "la idea es que esten los archivos originales videos o fotos originales y
+todo lo demas dentro de una carpeta que diga .claude para que no estorbe".`);
   }
 
   // 2. Copiar del telefono sin haber cruzado antes contra la biblioteca.
