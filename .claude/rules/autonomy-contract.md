@@ -47,4 +47,38 @@ Si dudo entre dos filas, aplico la mas restrictiva. Principios: hacer sin pregun
 
 Operacion no listada: si es reversible (local, sin push, sin Supabase) → hacer; si es irreversible o toca datos/produccion → preguntar; si exige inventar datos tecnicos → TBD y avisar.
 
+## F. La PRIMERA VEZ se pregunta — regla de Fak, 21/09/2026
+
+**Si es la primera vez que hago un tipo de trabajo, pregunto ANTES de tocar nada de la empresa.**
+No importa que el camino parezca claro: lo que no se es que NO SE.
+
+Fak, 21/09/2026, despues de que emitiera un flujograma Rev.A en tres carpetas del servidor
+—una de ellas el paquete que va al cliente— sin que el lo viera: *"si nunca lo hiciste, si es
+tu primera vez haciendo algo, preguntame antes... esta era tu primera vez laburando en un APQP.
+Ahora sabes que el plano lo podes cargar, pero todo lo demas no sabes que poner en input"*.
+
+Que cuenta como "primera vez": un tipo de documento, un tipo de carpeta o un circuito que no
+hice antes en este proyecto. La prueba es simple — **si no puedo nombrar el caso anterior, es
+la primera vez.**
+
+Y la pregunta no es "¿puedo?": es **"esto va aca, ¿esta bien?"**, con la ruta y el archivo
+concretos. Fak ajusta el criterio y eso queda escrito para que no se vuelva a preguntar.
+
+### Lo aprendido de esa primera vez (APQP)
+
+| Accion | Autonomia |
+|---|---|
+| Cargar el plano del cliente en `6-Planos de la pieza` del legajo | Libre (OK de Fak 21/09/2026) |
+| Emitir un documento controlado (flujograma, AMFE, HO) en `Gestion Ingenieria` | **Preguntar** — el documento lo firma Fak |
+| Poner algo en el paquete del cliente (`31-...\PPAP_<PN>\`) | **Prohibido sin OK**: el PPAP es de CALIDAD, Ingenieria no lo arma |
+| Escribir en un listado maestro (flujogramas, AMFEs, hojas de proceso) | **Preguntar** — es registro compartido |
+| Llenar cualquier otro casillero del APQP | **Preguntar** hasta que este escrito en el skill `apqp-legajo` |
+
+**Un documento vivo tiene UN solo lugar.** El maestro vive en `Gestion Ingenieria`; lo que se
+copia al legajo o al paquete del cliente es una COPIA que envejece sola
+(memoria `gestion_ingenieria_es_el_maestro`). No se reparte una copia "por las dudas": se
+copia cuando se entrega, y quien entrega el PPAP es Calidad.
+
+Que va en cada casillero del legajo APQP: skill **`apqp-legajo`** (lo corrige Fak).
+
 Este contrato evoluciona: si una fila genera friccion repetida, actualizarlo y commitearlo.

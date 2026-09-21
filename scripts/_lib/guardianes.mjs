@@ -161,7 +161,7 @@ export function ctxDesdeEnv(env) {
  */
 const SOLO_SHELL = ['supabase-guard', 'validator-check', 'renumber-guard', 'push-guard', 'arb-cerrar-guard', 'script-inline-guard', 'secretos-guard'];
 const SOLO_ARCHIVO = ['file-guard', 'causas-ajenas-guard'];
-const LOS_CUATRO = ['consumos-entregable-guard', 'cad-guard', 'patrones-guard', 'escritorio-guard', 'borrado-masivo-guard', 'ho-numeracion-guard', 'mail-guard', 'documentacion-oficial-guard', 'video-maquina-guard', 'caracteristicas-especiales-guard'];
+const LOS_CUATRO = ['consumos-entregable-guard', 'cad-guard', 'patrones-guard', 'escritorio-guard', 'borrado-masivo-guard', 'ho-numeracion-guard', 'mail-guard', 'documentacion-oficial-guard', 'video-maquina-guard', 'caracteristicas-especiales-guard', 'apqp-cliente-guard'];
 export const TODOS = ['file-guard', 'supabase-guard', 'validator-check', 'renumber-guard', 'push-guard', 'script-inline-guard', 'secretos-guard', ...LOS_CUATRO, 'arb-cerrar-guard', 'causas-ajenas-guard'];
 
 export function matriz(tool) {
@@ -1404,6 +1404,81 @@ QUE HACER EN VEZ:
 NO BLOQUEADO, por si era lo que buscabas: cerrar 'Maestro de Insumos' o 'Maestro de
 Relaciones' con WM_CLOSE (es el modo documentado de descartar una edicion sin grabar),
 y 'python scripts/_arbVer.py reset', que cierra y REABRE la de Relaciones.`);
+};
+
+// ── apqp-cliente-guard ─────────────────────────────────────────────────────
+// Regla `.claude/rules/autonomy-contract.md` §F (Fak, 21/09/2026). Dos zonas donde Ingenieria
+// no escribe sola:
+//
+//   1. EL PAQUETE QUE VA AL CLIENTE. Adentro de un legajo PPAP, la carpeta del paquete del
+//      cliente (`PPAP_<part number>_<n>`) la arma CALIDAD, no Ingenieria. El 21/09/2026 emiti
+//      el flujograma 159 Rev.A y lo copie ahi sin que Fak lo viera: *"lo del plano no me parece
+//      mal que lo pongas en su carpeta pero todo lo demas... si"*.
+//   2. LOS LISTADOS MAESTROS (flujogramas, AMFEs, hojas de proceso). Son registro compartido:
+//      la fila la carga Fak o se carga con su OK.
+//
+// Lo que NO bloquea: leer cualquiera de las dos, y SACAR algo del paquete del cliente — esa es
+// la unica correccion posible cuando ya se colo un archivo. Tampoco toca el resto del legajo
+// APQP: cargar el plano del cliente en `6-Planos de la pieza` quedo autorizado.
+const APQP_PAQUETE = /[\\/]PPAP_[A-Za-z0-9][A-Za-z0-9._-]*[\\/]/;
+const APQP_LISTADO = /Listado_Maestro_[A-Za-z]+\.xlsx|Listado hojas de proceso\.xlsx/i;
+const APQP_EXCEPCION = /(__tests__|\.test\.|\.spec\.|[/\\]hooks[/\\]|[/\\]_lib[/\\]guardianes\.mjs$|[/\\]\.claude[/\\]rules[/\\]|[/\\]\.claude[/\\]skills[/\\]|LECCIONES_APRENDIDAS)/i;
+const APQP_ESCRIBE = /(^|[;&|\s])(cp|copy|xcopy|robocopy|mv|move)(\s|$)|Copy-Item|Move-Item|shutil\.(copy|move)|>\s*["']?[^"'\s|]*[\\/]/im;
+// Los scripts de alta en un listado maestro siguen todos el mismo patron: `_registrar*` + --apply.
+const APQP_REGISTRA = /_registrar[A-Za-z0-9]*\.(py|mjs)\b[^\n]*--apply|--apply[^\n]*_registrar[A-Za-z0-9]*\.(py|mjs)\b/i;
+
+const APQP_CIERRE = `Regla: .claude/rules/autonomy-contract.md §F — "la PRIMERA VEZ se pregunta".
+Que va en cada casillero del legajo APQP: skill \`apqp-legajo\`.`;
+
+GUARDIANES['apqp-cliente-guard'] = (ctx) => {
+  let tool, cmd, file;
+  if (ctx.ok) { tool = ctx.toolL; cmd = ctx.cmd6; file = ctx.fileL; }
+  else { tool = ctx.rescate.tool; file = ctx.rescate.file; cmd = `${ctx.rescate.cmd} ${ctx.raw.replace(/\n/g, ' ')}`; }
+  const todo = `${cmd} ${file}`;
+  if (APQP_EXCEPCION.test(todo)) return null;
+  const esEscritura = tool === 'write' || tool === 'edit';
+
+  // 1. El paquete del cliente
+  const destino = esEscritura ? file : ultimaRuta(cmd);
+  const vaAlPaquete = APQP_PAQUETE.test(destino);
+  if (vaAlPaquete && (esEscritura || APQP_ESCRIBE.test(cmd))) {
+    return bloqueo(`[APQP-CLIENTE] BLOQUEADO: estas poniendo un archivo en el PAQUETE QUE VA AL CLIENTE.
+
+${destino}
+
+Esa carpeta es el paquete de PPAP que Barack le devuelve al cliente, y lo arma CALIDAD.
+Ingenieria le deja la base (flujograma, AMFE, base de plan de control) en el LEGAJO; quien
+decide que entra al paquete, con que revision y cuando se presenta, no soy yo.
+
+Y hay un motivo mas: un documento vivo tiene UN solo lugar. La copia que se deja "por las
+dudas" en el paquete envejece sola y despues nadie sabe cual manda.
+
+  · Dejalo en el casillero del legajo que le corresponde y avisale a Fak que esta listo.
+  · Si Fak ya dijo que va al paquete, decilo y lo copio.
+  · SACAR algo de ahi no esta bloqueado: eso siempre se puede.
+
+${APQP_CIERRE}`);
+  }
+
+  // 2. Los listados maestros
+  const tocaListado = APQP_LISTADO.test(destino) || (!esEscritura && APQP_LISTADO.test(cmd));
+  if ((esEscritura && APQP_LISTADO.test(file)) || (!esEscritura && tocaListado && APQP_ESCRIBE.test(cmd)) || APQP_REGISTRA.test(cmd)) {
+    return bloqueo(`[APQP-CLIENTE] BLOQUEADO: estas por escribir en un LISTADO MAESTRO.
+
+${destino || cmd.slice(0, 120)}
+
+Los listados maestros (flujogramas, AMFEs, hojas de proceso) son el registro compartido de
+Ingenieria: de ahi sale el numero de cada documento y el estado de cada uno. Una fila cargada
+de mas, o con una ruta que todavia no existe, la arrastra despues todo el mundo.
+
+  · Corre el script en DRY-RUN (sin --apply), mostrale a Fak la fila que va a quedar, y
+    aplicala con su OK.
+  · Leer el listado no esta bloqueado.
+
+${APQP_CIERRE}`);
+  }
+
+  return null;
 };
 
 export const NOMBRES = Object.keys(GUARDIANES);

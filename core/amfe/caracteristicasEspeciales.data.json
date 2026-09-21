@@ -5,23 +5,72 @@
     "Regla always-on con las fuentes y sus paginas: .claude/rules/caracteristicas-especiales.md. NO duplicar estas tablas en codigo: se cambian ACA y todos las ven."
   ],
   "criterio": {
-    "CRITICA": { "severidad_min": 9, "severidad_max": 10, "ocurrencia_min": 1, "texto": "S = 9 o 10, O indistinto" },
-    "SIGNIFICATIVA": { "severidad_min": 5, "severidad_max": 8, "ocurrencia_min": 4, "texto": "S = 5 a 8 y O >= 4" }
+    "CRITICA": {
+      "severidad_min": 9,
+      "severidad_max": 10,
+      "ocurrencia_min": 1,
+      "texto": "S = 9 o 10, O indistinto"
+    },
+    "SIGNIFICATIVA": {
+      "severidad_min": 5,
+      "severidad_max": 8,
+      "ocurrencia_min": 4,
+      "texto": "S = 5 a 8 y O >= 4"
+    }
   },
   "criterio_fuente": "I-AC-005 rev.B, tabla del punto 5 ('Severidad: 9 o 10 / Ocurrencia: indistinto' -> CC; 'Severidad: 5 a 8 / Ocurrencia: >= 4' -> CS, verificado en el XML del docx el 11/09/2026); manual AMFE AIAG-VDA (SETEC R06 jul-2020, pag. 129). Legal = S 9 por la tabla P1 del AIAG-VDA ('noncompliance with regulations'): la CC SALE de la S, no es independiente de S/O.",
   "aliases": {
-    "CRITICA": ["CC", "CS/CC", "∇", "▽", "D", "D/TLD", "TLD"],
-    "SIGNIFICATIVA": ["SC", "CS"],
-    "SEGURIDAD_OPERADOR": ["OS"],
-    "ALTO_IMPACTO": ["HI"]
+    "CRITICA": [
+      "CC",
+      "CS/CC",
+      "∇",
+      "▽",
+      "D",
+      "D/TLD",
+      "TLD",
+      "CC/S",
+      "CC/H"
+    ],
+    "SIGNIFICATIVA": [
+      "SC",
+      "CS",
+      "SC/F"
+    ],
+    "SEGURIDAD_OPERADOR": [
+      "OS"
+    ],
+    "ALTO_IMPACTO": [
+      "HI"
+    ]
   },
   "aliases_comentario": "W / WICHTIG NO estan a proposito: no existen en ninguna norma VW (barrido 08/09/2026: 24 normas del legajo VW427 + Formel Q + Anexo + CSR + QMA; Fak 09/09: 'la w no existe'). Una sigla que no esta aca sale como SIGLA_DESCONOCIDA: nunca se adivina. CS es la escritura del instructivo; todos los documentos de trabajo escriben SC.",
-  "sin_marca": ["", "-", "—", "N/A"],
+  "sin_marca": [
+    "",
+    "-",
+    "—",
+    "N/A"
+  ],
   "simbologia": {
-    "INTERNA": { "CRITICA": "CC", "SIGNIFICATIVA": "SC", "SEGURIDAD_OPERADOR": "OS", "ALTO_IMPACTO": "HI" },
-    "VW": { "CRITICA": "D/TLD", "SIGNIFICATIVA": "SC", "SEGURIDAD_OPERADOR": "OS", "ALTO_IMPACTO": "HI" }
+    "INTERNA": {
+      "CRITICA": "CC",
+      "SIGNIFICATIVA": "SC",
+      "SEGURIDAD_OPERADOR": "OS",
+      "ALTO_IMPACTO": "HI"
+    },
+    "VW": {
+      "CRITICA": "D/TLD",
+      "SIGNIFICATIVA": "SC",
+      "SEGURIDAD_OPERADOR": "OS",
+      "ALTO_IMPACTO": "HI"
+    },
+    "SMRC": {
+      "CRITICA": "cc/h",
+      "SIGNIFICATIVA": "sc/f",
+      "SEGURIDAD_OPERADOR": "OS",
+      "ALTO_IMPACTO": "HI"
+    }
   },
-  "simbologia_comentario": "Para VW la critica se escribe D/TLD (Formel Q pag. 28 §7.5: D y TLD son UNA marca, mismo rango; CSR VW 'parts with D/TLD-marking') y la significativa SC (VW no tiene sigla propia; Fak 09/09/2026). En caratula y flujograma la leyenda dice solo CARACTERISTICA CRITICA / SIGNIFICATIVA, sin citar instructivos ni manuales (Fak 08/09/2026).",
+  "simbologia_comentario": "Para VW la critica se escribe D/TLD (Formel Q pag. 28 §7.5: D y TLD son UNA marca, mismo rango; CSR VW 'parts with D/TLD-marking') y la significativa SC. Para SMRC / Stellantis la critica se PARTE EN DOS: <cc/s> cuando el motivo es SEGURIDAD y <cc/h> cuando es HOMOLOGACION; la significativa funcional es <sc/f>. En simbologia.SMRC la CRITICA figura como cc/h porque es la mayoritaria, pero la sigla correcta de cada caracteristica la dice el LSC del cliente columna por columna: no se elige por defecto. La tabla completa, con el equivalente interno, esta en tabla_conversion.",
   "texto_nivel": {
     "CRITICA": "CARACTERISTICA CRITICA",
     "SIGNIFICATIVA": "CARACTERISTICA SIGNIFICATIVA",
@@ -38,7 +87,10 @@
     "∇": "manual AMFE AIAG-VDA (SETEC pag. 129)",
     "▽": "manual AMFE AIAG-VDA (SETEC pag. 129)",
     "OS": "manual AMFE AIAG-VDA (SETEC pag. 129)",
-    "HI": "manual AMFE AIAG-VDA (SETEC pag. 129)"
+    "HI": "manual AMFE AIAG-VDA (SETEC pag. 129)",
+    "cc/s": "simbologia SMRC / Stellantis — LSC v1 del cliente, columna K ('( S )', <cc/s>): critica de SEGURIDAD",
+    "cc/h": "simbologia SMRC / Stellantis — LSC v1 del cliente, columna L ('( H )', <cc/h>): critica de HOMOLOGACION",
+    "sc/f": "simbologia SMRC / Stellantis — LSC v1 del cliente, columna M ('( M )', <sc/f>): significativa FUNCIONAL"
   },
   "fuentes": [
     {
@@ -88,6 +140,11 @@
       "paginas": "4 de 6 (notas generales)",
       "dice": "Nota 7: ◇ = caracteristica clave del producto; simbolo aparte = reglamentaria (seguridad/legal); los dos juntos = ambas. Tabla KCDS (Safety/Compliance KPC · Fit/Function PQC · Attribute AQC · Document Required DR) VACIA en los tres planos: el cliente no designo ninguna. Nota 10: inflamabilidad segun CVTC 52034 (tambien en el SOR PKK1 pag. 8).",
       "ruta": "Y:\\BARACK\\CALIDAD\\DOCUMENTACION SGC\\PPAP CLIENTES\\NOVAX\\Tapizadas puerta\\6-Planos de la pieza\\17- Planos\\02- 2D\\"
+    },
+    {
+      "doc": "P21 ARMREST_SSRT MY2026_LSC_v1.xlsx — List of Special Characteristics de SMRC / Stellantis (10/07/2026, G. Medina)",
+      "paginas": "hoja LSC, filas 4 a 35, columnas K / L / M",
+      "dice": "El cliente designa cada caracteristica una por una en tres columnas: K '( S )' = <cc/s> critica de seguridad, L '( H )' = <cc/h> critica de homologacion, M '( M )' = <sc/f> significativa funcional. En el P21 hilo naranja el reparto es 3 cc/s, 15 cc/h y 1 sc/f."
     }
   ],
   "regla_operativa": [
@@ -97,7 +154,10 @@
     "VW no tiene sigla de significativa: la SC (S 5-8 y O >= 4) es criterio de Barack y para VW se escribe SC. La W no existe en ninguna norma.",
     "La marca de una operacion en el flujograma = union de las siglas de sus causas en el AMFE. Una ▽ heredada sin causa S >= 9 detras no se copia: se informa como diferencia.",
     "Asignar o cambiar CC/SC es de Fak o del cliente (core-prohibiciones §2): la lista calculada por criterio se muestra con S y O al lado y el OK de Fak la asigna. Lo que un documento contesta no se le pregunta.",
-    "Una sigla que ninguna fuente reconoce (W, Wichtig, Clave, PV2005, YC/YS de diseno) no se adivina: se reporta."
+    "Una sigla que ninguna fuente reconoce (W, Wichtig, Clave, PV2005, YC/YS de diseno) no se adivina: se reporta.",
+    "Cuando el cliente TIENE su propia simbologia, en el documento que va a ese cliente se escribe la del CLIENTE, no la nuestra. Lo dice el propio I-AC-005 ('sera utilizada la simbologia especificada por el Cliente cuando el mismo asi lo requiera') y lo exige IATF 16949 §8.3.3.3 d). Fak, 21/09/2026: 'cuando el cliente tiene, hay que usar las del cliente'.",
+    "La primera vez que aparece la simbologia de un cliente nuevo se INCORPORA A ESTE CANON en la misma sesion, con su fuente y su equivalente interno en tabla_conversion. Nunca se traduce en silencio a la nuestra ni se deja caer en SIGLA_DESCONOCIDA. Fak, 21/09/2026: 'incorporalas a nuestro canon porque las vamos a volver a utilizar'. Incorporar una sigla NO es asignarla: asignar sigue siendo de Fak o del cliente.",
+    "Un cliente puede partir un nivel en varias marcas (SMRC parte la critica en <cc/s> seguridad y <cc/h> homologacion). Esa distincion NO se colapsa: se escribe la marca exacta que el cliente designo caracteristica por caracteristica, y la equivalencia con nuestro nivel vive en tabla_conversion."
   ],
   "recordatorio": [
     "[CARACTERISTICAS ESPECIALES — criterio que NO se olvida (Fak 11/09/2026: 'es un error gravisimo que debemos corregir para siempre'). Regla always-on: .claude/rules/caracteristicas-especiales.md]",
@@ -109,16 +169,86 @@
   ],
   "guard_comentario": "Disparadores del hook PreToolUse caracteristicas-especiales-guard (recordatorio 1x/h, additionalContext, NO bloquea). Se prueban en las dos direcciones en __tests__/scripts/guardianes.test.mjs. Las regex se aplican con flag i sobre comando + file_path + contenido escrito. guard_excluir_rutas se aplica solo sobre comando + file_path: escribir SOBRE el tema (memorias, LECCIONES, reglas, hooks, tests, commits) no dispara.",
   "guard_disparadores": [
-    { "regex": "specialChar|criticalType|nivelPorCriterio|caracteristicasEspeciales|specialChars\\.ts|amfeValidation\\.ts", "que": "codigo o datos que tocan la columna de caracteristica especial" },
-    { "regex": "tools[\\\\/]flowchart[\\\\/]data[\\\\/]|_flujograma\\.mjs|FLUJOGRAMA_\\d", "que": "un flujograma (las marcas de cada operacion)" },
-    { "regex": "D\\s*/\\s*TLD|\\bTLD\\b", "que": "la sigla D/TLD" },
-    { "regex": "caracter[ií]stica[s]?\\s+(especial|cr[ií]tica|significativa)|\\bCC\\s*/\\s*SC\\b|\\bSC\\s*/\\s*CC\\b|I-AC-005|I-PY-001\\.7", "que": "caracteristicas especiales por su nombre" }
+    {
+      "regex": "specialChar|criticalType|nivelPorCriterio|caracteristicasEspeciales|specialChars\\.ts|amfeValidation\\.ts",
+      "que": "codigo o datos que tocan la columna de caracteristica especial"
+    },
+    {
+      "regex": "tools[\\\\/]flowchart[\\\\/]data[\\\\/]|_flujograma\\.mjs|FLUJOGRAMA_\\d",
+      "que": "un flujograma (las marcas de cada operacion)"
+    },
+    {
+      "regex": "D\\s*/\\s*TLD|\\bTLD\\b",
+      "que": "la sigla D/TLD"
+    },
+    {
+      "regex": "caracter[ií]stica[s]?\\s+(especial|cr[ií]tica|significativa)|\\bCC\\s*/\\s*SC\\b|\\bSC\\s*/\\s*CC\\b|I-AC-005|I-PY-001\\.7",
+      "que": "caracteristicas especiales por su nombre"
+    }
   ],
   "guard_excluir_rutas": "caracteristicas-especiales|caracteristicasEspeciales\\.data\\.json|LECCIONES_APRENDIDAS|[\\\\/]memory[\\\\/]|[\\\\/]\\.claude[\\\\/](rules|plans|hooks)[\\\\/]|\\.test\\.|\\bgit\\s+(commit|log|diff|status|add|show)\\b",
   "prompt_comentario": "Disparadores del hook UserPromptSubmit caracteristicas-especiales-prompt.sh: si el mensaje de Fak nombra el tema, el recordatorio entra SIN cooldown ('siempre que te preguntes, recuerdes todo esto'). Se prueba en __tests__/scripts/hooksVarios.test.mjs.",
   "prompt_disparadores": [
-    { "regex": "caracter[ií]stica[s]?\\s+(especial|cr[ií]tica|significativa)|caracter[ií]sticas?\\s+esp\\b", "que": "nombra las caracteristicas especiales" },
-    { "regex": "\\bTLD\\b|D\\s*/\\s*TLD|\\bCC\\s*[/y,]\\s*SC\\b|\\bSC\\s*[/y,]\\s*CC\\b|\\bsiglas?\\b|\\bcr[ií]tica\\b|significativa|▽|∇|\\bwichtig\\b|\\b(la|una|esa|esta)\\s+w\\b", "que": "nombra una sigla o un nivel (incluida 'la W', que no existe)" },
-    { "regex": "marcas?\\s+(del|de los|en el|en los)\\s+flujograma|simbolog[ií]a|I-AC-005|I-PY-001|plan(es)?\\s+de\\s+control", "que": "marcas del flujograma, simbologia o plan de control" }
-  ]
+    {
+      "regex": "caracter[ií]stica[s]?\\s+(especial|cr[ií]tica|significativa)|caracter[ií]sticas?\\s+esp\\b",
+      "que": "nombra las caracteristicas especiales"
+    },
+    {
+      "regex": "\\bTLD\\b|D\\s*/\\s*TLD|\\bCC\\s*[/y,]\\s*SC\\b|\\bSC\\s*[/y,]\\s*CC\\b|\\bsiglas?\\b|\\bcr[ií]tica\\b|significativa|▽|∇|\\bwichtig\\b|\\b(la|una|esa|esta)\\s+w\\b",
+      "que": "nombra una sigla o un nivel (incluida 'la W', que no existe)"
+    },
+    {
+      "regex": "marcas?\\s+(del|de los|en el|en los)\\s+flujograma|simbolog[ií]a|I-AC-005|I-PY-001|plan(es)?\\s+de\\s+control",
+      "que": "marcas del flujograma, simbologia o plan de control"
+    }
+  ],
+  "tabla_conversion": {
+    "_comentario": "Tabla de conversion de simbolos exigida por IATF 16949 §8.3.3.3 d): si la organizacion usa simbolos propios en lugar de los del cliente, la equivalencia tiene que estar definida y ser presentable al cliente. Se carga una entrada por cada cliente que tenga simbologia propia, la primera vez que aparece.",
+    "SMRC": {
+      "fuente": "P21 ARMREST_SSRT MY2026_LSC_v1.xlsx, hoja LSC, bloque 'Customers / marking of SC' (fila 4), clave en las filas 8 y 10; leido el 21/09/2026",
+      "marcas": [
+        {
+          "cliente": "cc/s",
+          "columna_lsc": "K",
+          "clave_lsc": "( S )",
+          "nivel": "CRITICA",
+          "significa": "caracteristica critica de SEGURIDAD",
+          "equivalente_interno": "CC"
+        },
+        {
+          "cliente": "cc/h",
+          "columna_lsc": "L",
+          "clave_lsc": "( H )",
+          "nivel": "CRITICA",
+          "significa": "caracteristica critica de HOMOLOGACION",
+          "equivalente_interno": "CC"
+        },
+        {
+          "cliente": "sc/f",
+          "columna_lsc": "M",
+          "clave_lsc": "( M )",
+          "nivel": "SIGNIFICATIVA",
+          "significa": "caracteristica significativa FUNCIONAL",
+          "equivalente_interno": "SC"
+        }
+      ]
+    },
+    "VW": {
+      "fuente": "Formel Q Capacidad de Calidad 8a ed. pag. 28 §7.5 y pag. 35; CSR VW IATF 2018 §8.3.3.3",
+      "marcas": [
+        {
+          "cliente": "D/TLD",
+          "nivel": "CRITICA",
+          "significa": "documentacion obligatoria legal (D y TLD son la misma marca)",
+          "equivalente_interno": "CC"
+        },
+        {
+          "cliente": "SC",
+          "nivel": "SIGNIFICATIVA",
+          "significa": "VW no tiene sigla propia de significativa: el proveedor nombra la suya",
+          "equivalente_interno": "SC"
+        }
+      ]
+    }
+  }
 }
