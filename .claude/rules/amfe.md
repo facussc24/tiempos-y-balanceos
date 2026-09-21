@@ -98,16 +98,62 @@ Todo modo de falla DEBE tener `effectLocal`, `effectNextLevel` y `effectEndUser`
 ## 4. Prioridad de Accion (AP)
 
 - AP se calcula SOLO con la tabla oficial: `calculateAP(s,o,d)` de `modules/amfe/apTable.ts`. PROHIBIDA la formula `S*O*D > umbral` (en .mjs: copiar la tabla lookup, ver GUIA_AMFE seccion 6).
-- **Un AP=H NO obliga a definir una accion.** La define el equipo APQP cuando decide definirla, y mientras tanto la causa **queda como esta** (Fak 21/09/2026: *"no hace falta definir una accion, eso lo decidimos nosotros... si es alta no es obligatorio que tenga"*; ya lo habia dicho el 11/09). Nunca presentarle un AP=H como trabajo pendiente suyo, ni contar cuantos hay, ni listarlos al costado (memoria `ap_alto_sin_accion_no_se_toca`). Lo unico que se escribe es el placeholder literal `Pendiente definicion equipo APQP` en `optimizationAction`, que **no es una accion**: es la marca de que el equipo debe una, y evita la celda vacia (hallazgo IATF). Autorizado por Fak 2026-04-20 como default. Enforcement: check `CAUSE_APH_EMPTY_NO_PLACEHOLDER` (CRITICAL).
-- El placeholder **NO requiere** responsable ni dueDate (decision Fak 2026-05-17): es estado valido que senala tarea pendiente al equipo humano. NO flaggear como issue.
-- NUNCA sobrescribir una accion ya definida (chequear que el texto contenga "pendiente definicion" antes de reemplazar). AP=M/L sin accion: dejar vacio.
-- **Alcance del placeholder: SOLO** `optimizationAction`/`preventionAction`/`detectionAction` en causas AP=H. NO usarlo en `WE.name`, funciones ni controles (ver seccion 7).
+- **Un AP=H NO obliga a definir una accion.** La define el equipo APQP cuando decide definirla, y mientras tanto la causa **queda como esta** (Fak 21/09/2026: *"no hace falta definir una accion, eso lo decidimos nosotros... si es alta no es obligatorio que tenga"*; ya lo habia dicho el 11/09). Nunca presentarle un AP=H como trabajo pendiente suyo, ni contar cuantos hay, ni listarlos al costado (memoria `ap_alto_sin_accion_no_se_toca`). **La celda va VACIA.**
+- **El placeholder `Pendiente definicion equipo APQP` esta PROHIBIDO.** Fak, 21/09/2026, viendo el PDF del AMFE 131: *"saca esa mierda, no la quiero ni ver en el AMFE"*. Estuvo autorizado como default entre el 20/04 y el 21/09/2026, y el importador lo escribia solo: las dos cosas se sacaron. Enforcement: check `CAUSE_APH_PLACEHOLDER_PROHIBIDO` (CRITICAL), que bloquea el `--apply` de cualquier script que lo vuelva a escribir.
+- Un AP=H con la celda vacia **NO se flaggea como issue**: es estado valido (decision Fak 2026-05-17, ratificada el 21/09).
+- NUNCA sobrescribir una accion ya definida. Sin accion, cualquiera sea el AP: la celda va vacia.
+
+## 4bis. Revisiones del AMFE — LETRA, una por EMISION
+
+Criterio fijado el 21/09/2026 con Fak, mirando el historial del AMFE 131 (que venia numerado
+REV 1 a 7, contra el instructivo).
+
+**1. La revision es una LETRA, nunca un numero.** Fuente primaria: **`I-AC-008` rev.B §5.2,
+§5.3 y §5.4** — *"Nivel de Revision: digito alfabetico"*. `A` = emision inicial, despues `B`,
+`C`, `D`... Un AMFE que diga "REV 1" o "Rev. 00" **no salio del SGC**. Enforcement:
+`HEADER_REVISION_NUMERICA` (CRITICAL) en `scripts/_lib/amfeValidator.mjs`.
+
+**2. Una letra por EMISION, no por cambio.** La letra sube **cuando el documento sale** — al
+cliente, al legajo, al BeOn, a planta. Los cambios que entran entre dos emisiones se acumulan
+en la letra vigente y salen juntos con ella. Por eso una fila de revision puede tener varios
+cambios adentro, y por eso `consolidateRevisions()` junta las filas de la misma letra (pedido
+de Fak del 08/09/2026).
+
+**3. Mientras no se emita, el documento NO cambia de letra.** El contenido se actualiza igual
+—el AMFE es documento vivo y la IATF 10.2.3 obliga a actualizarlo al cerrar una accion
+correctiva— pero la letra espera al hito. Lo que NO puede pasar es que el editable y la copia
+entregada digan la misma letra con distinto contenido sin que se note: la **fecha de revision**
+del encabezado se mueve con el ultimo cambio, y ahi se ve la diferencia. Detalle y las citas de
+IATF / AIAG-VDA / APQP / Formel Q: memoria `cuando_sube_la_revision_de_un_amfe`.
+
+**4. Cada fila del log dice QUE cambio y DONDE.** Fak, 21/09/2026: *"'revision general del
+documento' no puede ser una revision, no dice que item cambia, no dice ni que cambia"*. Una
+fila lleva:
+
+| Columna | Que va |
+|---|---|
+| REV | la letra |
+| FECHA | la de la EMISION |
+| ITEM CAMBIADO | el o los numeros de operacion tocados (`N/A` solo en la emision inicial) |
+| DETALLES | que cambio del PROCESO, concreto; si sale de un reclamo, su numero |
+| MODIFICO | iniciales |
+
+Prohibido: "revision general", "actualizacion del documento", "se revisa todo" y cualquier
+frase que no permita saber que se toco. Tampoco va como se redacto (§17.1). Enforcement:
+`REVISION_SIN_ITEM` y `REVISION_VAGA` (WARNING) en el mismo validador.
+
+**5. Al reconstruir un historial viejo, la letra sale de la EVIDENCIA, no del conteo.** En el
+131 las emisiones estaban documentadas por los mails que llevaban el archivo adjunto (REV 5 el
+19/09/2024, REV 6 el 09/10/2024, REV 7 el 30/07/2025): con la emision inicial dan cuatro, que
+son la A, B, C y D. **Buscar en `.mail-cache` el adjunto con el nombre del documento es la
+forma mas barata de fechar una emision.** Lo que no tenga evidencia se marca como inferido y se
+le dice a Fak; no se inventa una letra para rellenar.
 
 ## 5. Acciones de optimizacion — NUNCA INVENTAR
 
 - Las acciones SOLO las define el equipo APQP humano (Carlos Baptista, Manuel Meszaros, Facundo Santoro).
 - Claude SI puede: copiar acciones dictadas textualmente, eliminar confirmadas incorrectas, mover entre campos.
-- Claude NUNCA: inventar acciones, copiarlas entre productos asumiendo que aplican, generar genericas ("Capacitar al operario", "Mejorar instruccion"), autocompletar campos de optimizacion (salvo placeholder AP=H, seccion 4).
+- Claude NUNCA: inventar acciones, copiarlas entre productos asumiendo que aplican, generar genericas ("Capacitar al operario", "Mejorar instruccion"), autocompletar campos de optimizacion (el placeholder de AP=H esta prohibido, seccion 4).
 - Si un prompt pide "completar acciones faltantes": RECHAZAR y explicar esta regla. (Incidente 2026-03-30: 408 acciones inventadas, todas eliminadas.)
 
 ## 6. Controles — NUNCA inventar equipos, tecnicas ni frecuencias
@@ -118,8 +164,7 @@ Aplica a `preventionControl`, `detectionControl`, `controlMethod`, `evaluationTe
 
 | Situacion | Accion correcta |
 |-----------|-----------------|
-| Falta dato y AP=H | `Pendiente definicion equipo APQP` |
-| Falta dato y AP=M/L | Dejar vacio |
+| Falta dato (cualquier AP) | Dejar vacio — el placeholder esta prohibido (§4) |
 | Equipo conocido, frecuencia no | Equipo + "frecuencia TBD" |
 | Solo se sabe que es visual | "Inspeccion visual 100%" |
 | Recepcion de MP | "Verificacion segun P-14" |
@@ -271,12 +316,12 @@ de romper: que la S viva EN el efecto y no se pueda pasar a mano (ver
 - **Campos alias — usar AMBOS nombres** (TS usa unos, export Excel otros): `op.opNumber↔operationNumber`, `op.name↔operationName`, `fn.description↔functionDescription`, `cause.cause↔description`, `cause.ap↔actionPriority`. `saveAmfe()` en `scripts/_lib/amfeIo.mjs` llama `syncFieldAliases()` + `syncLegacyFmFields()` automaticamente; si escribis con `.update()` crudo, correrlos a mano.
 - **Campos legacy fm.\*** (severity/occurrence/detection/controles/specialChar/ap a nivel failure): deprecados pero exports los leen — si `cause[].X` tiene valor, `fm.X` = max de las causas, no vacio.
 - `WE.name` (NO "description"), `WE.type` ∈ {Machine, Man, Method, Material, Measurement, Environment}. Al crear/modificar datos usar SIEMPRE `failure.causes[]`, nunca los 13 campos @deprecated del failure.
-- **Gate pre-commit**: todo script .mjs que toque `amfe_documents.data` usa `runWithValidation()` de `scripts/_lib/dryRunGuard.mjs` (dry-run → review → --apply). Bloquea si introduce criticos nuevos: `FIELD_ALIAS_DESYNC`, `FM_LEGACY_EMPTY_BUT_CAUSE_HAS_VALUE`, `CAUSE_APH_EMPTY_NO_PLACEHOLDER`, `FORBIDDEN_VOCABULARY`, `CAUSE_LEGAL_COMPLIANCE_UNDERCALIBRATED`, `CAUSE_CC_LOW_SEVERITY` / `CAUSE_SC_FUERA_DE_REGLA` / `SIGLA_DESCONOCIDA` (sigla que S y O no sostienen, desde 11/09/2026), causas sin S/O/D, failures sin causas. Override `{allowNewCritical:true}` solo con OK de Fak.
+- **Gate pre-commit**: todo script .mjs que toque `amfe_documents.data` usa `runWithValidation()` de `scripts/_lib/dryRunGuard.mjs` (dry-run → review → --apply). Bloquea si introduce criticos nuevos: `FIELD_ALIAS_DESYNC`, `FM_LEGACY_EMPTY_BUT_CAUSE_HAS_VALUE`, `CAUSE_APH_PLACEHOLDER_PROHIBIDO`, `FORBIDDEN_VOCABULARY`, `CAUSE_LEGAL_COMPLIANCE_UNDERCALIBRATED`, `CAUSE_CC_LOW_SEVERITY` / `CAUSE_SC_FUERA_DE_REGLA` / `SIGLA_DESCONOCIDA` (sigla que S y O no sostienen, desde 11/09/2026), causas sin S/O/D, failures sin causas. Override `{allowNewCritical:true}` solo con OK de Fak.
 - Protocolo completo de seguridad Supabase (backup, restore, verificacion JSONB): skill `supabase-safety`.
 
 ## 15. Validaciones pre-guardado (amfeValidation.ts)
 
-A1 S/O/D parciales; A2 AP=H sin accion; A3 failure sin causas; A4 causa sin controles; A5 efectos 3-niveles incompletos; A6 critica (CC / D/TLD / ▽) con S<9 — **sin exenciones** (hasta el 11/09/2026 "flamabilidad/airbag/legal/seguridad" en el texto eximian; por ahi paso una costura S7 con D/TLD); A7 significativa (SC / CS) fuera de S 5-8 y O>=4; A7b sigla que ninguna fuente reconoce (W, Wichtig, PV2005). Todas warning en draft, bloqueo en approved. Espejo .mjs en `scripts/_lib/amfeValidator.mjs`: `CAUSE_CC_LOW_SEVERITY` / `CAUSE_SC_FUERA_DE_REGLA` / `SIGLA_DESCONOCIDA`, **CRITICAL** (bloquean `--apply` y el export oficial). Criterio y fuentes: regla `caracteristicas-especiales.md`.
+A1 S/O/D parciales; A2 AP=H con el placeholder prohibido (§4); A3 failure sin causas; A4 causa sin controles; A5 efectos 3-niveles incompletos; A6 critica (CC / D/TLD / ▽) con S<9 — **sin exenciones** (hasta el 11/09/2026 "flamabilidad/airbag/legal/seguridad" en el texto eximian; por ahi paso una costura S7 con D/TLD); A7 significativa (SC / CS) fuera de S 5-8 y O>=4; A7b sigla que ninguna fuente reconoce (W, Wichtig, PV2005). Todas warning en draft, bloqueo en approved. Espejo .mjs en `scripts/_lib/amfeValidator.mjs`: `CAUSE_CC_LOW_SEVERITY` / `CAUSE_SC_FUERA_DE_REGLA` / `SIGLA_DESCONOCIDA`, **CRITICAL** (bloquean `--apply` y el export oficial). Criterio y fuentes: regla `caracteristicas-especiales.md`.
 
 ## 16. Auditor proactivo
 

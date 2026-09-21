@@ -263,6 +263,23 @@ describe('consolidateRevisions — una fila por letra (Fak, 08/09/2026)', () => 
         expect(out[0].modifiedBy).toBe('FS');
     });
 
+    it('NO consolida las entradas sin letra: cada una es su propia fila (AMFE 131, 21/09/2026)', () => {
+        // Los AMFE viejos del servidor llevan el log sin columna REV. Agruparlos por la letra
+        // vacia fundia las 8 filas del historial del 131 en un solo parrafo ilegible.
+        const out = consolidateRevisions([
+            { rev: '', date: '2024-05-13', item: 'N/A', details: 'EMISION INICIAL.', modifiedBy: 'FS' },
+            { rev: '', date: '2024-06-25', item: '', details: 'Revision general del documento.', modifiedBy: 'FS' },
+            { rev: '', date: '2025-07-29', item: '30 / 50 / 60', details: 'Se actualiza por reclamos.', modifiedBy: 'FS' },
+            { rev: 'D', date: '2026-09-21', item: '60', details: 'Se incorpora el modo de falla.', modifiedBy: 'FS' },
+        ]);
+        expect(out).toHaveLength(4);
+        expect(out.map(r => r.date)).toEqual(['2024-05-13', '2024-06-25', '2025-07-29', '2026-09-21']);
+        expect(out[0].details).toBe('EMISION INICIAL.');
+        expect(out[2].item).toBe('30, 50, 60');
+        // la unica con letra sigue siendo la unica con letra
+        expect(out.filter(r => r.rev).map(r => r.rev)).toEqual(['D']);
+    });
+
     it('mantiene separadas las letras distintas y en su orden', () => {
         const out = consolidateRevisions([
             { rev: 'A', date: '12/11/2025', item: 'N/A', details: 'EMISION INICIAL.' },

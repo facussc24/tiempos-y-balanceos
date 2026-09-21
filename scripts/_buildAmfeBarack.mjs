@@ -60,7 +60,6 @@ function resolveWeName(buck, m) {
   const name = (RES[buck] || RES.generico)[m];
   return name ? name.replace(/ \/ /g, ' y ') : name; // sin "/" (regla 1M por linea)
 }
-const APH_PLACEHOLDER = 'Pendiente definición equipo APQP';
 
 // O/D para causas que el Excel dejó sin calificar (autorizado Fak 2026-06-25).
 // Criterio: escalas AIAG-VDA (amfe.md) + causas hermanas del mismo FM + controles presentes.
@@ -158,9 +157,11 @@ function build(parsed, header) {
           c = { ...c, occurrence: occ, detection: det };
           const ap = (f.severity && c.occurrence && c.detection) ? calculateAP(f.severity, c.occurrence, c.detection) : '';
           // AP=H sin accion ni placeholder -> placeholder autorizado (regla amfe-aph-pending)
-          let prevAct = c.preventionAction || '';
+          // El placeholder quedo PROHIBIDO (Fak, 21/09/2026: "saca esa mierda, no la quiero
+          // ni ver en el AMFE"). Un AP=H sin accion va con la celda VACIA hasta que el
+          // equipo la defina. Gate: CAUSE_APH_PLACEHOLDER_PROHIBIDO. Regla amfe.md §4.
+          const prevAct = c.preventionAction || '';
           const detAct = c.detectionAction || '';
-          if (ap === 'H' && !prevAct && !detAct) prevAct = APH_PLACEHOLDER;
           return {
             id: uid(),
             cause: c.cause, description: c.cause,

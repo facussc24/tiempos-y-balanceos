@@ -32,6 +32,7 @@ import {
     TYPE_TRANSLATION,
 } from './genericLabels.mjs';
 import { scanForbidden } from './forbiddenContent.mjs';
+import { revisarEquipo } from './nomina.mjs';
 import { calculateAP, apImplausible } from './amfeIo.mjs';
 
 const SUSPICIOUS_OP_PATTERNS = [
@@ -110,10 +111,14 @@ export const CRITICAL_TYPES = new Set([
     'FN_GENERIC_PLACEHOLDER',
     'WE_NAME_EQUALS_TYPE',
     'OP_FUNCTION_DUPLICATE_FOCUS',
-    // AP=H sin accion (agregado 2026-05-17 por plan soft-snacking-elephant)
-    // Bloquea cualquier script que deje causas AP=H sin accion ni placeholder
-    // "Pendiente definicion equipo APQP" (ver rules/amfe-aph-pending.md).
-    'CAUSE_APH_EMPTY_NO_PLACEHOLDER',
+    // El placeholder "Pendiente definicion equipo APQP" NO va en el AMFE (Fak, 21/09/2026).
+    // Reemplaza al viejo CAUSE_APH_EMPTY_NO_PLACEHOLDER, que exigia justo lo contrario:
+    // un AP=H sin accion es un estado valido y la celda queda VACIA hasta que el equipo
+    // defina la accion. Bloquea para que ningun script lo vuelva a escribir (amfe.md §4).
+    'CAUSE_APH_PLACEHOLDER_PROHIBIDO',
+    // La revision de un AMFE va en LETRA (I-AC-008 rev.B §5.2: "digito alfabetico").
+    // El AMFE 131 venia numerado REV 1 a 7 contra el instructivo (21/09/2026, amfe.md §4bis).
+    'HEADER_REVISION_NUMERICA',
     // El PU se inyecta dentro de la funda ya montada (agregado 2026-08-18, rules/amfe.md §12).
     // Los AMFE 153 y 155 lo tuvieron al reves y la regla escrita repetia el error.
     'PU_ANTES_DE_ENFUNDADO',
@@ -142,6 +147,14 @@ export const CRITICAL_TYPES = new Set([
     'CAUSE_CC_LOW_SEVERITY',
     'CAUSE_SC_FUERA_DE_REGLA',
     'SIGLA_DESCONOCIDA',
+    // Persona que ya no trabaja en Barack firmando el EQUIPO MULTIFUNCIONAL (21/09/2026).
+    // Bloquea porque es lo PRIMERO que se ve al abrir la caratula, y porque el documento lo
+    // lee el cliente: una persona que se fue hace dos anos en la portada del AMFE dice que
+    // nadie lo reviso. Paso con el 173 — copie el equipo del AMFE 127 de agosto de 2024, que
+    // YA venia con alguien que se habia ido en marzo de ese ano. Fak: "de donde carajo todos
+    // esos nombres... esas personas hace rato no laburan en Barack".
+    'EQUIPO_PERSONA_NO_TRABAJA',
+    'EQUIPO_PERSONA_DESCONOCIDA',
 ]);
 
 // Caracteristicas especiales — FUENTE UNICA core/amfe/caracteristicasEspeciales.data.json
@@ -446,6 +459,86 @@ export function esDeteccionSinControlDeclarado(detectionControl, detection) {
     return det === '' || det === '-' || det.toLowerCase() === 'tbd';
 }
 
+/**
+ * EQUIPO MULTIFUNCIONAL de la caratula — que no firme alguien que ya no trabaja en Barack.
+ *
+ * Mira el equipo y tambien quien elaboro, reviso y aprobo: son los mismos nombres y salen
+ * impresos en la misma hoja. La nomina y su evidencia viven en
+ * core/amfe/nominaBarack.data.json; aca no hay ningun nombre escrito.
+ */
+/**
+ * Revisiones del AMFE: LETRA, nunca numero (I-AC-008 rev.B §5.2/§5.3/§5.4, "Nivel de Revision:
+ * digito alfabetico"), y cada fila del log tiene que decir QUE cambio y DONDE.
+ * Fak, 21/09/2026, sobre el historial del AMFE 131: *"'revision general del documento' no puede
+ * ser una revision, no dice que item cambia, no dice ni que cambia"*. Regla: amfe.md §4bis.
+ *
+ * `revs` es el array de la columna `revisions` (o data.revisions): {rev, date, item, description}.
+ */
+const REVISION_VAGA_RE = /^(revisi[oó]n\s+general|actualizaci[oó]n\s+(general\s+)?del\s+documento|se\s+revisa\s+todo|revisi[oó]n\s+completa)\b/i;
+
+export function validateRevisiones(doc, revs, amfeNumber = '') {
+    const out = [];
+    const h = doc?.header ?? {};
+    const nivel = String(h.revision ?? h.revisionLevel ?? h.rev ?? '').trim();
+    if (nivel && /^\d+$/.test(nivel.replace(/^rev\.?\s*/i, ''))) {
+        out.push({ type: 'HEADER_REVISION_NUMERICA', severity: 'CRITICAL', amfe: amfeNumber,
+            detail: `nivel de revision "${nivel}": el I-AC-008 §5.2 pide digito ALFABETICO (A = emision inicial). Un AMFE numerado no salio del SGC` });
+    }
+    for (const r of Array.isArray(revs) ? revs : []) {
+        const letra = String(r?.rev ?? '').trim();
+        const etq = `revision ${letra || '(sin letra)'} del ${String(r?.date ?? '?').slice(0, 10)}`;
+        if (letra && /^\d+$/.test(letra)) {
+            out.push({ type: 'HEADER_REVISION_NUMERICA', severity: 'CRITICAL', amfe: amfeNumber,
+                detail: `${etq}: la revision va en letra, no en numero (I-AC-008 §5.2)` });
+        }
+        const detalle = String(r?.description ?? '').trim();
+        if (REVISION_VAGA_RE.test(detalle)) {
+            out.push({ type: 'REVISION_VAGA', severity: 'WARNING', amfe: amfeNumber,
+                detail: `${etq}: "${detalle.slice(0, 48)}" no dice QUE cambio — el log cuenta el cambio del proceso (amfe.md §4bis)` });
+        }
+        const item = String(r?.item ?? '').trim();
+        const esInicial = /emisi[oó]n\s+inicial/i.test(detalle);
+        if (!item && !esInicial) {
+            out.push({ type: 'REVISION_SIN_ITEM', severity: 'WARNING', amfe: amfeNumber,
+                detail: `${etq}: sin ITEM CAMBIADO — va el numero de operacion tocada ("N/A" solo en la emision inicial)` });
+        }
+    }
+    return out;
+}
+
+export function validateEquipoMultifuncional(doc, amfeNumber = '') {
+    const h = doc?.header ?? {};
+    const out = [];
+    const campos = [
+        ['coreTeam', h.coreTeam ?? h.crossFunctionalTeam ?? h.team],
+        ['responsibleEngineer', h.responsibleEngineer],
+        ['processResponsible', h.processResponsible],
+        ['elaboratedBy', h.elaboratedBy ?? h.preparedBy],
+        ['reviewedBy', h.reviewedBy],
+        ['approvedBy', h.approvedBy],
+    ];
+    for (const [campo, valor] of campos) {
+        if (!valor) continue;
+        for (const p of revisarEquipo(valor)) {
+            // La nomina vencida no es un problema del documento: no lo bloquea.
+            if (p.entrada === '(la nomina)') {
+                out.push({ type: 'NOMINA_VENCIDA', severity: 'WARNING', amfe: amfeNumber,
+                    detail: `${p.motivo}. ${p.comoArreglar}` });
+                continue;
+            }
+            const desconocida = p.motivo.startsWith('no esta en la nomina');
+            out.push({
+                type: p.gravedad === 'WARNING' ? 'EQUIPO_BAJA_PROBABLE'
+                    : desconocida ? 'EQUIPO_PERSONA_DESCONOCIDA' : 'EQUIPO_PERSONA_NO_TRABAJA',
+                severity: p.gravedad,
+                amfe: amfeNumber,
+                detail: `caratula, ${campo}: "${p.entrada}" ${p.motivo}. ${p.comoArreglar}`,
+            });
+        }
+    }
+    return out;
+}
+
 export function validateAmfeDoc(doc, productName = '', amfeNumber = '') {
     const issues = [];
 
@@ -468,6 +561,9 @@ export function validateAmfeDoc(doc, productName = '', amfeNumber = '') {
 
     // Dos operaciones con el mismo nombre: ambiguas para el flujograma y para el diff.
     issues.push(...validateNombresDeOperacion(doc, amfeNumber));
+
+    // El EQUIPO MULTIFUNCIONAL de la caratula: que no firme gente que ya no trabaja.
+    issues.push(...validateEquipoMultifuncional(doc, amfeNumber));
 
     const productUp = String(productName).toUpperCase();
 
@@ -880,23 +976,21 @@ export function validateAmfeDoc(doc, productName = '', amfeNumber = '') {
                             }
                         }
 
-                        // CAUSE_APH_EMPTY_NO_PLACEHOLDER (rules/amfe-aph-pending.md)
-                        // AP=H requiere accion. Si los 3 campos (optimization/prevention/detection)
-                        // estan vacios Y ninguno contiene el placeholder autorizado, es bloqueo IATF.
+                        // El placeholder "Pendiente definicion equipo APQP" quedo PROHIBIDO
+                        // (Fak, 21/09/2026, viendo el PDF del AMFE 131: *"saca esa mierda, no
+                        // la quiero ni ver en el AMFE"*). Un AP=H sin accion es un estado
+                        // valido: la accion la define el equipo cuando decide, y hasta
+                        // entonces la celda va VACIA. Antes esto era
+                        // CAUSE_APH_EMPTY_NO_PLACEHOLDER (CRITICAL) y ademas lo AGREGABA el
+                        // importador; las dos cosas se sacaron. Regla: amfe.md §4.
                         const apVal = String(c.ap || c.actionPriority || '').trim().toUpperCase();
                         if (apVal === 'H') {
-                            const optAct = String(c.optimizationAction || '').trim();
-                            const prevAct = String(c.preventionAction || '').trim();
-                            const detAct = String(c.detectionAction || '').trim();
                             const placeholderRe = /pendiente\s+definici[oó]n\s+equipo\s+apqp/i;
-                            const hasContent = optAct || prevAct || detAct;
-                            const hasPlaceholder =
-                                placeholderRe.test(optAct) ||
-                                placeholderRe.test(prevAct) ||
-                                placeholderRe.test(detAct);
-                            if (!hasContent || (!hasPlaceholder && !optAct && !prevAct && !detAct)) {
-                                issues.push({ ...cCtx, type: 'CAUSE_APH_EMPTY_NO_PLACEHOLDER',
-                                    detail: 'AP=H sin accion ni placeholder "Pendiente definicion equipo APQP" — bloqueante IATF' });
+                            const conPlaceholder = ['optimizationAction', 'preventionAction', 'detectionAction']
+                                .filter((campo) => placeholderRe.test(String(c[campo] || '')));
+                            if (conPlaceholder.length) {
+                                issues.push({ ...cCtx, type: 'CAUSE_APH_PLACEHOLDER_PROHIBIDO',
+                                    detail: `el placeholder "Pendiente definicion equipo APQP" no va en el AMFE (${conPlaceholder.join(', ')}): un AP=H sin accion va con la celda vacia` });
                             }
                         }
                     }

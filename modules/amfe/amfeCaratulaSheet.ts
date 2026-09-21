@@ -479,8 +479,15 @@ function ordenarItems(items: readonly string[]): string[] {
  */
 export function consolidateRevisions(revs: readonly AmfeOfficialRevision[]): AmfeOfficialRevision[] {
     const porLetra = new Map<string, AmfeOfficialRevision & { _items: string[]; _detalles: string[]; _quien: string[] }>();
-    for (const r of revs) {
-        const clave = (r.rev || '').trim().toUpperCase();
+    for (const [i, r] of revs.entries()) {
+        // Sin letra NO se consolida: dos entradas sin letra no son "la misma revision", son
+        // dos cambios distintos. Los AMFE viejos del servidor llevan el log SIN columna REV
+        // (fecha / item cambiado / detalles / modifico), y agruparlos por la letra vacia
+        // fundia las 8 filas del historial del AMFE 131 en un solo parrafo ilegible
+        // (21/09/2026). La consolidacion que pidio Fak el 08/09 es entre filas de la MISMA
+        // letra, que es cuando se sabe que son la misma revision.
+        const letra = (r.rev || '').trim().toUpperCase();
+        const clave = letra || `__sin_letra_${i}`;
         const previo = porLetra.get(clave);
         const acc = previo ?? {
             rev: r.rev, date: '', item: '', details: '', pswDate: '', modifiedBy: '',
