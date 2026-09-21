@@ -92,6 +92,12 @@ ICO_ANTEOJOS = os.path.join(EPP_DIR, "ico_16034.png")
 ICO_AUDITIVA = os.path.join(EPP_DIR, "ico_12924.png")
 
 EPP_STD = [ICO_ROPA, ICO_CALZADO, ICO_GUANTES, ICO_ANTEOJOS, ICO_AUDITIVA]
+
+# Los dos fijos de toda hoja de Barack. El tercero lo define el riesgo del
+# puesto, no la costumbre: los anteojos salieron porque nadie los usa en esta
+# maquina (Fak, 21/09/2026) y meter un EPP que no se usa vacia de valor al que
+# si hace falta.
+EPP_IMG = [ICO_ROPA, ICO_CALZADO]
 EPP_MOLD_CHANGE = [ICO_ROPA, ICO_CALZADO, ICO_GUANTES, ICO_ANTEOJOS]
 
 # ─── TIPOGRAFÍA Y MEDICIÓN REAL ──────────────────────────────────────────────
@@ -963,40 +969,40 @@ def _f(n):
 # ════════════════════════════════════════════════════════════════════════════
 
 HOJAS_IMG = [
-    # ── PARTE 1 — ARRANQUE ────────────────────────────────────────────────────
+    # ── PARTE 1 — PRENDER LA MAQUINA ──────────────────────────────────────────
     dict(
         op="30.1",
-        denominacion="EL TABLERO Y LOS SERVICIOS",
+        denominacion="ENCENDIDO DE LA MAQUINA",
         modo="secuencia",
-        imagenes=[_f("e1_llave.jpg"), _f("e2_power.jpg"),
-                  _f("e3_chiller.jpg"), _f("e4_manometros.jpg")],
+        imagenes=[_f("e1_llave.jpg"), _f("e2_power.jpg"), _f("n3_servicios.jpg")],
         pies=["La llave general del tablero",
-              "El pulsador POWER START",
-              "Chiller y agua del molde",
-              "El panel de manometros"],
-        sin_marcas_ok=True,   # son primeros planos: el sujeto ya llena el cuadro
+              "El boton verde POWER START",
+              "La fila de servicios de la pantalla"],
+        sin_marcas_ok=True,
         pasos=[
-            "La llave general va en la puerta del tablero: Schneider, con On (I) arriba y "
-            "Off (0) abajo.",
-            "Al lado del tablero estan los dos pulsadores de potencia: el verde POWER "
-            "START (电源启动) y el rojo POWER STOP (电源停止).",
-            "Contra la pared estan la refrigeracion (chiller) y el atemperador del agua "
-            "del molde (水式模温机), cada uno con su display.",
-            "El panel de manometros tiene cinco: la presion de aire de red (气源压力) y "
-            "los cuatro vacios, molde superior, molde inferior y sus dos tanques.",
+            "Girar la llave general del tablero a la posicion I.",
+            "Apretar el boton verde POWER START del tablero y esperar a que quede encendido.",
+            "Prender los servicios desde la pantalla: apretar la fila de abajo hasta que los "
+            "ocho queden en verde.",
         ],
+        parametros=[
+            ("Servicios a prender", "los 8 de la fila de abajo"),
+            ("Que son", "vacio, calor, lamparas, enfriador y temperatura de molde"),
+        ],
+        nota="El enfriador y la temperatura del molde se prenden de esta misma pantalla: "
+             "no hay que ir hasta el equipo.",
         fuentes=[
-            "IMG_0869 (11-09-2026) s=33, la llave en la puerta del tablero, y el rotulo "
-            "Schneider On/Off se lee en la foto",
-            "IMG_0597 (02-09-2026) s=1,8 y s=2,8, los dos pulsadores con su rotulo",
-            "IMG_0869 (11-09-2026) s=44, los dos equipos con su rotulo chino a la vista",
-            "IMG_0869 (11-09-2026) s=57, los cinco manometros con su etiqueta en chino e "
-            "ingles",
+            "IMG_0596 (02-09-2026) min 0:01 y 0:06, en el tablero: \u00ab¿Puedo cambiar a ON? "
+            "¿Asi?\u00bb / \u00ab¿Puedes prender los corrientes?\u00bb",
+            "IMG_0597 (02-09-2026) s=3,0: el boton verde POWER START encendido, con su cartel",
+            "IMG_0579 (02-09-2026) min 6:22 a 6:41, el tecnico: \u00abPrimer paso es prender "
+            "todos los servicios, los motores de vacio, la temperatura del horno, iluminacion, "
+            "refrigeracion, que es chiller y es atemperador\u00bb",
         ],
-        epp=EPP_STD,
-        disparador="SI UN EQUIPO NO ENCIENDE O UN MANOMETRO ESTA EN CERO",
+        epp=EPP_IMG,
+        disparador="SI LA MAQUINA NO ENCIENDE O UN SERVICIO NO PASA A VERDE",
         acciones=[
-            "1. No insistir con la llave ni con el pulsador.",
+            "1. No insistir con la llave ni con el boton.",
             "2. Dar aviso al Lider de Produccion y a Mantenimiento.",
             "3. Esperar la intervencion del personal autorizado.",
         ],
@@ -1008,22 +1014,21 @@ HOJAS_IMG = [
         modo="rotulada",
         imagenes=[_f("r_puesto.jpg")],
         pasos=[
-            "Pantalla tactil del HMI. Es por donde se opera todo: recetas, temperaturas y ciclo.",
-            "Botonera: el selector AUTOMATICO / MANUAL y los tres pulsadores del ciclo.",
-            "Parada de emergencia del lateral. Corta todo en el acto.",
-            "Termorregulador del agua del molde. Antes de arrancar tiene que estar en marcha.",
-            "Cartel del fabricante: la maquina se apaga cuando no se usa.",
+            "Operar la maquina desde la pantalla tactil: receta, temperaturas y ciclo.",
+            "Mandar el ciclo desde la botonera: el selector de modo y los botones.",
+            "Golpear el boton de parada de emergencia ante cualquier riesgo: corta todo.",
+            "Verificar que el atemperador del agua del molde este en marcha antes de arrancar.",
+            "Respetar los carteles del puesto: a la zona del molde no entra nadie sin "
+            "autorizacion.",
         ],
-        nota="En la zona del molde no entra nadie que no este autorizado, y la maquina "
-             "se apaga cuando no se usa: los dos carteles estan en el puesto.",
         fuentes=[
-            "IMG_0801 (09-09-2026) s=1,1: la pantalla esta en el puesto, se ve en la foto",
-            "misma foto: la botonera con el selector y los tres pulsadores",
-            "misma foto: la seta del lateral",
-            "misma foto: el atemperador con su display, rotulado 水式模温机",
-            "misma foto: el cartel del fabricante, TURN OFF MACHINE WHEN NOT IN USE",
+            "IMG_0801 (09-09-2026) s=1,1: la pantalla del puesto, se ve en la foto",
+            "misma foto: la botonera con el selector y los botones del ciclo",
+            "misma foto: el boton de parada de emergencia del lateral",
+            "misma foto: el atemperador del agua del molde, con su display",
+            "misma foto: los dos carteles del puesto",
         ],
-        epp=EPP_STD,
+        epp=EPP_IMG,
         disparador="SI FALTA UN COMANDO, ESTA FLOJO O NO ENCIENDE",
         acciones=[
             "1. No operar la maquina.",
@@ -1037,133 +1042,149 @@ HOJAS_IMG = [
         op="30.3",
         denominacion="LOS COMANDOS DEL PUESTO",
         modo="rotulada",
-        imagenes=[_f("r_botonera.jpg")],
+        imagenes=[_f("r2_botonera.jpg")],
         pasos=[
-            "Selector AUTOMATICO (自动) / MANUAL (手动).",
-            "Azul: RESET (复位).",
-            "Verde: ARRANQUE DE CICLO (循环启动).",
-            "Rojo: PARO DE CICLO (循环停止).",
-            "Seta de emergencia: corta todo en el acto.",
+            "Poner el selector de modo en AUTOMATICO.",
+            "Apretar el boton verde para arrancar el ciclo.",
+            "Apretar el boton rojo para parar el ciclo.",
+            "Mantener apretado el boton azul de RESET hasta que quede encendido.",
+            "Apretar el boton negro de la caja colgante enseguida despues del verde: es lo "
+            "que larga el ciclo.",
+            "Golpear el boton de parada de emergencia ante cualquier riesgo.",
         ],
+        parametros=[("Tiempo que se mantiene el RESET", "3 s")],
         fuentes=[
-            "IMG_0801 (09-09-2026) s=1,1: la serigrafia 自动 / 手动 se lee en la foto",
-            "misma foto: la serigrafia 复位 arriba del pulsador azul",
-            "misma foto: la serigrafia 循环启动 arriba del verde",
-            "misma foto: la serigrafia 循环停止 arriba del rojo",
-            "misma foto: la seta del puesto",
+            "IMG_0579 (02-09-2026) min 6:41 a 6:49, el tecnico: \u00abes automatico, "
+            "directamente automatico\u00bb; el selector se ve en IMG_0840 s=4",
+            "IMG_0842 (10-09-2026) min 0:00: \u00abboton verde y despues boton negro\u00bb",
+            "IMG_0840 (10-09-2026) s=4: el boton rojo con su cartel, al lado del verde",
+            "IMG_0579 (02-09-2026) min 7:33 a 7:40: \u00ab3 segundos... 3 segundos hasta que "
+            "se enciende\u00bb, y min 7:09: \u00abcuando este luce azul esta encendido\u00bb",
+            "IMG_0842 (10-09-2026) min 0:00 y 0:06: \u00abboton verde y despues boton "
+            "negro\u00bb / \u00abarranca si queres de ahi\u00bb",
+            "IMG_0840 (10-09-2026) s=4: el hongo de emergencia sobre fondo amarillo",
         ],
-        nota="Elegido el modo en la pantalla, el azul se mantiene apretado unos 3 segundos.",
-        epp=EPP_STD,
+        nota="Que hace exactamente el boton negro no esta documentado: lo unico registrado "
+             "es que va enseguida despues del verde. Preguntar antes de usarlo de otra forma.",
+        epp=EPP_IMG,
         disparador="SI UN COMANDO NO RESPONDE O QUEDA TRABADO",
         acciones=[
-            "1. No forzar el pulsador ni repetirlo.",
-            "2. Mirar la alarma que muestra el HMI y anotarla.",
+            "1. No forzar el boton ni repetirlo.",
+            "2. Anotar la alarma que muestra la pantalla.",
             "3. Dar aviso al Lider de Produccion.",
         ],
     ),
 
     dict(
         op="30.4",
-        denominacion="EL CICLO AUTOMATICO, PASO A PASO",
+        denominacion="ARRANCAR EN AUTOMATICO",
+        modo="rotulada",
+        imagenes=[_f("r2_automatico.jpg")],
+        pasos=[
+            "Elegir Modo Automatico en la lista de la pantalla.",
+            "Verificar que los ocho servicios de la fila de abajo esten en verde.",
+            "Mantener apretado el boton azul de RESET hasta que quede encendido.",
+            "Apretar el boton verde y enseguida el negro: el ciclo arranca cuando se empieza "
+            "a mover el carro de arriba.",
+        ],
+        parametros=[
+            ("Tiempo que se mantiene el RESET", "3 s"),
+            ("Usuario y contrase\u00f1a", "solo para cambiar un parametro, no para arrancar"),
+        ],
+        nota="Antes de dar arranque, los sustratos van en su lugar y todas las luces tienen "
+             "que estar encendidas: si falta una luz, falta un sustrato.",
+        fuentes=[
+            "IMG_0579 (02-09-2026) min 6:41 a 6:49: \u00abes automatico, directamente "
+            "automatico\u00bb, y la lista se lee en la pantalla",
+            "IMG_0579 (02-09-2026) min 6:22 a 6:41: los servicios que el tecnico enumera son "
+            "los de esa fila",
+            "IMG_0579 (02-09-2026) min 7:33 a 7:40 y 7:09: \u00ab3 segundos hasta que se "
+            "enciende\u00bb / \u00abcuando este luce azul esta encendido\u00bb",
+            "IMG_0842 (10-09-2026) min 0:00 y 1:05 a 1:11: \u00abboton verde y despues boton "
+            "negro\u00bb / \u00abcuando se empieza a mover el carro de arriba, recien ahi "
+            "arranca, porque ahi va a buscar la placa\u00bb",
+        ],
+        epp=EPP_IMG,
+        disparador="SI EL CICLO NO ARRANCA O LA PANTALLA MUESTRA UNA ALARMA",
+        acciones=[
+            "1. No pasar a manual para destrabarlo.",
+            "2. Anotar la alarma que muestra la pantalla.",
+            "3. Dar aviso al Lider de Produccion.",
+        ],
+    ),
+
+    # ── PARTE 3 — TRABAJAR Y CONTROLAR ────────────────────────────────────────
+    dict(
+        op="30.5",
+        denominacion="EL CICLO: QUE HACE EL OPERARIO",
         modo="secuencia",
         imagenes=[_f("m1_entra.jpg"), _f("m2_conformado.jpg"), _f("m3_abre.jpg")],
         pies=["La mesa entra con el molde",
-              "El plato baja sobre el molde",
+              "El plato baja y la maquina cierra",
               "La maquina abre con la pieza"],
         pasos=[
-            "La mesa entra con el molde y el portico queda arriba.",
-            "El plato de calefactores baja sobre el molde y la maquina cierra. De aca en "
-            "adelante el ciclo no se ve desde afuera: se sigue por la pantalla.",
-            "La maquina abre sola con la pieza ya conformada sobre el molde. Recien ahi se entra a sacarla, entre dos.",
+            "Arrancar el ciclo solo con dos personas en el frente, una de cada lado.",
+            "Esperar a que bajen las sopapas a buscar la placa y dejar correr el ciclo.",
+            "Retirar la pieza del molde entre dos, recien cuando la maquina abrio sola.",
         ],
         nota="Nadie mete la mano hasta que la maquina abrio sola.",
         fuentes=[
-            "IMG_0844 (10-09-2026) s=119: se ve la mesa entrando con el molde",
-            "IMG_0844 s=153: se ve el plato de calefactores abajo, sobre el molde",
-            "IMG_0844 s=396: se ve la maquina abierta con la pieza sobre el molde",
+            "IMG_0842 (10-09-2026) min 0:31 a 0:49: \u00abfalta gente, yo tenia que conseguir "
+            "una persona aca\u00bb / \u00abdos minimos\u00bb",
+            "IMG_0842 (10-09-2026) min 1:28 a 1:38: \u00abestan funcionando las sopapas... si "
+            "tienen la placa cortada, se van a bajar las sopapas y buscar la placa\u00bb",
+            "IMG_0842 (10-09-2026) min 0:39 a 0:49: \u00abdos minimos\u00bb, el tecnico sobre "
+            "cuanta gente hace falta en el frente de la maquina",
         ],
-        epp=EPP_STD,
-        disparador="SI LA PIEZA SALE CON BURBUJA, ARRUGA O MAL COPIADO DEL GRANO",
+        epp=EPP_IMG,
+        disparador="SI ALGO QUEDA TRABADO O HAY QUE ENTRAR A LA ZONA DEL MOLDE",
+        acciones=[
+            "1. Parar el ciclo con el boton rojo antes de acercarse.",
+            "2. Dar aviso al Lider de Produccion.",
+            "3. No entrar a la zona del molde sin autorizacion.",
+        ],
+    ),
+
+    dict(
+        op="30.6",
+        denominacion="CONTROL DE LA PIEZA",
+        modo="secuencia",
+        imagenes=[_f("n5_mano.jpg"), _f("n8_canto.jpg"), _f("n7_despegue.jpg")],
+        pies=["Pasar la mano por la superficie",
+              "Mirar el canto envuelto",
+              "Abrir la punta con los dedos"],
+        sin_marcas_ok=True,
+        pasos=[
+            "Pasar la mano por la superficie de la pieza recien sacada del molde y mirar que "
+            "no quede ningun globito.",
+            "Mirar el canto envuelto y avisar si se marcan los agujeros de vacio.",
+            "Abrir la punta con los dedos y verificar que la piel este pegada.",
+        ],
+        nota="Ante la duda, apartar la pieza y avisar. El criterio de aceptacion y la "
+             "frecuencia los define Calidad en el Plan de Control.",
+        fuentes=[
+            "IMG_0859 (11-09-2026) min 0:08 a 0:21: \u00abes la que tenia el globito\u00bb / "
+            "\u00abcon eso logramos eliminar el globito\u00bb",
+            "IMG_0660 (04-09-2026) min 0:00 a 0:09: \u00abse notan los agujeros de vacio, lo "
+            "sigue marcando... estos agujeritos pueden ser culpa del plastico\u00bb",
+            "IMG_0813 (09-09-2026) min 0:00: \u00abel T17 genero este defecto que no termino "
+            "de pegar bien en la punta\u00bb",
+        ],
+        epp=EPP_IMG,
+        disparador="SI LA PIEZA SALE CON GLOBITO, CON LA PIEL DESPEGADA EN LA PUNTA O CON LA "
+                   "MARCA DE LOS AGUJEROS DE VACIO",
         acciones=[
             "1. Apartar la pieza e identificarla.",
             "2. Dar aviso al Lider de Produccion.",
             "3. No tocar parametros por cuenta propia.",
         ],
     ),
-
-    dict(
-        op="30.5",
-        denominacion="LA PANTALLA DE OPERACION",
-        modo="rotulada",
-        imagenes=[_f("r_operacion.jpg")],
-        pasos=[
-            "El campo de arriba dice que se esta alimentando. En esta pantalla, Cuero en rollo.",
-            "El modo de calentamiento se elige por TEMPERATURA de piel (superior o inferior) o por TIEMPO. Por temperatura, calienta hasta que esa piel llega a la ajustada; por tiempo, sale a los segundos puestos sin mirar el grado.",
-            "Seleccion de proceso: vacio, temperatura del molde, temperatura de "
-            "calentamiento y expulsar esqueleto.",
-            "Las cuatro temperaturas que lee el infrarrojo en el molde y el valor ajustado.",
-            "El pie dice la produccion del turno, la receta y el numero de molde activos.",
-        ],
-        parametros=[
-            ("Tiempo de vacio del molde inferior", "19 s"),
-            ("Alimentacion", "Cuero en rollo"),
-            ("Modo de calentamiento", "Deteccion infrarroja"),
-        ],
-        nota="Los numeros que se ven en la foto son los de ese momento. Los que valen son "
-             "los de la receta cargada: si no coinciden, no se arranca.",
-        fuentes=[
-            "IMG_0587 (02-09-2026) s=10,3: el campo Seleccion Lamina Alimentacion en la pantalla",
-            "IMG_0587 audio 00:04 a 00:33, el tecnico explicando los dos modos",
-            "misma pantalla: el bloque Seleccion de Proceso con sus llaves",
-            "misma pantalla: el bloque Visualizacion de Temp",
-            "misma pantalla: el pie con Produccion, Receta y Numero Molde",
-        ],
-        epp=EPP_STD,
-        disparador="SI UN PARAMETRO NO COINCIDE CON LA RECETA CARGADA",
-        acciones=[
-            "1. No arrancar el ciclo.",
-            "2. Dar aviso al Lider de Produccion.",
-            "3. Revalidar la receta antes de habilitar la maquina.",
-        ],
-    ),
-
-    dict(
-        op="30.6",
-        denominacion="LA MATRIZ DE ZONAS DE CALOR",
-        modo="rotulada",
-        imagenes=[_f("r_matriz.jpg")],
-        pasos=[
-            "Arriba se elige que mitad se mira: Calentamiento Superior o Calentamiento "
-            "Inferior. La que esta mirando queda en verde.",
-            "Cada casillero con numero es una resistencia: arriba lo que MIDE y abajo, en "
-            "amarillo, lo que tiene CONSIGNADO. Los casilleros vacios no tienen resistencia.",
-            "El contorno del molde queda dibujado sobre la grilla y marca por donde pasa la "
-            "pieza. Las de adentro y las de afuera muestran las dos su temperatura.",
-            "El pie dice la produccion del turno, la receta y el numero de molde.",
-        ],
-        fuentes=[
-            "IMG_0789 (09-09-2026) s=14,5: los dos botones arriba a la izquierda, con "
-            "Calentamiento Superior en verde",
-            "misma pantalla: cada casillero con su valor medido arriba y el consignado en "
-            "amarillo",
-            "misma pantalla: el contorno del molde dibujado sobre la grilla",
-            "misma pantalla: el pie con Produccion, Receta y N de Molde",
-        ],
-        nota="Si una resistencia mide muy por debajo de lo consignado, no se arranca: se "
-             "anota el numero de la resistencia y se avisa.",
-        epp=EPP_STD,
-        disparador="SI UNA ZONA NO LLEGA A LA TEMPERATURA CONSIGNADA",
-        acciones=[
-            "1. No arrancar la produccion con una zona fria.",
-            "2. Anotar que numero de resistencia es.",
-            "3. Dar aviso al Lider de Produccion y a Mantenimiento.",
-        ],
-    ),
 ]
 
 
 def compilar_deck():
-    print("Iniciando compilacion de Hoja de Proceso IMG (11 laminas)...")
+    print(f"Iniciando compilacion de Hoja de Proceso IMG "
+          f"({len(HOJAS_IMG) + 1} laminas: portada + {len(HOJAS_IMG)})...")
     prs = Presentation()
     prs.slide_width = Cm(W)
     prs.slide_height = Cm(H)

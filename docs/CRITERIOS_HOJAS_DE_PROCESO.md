@@ -183,10 +183,23 @@ Las plantas automotrices de Argentina poseen una jerga técnica propia, forjada 
 | ❌ **Albarán** | ✔️ **Remito de entrega** / **Remito** | Documento mercantil de ingreso y egreso de materiales en planta. |
 | ❌ **Carretilla elevadora** / **Toro** | ✔️ **Autoelevador** / **Clark** | Maquinaria rodante de movimiento de materiales y racks en pasillos. |
 | ❌ **Par de apriete** / **Apriete con llave** | ✔️ **Torque** / **Torquear** (con torquímetro) | "Aplicar un torque de 470 Nm a los cáncamos giratorios". En planta no se dice "par de apriete", se usa "torque". |
-| ❌ **Pulsador de seta** / **Paro de emergencia** | ✔️ **Golpe de puño** / **Parada de emergencia** | El botón rojo de seguridad industrial del pupitre de comando. |
+| ❌ **Seta** / **Pulsador de seta** / **Golpe de puño** | ✔️ **Botón de parada de emergencia** (y en la máquina que lo tiene serigrafiado, por su etiqueta: *el botón rojo de STOP*) | Fak, 21/09/2026: *"'SETA' se llaman botón de parada de emergencia"*. **"Golpe de puño" estaba mal y lo puse yo**: 0 apariciones en 123 PDFs del SGC y 107 hojas. El corpus real dice *"presionar el botón rojo"* (troquelado 2019). Enforced por `vocabulario.data.json` + `redaccion.py`. |
 | ❌ **Comprobación** | ✔️ **Verificación** / **Inspección** | Lenguaje estandarizado por los manuales de procedimientos SGC. |
+| ❌ **Pulsador** | ✔️ **Botón** | Barrido el corpus real: **"pulsador" 0 apariciones, "botón" 74**. Alcanza con el color y la etiqueta: *el botón verde*, *el botón rojo de STOP*. |
 
 ---
+
+> **Cómo se agrega un renglón a esta tabla (21/09/2026).** La columna de la izquierda se
+> puede llenar con una corrección de Fak; **la de la derecha no se completa de memoria**. Se
+> cuenta primero cuántas veces aparece cada candidato en el corpus real —los instructivos, las
+> HO emitidas y los PDFs del SGC— y se escribe el conteo como justificación. Dos renglones de
+> esta misma tabla estaban mal por saltarse ese paso: *"Golpe de puño"* y *"pulsador"*, los dos
+> con cero apariciones en Barack. **Prohibir bien y reemplazar mal es peor que no escribir el
+> renglón**, porque el reemplazo es lo que después se copia.
+>
+> Ojo con citarse a uno mismo: las hojas de la familia HO-968 llevan marcas mías (`⚠ NOTA
+> CRÍTICA`, `— TBD`), así que **no son corpus de Barack**. El corpus limpio son los documentos
+> anteriores a septiembre de 2026 y los de otros autores.
 
 ### 3.3 Regla sobre Accesorios de Flete y Transporte Externo
 En la primera versión de la máquina IMG, se había creado una lámina completa (30.12) instruyendo a los operarios sobre la colocación de unos **topes rojos de transporte (Kip) asegurados con bulones de 20 mm**.

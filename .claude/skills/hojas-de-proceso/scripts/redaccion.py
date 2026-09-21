@@ -46,6 +46,10 @@ VERBOS = {
     "extraer", "trasladar", "acercar", "alejar", "usar", "utilizar", "ubicar", "montar",
     "desmontar", "conectar", "desconectar", "encender", "apagar", "pulsar", "mantener",
     "aguardar", "asegurar", "fijar", "trabar", "destrabar", "desplazar", "empujar", "tirar",
+    # los que faltaban, contados en las hojas limpias de Barack (78 pasos, 21/09/2026)
+    "mover", "levantar", "verter", "mezclar", "armar", "apilar", "tapar", "desarmar",
+    "sumergir", "batir", "rociar", "superar", "prender", "pasar", "enganchar", "precintar",
+    "setear", "torquear", "segregar", "operar", "mandar", "golpear", "respetar", "dejar",
 }
 
 # Con que arranca una frase que describe a la maquina en vez de mandarle algo al operario.
@@ -114,7 +118,12 @@ def revisar_voz(paso):
     t = PREFIJO_OK.sub("", t).strip()
     if not t:
         return "narrativo", "el paso esta vacio"
-    primera = re.split(r"[\s,:;.]+", t)[0]
+    palabras = re.split(r"[\s,:;.]+", t)
+    primera = palabras[0]
+    # un paso puede arrancar negado: "No superar 6 niveles ni mezclar mano DERECHA /
+    # IZQUIERDA" es un paso real de Barack (HO-71). Lo que manda es el verbo que sigue.
+    if primera == "no" and len(palabras) > 1:
+        primera = palabras[1]
     if primera in VERBOS:
         return "ok", primera
     if NARRATIVO.match(t):
