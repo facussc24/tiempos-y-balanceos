@@ -58,6 +58,24 @@ Regla corta. El detalle, los umbrales y los errores caros: skill `hojas-de-proce
     Lo frenan `_gate_cada_paso_con_fuente()` y `_gate_transcripcion_leida()`.
 12. **El sector de esta maquina es `IMG`**, no "MOLDEO IMG": ese sector no existe.
 
+13. **El canon de estas hojas es `docs/CRITERIOS_HOJAS_DE_PROCESO.md`** y se abre ANTES de
+    escribir el primer paso. Existe desde el 08/09/2026 y el skill no lo nombraba: por eso
+    el 21/09 entregue 26 de 27 pasos escritos como narracion y una hoja que decia "SETA",
+    las dos cosas que el canon ya prohibia (3.2 y 4.4). Un canon huerfano no gobierna nada.
+14. **Un paso arranca con el verbo de lo que hace EL OPERARIO.** Poner, Verificar, Apretar,
+    Esperar. No con articulo ni narrando a la maquina (Fak, 21/09/2026: *"no me explicas
+    que debo hacer yo... entendes la diferencia?"*). Un rotulo no es un paso: el nombre del
+    comando va en la FOTO, y en la descripcion va que hacer con el. La prueba: si el que
+    lee hace exactamente lo que dice cada renglon, el trabajo queda hecho.
+15. **El castellano es el de planta, y esta en `vocabulario.data.json` con su fuente.**
+    `seta` -> boton de parada de emergencia. Termino nuevo se agrega mirando un documento
+    real, nunca de memoria. Lo frena `redaccion.py`.
+16. **Lo que el operario no toca, no lleva hoja** (Fak sobre los manometros: *"¿para que
+    hace falta eso? al pedo esta"*), y conocer una pantalla no es un paso: la pantalla
+    entra cuando un paso manda mirarla o tocarla. El **EPP sale del riesgo real del
+    puesto**, no de un set generico (*"¿para que necesito gafas? nadie usa gafas en esta
+    maquina"*).
+
 ## Enforcement
 
 - **Duro:** `py -3 .claude/skills/hojas-de-proceso/scripts/hoja_proceso_check.py "<deck.pptx>"`
@@ -66,6 +84,8 @@ Regla corta. El detalle, los umbrales y los errores caros: skill `hojas-de-proce
   con los mismos numeros con los que el gate rechaza.
 - **Regresion:** `py -3 .claude/skills/hojas-de-proceso/scripts/hojalib_selftest.py` — 25
   casos, cada criterio en ROJO y en VERDE.
+- **Regresion:** `py -3 .claude/skills/hojas-de-proceso/scripts/redaccion_selftest.py` — 36
+  casos de idioma, vocabulario y voz, en ROJO y en VERDE.
 
 **Las contraseñas de HMI no van al repo** (`_gateRepoPublico.mjs` CHECK-3 las busca por contenido).
 El resto del spec de la maquina vive donde se lo busca —la carpeta de la maquina—, no en el repo.

@@ -1,6 +1,6 @@
 ---
 name: hojas-de-proceso
-description: Hojas de proceso / hojas de operaciones de Barack (formulario I-IN-002.4-R01) en PPTX o Excel — que imagen manda, como se acomodan y como se prepara una pantalla de HMI para que se lea impresa. Trae la libreria `hojalib`, el gate que rechaza la hoja y su selftest.
+description: Hojas de proceso / hojas de operaciones de Barack (formulario I-IN-002.4-R01) en PPTX o Excel — que le manda cada paso al operario, con que palabras, que imagen manda y como se prepara una pantalla de HMI para que se lea impresa. El canon es `docs/CRITERIOS_HOJAS_DE_PROCESO.md`; trae `hojalib`, el gate de redaccion con el castellano de planta, el gate que rechaza la hoja y sus selftests.
 ---
 
 # Una hoja de proceso se lee de pie, al lado de la maquina, impresa en A4
@@ -23,6 +23,97 @@ Ninguna se arregla con buena voluntad. Las dos se arreglan con un numero.
 ---
 
 ## 0. LOS GATES (bloqueantes, en este orden)
+
+### GATE 0 cero — el canon se abre ANTES de escribir el primer paso
+
+**El documento maestro de estas hojas es `docs/CRITERIOS_HOJAS_DE_PROCESO.md`.** Lo escribio
+Fak corrigiendo hoja por hoja. No es material de consulta: es lo primero que se lee, y sus
+secciones ganan sobre cualquier criterio que yo derive solo.
+
+| Seccion del canon | Lo que zanja |
+|---|---|
+| **1.1 y 1.2** | Procesos **no** emite hojas de Calidad. El bloque CICLO DE CONTROL va **vacio** hasta que Calidad emita su Plan de Control aprobado para ese part number |
+| **1.3** | El punto critico (airbag / Top Roll) lleva alerta visual en la foto, no protocolo de ensayo |
+| **2.x** | Fotografia operativa: paso a paso, nada de imagenes sinteticas, pantallas legibles, cero fotos invertidas |
+| **3.2** | **La tabla de terminos prohibidos**: el castellano de planta argentino |
+| **4.1 a 4.3** | Geometria, paleta y tipografias del formulario |
+| **4.4** | **Infinitivo obligatorio**, tono sobrio, `TBD` para lo que falta |
+| **4.5** | Las tres fases fijas del plan de reaccion |
+| **6** | El checklist de auditoria pre-entrega |
+
+> **Por que esto es un gate y no una nota al pie.** El 21/09/2026 entregue seis hojas de la
+> MOLDEADORA IMG. El canon estaba en el repo desde el 08/09 y **ningun archivo del skill lo
+> nombraba**, asi que no lo abri. Resultado: 26 de los 27 pasos escritos como narracion de la
+> maquina, y una hoja que decia "SETA". Fak: *"encontre un error gravisimo... tenes que
+> corregir directamente la skill para incluir vocabulario conocido argentino nuestro, no este
+> random que inventaste"*. **Un canon huerfano no gobierna nada.**
+
+### GATE 0 uno — ¿este paso le dice al operario que HACER?
+
+La pregunta que decide si una hoja sirve: **si el que la lee hace exactamente lo que dice
+cada renglon, ¿queda el trabajo hecho?** Si el renglon describe la maquina, la respuesta es no.
+
+| Asi NO (lo que entregue) | Asi SI |
+|---|---|
+| *"La mesa entra con el molde y el portico queda arriba."* | *"Esperar afuera del cerco hasta que la mesa termine de entrar."* |
+| *"Selector AUTOMATICO (自动) / MANUAL (手动)."* | *"Poner el selector en AUTOMATICO (自动)."* |
+| *"El campo de arriba dice que se esta alimentando."* | *"Verificar que la alimentacion diga Cuero en rollo antes de arrancar."* |
+| *"Seta de emergencia: corta todo en el acto."* | *"Ante cualquier riesgo, golpear el boton de parada de emergencia."* |
+
+Reglas duras, las tres del canon 4.4:
+
+1. **Cada paso arranca con un verbo en infinitivo.** Poner, Verificar, Apretar, Esperar,
+   Retirar. Nunca con articulo, nunca con el nombre de una pieza, nunca narrando.
+2. **El sujeto del paso es el operario, no la maquina.** Lo que la maquina hace sola solo se
+   escribe cuando le cambia algo al operario: que espere, que no se acerque, que mire.
+3. **Un rotulo no es un paso.** El nombre de un comando va **en la foto** (`rotular.py`); en
+   la DESCRIPCION va lo que hay que hacer con ese comando.
+
+**Un panel que el operario no toca no lleva hoja.** Fak, 21/09/2026, sobre la lamina de los
+manometros: *"el panel de los no se que, ¿para que hace falta eso? al pedo esta"*. Antes de
+poner una foto: **¿que hace el operario con esto, hoy, en su turno?** Sin respuesta, se cae.
+
+**Lo que pide la norma, para no discutirlo de nuevo** (barrido de los manuales oficiales,
+21/09/2026):
+
+| Requisito | Fuente |
+|---|---|
+| La clausula se titula **"Trabajo estandarizado — instrucciones para el OPERARIO y ayudas visuales"**, y sus cuatro incisos hablan del que **ejecuta**: se comunican y **son entendidos** por los responsables de su ejecucion · **legibles** · **en idioma entendible** · **accesibles en el puesto** | IATF 16949:2016 §8.5.1.2, pag. 55 |
+| La hoja **debe incluir las normas para la seguridad del operario** (ultima frase de la clausula). El EPP sale del **riesgo real del puesto**, no de un set copiado | IATF §8.5.1.2, pag. 55 · Res. SRT 299/2011 punto 10 |
+| Las instrucciones dan detalle "for the **operation** of the processes" y llevan los **parametros** (velocidades, tiempos de ciclo, herramental) | AIAG APQP 3ª ed. §3.7, pag. 34 |
+| En el puesto van **instrucciones Y plan de reaccion**, y las instrucciones se cotejan contra el plan de control, el AMFE y el flujograma | APQP A-9 preg. 42, pag. 66 · APQP cap. 4, pag. 42 |
+| *"Hoja de proceso: documento donde se explica **como realizar una operacion** incluyendo secuencias de trabajo, controles a realizar, elementos a utilizar, parametros de proceso"* | I-IN-002 rev.A §4, el SGC de Barack |
+
+**La norma NO fija la forma gramatical** —eso lo fija Barack y es el infinitivo del canon
+4.4—, pero si fija el efecto: **entendido por el que lo ejecuta**. Cualquiera que diga que
+IATF exige imperativo esta inventando.
+
+**Un paso completo cierra el lazo en un solo renglon: ACCION + CRITERIO + QUE HACER SI NO.**
+*"Verificar en la pantalla que la alimentacion diga Cuero en rollo antes de arrancar. Si no
+lo dice, no arrancar: avisar al lider."* Sin criterio no se sabe cuando esta bien hecho; sin
+la reaccion, el operario queda solo con el problema.
+
+**Y una hoja de "conocer la pantalla" tampoco es una hoja de proceso.** Fak, sobre la lamina
+del HMI: *"no se de que me sirve conocer esa pantalla... quiero saber como empezar"*. La
+pantalla entra cuando el paso manda **mirarla o tocarla**, y entra dentro de ese paso.
+
+### GATE 0 dos — el castellano de planta
+
+Antes de escribir, el vocabulario: **`vocabulario.data.json`** (la tabla 3.2 del canon, en
+forma de dato) y el gate **`redaccion.py`**, que lee los dos y frena la hoja.
+
+- `seta` → **boton de parada de emergencia** · `izaje` → maniobra con el puente grua ·
+  `chumacera` → soporte del desbobinador · `contenedor de rechazo` → cajon de scrap ·
+  `par de apriete` → torque · `mandril` → eje neumatico expansible.
+- **Termino nuevo se agrega con su FUENTE**, nunca de memoria: una palabra prohibida que Fak
+  si usa es tan mala como una inventada que no usa nadie (el 12/09 un gate de estilo salio
+  invertido y marcaba en rojo los mails de Fak).
+
+```bash
+py -3 .claude/skills/hojas-de-proceso/scripts/redaccion.py texto "La mesa entra con el molde"
+py -3 .claude/skills/hojas-de-proceso/scripts/redaccion.py spec <generador.py> HOJAS_X
+py -3 .claude/skills/hojas-de-proceso/scripts/redaccion_selftest.py   # 36 casos, rojo y verde
+```
 
 ### GATE 0 — antes de escribir nada: ¿cuantos pasos tiene esta hoja, y entran?
 
@@ -388,9 +479,13 @@ CICLO DE CONTROL · ELEMENTOS DE SEGURIDAD · PLAN DE REACCION.
 | **Dura** | una marca que cae sobre una zona lisa (al lado del boton, no encima) | `rotular.chequear_marcas()` |
 | **Dura** | cocina interna en el texto de la hoja (Nº de video, pendientes, metodo) | `_gate_texto_para_el_operario()` del generador |
 | **Medido** | donde esta cada pulsador, en vez de estimarlo | `medir_marca.py` / `--marca "color:verde|..."` |
+| **Dura** | un termino que en planta no se dice asi (`seta`, `izaje`, `chumacera`...) | `redaccion.py` + `vocabulario.data.json` |
+| **Dura** | un paso que describe la maquina en vez de mandarle algo al operario | `redaccion.gate_redaccion()` |
+| **Regresion** | 36 casos de idioma, vocabulario y voz, en ROJO y en VERDE | `redaccion_selftest.py` |
 
 ```bash
 py -3 .claude/skills/hojas-de-proceso/scripts/hojalib_selftest.py     # 25 casos
+py -3 .claude/skills/hojas-de-proceso/scripts/redaccion_selftest.py   # 36 casos
 py -3 .claude/skills/hojas-de-proceso/scripts/fotodevideo.py leer <assets>/*.jpg  # procedencia
 py -3 .claude/skills/hojas-de-proceso/scripts/hoja_proceso_check.py "<deck.pptx>" --spec <spec.py>
 ```

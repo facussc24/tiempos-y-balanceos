@@ -35,6 +35,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from pptx import Presentation  # noqa: E402
 
 import hojalib as HL  # noqa: E402
+import redaccion as RED
 
 EMU = 360000.0
 
@@ -115,6 +116,12 @@ def revisar(ruta, declara=None):
                 fallas.append((i + 1, op or "portada", "texto",
                                "un texto pide %.2f cm mas de los que tiene la caja: %r"
                                % (sobra, sh.text_frame.text.strip()[:52])))
+            # el castellano de planta se chequea sobre el ARCHIVO ENTREGADO, no sobre el
+            # generador: asi lo caza venga de donde venga el texto (canon 3.2)
+            for hallado, reemplazo, _motivo, _fuente in RED.revisar_vocabulario(
+                    sh.text_frame.text):
+                fallas.append((i + 1, op or "portada", "vocabulario",
+                               "dice %r y aca se dice %r" % (hallado, reemplazo)))
         if not op:
             continue
 

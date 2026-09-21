@@ -1,0 +1,142 @@
+{
+  "_leeme": [
+    "El castellano de planta de Barack, en forma de dato. Lo lee el gate `redaccion.py`.",
+    "Cada termino prohibido lleva su FUENTE: de donde sale que esta prohibido. Sin fuente no",
+    "se agrega nada: prohibir una palabra que Fak usa es tan malo como dejar pasar una que no",
+    "usa nadie (leccion del 12/09: un gate de estilo se calibra por su falso rojo contra el",
+    "corpus del dueno de la voz).",
+    "",
+    "`patron` es una expresion regular, se compara en minusculas y sin acentos.",
+    "`contexto` (opcional) limita el rojo a las hojas de proceso donde ese sentido aplica;",
+    "si esta, la palabra sola no alcanza para dar rojo fuera de ese contexto."
+  ],
+
+  "prohibidos": [
+    {
+      "patron": "\\bsetas?\\b",
+      "reemplazo": "boton de parada de emergencia",
+      "motivo": "Aca no se dice 'seta'. Es el hongo rojo del puesto y se llama boton de parada de emergencia.",
+      "fuente": "Fak 21/09/2026: \"encontre un error gravisimo en la hoja los comandos del puesto 'SETA' se llaman boton de parada de emergencia\". Ya estaba en CRITERIOS_HOJAS_DE_PROCESO.md 3.2."
+    },
+    {
+      "patron": "\\bizaje\\b",
+      "reemplazo": "maniobra con el puente grua",
+      "motivo": "Termino de manual portuario. En planta se habla del puente grua y del amarre.",
+      "fuente": "Fak 08/09/2026: \"ni se que es izaje\". CRITERIOS_HOJAS_DE_PROCESO.md 3.2."
+    },
+    {
+      "patron": "\\beslingas?\\b",
+      "reemplazo": "cadenas del puente grua",
+      "motivo": "El molde va con cadenas de acero y grilletes, no con eslingas textiles.",
+      "fuente": "CRITERIOS_HOJAS_DE_PROCESO.md 3.2."
+    },
+    {
+      "patron": "\\bchumace?ras?\\b|\\bchumasquereas?\\b",
+      "reemplazo": "soportes del desbobinador",
+      "motivo": "Palabra de manual mecanico que en Barack no usa nadie.",
+      "fuente": "Fak: \"chumasquereas que carajo es eso jajaj dios mio esas palabras te dije que no\". CRITERIOS_HOJAS_DE_PROCESO.md 3.2."
+    },
+    {
+      "patron": "\\bcontenedor de rechazo\\b|\\bcubo de desechos?\\b|\\btacho de desperdicios\\b",
+      "reemplazo": "cajon de scrap",
+      "motivo": "El scrap se segrega en el cajon rojo. Asi esta en las hojas maestras HO-968 y HO-985.",
+      "fuente": "CRITERIOS_HOJAS_DE_PROCESO.md 3.2."
+    },
+    {
+      "patron": "\\bmandril\\b|\\beje hinchable\\b",
+      "reemplazo": "eje neumatico expansible",
+      "motivo": "'Mandril' es iberico. Aca es el eje expansible que se infla con aire.",
+      "fuente": "CRITERIOS_HOJAS_DE_PROCESO.md 3.2."
+    },
+    {
+      "patron": "\\bcanuto\\b",
+      "reemplazo": "buje de carton",
+      "motivo": "El cilindro hueco sobre el que viene enrollada la lamina es el buje de carton.",
+      "fuente": "CRITERIOS_HOJAS_DE_PROCESO.md 3.2."
+    },
+    {
+      "patron": "\\balbaran\\b",
+      "reemplazo": "remito",
+      "motivo": "Documento de ingreso y egreso de materiales: aca es el remito.",
+      "fuente": "CRITERIOS_HOJAS_DE_PROCESO.md 3.2."
+    },
+    {
+      "patron": "\\bcarretilla elevadora\\b|\\btoro elevador\\b",
+      "reemplazo": "autoelevador",
+      "motivo": "La maquina de mover racks es el autoelevador (o el clark).",
+      "fuente": "CRITERIOS_HOJAS_DE_PROCESO.md 3.2."
+    },
+    {
+      "patron": "\\bpar de apriete\\b",
+      "reemplazo": "torque",
+      "motivo": "En planta no se dice 'par de apriete': se torquea con torquimetro.",
+      "fuente": "CRITERIOS_HOJAS_DE_PROCESO.md 3.2."
+    },
+    {
+      "patron": "\\bflexometro\\b",
+      "reemplazo": "cinta metrica",
+      "motivo": "Espanolismo peninsular.",
+      "fuente": "core-prohibiciones.md 4."
+    },
+    {
+      "patron": "\\bordenador\\b|\\bfichero\\b|\\bcoger\\b",
+      "reemplazo": "computadora / archivo / agarrar",
+      "motivo": "Espanolismos peninsulares.",
+      "fuente": "core-prohibiciones.md 4."
+    },
+    {
+      "patron": "\\bcomprobacion\\b|\\bcomprobar\\b",
+      "reemplazo": "verificacion / verificar",
+      "motivo": "El SGC de Barack estandarizo 'verificar' e 'inspeccionar'.",
+      "fuente": "CRITERIOS_HOJAS_DE_PROCESO.md 3.2."
+    }
+  ],
+
+  "prohibidos_con_contexto": [
+    {
+      "patron": "\\bmordazas?\\b",
+      "reemplazo": "clamps neumaticos",
+      "contexto": "termoformado",
+      "motivo": "En la termoformadora, lo que fija la lamina al marco tensor son los clamps neumaticos.",
+      "fuente": "CRITERIOS_HOJAS_DE_PROCESO.md 3.2 (la tabla la marca como prohibida 'aislada / mecanica')."
+    },
+    {
+      "patron": "\\bnucleo\\b",
+      "reemplazo": "buje de carton",
+      "contexto": "bobina",
+      "motivo": "Hablando de la bobina, el cilindro interior es el buje de carton.",
+      "fuente": "CRITERIOS_HOJAS_DE_PROCESO.md 3.2."
+    }
+  ],
+
+  "_contextos": {
+    "termoformado": "lamina|molde|vacio|termoform|conformad|marco tensor",
+    "bobina": "bobina|rollo|desbobinad|lamina"
+  },
+
+  "dramatizacion": {
+    "_leeme": "4.4: tono tecnico sobrio. La hoja manda una accion, no lamenta una consecuencia.",
+    "patrones": [
+      "\\bse rompen? al instante\\b",
+      "\\bal instante\\b",
+      "\\bcatastrof",
+      "\\bgravisim",
+      "\\bjamas\\b",
+      "\\bnunca mas\\b",
+      "\\bpeligro de muerte\\b",
+      "\\bdesastre\\b"
+    ],
+    "fuente": "CRITERIOS_HOJAS_DE_PROCESO.md 4.4: \"'Se rompen al instante' es una exageracion melodramatica no profesional. La HO debe indicar una accion positiva concreta de verificacion, no un lamento\"."
+  },
+
+  "borrador": {
+    "_leeme": "4.4: no se imprime una hoja que se declara provisoria. El dato que falta es TBD.",
+    "patrones": [
+      "\\bborrador\\b",
+      "\\bsujeto a revision\\b",
+      "\\bpendiente de validacion\\b",
+      "\\bprovisorio\\b"
+    ],
+    "fuente": "CRITERIOS_HOJAS_DE_PROCESO.md 4.4."
+  }
+}

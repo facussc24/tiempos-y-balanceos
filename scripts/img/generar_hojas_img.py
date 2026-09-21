@@ -33,6 +33,13 @@ import os
 import sys
 import shutil
 import functools
+
+# El vocabulario de planta y la voz del paso son del SKILL, no de esta maquina:
+# valen para cualquier hoja de proceso de Barack.
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                '..', '..', '.claude', 'skills',
+                                'hojas-de-proceso', 'scripts'))
+from redaccion import gate_redaccion  # noqa: E402
 from PIL import Image, ImageFont
 from pptx import Presentation
 from pptx.util import Cm, Pt
@@ -897,6 +904,7 @@ def hoja(prs, d, logo=None):
     _gate_no_afirmar_de_mas(d)
     _gate_secuencia_en_orden(d)
     _gate_secuencia_con_marca(d)
+    gate_redaccion(d)
     bloque_imagenes(slide, d.get("imagenes", []), d.get("pies"),
                     numerar=(d.get("modo", "secuencia") != "rotulada"))
     bloque_pasos(slide, d.get("pasos", []), d.get("nota"), d.get("parametros"))
