@@ -1116,22 +1116,24 @@ HOJAS_IMG = [
         modo="rotulada",
         imagenes=[_f("r_matriz.jpg")],
         pasos=[
-            "Arriba se elige que mitad se mira: calentamiento superior (上加热) o "
-            "inferior (下加热).",
+            "Arriba se elige que mitad se mira: Calentamiento Superior o Calentamiento "
+            "Inferior. La que esta mirando queda en verde.",
             "Cada casillero con numero es una resistencia: arriba lo que MIDE y abajo, en "
             "amarillo, lo que tiene CONSIGNADO. Los casilleros vacios no tienen resistencia.",
             "El contorno del molde queda dibujado sobre la grilla y marca por donde pasa la "
             "pieza. Las de adentro y las de afuera muestran las dos su temperatura.",
             "El pie dice la produccion del turno, la receta y el numero de molde.",
         ],
+        fuentes=[
+            "IMG_0789 (09-09-2026) s=14,5: los dos botones arriba a la izquierda, con "
+            "Calentamiento Superior en verde",
+            "misma pantalla: cada casillero con su valor medido arriba y el consignado en "
+            "amarillo",
+            "misma pantalla: el contorno del molde dibujado sobre la grilla",
+            "misma pantalla: el pie con Produccion, Receta y N de Molde",
+        ],
         nota="Si una resistencia mide muy por debajo de lo consignado, no se arranca: se "
              "anota el numero de la resistencia y se avisa.",
-        fuentes=[
-            "IMG_0801 s=20,3: los dos botones 上加热 / 下加热 arriba de la grilla",
-            "misma pantalla: cada casillero con su valor medido arriba y el consignado en amarillo",
-            "misma pantalla: el contorno del molde dibujado sobre la grilla",
-            "misma pantalla: el pie con Produccion, Receta y Numero Molde",
-        ],
         epp=EPP_STD,
         disparador="SI UNA ZONA NO LLEGA A LA TEMPERATURA CONSIGNADA",
         acciones=[

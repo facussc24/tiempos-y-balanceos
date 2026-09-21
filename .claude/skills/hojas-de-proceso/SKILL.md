@@ -270,6 +270,25 @@ escribir, pero solo**: el por que va aparte (`no-pfd-no-ho.md` §5).
 Lo mismo para los parametros: va el valor que rige (`Tiempo de vacio: 19 s`), no su
 historia (`subido de 8 s el 10/09 porque...`).
 
+## 2 sexies. La pantalla va en CASTELLANO, y el idioma no es del dia
+
+Fak, 21/09/2026: *"hay que intentar que todas, dentro de lo posible, esten en español, no en
+chino: cuando ya lo habiamos traducido me asegure de grabar todas las pantallas de frente"*.
+
+Barridos los 5.335 fotogramas de la moldeadora: **ninguna pantalla existe solo en chino**.
+Las 26 pantallas distintas tienen al menos una toma en castellano. Asi que si una hoja
+muestra una pantalla en chino, es que no se busco bien.
+
+**Y lo que cambia como se busca: el idioma NO es una propiedad del dia.** La barra de arriba
+tiene las tres banderas (China / Reino Unido / Argentina) y se cambia en cualquier momento —
+el 09/09 a las 08:50:22 la pantalla esta en chino y a las 08:50:27 ya esta en castellano; el
+11/09 a las 11:29:40 en castellano y seis segundos despues en chino otra vez. Buscar "el dia
+en que estaba traducido" no sirve: se mira cuadro por cuadro.
+
+**Y el OCR no alcanza para encontrarlas.** En ese barrido, un fotograma con la pantalla en
+castellano perfectamente legible dio CERO texto, ni agrandandolo al doble. Lo encontro el
+barrido visual. El OCR ordena la busqueda; el que decide es el ojo.
+
 ## 3. La pantalla es la FOTO REAL enderezada, con el dato encima. Ni redibujada ni con IA
 
 **Fak, 08/09/2026:** *"intenta poner la foto de la pantalla real y metele un edit y ponele encima
