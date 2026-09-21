@@ -203,7 +203,7 @@
     }
   ],
   "tabla_conversion": {
-    "_comentario": "Tabla de conversion de simbolos exigida por IATF 16949 §8.3.3.3 d): si la organizacion usa simbolos propios en lugar de los del cliente, la equivalencia tiene que estar definida y ser presentable al cliente. Se carga una entrada por cada cliente que tenga simbologia propia, la primera vez que aparece.",
+    "_comentario": "Tabla de conversion de simbolos exigida por IATF 16949 §8.3.3.3 d): si la organizacion usa simbolos propios en lugar de los del cliente, la equivalencia tiene que estar definida y ser presentable al cliente. Se carga una entrada por cada cliente que tenga simbologia propia, la primera vez que aparece. El campo 'leyenda' es el texto EXACTO que se imprime en la caratula y en el flujograma, y solo lo llevan las marcas que lo necesitan: cuando un cliente parte un nivel en varias (SMRC parte la critica en seguridad y homologacion), decir \"CARACTERISTICA CRITICA\" en las dos lineas borra la distincion que el cliente hizo. Las que no lo llevan usan el texto del NIVEL, que es lo que Fak fijo el 08/09/2026 para VW: en caratula y flujograma no se explica ni se citan normas. El campo 'significa' es prosa de referencia y NO se imprime.",
     "SMRC": {
       "fuente": "P21 ARMREST_SSRT MY2026_LSC_v1.xlsx, hoja LSC, bloque 'Customers / marking of SC' (fila 4), clave en las filas 8 y 10; leido el 21/09/2026",
       "marcas": [
@@ -213,7 +213,8 @@
           "clave_lsc": "( S )",
           "nivel": "CRITICA",
           "significa": "caracteristica critica de SEGURIDAD",
-          "equivalente_interno": "CC"
+          "equivalente_interno": "CC",
+          "leyenda": "CARACTERISTICA CRITICA DE SEGURIDAD"
         },
         {
           "cliente": "cc/h",
@@ -221,7 +222,8 @@
           "clave_lsc": "( H )",
           "nivel": "CRITICA",
           "significa": "caracteristica critica de HOMOLOGACION",
-          "equivalente_interno": "CC"
+          "equivalente_interno": "CC",
+          "leyenda": "CARACTERISTICA CRITICA DE HOMOLOGACION"
         },
         {
           "cliente": "sc/f",
@@ -229,7 +231,8 @@
           "clave_lsc": "( M )",
           "nivel": "SIGNIFICATIVA",
           "significa": "caracteristica significativa FUNCIONAL",
-          "equivalente_interno": "SC"
+          "equivalente_interno": "SC",
+          "leyenda": "CARACTERISTICA SIGNIFICATIVA FUNCIONAL"
         }
       ]
     },

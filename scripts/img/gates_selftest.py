@@ -1,0 +1,76 @@
+# -*- coding: utf-8 -*-
+"""gates_selftest.py — los seis gates del generador, cada uno en ROJO y en VERDE.
+
+    py -3 scripts/img/gates_selftest.py     # sale 1 si alguno no hace lo que dice
+
+Un gate que no puede dar rojo esta tan roto como el que no puede dar verde: lo unico que
+prueba que sirve es verlo rechazar el caso que lo motivo.
+"""
+import os
+import sys
+
+sys.path.insert(0, os.path.abspath('scripts/img'))
+import generar_hojas_img as G  # noqa: E402
+
+F = lambda n: os.path.join('scripts', 'img', 'assets2', n)  # noqa: E731
+
+CASOS = [
+    # (gate, nombre del caso, dict, se_espera_rojo)
+    (G._gate_una_foto_por_paso, "3 fotos y 4 pasos",
+     dict(op='X', imagenes=[F('m1_entra.jpg')] * 3, pasos=['a', 'b', 'c', 'd']), True),
+    (G._gate_una_foto_por_paso, "5 pasos en una hoja de secuencia",
+     dict(op='X', imagenes=[F('m1_entra.jpg')] * 4, pasos=list('abcde')), True),
+    (G._gate_una_foto_por_paso, "4 fotos y 4 pasos",
+     dict(op='X', imagenes=[F('m1_entra.jpg')] * 4, pasos=list('abcd')), False),
+
+    (G._gate_texto_para_el_operario, "la nota cita el numero de video",
+     dict(op='X', nota='Las cuatro fotos son del IMG_0844.'), True),
+    (G._gate_texto_para_el_operario, "un pendiente con el proveedor",
+     dict(op='X', nota='Pendiente de confirmar con KINGPOWER.'), True),
+    (G._gate_texto_para_el_operario, "una nota operativa",
+     dict(op='X', nota='Nadie mete la mano hasta que la maquina abrio sola.'), False),
+
+    (G._gate_no_afirmar_de_mas, "afirma que algo esta apagado",
+     dict(op='X', pasos=['Las de afuera del contorno quedan apagadas o al minimo.']), True),
+    (G._gate_no_afirmar_de_mas, "un numero con unidad sin declarar",
+     dict(op='X', pasos=['Esperar a que llegue a 390 °C.']), True),
+    (G._gate_no_afirmar_de_mas, "el mismo numero, declarado",
+     dict(op='X', parametros=[('Tiempo de vacio', '19 s')], pasos=['Esperar los 19 s.']), False),
+
+    (G._gate_cada_paso_con_fuente, "2 pasos y 1 fuente",
+     dict(op='X', pasos=['a', 'b'], fuentes=['IMG_0801 s=1,1: se ve en la foto']), True),
+    (G._gate_cada_paso_con_fuente, "una fuente que no es una fuente",
+     dict(op='X', pasos=['a'], fuentes=['ok']), True),
+    (G._gate_cada_paso_con_fuente, "una fuente por paso",
+     dict(op='X', pasos=['a'], fuentes=['IMG_0801 (09-09-2026) s=1,1: la serigrafia']), False),
+
+    (G._gate_transcripcion_leida, "manda algo desde un video sin transcripcion",
+     dict(op='X', pasos=['Apretar el verde.'], fuentes=['IMG_9999 s=1: se ve']), True),
+    (G._gate_transcripcion_leida, "DESCRIBE lo del mismo video sin transcripcion",
+     dict(op='X', pasos=['El pulsador verde esta al lado del rojo.'],
+          fuentes=['IMG_9999 s=1: se ve']), False),
+    (G._gate_transcripcion_leida, "manda algo desde un video que SI tiene transcripcion",
+     dict(op='X', pasos=['Apretar el verde.'], fuentes=['IMG_0801 s=1,1: la serigrafia']), False),
+
+    (G._gate_secuencia_en_orden, "el paso 1 pasa despues del paso 2",
+     dict(op='X', modo='secuencia',
+          imagenes=[F('m3_abre.jpg'), F('m1_entra.jpg')]), True),
+    (G._gate_secuencia_en_orden, "en el orden del reloj",
+     dict(op='X', modo='secuencia',
+          imagenes=[F('m1_entra.jpg'), F('m3_abre.jpg')]), False),
+]
+
+print("LOS GATES, cada uno con un caso que debe RECHAZAR y otro que debe PASAR\n")
+malos = 0
+for fn, nombre, d, espera_rojo in CASOS:
+    try:
+        fn(d)
+        real = 'VERDE'
+    except SystemExit:
+        real = 'ROJO'
+    ok = (real == 'ROJO') == espera_rojo
+    malos += not ok
+    print(f"  {'ok  ' if ok else 'FALLA'}  {fn.__name__:34s} {real:5s}  {nombre}")
+
+print(f"\n{len(CASOS)} casos, {malos} fallan.")
+sys.exit(1 if malos else 0)

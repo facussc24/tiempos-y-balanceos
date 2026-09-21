@@ -216,4 +216,35 @@ describe('specialChars — la leyenda imprimible no cita normas (Fak 08/09/2026)
         expect(leyendaDeMarcas(['-', '', null])).toEqual([]);
         expect(leyendaDeMarcas(['W'])).toEqual([{ mark: 'W', meaning: 'SIGLA NO DEFINIDA — VERIFICAR.' }]);
     });
+
+    /**
+     * Cuando un cliente parte un nivel en varias marcas, la leyenda tiene que distinguirlas.
+     * SMRC usa <cc/s> critica de SEGURIDAD y <cc/h> critica de HOMOLOGACION: con el texto del
+     * nivel, las dos lineas decian "CARACTERISTICA CRITICA" y borraban la diferencia que el
+     * cliente hizo a proposito. Salio asi en el primer export del AMFE 173 (21/09/2026).
+     */
+    it('SMRC: las dos criticas se distinguen, y la sigla va como la escribe el cliente', () => {
+        expect(leyendaDeMarcas(['cc/h', 'cc/s', 'sc/f'])).toEqual([
+            { mark: 'cc/h', meaning: 'CARACTERISTICA CRITICA DE HOMOLOGACION' },
+            { mark: 'cc/s', meaning: 'CARACTERISTICA CRITICA DE SEGURIDAD' },
+            { mark: 'sc/f', meaning: 'CARACTERISTICA SIGNIFICATIVA FUNCIONAL' },
+        ]);
+    });
+
+    /**
+     * El gemelo del anterior: agregar el texto por sigla NO puede cambiarle la leyenda a los
+     * demas. El primer intento leyo el campo `significa` del canon, que es prosa de referencia,
+     * y le puso a D/TLD "documentacion obligatoria legal..." — justo lo que Fak saco el
+     * 08/09/2026. Solo se imprime el campo `leyenda`, y solo lo llevan las marcas que lo piden.
+     */
+    it('VW y la interna NO cambian: siguen diciendo solo el nivel', () => {
+        expect(leyendaDeMarcas(['D/TLD', 'SC'])).toEqual([
+            { mark: 'D/TLD', meaning: 'CARACTERISTICA CRITICA' },
+            { mark: 'SC', meaning: 'CARACTERISTICA SIGNIFICATIVA' },
+        ]);
+        expect(leyendaDeMarcas(['CC', 'SC'])).toEqual([
+            { mark: 'CC', meaning: 'CARACTERISTICA CRITICA' },
+            { mark: 'SC', meaning: 'CARACTERISTICA SIGNIFICATIVA' },
+        ]);
+    });
 });

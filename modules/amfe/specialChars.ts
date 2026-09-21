@@ -57,6 +57,33 @@ const normalize = (raw: string | undefined | null): string =>
         .trim();
 
 /**
+ * Significado por SIGLA, cuando el canon lo trae en `tabla_conversion`.
+ *
+ * Existe porque un cliente puede partir un nivel en varias marcas y el texto del NIVEL ya no
+ * alcanza para distinguirlas (SMRC: `<cc/s>` seguridad y `<cc/h>` homologacion, las dos
+ * criticas). Guarda tambien la sigla con la grafia del cliente, para imprimirla como el la
+ * escribe y no normalizada en mayusculas.
+ */
+const SIGNIFICADO_POR_SIGLA: Map<string, { mark: string; significa: string }> = (() => {
+    const m = new Map<string, { mark: string; significa: string }>();
+    const tabla = (data as { tabla_conversion?: Record<string, unknown> }).tabla_conversion;
+    if (!tabla) return m;
+    for (const [clave, valor] of Object.entries(tabla)) {
+        if (clave.startsWith('_') || typeof valor !== 'object' || valor === null) continue;
+        const marcas = (valor as { marcas?: Array<{ cliente?: string; leyenda?: string }> }).marcas;
+        if (!Array.isArray(marcas)) continue;
+        for (const x of marcas) {
+            // Solo las marcas con `leyenda` propia. El `significa` es prosa de referencia:
+            // imprimirlo cambiaria la leyenda de VW, que Fak fijo el 08/09/2026 sin explicaciones.
+            if (!x?.cliente || !x?.leyenda) continue;
+            const k = normalize(x.cliente);
+            if (k && !m.has(k)) m.set(k, { mark: x.cliente, significa: x.leyenda });
+        }
+    }
+    return m;
+})();
+
+/**
  * Nivel canonico de una marca, sea cual sea la notacion en que este escrita.
  * Devuelve null si la celda esta vacia o la sigla no la reconoce ninguna de las fuentes
  * (en ese caso NO se adivina: se reporta como desconocida).
@@ -167,22 +194,36 @@ export interface EntradaLeyenda { mark: string; meaning: string; }
  * Se construye desde las marcas que trae el documento, NO desde una lista fija: si el
  * AMFE no marca nada, no hay leyenda; si trae una sigla que ninguna fuente reconoce, se
  * lista igual diciendo que no esta definida — no se adivina que quiso decir.
+ *
+ * **Cuando un cliente parte un nivel en varias marcas, la leyenda las distingue.** SMRC usa
+ * `<cc/s>` critica de SEGURIDAD y `<cc/h>` critica de HOMOLOGACION: las dos son criticas,
+ * pero decir "CARACTERISTICA CRITICA" en las dos lineas borra justo la diferencia que el
+ * cliente hizo a proposito, y deja una leyenda que repite lo mismo dos veces sin explicar
+ * nada (salio asi en el primer export del AMFE 173, el 21/09/2026). Por eso el significado
+ * sale primero de `tabla_conversion` del canon, que lo trae por sigla, y solo si esa sigla
+ * no esta ahi se cae al texto generico del nivel. La sigla se imprime **como la escribe el
+ * cliente** (`cc/h`, no `CC/H`): es su notacion, no la nuestra.
  */
 export function leyendaDeMarcas(
     marcas: Iterable<string | null | undefined>,
 ): EntradaLeyenda[] {
-    const vistas = new Map<string, { meaning: string; orden: number }>();
+    const vistas = new Map<string, { mark: string; meaning: string; orden: number }>();
     for (const raw of marcas) {
         const v = normalize(raw);
         if (!v || vistas.has(v) || esSinMarca(v)) continue;
+        const propia = SIGNIFICADO_POR_SIGLA.get(v);
         const nivel = nivelDeCaracteristica(v);
         if (!nivel) {
-            vistas.set(v, { meaning: 'SIGLA NO DEFINIDA — VERIFICAR.', orden: ORDEN_NIVEL.length });
+            vistas.set(v, { mark: v, meaning: 'SIGLA NO DEFINIDA — VERIFICAR.', orden: ORDEN_NIVEL.length });
             continue;
         }
-        vistas.set(v, { meaning: TEXTO_NIVEL[nivel], orden: ORDEN_NIVEL.indexOf(nivel) });
+        vistas.set(v, {
+            mark: propia?.mark ?? v,
+            meaning: (propia?.significa ?? TEXTO_NIVEL[nivel]).toUpperCase(),
+            orden: ORDEN_NIVEL.indexOf(nivel),
+        });
     }
     return [...vistas.entries()]
         .sort((a, b) => a[1].orden - b[1].orden || a[0].localeCompare(b[0]))
-        .map(([mark, { meaning }]) => ({ mark, meaning }));
+        .map(([, { mark, meaning }]) => ({ mark, meaning }));
 }

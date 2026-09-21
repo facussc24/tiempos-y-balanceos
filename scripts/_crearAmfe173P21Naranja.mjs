@@ -515,7 +515,7 @@ const OP40 = operacion('40', 'COSTURA DE UNION',
         'SC 2.6: hilo Nylon, Thread M40, color negro standard',
         [
           falla('Costura de union ejecutada con un hilo distinto del Nylon M40 negro', EF_PIEZA_DISTINTA, [
-            causa('En el puesto conviven conos de hilo de union y de hilo vista, de articulos distintos',
+            causa('El puesto admite montar cualquier cono de hilo que este disponible',
               'Un solo cono de hilo de union habilitado en el puesto, identificado en la hoja de operaciones',
               4, 'Cotejo del cono montado contra la hoja de operaciones al inicio de turno y en cada cambio de lote', 6,
               sc('SC 2.6', 'cc/h')),
@@ -651,7 +651,7 @@ const OP50 = operacion('50', 'COSTURA VISTA - PESPUNTE SIMPLE, UNA LINEA',
         'SC 2.5: Linhanyl articulo BX138, codigo 12124E, Nylon 6.6, color Orange Zeus T90 / FHS-F090',
         [
           falla('Costura vista ejecutada con un hilo distinto del Linhanyl BX138 naranja', EF_PIEZA_DISTINTA, [
-            causa('En el sector conviven los conos de las variantes verde, azul y cuero de la misma pieza',
+            causa('El puesto admite montar cualquier cono de hilo que este en el sector',
               'Un solo articulo de hilo vista habilitado en el puesto, identificado en la hoja de operaciones',
               4, 'Cotejo de la etiqueta del cono montado contra la hoja de operaciones al inicio de turno', 4,
               sc('SC 2.5', 'cc/h')),
