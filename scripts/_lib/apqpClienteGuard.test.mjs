@@ -9,7 +9,13 @@
  */
 import { GUARDIANES } from './guardianes.mjs';
 
-const PAQUETE = 'Y:\\BARACK\\CALIDAD\\DOCUMENTACION SGC\\PPAP CLIENTES\\REYDEL-SMRC\\APB P21\\P21 SSRT-MY2026 HILO NARANJA\\APQP\\31-Aprobacion de piezas de Produccion(PPAP)\\PPAP_00257327-01-NHZD_328\\05 - Process Flow & Standar Work';
+// El paquete del cliente vive adentro de `1. Imput`, junto al resto de lo que mando el
+// cliente (Fak, 21/09/2026: "podes dejar todo eso dentro de input, en la carpeta original
+// del cliente"). El 21/09 estuvo un rato en el casillero 31 por decision mia; el gate tiene
+// que frenar en las DOS ubicaciones, porque la carpeta se reconoce por su nombre
+// `PPAP_<part number>_<n>`, no por donde este colgada.
+const PAQUETE = 'Y:\\BARACK\\CALIDAD\\DOCUMENTACION SGC\\PPAP CLIENTES\\REYDEL-SMRC\\APB P21\\P21 SSRT-MY2026 HILO NARANJA\\APQP\\1. Imput\\PPAP_00257327-01-NHZD_328\\05 - Process Flow & Standar Work';
+const PAQUETE_VIEJO = 'Y:\\BARACK\\CALIDAD\\DOCUMENTACION SGC\\PPAP CLIENTES\\REYDEL-SMRC\\APB P21\\P21 SSRT-MY2026 HILO NARANJA\\APQP\\31-Aprobacion de piezas de Produccion(PPAP)\\PPAP_00257327-01-NHZD_328\\05 - Process Flow & Standar Work';
 const LEGAJO = 'Y:\\BARACK\\CALIDAD\\DOCUMENTACION SGC\\PPAP CLIENTES\\REYDEL-SMRC\\APB P21\\P21 SSRT-MY2026 HILO NARANJA\\APQP';
 const LISTADO = 'Y:\\Ingenieria\\Documentacion Gestion Ingenieria\\13. Analisis del modo de falla y sus efectos ( I-AC-005.3)\\1. LISTADO DE AMFES\\Listado_Maestro_AMFE.xlsx';
 
@@ -32,6 +38,8 @@ const casos = [
     ctx('Bash', { cmd: `cp /c/tmp/f.pdf "${PAQUETE}\\FLUJOGRAMA 159.pdf"` })],
   ['ROJO', 'Copy-Item hacia el paquete del cliente',
     ctx('PowerShell', { cmd: `Copy-Item f.pdf "${PAQUETE}\\f.pdf"` })],
+  ['ROJO', 'el paquete en su ubicacion vieja (casillero 31) tambien se frena',
+    ctx('Bash', { cmd: `cp f.pdf "${PAQUETE_VIEJO}\\f.pdf"` })],
   ['ROJO', 'Write directo sobre un listado maestro',
     ctx('Write', { file: LISTADO })],
   ['ROJO', 'script de alta en un listado maestro con --apply',
@@ -42,6 +50,8 @@ const casos = [
   // ───────────────────────────── VERDE: tiene que dejar pasar
   ['VERDE', 'el plano del cliente en su casillero del legajo (autorizado por Fak)',
     ctx('Bash', { cmd: `cp plano.pdf "${LEGAJO}\\6-Planos de la pieza\\RP-00238891.pdf"` })],
+  ['VERDE', 'MOVER el paquete entero del cliente a 1. Imput (es lo que pidio Fak)',
+    ctx('Bash', { cmd: `mv "${LEGAJO}\\31-Aprobacion de piezas de Produccion(PPAP)\\PPAP_00257327-01-NHZD_328" "${LEGAJO}\\1. Imput\\"` })],
   ['VERDE', 'el flujograma en el casillero 20 del legajo',
     ctx('Bash', { cmd: `cp f.pdf "${LEGAJO}\\20- Flujograma de proceso\\FLUJOGRAMA 159.pdf"` })],
   ['VERDE', 'SACAR un archivo del paquete del cliente',
