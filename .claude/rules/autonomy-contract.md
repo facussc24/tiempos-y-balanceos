@@ -72,13 +72,13 @@ concretos. Fak ajusta el criterio y eso queda escrito para que no se vuelva a pr
 | Emitir un documento controlado (flujograma, AMFE, HO) en `Gestion Ingenieria` | **Preguntar** — el documento lo firma Fak |
 | Poner algo en el paquete del cliente (`31-...\PPAP_<PN>\`) | **Prohibido sin OK**: el PPAP es de CALIDAD, Ingenieria no lo arma |
 | Escribir en un listado maestro (flujogramas, AMFEs, hojas de proceso) | **Preguntar** — es registro compartido |
-| Llenar cualquier otro casillero del APQP | **Preguntar** hasta que este escrito el skill de legajo APQP (**todavia NO existe**) |
+| Llenar cualquier otro casillero del APQP | **Preguntar** si es la primera vez que lo lleno; el mapa esta en el skill  |
 
 **Un documento vivo tiene UN solo lugar.** El maestro vive en `Gestion Ingenieria`; lo que se
 copia al legajo o al paquete del cliente es una COPIA que envejece sola
 (memoria `gestion_ingenieria_es_el_maestro`). No se reparte una copia "por las dudas": se
 copia cuando se entrega, y quien entrega el PPAP es Calidad.
 
-Que va en cada casillero del legajo APQP: **pendiente de escribir** un skill de legajo APQP (lo corrige Fak). Mientras no exista, cada casillero nuevo se pregunta.
+Que va en cada casillero del legajo APQP: skill **** (relevado de 7 legajos reales el 21/09/2026; lo corrige Fak). Lo que ahi dice SIN DEFINIR se pregunta, no se completa.
 
 Este contrato evoluciona: si una fila genera friccion repetida, actualizarlo y commitearlo.
