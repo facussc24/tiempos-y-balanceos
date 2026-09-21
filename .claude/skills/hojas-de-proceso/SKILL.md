@@ -48,6 +48,31 @@ eso cada hoja salia con la cantidad de pasos que quedara. Ahora lo frena
 rapidamente de que va el paso, y solo haga falta leer para entender mas a fondo"*. La foto
 cuenta el paso; el renglon lo precisa; los parametros van en la hoja, no aparte.
 
+### GATE 0 bis — la transcripcion del video se lee ENTERA, siempre
+
+Fak, 21/09/2026: *"siempre leer las transcripciones si o si, ¿entendiste?"*. Y antes:
+*"si no sabes algo no lo asumas vos, lees las transcripciones de audio para entender lo que
+pasa en vez de inventar"*.
+
+El caso: escribi un paso de *"prender los servicios: refrigeracion y atemperador"* mirando
+los fotogramas del IMG_0596. La transcripcion de ESE MISMO video dice lo contrario —
+**"todo eso se maneja de alla, de la pantalla"**— y yo la tenia al lado sin leer. En la
+misma hoja escribi *"mirar la presion de aire antes de pedir cualquier movimiento"*: eso no
+lo dijo nadie, vi un panel de manometros en una foto y lo converti en un paso.
+
+**Los fotogramas dicen QUE HAY. La transcripcion dice QUE PASA.** Un paso es lo segundo.
+
+- **Cada paso declara su `fuentes`**: un video con su minuto, un documento, o quien lo dijo
+  y cuando. Sin fuente, el paso no va. Lo frena `_gate_cada_paso_con_fuente()`.
+- **Si la fuente es un video, tiene que existir su transcripcion.** Lo frena
+  `_gate_transcripcion_leida()`; sacarla es una linea:
+  `py -3 scripts/video/_infoDeVideos.py audio "<carpeta>" --solo 0869`.
+- **Del audio de planta sirve lo que narra Facundo**, no lo que sale del traductor: es chino
+  traducido por celular y el transcriptor inventa. Un numero sale de la PANTALLA.
+- Y una charla con el tecnico **no es un procedimiento**: sirve para saber que preguntar.
+  Si lo unico que hay es esa charla, la hoja dice QUE ES CADA COSA y la secuencia queda
+  pendiente (`no-pfd-no-ho.md` §3: sin documento fuente va TBD).
+
 ### GATE 1 — antes de acomodar: ¿cual es la imagen PRINCIPAL de esta hoja?
 
 Se contesta **por hoja y por escrito**, antes de tocar el layout: *la imagen que el paso
@@ -172,8 +197,10 @@ rehacerlo ni verificarlo. Y es lo que evita el defecto que tenia el set anterior
 fotos, **7 eran el mismo archivo con otro nombre** (una foto del portico se llamaba
 `30.9_b_cadenas_grua` y tambien `30.7_b_descenso_portico`).
 
-**El recorte se pide en la relacion de la celda.** Con 4 fotos la celda es 16:9; una foto de
-otra relacion entra contenida y queda mas chica que las otras. El generador avisa cuando una
+**El recorte se pide en la relacion de la CELDA, que no es 16:9.** Con 4 fotos y pie, la
+celda da **2,0:1** (7,86 x 3,89 cm); sin pie, 1,78:1. Una foto de otra relacion entra
+contenida, queda mas chica que las otras y puede caer abajo de los 25 cm2 del gate —
+paso el 21/09 con una foto de 1,60:1 que quedo en 24 cm2. El generador avisa cuando una
 foto llena menos del 80 % de su celda.
 
 ## 2 ter. Rotular: el numero va en la foto, el texto va en la HOJA

@@ -47,6 +47,17 @@ Regla corta. El detalle, los umbrales y los errores caros: skill `hojas-de-proce
    cualquier cambio de recorte. `medir_marca.py` la ubica, `--marca "color:verde|..."` la
    coloca sola, y `rotular.chequear_marcas()` rechaza la que cae sobre chapa lisa.
 
+10. **La transcripcion del video se lee ENTERA antes de escribir un paso** (Fak,
+    21/09/2026: *"siempre leer las transcripciones si o si"*). Los fotogramas dicen QUE HAY;
+    la transcripcion dice QUE PASA. Escribi "prender los servicios" mirando cuadros del
+    IMG_0596 y el audio de ese mismo video decia *"todo eso se maneja de alla, de la
+    pantalla"*.
+11. **Cada paso declara su fuente** — video con minuto, documento, o quien lo dijo y cuando.
+    Sin fuente el paso no va. En la misma hoja escribi "mirar la presion de aire antes de
+    pedir cualquier movimiento": eso no lo dijo nadie, vi un manometro en una foto.
+    Lo frenan `_gate_cada_paso_con_fuente()` y `_gate_transcripcion_leida()`.
+12. **El sector de esta maquina es `IMG`**, no "MOLDEO IMG": ese sector no existe.
+
 ## Enforcement
 
 - **Duro:** `py -3 .claude/skills/hojas-de-proceso/scripts/hoja_proceso_check.py "<deck.pptx>"`
