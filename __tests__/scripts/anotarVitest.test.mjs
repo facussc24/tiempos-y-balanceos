@@ -68,6 +68,32 @@ describe('_anotarVitest', () => {
   // reporter anota asserts, y una corrida que muere de otra forma no pasa por ahi. Un log
   // que no matchea ningun patron NO puede salir sin anotacion, que es justo cuando menos
   // se sabe que paso.
+  it('un rojo SIN ningun test fallado deja legible el por que, no solo el titulo', () => {
+    // 21/09/2026: el CI quedo rojo con los 4.333 tests en verde. Lo unico legible sin cuenta
+    // de GitHub fueron "Unhandled Rejection", "Unhandled Errors" y los dos conteos — el cuerpo,
+    // que es donde esta la respuesta, se perdia. Dos sesiones adivinaron una hora.
+    const rojoSinAssert = [
+      '⎯⎯⎯⎯ Unhandled Errors ⎯⎯⎯⎯',
+      'Vitest caught 1 unhandled error during the test run.',
+      '⎯⎯⎯⎯ Unhandled Rejection ⎯⎯⎯⎯',
+      '[vitest-pool]: Failed to start threads worker for test files __tests__/scripts/pdfBomArb.test.mjs.',
+      ' ❯ node_modules/vitest/dist/chunks/cli-api.js:3532:94',
+      'Caused by: Error: [vitest-pool-runner]: Timeout waiting for worker to respond',
+      ' Test Files  280 passed | 1 skipped (281)',
+      '      Tests  4333 passed | 12 skipped (4345)',
+    ].join('\n');
+    const out = lineasDelRojo(rojoSinAssert);
+    expect(out.join('\n')).toMatch(/Failed to start threads worker/);   // el por que
+    expect(out.join('\n')).toMatch(/pdfBomArb/);                        // donde
+    expect(out.join('\n')).toMatch(/Timeout waiting for worker/);       // la causa de fondo
+  });
+
+  it('el contexto no se roba el cupo cuando SI hay tests fallados', () => {
+    const out = lineasDelRojo(log);
+    expect(out.some((l) => /^FAIL\b/.test(l))).toBe(true);
+    expect(out.some((l) => /^(?:Tests|Test Files)\s{2}/.test(l))).toBe(true);
+  });
+
   it('un log sin ningun patron conocido igual deja anotacion', () => {
     const raro = 'levantando workers\nEl proceso termino solo\nexit code 1\n';
     const l = lineasDelRojo(raro);

@@ -60,6 +60,19 @@ const GRUPOS = [
   { nombre: 'otro', re: /(?:hook|Test) timed out|Serialized Error|Unhandled (?:Error|Rejection)|Failed Suites/ },
 ];
 
+/**
+ * Los titulos que anuncian un rojo que NO es un assert. La linea del titulo sola no dice
+ * nada — lo que importa viene abajo.
+ *
+ * 21/09/2026: el CI quedo rojo con los 4.333 tests EN VERDE y 281 archivos pasando; lo unico
+ * legible sin cuenta de GitHub fueron cuatro anotaciones: "Unhandled Rejection", "Unhandled
+ * Errors" y los dos conteos. El cuerpo —que es donde esta la respuesta— se perdio: no empieza
+ * con `Error:` ni con `AssertionError`, asi que no caia en ningun grupo, y sus lineas `at ...`
+ * las descarta RUIDO. Dos sesiones distintas pasaron una hora adivinando.
+ */
+const TITULOS_SIN_ASSERT = /Unhandled (?:Error|Rejection)|Failed Suites|Serialized Error/;
+const LINEAS_DE_CONTEXTO = 4;
+
 const limpiar = (s) => s.replace(ANSI, '').replace(/\r/g, '').trim();
 
 /** Anotacion de GitHub: una sola linea, y el `%` escapado DESPUES de cortar (cortar */
@@ -70,10 +83,22 @@ export const paraAnotacion = (s) => s.slice(0, TOPE_CHARS).replace(/%/g, '%25');
 const esDelReporter = (l) => l.startsWith('::');
 
 export function lineasDelRojo(texto, tope = TOPE_ANOTACIONES) {
-  const lineas = String(texto ?? '').split(/\n/).map(limpiar).filter(Boolean)
-    .filter((l) => !esDelReporter(l) && !RUIDO.some((r) => r.test(l)));
+  const crudas = String(texto ?? '').split(/\n/).map(limpiar).filter(Boolean)
+    .filter((l) => !esDelReporter(l));
 
-  const porGrupo = new Map(GRUPOS.map((g) => [g.nombre, []]));
+  // Lo que sigue a un titulo sin assert se guarda ANTES de filtrar el ruido: ahi el `at ...`
+  // es justamente el dato (que worker, que archivo), no relleno.
+  const contexto = [];
+  for (let i = 0; i < crudas.length; i++) {
+    if (!TITULOS_SIN_ASSERT.test(crudas[i])) continue;
+    for (const l of crudas.slice(i + 1, i + 1 + LINEAS_DE_CONTEXTO)) {
+      if (!TITULOS_SIN_ASSERT.test(l) && !/^[⎯─—-]+$/.test(l)) contexto.push(l);
+    }
+  }
+
+  const lineas = crudas.filter((l) => !RUIDO.some((r) => r.test(l)));
+
+  const porGrupo = new Map([...GRUPOS.map((g) => [g.nombre, []]), ['contexto', contexto]]);
   const vistas = new Set();
   for (const l of lineas) {
     const g = GRUPOS.find((x) => x.re.test(l));
@@ -82,14 +107,13 @@ export function lineasDelRojo(texto, tope = TOPE_ANOTACIONES) {
     porGrupo.get(g.nombre).push(l);
   }
 
+  // `contexto` va con los primeros: sin el, un rojo que no sale de un assert deja el titulo
+  // y nada mas. Se deduplica contra lo que ya entro por su grupo.
+  const orden = ['suite', 'motivo', 'contexto', 'cuenta', 'test', 'otro'];
   const out = [];
-  for (const g of GRUPOS) out.push(...porGrupo.get(g.nombre).slice(0, CUPO_POR_GRUPO));
-  for (const g of GRUPOS) {              // lo que sobro de cada grupo, si queda lugar
-    for (const l of porGrupo.get(g.nombre).slice(CUPO_POR_GRUPO)) {
-      if (out.length >= tope) break;
-      out.push(l);
-    }
-  }
+  const meter = (l) => { if (!out.includes(l) && out.length < tope) out.push(l); };
+  for (const n of orden) for (const l of (porGrupo.get(n) ?? []).slice(0, CUPO_POR_GRUPO)) meter(l);
+  for (const n of orden) for (const l of (porGrupo.get(n) ?? []).slice(CUPO_POR_GRUPO)) meter(l);
 
   // Un log que no matchea ningun grupo NO puede quedar sin anotacion: ahi es justamente
   // cuando no tengo idea de que paso. Van las ultimas lineas, que es lo que se mira a mano.
