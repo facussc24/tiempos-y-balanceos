@@ -1104,6 +1104,49 @@ HOJAS_IMG = [
 
     dict(
         op="30.4",
+        denominacion="MONTAJE DEL ROLLO DE VINILO Y ENHEBRADO DEL MATERIAL",
+        modo="secuencia",
+        imagenes=[_f("v0_montaje.jpg"), _f("v3_punta.jpg"),
+                  _f("v2_uncoiler.jpg"), _f("v4_cinta.jpg")],
+        pies=["El rollo sobre la cuna del desbobinador",
+              "La punta por arriba del rollo",
+              "Los selectores del desbobinador",
+              "La lamina sobre la cinta de carga"],
+        sin_marcas_ok=True,
+        pasos=[
+            "Colocar el rollo de vinilo con su eje sobre la cuna de rodillos del "
+            "desbobinador.",
+            "Pasar la punta del vinilo por arriba del rollo hasta la mesa de carga.",
+            "Mover el material con los dos selectores de la caja colgante: "
+            "UNCOILER para el rollo y Leather Conveyor para la cinta.",
+            "Apoyar la lamina sobre la cinta y alisarla con la mano hasta que quede sin "
+            "panza.",
+        ],
+        parametros=[
+            ("Alimentacion, en la pantalla", "Cuero en rollo"),
+            ("Largo de lamina", "1100 mm"),
+        ],
+        fuentes=[
+            "IMG_0393 (26-08-2026) s=0: se ve el rollo con el eje pasante y el collar de "
+            "tope, apoyado sobre la cuna de rodillos del bastidor",
+            "IMG_0393 (26-08-2026) s=18: se ve la punta del vinilo llevada por encima del "
+            "rollo hacia la mesa",
+            "IMG_0393 (26-08-2026) s=90: se leen las dos chapas, UNCOILER \u5f00\u5377\u673a "
+            "FWD/REV y Leather Conveyor \u76ae\u6599\u8f93\u9001 FWD/REV",
+            "IMG_0393 (26-08-2026) s=112: se ve la lamina sobre la cinta y dos operarios "
+            "alisandola con las palmas",
+        ],
+        epp=EPP_IMG,
+        disparador="SI EL VINILO ENTRA TORCIDO, ARRUGADO O CON EMPALME",
+        acciones=[
+            "1. Parar el avance con el selector antes de que entre a la mesa.",
+            "2. Dar aviso al Lider de Produccion.",
+            "3. No cortar ni empalmar por cuenta propia.",
+        ],
+    ),
+
+    dict(
+        op="30.5",
         denominacion="ARRANQUE DE LA MAQUINA EN MODO AUTOMATICO",
         modo="rotulada",
         imagenes=[_f("r2_automatico.jpg")],
@@ -1116,7 +1159,9 @@ HOJAS_IMG = [
         ],
         parametros=[
             ("Tiempo que se mantiene el RESET", "3 s"),
-            ("Usuario y contrase\u00f1a", "solo para cambiar un parametro, no para arrancar"),
+            ("Cuando van los sustratos", "despues de dar arranque, mientras la maquina "
+                                         "corta y calienta la piel"),
+            ("Retardo para poner los sustratos", "0 s en produccion de serie"),
         ],
         fuentes=[
             "IMG_0579 (02-09-2026) min 6:41 a 6:49: \u00abes automatico, directamente "
@@ -1140,29 +1185,39 @@ HOJAS_IMG = [
 
     # ── CONTROLAR ────────────────────────────────────────
     dict(
-        op="30.5",
+        op="30.6",
         denominacion="DESCARGA DE PIEZAS Y CARGA DE SUSTRATOS",
         modo="secuencia",
-        imagenes=[_f("m1_entra.jpg"), _f("m2_conformado.jpg"), _f("m3_abre.jpg")],
-        pies=["La mesa entra con el molde",
-              "El plato baja y la maquina cierra",
-              "La maquina abre con la pieza"],
+        imagenes=[_f("d1_pieza.jpg"), _f("d2_vinilo.jpg"),
+                  _f("d5_caballete.jpg"), _f("d3_sustratos.jpg")],
+        pies=["La pieza en el molde inferior",
+              "El resto de vinilo sobre el molde",
+              "Las piezas en el caballete",
+              "Los sustratos en los nidos del molde"],
+        sin_marcas_ok=True,
         pasos=[
-            "Arrancar el ciclo solo con dos personas en el frente, una de cada lado.",
-            "Esperar a que bajen las sopapas a buscar la placa y dejar correr el ciclo.",
-            "Retirar la pieza del molde entre dos, recien cuando la maquina abrio sola.",
+            "Retirar la pieza del molde cuando los expulsores la levantan, entre dos "
+            "personas, una de cada lado del frente.",
+            "Sacar del molde el resto de vinilo que sobra.",
+            "Apoyar las piezas en el caballete.",
+            "Colocar los sustratos plasticos nuevos en los nidos del molde y verificar que "
+            "se encienda la luz de cada posicion: si falta una luz, falta un sustrato.",
         ],
-        nota="Nadie mete la mano hasta que la maquina abrio sola.",
+        parametros=[("Personas en el frente", "dos como minimo")],
         fuentes=[
-            "IMG_0842 (10-09-2026) min 0:31 a 0:49: \u00abfalta gente, yo tenia que conseguir "
-            "una persona aca\u00bb / \u00abdos minimos\u00bb",
-            "IMG_0842 (10-09-2026) min 1:28 a 1:38: \u00abestan funcionando las sopapas... si "
-            "tienen la placa cortada, se van a bajar las sopapas y buscar la placa\u00bb",
-            "IMG_0842 (10-09-2026) min 0:39 a 0:49: \u00abdos minimos\u00bb, el tecnico sobre "
-            "cuanta gente hace falta en el frente de la maquina",
+            "Fak, 21-09-2026: \u00abla maquina no se abre sola, expulsa las piezas con los "
+            "expulsores, y ahi el operario tiene que retirar las piezas\u00bb; se ve en "
+            "IMG_0844 s=488; y en el audio del mismo video, min 0:55, los dos operarios se reparten: \u00abyo la de abajo, yo la de arriba\u00bb",
+            "Fak, 21-09-2026: \u00aby luego el resto de vinilo\u00bb; se ve en IMG_0844 "
+            "s=492, el operario sacando la lamina sobrante del molde verde",
+            "IMG_0844 (10-09-2026) s=505: se ven las piezas terminadas apoyadas en el "
+            "caballete",
+            "IMG_0579 (02-09-2026) min 7:42 a 8:09, el tecnico: \u00abahora tiene que poner "
+            "los sustratos\u00bb / \u00abpara ver que todo el luce esta encendido\u00bb / "
+            "\u00absi lo falta, le falta luz\u00bb",
         ],
         epp=EPP_IMG,
-        disparador="SI ALGO QUEDA TRABADO O HAY QUE ENTRAR A LA ZONA DEL MOLDE",
+        disparador="SI HAY QUE ENTRAR A LA ZONA DEL MOLDE CON LA MAQUINA EN CICLO",
         acciones=[
             "1. Parar el ciclo con el boton rojo antes de acercarse.",
             "2. Dar aviso al Lider de Produccion.",
@@ -1171,7 +1226,7 @@ HOJAS_IMG = [
     ),
 
     dict(
-        op="30.6",
+        op="30.7",
         denominacion="CONTROL DE PIEZA TERMOFORMADA",
         modo="secuencia",
         imagenes=[_f("n5_mano.jpg"), _f("n8_canto.jpg"), _f("n7_despegue.jpg")],

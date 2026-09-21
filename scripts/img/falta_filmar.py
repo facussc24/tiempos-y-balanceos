@@ -47,7 +47,42 @@ TOMAS = [
         ("La pantalla del HMI en parada o fin de jornada",
          "Para cerrar la hoja de apagado con lo que ve el operario."),
     ]),
-    ("2 · LO QUE MEJORARIA LO QUE YA HAY", [
+    ("2 · EL ROLLO DE VINILO — hay imagen, pero nadie lo explico en voz alta", [
+        ("Como sube el rollo al eje: a mano entre dos, con autoelevador o con un carro",
+         "En IMG_0393 lo manipulan a mano, pero es la puesta a punto, no la serie."),
+        ("Como se fija el eje al rollo y como se traba en la cuna",
+         "Se ve un collar contra la cara del rollo; no se ve ni se dice como se fija."),
+        ("Como se centra el rollo a lo ancho y contra que referencia",
+         "Ninguna toma lo muestra y nadie lo dice."),
+        ("Para que lado va la cara buena, y si la punta sale por arriba o por abajo",
+         "En IMG_0393 sale por arriba, pero nadie dice que sea la regla."),
+        ("Si hay FIFO, control de lote o identificacion del rollo al montarlo",
+         "Cero menciones en las 47 transcripciones."),
+        ("Que se hace con la punta vieja cuando se termina un rollo: empalme o descarte",
+         "No esta filmado ni dicho."),
+        ("Si el desbobinado en serie va en manual o en automatico",
+         "Las dos entradas existen en la lista de E/S de la maquina."),
+    ]),
+    ("3 · LOS SUSTRATOS Y EL FIN DE CICLO — para cerrar el criterio", [
+        ("Cuantos sustratos van por ciclo en el Top Roll y en que nidos",
+         "El HMI habilita hasta 4 posiciones; el 03/09 solo la 1 estaba en verde."),
+        ("Confirmar que 'Ret. en poner Matr.' es el tiempo para poner los sustratos, y "
+         "cuantos segundos tiene el operario cuando ese retardo esta en 0",
+         "En la puesta a punto estaba en 50 s; el tecnico dijo que en serie va en 0."),
+        ("Si la maquina frena cuando falta un sustrato, o solo apaga la luz y sigue",
+         "Del audio solo sale que la luz se apaga."),
+        ("Si el sustrato lleva una orientacion y como se dan cuenta",
+         "No hay nada grabado sobre poka-yoke."),
+        ("Que es el 'Esqueleto' de la pantalla: el sustrato plastico o el sobrante de vinilo",
+         "El HMI traduce 骨架 como Esqueleto y en este rubro 骨架 es el sustrato. Si se "
+         "escribe 'expulsar esqueleto' pensando en el sobrante, la hoja dice lo contrario "
+         "de lo que pasa. Es la pregunta que mas pesa."),
+        ("Donde va el sobrante de vinilo y si se cuenta",
+         "Nadie lo dice en ninguna toma."),
+        ("La dotacion real: uno o dos operarios por maquina",
+         "Lo unico grabado es 'dos minimos', dicho en una simulacion."),
+    ]),
+    ("4 · LO QUE MEJORARIA LO QUE YA HAY", [
         ("Las manos apretando, de frente y quietas: RESET, arranque y paro de ciclo",
          "Estan filmadas de costado y en movimiento. De frente y quietas se entienden mejor."),
         ("La pieza recien sacada, entera y sola sobre la mesa",
