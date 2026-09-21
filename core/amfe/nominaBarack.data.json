@@ -1,0 +1,63 @@
+{
+  "_comentario": [
+    "FUENTE UNICA de quien trabaja en Barack y puede firmar un documento del SGC. Nace el 21/09/2026, cuando Fak abrio el AMFE 173 recien emitido y lo primero que vio fue 'Araceli Maidana (Ingenieria)' en el EQUIPO MULTIFUNCIONAL: se habia ido en marzo de 2024. Textual: 'de donde carajo todos esos nombres... esas personas hace rato no laburan en Barack'.",
+    "COMO PASO: copie el equipo del AMFE 127 (agosto 2024) y le saque un solo nombre, el unico del que yo tenia una memoria. Los otros seis los pase tal cual. El 127 YA venia mal — Maidana se habia ido cinco meses antes de que ese AMFE se emitiera. Un dato de PERSONAS no se hereda de un documento viejo: se verifica contra la nomina.",
+    "ANTES NO EXISTIA ESTO: cada script generador tenia su propia lista hardcodeada y ninguna coincidia con otra. Por eso el dato vive ACA y no en el codigo.",
+    "La leen: scripts/_lib/nomina.mjs (y a traves suyo el validador y los generadores de AMFE). Regla: .claude/rules/amfe.md.",
+    "OJO — ESTE ARCHIVO ENVEJECE SOLO. Una alta o una baja no avisan. `verificado_el` dice hasta cuando se sostiene; pasado el plazo el gate avisa en vez de callarse. Quien lo actualiza vuelve a abrir las fuentes de `fuentes_de_verdad`, no este archivo."
+  ],
+
+  "verificado_el": "2026-09-21",
+  "vence_el": "2026-12-21",
+
+  "fuentes_de_verdad": [
+    {
+      "nombre": "Lista de distribucion de RRHH",
+      "que_es": "Florencia Porciuncula (Administracion de Personal, RRHH) manda saludos de cumpleanos con TODO el personal SOFT en copia. Hay 49 desde 2024. El diff de la lista entre dos mails es el registro de altas y bajas.",
+      "donde": ".mail-cache/mails.jsonl",
+      "ultima_leida": "2026-09-21 08:28, asunto 'Feliz Cumpleanos Federico', 33 personas en copia",
+      "limite": "solo personal SOFT: no incluye operarios de planta ni lideres de linea."
+    },
+    {
+      "nombre": "Organigrama oficial",
+      "que_es": "Da el AREA y la dependencia de cada uno. Es un PDF escaneado: se rasteriza y se mira, get_text() da vacio.",
+      "donde": "Y:\\1_PERFORMANCE\\Docs\\Organigrama detallado 06.04.26 v01.pdf",
+      "fecha": "2026-04-06",
+      "limite": "es anterior a las bajas de septiembre: no las refleja."
+    },
+    {
+      "nombre": "Asaichi de Ingenieria",
+      "que_es": "Carlos Baptista manda las prioridades del dia con las tareas asignadas por persona. Si alguien tiene tarea hoy, trabaja hoy.",
+      "donde": ".mail-cache/mails.jsonl, asunto 'Asaichi Ingenieria - Prioridades <fecha>'"
+    }
+  ],
+
+  "personas": [
+    { "nombre": "Facundo Santoro",   "area": "Ingenieria",          "funcion": "Documentacion",                "activo": true,  "evidencia": "lista RRHH 21/09/2026; tarea asignada en el Asaichi del 21/09/2026" },
+    { "nombre": "Carlos Baptista",   "area": "Ingenieria",          "funcion": "Gerente de Ingenieria",        "activo": true,  "evidencia": "escribe el Asaichi del 21/09/2026; lista RRHH 21/09/2026" },
+    { "nombre": "Pablo Gamboa",      "area": "Ingenieria",          "funcion": "Proceso",                      "activo": true,  "evidencia": "tarea asignada en el Asaichi del 21/09/2026; lista RRHH 21/09/2026" },
+    { "nombre": "Paulo Centurion",   "area": "Ingenieria",          "funcion": "Project Manager",              "activo": true,  "evidencia": "9 tareas asignadas en el Asaichi del 21/09/2026; lista RRHH 21/09/2026" },
+    { "nombre": "Leonardo Lattanzi", "area": "Ingenieria",          "funcion": "Project Manager",              "activo": true,  "evidencia": "tarea en el Asaichi del 21/09/2026; lista RRHH 21/09/2026" },
+    { "nombre": "Eduardo Alvarez",   "area": "Ingenieria",          "funcion": "Responsable Inyeccion Plastica","activo": true, "evidencia": "organigrama 06/04/2026" },
+
+    { "nombre": "Manuel Meszaros",   "area": "Calidad",             "funcion": "Gerente de Calidad",           "activo": true,  "evidencia": "lista RRHH 21/09/2026" },
+    { "nombre": "Cecilia Rodriguez", "area": "Calidad",             "funcion": "Responsable SGC",              "activo": true,  "evidencia": "organigrama 06/04/2026" },
+    { "nombre": "Nicolas Perez",     "area": "Calidad",             "funcion": "Responsable Calidad Cliente",  "activo": true,  "evidencia": "lista RRHH 21/09/2026" },
+    { "nombre": "Agustin Aguayo",    "area": "Calidad",             "funcion": "Auditoria y metrologia",       "activo": true,  "evidencia": "organigrama 06/04/2026" },
+    { "nombre": "Luca Tuccio",       "area": "Calidad",             "funcion": "",                             "activo": true,  "evidencia": "organigrama 06/04/2026" },
+    { "nombre": "Marco Ruiz",        "area": "Calidad",             "funcion": "",                             "activo": true,  "evidencia": "organigrama 06/04/2026" },
+
+    { "nombre": "Gonzalo Cal",       "area": "Produccion",          "funcion": "Gerente Industrial y Produccion Automotriz", "activo": true, "evidencia": "organigrama 06/04/2026" },
+    { "nombre": "Marianna Vera",     "area": "Performance Industrial", "funcion": "Responsable",               "activo": true,  "evidencia": "lista RRHH 21/09/2026" },
+
+    { "nombre": "Cristina Rabago",   "area": "Seguridad e Higiene", "funcion": "Seguridad y Salud Ocupacional / Medio Ambiente", "activo": true, "evidencia": "lista RRHH 21/09/2026 y organigrama 06/04/2026", "nota": "no manda un mail desde el 11/06/2026; esta en la nomina igual" },
+
+    { "nombre": "Araceli Maidana",   "area": "Ingenieria",          "funcion": "Tizadas",                      "activo": false, "baja": "2024-03", "evidencia": "su ultimo mail es un traspaso, 01/03/2024 09:58: 'Dejo este mail para que todos sepan donde se encuentran las tizadas que estaba haciendo'. No figura en ninguna lista de RRHH (arrancan 11/2024) ni en el organigrama 2026" },
+    { "nombre": "Valeria Atencio",   "area": "Seguridad e Higiene", "funcion": "Legales SST",                  "activo": false, "baja": "2025-08", "evidencia": "ultima lista de RRHH que la incluye: 26/08/2025. Ausente en las 23 listas siguientes, hasta el 21/09/2026. No esta en el organigrama 2026" },
+    { "nombre": "Marcelo Nieve",     "area": "Ingenieria",          "funcion": "Calidad Proyectos",            "activo": false, "baja": "2026-09-01", "evidencia": "su mail 'Fin del ciclo', 01/09/2026 16:22: 'hoy es mi ultimo dia en Barack'. Sale de la lista de RRHH entre el 31/08 y el 04/09/2026", "nota": "colgaba de Ingenieria, no de Calidad: en el organigrama esta en la rama de Baptista con la funcion 'Calidad Proyectos'" }
+  ],
+
+  "dudosos": [
+    { "nombre": "Jean Claudio Pagliaroli", "area": "Seguridad e Higiene", "funcion": "Asistente S&H", "evidencia": "desaparece de la lista de RRHH despues del 10/08/2026 y falta en las 7 siguientes; ultimo mail propio 02/06/2026. No hay mail de despedida", "que_falta": "confirmarlo con Fak: es el mismo patron que dieron Nieve y Atencio, pero un negativo no prueba la baja" }
+  ]
+}

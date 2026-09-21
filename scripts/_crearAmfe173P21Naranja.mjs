@@ -61,6 +61,8 @@
 import { randomUUID } from 'crypto';
 import { writeFileSync, mkdirSync } from 'fs';
 import { connectSupabase, parseData, calculateAP } from './_lib/amfeIo.mjs';
+import { runWithValidation } from './_lib/dryRunGuard.mjs';
+import { validateEquipoMultifuncional } from './_lib/amfeValidator.mjs';
 
 const APPLY = process.argv.includes('--apply');
 const AMFE_KEY = 'AMFE-P21-NAR-MY26';
@@ -69,7 +71,20 @@ const FECHA = '21/09/2026';
 const FECHA_ISO = '2026-09-21';
 
 const calcularAP = calculateAP;
-const id = () => randomUUID();
+
+/**
+ * Ids ESTABLES entre corridas. Eran `randomUUID()` y eso dejaba CIEGO al gate: `issueKey()`
+ * del validador identifica cada hallazgo por el id de su operacion, asi que con ids nuevos
+ * en cada corrida el diff before/after marcaba como "introducidos" hasta los 21 avisos que
+ * ya estaban. Un control que avisa siempre lo mismo no lo mira nadie, y peor: tapa el aviso
+ * que si es nuevo.
+ *
+ * Un contador con prefijo alcanza porque el documento se arma siempre en el mismo orden.
+ * Si se inserta una operacion en el medio, los ids de ahi para abajo corren y la corrida
+ * siguiente avisa de mas UNA vez; eso es visible y se entiende, a diferencia del ruido fijo.
+ */
+let _n = 0;
+const id = () => `p21nar-${String(++_n).padStart(4, '0')}`;
 
 function causa(descripcion, prevControl, O, detControl, D, extra = {}) {
   return {
@@ -98,7 +113,10 @@ function falla(descripcion, ef, causas) {
     const ap = calcularAP(ef.s, c.occurrence, c.detection);
     c.ap = ap;
     c.actionPriority = ap;
-    if (ap === 'H' && !c.optimizationAction) c.optimizationAction = 'Pendiente definicion equipo APQP';
+    // Un AP=H sin accion va con la CELDA VACIA. El placeholder "Pendiente definicion equipo
+    // APQP" quedo prohibido el 21/09/2026 (Fak, viendo el PDF del 131: "saca esa mierda, no
+    // la quiero ni ver en el AMFE"), y lo frena el check CAUSE_APH_PLACEHOLDER_PROHIBIDO.
+    // La accion la define el equipo cuando decide definirla; mientras tanto no se escribe nada.
   }
   return {
     id: id(),
@@ -1002,16 +1020,18 @@ const doc = {
     reviewedBy: 'Carlos Baptista',
     approvedBy: '',
     plantApproval: '',
-    // Equipo del AMFE 127, menos Marcelo Nieve (renuncio). Carlos Baptista es el responsable
-    // de todos los AMFEs (memoria `carlos_baptista_responsable_todos_los_amfes`).
+    // 21/09/2026 — la primera version de esta lista salio del AMFE 127 (agosto 2024) copiada
+    // tal cual, y Fak la cazo apenas abrio el archivo: Araceli Maidana se habia ido en marzo
+    // de 2024 (o sea que el 127 YA estaba mal) y Valeria Atencio en agosto de 2025.
+    // Un dato de PERSONAS no se hereda de un documento viejo. Hoy la nomina, con la evidencia
+    // de cada alta y cada baja, vive en core/amfe/nominaBarack.data.json y la revisa el check
+    // EQUIPO_PERSONA_NO_TRABAJA, que frena el --apply y el export oficial.
     coreTeam: [
       'Facundo Santoro (Ingenieria)',
       'Carlos Baptista (Ingenieria)',
-      'Araceli Maidana (Ingenieria)',
       'Pablo Gamboa (Ingenieria)',
       'Manuel Meszaros (Calidad)',
       'Cristina Rabago (Seguridad e Higiene)',
-      'Valeria Atencio (Seguridad e Higiene)',
     ],
     confidentiality: 'Confidencial',
   },
@@ -1205,7 +1225,7 @@ if (!APPLY) {
 if (errores.length) { console.error('\nNO se escribe: hay errores.'); process.exit(1); }
 
 const sb = await connectSupabase();
-const { data: ex } = await sb.from('amfe_documents').select('id,amfe_number,updated_at').eq('amfe_number', AMFE_KEY);
+const { data: ex } = await sb.from('amfe_documents').select('id,amfe_number,updated_at,data').eq('amfe_number', AMFE_KEY);
 
 // Si ya existe, se ACTUALIZA en su lugar. Este script es el generador del documento: la
 // version que vale es siempre la ultima que salio de aca. Insertar un segundo
@@ -1214,30 +1234,43 @@ const { data: ex } = await sb.from('amfe_documents').select('id,amfe_number,upda
 if (ex && ex.length) {
   const id0 = ex[0].id;
   console.log(`\n${AMFE_KEY} ya existe (id=${id0}, updated_at=${ex[0].updated_at}). Se ACTUALIZA en su lugar.`);
-  const { error: errUpd } = await sb.from('amfe_documents').update({
-    subject: doc.header.subject,
-    part_number: doc.header.partNumber,
-    responsible: doc.header.processResponsible,
-    operation_count: doc.operations.length,
-    cause_count: nCausas,
-    ap_h_count: apCount.H || 0,
-    ap_m_count: apCount.M || 0,
-    coverage_percent: nCausas > 0 ? Math.round((causasConSOD / nCausas) * 100) : 0,
-    last_revision_date: FECHA_ISO,
-    revision_level: 'A',
-    data: JSON.stringify(doc),
-    revisions: JSON.stringify(doc.revisions),
-  }).eq('id', id0);
-  if (errUpd) { console.error('UPDATE FALLO:', errUpd.message); process.exit(1); }
+
+  // Gate obligatorio (amfe.md §14): compara el documento que esta hoy contra el que va a
+  // quedar y frena si el cambio METE criticos nuevos. Sacar criticos no lo frena, que es
+  // justo lo que hace esta corrida con las dos personas que ya no trabajan en Barack.
+  await runWithValidation(
+    [{ id: id0, amfeNumber: AMFE_KEY, productName: doc.header.subject, before: parseData(ex[0].data), after: doc }],
+    true,
+    async () => {
+      const { error: errUpd } = await sb.from('amfe_documents').update({
+        subject: doc.header.subject,
+        part_number: doc.header.partNumber,
+        responsible: doc.header.processResponsible,
+        operation_count: doc.operations.length,
+        cause_count: nCausas,
+        ap_h_count: apCount.H || 0,
+        ap_m_count: apCount.M || 0,
+        coverage_percent: nCausas > 0 ? Math.round((causasConSOD / nCausas) * 100) : 0,
+        last_revision_date: FECHA_ISO,
+        revision_level: 'A',
+        data: JSON.stringify(doc),
+        revisions: JSON.stringify(doc.revisions),
+      }).eq('id', id0);
+      if (errUpd) { console.error('UPDATE FALLO:', errUpd.message); process.exit(1); }
+    },
+  );
 
   const { data: v0 } = await sb.from('amfe_documents').select('id,operation_count,cause_count,updated_at,data').eq('id', id0).single();
   const back0 = parseData(v0.data);
-  // Relectura de control: que el data quedo legible y que las severidades son las nuevas.
+  // Relectura de control: que el data quedo legible, que las severidades son las nuevas y
+  // que en la caratula no quedo nadie que no trabaje.
   const sev = new Set();
   for (const op of back0.operations) for (const w of op.workElements) for (const f of w.functions) for (const fm of f.failures) sev.add(fm.severity);
   console.log(`UPDATE OK`);
   console.log(`  verificado: ops=${v0.operation_count} causas=${v0.cause_count} | data.operations es array: ${Array.isArray(back0.operations)} | ops leidas: ${back0.operations.length}`);
   console.log(`  severidades presentes: ${[...sev].sort((a, b) => a - b).join(', ')}`);
+  console.log(`  equipo multifuncional: ${back0.header.coreTeam.join(' · ')}`);
+  console.log(`  problemas de nomina: ${validateEquipoMultifuncional(back0, AMFE_KEY).length}`);
   console.log(`  updated_at: ${v0.updated_at}`);
   process.exit(0);
 }
