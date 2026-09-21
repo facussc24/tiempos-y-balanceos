@@ -393,6 +393,20 @@ de componentes, da **0 resultados** y parece que el MDS no existe.
 En la base de Barack hay **4 de esos huerfanos** de sesiones anteriores — probablemente el
 mismo accidente. Si pasa, salir **sin guardar**.
 
+### Cambiar un nodo: se BORRA primero y se agrega despues
+
+Si se agrega el reemplazo estando todavia el nodo viejo, IMDS frena con un cartel:
+
+> *"Placing \<semicomponente\> together with \<componente\> under \<la pieza\> violates
+> **Recommendation 001**. This is only allowed for non-article semi components…"*
+
+Es la regla de **no mezclar tipos de nodo en el mismo nivel**. El cartel pide el nombre de un
+nodo intermedio nuevo para resolverlo; **se le da `Cancel`** ("store unchanged") y —ojo— **el
+nodo nuevo queda agregado igual**. Por eso el orden correcto es **Delete del viejo primero**.
+
+**Estado al 21/09/2026: el `Delete` de la barra del arbol no se logro disparar en remoto**
+(clic real, por codigo y clic derecho). Agregar, escribir pesos y guardar SI andan.
+
 ### El buscador del arbol vive en un IFRAME y tiene dos trampas
 
 1. **Esta en un `<iframe>`** (`j_id<NN>::f`), asi que no aparece en el DOM principal: hay que
