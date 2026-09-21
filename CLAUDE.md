@@ -95,7 +95,7 @@ Code en cada sesion; el detalle vive en su `SKILL.md` bajo `.claude/skills/`.
 
 **Modelo y sesion (decision Fak 04/09/2026):** Fable 5.1 para mejoras de codigo importantes,
 Opus 5 para el resto; no tocar el selector por cuenta propia. Toda sesion arranca en modo plan
-(`permissions.defaultMode`) y auto-compacta a 400k tokens (settings globales); el hook Stop
+(`permissions.defaultMode`) y auto-compacta a 1M tokens (settings globales); el hook Stop
 `cierre-guard.sh` corta el turno si termina pidiendo permiso para mi propio trabajo o si entregue
 afuera del repo sin decir la ruta.
 
