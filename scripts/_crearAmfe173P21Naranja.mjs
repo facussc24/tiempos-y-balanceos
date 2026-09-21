@@ -172,25 +172,29 @@ const EF_LEGAL_FUEGO = {
   next: 'Bloqueo del lote en la recepcion de SMRC',
   end: 'Incumplimiento de un requisito legal de inflamabilidad en el habitaculo del vehiculo',
 };
-// La pieza no es la que se aprobo: material, hilo o tipo de costura distintos de los de la
-// muestra patron. El efecto REAL es que el cliente rechaza el lote entero.
-// P1 Ship to Plant: "100% of product affected may have to be scrapped" / paro de mas de un turno.
-// NO es 9: el 9 de la columna End User es "Noncompliance with regulations", y eso lo cumple la
-// inflamabilidad (EF_LEGAL_FUEGO), no una costura cambiada.
+// La pieza no es la que se homologo: material, hilo o costura distintos de los que el cliente
+// designo. El efecto en el USUARIO FINAL es que el vehiculo se monta con una pieza que no es
+// la de su homologacion, y eso cae en "Noncompliance with regulations" de la Tabla P1 -> S=9.
+//
+// DECISION DE FAK, 21/09/2026. La tomo el con las dos lecturas delante:
+//   (a) montar un vehiculo con una pieza no homologada ES incumplimiento reglamentario -> 9
+//   (b) el efecto que Barack puede describir es el rechazo del lote -> 8
+// Eligio (a), que es ademas el razonamiento del propio cliente: por eso SMRC marca estas
+// caracteristicas como <cc/h>, critica de HOMOLOGACION.
+//
+// La S sigue saliendo del EFECTO, no de la sigla: lo que cambio es el efecto que se declara.
+// La diferencia que el script reportaba se cerro por decision, no subiendo un numero suelto.
 const EF_PIEZA_DISTINTA = {
-  s: 8,
-  local: 'Pieza fabricada con un material, un hilo o una costura distintos de la muestra patron',
-  next: 'Rechazo del lote completo en la recepcion de SMRC y riesgo de paro de linea',
-  end: 'Vehiculo montado con una pieza que no es la aprobada',
+  s: 9,
+  local: 'Pieza fabricada con un material, un hilo o una costura distintos de los homologados',
+  next: 'Rechazo del lote completo en la recepcion de SMRC',
+  end: 'Vehiculo montado con una pieza que no corresponde a su homologacion',
 };
-// La costura esta, es la que corresponde, pero se fue de tolerancia.
-// P1: "A portion of the production run may have to be scrapped".
-const EF_ASPECTO_COSTURA = {
-  s: 7,
-  local: 'Costura vista fuera de la tolerancia de posicion o de densidad',
-  next: 'Clasificacion de parte de la corrida en la planta del cliente',
-  end: 'Aspecto de la costura por debajo del estandar percibido por el usuario',
-};
+// (Hubo un EF_ASPECTO_COSTURA con S=7 para la posicion y la densidad de la costura. Quedo sin
+//  uso: la SC 2.3 y la SC 2.4 tambien son <cc/h> del cliente, asi que por la decision de Fak
+//  del 21/09 van al mismo efecto de homologacion que el resto. Si alguna vez aparece un desvio
+//  de costura que el cliente NO designo, ese si es aspecto y vuelve a necesitar su propio
+//  efecto: los desvios que hoy van por EF_ASPECTO son justamente esos.)
 const EF_PARO_LINEA = {
   s: 8,
   local: 'Conjunto que no se puede ensamblar sobre el panel de puerta',
@@ -623,13 +627,13 @@ const OP50 = operacion('50', 'COSTURA VISTA - PESPUNTE SIMPLE, UNA LINEA',
         'Dejar la linea de costura en la posicion y con la densidad que designo el cliente',
         'SC 2.3: 4 +0 / -1 mm por arriba de la linea de union de vinilos.  SC 2.4: 10 a 11 puntos cada 50 mm',
         [
-          falla('Linea de costura vista fuera de 4 +0 / -1 mm de la linea de union', EF_ASPECTO_COSTURA, [
+          falla('Linea de costura vista fuera de 4 +0 / -1 mm de la linea de union', EF_PIEZA_DISTINTA, [
             causa('La guia del pie de la maquina es regulable y no queda fijada entre lotes',
               'Guia de referencia seteada y verificada en el set up, contra la hoja de operaciones',
               5, 'Medicion con calibre de la distancia a la linea de union, al inicio de turno y en cada cambio de lote', 6,
               sc('SC 2.3', 'cc/h')),
           ]),
-          falla('Cantidad de puntos fuera de 10 a 11 cada 50 mm', EF_ASPECTO_COSTURA, [
+          falla('Cantidad de puntos fuera de 10 a 11 cada 50 mm', EF_PIEZA_DISTINTA, [
             causa('El largo de puntada se ajusta con una perilla sin traba y se corre con la vibracion',
               'Largo de puntada seteado y verificado en el set up de la maquina',
               5, 'Conteo de puntos con calibre contra la hoja de operaciones, al inicio de turno y en cada cambio de lote', 6,
@@ -1201,8 +1205,42 @@ if (!APPLY) {
 if (errores.length) { console.error('\nNO se escribe: hay errores.'); process.exit(1); }
 
 const sb = await connectSupabase();
-const { data: ex } = await sb.from('amfe_documents').select('id,amfe_number').eq('amfe_number', AMFE_KEY);
-if (ex && ex.length) { console.error(`\n${AMFE_KEY} YA EXISTE (id=${ex[0].id}). No se duplica.`); process.exit(1); }
+const { data: ex } = await sb.from('amfe_documents').select('id,amfe_number,updated_at').eq('amfe_number', AMFE_KEY);
+
+// Si ya existe, se ACTUALIZA en su lugar. Este script es el generador del documento: la
+// version que vale es siempre la ultima que salio de aca. Insertar un segundo
+// AMFE-P21-NAR-MY26 dejaria dos verdades; y dejar la vieja seria peor todavia, porque la
+// primera carga tenia las severidades derivadas de la sigla (el error del 21/09).
+if (ex && ex.length) {
+  const id0 = ex[0].id;
+  console.log(`\n${AMFE_KEY} ya existe (id=${id0}, updated_at=${ex[0].updated_at}). Se ACTUALIZA en su lugar.`);
+  const { error: errUpd } = await sb.from('amfe_documents').update({
+    subject: doc.header.subject,
+    part_number: doc.header.partNumber,
+    responsible: doc.header.processResponsible,
+    operation_count: doc.operations.length,
+    cause_count: nCausas,
+    ap_h_count: apCount.H || 0,
+    ap_m_count: apCount.M || 0,
+    coverage_percent: nCausas > 0 ? Math.round((causasConSOD / nCausas) * 100) : 0,
+    last_revision_date: FECHA_ISO,
+    revision_level: 'A',
+    data: JSON.stringify(doc),
+    revisions: JSON.stringify(doc.revisions),
+  }).eq('id', id0);
+  if (errUpd) { console.error('UPDATE FALLO:', errUpd.message); process.exit(1); }
+
+  const { data: v0 } = await sb.from('amfe_documents').select('id,operation_count,cause_count,updated_at,data').eq('id', id0).single();
+  const back0 = parseData(v0.data);
+  // Relectura de control: que el data quedo legible y que las severidades son las nuevas.
+  const sev = new Set();
+  for (const op of back0.operations) for (const w of op.workElements) for (const f of w.functions) for (const fm of f.failures) sev.add(fm.severity);
+  console.log(`UPDATE OK`);
+  console.log(`  verificado: ops=${v0.operation_count} causas=${v0.cause_count} | data.operations es array: ${Array.isArray(back0.operations)} | ops leidas: ${back0.operations.length}`);
+  console.log(`  severidades presentes: ${[...sev].sort((a, b) => a - b).join(', ')}`);
+  console.log(`  updated_at: ${v0.updated_at}`);
+  process.exit(0);
+}
 
 const nuevoId = randomUUID();
 const { error } = await sb.from('amfe_documents').insert({

@@ -370,6 +370,37 @@ vigente); se abre con el **`Edit`** del bloque *Source of material, including ci
    por ahora"*. **Queda pendiente conseguir el administrador y poner un contacto real: es a
    quien el cliente le escribe.**
 
+### 🔴 Lo que NO se puede operar en remoto: los desplegables de la barra del arbol
+
+**Medido el 21/09/2026, ocho intentos.** En la pestaña *Ingredients*, la barra de botones que
+esta arriba del arbol (`Add component`, `Add semicomponent`, **`Replace`**, `Delete`,
+`Move reference/node`) son **botones con menu desplegable** — el propio DOM los anuncia como
+*"Button has a popup, press down arrow key to access the popup"*.
+
+**Ese menu no se abre operando IMDS de forma remota.** Probado: clic sobre el icono, clic sobre
+la flecha, `Down` con el foco puesto, y disparar el evento por codigo. El unico que "funciono"
+fue el evento por codigo sobre `Semicomponent`, y **hizo otra cosa**: en vez de abrir el
+buscador creo un **semicomponente nuevo y vacio** (`SemiComponent_<id>`) colgando del arbol.
+En la base de Barack hay **4 de esos huerfanos** de sesiones anteriores — probablemente el
+mismo accidente.
+
+**Lo que SI responde:** escribir en un campo de texto (pesos, descripciones), los combos
+normales (`form_input`), el menu **MDS** de arriba (Save / Check / Release Internal / Save as),
+las pestañas, y el buscador de MDS.
+
+**Consecuencia practica para repartir el trabajo:** todo lo que sea **cambiar la ESTRUCTURA del
+arbol** (agregar, reemplazar o borrar un nodo) lo hace Fak a mano. Lo que es **llenar campos,
+versionar, guardar, chequear y liberar** lo puedo hacer yo. Antes de prometer una carga
+completa, separar las dos mitades.
+
+### Coordenadas: leer el rect del DOM, nunca estimar
+
+El pane del navegador y el viewport tienen escalas distintas (el 21/09: viewport 991 px,
+screenshot 800 px → factor **0,8073**). Las coordenadas de `computer` van en el frame del
+screenshot, asi que hay que **leer el `getBoundingClientRect()` del elemento y multiplicar**.
+Estimar "a ojo" desde una captura hace clic en el boton de al lado: perdi varios intentos
+clickeando `Move reference/node` creyendo que era `Replace`.
+
 ### El panel del navegador muestra capturas VIEJAS
 
 Varias veces el screenshot mostro el popup todavia abierto **despues** de que el clic ya habia
