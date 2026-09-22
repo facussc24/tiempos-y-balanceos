@@ -95,118 +95,167 @@
         [
           {
             "type": "transfer",
-            "description": "TRASLADO DE VINILO AL SECTOR DE CORTE"
+            "description": "TRASLADO DE VINILO AL SECTOR DE MESA DE CORTE"
           },
           {
             "stepId": "20",
-            "type": "op-ins",
+            "type": "operation",
             "description": "CORTE DE VINILO",
             "critical": true,
             "criticalType": "sc/f",
             "criticalColor": "black"
           },
           {
-            "stepId": "30",
+            "stepId": "21",
             "type": "op-ins",
-            "description": "REFILADO DE COMPONENTES CORTADOS"
+            "description": "CONTROL DE PRIMERA PIEZA CONTRA MYLAR"
+          },
+          {
+            "type": "condition",
+            "labelCondition": "¿CORTE CONFORME?",
+            "labelDown": "SI",
+            "branchSide": {
+              "labelNode": "NO",
+              "type": "terminal",
+              "text": "SCRAP"
+            }
           },
           {
             "type": "transfer",
             "description": "TRASLADO AL SECTOR DE COSTURA"
           },
           {
+            "stepId": "30",
+            "type": "operation",
+            "description": "REFILADO DE COMPONENTES CORTADOS"
+          },
+          {
             "stepId": "40",
-            "type": "op-ins",
+            "type": "operation",
             "description": "COSTURA DE UNIÓN",
             "critical": true,
             "criticalType": "cc/h",
             "criticalColor": "black"
           },
           {
-            "stepId": "50",
-            "type": "op-ins",
+            "stepId": "41",
+            "type": "operation",
             "description": "COSTURA VISTA — PESPUNTE SIMPLE, UNA LÍNEA",
             "critical": true,
             "criticalType": "cc/h",
             "criticalColor": "black"
           },
           {
-            "type": "condition",
-            "labelCondition": "¿COSTURA CONFORME?",
-            "labelDown": "SI",
-            "branchSide": {
-              "labelNode": "NO",
-              "type": "terminal",
-              "text": "RETRABAJO DE COSTURA / SCRAP"
-            }
-          },
-          {
             "type": "transfer",
-            "description": "TRASLADO DE LA FUNDA AL SECTOR DE ADHESIVADO"
+            "description": "TRASLADO DE LA FUNDA AL SECTOR DE TAPIZADO"
           }
         ],
         [
           {
             "type": "transfer",
-            "description": "TRASLADO DEL SUSTRATO PLÁSTICO AL SECTOR DE LIMPIEZA"
+            "description": "TRASLADO DEL SUSTRATO PLÁSTICO AL SECTOR DE TAPIZADO"
           },
           {
             "stepId": "60",
-            "type": "op-ins",
+            "type": "operation",
             "description": "LIMPIEZA DE PIEZA PLÁSTICA"
           },
           {
-            "stepId": "70",
-            "type": "op-ins",
+            "stepId": "61",
+            "type": "operation",
             "description": "APLICACIÓN DE PRIMER"
-          },
-          {
-            "type": "transfer",
-            "description": "TRASLADO DEL SUSTRATO AL SECTOR DE ADHESIVADO"
           }
         ]
       ]
     },
     {
-      "stepId": "80",
-      "type": "op-ins",
+      "stepId": "70",
+      "type": "operation",
       "description": "ADHESIVADO DE PIEZA PLÁSTICA Y VINILO"
     },
     {
-      "type": "transfer",
-      "description": "TRASLADO AL SECTOR DE TAPIZADO"
+      "stepId": "71",
+      "type": "op-ins",
+      "description": "CONTROL DE ADHESIVADO"
     },
     {
-      "stepId": "90.1",
-      "type": "op-ins",
+      "type": "condition",
+      "labelCondition": "¿ADHESIVADO OK?",
+      "labelDown": "SI",
+      "branchSide": {
+        "labelNode": "NO",
+        "sequence": [
+          {
+            "type": "condition",
+            "labelCondition": "¿SE PUEDE RETRABAJAR?",
+            "labelDown": "SI",
+            "branchSide": {
+              "labelNode": "NO",
+              "type": "terminal",
+              "text": "SCRAP"
+            }
+          },
+          {
+            "stepId": "72",
+            "type": "operation",
+            "description": "REPROCESO: FALTA DE ADHESIVO"
+          },
+          {
+            "type": "transfer",
+            "description": "RE-ENTRADA AL FLUJO PRINCIPAL",
+            "rework": {
+              "targetId": "71",
+              "label": "REVERIFICAR (A OP. 71)"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "stepId": "80",
+      "type": "operation",
       "description": "ACTIVADO DEL ADHESIVO EN HORNO"
     },
     {
-      "stepId": "90.2",
-      "type": "op-ins",
+      "stepId": "81",
+      "type": "operation",
       "description": "TAPIZADO"
     },
     {
-      "type": "inspection",
-      "description": "CONTROL DE ALINEACIÓN DE COSTURA CON REGLA MYLAR"
+      "stepId": "82",
+      "type": "op-ins",
+      "description": "CONTROL DE ALINEACIÓN DE COSTURA CON REGLA MYLAR",
+      "critical": true,
+      "criticalType": "cc/h",
+      "criticalColor": "black"
     },
     {
-      "stepId": "100",
-      "type": "op-ins",
+      "type": "condition",
+      "labelCondition": "¿ALINEACIÓN CONFORME?",
+      "labelDown": "SI",
+      "branchSide": {
+        "labelNode": "NO",
+        "type": "terminal",
+        "text": "SCRAP"
+      }
+    },
+    {
+      "stepId": "90",
+      "type": "operation",
       "description": "REFILADO CON MÁSCARA"
     },
     {
-      "stepId": "110",
-      "type": "op-ins",
-      "description": "TROQUELADO"
+      "stepId": "91",
+      "type": "operation",
+      "description": "TROQUELADO DE VINILO"
     },
     {
       "type": "transfer",
       "description": "TRASLADO AL SECTOR DE INSPECCIÓN FINAL"
     },
     {
-      "stepId": "120",
-      "type": "inspection",
+      "stepId": "100",
+      "type": "op-ins",
       "description": "INSPECCIÓN FINAL",
       "critical": true,
       "criticalType": "cc/h",
@@ -214,12 +263,12 @@
     },
     {
       "type": "condition",
-      "labelCondition": "¿PIEZA CONFORME?",
+      "labelCondition": "¿PRODUCTO CONFORME?",
       "labelDown": "SI",
       "branchSide": {
         "labelNode": "NO",
         "type": "terminal",
-        "text": "SCRAP O RETRABAJO"
+        "text": "SCRAP"
       }
     },
     {
@@ -227,7 +276,7 @@
       "description": "TRASLADO AL SECTOR DE EMBALAJE"
     },
     {
-      "stepId": "130",
+      "stepId": "110",
       "type": "operation",
       "description": "EMBALAJE E IDENTIFICACIÓN"
     },
