@@ -7,10 +7,14 @@ Por que existe: un video de 3 minutos filmando un HMI son ~700 cuadros y ~20 pan
 distintas. Lo que sirve son esas 20. Y el audio de planta con los tecnicos chinos no
 sirve como fuente de un numero, pero si sirve cuando narra Facundo.
 
+El audio es BILINGUE: el tecnico de KingPower habla chino y el operario contesta en
+castellano. Por eso `audio` hace una pasada por idioma y las fusiona por confianza; con
+una sola pasada, lo que queda afuera Whisper no lo transcribe, lo inventa.
+
 Deja, dentro de la carpeta de los videos:
   .claude/
       fotogramas de cada video/<xxxx>/       el mas nitido de cada pantalla distinta
-      transcripciones/IMG_<xxxx>.txt         audio con marca de tiempo
+      transcripciones/IMG_<xxxx>.bilingue.txt  audio con marca de tiempo, ES + ZH
       LEEME - que hay aca.txt
 
 En la RAIZ de la carpeta de la maquina van solo los originales (videos y fotos). Lo chequea
@@ -21,7 +25,7 @@ nombre): si una carpeta ya tiene cuadros, la saltea.
 
 Uso:
   python scripts/video/_infoDeVideos.py cuadros  "<carpeta de videos>" [--desde 2026-09-09] [--tope 24]
-  python scripts/video/_infoDeVideos.py audio    "<carpeta de videos>" [--desde 2026-09-09] [--solo 0813,0820]
+  python scripts/video/_infoDeVideos.py audio    "<carpeta de videos>" [--desde 2026-09-09] [--solo 0813,0820] [--idiomas es,zh]
   python scripts/video/_infoDeVideos.py todo     "<carpeta de videos>" [--desde 2026-09-09]
 
 --desde filtra por la fecha que llevan los nombres de la casa
@@ -150,9 +154,48 @@ def cuadros(carpeta: str, desde: str | None, tope: int, trabajo: str,
 
 
 # ------------------------------------------------------------------ audio
-def audio(carpeta: str, desde: str | None, solo: set[str] | None, trabajo: str) -> None:
+PASADAS = [("es", "transcribe", "ES"), ("zh", "translate", "ZH")]
+CABECERA = (
+    "# OJO: el audio de planta con los tecnicos NO es fuente de un numero. Los numeros\n"
+    "# salen de la pantalla del HMI. Lo que si sirve es lo que narra Facundo.\n"
+    "# [ES] lo dijo en castellano. [ZH] lo dijo en chino y esto es la traduccion directa\n"
+    "# del audio. (?) = Whisper poco seguro. (ALUCINA) = se repite o es spam: NO es fuente."
+)
+# Whisper escupe siempre las mismas frases cuando el audio es ruido de maquina sin habla.
+SPAM = ("订阅", "点赞", "打赏", "转发", "字幕", "subscribe", "Thanks for watching",
+        "请不吝", "明镜", "amara.org", "Subtitles by",
+        # forzado a castellano escupe el mismo spam traducido: el IMG_0393 dio dos
+        # "¡Suscribete al canal!" sobre 297 s de ruido de maquina
+        "suscríbete", "suscribete", "subtítulos", "subtitulos")
+
+
+def _alucina(texto: str, previas: list[str]) -> bool:
+    """Una frase repetida o el pedido de suscribirse a un canal no es lo que dijo nadie."""
+    if any(s.lower() in texto.lower() for s in SPAM):
+        return True
+    return len(previas) >= 3 and all(p == texto for p in previas[-3:])
+
+
+def audio(carpeta: str, desde: str | None, solo: set[str] | None, trabajo: str,
+          idiomas: list[str] | None = None) -> None:
+    """Transcribe cada video UNA vez por idioma y FUSIONA por confianza.
+
+    Pedido de Fak, 22/09/2026: *"muchos de los videos vas a tener que transcribirlos en
+    chino y en español porque a veces hablan chino"*.
+
+    El tecnico de KingPower habla chino y el operario contesta en castellano, muchas veces
+    en la misma frase. Whisper elige UN idioma para todo el archivo, y lo que queda afuera
+    no lo transcribe: lo INVENTA. El IMG_0393 —justo el video del rollo— salio con
+    "打一瓶子" ("abrir una botella") veinte veces seguidas y termino pidiendo que te
+    suscribas a un canal de YouTube: 297 segundos de material y ni una frase util.
+
+    Asi que va una pasada por idioma y despues se fusiona TRAMO A TRAMO, quedandose con la
+    que Whisper dio mas segura (`avg_logprob`). Del chino se pide `task="translate"`, que
+    saca el significado directo del audio en vez de traducir una transcripcion ya dudosa.
+    """
     from faster_whisper import WhisperModel
 
+    pedidos = [p for p in PASADAS if not idiomas or p[0] in idiomas]
     destino = os.path.join(carpeta_info(carpeta), "transcripciones")
     os.makedirs(destino, exist_ok=True)
     print("cargando modelo...", flush=True)
@@ -161,11 +204,7 @@ def audio(carpeta: str, desde: str | None, solo: set[str] | None, trabajo: str) 
         t = tag_de(v)
         if solo and t not in solo:
             continue
-        # El nombre unificado es IMG_xxxx.txt (21/09/2026); `xxxx.txt` es como se llamaban
-        # antes y se respeta para no re-transcribir 1 h 30 de audio al pedo.
-        dst = os.path.join(destino, f"IMG_{t}.txt")
-        if os.path.exists(os.path.join(destino, f"{t}.txt")):
-            dst = os.path.join(destino, f"{t}.txt")
+        dst = os.path.join(destino, f"IMG_{t}.bilingue.txt")
         if os.path.exists(dst):
             print(f"skip {t}", flush=True)
             continue
@@ -173,22 +212,52 @@ def audio(carpeta: str, desde: str | None, solo: set[str] | None, trabajo: str) 
         subprocess.run(
             ["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-i", os.path.join(carpeta, v),
              "-ac", "1", "-ar", "16000", wav], check=False)
-        segs, info = modelo.transcribe(wav, language="es", vad_filter=True, beam_size=1)
-        lineas = [
-            f"# {v}",
-            f"# idioma={info.language} prob={info.language_probability:.2f}",
-            "# OJO: el audio de planta con los tecnicos NO es fuente de un numero. Los numeros",
-            "# salen de la pantalla del HMI. Lo que si sirve es lo que narra Facundo.",
-            "",
-        ]
-        for s in segs:
-            lineas.append(f"[{int(s.start // 60):02d}:{int(s.start % 60):02d}] {s.text.strip()}")
+        crudo, detectado, rotas = [], [], []
+        for idi, tarea, marca in pedidos:
+            try:
+                segs, info = modelo.transcribe(wav, language=idi, task=tarea,
+                                               vad_filter=True, beam_size=1)
+                detectado.append(f"{marca}(solo detectaria {info.language} "
+                                 f"{info.language_probability:.2f})")
+                for s in segs:
+                    txt = s.text.strip()
+                    if txt:
+                        crudo.append((s.start, s.end, marca, txt, s.avg_logprob))
+            except Exception as e:
+                # Sin esto, una pasada que se cae por memoria devuelve CERO segmentos y el
+                # archivo queda escrito como si en ese idioma nadie hubiera hablado. Paso:
+                # la pasada ZH del IMG_0393 dio 0 y era `mkl_malloc: failed to allocate`.
+                rotas.append(f"{marca}: {type(e).__name__} {e}")
+                print(f"  {t} {marca}: FALLO -> {type(e).__name__}: {e}", flush=True)
+                continue
+            print(f"  {t} {marca}: {sum(1 for c in crudo if c[2] == marca)} seg", flush=True)
+        if rotas:
+            print(f"{t}: NO se escribe nada, {len(rotas)} pasada(s) fallaron:\n  "
+                  + "\n  ".join(rotas), flush=True)
+            continue
+        # Fusion: recorro en orden y, cuando dos pasadas pisan el mismo tramo, gana la que
+        # Whisper dio mas segura. Sin esto el archivo queda con todo dicho dos veces.
+        crudo.sort(key=lambda c: (c[0], -c[4]))
+        elegidos, fin_tomado = [], -1.0
+        for ini, fin, marca, txt, lp in crudo:
+            if ini < fin_tomado - 0.35:
+                continue
+            elegidos.append((ini, marca, txt, lp))
+            fin_tomado = max(fin_tomado, fin)
+        lineas = [f"# {v}", f"# pasadas: {' · '.join(detectado)}", CABECERA, ""]
+        previas: list[str] = []
+        for ini, marca, txt, lp in elegidos:
+            flag = " (ALUCINA)" if _alucina(txt, previas) else (" (?)" if lp < -0.9 else "")
+            lineas.append(f"[{int(ini // 60):02d}:{int(ini % 60):02d}] [{marca}] {txt}{flag}")
+            previas.append(txt)
         open(dst, "w", encoding="utf-8").write("\n".join(lineas))
         try:
             os.remove(wav)
         except OSError:
             pass
-        print(f"{t}: {len(lineas) - 5} segmentos", flush=True)
+        dudosas = sum(1 for l in lineas[4:] if "(ALUCINA)" in l)
+        print(f"{t}: {len(elegidos)} segmentos fusionados, {dudosas} marcados ALUCINA "
+              f"-> {os.path.basename(dst)}", flush=True)
 
 
 def main() -> int:
@@ -200,6 +269,9 @@ def main() -> int:
     ap.add_argument("--tope", type=int, default=24, help="maximo de cuadros por video (default 24)")
     ap.add_argument("--solo", help="lista de IMG_xxxx separados por coma; en 'cuadros' fija ademas el orden")
     ap.add_argument("--trabajo", default=os.path.join(os.environ.get("TEMP", "/tmp"), "_infoDeVideos"))
+    ap.add_argument("--idiomas", default="es,zh",
+                    help="idiomas a transcribir, separados por coma (default es,zh: el "
+                         "tecnico habla chino y el operario castellano en la misma frase)")
     a = ap.parse_args()
     if not os.path.isdir(a.carpeta):
         print(f"No existe la carpeta: {a.carpeta}", file=sys.stderr)
@@ -209,7 +281,8 @@ def main() -> int:
     if a.accion in ("cuadros", "todo"):
         cuadros(a.carpeta, a.desde, a.tope, a.trabajo, solo)
     if a.accion in ("audio", "todo"):
-        audio(a.carpeta, a.desde, solo, a.trabajo)
+        audio(a.carpeta, a.desde, solo, a.trabajo,
+              [x.strip() for x in a.idiomas.split(",") if x.strip()])
     print("LISTO", flush=True)
     return 0
 

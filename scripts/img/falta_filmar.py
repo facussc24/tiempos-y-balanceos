@@ -47,9 +47,10 @@ TOMAS = [
         ("La pantalla del HMI en parada o fin de jornada",
          "Para cerrar la hoja de apagado con lo que ve el operario."),
     ]),
-    ("2 · EL ROLLO DE VINILO — hay imagen, pero nadie lo explico en voz alta", [
-        ("Como sube el rollo al eje: a mano entre dos, con autoelevador o con un carro",
-         "En IMG_0393 lo manipulan a mano, pero es la puesta a punto, no la serie."),
+    ("2 · EL ROLLO DE VINILO — el unico video del tema no tiene audio util", [
+        ("Como sube el rollo a la cuna: a mano entre dos, con autoelevador o con un carro",
+         "El IMG_0393 EMPIEZA con el rollo ya montado y ningun otro de los 89 videos lo "
+         "muestra: subirlo no esta filmado."),
         ("Como se fija el eje al rollo y como se traba en la cuna",
          "Se ve un collar contra la cara del rollo; no se ve ni se dice como se fija."),
         ("Como se centra el rollo a lo ancho y contra que referencia",
@@ -57,11 +58,18 @@ TOMAS = [
         ("Para que lado va la cara buena, y si la punta sale por arriba o por abajo",
          "En IMG_0393 sale por arriba, pero nadie dice que sea la regla."),
         ("Si hay FIFO, control de lote o identificacion del rollo al montarlo",
-         "Cero menciones en las 47 transcripciones."),
+         "Cero menciones en las 49 transcripciones."),
         ("Que se hace con la punta vieja cuando se termina un rollo: empalme o descarte",
          "No esta filmado ni dicho."),
         ("Si el desbobinado en serie va en manual o en automatico",
          "Las dos entradas existen en la lista de E/S de la maquina."),
+        ("EL CORTE, filmado de cerca: la mordaza cerrando y la cuchilla entrando",
+         "De los 89 videos, ninguno los muestra en accion. Solo se leen sus nombres en "
+         "la botonera (PULL CLAMP, CUT PRESS, CUT SUPPORT, CUTTING BLADE)."),
+        ("En que ORDEN se tocan esos cuatro comandos para cortar la primera lamina",
+         "La hoja 30.6 propone mordaza, prensadora, soporte y cuchilla. Lo unico "
+         "respaldado es que la placa baja antes de cortar (IMG_0579 min 2:10). El resto "
+         "lo tiene que confirmar el tecnico antes de que la hoja se apruebe."),
     ]),
     ("3 · LOS SUSTRATOS Y EL FIN DE CICLO — para cerrar el criterio", [
         ("Cuantos sustratos van por ciclo en el Top Roll y en que nidos",

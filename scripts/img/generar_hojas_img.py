@@ -1104,29 +1104,28 @@ HOJAS_IMG = [
 
     dict(
         op="30.4",
-        denominacion="MONTAJE DEL ROLLO DE VINILO EN EL DESENROLLADOR",
+        denominacion="ENHEBRADO DEL VINILO EN EL DESENROLLADOR",
         modo="secuencia",
-        imagenes=[_f("w1_rollo.jpg"), _f("w3_mesa.jpg"), _f("w4_derecho.jpg")],
-        pies=["El rollo con su eje sobre la cuna",
-              "El material sobre la mesa de carga",
-              "El material derecho, del rollo a la maquina"],
+        imagenes=[_f("x2_enhebrar.jpg"), _f("x3_mesa.jpg"), _f("x1_desenrollador.jpg")],
+        pies=["La punta entre las barras y el rodillo",
+              "La punta sobre la mesa de carga",
+              "El material derecho, del rollo a la mesa"],
         sin_marcas_ok=True,
         pasos=[
-            "Colocar el rollo de vinilo con su eje sobre la cuna del desenrollador.",
-            "Apoyar la punta del material sobre la mesa de carga y alinearla con las barras "
-            "guia.",
-            "Verificar que el material salga derecho del rollo, sin arrugas ni desvio.",
+            "Pasar la punta del material entre las barras guia y el rodillo de arrastre.",
+            "Apoyar la punta del material sobre la mesa de carga y alisarla con la mano.",
+            "Verificar que el material corra derecho del rollo a la mesa, sin arrugas.",
         ],
         fuentes=[
-            "IMG_0393 (26-08-2026) s=14: se ve el rollo con su eje pasante mientras lo "
-            "colocan sobre el soporte del desenrollador",
-            "IMG_0393 (26-08-2026) s=107: se ve al operario apoyando el material sobre la "
-            "mesa de carga, con las dos manos",
-            "IMG_0393 (26-08-2026) s=135: se ve el rollo ya montado en la cuna y el material "
-            "corriendo derecho hacia la maquina",
+            "IMG_0393 (26-08-2026) s=49: dos operarios llevan la punta del material entre "
+            "las barras guia naranjas y el rodillo de arrastre verde",
+            "IMG_0393 (26-08-2026) s=114: el operario apoya el material sobre la mesa de "
+            "carga con las dos manos y lo alisa",
+            "IMG_0393 (26-08-2026) s=134: el rollo apoyado en la cuna del desenrollador, "
+            "con el eje pasante y su soporte, y el material corriendo derecho a la mesa",
         ],
         epp=EPP_IMG,
-        disparador="SI EL ROLLO NO APOYA BIEN O EL MATERIAL SALE TORCIDO",
+        disparador="SI EL MATERIAL SALE TORCIDO O CON ARRUGAS DEL ROLLO",
         acciones=[
             "1. No forzar el rollo a mano con la maquina en marcha.",
             "2. Dar aviso al Lider de Produccion.",
@@ -1136,38 +1135,70 @@ HOJAS_IMG = [
 
     dict(
         op="30.5",
-        denominacion="CARGA Y CORTE DE LA PRIMERA LAMINA",
+        denominacion="AVANCE DEL VINILO CON LOS SELECTORES",
         modo="secuencia",
-        imagenes=[_f("w7_alimentacion.jpg"), _f("w5_selectores.jpg"),
-                  _f("v5_carga_hmi.jpg"), _f("w6_cuchilla.jpg")],
-        pies=["Alimentacion en Cuero en rollo",
-              "Los selectores del desenrollador",
-              "La pantalla de carga, en castellano",
-              "El selector de la cuchilla de corte"],
+        imagenes=[_f("x6_alimentacion.jpg"), _f("x4_selectores.jpg"),
+                  _f("x7_carga_hmi.jpg")],
+        pies=["La pantalla, en Cuero en rollo",
+              "Los dos selectores del desenrollador",
+              "Los mismos comandos, en castellano"],
         sin_marcas_ok=True,
         pasos=[
             "Elegir Cuero en rollo en la pantalla, en Seleccion Lamina Alimentacion.",
-            "Mover el material con los dos selectores del desenrollador hasta la mesa de "
-            "carga: UNCOILER para el rollo y Leather Conveyor para el avance.",
-            "Bajar la placa prensadora y la placa soporte, y cerrar la mordaza de tiro sobre "
-            "la punta del material.",
-            "Cortar la lamina con el selector de la cuchilla de corte (CUTTING BLADE).",
+            "Mover el material hasta la mesa de carga con los dos selectores del "
+            "desenrollador, UNCOILER y Leather Convey, los dos en FWD.",
+            "Ajustar la posicion del material desde la pantalla Manual - Carga: "
+            "Desenrollador en Atras o en Adelante.",
+        ],
+        fuentes=[
+            "IMG_0661 (04-09-2026) s=30: en la pantalla Operacion del Equipo se lee "
+            "\u00abSeleccion Lamina Alimentacion: Cuero en rollo\u00bb",
+            "IMG_0393 (26-08-2026) s=158: la caja del desenrollador, con las dos chapas "
+            "UNCOILER \u5f00\u5377\u673a y Leather Convey \u76ae\u6599\u8f93\u9001, "
+            "cada una con FWD \u6b63\u8f6c y REV \u53cd\u8f6c",
+            "IMG_0830 (10-09-2026) s=41: la pantalla Manual - Carga, en castellano, con "
+            "\u00abDesenrollador: Atras / Adelante\u00bb y \u00abRodillo de prensado de "
+            "desenrollador\u00bb",
+        ],
+        epp=EPP_IMG,
+        disparador="SI EL MATERIAL NO AVANZA O AVANZA TORCIDO",
+        acciones=[
+            "1. Llevar los dos selectores a REV y sacar el material de la mesa.",
+            "2. Dar aviso al Lider de Produccion.",
+            "3. No tirar del material a mano con los selectores en FWD.",
+        ],
+    ),
+
+    dict(
+        op="30.6",
+        denominacion="CIERRE Y CORTE DE LA PRIMERA LAMINA",
+        modo="rotulada",
+        imagenes=[_f("x5r_botonera.jpg")],
+        pies=["La botonera de carga"],
+        pasos=[
+            "Cerrar la mordaza de tiro sobre la punta del material: PULL CLAMP en CLAMP.",
+            "Bajar la placa prensadora: CUT PRESS en DOWN.",
+            "Bajar la placa soporte: CUT SUPPORT en DOWN.",
+            "Cortar la lamina: CUTTING BLADE en ADV.",
         ],
         parametros=[("Largo de lamina", "1100 mm")],
         fuentes=[
-            "IMG_0661 (04-09-2026) s=30: se lee en la pantalla Operacion del Equipo, "
-            "\u00abSeleccion Lamina Alimentacion: Cuero en rollo\u00bb",
-            "IMG_0393 (26-08-2026) s=162: se leen las dos chapas del desenrollador, "
-            "UNCOILER \u5f00\u5377\u673a y Leather Conveyor \u76ae\u6599\u8f93\u9001, "
-            "cada una con FWD y REV",
-            "IMG_0830 (10-09-2026) s=41: la pantalla Manual - Carga en castellano, con "
-            "Placa Prensad., Placa Soporte y Mordaza de tiro",
-            "IMG_0579 (02-09-2026) min 2:02 y 2:10: \u00aby ahi con ese boton lo cortas y "
-            "agarras\u00bb / \u00abtenes que poner el down de bajar para que ese cuchillo "
-            "baje\u00bb; el selector se lee en IMG_0585 s=96",
+            "IMG_0393 (26-08-2026) s=173: en la botonera se lee PULL CLAMP "
+            "\u62c9\u6599\u5939\u94b3 con sus dos posiciones CLAMP \u5939\u7d27 y REL "
+            "\u677e\u5f00; IMG_0830 s=41 la llama \u00abMordaza de tiro\u00bb",
+            "IMG_0393 (26-08-2026) s=173: en la botonera se lee CUT PRESS "
+            "\u5207\u65ad\u538b\u6599 UP/DOWN; IMG_0830 s=41 la llama \u00abPlaca "
+            "Prensad.\u00bb y la muestra en Abajo",
+            "IMG_0393 (26-08-2026) s=173: en la botonera se lee CUT SUPPORT "
+            "\u5207\u65ad\u6258\u6599 UP/DOWN; IMG_0830 s=41 la llama \u00abPlaca "
+            "Soporte\u00bb y la muestra en Abajo",
+            "IMG_0393 (26-08-2026) s=173: en la botonera se lee CUTTING BLADE "
+            "\u5207\u65ad\u5200\u7247 ADV/BACK. El orden lo respalda IMG_0579 "
+            "(02-09-2026) min 2:10: \u00abtenes que poner el down de bajar para que ese "
+            "cuchillo baje\u00bb, o sea que la placa baja antes del corte",
         ],
         epp=EPP_IMG,
-        disparador="SI LA LAMINA SALE CORTA, TORCIDA O LA CUCHILLA NO BAJA",
+        disparador="SI LA LAMINA SALE CORTA, TORCIDA O LA CUCHILLA NO CORTA",
         acciones=[
             "1. No repetir el corte sobre la misma lamina.",
             "2. Apartar el recorte y dar aviso al Lider de Produccion.",
@@ -1176,7 +1207,7 @@ HOJAS_IMG = [
     ),
 
     dict(
-        op="30.6",
+        op="30.7",
         denominacion="ARRANQUE DE LA MAQUINA EN MODO AUTOMATICO",
         modo="rotulada",
         imagenes=[_f("r2_automatico.jpg")],
@@ -1215,7 +1246,7 @@ HOJAS_IMG = [
 
     # ── CONTROLAR ────────────────────────────────────────
     dict(
-        op="30.7",
+        op="30.8",
         denominacion="DESCARGA DE PIEZAS Y CARGA DE SUSTRATOS",
         modo="secuencia",
         imagenes=[_f("d1_pieza.jpg"), _f("d2_vinilo.jpg"),
@@ -1256,7 +1287,7 @@ HOJAS_IMG = [
     ),
 
     dict(
-        op="30.8",
+        op="30.9",
         denominacion="CONTROL DE PIEZA TERMOFORMADA",
         modo="secuencia",
         imagenes=[_f("n5_mano.jpg"), _f("n8_canto.jpg"), _f("n7_despegue.jpg")],
@@ -1294,8 +1325,50 @@ HOJAS_IMG = [
 ]
 
 
+PLANCHA_DECK = _f("_plancha_del_deck.jpg")
+
+
+def gate_fotos_miradas(hojas, portada=None):
+    """Las fotos del deck se MIRAN juntas antes de compilar. Este gate obliga ese paso.
+
+    22/09/2026. Entregue el bloque del vinilo con el operario ACOSTADO y con dos fotos
+    movidas. El IMG_0393 declara `rotation=-90`, pero el que filma giro el telefono a
+    mitad del video: la rotacion correcta cambia segun el segundo y el metadato del
+    archivo no la da. Del MISMO video, con los mismos parametros, una foto salio derecha
+    y la otra de costado.
+
+    Y no hay numero que lo cace. Probe el foco contra las 55 fotos de la carpeta: las de
+    la llave general (34) y el caballete (109) estan perfectas, y `w5_selectores` (37) es
+    ilegible. El percentil 99,5 tampoco separa (27 y 30 buenas contra 37 y 39 malas). Un
+    umbral ahi adentro tiraba seis fotos buenas.
+
+    Asi que el gate no juzga la foto: exige que la plancha exista y sea MAS NUEVA que la
+    ultima foto que toque. Para pasarlo hay que regenerarla, y para regenerarla se abre.
+    """
+    fotos = []
+    for h in hojas:
+        fotos += list(h.get("imagenes", []))
+    if portada:
+        fotos.append(portada)
+    fotos = [f for f in dict.fromkeys(fotos) if os.path.exists(f)]
+    repo = os.path.abspath(os.path.join(BASE_DIR, "..", ".."))
+    cmd = ("py -3 .claude/skills/hojas-de-proceso/scripts/fotodevideo.py contacto "
+           + " ".join(f'"{os.path.relpath(f, repo)}"' for f in fotos)
+           + f' --cols 3 --plancha "{os.path.relpath(PLANCHA_DECK, repo)}"')
+    if not os.path.exists(PLANCHA_DECK):
+        raise SystemExit("No hay plancha de contacto de las fotos del deck. Generala y "
+                         "MIRALA antes de compilar:\n\n  " + cmd + "\n")
+    t = os.path.getmtime(PLANCHA_DECK)
+    nuevas = [os.path.basename(f) for f in fotos if os.path.getmtime(f) > t]
+    if nuevas:
+        raise SystemExit(f"{len(nuevas)} foto(s) cambiaron despues de la ultima plancha y "
+                         f"nadie las miro:\n  " + "\n  ".join(nuevas)
+                         + "\n\nRegenerala y MIRALA:\n\n  " + cmd + "\n")
+
+
 def compilar_deck():
     gate_materiales_del_deck(HOJAS_IMG)
+    gate_fotos_miradas(HOJAS_IMG, PORTADA_IMG.get("foto"))
     print(f"Iniciando compilacion de Hoja de Proceso IMG "
           f"({len(HOJAS_IMG) + 1} laminas: portada + {len(HOJAS_IMG)})...")
     prs = Presentation()

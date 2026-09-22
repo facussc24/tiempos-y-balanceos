@@ -20,10 +20,13 @@ rehacerla ni verificar de donde salio.
 | `n3_servicios.jpg` | 30.1 | la fila de ocho servicios de la pantalla, en verde, rotulada |
 | `r_puesto.jpg` | 30.2 | el puesto de mando, rotulado — la marca 3 rodea SOLO el hongo rojo |
 | `r2_botonera.jpg` | 30.3 | la botonera con el hongo NEGRO adentro del cuadro, medida y rotulada |
-| `v0_montaje.jpg` | 30.4 | el rollo con su eje sobre la cuna de rodillos |
-| `v3_punta.jpg` | 30.4 | llevando la punta del vinilo por arriba del rollo |
-| `v2_uncoiler.jpg` | 30.4 | los selectores UNCOILER y Leather Conveyor |
-| `v4_cinta.jpg` | 30.4 | la lamina sobre la cinta, alisada a mano |
+| `x2_enhebrar.jpg` | 30.4 | dos operarios llevan la punta entre las barras y el rodillo (s=49) |
+| `x3_mesa.jpg` | 30.4 | el operario apoya la punta sobre la mesa de carga (s=114) |
+| `x1_desenrollador.jpg` | 30.4 | el rollo en la cuna, con su eje y el material derecho (s=134) |
+| `x6_alimentacion.jpg` | 30.5 | la pantalla con `Seleccion Lamina Alimentacion: Cuero en rollo` |
+| `x4_selectores.jpg` | 30.5 | la caja del desenrollador: UNCOILER y Leather Convey, legibles (s=158) |
+| `x7_carga_hmi.jpg` | 30.5 | los mismos comandos en castellano: Desenrollador, Placa Prensad., Placa Soporte |
+| `x5r_botonera.jpg` | 30.6 | la botonera de carga rotulada, 4 marcas sobre los comandos del corte |
 | `r2_automatico.jpg` | 30.5 | la pantalla con Modo Automatico, los servicios y la botonera, rotulada |
 | `d1_pieza.jpg` | 30.6 | el operario sacando la pieza del molde (IMG_0844 s=488) |
 | `d2_vinilo.jpg` | 30.6 | el operario sacando el RESTO DE VINILO del molde (s=492) |
@@ -49,6 +52,18 @@ castellano · `d4_nidos.jpg` el plano general de dos personas cargando sustratos
 
 **Quedaron descartadas, con el motivo**:
 
+- `w1_rollo.jpg`, `w3_mesa.jpg`, `w5_selectores.jpg`, `w4_derecho.jpg`, `w7_alimentacion.jpg`
+  y `w2_punta.jpg` — el primer set del vinilo (21/09). `w1_rollo` salio **rotada 90°**,
+  con el operario acostado: el IMG_0393 declara `rotation=-90` pero el que filma giro el
+  telefono a mitad del video, asi que la rotacion correcta cambia SEGUN EL SEGUNDO. Del
+  mismo video, con los mismos parametros, `w4_derecho` (s=135) salio derecha. `w3_mesa`
+  (foco 14) y `w5_selectores` (foco 37) salieron movidas, y en la segunda no se leian las
+  chapas que la hoja nombraba. Los reemplaza el set `x*`, elegido barriendo el video
+  entero y mirando la plancha de contacto.
+- `v0_montaje.jpg`, `v1_rollo.jpg`, `v2_uncoiler.jpg`, `v3_punta.jpg`, `v4_cinta.jpg`
+  — el set anterior a ese. `v4_cinta` ademas nombraba una **cinta que esta maquina no
+  tiene**.
+
 - `p4_saca.jpg` y `m4_saca.jpg` — dos operarios de espaldas tapando el 35 % del ancho.
 - `m1_entra.jpg`, `m2_conformado.jpg`, `m3_abre.jpg` — eran la hoja del ciclo escrita como
   narracion de la maquina; la reemplazo la 30.6, que muestra lo que hace el operario.
@@ -60,6 +75,13 @@ castellano · `d4_nidos.jpg` el plano general de dos personas cargando sustratos
   de proceso. La matriz de calor la reemplazo el control de la pieza.
 - `n1_tableros.jpg`, `n6_compara.jpg` — no entraron en ninguna hoja.
 - `c_carteles.jpg`, `c_tcu.jpg`, `e2_botones.jpg` — recortes fallidos o ya contenidos.
+
+`_plancha_del_deck.jpg` es la plancha de contacto con TODAS las fotos que usa el deck,
+juntas y a tamano util. El generador la exige mas nueva que la ultima foto que se toco:
+para pasar ese gate hay que regenerarla, y para regenerarla se abre. Existe porque la
+rotacion y el encuadre no los caza ningun numero — probe el foco contra las 55 fotos de
+esta carpeta y la llave general (34) y el caballete (109) estan perfectas mientras que
+`w5_selectores` (37) es ilegible. Se mira, no se mide.
 
 Los `_*.jpg` son cuadros de trabajo y **no van al repo** (`.gitignore`, misma convencion que
 `scripts/hotmelt/`).

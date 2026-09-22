@@ -75,6 +75,32 @@ CASOS = [
           imagenes=[F('m1_entra.jpg'), F('m3_abre.jpg')]), False),
 ]
 
+
+def _con_plancha(al_dia):
+    """Arma un caso del gate de la plancha: `al_dia` decide si la plancha es mas nueva.
+
+    El gate no juzga la foto —ninguna medida separa una foto buena de una movida, lo
+    probe contra las 55 de la carpeta— sino que OBLIGA a mirarlas: exige que la plancha
+    exista y sea posterior a la ultima foto que se toco.
+    """
+    def correr(_d):
+        foto, plancha = F('m1_entra.jpg'), G.PLANCHA_DECK
+        antes = os.path.exists(plancha) and os.path.getmtime(plancha)
+        try:
+            t = os.path.getmtime(foto)
+            os.utime(plancha, (t + 10, t + 10) if al_dia else (t - 10, t - 10))
+            G.gate_fotos_miradas([dict(op='X', imagenes=[foto])])
+        finally:
+            if antes:
+                os.utime(plancha, (antes, antes))
+    return correr
+
+
+CASOS += [
+    (_con_plancha(False), "una foto cambio despues de la plancha: nadie la miro", {}, True),
+    (_con_plancha(True), "la plancha es posterior a la foto", {}, False),
+]
+
 print("LOS GATES, cada uno con un caso que debe RECHAZAR y otro que debe PASAR\n")
 malos = 0
 for fn, nombre, d, espera_rojo in CASOS:

@@ -281,6 +281,49 @@ def acc_leer(a) -> int:
     return 0
 
 
+def acc_contacto(a) -> int:
+    """La plancha de TODAS las fotos del deck, juntas, para mirarlas antes de compilar.
+
+    Existe por el 22/09/2026. Entregue una hoja con el operario ACOSTADO: el IMG_0393
+    declara `rotation=-90`, pero el que filma giro el telefono a mitad del video, asi que
+    la rotacion correcta cambia SEGUN EL SEGUNDO y el metadato del archivo no la da. Con
+    `--rot 0` salieron bien unas y de costado otras, del mismo video.
+
+    Eso no lo caza ningun gate de codigo: se ve. Lo unico que sirve es mirar las fotos
+    juntas, a tamano util, antes de que entren a una lamina. Esta plancha es ese paso, y
+    el generador la exige mas nueva que la ultima foto que toque.
+    """
+    fotos = [f for f in a.foto if os.path.exists(f)]
+    if not fotos:
+        print("ninguna de esas fotos existe", file=sys.stderr)
+        return 1
+    cols = max(1, a.cols)
+    filas = (len(fotos) + cols - 1) // cols
+    cw, ch, rotulo = a.ancho_celda, a.alto_celda, 34
+    hoja = Image.new("RGB", (cols * cw, filas * (ch + rotulo)), (24, 24, 28))
+    dr = ImageDraw.Draw(hoja)
+    for i, f in enumerate(fotos):
+        im = Image.open(f)
+        ar = im.width / im.height
+        nit = foco(im)
+        im = im.copy()
+        im.thumbnail((cw - 10, ch - 10), Image.LANCZOS)
+        x = (i % cols) * cw + (cw - im.size[0]) // 2
+        y = (i // cols) * (ch + rotulo) + (ch - im.size[1]) // 2
+        hoja.paste(im, (x, y))
+        # el ratio y el foco al lado del nombre: una foto que llena poco su celda o que
+        # esta movida se descarta aca, no cuando ya esta impresa
+        dr.text(((i % cols) * cw + 6, (i // cols) * (ch + rotulo) + ch + 2),
+                os.path.basename(f), fill=(240, 240, 245))
+        dr.text(((i % cols) * cw + 6, (i // cols) * (ch + rotulo) + ch + 16),
+                f"{Image.open(f).size[0]}x{Image.open(f).size[1]}  ratio {ar:.2f}:1  "
+                f"foco {nit:.0f}", fill=(150, 200, 255))
+    hoja.save(a.plancha, quality=90)
+    print(f"{len(fotos)} fotos -> {a.plancha}")
+    print("MIRALA antes de compilar: la rotacion y el encuadre no los caza ningun gate.")
+    return 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -322,6 +365,14 @@ def main() -> int:
     p = sub.add_parser("leer", help="de donde salio cada foto (sale 1 si alguna no lo dice)")
     p.add_argument("foto", nargs="+")
     p.set_defaults(fn=acc_leer)
+
+    p = sub.add_parser("contacto", help="plancha con las fotos del deck, para MIRARLAS juntas")
+    p.add_argument("foto", nargs="+")
+    p.add_argument("--plancha", required=True)
+    p.add_argument("--cols", type=int, default=3)
+    p.add_argument("--ancho-celda", dest="ancho_celda", type=int, default=620)
+    p.add_argument("--alto-celda", dest="alto_celda", type=int, default=420)
+    p.set_defaults(fn=acc_contacto)
 
     a = ap.parse_args()
     return a.fn(a)
