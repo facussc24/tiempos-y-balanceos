@@ -269,3 +269,55 @@ if not mod or not proc:      # el arb va a rechazar el renglon entero
 Ya estaba anotado que el foco queda ahí, pero no que **el cargador aborta por eso**:
 *"no veo la grilla de insumos: la ventana está en otra solapa"*. Entre el export y el
 `--apply` va siempre un `click 118 68` (solapa `Altas`). El comando `reset` ya lo hace.
+
+⚠️ **22/09/2026: ese click puede dejar `Altas` elegida y VACÍA** (sin `Parte Superior` ni
+grilla; se ve en `_arbVer.py foto rel`). Ir a `Listado` y volver no la redibujó. Lo que la
+arregló fue cerrar y reabrir la ventana, y eso desató las dos fallas de abajo.
+
+### 🔴 CARTEL OCULTO DETRÁS DE RELACIONES: `ENTRY failed with error 1400` `22/09/2026`
+
+Al reabrir `Maestro de Relaciones` después del `WM_CLOSE` apareció un `#32770` **`Error`**:
+*"ENTRY failed with error 1400: El identificador de la ventana no es válido"*, con un solo
+botón, `Aceptar`. `_arbVer.py modal` contestaba **`cerrados: 1 | quedan: 1`** para siempre: el
+MISMO handle, nunca se cerraba. El cartel **no tiene dueño y quedó DETRÁS de Relaciones**,
+así que el click real caía en la ventana de adelante.
+
+Lo que lo cerró: `AttachThreadInput` + `SetWindowPos(HWND_TOP)` + `SetForegroundWindow` sobre
+el cartel, **`WindowFromPoint` en el centro del botón == el botón** (gate: si no, no se
+clickea) y recién ahí el click real. Medido: 1 → 0.
+
+**Y después la página `Altas` quedó armada DOS VECES**, una encima de la otra: **85
+editables** (lo normal son 43 = `Parte Superior` + 6×7), **2 `&Acepta`**, todos visibles y del
+mismo padre. `G()` agrupa por altura, así que cada fila salía con 14 controles intercalados y
+el cargador leía el `Rubro` ("1") donde esperaba el código. **El gate de pantalla contra export
+lo frenó en las 7 piezas sin escribir nada.** Se cura cerrando y reabriendo la ventana; antes
+de cargar, contar: **43 editables · 1 `&Acepta` · 6 filas**.
+
+### 🔴🔴 EL ARB COLGADO: `HEAP CORRUPTION` INVISIBLE, 0 DE CPU `22/09/2026`
+
+El segundo cierre y reapertura dejó un `Microsoft Visual C++ Runtime Library` / `HEAP
+CORRUPTION DETECTED` con **`IsWindowVisible = 0`**: era la ventana de primer plano pero no se
+dibujaba, y **el foco estaba en `&Anular`**. `_arbVer.py estado` decía `MODALES ABIERTOS: 0`,
+porque `ventanas()` solo enumera las **visibles**. Se detecta mirando la clase de
+`GetForegroundWindow()`.
+
+Las tres ventanas del proceso daban `IsHungAppWindow = True` y la CPU del proceso no se movió
+en 100 s. Un `PostMessage(WM_COMMAND, IDIGNORE)` al cartel no se procesó. Y **`ShowWindow` o
+`AttachThreadInput` contra un hilo colgado cuelgan al que llama**: mi script quedó trabado
+sin imprimir nada.
+
+- **Con el foco en `Anular`, ninguna tecla.** Un `ENTER` cierra el arb.
+- **Arb colgado (IsHung + CPU quieta) → no se espera ni se prueban trucos.** Fak, 22/09:
+  *"no que va a responder el arb jaja... si se traba así cagamos, hay que cerrarlo y
+  reabrirlo más fácil"*. Se le dice con el motivo, él da el OK, `taskkill /F` con el escape
+  de `arb-no-cerrar.md`, y él lo reabre con su usuario.
+- **Antes del kill, confirmar que no queda nada a medio grabar**: la última escritura tiene
+  que estar verificada en un export. Ese día lo estaba (una pieza grabada a las 14:03; los
+  intentos siguientes habían frenado antes del `ENTER`), y después del kill la base dio
+  exactamente las líneas pedidas.
+
+### `reset` no reabre si la ventana `Producción` está chica `22/09/2026`
+
+Con `Producción` en (10,10) y 1516×788, el click del ribbon de `reset` en (849,43) y
+(296,98) no abrió `Relaciones`, y no apareció ningún cartel. **`abrir()` de `_arbCargar.py`
+(teclado: `Alt V Y 0 3`) sí la abrió.** Ante la duda, reabrir por teclado.
