@@ -35,6 +35,7 @@ import { fileURLToPath, pathToFileURL } from 'url';
 import { spawnSync } from 'child_process';
 import { build } from 'esbuild';
 import { chromium } from 'playwright';
+import { revisarFlujograma } from './_lib/flujogramaCanon.mjs';
 
 const AQUI = dirname(fileURLToPath(import.meta.url));
 const RAIZ = resolve(AQUI, '..');
@@ -105,6 +106,25 @@ try {
         const archivoDatos = join(DATA, `${clave}.json`);
         if (!existsSync(archivoDatos)) { console.error(`  ✗ ${clave}: no existe ${archivoDatos}`); continue; }
         const datos = JSON.parse(readFileSync(archivoDatos, 'utf8'));
+
+        // El canon corre ANTES de dibujar. El 22/09/2026 Fak reviso el 159 y marco ocho cosas;
+        // siete ya estaban escritas en la skill `flujogramas` — una con su frase textual del
+        // 08/09 — y yo no la habia abierto. Un canon en prosa depende de que me acuerde de
+        // leerlo; este corre solo. Fak: "no solo quiero que lo corrijas, quiero que no vuelvan
+        // a suceder la proxima vez que haga flujogramas".
+        const hallazgos = revisarFlujograma(datos);
+        for (const h of hallazgos.filter((x) => x.gravedad === 'AVISO')) {
+            console.warn(`  ⚠ ${clave}: ${h.regla} — ${h.detalle}`);
+        }
+        const rojos = hallazgos.filter((x) => x.gravedad === 'ROJO');
+        if (rojos.length && !process.argv.includes('--sin-canon')) {
+            console.error(`\n  ✗ ${clave}: ${rojos.length} problema(s) contra el canon de flujogramas`);
+            for (const h of rojos) console.error(`      ${h.regla} — ${h.detalle}`);
+            console.error(`\n  Las convenciones y de donde sale cada una: skill \`flujogramas\`.`);
+            console.error(`  Para dibujarlo igual y mirarlo: --sin-canon (no se entrega asi).\n`);
+            continue;
+        }
+
         datos.logoUrl = logoDataUri;   // el motor cae a un logo de TEXTO si no lo recibe
 
         const html = `<!doctype html><html><head><meta charset="utf-8">

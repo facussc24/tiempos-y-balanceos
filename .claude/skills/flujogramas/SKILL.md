@@ -13,6 +13,46 @@ flujograma** — nunca al reves, aunque la HO sea mas nueva.
 > los flujogramas ahora, te lo habia dicho ya"*). No se le pasa un prompt para que los
 > dibuje el. Regla: `no-pfd-no-ho.md`.
 
+## 0. El canon CORRE, no se lee
+
+**`node scripts/_flujograma.mjs <clave>` revisa el JSON contra las convenciones ANTES de
+dibujar, y si hay rojos no genera nada.** El chequeo vive en `scripts/_lib/flujogramaCanon.mjs`,
+con 18 casos en `__tests__/scripts/flujogramaCanon.test.mjs`. `--sin-canon` dibuja igual para
+mirarlo, pero asi no se entrega.
+
+> **Por que existe, y es incomodo:** el 22/09/2026 Fak abrio el flujograma 159 y marco ocho
+> cosas. **Siete ya estaban escritas en esta misma skill**, una con su frase textual del
+> 08/09/2026 (*"dentro del mismo sector intentemos mantenernos en el mismo decimal"*). El canon
+> existia y yo no lo habia abierto. Fak: *"no solo quiero que lo corrijas, quiero que no vuelvan
+> a suceder la proxima vez que hagas flujogramas"*.
+>
+> Una skill depende de que yo me acuerde de leerla. El gate no.
+
+Lo que frena hoy, cada regla contada sobre el corpus (56 flujogramas vigentes del servidor +
+los 8 del generador, relevados el 22/09/2026):
+
+| Rojo | Que exige |
+|---|---|
+| `numero-repetido` | ningun numero dos veces, tampoco entre ramas paralelas |
+| `decimal-sin-madre` | un `90.1` exige que exista la operacion `90` (3 de 3 precedentes la tienen) |
+| `traslado-sin-cambiar-de-decena` | si hay traslado se cruzo de sector, asi que la decena cambia |
+| `opins-sobre-transformacion` | el simbolo OP+INSPECCION va **solo** sobre controles (18 de 18 en los hermanos; el 159 Rev.A tenia 11 y ninguno lo era) |
+| `control-sin-numero` | todo control es un nodo con numero — el de SU sector. Unica excepcion: `INSPECCION DE MATERIA PRIMA` |
+| `rombo-sin-control` | el rombo de conformidad cuelga de un control, no de una operacion de transformacion |
+| `retrabajo-en-terminal` | el retrabajo se DIBUJA; escrito adentro de una caja terminal es un retrabajo que no existe |
+| `conector-huerfano` | todo conector de salida tiene su entrada (`incomingConnector` o `VIENE DE (X)`) |
+| `sigla-sin-leyenda` | toda sigla dibujada esta declarada en la leyenda |
+| `cabecera-incompleta`, `sin-codigos`, `sin-historial` | cabecera y los tres bloques del pie |
+
+Y avisa, sin frenar, cuando un control va con elipse simple, cuando un traslado no nombra su
+sector destino, cuando un nombre esta en infinitivo (el corpus usa **sustantivo**: `CORTE DE
+VINILO`, no `CORTAR EL VINILO` — es lo contrario de las hojas de proceso) y cuando una caja
+terminal se sale de `SCRAP` / `RECLAMO DE CALIDAD AL PROVEEDOR` / `PLAN DE REACCION / SCRAP`.
+
+**Antes de numerar nada, abrir dos flujogramas vigentes del mismo cliente y familia.** Para
+SMRC/SAS apoyabrazos-IP-APC el modelo es el **153**; en el servidor, 126 Rev.7, 131 Rev.5 y
+105 Rev.H.
+
 ---
 
 ## 1. La numeracion — el criterio de la casa
@@ -83,8 +123,25 @@ OP 105 REFILADO POST-TAPIZADO existia solo en el Plan de Control, y era la OP 40
 
 ## 2. Las convenciones de dibujo (validadas por Fak)
 
+- **El CONTROL es un nodo propio, con numero y con el simbolo OP+INSPECCION.** Nunca vive
+  adentro de la operacion, y su numero es el del **sector donde se hace**: el control con
+  mylar de la mesa de corte es `21` o `22`, no un numero nuevo. Corolario: el simbolo
+  OP+INSPECCION **no va sobre operaciones de transformacion** — corte, costura, adhesivado y
+  tapizado van con elipse simple. Fak, 22/09/2026: *"le pusiste control a todas las
+  operaciones... no te pedi eso"*.
+- **Cada rombo de conformidad cuelga de un control, y no se pone un rombo donde no hay puesto
+  de control.** Fak, 22/09/2026: *"no hay puesto de control en costura, asi que el 'costura
+  conforme' ahi no iria, iria en corte"*. Si un rombo cuelga de una operacion de
+  transformacion, o falta el nodo de control o sobra el rombo.
 - **Retrabajo = DOS rombos separados**, nunca uno solo que mezcle conformidad y retrabajo:
   `¿CONFORME?` y, solo por el NO, `¿SE PUEDE RETRABAJAR?`.
+- **Un retrabajo escrito adentro de una caja terminal es un retrabajo que no se dibujo.**
+  `RETRABAJO DE COSTURA / SCRAP` como texto de un terminal no es el retrabajo: es su nombre.
+  El camino completo es `¿SE PUEDE RETRABAJAR?` → NO: `SCRAP`; SI: operacion numerada
+  `REPROCESO: <defecto concreto>` → `RE-ENTRADA AL FLUJO PRINCIPAL` con `REVERIFICAR (A OP. NN)`
+  apuntando **al control que lo rechazo**. En el generador lo usan 5 de 8.
+- **Un decimal exige su operacion madre.** `90.1` y `90.2` sin que exista un `90` no tiene
+  precedente: los 3 casos de decimal del corpus tienen el padre presente.
 - **SCRAP como terminal LATERAL**, caja roja al costado, jamas un paso del flujo principal.
 - **Nada de texto debajo de un terminal**: *"al scrap no hace falta aclararle nada"*. El
   detalle tecnico va al Plan de Control o al procedimiento, no al dibujo.
@@ -198,3 +255,13 @@ Entrega:
 ❌ Asignar CC/SC. Las asigna Fak o el cliente (`core-prohibiciones.md` §2); en un flujograma
    nuevo se transcriben las que ya traia la revision anterior, sobre las mismas operaciones.
 ❌ Agregar una clase Tailwind nueva al JSX esperando que aplique.
+❌ **Empezar a numerar sin abrir dos flujogramas vigentes del mismo cliente y familia.** Fak,
+   22/09/2026: *"¿no revisas los demas flujogramas antes de hacer este?"*.
+❌ **Heredar una bifurcacion de un flujograma MULTIPRODUCTO.** El REV.03 del P21 cubria varias
+   piezas, asi que su rombo *"¿el sustrato lleva primer?"* tenia sentido ahi. Traido a un
+   documento de UNA pieza, la rama NO no tenia a donde ir y quedo saliendo a un conector que no
+   aterrizaba en ningun lado. En un documento de una pieza, cada condicion se resuelve contra
+   ESA pieza antes de dibujarla.
+❌ **Escribir el retrabajo adentro del texto de una caja terminal** en vez de dibujarlo.
+❌ **Correr el generador con `--sin-canon` y entregar igual.** Ese flag es para mirar, no para
+   entregar.
