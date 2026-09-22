@@ -74,9 +74,16 @@ def main(argv):
         print(__doc__)
         return 2
 
+    if not os.path.isfile(a.pdf):
+        print(f'ERROR: no existe el archivo: {a.pdf}', file=sys.stderr)
+        return 2
     import fitz  # PyMuPDF
     doc = fitz.open(a.pdf)
-    paginas = parsear_paginas(a.paginas, doc.page_count)
+    try:
+        paginas = parsear_paginas(a.paginas, doc.page_count)
+    except ValueError as e:
+        print(f'ERROR: {e}', file=sys.stderr)
+        return 2
     dpi, out = a.dpi, a.out
     if out is None:
         base = os.path.splitext(os.path.basename(a.pdf))[0][:40]

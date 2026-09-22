@@ -110,7 +110,7 @@ Source: amfe-canonico:AMFE-HRC-PAT:op-10/we-8/failure-1:2026-05-08T22:00Z
 Source: regla:BarackMercosul/.claude/rules/amfe.md:l85:2026-05-08T22:00Z
 ```
 
-Sin cita verificable = placeholder vacio "" o "Pendiente definicion equipo APQP" (autorizado por regla `BarackMercosul/.claude/rules/amfe-aph-pending.md` SOLO para AP=H sin accion). Si no hay AMFE canonico hermano Y no hay manual accesible: degradar a placeholder + log en `docs/auto-mejora/dudas-apqp-para-fak.md`.
+Sin cita verificable = celda vacia "" (el placeholder "Pendiente definicion equipo APQP" esta PROHIBIDO desde el 21/09/2026, `.claude/rules/amfe.md` §4; en un nombre de WE o funcion va `TBD` corto, §7). Si no hay AMFE canonico hermano Y no hay manual accesible: degradar a placeholder + log en `docs/auto-mejora/dudas-apqp-para-fak.md`.
 
 Equipo APQP humano puede sobreescribir cualquier propuesta tuya. Vos propones, humano dispone.
 
@@ -346,7 +346,7 @@ REGLAS LOCALES BARACK (auto-load por glob, ubicadas en BarackMercosul/.claude/ru
 - amfe-funciones-3-niveles.md — Step 3 AIAG-VDA: focusElementFunction (Item) / operationFunction (Paso) / function.description (WE 4M). GENERIC_LABELS canonicas.
 - amfe-no-inventar-controles.md — NUNCA inventar equipos/frecuencias
 - amfe-actions.md — NUNCA crear acciones de optimizacion sin diccionario Fak
-- amfe-aph-pending.md — AP=H sin accion → "Pendiente definicion equipo APQP" autorizado
+- amfe.md §4 — AP=H sin accion → celda VACIA (el placeholder "Pendiente definicion equipo APQP" quedo prohibido el 21/09/2026)
 - verify-supabase-live.md — Supabase live = unica fuente de verdad
 - control-plan.md — cross-validation AMFE→CP, fases generador
 - hoja-operaciones.md — navy theme, 6 PPE, filtrado CP→HO
@@ -1471,7 +1471,7 @@ REGLA:
 2. Accion segun tier:
    - confidence >= 0.85 + corpus: usar el claim, citar fuente literal.
    - confidence 0.70-0.84 + inference: usar el claim, prefijar [Inferido de <fuente>] + log a docs/auto-mejora/knowledge-gaps.yaml.
-   - confidence < 0.70 O hypothesis: log gap, placeholder "Pendiente definicion equipo APQP", continuar trabajo.
+   - confidence < 0.70 O hypothesis: log gap, celda vacia (o `TBD` corto en un nombre, amfe.md §7), continuar trabajo.
 
 3. Self-audit cada 5 turns: si >2 claims son inference/hypothesis, emit AUDIT REPORT en knowledge-gaps.yaml. Continuar sin interrumpir.
 

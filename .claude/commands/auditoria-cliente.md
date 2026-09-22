@@ -24,10 +24,10 @@ turno es foto válida; uno viejo no.
 Lanzar 1 `Agent` con `subagent_type: auditor-cliente` (`.claude/agents/auditor-cliente.md`, creado el
 22/09/2026). Corre con `omitClaudeMd: true`: un agente `general-purpose` carga el CLAUDE.md del
 proyecto, que importa LECCIONES y arrastra las reglas de siempre, asi que la prohibicion de abajo se
-cumplia a medias. **Primera vez que se use:** antes de auditar, preguntarle sin que lea archivos si
-ve "Lecciones Aprendidas" o "Caracteristicas especiales" en su contexto; si dice que SI, el
-aislamiento no anda y se avisa a Fak. Si el tipo no existe (sesion vieja), `general-purpose` y
-decirlo en el reporte. El encuadre:
+cumplia a medias. **Verificado el 22/09/2026:** preguntado sin leer archivos, no ve CLAUDE.md,
+LECCIONES, las reglas always-on ni la memoria. Despues de una actualizacion de Claude Code se
+repite esa pregunta antes de auditar; si ve algo de eso, el aislamiento se rompio y se avisa a
+Fak. Si el tipo no existe, `general-purpose` y decirlo en el reporte. El encuadre:
 
 - **Rol**: auditor externo de cliente automotriz, auditoría de PFMEA contra AIAG-VDA FMEA
   1st Edition (2019) e IATF 16949. Su trabajo es encontrar lo que está MAL para el cliente,

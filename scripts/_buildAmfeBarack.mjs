@@ -156,7 +156,6 @@ function build(parsed, header) {
           }
           c = { ...c, occurrence: occ, detection: det };
           const ap = (f.severity && c.occurrence && c.detection) ? calculateAP(f.severity, c.occurrence, c.detection) : '';
-          // AP=H sin accion ni placeholder -> placeholder autorizado (regla amfe-aph-pending)
           // El placeholder quedo PROHIBIDO (Fak, 21/09/2026: "saca esa mierda, no la quiero
           // ni ver en el AMFE"). Un AP=H sin accion va con la celda VACIA hasta que el
           // equipo la defina. Gate: CAUSE_APH_PLACEHOLDER_PROHIBIDO. Regla amfe.md §4.
